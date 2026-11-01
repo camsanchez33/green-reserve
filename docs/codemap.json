@@ -5363,7 +5363,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 380,
+      "lines": 387,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7387,7 +7387,7 @@
     },
     {
       "path": "src/app/api/operator/tee-times/route.ts",
-      "lines": 172,
+      "lines": 184,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7419,6 +7419,8 @@
       "auth": "operator",
       "guard": "file",
       "imports": [
+        "@/lib/booking-events",
+        "@/lib/cancel-policy",
         "@/lib/course-time",
         "@/lib/golfer-key",
         "@/lib/money",
@@ -8138,7 +8140,7 @@
     },
     {
       "path": "src/app/courses/[slug]/CourseBookingClient.tsx",
-      "lines": 1863,
+      "lines": 1872,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8724,7 +8726,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1693,
+      "lines": 1699,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14885,6 +14887,7 @@
       ],
       "usedBy": [
         "src/app/api/operator/bookings/route.ts",
+        "src/app/api/operator/tee-times/route.ts",
         "src/lib/access-fee.ts",
         "src/lib/booking-fee.ts",
         "src/lib/booking-residents.ts",
@@ -15553,8 +15556,8 @@
     },
     {
       "path": "src/lib/cancel-confirm.ts",
-      "lines": 38,
-      "purpose": "The words staff read before cancelling a booking — the tee sheet's panel and Money → Cancellations ask the same question the same way, so the fee outcome they promise matches what lib/cancel-bookin...",
+      "lines": 44,
+      "purpose": "The words staff read before cancelling a booking from the tee sheet's panel, so the fee outcome they promise matches what lib/cancel-booking.ts actually does.",
       "brain": [],
       "exports": [
         {
@@ -15729,6 +15732,7 @@
         "src/app/api/cron/cancellation-cutoff/route.ts",
         "src/app/api/cron/hourly/route.ts",
         "src/app/api/manage/[bookingId]/route.ts",
+        "src/app/api/operator/tee-times/route.ts",
         "src/app/book/BookClient.tsx",
         "src/app/courses/[slug]/CourseBookingClient.tsx",
         "src/app/dashboard/settings/page.tsx",
@@ -21010,7 +21014,7 @@
     },
     {
       "path": "src/lib/no-show-fee.ts",
-      "lines": 218,
+      "lines": 234,
       "purpose": "SP-B (STAFF_POLICY_SPEC Part B4).",
       "brain": [],
       "exports": [
@@ -21039,12 +21043,24 @@
           "kind": "const"
         },
         {
+          "name": "NO_SHOW_SCAN_DAYS",
+          "kind": "const"
+        },
+        {
           "name": "noShowClosed",
+          "kind": "fn"
+        },
+        {
+          "name": "noShowMarkOutcome",
           "kind": "fn"
         },
         {
           "name": "NoShowResult",
           "kind": "type"
+        },
+        {
+          "name": "noShowScanFrom",
+          "kind": "fn"
         },
         {
           "name": "refundNoShowFee",
@@ -21084,7 +21100,7 @@
     },
     {
       "path": "src/lib/normalize-course.ts",
-      "lines": 91,
+      "lines": 98,
       "purpose": "",
       "brain": [],
       "exports": [

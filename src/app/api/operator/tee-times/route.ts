@@ -6,6 +6,8 @@ import { teeTimeToWire } from '@/lib/schedule-wire';
 import { resolveDashboardSession, can, requirePermission } from '@/lib/session';
 import { setTeeTimeBlocked } from '@/lib/schedule-service';
 import { golferKey } from '@/lib/golfer-key';
+import { bookingWindowHours, holdsAtCutoff, chargesOnLateCancel } from '@/lib/cancel-policy';
+import { teeTimeInstant } from '@/lib/booking-events';
 
 export async function GET(req: NextRequest) {
   const session = await resolveDashboardSession();
@@ -19,6 +21,7 @@ export async function GET(req: NextRequest) {
     date = todayIn(c?.timezone);
   }
   const withBookings = searchParams.get('withBookings') === '1';
+  const courseRow = withBookings ? await prisma.course.findUnique({ where: { id: session.courseId }, select: { timezone: true, cancellationHours: true } }) : null;
 
   const teeTimes = await prisma.teeTime.findMany({
     where: { courseId: session.courseId, date },
@@ -34,6 +37,8 @@ export async function GET(req: NextRequest) {
       ...(withBookings ? { bookings: {
       where: { status: { in: ['confirmed', 'completed'] } }, orderBy: { createdAt: 'asc' },
       select: { id: true, golferName: true, golferEmail: true, golferPhone: true, golferAccountId: true, players: true, createdAt: true, status: true, paymentStatus: true, totalAmount: true, accessFeeTotal: true, checkInFailReason: true, source: true, noShowAt: true, paidOffline: true, checkedInPlayers: true, stripePaymentMethodId: true, cancellationFeeTotal: true, roundPaymentIntentId: true,
+        // Tee audit 18: what a cancel now would do with the late fee — the confirm says it exactly.
+        cancellationHoursAtBooking: true, lateFeeTimingAtBooking: true,
         // RES-1: residents in the group, and whether it is on a member rate.
         residentPlayers: true, appliedRate: true,
         // Part of a group checking in is priced on the sheet as the server charges it (lib/member-rates partyFees).
@@ -70,7 +75,14 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(teeTimes.map(t => {
     const bookings = (t as { bookings?: (Row & { id: string; golferAccountId?: string | null })[] }).bookings;
     if (!bookings) return t;
-    return { ...t, bookings: bookings.map(({ stripePaymentMethodId, roundPaymentIntentId, shopLockedAt, golferAccountId: _acct, ...b }) => ({ ...b, hasCard: !!stripePaymentMethodId, roundPaid: !!roundPaymentIntentId, shopLocked: !!shopLockedAt, hasPhone: b.golferPhone.replace(/\D/g, '').length >= 10, notes: notesFor(b.id), accountName: accountOf.get(b.id) ?? '', ...(contact ? {} : { golferEmail: '', golferPhone: '' }) })) };
+    const teeAt = courseRow ? teeTimeInstant(courseRow.timezone, t.date, t.time) : null;
+    // Mirrors lib/cancel-booking.ts: when a cancel starts taking the late fee — a fee not yet charged and a
+    // policy that charges on a late cancel or holds at the cutoff. The instant, not a yes/no, so the sheet
+    // decides at the moment staff tap Cancel (a sheet open across the cutoff stays right). null = never.
+    const lateFeeFrom = (b: Row & { paymentStatus?: string; cancellationFeeTotal?: number; cancellationHoursAtBooking?: number | null; lateFeeTimingAtBooking?: string | null }) =>
+      courseRow && teeAt && (b.cancellationFeeTotal ?? 0) > 0 && b.paymentStatus !== 'cancellation_fee_charged' && (chargesOnLateCancel(b) || holdsAtCutoff(b))
+        ? new Date(teeAt.getTime() - bookingWindowHours(b, courseRow) * 3600_000).toISOString() : null;
+    return { ...t, bookings: bookings.map(({ stripePaymentMethodId, roundPaymentIntentId, shopLockedAt, golferAccountId: _acct, cancellationHoursAtBooking: _h, lateFeeTimingAtBooking: _t, ...b }: Row & { id: string; golferAccountId?: string | null; cancellationHoursAtBooking?: number | null; lateFeeTimingAtBooking?: string | null; paymentStatus?: string; cancellationFeeTotal?: number }) => ({ ...b, lateFeeFrom: lateFeeFrom({ ...b, cancellationHoursAtBooking: _h, lateFeeTimingAtBooking: _t }), hasCard: !!stripePaymentMethodId, roundPaid: !!roundPaymentIntentId, shopLocked: !!shopLockedAt, hasPhone: b.golferPhone.replace(/\D/g, '').length >= 10, notes: notesFor(b.id), accountName: accountOf.get(b.id) ?? '', ...(contact ? {} : { golferEmail: '', golferPhone: '' }) })) };
   }));
 }
 

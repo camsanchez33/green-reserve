@@ -117,14 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-11-01 19:02 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 4c2077ec</span>
-    <span>16 uncommitted</span>
+    <span>2026-11-01 19:42 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ cab4dae0</span>
+    <span>21 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">18 runs have shipped that the queue doesn't know about</div>
+<div class="lede">20 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-31. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">b5d27f01</span><span>Audit numbers: partial refunds, event money, event player swap, shop today, payout tile (#287)</span></li>
+<li><span class="h">c6efa694</span><span>Audit numbers: partial refunds, event money, event player swap, shop today, payout tile</span></li>
 <li><span class="h">10ab79d8</span><span>DENSE-10 Settings part 2: the Settings cards, labels over sentences (#286)</span></li>
 <li><span class="h">6bbb7c6d</span><span>DENSE-10 Settings part 2: the Settings cards, labels over sentences</span></li>
 <li><span class="h">bda21776</span><span>DENSE-10 Settings part 1: labels over sentences (#285)</span></li>
@@ -155,7 +157,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M STATUS.artifact.html</code></li><li><code>M STATUS.json</code></li><li><code>M STATUS.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/words-guard.baseline.json</code></li><li><code>M src/app/api/operator/events/[id]/route.ts</code></li><li><code>M src/app/api/operator/money/sales/route.ts</code></li><li><code>M src/app/api/operator/shop-sales/route.ts</code></li><li><code>M src/app/dashboard/analytics/page.tsx</code></li><li><code>M src/app/dashboard/money/page.tsx</code></li><li><code>M src/app/dashboard/shop/page.tsx</code></li><li><code>M src/components/dashboard/events/EventDetail.tsx</code></li><li><code>M src/components/dashboard/money/SalesPanel.tsx</code></li><li><code>M src/lib/analytics.ts</code></li><li><code>?? scripts/audit-numbers-db-test.ts</code></li></ul>
+<ul class="plain"><li><code>M STATUS.artifact.html</code></li><li><code>M STATUS.json</code></li><li><code>M STATUS.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/words-guard.baseline.json</code></li><li><code>M src/app/api/operator/bookings/route.ts</code></li><li><code>M src/app/api/operator/tee-times/route.ts</code></li><li><code>M src/app/api/preview/[courseId]/route.ts</code></li><li><code>M src/app/courses/[slug]/CourseBookingClient.tsx</code></li><li><code>M src/app/dashboard/members/page.tsx</code></li><li><code>M src/app/dashboard/page.tsx</code></li><li><code>M src/app/dashboard/settings/page.tsx</code></li><li><code>M src/lib/analytics-terms.ts</code></li><li><code>M src/lib/cancel-confirm.ts</code></li><li><code>M src/lib/counter-pay.ts</code></li><li><code>M src/lib/email.ts</code></li><li><code>M src/lib/no-show-fee.ts</code></li><li><code>M src/lib/normalize-course.ts</code></li><li><code>M src/lib/public-course.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -237,6 +239,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 11d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">b5d27f01</td><td class="num">2026-11-01</td><td>Audit numbers: partial refunds, event money, event player swap, shop today, payout tile (#287)</td></tr>
+<tr><td class="num">c6efa694</td><td class="num">2026-11-01</td><td>Audit numbers: partial refunds, event money, event player swap, shop today, payout tile</td></tr>
 <tr><td class="num">10ab79d8</td><td class="num">2026-11-01</td><td>DENSE-10 Settings part 2: the Settings cards, labels over sentences (#286)</td></tr>
 <tr><td class="num">6bbb7c6d</td><td class="num">2026-11-01</td><td>DENSE-10 Settings part 2: the Settings cards, labels over sentences</td></tr>
 <tr><td class="num">bda21776</td><td class="num">2026-11-01</td><td>DENSE-10 Settings part 1: labels over sentences (#285)</td></tr>
@@ -247,8 +251,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">1bbbbbc8</td><td class="num">2026-11-01</td><td>DENSE-8 Events: the list is a table with what each event still owes</td></tr>
 <tr><td class="num">286a3d44</td><td class="num">2026-11-01</td><td>DENSE-7 Pro shop: labels over sentences (text only) (#282)</td></tr>
 <tr><td class="num">06c09849</td><td class="num">2026-11-01</td><td>DENSE-7 Pro shop: labels over sentences (text only)</td></tr>
-<tr><td class="num">4274c1a6</td><td class="num">2026-11-01</td><td>DENSE-6 Schedule: labels over sentences (#281)</td></tr>
-<tr><td class="num">3ee7b212</td><td class="num">2026-11-01</td><td>DENSE-6 Schedule: labels over sentences</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

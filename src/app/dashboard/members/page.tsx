@@ -565,7 +565,7 @@ function MembersPageInner() {
   const active = members.filter(m => m.status === 'active');
   const unpaid = active.filter(m => ['unpaid', 'expired'].includes(duesOf(m, now).kind)).length;
   // DENSE-5 (Cam 2026-10-28): the strip — active, not renewed (ran out, not paid again), not linked
-  // (online bookings get public rates), and members' rounds this year.
+  // (they get member rates once they sign in with the listed email — lib/member-session), and members' rounds this year.
   const notRenewed = active.filter(m => duesOf(m, now).kind === 'expired').length;
   const notLinked = active.filter(m => !m.linked).length;
   const seesSpend = members.some(m => m.spendThisYearCents != null);
@@ -748,7 +748,7 @@ function MembersPageInner() {
                                   <div className="text-[13px] text-ink-soft space-y-0.5">
                                     {/* The columns a narrow screen hides. */}
                                     <p className="xl:hidden"><span className="sm:hidden">{m.tierName} · </span><span className="md:hidden">{m.expiresAt ? `Renews ${shortDate(m.expiresAt)} · ` : ''}{m.roundsThisYear ?? 0} rounds this year · </span><span className="lg:hidden">Since {shortDate(m.startedAt ?? m.createdAt)}{m.spendThisYearCents != null ? ` · ${usd0(m.spendThisYearCents)} spent` : ''} · </span>{m.lastRound ? `Last round ${shortDate(m.lastRound)}` : 'No rounds yet'}</p>
-                                    <p>{m.linked ? 'Account linked — member rates online.' : m.inviteAccepted ? 'Invite accepted.' : 'Not linked — online bookings get public rates.'}</p>
+                                    <p>{m.linked ? 'Account linked — member rates online.' : m.inviteAccepted ? 'Invite accepted.' : 'Not linked yet — member rates online once they sign in with this email.'}</p>
                                     {m.lastPaidAt && <p>Last paid {fmtDate(m.lastPaidAt)}</p>}
                                     {m.notes && <p>Note: {m.notes}</p>}
                                   </div>

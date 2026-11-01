@@ -80,11 +80,19 @@ function deadlineLabel(dateStr: string, timeStr: string, hoursBefore: number) {
   return `${day}, ${clock}`;
 }
 
-function todOf(t: TeeTime): TimeOfDay {
-  const h = parseInt(t.time.split(':')[0]);
-  if (h < 12) return 'morning';
-  if (h < 16) return 'afternoon';
+/** Twilight starts where the course's twilight price period does (normalize-course), else 4 PM. */
+function todOf(t: TeeTime, twilightStart: string | null | undefined): TimeOfDay {
+  const tw = twilightStart && /^\d{2}:\d{2}$/.test(twilightStart) ? twilightStart : '16:00';
+  const hm = t.time.slice(0, 5);
+  if (hm < '12:00') return 'morning';
+  if (hm < tw) return 'afternoon';
   return 'twilight';
+}
+
+/** The minute before a HH:MM time ("15:00" → "14:59"). */
+function minuteBefore(hm: string): string {
+  const m = Number(hm.slice(0, 2)) * 60 + Number(hm.slice(3, 5)) - 1;
+  return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
 }
 
 function holesOf(t: TeeTime): number | undefined {
@@ -143,6 +151,7 @@ type CourseWithBrand = Course & {
   is_live?: boolean;
   // BOOKING WINDOWS
   public_advance_days?: number;
+  twilight_start?: string | null;
   member_advance_days?: number;
   has_member_pricing?: boolean;
 };
@@ -459,7 +468,7 @@ export default function CourseDetailPage({
       if (t.players_available > 0 && t.players_available < players) return false;
       // W2-6 slice 3: a round can be for bigger groups only.
       if (t.players_available > 0 && (t.min_players ?? 1) > players) return false;
-      if (todFilter !== 'all' && todOf(t) !== todFilter) return false;
+      if (todFilter !== 'all' && todOf(t, course?.twilight_start) !== todFilter) return false;
       if (maxPrice !== null && t.green_fee > maxPrice) return false;
       if (holesFilter !== 'all') {
         const h = holesOf(t);
@@ -468,7 +477,7 @@ export default function CourseDetailPage({
       if (productActive !== 'all' && t.product_id !== productActive) return false;
       return true;
     });
-  }, [memberSession, memberTeeTimes, teeTimes, players, todFilter, maxPrice, holesFilter, productActive]);
+  }, [memberSession, memberTeeTimes, teeTimes, players, todFilter, maxPrice, holesFilter, productActive, course?.twilight_start]);
 
   const activeFilterCount =
     (todFilter !== 'all' ? 1 : 0) +
@@ -499,8 +508,8 @@ export default function CourseDetailPage({
     const todWindows: Record<TimeOfDay, { windowStart: string; windowEnd: string }> = {
       all:       { windowStart: '', windowEnd: '' },
       morning:   { windowStart: '06:00', windowEnd: '11:59' },
-      afternoon: { windowStart: '12:00', windowEnd: '15:59' },
-      twilight:  { windowStart: '16:00', windowEnd: '23:59' },
+      afternoon: { windowStart: '12:00', windowEnd: minuteBefore(course?.twilight_start ?? '16:00') },
+      twilight:  { windowStart: course?.twilight_start ?? '16:00', windowEnd: '23:59' },
     };
     const windows = alertModal.teeTimeId ? { windowStart: '', windowEnd: '' } : todWindows[todFilter];
     setAlertError('');
@@ -671,9 +680,9 @@ export default function CourseDetailPage({
   const memberWindowDays = course.member_advance_days ?? 14;
   const membersBookEarlier = !memberSession && !!course.has_member_pricing && memberWindowDays > viewerWindowDays;
 
-  const morningItems = filtered.filter(t => todOf(t) === 'morning');
-  const afternoonItems = filtered.filter(t => todOf(t) === 'afternoon');
-  const twilightItems = filtered.filter(t => todOf(t) === 'twilight');
+  const morningItems = filtered.filter(t => todOf(t, course.twilight_start) === 'morning');
+  const afternoonItems = filtered.filter(t => todOf(t, course.twilight_start) === 'afternoon');
+  const twilightItems = filtered.filter(t => todOf(t, course.twilight_start) === 'twilight');
   const groups = [
     { key: 'morning',   label: 'Morning',   items: morningItems },
     { key: 'afternoon', label: 'Afternoon', items: afternoonItems },
@@ -1531,11 +1540,11 @@ export default function CourseDetailPage({
                                     {/* Cart toggle */}
                                     {t.cart_fee > 0 && !t.cart_required && (
                                       <button
-                                        onClick={() => setWithCart(!withCart)}
+                                        onClick={() => setWithCart(!withCart)} aria-pressed={withCart}
                                         className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-md border text-sm font-medium transition-colors"
                                         style={withCart ? { borderColor: accent, backgroundColor: `${accent}12`, color: accent } : { borderColor: 'var(--color-line)', color: 'var(--color-ink-soft)' }}
                                       >
-                                        <span>Add cart</span>
+                                        <span>{withCart ? 'Cart added · tap to remove' : 'Add cart'}</span>
                                         <span>${t.cart_fee} / player</span>
                                       </button>
                                     )}

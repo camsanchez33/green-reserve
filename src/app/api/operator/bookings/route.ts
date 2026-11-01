@@ -14,7 +14,7 @@ import { changePartySize } from '@/lib/change-party';
 import { isPastIn, todayIn, payLinkOpensOn } from '@/lib/course-time';
 import { randomUUID } from 'crypto';
 import { refundSeparateAccessFee } from '@/lib/access-fee';
-import { markNoShow, refundNoShowFee, roundPaid } from '@/lib/no-show-fee';
+import { markNoShow, refundNoShowFee, roundPaid, noShowMarkOutcome } from '@/lib/no-show-fee';
 import { sendSms } from '@/lib/twilio';
 import { normalizePhone } from '@/lib/golfer-otp';
 import { formatTeeTime } from '@/lib/format';
@@ -269,7 +269,14 @@ export async function PATCH(req: NextRequest) {
     // NS-EOD: the mark only flags the booking; any no-show charge is taken at
     // the course's midnight if they still haven't checked in (lib/no-show-fee).
     await markNoShow(id, staff, { actorName });
-    return NextResponse.json({ success: true, noShowAt: new Date().toISOString(), fee: 'Marked a no-show. Any no-show charge is taken at midnight if they still haven’t checked in — “Still coming” or checking them in before then cancels it.' });
+    // Tee audit 27: a past day's midnight has gone — the hourly run takes the charge on its next pass.
+    // Tee audit 27: today → at midnight; a past day → the next hourly run; older than that run scans → never.
+    const outcome = noShowMarkOutcome(booking.teeTime.date, booking.course.timezone, new Date());
+    return NextResponse.json({ success: true, noShowAt: new Date().toISOString(), fee: outcome === 'never'
+      ? 'Marked a no-show. The hourly charge no longer reaches that day, so no no-show charge is taken.'
+      : outcome === 'next_hour'
+      ? 'Marked a no-show. Any no-show charge is taken within the hour — “Still coming” before then cancels it.'
+      : 'Marked a no-show. Any no-show charge is taken at midnight if they still haven’t checked in — “Still coming” or checking them in before then cancels it.' });
   }
   if (action === 'still_coming') {
     // G14 (review ledger): only a confirmed booking flagged a no-show has
@@ -365,7 +372,7 @@ export async function POST(req: NextRequest) {
         courseSlug: teeTime.course.slug,
         date: teeTime.date, time: teeTime.time, players, holes: teeTime.holes,
         greenFeeTotal, cartFeeTotal, accessFeeTotal, totalAmount,
-        bookingId: claimed.id, appliedRate: 'standard',
+        bookingId: claimed.id, appliedRate: made.appliedRate, // the rate staff picked (resident, senior, a tier, a pack)
         cancellationHours: teeTime.course.cancellationHours,
         confirmationNote: teeTime.course.confirmationNote,
         checkInToken: claimed.checkInToken ?? undefined,

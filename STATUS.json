@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-11-01T19:02:19.872Z",
+  "generatedAt": "2026-11-01T19:42:31.060Z",
   "repo": {
-    "head": "4c2077ec",
+    "head": "cab4dae0",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 16,
+    "dirtyCount": 21,
     "dirty": [
       "M STATUS.artifact.html",
       " M STATUS.json",
@@ -11,22 +11,40 @@
       " M docs/CODEMAP.md",
       " M docs/codemap.json",
       " M scripts/words-guard.baseline.json",
-      " M src/app/api/operator/events/[id]/route.ts",
-      " M src/app/api/operator/money/sales/route.ts",
-      " M src/app/api/operator/shop-sales/route.ts",
-      " M src/app/dashboard/analytics/page.tsx",
-      " M src/app/dashboard/money/page.tsx",
-      " M src/app/dashboard/shop/page.tsx",
-      " M src/components/dashboard/events/EventDetail.tsx",
-      " M src/components/dashboard/money/SalesPanel.tsx",
-      " M src/lib/analytics.ts",
-      "?? scripts/audit-numbers-db-test.ts"
+      " M src/app/api/operator/bookings/route.ts",
+      " M src/app/api/operator/tee-times/route.ts",
+      " M src/app/api/preview/[courseId]/route.ts",
+      " M src/app/courses/[slug]/CourseBookingClient.tsx",
+      " M src/app/dashboard/members/page.tsx",
+      " M src/app/dashboard/page.tsx",
+      " M src/app/dashboard/settings/page.tsx",
+      " M src/lib/analytics-terms.ts",
+      " M src/lib/cancel-confirm.ts",
+      " M src/lib/counter-pay.ts",
+      " M src/lib/email.ts",
+      " M src/lib/no-show-fee.ts",
+      " M src/lib/normalize-course.ts",
+      " M src/lib/public-course.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "b5d27f01",
+        "date": "2026-11-01T14:09:25-05:00",
+        "subject": "Audit numbers: partial refunds, event money, event player swap, shop today, payout tile (#287)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "c6efa694",
+        "date": "2026-11-01T19:02:21+00:00",
+        "subject": "Audit numbers: partial refunds, event money, event player swap, shop today, payout tile",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "10ab79d8",
         "date": "2026-11-01T13:18:49-05:00",
@@ -550,6 +568,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "b5d27f01",
+      "date": "2026-11-01",
+      "subject": "Audit numbers: partial refunds, event money, event player swap, shop today, payout tile (#287)"
+    },
+    {
+      "h": "c6efa694",
+      "date": "2026-11-01",
+      "subject": "Audit numbers: partial refunds, event money, event player swap, shop today, payout tile"
+    },
+    {
       "h": "10ab79d8",
       "date": "2026-11-01",
       "subject": "DENSE-10 Settings part 2: the Settings cards, labels over sentences (#286)"
@@ -598,16 +626,6 @@
       "h": "06c09849",
       "date": "2026-11-01",
       "subject": "DENSE-7 Pro shop: labels over sentences (text only)"
-    },
-    {
-      "h": "4274c1a6",
-      "date": "2026-11-01",
-      "subject": "DENSE-6 Schedule: labels over sentences (#281)"
-    },
-    {
-      "h": "3ee7b212",
-      "date": "2026-11-01",
-      "subject": "DENSE-6 Schedule: labels over sentences"
     }
   ]
 }

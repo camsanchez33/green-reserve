@@ -175,7 +175,7 @@ export type CounterBookingInput = {
   rate?: string;
 };
 export async function createCounterBooking(courseId: string, input: CounterBookingInput, actor: EventActor):
-  Promise<{ ok: true; id: string; checkInToken: string | null; greenFeeTotal: number; cartFeeTotal: number; totalAmount: number; teeTime: { date: string; time: string; holes: number }; course: { name: string; address: string | null; city: string | null; state: string | null; slug: string; cancellationHours: number; confirmationNote: string | null } }
+  Promise<{ ok: true; id: string; checkInToken: string | null; appliedRate: string; greenFeeTotal: number; cartFeeTotal: number; totalAmount: number; teeTime: { date: string; time: string; holes: number }; course: { name: string; address: string | null; city: string | null; state: string | null; slug: string; cancellationHours: number; confirmationNote: string | null } }
   | { ok: false; status: number; error: string }> {
   const golferName = String(input.golferName ?? '').trim().slice(0, 120);
   const golferEmail = String(input.golferEmail ?? '').trim().toLowerCase().slice(0, 200);
@@ -279,7 +279,7 @@ export async function createCounterBooking(courseId: string, input: CounterBooki
       cancellationHoursAtBooking: teeTime.course.cancellationHours,
     }, actor, { allowLate: input.late === true && source === 'walk_in' && actor.type === 'staff' });
     const c = teeTime.course;
-    return { ok: true, id: claimed.id, checkInToken: claimed.checkInToken, greenFeeTotal, cartFeeTotal, totalAmount,
+    return { ok: true, id: claimed.id, checkInToken: claimed.checkInToken, appliedRate, greenFeeTotal, cartFeeTotal, totalAmount,
       teeTime: { date: teeTime.date, time: teeTime.time, holes: teeTime.holes },
       course: { name: c.name, address: c.address, city: c.city, state: c.state, slug: c.slug, cancellationHours: c.cancellationHours, confirmationNote: c.confirmationNote } };
   } catch (err) {

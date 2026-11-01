@@ -130,8 +130,24 @@ export async function chargeNoShow(bookingId: string): Promise<NoShowResult> {
  * tried again. Bookings with nothing to charge are skipped. Scans the last
  * three days.
  */
+export const NO_SHOW_SCAN_DAYS = 3;
+/** The oldest tee date the hourly charge still looks at — older no-shows are never charged. */
+export const noShowScanFrom = (now: Date) => new Date(now.getTime() - NO_SHOW_SCAN_DAYS * 86_400_000).toISOString().slice(0, 10);
+
+/**
+ * What a no-show marked now means for its charge: 'midnight' (today's tee time — taken at the
+ * course's midnight), 'next_hour' (a past day the next hourly run still scans) or 'never' (the
+ * next run's scan no longer reaches that tee date). Judged against the NEXT hourly run, since
+ * the scan's UTC date can roll over between the mark and that run.
+ */
+export function noShowMarkOutcome(teeDate: string, tz: string | null | undefined, now: Date): 'midnight' | 'next_hour' | 'never' {
+  if (teeDate >= todayIn(tz, now)) return 'midnight';
+  const nextRun = new Date(Math.ceil(now.getTime() / 3_600_000) * 3_600_000);
+  return teeDate < noShowScanFrom(nextRun) ? 'never' : 'next_hour';
+}
+
 export async function dueNoShowCharges(now: Date): Promise<string[]> {
-  const scanFrom = new Date(now.getTime() - 3 * 86_400_000).toISOString().slice(0, 10);
+  const scanFrom = noShowScanFrom(now);
   const candidates = await prisma.booking.findMany({
     where: { status: 'confirmed', noShowAt: { not: null }, checkedInAt: null, paymentStatus: { not: 'paid' }, teeTime: { date: { gte: scanFrom } } },
     select: { id: true, noShowAt: true, noShowFeeTotal: true, accessFeeTotal: true, feePaidCents: true, teeTime: { select: { date: true } }, course: { select: { timezone: true } } },

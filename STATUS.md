@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-01 19:02 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `4c2077ec` · working tree **16 dirty file(s)**
+Generated 2026-11-01 19:42 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `cab4dae0` · working tree **21 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 18 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 20 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `b5d27f01` | 2026-11-01 | Audit numbers: partial refunds, event money, event player swap, shop today, payout tile (#287) |
+| `c6efa694` | 2026-11-01 | Audit numbers: partial refunds, event money, event player swap, shop today, payout tile |
 | `10ab79d8` | 2026-11-01 | DENSE-10 Settings part 2: the Settings cards, labels over sentences (#286) |
 | `6bbb7c6d` | 2026-11-01 | DENSE-10 Settings part 2: the Settings cards, labels over sentences |
 | `bda21776` | 2026-11-01 | DENSE-10 Settings part 1: labels over sentences (#285) |
@@ -33,7 +35,7 @@ Generated 2026-11-01 19:02 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (16 file(s))
+### Uncommitted working tree (21 file(s))
 
 - `M STATUS.artifact.html`
 - `M STATUS.json`
@@ -41,16 +43,20 @@ Generated 2026-11-01 19:02 UTC · branch `claude/walkthrough-2-prioritization-ui
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
 - `M scripts/words-guard.baseline.json`
-- `M src/app/api/operator/events/[id]/route.ts`
-- `M src/app/api/operator/money/sales/route.ts`
-- `M src/app/api/operator/shop-sales/route.ts`
-- `M src/app/dashboard/analytics/page.tsx`
-- `M src/app/dashboard/money/page.tsx`
-- `M src/app/dashboard/shop/page.tsx`
-- `M src/components/dashboard/events/EventDetail.tsx`
-- `M src/components/dashboard/money/SalesPanel.tsx`
-- `M src/lib/analytics.ts`
-- `?? scripts/audit-numbers-db-test.ts`
+- `M src/app/api/operator/bookings/route.ts`
+- `M src/app/api/operator/tee-times/route.ts`
+- `M src/app/api/preview/[courseId]/route.ts`
+- `M src/app/courses/[slug]/CourseBookingClient.tsx`
+- `M src/app/dashboard/members/page.tsx`
+- `M src/app/dashboard/page.tsx`
+- `M src/app/dashboard/settings/page.tsx`
+- `M src/lib/analytics-terms.ts`
+- `M src/lib/cancel-confirm.ts`
+- `M src/lib/counter-pay.ts`
+- `M src/lib/email.ts`
+- `M src/lib/no-show-fee.ts`
+- `M src/lib/normalize-course.ts`
+- `M src/lib/public-course.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -176,6 +182,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `b5d27f01` 2026-11-01 — Audit numbers: partial refunds, event money, event player swap, shop today, payout tile (#287)
+- `c6efa694` 2026-11-01 — Audit numbers: partial refunds, event money, event player swap, shop today, payout tile
 - `10ab79d8` 2026-11-01 — DENSE-10 Settings part 2: the Settings cards, labels over sentences (#286)
 - `6bbb7c6d` 2026-11-01 — DENSE-10 Settings part 2: the Settings cards, labels over sentences
 - `bda21776` 2026-11-01 — DENSE-10 Settings part 1: labels over sentences (#285)
@@ -186,8 +194,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `1bbbbbc8` 2026-11-01 — DENSE-8 Events: the list is a table with what each event still owes
 - `286a3d44` 2026-11-01 — DENSE-7 Pro shop: labels over sentences (text only) (#282)
 - `06c09849` 2026-11-01 — DENSE-7 Pro shop: labels over sentences (text only)
-- `4274c1a6` 2026-11-01 — DENSE-6 Schedule: labels over sentences (#281)
-- `3ee7b212` 2026-11-01 — DENSE-6 Schedule: labels over sentences
 
 ---
 

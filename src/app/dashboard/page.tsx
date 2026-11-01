@@ -70,6 +70,8 @@ type Booking = {
   cancellationFeeTotal?: number;
   /** SP-B: false when the golfer booked without a card (pay-link course). */
   hasCard?: boolean;
+  /** When a cancel starts taking the late fee (ISO), or null for never; absent = unknown. */
+  lateFeeFrom?: string | null;
   /** PAY-1: a textable number is on file (sent even to logins that can't see it). */
   hasPhone?: boolean;
   /** POS-1a: pro-shop items charged with the round, and GreenReserve's fee on them. */
@@ -232,8 +234,8 @@ function DashboardPageInner() {
 
   // SD-4: one wording for a check-in result, and it distinguishes a refund
   // that happened from one that failed — the service reports both now.
-  function chargeOutcome(data: { totalCharged: number; feeRefunded?: boolean; feeRefundFailed?: boolean; feeRefundAmount?: number }) {
-    const charged = `Checked in — charged $${(data.totalCharged / 100).toFixed(2)}`;
+  function chargeOutcome(data: { totalCharged: number; feeRefunded?: boolean; feeRefundFailed?: boolean; feeRefundAmount?: number; alreadyPaid?: boolean }) {
+    const charged = data.alreadyPaid ? 'Checked in — already paid, nothing charged' : `Checked in — charged $${(data.totalCharged / 100).toFixed(2)}`;
     if (data.feeRefundFailed) {
       toast(`${charged}. The $${((data.feeRefundAmount ?? 0) / 100).toFixed(2)} late-cancellation fee refund FAILED — issue it in Stripe or the golfer is still out that money.`, 'warn');
     } else if (data.feeRefunded) {
@@ -259,7 +261,7 @@ function DashboardPageInner() {
   // Cancel from the sheet (Cam 2026-10-08: "you have to be able to cancel someones
   // time from the sheet") — the same route, words and fee rules as Money → Cancellations.
   async function cancelGroup(b: Booking, waive: boolean) {
-    const c = { golferName: b.golferName, paymentStatus: b.paymentStatus, cancellationFeeTotal: b.cancellationFeeTotal ?? 0, noShowAt: b.noShowAt };
+    const c = { golferName: b.golferName, paymentStatus: b.paymentStatus, cancellationFeeTotal: b.cancellationFeeTotal ?? 0, noShowAt: b.noShowAt, lateFeeOnCancel: b.lateFeeFrom === undefined ? undefined : b.lateFeeFrom !== null && Date.now() >= Date.parse(b.lateFeeFrom), hasCard: b.hasCard };
     if (!confirm(cancelConfirmText(c, waive, access.can('sheet.waive_fee')))) return;
     setRowBusy(b.id);
     try {
@@ -346,14 +348,18 @@ function DashboardPageInner() {
     // No saved card → the card modal. Keyed on the card itself, not paymentStatus:
     // the hourly cron flips a no-card booking to 'awaiting_checkin' when it sends
     // the pay link, which is before most golfers reach the counter.
-    if (b.hasCard === false || b.paymentStatus === 'no_payment_method') { openCardModal(b, ''); return; }
+    // Tee audit 17: a round paid ahead is never charged again (and a headcount changes nothing).
+    const prepaid = b.paymentStatus === 'paid';
+    if (!prepaid && (b.hasCard === false || b.paymentStatus === 'no_payment_method')) { openCardModal(b, ''); return; }
     // SD-5: partial party — the charge is prorated to who showed.
-    const showed = askHeadcount(b);
+    const showed = prepaid ? b.players : askHeadcount(b);
     if (showed === null) return;
     const partial = showed < b.players ? showed : undefined;
     // POS-1a: shop items and their fee are never prorated — they ride whole.
     const amount = (partial ? partRound(b, partial, true) : b.totalAmount) + shopExtra(b);
-    if (!confirm(`Check in ${b.golferName}${partial ? ` (${partial} of ${b.players} players)` : ''} and charge their card $${(amount / 100).toFixed(2)} for the round${(b.shopTotalCents ?? 0) > 0 ? ' and shop items' : ''}?`)) return;
+    if (!confirm(prepaid
+      ? `Check in ${b.golferName}? Their round is already paid — nothing is charged.`
+      : `Check in ${b.golferName}${partial ? ` (${partial} of ${b.players} players)` : ''} and charge their card $${(amount / 100).toFixed(2)} for the round${(b.shopTotalCents ?? 0) > 0 ? ' and shop items' : ''}?`)) return;
     setCheckingInId(b.id);
     let res: Response; let data: Record<string, unknown> & { error?: string; totalCharged: number };
     try {
