@@ -17,6 +17,8 @@
 //   collected        course share of completed bookings: paid by card at
 //                    check-in ('paid') or at the counter ('paid_offline').
 //                    There is no online prepay — cards are charged at check-in.
+//                    Less the course's part of any refund given back on the
+//                    round (a partial refund keeps the round 'paid'; Money audit 9).
 //   outstanding      non-cancelled, tee time passed, not collected — and not a
 //                    no-show staff marked (counted apart, never chased as a debt)
 //                    or a round refunded in full (Revamp 3 audit, Cam 2026-10-29).
@@ -106,12 +108,28 @@ async function load(courseId: string, range: Range) {
           // W2-8: residents (RES-1) and whether the booking carried a fee policy.
           residentPlayers: true, residentRateCents: true, cancellationFeeApplies: true, appliedRate: true,
           // W2-8 (4): pro-shop items added to the round (POS-1a), before tax.
-          shopTotalCents: true,
+          shopTotalCents: true, shopTaxCents: true,
         },
       },
     },
   });
-  return { tz, courseName: course?.name ?? '', teeTimes };
+  // Money audit 9 (2026-11-01): a round refunded in part stays 'paid', so its course share
+  // was counted whole. The course's part of every round refund given back (the ledger's
+  // amount less GreenReserve's fee returned with it) comes off what the round brought in.
+  // Card-reader duplicates ('system') are a second payment given back, never the round's own;
+  // dispute money the webhook mirrors (stripeId dp_…) is a dispute, not a refund, and is left out.
+  // A refund made in the Stripe dashboard is mirrored with GreenReserve's part as 0, so at most
+  // the booking fee may be over-subtracted there.
+  const bookingIds = teeTimes.flatMap(t => t.bookings.filter(b => b.paymentStatus === 'paid').map(b => b.id));
+  const refundBack = new Map<string, number>();
+  if (bookingIds.length) {
+    const outs = await prisma.moneyMove.findMany({
+      where: { courseId, what: 'round', direction: 'out', account: 'course', actor: { not: 'system' }, bookingId: { in: bookingIds } },
+      select: { bookingId: true, amountCents: true, platformFeeCents: true, stripeId: true },
+    });
+    for (const m of outs) if (m.bookingId && !m.stripeId?.startsWith('dp_')) refundBack.set(m.bookingId, (refundBack.get(m.bookingId) ?? 0) + Math.max(0, m.amountCents - m.platformFeeCents));
+  }
+  return { tz, courseName: course?.name ?? '', teeTimes, refundBack };
 }
 
 /** Compute every section for one range. `now` is injectable for tests. */
@@ -138,11 +156,23 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
   // Money: a round refunded in full is settled, neither expected nor owed.
   const pastMoney = pastLive.filter(b => !refunded(b));
   const collectedSet = new Set(collectedB);
+  // What a collected round kept. A refund covers the course's whole part of the charge — the round
+  // and any shop items on it (with their tax) — so it is split between them pro rata: only the
+  // round's part comes off round revenue, the shop part off "shop items on rounds".
+  const refundSplit = (b: B) => {
+    const back = L.refundBack.get(b.id) ?? 0;
+    const shop = b.shopTotalCents + (b.shopTaxCents ?? 0);
+    const whole = share(b) + shop;
+    if (!back || whole <= 0) return { round: 0, shop: 0 };
+    const shopPart = Math.min(shop, Math.round(back * shop / whole));
+    return { round: Math.min(share(b), back - shopPart), shop: shop > 0 ? Math.round(shopPart * b.shopTotalCents / shop) : 0 };
+  };
+  const kept = (b: B) => Math.max(0, share(b) - refundSplit(b).round);
 
   // ── 1. Revenue ────────────────────────────────────────────────────────────
   const expected = pastMoney.reduce((s, b) => s + share(b), 0);
-  const collected = collectedB.reduce((s, b) => s + share(b), 0);
-  const card = collectedB.filter(b => b.paymentStatus === 'paid').reduce((s, b) => s + share(b), 0);
+  const collected = collectedB.reduce((s, b) => s + kept(b), 0);
+  const card = collectedB.filter(b => b.paymentStatus === 'paid').reduce((s, b) => s + kept(b), 0);
   const counter = collectedB.filter(b => b.paymentStatus === 'paid_offline').reduce((s, b) => s + share(b), 0);
   const onAccount = collectedB.filter(b => b.paymentStatus === 'on_account').reduce((s, b) => s + share(b), 0);
   const outstandingB = pastMoney.filter(b => !collectedSet.has(b) && !b.noShowAt);
@@ -171,14 +201,14 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
     const k = bucketOf(d); if (!series.has(k)) series.set(k, { expected: 0, collected: 0, rounds: 0, sale: 0, booked: 0 });
   }
   for (const b of pastMoney) { const r = series.get(bucketOf(b.date)); if (r) r.expected += share(b); }
-  for (const b of collectedB) { const r = series.get(bucketOf(b.date)); if (r) { r.collected += share(b); r.rounds += b.checkedInPlayers ?? b.players; } }
+  for (const b of collectedB) { const r = series.get(bucketOf(b.date)); if (r) { r.collected += kept(b); r.rounds += b.checkedInPlayers ?? b.players; } }
   // DENSE-2: the same collected course share, by the tee time's weekday and hour (Money's sales charts).
   const collectedByDow = Array.from({ length: 7 }, () => 0);
   const collectedByHour = new Map<number, number>();
   for (const b of collectedB) {
-    collectedByDow[dowOf(b.date)] += share(b);
+    collectedByDow[dowOf(b.date)] += kept(b);
     const h = Number(b.time.slice(0, 2));
-    collectedByHour.set(h, (collectedByHour.get(h) ?? 0) + share(b));
+    collectedByHour.set(h, (collectedByHour.get(h) ?? 0) + kept(b));
   }
 
   // ── 2. Utilization ───────────────────────────────────────────────────────
@@ -192,7 +222,7 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
   // spot). Past tee times only — upcoming ones haven't had the chance to earn.
   const heatEarned = new Map<string, { spots: number; cents: number }>();
   const collectedByTeeTime = new Map<string, number>();
-  for (const b of collectedB) collectedByTeeTime.set(b.teeTimeId, (collectedByTeeTime.get(b.teeTimeId) ?? 0) + share(b));
+  for (const b of collectedB) collectedByTeeTime.set(b.teeTimeId, (collectedByTeeTime.get(b.teeTimeId) ?? 0) + kept(b));
   let sale = 0, bookedSpots = 0;
   for (const t of forSale) {
     const booked = Math.min(t.playersBooked, t.playersAvailable);
@@ -332,12 +362,19 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
   // ── W2-8 (4): spend beyond the green fee — carts, shop items on rounds, walk-up shop sales ──
   // Pro-shop money is its own line (Cam 2026-10-22): never part of "revenue".
   const cartRounds = collectedB.filter(b => b.cartFeeTotal > 0).length;
-  const shopOnRounds = collectedB.reduce((n, b) => n + b.shopTotalCents, 0);
+  const shopOnRounds = collectedB.reduce((n, b) => n + Math.max(0, b.shopTotalCents - refundSplit(b).shop), 0);
   const walkUps = await prisma.shopSale.findMany({
     where: { courseId, status: { in: ['paid_cash', 'paid_card', 'paid_account'] }, paidAt: { gte: new Date(teeMs(range.from, '00:00')), lt: new Date(teeMs(addDaysStr(range.to, 1), '00:00')) } },
     select: { totalCents: true, taxCents: true, refundedCents: true, roundsCents: true },
   });
   const walkUp = walkUpNet(walkUps);
+  // Events audit 1 (2026-11-01): event money (deposits, balances, players' own payments) had no
+  // line on Money or Analytics. Its own line, like register sales — never part of round revenue.
+  const eventPaid = await prisma.courseEventPayment.findMany({
+    where: { courseId, status: 'paid', paidAt: { gte: new Date(teeMs(range.from, '00:00')), lt: new Date(teeMs(addDaysStr(range.to, 1), '00:00')) } },
+    select: { amountCents: true, refundedCents: true },
+  });
+  const eventMoney = { payments: eventPaid.length, cents: eventPaid.reduce((s, p) => s + Math.max(0, p.amountCents - p.refundedCents), 0) };
 
   // ── 6. Customers ─────────────────────────────────────────────────────────
   // History is all-time up to the range end, so "returning" knows the past.
@@ -356,7 +393,7 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
     const k = customerKey(b);
     if (!k) { unidentified++; unidentifiedPlayers += b.players; continue; }
     const r = inRange.get(k) ?? { name: b.golferName, rounds: 0, players: 0, spendCents: 0 };
-    r.rounds++; r.players += b.players; if (collectedSet.has(b)) r.spendCents += share(b);
+    r.rounds++; r.players += b.players; if (collectedSet.has(b)) r.spendCents += kept(b);
     inRange.set(k, r);
   }
   let newC = 0, returningC = 0;
@@ -439,12 +476,13 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
         cartRounds, rounds: collectedB.length, cartPct: pct(cartRounds, collectedB.length),
         shopOnRoundsCents: shopOnRounds, shopPerRoundCents: roundsPlayed ? Math.round(shopOnRounds / roundsPlayed) : null,
         walkUpSales: walkUp.sales, walkUpCents: walkUp.cents,
+        eventPayments: eventMoney.payments, eventCents: eventMoney.cents,
       },
       // W2-8 (2): rate paid vs posted, by rate.
       rates: { rows: rateList, paidCents: ratePaid, postedCents: ratePosted, belowPostedCents: ratePosted - ratePaid, ofPostedPct: pct(ratePaid, ratePosted) },
       byDow: collectedByDow.map((cents, i) => ({ dow: DOW[i], collectedCents: cents })),
       byHour: [...collectedByHour.entries()].sort((x, y) => x[0] - y[0]).map(([hour, cents]) => ({ hour, collectedCents: cents })),
-      greenCents: greenCollected, cartCents: cartCollected, lateFeesKeptCents: lateFeesKept, holdsHeldCents: holdsHeld, greenReserveFeesCents: grFees,
+      greenCents: greenCollected, cartCents: cartCollected, roundRefundsCents: collectedB.reduce((s, b) => s + (share(b) - kept(b)), 0), lateFeesKeptCents: lateFeesKept, holdsHeldCents: holdsHeld, greenReserveFeesCents: grFees,
       pipeline: {
         upcomingBookings: upcomingB.length,
         cardOnFile: { bookings: onCard.length, cents: onCard.reduce((s, b) => s + share(b), 0), noCardRequired: onCard.filter(b => b.paymentStatus === 'no_payment_method').length },

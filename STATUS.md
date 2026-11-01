@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-01 18:10 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `2a058f27` · working tree **6 dirty file(s)**
+Generated 2026-11-01 19:02 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `4c2077ec` · working tree **16 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 16 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 18 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `10ab79d8` | 2026-11-01 | DENSE-10 Settings part 2: the Settings cards, labels over sentences (#286) |
+| `6bbb7c6d` | 2026-11-01 | DENSE-10 Settings part 2: the Settings cards, labels over sentences |
 | `bda21776` | 2026-11-01 | DENSE-10 Settings part 1: labels over sentences (#285) |
 | `e4bc0f02` | 2026-11-01 | DENSE-10 Settings part 1: labels over sentences |
 | `6d571671` | 2026-11-01 | DENSE-9 Messages: the intro is the reply-time line and the email (#284) |
@@ -31,14 +33,24 @@ Generated 2026-11-01 18:10 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (6 file(s))
+### Uncommitted working tree (16 file(s))
 
-- `M DENSE_UI_SPEC.md`
+- `M STATUS.artifact.html`
+- `M STATUS.json`
+- `M STATUS.md`
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
 - `M scripts/words-guard.baseline.json`
-- `M src/components/dashboard/CardReaderCard.tsx`
-- `M src/components/dashboard/SalesTaxCard.tsx`
-- `M src/components/dashboard/ShopCatalog.tsx`
-- `M src/components/dashboard/StaffPermissions.tsx`
+- `M src/app/api/operator/events/[id]/route.ts`
+- `M src/app/api/operator/money/sales/route.ts`
+- `M src/app/api/operator/shop-sales/route.ts`
+- `M src/app/dashboard/analytics/page.tsx`
+- `M src/app/dashboard/money/page.tsx`
+- `M src/app/dashboard/shop/page.tsx`
+- `M src/components/dashboard/events/EventDetail.tsx`
+- `M src/components/dashboard/money/SalesPanel.tsx`
+- `M src/lib/analytics.ts`
+- `?? scripts/audit-numbers-db-test.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -164,6 +176,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `10ab79d8` 2026-11-01 — DENSE-10 Settings part 2: the Settings cards, labels over sentences (#286)
+- `6bbb7c6d` 2026-11-01 — DENSE-10 Settings part 2: the Settings cards, labels over sentences
 - `bda21776` 2026-11-01 — DENSE-10 Settings part 1: labels over sentences (#285)
 - `e4bc0f02` 2026-11-01 — DENSE-10 Settings part 1: labels over sentences
 - `6d571671` 2026-11-01 — DENSE-9 Messages: the intro is the reply-time line and the email (#284)
@@ -174,8 +188,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `06c09849` 2026-11-01 — DENSE-7 Pro shop: labels over sentences (text only)
 - `4274c1a6` 2026-11-01 — DENSE-6 Schedule: labels over sentences (#281)
 - `3ee7b212` 2026-11-01 — DENSE-6 Schedule: labels over sentences
-- `a59c32eb` 2026-10-31 — Audit cleanups: ledger guard + Stripe's fee, Return items retries returns only, admin actions confirm (#280)
-- `20f25179` 2026-11-01 — Audit cleanups: ledger guard sees statement and renewal charges, ledger takes Stripe's fee, Return items retries returns only, admin actions confirm
 
 ---
 

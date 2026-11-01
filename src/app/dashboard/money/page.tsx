@@ -127,6 +127,9 @@ function MoneyPageInner() {
   // A failed load is said out loud — never shown as "nothing on its way".
   const [overviewError, setOverviewError] = useState('');
   const [payoutError, setPayoutError] = useState('');
+  // Money audit 25: what Stripe's payouts call said about the connection — a course marked active
+  // with no account id read as connected and showed "Checking Stripe…" forever.
+  const [payoutsConnected, setPayoutsConnected] = useState<boolean | null>(null);
   const [openingStripe, setOpeningStripe] = useState(false);
   const [stripeError, setStripeError] = useState('');
   // Booleans, not the access object: it is a new object every render, and a
@@ -143,6 +146,7 @@ function MoneyPageInner() {
     // Not connected is its own state (undefined → "Connect Stripe"), never "nothing on its way".
     setNextPayout(p && p.ok ? (p.data.connected ? (p.data.next ?? null) : undefined) : undefined);
     setPayoutError(p && !p.ok ? p.error : '');
+    setPayoutsConnected(p && p.ok ? !!p.data.connected : null);
   }, [seesPayments, seesPayouts]);
 
   useEffect(() => { loadBookings(); }, [loadBookings]);
@@ -193,7 +197,7 @@ function MoneyPageInner() {
               weekday and hour, what it was for, how golfers paid, the cash drawer. */}
           {seesPayments && (
             <SalesPanel nextPayout={nextPayout} showPayout={seesPayouts && !payoutError}
-              stripeConnected={courseLoaded && course.stripeAccountActive}
+              stripeConnected={payoutsConnected ?? (courseLoaded && course.stripeAccountActive)}
               notPaid={overview ? { cents: overview.notPaidCents, groups: overview.notPaidGroups } : null}
               onSeeUnpaid={tabs.some(t => t.key === 'payments') ? () => setTab('payments', 'unpaid') : undefined} />
           )}
@@ -201,7 +205,7 @@ function MoneyPageInner() {
             <Card className="px-5 py-4 mb-6 max-w-sm">
               <div className="text-[13px] text-ink-soft">Next payout</div>
               {nextPayout ? <><div className="text-[24px] font-semibold tabular-nums text-ink">{usd(nextPayout.amountCents)}</div><div className="text-[12.5px] text-ink-muted">{fmtArrival(nextPayout.arrivalDate)}</div></>
-                : courseLoaded && !course.stripeAccountActive ? <div className="text-[13.5px] text-ink mt-1">Connect Stripe</div>
+                : payoutsConnected === false || (payoutsConnected === null && courseLoaded && !course.stripeAccountActive) ? <div className="text-[13.5px] text-ink mt-1">Connect Stripe</div>
                 : <div className="text-[13.5px] text-ink-muted mt-1">{nextPayout === null ? 'None on its way' : 'Checking Stripe…'}</div>}
             </Card>
           )}

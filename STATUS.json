@@ -1,22 +1,46 @@
 {
-  "generatedAt": "2026-11-01T18:10:59.982Z",
+  "generatedAt": "2026-11-01T19:02:19.872Z",
   "repo": {
-    "head": "2a058f27",
+    "head": "4c2077ec",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 6,
+    "dirtyCount": 16,
     "dirty": [
-      "M DENSE_UI_SPEC.md",
+      "M STATUS.artifact.html",
+      " M STATUS.json",
+      " M STATUS.md",
+      " M docs/CODEMAP.md",
+      " M docs/codemap.json",
       " M scripts/words-guard.baseline.json",
-      " M src/components/dashboard/CardReaderCard.tsx",
-      " M src/components/dashboard/SalesTaxCard.tsx",
-      " M src/components/dashboard/ShopCatalog.tsx",
-      " M src/components/dashboard/StaffPermissions.tsx"
+      " M src/app/api/operator/events/[id]/route.ts",
+      " M src/app/api/operator/money/sales/route.ts",
+      " M src/app/api/operator/shop-sales/route.ts",
+      " M src/app/dashboard/analytics/page.tsx",
+      " M src/app/dashboard/money/page.tsx",
+      " M src/app/dashboard/shop/page.tsx",
+      " M src/components/dashboard/events/EventDetail.tsx",
+      " M src/components/dashboard/money/SalesPanel.tsx",
+      " M src/lib/analytics.ts",
+      "?? scripts/audit-numbers-db-test.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "10ab79d8",
+        "date": "2026-11-01T13:18:49-05:00",
+        "subject": "DENSE-10 Settings part 2: the Settings cards, labels over sentences (#286)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "6bbb7c6d",
+        "date": "2026-11-01T18:11:01+00:00",
+        "subject": "DENSE-10 Settings part 2: the Settings cards, labels over sentences",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "bda21776",
         "date": "2026-11-01T13:10:46-05:00",
@@ -526,6 +550,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "10ab79d8",
+      "date": "2026-11-01",
+      "subject": "DENSE-10 Settings part 2: the Settings cards, labels over sentences (#286)"
+    },
+    {
+      "h": "6bbb7c6d",
+      "date": "2026-11-01",
+      "subject": "DENSE-10 Settings part 2: the Settings cards, labels over sentences"
+    },
+    {
       "h": "bda21776",
       "date": "2026-11-01",
       "subject": "DENSE-10 Settings part 1: labels over sentences (#285)"
@@ -574,16 +608,6 @@
       "h": "3ee7b212",
       "date": "2026-11-01",
       "subject": "DENSE-6 Schedule: labels over sentences"
-    },
-    {
-      "h": "a59c32eb",
-      "date": "2026-10-31",
-      "subject": "Audit cleanups: ledger guard + Stripe's fee, Return items retries returns only, admin actions confirm (#280)"
-    },
-    {
-      "h": "20f25179",
-      "date": "2026-11-01",
-      "subject": "Audit cleanups: ledger guard sees statement and renewal charges, ledger takes Stripe's fee, Return items retries returns only, admin actions confirm"
     }
   ]
 }

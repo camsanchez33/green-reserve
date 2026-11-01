@@ -5747,7 +5747,7 @@
     },
     {
       "path": "src/app/api/operator/events/[id]/route.ts",
-      "lines": 311,
+      "lines": 325,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6207,7 +6207,7 @@
     },
     {
       "path": "src/app/api/operator/money/sales/route.ts",
-      "lines": 62,
+      "lines": 64,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7083,7 +7083,7 @@
     },
     {
       "path": "src/app/api/operator/shop-sales/route.ts",
-      "lines": 281,
+      "lines": 287,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7112,6 +7112,7 @@
       "imports": [
         "@/lib/agreement-required",
         "@/lib/card-reader",
+        "@/lib/course-time",
         "@/lib/email",
         "@/lib/golfer-otp",
         "@/lib/prisma",
@@ -7119,6 +7120,7 @@
         "@/lib/register",
         "@/lib/session",
         "@/lib/shop-sales",
+        "@/lib/tee-time-utils",
         "@/lib/twilio",
         "next/server"
       ],
@@ -8339,7 +8341,7 @@
     },
     {
       "path": "src/app/dashboard/analytics/page.tsx",
-      "lines": 789,
+      "lines": 792,
       "purpose": "DENSE-1 (DENSE_UI_SPEC.md, Cam 2026-10-27:",
       "brain": [],
       "exports": [
@@ -8634,7 +8636,7 @@
     },
     {
       "path": "src/app/dashboard/money/page.tsx",
-      "lines": 269,
+      "lines": 273,
       "purpose": "SD-8 — Payments and Cancellations were two pages querying the same endpoint, and Payouts was buried in Settings.",
       "brain": [],
       "exports": [
@@ -8905,7 +8907,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 913,
+      "lines": 921,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -11668,7 +11670,7 @@
     },
     {
       "path": "src/components/dashboard/events/EventDetail.tsx",
-      "lines": 400,
+      "lines": 422,
       "purpose": "W2-9 Events:",
       "brain": [],
       "exports": [
@@ -12097,7 +12099,7 @@
     },
     {
       "path": "src/components/dashboard/money/SalesPanel.tsx",
-      "lines": 242,
+      "lines": 244,
       "purpose": "DENSE-2 (Cam 2026-10-27, after Toast's Sales Summary and Stripe's Today):",
       "brain": [],
       "exports": [
@@ -14221,7 +14223,7 @@
     },
     {
       "path": "src/lib/analytics.ts",
-      "lines": 590,
+      "lines": 628,
       "purpose": "AN-1 (Cam 2026-10-01):",
       "brain": [],
       "exports": [
@@ -17089,6 +17091,7 @@
         "src/app/api/operator/money/sales/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
         "src/app/api/operator/shop-sales/rounds/route.ts",
+        "src/app/api/operator/shop-sales/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/operator/weather-cancel/route.ts",
         "src/app/dashboard/page.tsx",
@@ -24704,6 +24707,7 @@
         "src/app/api/cron/cancellation-cutoff/route.ts",
         "src/app/api/cron/hourly/route.ts",
         "src/app/api/manage/[bookingId]/route.ts",
+        "src/app/api/operator/shop-sales/route.ts",
         "src/app/courses/[slug]/CourseBookingClient.tsx",
         "src/lib/analytics.ts",
         "src/lib/booking-events.ts",
@@ -27516,6 +27520,7 @@
       "readers": [
         "src/app/api/operator/events/[id]/payments/route.ts",
         "src/app/api/operator/events/[id]/route.ts",
+        "src/lib/analytics.ts",
         "src/lib/event-payments.ts",
         "src/lib/event-signup.ts",
         "src/lib/ledger-view.ts"
@@ -29560,6 +29565,7 @@
       ],
       "readers": [
         "src/app/api/member/[courseSlug]/payments/route.ts",
+        "src/lib/analytics.ts",
         "src/lib/ledger-view.ts",
         "src/lib/money-ledger.ts",
         "src/lib/register-close.ts"

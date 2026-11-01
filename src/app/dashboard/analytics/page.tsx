@@ -397,7 +397,8 @@ function MoreNumbers({ d, open }: { d: Data; open: (t: Tab) => void }) {
 }
 
 function RevenueTab({ d }: { d: Data }) {
-  const rangeBalls = Math.max(0, d.revenue.collectedCents - d.revenue.greenCents - d.revenue.cartCents);
+  const refunds = d.revenue.roundRefundsCents ?? 0;
+  const rangeBalls = Math.max(0, d.revenue.collectedCents + refunds - d.revenue.greenCents - d.revenue.cartCents);
   const r = d.revenue.rates;
   return (
     <div className="space-y-10">
@@ -407,6 +408,7 @@ function RevenueTab({ d }: { d: Data }) {
             <Line label="Green fees" value={usd(d.revenue.greenCents)} />
             <Line label="Carts" value={usd(d.revenue.cartCents)} />
             {rangeBalls > 0 && <Line label="Range balls" value={usd(rangeBalls)} />}
+            {refunds > 0 && <Line label="Refunded" value={`−${usd(refunds)}`} />}
             <Line label="Revenue" value={usd(d.revenue.collectedCents)} strong />
             {d.revenue.lateFeesKeptCents > 0 && <Line label="Late-cancel fees kept" value={usd(d.revenue.lateFeesKeptCents)} />}
           </div>
@@ -429,6 +431,7 @@ function RevenueTab({ d }: { d: Data }) {
           <Line label="Rounds with a cart" sub={`${d.revenue.beyond.cartRounds} of ${d.revenue.beyond.rounds}`} value={pctS(d.revenue.beyond.cartPct)} />
           <Line label="Shop items on rounds" sub={d.revenue.beyond.shopPerRoundCents == null ? undefined : `${usd2(d.revenue.beyond.shopPerRoundCents)} per round`} value={usd(d.revenue.beyond.shopOnRoundsCents)} />
           <Line label="Walk-up shop sales" sub={plural(d.revenue.beyond.walkUpSales, 'sale')} value={usd(d.revenue.beyond.walkUpCents)} />
+          {(d.revenue.beyond.eventPayments ?? 0) > 0 && <Line label="Event payments" sub={plural(d.revenue.beyond.eventPayments ?? 0, 'payment')} value={usd(d.revenue.beyond.eventCents ?? 0)} />}
         </div>
       </Section>
 
