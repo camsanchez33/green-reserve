@@ -46,6 +46,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     initiation: initiationCents / 100,
     serviceFee: feeCents / 100,
     total: totalCents / 100,
+    // Audit 2026-10-31: the exact total the page shows; the POST charges only this.
+    totalCents,
     paymentStatus: m.paymentStatus,
     // Paid, and not yet inside the 30-day renewal window the POST allows —
     // else the renewal link the reminder cron sends could never be paid.
@@ -65,7 +67,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!(await rateLimit('membership:pay:' + id, 10, 300))) {
     return NextResponse.json({ error: 'Too many attempts — wait a few minutes and try again.' }, { status: 429 });
   }
-  const { token, paymentMethodId, autoRenewConsent } = await req.json();
+  const { token, paymentMethodId, autoRenewConsent, expectedTotalCents, autoRenewTerms } = await req.json();
   const m = await authorize(id, token);
   if (!m) return NextResponse.json({ error: 'Invalid or expired payment link.' }, { status: 404 });
 
@@ -105,6 +107,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
   // What is due is worked out from the row as it is now, under the claim.
   const due = amountsDue({ ...m, lastPaidAt: now.lastPaidAt });
+  // Audit 2026-10-31: charge only the total the golfer was shown, and only under the renewal terms
+  // they ticked — a price or term edited while the page was open is a refresh, never a surprise charge.
+  if (Number(expectedTotalCents) !== due.totalCents || (m.tier?.autoRenew && autoRenewTerms !== autoTerms)) {
+    await release();
+    return NextResponse.json({ error: 'The amount or terms changed since this page loaded — refresh to see them.' }, { status: 409 });
+  }
 
   let paymentIntentId: string;
   let chargedCents: number;

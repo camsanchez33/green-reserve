@@ -5095,7 +5095,7 @@
     },
     {
       "path": "src/app/api/membership/[id]/route.ts",
-      "lines": 184,
+      "lines": 192,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7429,7 +7429,7 @@
     },
     {
       "path": "src/app/api/operator/tiers/route.ts",
-      "lines": 179,
+      "lines": 187,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9298,7 +9298,7 @@
     },
     {
       "path": "src/app/membership/[id]/page.tsx",
-      "lines": 238,
+      "lines": 240,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11020,7 +11020,7 @@
     },
     {
       "path": "src/components/dashboard/MemberAccount.tsx",
-      "lines": 125,
+      "lines": 128,
       "purpose": "MEM-ACCT (Cam 2026-10-30:",
       "brain": [],
       "exports": [
@@ -19988,7 +19988,7 @@
     },
     {
       "path": "src/lib/member-account.ts",
-      "lines": 182,
+      "lines": 211,
       "purpose": "MEM-ACCT (Cam 2026-10-30:",
       "brain": [],
       "exports": [
@@ -20010,6 +20010,10 @@
         },
         {
           "name": "creditAccount",
+          "kind": "fn"
+        },
+        {
+          "name": "creditFeeBack",
           "kind": "fn"
         },
         {

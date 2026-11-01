@@ -137,13 +137,42 @@ export async function moveCharge(courseId: string, chargeId: unknown, toMembersh
 }
 class MoveRefused extends Error { constructor(public status: number, message: string) { super(message); } }
 
-/** Staff: credit an amount back (a mistake, a refund of an account charge). Needs a reason. */
-export async function creditAccount(courseId: string, membershipId: string, amountCents: unknown, reason: unknown, createdBy: string) {
+/**
+ * Pure: GreenReserve's fee a credit against a round line gives back. Crediting the whole round undoes it
+ * (like a waived booking: the fee comes back); a part credit is a discount on a round that was played,
+ * which keeps the fee — the same as a staff refund of a played round (lib/staff-refund).
+ */
+export function creditFeeBack(line: { amountCents: number; feeCents: number }, creditCents: number) {
+  return line.feeCents > 0 && creditCents >= line.amountCents ? line.feeCents : 0;
+}
+
+/**
+ * Staff: credit an amount back (a mistake, a refund of an account charge). Needs a reason.
+ * Audit 2026-10-31: crediting the whole of an unbilled round ("Credit back" on its line) also takes
+ * GreenReserve's fee off that line, so the course never pays our fee on a round it credited back
+ * (creditFeeBack). A part credit, or one not tied to a round, leaves the fee alone.
+ */
+export async function creditAccount(courseId: string, membershipId: string, amountCents: unknown, reason: unknown, createdBy: string, chargeId?: unknown) {
   const cents = Number(amountCents);
   if (!Number.isInteger(cents) || cents <= 0 || cents > MAX_CREDIT_CENTS) return fail(400, 'Enter a credit from $0.01 to $10,000.');
   const why = String(reason ?? '').trim();
   if (!why) return fail(400, 'Say why — the member sees it on their statement.');
-  return prisma.$transaction(tx => addCharge(tx, { courseId, membershipId, kind: 'credit', amountCents: -cents, note: why, createdBy }));
+  if (chargeId != null && (typeof chargeId !== 'string' || !chargeId)) return fail(400, 'Pick the charge to credit.');
+  return prisma.$transaction(async tx => {
+    if (chargeId) {
+      // Locked first (addCharge takes the same lock, and a statement close takes it before billing lines).
+      await tx.$queryRaw`SELECT id FROM "CourseMembership" WHERE id = ${membershipId} FOR UPDATE`;
+      const line = await tx.memberCharge.findFirst({ where: { id: chargeId as string, courseId, membershipId, kind: 'round', statementId: null }, select: { id: true, amountCents: true, feeCents: true } });
+      if (!line) return fail(404, 'That round isn’t unbilled on this member’s account — refresh and look again.');
+      if (cents > line.amountCents) return fail(400, `At most $${(line.amountCents / 100).toFixed(2)} can be credited against this round.`);
+      // The credit goes on first; only then does the round's fee come off (never one without the other).
+      const added = await addCharge(tx, { courseId, membershipId, kind: 'credit', amountCents: -cents, note: why, createdBy });
+      const back = creditFeeBack(line, cents);
+      if (added.ok && back > 0) await tx.memberCharge.update({ where: { id: line.id }, data: { feeCents: line.feeCents - back } });
+      return added;
+    }
+    return addCharge(tx, { courseId, membershipId, kind: 'credit', amountCents: -cents, note: why, createdBy });
+  });
 }
 
 /** A member's account for the Members page: balance, limit and the lines not yet billed, newest first. */

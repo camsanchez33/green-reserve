@@ -171,7 +171,7 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
   if (noCard) {
     // No-fee-policy course — no card collected, golfer pays at check-in
     intro = `<h1 style="margin:16px 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">You're on the tee sheet.</h1>
-      <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">Your spot at ${data.courseName} is confirmed. <strong>No card required</strong> — pay at the course when you check in, or use the link below to pay online.</p>`;
+      <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">Your spot at ${data.courseName} is confirmed. <strong>No card required</strong> — pay at the course when you check in, or online from the link below on the day of your round.</p>`;
     totalRow = `<tr><td style="padding:14px 12px 0 0;color:#141814;font-size:15px;font-weight:600;">Total due at the course</td><td align="right" style="padding:14px 0 0;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:22px;font-weight:600;">$${(data.totalAmount / 100).toFixed(2)}</td></tr>`;
     policyBox = `<div style="background:#EEF3EC;border:1px solid #CFDCCD;border-radius:6px;padding:16px;margin-bottom:24px;">
       <p style="margin:0;color:#173B2A;font-size:13px;font-weight:600;">Free cancellation any time — no fees, no card on file.</p>
@@ -549,9 +549,9 @@ export async function sendReminderEmail(data: {
       <p style="margin:0;color:#3F453E;font-size:14px;">${data.players} player${data.players > 1 ? 's' : ''} &middot; ${data.productLabel ? escHtml(data.productLabel) + ' &middot; ' : ''}${data.holes} holes</p>
     </div>
     <div style="background:#F7EFE2;border:1px solid #E8D3B0;border-radius:6px;padding:14px;margin-bottom:20px;">
-      <p style="margin:0;color:#7A4A10;font-size:13px;">&#128336; ${checkInUrl ? 'Check in and pay below before you head out, or do it at the pro shop when you arrive.' : 'Arrive 15 minutes early and check in at the pro shop.'}</p>
+      <p style="margin:0;color:#7A4A10;font-size:13px;">&#128336; ${checkInUrl ? 'The link below opens tomorrow, the day of your round — check in and pay there before you head out, or at the pro shop when you arrive.' : 'Arrive 15 minutes early and check in at the pro shop.'}</p>
     </div>
-    ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:10px;">Check In &amp; Pay &rarr;</a>` : ''}
+    ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:10px;">Check In &amp; Pay Tomorrow &rarr;</a>` : ''}
     <a href="${manageUrl}" style="display:block;${checkInUrl ? 'color:#173B2A;' : 'background:#173B2A;color:#fff;'}text-decoration:none;text-align:center;padding:${checkInUrl ? '8px' : '14px'};font-weight:600;font-size:${checkInUrl ? '13px' : '15px'};">View or Cancel Booking &rarr;</a>
   `);
   await getResend().emails.send({ meta: { kind: 'reminder_email', bookingId: data.bookingId, courseSlug: data.courseSlug }, from: FROM_SUPPORT, to: data.golferEmail, subject: `Tomorrow: ${data.time} at ${data.courseName}`, html });
