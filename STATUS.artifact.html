@@ -117,14 +117,17 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-11-02 05:52 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 715b5c3e</span>
-    <span>15 uncommitted</span>
+    <span>2026-11-02 06:14 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ bbf0f755</span>
+    <span>17 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">42 runs have shipped that the queue doesn't know about</div>
+<div class="lede">45 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-31. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">0394ca3b</span><span>Home: shift note, course conditions, week ahead, month vs goal (#295)</span></li>
+<li><span class="h">7de2b772</span><span>operator-home test: accept the money permission read once and passed to operatorHome</span></li>
+<li><span class="h">61cb526c</span><span>Home: shift note, course conditions, week ahead, month vs goal</span></li>
 <li><span class="h">0ca08896</span><span>Tee sheet: till-style check-in on the time card (#294)</span></li>
 <li><span class="h">383b5af1</span><span>Regenerate code map and status board</span></li>
 <li><span class="h">1b7f3b82</span><span>Tests follow the till: Here-now buttons, pay-link day rule, owed amount as the ticket Total</span></li>
@@ -179,7 +182,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M CLAUDE.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M prisma/schema.prisma</code></li><li><code>M src/app/api/operator/conditions/route.ts</code></li><li><code>M src/app/api/operator/home/route.ts</code></li><li><code>M src/app/dashboard/home/page.tsx</code></li><li><code>M src/lib/data-reset.ts</code></li><li><code>?? prisma/migrations/20261102100000_home_board/</code></li><li><code>?? scripts/home-board-db-test.ts</code></li><li><code>?? src/app/api/operator/month-goal/</code></li><li><code>?? src/app/api/operator/shift-notes/</code></li><li><code>?? src/components/dashboard/home/</code></li><li><code>?? src/lib/course-conditions.ts</code></li><li><code>?? src/lib/home-board.ts</code></li></ul>
+<ul class="plain"><li><code>M CLAUDE.md</code></li><li><code>M STATUS.artifact.html</code></li><li><code>M STATUS.json</code></li><li><code>M STATUS.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M prisma/schema.prisma</code></li><li><code>M scripts/home-board-db-test.ts</code></li><li><code>M src/app/api/operator/conditions/route.ts</code></li><li><code>M src/app/dashboard/shop/page.tsx</code></li><li><code>M src/components/dashboard/ShopCatalog.tsx</code></li><li><code>M src/components/dashboard/home/HomeBoard.tsx</code></li><li><code>M src/lib/shop-catalog.ts</code></li><li><code>M src/lib/shop-tree.ts</code></li><li><code>?? prisma/migrations/20261102110000_shop_item_photo/</code></li><li><code>?? scripts/register-photo-test.ts</code></li><li><code>?? src/app/api/operator/shop-items/photo/</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -261,6 +264,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 12d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">0394ca3b</td><td class="num">2026-11-02</td><td>Home: shift note, course conditions, week ahead, month vs goal (#295)</td></tr>
+<tr><td class="num">7de2b772</td><td class="num">2026-11-02</td><td>operator-home test: accept the money permission read once and passed to operatorHome</td></tr>
+<tr><td class="num">61cb526c</td><td class="num">2026-11-02</td><td>Home: shift note, course conditions, week ahead, month vs goal</td></tr>
 <tr><td class="num">0ca08896</td><td class="num">2026-11-02</td><td>Tee sheet: till-style check-in on the time card (#294)</td></tr>
 <tr><td class="num">383b5af1</td><td class="num">2026-11-02</td><td>Regenerate code map and status board</td></tr>
 <tr><td class="num">1b7f3b82</td><td class="num">2026-11-02</td><td>Tests follow the till: Here-now buttons, pay-link day rule, owed amount as the ticket Total</td></tr>
@@ -270,9 +276,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">14d6254a</td><td class="num">2026-11-02</td><td>Dark mode is screen-only (prints stay light); theme cookie Secure only over https</td></tr>
 <tr><td class="num">7ca659d0</td><td class="num">2026-11-02</td><td>Rail groups never drop a tab; tests follow the grouped rail and the mem-fill token</td></tr>
 <tr><td class="num">46a688fc</td><td class="num">2026-11-02</td><td>Dashboard foundation: Geist, grey page + white panels, grouped rail, Light/Dark</td></tr>
-<tr><td class="num">3ae2293d</td><td class="num">2026-11-02</td><td>Pricing switches + busy-season data + speed + counter fixes + SMS opt-in (Twilio) (#289)</td></tr>
-<tr><td class="num">3659755c</td><td class="num">2026-11-02</td><td>SMS-1 follow-up: Home / Money declined cards ask before texting, like the tee sheet</td></tr>
-<tr><td class="num">bffab6e9</td><td class="num">2026-11-02</td><td>Event money needs &quot;Mark paid at the counter&quot;; a member with history can't be deleted</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

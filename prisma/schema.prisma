@@ -1467,6 +1467,8 @@ model ShopItem {
   parent      ShopItem?          @relation("ShopItemOptions", fields: [parentId], references: [id], onDelete: Cascade)
   options     ShopItem[]         @relation("ShopItemOptions")
   optionLabel String             @default("")
+  /// DASH-D register (Cam 2026-11-01, "photo tiles"): the register tile's photo; "" = the tile shows the name.
+  photoUrl    String             @default("")
   /// W2-7 part B: how the item is taxed — a key of TAX_CATEGORIES in lib/sales-tax.ts (Stripe product tax code).
   taxCategory String             @default("general")
   /// SHOP-4 (Cam 2026-10-30): what one costs the course, for margin. Optional; only the owner sees it.

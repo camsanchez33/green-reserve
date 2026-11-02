@@ -3,6 +3,8 @@
 export type FlatItem = {
   id: string; name: string; category: string; priceCents: number; active: boolean; stockCount: number | null;
   sku: string; parentId: string | null; optionLabel: string; sortOrder?: number; taxCategory?: string;
+  /** DASH-D: the register tile's photo ('' = the name). */
+  photoUrl?: string;
 };
 export type TreeItem = FlatItem & { options: FlatItem[] };
 

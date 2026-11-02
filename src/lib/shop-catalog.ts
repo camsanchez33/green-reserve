@@ -9,7 +9,7 @@ import { validItemInput, MAX_ITEM_PRICE_CENTS } from './shop';
 import { MAX_IMPORT_ITEMS, MAX_OPTIONS, type ImportItem } from './shop-import';
 import { isTaxCategory } from './tax-categories';
 
-export const ITEM_SELECT = { id: true, name: true, category: true, priceCents: true, active: true, sortOrder: true, stockCount: true, sku: true, parentId: true, optionLabel: true, taxCategory: true } as const;
+export const ITEM_SELECT = { id: true, name: true, category: true, priceCents: true, active: true, sortOrder: true, stockCount: true, sku: true, parentId: true, optionLabel: true, taxCategory: true, photoUrl: true } as const;
 
 export const optionName = (item: string, option: string) => `${item} — ${option}`;
 

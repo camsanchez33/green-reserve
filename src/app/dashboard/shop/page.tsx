@@ -567,7 +567,7 @@ export default function ShopPage() {
                   </div>
                 )}
                 {tab === 'items' && tree.length > 0 && groups.length === 0 && <p className="text-sm text-ink-soft">Nothing matches.{q.trim() ? ' Unknown code? Add it as a SKU in Settings → Pro shop.' : ''}</p>}
-                {tab === 'items' && groups.map(([group, list]) => (
+                {tab === 'items' && groups.map(([group, list]) => { const withPhotos = list.some(i => i.photoUrl); return (
                   <section key={group} className="mb-4 last:mb-0">
                     <h2 className="text-[13px] font-semibold text-ink mb-2">{group}</h2>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -577,9 +577,14 @@ export default function ShopPage() {
                         return (
                           <div key={it.id} className={picking === it.id ? 'col-span-2 sm:col-span-3' : ''}>
                             <button onClick={() => (opts.length ? setPicking(p => (p === it.id ? null : it.id)) : add(it.id, 1))} aria-expanded={opts.length ? picking === it.id : undefined}
-                              className={'w-full text-left rounded-md border px-3 py-2.5 transition-colors ' + (n ? 'border-pine/50 bg-pine/[0.05]' : 'border-line bg-white hover:border-line-strong')}>
-                              <span className="block text-sm font-medium text-ink leading-snug">{it.name}</span>
-                              <span className="block text-[12.5px] text-ink-muted tabular-nums">
+                              className={'w-full text-left rounded-[7px] border overflow-hidden transition-colors ' + (n ? 'border-pine/50 bg-pine/[0.05]' : 'border-line bg-white hover:border-line-strong')}>
+                              {/* DASH-D (Cam 2026-11-01, "photo tiles"): the item's photo when it has one; otherwise the name is the tile. */}
+                              {withPhotos && (it.photoUrl
+                                // eslint-disable-next-line @next/next/no-img-element
+                                ? <img src={it.photoUrl} alt="" loading="lazy" className="block w-full h-20 object-cover bg-paper" />
+                                : <span aria-hidden="true" className="flex w-full h-20 items-center justify-center bg-paper text-[18px] font-semibold text-ink-faint">{it.name.split(/\s+/).filter(w => /^[A-Za-z0-9]/.test(w)).slice(0, 2).map(w => w[0]).join('').toUpperCase()}</span>)}
+                              <span className="block px-3 pt-2.5 text-sm font-medium text-ink leading-snug">{it.name}</span>
+                              <span className="block px-3 pb-2.5 text-[12.5px] text-ink-muted tabular-nums">
                                 {usd(it.priceCents)}
                                 {opts.length ? <> · {opts.length} options</> : it.stockCount !== null && <span className={it.stockCount <= 0 ? 'text-bad' : ''}> · {stockWords(it.stockCount)}</span>}
                                 {n ? <span className="text-pine font-semibold"> · {n} in sale</span> : null}
@@ -603,7 +608,7 @@ export default function ShopPage() {
                       })}
                     </div>
                   </section>
-                ))}
+                ); })}
               </Card>
 
               <Card className="p-5 lg:sticky lg:top-6">

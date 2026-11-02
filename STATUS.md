@@ -4,14 +4,17 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-02 05:52 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `715b5c3e` · working tree **15 dirty file(s)**
+Generated 2026-11-02 06:14 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `bbf0f755` · working tree **17 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 42 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 45 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `0394ca3b` | 2026-11-02 | Home: shift note, course conditions, week ahead, month vs goal (#295) |
+| `7de2b772` | 2026-11-02 | operator-home test: accept the money permission read once and passed to operatorHome |
+| `61cb526c` | 2026-11-02 | Home: shift note, course conditions, week ahead, month vs goal |
 | `0ca08896` | 2026-11-02 | Tee sheet: till-style check-in on the time card (#294) |
 | `383b5af1` | 2026-11-02 | Regenerate code map and status board |
 | `1b7f3b82` | 2026-11-02 | Tests follow the till: Here-now buttons, pay-link day rule, owed amount as the ticket Total |
@@ -57,23 +60,25 @@ Generated 2026-11-02 05:52 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (15 file(s))
+### Uncommitted working tree (17 file(s))
 
 - `M CLAUDE.md`
+- `M STATUS.artifact.html`
+- `M STATUS.json`
+- `M STATUS.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
 - `M prisma/schema.prisma`
+- `M scripts/home-board-db-test.ts`
 - `M src/app/api/operator/conditions/route.ts`
-- `M src/app/api/operator/home/route.ts`
-- `M src/app/dashboard/home/page.tsx`
-- `M src/lib/data-reset.ts`
-- `?? prisma/migrations/20261102100000_home_board/`
-- `?? scripts/home-board-db-test.ts`
-- `?? src/app/api/operator/month-goal/`
-- `?? src/app/api/operator/shift-notes/`
-- `?? src/components/dashboard/home/`
-- `?? src/lib/course-conditions.ts`
-- `?? src/lib/home-board.ts`
+- `M src/app/dashboard/shop/page.tsx`
+- `M src/components/dashboard/ShopCatalog.tsx`
+- `M src/components/dashboard/home/HomeBoard.tsx`
+- `M src/lib/shop-catalog.ts`
+- `M src/lib/shop-tree.ts`
+- `?? prisma/migrations/20261102110000_shop_item_photo/`
+- `?? scripts/register-photo-test.ts`
+- `?? src/app/api/operator/shop-items/photo/`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -199,6 +204,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `0394ca3b` 2026-11-02 — Home: shift note, course conditions, week ahead, month vs goal (#295)
+- `7de2b772` 2026-11-02 — operator-home test: accept the money permission read once and passed to operatorHome
+- `61cb526c` 2026-11-02 — Home: shift note, course conditions, week ahead, month vs goal
 - `0ca08896` 2026-11-02 — Tee sheet: till-style check-in on the time card (#294)
 - `383b5af1` 2026-11-02 — Regenerate code map and status board
 - `1b7f3b82` 2026-11-02 — Tests follow the till: Here-now buttons, pay-link day rule, owed amount as the ticket Total
@@ -208,9 +216,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `14d6254a` 2026-11-02 — Dark mode is screen-only (prints stay light); theme cookie Secure only over https
 - `7ca659d0` 2026-11-02 — Rail groups never drop a tab; tests follow the grouped rail and the mem-fill token
 - `46a688fc` 2026-11-02 — Dashboard foundation: Geist, grey page + white panels, grouped rail, Light/Dark
-- `3ae2293d` 2026-11-02 — Pricing switches + busy-season data + speed + counter fixes + SMS opt-in (Twilio) (#289)
-- `3659755c` 2026-11-02 — SMS-1 follow-up: Home / Money declined cards ask before texting, like the tee sheet
-- `bffab6e9` 2026-11-02 — Event money needs "Mark paid at the counter"; a member with history can't be deleted
 
 ---
 
