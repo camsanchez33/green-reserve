@@ -1,5 +1,13 @@
 import twilio from 'twilio';
 import { logSent, type SendMeta } from './sent-messages';
+import { hasSmsConsent, recordSmsConsent } from './sms-consent';
+import { SMS_NO_CONSENT } from './sms-consent-copy';
+
+/** SMS-1: thrown when a number hasn't agreed to texts. Staff routes turn it into "read them the script". */
+export class SmsNoConsentError extends Error {
+  readonly needsConsent = true;
+  constructor() { super(SMS_NO_CONSENT); this.name = 'SmsNoConsentError'; }
+}
 
 let _client: ReturnType<typeof twilio> | null = null;
 function getClient() {
@@ -54,12 +62,22 @@ export async function sendSms(to: string, body: string, meta: SendMeta = { kind:
     await logSent({ ...meta, channel: 'sms', to, status: 'skipped', error: 'fictional number' });
     throw new Error('That is a sample phone number (555-01xx) — no text was sent.');
   }
+  // SMS-1 (Twilio A2P 10DLC): only a number that said yes — on a web form or out loud to staff.
+  if (!(await hasSmsConsent(to))) {
+    await logSent({ ...meta, channel: 'sms', to, status: 'skipped', error: 'no text consent' });
+    throw new SmsNoConsentError();
+  }
   // BRAIN-1b: every text lands in the send log (kind and ids, never the body).
   let msg;
   try {
     msg = await getClient().messages.create({ to, from, body });
   } catch (err) {
     await logSent({ ...meta, channel: 'sms', to, status: 'failed', error: err instanceof Error ? err.message : String(err) });
+    // 21610: the number replied STOP (Twilio blocks it) — record the opt-out so we stop asking.
+    if ((err as { code?: number })?.code === 21610) {
+      await recordSmsConsent(to, 'opt_out', { method: 'carrier' });
+      throw new Error('This number replied STOP to our texts — email them instead.');
+    }
     throw err;
   }
   await logSent({ ...meta, channel: 'sms', to, status: 'sent', providerId: msg.sid });

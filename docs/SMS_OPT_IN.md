@@ -81,3 +81,25 @@ STOP and HELP.
   day-of notice, a receipt) — Terms §6 and Privacy §3 change from "varies" to this.
 
 Twilio setup itself (account, number, campaign registration) is still on Cam's list.
+
+## Built (SMS-1, 2026-11-02)
+- **Record:** `SmsConsent` (append-only; the latest row per phone decides) — `src/lib/sms-consent.ts`
+  (`recordSmsConsent`, `hasSmsConsent`, `consentedPhones`, `optInAndConfirm`). Wording and its version:
+  `src/lib/sms-consent-copy.ts` (`SMS_CONSENT_VERSION`; change a sentence → bump it).
+- **Gate:** `sendSms()` refuses a number whose latest row isn't `opt_in` (`SmsNoConsentError`, logged as
+  skipped). Twilio's 21610 (the number replied STOP) records an opt-out. Sign-in codes (`sendSmsOtp`) are
+  not gated — the person asked for the code.
+- **Web:** an unticked box under the phone field on the booking form and (for the person signing up only)
+  the event sign-up; the routes record `web_booking` / `web_event` only on an explicit `true`.
+- **Verbal:** `SmsConsentAsk` shows the script and a "They said yes to texts" tick — walk-in / phone
+  booking form, the register's text pay link, event pay links; the tee sheet's Text pay link asks in a
+  dialog when the number never agreed. Routes record `verbal` with the staff login (`recordedBy`).
+- **Replies:** `/api/twilio/inbound` (Twilio-signed): STOP family → opt-out, START/UNSTOP/YES → opt-in +
+  confirmation, HELP/INFO → the help text.
+- **Course notices** text only numbers that agreed (preview counts too).
+- **Terms §6 / Privacy §3** (v2026-11-02): texts only with that agreement, up to 4 messages per booking.
+
+### Twilio console (Cam)
+- Messaging → the number (or Messaging Service) → "A message comes in": `https://greenreserve.app/api/twilio/inbound`, POST.
+- Campaign Message Flow: the booking page URL of a live course (the box is visible once a phone number is typed);
+  for the staff flow, a public screenshot of the walk-in form with the script showing.

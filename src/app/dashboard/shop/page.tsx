@@ -10,6 +10,7 @@
 // scan a barcode into the search box, ring up a custom amount, take money off
 // (shop.discount), enter the cash handed over for the change, send a receipt,
 // and refund a paid sale (money.refund; items only with shop.return) — cash recorded, card through Stripe.
+import SmsConsentAsk from '@/components/dashboard/SmsConsentAsk';
 import { PackPicker, PackHolders } from '@/components/dashboard/RegisterPacks';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -81,6 +82,8 @@ export default function ShopPage() {
   const [onReader, setOnReader] = useState<ReaderSale | null>(null);
   const [roundOnReader, setRoundOnReader] = useState<RoundOnReader | null>(null);
   const [customer, setCustomer] = useState({ name: '', phone: '', email: '' });
+  // SMS-1: the customer said yes to texts after staff read the script. Never on by default.
+  const [smsYes, setSmsYes] = useState(false);
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const [note, setNote] = useState('');
@@ -253,6 +256,7 @@ export default function ShopPage() {
         // The total on screen: if the tax has changed since, nothing is rung up and the new total shows.
         expectedItemsCents: (pay === 'cash' || pay === 'account') && !itemsEmpty && priced ? priced.totalCents : undefined,
         customerName: customer.name, customerPhone: customer.phone, customerEmail: customer.email,
+        ...(pay === 'sms' && smsYes ? { smsConsent: 'verbal' } : {}),
       }),
     });
     setBusy('');
@@ -264,7 +268,7 @@ export default function ShopPage() {
       if (/^The (round was|\d+ rounds were) paid/.test(r.error)) { setPicked([]); setWalkIns([]); loadRounds(); load(); }
       return;
     }
-    setCart({}); setCustoms([]); setDiscount(null); setTendered(''); setCustomer({ name: '', phone: '', email: '' }); setPicked([]); setWalkIns([]); setAccountMember(null);
+    setCart({}); setCustoms([]); setDiscount(null); setTendered(''); setCustomer({ name: '', phone: '', email: '' }); setSmsYes(false); setPicked([]); setWalkIns([]); setAccountMember(null);
     if (hasRounds) loadRounds();
     if (r.data.skipped?.length) setError(`Not rung up: ${r.data.skipped.join(' ')} The total below is what was taken.`);
     if (r.data.notes?.length) setNote(r.data.notes.join(' '));
@@ -728,8 +732,9 @@ export default function ShopPage() {
                       <div className="space-y-2">
                         <input value={customer.name} onChange={e => setCustomer(c => ({ ...c, name: e.target.value }))} placeholder="Name (optional)" aria-label="Customer name" className={INPUT + ' w-full'} />
                         {pay === 'sms'
-                          ? <input value={customer.phone} onChange={e => setCustomer(c => ({ ...c, phone: e.target.value }))} placeholder="Mobile number" type="tel" aria-label="Mobile number" className={INPUT + ' w-full'} />
+                          ? <input value={customer.phone} onChange={e => { setCustomer(c => ({ ...c, phone: e.target.value })); setSmsYes(false); }} placeholder="Mobile number" type="tel" aria-label="Mobile number" className={INPUT + ' w-full'} />
                           : <input value={customer.email} onChange={e => setCustomer(c => ({ ...c, email: e.target.value }))} placeholder="Email address" type="email" aria-label="Email address" className={INPUT + ' w-full'} />}
+                        {pay === 'sms' && customer.phone.replace(/\D/g, '').length >= 10 && <SmsConsentAsk courseName="" checked={smsYes} onChange={setSmsYes} />}
                       </div>
                     )}
                     {noTax && <p className="text-[13px] text-warn" role="status">{pay === 'cash' || pay === 'account' ? 'No sales tax right now — taken without it.' : 'No sales tax right now — cash only.'} <button type="button" onClick={() => setQuoteTry(n => n + 1)} className="underline font-medium">Try again</button></p>}

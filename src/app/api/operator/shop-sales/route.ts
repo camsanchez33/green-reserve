@@ -1,3 +1,5 @@
+import { SMS_NO_CONSENT_STAFF } from '@/lib/sms-consent-copy';
+import { optInAndConfirm } from '@/lib/sms-consent';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { prisma } from '@/lib/prisma';
@@ -8,7 +10,7 @@ import { todayIn, DEFAULT_TZ, isValidTimezone } from '@/lib/course-time';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
 import { ringUpCash } from '@/lib/register';
 import { startReaderPayment, readerSaleStatus, cancelReaderPayment, simulateTap } from '@/lib/card-reader';
-import { sendSms } from '@/lib/twilio';
+import { sendSms, SmsNoConsentError } from '@/lib/twilio';
 import { normalizePhone } from '@/lib/golfer-otp';
 import { sendShopSalePayLinkEmail, sendShopReceiptEmail, isPlaceholderEmail } from '@/lib/email';
 
@@ -87,6 +89,7 @@ async function sendLink(courseId: string, sale: SaleView, payToken: string, via:
     }
     return null;
   } catch (err) {
+    if (err instanceof SmsNoConsentError) return SMS_NO_CONSENT_STAFF;
     return `The ${via === 'sms' ? 'text' : 'email'} didn’t send (${err instanceof Error ? err.message : 'unknown error'}).`;
   }
 }
@@ -159,6 +162,8 @@ export async function POST(req: NextRequest) {
     if (!started.ok) return NextResponse.json({ sale, readerError: started.error }, { status: 207 });
     return NextResponse.json({ sale, reader: 'waiting' });
   }
+  // SMS-1: staff read the script and the customer said yes — record it (verbal) before the link goes.
+  if (via === 'sms' && body.smsConsent === 'verbal' && sale.customerPhone) await optInAndConfirm(sale.customerPhone, { method: 'verbal', courseId: g.session.courseId, recordedBy: g.session.staffId ?? `operator:${g.session.operatorId}` });
   const sendError = await sendLink(g.session.courseId, sale, payToken, via, course.name);
   // The sale exists either way; staff can resend or take cash for it from the list.
   return NextResponse.json({ sale, sent: !sendError, ...(sendError ? { sendError } : {}) }, { status: sendError ? 207 : 200 });
@@ -276,6 +281,8 @@ export async function PATCH(req: NextRequest) {
           discountCents: s.discountCents, discountNote: s.discountNote, taxCents: s.taxCents, totalCents: s.totalCents, paidWith, paidAt, cashTenderedCents: s.cashTenderedCents, refundedCents: s.refundedCents });
       }
     } catch (err) {
+      // SMS-1: a receipt can't ask for consent at this point — email it instead.
+      if (err instanceof SmsNoConsentError) return NextResponse.json({ error: 'This number hasn’t agreed to texts — email the receipt instead.' }, { status: 409 });
       return NextResponse.json({ error: `The receipt didn’t send (${err instanceof Error ? err.message : 'unknown error'}). Try again.` }, { status: 502 });
     }
     // Keep the address the customer gave, so a later receipt or refund note can reach them.

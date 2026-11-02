@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { optInAndConfirm } from '@/lib/sms-consent';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { memberPricingOn, residentPricingOn } from '@/lib/pricing-switch';
 import { onlineBookingBlock } from '@/lib/golfer-record';
 import { applyTierRates } from '@/lib/tier-rates';
@@ -30,7 +31,7 @@ import { rateLimit, clientIp } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { teeTimeId, players: playersRaw, golferName, golferEmail, golferPhone, setupIntentId, cartSelected, rangeBallsSize, termsAccepted, promoCode, packLineId } = body;
+  const { teeTimeId, players: playersRaw, golferName, golferEmail, golferPhone, setupIntentId, cartSelected, rangeBallsSize, termsAccepted, promoCode, packLineId, smsConsent } = body;
 
   if (!teeTimeId || !playersRaw || !golferName || !golferEmail)
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -375,6 +376,13 @@ export async function POST(req: NextRequest) {
   }
 
   console.log(JSON.stringify({ ev: 'booking.created', bookingId: claimed.id, teeTimeId, players, totalCents, hasCard: !!savedPaymentMethodId }));
+
+  // SMS-1 (Twilio A2P 10DLC): texts only when the golfer ticked the (unticked) box by their number.
+  // Recorded and confirmed after the response is sent (after(): Vercel keeps it running) — never slows the booking.
+  if (smsConsent === true && golferPhone) {
+    const consentPhoneRaw = String(golferPhone), consentCourse = teeTimeFull.courseId, consentBooking = claimed.id;
+    after(() => optInAndConfirm(consentPhoneRaw, { method: 'web_booking', courseId: consentCourse, bookingId: consentBooking }));
+  }
 
   // Send confirmation emails (fire-and-forget)
   try {

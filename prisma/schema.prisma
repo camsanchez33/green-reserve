@@ -1126,6 +1126,23 @@ model AdminGoal {
 /// the provider took it. Never the subject or body (some carry sign-in codes).
 /// Written by the one email choke point (lib/email.ts getResend) and
 /// lib/twilio.ts; read by the course timeline.
+/// SMS-1 (Cam 2026-11-02, Twilio A2P 10DLC): who agreed to texts, when, how and to
+/// what wording. Append-only — the latest row for a phone decides; `sendSms()` refuses
+/// a number whose latest row isn't opt_in. One row per opt-in or opt-out.
+model SmsConsent {
+  id         String   @id @default(cuid())
+  phone      String // E.164 (normalizePhone)
+  action     String // "opt_in" | "opt_out"
+  method     String // "web_booking" | "web_event" | "verbal" | "sms_reply" | "carrier"
+  wording    String // SMS_CONSENT_VERSION the person saw or heard
+  courseId   String?
+  bookingId  String?
+  recordedBy String   @default("") // staff id for a verbal yes; "" for the golfer's own
+  createdAt  DateTime @default(now())
+
+  @@index([phone, createdAt])
+}
+
 model SentMessage {
   id         String   @id @default(cuid())
   channel    String // "email" | "sms"

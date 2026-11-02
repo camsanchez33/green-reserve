@@ -1,15 +1,43 @@
 {
-  "generatedAt": "2026-11-02T03:22:13.375Z",
+  "generatedAt": "2026-11-02T03:42:29.606Z",
   "repo": {
-    "head": "b199995d",
+    "head": "db252e4b",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 0,
-    "dirty": [],
-    "looksLikeRunInProgress": false
+    "dirtyCount": 28,
+    "dirty": [
+      "M CLAUDE.md",
+      " M docs/CODEMAP.md",
+      " M docs/SMS_OPT_IN.md",
+      " M docs/codemap.json",
+      " M prisma/schema.prisma",
+      " M src/app/api/bookings/route.ts",
+      " M src/app/api/event-signup/[id]/route.ts",
+      " M src/app/api/operator/bookings/route.ts",
+      " M src/app/api/operator/events/[id]/payments/route.ts",
+      " M src/app/api/operator/golfer-messages/route.ts",
+      " M src/app/api/operator/shop-sales/route.ts",
+      " M src/app/book/BookClient.tsx",
+      " M src/app/dashboard/page.tsx",
+      " M src/app/dashboard/shop/page.tsx",
+      " M src/app/events/[id]/SignupForm.tsx",
+      " M src/app/privacy/page.tsx",
+      " M src/app/terms/page.tsx",
+      " M src/components/dashboard/events/EventMoney.tsx",
+      " M src/lib/data-reset.ts",
+      " M src/lib/golfer-messages.ts"
+    ],
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "db252e4b",
+        "date": "2026-11-02T03:22:21+00:00",
+        "subject": "Status board refresh",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "b199995d",
         "date": "2026-11-02T01:39:22+00:00",
@@ -401,12 +429,6 @@
       "ageDays": 9
     },
     {
-      "file": "HOMEPAGE_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-23",
-      "ageDays": 9
-    },
-    {
       "file": "AGREEMENT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
@@ -416,6 +438,12 @@
       "file": "CALL_SCHEDULING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
+      "ageDays": 10
+    },
+    {
+      "file": "HOMEPAGE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-23",
       "ageDays": 10
     },
     {
@@ -596,6 +624,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "db252e4b",
+      "date": "2026-11-02",
+      "subject": "Status board refresh"
+    },
+    {
       "h": "b199995d",
       "date": "2026-11-02",
       "subject": "Counter friction: one-tap check-in, no-show waits 10 min, cart off by default, search on phones"
@@ -649,11 +682,6 @@
       "h": "6bbb7c6d",
       "date": "2026-11-01",
       "subject": "DENSE-10 Settings part 2: the Settings cards, labels over sentences"
-    },
-    {
-      "h": "bda21776",
-      "date": "2026-11-01",
-      "subject": "DENSE-10 Settings part 1: labels over sentences (#285)"
     }
   ]
 }

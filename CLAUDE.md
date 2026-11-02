@@ -39,6 +39,8 @@ confirmed → (moved: staff, golfer's own swap, frost delay) → still confirmed
 completed → (staff moves a checked-in group, Cam 2026-10-08) → still completed on the new tee time; price always kept (it's paid), nothing charged or refunded; the golfer's own swap and frost delay still refuse checked-in groups
 ```
 
+- SMS-1 (Cam 2026-11-02, Twilio A2P 10DLC — `docs/SMS_OPT_IN.md`): a text goes ONLY to a number that agreed — an unticked box on the booking form / event sign-up, or a spoken yes staff record with "They said yes to texts" after reading the script (`SmsConsentAsk`). `sendSms()` refuses anyone else (`SmsNoConsentError`); every opt-in/opt-out is an append-only `SmsConsent` row (`src/lib/sms-consent.ts`); the wording lives only in `src/lib/sms-consent-copy.ts`; STOP/START/HELP replies come in on the Twilio-signed `/api/twilio/inbound`. A new place that collects a phone we text must ask the same way.
+
 ### Check-in
 - Staff check-in: tee sheet on `/dashboard` → `PATCH /api/operator/bookings` with `action: 'checkin'`
 - Golfer self check-in: `/checkin/[bookingId]?token=...` → `/api/checkin/[bookingId]` (token-gated, emailed in confirmation)

@@ -1,3 +1,5 @@
+import { SMS_NO_CONSENT_STAFF } from '@/lib/sms-consent-copy';
+import { optInAndConfirm } from '@/lib/sms-consent';
 import { roundChargeCents } from '@/lib/shop';
 import { NextRequest, NextResponse } from 'next/server';
 import { recordBookingEvent, teeTimeInstant, type EventActor } from '@/lib/booking-events';
@@ -15,7 +17,7 @@ import { isPastIn, todayIn, payLinkOpensOn } from '@/lib/course-time';
 import { randomUUID } from 'crypto';
 import { refundSeparateAccessFee } from '@/lib/access-fee';
 import { markNoShow, refundNoShowFee, roundPaid, noShowMarkOutcome } from '@/lib/no-show-fee';
-import { sendSms } from '@/lib/twilio';
+import { sendSms, SmsNoConsentError } from '@/lib/twilio';
 import { normalizePhone } from '@/lib/golfer-otp';
 import { formatTeeTime } from '@/lib/format';
 import { createCounterBooking, settleAtCounter } from '@/lib/counter-pay';
@@ -103,7 +105,7 @@ export async function PATCH(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { id, action, paymentMethodId, checkedInPlayers: cipRaw, waiveFee: waiveRaw, via: viaRaw, newTeeTimeId, reprice, dryRun, residentPlayers, cashTenderedCents, amountCents, reason, newPlayers, membershipId } = await req.json();
+  const { id, action, paymentMethodId, checkedInPlayers: cipRaw, waiveFee: waiveRaw, via: viaRaw, newTeeTimeId, reprice, dryRun, residentPlayers, cashTenderedCents, amountCents, reason, newPlayers, membershipId, smsConsent } = await req.json();
   const waiveFee = action === 'cancel' && waiveRaw === true;
   // SD-5: partial party — how many actually showed (1 .. players-1); absent = all.
   const cip = cipRaw == null ? undefined : Number(cipRaw);
@@ -241,10 +243,13 @@ export async function PATCH(req: NextRequest) {
       }
       const to = normalizePhone(b.golferPhone);
       const url = `${process.env.NEXT_PUBLIC_URL}/checkin/${id}?token=${token}`;
+      // SMS-1: staff read the script and the golfer said yes — record it (verbal) before the link goes.
+      if (smsConsent === 'verbal') await optInAndConfirm(to, { method: 'verbal', courseId: session.courseId, bookingId: id, recordedBy: session.staffId ?? `operator:${session.operatorId}` });
       try {
         // Every non-code text carries the opt-out line (legal rewrite 2026-10-19).
         await sendSms(to, `${b.course.name}: check in and pay for your ${formatTeeTime(b.teeTime.time)} tee time here (Apple Pay, Google Pay or card): ${url} Reply STOP to opt out.`, { kind: 'pay_link_text', bookingId: id });
       } catch (err) {
+        if (err instanceof SmsNoConsentError) return NextResponse.json({ error: SMS_NO_CONSENT_STAFF, needsConsent: true }, { status: 409 });
         return NextResponse.json({ error: `The text didn’t send (${err instanceof Error ? err.message : 'SMS error'}) — try email, or take payment at the counter.` }, { status: 502 });
       }
       return NextResponse.json({ success: true, sentTo: `${to.slice(0, -4).replace(/\d/g, '•')}${to.slice(-4)}` });
@@ -347,6 +352,8 @@ export async function POST(req: NextRequest) {
     promoCode: typeof body.promoCode === 'string' ? body.promoCode : undefined,
   }, { type: 'staff', id: session.staffId ?? session.operatorId });
   if (!made.ok) return NextResponse.json({ error: made.error }, { status: made.status });
+  // SMS-1: the golfer said yes to texts when staff read them the script.
+  if (body.smsConsent === 'verbal' && String(body.golferPhone ?? '').trim()) await optInAndConfirm(String(body.golferPhone), { method: 'verbal', courseId: session.courseId, bookingId: made.id, recordedBy: session.staffId ?? `operator:${session.operatorId}` });
   // CASH-1: "paying cash now" — the booking is made, then its round is rung up in cash.
   if (checkInNow) {
     const cash = await ringUpCash(session.courseId, { lines: [], bookingIds: [made.id], walkIns: [], soldBy: session.email, actor: { type: 'staff', id: session.staffId ?? session.operatorId } });

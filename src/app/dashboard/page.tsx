@@ -1,4 +1,6 @@
 'use client';
+import SmsConsentAsk, { SmsConsentDialog } from '@/components/dashboard/SmsConsentAsk';
+import { SMS_NO_CONSENT_STAFF } from '@/lib/sms-consent-copy';
 import { PackHolderPick, PACK_RATE } from '@/components/dashboard/RegisterPacks';
 import type { Holding } from '@/lib/round-packs';
 import { Card, CARD } from '@/components/ui/Card';
@@ -123,6 +125,9 @@ function DashboardPageInner() {
   const [teeTimes, setTeeTimes]   = useState<TeeTime[]>([]);
   const [loading, setLoading]     = useState(true);
   const [courseName, setCourseName] = useState('');
+  // SMS-1: the group whose pay link needs a verbal yes before it can be texted.
+  const [textAsk, setTextAsk] = useState<Booking | null>(null);
+  const [textAskYes, setTextAskYes] = useState(false);
   const [courseArchived, setCourseArchived] = useState(false);
   const [courseDraft, setCourseDraft] = useState(false);
   const [pageApprovalStatus, setPageApprovalStatus] = useState<'none' | 'approved' | 'changes_requested'>('none');
@@ -335,11 +340,14 @@ function DashboardPageInner() {
   // at the counter. This (re)sends it.
   // PAY-1: 'sms' texts it to the golfer at the counter (Apple Pay / Google Pay
   // on their own phone); 'email' is the original.
-  async function sendPayLink(b: Booking, via: 'sms' | 'email' = 'email') {
+  async function sendPayLink(b: Booking, via: 'sms' | 'email' = 'email', saidYes = false) {
     setRowBusy(b.id);
-    const r = await dfetch<{ sentTo: string }>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: b.id, action: 'send_pay_link', via }) });
+    const r = await dfetch<{ sentTo: string }>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: b.id, action: 'send_pay_link', via, ...(saidYes ? { smsConsent: 'verbal' } : {}) }) });
     setRowBusy(null);
+    // SMS-1: the number never agreed to texts — ask them (the script), then send.
+    if (!r.ok && r.status === 409 && r.error === SMS_NO_CONSENT_STAFF) { setTextAsk(b); setTextAskYes(false); return; }
     if (!r.ok) { toast(r.error); return; }
+    setTextAsk(null);
     toast(via === 'sms'
       ? `Pay link texted to ${r.data.sentTo}. They can pay with Apple Pay, Google Pay or a card, and the sheet updates when they do.`
       : `Pay link sent to ${r.data.sentTo}. They can check in and pay from their phone.`, 'ok');
@@ -1220,6 +1228,13 @@ function DashboardPageInner() {
         </div>
       )}
 
+      {/* ── SMS-1: ask before texting a pay link to a number that never agreed ── */}
+      {textAsk && (
+        <SmsConsentDialog courseName={courseName} name={textAsk.golferName} busy={rowBusy === textAsk.id} yes={textAskYes} onYes={setTextAskYes}
+          onEmail={textAsk.golferEmail && !textAsk.golferEmail.endsWith('@noemail.greenreserve.app') ? () => { const b = textAsk; setTextAsk(null); sendPayLink(b, 'email'); } : undefined}
+          onSend={() => sendPayLink(textAsk, 'sms', true)} onClose={() => setTextAsk(null)} />
+      )}
+
       {/* ── WX-1 Weather: cancel times, or B-9 delay start — preview, then confirm ── */}
       {frostOpen && (
         <div className="fixed inset-0 bg-ink/20 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
@@ -1406,7 +1421,7 @@ function DashboardPageInner() {
               <h3 className="font-serif font-semibold text-ink text-[17px]">{walkInLate ? 'Already played' : 'Walk-in'} — {fmtTime(walkInSlot.time)}</h3>
               <button onClick={() => setWalkInSlot(null)} className="text-ink-muted hover:text-ink"><X className="w-5 h-5"/></button>
             </div>
-            <WalkInForm slot={walkInSlot} late={walkInLate} onSave={(msg, tone) => { setWalkInSlot(null); toast(msg, tone ?? 'ok'); loadTimes(selectedDate); }} onCancel={() => setWalkInSlot(null)} />
+            <WalkInForm slot={walkInSlot} late={walkInLate} courseName={courseName} onSave={(msg, tone) => { setWalkInSlot(null); toast(msg, tone ?? 'ok'); loadTimes(selectedDate); }} onCancel={() => setWalkInSlot(null)} />
           </div>
         </div>
       )}
@@ -1462,10 +1477,12 @@ export default function DashboardPage() {
 }
 
 /* ─── SD-5: Walk-in / phone booking form ───────────────────────────────── */
-function WalkInForm({ slot, late, onSave, onCancel }: { slot: TeeTime; late: boolean; onSave: (msg: string, tone?: 'ok' | 'warn') => void; onCancel: () => void }) {
+function WalkInForm({ slot, late, courseName, onSave, onCancel }: { slot: TeeTime; late: boolean; courseName: string; onSave: (msg: string, tone?: 'ok' | 'warn') => void; onCancel: () => void }) {
   const spots = Math.max(0, slot.playersAvailable - slot.playersBooked);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  // SMS-1: staff read the script; ticked only after the golfer says yes. Never on by default.
+  const [smsYes, setSmsYes] = useState(false);
   const [email, setEmail] = useState('');
   const [players, setPlayers] = useState(Math.min(2, spots) || 1);
   // CART-1: a cart-only tee time charges the cart for everyone (the route forces it too).
@@ -1517,7 +1534,7 @@ function WalkInForm({ slot, late, onSave, onCancel }: { slot: TeeTime; late: boo
   async function save() {
     setSaving(true); setErr('');
     const r = await dfetch<{ emailSent: boolean | null; cashError?: string }>('/api/operator/bookings', {
-      method: 'POST', body: JSON.stringify({ teeTimeId: slot.id, golferName: name, golferPhone: phone, golferEmail: email, players, cartSelected: cart, source, rate: sentRate, ...(promo.trim() ? { promoCode: promo.trim() } : {}), checkInNow: source === 'walk_in' && checkInNow && canCash, ...(late ? { late: true } : {}) }),
+      method: 'POST', body: JSON.stringify({ teeTimeId: slot.id, golferName: name, golferPhone: phone, golferEmail: email, ...(smsYes && phone.replace(/\D/g, '').length >= 10 ? { smsConsent: 'verbal' } : {}), players, cartSelected: cart, source, rate: sentRate, ...(promo.trim() ? { promoCode: promo.trim() } : {}), checkInNow: source === 'walk_in' && checkInNow && canCash, ...(late ? { late: true } : {}) }),
     });
     setSaving(false);
     if (!r.ok) { setErr(r.error); return; }
@@ -1541,13 +1558,14 @@ function WalkInForm({ slot, late, onSave, onCancel }: { slot: TeeTime; late: boo
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-[13px] font-semibold text-ink mb-1">Phone <span className="font-normal text-ink-muted">(optional)</span></label>
-          <input value={phone} onChange={e => setPhone(e.target.value)} className={inp} />
+          <input value={phone} onChange={e => { setPhone(e.target.value); setSmsYes(false); }} className={inp} />
         </div>
         <div>
           <label className="block text-[13px] font-semibold text-ink mb-1">Players <span className="font-normal text-ink-muted">({spots} open)</span></label>
           <input type="number" min={1} max={Math.max(1, spots)} value={players} onChange={e => setPlayers(Math.max(1, Math.min(Math.max(1, spots), Number(e.target.value) || 1)))} className={inp} />
         </div>
       </div>
+      {phone.replace(/\D/g, '').length >= 10 && <SmsConsentAsk courseName={courseName} checked={smsYes} onChange={setSmsYes} />}
       <div>
         <label className="block text-[13px] font-semibold text-ink mb-1">Email <span className="font-normal text-ink-muted">{late ? '(optional)' : '(optional — sends a confirmation with a check-in link)'}</span></label>
         <input type="email" value={email} onChange={e => setEmail(e.target.value)} className={inp} />

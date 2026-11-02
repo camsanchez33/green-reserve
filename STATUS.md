@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-02 03:22 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `b199995d` · working tree clean
+Generated 2026-11-02 03:42 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `db252e4b` · working tree **28 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 27 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 28 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `db252e4b` | 2026-11-02 | Status board refresh |
 | `b199995d` | 2026-11-02 | Counter friction: one-tap check-in, no-show waits 10 min, cart off by default, search on phones |
 | `45ca1d0e` | 2026-11-02 | Speed with volume: one time-zone formatter per zone (Analytics 90 days 10.7s → 1.2s) |
 | `4054bff4` | 2026-11-02 | Test course: busy-season sample data, with every money table filled |
@@ -41,6 +42,32 @@ Generated 2026-11-02 03:22 UTC · branch `claude/walkthrough-2-prioritization-ui
 | `efef5f62` | 2026-11-01 | Money audit fixes: dues charge only the shown total, tier term change stops auto-renew, credited round returns our fee, pay link opens on the day |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+
+### Uncommitted working tree (28 file(s))
+
+- `M CLAUDE.md`
+- `M docs/CODEMAP.md`
+- `M docs/SMS_OPT_IN.md`
+- `M docs/codemap.json`
+- `M prisma/schema.prisma`
+- `M src/app/api/bookings/route.ts`
+- `M src/app/api/event-signup/[id]/route.ts`
+- `M src/app/api/operator/bookings/route.ts`
+- `M src/app/api/operator/events/[id]/payments/route.ts`
+- `M src/app/api/operator/golfer-messages/route.ts`
+- `M src/app/api/operator/shop-sales/route.ts`
+- `M src/app/book/BookClient.tsx`
+- `M src/app/dashboard/page.tsx`
+- `M src/app/dashboard/shop/page.tsx`
+- `M src/app/events/[id]/SignupForm.tsx`
+- `M src/app/privacy/page.tsx`
+- `M src/app/terms/page.tsx`
+- `M src/components/dashboard/events/EventMoney.tsx`
+- `M src/lib/data-reset.ts`
+- `M src/lib/golfer-messages.ts`
+
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -128,9 +155,9 @@ This is the distinction a raw checkbox count gets wrong.
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 6d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 7d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 9d |
-| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 9d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 10d |
 | `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 10d |
+| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 10d |
 | `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 10d |
 | `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 10d |
 | `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 10d |
@@ -163,6 +190,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `db252e4b` 2026-11-02 — Status board refresh
 - `b199995d` 2026-11-02 — Counter friction: one-tap check-in, no-show waits 10 min, cart off by default, search on phones
 - `45ca1d0e` 2026-11-02 — Speed with volume: one time-zone formatter per zone (Analytics 90 days 10.7s → 1.2s)
 - `4054bff4` 2026-11-02 — Test course: busy-season sample data, with every money table filled
@@ -174,7 +202,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `c6efa694` 2026-11-01 — Audit numbers: partial refunds, event money, event player swap, shop today, payout tile
 - `10ab79d8` 2026-11-01 — DENSE-10 Settings part 2: the Settings cards, labels over sentences (#286)
 - `6bbb7c6d` 2026-11-01 — DENSE-10 Settings part 2: the Settings cards, labels over sentences
-- `bda21776` 2026-11-01 — DENSE-10 Settings part 1: labels over sentences (#285)
 
 ---
 
