@@ -16,8 +16,15 @@ export const US_TIMEZONES: { id: string; label: string }[] = [
   { id: 'Pacific/Honolulu', label: 'Hawaii' },
 ];
 
+// Remembered per zone: building a formatter to test a zone is slow, and this runs per row in Analytics.
+const validZones = new Map<string, boolean>();
 export function isValidTimezone(tz: string): boolean {
-  try { new Intl.DateTimeFormat('en-US', { timeZone: tz }); return true; } catch { return false; }
+  const known = validZones.get(tz);
+  if (known !== undefined) return known;
+  let ok = false;
+  try { new Intl.DateTimeFormat('en-US', { timeZone: tz }); ok = true; } catch { ok = false; }
+  if (validZones.size < 1000) validZones.set(tz, ok);
+  return ok;
 }
 
 /** YYYY-MM-DD of `now` in the course's timezone. */

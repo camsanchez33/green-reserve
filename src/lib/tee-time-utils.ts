@@ -20,14 +20,27 @@ export function teeToUtcMs(date: string, time: string, tz: string): number {
   return wall - tzOffsetMs(first, tz);
 }
 
+// Building an Intl.DateTimeFormat is the slow part (~0.1 ms each); Analytics converts every
+// booking's tee time, so with a season of bookings a fresh formatter per call was most of
+// the page's time (busy-season sample, 2026-11-02: 5 of 6 seconds). One per time zone.
+const formatters = new Map<string, Intl.DateTimeFormat>();
+function formatterFor(tz: string): Intl.DateTimeFormat {
+  let f = formatters.get(tz);
+  if (!f) {
+    f = new Intl.DateTimeFormat('en-US', {
+      timeZone: tz,
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+      hour12: false,
+    });
+    formatters.set(tz, f);
+  }
+  return f;
+}
+
 /** Milliseconds `tz` is ahead of UTC at the instant `ms` (negative in the US). */
 function tzOffsetMs(ms: number, tz: string): number {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: tz,
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', second: '2-digit',
-    hour12: false,
-  }).formatToParts(new Date(ms));
+  const parts = formatterFor(tz).formatToParts(new Date(ms));
 
   const p: Record<string, string> = {};
   for (const part of parts) if (part.type !== 'literal') p[part.type] = part.value;
