@@ -15,7 +15,9 @@ const check = (label: string, ok: boolean) => { console.log(`${ok ? 'PASS' : 'FA
 const railStart = src.indexOf('<aside className="op-rail');
 const rail = railStart >= 0 ? src.slice(railStart, src.indexOf('</aside>', railStart)) : '';
 check('the desktop menu is a rail down the left', /hidden md:flex fixed inset-y-0 left-0/.test(rail) && /w-\[var\(--op-rail-w\)\]/.test(rail));
-check('the rail lists every visible tab (one list, not a hand-picked few)', /navItems\.filter\(n => !n\.soon && visible\(n\.key\)\)/.test(rail));
+// DASH-D: the rail is grouped (Today / Business / Settings), still drawn from the one navItems list,
+// and a tab no group names falls into Business — never dropped.
+check('the rail lists every visible tab (one list, grouped, none dropped)', /navItems\.filter\(n => !n\.soon && visible\(n\.key\) && g\.keys\.includes\(n\.key\)\)/.test(rail) && src.includes("railGroups[1].keys.push(...navItems.map(n => n.key).filter(k => !grouped.has(k)));"));
 check('a tall menu scrolls inside the rail, never sideways', /overflow-y-auto/.test(rail) && !/overflow-x-auto/.test(rail));
 check('the rail keeps the course switcher, Course alert, the booking page and sign-out',
   /aria-label="Switch course"/.test(rail) && /Course alert/.test(rail) && /\/courses\/' \+ slug/.test(rail) && /onClick=\{logout\}/.test(rail));

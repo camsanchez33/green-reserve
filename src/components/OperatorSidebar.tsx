@@ -172,6 +172,9 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     { label: 'Business', keys: ['money', 'members', 'events', 'schedule', 'analytics'] },
     { label: '', keys: ['settings'] },
   ];
+  // A tab no group names still shows (in Business) — a new tab is never dropped from the rail.
+  const grouped = new Set(railGroups.flatMap(g => g.keys));
+  railGroups[1].keys.push(...navItems.map(n => n.key).filter(k => !grouped.has(k)));
 
   return (
     <>
@@ -273,7 +276,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
       <OperatorSearch />
       <nav aria-label="Dashboard" className="flex flex-col gap-4 text-[14px]">
         {railGroups.map(g => {
-          const items = g.keys.map(k => navItems.find(n => n.key === k)!).filter(n => n && !n.soon && visible(n.key));
+          const items = navItems.filter(n => !n.soon && visible(n.key) && g.keys.includes(n.key)).sort((x, y) => g.keys.indexOf(x.key) - g.keys.indexOf(y.key));
           if (!items.length) return null;
           return (
             <div key={g.label || 'end'} className="flex flex-col gap-px">
