@@ -13,7 +13,7 @@ export async function PATCH(req: NextRequest) {
   if (denied) return denied;
   const body = await req.json().catch(() => null) as { conditions?: unknown; detail?: unknown } | null;
   // DASH-D Home: { detail } sets carts / range / greens / pins (unknown keys and values are dropped).
-  if (body && 'detail' in body) {
+  if (body && typeof body === 'object' && 'detail' in body) {
     const detail = cleanConditions(body.detail);
     const at = new Date();
     await prisma.course.update({ where: { id: session.courseId }, data: { conditionsDetail: detail, conditionsDetailAt: at } });

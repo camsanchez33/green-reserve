@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-649 source files · 289 routes · 229 libraries · 70 models
+650 source files · 290 routes · 229 libraries · 70 models
 
 ## Single sources of truth
 
@@ -265,6 +265,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/operator/sheet-money` | operator | file | GET | `src/app/api/operator/sheet-money/route.ts` | 31 |
 | `/api/operator/shift-notes` | operator | file | GET PATCH POST | `src/app/api/operator/shift-notes/route.ts` | 47 |
 | `/api/operator/shop-items` | operator | NONE FOUND for POST/PATCH/DELETE | DELETE GET PATCH POST | `src/app/api/operator/shop-items/route.ts` | 91 |
+| `/api/operator/shop-items/photo` | operator | file | DELETE POST | `src/app/api/operator/shop-items/photo/route.ts` | 55 |
 | `/api/operator/shop-items/read` | operator | file | POST | `src/app/api/operator/shop-items/read/route.ts` | 33 |
 | `/api/operator/shop-sales` | operator | file | GET PATCH POST | `src/app/api/operator/shop-sales/route.ts` | 294 |
 | `/api/operator/shop-sales/quote` | operator | file | POST | `src/app/api/operator/shop-sales/quote/route.ts` | 22 |
@@ -321,7 +322,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/dashboard/reset-password` | operator | entry | page | `src/app/dashboard/reset-password/page.tsx` | 123 |
 | `/dashboard/schedules` | operator | middleware | page | `src/app/dashboard/schedules/page.tsx` | 636 |
 | `/dashboard/settings` | operator | middleware | page | `src/app/dashboard/settings/page.tsx` | 1158 |
-| `/dashboard/shop` | operator | middleware | page | `src/app/dashboard/shop/page.tsx` | 938 |
+| `/dashboard/shop` | operator | middleware | page | `src/app/dashboard/shop/page.tsx` | 943 |
 | `/dashboard/sign` | operator | middleware | page | `src/app/dashboard/sign/page.tsx` | 26 |
 | `/dashboard/tournaments` | operator | middleware | page | `src/app/dashboard/tournaments/page.tsx` | 5 |
 | `/dashboard/verify` | operator | token | page | `src/app/dashboard/verify/page.tsx` | 148 |
@@ -348,8 +349,8 @@ Sorted by how many files import them, so the load-bearing ones are first.
 
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
-| `src/lib/prisma.ts` | 278 | 15 |  | `prisma` |
-| `src/lib/session.ts` | 75 | 120 |  | `ACTIVE_COURSE_COOKIE`, `can`, `requirePermission`, `resolveDashboardSession`, `ResolvedSession`, `STAFF_FORBIDDEN`, `touchStaffSeen` |
+| `src/lib/prisma.ts` | 279 | 15 |  | `prisma` |
+| `src/lib/session.ts` | 76 | 120 |  | `ACTIVE_COURSE_COOKIE`, `can`, `requirePermission`, `resolveDashboardSession`, `ResolvedSession`, `STAFF_FORBIDDEN`, `touchStaffSeen` |
 | `src/lib/admin-session.ts` | 70 | 201 |  | `AdminSession`, `AdminSessionUnavailable`, `areaGate`, `MANAGER_PLUS`, `OWNER_ONLY`, `ownerGateError`, `requireOwner`, `requireRole` +7 more |
 | `src/lib/email.ts` | 64 | 2158 |  | `BookingEmailData`, `escapeHtml`, `firstName`, `isPlaceholderEmail`, `PLACEHOLDER_EMAIL_DOMAIN`, `sendAdminDigest`, `sendAdminPasswordChangedNotification`, `sendAdminPasswordResetEmail` +72 more |
 | `src/lib/course-time.ts` | 60 | 63 | SD-3 — course-local time. | `addDaysStr`, `clockIn`, `DEFAULT_TZ`, `isPastIn`, `isValidTimezone`, `payLinkOpensOn`, `todayIn`, `US_TIMEZONES` |
@@ -358,11 +359,11 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/dashboard-fetch.ts` | 44 | 43 | SD-10 (from the SD review). | `dfetch`, `DFetchResult` |
 | `src/lib/admin-audit.ts` | 42 | 194 | BRAIN-1a (Cam 2026-10-22): | `ACTION_LABELS`, `auditAdmin`, `AuditEntry`, `bodyWithReason`, `changedFields`, `courseOfBooking`, `needReason`, `REASON_ACTIONS` +5 more |
 | `src/lib/stripe.ts` | 34 | 145 | Every charge, refund and SetupIntent GreenReserve makes goes through here. | `ACCESS_FEE_CENTS`, `chargeOnConnectedAccount`, `chargeOneIntent`, `MEMBERSHIP_FEE_RATE`, `membershipFeeCents`, `refundOnConnectedAccount`, `stripe` |
-| `src/lib/agreement-required.ts` | 31 | 124 | AGREEMENT_SPEC AG-3 — version bumps and re-acceptance. | `AGREEMENT_REQUIRED_MESSAGE`, `agreementDueByCourse`, `agreementOverdueCourses`, `agreementReacceptance`, `currentReacceptWindow`, `Reacceptance`, `ReacceptWindow`, `requireAgreementCurrent` +1 more |
+| `src/lib/agreement-required.ts` | 32 | 124 | AGREEMENT_SPEC AG-3 — version bumps and re-acceptance. | `AGREEMENT_REQUIRED_MESSAGE`, `agreementDueByCourse`, `agreementOverdueCourses`, `agreementReacceptance`, `currentReacceptWindow`, `Reacceptance`, `ReacceptWindow`, `requireAgreementCurrent` +1 more |
 | `src/lib/auth.ts` | 31 | 202 |  | `DashboardSession`, `getGolferSession`, `getOperatorSession`, `signGolferToken`, `signMemberInviteToken`, `signPendingTwoFactorToken`, `signStaffResetToken`, `signStaffToken` +4 more |
 | `src/lib/booking-events.ts` | 27 | 85 |  | `BookingEventInput`, `EventActor`, `recordBookingEvent`, `recordBookingEventSafe`, `teeTimeInstant` |
 | `src/lib/money.ts` | 27 | 50 | Money conversions, in one place. | `centsToDollars`, `centsToDollarsOr0`, `dollarsToCents`, `dollarsToCentsOr0`, `fmtCents` |
-| `src/lib/contact.ts` | 24 | 20 | MAIL-1 (Cam 2026-10-22): | `ADMIN_EMAIL`, `BILLING_EMAIL`, `NOREPLY_EMAIL`, `SUPPORT_EMAIL` |
+| `src/lib/contact.ts` | 25 | 20 | MAIL-1 (Cam 2026-10-22): | `ADMIN_EMAIL`, `BILLING_EMAIL`, `NOREPLY_EMAIL`, `SUPPORT_EMAIL` |
 | `src/lib/cancel-policy.ts` | 20 | 262 | SP-B (STAFF_POLICY_SPEC Part B). | `afterCutoffLine`, `afterCutoffShort`, `bookingWindowHours`, `cancelNowWords`, `CancelPolicy`, `cardAtBooking`, `cardRequired`, `chargesNoShow` +15 more |
 | `src/lib/shop.ts` | 20 | 158 | POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): | `addItemToBooking`, `MAX_BOOKING_SHOP_CENTS`, `MAX_ITEM_PRICE_CENTS`, `MAX_LINE_QUANTITY`, `removeLineFromBooking`, `roundApplicationFeeCents`, `roundChargeCents`, `roundChargedTotal` +9 more |
 | `src/lib/money-ledger.ts` | 18 | 101 | LEDGER-1 (Cam 2026-10-30, "one new money table"): | `chargeWhat`, `feeBackCents`, `mirrorMove`, `Move`, `MoveMethod`, `MoveWhat`, `recordMove` |
@@ -428,6 +429,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/event-payments.ts` | 5 | 484 | W2-9b (Cam 2026-10-22: | `chargeEventPayment`, `COURSE_METHODS`, `createPayLink`, `eventFeeFor`, `eventMoney`, `HOLD_MINUTES`, `holdProblem`, `MAX_EVENT_PAYMENT_CENTS` +14 more |
 | `src/lib/expenses.ts` | 5 | 88 | EXPENSE TRACKER (RUN_QUEUE "EXPENSE TRACKER / real P&L") — the manual half of the P&L: | `EXPENSE_CADENCE_LABEL`, `EXPENSE_CADENCES`, `EXPENSE_CATEGORIES`, `EXPENSE_CATEGORY_LABEL`, `ExpenseCadence`, `ExpenseCategory`, `isExpenseCadence`, `isExpenseCategory` +4 more |
 | `src/lib/golfer-key.ts` | 5 | 40 | Who a golfer is at a course: | `golferKey`, `golferKeys`, `keyMatch`, `parseGolferKey` |
+| `src/lib/image-resize.ts` | 5 | 33 | Client-side downscale so a 12MB phone photo never has to travel over the wire or blow the perf budget on the page that eventually renders it. | `downscaleImage` |
 | `src/lib/membership-autorenew.ts` | 5 | 156 | MEM-RENEW (Cam 2026-10-30: | `autoRenewTermsText`, `chargeRenewal`, `chargesDue`, `duesIntentKey`, `markReminded`, `memberContact`, `reminderLeadDays`, `remindersDue` +5 more |
 | `src/lib/operator-home.ts` | 5 | 160 | DASH-C Home (Cam 2026-10-22, "very nice" on the course dashboard mockups): | `DeclinedCard`, `declinedCards`, `HomeGroup`, `HomeSlot`, `operatorHome` |
 | `src/lib/setup-missing.ts` | 5 | 51 | What is still missing from a course's booking page, each with the Settings section that fixes it. | `MissingItem`, `MissingKey`, `missingSetup`, `PAYMENTS_BLOCK_LIVE`, `paymentsMissing`, `settingsHref`, `SetupFacts` |
@@ -444,7 +446,6 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/course-group.ts` | 4 | 13 | GRP-1 (Cam 2026-10-19, after golfbergencounty.com): | `groupCourseIds` |
 | `src/lib/demo-courses.ts` | 4 | 4 | Cam: | `DEMO_COURSE_SLUGS` |
 | `src/lib/event-signup.ts` | 4 | 232 | W2-9d (Cam 2026-10-22): | `cleanQuestions`, `HOLD_MINUTES`, `lapseHolds`, `MAX_GROUP`, `MAX_QUESTIONS`, `moveOntoList`, `questionsOf`, `sendSignupConfirmation` +7 more |
-| `src/lib/image-resize.ts` | 4 | 33 | Client-side downscale so a 12MB phone photo never has to travel over the wire or blow the perf budget on the page that eventually renders it. | `downscaleImage` |
 | `src/lib/lifecycle.ts` | 4 | 416 |  | `archivePair`, `deleteInquiryOrPair`, `deletePair`, `forceDeleteOrphan`, `ForceDeleteResult`, `LifecycleResult`, `listAcknowledgedOrphans`, `ORPHAN_FLAG` +6 more |
 | `src/lib/member-account.ts` | 4 | 211 | MEM-ACCT (Cam 2026-10-30: | `accountBalance`, `accountMembers`, `accountView`, `addCharge`, `creditAccount`, `creditFeeBack`, `fitsLimit`, `MAX_CREDIT_CENTS` +2 more |
 | `src/lib/member-statements.ts` | 4 | 218 | MEM-ACCT part 2 (Cam 2026-10-30: | `AUTO_CHARGE_DAYS`, `autoChargesDue`, `autoChargeStatement`, `Charger`, `chargeStatement`, `closeStatements`, `DUE_DAYS`, `emailStatement` +9 more |
@@ -525,7 +526,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/sheet-token.ts` | 2 | 52 |  | `CLOSED_TO_SHEET`, `DETAILS_TOKEN_TTL_DAYS`, `gateSheetAccess`, `SheetGate` |
 | `src/lib/shop-report.ts` | 2 | 88 | SHOP-4 (Cam 2026-10-30: | `shopReport`, `ShopReport`, `ShopReportItem`, `summarize` |
 | `src/lib/shop-stock.ts` | 2 | 98 | SHOP-4 (Cam 2026-10-30: | `isLow`, `receiveStock`, `recentReceipts`, `setCost`, `setReorder`, `StockRow`, `stockRows` |
-| `src/lib/shop-tree.ts` | 2 | 55 | W2-7: | `bySku`, `FlatItem`, `matches`, `shopTree`, `skuHits`, `stockOf`, `stockWords`, `TreeItem` |
+| `src/lib/shop-tree.ts` | 2 | 57 | W2-7: | `bySku`, `FlatItem`, `matches`, `shopTree`, `skuHits`, `stockOf`, `stockWords`, `TreeItem` |
 | `src/lib/staff-fonts.ts` | 2 | 10 | U-0 (UI_REVISE_SPEC §1b) used to give /dashboard and /admin their own STAFF look here: | `STAFF_LOOK_CLASS` |
 | `src/lib/submit-change-request.ts` | 2 | 91 |  | `cleanChangeItems`, `submitChangeRequest` |
 | `src/lib/tee-colour.ts` | 2 | 22 | Settings rework (Cam 2026-10-19: | `teeColour` |
@@ -668,7 +669,7 @@ Sorted the same way.
 | `src/components/dashboard/RoundRulesCard.tsx` | 1 | 89 | W2-6 slice 3 (Cam 2026-10-20): | `CourseRules`, `default (RoundRulesCard)`, `RoundRules` |
 | `src/components/dashboard/SalesTaxCard.tsx` | 1 | 82 | W2-7 part B (Cam 2026-10-20): | `SalesTaxCard` |
 | `src/components/dashboard/settings/WhoPaysWhat.tsx` | 1 | 99 | Settings → Prices & fees: | `WhoPaysWhat` |
-| `src/components/dashboard/ShopCatalog.tsx` | 1 | 374 | POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): | `ShopCatalog` |
+| `src/components/dashboard/ShopCatalog.tsx` | 1 | 414 | POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): | `ShopCatalog` |
 | `src/components/dashboard/ShopItemsForGroup.tsx` | 1 | 150 | POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): | `default (ShopItemsForGroup)`, `ShopLine` |
 | `src/components/dashboard/ShopStock.tsx` | 1 | 135 | SHOP-4 (Cam 2026-10-30: | `ShopStock` |
 | `src/components/dashboard/StaffPermissions.tsx` | 1 | 243 | SP-A (STAFF_POLICY_SPEC A6): | `StaffPermissions` |
@@ -1157,11 +1158,11 @@ without opening anything.
 
 ### ShopItem
 
-22 fields · 4 writer(s) · 6 reader(s)
+23 fields · 5 writer(s) · 7 reader(s)
 
-- fields: `id`, `courseId`, `course`, `name`, `category`, `priceCents`, `active`, `sortOrder`, `stockCount`, `sku`, `parentId`, `parent`, `options`, `optionLabel`, `taxCategory`, `costCents`, `reorderAt`, `createdAt`, `updatedAt`, `sales`, `saleLines`, `receipts`
-- writers: `src/app/api/operator/shop-items/route.ts`, `src/lib/sample-data.ts`, `src/lib/shop-catalog.ts`, `src/lib/shop-stock.ts`
-- readers: `src/app/api/operator/shop-items/route.ts`, `src/lib/sample-data.ts`, `src/lib/shop-catalog.ts`, `src/lib/shop-report.ts`, `src/lib/shop-sales.ts`, `src/lib/shop-stock.ts`
+- fields: `id`, `courseId`, `course`, `name`, `category`, `priceCents`, `active`, `sortOrder`, `stockCount`, `sku`, `parentId`, `parent`, `options`, `optionLabel`, `photoUrl`, `taxCategory`, `costCents`, `reorderAt`, `createdAt`, `updatedAt`, `sales`, `saleLines`, `receipts`
+- writers: `src/app/api/operator/shop-items/photo/route.ts`, `src/app/api/operator/shop-items/route.ts`, `src/lib/sample-data.ts`, `src/lib/shop-catalog.ts`, `src/lib/shop-stock.ts`
+- readers: `src/app/api/operator/shop-items/photo/route.ts`, `src/app/api/operator/shop-items/route.ts`, `src/lib/sample-data.ts`, `src/lib/shop-catalog.ts`, `src/lib/shop-report.ts`, `src/lib/shop-sales.ts`, `src/lib/shop-stock.ts`
 
 ### ShopSale
 

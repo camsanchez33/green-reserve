@@ -1,31 +1,54 @@
 {
-  "generatedAt": "2026-11-02T05:52:35.666Z",
+  "generatedAt": "2026-11-02T06:14:07.056Z",
   "repo": {
-    "head": "715b5c3e",
+    "head": "bbf0f755",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 15,
+    "dirtyCount": 17,
     "dirty": [
       "M CLAUDE.md",
+      " M STATUS.artifact.html",
+      " M STATUS.json",
+      " M STATUS.md",
       " M docs/CODEMAP.md",
       " M docs/codemap.json",
       " M prisma/schema.prisma",
+      " M scripts/home-board-db-test.ts",
       " M src/app/api/operator/conditions/route.ts",
-      " M src/app/api/operator/home/route.ts",
-      " M src/app/dashboard/home/page.tsx",
-      " M src/lib/data-reset.ts",
-      "?? prisma/migrations/20261102100000_home_board/",
-      "?? scripts/home-board-db-test.ts",
-      "?? src/app/api/operator/month-goal/",
-      "?? src/app/api/operator/shift-notes/",
-      "?? src/components/dashboard/home/",
-      "?? src/lib/course-conditions.ts",
-      "?? src/lib/home-board.ts"
+      " M src/app/dashboard/shop/page.tsx",
+      " M src/components/dashboard/ShopCatalog.tsx",
+      " M src/components/dashboard/home/HomeBoard.tsx",
+      " M src/lib/shop-catalog.ts",
+      " M src/lib/shop-tree.ts",
+      "?? prisma/migrations/20261102110000_shop_item_photo/",
+      "?? scripts/register-photo-test.ts",
+      "?? src/app/api/operator/shop-items/photo/"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "0394ca3b",
+        "date": "2026-11-02T01:12:42-05:00",
+        "subject": "Home: shift note, course conditions, week ahead, month vs goal (#295)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "7de2b772",
+        "date": "2026-11-02T06:05:51+00:00",
+        "subject": "operator-home test: accept the money permission read once and passed to operatorHome",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "61cb526c",
+        "date": "2026-11-02T05:52:37+00:00",
+        "subject": "Home: shift note, course conditions, week ahead, month vs goal",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "0ca08896",
         "date": "2026-11-02T00:51:45-05:00",
@@ -717,6 +740,21 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "0394ca3b",
+      "date": "2026-11-02",
+      "subject": "Home: shift note, course conditions, week ahead, month vs goal (#295)"
+    },
+    {
+      "h": "7de2b772",
+      "date": "2026-11-02",
+      "subject": "operator-home test: accept the money permission read once and passed to operatorHome"
+    },
+    {
+      "h": "61cb526c",
+      "date": "2026-11-02",
+      "subject": "Home: shift note, course conditions, week ahead, month vs goal"
+    },
+    {
       "h": "0ca08896",
       "date": "2026-11-02",
       "subject": "Tee sheet: till-style check-in on the time card (#294)"
@@ -760,21 +798,6 @@
       "h": "46a688fc",
       "date": "2026-11-02",
       "subject": "Dashboard foundation: Geist, grey page + white panels, grouped rail, Light/Dark"
-    },
-    {
-      "h": "3ae2293d",
-      "date": "2026-11-02",
-      "subject": "Pricing switches + busy-season data + speed + counter fixes + SMS opt-in (Twilio) (#289)"
-    },
-    {
-      "h": "3659755c",
-      "date": "2026-11-02",
-      "subject": "SMS-1 follow-up: Home / Money declined cards ask before texting, like the tee sheet"
-    },
-    {
-      "h": "bffab6e9",
-      "date": "2026-11-02",
-      "subject": "Event money needs \"Mark paid at the counter\"; a member with history can't be deleted"
     }
   ]
 }

@@ -21,6 +21,7 @@ const read = (p: string) => readFileSync(p, 'utf8');
 
 async function cleanup() {
   const ids = (await prisma.course.findMany({ where: { slug: { startsWith: TAG } }, select: { id: true } })).map(c => c.id);
+  await prisma.booking.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.shiftNote.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.courseMonthGoal.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.teeTime.deleteMany({ where: { courseId: { in: ids } } });
@@ -57,8 +58,14 @@ async function main() {
   // 3. week ahead
   const today = todayIn('UTC');
   const tt = (date: string, time: string, avail: number, status = 'available') => prisma.teeTime.create({ data: { courseId: a.id, date, time, holes: 18, greenFeeCents: 5000, cartFeeCents: 0, playersAvailable: avail, playersBooked: 0, status } });
-  await tt(today, '08:00', 4); await tt(today, '08:10', 4); await tt(addDaysStr(today, 2), '14:00', 4); await tt(addDaysStr(today, 2), '14:10', 4, 'blocked'); await tt(addDaysStr(today, 9), '09:00', 4);
+  const t8 = await tt(today, '08:00', 4); await tt(today, '08:10', 4); await tt(addDaysStr(today, 2), '14:00', 4); await tt(addDaysStr(today, 2), '14:10', 4, 'blocked'); await tt(addDaysStr(today, 9), '09:00', 4);
+  // Review 2026-11-02: real bookings, so booked and collected aren't trivially 0. A paid, checked-in round of 3
+  // counts; a cancelled group of 2 at the same time doesn't.
+  const bk = (o: Record<string, unknown>) => prisma.booking.create({ data: { teeTimeId: t8.id, courseId: a.id, golferName: 'G', golferEmail: `${TAG}@test.local`, greenFeeTotal: 13500, cartFeeTotal: 0, accessFeeTotal: 450, totalAmount: 13950, ...o } as never });
+  await bk({ players: 3, status: 'completed', paymentStatus: 'paid', roundPaymentIntentId: 'pi_hb1', paidAt: new Date(), checkedInAt: new Date() });
+  await bk({ players: 2, status: 'cancelled', paymentStatus: 'card_on_file' });
   const wk = await weekAhead(a.id, 'UTC');
+  ok('booked counts live groups only (a cancelled group doesn\'t)', wk.days[0].cells[0].booked === 3, wk.days[0].cells[0]);
   ok('7 days from today, hours that have tee times (blocked and later days left out)', wk.days.length === 7 && wk.days[0].date === today && JSON.stringify(wk.hours) === '[8,14]', wk.hours);
   ok('spots offered per hour (blocked offers nothing)', wk.days[0].cells[0].offered === 8 && wk.days[2].cells[1].offered === 4 && wk.days[1].cells[0].offered === 0);
 
@@ -68,7 +75,7 @@ async function main() {
   await prisma.courseMonthGoal.create({ data: { courseId: a.id, month: today.slice(0, 7), cents: 3_000_000 } });
   const g = await monthGoal(a.id, 'UTC');
   const mtd = await computeAnalytics(a.id, { from: `${today.slice(0, 7)}-01`, to: today });
-  ok('collected is computeAnalytics\' figure for the month to date', g.collectedCents === mtd.revenue.collectedCents);
+  ok('collected is computeAnalytics\' figure for the month to date — and not 0', g.collectedCents === mtd.revenue.collectedCents && g.collectedCents > 0, g.collectedCents);
   ok('needed a day = what\'s left over the days left (today included)', g.neededPerDayCents === Math.ceil((3_000_000 - g.collectedCents) / g.daysLeft) && g.daysLeft >= 1);
   await prisma.courseMonthGoal.update({ where: { courseId_month: { courseId: a.id, month: today.slice(0, 7) } }, data: { cents: null } });
   ok('a cleared goal reads as no goal (the row stays)', (await monthGoal(a.id, 'UTC')).goalCents === null && (await prisma.courseMonthGoal.count({ where: { courseId: a.id } })) === 1);

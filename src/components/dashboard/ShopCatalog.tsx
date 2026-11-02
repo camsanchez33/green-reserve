@@ -14,6 +14,45 @@ import { INPUT_COMPACT as INPUT } from '@/components/ui/field';
 import { parseImport, parsePriceCents, type ImportItem } from '@/lib/shop-import';
 import { shopTree, matches, stockOf, type FlatItem, type TreeItem } from '@/lib/shop-tree';
 import { TAX_CATEGORIES } from '@/lib/tax-categories';
+import { downscaleImage } from '@/lib/image-resize';
+
+/** DASH-D (Cam 2026-11-01, "photo tiles"): an item's register photo — a 40px thumbnail that opens the file picker. */
+function ItemPhoto({ item, onChanged, onError }: { item: FlatItem; onChanged: () => Promise<void> | void; onError: (m: string) => void }) {
+  const [busy, setBusy] = useState(false);
+  async function upload(file: File) {
+    setBusy(true);
+    // Vercel refuses a request over 4.5 MB before the route runs — shrink a phone photo first, as the logo upload does.
+    const fd = new FormData(); fd.append('itemId', item.id);
+    try {
+      fd.append('file', await downscaleImage(file));
+      const r = await fetch('/api/operator/shop-items/photo', { method: 'POST', body: fd });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) { onError(d.error || 'Upload failed — try again.'); return; }
+      await onChanged();
+    } catch { onError('Upload failed — try again.'); } finally { setBusy(false); }
+  }
+  async function remove() {
+    setBusy(true);
+    const r = await dfetch(`/api/operator/shop-items/photo?itemId=${encodeURIComponent(item.id)}`, { method: 'DELETE' });
+    setBusy(false);
+    if (!r.ok) { onError(r.error); return; }
+    await onChanged();
+  }
+  return (
+    <span className="flex items-center gap-1.5">
+      <label className={'relative w-10 h-10 shrink-0 rounded-[5px] overflow-hidden cursor-pointer ' + (item.photoUrl ? '' : 'border border-dashed border-line-strong')}>
+        {item.photoUrl
+          // eslint-disable-next-line @next/next/no-img-element
+          ? <img src={item.photoUrl} alt="" loading="lazy" className="w-full h-full object-cover" />
+          : <span className="absolute inset-0 flex items-center justify-center text-[16px] text-ink-faint" aria-hidden="true">+</span>}
+        <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={busy} aria-label={`Photo for ${item.name}`}
+          onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) upload(f); }} />
+        {busy && <span className="absolute inset-0 bg-white/70 text-[11px] flex items-center justify-center">…</span>}
+      </label>
+      {item.photoUrl && !busy && <button type="button" onClick={remove} className="text-xs text-ink-soft hover:text-ink px-1">Remove</button>}
+    </span>
+  );
+}
 
 const TAX_OPTIONS = Object.entries(TAX_CATEGORIES) as [string, { label: string; hint: string }][];
 
@@ -266,7 +305,7 @@ export function ShopCatalog() {
   return (
     <div className="space-y-4">
       <p className="text-sm text-ink-soft -mt-1">
-        Sold on the Pro shop page, or added to a round on the tee sheet and charged with it{SHOP_FEE_ON ? <>, plus GreenReserve&apos;s {usd(SHOP_SALE_FEE_CENTS)} per sale, paid by the golfer</> : null}. A price change never touches items already sold.
+        Sold at the register, or added to a round and charged with it{SHOP_FEE_ON ? <>, plus GreenReserve&apos;s {usd(SHOP_SALE_FEE_CENTS)} per sale, paid by the golfer</> : null}. A price change never touches items already sold.
       </p>
       {loadError && (
         <div className="rounded-md bg-bad/5 border border-bad/20 px-4 py-2.5 flex items-center justify-between gap-3">
@@ -308,7 +347,7 @@ export function ShopCatalog() {
           })()}
         </div>
       )}
-      {!canEdit && flat && <p className="text-xs text-ink-muted">Ask the course owner to turn on “Edit the shop catalog” for you to change these.</p>}
+      {!canEdit && flat && <p className="text-xs text-ink-muted">Changing these needs “Edit the shop catalog” from the owner.</p>}
       {error && <p className="text-xs text-bad">{error}</p>}
       {note && <p className="text-xs text-ok">{note}</p>}
 
@@ -350,6 +389,7 @@ export function ShopCatalog() {
                         )}
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
+                        {canEdit && <ItemPhoto item={i} onChanged={load} onError={m => { setNote(''); setError(m); }} />}
                         <span className="text-sm tabular-nums text-ink">{usd(i.priceCents)}</span>
                         {canEdit && (
                           <>

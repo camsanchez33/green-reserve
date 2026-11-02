@@ -1,8 +1,8 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 649,
-    "routes": 289,
+    "files": 650,
+    "routes": 290,
     "libs": 229,
     "models": 70,
     "orphans": 10,
@@ -7037,6 +7037,39 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/shop-items/photo/route.ts",
+      "lines": 55,
+      "purpose": "DASH-D register (Cam 2026-11-01, \"photo tiles\"):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "DELETE",
+          "kind": "route"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/shop-items/photo",
+      "kind": "api",
+      "methods": [
+        "DELETE",
+        "POST"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/agreement-required",
+        "@/lib/contact",
+        "@/lib/prisma",
+        "@/lib/session",
+        "@vercel/blob",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/shop-items/read/route.ts",
       "lines": 33,
       "purpose": "",
@@ -9027,7 +9060,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 938,
+      "lines": 943,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -11495,7 +11528,7 @@
     },
     {
       "path": "src/components/dashboard/ShopCatalog.tsx",
-      "lines": 374,
+      "lines": 414,
       "purpose": "POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08):",
       "brain": [],
       "exports": [
@@ -11513,6 +11546,7 @@
         "@/components/ui/field",
         "@/lib/booking-fees",
         "@/lib/dashboard-fetch",
+        "@/lib/image-resize",
         "@/lib/shop-import",
         "@/lib/shop-tree",
         "@/lib/tax-categories",
@@ -14340,6 +14374,7 @@
         "src/app/api/operator/sales-tax/route.ts",
         "src/app/api/operator/schedule/route.ts",
         "src/app/api/operator/settings/route.ts",
+        "src/app/api/operator/shop-items/photo/route.ts",
         "src/app/api/operator/shop-items/route.ts",
         "src/app/api/operator/shop-sales/route.ts",
         "src/app/api/operator/sign/route.ts",
@@ -16508,6 +16543,7 @@
         "src/app/api/inquiries/upload/route.ts",
         "src/app/api/operator/messages/route.ts",
         "src/app/api/operator/photos/route.ts",
+        "src/app/api/operator/shop-items/photo/route.ts",
         "src/app/api/operator/upload/route.ts",
         "src/app/call/[token]/page.tsx",
         "src/app/checkin/[bookingId]/page.tsx",
@@ -19538,6 +19574,7 @@
         "src/app/dashboard/settings/page.tsx",
         "src/app/for-courses/details/page.tsx",
         "src/components/dashboard/ImageUpload.tsx",
+        "src/components/dashboard/ShopCatalog.tsx",
         "src/components/dashboard/onboarding/PageReviewStep.tsx"
       ]
     },
@@ -22271,6 +22308,7 @@
         "src/app/api/operator/round-rules/route.ts",
         "src/app/api/operator/settings/route.ts",
         "src/app/api/operator/shift-notes/route.ts",
+        "src/app/api/operator/shop-items/photo/route.ts",
         "src/app/api/operator/shop-items/route.ts",
         "src/app/api/operator/shop-sales/rounds/route.ts",
         "src/app/api/operator/shop-sales/route.ts",
@@ -23916,6 +23954,7 @@
         "src/app/api/operator/settings/route.ts",
         "src/app/api/operator/sheet-money/route.ts",
         "src/app/api/operator/shift-notes/route.ts",
+        "src/app/api/operator/shop-items/photo/route.ts",
         "src/app/api/operator/shop-items/read/route.ts",
         "src/app/api/operator/shop-items/route.ts",
         "src/app/api/operator/shop-sales/quote/route.ts",
@@ -24515,7 +24554,7 @@
     },
     {
       "path": "src/lib/shop-tree.ts",
-      "lines": 55,
+      "lines": 57,
       "purpose": "W2-7:",
       "brain": [],
       "exports": [
@@ -31098,6 +31137,10 @@
           "type": "String"
         },
         {
+          "name": "photoUrl",
+          "type": "String"
+        },
+        {
           "name": "taxCategory",
           "type": "String"
         },
@@ -31131,12 +31174,14 @@
         }
       ],
       "writers": [
+        "src/app/api/operator/shop-items/photo/route.ts",
         "src/app/api/operator/shop-items/route.ts",
         "src/lib/sample-data.ts",
         "src/lib/shop-catalog.ts",
         "src/lib/shop-stock.ts"
       ],
       "readers": [
+        "src/app/api/operator/shop-items/photo/route.ts",
         "src/app/api/operator/shop-items/route.ts",
         "src/lib/sample-data.ts",
         "src/lib/shop-catalog.ts",
