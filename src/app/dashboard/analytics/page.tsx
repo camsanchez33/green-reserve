@@ -24,7 +24,7 @@ import type { PermissionKey } from '@/lib/staff-permissions';
 import { LoadError } from '@/components/dashboard/LoadError';
 import { Card } from '@/components/ui/Card';
 import { StatusDot } from '@/components/ui/StatusDot';
-import { TERMS, type TermKey } from '@/lib/analytics-terms';
+import { TERMS, TURNED_AWAY_CSV, type TermKey } from '@/lib/analytics-terms';
 import { ShopTab } from '@/components/dashboard/analytics/ShopTab';
 import type { Analytics } from '@/lib/analytics';
 
@@ -380,7 +380,7 @@ function MoreNumbers({ d, open }: { d: Data; open: (t: Tab) => void }) {
     { label: 'Booked ahead', term: 'bookedAhead', value: h.avgLeadDays == null ? '—' : `${h.avgLeadDays} days`, delta: <Delta now={h.avgLeadDays} prev={p?.avgLeadDays} unit="num" />, tab: 'booking' },
     { label: 'No-shows', term: 'noShows', value: pctS(h.noShowPct), delta: <Delta now={h.noShowPct} prev={p?.noShowPct} unit="pts" goodWhenUp={false} />, tab: 'misses' },
     { label: 'Cancellations', term: 'cancellations', value: pctS(h.cancelPct), delta: <Delta now={h.cancelPct} prev={p?.cancelPct} unit="pts" goodWhenUp={false} />, tab: 'misses' },
-    { label: 'Open spots', term: 'emptySpots', value: d.unfilled.openSpots.toLocaleString(), delta: <span className="text-ink-muted tabular-nums">{plural(d.unfilled.slots, 'tee time')}</span>, tab: 'busy' },
+    { label: 'Open player spots', term: 'emptySpots', value: d.unfilled.openSpots.toLocaleString(), delta: <span className="text-ink-muted tabular-nums">{plural(d.unfilled.slots, 'tee time')}</span>, tab: 'busy' },
     { label: 'Rounds with a cart', term: 'cartRounds', value: pctS(d.revenue.beyond.cartPct), delta: <span className="text-ink-muted tabular-nums">{d.revenue.beyond.cartRounds} of {d.revenue.beyond.rounds}</span>, tab: 'revenue' },
   ];
   return (
@@ -517,14 +517,14 @@ function BusyTab({ d }: { d: Data }) {
 
       {/* W2-8 (6): where demand was more than the tee sheet offered. */}
       <Section title="Golfers you turned away" term="turnedAway"
-        action={u.alerts.count > 0 ? <Download onClick={() => downloadCsv(`waiting-for-a-time-${d.range.from}-${d.range.to}`, ['Date', 'Time', 'Players', 'Told'], u.alerts.rows.map(a => [a.date, a.time, a.players, a.notified ? 'yes' : 'no']))} /> : undefined}>
+        action={u.alerts.count > 0 || (u.soldOutRows?.length ?? 0) > 0 ? <Download onClick={() => downloadCsv(`turned-away-${d.range.from}-${d.range.to}`, TURNED_AWAY_CSV.head, [...(u.soldOutRows ?? []).map(t => [TURNED_AWAY_CSV.soldOut, t.date, t.time, '', '']), ...u.alerts.rows.map(a => [TURNED_AWAY_CSV.waiting, a.date, a.time, a.players, a.notified ? 'yes' : 'no'])])} /> : undefined}>
         <div className="divide-y divide-line-soft max-w-xl mb-4">
           <Line label="Tee times sold out" value={u.soldOutTimes.toLocaleString()} />
           <Line label="Asked to hear of an opening" sub={plural(u.alerts.players, 'player')} value={plural(u.alerts.count, 'golfer')} />
           {u.alerts.count > 0 && <Line label="Told a time opened" value={u.alerts.notified.toLocaleString()} />}
           {u.blockedTimes > 0 && <Line label="Times you blocked" value={u.blockedTimes.toLocaleString()} />}
         </div>
-        <Table head={['Day', 'Hour', 'Times sold out']} empty="Nothing sold out in these dates."
+        <Table head={['Weekday', 'Hour', 'Sold out']} empty="Nothing sold out in these dates."
           rows={u.soldOutByHour.map(r => [DAY_NAME[r.dow] ?? r.dow, fmtHour(r.hour), r.times])} />
       </Section>
 

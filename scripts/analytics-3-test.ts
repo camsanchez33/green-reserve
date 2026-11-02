@@ -37,7 +37,7 @@ check('no unsold-spot dollar figure reaches Birdie or the monthly review', !read
 check('a new sign-in forgets the last course’s top bar', readFileSync('src/app/dashboard/login/page.tsx', 'utf8').includes("sessionStorage.removeItem('gr:op-identity')"));
 // DENSE-1: definitions moved behind the labels, into lib/analytics-terms.ts.
 const terms = readFileSync('src/lib/analytics-terms.ts', 'utf8');
-check('tile wording matches the numbers', terms.includes('of bookings whose tee time has passed') && terms.includes('counting past visits'));
+check('tile wording matches the numbers', terms.includes('of bookings whose tee time has passed') && terms.includes('in these dates or any time before'));
 check('sign-in is a full page load, so no cached course survives', readFileSync('src/app/dashboard/login/page.tsx', 'utf8').includes("window.location.assign(data.redirect || '/dashboard')"));
 check('“kept from before” says booked, not played', terms.includes('from the period before who booked with you again') && page.includes('term="keptFromBefore"'));
 // DENSE-1 review: the dashed "period before" only in day mode (weekly buckets don't line up),

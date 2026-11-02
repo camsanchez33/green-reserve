@@ -10,6 +10,7 @@ import { INPUT_COMPACT as INPUT } from '@/components/ui/field';
 import { LoadError } from '@/components/dashboard/LoadError';
 import { dfetch } from '@/lib/dashboard-fetch';
 import type { StockRow } from '@/lib/shop-stock';
+import { stockWords } from '@/lib/shop-tree';
 
 type Data = { rows: StockRow[]; receipts: { id: string; name: string; quantity: number; unitCostCents?: number | null; receivedBy: string; createdAt: string; note: string }[]; canEdit: boolean; canCost: boolean };
 type Edit = { id: string; qty: string; cost: string; reorder: string; unitCost: string };
@@ -34,7 +35,10 @@ export function ShopStock({ refreshKey = 0 }: { refreshKey?: number }) {
   if (error && !data) return <LoadError message={`Couldn't load stock — ${error}`} onRetry={load} />;
   if (!data) return null;
   const counted = data.rows.filter(r => r.stockCount !== null || r.reorderAt !== null || (data.canCost && r.costCents != null));
-  const low = data.rows.filter(r => r.low);
+  // Accuracy pass (Cam 2026-11-02, the Polo said 'none left' on its tile and 'low' here): an empty shelf is 'sold out' everywhere.
+  const out = data.rows.filter(r => r.stockCount !== null && r.stockCount <= 0);
+  const low = data.rows.filter(r => r.low && !(r.stockCount !== null && r.stockCount <= 0));
+  const names = (rs: StockRow[]) => rs.slice(0, 3).map(r => r.name).join(', ') + (rs.length > 3 ? '…' : '');
 
   const start = (r: StockRow) => { setRowError(''); setEdit({ id: r.id, qty: '', unitCost: '', reorder: r.reorderAt == null ? '' : String(r.reorderAt), cost: usd(r.costCents) }); };
   async function post(body: Record<string, unknown>) {
@@ -67,7 +71,9 @@ export function ShopStock({ refreshKey = 0 }: { refreshKey?: number }) {
     <Card className="p-5">
       <div className="flex flex-wrap items-center gap-3">
         <h2 className="text-[15px] font-semibold text-ink">Stock</h2>
-        {low.length > 0 ? <StatusDot status="warn" label={`${low.length} low: ${low.slice(0, 3).map(r => r.name).join(', ')}${low.length > 3 ? '…' : ''}`} /> : <span className="text-[13px] text-ink-muted">{counted.length ? 'Nothing low' : 'No items counted'}</span>}
+        {out.length > 0 && <StatusDot status="bad" label={`${out.length} sold out: ${names(out)}`} />}
+        {low.length > 0 && <StatusDot status="warn" label={`${low.length} low: ${names(low)}`} />}
+        {!out.length && !low.length && <span className="text-[13px] text-ink-muted">{counted.length ? 'Nothing low' : 'No items counted'}</span>}
         <button onClick={() => setOpen(o => !o)} aria-expanded={open} className="ml-auto text-[13px] font-medium text-pine hover:underline underline-offset-4">{open ? 'Hide' : data.canEdit ? 'Receive stock' : 'Open'}</button>
       </div>
       {error && <p role="alert" className="text-[12.5px] text-bad mt-2">{error}</p>}
@@ -101,8 +107,8 @@ export function ShopStock({ refreshKey = 0 }: { refreshKey?: number }) {
                 </tr>
               ) : (
                 <tr key={r.id}>
-                  <td className="py-2 pr-3 text-ink">{r.low && <StatusDot status="warn" label="" />} {r.name}</td>
-                  <td className={'py-2 pr-3 text-right ' + (r.low ? 'text-warn font-semibold' : 'text-ink')}>{r.stockCount ?? '—'}</td>
+                  <td className="py-2 pr-3 text-ink">{r.stockCount !== null && r.stockCount <= 0 ? <StatusDot status="bad" label="" /> : r.low && <StatusDot status="warn" label="" />} {r.name}</td>
+                  <td className={'py-2 pr-3 text-right ' + (r.stockCount !== null && r.stockCount <= 0 ? 'text-bad font-semibold' : r.low ? 'text-warn font-semibold' : 'text-ink')}>{r.stockCount === null ? '—' : r.stockCount <= 0 ? stockWords(r.stockCount) : r.stockCount}</td>
                   <td className="py-2 pr-3 text-right text-ink-muted">{r.reorderAt ?? '—'}</td>
                   {data.canCost && <td className="py-2 pr-3 text-right text-ink-muted">{r.costCents == null ? '—' : `$${usd(r.costCents)}`}</td>}
                   <td className="py-2 text-right">{(data.canEdit || data.canCost) && <button onClick={() => start(r)} className="text-[13px] font-medium text-pine hover:underline underline-offset-4">Edit</button>}</td>

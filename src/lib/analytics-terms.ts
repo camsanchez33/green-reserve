@@ -7,21 +7,21 @@ export const TERMS = {
   shopMargin: 'What sold, less what those items cost you at the cost entered today. Items with no cost are left out.',
   revenue: 'Green fees, carts and range balls paid to your course for these dates. GreenReserve’s booking fee is the golfer’s and isn’t counted.',
   fill: 'Spots booked out of every spot you offered on tee times that weren’t blocked.',
-  rounds: 'Golfers who checked in and paid. One golfer, one round.',
+  rounds: 'Golfers who checked in and paid. One golfer, one round — a group of four is one booking and four rounds.',
   perRound: 'Revenue divided by rounds played: what each golfer spent with you.',
-  bookings: 'Bookings for tee times in these dates that weren’t cancelled.',
+  bookings: 'Reservations — one per group — for tee times in these dates that weren’t cancelled. Rounds count the golfers in them.',
   golfers: 'Different golfers who booked, matched on email, then phone. Walk-ins with neither can’t be counted.',
-  cameBack: 'Golfers who have booked with you more than once, counting past visits.',
+  cameBack: 'Of the golfers who booked in these dates, the share who have booked with you more than once — in these dates or any time before. The change is against the period before.',
   keptFromBefore: 'Golfers from the period before who booked with you again in these dates.',
   noShows: 'Groups that hadn’t checked in by 30 minutes after their tee time, marked by staff or not, as a share of bookings whose tee time has passed.',
   cancellations: 'Bookings cancelled, not counting rounds you called off for weather or a closure.',
   bookedAhead: 'How many days before the tee time golfers booked, on average.',
-  emptySpots: 'Spots nobody booked on tee times that have already gone out.',
+  emptySpots: 'Player spots nobody booked on tee times in these dates that have already gone out — a foursome time with one golfer has three.',
   cartRounds: 'Paid bookings that included a cart.',
   revenueChart: 'What your course was paid for the rounds on each day. The light part of a bar is rounds that played (or no-showed) but weren’t paid yet.',
   whatFor: 'Your revenue split by what golfers paid for.',
   howPaid: 'By card is at check-in or with a pay link; at the counter is cash or your own card machine.',
-  beyond: 'Carts and the pro shop. Shop sales aren’t counted in revenue. Before sales tax.',
+  beyond: 'Carts and the pro shop. Shop sales aren’t counted in revenue. Before sales tax. Staff add shop items to a round from the group on the tee sheet.',
   posted: 'Green fees on paid rounds against the price posted for each tee time. The gap is member and resident rates and prices staff set by hand.',
   comingUp: 'Bookings for tee times that haven’t happened yet, and what they’re worth when they play.',
   // DENSE-5 Members strip.
@@ -34,7 +34,7 @@ export const TERMS = {
   heatEarned: 'Each square is one hour on one day of the week: what it earned for every spot offered, sold or not, on tee times already played.',
   byDow: 'The share of spots booked on each day of the week.',
   byHour: 'The share of spots booked in each hour of the day.',
-  turnedAway: 'Tee times that sold out, and golfers who asked to be told when a full time opened.',
+  turnedAway: 'Tee times where every player spot was booked, and golfers who asked to be told when a full time opened. The download lists each date and time.',
   openSpots: 'Tee times that went out with room left, most open spots first.',
   noShowRule: 'A group counts as a no-show when it hasn’t checked in 30 minutes after its tee time.',
   feePolicy: 'No-shows on bookings that had a card and a fee, against bookings with no fee.',
@@ -45,5 +45,8 @@ export const TERMS = {
   channel: 'Online is your booking page; phone and walk-in are the ones your staff added on the tee sheet.',
   lead: 'How long before the tee time each booking was made.',
 } as const;
+
+/** The turned-away download: each row says whether it is a full tee time or a golfer waiting for one. */
+export const TURNED_AWAY_CSV = { head: ['What', 'Date', 'Time', 'Players', 'Told'], soldOut: 'Sold out', waiting: 'Asked to hear of an opening' };
 
 export type TermKey = keyof typeof TERMS;

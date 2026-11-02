@@ -505,6 +505,8 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
       earnedPerSpot: { hours, rows: DOW.map((d, w) => ({ dow: d, cells: hours.map(h => { const e = heatEarned.get(`${w}-${h}`); return e && e.spots ? Math.round(e.cents / e.spots) : null; }) })) },
       // W2-8 (6): demand turned away.
       soldOutTimes: soldOut.length,
+      // Accuracy pass (Cam 2026-11-02): which dates and times, for the download.
+      soldOutRows: soldOut.map(t => ({ date: t.date, time: t.time })).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time)).slice(0, 2000),
       soldOutByHour: [...soldOutBy.entries()].map(([k, n]) => { const [w, h] = k.split('-').map(Number); return { dow: DOW[w], hour: h, times: n }; }).sort((a, b) => b.times - a.times).slice(0, 8),
       alerts: { count: alerts.length, players: alerts.reduce((n, a) => n + a.players, 0), notified: alerts.filter(a => a.notifiedAt).length,
         rows: alerts.map(a => ({ date: a.date, time: a.teeTime?.time ?? (a.windowStart || null), players: a.players, notified: !!a.notifiedAt })) },
