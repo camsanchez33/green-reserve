@@ -163,12 +163,12 @@ export async function PATCH(req: NextRequest) {
   if (action === 'split') {
     const r = await splitBooking(session.courseId, id, Number(splitPlayers), { name: typeof splitName === 'string' ? splitName : '', phone: typeof splitPhone === 'string' ? splitPhone : '', actor: staff });
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
-    if (thenCash !== true) return NextResponse.json({ success: true, newBookingId: r.newBookingId, leaveCents: r.leaveCents, keepCents: r.keepCents });
+    if (thenCash !== true) return NextResponse.json({ success: true, newBookingId: r.newBookingId, leaveCents: r.leaveCents, keepCents: r.keepCents, fee: r.note });
     const cash = await ringUpCash(session.courseId, { lines: [], bookingIds: [r.newBookingId], walkIns: [], cashTenderedCents, soldBy: session.email, actor: staff });
     // The split stands either way; a refused cash sale leaves the new group on the sheet, owing.
-    if (!cash.ok) return NextResponse.json({ success: true, newBookingId: r.newBookingId, leaveCents: r.leaveCents, keepCents: r.keepCents, cashError: cash.error });
-    if (cash.value.skipped.length) return NextResponse.json({ success: true, newBookingId: r.newBookingId, leaveCents: r.leaveCents, keepCents: r.keepCents, cashError: cash.value.skipped.join(' ') });
-    return NextResponse.json({ success: true, newBookingId: r.newBookingId, leaveCents: r.leaveCents, keepCents: r.keepCents, saleId: cash.value.sale.id, totalCents: cash.value.sale.totalCents });
+    if (!cash.ok) return NextResponse.json({ success: true, newBookingId: r.newBookingId, leaveCents: r.leaveCents, keepCents: r.keepCents, cashError: cash.error, fee: r.note });
+    if (cash.value.skipped.length) return NextResponse.json({ success: true, newBookingId: r.newBookingId, leaveCents: r.leaveCents, keepCents: r.keepCents, cashError: cash.value.skipped.join(' '), fee: r.note });
+    return NextResponse.json({ success: true, newBookingId: r.newBookingId, leaveCents: r.leaveCents, keepCents: r.keepCents, saleId: cash.value.sale.id, totalCents: cash.value.sale.totalCents, fee: [r.note, cash.value.notes.join(' ')].filter(Boolean).join(' ') || null });
   }
   if (action === 'change_players') {
     const n = Number(newPlayers);

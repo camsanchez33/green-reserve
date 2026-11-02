@@ -84,6 +84,20 @@ async function main() {
   ok('…both bookings carry an event saying what happened', (await prisma.bookingEvent.count({ where: { courseId: course.id, bookingId: { in: [john.id, r.ok ? r.newBookingId : ''] } } })) === 2);
   ok('another course can\'t split it', !(await splitBooking('other-course', john.id, 1, { actor })).ok);
 
+  // Final review 2026-11-02: a hold already taken at the cutoff. The booker's row carries the smaller fee and the
+  // leavers' share goes back (here Stripe isn't configured, so the refund fails and staff are told the exact amount).
+  const held = await mk({ paymentStatus: 'cancellation_fee_charged', cancellationFeeChargeId: 'pi_hold', cancellationFeeTotal: 4000 });
+  await prisma.course.update({ where: { id: course.id }, data: { lateFeeBasis: 'player', stripeAccountId: 'acct_test' } });
+  const rh = await splitBooking(course.id, held.id, 1, { actor });
+  const heldAfter = await prisma.booking.findUniqueOrThrow({ where: { id: held.id } });
+  ok('a group whose hold is taken can still split (that\'s every card group on the day at a hold course)', rh.ok && heldAfter.players === 3 && heldAfter.paymentStatus === 'cancellation_fee_charged' && heldAfter.cancellationFeeChargeId === 'pi_hold');
+  ok('…its fee record drops to the 3 who stay ($30)', heldAfter.cancellationFeeTotal === 3000, heldAfter.cancellationFeeTotal);
+  ok('…and the one who left gets their $10 share of the hold back — or staff are told exactly what to refund', rh.ok && rh.note === 'Split done, but $10.00 of the late-cancellation hold couldn’t be refunded automatically — refund it in Stripe.', rh.ok ? rh.note : rh);
+  ok('a group with no hold has nothing to give back', r.ok && r.note === null);
+  const db = readFileSync('src/lib/split-booking-db.ts', 'utf8');
+  ok('the hold share is refunded on the course\'s account and written to the ledger', db.includes('refundOnConnectedAccount({ paymentIntentId: h.chargeId, connectedAccountId: h.account, amountCents: h.cents })') && db.includes("recordMove({ courseId: h.courseId, what: 'hold', direction: 'out'"));
+  await prisma.course.update({ where: { id: course.id }, data: { lateFeeBasis: 'booking', stripeAccountId: '' } });
+
   // 3–4. refused in the database too, and a racing payment wins
   const paid = await mk({ paymentStatus: 'paid', roundPaymentIntentId: 'pi_1', status: 'completed' });
   const rp = await splitBooking(course.id, paid.id, 1, { actor });

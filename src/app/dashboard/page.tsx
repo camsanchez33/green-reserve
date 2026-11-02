@@ -224,8 +224,9 @@ function DashboardPageInner() {
   async function splitOff(b: Booking, n: number, name: string, thenCash: boolean) {
     setSplitBusy(true);
     try {
-      const r = await dfetch<{ newBookingId: string; leaveCents: number; cashError?: string; totalCents?: number }>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: b.id, action: 'split', splitPlayers: n, splitName: name, thenCash }) });
+      const r = await dfetch<{ newBookingId: string; leaveCents: number; cashError?: string; totalCents?: number; fee?: string | null }>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: b.id, action: 'split', splitPlayers: n, splitName: name, thenCash }) });
       if (!r.ok) { toast(r.error, 'warn'); return; }
+      if (r.data.fee) toast(r.data.fee, 'warn');
       setSplitFor(null);
       if (r.data.cashError) toast(`Cash failed: ${r.data.cashError} — still owing.`, 'warn');
       else if (thenCash) { toast('Cash taken — checked in.', 'ok'); setJustDone({ bookingId: r.data.newBookingId, name: name.trim() || `${b.golferName} · guest${n > 1 ? 's' : ''}`, players: n, how: 'Cash' }); }

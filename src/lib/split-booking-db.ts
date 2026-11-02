@@ -10,16 +10,23 @@
 import { prisma } from './prisma';
 import { splitShares, splitRefusal } from './split-booking';
 import { rescalePartyFees } from './cancel-policy';
-import { recordBookingEvent, type EventActor } from './booking-events';
+import { recordBookingEvent, recordBookingEventSafe, type EventActor } from './booking-events';
+import { refundOnConnectedAccount } from './stripe';
+import { recordMove } from './money-ledger';
 
-export type SplitResult = { ok: true; newBookingId: string; keepCents: number; leaveCents: number } | { ok: false; status: number; error: string };
+export type SplitResult = { ok: true; newBookingId: string; keepCents: number; leaveCents: number; note: string | null } | { ok: false; status: number; error: string };
+
+/** A hold already taken (cutoff) covers the whole party; the players who split off get their share back (final review 2026-11-02). */
+type HoldBack = { chargeId: string; account: string; cents: number; bookingId: string; courseId: string; actor: EventActor };
 
 export async function splitBooking(courseId: string, bookingId: string, leave: number, opts: { name?: string; phone?: string; actor: EventActor }): Promise<SplitResult> {
   if (!Number.isInteger(leave) || leave < 1) return { ok: false, status: 400, error: 'Pick how many are paying on their own.' };
   const name = String(opts.name ?? '').trim().slice(0, 120);
   const phone = String(opts.phone ?? '').trim().slice(0, 40);
+  let hold: HoldBack | null = null;
+  let result: SplitResult;
   try {
-    return await prisma.$transaction(async tx => {
+    result = await prisma.$transaction(async tx => {
       const b = await tx.booking.findUnique({
         where: { id: bookingId },
         select: {
@@ -27,9 +34,9 @@ export async function splitBooking(courseId: string, bookingId: string, leave: n
           roundPaymentIntentId: true, shopLockedAt: true, readerStartedAt: true, feePaidCents: true, appliedRate: true,
           greenFeeTotal: true, cartFeeTotal: true, cartSelected: true, rangeBallsTotal: true, accessFeeTotal: true, totalAmount: true,
           residentPlayers: true, residentRateCents: true, memberRateCents: true, memberCartCents: true,
-          cancellationFeeTotal: true, noShowFeeTotal: true, cancellationHoursAtBooking: true,
+          cancellationFeeTotal: true, noShowFeeTotal: true, cancellationHoursAtBooking: true, cancellationFeeChargeId: true,
           teeTime: { select: { greenFeeCents: true, cartFeeCents: true, eventId: true } },
-          course: { select: { lateFeeBasis: true, noShowFeeBasis: true, noShowFeeCents: true } },
+          course: { select: { lateFeeBasis: true, noShowFeeBasis: true, noShowFeeCents: true, stripeAccountId: true } },
         },
       });
       if (!b || b.courseId !== courseId) return { ok: false, status: 404, error: 'Not found' } as const;
@@ -52,6 +59,12 @@ export async function splitBooking(courseId: string, bookingId: string, leave: n
         },
       });
       if (!changed.count) return { ok: false, status: 409, error: 'This group just changed — refresh and look again.' } as const;
+      // The hold the cron took at the cutoff is exactly cancellationFeeTotal (lib/cutoff-hold). The booker's row now
+      // carries the smaller fee, so the leavers' share goes back once this commits — what Stripe keeps always equals the row.
+      const holdShare = b.cancellationFeeTotal - fees.cancellationFeeTotal;
+      if (b.paymentStatus === 'cancellation_fee_charged' && b.cancellationFeeChargeId && holdShare > 0 && b.course.stripeAccountId) {
+        hold = { chargeId: b.cancellationFeeChargeId, account: b.course.stripeAccountId, cents: holdShare, bookingId: b.id, courseId, actor: opts.actor };
+      }
 
       const created = await tx.booking.create({
         data: {
@@ -70,10 +83,23 @@ export async function splitBooking(courseId: string, bookingId: string, leave: n
       const meta = { split: true, from: b.id, to: created.id, playersLeft: off.players, before: b.totalAmount, keep: keep.totalAmount, leave: off.totalAmount };
       await recordBookingEvent(tx, { bookingId: b.id, courseId, type: 'price_changed', actor: opts.actor, amountCents: keep.totalAmount, playerCount: keep.players, metadata: meta });
       await recordBookingEvent(tx, { bookingId: created.id, courseId, type: 'booking_created', actor: opts.actor, amountCents: off.totalAmount, playerCount: off.players, metadata: meta });
-      return { ok: true, newBookingId: created.id, keepCents: keep.totalAmount, leaveCents: off.totalAmount } as const;
+      return { ok: true, newBookingId: created.id, keepCents: keep.totalAmount, leaveCents: off.totalAmount, note: null } as const;
     });
   } catch (err) {
     console.error(JSON.stringify({ ev: 'split_booking.fail', bookingId, error: err instanceof Error ? err.message : String(err) }));
     return { ok: false, status: 500, error: 'The split didn’t go through — nothing changed. Try again.' };
   }
+  const h = hold as HoldBack | null;
+  if (result.ok && h) {
+    // Outside the transaction (a Stripe call), ledger first-class: the refund is a money move.
+    try {
+      const refund = await refundOnConnectedAccount({ paymentIntentId: h.chargeId, connectedAccountId: h.account, amountCents: h.cents });
+      await recordMove({ courseId: h.courseId, what: 'hold', direction: 'out', method: 'card', account: 'course', amountCents: refund.amount, stripeId: refund.id, bookingId: h.bookingId, actor: h.actor.type, note: 'hold share given back — players split off to pay on their own' });
+      await recordBookingEventSafe({ bookingId: h.bookingId, courseId: h.courseId, type: 'fee_refunded', actor: h.actor, amountCents: refund.amount, stripeId: refund.id, metadata: { reason: 'hold_share_split' } });
+    } catch (err) {
+      console.error(JSON.stringify({ ev: 'split_booking.hold_refund.fail', bookingId, error: err instanceof Error ? err.message : String(err) }));
+      result = { ...result, note: `Split done, but $${(h.cents / 100).toFixed(2)} of the late-cancellation hold couldn’t be refunded automatically — refund it in Stripe.` };
+    }
+  }
+  return result;
 }

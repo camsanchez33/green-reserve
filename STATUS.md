@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-02 21:43 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `305393b8` · working tree **8 dirty file(s)**
+Generated 2026-11-02 21:52 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `580df30d` · working tree **7 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 51 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 52 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `f3ad66bb` | 2026-11-02 | Tee sheet: pay separately — split players off a group and pay their share |
 | `90f8f79d` | 2026-11-02 | Dashboard: "/" or Cmd/Ctrl K jumps to golfer search; Home flags stale conditions (#298) |
 | `06d5e4c6` | 2026-11-02 | Dashboard: / or Ctrl/Cmd K jumps to golfer search; Home says when conditions are off the booking page |
 | `2aa723d8` | 2026-11-02 | Booking page: today's course conditions while fresh (#297) |
@@ -66,16 +67,15 @@ Generated 2026-11-02 21:43 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (8 file(s))
+### Uncommitted working tree (7 file(s))
 
-- `M CLAUDE.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
+- `M scripts/split-booking-db-test.ts`
 - `M src/app/api/operator/bookings/route.ts`
 - `M src/app/dashboard/page.tsx`
-- `?? scripts/split-booking-db-test.ts`
-- `?? src/lib/split-booking-db.ts`
-- `?? src/lib/split-booking.ts`
+- `M src/lib/split-booking-db.ts`
+- `?? docs/feedback/2026-11-02-operations-pages-ideas.md`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -166,13 +166,13 @@ This is the distinction a raw checkbox count gets wrong.
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 7d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 7d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 9d |
-| `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 10d |
-| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 10d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 10d |
-| `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 10d |
-| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 10d |
-| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 10d |
-| `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 10d |
+| `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 11d |
+| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 11d |
+| `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 11d |
+| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 11d |
+| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 11d |
+| `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 11d |
 | `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 12d |
 | `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 12d |
 | `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 12d |
@@ -201,6 +201,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `580df30d` 2026-11-02 — queue/spec update
+- `cbc3bd08` 2026-11-02 — queue/spec update
+- `f3ad66bb` 2026-11-02 — Tee sheet: pay separately — split players off a group and pay their share
 - `90f8f79d` 2026-11-02 — Dashboard: "/" or Cmd/Ctrl K jumps to golfer search; Home flags stale conditions (#298)
 - `06d5e4c6` 2026-11-02 — Dashboard: / or Ctrl/Cmd K jumps to golfer search; Home says when conditions are off the booking page
 - `2aa723d8` 2026-11-02 — Booking page: today's course conditions while fresh (#297)
@@ -210,9 +213,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `0394ca3b` 2026-11-02 — Home: shift note, course conditions, week ahead, month vs goal (#295)
 - `7de2b772` 2026-11-02 — operator-home test: accept the money permission read once and passed to operatorHome
 - `61cb526c` 2026-11-02 — Home: shift note, course conditions, week ahead, month vs goal
-- `0ca08896` 2026-11-02 — Tee sheet: till-style check-in on the time card (#294)
-- `383b5af1` 2026-11-02 — Regenerate code map and status board
-- `1b7f3b82` 2026-11-02 — Tests follow the till: Here-now buttons, pay-link day rule, owed amount as the ticket Total
 
 ---
 

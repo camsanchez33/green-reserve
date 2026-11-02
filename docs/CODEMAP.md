@@ -304,7 +304,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/courses/[slug]/account` | golfer | **NONE FOUND** | page | `src/app/courses/[slug]/account/page.tsx` | 11 |
 | `/courses/[slug]/account/accept-invite` | golfer | entry | page | `src/app/courses/[slug]/account/accept-invite/page.tsx` | 144 |
 | `/courses/[slug]/member` | member | **NONE FOUND** | page | `src/app/courses/[slug]/member/page.tsx` | 874 |
-| `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 1874 |
+| `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 1875 |
 | `/dashboard/2fa` | operator | entry | page | `src/app/dashboard/2fa/page.tsx` | 110 |
 | `/dashboard/analytics` | operator | middleware | page | `src/app/dashboard/analytics/page.tsx` | 792 |
 | `/dashboard/cancellations` | operator | middleware | page | `src/app/dashboard/cancellations/page.tsx` | 17 |
@@ -358,7 +358,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/format.ts` | 51 | 78 | MP-9 (ADMIN_V4 V4-6 §3) — the one place admin pages format money and time. | `formatCents`, `formatDate`, `formatDateTime`, `formatEasternDate`, `formatEasternDay`, `formatMoney`, `formatRelative`, `formatStamp` +3 more |
 | `src/lib/dashboard-fetch.ts` | 44 | 43 | SD-10 (from the SD review). | `dfetch`, `DFetchResult` |
 | `src/lib/admin-audit.ts` | 42 | 194 | BRAIN-1a (Cam 2026-10-22): | `ACTION_LABELS`, `auditAdmin`, `AuditEntry`, `bodyWithReason`, `changedFields`, `courseOfBooking`, `needReason`, `REASON_ACTIONS` +5 more |
-| `src/lib/stripe.ts` | 34 | 145 | Every charge, refund and SetupIntent GreenReserve makes goes through here. | `ACCESS_FEE_CENTS`, `chargeOnConnectedAccount`, `chargeOneIntent`, `MEMBERSHIP_FEE_RATE`, `membershipFeeCents`, `refundOnConnectedAccount`, `stripe` |
+| `src/lib/stripe.ts` | 35 | 145 | Every charge, refund and SetupIntent GreenReserve makes goes through here. | `ACCESS_FEE_CENTS`, `chargeOnConnectedAccount`, `chargeOneIntent`, `MEMBERSHIP_FEE_RATE`, `membershipFeeCents`, `refundOnConnectedAccount`, `stripe` |
 | `src/lib/agreement-required.ts` | 32 | 124 | AGREEMENT_SPEC AG-3 — version bumps and re-acceptance. | `AGREEMENT_REQUIRED_MESSAGE`, `agreementDueByCourse`, `agreementOverdueCourses`, `agreementReacceptance`, `currentReacceptWindow`, `Reacceptance`, `ReacceptWindow`, `requireAgreementCurrent` +1 more |
 | `src/lib/auth.ts` | 31 | 202 |  | `DashboardSession`, `getGolferSession`, `getOperatorSession`, `signGolferToken`, `signMemberInviteToken`, `signPendingTwoFactorToken`, `signStaffResetToken`, `signStaffToken` +4 more |
 | `src/lib/booking-events.ts` | 28 | 85 |  | `BookingEventInput`, `EventActor`, `recordBookingEvent`, `recordBookingEventSafe`, `teeTimeInstant` |
@@ -366,8 +366,8 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/contact.ts` | 25 | 20 | MAIL-1 (Cam 2026-10-22): | `ADMIN_EMAIL`, `BILLING_EMAIL`, `NOREPLY_EMAIL`, `SUPPORT_EMAIL` |
 | `src/lib/cancel-policy.ts` | 21 | 262 | SP-B (STAFF_POLICY_SPEC Part B). | `afterCutoffLine`, `afterCutoffShort`, `bookingWindowHours`, `cancelNowWords`, `CancelPolicy`, `cardAtBooking`, `cardRequired`, `chargesNoShow` +15 more |
 | `src/lib/shop.ts` | 20 | 158 | POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): | `addItemToBooking`, `MAX_BOOKING_SHOP_CENTS`, `MAX_ITEM_PRICE_CENTS`, `MAX_LINE_QUANTITY`, `removeLineFromBooking`, `roundApplicationFeeCents`, `roundChargeCents`, `roundChargedTotal` +9 more |
+| `src/lib/money-ledger.ts` | 19 | 101 | LEDGER-1 (Cam 2026-10-30, "one new money table"): | `chargeWhat`, `feeBackCents`, `mirrorMove`, `Move`, `MoveMethod`, `MoveWhat`, `recordMove` |
 | `src/lib/member-rates.ts` | 18 | 101 | Cam 2026-10-29 (Revamp 3 audit, fixes 1 and 2 — "up to course"): | `LapseRule`, `liveMembershipWhere`, `memberPlayers`, `membershipLive`, `memberSpot`, `PartyBooking`, `partyFees`, `splitTotal` |
-| `src/lib/money-ledger.ts` | 18 | 101 | LEDGER-1 (Cam 2026-10-30, "one new money table"): | `chargeWhat`, `feeBackCents`, `mirrorMove`, `Move`, `MoveMethod`, `MoveWhat`, `recordMove` |
 | `src/lib/admin-fetch.ts` | 17 | 153 | One place that decides what an admin fetch failure MEANS. | `adminErrorMessage`, `adminFetch`, `AdminFetchAction`, `AdminFetchFailure`, `AdminFetchResult`, `LOGIN_SESSION_ENDED` |
 | `src/lib/booking-fees.ts` | 17 | 54 |  | `ACCESS_FEE_CENTS`, `ACCESS_FEE_PER_PLAYER`, `EVENT_FEE_LABEL`, `EVENT_FEE_ON`, `FEE_AT_BOOKING_ON`, `feeCoveredCents`, `hoursLabel`, `serviceFeeLabel` +3 more |
 | `src/lib/change-requests.ts` | 17 | 149 | Single source of truth for structured "request changes" data (V13b). | `APPROVED_MARKER`, `CATEGORY_LABEL`, `CHANGE_ADDRESSED_PREFIX`, `CHANGE_CATEGORIES`, `ChangeCategoryKey`, `ChangeItem`, `CHANGES_REQUESTED_PREFIX`, `computeOpenChanges` +14 more |
@@ -567,7 +567,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/sheet-vs-live.ts` | 1 | 108 | MP-5e. | `ConfigDrift`, `InquirySide`, `LiveSide`, `sheetVsLive` |
 | `src/lib/shop-ai-import.ts` | 1 | 96 | W2-7 (Cam 2026-10-20: | `cleanRows`, `MAX_READ_CHARS`, `ReadRow`, `readShopList`, `SHOP_READ_MODEL` |
 | `src/lib/shop-catalog.ts` | 1 | 163 | W2-7 (Cam 2026-10-20): | `createItems`, `deleteItem`, `ImportItem`, `ITEM_SELECT`, `ItemIn`, `optionName`, `readItem`, `setItemActive` +1 more |
-| `src/lib/split-booking-db.ts` | 1 | 80 | SPLIT-1 (Cam 2026-11-02, "they all want to pay separately … has to be seamless"): | `splitBooking`, `SplitResult` |
+| `src/lib/split-booking-db.ts` | 1 | 106 | SPLIT-1 (Cam 2026-11-02, "they all want to pay separately … has to be seamless"): | `splitBooking`, `SplitResult` |
 | `src/lib/staff-refund.ts` | 1 | 135 | Revamp 3 dead end 14 (Cam 2026-10-29): | `refundableCents`, `refundRound`, `StaffRefundResult`, `waiveLateFee` |
 | `src/lib/stripe-match.ts` | 1 | 25 | ADMIN-C Money → Disputes: | `lastFullMonths`, `matchResult`, `MonthWindow` |
 | `src/lib/tee-time-fit.ts` | 1 | 19 | Cam 2026-10-19: | `FIT_WINDOW_MIN`, `timesTooClose` |

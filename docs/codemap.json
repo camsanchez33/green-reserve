@@ -8875,7 +8875,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1874,
+      "lines": 1875,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -21119,6 +21119,7 @@
         "src/lib/refund-booking.ts",
         "src/lib/register.ts",
         "src/lib/shop-sales.ts",
+        "src/lib/split-booking-db.ts",
         "src/lib/staff-refund.ts"
       ]
     },
@@ -24853,7 +24854,7 @@
     },
     {
       "path": "src/lib/split-booking-db.ts",
-      "lines": 80,
+      "lines": 106,
       "purpose": "SPLIT-1 (Cam 2026-11-02, \"they all want to pay separately … has to be seamless\"):",
       "brain": [],
       "exports": [
@@ -24874,8 +24875,10 @@
       "imports": [
         "./booking-events",
         "./cancel-policy",
+        "./money-ledger",
         "./prisma",
-        "./split-booking"
+        "./split-booking",
+        "./stripe"
       ],
       "usedBy": [
         "src/app/api/operator/bookings/route.ts"
@@ -25238,6 +25241,7 @@
         "src/lib/sales-tax.ts",
         "src/lib/sample-data.ts",
         "src/lib/shop-sales.ts",
+        "src/lib/split-booking-db.ts",
         "src/lib/staff-refund.ts"
       ]
     },
