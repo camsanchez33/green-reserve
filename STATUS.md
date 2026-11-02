@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-02 21:54 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `7458886d` · working tree clean
+Generated 2026-11-02 22:42 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `44eebb0b` · working tree **15 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 53 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 55 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `e83ec9db` | 2026-11-02 | Tee sheet: pay separately — split players off a group and pay their share (#299) |
+| `5cfea0f0` | 2026-11-02 | Regenerate code map and status board |
 | `7458886d` | 2026-11-02 | Pay separately: give back the leavers' share of a hold already taken |
 | `f3ad66bb` | 2026-11-02 | Tee sheet: pay separately — split players off a group and pay their share |
 | `90f8f79d` | 2026-11-02 | Dashboard: "/" or Cmd/Ctrl K jumps to golfer search; Home flags stale conditions (#298) |
@@ -67,6 +69,27 @@ Generated 2026-11-02 21:54 UTC · branch `claude/walkthrough-2-prioritization-ui
 | `efef5f62` | 2026-11-01 | Money audit fixes: dues charge only the shown total, tier term change stops auto-renew, credited round returns our fee, pay link opens on the day |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+
+### Uncommitted working tree (15 file(s))
+
+- `M STATUS.artifact.html`
+- `M STATUS.json`
+- `M STATUS.md`
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
+- `M scripts/analytics-3-test.ts`
+- `M scripts/analytics-w28-db-test.ts`
+- `M scripts/revamp3-fixes-test.ts`
+- `M src/app/dashboard/analytics/page.tsx`
+- `M src/app/dashboard/shop/page.tsx`
+- `M src/components/dashboard/ShopCatalog.tsx`
+- `M src/components/dashboard/ShopStock.tsx`
+- `M src/lib/analytics-terms.ts`
+- `M src/lib/analytics.ts`
+- `M src/lib/shop-tree.ts`
+
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -153,7 +176,7 @@ This is the distinction a raw checkbox count gets wrong.
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 12d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 7d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 7d |
-| `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 9d |
+| `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 10d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 10d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 11d |
 | `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 11d |
@@ -189,6 +212,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `e83ec9db` 2026-11-02 — Tee sheet: pay separately — split players off a group and pay their share (#299)
+- `5cfea0f0` 2026-11-02 — Regenerate code map and status board
 - `7458886d` 2026-11-02 — Pay separately: give back the leavers' share of a hold already taken
 - `580df30d` 2026-11-02 — queue/spec update
 - `cbc3bd08` 2026-11-02 — queue/spec update
@@ -199,8 +224,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `449bd296` 2026-11-02 — Booking page: today's course conditions (carts, range, greens, pins) while fresh
 - `360913a3` 2026-11-02 — Register: item photos on the tiles (+ Home review follow-ups) (#296)
 - `b04c0c83` 2026-11-02 — Register: item photos on the tiles (+ Home review follow-ups)
-- `0394ca3b` 2026-11-02 — Home: shift note, course conditions, week ahead, month vs goal (#295)
-- `7de2b772` 2026-11-02 — operator-home test: accept the money permission read once and passed to operatorHome
 
 ---
 

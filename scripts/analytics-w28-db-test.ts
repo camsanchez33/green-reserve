@@ -76,6 +76,8 @@ async function main() {
   check('earned per spot at 8: ($160 green + $40 cart) ÷ 4 spots = $50', wedRow.cells[hourIdx(8)] === 5000, JSON.stringify(wedRow));
   check('earned per spot at 10 (a no-show, nothing collected): $0', wedRow.cells[hourIdx(10)] === 0);
   check('sold out: the four full times', a.utilization.soldOutTimes === 4, String(a.utilization.soldOutTimes));
+  const so = a.utilization.soldOutRows;
+  check('sold out: each full time listed by date and time, in order', so.length === 4 && so.every((r, i) => !i || (so[i - 1].date + so[i - 1].time) <= (r.date + r.time)), JSON.stringify(so));
   check('a golfer waiting for a time (2 players)', a.utilization.alerts.count === 1 && a.utilization.alerts.players === 2 && a.utilization.alerts.notified === 0);
   check('closed day listed with its reason', a.utilization.closedDays.length === 1 && a.utilization.closedDays[0].reason === 'Aeration');
   check('short-show: one group, one player missing', a.noShows.shortShows.groups === 1 && a.noShows.shortShows.missingPlayers === 1, JSON.stringify(a.noShows.shortShows));

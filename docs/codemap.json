@@ -11590,7 +11590,7 @@
     },
     {
       "path": "src/components/dashboard/ShopStock.tsx",
-      "lines": 135,
+      "lines": 141,
       "purpose": "SHOP-4 (Cam 2026-10-30:",
       "brain": [],
       "exports": [
@@ -11611,6 +11611,7 @@
         "@/components/ui/field",
         "@/lib/dashboard-fetch",
         "@/lib/shop-stock",
+        "@/lib/shop-tree",
         "react"
       ],
       "usedBy": [
@@ -14510,7 +14511,7 @@
     },
     {
       "path": "src/lib/analytics-terms.ts",
-      "lines": 50,
+      "lines": 53,
       "purpose": "DENSE-1 (DENSE_UI_SPEC P2):",
       "brain": [],
       "exports": [
@@ -14520,6 +14521,10 @@
         },
         {
           "name": "TERMS",
+          "kind": "const"
+        },
+        {
+          "name": "TURNED_AWAY_CSV",
           "kind": "const"
         }
       ],
@@ -14538,7 +14543,7 @@
     },
     {
       "path": "src/lib/analytics.ts",
-      "lines": 628,
+      "lines": 630,
       "purpose": "AN-1 (Cam 2026-10-01):",
       "brain": [],
       "exports": [
@@ -24621,7 +24626,8 @@
       "imports": [],
       "usedBy": [
         "src/app/dashboard/shop/page.tsx",
-        "src/components/dashboard/ShopCatalog.tsx"
+        "src/components/dashboard/ShopCatalog.tsx",
+        "src/components/dashboard/ShopStock.tsx"
       ]
     },
     {

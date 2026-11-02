@@ -52,5 +52,5 @@ export function skuHits(items: FlatItem[], code: string): FlatItem[] {
 
 /** A shelf count in words: below zero says how far it's oversold (a sale never waits on the count). */
 export function stockWords(n: number): string {
-  return n < 0 ? `${-n} oversold` : n === 0 ? 'none left' : `${n} left`;
+  return n < 0 ? `${-n} oversold` : n === 0 ? 'sold out' : `${n} left`;
 }

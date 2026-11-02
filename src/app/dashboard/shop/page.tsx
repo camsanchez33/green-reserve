@@ -213,7 +213,7 @@ export default function ShopPage() {
   // A scanner types the code and presses Enter: an exact SKU goes straight into the sale.
   function scan(code: string) {
     const hit = bySku(items ?? [], code);
-    if (hit) { add(hit.id, 1); setQ(''); setNote(`Added ${hit.name}.${hit.stockCount !== null && hit.stockCount - (cart[hit.id] ?? 0) <= 0 ? ' None left.' : ''}`); setError(''); return true; }
+    if (hit) { add(hit.id, 1); setQ(''); setNote(`Added ${hit.name}.${hit.stockCount !== null && hit.stockCount - (cart[hit.id] ?? 0) <= 0 ? ' Sold out.' : ''}`); setError(''); return true; }
     // Two items with one code: say so instead of adding nothing silently.
     if (skuHits(items ?? [], code).length > 1) { setError(`Code ${code.trim()} is on two items.`); return true; }
     return false;

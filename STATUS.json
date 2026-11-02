@@ -1,15 +1,45 @@
 {
-  "generatedAt": "2026-11-02T21:54:30.041Z",
+  "generatedAt": "2026-11-02T22:42:22.683Z",
   "repo": {
-    "head": "7458886d",
+    "head": "44eebb0b",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 0,
-    "dirty": [],
-    "looksLikeRunInProgress": false
+    "dirtyCount": 15,
+    "dirty": [
+      "M STATUS.artifact.html",
+      " M STATUS.json",
+      " M STATUS.md",
+      " M docs/CODEMAP.md",
+      " M docs/codemap.json",
+      " M scripts/analytics-3-test.ts",
+      " M scripts/analytics-w28-db-test.ts",
+      " M scripts/revamp3-fixes-test.ts",
+      " M src/app/dashboard/analytics/page.tsx",
+      " M src/app/dashboard/shop/page.tsx",
+      " M src/components/dashboard/ShopCatalog.tsx",
+      " M src/components/dashboard/ShopStock.tsx",
+      " M src/lib/analytics-terms.ts",
+      " M src/lib/analytics.ts",
+      " M src/lib/shop-tree.ts"
+    ],
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "e83ec9db",
+        "date": "2026-11-02T17:02:53-05:00",
+        "subject": "Tee sheet: pay separately — split players off a group and pay their share (#299)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "5cfea0f0",
+        "date": "2026-11-02T21:54:32+00:00",
+        "subject": "Regenerate code map and status board",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "7458886d",
         "date": "2026-11-02T21:53:05+00:00",
@@ -580,7 +610,7 @@
       "file": "ADMIN_V5_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-23",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "HOMEPAGE_SPEC.md",
@@ -778,6 +808,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "e83ec9db",
+      "date": "2026-11-02",
+      "subject": "Tee sheet: pay separately — split players off a group and pay their share (#299)"
+    },
+    {
+      "h": "5cfea0f0",
+      "date": "2026-11-02",
+      "subject": "Regenerate code map and status board"
+    },
+    {
       "h": "7458886d",
       "date": "2026-11-02",
       "subject": "Pay separately: give back the leavers' share of a hold already taken"
@@ -826,16 +866,6 @@
       "h": "b04c0c83",
       "date": "2026-11-02",
       "subject": "Register: item photos on the tiles (+ Home review follow-ups)"
-    },
-    {
-      "h": "0394ca3b",
-      "date": "2026-11-02",
-      "subject": "Home: shift note, course conditions, week ahead, month vs goal (#295)"
-    },
-    {
-      "h": "7de2b772",
-      "date": "2026-11-02",
-      "subject": "operator-home test: accept the money permission read once and passed to operatorHome"
     }
   ]
 }
