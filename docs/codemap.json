@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 644,
-    "routes": 287,
-    "libs": 227,
-    "models": 68,
+    "files": 649,
+    "routes": 289,
+    "libs": 229,
+    "models": 70,
     "orphans": 10,
     "ungatedRoutes": 3
   },
@@ -5525,7 +5525,7 @@
     },
     {
       "path": "src/app/api/operator/conditions/route.ts",
-      "lines": 24,
+      "lines": 32,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5542,6 +5542,7 @@
       "auth": "operator",
       "guard": "file",
       "imports": [
+        "@/lib/course-conditions",
         "@/lib/prisma",
         "@/lib/session",
         "next/server"
@@ -5936,7 +5937,7 @@
     },
     {
       "path": "src/app/api/operator/home/route.ts",
-      "lines": 15,
+      "lines": 27,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5953,7 +5954,9 @@
       "auth": "operator",
       "guard": "file",
       "imports": [
+        "@/lib/home-board",
         "@/lib/operator-home",
+        "@/lib/prisma",
         "@/lib/session",
         "next/server"
       ],
@@ -6244,6 +6247,31 @@
         "@/lib/course-time",
         "@/lib/prisma",
         "@/lib/register-close",
+        "@/lib/session",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/operator/month-goal/route.ts",
+      "lines": 29,
+      "purpose": "DASH-D Home (Cam 2026-11-01, \"month vs goal\"):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "PUT",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/month-goal",
+      "kind": "api",
+      "methods": [
+        "PUT"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/prisma",
         "@/lib/session",
         "next/server"
       ],
@@ -6967,6 +6995,42 @@
       "guard": "file",
       "imports": [
         "@/lib/analytics",
+        "@/lib/session",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/operator/shift-notes/route.ts",
+      "lines": 47,
+      "purpose": "DASH-D Home (Cam 2026-11-01, \"shift handoff note\"):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "PATCH",
+          "kind": "route"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/shift-notes",
+      "kind": "api",
+      "methods": [
+        "GET",
+        "PATCH",
+        "POST"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/home-board",
+        "@/lib/prisma",
         "@/lib/session",
         "next/server"
       ],
@@ -8531,7 +8595,7 @@
     },
     {
       "path": "src/app/dashboard/home/page.tsx",
-      "lines": 258,
+      "lines": 278,
       "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the mockups):",
       "brain": [],
       "exports": [
@@ -8549,8 +8613,10 @@
         "@/components/OperatorSidebar",
         "@/components/dashboard/DeclinedCardList",
         "@/components/dashboard/LoadError",
+        "@/components/dashboard/home/HomeBoard",
         "@/components/dashboard/money/PayoutsTable",
         "@/components/dashboard/settings/FinishSetup",
+        "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/lib/analytics-terms",
         "@/lib/dashboard-fetch",
@@ -12000,6 +12066,62 @@
       ]
     },
     {
+      "path": "src/components/dashboard/home/HomeBoard.tsx",
+      "lines": 188,
+      "purpose": "DASH-D Home (Cam 2026-11-01, mockup S1):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "Conditions",
+          "kind": "type"
+        },
+        {
+          "name": "ConditionsCard",
+          "kind": "component"
+        },
+        {
+          "name": "MonthGoal",
+          "kind": "type"
+        },
+        {
+          "name": "MonthGoalCard",
+          "kind": "component"
+        },
+        {
+          "name": "ShiftNote",
+          "kind": "type"
+        },
+        {
+          "name": "ShiftNotes",
+          "kind": "component"
+        },
+        {
+          "name": "WeekAhead",
+          "kind": "type"
+        },
+        {
+          "name": "WeekAheadCard",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/ui/Card",
+        "@/components/ui/StatusDot",
+        "@/lib/course-conditions",
+        "@/lib/dashboard-fetch",
+        "next/link",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/home/page.tsx"
+      ]
+    },
+    {
       "path": "src/components/dashboard/members/ImportMembers.tsx",
       "lines": 124,
       "purpose": "Members → Import a list (Cam 2026-10-19).",
@@ -12519,6 +12641,7 @@
         "src/app/dashboard/analytics/page.tsx",
         "src/app/dashboard/events/page.tsx",
         "src/app/dashboard/golfers/[key]/page.tsx",
+        "src/app/dashboard/home/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/money/page.tsx",
@@ -12560,6 +12683,7 @@
         "src/components/dashboard/events/EventMoney.tsx",
         "src/components/dashboard/events/EventSetup.tsx",
         "src/components/dashboard/events/EventSignup.tsx",
+        "src/components/dashboard/home/HomeBoard.tsx",
         "src/components/dashboard/members/ImportMembers.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
         "src/components/dashboard/money/LedgerPanel.tsx",
@@ -12856,6 +12980,7 @@
         "src/components/dashboard/events/EventDetail.tsx",
         "src/components/dashboard/events/EventMoney.tsx",
         "src/components/dashboard/events/EventSignup.tsx",
+        "src/components/dashboard/home/HomeBoard.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
         "src/components/dashboard/money/CancellationsPanel.tsx",
         "src/components/dashboard/money/LedgerPanel.tsx",
@@ -14450,6 +14575,7 @@
         "src/app/dashboard/analytics/page.tsx",
         "src/lib/birdie/tools.ts",
         "src/lib/golfer-record.ts",
+        "src/lib/home-board.ts",
         "src/lib/member-stats.ts",
         "src/lib/monthly-review.ts",
         "src/lib/operator-home.ts"
@@ -16630,6 +16756,45 @@
       ]
     },
     {
+      "path": "src/lib/course-conditions.ts",
+      "lines": 31,
+      "purpose": "DASH-D Home (Cam 2026-11-01, \"the course conditions\"):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "cleanConditions",
+          "kind": "fn"
+        },
+        {
+          "name": "CONDITION_FIELDS",
+          "kind": "const"
+        },
+        {
+          "name": "ConditionKey",
+          "kind": "type"
+        },
+        {
+          "name": "conditionLabel",
+          "kind": "fn"
+        },
+        {
+          "name": "CourseConditions",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/api/operator/conditions/route.ts",
+        "src/components/dashboard/home/HomeBoard.tsx",
+        "src/lib/home-board.ts"
+      ]
+    },
+    {
       "path": "src/lib/course-events.ts",
       "lines": 403,
       "purpose": "W2-9 Events (Cam 2026-10-21:",
@@ -17275,6 +17440,7 @@
         "src/lib/demand-pricing.ts",
         "src/lib/event-signup.ts",
         "src/lib/golfer-record.ts",
+        "src/lib/home-board.ts",
         "src/lib/ledger-view.ts",
         "src/lib/member-rates.ts",
         "src/lib/member-statements.ts",
@@ -17777,6 +17943,7 @@
         "src/components/dashboard/events/EventDetail.tsx",
         "src/components/dashboard/events/EventMoney.tsx",
         "src/components/dashboard/events/EventSetup.tsx",
+        "src/components/dashboard/home/HomeBoard.tsx",
         "src/components/dashboard/members/ImportMembers.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
         "src/components/dashboard/money/LedgerPanel.tsx",
@@ -17833,7 +18000,7 @@
     },
     {
       "path": "src/lib/data-reset.ts",
-      "lines": 159,
+      "lines": 161,
       "purpose": "TEST-1 (Cam 2026-10-22:",
       "brain": [],
       "exports": [
@@ -19301,6 +19468,53 @@
       "usedBy": [
         "src/app/api/bookings/route.ts",
         "src/app/api/operator/golfers/[key]/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/home-board.ts",
+      "lines": 82,
+      "purpose": "DASH-D Home (Cam 2026-11-01, mockups S1 + \"week-ahead heat map and month vs goal\"):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "courseConditions",
+          "kind": "fn"
+        },
+        {
+          "name": "monthGoal",
+          "kind": "fn"
+        },
+        {
+          "name": "openShiftNotes",
+          "kind": "fn"
+        },
+        {
+          "name": "SHIFT_NOTE_MAX",
+          "kind": "const"
+        },
+        {
+          "name": "ShiftNoteRow",
+          "kind": "type"
+        },
+        {
+          "name": "weekAhead",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./analytics",
+        "./course-conditions",
+        "./course-time",
+        "./prisma"
+      ],
+      "usedBy": [
+        "src/app/api/operator/home/route.ts",
+        "src/app/api/operator/shift-notes/route.ts"
       ]
     },
     {
@@ -22032,6 +22246,7 @@
         "src/app/api/operator/frost-delay/route.ts",
         "src/app/api/operator/golfer-messages/route.ts",
         "src/app/api/operator/golfers/[key]/route.ts",
+        "src/app/api/operator/home/route.ts",
         "src/app/api/operator/last-minute/route.ts",
         "src/app/api/operator/member-accounts/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
@@ -22040,6 +22255,7 @@
         "src/app/api/operator/money/ledger/route.ts",
         "src/app/api/operator/money/overview/route.ts",
         "src/app/api/operator/money/sales/route.ts",
+        "src/app/api/operator/month-goal/route.ts",
         "src/app/api/operator/monthly-reviews/route.ts",
         "src/app/api/operator/my-courses/route.ts",
         "src/app/api/operator/nines/route.ts",
@@ -22054,6 +22270,7 @@
         "src/app/api/operator/round-packs/route.ts",
         "src/app/api/operator/round-rules/route.ts",
         "src/app/api/operator/settings/route.ts",
+        "src/app/api/operator/shift-notes/route.ts",
         "src/app/api/operator/shop-items/route.ts",
         "src/app/api/operator/shop-sales/rounds/route.ts",
         "src/app/api/operator/shop-sales/route.ts",
@@ -22129,6 +22346,7 @@
         "src/lib/go-live-preflight.ts",
         "src/lib/golfer-messages.ts",
         "src/lib/golfer-record.ts",
+        "src/lib/home-board.ts",
         "src/lib/inquiry-email-failed.ts",
         "src/lib/ledger-view.ts",
         "src/lib/lifecycle.ts",
@@ -23674,6 +23892,7 @@
         "src/app/api/operator/money/ledger/route.ts",
         "src/app/api/operator/money/overview/route.ts",
         "src/app/api/operator/money/sales/route.ts",
+        "src/app/api/operator/month-goal/route.ts",
         "src/app/api/operator/monthly-reviews/route.ts",
         "src/app/api/operator/my-courses/route.ts",
         "src/app/api/operator/nines/route.ts",
@@ -23696,6 +23915,7 @@
         "src/app/api/operator/search/route.ts",
         "src/app/api/operator/settings/route.ts",
         "src/app/api/operator/sheet-money/route.ts",
+        "src/app/api/operator/shift-notes/route.ts",
         "src/app/api/operator/shop-items/read/route.ts",
         "src/app/api/operator/shop-items/route.ts",
         "src/app/api/operator/shop-sales/quote/route.ts",
@@ -27314,6 +27534,14 @@
           "type": "DateTime?"
         },
         {
+          "name": "conditionsDetail",
+          "type": "Json?"
+        },
+        {
+          "name": "conditionsDetailAt",
+          "type": "DateTime?"
+        },
+        {
           "name": "giftCardUrl",
           "type": "String"
         },
@@ -27531,6 +27759,7 @@
         "src/app/api/operator/events/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
         "src/app/api/operator/golfer-messages/route.ts",
+        "src/app/api/operator/home/route.ts",
         "src/app/api/operator/last-minute/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
@@ -27588,6 +27817,7 @@
         "src/lib/go-live-preflight.ts",
         "src/lib/golfer-messages.ts",
         "src/lib/golfer-record.ts",
+        "src/lib/home-board.ts",
         "src/lib/ledger-view.ts",
         "src/lib/lifecycle.ts",
         "src/lib/member-account.ts",
@@ -28673,6 +28903,41 @@
       ]
     },
     {
+      "name": "CourseMonthGoal",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "courseId",
+          "type": "String"
+        },
+        {
+          "name": "month",
+          "type": "String"
+        },
+        {
+          "name": "cents",
+          "type": "Int?"
+        },
+        {
+          "name": "setBy",
+          "type": "String"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ],
+      "writers": [
+        "src/app/api/operator/month-goal/route.ts"
+      ],
+      "readers": [
+        "src/lib/home-board.ts"
+      ]
+    },
+    {
       "name": "CourseOperator",
       "fields": [
         {
@@ -28795,6 +29060,7 @@
         "src/app/api/operator/messages/route.ts",
         "src/app/api/operator/profile/route.ts",
         "src/app/api/operator/settings/route.ts",
+        "src/app/api/operator/shift-notes/route.ts",
         "src/app/api/operator/staff/route.ts",
         "src/app/api/preview/send/route.ts",
         "src/lib/security-events.ts",
@@ -29100,6 +29366,7 @@
         "src/app/api/auth/login/route.ts",
         "src/app/api/auth/reset-password/route.ts",
         "src/app/api/operator/messages/route.ts",
+        "src/app/api/operator/shift-notes/route.ts",
         "src/app/api/operator/staff/route.ts",
         "src/lib/lifecycle.ts",
         "src/lib/security-events.ts",
@@ -30728,6 +30995,50 @@
       ]
     },
     {
+      "name": "ShiftNote",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "courseId",
+          "type": "String"
+        },
+        {
+          "name": "body",
+          "type": "String"
+        },
+        {
+          "name": "authorId",
+          "type": "String"
+        },
+        {
+          "name": "authorName",
+          "type": "String"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "doneAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "doneBy",
+          "type": "String"
+        }
+      ],
+      "writers": [
+        "src/app/api/operator/shift-notes/route.ts",
+        "src/lib/data-reset.ts"
+      ],
+      "readers": [
+        "src/lib/home-board.ts"
+      ]
+    },
+    {
       "name": "ShopItem",
       "fields": [
         {
@@ -31506,6 +31817,7 @@
         "src/lib/demand-pricing.ts",
         "src/lib/frost-delay.ts",
         "src/lib/golfer-messages.ts",
+        "src/lib/home-board.ts",
         "src/lib/operator-home.ts",
         "src/lib/public-tee-times.ts",
         "src/lib/register.ts",

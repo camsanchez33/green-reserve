@@ -19,6 +19,8 @@ import { useRouter } from 'next/navigation';
 import { FinishSetup } from '@/components/dashboard/settings/FinishSetup';
 import { settingsHref, type MissingItem } from '@/lib/setup-missing';
 import { TERMS } from '@/lib/analytics-terms';
+import { CARD } from '@/components/ui/Card';
+import { ShiftNotes, ConditionsCard, WeekAheadCard, MonthGoalCard, type ShiftNote, type Conditions, type WeekAhead, type MonthGoal } from '@/components/dashboard/home/HomeBoard';
 
 type Group = { id: string; name: string; players: number; paymentStatus: string; checkedIn: boolean };
 type Home = {
@@ -35,6 +37,8 @@ type Home = {
   unreadMessages: number;
   comingUp: { id: string; time: string; open: number; groups: Group[] }[];
   setupMissing: MissingItem[];
+  /** DASH-D: the shift notes, conditions, week ahead and (money logins) the month goal. */
+  board: { notes: ShiftNote[]; conditions: Conditions; week: WeekAhead; goal: MonthGoal | null };
 };
 
 const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -109,10 +113,10 @@ export default function DashboardHome() {
     <div className="flex flex-col min-h-screen md:h-screen bg-page md:overflow-hidden">
       <OperatorSidebar active="home" />
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
-        <div className="px-4 sm:px-10 py-7 flex flex-col gap-8">
+        <div className="px-4 sm:px-8 py-6 flex flex-col gap-4">
           <div className="flex flex-wrap items-end gap-3">
             <div className="flex-1 min-w-[260px]">
-              <h1 className="font-serif text-[32px] leading-none text-ink">{home ? longDate(home.today) : 'Today'}</h1>
+              <h1 className="font-serif text-[26px] leading-none text-ink">{home ? longDate(home.today) : 'Today'}</h1>
               <p className="mt-2.5 text-[14px] text-ink-soft">{home ? `${home.courseName} · as of ${fmtTime(home.clock)}` : 'Loading today…'}</p>
             </div>
             <div className="flex gap-2">
@@ -128,11 +132,19 @@ export default function DashboardHome() {
             <div className="-mb-3"><FinishSetup items={home.setupMissing.map(i => ({ ...i, onClick: () => router.push(i.href ?? settingsHref(i.section)) }))} /></div>
           )}
 
+          {/* DASH-D (Cam 2026-11-01): the last shift's note and the course conditions open the day. */}
           {home && (
-            <div className="flex flex-wrap gap-8">
-              <section className="flex-[2_1_560px] min-w-0 flex flex-col gap-4">
+            <div className="grid gap-4 lg:grid-cols-2">
+              <ShiftNotes key={home.board.notes.map(n => n.id).join()} initial={home.board.notes} />
+              <ConditionsCard key={home.board.conditions.updatedAt ?? ''} initial={home.board.conditions} canEdit={access.can('sheet.course_alert')} />
+            </div>
+          )}
+
+          {home && (
+            <div className="flex flex-wrap gap-4">
+              <section className={`${CARD} px-5 py-4 flex-[2_1_560px] min-w-0 flex flex-col gap-4 self-start`}>
                 <div className="flex flex-wrap items-baseline gap-3">
-                  <h2 className="text-[20px] font-bold text-ink">Today</h2>
+                  <h2 className="text-[15px] font-semibold text-ink">Today</h2>
                   <span className="ml-auto text-[13px] text-ink-muted">Players booked by hour · <span className="inline-block w-2.5 h-2.5 rounded-sm bg-pine align-middle" /> today <span className="inline-block w-2.5 h-2.5 rounded-sm bg-line align-middle ml-1" /> last {weekday(home.lastWeek)}</span>
                 </div>
                 <div className="flex items-end gap-1.5 h-40" role="img" aria-label={`Players booked by hour today and last ${weekday(home.lastWeek)}`}>
@@ -145,7 +157,7 @@ export default function DashboardHome() {
                 </div>
                 <div className="flex gap-1.5 text-[11.5px] text-ink-muted -mt-2">{shown.map(h => <span key={h.hour} className="flex-1 text-center">{h.hour % 2 === 0 ? hourLabel(h.hour) : ''}</span>)}</div>
 
-                <div className="grid grid-cols-2 lg:grid-cols-4 border border-line rounded-lg overflow-hidden">
+                <div className="grid grid-cols-2 lg:grid-cols-4 border-y border-line">
                   {(() => { const d = diff(home.players.today, home.players.lastWeek); return (
                     <div className="px-4 py-3.5"><div className="text-[13px] text-ink-soft">Players booked</div><div className="text-[24px] font-semibold tabular-nums text-ink mt-1">{home.players.today}</div><div className={`text-[12.5px] ${d.tone}`}>{d.text}</div>
                       <Spark values={home.trend.players} dates={home.trend.dates} fmt={v => `${v}`} /></div>); })()}
@@ -161,9 +173,9 @@ export default function DashboardHome() {
                 </div>
 
                 {/* DENSE-3 (Cam 2026-10-28): the next 14 days against what that weekday usually has by now (analytics bookingPace). */}
-                <div className="flex items-baseline gap-3 mt-2"><h2 className="text-[20px] font-bold text-ink">Next 14 days</h2>
+                <div className="flex items-baseline gap-3 mt-2"><h2 className="text-[15px] font-semibold text-ink">Next 14 days</h2>
                   <span className="ml-auto text-[13px] text-ink-muted" title={TERMS.pace}>Booked · <span className="inline-block w-px h-3 bg-ink align-middle" /> usual by now</span></div>
-                <div className="grid grid-cols-7 border border-line rounded-lg overflow-hidden" role="list" aria-label="Next 14 days">
+                <div className="grid grid-cols-7 border-y border-line" role="list" aria-label="Next 14 days">
                   {home.pace.map((d, i) => {
                     const behind = d.usual !== null && d.booked < d.usual;
                     return (
@@ -184,12 +196,12 @@ export default function DashboardHome() {
                 </div>
               </section>
 
-              <section className="flex-[1_1_300px] min-w-0 flex flex-col gap-4">
-                <h2 className="text-[20px] font-bold text-ink">Needs you</h2>
+              <section className={`${CARD} px-5 py-4 flex-[1_1_300px] min-w-0 flex flex-col gap-4 self-start`}>
+                <h2 className="text-[15px] font-semibold text-ink">Needs you</h2>
                 {needs === 0 ? (
                   <p className="text-[14px] text-ink-soft"><StatusDot status="ok" label="" /> Nothing needs you right now.</p>
                 ) : (
-                  <div className="border border-line rounded-lg divide-y divide-line-soft text-[14px]">
+                  <div className="-mx-5 border-y border-line divide-y divide-line-soft text-[14px]">
                     <DeclinedCardList rows={home.declined} total={home.declinedTotal} canSendLink={access.can('sheet.checkin')} moreHref={access.can('money.payments') ? '/dashboard/money' : undefined} />
                     {home.late.length > 0 && (
                       <div className="flex items-center gap-3 px-4 py-3">
@@ -211,9 +223,9 @@ export default function DashboardHome() {
 
                 {/* DENSE-3 (Cam 2026-10-28): the money panel is the next payout only. */}
                 {seesPayouts && <>
-                  <div className="flex items-baseline gap-3"><h2 className="text-[20px] font-bold text-ink">Your money</h2><Link href="/dashboard/money" className="ml-auto text-[13px] text-pine">Money →</Link></div>
+                  <div className="flex items-baseline gap-3"><h2 className="text-[15px] font-semibold text-ink">Your money</h2><Link href="/dashboard/money" className="ml-auto text-[13px] text-pine">Money →</Link></div>
                   {payoutError ? <LoadError message={`Couldn't load your payouts from Stripe — ${payoutError}`} onRetry={loadPayouts} /> : (
-                    <div className="border border-line rounded-lg text-[14px]">
+                    <div className="-mx-5 border-y border-line text-[14px]">
                       <div className="flex items-center gap-3 px-4 py-3"><span className="flex-1">Next payout</span>
                         {!payouts ? <span className="text-ink-muted">Checking Stripe…</span>
                           : !payouts.connected ? <Link href="/dashboard/money?tab=payouts" className="text-pine">Connect Stripe</Link>
@@ -227,13 +239,21 @@ export default function DashboardHome() {
             </div>
           )}
 
+          {/* DASH-D (Cam 2026-11-01, "week-ahead heat map and month vs goal"). */}
           {home && (
-            <section className="flex flex-col gap-3">
-              <div className="flex items-baseline gap-3"><h2 className="text-[20px] font-bold text-ink">Coming up</h2><Link href="/dashboard" className="ml-auto text-[13px] text-pine">Full tee sheet →</Link></div>
+            <div className={`grid gap-4 ${home.board.goal ? 'lg:grid-cols-[2fr_1fr]' : ''}`}>
+              <WeekAheadCard week={home.board.week} canDeal={access.can('schedule.view')} />
+              {home.board.goal && <MonthGoalCard key={`${home.board.goal.month}:${home.board.goal.goalCents}`} goal={home.board.goal} canSet={access.can('settings.edit') && access.can('money.payments')} onSaved={load} />}
+            </div>
+          )}
+
+          {home && (
+            <section className={`${CARD} px-5 py-4 flex flex-col gap-3`}>
+              <div className="flex items-baseline gap-3"><h2 className="text-[15px] font-semibold text-ink">Coming up</h2><Link href="/dashboard" className="ml-auto text-[13px] text-pine">Full tee sheet →</Link></div>
               {home.comingUp.length === 0 ? (
                 <p className="text-[14px] text-ink-soft">No more tee times today.</p>
               ) : (
-                <div className="border border-line rounded-lg divide-y divide-line-soft text-[14px]">
+                <div className="-mx-5 border-t border-line divide-y divide-line-soft text-[14px]">
                   {home.comingUp.map(s => (
                     <div key={s.time} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3">
                       {/* Home audit: a time opens its card on the tee sheet (check in, pay, move). */}

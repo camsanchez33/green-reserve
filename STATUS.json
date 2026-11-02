@@ -1,15 +1,45 @@
 {
-  "generatedAt": "2026-11-02T05:45:18.845Z",
+  "generatedAt": "2026-11-02T05:52:35.666Z",
   "repo": {
-    "head": "1b7f3b82",
+    "head": "715b5c3e",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 0,
-    "dirty": [],
-    "looksLikeRunInProgress": false
+    "dirtyCount": 15,
+    "dirty": [
+      "M CLAUDE.md",
+      " M docs/CODEMAP.md",
+      " M docs/codemap.json",
+      " M prisma/schema.prisma",
+      " M src/app/api/operator/conditions/route.ts",
+      " M src/app/api/operator/home/route.ts",
+      " M src/app/dashboard/home/page.tsx",
+      " M src/lib/data-reset.ts",
+      "?? prisma/migrations/20261102100000_home_board/",
+      "?? scripts/home-board-db-test.ts",
+      "?? src/app/api/operator/month-goal/",
+      "?? src/app/api/operator/shift-notes/",
+      "?? src/components/dashboard/home/",
+      "?? src/lib/course-conditions.ts",
+      "?? src/lib/home-board.ts"
+    ],
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "0ca08896",
+        "date": "2026-11-02T00:51:45-05:00",
+        "subject": "Tee sheet: till-style check-in on the time card (#294)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "383b5af1",
+        "date": "2026-11-02T05:45:21+00:00",
+        "subject": "Regenerate code map and status board",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "1b7f3b82",
         "date": "2026-11-02T05:44:18+00:00",
@@ -687,6 +717,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "0ca08896",
+      "date": "2026-11-02",
+      "subject": "Tee sheet: till-style check-in on the time card (#294)"
+    },
+    {
+      "h": "383b5af1",
+      "date": "2026-11-02",
+      "subject": "Regenerate code map and status board"
+    },
+    {
       "h": "1b7f3b82",
       "date": "2026-11-02",
       "subject": "Tests follow the till: Here-now buttons, pay-link day rule, owed amount as the ticket Total"
@@ -735,16 +775,6 @@
       "h": "bffab6e9",
       "date": "2026-11-02",
       "subject": "Event money needs \"Mark paid at the counter\"; a member with history can't be deleted"
-    },
-    {
-      "h": "53e31df1",
-      "date": "2026-11-02",
-      "subject": "Counter friction B: card beside the sheet, Home opens a time's card, member opens golfer record, cash through a failed tax quote"
-    },
-    {
-      "h": "b80496f3",
-      "date": "2026-11-02",
-      "subject": "SMS-1: texts only to numbers that agreed (Twilio A2P 10DLC opt-in)"
     }
   ]
 }

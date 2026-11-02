@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
+import { cleanConditions } from '@/lib/course-conditions';
 
 /** R-AUTH-005 (Cam 2026-10-26): the alert is a short public notice on the booking page. */
 const COURSE_ALERT_MAX = 280;
@@ -10,7 +11,14 @@ export async function PATCH(req: NextRequest) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const denied = requirePermission(session, 'sheet.course_alert');
   if (denied) return denied;
-  const body = await req.json().catch(() => null) as { conditions?: unknown } | null;
+  const body = await req.json().catch(() => null) as { conditions?: unknown; detail?: unknown } | null;
+  // DASH-D Home: { detail } sets carts / range / greens / pins (unknown keys and values are dropped).
+  if (body && 'detail' in body) {
+    const detail = cleanConditions(body.detail);
+    const at = new Date();
+    await prisma.course.update({ where: { id: session.courseId }, data: { conditionsDetail: detail, conditionsDetailAt: at } });
+    return NextResponse.json({ detail, updatedAt: at.toISOString() });
+  }
   const raw = body?.conditions ?? '';
   if (typeof raw !== 'string') return NextResponse.json({ error: 'The alert must be text.' }, { status: 400 });
   const conditions = raw.trim();
