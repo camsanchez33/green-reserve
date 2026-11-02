@@ -117,14 +117,15 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-11-02 21:52 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 580df30d</span>
-    <span>7 uncommitted</span>
+    <span>2026-11-02 21:54 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 7458886d</span>
+    <span>tree clean</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">52 runs have shipped that the queue doesn't know about</div>
+<div class="lede">53 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-31. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">7458886d</span><span>Pay separately: give back the leavers' share of a hold already taken</span></li>
 <li><span class="h">f3ad66bb</span><span>Tee sheet: pay separately — split players off a group and pay their share</span></li>
 <li><span class="h">90f8f79d</span><span>Dashboard: &quot;/&quot; or Cmd/Ctrl K jumps to golfer search; Home flags stale conditions (#298)</span></li>
 <li><span class="h">06d5e4c6</span><span>Dashboard: / or Ctrl/Cmd K jumps to golfer search; Home says when conditions are off the booking page</span></li>
@@ -186,11 +187,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">7</span><span class="l">Revise pages left</span></div>
   <div class="tile t-idle"><span class="n">17</span><span class="l">Ideas parked</span></div>
 </div>
-<section><h2>Working tree right now</h2>
-<div class="card flag">
-<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/split-booking-db-test.ts</code></li><li><code>M src/app/api/operator/bookings/route.ts</code></li><li><code>M src/app/dashboard/page.tsx</code></li><li><code>M src/lib/split-booking-db.ts</code></li><li><code>?? docs/feedback/2026-11-02-operations-pages-ideas.md</code></li></ul>
-</div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
 <div class="row"><span class="idx">1</span><span class="t">DENSE — Cam 2026-10-27: &quot;too much words on the pages … think OpenTable, Stripe, Lightspeed, Toast … apply across all tabs on both dashboard and admin&quot;. Lots of data, almost no sentences. Plan, princip</span><span class="where">:101</span></div>
@@ -271,6 +267,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 12d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">7458886d</td><td class="num">2026-11-02</td><td>Pay separately: give back the leavers' share of a hold already taken</td></tr>
 <tr><td class="num">580df30d</td><td class="num">2026-11-02</td><td>queue/spec update</td></tr>
 <tr><td class="num">cbc3bd08</td><td class="num">2026-11-02</td><td>queue/spec update</td></tr>
 <tr><td class="num">f3ad66bb</td><td class="num">2026-11-02</td><td>Tee sheet: pay separately — split players off a group and pay their share</td></tr>
@@ -282,7 +279,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">b04c0c83</td><td class="num">2026-11-02</td><td>Register: item photos on the tiles (+ Home review follow-ups)</td></tr>
 <tr><td class="num">0394ca3b</td><td class="num">2026-11-02</td><td>Home: shift note, course conditions, week ahead, month vs goal (#295)</td></tr>
 <tr><td class="num">7de2b772</td><td class="num">2026-11-02</td><td>operator-home test: accept the money permission read once and passed to operatorHome</td></tr>
-<tr><td class="num">61cb526c</td><td class="num">2026-11-02</td><td>Home: shift note, course conditions, week ahead, month vs goal</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

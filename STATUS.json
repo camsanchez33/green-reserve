@@ -1,23 +1,22 @@
 {
-  "generatedAt": "2026-11-02T21:52:48.790Z",
+  "generatedAt": "2026-11-02T21:54:30.041Z",
   "repo": {
-    "head": "580df30d",
+    "head": "7458886d",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 7,
-    "dirty": [
-      "M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M scripts/split-booking-db-test.ts",
-      " M src/app/api/operator/bookings/route.ts",
-      " M src/app/dashboard/page.tsx",
-      " M src/lib/split-booking-db.ts",
-      "?? docs/feedback/2026-11-02-operations-pages-ideas.md"
-    ],
-    "looksLikeRunInProgress": true
+    "dirtyCount": 0,
+    "dirty": [],
+    "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "7458886d",
+        "date": "2026-11-02T21:53:05+00:00",
+        "subject": "Pay separately: give back the leavers' share of a hold already taken",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "f3ad66bb",
         "date": "2026-11-02T21:44:21+00:00",
@@ -779,6 +778,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "7458886d",
+      "date": "2026-11-02",
+      "subject": "Pay separately: give back the leavers' share of a hold already taken"
+    },
+    {
       "h": "580df30d",
       "date": "2026-11-02",
       "subject": "queue/spec update"
@@ -832,11 +836,6 @@
       "h": "7de2b772",
       "date": "2026-11-02",
       "subject": "operator-home test: accept the money permission read once and passed to operatorHome"
-    },
-    {
-      "h": "61cb526c",
-      "date": "2026-11-02",
-      "subject": "Home: shift note, course conditions, week ahead, month vs goal"
     }
   ]
 }

@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-02 21:52 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `580df30d` · working tree **7 dirty file(s)**
+Generated 2026-11-02 21:54 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `7458886d` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 52 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 53 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `7458886d` | 2026-11-02 | Pay separately: give back the leavers' share of a hold already taken |
 | `f3ad66bb` | 2026-11-02 | Tee sheet: pay separately — split players off a group and pay their share |
 | `90f8f79d` | 2026-11-02 | Dashboard: "/" or Cmd/Ctrl K jumps to golfer search; Home flags stale conditions (#298) |
 | `06d5e4c6` | 2026-11-02 | Dashboard: / or Ctrl/Cmd K jumps to golfer search; Home says when conditions are off the booking page |
@@ -66,19 +67,6 @@ Generated 2026-11-02 21:52 UTC · branch `claude/walkthrough-2-prioritization-ui
 | `efef5f62` | 2026-11-01 | Money audit fixes: dues charge only the shown total, tier term change stops auto-renew, credited round returns our fee, pay link opens on the day |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
-
-### Uncommitted working tree (7 file(s))
-
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M scripts/split-booking-db-test.ts`
-- `M src/app/api/operator/bookings/route.ts`
-- `M src/app/dashboard/page.tsx`
-- `M src/lib/split-booking-db.ts`
-- `?? docs/feedback/2026-11-02-operations-pages-ideas.md`
-
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -201,6 +189,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `7458886d` 2026-11-02 — Pay separately: give back the leavers' share of a hold already taken
 - `580df30d` 2026-11-02 — queue/spec update
 - `cbc3bd08` 2026-11-02 — queue/spec update
 - `f3ad66bb` 2026-11-02 — Tee sheet: pay separately — split players off a group and pay their share
@@ -212,7 +201,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `b04c0c83` 2026-11-02 — Register: item photos on the tiles (+ Home review follow-ups)
 - `0394ca3b` 2026-11-02 — Home: shift note, course conditions, week ahead, month vs goal (#295)
 - `7de2b772` 2026-11-02 — operator-home test: accept the money permission read once and passed to operatorHome
-- `61cb526c` 2026-11-02 — Home: shift note, course conditions, week ahead, month vs goal
 
 ---
 
