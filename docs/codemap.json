@@ -8284,7 +8284,7 @@
     },
     {
       "path": "src/app/courses/[slug]/CourseBookingClient.tsx",
-      "lines": 1872,
+      "lines": 1879,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -16793,7 +16793,7 @@
     },
     {
       "path": "src/lib/course-conditions.ts",
-      "lines": 31,
+      "lines": 43,
       "purpose": "DASH-D Home (Cam 2026-11-01, \"the course conditions\"):",
       "brain": [],
       "exports": [
@@ -16814,8 +16814,16 @@
           "kind": "fn"
         },
         {
+          "name": "CONDITIONS_FRESH_HOURS",
+          "kind": "const"
+        },
+        {
           "name": "CourseConditions",
           "kind": "type"
+        },
+        {
+          "name": "golferConditionLines",
+          "kind": "fn"
         }
       ],
       "route": null,
@@ -16827,7 +16835,8 @@
       "usedBy": [
         "src/app/api/operator/conditions/route.ts",
         "src/components/dashboard/home/HomeBoard.tsx",
-        "src/lib/home-board.ts"
+        "src/lib/home-board.ts",
+        "src/lib/normalize-course.ts"
       ]
     },
     {
@@ -17733,7 +17742,7 @@
     },
     {
       "path": "src/lib/courses-data.ts",
-      "lines": 331,
+      "lines": 333,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -21515,7 +21524,7 @@
     },
     {
       "path": "src/lib/normalize-course.ts",
-      "lines": 98,
+      "lines": 101,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -21531,6 +21540,7 @@
       "guard": null,
       "imports": [
         "./cancel-policy",
+        "./course-conditions",
         "./money",
         "./walking",
         "@/lib/facilities"
