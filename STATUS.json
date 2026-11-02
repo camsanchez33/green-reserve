@@ -1,36 +1,39 @@
 {
-  "generatedAt": "2026-11-01T23:24:16.934Z",
+  "generatedAt": "2026-11-02T00:22:40.930Z",
   "repo": {
-    "head": "cd621666",
+    "head": "91745c5a",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 37,
+    "dirtyCount": 9,
     "dirty": [
-      "M CLAUDE.md",
-      " M STATUS.artifact.html",
+      "M STATUS.artifact.html",
       " M STATUS.json",
       " M STATUS.md",
       " M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/audit-wording-test.ts",
-      " M scripts/counter-rates-db-test.ts",
-      " M scripts/demand-pricing-db-test.ts",
-      " M scripts/last-minute-db-test.ts",
-      " M scripts/member-rates-db-test.ts",
-      " M scripts/move-booking-test.ts",
-      " M scripts/promo-codes-db-test.ts",
-      " M scripts/residents-test.ts",
-      " M scripts/words-guard.baseline.json",
-      " M src/app/api/admin/create-course/route.ts",
-      " M src/app/api/admin/inquiries/route.ts",
-      " M src/app/api/admin/schedule/route.ts",
-      " M src/app/api/bookings/resident-rate/route.ts",
-      " M src/app/api/bookings/route.ts"
+      " M scripts/sample-data-db-test.ts",
+      " M src/lib/sample-data.ts",
+      " M src/lib/tee-sheet-engine.ts",
+      "?? docs/SMS_OPT_IN.md"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "91745c5a",
+        "date": "2026-11-01T23:39:42+00:00",
+        "subject": "member-portal-price test: its course has member prices, so the switches are on",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "96cd687f",
+        "date": "2026-11-01T23:24:19+00:00",
+        "subject": "Pricing switches: Members / Residents off means the public price (backfill + auto-on)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "1db52953",
         "date": "2026-11-01T14:49:34-05:00",
@@ -351,16 +354,16 @@
   },
   "specs": [
     {
-      "file": "DENSE_UI_SPEC.md",
+      "file": "CLAUDE.md",
       "openRefs": 1,
       "lastTouched": "2026-11-01",
       "ageDays": 0
     },
     {
-      "file": "CLAUDE.md",
+      "file": "DENSE_UI_SPEC.md",
       "openRefs": 1,
-      "lastTouched": "2026-10-30",
-      "ageDays": 2
+      "lastTouched": "2026-11-01",
+      "ageDays": 0
     },
     {
       "file": "PLATFORM_ROADMAP_SPEC.md",
@@ -582,6 +585,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "91745c5a",
+      "date": "2026-11-01",
+      "subject": "member-portal-price test: its course has member prices, so the switches are on"
+    },
+    {
+      "h": "96cd687f",
+      "date": "2026-11-01",
+      "subject": "Pricing switches: Members / Residents off means the public price (backfill + auto-on)"
+    },
+    {
       "h": "1db52953",
       "date": "2026-11-01",
       "subject": "Audit wording: what the sheet, members, settings and golfer page say, made true (#288)"
@@ -630,16 +643,6 @@
       "h": "d74792b2",
       "date": "2026-11-01",
       "subject": "DENSE-9 Messages: the intro is the reply-time line and the email"
-    },
-    {
-      "h": "fe34fcb1",
-      "date": "2026-11-01",
-      "subject": "DENSE-8 Events: the list is a table with what each event still owes (#283)"
-    },
-    {
-      "h": "1bbbbbc8",
-      "date": "2026-11-01",
-      "subject": "DENSE-8 Events: the list is a table with what each event still owes"
     }
   ]
 }

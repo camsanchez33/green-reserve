@@ -52,7 +52,40 @@ async function cleanup() {
   ok('no booking has a saved card, so no cron can charge one', bookings.every(b => !b.stripePaymentMethodId && !b.stripeCustomerId));
   const statuses = new Set(bookings.map(b => `${b.status}/${b.paymentStatus}`));
   ok('every state a real day produces is there', ['completed/paid', 'completed/paid_offline', 'cancelled/cancellation_fee_charged', 'confirmed/no_payment_method', 'confirmed/manual'].every(s => statuses.has(s)), [...statuses]);
-  ok('paid means checked in, with a paid time', bookings.filter(b => b.status === 'completed').every(b => b.checkedInAt && b.paidAt && (b.paymentStatus === 'paid' || b.paymentStatus === 'paid_offline')));
+  ok('paid means checked in, with a paid time', bookings.filter(b => b.status === 'completed').every(b => b.checkedInAt && b.paidAt && (b.paymentStatus === 'paid' || b.paymentStatus === 'paid_offline' || b.paymentStatus === 'on_account')));
+  // Busy season (Cam 2026-11-01): volume, and every money table a real course fills.
+  ok('busy season: thousands of bookings over six months, 150 members, 60 residents', res.ok && res.made.bookings > 8000 && res.made.members === 150 && res.made.residents === 60, res.ok ? res.made : res);
+  const cid = course.id;
+  const [cardRounds, cardMoves, onAcct, charges, statements, stmtMoves, dues, notes, closes, promoUsed, sw] = await Promise.all([
+    prisma.booking.count({ where: { courseId: cid, status: 'completed', paymentStatus: 'paid' } }),
+    prisma.moneyMove.count({ where: { courseId: cid, what: 'round', method: 'card', direction: 'in' } }),
+    prisma.booking.count({ where: { courseId: cid, paymentStatus: 'on_account' } }),
+    prisma.memberCharge.count({ where: { courseId: cid } }),
+    prisma.memberStatement.findMany({ where: { courseId: cid }, select: { status: true, totalCents: true, lines: { select: { amountCents: true } } } }),
+    prisma.moneyMove.count({ where: { courseId: cid, what: 'account' } }),
+    prisma.moneyMove.count({ where: { courseId: cid, what: 'dues' } }),
+    prisma.golferNote.count({ where: { courseId: cid } }),
+    prisma.registerClose.count({ where: { courseId: cid } }),
+    prisma.booking.count({ where: { courseId: cid, promoCodeId: { not: null } } }),
+    prisma.course.findUniqueOrThrow({ where: { id: cid }, select: { hasMemberPricing: true, hasResidentPricing: true } }),
+  ]);
+  ok('the ledger has a card row for every card-paid round', cardRounds > 0 && cardMoves === cardRounds, { cardRounds, cardMoves });
+  ok('full members put rounds on their account, one charge each', onAcct > 0 && charges === onAcct, { onAcct, charges });
+  ok('finished months close into statements whose lines add up; paid ones are in the ledger', statements.length > 0 && statements.every(st => st.totalCents === st.lines.reduce((t, l) => t + l.amountCents, 0)) && stmtMoves === statements.filter(st => st.status === 'paid').length && statements.some(st => st.status === 'open'));
+  ok('dues, notes, promo uses and 60 close-outs are there', dues > 0 && notes > 0 && promoUsed > 0 && closes === 60, { dues, notes, promoUsed, closes });
+  ok('the member and resident price switches are on', sw.hasMemberPricing && sw.hasResidentPricing);
+  const future = new Date(Date.now() + 60_000);
+  const [fMoves, fStmts, fSales] = await Promise.all([
+    prisma.moneyMove.count({ where: { courseId: cid, at: { gt: future } } }),
+    prisma.memberStatement.count({ where: { courseId: cid, paidAt: { gt: future } } }),
+    prisma.shopSale.count({ where: { courseId: cid, paidAt: { gt: future } } }),
+  ]);
+  ok('no money moved, statement paid or sale made in the future', fMoves + fStmts + fSales === 0, { fMoves, fStmts, fSales });
+  const promoRows = await prisma.booking.findMany({ where: { courseId: cid, promoCodeId: { not: null } }, select: { golferEmail: true, promoCodeId: true, teeTime: { select: { time: true } } } });
+  const codes = await prisma.promoCode.findMany({ where: { courseId: cid }, select: { id: true, fromTime: true, onePerGolfer: true } });
+  const seen = new Set<string>();
+  const badPromo = promoRows.filter(b => { const c = codes.find(x => x.id === b.promoCodeId)!; const k = `${c.id}|${b.golferEmail}`; const bad = (c.fromTime && b.teeTime.time < c.fromTime) || (c.onePerGolfer && seen.has(k)); seen.add(k); return bad; });
+  ok('promo codes were only used where they fit (times, once per golfer)', badPromo.length === 0, badPromo.length);
   ok('totals add up (green + cart + booking fee)', bookings.every(b => b.totalAmount === b.greenFeeTotal + b.cartFeeTotal + b.rangeBallsTotal + b.accessFeeTotal));
   ok('counter bookings carry no booking fee', bookings.filter(b => b.source !== 'online').every(b => b.accessFeeTotal === 0));
   ok('nothing was booked before it was made, or in the future', bookings.every(b => b.createdAt.getTime() <= Date.now()));

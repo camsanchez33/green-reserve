@@ -18978,7 +18978,8 @@
         "src/app/api/operator/golfers/[key]/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/lib/analytics.ts",
-        "src/lib/golfer-record.ts"
+        "src/lib/golfer-record.ts",
+        "src/lib/sample-data.ts"
       ]
     },
     {
@@ -22885,8 +22886,8 @@
     },
     {
       "path": "src/lib/sample-data.ts",
-      "lines": 350,
-      "purpose": "Cam 2026-10-28 (\"add a shit ton of test tee times, members and shit to the test course … do a lot of fake bookings\"):",
+      "lines": 501,
+      "purpose": "Cam 2026-10-28 (\"add a shit ton of test tee times, members and shit to the test course … do a lot of fake bookings\"); Cam 2026-11-01 chose \"Busy season\":",
       "brain": [],
       "exports": [
         {
@@ -22925,6 +22926,7 @@
         "./course-events",
         "./course-time",
         "./email",
+        "./golfer-key",
         "./member-rates",
         "./prisma",
         "./residents",
@@ -24680,7 +24682,7 @@
     },
     {
       "path": "src/lib/tee-sheet-engine.ts",
-      "lines": 290,
+      "lines": 292,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -27163,7 +27165,8 @@
         "src/lib/demand-pricing.ts",
         "src/lib/lifecycle.ts",
         "src/lib/pricing-switch.ts",
-        "src/lib/sales-tax.ts"
+        "src/lib/sales-tax.ts",
+        "src/lib/sample-data.ts"
       ],
       "readers": [
         "src/app/api/admin/audit/route.ts",
@@ -27601,7 +27604,8 @@
         }
       ],
       "writers": [
-        "src/lib/event-payments.ts"
+        "src/lib/event-payments.ts",
+        "src/lib/sample-data.ts"
       ],
       "readers": [
         "src/app/api/operator/events/[id]/payments/route.ts",
@@ -27609,7 +27613,8 @@
         "src/lib/analytics.ts",
         "src/lib/event-payments.ts",
         "src/lib/event-signup.ts",
-        "src/lib/ledger-view.ts"
+        "src/lib/ledger-view.ts",
+        "src/lib/sample-data.ts"
       ]
     },
     {
@@ -29088,7 +29093,8 @@
       ],
       "writers": [
         "src/app/api/operator/golfers/[key]/route.ts",
-        "src/lib/data-reset.ts"
+        "src/lib/data-reset.ts",
+        "src/lib/sample-data.ts"
       ],
       "readers": [
         "src/app/api/operator/golfers/[key]/route.ts",
@@ -29226,7 +29232,9 @@
           "type": "MemberStatement?"
         }
       ],
-      "writers": [],
+      "writers": [
+        "src/lib/sample-data.ts"
+      ],
       "readers": [
         "src/app/api/operator/member-accounts/route.ts",
         "src/app/api/operator/tee-times/route.ts",
@@ -29449,7 +29457,8 @@
       ],
       "writers": [
         "src/app/api/statement/[id]/route.ts",
-        "src/lib/member-statements.ts"
+        "src/lib/member-statements.ts",
+        "src/lib/sample-data.ts"
       ],
       "readers": [
         "src/app/api/cron/send-reminders/route.ts",
@@ -29648,7 +29657,8 @@
         }
       ],
       "writers": [
-        "src/lib/data-reset.ts"
+        "src/lib/data-reset.ts",
+        "src/lib/sample-data.ts"
       ],
       "readers": [
         "src/app/api/member/[courseSlug]/payments/route.ts",
@@ -30111,12 +30121,14 @@
       ],
       "writers": [
         "src/app/api/operator/promo-codes/route.ts",
-        "src/lib/data-reset.ts"
+        "src/lib/data-reset.ts",
+        "src/lib/sample-data.ts"
       ],
       "readers": [
         "src/app/api/operator/promo-codes/route.ts",
         "src/app/api/promo/check/route.ts",
-        "src/lib/promo-codes.ts"
+        "src/lib/promo-codes.ts",
+        "src/lib/sample-data.ts"
       ]
     },
     {
@@ -30213,7 +30225,8 @@
       ],
       "writers": [
         "src/lib/data-reset.ts",
-        "src/lib/register-close.ts"
+        "src/lib/register-close.ts",
+        "src/lib/sample-data.ts"
       ],
       "readers": [
         "src/lib/register-close.ts",
