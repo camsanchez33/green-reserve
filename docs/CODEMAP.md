@@ -379,6 +379,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/approval-state.ts` | 11 | 61 |  | `ApprovalState`, `coursePageDecision`, `getApprovalState`, `recordCoursePageDecision` |
 | `src/lib/real-courses.ts` | 11 | 22 | TEST-2 (Cam 2026-10-22: | `ON_REAL_BOOKING`, `ON_REAL_COURSE`, `REAL_COURSE` |
 | `src/lib/security-events.ts` | 11 | 129 | SEC-3 (Cam 2026-10-26, "security has to be insane"; chose "log events" and "email + Problems"): | `BURST_PER_IP`, `BURST_TOTAL`, `lockedAccountsNow`, `MAX_EVENTS_PER_IP_HOUR`, `purgeOldSecurityEvents`, `SECURITY_KEEP_DAYS`, `securityEvent`, `securityFindings` +3 more |
+| `src/lib/sms-consent-copy.ts` | 11 | 47 | SMS-1 (Cam 2026-11-02, Twilio A2P 10DLC — docs/SMS_OPT_IN.md): | `SMS_CONFIRMATION`, `SMS_CONSENT_VERSION`, `SMS_FREQUENCY`, `SMS_HELP`, `SMS_NO_CONSENT`, `SMS_NO_CONSENT_STAFF`, `smsKeyword`, `smsVerbalScript` +1 more |
 | `src/lib/staff-permissions.ts` | 11 | 152 | SP-A (STAFF_POLICY_SPEC Part A). | `ALL_KEYS`, `deniedMessage`, `labelFor`, `LEGACY_KEYS`, `normalizePermissions`, `PermissionDef`, `PermissionKey`, `PERMISSIONS` +5 more |
 | `src/lib/step-up-client.ts` | 11 | 70 | AW-1c: | `askReason`, `registerReasonHandler`, `registerStepUpHandler`, `stepUpFetch`, `withReason` |
 | `src/lib/access-fee.ts` | 10 | 192 | FB-3 (Cam 2026-09-29, FB3_FEE_PLAN_SPEC.md option B). | `bookingIdForFeeCharge`, `chargeAccessFeeSeparately`, `counterFeesUncollected`, `FeeChargeResult`, `liveSeparateFee`, `refundSeparateAccessFee` |
@@ -386,7 +387,6 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/cron-log.ts` | 10 | 141 | MP-8b: | `cronHealth`, `CronHealth`, `cronRoute`, `lastStripeWebhook`, `logStripeWebhook`, `STRIPE_WEBHOOK_JOB` |
 | `src/lib/demand-pricing.ts` | 10 | 151 | PRICE-5 (Cam 2026-10-30: | `Cell`, `dealWins`, `DemandCourse`, `demandDue`, `DemandMap`, `DemandMode`, `demandPctAt`, `demandPctFor` +10 more |
 | `src/lib/last-minute.ts` | 10 | 43 | PRICE-2 (Cam 2026-10-30: | `DealCourse`, `dealPct`, `dealRateSeat`, `dealSeat`, `dealSettingsError` |
-| `src/lib/sms-consent-copy.ts` | 10 | 47 | SMS-1 (Cam 2026-11-02, Twilio A2P 10DLC — docs/SMS_OPT_IN.md): | `SMS_CONFIRMATION`, `SMS_CONSENT_VERSION`, `SMS_FREQUENCY`, `SMS_HELP`, `SMS_NO_CONSENT`, `SMS_NO_CONSENT_STAFF`, `smsKeyword`, `smsVerbalScript` +1 more |
 | `src/lib/tee-sheet-engine.ts` | 10 | 292 |  | `DesiredSlot`, `desiredSlots`, `generateForAllCourses`, `generateTeeTimes`, `regenerateUpcoming`, `regenerationDays`, `ScheduleForSlots`, `slotKey` |
 | `src/lib/tee-time-utils.ts` | 10 | 54 | Converts a stored tee-time (date "YYYY-MM-DD", time "HH:MM" in the course's local timezone) to a UTC millisecond timestamp. | `teeToUtcMs` |
 | `src/lib/agreement-gate.ts` | 9 | 117 | AG-1: | `AgreementDocStatus`, `agreementStatus`, `AgreementStatus`, `hasAcceptedAgreement`, `latestOperatorAgreement` |
@@ -593,11 +593,11 @@ Sorted the same way.
 | `src/components/dashboard/StaffNotice.tsx` | 5 | 30 | SD-11 / SP-A. | `StaffNotice` |
 | `src/components/AuthPhotoShell.tsx` | 4 | 23 |  | `AUTH_PHOTO_LINK`, `AUTH_PHOTO_LINKS`, `AuthPhotoShell` |
 | `src/components/dashboard/money/types.ts` | 4 | 22 | SD-8 — one booking shape for all three Money tabs. | `MoneyBooking`, `MoneyCourse` |
+| `src/components/dashboard/SmsConsentAsk.tsx` | 4 | 39 | SMS-1 (Cam 2026-11-02, Twilio A2P 10DLC — docs/SMS_OPT_IN.md): | `default (SmsConsentAsk)`, `SmsConsentDialog` |
 | `src/components/dashboard/DateRangeButton.tsx` | 3 | 117 | AN-3 (Cam 2026-10-19: | `DateRange`, `default (DateRangeButton)`, `presets`, `rangeLabel` |
 | `src/components/dashboard/events/EventDetail.tsx` | 3 | 425 | W2-9 Events: | `default (EventDetail)`, `EventData`, `EventFull`, `EventPlayer`, `EventTask` |
 | `src/components/dashboard/money/PayoutsTable.tsx` | 3 | 73 | Money rework (Cam 2026-10-19): | `fmtDay`, `Payout`, `PayoutsData`, `PayoutsTable`, `usd` |
 | `src/components/dashboard/SignAgreements.tsx` | 3 | 222 | AGREEMENT_SPEC AG-2 §1 — the "Sign" step. | `default (SignAgreements)` |
-| `src/components/dashboard/SmsConsentAsk.tsx` | 3 | 39 | SMS-1 (Cam 2026-11-02, Twilio A2P 10DLC — docs/SMS_OPT_IN.md): | `default (SmsConsentAsk)`, `SmsConsentDialog` |
 | `src/components/EmptyState.tsx` | 3 | 22 |  | `EmptyState` |
 | `src/components/GolferExitLinks.tsx` | 3 | 24 |  | `GolferExitLinks` |
 | `src/components/PlainHeader.tsx` | 3 | 17 |  | `default (PlainHeader)` |
@@ -608,7 +608,7 @@ Sorted the same way.
 | `src/components/CoursePacks.tsx` | 2 | 63 | PRICE-3 (Cam 2026-10-30: | `CoursePacks` |
 | `src/components/dashboard/AccountPicker.tsx` | 2 | 55 | MEM-ACCT 1b (Cam 2026-10-31: | `AccountMember`, `AccountPicker` |
 | `src/components/dashboard/ChangeAccount.tsx` | 2 | 33 | MEM-ACCT (Cam 2026-10-31, "move to the right member"): | `ChangeAccount` |
-| `src/components/dashboard/DeclinedCardList.tsx` | 2 | 63 | Declined cards — the same rows on Home and Money → Needs you (Revamp 3 dead end 16, Cam 2026-10-29). | `DeclinedCardList` |
+| `src/components/dashboard/DeclinedCardList.tsx` | 2 | 73 | Declined cards — the same rows on Home and Money → Needs you (Revamp 3 dead end 16, Cam 2026-10-29). | `DeclinedCardList` |
 | `src/components/dashboard/events/EventSetup.tsx` | 2 | 379 | W2-9 Events: | `blankForm`, `default (EventSetup)`, `EventForm`, `KINDS`, `NineOpt`, `PAYERS`, `Product` |
 | `src/components/dashboard/ImageUpload.tsx` | 2 | 62 | The course's logo or course photo: | `ImageUpload` |
 | `src/components/dashboard/money/RefundForm.tsx` | 2 | 47 | Revamp 3 dead end 14 (Cam 2026-10-29): | `RefundForm` |

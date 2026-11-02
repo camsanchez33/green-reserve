@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-02 03:58 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `53e31df1` · working tree **10 dirty file(s)**
+Generated 2026-11-02 04:06 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `bffab6e9` · working tree **4 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 30 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 31 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `bffab6e9` | 2026-11-02 | Event money needs "Mark paid at the counter"; a member with history can't be deleted |
 | `53e31df1` | 2026-11-02 | Counter friction B: card beside the sheet, Home opens a time's card, member opens golfer record, cash through a failed tax quote |
 | `b80496f3` | 2026-11-02 | SMS-1: texts only to numbers that agreed (Twilio A2P 10DLC opt-in) |
 | `db252e4b` | 2026-11-02 | Status board refresh |
@@ -45,18 +46,12 @@ Generated 2026-11-02 03:58 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (10 file(s))
+### Uncommitted working tree (4 file(s))
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M src/app/api/operator/events/[id]/payments/route.ts`
-- `M src/app/api/operator/members/route.ts`
-- `M src/components/dashboard/events/EventDay.tsx`
-- `M src/components/dashboard/events/EventDetail.tsx`
-- `M src/components/dashboard/events/EventMoney.tsx`
-- `M src/lib/staff-permissions.ts`
-- `?? scripts/events-pay-perm-test.ts`
-- `?? scripts/member-remove-test.ts`
+- `M scripts/sms-consent-db-test.ts`
+- `M src/components/dashboard/DeclinedCardList.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -182,6 +177,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `bffab6e9` 2026-11-02 — Event money needs "Mark paid at the counter"; a member with history can't be deleted
 - `53e31df1` 2026-11-02 — Counter friction B: card beside the sheet, Home opens a time's card, member opens golfer record, cash through a failed tax quote
 - `b80496f3` 2026-11-02 — SMS-1: texts only to numbers that agreed (Twilio A2P 10DLC opt-in)
 - `db252e4b` 2026-11-02 — Status board refresh
@@ -193,7 +189,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `1db52953` 2026-11-01 — Audit wording: what the sheet, members, settings and golfer page say, made true (#288)
 - `93f3ff63` 2026-11-01 — Audit wording: what the sheet, members, settings and golfer page say, made true
 - `b5d27f01` 2026-11-01 — Audit numbers: partial refunds, event money, event player swap, shop today, payout tile (#287)
-- `c6efa694` 2026-11-01 — Audit numbers: partial refunds, event money, event player swap, shop today, payout tile
 
 ---
 

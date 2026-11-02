@@ -9,6 +9,8 @@ import { StatusDot } from '@/components/ui/StatusDot';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { formatTeeDate, formatTeeTime } from '@/lib/format';
 import type { DeclinedCard } from '@/lib/operator-home';
+import { SmsConsentDialog } from '@/components/dashboard/SmsConsentAsk';
+import { SMS_NO_CONSENT_STAFF } from '@/lib/sms-consent-copy';
 
 const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const BTN = 'text-[13px] font-medium text-ink px-3 py-1.5 rounded-md bg-white border border-line hover:border-line-strong disabled:opacity-50';
@@ -20,10 +22,15 @@ export function DeclinedCardList({ rows, total, canSendLink, moreHref }: {
 }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [result, setResult] = useState<Record<string, { ok: boolean; text: string }>>({});
-  async function send(d: DeclinedCard, via: 'sms' | 'email') {
+  // SMS-1: a number that never agreed to texts — read the script, record the yes, then send (as on the tee sheet).
+  const [ask, setAsk] = useState<DeclinedCard | null>(null);
+  const [askYes, setAskYes] = useState(false);
+  async function send(d: DeclinedCard, via: 'sms' | 'email', saidYes = false) {
     setBusy(d.id);
-    const r = await dfetch<{ sentTo: string }>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: d.id, action: 'send_pay_link', via }) });
+    const r = await dfetch<{ sentTo: string }>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: d.id, action: 'send_pay_link', via, ...(saidYes ? { smsConsent: 'verbal' } : {}) }) });
     setBusy(null);
+    if (!r.ok && r.status === 409 && r.error === SMS_NO_CONSENT_STAFF) { setAsk(d); setAskYes(false); return; }
+    setAsk(null);
     setResult(m => ({ ...m, [d.id]: r.ok
       ? { ok: true, text: `${via === 'sms' ? 'Texted' : 'Emailed'} to ${r.data.sentTo}. This clears once they pay.` }
       : { ok: false, text: r.error } }));
@@ -31,6 +38,9 @@ export function DeclinedCardList({ rows, total, canSendLink, moreHref }: {
   const more = total - rows.length;
   return (
     <>
+      {ask && <SmsConsentDialog courseName="" name={ask.name} busy={busy === ask.id} yes={askYes} onYes={setAskYes}
+        onEmail={ask.canEmail ? () => { const d = ask; setAsk(null); send(d, 'email'); } : undefined}
+        onSend={() => send(ask, 'sms', true)} onClose={() => setAsk(null)} />}
       {rows.map(d => {
         const res = result[d.id];
         return (

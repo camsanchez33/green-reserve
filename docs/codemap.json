@@ -10872,7 +10872,7 @@
     },
     {
       "path": "src/components/dashboard/DeclinedCardList.tsx",
-      "lines": 63,
+      "lines": 73,
       "purpose": "Declined cards — the same rows on Home and Money → Needs you (Revamp 3 dead end 16, Cam 2026-10-29).",
       "brain": [],
       "exports": [
@@ -10887,10 +10887,12 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/components/dashboard/SmsConsentAsk",
         "@/components/ui/StatusDot",
         "@/lib/dashboard-fetch",
         "@/lib/format",
         "@/lib/operator-home",
+        "@/lib/sms-consent-copy",
         "next/link",
         "react"
       ],
@@ -11529,6 +11531,7 @@
       "usedBy": [
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/shop/page.tsx",
+        "src/components/dashboard/DeclinedCardList.tsx",
         "src/components/dashboard/events/EventMoney.tsx"
       ]
     },
@@ -24407,6 +24410,7 @@
         "src/app/book/BookClient.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/events/[id]/SignupForm.tsx",
+        "src/components/dashboard/DeclinedCardList.tsx",
         "src/components/dashboard/SmsConsentAsk.tsx",
         "src/lib/sms-consent.ts",
         "src/lib/twilio.ts"
