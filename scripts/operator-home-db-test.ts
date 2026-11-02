@@ -95,7 +95,7 @@ async function main() {
   check('Money\'s pay-link buttons need the tee sheet\'s check-in permission, like the route', /access\.can\('sheet\.checkin'\)/.test(page) && /action: 'send_pay_link'/.test(readFileSync('src/components/dashboard/DeclinedCardList.tsx', 'utf8')));
 
   const route = readFileSync('src/app/api/operator/home/route.ts', 'utf8');
-  check('the route gates money and messages per permission', /money: can\(session, 'money\.payments'\)/.test(route) && /messages: can\(session, 'messages\.use'\)/.test(route) && /requirePermission\(session, 'sheet\.view'\)/.test(route));
+  check('the route gates money and messages per permission', (/money: can\(session, 'money\.payments'\)/.test(route) || (/const money = can\(session, 'money\.payments'\);/.test(route) && /operatorHome\(session\.courseId, \{ money,/.test(route))) && /messages: can\(session, 'messages\.use'\)/.test(route) && /requirePermission\(session, 'sheet\.view'\)/.test(route));
 }
 
 cleanup().then(main).then(cleanup)
