@@ -25,7 +25,7 @@ export type BoardSlot = {
 };
 type Tone = 'ok' | 'warn' | 'bad';
 
-const HATCH: React.CSSProperties = { backgroundImage: 'repeating-linear-gradient(135deg, #E3E4DE 0 1px, transparent 1px 7px)' };
+const HATCH: React.CSSProperties = { backgroundImage: 'repeating-linear-gradient(135deg, var(--color-line) 0 1px, transparent 1px 7px)' };
 
 /** Paid = checked in (online, card or at the counter) or collected ahead. */
 export function groupTone(g: BoardGroup): Tone {
@@ -139,7 +139,7 @@ export default function TeeSheetRows({ slots: allSlots, isPast, isGone, nextUpId
                       style={{ gridColumn: `span ${span}` }}
                       className={'h-8 min-w-0 flex items-center gap-1.5 px-2 rounded-[4px] border-l-[3px] text-left text-[12.5px] shadow-[0_0_0_1px_rgba(20,24,20,0.08)] '
                         + EDGE[t] + ' '
-                        + (g.status === 'completed' ? 'bg-ok/[0.12] ' : special(g) ? 'bg-[#F1EEE4] ' : 'bg-white ')
+                        + (g.status === 'completed' ? 'bg-ok/[0.12] ' : special(g) ? 'bg-mem-fill ' : 'bg-white ')
                         + (can ? 'cursor-grab active:cursor-grabbing' : '')}>
                       <span className={'truncate ' + (t === 'bad' ? 'text-bad font-medium' : 'text-ink')}>{g.golferName}</span>
                       {g.players > 1 && <span className="shrink-0 text-ink-muted tabular-nums">+{g.players - 1}</span>}

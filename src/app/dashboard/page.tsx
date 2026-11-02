@@ -832,7 +832,7 @@ function DashboardPageInner() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen md:h-screen bg-white md:overflow-hidden">
+    <div className="flex flex-col min-h-screen md:h-screen bg-page md:overflow-hidden">
       <OperatorSidebar active={tab} onAlertClick={access.can('sheet.course_alert') ? () => { setAlertEmail(false); setShowConditions(true); } : undefined}/>
 
       {/* Tee audit 16: on a wide screen the time's card sits beside the sheet — the sheet narrows instead of being covered. */}
@@ -1109,7 +1109,7 @@ function DashboardPageInner() {
                     <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-white shadow-[0_0_0_1px_rgba(20,24,20,0.12)] border-l-[3px] border-warn" />Owes</span>
                     <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-white shadow-[0_0_0_1px_rgba(20,24,20,0.12)] border-l-[3px] border-bad" />Declined or no-show</span>
                     <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-ok/[0.12]" />Checked in</span>
-                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-[#F1EEE4]" />Member or resident</span>
+                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-[var(--color-mem-fill)]" />Member or resident</span>
                   </div>
                 </div>
               {loading ? (
@@ -1730,7 +1730,8 @@ function CardCheckInModal({ booking, reason, showed, onConfirm, onCancel }: {
       )}
       <div className="mb-4">
         <label className="block text-[13px] font-semibold text-ink mb-1.5">Card details</label>
-        <div className="w-full px-4 py-3.5 rounded-md border border-line bg-paper focus-within:border-pine/40 transition-colors">
+        {/* Stripe draws the field in its own frame, which can't follow the dark tokens — the box stays light. */}
+        <div className="op-keep-light w-full px-4 py-3.5 rounded-md border border-line bg-paper focus-within:border-pine/40 transition-colors">
           <CardElement options={cardStyle}/>
         </div>
       </div>

@@ -263,7 +263,7 @@ export default function SchedulesPage() {
   }
 
   if (pageAccess.loaded && !pageAccess.can('schedule.view')) return (
-    <div className="flex flex-col min-h-screen md:h-screen bg-white md:overflow-hidden">
+    <div className="flex flex-col min-h-screen md:h-screen bg-page md:overflow-hidden">
       <OperatorSidebar active="schedule" />
       <main className="flex-1 md:overflow-y-auto"><StaffNotice what="the schedule" view="schedule.view" /></main>
     </div>
@@ -400,7 +400,7 @@ export default function SchedulesPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen md:h-screen bg-white md:overflow-hidden">
+    <div className="flex flex-col min-h-screen md:h-screen bg-page md:overflow-hidden">
       <OperatorSidebar active="schedule" />
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <StaffNotice what="the schedule" view="schedule.view" edit="schedule.edit" />

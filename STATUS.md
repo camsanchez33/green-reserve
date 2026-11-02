@@ -4,14 +4,19 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-02 04:06 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `bffab6e9` · working tree **4 dirty file(s)**
+Generated 2026-11-02 05:33 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `14d6254a` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 31 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 36 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `14d6254a` | 2026-11-02 | Dark mode is screen-only (prints stay light); theme cookie Secure only over https |
+| `7ca659d0` | 2026-11-02 | Rail groups never drop a tab; tests follow the grouped rail and the mem-fill token |
+| `46a688fc` | 2026-11-02 | Dashboard foundation: Geist, grey page + white panels, grouped rail, Light/Dark |
+| `3ae2293d` | 2026-11-02 | Pricing switches + busy-season data + speed + counter fixes + SMS opt-in (Twilio) (#289) |
+| `3659755c` | 2026-11-02 | SMS-1 follow-up: Home / Money declined cards ask before texting, like the tee sheet |
 | `bffab6e9` | 2026-11-02 | Event money needs "Mark paid at the counter"; a member with history can't be deleted |
 | `53e31df1` | 2026-11-02 | Counter friction B: card beside the sheet, Home opens a time's card, member opens golfer record, cash through a failed tax quote |
 | `b80496f3` | 2026-11-02 | SMS-1: texts only to numbers that agreed (Twilio A2P 10DLC opt-in) |
@@ -46,15 +51,13 @@ Generated 2026-11-02 04:06 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (4 file(s))
+### Uncommitted working tree (2 file(s))
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/sms-consent-db-test.ts`
-- `M src/components/dashboard/DeclinedCardList.tsx`
 
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -177,6 +180,11 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `14d6254a` 2026-11-02 — Dark mode is screen-only (prints stay light); theme cookie Secure only over https
+- `7ca659d0` 2026-11-02 — Rail groups never drop a tab; tests follow the grouped rail and the mem-fill token
+- `46a688fc` 2026-11-02 — Dashboard foundation: Geist, grey page + white panels, grouped rail, Light/Dark
+- `3ae2293d` 2026-11-02 — Pricing switches + busy-season data + speed + counter fixes + SMS opt-in (Twilio) (#289)
+- `3659755c` 2026-11-02 — SMS-1 follow-up: Home / Money declined cards ask before texting, like the tee sheet
 - `bffab6e9` 2026-11-02 — Event money needs "Mark paid at the counter"; a member with history can't be deleted
 - `53e31df1` 2026-11-02 — Counter friction B: card beside the sheet, Home opens a time's card, member opens golfer record, cash through a failed tax quote
 - `b80496f3` 2026-11-02 — SMS-1: texts only to numbers that agreed (Twilio A2P 10DLC opt-in)
@@ -184,11 +192,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `b199995d` 2026-11-02 — Counter friction: one-tap check-in, no-show waits 10 min, cart off by default, search on phones
 - `45ca1d0e` 2026-11-02 — Speed with volume: one time-zone formatter per zone (Analytics 90 days 10.7s → 1.2s)
 - `4054bff4` 2026-11-02 — Test course: busy-season sample data, with every money table filled
-- `91745c5a` 2026-11-01 — member-portal-price test: its course has member prices, so the switches are on
-- `96cd687f` 2026-11-01 — Pricing switches: Members / Residents off means the public price (backfill + auto-on)
-- `1db52953` 2026-11-01 — Audit wording: what the sheet, members, settings and golfer page say, made true (#288)
-- `93f3ff63` 2026-11-01 — Audit wording: what the sheet, members, settings and golfer page say, made true
-- `b5d27f01` 2026-11-01 — Audit numbers: partial refunds, event money, event player swap, shop today, payout tile (#287)
 
 ---
 

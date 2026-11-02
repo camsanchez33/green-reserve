@@ -462,7 +462,7 @@ function SettingsPageInner() {
   }).map(i => ({ ...i, onClick: () => goTo(i.section as Section) }));
 
   return (
-    <div className="flex flex-col min-h-screen md:h-screen bg-white md:overflow-hidden">
+    <div className="flex flex-col min-h-screen md:h-screen bg-page md:overflow-hidden">
       <OperatorSidebar active="settings"/>
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <StaffNotice what="these settings" edit="settings.edit" />

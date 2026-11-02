@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 641,
+    "files": 643,
     "routes": 287,
-    "libs": 226,
+    "libs": 227,
     "models": 68,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -8565,7 +8565,7 @@
     },
     {
       "path": "src/app/dashboard/layout.tsx",
-      "lines": 18,
+      "lines": 22,
       "purpose": "Auth protection for /dashboard/* is handled by src/middleware.ts.",
       "brain": [],
       "exports": [
@@ -8584,9 +8584,11 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/lib/op-theme",
         "@/lib/staff-fonts",
         "next",
-        "next/font/google"
+        "next/font/google",
+        "next/headers"
       ],
       "usedBy": []
     },
@@ -8773,7 +8775,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1748,
+      "lines": 1749,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10048,7 +10050,7 @@
     },
     {
       "path": "src/components/OperatorSidebar.tsx",
-      "lines": 314,
+      "lines": 334,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10071,6 +10073,7 @@
         "@/components/birdie/BirdieWidget",
         "@/components/dashboard/AgreementNotice",
         "@/components/dashboard/OperatorSearch",
+        "@/components/dashboard/ThemeSwitch",
         "@/components/dashboard/Toast",
         "@/lib/dashboard-visits",
         "@/lib/unsaved-guard",
@@ -11653,6 +11656,30 @@
       ],
       "usedBy": [
         "src/app/dashboard/page.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/ThemeSwitch.tsx",
+      "lines": 22,
+      "purpose": "DASH-D:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (ThemeSwitch)",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/lib/op-theme",
+        "react"
+      ],
+      "usedBy": [
+        "src/components/OperatorSidebar.tsx"
       ]
     },
     {
@@ -21224,6 +21251,44 @@
         "src/app/api/courses/route.ts",
         "src/app/api/preview/[courseId]/route.ts",
         "src/lib/public-course.ts"
+      ]
+    },
+    {
+      "path": "src/lib/op-theme.ts",
+      "lines": 24,
+      "purpose": "DASH-D (Cam 2026-11-01:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "currentOpTheme",
+          "kind": "fn"
+        },
+        {
+          "name": "OP_THEME_COOKIE",
+          "kind": "const"
+        },
+        {
+          "name": "OpTheme",
+          "kind": "type"
+        },
+        {
+          "name": "readOpTheme",
+          "kind": "fn"
+        },
+        {
+          "name": "setOpTheme",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/dashboard/layout.tsx",
+        "src/components/dashboard/ThemeSwitch.tsx"
       ]
     },
     {

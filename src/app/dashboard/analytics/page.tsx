@@ -706,7 +706,7 @@ function AnalyticsInner() {
   const d = data;
 
   if (denied || signedOut) return (
-    <div className="flex flex-col min-h-screen md:h-screen bg-white md:overflow-hidden">
+    <div className="flex flex-col min-h-screen md:h-screen bg-page md:overflow-hidden">
       <OperatorSidebar active="analytics" />
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <div className="max-w-xl mx-auto px-6 py-16">
@@ -725,7 +725,7 @@ function AnalyticsInner() {
   const notes = d ? insights(d, access.can, access.loaded && !access.isStaff) : [];
 
   return (
-    <div className="flex flex-col min-h-screen md:h-screen bg-white md:overflow-hidden">
+    <div className="flex flex-col min-h-screen md:h-screen bg-page md:overflow-hidden">
       <OperatorSidebar active="analytics" />
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <div className="px-4 sm:px-10 py-7">

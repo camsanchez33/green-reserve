@@ -23,6 +23,15 @@
      active tab). 2.9:1 on paper: never text, never the only state signal. */
   --color-fairway:     #3BAA6B;
   --color-dot-neutral: #B3B6AF;
+  /* DASH-D (Cam 2026-11-01): the course dashboard's grey page, its menu rail and
+     the tee sheet fills. Defaults here so the utilities exist; .op-look sets them. */
+  --color-page:        #F4F5F1;
+  --color-rail:        #E3E6DE;
+  --color-rail-line:   #C9CEC2;
+  --color-pine-soft:   #E6EEE8;
+  --color-ok-fill:     #EAF2EC;
+  --color-mem-fill:    #F4EEDF;
+  --color-dash:        #CDD0C6;
 
   /* FLOW-1: a card is a white sheet with a whisper of an edge, not a ruled
      box — `shadow-card` (a 1px ring at 6% + the allowed 0 1px 2px). */
@@ -109,16 +118,65 @@ body {
 .admin-look { --font-sans: var(--font-inter), 'Helvetica Neue', Arial, sans-serif; font-family: var(--font-sans); }
 .admin-look .font-serif { font-family: var(--font-sans); font-weight: 700; letter-spacing: -0.02em; }
 
-/* DASH-C (Cam 2026-10-22, the course dashboard mockups): the same clean look as
-   ADMIN-C for courses — a 232px white menu on the left (OperatorSidebar's
-   .op-rail, md and up), white pages, Inter titles included. Scoped to pages that
-   render the rail, so login, reset-password and onboarding keep the site look. */
+/* DASH-D (Cam 2026-11-01/02, the dashboard mockups — replaces DASH-C's white
+   pages + Inter): Geist, a grey page with white soft-sheet panels, a darker
+   grouped menu rail (OperatorSidebar's .op-rail, md and up), and a Light/Dark
+   choice per browser (the gr_op_theme cookie, read in dashboard/layout.tsx into
+   data-theme). Scoped to pages that render the rail, so login, reset-password
+   and onboarding keep the site look. Dark mode is ONLY the token swap below —
+   pages never test the theme; a colour typed as a hex on a dashboard page won't
+   follow it, so use the tokens. */
 :root { --op-rail-w: 14.5rem; }
 @media (min-width: 768px) { .op-look:has(.op-rail) { padding-left: var(--op-rail-w); } }
 /* Printing (event pairings, cart signs): the page alone — no rail, no bars, no gap where the rail was. */
 @media print { .op-look:has(.op-rail) { padding-left: 0; } .op-rail, .op-look nav[aria-label="Dashboard"], #op-more { display: none !important; } }
-.op-look:has(.op-rail) { --font-sans: var(--font-inter), 'Helvetica Neue', Arial, sans-serif; font-family: var(--font-sans); }
+.op-look:has(.op-rail) {
+  --font-sans: var(--font-geist), 'Helvetica Neue', Arial, sans-serif; font-family: var(--font-sans);
+  --color-paper: #F4F5F1; --color-ink-soft: #3A403A; --color-line-strong: #C9CEC2;
+  background: var(--color-page); min-height: 100vh; color: var(--color-ink);
+}
 .op-look:has(.op-rail) .font-serif { font-family: var(--font-sans); font-weight: 700; letter-spacing: -0.02em; }
+.op-look:has(.op-rail) .tabular-nums, .op-look:has(.op-rail) table { font-variant-numeric: tabular-nums; }
+/* The logo pair: the pine lockup in light, the cream one in dark. */
+.op-look .op-dark-only { display: none; }
+
+/* Dark is a SCREEN preference: printing (pairings, cart signs) always gets the
+   light tokens, so dark text never lands on white paper. */
+@media screen {
+/* Dark: every token swapped for its twin. `bg-white` is a panel, so it takes
+   the card colour; white TEXT on a solid fill takes the dark page colour,
+   because in dark the fills are the bright tints. */
+.op-look[data-theme="dark"]:has(.op-rail) {
+  color-scheme: dark;
+  --color-page: #0F1110; --color-paper: #141715; --color-card: #181B19; --color-white: #181B19;
+  --color-rail: #141715; --color-rail-line: #2A2E2B;
+  --color-ink: #E8EBE6; --color-ink-soft: #C3C8C1; --color-ink-muted: #8F958D; --color-ink-faint: #858B83;
+  --color-line: #2A2E2B; --color-line-soft: #222623; --color-line-strong: #3A3F3B;
+  --color-pine: #4FB27A; --color-pine-hover: #63C28C; --color-pine-soft: #1C2A21;
+  --color-ok: #5CC48A; --color-warn: #E3A23B; --color-bad: #F07B6A;
+  --color-ok-fill: #17271D; --color-mem-fill: #2A2518; --color-dash: #3A3F3B; --color-dot-neutral: #5A605A;
+  --color-fairway: #3BAA6B;
+}
+.op-look[data-theme="dark"]:has(.op-rail) .op-dark-only { display: inline-block; }
+.op-look[data-theme="dark"]:has(.op-rail) .op-light-only { display: none; }
+.op-look[data-theme="dark"]:has(.op-rail) .text-white { color: #FFFFFF; }
+.op-look[data-theme="dark"]:has(.op-rail) :is(.bg-pine, .bg-ok, .bg-bad, .bg-warn, .bg-ink, .bg-bad\/90).text-white,
+.op-look[data-theme="dark"]:has(.op-rail) :is(.bg-pine, .bg-ok, .bg-bad, .bg-warn, .bg-ink) .text-white { color: #0F1110; }
+.op-look[data-theme="dark"]:has(.op-rail) .shadow-card { box-shadow: 0 0 0 1px rgba(255,255,255,.07), 0 1px 2px rgba(0,0,0,.4); }
+.op-look[data-theme="dark"]:has(.op-rail) :is(.bg-ink\/20, .bg-ink\/30, .bg-ink\/40, .bg-black\/30, .bg-black\/50) { background-color: rgb(0 0 0 / .6); }
+.op-look[data-theme="dark"]:has(.op-rail) img:not([src*="/brand/"]) { filter: brightness(.92); }
+/* A preview of a golfer page (the booking page, an email) stays in the light look. */
+.op-look[data-theme="dark"]:has(.op-rail) .op-keep-light {
+  color-scheme: light;
+  --color-page: #F4F5F1; --color-paper: #FAFAF7; --color-card: #FFFFFF; --color-white: #FFFFFF;
+  --color-ink: #141814; --color-ink-soft: #50554F; --color-ink-muted: #6B706A; --color-ink-faint: #70756F;
+  --color-line: #E3E4DE; --color-line-soft: #EFF0EB; --color-line-strong: #D3D5CD;
+  --color-pine: #173B2A; --color-pine-hover: #0F2C1F; --color-ok: #3D7A55; --color-warn: #9A5B13; --color-bad: #A3452F;
+  color: var(--color-ink);
+}
+.op-look[data-theme="dark"]:has(.op-rail) .op-keep-light :is(.bg-pine, .bg-ok, .bg-bad, .bg-warn, .bg-ink) .text-white,
+.op-look[data-theme="dark"]:has(.op-rail) .op-keep-light :is(.bg-pine, .bg-ok, .bg-bad, .bg-warn, .bg-ink).text-white { color: #FFFFFF; }
+}
 
 /* FB-2: "See how it works" on the homepage glides to the steps instead of
    jumping. Homepage only, and never for visitors who asked for reduced motion. */

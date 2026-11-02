@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-641 source files · 287 routes · 226 libraries · 68 models
+643 source files · 287 routes · 227 libraries · 68 models
 
 ## Single sources of truth
 
@@ -301,7 +301,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/courses/[slug]/account` | golfer | **NONE FOUND** | page | `src/app/courses/[slug]/account/page.tsx` | 11 |
 | `/courses/[slug]/account/accept-invite` | golfer | entry | page | `src/app/courses/[slug]/account/accept-invite/page.tsx` | 144 |
 | `/courses/[slug]/member` | member | **NONE FOUND** | page | `src/app/courses/[slug]/member/page.tsx` | 874 |
-| `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 1748 |
+| `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 1749 |
 | `/dashboard/2fa` | operator | entry | page | `src/app/dashboard/2fa/page.tsx` | 110 |
 | `/dashboard/analytics` | operator | middleware | page | `src/app/dashboard/analytics/page.tsx` | 792 |
 | `/dashboard/cancellations` | operator | middleware | page | `src/app/dashboard/cancellations/page.tsx` | 17 |
@@ -512,6 +512,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/membership-pay-link.ts` | 2 | 45 | Membership dues pay links — sending one by email, and what to tell staff when it couldn't go. | `maybeSendPayLink`, `NOT_SENT` |
 | `src/lib/membership-renewal.ts` | 2 | 18 | When a paid membership's next term can be paid (LEDGER-1 review, Cam 2026-10-30). | `paidUntilRenewal`, `renewalWindowDays` |
 | `src/lib/no-fee-labels.ts` | 2 | 13 | Client-safe half of lib/cancel-fee-reason (no prisma): | `NO_FEE_LABEL`, `NoFeeReason` |
+| `src/lib/op-theme.ts` | 2 | 24 | DASH-D (Cam 2026-11-01: | `currentOpTheme`, `OP_THEME_COOKIE`, `OpTheme`, `readOpTheme`, `setOpTheme` |
 | `src/lib/operator-search.ts` | 2 | 86 | DASH-C search (the mockups' "Find a golfer, booking or member"): | `bySearchOrder`, `operatorSearch`, `SearchResult` |
 | `src/lib/page-review.ts` | 2 | 109 | Cam 2026-10-27 (onboarding walk): | `pageReview`, `PageReview`, `ReviewPart`, `ReviewPartKey`, `ReviewRow` |
 | `src/lib/security-checklist.ts` | 2 | 67 | SEC-3: | `Check`, `securityChecklist` |
@@ -586,7 +587,7 @@ Sorted the same way.
 | `src/components/admin/AdminSidebar.tsx` | 19 | 238 |  | `AdminNavKey`, `default (AdminSidebar)` |
 | `src/components/ui/Eyebrow.tsx` | 13 | 19 |  | `Eyebrow`, `EYEBROW` |
 | `src/components/dashboard/Toast.tsx` | 12 | 70 | SD-2. | `toast`, `Toaster`, `ToastKind` |
-| `src/components/OperatorSidebar.tsx` | 12 | 314 |  | `default (OperatorSidebar)`, `OperatorNavKey` |
+| `src/components/OperatorSidebar.tsx` | 12 | 334 |  | `default (OperatorSidebar)`, `OperatorNavKey` |
 | `src/components/CourseHeaderBar.tsx` | 9 | 46 | White-label rule: | `CourseHeaderBar` |
 | `src/components/ui/ErrorState.tsx` | 9 | 96 |  | `ErrorBanner`, `LoadFailure` |
 | `src/components/ui/Modal.tsx` | 9 | 141 | MP-9 (ADMIN_V4 V4-6 §4) — the one dialog. | `Modal`, `ModalActions` |
@@ -666,6 +667,7 @@ Sorted the same way.
 | `src/components/dashboard/ShopStock.tsx` | 1 | 135 | SHOP-4 (Cam 2026-10-30: | `ShopStock` |
 | `src/components/dashboard/StaffPermissions.tsx` | 1 | 243 | SP-A (STAFF_POLICY_SPEC A6): | `StaffPermissions` |
 | `src/components/dashboard/TeeSheetRows.tsx` | 1 | 177 | DENSE-4 (DENSE_UI_SPEC D1, Cam 2026-10-27: | `BoardGroup`, `BoardSlot`, `default (TeeSheetRows)`, `groupTone` |
+| `src/components/dashboard/ThemeSwitch.tsx` | 1 | 22 | DASH-D: | `default (ThemeSwitch)` |
 | `src/components/Footer.tsx` | 1 | 79 |  | `default (Footer)` |
 | `src/components/home/TeeSheetDemo.tsx` | 1 | 321 | HOME-2 (HOMEPAGE_SPEC.md, Cam 2026-10-07: | `LaptopDemo` |
 | `src/components/MainOffset.tsx` | 1 | 32 |  | `default (MainOffset)` |

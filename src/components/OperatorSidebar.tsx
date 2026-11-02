@@ -14,6 +14,7 @@ import AgreementNotice from '@/components/dashboard/AgreementNotice';
 import { recordTabVisit } from '@/lib/dashboard-visits';
 import { Toaster, toast } from '@/components/dashboard/Toast';
 import OperatorSearch from '@/components/dashboard/OperatorSearch';
+import ThemeSwitch from '@/components/dashboard/ThemeSwitch';
 
 export type OperatorNavKey =
   | 'home' | 'teesheet' | 'analytics' | 'money' | 'events'
@@ -165,6 +166,15 @@ export default function OperatorSidebar({ active, onAlertClick }: {
   const mobileItems = navItems.filter(n => mobileKeys.includes(n.key) && !n.soon);
   const moreItems = navItems.filter(n => !mobileKeys.includes(n.key) && !n.soon && visible(n.key));
   const [moreOpen, setMoreOpen] = useState(false);
+  // DASH-D (Cam 2026-11-01, "grouped"): the day's work first, then the business, then Settings.
+  const railGroups: { label: string; keys: OperatorNavKey[] }[] = [
+    { label: 'Today', keys: ['home', 'teesheet', 'shop', 'messages'] },
+    { label: 'Business', keys: ['money', 'members', 'events', 'schedule', 'analytics'] },
+    { label: '', keys: ['settings'] },
+  ];
+  // A tab no group names still shows (in Business) — a new tab is never dropped from the rail.
+  const grouped = new Set(railGroups.flatMap(g => g.keys));
+  railGroups[1].keys.push(...navItems.map(n => n.key).filter(k => !grouped.has(k)));
 
   return (
     <>
@@ -180,7 +190,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
       <div className="flex-1 min-w-0">
         <div className="font-serif text-[14px] text-ink leading-snug truncate">{name || 'GreenReserve'}</div>
         {name && <div className="text-[11.5px] text-ink-muted truncate">{meta}</div>}
-        <div className="flex items-center gap-1.5 text-[11.5px] text-ink-muted mt-1 whitespace-nowrap">Powered by <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={80} height={15} className="h-[14px] w-auto" /></div>
+        <div className="flex items-center gap-1.5 text-[11.5px] text-ink-muted mt-1 whitespace-nowrap">Powered by <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={80} height={15} className="op-light-only h-[14px] w-auto" /><Image src="/brand/logo-cream.svg" unoptimized alt="GreenReserve" width={80} height={15} className="op-dark-only h-[14px] w-auto" /></div>
       </div>
       {myCourses.length > 1 && (
         <select
@@ -207,10 +217,10 @@ export default function OperatorSidebar({ active, onAlertClick }: {
           <button
             key={item.key}
             onClick={() => { if (confirmLeave()) router.push(item.href); }}
-            className={'flex-1 min-h-[56px] flex flex-col items-center justify-center gap-1 text-[10.5px] font-medium transition-colors relative ' + (isActive ? 'text-ink' : 'text-ink-muted')}
-            style={isActive ? { color: brandColor } : undefined}
+            className={'flex-1 min-h-[56px] flex flex-col items-center justify-center gap-1 text-[10.5px] transition-colors relative ' + (isActive ? 'text-ink font-semibold' : 'text-ink-muted font-medium')}
             aria-current={isActive ? 'page' : undefined}
           >
+            {isActive && <span aria-hidden="true" className="absolute top-0 inset-x-[30%] h-[2px] rounded-full" style={{ backgroundColor: brandColor }} />}
             {item.icon}
             <span className="leading-none">{item.label}</span>
             {item.key === 'messages' && unreadMessages > 0 && (
@@ -222,8 +232,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
       {/* Always there on a phone: it carries the golfer search even when every tab fits the bar. */}
       {(
         <button onClick={() => setMoreOpen(o => !o)} aria-expanded={moreOpen} aria-controls="op-more"
-          className={'flex-1 min-h-[56px] flex flex-col items-center justify-center gap-1 text-[10.5px] font-medium ' + (moreItems.some(i => i.key === active) ? 'text-ink' : 'text-ink-muted')}
-          style={moreItems.some(i => i.key === active) ? { color: brandColor } : undefined}>
+          className={'flex-1 min-h-[56px] flex flex-col items-center justify-center gap-1 text-[10.5px] ' + (moreItems.some(i => i.key === active) ? 'text-ink font-semibold' : 'text-ink-muted font-medium')}>
           <span aria-hidden="true" className="h-4 leading-4 text-[15px] tracking-[0.1em]">•••</span>
           <span className="leading-none">More</span>
         </button>
@@ -237,10 +246,11 @@ export default function OperatorSidebar({ active, onAlertClick }: {
         {moreItems.map(item => (
           <button key={item.key} onClick={() => { setMoreOpen(false); if (confirmLeave()) router.push(item.href); }}
             aria-current={active === item.key ? 'page' : undefined}
-            className="w-full text-left px-5 py-3.5 text-[14px] border-b border-line-soft last:border-b-0 text-ink" style={active === item.key ? { color: brandColor } : undefined}>
+            className={'w-full text-left px-5 py-3.5 text-[14px] border-b border-line-soft text-ink ' + (active === item.key ? 'font-semibold' : '')}>
             {item.label}
           </button>
         ))}
+        <div className="px-4 py-3"><ThemeSwitch /></div>
       </div>
     )}
 
@@ -251,7 +261,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
         sign-out at the foot. The course's colour marks the active tab. Pages
         keep their own wrappers; .op-look in globals.css makes room for the
         rail. Below md the strip and bottom bar above are unchanged. */}
-    <aside className="op-rail hidden md:flex fixed inset-y-0 left-0 z-30 w-[var(--op-rail-w)] flex-col gap-5 bg-white border-r border-line px-3.5 py-[18px] overflow-y-auto">
+    <aside className="op-rail hidden md:flex fixed inset-y-0 left-0 z-30 w-[var(--op-rail-w)] flex-col gap-4 bg-rail border-r border-rail-line px-3 py-4 overflow-y-auto">
       <div className="flex items-center gap-2.5 px-1.5 min-w-0" title={meta}>
         {identity.logoUrl ? (
           <Image src={identity.logoUrl} unoptimized alt="" width={34} height={34} className="w-[34px] h-[34px] rounded-md object-contain shrink-0" />
@@ -264,26 +274,35 @@ export default function OperatorSidebar({ active, onAlertClick }: {
         </div>
       </div>
       <OperatorSearch />
-      <nav aria-label="Dashboard" className="flex flex-col gap-px text-[14px]">
-        {navItems.filter(n => !n.soon && visible(n.key)).map(item => {
-          const isActive = active === item.key;
+      <nav aria-label="Dashboard" className="flex flex-col gap-4 text-[14px]">
+        {railGroups.map(g => {
+          const items = navItems.filter(n => !n.soon && visible(n.key) && g.keys.includes(n.key)).sort((x, y) => g.keys.indexOf(x.key) - g.keys.indexOf(y.key));
+          if (!items.length) return null;
           return (
-            <button
-              key={item.key}
-              onClick={() => { if (confirmLeave()) router.push(item.href); }}
-              aria-current={isActive ? 'page' : undefined}
-              className={'flex items-center text-left px-2.5 py-2 rounded-md transition-colors ' + (isActive ? 'font-semibold' : 'text-ink-soft hover:bg-paper hover:text-ink')}
-              style={isActive ? { color: brandColor, backgroundColor: brandColor + '14' } : undefined}
-            >
-              <span className="flex-1">{item.label}</span>
-              {item.key === 'messages' && unreadMessages > 0 && (
-                <span className="text-[12px] font-medium text-bad" aria-label={`${unreadMessages} unread`}>{unreadMessages > 99 ? '99+' : unreadMessages}</span>
-              )}
-            </button>
+            <div key={g.label || 'end'} className="flex flex-col gap-px">
+              {g.label && <div className="px-2.5 pb-1 text-[12px] font-medium text-ink-muted">{g.label}</div>}
+              {items.map(item => {
+                const isActive = active === item.key;
+                return (
+                  <button
+                    key={item.key}
+                    onClick={() => { if (confirmLeave()) router.push(item.href); }}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={'flex items-center gap-2 text-left px-2.5 py-[7px] rounded-[7px] transition-colors ' + (isActive ? 'bg-white text-ink font-semibold shadow-card' : 'text-ink-soft hover:bg-white/60 hover:text-ink')}
+                  >
+                    <span aria-hidden="true" className="w-[6px] h-[6px] rounded-full shrink-0" style={{ backgroundColor: isActive ? brandColor : 'transparent' }} />
+                    <span className="flex-1">{item.label}</span>
+                    {item.key === 'messages' && unreadMessages > 0 && (
+                      <span className="text-[12px] font-medium text-bad tabular-nums" aria-label={`${unreadMessages} unread`}>{unreadMessages > 99 ? '99+' : unreadMessages}</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           );
         })}
       </nav>
-      <div className="mt-auto flex flex-col gap-px border-t border-line pt-3 text-[13.5px]">
+      <div className="mt-auto flex flex-col gap-px border-t border-rail-line pt-3 text-[13.5px]">
         {myCourses.length > 1 && (
           <select
             value={identity.id || ''}
@@ -299,13 +318,14 @@ export default function OperatorSidebar({ active, onAlertClick }: {
         )}
         {/* SD-8b: Settings passes no onAlertClick, so this navigates (guarded). */}
         {access.can('sheet.course_alert') && <button onClick={() => { if (onAlertClick) { onAlertClick(); return; } if (confirmLeave()) router.push('/dashboard'); }}
-          className="text-left px-2.5 py-2 rounded-md text-ink-soft hover:bg-paper hover:text-ink transition-colors">Course alert</button>}
+          className="text-left px-2.5 py-2 rounded-md text-ink-soft hover:bg-white/60 hover:text-ink transition-colors">Course alert</button>}
         {slug && (
-          <a href={'/courses/' + slug} target="_blank" rel="noopener" className="px-2.5 py-2 rounded-md text-ink-soft hover:bg-paper hover:text-ink transition-colors">Your booking page ↗</a>
+          <a href={'/courses/' + slug} target="_blank" rel="noopener" className="px-2.5 py-2 rounded-md text-ink-soft hover:bg-white/60 hover:text-ink transition-colors">Your booking page ↗</a>
         )}
-        <button onClick={logout} className="text-left px-2.5 py-2 rounded-md text-ink-soft hover:bg-paper hover:text-bad transition-colors">Sign out</button>
+        <button onClick={logout} className="text-left px-2.5 py-2 rounded-md text-ink-soft hover:bg-white/60 hover:text-bad transition-colors">Sign out</button>
+        <div className="px-1 pt-2"><ThemeSwitch /></div>
         {/* LOGO-2 (Cam 2026-10-20): "Powered by" and the GreenReserve lockup stay with the course's name. */}
-        <span className="flex items-center gap-1.5 px-2.5 pt-2 text-[11.5px] text-ink-muted whitespace-nowrap">Powered by <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={80} height={15} className="h-[14px] w-auto" /></span>
+        <span className="flex items-center gap-1.5 px-2.5 pt-2 text-[11.5px] text-ink-muted whitespace-nowrap">Powered by <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={80} height={15} className="op-light-only h-[14px] w-auto" /><Image src="/brand/logo-cream.svg" unoptimized alt="GreenReserve" width={80} height={15} className="op-dark-only h-[14px] w-auto" /></span>
       </div>
     </aside>
     </>
