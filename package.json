@@ -12,7 +12,7 @@
     "@anthropic-ai/sdk": "^0.126.0",
     "@prisma/client": "^5.0.0",
     "@react-pdf/renderer": "^4.9.0",
-    "@sentry/nextjs": "^11.9.0",
+    "@sentry/nextjs": "^11.10.0",
     "@simplewebauthn/browser": "13.3.0",
     "@simplewebauthn/server": "13.3.3",
     "@stripe/react-stripe-js": "^2.8.0",
@@ -28,7 +28,7 @@
     "qrcode": "^1.5.4",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
-    "resend": "^6.34.1",
+    "resend": "^6.35.0",
     "stripe": "^16.0.0",
     "twilio": "^6.2.0"
   },
