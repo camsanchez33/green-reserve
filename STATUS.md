@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-02 00:22 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `91745c5a` · working tree **9 dirty file(s)**
+Generated 2026-11-02 01:39 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `45ca1d0e` · working tree **9 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 24 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 26 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `45ca1d0e` | 2026-11-02 | Speed with volume: one time-zone formatter per zone (Analytics 90 days 10.7s → 1.2s) |
+| `4054bff4` | 2026-11-02 | Test course: busy-season sample data, with every money table filled |
 | `91745c5a` | 2026-11-01 | member-portal-price test: its course has member prices, so the switches are on |
 | `96cd687f` | 2026-11-01 | Pricing switches: Members / Residents off means the public price (backfill + auto-on) |
 | `1db52953` | 2026-11-01 | Audit wording: what the sheet, members, settings and golfer page say, made true (#288) |
@@ -41,15 +43,15 @@ Generated 2026-11-02 00:22 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 ### Uncommitted working tree (9 file(s))
 
-- `M STATUS.artifact.html`
-- `M STATUS.json`
-- `M STATUS.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/sample-data-db-test.ts`
-- `M src/lib/sample-data.ts`
-- `M src/lib/tee-sheet-engine.ts`
-- `?? docs/SMS_OPT_IN.md`
+- `M scripts/teesheet-1-test.ts`
+- `M scripts/words-guard.baseline.json`
+- `M src/app/dashboard/page.tsx`
+- `M src/app/dashboard/shop/page.tsx`
+- `M src/components/OperatorSidebar.tsx`
+- `M src/components/dashboard/OperatorSearch.tsx`
+- `?? scripts/teesheet-3-test.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -175,6 +177,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `45ca1d0e` 2026-11-02 — Speed with volume: one time-zone formatter per zone (Analytics 90 days 10.7s → 1.2s)
+- `4054bff4` 2026-11-02 — Test course: busy-season sample data, with every money table filled
 - `91745c5a` 2026-11-01 — member-portal-price test: its course has member prices, so the switches are on
 - `96cd687f` 2026-11-01 — Pricing switches: Members / Residents off means the public price (backfill + auto-on)
 - `1db52953` 2026-11-01 — Audit wording: what the sheet, members, settings and golfer page say, made true (#288)
@@ -185,8 +189,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `6bbb7c6d` 2026-11-01 — DENSE-10 Settings part 2: the Settings cards, labels over sentences
 - `bda21776` 2026-11-01 — DENSE-10 Settings part 1: labels over sentences (#285)
 - `e4bc0f02` 2026-11-01 — DENSE-10 Settings part 1: labels over sentences
-- `6d571671` 2026-11-01 — DENSE-9 Messages: the intro is the reply-time line and the email (#284)
-- `d74792b2` 2026-11-01 — DENSE-9 Messages: the intro is the reply-time line and the email
 
 ---
 

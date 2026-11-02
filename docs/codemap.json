@@ -8737,7 +8737,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1701,
+      "lines": 1721,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8920,7 +8920,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 921,
+      "lines": 928,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -10008,7 +10008,7 @@
     },
     {
       "path": "src/components/OperatorSidebar.tsx",
-      "lines": 310,
+      "lines": 314,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11132,7 +11132,7 @@
     },
     {
       "path": "src/components/dashboard/OperatorSearch.tsx",
-      "lines": 87,
+      "lines": 90,
       "purpose": "DASH-C:",
       "brain": [],
       "exports": [
@@ -17047,7 +17047,7 @@
     },
     {
       "path": "src/lib/course-time.ts",
-      "lines": 56,
+      "lines": 63,
       "purpose": "SD-3 — course-local time.",
       "brain": [],
       "exports": [
@@ -24772,7 +24772,7 @@
     },
     {
       "path": "src/lib/tee-time-utils.ts",
-      "lines": 41,
+      "lines": 54,
       "purpose": "Converts a stored tee-time (date \"YYYY-MM-DD\", time \"HH:MM\" in the course's local timezone) to a UTC millisecond timestamp.",
       "brain": [],
       "exports": [

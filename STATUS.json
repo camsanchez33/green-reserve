@@ -1,25 +1,39 @@
 {
-  "generatedAt": "2026-11-02T00:22:40.930Z",
+  "generatedAt": "2026-11-02T01:39:20.059Z",
   "repo": {
-    "head": "91745c5a",
+    "head": "45ca1d0e",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
     "dirtyCount": 9,
     "dirty": [
-      "M STATUS.artifact.html",
-      " M STATUS.json",
-      " M STATUS.md",
-      " M docs/CODEMAP.md",
+      "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/sample-data-db-test.ts",
-      " M src/lib/sample-data.ts",
-      " M src/lib/tee-sheet-engine.ts",
-      "?? docs/SMS_OPT_IN.md"
+      " M scripts/teesheet-1-test.ts",
+      " M scripts/words-guard.baseline.json",
+      " M src/app/dashboard/page.tsx",
+      " M src/app/dashboard/shop/page.tsx",
+      " M src/components/OperatorSidebar.tsx",
+      " M src/components/dashboard/OperatorSearch.tsx",
+      "?? scripts/teesheet-3-test.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "45ca1d0e",
+        "date": "2026-11-02T01:23:17+00:00",
+        "subject": "Speed with volume: one time-zone formatter per zone (Analytics 90 days 10.7s → 1.2s)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "4054bff4",
+        "date": "2026-11-02T00:22:43+00:00",
+        "subject": "Test course: busy-season sample data, with every money table filled",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "91745c5a",
         "date": "2026-11-01T23:39:42+00:00",
@@ -585,6 +599,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "45ca1d0e",
+      "date": "2026-11-02",
+      "subject": "Speed with volume: one time-zone formatter per zone (Analytics 90 days 10.7s → 1.2s)"
+    },
+    {
+      "h": "4054bff4",
+      "date": "2026-11-02",
+      "subject": "Test course: busy-season sample data, with every money table filled"
+    },
+    {
       "h": "91745c5a",
       "date": "2026-11-01",
       "subject": "member-portal-price test: its course has member prices, so the switches are on"
@@ -633,16 +657,6 @@
       "h": "e4bc0f02",
       "date": "2026-11-01",
       "subject": "DENSE-10 Settings part 1: labels over sentences"
-    },
-    {
-      "h": "6d571671",
-      "date": "2026-11-01",
-      "subject": "DENSE-9 Messages: the intro is the reply-time line and the email (#284)"
-    },
-    {
-      "h": "d74792b2",
-      "date": "2026-11-01",
-      "subject": "DENSE-9 Messages: the intro is the reply-time line and the email"
     }
   ]
 }

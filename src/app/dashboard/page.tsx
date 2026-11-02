@@ -205,6 +205,8 @@ function DashboardPageInner() {
   const [walkInSlot, setWalkInSlot] = useState<TeeTime | null>(null);
   const [walkInLate, setWalkInLate] = useState(false);
   const [rowBusy, setRowBusy] = useState<string | null>(null);
+  // How many of each group are here (the card's "Here" picker); unset = the whole group.
+  const [here, setHere] = useState<Record<string, number>>({});
   const [cardModalBooking, setCardModalBooking] = useState<Booking | null>(null);
   // Revamp 3 dead end 19: the players who showed, carried into the card form (no saved card, or a declined one).
   const [cardModalShowed, setCardModalShowed] = useState<number | undefined>(undefined);
@@ -249,13 +251,12 @@ function DashboardPageInner() {
   // booking, each with a pending state and an explicit failure.
   // SD-5: partial party — ask how many showed before a check-in or a counter
   // payment; null = the counter cancelled the prompt.
+  // Tee audit 14 (2026-11-02): the headcount is the "Here" picker on the group's card, set to the whole
+  // group — a full group checks in with one tap; a short one is one pick, never a browser prompt.
   function askHeadcount(b: Booking): number | null {
     if (b.players <= 1) return b.players;
-    const raw = window.prompt(`How many of ${b.golferName}'s ${b.players} players are here?`, String(b.players));
-    if (raw === null) return null;
-    const n = Number(raw);
-    if (!Number.isInteger(n) || n < 1 || n > b.players) { toast(`Enter a number between 1 and ${b.players}.`, 'warn'); return null; }
-    return n;
+    const n = here[b.id] ?? b.players;
+    return Number.isInteger(n) && n >= 1 && n <= b.players ? n : b.players;
   }
 
   // Cancel from the sheet (Cam 2026-10-08: "you have to be able to cancel someones
@@ -676,6 +677,10 @@ function DashboardPageInner() {
     const declined = b.status === 'confirmed' && !!b.checkInFailReason;
     const late = b.status === 'confirmed' && !b.noShowAt && (selectedDate < today() || (selectedDate === today() && tt.time < nowHM));
     const teedOff = selectedDate < today() || (selectedDate === today() && tt.time <= nowHM);
+    // Tee audit 26: "Mark no-show" waits 10 minutes past the time, as the late bar does — a group still
+    // walking to the tee isn't one stray tap from a no-show.
+    const mins = (hm: string) => Number(hm.slice(0, 2)) * 60 + Number(hm.slice(3, 5));
+    const noShowReady = late && (selectedDate < today() || mins(nowHM) - mins(tt.time) >= 10);
     const link = 'text-[13px] font-medium text-ink-soft hover:text-ink disabled:opacity-50';
     const primary = 'px-3 min-h-[36px] rounded-md text-[13px] font-medium text-white disabled:opacity-50 transition-colors ';
     const due = (b.totalAmount ?? 0) + shopExtra(b);
@@ -705,6 +710,15 @@ function DashboardPageInner() {
         </p>
 
         <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-2" onClick={e => e.stopPropagation()}>
+          {/* Who showed: the check-in and cash buttons charge for this many (the whole group unless changed). */}
+          {b.status === 'confirmed' && b.players > 1 && b.paymentStatus !== 'paid' && (access.can('sheet.checkin') || access.can('sheet.counter_payment')) && (
+            <label className="flex items-center gap-1.5 text-[13px] text-ink-soft">Here
+              <select aria-label={`How many of ${b.golferName}'s group are here`} value={Math.min(here[b.id] ?? b.players, b.players)} onChange={e => setHere(h => ({ ...h, [b.id]: Number(e.target.value) }))}
+                className="bg-paper border border-line rounded-md px-1.5 py-1 text-[13px] text-ink">
+                {Array.from({ length: b.players }, (_, i) => b.players - i).map(n => <option key={n} value={n}>{n} of {b.players}</option>)}
+              </select>
+            </label>
+          )}
           {/* CASH-1 (Cam 2026-10-25): paid online, or rung up in store — cash here, or the card reader. */}
           {b.status === 'confirmed' && b.paymentStatus === 'manual' && access.can('sheet.counter_payment') && (
             <button onClick={() => bookingLifecycle(b, 'take_cash')} disabled={rowBusy === b.id} className={primary + 'bg-pine hover:bg-pine-hover'}>
@@ -744,13 +758,13 @@ function DashboardPageInner() {
           {b.status === 'confirmed' && b.noShowAt && access.can('sheet.no_show') && (
             <button onClick={() => bookingLifecycle(b, 'still_coming')} disabled={rowBusy === b.id} className={link}>{rowBusy === b.id ? '…' : 'Still coming'}</button>
           )}
-          {/* A group past its time and not checked in: "Still coming" clears it
-              from the bar's late list for now; "Mark no-show" records it (and is
-              the counter's path to the no-show fee). */}
+          {/* A group past its time and not checked in: "Running late" takes it off the late bar on
+              this screen (tee audit 25: it was also called "Still coming", the name of the undo for
+              a no-show, which does something else); "Mark no-show" records it — the no-show fee's path. */}
           {late && selectedDate === today() && !stillComing.has(b.id) && (
-            <button onClick={() => setStillComing(prev => new Set(prev).add(b.id))} className={link}>Still coming</button>
+            <button onClick={() => setStillComing(prev => new Set(prev).add(b.id))} className={link}>Running late</button>
           )}
-          {late && access.can('sheet.no_show') && (
+          {noShowReady && access.can('sheet.no_show') && (
             <button onClick={() => bookingLifecycle(b, 'no_show')} disabled={rowBusy === b.id} className="text-[13px] font-medium text-bad hover:underline disabled:opacity-50">{rowBusy === b.id ? '…' : 'Mark no-show'}</button>
           )}
           {/* Cam 2026-10-27: after the tee time a group checks in or is a no-show — no cancel. A booking
@@ -1067,7 +1081,8 @@ function DashboardPageInner() {
                   ) : (
                     <span className="text-ink-soft">{selectedDate === today() ? 'All on time' : ''}</span>
                   )}
-                  {eventsDue.map(ev => (
+                  {/* Tee audit 32: an overdue checklist is today's to-do — on today's sheet, not every day browsed. */}
+                  {selectedDate === today() && eventsDue.map(ev => (
                     <Link key={ev.id} href={`/dashboard/events?id=${ev.id}`} className="inline-flex items-center gap-1.5 text-ink hover:underline">
                       <StatusDot status="bad" label={`${ev.name}: ${ev.tasksOverdue} checklist item${ev.tasksOverdue === 1 ? '' : 's'} overdue`} />
                     </Link>
@@ -1455,7 +1470,8 @@ function WalkInForm({ slot, late, onSave, onCancel }: { slot: TeeTime; late: boo
   const [players, setPlayers] = useState(Math.min(2, spots) || 1);
   // CART-1: a cart-only tee time charges the cart for everyone (the route forces it too).
   const cartForced = slot.walkingAllowed === false;
-  const [cartPick, setCart] = useState(slot.cartFee > 0);
+  // Tee audit 11: unticked unless the time can't be walked (cartForced) — a walking group was charged a cart by default.
+  const [cartPick, setCart] = useState(false);
   const cart = cartForced || cartPick;
   const [source, setSource] = useState<'walk_in' | 'phone'>('walk_in');
   // Cam 2026-10-01: "when one person gets checked in it's automatically
@@ -1463,7 +1479,11 @@ function WalkInForm({ slot, late, onSave, onCancel }: { slot: TeeTime; late: boo
   // in more than one booking; this box being ON by default did — every walk-in
   // added to a slot arrived already checked in and paid. Each group is now
   // checked in on its own row, by choice, unless staff tick this.
-  const [checkInNow, setCheckInNow] = useState(false);
+  // Tee audit 21: a walk-in who already played (late) is usually paying now — ticked for them, so they
+  // aren't left unpaid and flagged late. Only for logins that can take payment at the counter.
+  const access = useDashboardAccess();
+  const canCash = access.can('sheet.counter_payment');
+  const [checkInNow, setCheckInNow] = useState(late);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState('');
   // Revamp 3 dead end 20: the rate staff pick — the time's standard, resident, senior or junior price, or a membership.
@@ -1497,13 +1517,13 @@ function WalkInForm({ slot, late, onSave, onCancel }: { slot: TeeTime; late: boo
   async function save() {
     setSaving(true); setErr('');
     const r = await dfetch<{ emailSent: boolean | null; cashError?: string }>('/api/operator/bookings', {
-      method: 'POST', body: JSON.stringify({ teeTimeId: slot.id, golferName: name, golferPhone: phone, golferEmail: email, players, cartSelected: cart, source, rate: sentRate, ...(promo.trim() ? { promoCode: promo.trim() } : {}), checkInNow: source === 'walk_in' && checkInNow, ...(late ? { late: true } : {}) }),
+      method: 'POST', body: JSON.stringify({ teeTimeId: slot.id, golferName: name, golferPhone: phone, golferEmail: email, players, cartSelected: cart, source, rate: sentRate, ...(promo.trim() ? { promoCode: promo.trim() } : {}), checkInNow: source === 'walk_in' && checkInNow && canCash, ...(late ? { late: true } : {}) }),
     });
     setSaving(false);
     if (!r.ok) { setErr(r.error); return; }
     if (r.data?.cashError) { onSave(r.data.cashError, 'warn'); return; }
     const sent = r.data?.emailSent;
-    onSave(`${name} added${source === 'walk_in' && checkInNow ? ' — cash taken, checked in' : ''}${sent === true ? ' — confirmation emailed' : sent === false ? ' — the confirmation email did not send' : ''}.`);
+    onSave(`${name} added${source === 'walk_in' && checkInNow && canCash ? ' — cash taken, checked in' : ''}${sent === true ? ' — confirmation emailed' : sent === false ? ' — the confirmation email did not send' : ''}.`);
   }
 
   return (
@@ -1554,7 +1574,7 @@ function WalkInForm({ slot, late, onSave, onCancel }: { slot: TeeTime; late: boo
       <label className="block"><span className="block text-[13px] font-semibold text-ink mb-1">Promo code</span>
         <input value={promo} onChange={e => setPromo(e.target.value.toUpperCase())} className={inp} />
       </label>
-      {source === 'walk_in' && (
+      {source === 'walk_in' && canCash && (
         <label className="flex items-center gap-2 text-sm text-ink cursor-pointer">
           <input type="checkbox" checked={checkInNow} onChange={e => setCheckInNow(e.target.checked)} className="accent-pine" />Paying cash now — take it and check this group in
         </label>
@@ -1565,7 +1585,7 @@ function WalkInForm({ slot, late, onSave, onCancel }: { slot: TeeTime; late: boo
         <button onClick={onCancel} disabled={saving} className="flex-1 px-4 py-2.5 border border-line text-ink-soft hover:text-ink rounded-md text-[12.5px] font-medium transition-colors">Cancel</button>
         <button onClick={save} disabled={saving || name.trim().length < 2 || spots === 0 || (rate === 'member' && !member) || (rate === 'pack' && !pack)}
           className="flex-1 px-4 py-2.5 bg-pine hover:bg-pine-hover disabled:opacity-50 text-white rounded-md text-[12.5px] font-medium transition-colors">
-          {saving ? 'Adding…' : source === 'walk_in' && checkInNow ? (total === null ? 'Add + take cash' : `Add + take $${total.toFixed(2)} cash`) : 'Add booking'}
+          {saving ? 'Adding…' : source === 'walk_in' && checkInNow && canCash ? (total === null ? 'Add + take cash' : `Add + take $${total.toFixed(2)} cash`) : 'Add booking'}
         </button>
       </div>
     </div>

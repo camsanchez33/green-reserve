@@ -210,12 +210,19 @@ export default function ShopPage() {
     if (skuHits(items ?? [], code).length > 1) { setError(`Code ${code.trim()} is on two items.`); return true; }
     return false;
   }
+  // Shop audit 10: a scan that matches nothing said nothing — the cashier thought it rang up.
+  function noMatch(code: string) {
+    setNote('');
+    setError(`No item has the code ${code.trim()}.`);
+  }
 
   // SHOP-4 (Cam 2026-10-30, "scan to add"): a scanner works anywhere on the register,
   // not only in the search box. A scanner types fast and ends with Enter; a person
   // typing in a field is left alone.
   const scanRef = useRef(scan);
   scanRef.current = scan;
+  const noMatchRef = useRef(noMatch);
+  noMatchRef.current = noMatch;
   useEffect(() => {
     let buf = '', last = 0;
     const onKey = (e: KeyboardEvent) => {
@@ -225,7 +232,7 @@ export default function ShopPage() {
       const now = Date.now();
       if (now - last > 60) buf = '';
       last = now;
-      if (e.key === 'Enter') { if (buf.length >= 3 && scanRef.current(buf)) e.preventDefault(); buf = ''; return; }
+      if (e.key === 'Enter') { if (buf.length >= 3) { e.preventDefault(); if (!scanRef.current(buf)) noMatchRef.current(buf); } buf = ''; return; }
       if (e.key.length === 1) buf += e.key;
     };
     window.addEventListener('keydown', onKey);
@@ -542,7 +549,7 @@ export default function ShopPage() {
                 {tab === 'items' && tree.length > 0 && (
                   <div className="flex flex-wrap items-center gap-2 mb-4">
                     <input ref={searchRef} value={q} onChange={e => setQ(e.target.value)} autoFocus
-                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); if (!scan(q) && q.trim()) setNote(''); } }}
+                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); const t = q.trim(); if (scan(q) || !t) return; if (!tree.some(i => matches(i, q))) noMatch(q); else setNote(''); } }}
                       placeholder="Find or scan an item" aria-label="Find or scan an item" className={INPUT + ' w-56'} />
                     {categories.length > 1 && ['', ...categories].map(c => (
                       <button key={c || 'all'} type="button" onClick={() => setCat(c)} aria-pressed={cat === c}
