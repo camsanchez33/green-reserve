@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-02 01:39 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `45ca1d0e` · working tree **9 dirty file(s)**
+Generated 2026-11-02 03:22 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `b199995d` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 26 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 27 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `b199995d` | 2026-11-02 | Counter friction: one-tap check-in, no-show waits 10 min, cart off by default, search on phones |
 | `45ca1d0e` | 2026-11-02 | Speed with volume: one time-zone formatter per zone (Analytics 90 days 10.7s → 1.2s) |
 | `4054bff4` | 2026-11-02 | Test course: busy-season sample data, with every money table filled |
 | `91745c5a` | 2026-11-01 | member-portal-price test: its course has member prices, so the switches are on |
@@ -40,21 +41,6 @@ Generated 2026-11-02 01:39 UTC · branch `claude/walkthrough-2-prioritization-ui
 | `efef5f62` | 2026-11-01 | Money audit fixes: dues charge only the shown total, tier term change stops auto-renew, credited round returns our fee, pay link opens on the day |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
-
-### Uncommitted working tree (9 file(s))
-
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M scripts/teesheet-1-test.ts`
-- `M scripts/words-guard.baseline.json`
-- `M src/app/dashboard/page.tsx`
-- `M src/app/dashboard/shop/page.tsx`
-- `M src/components/OperatorSidebar.tsx`
-- `M src/components/dashboard/OperatorSearch.tsx`
-- `?? scripts/teesheet-3-test.ts`
-
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -138,7 +124,7 @@ This is the distinction a raw checkbox count gets wrong.
 |---|---|---|---|
 | `CLAUDE.md` | 1 | 2026-11-01 | 0d |
 | `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 0d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 11d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 12d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 6d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 7d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 9d |
@@ -149,34 +135,35 @@ This is the distinction a raw checkbox count gets wrong.
 | `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 10d |
 | `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 10d |
 | `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 10d |
-| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 11d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `ARCHITECTURE.md` | 0 | 2026-10-20 | 11d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `CODEMAP_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `FB2_COPY_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `GOLFER_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `HARDENING_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `REVIEW_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `UI_REVISE_SPEC.md` | 0 | 2026-10-20 | 11d |
+| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 12d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `ARCHITECTURE.md` | 0 | 2026-10-20 | 12d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `CODEMAP_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `GOLFER_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `HARDENING_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `UI_REVISE_SPEC.md` | 0 | 2026-10-20 | 12d |
 
 ## Recent commits
 
+- `b199995d` 2026-11-02 — Counter friction: one-tap check-in, no-show waits 10 min, cart off by default, search on phones
 - `45ca1d0e` 2026-11-02 — Speed with volume: one time-zone formatter per zone (Analytics 90 days 10.7s → 1.2s)
 - `4054bff4` 2026-11-02 — Test course: busy-season sample data, with every money table filled
 - `91745c5a` 2026-11-01 — member-portal-price test: its course has member prices, so the switches are on
@@ -188,7 +175,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `10ab79d8` 2026-11-01 — DENSE-10 Settings part 2: the Settings cards, labels over sentences (#286)
 - `6bbb7c6d` 2026-11-01 — DENSE-10 Settings part 2: the Settings cards, labels over sentences
 - `bda21776` 2026-11-01 — DENSE-10 Settings part 1: labels over sentences (#285)
-- `e4bc0f02` 2026-11-01 — DENSE-10 Settings part 1: labels over sentences
 
 ---
 
