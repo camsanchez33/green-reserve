@@ -19,6 +19,7 @@ import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { dfetch } from '@/lib/dashboard-fetch';
 import ShopItemsForGroup, { type ShopLine } from '@/components/dashboard/ShopItemsForGroup';
+import GroupTicket from '@/components/dashboard/GroupTicket';
 import { LoadError } from '@/components/dashboard/LoadError';
 import { toast } from '@/components/dashboard/Toast';
 import GettingStartedChecklist from '@/components/dashboard/GettingStartedChecklist';
@@ -147,6 +148,9 @@ function DashboardPageInner() {
   // SHEET-2 (Cam 2026-10-08: "is it smart to have both" — no: one sheet). The
   // board is the tee sheet; tapping a square opens this panel.
   const [panelId, setPanelId] = useState<string | null>(null);
+  // DASH-D: the till's result — the group just checked in, shown at the top of its time's card.
+  const [justDone, setJustDone] = useState<{ bookingId: string; name: string; players: number; how: string } | null>(null);
+  useEffect(() => { setJustDone(null); }, [panelId]);
   const pendingTtRef = useRef<string | null>(null);
   const [showConditions, setShowConditions]   = useState(false);
   const [conditions, setConditions]       = useState('');
@@ -330,6 +334,7 @@ function DashboardPageInner() {
       if (!r.ok) { toast(r.error, 'warn'); return; }
       if (r.data?.fee) toast(r.data.fee, 'warn');
       toast(action === 'no_show' ? `${b.golferName} marked as a no-show.` : action === 'still_coming' ? `${b.golferName} is still coming.` : `Cash taken — ${b.golferName} is checked in.`, 'ok');
+      if (action === 'take_cash') setJustDone({ bookingId: b.id, name: b.golferName, players: checkedInPlayers ?? b.players, how: 'Cash' });
       await loadTimes(selectedDate);
     } finally {
       setRowBusy(null);
@@ -395,6 +400,7 @@ function DashboardPageInner() {
       toast(data.error || 'Check-in failed'); return;
     }
     chargeOutcome(data);
+    setJustDone({ bookingId: b.id, name: b.golferName, players: partial ?? b.players, how: data.alreadyPaid ? 'Paid ahead' : `$${(data.totalCharged / 100).toFixed(2)} · card on file` });
     loadTimes(selectedDate);
   }
 
@@ -417,6 +423,7 @@ function DashboardPageInner() {
       return msg;
     }
     chargeOutcome(data);
+    setJustDone({ bookingId: b.id, name: b.golferName, players: cardModalShowed ?? b.players, how: `$${(data.totalCharged / 100).toFixed(2)} · new card` });
     setCardModalBooking(null); setCardModalReason(''); setCardModalShowed(undefined);
     loadTimes(selectedDate);
     return null;
@@ -698,13 +705,31 @@ function DashboardPageInner() {
     const mins = (hm: string) => Number(hm.slice(0, 2)) * 60 + Number(hm.slice(3, 5));
     const noShowReady = late && (selectedDate < today() || mins(nowHM) - mins(tt.time) >= 10);
     const link = 'text-[13px] font-medium text-ink-soft hover:text-ink disabled:opacity-50';
-    const primary = 'px-3 min-h-[36px] rounded-md text-[13px] font-medium text-white disabled:opacity-50 transition-colors ';
-    const due = (b.totalAmount ?? 0) + shopExtra(b);
+    // DASH-D till (Cam 2026-11-01, "more POS like"): one big pay button, the other ways to pay
+    // as a grid under it, the rest as quiet links. Every button and condition is the one the
+    // card had before — only the layout changed.
+    const tile = 'px-3 min-h-[44px] rounded-[7px] bg-white border border-line text-[13px] font-medium text-ink hover:bg-paper disabled:opacity-50 transition-colors';
+    const big = 'w-full min-h-[52px] rounded-[7px] text-[15px] font-semibold text-white disabled:opacity-50 transition-colors flex flex-col items-center justify-center ';
+    const herePlayers = Math.min(here[b.id] ?? b.players, b.players);
+    const prepaid = b.paymentStatus === 'paid';
+    // The amounts the existing confirms quote: the card (round + booking fee for who's here, shop items whole)…
+    const cardDue = (herePlayers < b.players ? partRound(b, herePlayers, true) : b.totalAmount) + shopExtra(b);
+    // …and cash (no GreenReserve fee on a counter payment — PAY-2).
+    const cashDue = (herePlayers < b.players ? partRound(b, herePlayers, false) : b.totalAmount - (b.accessFeeTotal ?? 0)) + (b.shopTotalCents ?? 0) + (b.shopTaxCents ?? 0);
+    const showMoney = access.can('money.payments');
+    const money = (c: number) => showMoney ? ` · $${(c / 100).toFixed(2)}` : '';
+    const unpaid = b.status === 'confirmed' && b.paymentStatus !== 'paid' && b.paymentStatus !== 'paid_offline' && b.paymentStatus !== 'on_account';
+    const canCash = b.status === 'confirmed' && b.paymentStatus !== 'manual' && b.paymentStatus !== 'paid' && b.paymentStatus !== 'paid_offline' && access.can('sheet.counter_payment');
+    const canAccount = b.status === 'confirmed' && !b.noShowAt && !b.roundPaid && b.paymentStatus !== 'paid' && b.paymentStatus !== 'paid_offline' && hasAccounts && access.can('sheet.counter_payment');
+    const canReader = b.status === 'confirmed' && b.paymentStatus !== 'paid' && b.paymentStatus !== 'paid_offline' && hasReader && selectedDate === today() && access.can('sheet.checkin') && access.can('shop.sell');
+    const canTextLink = b.status === 'confirmed' && b.hasCard === false && access.can('sheet.checkin') && b.hasPhone && selectedDate <= today();
+    const canEmailLink = b.status === 'confirmed' && b.hasCard === false && b.paymentStatus !== 'manual' && access.can('sheet.checkin') && !b.golferEmail.endsWith('@noemail.greenreserve.app') && selectedDate <= today();
+    const showTicket = showMoney && unpaid && !b.noShowAt;
     return (
-      <li key={b.id} className={'py-3.5 ' + (declined ? 'pl-3 shadow-[inset_3px_0_0_var(--color-bad)]' : '')}>
+      <li key={b.id} className={'py-4 ' + (declined ? 'pl-3 shadow-[inset_3px_0_0_var(--color-bad)]' : '')}>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[14.5px] text-ink">
+            <p className="text-[15px] text-ink">
               {/* The golfer record (Cam 2026-10-29), opened by this booking — the key never reaches the page. */}
               <Link href={`/dashboard/golfers/b:${b.id}`} onClick={e => e.stopPropagation()} className="font-semibold hover:underline">{b.golferName}</Link>
               <span className="text-ink-muted"> · {b.players} player{b.players !== 1 ? 's' : ''}</span>
@@ -715,7 +740,7 @@ function DashboardPageInner() {
             {/* Staff notes on this golfer or this booking (dead end 25). */}
             {(b.notes?.length ?? 0) > 0 && <p className="text-[12.5px] text-ink mt-0.5">{b.notes!.join(' · ')}</p>}
           </div>
-          {access.can('money.payments') && <span className="shrink-0 text-[14px] font-semibold text-ink tabular-nums">${(due / 100).toFixed(2)}</span>}
+          {showMoney && !showTicket && <span className="shrink-0 text-[14px] font-semibold text-ink tabular-nums">${(((b.totalAmount ?? 0) + shopExtra(b)) / 100).toFixed(2)}</span>}
         </div>
         <p className="mt-1 flex items-baseline gap-1.5 text-[13px] text-ink">
           {b.noShowAt && b.status === 'confirmed'
@@ -725,78 +750,27 @@ function DashboardPageInner() {
               : <><StatusDot {...statusDot(bStatus.tone)} /><span>{b.paymentStatus === 'on_account' && b.accountName ? `Checked In · on ${b.accountName}’s account` : bStatus.label}{bStatus.sublabel && b.status === 'confirmed' && <span className="text-ink-muted"> · {bStatus.sublabel}</span>}</span></>}
         </p>
 
-        <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-2" onClick={e => e.stopPropagation()}>
-          {/* Who showed: the check-in and cash buttons charge for this many (the whole group unless changed). */}
-          {b.status === 'confirmed' && b.players > 1 && b.paymentStatus !== 'paid' && (access.can('sheet.checkin') || access.can('sheet.counter_payment')) && (
-            <label className="flex items-center gap-1.5 text-[13px] text-ink-soft">Here
-              <select aria-label={`How many of ${b.golferName}'s group are here`} value={Math.min(here[b.id] ?? b.players, b.players)} onChange={e => setHere(h => ({ ...h, [b.id]: Number(e.target.value) }))}
-                className="bg-paper border border-line rounded-md px-1.5 py-1 text-[13px] text-ink">
-                {Array.from({ length: b.players }, (_, i) => b.players - i).map(n => <option key={n} value={n}>{n} of {b.players}</option>)}
-              </select>
-            </label>
-          )}
-          {/* CASH-1 (Cam 2026-10-25): paid online, or rung up in store — cash here, or the card reader. */}
-          {b.status === 'confirmed' && b.paymentStatus === 'manual' && access.can('sheet.counter_payment') && (
-            <button onClick={() => bookingLifecycle(b, 'take_cash')} disabled={rowBusy === b.id} className={primary + 'bg-pine hover:bg-pine-hover'}>
-              {rowBusy === b.id ? 'Saving…' : 'Take cash · check in'}
-            </button>
-          )}
-          {b.status !== 'completed' && b.status !== 'cancelled' && b.paymentStatus !== 'manual' && access.can('sheet.checkin') && (
-            <button onClick={() => { if (b.checkInFailReason) openCardModal(b, b.checkInFailReason); else checkInBooking(b); }}
-              disabled={checkingInId === b.id} className={primary + (b.checkInFailReason ? 'bg-bad hover:bg-bad/90' : 'bg-pine hover:bg-pine-hover')}>
-              {checkingInId === b.id ? 'Charging…' : b.checkInFailReason ? 'Retry with new card' : 'Check in'}
-            </button>
-          )}
-          {b.status === 'confirmed' && b.paymentStatus !== 'manual' && b.paymentStatus !== 'paid' && b.paymentStatus !== 'paid_offline' && access.can('sheet.counter_payment') && (
-            <button onClick={() => bookingLifecycle(b, 'take_cash')} disabled={rowBusy === b.id} className={link}>{rowBusy === b.id ? 'Saving…' : 'Take cash'}</button>
-          )}
-          {b.status === 'confirmed' && !b.noShowAt && !b.roundPaid && b.paymentStatus !== 'paid' && b.paymentStatus !== 'paid_offline' && hasAccounts && access.can('sheet.counter_payment') && (
-            <ChargeToAccount booking={b} className={link} onDone={async (msg, note) => { if (note) toast(note, 'warn'); toast(msg, 'ok'); await loadTimes(selectedDate); }} />
-          )}
-          {b.paymentStatus === 'on_account' && access.can('sheet.counter_payment') && (
-            <ChangeAccount target={{ bookingId: b.id }} className={link} inputClass="bg-white border border-line rounded-md px-2 py-1.5 text-ink placeholder-ink-faint focus:border-pine/40 focus:ring-2 focus:ring-pine/10" onDone={async msg => { toast(msg, 'ok'); await loadTimes(selectedDate); }} />
-          )}
-          {b.status === 'confirmed' && b.paymentStatus !== 'paid' && b.paymentStatus !== 'paid_offline' && hasReader && selectedDate === today() && access.can('sheet.checkin') && access.can('shop.sell') && (
-            <Link href={`/dashboard/shop?round=${b.id}`} className={link}>Card reader</Link>
-          )}
-          {b.status === 'confirmed' && b.hasCard === false && access.can('sheet.checkin') && b.hasPhone && selectedDate <= today() && (
-            <button onClick={() => sendPayLink(b, 'sms')} disabled={rowBusy === b.id} className={link}
-              title="Text them a link to pay on their phone (Apple Pay, Google Pay or card); the booking fee is collected with the round">{rowBusy === b.id ? 'Sending…' : 'Text pay link'}</button>
-          )}
-          {b.status === 'confirmed' && b.hasCard === false && b.paymentStatus !== 'manual' && access.can('sheet.checkin') && !b.golferEmail.endsWith('@noemail.greenreserve.app') && selectedDate <= today() && (
-            <button onClick={() => sendPayLink(b)} disabled={rowBusy === b.id} className={link}
-              title="Email them their link to check in and pay online — the booking fee is collected with the round">{rowBusy === b.id ? 'Sending…' : 'Email pay link'}</button>
-          )}
-          {((b.status === 'confirmed' && !b.noShowAt) || (b.status === 'completed' && selectedDate >= today())) && access.can('sheet.move') && (
-            <button onClick={() => setMoveTarget({ booking: { id: b.id, golferName: b.golferName, players: b.players, emailable: !b.golferEmail.endsWith('@noemail.greenreserve.app'), checkedIn: b.status === 'completed' }, fromTeeTimeId: tt.id })}
-              className={link}>Move</button>
-          )}
-          {b.status === 'confirmed' && b.noShowAt && access.can('sheet.no_show') && (
-            <button onClick={() => bookingLifecycle(b, 'still_coming')} disabled={rowBusy === b.id} className={link}>{rowBusy === b.id ? '…' : 'Still coming'}</button>
-          )}
-          {/* A group past its time and not checked in: "Running late" takes it off the late bar on
-              this screen (tee audit 25: it was also called "Still coming", the name of the undo for
-              a no-show, which does something else); "Mark no-show" records it — the no-show fee's path. */}
-          {late && selectedDate === today() && !stillComing.has(b.id) && (
-            <button onClick={() => setStillComing(prev => new Set(prev).add(b.id))} className={link}>Running late</button>
-          )}
-          {noShowReady && access.can('sheet.no_show') && (
-            <button onClick={() => bookingLifecycle(b, 'no_show')} disabled={rowBusy === b.id} className="text-[13px] font-medium text-bad hover:underline disabled:opacity-50">{rowBusy === b.id ? '…' : 'Mark no-show'}</button>
-          )}
-          {/* Cam 2026-10-27: after the tee time a group checks in or is a no-show — no cancel. A booking
-              made by mistake can still come off, with no fee, for logins that can waive (cancel-booking.ts). */}
-          {b.status === 'confirmed' && teedOff && access.can('sheet.cancel') && access.can('sheet.waive_fee') && (
-            <button onClick={() => cancelGroup(b, true)} disabled={rowBusy === b.id} className={'ml-auto ' + link}>Remove, booked by mistake</button>
-          )}
-          {b.status === 'confirmed' && !teedOff && access.can('sheet.cancel') && (
-            <span className="ml-auto flex items-center gap-x-4">
-              {access.can('sheet.waive_fee') && ((b.cancellationFeeTotal ?? 0) > 0 || !!b.noShowAt) && (
-                <button onClick={() => cancelGroup(b, true)} disabled={rowBusy === b.id} className={link}>Cancel, no fee</button>
-              )}
-              <button onClick={() => cancelGroup(b, false)} disabled={rowBusy === b.id} className="text-[13px] font-medium text-bad hover:underline disabled:opacity-50">{rowBusy === b.id ? '…' : 'Cancel booking'}</button>
-            </span>
-          )}
-        </div>
+        {/* Who showed: the check-in and cash buttons charge for this many (the whole group unless changed). */}
+        {b.status === 'confirmed' && b.players > 1 && b.paymentStatus !== 'paid' && (access.can('sheet.checkin') || access.can('sheet.counter_payment')) && (
+          <div className="mt-3" onClick={e => e.stopPropagation()}>
+            <div className="text-[12.5px] font-medium text-ink mb-1">Here now</div>
+            <div role="radiogroup" aria-label={`How many of ${b.golferName}'s group are here`} className="flex gap-1 p-1 rounded-[7px] bg-paper">
+              {Array.from({ length: b.players }, (_, i) => i + 1).map(n => (
+                <button key={n} type="button" role="radio" aria-checked={herePlayers === n} onClick={() => setHere(h => ({ ...h, [b.id]: n }))}
+                  className={'flex-1 min-h-[36px] rounded-[5px] text-[13.5px] tabular-nums transition-colors ' + (herePlayers === n ? 'bg-white text-ink font-semibold shadow-card' : 'text-ink-muted hover:text-ink')}>
+                  {n === b.players ? `All ${n}` : n}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* The ticket: what the card is charged, line by line, for who's here. */}
+        {showTicket && (
+          <div className="mt-3 rounded-[7px] bg-paper/70 px-3 py-1" onClick={e => e.stopPropagation()}>
+            <GroupTicket booking={b} here={herePlayers} />
+          </div>
+        )}
 
         {/* Dead end 19: the party size, while the round's price can still change. */}
         {b.status === 'confirmed' && !b.noShowAt && !b.paidOffline && !b.roundPaid && !b.shopLocked && b.paymentStatus !== 'paid' && b.paymentStatus !== 'cancellation_fee_charged' && access.can('sheet.counter_payment') && (
@@ -826,6 +800,83 @@ function DashboardPageInner() {
             editable={b.status === 'confirmed' && !b.paidOffline && !b.shopLocked && !(b.roundPaid && (b.paymentStatus === 'paid' || b.paymentStatus === 'refunded'))}
             canSell={access.can('shop.sell')} showMoney={access.can('money.payments')}
             onChanged={() => loadTimes(selectedDate)} />
+        </div>
+
+        {showTicket && (
+          <div className="mt-3 flex items-baseline justify-between border-t border-line pt-3">
+            <span className="text-[14px] text-ink">Total</span>
+            <span className="text-[28px] font-semibold tracking-[-0.02em] text-ink tabular-nums">${(cardDue / 100).toFixed(2)}</span>
+          </div>
+        )}
+
+        <div className="mt-3 space-y-2" onClick={e => e.stopPropagation()}>
+          {/* CASH-1 (Cam 2026-10-25): paid online, or rung up in store — cash here, or the card reader. */}
+          {b.status === 'confirmed' && b.paymentStatus === 'manual' && access.can('sheet.counter_payment') && (
+            <button onClick={() => bookingLifecycle(b, 'take_cash')} disabled={rowBusy === b.id} className={big + 'bg-pine hover:bg-pine-hover'}>
+              {rowBusy === b.id ? 'Saving…' : `Take cash · check in${money(cashDue)}`}
+            </button>
+          )}
+          {b.status !== 'completed' && b.status !== 'cancelled' && b.paymentStatus !== 'manual' && access.can('sheet.checkin') && (
+            <button onClick={() => { if (b.checkInFailReason) openCardModal(b, b.checkInFailReason); else checkInBooking(b); }}
+              disabled={checkingInId === b.id} className={big + (b.checkInFailReason ? 'bg-bad hover:bg-bad/90' : 'bg-pine hover:bg-pine-hover')}>
+              {checkingInId === b.id ? 'Charging…' : b.checkInFailReason ? 'Retry with new card'
+                : prepaid ? 'Check in · paid ahead'
+                : (b.hasCard === false || b.paymentStatus === 'no_payment_method') ? `Take a card${money(cardDue)}`
+                : `Charge card on file${money(cardDue)}`}
+            </button>
+          )}
+          {(canCash || canAccount || b.paymentStatus === 'on_account' && access.can('sheet.counter_payment') || canReader || canTextLink || canEmailLink) && (
+            <div className="grid grid-cols-2 gap-2">
+              {canCash && (
+                <button onClick={() => bookingLifecycle(b, 'take_cash')} disabled={rowBusy === b.id} className={tile}>{rowBusy === b.id ? 'Saving…' : `Take cash${money(cashDue)}`}</button>
+              )}
+              {canReader && <Link href={`/dashboard/shop?round=${b.id}`} className={tile + ' flex items-center justify-center'}>Card reader</Link>}
+              {canTextLink && (
+                <button onClick={() => sendPayLink(b, 'sms')} disabled={rowBusy === b.id} className={tile}>{rowBusy === b.id ? 'Sending…' : 'Text pay link'}</button>
+              )}
+              {canEmailLink && (
+                <button onClick={() => sendPayLink(b)} disabled={rowBusy === b.id} className={tile}>{rowBusy === b.id ? 'Sending…' : 'Email pay link'}</button>
+              )}
+              {canAccount && (
+                <ChargeToAccount booking={b} className={tile} onDone={async (msg, note) => { if (note) toast(note, 'warn'); toast(msg, 'ok'); await loadTimes(selectedDate); }} />
+              )}
+              {b.paymentStatus === 'on_account' && access.can('sheet.counter_payment') && (
+                <ChangeAccount target={{ bookingId: b.id }} className={tile} inputClass="bg-white border border-line rounded-md px-2 py-1.5 text-ink placeholder-ink-faint focus:border-pine/40 focus:ring-2 focus:ring-pine/10" onDone={async msg => { toast(msg, 'ok'); await loadTimes(selectedDate); }} />
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2" onClick={e => e.stopPropagation()}>
+          {((b.status === 'confirmed' && !b.noShowAt) || (b.status === 'completed' && selectedDate >= today())) && access.can('sheet.move') && (
+            <button onClick={() => setMoveTarget({ booking: { id: b.id, golferName: b.golferName, players: b.players, emailable: !b.golferEmail.endsWith('@noemail.greenreserve.app'), checkedIn: b.status === 'completed' }, fromTeeTimeId: tt.id })}
+              className={link}>Move</button>
+          )}
+          {b.status === 'confirmed' && b.noShowAt && access.can('sheet.no_show') && (
+            <button onClick={() => bookingLifecycle(b, 'still_coming')} disabled={rowBusy === b.id} className={link}>{rowBusy === b.id ? '…' : 'Still coming'}</button>
+          )}
+          {/* A group past its time and not checked in: "Running late" takes it off the late bar on
+              this screen (tee audit 25: it was also called "Still coming", the name of the undo for
+              a no-show, which does something else); "Mark no-show" records it — the no-show fee's path. */}
+          {late && selectedDate === today() && !stillComing.has(b.id) && (
+            <button onClick={() => setStillComing(prev => new Set(prev).add(b.id))} className={link}>Running late</button>
+          )}
+          {noShowReady && access.can('sheet.no_show') && (
+            <button onClick={() => bookingLifecycle(b, 'no_show')} disabled={rowBusy === b.id} className="text-[13px] font-medium text-bad hover:underline disabled:opacity-50">{rowBusy === b.id ? '…' : 'Mark no-show'}</button>
+          )}
+          {/* Cam 2026-10-27: after the tee time a group checks in or is a no-show — no cancel. A booking
+              made by mistake can still come off, with no fee, for logins that can waive (cancel-booking.ts). */}
+          {b.status === 'confirmed' && teedOff && access.can('sheet.cancel') && access.can('sheet.waive_fee') && (
+            <button onClick={() => cancelGroup(b, true)} disabled={rowBusy === b.id} className={'ml-auto ' + link}>Remove, booked by mistake</button>
+          )}
+          {b.status === 'confirmed' && !teedOff && access.can('sheet.cancel') && (
+            <span className="ml-auto flex items-center gap-x-4">
+              {access.can('sheet.waive_fee') && ((b.cancellationFeeTotal ?? 0) > 0 || !!b.noShowAt) && (
+                <button onClick={() => cancelGroup(b, true)} disabled={rowBusy === b.id} className={link}>Cancel, no fee</button>
+              )}
+              <button onClick={() => cancelGroup(b, false)} disabled={rowBusy === b.id} className="text-[13px] font-medium text-bad hover:underline disabled:opacity-50">{rowBusy === b.id ? '…' : 'Cancel booking'}</button>
+            </span>
+          )}
         </div>
       </li>
     );
@@ -1105,9 +1156,9 @@ function DashboardPageInner() {
                     </Link>
                   ))}
                   <div className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-1 text-ink-soft">
-                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-white shadow-[0_0_0_1px_rgba(20,24,20,0.12)] border-l-[3px] border-ok" />Paid</span>
-                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-white shadow-[0_0_0_1px_rgba(20,24,20,0.12)] border-l-[3px] border-warn" />Owes</span>
-                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-white shadow-[0_0_0_1px_rgba(20,24,20,0.12)] border-l-[3px] border-bad" />Declined or no-show</span>
+                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-white shadow-[0_0_0_1px_var(--color-line-strong)] border-l-[3px] border-ok" />Paid</span>
+                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-white shadow-[0_0_0_1px_var(--color-line-strong)] border-l-[3px] border-warn" />Owes</span>
+                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-white shadow-[0_0_0_1px_var(--color-line-strong)] border-l-[3px] border-bad" />Declined or no-show</span>
                     <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-ok/[0.12]" />Checked in</span>
                     <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-[var(--color-mem-fill)]" />Member or resident</span>
                   </div>
@@ -1185,6 +1236,22 @@ function DashboardPageInner() {
               </div>
 
               <div className="flex-1 overflow-y-auto px-5">
+                {justDone && groups.some(g => g.id === justDone.bookingId) && (() => {
+                  // The next time today with a group still to check in — one tap to the next ticket.
+                  const next = selectedDate === today() ? teeTimes.find(t => t.time > panelSlot.time && (t.bookings ?? []).some(g => g.status === 'confirmed' && !g.noShowAt)) : undefined;
+                  const nextGroup = next?.bookings?.find(g => g.status === 'confirmed' && !g.noShowAt);
+                  return (
+                    <div role="status" className="mt-4 rounded-[7px] bg-ok-fill px-4 py-3.5">
+                      <p className="flex items-baseline gap-2 text-[15px] font-semibold text-ink"><StatusDot status="ok" />{justDone.name} · {justDone.players} checked in</p>
+                      <p className="mt-0.5 text-[13px] text-ink-soft">{justDone.how}</p>
+                      {next && nextGroup && (
+                        <button onClick={() => setPanelId(next.id)} className="mt-3 w-full min-h-[44px] rounded-[7px] bg-pine hover:bg-pine-hover text-white text-[14px] font-semibold">
+                          Next: {nextGroup.golferName} · {nextGroup.players} at {fmtTime(next.time)}
+                        </button>
+                      )}
+                    </div>
+                  );
+                })()}
                 {groups.length > 0
                   ? <ul className="divide-y divide-line-soft">{groups.map(b => groupRow(b, panelSlot))}</ul>
                   : <p className="py-6 text-[13.5px] text-ink-soft">{panelSlot.status === 'blocked'

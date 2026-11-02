@@ -4,14 +4,18 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-02 05:33 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `14d6254a` · working tree **2 dirty file(s)**
+Generated 2026-11-02 05:45 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `1b7f3b82` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 36 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 40 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `1b7f3b82` | 2026-11-02 | Tests follow the till: Here-now buttons, pay-link day rule, owed amount as the ticket Total |
+| `d65d1332` | 2026-11-02 | Tee sheet: till-style check-in on the time card |
+| `bbcc7c63` | 2026-11-02 | Dashboard foundation: Geist, grey page + white panels, grouped rail, Light/Dark (#293) |
+| `ba7d3ab1` | 2026-11-02 | Regenerate code map and status board |
 | `14d6254a` | 2026-11-02 | Dark mode is screen-only (prints stay light); theme cookie Secure only over https |
 | `7ca659d0` | 2026-11-02 | Rail groups never drop a tab; tests follow the grouped rail and the mem-fill token |
 | `46a688fc` | 2026-11-02 | Dashboard foundation: Geist, grey page + white panels, grouped rail, Light/Dark |
@@ -50,14 +54,6 @@ Generated 2026-11-02 05:33 UTC · branch `claude/walkthrough-2-prioritization-ui
 | `efef5f62` | 2026-11-01 | Money audit fixes: dues charge only the shown total, tier term change stops auto-renew, credited round returns our fee, pay link opens on the day |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
-
-### Uncommitted working tree (2 file(s))
-
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-
-Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
-these actually are first.
 
 ## In flight
 
@@ -180,6 +176,10 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `1b7f3b82` 2026-11-02 — Tests follow the till: Here-now buttons, pay-link day rule, owed amount as the ticket Total
+- `d65d1332` 2026-11-02 — Tee sheet: till-style check-in on the time card
+- `bbcc7c63` 2026-11-02 — Dashboard foundation: Geist, grey page + white panels, grouped rail, Light/Dark (#293)
+- `ba7d3ab1` 2026-11-02 — Regenerate code map and status board
 - `14d6254a` 2026-11-02 — Dark mode is screen-only (prints stay light); theme cookie Secure only over https
 - `7ca659d0` 2026-11-02 — Rail groups never drop a tab; tests follow the grouped rail and the mem-fill token
 - `46a688fc` 2026-11-02 — Dashboard foundation: Geist, grey page + white panels, grouped rail, Light/Dark
@@ -188,10 +188,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `bffab6e9` 2026-11-02 — Event money needs "Mark paid at the counter"; a member with history can't be deleted
 - `53e31df1` 2026-11-02 — Counter friction B: card beside the sheet, Home opens a time's card, member opens golfer record, cash through a failed tax quote
 - `b80496f3` 2026-11-02 — SMS-1: texts only to numbers that agreed (Twilio A2P 10DLC opt-in)
-- `db252e4b` 2026-11-02 — Status board refresh
-- `b199995d` 2026-11-02 — Counter friction: one-tap check-in, no-show waits 10 min, cart off by default, search on phones
-- `45ca1d0e` 2026-11-02 — Speed with volume: one time-zone formatter per zone (Analytics 90 days 10.7s → 1.2s)
-- `4054bff4` 2026-11-02 — Test course: busy-season sample data, with every money table filled
 
 ---
 
