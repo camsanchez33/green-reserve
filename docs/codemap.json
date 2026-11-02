@@ -10050,7 +10050,7 @@
     },
     {
       "path": "src/components/OperatorSidebar.tsx",
-      "lines": 331,
+      "lines": 334,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -21255,7 +21255,7 @@
     },
     {
       "path": "src/lib/op-theme.ts",
-      "lines": 23,
+      "lines": 24,
       "purpose": "DASH-D (Cam 2026-11-01:",
       "brain": [],
       "exports": [
