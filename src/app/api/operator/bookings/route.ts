@@ -1,6 +1,7 @@
 import { SMS_NO_CONSENT_STAFF } from '@/lib/sms-consent-copy';
 import { optInAndConfirm } from '@/lib/sms-consent';
 import { roundChargeCents } from '@/lib/shop';
+import { splitBooking } from '@/lib/split-booking-db';
 import { NextRequest, NextResponse } from 'next/server';
 import { recordBookingEvent, teeTimeInstant, type EventActor } from '@/lib/booking-events';
 import { prisma } from '@/lib/prisma';
@@ -105,13 +106,13 @@ export async function PATCH(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { id, action, paymentMethodId, checkedInPlayers: cipRaw, waiveFee: waiveRaw, via: viaRaw, newTeeTimeId, reprice, dryRun, residentPlayers, cashTenderedCents, amountCents, reason, newPlayers, membershipId, smsConsent } = await req.json();
+  const { id, action, paymentMethodId, checkedInPlayers: cipRaw, waiveFee: waiveRaw, via: viaRaw, newTeeTimeId, reprice, dryRun, residentPlayers, cashTenderedCents, amountCents, reason, newPlayers, membershipId, smsConsent, splitPlayers, splitName, splitPhone, thenCash } = await req.json();
   const waiveFee = action === 'cancel' && waiveRaw === true;
   // SD-5: partial party — how many actually showed (1 .. players-1); absent = all.
   const cip = cipRaw == null ? undefined : Number(cipRaw);
   if (cip !== undefined && (!Number.isInteger(cip) || cip < 1)) return NextResponse.json({ error: 'Invalid headcount.' }, { status: 400 });
   // CASH-1: 'take_cash' (the old 'paid_offline' still arrives from open tabs — it is the same cash sale).
-  const ACTIONS = ['cancel', 'checkin', 'no_show', 'still_coming', 'take_cash', 'paid_offline', 'send_pay_link', 'move', 'set_residents', 'refund_round', 'waive_late_fee', 'change_players', 'charge_account'];
+  const ACTIONS = ['cancel', 'checkin', 'no_show', 'still_coming', 'take_cash', 'paid_offline', 'send_pay_link', 'move', 'set_residents', 'refund_round', 'waive_late_fee', 'change_players', 'charge_account', 'split'];
   if (!id || !ACTIONS.includes(action)) {
     return NextResponse.json({ error: 'Missing id or unsupported action' }, { status: 400 });
   }
@@ -122,7 +123,9 @@ export async function PATCH(req: NextRequest) {
     // Dead end 19: a group's party size changes its price at the counter, like residents.
     change_players: 'sheet.counter_payment',
     // MEM-ACCT: the group's round on a member's account — paid at the counter, settled later.
-    charge_account: 'sheet.counter_payment' };
+    charge_account: 'sheet.counter_payment',
+    // SPLIT-1: paying separately changes the group's price at the counter, like a party-size change.
+    split: 'sheet.counter_payment' };
   const deniedAction = requirePermission(session, NEEDS[action]);
   if (deniedAction) return deniedAction;
   // SP-A: cancelling WITHOUT the late fee refunds a hold already taken — its own permission.
@@ -154,6 +157,19 @@ export async function PATCH(req: NextRequest) {
   // time's free-cancellation window has closed) so the sheet can show it
   // before Confirm. The price is kept unless staff ask for the new time's rate.
   // RES-1: how many of the group are residents (they showed their card).
+  // SPLIT-1 (Cam 2026-11-02, "they all want to pay separately … seamless"): split players off
+  // into their own booking (lib/split-booking-db); with thenCash, take their cash in the same
+  // request — the same register cash sale as Take cash.
+  if (action === 'split') {
+    const r = await splitBooking(session.courseId, id, Number(splitPlayers), { name: typeof splitName === 'string' ? splitName : '', phone: typeof splitPhone === 'string' ? splitPhone : '', actor: staff });
+    if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+    if (thenCash !== true) return NextResponse.json({ success: true, newBookingId: r.newBookingId, leaveCents: r.leaveCents, keepCents: r.keepCents, fee: r.note });
+    const cash = await ringUpCash(session.courseId, { lines: [], bookingIds: [r.newBookingId], walkIns: [], cashTenderedCents, soldBy: session.email, actor: staff });
+    // The split stands either way; a refused cash sale leaves the new group on the sheet, owing.
+    if (!cash.ok) return NextResponse.json({ success: true, newBookingId: r.newBookingId, leaveCents: r.leaveCents, keepCents: r.keepCents, cashError: cash.error, fee: r.note });
+    if (cash.value.skipped.length) return NextResponse.json({ success: true, newBookingId: r.newBookingId, leaveCents: r.leaveCents, keepCents: r.keepCents, cashError: cash.value.skipped.join(' '), fee: r.note });
+    return NextResponse.json({ success: true, newBookingId: r.newBookingId, leaveCents: r.leaveCents, keepCents: r.keepCents, saleId: cash.value.sale.id, totalCents: cash.value.sale.totalCents, fee: [r.note, cash.value.notes.join(' ')].filter(Boolean).join(' ') || null });
+  }
   if (action === 'change_players') {
     const n = Number(newPlayers);
     if (!Number.isInteger(n) || n < 1 || n > 8) return NextResponse.json({ error: 'Players must be 1 to 8.' }, { status: 400 });

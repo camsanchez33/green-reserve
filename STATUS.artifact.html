@@ -117,14 +117,18 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-11-02 06:30 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 76a80e51</span>
-    <span>7 uncommitted</span>
+    <span>2026-11-02 21:54 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 7458886d</span>
+    <span>tree clean</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">49 runs have shipped that the queue doesn't know about</div>
+<div class="lede">53 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-31. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">7458886d</span><span>Pay separately: give back the leavers' share of a hold already taken</span></li>
+<li><span class="h">f3ad66bb</span><span>Tee sheet: pay separately — split players off a group and pay their share</span></li>
+<li><span class="h">90f8f79d</span><span>Dashboard: &quot;/&quot; or Cmd/Ctrl K jumps to golfer search; Home flags stale conditions (#298)</span></li>
+<li><span class="h">06d5e4c6</span><span>Dashboard: / or Ctrl/Cmd K jumps to golfer search; Home says when conditions are off the booking page</span></li>
 <li><span class="h">2aa723d8</span><span>Booking page: today's course conditions while fresh (#297)</span></li>
 <li><span class="h">449bd296</span><span>Booking page: today's course conditions (carts, range, greens, pins) while fresh</span></li>
 <li><span class="h">360913a3</span><span>Register: item photos on the tiles (+ Home review follow-ups) (#296)</span></li>
@@ -183,11 +187,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">7</span><span class="l">Revise pages left</span></div>
   <div class="tile t-idle"><span class="n">17</span><span class="l">Ideas parked</span></div>
 </div>
-<section><h2>Working tree right now</h2>
-<div class="card flag">
-<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M src/components/dashboard/OperatorSearch.tsx</code></li><li><code>M src/components/dashboard/home/HomeBoard.tsx</code></li><li><code>M src/lib/course-conditions.ts</code></li><li><code>M src/lib/home-board.ts</code></li><li><code>?? scripts/search-shortcut-test.ts</code></li></ul>
-</div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
 <div class="row"><span class="idx">1</span><span class="t">DENSE — Cam 2026-10-27: &quot;too much words on the pages … think OpenTable, Stripe, Lightspeed, Toast … apply across all tabs on both dashboard and admin&quot;. Lots of data, almost no sentences. Plan, princip</span><span class="where">:101</span></div>
@@ -217,7 +216,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Built, not signed off</h2>
 <p class="note">The box is open because <code>/gr-review</code> hasn't run &mdash; not because the code is missing.</p>
 <div class="ledger">
-<div class="row"><span class="t">BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)</span><span class="age">102d</span><span class="where">b88c8bf3</span></div>
+<div class="row"><span class="t">BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)</span><span class="age">103d</span><span class="where">b88c8bf3</span></div>
 </div></section>
 <section><h2>Waiting on you, not on a build</h2>
 <ul class="plain"><li>CAM: live walks before launch (code merged <span class="where">:104</span></li><li>Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checked against th <span class="where">:111</span></li><li>Cam: which business address to publish, and confirming the Terms' governing law moves from New Jersey to New York (LLC is NY) <span class="where">:290</span></li><li>CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` (&quot;Golf course name&quot;) to the demo event, so homepage demo inquiries arrive  <span class="where">:393</span></li><li>CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge) Loop fix is code-verified: sweepOrphanCourses skips archived [ORPHAN] c <span class="where">:2412</span></li><li>CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars <span class="where">:3048</span></li></ul>
@@ -229,18 +228,18 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <p class="note">Open refs = how many open queue items still point at that spec. Zero and old means consumed.</p>
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
 <tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-11-02 &middot; 0d</td></tr>
-<tr><td><code>DENSE_UI_SPEC.md</code></td><td class="num">1</td><td class="num">2026-11-01 &middot; 0d</td></tr>
+<tr><td><code>DENSE_UI_SPEC.md</code></td><td class="num">1</td><td class="num">2026-11-01 &middot; 1d</td></tr>
 <tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-20 &middot; 12d</td></tr>
-<tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-26 &middot; 6d</td></tr>
 <tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-25 &middot; 7d</td></tr>
+<tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-26 &middot; 7d</td></tr>
 <tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 9d</td></tr>
-<tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 10d</td></tr>
-<tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 10d</td></tr>
 <tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 10d</td></tr>
-<tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 10d</td></tr>
-<tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 10d</td></tr>
-<tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 10d</td></tr>
-<tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 10d</td></tr>
+<tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 11d</td></tr>
+<tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 11d</td></tr>
+<tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 11d</td></tr>
+<tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 11d</td></tr>
+<tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 11d</td></tr>
+<tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 11d</td></tr>
 <tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 12d</td></tr>
 <tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 12d</td></tr>
 <tr><td><code>ADMIN_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 12d</td></tr>
@@ -268,18 +267,18 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 12d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">7458886d</td><td class="num">2026-11-02</td><td>Pay separately: give back the leavers' share of a hold already taken</td></tr>
+<tr><td class="num">580df30d</td><td class="num">2026-11-02</td><td>queue/spec update</td></tr>
+<tr><td class="num">cbc3bd08</td><td class="num">2026-11-02</td><td>queue/spec update</td></tr>
+<tr><td class="num">f3ad66bb</td><td class="num">2026-11-02</td><td>Tee sheet: pay separately — split players off a group and pay their share</td></tr>
+<tr><td class="num">90f8f79d</td><td class="num">2026-11-02</td><td>Dashboard: &quot;/&quot; or Cmd/Ctrl K jumps to golfer search; Home flags stale conditions (#298)</td></tr>
+<tr><td class="num">06d5e4c6</td><td class="num">2026-11-02</td><td>Dashboard: / or Ctrl/Cmd K jumps to golfer search; Home says when conditions are off the booking page</td></tr>
 <tr><td class="num">2aa723d8</td><td class="num">2026-11-02</td><td>Booking page: today's course conditions while fresh (#297)</td></tr>
 <tr><td class="num">449bd296</td><td class="num">2026-11-02</td><td>Booking page: today's course conditions (carts, range, greens, pins) while fresh</td></tr>
 <tr><td class="num">360913a3</td><td class="num">2026-11-02</td><td>Register: item photos on the tiles (+ Home review follow-ups) (#296)</td></tr>
 <tr><td class="num">b04c0c83</td><td class="num">2026-11-02</td><td>Register: item photos on the tiles (+ Home review follow-ups)</td></tr>
 <tr><td class="num">0394ca3b</td><td class="num">2026-11-02</td><td>Home: shift note, course conditions, week ahead, month vs goal (#295)</td></tr>
 <tr><td class="num">7de2b772</td><td class="num">2026-11-02</td><td>operator-home test: accept the money permission read once and passed to operatorHome</td></tr>
-<tr><td class="num">61cb526c</td><td class="num">2026-11-02</td><td>Home: shift note, course conditions, week ahead, month vs goal</td></tr>
-<tr><td class="num">0ca08896</td><td class="num">2026-11-02</td><td>Tee sheet: till-style check-in on the time card (#294)</td></tr>
-<tr><td class="num">383b5af1</td><td class="num">2026-11-02</td><td>Regenerate code map and status board</td></tr>
-<tr><td class="num">1b7f3b82</td><td class="num">2026-11-02</td><td>Tests follow the till: Here-now buttons, pay-link day rule, owed amount as the ticket Total</td></tr>
-<tr><td class="num">d65d1332</td><td class="num">2026-11-02</td><td>Tee sheet: till-style check-in on the time card</td></tr>
-<tr><td class="num">bbcc7c63</td><td class="num">2026-11-02</td><td>Dashboard foundation: Geist, grey page + white panels, grouped rail, Light/Dark (#293)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>
