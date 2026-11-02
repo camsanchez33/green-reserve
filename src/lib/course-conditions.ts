@@ -40,3 +40,8 @@ export function golferConditionLines(raw: unknown, at: Date | string | null | un
   const c = cleanConditions(raw);
   return CONDITION_FIELDS.filter(f => c[f.key]).map(f => `${f.label}: ${conditionLabel(f.key, c[f.key])}`);
 }
+
+/** Home's warning: conditions are set but golfers no longer see them — the same rule as the booking page, by construction. */
+export function conditionsOffBookingPage(raw: unknown, detailAt: Date | string | null | undefined, now: Date = new Date()): boolean {
+  return Object.keys(cleanConditions(raw)).length > 0 && golferConditionLines(raw, detailAt, now).length === 0;
+}

@@ -11312,7 +11312,7 @@
     },
     {
       "path": "src/components/dashboard/OperatorSearch.tsx",
-      "lines": 90,
+      "lines": 116,
       "purpose": "DASH-C:",
       "brain": [],
       "exports": [
@@ -12101,7 +12101,7 @@
     },
     {
       "path": "src/components/dashboard/home/HomeBoard.tsx",
-      "lines": 188,
+      "lines": 192,
       "purpose": "DASH-D Home (Cam 2026-11-01, mockup S1):",
       "brain": [],
       "exports": [
@@ -16793,7 +16793,7 @@
     },
     {
       "path": "src/lib/course-conditions.ts",
-      "lines": 43,
+      "lines": 48,
       "purpose": "DASH-D Home (Cam 2026-11-01, \"the course conditions\"):",
       "brain": [],
       "exports": [
@@ -16816,6 +16816,10 @@
         {
           "name": "CONDITIONS_FRESH_HOURS",
           "kind": "const"
+        },
+        {
+          "name": "conditionsOffBookingPage",
+          "kind": "fn"
         },
         {
           "name": "CourseConditions",
@@ -19517,7 +19521,7 @@
     },
     {
       "path": "src/lib/home-board.ts",
-      "lines": 82,
+      "lines": 83,
       "purpose": "DASH-D Home (Cam 2026-11-01, mockups S1 + \"week-ahead heat map and month vs goal\"):",
       "brain": [],
       "exports": [
