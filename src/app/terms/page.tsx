@@ -28,14 +28,14 @@ export default function TermsOfServicePage() {
                 <a href="/operator-agreement" className={navIdle}>Operator Agreement</a>
               </nav>
               <p className="mt-6 pl-3 text-xs text-ink-soft leading-relaxed">
-                Version v2026-10-19<br />Last updated October 19, 2026
+                Version v2026-11-02<br />Last updated November 2, 2026
               </p>
             </div>
           </aside>
 
           <div>
             <h1 className="text-3xl sm:text-4xl font-serif font-semibold tracking-tight text-ink mb-3">Terms of Service</h1>
-            <p className="text-ink-soft text-sm mb-10">Version v2026-10-19 — last updated October 19, 2026</p>
+            <p className="text-ink-soft text-sm mb-10">Version v2026-11-02 — last updated November 2, 2026</p>
 
             {/* Plain-English summary */}
             <div className="bg-white rounded-lg shadow-card p-6 mb-12">
@@ -143,10 +143,16 @@ export default function TermsOfServicePage() {
                   <span className="text-ink-faint font-normal mr-2">6.</span>Emails and text messages
                 </h2>
                 <p>
-                  By booking a tee time or creating an account, you agree to receive emails and text messages about your bookings:
-                  confirmations and changes, pay links and check-in, sign-in codes, and notices the course sends about your booking day
-                  (such as weather or course conditions). These are not marketing; we never send marketing texts without your separate
-                  opt-in. Message frequency varies. Message and data rates may apply. <strong className="text-ink">Reply STOP to any text to stop texts, or HELP for help.</strong>
+                  By booking a tee time or creating an account, you agree to receive emails about your bookings: confirmations and
+                  changes, pay links and check-in, and notices the course sends about your booking day (such as weather or course conditions).
+                </p>
+                <p className="mt-2">
+                  <strong className="text-ink">We text you only if you agree to it</strong> — by ticking the text-message box next to your
+                  number when you book or sign up for an event (it is never ticked for you, and you can book without it), or by saying
+                  yes when course staff read you our text-message terms. Texts are about your own bookings: a pay link, a day-of notice
+                  from the course, a receipt, and one text confirming you signed up — up to 4 messages per booking. A sign-in code is texted only when you
+                  ask for one. These are not marketing; we never send marketing texts without your separate opt-in. Message and data
+                  rates may apply. <strong className="text-ink">Reply STOP to any text to stop texts, or HELP for help.</strong>
                 </p>
               </section>
               <section>
@@ -186,7 +192,11 @@ export default function TermsOfServicePage() {
               <section className="pt-6 border-t border-line">
                 <h3 className="font-semibold text-sm text-ink mb-2">Changes to these terms</h3>
                 <p className="text-sm mb-2">
-                  <strong className="text-ink">v2026-10-19 (current):</strong> names GreenReserve LLC and moves governing law to New York;
+                  <strong className="text-ink">v2026-11-02 (current):</strong> texts are sent only to numbers that agreed — an unticked box
+                  when you book or sign up, or a spoken yes to course staff — at up to 4 messages per booking.
+                </p>
+                <p className="text-sm mb-2">
+                  <strong className="text-ink">v2026-10-19:</strong> names GreenReserve LLC and moves governing law to New York;
                   describes when fees are charged (nothing at booking; a card only when a course has a late or no-show fee); authorizes
                   the cutoff hold, late-cancellation and no-show charges and the separate booking fee; no fee on cash paid at the counter;
                   pro-shop items; the 1% membership fee covers initiation fees; text-message terms with STOP and HELP.

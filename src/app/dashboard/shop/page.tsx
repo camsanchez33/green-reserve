@@ -10,6 +10,7 @@
 // scan a barcode into the search box, ring up a custom amount, take money off
 // (shop.discount), enter the cash handed over for the change, send a receipt,
 // and refund a paid sale (money.refund; items only with shop.return) — cash recorded, card through Stripe.
+import SmsConsentAsk from '@/components/dashboard/SmsConsentAsk';
 import { PackPicker, PackHolders } from '@/components/dashboard/RegisterPacks';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -81,6 +82,10 @@ export default function ShopPage() {
   const [onReader, setOnReader] = useState<ReaderSale | null>(null);
   const [roundOnReader, setRoundOnReader] = useState<RoundOnReader | null>(null);
   const [customer, setCustomer] = useState({ name: '', phone: '', email: '' });
+  // SMS-1: the customer said yes to texts after staff read the script. Never on by default.
+  const [smsYes, setSmsYes] = useState(false);
+  // Shop audit 16: a cash sale rung up without a quote — the panel then says what to collect.
+  const [justNoQuote, setJustNoQuote] = useState(false);
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const [note, setNote] = useState('');
@@ -196,7 +201,10 @@ export default function ShopPage() {
   const due = (itemsEmpty ? 0 : priced ? priced.totalCents : subtotal) + roundsCents;
   // Stripe Tax down: cash still goes through, with no tax (Cam 2026-10-29); a pay link or the reader waits.
   const noTax = !itemsEmpty && !!priced?.taxUnavailable;
-  const ready = itemsEmpty ? hasRounds : !!priced && (!noTax || pay === 'cash' || pay === 'account');
+  // Shop audit 16 (Cam: "never block cash"): if the total with tax can't be worked out (the quote errored or is
+  // rate-limited), cash still goes through — the server works the tax out and the sale shows what to collect.
+  const cashNoQuote = pay === 'cash' && !itemsEmpty && !priced && !!quoteError;
+  const ready = itemsEmpty ? hasRounds : (!!priced && (!noTax || pay === 'cash' || pay === 'account')) || cashNoQuote;
   const tenderedCents = toCents(tendered);
   const add = (id: string, d: number) => setCart(c => { const q = Math.max(0, Math.min(99, (c[id] ?? 0) + d)); const n = { ...c }; if (q) n[id] = q; else delete n[id]; return n; });
   const addCustom = (key: string, d: number) => setCustoms(cs => cs.map(c => c.key === key ? { ...c, quantity: Math.max(0, Math.min(99, c.quantity + d)) } : c).filter(c => c.quantity > 0));
@@ -210,12 +218,19 @@ export default function ShopPage() {
     if (skuHits(items ?? [], code).length > 1) { setError(`Code ${code.trim()} is on two items.`); return true; }
     return false;
   }
+  // Shop audit 10: a scan that matches nothing said nothing — the cashier thought it rang up.
+  function noMatch(code: string) {
+    setNote('');
+    setError(`No item has the code ${code.trim()}.`);
+  }
 
   // SHOP-4 (Cam 2026-10-30, "scan to add"): a scanner works anywhere on the register,
   // not only in the search box. A scanner types fast and ends with Enter; a person
   // typing in a field is left alone.
   const scanRef = useRef(scan);
   scanRef.current = scan;
+  const noMatchRef = useRef(noMatch);
+  noMatchRef.current = noMatch;
   useEffect(() => {
     let buf = '', last = 0;
     const onKey = (e: KeyboardEvent) => {
@@ -225,7 +240,7 @@ export default function ShopPage() {
       const now = Date.now();
       if (now - last > 60) buf = '';
       last = now;
-      if (e.key === 'Enter') { if (buf.length >= 3 && scanRef.current(buf)) e.preventDefault(); buf = ''; return; }
+      if (e.key === 'Enter') { if (buf.length >= 3) { e.preventDefault(); if (!scanRef.current(buf)) noMatchRef.current(buf); } buf = ''; return; }
       if (e.key.length === 1) buf += e.key;
     };
     window.addEventListener('keydown', onKey);
@@ -242,10 +257,11 @@ export default function ShopPage() {
         bookingIds: pickedRounds.map(o => o.bookingId),
         walkIns: walkIns.map(w => ({ teeTimeId: w.teeTimeId, golferName: w.golferName, players: w.players, cartSelected: w.cart, rate: w.rate })),
         pay: pay === 'cash' || pay === 'reader' || pay === 'account' ? pay : 'link', membershipId: pay === 'account' ? accountMember?.id : undefined, via: pay === 'email' ? 'email' : 'sms', readerId: pay === 'reader' ? readerId : undefined, taxCalculationId: priced?.taxCalculationId || undefined,
-        cashTenderedCents: pay === 'cash' && tenderedCents ? tenderedCents : undefined,
+        cashTenderedCents: pay === 'cash' && tenderedCents && !cashNoQuote ? tenderedCents : undefined,
         // The total on screen: if the tax has changed since, nothing is rung up and the new total shows.
         expectedItemsCents: (pay === 'cash' || pay === 'account') && !itemsEmpty && priced ? priced.totalCents : undefined,
         customerName: customer.name, customerPhone: customer.phone, customerEmail: customer.email,
+        ...(pay === 'sms' && smsYes ? { smsConsent: 'verbal' } : {}),
       }),
     });
     setBusy('');
@@ -257,14 +273,14 @@ export default function ShopPage() {
       if (/^The (round was|\d+ rounds were) paid/.test(r.error)) { setPicked([]); setWalkIns([]); loadRounds(); load(); }
       return;
     }
-    setCart({}); setCustoms([]); setDiscount(null); setTendered(''); setCustomer({ name: '', phone: '', email: '' }); setPicked([]); setWalkIns([]); setAccountMember(null);
+    setCart({}); setCustoms([]); setDiscount(null); setTendered(''); setCustomer({ name: '', phone: '', email: '' }); setSmsYes(false); setPicked([]); setWalkIns([]); setAccountMember(null);
     if (hasRounds) loadRounds();
     if (r.data.skipped?.length) setError(`Not rung up: ${r.data.skipped.join(' ')} The total below is what was taken.`);
     if (r.data.notes?.length) setNote(r.data.notes.join(' '));
     if (pay === 'reader') setOnReader({ sale: r.data.sale, readerId, state: r.data.readerError ? 'error' : 'waiting', message: r.data.readerError ?? '' });
     else if (r.data.sendError) setError(`Sale saved, but ${r.data.sendError.charAt(0).toLowerCase()}${r.data.sendError.slice(1)} Send it again from the list below, or take cash.`);
-    else if (pay === 'cash' || pay === 'account') { setJustPaid(r.data.sale); setReceipt({ id: r.data.sale.id, via: 'email', to: r.data.sale.customerEmail || '' }); }
-    else setNote(`Pay link ${pay === 'sms' ? 'texted' : 'emailed'}. It shows as paid below when they pay.`);
+    else if (pay === 'cash' || pay === 'account') { setJustPaid(r.data.sale); setJustNoQuote(cashNoQuote); setReceipt({ id: r.data.sale.id, via: 'email', to: r.data.sale.customerEmail || '' }); }
+    else setNote(`Pay link ${pay === 'sms' ? 'texted' : 'emailed'}. It shows below once paid.`);
     load();
     searchRef.current?.focus();
   }
@@ -542,7 +558,7 @@ export default function ShopPage() {
                 {tab === 'items' && tree.length > 0 && (
                   <div className="flex flex-wrap items-center gap-2 mb-4">
                     <input ref={searchRef} value={q} onChange={e => setQ(e.target.value)} autoFocus
-                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); if (!scan(q) && q.trim()) setNote(''); } }}
+                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); const t = q.trim(); if (scan(q) || !t) return; if (!tree.some(i => matches(i, q))) noMatch(q); else setNote(''); } }}
                       placeholder="Find or scan an item" aria-label="Find or scan an item" className={INPUT + ' w-56'} />
                     {categories.length > 1 && ['', ...categories].map(c => (
                       <button key={c || 'all'} type="button" onClick={() => setCat(c)} aria-pressed={cat === c}
@@ -657,7 +673,7 @@ export default function ShopPage() {
                     ))}
                     {priced && priced.discountCents > 0 && <li className="flex justify-between py-2 text-sm text-ink-soft"><span>Discount{discount?.note.trim() ? ` (${discount.note.trim()})` : ''}</span><span className="tabular-nums">−{usd(priced.discountCents)}</span></li>}
                     {priced && priced.taxCents > 0 && <li className="flex justify-between py-2 text-sm text-ink-soft"><span>Sales tax</span><span className="tabular-nums">{usd(priced.taxCents)}</span></li>}
-                    <li className="flex justify-between py-2.5 text-[15px] font-semibold text-ink"><span>Total</span><span className="tabular-nums">{ready ? usd(due) : <span className="text-ink-muted font-normal text-sm">Working out the total…</span>}</span></li>
+                    <li className="flex justify-between py-2.5 text-[15px] font-semibold text-ink"><span>Total</span><span className="tabular-nums">{cashNoQuote ? <span className="text-ink-muted font-normal">—</span> : ready ? usd(due) : <span className="text-ink-muted font-normal text-sm">Working out the total…</span>}</span></li>
                   </ul>
                 )}
 
@@ -700,7 +716,7 @@ export default function ShopPage() {
                       : 'Checked in and paid here, one receipt. Discounts are for shop items only.'}</p>}
                     {/* CASH-1: a login with check-in but not counter payment can only use the reader, for one group at a time. */}
                     {!payChoices.some(([k]) => k === pay) && <p className="text-[12.5px] text-bad" role="alert">{hasRounds && !canCash ? 'One group alone can go on the card reader. Cash needs “Mark paid at the counter”.' : 'Pick how they pay.'}</p>}
-                    {pay === 'cash' && ready && due > 0 && (
+                    {pay === 'cash' && ready && due > 0 && !cashNoQuote && (
                       <div>
                         <span className="block text-[13px] font-medium text-ink mb-1.5">Cash handed over <span className="font-normal text-ink-muted">(optional)</span></span>
                         <div className="flex flex-wrap gap-1.5">
@@ -721,15 +737,16 @@ export default function ShopPage() {
                       <div className="space-y-2">
                         <input value={customer.name} onChange={e => setCustomer(c => ({ ...c, name: e.target.value }))} placeholder="Name (optional)" aria-label="Customer name" className={INPUT + ' w-full'} />
                         {pay === 'sms'
-                          ? <input value={customer.phone} onChange={e => setCustomer(c => ({ ...c, phone: e.target.value }))} placeholder="Mobile number" type="tel" aria-label="Mobile number" className={INPUT + ' w-full'} />
+                          ? <input value={customer.phone} onChange={e => { setCustomer(c => ({ ...c, phone: e.target.value })); setSmsYes(false); }} placeholder="Mobile number" type="tel" aria-label="Mobile number" className={INPUT + ' w-full'} />
                           : <input value={customer.email} onChange={e => setCustomer(c => ({ ...c, email: e.target.value }))} placeholder="Email address" type="email" aria-label="Email address" className={INPUT + ' w-full'} />}
+                        {pay === 'sms' && customer.phone.replace(/\D/g, '').length >= 10 && <SmsConsentAsk courseName="" checked={smsYes} onChange={setSmsYes} />}
                       </div>
                     )}
                     {noTax && <p className="text-[13px] text-warn" role="status">{pay === 'cash' || pay === 'account' ? 'No sales tax right now — taken without it.' : 'No sales tax right now — cash only.'} <button type="button" onClick={() => setQuoteTry(n => n + 1)} className="underline font-medium">Try again</button></p>}
                     {quoteError && <p className="text-[13px] text-bad" role="alert">{quoteError} <button type="button" onClick={() => { setQuoteError(''); setQuoteTry(n => n + 1); }} className="underline font-medium">Try again</button></p>}
-                    <button onClick={ringUp} disabled={!payChoices.some(([k]) => k === pay) || busy === 'sale' || needContact || !ready || (pay === 'cash' && tenderedCents > 0 && tenderedCents < due) || (pay === 'account' && !accountMember) || (pay === 'reader' && (!readerId || onReader?.state === 'waiting' || roundOnReader?.state === 'waiting'))}
+                    <button onClick={ringUp} disabled={!payChoices.some(([k]) => k === pay) || busy === 'sale' || needContact || !ready || (pay === 'cash' && !cashNoQuote && tenderedCents > 0 && tenderedCents < due) || (pay === 'account' && !accountMember) || (pay === 'reader' && (!readerId || onReader?.state === 'waiting' || roundOnReader?.state === 'waiting'))}
                       className="w-full bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-sm py-2.5 disabled:opacity-50">
-                      {busy === 'sale' ? 'Saving…' : pay === 'cash' ? `Take ${usd(due)} cash` : pay === 'account' ? `${usd(due)} on account` : pay === 'reader' ? `Charge ${usd(due)} on the reader` : `Send ${usd(due)} pay link`}
+                      {busy === 'sale' ? 'Saving…' : pay === 'cash' ? (cashNoQuote ? 'Take cash' : `Take ${usd(due)} cash`) : pay === 'account' ? `${usd(due)} on account` : pay === 'reader' ? `Charge ${usd(due)} on the reader` : `Send ${usd(due)} pay link`}
                     </button>
                   </div>
                 )}
@@ -780,7 +797,7 @@ export default function ShopPage() {
                 )}
                 {justPaid && (
                   <div className="mt-4 border-l-[3px] border-ok pl-3 space-y-2">
-                    <p className="text-[14px] text-ink"><span className="font-semibold tabular-nums">{usd(justPaid.totalCents)}</span> {justPaid.status === 'paid_card' ? 'paid by card' : justPaid.status === 'paid_account' ? 'on account' : 'in cash'} — recorded.
+                    <p className="text-[14px] text-ink"><span className="font-semibold tabular-nums">{usd(justPaid.totalCents)}</span> {justPaid.status === 'paid_card' ? 'paid by card' : justPaid.status === 'paid_account' ? 'on account' : 'in cash'} — recorded.{justNoQuote && <> <strong className="text-ink">Collect {usd(justPaid.totalCents)}.</strong></>}
                       {justPaid.cashTenderedCents != null && <> Change: <span className="font-semibold tabular-nums">{usd(justPaid.cashTenderedCents - justPaid.totalCents)}</span>.</>}</p>
                     {receipt?.id === justPaid.id && <ReceiptForm receipt={receipt} setReceipt={setReceipt} onSend={sendReceipt} busy={busy === 'receipt' + justPaid.id} onSkip={() => { setReceipt(null); setJustPaid(null); }} />}
                   </div>

@@ -2,6 +2,7 @@
 // W2-9d: the sign-up form — whoever fills it in, plus up to three more players.
 // Name and email for the person signing up; name for each other player (their
 // email and mobile are optional); the course's own questions for everyone.
+import { smsWebConsentText } from '@/lib/sms-consent-copy';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
@@ -18,6 +19,8 @@ export default function SignupForm({ eventId, accent, maxGroup, questions, payNo
 }) {
   const [players, setPlayers] = useState<Player[]>([blank()]);
   const [busy, setBusy] = useState(false);
+  // SMS-1: text consent for the person signing up (player 1) only — its own unticked box.
+  const [smsOk, setSmsOk] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState<{ status: 'in' | 'waitlist'; names: string[] } | null>(null);
   const n = players.length;
@@ -28,7 +31,7 @@ export default function SignupForm({ eventId, accent, maxGroup, questions, payNo
     ev.preventDefault();
     setBusy(true); setError('');
     try {
-      const res = await fetch(`/api/event-signup/${eventId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ players }) });
+      const res = await fetch(`/api/event-signup/${eventId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ players, smsConsent: smsOk && players[0].phone.replace(/\D/g, '').length >= 10 }) });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) { setError(data.error || 'That didn’t go through — try again.'); setBusy(false); return; }
       if (data.status === 'pay' && data.payUrl) { window.location.href = data.payUrl; return; }
@@ -67,6 +70,12 @@ export default function SignupForm({ eventId, accent, maxGroup, questions, payNo
               <input type="email" required={i === 0} maxLength={200} autoComplete={i === 0 ? 'email' : 'off'} className={INPUT} value={p.email} onChange={ev => set(i, { email: ev.target.value })} /></label>
             <label className="block"><span className="block text-[13px] font-medium text-ink mb-1">Mobile <span className="font-normal text-ink-muted">(optional)</span></span>
               <input type="tel" maxLength={40} autoComplete={i === 0 ? 'tel' : 'off'} className={INPUT} value={p.phone} onChange={ev => set(i, { phone: ev.target.value })} /></label>
+            {i === 0 && p.phone.replace(/\D/g, '').length >= 10 && (
+              <label className="flex items-start gap-2.5 text-[12.5px] text-ink-soft leading-snug cursor-pointer select-none">
+                <input type="checkbox" checked={smsOk} onChange={ev => setSmsOk(ev.target.checked)} className="mt-0.5 w-4 h-4 shrink-0" style={{ accentColor: accent }} />
+                <span>{smsWebConsentText(courseName).replace('this booking', 'this event')} <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline">Terms</a> · <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline">Privacy</a>. Optional.</span>
+              </label>
+            )}
             {questions.map(q => (
               <label key={q.id} className="block"><span className="block text-[13px] font-medium text-ink mb-1">{q.label}{!q.required && <span className="font-normal text-ink-muted"> (optional)</span>}</span>
                 <input required={q.required} maxLength={300} className={INPUT} value={p.answers[q.id] ?? ''} onChange={ev => set(i, { answers: { ...p.answers, [q.id]: ev.target.value } })} /></label>

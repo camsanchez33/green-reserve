@@ -28,14 +28,14 @@ export default function PrivacyPolicyPage() {
                 <a href="/operator-agreement" className={navIdle}>Operator Agreement</a>
               </nav>
               <p className="mt-6 pl-3 text-xs text-ink-soft leading-relaxed">
-                Version v2026-10-19<br />Last updated October 19, 2026
+                Version v2026-11-02<br />Last updated November 2, 2026
               </p>
             </div>
           </aside>
 
           <div>
             <h1 className="text-3xl sm:text-4xl font-serif font-semibold tracking-tight text-ink mb-3">Privacy Policy</h1>
-            <p className="text-ink-soft text-sm mb-10">Version v2026-10-19 — last updated October 19, 2026</p>
+            <p className="text-ink-soft text-sm mb-10">Version v2026-11-02 — last updated November 2, 2026</p>
 
             {/* Plain-English summary */}
             <div className="bg-white rounded-lg shadow-card p-6 mb-12">
@@ -89,8 +89,11 @@ export default function PrivacyPolicyPage() {
                   <span className="text-ink-faint font-normal mr-2">3.</span>Emails and text messages
                 </h2>
                 <p>
-                  We send emails and texts about your bookings: confirmations and changes, pay links and check-in, sign-in codes, and
-                  notices the course sends about your booking day. These are not marketing. <strong className="text-ink">We never send marketing texts without your separate, explicit opt-in.</strong>
+                  We send emails about your bookings: confirmations and changes, pay links and check-in, and notices the course sends
+                  about your booking day. We text you only if you agreed — a box you ticked when you booked or signed up, or a yes you
+                  gave course staff — and we keep a record of that agreement (your number, when, how, and the wording you agreed to).
+                  Texts are about your own bookings, up to 4 messages per booking; a sign-in code is texted only when you ask for one.
+                  These are not marketing. <strong className="text-ink">We never send marketing texts without your separate, explicit opt-in.</strong>
                   Reply STOP to any text to stop texts, or HELP for help. Message and data rates may apply.
                 </p>
               </section>
@@ -220,7 +223,11 @@ export default function PrivacyPolicyPage() {
               <section className="pt-6 border-t border-line">
                 <h3 className="font-semibold text-sm text-ink mb-2">Changes to this policy</h3>
                 <p className="text-sm mb-2">
-                  <strong className="text-ink">v2026-10-19 (current):</strong> names GreenReserve LLC (New York); lists the service providers
+                  <strong className="text-ink">v2026-11-02 (current):</strong> texts only with your agreement, and the record we keep of it;
+                  up to 4 messages per booking.
+                </p>
+                <p className="text-sm mb-2">
+                  <strong className="text-ink">v2026-10-19:</strong> names GreenReserve LLC (New York); lists the service providers
                   that process data, including the AI assistant; adds phone sign-in, pay pages, pro-shop items, cookies, keeping data and
                   the text-message STOP and HELP terms; says what signing the Operator Agreement records.
                 </p>

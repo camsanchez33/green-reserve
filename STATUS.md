@@ -4,14 +4,25 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-01 19:42 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `cab4dae0` · working tree **21 dirty file(s)**
+Generated 2026-11-02 04:06 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `bffab6e9` · working tree **4 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 20 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 31 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `bffab6e9` | 2026-11-02 | Event money needs "Mark paid at the counter"; a member with history can't be deleted |
+| `53e31df1` | 2026-11-02 | Counter friction B: card beside the sheet, Home opens a time's card, member opens golfer record, cash through a failed tax quote |
+| `b80496f3` | 2026-11-02 | SMS-1: texts only to numbers that agreed (Twilio A2P 10DLC opt-in) |
+| `db252e4b` | 2026-11-02 | Status board refresh |
+| `b199995d` | 2026-11-02 | Counter friction: one-tap check-in, no-show waits 10 min, cart off by default, search on phones |
+| `45ca1d0e` | 2026-11-02 | Speed with volume: one time-zone formatter per zone (Analytics 90 days 10.7s → 1.2s) |
+| `4054bff4` | 2026-11-02 | Test course: busy-season sample data, with every money table filled |
+| `91745c5a` | 2026-11-01 | member-portal-price test: its course has member prices, so the switches are on |
+| `96cd687f` | 2026-11-01 | Pricing switches: Members / Residents off means the public price (backfill + auto-on) |
+| `1db52953` | 2026-11-01 | Audit wording: what the sheet, members, settings and golfer page say, made true (#288) |
+| `93f3ff63` | 2026-11-01 | Audit wording: what the sheet, members, settings and golfer page say, made true |
 | `b5d27f01` | 2026-11-01 | Audit numbers: partial refunds, event money, event player swap, shop today, payout tile (#287) |
 | `c6efa694` | 2026-11-01 | Audit numbers: partial refunds, event money, event player swap, shop today, payout tile |
 | `10ab79d8` | 2026-11-01 | DENSE-10 Settings part 2: the Settings cards, labels over sentences (#286) |
@@ -35,28 +46,12 @@ Generated 2026-11-01 19:42 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (21 file(s))
+### Uncommitted working tree (4 file(s))
 
-- `M STATUS.artifact.html`
-- `M STATUS.json`
-- `M STATUS.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/words-guard.baseline.json`
-- `M src/app/api/operator/bookings/route.ts`
-- `M src/app/api/operator/tee-times/route.ts`
-- `M src/app/api/preview/[courseId]/route.ts`
-- `M src/app/courses/[slug]/CourseBookingClient.tsx`
-- `M src/app/dashboard/members/page.tsx`
-- `M src/app/dashboard/page.tsx`
-- `M src/app/dashboard/settings/page.tsx`
-- `M src/lib/analytics-terms.ts`
-- `M src/lib/cancel-confirm.ts`
-- `M src/lib/counter-pay.ts`
-- `M src/lib/email.ts`
-- `M src/lib/no-show-fee.ts`
-- `M src/lib/normalize-course.ts`
-- `M src/lib/public-course.ts`
+- `M scripts/sms-consent-db-test.ts`
+- `M src/components/dashboard/DeclinedCardList.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -141,59 +136,59 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
+| `CLAUDE.md` | 1 | 2026-11-02 | 0d |
 | `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 0d |
-| `CLAUDE.md` | 1 | 2026-10-30 | 1d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 11d |
-| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 5d |
-| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 6d |
-| `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 8d |
-| `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 9d |
-| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 9d |
-| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 9d |
-| `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 9d |
-| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 9d |
-| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 9d |
-| `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 9d |
-| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 11d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `ARCHITECTURE.md` | 0 | 2026-10-20 | 11d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `CODEMAP_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `FB2_COPY_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `GOLFER_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `HARDENING_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `REVIEW_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-20 | 11d |
-| `UI_REVISE_SPEC.md` | 0 | 2026-10-20 | 11d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 12d |
+| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 6d |
+| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 7d |
+| `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 9d |
+| `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 10d |
+| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 10d |
+| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 10d |
+| `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 10d |
+| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 10d |
+| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 10d |
+| `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 10d |
+| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 12d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `ARCHITECTURE.md` | 0 | 2026-10-20 | 12d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `CODEMAP_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `GOLFER_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `HARDENING_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `UI_REVISE_SPEC.md` | 0 | 2026-10-20 | 12d |
 
 ## Recent commits
 
+- `bffab6e9` 2026-11-02 — Event money needs "Mark paid at the counter"; a member with history can't be deleted
+- `53e31df1` 2026-11-02 — Counter friction B: card beside the sheet, Home opens a time's card, member opens golfer record, cash through a failed tax quote
+- `b80496f3` 2026-11-02 — SMS-1: texts only to numbers that agreed (Twilio A2P 10DLC opt-in)
+- `db252e4b` 2026-11-02 — Status board refresh
+- `b199995d` 2026-11-02 — Counter friction: one-tap check-in, no-show waits 10 min, cart off by default, search on phones
+- `45ca1d0e` 2026-11-02 — Speed with volume: one time-zone formatter per zone (Analytics 90 days 10.7s → 1.2s)
+- `4054bff4` 2026-11-02 — Test course: busy-season sample data, with every money table filled
+- `91745c5a` 2026-11-01 — member-portal-price test: its course has member prices, so the switches are on
+- `96cd687f` 2026-11-01 — Pricing switches: Members / Residents off means the public price (backfill + auto-on)
+- `1db52953` 2026-11-01 — Audit wording: what the sheet, members, settings and golfer page say, made true (#288)
+- `93f3ff63` 2026-11-01 — Audit wording: what the sheet, members, settings and golfer page say, made true
 - `b5d27f01` 2026-11-01 — Audit numbers: partial refunds, event money, event player swap, shop today, payout tile (#287)
-- `c6efa694` 2026-11-01 — Audit numbers: partial refunds, event money, event player swap, shop today, payout tile
-- `10ab79d8` 2026-11-01 — DENSE-10 Settings part 2: the Settings cards, labels over sentences (#286)
-- `6bbb7c6d` 2026-11-01 — DENSE-10 Settings part 2: the Settings cards, labels over sentences
-- `bda21776` 2026-11-01 — DENSE-10 Settings part 1: labels over sentences (#285)
-- `e4bc0f02` 2026-11-01 — DENSE-10 Settings part 1: labels over sentences
-- `6d571671` 2026-11-01 — DENSE-9 Messages: the intro is the reply-time line and the email (#284)
-- `d74792b2` 2026-11-01 — DENSE-9 Messages: the intro is the reply-time line and the email
-- `fe34fcb1` 2026-11-01 — DENSE-8 Events: the list is a table with what each event still owes (#283)
-- `1bbbbbc8` 2026-11-01 — DENSE-8 Events: the list is a table with what each event still owes
-- `286a3d44` 2026-11-01 — DENSE-7 Pro shop: labels over sentences (text only) (#282)
-- `06c09849` 2026-11-01 — DENSE-7 Pro shop: labels over sentences (text only)
 
 ---
 

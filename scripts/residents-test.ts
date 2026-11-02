@@ -44,7 +44,7 @@ async function main() {
   // ── Database ───────────────────────────────────────────────────────────────
   await cleanup();
   const op = await prisma.courseOperator.create({ data: { name: 'Res Test', email: `${TAG}@test.local`, password: 'x' } });
-  const mk = (n: string) => prisma.course.create({ data: { name: `Res ${n}`, slug: `${TAG}-${n}`, operatorId: op.id, address: '1 Test Dr', city: 'T', state: 'CA', zipCode: '90210', holes: 18, liveStatus: 'live', active: true, timezone: 'UTC', cancellationHours: 24 } });
+  const mk = (n: string) => prisma.course.create({ data: { hasMemberPricing: true, hasResidentPricing: true, name: `Res ${n}`, slug: `${TAG}-${n}`, operatorId: op.id, address: '1 Test Dr', city: 'T', state: 'CA', zipCode: '90210', holes: 18, liveStatus: 'live', active: true, timezone: 'UTC', cancellationHours: 24 } });
   const course = await mk('a');
   const other = await mk('b');
   const slot = (time: string, resident: number | null, green = 5000) => prisma.teeTime.create({ data: { courseId: course.id, date: '2030-06-04', time, holes: 18, greenFeeCents: green, cartFeeCents: 0, playersAvailable: 4, playersBooked: 0, residentRateCents: resident } });

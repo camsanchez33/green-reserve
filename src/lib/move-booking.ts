@@ -30,6 +30,7 @@
 // passed at a course with a late/hold fee: otherwise a golfer inside the window
 // could move weeks out and cancel free (lateness is judged on the tee time the
 // booking holds at cancel), or step past the advance-booking window.
+import { memberPricingOn, residentPricingOn } from './pricing-switch';
 import type { Prisma } from '@prisma/client';
 import { prisma } from './prisma';
 import { applyTierRates } from './tier-rates';
@@ -125,7 +126,7 @@ export async function moveBooking(opts: {
           cartSelected: true, appliedRate: true, packLineId: true, packRounds: true, memberRateCents: true, residentPlayers: true, residentRateCents: true, promoCodeId: true, promoDiscountCents: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, accessFeeTotal: true,
           cancellationHoursAtBooking: true, lateFeeTimingAtBooking: true, cancellationFeeTotal: true, cancellationFeeChargeId: true,
           teeTime: { select: { id: true, date: true, time: true, status: true, playersBooked: true, playersAvailable: true } },
-          course: { select: { timezone: true, cancellationHours: true, memberGraceDays: true, lastMinuteOn: true, lastMinuteHours: true, lastMinutePct: true, lastMinuteCounter: true, lastMinuteStack: true, demandMode: true, demandFloorPct: true, demandCeilingPct: true } },
+          course: { select: { timezone: true, cancellationHours: true, memberGraceDays: true, hasMemberPricing: true, hasResidentPricing: true, lastMinuteOn: true, lastMinuteHours: true, lastMinutePct: true, lastMinuteCounter: true, lastMinuteStack: true, demandMode: true, demandFloorPct: true, demandCeilingPct: true } },
         },
       });
       if (!b || (opts.courseId && b.courseId !== opts.courseId)) throw new MoveError('NOT_FOUND');
@@ -181,7 +182,8 @@ export async function moveBooking(opts: {
               ...(b.golferEmail ? [{ inviteEmail: { equals: b.golferEmail, mode: 'insensitive' as const } }] : []),
             ] }, select: { status: true, expiresAt: true } })
           : [];
-        const lapsed = theirs.length > 0 && !theirs.some(m => membershipLive(m, b.course));
+        // Members switched off in Settings (lib/pricing-switch): a repriced move pays the public price.
+        const lapsed = (theirs.length > 0 && !theirs.some(m => membershipLive(m, b.course))) || (opts.pricing !== 'keep' && !memberPricingOn(b.course));
         const tier = lapsed ? null : named;
         rate = lapsed ? rate : tier
           ? applyTierRates(slot, tier)
@@ -194,7 +196,8 @@ export async function moveBooking(opts: {
       // PRICE-1: a promo code on the booking carries to the new time when it still fits there
       // (its dates, days and hours; a use is already counted); otherwise it comes off. Seat by
       // seat, as when it was booked (lib/promo-codes).
-      const residentN = opts.residentPlayers ?? b.residentPlayers;
+      // Residents switched off: a repriced move carries no resident seat.
+      const residentN = opts.pricing !== 'keep' && !residentPricingOn(b.course) ? 0 : (opts.residentPlayers ?? b.residentPlayers);
       const code = b.promoCodeId ? await tx.promoCode.findUnique({ where: { id: b.promoCodeId } }) : null;
       const promo = code && !promoFits({ ...code, maxUses: null, active: true }, slot, { rateApplied: memberN > 0 || (residentN > 0 && slot.residentRateCents != null) }) ? code : null;
       const seat = (c: number) => (promo && !rateIsOwn ? seatAfter(promo, c) : c);

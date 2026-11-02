@@ -219,7 +219,8 @@ export default function OperatorSidebar({ active, onAlertClick }: {
           </button>
         );
       })}
-      {moreItems.length > 0 && (
+      {/* Always there on a phone: it carries the golfer search even when every tab fits the bar. */}
+      {(
         <button onClick={() => setMoreOpen(o => !o)} aria-expanded={moreOpen} aria-controls="op-more"
           className={'flex-1 min-h-[56px] flex flex-col items-center justify-center gap-1 text-[10.5px] font-medium ' + (moreItems.some(i => i.key === active) ? 'text-ink' : 'text-ink-muted')}
           style={moreItems.some(i => i.key === active) ? { color: brandColor } : undefined}>
@@ -230,6 +231,9 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     </nav>
     {moreOpen && (
       <div id="op-more" className="md:hidden fixed inset-x-0 bottom-[calc(56px+env(safe-area-inset-bottom))] z-30 bg-white border-t border-line shadow-card">
+        {/* Members audit 22: golfer search on a phone or tablet too (it lived only in the desktop rail);
+            here rather than in the top strip, so the tee sheet doesn't start further down. */}
+        <div className="px-4 py-3 border-b border-line-soft"><OperatorSearch dropUp onPicked={() => setMoreOpen(false)} /></div>
         {moreItems.map(item => (
           <button key={item.key} onClick={() => { setMoreOpen(false); if (confirmLeave()) router.push(item.href); }}
             aria-current={active === item.key ? 'page' : undefined}

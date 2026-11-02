@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { rateLimit } from '@/lib/rate-limit';
 import { smsConfigured } from '@/lib/twilio';
-import { audience, reach, checkWindow, sendCourseMessage, smsRoom, MAX_MESSAGE_CHARS } from '@/lib/golfer-messages';
+import { audience, withTextConsent, reach, checkWindow, sendCourseMessage, smsRoom, MAX_MESSAGE_CHARS } from '@/lib/golfer-messages';
 
 // MSG-1 (PLATFORM_ROADMAP_SPEC §5): message the golfers booked on a day.
 // GET  ?date&from&to → who it would reach (counts only) + the last messages sent.
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
   const bad = checkWindow(w);
   if (bad) return NextResponse.json({ error: bad }, { status: 400 });
   const [list, recent, course] = await Promise.all([
-    audience(session.courseId, w),
+    audience(session.courseId, w).then(withTextConsent),
     prisma.courseMessage.findMany({ where: { courseId: session.courseId }, orderBy: { createdAt: 'desc' }, take: 5, select: { id: true, date: true, fromTime: true, toTime: true, body: true, sentEmail: true, sentSms: true, failed: true, createdAt: true } }),
     prisma.course.findUnique({ where: { id: session.courseId }, select: { name: true } }),
   ]);
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     if (body.length > room) return NextResponse.json({ error: `A text fits ${room} characters — shorten the message or untick the text box.` }, { status: 400 });
   }
   // Revamp 3 fix 12: a send that reaches nobody is refused, never answered "ok" with 0 sent.
-  const r0 = reach(await audience(session.courseId, w), b.sms === true && smsConfigured());
+  const r0 = reach(await withTextConsent(await audience(session.courseId, w)), b.sms === true && smsConfigured());
   if (r0.golfers > 0 && r0.email + r0.sms === 0) return NextResponse.json({ error: `None of the ${r0.golfers} golfer${r0.golfers === 1 ? '' : 's'} booked has an email on file${smsConfigured() ? (b.sms === true ? ' or a mobile' : ' — tick the text box') : ', and texting is off'}. Tell them at the counter.` }, { status: 400 });
   // A course can't flood its golfers by accident: six notices an hour.
   if (!(await rateLimit(`golfer-msg:${session.courseId}`, 6, 3600))) {

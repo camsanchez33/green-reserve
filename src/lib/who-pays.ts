@@ -41,7 +41,8 @@ function periodLabel(s: WireSchedule, many: boolean) {
   return s.productLabel ? `${s.productLabel} · ${name}` : name;
 }
 
-export function whoPays(schedules: WireSchedule[], tiers: WireTier[]): { periods: Period[]; rows: Row[] } {
+// Settings' Members / Residents switches (lib/pricing-switch): a switched-off kind of price is never charged, so it has no row.
+export function whoPays(schedules: WireSchedule[], tiers: WireTier[], switches: { membersOn?: boolean; residentsOn?: boolean } = {}): { periods: Period[]; rows: Row[] } {
   // Columns in the order of the day (Morning before Twilight), not the order they were made.
   const live = schedules.filter(s => s.active).sort((a, b) => a.startTime.localeCompare(b.startTime) || a.tierName.localeCompare(b.tierName));
   const periods = live.map(s => ({ id: s.id, label: periodLabel(s, live.length > 1) }));
@@ -57,7 +58,7 @@ export function whoPays(schedules: WireSchedule[], tiers: WireTier[]): { periods
     weekend: cells(s => s.greenFeeWeekend, true),
   });
 
-  if (live.some(s => s.residentRateWeekday != null || s.residentRateWeekend != null)) {
+  if (switches.residentsOn !== false && live.some(s => s.residentRateWeekday != null || s.residentRateWeekend != null)) {
     rows.push({
       key: 'resident', label: 'Residents',
       who: 'Golfers on your Residents list (Members → Residents). Signed in, a resident books themselves at this rate; at the counter, staff set how many of a group showed a card.',
@@ -80,7 +81,7 @@ export function whoPays(schedules: WireSchedule[], tiers: WireTier[]): { periods
     return cents === teeTime.greenFeeCents ? null : d(cents);
   };
 
-  for (const t of tiers.filter(t => t.active)) {
+  for (const t of switches.membersOn === false ? [] : tiers.filter(t => t.active)) {
     const how = t.greenFeeWeekday != null || t.greenFeeWeekend != null ? 'their own flat price'
       : t.discountPct != null ? `${t.discountPct}% off the public rate`
       : 'the member rate on your schedule';

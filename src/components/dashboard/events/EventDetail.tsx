@@ -2,6 +2,7 @@
 // W2-9 Events: one event — what it holds on the tee sheet, its prep checklist,
 // and its players with their groups. Every write shows its pending state and
 // then the result or the server's reason (dfetch never throws).
+import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import { useEffect, useState } from 'react';
 import { shotgunLabels, groupStartTime } from '@/lib/course-events';
 import { Card } from '@/components/ui/Card';
@@ -50,6 +51,8 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
   data: EventData; onChange: (d: EventData) => void; onEdit: () => void; onBack: () => void;
   canRefund: boolean; reload: () => Promise<void>;
 }) {
+  // Events audit 23: taking event money needs "Mark paid at the counter" (the payments route checks it too).
+  const canRecord = useDashboardAccess().can('sheet.counter_payment');
   const { event: e, today, held, toMove } = data;
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
@@ -163,7 +166,7 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
         <EventDay groups={sortedGroups} ungrouped={ungrouped} startOf={startOf} onList={onList} busy={busy}
           owes={p => playersPay && stateOf(p) !== 'paid' && stateOf(p) !== 'paying'}
           onCheck={(ids, on, key) => { act(key, { action: 'checkin', playerIds: ids, on }); }}
-          onTakePayment={p => { setPaidHere({ id: p.id, amount: price, method: 'cash' }); document.getElementById(`player-${p.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }}
+          onTakePayment={canRecord ? p => { setPaidHere({ id: p.id, amount: price, method: 'cash' }); document.getElementById(`player-${p.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); } : undefined}
           onPrintSigns={() => printNow('signs')} />
       )}
 
@@ -395,7 +398,7 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
                             {live && st === 'none' && ((p.email && !p.email.endsWith('@noemail.greenreserve.app')) || p.phone.replace(/\D/g, '').length >= 10) && <button disabled={!!busy || !price} title={price ? undefined : 'Set a price per player first'}
                               onClick={() => payAct('link' + p.id, { action: 'link', playerId: p.id, amount: price, via: p.email && !p.email.endsWith('@noemail.greenreserve.app') ? 'email' : 'sms' }, r => r.sent ? `Pay link sent to ${p.name}.` : `Link made for ${p.name}, but it didn\u2019t send${r.sendError ? `: ${String(r.sendError)}` : ''} — copy it here.`)}
                               className="text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2 disabled:opacity-50">{busy === 'link' + p.id ? 'Sending…' : 'Send link'}</button>}
-                            {<button disabled={!!busy} onClick={() => setPaidHere({ id: p.id, amount: price, method: 'cash' })} className="text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2">Paid at the course</button>}
+                            {canRecord && <button disabled={!!busy} onClick={() => setPaidHere({ id: p.id, amount: price, method: 'cash' })} className="text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2">Paid at the course</button>}
                           </span>
                         );
                       })()}

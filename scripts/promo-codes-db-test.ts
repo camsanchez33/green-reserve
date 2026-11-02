@@ -44,7 +44,7 @@ const route2 = () => readFileSync('src/app/api/operator/promo-codes/route.ts', '
   ok('a code from Settings is checked', readPromo({ code: 'ab', kind: 'percent', value: 10 }).ok === false && readPromo({ code: 'fall 20', kind: 'percent', value: 120 }).ok === false && readPromo({ code: 'fall-20', kind: 'amount', value: 500 }).ok === true);
 
   const op = await prisma.courseOperator.create({ data: { name: 'x', email: `${TAG}@t.local`, password: 'x' } });
-  const mk = (n: string) => prisma.course.create({ data: { name: `Promo ${n}`, slug: `${TAG}-${n}`, operatorId: op.id, address: '1', city: 'X', state: 'NJ', zipCode: '9', holes: 18, timezone: 'UTC' } });
+  const mk = (n: string) => prisma.course.create({ data: { hasMemberPricing: true, hasResidentPricing: true, name: `Promo ${n}`, slug: `${TAG}-${n}`, operatorId: op.id, address: '1', city: 'X', state: 'NJ', zipCode: '9', holes: 18, timezone: 'UTC' } });
   const c = await mk('a'), other = await mk('b');
   const day = addDaysStr(todayIn('UTC'), 3);
   const slot = await prisma.teeTime.create({ data: { courseId: c.id, date: day, time: '10:00', holes: 18, greenFeeCents: 5000, cartFeeCents: 2000, playersAvailable: 8, residentRateCents: 3000 } });

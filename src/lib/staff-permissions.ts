@@ -36,7 +36,7 @@ export interface PermissionDef {
 export const PERMISSIONS: PermissionDef[] = [
   { key: 'sheet.view', group: 'Tee sheet', label: 'See the tee sheet', help: 'Every staff login can see the day’s tee times.', locked: true },
   { key: 'sheet.checkin', group: 'Tee sheet', label: 'Check groups in', help: 'Check in a group and take a card payment at check-in.' },
-  { key: 'sheet.counter_payment', group: 'Tee sheet', label: 'Mark paid at the counter', help: 'Record a round paid in cash or at the pro shop.' },
+  { key: 'sheet.counter_payment', group: 'Tee sheet', label: 'Mark paid at the counter', help: 'Record a round, or event money, paid in cash or another way.' },
   { key: 'sheet.walkin', group: 'Tee sheet', label: 'Add walk-ins and phone bookings', help: 'Book an open time for someone at the counter or on the phone.' },
   { key: 'sheet.move', group: 'Tee sheet', label: 'Move a group to another time', help: 'Move a booking to another open time. The golfer is emailed; the price stays unless you choose the new time’s rate.' },
   { key: 'sheet.no_show', group: 'Tee sheet', label: 'Mark no-shows', help: 'Mark a group that never arrived, or undo it with “still coming”.' },

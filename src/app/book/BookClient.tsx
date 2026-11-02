@@ -1,4 +1,5 @@
 'use client';
+import { smsWebConsentText } from '@/lib/sms-consent-copy';
 import { splitTotal } from '@/lib/member-rates';
 import { FEE_AT_BOOKING_ON } from '@/lib/booking-fees';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -588,9 +589,11 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
   // Cam 2026-10-19: agreeing is a box the golfer ticks, never implied by the
   // button (clickwrap). Nothing books — card form, Apple Pay or no card — until it is.
   const [agreed, setAgreed] = useState(false);
+  // SMS-1 (Twilio A2P 10DLC): text consent is its own box, never pre-ticked, never part of the terms box.
+  const [smsOk, setSmsOk] = useState(false);
   // The wallet button's handler is registered once; it reads the code from here, never a stale render.
-  const latest = useRef({ name, email, phone, agreed, promoCode, packLineId });
-  latest.current = { name, email, phone, agreed, promoCode, packLineId };
+  const latest = useRef({ name, email, phone, agreed, promoCode, packLineId, smsOk });
+  latest.current = { name, email, phone, agreed, promoCode, packLineId, smsOk };
 
   /** Create the booking. setupIntentId when a card was saved for it. */
   async function book(who: { name: string; email: string; phone: string }, setupIntentId?: string): Promise<boolean> {
@@ -610,6 +613,7 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
         ...(latest.current.promoCode ? { promoCode: latest.current.promoCode } : {}),
         ...(latest.current.packLineId ? { packLineId: latest.current.packLineId } : {}),
         termsAccepted: latest.current.agreed === true,
+        smsConsent: latest.current.smsOk === true && who.phone.replace(/\D/g, '').length >= 10,
       }),
     });
     const data = await res.json();
@@ -749,6 +753,12 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
           <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="(555) 555-5555" className={iCls} />
         </div>
       </div>
+      {phone.replace(/\D/g, '').length >= 10 && (
+        <label className="flex items-start gap-2.5 text-[12.5px] text-ink-soft leading-snug cursor-pointer select-none">
+          <input type="checkbox" checked={smsOk} onChange={e => setSmsOk(e.target.checked)} className="mt-0.5 w-4 h-4 shrink-0" style={{ accentColor: accent }} />
+          <span>{smsWebConsentText(courseName)} <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline">Terms</a> · <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline">Privacy</a>. Optional — you can book without it.</span>
+        </label>
+      )}
 
       <label className="flex items-start gap-2.5 text-[13px] text-ink leading-snug cursor-pointer select-none">
         <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} className="mt-0.5 w-4 h-4 shrink-0" style={{ accentColor: accent }} />

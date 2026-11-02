@@ -32,7 +32,7 @@ async function course() {
     where: { email: `${TAG}@test.local` }, update: {},
     create: { name: 'Move Test', email: `${TAG}@test.local`, password: 'not-a-real-hash' },
   });
-  return prisma.course.create({ data: {
+  return prisma.course.create({ data: { hasMemberPricing: true, hasResidentPricing: true,
     name: 'Move Test Course', slug: `${TAG}-${++n}`, operatorId: operator.id, address: '1 Test Dr', city: 'Testville', state: 'CA', zipCode: '90210', holes: 18,
     liveStatus: 'live', active: true, timezone: 'UTC', cancellationHours: 24,
   } });

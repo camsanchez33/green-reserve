@@ -6,7 +6,7 @@
 //  5. "Not linked" members get member rates once they sign in with the listed email — the words say so;
 //  6. the golfer page's Twilight filter starts at the course's own twilight period;
 //  7. the golfer page's cart button says when a cart is added;
-//  8. the Members / Residents toggles say that turning them off doesn't stop a price already set.
+//  8. the Members / Residents toggles say off means the public price (true since lib/pricing-switch).
 // Pure. Run: npx tsx scripts/audit-wording-test.ts
 import { readFileSync } from 'fs';
 import { cancelConfirmText } from '../src/lib/cancel-confirm';
@@ -73,7 +73,7 @@ ok('7. the cart button says when it is on', golfer.includes("{withCart ? 'Cart a
 
 // 8
 const settings = read('src/app/dashboard/settings/page.tsx');
-ok('8. the toggles say off doesn\'t stop a price already set', (settings.match(/Turning this off doesn’t stop/g) ?? []).length === 2 && !settings.includes('Turn on if members pay less'));
+ok('8. the toggles say off means the public price (lib/pricing-switch makes it so)', settings.includes('Off: members pay the public price, online and at the counter.') && settings.includes('Off: residents pay the public price, online and at the counter.'));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);

@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { optInAndConfirm } from '@/lib/sms-consent';
+import { NextRequest, NextResponse, after } from 'next/server';
+import { memberPricingOn, residentPricingOn } from '@/lib/pricing-switch';
 import { onlineBookingBlock } from '@/lib/golfer-record';
 import { applyTierRates } from '@/lib/tier-rates';
 import { membershipLive, memberPlayers, splitTotal, memberSpot } from '@/lib/member-rates';
@@ -29,7 +31,7 @@ import { rateLimit, clientIp } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { teeTimeId, players: playersRaw, golferName, golferEmail, golferPhone, setupIntentId, cartSelected, rangeBallsSize, termsAccepted, promoCode, packLineId } = body;
+  const { teeTimeId, players: playersRaw, golferName, golferEmail, golferPhone, setupIntentId, cartSelected, rangeBallsSize, termsAccepted, promoCode, packLineId, smsConsent } = body;
 
   if (!teeTimeId || !playersRaw || !golferName || !golferEmail)
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -106,7 +108,8 @@ export async function POST(req: NextRequest) {
       ? await prisma.courseMembership.findUnique({ where: { id: golferMembership.membershipId }, include: { tier: true } })
       : null;
     if (membership) viewerMembership = { tier: membership.tier };
-    if (membership?.tier) {
+    // Members switched off in Settings: the membership still counts (its window), its rate doesn't.
+    if (membership?.tier && memberPricingOn(teeTimeFull.course)) {
       const rates = applyTierRates(teeTimeFull, membership.tier);
       resolvedGreenFeeOverride = rates.greenFeeCents;
       resolvedCartFeeOverride  = rates.cartFeeCents;
@@ -126,7 +129,7 @@ export async function POST(req: NextRequest) {
       // A lapsed membership (past its end date + the course's grace days) gets public rates and the public window.
       const live = !!membership && membership.courseId === teeTimeFull.courseId && membershipLive(membership, teeTimeFull.course);
       if (live && !viewerMembership) viewerMembership = { tier: membership!.tier };
-      if (live && membership!.tier) {
+      if (live && membership!.tier && memberPricingOn(teeTimeFull.course)) {
         const rates = applyTierRates(teeTimeFull, membership!.tier);
         resolvedGreenFeeOverride = rates.greenFeeCents;
         resolvedCartFeeOverride  = rates.cartFeeCents;
@@ -164,7 +167,7 @@ export async function POST(req: NextRequest) {
 
   // RES-1: a signed-in golfer on the course's resident list pays the resident
   // rate for one player — themselves. A member rate is never combined with it.
-  const resident = appliedTierName === 'standard' && teeTimeFull.residentRateCents != null
+  const resident = appliedTierName === 'standard' && teeTimeFull.residentRateCents != null && residentPricingOn(teeTimeFull.course)
     ? await golferResident(teeTimeFull.courseId, teeTimeFull.date) : null;
   // PRICE-1 (Cam 2026-10-30): a promo code comes off the green fee, SEAT BY SEAT — the member's
   // spot, the resident and each other player each pay their own rate less the code — so the
@@ -373,6 +376,13 @@ export async function POST(req: NextRequest) {
   }
 
   console.log(JSON.stringify({ ev: 'booking.created', bookingId: claimed.id, teeTimeId, players, totalCents, hasCard: !!savedPaymentMethodId }));
+
+  // SMS-1 (Twilio A2P 10DLC): texts only when the golfer ticked the (unticked) box by their number.
+  // Recorded and confirmed after the response is sent (after(): Vercel keeps it running) — never slows the booking.
+  if (smsConsent === true && golferPhone) {
+    const consentPhoneRaw = String(golferPhone), consentCourse = teeTimeFull.courseId, consentBooking = claimed.id;
+    after(() => optInAndConfirm(consentPhoneRaw, { method: 'web_booking', courseId: consentCourse, bookingId: consentBooking }));
+  }
 
   // Send confirmation emails (fire-and-forget)
   try {

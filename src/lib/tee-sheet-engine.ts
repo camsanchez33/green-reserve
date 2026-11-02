@@ -192,6 +192,7 @@ export async function generateTeeTimes(courseId: string, dateStr: string): Promi
     await prisma.teeTime.deleteMany({ where: { id: { in: toDelete } } });
   }
   const updates = new Map<string, { data: Prisma.TeeTimeUncheckedUpdateManyInput; ids: string[] }>();
+  const toCreate: Prisma.TeeTimeCreateManyInput[] = [];
 
   const adopted = new Set<string>();
   for (const [key, slot] of desired) {
@@ -240,11 +241,12 @@ export async function generateTeeTimes(courseId: string, dateStr: string): Promi
         continue;
       }
     }
-    await prisma.teeTime.create({
-      data: { courseId, date: dateStr, time: slot.time, productId: slot.productId, playersAvailable: 4, playersBooked: 0, ...fields },
-    });
+    // One insert for the day's new slots (Cam 2026-11-01's busy-season sample fill writes ~11,600
+    // tee times; one round trip each could pass the function's time limit against the remote DB).
+    toCreate.push({ courseId, date: dateStr, time: slot.time, productId: slot.productId, playersAvailable: 4, playersBooked: 0, ...fields });
     created++;
   }
+  if (toCreate.length) await prisma.teeTime.createMany({ data: toCreate });
   // Only rows still open: a booking that landed since the read keeps its slot as it is.
   for (const { data, ids } of updates.values()) {
     await prisma.teeTime.updateMany({ where: { id: { in: ids }, playersBooked: 0, status: { not: 'blocked' } }, data });

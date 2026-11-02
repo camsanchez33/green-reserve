@@ -17,7 +17,9 @@ const fmtTime = (hhmm: string) => {
 };
 const fmtDate = (d: string) => new Date(d + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
 
-export default function OperatorSearch() {
+// dropUp: results open above the box (the phone's More sheet sits at the bottom of the screen);
+// onPicked: the More sheet closes when a result is opened.
+export default function OperatorSearch({ dropUp = false, onPicked }: { dropUp?: boolean; onPicked?: () => void } = {}) {
   const router = useRouter();
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
@@ -52,6 +54,7 @@ export default function OperatorSearch() {
   function go(href: string) {
     if (!confirmLeave()) return;
     setOpen(false); setQ('');
+    onPicked?.();
     router.push(href);
   }
 
@@ -66,7 +69,7 @@ export default function OperatorSearch() {
           placeholder="Find a golfer or member" className="flex-1 min-w-0 bg-transparent text-[13px] text-ink placeholder-ink-faint outline-none" />
       </label>
       {showPanel && (
-        <Card role="listbox" aria-label="Search results" className="absolute inset-x-0 top-full mt-1 z-50 py-1 text-[13px] max-h-[60vh] overflow-y-auto">
+        <Card role="listbox" aria-label="Search results" className={(dropUp ? "absolute inset-x-0 bottom-full mb-1 max-h-[45vh]" : "absolute inset-x-0 top-full mt-1 max-h-[60vh]") + " z-50 py-1 text-[13px] overflow-y-auto"}>
           {error ? <p role="alert" className="px-3 py-2.5 text-bad">{error}</p>
             : results === null ? <p className="px-3 py-2.5 text-ink-muted">{busy ? 'Searching…' : 'Keep typing…'}</p>
             : results.length === 0 ? <p className="px-3 py-2.5 text-ink-muted">No match for “{q.trim()}” in 60 days.</p>

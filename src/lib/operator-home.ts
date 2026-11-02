@@ -61,7 +61,7 @@ export async function declinedCards(courseId: string, withAmounts: boolean, take
 }
 
 export type HomeGroup = { id: string; name: string; players: number; paymentStatus: string; checkedIn: boolean };
-export type HomeSlot = { time: string; open: number; groups: HomeGroup[] };
+export type HomeSlot = { id: string; time: string; open: number; groups: HomeGroup[] };
 
 export async function operatorHome(courseId: string, opts: { money: boolean; messages: boolean; setup?: boolean; owner?: boolean }, now = new Date()) {
   const course = await prisma.course.findUnique({ where: { id: courseId }, select: {
@@ -81,7 +81,7 @@ export async function operatorHome(courseId: string, opts: { money: boolean; mes
     prisma.teeTime.findMany({
       where: { courseId, date: today, status: { not: 'blocked' } },
       orderBy: { time: 'asc' },
-      select: { time: true, playersAvailable: true, playersBooked: true,
+      select: { id: true, time: true, playersAvailable: true, playersBooked: true,
         bookings: { where: LIVE, orderBy: { createdAt: 'asc' }, select: { id: true, golferName: true, players: true, paymentStatus: true, checkedInAt: true, noShowAt: true, status: true } } },
     }),
     declinedCards(courseId, opts.money),
@@ -97,10 +97,11 @@ export async function operatorHome(courseId: string, opts: { money: boolean; mes
   const graceAgo = minusMinutes(clock, NO_SHOW_GRACE_MIN);
   const late = slots.flatMap(s => s.time.slice(0, 5) <= graceAgo
     // A declined card is listed on its own above, not again here.
-    ? s.bookings.filter(b => b.status === 'confirmed' && !b.checkedInAt && !b.noShowAt && !declinedIds.has(b.id)).map(b => ({ id: b.id, name: b.golferName, time: s.time.slice(0, 5) }))
+    ? s.bookings.filter(b => b.status === 'confirmed' && !b.checkedInAt && !b.noShowAt && !declinedIds.has(b.id)).map(b => ({ id: b.id, teeTimeId: s.id, name: b.golferName, time: s.time.slice(0, 5) }))
     : []);
 
   const comingUp: HomeSlot[] = slots.filter(s => s.time.slice(0, 5) >= clock.slice(0, 5)).slice(0, 6).map(s => ({
+    id: s.id,
     time: s.time.slice(0, 5),
     open: Math.max(0, s.playersAvailable - s.playersBooked),
     groups: s.bookings.map(b => ({ id: b.id, name: b.golferName, players: b.players, paymentStatus: b.paymentStatus, checkedIn: !!b.checkedInAt || b.status === 'completed' })),

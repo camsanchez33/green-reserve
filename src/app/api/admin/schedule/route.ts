@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { withPriceSwitch } from '@/lib/pricing-switch';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, SUPPORT_PLUS, areaGate } from '@/lib/admin-session';
 import { listSchedules, createSchedule, updateSchedule, deleteSchedule, ScheduleConflictError, ScheduleProductError } from '@/lib/schedule-service';
 import { withAudit } from '@/lib/admin-audit';
@@ -42,7 +44,8 @@ async function addSchedule(req: NextRequest) {
   if (!courseId) return NextResponse.json({ error: 'Missing courseId' }, { status: 400 });
   if (!body.startTime || !body.endTime) return NextResponse.json({ error: 'First and last tee are required' }, { status: 400 });
 
-  try { return NextResponse.json(await createSchedule(courseId, body, { actor: session.name })); }
+  // A newly set member / resident price switches it on (lib/pricing-switch).
+  try { return NextResponse.json(await withPriceSwitch(courseId, () => createSchedule(courseId, body, { actor: session.name }))); }
   catch (err) { const r = scheduleError(err); if (r) return r; throw err; }
 }
 
@@ -57,7 +60,8 @@ async function editSchedule(req: NextRequest) {
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
   try {
-    const updated = await updateSchedule(id, data, { actor: session.name });
+    const owner = await prisma.teeTimeSchedule.findUnique({ where: { id }, select: { courseId: true } });
+    const updated = owner ? await withPriceSwitch(owner.courseId, () => updateSchedule(id, data, { actor: session.name })) : null;
     if (!updated) return NextResponse.json({ error: 'Schedule not found' }, { status: 404 });
     return NextResponse.json(updated);
   } catch (err) { const r = scheduleError(err); if (r) return r; throw err; }

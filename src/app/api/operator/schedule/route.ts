@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withPriceSwitch } from '@/lib/pricing-switch';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { listSchedules, createSchedule, updateSchedule, deleteSchedule, saveSchedulePlan, saveCoursePlan, ScheduleConflictError, ScheduleProductError, SchedulePlanError, type SchedulePlan } from '@/lib/schedule-service';
@@ -40,7 +41,8 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
   if (!body.startTime || !body.endTime) return NextResponse.json({ error: 'First and last tee are required' }, { status: 400 });
-  try { return NextResponse.json(await createSchedule(session.courseId, body)); }
+  // A newly set member / resident price switches it on (lib/pricing-switch).
+  try { return NextResponse.json(await withPriceSwitch(session.courseId, () => createSchedule(session.courseId, body))); }
   catch (err) { const r = scheduleError(err); if (r) return r; throw err; }
 }
 
@@ -55,7 +57,7 @@ export async function PATCH(req: NextRequest) {
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
   try {
-    const updated = await updateSchedule(id, data, { scopeCourseId: session.courseId });
+    const updated = await withPriceSwitch(session.courseId, () => updateSchedule(id, data, { scopeCourseId: session.courseId }));
     if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json(updated);
   } catch (err) { const r = scheduleError(err); if (r) return r; throw err; }
@@ -85,13 +87,13 @@ export async function PUT(req: NextRequest) {
   const raw = await req.json().catch(() => null) as (SchedulePlan & { coursePlan?: CoursePlan }) | null;
   // W2-6 Schedule simplification: the Schedule page saves the whole course plan at once.
   if (raw?.coursePlan) {
-    try { return NextResponse.json(await saveCoursePlan(session.courseId, raw.coursePlan)); }
+    try { return NextResponse.json(await withPriceSwitch(session.courseId, () => saveCoursePlan(session.courseId, raw.coursePlan!))); }
     catch (err) { const r = scheduleError(err); if (r) return r; throw err; }
   }
   const body = raw;
   if (!body || !Array.isArray(body.periods) || !Array.isArray(body.replaces)) return NextResponse.json({ error: 'Tell us what you are changing.' }, { status: 400 });
   try {
-    const rows = await saveSchedulePlan(session.courseId, body);
+    const rows = await withPriceSwitch(session.courseId, () => saveSchedulePlan(session.courseId, body));
     if (!rows) return NextResponse.json({ error: 'That schedule isn’t on this course. Refresh and try again.' }, { status: 404 });
     return NextResponse.json(rows);
   } catch (err) { const r = scheduleError(err); if (r) return r; throw err; }

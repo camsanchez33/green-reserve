@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { switchOnWherePriced } from '@/lib/pricing-switch';
 import { prisma } from '@/lib/prisma';
 import { dollarsToCents, dollarsToCentsOr0 } from '@/lib/money';
 import { randomBytes } from 'crypto';
@@ -176,6 +177,8 @@ async function createCourse(req: NextRequest) {
       });
       seedTierCreated = true;
     }
+    // Switch on each kind of price the build wrote (lib/pricing-switch) — e.g. a resident seed on a non-municipal course.
+    if (courseId) await switchOnWherePriced(courseId);
 
     // Cam 2026-10-27: the one "set your password" email — no password in it or in this response.
     let emailError: string | null = null;

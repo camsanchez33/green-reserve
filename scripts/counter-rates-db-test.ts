@@ -35,7 +35,7 @@ async function cleanup() {
   ok('the grid\'s senior and junior prices reach the schedule rows', rows[0].seniorRateWeekday === 40 && rows[0].juniorRateWeekend === 30);
 
   const op = await prisma.courseOperator.create({ data: { name: 'x', email: `${TAG}@t.local`, password: 'x' } });
-  const c = await prisma.course.create({ data: { name: 'Rates GC', slug: `${TAG}-a`, operatorId: op.id, address: '1', city: 'X', state: 'NJ', zipCode: '9', holes: 18, timezone: 'UTC' } });
+  const c = await prisma.course.create({ data: { hasMemberPricing: true, hasResidentPricing: true, name: 'Rates GC', slug: `${TAG}-a`, operatorId: op.id, address: '1', city: 'X', state: 'NJ', zipCode: '9', holes: 18, timezone: 'UTC' } });
   await prisma.teeTimeSchedule.create({ data: { courseId: c.id, tierName: 'All day', daysOfWeek: [], startTime: '07:00', endTime: '08:00', intervalMinutes: 10, holes: 18,
     greenFeeWeekdayCents: 6000, greenFeeWeekendCents: 6000, cartFeeCents: 2000, seniorRateWeekdayCents: 4000, seniorRateWeekendCents: 4000, juniorRateWeekdayCents: 2500, juniorRateWeekendCents: 2500, residentRateWeekdayCents: 3500, residentRateWeekendCents: 3500 } });
   const day = addDaysStr(todayIn('UTC'), 2);
@@ -71,7 +71,7 @@ async function cleanup() {
   const bare = await prisma.teeTime.create({ data: { courseId: c.id, date: day, time: '09:00', holes: 18, greenFeeCents: 6000, cartFeeCents: 0, playersAvailable: 4 } });
   const none = await createCounterBooking(c.id, { teeTimeId: bare.id, golferName: 'No Senior', players: 1, rate: 'senior' }, STAFF);
   ok('a time with no senior price says so', !none.ok && /no senior price/.test(none.error), none);
-  const other = await prisma.course.create({ data: { name: 'Other', slug: `${TAG}-b`, operatorId: op.id, address: '1', city: 'X', state: 'NJ', zipCode: '9', holes: 18, timezone: 'UTC' } });
+  const other = await prisma.course.create({ data: { hasMemberPricing: true, hasResidentPricing: true, name: 'Other', slug: `${TAG}-b`, operatorId: op.id, address: '1', city: 'X', state: 'NJ', zipCode: '9', holes: 18, timezone: 'UTC' } });
   const otherTier = await prisma.membershipTier.create({ data: { courseId: other.id, name: 'Theirs', greenFeeWeekdayCents: 100 } });
   ok('another course\'s membership is refused', !(await mk(`tier:${otherTier.id}`)).ok);
 

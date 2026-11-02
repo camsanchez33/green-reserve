@@ -9,7 +9,7 @@ import { Card } from '@/components/ui/Card';
 export function EventDay({ groups, ungrouped, startOf, onList, owes, busy, onCheck, onTakePayment, onPrintSigns }: {
   groups: [number, EventPlayer[]][]; ungrouped: EventPlayer[]; startOf: (g: number, hole: number | null) => string;
   onList: EventPlayer[]; owes: (p: EventPlayer) => boolean; busy: string;
-  onCheck: (ids: string[], on: boolean, key: string) => void; onTakePayment: (p: EventPlayer) => void; onPrintSigns: () => void;
+  onCheck: (ids: string[], on: boolean, key: string) => void; onTakePayment?: (p: EventPlayer) => void; onPrintSigns: () => void;
 }) {
   const here = onList.filter(p => p.checkedInAt).length;
   const unpaid = onList.filter(owes).length;
@@ -20,7 +20,7 @@ export function EventDay({ groups, ungrouped, startOf, onList, owes, busy, onChe
           onChange={ev => onCheck([p.id], ev.target.checked, 'ci:' + p.id)} />
         <span className={'truncate ' + (p.checkedInAt ? 'text-ink' : 'text-ink-soft')}>{p.name}</span>
       </label>
-      {owes(p) && <button type="button" onClick={() => onTakePayment(p)} className="ml-auto text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2">Take payment</button>}
+      {owes(p) && onTakePayment && <button type="button" onClick={() => onTakePayment(p)} className="ml-auto text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2">Take payment</button>}
     </li>
   );
   return (

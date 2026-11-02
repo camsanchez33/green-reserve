@@ -2,6 +2,7 @@
 // counter, before the round is paid. Only the green fee changes: residents pay
 // the tee time's resident rate, everyone else what the booking's non-residents
 // already pay. Members stay on their member rate (no stacking).
+import { residentPricingOn } from './pricing-switch';
 import { prisma } from './prisma';
 import { recordBookingEvent, teeTimeInstant, type EventActor } from './booking-events';
 import { seatAfter } from './promo-codes';
@@ -25,7 +26,7 @@ export async function setBookingResidents(courseId: string, bookingId: string, c
         checkedInAt: true, noShowAt: true, roundPaymentIntentId: true, shopLockedAt: true, readerStartedAt: true,
         greenFeeTotal: true, totalAmount: true, residentPlayers: true, residentRateCents: true, promoCodeId: true, lastMinutePct: true, demandPct: true,
         teeTime: { select: { date: true, time: true, greenFeeCents: true, residentRateCents: true } },
-        course: { select: { timezone: true, lastMinuteStack: true } },
+        course: { select: { timezone: true, lastMinuteStack: true, hasResidentPricing: true } },
       },
     });
     if (!b || b.courseId !== courseId) return fail(404, 'Booking not found.');
@@ -35,6 +36,8 @@ export async function setBookingResidents(courseId: string, bookingId: string, c
     if (b.paymentStatus === 'paid' || b.paidOffline || b.roundPaymentIntentId || b.shopLockedAt || b.readerStartedAt) return fail(409, 'This round is already paid or being paid — its price can’t change now.');
     if (b.appliedRate === 'pack') return fail(409, 'This group is on a round pack — residents don’t combine with it.');
     if (b.appliedRate !== 'standard' && b.appliedRate !== 'resident') return fail(409, `This group is booked at the ${b.appliedRate} member rate — residents don’t combine with it.`);
+    // Switched off in Settings (lib/pricing-switch); taking residents off a group stays allowed.
+    if (n > 0 && !residentPricingOn(b.course)) return fail(409, 'Resident prices are off in Settings.');
     if (b.teeTime.residentRateCents == null) return fail(409, 'This tee time has no resident price. Set one in Schedule.');
     if (n === b.residentPlayers) return { ok: true, residentPlayers: n, greenFeeTotal: b.greenFeeTotal, totalAmount: b.totalAmount };
 

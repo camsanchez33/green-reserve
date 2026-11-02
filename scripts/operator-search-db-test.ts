@@ -49,6 +49,10 @@ async function main() {
   check('…and nothing older than 60 days', bookings.every(r => r.kind === 'booking' && r.date >= addDaysStr(todayIn('UTC'), -60)));
   check('a booking opens the sheet on its day, filtered to the golfer', bookings[0]?.href.startsWith('/dashboard?date=') && bookings[0]?.href.includes('q=Zelda'));
   check('members are found by name', full.some(r => r.kind === 'member'));
+  // Members audit 22: a member opens their golfer record — by email for a login that sees contact, never leaking it otherwise.
+  check('a member opens their golfer record (by email, for a login that sees contact)', full.find(r => r.kind === 'member')?.href === `/dashboard/golfers/${encodeURIComponent('e:zq@example.com')}`, full.find(r => r.kind === 'member'));
+  const noContact = await operatorSearch(a.id, 'quarterm', { contact: false, members: true });
+  check('…without contact permission and no account, it falls back to Members (no email in the link)', noContact.find(r => r.kind === 'member')?.href.startsWith('/dashboard/members?q=') === true && !noContact.some(r => r.href.includes('zq%40') || r.href.includes('zq@')));
   check('email finds them for a login that sees contact', (await operatorSearch(a.id, 'zq@example', { contact: true, members: false })).length === 1);
   check('…but not without contact permission', (await operatorSearch(a.id, 'zq@example', { contact: false, members: false })).length === 0);
   check('phone digits match only with contact permission', (await operatorSearch(a.id, '8675309', { contact: true, members: false })).length === 1 && (await operatorSearch(a.id, '8675309', { contact: false, members: false })).length === 0);

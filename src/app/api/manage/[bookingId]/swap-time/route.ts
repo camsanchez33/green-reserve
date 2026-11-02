@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { residentPricingOn } from '@/lib/pricing-switch';
 import { prisma } from '@/lib/prisma';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { CURRENT_TERMS_VERSION } from '@/lib/terms';
@@ -44,7 +45,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
   // booking's account is still on the resident list with a card good on the
   // new date. Residents staff set at the counter are set again at the counter.
   let residentPlayers = 0;
-  if (booking.residentPlayers > 0 && booking.golferAccount?.email) {
+  const switches = await prisma.course.findUnique({ where: { id: booking.courseId }, select: { hasResidentPricing: true } });
+  if (booking.residentPlayers > 0 && booking.golferAccount?.email && residentPricingOn(switches)) {
     const slot = await prisma.teeTime.findUnique({ where: { id: String(newTeeTimeId) }, select: { date: true } });
     if (slot && await residentOn(booking.courseId, booking.golferAccount.email, slot.date)) residentPlayers = 1;
   }

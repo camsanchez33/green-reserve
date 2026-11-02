@@ -18,7 +18,7 @@ check('the rate is no longer in the header', !page.includes('commonRate'));
 check('the time panel always shows its rate', page.includes("holes · ${panelSlot.greenFee.toFixed(2)} a player"));
 check('Find golfer sits in the sheet bar with a refresh icon', page.includes('id="sheet-search"') && page.includes('aria-label="Refresh the sheet"'));
 check('no Refresh text button in the header', !/>\s*Refresh\s*</.test(page));
-check('mark no-show is reachable from the time panel', page.includes("bookingLifecycle(b, 'no_show')") && page.includes("late && access.can('sheet.no_show') && (\n            <button onClick={() => bookingLifecycle(b, 'no_show')"));
+check('mark no-show is reachable from the time panel', page.includes("bookingLifecycle(b, 'no_show')") && page.includes("noShowReady && access.can('sheet.no_show') && (\n            <button onClick={() => bookingLifecycle(b, 'no_show')") && page.includes('mins(nowHM) - mins(tt.time) >= 10'));
 check('still coming (a late group) is reachable and clears it from the late list', page.includes('setStillComing(prev => new Set(prev).add(b.id))') && page.includes('!stillComing.has(b.id) && !b.noShowAt'));
 // DENSE-4 (Cam 2026-10-27): seat rows replaced the board — the key shows the money edge and the checked-in / member fills the rows use.
 check('the key swatches match the seat cells', page.includes('border-l-[3px] border-ok" />Paid') && page.includes('bg-ok/[0.12]" />Checked in') && page.includes('bg-[#F1EEE4]" />Member or resident'));

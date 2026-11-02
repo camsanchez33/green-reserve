@@ -3,7 +3,7 @@
 // kinds of golfer the course has and what each pays, read from Schedule and
 // Members (lib/who-pays.ts). Prices are changed where they live; this table is
 // where a course sees them side by side.
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Card } from '@/components/ui/Card';
 import { LoadError } from '@/components/dashboard/LoadError';
@@ -32,8 +32,10 @@ function Prices({ weekday, weekend, periods }: { weekday: Cell[]; weekend: Cell[
   );
 }
 
-export function WhoPaysWhat({ accessLoaded, accessFailed, canSeeSchedule, canSeeMembers }: { accessLoaded: boolean; accessFailed: boolean; canSeeSchedule: boolean; canSeeMembers: boolean }) {
-  const [data, setData] = useState<ReturnType<typeof whoPays> | null>(null);
+export function WhoPaysWhat({ accessLoaded, accessFailed, canSeeSchedule, canSeeMembers, membersOn, residentsOn }: { accessLoaded: boolean; accessFailed: boolean; canSeeSchedule: boolean; canSeeMembers: boolean; membersOn?: boolean; residentsOn?: boolean }) {
+  // The prices as set; the table follows the Members / Residents switches as they're flipped (lib/pricing-switch).
+  const [raw, setRaw] = useState<{ s: WireSchedule[]; t: WireTier[] } | null>(null);
+  const data = useMemo(() => (raw ? whoPays(raw.s, raw.t, { membersOn, residentsOn }) : null), [raw, membersOn, residentsOn]);
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
@@ -49,7 +51,7 @@ export function WhoPaysWhat({ accessLoaded, accessFailed, canSeeSchedule, canSee
     ]);
     if (!s.ok) { setError(s.error); return; }
     if (t && !t.ok) { setError(t.error); return; }
-    setData(whoPays(s.data, t?.ok ? t.data : []));
+    setRaw({ s: s.data, t: t?.ok ? t.data : [] });
   }, [accessLoaded, accessFailed, canSeeSchedule, canSeeMembers]);
   useEffect(() => { load(); }, [load]);
 

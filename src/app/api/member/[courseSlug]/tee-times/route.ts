@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { memberPricingOn, residentPricingOn } from '@/lib/pricing-switch';
 import { dealPct, dealRateSeat } from '@/lib/last-minute';
 import { demandPctAt, onlinePublicSeat, dealWins, loadDemand } from '@/lib/demand-pricing';
 import { todayIn, clockIn } from '@/lib/course-time';
@@ -43,7 +44,8 @@ export async function GET(
   // Lapsed (past its end date + the course's grace days, lib/member-rates): public rates and window, as booking charges.
   const tier = membership && membership.courseId === course.id ? membership.tier : null;
   const live = !!membership && membership.courseId === course.id && membershipLive(membership, course);
-  const pricingTier = live ? tier : null;
+  // Members switched off in Settings (lib/pricing-switch): the window stays, the rate doesn't.
+  const pricingTier = live && memberPricingOn(course) ? tier : null;
 
   // BOOKING WINDOWS: a member sees as far ahead as their tier allows (the
   // course's member default when the tier does not say).
@@ -76,7 +78,7 @@ export async function GET(
   // resident rate when no membership price applied and their resident card is
   // good on the date (api/bookings: golferResident, groupGreenFee). Same lookup
   // here, so the list can show it; the page adds it up the same way.
-  const resident = !pricingTier ? await golferResident(course.id, date) : null;
+  const resident = !pricingTier && residentPricingOn(course) ? await golferResident(course.id, date) : null;
 
   const hasTierPrice = !!pricingTier && (pricingTier.greenFeeWeekdayCents != null || pricingTier.greenFeeWeekendCents != null || pricingTier.discountPct != null);
 

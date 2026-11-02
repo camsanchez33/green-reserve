@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 636,
-    "routes": 286,
-    "libs": 223,
-    "models": 67,
+    "files": 641,
+    "routes": 287,
+    "libs": 226,
+    "models": 68,
     "orphans": 10,
     "ungatedRoutes": 3
   },
@@ -1997,7 +1997,7 @@
     },
     {
       "path": "src/app/api/admin/create-course/route.ts",
-      "lines": 203,
+      "lines": 206,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2024,6 +2024,7 @@
         "@/lib/email",
         "@/lib/money",
         "@/lib/operator-setup",
+        "@/lib/pricing-switch",
         "@/lib/prisma",
         "bcryptjs",
         "crypto",
@@ -2292,7 +2293,7 @@
     },
     {
       "path": "src/app/api/admin/inquiries/route.ts",
-      "lines": 1307,
+      "lines": 1312,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2340,6 +2341,7 @@
         "@/lib/lifecycle",
         "@/lib/money",
         "@/lib/operator-setup",
+        "@/lib/pricing-switch",
         "@/lib/prisma",
         "@/lib/rate-limit",
         "@/lib/setup-sheet-recap",
@@ -2807,7 +2809,7 @@
     },
     {
       "path": "src/app/api/admin/schedule/route.ts",
-      "lines": 86,
+      "lines": 90,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2845,6 +2847,8 @@
       "imports": [
         "@/lib/admin-audit",
         "@/lib/admin-session",
+        "@/lib/pricing-switch",
+        "@/lib/prisma",
         "@/lib/schedule-service",
         "next/server"
       ],
@@ -3673,7 +3677,7 @@
     },
     {
       "path": "src/app/api/bookings/resident-rate/route.ts",
-      "lines": 62,
+      "lines": 65,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3695,6 +3699,7 @@
         "@/lib/last-minute",
         "@/lib/member-rates",
         "@/lib/member-session",
+        "@/lib/pricing-switch",
         "@/lib/prisma",
         "@/lib/round-packs",
         "@/lib/tier-rates",
@@ -3704,7 +3709,7 @@
     },
     {
       "path": "src/app/api/bookings/route.ts",
-      "lines": 492,
+      "lines": 502,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3742,11 +3747,13 @@
         "@/lib/member-rates",
         "@/lib/member-session",
         "@/lib/money",
+        "@/lib/pricing-switch",
         "@/lib/prisma",
         "@/lib/promo-codes",
         "@/lib/rate-limit",
         "@/lib/residents",
         "@/lib/round-packs",
+        "@/lib/sms-consent",
         "@/lib/stripe",
         "@/lib/tee-time-utils",
         "@/lib/terms",
@@ -4368,7 +4375,7 @@
     },
     {
       "path": "src/app/api/event-signup/[id]/route.ts",
-      "lines": 19,
+      "lines": 28,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4386,7 +4393,9 @@
       "guard": "public",
       "imports": [
         "@/lib/event-signup",
+        "@/lib/prisma",
         "@/lib/rate-limit",
+        "@/lib/sms-consent",
         "next/server"
       ],
       "usedBy": []
@@ -4877,7 +4886,7 @@
     },
     {
       "path": "src/app/api/manage/[bookingId]/swap-time/route.ts",
-      "lines": 67,
+      "lines": 69,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4898,6 +4907,7 @@
         "@/lib/manage-access",
         "@/lib/member-session",
         "@/lib/move-booking",
+        "@/lib/pricing-switch",
         "@/lib/prisma",
         "@/lib/rate-limit",
         "@/lib/terms",
@@ -5008,7 +5018,7 @@
     },
     {
       "path": "src/app/api/member/[courseSlug]/tee-times/route.ts",
-      "lines": 131,
+      "lines": 133,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5033,6 +5043,7 @@
         "@/lib/member-rates",
         "@/lib/member-session",
         "@/lib/money",
+        "@/lib/pricing-switch",
         "@/lib/prisma",
         "@/lib/tier-rates",
         "next/server"
@@ -5363,7 +5374,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 387,
+      "lines": 394,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5408,6 +5419,8 @@
         "@/lib/register",
         "@/lib/session",
         "@/lib/shop",
+        "@/lib/sms-consent",
+        "@/lib/sms-consent-copy",
         "@/lib/staff-permissions",
         "@/lib/staff-refund",
         "@/lib/twilio",
@@ -5537,7 +5550,7 @@
     },
     {
       "path": "src/app/api/operator/counter-members/route.ts",
-      "lines": 33,
+      "lines": 36,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5555,6 +5568,7 @@
       "guard": "file",
       "imports": [
         "@/lib/member-rates",
+        "@/lib/pricing-switch",
         "@/lib/prisma",
         "@/lib/session",
         "next/server"
@@ -5715,7 +5729,7 @@
     },
     {
       "path": "src/app/api/operator/events/[id]/payments/route.ts",
-      "lines": 114,
+      "lines": 123,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5740,6 +5754,8 @@
         "@/lib/prisma",
         "@/lib/rate-limit",
         "@/lib/session",
+        "@/lib/sms-consent",
+        "@/lib/sms-consent-copy",
         "@/lib/twilio",
         "next/server"
       ],
@@ -6064,7 +6080,7 @@
     },
     {
       "path": "src/app/api/operator/members/route.ts",
-      "lines": 305,
+      "lines": 317,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6819,7 +6835,7 @@
     },
     {
       "path": "src/app/api/operator/schedule/route.ts",
-      "lines": 99,
+      "lines": 101,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6862,6 +6878,7 @@
       "imports": [
         "@/lib/agreement-required",
         "@/lib/course-plan",
+        "@/lib/pricing-switch",
         "@/lib/schedule-service",
         "@/lib/session",
         "next/server"
@@ -7083,7 +7100,7 @@
     },
     {
       "path": "src/app/api/operator/shop-sales/route.ts",
-      "lines": 287,
+      "lines": 294,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7120,6 +7137,8 @@
         "@/lib/register",
         "@/lib/session",
         "@/lib/shop-sales",
+        "@/lib/sms-consent",
+        "@/lib/sms-consent-copy",
         "@/lib/tee-time-utils",
         "@/lib/twilio",
         "next/server"
@@ -7434,7 +7453,7 @@
     },
     {
       "path": "src/app/api/operator/tiers/route.ts",
-      "lines": 187,
+      "lines": 189,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7472,6 +7491,7 @@
         "@/lib/membership-autorenew",
         "@/lib/membership-join",
         "@/lib/money",
+        "@/lib/pricing-switch",
         "@/lib/prisma",
         "@/lib/session",
         "@/lib/tier-wire",
@@ -7833,6 +7853,32 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/twilio/inbound/route.ts",
+      "lines": 56,
+      "purpose": "SMS-1 (Cam 2026-11-02, Twilio A2P 10DLC) — replies to GreenReserve's texting number.",
+      "brain": [],
+      "exports": [
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/twilio/inbound",
+      "kind": "api",
+      "methods": [
+        "POST"
+      ],
+      "auth": "public",
+      "guard": "public",
+      "imports": [
+        "@/lib/sms-consent",
+        "@/lib/sms-consent-copy",
+        "next/server",
+        "twilio"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/waitlist/route.ts",
       "lines": 7,
       "purpose": "",
@@ -7857,7 +7903,7 @@
     },
     {
       "path": "src/app/book/BookClient.tsx",
-      "lines": 811,
+      "lines": 821,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7890,6 +7936,7 @@
         "@/lib/booking-fees",
         "@/lib/cancel-policy",
         "@/lib/member-rates",
+        "@/lib/sms-consent-copy",
         "@stripe/react-stripe-js",
         "@stripe/stripe-js",
         "@stripe/stripe-js/pure",
@@ -8484,7 +8531,7 @@
     },
     {
       "path": "src/app/dashboard/home/page.tsx",
-      "lines": 256,
+      "lines": 258,
       "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the mockups):",
       "brain": [],
       "exports": [
@@ -8726,7 +8773,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1699,
+      "lines": 1748,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8750,6 +8797,7 @@
         "@/components/dashboard/MoveGroupModal",
         "@/components/dashboard/RegisterPacks",
         "@/components/dashboard/ShopItemsForGroup",
+        "@/components/dashboard/SmsConsentAsk",
         "@/components/dashboard/TeeSheetRows",
         "@/components/dashboard/Toast",
         "@/components/ui/Card",
@@ -8766,6 +8814,7 @@
         "@/lib/member-rates",
         "@/lib/round-packs",
         "@/lib/setup-missing",
+        "@/lib/sms-consent-copy",
         "@/lib/tee-time-fit",
         "@/lib/use-dashboard-access",
         "@stripe/react-stripe-js",
@@ -8909,7 +8958,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 921,
+      "lines": 938,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -8929,6 +8978,7 @@
         "@/components/dashboard/RegisterClose",
         "@/components/dashboard/RegisterPacks",
         "@/components/dashboard/ShopStock",
+        "@/components/dashboard/SmsConsentAsk",
         "@/components/dashboard/StaffNotice",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
@@ -9038,7 +9088,7 @@
     },
     {
       "path": "src/app/events/[id]/SignupForm.tsx",
-      "lines": 88,
+      "lines": 97,
       "purpose": "W2-9d:",
       "brain": [],
       "exports": [
@@ -9055,6 +9105,7 @@
       "imports": [
         "@/components/ui/Card",
         "@/components/ui/field",
+        "@/lib/sms-consent-copy",
         "lucide-react",
         "react"
       ],
@@ -9519,7 +9570,7 @@
     },
     {
       "path": "src/app/privacy/page.tsx",
-      "lines": 248,
+      "lines": 255,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9678,7 +9729,7 @@
     },
     {
       "path": "src/app/terms/page.tsx",
-      "lines": 221,
+      "lines": 231,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9997,7 +10048,7 @@
     },
     {
       "path": "src/components/OperatorSidebar.tsx",
-      "lines": 310,
+      "lines": 314,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10821,7 +10872,7 @@
     },
     {
       "path": "src/components/dashboard/DeclinedCardList.tsx",
-      "lines": 63,
+      "lines": 73,
       "purpose": "Declined cards — the same rows on Home and Money → Needs you (Revamp 3 dead end 16, Cam 2026-10-29).",
       "brain": [],
       "exports": [
@@ -10836,10 +10887,12 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/components/dashboard/SmsConsentAsk",
         "@/components/ui/StatusDot",
         "@/lib/dashboard-fetch",
         "@/lib/format",
         "@/lib/operator-home",
+        "@/lib/sms-consent-copy",
         "next/link",
         "react"
       ],
@@ -11121,7 +11174,7 @@
     },
     {
       "path": "src/components/dashboard/OperatorSearch.tsx",
-      "lines": 87,
+      "lines": 90,
       "purpose": "DASH-C:",
       "brain": [],
       "exports": [
@@ -11452,6 +11505,37 @@
       ]
     },
     {
+      "path": "src/components/dashboard/SmsConsentAsk.tsx",
+      "lines": 39,
+      "purpose": "SMS-1 (Cam 2026-11-02, Twilio A2P 10DLC — docs/SMS_OPT_IN.md):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (SmsConsentAsk)",
+          "kind": "component"
+        },
+        {
+          "name": "SmsConsentDialog",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/ui/Card",
+        "@/lib/sms-consent-copy"
+      ],
+      "usedBy": [
+        "src/app/dashboard/page.tsx",
+        "src/app/dashboard/shop/page.tsx",
+        "src/components/dashboard/DeclinedCardList.tsx",
+        "src/components/dashboard/events/EventMoney.tsx"
+      ]
+    },
+    {
       "path": "src/components/dashboard/StaffNotice.tsx",
       "lines": 30,
       "purpose": "SD-11 / SP-A.",
@@ -11672,7 +11756,7 @@
     },
     {
       "path": "src/components/dashboard/events/EventDetail.tsx",
-      "lines": 422,
+      "lines": 425,
       "purpose": "W2-9 Events:",
       "brain": [],
       "exports": [
@@ -11713,6 +11797,7 @@
         "@/lib/course-events",
         "@/lib/dashboard-fetch",
         "@/lib/format",
+        "@/lib/use-dashboard-access",
         "react"
       ],
       "usedBy": [
@@ -11723,7 +11808,7 @@
     },
     {
       "path": "src/components/dashboard/events/EventMoney.tsx",
-      "lines": 315,
+      "lines": 322,
       "purpose": "W2-9b:",
       "brain": [],
       "exports": [
@@ -11754,11 +11839,13 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/components/dashboard/SmsConsentAsk",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/components/ui/field",
         "@/lib/dashboard-fetch",
         "@/lib/format",
+        "@/lib/use-dashboard-access",
         "react"
       ],
       "usedBy": [
@@ -12217,7 +12304,7 @@
     },
     {
       "path": "src/components/dashboard/settings/WhoPaysWhat.tsx",
-      "lines": 97,
+      "lines": 99,
       "purpose": "Settings → Prices & fees:",
       "brain": [],
       "exports": [
@@ -12404,6 +12491,7 @@
         "src/components/dashboard/RegisterPacks.tsx",
         "src/components/dashboard/RoundRulesCard.tsx",
         "src/components/dashboard/ShopStock.tsx",
+        "src/components/dashboard/SmsConsentAsk.tsx",
         "src/components/dashboard/events/EventDay.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
         "src/components/dashboard/events/EventMoney.tsx",
@@ -15064,7 +15152,7 @@
     },
     {
       "path": "src/lib/booking-residents.ts",
-      "lines": 69,
+      "lines": 72,
       "purpose": "RES-1 (Cam 2026-10-19):",
       "brain": [],
       "exports": [
@@ -15086,6 +15174,7 @@
         "./booking-events",
         "./demand-pricing",
         "./last-minute",
+        "./pricing-switch",
         "./prisma",
         "./promo-codes",
         "./residents"
@@ -16026,7 +16115,7 @@
     },
     {
       "path": "src/lib/checkin-booking.ts",
-      "lines": 517,
+      "lines": 519,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -16060,6 +16149,7 @@
         "./member-rates",
         "./money-ledger",
         "./no-show-fee",
+        "./pricing-switch",
         "./prisma",
         "./reader-rounds",
         "./round-shop-tax",
@@ -16245,12 +16335,13 @@
         "src/components/dashboard/SignAgreements.tsx",
         "src/lib/agreement-sign.ts",
         "src/lib/email.ts",
+        "src/lib/sms-consent-copy.ts",
         "src/lib/submit-change-request.ts"
       ]
     },
     {
       "path": "src/lib/counter-pay.ts",
-      "lines": 299,
+      "lines": 303,
       "purpose": "A group pays for its round at the counter (cash, or the course's own card machine):",
       "brain": [],
       "exports": [
@@ -16299,6 +16390,7 @@
         "./member-rates",
         "./money-ledger",
         "./no-show-fee",
+        "./pricing-switch",
         "./prisma",
         "./promo-codes",
         "./reader-rounds",
@@ -17033,7 +17125,7 @@
     },
     {
       "path": "src/lib/course-time.ts",
-      "lines": 56,
+      "lines": 63,
       "purpose": "SD-3 — course-local time.",
       "brain": [],
       "exports": [
@@ -18964,12 +19056,13 @@
         "src/app/api/operator/golfers/[key]/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/lib/analytics.ts",
-        "src/lib/golfer-record.ts"
+        "src/lib/golfer-record.ts",
+        "src/lib/sample-data.ts"
       ]
     },
     {
       "path": "src/lib/golfer-messages.ts",
-      "lines": 119,
+      "lines": 127,
       "purpose": "MSG-1 (PLATFORM_ROADMAP_SPEC §5, Cam 2026-10-07:",
       "brain": [],
       "exports": [
@@ -19004,6 +19097,10 @@
         {
           "name": "Window",
           "kind": "type"
+        },
+        {
+          "name": "withTextConsent",
+          "kind": "fn"
         }
       ],
       "route": null,
@@ -19016,6 +19113,7 @@
         "./format",
         "./golfer-otp",
         "./prisma",
+        "./sms-consent",
         "./twilio"
       ],
       "usedBy": [
@@ -19084,7 +19182,8 @@
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/events/[id]/payments/route.ts",
         "src/app/api/operator/shop-sales/route.ts",
-        "src/lib/golfer-messages.ts"
+        "src/lib/golfer-messages.ts",
+        "src/lib/sms-consent.ts"
       ]
     },
     {
@@ -20935,7 +21034,7 @@
     },
     {
       "path": "src/lib/move-booking.ts",
-      "lines": 292,
+      "lines": 295,
       "purpose": "ACT-1 (PLATFORM_ROADMAP_SPEC §2, Cam 2026-10-07):",
       "brain": [],
       "exports": [
@@ -20972,6 +21071,7 @@
         "./demand-pricing",
         "./last-minute",
         "./member-rates",
+        "./pricing-switch",
         "./prisma",
         "./promo-codes",
         "./residents",
@@ -21128,7 +21228,7 @@
     },
     {
       "path": "src/lib/operator-home.ts",
-      "lines": 159,
+      "lines": 160,
       "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the course dashboard mockups):",
       "brain": [],
       "exports": [
@@ -21176,7 +21276,7 @@
     },
     {
       "path": "src/lib/operator-search.ts",
-      "lines": 80,
+      "lines": 86,
       "purpose": "DASH-C search (the mockups' \"Find a golfer, booking or member\"):",
       "brain": [],
       "exports": [
@@ -21642,6 +21742,55 @@
       ]
     },
     {
+      "path": "src/lib/pricing-switch.ts",
+      "lines": 76,
+      "purpose": "Settings → \"Who gets their own price\" (Cam 2026-11-01:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "memberPricingOn",
+          "kind": "fn"
+        },
+        {
+          "name": "residentPricingOn",
+          "kind": "fn"
+        },
+        {
+          "name": "switchOnWherePriced",
+          "kind": "fn"
+        },
+        {
+          "name": "withPriceSwitch",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./prisma"
+      ],
+      "usedBy": [
+        "src/app/api/admin/create-course/route.ts",
+        "src/app/api/admin/inquiries/route.ts",
+        "src/app/api/admin/schedule/route.ts",
+        "src/app/api/bookings/resident-rate/route.ts",
+        "src/app/api/bookings/route.ts",
+        "src/app/api/manage/[bookingId]/swap-time/route.ts",
+        "src/app/api/member/[courseSlug]/tee-times/route.ts",
+        "src/app/api/operator/counter-members/route.ts",
+        "src/app/api/operator/schedule/route.ts",
+        "src/app/api/operator/tiers/route.ts",
+        "src/lib/booking-residents.ts",
+        "src/lib/checkin-booking.ts",
+        "src/lib/counter-pay.ts",
+        "src/lib/move-booking.ts",
+        "src/lib/register.ts"
+      ]
+    },
+    {
       "path": "src/lib/prisma.ts",
       "lines": 15,
       "purpose": "",
@@ -21695,6 +21844,7 @@
         "src/app/api/admin/request-re-review/route.ts",
         "src/app/api/admin/resend-staff-setup/route.ts",
         "src/app/api/admin/revenue/route.ts",
+        "src/app/api/admin/schedule/route.ts",
         "src/app/api/admin/search/route.ts",
         "src/app/api/admin/send-golive-reminder/route.ts",
         "src/app/api/admin/set-password/route.ts",
@@ -21736,6 +21886,7 @@
         "src/app/api/cron/monthly-review/route.ts",
         "src/app/api/cron/send-reminders/route.ts",
         "src/app/api/event-payment/[id]/route.ts",
+        "src/app/api/event-signup/[id]/route.ts",
         "src/app/api/golfer/auth/accept-invite/route.ts",
         "src/app/api/golfer/auth/me/route.ts",
         "src/app/api/golfer/auth/otp/verify/route.ts",
@@ -21900,6 +22051,7 @@
         "src/lib/owner-passkey.ts",
         "src/lib/owner-session.ts",
         "src/lib/page-review.ts",
+        "src/lib/pricing-switch.ts",
         "src/lib/problems.ts",
         "src/lib/promo-codes.ts",
         "src/lib/public-course.ts",
@@ -21926,6 +22078,7 @@
         "src/lib/shop-sales.ts",
         "src/lib/shop-stock.ts",
         "src/lib/shop.ts",
+        "src/lib/sms-consent.ts",
         "src/lib/staff-refund.ts",
         "src/lib/submit-change-request.ts",
         "src/lib/tee-sheet-engine.ts",
@@ -22465,7 +22618,7 @@
     },
     {
       "path": "src/lib/register.ts",
-      "lines": 125,
+      "lines": 128,
       "purpose": "POS-3 R2 (Cam 2026-10-24:",
       "brain": [],
       "exports": [
@@ -22492,6 +22645,7 @@
         "./counter-pay",
         "./format",
         "./money-ledger",
+        "./pricing-switch",
         "./prisma",
         "./shop",
         "./shop-sales"
@@ -22818,8 +22972,8 @@
     },
     {
       "path": "src/lib/sample-data.ts",
-      "lines": 350,
-      "purpose": "Cam 2026-10-28 (\"add a shit ton of test tee times, members and shit to the test course … do a lot of fake bookings\"):",
+      "lines": 501,
+      "purpose": "Cam 2026-10-28 (\"add a shit ton of test tee times, members and shit to the test course … do a lot of fake bookings\"); Cam 2026-11-01 chose \"Busy season\":",
       "brain": [],
       "exports": [
         {
@@ -22858,6 +23012,7 @@
         "./course-events",
         "./course-time",
         "./email",
+        "./golfer-key",
         "./member-rates",
         "./prisma",
         "./residents",
@@ -24197,6 +24352,124 @@
       ]
     },
     {
+      "path": "src/lib/sms-consent-copy.ts",
+      "lines": 47,
+      "purpose": "SMS-1 (Cam 2026-11-02, Twilio A2P 10DLC — docs/SMS_OPT_IN.md):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "SMS_CONFIRMATION",
+          "kind": "const"
+        },
+        {
+          "name": "SMS_CONSENT_VERSION",
+          "kind": "const"
+        },
+        {
+          "name": "SMS_FREQUENCY",
+          "kind": "const"
+        },
+        {
+          "name": "SMS_HELP",
+          "kind": "const"
+        },
+        {
+          "name": "SMS_NO_CONSENT",
+          "kind": "const"
+        },
+        {
+          "name": "SMS_NO_CONSENT_STAFF",
+          "kind": "const"
+        },
+        {
+          "name": "smsKeyword",
+          "kind": "fn"
+        },
+        {
+          "name": "smsVerbalScript",
+          "kind": "fn"
+        },
+        {
+          "name": "smsWebConsentText",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./contact"
+      ],
+      "usedBy": [
+        "src/app/api/operator/bookings/route.ts",
+        "src/app/api/operator/events/[id]/payments/route.ts",
+        "src/app/api/operator/shop-sales/route.ts",
+        "src/app/api/twilio/inbound/route.ts",
+        "src/app/book/BookClient.tsx",
+        "src/app/dashboard/page.tsx",
+        "src/app/events/[id]/SignupForm.tsx",
+        "src/components/dashboard/DeclinedCardList.tsx",
+        "src/components/dashboard/SmsConsentAsk.tsx",
+        "src/lib/sms-consent.ts",
+        "src/lib/twilio.ts"
+      ]
+    },
+    {
+      "path": "src/lib/sms-consent.ts",
+      "lines": 72,
+      "purpose": "SMS-1 (Cam 2026-11-02, Twilio A2P 10DLC — docs/SMS_OPT_IN.md):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "consentedPhones",
+          "kind": "fn"
+        },
+        {
+          "name": "ConsentMethod",
+          "kind": "type"
+        },
+        {
+          "name": "consentPhone",
+          "kind": "fn"
+        },
+        {
+          "name": "hasSmsConsent",
+          "kind": "fn"
+        },
+        {
+          "name": "optInAndConfirm",
+          "kind": "fn"
+        },
+        {
+          "name": "recordSmsConsent",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./golfer-otp",
+        "./prisma",
+        "./sms-consent-copy",
+        "./twilio"
+      ],
+      "usedBy": [
+        "src/app/api/bookings/route.ts",
+        "src/app/api/event-signup/[id]/route.ts",
+        "src/app/api/operator/bookings/route.ts",
+        "src/app/api/operator/events/[id]/payments/route.ts",
+        "src/app/api/operator/shop-sales/route.ts",
+        "src/app/api/twilio/inbound/route.ts",
+        "src/lib/golfer-messages.ts",
+        "src/lib/twilio.ts"
+      ]
+    },
+    {
       "path": "src/lib/staff-fonts.ts",
       "lines": 10,
       "purpose": "U-0 (UI_REVISE_SPEC §1b) used to give /dashboard and /admin their own STAFF look here:",
@@ -24613,7 +24886,7 @@
     },
     {
       "path": "src/lib/tee-sheet-engine.ts",
-      "lines": 290,
+      "lines": 292,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -24703,7 +24976,7 @@
     },
     {
       "path": "src/lib/tee-time-utils.ts",
-      "lines": 41,
+      "lines": 54,
       "purpose": "Converts a stored tee-time (date \"YYYY-MM-DD\", time \"HH:MM\" in the course's local timezone) to a UTC millisecond timestamp.",
       "brain": [],
       "exports": [
@@ -24733,7 +25006,7 @@
     },
     {
       "path": "src/lib/terms.ts",
-      "lines": 8,
+      "lines": 9,
       "purpose": "Bump this whenever /terms materially changes so old bookings keep an honest record of which version the golfer actually agreed to.",
       "brain": [],
       "exports": [
@@ -24850,7 +25123,7 @@
     },
     {
       "path": "src/lib/twilio.ts",
-      "lines": 68,
+      "lines": 86,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -24869,6 +25142,10 @@
         {
           "name": "smsConfigured",
           "kind": "fn"
+        },
+        {
+          "name": "SmsNoConsentError",
+          "kind": "class"
         }
       ],
       "route": null,
@@ -24878,6 +25155,8 @@
       "guard": null,
       "imports": [
         "./sent-messages",
+        "./sms-consent",
+        "./sms-consent-copy",
         "twilio"
       ],
       "usedBy": [
@@ -24887,6 +25166,7 @@
         "src/app/api/operator/golfer-messages/route.ts",
         "src/app/api/operator/shop-sales/route.ts",
         "src/lib/golfer-messages.ts",
+        "src/lib/sms-consent.ts",
         "src/lib/two-factor.ts"
       ]
     },
@@ -24998,7 +25278,9 @@
         "src/app/dashboard/shop/page.tsx",
         "src/components/OperatorSidebar.tsx",
         "src/components/dashboard/ShopCatalog.tsx",
-        "src/components/dashboard/StaffNotice.tsx"
+        "src/components/dashboard/StaffNotice.tsx",
+        "src/components/dashboard/events/EventDetail.tsx",
+        "src/components/dashboard/events/EventMoney.tsx"
       ]
     },
     {
@@ -25128,7 +25410,7 @@
     },
     {
       "path": "src/lib/who-pays.ts",
-      "lines": 104,
+      "lines": 105,
       "purpose": "Settings → Prices & fees, \"Who pays what\" (Cam 2026-10-19, OPERATOR_REWORK_SPEC \"Settings — round 1\"):",
       "brain": [],
       "exports": [
@@ -27095,7 +27377,9 @@
         "src/lib/card-reader.ts",
         "src/lib/demand-pricing.ts",
         "src/lib/lifecycle.ts",
-        "src/lib/sales-tax.ts"
+        "src/lib/pricing-switch.ts",
+        "src/lib/sales-tax.ts",
+        "src/lib/sample-data.ts"
       ],
       "readers": [
         "src/app/api/admin/audit/route.ts",
@@ -27127,6 +27411,7 @@
         "src/app/api/cron/monthly-review/route.ts",
         "src/app/api/cron/send-reminders/route.ts",
         "src/app/api/manage/[bookingId]/available-times/route.ts",
+        "src/app/api/manage/[bookingId]/swap-time/route.ts",
         "src/app/api/member/[courseSlug]/payments/route.ts",
         "src/app/api/member/[courseSlug]/send-code/route.ts",
         "src/app/api/member/[courseSlug]/session/route.ts",
@@ -27214,6 +27499,7 @@
         "src/lib/public-tee-times.ts",
         "src/lib/real-courses.ts",
         "src/lib/register-close.ts",
+        "src/lib/register.ts",
         "src/lib/sales-tax.ts",
         "src/lib/sample-data.ts",
         "src/lib/schedule-preview.ts",
@@ -27407,6 +27693,7 @@
         "src/lib/data-reset.ts"
       ],
       "readers": [
+        "src/app/api/event-signup/[id]/route.ts",
         "src/app/api/operator/events/[id]/payments/route.ts",
         "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/events/route.ts",
@@ -27531,7 +27818,8 @@
         }
       ],
       "writers": [
-        "src/lib/event-payments.ts"
+        "src/lib/event-payments.ts",
+        "src/lib/sample-data.ts"
       ],
       "readers": [
         "src/app/api/operator/events/[id]/payments/route.ts",
@@ -27539,7 +27827,8 @@
         "src/lib/analytics.ts",
         "src/lib/event-payments.ts",
         "src/lib/event-signup.ts",
-        "src/lib/ledger-view.ts"
+        "src/lib/ledger-view.ts",
+        "src/lib/sample-data.ts"
       ]
     },
     {
@@ -29018,7 +29307,8 @@
       ],
       "writers": [
         "src/app/api/operator/golfers/[key]/route.ts",
-        "src/lib/data-reset.ts"
+        "src/lib/data-reset.ts",
+        "src/lib/sample-data.ts"
       ],
       "readers": [
         "src/app/api/operator/golfers/[key]/route.ts",
@@ -29156,9 +29446,12 @@
           "type": "MemberStatement?"
         }
       ],
-      "writers": [],
+      "writers": [
+        "src/lib/sample-data.ts"
+      ],
       "readers": [
         "src/app/api/operator/member-accounts/route.ts",
+        "src/app/api/operator/members/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/lib/member-account.ts",
         "src/lib/member-statements.ts",
@@ -29289,6 +29582,7 @@
         "src/lib/counter-pay.ts",
         "src/lib/member-import.ts",
         "src/lib/membership-join.ts",
+        "src/lib/pricing-switch.ts",
         "src/lib/sample-data.ts"
       ]
     },
@@ -29378,11 +29672,13 @@
       ],
       "writers": [
         "src/app/api/statement/[id]/route.ts",
-        "src/lib/member-statements.ts"
+        "src/lib/member-statements.ts",
+        "src/lib/sample-data.ts"
       ],
       "readers": [
         "src/app/api/cron/send-reminders/route.ts",
         "src/app/api/operator/member-accounts/route.ts",
+        "src/app/api/operator/members/route.ts",
         "src/lib/member-account.ts",
         "src/lib/member-statements.ts"
       ]
@@ -29577,10 +29873,12 @@
         }
       ],
       "writers": [
-        "src/lib/data-reset.ts"
+        "src/lib/data-reset.ts",
+        "src/lib/sample-data.ts"
       ],
       "readers": [
         "src/app/api/member/[courseSlug]/payments/route.ts",
+        "src/app/api/operator/members/route.ts",
         "src/lib/analytics.ts",
         "src/lib/ledger-view.ts",
         "src/lib/money-ledger.ts",
@@ -30040,12 +30338,14 @@
       ],
       "writers": [
         "src/app/api/operator/promo-codes/route.ts",
-        "src/lib/data-reset.ts"
+        "src/lib/data-reset.ts",
+        "src/lib/sample-data.ts"
       ],
       "readers": [
         "src/app/api/operator/promo-codes/route.ts",
         "src/app/api/promo/check/route.ts",
-        "src/lib/promo-codes.ts"
+        "src/lib/promo-codes.ts",
+        "src/lib/sample-data.ts"
       ]
     },
     {
@@ -30142,7 +30442,8 @@
       ],
       "writers": [
         "src/lib/data-reset.ts",
-        "src/lib/register-close.ts"
+        "src/lib/register-close.ts",
+        "src/lib/sample-data.ts"
       ],
       "readers": [
         "src/lib/register-close.ts",
@@ -30789,6 +31090,53 @@
       ]
     },
     {
+      "name": "SmsConsent",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "phone",
+          "type": "String"
+        },
+        {
+          "name": "action",
+          "type": "String"
+        },
+        {
+          "name": "method",
+          "type": "String"
+        },
+        {
+          "name": "wording",
+          "type": "String"
+        },
+        {
+          "name": "courseId",
+          "type": "String?"
+        },
+        {
+          "name": "bookingId",
+          "type": "String?"
+        },
+        {
+          "name": "recordedBy",
+          "type": "String"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ],
+      "writers": [
+        "src/lib/sms-consent.ts"
+      ],
+      "readers": [
+        "src/lib/sms-consent.ts"
+      ]
+    },
+    {
       "name": "StaffPermissionChange",
       "fields": [
         {
@@ -31260,12 +31608,14 @@
         "src/lib/schedule-service.ts"
       ],
       "readers": [
+        "src/app/api/admin/schedule/route.ts",
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/residents/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/lib/birdie/course-context.ts",
         "src/lib/course-events.ts",
         "src/lib/course-shape-setup.ts",
+        "src/lib/pricing-switch.ts",
         "src/lib/sample-data.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts",

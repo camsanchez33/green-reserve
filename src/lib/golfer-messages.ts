@@ -5,6 +5,7 @@
 // confirmed bookings in that window, never a list, so no marketing consent is
 // involved. Email always; a text too when Twilio is configured and the course
 // asks. Each golfer is messaged once however many bookings they hold.
+import { consentedPhones } from './sms-consent';
 import { prisma } from './prisma';
 import { sendCourseNoticeEmail, isPlaceholderEmail } from './email';
 import { sendSms, smsConfigured } from './twilio';
@@ -59,6 +60,12 @@ export async function audience(courseId: string, w: Window): Promise<Recipient[]
  * off, so "22 booked, 0 unreachable" sent to nobody. `noEmail` is who's left when
  * the text box is unticked.
  */
+/** SMS-1: keep a recipient's phone only if that number agreed to texts (one query for the list). */
+export async function withTextConsent(list: Recipient[]): Promise<Recipient[]> {
+  const agreed = await consentedPhones(list.map(r => r.phone).filter((p): p is string => !!p));
+  return list.map(r => ({ ...r, phone: r.phone && agreed.has(normalizePhone(r.phone)) ? r.phone : null }));
+}
+
 export function reach(list: Recipient[], textingOn: boolean) {
   return {
     golfers: list.length, email: list.filter(r => r.email).length, sms: textingOn ? list.filter(r => r.phone).length : 0,
@@ -73,7 +80,8 @@ export async function sendCourseMessage(opts: {
 }): Promise<{ sentEmail: number; sentSms: number; failed: { name: string; how: 'email' | 'sms'; error: string }[]; unreachable: number }> {
   const course = await prisma.course.findUnique({ where: { id: opts.courseId }, select: { name: true, operator: { select: { email: true } } } });
   if (!course) throw new Error('Course not found');
-  const list = await audience(opts.courseId, opts.window);
+  // SMS-1 (Twilio A2P 10DLC): a notice is texted only to numbers that agreed; the rest get the email.
+  const list = await withTextConsent(await audience(opts.courseId, opts.window));
   const doSms = opts.sms && smsConfigured();
   const dateLabel = formatTeeDay(opts.window.date);
   const failed: { name: string; how: 'email' | 'sms'; error: string }[] = [];

@@ -68,7 +68,7 @@ async function cleanup() {
   ok('…and the whole group pays the round less the booking fee', counterDueCents(counterB) === 25800);
 
   const op = await prisma.courseOperator.create({ data: { name: 'Rates Test', email: `${TAG}@t.local`, password: 'x' } });
-  const course = await prisma.course.create({ data: { name: 'Rates GC', slug: `${TAG}-1`, operatorId: op.id, address: 'a', city: 'c', state: 'NY', zipCode: '1', memberGraceDays: 0 } });
+  const course = await prisma.course.create({ data: { hasMemberPricing: true, hasResidentPricing: true, name: 'Rates GC', slug: `${TAG}-1`, operatorId: op.id, address: 'a', city: 'c', state: 'NY', zipCode: '1', memberGraceDays: 0 } });
   const tier = await prisma.membershipTier.create({ data: { courseId: course.id, name: 'Full', cartFeeWeekdayCents: 1000, greenFeeWeekdayCents: 3000 } });
   const mk = (email: string, expiresAt: Date | null) => prisma.courseMembership.create({ data: { courseId: course.id, tierId: tier.id, inviteEmail: email, status: 'active', expiresAt } });
   await mk(`${TAG}+live@t.local`, null);

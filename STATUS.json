@@ -1,36 +1,97 @@
 {
-  "generatedAt": "2026-11-01T19:42:31.060Z",
+  "generatedAt": "2026-11-02T04:06:47.318Z",
   "repo": {
-    "head": "cab4dae0",
+    "head": "bffab6e9",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 21,
+    "dirtyCount": 4,
     "dirty": [
-      "M STATUS.artifact.html",
-      " M STATUS.json",
-      " M STATUS.md",
-      " M docs/CODEMAP.md",
+      "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/words-guard.baseline.json",
-      " M src/app/api/operator/bookings/route.ts",
-      " M src/app/api/operator/tee-times/route.ts",
-      " M src/app/api/preview/[courseId]/route.ts",
-      " M src/app/courses/[slug]/CourseBookingClient.tsx",
-      " M src/app/dashboard/members/page.tsx",
-      " M src/app/dashboard/page.tsx",
-      " M src/app/dashboard/settings/page.tsx",
-      " M src/lib/analytics-terms.ts",
-      " M src/lib/cancel-confirm.ts",
-      " M src/lib/counter-pay.ts",
-      " M src/lib/email.ts",
-      " M src/lib/no-show-fee.ts",
-      " M src/lib/normalize-course.ts",
-      " M src/lib/public-course.ts"
+      " M scripts/sms-consent-db-test.ts",
+      " M src/components/dashboard/DeclinedCardList.tsx"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "bffab6e9",
+        "date": "2026-11-02T03:58:16+00:00",
+        "subject": "Event money needs \"Mark paid at the counter\"; a member with history can't be deleted",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "53e31df1",
+        "date": "2026-11-02T03:49:42+00:00",
+        "subject": "Counter friction B: card beside the sheet, Home opens a time's card, member opens golfer record, cash through a failed tax quote",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "b80496f3",
+        "date": "2026-11-02T03:42:32+00:00",
+        "subject": "SMS-1: texts only to numbers that agreed (Twilio A2P 10DLC opt-in)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "db252e4b",
+        "date": "2026-11-02T03:22:21+00:00",
+        "subject": "Status board refresh",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "b199995d",
+        "date": "2026-11-02T01:39:22+00:00",
+        "subject": "Counter friction: one-tap check-in, no-show waits 10 min, cart off by default, search on phones",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "45ca1d0e",
+        "date": "2026-11-02T01:23:17+00:00",
+        "subject": "Speed with volume: one time-zone formatter per zone (Analytics 90 days 10.7s → 1.2s)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "4054bff4",
+        "date": "2026-11-02T00:22:43+00:00",
+        "subject": "Test course: busy-season sample data, with every money table filled",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "91745c5a",
+        "date": "2026-11-01T23:39:42+00:00",
+        "subject": "member-portal-price test: its course has member prices, so the switches are on",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "96cd687f",
+        "date": "2026-11-01T23:24:19+00:00",
+        "subject": "Pricing switches: Members / Residents off means the public price (backfill + auto-on)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "1db52953",
+        "date": "2026-11-01T14:49:34-05:00",
+        "subject": "Audit wording: what the sheet, members, settings and golfer page say, made true (#288)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "93f3ff63",
+        "date": "2026-11-01T19:42:33+00:00",
+        "subject": "Audit wording: what the sheet, members, settings and golfer page say, made true",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "b5d27f01",
         "date": "2026-11-01T14:09:25-05:00",
@@ -337,295 +398,295 @@
   },
   "specs": [
     {
+      "file": "CLAUDE.md",
+      "openRefs": 1,
+      "lastTouched": "2026-11-02",
+      "ageDays": 0
+    },
+    {
       "file": "DENSE_UI_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-11-01",
       "ageDays": 0
     },
     {
-      "file": "CLAUDE.md",
-      "openRefs": 1,
-      "lastTouched": "2026-10-30",
-      "ageDays": 1
-    },
-    {
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-10-20",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "STAFF_POLICY_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-26",
-      "ageDays": 5
+      "ageDays": 6
     },
     {
       "file": "OPERATOR_REWORK_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-25",
-      "ageDays": 6
+      "ageDays": 7
     },
     {
       "file": "ADMIN_V5_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-23",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "AGREEMENT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "CALL_SCHEDULING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "HOMEPAGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-23",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "ONBOARDING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "ONBOARDING_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "PUBLIC_SITE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "RECEIPT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "ADMIN_MASTER_PLAN.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "ADMIN_REBUILD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "ADMIN_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "ADMIN_V3_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "ADMIN_V4_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "ARCHITECTURE.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "BACKUP_OPS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "BIRDIE_AI_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "CODEMAP_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "COURSES_SHEET_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "COURSE_LAYOUT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "DESIGN_SYSTEM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "FB2_COPY_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "FB3_FEE_PLAN_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "GOLFER_EDGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "GOLFER_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "HARDENING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "INQUIRY_CALL_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "INQUIRY_FORM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "MANAGE_BOOKING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "PRIVATE_BILLING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "PRODUCTION_READINESS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "REVIEW_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "SITE_DASHBOARD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "UI_REVISE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 11
+      "ageDays": 12
     }
   ],
   "bank": null,
   "recentCommits": [
     {
+      "h": "bffab6e9",
+      "date": "2026-11-02",
+      "subject": "Event money needs \"Mark paid at the counter\"; a member with history can't be deleted"
+    },
+    {
+      "h": "53e31df1",
+      "date": "2026-11-02",
+      "subject": "Counter friction B: card beside the sheet, Home opens a time's card, member opens golfer record, cash through a failed tax quote"
+    },
+    {
+      "h": "b80496f3",
+      "date": "2026-11-02",
+      "subject": "SMS-1: texts only to numbers that agreed (Twilio A2P 10DLC opt-in)"
+    },
+    {
+      "h": "db252e4b",
+      "date": "2026-11-02",
+      "subject": "Status board refresh"
+    },
+    {
+      "h": "b199995d",
+      "date": "2026-11-02",
+      "subject": "Counter friction: one-tap check-in, no-show waits 10 min, cart off by default, search on phones"
+    },
+    {
+      "h": "45ca1d0e",
+      "date": "2026-11-02",
+      "subject": "Speed with volume: one time-zone formatter per zone (Analytics 90 days 10.7s → 1.2s)"
+    },
+    {
+      "h": "4054bff4",
+      "date": "2026-11-02",
+      "subject": "Test course: busy-season sample data, with every money table filled"
+    },
+    {
+      "h": "91745c5a",
+      "date": "2026-11-01",
+      "subject": "member-portal-price test: its course has member prices, so the switches are on"
+    },
+    {
+      "h": "96cd687f",
+      "date": "2026-11-01",
+      "subject": "Pricing switches: Members / Residents off means the public price (backfill + auto-on)"
+    },
+    {
+      "h": "1db52953",
+      "date": "2026-11-01",
+      "subject": "Audit wording: what the sheet, members, settings and golfer page say, made true (#288)"
+    },
+    {
+      "h": "93f3ff63",
+      "date": "2026-11-01",
+      "subject": "Audit wording: what the sheet, members, settings and golfer page say, made true"
+    },
+    {
       "h": "b5d27f01",
       "date": "2026-11-01",
       "subject": "Audit numbers: partial refunds, event money, event player swap, shop today, payout tile (#287)"
-    },
-    {
-      "h": "c6efa694",
-      "date": "2026-11-01",
-      "subject": "Audit numbers: partial refunds, event money, event player swap, shop today, payout tile"
-    },
-    {
-      "h": "10ab79d8",
-      "date": "2026-11-01",
-      "subject": "DENSE-10 Settings part 2: the Settings cards, labels over sentences (#286)"
-    },
-    {
-      "h": "6bbb7c6d",
-      "date": "2026-11-01",
-      "subject": "DENSE-10 Settings part 2: the Settings cards, labels over sentences"
-    },
-    {
-      "h": "bda21776",
-      "date": "2026-11-01",
-      "subject": "DENSE-10 Settings part 1: labels over sentences (#285)"
-    },
-    {
-      "h": "e4bc0f02",
-      "date": "2026-11-01",
-      "subject": "DENSE-10 Settings part 1: labels over sentences"
-    },
-    {
-      "h": "6d571671",
-      "date": "2026-11-01",
-      "subject": "DENSE-9 Messages: the intro is the reply-time line and the email (#284)"
-    },
-    {
-      "h": "d74792b2",
-      "date": "2026-11-01",
-      "subject": "DENSE-9 Messages: the intro is the reply-time line and the email"
-    },
-    {
-      "h": "fe34fcb1",
-      "date": "2026-11-01",
-      "subject": "DENSE-8 Events: the list is a table with what each event still owes (#283)"
-    },
-    {
-      "h": "1bbbbbc8",
-      "date": "2026-11-01",
-      "subject": "DENSE-8 Events: the list is a table with what each event still owes"
-    },
-    {
-      "h": "286a3d44",
-      "date": "2026-11-01",
-      "subject": "DENSE-7 Pro shop: labels over sentences (text only) (#282)"
-    },
-    {
-      "h": "06c09849",
-      "date": "2026-11-01",
-      "subject": "DENSE-7 Pro shop: labels over sentences (text only)"
     }
   ]
 }

@@ -65,6 +65,8 @@ async function main() {
   check('declined cards need you, each with what the retry will charge (round + shop items)', owner.declined.length === 3 && owner.declinedTotal === 3 && shopDecline?.amountCents === 10300 + 2000 + 160, owner.declined);
   check('a declined group past its time is not listed again as late', !owner.late.some(l => l.time === '10:30'));
   check('coming up starts at the course clock and skips blocked times', owner.comingUp.map(s => s.time).join(',') === '13:00,14:00', owner.comingUp.map(s => s.time));
+  // Home audit: each time (and a single late group) carries its tee time's id, so Home opens that time's card.
+  check('coming-up times and late groups carry the tee time id the card opens by', owner.comingUp.every(s => typeof s.id === 'string' && s.id.length > 8) && owner.late.every(l => typeof l.teeTimeId === 'string' && l.teeTimeId.length > 8));
   check('money uses the Analytics definitions (paid today by card or at the counter, counted in groups)', !!owner.money && owner.money.paidCents === 15000 && owner.money.paidGroups === 2, owner.money);
 
   // DENSE-3 (Cam 2026-10-28): trend lines, the 14-day pace, and Not paid yet as on the tee sheet strip.

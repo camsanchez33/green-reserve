@@ -5,6 +5,8 @@
 // at the course (cash, check, the course's own card machine). Any amount, any
 // number of them. Refunds when the course decides to give one. Every action
 // shows its pending state, then the result or the server's reason.
+import { useDashboardAccess } from '@/lib/use-dashboard-access';
+import SmsConsentAsk from '@/components/dashboard/SmsConsentAsk';
 import { useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -55,12 +57,16 @@ export default function EventMoney({ eventId, live, pricePerPlayerCents, organiz
   money: Money; payments: EventPayment[]; canRefund: boolean; reload: () => Promise<void>;
 }) {
   const [mode, setMode] = useState<'' | 'link' | 'record'>('');
+  // Events audit 23: recording money taken another way needs "Mark paid at the counter" (the route checks it too).
+  const canRecord = useDashboardAccess().can('sheet.counter_payment');
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const [note, setNote] = useState('');
   const [made, setMade] = useState<{ payUrl: string; sent: string | null; sendError: string | null } | null>(null);
   const [copied, setCopied] = useState('');
   const [link, setLink] = useState({ kind: 'deposit' as 'deposit' | 'balance' | 'other', amount: '', label: '', headcount: String(money.headcount || ''), payerName: organizer.name, payerEmail: organizer.email, payerPhone: organizer.phone, via: (organizer.email ? 'email' : organizer.phone ? 'sms' : 'none') as 'email' | 'sms' | 'none' });
+  // SMS-1: the payer said yes to texts after staff read the script. Never on by default.
+  const [smsYes, setSmsYes] = useState(false);
   const [rec, setRec] = useState({ kind: 'deposit' as 'deposit' | 'balance' | 'other', amount: '', method: 'cash' as string, payerName: organizer.name, label: '', note: '' });
   const [paidOther, setPaidOther] = useState<{ id: string; method: string } | null>(null);
   const [refund, setRefund] = useState<{ id: string; amount: string; reason: string; confirm: boolean } | null>(null);
@@ -112,7 +118,7 @@ export default function EventMoney({ eventId, live, pricePerPlayerCents, organiz
         {live && (
           <div className="flex gap-2">
             <button onClick={() => { setMode(mode === 'link' ? '' : 'link'); setMade(null); setError(''); setLink(l => ({ ...l, headcount: String(money.headcount || '') })); }} className={SECONDARY} aria-expanded={mode === 'link'}>Send a pay link</button>
-            <button onClick={() => { setMode(mode === 'record' ? '' : 'record'); setError(''); }} className={SECONDARY} aria-expanded={mode === 'record'}>Record a payment</button>
+            {canRecord && <button onClick={() => { setMode(mode === 'record' ? '' : 'record'); setError(''); }} className={SECONDARY} aria-expanded={mode === 'record'}>Record a payment</button>}
           </div>
         )}
       </div>
@@ -162,7 +168,7 @@ export default function EventMoney({ eventId, live, pricePerPlayerCents, organiz
       {mode === 'link' && (
         <form className="mt-4 bg-paper/70 rounded-md p-4 space-y-3 max-w-lg" onSubmit={async e => {
           e.preventDefault();
-          const r = await post('link', { action: 'link', ...link, via: link.via === 'none' ? null : link.via });
+          const r = await post('link', { action: 'link', ...link, via: link.via === 'none' ? null : link.via, ...(link.via === 'sms' && smsYes ? { smsConsent: 'verbal' } : {}) });
           if (r) { setMade({ payUrl: String(r.payUrl ?? ''), sent: (r.sent as string | null) ?? null, sendError: (r.sendError as string | null) ?? null }); }
         }}>
           <div><span className="block text-[13px] font-medium text-ink mb-1.5">What it’s for</span>
@@ -188,10 +194,11 @@ export default function EventMoney({ eventId, live, pricePerPlayerCents, organiz
           <div className="grid sm:grid-cols-3 gap-3">
             <label className="block"><span className="block text-[13px] font-medium text-ink mb-1.5">To</span><input className={INPUT + ' w-full'} value={link.payerName} onChange={e => setLink(l => ({ ...l, payerName: e.target.value }))} /></label>
             <label className="block"><span className="block text-[13px] font-medium text-ink mb-1.5">Email</span><input type="email" className={INPUT + ' w-full'} value={link.payerEmail} onChange={e => setLink(l => ({ ...l, payerEmail: e.target.value }))} /></label>
-            <label className="block"><span className="block text-[13px] font-medium text-ink mb-1.5">Mobile</span><input type="tel" className={INPUT + ' w-full'} value={link.payerPhone} onChange={e => setLink(l => ({ ...l, payerPhone: e.target.value }))} /></label>
+            <label className="block"><span className="block text-[13px] font-medium text-ink mb-1.5">Mobile</span><input type="tel" className={INPUT + ' w-full'} value={link.payerPhone} onChange={e => { setLink(l => ({ ...l, payerPhone: e.target.value })); setSmsYes(false); }} /></label>
           </div>
           <div><span className="block text-[13px] font-medium text-ink mb-1.5">Send it by</span>
             <Segmented label="Send it by" value={link.via} options={[['email', 'Email'], ['sms', 'Text'], ['none', 'I’ll send it myself']] as const} onChange={v => setLink(l => ({ ...l, via: v }))} /></div>
+          {link.via === 'sms' && link.payerPhone.replace(/\D/g, '').length >= 10 && <SmsConsentAsk courseName="" checked={smsYes} onChange={setSmsYes} />}
           <div className="flex gap-2">
             <button type="submit" disabled={!!busy} className={PRIMARY}>{busy === 'link' ? 'Making the link…' : link.via === 'none' ? 'Make the link' : 'Send the link'}</button>
             <button type="button" onClick={() => setMode('')} className={SECONDARY}>Close</button>
@@ -260,7 +267,7 @@ export default function EventMoney({ eventId, live, pricePerPlayerCents, organiz
                     {live && p.payUrl && <button onClick={() => copy(p.payUrl!, p.id)} className={LINK}>{copied === p.id ? 'Copied' : 'Copy link'}</button>}
                     {live && p.payerEmail && <button disabled={!!busy} onClick={() => post('resend' + p.id, { action: 'resend', paymentId: p.id, via: 'email' }, () => 'Emailed again.')} className={LINK}>Email again</button>}
                     {live && p.payerPhone && <button disabled={!!busy} onClick={() => post('resend' + p.id, { action: 'resend', paymentId: p.id, via: 'sms' }, () => 'Texted again.')} className={LINK}>Text again</button>}
-                    <button onClick={() => setPaidOther(paidOther?.id === p.id ? null : { id: p.id, method: 'cash' })} className={LINK}>Paid another way</button>
+                    {canRecord && <button onClick={() => setPaidOther(paidOther?.id === p.id ? null : { id: p.id, method: 'cash' })} className={LINK}>Paid another way</button>}
                     <button disabled={!!busy} onClick={() => post('void' + p.id, { action: 'void', paymentId: p.id }, () => 'Link cancelled — it can’t be paid now.')} className={LINK}>{busy === 'void' + p.id ? 'Cancelling…' : 'Cancel link'}</button>
                   </div>
                 )}
