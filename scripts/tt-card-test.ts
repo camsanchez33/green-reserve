@@ -14,7 +14,7 @@ check('on a laptop the card has no backdrop over the sheet', /md:inset-auto md:t
 check('on a phone it is a full sheet from the bottom', /absolute inset-x-0 bottom-0 top-12 md:static/.test(card));
 check('the slide respects reduced motion', /prefers-reduced-motion: no-preference[\s\S]*tt-card-up/.test(readFileSync('src/app/globals.css', 'utf8')));
 check('the price line is in the card', card.includes('a player{panelSlot.cartFee > 0'));
-check('each group shows what it owes, to logins that see payments', page.includes("access.can('money.payments') && <span className=\"shrink-0 text-[14px] font-semibold text-ink tabular-nums\">${(due / 100).toFixed(2)}"));
+check('each group shows what it owes, to logins that see payments', page.includes("const showMoney = access.can('money.payments');") && page.includes('{showMoney && !showTicket && <span className="shrink-0 text-[14px] font-semibold text-ink tabular-nums">') && page.includes('${(cardDue / 100).toFixed(2)}</span>')); // DASH-D: unpaid groups show it as the ticket's Total
 for (const a of ["checkInBooking(b)", "bookingLifecycle(b, 'take_cash')", "sendPayLink(b, 'sms')", "sendPayLink(b)", 'setMoveTarget(', "bookingLifecycle(b, 'still_coming')", "bookingLifecycle(b, 'no_show')", 'cancelGroup(b, false)', 'cancelGroup(b, true)', 'setResidents(b,', '<ShopItemsForGroup', 'setWalkInSlot(panelSlot)', 'toggleBlock(panelSlot)', 'deleteTime(panelSlot)']) {
   check(`the card keeps ${a}`, page.includes(a));
 }
