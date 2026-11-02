@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-02 05:40 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `d18a312a` · working tree **6 dirty file(s)**
+Generated 2026-11-02 05:45 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `1b7f3b82` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 38 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 40 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `1b7f3b82` | 2026-11-02 | Tests follow the till: Here-now buttons, pay-link day rule, owed amount as the ticket Total |
+| `d65d1332` | 2026-11-02 | Tee sheet: till-style check-in on the time card |
 | `bbcc7c63` | 2026-11-02 | Dashboard foundation: Geist, grey page + white panels, grouped rail, Light/Dark (#293) |
 | `ba7d3ab1` | 2026-11-02 | Regenerate code map and status board |
 | `14d6254a` | 2026-11-02 | Dark mode is screen-only (prints stay light); theme cookie Secure only over https |
@@ -52,18 +54,6 @@ Generated 2026-11-02 05:40 UTC · branch `claude/walkthrough-2-prioritization-ui
 | `efef5f62` | 2026-11-01 | Money audit fixes: dues charge only the shown total, tier term change stops auto-renew, credited round returns our fee, pay link opens on the day |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
-
-### Uncommitted working tree (6 file(s))
-
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M src/app/dashboard/page.tsx`
-- `M src/components/dashboard/TeeSheetRows.tsx`
-- `?? scripts/teesheet-till-test.ts`
-- `?? src/components/dashboard/GroupTicket.tsx`
-
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -186,6 +176,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `1b7f3b82` 2026-11-02 — Tests follow the till: Here-now buttons, pay-link day rule, owed amount as the ticket Total
+- `d65d1332` 2026-11-02 — Tee sheet: till-style check-in on the time card
 - `bbcc7c63` 2026-11-02 — Dashboard foundation: Geist, grey page + white panels, grouped rail, Light/Dark (#293)
 - `ba7d3ab1` 2026-11-02 — Regenerate code map and status board
 - `14d6254a` 2026-11-02 — Dark mode is screen-only (prints stay light); theme cookie Secure only over https
@@ -196,8 +188,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `bffab6e9` 2026-11-02 — Event money needs "Mark paid at the counter"; a member with history can't be deleted
 - `53e31df1` 2026-11-02 — Counter friction B: card beside the sheet, Home opens a time's card, member opens golfer record, cash through a failed tax quote
 - `b80496f3` 2026-11-02 — SMS-1: texts only to numbers that agreed (Twilio A2P 10DLC opt-in)
-- `db252e4b` 2026-11-02 — Status board refresh
-- `b199995d` 2026-11-02 — Counter friction: one-tap check-in, no-show waits 10 min, cart off by default, search on phones
 
 ---
 

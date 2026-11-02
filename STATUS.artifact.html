@@ -117,14 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-11-02 05:40 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ d18a312a</span>
-    <span>6 uncommitted</span>
+    <span>2026-11-02 05:45 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 1b7f3b82</span>
+    <span>tree clean</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">38 runs have shipped that the queue doesn't know about</div>
+<div class="lede">40 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-31. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">1b7f3b82</span><span>Tests follow the till: Here-now buttons, pay-link day rule, owed amount as the ticket Total</span></li>
+<li><span class="h">d65d1332</span><span>Tee sheet: till-style check-in on the time card</span></li>
 <li><span class="h">bbcc7c63</span><span>Dashboard foundation: Geist, grey page + white panels, grouped rail, Light/Dark (#293)</span></li>
 <li><span class="h">ba7d3ab1</span><span>Regenerate code map and status board</span></li>
 <li><span class="h">14d6254a</span><span>Dark mode is screen-only (prints stay light); theme cookie Secure only over https</span></li>
@@ -172,11 +174,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">7</span><span class="l">Revise pages left</span></div>
   <div class="tile t-idle"><span class="n">17</span><span class="l">Ideas parked</span></div>
 </div>
-<section><h2>Working tree right now</h2>
-<div class="card flag">
-<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M src/app/dashboard/page.tsx</code></li><li><code>M src/components/dashboard/TeeSheetRows.tsx</code></li><li><code>?? scripts/teesheet-till-test.ts</code></li><li><code>?? src/components/dashboard/GroupTicket.tsx</code></li></ul>
-</div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
 <div class="row"><span class="idx">1</span><span class="t">DENSE — Cam 2026-10-27: &quot;too much words on the pages … think OpenTable, Stripe, Lightspeed, Toast … apply across all tabs on both dashboard and admin&quot;. Lots of data, almost no sentences. Plan, princip</span><span class="where">:101</span></div>
@@ -257,6 +254,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 12d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">1b7f3b82</td><td class="num">2026-11-02</td><td>Tests follow the till: Here-now buttons, pay-link day rule, owed amount as the ticket Total</td></tr>
+<tr><td class="num">d65d1332</td><td class="num">2026-11-02</td><td>Tee sheet: till-style check-in on the time card</td></tr>
 <tr><td class="num">bbcc7c63</td><td class="num">2026-11-02</td><td>Dashboard foundation: Geist, grey page + white panels, grouped rail, Light/Dark (#293)</td></tr>
 <tr><td class="num">ba7d3ab1</td><td class="num">2026-11-02</td><td>Regenerate code map and status board</td></tr>
 <tr><td class="num">14d6254a</td><td class="num">2026-11-02</td><td>Dark mode is screen-only (prints stay light); theme cookie Secure only over https</td></tr>
@@ -267,8 +266,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">bffab6e9</td><td class="num">2026-11-02</td><td>Event money needs &quot;Mark paid at the counter&quot;; a member with history can't be deleted</td></tr>
 <tr><td class="num">53e31df1</td><td class="num">2026-11-02</td><td>Counter friction B: card beside the sheet, Home opens a time's card, member opens golfer record, cash through a failed tax quote</td></tr>
 <tr><td class="num">b80496f3</td><td class="num">2026-11-02</td><td>SMS-1: texts only to numbers that agreed (Twilio A2P 10DLC opt-in)</td></tr>
-<tr><td class="num">db252e4b</td><td class="num">2026-11-02</td><td>Status board refresh</td></tr>
-<tr><td class="num">b199995d</td><td class="num">2026-11-02</td><td>Counter friction: one-tap check-in, no-show waits 10 min, cart off by default, search on phones</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>
