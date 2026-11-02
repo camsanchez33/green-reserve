@@ -193,6 +193,9 @@ model Course {
   operator                   CourseOperator?       @relation(fields: [operatorId], references: [id])
   conditions                 String                @default("")
   conditionsUpdatedAt        DateTime?
+  /// DASH-D Home: carts / range / greens / pins (lib/course-conditions, cleanConditions). Null = never set.
+  conditionsDetail           Json?
+  conditionsDetailAt         DateTime?
   giftCardUrl                String                @default("")
   heroPhotoUrl               String                @default("")
   teeTimes                   TeeTime[]
@@ -2129,4 +2132,33 @@ model RoundPack {
   updatedAt  DateTime @updatedAt
 
   @@index([courseId])
+}
+
+/// DASH-D Home (Cam 2026-11-01, "shift handoff note"): a note one shift leaves the
+/// next. Anyone who can see the tee sheet writes and clears them; never edited or
+/// deleted — clearing sets doneAt.
+model ShiftNote {
+  id         String    @id @default(cuid())
+  courseId   String
+  body       String
+  authorId   String    @default("")
+  authorName String    @default("")
+  createdAt  DateTime  @default(now())
+  doneAt     DateTime?
+  doneBy     String    @default("")
+
+  @@index([courseId, createdAt])
+}
+
+/// DASH-D Home (Cam 2026-11-01, "month vs goal"): a course's revenue goal for one
+/// month ("YYYY-MM"). cents null = cleared. Compared with computeAnalytics' collected.
+model CourseMonthGoal {
+  id        String   @id @default(cuid())
+  courseId  String
+  month     String
+  cents     Int?
+  setBy     String   @default("")
+  updatedAt DateTime @updatedAt
+
+  @@unique([courseId, month])
 }

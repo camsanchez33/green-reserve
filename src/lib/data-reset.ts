@@ -37,7 +37,7 @@ export const WIPED_TABLES = [
   // golfers and activity
   'GolferAccount', 'CourseResident', 'CourseMembership', 'TeeTime', 'Booking', 'TeeTimeAlert', 'PaymentEvent',
   'BookingEvent', 'BookingShopItem', 'SentMessage', 'SmsConsent', 'ShopSale', 'ShopSaleLine', 'ShopSaleRefund', 'RegisterClose', 'MoneyMove', 'ShopStockReceipt', 'PromoCode', 'RoundPack', 'DemandPrice', 'MemberCharge', 'MemberStatement', 'MonthlyReview',
-  'GolferNote', 'GolferBlock',
+  'GolferNote', 'GolferBlock', 'ShiftNote', 'CourseMonthGoal',
   'CourseEvent', 'CourseEventTask', 'CourseEventPlayer', 'CourseEventPayment', 'CourseEventRefund',
   // the pipeline
   'CourseInquiry', 'Call', 'InquiryStatusEvent', 'ChangeRequest',
@@ -151,6 +151,8 @@ export async function resetTestCourse(courseId: string): Promise<{ ok: true; cle
     // The golfer record's notes and online-booking blocks are activity too.
     prisma.golferNote.deleteMany({ where: { courseId } }),
     prisma.golferBlock.deleteMany({ where: { courseId } }),
+    // Shift notes are the day's activity; month goals are setup and stay.
+    prisma.shiftNote.deleteMany({ where: { courseId } }),
     // Every booked tee time opens back up; a time the course blocked by hand stays blocked.
     prisma.teeTime.updateMany({ where: { courseId, status: { not: 'blocked' } }, data: { playersBooked: 0, status: 'available' } }),
   ]);

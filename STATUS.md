@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-02 05:45 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `1b7f3b82` · working tree clean
+Generated 2026-11-02 05:52 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `715b5c3e` · working tree **15 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 40 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 42 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `0ca08896` | 2026-11-02 | Tee sheet: till-style check-in on the time card (#294) |
+| `383b5af1` | 2026-11-02 | Regenerate code map and status board |
 | `1b7f3b82` | 2026-11-02 | Tests follow the till: Here-now buttons, pay-link day rule, owed amount as the ticket Total |
 | `d65d1332` | 2026-11-02 | Tee sheet: till-style check-in on the time card |
 | `bbcc7c63` | 2026-11-02 | Dashboard foundation: Geist, grey page + white panels, grouped rail, Light/Dark (#293) |
@@ -54,6 +56,27 @@ Generated 2026-11-02 05:45 UTC · branch `claude/walkthrough-2-prioritization-ui
 | `efef5f62` | 2026-11-01 | Money audit fixes: dues charge only the shown total, tier term change stops auto-renew, credited round returns our fee, pay link opens on the day |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+
+### Uncommitted working tree (15 file(s))
+
+- `M CLAUDE.md`
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
+- `M prisma/schema.prisma`
+- `M src/app/api/operator/conditions/route.ts`
+- `M src/app/api/operator/home/route.ts`
+- `M src/app/dashboard/home/page.tsx`
+- `M src/lib/data-reset.ts`
+- `?? prisma/migrations/20261102100000_home_board/`
+- `?? scripts/home-board-db-test.ts`
+- `?? src/app/api/operator/month-goal/`
+- `?? src/app/api/operator/shift-notes/`
+- `?? src/components/dashboard/home/`
+- `?? src/lib/course-conditions.ts`
+- `?? src/lib/home-board.ts`
+
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -176,6 +199,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `0ca08896` 2026-11-02 — Tee sheet: till-style check-in on the time card (#294)
+- `383b5af1` 2026-11-02 — Regenerate code map and status board
 - `1b7f3b82` 2026-11-02 — Tests follow the till: Here-now buttons, pay-link day rule, owed amount as the ticket Total
 - `d65d1332` 2026-11-02 — Tee sheet: till-style check-in on the time card
 - `bbcc7c63` 2026-11-02 — Dashboard foundation: Geist, grey page + white panels, grouped rail, Light/Dark (#293)
@@ -186,8 +211,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `3ae2293d` 2026-11-02 — Pricing switches + busy-season data + speed + counter fixes + SMS opt-in (Twilio) (#289)
 - `3659755c` 2026-11-02 — SMS-1 follow-up: Home / Money declined cards ask before texting, like the tee sheet
 - `bffab6e9` 2026-11-02 — Event money needs "Mark paid at the counter"; a member with history can't be deleted
-- `53e31df1` 2026-11-02 — Counter friction B: card beside the sheet, Home opens a time's card, member opens golfer record, cash through a failed tax quote
-- `b80496f3` 2026-11-02 — SMS-1: texts only to numbers that agreed (Twilio A2P 10DLC opt-in)
 
 ---
 
