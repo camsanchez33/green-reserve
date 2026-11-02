@@ -20,6 +20,7 @@ import OperatorSidebar from '@/components/OperatorSidebar';
 import { dfetch } from '@/lib/dashboard-fetch';
 import ShopItemsForGroup, { type ShopLine } from '@/components/dashboard/ShopItemsForGroup';
 import GroupTicket from '@/components/dashboard/GroupTicket';
+import { splitShares } from '@/lib/split-booking';
 import { LoadError } from '@/components/dashboard/LoadError';
 import { toast } from '@/components/dashboard/Toast';
 import GettingStartedChecklist from '@/components/dashboard/GettingStartedChecklist';
@@ -217,6 +218,21 @@ function DashboardPageInner() {
   const [rowBusy, setRowBusy] = useState<string | null>(null);
   // How many of each group are here (the card's "Here" picker); unset = the whole group.
   const [here, setHere] = useState<Record<string, number>>({});
+  // SPLIT-1 (Cam 2026-11-02): "they all want to pay separately" — the group whose split box is open.
+  const [splitFor, setSplitFor] = useState<{ id: string; n: number; name: string } | null>(null);
+  const [splitBusy, setSplitBusy] = useState(false);
+  async function splitOff(b: Booking, n: number, name: string, thenCash: boolean) {
+    setSplitBusy(true);
+    try {
+      const r = await dfetch<{ newBookingId: string; leaveCents: number; cashError?: string; totalCents?: number }>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: b.id, action: 'split', splitPlayers: n, splitName: name, thenCash }) });
+      if (!r.ok) { toast(r.error, 'warn'); return; }
+      setSplitFor(null);
+      if (r.data.cashError) toast(`Cash failed: ${r.data.cashError} — still owing.`, 'warn');
+      else if (thenCash) { toast('Cash taken — checked in.', 'ok'); setJustDone({ bookingId: r.data.newBookingId, name: name.trim() || `${b.golferName} · guest${n > 1 ? 's' : ''}`, players: n, how: 'Cash' }); }
+      else toast('Split off.', 'ok');
+      await loadTimes(selectedDate);
+    } finally { setSplitBusy(false); }
+  }
   const [cardModalBooking, setCardModalBooking] = useState<Booking | null>(null);
   // Revamp 3 dead end 19: the players who showed, carried into the card form (no saved card, or a declined one).
   const [cardModalShowed, setCardModalShowed] = useState<number | undefined>(undefined);
@@ -355,7 +371,7 @@ function DashboardPageInner() {
     if (!r.ok) { toast(r.error); return; }
     setTextAsk(null);
     toast(via === 'sms'
-      ? `Pay link texted to ${r.data.sentTo}. They can pay with Apple Pay, Google Pay or a card, and the sheet updates when they do.`
+      ? `Pay link texted to ${r.data.sentTo} — the sheet updates when they pay.`
       : `Pay link sent to ${r.data.sentTo}. They can check in and pay from their phone.`, 'ok');
   }
 
@@ -717,6 +733,13 @@ function DashboardPageInner() {
     // …and cash (no GreenReserve fee on a counter payment — PAY-2).
     const cashDue = (herePlayers < b.players ? partRound(b, herePlayers, false) : b.totalAmount - (b.accessFeeTotal ?? 0)) + (b.shopTotalCents ?? 0) + (b.shopTaxCents ?? 0);
     const showMoney = access.can('money.payments');
+    // A group checked in short (only some showed) paid for those players only — show that, not the booked total.
+    const partlyPlayed = b.status === 'completed' && b.checkedInPlayers != null && b.checkedInPlayers < b.players;
+    const paidShownCents = partlyPlayed
+      ? (b.paidOffline ? partRound(b, b.checkedInPlayers!, false) + (b.shopTotalCents ?? 0) + (b.shopTaxCents ?? 0) : partRound(b, b.checkedInPlayers!, true) + shopExtra(b))
+      // Cash collects no GreenReserve fee (PAY-2) — a group paid at the counter shows what the counter took.
+      : b.paidOffline ? (b.totalAmount ?? 0) - (b.accessFeeTotal ?? 0) + (b.shopTotalCents ?? 0) + (b.shopTaxCents ?? 0)
+      : (b.totalAmount ?? 0) + shopExtra(b);
     const money = (c: number) => showMoney ? ` · $${(c / 100).toFixed(2)}` : '';
     const unpaid = b.status === 'confirmed' && b.paymentStatus !== 'paid' && b.paymentStatus !== 'paid_offline' && b.paymentStatus !== 'on_account';
     const canCash = b.status === 'confirmed' && b.paymentStatus !== 'manual' && b.paymentStatus !== 'paid' && b.paymentStatus !== 'paid_offline' && access.can('sheet.counter_payment');
@@ -725,6 +748,8 @@ function DashboardPageInner() {
     const canTextLink = b.status === 'confirmed' && b.hasCard === false && access.can('sheet.checkin') && b.hasPhone && selectedDate <= today();
     const canEmailLink = b.status === 'confirmed' && b.hasCard === false && b.paymentStatus !== 'manual' && access.can('sheet.checkin') && !b.golferEmail.endsWith('@noemail.greenreserve.app') && selectedDate <= today();
     const showTicket = showMoney && unpaid && !b.noShowAt;
+    // SPLIT-1: the route re-checks all of this (lib/split-booking splitRefusal); this only hides the door.
+    const canSplit = b.status === 'confirmed' && b.players > 1 && unpaid && !b.noShowAt && !b.roundPaid && !b.shopLocked && b.appliedRate !== 'pack' && !tt.event && access.can('sheet.counter_payment');
     return (
       <li key={b.id} className={'py-4 ' + (declined ? 'pl-3 shadow-[inset_3px_0_0_var(--color-bad)]' : '')}>
         <div className="flex items-start justify-between gap-3">
@@ -740,20 +765,20 @@ function DashboardPageInner() {
             {/* Staff notes on this golfer or this booking (dead end 25). */}
             {(b.notes?.length ?? 0) > 0 && <p className="text-[12.5px] text-ink mt-0.5">{b.notes!.join(' · ')}</p>}
           </div>
-          {showMoney && !showTicket && <span className="shrink-0 text-[14px] font-semibold text-ink tabular-nums">${(((b.totalAmount ?? 0) + shopExtra(b)) / 100).toFixed(2)}</span>}
+          {showMoney && !showTicket && <span className="shrink-0 text-[14px] font-semibold text-ink tabular-nums">${(paidShownCents / 100).toFixed(2)}</span>}
         </div>
         <p className="mt-1 flex items-baseline gap-1.5 text-[13px] text-ink">
           {b.noShowAt && b.status === 'confirmed'
             ? <><StatusDot status="bad" /><span>No-show</span></>
             : declined
               ? <><StatusDot status="bad" /><span>Card declined<span className="text-ink-muted"> · {b.checkInFailReason}</span></span></>
-              : <><StatusDot {...statusDot(bStatus.tone)} /><span>{b.paymentStatus === 'on_account' && b.accountName ? `Checked In · on ${b.accountName}’s account` : bStatus.label}{bStatus.sublabel && b.status === 'confirmed' && <span className="text-ink-muted"> · {bStatus.sublabel}</span>}</span></>}
+              : <><StatusDot {...statusDot(bStatus.tone)} /><span>{b.paymentStatus === 'on_account' && b.accountName ? `Checked In · on ${b.accountName}’s account` : bStatus.label}{bStatus.sublabel && b.status === 'confirmed' && <span className="text-ink-muted"> · {bStatus.sublabel}</span>}{partlyPlayed && <span className="text-ink-muted"> · {b.checkedInPlayers} of {b.players} played</span>}</span></>}
         </p>
 
         {/* Who showed: the check-in and cash buttons charge for this many (the whole group unless changed). */}
         {b.status === 'confirmed' && b.players > 1 && b.paymentStatus !== 'paid' && (access.can('sheet.checkin') || access.can('sheet.counter_payment')) && (
           <div className="mt-3" onClick={e => e.stopPropagation()}>
-            <div className="text-[12.5px] font-medium text-ink mb-1">Here now</div>
+            <div className="text-[12.5px] font-medium text-ink mb-1">Showed up</div>
             <div role="radiogroup" aria-label={`How many of ${b.golferName}'s group are here`} className="flex gap-1 p-1 rounded-[7px] bg-paper">
               {Array.from({ length: b.players }, (_, i) => i + 1).map(n => (
                 <button key={n} type="button" role="radio" aria-checked={herePlayers === n} onClick={() => setHere(h => ({ ...h, [b.id]: n }))}
@@ -762,8 +787,41 @@ function DashboardPageInner() {
                 </button>
               ))}
             </div>
+            {herePlayers < b.players && <p className="mt-1.5 text-[12.5px] text-warn">The other {b.players - herePlayers} won’t be charged.</p>}
           </div>
         )}
+
+        {/* SPLIT-1 (Cam 2026-11-02): paying separately — the players who pay on their own become their own
+            group on this time, at the group's own per-player price (lib/split-booking), then pay any way. */}
+        {canSplit && splitFor?.id !== b.id && (
+          <button type="button" onClick={e => { e.stopPropagation(); setSplitFor({ id: b.id, n: 1, name: '' }); }} className={'mt-2 ' + link}>Pay separately</button>
+        )}
+        {canSplit && splitFor?.id === b.id && (() => {
+          const sh = splitShares({ players: b.players, greenFeeTotal: b.greenFeeTotal ?? (b.totalAmount - (b.accessFeeTotal ?? 0)), cartFeeTotal: b.cartFeeTotal ?? 0, rangeBallsTotal: b.rangeBallsTotal ?? 0, accessFeeTotal: b.accessFeeTotal ?? 0, totalAmount: b.totalAmount, residentPlayers: b.residentPlayers ?? 0, residentRateCents: b.residentRateCents ?? null, memberRateCents: b.memberRateCents ?? null, memberCartCents: b.memberCartCents ?? null }, splitFor.n, { greenFeeCents: Math.round(tt.greenFee * 100), cartFeeCents: Math.round(tt.cartFee * 100) });
+          const cashCents = sh ? sh.leave.totalAmount - sh.leave.accessFeeTotal : 0;
+          return (
+            <div className="mt-3 rounded-[7px] bg-paper/70 px-3 py-3 space-y-2.5" onClick={e => e.stopPropagation()}>
+              <div className="flex flex-wrap items-center gap-2 text-[13px] text-ink">
+                <label className="flex items-center gap-1.5">Paying alone
+                  <select value={splitFor.n} onChange={e => setSplitFor({ ...splitFor, n: Number(e.target.value) })} className="bg-white border border-line rounded-md px-1.5 py-1 text-[13px] text-ink">
+                    {Array.from({ length: b.players - 1 }, (_, i) => i + 1).map(n => <option key={n} value={n}>{n}</option>)}
+                  </select>
+                </label>
+                <input value={splitFor.name} onChange={e => setSplitFor({ ...splitFor, name: e.target.value })} placeholder="Name" aria-label="Their name"
+                  className="flex-1 min-w-[140px] bg-white border border-line rounded-md px-2.5 py-1.5 text-[13px] text-ink placeholder-ink-faint" />
+              </div>
+              {sh && showMoney && <p className="text-[12.5px] text-ink-soft tabular-nums">Their share ${(sh.leave.totalAmount / 100).toFixed(2)} · {b.golferName} keeps ${(sh.keep.totalAmount / 100).toFixed(2)}</p>}
+              {!sh && <p className="text-[12.5px] text-bad">This price can’t be split.</p>}
+              <div className="grid grid-cols-2 gap-2">
+                <button type="button" disabled={!sh || splitBusy} onClick={() => splitOff(b, splitFor.n, splitFor.name, true)} className={big.replace('w-full min-h-[52px] ', 'min-h-[44px] text-[14px] ') + 'bg-pine hover:bg-pine-hover'}>
+                  {splitBusy ? 'Saving…' : `Take cash${money(cashCents)}`}
+                </button>
+                <button type="button" disabled={!sh || splitBusy} onClick={() => splitOff(b, splitFor.n, splitFor.name, false)} className={tile}>Split off</button>
+              </div>
+              <button type="button" onClick={() => setSplitFor(null)} className={link}>Back</button>
+            </div>
+          );
+        })()}
 
         {/* The ticket: what the card is charged, line by line, for who's here. */}
         {showTicket && (
@@ -1792,7 +1850,7 @@ function CardCheckInModal({ booking, reason, showed, onConfirm, onCancel }: {
       </div>
       {reason && (
         <div className="mb-4 text-xs text-bad bg-bad/5 border border-bad/20 rounded-md px-3 py-2">
-          {reason} The booking still stands — take a different card, or collect in person and leave it for the operator to mark.
+          {reason} The booking still stands — try another card, or take cash.
         </div>
       )}
       <div className="mb-4">

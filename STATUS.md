@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-02 06:30 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `76a80e51` · working tree **7 dirty file(s)**
+Generated 2026-11-02 21:43 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `305393b8` · working tree **8 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 49 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 51 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `90f8f79d` | 2026-11-02 | Dashboard: "/" or Cmd/Ctrl K jumps to golfer search; Home flags stale conditions (#298) |
+| `06d5e4c6` | 2026-11-02 | Dashboard: / or Ctrl/Cmd K jumps to golfer search; Home says when conditions are off the booking page |
 | `2aa723d8` | 2026-11-02 | Booking page: today's course conditions while fresh (#297) |
 | `449bd296` | 2026-11-02 | Booking page: today's course conditions (carts, range, greens, pins) while fresh |
 | `360913a3` | 2026-11-02 | Register: item photos on the tiles (+ Home review follow-ups) (#296) |
@@ -64,15 +66,16 @@ Generated 2026-11-02 06:30 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (7 file(s))
+### Uncommitted working tree (8 file(s))
 
+- `M CLAUDE.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M src/components/dashboard/OperatorSearch.tsx`
-- `M src/components/dashboard/home/HomeBoard.tsx`
-- `M src/lib/course-conditions.ts`
-- `M src/lib/home-board.ts`
-- `?? scripts/search-shortcut-test.ts`
+- `M src/app/api/operator/bookings/route.ts`
+- `M src/app/dashboard/page.tsx`
+- `?? scripts/split-booking-db-test.ts`
+- `?? src/lib/split-booking-db.ts`
+- `?? src/lib/split-booking.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -89,7 +92,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 102d | `b88c8bf3` | `RUN_QUEUE.md:2412` |
+| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 103d | `b88c8bf3` | `RUN_QUEUE.md:2412` |
 
 ## Not started — the actual queue
 
@@ -158,10 +161,10 @@ This is the distinction a raw checkbox count gets wrong.
 | spec | open refs | last touched | age |
 |---|---|---|---|
 | `CLAUDE.md` | 1 | 2026-11-02 | 0d |
-| `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 0d |
+| `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 1d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 12d |
-| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 6d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 7d |
+| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 7d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 9d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 10d |
 | `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 10d |
@@ -198,6 +201,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `90f8f79d` 2026-11-02 — Dashboard: "/" or Cmd/Ctrl K jumps to golfer search; Home flags stale conditions (#298)
+- `06d5e4c6` 2026-11-02 — Dashboard: / or Ctrl/Cmd K jumps to golfer search; Home says when conditions are off the booking page
 - `2aa723d8` 2026-11-02 — Booking page: today's course conditions while fresh (#297)
 - `449bd296` 2026-11-02 — Booking page: today's course conditions (carts, range, greens, pins) while fresh
 - `360913a3` 2026-11-02 — Register: item photos on the tiles (+ Home review follow-ups) (#296)
@@ -208,8 +213,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `0ca08896` 2026-11-02 — Tee sheet: till-style check-in on the time card (#294)
 - `383b5af1` 2026-11-02 — Regenerate code map and status board
 - `1b7f3b82` 2026-11-02 — Tests follow the till: Here-now buttons, pay-link day rule, owed amount as the ticket Total
-- `d65d1332` 2026-11-02 — Tee sheet: till-style check-in on the time card
-- `bbcc7c63` 2026-11-02 — Dashboard foundation: Geist, grey page + white panels, grouped rail, Light/Dark (#293)
 
 ---
 

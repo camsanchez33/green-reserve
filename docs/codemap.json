@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 650,
+    "files": 652,
     "routes": 290,
-    "libs": 229,
+    "libs": 231,
     "models": 70,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -5374,7 +5374,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 394,
+      "lines": 410,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5421,6 +5421,7 @@
         "@/lib/shop",
         "@/lib/sms-consent",
         "@/lib/sms-consent-copy",
+        "@/lib/split-booking-db",
         "@/lib/staff-permissions",
         "@/lib/staff-refund",
         "@/lib/twilio",
@@ -8874,7 +8875,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1816,
+      "lines": 1874,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8917,6 +8918,7 @@
         "@/lib/round-packs",
         "@/lib/setup-missing",
         "@/lib/sms-consent-copy",
+        "@/lib/split-booking",
         "@/lib/tee-time-fit",
         "@/lib/use-dashboard-access",
         "@stripe/react-stripe-js",
@@ -15222,6 +15224,7 @@
         "src/lib/sample-data.ts",
         "src/lib/shop-report.ts",
         "src/lib/shop-sales.ts",
+        "src/lib/split-booking-db.ts",
         "src/lib/staff-refund.ts",
         "src/lib/tee-sheet-engine.ts",
         "src/lib/weather-cancel.ts"
@@ -16060,7 +16063,8 @@
         "src/lib/normalize-course.ts",
         "src/lib/page-review.ts",
         "src/lib/receipt-charges.ts",
-        "src/lib/sample-data.ts"
+        "src/lib/sample-data.ts",
+        "src/lib/split-booking-db.ts"
       ]
     },
     {
@@ -20632,7 +20636,8 @@
         "src/lib/member-account.ts",
         "src/lib/member-session.ts",
         "src/lib/move-booking.ts",
-        "src/lib/sample-data.ts"
+        "src/lib/sample-data.ts",
+        "src/lib/split-booking.ts"
       ]
     },
     {
@@ -22451,6 +22456,7 @@
         "src/lib/shop-stock.ts",
         "src/lib/shop.ts",
         "src/lib/sms-consent.ts",
+        "src/lib/split-booking-db.ts",
         "src/lib/staff-refund.ts",
         "src/lib/submit-change-request.ts",
         "src/lib/tee-sheet-engine.ts",
@@ -23074,7 +23080,8 @@
         "src/lib/member-rates.ts",
         "src/lib/member-session.ts",
         "src/lib/move-booking.ts",
-        "src/lib/sample-data.ts"
+        "src/lib/sample-data.ts",
+        "src/lib/split-booking.ts"
       ]
     },
     {
@@ -24842,6 +24849,73 @@
         "src/app/api/twilio/inbound/route.ts",
         "src/lib/golfer-messages.ts",
         "src/lib/twilio.ts"
+      ]
+    },
+    {
+      "path": "src/lib/split-booking-db.ts",
+      "lines": 80,
+      "purpose": "SPLIT-1 (Cam 2026-11-02, \"they all want to pay separately … has to be seamless\"):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "splitBooking",
+          "kind": "fn"
+        },
+        {
+          "name": "SplitResult",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./booking-events",
+        "./cancel-policy",
+        "./prisma",
+        "./split-booking"
+      ],
+      "usedBy": [
+        "src/app/api/operator/bookings/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/split-booking.ts",
+      "lines": 66,
+      "purpose": "SPLIT-1 (Cam 2026-11-02:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "SplitPart",
+          "kind": "type"
+        },
+        {
+          "name": "splitRefusal",
+          "kind": "fn"
+        },
+        {
+          "name": "splitShares",
+          "kind": "fn"
+        },
+        {
+          "name": "SplitSource",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./member-rates",
+        "./residents"
+      ],
+      "usedBy": [
+        "src/app/dashboard/page.tsx",
+        "src/lib/split-booking-db.ts"
       ]
     },
     {
