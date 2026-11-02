@@ -23,10 +23,11 @@ export async function openShiftNotes(courseId: string, now = new Date()): Promis
   return rows.map(r => ({ ...r, createdAt: r.createdAt.toISOString() }));
 }
 
-export async function courseConditions(courseId: string): Promise<{ detail: CourseConditions; alert: string; updatedAt: string | null }> {
+export async function courseConditions(courseId: string): Promise<{ detail: CourseConditions; alert: string; updatedAt: string | null; detailAt: string | null }> {
   const c = await prisma.course.findUnique({ where: { id: courseId }, select: { conditions: true, conditionsDetail: true, conditionsDetailAt: true, conditionsUpdatedAt: true } });
   const at = [c?.conditionsDetailAt, c?.conditionsUpdatedAt].filter((d): d is Date => !!d).sort((a, b) => b.getTime() - a.getTime())[0];
-  return { detail: cleanConditions(c?.conditionsDetail), alert: c?.conditions ?? '', updatedAt: at ? at.toISOString() : null };
+  // detailAt is the four choices' own time — what the booking page's 18 hours run from (golferConditionLines).
+  return { detail: cleanConditions(c?.conditionsDetail), alert: c?.conditions ?? '', updatedAt: at ? at.toISOString() : null, detailAt: c?.conditionsDetailAt ? c.conditionsDetailAt.toISOString() : null };
 }
 
 /** The next 7 days (today first), per tee-time hour: players booked and spots offered. Blocked times offer nothing. */

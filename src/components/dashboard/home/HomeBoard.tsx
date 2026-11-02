@@ -8,12 +8,12 @@ import Link from 'next/link';
 import { Card } from '@/components/ui/Card';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { dfetch } from '@/lib/dashboard-fetch';
-import { CONDITION_FIELDS, conditionLabel, type CourseConditions, type ConditionKey } from '@/lib/course-conditions';
+import { CONDITION_FIELDS, conditionLabel, conditionsOffBookingPage, type CourseConditions, type ConditionKey } from '@/lib/course-conditions';
 
 export type ShiftNote = { id: string; body: string; authorName: string; createdAt: string };
 export type WeekAhead = { hours: number[]; days: { date: string; cells: { booked: number; offered: number }[] }[] };
 export type MonthGoal = { month: string; goalCents: number | null; collectedCents: number; daysLeft: number; neededPerDayCents: number | null; lastMonth: string; lastMonthPerDayCents: number };
-export type Conditions = { detail: CourseConditions; alert: string; updatedAt: string | null };
+export type Conditions = { detail: CourseConditions; alert: string; updatedAt: string | null; detailAt: string | null };
 
 const usd0 = (c: number) => `$${Math.round(c / 100).toLocaleString('en-US')}`;
 const when = (iso: string) => new Date(iso).toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' });
@@ -79,7 +79,7 @@ export function ConditionsCard({ initial, canEdit }: { initial: Conditions; canE
     const r = await dfetch<{ detail: CourseConditions; updatedAt: string | null }>('/api/operator/conditions', { method: 'PATCH', body: JSON.stringify({ detail: draft }) });
     setBusy(false);
     if (!r.ok) { setError(r.error); return; }
-    setC(x => ({ ...x, detail: r.data.detail, updatedAt: r.data.updatedAt })); setEditing(false);
+    setC(x => ({ ...x, detail: r.data.detail, updatedAt: r.data.updatedAt, detailAt: r.data.updatedAt })); setEditing(false);
   }
   return (
     <Card className="px-5 py-4 flex flex-col gap-3">
@@ -88,6 +88,10 @@ export function ConditionsCard({ initial, canEdit }: { initial: Conditions; canE
         {c.updatedAt && <span className="text-[12px] text-ink-muted">{when(c.updatedAt)}</span>}
         {canEdit && !editing && <button className="ml-auto text-[13px] font-medium text-pine" onClick={() => { setDraft(c.detail); setEditing(true); }}>Update</button>}
       </div>
+      {/* Golfers see these for 18 hours from when they were set (golferConditionLines) — say so when they've gone. */}
+      {conditionsOffBookingPage(c.detail, c.detailAt) && (
+        <p className="-mt-1 text-[12.5px] text-ink-soft"><StatusDot status="warn" label="" /> Off your booking page — update to show today&apos;s</p>
+      )}
       {!editing ? (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {CONDITION_FIELDS.map(f => (

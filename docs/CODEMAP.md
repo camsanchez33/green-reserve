@@ -442,7 +442,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/call-invite.ts` | 4 | 106 | CALL_SCHEDULING_SPEC SC-2 §1 — the "pick a call time" invite. | `deliverCallInvite`, `INVITE_DAYS`, `inviteAgendaLines`, `InviteSendResult`, `inviteUrl`, `issueCallInvite`, `sendCallInvite`, `sendCallReminders` |
 | `src/lib/card-reader.ts` | 4 | 278 | POS-3 R3 (Cam 2026-10-24: | `cancelReaderPayment`, `courseStripe`, `listReaders`, `ownReader`, `readerSaleStatus`, `ReaderSaleStatus`, `ReaderView`, `registerReader` +7 more |
 | `src/lib/company-documents.ts` | 4 | 61 | CO-DOCS (Cam 2026-10-01): | `COMPANY_DOC_CATEGORIES`, `COMPANY_DOC_MAX_BYTES`, `COMPANY_DOC_PREFIX`, `COMPANY_DOC_TYPES`, `CompanyDocCategory`, `companyDocPathOf`, `describeCompanyPath`, `isAllowedCompanyPath` +1 more |
-| `src/lib/course-conditions.ts` | 4 | 43 | DASH-D Home (Cam 2026-11-01, "the course conditions"): | `cleanConditions`, `CONDITION_FIELDS`, `ConditionKey`, `conditionLabel`, `CONDITIONS_FRESH_HOURS`, `CourseConditions`, `golferConditionLines` |
+| `src/lib/course-conditions.ts` | 4 | 48 | DASH-D Home (Cam 2026-11-01, "the course conditions"): | `cleanConditions`, `CONDITION_FIELDS`, `ConditionKey`, `conditionLabel`, `CONDITIONS_FRESH_HOURS`, `conditionsOffBookingPage`, `CourseConditions`, `golferConditionLines` |
 | `src/lib/course-events.ts` | 4 | 403 | W2-9 Events (Cam 2026-10-21: | `applyHold`, `autoPairings`, `cancelEvent`, `createEvent`, `DEFAULT_TASKS`, `dueFor`, `EVENT_KINDS`, `EventError` +20 more |
 | `src/lib/course-group.ts` | 4 | 13 | GRP-1 (Cam 2026-10-19, after golfbergencounty.com): | `groupCourseIds` |
 | `src/lib/demo-courses.ts` | 4 | 4 | Cam: | `DEMO_COURSE_SLUGS` |
@@ -507,7 +507,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/cutoff-hold.ts` | 2 | 127 | The cancellation-window hold (SP-B timing "hold_at_cutoff"): | `chargeCutoffHold`, `HOLD_STALE_MS`, `HoldResult` |
 | `src/lib/data-reset.ts` | 2 | 161 | TEST-1 (Cam 2026-10-22: | `CourseResetPreview`, `KEPT_TABLES`, `previewCourseReset`, `previewWipeAll`, `resetTestCourse`, `TableCounts`, `WIPE_ALL_UNTIL`, `WIPE_CONFIRM_WORDS` +3 more |
 | `src/lib/golfer-record.ts` | 2 | 174 | The golfer record (Revamp 3, Cam 2026-10-29): | `autoBlockReason`, `golferRecord`, `GolferRecord`, `isLateCancel`, `onlineBookingBlock`, `recordKeys`, `recordKeysFor` |
-| `src/lib/home-board.ts` | 2 | 82 | DASH-D Home (Cam 2026-11-01, mockups S1 + "week-ahead heat map and month vs goal"): | `courseConditions`, `monthGoal`, `openShiftNotes`, `SHIFT_NOTE_MAX`, `ShiftNoteRow`, `weekAhead` |
+| `src/lib/home-board.ts` | 2 | 83 | DASH-D Home (Cam 2026-11-01, mockups S1 + "week-ahead heat map and month vs goal"): | `courseConditions`, `monthGoal`, `openShiftNotes`, `SHIFT_NOTE_MAX`, `ShiftNoteRow`, `weekAhead` |
 | `src/lib/inquiry-action-queue.ts` | 2 | 107 | The Overview action queue's inquiry rows. | `ActionQueueRow`, `buildInquiryQueueRows`, `QueueInquiry` |
 | `src/lib/inquiry-board.ts` | 2 | 85 | AW-6a (Cam 2026-10-21): | `BOARD_COLUMNS`, `BOARD_STUCK_DAYS`, `boardColumn`, `BoardColumn`, `BoardInquiry`, `LIVE_ON_BOARD_DAYS`, `nextStep`, `NextStep` +1 more |
 | `src/lib/inquiry-email-failed.ts` | 2 | 16 | Launch walk (Cam 2026-10-31): | `noteEmailFailed` |
@@ -649,7 +649,7 @@ Sorted the same way.
 | `src/components/dashboard/GettingStartedChecklist.tsx` | 1 | 187 |  | `default (GettingStartedChecklist)` |
 | `src/components/dashboard/GolferMessageModal.tsx` | 1 | 140 | MSG-1 (PLATFORM_ROADMAP_SPEC §5): | `default (GolferMessageModal)` |
 | `src/components/dashboard/GroupTicket.tsx` | 1 | 62 | DASH-D (Cam 2026-11-01, "make checking someone in a little more POS like"): | `default (GroupTicket)`, `TicketBooking`, `TicketLine`, `ticketLines` |
-| `src/components/dashboard/home/HomeBoard.tsx` | 1 | 188 | DASH-D Home (Cam 2026-11-01, mockup S1): | `Conditions`, `ConditionsCard`, `MonthGoal`, `MonthGoalCard`, `ShiftNote`, `ShiftNotes`, `WeekAhead`, `WeekAheadCard` |
+| `src/components/dashboard/home/HomeBoard.tsx` | 1 | 192 | DASH-D Home (Cam 2026-11-01, mockup S1): | `Conditions`, `ConditionsCard`, `MonthGoal`, `MonthGoalCard`, `ShiftNote`, `ShiftNotes`, `WeekAhead`, `WeekAheadCard` |
 | `src/components/dashboard/LastMinuteDeals.tsx` | 1 | 71 | PRICE-2 (Cam 2026-10-30: | `LastMinuteDeals` |
 | `src/components/dashboard/MemberAccount.tsx` | 1 | 134 | MEM-ACCT (Cam 2026-10-30: | `AccountFields`, `MemberAccount` |
 | `src/components/dashboard/MemberJoin.tsx` | 1 | 92 | MEM-JOIN (Cam 2026-10-30: | `AutoRenewFields`, `AutoRenewStop`, `JoinOnlineSelect`, `JoinRequests` |
@@ -662,7 +662,7 @@ Sorted the same way.
 | `src/components/dashboard/money/SalesPanel.tsx` | 1 | 244 | DENSE-2 (Cam 2026-10-27, after Toast's Sales Summary and Stripe's Today): | `SalesPanel` |
 | `src/components/dashboard/MoveGroupModal.tsx` | 1 | 154 | ACT-1 (PLATFORM_ROADMAP_SPEC §2): | `default (MoveGroupModal)` |
 | `src/components/dashboard/onboarding/PageReviewStep.tsx` | 1 | 257 | Onboarding step 1 (Cam 2026-10-27): | `PageReviewStep` |
-| `src/components/dashboard/OperatorSearch.tsx` | 1 | 90 | DASH-C: | `default (OperatorSearch)` |
+| `src/components/dashboard/OperatorSearch.tsx` | 1 | 116 | DASH-C: | `default (OperatorSearch)` |
 | `src/components/dashboard/PromoCodes.tsx` | 1 | 119 | PRICE-1 (Cam 2026-10-30: | `PromoCodes` |
 | `src/components/dashboard/RegisterClose.tsx` | 1 | 194 | POS-3 R4 (Cam 2026-10-24): | `RegisterClose` |
 | `src/components/dashboard/RoundPacks.tsx` | 1 | 109 | PRICE-3 (Cam 2026-10-30: | `RoundPacks` |

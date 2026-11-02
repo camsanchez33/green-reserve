@@ -29,6 +29,31 @@ export default function OperatorSearch({ dropUp = false, onPicked }: { dropUp?: 
   const [busy, setBusy] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   const seq = useRef(0);
+  const input = useRef<HTMLInputElement>(null);
+  // DASH-D (Cam 2026-11-01, the command bar): "/" or Ctrl/⌘ K jumps to the search from any
+  // dashboard page. The rail's copy only (the phone's lives in the More sheet), and never
+  // while someone is typing in a field.
+  useEffect(() => {
+    if (dropUp) return;
+    let lastKeyAt = 0;
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      const typing = !!t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
+      const k = e.key.toLowerCase();
+      // A barcode scanner types fast: a "/" inside a scanned code belongs to the register's scan, not here.
+      const now = performance.now(), burst = now - lastKeyAt < 100;
+      if (e.key.length === 1) lastKeyAt = now;
+      // Never out of an open dialog (focus would land behind the overlay).
+      if (t?.closest('[role="dialog"]') || document.querySelector('[aria-modal="true"]')) return;
+      if ((k === 'k' && e.metaKey) || (k === 'k' && e.ctrlKey && !typing) || (e.key === '/' && !typing && !burst && !e.metaKey && !e.ctrlKey && !e.altKey)) {
+        if (!input.current || input.current.offsetParent === null) return; // hidden (phone width)
+        e.preventDefault();
+        input.current.focus(); input.current.select();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [dropUp]);
 
   useEffect(() => {
     const term = q.trim();
@@ -64,9 +89,10 @@ export default function OperatorSearch({ dropUp = false, onPicked }: { dropUp?: 
       <label className="flex items-center gap-2 bg-paper rounded-md px-2.5 py-2 focus-within:ring-2 focus-within:ring-pine/10">
         <Search className="w-3.5 h-3.5 text-ink-faint shrink-0" aria-hidden="true" />
         <span className="sr-only">Find a golfer, booking or member</span>
-        <input value={q} onChange={e => { setQ(e.target.value); setOpen(true); }} onFocus={() => setOpen(true)}
+        <input ref={input} value={q} onChange={e => { setQ(e.target.value); setOpen(true); }} onFocus={() => setOpen(true)}
           onKeyDown={e => { if (e.key === 'Escape') setOpen(false); if (e.key === 'Enter' && results?.[0] && resultsFor === q.trim()) go(results[0].href); }}
-          placeholder="Find a golfer or member" className="flex-1 min-w-0 bg-transparent text-[13px] text-ink placeholder-ink-faint outline-none" />
+          placeholder="Find a golfer or member" aria-keyshortcuts={dropUp ? undefined : '/ Control+K Meta+K'} className="flex-1 min-w-0 bg-transparent text-[13px] text-ink placeholder-ink-faint outline-none" />
+        {!dropUp && !q && <kbd aria-hidden="true" className="shrink-0 rounded-[4px] border border-line px-1.5 text-[11px] leading-[18px] text-ink-faint font-sans">/</kbd>}
       </label>
       {showPanel && (
         <Card role="listbox" aria-label="Search results" className={(dropUp ? "absolute inset-x-0 bottom-full mb-1 max-h-[45vh]" : "absolute inset-x-0 top-full mt-1 max-h-[60vh]") + " z-50 py-1 text-[13px] overflow-y-auto"}>

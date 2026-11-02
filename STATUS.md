@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-02 06:21 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `c96e02bb` · working tree **8 dirty file(s)**
+Generated 2026-11-02 06:30 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `76a80e51` · working tree **7 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 47 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 49 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `2aa723d8` | 2026-11-02 | Booking page: today's course conditions while fresh (#297) |
+| `449bd296` | 2026-11-02 | Booking page: today's course conditions (carts, range, greens, pins) while fresh |
 | `360913a3` | 2026-11-02 | Register: item photos on the tiles (+ Home review follow-ups) (#296) |
 | `b04c0c83` | 2026-11-02 | Register: item photos on the tiles (+ Home review follow-ups) |
 | `0394ca3b` | 2026-11-02 | Home: shift note, course conditions, week ahead, month vs goal (#295) |
@@ -62,16 +64,15 @@ Generated 2026-11-02 06:21 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (8 file(s))
+### Uncommitted working tree (7 file(s))
 
-- `M CLAUDE.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M src/app/courses/[slug]/CourseBookingClient.tsx`
+- `M src/components/dashboard/OperatorSearch.tsx`
+- `M src/components/dashboard/home/HomeBoard.tsx`
 - `M src/lib/course-conditions.ts`
-- `M src/lib/courses-data.ts`
-- `M src/lib/normalize-course.ts`
-- `?? scripts/booking-conditions-test.ts`
+- `M src/lib/home-board.ts`
+- `?? scripts/search-shortcut-test.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -197,6 +198,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `2aa723d8` 2026-11-02 — Booking page: today's course conditions while fresh (#297)
+- `449bd296` 2026-11-02 — Booking page: today's course conditions (carts, range, greens, pins) while fresh
 - `360913a3` 2026-11-02 — Register: item photos on the tiles (+ Home review follow-ups) (#296)
 - `b04c0c83` 2026-11-02 — Register: item photos on the tiles (+ Home review follow-ups)
 - `0394ca3b` 2026-11-02 — Home: shift note, course conditions, week ahead, month vs goal (#295)
@@ -207,8 +210,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `1b7f3b82` 2026-11-02 — Tests follow the till: Here-now buttons, pay-link day rule, owed amount as the ticket Total
 - `d65d1332` 2026-11-02 — Tee sheet: till-style check-in on the time card
 - `bbcc7c63` 2026-11-02 — Dashboard foundation: Geist, grey page + white panels, grouped rail, Light/Dark (#293)
-- `ba7d3ab1` 2026-11-02 — Regenerate code map and status board
-- `14d6254a` 2026-11-02 — Dark mode is screen-only (prints stay light); theme cookie Secure only over https
 
 ---
 
