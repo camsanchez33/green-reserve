@@ -114,7 +114,7 @@ function EventsInner() {
   );
 
   return (
-    <div className="flex flex-col min-h-screen md:h-screen bg-white md:overflow-hidden print:h-auto print:overflow-visible">
+    <div className="flex flex-col min-h-screen md:h-screen bg-page md:overflow-hidden print:h-auto print:overflow-visible">
       <style>{PRINT_CSS}</style>
       <OperatorSidebar active="events" />
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-8 print:overflow-visible">

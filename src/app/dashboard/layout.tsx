@@ -4,14 +4,18 @@
 // AnnouncementBanner is rendered inside OperatorSidebar so it only appears on
 // authenticated dashboard pages (login, forgot-password, etc. don't use the sidebar).
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { cookies } from 'next/headers';
+import { Geist } from 'next/font/google';
 import { STAFF_LOOK_CLASS } from '@/lib/staff-fonts';
-// DASH-C: the dashboard's one face, as the admin's (see globals.css .op-look).
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
+import { OP_THEME_COOKIE, readOpTheme } from '@/lib/op-theme';
+// DASH-D (Cam 2026-11-01): Geist is the dashboard's one face (see globals.css .op-look).
+const geist = Geist({ subsets: ['latin'], variable: '--font-geist', display: 'swap' });
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };
-// The staff wrapper (src/lib/staff-fonts.ts). Since FLOW-1 it carries no look
-// of its own — the dashboard renders in the site's one look.
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  return <div className={STAFF_LOOK_CLASS}><div className={`op-look ${inter.variable}`}>{children}</div></div>;
+// The staff wrapper (src/lib/staff-fonts.ts) is only a hook. data-theme is the
+// Light/Dark choice (DASH-D), read from this browser's cookie so the first paint
+// is already in the right look.
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const theme = readOpTheme((await cookies()).get(OP_THEME_COOKIE)?.value);
+  return <div className={STAFF_LOOK_CLASS}><div className={`op-look ${geist.variable}`} data-theme={theme}>{children}</div></div>;
 }

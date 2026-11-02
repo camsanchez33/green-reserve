@@ -458,7 +458,7 @@ export default function ShopPage() {
   const quickCash = [due, ...[2000, 5000, 10000].filter(n => n > due)].filter((n, i, a) => n > 0 && a.indexOf(n) === i).slice(0, 4);
 
   return (
-    <div className="flex flex-col min-h-screen md:h-screen bg-white md:overflow-hidden">
+    <div className="flex flex-col min-h-screen md:h-screen bg-page md:overflow-hidden">
       <OperatorSidebar active="shop" />
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-8">
         {access.loaded && !canSell ? <StaffNotice what="the pro shop" view="shop.sell" /> : (

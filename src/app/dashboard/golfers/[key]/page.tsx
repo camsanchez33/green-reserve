@@ -62,7 +62,7 @@ export default function GolferRecordPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen md:h-screen bg-white md:overflow-hidden">
+    <div className="flex flex-col min-h-screen md:h-screen bg-page md:overflow-hidden">
       <OperatorSidebar active="teesheet" />
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <div className="px-4 sm:px-10 py-7 flex flex-col gap-6 max-w-4xl">

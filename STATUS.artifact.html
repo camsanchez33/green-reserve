@@ -117,14 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-11-02 04:06 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ bffab6e9</span>
-    <span>4 uncommitted</span>
+    <span>2026-11-02 05:23 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 8fb96ded</span>
+    <span>21 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">31 runs have shipped that the queue doesn't know about</div>
+<div class="lede">33 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-31. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">3ae2293d</span><span>Pricing switches + busy-season data + speed + counter fixes + SMS opt-in (Twilio) (#289)</span></li>
+<li><span class="h">3659755c</span><span>SMS-1 follow-up: Home / Money declined cards ask before texting, like the tee sheet</span></li>
 <li><span class="h">bffab6e9</span><span>Event money needs &quot;Mark paid at the counter&quot;; a member with history can't be deleted</span></li>
 <li><span class="h">53e31df1</span><span>Counter friction B: card beside the sheet, Home opens a time's card, member opens golfer record, cash through a failed tax quote</span></li>
 <li><span class="h">b80496f3</span><span>SMS-1: texts only to numbers that agreed (Twilio A2P 10DLC opt-in)</span></li>
@@ -168,7 +170,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/sms-consent-db-test.ts</code></li><li><code>M src/components/dashboard/DeclinedCardList.tsx</code></li></ul>
+<ul class="plain"><li><code>M CLAUDE.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M src/app/dashboard/analytics/page.tsx</code></li><li><code>M src/app/dashboard/events/page.tsx</code></li><li><code>M src/app/dashboard/golfers/[key]/page.tsx</code></li><li><code>M src/app/dashboard/home/page.tsx</code></li><li><code>M src/app/dashboard/layout.tsx</code></li><li><code>M src/app/dashboard/members/page.tsx</code></li><li><code>M src/app/dashboard/messages/page.tsx</code></li><li><code>M src/app/dashboard/money/page.tsx</code></li><li><code>M src/app/dashboard/page.tsx</code></li><li><code>M src/app/dashboard/schedules/page.tsx</code></li><li><code>M src/app/dashboard/settings/page.tsx</code></li><li><code>M src/app/dashboard/shop/page.tsx</code></li><li><code>M src/app/globals.css</code></li><li><code>M src/components/OperatorSidebar.tsx</code></li><li><code>M src/components/dashboard/CoursePreview.tsx</code></li><li><code>M src/components/dashboard/TeeSheetRows.tsx</code></li><li><code>?? src/components/dashboard/ThemeSwitch.tsx</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -250,6 +252,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 12d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">3ae2293d</td><td class="num">2026-11-02</td><td>Pricing switches + busy-season data + speed + counter fixes + SMS opt-in (Twilio) (#289)</td></tr>
+<tr><td class="num">3659755c</td><td class="num">2026-11-02</td><td>SMS-1 follow-up: Home / Money declined cards ask before texting, like the tee sheet</td></tr>
 <tr><td class="num">bffab6e9</td><td class="num">2026-11-02</td><td>Event money needs &quot;Mark paid at the counter&quot;; a member with history can't be deleted</td></tr>
 <tr><td class="num">53e31df1</td><td class="num">2026-11-02</td><td>Counter friction B: card beside the sheet, Home opens a time's card, member opens golfer record, cash through a failed tax quote</td></tr>
 <tr><td class="num">b80496f3</td><td class="num">2026-11-02</td><td>SMS-1: texts only to numbers that agreed (Twilio A2P 10DLC opt-in)</td></tr>
@@ -260,8 +264,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">91745c5a</td><td class="num">2026-11-01</td><td>member-portal-price test: its course has member prices, so the switches are on</td></tr>
 <tr><td class="num">96cd687f</td><td class="num">2026-11-01</td><td>Pricing switches: Members / Residents off means the public price (backfill + auto-on)</td></tr>
 <tr><td class="num">1db52953</td><td class="num">2026-11-01</td><td>Audit wording: what the sheet, members, settings and golfer page say, made true (#288)</td></tr>
-<tr><td class="num">93f3ff63</td><td class="num">2026-11-01</td><td>Audit wording: what the sheet, members, settings and golfer page say, made true</td></tr>
-<tr><td class="num">b5d27f01</td><td class="num">2026-11-01</td><td>Audit numbers: partial refunds, event money, event player swap, shop today, payout tile (#287)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

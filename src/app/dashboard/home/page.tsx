@@ -62,7 +62,7 @@ function Spark({ values, dates, fmt }: { values: (number | null)[]; dates: strin
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="mt-1.5 overflow-visible" role="img" aria-label={`Same weekday, last 7 weeks — ${label}`}>
       <title>{label}</title>
       <polyline points={real.map(xy).join(' ')} fill="none" stroke="#8FA898" strokeWidth="1.5" strokeLinejoin="round" />
-      <circle cx={xy(last).split(',')[0]} cy={xy(last).split(',')[1]} r="2.5" fill="#173B2A" />
+      <circle cx={xy(last).split(',')[0]} cy={xy(last).split(',')[1]} r="2.5" style={{ fill: 'var(--color-pine)' }} />
     </svg>
   );
 }
@@ -106,7 +106,7 @@ export default function DashboardHome() {
   const needs = home ? home.declinedTotal + home.late.length + (home.unreadMessages > 0 ? 1 : 0) : 0;
 
   return (
-    <div className="flex flex-col min-h-screen md:h-screen bg-white md:overflow-hidden">
+    <div className="flex flex-col min-h-screen md:h-screen bg-page md:overflow-hidden">
       <OperatorSidebar active="home" />
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <div className="px-4 sm:px-10 py-7 flex flex-col gap-8">

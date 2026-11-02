@@ -31,7 +31,7 @@ export default function CoursePreview(p: CoursePreviewProps) {
   const slots = [{ time: '7:10 AM', open: 4, fee: 62 }, { time: '7:40 AM', open: 2, fee: 62 }];
 
   return (
-    <div className="w-full max-w-[380px] bg-paper border border-line overflow-hidden text-ink" aria-label="Live preview of your booking page" style={{ borderRadius: 14 }}>
+    <div className="op-keep-light w-full max-w-[380px] bg-paper border border-line overflow-hidden text-ink" aria-label="Live preview of your booking page" style={{ borderRadius: 14 }}>
       <div className="relative h-44 flex flex-col justify-end px-5 pb-4 text-white overflow-hidden"
         style={p.heroImageUrl ? { backgroundImage: `url(${p.heroImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : { backgroundColor: accent }}>
         {p.heroImageUrl

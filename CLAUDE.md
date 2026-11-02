@@ -271,7 +271,9 @@ Cam 2026-10-01: "get this ui build out through /admin and /dashboard and every o
 page so the whole site flows together." The split PUBLIC/STAFF look (UI_REVISE_SPEC §0/§1,
 Sept 2026) is RETIRED. Every page — homepage, /for-courses, legal, golfer pages, /dashboard,
 /admin — uses the homepage's palette, type (TYPE-1: EB Garamond + Libre Franklin) and corners. Clubhouse *structure* still holds
-(white cards on paper, StatusDot, no pills, no dark mode).
+(white cards on paper, StatusDot, no pills, no dark mode — except the course dashboard's own Light/Dark choice, DASH-D below).
+
+DASH-D (Cam 2026-11-01/02, the dashboard mockups — "go with light default and dark option, no glass"; supersedes DASH-C's white pages and Inter for `/dashboard/*` with the rail ONLY): **Geist** (loaded in `dashboard/layout.tsx`), a grey page (`bg-page` #F4F5F1) with white soft-sheet panels (`<Card>`), colour only where it means something (warnings, money state, urgency) — no green dashboard. The menu rail is a darker tint (`bg-rail` #E3E6DE, `border-rail-line`), grouped Today (Home, Tee sheet, Pro shop, Messages) · Business (Money, Members, Events, Schedule, Analytics) · Settings; the current tab is a white raised card with the course's `brandColor` dot. Light/Dark switch at the rail's foot and in the phone's More menu (`ThemeSwitch.tsx`), saved per browser in the `gr_op_theme` cookie (`src/lib/op-theme.ts`) and read by the layout into `data-theme` so the first paint is right. Dark mode is ONLY the token swap in `globals.css` (`.op-look[data-theme="dark"]`) — pages never test the theme, so a dashboard page uses tokens (`bg-white`, `bg-page`, `text-ink`, `var(--color-…)`), never a typed hex; a golfer-page preview wears `op-keep-light`. Spacing 4/8/12/16/24/32; type 26 title · 24 number · 15 section · 14 body · 12.5 label · 12 small; panels 10px, buttons/inputs 7px, seat cells 5px — applied page by page as each restyle PR lands.
 
 | | Every page |
 |---|---|

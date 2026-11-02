@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-02 04:06 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `bffab6e9` · working tree **4 dirty file(s)**
+Generated 2026-11-02 05:23 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `8fb96ded` · working tree **21 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 31 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 33 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `3ae2293d` | 2026-11-02 | Pricing switches + busy-season data + speed + counter fixes + SMS opt-in (Twilio) (#289) |
+| `3659755c` | 2026-11-02 | SMS-1 follow-up: Home / Money declined cards ask before texting, like the tee sheet |
 | `bffab6e9` | 2026-11-02 | Event money needs "Mark paid at the counter"; a member with history can't be deleted |
 | `53e31df1` | 2026-11-02 | Counter friction B: card beside the sheet, Home opens a time's card, member opens golfer record, cash through a failed tax quote |
 | `b80496f3` | 2026-11-02 | SMS-1: texts only to numbers that agreed (Twilio A2P 10DLC opt-in) |
@@ -46,12 +48,28 @@ Generated 2026-11-02 04:06 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (4 file(s))
+### Uncommitted working tree (21 file(s))
 
+- `M CLAUDE.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/sms-consent-db-test.ts`
-- `M src/components/dashboard/DeclinedCardList.tsx`
+- `M src/app/dashboard/analytics/page.tsx`
+- `M src/app/dashboard/events/page.tsx`
+- `M src/app/dashboard/golfers/[key]/page.tsx`
+- `M src/app/dashboard/home/page.tsx`
+- `M src/app/dashboard/layout.tsx`
+- `M src/app/dashboard/members/page.tsx`
+- `M src/app/dashboard/messages/page.tsx`
+- `M src/app/dashboard/money/page.tsx`
+- `M src/app/dashboard/page.tsx`
+- `M src/app/dashboard/schedules/page.tsx`
+- `M src/app/dashboard/settings/page.tsx`
+- `M src/app/dashboard/shop/page.tsx`
+- `M src/app/globals.css`
+- `M src/components/OperatorSidebar.tsx`
+- `M src/components/dashboard/CoursePreview.tsx`
+- `M src/components/dashboard/TeeSheetRows.tsx`
+- `?? src/components/dashboard/ThemeSwitch.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -177,6 +195,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `3ae2293d` 2026-11-02 — Pricing switches + busy-season data + speed + counter fixes + SMS opt-in (Twilio) (#289)
+- `3659755c` 2026-11-02 — SMS-1 follow-up: Home / Money declined cards ask before texting, like the tee sheet
 - `bffab6e9` 2026-11-02 — Event money needs "Mark paid at the counter"; a member with history can't be deleted
 - `53e31df1` 2026-11-02 — Counter friction B: card beside the sheet, Home opens a time's card, member opens golfer record, cash through a failed tax quote
 - `b80496f3` 2026-11-02 — SMS-1: texts only to numbers that agreed (Twilio A2P 10DLC opt-in)
@@ -187,8 +207,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `91745c5a` 2026-11-01 — member-portal-price test: its course has member prices, so the switches are on
 - `96cd687f` 2026-11-01 — Pricing switches: Members / Residents off means the public price (backfill + auto-on)
 - `1db52953` 2026-11-01 — Audit wording: what the sheet, members, settings and golfer page say, made true (#288)
-- `93f3ff63` 2026-11-01 — Audit wording: what the sheet, members, settings and golfer page say, made true
-- `b5d27f01` 2026-11-01 — Audit numbers: partial refunds, event money, event player swap, shop today, payout tile (#287)
 
 ---
 
