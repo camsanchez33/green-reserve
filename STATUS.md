@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-02 05:33 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `14d6254a` · working tree **2 dirty file(s)**
+Generated 2026-11-02 05:40 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `d18a312a` · working tree **6 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 36 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 38 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `bbcc7c63` | 2026-11-02 | Dashboard foundation: Geist, grey page + white panels, grouped rail, Light/Dark (#293) |
+| `ba7d3ab1` | 2026-11-02 | Regenerate code map and status board |
 | `14d6254a` | 2026-11-02 | Dark mode is screen-only (prints stay light); theme cookie Secure only over https |
 | `7ca659d0` | 2026-11-02 | Rail groups never drop a tab; tests follow the grouped rail and the mem-fill token |
 | `46a688fc` | 2026-11-02 | Dashboard foundation: Geist, grey page + white panels, grouped rail, Light/Dark |
@@ -51,13 +53,17 @@ Generated 2026-11-02 05:33 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (2 file(s))
+### Uncommitted working tree (6 file(s))
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
+- `M src/app/dashboard/page.tsx`
+- `M src/components/dashboard/TeeSheetRows.tsx`
+- `?? scripts/teesheet-till-test.ts`
+- `?? src/components/dashboard/GroupTicket.tsx`
 
-Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
-these actually are first.
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -180,6 +186,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `bbcc7c63` 2026-11-02 — Dashboard foundation: Geist, grey page + white panels, grouped rail, Light/Dark (#293)
+- `ba7d3ab1` 2026-11-02 — Regenerate code map and status board
 - `14d6254a` 2026-11-02 — Dark mode is screen-only (prints stay light); theme cookie Secure only over https
 - `7ca659d0` 2026-11-02 — Rail groups never drop a tab; tests follow the grouped rail and the mem-fill token
 - `46a688fc` 2026-11-02 — Dashboard foundation: Geist, grey page + white panels, grouped rail, Light/Dark
@@ -190,8 +198,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `b80496f3` 2026-11-02 — SMS-1: texts only to numbers that agreed (Twilio A2P 10DLC opt-in)
 - `db252e4b` 2026-11-02 — Status board refresh
 - `b199995d` 2026-11-02 — Counter friction: one-tap check-in, no-show waits 10 min, cart off by default, search on phones
-- `45ca1d0e` 2026-11-02 — Speed with volume: one time-zone formatter per zone (Analytics 90 days 10.7s → 1.2s)
-- `4054bff4` 2026-11-02 — Test course: busy-season sample data, with every money table filled
 
 ---
 

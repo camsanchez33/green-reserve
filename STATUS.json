@@ -1,18 +1,36 @@
 {
-  "generatedAt": "2026-11-02T05:33:23.983Z",
+  "generatedAt": "2026-11-02T05:40:17.906Z",
   "repo": {
-    "head": "14d6254a",
+    "head": "d18a312a",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 2,
+    "dirtyCount": 6,
     "dirty": [
       "M docs/CODEMAP.md",
-      " M docs/codemap.json"
+      " M docs/codemap.json",
+      " M src/app/dashboard/page.tsx",
+      " M src/components/dashboard/TeeSheetRows.tsx",
+      "?? scripts/teesheet-till-test.ts",
+      "?? src/components/dashboard/GroupTicket.tsx"
     ],
-    "looksLikeRunInProgress": false
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "bbcc7c63",
+        "date": "2026-11-02T00:39:41-05:00",
+        "subject": "Dashboard foundation: Geist, grey page + white panels, grouped rail, Light/Dark (#293)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "ba7d3ab1",
+        "date": "2026-11-02T05:33:26+00:00",
+        "subject": "Regenerate code map and status board",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "14d6254a",
         "date": "2026-11-02T05:32:26+00:00",
@@ -662,6 +680,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "bbcc7c63",
+      "date": "2026-11-02",
+      "subject": "Dashboard foundation: Geist, grey page + white panels, grouped rail, Light/Dark (#293)"
+    },
+    {
+      "h": "ba7d3ab1",
+      "date": "2026-11-02",
+      "subject": "Regenerate code map and status board"
+    },
+    {
       "h": "14d6254a",
       "date": "2026-11-02",
       "subject": "Dark mode is screen-only (prints stay light); theme cookie Secure only over https"
@@ -710,16 +738,6 @@
       "h": "b199995d",
       "date": "2026-11-02",
       "subject": "Counter friction: one-tap check-in, no-show waits 10 min, cart off by default, search on phones"
-    },
-    {
-      "h": "45ca1d0e",
-      "date": "2026-11-02",
-      "subject": "Speed with volume: one time-zone formatter per zone (Analytics 90 days 10.7s → 1.2s)"
-    },
-    {
-      "h": "4054bff4",
-      "date": "2026-11-02",
-      "subject": "Test course: busy-season sample data, with every money table filled"
     }
   ]
 }

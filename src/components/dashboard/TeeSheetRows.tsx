@@ -137,7 +137,7 @@ export default function TeeSheetRows({ slots: allSlots, isPast, isGone, nextUpId
                       onDragStart={e => { e.dataTransfer.setData('text/plain', g.id); e.dataTransfer.effectAllowed = 'move'; setDragging({ group: g, fromId: s.id }); }}
                       onDragEnd={() => { setDragging(null); setOver(null); }}
                       style={{ gridColumn: `span ${span}` }}
-                      className={'h-8 min-w-0 flex items-center gap-1.5 px-2 rounded-[4px] border-l-[3px] text-left text-[12.5px] shadow-[0_0_0_1px_rgba(20,24,20,0.08)] '
+                      className={'h-8 min-w-0 flex items-center gap-1.5 px-2 rounded-[5px] border-l-[3px] text-left text-[12.5px] shadow-[0_0_0_1px_var(--color-line-strong)] '
                         + EDGE[t] + ' '
                         + (g.status === 'completed' ? 'bg-ok/[0.12] ' : special(g) ? 'bg-mem-fill ' : 'bg-white ')
                         + (can ? 'cursor-grab active:cursor-grabbing' : '')}>

@@ -1,7 +1,7 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 643,
+    "files": 644,
     "routes": 287,
     "libs": 227,
     "models": 68,
@@ -8775,7 +8775,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1749,
+      "lines": 1816,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8795,6 +8795,7 @@
         "@/components/dashboard/ChargeToAccount",
         "@/components/dashboard/GettingStartedChecklist",
         "@/components/dashboard/GolferMessageModal",
+        "@/components/dashboard/GroupTicket",
         "@/components/dashboard/LoadError",
         "@/components/dashboard/MoveGroupModal",
         "@/components/dashboard/RegisterPacks",
@@ -10980,6 +10981,41 @@
         "@/lib/format",
         "lucide-react",
         "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/page.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/GroupTicket.tsx",
+      "lines": 62,
+      "purpose": "DASH-D (Cam 2026-11-01, \"make checking someone in a little more POS like\"):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (GroupTicket)",
+          "kind": "component"
+        },
+        {
+          "name": "TicketBooking",
+          "kind": "type"
+        },
+        {
+          "name": "TicketLine",
+          "kind": "type"
+        },
+        {
+          "name": "ticketLines",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/lib/member-rates"
       ],
       "usedBy": [
         "src/app/dashboard/page.tsx"
@@ -20324,6 +20360,7 @@
         "src/app/courses/[slug]/member/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/manage/[bookingId]/page.tsx",
+        "src/components/dashboard/GroupTicket.tsx",
         "src/lib/change-party.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/counter-pay.ts",
