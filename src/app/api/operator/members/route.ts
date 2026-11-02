@@ -299,6 +299,18 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
+  // Members audit 10 (archive, never delete): removing a membership cascades its account lines and statements
+  // away, so only one with no history (added by mistake) can go. Anyone else is set to Not active, which keeps
+  // their dues, account and statements.
+  const [charges, statements, moves] = await Promise.all([
+    prisma.memberCharge.count({ where: { membershipId: id } }),
+    prisma.memberStatement.count({ where: { membershipId: id } }),
+    prisma.moneyMove.count({ where: { membershipId: id } }),
+  ]);
+  // A dues charge in flight counts too: removing mid-charge would take the money for a membership that's gone.
+  if (charges || statements || moves || membership.lastPaidAt || membership.duesChargeStartedAt || membership.duesIntentId) {
+    return NextResponse.json({ error: 'This member has dues or account history, so they can’t be removed — set them to Not active instead. That keeps the history.' }, { status: 409 });
+  }
   await prisma.courseMembership.delete({ where: { id } });
   return NextResponse.json({ success: true });
 }

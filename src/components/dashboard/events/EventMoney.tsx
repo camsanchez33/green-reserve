@@ -5,6 +5,7 @@
 // at the course (cash, check, the course's own card machine). Any amount, any
 // number of them. Refunds when the course decides to give one. Every action
 // shows its pending state, then the result or the server's reason.
+import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import SmsConsentAsk from '@/components/dashboard/SmsConsentAsk';
 import { useState } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -56,6 +57,8 @@ export default function EventMoney({ eventId, live, pricePerPlayerCents, organiz
   money: Money; payments: EventPayment[]; canRefund: boolean; reload: () => Promise<void>;
 }) {
   const [mode, setMode] = useState<'' | 'link' | 'record'>('');
+  // Events audit 23: recording money taken another way needs "Mark paid at the counter" (the route checks it too).
+  const canRecord = useDashboardAccess().can('sheet.counter_payment');
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const [note, setNote] = useState('');
@@ -115,7 +118,7 @@ export default function EventMoney({ eventId, live, pricePerPlayerCents, organiz
         {live && (
           <div className="flex gap-2">
             <button onClick={() => { setMode(mode === 'link' ? '' : 'link'); setMade(null); setError(''); setLink(l => ({ ...l, headcount: String(money.headcount || '') })); }} className={SECONDARY} aria-expanded={mode === 'link'}>Send a pay link</button>
-            <button onClick={() => { setMode(mode === 'record' ? '' : 'record'); setError(''); }} className={SECONDARY} aria-expanded={mode === 'record'}>Record a payment</button>
+            {canRecord && <button onClick={() => { setMode(mode === 'record' ? '' : 'record'); setError(''); }} className={SECONDARY} aria-expanded={mode === 'record'}>Record a payment</button>}
           </div>
         )}
       </div>
@@ -264,7 +267,7 @@ export default function EventMoney({ eventId, live, pricePerPlayerCents, organiz
                     {live && p.payUrl && <button onClick={() => copy(p.payUrl!, p.id)} className={LINK}>{copied === p.id ? 'Copied' : 'Copy link'}</button>}
                     {live && p.payerEmail && <button disabled={!!busy} onClick={() => post('resend' + p.id, { action: 'resend', paymentId: p.id, via: 'email' }, () => 'Emailed again.')} className={LINK}>Email again</button>}
                     {live && p.payerPhone && <button disabled={!!busy} onClick={() => post('resend' + p.id, { action: 'resend', paymentId: p.id, via: 'sms' }, () => 'Texted again.')} className={LINK}>Text again</button>}
-                    <button onClick={() => setPaidOther(paidOther?.id === p.id ? null : { id: p.id, method: 'cash' })} className={LINK}>Paid another way</button>
+                    {canRecord && <button onClick={() => setPaidOther(paidOther?.id === p.id ? null : { id: p.id, method: 'cash' })} className={LINK}>Paid another way</button>}
                     <button disabled={!!busy} onClick={() => post('void' + p.id, { action: 'void', paymentId: p.id }, () => 'Link cancelled — it can’t be paid now.')} className={LINK}>{busy === 'void' + p.id ? 'Cancelling…' : 'Cancel link'}</button>
                   </div>
                 )}

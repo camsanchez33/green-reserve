@@ -61,6 +61,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   try {
     switch (body.action) {
       case 'record': {
+        // Events audit 23: saying money was taken (check, cash, card elsewhere) is a counter-payment power, not just "Run events".
+        { const denied = requirePermission(session, 'sheet.counter_payment'); if (denied) return denied; }
         const r = await recordCoursePayment(courseId, id, body, session.email);
         if (!r.ok) return bad(r.error, r.status);
         return NextResponse.json({ ok: true });
@@ -89,6 +91,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       }
       case 'void': case 'paid_other': {
         if (!own) return bad('Pick a payment.');
+        if (body.action === 'paid_other') { const denied = requirePermission(session, 'sheet.counter_payment'); if (denied) return denied; }
         const r = await settleOpenPayment(courseId, own.id, body.action === 'void' ? 'void' : { method: String(body.method ?? '') });
         if (!r.ok) return bad(r.error, r.status);
         return NextResponse.json({ ok: true });

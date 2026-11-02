@@ -5729,7 +5729,7 @@
     },
     {
       "path": "src/app/api/operator/events/[id]/payments/route.ts",
-      "lines": 120,
+      "lines": 123,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6080,7 +6080,7 @@
     },
     {
       "path": "src/app/api/operator/members/route.ts",
-      "lines": 305,
+      "lines": 317,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11753,7 +11753,7 @@
     },
     {
       "path": "src/components/dashboard/events/EventDetail.tsx",
-      "lines": 422,
+      "lines": 425,
       "purpose": "W2-9 Events:",
       "brain": [],
       "exports": [
@@ -11794,6 +11794,7 @@
         "@/lib/course-events",
         "@/lib/dashboard-fetch",
         "@/lib/format",
+        "@/lib/use-dashboard-access",
         "react"
       ],
       "usedBy": [
@@ -11804,7 +11805,7 @@
     },
     {
       "path": "src/components/dashboard/events/EventMoney.tsx",
-      "lines": 319,
+      "lines": 322,
       "purpose": "W2-9b:",
       "brain": [],
       "exports": [
@@ -11841,6 +11842,7 @@
         "@/components/ui/field",
         "@/lib/dashboard-fetch",
         "@/lib/format",
+        "@/lib/use-dashboard-access",
         "react"
       ],
       "usedBy": [
@@ -25272,7 +25274,9 @@
         "src/app/dashboard/shop/page.tsx",
         "src/components/OperatorSidebar.tsx",
         "src/components/dashboard/ShopCatalog.tsx",
-        "src/components/dashboard/StaffNotice.tsx"
+        "src/components/dashboard/StaffNotice.tsx",
+        "src/components/dashboard/events/EventDetail.tsx",
+        "src/components/dashboard/events/EventMoney.tsx"
       ]
     },
     {
@@ -29443,6 +29447,7 @@
       ],
       "readers": [
         "src/app/api/operator/member-accounts/route.ts",
+        "src/app/api/operator/members/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/lib/member-account.ts",
         "src/lib/member-statements.ts",
@@ -29669,6 +29674,7 @@
       "readers": [
         "src/app/api/cron/send-reminders/route.ts",
         "src/app/api/operator/member-accounts/route.ts",
+        "src/app/api/operator/members/route.ts",
         "src/lib/member-account.ts",
         "src/lib/member-statements.ts"
       ]
@@ -29868,6 +29874,7 @@
       ],
       "readers": [
         "src/app/api/member/[courseSlug]/payments/route.ts",
+        "src/app/api/operator/members/route.ts",
         "src/lib/analytics.ts",
         "src/lib/ledger-view.ts",
         "src/lib/money-ledger.ts",

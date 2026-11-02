@@ -225,14 +225,14 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/operator/demand-pricing` | operator | file | GET PATCH POST | `src/app/api/operator/demand-pricing/route.ts` | 85 |
 | `/api/operator/events` | operator | file | GET POST | `src/app/api/operator/events/route.ts` | 74 |
 | `/api/operator/events/[id]` | operator | file | GET PATCH | `src/app/api/operator/events/[id]/route.ts` | 325 |
-| `/api/operator/events/[id]/payments` | operator | file | POST | `src/app/api/operator/events/[id]/payments/route.ts` | 120 |
+| `/api/operator/events/[id]/payments` | operator | file | POST | `src/app/api/operator/events/[id]/payments/route.ts` | 123 |
 | `/api/operator/frost-delay` | operator | file | POST | `src/app/api/operator/frost-delay/route.ts` | 33 |
 | `/api/operator/golfer-messages` | operator | file | GET POST | `src/app/api/operator/golfer-messages/route.ts` | 62 |
 | `/api/operator/golfers/[key]` | operator | file | GET POST | `src/app/api/operator/golfers/[key]/route.ts` | 97 |
 | `/api/operator/home` | operator | file | GET | `src/app/api/operator/home/route.ts` | 15 |
 | `/api/operator/last-minute` | operator | file | GET PATCH | `src/app/api/operator/last-minute/route.ts` | 39 |
 | `/api/operator/member-accounts` | operator | file | GET POST | `src/app/api/operator/member-accounts/route.ts` | 73 |
-| `/api/operator/members` | operator | file | DELETE GET PATCH POST | `src/app/api/operator/members/route.ts` | 305 |
+| `/api/operator/members` | operator | file | DELETE GET PATCH POST | `src/app/api/operator/members/route.ts` | 317 |
 | `/api/operator/members/import` | operator | file | POST | `src/app/api/operator/members/import/route.ts` | 35 |
 | `/api/operator/members/remind-overdue` | operator | file | POST | `src/app/api/operator/members/remind-overdue/route.ts` | 76 |
 | `/api/operator/messages` | operator | file | GET PATCH POST | `src/app/api/operator/messages/route.ts` | 123 |
@@ -372,10 +372,10 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/course-timeline.ts` | 15 | 364 |  | `AGREEMENT_ACCEPTED_PREFIX`, `AgreementAcceptedPayload`, `buildCourseFeed`, `CHECKIN_CALL_PREFIX`, `CheckInCallPayload`, `CURRENT_AGREEMENT_VERSION`, `DOCUMENT_UPLOADED_PREFIX`, `DocumentUploadedPayload` +26 more |
 | `src/lib/inquiry-call.ts` | 15 | 175 | INQUIRY_CALL_SPEC IC-1 §2 — the discovery-call agenda catalog, and the small derivations the sheet, the detail page and the queue share. | `AGENDA`, `AgendaItem`, `agendaStatus`, `AgendaStatusRow`, `callGate`, `CallLike`, `defaultAgenda`, `DIRECTION_LABEL` +13 more |
 | `src/lib/pricing-switch.ts` | 15 | 76 | Settings → "Who gets their own price" (Cam 2026-11-01: | `memberPricingOn`, `residentPricingOn`, `switchOnWherePriced`, `withPriceSwitch` |
+| `src/lib/use-dashboard-access.ts` | 14 | 51 | SP-A: | `DashboardAccess`, `useDashboardAccess` |
 | `src/lib/admin-areas.ts` | 13 | 44 | AW-11 (Cam 2026-10-22: | `ADMIN_AREAS`, `AdminArea`, `ALL_AREAS`, `effectiveAreas`, `hasArea`, `isAdminArea` |
 | `src/lib/round-packs.ts` | 13 | 288 | PRICE-3 (Cam 2026-10-30: | `buyPackOnline`, `closeStalePackLinks`, `endPacksRefundedOutside`, `findHoldings`, `giveBack`, `Holding`, `holdingById`, `holdingsFor` +16 more |
 | `src/lib/admin-session-context.tsx` | 12 | 80 | MP-11a (ADMIN_V4 V4-7, LAW rule 2): | `AdminSessionProvider`, `AdminSessionView`, `isAdminAuthPath`, `useAdminSession` |
-| `src/lib/use-dashboard-access.ts` | 12 | 51 | SP-A: | `DashboardAccess`, `useDashboardAccess` |
 | `src/lib/approval-state.ts` | 11 | 61 |  | `ApprovalState`, `coursePageDecision`, `getApprovalState`, `recordCoursePageDecision` |
 | `src/lib/real-courses.ts` | 11 | 22 | TEST-2 (Cam 2026-10-22: | `ON_REAL_BOOKING`, `ON_REAL_COURSE`, `REAL_COURSE` |
 | `src/lib/security-events.ts` | 11 | 129 | SEC-3 (Cam 2026-10-26, "security has to be insane"; chose "log events" and "email + Problems"): | `BURST_PER_IP`, `BURST_TOTAL`, `lockedAccountsNow`, `MAX_EVENTS_PER_IP_HOUR`, `purgeOldSecurityEvents`, `SECURITY_KEEP_DAYS`, `securityEvent`, `securityFindings` +3 more |
@@ -594,7 +594,7 @@ Sorted the same way.
 | `src/components/AuthPhotoShell.tsx` | 4 | 23 |  | `AUTH_PHOTO_LINK`, `AUTH_PHOTO_LINKS`, `AuthPhotoShell` |
 | `src/components/dashboard/money/types.ts` | 4 | 22 | SD-8 — one booking shape for all three Money tabs. | `MoneyBooking`, `MoneyCourse` |
 | `src/components/dashboard/DateRangeButton.tsx` | 3 | 117 | AN-3 (Cam 2026-10-19: | `DateRange`, `default (DateRangeButton)`, `presets`, `rangeLabel` |
-| `src/components/dashboard/events/EventDetail.tsx` | 3 | 422 | W2-9 Events: | `default (EventDetail)`, `EventData`, `EventFull`, `EventPlayer`, `EventTask` |
+| `src/components/dashboard/events/EventDetail.tsx` | 3 | 425 | W2-9 Events: | `default (EventDetail)`, `EventData`, `EventFull`, `EventPlayer`, `EventTask` |
 | `src/components/dashboard/money/PayoutsTable.tsx` | 3 | 73 | Money rework (Cam 2026-10-19): | `fmtDay`, `Payout`, `PayoutsData`, `PayoutsTable`, `usd` |
 | `src/components/dashboard/SignAgreements.tsx` | 3 | 222 | AGREEMENT_SPEC AG-2 §1 — the "Sign" step. | `default (SignAgreements)` |
 | `src/components/dashboard/SmsConsentAsk.tsx` | 3 | 39 | SMS-1 (Cam 2026-11-02, Twilio A2P 10DLC — docs/SMS_OPT_IN.md): | `default (SmsConsentAsk)`, `SmsConsentDialog` |
@@ -638,7 +638,7 @@ Sorted the same way.
 | `src/components/dashboard/CoursePreview.tsx` | 1 | 80 | B-6 (UI_REVISE_SPEC §4): | `CoursePreviewProps`, `default (CoursePreview)` |
 | `src/components/dashboard/DemandPricing.tsx` | 1 | 128 | PRICE-5 (Cam 2026-10-30: | `DemandPricing` |
 | `src/components/dashboard/events/EventDay.tsx` | 1 | 73 | Event day (Cam 2026-10-31: | `CartSigns`, `EventDay` |
-| `src/components/dashboard/events/EventMoney.tsx` | 1 | 319 | W2-9b: | `default (EventMoney)`, `EventPayment`, `EventRefund`, `Guarantee`, `Money` |
+| `src/components/dashboard/events/EventMoney.tsx` | 1 | 322 | W2-9b: | `default (EventMoney)`, `EventPayment`, `EventRefund`, `Guarantee`, `Money` |
 | `src/components/dashboard/events/EventSignup.tsx` | 1 | 149 | W2-9d (Cam 2026-10-22): | `default (EventSignup)`, `SignupQuestion` |
 | `src/components/dashboard/GettingStartedChecklist.tsx` | 1 | 187 |  | `default (GettingStartedChecklist)` |
 | `src/components/dashboard/GolferMessageModal.tsx` | 1 | 140 | MSG-1 (PLATFORM_ROADMAP_SPEC §5): | `default (GolferMessageModal)` |
@@ -989,11 +989,11 @@ without opening anything.
 
 ### MemberCharge
 
-15 fields · 1 writer(s) · 5 reader(s)
+15 fields · 1 writer(s) · 6 reader(s)
 
 - fields: `id`, `courseId`, `course`, `membershipId`, `membership`, `kind`, `amountCents`, `feeCents`, `bookingId`, `shopSaleId`, `note`, `createdBy`, `createdAt`, `statementId`, `statement`
 - writers: `src/lib/sample-data.ts`
-- readers: `src/app/api/operator/member-accounts/route.ts`, `src/app/api/operator/tee-times/route.ts`, `src/lib/member-account.ts`, `src/lib/member-statements.ts`, `src/lib/shop-sales.ts`
+- readers: `src/app/api/operator/member-accounts/route.ts`, `src/app/api/operator/members/route.ts`, `src/app/api/operator/tee-times/route.ts`, `src/lib/member-account.ts`, `src/lib/member-statements.ts`, `src/lib/shop-sales.ts`
 
 ### MembershipTier
 
@@ -1005,11 +1005,11 @@ without opening anything.
 
 ### MemberStatement
 
-20 fields · 3 writer(s) · 4 reader(s)
+20 fields · 3 writer(s) · 5 reader(s)
 
 - fields: `id`, `courseId`, `course`, `membershipId`, `membership`, `period`, `closedAt`, `dueAt`, `totalCents`, `feeCents`, `status`, `payToken`, `paymentIntentId`, `paidAt`, `chargeStartedAt`, `autoChargeAt`, `autoFailedAt`, `autoRetryAt`, `createdAt`, `lines`
 - writers: `src/app/api/statement/[id]/route.ts`, `src/lib/member-statements.ts`, `src/lib/sample-data.ts`
-- readers: `src/app/api/cron/send-reminders/route.ts`, `src/app/api/operator/member-accounts/route.ts`, `src/lib/member-account.ts`, `src/lib/member-statements.ts`
+- readers: `src/app/api/cron/send-reminders/route.ts`, `src/app/api/operator/member-accounts/route.ts`, `src/app/api/operator/members/route.ts`, `src/lib/member-account.ts`, `src/lib/member-statements.ts`
 
 ### Message
 
@@ -1029,11 +1029,11 @@ without opening anything.
 
 ### MoneyMove
 
-18 fields · 2 writer(s) · 5 reader(s)
+18 fields · 2 writer(s) · 6 reader(s)
 
 - fields: `id`, `courseId`, `course`, `at`, `what`, `direction`, `method`, `account`, `amountCents`, `platformFeeCents`, `stripeId`, `bookingId`, `saleId`, `membershipId`, `eventPaymentId`, `actor`, `note`, `createdAt`
 - writers: `src/lib/data-reset.ts`, `src/lib/sample-data.ts`
-- readers: `src/app/api/member/[courseSlug]/payments/route.ts`, `src/lib/analytics.ts`, `src/lib/ledger-view.ts`, `src/lib/money-ledger.ts`, `src/lib/register-close.ts`
+- readers: `src/app/api/member/[courseSlug]/payments/route.ts`, `src/app/api/operator/members/route.ts`, `src/lib/analytics.ts`, `src/lib/ledger-view.ts`, `src/lib/money-ledger.ts`, `src/lib/register-close.ts`
 
 ### MonthlyReview
 
