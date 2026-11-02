@@ -1,33 +1,38 @@
 {
-  "generatedAt": "2026-11-02T06:14:07.056Z",
+  "generatedAt": "2026-11-02T06:21:21.423Z",
   "repo": {
-    "head": "bbf0f755",
+    "head": "c96e02bb",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 17,
+    "dirtyCount": 8,
     "dirty": [
       "M CLAUDE.md",
-      " M STATUS.artifact.html",
-      " M STATUS.json",
-      " M STATUS.md",
       " M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M prisma/schema.prisma",
-      " M scripts/home-board-db-test.ts",
-      " M src/app/api/operator/conditions/route.ts",
-      " M src/app/dashboard/shop/page.tsx",
-      " M src/components/dashboard/ShopCatalog.tsx",
-      " M src/components/dashboard/home/HomeBoard.tsx",
-      " M src/lib/shop-catalog.ts",
-      " M src/lib/shop-tree.ts",
-      "?? prisma/migrations/20261102110000_shop_item_photo/",
-      "?? scripts/register-photo-test.ts",
-      "?? src/app/api/operator/shop-items/photo/"
+      " M src/app/courses/[slug]/CourseBookingClient.tsx",
+      " M src/lib/course-conditions.ts",
+      " M src/lib/courses-data.ts",
+      " M src/lib/normalize-course.ts",
+      "?? scripts/booking-conditions-test.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "360913a3",
+        "date": "2026-11-02T01:21:10-05:00",
+        "subject": "Register: item photos on the tiles (+ Home review follow-ups) (#296)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "b04c0c83",
+        "date": "2026-11-02T06:14:09+00:00",
+        "subject": "Register: item photos on the tiles (+ Home review follow-ups)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "0394ca3b",
         "date": "2026-11-02T01:12:42-05:00",
@@ -740,6 +745,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "360913a3",
+      "date": "2026-11-02",
+      "subject": "Register: item photos on the tiles (+ Home review follow-ups) (#296)"
+    },
+    {
+      "h": "b04c0c83",
+      "date": "2026-11-02",
+      "subject": "Register: item photos on the tiles (+ Home review follow-ups)"
+    },
+    {
       "h": "0394ca3b",
       "date": "2026-11-02",
       "subject": "Home: shift note, course conditions, week ahead, month vs goal (#295)"
@@ -788,16 +803,6 @@
       "h": "14d6254a",
       "date": "2026-11-02",
       "subject": "Dark mode is screen-only (prints stay light); theme cookie Secure only over https"
-    },
-    {
-      "h": "7ca659d0",
-      "date": "2026-11-02",
-      "subject": "Rail groups never drop a tab; tests follow the grouped rail and the mem-fill token"
-    },
-    {
-      "h": "46a688fc",
-      "date": "2026-11-02",
-      "subject": "Dashboard foundation: Geist, grey page + white panels, grouped rail, Light/Dark"
     }
   ]
 }

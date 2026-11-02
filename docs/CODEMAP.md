@@ -442,6 +442,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/call-invite.ts` | 4 | 106 | CALL_SCHEDULING_SPEC SC-2 §1 — the "pick a call time" invite. | `deliverCallInvite`, `INVITE_DAYS`, `inviteAgendaLines`, `InviteSendResult`, `inviteUrl`, `issueCallInvite`, `sendCallInvite`, `sendCallReminders` |
 | `src/lib/card-reader.ts` | 4 | 278 | POS-3 R3 (Cam 2026-10-24: | `cancelReaderPayment`, `courseStripe`, `listReaders`, `ownReader`, `readerSaleStatus`, `ReaderSaleStatus`, `ReaderView`, `registerReader` +7 more |
 | `src/lib/company-documents.ts` | 4 | 61 | CO-DOCS (Cam 2026-10-01): | `COMPANY_DOC_CATEGORIES`, `COMPANY_DOC_MAX_BYTES`, `COMPANY_DOC_PREFIX`, `COMPANY_DOC_TYPES`, `CompanyDocCategory`, `companyDocPathOf`, `describeCompanyPath`, `isAllowedCompanyPath` +1 more |
+| `src/lib/course-conditions.ts` | 4 | 43 | DASH-D Home (Cam 2026-11-01, "the course conditions"): | `cleanConditions`, `CONDITION_FIELDS`, `ConditionKey`, `conditionLabel`, `CONDITIONS_FRESH_HOURS`, `CourseConditions`, `golferConditionLines` |
 | `src/lib/course-events.ts` | 4 | 403 | W2-9 Events (Cam 2026-10-21: | `applyHold`, `autoPairings`, `cancelEvent`, `createEvent`, `DEFAULT_TASKS`, `dueFor`, `EVENT_KINDS`, `EventError` +20 more |
 | `src/lib/course-group.ts` | 4 | 13 | GRP-1 (Cam 2026-10-19, after golfbergencounty.com): | `groupCourseIds` |
 | `src/lib/demo-courses.ts` | 4 | 4 | Cam: | `DEMO_COURSE_SLUGS` |
@@ -462,7 +463,6 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/booking-mode.ts` | 3 | 22 | Course-world pages: | `isBookingMode`, `isCourseWorld` |
 | `src/lib/claim-tee-time.ts` | 3 | 120 |  | `claimTeeTime`, `LATE_ADD_MESSAGE`, `LATE_ADD_MINUTES`, `TeeTimeClaimError` |
 | `src/lib/counter-pay.ts` | 3 | 303 | A group pays for its round at the counter (cash, or the course's own card machine): | `accountDueCents`, `CounterBookingInput`, `counterDueCents`, `CounterResult`, `createCounterBooking`, `roundNote`, `settleAtCounter` |
-| `src/lib/course-conditions.ts` | 3 | 31 | DASH-D Home (Cam 2026-11-01, "the course conditions"): | `cleanConditions`, `CONDITION_FIELDS`, `ConditionKey`, `conditionLabel`, `CourseConditions` |
 | `src/lib/course-setup.ts` | 3 | 52 | COURSES_SHEET_SPEC CS-1 §1 — the five setup steps a built course goes through before it is live. | `SETUP_STEPS`, `SetupCourseLike`, `setupProgress`, `SetupProgress`, `SetupStep`, `SetupStepKey` |
 | `src/lib/course-wire.ts` | 3 | 57 |  | `COURSE_MONEY_WIRE_FIELDS`, `courseMoneyFromWire`, `courseToWire` |
 | `src/lib/dashboard-visits.ts` | 3 | 45 | Tracks which operator dashboard tabs a device has visited — used to derive "Look around your dashboard" / "Check your tee sheet schedule" in the Getting Started checklist (V13). | `CORE_TABS`, `getVisitedTabs`, `isIntroSeen`, `LOOK_AROUND_THRESHOLD`, `markIntroSeen`, `recordTabVisit` |
@@ -475,7 +475,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/membership-dues.ts` | 3 | 126 | Membership dues: | `amountsDue`, `markDuesPaidAtCourse`, `recordPaidTerm` |
 | `src/lib/membership-join.ts` | 3 | 97 | MEM-JOIN (Cam 2026-10-30: | `approveJoin`, `declineJoin`, `JOIN_NEEDS_DUES`, `joinableTiers`, `JoinMode`, `JoinResult`, `joinTier`, `myMembership` +1 more |
 | `src/lib/monthly-review.ts` | 3 | 257 | BI-1 (PLATFORM_ROADMAP_SPEC §1, Cam 2026-10-07: | `allowedNumbers`, `buildFacts`, `claudeWriter`, `draftProblems`, `emailPendingReviews`, `isFullMonth`, `monthLabel`, `monthRange` +11 more |
-| `src/lib/normalize-course.ts` | 3 | 98 |  | `normalizeDbCourse` |
+| `src/lib/normalize-course.ts` | 3 | 101 |  | `normalizeDbCourse` |
 | `src/lib/operator-setup.ts` | 3 | 41 | Cam 2026-10-27 (onboarding walk): | `hasSetUp`, `issueSetupLink`, `SETUP_LINK_DAYS` |
 | `src/lib/owner-passkey.ts` | 3 | 111 | AW-1b (Cam 2026-10-21: | `addPasskey`, `authenticationOptions`, `hasPasskey`, `registrationOptions`, `relyingParty`, `verifyPasskeySignIn` |
 | `src/lib/owner-totp.ts` | 3 | 100 | OWNER TOTP 2FA (RUN_QUEUE) — the authenticator-app second factor for the owner account. | `generateRecoveryCodes`, `generateTotpSecret`, `looksLikeRecoveryCode`, `matchRecoveryCode`, `normalizeRecoveryCode`, `RECOVERY_CODE_COUNT`, `signEnrolToken`, `TOTP_ISSUER` +8 more |
@@ -503,7 +503,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/course-shape-setup.ts` | 2 | 179 | W2-6 (Cam 2026-10-20: | `applyCourseSetup`, `planCourseSetup`, `SetupInput`, `SetupPreview` |
 | `src/lib/course-shape.ts` | 2 | 116 | W2-6 (Cam 2026-10-20: | `guessShape`, `isStockLabel`, `PlanNine`, `PlanRound`, `shapeDef`, `ShapeDef`, `ShapeKey`, `shapeNines` +2 more |
 | `src/lib/course-timeline-groups.ts` | 2 | 16 | BRAIN-1b: | `FEED_GROUPS`, `FeedGroup`, `FeedItem` |
-| `src/lib/courses-data.ts` | 2 | 331 |  | `Course`, `COURSES`, `generateTeeTimes`, `getCourseBySlug`, `searchCourses`, `TeeTime` |
+| `src/lib/courses-data.ts` | 2 | 333 |  | `Course`, `COURSES`, `generateTeeTimes`, `getCourseBySlug`, `searchCourses`, `TeeTime` |
 | `src/lib/cutoff-hold.ts` | 2 | 127 | The cancellation-window hold (SP-B timing "hold_at_cutoff"): | `chargeCutoffHold`, `HOLD_STALE_MS`, `HoldResult` |
 | `src/lib/data-reset.ts` | 2 | 161 | TEST-1 (Cam 2026-10-22: | `CourseResetPreview`, `KEPT_TABLES`, `previewCourseReset`, `previewWipeAll`, `resetTestCourse`, `TableCounts`, `WIPE_ALL_UNTIL`, `WIPE_CONFIRM_WORDS` +3 more |
 | `src/lib/golfer-record.ts` | 2 | 174 | The golfer record (Revamp 3, Cam 2026-10-29): | `autoBlockReason`, `golferRecord`, `GolferRecord`, `isLateCancel`, `onlineBookingBlock`, `recordKeys`, `recordKeysFor` |

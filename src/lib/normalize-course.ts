@@ -2,6 +2,7 @@ import { policyFrom } from './cancel-policy';
 import { facilityLines } from '@/lib/facilities';
 import { centsToDollarsOr0 } from './money';
 import { walkingSummary } from './walking';
+import { golferConditionLines } from './course-conditions';
 /**
  * Maps a Prisma Course row (camelCase) onto the snake_case shape the golfer-facing
  * UI (CourseCard, /courses, /courses/[slug]) was built against. Used by every public
@@ -49,6 +50,8 @@ export function normalizeDbCourse(c: any, startingGreenFee = 0) {
     image_gradient: c.imageGradient ?? 'linear-gradient(160deg,#071810 0%,#1b4332 60%,#2d6a4f 100%)',
     logo_url: c.logoUrl ?? '',
     conditions: c.conditions ?? '',
+    // DASH-D (Cam 2026-11-01, "conditions on the booking page"): carts / range / greens / pins, while fresh.
+    conditions_today: golferConditionLines(c.conditionsDetail, c.conditionsDetailAt),
     hero_image_url: c.heroImageUrl ?? '',
     confirmation_note: c.confirmationNote ?? '',
     featured: c.featured ?? false,

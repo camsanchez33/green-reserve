@@ -945,6 +945,13 @@ export default function CourseDetailPage({
           a step to stay visible. */}
       <div className="h-[5px]" style={{ backgroundColor: accent, filter: course.hero_image_url ? undefined : 'brightness(0.8)' }} aria-hidden="true" />
 
+      {/* DASH-D (Cam 2026-11-01): today's course conditions, set on the dashboard's Home — a plain line, not an alert. */}
+      {(course.conditions_today?.length ?? 0) > 0 && (
+        <div className="border-b border-line bg-white">
+          <p className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2 text-[13px] text-ink-soft"><span className="font-medium text-ink">Today</span> · {course.conditions_today!.join(' · ')}</p>
+        </div>
+      )}
+
       {/* Course alert banner */}
       {course.conditions && (
         <div className="bg-warn/5 border-b border-warn/20">

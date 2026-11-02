@@ -28,3 +28,15 @@ export function conditionLabel(key: ConditionKey, value: string | undefined): st
   const f = CONDITION_FIELDS.find(x => x.key === key);
   return (f?.options.find(([k]) => k === value)?.[1]) ?? '';
 }
+
+/** Golfers see conditions only when staff set them in the last 18 hours — yesterday's "path only" never reads as today's. */
+export const CONDITIONS_FRESH_HOURS = 18;
+
+/** The booking page's line: "Carts: Path only", … — only the fields set, only while fresh. */
+export function golferConditionLines(raw: unknown, at: Date | string | null | undefined, now: Date = new Date()): string[] {
+  if (!at) return [];
+  const t = new Date(at).getTime();
+  if (!Number.isFinite(t) || now.getTime() - t > CONDITIONS_FRESH_HOURS * 3600000) return [];
+  const c = cleanConditions(raw);
+  return CONDITION_FIELDS.filter(f => c[f.key]).map(f => `${f.label}: ${conditionLabel(f.key, c[f.key])}`);
+}

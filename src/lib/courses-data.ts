@@ -24,6 +24,8 @@ export type Course = {
   image_gradient: string;
   logo_url?: string;
   conditions?: string;
+  /** DASH-D: "Carts: Path only", … set by staff in the last 18 hours. */
+  conditions_today?: string[];
   hero_image_url?: string;
   featured: boolean;
   base_green_fee: number;
