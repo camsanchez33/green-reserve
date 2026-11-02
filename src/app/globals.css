@@ -140,6 +140,9 @@ body {
 /* The logo pair: the pine lockup in light, the cream one in dark. */
 .op-look .op-dark-only { display: none; }
 
+/* Dark is a SCREEN preference: printing (pairings, cart signs) always gets the
+   light tokens, so dark text never lands on white paper. */
+@media screen {
 /* Dark: every token swapped for its twin. `bg-white` is a panel, so it takes
    the card colour; white TEXT on a solid fill takes the dark page colour,
    because in dark the fills are the bright tints. */
@@ -173,6 +176,7 @@ body {
 }
 .op-look[data-theme="dark"]:has(.op-rail) .op-keep-light :is(.bg-pine, .bg-ok, .bg-bad, .bg-warn, .bg-ink) .text-white,
 .op-look[data-theme="dark"]:has(.op-rail) .op-keep-light :is(.bg-pine, .bg-ok, .bg-bad, .bg-warn, .bg-ink).text-white { color: #FFFFFF; }
+}
 
 /* FB-2: "See how it works" on the homepage glides to the steps instead of
    jumping. Homepage only, and never for visitors who asked for reduced motion. */

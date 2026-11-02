@@ -22,6 +22,9 @@ const darkVars = vars(dark);
 const missing = [...new Set([...vars(light), ...themeVars])].filter(v => !darkVars.has(v));
 ok('every colour token has a dark twin', dark.length > 0 && missing.length === 0, missing);
 ok('bg-white is a panel in dark (card colour), dark knows its own scheme', dark.includes('--color-white: #181B19') && dark.includes('color-scheme: dark'));
+// Final review 2026-11-02: a dark dashboard printed near-white text on white paper.
+const screenAt = css.indexOf('@media screen {');
+ok('dark mode is screen-only — print always gets the light tokens', screenAt > 0 && [...css.matchAll(/\[data-theme="dark"\]/g)].every(m => m.index! > screenAt && m.index! < css.indexOf('/* FB-2:')));
 ok('white text on a solid fill turns dark in dark mode', css.includes(':is(.bg-pine, .bg-ok, .bg-bad, .bg-warn, .bg-ink) .text-white { color: #0F1110; }'));
 
 const layout = read('src/app/dashboard/layout.tsx');

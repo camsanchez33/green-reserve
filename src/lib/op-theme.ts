@@ -12,7 +12,8 @@ export function readOpTheme(v: string | undefined | null): OpTheme {
 
 /** Apply and remember the choice (browser only). One year; the dashboard path only. */
 export function setOpTheme(theme: OpTheme): void {
-  document.cookie = `${OP_THEME_COOKIE}=${theme}; Path=/dashboard; Max-Age=31536000; SameSite=Lax; Secure`;
+  // Secure only over https, so a phone testing against a plain-http dev address keeps the choice too.
+  document.cookie = `${OP_THEME_COOKIE}=${theme}; Path=/dashboard; Max-Age=31536000; SameSite=Lax${location.protocol === 'https:' ? '; Secure' : ''}`;
   document.querySelectorAll<HTMLElement>('.op-look').forEach(el => { el.dataset.theme = theme; });
 }
 
