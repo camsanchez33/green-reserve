@@ -8531,7 +8531,7 @@
     },
     {
       "path": "src/app/dashboard/home/page.tsx",
-      "lines": 256,
+      "lines": 258,
       "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the mockups):",
       "brain": [],
       "exports": [
@@ -8773,7 +8773,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1739,
+      "lines": 1748,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8958,7 +8958,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 933,
+      "lines": 938,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -21223,7 +21223,7 @@
     },
     {
       "path": "src/lib/operator-home.ts",
-      "lines": 159,
+      "lines": 160,
       "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the course dashboard mockups):",
       "brain": [],
       "exports": [
@@ -21271,7 +21271,7 @@
     },
     {
       "path": "src/lib/operator-search.ts",
-      "lines": 80,
+      "lines": 86,
       "purpose": "DASH-C search (the mockups' \"Find a golfer, booking or member\"):",
       "brain": [],
       "exports": [

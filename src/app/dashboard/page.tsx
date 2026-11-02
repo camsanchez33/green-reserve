@@ -147,6 +147,7 @@ function DashboardPageInner() {
   // SHEET-2 (Cam 2026-10-08: "is it smart to have both" — no: one sheet). The
   // board is the tee sheet; tapping a square opens this panel.
   const [panelId, setPanelId] = useState<string | null>(null);
+  const pendingTtRef = useRef<string | null>(null);
   const [showConditions, setShowConditions]   = useState(false);
   const [conditions, setConditions]       = useState('');
   const [conditionsInput, setConditionsInput] = useState('');
@@ -605,7 +606,14 @@ function DashboardPageInner() {
     if (d && /^\d{4}-\d{2}-\d{2}$/.test(d)) { urlDateRef.current = d; setSelectedDate(d); }
     const q = searchParams.get('q');
     if (q) setSearch(q.slice(0, 80));
+    // Home audit: ?tt=<tee time> (Home's times and late groups) opens that time's card once the sheet has it.
+    const tt = searchParams.get('tt');
+    if (tt && /^[A-Za-z0-9_-]{8,40}$/.test(tt)) pendingTtRef.current = tt;
   }, [searchParams]);
+  useEffect(() => {
+    const tt = pendingTtRef.current;
+    if (tt && teeTimes.some(t => t.id === tt)) { pendingTtRef.current = null; setPanelId(tt); }
+  }, [teeTimes]);
 
   async function saveConditions() {
     setSavingConditions(true);
@@ -827,7 +835,8 @@ function DashboardPageInner() {
     <div className="flex flex-col min-h-screen md:h-screen bg-white md:overflow-hidden">
       <OperatorSidebar active={tab} onAlertClick={access.can('sheet.course_alert') ? () => { setAlertEmail(false); setShowConditions(true); } : undefined}/>
 
-      <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
+      {/* Tee audit 16: on a wide screen the time's card sits beside the sheet — the sheet narrows instead of being covered. */}
+      <main className={`flex-1 md:overflow-y-auto pb-24 md:pb-0 ${panelSlot ? 'xl:pr-[536px]' : ''}`}>
         {courseDraft && !courseArchived && (
           <div className="bg-pine/5 border-b border-pine/20 px-6 py-3">
             <div className="flex items-center gap-2 text-sm text-ink-soft flex-wrap">

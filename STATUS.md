@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-02 03:42 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `db252e4b` · working tree **28 dirty file(s)**
+Generated 2026-11-02 03:49 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `b80496f3` · working tree **10 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 28 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 29 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `b80496f3` | 2026-11-02 | SMS-1: texts only to numbers that agreed (Twilio A2P 10DLC opt-in) |
 | `db252e4b` | 2026-11-02 | Status board refresh |
 | `b199995d` | 2026-11-02 | Counter friction: one-tap check-in, no-show waits 10 min, cart off by default, search on phones |
 | `45ca1d0e` | 2026-11-02 | Speed with volume: one time-zone formatter per zone (Analytics 90 days 10.7s → 1.2s) |
@@ -43,28 +44,18 @@ Generated 2026-11-02 03:42 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (28 file(s))
+### Uncommitted working tree (10 file(s))
 
-- `M CLAUDE.md`
 - `M docs/CODEMAP.md`
-- `M docs/SMS_OPT_IN.md`
 - `M docs/codemap.json`
-- `M prisma/schema.prisma`
-- `M src/app/api/bookings/route.ts`
-- `M src/app/api/event-signup/[id]/route.ts`
-- `M src/app/api/operator/bookings/route.ts`
-- `M src/app/api/operator/events/[id]/payments/route.ts`
-- `M src/app/api/operator/golfer-messages/route.ts`
-- `M src/app/api/operator/shop-sales/route.ts`
-- `M src/app/book/BookClient.tsx`
+- `M scripts/operator-home-db-test.ts`
+- `M scripts/operator-search-db-test.ts`
+- `M src/app/dashboard/home/page.tsx`
 - `M src/app/dashboard/page.tsx`
 - `M src/app/dashboard/shop/page.tsx`
-- `M src/app/events/[id]/SignupForm.tsx`
-- `M src/app/privacy/page.tsx`
-- `M src/app/terms/page.tsx`
-- `M src/components/dashboard/events/EventMoney.tsx`
-- `M src/lib/data-reset.ts`
-- `M src/lib/golfer-messages.ts`
+- `M src/lib/operator-home.ts`
+- `M src/lib/operator-search.ts`
+- `?? scripts/counter-b-test.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -149,7 +140,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-11-01 | 0d |
+| `CLAUDE.md` | 1 | 2026-11-02 | 0d |
 | `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 0d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 12d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 6d |
@@ -190,6 +181,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `b80496f3` 2026-11-02 — SMS-1: texts only to numbers that agreed (Twilio A2P 10DLC opt-in)
 - `db252e4b` 2026-11-02 — Status board refresh
 - `b199995d` 2026-11-02 — Counter friction: one-tap check-in, no-show waits 10 min, cart off by default, search on phones
 - `45ca1d0e` 2026-11-02 — Speed with volume: one time-zone formatter per zone (Analytics 90 days 10.7s → 1.2s)
@@ -201,7 +193,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `b5d27f01` 2026-11-01 — Audit numbers: partial refunds, event money, event player swap, shop today, payout tile (#287)
 - `c6efa694` 2026-11-01 — Audit numbers: partial refunds, event money, event player swap, shop today, payout tile
 - `10ab79d8` 2026-11-01 — DENSE-10 Settings part 2: the Settings cards, labels over sentences (#286)
-- `6bbb7c6d` 2026-11-01 — DENSE-10 Settings part 2: the Settings cards, labels over sentences
 
 ---
 

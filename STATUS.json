@@ -1,36 +1,33 @@
 {
-  "generatedAt": "2026-11-02T03:42:29.606Z",
+  "generatedAt": "2026-11-02T03:49:40.100Z",
   "repo": {
-    "head": "db252e4b",
+    "head": "b80496f3",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 28,
+    "dirtyCount": 10,
     "dirty": [
-      "M CLAUDE.md",
-      " M docs/CODEMAP.md",
-      " M docs/SMS_OPT_IN.md",
+      "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M prisma/schema.prisma",
-      " M src/app/api/bookings/route.ts",
-      " M src/app/api/event-signup/[id]/route.ts",
-      " M src/app/api/operator/bookings/route.ts",
-      " M src/app/api/operator/events/[id]/payments/route.ts",
-      " M src/app/api/operator/golfer-messages/route.ts",
-      " M src/app/api/operator/shop-sales/route.ts",
-      " M src/app/book/BookClient.tsx",
+      " M scripts/operator-home-db-test.ts",
+      " M scripts/operator-search-db-test.ts",
+      " M src/app/dashboard/home/page.tsx",
       " M src/app/dashboard/page.tsx",
       " M src/app/dashboard/shop/page.tsx",
-      " M src/app/events/[id]/SignupForm.tsx",
-      " M src/app/privacy/page.tsx",
-      " M src/app/terms/page.tsx",
-      " M src/components/dashboard/events/EventMoney.tsx",
-      " M src/lib/data-reset.ts",
-      " M src/lib/golfer-messages.ts"
+      " M src/lib/operator-home.ts",
+      " M src/lib/operator-search.ts",
+      "?? scripts/counter-b-test.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "b80496f3",
+        "date": "2026-11-02T03:42:32+00:00",
+        "subject": "SMS-1: texts only to numbers that agreed (Twilio A2P 10DLC opt-in)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "db252e4b",
         "date": "2026-11-02T03:22:21+00:00",
@@ -395,7 +392,7 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 1,
-      "lastTouched": "2026-11-01",
+      "lastTouched": "2026-11-02",
       "ageDays": 0
     },
     {
@@ -624,6 +621,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "b80496f3",
+      "date": "2026-11-02",
+      "subject": "SMS-1: texts only to numbers that agreed (Twilio A2P 10DLC opt-in)"
+    },
+    {
       "h": "db252e4b",
       "date": "2026-11-02",
       "subject": "Status board refresh"
@@ -677,11 +679,6 @@
       "h": "10ab79d8",
       "date": "2026-11-01",
       "subject": "DENSE-10 Settings part 2: the Settings cards, labels over sentences (#286)"
-    },
-    {
-      "h": "6bbb7c6d",
-      "date": "2026-11-01",
-      "subject": "DENSE-10 Settings part 2: the Settings cards, labels over sentences"
     }
   ]
 }

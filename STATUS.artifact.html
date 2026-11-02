@@ -117,14 +117,15 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-11-02 03:42 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ db252e4b</span>
-    <span>28 uncommitted</span>
+    <span>2026-11-02 03:49 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ b80496f3</span>
+    <span>10 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">28 runs have shipped that the queue doesn't know about</div>
+<div class="lede">29 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-31. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">b80496f3</span><span>SMS-1: texts only to numbers that agreed (Twilio A2P 10DLC opt-in)</span></li>
 <li><span class="h">db252e4b</span><span>Status board refresh</span></li>
 <li><span class="h">b199995d</span><span>Counter friction: one-tap check-in, no-show waits 10 min, cart off by default, search on phones</span></li>
 <li><span class="h">45ca1d0e</span><span>Speed with volume: one time-zone formatter per zone (Analytics 90 days 10.7s → 1.2s)</span></li>
@@ -165,7 +166,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M CLAUDE.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/SMS_OPT_IN.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M prisma/schema.prisma</code></li><li><code>M src/app/api/bookings/route.ts</code></li><li><code>M src/app/api/event-signup/[id]/route.ts</code></li><li><code>M src/app/api/operator/bookings/route.ts</code></li><li><code>M src/app/api/operator/events/[id]/payments/route.ts</code></li><li><code>M src/app/api/operator/golfer-messages/route.ts</code></li><li><code>M src/app/api/operator/shop-sales/route.ts</code></li><li><code>M src/app/book/BookClient.tsx</code></li><li><code>M src/app/dashboard/page.tsx</code></li><li><code>M src/app/dashboard/shop/page.tsx</code></li><li><code>M src/app/events/[id]/SignupForm.tsx</code></li><li><code>M src/app/privacy/page.tsx</code></li><li><code>M src/app/terms/page.tsx</code></li><li><code>M src/components/dashboard/events/EventMoney.tsx</code></li><li><code>M src/lib/data-reset.ts</code></li><li><code>M src/lib/golfer-messages.ts</code></li></ul>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/operator-home-db-test.ts</code></li><li><code>M scripts/operator-search-db-test.ts</code></li><li><code>M src/app/dashboard/home/page.tsx</code></li><li><code>M src/app/dashboard/page.tsx</code></li><li><code>M src/app/dashboard/shop/page.tsx</code></li><li><code>M src/lib/operator-home.ts</code></li><li><code>M src/lib/operator-search.ts</code></li><li><code>?? scripts/counter-b-test.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -207,7 +208,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Spec inventory</h2>
 <p class="note">Open refs = how many open queue items still point at that spec. Zero and old means consumed.</p>
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
-<tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-11-01 &middot; 0d</td></tr>
+<tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-11-02 &middot; 0d</td></tr>
 <tr><td><code>DENSE_UI_SPEC.md</code></td><td class="num">1</td><td class="num">2026-11-01 &middot; 0d</td></tr>
 <tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-20 &middot; 12d</td></tr>
 <tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-26 &middot; 6d</td></tr>
@@ -247,6 +248,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 12d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">b80496f3</td><td class="num">2026-11-02</td><td>SMS-1: texts only to numbers that agreed (Twilio A2P 10DLC opt-in)</td></tr>
 <tr><td class="num">db252e4b</td><td class="num">2026-11-02</td><td>Status board refresh</td></tr>
 <tr><td class="num">b199995d</td><td class="num">2026-11-02</td><td>Counter friction: one-tap check-in, no-show waits 10 min, cart off by default, search on phones</td></tr>
 <tr><td class="num">45ca1d0e</td><td class="num">2026-11-02</td><td>Speed with volume: one time-zone formatter per zone (Analytics 90 days 10.7s → 1.2s)</td></tr>
@@ -258,7 +260,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">b5d27f01</td><td class="num">2026-11-01</td><td>Audit numbers: partial refunds, event money, event player swap, shop today, payout tile (#287)</td></tr>
 <tr><td class="num">c6efa694</td><td class="num">2026-11-01</td><td>Audit numbers: partial refunds, event money, event player swap, shop today, payout tile</td></tr>
 <tr><td class="num">10ab79d8</td><td class="num">2026-11-01</td><td>DENSE-10 Settings part 2: the Settings cards, labels over sentences (#286)</td></tr>
-<tr><td class="num">6bbb7c6d</td><td class="num">2026-11-01</td><td>DENSE-10 Settings part 2: the Settings cards, labels over sentences</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

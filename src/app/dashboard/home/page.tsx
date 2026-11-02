@@ -31,9 +31,9 @@ type Home = {
   money: null | { paidCents: number; paidGroups: number; outstandingCents: number; outstandingGroups: number; lateGroups: number };
   declined: DeclinedCard[];
   declinedTotal: number;
-  late: { id: string; name: string; time: string }[];
+  late: { id: string; teeTimeId: string; name: string; time: string }[];
   unreadMessages: number;
-  comingUp: { time: string; open: number; groups: Group[] }[];
+  comingUp: { id: string; time: string; open: number; groups: Group[] }[];
   setupMissing: MissingItem[];
 };
 
@@ -195,7 +195,8 @@ export default function DashboardHome() {
                       <div className="flex items-center gap-3 px-4 py-3">
                         <StatusDot status="warn" label="" />
                         <div className="flex-1 min-w-0"><div>{home.late.length} group{home.late.length === 1 ? '' : 's'} past their tee time, not checked in</div><div className="text-[12.5px] text-ink-muted truncate">{home.late.map(l => `${fmtTime(l.time)} ${l.name}`).join(' · ')}</div></div>
-                        <Link href="/dashboard" className="text-[13px] font-medium text-pine">Open</Link>
+                        {/* Home audit: one late group opens its time's card; several open the sheet. */}
+                        <Link href={home.late.length === 1 ? `/dashboard?tt=${home.late[0].teeTimeId}` : '/dashboard'} className="text-[13px] font-medium text-pine">Open</Link>
                       </div>
                     )}
                     {home.unreadMessages > 0 && (
@@ -235,7 +236,8 @@ export default function DashboardHome() {
                 <div className="border border-line rounded-lg divide-y divide-line-soft text-[14px]">
                   {home.comingUp.map(s => (
                     <div key={s.time} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3">
-                      <span className="w-20 font-semibold tabular-nums">{fmtTime(s.time)}</span>
+                      {/* Home audit: a time opens its card on the tee sheet (check in, pay, move). */}
+                      <Link href={`/dashboard?tt=${s.id}`} className="w-20 font-semibold tabular-nums text-pine hover:underline">{fmtTime(s.time)}</Link>
                       {/* DENSE-3 (Cam 2026-10-28): each group says whether it's checked in, paid or not yet. */}
                       <span className="flex-1 min-w-[160px] flex flex-wrap gap-x-4 gap-y-1">{s.groups.length ? s.groups.map(g => (
                         <span key={g.id} className="inline-flex items-center gap-1.5 min-w-0"><span className="truncate">{g.name} · {g.players}</span>

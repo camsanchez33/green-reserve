@@ -56,7 +56,7 @@ export async function operatorSearch(courseId: string, rawQ: string, opts: { con
         ...(opts.contact ? [{ inviteEmail: contains(q) }, { golfer: { email: contains(q) } }] : []),
       ] },
       take: 5,
-      select: { id: true, inviteName: true, membershipType: true, tier: { select: { name: true } }, golfer: { select: { firstName: true, lastName: true } } },
+      select: { id: true, inviteName: true, inviteEmail: true, golferId: true, membershipType: true, tier: { select: { name: true } }, golfer: { select: { firstName: true, lastName: true, email: true } } },
     }) : Promise.resolve([]),
     // RES-1 / GRP-1: residents are shared across a course group, so search the group's list.
     opts.members ? groupCourseIds(courseId).then(ids => prisma.courseResident.findMany({
@@ -72,7 +72,13 @@ export async function operatorSearch(courseId: string, rawQ: string, opts: { con
   }));
   for (const m of members) {
     const name = (m.golfer ? `${m.golfer.firstName} ${m.golfer.lastName}` : m.inviteName).trim() || 'Member';
-    out.push({ kind: 'member', id: m.id, name, tier: m.tier?.name || m.membershipType, href: `/dashboard/members?q=${encodeURIComponent(name)}` });
+    // Members audit 22: a member opens their golfer record (bookings, notes, account) — by email for logins
+    // that may see contact details, else by their GreenReserve account; Members only when neither is known.
+    const email = (m.golfer?.email || m.inviteEmail || '').trim().toLowerCase();
+    const href = opts.contact && email ? `/dashboard/golfers/${encodeURIComponent(`e:${email}`)}`
+      : m.golferId ? `/dashboard/golfers/${encodeURIComponent(`a:${m.golferId}`)}`
+      : `/dashboard/members?q=${encodeURIComponent(name)}`;
+    out.push({ kind: 'member', id: m.id, name, tier: m.tier?.name || m.membershipType, href });
   }
   for (const r of residents) out.push({ kind: 'resident', id: r.id, name: r.name, href: `/dashboard/members?q=${encodeURIComponent(r.name)}` });
   return out;
