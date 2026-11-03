@@ -4,14 +4,17 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-02 22:42 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `44eebb0b` · working tree **15 dirty file(s)**
+Generated 2026-11-03 00:14 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `52abf641` · working tree **3 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 55 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 58 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `52abf641` | 2026-11-03 | Glass dashboard: green glow behind the page, frosted cards and rail, tab lifts on hover |
+| `66238486` | 2026-11-02 | Accuracy pass: plain Analytics definitions and one stock wording (#300) |
+| `d2052372` | 2026-11-02 | Accuracy pass: plain Analytics definitions, sold-out dates in the download, one stock wording |
 | `e83ec9db` | 2026-11-02 | Tee sheet: pay separately — split players off a group and pay their share (#299) |
 | `5cfea0f0` | 2026-11-02 | Regenerate code map and status board |
 | `7458886d` | 2026-11-02 | Pay separately: give back the leavers' share of a hold already taken |
@@ -70,23 +73,11 @@ Generated 2026-11-02 22:42 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (15 file(s))
+### Uncommitted working tree (3 file(s))
 
-- `M STATUS.artifact.html`
-- `M STATUS.json`
-- `M STATUS.md`
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M scripts/analytics-3-test.ts`
-- `M scripts/analytics-w28-db-test.ts`
-- `M scripts/revamp3-fixes-test.ts`
-- `M src/app/dashboard/analytics/page.tsx`
-- `M src/app/dashboard/shop/page.tsx`
-- `M src/components/dashboard/ShopCatalog.tsx`
-- `M src/components/dashboard/ShopStock.tsx`
-- `M src/lib/analytics-terms.ts`
-- `M src/lib/analytics.ts`
-- `M src/lib/shop-tree.ts`
+- `M CLAUDE.md`
+- `M scripts/glass-test.ts`
+- `M src/app/globals.css`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -171,11 +162,11 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-11-02 | 0d |
+| `CLAUDE.md` | 1 | 2026-11-03 | 0d |
 | `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 1d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 12d |
-| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 7d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 7d |
+| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 8d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 10d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 10d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 11d |
@@ -212,6 +203,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `52abf641` 2026-11-03 — Glass dashboard: green glow behind the page, frosted cards and rail, tab lifts on hover
+- `66238486` 2026-11-02 — Accuracy pass: plain Analytics definitions and one stock wording (#300)
+- `d2052372` 2026-11-02 — Accuracy pass: plain Analytics definitions, sold-out dates in the download, one stock wording
 - `e83ec9db` 2026-11-02 — Tee sheet: pay separately — split players off a group and pay their share (#299)
 - `5cfea0f0` 2026-11-02 — Regenerate code map and status board
 - `7458886d` 2026-11-02 — Pay separately: give back the leavers' share of a hold already taken
@@ -221,9 +215,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `90f8f79d` 2026-11-02 — Dashboard: "/" or Cmd/Ctrl K jumps to golfer search; Home flags stale conditions (#298)
 - `06d5e4c6` 2026-11-02 — Dashboard: / or Ctrl/Cmd K jumps to golfer search; Home says when conditions are off the booking page
 - `2aa723d8` 2026-11-02 — Booking page: today's course conditions while fresh (#297)
-- `449bd296` 2026-11-02 — Booking page: today's course conditions (carts, range, greens, pins) while fresh
-- `360913a3` 2026-11-02 — Register: item photos on the tiles (+ Home review follow-ups) (#296)
-- `b04c0c83` 2026-11-02 — Register: item photos on the tiles (+ Home review follow-ups)
 
 ---
 

@@ -288,7 +288,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
                     key={item.key}
                     onClick={() => { if (confirmLeave()) router.push(item.href); }}
                     aria-current={isActive ? 'page' : undefined}
-                    className={'flex items-center gap-2 text-left px-2.5 py-[7px] rounded-[7px] transition-colors ' + (isActive ? 'bg-white text-ink font-semibold shadow-card' : 'text-ink-soft hover:bg-white/60 hover:text-ink')}
+                    className={'op-tab flex items-center gap-2 text-left px-2.5 py-[7px] rounded-[7px] ' + (isActive ? 'bg-white text-ink font-semibold shadow-card' : 'text-ink-soft hover:bg-white/60 hover:text-ink')}
                   >
                     <span aria-hidden="true" className="w-[6px] h-[6px] rounded-full shrink-0" style={{ backgroundColor: isActive ? brandColor : 'transparent' }} />
                     <span className="flex-1">{item.label}</span>
