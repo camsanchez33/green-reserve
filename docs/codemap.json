@@ -11766,7 +11766,7 @@
     },
     {
       "path": "src/components/dashboard/TeeSheetCalendar.tsx",
-      "lines": 85,
+      "lines": 87,
       "purpose": "VIEWS-1 (Cam 2026-11-03):",
       "brain": [],
       "exports": [
@@ -11791,7 +11791,7 @@
     },
     {
       "path": "src/components/dashboard/TeeSheetList.tsx",
-      "lines": 62,
+      "lines": 61,
       "purpose": "VIEWS-1 (Cam 2026-11-03, the glass/views canvas:",
       "brain": [],
       "exports": [

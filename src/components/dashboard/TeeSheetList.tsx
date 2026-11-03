@@ -5,7 +5,7 @@
 // card, where every action lives. Nothing here writes.
 import { formatTeeTime } from '@/lib/format';
 import { StatusDot } from '@/components/ui/StatusDot';
-import { groupTone, special, TONE_LABEL, type BoardSlot } from './TeeSheetRows';
+import { groupTone, special, type BoardSlot } from './TeeSheetRows';
 
 const SOURCE: Record<string, string> = { walk_in: 'Walk-in', phone: 'Phone' };
 const DOT = { ok: 'ok', warn: 'warn', bad: 'bad' } as const;
@@ -26,7 +26,6 @@ export default function TeeSheetList({ slots, isPast, selectedId, showMoney, onS
   return (
     <div>
       <div>
-        <div>
           <div aria-hidden="true" className={'grid gap-2 sm:gap-3 px-2 sm:px-3 pb-2 text-[12px] text-ink-muted ' + cols}>
             <span>Time</span><span>Booked by</span>
             <span className="text-right">Players</span><span>Money</span>
@@ -38,7 +37,7 @@ export default function TeeSheetList({ slots, isPast, selectedId, showMoney, onS
             const state = g.status === 'completed' ? 'Checked in' : noShow ? 'No-show' : t === 'bad' ? 'Card declined' : g.paymentStatus === 'paid' ? 'Paid' : 'Not paid yet';
             return (
               <button key={g.id} type="button" onClick={() => onSelect(s.id)}
-                aria-label={`${formatTeeTime(s.time)}, ${g.golferName}, ${g.players} player${g.players === 1 ? '' : 's'}, ${TONE_LABEL[t]}. Open`}
+                aria-label={`${formatTeeTime(s.time)}, ${g.golferName}, ${g.players} player${g.players === 1 ? '' : 's'}, ${state}. Open`}
                 className={'w-full grid gap-2 sm:gap-3 items-center px-2 sm:px-3 py-2.5 text-left text-[13.5px] border-t border-line-soft hover:bg-paper/70 transition-colors '
                   + cols + (selectedId === s.id ? ' bg-paper/70' : '') + (isPast(s) && g.status !== 'confirmed' ? ' opacity-60' : '')}>
                 <span className="tabular-nums font-semibold text-ink">{formatTeeTime(s.time)}</span>
@@ -49,11 +48,11 @@ export default function TeeSheetList({ slots, isPast, selectedId, showMoney, onS
                 </span>
                 <span className="text-right tabular-nums text-ink">{g.players}</span>
                 <span className="min-w-0"><StatusDot status={g.status === 'completed' ? 'ok' : DOT[t]} label={state} /></span>
-                {showMoney && <span className="hidden sm:block text-right tabular-nums text-ink">{g.totalAmount == null ? '' : `$${(g.totalAmount / 100).toFixed(2)}`}</span>}
+                {/* A checked-in group's paid amount can differ (part played, cash without the booking fee) — the card shows it exactly. */}
+                {showMoney && <span className="hidden sm:block text-right tabular-nums text-ink">{g.totalAmount == null || g.status === 'completed' ? '' : `$${(g.totalAmount / 100).toFixed(2)}`}</span>}
               </button>
             );
           })}
-        </div>
       </div>
       <div className="flex justify-end px-3 pt-2 text-[12.5px] text-ink-muted tabular-nums">{open} open spot{open === 1 ? '' : 's'} left</div>
     </div>

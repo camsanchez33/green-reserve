@@ -676,8 +676,8 @@ Sorted the same way.
 | `src/components/dashboard/ShopItemsForGroup.tsx` | 1 | 150 | POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): | `default (ShopItemsForGroup)`, `ShopLine` |
 | `src/components/dashboard/ShopStock.tsx` | 1 | 141 | SHOP-4 (Cam 2026-10-30: | `ShopStock` |
 | `src/components/dashboard/StaffPermissions.tsx` | 1 | 243 | SP-A (STAFF_POLICY_SPEC A6): | `StaffPermissions` |
-| `src/components/dashboard/TeeSheetCalendar.tsx` | 1 | 85 | VIEWS-1 (Cam 2026-11-03): | `default (TeeSheetCalendar)` |
-| `src/components/dashboard/TeeSheetList.tsx` | 1 | 62 | VIEWS-1 (Cam 2026-11-03, the glass/views canvas: | `default (TeeSheetList)` |
+| `src/components/dashboard/TeeSheetCalendar.tsx` | 1 | 87 | VIEWS-1 (Cam 2026-11-03): | `default (TeeSheetCalendar)` |
+| `src/components/dashboard/TeeSheetList.tsx` | 1 | 61 | VIEWS-1 (Cam 2026-11-03, the glass/views canvas: | `default (TeeSheetList)` |
 | `src/components/dashboard/ThemeSwitch.tsx` | 1 | 22 | DASH-D: | `default (ThemeSwitch)` |
 | `src/components/Footer.tsx` | 1 | 79 |  | `default (Footer)` |
 | `src/components/home/TeeSheetDemo.tsx` | 1 | 321 | HOME-2 (HOMEPAGE_SPEC.md, Cam 2026-10-07: | `LaptopDemo` |

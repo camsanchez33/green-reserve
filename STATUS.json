@@ -1,25 +1,27 @@
 {
-  "generatedAt": "2026-11-03T19:15:13.401Z",
+  "generatedAt": "2026-11-03T19:20:42.547Z",
   "repo": {
-    "head": "ff2bcb17",
+    "head": "659066c6",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 9,
+    "dirtyCount": 4,
     "dirty": [
-      "M CLAUDE.md",
-      " M docs/CODEMAP.md",
+      "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M src/app/api/operator/tee-times/route.ts",
-      " M src/app/dashboard/page.tsx",
-      " M src/components/dashboard/TeeSheetRows.tsx",
-      "?? scripts/sheet-views-test.ts",
-      "?? src/components/dashboard/TeeSheetCalendar.tsx",
-      "?? src/components/dashboard/TeeSheetList.tsx"
+      " M src/components/dashboard/TeeSheetCalendar.tsx",
+      " M src/components/dashboard/TeeSheetList.tsx"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "659066c6",
+        "date": "2026-11-03T19:15:39+00:00",
+        "subject": "Tee sheet views: Grid, List and Calendar",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "aec2961f",
         "date": "2026-11-02T19:22:52-05:00",
@@ -608,7 +610,7 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 1,
-      "lastTouched": "2026-11-02",
+      "lastTouched": "2026-11-03",
       "ageDays": 0
     },
     {
@@ -837,6 +839,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "659066c6",
+      "date": "2026-11-03",
+      "subject": "Tee sheet views: Grid, List and Calendar"
+    },
+    {
       "h": "aec2961f",
       "date": "2026-11-02",
       "subject": "Glass dashboard: green glow, frosted cards and rail, tab lifts on hover (#301)"
@@ -890,11 +897,6 @@
       "h": "f3ad66bb",
       "date": "2026-11-02",
       "subject": "Tee sheet: pay separately — split players off a group and pay their share"
-    },
-    {
-      "h": "90f8f79d",
-      "date": "2026-11-02",
-      "subject": "Dashboard: \"/\" or Cmd/Ctrl K jumps to golfer search; Home flags stale conditions (#298)"
     }
   ]
 }

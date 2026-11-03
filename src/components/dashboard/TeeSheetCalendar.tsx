@@ -26,6 +26,8 @@ export default function TeeSheetCalendar({ selectedDate, today, onPick }: {
   onPick: (date: string) => void;
 }) {
   const [month, setMonth] = useState(selectedDate.slice(0, 7));
+  // The day stepper above still moves the date; follow it to its month.
+  useEffect(() => { setMonth(selectedDate.slice(0, 7)); }, [selectedDate]);
   const [days, setDays] = useState<Day[] | null>(null);
   const [error, setError] = useState('');
 
