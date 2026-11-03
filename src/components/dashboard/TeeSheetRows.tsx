@@ -16,6 +16,8 @@ export type BoardGroup = {
   paymentStatus: string; noShowAt?: string | null; checkInFailReason?: string;
   /** RES-1 / tiers: a member or resident rate shades the group. */
   residentPlayers?: number; appliedRate?: string;
+  /** VIEWS-1: the List view shows how it was booked and the round's price (cents). */
+  source?: string; totalAmount?: number;
 };
 export type BoardSlot = {
   id: string; time: string; status: string; playersAvailable: number; playersBooked: number;
@@ -33,10 +35,10 @@ export function groupTone(g: BoardGroup): Tone {
   if ((g.noShowAt && g.status === 'confirmed') || g.checkInFailReason) return 'bad';
   return 'warn';
 }
-const TONE_LABEL: Record<Tone, string> = { ok: 'paid', warn: 'booked, not paid yet', bad: 'needs attention' };
+export const TONE_LABEL: Record<Tone, string> = { ok: 'paid', warn: 'booked, not paid yet', bad: 'needs attention' };
 const EDGE: Record<Tone, string> = { ok: 'border-l-ok', warn: 'border-l-warn', bad: 'border-l-bad' };
 
-const special = (g: BoardGroup) => (g.residentPlayers ?? 0) > 0 || (!!g.appliedRate && g.appliedRate !== 'standard');
+export const special = (g: BoardGroup) => (g.residentPlayers ?? 0) > 0 || (!!g.appliedRate && g.appliedRate !== 'standard');
 
 /** The same groups the panel's Move offers: confirmed and not a no-show, or checked in. */
 const movable = (g: BoardGroup) => (g.status === 'confirmed' && !g.noShowAt) || g.status === 'completed';

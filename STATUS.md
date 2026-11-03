@@ -4,14 +4,17 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-03 00:14 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `52abf641` · working tree **3 dirty file(s)**
+Generated 2026-11-03 19:20 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `659066c6` · working tree **4 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 58 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 61 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `659066c6` | 2026-11-03 | Tee sheet views: Grid, List and Calendar |
+| `aec2961f` | 2026-11-02 | Glass dashboard: green glow, frosted cards and rail, tab lifts on hover (#301) |
+| `f45e3113` | 2026-11-03 | Glass: keep pop-up panels solid and darken faint text so both clear AA |
 | `52abf641` | 2026-11-03 | Glass dashboard: green glow behind the page, frosted cards and rail, tab lifts on hover |
 | `66238486` | 2026-11-02 | Accuracy pass: plain Analytics definitions and one stock wording (#300) |
 | `d2052372` | 2026-11-02 | Accuracy pass: plain Analytics definitions, sold-out dates in the download, one stock wording |
@@ -73,11 +76,12 @@ Generated 2026-11-03 00:14 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (3 file(s))
+### Uncommitted working tree (4 file(s))
 
-- `M CLAUDE.md`
-- `M scripts/glass-test.ts`
-- `M src/app/globals.css`
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
+- `M src/components/dashboard/TeeSheetCalendar.tsx`
+- `M src/components/dashboard/TeeSheetList.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -94,7 +98,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 103d | `b88c8bf3` | `RUN_QUEUE.md:2412` |
+| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 104d | `b88c8bf3` | `RUN_QUEUE.md:2412` |
 
 ## Not started — the actual queue
 
@@ -163,46 +167,49 @@ This is the distinction a raw checkbox count gets wrong.
 | spec | open refs | last touched | age |
 |---|---|---|---|
 | `CLAUDE.md` | 1 | 2026-11-03 | 0d |
-| `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 1d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 12d |
+| `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 2d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 13d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 7d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 8d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 10d |
-| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 10d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 11d |
 | `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 11d |
+| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 11d |
 | `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 11d |
 | `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 11d |
 | `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 11d |
 | `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 11d |
-| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 12d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 12d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 12d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-10-20 | 12d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-10-20 | 12d |
-| `ARCHITECTURE.md` | 0 | 2026-10-20 | 12d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-20 | 12d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-20 | 12d |
-| `CODEMAP_SPEC.md` | 0 | 2026-10-20 | 12d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-20 | 12d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-20 | 12d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-20 | 12d |
-| `FB2_COPY_SPEC.md` | 0 | 2026-10-20 | 12d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-20 | 12d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-20 | 12d |
-| `GOLFER_SPEC.md` | 0 | 2026-10-20 | 12d |
-| `HARDENING_SPEC.md` | 0 | 2026-10-20 | 12d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-20 | 12d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-20 | 12d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-20 | 12d |
-| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-20 | 12d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-20 | 12d |
-| `REVIEW_SPEC.md` | 0 | 2026-10-20 | 12d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-20 | 12d |
-| `UI_REVISE_SPEC.md` | 0 | 2026-10-20 | 12d |
+| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 13d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 13d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 13d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-10-20 | 13d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-10-20 | 13d |
+| `ARCHITECTURE.md` | 0 | 2026-10-20 | 13d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-20 | 13d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-20 | 13d |
+| `CODEMAP_SPEC.md` | 0 | 2026-10-20 | 13d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-20 | 13d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-20 | 13d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-20 | 13d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-10-20 | 13d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-20 | 13d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-20 | 13d |
+| `GOLFER_SPEC.md` | 0 | 2026-10-20 | 13d |
+| `HARDENING_SPEC.md` | 0 | 2026-10-20 | 13d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-20 | 13d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-20 | 13d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-20 | 13d |
+| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-20 | 13d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-20 | 13d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-20 | 13d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-20 | 13d |
+| `UI_REVISE_SPEC.md` | 0 | 2026-10-20 | 13d |
 
 ## Recent commits
 
+- `659066c6` 2026-11-03 — Tee sheet views: Grid, List and Calendar
+- `aec2961f` 2026-11-02 — Glass dashboard: green glow, frosted cards and rail, tab lifts on hover (#301)
+- `f45e3113` 2026-11-03 — Glass: keep pop-up panels solid and darken faint text so both clear AA
 - `52abf641` 2026-11-03 — Glass dashboard: green glow behind the page, frosted cards and rail, tab lifts on hover
 - `66238486` 2026-11-02 — Accuracy pass: plain Analytics definitions and one stock wording (#300)
 - `d2052372` 2026-11-02 — Accuracy pass: plain Analytics definitions, sold-out dates in the download, one stock wording
@@ -212,9 +219,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `580df30d` 2026-11-02 — queue/spec update
 - `cbc3bd08` 2026-11-02 — queue/spec update
 - `f3ad66bb` 2026-11-02 — Tee sheet: pay separately — split players off a group and pay their share
-- `90f8f79d` 2026-11-02 — Dashboard: "/" or Cmd/Ctrl K jumps to golfer search; Home flags stale conditions (#298)
-- `06d5e4c6` 2026-11-02 — Dashboard: / or Ctrl/Cmd K jumps to golfer search; Home says when conditions are off the booking page
-- `2aa723d8` 2026-11-02 — Booking page: today's course conditions while fresh (#297)
 
 ---
 
