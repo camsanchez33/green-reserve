@@ -117,14 +117,15 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-11-03 00:05 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 6ff38c64</span>
-    <span>4 uncommitted</span>
+    <span>2026-11-03 00:14 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 52abf641</span>
+    <span>3 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">57 runs have shipped that the queue doesn't know about</div>
+<div class="lede">58 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-31. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">52abf641</span><span>Glass dashboard: green glow behind the page, frosted cards and rail, tab lifts on hover</span></li>
 <li><span class="h">66238486</span><span>Accuracy pass: plain Analytics definitions and one stock wording (#300)</span></li>
 <li><span class="h">d2052372</span><span>Accuracy pass: plain Analytics definitions, sold-out dates in the download, one stock wording</span></li>
 <li><span class="h">e83ec9db</span><span>Tee sheet: pay separately — split players off a group and pay their share (#299)</span></li>
@@ -194,7 +195,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M CLAUDE.md</code></li><li><code>M src/app/globals.css</code></li><li><code>M src/components/OperatorSidebar.tsx</code></li><li><code>?? scripts/glass-test.ts</code></li></ul>
+<ul class="plain"><li><code>M CLAUDE.md</code></li><li><code>M scripts/glass-test.ts</code></li><li><code>M src/app/globals.css</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -236,7 +237,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Spec inventory</h2>
 <p class="note">Open refs = how many open queue items still point at that spec. Zero and old means consumed.</p>
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
-<tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-11-02 &middot; 0d</td></tr>
+<tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-11-03 &middot; 0d</td></tr>
 <tr><td><code>DENSE_UI_SPEC.md</code></td><td class="num">1</td><td class="num">2026-11-01 &middot; 1d</td></tr>
 <tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-20 &middot; 12d</td></tr>
 <tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-26 &middot; 7d</td></tr>
@@ -276,6 +277,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 12d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">52abf641</td><td class="num">2026-11-03</td><td>Glass dashboard: green glow behind the page, frosted cards and rail, tab lifts on hover</td></tr>
 <tr><td class="num">66238486</td><td class="num">2026-11-02</td><td>Accuracy pass: plain Analytics definitions and one stock wording (#300)</td></tr>
 <tr><td class="num">d2052372</td><td class="num">2026-11-02</td><td>Accuracy pass: plain Analytics definitions, sold-out dates in the download, one stock wording</td></tr>
 <tr><td class="num">e83ec9db</td><td class="num">2026-11-02</td><td>Tee sheet: pay separately — split players off a group and pay their share (#299)</td></tr>
@@ -287,7 +289,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">90f8f79d</td><td class="num">2026-11-02</td><td>Dashboard: &quot;/&quot; or Cmd/Ctrl K jumps to golfer search; Home flags stale conditions (#298)</td></tr>
 <tr><td class="num">06d5e4c6</td><td class="num">2026-11-02</td><td>Dashboard: / or Ctrl/Cmd K jumps to golfer search; Home says when conditions are off the booking page</td></tr>
 <tr><td class="num">2aa723d8</td><td class="num">2026-11-02</td><td>Booking page: today's course conditions while fresh (#297)</td></tr>
-<tr><td class="num">449bd296</td><td class="num">2026-11-02</td><td>Booking page: today's course conditions (carts, range, greens, pins) while fresh</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

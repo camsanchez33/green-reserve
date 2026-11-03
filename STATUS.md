@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-03 00:05 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `6ff38c64` · working tree **4 dirty file(s)**
+Generated 2026-11-03 00:14 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `52abf641` · working tree **3 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 57 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 58 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `52abf641` | 2026-11-03 | Glass dashboard: green glow behind the page, frosted cards and rail, tab lifts on hover |
 | `66238486` | 2026-11-02 | Accuracy pass: plain Analytics definitions and one stock wording (#300) |
 | `d2052372` | 2026-11-02 | Accuracy pass: plain Analytics definitions, sold-out dates in the download, one stock wording |
 | `e83ec9db` | 2026-11-02 | Tee sheet: pay separately — split players off a group and pay their share (#299) |
@@ -72,12 +73,11 @@ Generated 2026-11-03 00:05 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (4 file(s))
+### Uncommitted working tree (3 file(s))
 
 - `M CLAUDE.md`
+- `M scripts/glass-test.ts`
 - `M src/app/globals.css`
-- `M src/components/OperatorSidebar.tsx`
-- `?? scripts/glass-test.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -162,7 +162,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-11-02 | 0d |
+| `CLAUDE.md` | 1 | 2026-11-03 | 0d |
 | `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 1d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 12d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 7d |
@@ -203,6 +203,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `52abf641` 2026-11-03 — Glass dashboard: green glow behind the page, frosted cards and rail, tab lifts on hover
 - `66238486` 2026-11-02 — Accuracy pass: plain Analytics definitions and one stock wording (#300)
 - `d2052372` 2026-11-02 — Accuracy pass: plain Analytics definitions, sold-out dates in the download, one stock wording
 - `e83ec9db` 2026-11-02 — Tee sheet: pay separately — split players off a group and pay their share (#299)
@@ -214,7 +215,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `90f8f79d` 2026-11-02 — Dashboard: "/" or Cmd/Ctrl K jumps to golfer search; Home flags stale conditions (#298)
 - `06d5e4c6` 2026-11-02 — Dashboard: / or Ctrl/Cmd K jumps to golfer search; Home says when conditions are off the booking page
 - `2aa723d8` 2026-11-02 — Booking page: today's course conditions while fresh (#297)
-- `449bd296` 2026-11-02 — Booking page: today's course conditions (carts, range, greens, pins) while fresh
 
 ---
 

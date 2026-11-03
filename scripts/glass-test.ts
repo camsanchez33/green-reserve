@@ -22,6 +22,8 @@ ok('the rail is frosted', g.includes('.op-look:has(.op-rail) .op-rail {'));
 ok('the tab lifts on hover, never the current tab', g.includes('.op-tab:not([aria-current]):hover') && g.includes('translateY(-2px)'));
 ok('reduced motion turns the lift off', /prefers-reduced-motion: reduce\)[^\n]*transform: none/.test(g));
 ok('reduced transparency gets solid panels and no glow', g.includes('prefers-reduced-transparency: reduce') && g.includes('display: none'));
+ok('a pop-up window\'s panel (inside a fixed inset-0 backdrop) stays solid', g.includes('.op-look:has(.op-rail) .fixed.inset-0 .bg-white.shadow-card'));
+ok('faint text is darkened for the frosted cards', css.includes('--color-ink-faint: #666B65;'));
 ok('a golfer-page preview stays solid', g.includes('.op-keep-light .bg-white.shadow-card'));
 ok('no cursor tracking: no pointer variables in the CSS', !/--(mouse|cursor|pointer)-?[xy]/i.test(g));
 ok('the rail tabs carry the hook class', readFileSync('src/components/OperatorSidebar.tsx', 'utf8').includes("'op-tab flex items-center"));

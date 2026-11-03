@@ -133,6 +133,8 @@ body {
 .op-look:has(.op-rail) {
   --font-sans: var(--font-geist), 'Helvetica Neue', Arial, sans-serif; font-family: var(--font-sans);
   --color-paper: #F4F5F1; --color-ink-soft: #3A403A; --color-line-strong: #C9CEC2;
+  /* Glass review (2026-11-02): faint text on a frosted card over the glow was 4.27:1 — this clears 4.5. */
+  --color-ink-faint: #666B65;
   background: var(--color-page); min-height: 100vh; color: var(--color-ink);
 }
 .op-look:has(.op-rail) .font-serif { font-family: var(--font-sans); font-weight: 700; letter-spacing: -0.02em; }
@@ -183,7 +185,8 @@ body {
    dashboard pages with the rail only. Three parts, nothing else changes:
    1. A soft green glow fixed behind the page — two blurred plain circles, no gradient — so the
       glass has something to blur. 2. Every card (bg-white + shadow-card, i.e. <Card>/CARD) is
-      frosted: the panel colour at 72% with a blur. 3. The rail is frosted and the tab under the
+      frosted: the panel colour at 64% with a blur; a pop-up
+      window's panel stays solid (over a dimmed page, frosting dropped grey text below AA). 3. The rail is frosted and the tab under the
       pointer lifts 2px (no cursor tracking; off with reduced motion). A golfer-page preview
       (.op-keep-light) and anyone who asks for less transparency keep solid panels. */
 @media screen {
@@ -210,6 +213,7 @@ body {
   box-shadow: 0 6px 18px rgba(20,24,20,.10), 0 0 0 1px rgba(20,24,20,.05);
 }
 .op-look[data-theme="dark"]:has(.op-rail) .op-tab:not([aria-current]):hover { box-shadow: 0 6px 18px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.08); }
+.op-look:has(.op-rail) .fixed.inset-0 .bg-white.shadow-card,
 .op-look:has(.op-rail) .op-keep-light .bg-white.shadow-card { background-color: var(--color-white); -webkit-backdrop-filter: none; backdrop-filter: none; }
 }
 @media screen and (prefers-reduced-motion: reduce) { .op-look:has(.op-rail) .op-tab { transition: none; } .op-look:has(.op-rail) .op-tab:not([aria-current]):hover { transform: none; } }
