@@ -30,6 +30,8 @@ import { StatusDot } from '@/components/ui/StatusDot';
 import MoveGroupModal from '@/components/dashboard/MoveGroupModal';
 import { cancelConfirmText, cancelResultText, type CancelResult } from '@/lib/cancel-confirm';
 import TeeSheetRows, { type BoardGroup } from '@/components/dashboard/TeeSheetRows';
+import TeeSheetList from '@/components/dashboard/TeeSheetList';
+import TeeSheetCalendar from '@/components/dashboard/TeeSheetCalendar';
 import { lateForAdding } from '@/lib/late-add';
 import GolferMessageModal from '@/components/dashboard/GolferMessageModal';
 import { CHANGE_CATEGORIES } from '@/lib/change-requests';
@@ -57,6 +59,9 @@ type TeeTime = {
   /** W2-9: the event holding this (blocked) time. */
   event?: { id: string; name: string } | null;
 };
+type SheetView = 'grid' | 'list' | 'calendar';
+const SHEET_VIEWS: { id: SheetView; label: string }[] = [{ id: 'grid', label: 'Grid' }, { id: 'list', label: 'List' }, { id: 'calendar', label: 'Calendar' }];
+
 type Booking = {
   id: string; golferName: string; golferEmail: string; players: number; createdAt: string;
   status: string; paymentStatus: string; totalAmount: number; accessFeeTotal?: number;
@@ -149,6 +154,11 @@ function DashboardPageInner() {
   // SHEET-2 (Cam 2026-10-08: "is it smart to have both" — no: one sheet). The
   // board is the tee sheet; tapping a square opens this panel.
   const [panelId, setPanelId] = useState<string | null>(null);
+  // VIEWS-1 (Cam 2026-11-03): Grid (seat rows), List (one line per group) or Calendar (the month).
+  // Remembered per browser; the grid is the default and always works without it.
+  const [sheetView, setSheetViewState] = useState<SheetView>('grid');
+  useEffect(() => { try { const v = localStorage.getItem('gr_sheet_view'); if (v === 'list' || v === 'calendar') setSheetViewState(v); } catch {} }, []);
+  const setSheetView = (v: SheetView) => { setSheetViewState(v); try { localStorage.setItem('gr_sheet_view', v); } catch {} };
   // DASH-D: the till's result — the group just checked in, shown at the top of its time's card.
   const [justDone, setJustDone] = useState<{ bookingId: string; name: string; players: number; how: string } | null>(null);
   useEffect(() => { setJustDone(null); }, [panelId]);
@@ -1180,9 +1190,17 @@ function DashboardPageInner() {
                   {/* Cam 2026-10-19: Find golfer sits in the sheet's own bar, and
                       refresh is a small icon beside it instead of a button. */}
                   <div className="ml-auto flex items-center gap-2">
+                    <div role="group" aria-label="Sheet view" className="flex p-0.5 rounded-md bg-paper border border-line">
+                      {SHEET_VIEWS.map(v => (
+                        <button key={v.id} type="button" aria-pressed={sheetView === v.id} onClick={() => setSheetView(v.id)}
+                          className={'px-2.5 py-1 rounded-[5px] text-[12.5px] font-medium transition-colors ' + (sheetView === v.id ? 'bg-white text-ink shadow-card' : 'text-ink-soft hover:text-ink')}>
+                          {v.label}
+                        </button>
+                      ))}
+                    </div>
                     <label className="sr-only" htmlFor="sheet-search">Find golfer</label>
                     <input id="sheet-search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Find golfer"
-                      className={INPUT_COMPACT + ' w-36 sm:w-56 py-1.5'}/>
+                      className={INPUT_COMPACT + ' w-28 sm:w-56 py-1.5'}/>
                     <button onClick={() => loadTimes(selectedDate)} aria-label="Refresh the sheet" title="Refresh the sheet"
                       className="w-8 h-8 rounded-md border border-line inline-flex items-center justify-center text-[16px] leading-none text-ink-muted hover:text-ink hover:bg-paper transition-colors">
                       <span aria-hidden="true">↻</span>
@@ -1193,7 +1211,7 @@ function DashboardPageInner() {
                     (groups past their time and not checked in — tap one to open its
                     time and check in, mark still coming or no-show) and holds the
                     color key, where it is seen. */}
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2 border-b border-line text-[12.5px]">
+                <div className={'flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2 border-b border-line text-[12.5px] ' + (sheetView === 'calendar' ? 'hidden' : 'flex')}>
                   {lateGroups.length > 0 ? (
                     <div className="flex flex-wrap items-center gap-2 min-w-0">
                       <StatusDot status="warn" label={`${lateGroups.length} not checked in`} />
@@ -1222,7 +1240,11 @@ function DashboardPageInner() {
                     <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-[var(--color-mem-fill)]" />Member or resident</span>
                   </div>
                 </div>
-              {loading ? (
+              {sheetView === 'calendar' ? (
+                <div className="bg-paper/70 p-3 sm:p-4 rounded-b-lg">
+                  <TeeSheetCalendar selectedDate={selectedDate} today={today()} onPick={d => { setSelectedDate(d); setSheetView('grid'); }} />
+                </div>
+              ) : loading ? (
                 <div className="flex items-center justify-center py-16 text-ink-muted gap-2">
                   <Loader2 className="w-5 h-5 animate-spin"/>Loading tee times...
                 </div>
@@ -1234,6 +1256,14 @@ function DashboardPageInner() {
               ) : (
                 <div className="bg-paper/70 p-3 sm:p-4 rounded-b-lg">
                   {q && visibleTimes.length === 0 && <p className="text-center py-6 text-ink-muted text-sm">No bookings match &quot;{search}&quot; on this date.</p>}
+                  {sheetView === 'list' ? (
+                    <TeeSheetList
+                      slots={visibleTimes}
+                      isPast={t => selectedDate < today() || (selectedDate === today() && t.time <= nowHM)}
+                      selectedId={panelId}
+                      showMoney={access.can('money.payments')}
+                      onSelect={setPanelId} />
+                  ) : (
                   <TeeSheetRows
                     slots={visibleTimes}
                     isPast={t => selectedDate < today() || (selectedDate === today() && t.time <= nowHM)}
@@ -1247,9 +1277,10 @@ function DashboardPageInner() {
                       fromTeeTimeId: fromId, toTeeTimeId: toId,
                     })}
                     onSelect={setPanelId} />
+                  )}
                 </div>
               )}
-                {!loading && teeTimes.length > 0 && (
+                {!loading && teeTimes.length > 0 && sheetView !== 'calendar' && (
                   <div className="flex justify-end px-4 py-2 border-t border-line bg-paper rounded-b-lg text-[12.5px] text-ink-muted tabular-nums">
                     {teeTimes.reduce((n, x) => n + (x.bookings?.length ?? 0), 0)} group{teeTimes.reduce((n, x) => n + (x.bookings?.length ?? 0), 0) === 1 ? '' : 's'} booked · {teeTimes.filter(x => x.status !== 'blocked').length} tee times
                   </div>

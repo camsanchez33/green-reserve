@@ -14,6 +14,21 @@ export async function GET(req: NextRequest) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { searchParams } = req.nextUrl;
+  // VIEWS-1 (Cam 2026-11-03): the tee sheet's Calendar view — players booked of spots
+  // offered for each day of one month, blocked times left out. This course only.
+  const month = searchParams.get('month');
+  if (month !== null) {
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return NextResponse.json({ error: 'Pick a month as YYYY-MM.' }, { status: 400 });
+    const rows = await prisma.teeTime.groupBy({
+      by: ['date'],
+      where: { courseId: session.courseId, date: { gte: `${month}-01`, lte: `${month}-31` }, status: { not: 'blocked' } },
+      _sum: { playersAvailable: true, playersBooked: true },
+      _count: { _all: true },
+    });
+    const days = rows.map(r => ({ date: r.date, times: r._count._all, spots: r._sum.playersAvailable ?? 0, booked: r._sum.playersBooked ?? 0 }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+    return NextResponse.json({ month, days });
+  }
   // SD-3: the default day is the course's today, not the server's.
   let date = searchParams.get('date') || '';
   if (!date) {

@@ -1,7 +1,7 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 652,
+    "files": 654,
     "routes": 290,
     "libs": 231,
     "models": 70,
@@ -7504,7 +7504,7 @@
     },
     {
       "path": "src/app/api/operator/tee-times/route.ts",
-      "lines": 184,
+      "lines": 199,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8875,7 +8875,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1875,
+      "lines": 1906,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8901,6 +8901,8 @@
         "@/components/dashboard/RegisterPacks",
         "@/components/dashboard/ShopItemsForGroup",
         "@/components/dashboard/SmsConsentAsk",
+        "@/components/dashboard/TeeSheetCalendar",
+        "@/components/dashboard/TeeSheetList",
         "@/components/dashboard/TeeSheetRows",
         "@/components/dashboard/Toast",
         "@/components/ui/Card",
@@ -11207,6 +11209,7 @@
         "src/components/dashboard/RegisterPacks.tsx",
         "src/components/dashboard/RoundPacks.tsx",
         "src/components/dashboard/ShopStock.tsx",
+        "src/components/dashboard/TeeSheetCalendar.tsx",
         "src/components/dashboard/analytics/ShopTab.tsx",
         "src/components/dashboard/members/ImportMembers.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
@@ -11762,8 +11765,58 @@
       "usedBy": []
     },
     {
+      "path": "src/components/dashboard/TeeSheetCalendar.tsx",
+      "lines": 85,
+      "purpose": "VIEWS-1 (Cam 2026-11-03):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (TeeSheetCalendar)",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/dashboard/LoadError",
+        "@/lib/dashboard-fetch",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/page.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/TeeSheetList.tsx",
+      "lines": 62,
+      "purpose": "VIEWS-1 (Cam 2026-11-03, the glass/views canvas:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (TeeSheetList)",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./TeeSheetRows",
+        "@/components/ui/StatusDot",
+        "@/lib/format"
+      ],
+      "usedBy": [
+        "src/app/dashboard/page.tsx"
+      ]
+    },
+    {
       "path": "src/components/dashboard/TeeSheetRows.tsx",
-      "lines": 177,
+      "lines": 179,
       "purpose": "DENSE-4 (DENSE_UI_SPEC D1, Cam 2026-10-27:",
       "brain": [],
       "exports": [
@@ -11782,6 +11835,14 @@
         {
           "name": "groupTone",
           "kind": "fn"
+        },
+        {
+          "name": "special",
+          "kind": "fn"
+        },
+        {
+          "name": "TONE_LABEL",
+          "kind": "const"
         }
       ],
       "route": null,
@@ -11794,7 +11855,8 @@
         "react"
       ],
       "usedBy": [
-        "src/app/dashboard/page.tsx"
+        "src/app/dashboard/page.tsx",
+        "src/components/dashboard/TeeSheetList.tsx"
       ]
     },
     {
@@ -13013,6 +13075,7 @@
         "src/components/dashboard/ShopStock.tsx",
         "src/components/dashboard/SignAgreements.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
+        "src/components/dashboard/TeeSheetList.tsx",
         "src/components/dashboard/Toast.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
         "src/components/dashboard/events/EventMoney.tsx",
@@ -17997,6 +18060,7 @@
         "src/components/dashboard/ShopItemsForGroup.tsx",
         "src/components/dashboard/ShopStock.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
+        "src/components/dashboard/TeeSheetCalendar.tsx",
         "src/components/dashboard/analytics/ShopTab.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
         "src/components/dashboard/events/EventMoney.tsx",
@@ -19226,6 +19290,7 @@
         "src/components/dashboard/GolferMessageModal.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
+        "src/components/dashboard/TeeSheetList.tsx",
         "src/components/dashboard/TeeSheetRows.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
         "src/components/dashboard/events/EventMoney.tsx",
