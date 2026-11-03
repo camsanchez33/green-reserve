@@ -178,6 +178,47 @@ body {
 .op-look[data-theme="dark"]:has(.op-rail) .op-keep-light :is(.bg-pine, .bg-ok, .bg-bad, .bg-warn, .bg-ink).text-white { color: #FFFFFF; }
 }
 
+/* GLASS-1 (Cam 2026-11-02, the glass examples canvas: "a little green glow is fine", glass
+   cards "everywhere", the menu tab that lifts — reverses DASH-D's "no glass"). Screen only,
+   dashboard pages with the rail only. Three parts, nothing else changes:
+   1. A soft green glow fixed behind the page — two blurred plain circles, no gradient — so the
+      glass has something to blur. 2. Every card (bg-white + shadow-card, i.e. <Card>/CARD) is
+      frosted: the panel colour at 72% with a blur. 3. The rail is frosted and the tab under the
+      pointer lifts 2px (no cursor tracking; off with reduced motion). A golfer-page preview
+      (.op-keep-light) and anyone who asks for less transparency keep solid panels. */
+@media screen {
+.op-look:has(.op-rail) { isolation: isolate; }
+.op-look:has(.op-rail)::before, .op-look:has(.op-rail)::after {
+  content: ''; position: fixed; z-index: -1; pointer-events: none; border-radius: 9999px; filter: blur(90px);
+}
+.op-look:has(.op-rail)::before { width: 560px; height: 560px; left: -140px; top: 18vh; background: #3BAA6B; opacity: .20; }
+.op-look:has(.op-rail)::after { width: 640px; height: 640px; right: 6vw; top: 38vh; background: #3BAA6B; opacity: .14; }
+.op-look[data-theme="dark"]:has(.op-rail)::before { opacity: .22; }
+.op-look[data-theme="dark"]:has(.op-rail)::after { background: #2F6B4F; opacity: .40; }
+.op-look:has(.op-rail) .bg-white.shadow-card:not(.op-tab) {
+  background-color: color-mix(in srgb, var(--color-white) 64%, transparent);
+  -webkit-backdrop-filter: blur(18px) saturate(140%); backdrop-filter: blur(18px) saturate(140%);
+}
+.op-look:has(.op-rail) .op-rail {
+  background-color: color-mix(in srgb, var(--color-rail) 55%, transparent);
+  -webkit-backdrop-filter: blur(22px) saturate(140%); backdrop-filter: blur(22px) saturate(140%);
+}
+.op-look:has(.op-rail) .op-tab { transition: transform .18s ease, background-color .18s ease, box-shadow .18s ease, color .18s ease; }
+.op-look:has(.op-rail) .op-tab:not([aria-current]):hover {
+  transform: translateY(-2px); color: var(--color-ink);
+  background-color: color-mix(in srgb, var(--color-white) 78%, transparent);
+  box-shadow: 0 6px 18px rgba(20,24,20,.10), 0 0 0 1px rgba(20,24,20,.05);
+}
+.op-look[data-theme="dark"]:has(.op-rail) .op-tab:not([aria-current]):hover { box-shadow: 0 6px 18px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.08); }
+.op-look:has(.op-rail) .op-keep-light .bg-white.shadow-card { background-color: var(--color-white); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+@media screen and (prefers-reduced-motion: reduce) { .op-look:has(.op-rail) .op-tab { transition: none; } .op-look:has(.op-rail) .op-tab:not([aria-current]):hover { transform: none; } }
+@media screen and (prefers-reduced-transparency: reduce) {
+  .op-look:has(.op-rail)::before, .op-look:has(.op-rail)::after { display: none; }
+  .op-look:has(.op-rail) .bg-white.shadow-card:not(.op-tab), .op-look:has(.op-rail) .op-rail { background-color: var(--color-white); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .op-look:has(.op-rail) .op-rail { background-color: var(--color-rail); }
+}
+
 /* FB-2: "See how it works" on the homepage glides to the steps instead of
    jumping. Homepage only, and never for visitors who asked for reduced motion. */
 @media (prefers-reduced-motion: no-preference) {
