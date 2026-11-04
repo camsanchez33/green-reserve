@@ -7,12 +7,16 @@
 import { useState } from 'react';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { SHOP_FEE_LABEL, SHOP_SALE_FEE_CENTS, SHOP_FEE_ON } from '@/lib/booking-fees';
+import { groupLines, type ShopLineGroup } from '@/lib/shop-lines';
 
 export type ShopLine = { id: string; name: string; unitPriceCents: number; quantity: number };
-type CatalogItem = { id: string; name: string; category: string; priceCents: number; active: boolean; parentId?: string | null };
+type CatalogItem = { id: string; name: string; category: string; priceCents: number; active: boolean; parentId?: string | null; stockCount?: number | null; sku?: string; photoUrl?: string | null };
 
 const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
+const initials = (n: string) => n.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]!.toUpperCase()).join('');
 
+// Cam 2026-11-04 ("the whole add a pro shop item is poor"): the register's way — tap a tile to add
+// one, − / + on each row, search or scan to find (lib/shop-lines groups the saved lines).
 export default function ShopItemsForGroup({ bookingId, lines, shopFeeCents, shopTaxCents = 0, editable, canSell, showMoney, onChanged }: {
   bookingId: string;
   lines: ShopLine[];
@@ -30,34 +34,43 @@ export default function ShopItemsForGroup({ bookingId, lines, shopFeeCents, shop
   const [picking, setPicking] = useState(false);
   const [catalog, setCatalog] = useState<CatalogItem[] | null>(null);
   const [loadError, setLoadError] = useState('');
-  const [itemId, setItemId] = useState('');
-  const [qty, setQty] = useState(1);
+  const [q, setQ] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState('');
   // W2-7 B2: the item saved but its sales tax couldn't be worked out yet.
   const [taxNote, setTaxNote] = useState('');
 
-  async function openPicker() {
-    setPicking(true); setError(''); setLoadError('');
-    if (catalog) return;
+  async function loadCatalog(): Promise<CatalogItem[] | null> {
+    if (catalog) return catalog;
     const r = await dfetch<{ items: CatalogItem[] }>('/api/operator/shop-items');
-    if (!r.ok) { setLoadError(r.error); return; }
+    if (!r.ok) { setLoadError(r.error); return null; }
     // W2-7: sellable rows only — an item with sizes/colors is picked by its option ("Logo polo — M").
     const parents = new Set(r.data.items.map(i => i.parentId).filter(Boolean));
     const hidden = new Set(r.data.items.filter(i => !i.active).map(i => i.id));
     const active = r.data.items.filter(i => i.active && !parents.has(i.id) && !(i.parentId && hidden.has(i.parentId))).sort((a, b) => (a.category || '~').localeCompare(b.category || '~') || a.name.localeCompare(b.name));
     setCatalog(active);
-    if (active[0]) setItemId(active[0].id);
+    return active;
   }
 
-  async function add() {
-    if (!itemId) return;
-    setBusy('add'); setError('');
-    const r = await dfetch<{ taxError?: string }>('/api/operator/bookings/shop', { method: 'POST', body: JSON.stringify({ bookingId, shopItemId: itemId, quantity: qty }) });
+  async function openPicker() {
+    setPicking(true); setError(''); setLoadError('');
+    await loadCatalog();
+  }
+
+  /** "+" on a row: one more of that item. The catalog loads on the first tap (review 2026-11-04). */
+  async function more(g: ShopLineGroup) {
+    setError('');
+    const list = await loadCatalog();
+    const it = list?.find(i => i.name === g.name && i.priceCents === g.unitPriceCents);
+    if (it) await add(it.id); else { setPicking(true); setError('Pick it again below.'); }
+  }
+
+  async function add(itemId: string) {
+    setBusy(`add:${itemId}`); setError('');
+    const r = await dfetch<{ taxError?: string }>('/api/operator/bookings/shop', { method: 'POST', body: JSON.stringify({ bookingId, shopItemId: itemId, quantity: 1 }) });
     setBusy(null);
     if (!r.ok) { setError(r.error); return; }
     setTaxNote(r.data?.taxError || '');
-    setPicking(false); setQty(1);
     await onChanged();
   }
 
@@ -72,23 +85,37 @@ export default function ShopItemsForGroup({ bookingId, lines, shopFeeCents, shop
 
   if (lines.length === 0 && !(editable && canSell)) return null;
   const shopTotal = lines.reduce((s, l) => s + l.unitPriceCents * l.quantity, 0);
-
+  const groups = groupLines(lines);
+  const term = q.trim().toLowerCase();
+  const shown = (catalog ?? []).filter(i => !term || i.name.toLowerCase().includes(term) || (i.category || '').toLowerCase().includes(term) || (i.sku || '').toLowerCase() === term);
+  const anyPhoto = shown.some(i => i.photoUrl);
+  const canEdit = editable && canSell;
+  
   return (
     <div className="basis-full mt-1 border-t border-line pt-2 text-[13px]">
-      {lines.length > 0 && (
-        <ul className="space-y-1 mb-1.5">
-          {lines.map(l => (
-            <li key={l.id} className="flex items-center justify-between gap-2">
-              <span className="text-ink truncate">{l.name}{l.quantity > 1 ? ` × ${l.quantity}` : ''}</span>
-              <span className="flex items-center gap-2 shrink-0">
-                {showMoney && <span className="tabular-nums text-ink-soft">{usd(l.unitPriceCents * l.quantity)}</span>}
-                {editable && canSell && (
-                  <button type="button" onClick={e => { e.stopPropagation(); remove(l.id); }} disabled={busy !== null}
-                    className="text-xs text-ink-soft hover:text-bad px-1 disabled:opacity-50">{busy === l.id ? '…' : 'Remove'}</button>
-                )}
-              </span>
-            </li>
-          ))}
+      {groups.length > 0 && (
+        <ul className="space-y-1.5 mb-1.5">
+          {groups.map(g => {
+            return (
+              <li key={g.key} className="flex items-center justify-between gap-2">
+                <span className="text-ink truncate">{g.name}</span>
+                <span className="flex items-center gap-2 shrink-0">
+                  {canEdit ? (
+                    <span className="inline-flex items-center rounded-md border border-line bg-white">
+                      {/* A line saved several at once (the old quantity box) comes off whole — the button says so. */}
+                      <button type="button" onClick={e => { e.stopPropagation(); remove(g.lastId); }} disabled={busy !== null}
+                        aria-label={g.lastQty > 1 ? `Remove ${g.lastQty} ${g.name}` : `Less ${g.name}`}
+                        className={(g.lastQty > 1 ? 'px-2 text-[12px] ' : 'w-8 ') + 'h-8 text-ink-soft hover:text-bad disabled:opacity-50'}>{g.lastQty > 1 ? `−${g.lastQty}` : '−'}</button>
+                      <span className="min-w-[1.5rem] text-center tabular-nums text-ink">{g.quantity}</span>
+                      <button type="button" onClick={e => { e.stopPropagation(); more(g); }} disabled={busy !== null}
+                        aria-label={`More ${g.name}`} className="w-8 h-8 text-ink-soft hover:text-ink disabled:opacity-50">+</button>
+                    </span>
+                  ) : g.quantity > 1 && <span className="tabular-nums text-ink-soft">× {g.quantity}</span>}
+                  {showMoney && <span className="w-16 text-right tabular-nums text-ink-soft">{usd(g.unitPriceCents * g.quantity)}</span>}
+                </span>
+              </li>
+            );
+          })}
           {showMoney && shopFeeCents > 0 && (
             <li className="flex items-center justify-between gap-2 text-ink-muted">
               <span>{SHOP_FEE_LABEL}</span><span className="tabular-nums">{usd(shopFeeCents)}</span>
@@ -101,49 +128,60 @@ export default function ShopItemsForGroup({ bookingId, lines, shopFeeCents, shop
           )}
         </ul>
       )}
-      {lines.length > 0 && !editable && <p className="text-[12px] text-ink-muted">Shop items {usd(shopTotal)} were part of this round&apos;s payment.</p>}
+      {lines.length > 0 && !editable && <p className="text-[12px] text-ink-muted">{usd(shopTotal)} paid with the round.</p>}
 
-      {editable && canSell && !picking && (
+      {canEdit && !picking && (
         <button type="button" onClick={e => { e.stopPropagation(); openPicker(); }}
-          className="text-xs font-medium text-ink-soft hover:text-ink py-0.5">Add shop item</button>
+          className="w-full min-h-[40px] rounded-[7px] border border-dashed border-line-strong text-[13px] font-medium text-ink-soft hover:text-ink hover:bg-paper transition-colors">
+          {lines.length ? 'Add items' : 'Add shop items'}
+        </button>
       )}
 
-      {editable && canSell && picking && (
+      {canEdit && picking && (
         <div className="mt-1 space-y-2" onClick={e => e.stopPropagation()}>
           {loadError && (
             <p className="text-xs text-bad">{loadError} <button type="button" onClick={() => { setCatalog(null); openPicker(); }} className="underline">Try again</button></p>
           )}
-          {!loadError && !catalog && <p className="text-xs text-ink-muted">Loading the shop…</p>}
+          {!loadError && !catalog && <p className="text-xs text-ink-muted">Loading…</p>}
           {catalog && catalog.length === 0 && (
-            <p className="text-xs text-ink-soft">Your shop has no items yet — add them in Settings → Pro shop.</p>
+            <p className="text-xs text-ink-soft">No items yet — add them in Settings → Pro shop.</p>
           )}
-          {catalog && catalog.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2">
-              <label className="sr-only" htmlFor={`shop-item-${bookingId}`}>Item</label>
-              <select id={`shop-item-${bookingId}`} value={itemId} onChange={e => setItemId(e.target.value)}
-                className="min-w-0 flex-1 bg-paper border border-line rounded-md px-2.5 py-1.5 text-[13px] text-ink focus:border-pine/40 focus:ring-2 focus:ring-pine/10 outline-none">
-                {[...new Set(catalog.map(i => i.category || 'Other'))].map(c => (
-                  <optgroup key={c} label={c}>
-                    {catalog.filter(i => (i.category || 'Other') === c).map(i => <option key={i.id} value={i.id}>{i.name}{showMoney ? ` · ${usd(i.priceCents)}` : ''}</option>)}
-                  </optgroup>
-                ))}
-              </select>
-              <label className="sr-only" htmlFor={`shop-qty-${bookingId}`}>Quantity</label>
-              <input id={`shop-qty-${bookingId}`} type="number" min={1} max={99} value={qty}
-                onChange={e => setQty(Math.max(1, Math.min(99, Math.floor(Number(e.target.value) || 1))))}
-                className="w-16 bg-paper border border-line rounded-md px-2 py-1.5 text-[13px] text-ink tabular-nums focus:border-pine/40 focus:ring-2 focus:ring-pine/10 outline-none" />
-              <button type="button" onClick={add} disabled={busy !== null || !itemId}
-                className="bg-pine hover:bg-pine-hover text-white text-xs font-medium rounded-md px-3 py-1.5 disabled:opacity-50">{busy === 'add' ? 'Adding…' : 'Add'}</button>
-              <button type="button" onClick={() => { setPicking(false); setError(''); }} className="text-xs text-ink-soft hover:text-ink px-1">Cancel</button>
+          {catalog && catalog.length > 0 && (<>
+            <div className="flex items-center gap-2">
+              <input id={`shop-find-${bookingId}`} aria-label="Find or scan" value={q} onChange={e => setQ(e.target.value)} placeholder="Find or scan"
+                onKeyDown={e => { if (e.key !== 'Enter') return; const exact = shown.find(i => (i.sku || '').toLowerCase() === term) ?? (shown.length === 1 ? shown[0] : undefined); if (exact) { e.preventDefault(); add(exact.id); setQ(''); } }}
+                className="flex-1 min-w-0 bg-white border border-line rounded-md px-2.5 py-1.5 text-[13px] text-ink placeholder-ink-faint focus:border-pine/40 focus:ring-2 focus:ring-pine/10 outline-none" />
+              <button type="button" onClick={() => { setPicking(false); setQ(''); setError(''); }} className="text-[13px] font-medium text-ink-soft hover:text-ink px-1">Done</button>
             </div>
-          )}
-          {catalog && catalog.length > 0 && lines.length === 0 && (
-            <p className="text-[12px] text-ink-muted">Charged with the round{SHOP_FEE_ON ? `, plus GreenReserve’s ${usd(SHOP_SALE_FEE_CENTS)} per sale, paid by the golfer` : ''}.</p>
-          )}
+            <div className="grid grid-cols-3 gap-1.5 max-h-[16rem] overflow-y-auto">
+              {shown.map(i => {
+                const out = i.stockCount != null && i.stockCount <= 0;
+                return (
+                  <button key={i.id} type="button" onClick={() => add(i.id)} disabled={busy !== null}
+                    aria-label={`Add ${i.name}${showMoney ? `, ${usd(i.priceCents)}` : ''}${out ? ', sold out' : ''}`}
+                    className="min-w-0 rounded-[7px] bg-white shadow-[0_0_0_1px_var(--color-line)] hover:shadow-[0_0_0_2px_var(--color-pine)] text-left overflow-hidden disabled:opacity-60 transition-shadow">
+                    {anyPhoto && (i.photoUrl
+                      ? <img src={i.photoUrl} alt="" loading="lazy" className="w-full h-14 object-cover" />
+                      : <span aria-hidden="true" className="w-full h-14 flex items-center justify-center bg-paper text-[13px] font-semibold text-ink-muted">{initials(i.name)}</span>)}
+                    <span className="block px-2 py-1.5">
+                      <span className="block text-[12.5px] leading-tight text-ink line-clamp-2">{busy === `add:${i.id}` ? 'Adding…' : i.name}</span>
+                      <span className="block mt-0.5 text-[12px] tabular-nums text-ink-muted">
+                        {showMoney ? usd(i.priceCents) : ''}{out && <span className="text-bad">{showMoney ? ' · ' : ''}sold out</span>}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+              {shown.length === 0 && <p className="col-span-3 py-3 text-center text-[12.5px] text-ink-muted">No match</p>}
+            </div>
+            {lines.length === 0 && (
+              <p className="text-[12px] text-ink-muted">Charged with the round{SHOP_FEE_ON ? `, plus GreenReserve’s ${usd(SHOP_SALE_FEE_CENTS)} per sale, paid by the golfer` : ''}.</p>
+            )}
+          </>)}
         </div>
       )}
       {error && <p className="mt-1 text-xs text-bad">{error}</p>}
-      {taxNote && <p className="mt-1 text-xs text-warn">Saved, but {taxNote.charAt(0).toLowerCase() + taxNote.slice(1)} It&apos;s worked out again before the round is paid.</p>}
+      {taxNote && <p className="mt-1 text-xs text-warn">Saved, but {taxNote.charAt(0).toLowerCase() + taxNote.slice(1)}</p>}
     </div>
   );
 }

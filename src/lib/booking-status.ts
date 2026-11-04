@@ -42,7 +42,7 @@ export function getBookingStatus(status: string, paymentStatus: string): Booking
   // status === 'confirmed'
   // SD-5: entered at the counter (walk-in / phone) — pays there.
   if (paymentStatus === 'manual') {
-    return { label: 'Pays in store', sublabel: 'Walk-in or phone booking — cash, the card reader or a pay link', tone: 'blue' };
+    return { label: 'Pays in store', sublabel: 'Walk-in or phone booking — pays at the counter', tone: 'blue' };
   }
   if (paymentStatus === 'no_payment_method') {
     return { label: 'No Card Required', sublabel: 'Pay at the course or via check-in link', tone: 'blue' };

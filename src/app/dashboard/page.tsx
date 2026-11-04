@@ -230,6 +230,8 @@ function DashboardPageInner() {
   const [here, setHere] = useState<Record<string, number>>({});
   // SPLIT-1 (Cam 2026-11-02): "they all want to pay separately" — the group whose split box is open.
   const [splitFor, setSplitFor] = useState<{ id: string; n: number; name: string } | null>(null);
+  // Cam 2026-11-04: the booked party size lives behind "Edit group", out of the checkout.
+  const [editGroupId, setEditGroupId] = useState<string | null>(null);
   const [splitBusy, setSplitBusy] = useState(false);
   async function splitOff(b: Booking, n: number, name: string, thenCash: boolean) {
     setSplitBusy(true);
@@ -756,6 +758,12 @@ function DashboardPageInner() {
     const canCash = b.status === 'confirmed' && b.paymentStatus !== 'manual' && b.paymentStatus !== 'paid' && b.paymentStatus !== 'paid_offline' && access.can('sheet.counter_payment');
     const canAccount = b.status === 'confirmed' && !b.noShowAt && !b.roundPaid && b.paymentStatus !== 'paid' && b.paymentStatus !== 'paid_offline' && hasAccounts && access.can('sheet.counter_payment');
     const canReader = b.status === 'confirmed' && b.paymentStatus !== 'paid' && b.paymentStatus !== 'paid_offline' && hasReader && selectedDate === today() && access.can('sheet.checkin') && access.can('shop.sell');
+    // Cam 2026-11-04 ("no option to send it to the card reader"): the reader is always on the card for a group
+    // that still pays — usable, or saying why not (none connected, or not this group's day yet).
+    const readerWanted = b.status === 'confirmed' && b.paymentStatus !== 'paid' && b.paymentStatus !== 'paid_offline' && b.paymentStatus !== 'on_account' && !b.noShowAt && access.can('sheet.checkin') && access.can('shop.sell');
+    // No reader at all → say so on any day it could pay (owners get the link to connect one); a reader but not its day → "on the day".
+    const readerWhyNot = canReader || !readerWanted || selectedDate < today() ? null : !hasReader ? 'none' : 'day';
+    const canSizeGroup = b.status === 'confirmed' && !b.noShowAt && !b.paidOffline && !b.roundPaid && !b.shopLocked && b.paymentStatus !== 'paid' && b.paymentStatus !== 'cancellation_fee_charged' && access.can('sheet.counter_payment');
     const canTextLink = b.status === 'confirmed' && b.hasCard === false && access.can('sheet.checkin') && b.hasPhone && selectedDate <= today();
     const canEmailLink = b.status === 'confirmed' && b.hasCard === false && b.paymentStatus !== 'manual' && access.can('sheet.checkin') && !b.golferEmail.endsWith('@noemail.greenreserve.app') && selectedDate <= today();
     const showTicket = showMoney && unpaid && !b.noShowAt;
@@ -841,16 +849,6 @@ function DashboardPageInner() {
           </div>
         )}
 
-        {/* Dead end 19: the party size, while the round's price can still change. */}
-        {b.status === 'confirmed' && !b.noShowAt && !b.paidOffline && !b.roundPaid && !b.shopLocked && b.paymentStatus !== 'paid' && b.paymentStatus !== 'cancellation_fee_charged' && access.can('sheet.counter_payment') && (
-          <label className="mt-2.5 flex items-center gap-2 text-[13px] text-ink-soft" onClick={e => e.stopPropagation()}>
-            Players
-            <select value={b.players} disabled={rowBusy === b.id} onChange={e => changePlayers(b, Number(e.target.value))}
-              className="bg-paper border border-line rounded-md px-2 py-1 text-[13px] text-ink disabled:opacity-50">
-              {Array.from({ length: Math.max(b.players, tt.playersAvailable - tt.playersBooked + b.players) }, (_, i) => <option key={i + 1} value={i + 1}>{i + 1}</option>)}
-            </select>
-          </label>
-        )}
         {/* RES-1: residents in the group, while the round's price can still change. */}
         {b.status === 'confirmed' && tt.residentRateCents != null && !b.noShowAt && !b.paidOffline && !b.roundPaid && !b.shopLocked && b.paymentStatus !== 'paid'
           && (!b.appliedRate || b.appliedRate === 'standard' || b.appliedRate === 'resident') && access.can('sheet.counter_payment') && (
@@ -894,12 +892,15 @@ function DashboardPageInner() {
                 : `Charge card on file${money(cardDue)}`}
             </button>
           )}
-          {(canCash || canAccount || b.paymentStatus === 'on_account' && access.can('sheet.counter_payment') || canReader || canTextLink || canEmailLink) && (
+          {(canCash || canAccount || b.paymentStatus === 'on_account' && access.can('sheet.counter_payment') || canReader || readerWhyNot || canTextLink || canEmailLink) && (
             <div className="grid grid-cols-2 gap-2">
               {canCash && (
                 <button onClick={() => bookingLifecycle(b, 'take_cash')} disabled={rowBusy === b.id} className={tile}>{rowBusy === b.id ? 'Saving…' : `Take cash${money(cashDue)}`}</button>
               )}
               {canReader && <Link href={`/dashboard/shop?round=${b.id}`} className={tile + ' flex items-center justify-center'}>Card reader</Link>}
+              {readerWhyNot === 'none' && !access.isStaff && <Link href="/dashboard/settings?section=Pro+shop" className={tile + ' flex items-center justify-center text-ink-soft'}>Connect a card reader</Link>}
+              {readerWhyNot === 'none' && access.isStaff && <button type="button" disabled className={tile + ' text-ink-soft'}>No card reader</button>}
+              {readerWhyNot === 'day' && <button type="button" disabled className={tile + ' text-ink-soft'}>Reader · on the day</button>}
               {canTextLink && (
                 <button onClick={() => sendPayLink(b, 'sms')} disabled={rowBusy === b.id} className={tile}>{rowBusy === b.id ? 'Sending…' : 'Text pay link'}</button>
               )}
@@ -920,6 +921,9 @@ function DashboardPageInner() {
           {((b.status === 'confirmed' && !b.noShowAt) || (b.status === 'completed' && selectedDate >= today())) && access.can('sheet.move') && (
             <button onClick={() => setMoveTarget({ booking: { id: b.id, golferName: b.golferName, players: b.players, emailable: !b.golferEmail.endsWith('@noemail.greenreserve.app'), checkedIn: b.status === 'completed' }, fromTeeTimeId: tt.id })}
               className={link}>Move</button>
+          )}
+          {canSizeGroup && (
+            <button type="button" aria-expanded={editGroupId === b.id} onClick={() => setEditGroupId(editGroupId === b.id ? null : b.id)} className={link}>Edit group</button>
           )}
           {b.status === 'confirmed' && b.noShowAt && access.can('sheet.no_show') && (
             <button onClick={() => bookingLifecycle(b, 'still_coming')} disabled={rowBusy === b.id} className={link}>{rowBusy === b.id ? '…' : 'Still coming'}</button>
@@ -947,6 +951,19 @@ function DashboardPageInner() {
             </span>
           )}
         </div>
+        {/* Dead end 19 → Cam 2026-11-04: the BOOKED party size (4 became 3 before they came), apart from
+            "Showed up" (who's paying now). Same action and rules as before. */}
+        {canSizeGroup && editGroupId === b.id && (
+          <div className="mt-2.5 rounded-[7px] bg-paper/70 px-3 py-2.5" onClick={e => e.stopPropagation()}>
+            <label className="flex items-center gap-2 text-[13px] text-ink">
+              Booked for
+              <select value={b.players} disabled={rowBusy === b.id} onChange={e => changePlayers(b, Number(e.target.value))}
+                className="bg-white border border-line rounded-md px-2 py-1 text-[13px] text-ink disabled:opacity-50">
+                {Array.from({ length: Math.max(b.players, tt.playersAvailable - tt.playersBooked + b.players) }, (_, i) => <option key={i + 1} value={i + 1}>{i + 1} player{i ? 's' : ''}</option>)}
+              </select>
+            </label>
+          </div>
+        )}
       </li>
     );
   };
@@ -963,7 +980,7 @@ function DashboardPageInner() {
                             <span>{pageApprovalStatus === 'approved'
                               ? stripeAccountActive ? 'You approved your page. We’ll check everything and take your course live.' : PAYMENTS_BLOCK_LIVE
                               : pageApprovalStatus === 'changes_requested'
-                                ? 'We’re making your changes and will send your page back for you to approve.'
+                                ? 'We’re making your changes and will send your page back.'
                                 : 'Your course isn’t live yet. Golfers can book once you approve your page.'}</span>
               <div className="flex items-center gap-2 ml-auto">
                 {pageApprovalStatus === 'approved' ? (
@@ -1418,8 +1435,8 @@ function DashboardPageInner() {
                     className={'text-left rounded-md border px-3 py-2.5 transition-colors disabled:opacity-60 ' + (wxMode === k ? 'border-pine/50 bg-pine/[0.05]' : 'border-line hover:border-line-strong')}>
                     <span className="block text-[13.5px] font-semibold text-ink">{l}</span>
                     <span className="block text-[12.5px] text-ink-soft mt-0.5">{k === 'cancel'
-                      ? 'Rain or lightning: cancel a range of times with no fee, block them, and email those golfers.'
-                      : 'Frost or a wet morning: push the first tee time later and move the early groups back, then email them.'}</span>
+                      ? 'Rain or lightning: cancel and block a range of times, no fee, email those golfers.'
+                      : 'Frost or a wet morning: start later and move the early groups back.'}</span>
                   </button>
                 ))}
               </div>
