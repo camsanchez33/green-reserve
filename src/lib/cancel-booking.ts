@@ -1,6 +1,7 @@
 import { prisma } from './prisma';
 import { sendCancellationEmail, sendTeeTimeAlertEmail } from './email';
 import { refundOnConnectedAccount, chargeOnConnectedAccount } from './stripe';
+import { holdRefundCents, hasShareToRefund } from './split-booking-db';
 import { refundSeparateAccessFee, chargeAccessFeeSeparately } from './access-fee';
 import { refundBookingFee } from './booking-fee';
 import { releaseBookingRounds } from './round-packs';
@@ -100,7 +101,10 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
   let feeWaivedRefunded = false;
   if (feeAlreadyCharged && waiveFee && booking.cancellationFeeChargeId && booking.course.stripeAccountId) {
     try {
-      const refund = await refundOnConnectedAccount({ paymentIntentId: booking.cancellationFeeChargeId, connectedAccountId: booking.course.stripeAccountId });
+      // PARTIAL-1: a hold shared with a part split off this group gives back only this booking's share.
+      const share = await holdRefundCents(booking);
+      if (!hasShareToRefund(share)) { feeAlreadyCharged = false; } else {
+      const refund = await refundOnConnectedAccount({ paymentIntentId: booking.cancellationFeeChargeId, connectedAccountId: booking.course.stripeAccountId, amountCents: share });
       feeAlreadyCharged = false;
       feeWaivedRefunded = true;
       await recordMove({ courseId: booking.courseId, what: await chargeWhat(booking.cancellationFeeChargeId, holdsAtCutoff(booking) ? 'hold' : 'late_fee'), direction: 'out', method: 'card', account: 'course', amountCents: refund.amount, stripeId: refund.id, bookingId, actor: actor.type, note: 'fee waived on cancel' });
@@ -111,6 +115,7 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
         stripeId: refund.id, metadata: { reason: 'late_fee_waived' },
       });
       console.log(JSON.stringify({ ev: 'cancel.fee_waived.ok', bookingId, paymentIntentId: booking.cancellationFeeChargeId }));
+      }
     } catch (err) {
       feeRefundFailed = err instanceof Error ? err.message : String(err);
       console.error(JSON.stringify({ ev: 'cancel.fee_waived.fail', bookingId, error: feeRefundFailed }));

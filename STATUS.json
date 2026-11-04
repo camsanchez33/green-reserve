@@ -1,15 +1,43 @@
 {
-  "generatedAt": "2026-11-04T02:51:08.987Z",
+  "generatedAt": "2026-11-04T04:04:13.007Z",
   "repo": {
-    "head": "b689a296",
+    "head": "726c9d6e",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 0,
-    "dirty": [],
-    "looksLikeRunInProgress": false
+    "dirtyCount": 13,
+    "dirty": [
+      "M CLAUDE.md",
+      " M docs/CODEMAP.md",
+      " M docs/codemap.json",
+      " M prisma/schema.prisma",
+      " M scripts/cash-at-counter-db-test.ts",
+      " M scripts/split-booking-db-test.ts",
+      " M src/app/api/operator/tee-times/route.ts",
+      " M src/app/dashboard/page.tsx",
+      " M src/lib/cancel-booking.ts",
+      " M src/lib/checkin-booking.ts",
+      " M src/lib/counter-pay.ts",
+      " M src/lib/split-booking-db.ts",
+      "?? prisma/migrations/20261104000000_booking_split_from/"
+    ],
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "327461ef",
+        "date": "2026-11-03T21:58:38-05:00",
+        "subject": "Glass that actually shows, and a cleaner group-card checkout (#304)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "5fb78584",
+        "date": "2026-11-04T02:51:18+00:00",
+        "subject": "Status board",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "b689a296",
         "date": "2026-11-04T02:51:06+00:00",
@@ -661,7 +689,7 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 1,
-      "lastTouched": "2026-11-04",
+      "lastTouched": "2026-11-03",
       "ageDays": 0
     },
     {
@@ -674,7 +702,7 @@
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-10-20",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "STAFF_POLICY_SPEC.md",
@@ -695,12 +723,6 @@
       "ageDays": 11
     },
     {
-      "file": "HOMEPAGE_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-23",
-      "ageDays": 11
-    },
-    {
       "file": "AGREEMENT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
@@ -710,6 +732,12 @@
       "file": "CALL_SCHEDULING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
+      "ageDays": 12
+    },
+    {
+      "file": "HOMEPAGE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-23",
       "ageDays": 12
     },
     {
@@ -740,155 +768,165 @@
       "file": "ADMIN_MASTER_PLAN.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "ADMIN_REBUILD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "ADMIN_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "ADMIN_V3_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "ADMIN_V4_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "ARCHITECTURE.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "BACKUP_OPS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "BIRDIE_AI_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "CODEMAP_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "COURSES_SHEET_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "COURSE_LAYOUT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "DESIGN_SYSTEM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "FB2_COPY_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "FB3_FEE_PLAN_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "GOLFER_EDGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "GOLFER_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "HARDENING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "INQUIRY_CALL_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "INQUIRY_FORM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "MANAGE_BOOKING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "PRIVATE_BILLING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "PRODUCTION_READINESS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "REVIEW_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "SITE_DASHBOARD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "UI_REVISE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 13
+      "ageDays": 14
     }
   ],
   "bank": null,
   "recentCommits": [
+    {
+      "h": "327461ef",
+      "date": "2026-11-03",
+      "subject": "Glass that actually shows, and a cleaner group-card checkout (#304)"
+    },
+    {
+      "h": "5fb78584",
+      "date": "2026-11-04",
+      "subject": "Status board"
+    },
     {
       "h": "b689a296",
       "date": "2026-11-04",
@@ -938,16 +976,6 @@
       "h": "aec2961f",
       "date": "2026-11-02",
       "subject": "Glass dashboard: green glow, frosted cards and rail, tab lifts on hover (#301)"
-    },
-    {
-      "h": "f45e3113",
-      "date": "2026-11-03",
-      "subject": "Glass: keep pop-up panels solid and darken faint text so both clear AA"
-    },
-    {
-      "h": "52abf641",
-      "date": "2026-11-03",
-      "subject": "Glass dashboard: green glow behind the page, frosted cards and rail, tab lifts on hover"
     }
   ]
 }

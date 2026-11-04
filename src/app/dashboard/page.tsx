@@ -75,6 +75,8 @@ type Booking = {
   noShowAt?: string | null;
   paidOffline?: boolean;
   checkedInPlayers?: number | null;
+  /** PARTIAL-1: the group this booking was split off (players still on their way, or paying separately). */
+  splitFromId?: string | null;
   /** The late fee this booking carries (cents) — the cancel confirm says what it costs. */
   cancellationFeeTotal?: number;
   /** SP-B: false when the golfer booked without a card (pay-link course). */
@@ -278,7 +280,7 @@ function DashboardPageInner() {
   function chargeOutcome(data: { totalCharged: number; feeRefunded?: boolean; feeRefundFailed?: boolean; feeRefundAmount?: number; alreadyPaid?: boolean }) {
     const charged = data.alreadyPaid ? 'Checked in — already paid, nothing charged' : `Checked in — charged $${(data.totalCharged / 100).toFixed(2)}`;
     if (data.feeRefundFailed) {
-      toast(`${charged}. The $${((data.feeRefundAmount ?? 0) / 100).toFixed(2)} late-cancellation fee refund FAILED — issue it in Stripe or the golfer is still out that money.`, 'warn');
+      toast(`${charged}. The $${((data.feeRefundAmount ?? 0) / 100).toFixed(2)} late-cancellation fee refund FAILED — issue it in Stripe.`, 'warn');
     } else if (data.feeRefunded) {
       toast(`${charged}, and refunded the $${((data.feeRefundAmount ?? 0) / 100).toFixed(2)} late-cancellation fee.`, 'ok');
     } else {
@@ -441,7 +443,7 @@ function DashboardPageInner() {
       data = await res.json().catch(() => ({}));
     } catch {
       setCheckingInId(null);
-      return 'Network error — the card may or may not have been charged. Refresh the sheet before trying again.';
+      return 'Network error — the card may or may not have been charged. Refresh before trying again.';
     }
     setCheckingInId(null);
     if (!res.ok) {
@@ -741,10 +743,18 @@ function DashboardPageInner() {
     const big = 'w-full min-h-[52px] rounded-[7px] text-[15px] font-semibold text-white disabled:opacity-50 transition-colors flex flex-col items-center justify-center ';
     const herePlayers = Math.min(here[b.id] ?? b.players, b.players);
     const prepaid = b.paymentStatus === 'paid';
+    // PARTIAL-1 (Cam 2026-11-04): checking in some of the group splits the rest off, still booked — priced as the server
+    // splits it (lib/split-booking splitShares). A group that can't be split is charged for who's here (SD-5).
+    const splitSrc = { players: b.players, greenFeeTotal: b.greenFeeTotal ?? (b.totalAmount - (b.accessFeeTotal ?? 0)), cartFeeTotal: b.cartFeeTotal ?? 0, rangeBallsTotal: b.rangeBallsTotal ?? 0, accessFeeTotal: b.accessFeeTotal ?? 0, totalAmount: b.totalAmount, residentPlayers: b.residentPlayers ?? 0, residentRateCents: b.residentRateCents ?? null, memberRateCents: b.memberRateCents ?? null, memberCartCents: b.memberCartCents ?? null };
+    const keepsRest = herePlayers < b.players && b.appliedRate !== 'pack' && !tt.event && !b.roundPaid && !b.shopLocked && !b.noShowAt;
+    const restSplit = keepsRest ? splitShares(splitSrc, b.players - herePlayers, { greenFeeCents: Math.round(tt.greenFee * 100), cartFeeCents: Math.round(tt.cartFee * 100) }) : null;
     // The amounts the existing confirms quote: the card (round + booking fee for who's here, shop items whole)…
-    const cardDue = (herePlayers < b.players ? partRound(b, herePlayers, true) : b.totalAmount) + shopExtra(b);
+    const cardDue = (restSplit ? restSplit.keep.totalAmount : herePlayers < b.players ? partRound(b, herePlayers, true) : b.totalAmount) + shopExtra(b);
     // …and cash (no GreenReserve fee on a counter payment — PAY-2).
-    const cashDue = (herePlayers < b.players ? partRound(b, herePlayers, false) : b.totalAmount - (b.accessFeeTotal ?? 0)) + (b.shopTotalCents ?? 0) + (b.shopTaxCents ?? 0);
+    const cashDue = (restSplit ? restSplit.keep.totalAmount - restSplit.keep.accessFeeTotal : herePlayers < b.players ? partRound(b, herePlayers, false) : b.totalAmount - (b.accessFeeTotal ?? 0)) + (b.shopTotalCents ?? 0) + (b.shopTaxCents ?? 0);
+    const parentGroup = b.splitFromId ? tt.bookings?.find(p => p.id === b.splitFromId) : undefined;
+    const partsOff = (tt.bookings ?? []).filter(c => c.splitFromId === b.id);
+    const groupOf = partsOff.reduce((n, c) => n + c.players, b.players);
     const showMoney = access.can('money.payments');
     // A group checked in short (only some showed) paid for those players only — show that, not the booked total.
     const partlyPlayed = b.status === 'completed' && b.checkedInPlayers != null && b.checkedInPlayers < b.players;
@@ -778,7 +788,9 @@ function DashboardPageInner() {
               <Link href={`/dashboard/golfers/b:${b.id}`} onClick={e => e.stopPropagation()} className="font-semibold hover:underline">{b.golferName}</Link>
               <span className="text-ink-muted"> · {b.players} player{b.players !== 1 ? 's' : ''}</span>
               {(b.residentPlayers ?? 0) > 0 && <span className="text-ink-muted"> · {b.residentPlayers} resident{b.residentPlayers === 1 ? '' : 's'}</span>}
-              {(b.source === 'walk_in' || b.source === 'phone') && <span className="text-ink-muted"> · {b.source === 'phone' ? 'Phone' : 'Walk-in'}</span>}
+              {(b.source === 'walk_in' || b.source === 'phone') && !parentGroup && <span className="text-ink-muted"> · {b.source === 'phone' ? 'Phone' : 'Walk-in'}</span>}
+              {parentGroup && <span className="text-ink-muted"> · with {parentGroup.golferName}</span>}
+              {b.status === 'completed' && partsOff.length > 0 && <span className="text-ink-muted"> · {b.players} of {groupOf} checked in</span>}
             </p>
             {access.can('sheet.golfer_contact') && <p className="text-[12.5px] text-ink-muted truncate">{b.golferEmail.endsWith('@noemail.greenreserve.app') ? (b.golferPhone || 'No contact on file') : b.golferEmail}</p>}
             {/* Staff notes on this golfer or this booking (dead end 25). */}
@@ -806,7 +818,9 @@ function DashboardPageInner() {
                 </button>
               ))}
             </div>
-            {herePlayers < b.players && <p className="mt-1.5 text-[12.5px] text-warn">The other {b.players - herePlayers} won’t be charged.</p>}
+            {herePlayers < b.players && (restSplit
+              ? <p className="mt-1.5 text-[12.5px] text-ink-soft">{b.players - herePlayers} more stay booked.</p>
+              : <p className="mt-1.5 text-[12.5px] text-warn">The other {b.players - herePlayers} won’t be charged.</p>)}
           </div>
         )}
 
@@ -1059,7 +1073,7 @@ function DashboardPageInner() {
         )}
         {courseArchived && (
           <div className="bg-bad/5 border-b border-bad/20 px-6 py-3 flex items-center gap-2 text-sm text-bad">
-            <span>This course has been archived. The public booking page is offline. Contact GreenReserve support to restore it.</span>
+            <span>This course is archived and its booking page is offline. Contact support to restore it.</span>
           </div>
         )}
         {conditions && (
@@ -1316,7 +1330,13 @@ function DashboardPageInner() {
           who's next, can tap another time or drag a group; on a phone it is a
           full sheet that slides up. Everything for the time in one place. ── */}
       {panelSlot && (() => {
-        const groups = panelSlot.bookings ?? [];
+        // PARTIAL-1: a part split off a group sits right under that group.
+        const groups = (() => {
+          const all = panelSlot.bookings ?? [];
+          const top = all.filter(g => !g.splitFromId || !all.some(p => p.id === g.splitFromId));
+          const under = (id: string): Booking[] => all.filter(g => g.splitFromId === id).flatMap(g => [g, ...under(g.id)]);
+          return top.flatMap(g => [g, ...under(g.id)]);
+        })();
         const open = panelSlot.playersAvailable - panelSlot.playersBooked;
         const past = selectedDate < today() || (selectedDate === today() && panelSlot.time < nowHM);
         return (

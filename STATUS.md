@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-04 02:51 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `b689a296` · working tree clean
+Generated 2026-11-04 04:04 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `726c9d6e` · working tree **13 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 69 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 71 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `327461ef` | 2026-11-03 | Glass that actually shows, and a cleaner group-card checkout (#304) |
+| `5fb78584` | 2026-11-04 | Status board |
 | `b689a296` | 2026-11-04 | Glass: soften the glow a step and move the second one low right, darker light text and lighter dark text, so every token clears 4.5:1 on cards and on the bare page |
 | `38ea94b2` | 2026-11-04 | Group card checkout: + adds on first tap, − says when it removes several, exact SKU scan, no reader promised where none is, tests |
 | `2ab4d6b2` | 2026-11-04 | Group card checkout: party size behind Edit group, the card reader always shown with its reason, register-style tiles for shop items |
@@ -83,6 +85,25 @@ Generated 2026-11-04 02:51 UTC · branch `claude/walkthrough-2-prioritization-ui
 | `efef5f62` | 2026-11-01 | Money audit fixes: dues charge only the shown total, tier term change stops auto-renew, credited round returns our fee, pay link opens on the day |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+
+### Uncommitted working tree (13 file(s))
+
+- `M CLAUDE.md`
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
+- `M prisma/schema.prisma`
+- `M scripts/cash-at-counter-db-test.ts`
+- `M scripts/split-booking-db-test.ts`
+- `M src/app/api/operator/tee-times/route.ts`
+- `M src/app/dashboard/page.tsx`
+- `M src/lib/cancel-booking.ts`
+- `M src/lib/checkin-booking.ts`
+- `M src/lib/counter-pay.ts`
+- `M src/lib/split-booking-db.ts`
+- `?? prisma/migrations/20261104000000_booking_split_from/`
+
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -164,47 +185,49 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-11-04 | 0d |
+| `CLAUDE.md` | 1 | 2026-11-03 | 0d |
 | `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 2d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 13d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 14d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 8d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 9d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 11d |
-| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 11d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 12d |
 | `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 12d |
+| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 12d |
 | `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 12d |
 | `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 12d |
 | `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 12d |
 | `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 12d |
-| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 13d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 13d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 13d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-10-20 | 13d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-10-20 | 13d |
-| `ARCHITECTURE.md` | 0 | 2026-10-20 | 13d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-20 | 13d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-20 | 13d |
-| `CODEMAP_SPEC.md` | 0 | 2026-10-20 | 13d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-20 | 13d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-20 | 13d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-20 | 13d |
-| `FB2_COPY_SPEC.md` | 0 | 2026-10-20 | 13d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-20 | 13d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-20 | 13d |
-| `GOLFER_SPEC.md` | 0 | 2026-10-20 | 13d |
-| `HARDENING_SPEC.md` | 0 | 2026-10-20 | 13d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-20 | 13d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-20 | 13d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-20 | 13d |
-| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-20 | 13d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-20 | 13d |
-| `REVIEW_SPEC.md` | 0 | 2026-10-20 | 13d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-20 | 13d |
-| `UI_REVISE_SPEC.md` | 0 | 2026-10-20 | 13d |
+| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 14d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 14d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 14d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-10-20 | 14d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-10-20 | 14d |
+| `ARCHITECTURE.md` | 0 | 2026-10-20 | 14d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-20 | 14d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-20 | 14d |
+| `CODEMAP_SPEC.md` | 0 | 2026-10-20 | 14d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-20 | 14d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-20 | 14d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-20 | 14d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-10-20 | 14d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-20 | 14d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-20 | 14d |
+| `GOLFER_SPEC.md` | 0 | 2026-10-20 | 14d |
+| `HARDENING_SPEC.md` | 0 | 2026-10-20 | 14d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-20 | 14d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-20 | 14d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-20 | 14d |
+| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-20 | 14d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-20 | 14d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-20 | 14d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-20 | 14d |
+| `UI_REVISE_SPEC.md` | 0 | 2026-10-20 | 14d |
 
 ## Recent commits
 
+- `327461ef` 2026-11-03 — Glass that actually shows, and a cleaner group-card checkout (#304)
+- `5fb78584` 2026-11-04 — Status board
 - `b689a296` 2026-11-04 — Glass: soften the glow a step and move the second one low right, darker light text and lighter dark text, so every token clears 4.5:1 on cards and on the bare page
 - `38ea94b2` 2026-11-04 — Group card checkout: + adds on first tap, − says when it removes several, exact SKU scan, no reader promised where none is, tests
 - `2ab4d6b2` 2026-11-04 — Group card checkout: party size behind Edit group, the card reader always shown with its reason, register-style tiles for shop items
@@ -215,8 +238,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `9652f9f5` 2026-11-03 — Tee sheet views: say the shown state to screen readers, no price on checked-in lines, calendar follows the day stepper
 - `659066c6` 2026-11-03 — Tee sheet views: Grid, List and Calendar
 - `aec2961f` 2026-11-02 — Glass dashboard: green glow, frosted cards and rail, tab lifts on hover (#301)
-- `f45e3113` 2026-11-03 — Glass: keep pop-up panels solid and darken faint text so both clear AA
-- `52abf641` 2026-11-03 — Glass dashboard: green glow behind the page, frosted cards and rail, tab lifts on hover
 
 ---
 

@@ -65,7 +65,11 @@ async function cleanup() {
   const cash = await ringUpCash(c.id, { lines: [], bookingIds: [online.id], walkIns: [], headcounts: { [online.id]: 3 }, cashTenderedCents: 16000, soldBy: 'desk@t.local', actor: STAFF });
   const after = await prisma.booking.findUniqueOrThrow({ where: { id: online.id } });
   ok('cash for a group is a register sale of its round — for the three who showed, no booking fee', cash.ok && cash.value.sale.totalCents === 15000 && cash.value.sale.roundsCents === 15000 && cash.value.sale.cashTenderedCents === 16000, cash);
-  ok('…the group is checked in and paid, three of four', after.status === 'completed' && after.paymentStatus === 'paid_offline' && after.checkedInPlayers === 3);
+  ok('…the three are checked in and paid', after.status === 'completed' && after.paymentStatus === 'paid_offline' && after.players === 3 && after.checkedInPlayers === null, after);
+  // PARTIAL-1 (Cam 2026-11-04): the one still on the way is NOT written off — they split off, still booked, linked to the group.
+  const rest = await prisma.booking.findFirst({ where: { splitFromId: online.id } });
+  ok('…the fourth stays booked as their own line, inside the group', !!rest && rest.status === 'confirmed' && rest.players === 1 && rest.golferEmail === online.golferEmail && rest.paymentStatus === 'no_payment_method', rest);
+  ok('…and the two add up to the booking they were', !!rest && rest.totalAmount + after.totalAmount === 20600 && rest.accessFeeTotal + after.accessFeeTotal === 600, { rest, after });
   ok('…and reads as paid at the register', getBookingStatus('completed', 'paid_offline').label === 'Checked In · Paid at the register');
   const again = await ringUpCash(c.id, { lines: [], bookingIds: [online.id], walkIns: [], soldBy: 't', actor: STAFF });
   ok('…and can’t be taken twice', !again.ok);

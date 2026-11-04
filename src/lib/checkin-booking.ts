@@ -10,6 +10,7 @@ import { roundChargeCents, roundApplicationFeeCents, shopLinesFor } from './shop
 import { ensureShopTax, recordRoundShopTax } from './round-shop-tax';
 import { noShowClosed, NO_SHOW_CLOSED_ERROR } from './no-show-fee';
 import { recordMove } from './money-ledger';
+import { holdRefundCents, hasShareToRefund, splitOffLateArrivals } from './split-booking-db';
 
 /**
  * Charging a round, and checking a golfer in, are two different things.
@@ -160,6 +161,17 @@ async function chargeBooking(
   // PRICE-3: nor when nothing is owed (a group fully on a round pack) and no cart is being added.
   if (!alreadyPaid && !opts?.cardPresent && !(roundChargeCents(booking) === 0 && !opts?.addCart) && (!booking.course.stripeAccountActive || !booking.course.stripeAccountId)) {
     return { error: 'Stripe setup incomplete — the operator needs to finish Stripe onboarding in dashboard Settings before card payments can be accepted.', status: 422 } as const;
+  }
+
+  // PARTIAL-1 (Cam 2026-11-04): some of the group are here, the rest are on their way. The ones still
+  // coming split off into their own booking (same card, same rules, linked to this one) so they stay open
+  // to check in, pay or no-show; then this group checks in whole. A group that can't be split (a pack,
+  // a booking fee already paid, the reader) falls back to the SD-5 partial charge below.
+  const arrived = opts?.checkedInPlayers;
+  if (mode.recordCheckIn && !alreadyPaid && arrived != null && Number.isInteger(arrived) && arrived >= 1 && arrived < booking.players) {
+    const sp = await splitOffLateArrivals(booking.courseId, bookingId, booking.players - arrived, actor);
+    if (sp.ok) return chargeBooking(bookingId, { ...opts, checkedInPlayers: undefined }, mode, actor, readerSettled);
+    console.log(JSON.stringify({ ev: 'checkin.partial_split_refused', bookingId, error: sp.error }));
   }
 
   // B-5: "Add a cart today?" — only for a booking with no cart, only before
@@ -394,9 +406,13 @@ async function chargeBooking(
 
     if (refundPendingFee) {
       try {
+        // PARTIAL-1: a hold shared with a part split off this group gives back only this booking's share.
+        const share = await holdRefundCents(booking);
+        if (!hasShareToRefund(share)) { feeRefundOk = true; } else {
         const refund = await refundOnConnectedAccount({
           paymentIntentId: booking.cancellationFeeChargeId,
           connectedAccountId: booking.course.stripeAccountId as string,
+          amountCents: share,
         });
         feeRefundOk = true;
         await recordMove({ courseId: booking.courseId, what: 'hold', direction: 'out', method: 'card', account: 'course', amountCents: refund.amount, stripeId: refund.id, bookingId, actor: actor.type, note: 'hold given back at check-in' });
@@ -409,6 +425,7 @@ async function chargeBooking(
           stripeId: refund.id, metadata: { reason: 'hold_refunded_at_checkin' },
         });
         console.log(JSON.stringify({ ev: `${ev}.fee_refund.ok`, bookingId, cancelFeeChargeId: booking.cancellationFeeChargeId }));
+        }
       } catch (err) {
         // The round charge already succeeded -- don't fail over a refund
         // hiccup. Log it AND report it, so the person at the counter knows
