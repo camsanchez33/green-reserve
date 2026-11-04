@@ -6,8 +6,9 @@
 //   1. When you're open — first tee, last tee, minutes apart; "Different hours
 //      on some days" gives any days their own hours and prices, or closes them.
 //   2. What golfers can book — each round on or off, all day or between times.
-//   3. What it costs — ONE price table per set of days: a row per round, a
-//      column per price change ("+ Add a price change" asks only the time);
+//   3. What it costs — ONE price table per set of days: a column per round
+//      (PRICES-1, Cam 2026-11-04: side by side, a row per price; one round at a
+//      time on a phone), split by price change ("+ Add a price change" asks only the time);
 //      names are automatic (Morning / Midday / Afternoon / Twilight) and can be
 //      renamed. Member and resident prices only when the course has them.
 // The page edits a CoursePlan (lib/course-plan.ts); saving writes it as the
@@ -152,6 +153,8 @@ export default function SchedulesPage() {
   // Revamp 3 dead end 20: senior and junior prices (picked at the counter) once the course adds them.
   const [addAges, setAddAges] = useState(false);
   const showAges = addAges || rows.some(s => s.seniorRateWeekday != null || s.juniorRateWeekday != null);
+  // PRICES-1: on a phone the price table shows one round at a time.
+  const [priceRound, setPriceRound] = useState('');
 
   // ── Editing the plan ───────────────────────────────────────────────────────
   const edit = (f: (p: CoursePlan) => CoursePlan) => setPlan(p => p ? f(p) : p);
@@ -291,7 +294,7 @@ export default function SchedulesPage() {
     </div>
   );
 
-  /** The price table for one set of days: a row per round sold, a column per price change. */
+  /** The price table for one set of days: a column per round sold (and per price change), a row per price. */
   const priceTable = (i: number, d: DayPlan) => {
     const names = columnNames(d);
     const starts = [d.first, ...d.changes.map(c => c.at)];
@@ -343,45 +346,72 @@ export default function SchedulesPage() {
       ...(showResident ? [{ kind: 'resident' as const, label: 'Residents' }] : []),
       ...(showAges ? [{ kind: 'senior' as const, label: 'Seniors' }, { kind: 'junior' as const, label: 'Juniors' }] : []),
     ];
+    // PRICES-1 (Cam 2026-11-04, "one table"): every round side by side — a column (or, with price changes,
+    // a column per price) for each round sold, a row per price. The difference between rounds reads across.
+    const cols = sold.flatMap(r => names.map((_, col) => ({ key: r.key, col })).filter(c => soldIn(c.key, c.col)));
+    const groupsOf = sold.map(r => ({ r, n: cols.filter(c => c.key === r.key).length })).filter(g => g.n > 0);
+    const shown = groupsOf.some(g => g.r.key === priceRound) ? priceRound : groupsOf[0]?.r.key;
+    // A phone shows one round; md and up show them all.
+    const onPhone = (key: string) => key === shown ? '' : 'hidden md:table-cell ';
+    const hours = (key: string) => {
+      const r = plan?.rounds.find(x => x.key === key);
+      return r?.from || r?.to ? `${fmtTime(r.from ?? d.first)} – ${fmtTime(r.to ?? d.last)}` : 'All day';
+    };
     return (
       <div className="overflow-x-auto -mx-5 px-5">
+        {groupsOf.length > 1 && (
+          <div role="group" className="md:hidden mb-3 flex gap-1 p-1 rounded-[7px] bg-paper">
+            {groupsOf.map(({ r }) => (
+              <button key={r.key} type="button" aria-pressed={r.key === shown} onClick={() => setPriceRound(r.key)}
+                className={'flex-1 min-h-[36px] rounded-[5px] text-[13px] ' + (r.key === shown ? 'bg-white text-ink font-semibold shadow-card' : 'text-ink-muted')}>{labelOf(r.key)}</button>
+            ))}
+          </div>
+        )}
         <table className="text-[13.5px] border-separate border-spacing-0">
           <thead>
             <tr>
-              <th className="text-left font-semibold text-ink pr-4 pb-2 align-bottom min-w-[9rem]">{wd && we ? <span className="text-[12px] font-normal text-ink-muted">Weekday · weekend</span> : null}</th>
-              {names.map((n, col) => (
-                <th key={col} className="text-left font-normal pr-4 pb-2 align-bottom">
-                  {renaming && renaming.d === i && renaming.col === col ? (
-                    <input autoFocus value={renaming.name} onChange={e => setRenaming({ ...renaming, name: e.target.value })}
-                      onBlur={() => rename(i, col, renaming.name)} onKeyDown={e => { if (e.key === 'Enter') rename(i, col, renaming.name); if (e.key === 'Escape') setRenaming(null); }}
-                      aria-label="Price name" className="w-32 bg-paper border border-line rounded-md px-2 py-1 text-[13.5px] text-ink" />
-                  ) : (
-                    <button type="button" disabled={!canEdit} onClick={() => setRenaming({ d: i, col, name: n })} title={canEdit ? 'Tap to rename' : undefined}
-                      className="font-semibold text-ink hover:text-pine text-left disabled:hover:text-ink">{n}</button>
-                  )}
-                  <div className="text-[12px] text-ink-muted flex items-center gap-2">
-                    {col === 0 ? `from ${fmtTime(d.first)}` : `from ${fmtTime(starts[col])}`}
-                    {col > 0 && canEdit && <button type="button" onClick={() => removeChange(i, col)} className="text-ink-muted hover:text-bad underline underline-offset-2">remove</button>}
-                  </div>
+              <th className="text-left font-normal pr-4 pb-1 align-bottom min-w-[8rem]">{wd && we ? <span className="text-[12px] text-ink-muted">Weekday · weekend</span> : null}</th>
+              {groupsOf.map(({ r, n }) => (
+                <th key={r.key} colSpan={n} className={onPhone(r.key) + 'text-left font-semibold text-ink pr-6 pb-1 align-bottom'}>
+                  {labelOf(r.key)}<span className="block text-[12px] font-normal text-ink-muted">{hours(r.key)}</span>
                 </th>
               ))}
             </tr>
+            {names.length > 1 && (
+              <tr>
+                <th />
+                {cols.map(({ key, col }) => (
+                  <th key={`${key}-${col}`} className={onPhone(key) + 'text-left font-normal pr-4 pb-2 align-bottom'}>
+                    {renaming && renaming.d === i && renaming.col === col ? (
+                      <input autoFocus value={renaming.name} onChange={e => setRenaming({ ...renaming, name: e.target.value })}
+                        onBlur={() => rename(i, col, renaming.name)} onKeyDown={e => { if (e.key === 'Enter') rename(i, col, renaming.name); if (e.key === 'Escape') setRenaming(null); }}
+                        aria-label="Price name" className="w-32 bg-paper border border-line rounded-md px-2 py-1 text-[13.5px] text-ink" />
+                    ) : (
+                      <button type="button" disabled={!canEdit} onClick={() => setRenaming({ d: i, col, name: names[col] })} title={canEdit ? 'Tap to rename' : undefined}
+                        className="font-medium text-ink hover:text-pine text-left disabled:hover:text-ink">{names[col]}</button>
+                    )}
+                    <div className="text-[12px] text-ink-muted flex items-center gap-2">
+                      {`from ${fmtTime(starts[col])}`}
+                      {col > 0 && canEdit && <button type="button" onClick={() => removeChange(i, col)} className="text-ink-muted hover:text-bad underline underline-offset-2">remove</button>}
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            )}
           </thead>
           <tbody>
-            {sold.map(r => subRows.map((sr, k) => (
-              <tr key={`${r.key}-${sr.kind}`}>
-                <td className={'pr-4 py-1.5 align-middle ' + (k === 0 ? 'border-t border-line-soft' : '')}>
-                  {k === 0 ? <span className="font-semibold text-ink">{labelOf(r.key)}</span> : <span className="text-ink-soft pl-3">{sr.label}</span>}
+            {subRows.map((sr, k) => (
+              <tr key={sr.kind}>
+                <td className="pr-4 py-1.5 align-middle border-t border-line-soft whitespace-nowrap">
+                  <span className={k === 0 ? 'font-semibold text-ink' : 'text-ink-soft'}>{sr.label}</span>
                 </td>
-                {names.map((_, col) => (
-                  <td key={col} className={'pr-4 py-1.5 align-middle ' + (k === 0 ? 'border-t border-line-soft' : '')}>
-                    {!soldIn(r.key, col) ? (k === 0 ? <span className="text-ink-muted">not sold</span> : null)
-                      : sr.kind === 'walk' ? walkPair(r.key, col)
-                      : pair(r.key, col, sr.kind)}
+                {cols.map(({ key, col }) => (
+                  <td key={`${key}-${col}`} className={onPhone(key) + 'pr-4 py-1.5 align-middle border-t border-line-soft'}>
+                    {sr.kind === 'walk' ? walkPair(key, col) : pair(key, col, sr.kind)}
                   </td>
                 ))}
               </tr>
-            )))}
+            ))}
           </tbody>
         </table>
         {canEdit && (

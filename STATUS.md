@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-04 04:36 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `c05debd3` · working tree **7 dirty file(s)**
+Generated 2026-11-04 04:38 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `497612df` · working tree **5 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 75 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 76 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `497612df` | 2026-11-04 | Tee sheet: 1st and 10th tee side by side (TEES-1) |
 | `80935727` | 2026-11-03 | Partial check-in keeps the rest of the group booked (PARTIAL-1) (#305) |
 | `c4ee41dd` | 2026-11-04 | PARTIAL-1: split parts are not new bookings on Analytics |
 | `d88474dc` | 2026-11-04 | PARTIAL-1 review fixes: split parts off Admin Home counts, confirms quote the card's figure |
@@ -90,15 +91,13 @@ Generated 2026-11-04 04:36 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (7 file(s))
+### Uncommitted working tree (5 file(s))
 
 - `M CLAUDE.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M src/app/api/operator/tee-times/route.ts`
-- `M src/app/dashboard/page.tsx`
-- `M src/components/dashboard/TeeSheetRows.tsx`
-- `?? scripts/tees-side-by-side-test.ts`
+- `M scripts/schedule-rework-test.ts`
+- `M src/app/dashboard/schedules/page.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -183,7 +182,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-11-03 | 0d |
+| `CLAUDE.md` | 1 | 2026-11-04 | 0d |
 | `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 2d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 14d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 8d |
@@ -224,6 +223,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `497612df` 2026-11-04 — Tee sheet: 1st and 10th tee side by side (TEES-1)
 - `80935727` 2026-11-03 — Partial check-in keeps the rest of the group booked (PARTIAL-1) (#305)
 - `c4ee41dd` 2026-11-04 — PARTIAL-1: split parts are not new bookings on Analytics
 - `d88474dc` 2026-11-04 — PARTIAL-1 review fixes: split parts off Admin Home counts, confirms quote the card's figure
@@ -235,7 +235,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `2ab4d6b2` 2026-11-04 — Group card checkout: party size behind Edit group, the card reader always shown with its reason, register-style tiles for shop items
 - `c472b412` 2026-11-04 — Glass: let the glow through the page layer, stronger glow and clearer cards, darker text tokens so it stays readable
 - `e54302c2` 2026-11-03 — Booking: a stale golfer sign-in books as a guest instead of crashing (#303)
-- `3298d526` 2026-11-04 — Booking: a golfer signed in to an account that no longer exists books as a guest instead of crashing
 
 ---
 

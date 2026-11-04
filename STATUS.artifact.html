@@ -117,14 +117,15 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-11-04 04:36 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ c05debd3</span>
-    <span>7 uncommitted</span>
+    <span>2026-11-04 04:38 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 497612df</span>
+    <span>5 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">75 runs have shipped that the queue doesn't know about</div>
+<div class="lede">76 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-31. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">497612df</span><span>Tee sheet: 1st and 10th tee side by side (TEES-1)</span></li>
 <li><span class="h">80935727</span><span>Partial check-in keeps the rest of the group booked (PARTIAL-1) (#305)</span></li>
 <li><span class="h">c4ee41dd</span><span>PARTIAL-1: split parts are not new bookings on Analytics</span></li>
 <li><span class="h">d88474dc</span><span>PARTIAL-1 review fixes: split parts off Admin Home counts, confirms quote the card's figure</span></li>
@@ -212,7 +213,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M CLAUDE.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M src/app/api/operator/tee-times/route.ts</code></li><li><code>M src/app/dashboard/page.tsx</code></li><li><code>M src/components/dashboard/TeeSheetRows.tsx</code></li><li><code>?? scripts/tees-side-by-side-test.ts</code></li></ul>
+<ul class="plain"><li><code>M CLAUDE.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/schedule-rework-test.ts</code></li><li><code>M src/app/dashboard/schedules/page.tsx</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -254,7 +255,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Spec inventory</h2>
 <p class="note">Open refs = how many open queue items still point at that spec. Zero and old means consumed.</p>
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
-<tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-11-03 &middot; 0d</td></tr>
+<tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-11-04 &middot; 0d</td></tr>
 <tr><td><code>DENSE_UI_SPEC.md</code></td><td class="num">1</td><td class="num">2026-11-01 &middot; 2d</td></tr>
 <tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-20 &middot; 14d</td></tr>
 <tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-26 &middot; 8d</td></tr>
@@ -294,6 +295,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 14d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">497612df</td><td class="num">2026-11-04</td><td>Tee sheet: 1st and 10th tee side by side (TEES-1)</td></tr>
 <tr><td class="num">80935727</td><td class="num">2026-11-03</td><td>Partial check-in keeps the rest of the group booked (PARTIAL-1) (#305)</td></tr>
 <tr><td class="num">c4ee41dd</td><td class="num">2026-11-04</td><td>PARTIAL-1: split parts are not new bookings on Analytics</td></tr>
 <tr><td class="num">d88474dc</td><td class="num">2026-11-04</td><td>PARTIAL-1 review fixes: split parts off Admin Home counts, confirms quote the card's figure</td></tr>
@@ -305,7 +307,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">2ab4d6b2</td><td class="num">2026-11-04</td><td>Group card checkout: party size behind Edit group, the card reader always shown with its reason, register-style tiles for shop items</td></tr>
 <tr><td class="num">c472b412</td><td class="num">2026-11-04</td><td>Glass: let the glow through the page layer, stronger glow and clearer cards, darker text tokens so it stays readable</td></tr>
 <tr><td class="num">e54302c2</td><td class="num">2026-11-03</td><td>Booking: a stale golfer sign-in books as a guest instead of crashing (#303)</td></tr>
-<tr><td class="num">3298d526</td><td class="num">2026-11-04</td><td>Booking: a golfer signed in to an account that no longer exists books as a guest instead of crashing</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>
