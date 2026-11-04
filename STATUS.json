@@ -1,37 +1,47 @@
 {
-  "generatedAt": "2026-11-04T02:44:13.086Z",
+  "generatedAt": "2026-11-04T02:51:08.987Z",
   "repo": {
-    "head": "2728c880",
+    "head": "b689a296",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 3,
-    "dirty": [
-      "M CLAUDE.md",
-      " M scripts/glass-test.ts",
-      " M src/app/globals.css"
-    ],
-    "looksLikeRunInProgress": true
+    "dirtyCount": 0,
+    "dirty": [],
+    "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
       {
-        "h": "2728c880",
-        "date": "2026-11-04T02:39:19+00:00",
+        "h": "b689a296",
+        "date": "2026-11-04T02:51:06+00:00",
+        "subject": "Glass: soften the glow a step and move the second one low right, darker light text and lighter dark text, so every token clears 4.5:1 on cards and on the bare page",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "38ea94b2",
+        "date": "2026-11-04T02:51:06+00:00",
         "subject": "Group card checkout: + adds on first tap, − says when it removes several, exact SKU scan, no reader promised where none is, tests",
         "ids": [],
         "matches": []
       },
       {
-        "h": "8a8e074b",
-        "date": "2026-11-04T02:38:30+00:00",
+        "h": "2ab4d6b2",
+        "date": "2026-11-04T02:51:06+00:00",
         "subject": "Group card checkout: party size behind Edit group, the card reader always shown with its reason, register-style tiles for shop items",
         "ids": [],
         "matches": []
       },
       {
-        "h": "719081db",
-        "date": "2026-11-04T02:38:26+00:00",
+        "h": "c472b412",
+        "date": "2026-11-04T02:51:06+00:00",
         "subject": "Glass: let the glow through the page layer, stronger glow and clearer cards, darker text tokens so it stays readable",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "e54302c2",
+        "date": "2026-11-03T21:50:43-05:00",
+        "subject": "Booking: a stale golfer sign-in books as a guest instead of crashing (#303)",
         "ids": [],
         "matches": []
       },
@@ -880,19 +890,29 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "2728c880",
+      "h": "b689a296",
+      "date": "2026-11-04",
+      "subject": "Glass: soften the glow a step and move the second one low right, darker light text and lighter dark text, so every token clears 4.5:1 on cards and on the bare page"
+    },
+    {
+      "h": "38ea94b2",
       "date": "2026-11-04",
       "subject": "Group card checkout: + adds on first tap, − says when it removes several, exact SKU scan, no reader promised where none is, tests"
     },
     {
-      "h": "8a8e074b",
+      "h": "2ab4d6b2",
       "date": "2026-11-04",
       "subject": "Group card checkout: party size behind Edit group, the card reader always shown with its reason, register-style tiles for shop items"
     },
     {
-      "h": "719081db",
+      "h": "c472b412",
       "date": "2026-11-04",
       "subject": "Glass: let the glow through the page layer, stronger glow and clearer cards, darker text tokens so it stays readable"
+    },
+    {
+      "h": "e54302c2",
+      "date": "2026-11-03",
+      "subject": "Booking: a stale golfer sign-in books as a guest instead of crashing (#303)"
     },
     {
       "h": "3298d526",
@@ -928,16 +948,6 @@
       "h": "52abf641",
       "date": "2026-11-03",
       "subject": "Glass dashboard: green glow behind the page, frosted cards and rail, tab lifts on hover"
-    },
-    {
-      "h": "66238486",
-      "date": "2026-11-02",
-      "subject": "Accuracy pass: plain Analytics definitions and one stock wording (#300)"
-    },
-    {
-      "h": "d2052372",
-      "date": "2026-11-02",
-      "subject": "Accuracy pass: plain Analytics definitions, sold-out dates in the download, one stock wording"
     }
   ]
 }

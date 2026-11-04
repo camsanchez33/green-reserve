@@ -4,17 +4,19 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-04 02:44 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `2728c880` · working tree **3 dirty file(s)**
+Generated 2026-11-04 02:51 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `b689a296` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 67 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 69 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `2728c880` | 2026-11-04 | Group card checkout: + adds on first tap, − says when it removes several, exact SKU scan, no reader promised where none is, tests |
-| `8a8e074b` | 2026-11-04 | Group card checkout: party size behind Edit group, the card reader always shown with its reason, register-style tiles for shop items |
-| `719081db` | 2026-11-04 | Glass: let the glow through the page layer, stronger glow and clearer cards, darker text tokens so it stays readable |
+| `b689a296` | 2026-11-04 | Glass: soften the glow a step and move the second one low right, darker light text and lighter dark text, so every token clears 4.5:1 on cards and on the bare page |
+| `38ea94b2` | 2026-11-04 | Group card checkout: + adds on first tap, − says when it removes several, exact SKU scan, no reader promised where none is, tests |
+| `2ab4d6b2` | 2026-11-04 | Group card checkout: party size behind Edit group, the card reader always shown with its reason, register-style tiles for shop items |
+| `c472b412` | 2026-11-04 | Glass: let the glow through the page layer, stronger glow and clearer cards, darker text tokens so it stays readable |
+| `e54302c2` | 2026-11-03 | Booking: a stale golfer sign-in books as a guest instead of crashing (#303) |
 | `3298d526` | 2026-11-04 | Booking: a golfer signed in to an account that no longer exists books as a guest instead of crashing |
 | `9aea09cc` | 2026-11-03 | Tee sheet views: Grid, List and Calendar (#302) |
 | `9652f9f5` | 2026-11-03 | Tee sheet views: say the shown state to screen readers, no price on checked-in lines, calendar follows the day stepper |
@@ -81,15 +83,6 @@ Generated 2026-11-04 02:44 UTC · branch `claude/walkthrough-2-prioritization-ui
 | `efef5f62` | 2026-11-01 | Money audit fixes: dues charge only the shown total, tier term change stops auto-renew, credited round returns our fee, pay link opens on the day |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
-
-### Uncommitted working tree (3 file(s))
-
-- `M CLAUDE.md`
-- `M scripts/glass-test.ts`
-- `M src/app/globals.css`
-
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -212,9 +205,11 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `2728c880` 2026-11-04 — Group card checkout: + adds on first tap, − says when it removes several, exact SKU scan, no reader promised where none is, tests
-- `8a8e074b` 2026-11-04 — Group card checkout: party size behind Edit group, the card reader always shown with its reason, register-style tiles for shop items
-- `719081db` 2026-11-04 — Glass: let the glow through the page layer, stronger glow and clearer cards, darker text tokens so it stays readable
+- `b689a296` 2026-11-04 — Glass: soften the glow a step and move the second one low right, darker light text and lighter dark text, so every token clears 4.5:1 on cards and on the bare page
+- `38ea94b2` 2026-11-04 — Group card checkout: + adds on first tap, − says when it removes several, exact SKU scan, no reader promised where none is, tests
+- `2ab4d6b2` 2026-11-04 — Group card checkout: party size behind Edit group, the card reader always shown with its reason, register-style tiles for shop items
+- `c472b412` 2026-11-04 — Glass: let the glow through the page layer, stronger glow and clearer cards, darker text tokens so it stays readable
+- `e54302c2` 2026-11-03 — Booking: a stale golfer sign-in books as a guest instead of crashing (#303)
 - `3298d526` 2026-11-04 — Booking: a golfer signed in to an account that no longer exists books as a guest instead of crashing
 - `9aea09cc` 2026-11-03 — Tee sheet views: Grid, List and Calendar (#302)
 - `9652f9f5` 2026-11-03 — Tee sheet views: say the shown state to screen readers, no price on checked-in lines, calendar follows the day stepper
@@ -222,8 +217,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `aec2961f` 2026-11-02 — Glass dashboard: green glow, frosted cards and rail, tab lifts on hover (#301)
 - `f45e3113` 2026-11-03 — Glass: keep pop-up panels solid and darken faint text so both clear AA
 - `52abf641` 2026-11-03 — Glass dashboard: green glow behind the page, frosted cards and rail, tab lifts on hover
-- `66238486` 2026-11-02 — Accuracy pass: plain Analytics definitions and one stock wording (#300)
-- `d2052372` 2026-11-02 — Accuracy pass: plain Analytics definitions, sold-out dates in the download, one stock wording
 
 ---
 
