@@ -7504,7 +7504,7 @@
     },
     {
       "path": "src/app/api/operator/tee-times/route.ts",
-      "lines": 201,
+      "lines": 211,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8875,7 +8875,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1945,
+      "lines": 1947,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11817,7 +11817,7 @@
     },
     {
       "path": "src/components/dashboard/TeeSheetRows.tsx",
-      "lines": 179,
+      "lines": 256,
       "purpose": "DENSE-4 (DENSE_UI_SPEC D1, Cam 2026-10-27:",
       "brain": [],
       "exports": [
@@ -30624,6 +30624,7 @@
         "src/app/api/operator/events/route.ts",
         "src/app/api/operator/nines/route.ts",
         "src/app/api/operator/tee-sets/route.ts",
+        "src/app/api/operator/tee-times/route.ts",
         "src/lib/course-events.ts",
         "src/lib/course-shape-setup.ts",
         "src/lib/schedule-preview.ts",

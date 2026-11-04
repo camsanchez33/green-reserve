@@ -24,6 +24,9 @@ export type BoardSlot = {
   bookings?: BoardGroup[]; event?: { id: string; name: string } | null;
   /** Price a player, dollars (shown in the row). */
   greenFee?: number;
+  /** TEES-1: the tee the round starts from ("1st tee", "10th tee", or a nine's name). Two or more on a
+   *  day put them side by side, times lined up across. */
+  tee?: string | null;
 };
 type Tone = 'ok' | 'warn' | 'bad';
 
@@ -42,6 +45,12 @@ export const special = (g: BoardGroup) => (g.residentPlayers ?? 0) > 0 || (!!g.a
 
 /** The same groups the panel's Move offers: confirmed and not a no-show, or checked in. */
 const movable = (g: BoardGroup) => (g.status === 'confirmed' && !g.noShowAt) || g.status === 'completed';
+
+/** The 1st tee first, then the 10th, then any other (a nine's name). */
+const teeOrder = (t: string) => t === '1st tee' ? 0 : t === '10th tee' ? 1 : t ? 2 : 3;
+
+/** A time always has a tee once the course has nines (the route), so '' never shows beside another. */
+const teeName = (t: string) => t;
 
 const hourLabel = (h: number) => `${h % 12 || 12} ${h >= 12 ? 'PM' : 'AM'}`;
 const price = (v?: number) => v == null ? '' : `$${Number.isInteger(v) ? v : v.toFixed(2)}`;
@@ -81,47 +90,51 @@ export default function TeeSheetRows({ slots: allSlots, isPast, isGone, nextUpId
   const cols = Math.max(4, ...allSlots.map(s => s.playersAvailable));
   const grid: React.CSSProperties = { gridTemplateColumns: `3.75rem 2.75rem repeat(${cols}, minmax(0, 1fr))` };
   const nowIndex = slots.findIndex(s => !isPast(s));
+  // TEES-1 (Cam 2026-11-04, "side by side"): the day's tees, in the order the times first use them.
+  const lanes = [...new Set(allSlots.map(s => s.tee ?? ''))].sort((a, b) => teeOrder(a) - teeOrder(b) || a.localeCompare(b));
+  const [lane, setLane] = useState('');
+  const shownLane = lanes.includes(lane) ? lane : lanes[0];
+  const laneGrid: React.CSSProperties = { gridTemplateColumns: `2.75rem repeat(${cols}, minmax(0, 1fr))` };
+  // A phone shows one tee (two columns); md and up show every tee.
+  const laneRow = { '--lanes': lanes.length } as React.CSSProperties;
+  const laneCols = 'grid-cols-[3.75rem_minmax(0,1fr)] md:grid-cols-[3.75rem_repeat(var(--lanes),minmax(0,1fr))] ';
   const showNow = nowIndex > 0;
 
-  const rows = (list: BoardSlot[], label: string, withNow: boolean) => {
-  let lastHour = -1;
-  return (
-    <div role="list" aria-label={label} className="space-y-[3px]">
-      {list.map((s, i) => {
-        const h = Number(s.time.slice(0, 2));
-        const newHour = h !== lastHour; lastHour = h;
-        const past = isPast(s);
-        const blocked = s.status === 'blocked';
-        const target = takes(s);
-        const next = s.id === nextUpId;
-        const groups = s.bookings ?? [];
-        let used = 0;
-        return (
-          <div key={s.id} role="listitem">
-            {newHour && <div className={'px-1 text-[12px] font-semibold text-ink-muted ' + (i ? 'pt-2.5 pb-1' : 'pb-1')}>{hourLabel(h)}</div>}
-            {withNow && showNow && i === nowIndex && (
-              <div className="flex items-center gap-2 py-0.5" aria-hidden="true">
-                <span className="text-[11px] font-semibold text-warn">Now</span><span className="flex-1 border-t-2 border-warn" />
-              </div>
-            )}
+  // One tee time's seats: the price, then a cell per seat (the time label sits beside it).
+  const slotCells = (s: BoardSlot, withTime: boolean, extra = '') => {
+    const past = isPast(s);
+    const blocked = s.status === 'blocked';
+    const target = takes(s);
+    const next = s.id === nextUpId;
+    const groups = s.bookings ?? [];
+    let used = 0;
+    const openLabel = `${formatTeeTime(s.time)}${withTime ? '' : `, ${s.tee ?? ''}`}${next ? ', next up' : ''}${blocked ? ', blocked' : `, ${s.playersBooked} of ${s.playersAvailable} booked`}. Open`;
+    return (
             <div
+              key={s.id}
               onClick={() => onSelect(s.id)}
               onDragOver={e => { if (target) { e.preventDefault(); if (over !== s.id) setOver(s.id); } }}
               onDragLeave={() => setOver(o => (o === s.id ? null : o))}
               onDrop={e => { e.preventDefault(); if (dragging && target) onMove(dragging.group, dragging.fromId, s.id); setDragging(null); setOver(null); }}
-              style={grid}
-              className={'grid items-center gap-[3px] rounded-md cursor-pointer '
+              style={withTime ? grid : laneGrid}
+              className={(extra || 'grid ') + 'items-center gap-[3px] rounded-md cursor-pointer min-w-0 '
                 + (over === s.id ? 'ring-2 ring-pine ' : selectedId === s.id ? 'ring-2 ring-pine/50 ' : target ? 'ring-1 ring-pine/30 ' : '')
                 + (dragging && !target && s.id !== dragging.fromId ? 'opacity-40 ' : past ? 'opacity-55 ' : '')}>
-              {/* The time is the row's button for keyboard and screen readers; groups stay siblings. */}
+              {/* The time (or, side by side, the price) is the row's button for keyboard and screen readers; groups stay siblings. */}
+              {withTime ? (
               <button type="button"
-                aria-label={`${formatTeeTime(s.time)}${next ? ', next up' : ''}${blocked ? ', blocked' : `, ${s.playersBooked} of ${s.playersAvailable} booked`}. Open`}
+                aria-label={openLabel}
                 onClick={e => { e.stopPropagation(); onSelect(s.id); }}
                 className={'h-8 px-1.5 text-left text-[13px] font-semibold tabular-nums rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-pine/40 '
                   + (next ? 'text-pine shadow-[inset_3px_0_0_var(--color-pine)] pl-2.5' : 'text-ink')}>
                 {formatTeeTime(s.time).replace(/ (AM|PM)$/, '')}
               </button>
-              <span className="text-[12px] text-ink-muted tabular-nums truncate">{blocked ? '' : price(s.greenFee)}</span>
+              ) : null}
+              {withTime
+                ? <span className="text-[12px] text-ink-muted tabular-nums truncate">{blocked ? '' : price(s.greenFee)}</span>
+                : <button type="button" onClick={e => { e.stopPropagation(); onSelect(s.id); }}
+                    aria-label={openLabel}
+                    className="h-8 text-left text-[12px] text-ink-muted tabular-nums truncate rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-pine/40">{blocked ? '' : price(s.greenFee)}</button>}
               {blocked ? (
                 <span style={{ ...HATCH, gridColumn: `span ${cols}` }} className="h-8 rounded-[4px] bg-paper px-2 flex items-center text-[12.5px] italic text-ink-muted truncate">
                   {s.event ? s.event.name : 'Blocked'}
@@ -154,6 +167,56 @@ export default function TeeSheetRows({ slots: allSlots, isPast, isGone, nextUpId
                 ))}
               </>)}
             </div>
+    );
+  };
+
+  const nowLine = <div className="flex items-center gap-2 py-0.5" aria-hidden="true">
+    <span className="text-[11px] font-semibold text-warn">Now</span><span className="flex-1 border-t-2 border-warn" />
+  </div>;
+
+  const rows = (list: BoardSlot[], label: string, withNow: boolean) => {
+  let lastHour = -1;
+  if (lanes.length > 1) {
+    // TEES-1: one line per time, a column per tee. A tee with no time then is an empty cell.
+    const times = [...new Set(list.map(s => s.time))].sort();
+    const nowAt = times.findIndex(t => list.some(s => s.time === t && !isPast(s)));
+    return (
+      <div role="list" aria-label={label} className="space-y-[3px]">
+        {times.map((time, i) => {
+          const h = Number(time.slice(0, 2));
+          const newHour = h !== lastHour; lastHour = h;
+          const at = list.filter(s => s.time === time);
+          const next = at.some(s => s.id === nextUpId);
+          return (
+            <div key={time} role="listitem">
+              {newHour && <div className={'px-1 text-[12px] font-semibold text-ink-muted ' + (i ? 'pt-2.5 pb-1' : 'pb-1')}>{hourLabel(h)}</div>}
+              {withNow && nowAt > 0 && i === nowAt && nowLine}
+              <div style={laneRow} className={laneCols + 'grid items-center gap-x-3'}>
+                <span className={'h-8 px-1.5 flex items-center text-[13px] font-semibold tabular-nums ' + (next ? 'text-pine shadow-[inset_3px_0_0_var(--color-pine)] pl-2.5' : 'text-ink') + (at.every(isPast) ? ' opacity-55' : '')}>
+                  {formatTeeTime(time).replace(/ (AM|PM)$/, '')}
+                </span>
+                {lanes.map(l => {
+                  const s = at.find(x => (x.tee ?? '') === l);
+                  const phone = l === shownLane ? '' : 'hidden md:grid ';
+                  return s ? slotCells(s, false, phone) : <span key={l} aria-hidden="true" className={'h-8 rounded-[4px] ' + (l === shownLane ? 'block' : 'hidden md:block')} />;
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+  return (
+    <div role="list" aria-label={label} className="space-y-[3px]">
+      {list.map((s, i) => {
+        const h = Number(s.time.slice(0, 2));
+        const newHour = h !== lastHour; lastHour = h;
+        return (
+          <div key={s.id} role="listitem">
+            {newHour && <div className={'px-1 text-[12px] font-semibold text-ink-muted ' + (i ? 'pt-2.5 pb-1' : 'pb-1')}>{hourLabel(h)}</div>}
+            {withNow && showNow && i === nowIndex && nowLine}
+            {slotCells(s, true)}
           </div>
         );
       })}
@@ -163,6 +226,20 @@ export default function TeeSheetRows({ slots: allSlots, isPast, isGone, nextUpId
 
   return (
     <div>
+      {lanes.length > 1 && (
+        <>
+          {/* On a phone one tee at a time; from md up they sit side by side under these names. */}
+          <div role="group" className="md:hidden mb-2 flex gap-1 p-1 rounded-[7px] bg-paper">
+            {lanes.map(l => (
+              <button key={l} type="button" aria-pressed={l === shownLane} onClick={() => setLane(l)}
+                className={'flex-1 min-h-[36px] rounded-[5px] text-[13px] ' + (l === shownLane ? 'bg-white text-ink font-semibold shadow-card' : 'text-ink-muted')}>{teeName(l)}</button>
+            ))}
+          </div>
+          <div style={laneRow} className={laneCols + 'hidden md:grid gap-x-3 pb-1 text-[13px] font-semibold text-ink'}>
+            <span />{lanes.map(l => <span key={l} className="px-1 truncate">{teeName(l)}</span>)}
+          </div>
+        </>
+      )}
       {slots.length > 0 ? rows(slots, 'Tee times', true) : gone.length > 0 && <p className="py-6 text-center text-[13.5px] text-ink-muted">No more tee times today</p>}
       {gone.length > 0 && (
         <div className="mt-4 pt-3 border-t border-line">

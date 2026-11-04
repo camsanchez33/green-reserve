@@ -1,20 +1,37 @@
 {
-  "generatedAt": "2026-11-04T04:20:33.237Z",
+  "generatedAt": "2026-11-04T04:36:19.662Z",
   "repo": {
-    "head": "d88474dc",
+    "head": "c05debd3",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 4,
+    "dirtyCount": 7,
     "dirty": [
-      "M docs/CODEMAP.md",
+      "M CLAUDE.md",
+      " M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/split-booking-db-test.ts",
-      " M src/lib/analytics.ts"
+      " M src/app/api/operator/tee-times/route.ts",
+      " M src/app/dashboard/page.tsx",
+      " M src/components/dashboard/TeeSheetRows.tsx",
+      "?? scripts/tees-side-by-side-test.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "80935727",
+        "date": "2026-11-03T23:28:41-05:00",
+        "subject": "Partial check-in keeps the rest of the group booked (PARTIAL-1) (#305)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "c4ee41dd",
+        "date": "2026-11-04T04:20:35+00:00",
+        "subject": "PARTIAL-1: split parts are not new bookings on Analytics",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "d88474dc",
         "date": "2026-11-04T04:17:31+00:00",
@@ -694,7 +711,7 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 1,
-      "lastTouched": "2026-11-04",
+      "lastTouched": "2026-11-03",
       "ageDays": 0
     },
     {
@@ -923,6 +940,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "80935727",
+      "date": "2026-11-03",
+      "subject": "Partial check-in keeps the rest of the group booked (PARTIAL-1) (#305)"
+    },
+    {
+      "h": "c4ee41dd",
+      "date": "2026-11-04",
+      "subject": "PARTIAL-1: split parts are not new bookings on Analytics"
+    },
+    {
       "h": "d88474dc",
       "date": "2026-11-04",
       "subject": "PARTIAL-1 review fixes: split parts off Admin Home counts, confirms quote the card's figure"
@@ -971,16 +998,6 @@
       "h": "3298d526",
       "date": "2026-11-04",
       "subject": "Booking: a golfer signed in to an account that no longer exists books as a guest instead of crashing"
-    },
-    {
-      "h": "9aea09cc",
-      "date": "2026-11-03",
-      "subject": "Tee sheet views: Grid, List and Calendar (#302)"
-    },
-    {
-      "h": "9652f9f5",
-      "date": "2026-11-03",
-      "subject": "Tee sheet views: say the shown state to screen readers, no price on checked-in lines, calendar follows the day stepper"
     }
   ]
 }
