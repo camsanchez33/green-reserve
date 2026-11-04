@@ -133,9 +133,10 @@ body {
 .op-look:has(.op-rail) {
   --font-sans: var(--font-geist), 'Helvetica Neue', Arial, sans-serif; font-family: var(--font-sans);
   --color-paper: #F4F5F1; --color-ink-soft: #3A403A; --color-line-strong: #C9CEC2;
-  /* Glass (Cam 2026-11-03 picked the stronger look): on a 50% card over the glow's greenest spot the
-     stock muted, faint, ok and warn text fell to ~4.1:1. These clear 5:1 there, on the bare page and on white. */
-  --color-ink-muted: #585D57; --color-ink-faint: #5F645E; --color-ok: #2F6545; --color-warn: #83500F;
+  /* Glass (Cam 2026-11-03 picked the stronger look): text sits on 50% cards over the glow AND straight on
+     the glowing page. Modelled at 390-1920 wide (scratch contrast sweep, 2026-11-04 review), these keep
+     muted, faint, ok, warn and bad at 4.6:1 or better on both, everywhere. */
+  --color-ink-muted: #4E534D; --color-ink-faint: #53584F; --color-ok: #285A3C; --color-warn: #744710; --color-bad: #8C3A26;
   background: var(--color-page); min-height: 100vh; color: var(--color-ink);
 }
 .op-look:has(.op-rail) .font-serif { font-family: var(--font-sans); font-weight: 700; letter-spacing: -0.02em; }
@@ -153,10 +154,10 @@ body {
   color-scheme: dark;
   --color-page: #0F1110; --color-paper: #141715; --color-card: #181B19; --color-white: #181B19;
   --color-rail: #141715; --color-rail-line: #2A2E2B;
-  --color-ink: #E8EBE6; --color-ink-soft: #C3C8C1; --color-ink-muted: #8F958D; --color-ink-faint: #8B9189;
+  --color-ink: #E8EBE6; --color-ink-soft: #C3C8C1; --color-ink-muted: #9AA098; --color-ink-faint: #959B93;
   --color-line: #2A2E2B; --color-line-soft: #222623; --color-line-strong: #3A3F3B;
   --color-pine: #4FB27A; --color-pine-hover: #63C28C; --color-pine-soft: #1C2A21;
-  --color-ok: #5CC48A; --color-warn: #E3A23B; --color-bad: #F07B6A;
+  --color-ok: #5CC48A; --color-warn: #E3A23B; --color-bad: #F28A7A;
   --color-ok-fill: #17271D; --color-mem-fill: #2A2518; --color-dash: #3A3F3B; --color-dot-neutral: #5A605A;
   --color-fairway: #3BAA6B;
 }
@@ -199,10 +200,11 @@ body {
 .op-look:has(.op-rail)::before, .op-look:has(.op-rail)::after {
   content: ''; position: fixed; z-index: -1; pointer-events: none; border-radius: 9999px; filter: blur(90px);
 }
-.op-look:has(.op-rail)::before { width: 900px; height: 700px; left: 12vw; top: -12vh; background: #3BAA6B; opacity: .30; }
-.op-look:has(.op-rail)::after { width: 900px; height: 760px; right: -8vw; top: 42vh; background: #2F6B4F; opacity: .26; }
-.op-look[data-theme="dark"]:has(.op-rail)::before { opacity: .22; }
-.op-look[data-theme="dark"]:has(.op-rail)::after { background: #2F6B4F; opacity: .40; }
+.op-look:has(.op-rail)::before { width: 900px; height: 700px; left: 12vw; top: -12vh; background: #3BAA6B; opacity: .20; }
+/* Low and to the right, so the two never stack on a laptop or iPad (2026-11-04 review). */
+.op-look:has(.op-rail)::after { width: 900px; height: 760px; right: -12vw; top: 62vh; background: #2F6B4F; opacity: .18; }
+.op-look[data-theme="dark"]:has(.op-rail)::before { opacity: .14; }
+.op-look[data-theme="dark"]:has(.op-rail)::after { background: #2F6B4F; opacity: .22; }
 .op-look:has(.op-rail) .bg-white.shadow-card:not(.op-tab) {
   background-color: color-mix(in srgb, var(--color-white) 50%, transparent);
   -webkit-backdrop-filter: blur(18px) saturate(140%); backdrop-filter: blur(18px) saturate(140%);

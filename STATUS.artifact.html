@@ -117,14 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-11-04 02:38 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 719081db</span>
-    <span>8 uncommitted</span>
+    <span>2026-11-04 02:44 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 2728c880</span>
+    <span>3 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">65 runs have shipped that the queue doesn't know about</div>
+<div class="lede">67 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-31. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">2728c880</span><span>Group card checkout: + adds on first tap, − says when it removes several, exact SKU scan, no reader promised where none is, tests</span></li>
+<li><span class="h">8a8e074b</span><span>Group card checkout: party size behind Edit group, the card reader always shown with its reason, register-style tiles for shop items</span></li>
 <li><span class="h">719081db</span><span>Glass: let the glow through the page layer, stronger glow and clearer cards, darker text tokens so it stays readable</span></li>
 <li><span class="h">3298d526</span><span>Booking: a golfer signed in to an account that no longer exists books as a guest instead of crashing</span></li>
 <li><span class="h">9aea09cc</span><span>Tee sheet views: Grid, List and Calendar (#302)</span></li>
@@ -202,7 +204,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>UU STATUS.artifact.html</code></li><li><code>UU STATUS.json</code></li><li><code>UU STATUS.md</code></li><li><code>M  docs/CODEMAP.md</code></li><li><code>M  docs/codemap.json</code></li><li><code>M  src/app/dashboard/page.tsx</code></li><li><code>M  src/components/dashboard/ShopItemsForGroup.tsx</code></li><li><code>M  src/lib/booking-status.ts</code></li></ul>
+<ul class="plain"><li><code>M CLAUDE.md</code></li><li><code>M scripts/glass-test.ts</code></li><li><code>M src/app/globals.css</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -284,6 +286,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 13d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">2728c880</td><td class="num">2026-11-04</td><td>Group card checkout: + adds on first tap, − says when it removes several, exact SKU scan, no reader promised where none is, tests</td></tr>
+<tr><td class="num">8a8e074b</td><td class="num">2026-11-04</td><td>Group card checkout: party size behind Edit group, the card reader always shown with its reason, register-style tiles for shop items</td></tr>
 <tr><td class="num">719081db</td><td class="num">2026-11-04</td><td>Glass: let the glow through the page layer, stronger glow and clearer cards, darker text tokens so it stays readable</td></tr>
 <tr><td class="num">3298d526</td><td class="num">2026-11-04</td><td>Booking: a golfer signed in to an account that no longer exists books as a guest instead of crashing</td></tr>
 <tr><td class="num">9aea09cc</td><td class="num">2026-11-03</td><td>Tee sheet views: Grid, List and Calendar (#302)</td></tr>
@@ -294,8 +298,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">52abf641</td><td class="num">2026-11-03</td><td>Glass dashboard: green glow behind the page, frosted cards and rail, tab lifts on hover</td></tr>
 <tr><td class="num">66238486</td><td class="num">2026-11-02</td><td>Accuracy pass: plain Analytics definitions and one stock wording (#300)</td></tr>
 <tr><td class="num">d2052372</td><td class="num">2026-11-02</td><td>Accuracy pass: plain Analytics definitions, sold-out dates in the download, one stock wording</td></tr>
-<tr><td class="num">e83ec9db</td><td class="num">2026-11-02</td><td>Tee sheet: pay separately — split players off a group and pay their share (#299)</td></tr>
-<tr><td class="num">5cfea0f0</td><td class="num">2026-11-02</td><td>Regenerate code map and status board</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

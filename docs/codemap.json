@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 654,
+    "files": 655,
     "routes": 290,
-    "libs": 231,
+    "libs": 232,
     "models": 70,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -8875,7 +8875,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1922,
+      "lines": 1923,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11564,7 +11564,7 @@
     },
     {
       "path": "src/components/dashboard/ShopItemsForGroup.tsx",
-      "lines": 187,
+      "lines": 188,
       "purpose": "POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08):",
       "brain": [],
       "exports": [
@@ -11585,6 +11585,7 @@
       "imports": [
         "@/lib/booking-fees",
         "@/lib/dashboard-fetch",
+        "@/lib/shop-lines",
         "react"
       ],
       "usedBy": [
@@ -24396,6 +24397,35 @@
         "src/components/dashboard/ShopCatalog.tsx",
         "src/lib/shop-ai-import.ts",
         "src/lib/shop-catalog.ts"
+      ]
+    },
+    {
+      "path": "src/lib/shop-lines.ts",
+      "lines": 16,
+      "purpose": "Cam 2026-11-04:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "groupLines",
+          "kind": "fn"
+        },
+        {
+          "name": "ShopLineGroup",
+          "kind": "type"
+        },
+        {
+          "name": "ShopLineIn",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/components/dashboard/ShopItemsForGroup.tsx"
       ]
     },
     {
