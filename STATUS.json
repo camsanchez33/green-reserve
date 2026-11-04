@@ -1,24 +1,50 @@
 {
-  "generatedAt": "2026-11-04T04:44:32.175Z",
+  "generatedAt": "2026-11-04T20:36:41.343Z",
   "repo": {
-    "head": "988566c5",
+    "head": "3e901199",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 8,
+    "dirtyCount": 6,
     "dirty": [
       "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/schedule-rework-test.ts",
-      " M scripts/tees-side-by-side-test.ts",
-      " M src/app/api/operator/tee-times/route.ts",
-      " M src/app/dashboard/page.tsx",
-      " M src/app/dashboard/schedules/page.tsx",
-      " M src/components/dashboard/TeeSheetRows.tsx"
+      " M scripts/ledger-view-db-test.ts",
+      " M src/components/dashboard/money/LedgerPanel.tsx",
+      " M src/lib/earned-terms.ts",
+      " M src/lib/ledger-view.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "3e901199",
+        "date": "2026-11-04T20:31:44+00:00",
+        "subject": "EARNED-1: CLAUDE.md wording",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "3b06f8d3",
+        "date": "2026-11-04T20:31:38+00:00",
+        "subject": "Money: earned vs paid out on the Ledger (EARNED-1)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "ddeaa003",
+        "date": "2026-11-04T14:08:21-05:00",
+        "subject": "Tee sheet: 1st and 10th tee side by side; Schedule: prices as one table (#306)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "56fffcae",
+        "date": "2026-11-04T04:44:34+00:00",
+        "subject": "TEES-1 / PRICES-1 review fixes: same-tee times stack, nine order; one rename field, every price change shown",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "988566c5",
         "date": "2026-11-04T04:38:07+00:00",
@@ -585,7 +611,7 @@
       "line": 2412,
       "hash": "b88c8bf3",
       "shipDate": "2026-07-22",
-      "ageDays": 104
+      "ageDays": 105
     }
   ],
   "next": [
@@ -733,7 +759,7 @@
       "file": "DENSE_UI_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-11-01",
-      "ageDays": 2
+      "ageDays": 3
     },
     {
       "file": "PLATFORM_ROADMAP_SPEC.md",
@@ -955,6 +981,26 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "3e901199",
+      "date": "2026-11-04",
+      "subject": "EARNED-1: CLAUDE.md wording"
+    },
+    {
+      "h": "3b06f8d3",
+      "date": "2026-11-04",
+      "subject": "Money: earned vs paid out on the Ledger (EARNED-1)"
+    },
+    {
+      "h": "ddeaa003",
+      "date": "2026-11-04",
+      "subject": "Tee sheet: 1st and 10th tee side by side; Schedule: prices as one table (#306)"
+    },
+    {
+      "h": "56fffcae",
+      "date": "2026-11-04",
+      "subject": "TEES-1 / PRICES-1 review fixes: same-tee times stack, nine order; one rename field, every price change shown"
+    },
+    {
       "h": "988566c5",
       "date": "2026-11-04",
       "subject": "Schedule: prices as one table, rounds side by side (PRICES-1)"
@@ -993,26 +1039,6 @@
       "h": "5fb78584",
       "date": "2026-11-04",
       "subject": "Status board"
-    },
-    {
-      "h": "b689a296",
-      "date": "2026-11-04",
-      "subject": "Glass: soften the glow a step and move the second one low right, darker light text and lighter dark text, so every token clears 4.5:1 on cards and on the bare page"
-    },
-    {
-      "h": "38ea94b2",
-      "date": "2026-11-04",
-      "subject": "Group card checkout: + adds on first tap, − says when it removes several, exact SKU scan, no reader promised where none is, tests"
-    },
-    {
-      "h": "2ab4d6b2",
-      "date": "2026-11-04",
-      "subject": "Group card checkout: party size behind Edit group, the card reader always shown with its reason, register-style tiles for shop items"
-    },
-    {
-      "h": "c472b412",
-      "date": "2026-11-04",
-      "subject": "Glass: let the glow through the page layer, stronger glow and clearer cards, darker text tokens so it stays readable"
     }
   ]
 }

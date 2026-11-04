@@ -4,14 +4,18 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-04 04:44 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `988566c5` · working tree **8 dirty file(s)**
+Generated 2026-11-04 20:36 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `3e901199` · working tree **6 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 77 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 81 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `3e901199` | 2026-11-04 | EARNED-1: CLAUDE.md wording |
+| `3b06f8d3` | 2026-11-04 | Money: earned vs paid out on the Ledger (EARNED-1) |
+| `ddeaa003` | 2026-11-04 | Tee sheet: 1st and 10th tee side by side; Schedule: prices as one table (#306) |
+| `56fffcae` | 2026-11-04 | TEES-1 / PRICES-1 review fixes: same-tee times stack, nine order; one rename field, every price change shown |
 | `988566c5` | 2026-11-04 | Schedule: prices as one table, rounds side by side (PRICES-1) |
 | `497612df` | 2026-11-04 | Tee sheet: 1st and 10th tee side by side (TEES-1) |
 | `80935727` | 2026-11-03 | Partial check-in keeps the rest of the group booked (PARTIAL-1) (#305) |
@@ -92,16 +96,14 @@ Generated 2026-11-04 04:44 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (8 file(s))
+### Uncommitted working tree (6 file(s))
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/schedule-rework-test.ts`
-- `M scripts/tees-side-by-side-test.ts`
-- `M src/app/api/operator/tee-times/route.ts`
-- `M src/app/dashboard/page.tsx`
-- `M src/app/dashboard/schedules/page.tsx`
-- `M src/components/dashboard/TeeSheetRows.tsx`
+- `M scripts/ledger-view-db-test.ts`
+- `M src/components/dashboard/money/LedgerPanel.tsx`
+- `M src/lib/earned-terms.ts`
+- `M src/lib/ledger-view.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -118,7 +120,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 104d | `b88c8bf3` | `RUN_QUEUE.md:2412` |
+| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 105d | `b88c8bf3` | `RUN_QUEUE.md:2412` |
 
 ## Not started — the actual queue
 
@@ -187,7 +189,7 @@ This is the distinction a raw checkbox count gets wrong.
 | spec | open refs | last touched | age |
 |---|---|---|---|
 | `CLAUDE.md` | 1 | 2026-11-04 | 0d |
-| `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 2d |
+| `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 3d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 14d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 8d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 9d |
@@ -227,6 +229,10 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `3e901199` 2026-11-04 — EARNED-1: CLAUDE.md wording
+- `3b06f8d3` 2026-11-04 — Money: earned vs paid out on the Ledger (EARNED-1)
+- `ddeaa003` 2026-11-04 — Tee sheet: 1st and 10th tee side by side; Schedule: prices as one table (#306)
+- `56fffcae` 2026-11-04 — TEES-1 / PRICES-1 review fixes: same-tee times stack, nine order; one rename field, every price change shown
 - `988566c5` 2026-11-04 — Schedule: prices as one table, rounds side by side (PRICES-1)
 - `497612df` 2026-11-04 — Tee sheet: 1st and 10th tee side by side (TEES-1)
 - `80935727` 2026-11-03 — Partial check-in keeps the rest of the group booked (PARTIAL-1) (#305)
@@ -235,10 +241,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `fce72d26` 2026-11-04 — Partial check-in keeps the rest of the group booked (PARTIAL-1)
 - `327461ef` 2026-11-03 — Glass that actually shows, and a cleaner group-card checkout (#304)
 - `5fb78584` 2026-11-04 — Status board
-- `b689a296` 2026-11-04 — Glass: soften the glow a step and move the second one low right, darker light text and lighter dark text, so every token clears 4.5:1 on cards and on the bare page
-- `38ea94b2` 2026-11-04 — Group card checkout: + adds on first tap, − says when it removes several, exact SKU scan, no reader promised where none is, tests
-- `2ab4d6b2` 2026-11-04 — Group card checkout: party size behind Edit group, the card reader always shown with its reason, register-style tiles for shop items
-- `c472b412` 2026-11-04 — Glass: let the glow through the page layer, stronger glow and clearer cards, darker text tokens so it stays readable
 
 ---
 

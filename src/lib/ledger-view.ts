@@ -29,6 +29,8 @@ export type LedgerDay = {
   /** Card money on the course's Stripe account, by the ledger — compared with Stripe's. */
   courseCardNetCents: number;
   stripeNetCents: number | null;
+  /** EARNED-1: Stripe's own processing fees on the day's card money (null = Stripe not read). */
+  stripeFeeCents: number | null;
   match: 'ok' | 'off' | 'none' | 'unknown';
   moves: number;
 };
@@ -63,7 +65,7 @@ async function movesIn(courseId: string, from: Date, to: Date): Promise<Row[]> {
 }
 
 /** Pure: a day's totals from its rows. */
-export function sumDay(day: string, rows: Pick<Row, 'direction' | 'method' | 'account' | 'amountCents' | 'platformFeeCents'>[]): Omit<LedgerDay, 'stripeNetCents' | 'match'> {
+export function sumDay(day: string, rows: Pick<Row, 'direction' | 'method' | 'account' | 'amountCents' | 'platformFeeCents'>[]): Omit<LedgerDay, 'stripeNetCents' | 'stripeFeeCents' | 'match'> {
   let cardIn = 0, cashIn = 0, otherIn = 0, out = 0, platform = 0, courseCard = 0;
   for (const r of rows) {
     const sign = r.direction === 'out' ? -1 : 1;
@@ -89,9 +91,9 @@ export function matchOf(ledgerCents: number, stripeCents: number | null): Ledger
  * charges and payments in, refunds and dispute money out (payouts and Stripe's fees
  * aside). Null when it can't be read (no account, Stripe down).
  */
-async function stripeByDay(accountId: string | null, tz: string, from: Date, to: Date): Promise<Map<string, number> | null> {
+async function stripeByDay(accountId: string | null, tz: string, from: Date, to: Date): Promise<Map<string, { net: number; fee: number }> | null> {
   if (!accountId) return null;
-  const by = new Map<string, number>();
+  const by = new Map<string, { net: number; fee: number }>();
   try {
     const list = stripe.balanceTransactions.list(
       { created: { gte: Math.floor(from.getTime() / 1000), lt: Math.floor(to.getTime() / 1000) }, limit: 100 },
@@ -105,7 +107,11 @@ async function stripeByDay(accountId: string | null, tz: string, from: Date, to:
       // Card money moving: charges, refunds, dispute withdrawals and reinstatements.
       if (!['charge', 'payment', 'refund', 'payment_refund', 'adjustment', 'payment_failure_refund'].includes(t.type)) continue;
       const d = dayOf(tz, new Date(t.created * 1000));
-      by.set(d, (by.get(d) ?? 0) + t.amount);
+      const cur = by.get(d) ?? { net: 0, fee: 0 };
+      cur.net += t.amount;
+      // EARNED-1: only Stripe's own fee — GreenReserve's application fee is in the ledger already.
+      for (const f of t.fee_details ?? []) if (f.type === 'stripe_fee' && f.currency === 'usd') cur.fee += f.amount;
+      by.set(d, cur);
     }
     return by;
   } catch (err) {
@@ -115,24 +121,72 @@ async function stripeByDay(accountId: string | null, tz: string, from: Date, to:
 }
 
 /** The days from..to (inclusive), newest first, with the Stripe match. */
-export async function ledgerDays(courseId: string, from: string, to: string): Promise<{ days: LedgerDay[]; stripeRead: boolean; stripeConnected: boolean; tz: string } | null> {
+/** EARNED-1: what the course earned over the days — collected, less what went back, GreenReserve's part and Stripe's fees. */
+export type Earned = { collectedCents: number; givenBackCents: number; greenReserveCents: number; stripeFeeCents: number | null; keptCents: number | null };
+/** EARNED-1: what reached the course — Stripe payouts that arrived in the range, cash kept at the course, and what still waits in Stripe. */
+export type PaidOut = { payoutsCents: number | null; payoutCount: number; cashCents: number; inStripeCents: number | null };
+
+/** Pure: the range's earned figures from its days. Stripe's fees unknown → what the course kept is unknown too. */
+export function earnedOf(days: Pick<LedgerDay, 'cardInCents' | 'cashInCents' | 'otherInCents' | 'outCents' | 'platformCents' | 'stripeFeeCents'>[]): Earned {
+  const collected = days.reduce((n, d) => n + d.cardInCents + d.cashInCents + d.otherInCents, 0);
+  const back = days.reduce((n, d) => n + d.outCents, 0);
+  const gr = days.reduce((n, d) => n + d.platformCents, 0);
+  const fees = days.some(d => d.stripeFeeCents === null) ? null : days.reduce((n, d) => n + (d.stripeFeeCents ?? 0), 0);
+  return { collectedCents: collected, givenBackCents: back, greenReserveCents: gr, stripeFeeCents: fees, keptCents: fees === null ? null : collected - back - gr - fees };
+}
+
+/** Pure: cash kept at the course over the days (cash in less cash given back), from the rows' sums. */
+export const cashKeptOf = (rows: Pick<Row, 'direction' | 'method' | 'amountCents'>[]) =>
+  rows.reduce((n, r) => r.method === 'cash' ? n + (r.direction === 'out' ? -r.amountCents : r.amountCents) : n, 0);
+
+/** Stripe payouts that arrived in the bank between the course-local days (inclusive), and the balance still in Stripe. */
+async function stripePaidOut(accountId: string | null, tz: string, from: string, to: string): Promise<{ payoutsCents: number | null; payoutCount: number; inStripeCents: number | null }> {
+  if (!accountId) return { payoutsCents: null, payoutCount: 0, inStripeCents: null };
+  const opts = { stripeAccount: accountId };
+  try {
+    // A payout's arrival_date is a calendar day, sent as midnight UTC of that day — read it as a date, never through
+    // the course's timezone (west of UTC that would land it on the day before).
+    const gte = Date.parse(`${from}T00:00:00Z`) / 1000, lt = Date.parse(`${addDaysStr(to, 1)}T00:00:00Z`) / 1000;
+    let cents = 0, count = 0, n = 0;
+    for await (const p of stripe.payouts.list({ arrival_date: { gte, lt }, limit: 100 }, opts)) {
+      if (++n > 2_000) return { payoutsCents: null, payoutCount: 0, inStripeCents: null };
+      if (p.currency !== 'usd' || p.status === 'failed' || p.status === 'canceled') continue;
+      const d = new Date(p.arrival_date * 1000).toISOString().slice(0, 10);
+      if (d < from || d > to) continue;
+      cents += p.amount; count++;
+    }
+    const bal = await stripe.balance.retrieve({}, opts);
+    const usd = (list: { amount: number; currency: string }[]) => list.filter(x => x.currency === 'usd').reduce((t, x) => t + x.amount, 0);
+    return { payoutsCents: cents, payoutCount: count, inStripeCents: usd(bal.available) + usd(bal.pending) };
+  } catch (err) {
+    console.error(JSON.stringify({ ev: 'ledger.payouts_read.fail', error: err instanceof Error ? err.message : String(err) }));
+    return { payoutsCents: null, payoutCount: 0, inStripeCents: null };
+  }
+}
+
+export async function ledgerDays(courseId: string, from: string, to: string, opts: { withPayouts?: boolean } = {}): Promise<{ days: LedgerDay[]; stripeRead: boolean; stripeConnected: boolean; tz: string; earned: Earned; paidOut: PaidOut | null } | null> {
   const course = await prisma.course.findUnique({ where: { id: courseId }, select: { timezone: true, stripeAccountId: true, stripeAccountActive: true } });
   if (!course) return null;
   const tz = course.timezone;
   const start = dayStart(tz, from), end = dayStart(tz, addDaysStr(to, 1));
-  const [rows, stripeDays] = await Promise.all([
+  const account = course.stripeAccountActive ? course.stripeAccountId : null;
+  const [rows, stripeDays, paid] = await Promise.all([
     movesIn(courseId, start, end),
-    stripeByDay(course.stripeAccountActive ? course.stripeAccountId : null, tz, start, end),
+    stripeByDay(account, tz, start, end),
+    opts.withPayouts ? stripePaidOut(account, tz, from, to) : Promise.resolve(null),
   ]);
   const byDay = new Map<string, Row[]>();
   for (const r of rows) { const d = dayOf(tz, r.at); (byDay.get(d) ?? byDay.set(d, []).get(d)!).push(r); }
   const days: LedgerDay[] = [];
   for (let d = to; d >= from; d = addDaysStr(d, -1)) {
     const s = sumDay(d, byDay.get(d) ?? []);
-    const stripeNet = stripeDays ? (stripeDays.get(d) ?? 0) : null;
-    days.push({ ...s, stripeNetCents: stripeNet, match: matchOf(s.courseCardNetCents, stripeNet) });
+    const st = stripeDays ? (stripeDays.get(d) ?? { net: 0, fee: 0 }) : null;
+    // A course with no card money on its own Stripe account pays Stripe nothing.
+    const fee = st ? st.fee : s.courseCardNetCents === 0 && !account ? 0 : null;
+    days.push({ ...s, stripeNetCents: st ? st.net : null, stripeFeeCents: fee, match: matchOf(s.courseCardNetCents, st ? st.net : null) });
   }
-  return { days, stripeRead: !!stripeDays, stripeConnected: !!(course.stripeAccountActive && course.stripeAccountId), tz };
+  const paidOut = paid ? { ...paid, cashCents: cashKeptOf(rows) } : null;
+  return { days, stripeRead: !!stripeDays, stripeConnected: !!(course.stripeAccountActive && course.stripeAccountId), tz, earned: earnedOf(days), paidOut };
 }
 
 export type LedgerRow = Omit<Row, 'at'> & { at: string; label: string; methodLabel: string; who: string; href: string | null };

@@ -6,7 +6,7 @@ import { readFileSync } from 'fs';
 import { prisma } from '../src/lib/prisma';
 import { stripe } from '../src/lib/stripe';
 import { recordMove } from '../src/lib/money-ledger';
-import { ledgerDays, ledgerRows, ledgerCsv, sumDay, matchOf } from '../src/lib/ledger-view';
+import { ledgerDays, ledgerRows, ledgerCsv, sumDay, matchOf, earnedOf, cashKeptOf } from '../src/lib/ledger-view';
 import { daySummary } from '../src/lib/register-close';
 import { todayIn, addDaysStr } from '../src/lib/course-time';
 
@@ -58,9 +58,33 @@ async function cleanup() {
   ok('…matches Stripe (payouts aside)', d?.match === 'ok' && d.stripeNetCents === 10300, d);
   stripeAmount = 10000;
   ok('…and says so when Stripe recorded something else', (await ledgerDays(c.id, today, today))?.days[0].match === 'off');
+  // EARNED-1 (Cam 2026-11-04, "earned vs paid out"): Stripe's own fee per day, earned, and what reached the bank.
+  stripeAmount = 10300;
+  bt.list = () => ({ async *[Symbol.asyncIterator]() { yield { currency: 'usd', type: 'charge', amount: 10300, created: Math.floor(Date.now() / 1000), fee_details: [{ type: 'stripe_fee', amount: 329, currency: 'usd' }, { type: 'application_fee', amount: 300, currency: 'usd' }] }; } });
+  const po = stripe.payouts as unknown as { list: unknown }; const bal = stripe.balance as unknown as { retrieve: unknown };
+  const nowS = Math.floor(Date.now() / 1000);
+  // Stripe sends arrival_date as midnight UTC of the arrival day: today's payout counts, tomorrow's doesn't (a New York course).
+  const midnight = (d: string) => Date.parse(`${d}T00:00:00Z`) / 1000;
+  po.list = () => ({ async *[Symbol.asyncIterator]() { yield { currency: 'usd', status: 'paid', amount: 8000, arrival_date: midnight(today) }; yield { currency: 'usd', status: 'paid', amount: 4400, arrival_date: midnight(addDaysStr(today, 1)) }; yield { currency: 'usd', status: 'failed', amount: 500, arrival_date: midnight(today) }; yield { currency: 'usd', status: 'paid', amount: 700, arrival_date: nowS - 40 * 86400 }; } });
+  bal.retrieve = async () => ({ available: [{ amount: 1200, currency: 'usd' }], pending: [{ amount: 300, currency: 'usd' }, { amount: 99, currency: 'eur' }] });
+  const ep = await ledgerDays(c.id, today, today, { withPayouts: true });
+  ok('a day carries only Stripe\'s own fee (GreenReserve\'s is in the ledger already)', ep?.days[0].stripeFeeCents === 329, ep?.days[0]);
+  ok('earned: collected, given back, GreenReserve\'s part, Stripe\'s fees, what the course keeps', !!ep && ep.earned.collectedCents === 60300 && ep.earned.stripeFeeCents === 329 && ep.earned.keptCents === 60300 - ep.earned.givenBackCents - ep.earned.greenReserveCents - 329, ep?.earned);
+  ok('paid out: payouts that arrived in the range (failed and older ones left out), cash at the course, the Stripe balance now', !!ep?.paidOut && ep.paidOut.payoutsCents === 8000 && ep.paidOut.payoutCount === 1 && ep.paidOut.cashCents === 50000 && ep.paidOut.inStripeCents === 1500, ep?.paidOut);
+  ok('…only asked for (the Payouts permission)', (await ledgerDays(c.id, today, today))?.paidOut === null);
+  ok('pure: Stripe\'s fees unknown on any day → what the course keeps is unknown, never a guess', earnedOf([{ cardInCents: 100, cashInCents: 0, otherInCents: 0, outCents: 0, platformCents: 0, stripeFeeCents: null }]).keptCents === null
+    && earnedOf([{ cardInCents: 1000, cashInCents: 500, otherInCents: 0, outCents: 200, platformCents: 30, stripeFeeCents: 59 }]).keptCents === 1211);
+  const panel = readFileSync('src/components/dashboard/money/LedgerPanel.tsx', 'utf8');
+  ok('a negative fee (a refund without its charge) shows one minus sign', panel.includes("opts.minus ? usd2(-cents) : usd2(cents)") && !panel.includes('`−${usd2(cents)}`'));
+  ok('pure: cash at the course is cash in less cash given back', cashKeptOf([{ direction: 'in', method: 'cash', amountCents: 500 }, { direction: 'out', method: 'cash', amountCents: 100 }, { direction: 'in', method: 'card', amountCents: 999 }]) === 400);
+  po.list = () => ({ async *[Symbol.asyncIterator]() { throw new Error('Stripe down'); } });
+  const pdown = await ledgerDays(c.id, today, today, { withPayouts: true });
+  ok('payouts unreadable: shown as unknown, the rest still adds up', pdown?.paidOut?.payoutsCents === null && pdown.paidOut.inStripeCents === null && pdown.paidOut.cashCents === 50000);
+  const lroute = readFileSync('src/app/api/operator/money/ledger/route.ts', 'utf8');
+  ok('the route reads payouts only with money.payouts', lroute.includes("withPayouts: can(session, 'money.payouts')"));
   bt.list = () => ({ async *[Symbol.asyncIterator]() { throw new Error('Stripe down'); } });
   const down = await ledgerDays(c.id, today, today);
-  ok('Stripe down: the ledger still shows, unchecked', down?.stripeRead === false && down.days[0].match === 'unknown' && down.days[0].cardInCents === 10300);
+  ok('Stripe down: the ledger still shows, unchecked', down?.stripeRead === false && down.days[0].match === 'unknown' && down.days[0].cardInCents === 10300 && down.days[0].stripeFeeCents === null && down.earned.keptCents === null);
 
   const rows = await ledgerRows(c.id, today);
   ok('a day\'s rows: each movement, named and linked to its booking', rows?.length === 2 && rows.some(x => x.who === 'Pat Ledger' && x.href?.startsWith('/dashboard?date=')), rows);
