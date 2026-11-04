@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-04 02:38 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `3298d526` · working tree **6 dirty file(s)**
+Generated 2026-11-04 02:38 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `719081db` · working tree **8 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 64 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 65 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `719081db` | 2026-11-04 | Glass: let the glow through the page layer, stronger glow and clearer cards, darker text tokens so it stays readable |
 | `3298d526` | 2026-11-04 | Booking: a golfer signed in to an account that no longer exists books as a guest instead of crashing |
 | `9aea09cc` | 2026-11-03 | Tee sheet views: Grid, List and Calendar (#302) |
 | `9652f9f5` | 2026-11-03 | Tee sheet views: say the shown state to screen readers, no price on checked-in lines, calendar follows the day stepper |
@@ -79,14 +80,16 @@ Generated 2026-11-04 02:38 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (6 file(s))
+### Uncommitted working tree (8 file(s))
 
-- `M  CLAUDE.md`
 - `UU STATUS.artifact.html`
 - `UU STATUS.json`
 - `UU STATUS.md`
-- `M  scripts/glass-test.ts`
-- `M  src/app/globals.css`
+- `M  docs/CODEMAP.md`
+- `M  docs/codemap.json`
+- `M  src/app/dashboard/page.tsx`
+- `M  src/components/dashboard/ShopItemsForGroup.tsx`
+- `M  src/lib/booking-status.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -171,7 +174,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-11-03 | 0d |
+| `CLAUDE.md` | 1 | 2026-11-04 | 0d |
 | `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 2d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 13d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 8d |
@@ -212,6 +215,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `719081db` 2026-11-04 — Glass: let the glow through the page layer, stronger glow and clearer cards, darker text tokens so it stays readable
 - `3298d526` 2026-11-04 — Booking: a golfer signed in to an account that no longer exists books as a guest instead of crashing
 - `9aea09cc` 2026-11-03 — Tee sheet views: Grid, List and Calendar (#302)
 - `9652f9f5` 2026-11-03 — Tee sheet views: say the shown state to screen readers, no price on checked-in lines, calendar follows the day stepper
@@ -223,7 +227,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `d2052372` 2026-11-02 — Accuracy pass: plain Analytics definitions, sold-out dates in the download, one stock wording
 - `e83ec9db` 2026-11-02 — Tee sheet: pay separately — split players off a group and pay their share (#299)
 - `5cfea0f0` 2026-11-02 — Regenerate code map and status board
-- `7458886d` 2026-11-02 — Pay separately: give back the leavers' share of a hold already taken
 
 ---
 

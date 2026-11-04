@@ -8875,7 +8875,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1906,
+      "lines": 1922,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11564,7 +11564,7 @@
     },
     {
       "path": "src/components/dashboard/ShopItemsForGroup.tsx",
-      "lines": 150,
+      "lines": 187,
       "purpose": "POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08):",
       "brain": [],
       "exports": [
