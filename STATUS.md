@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-04 04:04 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `726c9d6e` · working tree **13 dirty file(s)**
+Generated 2026-11-04 04:17 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `fce72d26` · working tree **9 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 71 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 72 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `fce72d26` | 2026-11-04 | Partial check-in keeps the rest of the group booked (PARTIAL-1) |
 | `327461ef` | 2026-11-03 | Glass that actually shows, and a cleaner group-card checkout (#304) |
 | `5fb78584` | 2026-11-04 | Status board |
 | `b689a296` | 2026-11-04 | Glass: soften the glow a step and move the second one low right, darker light text and lighter dark text, so every token clears 4.5:1 on cards and on the bare page |
@@ -86,21 +87,17 @@ Generated 2026-11-04 04:04 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (13 file(s))
+### Uncommitted working tree (9 file(s))
 
-- `M CLAUDE.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M prisma/schema.prisma`
 - `M scripts/cash-at-counter-db-test.ts`
 - `M scripts/split-booking-db-test.ts`
-- `M src/app/api/operator/tee-times/route.ts`
+- `M scripts/teesheet-till-test.ts`
+- `M scripts/tt-card-test.ts`
 - `M src/app/dashboard/page.tsx`
-- `M src/lib/cancel-booking.ts`
-- `M src/lib/checkin-booking.ts`
+- `M src/lib/admin-home.ts`
 - `M src/lib/counter-pay.ts`
-- `M src/lib/split-booking-db.ts`
-- `?? prisma/migrations/20261104000000_booking_split_from/`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -185,7 +182,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-11-03 | 0d |
+| `CLAUDE.md` | 1 | 2026-11-04 | 0d |
 | `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 2d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 14d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 8d |
@@ -226,6 +223,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `fce72d26` 2026-11-04 — Partial check-in keeps the rest of the group booked (PARTIAL-1)
 - `327461ef` 2026-11-03 — Glass that actually shows, and a cleaner group-card checkout (#304)
 - `5fb78584` 2026-11-04 — Status board
 - `b689a296` 2026-11-04 — Glass: soften the glow a step and move the second one low right, darker light text and lighter dark text, so every token clears 4.5:1 on cards and on the bare page
@@ -237,7 +235,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `9aea09cc` 2026-11-03 — Tee sheet views: Grid, List and Calendar (#302)
 - `9652f9f5` 2026-11-03 — Tee sheet views: say the shown state to screen readers, no price on checked-in lines, calendar follows the day stepper
 - `659066c6` 2026-11-03 — Tee sheet views: Grid, List and Calendar
-- `aec2961f` 2026-11-02 — Glass dashboard: green glow, frosted cards and rail, tab lifts on hover (#301)
 
 ---
 

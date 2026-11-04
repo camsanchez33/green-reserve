@@ -94,6 +94,7 @@ export async function settleAtCounter(courseId: string, bookingId: string, opts:
   if (cip !== undefined && cip < booking.players) {
     const sp = await splitOffLateArrivals(courseId, bookingId, booking.players - cip, opts.actor);
     if (sp.ok) return settleAtCounter(courseId, bookingId, { ...opts, checkedInPlayers: undefined });
+    console.log(JSON.stringify({ ev: 'counter.partial_split_refused', bookingId, error: sp.error }));
   }
   const hadHoldFee = booking.paymentStatus === 'cancellation_fee_charged' && !!booking.cancellationFeeChargeId;
   // W2-7 B2: bring the shop items' sales tax up to date before the counter

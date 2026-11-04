@@ -8875,7 +8875,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1943,
+      "lines": 1945,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -13876,7 +13876,7 @@
     },
     {
       "path": "src/lib/admin-home.ts",
-      "lines": 130,
+      "lines": 131,
       "purpose": "ADMIN-C (Cam 2026-10-22, mockup C \"Clean hub\"):",
       "brain": [],
       "exports": [
@@ -16642,7 +16642,7 @@
     },
     {
       "path": "src/lib/counter-pay.ts",
-      "lines": 315,
+      "lines": 316,
       "purpose": "A group pays for its round at the counter (cash, or the course's own card machine):",
       "brain": [],
       "exports": [

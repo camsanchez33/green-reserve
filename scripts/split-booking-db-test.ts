@@ -95,6 +95,8 @@ async function main() {
   ok('…and the one who left gets their $10 share of the hold back — or staff are told exactly what to refund', rh.ok && rh.note === 'Split done, but $10.00 of the late-cancellation hold couldn’t be refunded automatically — refund it in Stripe.', rh.ok ? rh.note : rh);
   ok('a group with no hold has nothing to give back', r.ok && r.note === null);
   const db = readFileSync('src/lib/split-booking-db.ts', 'utf8');
+  ok('PARTIAL-1: a part split off is not a new booking on Admin Home', readFileSync('src/lib/admin-home.ts', 'utf8').includes("const LIVE = { status: { not: 'cancelled' }, splitFromId: null,"));
+  ok('…the cash confirm quotes the card\'s own figure', readFileSync('src/app/dashboard/page.tsx', 'utf8').includes("bookingLifecycle(b, 'take_cash', cashDue)"));
   ok('the hold share is refunded on the course\'s account and written to the ledger', db.includes('refundOnConnectedAccount({ paymentIntentId: h.chargeId, connectedAccountId: h.account, amountCents: h.cents })') && db.includes("recordMove({ courseId: h.courseId, what: 'hold', direction: 'out'"));
   await prisma.course.update({ where: { id: course.id }, data: { lateFeeBasis: 'booking', stripeAccountId: '' } });
 

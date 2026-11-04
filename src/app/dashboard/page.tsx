@@ -344,7 +344,7 @@ function DashboardPageInner() {
     }
   }
 
-  async function bookingLifecycle(b: Booking, action: 'no_show' | 'still_coming' | 'take_cash') {
+  async function bookingLifecycle(b: Booking, action: 'no_show' | 'still_coming' | 'take_cash', cashCents?: number) {
     let checkedInPlayers: number | undefined;
     if (action === 'take_cash') {
       const n = askHeadcount(b);
@@ -355,7 +355,8 @@ function DashboardPageInner() {
       const who = checkedInPlayers ?? b.players;
       // POS-1a: shop items on the booking are collected at the counter too (no
       // GreenReserve shop fee on a counter payment, like the booking fee in cash).
-      const owed = (who < b.players ? partRound(b, who, false) : b.totalAmount - (b.accessFeeTotal ?? 0)) + (b.shopTotalCents ?? 0) + (b.shopTaxCents ?? 0);
+      // The card's own figure when it has one (PARTIAL-1: priced as the split the server makes).
+      const owed = cashCents ?? (who < b.players ? partRound(b, who, false) : b.totalAmount - (b.accessFeeTotal ?? 0)) + (b.shopTotalCents ?? 0) + (b.shopTaxCents ?? 0);
       // CASH-1: a cash sale of the round, rung up like the register (receipt on the Pro shop page).
       if (!confirm(`Take $${(owed / 100).toFixed(2)} cash from ${b.golferName} for ${who} of ${b.players} player${b.players === 1 ? '' : 's'}? They’re checked in, and the sale goes on today’s register.`)) return;
     }
@@ -390,7 +391,7 @@ function DashboardPageInner() {
       : `Pay link sent to ${r.data.sentTo}. They can check in and pay from their phone.`, 'ok');
   }
 
-  async function checkInBooking(b: Booking) {
+  async function checkInBooking(b: Booking, cardCents?: number) {
     // No saved card → the card modal. Keyed on the card itself, not paymentStatus:
     // the hourly cron flips a no-card booking to 'awaiting_checkin' when it sends
     // the pay link, which is before most golfers reach the counter.
@@ -402,7 +403,8 @@ function DashboardPageInner() {
     if (showed === null) return;
     const partial = showed < b.players ? showed : undefined;
     // POS-1a: shop items and their fee are never prorated — they ride whole.
-    const amount = (partial ? partRound(b, partial, true) : b.totalAmount) + shopExtra(b);
+    // The card's own figure when it has one (PARTIAL-1: priced as the split the server makes).
+    const amount = cardCents ?? (partial ? partRound(b, partial, true) : b.totalAmount) + shopExtra(b);
     if (!confirm(prepaid
       ? `Check in ${b.golferName}? Their round is already paid — nothing is charged.`
       : `Check in ${b.golferName}${partial ? ` (${partial} of ${b.players} players)` : ''} and charge their card $${(amount / 100).toFixed(2)} for the round${(b.shopTotalCents ?? 0) > 0 ? ' and shop items' : ''}?`)) return;
@@ -789,7 +791,7 @@ function DashboardPageInner() {
               <span className="text-ink-muted"> · {b.players} player{b.players !== 1 ? 's' : ''}</span>
               {(b.residentPlayers ?? 0) > 0 && <span className="text-ink-muted"> · {b.residentPlayers} resident{b.residentPlayers === 1 ? '' : 's'}</span>}
               {(b.source === 'walk_in' || b.source === 'phone') && !parentGroup && <span className="text-ink-muted"> · {b.source === 'phone' ? 'Phone' : 'Walk-in'}</span>}
-              {parentGroup && <span className="text-ink-muted"> · with {parentGroup.golferName}</span>}
+              {parentGroup && !b.golferName.startsWith(parentGroup.golferName) && <span className="text-ink-muted"> · with {parentGroup.golferName}</span>}
               {b.status === 'completed' && partsOff.length > 0 && <span className="text-ink-muted"> · {b.players} of {groupOf} checked in</span>}
             </p>
             {access.can('sheet.golfer_contact') && <p className="text-[12.5px] text-ink-muted truncate">{b.golferEmail.endsWith('@noemail.greenreserve.app') ? (b.golferPhone || 'No contact on file') : b.golferEmail}</p>}
@@ -893,12 +895,12 @@ function DashboardPageInner() {
         <div className="mt-3 space-y-2" onClick={e => e.stopPropagation()}>
           {/* CASH-1 (Cam 2026-10-25): paid online, or rung up in store — cash here, or the card reader. */}
           {b.status === 'confirmed' && b.paymentStatus === 'manual' && access.can('sheet.counter_payment') && (
-            <button onClick={() => bookingLifecycle(b, 'take_cash')} disabled={rowBusy === b.id} className={big + 'bg-pine hover:bg-pine-hover'}>
+            <button onClick={() => bookingLifecycle(b, 'take_cash', cashDue)} disabled={rowBusy === b.id} className={big + 'bg-pine hover:bg-pine-hover'}>
               {rowBusy === b.id ? 'Saving…' : `Take cash · check in${money(cashDue)}`}
             </button>
           )}
           {b.status !== 'completed' && b.status !== 'cancelled' && b.paymentStatus !== 'manual' && access.can('sheet.checkin') && (
-            <button onClick={() => { if (b.checkInFailReason) openCardModal(b, b.checkInFailReason); else checkInBooking(b); }}
+            <button onClick={() => { if (b.checkInFailReason) openCardModal(b, b.checkInFailReason); else checkInBooking(b, cardDue); }}
               disabled={checkingInId === b.id} className={big + (b.checkInFailReason ? 'bg-bad hover:bg-bad/90' : 'bg-pine hover:bg-pine-hover')}>
               {checkingInId === b.id ? 'Charging…' : b.checkInFailReason ? 'Retry with new card'
                 : prepaid ? 'Check in · paid ahead'
@@ -909,7 +911,7 @@ function DashboardPageInner() {
           {(canCash || canAccount || b.paymentStatus === 'on_account' && access.can('sheet.counter_payment') || canReader || readerWhyNot || canTextLink || canEmailLink) && (
             <div className="grid grid-cols-2 gap-2">
               {canCash && (
-                <button onClick={() => bookingLifecycle(b, 'take_cash')} disabled={rowBusy === b.id} className={tile}>{rowBusy === b.id ? 'Saving…' : `Take cash${money(cashDue)}`}</button>
+                <button onClick={() => bookingLifecycle(b, 'take_cash', cashDue)} disabled={rowBusy === b.id} className={tile}>{rowBusy === b.id ? 'Saving…' : `Take cash${money(cashDue)}`}</button>
               )}
               {canReader && <Link href={`/dashboard/shop?round=${b.id}`} className={tile + ' flex items-center justify-center'}>Card reader</Link>}
               {readerWhyNot === 'none' && !access.isStaff && <Link href="/dashboard/settings?section=Pro+shop" className={tile + ' flex items-center justify-center text-ink-soft'}>Connect a card reader</Link>}

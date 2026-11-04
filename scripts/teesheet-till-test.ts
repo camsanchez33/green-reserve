@@ -41,9 +41,9 @@ const l1 = ticketLines(legacy, 1);
 ok('a booking without its parts: one Round line, prorated like the sheet', l1.lines[0].label === 'Round' && l1.roundCents === partRound(legacy, 1) && sum(l1) === l1.roundCents, l1);
 
 const page = readFileSync('src/app/dashboard/page.tsx', 'utf8');
-ok('card total = the confirm\'s amount (partRound for part, total for all, plus shop)', page.includes('const cardDue = (herePlayers < b.players ? partRound(b, herePlayers, true) : b.totalAmount) + shopExtra(b);'));
-ok('cash = the take-cash confirm\'s amount (no booking fee)', page.includes("const cashDue = (herePlayers < b.players ? partRound(b, herePlayers, false) : b.totalAmount - (b.accessFeeTotal ?? 0)) + (b.shopTotalCents ?? 0) + (b.shopTaxCents ?? 0);")
-  && page.includes("const owed = (who < b.players ? partRound(b, who, false) : b.totalAmount - (b.accessFeeTotal ?? 0)) + (b.shopTotalCents ?? 0) + (b.shopTaxCents ?? 0);"));
+ok('card total = the confirm\'s amount (partRound for part, total for all, plus shop)', page.includes('const cardDue = (restSplit ? restSplit.keep.totalAmount : herePlayers < b.players ? partRound(b, herePlayers, true) : b.totalAmount) + shopExtra(b);') && page.includes('const amount = cardCents ?? (partial ? partRound(b, partial, true) : b.totalAmount) + shopExtra(b);') && page.includes('checkInBooking(b, cardDue)'));
+ok('cash = the take-cash confirm\'s amount (no booking fee)', page.includes("const cashDue = (restSplit ? restSplit.keep.totalAmount - restSplit.keep.accessFeeTotal : herePlayers < b.players ? partRound(b, herePlayers, false) : b.totalAmount - (b.accessFeeTotal ?? 0)) + (b.shopTotalCents ?? 0) + (b.shopTaxCents ?? 0);")
+  && page.includes("bookingLifecycle(b, 'take_cash', cashDue)") && page.includes("const owed = cashCents ?? (who < b.players ? partRound(b, who, false) : b.totalAmount - (b.accessFeeTotal ?? 0)) + (b.shopTotalCents ?? 0) + (b.shopTaxCents ?? 0);"));
 ok('the "Here now" pick is the headcount the charge uses', page.includes('setHere(h => ({ ...h, [b.id]: n }))') && page.includes('const n = here[b.id] ?? b.players;'));
 ok('pay buttons keep their permissions', page.includes("b.paymentStatus !== 'manual' && access.can('sheet.checkin') && (") && page.includes("const canCash = b.status === 'confirmed' && b.paymentStatus !== 'manual' && b.paymentStatus !== 'paid' && b.paymentStatus !== 'paid_offline' && access.can('sheet.counter_payment');")
   && page.includes("access.can('sheet.checkin') && access.can('shop.sell');") && page.includes('hasAccounts && access.can(\'sheet.counter_payment\')'));
