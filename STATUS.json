@@ -1,22 +1,28 @@
 {
-  "generatedAt": "2026-11-04T20:51:19.391Z",
+  "generatedAt": "2026-11-04T20:54:30.622Z",
   "repo": {
-    "head": "b176baf5",
+    "head": "fed27d5f",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 6,
+    "dirtyCount": 5,
     "dirty": [
-      "M CLAUDE.md",
-      " M docs/CODEMAP.md",
+      "M docs/CODEMAP.md",
       " M docs/codemap.json",
+      " M scripts/events-command-test.ts",
       " M src/components/dashboard/events/EventDetail.tsx",
-      "?? scripts/events-command-test.ts",
-      "?? src/lib/event-command.ts"
+      " M src/lib/event-command.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "fed27d5f",
+        "date": "2026-11-04T20:51:21+00:00",
+        "subject": "Events: command center strip and organizer bill coverage per player (EVENTS-1)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "f75dd615",
         "date": "2026-11-04T15:49:09-05:00",
@@ -995,6 +1001,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "fed27d5f",
+      "date": "2026-11-04",
+      "subject": "Events: command center strip and organizer bill coverage per player (EVENTS-1)"
+    },
+    {
       "h": "f75dd615",
       "date": "2026-11-04",
       "subject": "Money: earned vs paid out on the Ledger (EARNED-1) (#307)"
@@ -1048,11 +1059,6 @@
       "h": "d88474dc",
       "date": "2026-11-04",
       "subject": "PARTIAL-1 review fixes: split parts off Admin Home counts, confirms quote the card's figure"
-    },
-    {
-      "h": "fce72d26",
-      "date": "2026-11-04",
-      "subject": "Partial check-in keeps the rest of the group booked (PARTIAL-1)"
     }
   ]
 }

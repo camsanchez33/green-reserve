@@ -14,7 +14,7 @@ import { KINDS } from './EventSetup';
 import EventMoney, { type EventPayment, type Money } from './EventMoney';
 import EventSignup, { type SignupQuestion } from './EventSignup';
 import { EventDay, CartSigns } from './EventDay';
-import { eventStrip, coveredCount, STRIP_TERMS as T } from '@/lib/event-command';
+import { eventStrip, coveredCount, pastHeadcount, STRIP_TERMS as T } from '@/lib/event-command';
 
 export type EventTask = { id: string; label: string; dueDate: string | null; doneAt: string | null; doneBy: string };
 export type EventPlayer = {
@@ -165,6 +165,8 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
 
       {/* EVENTS-1 (Cam 2026-11-04, "events command center"): where the event stands, at a glance. */}
       {live && (() => {
+        // Players added after a balance confirmed the headcount: not in Owed (it bills the confirmed number), so said here.
+        const extra = pastHeadcount(data.money, onList.length);
         const st = eventStrip({ capacity: e.players, onList: onList.length, holding: e.entrants.filter(p => p.status === 'held' && p.holdUntil && new Date(p.holdUntil) > new Date()).length, money: data.money, tasks: e.tasks, today });
         const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
         const cell = (label: string, def: string, value: string, sub?: string, bad?: boolean) => (
@@ -179,7 +181,7 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
             {cell(T.registered.label, T.registered.def, st.capacity ? `${st.registered} / ${st.capacity}` : String(st.registered), orgPays && e.pricePerPlayerCents > 0 ? `${T.covered.label} ${covered}` : undefined)}
             {st.spotsLeft !== null && cell(T.spotsLeft.label, T.spotsLeft.def, String(st.spotsLeft))}
             {e.pricePerPlayerCents > 0 && cell(T.collected.label, T.collected.def, usd(st.collectedCents), st.sentCents ? `${usd(st.sentCents)} ${T.sent.label}` : undefined)}
-            {e.pricePerPlayerCents > 0 && cell(T.owed.label, T.owed.def, usd(st.owedCents), undefined, st.owedCents > 0 && e.date <= today)}
+            {e.pricePerPlayerCents > 0 && cell(T.owed.label, T.owed.def, usd(st.owedCents), extra ? `+${extra} ${T.past.label}` : undefined, (st.owedCents > 0 && e.date <= today) || extra > 0)}
             {cell(T.tasks.label, T.tasks.def, String(st.tasksLeft), st.overdue ? `${st.overdue} ${T.overdue.label}` : st.nextDue ? `${T.next.label} ${formatTeeDay(st.nextDue)}` : undefined, st.overdue > 0)}
           </Card>
         );

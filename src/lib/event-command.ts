@@ -42,6 +42,14 @@ export function coveredCount(keptCents: number, priceCents: number, onList: numb
   return Math.min(onList, Math.floor(keptCents / priceCents));
 }
 
+/**
+ * Players added after the headcount was confirmed (a balance paid for it): eventMoney() bills
+ * the confirmed number, so they are not in Owed — the strip names them instead of hiding them.
+ */
+export function pastHeadcount(money: { headcount: number; headcountConfirmed: boolean }, onList: number): number {
+  return money.headcountConfirmed ? Math.max(0, onList - money.headcount) : 0;
+}
+
 /** The words on the strip, each with its definition behind the label (DENSE). */
 export const STRIP_TERMS = {
   registered: { label: 'Registered', def: 'Players on the list, of the spots the event offers' },
@@ -51,6 +59,7 @@ export const STRIP_TERMS = {
   sent: { label: 'pay links out', def: '' },
   tasks: { label: 'Tasks left', def: 'Checklist items not done yet' },
   overdue: { label: 'overdue', def: '' },
+  past: { label: 'past the confirmed headcount', def: '' },
   next: { label: 'next', def: '' },
   covered: { label: 'Covered', def: 'Paid for by the organizer’s bill' },
   notCovered: { label: 'Not covered yet', def: 'The organizer’s payments don’t reach this player yet' },

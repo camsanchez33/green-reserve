@@ -6,7 +6,7 @@
 //     covered yet per player in list order.
 // Run: npx tsx scripts/events-command-test.ts
 import { readFileSync } from 'fs';
-import { eventStrip, coveredCount } from '../src/lib/event-command';
+import { eventStrip, coveredCount, pastHeadcount } from '../src/lib/event-command';
 import { eventMoney } from '../src/lib/event-payments';
 
 let failed = 0;
@@ -25,6 +25,11 @@ ok('never fewer than no spots left', eventStrip({ capacity: 10, onList: 9, holdi
 ok('the bill covers whole players', coveredCount(190000, 8000, 60) === 23);
 ok('…never more than the list', coveredCount(10_000_000, 8000, 60) === 60);
 ok('…nothing without a price or money', coveredCount(190000, 0, 60) === 0 && coveredCount(0, 8000, 60) === 0 && coveredCount(-5, 8000, 60) === 0);
+
+// A balance paid for 40 locks the headcount; 20 added after are not in Owed — the strip names them, never calls them covered.
+const locked = eventMoney({ pricePerPlayerCents: 8000, finalHeadcount: 40, players: 72, entrants: 60, payer: 'organizer', guaranteedPlayers: null }, [{ status: 'paid', amountCents: 320000, refundedCents: 0 }]);
+ok('confirmed headcount 40, 60 on the list: owed $0 for the bill, 40 covered, 20 named as past it', locked.owedCents === 0 && coveredCount(locked.keptCents, 8000, 60) === 40 && pastHeadcount(locked, 60) === 20, locked);
+ok('…nothing past it before a headcount is confirmed', pastHeadcount(money, 60) === 0);
 
 const page = readFileSync('src/components/dashboard/events/EventDetail.tsx', 'utf8');
 ok('the strip sits on a live event, from the same money as the Money card', page.includes('{live && (() => {') && page.includes('money: data.money, tasks: e.tasks, today })'));

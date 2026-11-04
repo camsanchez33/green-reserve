@@ -11985,7 +11985,7 @@
     },
     {
       "path": "src/components/dashboard/events/EventDetail.tsx",
-      "lines": 456,
+      "lines": 458,
       "purpose": "W2-9 Events:",
       "brain": [],
       "exports": [
@@ -18858,7 +18858,7 @@
     },
     {
       "path": "src/lib/event-command.ts",
-      "lines": 59,
+      "lines": 68,
       "purpose": "EVENTS-1 (Cam 2026-11-04, \"events command center\"):",
       "brain": [],
       "exports": [
@@ -18868,6 +18868,10 @@
         },
         {
           "name": "eventStrip",
+          "kind": "fn"
+        },
+        {
+          "name": "pastHeadcount",
           "kind": "fn"
         },
         {
