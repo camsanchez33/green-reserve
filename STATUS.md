@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-04 20:36 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `3e901199` · working tree **6 dirty file(s)**
+Generated 2026-11-04 20:51 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `b176baf5` · working tree **6 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 81 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 83 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `f75dd615` | 2026-11-04 | Money: earned vs paid out on the Ledger (EARNED-1) (#307) |
+| `533f74d5` | 2026-11-04 | EARNED-1 review fixes: payout arrival day, one minus sign, per-day filter, keyboard detail |
 | `3e901199` | 2026-11-04 | EARNED-1: CLAUDE.md wording |
 | `3b06f8d3` | 2026-11-04 | Money: earned vs paid out on the Ledger (EARNED-1) |
 | `ddeaa003` | 2026-11-04 | Tee sheet: 1st and 10th tee side by side; Schedule: prices as one table (#306) |
@@ -98,12 +100,12 @@ Generated 2026-11-04 20:36 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 ### Uncommitted working tree (6 file(s))
 
+- `M CLAUDE.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/ledger-view-db-test.ts`
-- `M src/components/dashboard/money/LedgerPanel.tsx`
-- `M src/lib/earned-terms.ts`
-- `M src/lib/ledger-view.ts`
+- `M src/components/dashboard/events/EventDetail.tsx`
+- `?? scripts/events-command-test.ts`
+- `?? src/lib/event-command.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -229,6 +231,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `f75dd615` 2026-11-04 — Money: earned vs paid out on the Ledger (EARNED-1) (#307)
+- `533f74d5` 2026-11-04 — EARNED-1 review fixes: payout arrival day, one minus sign, per-day filter, keyboard detail
 - `3e901199` 2026-11-04 — EARNED-1: CLAUDE.md wording
 - `3b06f8d3` 2026-11-04 — Money: earned vs paid out on the Ledger (EARNED-1)
 - `ddeaa003` 2026-11-04 — Tee sheet: 1st and 10th tee side by side; Schedule: prices as one table (#306)
@@ -239,8 +243,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `c4ee41dd` 2026-11-04 — PARTIAL-1: split parts are not new bookings on Analytics
 - `d88474dc` 2026-11-04 — PARTIAL-1 review fixes: split parts off Admin Home counts, confirms quote the card's figure
 - `fce72d26` 2026-11-04 — Partial check-in keeps the rest of the group booked (PARTIAL-1)
-- `327461ef` 2026-11-03 — Glass that actually shows, and a cleaner group-card checkout (#304)
-- `5fb78584` 2026-11-04 — Status board
 
 ---
 

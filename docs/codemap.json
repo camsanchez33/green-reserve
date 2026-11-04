@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 656,
+    "files": 657,
     "routes": 290,
-    "libs": 233,
+    "libs": 234,
     "models": 70,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -11985,7 +11985,7 @@
     },
     {
       "path": "src/components/dashboard/events/EventDetail.tsx",
-      "lines": 425,
+      "lines": 456,
       "purpose": "W2-9 Events:",
       "brain": [],
       "exports": [
@@ -12025,6 +12025,7 @@
         "@/components/ui/field",
         "@/lib/course-events",
         "@/lib/dashboard-fetch",
+        "@/lib/event-command",
         "@/lib/format",
         "@/lib/use-dashboard-access",
         "react"
@@ -18853,6 +18854,43 @@
         "src/lib/submit-change-request.ts",
         "src/lib/two-factor.ts",
         "src/lib/weather-cancel.ts"
+      ]
+    },
+    {
+      "path": "src/lib/event-command.ts",
+      "lines": 59,
+      "purpose": "EVENTS-1 (Cam 2026-11-04, \"events command center\"):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "coveredCount",
+          "kind": "fn"
+        },
+        {
+          "name": "eventStrip",
+          "kind": "fn"
+        },
+        {
+          "name": "Strip",
+          "kind": "type"
+        },
+        {
+          "name": "STRIP_TERMS",
+          "kind": "const"
+        },
+        {
+          "name": "StripInput",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/components/dashboard/events/EventDetail.tsx"
       ]
     },
     {

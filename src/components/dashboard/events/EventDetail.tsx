@@ -14,6 +14,7 @@ import { KINDS } from './EventSetup';
 import EventMoney, { type EventPayment, type Money } from './EventMoney';
 import EventSignup, { type SignupQuestion } from './EventSignup';
 import { EventDay, CartSigns } from './EventDay';
+import { eventStrip, coveredCount, STRIP_TERMS as T } from '@/lib/event-command';
 
 export type EventTask = { id: string; label: string; dueDate: string | null; doneAt: string | null; doneBy: string };
 export type EventPlayer = {
@@ -90,6 +91,11 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
   const unpaid = onList.filter(p => stateOf(p) === 'none').length;
   const questions = data.signup.questions;
   const answersOf = (p: EventPlayer) => questions.filter(q => p.answers?.[q.id]).map(q => `${q.label}: ${p.answers[q.id]}`).join(' · ');
+  // EVENTS-1: the organizer's bill covers this many on the list, a full price each, in list order.
+  const orgPays = e.payer === 'organizer';
+  const listOrder = [...onList].sort((a, b) => (a.groupNo ?? 1e9) - (b.groupNo ?? 1e9));
+  const covered = orgPays ? coveredCount(data.money.keptCents, e.pricePerPlayerCents, onList.length) : 0;
+  const coveredIds = new Set(listOrder.slice(0, covered).map(p => p.id));
   const spotsLeft = e.players > 0 ? Math.max(0, e.players - onList.length - e.entrants.filter(p => p.status === 'held' && p.holdUntil && new Date(p.holdUntil) > new Date()).length) : null;
 
   /** A payment action (the payments route), then refresh the event in place. */
@@ -156,6 +162,28 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
           )}
         </div>
       </div>
+
+      {/* EVENTS-1 (Cam 2026-11-04, "events command center"): where the event stands, at a glance. */}
+      {live && (() => {
+        const st = eventStrip({ capacity: e.players, onList: onList.length, holding: e.entrants.filter(p => p.status === 'held' && p.holdUntil && new Date(p.holdUntil) > new Date()).length, money: data.money, tasks: e.tasks, today });
+        const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+        const cell = (label: string, def: string, value: string, sub?: string, bad?: boolean) => (
+          <div className="px-4 py-3 min-w-[8.5rem]">
+            <div className="text-[12.5px] text-ink-soft" title={def}>{label}</div>
+            <div className={'text-[22px] font-semibold tabular-nums ' + (bad ? 'text-bad' : 'text-ink')}>{value}</div>
+            {sub && <div className={'text-[12px] ' + (bad ? 'text-bad' : 'text-ink-muted')}>{sub}</div>}
+          </div>
+        );
+        return (
+          <Card className="print:hidden flex flex-wrap divide-x divide-line-soft">
+            {cell(T.registered.label, T.registered.def, st.capacity ? `${st.registered} / ${st.capacity}` : String(st.registered), orgPays && e.pricePerPlayerCents > 0 ? `${T.covered.label} ${covered}` : undefined)}
+            {st.spotsLeft !== null && cell(T.spotsLeft.label, T.spotsLeft.def, String(st.spotsLeft))}
+            {e.pricePerPlayerCents > 0 && cell(T.collected.label, T.collected.def, usd(st.collectedCents), st.sentCents ? `${usd(st.sentCents)} ${T.sent.label}` : undefined)}
+            {e.pricePerPlayerCents > 0 && cell(T.owed.label, T.owed.def, usd(st.owedCents), undefined, st.owedCents > 0 && e.date <= today)}
+            {cell(T.tasks.label, T.tasks.def, String(st.tasksLeft), st.overdue ? `${st.overdue} ${T.overdue.label}` : st.nextDue ? `${T.next.label} ${formatTeeDay(st.nextDue)}` : undefined, st.overdue > 0)}
+          </Card>
+        );
+      })()}
 
       {(error || note) && (
         <p role={error ? 'alert' : 'status'} className={'print:hidden text-[13.5px] ' + (error ? 'text-bad' : 'text-ink')}>{error || note}</p>
@@ -331,7 +359,7 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
             <table className="w-full text-[13.5px]">
               <thead><tr className="text-left text-ink-muted border-b border-line">
                 <th className="py-2 pr-3 font-medium">Player</th><th className="py-2 pr-3 font-medium">Contact</th>
-                <th className="py-2 pr-3 font-medium">Group</th>{e.format === 'shotgun' && <th className="py-2 pr-3 font-medium">Hole</th>}{playersPay && <th className="py-2 pr-3 font-medium">Paid</th>}<th />
+                <th className="py-2 pr-3 font-medium">Group</th>{e.format === 'shotgun' && <th className="py-2 pr-3 font-medium">Hole</th>}{playersPay && <th className="py-2 pr-3 font-medium">Paid</th>}{orgPays && e.pricePerPlayerCents > 0 && <th className="py-2 pr-3 font-medium" title={T.coverage.def}>{T.coverage.label}</th>}<th />
               </tr></thead>
               <tbody className="divide-y divide-line-soft">
                 {[...sortedGroups.flatMap(([, ps]) => ps), ...ungrouped].map(p => (
@@ -361,6 +389,9 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
                           className={INPUT + ' w-20'} onBlur={ev => { const v = ev.target.value === '' ? null : Number(ev.target.value); if (v !== p.startHole) act('set:' + p.id, { action: 'player_set', playerId: p.id, groupNo: p.groupNo, startHole: v }); }} />
                       </td>
                     )}
+                    {orgPays && e.pricePerPlayerCents > 0 && <td className="py-2 pr-3">
+                      {coveredIds.has(p.id) ? <StatusDot status="ok" label={T.covered.label} /> : <StatusDot status="warn" label={T.notCovered.label} />}
+                    </td>}
                     {playersPay && <td className="py-2 pr-3">
                       {(() => {
                         const st = stateOf(p);

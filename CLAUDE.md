@@ -62,6 +62,9 @@ completed → (staff moves a checked-in group, Cam 2026-10-08) → still complet
 - **TEST-2: a test course never touches the platform's numbers.** `src/lib/real-courses.ts` (`REAL_COURSE`, `ON_REAL_COURSE`, `ON_REAL_BOOKING`) is spread into every platform-wide query: admin Home, Today/Health, Money (revenue route), Goals, Problems (admin-checks), Needs you, the menu badges, `paidWindow`/`counterFeesUncollected` when called without a course, the public course list, the sitemap; its booking page is noindex. Its own dashboard and admin course page count it like any course. Kept whole on purpose (they answer to Stripe): disputes, the Stripe month match, the transactions export, course payouts. A new platform-wide query uses the same spread; `scripts/real-courses-db-test.ts` checks the list.
 - A new model must be added to `WIPED_TABLES` or `KEPT_TABLES` — `scripts/data-reset-db-test.ts` fails otherwise.
 
+### Events command center (EVENTS-1, Cam 2026-11-04)
+A live event opens with one strip: registered (of the spots offered), spots left (online sign-ups still paying hold one), collected and owed (lib/event-payments `eventMoney()`, the same figures as the event's Money card), pay links out, tasks left with overdue / next due. An event the organizer pays as one bill shows, per player, Covered or Not covered yet — "Covered count" (Cam's pick): the money kept covers whole players at the event's price, in list order, never more than the list. Pure in `src/lib/event-command.ts`; `scripts/events-command-test.ts` pins it.
+
 ### Operator onboarding pipeline
 Inquiry → `pending` → `in_review` → `details_requested` → `details_submitted` → `building` → `live`
 Admin page manages all stages. Operators get dashboard access when approved.
