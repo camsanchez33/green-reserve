@@ -761,7 +761,8 @@ function DashboardPageInner() {
     // Cam 2026-11-04 ("no option to send it to the card reader"): the reader is always on the card for a group
     // that still pays — usable, or saying why not (none connected, or not this group's day yet).
     const readerWanted = b.status === 'confirmed' && b.paymentStatus !== 'paid' && b.paymentStatus !== 'paid_offline' && b.paymentStatus !== 'on_account' && !b.noShowAt && access.can('sheet.checkin') && access.can('shop.sell');
-    const readerWhyNot = canReader || !readerWanted || selectedDate < today() ? null : selectedDate > today() ? 'day' : 'none';
+    // No reader at all → say so on any day it could pay (owners get the link to connect one); a reader but not its day → "on the day".
+    const readerWhyNot = canReader || !readerWanted || selectedDate < today() ? null : !hasReader ? 'none' : 'day';
     const canSizeGroup = b.status === 'confirmed' && !b.noShowAt && !b.paidOffline && !b.roundPaid && !b.shopLocked && b.paymentStatus !== 'paid' && b.paymentStatus !== 'cancellation_fee_charged' && access.can('sheet.counter_payment');
     const canTextLink = b.status === 'confirmed' && b.hasCard === false && access.can('sheet.checkin') && b.hasPhone && selectedDate <= today();
     const canEmailLink = b.status === 'confirmed' && b.hasCard === false && b.paymentStatus !== 'manual' && access.can('sheet.checkin') && !b.golferEmail.endsWith('@noemail.greenreserve.app') && selectedDate <= today();
