@@ -104,7 +104,7 @@ async function load(courseId: string, range: Range) {
         select: {
           id: true, status: true, paymentStatus: true, players: true, checkedInPlayers: true, checkedInAt: true, noShowAt: true,
           greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, accessFeeTotal: true, cancellationFeeTotal: true,
-          cancelledAt: true, createdAt: true, source: true, golferName: true, golferEmail: true, golferPhone: true, golferAccountId: true,
+          cancelledAt: true, createdAt: true, source: true, splitFromId: true, golferName: true, golferEmail: true, golferPhone: true, golferAccountId: true,
           // W2-8: residents (RES-1) and whether the booking carried a fee policy.
           residentPlayers: true, residentRateCents: true, cancellationFeeApplies: true, appliedRate: true,
           // W2-8 (4): pro-shop items added to the round (POS-1a), before tax.
@@ -148,6 +148,9 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
     for (const b of t.bookings) bookings.push({ ...b, date: t.date, time: t.time, teeTimeId: t.id, teeAt: at, passed: at + NO_SHOW_GRACE_MIN * 60000 < nowMs });
   }
   const live = bookings.filter(b => b.status !== 'cancelled');
+  // PARTIAL-1: a part split off a group (late arrivals, paying separately) is not a booking made — it counts for
+  // players and money (in `live`), never as another booking, channel or lead time.
+  const made = live.filter(b => !b.splitFromId);
   const cancelled = bookings.filter(b => b.status === 'cancelled');
   // MEM-ACCT: a round put on a member's account is settled at the counter; it is counted here and shown apart (accountCents).
   const collectedB = live.filter(b => b.status === 'completed' && (b.paymentStatus === 'paid' || b.paymentStatus === 'paid_offline' || b.paymentStatus === 'on_account'));
@@ -455,13 +458,13 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
   ]);
 
   // ── 7. Booking behaviour ─────────────────────────────────────────────────
-  const leadDays = live.map(b => Math.max(0, (b.teeAt - b.createdAt.getTime()) / 86400000));
+  const leadDays = made.map(b => Math.max(0, (b.teeAt - b.createdAt.getTime()) / 86400000));
   const leadHist = { sameDay: 0, d1to2: 0, d3to7: 0, d8to14: 0, d15plus: 0 };
   for (const d of leadDays) {
     if (d < 1) leadHist.sameDay++; else if (d < 3) leadHist.d1to2++; else if (d < 8) leadHist.d3to7++; else if (d < 15) leadHist.d8to14++; else leadHist.d15plus++;
   }
   const channel = { online: 0, walk_in: 0, phone: 0 } as Record<string, number>;
-  for (const b of live) channel[b.source] = (channel[b.source] ?? 0) + 1;
+  for (const b of made) channel[b.source] = (channel[b.source] ?? 0) + 1;
 
   const playersLive = live.reduce((s, b) => s + b.players, 0);
 
@@ -551,8 +554,8 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
       topBySpend: [...top].sort((a, b) => b.spendCents - a.spendCents || b.rounds - a.rounds).slice(0, 10),
     },
     behavior: {
-      bookings: live.length, players: playersLive,
-      avgGroupSize: live.length ? Math.round((playersLive / live.length) * 10) / 10 : null,
+      bookings: made.length, players: playersLive,
+      avgGroupSize: made.length ? Math.round((playersLive / made.length) * 10) / 10 : null,
       avgLeadDays: leadDays.length ? Math.round((leadDays.reduce((s, d) => s + d, 0) / leadDays.length) * 10) / 10 : null,
       lead: leadHist, channel,
     },

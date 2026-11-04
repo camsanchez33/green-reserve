@@ -14607,7 +14607,7 @@
     },
     {
       "path": "src/lib/analytics.ts",
-      "lines": 630,
+      "lines": 633,
       "purpose": "AN-1 (Cam 2026-10-01):",
       "brain": [],
       "exports": [

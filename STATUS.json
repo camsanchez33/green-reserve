@@ -1,25 +1,27 @@
 {
-  "generatedAt": "2026-11-04T04:17:29.318Z",
+  "generatedAt": "2026-11-04T04:20:33.237Z",
   "repo": {
-    "head": "fce72d26",
+    "head": "d88474dc",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 9,
+    "dirtyCount": 4,
     "dirty": [
       "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/cash-at-counter-db-test.ts",
       " M scripts/split-booking-db-test.ts",
-      " M scripts/teesheet-till-test.ts",
-      " M scripts/tt-card-test.ts",
-      " M src/app/dashboard/page.tsx",
-      " M src/lib/admin-home.ts",
-      " M src/lib/counter-pay.ts"
+      " M src/lib/analytics.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "d88474dc",
+        "date": "2026-11-04T04:17:31+00:00",
+        "subject": "PARTIAL-1 review fixes: split parts off Admin Home counts, confirms quote the card's figure",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "fce72d26",
         "date": "2026-11-04T04:06:46+00:00",
@@ -921,6 +923,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "d88474dc",
+      "date": "2026-11-04",
+      "subject": "PARTIAL-1 review fixes: split parts off Admin Home counts, confirms quote the card's figure"
+    },
+    {
       "h": "fce72d26",
       "date": "2026-11-04",
       "subject": "Partial check-in keeps the rest of the group booked (PARTIAL-1)"
@@ -974,11 +981,6 @@
       "h": "9652f9f5",
       "date": "2026-11-03",
       "subject": "Tee sheet views: say the shown state to screen readers, no price on checked-in lines, calendar follows the day stepper"
-    },
-    {
-      "h": "659066c6",
-      "date": "2026-11-03",
-      "subject": "Tee sheet views: Grid, List and Calendar"
     }
   ]
 }

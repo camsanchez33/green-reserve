@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-04 04:17 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `fce72d26` · working tree **9 dirty file(s)**
+Generated 2026-11-04 04:20 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `d88474dc` · working tree **4 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 72 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 73 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `d88474dc` | 2026-11-04 | PARTIAL-1 review fixes: split parts off Admin Home counts, confirms quote the card's figure |
 | `fce72d26` | 2026-11-04 | Partial check-in keeps the rest of the group booked (PARTIAL-1) |
 | `327461ef` | 2026-11-03 | Glass that actually shows, and a cleaner group-card checkout (#304) |
 | `5fb78584` | 2026-11-04 | Status board |
@@ -87,17 +88,12 @@ Generated 2026-11-04 04:17 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (9 file(s))
+### Uncommitted working tree (4 file(s))
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/cash-at-counter-db-test.ts`
 - `M scripts/split-booking-db-test.ts`
-- `M scripts/teesheet-till-test.ts`
-- `M scripts/tt-card-test.ts`
-- `M src/app/dashboard/page.tsx`
-- `M src/lib/admin-home.ts`
-- `M src/lib/counter-pay.ts`
+- `M src/lib/analytics.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -223,6 +219,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `d88474dc` 2026-11-04 — PARTIAL-1 review fixes: split parts off Admin Home counts, confirms quote the card's figure
 - `fce72d26` 2026-11-04 — Partial check-in keeps the rest of the group booked (PARTIAL-1)
 - `327461ef` 2026-11-03 — Glass that actually shows, and a cleaner group-card checkout (#304)
 - `5fb78584` 2026-11-04 — Status board
@@ -234,7 +231,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `3298d526` 2026-11-04 — Booking: a golfer signed in to an account that no longer exists books as a guest instead of crashing
 - `9aea09cc` 2026-11-03 — Tee sheet views: Grid, List and Calendar (#302)
 - `9652f9f5` 2026-11-03 — Tee sheet views: say the shown state to screen readers, no price on checked-in lines, calendar follows the day stepper
-- `659066c6` 2026-11-03 — Tee sheet views: Grid, List and Calendar
 
 ---
 
