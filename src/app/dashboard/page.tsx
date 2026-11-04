@@ -51,6 +51,7 @@ type TeeTime = {
   product?: { label: string } | null;
   /** TEES-1: the tee this time starts from (lib: tee-times route), for the side-by-side sheet. */
   tee?: string | null;
+  teeRank?: number;
   playersAvailable: number; playersBooked: number;
   greenFee: number; cartFee: number; walkingAllowed: boolean;
   /** RES-1: the tee time's resident price (cents); null = none. */

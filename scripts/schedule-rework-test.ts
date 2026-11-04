@@ -54,6 +54,8 @@ check('walking is set per price cell, weekday and weekend (CART-1)', page.includ
 // PRICES-1 (Cam 2026-11-04, "one table"): rounds side by side as columns, a row per price; one round at a time on a phone.
 check('prices are one table: a column per round sold (and per price change), a row per price', page.includes('const cols = sold.flatMap(r => names.map((_, col) => ({ key: r.key, col })).filter(c => soldIn(c.key, c.col)));')
   && page.includes('{subRows.map((sr, k) => (') && page.includes('colSpan={n}'));
+check('…renaming opens one field (keyed by round and price), every price change keeps a header (also one no round reaches), a lone price can be renamed', page.includes("(renaming.key ?? '') === key") && page.includes("periodHead('', col, 'hidden md:table-cell ', true)") && !page.includes('{names.length > 1 && ('));
+check('…a set of days no round is sold on says so', page.includes('if (!groupsOf.length) return'));
 check('…a phone shows one round with a switch', page.includes("const onPhone = (key: string) => key === shown ? '' : 'hidden md:table-cell ';") && page.includes('setPriceRound(r.key)'));
 check('the editor stacks on phones', !page.includes('<div className="grid grid-cols-3 gap-3">'));
 check('closing a day never tries to delete a row with cancelled bookings', bo.includes('bookings: { none: {} }'));

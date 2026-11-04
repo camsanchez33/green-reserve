@@ -27,6 +27,8 @@ export type BoardSlot = {
   /** TEES-1: the tee the round starts from ("1st tee", "10th tee", or a nine's name). Two or more on a
    *  day put them side by side, times lined up across. */
   tee?: string | null;
+  /** The tee's place in the course's nine order (the route), so columns follow the course. */
+  teeRank?: number;
 };
 type Tone = 'ok' | 'warn' | 'bad';
 
@@ -45,12 +47,6 @@ export const special = (g: BoardGroup) => (g.residentPlayers ?? 0) > 0 || (!!g.a
 
 /** The same groups the panel's Move offers: confirmed and not a no-show, or checked in. */
 const movable = (g: BoardGroup) => (g.status === 'confirmed' && !g.noShowAt) || g.status === 'completed';
-
-/** The 1st tee first, then the 10th, then any other (a nine's name). */
-const teeOrder = (t: string) => t === '1st tee' ? 0 : t === '10th tee' ? 1 : t ? 2 : 3;
-
-/** A time always has a tee once the course has nines (the route), so '' never shows beside another. */
-const teeName = (t: string) => t;
 
 const hourLabel = (h: number) => `${h % 12 || 12} ${h >= 12 ? 'PM' : 'AM'}`;
 const price = (v?: number) => v == null ? '' : `$${Number.isInteger(v) ? v : v.toFixed(2)}`;
@@ -91,7 +87,8 @@ export default function TeeSheetRows({ slots: allSlots, isPast, isGone, nextUpId
   const grid: React.CSSProperties = { gridTemplateColumns: `3.75rem 2.75rem repeat(${cols}, minmax(0, 1fr))` };
   const nowIndex = slots.findIndex(s => !isPast(s));
   // TEES-1 (Cam 2026-11-04, "side by side"): the day's tees, in the order the times first use them.
-  const lanes = [...new Set(allSlots.map(s => s.tee ?? ''))].sort((a, b) => teeOrder(a) - teeOrder(b) || a.localeCompare(b));
+  const rankOf = new Map(allSlots.map(s => [s.tee ?? '', s.teeRank ?? 0]));
+  const lanes = [...rankOf.keys()].sort((a, b) => (rankOf.get(a) ?? 0) - (rankOf.get(b) ?? 0) || a.localeCompare(b));
   const [lane, setLane] = useState('');
   const shownLane = lanes.includes(lane) ? lane : lanes[0];
   const laneGrid: React.CSSProperties = { gridTemplateColumns: `2.75rem repeat(${cols}, minmax(0, 1fr))` };
@@ -196,9 +193,13 @@ export default function TeeSheetRows({ slots: allSlots, isPast, isGone, nextUpId
                   {formatTeeTime(time).replace(/ (AM|PM)$/, '')}
                 </span>
                 {lanes.map(l => {
-                  const s = at.find(x => (x.tee ?? '') === l);
-                  const phone = l === shownLane ? '' : 'hidden md:grid ';
-                  return s ? slotCells(s, false, phone) : <span key={l} aria-hidden="true" className={'h-8 rounded-[4px] ' + (l === shownLane ? 'block' : 'hidden md:block')} />;
+                  // Every time on this tee at this minute — two rows can share one (a hand-added time, an old row).
+                  const ss = at.filter(x => (x.tee ?? '') === l);
+                  return (
+                    <div key={l} className={(l === shownLane ? 'block' : 'hidden md:block') + ' space-y-[3px] min-w-0'}>
+                      {ss.length ? ss.map(s => slotCells(s, false)) : <span aria-hidden="true" className="block h-8 rounded-[4px]" />}
+                    </div>
+                  );
                 })}
               </div>
             </div>
@@ -232,11 +233,11 @@ export default function TeeSheetRows({ slots: allSlots, isPast, isGone, nextUpId
           <div role="group" className="md:hidden mb-2 flex gap-1 p-1 rounded-[7px] bg-paper">
             {lanes.map(l => (
               <button key={l} type="button" aria-pressed={l === shownLane} onClick={() => setLane(l)}
-                className={'flex-1 min-h-[36px] rounded-[5px] text-[13px] ' + (l === shownLane ? 'bg-white text-ink font-semibold shadow-card' : 'text-ink-muted')}>{teeName(l)}</button>
+                className={'flex-1 min-h-[36px] rounded-[5px] text-[13px] ' + (l === shownLane ? 'bg-white text-ink font-semibold shadow-card' : 'text-ink-muted')}>{l}</button>
             ))}
           </div>
           <div style={laneRow} className={laneCols + 'hidden md:grid gap-x-3 pb-1 text-[13px] font-semibold text-ink'}>
-            <span />{lanes.map(l => <span key={l} className="px-1 truncate">{teeName(l)}</span>)}
+            <span />{lanes.map(l => <span key={l} className="px-1 truncate">{l}</span>)}
           </div>
         </>
       )}

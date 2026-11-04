@@ -93,13 +93,14 @@ export async function GET(req: NextRequest) {
   // front and a back nine they are the 1st and 10th tee; with more nines, the nine's own name. A time with
   // no round starts on the first nine. The sheet puts two or more tees on a day side by side.
   const nines = await prisma.nine.findMany({ where: { courseId: session.courseId }, orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }], select: { id: true, name: true } });
+  const teeIndex = (t: { product?: { nineIds: string[] } | null }) => Math.max(0, nines.findIndex(n => n.id === t.product?.nineIds?.[0]));
   const teeOf = (t: { product?: { nineIds: string[] } | null }) => {
     if (!nines.length) return null;
-    const i = Math.max(0, nines.findIndex(n => n.id === t.product?.nineIds?.[0]));
+    const i = teeIndex(t);
     return nines.length === 2 ? (i === 0 ? '1st tee' : '10th tee') : nines[i].name;
   };
   return NextResponse.json(teeTimes.map(t0 => {
-    const t = { ...t0, tee: teeOf(t0) };
+    const t = { ...t0, tee: teeOf(t0), teeRank: teeIndex(t0) };
     const bookings = (t as { bookings?: (Row & { id: string; golferAccountId?: string | null })[] }).bookings;
     if (!bookings) return t;
     const teeAt = courseRow ? teeTimeInstant(courseRow.timezone, t.date, t.time) : null;

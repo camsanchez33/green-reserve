@@ -56,7 +56,7 @@ function previewLines(p: Preview): string[] {
   if (p.repriced) out.push(`New price on ${p.repriced} tee time${p.repriced === 1 ? '' : 's'}; bookings keep theirs.`);
   if (p.removed) out.push(`Takes ${p.removed} open tee time${p.removed === 1 ? '' : 's'} off the sheet.`);
   if (p.bookedKept) out.push(`Keeps ${p.bookedKept} booked or blocked time${p.bookedKept === 1 ? '' : 's'} the schedule no longer has.`);
-  if (out.length === 0) out.push('No change in the next days; later days pick it up.');
+  if (out.length === 0) out.push('No change soon; later days follow.');
   return out;
 }
 
@@ -88,7 +88,7 @@ export default function SchedulesPage() {
   const [productsLoaded, setProductsLoaded] = useState(false);
   const [rulesView, setRulesView] = useState('');
   const [adding, setAdding] = useState<{ d: number; at: string } | null>(null);
-  const [renaming, setRenaming] = useState<{ d: number; col: number; name: string } | null>(null);
+  const [renaming, setRenaming] = useState<{ d: number; col: number; name: string; key?: string } | null>(null);
   const [blackouts, setBlackouts] = useState<{ id: string; date: string; reason: string }[]>([]);
   const [blackoutError, setBlackoutError] = useState('');
   const [closing, setClosing] = useState<{ date: string; reason: string } | null>(null);
@@ -357,6 +357,24 @@ export default function SchedulesPage() {
       const r = plan?.rounds.find(x => x.key === key);
       return r?.from || r?.to ? `${fmtTime(r.from ?? d.first)} – ${fmtTime(r.to ?? d.last)}` : 'All day';
     };
+    // A period's name (tap to rename), when it starts, and remove. One input at a time: renaming is keyed by round too.
+    const periodHead = (key: string, col: number, extra: string, unsold = false) => (
+      <th key={`${key}-${col}`} className={extra + 'text-left font-normal pr-4 pb-2 align-bottom'}>
+        {renaming && renaming.d === i && renaming.col === col && (renaming.key ?? '') === key ? (
+          <input autoFocus value={renaming.name} onChange={e => setRenaming({ ...renaming, name: e.target.value })}
+            onBlur={() => rename(i, col, renaming.name)} onKeyDown={e => { if (e.key === 'Enter') rename(i, col, renaming.name); if (e.key === 'Escape') setRenaming(null); }}
+            aria-label="Price name" className="w-32 bg-paper border border-line rounded-md px-2 py-1 text-[13.5px] text-ink" />
+        ) : (
+          <button type="button" disabled={!canEdit} onClick={() => setRenaming({ d: i, col, name: names[col], key })} title={canEdit ? 'Tap to rename' : undefined}
+            className="font-medium text-ink hover:text-pine text-left disabled:hover:text-ink">{names[col]}</button>
+        )}
+        <div className="text-[12px] text-ink-muted flex items-center gap-2">
+          {`from ${fmtTime(starts[col])}${unsold ? ' · not sold' : ''}`}
+          {col > 0 && canEdit && <button type="button" onClick={() => removeChange(i, col)} className="text-ink-muted hover:text-bad underline underline-offset-2">remove</button>}
+        </div>
+      </th>
+    );
+    if (!groupsOf.length) return <p className="text-[13.5px] text-ink-muted">Not sold.</p>;
     return (
       <div className="overflow-x-auto -mx-5 px-5">
         {groupsOf.length > 1 && (
@@ -377,27 +395,12 @@ export default function SchedulesPage() {
                 </th>
               ))}
             </tr>
-            {names.length > 1 && (
-              <tr>
-                <th />
-                {cols.map(({ key, col }) => (
-                  <th key={`${key}-${col}`} className={onPhone(key) + 'text-left font-normal pr-4 pb-2 align-bottom'}>
-                    {renaming && renaming.d === i && renaming.col === col ? (
-                      <input autoFocus value={renaming.name} onChange={e => setRenaming({ ...renaming, name: e.target.value })}
-                        onBlur={() => rename(i, col, renaming.name)} onKeyDown={e => { if (e.key === 'Enter') rename(i, col, renaming.name); if (e.key === 'Escape') setRenaming(null); }}
-                        aria-label="Price name" className="w-32 bg-paper border border-line rounded-md px-2 py-1 text-[13.5px] text-ink" />
-                    ) : (
-                      <button type="button" disabled={!canEdit} onClick={() => setRenaming({ d: i, col, name: names[col] })} title={canEdit ? 'Tap to rename' : undefined}
-                        className="font-medium text-ink hover:text-pine text-left disabled:hover:text-ink">{names[col]}</button>
-                    )}
-                    <div className="text-[12px] text-ink-muted flex items-center gap-2">
-                      {`from ${fmtTime(starts[col])}`}
-                      {col > 0 && canEdit && <button type="button" onClick={() => removeChange(i, col)} className="text-ink-muted hover:text-bad underline underline-offset-2">remove</button>}
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            )}
+            <tr>
+              <th />
+              {cols.map(({ key, col }) => periodHead(key, col, onPhone(key)))}
+              {/* A price change no sold round reaches still shows, so it can be renamed or removed. */}
+              {names.map((_, col) => cols.some(c => c.col === col) ? null : periodHead('', col, 'hidden md:table-cell ', true))}
+            </tr>
           </thead>
           <tbody>
             {subRows.map((sr, k) => (
