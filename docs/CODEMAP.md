@@ -158,7 +158,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/bookings` | member | file | GET POST | `src/app/api/bookings/route.ts` | 502 |
 | `/api/bookings/cancel` | golfer | file | POST | `src/app/api/bookings/cancel/route.ts` | 44 |
 | `/api/bookings/resident-rate` | public | public | GET | `src/app/api/bookings/resident-rate/route.ts` | 65 |
-| `/api/bookings/setup-intent` | public | public | POST | `src/app/api/bookings/setup-intent/route.ts` | 73 |
+| `/api/bookings/setup-intent` | public | public | POST | `src/app/api/bookings/setup-intent/route.ts` | 74 |
 | `/api/calcom/webhook` | public | public | POST | `src/app/api/calcom/webhook/route.ts` | 219 |
 | `/api/call/[token]` | public | public | GET | `src/app/api/call/[token]/route.ts` | 80 |
 | `/api/cam/device` | public | token | GET POST | `src/app/api/cam/device/route.ts` | 24 |
@@ -349,7 +349,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
-| `src/lib/prisma.ts` | 280 | 15 |  | `prisma` |
+| `src/lib/prisma.ts` | 281 | 15 |  | `prisma` |
 | `src/lib/session.ts` | 76 | 120 |  | `ACTIVE_COURSE_COOKIE`, `can`, `requirePermission`, `resolveDashboardSession`, `ResolvedSession`, `STAFF_FORBIDDEN`, `touchStaffSeen` |
 | `src/lib/admin-session.ts` | 70 | 201 |  | `AdminSession`, `AdminSessionUnavailable`, `areaGate`, `MANAGER_PLUS`, `OWNER_ONLY`, `ownerGateError`, `requireOwner`, `requireRole` +7 more |
 | `src/lib/email.ts` | 64 | 2158 |  | `BookingEmailData`, `escapeHtml`, `firstName`, `isPlaceholderEmail`, `PLACEHOLDER_EMAIL_DOMAIN`, `sendAdminDigest`, `sendAdminPasswordChangedNotification`, `sendAdminPasswordResetEmail` +72 more |
@@ -360,7 +360,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/admin-audit.ts` | 42 | 194 | BRAIN-1a (Cam 2026-10-22): | `ACTION_LABELS`, `auditAdmin`, `AuditEntry`, `bodyWithReason`, `changedFields`, `courseOfBooking`, `needReason`, `REASON_ACTIONS` +5 more |
 | `src/lib/stripe.ts` | 35 | 145 | Every charge, refund and SetupIntent GreenReserve makes goes through here. | `ACCESS_FEE_CENTS`, `chargeOnConnectedAccount`, `chargeOneIntent`, `MEMBERSHIP_FEE_RATE`, `membershipFeeCents`, `refundOnConnectedAccount`, `stripe` |
 | `src/lib/agreement-required.ts` | 32 | 124 | AGREEMENT_SPEC AG-3 — version bumps and re-acceptance. | `AGREEMENT_REQUIRED_MESSAGE`, `agreementDueByCourse`, `agreementOverdueCourses`, `agreementReacceptance`, `currentReacceptWindow`, `Reacceptance`, `ReacceptWindow`, `requireAgreementCurrent` +1 more |
-| `src/lib/auth.ts` | 31 | 202 |  | `DashboardSession`, `getGolferSession`, `getOperatorSession`, `signGolferToken`, `signMemberInviteToken`, `signPendingTwoFactorToken`, `signStaffResetToken`, `signStaffToken` +4 more |
+| `src/lib/auth.ts` | 31 | 212 |  | `DashboardSession`, `getGolferSession`, `getOperatorSession`, `signGolferToken`, `signMemberInviteToken`, `signPendingTwoFactorToken`, `signStaffResetToken`, `signStaffToken` +4 more |
 | `src/lib/booking-events.ts` | 28 | 85 |  | `BookingEventInput`, `EventActor`, `recordBookingEvent`, `recordBookingEventSafe`, `teeTimeInstant` |
 | `src/lib/money.ts` | 27 | 50 | Money conversions, in one place. | `centsToDollars`, `centsToDollarsOr0`, `dollarsToCents`, `dollarsToCentsOr0`, `fmtCents` |
 | `src/lib/contact.ts` | 25 | 20 | MAIL-1 (Cam 2026-10-22): | `ADMIN_EMAIL`, `BILLING_EMAIL`, `NOREPLY_EMAIL`, `SUPPORT_EMAIL` |
@@ -978,11 +978,11 @@ without opening anything.
 
 ### GolferAccount
 
-14 fields · 3 writer(s) · 14 reader(s)
+14 fields · 3 writer(s) · 15 reader(s)
 
 - fields: `id`, `email`, `password`, `firstName`, `lastName`, `phone`, `stripeCustomerId`, `resetToken`, `resetTokenExpiry`, `failedLoginAttempts`, `lockoutUntil`, `createdAt`, `bookings`, `memberships`
 - writers: `src/app/api/bookings/setup-intent/route.ts`, `src/app/api/golfer/auth/accept-invite/route.ts`, `src/app/api/golfer/auth/otp/verify/route.ts`
-- readers: `src/app/api/admin/golfers/route.ts`, `src/app/api/admin/search/route.ts`, `src/app/api/bookings/setup-intent/route.ts`, `src/app/api/courses/[slug]/account/route.ts`, `src/app/api/courses/[slug]/join/route.ts`, `src/app/api/courses/[slug]/packs/route.ts`, `src/app/api/golfer/auth/accept-invite/route.ts`, `src/app/api/golfer/auth/me/route.ts`, `src/app/api/golfer/auth/otp/verify/route.ts`, `src/app/api/golfer/profile/route.ts`, `src/app/api/operator/members/route.ts`, `src/lib/member-import.ts` +2 more (see `docs/codemap.json`)
+- readers: `src/app/api/admin/golfers/route.ts`, `src/app/api/admin/search/route.ts`, `src/app/api/bookings/setup-intent/route.ts`, `src/app/api/courses/[slug]/account/route.ts`, `src/app/api/courses/[slug]/join/route.ts`, `src/app/api/courses/[slug]/packs/route.ts`, `src/app/api/golfer/auth/accept-invite/route.ts`, `src/app/api/golfer/auth/me/route.ts`, `src/app/api/golfer/auth/otp/verify/route.ts`, `src/app/api/golfer/profile/route.ts`, `src/app/api/operator/members/route.ts`, `src/lib/auth.ts` +3 more (see `docs/codemap.json`)
 
 ### GolferBlock
 

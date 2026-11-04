@@ -129,6 +129,16 @@ export async function getGolferSession() {
     const { payload } = await jwtVerify(token, secret);
     const p = payload as { golferId: string; email: string; type: string; iat?: number; exp?: number };
     if (p.type !== 'golfer') return null;
+    // Cam 2026-11-04 (a booking failed: "golferAccount.update … Record to update not found"): a valid
+    // token can outlive its account — the test-data reset, a removed golfer. Such a session is no
+    // session: the cookie is cleared and the golfer carries on as a guest instead of hitting a crash
+    // (or a booking pointing at a missing account). One indexed lookup per golfer request.
+    const { prisma } = await import('./prisma');
+    const account = await prisma.golferAccount.findUnique({ where: { id: p.golferId }, select: { id: true } }).catch(() => undefined);
+    if (account === null) {
+      try { cookieStore.delete('gr_golfer'); } catch { /* read-only in a server component */ }
+      return null;
+    }
     // Sliding renewal: reissue when >50% of 90-day TTL has elapsed
     if (p.iat && p.exp) {
       const elapsed = Date.now() / 1000 - p.iat;

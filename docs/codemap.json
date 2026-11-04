@@ -3766,7 +3766,7 @@
     },
     {
       "path": "src/app/api/bookings/setup-intent/route.ts",
-      "lines": 73,
+      "lines": 74,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14799,7 +14799,7 @@
     },
     {
       "path": "src/lib/auth.ts",
-      "lines": 202,
+      "lines": 212,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14858,6 +14858,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./prisma",
         "jose",
         "next/headers"
       ],
@@ -22442,6 +22443,7 @@
         "src/lib/analytics.ts",
         "src/lib/announcement-audience.ts",
         "src/lib/approval-state.ts",
+        "src/lib/auth.ts",
         "src/lib/birdie/course-context.ts",
         "src/lib/birdie/guardrails.ts",
         "src/lib/birdie/proposals.ts",
@@ -29795,6 +29797,7 @@
         "src/app/api/golfer/auth/otp/verify/route.ts",
         "src/app/api/golfer/profile/route.ts",
         "src/app/api/operator/members/route.ts",
+        "src/lib/auth.ts",
         "src/lib/member-import.ts",
         "src/lib/member-session.ts",
         "src/lib/security-events.ts"

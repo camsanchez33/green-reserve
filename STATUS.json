@@ -1,20 +1,35 @@
 {
-  "generatedAt": "2026-11-03T19:20:42.547Z",
+  "generatedAt": "2026-11-04T02:37:45.123Z",
   "repo": {
-    "head": "659066c6",
+    "head": "5dd83d6d",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 4,
+    "dirtyCount": 5,
     "dirty": [
       "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M src/components/dashboard/TeeSheetCalendar.tsx",
-      " M src/components/dashboard/TeeSheetList.tsx"
+      " M src/app/api/bookings/setup-intent/route.ts",
+      " M src/lib/auth.ts",
+      "?? scripts/golfer-stale-session-test.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "9aea09cc",
+        "date": "2026-11-03T14:30:44-05:00",
+        "subject": "Tee sheet views: Grid, List and Calendar (#302)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "9652f9f5",
+        "date": "2026-11-03T19:20:54+00:00",
+        "subject": "Tee sheet views: say the shown state to screen readers, no price on checked-in lines, calendar follows the day stepper",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "659066c6",
         "date": "2026-11-03T19:15:39+00:00",
@@ -629,30 +644,18 @@
       "file": "STAFF_POLICY_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-26",
-      "ageDays": 7
+      "ageDays": 8
     },
     {
       "file": "OPERATOR_REWORK_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-25",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "ADMIN_V5_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-23",
-      "ageDays": 10
-    },
-    {
-      "file": "AGREEMENT_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-22",
-      "ageDays": 11
-    },
-    {
-      "file": "CALL_SCHEDULING_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-22",
       "ageDays": 11
     },
     {
@@ -662,28 +665,40 @@
       "ageDays": 11
     },
     {
+      "file": "AGREEMENT_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 12
+    },
+    {
+      "file": "CALL_SCHEDULING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 12
+    },
+    {
       "file": "ONBOARDING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "ONBOARDING_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "PUBLIC_SITE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "RECEIPT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "ADMIN_MASTER_PLAN.md",
@@ -839,6 +854,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "9aea09cc",
+      "date": "2026-11-03",
+      "subject": "Tee sheet views: Grid, List and Calendar (#302)"
+    },
+    {
+      "h": "9652f9f5",
+      "date": "2026-11-03",
+      "subject": "Tee sheet views: say the shown state to screen readers, no price on checked-in lines, calendar follows the day stepper"
+    },
+    {
       "h": "659066c6",
       "date": "2026-11-03",
       "subject": "Tee sheet views: Grid, List and Calendar"
@@ -887,16 +912,6 @@
       "h": "580df30d",
       "date": "2026-11-02",
       "subject": "queue/spec update"
-    },
-    {
-      "h": "cbc3bd08",
-      "date": "2026-11-02",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "f3ad66bb",
-      "date": "2026-11-02",
-      "subject": "Tee sheet: pay separately — split players off a group and pay their share"
     }
   ]
 }
