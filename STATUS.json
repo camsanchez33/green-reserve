@@ -1,24 +1,36 @@
 {
-  "generatedAt": "2026-11-04T20:31:35.487Z",
+  "generatedAt": "2026-11-04T20:36:41.343Z",
   "repo": {
-    "head": "a310d412",
+    "head": "3e901199",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 8,
+    "dirtyCount": 6,
     "dirty": [
-      "M CLAUDE.md",
-      " M docs/CODEMAP.md",
+      "M docs/CODEMAP.md",
       " M docs/codemap.json",
       " M scripts/ledger-view-db-test.ts",
-      " M src/app/api/operator/money/ledger/route.ts",
       " M src/components/dashboard/money/LedgerPanel.tsx",
-      " M src/lib/ledger-view.ts",
-      "?? src/lib/earned-terms.ts"
+      " M src/lib/earned-terms.ts",
+      " M src/lib/ledger-view.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "3e901199",
+        "date": "2026-11-04T20:31:44+00:00",
+        "subject": "EARNED-1: CLAUDE.md wording",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "3b06f8d3",
+        "date": "2026-11-04T20:31:38+00:00",
+        "subject": "Money: earned vs paid out on the Ledger (EARNED-1)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "ddeaa003",
         "date": "2026-11-04T14:08:21-05:00",
@@ -969,6 +981,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "3e901199",
+      "date": "2026-11-04",
+      "subject": "EARNED-1: CLAUDE.md wording"
+    },
+    {
+      "h": "3b06f8d3",
+      "date": "2026-11-04",
+      "subject": "Money: earned vs paid out on the Ledger (EARNED-1)"
+    },
+    {
       "h": "ddeaa003",
       "date": "2026-11-04",
       "subject": "Tee sheet: 1st and 10th tee side by side; Schedule: prices as one table (#306)"
@@ -1017,16 +1039,6 @@
       "h": "5fb78584",
       "date": "2026-11-04",
       "subject": "Status board"
-    },
-    {
-      "h": "b689a296",
-      "date": "2026-11-04",
-      "subject": "Glass: soften the glow a step and move the second one low right, darker light text and lighter dark text, so every token clears 4.5:1 on cards and on the bare page"
-    },
-    {
-      "h": "38ea94b2",
-      "date": "2026-11-04",
-      "subject": "Group card checkout: + adds on first tap, − says when it removes several, exact SKU scan, no reader promised where none is, tests"
     }
   ]
 }

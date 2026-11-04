@@ -515,7 +515,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/inquiry-email-failed.ts` | 2 | 16 | Launch walk (Cam 2026-10-31): | `noteEmailFailed` |
 | `src/lib/inquiry-signin.ts` | 2 | 124 | SD-11 — the "are you trying to sign in?" challenge that sits between the public sign-up form and a course that already exists. | `CODE_TTL_SECONDS`, `codeMatches`, `cookieOptions`, `generateCode`, `inertChallenge`, `macCode`, `MAX_CODE_ATTEMPTS`, `newChallengeId` +5 more |
 | `src/lib/late-add.ts` | 2 | 13 | Cam 2026-10-27: | `LATE_ADD_MESSAGE`, `LATE_ADD_MINUTES`, `lateForAdding` |
-| `src/lib/ledger-view.ts` | 2 | 248 | LEDGER-2 (Cam 2026-10-30: | `cashKeptOf`, `dayOf`, `dayStart`, `Earned`, `earnedOf`, `LEDGER_MAX_DAYS`, `LEDGER_MAX_ROWS`, `ledgerCsv` +10 more |
+| `src/lib/ledger-view.ts` | 2 | 249 | LEDGER-2 (Cam 2026-10-30: | `cashKeptOf`, `dayOf`, `dayStart`, `Earned`, `earnedOf`, `LEDGER_MAX_DAYS`, `LEDGER_MAX_ROWS`, `ledgerCsv` +10 more |
 | `src/lib/membership-pay-link.ts` | 2 | 45 | Membership dues pay links — sending one by email, and what to tell staff when it couldn't go. | `maybeSendPayLink`, `NOT_SENT` |
 | `src/lib/membership-renewal.ts` | 2 | 18 | When a paid membership's next term can be paid (LEDGER-1 review, Cam 2026-10-30). | `paidUntilRenewal`, `renewalWindowDays` |
 | `src/lib/no-fee-labels.ts` | 2 | 13 | Client-safe half of lib/cancel-fee-reason (no prisma): | `NO_FEE_LABEL`, `NoFeeReason` |
@@ -552,7 +552,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/course-rounds.ts` | 1 | 20 | Settings rework (Cam 2026-10-19): | `CandidateRound`, `candidateRounds`, `sameNines` |
 | `src/lib/cron-windows.ts` | 1 | 26 | R-CRON-003 — when the hourly cron sends its time-based emails. | `checkInEmailDue`, `cutoffWarningDue` |
 | `src/lib/dispute-evidence.ts` | 1 | 117 | ADMIN-C Money → Disputes (PR2b): | `EvidenceInput`, `evidenceText`, `loadEvidence` |
-| `src/lib/earned-terms.ts` | 1 | 32 | EARNED-1 (Cam 2026-11-04, "earned vs paid out"): | `EARNED_TERMS`, `EARNED_TITLE`, `EarnedKey`, `LEDGER_UI`, `PAID_OUT_TERMS`, `PAID_OUT_TITLE`, `PaidOutKey`, `Term` |
+| `src/lib/earned-terms.ts` | 1 | 33 | EARNED-1 (Cam 2026-11-04, "earned vs paid out"): | `EARNED_TERMS`, `EARNED_TITLE`, `EarnedKey`, `LEDGER_UI`, `PAID_OUT_TERMS`, `PAID_OUT_TITLE`, `PaidOutKey`, `Term` |
 | `src/lib/email-failed-notice.ts` | 1 | 9 | Launch walk (Cam 2026-10-31): | `emailFailedNotice` |
 | `src/lib/faq.ts` | 1 | 26 | SD-7: | `faqJsonLd`, `HOME_FAQ` |
 | `src/lib/fees-by-day.ts` | 1 | 28 | ADMIN-C Money → Overview chart: | `feesByDay`, `Window` |
@@ -661,7 +661,7 @@ Sorted the same way.
 | `src/components/dashboard/members/ImportMembers.tsx` | 1 | 124 | Members → Import a list (Cam 2026-10-19). | `ImportMembers` |
 | `src/components/dashboard/members/ResidentsCard.tsx` | 1 | 169 | RES-1 (Cam 2026-10-19): | `ResidentsCard` |
 | `src/components/dashboard/money/CancellationsPanel.tsx` | 1 | 88 | Money rework (Cam 2026-10-19: | `CancellationsPanel` |
-| `src/components/dashboard/money/LedgerPanel.tsx` | 1 | 219 | LEDGER-2 (Cam 2026-10-30: | `LedgerPanel` |
+| `src/components/dashboard/money/LedgerPanel.tsx` | 1 | 223 | LEDGER-2 (Cam 2026-10-30: | `LedgerPanel` |
 | `src/components/dashboard/money/PaymentsPanel.tsx` | 1 | 130 | Money rework (Cam 2026-10-19: | `PaymentsPanel`, `paymentStatus` |
 | `src/components/dashboard/money/PayoutsPanel.tsx` | 1 | 102 | SD-8 — the Stripe card, moved here out of Settings. | `PayoutsPanel` |
 | `src/components/dashboard/money/SalesPanel.tsx` | 1 | 244 | DENSE-2 (Cam 2026-10-27, after Toast's Sales Summary and Stripe's Today): | `SalesPanel` |

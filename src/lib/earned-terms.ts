@@ -27,5 +27,6 @@ export const PAID_OUT_TITLE = 'Paid out';
 export const LEDGER_UI = {
   feeColumn: 'Stripe fees', feeColumnDef: 'Stripe’s card processing fees',
   what: 'What', everything: 'Everything', how: 'How paid', anyWay: 'Any way', none: 'None.',
+  payout: 'payout', payouts: 'payouts',
   account: 'Account', course: 'Your course', grPart: 'GreenReserve part', by: 'By', stripe: 'Stripe',
 } as const;

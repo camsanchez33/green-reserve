@@ -144,13 +144,14 @@ async function stripePaidOut(accountId: string | null, tz: string, from: string,
   if (!accountId) return { payoutsCents: null, payoutCount: 0, inStripeCents: null };
   const opts = { stripeAccount: accountId };
   try {
-    // A day either side, then kept by the arrival day in the course's own timezone.
-    const gte = Math.floor(dayStart(tz, addDaysStr(from, -1)).getTime() / 1000), lt = Math.floor(dayStart(tz, addDaysStr(to, 2)).getTime() / 1000);
+    // A payout's arrival_date is a calendar day, sent as midnight UTC of that day — read it as a date, never through
+    // the course's timezone (west of UTC that would land it on the day before).
+    const gte = Date.parse(`${from}T00:00:00Z`) / 1000, lt = Date.parse(`${addDaysStr(to, 1)}T00:00:00Z`) / 1000;
     let cents = 0, count = 0, n = 0;
     for await (const p of stripe.payouts.list({ arrival_date: { gte, lt }, limit: 100 }, opts)) {
       if (++n > 2_000) return { payoutsCents: null, payoutCount: 0, inStripeCents: null };
       if (p.currency !== 'usd' || p.status === 'failed' || p.status === 'canceled') continue;
-      const d = dayOf(tz, new Date(p.arrival_date * 1000));
+      const d = new Date(p.arrival_date * 1000).toISOString().slice(0, 10);
       if (d < from || d > to) continue;
       cents += p.amount; count++;
     }

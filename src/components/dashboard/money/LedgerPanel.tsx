@@ -55,6 +55,8 @@ export function LedgerPanel() {
   const openDay = (day: string) => {
     if (open === day) { setOpen(null); return; }
     setOpen(day);
+    // EARNED-1: a filter is for the day it was picked on.
+    setFilter({ what: '', method: '' });
     if (!rows[day] || 'error' in rows[day]) fetchDay(day);
   };
 
@@ -69,7 +71,7 @@ export function LedgerPanel() {
   const line = (label: string, cents: number | null, opts: { minus?: boolean; total?: boolean; note?: string; title?: string } = {}) => (
     <div className={'flex items-baseline justify-between gap-4 py-1.5 ' + (opts.total ? 'border-t border-line mt-1 pt-2 font-semibold text-ink' : '')}>
       <span className={opts.total ? '' : 'text-ink-soft'} title={opts.title}>{label}{opts.note && <span className="text-ink-muted font-normal"> · {opts.note}</span>}</span>
-      <span className="tabular-nums">{cents === null ? '—' : opts.minus && cents ? `−${usd2(cents)}` : usd2(cents)}</span>
+      <span className="tabular-nums">{cents === null ? '—' : opts.minus ? usd2(-cents) : usd2(cents)}</span>
     </div>
   );
 
@@ -91,7 +93,7 @@ export function LedgerPanel() {
           {p && (
             <Card className="px-5 py-4 text-[13.5px]">
               <h3 className="text-[15px] font-semibold text-ink mb-1">{PAID_OUT_TITLE}</h3>
-              {PAID_OUT_TERMS.map(t => <Fragment key={t.key}>{line(t.label, p[t.key], { title: t.def, note: t.key === 'payoutsCents' && p.payoutsCents !== null ? `${p.payoutCount}` : undefined })}</Fragment>)}
+              {PAID_OUT_TERMS.map(t => <Fragment key={t.key}>{line(t.label, p[t.key], { title: t.def, note: t.key === 'payoutsCents' && p.payoutsCents !== null ? `${p.payoutCount} ${p.payoutCount === 1 ? LEDGER_UI.payout : LEDGER_UI.payouts}` : undefined })}</Fragment>)}
             </Card>
           )}
         </div>
@@ -192,17 +194,19 @@ function DayRows({ rows, tz, filter, onFilter }: { rows: LedgerRow[]; tz: string
         const out = r.direction === 'out';
         return (
           <Fragment key={r.id}>
-          <li onClick={e => { e.stopPropagation(); setOpenId(openId === r.id ? null : r.id); }} aria-expanded={openId === r.id} className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 py-1.5 text-[13px] cursor-pointer">
+          <li onClick={e => { e.stopPropagation(); setOpenId(openId === r.id ? null : r.id); }} className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 py-1.5 text-[13px] cursor-pointer">
+            <button type="button" aria-expanded={openId === r.id} aria-label={`${r.label} ${usd2(r.amountCents)}`} onClick={e => { e.stopPropagation(); setOpenId(openId === r.id ? null : r.id); }}
+              className="w-4 text-ink-muted rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-pine/40"><span aria-hidden="true">{openId === r.id ? '▾' : '▸'}</span></button>
             <span className="w-16 text-ink-muted tabular-nums">{time(r.at)}</span>
             <span className="text-ink">{r.label}{out ? ' · given back' : ''}</span>
             <span className="text-ink-muted">{r.methodLabel}{r.account === 'platform' ? ' · GreenReserve' : ''}</span>
-            {r.who && (r.href ? <Link href={r.href} className="text-pine hover:underline underline-offset-4">{r.who}</Link> : <span className="text-ink">{r.who}</span>)}
+            {r.who && (r.href ? <Link href={r.href} onClick={e => e.stopPropagation()} className="text-pine hover:underline underline-offset-4">{r.who}</Link> : <span className="text-ink">{r.who}</span>)}
             {r.note && <span className="text-ink-muted truncate max-w-[18rem]">{r.note}</span>}
             <span className={'ml-auto tabular-nums font-medium ' + (out ? 'text-bad' : 'text-ink')}>{out ? '−' : ''}{usd2(r.amountCents)}</span>
           </li>
           {/* EARNED-1: one payment's detail — where it went, GreenReserve's part, who did it, Stripe's id. */}
           {openId === r.id && (
-            <li className="pb-2 pl-[4.75rem] grid grid-cols-[auto_1fr] gap-x-4 gap-y-0.5 text-[12.5px]">
+            <li className="pb-2 pl-[6rem] grid grid-cols-[auto_1fr] gap-x-4 gap-y-0.5 text-[12.5px]">
               <span className="text-ink-muted">{LEDGER_UI.account}</span><span className="text-ink">{r.account === 'platform' ? 'GreenReserve' : LEDGER_UI.course}</span>
               <span className="text-ink-muted">{LEDGER_UI.grPart}</span><span className="text-ink tabular-nums">{usd2(r.platformFeeCents)}</span>
               <span className="text-ink-muted">{LEDGER_UI.by}</span><span className="text-ink">{r.actor}</span>

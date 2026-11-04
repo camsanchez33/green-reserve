@@ -12312,7 +12312,7 @@
     },
     {
       "path": "src/components/dashboard/money/LedgerPanel.tsx",
-      "lines": 219,
+      "lines": 223,
       "purpose": "LEDGER-2 (Cam 2026-10-30:",
       "brain": [],
       "exports": [
@@ -18379,7 +18379,7 @@
     },
     {
       "path": "src/lib/earned-terms.ts",
-      "lines": 32,
+      "lines": 33,
       "purpose": "EARNED-1 (Cam 2026-11-04, \"earned vs paid out\"):",
       "brain": [],
       "exports": [
@@ -20308,7 +20308,7 @@
     },
     {
       "path": "src/lib/ledger-view.ts",
-      "lines": 248,
+      "lines": 249,
       "purpose": "LEDGER-2 (Cam 2026-10-30:",
       "brain": [],
       "exports": [

@@ -63,7 +63,9 @@ async function cleanup() {
   bt.list = () => ({ async *[Symbol.asyncIterator]() { yield { currency: 'usd', type: 'charge', amount: 10300, created: Math.floor(Date.now() / 1000), fee_details: [{ type: 'stripe_fee', amount: 329, currency: 'usd' }, { type: 'application_fee', amount: 300, currency: 'usd' }] }; } });
   const po = stripe.payouts as unknown as { list: unknown }; const bal = stripe.balance as unknown as { retrieve: unknown };
   const nowS = Math.floor(Date.now() / 1000);
-  po.list = () => ({ async *[Symbol.asyncIterator]() { yield { currency: 'usd', status: 'paid', amount: 8000, arrival_date: nowS }; yield { currency: 'usd', status: 'failed', amount: 500, arrival_date: nowS }; yield { currency: 'usd', status: 'paid', amount: 700, arrival_date: nowS - 40 * 86400 }; } });
+  // Stripe sends arrival_date as midnight UTC of the arrival day: today's payout counts, tomorrow's doesn't (a New York course).
+  const midnight = (d: string) => Date.parse(`${d}T00:00:00Z`) / 1000;
+  po.list = () => ({ async *[Symbol.asyncIterator]() { yield { currency: 'usd', status: 'paid', amount: 8000, arrival_date: midnight(today) }; yield { currency: 'usd', status: 'paid', amount: 4400, arrival_date: midnight(addDaysStr(today, 1)) }; yield { currency: 'usd', status: 'failed', amount: 500, arrival_date: midnight(today) }; yield { currency: 'usd', status: 'paid', amount: 700, arrival_date: nowS - 40 * 86400 }; } });
   bal.retrieve = async () => ({ available: [{ amount: 1200, currency: 'usd' }], pending: [{ amount: 300, currency: 'usd' }, { amount: 99, currency: 'eur' }] });
   const ep = await ledgerDays(c.id, today, today, { withPayouts: true });
   ok('a day carries only Stripe\'s own fee (GreenReserve\'s is in the ledger already)', ep?.days[0].stripeFeeCents === 329, ep?.days[0]);
@@ -72,6 +74,8 @@ async function cleanup() {
   ok('…only asked for (the Payouts permission)', (await ledgerDays(c.id, today, today))?.paidOut === null);
   ok('pure: Stripe\'s fees unknown on any day → what the course keeps is unknown, never a guess', earnedOf([{ cardInCents: 100, cashInCents: 0, otherInCents: 0, outCents: 0, platformCents: 0, stripeFeeCents: null }]).keptCents === null
     && earnedOf([{ cardInCents: 1000, cashInCents: 500, otherInCents: 0, outCents: 200, platformCents: 30, stripeFeeCents: 59 }]).keptCents === 1211);
+  const panel = readFileSync('src/components/dashboard/money/LedgerPanel.tsx', 'utf8');
+  ok('a negative fee (a refund without its charge) shows one minus sign', panel.includes("opts.minus ? usd2(-cents) : usd2(cents)") && !panel.includes('`−${usd2(cents)}`'));
   ok('pure: cash at the course is cash in less cash given back', cashKeptOf([{ direction: 'in', method: 'cash', amountCents: 500 }, { direction: 'out', method: 'cash', amountCents: 100 }, { direction: 'in', method: 'card', amountCents: 999 }]) === 400);
   po.list = () => ({ async *[Symbol.asyncIterator]() { throw new Error('Stripe down'); } });
   const pdown = await ledgerDays(c.id, today, today, { withPayouts: true });

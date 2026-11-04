@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-04 20:31 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `a310d412` · working tree **8 dirty file(s)**
+Generated 2026-11-04 20:36 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `3e901199` · working tree **6 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 79 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 81 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `3e901199` | 2026-11-04 | EARNED-1: CLAUDE.md wording |
+| `3b06f8d3` | 2026-11-04 | Money: earned vs paid out on the Ledger (EARNED-1) |
 | `ddeaa003` | 2026-11-04 | Tee sheet: 1st and 10th tee side by side; Schedule: prices as one table (#306) |
 | `56fffcae` | 2026-11-04 | TEES-1 / PRICES-1 review fixes: same-tee times stack, nine order; one rename field, every price change shown |
 | `988566c5` | 2026-11-04 | Schedule: prices as one table, rounds side by side (PRICES-1) |
@@ -94,16 +96,14 @@ Generated 2026-11-04 20:31 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (8 file(s))
+### Uncommitted working tree (6 file(s))
 
-- `M CLAUDE.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
 - `M scripts/ledger-view-db-test.ts`
-- `M src/app/api/operator/money/ledger/route.ts`
 - `M src/components/dashboard/money/LedgerPanel.tsx`
+- `M src/lib/earned-terms.ts`
 - `M src/lib/ledger-view.ts`
-- `?? src/lib/earned-terms.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -229,6 +229,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `3e901199` 2026-11-04 — EARNED-1: CLAUDE.md wording
+- `3b06f8d3` 2026-11-04 — Money: earned vs paid out on the Ledger (EARNED-1)
 - `ddeaa003` 2026-11-04 — Tee sheet: 1st and 10th tee side by side; Schedule: prices as one table (#306)
 - `56fffcae` 2026-11-04 — TEES-1 / PRICES-1 review fixes: same-tee times stack, nine order; one rename field, every price change shown
 - `988566c5` 2026-11-04 — Schedule: prices as one table, rounds side by side (PRICES-1)
@@ -239,8 +241,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `fce72d26` 2026-11-04 — Partial check-in keeps the rest of the group booked (PARTIAL-1)
 - `327461ef` 2026-11-03 — Glass that actually shows, and a cleaner group-card checkout (#304)
 - `5fb78584` 2026-11-04 — Status board
-- `b689a296` 2026-11-04 — Glass: soften the glow a step and move the second one low right, darker light text and lighter dark text, so every token clears 4.5:1 on cards and on the bare page
-- `38ea94b2` 2026-11-04 — Group card checkout: + adds on first tap, − says when it removes several, exact SKU scan, no reader promised where none is, tests
 
 ---
 

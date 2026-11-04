@@ -117,14 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-11-04 20:31 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ a310d412</span>
-    <span>8 uncommitted</span>
+    <span>2026-11-04 20:36 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 3e901199</span>
+    <span>6 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">79 runs have shipped that the queue doesn't know about</div>
+<div class="lede">81 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-31. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">3e901199</span><span>EARNED-1: CLAUDE.md wording</span></li>
+<li><span class="h">3b06f8d3</span><span>Money: earned vs paid out on the Ledger (EARNED-1)</span></li>
 <li><span class="h">ddeaa003</span><span>Tee sheet: 1st and 10th tee side by side; Schedule: prices as one table (#306)</span></li>
 <li><span class="h">56fffcae</span><span>TEES-1 / PRICES-1 review fixes: same-tee times stack, nine order; one rename field, every price change shown</span></li>
 <li><span class="h">988566c5</span><span>Schedule: prices as one table, rounds side by side (PRICES-1)</span></li>
@@ -216,7 +218,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M CLAUDE.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/ledger-view-db-test.ts</code></li><li><code>M src/app/api/operator/money/ledger/route.ts</code></li><li><code>M src/components/dashboard/money/LedgerPanel.tsx</code></li><li><code>M src/lib/ledger-view.ts</code></li><li><code>?? src/lib/earned-terms.ts</code></li></ul>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/ledger-view-db-test.ts</code></li><li><code>M src/components/dashboard/money/LedgerPanel.tsx</code></li><li><code>M src/lib/earned-terms.ts</code></li><li><code>M src/lib/ledger-view.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -298,6 +300,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 14d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">3e901199</td><td class="num">2026-11-04</td><td>EARNED-1: CLAUDE.md wording</td></tr>
+<tr><td class="num">3b06f8d3</td><td class="num">2026-11-04</td><td>Money: earned vs paid out on the Ledger (EARNED-1)</td></tr>
 <tr><td class="num">ddeaa003</td><td class="num">2026-11-04</td><td>Tee sheet: 1st and 10th tee side by side; Schedule: prices as one table (#306)</td></tr>
 <tr><td class="num">56fffcae</td><td class="num">2026-11-04</td><td>TEES-1 / PRICES-1 review fixes: same-tee times stack, nine order; one rename field, every price change shown</td></tr>
 <tr><td class="num">988566c5</td><td class="num">2026-11-04</td><td>Schedule: prices as one table, rounds side by side (PRICES-1)</td></tr>
@@ -308,8 +312,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">fce72d26</td><td class="num">2026-11-04</td><td>Partial check-in keeps the rest of the group booked (PARTIAL-1)</td></tr>
 <tr><td class="num">327461ef</td><td class="num">2026-11-03</td><td>Glass that actually shows, and a cleaner group-card checkout (#304)</td></tr>
 <tr><td class="num">5fb78584</td><td class="num">2026-11-04</td><td>Status board</td></tr>
-<tr><td class="num">b689a296</td><td class="num">2026-11-04</td><td>Glass: soften the glow a step and move the second one low right, darker light text and lighter dark text, so every token clears 4.5:1 on cards and on the bare page</td></tr>
-<tr><td class="num">38ea94b2</td><td class="num">2026-11-04</td><td>Group card checkout: + adds on first tap, − says when it removes several, exact SKU scan, no reader promised where none is, tests</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>
