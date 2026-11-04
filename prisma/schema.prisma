@@ -733,6 +733,10 @@ model Booking {
   memberRateCents            Int?
   memberCartCents            Int?
   createdAt                  DateTime          @default(now())
+  /// PARTIAL-1 (Cam 2026-11-04): the booking this one was split off — the players of a group still
+  /// on their way when the rest checked in (or who paid separately, SPLIT-1). The tee sheet shows
+  /// it inside that group. Null = not split from anything.
+  splitFromId                String?
   paymentEvents              PaymentEvent[]
   shopItems                  BookingShopItem[]
 
@@ -744,6 +748,7 @@ model Booking {
   // MP-10 schema half: the surfaces that filter by check-in / payment time.
   @@index([courseId, checkedInAt])
   @@index([courseId, paidAt])
+  @@index([splitFromId])
 }
 
 model TeeTimeSchedule {

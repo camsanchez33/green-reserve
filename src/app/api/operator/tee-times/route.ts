@@ -52,6 +52,8 @@ export async function GET(req: NextRequest) {
       ...(withBookings ? { bookings: {
       where: { status: { in: ['confirmed', 'completed'] } }, orderBy: { createdAt: 'asc' },
       select: { id: true, golferName: true, golferEmail: true, golferPhone: true, golferAccountId: true, players: true, createdAt: true, status: true, paymentStatus: true, totalAmount: true, accessFeeTotal: true, checkInFailReason: true, source: true, noShowAt: true, paidOffline: true, checkedInPlayers: true, stripePaymentMethodId: true, cancellationFeeTotal: true, roundPaymentIntentId: true,
+        // PARTIAL-1: the group a booking was split off, so the card shows it inside that group.
+        splitFromId: true,
         // Tee audit 18: what a cancel now would do with the late fee — the confirm says it exactly.
         cancellationHoursAtBooking: true, lateFeeTimingAtBooking: true,
         // RES-1: residents in the group, and whether it is on a member rate.

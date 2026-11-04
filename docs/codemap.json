@@ -7504,7 +7504,7 @@
     },
     {
       "path": "src/app/api/operator/tee-times/route.ts",
-      "lines": 199,
+      "lines": 201,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8875,7 +8875,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1923,
+      "lines": 1945,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -13876,7 +13876,7 @@
     },
     {
       "path": "src/lib/admin-home.ts",
-      "lines": 130,
+      "lines": 131,
       "purpose": "ADMIN-C (Cam 2026-10-22, mockup C \"Clean hub\"):",
       "brain": [],
       "exports": [
@@ -14607,7 +14607,7 @@
     },
     {
       "path": "src/lib/analytics.ts",
-      "lines": 630,
+      "lines": 633,
       "purpose": "AN-1 (Cam 2026-10-01):",
       "brain": [],
       "exports": [
@@ -15899,7 +15899,7 @@
     },
     {
       "path": "src/lib/cancel-booking.ts",
-      "lines": 359,
+      "lines": 364,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -15929,6 +15929,7 @@
         "./refund-booking",
         "./round-packs",
         "./shop",
+        "./split-booking-db",
         "./stripe"
       ],
       "usedBy": [
@@ -16413,7 +16414,7 @@
     },
     {
       "path": "src/lib/checkin-booking.ts",
-      "lines": 519,
+      "lines": 536,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -16452,6 +16453,7 @@
         "./reader-rounds",
         "./round-shop-tax",
         "./shop",
+        "./split-booking-db",
         "./stripe"
       ],
       "usedBy": [
@@ -16640,7 +16642,7 @@
     },
     {
       "path": "src/lib/counter-pay.ts",
-      "lines": 303,
+      "lines": 316,
       "purpose": "A group pays for its round at the counter (cash, or the course's own card machine):",
       "brain": [],
       "exports": [
@@ -16695,6 +16697,7 @@
         "./reader-rounds",
         "./round-packs",
         "./round-shop-tax",
+        "./split-booking-db",
         "./stripe",
         "./tier-rates",
         "crypto"
@@ -24957,12 +24960,24 @@
     },
     {
       "path": "src/lib/split-booking-db.ts",
-      "lines": 106,
+      "lines": 150,
       "purpose": "SPLIT-1 (Cam 2026-11-02, \"they all want to pay separately … has to be seamless\"):",
       "brain": [],
       "exports": [
         {
+          "name": "hasShareToRefund",
+          "kind": "fn"
+        },
+        {
+          "name": "holdRefundCents",
+          "kind": "fn"
+        },
+        {
           "name": "splitBooking",
+          "kind": "fn"
+        },
+        {
+          "name": "splitOffLateArrivals",
           "kind": "fn"
         },
         {
@@ -24984,7 +24999,10 @@
         "./stripe"
       ],
       "usedBy": [
-        "src/app/api/operator/bookings/route.ts"
+        "src/app/api/operator/bookings/route.ts",
+        "src/lib/cancel-booking.ts",
+        "src/lib/checkin-booking.ts",
+        "src/lib/counter-pay.ts"
       ]
     },
     {
@@ -26929,6 +26947,10 @@
           "type": "DateTime"
         },
         {
+          "name": "splitFromId",
+          "type": "String?"
+        },
+        {
           "name": "paymentEvents",
           "type": "PaymentEvent[]"
         },
@@ -27024,6 +27046,7 @@
         "src/lib/round-shop-tax.ts",
         "src/lib/sample-data.ts",
         "src/lib/sent-messages.ts",
+        "src/lib/split-booking-db.ts",
         "src/lib/staff-refund.ts",
         "src/lib/weather-cancel.ts"
       ]

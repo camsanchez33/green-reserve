@@ -13,6 +13,7 @@ import { ensureShopTax, recordRoundShopTax } from './round-shop-tax';
 import { recordBookingEvent, recordBookingEventSafe, teeTimeInstant, type EventActor } from './booking-events';
 import { refundSeparateAccessFee, liveSeparateFee } from './access-fee';
 import { refundOnConnectedAccount } from './stripe';
+import { splitOffLateArrivals, holdRefundCents, hasShareToRefund } from './split-booking-db';
 import { claimTeeTime, TeeTimeClaimError, LATE_ADD_MESSAGE } from './claim-tee-time';
 import { todayIn } from './course-time';
 import { randomUUID } from 'crypto';
@@ -65,7 +66,7 @@ export async function settleAtCounter(courseId: string, bookingId: string, opts:
     where: { id: bookingId, courseId },
     select: { readerStartedAt: true, noShowAt: true, courseId: true, golferName: true, status: true, paymentStatus: true, players: true, totalAmount: true, accessFeeTotal: true, shopTotalCents: true, shopTaxCents: true,
       greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, residentPlayers: true, residentRateCents: true, memberRateCents: true, memberCartCents: true, feePaidCents: true,
-      cancellationFeeChargeId: true, teeTime: { select: { date: true, time: true } }, course: { select: { timezone: true, stripeAccountId: true } } },
+      cancellationFeeChargeId: true, cancellationFeeTotal: true, teeTime: { select: { date: true, time: true } }, course: { select: { timezone: true, stripeAccountId: true } } },
   });
   if (!booking) return { ok: false, status: 404, error: 'Not found' };
   // POS-3 R3b: on the card reader right now — cash would be a second payment. A claim
@@ -87,6 +88,14 @@ export async function settleAtCounter(courseId: string, bookingId: string, opts:
   // payment") is paid — marking it paid offline would hide that payment and
   // take the booking fee a second time.
   if (booking.paymentStatus === 'paid') return { ok: false, status: 409, error: 'This round was already paid by card — check them in instead.' };
+  // PARTIAL-1 (Cam 2026-11-04): the rest of the group is still on its way — they split off into their own
+  // booking (same card and rules, linked to this one) and stay open; this group then settles whole. A group
+  // that can't be split (a pack, a booking fee already paid) settles the old way, for the headcount that came.
+  if (cip !== undefined && cip < booking.players) {
+    const sp = await splitOffLateArrivals(courseId, bookingId, booking.players - cip, opts.actor);
+    if (sp.ok) return settleAtCounter(courseId, bookingId, { ...opts, checkedInPlayers: undefined });
+    console.log(JSON.stringify({ ev: 'counter.partial_split_refused', bookingId, error: sp.error }));
+  }
   const hadHoldFee = booking.paymentStatus === 'cancellation_fee_charged' && !!booking.cancellationFeeChargeId;
   // W2-7 B2: bring the shop items' sales tax up to date before the counter
   // closes the round. Cash is never blocked (PAY-2): if Stripe can't be
@@ -128,9 +137,13 @@ export async function settleAtCounter(courseId: string, bookingId: string, opts:
   let holdNote: string | null = null;
   if (hadHoldFee && booking.course.stripeAccountId) {
     try {
-      const refund = await refundOnConnectedAccount({ paymentIntentId: booking.cancellationFeeChargeId as string, connectedAccountId: booking.course.stripeAccountId });
+      // PARTIAL-1: a hold shared with a part split off this group gives back only this booking's share.
+      const share = await holdRefundCents({ id: bookingId, cancellationFeeChargeId: booking.cancellationFeeChargeId as string, cancellationFeeTotal: booking.cancellationFeeTotal });
+      if (hasShareToRefund(share)) {
+      const refund = await refundOnConnectedAccount({ paymentIntentId: booking.cancellationFeeChargeId as string, connectedAccountId: booking.course.stripeAccountId, amountCents: share });
       await recordMove({ courseId, what: 'hold', direction: 'out', method: 'card', account: 'course', amountCents: refund.amount, stripeId: refund.id, bookingId, actor: opts.actor.type, note: 'hold given back — paid at the counter' });
       await recordBookingEventSafe({ ...evBase, type: 'fee_refunded', amountCents: refund.amount, playerCount: booking.players, stripeId: refund.id, metadata: { reason: 'hold_refunded_at_checkin', paidOffline: true } });
+      }
     } catch (err) {
       holdNote = `The late-cancellation hold fee could not be refunded automatically (${err instanceof Error ? err.message : 'Stripe error'}) — GreenReserve will follow up.`;
     }

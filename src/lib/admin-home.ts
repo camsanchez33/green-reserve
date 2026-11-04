@@ -12,7 +12,8 @@ import { addDaysStr } from './course-time';
 
 const DAY = 86_400_000;
 // TEST-2: a test course's bookings never count toward the platform's numbers.
-const LIVE = { status: { not: 'cancelled' }, ...ON_REAL_COURSE } as const;
+// PARTIAL-1: a part split off a group (players still on their way, or paying separately) is not a new booking.
+const LIVE = { status: { not: 'cancelled' }, splitFromId: null, ...ON_REAL_COURSE } as const;
 
 /** Online bookings made between two instants: per platform hour (0–23), and when each was made. */
 async function onlineByHour(from: Date, to: Date): Promise<{ hours: number[]; at: Date[] }> {

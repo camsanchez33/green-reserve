@@ -12,7 +12,7 @@
 import { readFileSync } from 'fs';
 import { prisma } from '../src/lib/prisma';
 import { splitShares, splitRefusal } from '../src/lib/split-booking';
-import { splitBooking } from '../src/lib/split-booking-db';
+import { splitBooking, splitOffLateArrivals, holdRefundCents, hasShareToRefund } from '../src/lib/split-booking-db';
 import { todayIn, addDaysStr } from '../src/lib/course-time';
 
 const TAG = 'splittest';
@@ -95,8 +95,42 @@ async function main() {
   ok('…and the one who left gets their $10 share of the hold back — or staff are told exactly what to refund', rh.ok && rh.note === 'Split done, but $10.00 of the late-cancellation hold couldn’t be refunded automatically — refund it in Stripe.', rh.ok ? rh.note : rh);
   ok('a group with no hold has nothing to give back', r.ok && r.note === null);
   const db = readFileSync('src/lib/split-booking-db.ts', 'utf8');
+  ok('PARTIAL-1: a part split off is not a new booking on Admin Home', readFileSync('src/lib/admin-home.ts', 'utf8').includes("const LIVE = { status: { not: 'cancelled' }, splitFromId: null,"));
+  ok('…nor on Analytics (bookings, group size, channel, lead time)', (() => { const a = readFileSync('src/lib/analytics.ts', 'utf8'); return a.includes('const made = live.filter(b => !b.splitFromId);') && a.includes('bookings: made.length') && a.includes('for (const b of made) channel') && a.includes('const leadDays = made.map'); })());
+  ok('…the cash confirm quotes the card\'s own figure', readFileSync('src/app/dashboard/page.tsx', 'utf8').includes("bookingLifecycle(b, 'take_cash', cashDue)"));
   ok('the hold share is refunded on the course\'s account and written to the ledger', db.includes('refundOnConnectedAccount({ paymentIntentId: h.chargeId, connectedAccountId: h.account, amountCents: h.cents })') && db.includes("recordMove({ courseId: h.courseId, what: 'hold', direction: 'out'"));
   await prisma.course.update({ where: { id: course.id }, data: { lateFeeBasis: 'booking', stripeAccountId: '' } });
+
+  // PARTIAL-1 (Cam 2026-11-04: "if only one person's checked in the other should still be open"): the ones still on
+  // their way split off with the group's card, contact and rules, linked to it — and a hold is shared, not refunded.
+  await prisma.course.update({ where: { id: course.id }, data: { lateFeeBasis: 'player', noShowFeeBasis: 'player', noShowFeeCents: 1500, stripeAccountId: 'acct_test' } });
+  const late = await mk({ golferPhone: '5551234567', stripeCustomerId: 'cus_1', paymentStatus: 'cancellation_fee_charged', cancellationFeeChargeId: 'pi_hold2', cancellationFeeTotal: 4000, noShowFeeTotal: 6000, autoNoShowMinutesAtBooking: 30, lateFeeTimingAtBooking: 'hold_at_cutoff', source: 'online' });
+  const ra = await splitOffLateArrivals(course.id, late.id, 1, actor);
+  const lateAfter = await prisma.booking.findUniqueOrThrow({ where: { id: late.id } });
+  const coming = ra.ok ? await prisma.booking.findUniqueOrThrow({ where: { id: ra.newBookingId } }) : null;
+  ok('late arrivals: the 3 here keep 3 players, their share of the fees', ra.ok && lateAfter.players === 3 && lateAfter.cancellationFeeTotal === 3000 && lateAfter.noShowFeeTotal === 4500, lateAfter);
+  ok('…the one on the way keeps the card, contact and rules, linked to the group', !!coming && coming.splitFromId === late.id && coming.status === 'confirmed' && coming.players === 1
+    && coming.stripePaymentMethodId === 'pm_test' && coming.stripeCustomerId === 'cus_1' && coming.golferEmail === late.golferEmail && coming.golferPhone === '5551234567'
+    && coming.autoNoShowMinutesAtBooking === 30 && coming.lateFeeTimingAtBooking === 'hold_at_cutoff' && coming.source === 'online' && coming.golferName === 'John Smith · guest', coming);
+  ok('…and its share of the hold: same charge, $10, nothing refunded at the split', !!coming && coming.paymentStatus === 'cancellation_fee_charged' && coming.cancellationFeeChargeId === 'pi_hold2' && coming.cancellationFeeTotal === 1000 && coming.noShowFeeTotal === 1500 && ra.ok && ra.note === null, coming);
+  ok('…the fees still add up to the one booking', !!coming && coming.cancellationFeeTotal + lateAfter.cancellationFeeTotal === 4000 && coming.totalAmount + lateAfter.totalAmount === 26600);
+  ok('a shared hold comes back only as each part\'s share', (await holdRefundCents(lateAfter)) === 3000 && !!coming && (await holdRefundCents(coming)) === 1000);
+  const alone = await mk({ paymentStatus: 'cancellation_fee_charged', cancellationFeeChargeId: 'pi_alone', cancellationFeeTotal: 4000 });
+  ok('…a hold one booking owns still comes back whole', (await holdRefundCents(alone)) === undefined && hasShareToRefund(undefined) && !hasShareToRefund(0));
+  // A per-booking hold stays whole with the booker; the part on its way has none (and nothing for the cron to take).
+  await prisma.course.update({ where: { id: course.id }, data: { lateFeeBasis: 'booking', noShowFeeBasis: 'booking' } });
+  const flat = await mk({ paymentStatus: 'cancellation_fee_charged', cancellationFeeChargeId: 'pi_flat', cancellationFeeTotal: 2500 });
+  const rf = await splitOffLateArrivals(course.id, flat.id, 2, actor);
+  const flatRest = rf.ok ? await prisma.booking.findUniqueOrThrow({ where: { id: rf.newBookingId } }) : null;
+  ok('a per-booking hold stays whole with the booker; the rest carry no hold, card still on file', !!flatRest && flatRest.cancellationFeeTotal === 0 && flatRest.paymentStatus === 'card_on_file' && flatRest.cancellationFeeChargeId === '' && (await prisma.booking.findUniqueOrThrow({ where: { id: flat.id } })).cancellationFeeTotal === 2500, flatRest);
+  const nocard = await mk({ paymentStatus: 'no_payment_method', stripePaymentMethodId: '' });
+  const rn = await splitOffLateArrivals(course.id, nocard.id, 1, actor);
+  const nocardRest = rn.ok ? await prisma.booking.findUniqueOrThrow({ where: { id: rn.newBookingId } }) : null;
+  ok('no card on the booking: the rest pay in store when they come (pay link or counter)', !!nocardRest && nocardRest.paymentStatus === 'no_payment_method' && nocardRest.stripePaymentMethodId === '', nocardRest);
+  const ck = readFileSync('src/lib/checkin-booking.ts', 'utf8'); const cp = readFileSync('src/lib/counter-pay.ts', 'utf8'); const cb = readFileSync('src/lib/cancel-booking.ts', 'utf8');
+  ok('card check-in and cash split the rest off before settling, and fall back when it can\'t', ck.includes('splitOffLateArrivals(booking.courseId, bookingId, booking.players - arrived, actor)') && cp.includes('splitOffLateArrivals(courseId, bookingId, booking.players - cip, opts.actor)'));
+  ok('all three hold refunds give back only the booking\'s share', [ck, cp, cb].every(f => f.includes('holdRefundCents(') && f.includes('amountCents: share')));
+  await prisma.course.update({ where: { id: course.id }, data: { lateFeeBasis: 'booking', noShowFeeBasis: 'booking', noShowFeeCents: 0, stripeAccountId: '' } });
 
   // 3–4. refused in the database too, and a racing payment wins
   const paid = await mk({ paymentStatus: 'paid', roundPaymentIntentId: 'pi_1', status: 'completed' });
@@ -117,7 +151,8 @@ async function main() {
   ok('split + cash rings up only the new group, and a refused cash sale leaves it owing (said so)', route.includes("ringUpCash(session.courseId, { lines: [], bookingIds: [r.newBookingId], walkIns: []") && route.includes('cashError: cash.error'));
   const page = readFileSync('src/app/dashboard/page.tsx', 'utf8');
   ok('the tee sheet previews with the same splitShares the server uses', page.includes("import { splitShares } from '@/lib/split-booking';") && src.includes("import { splitShares, splitRefusal } from './split-booking';"));
-  ok('"Showed up" warns that the rest won\'t be charged', page.includes('won’t be charged.</p>') && page.includes('>Pay separately</button>'));
+  ok('"Showed up" says the rest stay booked (or, when the group can\'t split, that they won\'t be charged)', page.includes('{b.players - herePlayers} more stay booked.</p>') && page.includes('won’t be charged.</p>') && page.includes('>Pay separately</button>'));
+  ok('a part split off sits under its group, which says how many of the group checked in', page.includes('· with {parentGroup.golferName}</span>') && page.includes('{b.players} of {groupOf} checked in') && page.includes('const under = (id: string)'));
   ok('a group checked in short shows what was paid and how many played', page.includes('{b.checkedInPlayers} of {b.players} played') && page.includes('const paidShownCents = partlyPlayed'));
   ok('a group paid in cash shows what the counter took (no booking fee), not the booked total', page.includes(': b.paidOffline ? (b.totalAmount ?? 0) - (b.accessFeeTotal ?? 0) + (b.shopTotalCents ?? 0) + (b.shopTaxCents ?? 0)'));
 
