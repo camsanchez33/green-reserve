@@ -4,14 +4,18 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-04 04:20 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `d88474dc` · working tree **4 dirty file(s)**
+Generated 2026-11-04 04:44 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `988566c5` · working tree **8 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 73 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 77 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `988566c5` | 2026-11-04 | Schedule: prices as one table, rounds side by side (PRICES-1) |
+| `497612df` | 2026-11-04 | Tee sheet: 1st and 10th tee side by side (TEES-1) |
+| `80935727` | 2026-11-03 | Partial check-in keeps the rest of the group booked (PARTIAL-1) (#305) |
+| `c4ee41dd` | 2026-11-04 | PARTIAL-1: split parts are not new bookings on Analytics |
 | `d88474dc` | 2026-11-04 | PARTIAL-1 review fixes: split parts off Admin Home counts, confirms quote the card's figure |
 | `fce72d26` | 2026-11-04 | Partial check-in keeps the rest of the group booked (PARTIAL-1) |
 | `327461ef` | 2026-11-03 | Glass that actually shows, and a cleaner group-card checkout (#304) |
@@ -88,12 +92,16 @@ Generated 2026-11-04 04:20 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (4 file(s))
+### Uncommitted working tree (8 file(s))
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/split-booking-db-test.ts`
-- `M src/lib/analytics.ts`
+- `M scripts/schedule-rework-test.ts`
+- `M scripts/tees-side-by-side-test.ts`
+- `M src/app/api/operator/tee-times/route.ts`
+- `M src/app/dashboard/page.tsx`
+- `M src/app/dashboard/schedules/page.tsx`
+- `M src/components/dashboard/TeeSheetRows.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -219,6 +227,10 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `988566c5` 2026-11-04 — Schedule: prices as one table, rounds side by side (PRICES-1)
+- `497612df` 2026-11-04 — Tee sheet: 1st and 10th tee side by side (TEES-1)
+- `80935727` 2026-11-03 — Partial check-in keeps the rest of the group booked (PARTIAL-1) (#305)
+- `c4ee41dd` 2026-11-04 — PARTIAL-1: split parts are not new bookings on Analytics
 - `d88474dc` 2026-11-04 — PARTIAL-1 review fixes: split parts off Admin Home counts, confirms quote the card's figure
 - `fce72d26` 2026-11-04 — Partial check-in keeps the rest of the group booked (PARTIAL-1)
 - `327461ef` 2026-11-03 — Glass that actually shows, and a cleaner group-card checkout (#304)
@@ -227,10 +239,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `38ea94b2` 2026-11-04 — Group card checkout: + adds on first tap, − says when it removes several, exact SKU scan, no reader promised where none is, tests
 - `2ab4d6b2` 2026-11-04 — Group card checkout: party size behind Edit group, the card reader always shown with its reason, register-style tiles for shop items
 - `c472b412` 2026-11-04 — Glass: let the glow through the page layer, stronger glow and clearer cards, darker text tokens so it stays readable
-- `e54302c2` 2026-11-03 — Booking: a stale golfer sign-in books as a guest instead of crashing (#303)
-- `3298d526` 2026-11-04 — Booking: a golfer signed in to an account that no longer exists books as a guest instead of crashing
-- `9aea09cc` 2026-11-03 — Tee sheet views: Grid, List and Calendar (#302)
-- `9652f9f5` 2026-11-03 — Tee sheet views: say the shown state to screen readers, no price on checked-in lines, calendar follows the day stepper
 
 ---
 

@@ -49,6 +49,9 @@ type TeeTime = {
   id: string; date: string; time: string; holes: number;
   /** L2: the bookable product this slot sells (null on a simple course). */
   product?: { label: string } | null;
+  /** TEES-1: the tee this time starts from (lib: tee-times route), for the side-by-side sheet. */
+  tee?: string | null;
+  teeRank?: number;
   playersAvailable: number; playersBooked: number;
   greenFee: number; cartFee: number; walkingAllowed: boolean;
   /** RES-1: the tee time's resident price (cents); null = none. */
@@ -1359,7 +1362,7 @@ function DashboardPageInner() {
                 </div>
                 <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-ink">
                   <span>{panelSlot.status === 'blocked' ? <span className="italic text-ink-muted">{panelSlot.event ? `Held for ${panelSlot.event.name}` : 'Blocked'}</span> : <>{panelSlot.playersBooked} of {panelSlot.playersAvailable} players · {open <= 0 ? <span className="text-bad font-medium">Full</span> : `${open} open`}</>}</span>
-                  <span className="text-ink-soft">{panelSlot.product?.label ? `${panelSlot.product.label} · ` : ''}{panelSlot.holes} holes · ${panelSlot.greenFee.toFixed(2)} a player{panelSlot.cartFee > 0 ? ` + $${panelSlot.cartFee.toFixed(2)} cart` : ''}</span>
+                  <span className="text-ink-soft">{panelSlot.tee && (teeTimes ?? []).some(t => t.tee !== panelSlot.tee) ? `${panelSlot.tee} · ` : ''}{panelSlot.product?.label ? `${panelSlot.product.label} · ` : ''}{panelSlot.holes} holes · ${panelSlot.greenFee.toFixed(2)} a player{panelSlot.cartFee > 0 ? ` + $${panelSlot.cartFee.toFixed(2)} cart` : ''}</span>
                   {panelSlot.residentRateCents != null && <span className="text-ink-soft">Residents ${(panelSlot.residentRateCents / 100).toFixed(2)}</span>}
                 </div>
               </div>

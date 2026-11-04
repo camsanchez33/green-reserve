@@ -50,7 +50,13 @@ check('reopening a closed day rebuilds it', bo.includes('await generateTeeTimes(
 const prev = readFileSync('src/app/api/operator/schedule/preview/route.ts', 'utf8');
 check('the preview needs the edit permission and writes nothing', prev.includes("requirePermission(session, 'schedule.edit')") && !/prisma\.\w+\.(create|update|delete)/.test(readFileSync('src/lib/schedule-preview.ts', 'utf8')));
 check('rounds are switched on through setRoundSale (prices every column; tested in course-plan-test)', page.includes('setRoundSale(p, key, patch, defaultCell)'));
-check('walking is set per price cell, weekday and weekend (CART-1)', page.includes("label: 'Can walk'") && page.includes('walkPair(r.key, col)') && !page.includes('Golfers can walk'));
+check('walking is set per price cell, weekday and weekend (CART-1)', page.includes("label: 'Can walk'") && page.includes('walkPair(key, col)') && !page.includes('Golfers can walk'));
+// PRICES-1 (Cam 2026-11-04, "one table"): rounds side by side as columns, a row per price; one round at a time on a phone.
+check('prices are one table: a column per round sold (and per price change), a row per price', page.includes('const cols = sold.flatMap(r => names.map((_, col) => ({ key: r.key, col })).filter(c => soldIn(c.key, c.col)));')
+  && page.includes('{subRows.map((sr, k) => (') && page.includes('colSpan={n}'));
+check('…renaming opens one field (keyed by round and price), every price change keeps a header (also one no round reaches), a lone price can be renamed', page.includes("(renaming.key ?? '') === key") && page.includes("periodHead('', col, 'hidden md:table-cell ', true)") && !page.includes('{names.length > 1 && ('));
+check('…a set of days no round is sold on says so', page.includes('if (!groupsOf.length) return'));
+check('…a phone shows one round with a switch', page.includes("const onPhone = (key: string) => key === shown ? '' : 'hidden md:table-cell ';") && page.includes('setPriceRound(r.key)'));
 check('the editor stacks on phones', !page.includes('<div className="grid grid-cols-3 gap-3">'));
 check('closing a day never tries to delete a row with cancelled bookings', bo.includes('bookings: { none: {} }'));
 check('reopening a past day does not regenerate it', bo.includes('if (blackout.date < todayIn(course?.timezone))'));

@@ -1,20 +1,52 @@
 {
-  "generatedAt": "2026-11-04T04:20:33.237Z",
+  "generatedAt": "2026-11-04T04:44:32.175Z",
   "repo": {
-    "head": "d88474dc",
+    "head": "988566c5",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 4,
+    "dirtyCount": 8,
     "dirty": [
       "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/split-booking-db-test.ts",
-      " M src/lib/analytics.ts"
+      " M scripts/schedule-rework-test.ts",
+      " M scripts/tees-side-by-side-test.ts",
+      " M src/app/api/operator/tee-times/route.ts",
+      " M src/app/dashboard/page.tsx",
+      " M src/app/dashboard/schedules/page.tsx",
+      " M src/components/dashboard/TeeSheetRows.tsx"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "988566c5",
+        "date": "2026-11-04T04:38:07+00:00",
+        "subject": "Schedule: prices as one table, rounds side by side (PRICES-1)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "497612df",
+        "date": "2026-11-04T04:36:22+00:00",
+        "subject": "Tee sheet: 1st and 10th tee side by side (TEES-1)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "80935727",
+        "date": "2026-11-03T23:28:41-05:00",
+        "subject": "Partial check-in keeps the rest of the group booked (PARTIAL-1) (#305)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "c4ee41dd",
+        "date": "2026-11-04T04:20:35+00:00",
+        "subject": "PARTIAL-1: split parts are not new bookings on Analytics",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "d88474dc",
         "date": "2026-11-04T04:17:31+00:00",
@@ -923,6 +955,26 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "988566c5",
+      "date": "2026-11-04",
+      "subject": "Schedule: prices as one table, rounds side by side (PRICES-1)"
+    },
+    {
+      "h": "497612df",
+      "date": "2026-11-04",
+      "subject": "Tee sheet: 1st and 10th tee side by side (TEES-1)"
+    },
+    {
+      "h": "80935727",
+      "date": "2026-11-03",
+      "subject": "Partial check-in keeps the rest of the group booked (PARTIAL-1) (#305)"
+    },
+    {
+      "h": "c4ee41dd",
+      "date": "2026-11-04",
+      "subject": "PARTIAL-1: split parts are not new bookings on Analytics"
+    },
+    {
       "h": "d88474dc",
       "date": "2026-11-04",
       "subject": "PARTIAL-1 review fixes: split parts off Admin Home counts, confirms quote the card's figure"
@@ -961,26 +1013,6 @@
       "h": "c472b412",
       "date": "2026-11-04",
       "subject": "Glass: let the glow through the page layer, stronger glow and clearer cards, darker text tokens so it stays readable"
-    },
-    {
-      "h": "e54302c2",
-      "date": "2026-11-03",
-      "subject": "Booking: a stale golfer sign-in books as a guest instead of crashing (#303)"
-    },
-    {
-      "h": "3298d526",
-      "date": "2026-11-04",
-      "subject": "Booking: a golfer signed in to an account that no longer exists books as a guest instead of crashing"
-    },
-    {
-      "h": "9aea09cc",
-      "date": "2026-11-03",
-      "subject": "Tee sheet views: Grid, List and Calendar (#302)"
-    },
-    {
-      "h": "9652f9f5",
-      "date": "2026-11-03",
-      "subject": "Tee sheet views: say the shown state to screen readers, no price on checked-in lines, calendar follows the day stepper"
     }
   ]
 }

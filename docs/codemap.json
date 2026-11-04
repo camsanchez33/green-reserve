@@ -7504,7 +7504,7 @@
     },
     {
       "path": "src/app/api/operator/tee-times/route.ts",
-      "lines": 201,
+      "lines": 212,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8875,7 +8875,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1945,
+      "lines": 1948,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8980,7 +8980,7 @@
     },
     {
       "path": "src/app/dashboard/schedules/page.tsx",
-      "lines": 636,
+      "lines": 669,
       "purpose": "W2-6 Schedule simplification (Cam 2026-10-21:",
       "brain": [],
       "exports": [
@@ -11817,7 +11817,7 @@
     },
     {
       "path": "src/components/dashboard/TeeSheetRows.tsx",
-      "lines": 179,
+      "lines": 257,
       "purpose": "DENSE-4 (DENSE_UI_SPEC D1, Cam 2026-10-27:",
       "brain": [],
       "exports": [
@@ -30624,6 +30624,7 @@
         "src/app/api/operator/events/route.ts",
         "src/app/api/operator/nines/route.ts",
         "src/app/api/operator/tee-sets/route.ts",
+        "src/app/api/operator/tee-times/route.ts",
         "src/lib/course-events.ts",
         "src/lib/course-shape-setup.ts",
         "src/lib/schedule-preview.ts",

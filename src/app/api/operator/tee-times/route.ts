@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
     // and Stripe ids, on every staff terminal. The sheet renders these fields.
     include: {
       // L2: the product label rides along so the sheet can say "North + South · 18h".
-      product: { select: { label: true } },
+      product: { select: { label: true, nineIds: true } },
       // W2-9: the event holding a blocked time, so the sheet can name it.
       event: { select: { id: true, name: true } },
       ...(withBookings ? { bookings: {
@@ -89,7 +89,18 @@ export async function GET(req: NextRequest) {
     const k = keyOf.get(id);
     return noteRows.filter(n => n.bookingId === id || (!n.bookingId && k && n.golferKey === k)).slice(0, 3).map(n => n.body);
   };
-  return NextResponse.json(teeTimes.map(t => {
+  // TEES-1 (Cam 2026-11-04, "side by side"): the tee each time starts from — its round's first nine. With a
+  // front and a back nine they are the 1st and 10th tee; with more nines, the nine's own name. A time with
+  // no round starts on the first nine. The sheet puts two or more tees on a day side by side.
+  const nines = await prisma.nine.findMany({ where: { courseId: session.courseId }, orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }], select: { id: true, name: true } });
+  const teeIndex = (t: { product?: { nineIds: string[] } | null }) => Math.max(0, nines.findIndex(n => n.id === t.product?.nineIds?.[0]));
+  const teeOf = (t: { product?: { nineIds: string[] } | null }) => {
+    if (!nines.length) return null;
+    const i = teeIndex(t);
+    return nines.length === 2 ? (i === 0 ? '1st tee' : '10th tee') : nines[i].name;
+  };
+  return NextResponse.json(teeTimes.map(t0 => {
+    const t = { ...t0, tee: teeOf(t0), teeRank: teeIndex(t0) };
     const bookings = (t as { bookings?: (Row & { id: string; golferAccountId?: string | null })[] }).bookings;
     if (!bookings) return t;
     const teeAt = courseRow ? teeTimeInstant(courseRow.timezone, t.date, t.time) : null;
