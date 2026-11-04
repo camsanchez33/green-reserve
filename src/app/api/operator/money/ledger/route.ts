@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveDashboardSession, requirePermission } from '@/lib/session';
+import { resolveDashboardSession, requirePermission, can } from '@/lib/session';
 import { todayIn, addDaysStr } from '@/lib/course-time';
 import { ledgerDays, ledgerRows, ledgerCsv, LEDGER_MAX_DAYS, TooManyRows } from '@/lib/ledger-view';
 
@@ -46,6 +46,7 @@ async function read(req: NextRequest) {
     const csv = await ledgerCsv(session.courseId, range.from, range.to);
     return new NextResponse(csv ?? '', { headers: { ...noStore, 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': `attachment; filename="${course.slug}-ledger-${range.from}-to-${range.to}.csv"` } });
   }
-  const r = await ledgerDays(session.courseId, range.from, range.to);
-  return NextResponse.json({ range, today, ...(r ?? { days: [], stripeRead: false, stripeConnected: false }) }, { headers: noStore });
+  // EARNED-1: what reached the bank only with the Payouts permission (as Money → Payouts).
+  const r = await ledgerDays(session.courseId, range.from, range.to, { withPayouts: can(session, 'money.payouts') });
+  return NextResponse.json({ range, today, ...(r ?? { days: [], stripeRead: false, stripeConnected: false, earned: null, paidOut: null }) }, { headers: noStore });
 }
