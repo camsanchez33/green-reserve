@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-656 source files · 290 routes · 233 libraries · 70 models
+657 source files · 290 routes · 234 libraries · 70 models
 
 ## Single sources of truth
 
@@ -554,6 +554,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/dispute-evidence.ts` | 1 | 117 | ADMIN-C Money → Disputes (PR2b): | `EvidenceInput`, `evidenceText`, `loadEvidence` |
 | `src/lib/earned-terms.ts` | 1 | 33 | EARNED-1 (Cam 2026-11-04, "earned vs paid out"): | `EARNED_TERMS`, `EARNED_TITLE`, `EarnedKey`, `LEDGER_UI`, `PAID_OUT_TERMS`, `PAID_OUT_TITLE`, `PaidOutKey`, `Term` |
 | `src/lib/email-failed-notice.ts` | 1 | 9 | Launch walk (Cam 2026-10-31): | `emailFailedNotice` |
+| `src/lib/event-command.ts` | 1 | 68 | EVENTS-1 (Cam 2026-11-04, "events command center"): | `coveredCount`, `eventStrip`, `pastHeadcount`, `Strip`, `STRIP_TERMS`, `StripInput` |
 | `src/lib/faq.ts` | 1 | 26 | SD-7: | `faqJsonLd`, `HOME_FAQ` |
 | `src/lib/fees-by-day.ts` | 1 | 28 | ADMIN-C Money → Overview chart: | `feesByDay`, `Window` |
 | `src/lib/frost-delay.ts` | 1 | 100 | B-9 frost delay (Cam 2026-10-01: | `applyFrostDelay`, `FrostMove`, `FrostPlan`, `isFrostTime`, `planFrostDelay` |
@@ -605,7 +606,7 @@ Sorted the same way.
 | `src/components/dashboard/money/types.ts` | 4 | 22 | SD-8 — one booking shape for all three Money tabs. | `MoneyBooking`, `MoneyCourse` |
 | `src/components/dashboard/SmsConsentAsk.tsx` | 4 | 39 | SMS-1 (Cam 2026-11-02, Twilio A2P 10DLC — docs/SMS_OPT_IN.md): | `default (SmsConsentAsk)`, `SmsConsentDialog` |
 | `src/components/dashboard/DateRangeButton.tsx` | 3 | 117 | AN-3 (Cam 2026-10-19: | `DateRange`, `default (DateRangeButton)`, `presets`, `rangeLabel` |
-| `src/components/dashboard/events/EventDetail.tsx` | 3 | 425 | W2-9 Events: | `default (EventDetail)`, `EventData`, `EventFull`, `EventPlayer`, `EventTask` |
+| `src/components/dashboard/events/EventDetail.tsx` | 3 | 458 | W2-9 Events: | `default (EventDetail)`, `EventData`, `EventFull`, `EventPlayer`, `EventTask` |
 | `src/components/dashboard/money/PayoutsTable.tsx` | 3 | 73 | Money rework (Cam 2026-10-19): | `fmtDay`, `Payout`, `PayoutsData`, `PayoutsTable`, `usd` |
 | `src/components/dashboard/SignAgreements.tsx` | 3 | 222 | AGREEMENT_SPEC AG-2 §1 — the "Sign" step. | `default (SignAgreements)` |
 | `src/components/EmptyState.tsx` | 3 | 22 |  | `EmptyState` |

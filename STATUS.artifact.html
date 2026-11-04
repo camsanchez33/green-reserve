@@ -117,14 +117,17 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-11-04 20:36 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 3e901199</span>
-    <span>6 uncommitted</span>
+    <span>2026-11-04 20:54 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ fed27d5f</span>
+    <span>5 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">81 runs have shipped that the queue doesn't know about</div>
+<div class="lede">84 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-31. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">fed27d5f</span><span>Events: command center strip and organizer bill coverage per player (EVENTS-1)</span></li>
+<li><span class="h">f75dd615</span><span>Money: earned vs paid out on the Ledger (EARNED-1) (#307)</span></li>
+<li><span class="h">533f74d5</span><span>EARNED-1 review fixes: payout arrival day, one minus sign, per-day filter, keyboard detail</span></li>
 <li><span class="h">3e901199</span><span>EARNED-1: CLAUDE.md wording</span></li>
 <li><span class="h">3b06f8d3</span><span>Money: earned vs paid out on the Ledger (EARNED-1)</span></li>
 <li><span class="h">ddeaa003</span><span>Tee sheet: 1st and 10th tee side by side; Schedule: prices as one table (#306)</span></li>
@@ -218,7 +221,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/ledger-view-db-test.ts</code></li><li><code>M src/components/dashboard/money/LedgerPanel.tsx</code></li><li><code>M src/lib/earned-terms.ts</code></li><li><code>M src/lib/ledger-view.ts</code></li></ul>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/events-command-test.ts</code></li><li><code>M src/components/dashboard/events/EventDetail.tsx</code></li><li><code>M src/lib/event-command.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -300,6 +303,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 14d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">fed27d5f</td><td class="num">2026-11-04</td><td>Events: command center strip and organizer bill coverage per player (EVENTS-1)</td></tr>
+<tr><td class="num">f75dd615</td><td class="num">2026-11-04</td><td>Money: earned vs paid out on the Ledger (EARNED-1) (#307)</td></tr>
+<tr><td class="num">533f74d5</td><td class="num">2026-11-04</td><td>EARNED-1 review fixes: payout arrival day, one minus sign, per-day filter, keyboard detail</td></tr>
 <tr><td class="num">3e901199</td><td class="num">2026-11-04</td><td>EARNED-1: CLAUDE.md wording</td></tr>
 <tr><td class="num">3b06f8d3</td><td class="num">2026-11-04</td><td>Money: earned vs paid out on the Ledger (EARNED-1)</td></tr>
 <tr><td class="num">ddeaa003</td><td class="num">2026-11-04</td><td>Tee sheet: 1st and 10th tee side by side; Schedule: prices as one table (#306)</td></tr>
@@ -309,9 +315,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">80935727</td><td class="num">2026-11-03</td><td>Partial check-in keeps the rest of the group booked (PARTIAL-1) (#305)</td></tr>
 <tr><td class="num">c4ee41dd</td><td class="num">2026-11-04</td><td>PARTIAL-1: split parts are not new bookings on Analytics</td></tr>
 <tr><td class="num">d88474dc</td><td class="num">2026-11-04</td><td>PARTIAL-1 review fixes: split parts off Admin Home counts, confirms quote the card's figure</td></tr>
-<tr><td class="num">fce72d26</td><td class="num">2026-11-04</td><td>Partial check-in keeps the rest of the group booked (PARTIAL-1)</td></tr>
-<tr><td class="num">327461ef</td><td class="num">2026-11-03</td><td>Glass that actually shows, and a cleaner group-card checkout (#304)</td></tr>
-<tr><td class="num">5fb78584</td><td class="num">2026-11-04</td><td>Status board</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>
