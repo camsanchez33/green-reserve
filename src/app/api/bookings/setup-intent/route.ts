@@ -52,7 +52,8 @@ export async function POST(req: NextRequest) {
       const customer = await stripe.customers.create({ email, name: name || undefined });
       customerId = customer.id;
       if (golferSession) {
-        await prisma.golferAccount.update({ where: { id: golferSession.golferId }, data: { stripeCustomerId: customerId } });
+        // updateMany: never throws if the account went away mid-request (2026-11-04).
+        await prisma.golferAccount.updateMany({ where: { id: golferSession.golferId }, data: { stripeCustomerId: customerId } });
       }
     }
 
@@ -66,7 +67,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ clientSecret: setupIntent.client_secret });
   } catch (e) {
     console.error('Setup intent error:', e);
-    const msg = e instanceof Error ? e.message : 'Could not prepare card setup.';
-    return NextResponse.json({ error: msg }, { status: 500 });
+    // Never show a golfer a raw database or Stripe message (2026-11-04).
+    return NextResponse.json({ error: 'We couldn’t get the card form ready — try again in a moment.' }, { status: 500 });
   }
 }
