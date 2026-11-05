@@ -9680,7 +9680,7 @@
     },
     {
       "path": "src/app/privacy/page.tsx",
-      "lines": 255,
+      "lines": 258,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9839,7 +9839,7 @@
     },
     {
       "path": "src/app/terms/page.tsx",
-      "lines": 231,
+      "lines": 239,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -25819,7 +25819,7 @@
     },
     {
       "path": "src/lib/terms.ts",
-      "lines": 9,
+      "lines": 10,
       "purpose": "Bump this whenever /terms materially changes so old bookings keep an honest record of which version the golfer actually agreed to.",
       "brain": [],
       "exports": [

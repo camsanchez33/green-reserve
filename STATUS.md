@@ -4,15 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-05 04:49 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `8fa44fa2` · working tree clean
+Generated 2026-11-05 15:50 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `58c83859` · working tree **5 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 106 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 107 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `8fa44fa2` | 2026-11-05 | Database load from the audit: crons read only due tee dates, Stripe-id indexes, rate-limit sweep, sheet money strip asks less |
+| `d43ed864` | 2026-11-04 | Database audit: crons read only due dates, Stripe-id indexes, rate-limit sweep (#317) |
+| `ba4df316` | 2026-11-05 | Database load from the audit: crons read only due tee dates, Stripe-id indexes, rate-limit sweep, sheet money strip asks less |
 | `15c9cb2e` | 2026-11-04 | Security audit: money races (keyed refunds, recharge after refund, holds vs check-in, no-show vs still coming) (#316) |
 | `37df560b` | 2026-11-05 | Regenerate the code map and status board for lib/hold-key.ts |
 | `7cc238df` | 2026-11-05 | Money races from the security audit: keyed refunds, recharge after refund, cron hold vs check-in, no-show vs still coming |
@@ -120,6 +121,17 @@ Generated 2026-11-05 04:49 UTC · branch `claude/walkthrough-2-prioritization-ui
 | `efef5f62` | 2026-11-01 | Money audit fixes: dues charge only the shown total, tier term change stops auto-renew, credited round returns our fee, pay link opens on the day |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+
+### Uncommitted working tree (5 file(s))
+
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
+- `M src/app/privacy/page.tsx`
+- `M src/app/terms/page.tsx`
+- `M src/lib/terms.ts`
+
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -242,7 +254,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `8fa44fa2` 2026-11-05 — Database load from the audit: crons read only due tee dates, Stripe-id indexes, rate-limit sweep, sheet money strip asks less
+- `d43ed864` 2026-11-04 — Database audit: crons read only due dates, Stripe-id indexes, rate-limit sweep (#317)
+- `ba4df316` 2026-11-05 — Database load from the audit: crons read only due tee dates, Stripe-id indexes, rate-limit sweep, sheet money strip asks less
 - `15c9cb2e` 2026-11-04 — Security audit: money races (keyed refunds, recharge after refund, holds vs check-in, no-show vs still coming) (#316)
 - `37df560b` 2026-11-05 — Regenerate the code map and status board for lib/hold-key.ts
 - `7cc238df` 2026-11-05 — Money races from the security audit: keyed refunds, recharge after refund, cron hold vs check-in, no-show vs still coming
@@ -253,7 +266,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `5be9c0cf` 2026-11-05 — One card charge per round at a time: claim the round before charging; cash and the reader refuse a live claim
 - `4c7680ad` 2026-11-04 — Security audit: sign-in hardening (#313)
 - `bfa71331` 2026-11-05 — Sign-in hardening from the security audit: US/Canada-only texts, escaped email, exact phone linking, trimmed memberships list
-- `24b7474c` 2026-11-04 — Settings restyle to the DASH-D mockup (#312)
 
 ---
 
