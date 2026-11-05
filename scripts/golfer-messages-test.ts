@@ -65,7 +65,7 @@ async function main() {
   const logged = await prisma.courseMessage.findFirst({ where: { courseId: c.id } });
   check('the message is logged with its outcome', !!logged && logged.body.startsWith('Frost delay') && logged.failed === sent.failed.length && logged.sentEmail === sent.sentEmail);
 
-  check('a text leaves room for the course name', smsRoom('Hollow Creek') === SMS_CHARS - 'Hollow Creek'.length - 2);
+  check('a text leaves room for the "GreenReserve (course): " prefix', smsRoom('Hollow Creek') === SMS_CHARS - 'Hollow Creek'.length - 'GreenReserve (): '.length);
   const late = await sendCourseMessage({ courseId: c.id, window: { date: DAY }, body: 'Cart path only today.', sms: false, sentBy: 'op:test', budgetMs: -1 });
   check('out of time: every unsent golfer is named, nothing claimed', late.sentEmail === 0 && late.failed.length === 2 && late.failed.every(f => /Ran out of time/.test(f.error)), JSON.stringify(late.failed.map(f => f.error)));
   const lateLog = await prisma.courseMessage.findFirst({ where: { courseId: c.id, body: 'Cart path only today.' } });

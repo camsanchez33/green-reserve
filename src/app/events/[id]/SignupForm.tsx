@@ -73,7 +73,7 @@ export default function SignupForm({ eventId, accent, maxGroup, questions, payNo
             {i === 0 && p.phone.replace(/\D/g, '').length >= 10 && (
               <label className="flex items-start gap-2.5 text-[12.5px] text-ink-soft leading-snug cursor-pointer select-none">
                 <input type="checkbox" checked={smsOk} onChange={ev => setSmsOk(ev.target.checked)} className="mt-0.5 w-4 h-4 shrink-0" style={{ accentColor: accent }} />
-                <span>{smsWebConsentText(courseName).replace('this booking', 'this event')} <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline">Terms</a> · <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline">Privacy</a>. Optional.</span>
+                <span>{smsWebConsentText(courseName).replace('my booking at', 'my event at')} <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline">Terms</a> · <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline">Privacy</a>. Optional.</span>
               </label>
             )}
             {questions.map(q => (

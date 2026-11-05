@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-05 15:50 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `58c83859` · working tree **5 dirty file(s)**
+Generated 2026-11-05 19:48 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `d8502a80` · working tree **8 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 107 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 109 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `211403ca` | 2026-11-05 | Terms and Privacy: Twilio A2P campaign wording (#318) |
+| `acd00f57` | 2026-11-05 | Terms and Privacy: Twilio A2P campaign wording (SMS Terms heading, no selling or sharing opt-in data) |
 | `d43ed864` | 2026-11-04 | Database audit: crons read only due dates, Stripe-id indexes, rate-limit sweep (#317) |
 | `ba4df316` | 2026-11-05 | Database load from the audit: crons read only due tee dates, Stripe-id indexes, rate-limit sweep, sheet money strip asks less |
 | `15c9cb2e` | 2026-11-04 | Security audit: money races (keyed refunds, recharge after refund, holds vs check-in, no-show vs still coming) (#316) |
@@ -122,13 +124,16 @@ Generated 2026-11-05 15:50 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (5 file(s))
+### Uncommitted working tree (8 file(s))
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M src/app/privacy/page.tsx`
-- `M src/app/terms/page.tsx`
-- `M src/lib/terms.ts`
+- `M scripts/sms-consent-db-test.ts`
+- `M src/app/api/operator/bookings/route.ts`
+- `M src/app/api/operator/events/[id]/payments/route.ts`
+- `M src/app/api/operator/shop-sales/route.ts`
+- `M src/lib/golfer-messages.ts`
+- `M src/lib/sms-consent-copy.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -145,7 +150,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 105d | `b88c8bf3` | `RUN_QUEUE.md:2412` |
+| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 106d | `b88c8bf3` | `RUN_QUEUE.md:2412` |
 
 ## Not started — the actual queue
 
@@ -214,7 +219,7 @@ This is the distinction a raw checkbox count gets wrong.
 | spec | open refs | last touched | age |
 |---|---|---|---|
 | `CLAUDE.md` | 1 | 2026-11-04 | 0d |
-| `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 3d |
+| `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 4d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 15d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 9d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 10d |
@@ -254,6 +259,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `211403ca` 2026-11-05 — Terms and Privacy: Twilio A2P campaign wording (#318)
+- `acd00f57` 2026-11-05 — Terms and Privacy: Twilio A2P campaign wording (SMS Terms heading, no selling or sharing opt-in data)
 - `d43ed864` 2026-11-04 — Database audit: crons read only due dates, Stripe-id indexes, rate-limit sweep (#317)
 - `ba4df316` 2026-11-05 — Database load from the audit: crons read only due tee dates, Stripe-id indexes, rate-limit sweep, sheet money strip asks less
 - `15c9cb2e` 2026-11-04 — Security audit: money races (keyed refunds, recharge after refund, holds vs check-in, no-show vs still coming) (#316)
@@ -264,8 +271,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `ab7235ec` 2026-11-05 — One tee-time row per slot: fold existing duplicates, unique index, generation skips and never deletes a booked slot
 - `596b4b52` 2026-11-04 — Security audit: one card charge per round at a time (#314)
 - `5be9c0cf` 2026-11-05 — One card charge per round at a time: claim the round before charging; cash and the reader refuse a live claim
-- `4c7680ad` 2026-11-04 — Security audit: sign-in hardening (#313)
-- `bfa71331` 2026-11-05 — Sign-in hardening from the security audit: US/Canada-only texts, escaped email, exact phone linking, trimmed memberships list
 
 ---
 

@@ -15,7 +15,7 @@ import { formatTeeTime, formatTeeDay } from './format';
 export const MAX_MESSAGE_CHARS = 600;
 /** A text carries "{course}: {message}" in this many characters, then the STOP line. */
 export const SMS_CHARS = 300;
-export const smsRoom = (courseName: string) => SMS_CHARS - courseName.length - 2;
+export const smsRoom = (courseName: string) => SMS_CHARS - courseName.length - 'GreenReserve (): '.length;
 /** Stop well inside the route's maxDuration so a run always finishes and logs. */
 const BUDGET_MS = 240_000;
 
@@ -87,7 +87,7 @@ export async function sendCourseMessage(opts: {
   const failed: { name: string; how: 'email' | 'sms'; error: string }[] = [];
   let sentEmail = 0, sentSms = 0;
   // The route refuses a text that wouldn't fit; never cut one short here.
-  const text = `${course.name}: ${opts.body} Reply STOP to opt out.`;
+  const text = `GreenReserve (${course.name}): ${opts.body} Reply STOP to opt out.`;
   // Logged BEFORE sending and updated as it goes, so a run that dies part-way
   // still shows under "Recently sent" with what actually went out.
   const log = await prisma.courseMessage.create({ data: {
