@@ -100,6 +100,9 @@ export async function operatorHome(courseId: string, opts: { money: boolean; mes
     ? s.bookings.filter(b => b.status === 'confirmed' && !b.checkedInAt && !b.noShowAt && !declinedIds.has(b.id)).map(b => ({ id: b.id, teeTimeId: s.id, name: b.golferName, time: s.time.slice(0, 5) }))
     : []);
 
+  // Groups marked no-show today (Home's Needs you count).
+  const noShows = slots.reduce((n, s) => n + s.bookings.filter(b => b.noShowAt).length, 0);
+
   const comingUp: HomeSlot[] = slots.filter(s => s.time.slice(0, 5) >= clock.slice(0, 5)).slice(0, 6).map(s => ({
     id: s.id,
     time: s.time.slice(0, 5),
@@ -145,6 +148,7 @@ export async function operatorHome(courseId: string, opts: { money: boolean; mes
     declined,
     declinedTotal,
     late,
+    noShows,
     unreadMessages: unread,
     comingUp,
     // What is still missing from the booking page (lib/setup-missing), for logins that can fix it in Settings.

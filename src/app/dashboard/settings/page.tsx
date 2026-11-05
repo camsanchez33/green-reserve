@@ -25,6 +25,7 @@ import { facilityLines, RANGE_TYPES, FOOD_TYPES, TOURNAMENT_FREQ, type FacilityF
 import Link from 'next/link';
 import { Card } from '@/components/ui/Card';
 import { FinishSetup, type SetupItem } from '@/components/dashboard/settings/FinishSetup';
+import { showSetupField } from '@/lib/setup-missing';
 import { missingSetup } from '@/lib/setup-missing';
 import { ImageUpload } from '@/components/dashboard/ImageUpload';
 import { WhoPaysWhat } from '@/components/dashboard/settings/WhoPaysWhat';
@@ -457,9 +458,16 @@ function SettingsPageInner() {
   });
 
   const goTo = (sec: Section) => { setActive(sec); document.querySelector('main')?.scrollTo({ top: 0 }); window.scrollTo({ top: 0 }); };
+  // Cam 2026-11-05: a Finish-setting-up button lands on the field itself, outlined, not just the tab.
+  const [focusKey, setFocusKey] = useState(() => searchParams.get('focus') ?? '');
+  useEffect(() => {
+    if (!focusKey || !formLoaded) return;
+    const t = window.setTimeout(() => { showSetupField(focusKey); setFocusKey(''); }, 60);
+    return () => window.clearTimeout(t);
+  }, [focusKey, formLoaded, active]);
   const setupItems: SetupItem[] = missingSetup({
     ...form, galleryCount: photosLoaded ? photos.length : null, teeSetCount,
-  }).map(i => ({ ...i, onClick: () => goTo(i.section as Section) }));
+  }).map(i => ({ ...i, onClick: () => { if (active === i.section) showSetupField(i.key); else { setActive(i.section as Section); setFocusKey(i.key); } } }));
 
   return (
     <div className="flex flex-col min-h-screen md:h-screen bg-page md:overflow-hidden">
@@ -514,7 +522,7 @@ function SettingsPageInner() {
           {active==='Your course' && (
             <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_400px] xl:items-start">
               <SectionCard title="How you look">
-                <ImageUpload label="Your logo" kind="logo" value={(form.logoUrl as string)||''} onUploaded={url=>setForm(f=>({...f,logoUrl:url}))} hint="Square; a transparent PNG is best. Max 8MB. Saves on upload."/>
+                <div data-setup="logo"><ImageUpload label="Your logo" kind="logo" value={(form.logoUrl as string)||''} onUploaded={url=>setForm(f=>({...f,logoUrl:url}))} hint="Square; a transparent PNG is best. Max 8MB. Saves on upload."/></div>
                 <Field label="Your colour" hint="Tints your dashboard and booking page buttons.">
                   <div className="flex items-center gap-2">
                     <input type="color" value={(form.brandColor as string) || '#173B2A'} onChange={e => set('brandColor', e.target.value)}
@@ -524,7 +532,7 @@ function SettingsPageInner() {
                       className="bg-paper border border-line rounded-md px-3 py-2.5 text-sm font-mono text-ink outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors w-32"/>
                   </div>
                 </Field>
-                <ImageUpload label="Your course photo" kind="hero" value={(form.heroImageUrl as string)||''} onUploaded={url=>setForm(f=>({...f,heroImageUrl:url}))} hint="Wide landscape, behind your course name. Max 8MB. Saves on upload."/>
+                <div data-setup="hero"><ImageUpload label="Your course photo" kind="hero" value={(form.heroImageUrl as string)||''} onUploaded={url=>setForm(f=>({...f,heroImageUrl:url}))} hint="Wide landscape, behind your course name. Max 8MB. Saves on upload."/></div>
                 {/* PERS-1: the golfer's checkout, confirmation, check-in and manage pages wear the photo,
                     logo and colour above automatically. This note is the one thing they add. */}
                 <Field label="A note for golfers after they book" hint="Shown after booking and in the confirmation email. 400 characters.">
@@ -599,7 +607,7 @@ function SettingsPageInner() {
               </SectionCard>
 
               <SectionCard title="Contact">
-                <Field label="Phone"><FInput value={form.phone as string} onChange={v=>set('phone',v)} type="tel"/></Field>
+                <div data-setup="phone"><Field label="Phone"><FInput value={form.phone as string} onChange={v=>set('phone',v)} type="tel"/></Field></div>
                 <Field label="Website"><FInput value={form.website as string} onChange={v=>set('website',v)} placeholder="https://"/></Field>
                 <Field label="Course Type" hint={isStaffLogin ? 'Only the course owner can change this.' : undefined}>
                   <select value={form.type as string} onChange={e=>set('type',e.target.value)} disabled={isStaffLogin} className={iCls}>
@@ -613,14 +621,14 @@ function SettingsPageInner() {
                   <input type="number" value={(form.establishedYear as number) || ''} onChange={e => set('establishedYear', e.target.value ? Number(e.target.value) : null)}
                     placeholder="e.g. 1927" min={1850} max={new Date().getFullYear()} className={iCls}/>
                 </Field>
-                <Field label="Description">
+                <div data-setup="description"><Field label="Description">
                   {birdieOn && access.can('settings.edit') && (
                     <button type="button" onClick={askForDescription} className="mb-1.5 text-[12.5px] font-medium text-pine hover:underline underline-offset-4">
                       {String(form.description ?? '').trim() ? 'Ask the assistant to improve it' : 'Ask the assistant to write it'}
                     </button>
                   )}
                   <textarea value={(form.description as string)||''} onChange={e=>set('description',e.target.value)} rows={4} className={iCls + ' resize-none'} placeholder="History, signature holes, views"/>
-                </Field>
+                </Field></div>
                 <Field label="Gift Card URL" hint="Adds a gift card button to your course page.">
                   <FInput value={(form.giftCardUrl as string)||''} onChange={v=>set('giftCardUrl',v)} placeholder="https://"/>
                 </Field>
@@ -630,18 +638,18 @@ function SettingsPageInner() {
 
           {/* ── Course layout ── guided steps; each saves itself (CourseLayoutTab). */}
           {active==='Course layout' && (
-            <CourseLayoutTab
+            <div data-setup="teesets holes"><CourseLayoutTab
               holes={typeof form.holes === 'number' ? form.holes : null}
               par={typeof form.par === 'number' ? form.par : null}
               readOnly={isStaffLogin}
               onCourseSaved={patch => setForm(f => ({ ...f, ...patch }))}
-            />
+            /></div>
           )}
 
           {/* ── Photos ── */}
           {active==='Your course' && (
             <div className="space-y-5">
-              <SectionCard title="Gallery Photos">
+              <div data-setup="gallery"><SectionCard title="Gallery Photos">
                 <p className="text-sm text-ink-soft -mt-1">Up to 8 photos. Each saves on upload.</p>
                 {photoErr && (
                   <div className="flex items-center gap-2 bg-bad/5 border border-bad/20 text-bad rounded-md px-4 py-3 text-sm">
@@ -677,7 +685,7 @@ function SettingsPageInner() {
                   )}
                 </div>
                 <p className="text-xs text-ink-faint">{photos.length}/8 photos · JPEG, PNG, or WebP · Max 8MB each (large photos are auto-resized)</p>
-              </SectionCard>
+              </SectionCard></div>
             </div>
           )}
 

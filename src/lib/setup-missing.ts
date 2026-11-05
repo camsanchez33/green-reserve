@@ -46,5 +46,18 @@ export function missingSetup(f: SetupFacts): MissingItem[] {
   return keys.map(key => ({ key, ...ITEMS[key] }));
 }
 
-/** The Settings link that fixes an item, for pages outside Settings. */
-export const settingsHref = (section: string) => `/dashboard/settings?section=${encodeURIComponent(section)}`;
+/** The Settings link that fixes an item, for pages outside Settings. With a key, Settings scrolls to that
+ *  field and outlines it (Cam 2026-11-05: "take them exactly where they need to go"). */
+export const settingsHref = (section: string, key?: string) => `/dashboard/settings?section=${encodeURIComponent(section)}${key ? `&focus=${encodeURIComponent(key)}` : ''}`;
+
+/** Scrolls to the element marked data-setup="<key>", outlines it for a moment and focuses its first field. */
+export function showSetupField(key: string): boolean {
+  if (typeof document === 'undefined') return false;
+  const el = document.querySelector<HTMLElement>(`[data-setup~="${CSS.escape(key)}"]`);
+  if (!el) return false;
+  el.scrollIntoView({ block: 'center', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  el.classList.add('setup-flash');
+  window.setTimeout(() => el.classList.remove('setup-flash'), 2600);
+  el.querySelector<HTMLElement>('input:not([type=hidden]):not([type=file]), textarea, select')?.focus({ preventScroll: true });
+  return true;
+}

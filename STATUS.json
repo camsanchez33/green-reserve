@@ -1,24 +1,46 @@
 {
-  "generatedAt": "2026-11-05T19:48:03.942Z",
+  "generatedAt": "2026-11-05T22:47:12.818Z",
   "repo": {
-    "head": "d8502a80",
+    "head": "3a498eee",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 8,
+    "dirtyCount": 16,
     "dirty": [
-      "M docs/CODEMAP.md",
+      "M STATUS.artifact.html",
+      " M STATUS.json",
+      " M STATUS.md",
+      " M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/sms-consent-db-test.ts",
-      " M src/app/api/operator/bookings/route.ts",
-      " M src/app/api/operator/events/[id]/payments/route.ts",
-      " M src/app/api/operator/shop-sales/route.ts",
-      " M src/lib/golfer-messages.ts",
-      " M src/lib/sms-consent-copy.ts"
+      " M scripts/onboarding-review-step-test.ts",
+      " M src/app/dashboard/home/page.tsx",
+      " M src/app/dashboard/settings/page.tsx",
+      " M src/app/globals.css",
+      " M src/components/dashboard/home/HomeBoard.tsx",
+      " M src/components/dashboard/settings/FinishSetup.tsx",
+      " M src/lib/operator-home.ts",
+      " M src/lib/setup-missing.ts",
+      "?? scripts/home-page-test.ts",
+      "?? src/app/api/operator/weather/",
+      "?? src/lib/weather.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "901ba99b",
+        "date": "2026-11-05T15:57:23-05:00",
+        "subject": "Text-message opt-in names GreenReserve as the sender (Twilio campaign review) (#319)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "d12656c7",
+        "date": "2026-11-05T19:51:35+00:00",
+        "subject": "Text-message opt-in names GreenReserve as the sender, with the carriers' disclosure phrases; texts lead with GreenReserve",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "211403ca",
         "date": "2026-11-05T11:22:09-05:00",
@@ -966,33 +988,21 @@
       "ageDays": 15
     },
     {
-      "file": "STAFF_POLICY_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-26",
-      "ageDays": 9
-    },
-    {
       "file": "OPERATOR_REWORK_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-25",
       "ageDays": 10
     },
     {
+      "file": "STAFF_POLICY_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-26",
+      "ageDays": 10
+    },
+    {
       "file": "ADMIN_V5_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-23",
-      "ageDays": 12
-    },
-    {
-      "file": "AGREEMENT_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-22",
-      "ageDays": 13
-    },
-    {
-      "file": "CALL_SCHEDULING_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-22",
       "ageDays": 13
     },
     {
@@ -1002,28 +1012,40 @@
       "ageDays": 13
     },
     {
+      "file": "AGREEMENT_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 14
+    },
+    {
+      "file": "CALL_SCHEDULING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 14
+    },
+    {
       "file": "ONBOARDING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "ONBOARDING_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "PUBLIC_SITE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "RECEIPT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "ADMIN_MASTER_PLAN.md",
@@ -1179,6 +1201,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "901ba99b",
+      "date": "2026-11-05",
+      "subject": "Text-message opt-in names GreenReserve as the sender (Twilio campaign review) (#319)"
+    },
+    {
+      "h": "d12656c7",
+      "date": "2026-11-05",
+      "subject": "Text-message opt-in names GreenReserve as the sender, with the carriers' disclosure phrases; texts lead with GreenReserve"
+    },
+    {
       "h": "211403ca",
       "date": "2026-11-05",
       "subject": "Terms and Privacy: Twilio A2P campaign wording (#318)"
@@ -1227,16 +1259,6 @@
       "h": "ab7235ec",
       "date": "2026-11-05",
       "subject": "One tee-time row per slot: fold existing duplicates, unique index, generation skips and never deletes a booked slot"
-    },
-    {
-      "h": "596b4b52",
-      "date": "2026-11-04",
-      "subject": "Security audit: one card charge per round at a time (#314)"
-    },
-    {
-      "h": "5be9c0cf",
-      "date": "2026-11-05",
-      "subject": "One card charge per round at a time: claim the round before charging; cash and the reader refuse a live claim"
     }
   ]
 }

@@ -117,14 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-11-05 19:48 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ d8502a80</span>
-    <span>8 uncommitted</span>
+    <span>2026-11-05 22:47 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 3a498eee</span>
+    <span>16 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">109 runs have shipped that the queue doesn't know about</div>
+<div class="lede">111 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-31. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">901ba99b</span><span>Text-message opt-in names GreenReserve as the sender (Twilio campaign review) (#319)</span></li>
+<li><span class="h">d12656c7</span><span>Text-message opt-in names GreenReserve as the sender, with the carriers' disclosure phrases; texts lead with GreenReserve</span></li>
 <li><span class="h">211403ca</span><span>Terms and Privacy: Twilio A2P campaign wording (#318)</span></li>
 <li><span class="h">acd00f57</span><span>Terms and Privacy: Twilio A2P campaign wording (SMS Terms heading, no selling or sharing opt-in data)</span></li>
 <li><span class="h">d43ed864</span><span>Database audit: crons read only due dates, Stripe-id indexes, rate-limit sweep (#317)</span></li>
@@ -246,7 +248,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/sms-consent-db-test.ts</code></li><li><code>M src/app/api/operator/bookings/route.ts</code></li><li><code>M src/app/api/operator/events/[id]/payments/route.ts</code></li><li><code>M src/app/api/operator/shop-sales/route.ts</code></li><li><code>M src/lib/golfer-messages.ts</code></li><li><code>M src/lib/sms-consent-copy.ts</code></li></ul>
+<ul class="plain"><li><code>M STATUS.artifact.html</code></li><li><code>M STATUS.json</code></li><li><code>M STATUS.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/onboarding-review-step-test.ts</code></li><li><code>M src/app/dashboard/home/page.tsx</code></li><li><code>M src/app/dashboard/settings/page.tsx</code></li><li><code>M src/app/globals.css</code></li><li><code>M src/components/dashboard/home/HomeBoard.tsx</code></li><li><code>M src/components/dashboard/settings/FinishSetup.tsx</code></li><li><code>M src/lib/operator-home.ts</code></li><li><code>M src/lib/setup-missing.ts</code></li><li><code>?? scripts/home-page-test.ts</code></li><li><code>?? src/app/api/operator/weather/</code></li><li><code>?? src/lib/weather.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -291,16 +293,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-11-04 &middot; 0d</td></tr>
 <tr><td><code>DENSE_UI_SPEC.md</code></td><td class="num">1</td><td class="num">2026-11-01 &middot; 4d</td></tr>
 <tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-20 &middot; 15d</td></tr>
-<tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-26 &middot; 9d</td></tr>
 <tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-25 &middot; 10d</td></tr>
-<tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 12d</td></tr>
-<tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 13d</td></tr>
-<tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 13d</td></tr>
+<tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-26 &middot; 10d</td></tr>
+<tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 13d</td></tr>
 <tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 13d</td></tr>
-<tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 13d</td></tr>
-<tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 13d</td></tr>
-<tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 13d</td></tr>
-<tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 13d</td></tr>
+<tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 14d</td></tr>
+<tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 14d</td></tr>
+<tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 14d</td></tr>
+<tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 14d</td></tr>
+<tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 14d</td></tr>
+<tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 14d</td></tr>
 <tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 15d</td></tr>
 <tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 15d</td></tr>
 <tr><td><code>ADMIN_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 15d</td></tr>
@@ -328,6 +330,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 15d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">901ba99b</td><td class="num">2026-11-05</td><td>Text-message opt-in names GreenReserve as the sender (Twilio campaign review) (#319)</td></tr>
+<tr><td class="num">d12656c7</td><td class="num">2026-11-05</td><td>Text-message opt-in names GreenReserve as the sender, with the carriers' disclosure phrases; texts lead with GreenReserve</td></tr>
 <tr><td class="num">211403ca</td><td class="num">2026-11-05</td><td>Terms and Privacy: Twilio A2P campaign wording (#318)</td></tr>
 <tr><td class="num">acd00f57</td><td class="num">2026-11-05</td><td>Terms and Privacy: Twilio A2P campaign wording (SMS Terms heading, no selling or sharing opt-in data)</td></tr>
 <tr><td class="num">d43ed864</td><td class="num">2026-11-04</td><td>Database audit: crons read only due dates, Stripe-id indexes, rate-limit sweep (#317)</td></tr>
@@ -338,8 +342,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">df7ad5bd</td><td class="num">2026-11-04</td><td>Security audit: one tee-time row per slot (migration) (#315)</td></tr>
 <tr><td class="num">8286cf5a</td><td class="num">2026-11-05</td><td>Tests: give each test tee time its own slot (one row per slot is now enforced)</td></tr>
 <tr><td class="num">ab7235ec</td><td class="num">2026-11-05</td><td>One tee-time row per slot: fold existing duplicates, unique index, generation skips and never deletes a booked slot</td></tr>
-<tr><td class="num">596b4b52</td><td class="num">2026-11-04</td><td>Security audit: one card charge per round at a time (#314)</td></tr>
-<tr><td class="num">5be9c0cf</td><td class="num">2026-11-05</td><td>One card charge per round at a time: claim the round before charging; cash and the reader refuse a live claim</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>
