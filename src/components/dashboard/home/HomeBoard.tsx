@@ -20,6 +20,9 @@ const when = (iso: string) => new Date(iso).toLocaleString('en-US', { weekday: '
 const hourLabel = (h: number) => `${((h + 11) % 12) + 1}${h < 12 ? 'a' : 'p'}`;
 const dayLabel = (d: string, i: number) => i === 0 ? 'Today' : `${new Date(d + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' })} ${Number(d.slice(8, 10))}`;
 const monthName = (m: string) => new Date(m + '-15T12:00:00Z').toLocaleDateString('en-US', { month: 'long', timeZone: 'UTC' });
+/** The heat map's shade for a share booked (0–1). */
+const fill = (pct: number) => `color-mix(in oklab, var(--color-pine) ${Math.round(8 + pct * 84)}%, var(--color-line-soft))`;
+const initials = (name: string) => (name.trim().split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]?.toUpperCase()).join('') || 'S');
 const BTN = 'px-3 min-h-[36px] rounded-[7px] bg-white border border-line text-[13px] font-medium text-ink hover:bg-paper disabled:opacity-50';
 
 /** The note the last shift left — and a box to leave one for the next. */
@@ -38,19 +41,24 @@ export function ShiftNotes({ initial }: { initial: ShiftNote[] }) {
   }
   return (
     <Card className="px-5 py-4">
-      {notes.length === 0 && !writing && (
-        <div className="flex items-center gap-3"><span className="flex-1 text-[14px] text-ink-muted">No note from the last shift.</span><button className={BTN} onClick={() => setWriting(true)}>Leave a note</button></div>
-      )}
+      {/* Cam 2026-11-05 ("make the notes thing look better"): staff notes — what the last one left, and a box for the next. */}
+      <div className="flex items-baseline gap-3 mb-3"><h2 className="text-[15px] font-semibold text-ink">Staff notes</h2>
+        {notes.length > 0 && <span className="text-[12px] text-ink-muted tabular-nums">{notes.length}</span>}</div>
+      {notes.length === 0 && !writing && <p className="mb-2 text-[13.5px] text-ink-muted">Nothing from the last shift.</p>}
       {notes.map(n => (
-        <div key={n.id} className="flex gap-4 items-start py-1 [&+&]:border-t [&+&]:border-line [&+&]:pt-3 [&+&]:mt-2">
+        <div key={n.id} className="flex gap-3 items-start rounded-[7px] bg-paper/70 px-3 py-2.5 mb-2">
+          <span aria-hidden className="mt-0.5 w-7 h-7 shrink-0 rounded-full bg-pine/10 text-pine text-[11.5px] font-semibold grid place-items-center">{initials(n.authorName)}</span>
           <div className="flex-1 min-w-0">
-            <div className="text-[12.5px] text-ink-muted"><span className="font-semibold text-ink">Shift note</span>{n.authorName ? ` · ${n.authorName}` : ''} · {when(n.createdAt)}</div>
-            <p className="mt-1 text-[14px] leading-relaxed text-ink whitespace-pre-line break-words">{n.body}</p>
+            <div className="text-[12.5px] text-ink-muted"><span className="font-medium text-ink">{n.authorName || 'Staff'}</span> · {when(n.createdAt)}</div>
+            <p className="mt-0.5 text-[14px] leading-relaxed text-ink whitespace-pre-line break-words">{n.body}</p>
           </div>
           <button className={BTN} disabled={busy === n.id} onClick={() => send('PATCH', { id: n.id }, n.id)}>{busy === n.id ? 'Saving…' : 'Done'}</button>
         </div>
       ))}
-      {notes.length > 0 && !writing && <button className="mt-2 text-[13px] font-medium text-ink-soft hover:text-ink" onClick={() => setWriting(true)}>Leave a note</button>}
+      {!writing && (
+        <button type="button" onClick={() => setWriting(true)}
+          className="w-full text-left rounded-[7px] border border-dashed border-line-strong px-3 py-2.5 text-[13.5px] text-ink-muted hover:text-ink hover:border-pine/40">Leave a note for the next shift…</button>
+      )}
       {writing && (
         <div className="mt-2 flex flex-col gap-2">
           <textarea value={text} onChange={e => setText(e.target.value)} rows={3} maxLength={1000} autoFocus aria-label="Note for the next shift"
@@ -129,18 +137,25 @@ export function WeekAheadCard({ week, canDeal }: { week: WeekAhead; canDeal: boo
   if (week.hours.length === 0) return <Card className="px-5 py-4"><h2 className="text-[15px] font-semibold text-ink">Week ahead</h2><p className="mt-2 text-[14px] text-ink-muted">No tee times in the next seven days.</p></Card>;
   return (
     <Card className="px-5 py-4 min-w-0">
-      <div className="flex items-baseline gap-3"><h2 className="text-[15px] font-semibold text-ink">Week ahead</h2><span className="ml-auto text-[12px] text-ink-muted">Players booked of spots · darker is fuller</span></div>
-      <div className="mt-3 grid gap-[3px] items-center" style={{ gridTemplateColumns: `52px repeat(${week.hours.length}, minmax(0,1fr))` }} role="table" aria-label="Week ahead by hour">
+      {/* HOME-1 (Cam 2026-11-05, "clearer about what it shows"): how full each hour is, a scale, and each day's total. */}
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1"><h2 className="text-[15px] font-semibold text-ink">Week ahead · how full each hour is</h2>
+        <span className="ml-auto flex items-center gap-1.5 text-[12px] text-ink-muted">Empty
+          {[0, 0.25, 0.5, 0.75, 1].map(p => <span key={p} className="inline-block w-3.5 h-3 rounded-[2px]" style={{ backgroundColor: fill(p) }} />)}
+          Full <span className="inline-block w-3.5 h-3 rounded-[2px] ml-2" style={{ boxShadow: 'inset 0 0 0 1px var(--color-line)' }} /> no tee times</span></div>
+      <div className="mt-3 grid gap-[3px] items-center" style={{ gridTemplateColumns: `52px repeat(${week.hours.length}, minmax(0,1fr)) 64px` }} role="table" aria-label="Week ahead: players booked of spots, by hour">
         <div />
         {week.hours.map(h => <div key={h} className="text-[11px] text-ink-muted text-center" role="columnheader">{hourLabel(h)}</div>)}
+        <div className="text-[11px] text-ink-muted text-right" role="columnheader">Booked</div>
         {week.days.map((d, i) => (
           <div key={d.date} className="contents" role="row">
             <div className="text-[12px] text-ink-soft truncate" role="rowheader">{dayLabel(d.date, i)}</div>
             {d.cells.map((c, j) => {
               const pct = c.offered ? c.booked / c.offered : 0;
-              return <div key={j} role="cell" title={`${dayLabel(d.date, i)} ${hourLabel(week.hours[j])}:00 · ${c.offered ? `${c.booked} of ${c.offered}` : 'no tee times'}`}
-                className="h-5 rounded-[3px]" style={c.offered ? { backgroundColor: `color-mix(in oklab, var(--color-pine) ${Math.round(8 + pct * 84)}%, var(--color-line-soft))` } : { backgroundColor: 'transparent', boxShadow: 'inset 0 0 0 1px var(--color-line-soft)' }} />;
+              return <div key={j} role="cell" title={`${dayLabel(d.date, i)} ${hourLabel(week.hours[j])} · ${c.offered ? `${c.booked} of ${c.offered} spots booked (${Math.round(pct * 100)}%)` : 'no tee times'}`}
+                className="h-6 rounded-[3px]" style={c.offered ? { backgroundColor: fill(pct) } : { backgroundColor: 'transparent', boxShadow: 'inset 0 0 0 1px var(--color-line)' }} />;
             })}
+            {(() => { const b = d.cells.reduce((s, c) => s + c.booked, 0), o = d.cells.reduce((s, c) => s + c.offered, 0);
+              return <div role="cell" className="text-[12px] text-right tabular-nums text-ink">{o ? <>{b}<span className="text-ink-muted"> / {o}</span></> : <span className="text-ink-faint">—</span>}</div>; })()}
           </div>
         ))}
       </div>

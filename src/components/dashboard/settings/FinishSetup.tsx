@@ -13,15 +13,29 @@ export type SetupItem = { key: string; title: string; why: string; action: strin
 // Three rows at most until asked — the list sits above every section, so a
 // long one would push the section someone opened below the fold.
 const SHOWN = 3;
+const TITLE = 'Finish setting up';
 
-export function FinishSetup({ items }: { items: SetupItem[] }) {
+export function FinishSetup({ items, compact = false }: { items: SetupItem[]; compact?: boolean }) {
   const [all, setAll] = useState(false);
   if (items.length === 0) return null;
+  // Home (Cam 2026-11-05, "more concise"): one line — each missing thing is its own button to the exact field.
+  if (compact) return (
+    <Card className="border-l-[3px] border-l-warn px-4 py-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+      <span className="text-[14px] font-semibold text-ink">{TITLE}</span>
+      <span className="text-[12.5px] text-ink-muted tabular-nums">{items.length}</span>
+      <span className="flex flex-wrap gap-2 sm:ml-auto">
+        {items.map(i => (
+          <button key={i.key} onClick={i.onClick} title={i.why}
+            className="text-[12.5px] font-medium text-pine border border-pine/30 hover:bg-pine/5 rounded-md px-2.5 py-1 transition-colors">{i.action}</button>
+        ))}
+      </span>
+    </Card>
+  );
   const shown = all ? items : items.slice(0, SHOWN);
   return (
     <Card className="mb-5 border-l-[3px] border-l-warn">
       <div className="px-5 pt-4 pb-2">
-        <h2 className="text-[15px] font-semibold text-ink">Finish setting up</h2>
+        <h2 className="text-[15px] font-semibold text-ink">{TITLE}</h2>
         <p className="text-[13.5px] text-ink-soft mt-0.5">
           {items.length === 1 ? 'One thing is' : `${items.length} things are`} still missing from your course page.
         </p>

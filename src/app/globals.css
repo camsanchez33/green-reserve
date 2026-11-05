@@ -235,3 +235,6 @@ body {
 @media (prefers-reduced-motion: no-preference) {
   html:has([data-home-root]) { scroll-behavior: smooth; }
 }
+
+/* Cam 2026-11-05: a Finish-setting-up link outlines the field it lands on, for a moment. */
+.setup-flash { outline: 2px solid var(--color-warn); outline-offset: 4px; border-radius: 8px; transition: outline-color .6s; }

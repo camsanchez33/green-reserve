@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-05 19:48 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `d8502a80` · working tree **8 dirty file(s)**
+Generated 2026-11-05 22:47 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `3a498eee` · working tree **16 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 109 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 111 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `901ba99b` | 2026-11-05 | Text-message opt-in names GreenReserve as the sender (Twilio campaign review) (#319) |
+| `d12656c7` | 2026-11-05 | Text-message opt-in names GreenReserve as the sender, with the carriers' disclosure phrases; texts lead with GreenReserve |
 | `211403ca` | 2026-11-05 | Terms and Privacy: Twilio A2P campaign wording (#318) |
 | `acd00f57` | 2026-11-05 | Terms and Privacy: Twilio A2P campaign wording (SMS Terms heading, no selling or sharing opt-in data) |
 | `d43ed864` | 2026-11-04 | Database audit: crons read only due dates, Stripe-id indexes, rate-limit sweep (#317) |
@@ -124,16 +126,24 @@ Generated 2026-11-05 19:48 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (8 file(s))
+### Uncommitted working tree (16 file(s))
 
+- `M STATUS.artifact.html`
+- `M STATUS.json`
+- `M STATUS.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/sms-consent-db-test.ts`
-- `M src/app/api/operator/bookings/route.ts`
-- `M src/app/api/operator/events/[id]/payments/route.ts`
-- `M src/app/api/operator/shop-sales/route.ts`
-- `M src/lib/golfer-messages.ts`
-- `M src/lib/sms-consent-copy.ts`
+- `M scripts/onboarding-review-step-test.ts`
+- `M src/app/dashboard/home/page.tsx`
+- `M src/app/dashboard/settings/page.tsx`
+- `M src/app/globals.css`
+- `M src/components/dashboard/home/HomeBoard.tsx`
+- `M src/components/dashboard/settings/FinishSetup.tsx`
+- `M src/lib/operator-home.ts`
+- `M src/lib/setup-missing.ts`
+- `?? scripts/home-page-test.ts`
+- `?? src/app/api/operator/weather/`
+- `?? src/lib/weather.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -221,16 +231,16 @@ This is the distinction a raw checkbox count gets wrong.
 | `CLAUDE.md` | 1 | 2026-11-04 | 0d |
 | `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 4d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 15d |
-| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 9d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 10d |
-| `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 12d |
-| `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 13d |
-| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 13d |
+| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 10d |
+| `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 13d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 13d |
-| `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 13d |
-| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 13d |
-| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 13d |
-| `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 13d |
+| `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 14d |
+| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 14d |
+| `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 14d |
+| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 14d |
+| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 14d |
+| `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 14d |
 | `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 15d |
 | `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 15d |
 | `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 15d |
@@ -259,6 +269,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `901ba99b` 2026-11-05 — Text-message opt-in names GreenReserve as the sender (Twilio campaign review) (#319)
+- `d12656c7` 2026-11-05 — Text-message opt-in names GreenReserve as the sender, with the carriers' disclosure phrases; texts lead with GreenReserve
 - `211403ca` 2026-11-05 — Terms and Privacy: Twilio A2P campaign wording (#318)
 - `acd00f57` 2026-11-05 — Terms and Privacy: Twilio A2P campaign wording (SMS Terms heading, no selling or sharing opt-in data)
 - `d43ed864` 2026-11-04 — Database audit: crons read only due dates, Stripe-id indexes, rate-limit sweep (#317)
@@ -269,8 +281,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `df7ad5bd` 2026-11-04 — Security audit: one tee-time row per slot (migration) (#315)
 - `8286cf5a` 2026-11-05 — Tests: give each test tee time its own slot (one row per slot is now enforced)
 - `ab7235ec` 2026-11-05 — One tee-time row per slot: fold existing duplicates, unique index, generation skips and never deletes a booked slot
-- `596b4b52` 2026-11-04 — Security audit: one card charge per round at a time (#314)
-- `5be9c0cf` 2026-11-05 — One card charge per round at a time: claim the round before charging; cash and the reader refuse a live claim
 
 ---
 

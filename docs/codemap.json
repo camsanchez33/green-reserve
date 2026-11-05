@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 659,
-    "routes": 290,
-    "libs": 236,
+    "files": 661,
+    "routes": 291,
+    "libs": 237,
     "models": 70,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -7634,6 +7634,32 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/weather/route.ts",
+      "lines": 15,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/weather",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/prisma",
+        "@/lib/session",
+        "@/lib/weather",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/weather-cancel/route.ts",
       "lines": 50,
       "purpose": "",
@@ -8633,7 +8659,7 @@
     },
     {
       "path": "src/app/dashboard/home/page.tsx",
-      "lines": 278,
+      "lines": 331,
       "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the mockups):",
       "brain": [],
       "exports": [
@@ -8661,6 +8687,7 @@
         "@/lib/operator-home",
         "@/lib/setup-missing",
         "@/lib/use-dashboard-access",
+        "@/lib/weather",
         "next/link",
         "next/navigation",
         "react"
@@ -9019,7 +9046,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 1158,
+      "lines": 1166,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -12172,7 +12199,7 @@
     },
     {
       "path": "src/components/dashboard/home/HomeBoard.tsx",
-      "lines": 192,
+      "lines": 207,
       "purpose": "DASH-D Home (Cam 2026-11-01, mockup S1):",
       "brain": [],
       "exports": [
@@ -12565,7 +12592,7 @@
     },
     {
       "path": "src/components/dashboard/settings/FinishSetup.tsx",
-      "lines": 54,
+      "lines": 68,
       "purpose": "Settings rework (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -16658,7 +16685,8 @@
         "src/lib/agreement-sign.ts",
         "src/lib/email.ts",
         "src/lib/sms-consent-copy.ts",
-        "src/lib/submit-change-request.ts"
+        "src/lib/submit-change-request.ts",
+        "src/lib/weather.ts"
       ]
     },
     {
@@ -21904,7 +21932,7 @@
     },
     {
       "path": "src/lib/operator-home.ts",
-      "lines": 160,
+      "lines": 164,
       "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the course dashboard mockups):",
       "brain": [],
       "exports": [
@@ -22646,6 +22674,7 @@
         "src/app/api/operator/tiers/route.ts",
         "src/app/api/operator/upload/route.ts",
         "src/app/api/operator/weather-cancel/route.ts",
+        "src/app/api/operator/weather/route.ts",
         "src/app/api/preview/[courseId]/approve/route.ts",
         "src/app/api/preview/[courseId]/route.ts",
         "src/app/api/preview/[courseId]/tee-times/route.ts",
@@ -24298,7 +24327,8 @@
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/operator/tiers/route.ts",
         "src/app/api/operator/upload/route.ts",
-        "src/app/api/operator/weather-cancel/route.ts"
+        "src/app/api/operator/weather-cancel/route.ts",
+        "src/app/api/operator/weather/route.ts"
       ]
     },
     {
@@ -24339,7 +24369,7 @@
     },
     {
       "path": "src/lib/setup-missing.ts",
-      "lines": 51,
+      "lines": 64,
       "purpose": "What is still missing from a course's booking page, each with the Settings section that fixes it.",
       "brain": [],
       "exports": [
@@ -24370,6 +24400,10 @@
         {
           "name": "SetupFacts",
           "kind": "type"
+        },
+        {
+          "name": "showSetupField",
+          "kind": "fn"
         }
       ],
       "route": null,
@@ -26223,6 +26257,50 @@
       ],
       "usedBy": [
         "src/app/api/operator/weather-cancel/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/weather.ts",
+      "lines": 65,
+      "purpose": "HOME-W (Cam 2026-11-05, \"weather bar up top with the next tee times\"):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "courseWeather",
+          "kind": "fn"
+        },
+        {
+          "name": "geocodeAddress",
+          "kind": "fn"
+        },
+        {
+          "name": "hourKey",
+          "kind": "fn"
+        },
+        {
+          "name": "parseHourly",
+          "kind": "fn"
+        },
+        {
+          "name": "Weather",
+          "kind": "type"
+        },
+        {
+          "name": "WeatherHour",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./contact"
+      ],
+      "usedBy": [
+        "src/app/api/operator/weather/route.ts",
+        "src/app/dashboard/home/page.tsx"
       ]
     },
     {
@@ -28283,6 +28361,7 @@
         "src/app/api/operator/tiers/route.ts",
         "src/app/api/operator/upload/route.ts",
         "src/app/api/operator/weather-cancel/route.ts",
+        "src/app/api/operator/weather/route.ts",
         "src/app/api/preview/[courseId]/approve/route.ts",
         "src/app/api/preview/[courseId]/route.ts",
         "src/app/api/preview/[courseId]/tee-times/route.ts",
