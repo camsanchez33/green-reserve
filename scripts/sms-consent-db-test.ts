@@ -91,6 +91,15 @@ async function main() {
   // 5. the words and the wipe
   const terms = read('src/app/terms/page.tsx'), privacy = read('src/app/privacy/page.tsx');
   ok('Terms and Privacy give the figure, not "varies"', terms.includes('up to 4 messages per booking') && privacy.includes('up to 4 messages per booking') && !terms.includes('frequency varies'));
+  // Twilio's campaign review (2026-11-05): the box says SMS from GreenReserve (the registered brand, not the course),
+  // and carries all four disclosures in the carriers' own words.
+  {
+    const { smsWebConsentText: web, smsVerbalScript: verbal } = await import('../src/lib/sms-consent-copy');
+    const box = web('Pine Valley Golf Club'), say = verbal('Pine Valley Golf Club');
+    ok('the event sign-up says event, not booking', read('src/app/events/[id]/SignupForm.tsx').includes(".replace('my booking at', 'my event at')") && box.includes('my booking at'));
+    ok('the opt-in names GreenReserve as the sender of text messages (SMS)', box.includes('text messages (SMS) from GreenReserve') && say.includes('GreenReserve send you text messages (SMS)'));
+    ok('…with what, how often, Msg & data rates and Reply STOP to cancel, HELP for help', [box, say].every(t => t.includes('a pay link, a day-of notice and a receipt') && /up to 4 messages per booking/i.test(t) && t.includes('Msg & data rates may apply') && t.includes('Reply STOP to cancel, HELP for help')));
+  }
   // Twilio's campaign review matches this sentence verbatim against the live /privacy page — never reword it.
   ok('Privacy carries Twilio\'s no-sale sentence verbatim; Terms has an SMS Terms section with the rates disclosure', privacy.includes('We do not sell or share your SMS opt-in data or personal information with third parties for marketing purposes.') && terms.includes('(SMS Terms)') && terms.includes('rates may apply'));
   ok('SmsConsent is wiped before launch', (WIPED_TABLES as readonly string[]).includes('SmsConsent'));

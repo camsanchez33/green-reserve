@@ -82,7 +82,7 @@ async function sendLink(courseId: string, sale: SaleView, payToken: string, via:
       if ((sale.customerPhone || '').replace(/\D/g, '').length < 10) return 'Add a mobile number to text the link.';
       const to = normalizePhone(sale.customerPhone);
       if (!to.startsWith('+1')) return 'Pay links can only be texted to US and Canadian numbers — email it instead.';
-      await sendSms(to, `${courseName}: pay $${(sale.totalCents / 100).toFixed(2)} for your pro shop items here (Apple Pay, Google Pay or card): ${payUrl} Reply STOP to opt out.`, { kind: 'shop_pay_link_text', courseId });
+      await sendSms(to, `GreenReserve: pay $${(sale.totalCents / 100).toFixed(2)} for your ${courseName} pro shop items here (Apple Pay, Google Pay or card): ${payUrl} Reply STOP to opt out.`, { kind: 'shop_pay_link_text', courseId });
     } else {
       if (!sale.customerEmail || isPlaceholderEmail(sale.customerEmail) || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(sale.customerEmail)) return 'Add an email address to send the link.';
       await sendShopSalePayLinkEmail({ courseId, email: sale.customerEmail, name: sale.customerName, courseName, totalCents: sale.totalCents, taxCents: sale.taxCents, lines: sale.lines, payUrl, discountCents: sale.discountCents, discountNote: sale.discountNote });
@@ -274,7 +274,7 @@ export async function PATCH(req: NextRequest) {
         const phone = normalizePhone(to);
         if (!phone.startsWith('+1')) return NextResponse.json({ error: 'Receipts can only be texted to US and Canadian numbers — email it instead.' }, { status: 400 });
         const items = v.lines.reduce((n, l) => n + l.quantity, 0);
-        await sendSms(phone, `${s.course.name} receipt: ${items} item${items === 1 ? '' : 's'}, $${(s.totalCents / 100).toFixed(2)} ${s.status === 'paid_account' ? 'on your account' : `paid by ${paidWith.toLowerCase()}`}${s.refundedCents ? `, $${(s.refundedCents / 100).toFixed(2)} refunded` : ''}. Ref ${s.id.slice(-8).toUpperCase()}. Thank you! Reply STOP to opt out.`, { kind: 'shop_receipt_text', courseId: g.session.courseId });
+        await sendSms(phone, `GreenReserve receipt from ${s.course.name}: ${items} item${items === 1 ? '' : 's'}, $${(s.totalCents / 100).toFixed(2)} ${s.status === 'paid_account' ? 'on your account' : `paid by ${paidWith.toLowerCase()}`}${s.refundedCents ? `, $${(s.refundedCents / 100).toFixed(2)} refunded` : ''}. Ref ${s.id.slice(-8).toUpperCase()}. Thank you! Reply STOP to opt out.`, { kind: 'shop_receipt_text', courseId: g.session.courseId });
       } else {
         if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to) || isPlaceholderEmail(to)) return NextResponse.json({ error: 'Enter an email address for the receipt.' }, { status: 400 });
         await sendShopReceiptEmail({ email: to.toLowerCase(), name: s.customerName, courseName: s.course.name, courseId: g.session.courseId, saleId: s.id, lines: v.lines,

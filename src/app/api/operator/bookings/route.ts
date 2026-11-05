@@ -263,7 +263,7 @@ export async function PATCH(req: NextRequest) {
       if (smsConsent === 'verbal') await optInAndConfirm(to, { method: 'verbal', courseId: session.courseId, bookingId: id, recordedBy: session.staffId ?? `operator:${session.operatorId}` });
       try {
         // Every non-code text carries the opt-out line (legal rewrite 2026-10-19).
-        await sendSms(to, `${b.course.name}: check in and pay for your ${formatTeeTime(b.teeTime.time)} tee time here (Apple Pay, Google Pay or card): ${url} Reply STOP to opt out.`, { kind: 'pay_link_text', bookingId: id });
+        await sendSms(to, `GreenReserve: check in and pay for your ${formatTeeTime(b.teeTime.time)} tee time at ${b.course.name} here (Apple Pay, Google Pay or card): ${url} Reply STOP to opt out.`, { kind: 'pay_link_text', bookingId: id });
       } catch (err) {
         if (err instanceof SmsNoConsentError) return NextResponse.json({ error: SMS_NO_CONSENT_STAFF, needsConsent: true }, { status: 409 });
         return NextResponse.json({ error: `The text didn’t send (${err instanceof Error ? err.message : 'SMS error'}) — try email, or take payment at the counter.` }, { status: 502 });

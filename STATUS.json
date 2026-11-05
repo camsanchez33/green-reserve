@@ -1,21 +1,38 @@
 {
-  "generatedAt": "2026-11-05T15:50:45.283Z",
+  "generatedAt": "2026-11-05T19:48:03.942Z",
   "repo": {
-    "head": "58c83859",
+    "head": "d8502a80",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 5,
+    "dirtyCount": 8,
     "dirty": [
       "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M src/app/privacy/page.tsx",
-      " M src/app/terms/page.tsx",
-      " M src/lib/terms.ts"
+      " M scripts/sms-consent-db-test.ts",
+      " M src/app/api/operator/bookings/route.ts",
+      " M src/app/api/operator/events/[id]/payments/route.ts",
+      " M src/app/api/operator/shop-sales/route.ts",
+      " M src/lib/golfer-messages.ts",
+      " M src/lib/sms-consent-copy.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "211403ca",
+        "date": "2026-11-05T11:22:09-05:00",
+        "subject": "Terms and Privacy: Twilio A2P campaign wording (#318)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "acd00f57",
+        "date": "2026-11-05T15:53:31+00:00",
+        "subject": "Terms and Privacy: Twilio A2P campaign wording (SMS Terms heading, no selling or sharing opt-in data)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "d43ed864",
         "date": "2026-11-04T23:56:50-05:00",
@@ -792,7 +809,7 @@
       "line": 2412,
       "hash": "b88c8bf3",
       "shipDate": "2026-07-22",
-      "ageDays": 105
+      "ageDays": 106
     }
   ],
   "next": [
@@ -940,7 +957,7 @@
       "file": "DENSE_UI_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-11-01",
-      "ageDays": 3
+      "ageDays": 4
     },
     {
       "file": "PLATFORM_ROADMAP_SPEC.md",
@@ -1162,6 +1179,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "211403ca",
+      "date": "2026-11-05",
+      "subject": "Terms and Privacy: Twilio A2P campaign wording (#318)"
+    },
+    {
+      "h": "acd00f57",
+      "date": "2026-11-05",
+      "subject": "Terms and Privacy: Twilio A2P campaign wording (SMS Terms heading, no selling or sharing opt-in data)"
+    },
+    {
       "h": "d43ed864",
       "date": "2026-11-04",
       "subject": "Database audit: crons read only due dates, Stripe-id indexes, rate-limit sweep (#317)"
@@ -1210,16 +1237,6 @@
       "h": "5be9c0cf",
       "date": "2026-11-05",
       "subject": "One card charge per round at a time: claim the round before charging; cash and the reader refuse a live claim"
-    },
-    {
-      "h": "4c7680ad",
-      "date": "2026-11-04",
-      "subject": "Security audit: sign-in hardening (#313)"
-    },
-    {
-      "h": "bfa71331",
-      "date": "2026-11-05",
-      "subject": "Sign-in hardening from the security audit: US/Canada-only texts, escaped email, exact phone linking, trimmed memberships list"
     }
   ]
 }

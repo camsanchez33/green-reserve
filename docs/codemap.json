@@ -25077,7 +25077,7 @@
     },
     {
       "path": "src/lib/sms-consent-copy.ts",
-      "lines": 47,
+      "lines": 49,
       "purpose": "SMS-1 (Cam 2026-11-02, Twilio A2P 10DLC — docs/SMS_OPT_IN.md):",
       "brain": [],
       "exports": [
