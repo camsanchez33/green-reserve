@@ -23,6 +23,7 @@ function getClient() {
 
 export async function sendSmsOtp(to: string, code: string) {
   const from = process.env.TWILIO_FROM_NUMBER;
+  if (!isNorthAmericanNumber(to)) throw new Error('Codes are only texted to US and Canadian numbers.');
   const toMasked = to.slice(0, 3) + '…' + to.slice(-4);
   console.log('[twilio] sendSmsOtp — to:', toMasked, '| from:', from || 'MISSING');
   try {
@@ -48,6 +49,18 @@ export function isFictionalNumber(phone: string): boolean {
   return d.length === 10 && d.slice(3, 7) === '5550' && d[7] === '1';
 }
 
+/**
+ * AUDIT-1 (toll fraud): we only ever text US and Canadian numbers. A number
+ * typed with another country code — on any public form — is never sent to, so
+ * nobody can run up Twilio's bill with premium-rate international numbers.
+ * Bare 10-digit numbers are North American; so is 1 + 10 digits; "+" must be +1.
+ */
+export function isNorthAmericanNumber(phone: string): boolean {
+  const d = phone.replace(/\D/g, '');
+  if (phone.trim().startsWith('+')) return /^1\d{10}$/.test(d);
+  return d.length === 10 || (d.length === 11 && d[0] === '1');
+}
+
 /** Whether text messages can be sent at all (Twilio env present). */
 export const smsConfigured = () => !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_FROM_NUMBER);
 
@@ -56,6 +69,11 @@ export async function sendSms(to: string, body: string, meta: SendMeta = { kind:
   const from = process.env.TWILIO_FROM_NUMBER;
   if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN || !from) {
     throw new Error('Text messages are not set up (Twilio)');
+  }
+  // AUDIT-1: never a number outside the US and Canada (toll fraud).
+  if (!isNorthAmericanNumber(to)) {
+    await logSent({ ...meta, channel: 'sms', to, status: 'skipped', error: 'not a US or Canadian number' });
+    throw new Error('Texts only go to US and Canadian numbers — email them instead.');
   }
   // Cam 2026-10-28: 555-0100–0199 is the fictional block (sample data) — never texted.
   if (isFictionalNumber(to)) {

@@ -1,18 +1,34 @@
 {
-  "generatedAt": "2026-11-05T01:23:02.624Z",
+  "generatedAt": "2026-11-05T01:55:35.332Z",
   "repo": {
-    "head": "bcb7a5e7",
+    "head": "7f82cec7",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 0,
-    "dirty": [],
-    "looksLikeRunInProgress": false
+    "dirtyCount": 8,
+    "dirty": [
+      "M docs/CODEMAP.md",
+      " M docs/codemap.json",
+      " M src/app/api/golfer/auth/otp/request/route.ts",
+      " M src/app/api/golfer/auth/otp/verify/route.ts",
+      " M src/app/api/golfer/memberships/route.ts",
+      " M src/lib/email.ts",
+      " M src/lib/twilio.ts",
+      "?? scripts/audit-signin-test.ts"
+    ],
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
       {
-        "h": "bcb7a5e7",
-        "date": "2026-11-05T01:23:00+00:00",
+        "h": "24b7474c",
+        "date": "2026-11-04T20:30:04-05:00",
+        "subject": "Settings restyle to the DASH-D mockup (#312)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "56471e89",
+        "date": "2026-11-05T01:23:04+00:00",
         "subject": "Settings restyle to the DASH-D mockup: 26px title, section nav as raised tabs, 7px inputs and choice tiles",
         "ids": [],
         "matches": []
@@ -1065,7 +1081,12 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "bcb7a5e7",
+      "h": "24b7474c",
+      "date": "2026-11-04",
+      "subject": "Settings restyle to the DASH-D mockup (#312)"
+    },
+    {
+      "h": "56471e89",
       "date": "2026-11-05",
       "subject": "Settings restyle to the DASH-D mockup: 26px title, section nav as raised tabs, 7px inputs and choice tiles"
     },
@@ -1118,11 +1139,6 @@
       "h": "fed27d5f",
       "date": "2026-11-04",
       "subject": "Events: command center strip and organizer bill coverage per player (EVENTS-1)"
-    },
-    {
-      "h": "f75dd615",
-      "date": "2026-11-04",
-      "subject": "Money: earned vs paid out on the Ledger (EARNED-1) (#307)"
     }
   ]
 }

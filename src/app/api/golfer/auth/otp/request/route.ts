@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { classifyIdentifier, generateOtpCode, signOtpChallenge } from '@/lib/golfer-otp';
 import { sendGolferOtpEmail } from '@/lib/email';
-import { sendSmsOtp } from '@/lib/twilio';
+import { sendSmsOtp, isNorthAmericanNumber } from '@/lib/twilio';
 
 // Always returns the same generic response whether or not the identifier
 // matches an existing GolferAccount — no account enumeration.
@@ -13,6 +13,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Enter a valid email or phone number.' }, { status: 400 });
   }
   const { identifier, type } = parsed;
+  // AUDIT-1: codes are texted only to US and Canadian numbers (toll fraud).
+  if (type === 'phone' && !isNorthAmericanNumber(identifier)) {
+    return NextResponse.json({ error: 'Use a US or Canadian mobile number, or sign in with your email.' }, { status: 400 });
+  }
 
   const ip = clientIp(req);
   const perIdOk = await rateLimit(`golfer-otp-req:${identifier}`, 3, 600);

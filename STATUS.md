@@ -4,15 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-05 01:23 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `bcb7a5e7` · working tree clean
+Generated 2026-11-05 01:55 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `7f82cec7` · working tree **8 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 94 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 95 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `bcb7a5e7` | 2026-11-05 | Settings restyle to the DASH-D mockup: 26px title, section nav as raised tabs, 7px inputs and choice tiles |
+| `24b7474c` | 2026-11-04 | Settings restyle to the DASH-D mockup (#312) |
+| `56471e89` | 2026-11-05 | Settings restyle to the DASH-D mockup: 26px title, section nav as raised tabs, 7px inputs and choice tiles |
 | `b558efe3` | 2026-11-04 | Members restyle to the DASH-D mockup (#311) |
 | `5e0a462c` | 2026-11-05 | Members restyle to the DASH-D mockup: 26px title, four stat cards with 24px numbers, 7px buttons |
 | `e43e8996` | 2026-11-04 | Register restyle to the DASH-D mockup (#310) |
@@ -108,6 +109,20 @@ Generated 2026-11-05 01:23 UTC · branch `claude/walkthrough-2-prioritization-ui
 | `efef5f62` | 2026-11-01 | Money audit fixes: dues charge only the shown total, tier term change stops auto-renew, credited round returns our fee, pay link opens on the day |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+
+### Uncommitted working tree (8 file(s))
+
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
+- `M src/app/api/golfer/auth/otp/request/route.ts`
+- `M src/app/api/golfer/auth/otp/verify/route.ts`
+- `M src/app/api/golfer/memberships/route.ts`
+- `M src/lib/email.ts`
+- `M src/lib/twilio.ts`
+- `?? scripts/audit-signin-test.ts`
+
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -230,7 +245,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `bcb7a5e7` 2026-11-05 — Settings restyle to the DASH-D mockup: 26px title, section nav as raised tabs, 7px inputs and choice tiles
+- `24b7474c` 2026-11-04 — Settings restyle to the DASH-D mockup (#312)
+- `56471e89` 2026-11-05 — Settings restyle to the DASH-D mockup: 26px title, section nav as raised tabs, 7px inputs and choice tiles
 - `b558efe3` 2026-11-04 — Members restyle to the DASH-D mockup (#311)
 - `5e0a462c` 2026-11-05 — Members restyle to the DASH-D mockup: 26px title, four stat cards with 24px numbers, 7px buttons
 - `e43e8996` 2026-11-04 — Register restyle to the DASH-D mockup (#310)
@@ -241,7 +257,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `3bf3f7fa` 2026-11-04 — Events: command center strip and organizer bill coverage (EVENTS-1) (#308)
 - `4c554dc8` 2026-11-04 — EVENTS-1 review fix: name players past the confirmed headcount instead of hiding them
 - `fed27d5f` 2026-11-04 — Events: command center strip and organizer bill coverage per player (EVENTS-1)
-- `f75dd615` 2026-11-04 — Money: earned vs paid out on the Ledger (EARNED-1) (#307)
 
 ---
 
