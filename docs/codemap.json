@@ -1931,7 +1931,7 @@
     },
     {
       "path": "src/app/api/admin/course-settings/route.ts",
-      "lines": 83,
+      "lines": 91,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1958,6 +1958,7 @@
         "@/lib/course-timeline",
         "@/lib/course-wire",
         "@/lib/prisma",
+        "@/lib/settings-validation",
         "next/server"
       ],
       "usedBy": []
@@ -2293,7 +2294,7 @@
     },
     {
       "path": "src/app/api/admin/inquiries/route.ts",
-      "lines": 1312,
+      "lines": 1314,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2344,6 +2345,7 @@
         "@/lib/pricing-switch",
         "@/lib/prisma",
         "@/lib/rate-limit",
+        "@/lib/settings-validation",
         "@/lib/setup-sheet-recap",
         "@/lib/tee-sheet-engine",
         "bcryptjs",
@@ -4146,7 +4148,7 @@
     },
     {
       "path": "src/app/api/cron/cancellation-cutoff/route.ts",
-      "lines": 97,
+      "lines": 100,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4168,6 +4170,7 @@
         "@/lib/course-time",
         "@/lib/cron-auth",
         "@/lib/cron-log",
+        "@/lib/cron-windows",
         "@/lib/cutoff-hold",
         "@/lib/prisma",
         "@/lib/tee-time-utils",
@@ -4234,7 +4237,7 @@
     },
     {
       "path": "src/app/api/cron/hourly/route.ts",
-      "lines": 207,
+      "lines": 208,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8876,7 +8879,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1948,
+      "lines": 1953,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -17967,16 +17970,28 @@
     },
     {
       "path": "src/lib/cron-windows.ts",
-      "lines": 26,
+      "lines": 42,
       "purpose": "R-CRON-003 — when the hourly cron sends its time-based emails.",
       "brain": [],
       "exports": [
+        {
+          "name": "CHECKIN_DATES",
+          "kind": "const"
+        },
         {
           "name": "checkInEmailDue",
           "kind": "fn"
         },
         {
           "name": "cutoffWarningDue",
+          "kind": "fn"
+        },
+        {
+          "name": "FEE_DATES",
+          "kind": "const"
+        },
+        {
+          "name": "teeDateWindow",
           "kind": "fn"
         }
       ],
@@ -17987,6 +18002,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
+        "src/app/api/cron/cancellation-cutoff/route.ts",
         "src/app/api/cron/hourly/route.ts"
       ]
     },
@@ -23977,7 +23993,7 @@
     },
     {
       "path": "src/lib/security-events.ts",
-      "lines": 129,
+      "lines": 131,
       "purpose": "SEC-3 (Cam 2026-10-26, \"security has to be insane\"; chose \"log events\" and \"email + Problems\"):",
       "brain": [],
       "exports": [
@@ -24287,10 +24303,14 @@
     },
     {
       "path": "src/lib/settings-validation.ts",
-      "lines": 153,
+      "lines": 156,
       "purpose": "SD-1.",
       "brain": [],
       "exports": [
+        {
+          "name": "CANCELLATION_HOURS_MAX",
+          "kind": "const"
+        },
         {
           "name": "normalizeHttpUrl",
           "kind": "fn"
@@ -24311,6 +24331,8 @@
       "guard": null,
       "imports": [],
       "usedBy": [
+        "src/app/api/admin/course-settings/route.ts",
+        "src/app/api/admin/inquiries/route.ts",
         "src/app/api/operator/courses/route.ts",
         "src/app/api/operator/settings/route.ts"
       ]

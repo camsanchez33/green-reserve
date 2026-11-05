@@ -478,13 +478,18 @@ function DashboardPageInner() {
   const checkedInPlayers = teeTimes.reduce((s, t) => s + (t.bookings?.filter(b => b.status === 'completed').reduce((n, b) => n + (b.checkedInPlayers ?? b.players), 0) ?? 0), 0);
   const [dayMoney, setDayMoney] = useState<{ date: string; paidCents: number; paidGroups: number; outstandingCents: number; outstandingGroups: number; lateGroups: number } | null>(null);
   const canSeeMoney = access.can('money.payments');
+  // AUDIT-1 (database audit): the sheet re-reads every 30s and each read is a new array, so the
+  // strip re-ran the day's analytics each time. It now asks only when a group's money changed.
+  // (Plus a 5-minute tick: a group passing its time moves from "upcoming" to "late" with no booking change.)
+  const moneyKey = Math.floor(Date.now() / 300_000) + '#' + teeTimes.map(t => `${t.id}:${(t.bookings ?? []).map(b => `${b.id}.${b.status}.${b.paymentStatus}.${b.totalAmount}.${b.players}.${b.noShowAt ?? ''}`).join(',')}`).join('|');
   useEffect(() => {
     if (!canSeeMoney || teeTimes.length === 0) { setDayMoney(null); return; }
     let live = true;
     dfetch<{ date: string; paidCents: number; paidGroups: number; outstandingCents: number; outstandingGroups: number; lateGroups: number }>(`/api/operator/sheet-money?date=${selectedDate}`)
       .then(r => { if (live) setDayMoney(r.ok ? r.data : null); });
     return () => { live = false; };
-  }, [canSeeMoney, selectedDate, teeTimes]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- moneyKey stands for teeTimes' money state
+  }, [canSeeMoney, selectedDate, moneyKey]);
 
   // quiet: the background re-read (dead end 17) — no spinner, and a failed read keeps the sheet as it was.
   const loadTimes = useCallback(async (date: string, quiet = false) => {

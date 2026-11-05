@@ -1,18 +1,36 @@
 {
-  "generatedAt": "2026-11-05T04:42:35.696Z",
+  "generatedAt": "2026-11-05T04:49:45.887Z",
   "repo": {
-    "head": "7cc238df",
-    "branch": "HEAD",
-    "dirtyCount": 2,
-    "dirty": [
-      "M docs/CODEMAP.md",
-      " M docs/codemap.json"
-    ],
+    "head": "8fa44fa2",
+    "branch": "claude/walkthrough-2-prioritization-ui5xyu",
+    "dirtyCount": 0,
+    "dirty": [],
     "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "8fa44fa2",
+        "date": "2026-11-05T04:49:40+00:00",
+        "subject": "Database load from the audit: crons read only due tee dates, Stripe-id indexes, rate-limit sweep, sheet money strip asks less",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "15c9cb2e",
+        "date": "2026-11-04T23:49:20-05:00",
+        "subject": "Security audit: money races (keyed refunds, recharge after refund, holds vs check-in, no-show vs still coming) (#316)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "37df560b",
+        "date": "2026-11-05T04:42:46+00:00",
+        "subject": "Regenerate the code map and status board for lib/hold-key.ts",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "7cc238df",
         "date": "2026-11-05T04:38:36+00:00",
@@ -1131,6 +1149,21 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "8fa44fa2",
+      "date": "2026-11-05",
+      "subject": "Database load from the audit: crons read only due tee dates, Stripe-id indexes, rate-limit sweep, sheet money strip asks less"
+    },
+    {
+      "h": "15c9cb2e",
+      "date": "2026-11-04",
+      "subject": "Security audit: money races (keyed refunds, recharge after refund, holds vs check-in, no-show vs still coming) (#316)"
+    },
+    {
+      "h": "37df560b",
+      "date": "2026-11-05",
+      "subject": "Regenerate the code map and status board for lib/hold-key.ts"
+    },
+    {
       "h": "7cc238df",
       "date": "2026-11-05",
       "subject": "Money races from the security audit: keyed refunds, recharge after refund, cron hold vs check-in, no-show vs still coming"
@@ -1174,21 +1207,6 @@
       "h": "24b7474c",
       "date": "2026-11-04",
       "subject": "Settings restyle to the DASH-D mockup (#312)"
-    },
-    {
-      "h": "56471e89",
-      "date": "2026-11-05",
-      "subject": "Settings restyle to the DASH-D mockup: 26px title, section nav as raised tabs, 7px inputs and choice tiles"
-    },
-    {
-      "h": "b558efe3",
-      "date": "2026-11-04",
-      "subject": "Members restyle to the DASH-D mockup (#311)"
-    },
-    {
-      "h": "5e0a462c",
-      "date": "2026-11-05",
-      "subject": "Members restyle to the DASH-D mockup: 26px title, four stat cards with 24px numbers, 7px buttons"
     }
   ]
 }

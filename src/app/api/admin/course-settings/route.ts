@@ -1,3 +1,4 @@
+import { CANCELLATION_HOURS_MAX } from '@/lib/settings-validation';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { courseToWire, courseMoneyFromWire } from '@/lib/course-wire';
@@ -50,6 +51,13 @@ export async function PATCH(req: NextRequest) {
   const data: Record<string, unknown> = {};
   for (const key of allowed) {
     if (key in rest) data[key] = rest[key];
+  }
+  // AUDIT-1: the same limit as the course's own Settings — every booking copies this window, and the
+  // crons read only tee dates up to the longest one ahead (lib/cron-windows).
+  if ('cancellationHours' in data) {
+    const h = Number(data.cancellationHours);
+    if (!Number.isInteger(h) || h < 0 || h > CANCELLATION_HOURS_MAX) return NextResponse.json({ error: `The cancellation window must be a whole number of hours from 0 to ${CANCELLATION_HOURS_MAX} (14 days).` }, { status: 400 });
+    data.cancellationHours = h;
   }
 
   // A-05 item 4c (full mirror, no drift) — every admin-side edit here is

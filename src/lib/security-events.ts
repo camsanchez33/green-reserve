@@ -82,6 +82,8 @@ export async function purgeOldSecurityEvents(now = new Date()): Promise<number> 
   await prisma.rateLimit.deleteMany({ where: { OR: [
     { key: { startsWith: 'login-unknown' }, windowStart: { lt: new Date(now.getTime() - 30 * 24 * HOUR) } },
     { key: { startsWith: 'secev:' }, windowStart: { lt: new Date(now.getTime() - 2 * HOUR) } },
+    // AUDIT-1: every other counter once its window can't matter (the longest rateLimit window is 30 days).
+    { windowStart: { lt: new Date(now.getTime() - 31 * 24 * HOUR) } },
   ] } });
   return r.count;
 }

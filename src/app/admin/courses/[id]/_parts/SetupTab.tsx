@@ -62,8 +62,8 @@ export function SetupTab() {
               </div>
 
               {setupMsg && (
-                <div className={'text-sm font-medium px-4 py-2.5 rounded-md border ' + (setupMsg === 'error' ? 'bg-bad/5 text-bad border-bad/20' : 'bg-ok/5 text-ok border-ok/20')}>
-                  {setupMsg === 'error' ? 'Error saving' : 'Settings saved'}
+                <div className={'text-sm font-medium px-4 py-2.5 rounded-md border ' + (setupMsg.startsWith('error') ? 'bg-bad/5 text-bad border-bad/20' : 'bg-ok/5 text-ok border-ok/20')}>
+                  {setupMsg.startsWith('error') ? (setupMsg.slice(6) || 'Error saving') : 'Settings saved'}
                 </div>
               )}
 
