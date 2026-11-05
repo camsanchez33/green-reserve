@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-05 04:26 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `3d449e15` · working tree clean
+Generated 2026-11-05 04:42 UTC · branch `HEAD` · HEAD `7cc238df` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -12,7 +12,7 @@ Generated 2026-11-05 04:26 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 | commit | date | subject |
 |---|---|---|
-| `3d449e15` | 2026-11-05 | Money races from the security audit: keyed refunds, recharge after refund, cron hold vs check-in, no-show vs still coming |
+| `7cc238df` | 2026-11-05 | Money races from the security audit: keyed refunds, recharge after refund, cron hold vs check-in, no-show vs still coming |
 | `df7ad5bd` | 2026-11-04 | Security audit: one tee-time row per slot (migration) (#315) |
 | `8286cf5a` | 2026-11-05 | Tests: give each test tee time its own slot (one row per slot is now enforced) |
 | `ab7235ec` | 2026-11-05 | One tee-time row per slot: fold existing duplicates, unique index, generation skips and never deletes a booked slot |
@@ -117,6 +117,14 @@ Generated 2026-11-05 04:26 UTC · branch `claude/walkthrough-2-prioritization-ui
 | `efef5f62` | 2026-11-01 | Money audit fixes: dues charge only the shown total, tier term change stops auto-renew, credited round returns our fee, pay link opens on the day |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+
+### Uncommitted working tree (2 file(s))
+
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
+
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -239,7 +247,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `3d449e15` 2026-11-05 — Money races from the security audit: keyed refunds, recharge after refund, cron hold vs check-in, no-show vs still coming
+- `7cc238df` 2026-11-05 — Money races from the security audit: keyed refunds, recharge after refund, cron hold vs check-in, no-show vs still coming
 - `df7ad5bd` 2026-11-04 — Security audit: one tee-time row per slot (migration) (#315)
 - `8286cf5a` 2026-11-05 — Tests: give each test tee time its own slot (one row per slot is now enforced)
 - `ab7235ec` 2026-11-05 — One tee-time row per slot: fold existing duplicates, unique index, generation skips and never deletes a booked slot

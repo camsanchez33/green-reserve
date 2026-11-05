@@ -1,18 +1,21 @@
 {
-  "generatedAt": "2026-11-05T04:26:40.362Z",
+  "generatedAt": "2026-11-05T04:42:35.696Z",
   "repo": {
-    "head": "3d449e15",
-    "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 0,
-    "dirty": [],
+    "head": "7cc238df",
+    "branch": "HEAD",
+    "dirtyCount": 2,
+    "dirty": [
+      "M docs/CODEMAP.md",
+      " M docs/codemap.json"
+    ],
     "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
       {
-        "h": "3d449e15",
-        "date": "2026-11-05T04:26:38+00:00",
+        "h": "7cc238df",
+        "date": "2026-11-05T04:38:36+00:00",
         "subject": "Money races from the security audit: keyed refunds, recharge after refund, cron hold vs check-in, no-show vs still coming",
         "ids": [],
         "matches": []
@@ -1128,7 +1131,7 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "3d449e15",
+      "h": "7cc238df",
       "date": "2026-11-05",
       "subject": "Money races from the security audit: keyed refunds, recharge after refund, cron hold vs check-in, no-show vs still coming"
     },
