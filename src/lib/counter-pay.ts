@@ -17,7 +17,7 @@ import { splitOffLateArrivals, holdRefundCents, hasShareToRefund } from './split
 import { claimTeeTime, TeeTimeClaimError, LATE_ADD_MESSAGE } from './claim-tee-time';
 import { todayIn } from './course-time';
 import { randomUUID } from 'crypto';
-import { READER_STALE_MS } from './checkin-booking';
+import { READER_STALE_MS, CHARGE_STALE_MS, notBeingCharged, BEING_CHARGED } from './checkin-booking';
 import { noShowClosed, NO_SHOW_CLOSED_ERROR } from './no-show-fee';
 import { recordMove } from './money-ledger';
 import { applyTierRates } from './tier-rates';
@@ -64,7 +64,7 @@ export function roundNote(golferName: string, teeTime: { date: string; time: str
 export async function settleAtCounter(courseId: string, bookingId: string, opts: { actor: EventActor; actorName: string; checkedInPlayers?: number; onAccount?: { membershipId: string } }): Promise<CounterResult> {
   const booking = await prisma.booking.findFirst({
     where: { id: bookingId, courseId },
-    select: { readerStartedAt: true, noShowAt: true, courseId: true, golferName: true, status: true, paymentStatus: true, players: true, totalAmount: true, accessFeeTotal: true, shopTotalCents: true, shopTaxCents: true,
+    select: { readerStartedAt: true, shopLockedAt: true, noShowAt: true, courseId: true, golferName: true, status: true, paymentStatus: true, players: true, totalAmount: true, accessFeeTotal: true, shopTotalCents: true, shopTaxCents: true,
       greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, residentPlayers: true, residentRateCents: true, memberRateCents: true, memberCartCents: true, feePaidCents: true,
       cancellationFeeChargeId: true, cancellationFeeTotal: true, teeTime: { select: { date: true, time: true } }, course: { select: { timezone: true, stripeAccountId: true } } },
   });
@@ -79,6 +79,8 @@ export async function settleAtCounter(courseId: string, bookingId: string, opts:
     if (after?.readerStartedAt) return { ok: false, status: 409, error: 'This group is being paid on the card reader — finish or cancel it there first.' };
     if (after?.paymentStatus === 'paid') return { ok: false, status: 409, error: 'This round was just paid on the card reader.' };
   }
+  // AUDIT-1: a card charge is in flight (the pay link, a check-in by card) — cash now would be a second payment.
+  if (booking.paymentStatus !== 'paid' && booking.status === 'confirmed' && booking.shopLockedAt && Date.now() - booking.shopLockedAt.getTime() < CHARGE_STALE_MS) return { ok: false, status: 409, error: BEING_CHARGED };
   const cip = opts.checkedInPlayers;
   if (cip !== undefined && (!Number.isInteger(cip) || cip < 1 || cip > booking.players)) return { ok: false, status: 400, error: 'Invalid headcount.' };
   if (booking.status === 'cancelled') return { ok: false, status: 409, error: 'This booking was cancelled.' };
@@ -112,7 +114,8 @@ export async function settleAtCounter(courseId: string, bookingId: string, opts:
       // Only a booking still open to pay: two taps (sheet and register) settle it once.
       const done = await tx.booking.updateMany({
         // …and never while it is on the card reader (a claim taken since the check above).
-        where: { id: bookingId, courseId, status: 'confirmed', paymentStatus: { not: 'paid' }, readerStartedAt: null },
+        // AUDIT-1: …nor while a card charge holds the round.
+        where: { id: bookingId, courseId, status: 'confirmed', paymentStatus: { not: 'paid' }, readerStartedAt: null, ...notBeingCharged() },
         data: { status: 'completed', checkedInAt: new Date(), paidAt: new Date(), paidOffline: !acct, paymentStatus: acct ? 'on_account' : 'paid_offline', noShowAt: null, checkInFailReason: '', ...(cip !== undefined ? { checkedInPlayers: cip } : {}),
           // POS-1a: shop items are paid at the counter too; GreenReserve's shop fee is never collected in cash.
           shopFeeCents: 0 },

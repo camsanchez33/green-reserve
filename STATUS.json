@@ -1,24 +1,36 @@
 {
-  "generatedAt": "2026-11-05T01:55:35.332Z",
+  "generatedAt": "2026-11-05T02:08:42.387Z",
   "repo": {
-    "head": "7f82cec7",
+    "head": "f54e4fda",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 8,
-    "dirty": [
-      "M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M src/app/api/golfer/auth/otp/request/route.ts",
-      " M src/app/api/golfer/auth/otp/verify/route.ts",
-      " M src/app/api/golfer/memberships/route.ts",
-      " M src/lib/email.ts",
-      " M src/lib/twilio.ts",
-      "?? scripts/audit-signin-test.ts"
-    ],
-    "looksLikeRunInProgress": true
+    "dirtyCount": 0,
+    "dirty": [],
+    "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "f54e4fda",
+        "date": "2026-11-05T02:08:40+00:00",
+        "subject": "One card charge per round at a time: claim the round before charging; cash and the reader refuse a live claim",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "4c7680ad",
+        "date": "2026-11-04T21:08:21-05:00",
+        "subject": "Security audit: sign-in hardening (#313)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "bfa71331",
+        "date": "2026-11-05T01:55:57+00:00",
+        "subject": "Sign-in hardening from the security audit: US/Canada-only texts, escaped email, exact phone linking, trimmed memberships list",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "24b7474c",
         "date": "2026-11-04T20:30:04-05:00",
@@ -1081,6 +1093,21 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "f54e4fda",
+      "date": "2026-11-05",
+      "subject": "One card charge per round at a time: claim the round before charging; cash and the reader refuse a live claim"
+    },
+    {
+      "h": "4c7680ad",
+      "date": "2026-11-04",
+      "subject": "Security audit: sign-in hardening (#313)"
+    },
+    {
+      "h": "bfa71331",
+      "date": "2026-11-05",
+      "subject": "Sign-in hardening from the security audit: US/Canada-only texts, escaped email, exact phone linking, trimmed memberships list"
+    },
+    {
       "h": "24b7474c",
       "date": "2026-11-04",
       "subject": "Settings restyle to the DASH-D mockup (#312)"
@@ -1124,21 +1151,6 @@
       "h": "241549e9",
       "date": "2026-11-05",
       "subject": "Analytics: golfer groups — regulars, new, at risk, inactive (SEG-1)"
-    },
-    {
-      "h": "3bf3f7fa",
-      "date": "2026-11-04",
-      "subject": "Events: command center strip and organizer bill coverage (EVENTS-1) (#308)"
-    },
-    {
-      "h": "4c554dc8",
-      "date": "2026-11-04",
-      "subject": "EVENTS-1 review fix: name players past the confirmed headcount instead of hiding them"
-    },
-    {
-      "h": "fed27d5f",
-      "date": "2026-11-04",
-      "subject": "Events: command center strip and organizer bill coverage per player (EVENTS-1)"
     }
   ]
 }

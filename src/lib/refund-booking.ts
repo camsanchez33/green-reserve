@@ -118,7 +118,7 @@ export async function refundBooking(bookingId: string, opts: {
       data: { bookingId, kind: 'refund', amountCents, stripeId: refund.id, actor: opts.actor, actorName: opts.actorName, detail: reason },
     }),
     // paymentStatus only flips on a FULL refund; a partial one is still a paid round with money returned.
-    ...(full ? [prisma.booking.update({ where: { id: bookingId }, data: { paymentStatus: 'refunded' } })] : []),
+    ...(full ? [prisma.booking.update({ where: { id: bookingId }, data: { paymentStatus: 'refunded', shopLockedAt: null } }) /* AUDIT-1: the round is open again — its old charge claim mustn't block collecting it again */] : []),
   ]);
 
   let emailSent = false;
