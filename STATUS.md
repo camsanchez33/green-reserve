@@ -4,14 +4,17 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-05 01:55 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `7f82cec7` · working tree **8 dirty file(s)**
+Generated 2026-11-05 02:08 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `f54e4fda` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 95 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 98 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `f54e4fda` | 2026-11-05 | One card charge per round at a time: claim the round before charging; cash and the reader refuse a live claim |
+| `4c7680ad` | 2026-11-04 | Security audit: sign-in hardening (#313) |
+| `bfa71331` | 2026-11-05 | Sign-in hardening from the security audit: US/Canada-only texts, escaped email, exact phone linking, trimmed memberships list |
 | `24b7474c` | 2026-11-04 | Settings restyle to the DASH-D mockup (#312) |
 | `56471e89` | 2026-11-05 | Settings restyle to the DASH-D mockup: 26px title, section nav as raised tabs, 7px inputs and choice tiles |
 | `b558efe3` | 2026-11-04 | Members restyle to the DASH-D mockup (#311) |
@@ -109,20 +112,6 @@ Generated 2026-11-05 01:55 UTC · branch `claude/walkthrough-2-prioritization-ui
 | `efef5f62` | 2026-11-01 | Money audit fixes: dues charge only the shown total, tier term change stops auto-renew, credited round returns our fee, pay link opens on the day |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
-
-### Uncommitted working tree (8 file(s))
-
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M src/app/api/golfer/auth/otp/request/route.ts`
-- `M src/app/api/golfer/auth/otp/verify/route.ts`
-- `M src/app/api/golfer/memberships/route.ts`
-- `M src/lib/email.ts`
-- `M src/lib/twilio.ts`
-- `?? scripts/audit-signin-test.ts`
-
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -245,6 +234,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `f54e4fda` 2026-11-05 — One card charge per round at a time: claim the round before charging; cash and the reader refuse a live claim
+- `4c7680ad` 2026-11-04 — Security audit: sign-in hardening (#313)
+- `bfa71331` 2026-11-05 — Sign-in hardening from the security audit: US/Canada-only texts, escaped email, exact phone linking, trimmed memberships list
 - `24b7474c` 2026-11-04 — Settings restyle to the DASH-D mockup (#312)
 - `56471e89` 2026-11-05 — Settings restyle to the DASH-D mockup: 26px title, section nav as raised tabs, 7px inputs and choice tiles
 - `b558efe3` 2026-11-04 — Members restyle to the DASH-D mockup (#311)
@@ -254,9 +246,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `dfcf2b74` 2026-11-04 — Analytics: golfer groups — regulars, new, at risk, inactive (SEG-1) (#309)
 - `537fb89a` 2026-11-05 — SEG-1 review fix: golfer contact on Analytics only with See golfer email and phone
 - `241549e9` 2026-11-05 — Analytics: golfer groups — regulars, new, at risk, inactive (SEG-1)
-- `3bf3f7fa` 2026-11-04 — Events: command center strip and organizer bill coverage (EVENTS-1) (#308)
-- `4c554dc8` 2026-11-04 — EVENTS-1 review fix: name players past the confirmed headcount instead of hiding them
-- `fed27d5f` 2026-11-04 — Events: command center strip and organizer bill coverage per player (EVENTS-1)
 
 ---
 

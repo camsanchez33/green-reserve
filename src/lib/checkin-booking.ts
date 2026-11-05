@@ -69,6 +69,21 @@ type ChargeResult =
 export const READER_STALE_MS = 10 * 60 * 1000;
 
 /**
+ * AUDIT-1 (security audit 2026-11-05, S1): one card charge per round at a time.
+ * A card charge CLAIMS the round (shopLockedAt, a conditional write) before
+ * anything changes it; a second card attempt (staff on the sheet while the
+ * golfer pays on the pay link, two phones on one link), cash at the counter
+ * and the card reader all refuse a round with a live claim. A claim older
+ * than this belongs to an attempt that died mid-charge (the function is long
+ * gone): it can be taken over — the retry then finds that charge at Stripe
+ * (same idempotency key, or the search) instead of charging again.
+ */
+export const CHARGE_STALE_MS = 5 * 60 * 1000;
+export const BEING_CHARGED = 'This round is being charged right now from another screen — wait a moment and refresh.';
+/** Prisma where-clause: no live card-charge claim on the round. */
+export const notBeingCharged = (now = Date.now()) => ({ OR: [{ shopLockedAt: null }, { shopLockedAt: { lt: new Date(now - CHARGE_STALE_MS) } }] });
+
+/**
  * B-5 (security review): the cart add-on is priced the way the booking route
  * prices a cart — the golfer's active tier at this course, when they have one
  * (flat weekday/weekend cart rate), else the tee time's cart fee. Used for
@@ -174,6 +189,22 @@ async function chargeBooking(
     console.log(JSON.stringify({ ev: 'checkin.partial_split_refused', bookingId, error: sp.error }));
   }
 
+  // AUDIT-1: claim the round BEFORE anything below changes it or charges it. Only
+  // an open round with no reader payment and no live card claim can be taken; the
+  // reader brings its own claim (cardPresent), and a paid round charges nothing.
+  const lockStamp = new Date();
+  const claimRound = !alreadyPaid && !opts?.cardPresent;
+  if (claimRound) {
+    const claimed = await prisma.booking.updateMany({
+      where: { id: bookingId, status: 'confirmed', readerStartedAt: null, ...notBeingCharged(lockStamp.getTime()) },
+      data: { shopLockedAt: lockStamp },
+    });
+    if (!claimed.count) return { error: BEING_CHARGED, status: 409 } as const;
+  }
+  // The stamp is this attempt's: only this attempt may lift it, so an
+  // overlapping attempt's decline never unfreezes a charge still in flight.
+  const unlock = () => prisma.booking.updateMany({ where: { id: bookingId, shopLockedAt: lockStamp }, data: { shopLockedAt: null } });
+
   // B-5: "Add a cart today?" — only for a booking with no cart, only before
   // money moves, only when the tee time actually prices a cart. The booking's
   // own totals change first so the charge, the receipt and the ledger agree.
@@ -256,9 +287,11 @@ async function chargeBooking(
         chargePaymentMethodId = externalPm;
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Could not save card.';
+        await unlock();
         return { error: `Card setup failed: ${message}`, status: 402 } as const;
       }
     } else if (!chargePaymentMethodId && !opts?.cardPresent && roundChargeCents(booking) > 0) {
+      await unlock();
       return { error: 'No card on file -- enter card details to complete check-in.', status: 422 } as const;
     }
 
@@ -268,15 +301,15 @@ async function chargeBooking(
     // shop items freeze — set the lock, then read them again. A shop write
     // holding the row (lib/shop.ts lockBooking) finishes first and is seen;
     // any later one is refused. The lock is lifted only on a definite non-charge.
-    // The stamp is this attempt's: only this attempt may lift it, so an
-    // overlapping attempt's decline never unfreezes a charge still in flight.
-    const lockStamp = new Date();
+    // AUDIT-1: a card charge already holds its claim (taken above); the reader's
+    // own claim guards a reader payment, which takes the lock here as before.
     {
-      const locked = await prisma.booking.update({ where: { id: bookingId }, data: { shopLockedAt: lockStamp }, select: { shopTotalCents: true, shopFeeCents: true } });
+      const locked = claimRound
+        ? await prisma.booking.findUniqueOrThrow({ where: { id: bookingId }, select: { shopTotalCents: true, shopFeeCents: true } })
+        : await prisma.booking.update({ where: { id: bookingId }, data: { shopLockedAt: lockStamp }, select: { shopTotalCents: true, shopFeeCents: true } });
       booking.shopTotalCents = locked.shopTotalCents;
       booking.shopFeeCents = locked.shopFeeCents;
     }
-    const unlock = () => prisma.booking.updateMany({ where: { id: bookingId, shopLockedAt: lockStamp }, data: { shopLockedAt: null } });
     // W2-7 B2: the sales tax on the shop items, worked out NOW — under this
     // charge's own lock, so it is for exactly the items being charged (no shop
     // write can land in between). Never charge on a stale or missing figure.
@@ -395,7 +428,7 @@ async function chargeBooking(
       await prisma.booking.update({ where: { id: bookingId }, data: { checkInFailReason: message, ...(cartAddedCents > 0 && definite ? preCart : {}), ...(partialApplied && definite ? { ...prePartial, checkedInPlayers: null } : {}) } });
       if (definite) await unlock();
       if (inProgress) {
-        return { error: 'This round is being charged right now from another screen — wait a moment and refresh.', status: 409 } as const;
+        return { error: BEING_CHARGED, status: 409 } as const;
       }
       if (/idempotent|idempotency/i.test(message)) {
         return { error: 'The total changed since the first attempt with this card (a cart or a shop item was added or removed). Put the total back as it was, or use a different card.', status: 409 } as const;

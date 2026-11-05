@@ -16418,16 +16418,28 @@
     },
     {
       "path": "src/lib/checkin-booking.ts",
-      "lines": 536,
+      "lines": 569,
       "purpose": "",
       "brain": [],
       "exports": [
+        {
+          "name": "BEING_CHARGED",
+          "kind": "const"
+        },
         {
           "name": "cartAddOnCentsFor",
           "kind": "fn"
         },
         {
+          "name": "CHARGE_STALE_MS",
+          "kind": "const"
+        },
+        {
           "name": "collectPayment",
+          "kind": "fn"
+        },
+        {
+          "name": "notBeingCharged",
           "kind": "fn"
         },
         {
@@ -16646,7 +16658,7 @@
     },
     {
       "path": "src/lib/counter-pay.ts",
-      "lines": 316,
+      "lines": 319,
       "purpose": "A group pays for its round at the counter (cash, or the course's own card machine):",
       "brain": [],
       "exports": [
@@ -23020,7 +23032,7 @@
     },
     {
       "path": "src/lib/reader-rounds.ts",
-      "lines": 227,
+      "lines": 228,
       "purpose": "POS-3 R3b (Cam 2026-10-24, \"Ok go\"):",
       "brain": [],
       "exports": [

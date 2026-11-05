@@ -21,7 +21,7 @@ import Stripe from 'stripe';
 import { prisma } from './prisma';
 import { stripe } from './stripe';
 import { courseStripe, ownReader, stripeMessage } from './card-reader';
-import { performCheckIn, READER_STALE_MS as READER_STALE } from './checkin-booking';
+import { performCheckIn, READER_STALE_MS as READER_STALE, notBeingCharged, BEING_CHARGED } from './checkin-booking';
 import { ensureShopTax } from './round-shop-tax';
 import { roundChargeCents, roundApplicationFeeCents } from './shop';
 import { recordPaymentEvent } from './refund-booking';
@@ -61,10 +61,11 @@ export async function startRoundOnReader(courseId: string, bookingId: string, re
 
   const stamp = new Date();
   const claimed = await prisma.booking.updateMany({
-    where: { id: bookingId, courseId, status: 'confirmed', readerStartedAt: null, paymentStatus: { notIn: ['paid', 'paid_offline', 'on_account'] } },
+    // AUDIT-1: …and never while a card charge (the pay link, a check-in by card) holds the round.
+    where: { id: bookingId, courseId, status: 'confirmed', readerStartedAt: null, paymentStatus: { notIn: ['paid', 'paid_offline', 'on_account'] }, ...notBeingCharged(stamp.getTime()) },
     data: { readerStartedAt: stamp, readerId, readerIntentId: '' },
   });
-  if (!claimed.count) return fail(409, 'This group changed at the same moment — refresh and try again.');
+  if (!claimed.count) return fail(409, `This group changed at the same moment, or ${BEING_CHARGED.charAt(0).toLowerCase()}${BEING_CHARGED.slice(1)}`);
   // Freeze the items on the round (the lock a card charge takes) and price them now, under it.
   await prisma.booking.update({ where: { id: bookingId }, data: { shopLockedAt: stamp } });
   const taxed = await ensureShopTax(bookingId, { ownLock: stamp });

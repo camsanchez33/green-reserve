@@ -179,13 +179,13 @@ async function cleanup() {
   const z = await book(c.id);
   await startRoundOnReader(c.id, z.id, 'tmr_a', STAFF);
   const zpi = await piOf(z.id);
-  await prisma.booking.update({ where: { id: z.id }, data: { readerStartedAt: new Date(Date.now() - 11 * 60 * 1000) } });
+  await prisma.booking.update({ where: { id: z.id }, data: (() => { const t = new Date(Date.now() - 11 * 60 * 1000); return { readerStartedAt: t, shopLockedAt: t }; })() }); // the claim stamps both
   // Its stamp moved, so the shop lock with the old stamp is this claim's no longer — free it as a real stale claim would be.
   const zcash = await settleAtCounter(c.id, z.id, { actor: STAFF, actorName: 't' });
   ok('a claim left 10 minutes: the reader is stopped and its intent cancelled, then cash goes through', zcash.ok && zpi.status === 'canceled' && readers.get('tmr_a')!.action === null && (await get(z.id)).paymentStatus === 'paid_offline', zcash);
   const v = await book(c.id);
   await startRoundOnReader(c.id, v.id, 'tmr_a', STAFF);
-  await prisma.booking.update({ where: { id: v.id }, data: { readerStartedAt: new Date(Date.now() - 11 * 60 * 1000) } });
+  await prisma.booking.update({ where: { id: v.id }, data: (() => { const t = new Date(Date.now() - 11 * 60 * 1000); return { readerStartedAt: t, shopLockedAt: t }; })() }); // the claim stamps both
   tap('tmr_a'); // the customer did tap — late
   const vcash = await settleAtCounter(c.id, v.id, { actor: STAFF, actorName: 't' });
   ok('…and one that turned out paid is recorded as paid by card, never also cash', !vcash.ok && (await get(v.id)).paymentStatus === 'paid' && !(await get(v.id)).paidOffline, vcash);
