@@ -27,6 +27,7 @@ import { StatusDot } from '@/components/ui/StatusDot';
 import { TERMS, TURNED_AWAY_CSV, type TermKey } from '@/lib/analytics-terms';
 import { ShopTab } from '@/components/dashboard/analytics/ShopTab';
 import type { Analytics } from '@/lib/analytics';
+import { SEGMENTS, SEGMENT_LABEL, SEG_UI, type Segment } from '@/lib/golfer-segments';
 
 type Headline = { collectedCents: number; expectedCents: number; fillPct: number | null; lostCents: number; noShowPct: number | null; cancelPct: number | null; customers: number; returningPct: number | null; bookings: number; avgLeadDays: number | null; roundsPlayed?: number; perRoundCents?: number | null };
 type SeriesRow = Analytics['revenue']['series'][number];
@@ -614,6 +615,8 @@ function GolfersTab({ d }: { d: Data }) {
         {g.unidentifiedBookings > 0 && <p className="text-[12.5px] text-ink-muted mt-2">{plural(g.unidentifiedBookings, 'walk-in')} with no email or phone</p>}
       </Section>
 
+      <SegmentsSection d={d} />
+
       {/* W2-8 (9): the regulars to call — Cam 2026-10-22: name, email and phone shown. */}
       <Section title="Regulars who’ve gone quiet" term="goneQuiet"
         action={g.goneQuiet.length > 0 ? <Download onClick={() => downloadCsv(`gone-quiet-${d.range.to}`, ['Golfer', 'Email', 'Phone', 'Rounds', 'Last played', 'Usually every (days)', 'Days since'], g.goneQuiet.map(r => [r.name, r.email, r.phone, r.rounds, r.lastPlayed, r.usualGapDays, r.daysSince]))} /> : undefined}>
@@ -638,6 +641,31 @@ function GolfersTab({ d }: { d: Data }) {
         );
       })()}
     </div>
+  );
+}
+
+/** SEG-1 (Cam 2026-11-05): every golfer in one group (lib/golfer-segments) — pick a group to see who's in it. */
+const SEG_TERM: Record<Segment, TermKey> = { regular: 'segRegular', new: 'segNew', at_risk: 'segAtRisk', inactive: 'segInactive', occasional: 'segOccasional' };
+function SegmentsSection({ d }: { d: Data }) {
+  const s = d.customers.segments;
+  const [pick, setPick] = useState<Segment>('regular');
+  const rows = s.rows.filter(r => r.segment === pick);
+  return (
+    <Section title={SEG_UI.title} term="segments"
+      action={rows.length > 0 ? <Download onClick={() => downloadCsv(`golfers-${SEGMENT_LABEL[pick].toLowerCase().replace(/\s+/g, '-')}-${s.asOf}`, [...SEG_UI.csv], rows.map(r => [r.name, r.email, r.phone, r.rounds, r.recentRounds, r.firstPlayed, r.lastPlayed]))} /> : undefined}>
+      <div role="group" className="flex flex-wrap gap-1 p-1 rounded-[7px] bg-paper mb-3">
+        {SEGMENTS.map(k => (
+          <button key={k} type="button" aria-pressed={pick === k} title={TERMS[SEG_TERM[k]]} onClick={() => setPick(k)}
+            className={'flex-1 min-w-[7rem] px-3 py-2 rounded-[5px] text-left ' + (pick === k ? 'bg-white shadow-card' : 'hover:bg-white/60')}>
+            <span className="block text-[12.5px] text-ink-soft">{SEGMENT_LABEL[k]}</span>
+            <span className="block text-[20px] font-semibold tabular-nums text-ink">{s.counts[k].toLocaleString()}</span>
+          </button>
+        ))}
+      </div>
+      <Table head={[...SEG_UI.head]} empty={SEG_UI.empty}
+        rows={rows.slice(0, 25).map(r => [<Link key={r.key} href={`/dashboard/golfers/${encodeURIComponent(r.key)}`} className="text-pine hover:underline">{r.name}</Link>, r.rounds, r.recentRounds, fmtDay(r.lastPlayed)])} />
+      {rows.length > 25 && <p className="text-[12.5px] text-ink-muted mt-2">{rows.length - 25} {SEG_UI.more}</p>}
+    </Section>
   );
 }
 

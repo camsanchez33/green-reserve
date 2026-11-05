@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-657 source files · 290 routes · 234 libraries · 70 models
+658 source files · 290 routes · 235 libraries · 70 models
 
 ## Single sources of truth
 
@@ -306,7 +306,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/courses/[slug]/member` | member | **NONE FOUND** | page | `src/app/courses/[slug]/member/page.tsx` | 874 |
 | `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 1948 |
 | `/dashboard/2fa` | operator | entry | page | `src/app/dashboard/2fa/page.tsx` | 110 |
-| `/dashboard/analytics` | operator | middleware | page | `src/app/dashboard/analytics/page.tsx` | 792 |
+| `/dashboard/analytics` | operator | middleware | page | `src/app/dashboard/analytics/page.tsx` | 820 |
 | `/dashboard/cancellations` | operator | middleware | page | `src/app/dashboard/cancellations/page.tsx` | 17 |
 | `/dashboard/events` | operator | middleware | page | `src/app/dashboard/events/page.tsx` | 186 |
 | `/dashboard/forgot-password` | operator | entry | page | `src/app/dashboard/forgot-password/page.tsx` | 63 |
@@ -379,7 +379,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/admin-areas.ts` | 13 | 44 | AW-11 (Cam 2026-10-22: | `ADMIN_AREAS`, `AdminArea`, `ALL_AREAS`, `effectiveAreas`, `hasArea`, `isAdminArea` |
 | `src/lib/round-packs.ts` | 13 | 288 | PRICE-3 (Cam 2026-10-30: | `buyPackOnline`, `closeStalePackLinks`, `endPacksRefundedOutside`, `findHoldings`, `giveBack`, `Holding`, `holdingById`, `holdingsFor` +16 more |
 | `src/lib/admin-session-context.tsx` | 12 | 80 | MP-11a (ADMIN_V4 V4-7, LAW rule 2): | `AdminSessionProvider`, `AdminSessionView`, `isAdminAuthPath`, `useAdminSession` |
-| `src/lib/analytics.ts` | 11 | 633 | AN-1 (Cam 2026-10-01): | `Analytics`, `bookingPace`, `computeAnalytics`, `courseShareCents`, `EVENT_LOG_START`, `headline`, `NO_SHOW_GRACE_MIN`, `PaceDay` +4 more |
+| `src/lib/analytics.ts` | 11 | 638 | AN-1 (Cam 2026-10-01): | `Analytics`, `bookingPace`, `computeAnalytics`, `courseShareCents`, `EVENT_LOG_START`, `headline`, `NO_SHOW_GRACE_MIN`, `PaceDay` +4 more |
 | `src/lib/approval-state.ts` | 11 | 61 |  | `ApprovalState`, `coursePageDecision`, `getApprovalState`, `recordCoursePageDecision` |
 | `src/lib/real-courses.ts` | 11 | 22 | TEST-2 (Cam 2026-10-22: | `ON_REAL_BOOKING`, `ON_REAL_COURSE`, `REAL_COURSE` |
 | `src/lib/security-events.ts` | 11 | 129 | SEC-3 (Cam 2026-10-26, "security has to be insane"; chose "log events" and "email + Problems"): | `BURST_PER_IP`, `BURST_TOTAL`, `lockedAccountsNow`, `MAX_EVENTS_PER_IP_HOUR`, `purgeOldSecurityEvents`, `SECURITY_KEEP_DAYS`, `securityEvent`, `securityFindings` +3 more |
@@ -436,7 +436,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/tax-categories.ts` | 5 | 21 | W2-7 part B: | `isTaxCategory`, `TAX_CATEGORIES`, `TaxCategory`, `US_STATES` |
 | `src/lib/terms.ts` | 5 | 9 | Bump this whenever /terms materially changes so old bookings keep an honest record of which version the golfer actually agreed to. | `CURRENT_TERMS_VERSION` |
 | `src/lib/admin-course-tabs.ts` | 4 | 98 | AW-7 (Cam 2026-10-21): | `bucketWeeks`, `COURSE_TABS`, `COURSE_WEEKS`, `CourseTab`, `openingTab`, `ProblemInput`, `SetupCheck`, `SetupCheckKey` +5 more |
-| `src/lib/analytics-terms.ts` | 4 | 53 | DENSE-1 (DENSE_UI_SPEC P2): | `TermKey`, `TERMS`, `TURNED_AWAY_CSV` |
+| `src/lib/analytics-terms.ts` | 4 | 59 | DENSE-1 (DENSE_UI_SPEC P2): | `TermKey`, `TERMS`, `TURNED_AWAY_CSV` |
 | `src/lib/birdie/ask.ts` | 4 | 33 | AN-3 (Cam 2026-10-19: | `APPLIED_EVENT`, `ASK_EVENT`, `askBirdie`, `markBirdieReady`, `useBirdieReady` |
 | `src/lib/birdie/proposal-types.ts` | 4 | 65 | BIRDIE_AI_SPEC B4b — the confirm-card shape, shared by the server (which builds cards in proposals.ts) and the widget (which shows them and makes the call). | `cardCalls`, `isProposalCard`, `PROPOSAL_ROUTES`, `ProposalCall`, `ProposalCard` |
 | `src/lib/call-invite.ts` | 4 | 106 | CALL_SCHEDULING_SPEC SC-2 §1 — the "pick a call time" invite. | `deliverCallInvite`, `INVITE_DAYS`, `inviteAgendaLines`, `InviteSendResult`, `inviteUrl`, `issueCallInvite`, `sendCallInvite`, `sendCallReminders` |
@@ -509,6 +509,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/cutoff-hold.ts` | 2 | 127 | The cancellation-window hold (SP-B timing "hold_at_cutoff"): | `chargeCutoffHold`, `HOLD_STALE_MS`, `HoldResult` |
 | `src/lib/data-reset.ts` | 2 | 161 | TEST-1 (Cam 2026-10-22: | `CourseResetPreview`, `KEPT_TABLES`, `previewCourseReset`, `previewWipeAll`, `resetTestCourse`, `TableCounts`, `WIPE_ALL_UNTIL`, `WIPE_CONFIRM_WORDS` +3 more |
 | `src/lib/golfer-record.ts` | 2 | 174 | The golfer record (Revamp 3, Cam 2026-10-29): | `autoBlockReason`, `golferRecord`, `GolferRecord`, `isLateCancel`, `onlineBookingBlock`, `recordKeys`, `recordKeysFor` |
+| `src/lib/golfer-segments.ts` | 2 | 71 | SEG-1 (Cam 2026-11-05, golfer segments): | `golferSegments`, `INACTIVE_DAYS`, `NEW_DAYS`, `REGULAR_DAYS`, `REGULAR_ROUNDS`, `SEG_UI`, `Segment`, `SEGMENT_LABEL` +3 more |
 | `src/lib/home-board.ts` | 2 | 83 | DASH-D Home (Cam 2026-11-01, mockups S1 + "week-ahead heat map and month vs goal"): | `courseConditions`, `monthGoal`, `openShiftNotes`, `SHIFT_NOTE_MAX`, `ShiftNoteRow`, `weekAhead` |
 | `src/lib/inquiry-action-queue.ts` | 2 | 107 | The Overview action queue's inquiry rows. | `ActionQueueRow`, `buildInquiryQueueRows`, `QueueInquiry` |
 | `src/lib/inquiry-board.ts` | 2 | 85 | AW-6a (Cam 2026-10-21): | `BOARD_COLUMNS`, `BOARD_STUCK_DAYS`, `boardColumn`, `BoardColumn`, `BoardInquiry`, `LIVE_ON_BOARD_DAYS`, `nextStep`, `NextStep` +1 more |
