@@ -1,3 +1,4 @@
+import { holdChargeKey } from './hold-key';
 import { prisma } from './prisma';
 import { sendCancellationEmail, sendTeeTimeAlertEmail } from './email';
 import { refundOnConnectedAccount, chargeOnConnectedAccount } from './stripe';
@@ -77,6 +78,7 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
       const refund = await refundOnConnectedAccount({
         paymentIntentId: booking.roundPaymentIntentId as string,
         connectedAccountId: booking.course.stripeAccountId,
+        idempotencyKey: `round-cancel-${bookingId}-${booking.roundPaymentIntentId}`,
       });
       roundRefunded = true;
       // LEDGER-1: the whole round back, GreenReserve's application fee with it (refund_application_fee).
@@ -104,7 +106,7 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
       // PARTIAL-1: a hold shared with a part split off this group gives back only this booking's share.
       const share = await holdRefundCents(booking);
       if (!hasShareToRefund(share)) { feeAlreadyCharged = false; } else {
-      const refund = await refundOnConnectedAccount({ paymentIntentId: booking.cancellationFeeChargeId, connectedAccountId: booking.course.stripeAccountId, amountCents: share });
+      const refund = await refundOnConnectedAccount({ paymentIntentId: booking.cancellationFeeChargeId, connectedAccountId: booking.course.stripeAccountId, amountCents: share, idempotencyKey: `hold-back-${bookingId}-${booking.cancellationFeeChargeId}` });
       feeAlreadyCharged = false;
       feeWaivedRefunded = true;
       await recordMove({ courseId: booking.courseId, what: await chargeWhat(booking.cancellationFeeChargeId, holdsAtCutoff(booking) ? 'hold' : 'late_fee'), direction: 'out', method: 'card', account: 'course', amountCents: refund.amount, stripeId: refund.id, bookingId, actor: actor.type, note: 'fee waived on cancel' });
@@ -162,6 +164,10 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
     else if (!booking.course.stripeAccountId || !booking.course.stripeAccountActive) lateFeeChargeFailed = 'the course’s Stripe account is not connected';
     else {
       try {
+        // AUDIT-1: the very key the crons use (lib/hold-key), so a cancel racing them is still one charge.
+        const feeKey = hold && booking.paymentStatus === 'card_on_file'
+          ? await holdChargeKey(booking.id, booking.stripePaymentMethodId as string)
+          : `latefee-${booking.id}-${booking.stripePaymentMethodId}`;
         const charge = () => chargeOnConnectedAccount({
           customerId: booking.stripeCustomerId as string,
           paymentMethodId: booking.stripePaymentMethodId as string,
@@ -172,9 +178,7 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
           // The crons' key only while a cron could still be racing this cancel
           // (card_on_file). After a hold was taken and refunded (collectPayment),
           // reusing it would make Stripe replay the refunded PaymentIntent.
-          idempotencyKey: hold && booking.paymentStatus === 'card_on_file'
-            ? `cancelfee-${booking.id}-${booking.stripePaymentMethodId}`
-            : `latefee-${booking.id}-${booking.stripePaymentMethodId}`,
+          idempotencyKey: feeKey,
         });
         // A cron charging this same hold right now makes Stripe answer "another
         // in-progress request using this key". Wait and replay: Stripe then returns
@@ -252,7 +256,7 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
     const after = await prisma.booking.findUnique({ where: { id: bookingId }, select: { cancellationFeeChargeId: true } });
     if (lateFee && after?.cancellationFeeChargeId !== lateFee.id) {
       try {
-        const refund = await refundOnConnectedAccount({ paymentIntentId: lateFee.id, connectedAccountId: booking.course.stripeAccountId as string });
+        const refund = await refundOnConnectedAccount({ paymentIntentId: lateFee.id, connectedAccountId: booking.course.stripeAccountId as string, idempotencyKey: `late-fee-race-${bookingId}-${lateFee.id}` });
         await recordMove({ courseId: booking.courseId, what: hold ? 'hold' : 'late_fee', direction: 'out', method: 'card', account: 'course', amountCents: refund.amount, stripeId: refund.id, bookingId, actor: 'system', note: 'the booking changed while the fee was charged' });
         await recordPaymentEvent({ bookingId, kind: 'refund', amountCents: refund.amount, stripeId: refund.id, actor: 'system', detail: 'Late fee refunded — the booking was cancelled or checked in from another screen while it was being charged' }).catch(() => {});
       } catch (err) {

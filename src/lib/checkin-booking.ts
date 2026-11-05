@@ -200,6 +200,10 @@ async function chargeBooking(
       data: { shopLockedAt: lockStamp },
     });
     if (!claimed.count) return { error: BEING_CHARGED, status: 409 } as const;
+    // AUDIT-1: the hourly cron may have taken the cutoff hold since the read above — under the claim it
+    // can't any more (cutoff-hold refuses a claimed round), so read where the hold stands now.
+    const now = await prisma.booking.findUniqueOrThrow({ where: { id: bookingId }, select: { paymentStatus: true, cancellationFeeChargeId: true, cancellationFeeTotal: true } });
+    booking.paymentStatus = now.paymentStatus; booking.cancellationFeeChargeId = now.cancellationFeeChargeId; booking.cancellationFeeTotal = now.cancellationFeeTotal;
   }
   // The stamp is this attempt's: only this attempt may lift it, so an
   // overlapping attempt's decline never unfreezes a charge still in flight.
@@ -408,7 +412,9 @@ async function chargeBooking(
         // putting the amount in the key turned that refusal into a fresh
         // request, and a search index that lags by a minute cannot stand in
         // for idempotency.)
-        idempotencyKey: `checkin-${booking.id}-${chargePaymentMethodId}`,
+        // AUDIT-1: after a full refund the same card would replay the refunded charge (Stripe keeps a key
+        // 24h) and mark the round paid with no money taken — the refunded charge's id makes it a new request.
+        idempotencyKey: `checkin-${booking.id}-${chargePaymentMethodId}${booking.paymentStatus === 'refunded' && booking.roundPaymentIntentId ? `-after-${booking.roundPaymentIntentId}` : ''}`,
       });
       paymentIntentId = paymentIntent.id;
       chargedCents = paymentIntent.amount;
@@ -446,6 +452,7 @@ async function chargeBooking(
           paymentIntentId: booking.cancellationFeeChargeId,
           connectedAccountId: booking.course.stripeAccountId as string,
           amountCents: share,
+          idempotencyKey: `hold-back-${booking.id}-${booking.cancellationFeeChargeId}`,
         });
         feeRefundOk = true;
         await recordMove({ courseId: booking.courseId, what: 'hold', direction: 'out', method: 'card', account: 'course', amountCents: refund.amount, stripeId: refund.id, bookingId, actor: actor.type, note: 'hold given back at check-in' });

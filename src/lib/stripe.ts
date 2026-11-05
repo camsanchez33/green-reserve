@@ -130,6 +130,8 @@ export async function refundOnConnectedAccount(opts: {
   paymentIntentId: string;
   connectedAccountId: string;
   amountCents?: number; // omit to refund in full
+  /** AUDIT-1: a stable key per (booking, charge, purpose) so a retry or a double tap never refunds twice — a PARTIAL refund would otherwise succeed again. */
+  idempotencyKey?: string;
 }) {
   // Review (security, HIGH): every refund of a round charge must give back
   // GreenReserve's application fee pro rata — the refund primitive
@@ -139,6 +141,6 @@ export async function refundOnConnectedAccount(opts: {
   // the flag is a no-op there.
   return stripe.refunds.create(
     { payment_intent: opts.paymentIntentId, amount: opts.amountCents, refund_application_fee: true },
-    { stripeAccount: opts.connectedAccountId }
+    { stripeAccount: opts.connectedAccountId, ...(opts.idempotencyKey ? { idempotencyKey: opts.idempotencyKey } : {}) }
   );
 }

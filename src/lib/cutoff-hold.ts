@@ -14,6 +14,8 @@
 //      key), the charge is refunded in full.
 import { prisma } from './prisma';
 import { chargeOnConnectedAccount, refundOnConnectedAccount } from './stripe';
+import { CHARGE_STALE_MS, notBeingCharged } from './checkin-booking';
+import { holdChargeKey } from './hold-key';
 import { recordBookingEventSafe } from './booking-events';
 import { recordPaymentEvent } from './refund-booking';
 import { recordMove } from './money-ledger';
@@ -45,6 +47,9 @@ export async function chargeCutoffHold(bookingId: string, now: Date = new Date()
   });
   if (!booking || booking.status !== 'confirmed' || booking.paymentStatus !== 'card_on_file') return 'changed';
   if (booking.cancellationFeeTotal <= 0 || !holdsAtCutoff(booking)) return 'not_due';
+  // AUDIT-1: the round is being charged right now (pay link, check-in by card) — that charge settles
+  // it; a hold now would be charged and never given back. The next hourly run looks again.
+  if (booking.shopLockedAt && now.getTime() - booking.shopLockedAt.getTime() < CHARGE_STALE_MS) return 'not_due';
   const teeMs = teeToUtcMs(booking.teeTime.date, booking.teeTime.time, booking.course.timezone || 'America/New_York');
   const cutoffMs = teeMs - bookingWindowHours(booking, booking.course) * 3600_000;
   if (!Number.isFinite(teeMs) || cutoffMs > now.getTime() || now.getTime() - teeMs > HOLD_STALE_MS) return 'not_due';
@@ -63,7 +68,8 @@ export async function chargeCutoffHold(bookingId: string, now: Date = new Date()
       amountCents,
       applicationFeeCents: 0,
       description: `Late-cancellation fee - ${booking.course.name} - booking ${booking.id}`,
-      idempotencyKey: `cancelfee-${booking.id}-${booking.stripePaymentMethodId}`,
+      // AUDIT-1: changes after a hold was handed back, so a refunded hold is never replayed (lib/hold-key).
+      idempotencyKey: await holdChargeKey(booking.id, booking.stripePaymentMethodId),
     });
   } catch (err) {
     // R-PAY-010: a declined hold used to leave nothing behind. It is ledgered once
@@ -88,14 +94,15 @@ export async function chargeCutoffHold(bookingId: string, now: Date = new Date()
   // EV-1: the money has moved, so this is ONE plain conditional update (no
   // transaction that could time out after the charge); the event is best-effort.
   const recorded = await prisma.booking.updateMany({
-    where: { id: bookingId, status: 'confirmed', paymentStatus: 'card_on_file' },
+    // AUDIT-1: …and no round charge claimed the booking while the hold was charged (it's refunded below).
+    where: { id: bookingId, status: 'confirmed', paymentStatus: 'card_on_file', ...notBeingCharged(now.getTime()) },
     data: { paymentStatus: 'cancellation_fee_charged', cancellationFeeChargeId: pi.id, cancellationFeeChargedAt: new Date() },
   });
   if (!recorded.count) {
     const after = await prisma.booking.findUnique({ where: { id: bookingId }, select: { cancellationFeeChargeId: true, status: true, paymentStatus: true } });
     if (after?.cancellationFeeChargeId === pi.id) return 'recorded_elsewhere';
     try {
-      const refund = await refundOnConnectedAccount({ paymentIntentId: pi.id, connectedAccountId: account });
+      const refund = await refundOnConnectedAccount({ paymentIntentId: pi.id, connectedAccountId: account, idempotencyKey: `hold-race-${bookingId}-${pi.id}` });
       await recordMove({ courseId: booking.courseId, what: 'hold', direction: 'out', method: 'card', account: 'course', amountCents: refund.amount, stripeId: refund.id, bookingId, actor: 'cron', note: 'the booking changed while the hold was charged' });
       await recordPaymentEvent({ bookingId, kind: 'refund', amountCents: refund.amount, stripeId: refund.id, actor: 'cron', detail: `Cutoff hold refunded — the booking changed while it was being charged (now ${after?.status ?? 'missing'} / ${after?.paymentStatus ?? '-'})` }).catch(() => {});
       console.log(JSON.stringify({ ev: 'cron.cancelfee.refunded_race', bookingId, paymentIntentId: pi.id }));

@@ -4,15 +4,18 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-05 04:07 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `3b4bf230` · working tree **6 dirty file(s)**
+Generated 2026-11-05 04:42 UTC · branch `HEAD` · HEAD `7cc238df` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 100 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 103 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `3b4bf230` | 2026-11-05 | One tee-time row per slot: fold existing duplicates, unique index, generation skips and never deletes a booked slot |
+| `7cc238df` | 2026-11-05 | Money races from the security audit: keyed refunds, recharge after refund, cron hold vs check-in, no-show vs still coming |
+| `df7ad5bd` | 2026-11-04 | Security audit: one tee-time row per slot (migration) (#315) |
+| `8286cf5a` | 2026-11-05 | Tests: give each test tee time its own slot (one row per slot is now enforced) |
+| `ab7235ec` | 2026-11-05 | One tee-time row per slot: fold existing duplicates, unique index, generation skips and never deletes a booked slot |
 | `596b4b52` | 2026-11-04 | Security audit: one card charge per round at a time (#314) |
 | `5be9c0cf` | 2026-11-05 | One card charge per round at a time: claim the round before charging; cash and the reader refuse a live claim |
 | `4c7680ad` | 2026-11-04 | Security audit: sign-in hardening (#313) |
@@ -115,17 +118,13 @@ Generated 2026-11-05 04:07 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (6 file(s))
+### Uncommitted working tree (2 file(s))
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M src/app/api/operator/course-products/route.ts`
-- `M src/app/api/operator/tee-times/route.ts`
-- `M src/lib/tee-sheet-engine.ts`
-- `?? scripts/tee-time-slot-db-test.ts`
 
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -248,7 +247,10 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `3b4bf230` 2026-11-05 — One tee-time row per slot: fold existing duplicates, unique index, generation skips and never deletes a booked slot
+- `7cc238df` 2026-11-05 — Money races from the security audit: keyed refunds, recharge after refund, cron hold vs check-in, no-show vs still coming
+- `df7ad5bd` 2026-11-04 — Security audit: one tee-time row per slot (migration) (#315)
+- `8286cf5a` 2026-11-05 — Tests: give each test tee time its own slot (one row per slot is now enforced)
+- `ab7235ec` 2026-11-05 — One tee-time row per slot: fold existing duplicates, unique index, generation skips and never deletes a booked slot
 - `596b4b52` 2026-11-04 — Security audit: one card charge per round at a time (#314)
 - `5be9c0cf` 2026-11-05 — One card charge per round at a time: claim the round before charging; cash and the reader refuse a live claim
 - `4c7680ad` 2026-11-04 — Security audit: sign-in hardening (#313)
@@ -257,9 +259,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `56471e89` 2026-11-05 — Settings restyle to the DASH-D mockup: 26px title, section nav as raised tabs, 7px inputs and choice tiles
 - `b558efe3` 2026-11-04 — Members restyle to the DASH-D mockup (#311)
 - `5e0a462c` 2026-11-05 — Members restyle to the DASH-D mockup: 26px title, four stat cards with 24px numbers, 7px buttons
-- `e43e8996` 2026-11-04 — Register restyle to the DASH-D mockup (#310)
-- `b36fe621` 2026-11-05 — Register restyle to the DASH-D mockup: segmented tabs, tiles, steppers, total, pay tiles
-- `dfcf2b74` 2026-11-04 — Analytics: golfer groups — regulars, new, at risk, inactive (SEG-1) (#309)
 
 ---
 

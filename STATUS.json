@@ -1,25 +1,42 @@
 {
-  "generatedAt": "2026-11-05T04:07:52.155Z",
+  "generatedAt": "2026-11-05T04:42:35.696Z",
   "repo": {
-    "head": "3b4bf230",
-    "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 6,
+    "head": "7cc238df",
+    "branch": "HEAD",
+    "dirtyCount": 2,
     "dirty": [
       "M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M src/app/api/operator/course-products/route.ts",
-      " M src/app/api/operator/tee-times/route.ts",
-      " M src/lib/tee-sheet-engine.ts",
-      "?? scripts/tee-time-slot-db-test.ts"
+      " M docs/codemap.json"
     ],
-    "looksLikeRunInProgress": true
+    "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
       {
-        "h": "3b4bf230",
-        "date": "2026-11-05T03:57:29+00:00",
+        "h": "7cc238df",
+        "date": "2026-11-05T04:38:36+00:00",
+        "subject": "Money races from the security audit: keyed refunds, recharge after refund, cron hold vs check-in, no-show vs still coming",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "df7ad5bd",
+        "date": "2026-11-04T23:26:20-05:00",
+        "subject": "Security audit: one tee-time row per slot (migration) (#315)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "8286cf5a",
+        "date": "2026-11-05T04:15:59+00:00",
+        "subject": "Tests: give each test tee time its own slot (one row per slot is now enforced)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "ab7235ec",
+        "date": "2026-11-05T04:07:54+00:00",
         "subject": "One tee-time row per slot: fold existing duplicates, unique index, generation skips and never deletes a booked slot",
         "ids": [],
         "matches": []
@@ -1114,7 +1131,22 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "3b4bf230",
+      "h": "7cc238df",
+      "date": "2026-11-05",
+      "subject": "Money races from the security audit: keyed refunds, recharge after refund, cron hold vs check-in, no-show vs still coming"
+    },
+    {
+      "h": "df7ad5bd",
+      "date": "2026-11-04",
+      "subject": "Security audit: one tee-time row per slot (migration) (#315)"
+    },
+    {
+      "h": "8286cf5a",
+      "date": "2026-11-05",
+      "subject": "Tests: give each test tee time its own slot (one row per slot is now enforced)"
+    },
+    {
+      "h": "ab7235ec",
       "date": "2026-11-05",
       "subject": "One tee-time row per slot: fold existing duplicates, unique index, generation skips and never deletes a booked slot"
     },
@@ -1157,21 +1189,6 @@
       "h": "5e0a462c",
       "date": "2026-11-05",
       "subject": "Members restyle to the DASH-D mockup: 26px title, four stat cards with 24px numbers, 7px buttons"
-    },
-    {
-      "h": "e43e8996",
-      "date": "2026-11-04",
-      "subject": "Register restyle to the DASH-D mockup (#310)"
-    },
-    {
-      "h": "b36fe621",
-      "date": "2026-11-05",
-      "subject": "Register restyle to the DASH-D mockup: segmented tabs, tiles, steppers, total, pay tiles"
-    },
-    {
-      "h": "dfcf2b74",
-      "date": "2026-11-04",
-      "subject": "Analytics: golfer groups — regulars, new, at risk, inactive (SEG-1) (#309)"
     }
   ]
 }

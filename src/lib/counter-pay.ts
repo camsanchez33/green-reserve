@@ -138,12 +138,16 @@ export async function settleAtCounter(courseId: string, bookingId: string, opts:
   // They paid the round at the counter, so the hold fee the cron took after
   // the cutoff goes back — exactly as a card check-in refunds it.
   let holdNote: string | null = null;
-  if (hadHoldFee && booking.course.stripeAccountId) {
+  // AUDIT-1: the cron may have taken the hold between the read above and the settle (ensureShopTax
+  // is a Stripe call). Now the booking is completed no cron can record one, so read where it stands.
+  const settledHold = await prisma.booking.findUniqueOrThrow({ where: { id: bookingId }, select: { paymentStatus: true, cancellationFeeChargeId: true, cancellationFeeTotal: true } });
+  if (settledHold.cancellationFeeChargeId) { booking.cancellationFeeChargeId = settledHold.cancellationFeeChargeId; booking.cancellationFeeTotal = settledHold.cancellationFeeTotal; }
+  if ((hadHoldFee || !!settledHold.cancellationFeeChargeId) && booking.cancellationFeeChargeId && booking.course.stripeAccountId) {
     try {
       // PARTIAL-1: a hold shared with a part split off this group gives back only this booking's share.
       const share = await holdRefundCents({ id: bookingId, cancellationFeeChargeId: booking.cancellationFeeChargeId as string, cancellationFeeTotal: booking.cancellationFeeTotal });
       if (hasShareToRefund(share)) {
-      const refund = await refundOnConnectedAccount({ paymentIntentId: booking.cancellationFeeChargeId as string, connectedAccountId: booking.course.stripeAccountId, amountCents: share });
+      const refund = await refundOnConnectedAccount({ paymentIntentId: booking.cancellationFeeChargeId as string, connectedAccountId: booking.course.stripeAccountId, amountCents: share, idempotencyKey: `hold-back-${bookingId}-${booking.cancellationFeeChargeId}` });
       await recordMove({ courseId, what: 'hold', direction: 'out', method: 'card', account: 'course', amountCents: refund.amount, stripeId: refund.id, bookingId, actor: opts.actor.type, note: 'hold given back — paid at the counter' });
       await recordBookingEventSafe({ ...evBase, type: 'fee_refunded', amountCents: refund.amount, playerCount: booking.players, stripeId: refund.id, metadata: { reason: 'hold_refunded_at_checkin', paidOffline: true } });
       }

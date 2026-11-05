@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 658,
+    "files": 659,
     "routes": 290,
-    "libs": 235,
+    "libs": 236,
     "models": 70,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -15903,7 +15903,7 @@
     },
     {
       "path": "src/lib/cancel-booking.ts",
-      "lines": 364,
+      "lines": 368,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -15927,6 +15927,7 @@
         "./booking-fee",
         "./cancel-policy",
         "./email",
+        "./hold-key",
         "./money-ledger",
         "./no-show-fee",
         "./prisma",
@@ -16418,7 +16419,7 @@
     },
     {
       "path": "src/lib/checkin-booking.ts",
-      "lines": 569,
+      "lines": 576,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -16477,6 +16478,7 @@
         "src/app/api/checkin/[bookingId]/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/lib/counter-pay.ts",
+        "src/lib/cutoff-hold.ts",
         "src/lib/reader-rounds.ts"
       ]
     },
@@ -16658,7 +16660,7 @@
     },
     {
       "path": "src/lib/counter-pay.ts",
-      "lines": 319,
+      "lines": 323,
       "purpose": "A group pays for its round at the counter (cash, or the course's own card machine):",
       "brain": [],
       "exports": [
@@ -17990,7 +17992,7 @@
     },
     {
       "path": "src/lib/cutoff-hold.ts",
-      "lines": 127,
+      "lines": 134,
       "purpose": "The cancellation-window hold (SP-B timing \"hold_at_cutoff\"):",
       "brain": [],
       "exports": [
@@ -18015,7 +18017,9 @@
       "imports": [
         "./booking-events",
         "./cancel-policy",
+        "./checkin-booking",
         "./email",
+        "./hold-key",
         "./money-ledger",
         "./prisma",
         "./refund-booking",
@@ -19764,6 +19768,30 @@
       "usedBy": [
         "src/app/dashboard/analytics/page.tsx",
         "src/lib/analytics.ts"
+      ]
+    },
+    {
+      "path": "src/lib/hold-key.ts",
+      "lines": 20,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "holdChargeKey",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./prisma"
+      ],
+      "usedBy": [
+        "src/lib/cancel-booking.ts",
+        "src/lib/cutoff-hold.ts"
       ]
     },
     {
@@ -21707,7 +21735,7 @@
     },
     {
       "path": "src/lib/no-show-fee.ts",
-      "lines": 234,
+      "lines": 245,
       "purpose": "SP-B (STAFF_POLICY_SPEC Part B4).",
       "brain": [],
       "exports": [
@@ -22664,6 +22692,7 @@
         "src/lib/go-live-preflight.ts",
         "src/lib/golfer-messages.ts",
         "src/lib/golfer-record.ts",
+        "src/lib/hold-key.ts",
         "src/lib/home-board.ts",
         "src/lib/inquiry-email-failed.ts",
         "src/lib/ledger-view.ts",
@@ -25469,7 +25498,7 @@
     },
     {
       "path": "src/lib/stripe.ts",
-      "lines": 145,
+      "lines": 147,
       "purpose": "Every charge, refund and SetupIntent GreenReserve makes goes through here.",
       "brain": [
         "money-movement"
@@ -30699,6 +30728,7 @@
         "src/app/api/member/[courseSlug]/payments/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/lib/analytics.ts",
+        "src/lib/hold-key.ts",
         "src/lib/ledger-view.ts",
         "src/lib/money-ledger.ts",
         "src/lib/register-close.ts"
@@ -31066,6 +31096,7 @@
         "src/lib/booking-fee.ts",
         "src/lib/course-timeline.ts",
         "src/lib/cutoff-hold.ts",
+        "src/lib/hold-key.ts",
         "src/lib/money-problems.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/receipt-charges.ts",
