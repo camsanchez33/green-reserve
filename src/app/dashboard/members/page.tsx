@@ -597,7 +597,7 @@ function MembersPageInner() {
         <div className="px-4 sm:px-10 py-7 space-y-6">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0 max-w-[46em]">
-              <h1 className="font-serif text-[32px] leading-none text-ink">Members</h1>
+              <h1 className="font-serif text-[26px] leading-none text-ink">Members</h1>
               {members.length === 0 && <p className="text-[14px] text-ink-soft mt-2.5 leading-snug">Your members, what they pay and when they renew.</p>}
             </div>
             {canEdit && (
@@ -605,31 +605,31 @@ function MembersPageInner() {
                 {unpaid > 0 && (
                   <button onClick={remindOverdue} disabled={remindingOverdue}
                     title="Emails each unpaid or expired member their dues link, at most weekly"
-                    className="bg-white border border-line hover:border-line-strong text-ink rounded-md text-[13px] font-medium px-4 py-2 disabled:opacity-50">
+                    className="bg-white border border-line hover:border-line-strong text-ink rounded-[7px] text-[13px] font-medium px-4 py-2 min-h-[36px] disabled:opacity-50">
                     {remindingOverdue ? 'Sending…' : `Remind ${unpaid} unpaid`}
                   </button>
                 )}
                 {tiers.some(t => t.active) && (
                   <button onClick={() => { setImportOpen(true); setAddOpen(false); }}
-                    className="bg-white border border-line hover:border-line-strong text-ink rounded-md text-[13px] font-medium px-4 py-2">Import a list</button>
+                    className="bg-white border border-line hover:border-line-strong text-ink rounded-[7px] text-[13px] font-medium px-4 py-2 min-h-[36px]">Import a list</button>
                 )}
                 <button onClick={() => tiers.length ? startAddMember() : openWizard()}
-                  className="bg-pine hover:bg-pine-hover text-white rounded-md text-[13px] font-medium px-4 py-2">{tiers.length ? 'Add a member' : 'Set up a membership'}</button>
+                  className="bg-pine hover:bg-pine-hover text-white rounded-[7px] text-[13px] font-medium px-4 py-2 min-h-[36px]">{tiers.length ? 'Add a member' : 'Set up a membership'}</button>
               </div>
             )}
           </div>
           {loadError && <LoadError message={loadError} onRetry={loadAll} />}
 
           {members.length > 0 && (
-            <div className="flex flex-wrap border border-line rounded-lg overflow-hidden w-fit max-w-full" role="group" aria-label="Your members">
-              <div className="px-4 py-2.5 min-w-[8.5rem]"><div className="text-[12.5px] text-ink-soft">Active</div><div className="text-[20px] font-semibold tabular-nums text-ink">{active.length}</div></div>
-              <button type="button" onClick={() => { setNotRenewedOnly(true); setUnpaidOnly(false); setNotLinkedOnly(false); setFilterStatus('active'); }} className="px-4 py-2.5 min-w-[8.5rem] border-l border-line text-left hover:bg-paper/60"
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3" role="group" aria-label="Your members">
+              <Card className="px-4 py-3"><div className="text-[12.5px] text-ink-soft">Active</div><div className="text-[24px] font-semibold tabular-nums text-ink mt-1">{active.length}</div></Card>
+              <Card><button type="button" onClick={() => { setNotRenewedOnly(true); setUnpaidOnly(false); setNotLinkedOnly(false); setFilterStatus('active'); }} className="w-full h-full rounded-lg px-4 py-3 text-left hover:bg-paper/60"
                 title={TERMS.notRenewed}>
-                <div className="text-[12.5px] text-ink-soft">Not renewed</div><div className={'text-[20px] font-semibold tabular-nums ' + (notRenewed ? 'text-bad' : 'text-ink')}>{notRenewed}</div></button>
-              <button type="button" onClick={() => { setNotLinkedOnly(true); setUnpaidOnly(false); setNotRenewedOnly(false); setFilterStatus('active'); }} className="px-4 py-2.5 min-w-[8.5rem] border-l border-line text-left hover:bg-paper/60"
+                <div className="text-[12.5px] text-ink-soft">Not renewed</div><div className={'text-[24px] font-semibold tabular-nums mt-1 ' + (notRenewed ? 'text-bad' : 'text-ink')}>{notRenewed}</div></button></Card>
+              <Card><button type="button" onClick={() => { setNotLinkedOnly(true); setUnpaidOnly(false); setNotRenewedOnly(false); setFilterStatus('active'); }} className="w-full h-full rounded-lg px-4 py-3 text-left hover:bg-paper/60"
                 title={TERMS.notLinked}>
-                <div className="text-[12.5px] text-ink-soft">Not linked</div><div className={'text-[20px] font-semibold tabular-nums ' + (notLinked ? 'text-warn' : 'text-ink')}>{notLinked}</div></button>
-              <div className="px-4 py-2.5 min-w-[8.5rem] border-l border-line" title={TERMS.memberRounds}><div className="text-[12.5px] text-ink-soft">Member rounds this year</div><div className="text-[20px] font-semibold tabular-nums text-ink">{memberRounds}</div></div>
+                <div className="text-[12.5px] text-ink-soft">Not linked</div><div className={'text-[24px] font-semibold tabular-nums mt-1 ' + (notLinked ? 'text-warn' : 'text-ink')}>{notLinked}</div></button></Card>
+              <Card className="px-4 py-3"><div className="text-[12.5px] text-ink-soft" title={TERMS.memberRounds}>Member rounds this year</div><div className="text-[24px] font-semibold tabular-nums text-ink mt-1">{memberRounds}</div></Card>
             </div>
           )}
 
@@ -825,7 +825,7 @@ function MembersPageInner() {
           {tiers.length > 0 && (
             <Card className="p-5">
               <div className="flex flex-wrap items-baseline justify-between gap-3">
-                <h2 className="text-[17px] font-semibold text-ink">Memberships you offer</h2>
+                <h2 className="text-[15px] font-semibold text-ink">Memberships you offer</h2>
                 {canEdit && <button onClick={() => openWizard()} className="text-[13px] font-medium text-pine hover:underline">Add a membership</button>}
               </div>
               <ul className="mt-3 divide-y divide-line-soft">
