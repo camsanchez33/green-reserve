@@ -2179,3 +2179,21 @@ model CourseMonthGoal {
 
   @@unique([courseId, month])
 }
+
+/// HOME-2 (Cam 2026-11-05, "if you want to track goals track them here … set goals for certain
+/// metrics"): one target per course, month ("YYYY-MM") and metric — the catalog is
+/// src/lib/course-goals.ts. target is cents for money, a count or a percent otherwise; null =
+/// removed (nothing is deleted). Supersedes CourseMonthGoal, which is read as the collected
+/// goal only when a month has no CourseGoal row for it.
+model CourseGoal {
+  id        String   @id @default(cuid())
+  courseId  String
+  month     String
+  metric    String
+  target    Int?
+  setBy     String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([courseId, month, metric])
+}

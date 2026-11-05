@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-05 22:47 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `3a498eee` · working tree **16 dirty file(s)**
+Generated 2026-11-05 23:05 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `6aafaac7` · working tree **18 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 111 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 113 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `e14b7752` | 2026-11-05 | Home: weather + next tee times on top, field-level setup links, Needs you counts, Staff notes (#320) |
+| `a5bb5088` | 2026-11-05 | Home: weather and next tee times on top, field-level setup links, Needs you counts, Staff notes |
 | `901ba99b` | 2026-11-05 | Text-message opt-in names GreenReserve as the sender (Twilio campaign review) (#319) |
 | `d12656c7` | 2026-11-05 | Text-message opt-in names GreenReserve as the sender, with the carriers' disclosure phrases; texts lead with GreenReserve |
 | `211403ca` | 2026-11-05 | Terms and Privacy: Twilio A2P campaign wording (#318) |
@@ -126,24 +128,26 @@ Generated 2026-11-05 22:47 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (16 file(s))
+### Uncommitted working tree (18 file(s))
 
 - `M STATUS.artifact.html`
 - `M STATUS.json`
 - `M STATUS.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/onboarding-review-step-test.ts`
+- `M prisma/schema.prisma`
+- `M scripts/home-board-db-test.ts`
+- `M scripts/home-page-test.ts`
+- `M src/app/api/operator/home/route.ts`
+- `D src/app/api/operator/month-goal/route.ts`
 - `M src/app/dashboard/home/page.tsx`
-- `M src/app/dashboard/settings/page.tsx`
-- `M src/app/globals.css`
 - `M src/components/dashboard/home/HomeBoard.tsx`
-- `M src/components/dashboard/settings/FinishSetup.tsx`
-- `M src/lib/operator-home.ts`
-- `M src/lib/setup-missing.ts`
-- `?? scripts/home-page-test.ts`
-- `?? src/app/api/operator/weather/`
-- `?? src/lib/weather.ts`
+- `M src/lib/course-conditions.ts`
+- `M src/lib/data-reset.ts`
+- `M src/lib/home-board.ts`
+- `?? prisma/migrations/20261105020000_course_goals/`
+- `?? src/app/api/operator/goals/`
+- `?? src/lib/course-goals.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -269,6 +273,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `e14b7752` 2026-11-05 — Home: weather + next tee times on top, field-level setup links, Needs you counts, Staff notes (#320)
+- `a5bb5088` 2026-11-05 — Home: weather and next tee times on top, field-level setup links, Needs you counts, Staff notes
 - `901ba99b` 2026-11-05 — Text-message opt-in names GreenReserve as the sender (Twilio campaign review) (#319)
 - `d12656c7` 2026-11-05 — Text-message opt-in names GreenReserve as the sender, with the carriers' disclosure phrases; texts lead with GreenReserve
 - `211403ca` 2026-11-05 — Terms and Privacy: Twilio A2P campaign wording (#318)
@@ -279,8 +285,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `37df560b` 2026-11-05 — Regenerate the code map and status board for lib/hold-key.ts
 - `7cc238df` 2026-11-05 — Money races from the security audit: keyed refunds, recharge after refund, cron hold vs check-in, no-show vs still coming
 - `df7ad5bd` 2026-11-04 — Security audit: one tee-time row per slot (migration) (#315)
-- `8286cf5a` 2026-11-05 — Tests: give each test tee time its own slot (one row per slot is now enforced)
-- `ab7235ec` 2026-11-05 — One tee-time row per slot: fold existing duplicates, unique index, generation skips and never deletes a booked slot
 
 ---
 

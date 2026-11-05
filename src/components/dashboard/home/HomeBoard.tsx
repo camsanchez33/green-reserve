@@ -8,14 +8,14 @@ import Link from 'next/link';
 import { Card } from '@/components/ui/Card';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { dfetch } from '@/lib/dashboard-fetch';
-import { CONDITION_FIELDS, conditionLabel, conditionsOffBookingPage, type CourseConditions, type ConditionKey } from '@/lib/course-conditions';
+import { goalMetric, formatGoal, neededPerDay, type GoalMetric } from '@/lib/course-goals';
+import { CONDITION_FIELDS, CONDITION_SUGGESTIONS, CONDITION_LINES_MAX, CONDITION_LINE_CHARS, conditionLabel, conditionsOffBookingPage, type CourseConditions, type ConditionKey } from '@/lib/course-conditions';
 
 export type ShiftNote = { id: string; body: string; authorName: string; createdAt: string };
 export type WeekAhead = { hours: number[]; days: { date: string; cells: { booked: number; offered: number }[] }[] };
-export type MonthGoal = { month: string; goalCents: number | null; collectedCents: number; daysLeft: number; neededPerDayCents: number | null; lastMonth: string; lastMonthPerDayCents: number };
+export type Goals = { month: string; daysLeft: number; lastMonth: string; goals: { metric: GoalMetric; target: number; actual: number; lastMonth: number }[]; metrics: GoalMetric[] };
 export type Conditions = { detail: CourseConditions; alert: string; updatedAt: string | null; detailAt: string | null };
 
-const usd0 = (c: number) => `$${Math.round(c / 100).toLocaleString('en-US')}`;
 const when = (iso: string) => new Date(iso).toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' });
 const hourLabel = (h: number) => `${((h + 11) % 12) + 1}${h < 12 ? 'a' : 'p'}`;
 const dayLabel = (d: string, i: number) => i === 0 ? 'Today' : `${new Date(d + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' })} ${Number(d.slice(8, 10))}`;
@@ -75,19 +75,22 @@ export function ShiftNotes({ initial }: { initial: ShiftNote[] }) {
   );
 }
 
-/** Carts, range, greens, pins — two taps each — and the alert golfers see. */
+/** Carts, range, greens, pins — two taps each — the course's own lines (HOME-2), and the alert golfers see. */
 export function ConditionsCard({ initial, canEdit }: { initial: Conditions; canEdit: boolean }) {
   const [c, setC] = useState(initial);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<CourseConditions>(initial.detail);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [line, setLine] = useState('');
+  const lines = draft.lines ?? [];
+  const addLine = () => { const t = line.trim(); if (!t || lines.length >= CONDITION_LINES_MAX) return; setDraft(d => ({ ...d, lines: [...(d.lines ?? []), t] })); setLine(''); };
   async function save() {
     setBusy(true); setError('');
-    const r = await dfetch<{ detail: CourseConditions; updatedAt: string | null }>('/api/operator/conditions', { method: 'PATCH', body: JSON.stringify({ detail: draft }) });
+    const r = await dfetch<{ detail: CourseConditions; updatedAt: string | null }>('/api/operator/conditions', { method: 'PATCH', body: JSON.stringify({ detail: line.trim() && lines.length < CONDITION_LINES_MAX ? { ...draft, lines: [...lines, line.trim()] } : draft }) });
     setBusy(false);
     if (!r.ok) { setError(r.error); return; }
-    setC(x => ({ ...x, detail: r.data.detail, updatedAt: r.data.updatedAt, detailAt: r.data.updatedAt })); setEditing(false);
+    setC(x => ({ ...x, detail: r.data.detail, updatedAt: r.data.updatedAt, detailAt: r.data.updatedAt })); setLine(''); setEditing(false);
   }
   return (
     <Card className="px-5 py-4 flex flex-col gap-3">
@@ -105,6 +108,11 @@ export function ConditionsCard({ initial, canEdit }: { initial: Conditions; canE
           {CONDITION_FIELDS.map(f => (
             <div key={f.key}><div className="text-[12px] text-ink-muted">{f.label}</div><div className="mt-0.5 text-[14px] font-semibold text-ink">{conditionLabel(f.key, c.detail[f.key]) || <span className="font-normal text-ink-faint">Not set</span>}</div></div>
           ))}
+          {(c.detail.lines ?? []).length > 0 && (
+            <ul className="col-span-full flex flex-col gap-1 border-t border-line-soft pt-2.5">
+              {c.detail.lines!.map(l => <li key={l} className="text-[14px] text-ink">{l}</li>)}
+            </ul>
+          )}
         </div>
       ) : (
         <div className="flex flex-col gap-3">
@@ -120,6 +128,28 @@ export function ConditionsCard({ initial, canEdit }: { initial: Conditions; canE
               </div>
             </div>
           ))}
+          <div className="flex flex-col gap-2 border-t border-line-soft pt-3">
+            <span className="text-[13px] text-ink-soft">Your own · golfers see these too</span>
+            {lines.map((l, i) => (
+              <div key={l} className="flex items-center gap-2 rounded-[7px] bg-paper px-3 py-1.5 text-[14px] text-ink">
+                <span className="flex-1 min-w-0 break-words">{l}</span>
+                <button type="button" className="text-[12.5px] font-medium text-ink-soft hover:text-bad" onClick={() => setDraft(d => ({ ...d, lines: (d.lines ?? []).filter((_, j) => j !== i) }))}>Remove</button>
+              </div>
+            ))}
+            {lines.length < CONDITION_LINES_MAX && <>
+              <div className="flex gap-2">
+                <input value={line} onChange={e => setLine(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addLine(); } }} maxLength={CONDITION_LINE_CHARS}
+                  aria-label="Add a condition" placeholder="Greens rolling 10"
+                  className="flex-1 min-w-0 bg-paper border border-line rounded-[7px] px-3 py-2 text-[14px] text-ink placeholder-ink-faint focus:border-pine/40 focus:ring-2 focus:ring-pine/10" />
+                <button type="button" className={BTN} disabled={!line.trim()} onClick={addLine}>Add</button>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {CONDITION_SUGGESTIONS.filter(x => !lines.includes(x)).map(x => (
+                  <button key={x} type="button" onClick={() => setLine(x)} className="px-2 py-1 rounded-[5px] border border-line text-[12.5px] text-ink-soft hover:text-ink hover:border-line-strong">{x}</button>
+                ))}
+              </div>
+            </>}
+          </div>
           <div className="flex justify-end gap-2">
             <button className={BTN} onClick={() => { setEditing(false); setError(''); }}>Cancel</button>
             <button className="px-3.5 min-h-[36px] rounded-[7px] bg-pine hover:bg-pine-hover text-white text-[13px] font-medium disabled:opacity-50" disabled={busy} onClick={save}>{busy ? 'Saving…' : 'Save'}</button>
@@ -164,42 +194,75 @@ export function WeekAheadCard({ week, canDeal }: { week: WeekAhead; canDeal: boo
   );
 }
 
-/** This month against its goal — collected so far (Analytics' definition), what's needed a day, last month's pace. */
-export function MonthGoalCard({ goal, canSet, onSaved }: { goal: MonthGoal; canSet: boolean; onSaved: () => void }) {
-  const [editing, setEditing] = useState(false);
-  const [value, setValue] = useState(goal.goalCents ? String(goal.goalCents / 100) : '');
+/** HOME-2 (Cam 2026-11-05): this month's goals on the numbers the course picked — each against its target, with what's needed a day and last month's. */
+export function GoalsCard({ goals, canSet, onSaved }: { goals: Goals; canSet: boolean; onSaved: () => void }) {
+  const [editing, setEditing] = useState<GoalMetric | 'new' | null>(null);
+  const [metric, setMetric] = useState<GoalMetric | ''>('');
+  const [value, setValue] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  async function save() {
-    const dollars = Number(value.replace(/[$,\s]/g, ''));
-    if (!(dollars > 0)) { setError('Enter the goal in dollars.'); return; }
+  const unset = goals.metrics.filter(m => !goals.goals.some(g => g.metric === m));
+  const open = (m: GoalMetric | 'new', v = '') => { setEditing(m); setMetric(m === 'new' ? (unset[0] ?? '') : m); setValue(v); setError(''); };
+  async function put(m: GoalMetric, target: number | null) {
     setBusy(true); setError('');
-    const r = await dfetch('/api/operator/month-goal', { method: 'PUT', body: JSON.stringify({ month: goal.month, cents: Math.round(dollars * 100) }) });
+    const r = await dfetch('/api/operator/goals', { method: 'PUT', body: JSON.stringify({ month: goals.month, metric: m, target }) });
     setBusy(false);
     if (!r.ok) { setError(r.error); return; }
-    setEditing(false); onSaved();
+    setEditing(null); onSaved();
   }
-  const pct = goal.goalCents ? Math.min(100, (goal.collectedCents / goal.goalCents) * 100) : 0;
-  return (
-    <Card className="px-5 py-4 flex flex-col gap-2 min-w-0">
-      <div className="flex items-baseline gap-3"><h2 className="text-[15px] font-semibold text-ink">{monthName(goal.month)} vs goal</h2>
-        {canSet && !editing && <button className="ml-auto text-[13px] font-medium text-pine" onClick={() => setEditing(true)}>{goal.goalCents ? 'Change' : 'Set a goal'}</button>}</div>
-      <div className="text-[24px] font-semibold tracking-[-0.02em] text-ink tabular-nums">{usd0(goal.collectedCents)}{goal.goalCents != null && <span className="text-[13px] font-normal text-ink-muted"> of {usd0(goal.goalCents)}</span>}</div>
-      {goal.goalCents != null && <div className="h-1.5 rounded-full bg-line-soft"><div className="h-full rounded-full bg-pine" style={{ width: `${pct}%` }} /></div>}
-      {editing && (
-        <div className="flex gap-2">
-          <input inputMode="decimal" value={value} onChange={e => setValue(e.target.value)} aria-label={`Goal for ${monthName(goal.month)} in dollars`} placeholder="60000"
-            className="flex-1 min-w-0 bg-paper border border-line rounded-[7px] px-3 py-2 text-[14px] text-ink tabular-nums focus:border-pine/40 focus:ring-2 focus:ring-pine/10" />
-          <button className={BTN} onClick={() => { setEditing(false); setError(''); }}>Cancel</button>
-          <button className="px-3.5 min-h-[36px] rounded-[7px] bg-pine hover:bg-pine-hover text-white text-[13px] font-medium disabled:opacity-50" disabled={busy} onClick={save}>{busy ? 'Saving…' : 'Save'}</button>
-        </div>
+  function save() {
+    if (!metric) return;
+    const n = Number(value.replace(/[$,%\s]/g, ''));
+    const u = goalMetric(metric).unit;
+    if (!(n > 0) || (u === 'pct' && n > 100)) { setError(u === 'pct' ? 'Enter a percent from 1 to 100.' : 'Enter a number more than 0.'); return; }
+    put(metric, Math.round(u === 'cents' ? n * 100 : n));
+  }
+  const toInput = (m: GoalMetric, v: number) => String(goalMetric(m).unit === 'cents' ? Math.round(v / 100) : v);
+  const unit = metric ? goalMetric(metric).unit : 'count';
+  const form = (
+    <div className="flex flex-wrap gap-2">
+      {editing === 'new' && (
+        <select value={metric} onChange={e => setMetric(e.target.value as GoalMetric)} aria-label="What the goal is for"
+          className="flex-1 min-w-[150px] bg-paper border border-line rounded-[7px] px-2.5 py-2 text-[14px] text-ink focus:border-pine/40 focus:ring-2 focus:ring-pine/10">
+          {unset.map(m => <option key={m} value={m}>{goalMetric(m).label}</option>)}
+        </select>
       )}
-      <div className="flex flex-col text-[13px]">
-        <div className="flex justify-between py-1"><span className="text-ink-soft">Days left</span><span className="font-semibold tabular-nums">{goal.daysLeft}</span></div>
-        {goal.neededPerDayCents != null && <div className="flex justify-between py-1"><span className="text-ink-soft">Needed a day from here</span><span className="font-semibold tabular-nums">{usd0(goal.neededPerDayCents)}</span></div>}
-        <div className="flex justify-between py-1"><span className="text-ink-soft">{monthName(goal.lastMonth)} averaged</span><span className="font-semibold tabular-nums">{usd0(goal.lastMonthPerDayCents)} a day</span></div>
-      </div>
-      {goal.goalCents != null && goal.collectedCents >= goal.goalCents && <p className="text-[13px] text-ink"><StatusDot status="ok" label="" /> Goal reached</p>}
+      <input inputMode="decimal" value={value} onChange={e => setValue(e.target.value)} autoFocus aria-label="Goal"
+        placeholder={unit === 'cents' ? '$60,000' : unit === 'pct' ? '75%' : '1,000'}
+        className="w-28 min-w-0 bg-paper border border-line rounded-[7px] px-3 py-2 text-[14px] text-ink tabular-nums focus:border-pine/40 focus:ring-2 focus:ring-pine/10" />
+      <button className={BTN} onClick={() => { setEditing(null); setError(''); }}>Cancel</button>
+      <button className="px-3.5 min-h-[36px] rounded-[7px] bg-pine hover:bg-pine-hover text-white text-[13px] font-medium disabled:opacity-50" disabled={busy || !metric} onClick={save}>{busy ? 'Saving…' : 'Save'}</button>
+    </div>
+  );
+  return (
+    <Card className="px-5 py-4 flex flex-col gap-3 min-w-0">
+      <div className="flex items-baseline gap-3"><h2 className="text-[15px] font-semibold text-ink">{monthName(goals.month)} goals</h2>
+        <span className="text-[12px] text-ink-muted tabular-nums">{goals.daysLeft} days left</span>
+        {canSet && unset.length > 0 && editing !== 'new' && <button className="ml-auto text-[13px] font-medium text-pine" onClick={() => open('new')}>Add a goal</button>}</div>
+      {goals.goals.length === 0 && editing !== 'new' && <p className="text-[13.5px] text-ink-muted">No goals set.</p>}
+      {goals.goals.map(g => {
+        const m = goalMetric(g.metric);
+        const pct = Math.min(100, g.target ? (g.actual / g.target) * 100 : 0);
+        const done = g.actual >= g.target;
+        const need = neededPerDay(g.metric, g.target, g.actual, goals.daysLeft);
+        return (
+          <div key={g.metric} className="flex flex-col gap-1.5">
+            <div className="flex items-baseline gap-2">
+              <span className="text-[13.5px] text-ink" title={m.def}>{m.label}</span>
+              <span className="ml-auto text-[14px] font-semibold tabular-nums text-ink">{formatGoal(g.metric, g.actual)}<span className="font-normal text-ink-muted"> of {formatGoal(g.metric, g.target)}</span></span>
+            </div>
+            <div className="h-1.5 rounded-full bg-line-soft"><div className={`h-full rounded-full ${done ? 'bg-ok' : 'bg-pine'}`} style={{ width: `${pct}%` }} /></div>
+            <div className="flex flex-wrap gap-x-3 text-[12px] text-ink-muted tabular-nums">
+              {done ? <span className="text-ink"><StatusDot status="ok" label="" /> Reached</span> : need != null ? <span>{formatGoal(g.metric, need)} a day to go</span> : null}
+              <span>{monthName(goals.lastMonth)}: {formatGoal(g.metric, g.lastMonth)}</span>
+              {canSet && editing !== g.metric && <span className="ml-auto flex gap-3"><button className="font-medium text-pine" onClick={() => open(g.metric, toInput(g.metric, g.target))}>Change</button>
+                <button className="font-medium text-ink-soft hover:text-bad" disabled={busy} onClick={() => put(g.metric, null)}>Remove</button></span>}
+            </div>
+            {editing === g.metric && form}
+          </div>
+        );
+      })}
+      {editing === 'new' && form}
       {error && <p className="text-[13px] text-bad">{error}</p>}
     </Card>
   );

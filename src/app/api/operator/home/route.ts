@@ -2,13 +2,13 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, requirePermission, can } from '@/lib/session';
 import { operatorHome } from '@/lib/operator-home';
-import { openShiftNotes, courseConditions, weekAhead, monthGoal } from '@/lib/home-board';
+import { openShiftNotes, courseConditions, weekAhead, monthGoals } from '@/lib/home-board';
 
 // DASH-C: the course Home page (src/lib/operator-home.ts). Any login that can
 // see the tee sheet sees today's players and the next tee times; money needs
 // money.payments, the unread count needs messages.use.
 // DASH-D (Cam 2026-11-01): plus the board (lib/home-board) — the shift notes, the
-// course conditions and the week ahead for every login; the month goal is money.
+// course conditions and the week ahead for every login; HOME-2: the month's goals, money ones with money.payments.
 export async function GET() {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -20,7 +20,8 @@ export async function GET() {
     openShiftNotes(session.courseId),
     courseConditions(session.courseId),
     weekAhead(session.courseId, tz),
-    money ? monthGoal(session.courseId, tz) : Promise.resolve(null),
+    // HOME-2: every login sees the month's goals; money ones only with money.payments.
+    monthGoals(session.courseId, tz, { money }),
   ]);
-  return NextResponse.json({ ...home, board: { notes, conditions, week, goal } }, { headers: { 'Cache-Control': 'no-store' } });
+  return NextResponse.json({ ...home, board: { notes, conditions, week, goals: goal } }, { headers: { 'Cache-Control': 'no-store' } });
 }

@@ -26,7 +26,7 @@ import { settingsHref, type MissingItem } from '@/lib/setup-missing';
 import { TERMS } from '@/lib/analytics-terms';
 import { CARD } from '@/components/ui/Card';
 import { hourKey, type Weather, type WeatherHour } from '@/lib/weather';
-import { ShiftNotes, ConditionsCard, WeekAheadCard, MonthGoalCard, type ShiftNote, type Conditions, type WeekAhead, type MonthGoal } from '@/components/dashboard/home/HomeBoard';
+import { ShiftNotes, ConditionsCard, WeekAheadCard, GoalsCard, type ShiftNote, type Conditions, type WeekAhead, type Goals } from '@/components/dashboard/home/HomeBoard';
 
 type Group = { id: string; name: string; players: number; paymentStatus: string; checkedIn: boolean };
 type Home = {
@@ -44,8 +44,8 @@ type Home = {
   unreadMessages: number;
   comingUp: { id: string; time: string; open: number; groups: Group[] }[];
   setupMissing: MissingItem[];
-  /** DASH-D: the shift notes, conditions, week ahead and (money logins) the month goal. */
-  board: { notes: ShiftNote[]; conditions: Conditions; week: WeekAhead; goal: MonthGoal | null };
+  /** DASH-D: the shift notes, conditions, week ahead; HOME-2: the month's goals (money ones for money logins). */
+  board: { notes: ShiftNote[]; conditions: Conditions; week: WeekAhead; goals: Goals };
 };
 
 const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -319,7 +319,8 @@ export default function DashboardHome() {
                 {/* DASH-D (Cam 2026-11-01): the shift's notes and the course conditions. */}
                 <ShiftNotes key={home.board.notes.map(n => n.id).join()} initial={home.board.notes} />
                 <ConditionsCard key={home.board.conditions.updatedAt ?? ''} initial={home.board.conditions} canEdit={access.can('sheet.course_alert')} />
-                {home.board.goal && <MonthGoalCard key={`${home.board.goal.month}:${home.board.goal.goalCents}`} goal={home.board.goal} canSet={access.can('settings.edit') && access.can('money.payments')} onSaved={load} />}
+                {/* HOME-2 (Cam 2026-11-05): goals on the numbers the course picks; setting one is settings.edit (money ones also money.payments, checked by the route). */}
+                <GoalsCard key={home.board.goals.goals.map(g => `${g.metric}:${g.target}`).join()} goals={home.board.goals} canSet={access.can('settings.edit')} onSaved={load} />
               </div>
             </div>
           )}

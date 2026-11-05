@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 661,
+    "files": 662,
     "routes": 291,
-    "libs": 237,
-    "models": 70,
+    "libs": 238,
+    "models": 71,
     "orphans": 10,
     "ungatedRoutes": 3
   },
@@ -5871,6 +5871,32 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/goals/route.ts",
+      "lines": 32,
+      "purpose": "HOME-2 (Cam 2026-11-05, \"set goals for certain metrics\"):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "PUT",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/goals",
+      "kind": "api",
+      "methods": [
+        "PUT"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/course-goals",
+        "@/lib/prisma",
+        "@/lib/session",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/golfer-messages/route.ts",
       "lines": 62,
       "purpose": "",
@@ -5941,7 +5967,7 @@
     },
     {
       "path": "src/app/api/operator/home/route.ts",
-      "lines": 27,
+      "lines": 28,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6251,31 +6277,6 @@
         "@/lib/course-time",
         "@/lib/prisma",
         "@/lib/register-close",
-        "@/lib/session",
-        "next/server"
-      ],
-      "usedBy": []
-    },
-    {
-      "path": "src/app/api/operator/month-goal/route.ts",
-      "lines": 29,
-      "purpose": "DASH-D Home (Cam 2026-11-01, \"month vs goal\"):",
-      "brain": [],
-      "exports": [
-        {
-          "name": "PUT",
-          "kind": "route"
-        }
-      ],
-      "route": "/api/operator/month-goal",
-      "kind": "api",
-      "methods": [
-        "PUT"
-      ],
-      "auth": "operator",
-      "guard": "file",
-      "imports": [
-        "@/lib/prisma",
         "@/lib/session",
         "next/server"
       ],
@@ -8659,7 +8660,7 @@
     },
     {
       "path": "src/app/dashboard/home/page.tsx",
-      "lines": 331,
+      "lines": 332,
       "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the mockups):",
       "brain": [],
       "exports": [
@@ -12199,7 +12200,7 @@
     },
     {
       "path": "src/components/dashboard/home/HomeBoard.tsx",
-      "lines": 207,
+      "lines": 270,
       "purpose": "DASH-D Home (Cam 2026-11-01, mockup S1):",
       "brain": [],
       "exports": [
@@ -12212,11 +12213,11 @@
           "kind": "component"
         },
         {
-          "name": "MonthGoal",
+          "name": "Goals",
           "kind": "type"
         },
         {
-          "name": "MonthGoalCard",
+          "name": "GoalsCard",
           "kind": "component"
         },
         {
@@ -12245,6 +12246,7 @@
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/lib/course-conditions",
+        "@/lib/course-goals",
         "@/lib/dashboard-fetch",
         "next/link",
         "react"
@@ -16919,7 +16921,7 @@
     },
     {
       "path": "src/lib/course-conditions.ts",
-      "lines": 48,
+      "lines": 66,
       "purpose": "DASH-D Home (Cam 2026-11-01, \"the course conditions\"):",
       "brain": [],
       "exports": [
@@ -16929,6 +16931,18 @@
         },
         {
           "name": "CONDITION_FIELDS",
+          "kind": "const"
+        },
+        {
+          "name": "CONDITION_LINE_CHARS",
+          "kind": "const"
+        },
+        {
+          "name": "CONDITION_LINES_MAX",
+          "kind": "const"
+        },
+        {
+          "name": "CONDITION_SUGGESTIONS",
           "kind": "const"
         },
         {
@@ -17136,6 +17150,53 @@
       ],
       "usedBy": [
         "src/app/api/admin/course-detail/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/course-goals.ts",
+      "lines": 33,
+      "purpose": "HOME-2 (Cam 2026-11-05, \"if you want to track goals track them here … set goals for certain metrics\"):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "formatGoal",
+          "kind": "fn"
+        },
+        {
+          "name": "GOAL_MAX",
+          "kind": "const"
+        },
+        {
+          "name": "GOAL_METRICS",
+          "kind": "const"
+        },
+        {
+          "name": "goalMetric",
+          "kind": "fn"
+        },
+        {
+          "name": "GoalMetric",
+          "kind": "type"
+        },
+        {
+          "name": "isGoalMetric",
+          "kind": "fn"
+        },
+        {
+          "name": "neededPerDay",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/api/operator/goals/route.ts",
+        "src/components/dashboard/home/HomeBoard.tsx",
+        "src/lib/home-board.ts"
       ]
     },
     {
@@ -19840,7 +19901,7 @@
     },
     {
       "path": "src/lib/home-board.ts",
-      "lines": 83,
+      "lines": 108,
       "purpose": "DASH-D Home (Cam 2026-11-01, mockups S1 + \"week-ahead heat map and month vs goal\"):",
       "brain": [],
       "exports": [
@@ -19849,7 +19910,11 @@
           "kind": "fn"
         },
         {
-          "name": "monthGoal",
+          "name": "GoalRow",
+          "kind": "type"
+        },
+        {
+          "name": "monthGoals",
           "kind": "fn"
         },
         {
@@ -19877,6 +19942,7 @@
       "imports": [
         "./analytics",
         "./course-conditions",
+        "./course-goals",
         "./course-time",
         "./prisma"
       ],
@@ -22632,6 +22698,7 @@
         "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/events/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
+        "src/app/api/operator/goals/route.ts",
         "src/app/api/operator/golfer-messages/route.ts",
         "src/app/api/operator/golfers/[key]/route.ts",
         "src/app/api/operator/home/route.ts",
@@ -22643,7 +22710,6 @@
         "src/app/api/operator/money/ledger/route.ts",
         "src/app/api/operator/money/overview/route.ts",
         "src/app/api/operator/money/sales/route.ts",
-        "src/app/api/operator/month-goal/route.ts",
         "src/app/api/operator/monthly-reviews/route.ts",
         "src/app/api/operator/my-courses/route.ts",
         "src/app/api/operator/nines/route.ts",
@@ -24274,6 +24340,7 @@
         "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/events/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
+        "src/app/api/operator/goals/route.ts",
         "src/app/api/operator/golfer-messages/route.ts",
         "src/app/api/operator/golfers/[key]/route.ts",
         "src/app/api/operator/home/route.ts",
@@ -24286,7 +24353,6 @@
         "src/app/api/operator/money/ledger/route.ts",
         "src/app/api/operator/money/overview/route.ts",
         "src/app/api/operator/money/sales/route.ts",
-        "src/app/api/operator/month-goal/route.ts",
         "src/app/api/operator/monthly-reviews/route.ts",
         "src/app/api/operator/my-courses/route.ts",
         "src/app/api/operator/nines/route.ts",
@@ -28925,6 +28991,49 @@
       ]
     },
     {
+      "name": "CourseGoal",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "courseId",
+          "type": "String"
+        },
+        {
+          "name": "month",
+          "type": "String"
+        },
+        {
+          "name": "metric",
+          "type": "String"
+        },
+        {
+          "name": "target",
+          "type": "Int?"
+        },
+        {
+          "name": "setBy",
+          "type": "String"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ],
+      "writers": [
+        "src/app/api/operator/goals/route.ts"
+      ],
+      "readers": [
+        "src/lib/home-board.ts"
+      ]
+    },
+    {
       "name": "CourseGroup",
       "fields": [
         {
@@ -29509,9 +29618,7 @@
           "type": "DateTime"
         }
       ],
-      "writers": [
-        "src/app/api/operator/month-goal/route.ts"
-      ],
+      "writers": [],
       "readers": [
         "src/lib/home-board.ts"
       ]
