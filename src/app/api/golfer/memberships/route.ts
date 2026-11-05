@@ -7,7 +7,12 @@ export async function GET() {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const memberships = await prisma.courseMembership.findMany({
     where: { golferId: session.golferId, status: 'active' },
-    include: { course: { select: { id: true, name: true, slug: true, city: true, state: true } } },
+    // AUDIT-1: only what the golfer should see — never staff notes, pay tokens or Stripe ids.
+    select: {
+      id: true, status: true, membershipType: true, expiresAt: true, startedAt: true, paymentStatus: true, autoRenew: true,
+      tier: { select: { name: true } },
+      course: { select: { id: true, name: true, slug: true, city: true, state: true } },
+    },
   });
   return NextResponse.json(memberships);
 }

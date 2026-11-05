@@ -4481,7 +4481,7 @@
     },
     {
       "path": "src/app/api/golfer/auth/otp/request/route.ts",
-      "lines": 40,
+      "lines": 44,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4508,7 +4508,7 @@
     },
     {
       "path": "src/app/api/golfer/auth/otp/verify/route.ts",
-      "lines": 107,
+      "lines": 127,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4538,7 +4538,7 @@
     },
     {
       "path": "src/app/api/golfer/memberships/route.ts",
-      "lines": 29,
+      "lines": 34,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -25869,12 +25869,16 @@
     },
     {
       "path": "src/lib/twilio.ts",
-      "lines": 86,
+      "lines": 104,
       "purpose": "",
       "brain": [],
       "exports": [
         {
           "name": "isFictionalNumber",
+          "kind": "fn"
+        },
+        {
+          "name": "isNorthAmericanNumber",
           "kind": "fn"
         },
         {

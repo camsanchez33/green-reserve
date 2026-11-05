@@ -846,7 +846,7 @@ export async function sendGolferOtpEmail(data: { email: string; code: string; co
   const html = baseTemplate(`
     <h1 style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Your sign-in code</h1>
     <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">
-      Enter this code to sign in to your ${data.courseName} tee times.
+      Enter this code to sign in to your ${escHtml(data.courseName.slice(0, 80))} tee times.
     </p>
     <div style="background:#F6F4EC;border:1px solid #E3E4DE;border-radius:6px;padding:24px;margin-bottom:20px;text-align:center;">
       <p style="margin:0;color:#141814;font-size:32px;font-weight:700;font-family:monospace;letter-spacing:0.2em;">${data.code}</p>

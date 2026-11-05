@@ -7,6 +7,15 @@ import { signGolferToken } from '@/lib/auth';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { securityEvent } from '@/lib/security-events';
 
+/** The 10 digits of a US/Canadian number, or null for anything else (a foreign or malformed number). */
+function nanp10(phone: string): string | null {
+  const d = phone.replace(/\D/g, '');
+  if (phone.trim().startsWith('+')) return /^1\d{10}$/.test(d) ? d.slice(1) : null;
+  if (d.length === 10) return d;
+  if (d.length === 11 && d[0] === '1') return d.slice(1);
+  return null;
+}
+
 // Verification is what makes guest-booking linkage safe — once an identifier
 // is proven (this endpoint), any guest bookings under that same email/phone
 // get attached to the account so they show up in the portal automatically.
@@ -20,13 +29,16 @@ async function linkGuestBookings(identifier: string, type: 'email' | 'phone', go
   }
   // Phone numbers on guest bookings were typed free-form (not normalized at
   // booking time) — match on the last 10 digits instead of exact string.
-  const last10 = identifier.replace(/\D/g, '').slice(-10);
-  if (last10.length !== 10) return;
+  // AUDIT-1: only a North American number links, and only to bookings whose
+  // number is the SAME North American number — a foreign number that merely
+  // ends in the same 10 digits never takes someone else's bookings.
+  const last10 = nanp10(identifier);
+  if (!last10) return;
   const candidates = await prisma.booking.findMany({
     where: { golferAccountId: null, golferPhone: { contains: last10 } },
     select: { id: true, golferPhone: true },
   });
-  const matches = candidates.filter(c => c.golferPhone.replace(/\D/g, '').slice(-10) === last10);
+  const matches = candidates.filter(c => nanp10(c.golferPhone) === last10);
   if (matches.length > 0) {
     await prisma.booking.updateMany({ where: { id: { in: matches.map(m => m.id) } }, data: { golferAccountId: golferId } });
   }
@@ -66,13 +78,21 @@ export async function POST(req: NextRequest) {
 
   if (!golfer) {
     // Backfill a name from a prior guest booking under this identifier, if any.
-    const guestBooking = await prisma.booking.findFirst({
-      where: isEmail
-        ? { golferAccountId: null, golferEmail: { equals: challenge.identifier, mode: 'insensitive' } }
-        : { golferAccountId: null, golferPhone: { contains: challenge.identifier.replace(/\D/g, '').slice(-10) } },
-      orderBy: { createdAt: 'desc' },
-      select: { golferName: true },
-    });
+    const phone10 = isEmail ? null : nanp10(challenge.identifier);
+    const guestBooking = isEmail
+      ? await prisma.booking.findFirst({
+          where: { golferAccountId: null, golferEmail: { equals: challenge.identifier, mode: 'insensitive' } },
+          orderBy: { createdAt: 'desc' },
+          select: { golferName: true },
+        })
+      : phone10
+        ? (await prisma.booking.findMany({
+            where: { golferAccountId: null, golferPhone: { contains: phone10 } },
+            orderBy: { createdAt: 'desc' },
+            select: { golferName: true, golferPhone: true },
+            take: 20,
+          })).find(b => nanp10(b.golferPhone) === phone10) ?? null
+        : null;
     const [firstName, ...rest] = (guestBooking?.golferName || 'Golfer').trim().split(/\s+/);
     const lastName = rest.join(' ');
 
