@@ -98,6 +98,7 @@ Twilio setup itself (account, number, campaign registration) is still on Cam's l
   confirmation, HELP/INFO → the help text.
 - **Course notices** text only numbers that agreed (preview counts too).
 - **Terms §6 / Privacy §3** (v2026-11-02): texts only with that agreement, up to 4 messages per booking.
+- **v2026-11-05 (A2P review):** Terms §6 is headed "SMS Terms"; Privacy §3 carries Twilio's sentence verbatim — "We do not sell or share your SMS opt-in data or personal information with third parties for marketing purposes." (pinned in `scripts/sms-consent-db-test.ts`).
 
 ### Twilio console (Cam)
 - Messaging → the number (or Messaging Service) → "A message comes in": `https://greenreserve.app/api/twilio/inbound`, POST.

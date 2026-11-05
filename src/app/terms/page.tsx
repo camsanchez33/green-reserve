@@ -28,14 +28,14 @@ export default function TermsOfServicePage() {
                 <a href="/operator-agreement" className={navIdle}>Operator Agreement</a>
               </nav>
               <p className="mt-6 pl-3 text-xs text-ink-soft leading-relaxed">
-                Version v2026-11-02<br />Last updated November 2, 2026
+                Version v2026-11-05<br />Last updated November 5, 2026
               </p>
             </div>
           </aside>
 
           <div>
             <h1 className="text-3xl sm:text-4xl font-serif font-semibold tracking-tight text-ink mb-3">Terms of Service</h1>
-            <p className="text-ink-soft text-sm mb-10">Version v2026-11-02 — last updated November 2, 2026</p>
+            <p className="text-ink-soft text-sm mb-10">Version v2026-11-05 — last updated November 5, 2026</p>
 
             {/* Plain-English summary */}
             <div className="bg-white rounded-lg shadow-card p-6 mb-12">
@@ -140,7 +140,7 @@ export default function TermsOfServicePage() {
               </section>
               <section>
                 <h2 className="font-semibold text-base text-ink mb-2">
-                  <span className="text-ink-faint font-normal mr-2">6.</span>Emails and text messages
+                  <span className="text-ink-faint font-normal mr-2">6.</span>Emails and text messages (SMS Terms)
                 </h2>
                 <p>
                   By booking a tee time or creating an account, you agree to receive emails about your bookings: confirmations and
@@ -153,6 +153,10 @@ export default function TermsOfServicePage() {
                   from the course, a receipt, and one text confirming you signed up — up to 4 messages per booking. A sign-in code is texted only when you
                   ask for one. These are not marketing; we never send marketing texts without your separate opt-in. Message and data
                   rates may apply. <strong className="text-ink">Reply STOP to any text to stop texts, or HELP for help.</strong>
+                </p>
+                <p className="mt-2">
+                  GreenReserve does not sell or share your SMS opt-in data or personal information with third parties for marketing
+                  purposes. Carriers are not liable for delayed or undelivered messages.
                 </p>
               </section>
               <section>
@@ -192,7 +196,11 @@ export default function TermsOfServicePage() {
               <section className="pt-6 border-t border-line">
                 <h3 className="font-semibold text-sm text-ink mb-2">Changes to these terms</h3>
                 <p className="text-sm mb-2">
-                  <strong className="text-ink">v2026-11-02 (current):</strong> texts are sent only to numbers that agreed — an unticked box
+                  <strong className="text-ink">v2026-11-05 (current):</strong> the text-message section is headed SMS Terms and says we
+                  don’t sell or share text-message opt-in data or personal information for marketing (Twilio carrier registration).
+                </p>
+                <p className="text-sm mb-2">
+                  <strong className="text-ink">v2026-11-02:</strong> texts are sent only to numbers that agreed — an unticked box
                   when you book or sign up, or a spoken yes to course staff — at up to 4 messages per booking.
                 </p>
                 <p className="text-sm mb-2">

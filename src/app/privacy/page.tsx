@@ -28,14 +28,14 @@ export default function PrivacyPolicyPage() {
                 <a href="/operator-agreement" className={navIdle}>Operator Agreement</a>
               </nav>
               <p className="mt-6 pl-3 text-xs text-ink-soft leading-relaxed">
-                Version v2026-11-02<br />Last updated November 2, 2026
+                Version v2026-11-05<br />Last updated November 5, 2026
               </p>
             </div>
           </aside>
 
           <div>
             <h1 className="text-3xl sm:text-4xl font-serif font-semibold tracking-tight text-ink mb-3">Privacy Policy</h1>
-            <p className="text-ink-soft text-sm mb-10">Version v2026-11-02 — last updated November 2, 2026</p>
+            <p className="text-ink-soft text-sm mb-10">Version v2026-11-05 — last updated November 5, 2026</p>
 
             {/* Plain-English summary */}
             <div className="bg-white rounded-lg shadow-card p-6 mb-12">
@@ -95,6 +95,9 @@ export default function PrivacyPolicyPage() {
                   Texts are about your own bookings, up to 4 messages per booking; a sign-in code is texted only when you ask for one.
                   These are not marketing. <strong className="text-ink">We never send marketing texts without your separate, explicit opt-in.</strong>
                   Reply STOP to any text to stop texts, or HELP for help. Message and data rates may apply.
+                </p>
+                <p className="mt-2">
+                  <strong className="text-ink">We do not sell or share your SMS opt-in data or personal information with third parties for marketing purposes.</strong>
                 </p>
               </section>
               <section>
