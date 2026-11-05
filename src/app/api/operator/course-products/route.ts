@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
-import { regenerateUpcoming } from '@/lib/tee-sheet-engine';
+import { regenerateUpcoming, roundDeleteClashes } from '@/lib/tee-sheet-engine';
 import { findScheduleConflict } from '@/lib/schedule-conflict';
 
 // A schedule change rebuilds every bookable day (lib/tee-sheet-engine regenerateUpcoming), up to a year ahead.
@@ -118,7 +118,22 @@ export async function DELETE(req: NextRequest) {
   // whole-course schedules (SET NULL) that keep generating slots. Refuse.
   const attached = await prisma.teeTimeSchedule.count({ where: { productId: id, courseId: session.courseId } });
   if (attached > 0) return NextResponse.json({ error: `This round still has ${attached} schedule${attached === 1 ? '' : 's'} — delete or move them on Schedules first.` }, { status: 409 });
-  const removed = await prisma.courseProduct.deleteMany({ where: { id, courseId: session.courseId } });
-  if (removed.count > 0) await regenerateUpcoming(session.courseId);
+  // AUDIT-1: the round's tee times become no-round times (SET NULL) and the database holds
+  // one row per slot — clear the open side of any clash first (lib/tee-sheet-engine).
+  const courseId = session.courseId;
+  const clear = await roundDeleteClashes(courseId, id);
+  if (!clear.ok) return NextResponse.json({ error: clear.error }, { status: 409 });
+  const drop = clear.drop;
+  let removed;
+  try {
+    removed = await prisma.$transaction(async tx => {
+      if (drop.length) await tx.teeTime.deleteMany({ where: { id: { in: drop }, playersBooked: 0, status: { not: 'blocked' }, bookings: { none: {} } } });
+      return tx.courseProduct.deleteMany({ where: { id, courseId } });
+    });
+  } catch (err) {
+    if ((err as { code?: string })?.code === 'P2002') return NextResponse.json({ error: 'A tee time on this round was booked at the same moment — refresh and try again.' }, { status: 409 });
+    throw err;
+  }
+  if (removed.count > 0) await regenerateUpcoming(courseId);
   return NextResponse.json({ success: true });
 }

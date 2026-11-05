@@ -5579,7 +5579,7 @@
     },
     {
       "path": "src/app/api/operator/course-products/route.ts",
-      "lines": 125,
+      "lines": 140,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7504,7 +7504,7 @@
     },
     {
       "path": "src/app/api/operator/tee-times/route.ts",
-      "lines": 212,
+      "lines": 222,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -25644,7 +25644,7 @@
     },
     {
       "path": "src/lib/tee-sheet-engine.ts",
-      "lines": 292,
+      "lines": 320,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -25670,6 +25670,10 @@
         },
         {
           "name": "regenerationDays",
+          "kind": "fn"
+        },
+        {
+          "name": "roundDeleteClashes",
           "kind": "fn"
         },
         {

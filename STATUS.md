@@ -4,15 +4,17 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-05 02:08 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `f54e4fda` · working tree clean
+Generated 2026-11-05 04:07 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `3b4bf230` · working tree **6 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 98 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 100 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `f54e4fda` | 2026-11-05 | One card charge per round at a time: claim the round before charging; cash and the reader refuse a live claim |
+| `3b4bf230` | 2026-11-05 | One tee-time row per slot: fold existing duplicates, unique index, generation skips and never deletes a booked slot |
+| `596b4b52` | 2026-11-04 | Security audit: one card charge per round at a time (#314) |
+| `5be9c0cf` | 2026-11-05 | One card charge per round at a time: claim the round before charging; cash and the reader refuse a live claim |
 | `4c7680ad` | 2026-11-04 | Security audit: sign-in hardening (#313) |
 | `bfa71331` | 2026-11-05 | Sign-in hardening from the security audit: US/Canada-only texts, escaped email, exact phone linking, trimmed memberships list |
 | `24b7474c` | 2026-11-04 | Settings restyle to the DASH-D mockup (#312) |
@@ -113,6 +115,18 @@ Generated 2026-11-05 02:08 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
+### Uncommitted working tree (6 file(s))
+
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
+- `M src/app/api/operator/course-products/route.ts`
+- `M src/app/api/operator/tee-times/route.ts`
+- `M src/lib/tee-sheet-engine.ts`
+- `?? scripts/tee-time-slot-db-test.ts`
+
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
+
 ## In flight
 
 - **ROADMAP-1 — Cam 2026-10-07: build beyond the tee sheet, AI/BI first. The plan, order and open decisions live in `PLATFORM_ROADMAP_SPEC.md`: BI-1 monthly AI review (BUILT) → ACT-1 move a group → ACT-2 ** — `RUN_QUEUE.md:102`
@@ -195,46 +209,48 @@ This is the distinction a raw checkbox count gets wrong.
 |---|---|---|---|
 | `CLAUDE.md` | 1 | 2026-11-04 | 0d |
 | `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 3d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 14d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 15d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 9d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 10d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 12d |
-| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 12d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 13d |
 | `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 13d |
+| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 13d |
 | `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 13d |
 | `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 13d |
 | `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 13d |
 | `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 13d |
-| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 14d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 14d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 14d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-10-20 | 14d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-10-20 | 14d |
-| `ARCHITECTURE.md` | 0 | 2026-10-20 | 14d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-20 | 14d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-20 | 14d |
-| `CODEMAP_SPEC.md` | 0 | 2026-10-20 | 14d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-20 | 14d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-20 | 14d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-20 | 14d |
-| `FB2_COPY_SPEC.md` | 0 | 2026-10-20 | 14d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-20 | 14d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-20 | 14d |
-| `GOLFER_SPEC.md` | 0 | 2026-10-20 | 14d |
-| `HARDENING_SPEC.md` | 0 | 2026-10-20 | 14d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-20 | 14d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-20 | 14d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-20 | 14d |
-| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-20 | 14d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-20 | 14d |
-| `REVIEW_SPEC.md` | 0 | 2026-10-20 | 14d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-20 | 14d |
-| `UI_REVISE_SPEC.md` | 0 | 2026-10-20 | 14d |
+| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 15d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 15d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 15d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-10-20 | 15d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-10-20 | 15d |
+| `ARCHITECTURE.md` | 0 | 2026-10-20 | 15d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-20 | 15d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-20 | 15d |
+| `CODEMAP_SPEC.md` | 0 | 2026-10-20 | 15d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-20 | 15d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-20 | 15d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-20 | 15d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-10-20 | 15d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-20 | 15d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-20 | 15d |
+| `GOLFER_SPEC.md` | 0 | 2026-10-20 | 15d |
+| `HARDENING_SPEC.md` | 0 | 2026-10-20 | 15d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-20 | 15d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-20 | 15d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-20 | 15d |
+| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-20 | 15d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-20 | 15d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-20 | 15d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-20 | 15d |
+| `UI_REVISE_SPEC.md` | 0 | 2026-10-20 | 15d |
 
 ## Recent commits
 
-- `f54e4fda` 2026-11-05 — One card charge per round at a time: claim the round before charging; cash and the reader refuse a live claim
+- `3b4bf230` 2026-11-05 — One tee-time row per slot: fold existing duplicates, unique index, generation skips and never deletes a booked slot
+- `596b4b52` 2026-11-04 — Security audit: one card charge per round at a time (#314)
+- `5be9c0cf` 2026-11-05 — One card charge per round at a time: claim the round before charging; cash and the reader refuse a live claim
 - `4c7680ad` 2026-11-04 — Security audit: sign-in hardening (#313)
 - `bfa71331` 2026-11-05 — Sign-in hardening from the security audit: US/Canada-only texts, escaped email, exact phone linking, trimmed memberships list
 - `24b7474c` 2026-11-04 — Settings restyle to the DASH-D mockup (#312)
@@ -244,8 +260,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `e43e8996` 2026-11-04 — Register restyle to the DASH-D mockup (#310)
 - `b36fe621` 2026-11-05 — Register restyle to the DASH-D mockup: segmented tabs, tiles, steppers, total, pay tiles
 - `dfcf2b74` 2026-11-04 — Analytics: golfer groups — regulars, new, at risk, inactive (SEG-1) (#309)
-- `537fb89a` 2026-11-05 — SEG-1 review fix: golfer contact on Analytics only with See golfer email and phone
-- `241549e9` 2026-11-05 — Analytics: golfer groups — regulars, new, at risk, inactive (SEG-1)
 
 ---
 
