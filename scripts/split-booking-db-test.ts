@@ -98,7 +98,7 @@ async function main() {
   ok('PARTIAL-1: a part split off is not a new booking on Admin Home', readFileSync('src/lib/admin-home.ts', 'utf8').includes("const LIVE = { status: { not: 'cancelled' }, splitFromId: null,"));
   ok('…nor on Analytics (bookings, group size, channel, lead time)', (() => { const a = readFileSync('src/lib/analytics.ts', 'utf8'); return a.includes('const made = live.filter(b => !b.splitFromId);') && a.includes('bookings: made.length') && a.includes('for (const b of made) channel') && a.includes('const leadDays = made.map'); })());
   ok('…the cash confirm quotes the card\'s own figure', readFileSync('src/app/dashboard/page.tsx', 'utf8').includes("bookingLifecycle(b, 'take_cash', cashDue)"));
-  ok('the hold share is refunded on the course\'s account and written to the ledger', db.includes('refundOnConnectedAccount({ paymentIntentId: h.chargeId, connectedAccountId: h.account, amountCents: h.cents })') && db.includes("recordMove({ courseId: h.courseId, what: 'hold', direction: 'out'"));
+  ok('the hold share is refunded on the course\'s account and written to the ledger', db.includes('refundOnConnectedAccount({ paymentIntentId: h.chargeId, connectedAccountId: h.account, amountCents: h.cents, idempotencyKey: `hold-split-${h.bookingId}-${result.newBookingId}-${h.chargeId}` })') && db.includes("recordMove({ courseId: h.courseId, what: 'hold', direction: 'out'"));
   await prisma.course.update({ where: { id: course.id }, data: { lateFeeBasis: 'booking', stripeAccountId: '' } });
 
   // PARTIAL-1 (Cam 2026-11-04: "if only one person's checked in the other should still be open"): the ones still on

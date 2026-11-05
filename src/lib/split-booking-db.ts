@@ -137,7 +137,7 @@ export async function splitBooking(courseId: string, bookingId: string, leave: n
   if (result.ok && h) {
     // Outside the transaction (a Stripe call), ledger first-class: the refund is a money move.
     try {
-      const refund = await refundOnConnectedAccount({ paymentIntentId: h.chargeId, connectedAccountId: h.account, amountCents: h.cents });
+      const refund = await refundOnConnectedAccount({ paymentIntentId: h.chargeId, connectedAccountId: h.account, amountCents: h.cents, idempotencyKey: `hold-split-${h.bookingId}-${result.newBookingId}-${h.chargeId}` });
       await recordMove({ courseId: h.courseId, what: 'hold', direction: 'out', method: 'card', account: 'course', amountCents: refund.amount, stripeId: refund.id, bookingId: h.bookingId, actor: h.actor.type, note: 'hold share given back — players split off to pay on their own' });
       await recordBookingEventSafe({ bookingId: h.bookingId, courseId: h.courseId, type: 'fee_refunded', actor: h.actor, amountCents: refund.amount, stripeId: refund.id, metadata: { reason: 'hold_share_split' } });
     } catch (err) {

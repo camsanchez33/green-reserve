@@ -78,11 +78,16 @@ export async function chargeNoShow(bookingId: string): Promise<NoShowResult> {
     where: { id: bookingId },
     select: {
       id: true, courseId: true, players: true, noShowFeeTotal: true, stripeCustomerId: true, stripePaymentMethodId: true,
+      status: true, noShowAt: true, checkedInAt: true,
       teeTime: { select: { date: true, time: true } },
       course: { select: { name: true, timezone: true, stripeAccountId: true, stripeAccountActive: true } },
     },
   });
   if (!booking) throw new Error('Booking not found');
+  // AUDIT-1: the list was built at the start of the run — staff may have pressed "Still coming"
+  // (or checked them in) since. Only a booking still flagged is charged.
+  const stillNoShow = (b: { status: string; noShowAt: Date | null; checkedInAt: Date | null } | null) => !!b && b.status === 'confirmed' && !!b.noShowAt && !b.checkedInAt;
+  if (!stillNoShow(booking)) return { fee: { ok: true, charged: false, reason: 'no longer a no-show' }, courseFee: { charged: false, reason: 'no longer a no-show' } };
   const teeTimeAt = teeTimeInstant(booking.course.timezone, booking.teeTime.date, booking.teeTime.time);
   const actor: EventActor = { type: 'cron' };
 
@@ -109,6 +114,12 @@ export async function chargeNoShow(bookingId: string): Promise<NoShowResult> {
         await recordPaymentEvent({ bookingId, kind: 'no_show_fee', amountCents, stripeId: pi.id, actor: 'cron', detail: 'No-show fee (end of day — not checked in)' });
         await recordBookingEventSafe({ bookingId, courseId: booking.courseId, type: 'fee_charged', actor, amountCents, playerCount: booking.players, teeTimeAt, stripeId: pi.id, metadata: { reason: 'no_show_fee' } });
         courseFee = { charged: true, amountCents };
+        // AUDIT-1: "Still coming" pressed while this charge was in flight found nothing to refund — give it back now.
+        const after = await prisma.booking.findUnique({ where: { id: bookingId }, select: { status: true, noShowAt: true, checkedInAt: true } });
+        if (!stillNoShow(after)) {
+          const back = await refundNoShowFee(bookingId, 'system');
+          return { fee: { ok: true, charged: false, reason: 'no longer a no-show' }, courseFee: back.refunded ? { charged: false, reason: 'no longer a no-show — refunded' } : courseFee };
+        }
       } catch (err) {
         const reason = err instanceof Error ? err.message : String(err);
         await recordPaymentEvent({ bookingId, kind: 'charge_failed', amountCents, actor: 'cron', detail: `No-show fee: ${reason}` }).catch(() => {});

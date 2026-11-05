@@ -15903,7 +15903,7 @@
     },
     {
       "path": "src/lib/cancel-booking.ts",
-      "lines": 364,
+      "lines": 365,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -16418,7 +16418,7 @@
     },
     {
       "path": "src/lib/checkin-booking.ts",
-      "lines": 569,
+      "lines": 576,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -16477,6 +16477,7 @@
         "src/app/api/checkin/[bookingId]/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/lib/counter-pay.ts",
+        "src/lib/cutoff-hold.ts",
         "src/lib/reader-rounds.ts"
       ]
     },
@@ -17990,7 +17991,7 @@
     },
     {
       "path": "src/lib/cutoff-hold.ts",
-      "lines": 127,
+      "lines": 132,
       "purpose": "The cancellation-window hold (SP-B timing \"hold_at_cutoff\"):",
       "brain": [],
       "exports": [
@@ -18015,6 +18016,7 @@
       "imports": [
         "./booking-events",
         "./cancel-policy",
+        "./checkin-booking",
         "./email",
         "./money-ledger",
         "./prisma",
@@ -21707,7 +21709,7 @@
     },
     {
       "path": "src/lib/no-show-fee.ts",
-      "lines": 234,
+      "lines": 245,
       "purpose": "SP-B (STAFF_POLICY_SPEC Part B4).",
       "brain": [],
       "exports": [
@@ -25469,7 +25471,7 @@
     },
     {
       "path": "src/lib/stripe.ts",
-      "lines": 145,
+      "lines": 147,
       "purpose": "Every charge, refund and SetupIntent GreenReserve makes goes through here.",
       "brain": [
         "money-movement"
