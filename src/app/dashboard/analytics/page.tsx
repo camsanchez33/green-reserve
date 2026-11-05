@@ -649,10 +649,12 @@ const SEG_TERM: Record<Segment, TermKey> = { regular: 'segRegular', new: 'segNew
 function SegmentsSection({ d }: { d: Data }) {
   const s = d.customers.segments;
   const [pick, setPick] = useState<Segment>('regular');
+  // Contact only with "See golfer email and phone" (the route blanks it otherwise; this keeps the download's columns honest).
+  const contact = useDashboardAccess().can('sheet.golfer_contact');
   const rows = s.rows.filter(r => r.segment === pick);
   return (
     <Section title={SEG_UI.title} term="segments"
-      action={rows.length > 0 ? <Download onClick={() => downloadCsv(`golfers-${SEGMENT_LABEL[pick].toLowerCase().replace(/\s+/g, '-')}-${s.asOf}`, [...SEG_UI.csv], rows.map(r => [r.name, r.email, r.phone, r.rounds, r.recentRounds, r.firstPlayed, r.lastPlayed]))} /> : undefined}>
+      action={rows.length > 0 ? <Download onClick={() => downloadCsv(`golfers-${SEGMENT_LABEL[pick].toLowerCase().replace(/\s+/g, '-')}-${s.asOf}`, contact ? [...SEG_UI.csv] : SEG_UI.csv.filter((_, i) => i !== 1 && i !== 2), rows.map(r => contact ? [r.name, r.email, r.phone, r.rounds, r.recentRounds, r.firstPlayed, r.lastPlayed] : [r.name, r.rounds, r.recentRounds, r.firstPlayed, r.lastPlayed]))} /> : undefined}>
       <div role="group" className="flex flex-wrap gap-1 p-1 rounded-[7px] bg-paper mb-3">
         {SEGMENTS.map(k => (
           <button key={k} type="button" aria-pressed={pick === k} title={TERMS[SEG_TERM[k]]} onClick={() => setPick(k)}
@@ -663,7 +665,7 @@ function SegmentsSection({ d }: { d: Data }) {
         ))}
       </div>
       <Table head={[...SEG_UI.head]} empty={SEG_UI.empty}
-        rows={rows.slice(0, 25).map(r => [<Link key={r.key} href={`/dashboard/golfers/${encodeURIComponent(r.key)}`} className="text-pine hover:underline">{r.name}</Link>, r.rounds, r.recentRounds, fmtDay(r.lastPlayed)])} />
+        rows={rows.slice(0, 25).map(r => [r.key ? <Link key={r.key} href={`/dashboard/golfers/${encodeURIComponent(r.key)}`} className="text-pine hover:underline">{r.name}</Link> : r.name, r.rounds, r.recentRounds, fmtDay(r.lastPlayed)])} />
       {rows.length > 25 && <p className="text-[12.5px] text-ink-muted mt-2">{rows.length - 25} {SEG_UI.more}</p>}
     </Section>
   );

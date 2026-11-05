@@ -207,7 +207,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/membership/[id]/auto-renew` | public | public | POST | `src/app/api/membership/[id]/auto-renew/route.ts` | 24 |
 | `/api/operator/active-course` | operator | file | POST | `src/app/api/operator/active-course/route.ts` | 30 |
 | `/api/operator/agreement` | operator | file | GET POST | `src/app/api/operator/agreement/route.ts` | 38 |
-| `/api/operator/analytics` | operator | file | GET | `src/app/api/operator/analytics/route.ts` | 37 |
+| `/api/operator/analytics` | operator | file | GET | `src/app/api/operator/analytics/route.ts` | 44 |
 | `/api/operator/analytics/shop` | operator | file | GET | `src/app/api/operator/analytics/shop/route.ts` | 28 |
 | `/api/operator/announcements` | operator | file | GET | `src/app/api/operator/announcements/route.ts` | 51 |
 | `/api/operator/announcements/dismiss` | operator | file | POST | `src/app/api/operator/announcements/dismiss/route.ts` | 31 |
@@ -306,7 +306,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/courses/[slug]/member` | member | **NONE FOUND** | page | `src/app/courses/[slug]/member/page.tsx` | 874 |
 | `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 1948 |
 | `/dashboard/2fa` | operator | entry | page | `src/app/dashboard/2fa/page.tsx` | 110 |
-| `/dashboard/analytics` | operator | middleware | page | `src/app/dashboard/analytics/page.tsx` | 820 |
+| `/dashboard/analytics` | operator | middleware | page | `src/app/dashboard/analytics/page.tsx` | 822 |
 | `/dashboard/cancellations` | operator | middleware | page | `src/app/dashboard/cancellations/page.tsx` | 17 |
 | `/dashboard/events` | operator | middleware | page | `src/app/dashboard/events/page.tsx` | 186 |
 | `/dashboard/forgot-password` | operator | entry | page | `src/app/dashboard/forgot-password/page.tsx` | 63 |

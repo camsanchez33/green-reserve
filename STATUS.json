@@ -1,24 +1,30 @@
 {
-  "generatedAt": "2026-11-05T00:37:05.165Z",
+  "generatedAt": "2026-11-05T00:43:08.789Z",
   "repo": {
-    "head": "1be63b30",
+    "head": "241549e9",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 8,
+    "dirtyCount": 7,
     "dirty": [
       "M CLAUDE.md",
       " M docs/CODEMAP.md",
       " M docs/codemap.json",
+      " M scripts/golfer-segments-test.ts",
+      " M src/app/api/operator/analytics/route.ts",
       " M src/app/dashboard/analytics/page.tsx",
-      " M src/lib/analytics-terms.ts",
-      " M src/lib/analytics.ts",
-      "?? scripts/golfer-segments-test.ts",
-      "?? src/lib/golfer-segments.ts"
+      " M src/lib/analytics-terms.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "241549e9",
+        "date": "2026-11-05T00:37:08+00:00",
+        "subject": "Analytics: golfer groups — regulars, new, at risk, inactive (SEG-1)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "3bf3f7fa",
         "date": "2026-11-04T16:02:22-05:00",
@@ -789,7 +795,7 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 1,
-      "lastTouched": "2026-11-04",
+      "lastTouched": "2026-11-05",
       "ageDays": 0
     },
     {
@@ -1018,6 +1024,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "241549e9",
+      "date": "2026-11-05",
+      "subject": "Analytics: golfer groups — regulars, new, at risk, inactive (SEG-1)"
+    },
+    {
       "h": "3bf3f7fa",
       "date": "2026-11-04",
       "subject": "Events: command center strip and organizer bill coverage (EVENTS-1) (#308)"
@@ -1071,11 +1082,6 @@
       "h": "497612df",
       "date": "2026-11-04",
       "subject": "Tee sheet: 1st and 10th tee side by side (TEES-1)"
-    },
-    {
-      "h": "80935727",
-      "date": "2026-11-03",
-      "subject": "Partial check-in keeps the rest of the group booked (PARTIAL-1) (#305)"
     }
   ]
 }

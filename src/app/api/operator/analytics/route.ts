@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveDashboardSession, requirePermission } from '@/lib/session';
+import { resolveDashboardSession, requirePermission, can } from '@/lib/session';
 import { todayIn, addDaysStr } from '@/lib/course-time';
 import { computeAnalytics, headline, previousRange, type Range } from '@/lib/analytics';
 
@@ -32,5 +32,12 @@ export async function GET(req: NextRequest) {
   // DENSE-1: the previous period's series too, for the dashed line under the chart.
   const before = sp.get('compare') === '1' ? await computeAnalytics(session.courseId, previousRange(range)) : null;
   const compare = before ? { range: before.range, headline: headline(before), series: before.revenue.series } : null;
-  return NextResponse.json({ ...current, headline: headline(current), compare }, { headers: { 'Cache-Control': 'no-store' } });
+  // SEG-1 review: golfers' email and phone (and the record link, whose key IS one) only with
+  // "See golfer email and phone" — the same rule as the sheet, bookings and search.
+  const customers = can(session, 'sheet.golfer_contact') ? current.customers : {
+    ...current.customers,
+    goneQuiet: current.customers.goneQuiet.map(r => ({ ...r, email: '', phone: '' })),
+    segments: { ...current.customers.segments, rows: current.customers.segments.rows.map(r => ({ ...r, key: '', email: '', phone: '' })) },
+  };
+  return NextResponse.json({ ...current, customers, headline: headline(current), compare }, { headers: { 'Cache-Control': 'no-store' } });
 }

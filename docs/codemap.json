@@ -5202,7 +5202,7 @@
     },
     {
       "path": "src/app/api/operator/analytics/route.ts",
-      "lines": 37,
+      "lines": 44,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8488,7 +8488,7 @@
     },
     {
       "path": "src/app/dashboard/analytics/page.tsx",
-      "lines": 820,
+      "lines": 822,
       "purpose": "DENSE-1 (DENSE_UI_SPEC.md, Cam 2026-10-27:",
       "brain": [],
       "exports": [

@@ -35,6 +35,10 @@ const an = readFileSync('src/lib/analytics.ts', 'utf8');
 ok('Analytics groups every golfer it knows as of the same day as gone-quiet, with the same booked-ahead set', an.includes('const seg = golferSegments(visits, asOf, bookedAhead);') && an.includes('segments,'));
 const page = readFileSync('src/app/dashboard/analytics/page.tsx', 'utf8');
 ok('the Golfers tab shows the groups, links each golfer to their record, and downloads a group', page.includes('<SegmentsSection d={d} />') && page.includes('href={`/dashboard/golfers/${encodeURIComponent(r.key)}`}') && page.includes('[...SEG_UI.csv]'));
+const route = readFileSync('src/app/api/operator/analytics/route.ts', 'utf8');
+ok('without "See golfer email and phone": no email, phone or record key in the groups or the gone-quiet list', route.includes("can(session, 'sheet.golfer_contact') ? current.customers")
+  && route.includes("rows: current.customers.segments.rows.map(r => ({ ...r, key: '', email: '', phone: '' }))") && route.includes("goneQuiet: current.customers.goneQuiet.map(r => ({ ...r, email: '', phone: '' }))"));
+ok('…the page shows a plain name then, and the download has no contact columns', page.includes("r.key ? <Link key={r.key}") && page.includes("SEG_UI.csv.filter((_, i) => i !== 1 && i !== 2)"));
 const birdie = readFileSync('src/lib/birdie/tools.ts', 'utf8'); const review = readFileSync('src/lib/monthly-review.ts', 'utf8');
 ok('the golfer list never reaches the assistant or the monthly AI review', !birdie.includes('segments') && !review.includes('segments'));
 
