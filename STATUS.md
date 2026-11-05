@@ -4,14 +4,17 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-05 00:43 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `241549e9` · working tree **7 dirty file(s)**
+Generated 2026-11-05 01:07 UTC · branch `tmp-reg` · HEAD `c1e67533` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 87 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 90 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `c1e67533` | 2026-11-05 | Register restyle to the DASH-D mockup: segmented tabs, tiles, steppers, total, pay tiles |
+| `dfcf2b74` | 2026-11-04 | Analytics: golfer groups — regulars, new, at risk, inactive (SEG-1) (#309) |
+| `537fb89a` | 2026-11-05 | SEG-1 review fix: golfer contact on Analytics only with See golfer email and phone |
 | `241549e9` | 2026-11-05 | Analytics: golfer groups — regulars, new, at risk, inactive (SEG-1) |
 | `3bf3f7fa` | 2026-11-04 | Events: command center strip and organizer bill coverage (EVENTS-1) (#308) |
 | `4c554dc8` | 2026-11-04 | EVENTS-1 review fix: name players past the confirmed headcount instead of hiding them |
@@ -102,15 +105,9 @@ Generated 2026-11-05 00:43 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (7 file(s))
+### Uncommitted working tree (1 file(s))
 
-- `M CLAUDE.md`
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M scripts/golfer-segments-test.ts`
-- `M src/app/api/operator/analytics/route.ts`
-- `M src/app/dashboard/analytics/page.tsx`
-- `M src/lib/analytics-terms.ts`
+- `M src/app/dashboard/shop/page.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -195,7 +192,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-11-05 | 0d |
+| `CLAUDE.md` | 1 | 2026-11-04 | 0d |
 | `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 3d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 14d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 9d |
@@ -236,6 +233,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `c1e67533` 2026-11-05 — Register restyle to the DASH-D mockup: segmented tabs, tiles, steppers, total, pay tiles
+- `dfcf2b74` 2026-11-04 — Analytics: golfer groups — regulars, new, at risk, inactive (SEG-1) (#309)
+- `537fb89a` 2026-11-05 — SEG-1 review fix: golfer contact on Analytics only with See golfer email and phone
 - `241549e9` 2026-11-05 — Analytics: golfer groups — regulars, new, at risk, inactive (SEG-1)
 - `3bf3f7fa` 2026-11-04 — Events: command center strip and organizer bill coverage (EVENTS-1) (#308)
 - `4c554dc8` 2026-11-04 — EVENTS-1 review fix: name players past the confirmed headcount instead of hiding them
@@ -245,9 +245,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `3e901199` 2026-11-04 — EARNED-1: CLAUDE.md wording
 - `3b06f8d3` 2026-11-04 — Money: earned vs paid out on the Ledger (EARNED-1)
 - `ddeaa003` 2026-11-04 — Tee sheet: 1st and 10th tee side by side; Schedule: prices as one table (#306)
-- `56fffcae` 2026-11-04 — TEES-1 / PRICES-1 review fixes: same-tee times stack, nine order; one rename field, every price change shown
-- `988566c5` 2026-11-04 — Schedule: prices as one table, rounds side by side (PRICES-1)
-- `497612df` 2026-11-04 — Tee sheet: 1st and 10th tee side by side (TEES-1)
 
 ---
 

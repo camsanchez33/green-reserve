@@ -476,10 +476,10 @@ export default function ShopPage() {
             <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
               <Card className="p-5">
                 {(canCash || canCheckin) && (
-                  <div className="flex gap-1 mb-4" role="tablist" aria-label="Ring up">
+                  <div className="inline-flex gap-1 p-1 mb-4 rounded-[7px] bg-paper" role="tablist" aria-label="Ring up">
                     {([['items', 'Shop items'], ['rounds', 'Rounds today']] as const).map(([k, l]) => (
                       <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
-                        className={'px-3 py-1.5 rounded-md border text-[13px] ' + (tab === k ? 'border-pine/40 text-ink font-medium' : 'border-line text-ink-soft hover:text-ink')}>{l}</button>
+                        className={'px-3.5 min-h-[34px] rounded-[5px] text-[13.5px] ' + (tab === k ? 'bg-white text-ink font-semibold shadow-card' : 'text-ink-soft hover:text-ink')}>{l}</button>
                     ))}
                   </div>
                 )}
@@ -560,22 +560,22 @@ export default function ShopPage() {
                     <input ref={searchRef} value={q} onChange={e => setQ(e.target.value)} autoFocus
                       onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); const t = q.trim(); if (scan(q) || !t) return; if (!tree.some(i => matches(i, q))) noMatch(q); else setNote(''); } }}
                       placeholder="Find or scan an item" aria-label="Find or scan an item" className={INPUT + ' w-56'} />
-                    {categories.length > 1 && ['', ...categories].map(c => (
+                    {categories.length > 1 && <span className="inline-flex flex-wrap gap-1 p-1 rounded-[7px] bg-paper">{['', ...categories].map(c => (
                       <button key={c || 'all'} type="button" onClick={() => setCat(c)} aria-pressed={cat === c}
-                        className={'text-[12.5px] rounded-md px-2.5 py-1 border ' + (cat === c ? 'border-pine/40 text-ink font-medium' : 'border-line text-ink-soft hover:text-ink')}>{c || 'All'}</button>
-                    ))}
+                        className={'text-[13px] rounded-[5px] px-3 min-h-[30px] ' + (cat === c ? 'bg-white text-ink font-semibold shadow-card' : 'text-ink-soft hover:text-ink')}>{c || 'All'}</button>
+                    ))}</span>}
                   </div>
                 )}
                 {tab === 'items' && tree.length > 0 && groups.length === 0 && <p className="text-sm text-ink-soft">Nothing matches.{q.trim() ? ' Unknown code? Add it as a SKU in Settings → Pro shop.' : ''}</p>}
                 {tab === 'items' && groups.map(([group, list]) => { const withPhotos = list.some(i => i.photoUrl); return (
                   <section key={group} className="mb-4 last:mb-0">
                     <h2 className="text-[13px] font-semibold text-ink mb-2">{group}</h2>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2">
                       {list.map(it => {
                         const n = inCart(it);
                         const opts = it.options.filter(o => o.active);
                         return (
-                          <div key={it.id} className={picking === it.id ? 'col-span-2 sm:col-span-3' : ''}>
+                          <div key={it.id} className={picking === it.id ? 'col-span-2 sm:col-span-3 xl:col-span-4' : ''}>
                             <button onClick={() => (opts.length ? setPicking(p => (p === it.id ? null : it.id)) : add(it.id, 1))} aria-expanded={opts.length ? picking === it.id : undefined}
                               className={'w-full text-left rounded-[7px] border overflow-hidden transition-colors ' + (n ? 'border-pine/50 bg-pine/[0.05]' : 'border-line bg-white hover:border-line-strong')}>
                               {/* DASH-D (Cam 2026-11-01, "photo tiles"): the item's photo when it has one; otherwise the name is the tile. */}
@@ -584,10 +584,9 @@ export default function ShopPage() {
                                 ? <img src={it.photoUrl} alt="" loading="lazy" className="block w-full h-20 object-cover bg-paper" />
                                 : <span aria-hidden="true" className="flex w-full h-20 items-center justify-center bg-paper text-[18px] font-semibold text-ink-faint">{it.name.split(/\s+/).filter(w => /^[A-Za-z0-9]/.test(w)).slice(0, 2).map(w => w[0]).join('').toUpperCase()}</span>)}
                               <span className="block px-3 pt-2.5 text-sm font-medium text-ink leading-snug">{it.name}</span>
-                              <span className="block px-3 pb-2.5 text-[12.5px] text-ink-muted tabular-nums">
-                                {usd(it.priceCents)}
-                                {opts.length ? <> · {opts.length} options</> : it.stockCount !== null && <span className={it.stockCount <= 0 ? 'text-bad' : ''}> · {stockWords(it.stockCount)}</span>}
-                                {n ? <span className="text-pine font-semibold"> · {n} in sale</span> : null}
+                              <span className="flex items-baseline justify-between gap-2 px-3 pt-1 pb-2.5 text-[12.5px] text-ink-muted tabular-nums">
+                                <span><b className="text-[14px] font-semibold text-ink">{usd(it.priceCents)}</b>{n ? <span className="text-pine font-semibold"> · {n} in sale</span> : null}</span>
+                                {opts.length ? <span className="shrink-0 whitespace-nowrap">{opts.length} options</span> : it.stockCount !== null && <span className={'shrink-0 whitespace-nowrap' + (it.stockCount <= 0 ? ' text-bad' : '')}>{stockWords(it.stockCount)}</span>}
                               </span>
                             </button>
                             {picking === it.id && (
@@ -640,9 +639,9 @@ export default function ShopPage() {
                       <li key={l.item.id} className="flex items-center justify-between gap-2 py-2 text-sm">
                         <span className="min-w-0 truncate text-ink">{l.item.name}</span>
                         <span className="flex items-center gap-1.5 shrink-0">
-                          <button onClick={() => add(l.item.id, -1)} aria-label={`One fewer ${l.item.name}`} className="w-7 h-7 rounded-md border border-line text-ink-soft hover:text-ink">−</button>
+                          <button onClick={() => add(l.item.id, -1)} aria-label={`One fewer ${l.item.name}`} className="w-8 h-8 rounded-[7px] border border-line bg-white text-ink-soft hover:text-ink">−</button>
                           <span className="w-6 text-center tabular-nums">{l.quantity}</span>
-                          <button onClick={() => add(l.item.id, 1)} aria-label={`One more ${l.item.name}`} className="w-7 h-7 rounded-md border border-line text-ink-soft hover:text-ink">+</button>
+                          <button onClick={() => add(l.item.id, 1)} aria-label={`One more ${l.item.name}`} className="w-8 h-8 rounded-[7px] border border-line bg-white text-ink-soft hover:text-ink">+</button>
                           <span className="w-16 text-right tabular-nums text-ink">{usd(l.item.priceCents * l.quantity)}</span>
                         </span>
                       </li>
@@ -669,16 +668,16 @@ export default function ShopPage() {
                       <li key={c.key} className="flex items-center justify-between gap-2 py-2 text-sm">
                         <span className="min-w-0 truncate text-ink">{c.name}</span>
                         <span className="flex items-center gap-1.5 shrink-0">
-                          <button onClick={() => addCustom(c.key, -1)} aria-label={`One fewer ${c.name}`} className="w-7 h-7 rounded-md border border-line text-ink-soft hover:text-ink">−</button>
+                          <button onClick={() => addCustom(c.key, -1)} aria-label={`One fewer ${c.name}`} className="w-8 h-8 rounded-[7px] border border-line bg-white text-ink-soft hover:text-ink">−</button>
                           <span className="w-6 text-center tabular-nums">{c.quantity}</span>
-                          <button onClick={() => addCustom(c.key, 1)} aria-label={`One more ${c.name}`} className="w-7 h-7 rounded-md border border-line text-ink-soft hover:text-ink">+</button>
+                          <button onClick={() => addCustom(c.key, 1)} aria-label={`One more ${c.name}`} className="w-8 h-8 rounded-[7px] border border-line bg-white text-ink-soft hover:text-ink">+</button>
                           <span className="w-16 text-right tabular-nums text-ink">{usd(c.priceCents * c.quantity)}</span>
                         </span>
                       </li>
                     ))}
                     {priced && priced.discountCents > 0 && <li className="flex justify-between py-2 text-sm text-ink-soft"><span>Discount{discount?.note.trim() ? ` (${discount.note.trim()})` : ''}</span><span className="tabular-nums">−{usd(priced.discountCents)}</span></li>}
                     {priced && priced.taxCents > 0 && <li className="flex justify-between py-2 text-sm text-ink-soft"><span>Sales tax</span><span className="tabular-nums">{usd(priced.taxCents)}</span></li>}
-                    <li className="flex justify-between py-2.5 text-[15px] font-semibold text-ink"><span>Total</span><span className="tabular-nums">{cashNoQuote ? <span className="text-ink-muted font-normal">—</span> : ready ? usd(due) : <span className="text-ink-muted font-normal text-sm">Working out the total…</span>}</span></li>
+                    <li className="flex items-baseline justify-between pt-3 pb-1 text-[15px] font-semibold text-ink"><span>Total</span><span className="tabular-nums text-[24px]">{cashNoQuote ? <span className="text-ink-muted font-normal">—</span> : ready ? usd(due) : <span className="text-ink-muted font-normal text-sm">Working out the total…</span>}</span></li>
                   </ul>
                 )}
 
@@ -704,9 +703,9 @@ export default function ShopPage() {
 
                 {!empty && (
                   <div className="mt-3 space-y-3">
-                    <div className="space-y-1.5" role="radiogroup" aria-label="How they pay">
+                    <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="How they pay">
                       {payChoices.map(([k, label]) => (
-                        <label key={k} className={'flex items-center gap-2.5 px-3 py-2 rounded-md border cursor-pointer text-sm text-ink ' + (pay === k ? 'border-pine/40' : 'border-line')}>
+                        <label key={k} className={'flex items-center gap-2 px-3 min-h-[44px] rounded-[7px] border cursor-pointer text-[13.5px] text-ink ' + (pay === k ? 'border-pine/50 bg-pine/[0.05] font-medium' : 'border-line bg-white hover:border-line-strong')}>
                           <input type="radio" name="pay" checked={pay === k} onChange={() => setPay(k)} className="accent-pine" />{label}
                         </label>
                       ))}
@@ -750,7 +749,7 @@ export default function ShopPage() {
                     {noTax && <p className="text-[13px] text-warn" role="status">{pay === 'cash' || pay === 'account' ? 'No sales tax right now — taken without it.' : 'No sales tax right now — cash only.'} <button type="button" onClick={() => setQuoteTry(n => n + 1)} className="underline font-medium">Try again</button></p>}
                     {quoteError && <p className="text-[13px] text-bad" role="alert">{quoteError} <button type="button" onClick={() => { setQuoteError(''); setQuoteTry(n => n + 1); }} className="underline font-medium">Try again</button></p>}
                     <button onClick={ringUp} disabled={!payChoices.some(([k]) => k === pay) || busy === 'sale' || needContact || !ready || (pay === 'cash' && !cashNoQuote && tenderedCents > 0 && tenderedCents < due) || (pay === 'account' && !accountMember) || (pay === 'reader' && (!readerId || onReader?.state === 'waiting' || roundOnReader?.state === 'waiting'))}
-                      className="w-full bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-sm py-2.5 disabled:opacity-50">
+                      className="w-full min-h-[52px] bg-pine hover:bg-pine-hover text-white font-semibold rounded-[7px] text-[15px] disabled:opacity-50">
                       {busy === 'sale' ? 'Saving…' : pay === 'cash' ? (cashNoQuote ? 'Take cash' : `Take ${usd(due)} cash`) : pay === 'account' ? `${usd(due)} on account` : pay === 'reader' ? `Charge ${usd(due)} on the reader` : `Send ${usd(due)} pay link`}
                     </button>
                   </div>
