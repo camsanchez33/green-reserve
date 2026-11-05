@@ -1,20 +1,32 @@
 {
-  "generatedAt": "2026-11-05T01:07:33.633Z",
+  "generatedAt": "2026-11-05T01:15:52.596Z",
   "repo": {
-    "head": "c1e67533",
-    "branch": "tmp-reg",
-    "dirtyCount": 1,
-    "dirty": [
-      "M src/app/dashboard/shop/page.tsx"
-    ],
-    "looksLikeRunInProgress": true
+    "head": "686f59c3",
+    "branch": "claude/walkthrough-2-prioritization-ui5xyu",
+    "dirtyCount": 0,
+    "dirty": [],
+    "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
       {
-        "h": "c1e67533",
-        "date": "2026-11-05T01:02:40+00:00",
+        "h": "686f59c3",
+        "date": "2026-11-05T01:15:50+00:00",
+        "subject": "Members restyle to the DASH-D mockup: 26px title, four stat cards with 24px numbers, 7px buttons",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "e43e8996",
+        "date": "2026-11-04T20:15:35-05:00",
+        "subject": "Register restyle to the DASH-D mockup (#310)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "b36fe621",
+        "date": "2026-11-05T01:07:35+00:00",
         "subject": "Register restyle to the DASH-D mockup: segmented tabs, tiles, steppers, total, pay tiles",
         "ids": [],
         "matches": []
@@ -1039,7 +1051,17 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "c1e67533",
+      "h": "686f59c3",
+      "date": "2026-11-05",
+      "subject": "Members restyle to the DASH-D mockup: 26px title, four stat cards with 24px numbers, 7px buttons"
+    },
+    {
+      "h": "e43e8996",
+      "date": "2026-11-04",
+      "subject": "Register restyle to the DASH-D mockup (#310)"
+    },
+    {
+      "h": "b36fe621",
       "date": "2026-11-05",
       "subject": "Register restyle to the DASH-D mockup: segmented tabs, tiles, steppers, total, pay tiles"
     },
@@ -1087,16 +1109,6 @@
       "h": "3e901199",
       "date": "2026-11-04",
       "subject": "EARNED-1: CLAUDE.md wording"
-    },
-    {
-      "h": "3b06f8d3",
-      "date": "2026-11-04",
-      "subject": "Money: earned vs paid out on the Ledger (EARNED-1)"
-    },
-    {
-      "h": "ddeaa003",
-      "date": "2026-11-04",
-      "subject": "Tee sheet: 1st and 10th tee side by side; Schedule: prices as one table (#306)"
     }
   ]
 }
