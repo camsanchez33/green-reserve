@@ -8,7 +8,7 @@ import { sendCheckInLinkOnce } from '@/lib/check-in-email';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
 import { holdsAtCutoff, bookingWindowHours } from '@/lib/cancel-policy';
 import { markNoShow, dueAutoNoShows, chargeNoShow, dueNoShowCharges } from '@/lib/no-show-fee';
-import { cutoffWarningDue, checkInEmailDue } from '@/lib/cron-windows';
+import { cutoffWarningDue, checkInEmailDue, teeDateWindow, FEE_DATES, CHECKIN_DATES } from '@/lib/cron-windows';
 import { sendCancellationWarningEmail } from '@/lib/email';
 import { retryMissingAgreementPdfs } from '@/lib/agreement-sign';
 import { sendAgreementBumpNotices } from '@/lib/agreement-required';
@@ -55,7 +55,8 @@ export const GET = cronRoute('hourly', async (req: NextRequest) => {
 
   // ─── 1 & 2: Fee-policy bookings (card on file, fee > 0) ─────────────────────
   const feeBookings = await prisma.booking.findMany({
-    where: { status: 'confirmed', paymentStatus: 'card_on_file' },
+    // AUDIT-1: only tee dates whose warning or hold can still be due (not every booking ever made).
+    where: { status: 'confirmed', paymentStatus: 'card_on_file', teeTime: { date: teeDateWindow(now, FEE_DATES) } },
     include: {
       teeTime: { select: { date: true, time: true } },
       course: {
@@ -121,7 +122,7 @@ export const GET = cronRoute('hourly', async (req: NextRequest) => {
   const noCardBookings = await prisma.booking.findMany({
     // SP-B: plus card-on-file bookings whose late fee is charged on a late cancel
     // (no hold at the cutoff) — they need the check-in link exactly like these.
-    where: { status: 'confirmed', OR: [{ paymentStatus: 'no_payment_method' }, { paymentStatus: 'card_on_file', cancellationFeeTotal: { lte: 0 } }, { paymentStatus: 'card_on_file', lateFeeTimingAtBooking: { in: ['late_cancel', 'late_cancel_or_no_show'] } }] },
+    where: { status: 'confirmed', teeTime: { date: teeDateWindow(now, CHECKIN_DATES) }, OR: [{ paymentStatus: 'no_payment_method' }, { paymentStatus: 'card_on_file', cancellationFeeTotal: { lte: 0 } }, { paymentStatus: 'card_on_file', lateFeeTimingAtBooking: { in: ['late_cancel', 'late_cancel_or_no_show'] } }] },
     include: {
       teeTime: { select: { date: true, time: true } },
       course: { select: { name: true, timezone: true, checkInWindowHours: true } },

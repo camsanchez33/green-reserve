@@ -12,6 +12,9 @@ export type SettingsValidation =
   | { ok: true; data: Record<string, unknown> }
   | { ok: false; error: string };
 
+/** AUDIT-1: the longest cancellation window anywhere — the crons only read tee dates this far ahead (lib/cron-windows). */
+export const CANCELLATION_HOURS_MAX = 24 * 14;
+
 const INT_RANGES: Record<string, [number, number]> = {
   holes: [1, 45],
   par: [20, 120],
@@ -19,7 +22,7 @@ const INT_RANGES: Record<string, [number, number]> = {
   slope: [0, 155],
   minPlayers: [1, 8],
   maxPlayers: [1, 8],
-  cancellationHours: [0, 24 * 14],
+  cancellationHours: [0, CANCELLATION_HOURS_MAX],
   checkInWindowHours: [0, 48],
   publicAdvanceDays: [1, 365],
   memberAdvanceDays: [1, 365],

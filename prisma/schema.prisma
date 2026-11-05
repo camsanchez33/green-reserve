@@ -550,10 +550,10 @@ model CourseMembership {
   accountStatements      MemberStatement[]
   /// MEM-ACCT part 2 (Cam 2026-10-30: "separate box on first statement"): the card the member agreed,
   /// with its own box, to have charged for their account statements — never the auto-renew card.
-  accountCustomerId      String          @default("")
-  accountPaymentMethodId String          @default("")
+  accountCustomerId      String            @default("")
+  accountPaymentMethodId String            @default("")
   accountCardConsentAt   DateTime?
-  accountCardTerms       String          @default("")
+  accountCardTerms       String            @default("")
 
   @@unique([golferId, courseId])
   // MP-10 schema half: the overdue-dues surfaces filter by course + last payment.
@@ -749,6 +749,11 @@ model Booking {
   @@index([courseId, checkedInAt])
   @@index([courseId, paidAt])
   @@index([splitFromId])
+  // AUDIT-1: the Stripe webhook and refunds find a booking by its PaymentIntent (findBookingByStripeId, holdRefundCents).
+  @@index([roundPaymentIntentId])
+  @@index([cancellationFeeChargeId])
+  @@index([stripePaymentIntentId])
+  @@index([feePaymentIntentId])
 }
 
 model TeeTimeSchedule {
@@ -945,6 +950,9 @@ model RateLimit {
   key         String   @id
   count       Int      @default(1)
   windowStart DateTime @default(now())
+
+  // AUDIT-1: old windows are swept by age.
+  @@index([windowStart])
 }
 
 model AdminUser {
@@ -1231,6 +1239,8 @@ model PaymentEvent {
   @@index([bookingId])
   @@index([kind, createdAt])
   @@index([createdAt])
+  // AUDIT-1: webhook and refund paths look a payment event up by its Stripe id.
+  @@index([stripeId])
 }
 
 /// EV-1: what happened to a booking, one row per real-world occurrence, kept
@@ -1722,30 +1732,30 @@ model CourseEventTask {
 
 /// W2-9: a player in an event, with their group and starting hole (pairings).
 model CourseEventPlayer {
-  id        String               @id @default(cuid())
-  eventId   String
-  event     CourseEvent          @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  name      String
-  email     String               @default("")
-  phone     String               @default("")
+  id          String               @id @default(cuid())
+  eventId     String
+  event       CourseEvent          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name        String
+  email       String               @default("")
+  phone       String               @default("")
   /// 1-based group number; null = not in a group yet.
-  groupNo   Int?
+  groupNo     Int?
   /// Shotgun: the hole this group starts on. Tee times: null.
-  startHole Int?
-  payments  CourseEventPayment[]
+  startHole   Int?
+  payments    CourseEventPayment[]
   /// W2-9d: in = on the list; held = signed up online, a spot kept while they pay (until holdUntil); waitlist = the event was full.
-  status    String               @default("in")
+  status      String               @default("in")
   /// Event day (Cam 2026-10-31): when staff checked them in on the day; null = not here yet.
   checkedInAt DateTime?
-  holdUntil DateTime?
+  holdUntil   DateTime?
   /// staff | signup
-  source    String               @default("staff")
+  source      String               @default("staff")
   /// Players signed up together share a key (they pay and are paired together).
-  groupKey  String               @default("")
+  groupKey    String               @default("")
   /// Answers to the course's sign-up questions: { questionId: answer }.
-  answers   Json                 @default("{}")
-  sortOrder Int                  @default(0)
-  createdAt DateTime             @default(now())
+  answers     Json                 @default("{}")
+  sortOrder   Int                  @default(0)
+  createdAt   DateTime             @default(now())
 
   @@index([eventId])
 }

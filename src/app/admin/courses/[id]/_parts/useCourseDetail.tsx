@@ -556,8 +556,8 @@ export function useCourseDetail() {
       const r = await fetch('/api/admin/course-settings', {
         method: 'PATCH', headers: H(), body: JSON.stringify({ courseId, ...setupForm }),
       });
-      setSetupMsg(r.ok ? 'saved' : 'error');
-      if (r.ok) loadDetail();
+      if (r.ok) { setSetupMsg('saved'); loadDetail(); }
+      else setSetupMsg('error:' + (((await r.json().catch(() => ({}))) as { error?: string }).error ?? ''));
     } catch {
       setSetupMsg('error');
     } finally {

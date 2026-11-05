@@ -23,3 +23,19 @@ export function cutoffWarningDue(minsToCutoff: number): boolean {
 export function checkInEmailDue(minsToTee: number, windowMins: number): boolean {
   return minsToTee > 0 && minsToTee <= windowMins;
 }
+
+/**
+ * AUDIT-1 (database audit 2026-11-05): the crons used to load every confirmed booking ever made
+ * (no-shows and never-checked-in groups stay confirmed for good), so each run grew with the
+ * platform's whole history. They now read only tee dates that can still be due:
+ *  - fee bookings: a cancellation window is at most 14 days (settings-validation), the warning
+ *    is an hour before it, and a hold is never charged a day after the tee time (HOLD_STALE_MS);
+ *  - check-in links: at most 48 hours before the round (checkInWindowHours).
+ * Course-local date strings; a day of slack each side covers every time zone.
+ */
+export const FEE_DATES = { back: 2, ahead: 16 } as const;
+export const CHECKIN_DATES = { back: 1, ahead: 3 } as const;
+export function teeDateWindow(now: Date, w: { back: number; ahead: number }): { gte: string; lte: string } {
+  const day = (n: number) => new Date(now.getTime() + n * 86_400_000).toISOString().slice(0, 10);
+  return { gte: day(-w.back), lte: day(w.ahead) };
+}

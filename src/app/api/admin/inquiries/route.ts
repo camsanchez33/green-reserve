@@ -1,3 +1,4 @@
+import { CANCELLATION_HOURS_MAX } from '@/lib/settings-validation';
 import { sheetPricesNotBuilt } from '@/lib/setup-sheet-recap';
 import { switchOnWherePriced } from '@/lib/pricing-switch';
 import { NextRequest, NextResponse, after } from 'next/server';
@@ -840,7 +841,8 @@ async function handleAction(
       const residentWeekendFee = residentPass ? flt(residentPass.residentWeekend ?? d.residentWeekend, 0) : null;
 
       const hasCancellationPolicy = d.cancellationPolicy === 'yes';
-      const cancellationHours = hasCancellationPolicy ? num(Number(d.cancellationHours), 24) : 0;
+      // AUDIT-1: never past the longest window Settings allows (the crons read tee dates up to it).
+      const cancellationHours = hasCancellationPolicy ? Math.min(CANCELLATION_HOURS_MAX, Math.max(0, Math.round(num(Number(d.cancellationHours), 24)))) : 0;
       const lateCancellationFee = hasCancellationPolicy ? flt(d.lateFee, 0) : 0;
 
       const PASS_TYPE_LABELS: Record<string, string> = {

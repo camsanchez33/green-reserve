@@ -1,3 +1,4 @@
+import { teeDateWindow, FEE_DATES } from '@/lib/cron-windows';
 import { payLinkOpensOn } from '@/lib/course-time';
 import { holdsAtCutoff, bookingWindowHours } from '@/lib/cancel-policy';
 import { NextRequest, NextResponse } from 'next/server';
@@ -39,6 +40,8 @@ export const GET = cronRoute('cancellation-cutoff', async (req: NextRequest) => 
     where: {
       status: 'confirmed',
       paymentStatus: 'card_on_file',
+      // AUDIT-1: only tee dates whose hold can still be due (lib/cron-windows).
+      teeTime: { date: teeDateWindow(now, FEE_DATES) },
     },
     include: {
       teeTime: { select: { date: true, time: true } },
