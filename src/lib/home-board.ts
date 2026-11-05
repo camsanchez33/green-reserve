@@ -6,6 +6,7 @@ import { prisma } from './prisma';
 import { todayIn, addDaysStr } from './course-time';
 import { computeAnalytics } from './analytics';
 import { cleanConditions, type CourseConditions } from './course-conditions';
+import { GOAL_METRICS, type GoalMetric } from './course-goals';
 
 export const SHIFT_NOTE_MAX = 1000;
 const LIVE = { status: { in: ['confirmed', 'completed'] } };
@@ -57,26 +58,50 @@ const monthOf = (date: string) => date.slice(0, 7);
 const daysInMonth = (month: string) => { const [y, m] = month.split('-').map(Number); return new Date(Date.UTC(y, m, 0)).getUTCDate(); };
 function prevMonth(month: string) { const [y, m] = month.split('-').map(Number); return m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, '0')}`; }
 
+
+type A = Awaited<ReturnType<typeof computeAnalytics>>;
+/** Each metric's actual, from computeAnalytics' own figures (lib/course-goals lists them). */
+const actualOf: Record<GoalMetric, (a: A) => number> = {
+  collected: a => a.revenue.collectedCents,
+  rounds: a => a.revenue.roundsPlayed,
+  booked: a => a.behavior.players,
+  fill: a => a.utilization.fillPct ?? 0,
+  new_golfers: a => a.customers.newCustomers,
+};
+
+export type GoalRow = { metric: GoalMetric; target: number; actual: number; lastMonth: number };
+
 /**
- * This month against its goal: collected so far (computeAnalytics, month to date), the goal,
- * days left (today included), what's needed a day from here, and last month's daily average.
- * goalCents is null when no goal is set for the month.
+ * HOME-2 (Cam 2026-11-05): this month's goals on the metrics the course chose. Money ones only with
+ * money (money.payments). "Players booked" reads the whole month (tee times ahead count); every
+ * other metric reads the month to date. A month with no CourseGoal row for collected falls back to
+ * its old CourseMonthGoal amount, so a goal set before this shipped still shows.
  */
-export async function monthGoal(courseId: string, tz: string | null | undefined, now = new Date()) {
+export async function monthGoals(courseId: string, tz: string | null | undefined, opts: { money: boolean }, now = new Date()) {
   const today = todayIn(tz, now);
   const month = monthOf(today);
   const last = prevMonth(month);
-  const [goal, mtd, prev] = await Promise.all([
-    prisma.courseMonthGoal.findUnique({ where: { courseId_month: { courseId, month } }, select: { cents: true } }),
-    computeAnalytics(courseId, { from: `${month}-01`, to: today }, now),
-    computeAnalytics(courseId, { from: `${last}-01`, to: `${last}-${String(daysInMonth(last)).padStart(2, '0')}` }, now),
-  ]);
-  const collectedCents = mtd.revenue.collectedCents;
+  const end = (m: string) => `${m}-${String(daysInMonth(m)).padStart(2, '0')}`;
   const daysLeft = daysInMonth(month) - Number(today.slice(8, 10)) + 1;
-  const goalCents = goal?.cents ?? null;
-  return {
-    month, goalCents, collectedCents, daysLeft,
-    neededPerDayCents: goalCents != null ? Math.max(0, Math.ceil((goalCents - collectedCents) / daysLeft)) : null,
-    lastMonth: last, lastMonthPerDayCents: Math.round(prev.revenue.collectedCents / daysInMonth(last)),
-  };
+  const allowed = GOAL_METRICS.filter(m => opts.money || !m.money).map(m => m.key) as GoalMetric[];
+  const [rows, legacy] = await Promise.all([
+    prisma.courseGoal.findMany({ where: { courseId, month }, select: { metric: true, target: true } }),
+    opts.money ? prisma.courseMonthGoal.findUnique({ where: { courseId_month: { courseId, month } }, select: { cents: true } }) : Promise.resolve(null),
+  ]);
+  const targets = new Map<GoalMetric, number>();
+  for (const r of rows) if (r.target != null && (allowed as string[]).includes(r.metric)) targets.set(r.metric as GoalMetric, r.target);
+  if (legacy?.cents != null && !rows.some(r => r.metric === 'collected')) targets.set('collected', legacy.cents);
+  const set = allowed.filter(m => targets.has(m));
+  if (set.length === 0) return { month, daysLeft, lastMonth: last, goals: [] as GoalRow[], metrics: allowed };
+  const [mtd, full, prev] = await Promise.all([
+    computeAnalytics(courseId, { from: `${month}-01`, to: today }, now),
+    set.includes('booked') ? computeAnalytics(courseId, { from: `${month}-01`, to: end(month) }, now) : Promise.resolve(null),
+    computeAnalytics(courseId, { from: `${last}-01`, to: end(last) }, now),
+  ]);
+  const goals: GoalRow[] = set.map(metric => ({
+    metric, target: targets.get(metric)!,
+    actual: actualOf[metric](metric === 'booked' && full ? full : mtd),
+    lastMonth: actualOf[metric](prev),
+  }));
+  return { month, daysLeft, lastMonth: last, goals, metrics: allowed };
 }

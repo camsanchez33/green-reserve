@@ -1,7 +1,7 @@
 // HOME-1 (Cam 2026-11-05, page-by-page pass on Home): the weather and next tee times open the page,
 // Finish setting up lands on the field itself, Needs you leads with counts, Staff notes, a clearer heat map.
 // Pure + source pins. Run: npx tsx scripts/home-page-test.ts
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { parseHourly, hourKey } from '../src/lib/weather';
 import { settingsHref } from '../src/lib/setup-missing';
 
@@ -38,6 +38,15 @@ ok('the bar chart has room between hours', home.includes('gap-2 sm:gap-3 h-44') 
 const board = read('src/components/dashboard/home/HomeBoard.tsx');
 ok('staff notes: what the last shift left, and a box for the next', board.includes('>Staff notes<') && board.includes('Nothing from the last shift.') && board.includes('Leave a note for the next shift…'));
 ok('the heat map says what it shows, with a scale and each day\'s total', board.includes('how full each hour is') && board.includes('Empty') && board.includes('no tee times</span>') && board.includes('>Booked<'));
+
+// HOME-2 (Cam 2026-11-05): goals on the numbers the course picks; conditions open to what the course wants golfers to know.
+const goalsLib = read('src/lib/course-goals.ts');
+ok('goals can be set on money, rounds, players booked, fill and new golfers', ['collected', 'rounds', 'booked', 'fill', 'new_golfers'].every(k => goalsLib.includes(`key: '${k}'`)));
+ok('Home shows the goals card to every login; setting needs settings.edit', home.includes('<GoalsCard key=') && home.includes("canSet={access.can('settings.edit')}") && !home.includes('MonthGoalCard'));
+ok('each goal: actual of target, a day to go, last month, change and remove', board.includes(' a day to go') && board.includes('>Change<') && board.includes('>Remove<') && board.includes('Add a goal'));
+ok('the old single money goal and its route are gone', !existsSync('src/app/api/operator/month-goal/route.ts'));
+const cond = read('src/lib/course-conditions.ts');
+ok('conditions: the course\'s own lines, shown to golfers with the four choices', cond.includes('...(c.lines ?? [])') && board.includes('Your own · golfers see these too') && board.includes('CONDITION_SUGGESTIONS'));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);
