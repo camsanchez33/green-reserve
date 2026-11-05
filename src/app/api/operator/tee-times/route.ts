@@ -146,16 +146,26 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Fees must be between $0 and $1,000 (green) / $500 (cart).' }, { status: 400 });
   }
 
-  const teeTime = await prisma.teeTime.create({
-    data: {
-      courseId: session.courseId,
-      date, time, holes: Number(body.holes) === 9 ? 9 : 18,
-      playersAvailable: players, playersBooked: 0,
-      // MP-3 B2c: the form sends dollars; the columns are cents.
-      greenFeeCents, cartFeeCents,
-      walkingAllowed: body.walkingAllowed !== false, status: 'available',
-    },
-  });
+  // AUDIT-1: one row per slot (unique index TeeTime_slot_key) — a second 7:00 would double that tee.
+  const clash = await prisma.teeTime.findFirst({ where: { courseId: session.courseId, date, time, productId: null }, select: { id: true } });
+  if (clash) return NextResponse.json({ error: `There's already a ${time} tee time that day.` }, { status: 409 });
+  let teeTime;
+  try {
+    teeTime = await prisma.teeTime.create({
+      data: {
+        courseId: session.courseId,
+        date, time, holes: Number(body.holes) === 9 ? 9 : 18,
+        playersAvailable: players, playersBooked: 0,
+        // MP-3 B2c: the form sends dollars; the columns are cents.
+        greenFeeCents, cartFeeCents,
+        walkingAllowed: body.walkingAllowed !== false, status: 'available',
+      },
+    });
+  } catch (err) {
+    // Two adds of the same time at once: the second meets the unique index.
+    if ((err as { code?: string })?.code === 'P2002') return NextResponse.json({ error: `There's already a ${time} tee time that day.` }, { status: 409 });
+    throw err;
+  }
   return NextResponse.json(teeTimeToWire(teeTime));
 }
 

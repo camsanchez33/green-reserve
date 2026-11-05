@@ -189,7 +189,8 @@ export async function generateTeeTimes(courseId: string, dateStr: string): Promi
   const isOpen = (t: typeof existing[number]) => t.playersBooked === 0 && t.status !== 'blocked' && t._count.bookings === 0;
   const toDelete = existing.filter(t => isOpen(t) && !desired.has(slotKey(t.productId ?? null, t.time))).map(t => t.id);
   if (toDelete.length > 0) {
-    await prisma.teeTime.deleteMany({ where: { id: { in: toDelete } } });
+    // AUDIT-1: only if still open — a golfer who booked one since the read keeps it (and the day doesn't fail on the foreign key).
+    await prisma.teeTime.deleteMany({ where: { id: { in: toDelete }, playersBooked: 0, status: { not: 'blocked' }, bookings: { none: {} } } });
   }
   const updates = new Map<string, { data: Prisma.TeeTimeUncheckedUpdateManyInput; ids: string[] }>();
   const toCreate: Prisma.TeeTimeCreateManyInput[] = [];
@@ -246,7 +247,9 @@ export async function generateTeeTimes(courseId: string, dateStr: string): Promi
     toCreate.push({ courseId, date: dateStr, time: slot.time, productId: slot.productId, playersAvailable: 4, playersBooked: 0, ...fields });
     created++;
   }
-  if (toCreate.length) await prisma.teeTime.createMany({ data: toCreate });
+  // AUDIT-1: a slot another run created meanwhile (two saves, a save over the cron) is
+  // skipped, never doubled — the unique index TeeTime_slot_key is one row per slot.
+  if (toCreate.length) await prisma.teeTime.createMany({ data: toCreate, skipDuplicates: true });
   // Only rows still open: a booking that landed since the read keeps its slot as it is.
   for (const { data, ids } of updates.values()) {
     await prisma.teeTime.updateMany({ where: { id: { in: ids }, playersBooked: 0, status: { not: 'blocked' } }, data });
@@ -288,4 +291,29 @@ export async function generateForAllCourses(minDaysAhead = 8): Promise<{ courseI
     }
   }
   return errors;
+}
+
+/**
+ * AUDIT-1: deleting a round turns its tee times into no-round times (TeeTime.productId is
+ * SET NULL), and the database holds one row per slot (unique index TeeTime_slot_key). Where
+ * one of the round's times shares its slot with a no-round time already there, the OPEN one
+ * of the two must go before the round is deleted; two booked times at one slot can't be
+ * merged, so the delete is refused. Returns the open rows to delete with the round.
+ */
+export async function roundDeleteClashes(courseId: string, productId: string): Promise<{ ok: true; drop: string[] } | { ok: false; error: string }> {
+  const pick = { id: true, date: true, time: true, playersBooked: true, status: true, _count: { select: { bookings: true } } } as const;
+  const open = (t: { playersBooked: number; status: string; _count: { bookings: number } }) => t.playersBooked === 0 && t.status !== 'blocked' && t._count.bookings === 0;
+  const noRound = await prisma.teeTime.findMany({ where: { courseId, productId: null }, select: pick });
+  if (!noRound.length) return { ok: true, drop: [] };
+  const bySlot = new Map(noRound.map(t => [`${t.date} ${t.time}`, t]));
+  const mine = await prisma.teeTime.findMany({ where: { courseId, productId }, select: pick });
+  const drop: string[] = [];
+  for (const t of mine) {
+    const other = bySlot.get(`${t.date} ${t.time}`);
+    if (!other) continue;
+    if (open(t)) drop.push(t.id);
+    else if (open(other)) drop.push(other.id);
+    else return { ok: false, error: `Two booked groups are at ${t.time} on ${t.date} — one on this round and one without a round. Move one of them, then delete the round.` };
+  }
+  return { ok: true, drop };
 }

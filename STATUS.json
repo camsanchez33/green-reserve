@@ -1,18 +1,39 @@
 {
-  "generatedAt": "2026-11-05T02:08:42.387Z",
+  "generatedAt": "2026-11-05T04:07:52.155Z",
   "repo": {
-    "head": "f54e4fda",
+    "head": "3b4bf230",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 0,
-    "dirty": [],
-    "looksLikeRunInProgress": false
+    "dirtyCount": 6,
+    "dirty": [
+      "M docs/CODEMAP.md",
+      " M docs/codemap.json",
+      " M src/app/api/operator/course-products/route.ts",
+      " M src/app/api/operator/tee-times/route.ts",
+      " M src/lib/tee-sheet-engine.ts",
+      "?? scripts/tee-time-slot-db-test.ts"
+    ],
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
       {
-        "h": "f54e4fda",
-        "date": "2026-11-05T02:08:40+00:00",
+        "h": "3b4bf230",
+        "date": "2026-11-05T03:57:29+00:00",
+        "subject": "One tee-time row per slot: fold existing duplicates, unique index, generation skips and never deletes a booked slot",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "596b4b52",
+        "date": "2026-11-04T21:15:55-05:00",
+        "subject": "Security audit: one card charge per round at a time (#314)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "5be9c0cf",
+        "date": "2026-11-05T02:08:44+00:00",
         "subject": "One card charge per round at a time: claim the round before charging; cash and the reader refuse a live claim",
         "ids": [],
         "matches": []
@@ -877,7 +898,7 @@
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-10-20",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "STAFF_POLICY_SPEC.md",
@@ -898,12 +919,6 @@
       "ageDays": 12
     },
     {
-      "file": "HOMEPAGE_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-23",
-      "ageDays": 12
-    },
-    {
       "file": "AGREEMENT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
@@ -913,6 +928,12 @@
       "file": "CALL_SCHEDULING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
+      "ageDays": 13
+    },
+    {
+      "file": "HOMEPAGE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-23",
       "ageDays": 13
     },
     {
@@ -943,157 +964,167 @@
       "file": "ADMIN_MASTER_PLAN.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "ADMIN_REBUILD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "ADMIN_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "ADMIN_V3_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "ADMIN_V4_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "ARCHITECTURE.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "BACKUP_OPS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "BIRDIE_AI_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "CODEMAP_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "COURSES_SHEET_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "COURSE_LAYOUT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "DESIGN_SYSTEM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "FB2_COPY_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "FB3_FEE_PLAN_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "GOLFER_EDGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "GOLFER_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "HARDENING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "INQUIRY_CALL_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "INQUIRY_FORM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "MANAGE_BOOKING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "PRIVATE_BILLING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "PRODUCTION_READINESS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "REVIEW_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "SITE_DASHBOARD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "UI_REVISE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 14
+      "ageDays": 15
     }
   ],
   "bank": null,
   "recentCommits": [
     {
-      "h": "f54e4fda",
+      "h": "3b4bf230",
+      "date": "2026-11-05",
+      "subject": "One tee-time row per slot: fold existing duplicates, unique index, generation skips and never deletes a booked slot"
+    },
+    {
+      "h": "596b4b52",
+      "date": "2026-11-04",
+      "subject": "Security audit: one card charge per round at a time (#314)"
+    },
+    {
+      "h": "5be9c0cf",
       "date": "2026-11-05",
       "subject": "One card charge per round at a time: claim the round before charging; cash and the reader refuse a live claim"
     },
@@ -1141,16 +1172,6 @@
       "h": "dfcf2b74",
       "date": "2026-11-04",
       "subject": "Analytics: golfer groups — regulars, new, at risk, inactive (SEG-1) (#309)"
-    },
-    {
-      "h": "537fb89a",
-      "date": "2026-11-05",
-      "subject": "SEG-1 review fix: golfer contact on Analytics only with See golfer email and phone"
-    },
-    {
-      "h": "241549e9",
-      "date": "2026-11-05",
-      "subject": "Analytics: golfer groups — regulars, new, at risk, inactive (SEG-1)"
     }
   ]
 }
