@@ -97,8 +97,10 @@ async function main() {
     name: `${TAG} Test Course`, slug: `${TAG}-t`, operatorId: op.id, address: '1 Test Dr', city: 'T', state: 'CA', zipCode: '90210', holes: 18,
     liveStatus: 'live', active: true, timezone: 'UTC', isTest: true, stripeAccountActive: true,
   } });
+  // One row per slot (TeeTime_slot_key): each booking here gets its own tee time.
+  let slotMinute = 0;
   const mkBooking = async (courseId: string) => {
-    const tt = await prisma.teeTime.create({ data: { courseId, date: tomorrow, time: '09:00', holes: 18, greenFeeCents: 5000, cartFeeCents: 0, playersAvailable: 4, playersBooked: 1, status: 'available' } });
+    const tt = await prisma.teeTime.create({ data: { courseId, date: tomorrow, time: `09:${String(slotMinute++).padStart(2, '0')}`, holes: 18, greenFeeCents: 5000, cartFeeCents: 0, playersAvailable: 4, playersBooked: 1, status: 'available' } });
     return prisma.booking.create({ data: { teeTimeId: tt.id, courseId, golferName: 'Pat', golferEmail: `${TAG}+${courseId}@test.local`, players: 1,
       greenFeeTotal: 5000, cartFeeTotal: 0, accessFeeTotal: 150, totalAmount: 5150, status: 'confirmed', paymentStatus: 'card_on_file' } });
   };

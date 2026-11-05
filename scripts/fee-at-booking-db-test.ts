@@ -57,7 +57,9 @@ async function cleanup() {
   const op = await prisma.courseOperator.create({ data: { name: 'x', email: `${TAG}@t.local`, password: 'x' } });
   const c = await prisma.course.create({ data: { name: 'Fee GC', slug: `${TAG}-a`, operatorId: op.id, address: '1', city: 'X', state: 'CA', zipCode: '9', holes: 18, timezone: 'UTC', cancellationHours: 24 } });
   const day = (d: number) => new Date(Date.now() + d * 86400000).toISOString().slice(0, 10);
-  const tt = (date: string) => prisma.teeTime.create({ data: { courseId: c.id, date, time: '12:00', holes: 18, greenFeeCents: 5000, playersAvailable: 4 } });
+  // One row per slot (TeeTime_slot_key): each tee time here gets its own minute.
+  let minute = 0;
+  const tt = (date: string) => prisma.teeTime.create({ data: { courseId: c.id, date, time: `12:${String(minute++).padStart(2, '0')}`, holes: 18, greenFeeCents: 5000, playersAvailable: 4 } });
   const book = async (teeTimeId: string, players = 2) => {
     await prisma.teeTime.update({ where: { id: teeTimeId }, data: { playersBooked: { increment: players } } });
     return prisma.booking.create({ data: { teeTimeId, courseId: c.id, golferName: 'Fee Golfer', golferEmail: `${TAG}+g@t.local`, players,
