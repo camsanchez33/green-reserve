@@ -65,6 +65,9 @@ completed → (staff moves a checked-in group, Cam 2026-10-08) → still complet
 ### Events command center (EVENTS-1, Cam 2026-11-04)
 A live event opens with one strip: registered (of the spots offered), spots left (online sign-ups still paying hold one), collected and owed (lib/event-payments `eventMoney()`, the same figures as the event's Money card), pay links out, tasks left with overdue / next due. An event the organizer pays as one bill shows, per player, Covered or Not covered yet — "Covered count" (Cam's pick): the money kept covers whole players at the event's price, in list order, never more than the list. Pure in `src/lib/event-command.ts`; `scripts/events-command-test.ts` pins it.
 
+### Golfer groups (SEG-1, Cam 2026-11-05)
+Analytics → Golfers puts every golfer the course knows (golfer-key identity, non-cancelled bookings) in ONE group as of the last day picked — first match wins: New (first round in 30 days) · Inactive (last round 180+ days ago, nothing booked ahead) · At risk (the gone-quiet rule, played in the last 180 days) · Regular (rounds on 3+ days in the last 90) · Occasional. Each group lists its golfers linked to their record and downloads as CSV. Pure in `src/lib/golfer-segments.ts`; the definitions' words in `analytics-terms.ts`. The list stays on the Analytics route (analytics.view) — never in the assistant's tools or the monthly AI review — and its email, phone and record link (and the gone-quiet list's contact) reach only logins with `sheet.golfer_contact`; others see names. `scripts/golfer-segments-test.ts` pins it.
+
 ### Operator onboarding pipeline
 Inquiry → `pending` → `in_review` → `details_requested` → `details_submitted` → `building` → `live`
 Admin page manages all stages. Operators get dashboard access when approved.

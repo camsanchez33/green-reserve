@@ -117,14 +117,17 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-11-04 20:54 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ fed27d5f</span>
-    <span>5 uncommitted</span>
+    <span>2026-11-05 00:43 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 241549e9</span>
+    <span>7 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">84 runs have shipped that the queue doesn't know about</div>
+<div class="lede">87 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-31. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">241549e9</span><span>Analytics: golfer groups — regulars, new, at risk, inactive (SEG-1)</span></li>
+<li><span class="h">3bf3f7fa</span><span>Events: command center strip and organizer bill coverage (EVENTS-1) (#308)</span></li>
+<li><span class="h">4c554dc8</span><span>EVENTS-1 review fix: name players past the confirmed headcount instead of hiding them</span></li>
 <li><span class="h">fed27d5f</span><span>Events: command center strip and organizer bill coverage per player (EVENTS-1)</span></li>
 <li><span class="h">f75dd615</span><span>Money: earned vs paid out on the Ledger (EARNED-1) (#307)</span></li>
 <li><span class="h">533f74d5</span><span>EARNED-1 review fixes: payout arrival day, one minus sign, per-day filter, keyboard detail</span></li>
@@ -221,7 +224,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/events-command-test.ts</code></li><li><code>M src/components/dashboard/events/EventDetail.tsx</code></li><li><code>M src/lib/event-command.ts</code></li></ul>
+<ul class="plain"><li><code>M CLAUDE.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/golfer-segments-test.ts</code></li><li><code>M src/app/api/operator/analytics/route.ts</code></li><li><code>M src/app/dashboard/analytics/page.tsx</code></li><li><code>M src/lib/analytics-terms.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -263,19 +266,19 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Spec inventory</h2>
 <p class="note">Open refs = how many open queue items still point at that spec. Zero and old means consumed.</p>
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
-<tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-11-04 &middot; 0d</td></tr>
+<tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-11-05 &middot; 0d</td></tr>
 <tr><td><code>DENSE_UI_SPEC.md</code></td><td class="num">1</td><td class="num">2026-11-01 &middot; 3d</td></tr>
 <tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-20 &middot; 14d</td></tr>
-<tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-26 &middot; 8d</td></tr>
-<tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-25 &middot; 9d</td></tr>
-<tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 11d</td></tr>
-<tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 12d</td></tr>
-<tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 12d</td></tr>
+<tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-26 &middot; 9d</td></tr>
+<tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-25 &middot; 10d</td></tr>
+<tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 12d</td></tr>
 <tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 12d</td></tr>
-<tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 12d</td></tr>
-<tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 12d</td></tr>
-<tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 12d</td></tr>
-<tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 12d</td></tr>
+<tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 13d</td></tr>
+<tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 13d</td></tr>
+<tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 13d</td></tr>
+<tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 13d</td></tr>
+<tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 13d</td></tr>
+<tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 13d</td></tr>
 <tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 14d</td></tr>
 <tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 14d</td></tr>
 <tr><td><code>ADMIN_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 14d</td></tr>
@@ -303,6 +306,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 14d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">241549e9</td><td class="num">2026-11-05</td><td>Analytics: golfer groups — regulars, new, at risk, inactive (SEG-1)</td></tr>
+<tr><td class="num">3bf3f7fa</td><td class="num">2026-11-04</td><td>Events: command center strip and organizer bill coverage (EVENTS-1) (#308)</td></tr>
+<tr><td class="num">4c554dc8</td><td class="num">2026-11-04</td><td>EVENTS-1 review fix: name players past the confirmed headcount instead of hiding them</td></tr>
 <tr><td class="num">fed27d5f</td><td class="num">2026-11-04</td><td>Events: command center strip and organizer bill coverage per player (EVENTS-1)</td></tr>
 <tr><td class="num">f75dd615</td><td class="num">2026-11-04</td><td>Money: earned vs paid out on the Ledger (EARNED-1) (#307)</td></tr>
 <tr><td class="num">533f74d5</td><td class="num">2026-11-04</td><td>EARNED-1 review fixes: payout arrival day, one minus sign, per-day filter, keyboard detail</td></tr>
@@ -312,9 +318,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">56fffcae</td><td class="num">2026-11-04</td><td>TEES-1 / PRICES-1 review fixes: same-tee times stack, nine order; one rename field, every price change shown</td></tr>
 <tr><td class="num">988566c5</td><td class="num">2026-11-04</td><td>Schedule: prices as one table, rounds side by side (PRICES-1)</td></tr>
 <tr><td class="num">497612df</td><td class="num">2026-11-04</td><td>Tee sheet: 1st and 10th tee side by side (TEES-1)</td></tr>
-<tr><td class="num">80935727</td><td class="num">2026-11-03</td><td>Partial check-in keeps the rest of the group booked (PARTIAL-1) (#305)</td></tr>
-<tr><td class="num">c4ee41dd</td><td class="num">2026-11-04</td><td>PARTIAL-1: split parts are not new bookings on Analytics</td></tr>
-<tr><td class="num">d88474dc</td><td class="num">2026-11-04</td><td>PARTIAL-1 review fixes: split parts off Admin Home counts, confirms quote the card's figure</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 657,
+    "files": 658,
     "routes": 290,
-    "libs": 234,
+    "libs": 235,
     "models": 70,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -5202,7 +5202,7 @@
     },
     {
       "path": "src/app/api/operator/analytics/route.ts",
-      "lines": 37,
+      "lines": 44,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8488,7 +8488,7 @@
     },
     {
       "path": "src/app/dashboard/analytics/page.tsx",
-      "lines": 792,
+      "lines": 822,
       "purpose": "DENSE-1 (DENSE_UI_SPEC.md, Cam 2026-10-27:",
       "brain": [],
       "exports": [
@@ -8514,6 +8514,7 @@
         "@/lib/analytics-terms",
         "@/lib/birdie/ask",
         "@/lib/dashboard-fetch",
+        "@/lib/golfer-segments",
         "@/lib/staff-permissions",
         "@/lib/use-dashboard-access",
         "lucide-react",
@@ -14577,7 +14578,7 @@
     },
     {
       "path": "src/lib/analytics-terms.ts",
-      "lines": 53,
+      "lines": 59,
       "purpose": "DENSE-1 (DENSE_UI_SPEC P2):",
       "brain": [],
       "exports": [
@@ -14609,7 +14610,7 @@
     },
     {
       "path": "src/lib/analytics.ts",
-      "lines": 633,
+      "lines": 638,
       "purpose": "AN-1 (Cam 2026-10-01):",
       "brain": [],
       "exports": [
@@ -14671,6 +14672,7 @@
         "./course-time",
         "./email",
         "./golfer-key",
+        "./golfer-segments",
         "./prisma",
         "./tee-time-utils",
         "@prisma/client"
@@ -19688,6 +19690,68 @@
       "usedBy": [
         "src/app/api/bookings/route.ts",
         "src/app/api/operator/golfers/[key]/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/golfer-segments.ts",
+      "lines": 71,
+      "purpose": "SEG-1 (Cam 2026-11-05, golfer segments):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "golferSegments",
+          "kind": "fn"
+        },
+        {
+          "name": "INACTIVE_DAYS",
+          "kind": "const"
+        },
+        {
+          "name": "NEW_DAYS",
+          "kind": "const"
+        },
+        {
+          "name": "REGULAR_DAYS",
+          "kind": "const"
+        },
+        {
+          "name": "REGULAR_ROUNDS",
+          "kind": "const"
+        },
+        {
+          "name": "SEG_UI",
+          "kind": "const"
+        },
+        {
+          "name": "Segment",
+          "kind": "type"
+        },
+        {
+          "name": "SEGMENT_LABEL",
+          "kind": "const"
+        },
+        {
+          "name": "segmentOf",
+          "kind": "fn"
+        },
+        {
+          "name": "SegmentRow",
+          "kind": "type"
+        },
+        {
+          "name": "SEGMENTS",
+          "kind": "const"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/dashboard/analytics/page.tsx",
+        "src/lib/analytics.ts"
       ]
     },
     {

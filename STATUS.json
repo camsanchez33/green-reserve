@@ -1,21 +1,44 @@
 {
-  "generatedAt": "2026-11-04T20:54:30.622Z",
+  "generatedAt": "2026-11-05T00:43:08.789Z",
   "repo": {
-    "head": "fed27d5f",
+    "head": "241549e9",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 5,
+    "dirtyCount": 7,
     "dirty": [
-      "M docs/CODEMAP.md",
+      "M CLAUDE.md",
+      " M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/events-command-test.ts",
-      " M src/components/dashboard/events/EventDetail.tsx",
-      " M src/lib/event-command.ts"
+      " M scripts/golfer-segments-test.ts",
+      " M src/app/api/operator/analytics/route.ts",
+      " M src/app/dashboard/analytics/page.tsx",
+      " M src/lib/analytics-terms.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "241549e9",
+        "date": "2026-11-05T00:37:08+00:00",
+        "subject": "Analytics: golfer groups — regulars, new, at risk, inactive (SEG-1)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "3bf3f7fa",
+        "date": "2026-11-04T16:02:22-05:00",
+        "subject": "Events: command center strip and organizer bill coverage (EVENTS-1) (#308)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "4c554dc8",
+        "date": "2026-11-04T20:54:32+00:00",
+        "subject": "EVENTS-1 review fix: name players past the confirmed headcount instead of hiding them",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "fed27d5f",
         "date": "2026-11-04T20:51:21+00:00",
@@ -772,7 +795,7 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 1,
-      "lastTouched": "2026-11-04",
+      "lastTouched": "2026-11-05",
       "ageDays": 0
     },
     {
@@ -791,30 +814,18 @@
       "file": "STAFF_POLICY_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-26",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "OPERATOR_REWORK_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-25",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "ADMIN_V5_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-23",
-      "ageDays": 11
-    },
-    {
-      "file": "AGREEMENT_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-22",
-      "ageDays": 12
-    },
-    {
-      "file": "CALL_SCHEDULING_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-22",
       "ageDays": 12
     },
     {
@@ -824,28 +835,40 @@
       "ageDays": 12
     },
     {
+      "file": "AGREEMENT_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 13
+    },
+    {
+      "file": "CALL_SCHEDULING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 13
+    },
+    {
       "file": "ONBOARDING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 12
+      "ageDays": 13
     },
     {
       "file": "ONBOARDING_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 12
+      "ageDays": 13
     },
     {
       "file": "PUBLIC_SITE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 12
+      "ageDays": 13
     },
     {
       "file": "RECEIPT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 12
+      "ageDays": 13
     },
     {
       "file": "ADMIN_MASTER_PLAN.md",
@@ -1001,6 +1024,21 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "241549e9",
+      "date": "2026-11-05",
+      "subject": "Analytics: golfer groups — regulars, new, at risk, inactive (SEG-1)"
+    },
+    {
+      "h": "3bf3f7fa",
+      "date": "2026-11-04",
+      "subject": "Events: command center strip and organizer bill coverage (EVENTS-1) (#308)"
+    },
+    {
+      "h": "4c554dc8",
+      "date": "2026-11-04",
+      "subject": "EVENTS-1 review fix: name players past the confirmed headcount instead of hiding them"
+    },
+    {
       "h": "fed27d5f",
       "date": "2026-11-04",
       "subject": "Events: command center strip and organizer bill coverage per player (EVENTS-1)"
@@ -1044,21 +1082,6 @@
       "h": "497612df",
       "date": "2026-11-04",
       "subject": "Tee sheet: 1st and 10th tee side by side (TEES-1)"
-    },
-    {
-      "h": "80935727",
-      "date": "2026-11-03",
-      "subject": "Partial check-in keeps the rest of the group booked (PARTIAL-1) (#305)"
-    },
-    {
-      "h": "c4ee41dd",
-      "date": "2026-11-04",
-      "subject": "PARTIAL-1: split parts are not new bookings on Analytics"
-    },
-    {
-      "h": "d88474dc",
-      "date": "2026-11-04",
-      "subject": "PARTIAL-1 review fixes: split parts off Admin Home counts, confirms quote the card's figure"
     }
   ]
 }

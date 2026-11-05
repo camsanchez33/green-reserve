@@ -58,6 +58,7 @@ import { DEFAULT_TZ, isValidTimezone, todayIn, addDaysStr } from './course-time'
 import { teeToUtcMs } from './tee-time-utils';
 import { PLACEHOLDER_EMAIL_DOMAIN } from './email';
 import { golferKey } from './golfer-key';
+import { golferSegments } from './golfer-segments';
 
 /** EV-1's event log went live on this day; metrics that need it start here. */
 export const EVENT_LOG_START = '2026-10-01';
@@ -440,6 +441,9 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
     if (since >= 14 && since > 2 * usual) goneQuiet.push({ name: v.name, ...(contactOf.get(k) ?? { email: '', phone: '' }), rounds: ds.length, lastPlayed: ds[ds.length - 1], usualGapDays: Math.round(usual), daysSince: since });
   }
   goneQuiet.sort((a, b) => b.rounds - a.rounds || b.daysSince - a.daysSince);
+  // SEG-1: every golfer in one group as of the same day (lib/golfer-segments); At risk is the gone-quiet rule above.
+  const seg = golferSegments(visits, asOf, bookedAhead);
+  const segments = { asOf: seg.asOf, counts: seg.counts, rows: seg.rows.slice(0, 2000).map(r => ({ ...r, ...(contactOf.get(r.key) ?? { email: '', phone: '' }) })) };
 
   // Retention: of the customers who played in the previous equal-length
   // period, the share who played again in this one.
@@ -549,6 +553,7 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
       members: { active: membersActive, onFile: membersOnFile, tiers },
       // W2-8 (3): residents vs everyone else, per day of rounds paid (recorded from RES_START).
       goneQuiet: goneQuiet.slice(0, 50),
+      segments,
       residents: { since: RES_START, rows: [...resRows.entries()].sort().map(([date, r]) => ({ date, ...r })) },
       topByRounds: [...top].sort((a, b) => b.rounds - a.rounds || b.spendCents - a.spendCents).slice(0, 10),
       topBySpend: [...top].sort((a, b) => b.spendCents - a.spendCents || b.rounds - a.rounds).slice(0, 10),
