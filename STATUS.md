@@ -4,15 +4,17 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-05 01:15 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `686f59c3` · working tree clean
+Generated 2026-11-05 01:23 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `bcb7a5e7` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 92 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 94 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `686f59c3` | 2026-11-05 | Members restyle to the DASH-D mockup: 26px title, four stat cards with 24px numbers, 7px buttons |
+| `bcb7a5e7` | 2026-11-05 | Settings restyle to the DASH-D mockup: 26px title, section nav as raised tabs, 7px inputs and choice tiles |
+| `b558efe3` | 2026-11-04 | Members restyle to the DASH-D mockup (#311) |
+| `5e0a462c` | 2026-11-05 | Members restyle to the DASH-D mockup: 26px title, four stat cards with 24px numbers, 7px buttons |
 | `e43e8996` | 2026-11-04 | Register restyle to the DASH-D mockup (#310) |
 | `b36fe621` | 2026-11-05 | Register restyle to the DASH-D mockup: segmented tabs, tiles, steppers, total, pay tiles |
 | `dfcf2b74` | 2026-11-04 | Analytics: golfer groups — regulars, new, at risk, inactive (SEG-1) (#309) |
@@ -228,7 +230,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `686f59c3` 2026-11-05 — Members restyle to the DASH-D mockup: 26px title, four stat cards with 24px numbers, 7px buttons
+- `bcb7a5e7` 2026-11-05 — Settings restyle to the DASH-D mockup: 26px title, section nav as raised tabs, 7px inputs and choice tiles
+- `b558efe3` 2026-11-04 — Members restyle to the DASH-D mockup (#311)
+- `5e0a462c` 2026-11-05 — Members restyle to the DASH-D mockup: 26px title, four stat cards with 24px numbers, 7px buttons
 - `e43e8996` 2026-11-04 — Register restyle to the DASH-D mockup (#310)
 - `b36fe621` 2026-11-05 — Register restyle to the DASH-D mockup: segmented tabs, tiles, steppers, total, pay tiles
 - `dfcf2b74` 2026-11-04 — Analytics: golfer groups — regulars, new, at risk, inactive (SEG-1) (#309)
@@ -238,8 +242,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `4c554dc8` 2026-11-04 — EVENTS-1 review fix: name players past the confirmed headcount instead of hiding them
 - `fed27d5f` 2026-11-04 — Events: command center strip and organizer bill coverage per player (EVENTS-1)
 - `f75dd615` 2026-11-04 — Money: earned vs paid out on the Ledger (EARNED-1) (#307)
-- `533f74d5` 2026-11-04 — EARNED-1 review fixes: payout arrival day, one minus sign, per-day filter, keyboard detail
-- `3e901199` 2026-11-04 — EARNED-1: CLAUDE.md wording
 
 ---
 

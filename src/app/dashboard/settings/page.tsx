@@ -128,7 +128,7 @@ const FACILITY_GROUPS: { title: string; items: { key: string; label: string }[] 
     { key: 'hasTournaments', label: 'Tournaments' },
   ] },
 ];
-const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
+const iCls = 'w-full bg-paper border border-line rounded-[7px] px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -469,11 +469,11 @@ function SettingsPageInner() {
         {/* Settings rework: the serif title alone — what is missing is the Finish setting up list below. */}
         <div className="bg-white border-b border-line px-4 sm:px-10 py-5 flex flex-wrap items-start justify-between gap-3 sticky top-0 z-10">
           <div className="min-w-0">
-            <h1 className="font-serif text-[32px] leading-none text-ink">Settings</h1>
+            <h1 className="font-serif text-[26px] leading-none text-ink">Settings</h1>
           </div>
           {!NO_SAVE_BUTTON.includes(active) && (
             <button onClick={save} disabled={saving || !formLoaded || (!dirty && !saved)}
-              className="shrink-0 flex items-center gap-2 bg-pine hover:bg-pine-hover text-white px-4 py-2 rounded-md font-medium text-[12.5px] disabled:opacity-50 transition-colors">
+              className="shrink-0 flex items-center gap-2 bg-pine hover:bg-pine-hover text-white px-4 py-2 min-h-[36px] rounded-[7px] font-medium text-[13px] disabled:opacity-50 transition-colors">
                {saved ? 'Saved' : saving ? 'Saving...' : dirty ? `Save ${active}` : 'No changes'}
             </button>
           )}
@@ -496,13 +496,13 @@ function SettingsPageInner() {
 
           <div className="flex flex-col md:flex-row gap-6">
             {/* U-O: the sub-nav moves to the left rail and names the sections
-                in plain English, in the spec's order. Active item = pine text,
-                3px left border, paper bg — the §1b active pattern. */}
-            <nav aria-label="Settings sections" className="md:w-52 shrink-0 flex md:flex-col gap-1 overflow-x-auto md:overflow-visible">
+                in plain English, in the spec's order. Active item = a white raised
+                tab, like the dashboard menu (DASH-D). */}
+            <nav aria-label="Settings sections" className="md:w-52 shrink-0 flex md:flex-col gap-1 overflow-x-auto md:overflow-visible p-0.5 -m-0.5">
               {SECTIONS.map(s => (
                 <button key={s} onClick={() => setActive(s)}
                   aria-current={active===s ? 'page' : undefined}
-                  className={'text-left whitespace-nowrap px-3 py-2 text-[13.5px] font-medium border-l-[3px] transition-colors ' + (active===s ? 'border-pine bg-paper text-pine' : 'border-transparent text-ink-soft hover:text-ink hover:bg-line-soft/60')}>
+                  className={'text-left whitespace-nowrap px-3 py-2 text-[13.5px] rounded-[7px] transition-colors ' + (active===s ? 'bg-white shadow-card text-ink font-semibold' : 'font-medium text-ink-soft hover:text-ink hover:bg-white/60')}>
                   {s}
                 </button>
               ))}
@@ -821,7 +821,7 @@ function SettingsPageInner() {
                     ] as const).map(o => {
                       const sel = (o.key === 'card') === formTerms.cardNeeded;
                       return (
-                        <label key={o.key} className={'flex items-start gap-2.5 px-3 py-2.5 rounded-md border cursor-pointer bg-white ' + (sel ? 'border-pine/40' : 'border-line')}>
+                        <label key={o.key} className={'flex items-start gap-2.5 px-3 py-2.5 rounded-[7px] border cursor-pointer ' + (sel ? 'border-pine/50 bg-pine/[0.05]' : 'border-line bg-white')}>
                           <input type="radio" name="card-at-booking" checked={sel} className="mt-0.5 accent-pine"
                             onChange={() => {
                               if (o.key === 'none') { set('lateCancellationFee', 0); set('noShowFee', 0); }
@@ -853,7 +853,7 @@ function SettingsPageInner() {
                     <Field label="When the fee is taken">
                       <div className="space-y-2">
                         {LATE_FEE_TIMINGS.map(t => (
-                          <label key={t.key} className={'flex items-start gap-2.5 px-3 py-2.5 rounded-md border cursor-pointer bg-white ' + (((form.lateFeeTiming as string) || 'hold_at_cutoff') === t.key ? 'border-pine/40' : 'border-line')}>
+                          <label key={t.key} className={'flex items-start gap-2.5 px-3 py-2.5 rounded-[7px] border cursor-pointer ' + (((form.lateFeeTiming as string) || 'hold_at_cutoff') === t.key ? 'border-pine/50 bg-pine/[0.05]' : 'border-line bg-white')}>
                             <input type="radio" name="late-fee-timing" checked={((form.lateFeeTiming as string) || 'hold_at_cutoff') === t.key} onChange={() => set('lateFeeTiming', t.key)} className="mt-0.5 accent-pine"/>
                             <span><span className="block text-sm font-medium text-ink">{t.label}</span><span className="block text-xs text-ink-muted">{t.help}</span></span>
                           </label>
@@ -1124,7 +1124,7 @@ function SettingsPageInner() {
                   ] as const).map(o => {
                     const sel = ((form.twoFactorMethod as string) === 'sms' ? 'sms' : 'email') === o.key;
                     return (
-                      <label key={o.key} className={'flex items-start gap-2.5 px-3 py-2.5 rounded-md border cursor-pointer bg-white ' + (sel ? 'border-pine/40' : 'border-line')}>
+                      <label key={o.key} className={'flex items-start gap-2.5 px-3 py-2.5 rounded-[7px] border cursor-pointer ' + (sel ? 'border-pine/50 bg-pine/[0.05]' : 'border-line bg-white')}>
                         <input type="radio" name="two-step" checked={sel} onChange={() => set('twoFactorMethod', o.key)} className="mt-0.5 accent-pine"/>
                         <span><span className="block text-sm font-medium text-ink">{o.label}</span><span className="block text-xs text-ink-muted">{o.help}</span></span>
                       </label>
