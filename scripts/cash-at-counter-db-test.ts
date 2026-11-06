@@ -103,7 +103,7 @@ async function cleanup() {
     && (route.match(/settleAtCounter\(/g) ?? []).length === (route.match(/settleAtCounter\([^)]*onAccount: \{ membershipId \}/g) ?? []).length);
   ok('a walk-in "paying cash now" is booked, then rung up', /if \(checkInNow\) \{\s*const cash = await ringUpCash\(/.test(route));
   ok('a counter booking can’t be created paid', !counter.slice(counter.indexOf('export async function createCounterBooking')).includes("'paid_offline'") && !counter.includes('paidNow'));
-  ok('the tee sheet no longer offers "paid at counter"', !/paid at counter/i.test(sheet) && sheet.includes("bookingLifecycle(b, 'take_cash', cashDue)") && sheet.includes('/dashboard/shop?round='));
+  ok('the tee sheet no longer offers "paid at counter"', !/paid at counter/i.test(sheet) && sheet.includes("bookingLifecycle(b, 'take_cash', cashDue, ") && sheet.includes('/dashboard/shop?round='));
 
   await cleanup(); await prisma.$disconnect();
   if (failed) { console.error(`${failed} failed`); process.exit(1); }

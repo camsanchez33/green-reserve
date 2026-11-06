@@ -15,7 +15,7 @@ check('the strip\'s Not paid yet is every unpaid group on the day, with how many
 check('a walk-in who already played gets no booking confirmation', src('src/app/api/operator/bookings/route.ts').includes('if (golferEmail && !checkInNow && body.late !== true)'));
 check('the strip\'s money route needs money.payments', src('src/app/api/operator/sheet-money/route.ts').includes("requirePermission(session, 'money.payments')"));
 check('the rate is no longer in the header', !page.includes('commonRate'));
-check('the time panel always shows its rate', page.includes("holes · ${panelSlot.greenFee.toFixed(2)} a player"));
+check('the time panel always shows its rate', page.includes("{roundName(panelSlot)} · ${panelSlot.greenFee.toFixed(2)} a player"));
 check('Find golfer sits in the sheet bar with a refresh icon', page.includes('id="sheet-search"') && page.includes('aria-label="Refresh the sheet"'));
 check('no Refresh text button in the header', !/>\s*Refresh\s*</.test(page));
 check('mark no-show is reachable from the time panel', page.includes("bookingLifecycle(b, 'no_show')") && page.includes("noShowReady && access.can('sheet.no_show') && (\n            <button onClick={() => bookingLifecycle(b, 'no_show')") && page.includes('mins(nowHM) - mins(tt.time) >= 10'));
