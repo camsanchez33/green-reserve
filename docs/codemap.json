@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 666,
-    "routes": 292,
-    "libs": 241,
+    "files": 669,
+    "routes": 293,
+    "libs": 243,
     "models": 71,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -5897,8 +5897,37 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/golfer-messages/draft/route.ts",
+      "lines": 34,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/golfer-messages/draft",
+      "kind": "api",
+      "methods": [
+        "POST"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/birdie/guardrails",
+        "@/lib/golfer-messages",
+        "@/lib/notice-draft",
+        "@/lib/prisma",
+        "@/lib/rate-limit",
+        "@/lib/session",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/golfer-messages/route.ts",
-      "lines": 62,
+      "lines": 91,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5924,6 +5953,9 @@
       "auth": "operator",
       "guard": "file",
       "imports": [
+        "@/lib/birdie/guardrails",
+        "@/lib/email",
+        "@/lib/format",
         "@/lib/golfer-messages",
         "@/lib/prisma",
         "@/lib/rate-limit",
@@ -11126,7 +11158,7 @@
     },
     {
       "path": "src/components/dashboard/GolferMessageModal.tsx",
-      "lines": 140,
+      "lines": 227,
       "purpose": "MSG-1 (PLATFORM_ROADMAP_SPEC §5):",
       "brain": [],
       "exports": [
@@ -11144,6 +11176,7 @@
         "@/components/ui/field",
         "@/lib/dashboard-fetch",
         "@/lib/format",
+        "@/lib/notice-templates",
         "lucide-react",
         "react"
       ],
@@ -15119,7 +15152,10 @@
       ],
       "usedBy": [
         "src/app/api/admin/system/route.ts",
-        "src/app/api/birdie/chat/route.ts"
+        "src/app/api/birdie/chat/route.ts",
+        "src/app/api/operator/golfer-messages/draft/route.ts",
+        "src/app/api/operator/golfer-messages/route.ts",
+        "src/lib/notice-draft.ts"
       ]
     },
     {
@@ -18657,13 +18693,17 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 2158,
+      "lines": 2164,
       "purpose": "",
       "brain": [],
       "exports": [
         {
           "name": "BookingEmailData",
           "kind": "type"
+        },
+        {
+          "name": "courseNoticeEmail",
+          "kind": "fn"
         },
         {
           "name": "escapeHtml",
@@ -19029,6 +19069,7 @@
         "src/app/api/operator/change-password/route.ts",
         "src/app/api/operator/events/[id]/payments/route.ts",
         "src/app/api/operator/events/[id]/route.ts",
+        "src/app/api/operator/golfer-messages/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/messages/route.ts",
@@ -19579,6 +19620,7 @@
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/events/[id]/payments/route.ts",
         "src/app/api/operator/events/[id]/route.ts",
+        "src/app/api/operator/golfer-messages/route.ts",
         "src/app/api/operator/weather-cancel/route.ts",
         "src/app/dashboard/events/page.tsx",
         "src/app/dashboard/golfers/[key]/page.tsx",
@@ -19719,7 +19761,7 @@
     },
     {
       "path": "src/lib/golfer-messages.ts",
-      "lines": 127,
+      "lines": 140,
       "purpose": "MSG-1 (PLATFORM_ROADMAP_SPEC §5, Cam 2026-10-07:",
       "brain": [],
       "exports": [
@@ -19732,12 +19774,24 @@
           "kind": "fn"
         },
         {
+          "name": "isVia",
+          "kind": "fn"
+        },
+        {
           "name": "MAX_MESSAGE_CHARS",
           "kind": "const"
         },
         {
+          "name": "noticeText",
+          "kind": "fn"
+        },
+        {
           "name": "reach",
           "kind": "fn"
+        },
+        {
+          "name": "Recipient",
+          "kind": "type"
         },
         {
           "name": "sendCourseMessage",
@@ -19750,6 +19804,14 @@
         {
           "name": "smsRoom",
           "kind": "fn"
+        },
+        {
+          "name": "toCall",
+          "kind": "fn"
+        },
+        {
+          "name": "Via",
+          "kind": "type"
         },
         {
           "name": "Window",
@@ -19774,6 +19836,7 @@
         "./twilio"
       ],
       "usedBy": [
+        "src/app/api/operator/golfer-messages/draft/route.ts",
         "src/app/api/operator/golfer-messages/route.ts"
       ]
     },
@@ -22043,6 +22106,59 @@
       ]
     },
     {
+      "path": "src/lib/notice-draft.ts",
+      "lines": 35,
+      "purpose": "MSG-2 (Cam 2026-11-06, Message golfers:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "addedNumbers",
+          "kind": "fn"
+        },
+        {
+          "name": "draftNotice",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./birdie/guardrails",
+        "@anthropic-ai/sdk"
+      ],
+      "usedBy": [
+        "src/app/api/operator/golfer-messages/draft/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/notice-templates.ts",
+      "lines": 12,
+      "purpose": "MSG-2 (Cam 2026-11-06):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "BLANK",
+          "kind": "const"
+        },
+        {
+          "name": "READY",
+          "kind": "const"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/components/dashboard/GolferMessageModal.tsx"
+      ]
+    },
+    {
       "path": "src/lib/on-course.ts",
       "lines": 25,
       "purpose": "ONCOURSE-1 (Cam 2026-11-06:",
@@ -22808,6 +22924,7 @@
         "src/app/api/operator/events/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
         "src/app/api/operator/goals/route.ts",
+        "src/app/api/operator/golfer-messages/draft/route.ts",
         "src/app/api/operator/golfer-messages/route.ts",
         "src/app/api/operator/golfers/[key]/route.ts",
         "src/app/api/operator/home/route.ts",
@@ -23260,6 +23377,7 @@
         "src/app/api/membership/[id]/route.ts",
         "src/app/api/operator/agreement/route.ts",
         "src/app/api/operator/events/[id]/payments/route.ts",
+        "src/app/api/operator/golfer-messages/draft/route.ts",
         "src/app/api/operator/golfer-messages/route.ts",
         "src/app/api/operator/members/import/route.ts",
         "src/app/api/operator/request-changes/route.ts",
@@ -24451,6 +24569,7 @@
         "src/app/api/operator/events/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
         "src/app/api/operator/goals/route.ts",
+        "src/app/api/operator/golfer-messages/draft/route.ts",
         "src/app/api/operator/golfer-messages/route.ts",
         "src/app/api/operator/golfers/[key]/route.ts",
         "src/app/api/operator/home/route.ts",
@@ -28563,6 +28682,7 @@
         "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/events/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
+        "src/app/api/operator/golfer-messages/draft/route.ts",
         "src/app/api/operator/golfer-messages/route.ts",
         "src/app/api/operator/home/route.ts",
         "src/app/api/operator/last-minute/route.ts",

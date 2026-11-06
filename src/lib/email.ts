@@ -1863,18 +1863,24 @@ export async function sendMonthlyReviewEmail(data: {
 /** MSG-1: a course's notice to the golfers booked on a day ("frost delay,
  *  first tee 9:00"). The text is the course's own, escaped, line breaks kept.
  *  Replies go to the course, not GreenReserve. */
-export async function sendCourseNoticeEmail(data: {
-  to: string; golferName: string; courseName: string; replyTo?: string | null;
-  dateLabel: string; teeTime: string; body: string; courseId?: string;
-}) {
+/** MSG-2: the course notice exactly as it is sent — Message golfers previews this, the send uses it. */
+export function courseNoticeEmail(data: { courseName: string; dateLabel: string; teeTime: string; body: string }): { subject: string; html: string } {
   const html = baseTemplate(`
     <h1 style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">A note from ${escHtml(data.courseName)}</h1>
     <p style="margin:0 0 18px;color:#3F453E;font-size:14px;">About your ${escHtml(data.teeTime)} tee time on ${escHtml(data.dateLabel)}.</p>
     <div style="color:#141814;font-size:15px;line-height:1.6;white-space:pre-wrap;">${escHtml(data.body)}</div>
     <p style="margin:22px 0 0;color:#6B706A;font-size:13px;">Questions? Reply to this email to reach ${escHtml(data.courseName)}.</p>
   `);
+  return { subject: subj(`${data.courseName}: about your ${data.teeTime} tee time`), html };
+}
+
+export async function sendCourseNoticeEmail(data: {
+  to: string; golferName: string; courseName: string; replyTo?: string | null;
+  dateLabel: string; teeTime: string; body: string; courseId?: string;
+}) {
+  const { subject, html } = courseNoticeEmail(data);
   await getResend().emails.send({ meta: { kind: 'course_notice_email', courseId: data.courseId },
-    from: FROM_SUPPORT, to: data.to, subject: subj(`${data.courseName}: about your ${data.teeTime} tee time`), html,
+    from: FROM_SUPPORT, to: data.to, subject, html,
     ...(data.replyTo ? { replyTo: data.replyTo } : {}),
   });
 }

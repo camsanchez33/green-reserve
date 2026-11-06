@@ -1,24 +1,40 @@
 {
-  "generatedAt": "2026-11-06T04:12:22.823Z",
+  "generatedAt": "2026-11-06T04:27:44.294Z",
   "repo": {
-    "head": "f99d684b",
+    "head": "f0dbea40",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 8,
+    "dirtyCount": 10,
     "dirty": [
-      "M STATUS.artifact.html",
-      " M STATUS.json",
-      " M STATUS.md",
-      " M docs/CODEMAP.md",
+      "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/words-guard.baseline.json",
-      " M src/app/dashboard/page.tsx",
-      "?? scripts/weather-window-test.ts"
+      " M src/app/api/operator/golfer-messages/route.ts",
+      " M src/components/dashboard/GolferMessageModal.tsx",
+      " M src/lib/email.ts",
+      " M src/lib/golfer-messages.ts",
+      "?? scripts/message-golfers-test.ts",
+      "?? src/app/api/operator/golfer-messages/draft/",
+      "?? src/lib/notice-draft.ts",
+      "?? src/lib/notice-templates.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "2bea8fe8",
+        "date": "2026-11-05T23:20:48-05:00",
+        "subject": "Tee sheet: a cleaner weather window that updates as you pick the times (#328)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "97875d10",
+        "date": "2026-11-06T04:12:25+00:00",
+        "subject": "Tee sheet: a cleaner weather window that updates as you pick the times",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "e2a8f2f7",
         "date": "2026-11-05T23:11:40-05:00",
@@ -1312,6 +1328,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "2bea8fe8",
+      "date": "2026-11-05",
+      "subject": "Tee sheet: a cleaner weather window that updates as you pick the times (#328)"
+    },
+    {
+      "h": "97875d10",
+      "date": "2026-11-06",
+      "subject": "Tee sheet: a cleaner weather window that updates as you pick the times"
+    },
+    {
       "h": "e2a8f2f7",
       "date": "2026-11-05",
       "subject": "Tee sheet: Add tee time from the day's prices, keep a time for staff, safer Block and Delete (#327)"
@@ -1360,16 +1386,6 @@
       "h": "91764419",
       "date": "2026-11-05",
       "subject": "Public SMS consent page at /sms-consent for Twilio's checker (#323)"
-    },
-    {
-      "h": "41e8a0af",
-      "date": "2026-11-06",
-      "subject": "Public SMS consent page at /sms-consent for Twilio's checker"
-    },
-    {
-      "h": "b147abf7",
-      "date": "2026-11-05",
-      "subject": "Host the SMS consent screenshot at /sms-opt-in.png for Twilio (#322)"
     }
   ]
 }

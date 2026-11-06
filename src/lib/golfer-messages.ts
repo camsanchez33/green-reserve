@@ -20,6 +20,11 @@ export const smsRoom = (courseName: string) => SMS_CHARS - courseName.length - '
 const BUDGET_MS = 240_000;
 
 export type Window = { date: string; from?: string | null; to?: string | null };
+/** MSG-2 (Cam 2026-11-06, "do they want to send emails or text messages or how"): how a notice goes out. */
+export type Via = 'email' | 'text' | 'both';
+export const isVia = (v: unknown): v is Via => v === 'email' || v === 'text' || v === 'both';
+/** The text exactly as it is sent (the STOP line is always on it — SMS-1). */
+export const noticeText = (courseName: string, body: string) => `GreenReserve (${courseName}): ${body} Reply STOP to opt out.`;
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
 
@@ -31,7 +36,7 @@ export function checkWindow(w: Window): string | null {
   return null;
 }
 
-type Recipient = { name: string; email: string | null; phone: string | null; teeTime: string };
+export type Recipient = { name: string; email: string | null; phone: string | null; teeTime: string; rawPhone?: string | null };
 
 /** The golfers booked in the window, one entry per golfer (earliest tee time). */
 export async function audience(courseId: string, w: Window): Promise<Recipient[]> {
@@ -49,7 +54,7 @@ export async function audience(courseId: string, w: Window): Promise<Recipient[]
     const key = email ?? (phone ? `p:${digits.slice(-10)}` : `n:${b.golferName.toLowerCase()}`);
     if (seen.has(key)) continue;
     seen.add(key);
-    out.push({ name: b.golferName, email, phone, teeTime: t.time });
+    out.push({ name: b.golferName, email, phone, teeTime: t.time, rawPhone: b.golferPhone || null });
   }
   return out;
 }
@@ -66,15 +71,22 @@ export async function withTextConsent(list: Recipient[]): Promise<Recipient[]> {
   return list.map(r => ({ ...r, phone: r.phone && agreed.has(normalizePhone(r.phone)) ? r.phone : null }));
 }
 
-export function reach(list: Recipient[], textingOn: boolean) {
+const reaches = (r: Recipient, textingOn: boolean, via: Via) => (via !== 'text' && !!r.email) || (via !== 'email' && textingOn && !!r.phone);
+export function reach(list: Recipient[], textingOn: boolean, via: Via = 'both') {
   return {
-    golfers: list.length, email: list.filter(r => r.email).length, sms: textingOn ? list.filter(r => r.phone).length : 0,
-    unreachable: list.filter(r => !r.email && !(textingOn && r.phone)).length, noEmail: list.filter(r => !r.email).length,
+    golfers: list.length, email: via === 'text' ? 0 : list.filter(r => r.email).length, sms: textingOn && via !== 'email' ? list.filter(r => r.phone).length : 0,
+    unreachable: list.filter(r => !reaches(r, textingOn, via)).length, noEmail: list.filter(r => !r.email).length,
   };
+}
+/** MSG-2: who this message won't reach — the counter calls them. */
+export function toCall(list: Recipient[], textingOn: boolean, via: Via) {
+  return list.filter(r => !reaches(r, textingOn, via));
 }
 
 export async function sendCourseMessage(opts: {
   courseId: string; window: Window; body: string; sms: boolean; sentBy: string;
+  /** MSG-2: false = text only. Defaults to true (every caller before Email · Text · Both). */
+  email?: boolean;
   /** Test hook: the time budget (defaults to BUDGET_MS). */
   budgetMs?: number;
 }): Promise<{ sentEmail: number; sentSms: number; failed: { name: string; how: 'email' | 'sms'; error: string }[]; unreachable: number }> {
@@ -87,7 +99,8 @@ export async function sendCourseMessage(opts: {
   const failed: { name: string; how: 'email' | 'sms'; error: string }[] = [];
   let sentEmail = 0, sentSms = 0;
   // The route refuses a text that wouldn't fit; never cut one short here.
-  const text = `GreenReserve (${course.name}): ${opts.body} Reply STOP to opt out.`;
+  const text = noticeText(course.name, opts.body);
+  const doEmail = opts.email !== false;
   // Logged BEFORE sending and updated as it goes, so a run that dies part-way
   // still shows under "Recently sent" with what actually went out.
   const log = await prisma.courseMessage.create({ data: {
@@ -103,12 +116,12 @@ export async function sendCourseMessage(opts: {
     if (Date.now() - start > (opts.budgetMs ?? BUDGET_MS)) {
       // Out of time: say exactly who was not reached instead of dying silently.
       for (const left of list.slice(i)) {
-        if (left.email) failed.push({ name: left.name, how: 'email', error: 'Ran out of time — not sent' });
+        if (doEmail && left.email) failed.push({ name: left.name, how: 'email', error: 'Ran out of time — not sent' });
         if (doSms && left.phone) failed.push({ name: left.name, how: 'sms', error: 'Ran out of time — not sent' });
       }
       break;
     }
-    if (r.email) {
+    if (doEmail && r.email) {
       try {
         await sendCourseNoticeEmail({ courseId: opts.courseId, to: r.email, golferName: r.name, courseName: course.name, replyTo: course.operator?.email ?? null, dateLabel, teeTime: formatTeeTime(r.teeTime), body: opts.body });
         sentEmail++;
@@ -120,7 +133,7 @@ export async function sendCourseMessage(opts: {
     }
     if ((i + 1) % 20 === 0) await save();
   }
-  const unreachable = list.filter(r => !r.email && !(doSms && r.phone)).length;
+  const unreachable = list.filter(r => !(doEmail && r.email) && !(doSms && r.phone)).length;
   await save();
   return { sentEmail, sentSms, failed, unreachable };
 }
