@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-06 21:50 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `e3d8b62e` · working tree **30 dirty file(s)**
+Generated 2026-11-06 22:05 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `8e9f3b97` · working tree **13 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 138 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 140 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `de19b14e` | 2026-11-06 | Carts: per player or per cart (2 riders), set in Settings (#332) |
+| `fe626db0` | 2026-11-06 | Carts: per player or per cart (2 riders), set by the owner in Settings |
 | `ba23e030` | 2026-11-06 | Tee sheet: a Square-style Charge screen, and one "Paying now" control (#331) |
 | `d9f007fa` | 2026-11-06 | Tee sheet: a Square-style Charge screen, and one "Paying now" control |
 | `54cc0d80` | 2026-11-05 | Tee sheet: the group card asks how they're paying, then one button that says what it does (#330) |
@@ -153,28 +155,21 @@ Generated 2026-11-06 21:50 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (30 file(s))
+### Uncommitted working tree (13 file(s))
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `A prisma/migrations/20261106010000_cart_pricing/migration.sql`
-- `M prisma/schema.prisma`
-- `A scripts/cart-pricing-db-test.ts`
-- `A scripts/cart-pricing-test.ts`
+- `M scripts/add-tee-time-test.ts`
+- `M scripts/cash-at-counter-db-test.ts`
 - `M scripts/checkout-card-test.ts`
-- `M scripts/split-booking-db-test.ts`
+- `M scripts/group-card-checkout-test.ts`
+- `M scripts/teesheet-till-test.ts`
+- `M scripts/tt-card-test.ts`
 - `M scripts/words-guard.baseline.json`
-- `M src/app/api/admin/tee-sheet/route.ts`
-- `M src/app/api/bookings/route.ts`
-- `M src/app/api/manage/[bookingId]/route.ts`
-- `M src/app/api/operator/settings/route.ts`
-- `M src/app/api/operator/shop-sales/rounds/route.ts`
-- `M src/app/book/BookClient.tsx`
-- `M src/app/courses/[slug]/CourseBookingClient.tsx`
 - `M src/app/dashboard/page.tsx`
-- `M src/app/dashboard/schedules/page.tsx`
-- `M src/app/dashboard/settings/page.tsx`
-- `M src/app/dashboard/shop/page.tsx`
+- `M src/components/home/TeeSheetDemo.tsx`
+- `M src/lib/booking-status.ts`
+- `M src/lib/checkin-booking.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -264,7 +259,7 @@ This is the distinction a raw checkbox count gets wrong.
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 16d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 11d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 11d |
-| `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 13d |
+| `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 14d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 14d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 15d |
 | `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 15d |
@@ -300,6 +295,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `de19b14e` 2026-11-06 — Carts: per player or per cart (2 riders), set in Settings (#332)
+- `fe626db0` 2026-11-06 — Carts: per player or per cart (2 riders), set by the owner in Settings
 - `ba23e030` 2026-11-06 — Tee sheet: a Square-style Charge screen, and one "Paying now" control (#331)
 - `d9f007fa` 2026-11-06 — Tee sheet: a Square-style Charge screen, and one "Paying now" control
 - `54cc0d80` 2026-11-05 — Tee sheet: the group card asks how they're paying, then one button that says what it does (#330)
@@ -310,8 +307,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `c146bfe6` 2026-11-06 — Tee sheet: Message golfers by email, text or both, with ready-made messages and a preview
 - `2bea8fe8` 2026-11-05 — Tee sheet: a cleaner weather window that updates as you pick the times (#328)
 - `97875d10` 2026-11-06 — Tee sheet: a cleaner weather window that updates as you pick the times
-- `e2a8f2f7` 2026-11-05 — Tee sheet: Add tee time from the day's prices, keep a time for staff, safer Block and Delete (#327)
-- `60b0470c` 2026-11-06 — Test: the engine's delete pin includes the staff-only guard
 
 ---
 

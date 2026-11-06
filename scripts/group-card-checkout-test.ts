@@ -33,7 +33,8 @@ const shop = readFileSync('src/components/dashboard/ShopItemsForGroup.tsx', 'utf
 ok('the booked size is behind Edit group, not in the checkout', page.includes('>Change group size</button>') && page.includes('canSizeGroup && editGroupId === b.id') && page.includes('Booked for') && !/\n\s*Players\n\s*<select value=\{b\.players\}/.test(page));
 ok('the reader says why not: none connected, or not its day; never on a past day', page.includes("selectedDate < today() ? null : !hasReader ? 'none' : 'day'"));
 ok('owners get the link to connect a reader; staff are told there is none', page.includes("readerWhyNot === 'none' && !access.isStaff && <Link href=\"/dashboard/settings?section=Pro+shop\"") && page.includes("readerWhyNot === 'none' && access.isStaff"));
-ok('the usable reader button is unchanged', page.includes("{canReader && <Link href={`/dashboard/shop?round=${b.id}`}"));
+ok('the reader runs on the card itself (Cam 2026-11-06): send, wait for the tap, cancel, paid', page.includes("dfetch<{ status: string; dueCents?: number; message?: string }>('/api/operator/reader-rounds', { method: 'POST', body: JSON.stringify({ bookingId: b.id, readerId }) })") && page.includes("action: 'status'") && page.includes("readerAct('cancel')") && page.includes('Waiting for the card on '));
+ok('simulated taps only with test keys', page.includes("{readerTest && onReader.state === 'waiting' && <>"));
 ok('+ loads the shop on first use instead of opening the picker', shop.includes('async function more(g: ShopLineGroup)') && shop.includes('const list = await loadCatalog();'));
 ok('− on a line saved several at once says how many it removes', shop.includes('g.lastQty > 1 ? `Remove ${g.lastQty} ${g.name}`'));
 ok('a scanned SKU is added even when its text matches other items too', shop.includes("shown.find(i => (i.sku || '').toLowerCase() === term)"));

@@ -37,12 +37,13 @@ ok('open online / keep for staff is this course only, behind sheet.block', patch
 
 const page = read('src/app/dashboard/page.tsx');
 ok('the button says Add tee time', page.includes('\n                    Add tee time\n') && !page.includes('\n                    Add time\n'));
-ok('the form copies the nearest time and asks who can book it', page.includes('Priced like {fmtTime(like.time)}') && page.includes("'Open online'") && page.includes("'Keep for staff'") && page.includes('copyFrom: like.id'));
+ok('the form copies the nearest time and asks who can book it', page.includes('Priced like {fmtTime(like.time)}') && page.includes("[[true, 'Anyone'], [false, 'Counter only']]") && page.includes('copyFrom: like.id'));
 ok('a new time opens its card', page.includes('setPanelId(id)'));
-ok('the card switches it either way', page.includes("panelSlot.staffOnly ? 'Open online' : 'Keep for staff'"));
+ok('the card switches it: who can book the open seats — Anyone · Counter only · No one (Cam 2026-11-06)', page.includes("[['anyone', 'Anyone'], ['counter', 'Counter only'], ['none', 'No one']]") && page.includes('Who can book the {open > 0 ?') && page.includes('Booked groups stay.'));
+ok('…hidden on a full time, kept on a closed one so it can reopen', page.includes("!past && (open > 0 || panelSlot.status === 'blocked') && ("));
 ok('the row says Staff only', read('src/components/dashboard/TeeSheetRows.tsx').includes("s.staffOnly ? 'Staff only' : ''"));
 
-ok('Block asks first when a group is on the time, and says the group stays', page.includes('stay${booked.length === 1 ? \'s\' : \'\'} booked. Blocking only stops new bookings'));
+ok('closing a time with groups on it says they stay', page.includes("seatAccessOf(panelSlot) !== 'anyone' && (panelSlot.bookings ?? []).some(b => b.status !== 'cancelled') && <span className=\"text-[12.5px] text-ink-muted\">Booked groups stay.</span>"));
 
 ok('Delete time is not offered while a group is on the time', page.includes("!panelSlot.event && !(panelSlot.bookings ?? []).length && ("));
 { const del = route.slice(route.indexOf('export async function DELETE'));
