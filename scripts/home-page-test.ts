@@ -56,16 +56,31 @@ ok('conditions editor: label above, equal options, "+" shortcuts', board.include
 // highlighted view words, a search field, no boxed arrows or reload, a one-line late bar, a key that says Edge / Fill,
 // and past tee times at the top.
 const sheet = read('src/app/dashboard/page.tsx'), sheetRows = read('src/components/dashboard/TeeSheetRows.tsx');
-ok('tee sheet: the groups count is in the day strip, not a footer', sheet.includes('const dayGroups = ') && sheet.includes('>Times booked</div>') && !sheet.includes("group{teeTimes.reduce("));
+ok('tee sheet: the groups count is in the day strip, not a footer', sheet.includes('const dayGroups = ') && sheet.includes('>On the course</div>') && !sheet.includes("group{teeTimes.reduce("));
 ok('tee sheet: the view switch highlights the word', sheet.includes("'text-ink font-semibold border-pine'") && !sheet.includes("className=\"flex p-0.5 rounded-md bg-paper border border-line\""));
 ok('tee sheet: the key says what the colours and the tags mean', sheet.includes('" />Declined or no-show</span>') && sheet.includes('>M</b> member') && sheet.includes('>R</b> resident'));
-ok('tee sheet: "Times booked N of M", groups under it', sheet.includes('>Times booked</div>') && sheet.includes('const timesBooked = '));
+ok('tee sheet: today shows who is on the course; another day, the groups booked', sheet.includes('>On the course</div>') && sheet.includes('const onCourseNow = onCourse(teeTimes, today(), nowHM)') && sheet.includes('>Groups booked</div>'));
 ok('tee sheet: past tee times come first', sheetRows.indexOf('{PAST} · {gone.length}') < sheetRows.indexOf("rows(slots, 'Tee times', true)"));
 
 ok('the homepage demo mirrors the filled cells and the key', read('src/components/home/TeeSheetDemo.tsx').includes('<span><b>In</b>checked in</span>') && read('src/app/home.module.css').includes('.seatPaid { background: #CFE8D6; }'));
 ok('conditions choices wrap on a phone, never cut off', board.includes('whitespace-normal break-words') && !board.includes("text-[13px] truncate ' + (draft"));
 
 ok('the week-ahead link offers demand pricing and lands on it', board.includes('href="/dashboard/schedules#demand-pricing"') && read('src/components/dashboard/DemandPricing.tsx').includes('id="demand-pricing"'));
+
+{
+  const { onCourse } = require('../src/lib/on-course') as typeof import('../src/lib/on-course');
+  const g = (status: string, players: number) => ({ status, players });
+  const day = [
+    { date: '2026-11-06', time: '08:00', holes: 18, bookings: [g('completed', 4)] },          // out since 8, back ~12:30
+    { date: '2026-11-06', time: '09:00', holes: 18, bookings: [g('confirmed', 2)] },          // not checked in: not counted
+    { date: '2026-11-06', time: '06:30', holes: 18, bookings: [g('completed', 3)] },          // finished at 11:00
+    { date: '2026-11-06', time: '09:30', holes: 9, bookings: [g('completed', 2)] },           // a 9: back by 11:45
+    { date: '2026-11-06', time: '13:00', holes: 18, bookings: [g('completed', 4)] },          // later today
+  ];
+  const at = onCourse(day, '2026-11-06', '11:15');
+  ok('on the course: checked-in groups whose round is still under way (18 ≈ 4½ h, 9 ≈ 2¼ h)', at.groups === 2 && at.players === 6, at);
+  ok('…nobody on the course on another day', onCourse(day, '2026-11-07', '11:15').groups === 0);
+}
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);

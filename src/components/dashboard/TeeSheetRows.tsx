@@ -19,6 +19,8 @@ export type BoardGroup = {
   residentPlayers?: number; appliedRate?: string;
   /** VIEWS-1: the List view shows how it was booked and the round's price (cents). */
   source?: string; totalAmount?: number;
+  /** LIST-2: what the card would charge (roundChargeCents) — shop items, their fee and tax, less a booking fee already paid. */
+  shopTotalCents?: number | null; shopFeeCents?: number | null; shopTaxCents?: number | null; accessFeeTotal?: number; feePaidCents?: number | null;
 };
 export type BoardSlot = {
   id: string; time: string; status: string; playersAvailable: number; playersBooked: number;
@@ -45,15 +47,25 @@ export function groupTone(g: BoardGroup): Tone {
 }
 export const TONE_LABEL: Record<Tone, string> = { ok: 'paid', warn: 'booked, not paid yet', bad: 'needs attention' };
 /** FILL-1 (Cam 2026-11-06, "fully filled"): a group's whole cell is its money colour — the soft tints keep names readable. */
-const FILL: Record<Tone, string> = { ok: 'bg-paid-fill', warn: 'bg-owes-fill', bad: 'bg-bad-fill' };
+export const FILL: Record<Tone, string> = { ok: 'bg-paid-fill', warn: 'bg-owes-fill', bad: 'bg-bad-fill' };
 /** Who they are, as a tag: checked in, member rate, resident rate. */
+/** The rates that aren't a member tier; any other appliedRate names the tier (review 2026-11-06: a resident
+ *  rate was tagged M as well as R). */
+const NOT_A_TIER = new Set(['standard', 'resident', 'pack', 'senior', 'junior']);
+const RATE_WORD: Record<string, string> = { pack: 'Round pack', senior: 'Senior', junior: 'Junior' };
+export const isMemberRate = (g: BoardGroup) => !!g.appliedRate && !NOT_A_TIER.has(g.appliedRate);
+/** The group's rate in words — the member tier, "2 residents", Senior, Round pack — or '' for the public price. */
+export function rateWords(g: BoardGroup): string {
+  const r = g.residentPlayers ?? 0;
+  const parts = [isMemberRate(g) ? (/member/i.test(g.appliedRate!) ? g.appliedRate! : `${g.appliedRate} member`) : RATE_WORD[g.appliedRate ?? ''] ?? '', r > 0 ? `${r} resident${r === 1 ? '' : 's'}` : ''];
+  return parts.filter(Boolean).join(' · ');
+}
 export const groupTags = (g: BoardGroup) => [
   ...(g.status === 'completed' ? ['In'] : []),
-  ...(g.appliedRate && g.appliedRate !== 'standard' ? ['M'] : []),
+  ...(isMemberRate(g) ? ['M'] : []),
   ...((g.residentPlayers ?? 0) > 0 ? ['R'] : []),
 ];
 
-export const special = (g: BoardGroup) => (g.residentPlayers ?? 0) > 0 || (!!g.appliedRate && g.appliedRate !== 'standard');
 
 /** The same groups the panel's Move offers: confirmed and not a no-show, or checked in. */
 const movable = (g: BoardGroup) => (g.status === 'confirmed' && !g.noShowAt) || g.status === 'completed';
@@ -167,7 +179,7 @@ export default function TeeSheetRows({ slots: allSlots, isPast, isGone, nextUpId
                   const can = canMove && movable(g) && (g.status !== 'completed' || canMoveCheckedIn);
                   return (
                     <button key={g.id} type="button" draggable={can}
-                      title={`${g.golferName}, ${g.players} player${g.players === 1 ? '' : 's'} — ${g.status === 'completed' ? 'checked in, ' : ''}${TONE_LABEL[t]}${special(g) ? ', member or resident rate' : ''}${can ? '. Drag to another time to move' : ''}`}
+                      title={`${g.golferName}, ${g.players} player${g.players === 1 ? '' : 's'} — ${g.status === 'completed' ? 'checked in, ' : ''}${TONE_LABEL[t]}${rateWords(g) ? `, ${rateWords(g)} rate` : ''}${can ? '. Drag to another time to move' : ''}`}
                       onClick={e => { e.stopPropagation(); onSelect(s.id); }}
                       onDragStart={e => { e.dataTransfer.setData('text/plain', g.id); e.dataTransfer.effectAllowed = 'move'; setDragging({ group: g, fromId: s.id }); }}
                       onDragEnd={() => { setDragging(null); setOver(null); }}

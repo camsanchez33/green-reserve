@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-06 02:56 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `d7a3072e` · working tree **5 dirty file(s)**
+Generated 2026-11-06 03:19 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `a973829d` · working tree **17 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 121 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 123 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `be8b68ee` | 2026-11-05 | Home: the week-ahead link offers demand pricing and lands on it (#325) |
+| `58a9e0d0` | 2026-11-06 | Home: the week-ahead link offers demand pricing and lands on it |
 | `b9baa354` | 2026-11-05 | Tee sheet: cleaner top bar, Times booked, filled groups, 9-hole/twilight labels, no glow (#324) |
 | `52978014` | 2026-11-06 | Tee sheet: cleaner top bar, Times booked, filled groups with In/M/R, 9-hole and twilight labels, no glow |
 | `91764419` | 2026-11-05 | Public SMS consent page at /sms-consent for Twilio's checker (#323) |
@@ -136,13 +138,25 @@ Generated 2026-11-06 02:56 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (5 file(s))
+### Uncommitted working tree (17 file(s))
 
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M scripts/home-page-test.ts`
-- `M src/components/dashboard/DemandPricing.tsx`
-- `M src/components/dashboard/home/HomeBoard.tsx`
+- `M  STATUS.artifact.html`
+- `M  STATUS.json`
+- `M  STATUS.md`
+- `MM docs/CODEMAP.md`
+- `MM docs/codemap.json`
+- `M  scripts/home-page-test.ts`
+- `MM scripts/sheet-views-test.ts`
+- `M  scripts/words-guard.baseline.json`
+- `M  src/app/api/operator/tee-times/route.ts`
+- `M  src/app/dashboard/page.tsx`
+- `MM src/components/dashboard/TeeSheetCalendar.tsx`
+- `MM src/components/dashboard/TeeSheetList.tsx`
+- `MM src/components/dashboard/TeeSheetRows.tsx`
+- `M src/lib/booking-fees.ts`
+- `A  src/lib/calendar-days.ts`
+- `A  src/lib/on-course.ts`
+- `M src/lib/shop.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -229,7 +243,7 @@ This is the distinction a raw checkbox count gets wrong.
 |---|---|---|---|
 | `CLAUDE.md` | 1 | 2026-11-05 | 0d |
 | `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 4d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 15d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 16d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 10d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 11d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 13d |
@@ -240,34 +254,36 @@ This is the distinction a raw checkbox count gets wrong.
 | `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 14d |
 | `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 14d |
 | `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 14d |
-| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 15d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 15d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 15d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-10-20 | 15d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-10-20 | 15d |
-| `ARCHITECTURE.md` | 0 | 2026-10-20 | 15d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-20 | 15d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-20 | 15d |
-| `CODEMAP_SPEC.md` | 0 | 2026-10-20 | 15d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-20 | 15d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-20 | 15d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-20 | 15d |
-| `FB2_COPY_SPEC.md` | 0 | 2026-10-20 | 15d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-20 | 15d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-20 | 15d |
-| `GOLFER_SPEC.md` | 0 | 2026-10-20 | 15d |
-| `HARDENING_SPEC.md` | 0 | 2026-10-20 | 15d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-20 | 15d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-20 | 15d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-20 | 15d |
-| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-20 | 15d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-20 | 15d |
-| `REVIEW_SPEC.md` | 0 | 2026-10-20 | 15d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-20 | 15d |
-| `UI_REVISE_SPEC.md` | 0 | 2026-10-20 | 15d |
+| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 16d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 16d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 16d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-10-20 | 16d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-10-20 | 16d |
+| `ARCHITECTURE.md` | 0 | 2026-10-20 | 16d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-20 | 16d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-20 | 16d |
+| `CODEMAP_SPEC.md` | 0 | 2026-10-20 | 16d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-20 | 16d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-20 | 16d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-20 | 16d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-10-20 | 16d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-20 | 16d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-20 | 16d |
+| `GOLFER_SPEC.md` | 0 | 2026-10-20 | 16d |
+| `HARDENING_SPEC.md` | 0 | 2026-10-20 | 16d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-20 | 16d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-20 | 16d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-20 | 16d |
+| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-20 | 16d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-20 | 16d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-20 | 16d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-20 | 16d |
+| `UI_REVISE_SPEC.md` | 0 | 2026-10-20 | 16d |
 
 ## Recent commits
 
+- `be8b68ee` 2026-11-05 — Home: the week-ahead link offers demand pricing and lands on it (#325)
+- `58a9e0d0` 2026-11-06 — Home: the week-ahead link offers demand pricing and lands on it
 - `b9baa354` 2026-11-05 — Tee sheet: cleaner top bar, Times booked, filled groups, 9-hole/twilight labels, no glow (#324)
 - `52978014` 2026-11-06 — Tee sheet: cleaner top bar, Times booked, filled groups with In/M/R, 9-hole and twilight labels, no glow
 - `91764419` 2026-11-05 — Public SMS consent page at /sms-consent for Twilio's checker (#323)
@@ -278,8 +294,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `8ec892ce` 2026-11-05 — Home: goals on the numbers the course picks, and its own course-condition lines
 - `e14b7752` 2026-11-05 — Home: weather + next tee times on top, field-level setup links, Needs you counts, Staff notes (#320)
 - `a5bb5088` 2026-11-05 — Home: weather and next tee times on top, field-level setup links, Needs you counts, Staff notes
-- `901ba99b` 2026-11-05 — Text-message opt-in names GreenReserve as the sender (Twilio campaign review) (#319)
-- `d12656c7` 2026-11-05 — Text-message opt-in names GreenReserve as the sender, with the carriers' disclosure phrases; texts lead with GreenReserve
 
 ---
 

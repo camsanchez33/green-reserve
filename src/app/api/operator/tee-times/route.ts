@@ -27,7 +27,22 @@ export async function GET(req: NextRequest) {
     });
     const days = rows.map(r => ({ date: r.date, times: r._count._all, spots: r._sum.playersAvailable ?? 0, booked: r._sum.playersBooked ?? 0 }))
       .sort((a, b) => a.date.localeCompare(b.date));
-    return NextResponse.json({ month, days });
+    // CAL-2: why a day has nothing golfers can book — every time blocked, no schedule that weekday, or
+    // past the public booking window (lib/calendar-days.ts words it). This course only.
+    const [course, schedules, blocked] = await Promise.all([
+      prisma.course.findUnique({ where: { id: session.courseId }, select: { timezone: true, publicAdvanceDays: true } }),
+      prisma.teeTimeSchedule.findMany({ where: { courseId: session.courseId, active: true }, select: { daysOfWeek: true } }),
+      prisma.teeTime.groupBy({ by: ['date'], where: { courseId: session.courseId, date: { gte: `${month}-01`, lte: `${month}-31` }, status: 'blocked' } }),
+    ]);
+    const open = new Set(days.map(d => d.date));
+    const openWeekdays = schedules.some(s => s.daysOfWeek.length === 0) ? [0, 1, 2, 3, 4, 5, 6] : [...new Set(schedules.flatMap(s => s.daysOfWeek))].sort();
+    const info = {
+      today: todayIn(course?.timezone),
+      publicDays: course?.publicAdvanceDays ?? 7,
+      openWeekdays,
+      blockedDates: blocked.map(b => b.date).filter(d => !open.has(d)),
+    };
+    return NextResponse.json({ month, days, info });
   }
   // SD-3: the default day is the course's today, not the server's.
   let date = searchParams.get('date') || '';

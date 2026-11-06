@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 664,
+    "files": 666,
     "routes": 292,
-    "libs": 239,
+    "libs": 241,
     "models": 71,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -7508,7 +7508,7 @@
     },
     {
       "path": "src/app/api/operator/tee-times/route.ts",
-      "lines": 222,
+      "lines": 237,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8907,7 +8907,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1965,
+      "lines": 1974,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8949,6 +8949,7 @@
         "@/lib/format",
         "@/lib/late-add",
         "@/lib/member-rates",
+        "@/lib/on-course",
         "@/lib/round-packs",
         "@/lib/setup-missing",
         "@/lib/sms-consent-copy",
@@ -11828,7 +11829,7 @@
     },
     {
       "path": "src/components/dashboard/TeeSheetCalendar.tsx",
-      "lines": 87,
+      "lines": 90,
       "purpose": "VIEWS-1 (Cam 2026-11-03):",
       "brain": [],
       "exports": [
@@ -11844,6 +11845,7 @@
       "guard": null,
       "imports": [
         "@/components/dashboard/LoadError",
+        "@/lib/calendar-days",
         "@/lib/dashboard-fetch",
         "react"
       ],
@@ -11853,7 +11855,7 @@
     },
     {
       "path": "src/components/dashboard/TeeSheetList.tsx",
-      "lines": 61,
+      "lines": 74,
       "purpose": "VIEWS-1 (Cam 2026-11-03, the glass/views canvas:",
       "brain": [],
       "exports": [
@@ -11869,8 +11871,9 @@
       "guard": null,
       "imports": [
         "./TeeSheetRows",
-        "@/components/ui/StatusDot",
-        "@/lib/format"
+        "@/lib/booking-fees",
+        "@/lib/format",
+        "@/lib/tee-rounds"
       ],
       "usedBy": [
         "src/app/dashboard/page.tsx"
@@ -11878,7 +11881,7 @@
     },
     {
       "path": "src/components/dashboard/TeeSheetRows.tsx",
-      "lines": 285,
+      "lines": 297,
       "purpose": "DENSE-4 (DENSE_UI_SPEC D1, Cam 2026-10-27:",
       "brain": [],
       "exports": [
@@ -11895,6 +11898,10 @@
           "kind": "component"
         },
         {
+          "name": "FILL",
+          "kind": "const"
+        },
+        {
           "name": "groupTags",
           "kind": "fn"
         },
@@ -11903,7 +11910,11 @@
           "kind": "fn"
         },
         {
-          "name": "special",
+          "name": "isMemberRate",
+          "kind": "fn"
+        },
+        {
+          "name": "rateWords",
           "kind": "fn"
         },
         {
@@ -13146,7 +13157,6 @@
         "src/components/dashboard/ShopStock.tsx",
         "src/components/dashboard/SignAgreements.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
-        "src/components/dashboard/TeeSheetList.tsx",
         "src/components/dashboard/Toast.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
         "src/components/dashboard/events/EventMoney.tsx",
@@ -15416,7 +15426,7 @@
     },
     {
       "path": "src/lib/booking-fees.ts",
-      "lines": 54,
+      "lines": 64,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -15446,6 +15456,10 @@
         },
         {
           "name": "hoursLabel",
+          "kind": "fn"
+        },
+        {
+          "name": "roundChargeCents",
           "kind": "fn"
         },
         {
@@ -15481,6 +15495,7 @@
         "src/app/receipt/[bookingId]/page.tsx",
         "src/components/dashboard/ShopCatalog.tsx",
         "src/components/dashboard/ShopItemsForGroup.tsx",
+        "src/components/dashboard/TeeSheetList.tsx",
         "src/components/dashboard/money/PayoutsPanel.tsx",
         "src/components/home/TeeSheetDemo.tsx",
         "src/lib/booking-fee.ts",
@@ -15777,6 +15792,39 @@
         "src/app/api/call/[token]/route.ts",
         "src/app/demo/route.ts",
         "src/app/for-courses/page.tsx"
+      ]
+    },
+    {
+      "path": "src/lib/calendar-days.ts",
+      "lines": 41,
+      "purpose": "CAL-2 (Cam 2026-11-06:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "bookableFrom",
+          "kind": "fn"
+        },
+        {
+          "name": "CalendarInfo",
+          "kind": "type"
+        },
+        {
+          "name": "emptyDayWords",
+          "kind": "fn"
+        },
+        {
+          "name": "notYetWords",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/components/dashboard/TeeSheetCalendar.tsx"
       ]
     },
     {
@@ -21995,6 +22043,31 @@
       ]
     },
     {
+      "path": "src/lib/on-course.ts",
+      "lines": 25,
+      "purpose": "ONCOURSE-1 (Cam 2026-11-06:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "onCourse",
+          "kind": "fn"
+        },
+        {
+          "name": "ROUND_MINUTES",
+          "kind": "const"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/dashboard/page.tsx"
+      ]
+    },
+    {
       "path": "src/lib/op-theme.ts",
       "lines": 24,
       "purpose": "DASH-D (Cam 2026-11-01:",
@@ -25104,7 +25177,7 @@
     },
     {
       "path": "src/lib/shop.ts",
-      "lines": 158,
+      "lines": 151,
       "purpose": "POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08):",
       "brain": [
         "pro-shop"
@@ -25136,7 +25209,7 @@
         },
         {
           "name": "roundChargeCents",
-          "kind": "fn"
+          "kind": "reexport"
         },
         {
           "name": "roundChargedTotal",
@@ -25877,6 +25950,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
+        "src/components/dashboard/TeeSheetList.tsx",
         "src/components/dashboard/TeeSheetRows.tsx"
       ]
     },

@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { LoadError } from '@/components/dashboard/LoadError';
+import { emptyDayWords, notYetWords, type CalendarInfo } from '@/lib/calendar-days';
 
 type Day = { date: string; times: number; spots: number; booked: number };
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -29,12 +30,13 @@ export default function TeeSheetCalendar({ selectedDate, today, onPick }: {
   // The day stepper above still moves the date; follow it to its month.
   useEffect(() => { setMonth(selectedDate.slice(0, 7)); }, [selectedDate]);
   const [days, setDays] = useState<Day[] | null>(null);
+  const [info, setInfo] = useState<CalendarInfo | null>(null);
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
     setDays(null); setError('');
-    const r = await dfetch<{ month: string; days: Day[] }>(`/api/operator/tee-times?month=${month}`);
-    if (r.ok) setDays(r.data.days); else setError(r.error);
+    const r = await dfetch<{ month: string; days: Day[]; info: CalendarInfo }>(`/api/operator/tee-times?month=${month}`);
+    if (r.ok) { setDays(r.data.days); setInfo(r.data.info); } else setError(r.error);
   }, [month]);
   useEffect(() => { load(); }, [load]);
 
@@ -53,7 +55,6 @@ export default function TeeSheetCalendar({ selectedDate, today, onPick }: {
         <button type="button" onClick={() => setMonth(shiftMonth(month, 1))} aria-label="Next month"
           className="w-7 h-7 rounded-md inline-flex items-center justify-center text-ink-muted hover:text-ink hover:bg-paper transition-colors"><span aria-hidden="true">›</span></button>
         {month !== today.slice(0, 7) && <button type="button" onClick={() => setMonth(today.slice(0, 7))} className="ml-1 text-[12.5px] font-semibold text-pine hover:underline underline-offset-4">This month</button>}
-        <span className="ml-auto text-[12.5px] text-ink-muted">Players booked of spots</span>
       </div>
       {error ? <LoadError message={`Couldn't load ${title} — ${error}`} onRetry={load} /> : !days ? (
         <p role="status" className="py-16 text-center text-ink-muted">Loading {title}…</p>
@@ -67,14 +68,16 @@ export default function TeeSheetCalendar({ selectedDate, today, onPick }: {
               const d = byDate.get(date);
               const pct = d && d.spots > 0 ? Math.round(d.booked / d.spots * 100) : null;
               const fill = pct === null ? 'bg-paper text-ink-muted' : shade(pct);
-              const words = pct === null ? 'No tee times' : pct >= 100 ? 'Full' : `${pct}% full`;
+              // CAL-2 (Cam 2026-11-06): "60 players · 19%"; an empty day says why; a day golfers can't book yet says when.
+              const words = pct === null ? (info ? emptyDayWords(date, info) : 'No tee times') : `${d!.booked} ${d!.booked === 1 ? 'player' : 'players'} · ${pct >= 100 ? 'Full' : `${pct}%`}`;
+              const later = pct !== null && info ? notYetWords(date, info) : '';
               return (
                 <button key={date} type="button" onClick={() => onPick(date)}
-                  aria-label={`${new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}: ${words}${d ? `, ${d.booked} of ${d.spots} spots` : ''}. Open the sheet`}
+                  aria-label={`${new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}: ${words}${d ? `, ${d.spots} spots` : ''}${later ? `, ${later}` : ''}. Open the sheet`}
                   className={'h-[4.5rem] sm:h-20 rounded-md px-2 py-1.5 flex flex-col justify-between text-left transition-shadow hover:shadow-[0_0_0_2px_var(--color-pine)] '
                     + fill + (date === selectedDate ? ' shadow-[0_0_0_2px_var(--color-ink)]' : '') + (date < today ? ' opacity-60' : '')}>
                   <span className={'text-[13px] font-semibold tabular-nums' + (date === today ? ' underline underline-offset-4' : '')}>{i + 1}</span>
-                  <span className="text-[12px] tabular-nums leading-tight">{words}{d && d.spots > 0 && <span className="hidden sm:inline"><br />{d.booked} of {d.spots}</span>}</span>
+                  <span className="text-[12px] tabular-nums leading-tight">{words}{later && <span className="hidden sm:inline opacity-80"><br />{later}</span>}</span>
                 </button>
               );
             })}
