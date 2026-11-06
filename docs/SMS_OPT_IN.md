@@ -30,7 +30,9 @@ place that collects a phone number we text must meet the matching list below.
 
 ### Important notes
 1. The checkbox must be actively selected by the user, not pre-checked.
-2. If the web opt-in is behind a login or not yet published, host a screenshot on a
+2. The booking form's consent step is hosted at https://greenreserve.app/sms-opt-in.png
+   (`public/sms-opt-in.png`, a sample course; Cam 2026-11-06, Twilio wanted a public image URL).
+   If the web opt-in is behind a login or not yet published, host a screenshot on a
    publicly accessible website (OneDrive, Google Drive) and give that URL in the
    campaign's **Message Flow** field.
 
