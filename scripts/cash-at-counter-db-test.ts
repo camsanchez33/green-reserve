@@ -38,7 +38,7 @@ async function cleanup() {
   const made = await createCounterBooking(c.id, { teeTimeId: tt.id, golferName: 'Walk In', players: 2 }, STAFF);
   const w = made.ok ? await prisma.booking.findUniqueOrThrow({ where: { id: made.id } }) : null;
   ok('a counter booking is never made already paid', made.ok && w?.paymentStatus === 'manual' && w.status === 'confirmed' && !w.paidOffline, w);
-  ok('…its status says how it can be paid', getBookingStatus('confirmed', 'manual').label === 'Pays in store');
+  ok('…its status says how it can be paid', getBookingStatus('confirmed', 'manual').label === 'No card saved');
 
   // Cam 2026-10-27: nobody new joins a time LATE_ADD_MINUTES (20) after it went off — except
   // a walk-in staff forgot to put on the sheet, recorded with the "already played" button (late).
@@ -103,7 +103,7 @@ async function cleanup() {
     && (route.match(/settleAtCounter\(/g) ?? []).length === (route.match(/settleAtCounter\([^)]*onAccount: \{ membershipId \}/g) ?? []).length);
   ok('a walk-in "paying cash now" is booked, then rung up', /if \(checkInNow\) \{\s*const cash = await ringUpCash\(/.test(route));
   ok('a counter booking can’t be created paid', !counter.slice(counter.indexOf('export async function createCounterBooking')).includes("'paid_offline'") && !counter.includes('paidNow'));
-  ok('the tee sheet no longer offers "paid at counter"', !/paid at counter/i.test(sheet) && sheet.includes("bookingLifecycle(b, 'take_cash', cashDue, ") && sheet.includes('/dashboard/shop?round='));
+  ok('the tee sheet no longer offers "paid at counter"', !/paid at counter/i.test(sheet) && sheet.includes("bookingLifecycle(b, 'take_cash', cashDue, ") && sheet.includes('roundToReader(b, '));
 
   await cleanup(); await prisma.$disconnect();
   if (failed) { console.error(`${failed} failed`); process.exit(1); }

@@ -18,9 +18,10 @@ ok('one "Paying now" stepper; Pay separately is gone', page.includes('<span clas
 ok('short of the group: no choice for the rest — they stay booked (only a group that can\'t split is told they won\'t be charged)', !page.includes('Pays on their own now') && !page.includes('restMode') && page.includes('{rest > 0 && !restSplit && <p className="text-[12.5px] text-warn">The other {rest} won’t be charged.</p>}'));
 ok('Charge opens the payment screen; the server splits the rest off as it charges (PARTIAL-1)', page.includes('const charge = () => setPaySheet(b.id);'));
 ok('one Charge button with the card total', page.includes("`Charge${showMoney ? ` $${(cardDue / 100).toFixed(2)}` : ''}`"));
-ok('the ways keep their old permissions', page.includes("const cardOk = b.status !== 'completed' && b.status !== 'cancelled' && b.paymentStatus !== 'manual' && access.can('sheet.checkin');")
+ok('type a card for every unpaid group (Cam 2026-11-06), counter bookings too', page.includes("const cardOk = b.status !== 'completed' && b.status !== 'cancelled' && access.can('sheet.checkin');") && page.includes("{b.checkInFailReason ? 'Type a new card' : 'Type a card'}"));
+ok('the ways keep their old permissions', page.includes("const cardOk = b.status !== 'completed' && b.status !== 'cancelled' && access.can('sheet.checkin');")
   && page.includes("const cashOk = canCash || (b.status === 'confirmed' && b.paymentStatus === 'manual' && access.can('sheet.counter_payment'));")
-  && page.includes('{canReader && <Link href={`/dashboard/shop?round=${b.id}`}') && page.includes('{canTextLink && <button') && page.includes('{canEmailLink && <button') && page.includes('{canAccount && ('));
+  && page.includes('{canReader && onReader?.bookingId !== b.id && (') && page.includes('{canTextLink && <button') && page.includes('{canEmailLink && <button') && page.includes('{canAccount && ('));
 ok('the payment screen: the amount, then a row per way to pay', page.includes('How are they paying?') && page.includes('>Card on file</span>') && page.includes('Text a pay link') && page.includes('Email a pay link'));
 ok('cash: one tap for exact or the next $20 / $50 / $100, or Custom', page.includes('[2000, 5000, 10000].map(u => Math.ceil((cashDue + 1) / u) * u)') && page.includes('onClick={() => takeCash()}') && page.includes('onClick={() => takeCash(c)}') && page.includes('>Custom</button>'));
 ok('the cash handed over goes to the register sale; the server checks it covers the total', page.includes('{ tenderedCents: tendered && tendered > cashDue ? tendered : undefined }') && page.includes('...(cash?.tenderedCents ? { cashTenderedCents: cash.tenderedCents } : {})')
@@ -33,7 +34,7 @@ ok('the reader says when it charges the whole group (the register has no headcou
 ok('Move / Change group size / Cancel sit under More', page.includes("{moreFor === b.id ? 'Less' : 'More'}") && page.includes('moreFor === b.id && canSizeGroup && (') && page.includes("moreFor === b.id && b.status === 'confirmed' && !teedOff && access.can('sheet.cancel') && ("));
 ok('no-show and running late stay in sight', page.includes("{noShowReady && access.can('sheet.no_show') && (") && page.includes('Running late</button>'));
 ok("the time's header names the round once", page.includes('{roundName(panelSlot)} · ${panelSlot.greenFee.toFixed(2)} a player'));
-ok('"Pays in store" stands alone', page.includes("b.paymentStatus !== 'manual' && <span className=\"text-ink-muted\"> · {bStatus.sublabel}</span>"));
+ok('"No card saved" stands alone', page.includes("b.paymentStatus !== 'manual' && <span className=\"text-ink-muted\"> · {bStatus.sublabel}</span>"));
 ok('no reader: owners get the link, staff are told', page.includes('>Connect a card reader</Link>') && page.includes('No card reader connected'));
 
 ok('no split happens in the browser before a charge (nothing to half-finish)', !page.includes('async function splitOff('));

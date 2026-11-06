@@ -166,7 +166,7 @@ async function chargeBooking(
       await settleRoundReader(booking.courseId, bookingId, actor);
       return chargeBooking(bookingId, opts, mode, actor, true);
     }
-    return { error: 'This group is being paid on the card reader at the pro shop — finish or cancel it there first.', status: 409 } as const;
+    return { error: 'This group is on the card reader — finish or cancel that payment first.', status: 409 } as const;
   }
 
   // Already paid (e.g. an earlier charge-only collect). Never charge twice.

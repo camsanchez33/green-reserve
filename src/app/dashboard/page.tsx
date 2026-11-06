@@ -210,12 +210,61 @@ function DashboardPageInner() {
   type WxPlan = { from: string; to: string; wholeDay: boolean; startedBefore: string | null; groups: WxGroup[]; teeTimeIds: string[] };
   // SP-A: what this login may do on the sheet (owners: everything).
   const access = useDashboardAccess();
-  // CASH-1: a group can go to the card reader on the Pro shop page when the course has one.
-  const [hasReader, setHasReader] = useState(false);
+  // Cam 2026-11-06 ("card reader shouldn't take them to a random link"): the group's round goes to the course's
+  // card reader right from its card — the same server path as the register (POS-3 R3b, /api/operator/reader-rounds).
+  const [readers, setReaders] = useState<{ id: string; label: string; online: boolean }[]>([]);
+  const [readerTest, setReaderTest] = useState(false);
+  const hasReader = readers.length > 0;
   useEffect(() => {
     if (!access.loaded || !access.can('shop.sell')) return;
-    dfetch<{ readers: unknown[] }>('/api/operator/card-readers').then(r => { if (r.ok) setHasReader(r.data.readers.length > 0); });
+    dfetch<{ readers: { id: string; label: string; online: boolean }[]; testMode: boolean }>('/api/operator/card-readers').then(r => { if (r.ok) { setReaders(r.data.readers); setReaderTest(!!r.data.testMode); } });
   }, [access.loaded]); // eslint-disable-line react-hooks/exhaustive-deps
+  type OnReader = { bookingId: string; readerId: string; name: string; players: number; dueCents: number; state: 'waiting' | 'declined' | 'cancelled' | 'error'; message: string };
+  const [onReader, setOnReader] = useState<OnReader | null>(null);
+  const [readerPickFor, setReaderPickFor] = useState<string | null>(null);
+  const [readerBusy, setReaderBusy] = useState(false);
+  const lastReader = () => { try { return localStorage.getItem('gr_sheet_reader') ?? ''; } catch { return ''; } };
+  async function roundToReader(b: Booking, readerId: string) {
+    try { localStorage.setItem('gr_sheet_reader', readerId); } catch { /* per-browser convenience only */ }
+    setReaderPickFor(null); setReaderBusy(true);
+    const r = await dfetch<{ status: string; dueCents?: number; message?: string }>('/api/operator/reader-rounds', { method: 'POST', body: JSON.stringify({ bookingId: b.id, readerId }) });
+    setReaderBusy(false);
+    const base = { bookingId: b.id, readerId, name: b.golferName, players: b.players };
+    if (!r.ok) { setOnReader({ ...base, dueCents: 0, state: 'error', message: r.error }); return; }
+    setOnReader({ ...base, dueCents: r.data.dueCents ?? 0, state: 'waiting', message: r.data.message ?? '' });
+  }
+  // While a round is on the reader, ask every 2 seconds what it is doing (as the register does).
+  useEffect(() => {
+    if (onReader?.state !== 'waiting') return;
+    let live = true;
+    const t = setInterval(async () => {
+      const r = await dfetch<{ status: string; message?: string }>('/api/operator/reader-rounds', { method: 'PATCH', body: JSON.stringify({ bookingId: onReader.bookingId, action: 'status' }) });
+      if (!live) return;
+      if (!r.ok) { setOnReader(o => o && { ...o, message: `${r.error} Still checking…` }); return; }
+      if (r.data.status === 'paid') {
+        toast('Paid by card — checked in.', 'ok');
+        setJustDone({ bookingId: onReader.bookingId, name: onReader.name, players: onReader.players, how: `$${(onReader.dueCents / 100).toFixed(2)} · card reader` });
+        setOnReader(null); setPaySheet(null); loadTimes(selectedDate); return;
+      }
+      if (r.data.status === 'refunded') { toast(r.data.message ?? 'This round was already paid — the card payment was refunded.', 'warn'); setOnReader(null); loadTimes(selectedDate); return; }
+      if (r.data.status === 'declined') setOnReader(o => o && { ...o, state: 'declined', message: r.data.message || 'The card was declined.' });
+      else if (r.data.status === 'cancelled' || r.data.status === 'open') setOnReader(o => o && { ...o, state: 'cancelled', message: 'Stopped — nothing was charged.' });
+      else if (r.data.message) setOnReader(o => o && { ...o, message: r.data.message ?? '' });
+    }, 2000);
+    return () => { live = false; clearInterval(t); };
+  }, [onReader?.state, onReader?.bookingId]); // eslint-disable-line react-hooks/exhaustive-deps
+  async function readerAct(action: 'cancel' | 'simulate', card?: 'ok' | 'declined') {
+    if (!onReader) return;
+    setReaderBusy(true);
+    const r = await dfetch<{ status?: string; message?: string }>('/api/operator/reader-rounds', { method: 'PATCH', body: JSON.stringify({ bookingId: onReader.bookingId, action, readerId: onReader.readerId, card }) });
+    setReaderBusy(false);
+    if (!r.ok) { setOnReader(o => o && { ...o, message: r.error }); return; }
+    if (action !== 'cancel') return;
+    if (r.data.status === 'paid') { toast('The card went through — paid and checked in.', 'ok'); setOnReader(null); setPaySheet(null); loadTimes(selectedDate); return; }
+    if (r.data.status === 'refunded') { toast(r.data.message ?? '', 'warn'); setOnReader(null); loadTimes(selectedDate); return; }
+    if (r.data.status === 'waiting') { setOnReader(o => o && { ...o, message: r.data.message ?? 'Still on the reader — try again in a moment.' }); return; }
+    setOnReader(null); loadTimes(selectedDate); toast('Cancelled — nothing was charged.', 'ok');
+  }
   // MEM-ACCT: "On account" shows only when the course has members who can charge to one.
   const [hasAccounts, setHasAccounts] = useState(false);
   useEffect(() => {
@@ -614,26 +663,28 @@ function DashboardPageInner() {
     else toast('No preview link came back — try again.');
   }
 
-  // SD-10: Block / Unblock / Del were fire-and-forget with no result check —
-  // a 500 refetched the list and it looked identical; two fast taps fired twice.
-  async function toggleBlock(tt: TeeTime) {
-    // Cam 2026-11-06 ("you can just block a booking without any warning"): blocking never removes a group —
-    // it only stops new bookings — but say so before it happens, naming who stays.
-    const booked = (tt.bookings ?? []).filter(b => b.status !== 'cancelled');
-    if (tt.status !== 'blocked' && booked.length > 0
-      && !confirm(`Block ${fmtTime(tt.time)}?\n\n${booked.map(b => `${b.golferName} (${b.players})`).join(', ')} stay${booked.length === 1 ? 's' : ''} booked. Blocking only stops new bookings — golfers can't book the open spots. To take a group off, move or cancel it.`)) return;
+  // Cam 2026-11-06 ("this just doesn't make sense"): one line, "Who can book the N open seats" — Anyone · Counter
+  // only (hidden online, ADDTIME-1) · No one (blocked). Groups already booked are never touched by any of them.
+  // SD-10: every write is checked, and the row stays busy until the sheet has re-read it.
+  type SeatAccess = 'anyone' | 'counter' | 'none';
+  const seatAccessOf = (tt: TeeTime): SeatAccess => tt.status === 'blocked' ? 'none' : tt.staffOnly ? 'counter' : 'anyone';
+  async function setSeatAccess(tt: TeeTime, to: SeatAccess) {
+    if (seatAccessOf(tt) === to) return;
     setSlotBusy(tt.id);
-    const r = await dfetch('/api/operator/tee-times', { method: 'PATCH', body: JSON.stringify({ id: tt.id, status: tt.status === 'blocked' ? 'available' : 'blocked' }) });
-    if (!r.ok) toast(r.error);
-    await loadTimes(selectedDate);
-    setSlotBusy(null);
-  }
-  async function toggleStaffOnly(tt: TeeTime) {
-    setSlotBusy(tt.id);
-    const r = await dfetch('/api/operator/tee-times', { method: 'PATCH', body: JSON.stringify({ id: tt.id, staffOnly: !tt.staffOnly }) });
-    if (!r.ok) toast(r.error); else toast(tt.staffOnly ? 'Open online.' : 'Kept for staff.', 'ok');
-    await loadTimes(selectedDate);
-    setSlotBusy(null);
+    try {
+      const patch = (body: Record<string, unknown>) => dfetch('/api/operator/tee-times', { method: 'PATCH', body: JSON.stringify({ id: tt.id, ...body }) });
+      if (to === 'none') {
+        const r = await patch({ status: 'blocked' });
+        if (!r.ok) { toast(r.error); return; }
+      } else {
+        if (tt.status === 'blocked') { const r = await patch({ status: 'available' }); if (!r.ok) { toast(r.error); return; } }
+        if (!!tt.staffOnly !== (to === 'counter')) { const r = await patch({ staffOnly: to === 'counter' }); if (!r.ok) { toast(r.error); return; } }
+      }
+      toast(to === 'none' ? 'Closed to new bookings.' : to === 'counter' ? 'Counter only — hidden online.' : 'Open to everyone.', 'ok');
+    } finally {
+      await loadTimes(selectedDate);
+      setSlotBusy(null);
+    }
   }
   async function deleteTime(tt: TeeTime) {
     if (!confirm('Delete this tee time?')) return;
@@ -879,7 +930,8 @@ function DashboardPageInner() {
           // CHECKOUT-2 (Cam 2026-11-06): one "Paying now" control (was Showed up + Pay separately), a receipt, the total,
           // and ONE Charge button that opens the payment screen. Every way to pay keeps exactly its old permission and
           // condition and charges exactly what the server charges (cardDue / cashDue — unchanged).
-          const cardOk = b.status !== 'completed' && b.status !== 'cancelled' && b.paymentStatus !== 'manual' && access.can('sheet.checkin');
+          // Cam 2026-11-06 ("should have an option to type in card"): every unpaid group, a counter booking with no card too.
+          const cardOk = b.status !== 'completed' && b.status !== 'cancelled' && access.can('sheet.checkin');
           const cashOk = canCash || (b.status === 'confirmed' && b.paymentStatus === 'manual' && access.can('sheet.counter_payment'));
           const noCard = b.hasCard === false || b.paymentStatus === 'no_payment_method';
           const anyWay = cardOk || cashOk || canReader || canTextLink || canEmailLink || canAccount;
@@ -1000,10 +1052,38 @@ function DashboardPageInner() {
                     {cardOk && !prepaid && !noCard && !b.checkInFailReason && (
                       <button type="button" disabled={checkingInId === b.id} onClick={() => checkInBooking(b, cardDue)} className={row}><span>Card on file</span><span className="text-ink-muted">{checkingInId === b.id ? 'Charging…' : '›'}</span></button>
                     )}
-                    {cardOk && !prepaid && (noCard || b.checkInFailReason) && (
-                      <button type="button" onClick={() => openCardModal(b, b.checkInFailReason ?? '')} className={row}><span>{b.checkInFailReason ? 'New card' : 'Take a card'}</span><span className="text-ink-muted">›</span></button>
+                    {cardOk && !prepaid && (
+                      <button type="button" onClick={() => openCardModal(b, b.checkInFailReason ?? '')} className={row}><span>{b.checkInFailReason ? 'Type a new card' : 'Type a card'}</span><span className="text-ink-muted">›</span></button>
                     )}
-                    {canReader && <Link href={`/dashboard/shop?round=${b.id}`} className={row}><span>Card reader{herePlayers < b.players ? <span className="text-ink-muted"> · charges the whole group</span> : ''}</span><span className="text-ink-muted">›</span></Link>}
+                    {canReader && onReader?.bookingId !== b.id && (
+                      <button type="button" disabled={readerBusy} className={row}
+                        onClick={() => { const keep = readers.find(x => x.id === lastReader()); if (readers.length === 1 || keep) roundToReader(b, (keep ?? readers[0]).id); else setReaderPickFor(readerPickFor === b.id ? null : b.id); }}>
+                        <span>Card reader{herePlayers < b.players ? <span className="text-ink-muted"> · charges the whole group</span> : ''}{readers.length > 1 && readers.find(x => x.id === lastReader()) ? <span className="text-ink-muted"> · {readers.find(x => x.id === lastReader())!.label}</span> : ''}</span>
+                        <span className="text-ink-muted">{readerBusy ? 'Sending…' : '›'}</span>
+                      </button>
+                    )}
+                    {canReader && readerPickFor === b.id && readers.map(rd => (
+                      <button key={rd.id} type="button" onClick={() => roundToReader(b, rd.id)} className={row + ' pl-4'}><span>{rd.label}{!rd.online ? <span className="text-ink-muted"> · offline</span> : ''}</span><span className="text-ink-muted">›</span></button>
+                    ))}
+                    {onReader?.bookingId === b.id && (
+                      <div className="py-3 space-y-2" role="status">
+                        <p className="text-[14px] text-ink">
+                          {onReader.state === 'waiting' ? `Waiting for the card on ${readers.find(x => x.id === onReader.readerId)?.label ?? 'the reader'}${onReader.dueCents ? ` · $${(onReader.dueCents / 100).toFixed(2)}` : ''}`
+                            : onReader.state === 'declined' ? 'Declined' : onReader.state === 'cancelled' ? 'Stopped' : 'The reader didn’t take it'}
+                        </p>
+                        {onReader.message && <p className={'text-[12.5px] ' + (onReader.state === 'waiting' ? 'text-ink-muted' : 'text-bad')}>{onReader.message}</p>}
+                        <div className="flex flex-wrap gap-2">
+                          {onReader.state !== 'waiting' && <button type="button" disabled={readerBusy} onClick={() => roundToReader(b, onReader.readerId)} className="px-3 min-h-[34px] rounded-[7px] bg-pine hover:bg-pine-hover text-white text-[13px] font-semibold disabled:opacity-50">Try again</button>}
+                          {onReader.state === 'waiting' || onReader.state === 'error'
+                            ? <button type="button" disabled={readerBusy} onClick={() => readerAct('cancel')} className="px-3 min-h-[34px] rounded-[7px] border border-line text-[13px] font-medium text-ink hover:bg-paper disabled:opacity-50">{readerBusy ? '…' : 'Cancel'}</button>
+                            : <button type="button" onClick={() => setOnReader(null)} className="px-3 min-h-[34px] rounded-[7px] border border-line text-[13px] font-medium text-ink hover:bg-paper">Close</button>}
+                          {readerTest && onReader.state === 'waiting' && <>
+                            <button type="button" disabled={readerBusy} onClick={() => readerAct('simulate', 'ok')} className="px-3 min-h-[34px] rounded-[7px] border border-line text-[13px] text-ink hover:bg-paper disabled:opacity-50">Simulate a tap</button>
+                            <button type="button" disabled={readerBusy} onClick={() => readerAct('simulate', 'declined')} className="px-3 min-h-[34px] rounded-[7px] border border-line text-[13px] text-ink hover:bg-paper disabled:opacity-50">Simulate a decline</button>
+                          </>}
+                        </div>
+                      </div>
+                    )}
                     {canTextLink && <button type="button" disabled={rowBusy === b.id} onClick={() => sendPayLink(b, 'sms')} className={row}><span>Text a pay link</span><span className="text-ink-muted">{rowBusy === b.id ? 'Sending…' : '›'}</span></button>}
                     {canEmailLink && <button type="button" disabled={rowBusy === b.id} onClick={() => sendPayLink(b)} className={row}><span>Email a pay link</span><span className="text-ink-muted">{rowBusy === b.id ? 'Sending…' : '›'}</span></button>}
                     {canAccount && (
@@ -1500,15 +1580,19 @@ function DashboardPageInner() {
                 {panelSlot.status !== 'blocked' && open > 0 && access.can('sheet.walkin') && selectedDate === today() && lateForAdding(panelSlot.time, nowHM) && (
                   <button onClick={() => { setWalkInLate(true); setWalkInSlot(panelSlot); }} className="px-3.5 min-h-[36px] rounded-md border border-line text-[13px] font-medium text-ink hover:bg-paper">Add a walk-in who already played</button>
                 )}
-                {access.can('sheet.block') && !panelSlot.event && (
-                  <button onClick={() => toggleBlock(panelSlot)} disabled={slotBusy === panelSlot.id} className="px-3.5 min-h-[36px] rounded-md border border-line text-[13px] font-medium text-ink hover:bg-paper disabled:opacity-50">
-                    {slotBusy === panelSlot.id ? '…' : panelSlot.status === 'blocked' ? 'Unblock' : 'Block this time'}
-                  </button>
-                )}
-                {access.can('sheet.block') && !panelSlot.event && panelSlot.status !== 'blocked' && !past && (
-                  <button onClick={() => toggleStaffOnly(panelSlot)} disabled={slotBusy === panelSlot.id} className="px-3.5 min-h-[36px] rounded-md border border-line text-[13px] font-medium text-ink hover:bg-paper disabled:opacity-50">
-                    {panelSlot.staffOnly ? 'Open online' : 'Keep for staff'}
-                  </button>
+                {/* A full time has no open seats to decide about; a closed one still shows, so it can be reopened. */}
+                {access.can('sheet.block') && !panelSlot.event && !past && (open > 0 || panelSlot.status === 'blocked') && (
+                  <div className="w-full flex flex-wrap items-center gap-x-3 gap-y-1.5" role="radiogroup" aria-label="Who can book the open seats">
+                    <span className="text-[13px] text-ink-soft">Who can book the {open > 0 ? `${open} open seat${open === 1 ? '' : 's'}` : 'open seats'}</span>
+                    <div className="inline-flex rounded-[7px] border border-line overflow-hidden">
+                      {([['anyone', 'Anyone'], ['counter', 'Counter only'], ['none', 'No one']] as const).map(([k, l]) => (
+                        <button key={k} type="button" role="radio" aria-checked={seatAccessOf(panelSlot) === k} disabled={slotBusy === panelSlot.id}
+                          onClick={() => setSeatAccess(panelSlot, k)}
+                          className={'px-3 min-h-[34px] text-[13px] font-medium border-l border-line first:border-l-0 disabled:opacity-50 ' + (seatAccessOf(panelSlot) === k ? 'bg-pine text-white' : 'text-ink hover:bg-paper')}>{l}</button>
+                      ))}
+                    </div>
+                    {seatAccessOf(panelSlot) !== 'anyone' && (panelSlot.bookings ?? []).some(b => b.status !== 'cancelled') && <span className="text-[12.5px] text-ink-muted">Booked groups stay.</span>}
+                  </div>
                 )}
                 {/* Cam 2026-11-06: never offered while a group is on the time (the route refuses it too). */}
                 {access.can('sheet.edit_times') && !past && !panelSlot.event && !(panelSlot.bookings ?? []).length && (
@@ -1981,7 +2065,7 @@ function AddTeeTimeForm({ date, dayTimes, canPrice, onSave, onCancel }: { date: 
         </>
       ) : <p className="text-[13px] text-ink-soft">Schedule price</p>}
       <div role="radiogroup" aria-label="Who can book it" className="grid grid-cols-2 gap-1 p-1 bg-paper rounded-md">
-        {([[true, 'Open online'], [false, 'Keep for staff']] as const).map(([v, l]) => (
+        {([[true, 'Anyone'], [false, 'Counter only']] as const).map(([v, l]) => (
           <button key={l} type="button" role="radio" aria-checked={online === v} onClick={() => setOnline(v)}
             className={'py-1.5 rounded-md text-[13px] font-semibold transition-colors ' + (online === v ? 'bg-white text-ink shadow-card' : 'text-ink-muted hover:text-ink')}>{l}</button>
         ))}

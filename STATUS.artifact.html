@@ -117,14 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-11-06 21:50 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ e3d8b62e</span>
-    <span>30 uncommitted</span>
+    <span>2026-11-06 22:05 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 8e9f3b97</span>
+    <span>13 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">138 runs have shipped that the queue doesn't know about</div>
+<div class="lede">140 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-31. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">de19b14e</span><span>Carts: per player or per cart (2 riders), set in Settings (#332)</span></li>
+<li><span class="h">fe626db0</span><span>Carts: per player or per cart (2 riders), set by the owner in Settings</span></li>
 <li><span class="h">ba23e030</span><span>Tee sheet: a Square-style Charge screen, and one &quot;Paying now&quot; control (#331)</span></li>
 <li><span class="h">d9f007fa</span><span>Tee sheet: a Square-style Charge screen, and one &quot;Paying now&quot; control</span></li>
 <li><span class="h">54cc0d80</span><span>Tee sheet: the group card asks how they're paying, then one button that says what it does (#330)</span></li>
@@ -275,7 +277,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>A prisma/migrations/20261106010000_cart_pricing/migration.sql</code></li><li><code>M prisma/schema.prisma</code></li><li><code>A scripts/cart-pricing-db-test.ts</code></li><li><code>A scripts/cart-pricing-test.ts</code></li><li><code>M scripts/checkout-card-test.ts</code></li><li><code>M scripts/split-booking-db-test.ts</code></li><li><code>M scripts/words-guard.baseline.json</code></li><li><code>M src/app/api/admin/tee-sheet/route.ts</code></li><li><code>M src/app/api/bookings/route.ts</code></li><li><code>M src/app/api/manage/[bookingId]/route.ts</code></li><li><code>M src/app/api/operator/settings/route.ts</code></li><li><code>M src/app/api/operator/shop-sales/rounds/route.ts</code></li><li><code>M src/app/book/BookClient.tsx</code></li><li><code>M src/app/courses/[slug]/CourseBookingClient.tsx</code></li><li><code>M src/app/dashboard/page.tsx</code></li><li><code>M src/app/dashboard/schedules/page.tsx</code></li><li><code>M src/app/dashboard/settings/page.tsx</code></li><li><code>M src/app/dashboard/shop/page.tsx</code></li></ul>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/add-tee-time-test.ts</code></li><li><code>M scripts/cash-at-counter-db-test.ts</code></li><li><code>M scripts/checkout-card-test.ts</code></li><li><code>M scripts/group-card-checkout-test.ts</code></li><li><code>M scripts/teesheet-till-test.ts</code></li><li><code>M scripts/tt-card-test.ts</code></li><li><code>M scripts/words-guard.baseline.json</code></li><li><code>M src/app/dashboard/page.tsx</code></li><li><code>M src/components/home/TeeSheetDemo.tsx</code></li><li><code>M src/lib/booking-status.ts</code></li><li><code>M src/lib/checkin-booking.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -322,7 +324,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-20 &middot; 16d</td></tr>
 <tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-25 &middot; 11d</td></tr>
 <tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-26 &middot; 11d</td></tr>
-<tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 13d</td></tr>
+<tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 14d</td></tr>
 <tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 14d</td></tr>
 <tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 15d</td></tr>
 <tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 15d</td></tr>
@@ -357,6 +359,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 16d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">de19b14e</td><td class="num">2026-11-06</td><td>Carts: per player or per cart (2 riders), set in Settings (#332)</td></tr>
+<tr><td class="num">fe626db0</td><td class="num">2026-11-06</td><td>Carts: per player or per cart (2 riders), set by the owner in Settings</td></tr>
 <tr><td class="num">ba23e030</td><td class="num">2026-11-06</td><td>Tee sheet: a Square-style Charge screen, and one &quot;Paying now&quot; control (#331)</td></tr>
 <tr><td class="num">d9f007fa</td><td class="num">2026-11-06</td><td>Tee sheet: a Square-style Charge screen, and one &quot;Paying now&quot; control</td></tr>
 <tr><td class="num">54cc0d80</td><td class="num">2026-11-05</td><td>Tee sheet: the group card asks how they're paying, then one button that says what it does (#330)</td></tr>
@@ -367,8 +371,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">c146bfe6</td><td class="num">2026-11-06</td><td>Tee sheet: Message golfers by email, text or both, with ready-made messages and a preview</td></tr>
 <tr><td class="num">2bea8fe8</td><td class="num">2026-11-05</td><td>Tee sheet: a cleaner weather window that updates as you pick the times (#328)</td></tr>
 <tr><td class="num">97875d10</td><td class="num">2026-11-06</td><td>Tee sheet: a cleaner weather window that updates as you pick the times</td></tr>
-<tr><td class="num">e2a8f2f7</td><td class="num">2026-11-05</td><td>Tee sheet: Add tee time from the day's prices, keep a time for staff, safer Block and Delete (#327)</td></tr>
-<tr><td class="num">60b0470c</td><td class="num">2026-11-06</td><td>Test: the engine's delete pin includes the staff-only guard</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

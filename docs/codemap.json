@@ -8943,7 +8943,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 2070,
+      "lines": 2154,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -12762,7 +12762,7 @@
     },
     {
       "path": "src/components/home/TeeSheetDemo.tsx",
-      "lines": 321,
+      "lines": 322,
       "purpose": "HOME-2 (HOMEPAGE_SPEC.md, Cam 2026-10-07:",
       "brain": [],
       "exports": [
@@ -15660,7 +15660,7 @@
     },
     {
       "path": "src/lib/booking-status.ts",
-      "lines": 78,
+      "lines": 79,
       "purpose": "Single source of truth for what to show a user (operator, staff, or golfer) given a booking's current status + paymentStatus pair.",
       "brain": [],
       "exports": [

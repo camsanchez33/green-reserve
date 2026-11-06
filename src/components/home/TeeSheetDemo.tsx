@@ -89,7 +89,7 @@ type Tone = 'ok' | 'warn';
 const toneOf = (g: Group): Tone => g.done ? 'ok' : 'warn';
 /** getBookingStatus() labels, as the panel shows them. The demo course takes no
  *  card (the phone says so), so an online booking is "No Card Required". */
-const statusOf = (g: Group) => g.done ? (g.src === 'online' ? 'Checked In & Paid' : 'Checked In · Paid at the register') : g.src === 'online' ? 'No Card Required' : 'Pays in store';
+const statusOf = (g: Group) => g.done ? (g.src === 'online' ? 'Checked In & Paid' : 'Checked In · Paid at the register') : g.src === 'online' ? 'No Card Required' : 'No card saved';
 const hourOf = (t: string) => Number(t.slice(0, 2));
 const hourLabel = (h: number) => `${h % 12 || 12} ${h >= 12 ? 'PM' : 'AM'}`;
 
@@ -189,7 +189,8 @@ function TeeSheet() {
               setRow(panel.t, r => ({ ...r, groups: [...r.groups, { name: 'Dana Price', n: 1, src: 'walk_in' as Src }] }));
               toast('Dana Price added.');
             }}>Add a walk-in or phone booking</button>}
-            {!panel.groups.length && <button type="button" className={s.wk} onClick={() => setRow(panel.t, r => ({ ...r, blocked: !r.blocked }))}>{panel.blocked ? 'Unblock' : 'Block this time'}</button>}
+            {/* Mirrors the dashboard card's "Who can book the open seats" (Cam 2026-11-06): Anyone · No one here. */}
+            {(booked(panel) < CAP || panel.blocked) && <button type="button" className={s.wk} onClick={() => setRow(panel.t, r => ({ ...r, blocked: !r.blocked }))}>{panel.blocked ? 'Open to anyone' : 'Close to new bookings'}</button>}
           </div>
         </div>
       )}

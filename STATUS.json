@@ -1,36 +1,43 @@
 {
-  "generatedAt": "2026-11-06T21:50:52.050Z",
+  "generatedAt": "2026-11-06T22:05:05.760Z",
   "repo": {
-    "head": "e3d8b62e",
+    "head": "8e9f3b97",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 30,
+    "dirtyCount": 13,
     "dirty": [
       "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " A prisma/migrations/20261106010000_cart_pricing/migration.sql",
-      " M prisma/schema.prisma",
-      " A scripts/cart-pricing-db-test.ts",
-      " A scripts/cart-pricing-test.ts",
+      " M scripts/add-tee-time-test.ts",
+      " M scripts/cash-at-counter-db-test.ts",
       " M scripts/checkout-card-test.ts",
-      " M scripts/split-booking-db-test.ts",
+      " M scripts/group-card-checkout-test.ts",
+      " M scripts/teesheet-till-test.ts",
+      " M scripts/tt-card-test.ts",
       " M scripts/words-guard.baseline.json",
-      " M src/app/api/admin/tee-sheet/route.ts",
-      " M src/app/api/bookings/route.ts",
-      " M src/app/api/manage/[bookingId]/route.ts",
-      " M src/app/api/operator/settings/route.ts",
-      " M src/app/api/operator/shop-sales/rounds/route.ts",
-      " M src/app/book/BookClient.tsx",
-      " M src/app/courses/[slug]/CourseBookingClient.tsx",
       " M src/app/dashboard/page.tsx",
-      " M src/app/dashboard/schedules/page.tsx",
-      " M src/app/dashboard/settings/page.tsx",
-      " M src/app/dashboard/shop/page.tsx"
+      " M src/components/home/TeeSheetDemo.tsx",
+      " M src/lib/booking-status.ts",
+      " M src/lib/checkin-booking.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "de19b14e",
+        "date": "2026-11-06T16:59:06-05:00",
+        "subject": "Carts: per player or per cart (2 riders), set in Settings (#332)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "fe626db0",
+        "date": "2026-11-06T21:50:55+00:00",
+        "subject": "Carts: per player or per cart (2 riders), set by the owner in Settings",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "ba23e030",
         "date": "2026-11-06T13:55:09-05:00",
@@ -1196,7 +1203,7 @@
       "file": "ADMIN_V5_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-23",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "HOMEPAGE_SPEC.md",
@@ -1394,6 +1401,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "de19b14e",
+      "date": "2026-11-06",
+      "subject": "Carts: per player or per cart (2 riders), set in Settings (#332)"
+    },
+    {
+      "h": "fe626db0",
+      "date": "2026-11-06",
+      "subject": "Carts: per player or per cart (2 riders), set by the owner in Settings"
+    },
+    {
       "h": "ba23e030",
       "date": "2026-11-06",
       "subject": "Tee sheet: a Square-style Charge screen, and one \"Paying now\" control (#331)"
@@ -1442,16 +1459,6 @@
       "h": "97875d10",
       "date": "2026-11-06",
       "subject": "Tee sheet: a cleaner weather window that updates as you pick the times"
-    },
-    {
-      "h": "e2a8f2f7",
-      "date": "2026-11-05",
-      "subject": "Tee sheet: Add tee time from the day's prices, keep a time for staff, safer Block and Delete (#327)"
-    },
-    {
-      "h": "60b0470c",
-      "date": "2026-11-06",
-      "subject": "Test: the engine's delete pin includes the staff-only guard"
     }
   ]
 }
