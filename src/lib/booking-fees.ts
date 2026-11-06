@@ -51,3 +51,13 @@ export const FEE_AT_BOOKING_ON = false;
 export function feeCoveredCents(b: { accessFeeTotal: number; feePaidCents?: number | null }): number {
   return Math.max(0, Math.min(Math.round(b.feePaidCents ?? 0), Math.round(b.accessFeeTotal)));
 }
+
+/**
+ * What the round's card charge takes: the round, its shop items, their fee and
+ * (W2-7 B2) the sales tax on them. `shopTaxCents` is required in the type so a
+ * caller that forgets to load it is a compile error, not a charge without tax.
+ */
+export function roundChargeCents(b: { totalAmount: number; shopTotalCents?: number | null; shopFeeCents?: number | null; shopTaxCents: number | null | undefined; accessFeeTotal?: number; feePaidCents?: number | null }): number {
+  // FEE-AT-BOOKING: the part of GreenReserve's fee already taken when they booked is not charged again.
+  return Math.round(b.totalAmount) + (b.shopTotalCents ?? 0) + (b.shopFeeCents ?? 0) + (b.shopTaxCents ?? 0) - feeCoveredCents({ accessFeeTotal: b.accessFeeTotal ?? 0, feePaidCents: b.feePaidCents });
+}

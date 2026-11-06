@@ -1,4 +1,5 @@
 'use client';
+import { onCourse } from '@/lib/on-course';
 import SmsConsentAsk, { SmsConsentDialog } from '@/components/dashboard/SmsConsentAsk';
 import { SMS_NO_CONSENT_STAFF } from '@/lib/sms-consent-copy';
 import { PackHolderPick, PACK_RATE } from '@/components/dashboard/RegisterPacks';
@@ -706,6 +707,7 @@ function DashboardPageInner() {
     return () => { clearInterval(i); document.removeEventListener('visibilitychange', tick); };
   }, [loadTimes, selectedDate]);
   const nowHM = clockIn(courseTz); // SD-3: the course's clock, not the browser's
+  const onCourseNow = onCourse(teeTimes, today(), nowHM);
   // B-8: a group is late when its tee time went off 10+ minutes ago today and
   // nobody in it is checked in. Read straight off the sheet already loaded.
   const nowMin = Number(nowHM.slice(0, 2)) * 60 + Number(nowHM.slice(3, 5)); // the course's clock, like nowHM
@@ -1202,7 +1204,12 @@ function DashboardPageInner() {
                 // moves up from under the sheet): every number the same shape — label, value, one line under it — spread across the row.
                 <div className={CARD + ' grid grid-cols-2 sm:grid-cols-3 ' + (dayMoney && dayMoney.date === selectedDate ? 'lg:grid-cols-5' : 'lg:grid-cols-3') + ' mb-4'} role="group" aria-label="The day">
                   <div className="px-4 py-3"><div className="text-[12.5px] text-ink-soft">Players</div><div className="text-[20px] font-semibold text-ink tabular-nums leading-tight">{livePlayers}<span className="text-[13px] font-normal text-ink-muted"> of {spotsOffered}</span></div><div className="text-[12px] text-ink-muted">spots booked</div></div>
-                  <div className="px-4 py-3"><div className="text-[12.5px] text-ink-soft">Times booked</div><div className="text-[20px] font-semibold text-ink tabular-nums leading-tight">{timesBooked}<span className="text-[13px] font-normal text-ink-muted"> of {teeTimes.filter(x => x.status !== 'blocked').length}</span></div><div className="text-[12px] text-ink-muted tabular-nums">{dayGroups} {dayGroups === 1 ? 'group' : 'groups'}</div></div>
+                  {/* ONCOURSE-1 (Cam 2026-11-06, "rounds on the course now"): today, who is out playing; another day, the groups booked. */}
+                  {selectedDate === today() ? (
+                    <div className="px-4 py-3"><div className="text-[12.5px] text-ink-soft">On the course</div><div className="text-[20px] font-semibold text-ink tabular-nums leading-tight">{onCourseNow.groups}<span className="text-[13px] font-normal text-ink-muted"> {onCourseNow.groups === 1 ? 'group' : 'groups'}</span></div><div className="text-[12px] text-ink-muted tabular-nums">{onCourseNow.players} {onCourseNow.players === 1 ? 'player' : 'players'}</div></div>
+                  ) : (
+                    <div className="px-4 py-3"><div className="text-[12.5px] text-ink-soft">Groups booked</div><div className="text-[20px] font-semibold text-ink tabular-nums leading-tight">{dayGroups}</div><div className="text-[12px] text-ink-muted tabular-nums">on {timesBooked} of {teeTimes.filter(x => x.status !== 'blocked').length} tee times</div></div>
+                  )}
                   <div className="px-4 py-3"><div className="text-[12.5px] text-ink-soft">Checked in</div><div className="text-[20px] font-semibold text-ink tabular-nums leading-tight">{checkedInPlayers}<span className="text-[13px] font-normal text-ink-muted"> of {livePlayers}</span></div><div className="text-[12px] text-ink-muted">players</div></div>
                   {dayMoney && dayMoney.date === selectedDate && (<>
                     <div className="px-4 py-3"><div className="text-[12.5px] text-ink-soft">Paid</div><div className="text-[20px] font-semibold text-ink tabular-nums leading-tight">${(dayMoney.paidCents / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}</div><div className="text-[12px] text-ink-muted tabular-nums">{dayMoney.paidGroups} {dayMoney.paidGroups === 1 ? 'group' : 'groups'}</div></div>
@@ -1250,8 +1257,10 @@ function DashboardPageInner() {
                     <label className="sr-only" htmlFor="sheet-search">Find golfer</label>
                     <div className="relative">
                       <Search aria-hidden="true" className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ink-faint pointer-events-none" />
-                      <input id="sheet-search" type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Find golfer"
-                        className="w-32 sm:w-56 bg-paper rounded-md pl-8 pr-2.5 py-1.5 text-[13px] text-ink placeholder-ink-faint border border-transparent focus:bg-white focus:border-pine/40 focus:ring-2 focus:ring-pine/10 outline-none transition-colors"/>
+                      <input id="sheet-search" type="search" value={sheetView === 'calendar' ? '' : search} onChange={e => setSearch(e.target.value)}
+                        // Search reads one day's sheet; the month has nothing to search (Cam 2026-11-06).
+                        disabled={sheetView === 'calendar'} placeholder={sheetView === 'calendar' ? 'Pick a day to search' : 'Find golfer'}
+                        className="w-32 sm:w-56 disabled:opacity-70 disabled:cursor-not-allowed bg-paper rounded-md pl-8 pr-2.5 py-1.5 text-[13px] text-ink placeholder-ink-faint border border-transparent focus:bg-white focus:border-pine/40 focus:ring-2 focus:ring-pine/10 outline-none transition-colors"/>
                     </div>
                     <button onClick={() => loadTimes(selectedDate)} aria-label="Refresh the sheet" title="Refresh the sheet"
                       className="w-8 h-8 rounded-md inline-flex items-center justify-center text-[16px] leading-none text-ink-muted hover:text-ink hover:bg-paper transition-colors">

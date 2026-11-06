@@ -11,7 +11,7 @@
 // reads these two helpers instead of totalAmount / accessFeeTotal alone.
 import { prisma } from './prisma';
 import type { Prisma } from '@prisma/client';
-import { SHOP_SALE_FEE_CENTS, SHOP_FEE_ON, feeCoveredCents } from './booking-fees';
+import { SHOP_SALE_FEE_CENTS, SHOP_FEE_ON, feeCoveredCents, roundChargeCents } from './booking-fees';
 
 export { SHOP_SALE_FEE_CENTS, SHOP_FEE_ON };
 export const MAX_ITEM_PRICE_CENTS = 1_000_000; // $10,000 — a typo guard, not a business rule
@@ -24,15 +24,8 @@ export function shopFeeFor(shopTotalCents: number, on: boolean = SHOP_FEE_ON): n
   return on && shopTotalCents > 0 ? SHOP_SALE_FEE_CENTS : 0;
 }
 
-/**
- * What the round's card charge takes: the round, its shop items, their fee and
- * (W2-7 B2) the sales tax on them. `shopTaxCents` is required in the type so a
- * caller that forgets to load it is a compile error, not a charge without tax.
- */
-export function roundChargeCents(b: { totalAmount: number; shopTotalCents?: number | null; shopFeeCents?: number | null; shopTaxCents: number | null | undefined; accessFeeTotal?: number; feePaidCents?: number | null }): number {
-  // FEE-AT-BOOKING: the part of GreenReserve's fee already taken when they booked is not charged again.
-  return Math.round(b.totalAmount) + (b.shopTotalCents ?? 0) + (b.shopFeeCents ?? 0) + (b.shopTaxCents ?? 0) - feeCoveredCents({ accessFeeTotal: b.accessFeeTotal ?? 0, feePaidCents: b.feePaidCents });
-}
+// roundChargeCents moved to ./booking-fees (no Prisma) so the tee sheet's List can show the same figure (LIST-2).
+export { roundChargeCents };
 
 /** What the round's card charge actually took — the stored PaymentIntent amount
  *  when there is one (refunds and receipts cap against this), else the computed total. */
