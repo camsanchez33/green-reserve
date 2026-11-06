@@ -1,4 +1,6 @@
 export type Course = {
+  /** CART-2: 'per_cart' = the cart price is one cart for two riders (lib/cart-pricing). */
+  cart_pricing?: 'per_player' | 'per_cart';
   /** PRICE-3: the course sells round packs online (lib/public-course). */
   sells_packs?: boolean;
   /** MEM-JOIN: the course offers memberships to join online (lib/public-course). */

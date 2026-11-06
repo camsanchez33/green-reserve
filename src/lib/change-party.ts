@@ -18,6 +18,7 @@ import { recordBookingEvent, teeTimeInstant, type EventActor } from './booking-e
 import { isPastIn } from './course-time';
 import { groupGreenFee, otherPerPlayerCents } from './residents';
 import { partyFees } from './member-rates';
+import { resizeCart } from './cart-pricing';
 import { rulesFor, groupSizeError } from './booking-rules';
 import { refundBookingFee } from './booking-fee';
 import { giveBack } from './round-packs';
@@ -30,7 +31,7 @@ export async function changePartySize(bookingId: string, newPlayers: number, who
         where: { id: bookingId },
         select: {
           id: true, courseId: true, checkInToken: true, golferAccountId: true, teeTimeId: true, players: true,
-          status: true, cartSelected: true, rangeBallsTotal: true,
+          status: true, cartSelected: true, cartUnitCents: true, cartRiders: true, rangeBallsTotal: true,
           greenFeeTotal: true, cartFeeTotal: true, accessFeeTotal: true, residentPlayers: true, residentRateCents: true, memberRateCents: true, memberCartCents: true,
           cancellationFeeTotal: true, noShowFeeTotal: true, cancellationHoursAtBooking: true,
           paymentStatus: true, roundPaymentIntentId: true, shopLockedAt: true, readerStartedAt: true, feePaidCents: true, noShowAt: true, appliedRate: true, packLineId: true, packRounds: true,
@@ -95,7 +96,9 @@ export async function changePartySize(bookingId: string, newPlayers: number, who
         : null;
       const fees = partyFees({ ...booking, cartFeeTotal: booking.cartSelected ? booking.cartFeeTotal : 0 }, newPlayers, booking.teeTime);
       const greenFeeTotal = fees.greenFeeTotal;
-      const cartFeeTotal = fees.cartFeeTotal;
+      // CART-2: a per-cart booking re-counts its carts (riders follow the players) at its own cart price.
+      const cartResized = resizeCart(booking, newPlayers);
+      const cartFeeTotal = cartResized ? cartResized.cartFeeTotal : fees.cartFeeTotal;
       const accessFeeTotal = perPlayerAccess * newPlayers;
       const totalAmount = greenFeeTotal + cartFeeTotal + Math.round(booking.rangeBallsTotal) + accessFeeTotal;
 
@@ -108,7 +111,7 @@ export async function changePartySize(bookingId: string, newPlayers: number, who
       await tx.booking.update({
         where: { id: bookingId },
         data: {
-          players: newPlayers, greenFeeTotal, cartFeeTotal, ...(packBack > 0 ? { packRounds: booking.packRounds - packBack } : {}),
+          players: newPlayers, greenFeeTotal, cartFeeTotal, ...(cartResized ? { cartRiders: cartResized.cartRiders } : {}), ...(packBack > 0 ? { packRounds: booking.packRounds - packBack } : {}),
           ...(res ? { residentPlayers: res.residentPlayers, residentRateCents: res.residentRateCents } : {}), accessFeeTotal, totalAmount, cancellationFeeTotal, noShowFeeTotal,
           ...(who.by === 'golfer' ? { termsAcceptedAt: new Date(), termsVersion: CURRENT_TERMS_VERSION } : {}),
         },

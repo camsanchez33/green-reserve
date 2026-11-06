@@ -1,24 +1,50 @@
 {
-  "generatedAt": "2026-11-06T18:40:54.495Z",
+  "generatedAt": "2026-11-06T21:50:52.050Z",
   "repo": {
-    "head": "e2f573f0",
+    "head": "e3d8b62e",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 8,
+    "dirtyCount": 30,
     "dirty": [
       "M docs/CODEMAP.md",
       " M docs/codemap.json",
+      " A prisma/migrations/20261106010000_cart_pricing/migration.sql",
+      " M prisma/schema.prisma",
+      " A scripts/cart-pricing-db-test.ts",
+      " A scripts/cart-pricing-test.ts",
       " M scripts/checkout-card-test.ts",
-      " M scripts/group-card-checkout-test.ts",
       " M scripts/split-booking-db-test.ts",
-      " M scripts/teesheet-till-test.ts",
       " M scripts/words-guard.baseline.json",
-      " M src/app/dashboard/page.tsx"
+      " M src/app/api/admin/tee-sheet/route.ts",
+      " M src/app/api/bookings/route.ts",
+      " M src/app/api/manage/[bookingId]/route.ts",
+      " M src/app/api/operator/settings/route.ts",
+      " M src/app/api/operator/shop-sales/rounds/route.ts",
+      " M src/app/book/BookClient.tsx",
+      " M src/app/courses/[slug]/CourseBookingClient.tsx",
+      " M src/app/dashboard/page.tsx",
+      " M src/app/dashboard/schedules/page.tsx",
+      " M src/app/dashboard/settings/page.tsx",
+      " M src/app/dashboard/shop/page.tsx"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "ba23e030",
+        "date": "2026-11-06T13:55:09-05:00",
+        "subject": "Tee sheet: a Square-style Charge screen, and one \"Paying now\" control (#331)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "d9f007fa",
+        "date": "2026-11-06T18:40:57+00:00",
+        "subject": "Tee sheet: a Square-style Charge screen, and one \"Paying now\" control",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "54cc0d80",
         "date": "2026-11-05T23:55:18-05:00",
@@ -1155,15 +1181,15 @@
       "ageDays": 16
     },
     {
-      "file": "STAFF_POLICY_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-26",
-      "ageDays": 10
-    },
-    {
       "file": "OPERATOR_REWORK_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-25",
+      "ageDays": 11
+    },
+    {
+      "file": "STAFF_POLICY_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-26",
       "ageDays": 11
     },
     {
@@ -1173,46 +1199,46 @@
       "ageDays": 13
     },
     {
-      "file": "AGREEMENT_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-22",
-      "ageDays": 14
-    },
-    {
-      "file": "CALL_SCHEDULING_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-22",
-      "ageDays": 14
-    },
-    {
       "file": "HOMEPAGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-23",
       "ageDays": 14
     },
     {
+      "file": "AGREEMENT_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 15
+    },
+    {
+      "file": "CALL_SCHEDULING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 15
+    },
+    {
       "file": "ONBOARDING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "ONBOARDING_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "PUBLIC_SITE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "RECEIPT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "ADMIN_MASTER_PLAN.md",
@@ -1368,6 +1394,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "ba23e030",
+      "date": "2026-11-06",
+      "subject": "Tee sheet: a Square-style Charge screen, and one \"Paying now\" control (#331)"
+    },
+    {
+      "h": "d9f007fa",
+      "date": "2026-11-06",
+      "subject": "Tee sheet: a Square-style Charge screen, and one \"Paying now\" control"
+    },
+    {
       "h": "54cc0d80",
       "date": "2026-11-05",
       "subject": "Tee sheet: the group card asks how they're paying, then one button that says what it does (#330)"
@@ -1416,16 +1452,6 @@
       "h": "60b0470c",
       "date": "2026-11-06",
       "subject": "Test: the engine's delete pin includes the staff-only guard"
-    },
-    {
-      "h": "ff613483",
-      "date": "2026-11-06",
-      "subject": "Tee sheet: Add tee time from the day's prices, keep a time for staff, safer Block and Delete"
-    },
-    {
-      "h": "c5f4ba4b",
-      "date": "2026-11-05",
-      "subject": "Tee sheet: On the course, a fuller List, a Calendar that says why (#326)"
     }
   ]
 }

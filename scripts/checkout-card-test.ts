@@ -1,6 +1,7 @@
 // CHECKOUT-1/2 (Cam 2026-11-06, the tee sheet's group card: "clean, more POS like" — after Square's Charge screen;
 // "it shouldn't have a pay separately button when they can adjust how many people are paying"): one "Paying now"
-// stepper, and when it's short, "The other N: Pays on their own now · Coming later"; a receipt and the total; ONE
+// stepper — who isn't paying now stays booked as their own group, paid next (Cam 2026-11-06: no choice for them, "no need
+// for this"); a receipt and the total; ONE
 // Charge button that opens the payment screen — the amount, a Cash row with one-tap amounts (exact, the next $20 /
 // $50 / $100, Custom) and one row per other way to pay. Every way keeps exactly its old permission and condition,
 // and charges exactly cardDue / cashDue, the figures the server charges.
@@ -14,8 +15,8 @@ const route = readFileSync('src/app/api/operator/bookings/route.ts', 'utf8');
 const sales = readFileSync('src/lib/shop-sales.ts', 'utf8');
 
 ok('one "Paying now" stepper; Pay separately is gone', page.includes('<span className="text-[13px] font-medium text-ink">Paying now</span>') && !page.includes('>Pay separately</button>') && !page.includes('>Showed up</span>'));
-ok('short of the group: the rest pay on their own now or come later', page.includes("[['own', 'Pays on their own now'], ['later', restSplit ? 'Coming later' : 'Not charged']]") && page.includes("disabled={k === 'own' && !canSplit}"));
-ok('"Pays on their own now" splits them off first, then the booker pays', page.includes("if (rest > 0 && mode === 'own') {") && page.includes("if (!(await splitOff(b, rest, '', false))) return;") && page.includes('setPaySheet(b.id);'));
+ok('short of the group: no choice for the rest — they stay booked (only a group that can\'t split is told they won\'t be charged)', !page.includes('Pays on their own now') && !page.includes('restMode') && page.includes('{rest > 0 && !restSplit && <p className="text-[12.5px] text-warn">The other {rest} won’t be charged.</p>}'));
+ok('Charge opens the payment screen; the server splits the rest off as it charges (PARTIAL-1)', page.includes('const charge = () => setPaySheet(b.id);'));
 ok('one Charge button with the card total', page.includes("`Charge${showMoney ? ` $${(cardDue / 100).toFixed(2)}` : ''}`"));
 ok('the ways keep their old permissions', page.includes("const cardOk = b.status !== 'completed' && b.status !== 'cancelled' && b.paymentStatus !== 'manual' && access.can('sheet.checkin');")
   && page.includes("const cashOk = canCash || (b.status === 'confirmed' && b.paymentStatus === 'manual' && access.can('sheet.counter_payment'));")
@@ -35,7 +36,7 @@ ok("the time's header names the round once", page.includes('{roundName(panelSlot
 ok('"Pays in store" stands alone', page.includes("b.paymentStatus !== 'manual' && <span className=\"text-ink-muted\"> · {bStatus.sublabel}</span>"));
 ok('no reader: owners get the link, staff are told', page.includes('>Connect a card reader</Link>') && page.includes('No card reader connected'));
 
-ok('review: a refused split never goes on to charge', page.includes("if (!(await splitOff(b, rest, '', false))) return;") && page.includes('async function splitOff(b: Booking, n: number, name: string, thenCash: boolean): Promise<boolean>'));
+ok('no split happens in the browser before a charge (nothing to half-finish)', !page.includes('async function splitOff('));
 ok('review: the payment screen only for a group that still pays, and closes with the card', page.includes('const sheetOpen = paySheet === b.id && anyWay && unpaid && !prepaid;') && page.includes('useEffect(() => { setPaySheet(null); setMoreFor(null); }, [panelId]);'));
 ok('review: no ruled box inside the card', page.includes('<div className="mt-3 rounded-[7px] bg-paper/70">') && !page.includes('rounded-[10px] border border-line bg-white'));
 

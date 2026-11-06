@@ -62,6 +62,9 @@ model Course {
   walkingAllowed             String                @default("always")
   walkingNote                String                @default("")
   cartRequired               Boolean               @default(false)
+  /// CART-2 (Cam 2026-11-06): how a cart is charged — 'per_player' (each rider) or 'per_cart' (the schedule's cart
+  /// price is a cart for two; riders round up: 3 = 2 carts). lib/cart-pricing. Copied onto each booking (cartUnitCents).
+  cartPricing                String                @default("per_player")
   dresscode                  String[]
   minPlayers                 Int                   @default(1)
   maxPlayers                 Int                   @default(4)
@@ -734,6 +737,10 @@ model Booking {
   /// player in the group pays the same (no member, or the tier includes guests).
   memberRateCents            Int?
   memberCartCents            Int?
+  /// CART-2: set only on a booking made under a per-cart rule — the price of one cart, kept as booked; null = per player.
+  cartUnitCents              Int?
+  /// CART-2: the riders who pay for a cart (per cart: carts = riders / 2, rounded up); null = per player.
+  cartRiders                 Int?
   createdAt                  DateTime          @default(now())
   /// PARTIAL-1 (Cam 2026-11-04): the booking this one was split off — the players of a group still
   /// on their way when the rest checked in (or who paid separately, SPLIT-1). The tee sheet shows

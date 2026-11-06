@@ -41,6 +41,8 @@ export async function PATCH(req: NextRequest) {
   const OWNER_ONLY_FIELDS = ['cancellationHours', 'checkInWindowHours', 'rainCheckPolicy', 'lateCancellationFee', 'lateFeeBasis', 'lateFeeTiming', 'noShowFee', 'noShowFeeBasis', 'autoNoShowMinutes', 'onlineBlockNoShows', 'onlineBlockLateCancels', 'onlineBlockMonths', 'twoFactorMethod', 'twoFactorPhone'];
   // Who gets a member rate at the counter is the owner's call, like the policy.
   if (session.isStaff && 'counterMemberRate' in body) return NextResponse.json({ error: 'Only the course owner can change who gets a member rate at the counter.' }, { status: 403 });
+  // CART-2: how carts are charged changes every price with a cart — the owner's call.
+  if (session.isStaff && 'cartPricing' in body) return NextResponse.json({ error: 'Only the course owner can change how carts are charged.' }, { status: 403 });
   if (session.isStaff && OWNER_ONLY_FIELDS.some(k => k in body)) {
     return NextResponse.json({ error: 'The cancellation policy can only be changed from the course owner’s login.' }, { status: 403 });
   }
@@ -60,7 +62,7 @@ export async function PATCH(req: NextRequest) {
     'holes','par','yardage','slope','courseRating','type',
     'hasMemberPricing','memberAdvanceDays','memberGraceDays','counterMemberRate',
     'hasResidentPricing','residentCounty','residentState','residentProofRequired',
-    'walkingAllowed','walkingNote','cartRequired',
+    'walkingAllowed','walkingNote','cartRequired','cartPricing',
     'cancellationHours','checkInWindowHours','rainCheckPolicy','publicAdvanceDays','timezone',
     // SP-B: the cancellation & card policy (money: noShowFee goes through courseMoneyFromWire below).
     'lateFeeBasis','lateFeeTiming','noShowFeeBasis','autoNoShowMinutes','onlineBlockNoShows','onlineBlockLateCancels','onlineBlockMonths',

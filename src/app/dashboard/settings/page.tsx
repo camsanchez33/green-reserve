@@ -65,7 +65,7 @@ const NO_SAVE_BUTTON: Section[] = ['Course layout', 'Pro shop', 'Staff', 'Your a
 // "Edit course settings" never sends these (the API refuses them too).
 // Cam 2026-10-26: the time zone (every clock on the sheet) and the course type
 // (private turns off online booking) are the owner's too.
-const POLICY_FIELDS = ['cancellationHours', 'lateCancellationFee', 'checkInWindowHours', 'rainCheckPolicy', 'lateFeeBasis', 'lateFeeTiming', 'noShowFee', 'noShowFeeBasis', 'autoNoShowMinutes', 'onlineBlockNoShows', 'onlineBlockLateCancels', 'onlineBlockMonths', 'counterMemberRate', 'timezone', 'type'];
+const POLICY_FIELDS = ['cancellationHours', 'lateCancellationFee', 'checkInWindowHours', 'rainCheckPolicy', 'lateFeeBasis', 'lateFeeTiming', 'noShowFee', 'noShowFeeBasis', 'autoNoShowMinutes', 'onlineBlockNoShows', 'onlineBlockLateCancels', 'onlineBlockMonths', 'counterMemberRate', 'cartPricing', 'timezone', 'type'];
 
 // SD-8: Save used to PATCH the WHOLE form, so saving a dress-code chip also
 // re-sent every facility toggle and every price — two people editing different
@@ -78,7 +78,7 @@ const SECTION_FIELDS: Record<Section, string[]> = {
   'Course layout': [],
   'Booking rules': [
     'timezone', 'publicAdvanceDays', 'memberAdvanceDays', 'memberGraceDays', 'counterMemberRate', 'minPlayers', 'maxPlayers', 'dresscode',
-    'walkingAllowed', 'walkingNote', 'cartRequired',
+    'walkingAllowed', 'walkingNote', 'cartRequired', 'cartPricing',
   ],
   'Prices & fees': [
     'hasMemberPricing', 'hasResidentPricing', 'residentCounty', 'residentState', 'residentProofRequired',
@@ -779,6 +779,13 @@ function SettingsPageInner() {
                   {/* CART-1 (Cam 2026-10-24): when golfers can walk is set per round and time, beside the cart price. */}
                   <p className="text-sm text-ink">When golfers can walk, and what a cart costs, is set for each round and time on{' '}
                     <Link href="/dashboard/schedules" className="text-pine underline underline-offset-2">Schedule → What it costs</Link>.</p>
+                  {/* CART-2 (Cam 2026-11-06): per player, or per cart of two riders (3 riders = 2 carts). The owner's call — it changes prices. */}
+                  <Field label="How carts are charged" hint={form.cartPricing === 'per_cart' ? '2 riders a cart, rounded up. Members too.' : 'Each rider pays.'}>
+                    <select value={(form.cartPricing as string) || 'per_player'} onChange={e=>set('cartPricing',e.target.value)} disabled={isStaffLogin} className={iCls}>
+                      <option value="per_player">Per player</option>
+                      <option value="per_cart">Per cart (2 riders)</option>
+                    </select>
+                  </Field>
                   <Field label="Anything else about walking or carts" hint="Optional, one sentence. Shown on your booking page.">
                     <FInput value={form.walkingNote as string} onChange={v=>set('walkingNote',v)} placeholder="e.g. Push carts are free at the pro shop." maxLength={500}/>
                   </Field>

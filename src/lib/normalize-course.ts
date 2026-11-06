@@ -61,6 +61,8 @@ export function normalizeDbCourse(c: any, startingGreenFee = 0) {
     // Deferred-payment booking flow (range balls / cancellation policy display)
     has_driving_range:       c.hasDrivingRange ?? false,
     range_balls_free:        c.rangeBallsFree ?? true,
+    // CART-2: 'per_cart' = the cart price is one cart for two riders.
+    cart_pricing:            c.cartPricing === 'per_cart' ? 'per_cart' : 'per_player',
     // MP-3 B2b — THE HOLE IN THE RENAME. This function takes `c: any`, so the
     // renamed columns did NOT produce a compile error here: the old names simply
     // read undefined and fell through to these defaults, which would have shown

@@ -11,6 +11,7 @@ import { ensureShopTax, recordRoundShopTax } from './round-shop-tax';
 import { noShowClosed, NO_SHOW_CLOSED_ERROR } from './no-show-fee';
 import { recordMove } from './money-ledger';
 import { holdRefundCents, hasShareToRefund, splitOffLateArrivals } from './split-booking-db';
+import { cartCharge, cartRuleOf } from './cart-pricing';
 
 /**
  * Charging a round, and checking a golfer in, are two different things.
@@ -98,7 +99,9 @@ export async function cartAddOnCentsFor(booking: {
   if (booking.paymentStatus === 'paid' && booking.roundPaymentIntentId) return 0;
   const standard = booking.teeTime.cartFeeCents;
   let perPlayer = standard;
-  const grace = (await prisma.course.findUnique({ where: { id: booking.courseId }, select: { memberGraceDays: true, timezone: true, hasMemberPricing: true } })) ?? { memberGraceDays: 0, hasMemberPricing: false };
+  const grace = (await prisma.course.findUnique({ where: { id: booking.courseId }, select: { memberGraceDays: true, timezone: true, hasMemberPricing: true, cartPricing: true } })) ?? { memberGraceDays: 0, hasMemberPricing: false, cartPricing: 'per_player' };
+  // CART-2: a per-cart course charges a cart per two riders at the time's cart price, members too.
+  if (cartRuleOf(grace.cartPricing) === 'per_cart') return cartCharge({ rule: 'per_cart', cart: true, players: booking.players, unitCents: standard, perPlayerTotal: 0 }).cartFeeTotal;
   // Membership resolves the way the booking route does (member-session.ts):
   // by golfer account OR by the invite email, so an invite-only member who has
   // not accepted yet still gets their rate. Scoped to THIS course.
@@ -145,7 +148,7 @@ async function chargeBooking(
     where: { id: bookingId },
     include: {
       teeTime: { select: { date: true, time: true, greenFeeCents: true, cartFeeCents: true } },
-      course: { select: { name: true, slug: true, address: true, city: true, state: true, stripeAccountId: true, stripeAccountActive: true, timezone: true } },
+      course: { select: { name: true, slug: true, address: true, city: true, state: true, stripeAccountId: true, stripeAccountActive: true, timezone: true, cartPricing: true } },
     },
   });
 
@@ -213,13 +216,15 @@ async function chargeBooking(
   // money moves, only when the tee time actually prices a cart. The booking's
   // own totals change first so the charge, the receipt and the ledger agree.
   let cartAddedCents = 0;
-  const preCart = { cartSelected: booking.cartSelected, cartFeeTotal: booking.cartFeeTotal, totalAmount: booking.totalAmount };
+  const preCart = { cartSelected: booking.cartSelected, cartFeeTotal: booking.cartFeeTotal, totalAmount: booking.totalAmount, cartUnitCents: booking.cartUnitCents, cartRiders: booking.cartRiders };
+  // CART-2: a cart added on a per-cart course is a per-cart cart — its price and riders go on the booking.
+  const addedCartRule = cartRuleOf(booking.course.cartPricing) === 'per_cart' ? { cartUnitCents: booking.teeTime.cartFeeCents, cartRiders: booking.players } : {};
   if (opts?.addCart && !alreadyPaid) {
     cartAddedCents = await cartAddOnCentsFor(booking);
     if (cartAddedCents > 0) {
       await prisma.booking.update({
         where: { id: bookingId },
-        data: { cartSelected: true, cartFeeTotal: cartAddedCents, totalAmount: booking.totalAmount + cartAddedCents },
+        data: { cartSelected: true, cartFeeTotal: cartAddedCents, totalAmount: booking.totalAmount + cartAddedCents, ...addedCartRule },
       });
       booking.cartSelected = true;
       booking.cartFeeTotal = cartAddedCents;
@@ -377,7 +382,7 @@ async function chargeBooking(
             console.error(JSON.stringify({ ev: `${ev}.charge.prior_amount_mismatch`, bookingId, priorAmount: prior.amount, base, cartAddedCents, shopExtra }));
           }
           const money = matchesCart
-            ? { cartSelected: true, cartFeeTotal: cartAddedCents, totalAmount: base + cartAddedCents }
+            ? { cartSelected: true, cartFeeTotal: cartAddedCents, totalAmount: base + cartAddedCents, ...addedCartRule }
             : matchesBase
               ? preCart
               : shopExtra > 0 ? {} : { totalAmount: prior.amount };

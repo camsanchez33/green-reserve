@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState, Suspense } from 'react';
 import { partyFees } from '@/lib/member-rates';
+import { cartsFor, resizeCart } from '@/lib/cart-pricing';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { XCircle, Loader2, Clock, Users, ArrowLeft } from 'lucide-react';
@@ -28,7 +29,7 @@ type BookingInfo = {
   rangeBallsTotal: number;
   accessFeeTotal: number;
   totalAmount: number;
-  party?: { residentPlayers: number; residentRateCents: number | null; memberRateCents: number | null; memberCartCents: number | null; publicGreenCents: number; publicCartCents: number };
+  party?: { residentPlayers: number; residentRateCents: number | null; memberRateCents: number | null; memberCartCents: number | null; publicGreenCents: number; publicCartCents: number; cartSelected?: boolean; cartUnitCents?: number | null; cartRiders?: number | null };
   /** POS-1a: pro-shop items the course added plus GreenReserve's fee on them. */
   shopChargeCents?: number;
   cancellationHours: number;
@@ -336,6 +337,8 @@ function ManagePageInner() {
 
   // ── Change time: slot picker ──────────────────────────────────────────────
   if (view === 'change-time') {
+    // CART-2: a per-cart booking moves at a cart per two riders (the server re-prices the same way).
+    const slotCarts = info.party?.cartUnitCents != null ? cartsFor(info.party.cartRiders ?? info.players) : info.players;
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4 py-10">
         <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
@@ -382,12 +385,12 @@ function ManagePageInner() {
                 <p className="text-sm font-medium text-ink">Confirm new time: {fmtTime(selectedSlot.time)}</p>
                 <div className="text-sm space-y-1">
                   <div className="flex justify-between text-ink-soft"><span>New green fee</span><span>{dollars(selectedSlot.greenFee * info.players)}</span></div>
-                  {info.cartFeeTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Cart fee</span><span>{dollars(selectedSlot.cartFee * info.players)}</span></div>}
+                  {info.cartFeeTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Cart fee</span><span>{dollars(selectedSlot.cartFee * slotCarts)}</span></div>}
                   {info.rangeBallsTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Range balls</span><span>{dollars(info.rangeBallsTotal)}</span></div>}
                   <div className="flex justify-between text-ink-soft"><span>GreenReserve service fee ($1.50 × {info.players})</span><span>{dollars(info.accessFeeTotal)}</span></div>
                   <div className="flex justify-between font-semibold text-ink border-t border-line pt-2">
                     <span>New total at check-in</span>
-                    <span>{dollars(selectedSlot.greenFee * info.players + (info.cartFeeTotal > 0 ? selectedSlot.cartFee * info.players : 0) + info.rangeBallsTotal + info.accessFeeTotal)}</span>
+                    <span>{dollars(selectedSlot.greenFee * info.players + (info.cartFeeTotal > 0 ? selectedSlot.cartFee * slotCarts : 0) + info.rangeBallsTotal + info.accessFeeTotal)}</span>
                   </div>
                 </div>
                 {swapError && <p className="text-bad text-xs">{swapError}</p>}
@@ -418,7 +421,9 @@ function ManagePageInner() {
     const fees = partyFees({ players: info.players, greenFeeTotal: info.greenFeeTotal, cartFeeTotal: info.cartFeeTotal, residentPlayers: p?.residentPlayers ?? 0, residentRateCents: p?.residentRateCents ?? null, memberRateCents: p?.memberRateCents ?? null, memberCartCents: p?.memberCartCents ?? null },
       selectedPlayers, { greenFeeCents: p?.publicGreenCents ?? 0, cartFeeCents: p?.publicCartCents ?? 0 });
     const newGreen = fees.greenFeeTotal;
-    const newCart = fees.cartFeeTotal;
+    // CART-2: a per-cart booking re-counts its carts at its own cart price (lib/cart-pricing resizeCart, the server's rule).
+    const resized = p?.cartUnitCents != null ? resizeCart({ players: info.players, cartSelected: !!p.cartSelected, cartUnitCents: p.cartUnitCents, cartRiders: p.cartRiders ?? null }, selectedPlayers) : null;
+    const newCart = resized ? resized.cartFeeTotal : fees.cartFeeTotal;
     const newAccess = 150 * selectedPlayers;
     const newTotal = newGreen + newCart + info.rangeBallsTotal + newAccess;
     const maxPlayers = 4;

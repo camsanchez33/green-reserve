@@ -35,6 +35,7 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from './prisma';
 import { applyTierRates } from './tier-rates';
 import { memberPlayers, splitTotal, memberSpot, membershipLive } from './member-rates';
+import { cartCharge, cartRuleOf } from './cart-pricing';
 import { groupGreenFee } from './residents';
 import { bookingWindowHours, holdsAtCutoff } from './cancel-policy';
 import { todayIn } from './course-time';
@@ -123,10 +124,10 @@ export async function moveBooking(opts: {
         select: {
           id: true, courseId: true, teeTimeId: true, players: true, status: true, source: true, checkedInAt: true, noShowAt: true, golferAccountId: true, golferEmail: true,
           paymentStatus: true, roundPaymentIntentId: true, readerStartedAt: true,
-          cartSelected: true, appliedRate: true, packLineId: true, packRounds: true, memberRateCents: true, residentPlayers: true, residentRateCents: true, promoCodeId: true, promoDiscountCents: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, accessFeeTotal: true,
+          cartSelected: true, appliedRate: true, packLineId: true, packRounds: true, memberRateCents: true, residentPlayers: true, residentRateCents: true, promoCodeId: true, promoDiscountCents: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, accessFeeTotal: true, cartUnitCents: true, cartRiders: true,
           cancellationHoursAtBooking: true, lateFeeTimingAtBooking: true, cancellationFeeTotal: true, cancellationFeeChargeId: true,
           teeTime: { select: { id: true, date: true, time: true, status: true, playersBooked: true, playersAvailable: true } },
-          course: { select: { timezone: true, cancellationHours: true, memberGraceDays: true, hasMemberPricing: true, hasResidentPricing: true, lastMinuteOn: true, lastMinuteHours: true, lastMinutePct: true, lastMinuteCounter: true, lastMinuteStack: true, demandMode: true, demandFloorPct: true, demandCeilingPct: true } },
+          course: { select: { timezone: true, cancellationHours: true, memberGraceDays: true, hasMemberPricing: true, hasResidentPricing: true, lastMinuteOn: true, lastMinuteHours: true, lastMinutePct: true, lastMinuteCounter: true, lastMinuteStack: true, demandMode: true, demandFloorPct: true, demandCeilingPct: true, cartPricing: true } },
         },
       });
       if (!b || (opts.courseId && b.courseId !== opts.courseId)) throw new MoveError('NOT_FOUND');
@@ -225,13 +226,22 @@ export async function moveBooking(opts: {
       let newCart = cartOn ? (memberN ? splitTotal(b.players, memberN, rate.cartFeeCents, slot.cartFeeCents) : rate.cartFeeCents * b.players) : 0;
       // PRICE-3: a round pack's seats stay free on the new time (the rounds are already taken); the rest
       // of the group pays the new time's public price.
+      let coveredSeats = 0;
       if (b.appliedRate === 'pack' && b.packLineId) {
         const line = await tx.shopSaleLine.findUnique({ where: { id: b.packLineId }, select: { packCoversCart: true } });
         const guests = b.memberRateCents == null;
         const p = packPrice({ players: b.players, seats: guests ? b.players : 1, guests, coversCart: !!line?.packCoversCart, publicGreen: pubSeat, cartFee: slot.cartFeeCents, cart: cartOn });
         newGreen = p.greenFeeTotal; newCart = p.cartFeeTotal;
         spot = { memberRateCents: p.memberRateCents, memberCartCents: p.memberCartCents } as typeof spot;
+        coveredSeats = line?.packCoversCart ? (guests ? b.players : 1) : 0;
       }
+      // CART-2: a booking made per cart stays per cart (its riders, the new time's cart price); one taking
+      // a cart for the first time here follows the course's rule today; a per-player booking stays per player.
+      const cartRule = b.cartUnitCents != null ? 'per_cart' : !b.cartSelected ? cartRuleOf(b.course.cartPricing) : 'per_player';
+      if (b.cartUnitCents != null) coveredSeats = b.players - (b.cartRiders ?? b.players);
+      const cartPriced = cartCharge({ rule: cartRule, cart: cartOn, players: b.players, coveredSeats, unitCents: slot.cartFeeCents, perPlayerTotal: newCart });
+      newCart = cartPriced.cartFeeTotal;
+      if (cartPriced.cartUnitCents != null) spot = { ...spot, memberCartCents: null } as typeof spot;
       const range = Math.round(b.rangeBallsTotal);
       const access = Math.round(b.accessFeeTotal); // per-player amount unchanged: same players
       // A round already paid (admin "collect payment" before check-in) keeps its
@@ -262,6 +272,7 @@ export async function moveBooking(opts: {
       if (!keep) {
         data.residentPlayers = residents.residentPlayers; data.residentRateCents = residents.residentRateCents;
         data.cartSelected = cartOn;
+        data.cartUnitCents = cartPriced.cartUnitCents; data.cartRiders = cartPriced.cartRiders;
         data.memberRateCents = spot.memberRateCents; data.memberCartCents = spot.memberCartCents;
         data.lastMinutePct = dealSet ? lmPct : 0;
         data.demandPct = dealSet ? 0 : dmPct;

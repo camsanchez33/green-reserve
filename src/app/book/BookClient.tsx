@@ -1,6 +1,7 @@
 'use client';
 import { smsWebConsentText } from '@/lib/sms-consent-copy';
 import { splitTotal } from '@/lib/member-rates';
+import { cartsFor } from '@/lib/cart-pricing';
 import { FEE_AT_BOOKING_ON } from '@/lib/booking-fees';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, useEffect, useRef, Suspense } from 'react';
@@ -37,6 +38,7 @@ export type LiveTeeTime = {
 export type CourseInfo = {
   name: string; city: string; state: string; address: string;
   cart_required: boolean;
+  cart_pricing?: 'per_player' | 'per_cart';
   has_driving_range: boolean;
   range_balls_free: boolean;
   range_balls_small_price: number;
@@ -370,7 +372,11 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   const packShort = !!pk && pk.guests && pk.left < players;
   const greenTotal  = pk ? (players - packSeatsN) * teeTime.green_fee : memberRate ? splitTotal(players, memberN, c(memberRate.greenFee), c(teeTime.green_fee)) / 100
     : residentFee != null ? residentFee + teeTime.green_fee * (players - 1) : teeTime.green_fee * players;
-  const cartTotal    = withCart ? pk ? (pk.coversCart ? players - packSeatsN : players) * teeTime.cart_fee : (memberRate ? splitTotal(players, memberN, c(memberRate.cartFee), c(teeTime.cart_fee)) / 100 : teeTime.cart_fee * players) : 0;
+  // CART-2: a per-cart course charges the time's cart price per cart of two riders, members too; pack seats
+  // that include the cart leave the count (lib/cart-pricing cartCharge — the server's rule).
+  const perCart = course.cart_pricing === 'per_cart';
+  const cartsN = cartsFor(players - (pk?.coversCart ? packSeatsN : 0));
+  const cartTotal    = !withCart ? 0 : perCart ? cartsN * teeTime.cart_fee : pk ? (pk.coversCart ? players - packSeatsN : players) * teeTime.cart_fee : (memberRate ? splitTotal(players, memberN, c(memberRate.cartFee), c(teeTime.cart_fee)) / 100 : teeTime.cart_fee * players);
   const rangeBallsPrice = rangeBallsSize === 'small' ? course.range_balls_small_price
     : rangeBallsSize === 'medium' ? course.range_balls_medium_price
     : rangeBallsSize === 'large' ? course.range_balls_large_price
@@ -421,7 +427,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
                 <div className="flex items-center justify-between border-t border-line pt-3">
                   <div>
                     <p className="font-medium text-ink">Cart</p>
-                    <p className="text-xs text-ink">${teeTime.cart_fee.toFixed(2)} per player</p>
+                    <p className="text-xs text-ink">${teeTime.cart_fee.toFixed(2)} {perCart ? `a cart (2 riders)${withCart ? ` · ${cartsN} cart${cartsN === 1 ? '' : 's'}` : ''}` : 'per player'}</p>
                   </div>
                   {cartForced ? (
                     <span className="text-xs font-medium text-ink-muted bg-paper px-2.5 py-1 rounded-md border border-line">Required</span>

@@ -13,6 +13,7 @@ import { rescalePartyFees } from './cancel-policy';
 import { recordBookingEvent, recordBookingEventSafe, type EventActor } from './booking-events';
 import { refundOnConnectedAccount } from './stripe';
 import { recordMove } from './money-ledger';
+import { splitRiders } from './cart-pricing';
 
 export type SplitResult = { ok: true; newBookingId: string; keepCents: number; leaveCents: number; note: string | null } | { ok: false; status: number; error: string };
 
@@ -61,7 +62,7 @@ export async function splitBooking(courseId: string, bookingId: string, leave: n
         select: {
           id: true, courseId: true, teeTimeId: true, golferName: true, players: true, status: true, paymentStatus: true, noShowAt: true,
           roundPaymentIntentId: true, shopLockedAt: true, readerStartedAt: true, feePaidCents: true, appliedRate: true,
-          greenFeeTotal: true, cartFeeTotal: true, cartSelected: true, rangeBallsTotal: true, accessFeeTotal: true, totalAmount: true,
+          greenFeeTotal: true, cartFeeTotal: true, cartSelected: true, cartUnitCents: true, cartRiders: true, rangeBallsTotal: true, accessFeeTotal: true, totalAmount: true,
           residentPlayers: true, residentRateCents: true, memberRateCents: true, memberCartCents: true,
           cancellationFeeTotal: true, noShowFeeTotal: true, cancellationHoursAtBooking: true, cancellationFeeChargeId: true,
           golferEmail: true, golferPhone: true, golferAccountId: true, source: true, stripeCustomerId: true, stripePaymentMethodId: true,
@@ -81,11 +82,14 @@ export async function splitBooking(courseId: string, bookingId: string, leave: n
       const { keep, leave: off } = shares;
       // A per-player late or no-show fee follows the players who stay; the ones who leave pay at the counter and carry none.
       const fees = rescalePartyFees(b, b.course, b.players, keep.players);
+      // CART-2: a per-cart booking's riders go with the players who leave; both parts keep the cart price as booked.
+      const riders = splitRiders(b, off.players);
 
       const changed = await tx.booking.updateMany({
         where: { id: b.id, courseId, status: 'confirmed', players: b.players, paymentStatus: b.paymentStatus, roundPaymentIntentId: '', shopLockedAt: null, readerStartedAt: null, noShowAt: null, totalAmount: b.totalAmount },
         data: {
           players: keep.players, greenFeeTotal: keep.greenFeeTotal, cartFeeTotal: keep.cartFeeTotal, accessFeeTotal: keep.accessFeeTotal, totalAmount: keep.totalAmount,
+          ...(b.cartUnitCents != null ? { cartRiders: riders.keep } : {}),
           residentPlayers: keep.residentPlayers, residentRateCents: keep.residentRateCents,
           cancellationFeeTotal: fees.cancellationFeeTotal, noShowFeeTotal: fees.noShowFeeTotal,
         },
@@ -104,6 +108,7 @@ export async function splitBooking(courseId: string, bookingId: string, leave: n
         golferName: name.length >= 2 ? name : `${b.golferName} · guest${leave > 1 ? 's' : ''}`,
         players: off.players, appliedRate: off.residentPlayers > 0 ? 'resident' : 'standard',
         greenFeeTotal: off.greenFeeTotal, cartFeeTotal: off.cartFeeTotal, cartSelected: b.cartSelected && off.cartFeeTotal > 0,
+        ...(b.cartUnitCents != null && off.cartFeeTotal > 0 ? { cartUnitCents: b.cartUnitCents, cartRiders: riders.leave } : {}),
         accessFeeTotal: off.accessFeeTotal, totalAmount: off.totalAmount,
         residentPlayers: off.residentPlayers, residentRateCents: off.residentRateCents,
         status: 'confirmed', cancellationHoursAtBooking: b.cancellationHoursAtBooking,
