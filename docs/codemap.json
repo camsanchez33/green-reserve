@@ -11071,7 +11071,7 @@
     },
     {
       "path": "src/components/dashboard/DemandPricing.tsx",
-      "lines": 128,
+      "lines": 130,
       "purpose": "PRICE-5 (Cam 2026-10-30:",
       "brain": [],
       "exports": [
@@ -12234,7 +12234,7 @@
     },
     {
       "path": "src/components/dashboard/home/HomeBoard.tsx",
-      "lines": 271,
+      "lines": 273,
       "purpose": "DASH-D Home (Cam 2026-11-01, mockup S1):",
       "brain": [],
       "exports": [
