@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-06 04:27 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `f0dbea40` · working tree **10 dirty file(s)**
+Generated 2026-11-06 04:40 UTC · branch `HEAD` · HEAD `2e16380b` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 130 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 132 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `2e16380b` | 2026-11-06 | Owner 2FA: match a code and its step on one clock |
+| `c146bfe6` | 2026-11-06 | Tee sheet: Message golfers by email, text or both, with ready-made messages and a preview |
 | `2bea8fe8` | 2026-11-05 | Tee sheet: a cleaner weather window that updates as you pick the times (#328) |
 | `97875d10` | 2026-11-06 | Tee sheet: a cleaner weather window that updates as you pick the times |
 | `e2a8f2f7` | 2026-11-05 | Tee sheet: Add tee time from the day's prices, keep a time for staff, safer Block and Delete (#327) |
@@ -145,21 +147,13 @@ Generated 2026-11-06 04:27 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (10 file(s))
+### Uncommitted working tree (2 file(s))
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M src/app/api/operator/golfer-messages/route.ts`
-- `M src/components/dashboard/GolferMessageModal.tsx`
-- `M src/lib/email.ts`
-- `M src/lib/golfer-messages.ts`
-- `?? scripts/message-golfers-test.ts`
-- `?? src/app/api/operator/golfer-messages/draft/`
-- `?? src/lib/notice-draft.ts`
-- `?? src/lib/notice-templates.ts`
 
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -282,6 +276,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `2e16380b` 2026-11-06 — Owner 2FA: match a code and its step on one clock
+- `c146bfe6` 2026-11-06 — Tee sheet: Message golfers by email, text or both, with ready-made messages and a preview
 - `2bea8fe8` 2026-11-05 — Tee sheet: a cleaner weather window that updates as you pick the times (#328)
 - `97875d10` 2026-11-06 — Tee sheet: a cleaner weather window that updates as you pick the times
 - `e2a8f2f7` 2026-11-05 — Tee sheet: Add tee time from the day's prices, keep a time for staff, safer Block and Delete (#327)
@@ -292,8 +288,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `be8b68ee` 2026-11-05 — Home: the week-ahead link offers demand pricing and lands on it (#325)
 - `58a9e0d0` 2026-11-06 — Home: the week-ahead link offers demand pricing and lands on it
 - `b9baa354` 2026-11-05 — Tee sheet: cleaner top bar, Times booked, filled groups, 9-hole/twilight labels, no glow (#324)
-- `52978014` 2026-11-06 — Tee sheet: cleaner top bar, Times booked, filled groups with In/M/R, 9-hole and twilight labels, no glow
-- `91764419` 2026-11-05 — Public SMS consent page at /sms-consent for Twilio's checker (#323)
 
 ---
 

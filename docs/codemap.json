@@ -22498,7 +22498,7 @@
     },
     {
       "path": "src/lib/owner-totp.ts",
-      "lines": 100,
+      "lines": 103,
       "purpose": "OWNER TOTP 2FA (RUN_QUEUE) — the authenticator-app second factor for the owner account.",
       "brain": [],
       "exports": [
