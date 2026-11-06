@@ -212,7 +212,7 @@ function MoneyPageInner() {
 
           {overview && overview.declinedTotal > 0 && (
             <section className="mb-6" aria-labelledby="money-needs">
-              <h2 id="money-needs" className="text-[15px] font-semibold text-ink mb-2">Needs you</h2>
+              <h2 id="money-needs" className="text-[15px] font-semibold text-ink mb-2">Action needed</h2>
               <Card>
                 <div className="divide-y divide-line-soft">
                   <DeclinedCardList rows={overview.declined} total={overview.declinedTotal} canSendLink={canSendLink} />

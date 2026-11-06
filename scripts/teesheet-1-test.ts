@@ -21,11 +21,12 @@ check('no Refresh text button in the header', !/>\s*Refresh\s*</.test(page));
 check('mark no-show is reachable from the time panel', page.includes("bookingLifecycle(b, 'no_show')") && page.includes("noShowReady && access.can('sheet.no_show') && (\n            <button onClick={() => bookingLifecycle(b, 'no_show')") && page.includes('mins(nowHM) - mins(tt.time) >= 10'));
 check('still coming (a late group) is reachable and clears it from the late list', page.includes('setStillComing(prev => new Set(prev).add(b.id))') && page.includes('!stillComing.has(b.id) && !b.noShowAt'));
 // DENSE-4 (Cam 2026-10-27): seat rows replaced the board — the key shows the money edge and the checked-in / member fills the rows use.
-check('the key swatches match the seat cells', page.includes('border-l-[3px] border-ok" />Paid') && page.includes('bg-ok/[0.12]" />Checked in') && page.includes('bg-[var(--color-mem-fill)]" />Member or resident') && src('src/components/dashboard/TeeSheetRows.tsx').includes('bg-mem-fill'));
+// FILL-1 (Cam 2026-11-06, "fully filled"): the cell's colour is the money; In / M / R say who they are.
+check('the key swatches match the seat cells', page.includes('bg-paid-fill shadow-[0_0_0_1px_var(--color-line)]" />Paid') && page.includes('bg-owes-fill shadow-[0_0_0_1px_var(--color-line)]" />Owes') && page.includes('>In</b> checked in') && src('src/components/dashboard/TeeSheetRows.tsx').includes("FILL: Record<Tone, string> = { ok: 'bg-paid-fill', warn: 'bg-owes-fill', bad: 'bg-bad-fill' }"));
 check('late groups use the course clock', page.includes("Number(nowHM.slice(0, 2)) * 60"));
 check('late groups and the color key live in the bar under the date', page.includes('not checked in`') && page.includes('/>Owes</span>'));
 const rows = src('src/components/dashboard/TeeSheetRows.tsx');
-check('a group cell carries its money edge and a checked-in fill', rows.includes("ok: 'border-l-ok'") && rows.includes("g.status === 'completed' ? 'bg-ok/[0.12] '"));
+check('a group cell is filled with its money colour and tagged In / R / M', rows.includes('+ FILL[t] +') && rows.includes("g.status === 'completed' ? ['In'] : []"));
 check('no key or helper sentence under the rows', !rows.includes('Tap a time to'));
 check('the calendar opens left-aligned, inside the screen', src('src/components/ui/MonthPicker.tsx').includes('absolute left-0 top-full') && src('src/components/ui/MonthPicker.tsx').includes('max-w-[calc(100vw-32px)]'));
 check('an agreement announcement clears once nothing is left to sign', src('src/app/api/operator/announcements/route.ts').includes('/agreement/i.test(newest.title)') && src('src/app/api/operator/announcements/route.ts').includes('st.total > 0 && st.documents.every(d => !d.needsSigning)'));
@@ -35,7 +36,7 @@ const late = src('src/lib/late-add.ts'), claim = src('src/lib/claim-tee-time.ts'
 check('the late-add rule is 20 minutes, in one place', late.includes('LATE_ADD_MINUTES = 20') && late.includes('m(time) + LATE_ADD_MINUTES < m(clock)'));
 check('every booking path refuses a time 20 minutes gone (claimTeeTime)', claim.includes("throw new TeeTimeClaimError('PAST')") && claim.includes('LATE_ADD_MINUTES * 60_000 < Date.now()'));
 check('the three callers map PAST to a message', ['src/app/api/bookings/route.ts', 'src/lib/counter-pay.ts', 'src/app/api/admin/tee-sheet/route.ts'].every(f => src(f).includes("'PAST'")));
-check('today\'s gone times move to a collapsed Past tee times section (not while searching)', page.includes('isGone={selectedDate === today() && !q ? (t => lateForAdding(t.time, nowHM))') && rows.includes('Past tee times · {gone.length}') && rows.includes('useState(false)') && rows.includes('aria-expanded={goneOpen}'));
+check('today\'s gone times move to a collapsed Past tee times section (not while searching)', page.includes('isGone={selectedDate === today() && !q ? (t => lateForAdding(t.time, nowHM))') && rows.includes("const PAST = 'Past tee times'") && rows.includes('{PAST} · {gone.length}') && rows.includes('useState(false)') && rows.includes('aria-expanded={goneOpen}'));
 check('a gone time offers only "a walk-in who already played", sent as late', page.includes("selectedDate === today() && !lateForAdding(panelSlot.time, nowHM)))") && page.includes('Add a walk-in who already played') && page.includes("...(late ? { late: true } : {})"));
 check('only a staff walk-in marked late skips the cut-off', src('src/lib/counter-pay.ts').includes("{ allowLate: input.late === true && source === 'walk_in' && actor.type === 'staff' }") && claim.includes('if (!opts.allowLate && teeAt'));
 check('the sheet re-reads the clock every minute', page.includes('setInterval(() => setClockTick(t => t + 1), 60_000)'));

@@ -11,7 +11,7 @@ import { useEffect, useState, useCallback, Suspense, useRef } from 'react';
 import { todayIn, clockIn, DEFAULT_TZ } from '@/lib/course-time';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  ChevronLeft, ChevronRight, X, Loader2,
+  ChevronLeft, ChevronRight, X, Loader2, Search,
 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -475,6 +475,10 @@ function DashboardPageInner() {
   // and Analytics show), only for logins with money.payments.
   const livePlayers = teeTimes.reduce((s, t) => s + (t.bookings?.filter(b => b.status !== 'cancelled').reduce((n, b) => n + b.players, 0) ?? 0), 0);
   const spotsOffered = teeTimes.filter(t => t.status !== 'blocked').reduce((s, t) => s + t.playersAvailable, 0);
+  // SHEET-3: groups booked on the day (was the footer under the sheet).
+  const dayGroups = teeTimes.reduce((n, x) => n + (x.bookings?.length ?? 0), 0);
+  // Cam 2026-11-06 ("36 groups and 57 tee times doesn't make sense"): how many of the day's times have anyone on them.
+  const timesBooked = teeTimes.filter(x => x.status !== 'blocked' && (x.bookings?.length ?? 0) > 0).length;
   const checkedInPlayers = teeTimes.reduce((s, t) => s + (t.bookings?.filter(b => b.status === 'completed').reduce((n, b) => n + (b.checkedInPlayers ?? b.players), 0) ?? 0), 0);
   const [dayMoney, setDayMoney] = useState<{ date: string; paidCents: number; paidGroups: number; outstandingCents: number; outstandingGroups: number; lateGroups: number } | null>(null);
   const canSeeMoney = access.can('money.payments');
@@ -1173,13 +1177,14 @@ function DashboardPageInner() {
                   </h1>
                 </div>
                 <div className="flex flex-wrap gap-2 items-center">
+                  {/* SHEET-3 (Cam 2026-11-06, "a little cleaner"): the day's other actions are quiet words beside Add time, not boxed buttons. */}
                   {selectedDate >= today() && wxTabs.length > 0 && (
-                    <button onClick={() => { setFrostOpen(true); setWxMode(wxTabs[0][0]); setFrostPlan(null); setFrostErr(''); setFrostResult(null); setWxPlan(null); setWxErr(''); setWxResult(null); }} className="text-[13px] font-medium text-ink bg-white px-3.5 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">
+                    <button onClick={() => { setFrostOpen(true); setWxMode(wxTabs[0][0]); setFrostPlan(null); setFrostErr(''); setFrostResult(null); setWxPlan(null); setWxErr(''); setWxResult(null); }} className="text-[13px] font-medium text-ink-soft hover:text-ink hover:bg-white/70 px-2.5 py-1.5 rounded-md transition-colors">
                       Weather delay / cancel
                     </button>
                   )}
                   {access.can('sheet.message_golfers') && (
-                    <button onClick={() => setMessageOpen(true)} className="text-[13px] font-medium text-ink bg-white px-3.5 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">
+                    <button onClick={() => setMessageOpen(true)} className="text-[13px] font-medium text-ink-soft hover:text-ink hover:bg-white/70 px-2.5 py-1.5 rounded-md transition-colors">
                       {selectedDate === today() ? 'Message today’s golfers' : 'Message this day’s golfers'}
                     </button>
                   )}
@@ -1193,12 +1198,15 @@ function DashboardPageInner() {
 
               {/* DENSE-4b: the day strip — players, checked in, and (money.payments) paid / not paid yet. */}
               {teeTimes.length > 0 && (
-                <div className={CARD + ' grid grid-cols-2 sm:flex sm:flex-wrap mb-4 divide-line-soft sm:divide-x'} role="group" aria-label="The day">
-                  <div className="px-4 py-2.5 min-w-[9rem]"><div className="text-[12.5px] text-ink-soft">Players</div><div className="text-[18px] font-semibold text-ink tabular-nums">{livePlayers}<span className="text-[13px] font-normal text-ink-muted"> of {spotsOffered}</span></div></div>
-                  <div className="px-4 py-2.5 min-w-[9rem]"><div className="text-[12.5px] text-ink-soft">Checked in</div><div className="text-[18px] font-semibold text-ink tabular-nums">{checkedInPlayers}<span className="text-[13px] font-normal text-ink-muted"> of {livePlayers}</span></div></div>
+                // SHEET-3 (Cam 2026-11-06: "paid and unpaid should make more sense, like all metrics"; the groups-booked count
+                // moves up from under the sheet): every number the same shape — label, value, one line under it — spread across the row.
+                <div className={CARD + ' grid grid-cols-2 sm:grid-cols-3 ' + (dayMoney && dayMoney.date === selectedDate ? 'lg:grid-cols-5' : 'lg:grid-cols-3') + ' mb-4'} role="group" aria-label="The day">
+                  <div className="px-4 py-3"><div className="text-[12.5px] text-ink-soft">Players</div><div className="text-[20px] font-semibold text-ink tabular-nums leading-tight">{livePlayers}<span className="text-[13px] font-normal text-ink-muted"> of {spotsOffered}</span></div><div className="text-[12px] text-ink-muted">spots booked</div></div>
+                  <div className="px-4 py-3"><div className="text-[12.5px] text-ink-soft">Times booked</div><div className="text-[20px] font-semibold text-ink tabular-nums leading-tight">{timesBooked}<span className="text-[13px] font-normal text-ink-muted"> of {teeTimes.filter(x => x.status !== 'blocked').length}</span></div><div className="text-[12px] text-ink-muted tabular-nums">{dayGroups} {dayGroups === 1 ? 'group' : 'groups'}</div></div>
+                  <div className="px-4 py-3"><div className="text-[12.5px] text-ink-soft">Checked in</div><div className="text-[20px] font-semibold text-ink tabular-nums leading-tight">{checkedInPlayers}<span className="text-[13px] font-normal text-ink-muted"> of {livePlayers}</span></div><div className="text-[12px] text-ink-muted">players</div></div>
                   {dayMoney && dayMoney.date === selectedDate && (<>
-                    <div className="px-4 py-2.5 min-w-[9rem]"><div className="text-[12.5px] text-ink-soft">Paid</div><div className="text-[18px] font-semibold text-ink tabular-nums">${(dayMoney.paidCents / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}<span className="text-[13px] font-normal text-ink-muted"> · {dayMoney.paidGroups} {dayMoney.paidGroups === 1 ? 'group' : 'groups'}</span></div></div>
-                    <Link href="/dashboard/money?tab=payments&show=unpaid" className="px-4 py-2.5 min-w-[9rem] hover:bg-paper/60"><div className="text-[12.5px] text-ink-soft">Not paid yet</div><div className={'text-[18px] font-semibold tabular-nums ' + (dayMoney.lateGroups > 0 ? 'text-warn' : 'text-ink')}>${(dayMoney.outstandingCents / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}<span className="text-[13px] font-normal text-ink-muted"> · {dayMoney.outstandingGroups} {dayMoney.outstandingGroups === 1 ? 'group' : 'groups'}</span>{dayMoney.lateGroups > 0 && <span className="text-[13px] font-normal text-warn"> · {dayMoney.lateGroups} past</span>}</div></Link>
+                    <div className="px-4 py-3"><div className="text-[12.5px] text-ink-soft">Paid</div><div className="text-[20px] font-semibold text-ink tabular-nums leading-tight">${(dayMoney.paidCents / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}</div><div className="text-[12px] text-ink-muted tabular-nums">{dayMoney.paidGroups} {dayMoney.paidGroups === 1 ? 'group' : 'groups'}</div></div>
+                    <Link href="/dashboard/money?tab=payments&show=unpaid" className="px-4 py-3 hover:bg-paper/60"><div className="text-[12.5px] text-ink-soft">Not paid yet</div><div className={'text-[20px] font-semibold tabular-nums leading-tight ' + (dayMoney.lateGroups > 0 ? 'text-warn' : 'text-ink')}>${(dayMoney.outstandingCents / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}</div><div className="text-[12px] text-ink-muted tabular-nums">{dayMoney.outstandingGroups} {dayMoney.outstandingGroups === 1 ? 'group' : 'groups'}{dayMoney.lateGroups > 0 && <span className="text-warn"> · {dayMoney.lateGroups} past</span>}</div></Link>
                   </>)}
                 </div>
               )}
@@ -1215,13 +1223,13 @@ function DashboardPageInner() {
                   <div className="flex items-center gap-2 text-[13.5px] text-ink">
                     {/* SD-3: back is never clamped — yesterday's sheet must stay reachable. */}
                     <button onClick={() => setSelectedDate(addDays(selectedDate, -1))} aria-label="Previous day"
-                      className="w-7 h-7 rounded-md border border-line inline-flex items-center justify-center text-ink-muted hover:text-ink hover:bg-paper transition-colors">
+                      className="w-7 h-7 rounded-md inline-flex items-center justify-center text-ink-muted hover:text-ink hover:bg-paper transition-colors">
                       <ChevronLeft className="w-4 h-4"/>
                     </button>
                     <MonthPicker value={selectedDate} onChange={setSelectedDate} today={today()}
                       label={new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} />
                     <button onClick={() => setSelectedDate(addDays(selectedDate, 1))} aria-label="Next day"
-                      className="w-7 h-7 rounded-md border border-line inline-flex items-center justify-center text-ink-muted hover:text-ink hover:bg-paper transition-colors">
+                      className="w-7 h-7 rounded-md inline-flex items-center justify-center text-ink-muted hover:text-ink hover:bg-paper transition-colors">
                       <ChevronRight className="w-4 h-4"/>
                     </button>
                     {selectedDate !== today() && (
@@ -1231,19 +1239,22 @@ function DashboardPageInner() {
                   {/* Cam 2026-10-19: Find golfer sits in the sheet's own bar, and
                       refresh is a small icon beside it instead of a button. */}
                   <div className="ml-auto flex items-center gap-2">
-                    <div role="group" aria-label="Sheet view" className="flex p-0.5 rounded-md bg-paper border border-line">
+                    <div role="group" aria-label="Sheet view" className="flex items-center gap-3 mr-1">
                       {SHEET_VIEWS.map(v => (
                         <button key={v.id} type="button" aria-pressed={sheetView === v.id} onClick={() => setSheetView(v.id)}
-                          className={'px-2.5 py-1 rounded-[5px] text-[12.5px] font-medium transition-colors ' + (sheetView === v.id ? 'bg-white text-ink shadow-card' : 'text-ink-soft hover:text-ink')}>
+                          className={'py-1 text-[13px] transition-colors border-b-2 ' + (sheetView === v.id ? 'text-ink font-semibold border-pine' : 'text-ink-muted font-medium border-transparent hover:text-ink')}>
                           {v.label}
                         </button>
                       ))}
                     </div>
                     <label className="sr-only" htmlFor="sheet-search">Find golfer</label>
-                    <input id="sheet-search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Find golfer"
-                      className={INPUT_COMPACT + ' w-28 sm:w-56 py-1.5'}/>
+                    <div className="relative">
+                      <Search aria-hidden="true" className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ink-faint pointer-events-none" />
+                      <input id="sheet-search" type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Find golfer"
+                        className="w-32 sm:w-56 bg-paper rounded-md pl-8 pr-2.5 py-1.5 text-[13px] text-ink placeholder-ink-faint border border-transparent focus:bg-white focus:border-pine/40 focus:ring-2 focus:ring-pine/10 outline-none transition-colors"/>
+                    </div>
                     <button onClick={() => loadTimes(selectedDate)} aria-label="Refresh the sheet" title="Refresh the sheet"
-                      className="w-8 h-8 rounded-md border border-line inline-flex items-center justify-center text-[16px] leading-none text-ink-muted hover:text-ink hover:bg-paper transition-colors">
+                      className="w-8 h-8 rounded-md inline-flex items-center justify-center text-[16px] leading-none text-ink-muted hover:text-ink hover:bg-paper transition-colors">
                       <span aria-hidden="true">↻</span>
                     </button>
                   </div>
@@ -1254,15 +1265,18 @@ function DashboardPageInner() {
                     color key, where it is seen. */}
                 <div className={'flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2 border-b border-line text-[12.5px] ' + (sheetView === 'calendar' ? 'hidden' : 'flex')}>
                   {lateGroups.length > 0 ? (
-                    <div className="flex flex-wrap items-center gap-2 min-w-0">
+                    // SHEET-3 (Cam 2026-11-06, "more clean"): one line — the count, then the groups as plain links.
+                    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 min-w-0">
                       <StatusDot status="warn" label={`${lateGroups.length} not checked in`} />
-                      {lateGroups.slice(0, 4).map(({ tt, b, ago }) => (
-                        <button key={b.id} type="button" onClick={() => setPanelId(tt.id)}
-                          className="rounded-md bg-warn/[0.08] px-2 py-1 text-ink hover:bg-warn/15 transition-colors">
-                          {fmtTime(tt.time)} {b.golferName} · {ago < 60 ? `${ago}m` : `${Math.floor(ago / 60)}h`}
-                        </button>
+                      {lateGroups.slice(0, 4).map(({ tt, b, ago }, i) => (
+                        <span key={b.id} className="inline-flex items-center">
+                          <span aria-hidden="true" className="text-ink-faint mr-1.5">{i === 0 ? '·' : ','}</span>
+                          <button type="button" onClick={() => setPanelId(tt.id)} className="text-ink hover:text-pine hover:underline underline-offset-2">
+                            {fmtTime(tt.time)} {b.golferName}<span className="text-ink-muted"> {ago < 60 ? `${ago}m` : `${Math.floor(ago / 60)}h`}</span>
+                          </button>
+                        </span>
                       ))}
-                      {lateGroups.length > 4 && <span className="text-ink-muted">+{lateGroups.length - 4} more</span>}
+                      {lateGroups.length > 4 && <span className="text-ink-muted">and {lateGroups.length - 4} more</span>}
                     </div>
                   ) : (
                     <span className="text-ink-soft">{selectedDate === today() ? 'All on time' : ''}</span>
@@ -1273,12 +1287,15 @@ function DashboardPageInner() {
                       <StatusDot status="bad" label={`${ev.name}: ${ev.tasksOverdue} checklist item${ev.tasksOverdue === 1 ? '' : 's'} overdue`} />
                     </Link>
                   ))}
+                  {/* SHEET-3 / FILL-1 (Cam 2026-11-06, "more understandable", "fully filled"): the colour of a group is the money; In, M and R say who they are. */}
                   <div className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-1 text-ink-soft">
-                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-white shadow-[0_0_0_1px_var(--color-line-strong)] border-l-[3px] border-ok" />Paid</span>
-                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-white shadow-[0_0_0_1px_var(--color-line-strong)] border-l-[3px] border-warn" />Owes</span>
-                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-white shadow-[0_0_0_1px_var(--color-line-strong)] border-l-[3px] border-bad" />Declined or no-show</span>
-                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-ok/[0.12]" />Checked in</span>
-                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-[var(--color-mem-fill)]" />Member or resident</span>
+                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3.5 h-3.5 rounded-sm bg-paid-fill shadow-[0_0_0_1px_var(--color-line)]" />Paid</span>
+                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3.5 h-3.5 rounded-sm bg-owes-fill shadow-[0_0_0_1px_var(--color-line)]" />Owes</span>
+                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3.5 h-3.5 rounded-sm bg-bad-fill shadow-[0_0_0_1px_var(--color-line)]" />Declined or no-show</span>
+                    <span aria-hidden="true" className="w-px h-3.5 bg-line-strong mx-1" />
+                    <span><b className="font-semibold text-ink">In</b> checked in</span>
+                    <span><b className="font-semibold text-ink">M</b> member</span>
+                    <span><b className="font-semibold text-ink">R</b> resident</span>
                   </div>
                 </div>
               {sheetView === 'calendar' ? (
@@ -1321,11 +1338,6 @@ function DashboardPageInner() {
                   )}
                 </div>
               )}
-                {!loading && teeTimes.length > 0 && sheetView !== 'calendar' && (
-                  <div className="flex justify-end px-4 py-2 border-t border-line bg-paper rounded-b-lg text-[12.5px] text-ink-muted tabular-nums">
-                    {teeTimes.reduce((n, x) => n + (x.bookings?.length ?? 0), 0)} group{teeTimes.reduce((n, x) => n + (x.bookings?.length ?? 0), 0) === 1 ? '' : 's'} booked · {teeTimes.filter(x => x.status !== 'blocked').length} tee times
-                  </div>
-                )}
               </div>
             </>
           )}

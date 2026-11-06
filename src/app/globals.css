@@ -31,6 +31,10 @@
   --color-pine-soft:   #E6EEE8;
   --color-ok-fill:     #EAF2EC;
   --color-mem-fill:    #F4EEDF;
+  /* FILL-1 (Cam 2026-11-06, "fully filled"): a tee-sheet group's money colour, light enough for ink on top. */
+  --color-paid-fill:   #CFE8D6;
+  --color-owes-fill:   #F7E1B5;
+  --color-bad-fill:    #F4CFC6;
   --color-dash:        #CDD0C6;
 
   /* FLOW-1: a card is a white sheet with a whisper of an edge, not a ruled
@@ -158,7 +162,7 @@ body {
   --color-line: #2A2E2B; --color-line-soft: #222623; --color-line-strong: #3A3F3B;
   --color-pine: #4FB27A; --color-pine-hover: #63C28C; --color-pine-soft: #1C2A21;
   --color-ok: #5CC48A; --color-warn: #E3A23B; --color-bad: #F28A7A;
-  --color-ok-fill: #17271D; --color-mem-fill: #2A2518; --color-dash: #3A3F3B; --color-dot-neutral: #5A605A;
+  --color-ok-fill: #17271D; --color-mem-fill: #2A2518; --color-paid-fill: #1F3B2A; --color-owes-fill: #3E3018; --color-bad-fill: #4A2620; --color-dash: #3A3F3B; --color-dot-neutral: #5A605A;
   --color-fairway: #3BAA6B;
 }
 .op-look[data-theme="dark"]:has(.op-rail) .op-dark-only { display: inline-block; }
@@ -182,7 +186,7 @@ body {
 .op-look[data-theme="dark"]:has(.op-rail) .op-keep-light :is(.bg-pine, .bg-ok, .bg-bad, .bg-warn, .bg-ink).text-white { color: #FFFFFF; }
 }
 
-/* GLASS-1 (Cam 2026-11-02, the glass examples canvas: "a little green glow is fine", glass
+/* GLASS-1 (Cam 2026-11-02; glow and frosting removed by NOGLOW-1, Cam 2026-11-06 — only the tab lift is left) (was: the glass examples canvas: "a little green glow is fine", glass
    cards "everywhere", the menu tab that lifts — reverses DASH-D's "no glass"). Screen only,
    dashboard pages with the rail only. Three parts, nothing else changes:
    1. A soft green glow fixed behind the page — two blurred plain circles, no gradient — so the
@@ -191,28 +195,10 @@ body {
       window's panel stays solid (over a dimmed page, frosting dropped grey text below AA). 3. The rail is frosted and the tab under the
       pointer lifts 2px (no cursor tracking; off with reduced motion). A golfer-page preview
       (.op-keep-light) and anyone who asks for less transparency keep solid panels. */
+/* NOGLOW-1 (Cam 2026-11-06, "take away the green backdrop for the glass look, it looks terrible"): the glow
+   and the frosted cards and rail are gone — a plain grey page, solid white cards, the solid rail. The tab
+   lift on hover stays. */
 @media screen {
-.op-look:has(.op-rail) { isolation: isolate; }
-/* Every dashboard page wraps itself in `min-h-screen bg-page`; left solid it covers the glow, so only the
-   rail ever looked like glass (Cam 2026-11-03). The page colour already sits on .op-look itself. Only that
-   wrapper — a sticky bar or a cell with bg-page keeps its solid fill. */
-.op-look:has(.op-rail) .min-h-screen.bg-page { background-color: transparent; }
-.op-look:has(.op-rail)::before, .op-look:has(.op-rail)::after {
-  content: ''; position: fixed; z-index: -1; pointer-events: none; border-radius: 9999px; filter: blur(90px);
-}
-.op-look:has(.op-rail)::before { width: 900px; height: 700px; left: 12vw; top: -12vh; background: #3BAA6B; opacity: .20; }
-/* Low and to the right, so the two never stack on a laptop or iPad (2026-11-04 review). */
-.op-look:has(.op-rail)::after { width: 900px; height: 760px; right: -12vw; top: 62vh; background: #2F6B4F; opacity: .18; }
-.op-look[data-theme="dark"]:has(.op-rail)::before { opacity: .14; }
-.op-look[data-theme="dark"]:has(.op-rail)::after { background: #2F6B4F; opacity: .22; }
-.op-look:has(.op-rail) .bg-white.shadow-card:not(.op-tab) {
-  background-color: color-mix(in srgb, var(--color-white) 50%, transparent);
-  -webkit-backdrop-filter: blur(18px) saturate(140%); backdrop-filter: blur(18px) saturate(140%);
-}
-.op-look:has(.op-rail) .op-rail {
-  background-color: color-mix(in srgb, var(--color-rail) 55%, transparent);
-  -webkit-backdrop-filter: blur(22px) saturate(140%); backdrop-filter: blur(22px) saturate(140%);
-}
 .op-look:has(.op-rail) .op-tab { transition: transform .18s ease, background-color .18s ease, box-shadow .18s ease, color .18s ease; }
 .op-look:has(.op-rail) .op-tab:not([aria-current]):hover {
   transform: translateY(-2px); color: var(--color-ink);

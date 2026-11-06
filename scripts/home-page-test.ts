@@ -48,5 +48,22 @@ ok('the old single money goal and its route are gone', !existsSync('src/app/api/
 const cond = read('src/lib/course-conditions.ts');
 ok('conditions: the course\'s own lines, shown to golfers with the four choices', cond.includes('...(c.lines ?? [])') && board.includes('Your own · golfers see these too') && board.includes('CONDITION_SUGGESTIONS'));
 
+// Cam 2026-11-06: "Action needed" on Home and Money; the conditions editor lines up and its suggestions read as shortcuts.
+ok('"Action needed", not "Needs you", on Home and Money', home.includes('>Action needed</h2>') && read('src/app/dashboard/money/page.tsx').includes('>Action needed</h2>') && !home.includes('>Needs you</h2>'));
+ok('conditions editor: label above, equal options, "+" shortcuts', board.includes('repeat(${f.options.length}, minmax(0, 1fr))') && board.includes('>+ {x}</button>'));
+
+// SHEET-3 (Cam 2026-11-06, the tee sheet notes): quiet actions, one shape for every day number (groups moved up),
+// highlighted view words, a search field, no boxed arrows or reload, a one-line late bar, a key that says Edge / Fill,
+// and past tee times at the top.
+const sheet = read('src/app/dashboard/page.tsx'), sheetRows = read('src/components/dashboard/TeeSheetRows.tsx');
+ok('tee sheet: the groups count is in the day strip, not a footer', sheet.includes('const dayGroups = ') && sheet.includes('>Times booked</div>') && !sheet.includes("group{teeTimes.reduce("));
+ok('tee sheet: the view switch highlights the word', sheet.includes("'text-ink font-semibold border-pine'") && !sheet.includes("className=\"flex p-0.5 rounded-md bg-paper border border-line\""));
+ok('tee sheet: the key says what the colours and the tags mean', sheet.includes('" />Declined or no-show</span>') && sheet.includes('>M</b> member') && sheet.includes('>R</b> resident'));
+ok('tee sheet: "Times booked N of M", groups under it', sheet.includes('>Times booked</div>') && sheet.includes('const timesBooked = '));
+ok('tee sheet: past tee times come first', sheetRows.indexOf('{PAST} · {gone.length}') < sheetRows.indexOf("rows(slots, 'Tee times', true)"));
+
+ok('the homepage demo mirrors the filled cells and the key', read('src/components/home/TeeSheetDemo.tsx').includes('<span><b>In</b>checked in</span>') && read('src/app/home.module.css').includes('.seatPaid { background: #CFE8D6; }'));
+ok('conditions choices wrap on a phone, never cut off', board.includes('whitespace-normal break-words') && !board.includes("text-[13px] truncate ' + (draft"));
+
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);

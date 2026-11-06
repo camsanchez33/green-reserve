@@ -84,7 +84,7 @@ export function ConditionsCard({ initial, canEdit }: { initial: Conditions; canE
   const [error, setError] = useState('');
   const [line, setLine] = useState('');
   const lines = draft.lines ?? [];
-  const addLine = () => { const t = line.trim(); if (!t || lines.length >= CONDITION_LINES_MAX) return; setDraft(d => ({ ...d, lines: [...(d.lines ?? []), t] })); setLine(''); };
+  const addLine = () => { const t = line.trim(); if (!t || lines.length >= CONDITION_LINES_MAX) return; if (lines.some(x => x.toLowerCase() === t.toLowerCase())) { setLine(''); return; } setDraft(d => ({ ...d, lines: [...(d.lines ?? []), t] })); setLine(''); };
   async function save() {
     setBusy(true); setError('');
     const r = await dfetch<{ detail: CourseConditions; updatedAt: string | null }>('/api/operator/conditions', { method: 'PATCH', body: JSON.stringify({ detail: line.trim() && lines.length < CONDITION_LINES_MAX ? { ...draft, lines: [...lines, line.trim()] } : draft }) });
@@ -117,21 +117,22 @@ export function ConditionsCard({ initial, canEdit }: { initial: Conditions; canE
       ) : (
         <div className="flex flex-col gap-3">
           {CONDITION_FIELDS.map(f => (
-            <div key={f.key} className="flex flex-wrap items-center gap-2">
-              <span className="w-16 text-[13px] text-ink-soft">{f.label}</span>
-              <div role="radiogroup" aria-label={f.label} className="flex flex-wrap gap-1 p-1 rounded-[7px] bg-paper">
+            // Cam 2026-11-06 ("can be a little different"): label above, the options share the row equally — every row lines up.
+            <div key={f.key} className="flex flex-col gap-1.5">
+              <span className="text-[12.5px] text-ink-muted">{f.label}</span>
+              <div role="radiogroup" aria-label={f.label} className="grid gap-1 p-1 rounded-[7px] bg-paper" style={{ gridTemplateColumns: `repeat(${f.options.length}, minmax(0, 1fr))` }}>
                 {f.options.map(([k, label]) => (
                   <button key={k} type="button" role="radio" aria-checked={draft[f.key as ConditionKey] === k}
                     onClick={() => setDraft(d => ({ ...d, [f.key]: d[f.key as ConditionKey] === k ? undefined : k }))}
-                    className={'px-2.5 min-h-[32px] rounded-[5px] text-[13px] ' + (draft[f.key as ConditionKey] === k ? 'bg-white text-ink font-semibold shadow-card' : 'text-ink-muted hover:text-ink')}>{label}</button>
+                    className={'px-1 py-1 min-h-[32px] rounded-[5px] text-[13px] leading-tight whitespace-normal break-words ' + (draft[f.key as ConditionKey] === k ? 'bg-white text-ink font-semibold shadow-card' : 'text-ink-muted hover:text-ink')}>{label}</button>
                 ))}
               </div>
             </div>
           ))}
           <div className="flex flex-col gap-2 border-t border-line-soft pt-3">
-            <span className="text-[13px] text-ink-soft">Your own · golfers see these too</span>
+            <span className="text-[12.5px] text-ink-muted">Your own · golfers see these too</span>
             {lines.map((l, i) => (
-              <div key={l} className="flex items-center gap-2 rounded-[7px] bg-paper px-3 py-1.5 text-[14px] text-ink">
+              <div key={i} className="flex items-center gap-2 rounded-[7px] bg-paper px-3 py-1.5 text-[14px] text-ink">
                 <span className="flex-1 min-w-0 break-words">{l}</span>
                 <button type="button" className="text-[12.5px] font-medium text-ink-soft hover:text-bad" onClick={() => setDraft(d => ({ ...d, lines: (d.lines ?? []).filter((_, j) => j !== i) }))}>Remove</button>
               </div>
@@ -139,13 +140,13 @@ export function ConditionsCard({ initial, canEdit }: { initial: Conditions; canE
             {lines.length < CONDITION_LINES_MAX && <>
               <div className="flex gap-2">
                 <input value={line} onChange={e => setLine(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addLine(); } }} maxLength={CONDITION_LINE_CHARS}
-                  aria-label="Add a condition" placeholder="Greens rolling 10"
+                  aria-label="Add a condition" placeholder="Type a condition"
                   className="flex-1 min-w-0 bg-paper border border-line rounded-[7px] px-3 py-2 text-[14px] text-ink placeholder-ink-faint focus:border-pine/40 focus:ring-2 focus:ring-pine/10" />
                 <button type="button" className={BTN} disabled={!line.trim()} onClick={addLine}>Add</button>
               </div>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-x-3 gap-y-1 text-[12.5px]">
                 {CONDITION_SUGGESTIONS.filter(x => !lines.includes(x)).map(x => (
-                  <button key={x} type="button" onClick={() => setLine(x)} className="px-2 py-1 rounded-[5px] border border-line text-[12.5px] text-ink-soft hover:text-ink hover:border-line-strong">{x}</button>
+                  <button key={x} type="button" onClick={() => setLine(x)} className="text-pine hover:underline underline-offset-2">+ {x}</button>
                 ))}
               </div>
             </>}

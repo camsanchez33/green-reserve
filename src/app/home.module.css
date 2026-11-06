@@ -75,11 +75,12 @@
 .rw:hover .seat, .rw:hover .seatOpen { box-shadow: 0 0 0 1px rgba(23,59,42,.3); }
 .rwT { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; padding-left: 3px; }
 .rwP { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
-.seat { height: 26px; min-width: 0; display: flex; align-items: center; gap: 4px; padding: 0 6px; border-radius: 4px; border-left: 3px solid #9A5B13; background: #fff; box-shadow: 0 0 0 1px rgba(20,24,20,.08); font-size: 11.5px; overflow: hidden; }
+/* FILL-1 (Cam 2026-11-06): a group is filled with its money colour, as on the real sheet. */
+.seat { height: 26px; min-width: 0; display: flex; align-items: center; gap: 4px; padding: 0 6px; border-radius: 4px; background: #F7E1B5; box-shadow: 0 0 0 1px rgba(20,24,20,.08); font-size: 11.5px; overflow: hidden; }
+.seat b { margin-left: auto; font-size: 10.5px; font-weight: 600; color: #4A4F49; flex: 0 0 auto; }
 .seat span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .seat small { color: var(--muted); font-size: 11px; flex: 0 0 auto; }
-.seatPaid { border-left-color: #3D7A55; }
-.seatIn { background: #E6EFE8; }
+.seatPaid { background: #CFE8D6; }
 .seatNew { background: #EEF4EC; box-shadow: 0 0 0 1px rgba(23,59,42,.35); }
 .seatOpen { height: 26px; border-radius: 4px; background: var(--paper); border: 1px dashed var(--line); }
 .rwBlocked { height: 26px; border-radius: 4px; background: var(--paper) repeating-linear-gradient(135deg, #E3E4DE 0 1px, transparent 1px 7px); font-size: 11.5px; font-style: italic; color: var(--muted); display: flex; align-items: center; padding: 0 8px; grid-column: span 4; }
@@ -88,17 +89,18 @@
 .rwSel { box-shadow: 0 0 0 2px rgba(23,59,42,.5); }
 .rwNow { display: flex; align-items: center; gap: 6px; margin: 2px 0 4px; font-size: 10.5px; font-weight: 600; color: #9A5B13; }
 .rwNow::after { content: ''; flex: 1; border-top: 2px solid #9A5B13; }
-.kOk, .kWarn, .kBad, .kIn, .kMem { display: inline-block; width: 11px; height: 11px; border-radius: 2px; background: #fff; box-shadow: 0 0 0 1px rgba(20,24,20,.12); }
-.kOk { border-left: 3px solid #3D7A55; }
-.kWarn { border-left: 3px solid #9A5B13; }
-.kBad { border-left: 3px solid #A3452F; }
-.kIn { background: #E6EFE8; box-shadow: none; }
-.kMem { background: #F1EEE4; box-shadow: none; }
+.kOk, .kWarn, .kBad { display: inline-block; width: 12px; height: 12px; border-radius: 2px; box-shadow: 0 0 0 1px rgba(20,24,20,.08); }
+.kOk { background: #CFE8D6; }
+.kWarn { background: #F7E1B5; }
+.kBad { background: #F4CFC6; }
+.lg b { font-weight: 600; color: #141814; margin-right: 3px; }
 .dOk, .dWarn { display: inline-block; flex: 0 0 auto; width: 5px; height: 5px; border-radius: 50%; }
 .dOk { background: #3D7A55; }
 .dWarn { background: #9A5B13; }
 .lg { display: flex; flex-wrap: wrap; gap: 14px; margin: 0 0 10px; font-size: 11.5px; color: #4A4F49; }
 .lg span { display: inline-flex; align-items: center; gap: 6px; }
+/* SHEET-3 (Cam 2026-11-06): the key says what the edge and the fill mean, as on the real sheet. */
+.lgRule { width: 1px; height: 12px; background: #E3E4DE; align-self: center; }
 .pnl { position: absolute; top: 0; right: 0; bottom: 0; width: min(300px, 80%); z-index: 3; background: #fff; box-shadow: 0 0 0 1px rgba(20,24,20,.08), 0 1px 2px rgba(20,24,20,.05); padding: 14px 14px 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
 .pnlHd { display: flex; justify-content: space-between; align-items: flex-start; }
 .pnlHd b { display: block; font-size: 20px; font-variant-numeric: tabular-nums; }

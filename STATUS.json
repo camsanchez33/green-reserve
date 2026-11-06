@@ -1,19 +1,50 @@
 {
-  "generatedAt": "2026-11-06T01:52:40.697Z",
+  "generatedAt": "2026-11-06T02:45:12.837Z",
   "repo": {
-    "head": "3d4c9eb7",
+    "head": "c78875dc",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 3,
+    "dirtyCount": 22,
     "dirty": [
-      "M docs/CODEMAP.md",
+      "M CLAUDE.md",
+      " M STATUS.artifact.html",
+      " M STATUS.json",
+      " M STATUS.md",
+      " M docs/CODEMAP.md",
       " M docs/codemap.json",
-      "?? src/app/sms-consent/"
+      " M scripts/design-guard.baseline.json",
+      " M scripts/glass-test.ts",
+      " M scripts/home-page-test.ts",
+      " M scripts/tees-side-by-side-test.ts",
+      " M scripts/teesheet-1-test.ts",
+      " M src/app/dashboard/home/page.tsx",
+      " M src/app/dashboard/money/page.tsx",
+      " M src/app/dashboard/page.tsx",
+      " M src/app/globals.css",
+      " M src/app/home.module.css",
+      " M src/components/dashboard/TeeSheetCalendar.tsx",
+      " M src/components/dashboard/TeeSheetRows.tsx",
+      " M src/components/dashboard/home/HomeBoard.tsx",
+      " M src/components/home/TeeSheetDemo.tsx"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "91764419",
+        "date": "2026-11-05T21:05:07-05:00",
+        "subject": "Public SMS consent page at /sms-consent for Twilio's checker (#323)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "41e8a0af",
+        "date": "2026-11-06T01:52:44+00:00",
+        "subject": "Public SMS consent page at /sms-consent for Twilio's checker",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "b147abf7",
         "date": "2026-11-05T20:29:02-05:00",
@@ -1230,6 +1261,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "91764419",
+      "date": "2026-11-05",
+      "subject": "Public SMS consent page at /sms-consent for Twilio's checker (#323)"
+    },
+    {
+      "h": "41e8a0af",
+      "date": "2026-11-06",
+      "subject": "Public SMS consent page at /sms-consent for Twilio's checker"
+    },
+    {
       "h": "b147abf7",
       "date": "2026-11-05",
       "subject": "Host the SMS consent screenshot at /sms-opt-in.png for Twilio (#322)"
@@ -1278,16 +1319,6 @@
       "h": "acd00f57",
       "date": "2026-11-05",
       "subject": "Terms and Privacy: Twilio A2P campaign wording (SMS Terms heading, no selling or sharing opt-in data)"
-    },
-    {
-      "h": "d43ed864",
-      "date": "2026-11-04",
-      "subject": "Database audit: crons read only due dates, Stripe-id indexes, rate-limit sweep (#317)"
-    },
-    {
-      "h": "ba4df316",
-      "date": "2026-11-05",
-      "subject": "Database load from the audit: crons read only due tee dates, Stripe-id indexes, rate-limit sweep, sheet money strip asks less"
     }
   ]
 }
