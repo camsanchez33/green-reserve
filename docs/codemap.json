@@ -8939,7 +8939,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 2112,
+      "lines": 2105,
       "purpose": "",
       "brain": [],
       "exports": [

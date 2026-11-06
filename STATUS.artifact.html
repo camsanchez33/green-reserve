@@ -117,14 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-11-06 04:47 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 9dd45931</span>
-    <span>12 uncommitted</span>
+    <span>2026-11-06 18:40 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ e2f573f0</span>
+    <span>8 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">134 runs have shipped that the queue doesn't know about</div>
+<div class="lede">136 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-31. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">54cc0d80</span><span>Tee sheet: the group card asks how they're paying, then one button that says what it does (#330)</span></li>
+<li><span class="h">bd10ddf4</span><span>Tee sheet: the group card asks how they're paying, then one button that says what it does</span></li>
 <li><span class="h">337e9a0a</span><span>Tee sheet: Message golfers by email, text or both, with ready-made messages and a preview (#329)</span></li>
 <li><span class="h">e616bb78</span><span>Regenerate the code map and status board</span></li>
 <li><span class="h">2e16380b</span><span>Owner 2FA: match a code and its step on one clock</span></li>
@@ -271,7 +273,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/cash-at-counter-db-test.ts</code></li><li><code>M scripts/group-card-checkout-test.ts</code></li><li><code>M scripts/split-booking-db-test.ts</code></li><li><code>M scripts/teesheet-1-test.ts</code></li><li><code>M scripts/teesheet-3-test.ts</code></li><li><code>M scripts/teesheet-till-test.ts</code></li><li><code>M scripts/tt-card-test.ts</code></li><li><code>M scripts/words-guard.baseline.json</code></li><li><code>M src/app/dashboard/page.tsx</code></li><li><code>?? scripts/checkout-card-test.ts</code></li></ul>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/checkout-card-test.ts</code></li><li><code>M scripts/group-card-checkout-test.ts</code></li><li><code>M scripts/split-booking-db-test.ts</code></li><li><code>M scripts/teesheet-till-test.ts</code></li><li><code>M scripts/words-guard.baseline.json</code></li><li><code>M src/app/dashboard/page.tsx</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -302,7 +304,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Built, not signed off</h2>
 <p class="note">The box is open because <code>/gr-review</code> hasn't run &mdash; not because the code is missing.</p>
 <div class="ledger">
-<div class="row"><span class="t">BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)</span><span class="age">106d</span><span class="where">b88c8bf3</span></div>
+<div class="row"><span class="t">BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)</span><span class="age">107d</span><span class="where">b88c8bf3</span></div>
 </div></section>
 <section><h2>Waiting on you, not on a build</h2>
 <ul class="plain"><li>CAM: live walks before launch (code merged <span class="where">:104</span></li><li>Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checked against th <span class="where">:111</span></li><li>Cam: which business address to publish, and confirming the Terms' governing law moves from New Jersey to New York (LLC is NY) <span class="where">:290</span></li><li>CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` (&quot;Golf course name&quot;) to the demo event, so homepage demo inquiries arrive  <span class="where">:393</span></li><li>CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge) Loop fix is code-verified: sweepOrphanCourses skips archived [ORPHAN] c <span class="where">:2412</span></li><li>CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars <span class="where">:3048</span></li></ul>
@@ -314,7 +316,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <p class="note">Open refs = how many open queue items still point at that spec. Zero and old means consumed.</p>
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
 <tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-11-05 &middot; 0d</td></tr>
-<tr><td><code>DENSE_UI_SPEC.md</code></td><td class="num">1</td><td class="num">2026-11-01 &middot; 4d</td></tr>
+<tr><td><code>DENSE_UI_SPEC.md</code></td><td class="num">1</td><td class="num">2026-11-01 &middot; 5d</td></tr>
 <tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-20 &middot; 16d</td></tr>
 <tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-26 &middot; 10d</td></tr>
 <tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-25 &middot; 11d</td></tr>
@@ -353,6 +355,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 16d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">54cc0d80</td><td class="num">2026-11-05</td><td>Tee sheet: the group card asks how they're paying, then one button that says what it does (#330)</td></tr>
+<tr><td class="num">bd10ddf4</td><td class="num">2026-11-06</td><td>Tee sheet: the group card asks how they're paying, then one button that says what it does</td></tr>
 <tr><td class="num">337e9a0a</td><td class="num">2026-11-05</td><td>Tee sheet: Message golfers by email, text or both, with ready-made messages and a preview (#329)</td></tr>
 <tr><td class="num">e616bb78</td><td class="num">2026-11-06</td><td>Regenerate the code map and status board</td></tr>
 <tr><td class="num">2e16380b</td><td class="num">2026-11-06</td><td>Owner 2FA: match a code and its step on one clock</td></tr>
@@ -363,8 +367,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">60b0470c</td><td class="num">2026-11-06</td><td>Test: the engine's delete pin includes the staff-only guard</td></tr>
 <tr><td class="num">ff613483</td><td class="num">2026-11-06</td><td>Tee sheet: Add tee time from the day's prices, keep a time for staff, safer Block and Delete</td></tr>
 <tr><td class="num">c5f4ba4b</td><td class="num">2026-11-05</td><td>Tee sheet: On the course, a fuller List, a Calendar that says why (#326)</td></tr>
-<tr><td class="num">f8d6b25b</td><td class="num">2026-11-06</td><td>Tee sheet: On the course, a List with the grid's details, a Calendar that says why</td></tr>
-<tr><td class="num">be8b68ee</td><td class="num">2026-11-05</td><td>Home: the week-ahead link offers demand pricing and lands on it (#325)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>
