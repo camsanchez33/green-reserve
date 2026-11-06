@@ -225,7 +225,18 @@ function DashboardPageInner() {
   }, [canEvents]);
   const wxTabs = ([['cancel', 'Cancel for weather'], ['delay', 'Delay the start']] as const).filter(([k]) => access.can(k === 'cancel' ? 'sheet.weather_cancel' : 'sheet.delay_start'));
   const [wxMode, setWxMode] = useState<'cancel' | 'delay'>('cancel');
-  const [wxWhole, setWxWhole] = useState(true);
+  // WX-2 (Cam 2026-11-06, "clean, effective, organised"): Rest of today · Whole day · Custom; the plan
+  // follows every change live, and Cancel only runs on the window the plan on screen was made for.
+  const [wxSpan, setWxSpan] = useState<'rest' | 'day' | 'custom'>('day');
+  const [wxPlanKey, setWxPlanKey] = useState('');
+  const [frostPlanKey, setFrostPlanKey] = useState('');
+  // Review 2026-11-06: checking (the live plan) and applying are separate — while a cancel or move runs,
+  // the live plan stops and every control is locked, so a second apply can't start on top of it.
+  const [wxChecking, setWxChecking] = useState(false);
+  // An apply's own error (e.g. "stopped partway") — never cleared by the live re-check that follows it.
+  const [wxApplyErr, setWxApplyErr] = useState('');
+  const [frostApplyErr, setFrostApplyErr] = useState('');
+  const [frostChecking, setFrostChecking] = useState(false);
   const [wxFrom, setWxFrom] = useState('13:00');
   const [wxTo, setWxTo] = useState('');
   const [wxReason, setWxReason] = useState('');
@@ -233,6 +244,36 @@ function DashboardPageInner() {
   const [wxBusy, setWxBusy] = useState(false);
   const [wxErr, setWxErr] = useState('');
   const [wxResult, setWxResult] = useState<{ cancelled: number; blocked: number; feeRefundsFailed: number; calls: FrostCall[] } | null>(null);
+  /** The window a span means: rest of today from the course's clock now, the whole day, or the custom times. */
+  const wxWindow = (): { from?: string; to?: string } => wxSpan === 'day' ? {} : wxSpan === 'rest' ? { from: clockIn(courseTz), to: '24:00' } : { from: wxFrom, to: wxTo || '24:00' };
+  const wxKey = `${selectedDate}|${wxSpan}|${wxSpan === 'custom' ? `${wxFrom}-${wxTo}` : ''}`;
+  useEffect(() => {
+    if (!frostOpen || wxMode !== 'cancel' || wxResult || wxBusy) return;
+    if (wxSpan === 'custom' && !/^\d\d:\d\d$/.test(wxFrom)) return;
+    let live = true;
+    const t = setTimeout(async () => {
+      setWxChecking(true); setWxErr('');
+      const r = await dfetch<{ plan: WxPlan }>('/api/operator/weather-cancel', { method: 'POST', body: JSON.stringify({ date: selectedDate, ...wxWindow() }) });
+      if (!live) return;
+      setWxChecking(false);
+      if (!r.ok) { setWxErr(r.error); setWxPlan(null); setWxPlanKey(''); return; }
+      setWxPlan(r.data.plan); setWxPlanKey(wxKey);
+    }, 350);
+    return () => { live = false; clearTimeout(t); setWxChecking(false); };
+  }, [frostOpen, wxMode, wxKey, wxResult, wxBusy]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!frostOpen || wxMode !== 'delay' || frostResult || frostBusy || !/^\d\d:\d\d$/.test(frostTime)) return;
+    let live = true;
+    const t = setTimeout(async () => {
+      setFrostChecking(true); setFrostErr('');
+      const r = await dfetch<{ plan: FrostPlan }>('/api/operator/frost-delay', { method: 'POST', body: JSON.stringify({ date: selectedDate, newStart: frostTime }) });
+      if (!live) return;
+      setFrostChecking(false);
+      if (!r.ok) { setFrostErr(r.error); setFrostPlan(null); setFrostPlanKey(''); return; }
+      setFrostPlan(r.data.plan); setFrostPlanKey(`${selectedDate}|${frostTime}`);
+    }, 350);
+    return () => { live = false; clearTimeout(t); setFrostChecking(false); };
+  }, [frostOpen, wxMode, frostTime, selectedDate, frostResult, frostBusy]);
   const [walkInSlot, setWalkInSlot] = useState<TeeTime | null>(null);
   const [walkInLate, setWalkInLate] = useState(false);
   const [rowBusy, setRowBusy] = useState<string | null>(null);
@@ -1197,7 +1238,7 @@ function DashboardPageInner() {
                 <div className="flex flex-wrap gap-2 items-center">
                   {/* SHEET-3 (Cam 2026-11-06, "a little cleaner"): the day's other actions are quiet words beside Add time, not boxed buttons. */}
                   {selectedDate >= today() && wxTabs.length > 0 && (
-                    <button onClick={() => { setFrostOpen(true); setWxMode(wxTabs[0][0]); setFrostPlan(null); setFrostErr(''); setFrostResult(null); setWxPlan(null); setWxErr(''); setWxResult(null); }} className="text-[13px] font-medium text-ink-soft hover:text-ink hover:bg-white/70 px-2.5 py-1.5 rounded-md transition-colors">
+                    <button onClick={() => { setFrostOpen(true); setWxMode(wxTabs[0][0]); setWxSpan(selectedDate === today() ? 'rest' : 'day'); setFrostPlan(null); setFrostPlanKey(''); setFrostErr(''); setFrostApplyErr(''); setFrostResult(null); setWxPlan(null); setWxPlanKey(''); setWxErr(''); setWxApplyErr(''); setWxResult(null); }} className="text-[13px] font-medium text-ink-soft hover:text-ink hover:bg-white/70 px-2.5 py-1.5 rounded-md transition-colors">
                       Weather delay / cancel
                     </button>
                   )}
@@ -1500,18 +1541,11 @@ function DashboardPageInner() {
               <h3 className="font-serif font-semibold text-ink text-[17px]">Weather delay or cancel — {fmtDate(selectedDate)}</h3>
               <button onClick={() => setFrostOpen(false)} disabled={frostBusy || wxBusy} className="text-ink-muted hover:text-ink disabled:opacity-40" aria-label="Close"><X className="w-5 h-5"/></button>
             </div>
-            {!frostResult && !wxResult && (
-              // Cam 2026-10-19 ("doesn't explain what it does"): two plain choices,
-              // each saying what happens to the golfers, before anything else.
-              <div role="radiogroup" aria-label="What do you need to do?" className={'grid gap-2 mb-4 ' + (wxTabs.length > 1 ? 'sm:grid-cols-2' : 'grid-cols-1')}>
+            {!frostResult && !wxResult && wxTabs.length > 1 && (
+              <div role="tablist" aria-label="What do you need to do?" className="grid grid-cols-2 gap-1 p-1 bg-paper rounded-md mb-4">
                 {wxTabs.map(([k, l]) => (
-                  <button key={k} role="radio" aria-checked={wxMode === k} disabled={frostBusy || wxBusy} onClick={() => setWxMode(k)}
-                    className={'text-left rounded-md border px-3 py-2.5 transition-colors disabled:opacity-60 ' + (wxMode === k ? 'border-pine/50 bg-pine/[0.05]' : 'border-line hover:border-line-strong')}>
-                    <span className="block text-[13.5px] font-semibold text-ink">{l}</span>
-                    <span className="block text-[12.5px] text-ink-soft mt-0.5">{k === 'cancel'
-                      ? 'Rain or lightning: cancel and block a range of times, no fee, email those golfers.'
-                      : 'Frost or a wet morning: start later and move the early groups back.'}</span>
-                  </button>
+                  <button key={k} role="tab" aria-selected={wxMode === k} disabled={frostBusy || wxBusy} onClick={() => setWxMode(k)}
+                    className={'py-1.5 rounded-md text-[13px] font-semibold transition-colors ' + (wxMode === k ? 'bg-white text-ink shadow-card' : 'text-ink-muted hover:text-ink')}>{l}</button>
                 ))}
               </div>
             )}
@@ -1530,59 +1564,57 @@ function DashboardPageInner() {
                 <button onClick={() => { setFrostOpen(false); setWxResult(null); }} className="w-full bg-pine hover:bg-pine-hover text-white py-2.5 rounded-md text-[13px] font-semibold">Done</button>
               </div>
             ) : (<>
-            <p className="text-[13px] text-ink-soft mb-4">Every group in the window is cancelled with no fee — a hold already taken is refunded — and emailed why. The times are blocked so nobody books into the weather.</p>
-            <div className="grid grid-cols-2 gap-1 mb-3 text-[13px]">
-              {([[true, 'Whole day'], [false, 'Part of the day']] as const).map(([v, l]) => (
-                <label key={l} className={'flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer ' + (wxWhole === v ? 'border-pine/40 bg-pine/5 text-ink' : 'border-line text-ink-soft')}>
-                  <input type="radio" name="wx-span" checked={wxWhole === v} onChange={() => { setWxWhole(v); setWxPlan(null); }} className="accent-pine"/>{l}
-                </label>
+            <div role="radiogroup" aria-label="Which times" className={'grid gap-1 mb-3 text-[13px] ' + (selectedDate === today() ? 'grid-cols-3' : 'grid-cols-2')}>
+              {(selectedDate === today() ? [['rest', 'Rest of today'], ['day', 'Whole day'], ['custom', 'Custom']] as const : [['day', 'Whole day'], ['custom', 'Custom']] as const).map(([v, l]) => (
+                <button key={v} type="button" role="radio" aria-checked={wxSpan === v} disabled={wxBusy} onClick={() => setWxSpan(v)}
+                  className={'py-2 rounded-md border font-medium transition-colors disabled:opacity-50 ' + (wxSpan === v ? 'border-pine/40 bg-pine/5 text-ink' : 'border-line text-ink-soft hover:border-line-strong')}>{l}</button>
               ))}
             </div>
-            {!wxWhole && (
+            {wxSpan === 'custom' && (
               <div className="grid grid-cols-2 gap-2 mb-3">
-                <div><label className="block text-[12.5px] text-ink-muted mb-1.5">From</label>
-                  <input type="time" value={wxFrom} onChange={e => { setWxFrom(e.target.value); setWxPlan(null); }} className={iCls}/></div>
-                <div><label className="block text-[12.5px] text-ink-muted mb-1.5">To <span className="text-ink-faint">(blank = close)</span></label>
-                  <input type="time" value={wxTo} onChange={e => { setWxTo(e.target.value); setWxPlan(null); }} className={iCls}/></div>
+                <div><label htmlFor="wx-from" className="block text-[12.5px] text-ink-muted mb-1.5">From</label>
+                  <input id="wx-from" type="time" value={wxFrom} disabled={wxBusy} onChange={e => setWxFrom(e.target.value)} className={iCls}/></div>
+                <div><label htmlFor="wx-to" className="block text-[12.5px] text-ink-muted mb-1.5">To <span className="text-ink-faint">(blank = close)</span></label>
+                  <input id="wx-to" type="time" value={wxTo} disabled={wxBusy} onChange={e => setWxTo(e.target.value)} className={iCls}/></div>
               </div>
             )}
-            <label className="block text-[12.5px] text-ink-muted mb-1.5">Note for golfers <span className="text-ink-faint">(optional)</span></label>
-            <div className="flex gap-2 mb-4">
-              <input value={wxReason} maxLength={200} onChange={e => setWxReason(e.target.value)} placeholder="Lightning in the forecast" className={iCls + ' flex-1'}/>
-              <button disabled={wxBusy} onClick={async () => {
-                setWxBusy(true); setWxErr('');
-                const r = await dfetch<{ plan: WxPlan }>('/api/operator/weather-cancel', { method: 'POST', body: JSON.stringify({ date: selectedDate, ...(wxWhole ? {} : { from: wxFrom, to: wxTo || '24:00' }) }) });
-                setWxBusy(false);
-                if (!r.ok) { setWxErr(r.error); return; }
-                setWxPlan(r.data.plan);
-              }} className="px-4 rounded-md border border-line text-[13px] font-semibold text-ink hover:bg-paper disabled:opacity-50">{wxBusy && !wxPlan ? 'Checking…' : 'Preview'}</button>
+            <label htmlFor="wx-note" className="block text-[12.5px] text-ink-muted mb-1.5">Note in the email <span className="text-ink-faint">(optional)</span></label>
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {WX_NOTES.map(n => (
+                <button key={n} type="button" disabled={wxBusy} onClick={() => setWxReason(n)} aria-pressed={wxReason === n}
+                  className={'px-2.5 py-1 rounded-md border text-[12.5px] transition-colors ' + (wxReason === n ? 'border-pine/40 bg-pine/5 text-ink' : 'border-line text-ink-soft hover:border-line-strong')}>{n}</button>
+              ))}
             </div>
+            <input id="wx-note" value={wxReason} maxLength={200} disabled={wxBusy} onChange={e => setWxReason(e.target.value)} placeholder="Or write your own" className={iCls + ' w-full mb-4'}/>
+            {wxApplyErr && <p role="alert" className="text-[13px] text-bad mb-3">{wxApplyErr}</p>}
             {wxErr && <p className="text-[13px] text-bad mb-3">{wxErr}</p>}
-            {wxPlan && (
-              <div className="mb-4">
-                {wxPlan.groups.length === 0 ? (
-                  <p className="text-[13px] text-ink-soft">No groups are booked in that window.</p>
-                ) : (
-                  <ul className="divide-y divide-line text-[13px] border-y border-line max-h-56 overflow-y-auto">
+            <div className="mb-4" aria-live="polite">
+              {!wxPlan ? <p className="text-[13px] text-ink-muted">{wxChecking ? 'Checking the sheet…' : ''}</p>
+                : wxPlan.groups.length === 0 ? <p className="text-[13px] text-ink-soft">No groups booked{wxPlan.teeTimeIds.length ? ` · ${wxPlan.teeTimeIds.length} time${wxPlan.teeTimeIds.length === 1 ? '' : 's'} blocked` : ''}.</p>
+                : (<>
+                  <p className="text-[13.5px] text-ink mb-1.5"><b>{wxPlan.groups.length} group{wxPlan.groups.length === 1 ? '' : 's'} · {wxPlan.groups.reduce((n, g) => n + g.players, 0)} players</b> cancelled · {wxPlan.teeTimeIds.length} time{wxPlan.teeTimeIds.length === 1 ? '' : 's'} blocked</p>
+                  <ul className="divide-y divide-line text-[13px] border-y border-line max-h-48 overflow-y-auto">
                     {wxPlan.groups.map(g => (
-                      <li key={g.bookingId} className="flex justify-between gap-3 py-1.5"><span>{g.name} · {g.players}</span><span className="tabular-nums text-ink-soft">{fmtTime(g.time)}{g.noEmail ? ' · no email, call' : ''}</span></li>
+                      <li key={g.bookingId} className="flex justify-between gap-3 py-1.5"><span>{g.name} · {g.players}</span><span className={'tabular-nums ' + (g.noEmail ? 'text-bad' : 'text-ink-soft')}>{fmtTime(g.time)}{g.noEmail ? ' · no email, call' : ''}</span></li>
                     ))}
                   </ul>
-                )}
-                <p className="text-[12px] text-ink-soft mt-2">{wxPlan.teeTimeIds.length} time{wxPlan.teeTimeIds.length === 1 ? '' : 's'} will be blocked.{wxPlan.startedBefore ? ` Times up to ${fmtTime(wxPlan.startedBefore)} have already gone out and are left alone.` : ''}</p>
-              </div>
-            )}
+                </>)}
+              {wxPlan?.startedBefore && <p className="text-[12px] text-ink-muted mt-1.5">Times up to {fmtTime(wxPlan.startedBefore)} have gone out and stay as they are.</p>}
+            </div>
+            <p className="text-[12.5px] text-ink-soft mb-2">No fees · holds refunded · golfers emailed</p>
             <div className="flex gap-2">
               <button onClick={() => setFrostOpen(false)} disabled={wxBusy} className="flex-1 border border-line text-ink-soft py-2.5 rounded-md text-[13px] font-medium hover:border-line-strong disabled:opacity-50">Close</button>
-              <button disabled={!wxPlan || wxBusy || wxPlan.teeTimeIds.length === 0} onClick={async () => {
-                if (!wxPlan) return;
-                setWxBusy(true); setWxErr('');
-                const r = await dfetch<{ cancelled: WxGroup[]; failed: (WxGroup & { error: string })[]; feeRefundsFailed: number; blocked: number }>('/api/operator/weather-cancel', { method: 'POST', body: JSON.stringify({ date: selectedDate, ...(wxWhole ? {} : { from: wxFrom, to: wxTo || '24:00' }), reason: wxReason, apply: true }) });
+              <button disabled={!wxPlan || wxBusy || wxChecking || wxPlanKey !== wxKey || wxPlan.teeTimeIds.length === 0} onClick={async () => {
+                if (!wxPlan || wxBusy || wxPlanKey !== wxKey) return;
+                setWxBusy(true); setWxApplyErr('');
+                // The window the plan on screen was made for — Rest of today keeps the start it was previewed with.
+                const win = wxSpan === 'day' ? {} : { from: wxPlan.from, to: wxPlan.to };
+                const r = await dfetch<{ cancelled: WxGroup[]; failed: (WxGroup & { error: string })[]; feeRefundsFailed: number; blocked: number }>('/api/operator/weather-cancel', { method: 'POST', body: JSON.stringify({ date: selectedDate, ...win, reason: wxReason, apply: true }) });
                 setWxBusy(false);
                 if (!r.ok) {
                   // Review 2026-10-04: a failure partway used to read "Nothing was changed" —
                   // some groups may already be cancelled and emailed. Say so and refresh.
-                  setWxErr(r.status >= 500 || r.status === 0
+                  setWxApplyErr(r.status >= 500 || r.status === 0
                     ? `The cancellation stopped partway${r.status ? ` (error ${r.status})` : ''}. Some groups may already be cancelled and emailed — the sheet has been refreshed; check it, then run Weather again for any still booked.`
                     : r.error);
                   loadTimes(selectedDate); return;
@@ -1592,11 +1624,11 @@ function DashboardPageInner() {
                   ...r.data.cancelled.filter(c => c.noEmail).map(c => ({ name: c.name, players: c.players, why: `${fmtTime(c.time)} — cancelled, no email on file` })),
                 ];
                 toast(`Play called off: ${r.data.cancelled.length} group${r.data.cancelled.length === 1 ? '' : 's'} cancelled.`, calls.length ? 'warn' : 'ok');
-                setWxPlan(null); setWxResult({ cancelled: r.data.cancelled.length, blocked: r.data.blocked, feeRefundsFailed: r.data.feeRefundsFailed, calls }); loadTimes(selectedDate);
+                setWxPlan(null); setWxPlanKey(''); setWxResult({ cancelled: r.data.cancelled.length, blocked: r.data.blocked, feeRefundsFailed: r.data.feeRefundsFailed, calls }); loadTimes(selectedDate);
               }} className="flex-1 bg-bad hover:bg-bad/90 text-white py-2.5 rounded-md text-[13px] font-semibold disabled:opacity-50">
-                {wxBusy && wxPlan ? 'Cancelling…' : !wxPlan ? 'Preview first'
+                {wxBusy ? 'Cancelling…' : wxSpan === 'custom' && !/^\d\d:\d\d$/.test(wxFrom) ? 'Pick a start time' : !wxPlan || wxPlanKey !== wxKey ? (wxErr ? 'Fix the times' : 'Checking…')
                   : wxPlan.groups.length > 0 ? `Cancel ${wxPlan.groups.length} group${wxPlan.groups.length === 1 ? '' : 's'}`
-                  : wxPlan.teeTimeIds.length > 0 ? `Block ${wxPlan.teeTimeIds.length} time${wxPlan.teeTimeIds.length === 1 ? '' : 's'}` : 'Nothing to do'}
+                  : wxPlan.teeTimeIds.length > 0 ? `Block ${wxPlan.teeTimeIds.length} time${wxPlan.teeTimeIds.length === 1 ? '' : 's'}` : 'Nothing to cancel'}
               </button>
             </div>
             </>)) : frostResult ? (
@@ -1613,18 +1645,9 @@ function DashboardPageInner() {
                 <button onClick={() => { setFrostOpen(false); setFrostResult(null); }} className="w-full bg-pine hover:bg-pine-hover text-white py-2.5 rounded-md text-[13px] font-semibold">Done</button>
               </div>
             ) : (<>
-            <p className="text-[13px] text-ink-soft mb-4">Groups before the new first tee time move, in order, to the earliest open time that fits. Early times are blocked; moved golfers are emailed. Prices stay. Nobody is cancelled.</p>
-            <label className="block text-[12.5px] text-ink-muted mb-1.5">New first tee time</label>
-            <div className="flex gap-2 mb-4">
-              <input type="time" value={frostTime} onChange={e => { setFrostTime(e.target.value); setFrostPlan(null); }} className={iCls + ' flex-1'}/>
-              <button disabled={frostBusy} onClick={async () => {
-                setFrostBusy(true); setFrostErr('');
-                const r = await dfetch<{ plan: FrostPlan }>('/api/operator/frost-delay', { method: 'POST', body: JSON.stringify({ date: selectedDate, newStart: frostTime }) });
-                setFrostBusy(false);
-                if (!r.ok) { setFrostErr(r.error); return; }
-                setFrostPlan(r.data.plan);
-              }} className="px-4 rounded-md border border-line text-[13px] font-semibold text-ink hover:bg-paper disabled:opacity-50">{frostBusy && !frostPlan ? 'Checking…' : 'Preview'}</button>
-            </div>
+            <label htmlFor="frost-time" className="block text-[12.5px] text-ink-muted mb-1.5">New first tee time</label>
+            <input id="frost-time" type="time" value={frostTime} disabled={frostBusy} onChange={e => setFrostTime(e.target.value)} className={iCls + ' w-full mb-4'}/>
+            {frostApplyErr && <p role="alert" className="text-[13px] text-bad mb-3">{frostApplyErr}</p>}
             {frostErr && <p className="text-[13px] text-bad mb-3">{frostErr}</p>}
             {frostPlan && (
               <div className="mb-4">
@@ -1643,21 +1666,23 @@ function DashboardPageInner() {
                 <p className="text-[12px] text-ink-soft mt-2">{frostPlan.blockTeeTimeIds.length} time{frostPlan.blockTeeTimeIds.length === 1 ? '' : 's'} before {fmtTime(frostTime)} will be blocked.</p>
               </div>
             )}
+            <p className="text-[12.5px] text-ink-soft mb-2">Nobody cancelled · prices kept · moved golfers emailed</p>
             <div className="flex gap-2">
-              <button onClick={() => setFrostOpen(false)} disabled={frostBusy} className="flex-1 border border-line text-ink-soft py-2.5 rounded-md text-[13px] font-medium hover:border-line-strong disabled:opacity-50">Cancel</button>
-              <button disabled={!frostPlan || frostBusy || frostPlan.blockTeeTimeIds.length + frostPlan.moves.length === 0} onClick={async () => {
-                setFrostBusy(true); setFrostErr('');
+              <button onClick={() => setFrostOpen(false)} disabled={frostBusy} className="flex-1 border border-line text-ink-soft py-2.5 rounded-md text-[13px] font-medium hover:border-line-strong disabled:opacity-50">Close</button>
+              <button disabled={!frostPlan || frostBusy || frostChecking || frostPlanKey !== `${selectedDate}|${frostTime}` || frostPlan.blockTeeTimeIds.length + frostPlan.moves.length === 0} onClick={async () => {
+                if (frostBusy || frostPlanKey !== `${selectedDate}|${frostTime}`) return;
+                setFrostBusy(true); setFrostApplyErr('');
                 const r = await dfetch<{ moved: { name: string; players: number; toTime: string; emailed: boolean | null }[]; unplaced: { name: string; players: number; time: string }[]; blocked: number }>('/api/operator/frost-delay', { method: 'POST', body: JSON.stringify({ date: selectedDate, newStart: frostTime, apply: true }) });
                 setFrostBusy(false);
-                if (!r.ok) { setFrostErr(r.error); return; }
+                if (!r.ok) { setFrostApplyErr(r.error); return; }
                 const calls: FrostCall[] = [
                   ...r.data.unplaced.map(u => ({ name: u.name, players: u.players, why: `${fmtTime(u.time)} — no open time fit` })),
                   ...r.data.moved.filter(m => m.emailed !== true).map(m => ({ name: m.name, players: m.players, why: `moved to ${fmtTime(m.toTime)} — ${m.emailed === false ? 'email failed' : 'no email on file'}` })),
                 ];
                 toast(`Frost delay set: ${r.data.moved.length} group${r.data.moved.length === 1 ? '' : 's'} moved.`, calls.length ? 'warn' : 'ok');
-                setFrostPlan(null); setFrostResult({ moved: r.data.moved.length, blocked: r.data.blocked, calls }); loadTimes(selectedDate);
+                setFrostPlan(null); setFrostPlanKey(''); setFrostResult({ moved: r.data.moved.length, blocked: r.data.blocked, calls }); loadTimes(selectedDate);
               }} className="flex-1 bg-pine hover:bg-pine-hover text-white py-2.5 rounded-md text-[13px] font-semibold disabled:opacity-50">
-                {frostBusy && frostPlan ? 'Applying…' : !frostPlan ? 'Preview first'
+                {frostBusy ? 'Applying…' : !/^\d\d:\d\d$/.test(frostTime) ? 'Pick a time' : !frostPlan || frostPlanKey !== `${selectedDate}|${frostTime}` ? (frostErr ? 'Pick another time' : 'Checking…')
                   : frostPlan.moves.length > 0 ? `Move ${frostPlan.moves.length} group${frostPlan.moves.length === 1 ? '' : 's'}`
                   : frostPlan.blockTeeTimeIds.length > 0 ? `Block ${frostPlan.blockTeeTimeIds.length} time${frostPlan.blockTeeTimeIds.length === 1 ? '' : 's'}` : 'Nothing to do'}
               </button>
@@ -1866,6 +1891,9 @@ function WalkInForm({ slot, late, courseName, onSave, onCancel }: { slot: TeeTim
     </div>
   );
 }
+
+/** WX-2: the notes staff pick most for a weather email; they can still write their own. */
+const WX_NOTES = ['Rain', 'Lightning in the area', 'Course is flooded', 'High winds', 'Frost'];
 
 /* ─── Add Tee Time Form ─────────────────────────────────────────────────── */
 // ADDTIME-1 (Cam 2026-11-06, "what is it really doing"): an extra tee time the schedule doesn't make. It starts

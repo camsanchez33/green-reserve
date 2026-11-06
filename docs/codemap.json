@@ -8907,7 +8907,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 2027,
+      "lines": 2055,
       "purpose": "",
       "brain": [],
       "exports": [

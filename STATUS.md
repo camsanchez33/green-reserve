@@ -4,14 +4,17 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-06 03:56 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `3d4da59c` · working tree **23 dirty file(s)**
+Generated 2026-11-06 04:12 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `f99d684b` · working tree **8 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 125 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 128 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `e2a8f2f7` | 2026-11-05 | Tee sheet: Add tee time from the day's prices, keep a time for staff, safer Block and Delete (#327) |
+| `60b0470c` | 2026-11-06 | Test: the engine's delete pin includes the staff-only guard |
+| `ff613483` | 2026-11-06 | Tee sheet: Add tee time from the day's prices, keep a time for staff, safer Block and Delete |
 | `c5f4ba4b` | 2026-11-05 | Tee sheet: On the course, a fuller List, a Calendar that says why (#326) |
 | `f8d6b25b` | 2026-11-06 | Tee sheet: On the course, a List with the grid's details, a Calendar that says why |
 | `be8b68ee` | 2026-11-05 | Home: the week-ahead link offers demand pricing and lands on it (#325) |
@@ -140,28 +143,16 @@ Generated 2026-11-06 03:56 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (23 file(s))
+### Uncommitted working tree (8 file(s))
 
-- `M  STATUS.artifact.html`
-- `M  STATUS.json`
-- `M  STATUS.md`
-- `MM docs/CODEMAP.md`
-- `MM docs/codemap.json`
-- `A  prisma/migrations/20261106000000_tee_time_staff_only/migration.sql`
-- `M  prisma/schema.prisma`
-- `AM scripts/add-tee-time-test.ts`
-- `M  scripts/walkin-fit-test.ts`
-- `M  scripts/words-guard.baseline.json`
-- `MM src/app/api/bookings/route.ts`
-- `M  src/app/api/manage/[bookingId]/available-times/route.ts`
-- `M  src/app/api/member/[courseSlug]/tee-times/route.ts`
-- `M  src/app/api/operator/tee-times/route.ts`
-- `M src/app/api/preview/[courseId]/route.ts`
-- `M  src/app/api/preview/[courseId]/tee-times/route.ts`
-- `M  src/app/dashboard/page.tsx`
-- `M  src/components/dashboard/TeeSheetRows.tsx`
-- `M src/lib/cancel-booking.ts`
-- `M  src/lib/claim-tee-time.ts`
+- `M STATUS.artifact.html`
+- `M STATUS.json`
+- `M STATUS.md`
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
+- `M scripts/words-guard.baseline.json`
+- `M src/app/dashboard/page.tsx`
+- `?? scripts/weather-window-test.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -287,6 +278,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `e2a8f2f7` 2026-11-05 — Tee sheet: Add tee time from the day's prices, keep a time for staff, safer Block and Delete (#327)
+- `60b0470c` 2026-11-06 — Test: the engine's delete pin includes the staff-only guard
+- `ff613483` 2026-11-06 — Tee sheet: Add tee time from the day's prices, keep a time for staff, safer Block and Delete
 - `c5f4ba4b` 2026-11-05 — Tee sheet: On the course, a fuller List, a Calendar that says why (#326)
 - `f8d6b25b` 2026-11-06 — Tee sheet: On the course, a List with the grid's details, a Calendar that says why
 - `be8b68ee` 2026-11-05 — Home: the week-ahead link offers demand pricing and lands on it (#325)
@@ -296,9 +290,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `91764419` 2026-11-05 — Public SMS consent page at /sms-consent for Twilio's checker (#323)
 - `41e8a0af` 2026-11-06 — Public SMS consent page at /sms-consent for Twilio's checker
 - `b147abf7` 2026-11-05 — Host the SMS consent screenshot at /sms-opt-in.png for Twilio (#322)
-- `9db7e811` 2026-11-06 — Host the SMS consent screenshot at /sms-opt-in.png for Twilio
-- `92afb06e` 2026-11-05 — Home: goals on the numbers the course picks, and its own course-condition lines (#321)
-- `8ec892ce` 2026-11-05 — Home: goals on the numbers the course picks, and its own course-condition lines
 
 ---
 

@@ -117,14 +117,17 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-11-06 03:56 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 3d4da59c</span>
-    <span>23 uncommitted</span>
+    <span>2026-11-06 04:12 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ f99d684b</span>
+    <span>8 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">125 runs have shipped that the queue doesn't know about</div>
+<div class="lede">128 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-31. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">e2a8f2f7</span><span>Tee sheet: Add tee time from the day's prices, keep a time for staff, safer Block and Delete (#327)</span></li>
+<li><span class="h">60b0470c</span><span>Test: the engine's delete pin includes the staff-only guard</span></li>
+<li><span class="h">ff613483</span><span>Tee sheet: Add tee time from the day's prices, keep a time for staff, safer Block and Delete</span></li>
 <li><span class="h">c5f4ba4b</span><span>Tee sheet: On the course, a fuller List, a Calendar that says why (#326)</span></li>
 <li><span class="h">f8d6b25b</span><span>Tee sheet: On the course, a List with the grid's details, a Calendar that says why</span></li>
 <li><span class="h">be8b68ee</span><span>Home: the week-ahead link offers demand pricing and lands on it (#325)</span></li>
@@ -262,7 +265,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M  STATUS.artifact.html</code></li><li><code>M  STATUS.json</code></li><li><code>M  STATUS.md</code></li><li><code>MM docs/CODEMAP.md</code></li><li><code>MM docs/codemap.json</code></li><li><code>A  prisma/migrations/20261106000000_tee_time_staff_only/migration.sql</code></li><li><code>M  prisma/schema.prisma</code></li><li><code>AM scripts/add-tee-time-test.ts</code></li><li><code>M  scripts/walkin-fit-test.ts</code></li><li><code>M  scripts/words-guard.baseline.json</code></li><li><code>MM src/app/api/bookings/route.ts</code></li><li><code>M  src/app/api/manage/[bookingId]/available-times/route.ts</code></li><li><code>M  src/app/api/member/[courseSlug]/tee-times/route.ts</code></li><li><code>M  src/app/api/operator/tee-times/route.ts</code></li><li><code>M src/app/api/preview/[courseId]/route.ts</code></li><li><code>M  src/app/api/preview/[courseId]/tee-times/route.ts</code></li><li><code>M  src/app/dashboard/page.tsx</code></li><li><code>M  src/components/dashboard/TeeSheetRows.tsx</code></li><li><code>M src/lib/cancel-booking.ts</code></li><li><code>M  src/lib/claim-tee-time.ts</code></li></ul>
+<ul class="plain"><li><code>M STATUS.artifact.html</code></li><li><code>M STATUS.json</code></li><li><code>M STATUS.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/words-guard.baseline.json</code></li><li><code>M src/app/dashboard/page.tsx</code></li><li><code>?? scripts/weather-window-test.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -344,6 +347,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 16d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">e2a8f2f7</td><td class="num">2026-11-05</td><td>Tee sheet: Add tee time from the day's prices, keep a time for staff, safer Block and Delete (#327)</td></tr>
+<tr><td class="num">60b0470c</td><td class="num">2026-11-06</td><td>Test: the engine's delete pin includes the staff-only guard</td></tr>
+<tr><td class="num">ff613483</td><td class="num">2026-11-06</td><td>Tee sheet: Add tee time from the day's prices, keep a time for staff, safer Block and Delete</td></tr>
 <tr><td class="num">c5f4ba4b</td><td class="num">2026-11-05</td><td>Tee sheet: On the course, a fuller List, a Calendar that says why (#326)</td></tr>
 <tr><td class="num">f8d6b25b</td><td class="num">2026-11-06</td><td>Tee sheet: On the course, a List with the grid's details, a Calendar that says why</td></tr>
 <tr><td class="num">be8b68ee</td><td class="num">2026-11-05</td><td>Home: the week-ahead link offers demand pricing and lands on it (#325)</td></tr>
@@ -353,9 +359,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">91764419</td><td class="num">2026-11-05</td><td>Public SMS consent page at /sms-consent for Twilio's checker (#323)</td></tr>
 <tr><td class="num">41e8a0af</td><td class="num">2026-11-06</td><td>Public SMS consent page at /sms-consent for Twilio's checker</td></tr>
 <tr><td class="num">b147abf7</td><td class="num">2026-11-05</td><td>Host the SMS consent screenshot at /sms-opt-in.png for Twilio (#322)</td></tr>
-<tr><td class="num">9db7e811</td><td class="num">2026-11-06</td><td>Host the SMS consent screenshot at /sms-opt-in.png for Twilio</td></tr>
-<tr><td class="num">92afb06e</td><td class="num">2026-11-05</td><td>Home: goals on the numbers the course picks, and its own course-condition lines (#321)</td></tr>
-<tr><td class="num">8ec892ce</td><td class="num">2026-11-05</td><td>Home: goals on the numbers the course picks, and its own course-condition lines</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>
