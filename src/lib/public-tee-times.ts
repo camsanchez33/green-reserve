@@ -83,7 +83,7 @@ export async function loadPublicTeeTimes(slug: string, date: string): Promise<Pu
   }
 
   const teeTimes = await prisma.teeTime.findMany({
-    where: { courseId: dbCourse.id, date, status: { not: 'blocked' } },
+    where: { courseId: dbCourse.id, date, status: { not: 'blocked' }, staffOnly: false },
     orderBy: { time: 'asc' },
     include: { product: { select: { label: true, walkingPolicy: true, minPlayers: true, maxPlayers: true, publicAdvanceDays: true, teeSetRatings: { select: { rating: true, slope: true, teeSet: { select: { sortOrder: true } } } } } } },
   });

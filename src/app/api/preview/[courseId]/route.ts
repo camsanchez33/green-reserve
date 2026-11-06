@@ -32,7 +32,7 @@ export async function GET(
   if (!dbCourse) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
   const cheapest = await prisma.teeTime.findFirst({
-    where: { courseId, status: { not: 'blocked' } },
+    where: { courseId, status: { not: 'blocked' }, staffOnly: false },
     orderBy: { greenFeeCents: 'asc' },
     select: { greenFeeCents: true },
   });

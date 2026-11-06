@@ -68,7 +68,8 @@ export async function POST(req: NextRequest) {
       product: { select: { label: true, walkingPolicy: true, minPlayers: true, maxPlayers: true, publicAdvanceDays: true } },
     },
   });
-  if (!teeTimeFull) return NextResponse.json({ error: 'Tee time not found.' }, { status: 404 });
+  // ADDTIME-1: a time kept for staff isn't online — refused before any card or code is touched (claimTeeTime refuses it too).
+  if (!teeTimeFull || teeTimeFull.staffOnly) return NextResponse.json({ error: 'Tee time not found.' }, { status: 404 });
   // Same visibility as the public course page (loadPublicCourse): a course being
   // built, paused or archived takes no online bookings.
   const c0 = teeTimeFull.course;
@@ -342,7 +343,7 @@ export async function POST(req: NextRequest) {
       autoNoShowMinutesAtBooking: policy.autoNoShowMinutes,
       termsAcceptedAt:  new Date(),
       termsVersion:     CURRENT_TERMS_VERSION,
-    }, { type: 'golfer', id: golferSession?.golferId ?? null });
+    }, { type: 'golfer', id: golferSession?.golferId ?? null }, { online: true }); // ADDTIME-1: never a time kept for staff
   } catch (err) {
     if (promo) await releaseUse(promo.id);
     if (pack) await giveBack(prisma, pack.lineId, pack.seats);

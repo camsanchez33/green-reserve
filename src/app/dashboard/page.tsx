@@ -60,6 +60,10 @@ type TeeTime = {
   /** Dead end 20: senior and junior prices (cents), picked at the counter. */
   seniorRateCents?: number | null; juniorRateCents?: number | null;
   status: string; bookings?: Booking[];
+  /** ADDTIME-1: kept for staff — not listed or bookable online. */
+  staffOnly?: boolean;
+  /** ROUNDS-1: the price period (schedule name). */
+  tierName?: string | null;
   /** W2-9: the event holding this (blocked) time. */
   event?: { id: string; name: string } | null;
 };
@@ -574,9 +578,21 @@ function DashboardPageInner() {
   // SD-10: Block / Unblock / Del were fire-and-forget with no result check —
   // a 500 refetched the list and it looked identical; two fast taps fired twice.
   async function toggleBlock(tt: TeeTime) {
+    // Cam 2026-11-06 ("you can just block a booking without any warning"): blocking never removes a group —
+    // it only stops new bookings — but say so before it happens, naming who stays.
+    const booked = (tt.bookings ?? []).filter(b => b.status !== 'cancelled');
+    if (tt.status !== 'blocked' && booked.length > 0
+      && !confirm(`Block ${fmtTime(tt.time)}?\n\n${booked.map(b => `${b.golferName} (${b.players})`).join(', ')} stay${booked.length === 1 ? 's' : ''} booked. Blocking only stops new bookings — golfers can't book the open spots. To take a group off, move or cancel it.`)) return;
     setSlotBusy(tt.id);
     const r = await dfetch('/api/operator/tee-times', { method: 'PATCH', body: JSON.stringify({ id: tt.id, status: tt.status === 'blocked' ? 'available' : 'blocked' }) });
     if (!r.ok) toast(r.error);
+    await loadTimes(selectedDate);
+    setSlotBusy(null);
+  }
+  async function toggleStaffOnly(tt: TeeTime) {
+    setSlotBusy(tt.id);
+    const r = await dfetch('/api/operator/tee-times', { method: 'PATCH', body: JSON.stringify({ id: tt.id, staffOnly: !tt.staffOnly }) });
+    if (!r.ok) toast(r.error); else toast(tt.staffOnly ? 'Open online.' : 'Kept for staff.', 'ok');
     await loadTimes(selectedDate);
     setSlotBusy(null);
   }
@@ -1192,7 +1208,7 @@ function DashboardPageInner() {
                   )}
                   {access.can('sheet.edit_times') && (
                   <button onClick={() => setShowAddModal(true)} className="text-[13px] font-semibold bg-pine hover:bg-pine-hover text-white px-3.5 py-1.5 rounded-md transition-colors">
-                    Add time
+                    Add tee time
                   </button>
                   )}
                 </div>
@@ -1433,7 +1449,13 @@ function DashboardPageInner() {
                     {slotBusy === panelSlot.id ? '…' : panelSlot.status === 'blocked' ? 'Unblock' : 'Block this time'}
                   </button>
                 )}
-                {access.can('sheet.edit_times') && !past && !panelSlot.event && (
+                {access.can('sheet.block') && !panelSlot.event && panelSlot.status !== 'blocked' && !past && (
+                  <button onClick={() => toggleStaffOnly(panelSlot)} disabled={slotBusy === panelSlot.id} className="px-3.5 min-h-[36px] rounded-md border border-line text-[13px] font-medium text-ink hover:bg-paper disabled:opacity-50">
+                    {panelSlot.staffOnly ? 'Open online' : 'Keep for staff'}
+                  </button>
+                )}
+                {/* Cam 2026-11-06: never offered while a group is on the time (the route refuses it too). */}
+                {access.can('sheet.edit_times') && !past && !panelSlot.event && !(panelSlot.bookings ?? []).length && (
                   <button onClick={() => deleteTime(panelSlot)} disabled={slotBusy === panelSlot.id} className="ml-auto px-2 min-h-[36px] rounded-md text-[13px] font-medium text-ink-muted hover:text-bad disabled:opacity-50">Delete time</button>
                 )}
               </div>
@@ -1454,10 +1476,11 @@ function DashboardPageInner() {
         <div className="fixed inset-0 bg-ink/20 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="bg-white border border-line w-full sm:max-w-sm rounded-t-lg sm:rounded-lg p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:pb-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-serif font-semibold text-ink text-[17px]">Add a tee time — {fmtDate(selectedDate)}</h3>
-              <button onClick={() => setShowAddModal(false)} className="text-ink-muted hover:text-ink"><X className="w-5 h-5"/></button>
+              <h3 className="font-serif font-semibold text-ink text-[17px]">Add tee time — {fmtDate(selectedDate)}</h3>
+              <button onClick={() => setShowAddModal(false)} className="text-ink-muted hover:text-ink" aria-label="Close"><X className="w-5 h-5"/></button>
             </div>
-            <AddTeeTimeForm date={selectedDate} existingTimes={teeTimes.filter(t => t.status !== 'blocked').map(t => t.time)} onSave={()=>{setShowAddModal(false);loadTimes(selectedDate);}} onCancel={()=>setShowAddModal(false)}/>
+            {/* ADDTIME-1: a new time opens its card, ready to book. */}
+            <AddTeeTimeForm date={selectedDate} dayTimes={teeTimes} canPrice={!access.isStaff} onSave={async id => { setShowAddModal(false); await loadTimes(selectedDate); setPanelId(id); }} onCancel={()=>setShowAddModal(false)}/>
           </div>
         </div>
       )}
@@ -1845,50 +1868,80 @@ function WalkInForm({ slot, late, courseName, onSave, onCancel }: { slot: TeeTim
 }
 
 /* ─── Add Tee Time Form ─────────────────────────────────────────────────── */
-function AddTeeTimeForm({ date, existingTimes, onSave, onCancel }: { date: string; existingTimes: string[]; onSave: ()=>void; onCancel: ()=>void }) {
+// ADDTIME-1 (Cam 2026-11-06, "what is it really doing"): an extra tee time the schedule doesn't make. It starts
+// from the day's real prices — copied from the nearest time that day (round, holes, every rate) — and either
+// opens to golfers online or is kept for staff. Owners can change the price; staff never price a time (SD-11).
+const minsOf = (hm: string) => Number(hm.slice(0, 2)) * 60 + Number(hm.slice(3, 5));
+function AddTeeTimeForm({ date, dayTimes, canPrice, onSave, onCancel }: { date: string; dayTimes: TeeTime[]; canPrice: boolean; onSave: (id: string) => void; onCancel: () => void }) {
   const [time,     setTime]     = useState('08:00');
-  const [holes,    setHoles]    = useState(18);
   const [players,  setPlayers]  = useState(4);
-  const [greenFee, setGreenFee] = useState(65);
-  const [cartFee,  setCartFee]  = useState(18);
+  const [online,   setOnline]   = useState(true);
+  const [ownPrice, setOwnPrice] = useState(false);
+  const [holes,    setHoles]    = useState(18);
+  const [greenFee, setGreenFee] = useState(0);
+  const [cartFee,  setCartFee]  = useState(0);
   const [walking,  setWalking]  = useState(true);
   const [saving,   setSaving]   = useState(false);
   const [err,      setErr]      = useState('');
 
   const inp = 'bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors w-full';
+  // The nearest time that day, not an event's — its price is the day's price at that hour.
+  const pool = dayTimes.filter(t => !t.event);
+  const like = pool.length ? pool.reduce((a, b) => Math.abs(minsOf(b.time) - minsOf(time)) < Math.abs(minsOf(a.time) - minsOf(time)) ? b : a) : null;
+  const manual = !like || ownPrice;
+  useEffect(() => { if (like && !ownPrice) { setHoles(like.holes); setGreenFee(like.greenFee); setCartFee(like.cartFee); setWalking(like.walkingAllowed); } }, [like?.id, ownPrice]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Cam 2026-10-19: a time squeezed within a few minutes of another group asks once before it's added.
-  const close = timesTooClose(time, existingTimes);
+  const close = timesTooClose(time, dayTimes.filter(t => t.status !== 'blocked').map(t => t.time));
   const [confirmedClose, setConfirmedClose] = useState('');
   const needsConfirm = close.length > 0 && confirmedClose !== time;
 
   async function save() {
     if (needsConfirm) { setConfirmedClose(time); return; }
     setSaving(true); setErr('');
-    const r = await dfetch('/api/operator/tee-times', { method:'POST', body:JSON.stringify({date,time,holes,playersAvailable:players,greenFee,cartFee,walkingAllowed:walking}) });
+    const r = await dfetch<{ id: string }>('/api/operator/tee-times', { method:'POST', body:JSON.stringify({
+      date, time, playersAvailable: players, staffOnly: !online,
+      ...(like ? { copyFrom: like.id } : {}),
+      ...(manual && canPrice ? { holes, greenFee, cartFee, walkingAllowed: walking } : {}),
+    }) });
     setSaving(false);
     // SD-10: this closed the modal and refetched no matter what the server said.
     if (!r.ok) { setErr(r.error); return; }
-    onSave();
+    onSave(r.data.id);
   }
 
+  const what = like ? [like.tee, like.product?.label || `${like.holes} holes`].filter(Boolean).join(' · ') : '';
   return (
     <div className="space-y-3">
       {err && <p className="text-xs text-bad bg-bad/5 border border-bad/20 rounded-md px-3 py-2">{err}</p>}
       <div className="grid grid-cols-2 gap-3">
-        <div><label className="block text-[13px] font-semibold text-ink mb-1.5">Time</label><input type="time" value={time} onChange={e=>setTime(e.target.value)} className={inp}/></div>
-        <div><label className="block text-[13px] font-semibold text-ink mb-1.5">Holes</label><select value={holes} onChange={e=>setHoles(Number(e.target.value))} className={inp}><option value={9}>9</option><option value={18}>18</option></select></div>
+        <div><label htmlFor="add-time" className="block text-[13px] font-semibold text-ink mb-1.5">Time</label><input id="add-time" type="time" value={time} onChange={e=>setTime(e.target.value)} className={inp}/></div>
+        <div><label htmlFor="add-players" className="block text-[13px] font-semibold text-ink mb-1.5">Players</label><input id="add-players" type="number" value={players} min={1} max={8} onChange={e=>setPlayers(Number(e.target.value))} className={inp}/></div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div><label className="block text-[13px] font-semibold text-ink mb-1.5">Slots</label><input type="number" value={players} min={1} max={8} onChange={e=>setPlayers(Number(e.target.value))} className={inp}/></div>
-        <div><label className="block text-[13px] font-semibold text-ink mb-1.5">Green $</label><input type="number" value={greenFee} min={0} onChange={e=>setGreenFee(Number(e.target.value))} className={inp}/></div>
-        <div><label className="block text-[13px] font-semibold text-ink mb-1.5">Cart $</label><input type="number" value={cartFee} min={0} onChange={e=>setCartFee(Number(e.target.value))} className={inp}/></div>
-      </div>
-      <div className="flex items-center justify-between py-1">
-        <span className="text-sm text-ink">Walking allowed</span>
-        <button onClick={() => setWalking(!walking)} className={'relative w-11 h-6 rounded-sm transition-colors ' + (walking ? 'bg-pine' : 'bg-line-strong')}>
-          <span className={'absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-sm shadow-card transition-transform ' + (walking ? 'translate-x-5' : '')}/>
-        </button>
+      {like && !ownPrice ? (
+        <div className="rounded-md bg-paper/70 px-3 py-2.5 text-[13px]">
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="text-ink">Priced like {fmtTime(like.time)}</span>
+            {canPrice && <button type="button" onClick={() => setOwnPrice(true)} className="text-[12.5px] font-medium text-pine hover:underline underline-offset-4">Change</button>}
+          </div>
+          <div className="text-ink-soft tabular-nums">{what} · ${like.greenFee}{like.cartFee ? ` · cart $${like.cartFee}` : ''}{like.walkingAllowed ? '' : ' · riding only'}</div>
+        </div>
+      ) : canPrice ? (
+        <>
+          <div className="grid grid-cols-3 gap-3">
+            <div><label htmlFor="add-holes" className="block text-[13px] font-semibold text-ink mb-1.5">Holes</label><select id="add-holes" value={holes} onChange={e=>setHoles(Number(e.target.value))} className={inp}><option value={9}>9</option><option value={18}>18</option></select></div>
+            <div><label htmlFor="add-green" className="block text-[13px] font-semibold text-ink mb-1.5">Green $</label><input id="add-green" type="number" value={greenFee} min={0} onChange={e=>setGreenFee(Number(e.target.value))} className={inp}/></div>
+            <div><label htmlFor="add-cart" className="block text-[13px] font-semibold text-ink mb-1.5">Cart $</label><input id="add-cart" type="number" value={cartFee} min={0} onChange={e=>setCartFee(Number(e.target.value))} className={inp}/></div>
+          </div>
+          <label className="flex items-center gap-2 text-[13px] text-ink cursor-pointer"><input type="checkbox" checked={walking} onChange={e => setWalking(e.target.checked)} className="accent-pine"/>Walking allowed</label>
+          {like && <button type="button" onClick={() => setOwnPrice(false)} className="text-[12.5px] font-medium text-pine hover:underline underline-offset-4">Use the {fmtTime(like.time)} price</button>}
+        </>
+      ) : <p className="text-[13px] text-ink-soft">Schedule price</p>}
+      <div role="radiogroup" aria-label="Who can book it" className="grid grid-cols-2 gap-1 p-1 bg-paper rounded-md">
+        {([[true, 'Open online'], [false, 'Keep for staff']] as const).map(([v, l]) => (
+          <button key={l} type="button" role="radio" aria-checked={online === v} onClick={() => setOnline(v)}
+            className={'py-1.5 rounded-md text-[13px] font-semibold transition-colors ' + (online === v ? 'bg-white text-ink shadow-card' : 'text-ink-muted hover:text-ink')}>{l}</button>
+        ))}
       </div>
       {close.length > 0 && (
         <p role="status" className="text-[13px] text-ink bg-white border border-line border-l-[3px] border-l-warn rounded-md px-3 py-2.5">
@@ -1900,8 +1953,8 @@ function AddTeeTimeForm({ date, existingTimes, onSave, onCancel }: { date: strin
       )}
       <div className="flex gap-3 pt-1">
         <button onClick={onCancel} className="flex-1 border border-line text-ink-soft py-2.5 rounded-md text-[12.5px] font-medium hover:border-line-strong transition-colors">Cancel</button>
-        <button onClick={save} disabled={saving} className="flex-1 bg-pine hover:bg-pine-hover text-white py-2.5 rounded-md text-[12.5px] font-medium disabled:opacity-50 transition-colors">
-          {saving ? 'Adding...' : close.length > 0 && confirmedClose === time ? 'Add anyway' : 'Add time'}
+        <button onClick={save} disabled={saving || players < 1 || players > 8} className="flex-1 bg-pine hover:bg-pine-hover text-white py-2.5 rounded-md text-[12.5px] font-medium disabled:opacity-50 transition-colors">
+          {saving ? 'Adding…' : close.length > 0 && confirmedClose === time ? 'Add anyway' : 'Add tee time'}
         </button>
       </div>
     </div>
