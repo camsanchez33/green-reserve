@@ -1,18 +1,33 @@
 {
-  "generatedAt": "2026-11-06T01:21:02.767Z",
+  "generatedAt": "2026-11-06T01:52:40.697Z",
   "repo": {
-    "head": "2be5ddf8",
+    "head": "3d4c9eb7",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 2,
+    "dirtyCount": 3,
     "dirty": [
-      "M docs/SMS_OPT_IN.md",
-      "?? public/sms-opt-in.png"
+      "M docs/CODEMAP.md",
+      " M docs/codemap.json",
+      "?? src/app/sms-consent/"
     ],
-    "looksLikeRunInProgress": false
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "b147abf7",
+        "date": "2026-11-05T20:29:02-05:00",
+        "subject": "Host the SMS consent screenshot at /sms-opt-in.png for Twilio (#322)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "9db7e811",
+        "date": "2026-11-06T01:22:14+00:00",
+        "subject": "Host the SMS consent screenshot at /sms-opt-in.png for Twilio",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "92afb06e",
         "date": "2026-11-05T18:13:42-05:00",
@@ -1215,6 +1230,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "b147abf7",
+      "date": "2026-11-05",
+      "subject": "Host the SMS consent screenshot at /sms-opt-in.png for Twilio (#322)"
+    },
+    {
+      "h": "9db7e811",
+      "date": "2026-11-06",
+      "subject": "Host the SMS consent screenshot at /sms-opt-in.png for Twilio"
+    },
+    {
       "h": "92afb06e",
       "date": "2026-11-05",
       "subject": "Home: goals on the numbers the course picks, and its own course-condition lines (#321)"
@@ -1263,16 +1288,6 @@
       "h": "ba4df316",
       "date": "2026-11-05",
       "subject": "Database load from the audit: crons read only due tee dates, Stripe-id indexes, rate-limit sweep, sheet money strip asks less"
-    },
-    {
-      "h": "15c9cb2e",
-      "date": "2026-11-04",
-      "subject": "Security audit: money races (keyed refunds, recharge after refund, holds vs check-in, no-show vs still coming) (#316)"
-    },
-    {
-      "h": "37df560b",
-      "date": "2026-11-05",
-      "subject": "Regenerate the code map and status board for lib/hold-key.ts"
     }
   ]
 }
