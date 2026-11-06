@@ -9,7 +9,7 @@ ok('the database refuses a second row for a slot (no round counts as one slot to
 ok('…after folding duplicates already there: bookings and alerts move to the kept row', mig.includes('UPDATE "Booking" b SET "teeTimeId" = d.keeper') && mig.includes('UPDATE "TeeTimeAlert" a SET "teeTimeId" = d.keeper') && mig.includes('sum(t."playersBooked")'));
 const eng = readFileSync('src/lib/tee-sheet-engine.ts', 'utf8');
 ok('generation skips a slot another run made meanwhile', eng.includes('createMany({ data: toCreate, skipDuplicates: true })'));
-ok('…and never deletes a slot booked since it read the day', eng.includes("where: { id: { in: toDelete }, playersBooked: 0, status: { not: 'blocked' }, bookings: { none: {} } }"));
+ok('…and never deletes a slot booked since it read the day', eng.includes("where: { id: { in: toDelete }, playersBooked: 0, status: { not: 'blocked' }, staffOnly: false, bookings: { none: {} } }"));
 const route = readFileSync('src/app/api/operator/tee-times/route.ts', 'utf8');
 ok('adding a time by hand refuses one that already exists', route.includes("There's already a ${time} tee time that day."));
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
