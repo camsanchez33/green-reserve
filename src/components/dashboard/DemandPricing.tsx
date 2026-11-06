@@ -33,6 +33,8 @@ export function DemandPricing({ canEdit }: { canEdit: boolean }) {
     if (r.ok) { take(r.data); setError(''); } else setError(r.error);
   }, []);
   useEffect(() => { load(); }, [load]);
+  // Home's "Let GreenReserve price them for you" lands here: scroll once the card has loaded.
+  useEffect(() => { if (s !== null && typeof window !== 'undefined' && window.location.hash === '#demand-pricing') document.getElementById('demand-pricing')?.scrollIntoView({ block: 'start' }); }, [s !== null]); // once, on first load — never again after a Save
 
   if (error && !s) return <LoadError message={`Couldn't load demand pricing — ${error}`} onRetry={load} />;
   if (!s || !draft) return null;
@@ -63,7 +65,7 @@ export function DemandPricing({ canEdit }: { canEdit: boolean }) {
   const courseFill = s.hours[0]?.courseFillPct;
 
   return (
-    <Card className="p-5">
+    <Card id="demand-pricing" className="p-5 scroll-mt-6">
       <div className="flex flex-wrap items-baseline gap-3">
         <h2 className="text-[17px] font-semibold text-ink">Demand pricing</h2>
         <StatusDot status={st.demandMode === 'off' ? 'neutral' : 'ok'} label={`${MODE_LABEL[st.demandMode]} · ${st.demandFloorPct}–${st.demandCeilingPct}% of your rate`} />

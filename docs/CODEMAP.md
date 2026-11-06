@@ -655,14 +655,14 @@ Sorted the same way.
 | `src/components/dashboard/ChargeToAccount.tsx` | 1 | 66 | MEM-ACCT (Cam 2026-10-30: | `ChargeToAccount` |
 | `src/components/dashboard/CourseLayoutTab.tsx` | 1 | 495 | Settings rework (Cam 2026-10-19: | `default (CourseLayoutTab)` |
 | `src/components/dashboard/CoursePreview.tsx` | 1 | 80 | B-6 (UI_REVISE_SPEC §4): | `CoursePreviewProps`, `default (CoursePreview)` |
-| `src/components/dashboard/DemandPricing.tsx` | 1 | 128 | PRICE-5 (Cam 2026-10-30: | `DemandPricing` |
+| `src/components/dashboard/DemandPricing.tsx` | 1 | 130 | PRICE-5 (Cam 2026-10-30: | `DemandPricing` |
 | `src/components/dashboard/events/EventDay.tsx` | 1 | 73 | Event day (Cam 2026-10-31: | `CartSigns`, `EventDay` |
 | `src/components/dashboard/events/EventMoney.tsx` | 1 | 322 | W2-9b: | `default (EventMoney)`, `EventPayment`, `EventRefund`, `Guarantee`, `Money` |
 | `src/components/dashboard/events/EventSignup.tsx` | 1 | 149 | W2-9d (Cam 2026-10-22): | `default (EventSignup)`, `SignupQuestion` |
 | `src/components/dashboard/GettingStartedChecklist.tsx` | 1 | 187 |  | `default (GettingStartedChecklist)` |
 | `src/components/dashboard/GolferMessageModal.tsx` | 1 | 140 | MSG-1 (PLATFORM_ROADMAP_SPEC §5): | `default (GolferMessageModal)` |
 | `src/components/dashboard/GroupTicket.tsx` | 1 | 62 | DASH-D (Cam 2026-11-01, "make checking someone in a little more POS like"): | `default (GroupTicket)`, `TicketBooking`, `TicketLine`, `ticketLines` |
-| `src/components/dashboard/home/HomeBoard.tsx` | 1 | 271 | DASH-D Home (Cam 2026-11-01, mockup S1): | `Conditions`, `ConditionsCard`, `Goals`, `GoalsCard`, `ShiftNote`, `ShiftNotes`, `WeekAhead`, `WeekAheadCard` |
+| `src/components/dashboard/home/HomeBoard.tsx` | 1 | 273 | DASH-D Home (Cam 2026-11-01, mockup S1): | `Conditions`, `ConditionsCard`, `Goals`, `GoalsCard`, `ShiftNote`, `ShiftNotes`, `WeekAhead`, `WeekAheadCard` |
 | `src/components/dashboard/LastMinuteDeals.tsx` | 1 | 71 | PRICE-2 (Cam 2026-10-30: | `LastMinuteDeals` |
 | `src/components/dashboard/MemberAccount.tsx` | 1 | 134 | MEM-ACCT (Cam 2026-10-30: | `AccountFields`, `MemberAccount` |
 | `src/components/dashboard/MemberJoin.tsx` | 1 | 92 | MEM-JOIN (Cam 2026-10-30: | `AutoRenewFields`, `AutoRenewStop`, `JoinOnlineSelect`, `JoinRequests` |

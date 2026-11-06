@@ -190,7 +190,9 @@ export function WeekAheadCard({ week, canDeal }: { week: WeekAhead; canDeal: boo
           </div>
         ))}
       </div>
-      {canDeal && <div className="mt-3 text-right"><Link href="/dashboard/schedules" className="text-[13px] font-medium text-pine">Set a last-minute deal</Link></div>}
+      {/* Cam 2026-11-06 ("have our technology set updated prices with your parameters"): this is demand pricing —
+          quiet hours priced down, busy ones up, inside the course's floor and ceiling. The link lands on it. */}
+      {canDeal && <div className="mt-3 flex flex-wrap items-center justify-end gap-x-2 text-[13px]"><span className="text-ink-muted">Quiet hours?</span><Link href="/dashboard/schedules#demand-pricing" className="font-medium text-pine">Let GreenReserve price them for you</Link></div>}
     </Card>
   );
 }

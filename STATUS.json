@@ -1,36 +1,35 @@
 {
-  "generatedAt": "2026-11-06T02:45:12.837Z",
+  "generatedAt": "2026-11-06T02:56:27.989Z",
   "repo": {
-    "head": "c78875dc",
+    "head": "d7a3072e",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 22,
+    "dirtyCount": 5,
     "dirty": [
-      "M CLAUDE.md",
-      " M STATUS.artifact.html",
-      " M STATUS.json",
-      " M STATUS.md",
-      " M docs/CODEMAP.md",
+      "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/design-guard.baseline.json",
-      " M scripts/glass-test.ts",
       " M scripts/home-page-test.ts",
-      " M scripts/tees-side-by-side-test.ts",
-      " M scripts/teesheet-1-test.ts",
-      " M src/app/dashboard/home/page.tsx",
-      " M src/app/dashboard/money/page.tsx",
-      " M src/app/dashboard/page.tsx",
-      " M src/app/globals.css",
-      " M src/app/home.module.css",
-      " M src/components/dashboard/TeeSheetCalendar.tsx",
-      " M src/components/dashboard/TeeSheetRows.tsx",
-      " M src/components/dashboard/home/HomeBoard.tsx",
-      " M src/components/home/TeeSheetDemo.tsx"
+      " M src/components/dashboard/DemandPricing.tsx",
+      " M src/components/dashboard/home/HomeBoard.tsx"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "b9baa354",
+        "date": "2026-11-05T21:52:11-05:00",
+        "subject": "Tee sheet: cleaner top bar, Times booked, filled groups, 9-hole/twilight labels, no glow (#324)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "52978014",
+        "date": "2026-11-06T02:45:15+00:00",
+        "subject": "Tee sheet: cleaner top bar, Times booked, filled groups with In/M/R, 9-hole and twilight labels, no glow",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "91764419",
         "date": "2026-11-05T21:05:07-05:00",
@@ -1032,8 +1031,8 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 1,
-      "lastTouched": "2026-11-04",
-      "ageDays": 1
+      "lastTouched": "2026-11-05",
+      "ageDays": 0
     },
     {
       "file": "DENSE_UI_SPEC.md",
@@ -1261,6 +1260,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "b9baa354",
+      "date": "2026-11-05",
+      "subject": "Tee sheet: cleaner top bar, Times booked, filled groups, 9-hole/twilight labels, no glow (#324)"
+    },
+    {
+      "h": "52978014",
+      "date": "2026-11-06",
+      "subject": "Tee sheet: cleaner top bar, Times booked, filled groups with In/M/R, 9-hole and twilight labels, no glow"
+    },
+    {
       "h": "91764419",
       "date": "2026-11-05",
       "subject": "Public SMS consent page at /sms-consent for Twilio's checker (#323)"
@@ -1309,16 +1318,6 @@
       "h": "d12656c7",
       "date": "2026-11-05",
       "subject": "Text-message opt-in names GreenReserve as the sender, with the carriers' disclosure phrases; texts lead with GreenReserve"
-    },
-    {
-      "h": "211403ca",
-      "date": "2026-11-05",
-      "subject": "Terms and Privacy: Twilio A2P campaign wording (#318)"
-    },
-    {
-      "h": "acd00f57",
-      "date": "2026-11-05",
-      "subject": "Terms and Privacy: Twilio A2P campaign wording (SMS Terms heading, no selling or sharing opt-in data)"
     }
   ]
 }

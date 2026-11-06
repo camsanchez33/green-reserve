@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-06 02:45 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `c78875dc` · working tree **22 dirty file(s)**
+Generated 2026-11-06 02:56 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `d7a3072e` · working tree **5 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 119 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 121 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `b9baa354` | 2026-11-05 | Tee sheet: cleaner top bar, Times booked, filled groups, 9-hole/twilight labels, no glow (#324) |
+| `52978014` | 2026-11-06 | Tee sheet: cleaner top bar, Times booked, filled groups with In/M/R, 9-hole and twilight labels, no glow |
 | `91764419` | 2026-11-05 | Public SMS consent page at /sms-consent for Twilio's checker (#323) |
 | `41e8a0af` | 2026-11-06 | Public SMS consent page at /sms-consent for Twilio's checker |
 | `b147abf7` | 2026-11-05 | Host the SMS consent screenshot at /sms-opt-in.png for Twilio (#322) |
@@ -134,28 +136,13 @@ Generated 2026-11-06 02:45 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (22 file(s))
+### Uncommitted working tree (5 file(s))
 
-- `M CLAUDE.md`
-- `M STATUS.artifact.html`
-- `M STATUS.json`
-- `M STATUS.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/design-guard.baseline.json`
-- `M scripts/glass-test.ts`
 - `M scripts/home-page-test.ts`
-- `M scripts/tees-side-by-side-test.ts`
-- `M scripts/teesheet-1-test.ts`
-- `M src/app/dashboard/home/page.tsx`
-- `M src/app/dashboard/money/page.tsx`
-- `M src/app/dashboard/page.tsx`
-- `M src/app/globals.css`
-- `M src/app/home.module.css`
-- `M src/components/dashboard/TeeSheetCalendar.tsx`
-- `M src/components/dashboard/TeeSheetRows.tsx`
+- `M src/components/dashboard/DemandPricing.tsx`
 - `M src/components/dashboard/home/HomeBoard.tsx`
-- `M src/components/home/TeeSheetDemo.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -240,7 +227,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-11-04 | 1d |
+| `CLAUDE.md` | 1 | 2026-11-05 | 0d |
 | `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 4d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 15d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 10d |
@@ -281,6 +268,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `b9baa354` 2026-11-05 — Tee sheet: cleaner top bar, Times booked, filled groups, 9-hole/twilight labels, no glow (#324)
+- `52978014` 2026-11-06 — Tee sheet: cleaner top bar, Times booked, filled groups with In/M/R, 9-hole and twilight labels, no glow
 - `91764419` 2026-11-05 — Public SMS consent page at /sms-consent for Twilio's checker (#323)
 - `41e8a0af` 2026-11-06 — Public SMS consent page at /sms-consent for Twilio's checker
 - `b147abf7` 2026-11-05 — Host the SMS consent screenshot at /sms-opt-in.png for Twilio (#322)
@@ -291,8 +280,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `a5bb5088` 2026-11-05 — Home: weather and next tee times on top, field-level setup links, Needs you counts, Staff notes
 - `901ba99b` 2026-11-05 — Text-message opt-in names GreenReserve as the sender (Twilio campaign review) (#319)
 - `d12656c7` 2026-11-05 — Text-message opt-in names GreenReserve as the sender, with the carriers' disclosure phrases; texts lead with GreenReserve
-- `211403ca` 2026-11-05 — Terms and Privacy: Twilio A2P campaign wording (#318)
-- `acd00f57` 2026-11-05 — Terms and Privacy: Twilio A2P campaign wording (SMS Terms heading, no selling or sharing opt-in data)
 
 ---
 
