@@ -273,7 +273,8 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
   }
 
   // Find all unnotified alerts for this slot (specific-slot or criteria-based)
-  const alerts = notifySlotAlerts ? await prisma.teeTimeAlert.findMany({
+  // ADDTIME-1 (review 2026-11-06): a time kept for staff is never announced to golfers — it isn't bookable online.
+  const alerts = notifySlotAlerts && !booking.teeTime.staffOnly ? await prisma.teeTimeAlert.findMany({
     where: {
       notifiedAt: null,
       OR: [

@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-06 03:19 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `a973829d` · working tree **17 dirty file(s)**
+Generated 2026-11-06 03:56 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `3d4da59c` · working tree **23 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 123 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 125 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `c5f4ba4b` | 2026-11-05 | Tee sheet: On the course, a fuller List, a Calendar that says why (#326) |
+| `f8d6b25b` | 2026-11-06 | Tee sheet: On the course, a List with the grid's details, a Calendar that says why |
 | `be8b68ee` | 2026-11-05 | Home: the week-ahead link offers demand pricing and lands on it (#325) |
 | `58a9e0d0` | 2026-11-06 | Home: the week-ahead link offers demand pricing and lands on it |
 | `b9baa354` | 2026-11-05 | Tee sheet: cleaner top bar, Times booked, filled groups, 9-hole/twilight labels, no glow (#324) |
@@ -138,25 +140,28 @@ Generated 2026-11-06 03:19 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (17 file(s))
+### Uncommitted working tree (23 file(s))
 
 - `M  STATUS.artifact.html`
 - `M  STATUS.json`
 - `M  STATUS.md`
 - `MM docs/CODEMAP.md`
 - `MM docs/codemap.json`
-- `M  scripts/home-page-test.ts`
-- `MM scripts/sheet-views-test.ts`
+- `A  prisma/migrations/20261106000000_tee_time_staff_only/migration.sql`
+- `M  prisma/schema.prisma`
+- `AM scripts/add-tee-time-test.ts`
+- `M  scripts/walkin-fit-test.ts`
 - `M  scripts/words-guard.baseline.json`
+- `MM src/app/api/bookings/route.ts`
+- `M  src/app/api/manage/[bookingId]/available-times/route.ts`
+- `M  src/app/api/member/[courseSlug]/tee-times/route.ts`
 - `M  src/app/api/operator/tee-times/route.ts`
+- `M src/app/api/preview/[courseId]/route.ts`
+- `M  src/app/api/preview/[courseId]/tee-times/route.ts`
 - `M  src/app/dashboard/page.tsx`
-- `MM src/components/dashboard/TeeSheetCalendar.tsx`
-- `MM src/components/dashboard/TeeSheetList.tsx`
-- `MM src/components/dashboard/TeeSheetRows.tsx`
-- `M src/lib/booking-fees.ts`
-- `A  src/lib/calendar-days.ts`
-- `A  src/lib/on-course.ts`
-- `M src/lib/shop.ts`
+- `M  src/components/dashboard/TeeSheetRows.tsx`
+- `M src/lib/cancel-booking.ts`
+- `M  src/lib/claim-tee-time.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -247,9 +252,9 @@ This is the distinction a raw checkbox count gets wrong.
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 10d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 11d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 13d |
-| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 13d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 14d |
 | `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 14d |
+| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 14d |
 | `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 14d |
 | `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 14d |
 | `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 14d |
@@ -282,6 +287,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `c5f4ba4b` 2026-11-05 — Tee sheet: On the course, a fuller List, a Calendar that says why (#326)
+- `f8d6b25b` 2026-11-06 — Tee sheet: On the course, a List with the grid's details, a Calendar that says why
 - `be8b68ee` 2026-11-05 — Home: the week-ahead link offers demand pricing and lands on it (#325)
 - `58a9e0d0` 2026-11-06 — Home: the week-ahead link offers demand pricing and lands on it
 - `b9baa354` 2026-11-05 — Tee sheet: cleaner top bar, Times booked, filled groups, 9-hole/twilight labels, no glow (#324)
@@ -292,8 +299,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `9db7e811` 2026-11-06 — Host the SMS consent screenshot at /sms-opt-in.png for Twilio
 - `92afb06e` 2026-11-05 — Home: goals on the numbers the course picks, and its own course-condition lines (#321)
 - `8ec892ce` 2026-11-05 — Home: goals on the numbers the course picks, and its own course-condition lines
-- `e14b7752` 2026-11-05 — Home: weather + next tee times on top, field-level setup links, Needs you counts, Staff notes (#320)
-- `a5bb5088` 2026-11-05 — Home: weather and next tee times on top, field-level setup links, Needs you counts, Staff notes
 
 ---
 

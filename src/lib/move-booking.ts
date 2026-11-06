@@ -150,12 +150,13 @@ export async function moveBooking(opts: {
 
       const slot = await tx.teeTime.findUnique({
         where: { id: opts.newTeeTimeId },
-        select: { id: true, courseId: true, date: true, time: true, holes: true, status: true, playersBooked: true, playersAvailable: true, greenFeeCents: true, cartFeeCents: true, memberRateCents: true, residentRateCents: true, walkingAllowed: true },
+        select: { id: true, courseId: true, date: true, time: true, holes: true, status: true, playersBooked: true, playersAvailable: true, greenFeeCents: true, cartFeeCents: true, memberRateCents: true, residentRateCents: true, walkingAllowed: true, staffOnly: true },
       });
       if (!slot) throw new MoveError('SLOT_GONE');
       if (slot.courseId !== b.courseId) throw new MoveError('WRONG_COURSE');
       if (golferMove && slot.date !== b.teeTime.date) throw new MoveError('OTHER_DAY');
       if (slot.status === 'blocked') throw new MoveError('BLOCKED');
+      if (golferMove && slot.staffOnly) throw new MoveError('BLOCKED'); // ADDTIME-1: kept for the counter
       const teeAt = teeTimeInstant(b.course.timezone, slot.date, slot.time);
       if (!teeAt || teeAt.getTime() <= now.getTime()) throw new MoveError('PAST');
       const spotsLeft = slot.playersAvailable - slot.playersBooked;

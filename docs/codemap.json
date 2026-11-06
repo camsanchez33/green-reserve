@@ -3711,7 +3711,7 @@
     },
     {
       "path": "src/app/api/bookings/route.ts",
-      "lines": 502,
+      "lines": 503,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4775,7 +4775,7 @@
     },
     {
       "path": "src/app/api/manage/[bookingId]/available-times/route.ts",
-      "lines": 65,
+      "lines": 66,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7508,7 +7508,7 @@
     },
     {
       "path": "src/app/api/operator/tee-times/route.ts",
-      "lines": 237,
+      "lines": 259,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8907,7 +8907,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1974,
+      "lines": 2027,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11881,7 +11881,7 @@
     },
     {
       "path": "src/components/dashboard/TeeSheetRows.tsx",
-      "lines": 297,
+      "lines": 299,
       "purpose": "DENSE-4 (DENSE_UI_SPEC D1, Cam 2026-10-27:",
       "brain": [],
       "exports": [
@@ -16018,7 +16018,7 @@
     },
     {
       "path": "src/lib/cancel-booking.ts",
-      "lines": 368,
+      "lines": 369,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -16620,7 +16620,7 @@
     },
     {
       "path": "src/lib/claim-tee-time.ts",
-      "lines": 120,
+      "lines": 122,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -21849,7 +21849,7 @@
     },
     {
       "path": "src/lib/move-booking.ts",
-      "lines": 295,
+      "lines": 296,
       "purpose": "ACT-1 (PLATFORM_ROADMAP_SPEC §2, Cam 2026-10-07):",
       "brain": [],
       "exports": [
@@ -25956,7 +25956,7 @@
     },
     {
       "path": "src/lib/tee-sheet-engine.ts",
-      "lines": 320,
+      "lines": 321,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -32608,6 +32608,10 @@
         {
           "name": "status",
           "type": "String"
+        },
+        {
+          "name": "staffOnly",
+          "type": "Boolean"
         },
         {
           "name": "createdAt",

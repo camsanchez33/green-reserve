@@ -186,11 +186,12 @@ export async function generateTeeTimes(courseId: string, dateStr: string): Promi
   // dropped that time — the golfer already paid for it. A slot whose only
   // bookings are cancelled still has Booking rows pointing at it (RESTRICT), and
   // operator-blocked slots are a manual override: both are left alone.
-  const isOpen = (t: typeof existing[number]) => t.playersBooked === 0 && t.status !== 'blocked' && t._count.bookings === 0;
+  // ADDTIME-1: a time kept for staff is a manual override like a block — left alone.
+  const isOpen = (t: typeof existing[number]) => t.playersBooked === 0 && t.status !== 'blocked' && !t.staffOnly && t._count.bookings === 0;
   const toDelete = existing.filter(t => isOpen(t) && !desired.has(slotKey(t.productId ?? null, t.time))).map(t => t.id);
   if (toDelete.length > 0) {
     // AUDIT-1: only if still open — a golfer who booked one since the read keeps it (and the day doesn't fail on the foreign key).
-    await prisma.teeTime.deleteMany({ where: { id: { in: toDelete }, playersBooked: 0, status: { not: 'blocked' }, bookings: { none: {} } } });
+    await prisma.teeTime.deleteMany({ where: { id: { in: toDelete }, playersBooked: 0, status: { not: 'blocked' }, staffOnly: false, bookings: { none: {} } } });
   }
   const updates = new Map<string, { data: Prisma.TeeTimeUncheckedUpdateManyInput; ids: string[] }>();
   const toCreate: Prisma.TeeTimeCreateManyInput[] = [];

@@ -585,6 +585,8 @@ model TeeTime {
   walkingAllowed    Boolean        @default(true)
   tierName          String         @default("standard")
   status            String         @default("available")
+  /// ADDTIME-1 (Cam 2026-11-06): kept for staff — never listed or bookable online; the counter books it as any time.
+  staffOnly         Boolean        @default(false)
   createdAt         DateTime       @default(now())
   bookings          Booking[]
   teeTimeAlerts     TeeTimeAlert[]

@@ -55,7 +55,7 @@ export async function GET(
   }
 
   const teeTimes = await prisma.teeTime.findMany({
-    where: { courseId: course.id, date, status: { not: 'blocked' } },
+    where: { courseId: course.id, date, status: { not: 'blocked' }, staffOnly: false },
     orderBy: { time: 'asc' },
     include: { product: { select: { label: true, walkingPolicy: true, minPlayers: true, maxPlayers: true, publicAdvanceDays: true } } },
   });

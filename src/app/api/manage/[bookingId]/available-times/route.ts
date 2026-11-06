@@ -33,6 +33,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
       courseId: booking.courseId,
       date: booking.teeTime.date,
       status: { not: 'blocked' },
+      staffOnly: false, // ADDTIME-1: kept for the counter
       id: { not: booking.teeTimeId },
     },
     orderBy: { time: 'asc' },

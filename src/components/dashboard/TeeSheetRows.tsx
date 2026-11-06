@@ -34,6 +34,8 @@ export type BoardSlot = {
   teeRank?: number;
   /** ROUNDS-1: what the time sells — holes, its price period (schedule name, e.g. Twilight) and round. */
   holes?: number; tierName?: string | null; product?: { label: string } | null;
+  /** ADDTIME-1: kept for staff — labelled on the row. */
+  staffOnly?: boolean;
 };
 type Tone = 'ok' | 'warn' | 'bad';
 
@@ -118,7 +120,7 @@ export default function TeeSheetRows({ slots: allSlots, isPast, isGone, nextUpId
   // named once (its header, or the sheet's first run); a time selling anything else carries its own label.
   const laneOf = (s: BoardSlot) => s.tee ?? '';
   const usualBy = new Map(lanes.map(l => [l, usualRound(allSlots.filter(x => laneOf(x) === l))]));
-  const tagOf = (s: BoardSlot) => rowTag(s, usualBy.get(laneOf(s)) ?? '');
+  const tagOf = (s: BoardSlot) => [s.staffOnly ? 'Staff only' : '', rowTag(s, usualBy.get(laneOf(s)) ?? '')].filter(Boolean).join(' · ');
   // One pass per tee: the run each time sits in and when it began, so the header and its "from" always agree.
   const runAt = new Map(lanes.flatMap(l => [...runsOf(allSlots.filter(x => laneOf(x) === l), usualBy.get(l) ?? '')]));
   const tagsOn = allSlots.some(x => tagOf(x));

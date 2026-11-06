@@ -149,7 +149,16 @@ export async function POST(req: NextRequest) {
   // fee fields are ignored for staff.
   let greenFeeCents = dollarsToCentsOr0(body.greenFee);
   let cartFeeCents = dollarsToCentsOr0(body.cartFee);
-  if (session.isStaff) {
+  // ADDTIME-1 (Cam 2026-11-06, "the day's real prices"): the new time copies a time on the same day — its
+  // prices (member, resident, senior, junior too), cart, walking, round and holes. Only this course's.
+  const copyId = typeof body.copyFrom === 'string' ? body.copyFrom : '';
+  const src = copyId ? await prisma.teeTime.findFirst({ where: { id: copyId, courseId: session.courseId, date },
+    select: { greenFeeCents: true, cartFeeCents: true, memberRateCents: true, residentRateCents: true, seniorRateCents: true, juniorRateCents: true, walkingAllowed: true, tierName: true, holes: true, productId: true } }) : null;
+  if (copyId && !src) return NextResponse.json({ error: 'The time to copy prices from is gone — refresh the sheet and try again.' }, { status: 409 });
+  const ownFees = !session.isStaff && body.greenFee != null && body.cartFee != null;
+  if (src && (session.isStaff || !ownFees)) {
+    greenFeeCents = src.greenFeeCents; cartFeeCents = src.cartFeeCents;
+  } else if (session.isStaff) {
     const dow = new Date(date + 'T12:00:00').getDay();
     const weekend = dow === 0 || dow === 6;
     const schedules = await prisma.teeTimeSchedule.findMany({ where: { courseId: session.courseId, active: true }, orderBy: { createdAt: 'desc' } });
@@ -162,18 +171,21 @@ export async function POST(req: NextRequest) {
   }
 
   // AUDIT-1: one row per slot (unique index TeeTime_slot_key) — a second 7:00 would double that tee.
-  const clash = await prisma.teeTime.findFirst({ where: { courseId: session.courseId, date, time, productId: null }, select: { id: true } });
+  const productId = src?.productId ?? null;
+  const clash = await prisma.teeTime.findFirst({ where: { courseId: session.courseId, date, time, productId }, select: { id: true } });
   if (clash) return NextResponse.json({ error: `There's already a ${time} tee time that day.` }, { status: 409 });
   let teeTime;
   try {
     teeTime = await prisma.teeTime.create({
       data: {
         courseId: session.courseId,
-        date, time, holes: Number(body.holes) === 9 ? 9 : 18,
+        date, time, holes: src && (src.productId || !ownFees) ? src.holes : Number(body.holes) === 9 ? 9 : 18, // a round keeps its own holes
         playersAvailable: players, playersBooked: 0,
         // MP-3 B2c: the form sends dollars; the columns are cents.
         greenFeeCents, cartFeeCents,
-        walkingAllowed: body.walkingAllowed !== false, status: 'available',
+        walkingAllowed: src && !ownFees ? src.walkingAllowed : body.walkingAllowed !== false, status: 'available',
+        ...(src ? { productId, tierName: src.tierName, memberRateCents: src.memberRateCents, residentRateCents: src.residentRateCents, seniorRateCents: src.seniorRateCents, juniorRateCents: src.juniorRateCents } : {}),
+        staffOnly: body.staffOnly === true,
       },
     });
   } catch (err) {
@@ -190,8 +202,14 @@ export async function PATCH(req: NextRequest) {
   const denied = requirePermission(session, 'sheet.block'); // SP-A
   if (denied) return denied;
 
-  const { id, status } = await req.json();
+  const { id, status, staffOnly } = await req.json();
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+  // ADDTIME-1: open a time online, or keep it for staff. Same permission as blocking (who can sell it).
+  if (typeof staffOnly === 'boolean' && status === undefined) {
+    const r = await prisma.teeTime.updateMany({ where: { id, courseId: session.courseId }, data: { staffOnly } });
+    if (r.count === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    return NextResponse.json({ ok: true, staffOnly });
+  }
   // MP-5d: this used to write whatever `status` string arrived. The only two
   // states a person can put a slot into are open and blocked; anything else
   // is the engine's to set. Goes through the same service the admin uses.
@@ -229,6 +247,10 @@ export async function DELETE(req: NextRequest) {
   const booked = await prisma.booking.count({ where: { teeTimeId: id, courseId: session.courseId, status: { in: ['confirmed', 'completed'] } } });
   if (booked > 0) {
     return NextResponse.json({ error: `This tee time has ${booked} booking${booked === 1 ? '' : 's'} — cancel ${booked === 1 ? 'it' : 'them'} first, or block the time instead.` }, { status: 409 });
+  }
+  // Cam 2026-11-06: a cancelled booking still points at its time (and may carry a kept fee) — the time is history, not deletable.
+  if (await prisma.booking.count({ where: { teeTimeId: id, courseId: session.courseId } }) > 0) {
+    return NextResponse.json({ error: 'This tee time has cancelled bookings on record, so it stays on the sheet. Block it instead.' }, { status: 409 });
   }
   const r = await prisma.teeTime.deleteMany({ where: { id, courseId: session.courseId } });
   if (r.count === 0) return NextResponse.json({ error: 'That tee time no longer exists.' }, { status: 404 });

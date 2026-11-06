@@ -33,7 +33,8 @@ export async function claimTeeTime(
   actor: EventActor,
   // Staff recording a walk-in who already played (Cam 2026-10-27: "let staff add forgotten
   // walk-ins after") — only the tee sheet's own "already played" button sets it.
-  opts: { allowLate?: boolean } = {},
+  // ADDTIME-1: online bookings (the golfer booking route) can't take a time kept for staff.
+  opts: { allowLate?: boolean; online?: boolean } = {},
 ): Promise<{ id: string; checkInToken: string | null }> {
   const teeTimeId = String(data.teeTimeId);
   const players = Number(data.players);
@@ -43,11 +44,12 @@ export async function claimTeeTime(
       async (tx) => {
         const teeTime = await tx.teeTime.findUnique({
           where: { id: teeTimeId },
-          select: { id: true, playersBooked: true, playersAvailable: true, status: true, date: true, time: true, course: { select: { timezone: true } } },
+          select: { id: true, playersBooked: true, playersAvailable: true, status: true, staffOnly: true, date: true, time: true, course: { select: { timezone: true } } },
         });
 
         if (!teeTime) throw new TeeTimeClaimError('NOT_FOUND');
         if (teeTime.status === 'blocked') throw new TeeTimeClaimError('BLOCKED');
+        if (opts.online && teeTime.staffOnly) throw new TeeTimeClaimError('BLOCKED');
         const teeAt = teeTimeInstant(teeTime.course.timezone, teeTime.date, teeTime.time);
         if (!opts.allowLate && teeAt && teeAt.getTime() + LATE_ADD_MINUTES * 60_000 < Date.now()) throw new TeeTimeClaimError('PAST');
 

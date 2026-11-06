@@ -1,33 +1,50 @@
 {
-  "generatedAt": "2026-11-06T03:19:17.514Z",
+  "generatedAt": "2026-11-06T03:56:25.584Z",
   "repo": {
-    "head": "a973829d",
+    "head": "3d4da59c",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 17,
+    "dirtyCount": 23,
     "dirty": [
       "M  STATUS.artifact.html",
       "M  STATUS.json",
       "M  STATUS.md",
       "MM docs/CODEMAP.md",
       "MM docs/codemap.json",
-      "M  scripts/home-page-test.ts",
-      "MM scripts/sheet-views-test.ts",
+      "A  prisma/migrations/20261106000000_tee_time_staff_only/migration.sql",
+      "M  prisma/schema.prisma",
+      "AM scripts/add-tee-time-test.ts",
+      "M  scripts/walkin-fit-test.ts",
       "M  scripts/words-guard.baseline.json",
+      "MM src/app/api/bookings/route.ts",
+      "M  src/app/api/manage/[bookingId]/available-times/route.ts",
+      "M  src/app/api/member/[courseSlug]/tee-times/route.ts",
       "M  src/app/api/operator/tee-times/route.ts",
+      " M src/app/api/preview/[courseId]/route.ts",
+      "M  src/app/api/preview/[courseId]/tee-times/route.ts",
       "M  src/app/dashboard/page.tsx",
-      "MM src/components/dashboard/TeeSheetCalendar.tsx",
-      "MM src/components/dashboard/TeeSheetList.tsx",
-      "MM src/components/dashboard/TeeSheetRows.tsx",
-      " M src/lib/booking-fees.ts",
-      "A  src/lib/calendar-days.ts",
-      "A  src/lib/on-course.ts",
-      " M src/lib/shop.ts"
+      "M  src/components/dashboard/TeeSheetRows.tsx",
+      " M src/lib/cancel-booking.ts",
+      "M  src/lib/claim-tee-time.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "c5f4ba4b",
+        "date": "2026-11-05T22:41:38-05:00",
+        "subject": "Tee sheet: On the course, a fuller List, a Calendar that says why (#326)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "f8d6b25b",
+        "date": "2026-11-06T03:35:46+00:00",
+        "subject": "Tee sheet: On the course, a List with the grid's details, a Calendar that says why",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "be8b68ee",
         "date": "2026-11-05T22:08:40-05:00",
@@ -1091,12 +1108,6 @@
       "ageDays": 13
     },
     {
-      "file": "HOMEPAGE_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-23",
-      "ageDays": 13
-    },
-    {
       "file": "AGREEMENT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
@@ -1106,6 +1117,12 @@
       "file": "CALL_SCHEDULING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
+      "ageDays": 14
+    },
+    {
+      "file": "HOMEPAGE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-23",
       "ageDays": 14
     },
     {
@@ -1286,6 +1303,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "c5f4ba4b",
+      "date": "2026-11-05",
+      "subject": "Tee sheet: On the course, a fuller List, a Calendar that says why (#326)"
+    },
+    {
+      "h": "f8d6b25b",
+      "date": "2026-11-06",
+      "subject": "Tee sheet: On the course, a List with the grid's details, a Calendar that says why"
+    },
+    {
       "h": "be8b68ee",
       "date": "2026-11-05",
       "subject": "Home: the week-ahead link offers demand pricing and lands on it (#325)"
@@ -1334,16 +1361,6 @@
       "h": "8ec892ce",
       "date": "2026-11-05",
       "subject": "Home: goals on the numbers the course picks, and its own course-condition lines"
-    },
-    {
-      "h": "e14b7752",
-      "date": "2026-11-05",
-      "subject": "Home: weather + next tee times on top, field-level setup links, Needs you counts, Staff notes (#320)"
-    },
-    {
-      "h": "a5bb5088",
-      "date": "2026-11-05",
-      "subject": "Home: weather and next tee times on top, field-level setup links, Needs you counts, Staff notes"
     }
   ]
 }
