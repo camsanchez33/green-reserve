@@ -166,8 +166,14 @@ function DashboardPageInner() {
   // board is the tee sheet; tapping a square opens this panel.
   const [panelId, setPanelId] = useState<string | null>(null);
   // CHECKOUT-1 (Cam 2026-11-06, "pick how they pay, then one button"): the way each group is paying, and the cash handed over.
-  const [payHow, setPayHow] = useState<Record<string, string>>({});
   const [cashGiven, setCashGiven] = useState<Record<string, string>>({});
+  // CHECKOUT-2 (Cam 2026-11-06, a clean POS "Charge" screen): the group whose payment screen is open, and for a
+  // group paying for fewer than all of it, what the rest do — pay on their own now (split off) or come later.
+  const [paySheet, setPaySheet] = useState<string | null>(null);
+  const [restMode, setRestMode] = useState<Record<string, 'own' | 'later'>>({});
+  const [moreFor, setMoreFor] = useState<string | null>(null);
+  // The payment screen closes with the time's card.
+  useEffect(() => { setPaySheet(null); setMoreFor(null); }, [panelId]);
   // VIEWS-1 (Cam 2026-11-03): Grid (seat rows), List (one line per group) or Calendar (the month).
   // Remembered per browser; the grid is the default and always works without it.
   const [sheetView, setSheetViewState] = useState<SheetView>('grid');
@@ -284,21 +290,21 @@ function DashboardPageInner() {
   // How many of each group are here (the card's "Here" picker); unset = the whole group.
   const [here, setHere] = useState<Record<string, number>>({});
   // SPLIT-1 (Cam 2026-11-02): "they all want to pay separately" — the group whose split box is open.
-  const [splitFor, setSplitFor] = useState<{ id: string; n: number; name: string } | null>(null);
   // Cam 2026-11-04: the booked party size lives behind "Edit group", out of the checkout.
   const [editGroupId, setEditGroupId] = useState<string | null>(null);
   const [splitBusy, setSplitBusy] = useState(false);
-  async function splitOff(b: Booking, n: number, name: string, thenCash: boolean) {
+  /** True when the split went through (review 2026-11-06: the card must not go on to charge if it didn't). */
+  async function splitOff(b: Booking, n: number, name: string, thenCash: boolean): Promise<boolean> {
     setSplitBusy(true);
     try {
       const r = await dfetch<{ newBookingId: string; leaveCents: number; cashError?: string; totalCents?: number; fee?: string | null }>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: b.id, action: 'split', splitPlayers: n, splitName: name, thenCash }) });
-      if (!r.ok) { toast(r.error, 'warn'); return; }
+      if (!r.ok) { toast(r.error, 'warn'); return false; }
       if (r.data.fee) toast(r.data.fee, 'warn');
-      setSplitFor(null);
       if (r.data.cashError) toast(`Cash failed: ${r.data.cashError} — still owing.`, 'warn');
       else if (thenCash) { toast('Cash taken — checked in.', 'ok'); setJustDone({ bookingId: r.data.newBookingId, name: name.trim() || `${b.golferName} · guest${n > 1 ? 's' : ''}`, players: n, how: 'Cash' }); }
       else toast('Split off.', 'ok');
       await loadTimes(selectedDate);
+      return true;
     } finally { setSplitBusy(false); }
   }
   const [cardModalBooking, setCardModalBooking] = useState<Booking | null>(null);
@@ -844,7 +850,6 @@ function DashboardPageInner() {
       // Cash collects no GreenReserve fee (PAY-2) — a group paid at the counter shows what the counter took.
       : b.paidOffline ? (b.totalAmount ?? 0) - (b.accessFeeTotal ?? 0) + (b.shopTotalCents ?? 0) + (b.shopTaxCents ?? 0)
       : (b.totalAmount ?? 0) + shopExtra(b);
-    const money = (c: number) => showMoney ? ` · $${(c / 100).toFixed(2)}` : '';
     const unpaid = b.status === 'confirmed' && b.paymentStatus !== 'paid' && b.paymentStatus !== 'paid_offline' && b.paymentStatus !== 'on_account';
     const canCash = b.status === 'confirmed' && b.paymentStatus !== 'manual' && b.paymentStatus !== 'paid' && b.paymentStatus !== 'paid_offline' && access.can('sheet.counter_payment');
     const canAccount = b.status === 'confirmed' && !b.noShowAt && !b.roundPaid && b.paymentStatus !== 'paid' && b.paymentStatus !== 'paid_offline' && hasAccounts && access.can('sheet.counter_payment');
@@ -887,65 +892,70 @@ function DashboardPageInner() {
               : <><StatusDot {...statusDot(bStatus.tone)} /><span>{b.paymentStatus === 'on_account' && b.accountName ? `Checked In · on ${b.accountName}’s account` : bStatus.label}{bStatus.sublabel && b.status === 'confirmed' && b.paymentStatus !== 'manual' && <span className="text-ink-muted"> · {bStatus.sublabel}</span>}{partlyPlayed && <span className="text-ink-muted"> · {b.checkedInPlayers} of {b.players} played</span>}</span></>}
         </p>
 
-        {/* Who showed: the check-in and cash buttons charge for this many (the whole group unless changed). */}
-        {b.status === 'confirmed' && b.players > 1 && b.paymentStatus !== 'paid' && (access.can('sheet.checkin') || access.can('sheet.counter_payment')) && (
-          <div className="mt-3" onClick={e => e.stopPropagation()}>
-            {/* CHECKOUT-1 (Cam 2026-11-06, "make this look better"): a stepper, not a row of numbers. */}
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-[13px] font-medium text-ink">Showed up</span>
-              <div className="flex items-center gap-1" role="group" aria-label={`How many of ${b.golferName}'s group are here`}>
-                <button type="button" aria-label="One fewer" disabled={herePlayers <= 1} onClick={() => setHere(h => ({ ...h, [b.id]: Math.max(1, herePlayers - 1) }))}
-                  className="w-9 h-9 rounded-[7px] border border-line text-[16px] text-ink hover:bg-paper disabled:opacity-40">−</button>
-                <span className="min-w-[5.5rem] text-center text-[14px] tabular-nums text-ink" aria-live="polite"><b>{herePlayers}</b> of {b.players}</span>
-                <button type="button" aria-label="One more" disabled={herePlayers >= b.players} onClick={() => setHere(h => ({ ...h, [b.id]: Math.min(b.players, herePlayers + 1) }))}
-                  className="w-9 h-9 rounded-[7px] border border-line text-[16px] text-ink hover:bg-paper disabled:opacity-40">+</button>
-              </div>
-            </div>
-            {herePlayers < b.players && (restSplit
-              ? <p className="mt-1.5 text-[12.5px] text-ink-soft">{b.players - herePlayers} more stay booked.</p>
-              : <p className="mt-1.5 text-[12.5px] text-warn">The other {b.players - herePlayers} won’t be charged.</p>)}
-          </div>
-        )}
-
-        {/* SPLIT-1 (Cam 2026-11-02): paying separately — the players who pay on their own become their own
-            group on this time, at the group's own per-player price (lib/split-booking), then pay any way. */}
-        {canSplit && splitFor?.id !== b.id && (
-          <button type="button" onClick={e => { e.stopPropagation(); setSplitFor({ id: b.id, n: 1, name: '' }); }} className={'mt-2 ' + link}>Pay separately</button>
-        )}
-        {canSplit && splitFor?.id === b.id && (() => {
-          const sh = splitShares({ players: b.players, greenFeeTotal: b.greenFeeTotal ?? (b.totalAmount - (b.accessFeeTotal ?? 0)), cartFeeTotal: b.cartFeeTotal ?? 0, rangeBallsTotal: b.rangeBallsTotal ?? 0, accessFeeTotal: b.accessFeeTotal ?? 0, totalAmount: b.totalAmount, residentPlayers: b.residentPlayers ?? 0, residentRateCents: b.residentRateCents ?? null, memberRateCents: b.memberRateCents ?? null, memberCartCents: b.memberCartCents ?? null }, splitFor.n, { greenFeeCents: Math.round(tt.greenFee * 100), cartFeeCents: Math.round(tt.cartFee * 100) });
-          const cashCents = sh ? sh.leave.totalAmount - sh.leave.accessFeeTotal : 0;
+        {(() => {
+          // CHECKOUT-2 (Cam 2026-11-06): one "Paying now" control (was Showed up + Pay separately), a receipt, the total,
+          // and ONE Charge button that opens the payment screen. Every way to pay keeps exactly its old permission and
+          // condition and charges exactly what the server charges (cardDue / cashDue — unchanged).
+          const cardOk = b.status !== 'completed' && b.status !== 'cancelled' && b.paymentStatus !== 'manual' && access.can('sheet.checkin');
+          const cashOk = canCash || (b.status === 'confirmed' && b.paymentStatus === 'manual' && access.can('sheet.counter_payment'));
+          const noCard = b.hasCard === false || b.paymentStatus === 'no_payment_method';
+          const anyWay = cardOk || cashOk || canReader || canTextLink || canEmailLink || canAccount;
+          const rest = b.players - herePlayers;
+          const mode = rest > 0 ? (restMode[b.id] ?? 'later') : 'later';
+          const canPayNow = b.status === 'confirmed' && b.players > 1 && b.paymentStatus !== 'paid' && (access.can('sheet.checkin') || access.can('sheet.counter_payment'));
+          const sheetOpen = paySheet === b.id && anyWay && unpaid && !prepaid;
+          const givenRaw = Number(cashGiven[b.id] || 0);
+          const garbled = !Number.isFinite(givenRaw);
+          const givenCents = garbled ? 0 : Math.round(givenRaw * 100);
+          // The bills they'd hand over: the next $20, $50 and $100 above what's owed.
+          const quick = [...new Set([2000, 5000, 10000].map(u => Math.ceil((cashDue + 1) / u) * u))].sort((x, y) => x - y);
+          const takeCash = (tendered?: number) => bookingLifecycle(b, 'take_cash', cashDue, { tenderedCents: tendered && tendered > cashDue ? tendered : undefined });
+          const row = 'w-full flex items-center justify-between gap-3 py-3 text-left text-[14px] text-ink hover:bg-paper/70 disabled:opacity-50 transition-colors';
+          // "Pays on their own now": split them off first (their own group on this time, lib/split-booking), then the
+          // booker pays for who's here. The split moves no money; if it fails nothing is charged.
+          const charge = async () => {
+            if (rest > 0 && mode === 'own') {
+              if (!(await splitOff(b, rest, '', false))) return; // refused or dropped: stay on the card, nothing charged
+              setHere(h => { const n = { ...h }; delete n[b.id]; return n; });
+              setRestMode(m => { const n = { ...m }; delete n[b.id]; return n; });
+            }
+            setPaySheet(b.id);
+          };
           return (
-            <div className="mt-3 rounded-[7px] bg-paper/70 px-3 py-3 space-y-2.5" onClick={e => e.stopPropagation()}>
-              <div className="flex flex-wrap items-center gap-2 text-[13px] text-ink">
-                <label className="flex items-center gap-1.5">Paying alone
-                  <select value={splitFor.n} onChange={e => setSplitFor({ ...splitFor, n: Number(e.target.value) })} className="bg-white border border-line rounded-md px-1.5 py-1 text-[13px] text-ink">
-                    {Array.from({ length: b.players - 1 }, (_, i) => i + 1).map(n => <option key={n} value={n}>{n}</option>)}
-                  </select>
-                </label>
-                <input value={splitFor.name} onChange={e => setSplitFor({ ...splitFor, name: e.target.value })} placeholder="Name" aria-label="Their name"
-                  className="flex-1 min-w-[140px] bg-white border border-line rounded-md px-2.5 py-1.5 text-[13px] text-ink placeholder-ink-faint" />
-              </div>
-              {sh && showMoney && <p className="text-[12.5px] text-ink-soft tabular-nums">Their share ${(sh.leave.totalAmount / 100).toFixed(2)} · {b.golferName} keeps ${(sh.keep.totalAmount / 100).toFixed(2)}</p>}
-              {!sh && <p className="text-[12.5px] text-bad">This price can’t be split.</p>}
-              <div className="grid grid-cols-2 gap-2">
-                <button type="button" disabled={!sh || splitBusy} onClick={() => splitOff(b, splitFor.n, splitFor.name, true)} className={big.replace('w-full min-h-[52px] ', 'min-h-[44px] text-[14px] ') + 'bg-pine hover:bg-pine-hover'}>
-                  {splitBusy ? 'Saving…' : `Take cash${money(cashCents)}`}
-                </button>
-                <button type="button" disabled={!sh || splitBusy} onClick={() => splitOff(b, splitFor.n, splitFor.name, false)} className={tile}>Split off</button>
-              </div>
-              <button type="button" onClick={() => setSplitFor(null)} className={link}>Back</button>
-            </div>
-          );
-        })()}
+            <div onClick={e => e.stopPropagation()}>
+              {canPayNow && !sheetOpen && (
+                <div className="mt-3 space-y-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[13px] font-medium text-ink">Paying now</span>
+                    <div className="flex items-center gap-1" role="group" aria-label={`How many of ${b.golferName}'s group are paying now`}>
+                      <button type="button" aria-label="One fewer" disabled={herePlayers <= 1} onClick={() => setHere(h => ({ ...h, [b.id]: Math.max(1, herePlayers - 1) }))}
+                        className="w-9 h-9 rounded-[7px] border border-line text-[16px] text-ink hover:bg-paper disabled:opacity-40">−</button>
+                      <span className="min-w-[5.5rem] text-center text-[14px] tabular-nums text-ink" aria-live="polite"><b>{herePlayers}</b> of {b.players}</span>
+                      <button type="button" aria-label="One more" disabled={herePlayers >= b.players} onClick={() => setHere(h => ({ ...h, [b.id]: Math.min(b.players, herePlayers + 1) }))}
+                        className="w-9 h-9 rounded-[7px] border border-line text-[16px] text-ink hover:bg-paper disabled:opacity-40">+</button>
+                    </div>
+                  </div>
+                  {rest > 0 && (
+                    <div role="radiogroup" aria-label={`The other ${rest}`} className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[13px]">
+                      <span className="text-ink-soft">The other {rest}:</span>
+                      {([['own', 'Pays on their own now'], ['later', restSplit ? 'Coming later' : 'Not charged']] as const).map(([k, l]) => (
+                        <button key={k} type="button" role="radio" aria-checked={mode === k} disabled={k === 'own' && !canSplit}
+                          onClick={() => setRestMode(m => ({ ...m, [b.id]: k }))}
+                          className={'px-2.5 py-1 rounded-[7px] border transition-colors disabled:opacity-40 ' + (mode === k ? 'border-pine bg-pine/5 text-ink' : 'border-line text-ink-soft hover:border-line-strong')}>{l}</button>
+                      ))}
+                    </div>
+                  )}
+                  {rest > 0 && mode === 'later' && !restSplit && <p className="text-[12.5px] text-warn">The other {rest} won’t be charged.</p>}
+                </div>
+              )}
 
-        {/* The ticket: what the card is charged, line by line, for who's here. */}
-        {showTicket && (
-          <div className="mt-3 rounded-[7px] bg-paper/70 px-3 py-1" onClick={e => e.stopPropagation()}>
-            <GroupTicket booking={b} here={herePlayers} />
-          </div>
-        )}
-
+              {!sheetOpen && (<>
+                {/* The receipt: what the card is charged, line by line, for who's paying now. */}
+                {showTicket && (
+                  <div className="mt-3 rounded-[7px] bg-paper/70 px-3 py-1">
+                    <GroupTicket booking={b} here={herePlayers} />
+                  </div>
+                )}
         {/* RES-1: residents in the group, while the round's price can still change. */}
         {b.status === 'confirmed' && tt.residentRateCents != null && !b.noShowAt && !b.paidOffline && !b.roundPaid && !b.shopLocked && b.paymentStatus !== 'paid'
           && (!b.appliedRate || b.appliedRate === 'standard' || b.appliedRate === 'resident') && access.can('sheet.counter_payment') && (
@@ -966,107 +976,90 @@ function DashboardPageInner() {
             onChanged={() => loadTimes(selectedDate)} />
         </div>
 
-        {showTicket && (
-          <div className="mt-3 flex items-baseline justify-between border-t border-line pt-3">
-            <span className="text-[14px] text-ink">Total</span>
-            <span className="text-[28px] font-semibold tracking-[-0.02em] text-ink tabular-nums">${(cardDue / 100).toFixed(2)}</span>
-          </div>
-        )}
+                {showTicket && (
+                  <div className="mt-3 flex items-baseline justify-between border-t border-line pt-3">
+                    <span className="text-[14px] text-ink">Total</span>
+                    <span className="text-[28px] font-semibold tracking-[-0.02em] text-ink tabular-nums">${(cardDue / 100).toFixed(2)}</span>
+                  </div>
+                )}
+                {anyWay && (
+                  prepaid && cardOk
+                    ? <button onClick={() => checkInBooking(b, cardDue)} disabled={checkingInId === b.id} className={big + 'mt-3 bg-pine hover:bg-pine-hover'}>{checkingInId === b.id ? 'Checking in…' : `Check in${herePlayers < b.players ? ` ${herePlayers}` : ''} · paid ahead`}</button>
+                    : <button onClick={charge} disabled={splitBusy} className={big + 'mt-3 ' + (b.checkInFailReason ? 'bg-bad hover:bg-bad/90' : 'bg-pine hover:bg-pine-hover')}>
+                        {splitBusy ? 'Splitting…' : b.checkInFailReason ? 'Card declined · charge again' : `Charge${showMoney ? ` $${(cardDue / 100).toFixed(2)}` : ''}`}
+                      </button>
+                )}
+                {readerWhyNot === 'none' && !access.isStaff && <Link href="/dashboard/settings?section=Pro+shop" className={link + ' mt-2 block'}>Connect a card reader</Link>}
+                {readerWhyNot === 'none' && access.isStaff && <p className="mt-2 text-[12.5px] text-ink-muted">No card reader connected</p>}
+                {readerWhyNot === 'day' && <p className="mt-2 text-[12.5px] text-ink-muted">Card reader: on the day</p>}
+                {b.paymentStatus === 'on_account' && access.can('sheet.counter_payment') && (
+                  <div className="mt-2"><ChangeAccount target={{ bookingId: b.id }} className={tile} inputClass="bg-white border border-line rounded-md px-2 py-1.5 text-ink placeholder-ink-faint focus:border-pine/40 focus:ring-2 focus:ring-pine/10" onDone={async msg => { toast(msg, 'ok'); await loadTimes(selectedDate); }} /></div>
+                )}
+              </>)}
 
-        {(() => {
-          // CHECKOUT-1 (Cam 2026-11-06): "How are they paying?" — only the ways this group can pay, each with the
-          // same permission and rule as before — then ONE button that says exactly what it does.
-          const cardOk = b.status !== 'completed' && b.status !== 'cancelled' && b.paymentStatus !== 'manual' && access.can('sheet.checkin');
-          const cashOk = canCash || (b.status === 'confirmed' && b.paymentStatus === 'manual' && access.can('sheet.counter_payment'));
-          const ways: [string, string][] = [
-            ...(cardOk ? [['card', prepaid ? 'Paid ahead' : b.checkInFailReason ? 'New card' : (b.hasCard === false || b.paymentStatus === 'no_payment_method') ? 'Take a card' : 'Card on file'] as [string, string]] : []),
-            ...(cashOk ? [['cash', 'Cash'] as [string, string]] : []),
-            ...(canReader ? [['reader', 'Card reader'] as [string, string]] : []),
-            ...(canTextLink ? [['text', 'Text pay link'] as [string, string]] : []),
-            ...(canEmailLink ? [['email', 'Email pay link'] as [string, string]] : []),
-            ...(canAccount ? [['account', 'On account'] as [string, string]] : []),
-          ];
-          if (!ways.length && !readerWhyNot && !(b.paymentStatus === 'on_account' && access.can('sheet.counter_payment'))) return null;
-          const how = ways.some(([k]) => k === payHow[b.id]) ? payHow[b.id] : (b.paymentStatus === 'manual' && cashOk ? 'cash' : ways[0]?.[0]);
-          const who = herePlayers < b.players ? ` ${herePlayers}` : '';
-          const givenRaw = Number(cashGiven[b.id] || 0);
-          const garbled = !Number.isFinite(givenRaw);
-          const givenCents = garbled ? 0 : Math.round(givenRaw * 100);
-          const short = garbled || (givenCents > 0 && givenCents < cashDue);
-          const change = givenCents > cashDue ? givenCents - cashDue : 0;
-          // The bills they'd hand over: the next $20, $50 and $100 above what's owed.
-          const quick = [...new Set([2000, 5000, 10000].map(u => Math.ceil((cashDue + 1) / u) * u))].sort((x, y) => x - y);
-          return (
-            <div className="mt-3 space-y-2.5" onClick={e => e.stopPropagation()}>
-              {ways.length > 1 && (
-                <div>
-                  <span className="block text-[12.5px] text-ink-muted mb-1.5">How are they paying?</span>
-                  <div role="radiogroup" aria-label="How are they paying?" className="flex flex-wrap gap-1.5">
-                    {ways.map(([k, l]) => (
-                      <button key={k} type="button" role="radio" aria-checked={how === k} onClick={() => setPayHow(p => ({ ...p, [b.id]: k }))}
-                        className={'px-3 min-h-[36px] rounded-[7px] border text-[13px] font-medium transition-colors ' + (how === k ? 'border-pine bg-pine/5 text-ink' : 'border-line text-ink-soft hover:border-line-strong hover:text-ink')}>{l}</button>
-                    ))}
+              {/* The payment screen (after Square's: the amount, then one row per way to pay; a row pays). */}
+              {sheetOpen && (
+                <div className="mt-3 rounded-[7px] bg-paper/70">
+                  <div className="flex items-center justify-between px-4 pt-3">
+                    <button type="button" onClick={() => setPaySheet(null)} className={link}>Back</button>
+                    <span className="text-[12.5px] text-ink-muted">{b.golferName} · {herePlayers} player{herePlayers === 1 ? '' : 's'}</span>
+                  </div>
+                  <div className="px-4 pt-3 pb-4 text-center">
+                    <div className="text-[34px] font-semibold tracking-[-0.02em] text-ink tabular-nums">{showMoney ? `$${(cardDue / 100).toFixed(2)}` : 'Charge'}</div>
+                    <div className="text-[13px] text-ink-soft">{b.checkInFailReason ? `Card declined · ${b.checkInFailReason}` : 'How are they paying?'}</div>
+                  </div>
+                  <div className="divide-y divide-line border-t border-line px-4">
+                    {cashOk && (
+                      <div className="py-3">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                          <span className="text-[14px] text-ink mr-auto">Cash{showMoney && cashDue !== cardDue ? <span className="text-ink-muted"> · ${(cashDue / 100).toFixed(2)}, no booking fee</span> : ''}</span>
+                          <button type="button" disabled={rowBusy === b.id} onClick={() => takeCash()} className="text-[14px] font-semibold text-pine hover:underline disabled:opacity-50 tabular-nums">{showMoney ? `$${(cashDue / 100).toFixed(2)}` : 'Exact'}</button>
+                          {quick.map(c => <button key={c} type="button" disabled={rowBusy === b.id} onClick={() => takeCash(c)} className="text-[14px] font-semibold text-pine hover:underline disabled:opacity-50 tabular-nums">${c / 100}</button>)}
+                          <button type="button" onClick={() => setCashGiven(g => ({ ...g, [b.id]: g[b.id] ?? '' }))} className="text-[14px] font-semibold text-pine hover:underline">Custom</button>
+                        </div>
+                        {cashGiven[b.id] !== undefined && (
+                          <div className="mt-2 flex items-center gap-2">
+                            <span className="relative flex-1">
+                              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[13px] text-ink-muted">$</span>
+                              <input aria-label="Cash given" inputMode="decimal" autoFocus value={cashGiven[b.id]} onChange={e => setCashGiven(c => ({ ...c, [b.id]: e.target.value.replace(/[^\d.]/g, '') }))}
+                                className="w-full bg-white border border-line rounded-[7px] pl-6 pr-2.5 py-1.5 text-[14px] tabular-nums text-ink" />
+                            </span>
+                            <span className={'text-[13px] tabular-nums ' + (garbled || (givenCents > 0 && givenCents < cashDue) ? 'text-bad' : 'text-ink')}>
+                              {garbled ? 'Check the amount' : givenCents > 0 && givenCents < cashDue ? `Short $${((cashDue - givenCents) / 100).toFixed(2)}` : givenCents > cashDue ? `Change $${((givenCents - cashDue) / 100).toFixed(2)}` : ''}
+                            </span>
+                            <button type="button" disabled={rowBusy === b.id || garbled || givenCents < cashDue} onClick={() => takeCash(givenCents)} className="px-3 min-h-[34px] rounded-[7px] bg-pine hover:bg-pine-hover text-white text-[13px] font-semibold disabled:opacity-50">{rowBusy === b.id ? 'Saving…' : 'Take cash'}</button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {cardOk && !prepaid && !noCard && !b.checkInFailReason && (
+                      <button type="button" disabled={checkingInId === b.id} onClick={() => checkInBooking(b, cardDue)} className={row}><span>Card on file</span><span className="text-ink-muted">{checkingInId === b.id ? 'Charging…' : '›'}</span></button>
+                    )}
+                    {cardOk && !prepaid && (noCard || b.checkInFailReason) && (
+                      <button type="button" onClick={() => openCardModal(b, b.checkInFailReason ?? '')} className={row}><span>{b.checkInFailReason ? 'New card' : 'Take a card'}</span><span className="text-ink-muted">›</span></button>
+                    )}
+                    {canReader && <Link href={`/dashboard/shop?round=${b.id}`} className={row}><span>Card reader{herePlayers < b.players ? <span className="text-ink-muted"> · charges the whole group</span> : ''}</span><span className="text-ink-muted">›</span></Link>}
+                    {canTextLink && <button type="button" disabled={rowBusy === b.id} onClick={() => sendPayLink(b, 'sms')} className={row}><span>Text a pay link</span><span className="text-ink-muted">{rowBusy === b.id ? 'Sending…' : '›'}</span></button>}
+                    {canEmailLink && <button type="button" disabled={rowBusy === b.id} onClick={() => sendPayLink(b)} className={row}><span>Email a pay link</span><span className="text-ink-muted">{rowBusy === b.id ? 'Sending…' : '›'}</span></button>}
+                    {canAccount && (
+                      <div className="py-3"><ChargeToAccount booking={b} className={row + ' py-0'} onDone={async (msg, note) => { if (note) toast(note, 'warn'); toast(msg, 'ok'); setPaySheet(null); await loadTimes(selectedDate); }} /></div>
+                    )}
                   </div>
                 </div>
-              )}
-              {how === 'cash' && (
-                <div className="rounded-[7px] bg-paper/70 px-3 py-2.5 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <label htmlFor={`given-${b.id}`} className="text-[13px] text-ink shrink-0">Cash given</label>
-                    <span className="relative flex-1">
-                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[13px] text-ink-muted">$</span>
-                      <input id={`given-${b.id}`} inputMode="decimal" value={cashGiven[b.id] ?? ''} onChange={e => setCashGiven(c => ({ ...c, [b.id]: e.target.value.replace(/[^\d.]/g, '') }))}
-                        placeholder={(cashDue / 100).toFixed(2)} className="w-full bg-white border border-line rounded-[7px] pl-6 pr-2.5 py-1.5 text-[14px] tabular-nums text-ink placeholder-ink-faint" />
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <button type="button" onClick={() => setCashGiven(c => ({ ...c, [b.id]: '' }))} className="px-2.5 py-1 rounded-[7px] border border-line bg-white text-[12.5px] text-ink hover:bg-paper">Exact</button>
-                    {quick.map(c => <button key={c} type="button" onClick={() => setCashGiven(g => ({ ...g, [b.id]: (c / 100).toFixed(0) }))} className="px-2.5 py-1 rounded-[7px] border border-line bg-white text-[12.5px] tabular-nums text-ink hover:bg-paper">${c / 100}</button>)}
-                    <span className={'ml-auto text-[13.5px] tabular-nums ' + (short ? 'text-bad' : 'text-ink')}>{garbled ? 'Check the amount' : short ? `Short $${((cashDue - givenCents) / 100).toFixed(2)}` : change ? <>Change <b>${(change / 100).toFixed(2)}</b></> : 'No change'}</span>
-                  </div>
-                </div>
-              )}
-              {how === 'card' && (
-                <button onClick={() => { if (b.checkInFailReason) openCardModal(b, b.checkInFailReason); else checkInBooking(b, cardDue); }}
-                  disabled={checkingInId === b.id} className={big + (b.checkInFailReason ? 'bg-bad hover:bg-bad/90' : 'bg-pine hover:bg-pine-hover')}>
-                  {checkingInId === b.id ? 'Charging…' : b.checkInFailReason ? 'Retry with a new card'
-                    : prepaid ? `Check in${who} · paid ahead`
-                    : (b.hasCard === false || b.paymentStatus === 'no_payment_method') ? `Take a card${money(cardDue)} · check in${who}`
-                    : `Charge card on file${money(cardDue)} · check in${who}`}
-                </button>
-              )}
-              {how === 'cash' && (
-                <button onClick={() => bookingLifecycle(b, 'take_cash', cashDue, { tenderedCents: givenCents > cashDue ? givenCents : undefined })} disabled={rowBusy === b.id || short} className={big + 'bg-pine hover:bg-pine-hover'}>
-                  {rowBusy === b.id ? 'Saving…' : `Take${money(cashDue).replace(' · ', ' ')} cash · check in${who}`}
-                </button>
-              )}
-              {/* The register charges the whole group (it has no headcount): an amount only when that's who is here (review 2026-11-06). */}
-              {how === 'reader' && <Link href={`/dashboard/shop?round=${b.id}`} className={big + 'bg-pine hover:bg-pine-hover'}>Send{herePlayers === b.players ? money(b.totalAmount + shopExtra(b)).replace(' · ', ' ') : ' the whole group'} to the card reader</Link>}
-              {how === 'text' && (
-                <button onClick={() => sendPayLink(b, 'sms')} disabled={rowBusy === b.id} className={big + 'bg-pine hover:bg-pine-hover'}>{rowBusy === b.id ? 'Sending…' : 'Text a pay link'}</button>
-              )}
-              {how === 'email' && (
-                <button onClick={() => sendPayLink(b)} disabled={rowBusy === b.id} className={big + 'bg-pine hover:bg-pine-hover'}>{rowBusy === b.id ? 'Sending…' : 'Email a pay link'}</button>
-              )}
-              {how === 'account' && (
-                <ChargeToAccount booking={b} className={big + 'bg-pine hover:bg-pine-hover'} onDone={async (msg, note) => { if (note) toast(note, 'warn'); toast(msg, 'ok'); await loadTimes(selectedDate); }} />
-              )}
-              {readerWhyNot === 'none' && !access.isStaff && <Link href="/dashboard/settings?section=Pro+shop" className={link + ' block'}>Connect a card reader</Link>}
-              {readerWhyNot === 'none' && access.isStaff && <p className="text-[12.5px] text-ink-muted">No card reader connected</p>}
-              {readerWhyNot === 'day' && <p className="text-[12.5px] text-ink-muted">Card reader: on the day</p>}
-              {b.paymentStatus === 'on_account' && access.can('sheet.counter_payment') && (
-                <ChangeAccount target={{ bookingId: b.id }} className={tile} inputClass="bg-white border border-line rounded-md px-2 py-1.5 text-ink placeholder-ink-faint focus:border-pine/40 focus:ring-2 focus:ring-pine/10" onDone={async msg => { toast(msg, 'ok'); await loadTimes(selectedDate); }} />
               )}
             </div>
           );
         })()}
 
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2" onClick={e => e.stopPropagation()}>
-          {((b.status === 'confirmed' && !b.noShowAt) || (b.status === 'completed' && selectedDate >= today())) && access.can('sheet.move') && (
+          {((((b.status === 'confirmed' && !b.noShowAt) || (b.status === 'completed' && selectedDate >= today())) && access.can('sheet.move')) || canSizeGroup || (b.status === 'confirmed' && access.can('sheet.cancel') && (!teedOff || access.can('sheet.waive_fee')))) && (
+            <button type="button" aria-expanded={moreFor === b.id} onClick={() => setMoreFor(moreFor === b.id ? null : b.id)} className={link}>{moreFor === b.id ? 'Less' : 'More'}</button>
+          )}
+          {moreFor === b.id && ((b.status === 'confirmed' && !b.noShowAt) || (b.status === 'completed' && selectedDate >= today())) && access.can('sheet.move') && (
             <button onClick={() => setMoveTarget({ booking: { id: b.id, golferName: b.golferName, players: b.players, emailable: !b.golferEmail.endsWith('@noemail.greenreserve.app'), checkedIn: b.status === 'completed' }, fromTeeTimeId: tt.id })}
               className={link}>Move</button>
           )}
-          {canSizeGroup && (
+          {moreFor === b.id && canSizeGroup && (
             <button type="button" aria-expanded={editGroupId === b.id} onClick={() => setEditGroupId(editGroupId === b.id ? null : b.id)} className={link}>Change group size</button>
           )}
           {b.status === 'confirmed' && b.noShowAt && access.can('sheet.no_show') && (
@@ -1083,10 +1076,10 @@ function DashboardPageInner() {
           )}
           {/* Cam 2026-10-27: after the tee time a group checks in or is a no-show — no cancel. A booking
               made by mistake can still come off, with no fee, for logins that can waive (cancel-booking.ts). */}
-          {b.status === 'confirmed' && teedOff && access.can('sheet.cancel') && access.can('sheet.waive_fee') && (
+          {moreFor === b.id && b.status === 'confirmed' && teedOff && access.can('sheet.cancel') && access.can('sheet.waive_fee') && (
             <button onClick={() => cancelGroup(b, true)} disabled={rowBusy === b.id} className={'ml-auto ' + link}>Remove, booked by mistake</button>
           )}
-          {b.status === 'confirmed' && !teedOff && access.can('sheet.cancel') && (
+          {moreFor === b.id && b.status === 'confirmed' && !teedOff && access.can('sheet.cancel') && (
             <span className="ml-auto flex items-center gap-x-4">
               {access.can('sheet.waive_fee') && ((b.cancellationFeeTotal ?? 0) > 0 || !!b.noShowAt) && (
                 <button onClick={() => cancelGroup(b, true)} disabled={rowBusy === b.id} className={link}>Cancel, no fee</button>

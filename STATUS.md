@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-06 04:47 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `9dd45931` · working tree **12 dirty file(s)**
+Generated 2026-11-06 18:40 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `e2f573f0` · working tree **8 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 134 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 136 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `54cc0d80` | 2026-11-05 | Tee sheet: the group card asks how they're paying, then one button that says what it does (#330) |
+| `bd10ddf4` | 2026-11-06 | Tee sheet: the group card asks how they're paying, then one button that says what it does |
 | `337e9a0a` | 2026-11-05 | Tee sheet: Message golfers by email, text or both, with ready-made messages and a preview (#329) |
 | `e616bb78` | 2026-11-06 | Regenerate the code map and status board |
 | `2e16380b` | 2026-11-06 | Owner 2FA: match a code and its step on one clock |
@@ -149,20 +151,16 @@ Generated 2026-11-06 04:47 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (12 file(s))
+### Uncommitted working tree (8 file(s))
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/cash-at-counter-db-test.ts`
+- `M scripts/checkout-card-test.ts`
 - `M scripts/group-card-checkout-test.ts`
 - `M scripts/split-booking-db-test.ts`
-- `M scripts/teesheet-1-test.ts`
-- `M scripts/teesheet-3-test.ts`
 - `M scripts/teesheet-till-test.ts`
-- `M scripts/tt-card-test.ts`
 - `M scripts/words-guard.baseline.json`
 - `M src/app/dashboard/page.tsx`
-- `?? scripts/checkout-card-test.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -179,7 +177,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 106d | `b88c8bf3` | `RUN_QUEUE.md:2412` |
+| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 107d | `b88c8bf3` | `RUN_QUEUE.md:2412` |
 
 ## Not started — the actual queue
 
@@ -248,7 +246,7 @@ This is the distinction a raw checkbox count gets wrong.
 | spec | open refs | last touched | age |
 |---|---|---|---|
 | `CLAUDE.md` | 1 | 2026-11-05 | 0d |
-| `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 4d |
+| `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 5d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 16d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 10d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 11d |
@@ -288,6 +286,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `54cc0d80` 2026-11-05 — Tee sheet: the group card asks how they're paying, then one button that says what it does (#330)
+- `bd10ddf4` 2026-11-06 — Tee sheet: the group card asks how they're paying, then one button that says what it does
 - `337e9a0a` 2026-11-05 — Tee sheet: Message golfers by email, text or both, with ready-made messages and a preview (#329)
 - `e616bb78` 2026-11-06 — Regenerate the code map and status board
 - `2e16380b` 2026-11-06 — Owner 2FA: match a code and its step on one clock
@@ -298,8 +298,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `60b0470c` 2026-11-06 — Test: the engine's delete pin includes the staff-only guard
 - `ff613483` 2026-11-06 — Tee sheet: Add tee time from the day's prices, keep a time for staff, safer Block and Delete
 - `c5f4ba4b` 2026-11-05 — Tee sheet: On the course, a fuller List, a Calendar that says why (#326)
-- `f8d6b25b` 2026-11-06 — Tee sheet: On the course, a List with the grid's details, a Calendar that says why
-- `be8b68ee` 2026-11-05 — Home: the week-ahead link offers demand pricing and lands on it (#325)
 
 ---
 

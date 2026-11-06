@@ -1,8 +1,9 @@
-// CHECKOUT-1 (Cam 2026-11-06, the tee sheet's group card — "a couple of the buttons on the bottom look a little
-// confusing, they don't explain what they are doing"; "the take cash thing … should ask how much cash was
-// given"; "make this [Showed up] look better"): "How are they paying?" lists only the ways this group can
-// pay (the same permissions and rules as before), then ONE button that says what happens; cash asks for the
-// cash given and shows the change, and the server checks it covers the total; Showed up is a − / + stepper.
+// CHECKOUT-1/2 (Cam 2026-11-06, the tee sheet's group card: "clean, more POS like" — after Square's Charge screen;
+// "it shouldn't have a pay separately button when they can adjust how many people are paying"): one "Paying now"
+// stepper, and when it's short, "The other N: Pays on their own now · Coming later"; a receipt and the total; ONE
+// Charge button that opens the payment screen — the amount, a Cash row with one-tap amounts (exact, the next $20 /
+// $50 / $100, Custom) and one row per other way to pay. Every way keeps exactly its old permission and condition,
+// and charges exactly cardDue / cashDue, the figures the server charges.
 // Run: npx tsx scripts/checkout-card-test.ts
 import { readFileSync } from 'fs';
 
@@ -12,27 +13,31 @@ const page = readFileSync('src/app/dashboard/page.tsx', 'utf8');
 const route = readFileSync('src/app/api/operator/bookings/route.ts', 'utf8');
 const sales = readFileSync('src/lib/shop-sales.ts', 'utf8');
 
-ok('one "How are they paying?" choice, only the ways that apply', page.includes('aria-label="How are they paying?"') && page.includes("...(cashOk ? [['cash', 'Cash']") && page.includes("...(canAccount ? [['account', 'On account']") && page.includes("...(canTextLink ? [['text', 'Text pay link']"));
+ok('one "Paying now" stepper; Pay separately is gone', page.includes('<span className="text-[13px] font-medium text-ink">Paying now</span>') && !page.includes('>Pay separately</button>') && !page.includes('>Showed up</span>'));
+ok('short of the group: the rest pay on their own now or come later', page.includes("[['own', 'Pays on their own now'], ['later', restSplit ? 'Coming later' : 'Not charged']]") && page.includes("disabled={k === 'own' && !canSplit}"));
+ok('"Pays on their own now" splits them off first, then the booker pays', page.includes("if (rest > 0 && mode === 'own') {") && page.includes("if (!(await splitOff(b, rest, '', false))) return;") && page.includes('setPaySheet(b.id);'));
+ok('one Charge button with the card total', page.includes("`Charge${showMoney ? ` $${(cardDue / 100).toFixed(2)}` : ''}`"));
 ok('the ways keep their old permissions', page.includes("const cardOk = b.status !== 'completed' && b.status !== 'cancelled' && b.paymentStatus !== 'manual' && access.can('sheet.checkin');")
-  && page.includes("const cashOk = canCash || (b.status === 'confirmed' && b.paymentStatus === 'manual' && access.can('sheet.counter_payment'));"));
-ok('a pays-in-store group starts on Cash', page.includes("(b.paymentStatus === 'manual' && cashOk ? 'cash' : ways[0]?.[0])"));
-ok('the button says what it does, with the headcount', page.includes('`Charge card on file${money(cardDue)} · check in${who}`') && page.includes('cash · check in${who}`'));
-ok('cash asks what was handed over and shows the change', page.includes('>Cash given</label>') && page.includes('Change <b>${(change / 100).toFixed(2)}</b>') && page.includes('`Short $${((cashDue - givenCents) / 100).toFixed(2)}`'));
-ok('short cash cannot be taken; the cash handed over goes to the register sale', page.includes('disabled={rowBusy === b.id || short}') && page.includes('...(cash?.tenderedCents ? { cashTenderedCents: cash.tenderedCents } : {})')
+  && page.includes("const cashOk = canCash || (b.status === 'confirmed' && b.paymentStatus === 'manual' && access.can('sheet.counter_payment'));")
+  && page.includes('{canReader && <Link href={`/dashboard/shop?round=${b.id}`}') && page.includes('{canTextLink && <button') && page.includes('{canEmailLink && <button') && page.includes('{canAccount && ('));
+ok('the payment screen: the amount, then a row per way to pay', page.includes('How are they paying?') && page.includes('>Card on file</span>') && page.includes('Text a pay link') && page.includes('Email a pay link'));
+ok('cash: one tap for exact or the next $20 / $50 / $100, or Custom', page.includes('[2000, 5000, 10000].map(u => Math.ceil((cashDue + 1) / u) * u)') && page.includes('onClick={() => takeCash()}') && page.includes('onClick={() => takeCash(c)}') && page.includes('>Custom</button>'));
+ok('the cash handed over goes to the register sale; the server checks it covers the total', page.includes('{ tenderedCents: tendered && tendered > cashDue ? tendered : undefined }') && page.includes('...(cash?.tenderedCents ? { cashTenderedCents: cash.tenderedCents } : {})')
   && route.includes('cashTenderedCents, soldBy: session.email, actor: staff,') && sales.includes('has to cover the'));
-ok('Exact sends no tendered amount (the server total is the one charged)', page.includes('{ tenderedCents: givenCents > cashDue ? givenCents : undefined }'));
-ok("no browser pop-up from the card's cash step", page.includes('if (!cash && !confirm(`Take $'));
-ok('Showed up is a − / + stepper', page.includes('aria-label="One fewer"') && page.includes('aria-label="One more"') && page.includes('<b>{herePlayers}</b> of {b.players}'));
-ok("the time's header names the round once", page.includes('{roundName(panelSlot)} · ${panelSlot.greenFee.toFixed(2)} a player') && !page.includes("panelSlot.product?.label ? `${panelSlot.product.label} · ` : ''}{panelSlot.holes} holes"));
-ok('"Pays in store" stands alone (its sublabel repeated the line above)', page.includes("b.paymentStatus !== 'manual' && <span className=\"text-ink-muted\"> · {bStatus.sublabel}</span>"));
-ok('Edit group says what it does', page.includes('>Change group size</button>'));
+ok('custom cash: short or garbled cannot be taken', page.includes('disabled={rowBusy === b.id || garbled || givenCents < cashDue}') && page.includes('const garbled = !Number.isFinite(givenRaw);'));
+ok('cash shows its own price once, never beside a second figure for the same person', page.includes('cashDue !== cardDue ? <span className="text-ink-muted"> · ${(cashDue / 100).toFixed(2)}, no booking fee</span>'));
+ok("the change toast uses the sale's own total and tender", page.includes('r.data.cashTenderedCents - r.data.totalCents'));
+ok("no browser pop-up from the card's cash", page.includes('if (!cash && !confirm(`Take $'));
+ok('the reader says when it charges the whole group (the register has no headcount)', page.includes('charges the whole group'));
+ok('Move / Change group size / Cancel sit under More', page.includes("{moreFor === b.id ? 'Less' : 'More'}") && page.includes('moreFor === b.id && canSizeGroup && (') && page.includes("moreFor === b.id && b.status === 'confirmed' && !teedOff && access.can('sheet.cancel') && ("));
+ok('no-show and running late stay in sight', page.includes("{noShowReady && access.can('sheet.no_show') && (") && page.includes('Running late</button>'));
+ok("the time's header names the round once", page.includes('{roundName(panelSlot)} · ${panelSlot.greenFee.toFixed(2)} a player'));
+ok('"Pays in store" stands alone', page.includes("b.paymentStatus !== 'manual' && <span className=\"text-ink-muted\"> · {bStatus.sublabel}</span>"));
 ok('no reader: owners get the link, staff are told', page.includes('>Connect a card reader</Link>') && page.includes('No card reader connected'));
 
-ok('quick amounts are the next $20, $50 and $100 above what is owed', page.includes('[2000, 5000, 10000].map(u => Math.ceil((cashDue + 1) / u) * u)'));
-
-ok('review: the reader quotes only what the register charges (the whole group)', page.includes("herePlayers === b.players ? money(b.totalAmount + shopExtra(b))") && !page.includes('Send{money(cardDue)'));
-ok("review: the change toast uses the sale's own total and tender", page.includes('r.data.cashTenderedCents - r.data.totalCents'));
-ok('review: a garbled amount is never taken as exact', page.includes('const garbled = !Number.isFinite(givenRaw);') && page.includes('const short = garbled ||'));
+ok('review: a refused split never goes on to charge', page.includes("if (!(await splitOff(b, rest, '', false))) return;") && page.includes('async function splitOff(b: Booking, n: number, name: string, thenCash: boolean): Promise<boolean>'));
+ok('review: the payment screen only for a group that still pays, and closes with the card', page.includes('const sheetOpen = paySheet === b.id && anyWay && unpaid && !prepaid;') && page.includes('useEffect(() => { setPaySheet(null); setMoreFor(null); }, [panelId]);'));
+ok('review: no ruled box inside the card', page.includes('<div className="mt-3 rounded-[7px] bg-paper/70">') && !page.includes('rounded-[10px] border border-line bg-white'));
 
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
 process.exit(failed === 0 ? 0 : 1);

@@ -1,28 +1,38 @@
 {
-  "generatedAt": "2026-11-06T04:47:48.577Z",
+  "generatedAt": "2026-11-06T18:40:54.495Z",
   "repo": {
-    "head": "9dd45931",
+    "head": "e2f573f0",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 12,
+    "dirtyCount": 8,
     "dirty": [
       "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/cash-at-counter-db-test.ts",
+      " M scripts/checkout-card-test.ts",
       " M scripts/group-card-checkout-test.ts",
       " M scripts/split-booking-db-test.ts",
-      " M scripts/teesheet-1-test.ts",
-      " M scripts/teesheet-3-test.ts",
       " M scripts/teesheet-till-test.ts",
-      " M scripts/tt-card-test.ts",
       " M scripts/words-guard.baseline.json",
-      " M src/app/dashboard/page.tsx",
-      "?? scripts/checkout-card-test.ts"
+      " M src/app/dashboard/page.tsx"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "54cc0d80",
+        "date": "2026-11-05T23:55:18-05:00",
+        "subject": "Tee sheet: the group card asks how they're paying, then one button that says what it does (#330)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "bd10ddf4",
+        "date": "2026-11-06T04:48:03+00:00",
+        "subject": "Tee sheet: the group card asks how they're paying, then one button that says what it does",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "337e9a0a",
         "date": "2026-11-05T23:47:24-05:00",
@@ -988,7 +998,7 @@
       "line": 2412,
       "hash": "b88c8bf3",
       "shipDate": "2026-07-22",
-      "ageDays": 106
+      "ageDays": 107
     }
   ],
   "next": [
@@ -1136,7 +1146,7 @@
       "file": "DENSE_UI_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-11-01",
-      "ageDays": 4
+      "ageDays": 5
     },
     {
       "file": "PLATFORM_ROADMAP_SPEC.md",
@@ -1358,6 +1368,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "54cc0d80",
+      "date": "2026-11-05",
+      "subject": "Tee sheet: the group card asks how they're paying, then one button that says what it does (#330)"
+    },
+    {
+      "h": "bd10ddf4",
+      "date": "2026-11-06",
+      "subject": "Tee sheet: the group card asks how they're paying, then one button that says what it does"
+    },
+    {
       "h": "337e9a0a",
       "date": "2026-11-05",
       "subject": "Tee sheet: Message golfers by email, text or both, with ready-made messages and a preview (#329)"
@@ -1406,16 +1426,6 @@
       "h": "c5f4ba4b",
       "date": "2026-11-05",
       "subject": "Tee sheet: On the course, a fuller List, a Calendar that says why (#326)"
-    },
-    {
-      "h": "f8d6b25b",
-      "date": "2026-11-06",
-      "subject": "Tee sheet: On the course, a List with the grid's details, a Calendar that says why"
-    },
-    {
-      "h": "be8b68ee",
-      "date": "2026-11-05",
-      "subject": "Home: the week-ahead link offers demand pricing and lands on it (#325)"
     }
   ]
 }
