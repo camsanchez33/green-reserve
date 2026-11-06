@@ -51,6 +51,7 @@ const ENUMS: Record<string, string[]> = {
   // Cam 2026-10-29: member rates at the counter — the member shows their membership, or any membership.
   counterMemberRate: ['member', 'any'],
   noShowFeeBasis: ['booking', 'player'],
+  cartPricing: ['per_player', 'per_cart'],
   lateFeeTiming: ['hold_at_cutoff', 'late_cancel', 'late_cancel_or_no_show'],
   timezone: ['America/New_York', 'America/Chicago', 'America/Denver', 'America/Phoenix', 'America/Los_Angeles', 'America/Anchorage', 'Pacific/Honolulu'],
 };

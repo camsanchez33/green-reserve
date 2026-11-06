@@ -11,6 +11,7 @@
 // (shop.discount), enter the cash handed over for the change, send a receipt,
 // and refund a paid sale (money.refund; items only with shop.return) — cash recorded, card through Stripe.
 import SmsConsentAsk from '@/components/dashboard/SmsConsentAsk';
+import { cartsFor } from '@/lib/cart-pricing';
 import { PackPicker, PackHolders } from '@/components/dashboard/RegisterPacks';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -118,7 +119,7 @@ export default function ShopPage() {
   }
   const searchRef = useRef<HTMLInputElement>(null);
   const [tab, setTab] = useState<'items' | 'rounds'>('items');
-  const [roundsData, setRoundsData] = useState<{ owing: Owing[]; open: OpenTime[] } | null>(null);
+  const [roundsData, setRoundsData] = useState<{ owing: Owing[]; open: OpenTime[]; perCart?: boolean } | null>(null);
   const [roundsError, setRoundsError] = useState('');
   const [picked, setPicked] = useState<string[]>([]);
   const [walkIns, setWalkIns] = useState<WalkIn[]>([]);
@@ -154,7 +155,7 @@ export default function ShopPage() {
     if (rd.ok) { setReaders(rd.data.readers); setTestMode(rd.data.testMode); setReaderId(id => rd.data.readers.some(x => x.id === id) ? id : rd.data.readers[0]?.id ?? ''); }
   }, []);
   const loadRounds = useCallback(async () => {
-    const r = await dfetch<{ owing: Owing[]; open: OpenTime[] }>('/api/operator/shop-sales/rounds');
+    const r = await dfetch<{ owing: Owing[]; open: OpenTime[]; perCart?: boolean }>('/api/operator/shop-sales/rounds');
     if (r.ok) { setRoundsData(r.data); setRoundsError(''); } else setRoundsError(r.error);
   }, []);
   useEffect(() => { load(); }, [load]);
@@ -438,6 +439,8 @@ export default function ShopPage() {
   useEffect(() => { if (access.loaded && (canCash || canCheckin)) loadRounds(); }, [access.loaded, canCash, canCheckin, loadRounds]);
   const canWalkIn = access.can('sheet.walkin');
   const walkTime = roundsData?.open.find(t => t.teeTimeId === walkForm?.teeTimeId) ?? null;
+  // CART-2: per cart, two riders to a cart (rounded up) — lib/cart-pricing, the booking's own rule.
+  const walkCarts = (players: number) => (roundsData?.perCart ? cartsFor(players) : players);
   useEffect(() => { if (access.loaded && !canCash) setPay(p => (p === 'cash' ? (readers.length ? 'reader' : 'sms') : p)); }, [access.loaded, canCash, readers.length]);
   useEffect(() => { if (pay === 'reader' && !readers.length) setPay(canCash ? 'cash' : 'sms'); }, [pay, readers.length, canCash]);
   const readerName = (id: string) => readers.find(x => x.id === id)?.label ?? 'the card reader';
@@ -516,7 +519,7 @@ export default function ShopPage() {
                                 e.preventDefault();
                                 if (!walkTime || walkForm.name.trim().length < 2) { setError('Pick a time and enter the golfer’s name.'); return; }
                                 const cart = walkForm.cart || !walkTime.walkingAllowed;
-                                setWalkIns(ws => [...ws, { key: `w${Date.now()}`, teeTimeId: walkTime.teeTimeId, time: walkTime.time, golferName: walkForm.name.trim(), players: walkForm.players, cart, estimateCents: (walkGreen(walkTime, walkForm.rate) + (cart ? walkTime.cartFeeCents : 0)) * walkForm.players, rate: walkForm.rate ?? 'standard' }]);
+                                setWalkIns(ws => [...ws, { key: `w${Date.now()}`, teeTimeId: walkTime.teeTimeId, time: walkTime.time, golferName: walkForm.name.trim(), players: walkForm.players, cart, estimateCents: walkGreen(walkTime, walkForm.rate) * walkForm.players + (cart ? walkTime.cartFeeCents * walkCarts(walkForm.players) : 0), rate: walkForm.rate ?? 'standard' }]);
                                 setWalkForm(null); setError('');
                               }}>
                                 <div className="flex flex-wrap gap-2">
@@ -529,7 +532,7 @@ export default function ShopPage() {
                                 {walkTime && walkTime.cartFeeCents > 0 && (
                                   <label className="flex items-center gap-2 text-[13px] text-ink">
                                     <input type="checkbox" checked={walkForm.cart || !walkTime.walkingAllowed} disabled={!walkTime.walkingAllowed} onChange={e => setWalkForm({ ...walkForm, cart: e.target.checked })} className="accent-pine" />
-                                    Cart ({usd(walkTime.cartFeeCents)} / player){!walkTime.walkingAllowed ? ' — required on this time' : ''}
+                                    Cart ({usd(walkTime.cartFeeCents)} / {roundsData?.perCart ? 'cart, 2 riders' : 'player'}){!walkTime.walkingAllowed ? ' — required on this time' : ''}
                                   </label>
                                 )}
                                 {walkTime && (['resident', 'senior', 'junior'] as const).some(k => walkTime.rates?.[k] != null) && (
@@ -538,7 +541,7 @@ export default function ShopPage() {
                                     {(['resident', 'senior', 'junior'] as const).filter(k => walkTime.rates?.[k] != null).map(k => <option key={k} value={k}>{k[0].toUpperCase() + k.slice(1)}</option>)}
                                   </select>
                                 )}
-                                {walkTime && <p className="text-[12.5px] text-ink-muted tabular-nums">{usd((walkGreen(walkTime, walkForm.rate) + ((walkForm.cart || !walkTime.walkingAllowed) ? walkTime.cartFeeCents : 0)) * walkForm.players)}, checked in when you take the cash.</p>}
+                                {walkTime && <p className="text-[12.5px] text-ink-muted tabular-nums">{usd(walkGreen(walkTime, walkForm.rate) * walkForm.players + ((walkForm.cart || !walkTime.walkingAllowed) ? walkTime.cartFeeCents * walkCarts(walkForm.players) : 0))}, checked in when you take the cash.</p>}
                                 <div className="flex gap-2">
                                   <button type="submit" className="bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-[13px] px-3 py-2">Add to the sale</button>
                                   <button type="button" onClick={() => setWalkForm(null)} className="text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2">Cancel</button>

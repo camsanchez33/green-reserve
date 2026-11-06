@@ -5,6 +5,7 @@ import { describePolicy, policyFrom, afterCutoffShort, insideWindowLine, policyM
 import { lastBookableDate } from '@/lib/booking-window';
 import { teeColour } from '@/lib/tee-colour';
 import { walkingWords } from '@/lib/walking';
+import { cartsFor } from '@/lib/cart-pricing';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
 import { useEffect, useMemo, useState, useRef, use } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -1421,7 +1422,10 @@ export default function CourseDetailPage({
                             const hasMemberRate = !!(t.member_green_fee != null && t.has_member_rate && t.member_green_fee < t.green_fee);
                             const displayGreenFee = hasMemberRate ? t.member_green_fee! : t.green_fee;
                             const cartFee = isSel && (withCart || t.cart_required) && t.cart_fee > 0 ? t.cart_fee : 0;
-                            const slotTotal = (displayGreenFee + cartFee) * slotPlayers + 1.5 * slotPlayers;
+                            // CART-2: a per-cart course charges a cart for every two riders (rounded up) — the server's rule.
+                            const perCart = course.cart_pricing === 'per_cart';
+                            const carts = perCart ? cartsFor(slotPlayers) : slotPlayers;
+                            const slotTotal = displayGreenFee * slotPlayers + cartFee * carts + 1.5 * slotPlayers;
 
                             return (
                               <div key={t.id} className={`transition-colors ${isFull ? 'opacity-60' : ''}`} style={slotMark}>
@@ -1552,7 +1556,7 @@ export default function CourseDetailPage({
                                         style={withCart ? { borderColor: accent, backgroundColor: `${accent}12`, color: accent } : { borderColor: 'var(--color-line)', color: 'var(--color-ink-soft)' }}
                                       >
                                         <span>{withCart ? 'Cart added · tap to remove' : 'Add cart'}</span>
-                                        <span>${t.cart_fee} / player</span>
+                                        <span>${t.cart_fee} / {perCart ? 'cart (2 riders)' : 'player'}</span>
                                       </button>
                                     )}
                                     </div>
@@ -1567,8 +1571,8 @@ export default function CourseDetailPage({
                                       </div>
                                       {(withCart || t.cart_required) && t.cart_fee > 0 && (
                                         <div className="flex justify-between text-sm text-ink-soft">
-                                          <span>Cart × {slotPlayers}{t.cart_required ? ' (required)' : ''}</span>
-                                          <span>${(t.cart_fee * slotPlayers).toFixed(2)}</span>
+                                          <span>{perCart ? `${carts} cart${carts === 1 ? '' : 's'}` : `Cart × ${slotPlayers}`}{t.cart_required ? ' (required)' : ''}</span>
+                                          <span>${(t.cart_fee * carts).toFixed(2)}</span>
                                         </div>
                                       )}
                                       <div className="flex justify-between text-sm text-ink-soft">

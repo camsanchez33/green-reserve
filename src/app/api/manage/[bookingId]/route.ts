@@ -73,7 +73,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     rangeBallsTotal: booking.rangeBallsTotal,
     accessFeeTotal: booking.accessFeeTotal,
     // The change-players preview prices a new party size as the server will (lib/member-rates partyFees).
-    party: { residentPlayers: booking.residentPlayers, residentRateCents: booking.residentRateCents, memberRateCents: booking.memberRateCents, memberCartCents: booking.memberCartCents, publicGreenCents: booking.teeTime.greenFeeCents, publicCartCents: booking.teeTime.cartFeeCents },
+    party: { residentPlayers: booking.residentPlayers, residentRateCents: booking.residentRateCents, memberRateCents: booking.memberRateCents, memberCartCents: booking.memberCartCents, publicGreenCents: booking.teeTime.greenFeeCents, publicCartCents: booking.teeTime.cartFeeCents, cartSelected: booking.cartSelected, cartUnitCents: booking.cartUnitCents, cartRiders: booking.cartRiders },
     totalAmount: booking.totalAmount,
     // POS-1a: pro-shop items the course added, with GreenReserve's fee on them.
     shopChargeCents: booking.shopTotalCents + booking.shopFeeCents + booking.shopTaxCents,

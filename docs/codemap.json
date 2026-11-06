@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 669,
+    "files": 670,
     "routes": 293,
-    "libs": 243,
+    "libs": 244,
     "models": 71,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -3075,7 +3075,7 @@
     },
     {
       "path": "src/app/api/admin/tee-sheet/route.ts",
-      "lines": 129,
+      "lines": 132,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3105,6 +3105,7 @@
         "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/cancel-booking",
+        "@/lib/cart-pricing",
         "@/lib/claim-tee-time",
         "@/lib/course-metrics",
         "@/lib/prisma",
@@ -3711,7 +3712,7 @@
     },
     {
       "path": "src/app/api/bookings/route.ts",
-      "lines": 503,
+      "lines": 510,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3739,6 +3740,7 @@
         "@/lib/booking-rules",
         "@/lib/booking-window",
         "@/lib/cancel-policy",
+        "@/lib/cart-pricing",
         "@/lib/claim-tee-time",
         "@/lib/course-time",
         "@/lib/demand-pricing",
@@ -6977,7 +6979,7 @@
     },
     {
       "path": "src/app/api/operator/settings/route.ts",
-      "lines": 132,
+      "lines": 134,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7207,7 +7209,7 @@
     },
     {
       "path": "src/app/api/operator/shop-sales/rounds/route.ts",
-      "lines": 23,
+      "lines": 24,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8063,7 +8065,7 @@
     },
     {
       "path": "src/app/book/BookClient.tsx",
-      "lines": 821,
+      "lines": 827,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8095,6 +8097,7 @@
         "@/components/ui/field",
         "@/lib/booking-fees",
         "@/lib/cancel-policy",
+        "@/lib/cart-pricing",
         "@/lib/member-rates",
         "@/lib/sms-consent-copy",
         "@stripe/react-stripe-js",
@@ -8347,7 +8350,7 @@
     },
     {
       "path": "src/app/courses/[slug]/CourseBookingClient.tsx",
-      "lines": 1879,
+      "lines": 1883,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8369,6 +8372,7 @@
         "@/lib/booking-fees",
         "@/lib/booking-window",
         "@/lib/cancel-policy",
+        "@/lib/cart-pricing",
         "@/lib/change-requests",
         "@/lib/contact",
         "@/lib/courses-data",
@@ -8939,7 +8943,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 2105,
+      "lines": 2070,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9046,7 +9050,7 @@
     },
     {
       "path": "src/app/dashboard/schedules/page.tsx",
-      "lines": 669,
+      "lines": 671,
       "purpose": "W2-6 Schedule simplification (Cam 2026-10-21:",
       "brain": [],
       "exports": [
@@ -9081,7 +9085,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 1166,
+      "lines": 1173,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9130,7 +9134,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 942,
+      "lines": 945,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -9155,6 +9159,7 @@
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/components/ui/field",
+        "@/lib/cart-pricing",
         "@/lib/dashboard-fetch",
         "@/lib/shop-tree",
         "@/lib/use-dashboard-access",
@@ -9497,7 +9502,7 @@
     },
     {
       "path": "src/app/manage/[bookingId]/page.tsx",
-      "lines": 583,
+      "lines": 588,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9516,6 +9521,7 @@
         "@/components/GolferExitLinks",
         "@/components/ui/StatusDot",
         "@/lib/cancel-policy",
+        "@/lib/cart-pricing",
         "@/lib/member-rates",
         "lucide-react",
         "next/link",
@@ -16382,8 +16388,71 @@
       ]
     },
     {
+      "path": "src/lib/cart-pricing.ts",
+      "lines": 69,
+      "purpose": "CART-2 (Cam 2026-11-06:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "cartCharge",
+          "kind": "fn"
+        },
+        {
+          "name": "CartCharge",
+          "kind": "type"
+        },
+        {
+          "name": "cartPriceWords",
+          "kind": "fn"
+        },
+        {
+          "name": "CartRule",
+          "kind": "type"
+        },
+        {
+          "name": "cartRuleOf",
+          "kind": "fn"
+        },
+        {
+          "name": "cartsFor",
+          "kind": "fn"
+        },
+        {
+          "name": "resizeCart",
+          "kind": "fn"
+        },
+        {
+          "name": "RIDERS_PER_CART",
+          "kind": "const"
+        },
+        {
+          "name": "splitRiders",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/api/admin/tee-sheet/route.ts",
+        "src/app/api/bookings/route.ts",
+        "src/app/book/BookClient.tsx",
+        "src/app/courses/[slug]/CourseBookingClient.tsx",
+        "src/app/dashboard/shop/page.tsx",
+        "src/app/manage/[bookingId]/page.tsx",
+        "src/lib/change-party.ts",
+        "src/lib/checkin-booking.ts",
+        "src/lib/counter-pay.ts",
+        "src/lib/move-booking.ts",
+        "src/lib/split-booking-db.ts"
+      ]
+    },
+    {
       "path": "src/lib/change-party.ts",
-      "lines": 147,
+      "lines": 150,
       "purpose": "A group's party size changes:",
       "brain": [],
       "exports": [
@@ -16406,6 +16475,7 @@
         "./booking-fee",
         "./booking-rules",
         "./cancel-policy",
+        "./cart-pricing",
         "./course-time",
         "./manage-access",
         "./member-rates",
@@ -16571,7 +16641,7 @@
     },
     {
       "path": "src/lib/checkin-booking.ts",
-      "lines": 576,
+      "lines": 581,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -16613,6 +16683,7 @@
         "./access-fee",
         "./booking-events",
         "./booking-fees",
+        "./cart-pricing",
         "./email",
         "./member-rates",
         "./money-ledger",
@@ -16814,7 +16885,7 @@
     },
     {
       "path": "src/lib/counter-pay.ts",
-      "lines": 323,
+      "lines": 328,
       "purpose": "A group pays for its round at the counter (cash, or the course's own card machine):",
       "brain": [],
       "exports": [
@@ -16855,6 +16926,7 @@
       "imports": [
         "./access-fee",
         "./booking-events",
+        "./cart-pricing",
         "./checkin-booking",
         "./claim-tee-time",
         "./course-time",
@@ -18054,7 +18126,7 @@
     },
     {
       "path": "src/lib/courses-data.ts",
-      "lines": 333,
+      "lines": 335,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -21913,7 +21985,7 @@
     },
     {
       "path": "src/lib/move-booking.ts",
-      "lines": 296,
+      "lines": 307,
       "purpose": "ACT-1 (PLATFORM_ROADMAP_SPEC §2, Cam 2026-10-07):",
       "brain": [],
       "exports": [
@@ -21946,6 +22018,7 @@
       "imports": [
         "./booking-events",
         "./cancel-policy",
+        "./cart-pricing",
         "./course-time",
         "./demand-pricing",
         "./last-minute",
@@ -22079,7 +22152,7 @@
     },
     {
       "path": "src/lib/normalize-course.ts",
-      "lines": 101,
+      "lines": 103,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -24629,7 +24702,7 @@
     },
     {
       "path": "src/lib/settings-validation.ts",
-      "lines": 156,
+      "lines": 157,
       "purpose": "SD-1.",
       "brain": [],
       "exports": [
@@ -25526,7 +25599,7 @@
     },
     {
       "path": "src/lib/split-booking-db.ts",
-      "lines": 150,
+      "lines": 155,
       "purpose": "SPLIT-1 (Cam 2026-11-02, \"they all want to pay separately … has to be seamless\"):",
       "brain": [],
       "exports": [
@@ -25559,6 +25632,7 @@
       "imports": [
         "./booking-events",
         "./cancel-policy",
+        "./cart-pricing",
         "./money-ledger",
         "./prisma",
         "./split-booking",
@@ -27612,6 +27686,14 @@
           "type": "Int?"
         },
         {
+          "name": "cartUnitCents",
+          "type": "Int?"
+        },
+        {
+          "name": "cartRiders",
+          "type": "Int?"
+        },
+        {
           "name": "createdAt",
           "type": "DateTime"
         },
@@ -28086,6 +28168,10 @@
         {
           "name": "cartRequired",
           "type": "Boolean"
+        },
+        {
+          "name": "cartPricing",
+          "type": "String"
         },
         {
           "name": "dresscode",

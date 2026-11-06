@@ -16,7 +16,8 @@ export async function GET() {
   // Cash for a round is the counter-payment power; the card reader is check-in (CASH-1) — either may see who owes.
   const deniedCash = requirePermission(session, 'sheet.counter_payment');
   if (deniedCash && requirePermission(session, 'sheet.checkin')) return deniedCash;
-  const course = await prisma.course.findUnique({ where: { id: session.courseId }, select: { timezone: true } });
+  const course = await prisma.course.findUnique({ where: { id: session.courseId }, select: { timezone: true, cartPricing: true } });
   const date = todayIn(course?.timezone);
-  return NextResponse.json({ date, ...(await registerRounds(session.courseId, date, clockIn(course?.timezone))) });
+  // CART-2: the walk-in estimate counts carts the way the booking will.
+  return NextResponse.json({ date, perCart: course?.cartPricing === 'per_cart', ...(await registerRounds(session.courseId, date, clockIn(course?.timezone))) });
 }

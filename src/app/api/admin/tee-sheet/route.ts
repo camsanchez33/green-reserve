@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { cartCharge, cartRuleOf } from '@/lib/cart-pricing';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, SUPPORT_PLUS, areaGate } from '@/lib/admin-session';
 import { claimTeeTime, TeeTimeClaimError, LATE_ADD_MESSAGE } from '@/lib/claim-tee-time';
 import { performCancellation } from '@/lib/cancel-booking';
@@ -87,12 +88,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
-  const teeTime = await prisma.teeTime.findUnique({ where: { id: teeTimeId } });
+  const teeTime = await prisma.teeTime.findUnique({ where: { id: teeTimeId }, include: { course: { select: { cartPricing: true } } } });
   if (!teeTime) return NextResponse.json({ error: 'Tee time not found' }, { status: 404 });
 
   // MP-3 B2c: rates are cents; the x100 is gone.
   const greenFeeTotal = teeTime.greenFeeCents * players;
-  const cartFeeTotal = teeTime.cartFeeCents * players;
+  // CART-2: the course's cart rule (per player or per cart of two); marked as a cart so a later party change keeps it.
+  const cart = cartCharge({ rule: cartRuleOf(teeTime.course.cartPricing), cart: teeTime.cartFeeCents > 0, players, unitCents: teeTime.cartFeeCents, perPlayerTotal: teeTime.cartFeeCents * players });
+  const cartFeeTotal = cart.cartFeeTotal;
   const accessFeeTotal = 150 * players;
   const totalAmount = greenFeeTotal + cartFeeTotal + accessFeeTotal;
 
@@ -106,7 +109,7 @@ export async function POST(req: NextRequest) {
       players,
       appliedRate: 'standard',
       greenFeeTotal,
-      cartFeeTotal,
+      cartFeeTotal, cartSelected: cartFeeTotal > 0, cartUnitCents: cart.cartUnitCents, cartRiders: cart.cartRiders,
       accessFeeTotal,
       totalAmount,
       paymentStatus: 'manual',

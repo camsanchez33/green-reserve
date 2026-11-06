@@ -81,6 +81,8 @@ export default function SchedulesPage() {
   const [busy, setBusy] = useState(false);
   const [pending, setPending] = useState<Pending | null>(null);
   const [hasMember, setHasMember] = useState(false);
+  // CART-2: the course's cart rule (Settings) — the cart cell is a price per rider or per cart.
+  const [perCart, setPerCart] = useState(false);
   const [hasResident, setHasResident] = useState(false);
   const [courseHoles, setCourseHoles] = useState(18);
   const [products, setProducts] = useState<ProductOpt[]>([]);
@@ -112,10 +114,10 @@ export default function SchedulesPage() {
     setLoading(false);
   }, []);
   const loadWindows = useCallback(async () => {
-    const r = await dfetch<{ holes?: number; hasMemberPricing?: boolean; hasResidentPricing?: boolean; publicAdvanceDays?: number; memberAdvanceDays?: number; minPlayers?: number; maxPlayers?: number }>('/api/operator/settings');
+    const r = await dfetch<{ holes?: number; hasMemberPricing?: boolean; hasResidentPricing?: boolean; publicAdvanceDays?: number; memberAdvanceDays?: number; minPlayers?: number; maxPlayers?: number; cartPricing?: string }>('/api/operator/settings');
     if (!r.ok || !r.data) { setWindowsError(r.ok ? 'Settings came back empty — refresh.' : r.error); return; }
     const c = r.data;
-    setHasMember(!!c.hasMemberPricing); setHasResident(!!c.hasResidentPricing);
+    setHasMember(!!c.hasMemberPricing); setHasResident(!!c.hasResidentPricing); setPerCart(c.cartPricing === 'per_cart');
     if (typeof c.holes === 'number') setCourseHoles(c.holes);
     setWindows({ publicAdvanceDays: typeof c.publicAdvanceDays === 'number' ? c.publicAdvanceDays : null, memberAdvanceDays: typeof c.memberAdvanceDays === 'number' ? c.memberAdvanceDays : null });
     setCourseRules({ minPlayers: c.minPlayers ?? 1, maxPlayers: c.maxPlayers ?? 4, publicAdvanceDays: c.publicAdvanceDays ?? 7 });
@@ -341,7 +343,7 @@ export default function SchedulesPage() {
       );
     };
     const subRows: { kind: 'green' | 'cart' | 'walk' | 'member' | 'resident' | 'senior' | 'junior'; label: string }[] = [
-      { kind: 'green', label: 'Green fee' }, { kind: 'cart', label: 'Cart, per rider' }, { kind: 'walk', label: 'Can walk' },
+      { kind: 'green', label: 'Green fee' }, { kind: 'cart', label: perCart ? 'Cart, per cart (2 riders)' : 'Cart, per rider' }, { kind: 'walk', label: 'Can walk' },
       ...(showMember ? [{ kind: 'member' as const, label: 'Members' }] : []),
       ...(showResident ? [{ kind: 'resident' as const, label: 'Residents' }] : []),
       ...(showAges ? [{ kind: 'senior' as const, label: 'Seniors' }, { kind: 'junior' as const, label: 'Juniors' }] : []),

@@ -26,6 +26,7 @@ import { dealPct, dealSeat, dealRateSeat } from './last-minute';
 import { addCharge } from './member-account';
 import { holdingById, packSeats, packPrice, takeRounds, giveBack, PackError, PACK_NO_CODE } from './round-packs';
 import { memberPlayers, splitTotal, memberSpot, partyFees, membershipLive, type PartyBooking } from './member-rates';
+import { cartCharge, cartRuleOf } from './cart-pricing';
 
 export type CounterResult =
   | { ok: true; amountCents: number; note: string | null }
@@ -230,7 +231,7 @@ export async function createCounterBooking(courseId: string, input: CounterBooki
   let greenFeeTotal = seat(pub) * players;
   let cartFeeTotal = cart ? teeTime.cartFeeCents * players : 0;
   let appliedRate = 'standard';
-  let packUse: { lineId: string; rounds: number } | null = null;
+  let packUse: { lineId: string; rounds: number; coversCart: boolean } | null = null;
   let rateRows: { residentPlayers?: number; residentRateCents?: number | null; memberRateCents?: number | null; memberCartCents?: number | null } = {};
   // Switched off in Settings (lib/pricing-switch): no resident or member rate at the counter either.
   if (rate === 'resident' && !residentPricingOn(teeTime.course)) return { ok: false, status: 409, error: 'Resident prices are off in Settings — book them at the standard rate.' };
@@ -273,7 +274,7 @@ export async function createCounterBooking(courseId: string, input: CounterBooki
     cartFeeTotal = priced.cartFeeTotal;
     appliedRate = 'pack';
     rateRows = { memberRateCents: priced.memberRateCents, memberCartCents: priced.memberCartCents };
-    packUse = { lineId: holding.lineId, rounds: seats.seats };
+    packUse = { lineId: holding.lineId, rounds: seats.seats, coversCart: holding.coversCart };
   } else if (rate !== 'standard') return { ok: false, status: 400, error: 'Pick a rate.' };
   const promo = promoRow ? { id: promoRow.id, discountCents: ratedGreen - greenFeeTotal } : null;
   if (promo && promo.discountCents <= 0) return { ok: false, status: 400, error: NOTHING_OFF };
@@ -283,6 +284,10 @@ export async function createCounterBooking(courseId: string, input: CounterBooki
     try { await prisma.$transaction(tx => takeRounds(tx, courseId, use.lineId, use.rounds)); }
     catch (err) { if (err instanceof PackError) return { ok: false, status: 409, error: err.message }; throw err; }
   }
+  // CART-2: a per-cart course charges the time's cart price per cart of two (members too); pack seats that include the cart leave the count.
+  const cartPriced = cartCharge({ rule: cartRuleOf(teeTime.course.cartPricing), cart, players, coveredSeats: packUse?.coversCart ? packUse.rounds : 0, unitCents: teeTime.cartFeeCents, perPlayerTotal: cartFeeTotal });
+  cartFeeTotal = cartPriced.cartFeeTotal;
+  if (cartPriced.cartUnitCents != null) rateRows = { ...rateRows, memberCartCents: null };
   // No platform fee on a counter booking — nothing is collected online.
   const totalAmount = greenFeeTotal + cartFeeTotal;
   // CASH-1 (Cam 2026-10-25: "can't just be paid at counter"): a counter booking is
@@ -295,7 +300,7 @@ export async function createCounterBooking(courseId: string, input: CounterBooki
       ...(promo ? { promoCodeId: promo.id, promoDiscountCents: promo.discountCents } : {}),
       lastMinutePct,
       ...(packUse ? { packLineId: packUse.lineId, packRounds: packUse.rounds } : {}),
-      greenFeeTotal, cartFeeTotal, cartSelected: cart, accessFeeTotal: 0, totalAmount,
+      greenFeeTotal, cartFeeTotal, cartSelected: cart, cartUnitCents: cartPriced.cartUnitCents, cartRiders: cartPriced.cartRiders, accessFeeTotal: 0, totalAmount,
       checkInToken: golferEmail ? randomUUID() : null,
       paymentStatus: 'manual',
       status: 'confirmed',

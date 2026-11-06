@@ -4,6 +4,7 @@ import { memberPricingOn, residentPricingOn } from '@/lib/pricing-switch';
 import { onlineBookingBlock } from '@/lib/golfer-record';
 import { applyTierRates } from '@/lib/tier-rates';
 import { membershipLive, memberPlayers, splitTotal, memberSpot } from '@/lib/member-rates';
+import { cartCharge, cartRuleOf } from '@/lib/cart-pricing';
 import { groupGreenFee } from '@/lib/residents';
 import { applyPromo, reserveUse, releaseUse, seatAfter, NOTHING_OFF, PROMO_USED, type PromoRow } from '@/lib/promo-codes';
 import { dealPct, dealRateSeat } from '@/lib/last-minute';
@@ -187,7 +188,7 @@ export async function POST(req: NextRequest) {
   // What the booking keeps: whichever of the two set the public price.
   const dealSet = dealWins(teeTimeFull.greenFeeCents, lastMinutePct, demandPct);
   const kept = { lastMinutePct: dealSet ? lastMinutePct : 0, demandPct: dealSet ? 0 : demandPct };
-  let pack: { lineId: string; seats: number; greenFeeTotal: number; cartFeeTotal: number; memberRateCents: number | null; memberCartCents: number | null } | null = null;
+  let pack: { lineId: string; seats: number; coversCart: boolean; greenFeeTotal: number; cartFeeTotal: number; memberRateCents: number | null; memberCartCents: number | null } | null = null;
   if (usePack) {
     if (!golferSession?.email) return NextResponse.json({ error: 'Sign in to use your round pack.', code: 'pack' }, { status: 401 });
     const h = await holdingById(teeTimeFull.courseId, packLineId);
@@ -196,7 +197,7 @@ export async function POST(req: NextRequest) {
     if (!s.ok) return NextResponse.json({ error: s.error, code: 'pack' }, { status: 400 });
     const wants = walkingAllowedAt(teeTimeFull) ? !!cartSelected : true;
     const p = packPrice({ players, seats: s.seats, guests: h.guests, coversCart: h.coversCart, publicGreen: pubSeat, cartFee: teeTimeFull.cartFeeCents, cart: wants });
-    pack = { lineId: h.lineId, seats: s.seats, ...p };
+    pack = { lineId: h.lineId, seats: s.seats, coversCart: h.coversCart, ...p };
   }
   if (promoCode !== undefined && promoCode !== null && String(promoCode).trim() !== '') {
     const p = await applyPromo(teeTimeFull.courseId, promoCode, { date: teeTimeFull.date, time: teeTimeFull.time, rateApplied: !!appliedTier || !!resident, golferEmail: String(golferEmail), golferAccountId: golferSession?.golferId ?? null });
@@ -216,7 +217,11 @@ export async function POST(req: NextRequest) {
   else if (priced.residentPlayers > 0) appliedRate = 'resident';
   const promo = promoRow ? { id: promoRow.id, discountCents: ratedGreenFeeTotal - greenFeeTotal } : null;
   if (promo && promo.discountCents <= 0) return NextResponse.json({ error: NOTHING_OFF, code: 'promo' }, { status: 400 });
-  const cartFeeTotal   = pack ? pack.cartFeeTotal : wantsCart ? (appliedTier ? splitTotal(players, memberN, cartFeePerPlayerCents, teeTimeFull.cartFeeCents) : cartFeePerPlayerCents * players) : 0;
+  const perPlayerCart  = pack ? pack.cartFeeTotal : wantsCart ? (appliedTier ? splitTotal(players, memberN, cartFeePerPlayerCents, teeTimeFull.cartFeeCents) : cartFeePerPlayerCents * players) : 0;
+  // CART-2: a per-cart course charges the time's cart price per cart of two (members too); pack seats that include the cart leave the count.
+  const cartRule = cartRuleOf(teeTimeFull.course.cartPricing);
+  const cart = cartCharge({ rule: cartRule, cart: wantsCart, players, coveredSeats: pack?.coversCart ? pack.seats : 0, unitCents: teeTimeFull.cartFeeCents, perPlayerTotal: perPlayerCart });
+  const cartFeeTotal   = cart.cartFeeTotal;
 
   let rangeBallsTotal = 0;
   const ballsSize = String(rangeBallsSize || '');
@@ -322,8 +327,10 @@ export async function POST(req: NextRequest) {
       residentRateCents: pack ? null : priced.residentRateCents,
       // The member's own spot when guests pay the public rate (lib/member-rates partyFees); a pack holder's seat the same way.
       ...(pack ? { memberRateCents: pack.memberRateCents, memberCartCents: pack.memberCartCents, packLineId: pack.lineId, packRounds: pack.seats } : memberSpot(appliedTier, { greenFeeCents: seat(ownSeat), cartFeeCents: cartFeePerPlayerCents })),
+      // CART-2: a per-cart booking's cart money is shared evenly, so no member cart spot.
+      ...(cart.cartUnitCents != null ? { memberCartCents: null } : {}),
       ...kept,
-      cartFeeTotal,
+      cartFeeTotal, cartUnitCents: cart.cartUnitCents, cartRiders: cart.cartRiders,
       cartSelected:     wantsCart,
       rangeBallsSize:   rangeBallsTotal > 0 ? ballsSize : '',
       rangeBallsTotal,

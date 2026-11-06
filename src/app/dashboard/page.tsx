@@ -170,7 +170,6 @@ function DashboardPageInner() {
   // CHECKOUT-2 (Cam 2026-11-06, a clean POS "Charge" screen): the group whose payment screen is open, and for a
   // group paying for fewer than all of it, what the rest do — pay on their own now (split off) or come later.
   const [paySheet, setPaySheet] = useState<string | null>(null);
-  const [restMode, setRestMode] = useState<Record<string, 'own' | 'later'>>({});
   const [moreFor, setMoreFor] = useState<string | null>(null);
   // The payment screen closes with the time's card.
   useEffect(() => { setPaySheet(null); setMoreFor(null); }, [panelId]);
@@ -292,21 +291,6 @@ function DashboardPageInner() {
   // SPLIT-1 (Cam 2026-11-02): "they all want to pay separately" — the group whose split box is open.
   // Cam 2026-11-04: the booked party size lives behind "Edit group", out of the checkout.
   const [editGroupId, setEditGroupId] = useState<string | null>(null);
-  const [splitBusy, setSplitBusy] = useState(false);
-  /** True when the split went through (review 2026-11-06: the card must not go on to charge if it didn't). */
-  async function splitOff(b: Booking, n: number, name: string, thenCash: boolean): Promise<boolean> {
-    setSplitBusy(true);
-    try {
-      const r = await dfetch<{ newBookingId: string; leaveCents: number; cashError?: string; totalCents?: number; fee?: string | null }>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: b.id, action: 'split', splitPlayers: n, splitName: name, thenCash }) });
-      if (!r.ok) { toast(r.error, 'warn'); return false; }
-      if (r.data.fee) toast(r.data.fee, 'warn');
-      if (r.data.cashError) toast(`Cash failed: ${r.data.cashError} — still owing.`, 'warn');
-      else if (thenCash) { toast('Cash taken — checked in.', 'ok'); setJustDone({ bookingId: r.data.newBookingId, name: name.trim() || `${b.golferName} · guest${n > 1 ? 's' : ''}`, players: n, how: 'Cash' }); }
-      else toast('Split off.', 'ok');
-      await loadTimes(selectedDate);
-      return true;
-    } finally { setSplitBusy(false); }
-  }
   const [cardModalBooking, setCardModalBooking] = useState<Booking | null>(null);
   // Revamp 3 dead end 19: the players who showed, carried into the card form (no saved card, or a declined one).
   const [cardModalShowed, setCardModalShowed] = useState<number | undefined>(undefined);
@@ -864,7 +848,6 @@ function DashboardPageInner() {
     const canEmailLink = b.status === 'confirmed' && b.hasCard === false && b.paymentStatus !== 'manual' && access.can('sheet.checkin') && !b.golferEmail.endsWith('@noemail.greenreserve.app') && selectedDate <= today();
     const showTicket = showMoney && unpaid && !b.noShowAt;
     // SPLIT-1: the route re-checks all of this (lib/split-booking splitRefusal); this only hides the door.
-    const canSplit = b.status === 'confirmed' && b.players > 1 && unpaid && !b.noShowAt && !b.roundPaid && !b.shopLocked && b.appliedRate !== 'pack' && !tt.event && access.can('sheet.counter_payment');
     return (
       <li key={b.id} className={'py-4 ' + (declined ? 'pl-3 shadow-[inset_3px_0_0_var(--color-bad)]' : '')}>
         <div className="flex items-start justify-between gap-3">
@@ -901,7 +884,6 @@ function DashboardPageInner() {
           const noCard = b.hasCard === false || b.paymentStatus === 'no_payment_method';
           const anyWay = cardOk || cashOk || canReader || canTextLink || canEmailLink || canAccount;
           const rest = b.players - herePlayers;
-          const mode = rest > 0 ? (restMode[b.id] ?? 'later') : 'later';
           const canPayNow = b.status === 'confirmed' && b.players > 1 && b.paymentStatus !== 'paid' && (access.can('sheet.checkin') || access.can('sheet.counter_payment'));
           const sheetOpen = paySheet === b.id && anyWay && unpaid && !prepaid;
           const givenRaw = Number(cashGiven[b.id] || 0);
@@ -911,16 +893,9 @@ function DashboardPageInner() {
           const quick = [...new Set([2000, 5000, 10000].map(u => Math.ceil((cashDue + 1) / u) * u))].sort((x, y) => x - y);
           const takeCash = (tendered?: number) => bookingLifecycle(b, 'take_cash', cashDue, { tenderedCents: tendered && tendered > cashDue ? tendered : undefined });
           const row = 'w-full flex items-center justify-between gap-3 py-3 text-left text-[14px] text-ink hover:bg-paper/70 disabled:opacity-50 transition-colors';
-          // "Pays on their own now": split them off first (their own group on this time, lib/split-booking), then the
-          // booker pays for who's here. The split moves no money; if it fails nothing is charged.
-          const charge = async () => {
-            if (rest > 0 && mode === 'own') {
-              if (!(await splitOff(b, rest, '', false))) return; // refused or dropped: stay on the card, nothing charged
-              setHere(h => { const n = { ...h }; delete n[b.id]; return n; });
-              setRestMode(m => { const n = { ...m }; delete n[b.id]; return n; });
-            }
-            setPaySheet(b.id);
-          };
+          // Cam 2026-11-06 ("no need for this"): no choice for the rest — who isn't paying now stays booked as their
+          // own group on this time (PARTIAL-1, split off by the server as this charge goes through) and is paid next.
+          const charge = () => setPaySheet(b.id);
           return (
             <div onClick={e => e.stopPropagation()}>
               {canPayNow && !sheetOpen && (
@@ -935,17 +910,7 @@ function DashboardPageInner() {
                         className="w-9 h-9 rounded-[7px] border border-line text-[16px] text-ink hover:bg-paper disabled:opacity-40">+</button>
                     </div>
                   </div>
-                  {rest > 0 && (
-                    <div role="radiogroup" aria-label={`The other ${rest}`} className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[13px]">
-                      <span className="text-ink-soft">The other {rest}:</span>
-                      {([['own', 'Pays on their own now'], ['later', restSplit ? 'Coming later' : 'Not charged']] as const).map(([k, l]) => (
-                        <button key={k} type="button" role="radio" aria-checked={mode === k} disabled={k === 'own' && !canSplit}
-                          onClick={() => setRestMode(m => ({ ...m, [b.id]: k }))}
-                          className={'px-2.5 py-1 rounded-[7px] border transition-colors disabled:opacity-40 ' + (mode === k ? 'border-pine bg-pine/5 text-ink' : 'border-line text-ink-soft hover:border-line-strong')}>{l}</button>
-                      ))}
-                    </div>
-                  )}
-                  {rest > 0 && mode === 'later' && !restSplit && <p className="text-[12.5px] text-warn">The other {rest} won’t be charged.</p>}
+                  {rest > 0 && !restSplit && <p className="text-[12.5px] text-warn">The other {rest} won’t be charged.</p>}
                 </div>
               )}
 
@@ -985,8 +950,8 @@ function DashboardPageInner() {
                 {anyWay && (
                   prepaid && cardOk
                     ? <button onClick={() => checkInBooking(b, cardDue)} disabled={checkingInId === b.id} className={big + 'mt-3 bg-pine hover:bg-pine-hover'}>{checkingInId === b.id ? 'Checking in…' : `Check in${herePlayers < b.players ? ` ${herePlayers}` : ''} · paid ahead`}</button>
-                    : <button onClick={charge} disabled={splitBusy} className={big + 'mt-3 ' + (b.checkInFailReason ? 'bg-bad hover:bg-bad/90' : 'bg-pine hover:bg-pine-hover')}>
-                        {splitBusy ? 'Splitting…' : b.checkInFailReason ? 'Card declined · charge again' : `Charge${showMoney ? ` $${(cardDue / 100).toFixed(2)}` : ''}`}
+                    : <button onClick={charge} className={big + 'mt-3 ' + (b.checkInFailReason ? 'bg-bad hover:bg-bad/90' : 'bg-pine hover:bg-pine-hover')}>
+                        {b.checkInFailReason ? 'Card declined · charge again' : `Charge${showMoney ? ` $${(cardDue / 100).toFixed(2)}` : ''}`}
                       </button>
                 )}
                 {readerWhyNot === 'none' && !access.isStaff && <Link href="/dashboard/settings?section=Pro+shop" className={link + ' mt-2 block'}>Connect a card reader</Link>}
