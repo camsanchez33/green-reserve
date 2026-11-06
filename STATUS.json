@@ -1,24 +1,46 @@
 {
-  "generatedAt": "2026-11-06T04:12:22.823Z",
+  "generatedAt": "2026-11-06T04:40:34.502Z",
   "repo": {
-    "head": "f99d684b",
-    "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 8,
+    "head": "2e16380b",
+    "branch": "HEAD",
+    "dirtyCount": 2,
     "dirty": [
-      "M STATUS.artifact.html",
-      " M STATUS.json",
-      " M STATUS.md",
-      " M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M scripts/words-guard.baseline.json",
-      " M src/app/dashboard/page.tsx",
-      "?? scripts/weather-window-test.ts"
+      "M docs/CODEMAP.md",
+      " M docs/codemap.json"
     ],
-    "looksLikeRunInProgress": true
+    "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "2e16380b",
+        "date": "2026-11-06T04:39:35+00:00",
+        "subject": "Owner 2FA: match a code and its step on one clock",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "c146bfe6",
+        "date": "2026-11-06T04:27:47+00:00",
+        "subject": "Tee sheet: Message golfers by email, text or both, with ready-made messages and a preview",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "2bea8fe8",
+        "date": "2026-11-05T23:20:48-05:00",
+        "subject": "Tee sheet: a cleaner weather window that updates as you pick the times (#328)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "97875d10",
+        "date": "2026-11-06T04:12:25+00:00",
+        "subject": "Tee sheet: a cleaner weather window that updates as you pick the times",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "e2a8f2f7",
         "date": "2026-11-05T23:11:40-05:00",
@@ -1312,6 +1334,26 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "2e16380b",
+      "date": "2026-11-06",
+      "subject": "Owner 2FA: match a code and its step on one clock"
+    },
+    {
+      "h": "c146bfe6",
+      "date": "2026-11-06",
+      "subject": "Tee sheet: Message golfers by email, text or both, with ready-made messages and a preview"
+    },
+    {
+      "h": "2bea8fe8",
+      "date": "2026-11-05",
+      "subject": "Tee sheet: a cleaner weather window that updates as you pick the times (#328)"
+    },
+    {
+      "h": "97875d10",
+      "date": "2026-11-06",
+      "subject": "Tee sheet: a cleaner weather window that updates as you pick the times"
+    },
+    {
       "h": "e2a8f2f7",
       "date": "2026-11-05",
       "subject": "Tee sheet: Add tee time from the day's prices, keep a time for staff, safer Block and Delete (#327)"
@@ -1350,26 +1392,6 @@
       "h": "b9baa354",
       "date": "2026-11-05",
       "subject": "Tee sheet: cleaner top bar, Times booked, filled groups, 9-hole/twilight labels, no glow (#324)"
-    },
-    {
-      "h": "52978014",
-      "date": "2026-11-06",
-      "subject": "Tee sheet: cleaner top bar, Times booked, filled groups with In/M/R, 9-hole and twilight labels, no glow"
-    },
-    {
-      "h": "91764419",
-      "date": "2026-11-05",
-      "subject": "Public SMS consent page at /sms-consent for Twilio's checker (#323)"
-    },
-    {
-      "h": "41e8a0af",
-      "date": "2026-11-06",
-      "subject": "Public SMS consent page at /sms-consent for Twilio's checker"
-    },
-    {
-      "h": "b147abf7",
-      "date": "2026-11-05",
-      "subject": "Host the SMS consent screenshot at /sms-opt-in.png for Twilio (#322)"
     }
   ]
 }

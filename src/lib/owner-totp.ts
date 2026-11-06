@@ -40,7 +40,10 @@ export async function totpQrSvg(uri: string): Promise<string> {
 export function totpMatchStep(token: string, secret: string, now: number = Date.now()): number | null {
   const clean = String(token).replace(/\s+/g, '');
   if (!/^\d{6}$/.test(clean)) return null;
-  const delta = authenticator.checkDelta(clean, secret);
+  // One clock for both the match and the step: checkDelta on the real clock with the step from `now` could
+  // straddle a 30-second boundary and record step S−1 for a code from S, so `totp-used:S` was never written
+  // and the code could be entered once more inside its window (review 2026-11-06, found by a CI flake).
+  const delta = authenticator.clone({ epoch: now }).checkDelta(clean, secret);
   if (delta === null) return null;
   return Math.floor(now / 1000 / TOTP_STEP_SECONDS) + delta;
 }

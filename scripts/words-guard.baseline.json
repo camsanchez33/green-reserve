@@ -83,7 +83,7 @@
   "src/components/dashboard/DeclinedCardList.tsx": 29,
   "src/components/dashboard/DemandPricing.tsx": 82,
   "src/components/dashboard/GettingStartedChecklist.tsx": 163,
-  "src/components/dashboard/GolferMessageModal.tsx": 122,
+  "src/components/dashboard/GolferMessageModal.tsx": 120,
   "src/components/dashboard/GroupTicket.tsx": 10,
   "src/components/dashboard/ImageUpload.tsx": 24,
   "src/components/dashboard/LastMinuteDeals.tsx": 42,

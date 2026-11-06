@@ -117,14 +117,18 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-11-06 04:12 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ f99d684b</span>
-    <span>8 uncommitted</span>
+    <span>2026-11-06 04:40 UTC</span><span>HEAD @ 2e16380b</span>
+    <span>2 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">128 runs have shipped that the queue doesn't know about</div>
+<div class="lede">132 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-31. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">2e16380b</span><span>Owner 2FA: match a code and its step on one clock</span></li>
+<li><span class="h">c146bfe6</span><span>Tee sheet: Message golfers by email, text or both, with ready-made messages and a preview</span></li>
+<li><span class="h">2bea8fe8</span><span>Tee sheet: a cleaner weather window that updates as you pick the times (#328)</span></li>
+<li><span class="h">97875d10</span><span>Tee sheet: a cleaner weather window that updates as you pick the times</span></li>
 <li><span class="h">e2a8f2f7</span><span>Tee sheet: Add tee time from the day's prices, keep a time for staff, safer Block and Delete (#327)</span></li>
 <li><span class="h">60b0470c</span><span>Test: the engine's delete pin includes the staff-only guard</span></li>
 <li><span class="h">ff613483</span><span>Tee sheet: Add tee time from the day's prices, keep a time for staff, safer Block and Delete</span></li>
@@ -263,9 +267,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">17</span><span class="l">Ideas parked</span></div>
 </div>
 <section><h2>Working tree right now</h2>
-<div class="card flag">
-<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M STATUS.artifact.html</code></li><li><code>M STATUS.json</code></li><li><code>M STATUS.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/words-guard.baseline.json</code></li><li><code>M src/app/dashboard/page.tsx</code></li><li><code>?? scripts/weather-window-test.ts</code></li></ul>
+<div class="card">
+<h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -347,6 +351,10 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 16d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">2e16380b</td><td class="num">2026-11-06</td><td>Owner 2FA: match a code and its step on one clock</td></tr>
+<tr><td class="num">c146bfe6</td><td class="num">2026-11-06</td><td>Tee sheet: Message golfers by email, text or both, with ready-made messages and a preview</td></tr>
+<tr><td class="num">2bea8fe8</td><td class="num">2026-11-05</td><td>Tee sheet: a cleaner weather window that updates as you pick the times (#328)</td></tr>
+<tr><td class="num">97875d10</td><td class="num">2026-11-06</td><td>Tee sheet: a cleaner weather window that updates as you pick the times</td></tr>
 <tr><td class="num">e2a8f2f7</td><td class="num">2026-11-05</td><td>Tee sheet: Add tee time from the day's prices, keep a time for staff, safer Block and Delete (#327)</td></tr>
 <tr><td class="num">60b0470c</td><td class="num">2026-11-06</td><td>Test: the engine's delete pin includes the staff-only guard</td></tr>
 <tr><td class="num">ff613483</td><td class="num">2026-11-06</td><td>Tee sheet: Add tee time from the day's prices, keep a time for staff, safer Block and Delete</td></tr>
@@ -355,10 +363,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">be8b68ee</td><td class="num">2026-11-05</td><td>Home: the week-ahead link offers demand pricing and lands on it (#325)</td></tr>
 <tr><td class="num">58a9e0d0</td><td class="num">2026-11-06</td><td>Home: the week-ahead link offers demand pricing and lands on it</td></tr>
 <tr><td class="num">b9baa354</td><td class="num">2026-11-05</td><td>Tee sheet: cleaner top bar, Times booked, filled groups, 9-hole/twilight labels, no glow (#324)</td></tr>
-<tr><td class="num">52978014</td><td class="num">2026-11-06</td><td>Tee sheet: cleaner top bar, Times booked, filled groups with In/M/R, 9-hole and twilight labels, no glow</td></tr>
-<tr><td class="num">91764419</td><td class="num">2026-11-05</td><td>Public SMS consent page at /sms-consent for Twilio's checker (#323)</td></tr>
-<tr><td class="num">41e8a0af</td><td class="num">2026-11-06</td><td>Public SMS consent page at /sms-consent for Twilio's checker</td></tr>
-<tr><td class="num">b147abf7</td><td class="num">2026-11-05</td><td>Host the SMS consent screenshot at /sms-opt-in.png for Twilio (#322)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>
