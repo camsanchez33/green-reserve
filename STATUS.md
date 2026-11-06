@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-05 23:05 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `6aafaac7` · working tree **18 dirty file(s)**
+Generated 2026-11-06 01:21 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `2be5ddf8` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 113 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 115 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `92afb06e` | 2026-11-05 | Home: goals on the numbers the course picks, and its own course-condition lines (#321) |
+| `8ec892ce` | 2026-11-05 | Home: goals on the numbers the course picks, and its own course-condition lines |
 | `e14b7752` | 2026-11-05 | Home: weather + next tee times on top, field-level setup links, Needs you counts, Staff notes (#320) |
 | `a5bb5088` | 2026-11-05 | Home: weather and next tee times on top, field-level setup links, Needs you counts, Staff notes |
 | `901ba99b` | 2026-11-05 | Text-message opt-in names GreenReserve as the sender (Twilio campaign review) (#319) |
@@ -128,29 +130,13 @@ Generated 2026-11-05 23:05 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (18 file(s))
+### Uncommitted working tree (2 file(s))
 
-- `M STATUS.artifact.html`
-- `M STATUS.json`
-- `M STATUS.md`
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M prisma/schema.prisma`
-- `M scripts/home-board-db-test.ts`
-- `M scripts/home-page-test.ts`
-- `M src/app/api/operator/home/route.ts`
-- `D src/app/api/operator/month-goal/route.ts`
-- `M src/app/dashboard/home/page.tsx`
-- `M src/components/dashboard/home/HomeBoard.tsx`
-- `M src/lib/course-conditions.ts`
-- `M src/lib/data-reset.ts`
-- `M src/lib/home-board.ts`
-- `?? prisma/migrations/20261105020000_course_goals/`
-- `?? src/app/api/operator/goals/`
-- `?? src/lib/course-goals.ts`
+- `M docs/SMS_OPT_IN.md`
+- `?? public/sms-opt-in.png`
 
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -232,11 +218,11 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-11-04 | 0d |
+| `CLAUDE.md` | 1 | 2026-11-04 | 1d |
 | `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 4d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 15d |
-| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 10d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 10d |
+| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 11d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 13d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 13d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 14d |
@@ -273,6 +259,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `92afb06e` 2026-11-05 — Home: goals on the numbers the course picks, and its own course-condition lines (#321)
+- `8ec892ce` 2026-11-05 — Home: goals on the numbers the course picks, and its own course-condition lines
 - `e14b7752` 2026-11-05 — Home: weather + next tee times on top, field-level setup links, Needs you counts, Staff notes (#320)
 - `a5bb5088` 2026-11-05 — Home: weather and next tee times on top, field-level setup links, Needs you counts, Staff notes
 - `901ba99b` 2026-11-05 — Text-message opt-in names GreenReserve as the sender (Twilio campaign review) (#319)
@@ -283,8 +271,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `ba4df316` 2026-11-05 — Database load from the audit: crons read only due tee dates, Stripe-id indexes, rate-limit sweep, sheet money strip asks less
 - `15c9cb2e` 2026-11-04 — Security audit: money races (keyed refunds, recharge after refund, holds vs check-in, no-show vs still coming) (#316)
 - `37df560b` 2026-11-05 — Regenerate the code map and status board for lib/hold-key.ts
-- `7cc238df` 2026-11-05 — Money races from the security audit: keyed refunds, recharge after refund, cron hold vs check-in, no-show vs still coming
-- `df7ad5bd` 2026-11-04 — Security audit: one tee-time row per slot (migration) (#315)
 
 ---
 
