@@ -117,14 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-11-06 01:21 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 2be5ddf8</span>
-    <span>2 uncommitted</span>
+    <span>2026-11-06 01:52 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 3d4c9eb7</span>
+    <span>3 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">115 runs have shipped that the queue doesn't know about</div>
+<div class="lede">117 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-31. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">b147abf7</span><span>Host the SMS consent screenshot at /sms-opt-in.png for Twilio (#322)</span></li>
+<li><span class="h">9db7e811</span><span>Host the SMS consent screenshot at /sms-opt-in.png for Twilio</span></li>
 <li><span class="h">92afb06e</span><span>Home: goals on the numbers the course picks, and its own course-condition lines (#321)</span></li>
 <li><span class="h">8ec892ce</span><span>Home: goals on the numbers the course picks, and its own course-condition lines</span></li>
 <li><span class="h">e14b7752</span><span>Home: weather + next tee times on top, field-level setup links, Needs you counts, Staff notes (#320)</span></li>
@@ -250,9 +252,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">17</span><span class="l">Ideas parked</span></div>
 </div>
 <section><h2>Working tree right now</h2>
-<div class="card">
-<h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
-<ul class="plain"><li><code>M docs/SMS_OPT_IN.md</code></li><li><code>?? public/sms-opt-in.png</code></li></ul>
+<div class="card flag">
+<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>?? src/app/sms-consent/</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -334,6 +336,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 15d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">b147abf7</td><td class="num">2026-11-05</td><td>Host the SMS consent screenshot at /sms-opt-in.png for Twilio (#322)</td></tr>
+<tr><td class="num">9db7e811</td><td class="num">2026-11-06</td><td>Host the SMS consent screenshot at /sms-opt-in.png for Twilio</td></tr>
 <tr><td class="num">92afb06e</td><td class="num">2026-11-05</td><td>Home: goals on the numbers the course picks, and its own course-condition lines (#321)</td></tr>
 <tr><td class="num">8ec892ce</td><td class="num">2026-11-05</td><td>Home: goals on the numbers the course picks, and its own course-condition lines</td></tr>
 <tr><td class="num">e14b7752</td><td class="num">2026-11-05</td><td>Home: weather + next tee times on top, field-level setup links, Needs you counts, Staff notes (#320)</td></tr>
@@ -344,8 +348,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">acd00f57</td><td class="num">2026-11-05</td><td>Terms and Privacy: Twilio A2P campaign wording (SMS Terms heading, no selling or sharing opt-in data)</td></tr>
 <tr><td class="num">d43ed864</td><td class="num">2026-11-04</td><td>Database audit: crons read only due dates, Stripe-id indexes, rate-limit sweep (#317)</td></tr>
 <tr><td class="num">ba4df316</td><td class="num">2026-11-05</td><td>Database load from the audit: crons read only due tee dates, Stripe-id indexes, rate-limit sweep, sheet money strip asks less</td></tr>
-<tr><td class="num">15c9cb2e</td><td class="num">2026-11-04</td><td>Security audit: money races (keyed refunds, recharge after refund, holds vs check-in, no-show vs still coming) (#316)</td></tr>
-<tr><td class="num">37df560b</td><td class="num">2026-11-05</td><td>Regenerate the code map and status board for lib/hold-key.ts</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

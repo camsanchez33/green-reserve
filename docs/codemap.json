@@ -1,8 +1,8 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 662,
-    "routes": 291,
+    "files": 663,
+    "routes": 292,
     "libs": 238,
     "models": 71,
     "orphans": 10,
@@ -9810,6 +9810,35 @@
       "usedBy": []
     },
     {
+      "path": "src/app/sms-consent/page.tsx",
+      "lines": 56,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (SmsConsentPage)",
+          "kind": "component"
+        },
+        {
+          "name": "metadata",
+          "kind": "const"
+        }
+      ],
+      "route": "/sms-consent",
+      "kind": "page",
+      "methods": [],
+      "auth": "public",
+      "guard": "public",
+      "imports": [
+        "@/components/ui/Card",
+        "@/lib/contact",
+        "@/lib/seo",
+        "@/lib/sms-consent-copy",
+        "next"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/statement/[id]/page.tsx",
       "lines": 131,
       "purpose": "MEM-ACCT part 2 (Cam 2026-10-30):",
@@ -12791,6 +12820,7 @@
         "src/app/g/[slug]/page.tsx",
         "src/app/pay/event/[id]/page.tsx",
         "src/app/pay/shop/[id]/page.tsx",
+        "src/app/sms-consent/page.tsx",
         "src/app/statement/[id]/page.tsx",
         "src/components/CourseJoin.tsx",
         "src/components/CoursePacks.tsx",
@@ -16680,6 +16710,7 @@
         "src/app/for-courses/ForCoursesContent.tsx",
         "src/app/privacy/page.tsx",
         "src/app/receipt/[bookingId]/page.tsx",
+        "src/app/sms-consent/page.tsx",
         "src/app/teesheet/page.tsx",
         "src/app/terms/page.tsx",
         "src/components/Footer.tsx",
@@ -24266,6 +24297,7 @@
         "src/app/for-courses/page.tsx",
         "src/app/operator-agreement/page.tsx",
         "src/app/privacy/page.tsx",
+        "src/app/sms-consent/page.tsx",
         "src/app/teesheet/page.tsx",
         "src/app/terms/page.tsx"
       ]
@@ -25234,6 +25266,7 @@
         "src/app/book/BookClient.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/events/[id]/SignupForm.tsx",
+        "src/app/sms-consent/page.tsx",
         "src/components/dashboard/DeclinedCardList.tsx",
         "src/components/dashboard/SmsConsentAsk.tsx",
         "src/lib/sms-consent.ts",
