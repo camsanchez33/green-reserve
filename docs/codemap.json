@@ -8939,7 +8939,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 2055,
+      "lines": 2112,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8986,6 +8986,7 @@
         "@/lib/setup-missing",
         "@/lib/sms-consent-copy",
         "@/lib/split-booking",
+        "@/lib/tee-rounds",
         "@/lib/tee-time-fit",
         "@/lib/use-dashboard-access",
         "@stripe/react-stripe-js",
@@ -26069,6 +26070,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
+        "src/app/dashboard/page.tsx",
         "src/components/dashboard/TeeSheetList.tsx",
         "src/components/dashboard/TeeSheetRows.tsx"
       ]

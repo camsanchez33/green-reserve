@@ -306,7 +306,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/courses/[slug]/account` | golfer | **NONE FOUND** | page | `src/app/courses/[slug]/account/page.tsx` | 11 |
 | `/courses/[slug]/account/accept-invite` | golfer | entry | page | `src/app/courses/[slug]/account/accept-invite/page.tsx` | 144 |
 | `/courses/[slug]/member` | member | **NONE FOUND** | page | `src/app/courses/[slug]/member/page.tsx` | 874 |
-| `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 2055 |
+| `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 2112 |
 | `/dashboard/2fa` | operator | entry | page | `src/app/dashboard/2fa/page.tsx` | 110 |
 | `/dashboard/analytics` | operator | middleware | page | `src/app/dashboard/analytics/page.tsx` | 822 |
 | `/dashboard/cancellations` | operator | middleware | page | `src/app/dashboard/cancellations/page.tsx` | 17 |
@@ -496,6 +496,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/shop-import.ts` | 3 | 133 | W2-7 (Cam 2026-10-20: | `ImportItem`, `ImportOption`, `ImportRow`, `MAX_IMPORT_ITEMS`, `MAX_OPTIONS`, `parseImport`, `parsePriceCents` |
 | `src/lib/shop-tree.ts` | 3 | 57 | W2-7: | `bySku`, `FlatItem`, `matches`, `shopTree`, `skuHits`, `stockOf`, `stockWords`, `TreeItem` |
 | `src/lib/stripe-errors.ts` | 3 | 26 | Friendly-message map for Stripe decline/error strings (REVISE_QUEUE A-06 item 4: | `friendlyStripeError` |
+| `src/lib/tee-rounds.ts` | 3 | 67 | ROUNDS-1 (Cam 2026-11-06: | `periodOf`, `roundName`, `roundOf`, `RoundSlot`, `rowTag`, `runsOf`, `usualRound`, `usualRoundOnly` |
 | `src/lib/thread-signal.ts` | 3 | 52 | MP-7a. | `compareThreads`, `SignalMessage`, `threadSignal`, `ThreadSignal`, `UNANSWERED_AFTER_DAYS` |
 | `src/lib/two-factor.ts` | 3 | 56 |  | `CodeChannel`, `issueTwoFactorCode`, `readStoredCode` |
 | `src/lib/admin-goals.ts` | 2 | 49 | AW-4b (Cam 2026-10-21): | `GOAL_METRICS`, `goalCurrent`, `GoalMetric`, `goalPace`, `isGoalMetric`, `listGoals` |
@@ -540,7 +541,6 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/staff-fonts.ts` | 2 | 10 | U-0 (UI_REVISE_SPEC §1b) used to give /dashboard and /admin their own STAFF look here: | `STAFF_LOOK_CLASS` |
 | `src/lib/submit-change-request.ts` | 2 | 91 |  | `cleanChangeItems`, `submitChangeRequest` |
 | `src/lib/tee-colour.ts` | 2 | 22 | Settings rework (Cam 2026-10-19: | `teeColour` |
-| `src/lib/tee-rounds.ts` | 2 | 67 | ROUNDS-1 (Cam 2026-11-06: | `periodOf`, `roundName`, `roundOf`, `RoundSlot`, `rowTag`, `runsOf`, `usualRound`, `usualRoundOnly` |
 | `src/lib/weather.ts` | 2 | 65 | HOME-W (Cam 2026-11-05, "weather bar up top with the next tee times"): | `courseWeather`, `geocodeAddress`, `hourKey`, `parseHourly`, `Weather`, `WeatherHour` |
 | `src/lib/admin-ask-links.ts` | 1 | 15 | AW-3b: | `ADMIN_LINK`, `safeAdminPath` |
 | `src/lib/admin-ask.ts` | 1 | 161 | AW-3b (Cam 2026-10-21: | `ASK_TOOL_NAMES`, `ASK_TOOLS`, `AskOutcome`, `runAskTool` |

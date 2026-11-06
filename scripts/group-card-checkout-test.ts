@@ -30,10 +30,10 @@ ok('"Pays in store" no longer promises ways to pay the card may not offer', getB
 // ── the card ──
 const page = readFileSync('src/app/dashboard/page.tsx', 'utf8');
 const shop = readFileSync('src/components/dashboard/ShopItemsForGroup.tsx', 'utf8');
-ok('the booked size is behind Edit group, not in the checkout', page.includes('>Edit group</button>') && page.includes('canSizeGroup && editGroupId === b.id') && page.includes('Booked for') && !/\n\s*Players\n\s*<select value=\{b\.players\}/.test(page));
+ok('the booked size is behind Edit group, not in the checkout', page.includes('>Change group size</button>') && page.includes('canSizeGroup && editGroupId === b.id') && page.includes('Booked for') && !/\n\s*Players\n\s*<select value=\{b\.players\}/.test(page));
 ok('the reader says why not: none connected, or not its day; never on a past day', page.includes("selectedDate < today() ? null : !hasReader ? 'none' : 'day'"));
 ok('owners get the link to connect a reader; staff are told there is none', page.includes("readerWhyNot === 'none' && !access.isStaff && <Link href=\"/dashboard/settings?section=Pro+shop\"") && page.includes("readerWhyNot === 'none' && access.isStaff"));
-ok('the usable reader button is unchanged', page.includes("{canReader && <Link href={`/dashboard/shop?round=${b.id}`}"));
+ok('the usable reader button is unchanged', page.includes("...(canReader ? [['reader', 'Card reader']") && page.includes("how === 'reader' && <Link href={`/dashboard/shop?round=${b.id}`}"));
 ok('+ loads the shop on first use instead of opening the picker', shop.includes('async function more(g: ShopLineGroup)') && shop.includes('const list = await loadCatalog();'));
 ok('− on a line saved several at once says how many it removes', shop.includes('g.lastQty > 1 ? `Remove ${g.lastQty} ${g.name}`'));
 ok('a scanned SKU is added even when its text matches other items too', shop.includes("shown.find(i => (i.sku || '').toLowerCase() === term)"));

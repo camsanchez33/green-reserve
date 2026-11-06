@@ -1,5 +1,6 @@
 'use client';
 import { onCourse } from '@/lib/on-course';
+import { roundName } from '@/lib/tee-rounds';
 import SmsConsentAsk, { SmsConsentDialog } from '@/components/dashboard/SmsConsentAsk';
 import { SMS_NO_CONSENT_STAFF } from '@/lib/sms-consent-copy';
 import { PackHolderPick, PACK_RATE } from '@/components/dashboard/RegisterPacks';
@@ -164,6 +165,9 @@ function DashboardPageInner() {
   // SHEET-2 (Cam 2026-10-08: "is it smart to have both" — no: one sheet). The
   // board is the tee sheet; tapping a square opens this panel.
   const [panelId, setPanelId] = useState<string | null>(null);
+  // CHECKOUT-1 (Cam 2026-11-06, "pick how they pay, then one button"): the way each group is paying, and the cash handed over.
+  const [payHow, setPayHow] = useState<Record<string, string>>({});
+  const [cashGiven, setCashGiven] = useState<Record<string, string>>({});
   // VIEWS-1 (Cam 2026-11-03): Grid (seat rows), List (one line per group) or Calendar (the month).
   // Remembered per browser; the grid is the default and always works without it.
   const [sheetView, setSheetViewState] = useState<SheetView>('grid');
@@ -393,7 +397,7 @@ function DashboardPageInner() {
     }
   }
 
-  async function bookingLifecycle(b: Booking, action: 'no_show' | 'still_coming' | 'take_cash', cashCents?: number) {
+  async function bookingLifecycle(b: Booking, action: 'no_show' | 'still_coming' | 'take_cash', cashCents?: number, cash?: { tenderedCents?: number }) {
     let checkedInPlayers: number | undefined;
     if (action === 'take_cash') {
       const n = askHeadcount(b);
@@ -407,14 +411,18 @@ function DashboardPageInner() {
       // The card's own figure when it has one (PARTIAL-1: priced as the split the server makes).
       const owed = cashCents ?? (who < b.players ? partRound(b, who, false) : b.totalAmount - (b.accessFeeTotal ?? 0)) + (b.shopTotalCents ?? 0) + (b.shopTaxCents ?? 0);
       // CASH-1: a cash sale of the round, rung up like the register (receipt on the Pro shop page).
-      if (!confirm(`Take $${(owed / 100).toFixed(2)} cash from ${b.golferName} for ${who} of ${b.players} player${b.players === 1 ? '' : 's'}? They’re checked in, and the sale goes on today’s register.`)) return;
+      // CHECKOUT-1: the card's cash step already shows the amount, the cash given and the change — no second question.
+      if (!cash && !confirm(`Take $${(owed / 100).toFixed(2)} cash from ${b.golferName} for ${who} of ${b.players} player${b.players === 1 ? '' : 's'}? They’re checked in, and the sale goes on today’s register.`)) return;
     }
     setRowBusy(b.id);
     try {
-      const r = await dfetch<{ fee?: string | null }>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: b.id, action, ...(checkedInPlayers ? { checkedInPlayers } : {}) }) });
+      const r = await dfetch<{ fee?: string | null; totalCents?: number; cashTenderedCents?: number | null }>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: b.id, action, ...(checkedInPlayers ? { checkedInPlayers } : {}), ...(cash?.tenderedCents ? { cashTenderedCents: cash.tenderedCents } : {}) }) });
       if (!r.ok) { toast(r.error, 'warn'); return; }
       if (r.data?.fee) toast(r.data.fee, 'warn');
-      toast(action === 'no_show' ? `${b.golferName} marked as a no-show.` : action === 'still_coming' ? `${b.golferName} is still coming.` : `Cash taken — ${b.golferName} is checked in.`, 'ok');
+      // The change the sale recorded (review 2026-11-06): the server's own total and tender, never the card's guess.
+      const change = r.data?.cashTenderedCents != null && r.data.totalCents != null ? r.data.cashTenderedCents - r.data.totalCents : 0;
+      toast(action === 'no_show' ? `${b.golferName} marked as a no-show.` : action === 'still_coming' ? `${b.golferName} is still coming.` : `Cash taken — ${b.golferName} is checked in.${change > 0 ? ` Change $${(change / 100).toFixed(2)}.` : ''}`, 'ok');
+      if (action === 'take_cash') { setCashGiven(c => { const n = { ...c }; delete n[b.id]; return n; }); }
       if (action === 'take_cash') setJustDone({ bookingId: b.id, name: b.golferName, players: checkedInPlayers ?? b.players, how: 'Cash' });
       await loadTimes(selectedDate);
     } finally {
@@ -876,20 +884,22 @@ function DashboardPageInner() {
             ? <><StatusDot status="bad" /><span>No-show</span></>
             : declined
               ? <><StatusDot status="bad" /><span>Card declined<span className="text-ink-muted"> · {b.checkInFailReason}</span></span></>
-              : <><StatusDot {...statusDot(bStatus.tone)} /><span>{b.paymentStatus === 'on_account' && b.accountName ? `Checked In · on ${b.accountName}’s account` : bStatus.label}{bStatus.sublabel && b.status === 'confirmed' && <span className="text-ink-muted"> · {bStatus.sublabel}</span>}{partlyPlayed && <span className="text-ink-muted"> · {b.checkedInPlayers} of {b.players} played</span>}</span></>}
+              : <><StatusDot {...statusDot(bStatus.tone)} /><span>{b.paymentStatus === 'on_account' && b.accountName ? `Checked In · on ${b.accountName}’s account` : bStatus.label}{bStatus.sublabel && b.status === 'confirmed' && b.paymentStatus !== 'manual' && <span className="text-ink-muted"> · {bStatus.sublabel}</span>}{partlyPlayed && <span className="text-ink-muted"> · {b.checkedInPlayers} of {b.players} played</span>}</span></>}
         </p>
 
         {/* Who showed: the check-in and cash buttons charge for this many (the whole group unless changed). */}
         {b.status === 'confirmed' && b.players > 1 && b.paymentStatus !== 'paid' && (access.can('sheet.checkin') || access.can('sheet.counter_payment')) && (
           <div className="mt-3" onClick={e => e.stopPropagation()}>
-            <div className="text-[12.5px] font-medium text-ink mb-1">Showed up</div>
-            <div role="radiogroup" aria-label={`How many of ${b.golferName}'s group are here`} className="flex gap-1 p-1 rounded-[7px] bg-paper">
-              {Array.from({ length: b.players }, (_, i) => i + 1).map(n => (
-                <button key={n} type="button" role="radio" aria-checked={herePlayers === n} onClick={() => setHere(h => ({ ...h, [b.id]: n }))}
-                  className={'flex-1 min-h-[36px] rounded-[5px] text-[13.5px] tabular-nums transition-colors ' + (herePlayers === n ? 'bg-white text-ink font-semibold shadow-card' : 'text-ink-muted hover:text-ink')}>
-                  {n === b.players ? `All ${n}` : n}
-                </button>
-              ))}
+            {/* CHECKOUT-1 (Cam 2026-11-06, "make this look better"): a stepper, not a row of numbers. */}
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[13px] font-medium text-ink">Showed up</span>
+              <div className="flex items-center gap-1" role="group" aria-label={`How many of ${b.golferName}'s group are here`}>
+                <button type="button" aria-label="One fewer" disabled={herePlayers <= 1} onClick={() => setHere(h => ({ ...h, [b.id]: Math.max(1, herePlayers - 1) }))}
+                  className="w-9 h-9 rounded-[7px] border border-line text-[16px] text-ink hover:bg-paper disabled:opacity-40">−</button>
+                <span className="min-w-[5.5rem] text-center text-[14px] tabular-nums text-ink" aria-live="polite"><b>{herePlayers}</b> of {b.players}</span>
+                <button type="button" aria-label="One more" disabled={herePlayers >= b.players} onClick={() => setHere(h => ({ ...h, [b.id]: Math.min(b.players, herePlayers + 1) }))}
+                  className="w-9 h-9 rounded-[7px] border border-line text-[16px] text-ink hover:bg-paper disabled:opacity-40">+</button>
+              </div>
             </div>
             {herePlayers < b.players && (restSplit
               ? <p className="mt-1.5 text-[12.5px] text-ink-soft">{b.players - herePlayers} more stay booked.</p>
@@ -963,46 +973,93 @@ function DashboardPageInner() {
           </div>
         )}
 
-        <div className="mt-3 space-y-2" onClick={e => e.stopPropagation()}>
-          {/* CASH-1 (Cam 2026-10-25): paid online, or rung up in store — cash here, or the card reader. */}
-          {b.status === 'confirmed' && b.paymentStatus === 'manual' && access.can('sheet.counter_payment') && (
-            <button onClick={() => bookingLifecycle(b, 'take_cash', cashDue)} disabled={rowBusy === b.id} className={big + 'bg-pine hover:bg-pine-hover'}>
-              {rowBusy === b.id ? 'Saving…' : `Take cash · check in${money(cashDue)}`}
-            </button>
-          )}
-          {b.status !== 'completed' && b.status !== 'cancelled' && b.paymentStatus !== 'manual' && access.can('sheet.checkin') && (
-            <button onClick={() => { if (b.checkInFailReason) openCardModal(b, b.checkInFailReason); else checkInBooking(b, cardDue); }}
-              disabled={checkingInId === b.id} className={big + (b.checkInFailReason ? 'bg-bad hover:bg-bad/90' : 'bg-pine hover:bg-pine-hover')}>
-              {checkingInId === b.id ? 'Charging…' : b.checkInFailReason ? 'Retry with new card'
-                : prepaid ? 'Check in · paid ahead'
-                : (b.hasCard === false || b.paymentStatus === 'no_payment_method') ? `Take a card${money(cardDue)}`
-                : `Charge card on file${money(cardDue)}`}
-            </button>
-          )}
-          {(canCash || canAccount || b.paymentStatus === 'on_account' && access.can('sheet.counter_payment') || canReader || readerWhyNot || canTextLink || canEmailLink) && (
-            <div className="grid grid-cols-2 gap-2">
-              {canCash && (
-                <button onClick={() => bookingLifecycle(b, 'take_cash', cashDue)} disabled={rowBusy === b.id} className={tile}>{rowBusy === b.id ? 'Saving…' : `Take cash${money(cashDue)}`}</button>
+        {(() => {
+          // CHECKOUT-1 (Cam 2026-11-06): "How are they paying?" — only the ways this group can pay, each with the
+          // same permission and rule as before — then ONE button that says exactly what it does.
+          const cardOk = b.status !== 'completed' && b.status !== 'cancelled' && b.paymentStatus !== 'manual' && access.can('sheet.checkin');
+          const cashOk = canCash || (b.status === 'confirmed' && b.paymentStatus === 'manual' && access.can('sheet.counter_payment'));
+          const ways: [string, string][] = [
+            ...(cardOk ? [['card', prepaid ? 'Paid ahead' : b.checkInFailReason ? 'New card' : (b.hasCard === false || b.paymentStatus === 'no_payment_method') ? 'Take a card' : 'Card on file'] as [string, string]] : []),
+            ...(cashOk ? [['cash', 'Cash'] as [string, string]] : []),
+            ...(canReader ? [['reader', 'Card reader'] as [string, string]] : []),
+            ...(canTextLink ? [['text', 'Text pay link'] as [string, string]] : []),
+            ...(canEmailLink ? [['email', 'Email pay link'] as [string, string]] : []),
+            ...(canAccount ? [['account', 'On account'] as [string, string]] : []),
+          ];
+          if (!ways.length && !readerWhyNot && !(b.paymentStatus === 'on_account' && access.can('sheet.counter_payment'))) return null;
+          const how = ways.some(([k]) => k === payHow[b.id]) ? payHow[b.id] : (b.paymentStatus === 'manual' && cashOk ? 'cash' : ways[0]?.[0]);
+          const who = herePlayers < b.players ? ` ${herePlayers}` : '';
+          const givenRaw = Number(cashGiven[b.id] || 0);
+          const garbled = !Number.isFinite(givenRaw);
+          const givenCents = garbled ? 0 : Math.round(givenRaw * 100);
+          const short = garbled || (givenCents > 0 && givenCents < cashDue);
+          const change = givenCents > cashDue ? givenCents - cashDue : 0;
+          // The bills they'd hand over: the next $20, $50 and $100 above what's owed.
+          const quick = [...new Set([2000, 5000, 10000].map(u => Math.ceil((cashDue + 1) / u) * u))].sort((x, y) => x - y);
+          return (
+            <div className="mt-3 space-y-2.5" onClick={e => e.stopPropagation()}>
+              {ways.length > 1 && (
+                <div>
+                  <span className="block text-[12.5px] text-ink-muted mb-1.5">How are they paying?</span>
+                  <div role="radiogroup" aria-label="How are they paying?" className="flex flex-wrap gap-1.5">
+                    {ways.map(([k, l]) => (
+                      <button key={k} type="button" role="radio" aria-checked={how === k} onClick={() => setPayHow(p => ({ ...p, [b.id]: k }))}
+                        className={'px-3 min-h-[36px] rounded-[7px] border text-[13px] font-medium transition-colors ' + (how === k ? 'border-pine bg-pine/5 text-ink' : 'border-line text-ink-soft hover:border-line-strong hover:text-ink')}>{l}</button>
+                    ))}
+                  </div>
+                </div>
               )}
-              {canReader && <Link href={`/dashboard/shop?round=${b.id}`} className={tile + ' flex items-center justify-center'}>Card reader</Link>}
-              {readerWhyNot === 'none' && !access.isStaff && <Link href="/dashboard/settings?section=Pro+shop" className={tile + ' flex items-center justify-center text-ink-soft'}>Connect a card reader</Link>}
-              {readerWhyNot === 'none' && access.isStaff && <button type="button" disabled className={tile + ' text-ink-soft'}>No card reader</button>}
-              {readerWhyNot === 'day' && <button type="button" disabled className={tile + ' text-ink-soft'}>Reader · on the day</button>}
-              {canTextLink && (
-                <button onClick={() => sendPayLink(b, 'sms')} disabled={rowBusy === b.id} className={tile}>{rowBusy === b.id ? 'Sending…' : 'Text pay link'}</button>
+              {how === 'cash' && (
+                <div className="rounded-[7px] bg-paper/70 px-3 py-2.5 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <label htmlFor={`given-${b.id}`} className="text-[13px] text-ink shrink-0">Cash given</label>
+                    <span className="relative flex-1">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[13px] text-ink-muted">$</span>
+                      <input id={`given-${b.id}`} inputMode="decimal" value={cashGiven[b.id] ?? ''} onChange={e => setCashGiven(c => ({ ...c, [b.id]: e.target.value.replace(/[^\d.]/g, '') }))}
+                        placeholder={(cashDue / 100).toFixed(2)} className="w-full bg-white border border-line rounded-[7px] pl-6 pr-2.5 py-1.5 text-[14px] tabular-nums text-ink placeholder-ink-faint" />
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <button type="button" onClick={() => setCashGiven(c => ({ ...c, [b.id]: '' }))} className="px-2.5 py-1 rounded-[7px] border border-line bg-white text-[12.5px] text-ink hover:bg-paper">Exact</button>
+                    {quick.map(c => <button key={c} type="button" onClick={() => setCashGiven(g => ({ ...g, [b.id]: (c / 100).toFixed(0) }))} className="px-2.5 py-1 rounded-[7px] border border-line bg-white text-[12.5px] tabular-nums text-ink hover:bg-paper">${c / 100}</button>)}
+                    <span className={'ml-auto text-[13.5px] tabular-nums ' + (short ? 'text-bad' : 'text-ink')}>{garbled ? 'Check the amount' : short ? `Short $${((cashDue - givenCents) / 100).toFixed(2)}` : change ? <>Change <b>${(change / 100).toFixed(2)}</b></> : 'No change'}</span>
+                  </div>
+                </div>
               )}
-              {canEmailLink && (
-                <button onClick={() => sendPayLink(b)} disabled={rowBusy === b.id} className={tile}>{rowBusy === b.id ? 'Sending…' : 'Email pay link'}</button>
+              {how === 'card' && (
+                <button onClick={() => { if (b.checkInFailReason) openCardModal(b, b.checkInFailReason); else checkInBooking(b, cardDue); }}
+                  disabled={checkingInId === b.id} className={big + (b.checkInFailReason ? 'bg-bad hover:bg-bad/90' : 'bg-pine hover:bg-pine-hover')}>
+                  {checkingInId === b.id ? 'Charging…' : b.checkInFailReason ? 'Retry with a new card'
+                    : prepaid ? `Check in${who} · paid ahead`
+                    : (b.hasCard === false || b.paymentStatus === 'no_payment_method') ? `Take a card${money(cardDue)} · check in${who}`
+                    : `Charge card on file${money(cardDue)} · check in${who}`}
+                </button>
               )}
-              {canAccount && (
-                <ChargeToAccount booking={b} className={tile} onDone={async (msg, note) => { if (note) toast(note, 'warn'); toast(msg, 'ok'); await loadTimes(selectedDate); }} />
+              {how === 'cash' && (
+                <button onClick={() => bookingLifecycle(b, 'take_cash', cashDue, { tenderedCents: givenCents > cashDue ? givenCents : undefined })} disabled={rowBusy === b.id || short} className={big + 'bg-pine hover:bg-pine-hover'}>
+                  {rowBusy === b.id ? 'Saving…' : `Take${money(cashDue).replace(' · ', ' ')} cash · check in${who}`}
+                </button>
               )}
+              {/* The register charges the whole group (it has no headcount): an amount only when that's who is here (review 2026-11-06). */}
+              {how === 'reader' && <Link href={`/dashboard/shop?round=${b.id}`} className={big + 'bg-pine hover:bg-pine-hover'}>Send{herePlayers === b.players ? money(b.totalAmount + shopExtra(b)).replace(' · ', ' ') : ' the whole group'} to the card reader</Link>}
+              {how === 'text' && (
+                <button onClick={() => sendPayLink(b, 'sms')} disabled={rowBusy === b.id} className={big + 'bg-pine hover:bg-pine-hover'}>{rowBusy === b.id ? 'Sending…' : 'Text a pay link'}</button>
+              )}
+              {how === 'email' && (
+                <button onClick={() => sendPayLink(b)} disabled={rowBusy === b.id} className={big + 'bg-pine hover:bg-pine-hover'}>{rowBusy === b.id ? 'Sending…' : 'Email a pay link'}</button>
+              )}
+              {how === 'account' && (
+                <ChargeToAccount booking={b} className={big + 'bg-pine hover:bg-pine-hover'} onDone={async (msg, note) => { if (note) toast(note, 'warn'); toast(msg, 'ok'); await loadTimes(selectedDate); }} />
+              )}
+              {readerWhyNot === 'none' && !access.isStaff && <Link href="/dashboard/settings?section=Pro+shop" className={link + ' block'}>Connect a card reader</Link>}
+              {readerWhyNot === 'none' && access.isStaff && <p className="text-[12.5px] text-ink-muted">No card reader connected</p>}
+              {readerWhyNot === 'day' && <p className="text-[12.5px] text-ink-muted">Card reader: on the day</p>}
               {b.paymentStatus === 'on_account' && access.can('sheet.counter_payment') && (
                 <ChangeAccount target={{ bookingId: b.id }} className={tile} inputClass="bg-white border border-line rounded-md px-2 py-1.5 text-ink placeholder-ink-faint focus:border-pine/40 focus:ring-2 focus:ring-pine/10" onDone={async msg => { toast(msg, 'ok'); await loadTimes(selectedDate); }} />
               )}
             </div>
-          )}
-        </div>
+          );
+        })()}
 
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2" onClick={e => e.stopPropagation()}>
           {((b.status === 'confirmed' && !b.noShowAt) || (b.status === 'completed' && selectedDate >= today())) && access.can('sheet.move') && (
@@ -1010,7 +1067,7 @@ function DashboardPageInner() {
               className={link}>Move</button>
           )}
           {canSizeGroup && (
-            <button type="button" aria-expanded={editGroupId === b.id} onClick={() => setEditGroupId(editGroupId === b.id ? null : b.id)} className={link}>Edit group</button>
+            <button type="button" aria-expanded={editGroupId === b.id} onClick={() => setEditGroupId(editGroupId === b.id ? null : b.id)} className={link}>Change group size</button>
           )}
           {b.status === 'confirmed' && b.noShowAt && access.can('sheet.no_show') && (
             <button onClick={() => bookingLifecycle(b, 'still_coming')} disabled={rowBusy === b.id} className={link}>{rowBusy === b.id ? '…' : 'Still coming'}</button>
@@ -1445,7 +1502,7 @@ function DashboardPageInner() {
                 </div>
                 <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-ink">
                   <span>{panelSlot.status === 'blocked' ? <span className="italic text-ink-muted">{panelSlot.event ? `Held for ${panelSlot.event.name}` : 'Blocked'}</span> : <>{panelSlot.playersBooked} of {panelSlot.playersAvailable} players · {open <= 0 ? <span className="text-bad font-medium">Full</span> : `${open} open`}</>}</span>
-                  <span className="text-ink-soft">{panelSlot.tee && (teeTimes ?? []).some(t => t.tee !== panelSlot.tee) ? `${panelSlot.tee} · ` : ''}{panelSlot.product?.label ? `${panelSlot.product.label} · ` : ''}{panelSlot.holes} holes · ${panelSlot.greenFee.toFixed(2)} a player{panelSlot.cartFee > 0 ? ` + $${panelSlot.cartFee.toFixed(2)} cart` : ''}</span>
+                  <span className="text-ink-soft">{panelSlot.tee && (teeTimes ?? []).some(t => t.tee !== panelSlot.tee) ? `${panelSlot.tee} · ` : ''}{roundName(panelSlot)} · ${panelSlot.greenFee.toFixed(2)} a player{panelSlot.cartFee > 0 ? ` + $${panelSlot.cartFee.toFixed(2)} cart` : ''}</span>
                   {panelSlot.residentRateCents != null && <span className="text-ink-soft">Residents ${(panelSlot.residentRateCents / 100).toFixed(2)}</span>}
                 </div>
               </div>
