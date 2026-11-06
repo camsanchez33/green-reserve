@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-06 01:52 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `3d4c9eb7` · working tree **3 dirty file(s)**
+Generated 2026-11-06 02:45 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `c78875dc` · working tree **22 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 117 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 119 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `91764419` | 2026-11-05 | Public SMS consent page at /sms-consent for Twilio's checker (#323) |
+| `41e8a0af` | 2026-11-06 | Public SMS consent page at /sms-consent for Twilio's checker |
 | `b147abf7` | 2026-11-05 | Host the SMS consent screenshot at /sms-opt-in.png for Twilio (#322) |
 | `9db7e811` | 2026-11-06 | Host the SMS consent screenshot at /sms-opt-in.png for Twilio |
 | `92afb06e` | 2026-11-05 | Home: goals on the numbers the course picks, and its own course-condition lines (#321) |
@@ -132,11 +134,28 @@ Generated 2026-11-06 01:52 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (3 file(s))
+### Uncommitted working tree (22 file(s))
 
+- `M CLAUDE.md`
+- `M STATUS.artifact.html`
+- `M STATUS.json`
+- `M STATUS.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `?? src/app/sms-consent/`
+- `M scripts/design-guard.baseline.json`
+- `M scripts/glass-test.ts`
+- `M scripts/home-page-test.ts`
+- `M scripts/tees-side-by-side-test.ts`
+- `M scripts/teesheet-1-test.ts`
+- `M src/app/dashboard/home/page.tsx`
+- `M src/app/dashboard/money/page.tsx`
+- `M src/app/dashboard/page.tsx`
+- `M src/app/globals.css`
+- `M src/app/home.module.css`
+- `M src/components/dashboard/TeeSheetCalendar.tsx`
+- `M src/components/dashboard/TeeSheetRows.tsx`
+- `M src/components/dashboard/home/HomeBoard.tsx`
+- `M src/components/home/TeeSheetDemo.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -262,6 +281,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `91764419` 2026-11-05 — Public SMS consent page at /sms-consent for Twilio's checker (#323)
+- `41e8a0af` 2026-11-06 — Public SMS consent page at /sms-consent for Twilio's checker
 - `b147abf7` 2026-11-05 — Host the SMS consent screenshot at /sms-opt-in.png for Twilio (#322)
 - `9db7e811` 2026-11-06 — Host the SMS consent screenshot at /sms-opt-in.png for Twilio
 - `92afb06e` 2026-11-05 — Home: goals on the numbers the course picks, and its own course-condition lines (#321)
@@ -272,8 +293,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `d12656c7` 2026-11-05 — Text-message opt-in names GreenReserve as the sender, with the carriers' disclosure phrases; texts lead with GreenReserve
 - `211403ca` 2026-11-05 — Terms and Privacy: Twilio A2P campaign wording (#318)
 - `acd00f57` 2026-11-05 — Terms and Privacy: Twilio A2P campaign wording (SMS Terms heading, no selling or sharing opt-in data)
-- `d43ed864` 2026-11-04 — Database audit: crons read only due dates, Stripe-id indexes, rate-limit sweep (#317)
-- `ba4df316` 2026-11-05 — Database load from the audit: crons read only due tee dates, Stripe-id indexes, rate-limit sweep, sheet money strip asks less
 
 ---
 

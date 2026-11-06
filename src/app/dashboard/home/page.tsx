@@ -274,7 +274,7 @@ export default function DashboardHome() {
 
               <div className="flex flex-col gap-4 min-w-0">
                 <section className={`${CARD} px-5 py-4 flex flex-col gap-3`}>
-                  <h2 className="text-[15px] font-semibold text-ink">Needs you</h2>
+                  <h2 className="text-[15px] font-semibold text-ink">Action needed</h2>
                   <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
                     {counts.map(c => (
                       <div key={c.label}><div className="text-[12.5px] text-ink-muted">{c.label}</div>

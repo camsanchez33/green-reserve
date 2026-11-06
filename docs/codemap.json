@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 663,
+    "files": 664,
     "routes": 292,
-    "libs": 238,
+    "libs": 239,
     "models": 71,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -8907,7 +8907,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1953,
+      "lines": 1965,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11878,7 +11878,7 @@
     },
     {
       "path": "src/components/dashboard/TeeSheetRows.tsx",
-      "lines": 257,
+      "lines": 285,
       "purpose": "DENSE-4 (DENSE_UI_SPEC D1, Cam 2026-10-27:",
       "brain": [],
       "exports": [
@@ -11893,6 +11893,10 @@
         {
           "name": "default (TeeSheetRows)",
           "kind": "component"
+        },
+        {
+          "name": "groupTags",
+          "kind": "fn"
         },
         {
           "name": "groupTone",
@@ -11914,6 +11918,7 @@
       "guard": null,
       "imports": [
         "@/lib/format",
+        "@/lib/tee-rounds",
         "react"
       ],
       "usedBy": [
@@ -12229,7 +12234,7 @@
     },
     {
       "path": "src/components/dashboard/home/HomeBoard.tsx",
-      "lines": 270,
+      "lines": 271,
       "purpose": "DASH-D Home (Cam 2026-11-01, mockup S1):",
       "brain": [],
       "exports": [
@@ -25824,6 +25829,55 @@
       "usedBy": [
         "src/app/courses/[slug]/CourseBookingClient.tsx",
         "src/components/dashboard/CourseLayoutTab.tsx"
+      ]
+    },
+    {
+      "path": "src/lib/tee-rounds.ts",
+      "lines": 67,
+      "purpose": "ROUNDS-1 (Cam 2026-11-06:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "periodOf",
+          "kind": "fn"
+        },
+        {
+          "name": "roundName",
+          "kind": "fn"
+        },
+        {
+          "name": "roundOf",
+          "kind": "fn"
+        },
+        {
+          "name": "RoundSlot",
+          "kind": "type"
+        },
+        {
+          "name": "rowTag",
+          "kind": "fn"
+        },
+        {
+          "name": "runsOf",
+          "kind": "fn"
+        },
+        {
+          "name": "usualRound",
+          "kind": "fn"
+        },
+        {
+          "name": "usualRoundOnly",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/components/dashboard/TeeSheetRows.tsx"
       ]
     },
     {

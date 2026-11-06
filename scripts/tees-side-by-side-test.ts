@@ -25,7 +25,7 @@ ok('the sheet finds the day\'s tees in the course\'s nine order (1st tee first)'
 ok('two or more tees: one line per time, a column per tee', rows.includes('if (lanes.length > 1) {') && rows.includes('const times = [...new Set(list.map(s => s.time))].sort();')
   && rows.includes("const ss = at.filter(x => (x.tee ?? '') === l);") && rows.includes('ss.map(s => slotCells(s, false))') && !rows.includes('at.find('));
 ok('one tee: the sheet is exactly the old seat rows', rows.includes('{slotCells(s, true)}'));
-ok('a tee name heads each column from md up', rows.includes("hidden md:grid gap-x-3 pb-1 text-[13px] font-semibold text-ink") && rows.includes('{lanes.map(l => <span key={l} className="px-1 truncate">{l}</span>)}'));
+ok('a tee name heads each column from md up', rows.includes("hidden md:grid gap-x-3 pb-1 text-[13px] font-semibold text-ink") && rows.includes('{lanes.map(l => <span key={l} className="px-1 truncate">{l}<span className="font-normal text-ink-muted"> · {usualRoundOnly('));
 ok('a phone shows one tee at a time, with a switch', rows.includes('<div role="group" className="md:hidden') && rows.includes("(l === shownLane ? 'block' : 'hidden md:block')")
   && rows.includes("grid-cols-[3.75rem_minmax(0,1fr)] md:grid-cols-[3.75rem_repeat(var(--lanes),minmax(0,1fr))]"));
 ok('each tee\'s cells open the card and take a dragged group', (rows.match(/onSelect\(s\.id\)/g) ?? []).length >= 4 && rows.includes('if (dragging && target) onMove(dragging.group, dragging.fromId, s.id);'));

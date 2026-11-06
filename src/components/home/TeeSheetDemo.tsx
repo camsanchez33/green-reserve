@@ -129,7 +129,7 @@ function TeeSheet() {
       </div>
       <div className={s.bd}>
         {/* The key sits above the sheet, as on the real one. */}
-        <div className={s.lg}><span><i className={s.kOk} />Paid</span><span><i className={s.kWarn} />Owes</span><span><i className={s.kBad} />Declined or no-show</span><span><i className={s.kIn} />Checked in</span><span><i className={s.kMem} />Member or resident</span></div>
+        <div className={s.lg}><span><i className={s.kOk} />Paid</span><span><i className={s.kWarn} />Owes</span><span><i className={s.kBad} />Declined or no-show</span><i className={s.lgRule} aria-hidden="true" /><span><b>In</b>checked in</span><span><b>M</b>member</span><span><b>R</b>resident</span></div>
         {rows.map((r, i) => {
           const past = d.today && r.t <= NOW;
           const newHour = i === 0 || hourOf(rows[i - 1].t) !== hourOf(r.t);
@@ -144,8 +144,8 @@ function TeeSheet() {
                 {r.blocked ? <span className={s.rwBlocked}>Blocked</span> : <>
                   {r.groups.map((g, gi) => (
                     <span key={`${g.name}-${gi}`} style={{ gridColumn: `span ${Math.min(g.n, CAP)}` }}
-                      className={[s.seat, toneOf(g) === 'ok' ? s.seatPaid : '', g.done ? s.seatIn : '', g.isNew ? s.seatNew : ''].join(' ')}>
-                      <span>{g.name}</span>{g.n > 1 && <small>+{g.n - 1}</small>}
+                      className={[s.seat, toneOf(g) === 'ok' ? s.seatPaid : '', g.isNew ? s.seatNew : ''].join(' ')}>
+                      <span>{g.name}</span>{g.n > 1 && <small>+{g.n - 1}</small>}{g.done && <b>In</b>}
                     </span>
                   ))}
                   {Array.from({ length: Math.max(0, CAP - booked(r)) }, (_, k) => <span key={k} className={s.seatOpen} />)}

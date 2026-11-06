@@ -117,14 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-11-06 01:52 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 3d4c9eb7</span>
-    <span>3 uncommitted</span>
+    <span>2026-11-06 02:45 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ c78875dc</span>
+    <span>22 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">117 runs have shipped that the queue doesn't know about</div>
+<div class="lede">119 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-31. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">91764419</span><span>Public SMS consent page at /sms-consent for Twilio's checker (#323)</span></li>
+<li><span class="h">41e8a0af</span><span>Public SMS consent page at /sms-consent for Twilio's checker</span></li>
 <li><span class="h">b147abf7</span><span>Host the SMS consent screenshot at /sms-opt-in.png for Twilio (#322)</span></li>
 <li><span class="h">9db7e811</span><span>Host the SMS consent screenshot at /sms-opt-in.png for Twilio</span></li>
 <li><span class="h">92afb06e</span><span>Home: goals on the numbers the course picks, and its own course-condition lines (#321)</span></li>
@@ -254,7 +256,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>?? src/app/sms-consent/</code></li></ul>
+<ul class="plain"><li><code>M CLAUDE.md</code></li><li><code>M STATUS.artifact.html</code></li><li><code>M STATUS.json</code></li><li><code>M STATUS.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/design-guard.baseline.json</code></li><li><code>M scripts/glass-test.ts</code></li><li><code>M scripts/home-page-test.ts</code></li><li><code>M scripts/tees-side-by-side-test.ts</code></li><li><code>M scripts/teesheet-1-test.ts</code></li><li><code>M src/app/dashboard/home/page.tsx</code></li><li><code>M src/app/dashboard/money/page.tsx</code></li><li><code>M src/app/dashboard/page.tsx</code></li><li><code>M src/app/globals.css</code></li><li><code>M src/app/home.module.css</code></li><li><code>M src/components/dashboard/TeeSheetCalendar.tsx</code></li><li><code>M src/components/dashboard/TeeSheetRows.tsx</code></li><li><code>M src/components/dashboard/home/HomeBoard.tsx</code></li><li><code>M src/components/home/TeeSheetDemo.tsx</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -336,6 +338,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 15d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">91764419</td><td class="num">2026-11-05</td><td>Public SMS consent page at /sms-consent for Twilio's checker (#323)</td></tr>
+<tr><td class="num">41e8a0af</td><td class="num">2026-11-06</td><td>Public SMS consent page at /sms-consent for Twilio's checker</td></tr>
 <tr><td class="num">b147abf7</td><td class="num">2026-11-05</td><td>Host the SMS consent screenshot at /sms-opt-in.png for Twilio (#322)</td></tr>
 <tr><td class="num">9db7e811</td><td class="num">2026-11-06</td><td>Host the SMS consent screenshot at /sms-opt-in.png for Twilio</td></tr>
 <tr><td class="num">92afb06e</td><td class="num">2026-11-05</td><td>Home: goals on the numbers the course picks, and its own course-condition lines (#321)</td></tr>
@@ -346,8 +350,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">d12656c7</td><td class="num">2026-11-05</td><td>Text-message opt-in names GreenReserve as the sender, with the carriers' disclosure phrases; texts lead with GreenReserve</td></tr>
 <tr><td class="num">211403ca</td><td class="num">2026-11-05</td><td>Terms and Privacy: Twilio A2P campaign wording (#318)</td></tr>
 <tr><td class="num">acd00f57</td><td class="num">2026-11-05</td><td>Terms and Privacy: Twilio A2P campaign wording (SMS Terms heading, no selling or sharing opt-in data)</td></tr>
-<tr><td class="num">d43ed864</td><td class="num">2026-11-04</td><td>Database audit: crons read only due dates, Stripe-id indexes, rate-limit sweep (#317)</td></tr>
-<tr><td class="num">ba4df316</td><td class="num">2026-11-05</td><td>Database load from the audit: crons read only due tee dates, Stripe-id indexes, rate-limit sweep, sheet money strip asks less</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

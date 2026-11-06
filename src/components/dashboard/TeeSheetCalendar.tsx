@@ -48,10 +48,10 @@ export default function TeeSheetCalendar({ selectedDate, today, onPick }: {
     <div>
       <div className="flex items-center gap-2 pb-3">
         <button type="button" onClick={() => setMonth(shiftMonth(month, -1))} aria-label="Previous month"
-          className="w-7 h-7 rounded-md border border-line inline-flex items-center justify-center text-ink-muted hover:text-ink hover:bg-paper transition-colors"><span aria-hidden="true">‹</span></button>
+          className="w-7 h-7 rounded-md inline-flex items-center justify-center text-ink-muted hover:text-ink hover:bg-paper transition-colors"><span aria-hidden="true">‹</span></button>
         <h3 className="text-[15px] font-semibold text-ink min-w-[9.5rem] text-center">{title}</h3>
         <button type="button" onClick={() => setMonth(shiftMonth(month, 1))} aria-label="Next month"
-          className="w-7 h-7 rounded-md border border-line inline-flex items-center justify-center text-ink-muted hover:text-ink hover:bg-paper transition-colors"><span aria-hidden="true">›</span></button>
+          className="w-7 h-7 rounded-md inline-flex items-center justify-center text-ink-muted hover:text-ink hover:bg-paper transition-colors"><span aria-hidden="true">›</span></button>
         {month !== today.slice(0, 7) && <button type="button" onClick={() => setMonth(today.slice(0, 7))} className="ml-1 text-[12.5px] font-semibold text-pine hover:underline underline-offset-4">This month</button>}
         <span className="ml-auto text-[12.5px] text-ink-muted">Players booked of spots</span>
       </div>
