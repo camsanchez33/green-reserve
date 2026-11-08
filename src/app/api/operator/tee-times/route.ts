@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { todayIn, isPastIn } from '@/lib/course-time';
+import { livePlayers, timeSpots } from '@/lib/day-fill';
 import { setSeatsClosed } from '@/lib/tee-time-seats';
 import { prisma } from '@/lib/prisma';
 import { dollarsToCentsOr0 } from '@/lib/money';
@@ -20,14 +21,23 @@ export async function GET(req: NextRequest) {
   const month = searchParams.get('month');
   if (month !== null) {
     if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return NextResponse.json({ error: 'Pick a month as YYYY-MM.' }, { status: 400 });
-    const rows = await prisma.teeTime.groupBy({
-      by: ['date'],
-      where: { courseId: session.courseId, date: { gte: `${month}-01`, lte: `${month}-31` }, status: { not: 'blocked' } },
-      _sum: { playersAvailable: true, playersBooked: true },
-      _count: { _all: true },
+    // ACC-1: players booked of spots by the one rule the tee sheet, Home and Analytics use (lib/day-fill) — live
+    // players from the bookings; a blocked time counts only for a group already on it.
+    const rows = await prisma.teeTime.findMany({
+      where: { courseId: session.courseId, date: { gte: `${month}-01`, lte: `${month}-31` } },
+      select: { date: true, status: true, playersAvailable: true, bookings: { where: { status: { not: 'cancelled' } }, select: { status: true, players: true } } },
     });
-    const days = rows.map(r => ({ date: r.date, times: r._count._all, spots: r._sum.playersAvailable ?? 0, booked: r._sum.playersBooked ?? 0 }))
-      .sort((a, b) => a.date.localeCompare(b.date));
+    const byDate = new Map<string, { date: string; times: number; spots: number; booked: number }>();
+    const forSale = new Set<string>(); // days with a time golfers can book (CAL-2's "every time blocked" reads it)
+    for (const t of rows) {
+      const n = livePlayers(t.bookings);
+      if (t.status === 'blocked' && n === 0) continue;
+      const d = byDate.get(t.date) ?? { date: t.date, times: 0, spots: 0, booked: 0 };
+      d.times += 1; d.spots += timeSpots(t, n); d.booked += n;
+      if (t.status !== 'blocked') forSale.add(t.date);
+      byDate.set(t.date, d);
+    }
+    const days = [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
     // CAL-2: why a day has nothing golfers can book — every time blocked, no schedule that weekday, or
     // past the public booking window (lib/calendar-days.ts words it). This course only.
     const [course, schedules, blocked] = await Promise.all([
@@ -35,7 +45,7 @@ export async function GET(req: NextRequest) {
       prisma.teeTimeSchedule.findMany({ where: { courseId: session.courseId, active: true }, select: { daysOfWeek: true } }),
       prisma.teeTime.groupBy({ by: ['date'], where: { courseId: session.courseId, date: { gte: `${month}-01`, lte: `${month}-31` }, status: 'blocked' } }),
     ]);
-    const open = new Set(days.map(d => d.date));
+    const open = forSale;
     const openWeekdays = schedules.some(s => s.daysOfWeek.length === 0) ? [0, 1, 2, 3, 4, 5, 6] : [...new Set(schedules.flatMap(s => s.daysOfWeek))].sort();
     const info = {
       today: todayIn(course?.timezone),

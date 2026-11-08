@@ -27,8 +27,10 @@ export async function GET() {
     // Course time, so Payments sorts played from still-to-play by the course's clock, not the browser's.
     today, clock: clockIn(course?.timezone),
     paidCents: a.revenue.collectedCents,
-    notPaidCents: a.revenue.outstandingCents,
-    notPaidGroups: a.revenue.outstandingBookings,
+    // ACC-1: the same Not paid yet as the tee sheet and Home — owed plus today's groups not played yet (the window
+    // ends today, so "upcoming" here is later today only). "See them" opens Payments on the same set.
+    notPaidCents: a.revenue.outstandingCents + a.revenue.upcomingCents,
+    notPaidGroups: a.revenue.outstandingBookings + a.revenue.pipeline.upcomingBookings,
     declined: declined.rows,
     declinedTotal: declined.total,
     stripeConnected: !!(course?.stripeAccountActive && course.stripeAccountId),

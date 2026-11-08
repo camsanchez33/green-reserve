@@ -7,7 +7,7 @@ export type PaidOutKey = 'payoutsCents' | 'cashCents' | 'inStripeCents';
 export type Term<K> = { key: K; label: string; def: string; minus?: boolean; total?: boolean };
 
 export const EARNED_TERMS: Term<EarnedKey>[] = [
-  { key: 'collectedCents', label: 'Collected', def: 'Card, cash and other money taken in these days' },
+  { key: 'collectedCents', label: 'Taken in', def: 'Card, cash and other money that came in on these days — the day the money moved, not the day of the round' },
   { key: 'givenBackCents', label: 'Given back', def: 'Refunds and holds returned', minus: true },
   { key: 'greenReserveCents', label: 'GreenReserve fees', def: 'Booking fees taken, less any given back', minus: true },
   { key: 'stripeFeeCents', label: 'Stripe fees', def: 'Stripe’s card processing fees, as Stripe recorded them', minus: true },
@@ -20,7 +20,10 @@ export const PAID_OUT_TERMS: Term<PaidOutKey>[] = [
   { key: 'inStripeCents', label: 'In Stripe now', def: 'Your Stripe balance, available and on its way' },
 ];
 
-export const EARNED_TITLE = 'Earned';
+// ACC-1 (Cam 2026-11-08, picked "round's day + rename Ledger"): the Ledger counts money on the day it MOVED (it has to
+// match Stripe's payouts), while "Paid" on the tee sheet, Home, Money and Analytics counts a round on the round's day.
+// So the Ledger's card says "Money in" — never "Paid" or "Earned" — and nobody expects the two to match day by day.
+export const EARNED_TITLE = 'Money in';
 export const PAID_OUT_TITLE = 'Paid out';
 
 /** The day rows' filters and one payment's detail (EARNED-1). */

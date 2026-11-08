@@ -5,6 +5,7 @@
 // Money uses computeAnalytics()'s definitions (collected / outstanding), never a
 // new sum. The route decides which parts a login may see.
 import { paymentsMissing, missingSetup } from './setup-missing';
+import { timeSpots } from './day-fill';
 import { prisma } from './prisma';
 import { todayIn, clockIn, addDaysStr } from './course-time';
 import { computeAnalytics, bookingPace, NO_SHOW_GRACE_MIN } from './analytics';
@@ -25,7 +26,7 @@ async function dayShape(courseId: string, date: string) {
     const n = t.bookings.reduce((s, b) => s + b.players, 0);
     hours[Number(t.time.slice(0, 2))] += n;
     players += n;
-    if (t.status !== 'blocked') offered += t.playersAvailable;
+    offered += timeSpots(t, n); // ACC-1: one rule for spots (lib/day-fill)
   }
   return { hours, players, fillPct: offered ? Math.round((players / offered) * 100) : null };
 }
