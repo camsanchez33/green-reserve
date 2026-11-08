@@ -9139,7 +9139,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 857,
+      "lines": 871,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -11480,7 +11480,7 @@
     },
     {
       "path": "src/components/dashboard/RegisterClose.tsx",
-      "lines": 194,
+      "lines": 226,
       "purpose": "POS-3 R4 (Cam 2026-10-24):",
       "brain": [],
       "exports": [
@@ -11509,7 +11509,7 @@
     },
     {
       "path": "src/components/dashboard/RegisterPacks.tsx",
-      "lines": 108,
+      "lines": 111,
       "purpose": "PRICE-3 (Cam 2026-10-30:",
       "brain": [],
       "exports": [
@@ -11700,7 +11700,7 @@
     },
     {
       "path": "src/components/dashboard/ShopStock.tsx",
-      "lines": 141,
+      "lines": 146,
       "purpose": "SHOP-4 (Cam 2026-10-30:",
       "brain": [],
       "exports": [

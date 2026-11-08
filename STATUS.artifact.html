@@ -117,14 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-11-08 21:26 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ b14c351b</span>
-    <span>16 uncommitted</span>
+    <span>2026-11-08 23:27 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 7d699c81</span>
+    <span>11 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">153 runs have shipped that the queue doesn't know about</div>
+<div class="lede">155 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-31. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">b8512431</span><span>ACC-1: every booking and payment figure agrees across the site (#339)</span></li>
+<li><span class="h">260583c3</span><span>ACC-1: one set of definitions so every booking and payment figure agrees</span></li>
 <li><span class="h">437456cc</span><span>POS-4: Pro shop register as a real POS (#338)</span></li>
 <li><span class="h">f4cc7d76</span><span>POS-4: Pro shop register as a real POS — tiles, one ticket, Charge in steps</span></li>
 <li><span class="h">63efbf69</span><span>SEATS-1: close seats on a tee time one at a time (#337)</span></li>
@@ -290,7 +292,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/not-paid-db-test.ts</code></li><li><code>M scripts/sheet-views-test.ts</code></li><li><code>M scripts/words-guard.baseline.json</code></li><li><code>M src/app/api/operator/money/overview/route.ts</code></li><li><code>M src/app/api/operator/sheet-money/route.ts</code></li><li><code>M src/app/api/operator/tee-times/route.ts</code></li><li><code>M src/app/dashboard/page.tsx</code></li><li><code>M src/components/dashboard/money/PaymentsPanel.tsx</code></li><li><code>M src/lib/analytics.ts</code></li><li><code>M src/lib/earned-terms.ts</code></li><li><code>M src/lib/home-board.ts</code></li><li><code>M src/lib/operator-home.ts</code></li><li><code>?? scripts/accuracy-links-test.ts</code></li><li><code>?? src/lib/day-fill.ts</code></li></ul>
+<ul class="plain"><li><code>M STATUS.artifact.html</code></li><li><code>M STATUS.json</code></li><li><code>M STATUS.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/pos-register-test.ts</code></li><li><code>M scripts/words-guard.baseline.json</code></li><li><code>M src/app/dashboard/shop/page.tsx</code></li><li><code>M src/components/dashboard/RegisterClose.tsx</code></li><li><code>M src/components/dashboard/RegisterPacks.tsx</code></li><li><code>M src/components/dashboard/ShopStock.tsx</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -335,16 +337,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-11-08 &middot; 0d</td></tr>
 <tr><td><code>DENSE_UI_SPEC.md</code></td><td class="num">1</td><td class="num">2026-11-01 &middot; 7d</td></tr>
 <tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-20 &middot; 18d</td></tr>
-<tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-25 &middot; 13d</td></tr>
 <tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-26 &middot; 13d</td></tr>
-<tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 15d</td></tr>
-<tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 16d</td></tr>
-<tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 16d</td></tr>
+<tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-25 &middot; 14d</td></tr>
+<tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 16d</td></tr>
 <tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 16d</td></tr>
-<tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 16d</td></tr>
-<tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 16d</td></tr>
-<tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 16d</td></tr>
-<tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 16d</td></tr>
+<tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 17d</td></tr>
+<tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 17d</td></tr>
+<tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 17d</td></tr>
+<tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 17d</td></tr>
+<tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 17d</td></tr>
+<tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 17d</td></tr>
 <tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 18d</td></tr>
 <tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 18d</td></tr>
 <tr><td><code>ADMIN_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 18d</td></tr>
@@ -372,6 +374,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 18d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">b8512431</td><td class="num">2026-11-08</td><td>ACC-1: every booking and payment figure agrees across the site (#339)</td></tr>
+<tr><td class="num">260583c3</td><td class="num">2026-11-08</td><td>ACC-1: one set of definitions so every booking and payment figure agrees</td></tr>
 <tr><td class="num">437456cc</td><td class="num">2026-11-08</td><td>POS-4: Pro shop register as a real POS (#338)</td></tr>
 <tr><td class="num">f4cc7d76</td><td class="num">2026-11-08</td><td>POS-4: Pro shop register as a real POS — tiles, one ticket, Charge in steps</td></tr>
 <tr><td class="num">63efbf69</td><td class="num">2026-11-08</td><td>SEATS-1: close seats on a tee time one at a time (#337)</td></tr>
@@ -382,8 +386,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">480f7d0e</td><td class="num">2026-11-08</td><td>Time card: the reader charges who's here, receipts, day actions in the sheet bar</td></tr>
 <tr><td class="num">086b9403</td><td class="num">2026-11-08</td><td>Tee sheet: check-in in order — who's here, add to order, payment, done (#334)</td></tr>
 <tr><td class="num">f7245efa</td><td class="num">2026-11-08</td><td>Fix the split-booking pin for the check-in steps' rest line</td></tr>
-<tr><td class="num">506f38f0</td><td class="num">2026-11-08</td><td>Tee sheet: check-in in order — who's here, add to order, payment, done</td></tr>
-<tr><td class="num">8bed0df0</td><td class="num">2026-11-06</td><td>Tee sheet time card: who can book the open seats, reader on the card, type a card (#333)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>
