@@ -9,7 +9,7 @@ const src = (p: string) => readFileSync(p, 'utf8');
 const bar = src('src/components/OperatorSidebar.tsx');
 check('no course logo box in the top bar', !/<img src=\{logoUrl\}/.test(bar));
 const page = src('src/app/dashboard/page.tsx');
-check('the weather button says what it is', page.includes('Weather delay / cancel'));
+check('the weather action says what it is (under This day, Cam 2026-11-08)', page.includes('>Weather delay or cancel</button>') && page.includes('>This day ▾</button>'));
 check('the weather window offers two explained choices', page.includes("'Cancel for weather'") && page.includes("'Delay the start'") && page.includes('role="radiogroup"'));
 check('message golfers names whose day it is', page.includes('Message today’s golfers'));
 check('the course alert explains where it shows', page.includes('A short notice at the top of your booking page'));

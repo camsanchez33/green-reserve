@@ -28,6 +28,7 @@ import { recordPaymentEvent } from './refund-booking';
 import type { EventActor } from './booking-events';
 import { noShowClosed, NO_SHOW_CLOSED_ERROR } from './no-show-fee';
 import { recordMove } from './money-ledger';
+import { splitOffLateArrivals } from './split-booking-db';
 
 type Result<T> = { ok: true; value: T } | { ok: false; status: number; error: string };
 const fail = (status: number, error: string) => ({ ok: false as const, status, error });
@@ -42,8 +43,13 @@ async function release(bookingId: string, stamp: Date) {
   await prisma.booking.updateMany({ where: { id: bookingId, shopLockedAt: stamp }, data: { shopLockedAt: null } });
 }
 
-/** Send a group's round to a reader. */
-export async function startRoundOnReader(courseId: string, bookingId: string, readerId: string, actor: EventActor): Promise<Result<RoundReaderStatus>> {
+/**
+ * Send a group's round to a reader. `here` (Cam 2026-11-08: "the card reader should be able to charge only a
+ * select amount"): when only some of the group are paying now, the rest split off first into their own booking on
+ * the same time (PARTIAL-1, lib/split-booking-db — same as a card check-in), so the reader charges exactly who's
+ * here. A group that can't be split is refused rather than charged in full behind the screen's back.
+ */
+export async function startRoundOnReader(courseId: string, bookingId: string, readerId: string, actor: EventActor, opts: { here?: number } = {}): Promise<Result<RoundReaderStatus>> {
   const c = await courseStripe(courseId);
   if (!c.ok) return c;
   let b = await prisma.booking.findFirst({ where: { id: bookingId, courseId }, select: { status: true, paymentStatus: true, readerStartedAt: true, noShowAt: true, teeTime: { select: { date: true } }, course: { select: { timezone: true } } } });
@@ -58,6 +64,15 @@ export async function startRoundOnReader(courseId: string, bookingId: string, re
   if (noShowClosed(b)) return fail(409, NO_SHOW_CLOSED_ERROR);
   const reader = await ownReader(c.value.account, c.value.terminalLocationId, readerId);
   if (!reader.ok) return reader;
+  if (opts.here != null) {
+    const size = await prisma.booking.findFirst({ where: { id: bookingId, courseId }, select: { players: true } });
+    if (!size) return fail(404, 'That group isn’t on your tee sheet — refresh and try again.');
+    if (!Number.isInteger(opts.here) || opts.here < 1 || opts.here > size.players) return fail(400, 'Pick how many are paying now.');
+    if (opts.here < size.players) {
+      const sp = await splitOffLateArrivals(courseId, bookingId, size.players - opts.here, actor);
+      if (!sp.ok) return fail(409, `${sp.error} The reader can only charge the whole group of ${size.players} — take cash or type a card for who’s here.`);
+    }
+  }
 
   const stamp = new Date();
   const claimed = await prisma.booking.updateMany({

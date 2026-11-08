@@ -36,10 +36,10 @@ ok('the clash check looks at the copied round', post.includes('where: { courseId
 ok('open online / keep for staff is this course only, behind sheet.block', patch.includes("requirePermission(session, 'sheet.block')") && patch.includes('updateMany({ where: { id, courseId: session.courseId }, data: { staffOnly } })'));
 
 const page = read('src/app/dashboard/page.tsx');
-ok('the button says Add tee time', page.includes('\n                    Add tee time\n') && !page.includes('\n                    Add time\n'));
+ok('adding a time is "+ Time" in the sheet\'s own bar (Cam 2026-11-08), "Add tee time" when the day is empty', page.includes('>+ Time</button>') && page.includes('rounded-md text-[12.5px] font-medium transition-colors">Add tee time</button>'));
 ok('the form copies the nearest time and asks who can book it', page.includes('Priced like {fmtTime(like.time)}') && page.includes("[[true, 'Anyone'], [false, 'Counter only']]") && page.includes('copyFrom: like.id'));
 ok('a new time opens its card', page.includes('setPanelId(id)'));
-ok('the card switches it: who can book the open seats — Anyone · Counter only · No one (Cam 2026-11-06)', page.includes("[['anyone', 'Anyone'], ['counter', 'Counter only'], ['none', 'No one']]") && page.includes('Who can book the {open > 0 ?') && page.includes('Booked groups stay.'));
+ok('the card switches it: who can book the open seats — Anyone · Counter only · No one (Cam 2026-11-06)', page.includes("[['anyone', 'Anyone'], ['counter', 'Counter only'], ['none', 'No one']]") && page.includes("Open seats{open > 0 ? ` (${open})` : ''} can be booked by") && page.includes('Booked groups stay.') && page.includes("'Time options'"));
 ok('…hidden on a full time, kept on a closed one so it can reopen', page.includes("!past && (open > 0 || panelSlot.status === 'blocked') && ("));
 ok('the row says Staff only', read('src/components/dashboard/TeeSheetRows.tsx').includes("s.staffOnly ? 'Staff only' : ''"));
 

@@ -188,7 +188,7 @@ function TeeSheet() {
             {!panel.blocked && booked(panel) < CAP && <button type="button" className={s.ci} onClick={() => {
               setRow(panel.t, r => ({ ...r, groups: [...r.groups, { name: 'Dana Price', n: 1, src: 'walk_in' as Src }] }));
               toast('Dana Price added.');
-            }}>Add a walk-in or phone booking</button>}
+            }}>Add players</button>}
             {/* Mirrors the dashboard card's "Who can book the open seats" (Cam 2026-11-06): Anyone · No one here. */}
             {(booked(panel) < CAP || panel.blocked) && <button type="button" className={s.wk} onClick={() => setRow(panel.t, r => ({ ...r, blocked: !r.blocked }))}>{panel.blocked ? 'Open to anyone' : 'Close to new bookings'}</button>}
           </div>

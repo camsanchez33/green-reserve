@@ -16,7 +16,7 @@ check('no browser prompt for the headcount — the card\'s "Here" picker, set to
 check('…the picker never shows a count above the group (after a party-size change)', sheet.includes('const herePlayers = Math.min(here[b.id] ?? b.players, b.players);') && sheet.includes('disabled={herePlayers >= b.players}') && sheet.includes('Math.min(b.players, herePlayers + 1)'));
 // Tee 26 / 25
 check('"Mark no-show" waits 10 minutes past the time', sheet.includes('mins(nowHM) - mins(tt.time) >= 10') && sheet.includes("noShowReady && access.can('sheet.no_show')"));
-check('the late group\'s local hide is "Running late", not a second "Still coming"', sheet.includes('className={link}>Running late</button>') && (sheet.match(/>Still coming</g) ?? []).length === 0);
+check('no local "Running late" hide (Cam 2026-11-08), and no second "Still coming"', !sheet.includes('Running late') && !sheet.includes('stillComing') && (sheet.match(/>Still coming</g) ?? []).length === 0);
 // Tee 11 / 21
 check('walk-ins start without a cart unless the time can\'t be walked', sheet.includes('const [cartPick, setCart] = useState(false);') && sheet.includes('const cartForced = slot.walkingAllowed === false;'));
 check('a walk-in who already played starts as paying cash now — only for logins that can take cash', sheet.includes('const [checkInNow, setCheckInNow] = useState(late);') && sheet.includes("const canCash = access.can('sheet.counter_payment');") && (sheet.match(/checkInNow && canCash/g) ?? []).length === 3 && sheet.includes("{source === 'walk_in' && canCash && ("));

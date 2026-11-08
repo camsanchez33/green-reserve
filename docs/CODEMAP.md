@@ -213,7 +213,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/operator/announcements/dismiss` | operator | file | POST | `src/app/api/operator/announcements/dismiss/route.ts` | 31 |
 | `/api/operator/approve-page` | operator | file | POST | `src/app/api/operator/approve-page/route.ts` | 73 |
 | `/api/operator/blackouts` | operator | file | DELETE GET POST | `src/app/api/operator/blackouts/route.ts` | 42 |
-| `/api/operator/bookings` | operator | file | GET PATCH POST | `src/app/api/operator/bookings/route.ts` | 410 |
+| `/api/operator/bookings` | operator | file | GET PATCH POST | `src/app/api/operator/bookings/route.ts` | 447 |
 | `/api/operator/bookings/shop` | operator | file | DELETE POST | `src/app/api/operator/bookings/shop/route.ts` | 52 |
 | `/api/operator/card-readers` | operator | file | DELETE GET POST | `src/app/api/operator/card-readers/route.ts` | 38 |
 | `/api/operator/change-password` | operator | file | POST | `src/app/api/operator/change-password/route.ts` | 40 |
@@ -251,7 +251,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/operator/preview-link` | operator | file | GET | `src/app/api/operator/preview-link/route.ts` | 19 |
 | `/api/operator/profile` | operator | file | GET PATCH | `src/app/api/operator/profile/route.ts` | 36 |
 | `/api/operator/promo-codes` | operator | file | GET PATCH POST | `src/app/api/operator/promo-codes/route.ts` | 55 |
-| `/api/operator/reader-rounds` | operator | file | PATCH POST | `src/app/api/operator/reader-rounds/route.ts` | 50 |
+| `/api/operator/reader-rounds` | operator | file | PATCH POST | `src/app/api/operator/reader-rounds/route.ts` | 52 |
 | `/api/operator/regenerate-tee-times` | operator | file | POST | `src/app/api/operator/regenerate-tee-times/route.ts` | 32 |
 | `/api/operator/register-close` | operator | file | GET POST | `src/app/api/operator/register-close/route.ts` | 33 |
 | `/api/operator/request-changes` | operator | file | POST | `src/app/api/operator/request-changes/route.ts` | 32 |
@@ -306,7 +306,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/courses/[slug]/account` | golfer | **NONE FOUND** | page | `src/app/courses/[slug]/account/page.tsx` | 11 |
 | `/courses/[slug]/account/accept-invite` | golfer | entry | page | `src/app/courses/[slug]/account/accept-invite/page.tsx` | 144 |
 | `/courses/[slug]/member` | member | **NONE FOUND** | page | `src/app/courses/[slug]/member/page.tsx` | 874 |
-| `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 2200 |
+| `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 2257 |
 | `/dashboard/2fa` | operator | entry | page | `src/app/dashboard/2fa/page.tsx` | 110 |
 | `/dashboard/analytics` | operator | middleware | page | `src/app/dashboard/analytics/page.tsx` | 822 |
 | `/dashboard/cancellations` | operator | middleware | page | `src/app/dashboard/cancellations/page.tsx` | 17 |
@@ -340,7 +340,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/pay/shop/[id]` | public | token | page | `src/app/pay/shop/[id]/page.tsx` | 154 |
 | `/preview/[courseId]` | public | token | page | `src/app/preview/[courseId]/page.tsx` | 60 |
 | `/privacy` | public | public | page | `src/app/privacy/page.tsx` | 258 |
-| `/receipt/[bookingId]` | golfer | token | page | `src/app/receipt/[bookingId]/page.tsx` | 265 |
+| `/receipt/[bookingId]` | golfer | token | page | `src/app/receipt/[bookingId]/page.tsx` | 272 |
 | `/sms-consent` | public | public | page | `src/app/sms-consent/page.tsx` | 56 |
 | `/statement/[id]` | public | token | page | `src/app/statement/[id]/page.tsx` | 131 |
 | `/teesheet` | public | public | page | `src/app/teesheet/page.tsx` | 219 |
@@ -355,7 +355,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/prisma.ts` | 284 | 15 |  | `prisma` |
 | `src/lib/session.ts` | 78 | 120 |  | `ACTIVE_COURSE_COOKIE`, `can`, `requirePermission`, `resolveDashboardSession`, `ResolvedSession`, `STAFF_FORBIDDEN`, `touchStaffSeen` |
 | `src/lib/admin-session.ts` | 70 | 201 |  | `AdminSession`, `AdminSessionUnavailable`, `areaGate`, `MANAGER_PLUS`, `OWNER_ONLY`, `ownerGateError`, `requireOwner`, `requireRole` +7 more |
-| `src/lib/email.ts` | 65 | 2164 |  | `BookingEmailData`, `courseNoticeEmail`, `escapeHtml`, `firstName`, `isPlaceholderEmail`, `PLACEHOLDER_EMAIL_DOMAIN`, `sendAdminDigest`, `sendAdminPasswordChangedNotification` +73 more |
+| `src/lib/email.ts` | 65 | 2178 |  | `BookingEmailData`, `courseNoticeEmail`, `escapeHtml`, `firstName`, `isPlaceholderEmail`, `PLACEHOLDER_EMAIL_DOMAIN`, `sendAdminDigest`, `sendAdminPasswordChangedNotification` +74 more |
 | `src/lib/course-time.ts` | 60 | 63 | SD-3 — course-local time. | `addDaysStr`, `clockIn`, `DEFAULT_TZ`, `isPastIn`, `isValidTimezone`, `payLinkOpensOn`, `todayIn`, `US_TIMEZONES` |
 | `src/lib/rate-limit.ts` | 58 | 78 |  | `clientIp`, `evidentiaryIp`, `rateLimit`, `rateLimitCount` |
 | `src/lib/format.ts` | 53 | 78 | MP-9 (ADMIN_V4 V4-6 §3) — the one place admin pages format money and time. | `formatCents`, `formatDate`, `formatDateTime`, `formatEasternDate`, `formatEasternDay`, `formatMoney`, `formatRelative`, `formatStamp` +3 more |
@@ -438,6 +438,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/membership-autorenew.ts` | 5 | 156 | MEM-RENEW (Cam 2026-10-30: | `autoRenewTermsText`, `chargeRenewal`, `chargesDue`, `duesIntentKey`, `markReminded`, `memberContact`, `reminderLeadDays`, `remindersDue` +5 more |
 | `src/lib/operator-home.ts` | 5 | 164 | DASH-C Home (Cam 2026-10-22, "very nice" on the course dashboard mockups): | `DeclinedCard`, `declinedCards`, `HomeGroup`, `HomeSlot`, `operatorHome` |
 | `src/lib/setup-missing.ts` | 5 | 64 | What is still missing from a course's booking page, each with the Settings section that fixes it. | `MissingItem`, `MissingKey`, `missingSetup`, `PAYMENTS_BLOCK_LIVE`, `paymentsMissing`, `settingsHref`, `SetupFacts`, `showSetupField` |
+| `src/lib/split-booking-db.ts` | 5 | 155 | SPLIT-1 (Cam 2026-11-02, "they all want to pay separately … has to be seamless"): | `hasShareToRefund`, `holdRefundCents`, `splitBooking`, `splitOffLateArrivals`, `SplitResult` |
 | `src/lib/tax-categories.ts` | 5 | 21 | W2-7 part B: | `isTaxCategory`, `TAX_CATEGORIES`, `TaxCategory`, `US_STATES` |
 | `src/lib/terms.ts` | 5 | 10 | Bump this whenever /terms materially changes so old bookings keep an honest record of which version the golfer actually agreed to. | `CURRENT_TERMS_VERSION` |
 | `src/lib/admin-course-tabs.ts` | 4 | 98 | AW-7 (Cam 2026-10-21): | `bucketWeeks`, `COURSE_TABS`, `COURSE_WEEKS`, `CourseTab`, `openingTab`, `ProblemInput`, `SetupCheck`, `SetupCheckKey` +5 more |
@@ -462,7 +463,6 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/schedule-conflict.ts` | 4 | 143 | COURSE_LAYOUT_SPEC L2 — checks for schedules that share ground. | `checkSchedule`, `ConflictNine`, `ConflictProduct`, `ConflictSchedule`, `findScheduleConflict`, `TURN_MINUTES` |
 | `src/lib/settings-validation.ts` | 4 | 157 | SD-1. | `CANCELLATION_HOURS_MAX`, `normalizeHttpUrl`, `SettingsValidation`, `validateSettingsPatch` |
 | `src/lib/setup-sheet-recap.ts` | 4 | 130 | Cam 2026-10-26 (onboarding walk): | `RecapRow`, `SHEET_NEXT_STEPS`, `sheetPricesNotBuilt`, `sheetRecap` |
-| `src/lib/split-booking-db.ts` | 4 | 155 | SPLIT-1 (Cam 2026-11-02, "they all want to pay separately … has to be seamless"): | `hasShareToRefund`, `holdRefundCents`, `splitBooking`, `splitOffLateArrivals`, `SplitResult` |
 | `src/lib/unsaved-guard.ts` | 4 | 95 | SD-8b — leaving a dashboard page with unsaved edits. | `confirmLeave`, `setLeaveGuard`, `useBackGuard` |
 | `src/lib/walking.ts` | 4 | 23 | Settings rework (Cam 2026-10-19): | `walkingSummary`, `walkingWords` |
 | `src/lib/admin-action-queue.ts` | 3 | 116 | AW-4 (Cam 2026-10-21): | `ActionRow`, `buildActionQueue`, `QueueItem` |
@@ -489,7 +489,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/owner-totp.ts` | 3 | 103 | OWNER TOTP 2FA (RUN_QUEUE) — the authenticator-app second factor for the owner account. | `generateRecoveryCodes`, `generateTotpSecret`, `looksLikeRecoveryCode`, `matchRecoveryCode`, `normalizeRecoveryCode`, `RECOVERY_CODE_COUNT`, `signEnrolToken`, `TOTP_ISSUER` +8 more |
 | `src/lib/problems.ts` | 3 | 61 | BRAIN-2a (Cam 2026-10-22): | `listProblems`, `openProblemCount`, `ProblemView`, `SNOOZE_DAYS` |
 | `src/lib/public-course.ts` | 3 | 37 | PERF-1: | `loadPublicCourse` |
-| `src/lib/reader-rounds.ts` | 3 | 228 | POS-3 R3b (Cam 2026-10-24, "Ok go"): | `cancelRoundOnReader`, `roundReaderStatus`, `RoundReaderStatus`, `settleRoundReader`, `startRoundOnReader` |
+| `src/lib/reader-rounds.ts` | 3 | 243 | POS-3 R3b (Cam 2026-10-24, "Ok go"): | `cancelRoundOnReader`, `roundReaderStatus`, `RoundReaderStatus`, `settleRoundReader`, `startRoundOnReader` |
 | `src/lib/register-close.ts` | 3 | 147 | POS-3 R4 (Cam 2026-10-24: | `CLOSE_BACK_DAYS`, `closeDay`, `CloseView`, `daySummary`, `DaySummary`, `recentCloses` |
 | `src/lib/register.ts` | 3 | 128 | POS-3 R2 (Cam 2026-10-24: | `MAX_REGISTER_ROUNDS`, `registerRounds`, `ringUpCash` |
 | `src/lib/schedule-wire.ts` | 3 | 104 |  | `scheduleMoneyForCreate`, `scheduleMoneyFromWire`, `scheduleToWire`, `teeTimeToWire` |
@@ -617,7 +617,7 @@ Sorted the same way.
 | `src/components/dashboard/StaffNotice.tsx` | 5 | 30 | SD-11 / SP-A. | `StaffNotice` |
 | `src/components/AuthPhotoShell.tsx` | 4 | 23 |  | `AUTH_PHOTO_LINK`, `AUTH_PHOTO_LINKS`, `AuthPhotoShell` |
 | `src/components/dashboard/money/types.ts` | 4 | 22 | SD-8 — one booking shape for all three Money tabs. | `MoneyBooking`, `MoneyCourse` |
-| `src/components/dashboard/SmsConsentAsk.tsx` | 4 | 39 | SMS-1 (Cam 2026-11-02, Twilio A2P 10DLC — docs/SMS_OPT_IN.md): | `default (SmsConsentAsk)`, `SmsConsentDialog` |
+| `src/components/dashboard/SmsConsentAsk.tsx` | 4 | 41 | SMS-1 (Cam 2026-11-02, Twilio A2P 10DLC — docs/SMS_OPT_IN.md): | `default (SmsConsentAsk)`, `SmsConsentDialog` |
 | `src/components/dashboard/DateRangeButton.tsx` | 3 | 117 | AN-3 (Cam 2026-10-19: | `DateRange`, `default (DateRangeButton)`, `presets`, `rangeLabel` |
 | `src/components/dashboard/events/EventDetail.tsx` | 3 | 458 | W2-9 Events: | `default (EventDetail)`, `EventData`, `EventFull`, `EventPlayer`, `EventTask` |
 | `src/components/dashboard/money/PayoutsTable.tsx` | 3 | 73 | Money rework (Cam 2026-10-19): | `fmtDay`, `Payout`, `PayoutsData`, `PayoutsTable`, `usd` |

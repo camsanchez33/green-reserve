@@ -208,6 +208,22 @@ async function cleanup() {
   const racedPi = [...intents.values()].find(x => x.metadata.bookingId === r2.id)!;
   ok('a claim ended while starting: the new intent is cancelled and never sent to the reader', !raced.ok && racedPi.status === 'canceled' && readers.get('tmr_a')!.action === null && !(await get(r2.id)).shopLockedAt, raced);
 
+  // ── Only who's here (Cam 2026-11-08): the rest split off first, the reader charges the kept part ──
+  for (const a of readers.values()) a.action = null;
+  const four = await book(c.id, { players: 4 });
+  ok('more than the group is refused', !(await startRoundOnReader(c.id, four.id, 'tmr_a', STAFF, { here: 5 })).ok);
+  const part = await startRoundOnReader(c.id, four.id, 'tmr_a', STAFF, { here: 2 });
+  const kept = await get(four.id);
+  const off = await prisma.booking.findFirst({ where: { splitFromId: four.id } });
+  ok('2 of 4: the other 2 are their own booking, still booked; the reader asks for the 2', part.ok && kept.players === 2 && !!off && off.players === 2 && off.status === 'confirmed'
+    && part.ok && part.value.dueCents === 10000 && (await piOf(four.id)).amount === 10000, { part, kept: kept.players, off });
+  await cancelRoundOnReader(c.id, four.id, STAFF);
+  for (const a of readers.values()) a.action = null;
+  const packed = await book(c.id, { players: 3 });
+  await prisma.booking.update({ where: { id: packed.id }, data: { appliedRate: 'pack' } });
+  const refused = await startRoundOnReader(c.id, packed.id, 'tmr_a', STAFF, { here: 1 });
+  ok('a group that can’t split is refused, never charged in full', !refused.ok && refused.error.includes('The reader can only charge the whole group of 3') && !(await get(packed.id)).readerStartedAt && ![...intents.values()].some(x => x.metadata.bookingId === packed.id), refused);
+
   // ── Under 50¢ ──
   const tiny = await prisma.booking.create({ data: { teeTimeId: (await prisma.teeTime.create({ data: { courseId: c.id, date: today, time: '22:00', holes: 9, greenFeeCents: 40, playersAvailable: 4, playersBooked: 1 } })).id,
     courseId: c.id, golferName: 'Tiny', golferEmail: `${TAG}+t@t.local`, players: 1, greenFeeTotal: 40, cartFeeTotal: 0, accessFeeTotal: 0, totalAmount: 40, status: 'confirmed', paymentStatus: 'no_payment_method' } });

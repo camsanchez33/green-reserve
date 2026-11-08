@@ -173,14 +173,36 @@ function DashboardPageInner() {
   const [flow, setFlow] = useState<{ id: string; step: 1 | 2 | 3 } | null>(null);
   const [moreFor, setMoreFor] = useState<string | null>(null);
   // The payment screen closes with the time's card.
-  useEffect(() => { setFlow(null); setMoreFor(null); }, [panelId]);
+  useEffect(() => { setFlow(null); setMoreFor(null); setTimeOpts(false); }, [panelId]);
   // VIEWS-1 (Cam 2026-11-03): Grid (seat rows), List (one line per group) or Calendar (the month).
   // Remembered per browser; the grid is the default and always works without it.
   const [sheetView, setSheetViewState] = useState<SheetView>('grid');
   useEffect(() => { try { const v = localStorage.getItem('gr_sheet_view'); if (v === 'list' || v === 'calendar') setSheetViewState(v); } catch {} }, []);
   const setSheetView = (v: SheetView) => { setSheetViewState(v); try { localStorage.setItem('gr_sheet_view', v); } catch {} };
   // DASH-D: the till's result — the group just checked in, shown at the top of its time's card.
+  const [dayMenu, setDayMenu] = useState(false);
+  const [timeOpts, setTimeOpts] = useState(false);
   const [justDone, setJustDone] = useState<{ bookingId: string; name: string; players: number; how: string } | null>(null);
+  // RECEIPT-1 (Cam 2026-11-08): the receipt the golfer wants — print, text or email; '' = not asked yet.
+  const [receiptFor, setReceiptFor] = useState<{ via: 'sms' | 'email'; to: string } | null>(null);
+  const [receiptDone, setReceiptDone] = useState('');
+  const [receiptBusy, setReceiptBusy] = useState(false);
+  const [receiptAsk, setReceiptAsk] = useState(false);
+  const [receiptAskYes, setReceiptAskYes] = useState(false);
+  useEffect(() => { setReceiptFor(null); setReceiptDone(''); }, [justDone?.bookingId]);
+  async function sendReceipt(bookingId: string, via: 'print' | 'sms' | 'email', to = '', saidYes = false) {
+    // Print opens the window first (in the tap), so pop-up blockers let it through.
+    const win = via === 'print' ? window.open('', '_blank') : null;
+    setReceiptBusy(true);
+    const r = await dfetch<{ url?: string; sentTo?: string }>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: bookingId, action: 'send_receipt', via, ...(to ? { to } : {}), ...(saidYes ? { smsConsent: 'verbal' } : {}) }) });
+    setReceiptBusy(false);
+    if (!r.ok && r.status === 409 && r.error === SMS_NO_CONSENT_STAFF) { setReceiptAsk(true); setReceiptAskYes(false); return; }
+    if (!r.ok) { win?.close(); toast(r.error); return; }
+    setReceiptAsk(false);
+    if (via === 'print') { if (win && r.data.url) win.location.href = r.data.url; else if (r.data.url) window.open(r.data.url, '_blank'); setReceiptDone('Printing'); return; }
+    setReceiptFor(null);
+    setReceiptDone(`Receipt ${via === 'sms' ? 'texted' : 'emailed'} to ${r.data.sentTo ?? ''}`.trim());
+  }
   useEffect(() => { setJustDone(null); }, [panelId]);
   const pendingTtRef = useRef<string | null>(null);
   const [showConditions, setShowConditions]   = useState(false);
@@ -189,9 +211,6 @@ function DashboardPageInner() {
   const [savingConditions, setSavingConditions] = useState(false);
   const [alertEmail, setAlertEmail] = useState(false);
   const [checkingInId, setCheckingInId] = useState<string | null>(null);
-  // B-8: late groups the counter has said are "still coming" — hidden from the
-  // attention row for this page load only; nothing is written anywhere.
-  const [stillComing, setStillComing] = useState<Set<string>>(new Set());
   // SD-5: the walk-in form is opened on a slot; row actions carry their own busy id.
   // B-9 frost delay: pick the new first tee time, preview the moves, confirm.
   type FrostPlan = { moves: { bookingId: string; name: string; players: number; fromTime: string; toTime: string }[]; unplaced: { bookingId: string; name: string; players: number; time: string }[]; blockTeeTimeIds: string[] };
@@ -225,12 +244,14 @@ function DashboardPageInner() {
   const [readerPickFor, setReaderPickFor] = useState<string | null>(null);
   const [readerBusy, setReaderBusy] = useState(false);
   const lastReader = () => { try { return localStorage.getItem('gr_sheet_reader') ?? ''; } catch { return ''; } };
-  async function roundToReader(b: Booking, readerId: string) {
+  async function roundToReader(b: Booking, readerId: string, here?: number) {
     try { localStorage.setItem('gr_sheet_reader', readerId); } catch { /* per-browser convenience only */ }
     setReaderPickFor(null); setReaderBusy(true);
-    const r = await dfetch<{ status: string; dueCents?: number; message?: string }>('/api/operator/reader-rounds', { method: 'POST', body: JSON.stringify({ bookingId: b.id, readerId }) });
+    const r = await dfetch<{ status: string; dueCents?: number; message?: string }>('/api/operator/reader-rounds', { method: 'POST', body: JSON.stringify({ bookingId: b.id, readerId, ...(here && here < b.players ? { here } : {}) }) });
     setReaderBusy(false);
-    const base = { bookingId: b.id, readerId, name: b.golferName, players: b.players };
+    const base = { bookingId: b.id, readerId, name: b.golferName, players: here && here < b.players ? here : b.players };
+    // The rest may have split off already (here < players) — show the sheet as it is now, whatever happens next.
+    if (here && here < b.players) loadTimes(selectedDate);
     if (!r.ok) { setOnReader({ ...base, dueCents: 0, state: 'error', message: r.error }); return; }
     setOnReader({ ...base, dueCents: r.data.dueCents ?? 0, state: 'waiting', message: r.data.message ?? '' });
   }
@@ -824,7 +845,7 @@ function DashboardPageInner() {
         const ago = nowMin - (h * 60 + m);
         if (tt.status === 'blocked' || ago < 10) return [];
         return (tt.bookings ?? [])
-          .filter(b => b.status === 'confirmed' && !stillComing.has(b.id) && !b.noShowAt)
+          .filter(b => b.status === 'confirmed' && !b.noShowAt)
           .map(b => ({ tt, b, ago }));
       })
     : [];
@@ -1084,23 +1105,23 @@ function DashboardPageInner() {
                         )}
                         {canReader && onReader?.bookingId !== b.id && (
                           <button type="button" disabled={readerBusy} className={row}
-                            onClick={() => { const keep = readers.find(x => x.id === lastReader()); if (readers.length === 1 || keep) roundToReader(b, (keep ?? readers[0]).id); else setReaderPickFor(readerPickFor === b.id ? null : b.id); }}>
-                            <span>Card reader{herePlayers < b.players ? <span className="text-ink-muted"> · charges the whole group</span> : ''}{readers.length > 1 && readers.find(x => x.id === lastReader()) ? <span className="text-ink-muted"> · {readers.find(x => x.id === lastReader())!.label}</span> : ''}</span>
-                            <span className="flex items-center gap-2">{readerBusy ? <span className="text-ink-muted">Sending…</span> : herePlayers < b.players ? null : withFee}<span className="text-ink-muted">›</span></span>
+                            onClick={() => { const keep = readers.find(x => x.id === lastReader()); if (readers.length === 1 || keep) roundToReader(b, (keep ?? readers[0]).id, herePlayers); else setReaderPickFor(readerPickFor === b.id ? null : b.id); }}>
+                            <span>Card reader{readers.length > 1 && readers.find(x => x.id === lastReader()) ? <span className="text-ink-muted"> · {readers.find(x => x.id === lastReader())!.label}</span> : ''}</span>
+                            <span className="flex items-center gap-2">{readerBusy ? <span className="text-ink-muted">Sending…</span> : withFee}<span className="text-ink-muted">›</span></span>
                           </button>
                         )}
                         {canReader && readerPickFor === b.id && readers.map(rd => (
-                          <button key={rd.id} type="button" onClick={() => roundToReader(b, rd.id)} className={row + ' pl-4'}><span>{rd.label}{!rd.online ? <span className="text-ink-muted"> · offline</span> : ''}</span><span className="text-ink-muted">›</span></button>
+                          <button key={rd.id} type="button" onClick={() => roundToReader(b, rd.id, herePlayers)} className={row + ' pl-4'}><span>{rd.label}{!rd.online ? <span className="text-ink-muted"> · offline</span> : ''}</span><span className="text-ink-muted">›</span></button>
                         ))}
                         {onReader?.bookingId === b.id && (
                           <div className="py-3 space-y-2" role="status">
                             <p className="text-[14px] text-ink">
-                              {onReader.state === 'waiting' ? `Waiting for the card on ${readers.find(x => x.id === onReader.readerId)?.label ?? 'the reader'}${onReader.dueCents ? ` · $${(onReader.dueCents / 100).toFixed(2)}` : ''}`
+                              {onReader.state === 'waiting' ? `Tap, insert or swipe on the card reader${readers.length > 1 ? ` (${readers.find(x => x.id === onReader.readerId)?.label ?? ''})` : ''}${onReader.dueCents ? ` · $${(onReader.dueCents / 100).toFixed(2)}` : ''}`
                                 : onReader.state === 'declined' ? 'Declined' : onReader.state === 'cancelled' ? 'Stopped' : 'The reader didn’t take it'}
                             </p>
                             {onReader.message && <p className={'text-[12.5px] ' + (onReader.state === 'waiting' ? 'text-ink-muted' : 'text-bad')}>{onReader.message}</p>}
                             <div className="flex flex-wrap gap-2">
-                              {onReader.state !== 'waiting' && <button type="button" disabled={readerBusy} onClick={() => roundToReader(b, onReader.readerId)} className="px-3 min-h-[34px] rounded-[7px] bg-pine hover:bg-pine-hover text-white text-[13px] font-semibold disabled:opacity-50">Try again</button>}
+                              {onReader.state !== 'waiting' && <button type="button" disabled={readerBusy} onClick={() => roundToReader(b, onReader.readerId, herePlayers)} className="px-3 min-h-[34px] rounded-[7px] bg-pine hover:bg-pine-hover text-white text-[13px] font-semibold disabled:opacity-50">Try again</button>}
                               {onReader.state === 'waiting' || onReader.state === 'error'
                                 ? <button type="button" disabled={readerBusy} onClick={() => readerAct('cancel')} className="px-3 min-h-[34px] rounded-[7px] border border-line text-[13px] font-medium text-ink hover:bg-paper disabled:opacity-50">{readerBusy ? '…' : 'Cancel'}</button>
                                 : <button type="button" onClick={() => setOnReader(null)} className="px-3 min-h-[34px] rounded-[7px] border border-line text-[13px] font-medium text-ink hover:bg-paper">Close</button>}
@@ -1138,11 +1159,8 @@ function DashboardPageInner() {
             {b.status === 'confirmed' && b.noShowAt && access.can('sheet.no_show') && (
               <button onClick={() => bookingLifecycle(b, 'still_coming')} disabled={rowBusy === b.id} className={link}>{rowBusy === b.id ? '…' : 'Still coming'}</button>
             )}
-            {/* A group past its time and not checked in: "Running late" takes it off the late bar on
-                this screen (tee audit 25); "Mark no-show" records it — the no-show fee's path. */}
-            {late && selectedDate === today() && !stillComing.has(b.id) && (
-              <button onClick={() => setStillComing(prev => new Set(prev).add(b.id))} className={link}>Running late</button>
-            )}
+            {/* A group past its time and not checked in: "Mark no-show" records it — the no-show fee's path.
+                (Cam 2026-11-08: no local "late" hide — it recorded nothing.) */}
             {noShowReady && access.can('sheet.no_show') && (
               <button onClick={() => bookingLifecycle(b, 'no_show')} disabled={rowBusy === b.id} className="text-[13px] font-medium text-bad hover:underline disabled:opacity-50">{rowBusy === b.id ? '…' : 'Mark no-show'}</button>
             )}
@@ -1376,24 +1394,6 @@ function DashboardPageInner() {
                     {new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                   </h1>
                 </div>
-                <div className="flex flex-wrap gap-2 items-center">
-                  {/* SHEET-3 (Cam 2026-11-06, "a little cleaner"): the day's other actions are quiet words beside Add time, not boxed buttons. */}
-                  {selectedDate >= today() && wxTabs.length > 0 && (
-                    <button onClick={() => { setFrostOpen(true); setWxMode(wxTabs[0][0]); setWxSpan(selectedDate === today() ? 'rest' : 'day'); setFrostPlan(null); setFrostPlanKey(''); setFrostErr(''); setFrostApplyErr(''); setFrostResult(null); setWxPlan(null); setWxPlanKey(''); setWxErr(''); setWxApplyErr(''); setWxResult(null); }} className="text-[13px] font-medium text-ink-soft hover:text-ink hover:bg-white/70 px-2.5 py-1.5 rounded-md transition-colors">
-                      Weather delay / cancel
-                    </button>
-                  )}
-                  {access.can('sheet.message_golfers') && (
-                    <button onClick={() => setMessageOpen(true)} className="text-[13px] font-medium text-ink-soft hover:text-ink hover:bg-white/70 px-2.5 py-1.5 rounded-md transition-colors">
-                      {selectedDate === today() ? 'Message today’s golfers' : 'Message this day’s golfers'}
-                    </button>
-                  )}
-                  {access.can('sheet.edit_times') && (
-                  <button onClick={() => setShowAddModal(true)} className="text-[13px] font-semibold bg-pine hover:bg-pine-hover text-white px-3.5 py-1.5 rounded-md transition-colors">
-                    Add tee time
-                  </button>
-                  )}
-                </div>
               </div>
 
               {/* DENSE-4b: the day strip — players, checked in, and (money.payments) paid / not paid yet. */}
@@ -1443,7 +1443,7 @@ function DashboardPageInner() {
                   </div>
                   {/* Cam 2026-10-19: Find golfer sits in the sheet's own bar, and
                       refresh is a small icon beside it instead of a button. */}
-                  <div className="ml-auto flex items-center gap-2">
+                  <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
                     <div role="group" aria-label="Sheet view" className="flex items-center gap-3 mr-1">
                       {SHEET_VIEWS.map(v => (
                         <button key={v.id} type="button" aria-pressed={sheetView === v.id} onClick={() => setSheetView(v.id)}
@@ -1464,6 +1464,29 @@ function DashboardPageInner() {
                       className="w-8 h-8 rounded-md inline-flex items-center justify-center text-[16px] leading-none text-ink-muted hover:text-ink hover:bg-paper transition-colors">
                       <span aria-hidden="true">↻</span>
                     </button>
+                    {/* Cam 2026-11-08 ("feels like it's just there"): the day's actions live in the sheet's own bar —
+                        "This day" holds weather and messages; "+ Time" adds a tee time. Each keeps its old permission. */}
+                    {((selectedDate >= today() && wxTabs.length > 0) || access.can('sheet.message_golfers')) && (
+                      <div className="relative">
+                        <button type="button" aria-haspopup="menu" aria-expanded={dayMenu} onClick={() => setDayMenu(o => !o)} onBlur={e => { if (!e.currentTarget.parentElement?.contains(e.relatedTarget as Node | null)) setDayMenu(false); }} onKeyDown={e => { if (e.key === 'Escape') setDayMenu(false); }}
+                          className="whitespace-nowrap px-2.5 py-1.5 rounded-md text-[13px] font-medium text-ink-soft hover:text-ink hover:bg-paper transition-colors">This day ▾</button>
+                        {dayMenu && (
+                          <div role="menu" onKeyDown={e => { if (e.key === 'Escape') setDayMenu(false); }} className="absolute right-0 top-full mt-1 z-20 w-60 rounded-lg bg-white shadow-card py-1">
+                            {selectedDate >= today() && wxTabs.length > 0 && (
+                              <button role="menuitem" type="button" onClick={() => { setDayMenu(false); (() => { setFrostOpen(true); setWxMode(wxTabs[0][0]); setWxSpan(selectedDate === today() ? 'rest' : 'day'); setFrostPlan(null); setFrostPlanKey(''); setFrostErr(''); setFrostApplyErr(''); setFrostResult(null); setWxPlan(null); setWxPlanKey(''); setWxErr(''); setWxApplyErr(''); setWxResult(null); })(); }}
+                                className="w-full text-left px-3.5 py-2 text-[13.5px] text-ink hover:bg-paper">Weather delay or cancel</button>
+                            )}
+                            {access.can('sheet.message_golfers') && (
+                              <button role="menuitem" type="button" onClick={() => { setDayMenu(false); setMessageOpen(true); }}
+                                className="w-full text-left px-3.5 py-2 text-[13.5px] text-ink hover:bg-paper">{selectedDate === today() ? 'Message today’s golfers' : 'Message this day’s golfers'}</button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {access.can('sheet.edit_times') && (
+                      <button type="button" onClick={() => setShowAddModal(true)} className="whitespace-nowrap px-2.5 py-1.5 rounded-md text-[13px] font-semibold text-pine hover:bg-paper transition-colors">+ Time</button>
+                    )}
                   </div>
                 </div>
                 {/* Cam 2026-10-19: the bar under the date says what needs doing now
@@ -1600,6 +1623,31 @@ function DashboardPageInner() {
                     <div role="status" className="mt-4 rounded-[7px] bg-ok-fill px-4 py-3.5">
                       <p className="flex items-baseline gap-2 text-[15px] font-semibold text-ink"><StatusDot status="ok" />{justDone.name} · {justDone.players} checked in</p>
                       <p className="mt-0.5 text-[13px] text-ink-soft">{justDone.how}</p>
+                      {access.can('sheet.checkin') && (() => {
+                        const g = groups.find(x => x.id === justDone.bookingId);
+                        const hasEmail = !!g && !g.golferEmail.endsWith('@noemail.greenreserve.app');
+                        const btn = 'px-3 min-h-[34px] rounded-[7px] border border-line bg-white text-[13px] font-medium text-ink hover:bg-paper disabled:opacity-50';
+                        if (receiptDone) return <p className="mt-2 text-[13px] text-ink">{receiptDone === 'Printing' ? 'Receipt opened to print.' : `${receiptDone}.`}</p>;
+                        return (
+                          <div className="mt-2.5">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="text-[13px] text-ink-soft mr-1">Receipt</span>
+                              <button type="button" disabled={receiptBusy} onClick={() => sendReceipt(justDone.bookingId, 'print')} className={btn}>Print</button>
+                              <button type="button" disabled={receiptBusy} onClick={() => g?.hasPhone ? sendReceipt(justDone.bookingId, 'sms') : setReceiptFor({ via: 'sms', to: '' })} className={btn}>Text</button>
+                              <button type="button" disabled={receiptBusy} onClick={() => hasEmail ? sendReceipt(justDone.bookingId, 'email') : setReceiptFor({ via: 'email', to: '' })} className={btn}>Email</button>
+                              <button type="button" onClick={() => setReceiptDone('No receipt')} className="px-2 min-h-[34px] text-[13px] font-medium text-ink-soft hover:text-ink">No receipt</button>
+                            </div>
+                            {receiptFor && (
+                              <form className="mt-2 flex items-center gap-2" onSubmit={e => { e.preventDefault(); sendReceipt(justDone.bookingId, receiptFor.via, receiptFor.to); }}>
+                                <input autoFocus aria-label={receiptFor.via === 'sms' ? 'Mobile number' : 'Email'} inputMode={receiptFor.via === 'sms' ? 'tel' : 'email'} value={receiptFor.to}
+                                  onChange={e => setReceiptFor({ ...receiptFor, to: e.target.value })} placeholder={receiptFor.via === 'sms' ? 'Mobile number' : 'Email'}
+                                  className="flex-1 bg-white border border-line rounded-[7px] px-2.5 py-1.5 text-[14px] text-ink placeholder-ink-faint" />
+                                <button type="submit" disabled={receiptBusy || !receiptFor.to.trim()} className="px-3 min-h-[34px] rounded-[7px] bg-pine hover:bg-pine-hover text-white text-[13px] font-semibold disabled:opacity-50">{receiptBusy ? 'Sending…' : 'Send'}</button>
+                              </form>
+                            )}
+                          </div>
+                        );
+                      })()}
                       {next && nextGroup && (
                         <button onClick={() => setPanelId(next.id)} className="mt-3 w-full min-h-[44px] rounded-[7px] bg-pine hover:bg-pine-hover text-white text-[14px] font-semibold">
                           Next: {nextGroup.golferName} · {nextGroup.players} at {fmtTime(next.time)}
@@ -1620,7 +1668,7 @@ function DashboardPageInner() {
               <div className="px-5 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] border-t border-line-soft flex flex-wrap items-center gap-2">
                 {/* Cam 2026-10-27: nobody new joins a time LATE_ADD_MINUTES after it went off (claimTeeTime refuses it too). */}
                 {panelSlot.status !== 'blocked' && open > 0 && access.can('sheet.walkin') && (selectedDate > today() || (selectedDate === today() && !lateForAdding(panelSlot.time, nowHM))) && (
-                  <button onClick={() => { setWalkInLate(false); setWalkInSlot(panelSlot); }} className="px-3.5 min-h-[36px] rounded-md bg-pine hover:bg-pine-hover text-white text-[13px] font-medium">Add a walk-in or phone booking</button>
+                  <button onClick={() => { setWalkInLate(false); setWalkInSlot(panelSlot); }} className="px-3.5 min-h-[36px] rounded-md bg-pine hover:bg-pine-hover text-white text-[13px] font-medium">Add players</button>
                 )}
                 {/* …except a walk-in staff forgot to put on the sheet (Cam 2026-10-27), today only. */}
                 {panelSlot.status !== 'blocked' && open > 0 && access.can('sheet.walkin') && selectedDate === today() && lateForAdding(panelSlot.time, nowHM) && (
@@ -1628,8 +1676,13 @@ function DashboardPageInner() {
                 )}
                 {/* A full time has no open seats to decide about; a closed one still shows, so it can be reopened. */}
                 {access.can('sheet.block') && !panelSlot.event && !past && (open > 0 || panelSlot.status === 'blocked') && (
+                  <button type="button" aria-expanded={timeOpts} onClick={() => setTimeOpts(o => !o)} className="ml-auto px-2 min-h-[36px] text-[13px] font-medium text-ink-soft hover:text-ink">
+                    {seatAccessOf(panelSlot) === 'none' ? 'Closed · options' : seatAccessOf(panelSlot) === 'counter' ? 'Counter only · options' : 'Time options'}
+                  </button>
+                )}
+                {timeOpts && access.can('sheet.block') && !panelSlot.event && !past && (open > 0 || panelSlot.status === 'blocked') && (
                   <div className="w-full flex flex-wrap items-center gap-x-3 gap-y-1.5" role="radiogroup" aria-label="Who can book the open seats">
-                    <span className="text-[13px] text-ink-soft">Who can book the {open > 0 ? `${open} open seat${open === 1 ? '' : 's'}` : 'open seats'}</span>
+                    <span className="text-[13px] text-ink-soft">Open seats{open > 0 ? ` (${open})` : ''} can be booked by</span>
                     <div className="inline-flex rounded-[7px] border border-line overflow-hidden">
                       {([['anyone', 'Anyone'], ['counter', 'Counter only'], ['none', 'No one']] as const).map(([k, l]) => (
                         <button key={k} type="button" role="radio" aria-checked={seatAccessOf(panelSlot) === k} disabled={slotBusy === panelSlot.id}
@@ -1672,6 +1725,10 @@ function DashboardPageInner() {
       )}
 
       {/* ── SMS-1: ask before texting a pay link to a number that never agreed ── */}
+      {receiptAsk && justDone && (
+        <SmsConsentDialog what="the receipt" courseName={courseName} name={justDone.name} busy={receiptBusy} yes={receiptAskYes} onYes={setReceiptAskYes}
+          onSend={() => sendReceipt(justDone.bookingId, 'sms', receiptFor?.to ?? '', true)} onClose={() => setReceiptAsk(false)} />
+      )}
       {textAsk && (
         <SmsConsentDialog courseName={courseName} name={textAsk.golferName} busy={rowBusy === textAsk.id} yes={textAskYes} onYes={setTextAskYes}
           onEmail={textAsk.golferEmail && !textAsk.golferEmail.endsWith('@noemail.greenreserve.app') ? () => { const b = textAsk; setTextAsk(null); sendPayLink(b, 'email'); } : undefined}
