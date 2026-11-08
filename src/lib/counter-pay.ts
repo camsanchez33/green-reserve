@@ -53,6 +53,16 @@ export function accountDueCents(b: Parameters<typeof counterDueCents>[0] & { fee
   return { amountCents: counterDueCents(b, showed) + feeCents, feeCents };
 }
 
+/**
+ * RECEIPT-2 (review 2026-11-08): what the counter actually took for a round paid there — cash for who showed
+ * (a group that couldn't split was part-paid on the same booking: checkedInPlayers), or what went on the
+ * member's account. The same figures settleAtCounter / the account charge used, so the receipt matches.
+ */
+export function counterPaidCents(b: Parameters<typeof accountDueCents>[0] & { checkedInPlayers?: number | null }, method: 'cash' | 'account'): number {
+  const showed = b.checkedInPlayers ?? undefined;
+  return method === 'cash' ? counterDueCents(b, showed) : accountDueCents(b, showed).amountCents;
+}
+
 /** MEM-ACCT: a round's line on a member's account says whose round and when — "Tim Jones · Oct 31, 4:20 PM · 3 players". */
 export function roundNote(golferName: string, teeTime: { date: string; time: string }, players: number) {
   const [y, m, d] = teeTime.date.split('-').map(Number);

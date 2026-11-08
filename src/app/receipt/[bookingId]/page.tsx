@@ -9,6 +9,9 @@ import { StatusDot } from '@/components/ui/StatusDot';
 import { BILLING_EMAIL } from '@/lib/contact';
 
 type ReceiptData = {
+  /** RECEIPT-2: how it was paid (null = not paid yet / cancelled / refunded). */
+  payment?: { method: 'cash' | 'card' | 'account'; paidAt: string | null; amountCents: number; card?: string; tenderedCents?: number; changeCents?: number } | null;
+  hasAccount?: boolean; timezone?: string;
   bookingId: string; golferName: string; courseName: string; courseSlug: string; courseLocation: string; brandColor?: string;
   date: string; time: string; holes: number; productLabel?: string | null; players: number; cartSelected: boolean;
   greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number;
@@ -36,6 +39,11 @@ function fmtDate(d: string) {
   return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 }
 function dollars(cents: number) { return `$${(cents / 100).toFixed(2)}`; }
+
+/** RECEIPT-2: "Nov 8, 2:14 PM" in the course's time zone. */
+function paidWhen(iso: string, tz?: string): string {
+  try { return new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: tz || undefined }); } catch { return ''; }
+}
 
 function ReceiptPageInner() {
   const params = useParams();
@@ -96,6 +104,7 @@ function ReceiptPageInner() {
   const paidAtCourse = isCompleted && !!data.paidOffline;
   const onAccount = isCompleted && !!data.onAccount;
   const charges = data.charges ?? [];
+  const payment = data.payment ?? null;
   const chargedNow = data.chargedNowCents ?? 0;
 
   // paymentStatus 'refunded' is also set when a cancelled booking's fee is waived — only a played round reads "Refunded".
@@ -117,13 +126,22 @@ function ReceiptPageInner() {
     <>
       <style>{`
         @media print {
-          .no-print { display: none !important; }
-          body { background: #fff !important; }
-          .receipt-card { border: none !important; box-shadow: none !important; max-width: 100% !important; }
+          @page { margin: 4mm; }
+          .no-print, footer, nextjs-portal { display: none !important; }
+          body { background: #fff !important; color: #000 !important; }
+          .receipt-card .p-4 { padding: 1.5mm 0 !important; border: none !important; }
+          .receipt-wrap { max-width: 72mm !important; margin: 0 auto !important; }
+          .receipt-card { border: none !important; box-shadow: none !important; max-width: 100% !important; font-size: 11px !important; }
+          .receipt-card * { color: #000 !important; background: transparent !important; border-color: #000 !important; }
+          .receipt-card .px-6, .receipt-card .px-4 { padding-left: 0 !important; padding-right: 0 !important; }
+          .receipt-card .py-6 { padding-top: 2mm !important; padding-bottom: 2mm !important; }
+          .receipt-card .py-3, .receipt-card .py-3\.5 { padding-top: 1mm !important; padding-bottom: 1mm !important; }
+          .receipt-card .text-xl { font-size: 14px !important; }
+          .receipt-card img { display: none !important; }
         }
       `}</style>
       <div className="min-h-screen bg-paper px-4 py-10 print:bg-white print:py-0">
-        <div className="max-w-lg mx-auto">
+        <div className="receipt-wrap max-w-lg mx-auto">
           {/* Print button */}
           <div className="no-print flex justify-end mb-4">
             <button
@@ -147,8 +165,8 @@ function ReceiptPageInner() {
               {/* Status + title */}
               <div className="mb-5">
                 <StatusDot status={refunded ? 'neutral' : isCompleted ? 'ok' : isCancelled ? 'bad' : 'neutral'} label={statusLabel} />
-                <h1 className="text-[22px] font-serif font-semibold tracking-tight text-ink mt-3 mb-1">{data.courseName}</h1>
-                {data.courseLocation && <p className="text-ink text-sm">{data.courseLocation}</p>}
+                {/* RECEIPT-2: the course is named once, on the bar; the place sits under the status. */}
+                {data.courseLocation && <p className="text-ink-soft text-sm mt-1.5">{data.courseLocation}</p>}
               </div>
 
               {/* Booking details */}
@@ -178,10 +196,12 @@ function ReceiptPageInner() {
                     <span className="font-medium text-ink">{dollars(data.rangeBallsTotal)}</span>
                   </div>
                 )}
-                <div className="flex justify-between px-4 py-3">
-                  <span className="text-ink-soft">{serviceFeeLabel(data.players)}</span>
-                  <span className="font-medium text-ink">{dollars(data.accessFeeTotal)}</span>
-                </div>
+                {data.accessFeeTotal > 0 && payment?.method !== 'cash' && (
+                  <div className="flex justify-between px-4 py-3">
+                    <span className="text-ink-soft">{serviceFeeLabel(data.players)}</span>
+                    <span className="font-medium text-ink">{dollars(data.accessFeeTotal)}</span>
+                  </div>
+                )}
                 {(data.shopLines ?? []).map((l, i) => (
                   <div key={i} className="flex justify-between px-4 py-3">
                     <span className="text-ink-soft">{l.name}{l.quantity > 1 ? ` × ${l.quantity}` : ''}</span>
@@ -201,8 +221,8 @@ function ReceiptPageInner() {
                   </div>
                 )}
                 <div className="flex justify-between items-baseline px-4 py-3.5 bg-paper">
-                  <span className="font-medium text-ink">{totalLabel}</span>
-                  <span className="font-serif font-semibold text-ink text-xl leading-none">{dollars(data.totalAmount)}</span>
+                  <span className="font-medium text-ink">{payment ? (payment.method === 'account' ? 'On account' : 'Paid') : totalLabel}</span>
+                  <span className="font-serif font-semibold text-ink text-xl leading-none">{dollars(payment ? payment.amountCents : data.totalAmount)}</span>
                 </div>
               </div>
 
@@ -225,7 +245,19 @@ function ReceiptPageInner() {
               )}
 
               {/* Payment line */}
-              {isCompleted && (
+              {isCompleted && payment && (
+                <div className="text-sm text-ink mb-5 space-y-1">
+                  <div className="flex justify-between gap-3">
+                    <span>{payment.method === 'cash' ? 'Cash' : payment.method === 'account' ? 'Member account' : payment.card ?? 'Card'}</span>
+                    {payment.paidAt && <span className="text-ink-soft tabular-nums">{paidWhen(payment.paidAt, data.timezone)}</span>}
+                  </div>
+                  {payment.tenderedCents != null && payment.changeCents != null && (
+                    <div className="flex justify-between gap-3 text-ink-soft tabular-nums"><span>Cash given {dollars(payment.tenderedCents)}</span><span>Change {dollars(payment.changeCents)}</span></div>
+                  )}
+                  <div className="text-ink-muted">Booking #{data.bookingId.slice(0, 8).toUpperCase()}</div>
+                </div>
+              )}
+              {isCompleted && !payment && (
                 <div className="text-sm text-ink mb-5">
                   {refunded ? 'Refunded' : onAccount ? 'On your member account' : paidAtCourse ? 'Paid at the course' : 'Paid at check-in'} · Booking #{data.bookingId.slice(0, 8).toUpperCase()}
                 </div>
@@ -253,7 +285,7 @@ function ReceiptPageInner() {
 
           {data.courseSlug && (
             <div className="no-print max-w-lg mx-auto mt-6">
-              <GolferExitLinks courseSlug={data.courseSlug} courseName={data.courseName} />
+              <GolferExitLinks courseSlug={data.courseSlug} courseName={data.courseName} showBookings={!!data.hasAccount} />
             </div>
           )}
         </div>
