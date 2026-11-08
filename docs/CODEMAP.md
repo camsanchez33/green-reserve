@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-670 source files · 293 routes · 244 libraries · 71 models
+671 source files · 293 routes · 245 libraries · 71 models
 
 ## Single sources of truth
 
@@ -279,7 +279,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/operator/stripe/dashboard-link` | operator | file | POST | `src/app/api/operator/stripe/dashboard-link/route.ts` | 29 |
 | `/api/operator/stripe/payouts` | operator | file | GET | `src/app/api/operator/stripe/payouts/route.ts` | 41 |
 | `/api/operator/tee-sets` | operator | file | DELETE GET PATCH POST PUT | `src/app/api/operator/tee-sets/route.ts` | 169 |
-| `/api/operator/tee-times` | operator | file | DELETE GET PATCH POST | `src/app/api/operator/tee-times/route.ts` | 259 |
+| `/api/operator/tee-times` | operator | file | DELETE GET PATCH POST | `src/app/api/operator/tee-times/route.ts` | 267 |
 | `/api/operator/tiers` | operator | file | DELETE GET PATCH POST | `src/app/api/operator/tiers/route.ts` | 189 |
 | `/api/operator/upload` | operator | file | DELETE POST | `src/app/api/operator/upload/route.ts` | 89 |
 | `/api/operator/weather` | operator | file | GET | `src/app/api/operator/weather/route.ts` | 15 |
@@ -306,7 +306,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/courses/[slug]/account` | golfer | **NONE FOUND** | page | `src/app/courses/[slug]/account/page.tsx` | 11 |
 | `/courses/[slug]/account/accept-invite` | golfer | entry | page | `src/app/courses/[slug]/account/accept-invite/page.tsx` | 144 |
 | `/courses/[slug]/member` | member | **NONE FOUND** | page | `src/app/courses/[slug]/member/page.tsx` | 874 |
-| `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 2250 |
+| `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 2268 |
 | `/dashboard/2fa` | operator | entry | page | `src/app/dashboard/2fa/page.tsx` | 110 |
 | `/dashboard/analytics` | operator | middleware | page | `src/app/dashboard/analytics/page.tsx` | 822 |
 | `/dashboard/cancellations` | operator | middleware | page | `src/app/dashboard/cancellations/page.tsx` | 17 |
@@ -352,7 +352,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
-| `src/lib/prisma.ts` | 284 | 15 |  | `prisma` |
+| `src/lib/prisma.ts` | 285 | 15 |  | `prisma` |
 | `src/lib/session.ts` | 78 | 120 |  | `ACTIVE_COURSE_COOKIE`, `can`, `requirePermission`, `resolveDashboardSession`, `ResolvedSession`, `STAFF_FORBIDDEN`, `touchStaffSeen` |
 | `src/lib/admin-session.ts` | 70 | 201 |  | `AdminSession`, `AdminSessionUnavailable`, `areaGate`, `MANAGER_PLUS`, `OWNER_ONLY`, `ownerGateError`, `requireOwner`, `requireRole` +7 more |
 | `src/lib/email.ts` | 65 | 2178 |  | `BookingEmailData`, `courseNoticeEmail`, `escapeHtml`, `firstName`, `isPlaceholderEmail`, `PLACEHOLDER_EMAIL_DOMAIN`, `sendAdminDigest`, `sendAdminPasswordChangedNotification` +74 more |
@@ -395,7 +395,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/demand-pricing.ts` | 10 | 151 | PRICE-5 (Cam 2026-10-30: | `Cell`, `dealWins`, `DemandCourse`, `demandDue`, `DemandMap`, `DemandMode`, `demandPctAt`, `demandPctFor` +10 more |
 | `src/lib/last-minute.ts` | 10 | 43 | PRICE-2 (Cam 2026-10-30: | `DealCourse`, `dealPct`, `dealRateSeat`, `dealSeat`, `dealSettingsError` |
 | `src/lib/residents.ts` | 10 | 66 | RES-1 (Cam 2026-10-19): | `cardValidOn`, `groupGreenFee`, `MAX_CARD_NUMBER`, `MAX_RESIDENT_NAME`, `otherPerPlayerCents`, `residentInput` |
-| `src/lib/tee-sheet-engine.ts` | 10 | 321 |  | `DesiredSlot`, `desiredSlots`, `generateForAllCourses`, `generateTeeTimes`, `regenerateUpcoming`, `regenerationDays`, `roundDeleteClashes`, `ScheduleForSlots` +1 more |
+| `src/lib/tee-sheet-engine.ts` | 10 | 322 |  | `DesiredSlot`, `desiredSlots`, `generateForAllCourses`, `generateTeeTimes`, `regenerateUpcoming`, `regenerationDays`, `roundDeleteClashes`, `ScheduleForSlots` +1 more |
 | `src/lib/tee-time-utils.ts` | 10 | 54 | Converts a stored tee-time (date "YYYY-MM-DD", time "HH:MM" in the course's local timezone) to a UTC millisecond timestamp. | `teeToUtcMs` |
 | `src/lib/agreement-gate.ts` | 9 | 117 | AG-1: | `AgreementDocStatus`, `agreementStatus`, `AgreementStatus`, `hasAcceptedAgreement`, `latestOperatorAgreement` |
 | `src/lib/agreements.ts` | 9 | 134 | AGREEMENT_SPEC AG-1 §2 — versioned agreement documents. | `AgreementDocument`, `currentDocuments`, `currentVersion`, `DOCUMENT_DIR`, `DocumentMeta`, `listVersions`, `loadDocument`, `LoadedDocument` +2 more |
@@ -587,6 +587,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/staff-refund.ts` | 1 | 135 | Revamp 3 dead end 14 (Cam 2026-10-29): | `refundableCents`, `refundRound`, `StaffRefundResult`, `waiveLateFee` |
 | `src/lib/stripe-match.ts` | 1 | 25 | ADMIN-C Money → Disputes: | `lastFullMonths`, `matchResult`, `MonthWindow` |
 | `src/lib/tee-time-fit.ts` | 1 | 19 | Cam 2026-10-19: | `FIT_WINDOW_MIN`, `timesTooClose` |
+| `src/lib/tee-time-seats.ts` | 1 | 29 | SEATS-1 (Cam 2026-11-08: | `SeatsResult`, `setSeatsClosed` |
 | `src/lib/tier-wire.ts` | 1 | 43 |  | `tierToWire` |
 | `src/lib/use-resource.ts` | 1 | 40 | MP-11b (ADMIN_V4 V4-7 item 4). | `ResourceError`, `useResource` |
 | `src/lib/weather-cancel.ts` | 1 | 89 | WX-1 weather cancel (Cam 2026-10-01: | `applyWeatherCancel`, `isWeatherTime`, `planWeatherCancel`, `WeatherGroup`, `WeatherPlan`, `WeatherResult` |
@@ -638,7 +639,7 @@ Sorted the same way.
 | `src/components/dashboard/money/RefundForm.tsx` | 2 | 47 | Revamp 3 dead end 14 (Cam 2026-10-29): | `RefundForm` |
 | `src/components/dashboard/RegisterPacks.tsx` | 2 | 108 | PRICE-3 (Cam 2026-10-30: | `PACK_RATE`, `PackHolderPick`, `PackHolders`, `PackPicker` |
 | `src/components/dashboard/settings/FinishSetup.tsx` | 2 | 68 | Settings rework (Cam 2026-10-19: | `FinishSetup`, `SetupItem` |
-| `src/components/dashboard/TeeSheetRows.tsx` | 2 | 299 | DENSE-4 (DENSE_UI_SPEC D1, Cam 2026-10-27: | `BoardGroup`, `BoardSlot`, `default (TeeSheetRows)`, `FILL`, `groupTags`, `groupTone`, `isMemberRate`, `rateWords` +1 more |
+| `src/components/dashboard/TeeSheetRows.tsx` | 2 | 304 | DENSE-4 (DENSE_UI_SPEC D1, Cam 2026-10-27: | `BoardGroup`, `BoardSlot`, `default (TeeSheetRows)`, `FILL`, `groupTags`, `groupTone`, `isMemberRate`, `rateWords` +1 more |
 | `src/components/home/ProductShot.tsx` | 2 | 16 |  | `default (ProductShot)` |
 | `src/components/TrustNote.tsx` | 2 | 12 |  | `TrustNote` |
 | `src/components/ui/Btn.tsx` | 2 | 27 |  | `Btn` |
@@ -1258,11 +1259,11 @@ without opening anything.
 
 ### TeeTime
 
-25 fields · 10 writer(s) · 32 reader(s)
+26 fields · 11 writer(s) · 33 reader(s)
 
-- fields: `id`, `courseId`, `course`, `date`, `time`, `holes`, `playersAvailable`, `playersBooked`, `greenFeeCents`, `memberRateCents`, `residentRateCents`, `seniorRateCents`, `juniorRateCents`, `cartFeeCents`, `walkingAllowed`, `tierName`, `status`, `staffOnly`, `createdAt`, `bookings`, `teeTimeAlerts`, `eventId`, `event`, `productId`, `product`
-- writers: `src/app/api/operator/tee-times/route.ts`, `src/lib/blackouts.ts`, `src/lib/course-events.ts`, `src/lib/data-reset.ts`, `src/lib/frost-delay.ts`, `src/lib/lifecycle.ts`, `src/lib/sample-data.ts`, `src/lib/schedule-service.ts`, `src/lib/tee-sheet-engine.ts`, `src/lib/weather-cancel.ts`
-- readers: `src/app/api/admin/tee-sheet/route.ts`, `src/app/api/bookings/resident-rate/route.ts`, `src/app/api/bookings/route.ts`, `src/app/api/manage/[bookingId]/available-times/route.ts`, `src/app/api/manage/[bookingId]/swap-time/route.ts`, `src/app/api/member/[courseSlug]/tee-times/route.ts`, `src/app/api/operator/events/[id]/route.ts`, `src/app/api/operator/tee-times/route.ts`, `src/app/api/preview/[courseId]/route.ts`, `src/app/api/preview/[courseId]/tee-times/route.ts`, `src/app/api/promo/check/route.ts`, `src/lib/admin-home.ts` +20 more (see `docs/codemap.json`)
+- fields: `id`, `courseId`, `course`, `date`, `time`, `holes`, `playersAvailable`, `playersBooked`, `greenFeeCents`, `memberRateCents`, `residentRateCents`, `seniorRateCents`, `juniorRateCents`, `cartFeeCents`, `walkingAllowed`, `tierName`, `status`, `staffOnly`, `seatsClosed`, `createdAt`, `bookings`, `teeTimeAlerts`, `eventId`, `event`, `productId`, `product`
+- writers: `src/app/api/operator/tee-times/route.ts`, `src/lib/blackouts.ts`, `src/lib/course-events.ts`, `src/lib/data-reset.ts`, `src/lib/frost-delay.ts`, `src/lib/lifecycle.ts`, `src/lib/sample-data.ts`, `src/lib/schedule-service.ts`, `src/lib/tee-sheet-engine.ts`, `src/lib/tee-time-seats.ts`, `src/lib/weather-cancel.ts`
+- readers: `src/app/api/admin/tee-sheet/route.ts`, `src/app/api/bookings/resident-rate/route.ts`, `src/app/api/bookings/route.ts`, `src/app/api/manage/[bookingId]/available-times/route.ts`, `src/app/api/manage/[bookingId]/swap-time/route.ts`, `src/app/api/member/[courseSlug]/tee-times/route.ts`, `src/app/api/operator/events/[id]/route.ts`, `src/app/api/operator/tee-times/route.ts`, `src/app/api/preview/[courseId]/route.ts`, `src/app/api/preview/[courseId]/tee-times/route.ts`, `src/app/api/promo/check/route.ts`, `src/lib/admin-home.ts` +21 more (see `docs/codemap.json`)
 
 ### TeeTimeAlert
 

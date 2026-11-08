@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 670,
+    "files": 671,
     "routes": 293,
-    "libs": 244,
+    "libs": 245,
     "models": 71,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -7542,7 +7542,7 @@
     },
     {
       "path": "src/app/api/operator/tee-times/route.ts",
-      "lines": 259,
+      "lines": 267,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7583,6 +7583,7 @@
         "@/lib/schedule-service",
         "@/lib/schedule-wire",
         "@/lib/session",
+        "@/lib/tee-time-seats",
         "next/server"
       ],
       "usedBy": []
@@ -8945,7 +8946,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 2250,
+      "lines": 2268,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11923,7 +11924,7 @@
     },
     {
       "path": "src/components/dashboard/TeeSheetRows.tsx",
-      "lines": 299,
+      "lines": 304,
       "purpose": "DENSE-4 (DENSE_UI_SPEC D1, Cam 2026-10-27:",
       "brain": [],
       "exports": [
@@ -23172,6 +23173,7 @@
         "src/lib/staff-refund.ts",
         "src/lib/submit-change-request.ts",
         "src/lib/tee-sheet-engine.ts",
+        "src/lib/tee-time-seats.ts",
         "src/lib/two-factor.ts",
         "src/lib/weather-cancel.ts"
       ]
@@ -26165,7 +26167,7 @@
     },
     {
       "path": "src/lib/tee-sheet-engine.ts",
-      "lines": 321,
+      "lines": 322,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -26255,6 +26257,33 @@
       "imports": [],
       "usedBy": [
         "src/app/dashboard/page.tsx"
+      ]
+    },
+    {
+      "path": "src/lib/tee-time-seats.ts",
+      "lines": 29,
+      "purpose": "SEATS-1 (Cam 2026-11-08:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "SeatsResult",
+          "kind": "type"
+        },
+        {
+          "name": "setSeatsClosed",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./prisma"
+      ],
+      "usedBy": [
+        "src/app/api/operator/tee-times/route.ts"
       ]
     },
     {
@@ -32837,6 +32866,10 @@
           "type": "Boolean"
         },
         {
+          "name": "seatsClosed",
+          "type": "Int"
+        },
+        {
           "name": "createdAt",
           "type": "DateTime"
         },
@@ -32875,6 +32908,7 @@
         "src/lib/sample-data.ts",
         "src/lib/schedule-service.ts",
         "src/lib/tee-sheet-engine.ts",
+        "src/lib/tee-time-seats.ts",
         "src/lib/weather-cancel.ts"
       ],
       "readers": [
@@ -32909,6 +32943,7 @@
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts",
         "src/lib/tee-sheet-engine.ts",
+        "src/lib/tee-time-seats.ts",
         "src/lib/weather-cancel.ts"
       ]
     },

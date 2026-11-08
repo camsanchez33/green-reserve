@@ -45,7 +45,7 @@ ok('an unpaid group says how it booked and whether a card is saved (Cam 2026-11-
 ok('no reader: owners get the link, staff are told', page.includes('<span className="text-ink-soft">Connect a card reader</span>') && page.includes('No card reader connected'));
 
 ok('no split happens in the browser before a charge (nothing to half-finish)', !page.includes('async function splitOff('));
-ok('review: the steps only for a group that still has something to do, and close with the card', page.includes("const inFlow = flow?.id === b.id && b.status === 'confirmed' && unpaid && !prepaid;") && page.includes('useEffect(() => { setFlow(null); setMoreFor(null); setTimeOpts(false); }, [panelId]);'));
+ok('review: the steps only for a group that still has something to do, and close with the card', page.includes("const inFlow = flow?.id === b.id && b.status === 'confirmed' && unpaid && !prepaid;") && page.includes('useEffect(() => { setFlow(null); setMoreFor(null); }, [panelId]);'));
 ok('review: no ruled box inside the card', page.includes('<div className="mt-3 rounded-[7px] bg-paper/70 px-4 pt-3 pb-4">') && !page.includes('rounded-[10px] border border-line bg-white'));
 
 
@@ -53,7 +53,7 @@ ok('RECEIPT-1: after paying, Print · Text · Email · No receipt on the confirm
 ok('RECEIPT-1: only a paid round gets a receipt; a text only to a number that agreed (SMS-1)', route.includes("if (action === 'send_receipt') {") && route.includes("send_receipt: 'sheet.checkin'") && route.includes('A receipt is for a round that’s been paid.') && route.includes('if (err instanceof SmsNoConsentError) return NextResponse.json({ error: SMS_NO_CONSENT_STAFF, needsConsent: true }, { status: 409 });'));
 ok('RECEIPT-1: Print opens the receipt page, which prints itself', readFileSync('src/app/receipt/[bookingId]/page.tsx', 'utf8').includes("const autoPrint = search.get('print') === '1';"));
 ok('the day\'s actions sit in the sheet\'s bar, not floating above it (Cam 2026-11-08)', page.includes('>This day ▾</button>') && page.includes('>+ Time</button>') && !page.includes("SHEET-3 (Cam 2026-11-06, \"a little cleaner\"): the day's other actions"));
-ok('the time card\'s foot: Add players, and the seat choice behind Time options', page.includes('>Add players</button>') && page.includes('{timeOpts && access.can(\'sheet.block\')'));
+ok('the time card\'s foot: Add players, and the Open seats stepper (SEATS-1)', page.includes('>Add players</button>') && page.includes('aria-label="Open seats on this time"'));
 
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
 process.exit(failed === 0 ? 0 : 1);

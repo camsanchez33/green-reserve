@@ -590,6 +590,9 @@ model TeeTime {
   status            String         @default("available")
   /// ADDTIME-1 (Cam 2026-11-06): kept for staff — never listed or bookable online; the counter books it as any time.
   staffOnly         Boolean        @default(false)
+  /// SEATS-1 (Cam 2026-11-08: "close it by one individual spot or as many as there are"): open seats staff closed.
+  /// playersAvailable already excludes them; playersAvailable + seatsClosed is the time's size, so a seat reopens.
+  seatsClosed       Int            @default(0)
   createdAt         DateTime       @default(now())
   bookings          Booking[]
   teeTimeAlerts     TeeTimeAlert[]
@@ -1594,6 +1597,7 @@ model ShopSaleLine {
   packValidDays  Int?
 
   @@index([saleId])
+  @@index([bookingId])
   @@index([shopItemId])
 }
 

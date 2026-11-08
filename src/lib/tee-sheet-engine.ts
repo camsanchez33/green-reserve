@@ -187,11 +187,12 @@ export async function generateTeeTimes(courseId: string, dateStr: string): Promi
   // bookings are cancelled still has Booking rows pointing at it (RESTRICT), and
   // operator-blocked slots are a manual override: both are left alone.
   // ADDTIME-1: a time kept for staff is a manual override like a block — left alone.
-  const isOpen = (t: typeof existing[number]) => t.playersBooked === 0 && t.status !== 'blocked' && !t.staffOnly && t._count.bookings === 0;
+  // SEATS-1: a time with seats closed by hand is an override too.
+  const isOpen = (t: typeof existing[number]) => t.playersBooked === 0 && t.status !== 'blocked' && !t.staffOnly && t.seatsClosed === 0 && t._count.bookings === 0;
   const toDelete = existing.filter(t => isOpen(t) && !desired.has(slotKey(t.productId ?? null, t.time))).map(t => t.id);
   if (toDelete.length > 0) {
     // AUDIT-1: only if still open — a golfer who booked one since the read keeps it (and the day doesn't fail on the foreign key).
-    await prisma.teeTime.deleteMany({ where: { id: { in: toDelete }, playersBooked: 0, status: { not: 'blocked' }, staffOnly: false, bookings: { none: {} } } });
+    await prisma.teeTime.deleteMany({ where: { id: { in: toDelete }, playersBooked: 0, status: { not: 'blocked' }, staffOnly: false, seatsClosed: 0, bookings: { none: {} } } });
   }
   const updates = new Map<string, { data: Prisma.TeeTimeUncheckedUpdateManyInput; ids: string[] }>();
   const toCreate: Prisma.TeeTimeCreateManyInput[] = [];
@@ -253,7 +254,7 @@ export async function generateTeeTimes(courseId: string, dateStr: string): Promi
   if (toCreate.length) await prisma.teeTime.createMany({ data: toCreate, skipDuplicates: true });
   // Only rows still open: a booking that landed since the read keeps its slot as it is.
   for (const { data, ids } of updates.values()) {
-    await prisma.teeTime.updateMany({ where: { id: { in: ids }, playersBooked: 0, status: { not: 'blocked' } }, data });
+    await prisma.teeTime.updateMany({ where: { id: { in: ids }, playersBooked: 0, status: { not: 'blocked' }, seatsClosed: 0 }, data });
   }
 
   return created;

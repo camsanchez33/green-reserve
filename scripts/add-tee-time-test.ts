@@ -25,7 +25,7 @@ ok('the counter and admin claims do not', !read('src/lib/counter-pay.ts').includ
 const move = read('src/lib/move-booking.ts');
 ok("a golfer's own swap refuses it", move.includes("if (golferMove && slot.staffOnly) throw new MoveError('BLOCKED')"));
 const engine = read('src/lib/tee-sheet-engine.ts');
-ok('the engine never deletes it and treats it like a block', engine.includes('&& !t.staffOnly &&') && engine.includes("status: { not: 'blocked' }, staffOnly: false, bookings"));
+ok('the engine never deletes it and treats it like a block', engine.includes('&& !t.staffOnly &&') && engine.includes("status: { not: 'blocked' }, staffOnly: false, seatsClosed: 0, bookings"));
 
 const route = read('src/app/api/operator/tee-times/route.ts');
 const post = route.slice(route.indexOf('export async function POST'), route.indexOf('export async function PATCH'));
@@ -39,11 +39,11 @@ const page = read('src/app/dashboard/page.tsx');
 ok('adding a time is "+ Time" in the sheet\'s own bar (Cam 2026-11-08), "Add tee time" when the day is empty', page.includes('>+ Time</button>') && page.includes('rounded-md text-[12.5px] font-medium transition-colors">Add tee time</button>'));
 ok('the form copies the nearest time and asks who can book it', page.includes('Priced like {fmtTime(like.time)}') && page.includes("[[true, 'Anyone'], [false, 'Counter only']]") && page.includes('copyFrom: like.id'));
 ok('a new time opens its card', page.includes('setPanelId(id)'));
-ok('the card switches it: who can book the open seats — Anyone · Counter only · No one (Cam 2026-11-06)', page.includes("[['anyone', 'Anyone'], ['counter', 'Counter only'], ['none', 'No one']]") && page.includes("Open seats{open > 0 ? ` (${open})` : ''} can be booked by") && page.includes('Booked groups stay.') && page.includes("'Time options'"));
-ok('…hidden on a full time, kept on a closed one so it can reopen', page.includes("!past && (open > 0 || panelSlot.status === 'blocked') && ("));
+// SEATS-1 (Cam 2026-11-08) replaced the card's Anyone · Counter only · No one choice with the Open seats stepper
+// (scripts/seats-closed-test.ts); a time closed or hidden the old way keeps a one-tap way back.
+ok('a time closed or hidden the old way can be reopened from the card', page.includes('Closed · reopen this time') && page.includes('Hidden online · show it') && page.includes("setSeatAccess(panelSlot, 'anyone')"));
 ok('the row says Staff only', read('src/components/dashboard/TeeSheetRows.tsx').includes("s.staffOnly ? 'Staff only' : ''"));
 
-ok('closing a time with groups on it says they stay', page.includes("seatAccessOf(panelSlot) !== 'anyone' && (panelSlot.bookings ?? []).some(b => b.status !== 'cancelled') && <span className=\"text-[12.5px] text-ink-muted\">Booked groups stay.</span>"));
 
 ok('Delete time is not offered while a group is on the time', page.includes("!panelSlot.event && !(panelSlot.bookings ?? []).length && ("));
 { const del = route.slice(route.indexOf('export async function DELETE'));

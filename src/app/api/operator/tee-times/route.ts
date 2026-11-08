@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { todayIn, isPastIn } from '@/lib/course-time';
+import { setSeatsClosed } from '@/lib/tee-time-seats';
 import { prisma } from '@/lib/prisma';
 import { dollarsToCentsOr0 } from '@/lib/money';
 import { teeTimeToWire } from '@/lib/schedule-wire';
@@ -202,8 +203,15 @@ export async function PATCH(req: NextRequest) {
   const denied = requirePermission(session, 'sheet.block'); // SP-A
   if (denied) return denied;
 
-  const { id, status, staffOnly } = await req.json();
+  const { id, status, staffOnly, seatsClosed } = await req.json();
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+  // SEATS-1 (Cam 2026-11-08): close open seats one at a time, or all of them; reopen the same way. Booked groups
+  // are never touched: a seat can only close while it is open (the write re-checks who's booked).
+  if (seatsClosed !== undefined && status === undefined && staffOnly === undefined) {
+    const r = await setSeatsClosed(session.courseId, String(id), seatsClosed);
+    if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+    return NextResponse.json(r);
+  }
   // ADDTIME-1: open a time online, or keep it for staff. Same permission as blocking (who can sell it).
   if (typeof staffOnly === 'boolean' && status === undefined) {
     const r = await prisma.teeTime.updateMany({ where: { id, courseId: session.courseId }, data: { staffOnly } });
