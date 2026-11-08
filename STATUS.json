@@ -1,31 +1,41 @@
 {
-  "generatedAt": "2026-11-08T20:09:08.593Z",
+  "generatedAt": "2026-11-08T21:09:14.017Z",
   "repo": {
-    "head": "7c498a10",
+    "head": "5897ca3e",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 15,
+    "dirtyCount": 11,
     "dirty": [
-      "M docs/CODEMAP.md",
+      "M CLAUDE.md",
+      " M STATUS.artifact.html",
+      " M STATUS.json",
+      " M STATUS.md",
+      " M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M prisma/schema.prisma",
-      " M scripts/add-tee-time-test.ts",
-      " M scripts/checkout-card-test.ts",
-      " M scripts/tee-time-slot-test.ts",
-      " M scripts/tt-card-test.ts",
+      " M scripts/counter-b-test.ts",
+      " M scripts/register-photo-test.ts",
       " M scripts/words-guard.baseline.json",
-      " M src/app/api/operator/tee-times/route.ts",
-      " M src/app/dashboard/page.tsx",
-      " M src/components/dashboard/TeeSheetRows.tsx",
-      " M src/lib/tee-sheet-engine.ts",
-      "?? prisma/migrations/20261108000000_seats_closed/",
-      "?? scripts/seats-closed-test.ts",
-      "?? src/lib/tee-time-seats.ts"
+      " M src/app/dashboard/shop/page.tsx",
+      "?? scripts/pos-register-test.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "63efbf69",
+        "date": "2026-11-08T15:17:00-05:00",
+        "subject": "SEATS-1: close seats on a tee time one at a time (#337)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "ab8c4f43",
+        "date": "2026-11-08T20:09:11+00:00",
+        "subject": "SEATS-1: close seats on a tee time one at a time (Open seats − N + on the card)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "b324c547",
         "date": "2026-11-08T15:03:09-05:00",
@@ -1466,6 +1476,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "63efbf69",
+      "date": "2026-11-08",
+      "subject": "SEATS-1: close seats on a tee time one at a time (#337)"
+    },
+    {
+      "h": "ab8c4f43",
+      "date": "2026-11-08",
+      "subject": "SEATS-1: close seats on a tee time one at a time (Open seats − N + on the card)"
+    },
+    {
       "h": "b324c547",
       "date": "2026-11-08",
       "subject": "Receipt: what was actually paid, how and when; prints on a receipt printer (#336)"
@@ -1514,16 +1534,6 @@
       "h": "de19b14e",
       "date": "2026-11-06",
       "subject": "Carts: per player or per cart (2 riders), set in Settings (#332)"
-    },
-    {
-      "h": "fe626db0",
-      "date": "2026-11-06",
-      "subject": "Carts: per player or per cart (2 riders), set by the owner in Settings"
-    },
-    {
-      "h": "ba23e030",
-      "date": "2026-11-06",
-      "subject": "Tee sheet: a Square-style Charge screen, and one \"Paying now\" control (#331)"
     }
   ]
 }
