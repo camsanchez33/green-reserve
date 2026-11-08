@@ -396,6 +396,20 @@ export async function sendCheckInAvailableEmail(data: {
   await getResend().emails.send({ meta: { kind: 'check_in_available_email', bookingId: data.bookingId }, from: FROM_SUPPORT, to: data.golferEmail, subject: `Ready to check in — ${data.courseName} ${data.date} at ${data.time}`, html });
 }
 
+/** RECEIPT-1 (Cam 2026-11-08: a paper, text or email receipt when they pay at the counter): the round's receipt page. */
+export async function sendRoundReceiptLinkEmail(data: {
+  golferName: string; to: string; courseName: string; date: string; time: string; bookingId: string; checkInToken: string;
+}) {
+  const url = `${process.env.NEXT_PUBLIC_URL}/receipt/${data.bookingId}?token=${data.checkInToken}`;
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Your receipt from ${data.courseName}</h1>
+    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">Hi ${firstName(data.golferName)}, thanks for playing. Here is the receipt for your round on ${data.date} at ${data.time}.</p>
+    <a href="${url}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:16px;">View receipt &rarr;</a>
+    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking #${data.bookingId.slice(0, 8).toUpperCase()}</p>
+  `);
+  await getResend().emails.send({ meta: { kind: 'round_receipt_link_email', bookingId: data.bookingId }, from: FROM_BILLING, to: data.to, subject: `Your receipt from ${data.courseName}`, html });
+}
+
 export async function sendBookingModifiedEmail(data: {
   golferName: string; golferEmail: string; courseName: string; courseSlug?: string;
   date: string; time: string; players: number; holes: number; productLabel?: string | null;

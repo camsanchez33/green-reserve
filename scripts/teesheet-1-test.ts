@@ -19,7 +19,7 @@ check('the time panel always shows its rate', page.includes("{roundName(panelSlo
 check('Find golfer sits in the sheet bar with a refresh icon', page.includes('id="sheet-search"') && page.includes('aria-label="Refresh the sheet"'));
 check('no Refresh text button in the header', !/>\s*Refresh\s*</.test(page));
 check('mark no-show is reachable from the time panel', page.includes("bookingLifecycle(b, 'no_show')") && page.includes("noShowReady && access.can('sheet.no_show') && (\n              <button onClick={() => bookingLifecycle(b, 'no_show')") && page.includes('mins(nowHM) - mins(tt.time) >= 10'));
-check('still coming (a late group) is reachable and clears it from the late list', page.includes('setStillComing(prev => new Set(prev).add(b.id))') && page.includes('!stillComing.has(b.id) && !b.noShowAt'));
+check('a late group stays on the late list until it is checked in or marked a no-show (Cam 2026-11-08: no local hide)', page.includes(".filter(b => b.status === 'confirmed' && !b.noShowAt)") && !page.includes('setStillComing'));
 // DENSE-4 (Cam 2026-10-27): seat rows replaced the board — the key shows the money edge and the checked-in / member fills the rows use.
 // FILL-1 (Cam 2026-11-06, "fully filled"): the cell's colour is the money; In / M / R say who they are.
 check('the key swatches match the seat cells', page.includes('bg-paid-fill shadow-[0_0_0_1px_var(--color-line)]" />Paid') && page.includes('bg-owes-fill shadow-[0_0_0_1px_var(--color-line)]" />Owes') && page.includes('>In</b> checked in') && src('src/components/dashboard/TeeSheetRows.tsx').includes("FILL: Record<Tone, string> = { ok: 'bg-paid-fill', warn: 'bg-owes-fill', bad: 'bg-bad-fill' }"));

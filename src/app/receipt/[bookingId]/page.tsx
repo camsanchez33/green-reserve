@@ -63,6 +63,13 @@ function ReceiptPageInner() {
       .catch(() => setError('This receipt link is invalid or has expired.'))
       .finally(() => setLoading(false));
   }, [bookingId, token]);
+  // RECEIPT-1: the tee sheet's "Print" opens this with ?print=1 — print once it has loaded.
+  const autoPrint = search.get('print') === '1';
+  useEffect(() => {
+    if (!autoPrint || !data) return;
+    const t = setTimeout(() => window.print(), 300);
+    return () => clearTimeout(t);
+  }, [autoPrint, data]);
 
   if (loading) {
     return (

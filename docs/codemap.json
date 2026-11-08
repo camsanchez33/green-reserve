@@ -5379,7 +5379,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 410,
+      "lines": 447,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6614,7 +6614,7 @@
     },
     {
       "path": "src/app/api/operator/reader-rounds/route.ts",
-      "lines": 50,
+      "lines": 52,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8943,7 +8943,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 2200,
+      "lines": 2257,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9775,7 +9775,7 @@
     },
     {
       "path": "src/app/receipt/[bookingId]/page.tsx",
-      "lines": 265,
+      "lines": 272,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11754,7 +11754,7 @@
     },
     {
       "path": "src/components/dashboard/SmsConsentAsk.tsx",
-      "lines": 39,
+      "lines": 41,
       "purpose": "SMS-1 (Cam 2026-11-02, Twilio A2P 10DLC — docs/SMS_OPT_IN.md):",
       "brain": [],
       "exports": [
@@ -18766,7 +18766,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 2164,
+      "lines": 2178,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -19056,6 +19056,10 @@
         },
         {
           "name": "sendReminderEmail",
+          "kind": "fn"
+        },
+        {
+          "name": "sendRoundReceiptLinkEmail",
           "kind": "fn"
         },
         {
@@ -23473,7 +23477,7 @@
     },
     {
       "path": "src/lib/reader-rounds.ts",
-      "lines": 228,
+      "lines": 243,
       "purpose": "POS-3 R3b (Cam 2026-10-24, \"Ok go\"):",
       "brain": [],
       "exports": [
@@ -23513,6 +23517,7 @@
         "./refund-booking",
         "./round-shop-tax",
         "./shop",
+        "./split-booking-db",
         "./stripe",
         "stripe"
       ],
@@ -25642,7 +25647,8 @@
         "src/app/api/operator/bookings/route.ts",
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
-        "src/lib/counter-pay.ts"
+        "src/lib/counter-pay.ts",
+        "src/lib/reader-rounds.ts"
       ]
     },
     {

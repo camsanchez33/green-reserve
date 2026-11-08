@@ -4,14 +4,17 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-08 07:54 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `45307c55` · working tree **12 dirty file(s)**
+Generated 2026-11-08 19:31 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `17a1933d` · working tree **19 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 142 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 145 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `086b9403` | 2026-11-08 | Tee sheet: check-in in order — who's here, add to order, payment, done (#334) |
+| `f7245efa` | 2026-11-08 | Fix the split-booking pin for the check-in steps' rest line |
+| `506f38f0` | 2026-11-08 | Tee sheet: check-in in order — who's here, add to order, payment, done |
 | `8bed0df0` | 2026-11-06 | Tee sheet time card: who can book the open seats, reader on the card, type a card (#333) |
 | `23a4f354` | 2026-11-06 | Tee sheet time card: who can book the open seats, the reader on the card, type a card |
 | `de19b14e` | 2026-11-06 | Carts: per player or per cart (2 riders), set in Settings (#332) |
@@ -157,20 +160,27 @@ Generated 2026-11-08 07:54 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (12 file(s))
+### Uncommitted working tree (19 file(s))
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
+- `M scripts/add-tee-time-test.ts`
 - `M scripts/checkout-card-test.ts`
 - `M scripts/group-card-checkout-test.ts`
+- `M scripts/reader-rounds-db-test.ts`
 - `M scripts/teesheet-1-test.ts`
+- `M scripts/teesheet-2-test.ts`
 - `M scripts/teesheet-3-test.ts`
-- `M scripts/teesheet-till-test.ts`
 - `M scripts/tt-card-test.ts`
 - `M scripts/words-guard.baseline.json`
+- `M src/app/api/operator/bookings/route.ts`
+- `M src/app/api/operator/reader-rounds/route.ts`
 - `M src/app/dashboard/page.tsx`
-- `M src/components/dashboard/GroupTicket.tsx`
-- `M src/components/dashboard/TeeSheetRows.tsx`
+- `M src/app/receipt/[bookingId]/page.tsx`
+- `M src/components/dashboard/SmsConsentAsk.tsx`
+- `M src/components/home/TeeSheetDemo.tsx`
+- `M src/lib/email.ts`
+- `M src/lib/reader-rounds.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -187,7 +197,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 108d | `b88c8bf3` | `RUN_QUEUE.md:2412` |
+| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 109d | `b88c8bf3` | `RUN_QUEUE.md:2412` |
 
 ## Not started — the actual queue
 
@@ -256,7 +266,7 @@ This is the distinction a raw checkbox count gets wrong.
 | spec | open refs | last touched | age |
 |---|---|---|---|
 | `CLAUDE.md` | 1 | 2026-11-05 | 2d |
-| `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 6d |
+| `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 7d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 18d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 12d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 13d |
@@ -296,6 +306,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `086b9403` 2026-11-08 — Tee sheet: check-in in order — who's here, add to order, payment, done (#334)
+- `f7245efa` 2026-11-08 — Fix the split-booking pin for the check-in steps' rest line
+- `506f38f0` 2026-11-08 — Tee sheet: check-in in order — who's here, add to order, payment, done
 - `8bed0df0` 2026-11-06 — Tee sheet time card: who can book the open seats, reader on the card, type a card (#333)
 - `23a4f354` 2026-11-06 — Tee sheet time card: who can book the open seats, the reader on the card, type a card
 - `de19b14e` 2026-11-06 — Carts: per player or per cart (2 riders), set in Settings (#332)
@@ -305,9 +318,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `54cc0d80` 2026-11-05 — Tee sheet: the group card asks how they're paying, then one button that says what it does (#330)
 - `bd10ddf4` 2026-11-06 — Tee sheet: the group card asks how they're paying, then one button that says what it does
 - `337e9a0a` 2026-11-05 — Tee sheet: Message golfers by email, text or both, with ready-made messages and a preview (#329)
-- `e616bb78` 2026-11-06 — Regenerate the code map and status board
-- `2e16380b` 2026-11-06 — Owner 2FA: match a code and its step on one clock
-- `c146bfe6` 2026-11-06 — Tee sheet: Message golfers by email, text or both, with ready-made messages and a preview
 
 ---
 

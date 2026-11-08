@@ -9,7 +9,7 @@ import { resolveDashboardSession, can, requirePermission } from '@/lib/session';
 import type { PermissionKey } from '@/lib/staff-permissions';
 import { performCancellation } from '@/lib/cancel-booking';
 import { performCheckIn } from '@/lib/checkin-booking';
-import { sendBookingConfirmation, sendCheckInAvailableEmail, sendBookingModifiedEmail, isPlaceholderEmail } from '@/lib/email';
+import { sendBookingConfirmation, sendCheckInAvailableEmail, sendRoundReceiptLinkEmail, sendBookingModifiedEmail, isPlaceholderEmail } from '@/lib/email';
 import { moveBooking } from '@/lib/move-booking';
 import { setBookingResidents } from '@/lib/booking-residents';
 import { refundRound, waiveLateFee } from '@/lib/staff-refund';
@@ -106,18 +106,18 @@ export async function PATCH(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { id, action, paymentMethodId, checkedInPlayers: cipRaw, waiveFee: waiveRaw, via: viaRaw, newTeeTimeId, reprice, dryRun, residentPlayers, cashTenderedCents, amountCents, reason, newPlayers, membershipId, smsConsent, splitPlayers, splitName, splitPhone, thenCash } = await req.json();
+  const { id, action, paymentMethodId, checkedInPlayers: cipRaw, waiveFee: waiveRaw, via: viaRaw, newTeeTimeId, reprice, dryRun, residentPlayers, cashTenderedCents, amountCents, reason, newPlayers, membershipId, smsConsent, splitPlayers, splitName, splitPhone, thenCash, to: toRawIn } = await req.json();
   const waiveFee = action === 'cancel' && waiveRaw === true;
   // SD-5: partial party — how many actually showed (1 .. players-1); absent = all.
   const cip = cipRaw == null ? undefined : Number(cipRaw);
   if (cip !== undefined && (!Number.isInteger(cip) || cip < 1)) return NextResponse.json({ error: 'Invalid headcount.' }, { status: 400 });
   // CASH-1: 'take_cash' (the old 'paid_offline' still arrives from open tabs — it is the same cash sale).
-  const ACTIONS = ['cancel', 'checkin', 'no_show', 'still_coming', 'take_cash', 'paid_offline', 'send_pay_link', 'move', 'set_residents', 'refund_round', 'waive_late_fee', 'change_players', 'charge_account', 'split'];
+  const ACTIONS = ['cancel', 'checkin', 'no_show', 'still_coming', 'take_cash', 'paid_offline', 'send_pay_link', 'move', 'set_residents', 'refund_round', 'waive_late_fee', 'change_players', 'charge_account', 'split', 'send_receipt'];
   if (!id || !ACTIONS.includes(action)) {
     return NextResponse.json({ error: 'Missing id or unsupported action' }, { status: 400 });
   }
   // SP-A: each counter action is its own permission.
-  const NEEDS: Record<string, PermissionKey> = { cancel: 'sheet.cancel', checkin: 'sheet.checkin', no_show: 'sheet.no_show', still_coming: 'sheet.no_show', take_cash: 'sheet.counter_payment', paid_offline: 'sheet.counter_payment', send_pay_link: 'sheet.checkin', move: 'sheet.move', set_residents: 'sheet.counter_payment',
+  const NEEDS: Record<string, PermissionKey> = { cancel: 'sheet.cancel', checkin: 'sheet.checkin', no_show: 'sheet.no_show', still_coming: 'sheet.no_show', take_cash: 'sheet.counter_payment', paid_offline: 'sheet.counter_payment', send_pay_link: 'sheet.checkin', send_receipt: 'sheet.checkin', move: 'sheet.move', set_residents: 'sheet.counter_payment',
     // Revamp 3 dead end 14: refunding a paid round is its own permission; giving back a kept late fee is waiving it.
     refund_round: 'money.refund_rounds', waive_late_fee: 'sheet.waive_fee',
     // Dead end 19: a group's party size changes its price at the counter, like residents.
@@ -278,6 +278,43 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: `The pay link didn’t send (${err instanceof Error ? err.message : 'email error'}) — try again or check them in at the counter.` }, { status: 502 });
     }
     return NextResponse.json({ success: true, sentTo: b.golferEmail });
+  }
+  // RECEIPT-1 (Cam 2026-11-08): after they pay — Print (the receipt page, which prints), Text or Email the receipt.
+  // Only for a round that has been paid; a text goes only to a number that agreed (SMS-1, sendSms refuses others).
+  if (action === 'send_receipt') {
+    const via = viaRaw === 'sms' ? 'sms' : viaRaw === 'print' ? 'print' : 'email';
+    const b = await prisma.booking.findUnique({ where: { id }, select: { golferName: true, golferEmail: true, golferPhone: true, checkInToken: true, status: true, paymentStatus: true, course: { select: { name: true } }, teeTime: { select: { date: true, time: true } } } });
+    const paid = !!b && b.paymentStatus !== 'refunded' && (b.status === 'completed' || ['paid', 'paid_offline', 'on_account'].includes(b.paymentStatus));
+    if (!b || !paid) return NextResponse.json({ error: 'A receipt is for a round that’s been paid.' }, { status: 409 });
+    let token = b.checkInToken;
+    if (!token) {
+      token = randomUUID();
+      await prisma.booking.update({ where: { id }, data: { checkInToken: token } });
+    }
+    const url = `${process.env.NEXT_PUBLIC_URL}/receipt/${id}?token=${token}`;
+    if (via === 'print') return NextResponse.json({ success: true, url: `/receipt/${id}?token=${token}&print=1` });
+    const toRaw = typeof toRawIn === 'string' ? toRawIn.trim().slice(0, 200) : '';
+    if (via === 'sms') {
+      const phone = toRaw || b.golferPhone || '';
+      if (phone.replace(/\D/g, '').length < 10) return NextResponse.json({ error: 'Enter a mobile number for the receipt.' }, { status: 400 });
+      const to = normalizePhone(phone);
+      if (smsConsent === 'verbal') await optInAndConfirm(to, { method: 'verbal', courseId: session.courseId, bookingId: id, recordedBy: session.staffId ?? `operator:${session.operatorId}` });
+      try {
+        await sendSms(to, `GreenReserve: your receipt from ${b.course.name}: ${url} Reply STOP to opt out.`, { kind: 'round_receipt_text', bookingId: id });
+      } catch (err) {
+        if (err instanceof SmsNoConsentError) return NextResponse.json({ error: SMS_NO_CONSENT_STAFF, needsConsent: true }, { status: 409 });
+        return NextResponse.json({ error: `The text didn’t send (${err instanceof Error ? err.message : 'SMS error'}) — try email or print it.` }, { status: 502 });
+      }
+      return NextResponse.json({ success: true, sentTo: `${to.slice(0, -4).replace(/\d/g, '•')}${to.slice(-4)}` });
+    }
+    const email = (toRaw || b.golferEmail || '').toLowerCase();
+    if (!email || isPlaceholderEmail(email) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return NextResponse.json({ error: 'Enter an email for the receipt.' }, { status: 400 });
+    try {
+      await sendRoundReceiptLinkEmail({ golferName: b.golferName, to: email, courseName: b.course.name, date: b.teeTime.date, time: formatTeeTime(b.teeTime.time), bookingId: id, checkInToken: token });
+    } catch (err) {
+      return NextResponse.json({ error: `The receipt didn’t send (${err instanceof Error ? err.message : 'email error'}) — try again or print it.` }, { status: 502 });
+    }
+    return NextResponse.json({ success: true, sentTo: email });
   }
   if (action === 'no_show') {
     if (booking.status !== 'confirmed') return NextResponse.json({ error: 'Only a confirmed booking can be marked a no-show.' }, { status: 409 });

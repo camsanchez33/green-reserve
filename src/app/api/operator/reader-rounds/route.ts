@@ -26,7 +26,9 @@ export async function POST(req: NextRequest) {
   const bookingId = typeof body.bookingId === 'string' ? body.bookingId : '';
   const readerId = typeof body.readerId === 'string' ? body.readerId : '';
   if (!bookingId || !readerId) return NextResponse.json({ error: 'Pick a group and a card reader.' }, { status: 400 });
-  const r = await startRoundOnReader(g.session.courseId, bookingId, readerId, g.actor);
+  // Who's paying now (the check-in's "How many are here?"); absent = the whole group, as before.
+  const here = body.here === undefined ? undefined : Number(body.here);
+  const r = await startRoundOnReader(g.session.courseId, bookingId, readerId, g.actor, { here });
   if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
   return NextResponse.json(r.value);
 }
