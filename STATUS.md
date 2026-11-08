@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-08 21:09 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `5897ca3e` · working tree **11 dirty file(s)**
+Generated 2026-11-08 21:26 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `b14c351b` · working tree **16 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 151 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 153 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `437456cc` | 2026-11-08 | POS-4: Pro shop register as a real POS (#338) |
+| `f4cc7d76` | 2026-11-08 | POS-4: Pro shop register as a real POS — tiles, one ticket, Charge in steps |
 | `63efbf69` | 2026-11-08 | SEATS-1: close seats on a tee time one at a time (#337) |
 | `ab8c4f43` | 2026-11-08 | SEATS-1: close seats on a tee time one at a time (Open seats − N + on the card) |
 | `b324c547` | 2026-11-08 | Receipt: what was actually paid, how and when; prints on a receipt printer (#336) |
@@ -166,19 +168,24 @@ Generated 2026-11-08 21:09 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (11 file(s))
+### Uncommitted working tree (16 file(s))
 
-- `M CLAUDE.md`
-- `M STATUS.artifact.html`
-- `M STATUS.json`
-- `M STATUS.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/counter-b-test.ts`
-- `M scripts/register-photo-test.ts`
+- `M scripts/not-paid-db-test.ts`
+- `M scripts/sheet-views-test.ts`
 - `M scripts/words-guard.baseline.json`
-- `M src/app/dashboard/shop/page.tsx`
-- `?? scripts/pos-register-test.ts`
+- `M src/app/api/operator/money/overview/route.ts`
+- `M src/app/api/operator/sheet-money/route.ts`
+- `M src/app/api/operator/tee-times/route.ts`
+- `M src/app/dashboard/page.tsx`
+- `M src/components/dashboard/money/PaymentsPanel.tsx`
+- `M src/lib/analytics.ts`
+- `M src/lib/earned-terms.ts`
+- `M src/lib/home-board.ts`
+- `M src/lib/operator-home.ts`
+- `?? scripts/accuracy-links-test.ts`
+- `?? src/lib/day-fill.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -263,11 +270,11 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-11-05 | 2d |
+| `CLAUDE.md` | 1 | 2026-11-08 | 0d |
 | `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 7d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 18d |
-| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 12d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 13d |
+| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 13d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 15d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 16d |
 | `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 16d |
@@ -304,6 +311,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `437456cc` 2026-11-08 — POS-4: Pro shop register as a real POS (#338)
+- `f4cc7d76` 2026-11-08 — POS-4: Pro shop register as a real POS — tiles, one ticket, Charge in steps
 - `63efbf69` 2026-11-08 — SEATS-1: close seats on a tee time one at a time (#337)
 - `ab8c4f43` 2026-11-08 — SEATS-1: close seats on a tee time one at a time (Open seats − N + on the card)
 - `b324c547` 2026-11-08 — Receipt: what was actually paid, how and when; prints on a receipt printer (#336)
@@ -314,8 +323,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `f7245efa` 2026-11-08 — Fix the split-booking pin for the check-in steps' rest line
 - `506f38f0` 2026-11-08 — Tee sheet: check-in in order — who's here, add to order, payment, done
 - `8bed0df0` 2026-11-06 — Tee sheet time card: who can book the open seats, reader on the card, type a card (#333)
-- `23a4f354` 2026-11-06 — Tee sheet time card: who can book the open seats, the reader on the card, type a card
-- `de19b14e` 2026-11-06 — Carts: per player or per cart (2 riders), set in Settings (#332)
 
 ---
 

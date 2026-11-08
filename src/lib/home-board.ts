@@ -3,6 +3,7 @@
 // course conditions, the next seven days by hour, and the month against its goal.
 // Server-only. Money (the goal) uses computeAnalytics()'s collected figure, never a new sum.
 import { prisma } from './prisma';
+import { timeSpots } from './day-fill';
 import { todayIn, addDaysStr } from './course-time';
 import { computeAnalytics } from './analytics';
 import { cleanConditions, type CourseConditions } from './course-conditions';
@@ -31,21 +32,24 @@ export async function courseConditions(courseId: string): Promise<{ detail: Cour
   return { detail: cleanConditions(c?.conditionsDetail), alert: c?.conditions ?? '', updatedAt: at ? at.toISOString() : null, detailAt: c?.conditionsDetailAt ? c.conditionsDetailAt.toISOString() : null };
 }
 
-/** The next 7 days (today first), per tee-time hour: players booked and spots offered. Blocked times offer nothing. */
+/** The next 7 days (today first), per tee-time hour: players booked and spots offered (lib/day-fill's rule). */
 export async function weekAhead(courseId: string, tz: string | null | undefined, now = new Date()) {
   const today = todayIn(tz, now);
   const days = Array.from({ length: 7 }, (_, i) => addDaysStr(today, i));
   const times = await prisma.teeTime.findMany({
-    where: { courseId, date: { gte: days[0], lte: days[6] }, status: { not: 'blocked' } },
-    select: { date: true, time: true, playersAvailable: true, bookings: { where: LIVE, select: { players: true } } },
+    where: { courseId, date: { gte: days[0], lte: days[6] } },
+    select: { date: true, time: true, status: true, playersAvailable: true, bookings: { where: LIVE, select: { players: true } } },
   });
-  const hours = [...new Set(times.map(t => Number(t.time.slice(0, 2))))].sort((a, b) => a - b);
+  const hours = [...new Set(times.filter(t => t.status !== 'blocked' || t.bookings.length > 0).map(t => Number(t.time.slice(0, 2))))].sort((a, b) => a - b);
   const cell = new Map<string, { booked: number; offered: number }>();
   for (const t of times) {
     const k = `${t.date}|${Number(t.time.slice(0, 2))}`;
     const c = cell.get(k) ?? { booked: 0, offered: 0 };
-    c.booked += t.bookings.reduce((s, b) => s + b.players, 0);
-    c.offered += t.playersAvailable;
+    // ACC-1: one rule for players of spots (lib/day-fill) — a blocked time counts only for a group already on it.
+    const n = t.bookings.reduce((s, b) => s + b.players, 0);
+    if (t.status === 'blocked' && n === 0) continue;
+    c.booked += n;
+    c.offered += timeSpots(t, n);
     cell.set(k, c);
   }
   return {

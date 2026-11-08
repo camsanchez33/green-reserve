@@ -48,7 +48,7 @@ async function main() {
   // Payments: a no-show has its own list; a round later today is still to play (course time).
   const row = (o: Record<string, unknown>) => ({ status: 'confirmed', paymentStatus: 'card_on_file', cancellationFeeTotal: 0, noShowAt: null, teeTime: { date: '2031-05-14', time: '15:00', holes: 18 }, ...o }) as unknown as Parameters<typeof paymentStatus>[0];
   check('a no-show is not on the Not paid yet list', paymentStatus(row({ noShowAt: '2031-05-14T09:00:00Z', teeTime: { date: DAY, time: '08:00', holes: 18 } }), '2031-05-14', '12:00').group === 'noshow');
-  check('a round later today is still to play', paymentStatus(row({}), '2031-05-14', '12:00').group === 'upcoming');
+  check('a round later today that hasn\'t paid is in Not paid yet (ACC-1: the sheet and Money count it)', paymentStatus(row({}), '2031-05-14', '12:00').group === 'unpaid');
   check('…and owed once its time has gone', paymentStatus(row({}), '2031-05-14', '16:00').group === 'unpaid');
 
   const route = readFileSync('src/app/api/operator/bookings/route.ts', 'utf8');

@@ -15,7 +15,8 @@ const page = read('src/app/dashboard/page.tsx');
 
 const month = route.slice(route.indexOf("const month = searchParams.get('month')"), route.indexOf("// SD-3: the default day"));
 ok('the month summary sits after the session check', route.indexOf('if (!session) return') > 0 && route.indexOf('if (!session) return') < route.indexOf("const month = searchParams.get('month')"));
-ok('the month summary is scoped to the course and skips blocked times', month.includes('courseId: session.courseId') && month.includes("status: { not: 'blocked' }"));
+// ACC-1: a blocked time counts only for a group already on it (lib/day-fill), the rule the sheet, Home and Analytics use.
+ok('the month summary is scoped to the course and counts blocked times only for a group on them', month.includes('courseId: session.courseId') && month.includes("if (t.status === 'blocked' && n === 0) continue;") && month.includes('d.spots += timeSpots(t, n);'));
 ok('a bad month is refused', month.includes('status: 400') && month.includes('(0[1-9]|1[0-2])'));
 ok('List and Calendar never write (no POST/PATCH/DELETE)', ![list, cal].some(f => /method:\s*'(POST|PATCH|DELETE)'/.test(f)));
 ok('a list line opens the time\'s card', list.includes('onClick={() => onSelect(s.id)}'));

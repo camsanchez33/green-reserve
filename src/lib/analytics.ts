@@ -53,6 +53,7 @@
 //                    over the last four weeks (bookings made by then and not yet
 //                    cancelled by then; a group counts at its size today).
 import type { BookingEventType } from '@prisma/client';
+import { livePlayers, timeSpots } from './day-fill';
 import { prisma } from './prisma';
 import { DEFAULT_TZ, isValidTimezone, todayIn, addDaysStr } from './course-time';
 import { teeToUtcMs } from './tee-time-utils';
@@ -154,7 +155,10 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
   const made = live.filter(b => !b.splitFromId);
   const cancelled = bookings.filter(b => b.status === 'cancelled');
   // MEM-ACCT: a round put on a member's account is settled at the counter; it is counted here and shown apart (accountCents).
-  const collectedB = live.filter(b => b.status === 'completed' && (b.paymentStatus === 'paid' || b.paymentStatus === 'paid_offline' || b.paymentStatus === 'on_account'));
+  // ACC-1 (Cam 2026-11-08, "any booking or payment correlates so it is accurate"): paid is what the payment says —
+  // the same rule as Money → Payments (PaymentsPanel's paymentStatus). Admin "Collect payment" charges a round that
+  // is still confirmed (not checked in); it used to show as Not paid yet here while Payments and the Ledger had it.
+  const collectedB = live.filter(b => b.paymentStatus === 'paid' || b.paymentStatus === 'paid_offline' || b.paymentStatus === 'on_account');
   const refunded = (b: { paymentStatus: string }) => b.paymentStatus === 'refunded';
   const pastLive = live.filter(b => b.passed);
   // Money: a round refunded in full is settled, neither expected nor owed.
@@ -194,7 +198,8 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
   const grFees = collectedB.filter(b => b.paymentStatus === 'paid').reduce((s, b) => s + b.accessFeeTotal, 0);
   const greenCollected = collectedB.reduce((s, b) => s + b.greenFeeTotal, 0);
   const cartCollected = collectedB.reduce((s, b) => s + b.cartFeeTotal, 0);
-  const roundsPlayed = collectedB.reduce((s, b) => s + (b.checkedInPlayers ?? b.players), 0);
+  // Played needs a check-in (a round paid ahead by "Collect payment" hasn't been played).
+  const roundsPlayed = collectedB.filter(b => b.status === 'completed').reduce((s, b) => s + (b.checkedInPlayers ?? b.players), 0);
   const pastSlotsForSale = L.teeTimes.filter(t => t.status !== 'blocked' && teeMs(t.date, t.time) < nowMs).length;
 
   const byWeek = daysBetween(range.from, range.to) > 45;
@@ -205,7 +210,7 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
     const k = bucketOf(d); if (!series.has(k)) series.set(k, { expected: 0, collected: 0, rounds: 0, sale: 0, booked: 0 });
   }
   for (const b of pastMoney) { const r = series.get(bucketOf(b.date)); if (r) r.expected += share(b); }
-  for (const b of collectedB) { const r = series.get(bucketOf(b.date)); if (r) { r.collected += kept(b); r.rounds += b.checkedInPlayers ?? b.players; } }
+  for (const b of collectedB) { const r = series.get(bucketOf(b.date)); if (r) { r.collected += kept(b); if (b.status === 'completed') r.rounds += b.checkedInPlayers ?? b.players; } }
   // DENSE-2: the same collected course share, by the tee time's weekday and hour (Money's sales charts).
   const collectedByDow = Array.from({ length: 7 }, () => 0);
   const collectedByHour = new Map<number, number>();
@@ -228,20 +233,25 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
   const collectedByTeeTime = new Map<string, number>();
   for (const b of collectedB) collectedByTeeTime.set(b.teeTimeId, (collectedByTeeTime.get(b.teeTimeId) ?? 0) + kept(b));
   let sale = 0, bookedSpots = 0;
-  for (const t of forSale) {
-    const booked = Math.min(t.playersBooked, t.playersAvailable);
+  // ACC-1: players booked of spots by ONE rule (lib/day-fill) — the tee sheet's strip, Home and the Calendar use it
+  // too. Live players from the bookings (not the playersBooked counter); a blocked time with a group on it counts as
+  // exactly that group; a time is never more than full.
+  const fillTimes = L.teeTimes.map(t => ({ ...t, players: livePlayers(t.bookings) })).filter(t => t.status !== 'blocked' || t.players > 0);
+  for (const t of fillTimes) {
+    const booked = t.players;
+    const spots = timeSpots(t, booked);
     const h = Number(t.time.slice(0, 2)), w = dowOf(t.date);
-    sale += t.playersAvailable; bookedSpots += booked;
+    sale += spots; bookedSpots += booked;
     for (const [m, k] of [[byDay, t.date], [byHour, h], [heat, `${w}-${h}`]] as const) {
       const map = m as Map<string | number, ReturnType<typeof agg>>;
       if (!map.has(k)) map.set(k, agg());
-      const r = map.get(k)!; r.sale += t.playersAvailable; r.booked += booked;
+      const r = map.get(k)!; r.sale += spots; r.booked += booked;
     }
-    byDow[w].sale += t.playersAvailable; byDow[w].booked += booked;
-    { const sr = series.get(bucketOf(t.date)); if (sr) { sr.sale += t.playersAvailable; sr.booked += booked; } }
+    byDow[w].sale += spots; byDow[w].booked += booked;
+    { const sr = series.get(bucketOf(t.date)); if (sr) { sr.sale += spots; sr.booked += booked; } }
     if (teeMs(t.date, t.time) < nowMs) {
       const e = heatEarned.get(`${w}-${h}`) ?? { spots: 0, cents: 0 };
-      e.spots += t.playersAvailable; e.cents += collectedByTeeTime.get(t.id) ?? 0;
+      e.spots += spots; e.cents += collectedByTeeTime.get(t.id) ?? 0;
       heatEarned.set(`${w}-${h}`, e);
     }
   }
@@ -478,6 +488,9 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
       expectedCents: expected, collectedCents: collected, gapCents: expected - collected, gapPct: pct(expected - collected, expected),
       cardCents: card, counterCents: counter, accountCents: onAccount, outstandingCents: outstanding, outstandingBookings: outstandingB.length, upcomingCents: upcoming,
       noShowUnpaidCents: noShowUnpaidB.reduce((s, b) => s + share(b), 0), noShowUnpaidBookings: noShowUnpaidB.length,
+      // ACC-1: a round refunded in full is neither paid nor owed — counted here so the sheet can say so ("· 1 refunded")
+      // instead of a checked-in group silently dropping out of both.
+      refundedBookings: live.filter(refunded).length,
       // W2-8 (4): beyond the green fee — rounds with a cart, shop items on rounds, and walk-up shop sales (before tax).
       beyond: {
         cartRounds, rounds: collectedB.length, cartPct: pct(cartRounds, collectedB.length),

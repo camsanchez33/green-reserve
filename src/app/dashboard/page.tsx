@@ -1,5 +1,6 @@
 'use client';
 import { onCourse } from '@/lib/on-course';
+import { timeSpots, livePlayers as livePlayersOf } from '@/lib/day-fill';
 import { roundName } from '@/lib/tee-rounds';
 import SmsConsentAsk, { SmsConsentDialog } from '@/components/dashboard/SmsConsentAsk';
 import { SMS_NO_CONSENT_STAFF } from '@/lib/sms-consent-copy';
@@ -590,13 +591,14 @@ function DashboardPageInner() {
   // bookings; Paid / Not paid yet from /api/operator/sheet-money (the figures Home
   // and Analytics show), only for logins with money.payments.
   const livePlayers = teeTimes.reduce((s, t) => s + (t.bookings?.filter(b => b.status !== 'cancelled').reduce((n, b) => n + b.players, 0) ?? 0), 0);
-  const spotsOffered = teeTimes.filter(t => t.status !== 'blocked').reduce((s, t) => s + t.playersAvailable, 0);
+  // ACC-1: the same players-of-spots rule as Home, the Calendar and Analytics (lib/day-fill).
+  const spotsOffered = teeTimes.reduce((s, t) => s + timeSpots(t, livePlayersOf(t.bookings)), 0);
   // SHEET-3: groups booked on the day (was the footer under the sheet).
   const dayGroups = teeTimes.reduce((n, x) => n + (x.bookings?.length ?? 0), 0);
   // Cam 2026-11-06 ("36 groups and 57 tee times doesn't make sense"): how many of the day's times have anyone on them.
   const timesBooked = teeTimes.filter(x => x.status !== 'blocked' && (x.bookings?.length ?? 0) > 0).length;
   const checkedInPlayers = teeTimes.reduce((s, t) => s + (t.bookings?.filter(b => b.status === 'completed').reduce((n, b) => n + (b.checkedInPlayers ?? b.players), 0) ?? 0), 0);
-  const [dayMoney, setDayMoney] = useState<{ date: string; paidCents: number; paidGroups: number; outstandingCents: number; outstandingGroups: number; lateGroups: number } | null>(null);
+  const [dayMoney, setDayMoney] = useState<{ date: string; paidCents: number; paidGroups: number; outstandingCents: number; outstandingGroups: number; lateGroups: number; refundedGroups?: number } | null>(null);
   const canSeeMoney = access.can('money.payments');
   // AUDIT-1 (database audit): the sheet re-reads every 30s and each read is a new array, so the
   // strip re-ran the day's analytics each time. It now asks only when a group's money changed.
@@ -605,7 +607,7 @@ function DashboardPageInner() {
   useEffect(() => {
     if (!canSeeMoney || teeTimes.length === 0) { setDayMoney(null); return; }
     let live = true;
-    dfetch<{ date: string; paidCents: number; paidGroups: number; outstandingCents: number; outstandingGroups: number; lateGroups: number }>(`/api/operator/sheet-money?date=${selectedDate}`)
+    dfetch<{ date: string; paidCents: number; paidGroups: number; outstandingCents: number; outstandingGroups: number; lateGroups: number; refundedGroups?: number }>(`/api/operator/sheet-money?date=${selectedDate}`)
       .then(r => { if (live) setDayMoney(r.ok ? r.data : null); });
     return () => { live = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- moneyKey stands for teeTimes' money state
@@ -1422,7 +1424,7 @@ function DashboardPageInner() {
                   )}
                   <div className="px-4 py-3"><div className="text-[12.5px] text-ink-soft">Checked in</div><div className="text-[20px] font-semibold text-ink tabular-nums leading-tight">{checkedInPlayers}<span className="text-[13px] font-normal text-ink-muted"> of {livePlayers}</span></div><div className="text-[12px] text-ink-muted">players</div></div>
                   {dayMoney && dayMoney.date === selectedDate && (<>
-                    <div className="px-4 py-3"><div className="text-[12.5px] text-ink-soft">Paid</div><div className="text-[20px] font-semibold text-ink tabular-nums leading-tight">${(dayMoney.paidCents / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}</div><div className="text-[12px] text-ink-muted tabular-nums">{dayMoney.paidGroups} {dayMoney.paidGroups === 1 ? 'group' : 'groups'}</div></div>
+                    <div className="px-4 py-3"><div className="text-[12.5px] text-ink-soft">Paid</div><div className="text-[20px] font-semibold text-ink tabular-nums leading-tight">${(dayMoney.paidCents / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}</div><div className="text-[12px] text-ink-muted tabular-nums">{dayMoney.paidGroups} {dayMoney.paidGroups === 1 ? 'group' : 'groups'}{dayMoney.refundedGroups ? ` · ${dayMoney.refundedGroups} refunded` : ''}</div></div>
                     <div className="px-4 py-3"><div className="text-[12.5px] text-ink-soft">Not paid yet</div><div className={'text-[20px] font-semibold tabular-nums leading-tight ' + (dayMoney.lateGroups > 0 ? 'text-warn' : 'text-ink')}>${(dayMoney.outstandingCents / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}</div><div className="text-[12px] text-ink-muted tabular-nums">{dayMoney.outstandingGroups} {dayMoney.outstandingGroups === 1 ? 'group' : 'groups'}{dayMoney.lateGroups > 0 && <span className="text-warn"> · {dayMoney.lateGroups} past</span>}</div></div>
                   </>)}
                 </div>

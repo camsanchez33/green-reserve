@@ -26,5 +26,6 @@ export async function GET(req: NextRequest) {
     outstandingCents: a.revenue.outstandingCents + a.revenue.upcomingCents,
     outstandingGroups: a.revenue.outstandingBookings + a.revenue.pipeline.upcomingBookings,
     lateGroups: a.revenue.outstandingBookings,
+    refundedGroups: a.revenue.refundedBookings,
   }, { headers: { 'Cache-Control': 'no-store' } });
 }

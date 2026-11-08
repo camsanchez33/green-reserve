@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 671,
+    "files": 672,
     "routes": 293,
-    "libs": 245,
+    "libs": 246,
     "models": 71,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -6262,7 +6262,7 @@
     },
     {
       "path": "src/app/api/operator/money/overview/route.ts",
-      "lines": 37,
+      "lines": 39,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7016,7 +7016,7 @@
     },
     {
       "path": "src/app/api/operator/sheet-money/route.ts",
-      "lines": 31,
+      "lines": 32,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7542,7 +7542,7 @@
     },
     {
       "path": "src/app/api/operator/tee-times/route.ts",
-      "lines": 267,
+      "lines": 277,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7577,6 +7577,7 @@
         "@/lib/booking-events",
         "@/lib/cancel-policy",
         "@/lib/course-time",
+        "@/lib/day-fill",
         "@/lib/golfer-key",
         "@/lib/money",
         "@/lib/prisma",
@@ -8946,7 +8947,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 2268,
+      "lines": 2270,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8985,6 +8986,7 @@
         "@/lib/change-requests",
         "@/lib/course-time",
         "@/lib/dashboard-fetch",
+        "@/lib/day-fill",
         "@/lib/format",
         "@/lib/late-add",
         "@/lib/member-rates",
@@ -12464,7 +12466,7 @@
     },
     {
       "path": "src/components/dashboard/money/PaymentsPanel.tsx",
-      "lines": 130,
+      "lines": 132,
       "purpose": "Money rework (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -14729,7 +14731,7 @@
     },
     {
       "path": "src/lib/analytics.ts",
-      "lines": 638,
+      "lines": 651,
       "purpose": "AN-1 (Cam 2026-10-01):",
       "brain": [],
       "exports": [
@@ -14789,6 +14791,7 @@
       "guard": null,
       "imports": [
         "./course-time",
+        "./day-fill",
         "./email",
         "./golfer-key",
         "./golfer-segments",
@@ -18529,6 +18532,43 @@
       "usedBy": []
     },
     {
+      "path": "src/lib/day-fill.ts",
+      "lines": 28,
+      "purpose": "ACC-1 (Cam 2026-11-08, \"make sure these completely link throughout the site so any booking or payment correlates\"):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "fillOf",
+          "kind": "fn"
+        },
+        {
+          "name": "FillTime",
+          "kind": "type"
+        },
+        {
+          "name": "livePlayers",
+          "kind": "fn"
+        },
+        {
+          "name": "timeSpots",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/api/operator/tee-times/route.ts",
+        "src/app/dashboard/page.tsx",
+        "src/lib/analytics.ts",
+        "src/lib/home-board.ts",
+        "src/lib/operator-home.ts"
+      ]
+    },
+    {
       "path": "src/lib/db.ts",
       "lines": 2,
       "purpose": "",
@@ -18702,7 +18742,7 @@
     },
     {
       "path": "src/lib/earned-terms.ts",
-      "lines": 33,
+      "lines": 36,
       "purpose": "EARNED-1 (Cam 2026-11-04, \"earned vs paid out\"):",
       "brain": [],
       "exports": [
@@ -20131,7 +20171,7 @@
     },
     {
       "path": "src/lib/home-board.ts",
-      "lines": 108,
+      "lines": 112,
       "purpose": "DASH-D Home (Cam 2026-11-01, mockups S1 + \"week-ahead heat map and month vs goal\"):",
       "brain": [],
       "exports": [
@@ -20174,6 +20214,7 @@
         "./course-conditions",
         "./course-goals",
         "./course-time",
+        "./day-fill",
         "./prisma"
       ],
       "usedBy": [
@@ -22307,7 +22348,7 @@
     },
     {
       "path": "src/lib/operator-home.ts",
-      "lines": 164,
+      "lines": 165,
       "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the course dashboard mockups):",
       "brain": [],
       "exports": [
@@ -22340,6 +22381,7 @@
       "imports": [
         "./analytics",
         "./course-time",
+        "./day-fill",
         "./email",
         "./prisma",
         "./setup-missing",

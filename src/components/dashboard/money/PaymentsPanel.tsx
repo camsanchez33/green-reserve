@@ -25,8 +25,10 @@ export function paymentStatus(b: MoneyBooking, today: string, clock = '99:99'): 
   if (b.paymentStatus === 'paid_offline') return { label: 'Paid at the counter', tone: 'ok', group: 'paid' };
   if (b.paymentStatus === 'on_account') return { label: 'On account', tone: 'ok', group: 'paid' };
   if (b.paymentStatus === 'refunded') return { label: 'Refunded', tone: 'neutral', group: 'refunded' };
-  // Still to play — later today counts too (course time), not only future days.
-  if (b.teeTime.date > today || (b.teeTime.date === today && b.teeTime.time.slice(0, 5) > clock)) return { label: 'Not played yet', tone: 'neutral', group: 'upcoming' };
+  // Future days belong to the tee sheet. ACC-1: a group later TODAY that hasn't paid is in Not paid yet — the
+  // number on the tee sheet, Home and Money counts it, so the list "See them" opens has to show it.
+  if (b.teeTime.date > today) return { label: 'Not played yet', tone: 'neutral', group: 'upcoming' };
+  if (b.teeTime.date === today && b.teeTime.time.slice(0, 5) > clock) return { label: 'Not played yet', tone: 'neutral', group: 'unpaid' };
   // A marked no-show is its own list, never mixed in with what's owed (lib/analytics outstanding).
   if (b.noShowAt) return { label: b.paymentStatus === 'cancellation_fee_charged' ? `No-show · ${usd(b.cancellationFeeTotal)} hold kept` : 'No-show', tone: 'bad', group: 'noshow' };
   if (b.paymentStatus === 'cancellation_fee_charged') return { label: `Not paid yet · ${usd(b.cancellationFeeTotal)} hold taken`, tone: 'warn', group: 'unpaid' };
