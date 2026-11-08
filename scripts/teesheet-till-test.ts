@@ -47,7 +47,7 @@ ok('cash = the take-cash confirm\'s amount (no booking fee)', page.includes("con
 ok('the "Here now" pick is the headcount the charge uses', page.includes('setHere(h => ({ ...h, [b.id]: Math.max(1, herePlayers - 1) }))') && page.includes('const n = here[b.id] ?? b.players;'));
 ok('pay buttons keep their permissions', page.includes("const cardOk = b.status !== 'completed' && b.status !== 'cancelled' && access.can('sheet.checkin');") && page.includes("const canCash = b.status === 'confirmed' && b.paymentStatus !== 'manual' && b.paymentStatus !== 'paid' && b.paymentStatus !== 'paid_offline' && access.can('sheet.counter_payment');")
   && page.includes("access.can('sheet.checkin') && access.can('shop.sell');") && page.includes('hasAccounts && access.can(\'sheet.counter_payment\')'));
-ok('amounts on buttons only for logins that see money', page.includes("`Charge${showMoney ? ` $${(cardDue / 100).toFixed(2)}` : ''}`") && page.includes("{showMoney ? `$${(cardDue / 100).toFixed(2)}` : 'Charge'}") && page.includes("const showTicket = showMoney && unpaid && !b.noShowAt;"));
+ok('amounts only for logins that see money', page.includes("{showMoney && <div className=\"text-[34px] font-semibold tracking-[-0.02em] text-ink tabular-nums\">${(cashDue / 100).toFixed(2)}</div>}") && page.includes("const withFee = showMoney && cardDue !== cashDue ?") && page.includes('{showMoney && quick.map('));
 ok('after a check-in: who, how, and the next group', page.includes('{justDone.name} · {justDone.players} checked in') && page.includes('Next: {nextGroup.golferName}') && (page.match(/setJustDone\(\{ bookingId: b\.id/g) || []).length === 3);
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');

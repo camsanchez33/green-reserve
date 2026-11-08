@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-06 22:05 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `8e9f3b97` · working tree **13 dirty file(s)**
+Generated 2026-11-08 07:54 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `45307c55` · working tree **12 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 140 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 142 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `8bed0df0` | 2026-11-06 | Tee sheet time card: who can book the open seats, reader on the card, type a card (#333) |
+| `23a4f354` | 2026-11-06 | Tee sheet time card: who can book the open seats, the reader on the card, type a card |
 | `de19b14e` | 2026-11-06 | Carts: per player or per cart (2 riders), set in Settings (#332) |
 | `fe626db0` | 2026-11-06 | Carts: per player or per cart (2 riders), set by the owner in Settings |
 | `ba23e030` | 2026-11-06 | Tee sheet: a Square-style Charge screen, and one "Paying now" control (#331) |
@@ -155,21 +157,20 @@ Generated 2026-11-06 22:05 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (13 file(s))
+### Uncommitted working tree (12 file(s))
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/add-tee-time-test.ts`
-- `M scripts/cash-at-counter-db-test.ts`
 - `M scripts/checkout-card-test.ts`
 - `M scripts/group-card-checkout-test.ts`
+- `M scripts/teesheet-1-test.ts`
+- `M scripts/teesheet-3-test.ts`
 - `M scripts/teesheet-till-test.ts`
 - `M scripts/tt-card-test.ts`
 - `M scripts/words-guard.baseline.json`
 - `M src/app/dashboard/page.tsx`
-- `M src/components/home/TeeSheetDemo.tsx`
-- `M src/lib/booking-status.ts`
-- `M src/lib/checkin-booking.ts`
+- `M src/components/dashboard/GroupTicket.tsx`
+- `M src/components/dashboard/TeeSheetRows.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -186,7 +187,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 107d | `b88c8bf3` | `RUN_QUEUE.md:2412` |
+| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 108d | `b88c8bf3` | `RUN_QUEUE.md:2412` |
 
 ## Not started — the actual queue
 
@@ -254,47 +255,49 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-11-05 | 0d |
-| `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 5d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 16d |
-| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 11d |
-| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 11d |
-| `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 14d |
-| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 14d |
-| `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 15d |
-| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 15d |
-| `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 15d |
-| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 15d |
-| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 15d |
-| `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 15d |
-| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 16d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 16d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 16d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-10-20 | 16d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-10-20 | 16d |
-| `ARCHITECTURE.md` | 0 | 2026-10-20 | 16d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-20 | 16d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-20 | 16d |
-| `CODEMAP_SPEC.md` | 0 | 2026-10-20 | 16d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-20 | 16d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-20 | 16d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-20 | 16d |
-| `FB2_COPY_SPEC.md` | 0 | 2026-10-20 | 16d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-20 | 16d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-20 | 16d |
-| `GOLFER_SPEC.md` | 0 | 2026-10-20 | 16d |
-| `HARDENING_SPEC.md` | 0 | 2026-10-20 | 16d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-20 | 16d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-20 | 16d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-20 | 16d |
-| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-20 | 16d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-20 | 16d |
-| `REVIEW_SPEC.md` | 0 | 2026-10-20 | 16d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-20 | 16d |
-| `UI_REVISE_SPEC.md` | 0 | 2026-10-20 | 16d |
+| `CLAUDE.md` | 1 | 2026-11-05 | 2d |
+| `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 6d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 18d |
+| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 12d |
+| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 13d |
+| `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 15d |
+| `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 16d |
+| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 16d |
+| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 16d |
+| `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 16d |
+| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 16d |
+| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 16d |
+| `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 16d |
+| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 18d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 18d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 18d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-10-20 | 18d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-10-20 | 18d |
+| `ARCHITECTURE.md` | 0 | 2026-10-20 | 18d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-20 | 18d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-20 | 18d |
+| `CODEMAP_SPEC.md` | 0 | 2026-10-20 | 18d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-20 | 18d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-20 | 18d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-20 | 18d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-10-20 | 18d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-20 | 18d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-20 | 18d |
+| `GOLFER_SPEC.md` | 0 | 2026-10-20 | 18d |
+| `HARDENING_SPEC.md` | 0 | 2026-10-20 | 18d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-20 | 18d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-20 | 18d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-20 | 18d |
+| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-20 | 18d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-20 | 18d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-20 | 18d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-20 | 18d |
+| `UI_REVISE_SPEC.md` | 0 | 2026-10-20 | 18d |
 
 ## Recent commits
 
+- `8bed0df0` 2026-11-06 — Tee sheet time card: who can book the open seats, reader on the card, type a card (#333)
+- `23a4f354` 2026-11-06 — Tee sheet time card: who can book the open seats, the reader on the card, type a card
 - `de19b14e` 2026-11-06 — Carts: per player or per cart (2 riders), set in Settings (#332)
 - `fe626db0` 2026-11-06 — Carts: per player or per cart (2 riders), set by the owner in Settings
 - `ba23e030` 2026-11-06 — Tee sheet: a Square-style Charge screen, and one "Paying now" control (#331)
@@ -305,8 +308,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `e616bb78` 2026-11-06 — Regenerate the code map and status board
 - `2e16380b` 2026-11-06 — Owner 2FA: match a code and its step on one clock
 - `c146bfe6` 2026-11-06 — Tee sheet: Message golfers by email, text or both, with ready-made messages and a preview
-- `2bea8fe8` 2026-11-05 — Tee sheet: a cleaner weather window that updates as you pick the times (#328)
-- `97875d10` 2026-11-06 — Tee sheet: a cleaner weather window that updates as you pick the times
 
 ---
 

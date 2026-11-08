@@ -151,7 +151,7 @@ async function main() {
   ok('split + cash rings up only the new group, and a refused cash sale leaves it owing (said so)', route.includes("ringUpCash(session.courseId, { lines: [], bookingIds: [r.newBookingId], walkIns: []") && route.includes('cashError: cash.error'));
   const page = readFileSync('src/app/dashboard/page.tsx', 'utf8');
   ok('the tee sheet previews with the same splitShares the server uses', page.includes("import { splitShares } from '@/lib/split-booking';") && src.includes("import { splitShares, splitRefusal } from './split-booking';"));
-  ok('"Showed up" says the rest stay booked (or, when the group can\'t split, that they won\'t be charged)', page.includes('{rest > 0 && !restSplit && <p className="text-[12.5px] text-warn">The other {rest} won’t be charged.</p>}'));
+  ok('"Showed up" says the rest stay booked (or, when the group can\'t split, that they won\'t be charged)', page.includes("{restSplit ? `The other ${rest} stay booked.` : `The other ${rest} won’t be charged.`}"));
   ok('a part split off sits under its group, which says how many of the group checked in', page.includes('· with {parentGroup.golferName}</span>') && page.includes('{b.players} of {groupOf} checked in') && page.includes('const under = (id: string)'));
   ok('a group checked in short shows what was paid and how many played', page.includes('{b.checkedInPlayers} of {b.players} played') && page.includes('const paidShownCents = partlyPlayed'));
   ok('a group paid in cash shows what the counter took (no booking fee), not the booked total', page.includes(': b.paidOffline ? (b.totalAmount ?? 0) - (b.accessFeeTotal ?? 0) + (b.shopTotalCents ?? 0) + (b.shopTaxCents ?? 0)'));

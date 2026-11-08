@@ -1,29 +1,42 @@
 {
-  "generatedAt": "2026-11-06T22:05:05.760Z",
+  "generatedAt": "2026-11-08T07:54:43.528Z",
   "repo": {
-    "head": "8e9f3b97",
+    "head": "45307c55",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 13,
+    "dirtyCount": 12,
     "dirty": [
       "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/add-tee-time-test.ts",
-      " M scripts/cash-at-counter-db-test.ts",
       " M scripts/checkout-card-test.ts",
       " M scripts/group-card-checkout-test.ts",
+      " M scripts/teesheet-1-test.ts",
+      " M scripts/teesheet-3-test.ts",
       " M scripts/teesheet-till-test.ts",
       " M scripts/tt-card-test.ts",
       " M scripts/words-guard.baseline.json",
       " M src/app/dashboard/page.tsx",
-      " M src/components/home/TeeSheetDemo.tsx",
-      " M src/lib/booking-status.ts",
-      " M src/lib/checkin-booking.ts"
+      " M src/components/dashboard/GroupTicket.tsx",
+      " M src/components/dashboard/TeeSheetRows.tsx"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "8bed0df0",
+        "date": "2026-11-06T17:13:08-05:00",
+        "subject": "Tee sheet time card: who can book the open seats, reader on the card, type a card (#333)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "23a4f354",
+        "date": "2026-11-06T22:05:08+00:00",
+        "subject": "Tee sheet time card: who can book the open seats, the reader on the card, type a card",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "de19b14e",
         "date": "2026-11-06T16:59:06-05:00",
@@ -1031,7 +1044,7 @@
       "line": 2412,
       "hash": "b88c8bf3",
       "shipDate": "2026-07-22",
-      "ageDays": 107
+      "ageDays": 108
     }
   ],
   "next": [
@@ -1173,233 +1186,243 @@
       "file": "CLAUDE.md",
       "openRefs": 1,
       "lastTouched": "2026-11-05",
-      "ageDays": 0
+      "ageDays": 2
     },
     {
       "file": "DENSE_UI_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-11-01",
-      "ageDays": 5
+      "ageDays": 6
     },
     {
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-10-20",
-      "ageDays": 16
-    },
-    {
-      "file": "OPERATOR_REWORK_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-25",
-      "ageDays": 11
+      "ageDays": 18
     },
     {
       "file": "STAFF_POLICY_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-26",
-      "ageDays": 11
+      "ageDays": 12
+    },
+    {
+      "file": "OPERATOR_REWORK_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-25",
+      "ageDays": 13
     },
     {
       "file": "ADMIN_V5_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-23",
-      "ageDays": 14
-    },
-    {
-      "file": "HOMEPAGE_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-23",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "AGREEMENT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "file": "CALL_SCHEDULING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 15
+      "ageDays": 16
+    },
+    {
+      "file": "HOMEPAGE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-23",
+      "ageDays": 16
     },
     {
       "file": "ONBOARDING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "file": "ONBOARDING_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "file": "PUBLIC_SITE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "file": "RECEIPT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "file": "ADMIN_MASTER_PLAN.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 16
+      "ageDays": 18
     },
     {
       "file": "ADMIN_REBUILD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 16
+      "ageDays": 18
     },
     {
       "file": "ADMIN_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 16
+      "ageDays": 18
     },
     {
       "file": "ADMIN_V3_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 16
+      "ageDays": 18
     },
     {
       "file": "ADMIN_V4_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 16
+      "ageDays": 18
     },
     {
       "file": "ARCHITECTURE.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 16
+      "ageDays": 18
     },
     {
       "file": "BACKUP_OPS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 16
+      "ageDays": 18
     },
     {
       "file": "BIRDIE_AI_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 16
+      "ageDays": 18
     },
     {
       "file": "CODEMAP_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 16
+      "ageDays": 18
     },
     {
       "file": "COURSES_SHEET_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 16
+      "ageDays": 18
     },
     {
       "file": "COURSE_LAYOUT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 16
+      "ageDays": 18
     },
     {
       "file": "DESIGN_SYSTEM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 16
+      "ageDays": 18
     },
     {
       "file": "FB2_COPY_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 16
+      "ageDays": 18
     },
     {
       "file": "FB3_FEE_PLAN_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 16
+      "ageDays": 18
     },
     {
       "file": "GOLFER_EDGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 16
+      "ageDays": 18
     },
     {
       "file": "GOLFER_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 16
+      "ageDays": 18
     },
     {
       "file": "HARDENING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 16
+      "ageDays": 18
     },
     {
       "file": "INQUIRY_CALL_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 16
+      "ageDays": 18
     },
     {
       "file": "INQUIRY_FORM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 16
+      "ageDays": 18
     },
     {
       "file": "MANAGE_BOOKING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 16
+      "ageDays": 18
     },
     {
       "file": "PRIVATE_BILLING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 16
+      "ageDays": 18
     },
     {
       "file": "PRODUCTION_READINESS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 16
+      "ageDays": 18
     },
     {
       "file": "REVIEW_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 16
+      "ageDays": 18
     },
     {
       "file": "SITE_DASHBOARD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 16
+      "ageDays": 18
     },
     {
       "file": "UI_REVISE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 16
+      "ageDays": 18
     }
   ],
   "bank": null,
   "recentCommits": [
+    {
+      "h": "8bed0df0",
+      "date": "2026-11-06",
+      "subject": "Tee sheet time card: who can book the open seats, reader on the card, type a card (#333)"
+    },
+    {
+      "h": "23a4f354",
+      "date": "2026-11-06",
+      "subject": "Tee sheet time card: who can book the open seats, the reader on the card, type a card"
+    },
     {
       "h": "de19b14e",
       "date": "2026-11-06",
@@ -1449,16 +1472,6 @@
       "h": "c146bfe6",
       "date": "2026-11-06",
       "subject": "Tee sheet: Message golfers by email, text or both, with ready-made messages and a preview"
-    },
-    {
-      "h": "2bea8fe8",
-      "date": "2026-11-05",
-      "subject": "Tee sheet: a cleaner weather window that updates as you pick the times (#328)"
-    },
-    {
-      "h": "97875d10",
-      "date": "2026-11-06",
-      "subject": "Tee sheet: a cleaner weather window that updates as you pick the times"
     }
   ]
 }
