@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-08 20:09 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `7c498a10` · working tree **15 dirty file(s)**
+Generated 2026-11-08 21:09 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `5897ca3e` · working tree **11 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 149 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 151 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `63efbf69` | 2026-11-08 | SEATS-1: close seats on a tee time one at a time (#337) |
+| `ab8c4f43` | 2026-11-08 | SEATS-1: close seats on a tee time one at a time (Open seats − N + on the card) |
 | `b324c547` | 2026-11-08 | Receipt: what was actually paid, how and when; prints on a receipt printer (#336) |
 | `d26d15c1` | 2026-11-08 | Receipt: what was actually paid, how and when; prints on a receipt printer |
 | `d6083d50` | 2026-11-08 | Time card: reader charges who's here, receipts, day actions in the sheet bar (#335) |
@@ -164,23 +166,19 @@ Generated 2026-11-08 20:09 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (15 file(s))
+### Uncommitted working tree (11 file(s))
 
+- `M CLAUDE.md`
+- `M STATUS.artifact.html`
+- `M STATUS.json`
+- `M STATUS.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M prisma/schema.prisma`
-- `M scripts/add-tee-time-test.ts`
-- `M scripts/checkout-card-test.ts`
-- `M scripts/tee-time-slot-test.ts`
-- `M scripts/tt-card-test.ts`
+- `M scripts/counter-b-test.ts`
+- `M scripts/register-photo-test.ts`
 - `M scripts/words-guard.baseline.json`
-- `M src/app/api/operator/tee-times/route.ts`
-- `M src/app/dashboard/page.tsx`
-- `M src/components/dashboard/TeeSheetRows.tsx`
-- `M src/lib/tee-sheet-engine.ts`
-- `?? prisma/migrations/20261108000000_seats_closed/`
-- `?? scripts/seats-closed-test.ts`
-- `?? src/lib/tee-time-seats.ts`
+- `M src/app/dashboard/shop/page.tsx`
+- `?? scripts/pos-register-test.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -306,6 +304,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `63efbf69` 2026-11-08 — SEATS-1: close seats on a tee time one at a time (#337)
+- `ab8c4f43` 2026-11-08 — SEATS-1: close seats on a tee time one at a time (Open seats − N + on the card)
 - `b324c547` 2026-11-08 — Receipt: what was actually paid, how and when; prints on a receipt printer (#336)
 - `d26d15c1` 2026-11-08 — Receipt: what was actually paid, how and when; prints on a receipt printer
 - `d6083d50` 2026-11-08 — Time card: reader charges who's here, receipts, day actions in the sheet bar (#335)
@@ -316,8 +316,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `8bed0df0` 2026-11-06 — Tee sheet time card: who can book the open seats, reader on the card, type a card (#333)
 - `23a4f354` 2026-11-06 — Tee sheet time card: who can book the open seats, the reader on the card, type a card
 - `de19b14e` 2026-11-06 — Carts: per player or per cart (2 riders), set in Settings (#332)
-- `fe626db0` 2026-11-06 — Carts: per player or per cart (2 riders), set by the owner in Settings
-- `ba23e030` 2026-11-06 — Tee sheet: a Square-style Charge screen, and one "Paying now" control (#331)
 
 ---
 

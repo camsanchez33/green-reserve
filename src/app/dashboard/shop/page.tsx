@@ -10,8 +10,12 @@
 // scan a barcode into the search box, ring up a custom amount, take money off
 // (shop.discount), enter the cash handed over for the change, send a receipt,
 // and refund a paid sale (money.refund; items only with shop.return) — cash recorded, card through Stripe.
+// POS-4 (Cam 2026-11-08, approved mockup: "layout wastes space · too many ways to sort · checkout is unclear · not
+// like a real POS"): Register · Sales · Close out tabs. The register is big tiles under one row of category chips
+// (no headings), the ticket always on the right with one Charge button, and Charge runs in steps — how they pay →
+// take it → receipt. Tee times are paid on the tee sheet only (Cam: "tee times shouldnt be paid for in pro shop
+// they are paid on tee times"), so the register no longer lists rounds or walk-ins; the server routes are unchanged.
 import SmsConsentAsk from '@/components/dashboard/SmsConsentAsk';
-import { cartsFor } from '@/lib/cart-pricing';
 import { PackPicker, PackHolders } from '@/components/dashboard/RegisterPacks';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -39,15 +43,9 @@ type Sale = {
   link: boolean;
 };
 type Reader = { id: string; label: string; online: boolean; simulated: boolean };
-/** POS-3 R3b: one group's round on the card reader. */
-type RoundOnReader = { bookingId: string; readerId: string; label: string; dueCents: number; state: 'waiting' | 'declined' | 'cancelled' | 'error'; message: string };
 /** A sale on the card reader: waiting for the card, or what happened. */
 type ReaderSale = { sale: Sale; readerId: string; state: 'waiting' | 'declined' | 'cancelled' | 'error'; message: string };
 type Custom = { key: string; name: string; priceCents: number; quantity: number; roundPackId?: string };
-// POS-3 R2: green fees at the register — today's groups that owe, and walk-ins.
-type Owing = { bookingId: string; time: string; holes: number; golferName: string; players: number; dueCents: number; cardCents: number; noShow: boolean };
-type OpenTime = { teeTimeId: string; time: string; holes: number; round: string | null; spots: number; greenFeeCents: number; cartFeeCents: number; walkingAllowed: boolean; rates?: Record<'resident' | 'senior' | 'junior', number | null> };
-type WalkIn = { key: string; teeTimeId: string; time: string; golferName: string; players: number; cart: boolean; estimateCents: number; rate: string };
 type Discount = { mode: 'percent' | 'amount'; value: string; note: string };
 type Quote = { key: string; subtotalCents: number; discountCents: number; taxCents: number; totalCents: number; taxCalculationId: string; taxUnavailable?: boolean };
 
@@ -55,7 +53,9 @@ const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
 const toCents = (v: string) => { const n = Number(v.replace(/[$,\s]/g, '')); return Number.isFinite(n) && n > 0 ? Math.round(n * 100) : 0; };
 const isPaid = (s: Sale) => s.status === 'paid_cash' || s.status === 'paid_card' || s.status === 'paid_account';
 const LINK = 'text-[12.5px] text-pine font-medium hover:underline disabled:opacity-50';
-const clock = (t: string) => { const [h, m] = t.split(':').map(Number); return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`; };
+// POS-4: the big choice buttons in the Charge steps (how they pay, the receipt).
+const CHOICE = 'min-h-[56px] rounded-[7px] border px-3 text-[14px] font-medium text-ink text-center transition-colors disabled:opacity-50 ';
+const PAY_WORDS: Record<string, string> = { cash: 'Cash', reader: 'Card reader', account: 'On account', sms: 'Text a pay link', email: 'Email a pay link' };
 const time = (iso: string) => new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 const STATUS: Record<string, { label: string; tone: 'ok' | 'warn' | 'neutral' }> = {
   paid_cash: { label: 'Paid in cash', tone: 'ok' },
@@ -81,7 +81,6 @@ export default function ShopPage() {
   const [readerId, setReaderId] = useState('');
   const [testMode, setTestMode] = useState(false);
   const [onReader, setOnReader] = useState<ReaderSale | null>(null);
-  const [roundOnReader, setRoundOnReader] = useState<RoundOnReader | null>(null);
   const [customer, setCustomer] = useState({ name: '', phone: '', email: '' });
   // SMS-1: the customer said yes to texts after staff read the script. Never on by default.
   const [smsYes, setSmsYes] = useState(false);
@@ -118,14 +117,13 @@ export default function ShopPage() {
     setHistSales(r.data.sales);
   }
   const searchRef = useRef<HTMLInputElement>(null);
-  const [tab, setTab] = useState<'items' | 'rounds'>('items');
-  const [roundsData, setRoundsData] = useState<{ owing: Owing[]; open: OpenTime[]; perCart?: boolean } | null>(null);
-  const [roundsError, setRoundsError] = useState('');
-  const [picked, setPicked] = useState<string[]>([]);
-  const [walkIns, setWalkIns] = useState<WalkIn[]>([]);
-  const [walkForm, setWalkForm] = useState<{ teeTimeId: string; name: string; players: number; cart: boolean; rate?: string } | null>(null);
-  // Dead end 20: a walk-in at the time's resident, senior or junior price (members are booked on the tee sheet).
-  const walkGreen = (t: OpenTime, rate?: string) => (rate && rate !== 'standard' ? t.rates?.[rate as 'resident' | 'senior' | 'junior'] ?? t.greenFeeCents : t.greenFeeCents);
+  // POS-4: the page's tabs, and where the sale is in the Charge steps (null = building the sale).
+  const [view, setView] = useState<'register' | 'sales' | 'close'>('register');
+  const [step, setStep] = useState<null | 'pay' | 'take' | 'done'>(null);
+  // A pay link just sent: the done step says where it went.
+  const [linkSent, setLinkSent] = useState('');
+  // The done step's receipt: Text or Email picked (then the number or address to send it to).
+  const [rcptOpen, setRcptOpen] = useState(false);
   const [quoteError, setQuoteError] = useState('');
   const [quoteTry, setQuoteTry] = useState(0);
 
@@ -154,22 +152,15 @@ export default function ShopPage() {
     const rd = await dfetch<{ readers: Reader[]; testMode: boolean }>('/api/operator/card-readers');
     if (rd.ok) { setReaders(rd.data.readers); setTestMode(rd.data.testMode); setReaderId(id => rd.data.readers.some(x => x.id === id) ? id : rd.data.readers[0]?.id ?? ''); }
   }, []);
-  const loadRounds = useCallback(async () => {
-    const r = await dfetch<{ owing: Owing[]; open: OpenTime[]; perCart?: boolean }>('/api/operator/shop-sales/rounds');
-    if (r.ok) { setRoundsData(r.data); setRoundsError(''); } else setRoundsError(r.error);
-  }, []);
   useEffect(() => { load(); }, [load]);
 
   const tree = useMemo(() => shopTree(items ?? []).filter(i => !i.parentId), [items]);
   const categories = useMemo(() => [...new Set(tree.map(i => i.category || 'Other'))].sort(), [tree]);
-  const groups = useMemo(() => {
-    const m = new Map<string, TreeItem[]>();
-    for (const it of tree) {
-      if (!matches(it, q) || (cat && (it.category || 'Other') !== cat)) continue;
-      const k = it.category || 'Other'; m.set(k, [...(m.get(k) ?? []), it]);
-    }
-    return [...m.entries()];
-  }, [tree, q, cat]);
+  // POS-4: one flat list of tiles — the chip filters it; "All" keeps them in category order. No headings.
+  const shown = useMemo(() => tree
+    .filter(it => matches(it, q) && (!cat || (it.category || 'Other') === cat))
+    .sort((a, b) => (a.category || 'Other').localeCompare(b.category || 'Other')), [tree, q, cat]);
+  const withPhotos = shown.some(i => i.photoUrl);
   const inCart = (it: TreeItem) => (it.options.length ? it.options.reduce((s, o) => s + (cart[o.id] ?? 0), 0) : cart[it.id] ?? 0);
   const lines = (items ?? []).filter(i => cart[i.id]).map(i => ({ item: i, quantity: cart[i.id] }));
   const subtotal = lines.reduce((s, l) => s + l.item.priceCents * l.quantity, 0) + customs.reduce((s, c) => s + c.priceCents * c.quantity, 0);
@@ -193,23 +184,20 @@ export default function ShopPage() {
     return () => { live = false; clearTimeout(t); };
   }, [cartKey, quoteTry]);
   const priced = quote && quote.key === cartKey ? quote : null;
-  const pickedRounds = (roundsData?.owing ?? []).filter(o => picked.includes(o.bookingId));
-  // A group in cash owes the round less GreenReserve's fee; on the card reader, the round's card charge (booking fee included).
-  const owed = (o: Owing) => (pay === 'reader' ? o.cardCents : o.dueCents);
-  const roundsCents = pickedRounds.reduce((n, o) => n + owed(o), 0) + walkIns.reduce((n, w) => n + w.estimateCents, 0);
-  const hasRounds = pickedRounds.length + walkIns.length > 0;
   const itemsEmpty = salePayload.length === 0;
-  const due = (itemsEmpty ? 0 : priced ? priced.totalCents : subtotal) + roundsCents;
+  const due = itemsEmpty ? 0 : priced ? priced.totalCents : subtotal;
   // Stripe Tax down: cash still goes through, with no tax (Cam 2026-10-29); a pay link or the reader waits.
   const noTax = !itemsEmpty && !!priced?.taxUnavailable;
   // Shop audit 16 (Cam: "never block cash"): if the total with tax can't be worked out (the quote errored or is
   // rate-limited), cash still goes through — the server works the tax out and the sale shows what to collect.
-  const cashNoQuote = pay === 'cash' && !itemsEmpty && !priced && !!quoteError;
-  const ready = itemsEmpty ? hasRounds : (!!priced && (!noTax || pay === 'cash' || pay === 'account')) || cashNoQuote;
+  // The total with tax can't be worked out right now: cash (and only cash) still goes through.
+  const quoteDown = !itemsEmpty && !priced && !!quoteError;
+  const cashNoQuote = pay === 'cash' && quoteDown;
+  const ready = !itemsEmpty && ((!!priced && (!noTax || pay === 'cash' || pay === 'account')) || cashNoQuote);
   const tenderedCents = toCents(tendered);
   const add = (id: string, d: number) => setCart(c => { const q = Math.max(0, Math.min(99, (c[id] ?? 0) + d)); const n = { ...c }; if (q) n[id] = q; else delete n[id]; return n; });
   const addCustom = (key: string, d: number) => setCustoms(cs => cs.map(c => c.key === key ? { ...c, quantity: Math.max(0, Math.min(99, c.quantity + d)) } : c).filter(c => c.quantity > 0));
-  const empty = itemsEmpty && !hasRounds;
+  const empty = itemsEmpty;
 
   // A scanner types the code and presses Enter: an exact SKU goes straight into the sale.
   function scan(code: string) {
@@ -249,14 +237,11 @@ export default function ShopPage() {
   }, []);
 
   async function ringUp() {
-    if (pay === 'reader' && hasRounds) return roundToReader();
     setBusy('sale'); setError(''); setNote(''); setJustPaid(null);
     const r = await dfetch<{ sale: Sale; sent?: boolean; sendError?: string; readerError?: string; skipped?: string[]; notes?: string[] }>('/api/operator/shop-sales', {
       method: 'POST',
       body: JSON.stringify({
         lines: salePayload, discount: itemsEmpty ? undefined : discountPayload,
-        bookingIds: pickedRounds.map(o => o.bookingId),
-        walkIns: walkIns.map(w => ({ teeTimeId: w.teeTimeId, golferName: w.golferName, players: w.players, cartSelected: w.cart, rate: w.rate })),
         pay: pay === 'cash' || pay === 'reader' || pay === 'account' ? pay : 'link', membershipId: pay === 'account' ? accountMember?.id : undefined, via: pay === 'email' ? 'email' : 'sms', readerId: pay === 'reader' ? readerId : undefined, taxCalculationId: priced?.taxCalculationId || undefined,
         cashTenderedCents: pay === 'cash' && tenderedCents && !cashNoQuote ? tenderedCents : undefined,
         // The total on screen: if the tax has changed since, nothing is rung up and the new total shows.
@@ -269,65 +254,20 @@ export default function ShopPage() {
     if (!r.ok) {
       setError(r.error);
       // The tax changed since the total was shown: work the total out again.
-      if (r.status === 409 && /sales tax changed/.test(r.error)) setQuoteTry(n => n + 1);
-      // The rounds went through (checked in, paid at the counter) though the items didn't: take them out of the sale.
-      if (/^The (round was|\d+ rounds were) paid/.test(r.error)) { setPicked([]); setWalkIns([]); loadRounds(); load(); }
+      if (r.status === 409 && /sales tax changed/.test(r.error)) { setQuoteTry(n => n + 1); setStep(null); }
       return;
     }
-    setCart({}); setCustoms([]); setDiscount(null); setTendered(''); setCustomer({ name: '', phone: '', email: '' }); setSmsYes(false); setPicked([]); setWalkIns([]); setAccountMember(null);
-    if (hasRounds) loadRounds();
-    if (r.data.skipped?.length) setError(`Not rung up: ${r.data.skipped.join(' ')} The total below is what was taken.`);
+    setCart({}); setCustoms([]); setDiscount(null); setTendered(''); setCustomer({ name: '', phone: '', email: '' }); setSmsYes(false); setAccountMember(null);
+    if (r.data.skipped?.length) setError(`Not rung up: ${r.data.skipped.join(' ')} The total shown is what was taken.`);
     if (r.data.notes?.length) setNote(r.data.notes.join(' '));
     if (pay === 'reader') setOnReader({ sale: r.data.sale, readerId, state: r.data.readerError ? 'error' : 'waiting', message: r.data.readerError ?? '' });
-    else if (r.data.sendError) setError(`Sale saved, but ${r.data.sendError.charAt(0).toLowerCase()}${r.data.sendError.slice(1)} Send it again from the list below, or take cash.`);
-    else if (pay === 'cash' || pay === 'account') { setJustPaid(r.data.sale); setJustNoQuote(cashNoQuote); setReceipt({ id: r.data.sale.id, via: 'email', to: r.data.sale.customerEmail || '' }); }
-    else setNote(`Pay link ${pay === 'sms' ? 'texted' : 'emailed'}. It shows below once paid.`);
+    else if (r.data.sendError) { setError(`Sale saved, but ${r.data.sendError.charAt(0).toLowerCase()}${r.data.sendError.slice(1)} Send it again from Sales, or take cash.`); setStep(null); }
+    else if (pay === 'cash' || pay === 'account') { setJustPaid(r.data.sale); setJustNoQuote(cashNoQuote); setReceipt({ id: r.data.sale.id, via: 'email', to: r.data.sale.customerEmail || '' }); setStep('done'); }
+    else { setLinkSent(`Pay link ${pay === 'sms' ? 'texted' : 'emailed'}. It shows under Sales once paid.`); setStep('done'); }
     load();
     searchRef.current?.focus();
   }
 
-  // POS-3 R3b: one group's round on the reader — a card payment of their booking (checked in when it goes through).
-  async function roundToReader(again?: RoundOnReader) {
-    const group = again ? null : pickedRounds[0];
-    const bookingId = again?.bookingId ?? group?.bookingId ?? '';
-    const label = again?.label ?? (group ? `${clock(group.time)} · ${group.golferName} · ${group.players} player${group.players === 1 ? '' : 's'}` : '');
-    const rid = again?.readerId ?? readerId;
-    setBusy('sale'); setError(''); setNote(''); setJustPaid(null);
-    const r = await dfetch<{ status: string; dueCents?: number; message?: string }>('/api/operator/reader-rounds', { method: 'POST', body: JSON.stringify({ bookingId, readerId: rid }) });
-    setBusy('');
-    if (!r.ok) { setRoundOnReader({ bookingId, readerId: rid, label, dueCents: again?.dueCents ?? 0, state: 'error', message: r.error }); loadRounds(); return; }
-    setPicked([]);
-    setRoundOnReader({ bookingId, readerId: rid, label, dueCents: r.data.dueCents ?? 0, state: 'waiting', message: r.data.message ?? '' });
-  }
-  useEffect(() => {
-    if (roundOnReader?.state !== 'waiting') return;
-    let live = true;
-    const t = setInterval(async () => {
-      const r = await dfetch<{ status: string; message?: string }>('/api/operator/reader-rounds', { method: 'PATCH', body: JSON.stringify({ bookingId: roundOnReader.bookingId, action: 'status' }) });
-      if (!live) return;
-      if (!r.ok) { setRoundOnReader(o => o && { ...o, message: `${r.error} Still checking…` }); return; }
-      if (r.data.status === 'paid') { setNote(`${roundOnReader.label} — paid by card and checked in.`); setRoundOnReader(null); loadRounds(); return; }
-      if (r.data.status === 'refunded') { setError(r.data.message ?? 'The round was already paid — the card payment was refunded.'); setRoundOnReader(null); loadRounds(); return; }
-      if (r.data.status === 'declined') setRoundOnReader(o => o && { ...o, state: 'declined', message: r.data.message || 'The card was declined.' });
-      else if (r.data.status === 'cancelled' || r.data.status === 'open') setRoundOnReader(o => o && { ...o, state: 'cancelled', message: 'The payment was stopped — nothing was charged.' });
-      else if (r.data.message) setRoundOnReader(o => o && { ...o, message: r.data.message ?? '' });
-    }, 2000);
-    return () => { live = false; clearInterval(t); };
-  }, [roundOnReader?.state, roundOnReader?.bookingId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  async function roundReaderAct(action: 'cancel' | 'simulate', card?: 'ok' | 'declined') {
-    if (!roundOnReader) return;
-    setBusy('reader'); setError('');
-    const r = await dfetch<{ status?: string; message?: string }>('/api/operator/reader-rounds', { method: 'PATCH', body: JSON.stringify({ bookingId: roundOnReader.bookingId, action, readerId: roundOnReader.readerId, card }) });
-    setBusy('');
-    if (!r.ok) { setRoundOnReader(o => o && { ...o, message: r.error }); return; }
-    if (action === 'cancel') {
-      if (r.data.status === 'paid') { setNote(`${roundOnReader.label} — the card went through: paid and checked in.`); setRoundOnReader(null); loadRounds(); return; }
-      if (r.data.status === 'refunded') { setError(r.data.message ?? ''); setRoundOnReader(null); loadRounds(); return; }
-      setRoundOnReader(o => o && (r.data.status === 'waiting' ? { ...o, message: r.data.message ?? '' } : { ...o, state: 'cancelled', message: 'Cancelled — nothing was charged.' }));
-      loadRounds();
-    }
-  }
 
   // POS-3 R3: while a sale is on the reader, ask every 2 seconds what it is doing.
   useEffect(() => {
@@ -349,8 +289,11 @@ export default function ShopPage() {
     setOnReader(null);
     setJustPaid({ ...sale, status: 'paid_card' });
     setReceipt({ id: sale.id, via: 'email', to: '' });
+    setStep('done');
     load();
   }
+  // POS-4: the done step's "New sale" — back to an empty ticket.
+  function newSale() { setStep(null); setJustPaid(null); setReceipt(null); setRcptOpen(false); setLinkSent(''); setNote(''); setError(''); searchRef.current?.focus(); }
 
   async function readerAct(action: 'reader_start' | 'reader_cancel' | 'reader_simulate', card?: 'ok' | 'declined') {
     if (!onReader) return;
@@ -373,7 +316,9 @@ export default function ShopPage() {
     setBusy('');
     if (!r.ok) { setError(r.error); return; }
     setNote(`Receipt ${receipt.via === 'sms' ? 'texted' : 'emailed'}.`);
-    setReceipt(null); setJustPaid(null);
+    const fromDone = step === 'done' && justPaid?.id === receipt.id;
+    setReceipt(null); setJustPaid(null); setRcptOpen(false);
+    if (fromDone) setStep(null);
     load();
   }
 
@@ -419,12 +364,8 @@ export default function ShopPage() {
   const canReturn = canRefund || access.can('shop.return');
   // Recording cash is the counter-payment power, as on the tee sheet.
   const canCash = access.can('sheet.counter_payment');
-  // Rounds at the register are cash for now (rounds on the card reader come next).
-  // POS-3 R3b: one group (no items, no walk-in) can go on the card reader; other mixes of rounds are cash.
-  const canCheckin = access.can('sheet.checkin');
-  const oneRoundForReader = pickedRounds.length === 1 && walkIns.length === 0 && itemsEmpty && canCheckin;
-  const payChoices = ([['cash', 'Cash'], ['reader', 'Card reader'], ['account', 'On account'], ['sms', 'Text them a pay link'], ['email', 'Email them a pay link']] as const)
-    .filter(([k]) => (k !== 'cash' || canCash) && (k !== 'reader' || readers.length > 0) && (k !== 'account' || (canCash && accountsOn)) && (!hasRounds || k === 'cash' || (k === 'reader' && oneRoundForReader)));
+  const payChoices = (['reader', 'cash', 'account', 'sms', 'email'] as const)
+    .filter(k => (k !== 'cash' || canCash) && (k !== 'reader' || readers.length > 0) && (k !== 'account' || (canCash && accountsOn)));
   // MEM-ACCT 1b: "On account" shows only when some tier has member accounts on.
   useEffect(() => {
     if (!access.loaded || !canCash) return;
@@ -434,29 +375,19 @@ export default function ShopPage() {
       if (!r.ok) setError(r.error);
     });
   }, [access.loaded, canCash]);
-  useEffect(() => { if (hasRounds) setPay(p => (p === 'reader' && oneRoundForReader ? p : 'cash')); }, [hasRounds, oneRoundForReader]);
-  // Rounds: cash needs counter payment; the card reader needs check-in (CASH-1).
-  useEffect(() => { if (access.loaded && (canCash || canCheckin)) loadRounds(); }, [access.loaded, canCash, canCheckin, loadRounds]);
-  const canWalkIn = access.can('sheet.walkin');
-  const walkTime = roundsData?.open.find(t => t.teeTimeId === walkForm?.teeTimeId) ?? null;
-  // CART-2: per cart, two riders to a cart (rounded up) — lib/cart-pricing, the booking's own rule.
-  const walkCarts = (players: number) => (roundsData?.perCart ? cartsFor(players) : players);
   useEffect(() => { if (access.loaded && !canCash) setPay(p => (p === 'cash' ? (readers.length ? 'reader' : 'sms') : p)); }, [access.loaded, canCash, readers.length]);
   useEffect(() => { if (pay === 'reader' && !readers.length) setPay(canCash ? 'cash' : 'sms'); }, [pay, readers.length, canCash]);
   const readerName = (id: string) => readers.find(x => x.id === id)?.label ?? 'the card reader';
-  // CASH-1: the tee sheet's "Card reader" opens here with the group (?round=) picked for the reader.
-  const wantRound = useRef<string | null>(null);
-  useEffect(() => { wantRound.current = new URLSearchParams(window.location.search).get('round'); }, []);
-  useEffect(() => {
-    const id = wantRound.current;
-    if (!id || !roundsData || !readers.length) return;
-    wantRound.current = null;
-    setTab('rounds');
-    if (roundsData.owing.some(o => o.bookingId === id)) { setPicked([id]); setPay('reader'); }
-    else setError('That group isn’t waiting to pay today — check the tee sheet.');
-  }, [roundsData, readers.length]);
   const needContact = pay === 'sms' ? customer.phone.replace(/\D/g, '').length < 10 : pay === 'email' ? !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(customer.email.trim()) : false;
-  const todayTotal = (sales ?? []).filter(s => isPaid(s) && paidToday(s.paidAt)).reduce((t, s) => t + s.totalCents - s.refundedCents, 0);
+  // Accuracy (figures audit 2026-11-08): the shop's "today" is what the shop sold — green fees taken in cash on the
+  // tee sheet ring through the register (CASH-1) but are counted in the sheet's Paid, so they are left out here
+  // (the same rule as Analytics' walk-up shop figure). Refunds on a sale are items only (green fees refund on the booking).
+  const paidTodaySales = (sales ?? []).filter(s => isPaid(s) && paidToday(s.paidAt) && s.totalCents - (s.roundsCents ?? 0) > 0);
+  const todayTotal = paidTodaySales.reduce((t, s) => t + s.totalCents - (s.roundsCents ?? 0) - s.refundedCents, 0);
+  // A sale that changed under the steps (emptied, or the total is being worked out again) goes back to building.
+  useEffect(() => { if ((step === 'pay' || step === 'take') && empty && !onReader) setStep(null); }, [step, empty, onReader]);
+  const chargeLabel = cashNoQuote ? 'Charge' : `Charge ${usd(due)}`;
+  const takeDisabled = !payChoices.some(k => k === pay) || busy === 'sale' || needContact || !ready || (pay === 'cash' && !cashNoQuote && tenderedCents > 0 && tenderedCents < due) || (pay === 'account' && !accountMember) || (pay === 'reader' && (!readerId || onReader?.state === 'waiting'));
   // Quick cash amounts: the exact total, then the next notes up.
   const quickCash = [due, ...[2000, 5000, 10000].filter(n => n > due)].filter((n, i, a) => n > 0 && a.indexOf(n) === i).slice(0, 4);
 
@@ -465,9 +396,17 @@ export default function ShopPage() {
       <OperatorSidebar active="shop" />
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-8">
         {access.loaded && !canSell ? <StaffNotice what="the pro shop" view="shop.sell" /> : (
-          <div className="px-4 sm:px-10 py-7">
-            <h1 className="font-serif text-[32px] leading-none text-ink">Pro shop</h1>
-            {sales && <p className="text-[13.5px] text-ink-muted mt-2 tabular-nums">{usd(todayTotal)} today</p>}
+          <div className="px-4 sm:px-8 py-6">
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+              <h1 className="text-[26px] font-bold leading-none text-ink">Pro shop</h1>
+              <div className="inline-flex gap-1 p-1 rounded-[7px] bg-white shadow-card" role="tablist" aria-label="Pro shop">
+                {([['register', 'Register'], ['sales', 'Sales'], ...(access.can('shop.close') ? [['close', 'Close out']] : [])] as [typeof view, string][]).map(([k, l]) => (
+                  <button key={k} role="tab" aria-selected={view === k} onClick={() => { setView(k); if (k !== view) { setError(''); setNote(''); } }}
+                    className={'px-3.5 min-h-[34px] rounded-[5px] text-[13.5px] ' + (view === k ? 'bg-page text-ink font-semibold' : 'text-ink-soft hover:text-ink')}>{l}</button>
+                ))}
+              </div>
+              {sales && <p className="sm:ml-auto text-[13px] text-ink-muted tabular-nums">{usd(todayTotal)} today · {paidTodaySales.length} sale{paidTodaySales.length === 1 ? '' : 's'}</p>}
+            </div>
 
             {loadError && (
               <div className="mt-4 bg-bad/5 border border-bad/20 rounded-md px-4 py-3 text-sm text-bad flex items-center justify-between gap-3" role="alert">
@@ -476,344 +415,313 @@ export default function ShopPage() {
               </div>
             )}
 
-            <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
-              <Card className="p-5">
-                {(canCash || canCheckin) && (
-                  <div className="inline-flex gap-1 p-1 mb-4 rounded-[7px] bg-paper" role="tablist" aria-label="Ring up">
-                    {([['items', 'Shop items'], ['rounds', 'Rounds today']] as const).map(([k, l]) => (
-                      <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
-                        className={'px-3.5 min-h-[34px] rounded-[5px] text-[13.5px] ' + (tab === k ? 'bg-white text-ink font-semibold shadow-card' : 'text-ink-soft hover:text-ink')}>{l}</button>
-                    ))}
+            {view !== 'register' && (error || note) && (
+              <div className="mt-4" aria-live="polite">
+                {error && <p className="bg-bad/5 border border-bad/20 rounded-md px-4 py-3 text-[13px] text-bad" role="alert">{error}</p>}
+                {note && <p className="text-[13px] text-ok flex items-center gap-1.5"><StatusDot status="ok" />{note}</p>}
+              </div>
+            )}
+
+            {view === 'register' && (
+            <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
+              <Card className="p-4">
+                {!items && !loadError && <p className="text-sm text-ink-muted">Loading your shop…</p>}
+                {items && items.length === 0 && (
+                  <p className="text-sm text-ink-soft">Your shop has no items yet. <Link href="/dashboard/settings?section=Pro+shop" className="text-pine font-medium underline">Add them in Settings → Pro shop</Link>.</p>
+                )}
+                {tree.length > 0 && (
+                  <div className="space-y-3 mb-4">
+                    <input ref={searchRef} value={q} onChange={e => setQ(e.target.value)} autoFocus
+                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); const t = q.trim(); if (scan(q) || !t) return; if (!tree.some(i => matches(i, q))) noMatch(q); else setNote(''); } }}
+                      placeholder="Find or scan an item" aria-label="Find or scan an item" className={INPUT + ' w-full min-h-[44px]'} />
+                    {categories.length > 1 && <div className="flex flex-wrap gap-1.5" role="group" aria-label="Category">{['', ...categories].map(c => (
+                      <button key={c || 'all'} type="button" onClick={() => setCat(c)} aria-pressed={cat === c}
+                        className={'text-[13px] rounded-[7px] px-3 min-h-[34px] ' + (cat === c ? 'bg-ink text-white font-medium' : 'bg-page text-ink-soft hover:text-ink')}>{c || 'All'}</button>
+                    ))}</div>}
                   </div>
                 )}
-                {tab === 'rounds' && (
-                  <div>
-                    {roundsError && <p className="text-sm text-bad" role="alert">{roundsError} <button onClick={loadRounds} className="underline font-medium">Retry</button></p>}
-                    {!roundsData && !roundsError && <p className="text-sm text-ink-muted">Loading today’s tee sheet…</p>}
-                    {roundsData && (
+                {tree.length > 0 && shown.length === 0 && <p className="text-sm text-ink-soft mb-3">Nothing matches.{q.trim() ? ' Unknown code? Add it as a SKU in Settings → Pro shop.' : ''}</p>}
+                {items && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2.5">
+                    {shown.map(it => {
+                      const n = inCart(it);
+                      const opts = it.options.filter(o => o.active);
+                      return (
+                        <div key={it.id} className={picking === it.id ? 'col-span-2 sm:col-span-3 xl:col-span-4 2xl:col-span-5' : ''}>
+                          <button onClick={() => (opts.length ? setPicking(p => (p === it.id ? null : it.id)) : add(it.id, 1))} aria-expanded={opts.length ? picking === it.id : undefined}
+                            className={'w-full min-h-[104px] text-left rounded-[10px] border overflow-hidden flex flex-col transition-colors ' + (n ? 'border-pine/50 bg-pine/[0.05]' : 'border-line bg-white hover:border-line-strong')}>
+                            {/* DASH-D (Cam 2026-11-01, "photo tiles"): the item's photo when it has one; otherwise the name is the tile. */}
+                            {withPhotos && (it.photoUrl
+                              // eslint-disable-next-line @next/next/no-img-element
+                              ? <img src={it.photoUrl} alt="" loading="lazy" className="block w-full h-20 object-cover bg-paper" />
+                              : <span aria-hidden="true" className="flex w-full h-20 items-center justify-center bg-paper text-[18px] font-semibold text-ink-faint">{it.name.split(/\s+/).filter(w => /^[A-Za-z0-9]/.test(w)).slice(0, 2).map(w => w[0]).join('').toUpperCase()}</span>)}
+                            <span className="block px-3 pt-3 text-[14px] font-medium text-ink leading-snug">{it.name}</span>
+                            <span className="mt-auto flex items-baseline justify-between gap-2 px-3 pt-1 pb-3 text-[12px] text-ink-muted tabular-nums">
+                              <span><b className="text-[15px] font-semibold text-ink">{usd(it.priceCents)}</b>{n ? <span className="text-pine font-semibold"> · {n}</span> : null}</span>
+                              {opts.length ? <span className="shrink-0 whitespace-nowrap">{opts.length} options</span> : it.stockCount !== null && it.stockCount <= 0 && <span className="shrink-0 whitespace-nowrap text-bad">{stockWords(it.stockCount)}</span>}
+                            </span>
+                          </button>
+                          {picking === it.id && (
+                            <div className="mt-1.5 flex flex-wrap gap-1.5 bg-paper/70 rounded-md p-2" role="group" aria-label={`${it.name} options`}>
+                              {opts.map(o => (
+                                <button key={o.id} onClick={() => add(o.id, 1)}
+                                  className={'rounded-md border px-3 py-2 text-[13px] ' + (cart[o.id] ? 'border-pine/50 bg-white text-ink font-medium' : 'border-line bg-white text-ink hover:border-line-strong')}>
+                                  {o.optionLabel}
+                                  {o.priceCents !== it.priceCents && <span className="text-ink-muted tabular-nums"> {usd(o.priceCents)}</span>}
+                                  {o.stockCount !== null && <span className={'tabular-nums ' + (o.stockCount <= 0 ? 'text-bad' : 'text-ink-muted')}> ({o.stockCount})</span>}
+                                  {cart[o.id] ? <span className="text-pine font-semibold"> ×{cart[o.id]}</span> : null}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                    {!q.trim() && !cat && (
                       <>
-                        <h2 className="text-[13px] font-semibold text-ink mb-2">Groups still to pay</h2>
-                        {roundsData.owing.length === 0 ? <p className="text-sm text-ink-soft">Every group today has paid.</p> : (
-                          <ul className="divide-y divide-line-soft">
-                            {roundsData.owing.map(o => {
-                              const on = picked.includes(o.bookingId);
-                              return (
-                                <li key={o.bookingId} className="flex items-center justify-between gap-3 py-2 text-sm">
-                                  <span className="min-w-0"><span className="tabular-nums text-ink-soft">{clock(o.time)}</span> · <span className="text-ink">{o.golferName}</span> <span className="text-ink-muted">· {o.players} player{o.players === 1 ? '' : 's'} · {o.holes} holes{o.noShow ? ' · marked no-show' : ''}</span></span>
-                                  <span className="flex items-center gap-3 shrink-0">
-                                    <span className="tabular-nums text-ink">{usd(o.dueCents)}</span>
-                                    <button onClick={() => setPicked(p => on ? p.filter(x => x !== o.bookingId) : [...p, o.bookingId])} aria-pressed={on} className={LINK}>{on ? 'Added' : 'Add'}</button>
-                                  </span>
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        )}
-                        {canWalkIn && (
-                          <div className="mt-5">
-                            <h2 className="text-[13px] font-semibold text-ink mb-2">Walk-in</h2>
-                            {roundsData.open.length === 0 ? <p className="text-sm text-ink-soft">No open tee times left today.</p> : !walkForm ? (
-                              <button onClick={() => { const t = roundsData.open[0]; setWalkForm({ teeTimeId: t.teeTimeId, name: '', players: Math.min(2, t.spots), cart: !t.walkingAllowed || t.cartFeeCents > 0 }); }} className={LINK}>Walk-in on the next open time</button>
-                            ) : (
-                              <form className="bg-paper/70 rounded-md p-3 space-y-2 max-w-md" onSubmit={e => {
-                                e.preventDefault();
-                                if (!walkTime || walkForm.name.trim().length < 2) { setError('Pick a time and enter the golfer’s name.'); return; }
-                                const cart = walkForm.cart || !walkTime.walkingAllowed;
-                                setWalkIns(ws => [...ws, { key: `w${Date.now()}`, teeTimeId: walkTime.teeTimeId, time: walkTime.time, golferName: walkForm.name.trim(), players: walkForm.players, cart, estimateCents: walkGreen(walkTime, walkForm.rate) * walkForm.players + (cart ? walkTime.cartFeeCents * walkCarts(walkForm.players) : 0), rate: walkForm.rate ?? 'standard' }]);
-                                setWalkForm(null); setError('');
-                              }}>
-                                <div className="flex flex-wrap gap-2">
-                                  <select value={walkForm.teeTimeId} onChange={e => { const t = roundsData.open.find(x => x.teeTimeId === e.target.value)!; setWalkForm({ ...walkForm, teeTimeId: t.teeTimeId, players: Math.min(walkForm.players, t.spots), cart: walkForm.cart || !t.walkingAllowed }); }} aria-label="Tee time" className={INPUT}>
-                                    {roundsData.open.map(t => <option key={t.teeTimeId} value={t.teeTimeId}>{clock(t.time)}{t.round ? ` · ${t.round}` : ''} · {t.spots} open</option>)}
-                                  </select>
-                                  <input type="number" min={1} max={walkTime?.spots ?? 4} value={walkForm.players} onChange={e => setWalkForm({ ...walkForm, players: Math.max(1, Math.min(walkTime?.spots ?? 4, Number(e.target.value) || 1)) })} aria-label="Players" className={INPUT + ' w-20'} />
-                                </div>
-                                <input value={walkForm.name} onChange={e => setWalkForm({ ...walkForm, name: e.target.value })} placeholder="Golfer’s name" aria-label="Golfer’s name" maxLength={120} className={INPUT + ' w-full'} autoFocus />
-                                {walkTime && walkTime.cartFeeCents > 0 && (
-                                  <label className="flex items-center gap-2 text-[13px] text-ink">
-                                    <input type="checkbox" checked={walkForm.cart || !walkTime.walkingAllowed} disabled={!walkTime.walkingAllowed} onChange={e => setWalkForm({ ...walkForm, cart: e.target.checked })} className="accent-pine" />
-                                    Cart ({usd(walkTime.cartFeeCents)} / {roundsData?.perCart ? 'cart, 2 riders' : 'player'}){!walkTime.walkingAllowed ? ' — required on this time' : ''}
-                                  </label>
-                                )}
-                                {walkTime && (['resident', 'senior', 'junior'] as const).some(k => walkTime.rates?.[k] != null) && (
-                                  <select value={walkForm.rate ?? 'standard'} onChange={e => setWalkForm({ ...walkForm, rate: e.target.value })} aria-label="Rate" className={INPUT}>
-                                    <option value="standard">Standard</option>
-                                    {(['resident', 'senior', 'junior'] as const).filter(k => walkTime.rates?.[k] != null).map(k => <option key={k} value={k}>{k[0].toUpperCase() + k.slice(1)}</option>)}
-                                  </select>
-                                )}
-                                {walkTime && <p className="text-[12.5px] text-ink-muted tabular-nums">{usd(walkGreen(walkTime, walkForm.rate) * walkForm.players + ((walkForm.cart || !walkTime.walkingAllowed) ? walkTime.cartFeeCents * walkCarts(walkForm.players) : 0))}, checked in when you take the cash.</p>}
-                                <div className="flex gap-2">
-                                  <button type="submit" className="bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-[13px] px-3 py-2">Add to the sale</button>
-                                  <button type="button" onClick={() => setWalkForm(null)} className="text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2">Cancel</button>
-                                </div>
-                              </form>
-                            )}
-                          </div>
-                        )}
+                        <button type="button" onClick={() => { setCustomForm(f => f ? null : { name: '', amount: '' }); setPackPick(false); }} aria-expanded={!!customForm}
+                          className="min-h-[104px] rounded-[10px] border border-dashed border-line-strong text-[14px] font-medium text-ink-soft hover:text-ink">Custom amount</button>
+                        <button type="button" onClick={() => { setPackPick(o => !o); setCustomForm(null); }} aria-expanded={packPick}
+                          className="min-h-[104px] rounded-[10px] border border-dashed border-line-strong text-[14px] font-medium text-ink-soft hover:text-ink">Round pack</button>
                       </>
                     )}
                   </div>
                 )}
-                {tab === 'items' && !items && !loadError && <p className="text-sm text-ink-muted">Loading your shop…</p>}
-                {tab === 'items' && items && items.length === 0 && (
-                  <p className="text-sm text-ink-soft">Your shop has no items yet. <Link href="/dashboard/settings?section=Pro+shop" className="text-pine font-medium underline">Add them in Settings → Pro shop</Link>.</p>
-                )}
-                {tab === 'items' && tree.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-2 mb-4">
-                    <input ref={searchRef} value={q} onChange={e => setQ(e.target.value)} autoFocus
-                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); const t = q.trim(); if (scan(q) || !t) return; if (!tree.some(i => matches(i, q))) noMatch(q); else setNote(''); } }}
-                      placeholder="Find or scan an item" aria-label="Find or scan an item" className={INPUT + ' w-56'} />
-                    {categories.length > 1 && <span className="inline-flex flex-wrap gap-1 p-1 rounded-[7px] bg-paper">{['', ...categories].map(c => (
-                      <button key={c || 'all'} type="button" onClick={() => setCat(c)} aria-pressed={cat === c}
-                        className={'text-[13px] rounded-[5px] px-3 min-h-[30px] ' + (cat === c ? 'bg-white text-ink font-semibold shadow-card' : 'text-ink-soft hover:text-ink')}>{c || 'All'}</button>
-                    ))}</span>}
-                  </div>
-                )}
-                {tab === 'items' && tree.length > 0 && groups.length === 0 && <p className="text-sm text-ink-soft">Nothing matches.{q.trim() ? ' Unknown code? Add it as a SKU in Settings → Pro shop.' : ''}</p>}
-                {tab === 'items' && groups.map(([group, list]) => { const withPhotos = list.some(i => i.photoUrl); return (
-                  <section key={group} className="mb-4 last:mb-0">
-                    <h2 className="text-[13px] font-semibold text-ink mb-2">{group}</h2>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2">
-                      {list.map(it => {
-                        const n = inCart(it);
-                        const opts = it.options.filter(o => o.active);
-                        return (
-                          <div key={it.id} className={picking === it.id ? 'col-span-2 sm:col-span-3 xl:col-span-4' : ''}>
-                            <button onClick={() => (opts.length ? setPicking(p => (p === it.id ? null : it.id)) : add(it.id, 1))} aria-expanded={opts.length ? picking === it.id : undefined}
-                              className={'w-full text-left rounded-[7px] border overflow-hidden transition-colors ' + (n ? 'border-pine/50 bg-pine/[0.05]' : 'border-line bg-white hover:border-line-strong')}>
-                              {/* DASH-D (Cam 2026-11-01, "photo tiles"): the item's photo when it has one; otherwise the name is the tile. */}
-                              {withPhotos && (it.photoUrl
-                                // eslint-disable-next-line @next/next/no-img-element
-                                ? <img src={it.photoUrl} alt="" loading="lazy" className="block w-full h-20 object-cover bg-paper" />
-                                : <span aria-hidden="true" className="flex w-full h-20 items-center justify-center bg-paper text-[18px] font-semibold text-ink-faint">{it.name.split(/\s+/).filter(w => /^[A-Za-z0-9]/.test(w)).slice(0, 2).map(w => w[0]).join('').toUpperCase()}</span>)}
-                              <span className="block px-3 pt-2.5 text-sm font-medium text-ink leading-snug">{it.name}</span>
-                              <span className="flex items-baseline justify-between gap-2 px-3 pt-1 pb-2.5 text-[12.5px] text-ink-muted tabular-nums">
-                                <span><b className="text-[14px] font-semibold text-ink">{usd(it.priceCents)}</b>{n ? <span className="text-pine font-semibold"> · {n} in sale</span> : null}</span>
-                                {opts.length ? <span className="shrink-0 whitespace-nowrap">{opts.length} options</span> : it.stockCount !== null && <span className={'shrink-0 whitespace-nowrap' + (it.stockCount <= 0 ? ' text-bad' : '')}>{stockWords(it.stockCount)}</span>}
+              </Card>
+
+              <Card className="lg:sticky lg:top-6 flex flex-col lg:min-h-[calc(100vh-9rem)]">
+                {step === null ? (
+                  <>
+                    <div className="flex items-center justify-between gap-2 px-5 py-4 border-b border-line">
+                      <h2 className="text-[15px] font-semibold text-ink">This sale</h2>
+                      {!empty && <button type="button" onClick={() => { setCart({}); setCustoms([]); setDiscount(null); setTendered(''); setError(''); }} className="text-[12.5px] text-ink-soft hover:text-ink">Clear</button>}
+                    </div>
+                    <div className="flex-1 px-5 py-2">
+                      {packPick && <PackPicker onClose={() => setPackPick(false)} onPick={p => setCustoms(cs => cs.some(c => c.roundPackId === p.id) ? cs.map(c => c.roundPackId === p.id ? { ...c, quantity: Math.min(99, c.quantity + 1) } : c) : [...cs, { key: `p${p.id}`, name: p.name, priceCents: p.priceCents, quantity: 1, roundPackId: p.id }])} />}
+                      {customForm && (
+                        <form className="my-2 bg-paper/70 rounded-md p-3 flex flex-wrap gap-2 items-end" onSubmit={e => {
+                          e.preventDefault();
+                          const c = toCents(customForm.amount);
+                          if (!customForm.name.trim() || !c) { setError('Give the custom amount a name and a price.'); return; }
+                          setCustoms(cs => [...cs, { key: `c${Date.now()}`, name: customForm.name.trim().slice(0, 60), priceCents: c, quantity: 1 }]);
+                          setCustomForm(null); setError('');
+                        }}>
+                          <input value={customForm.name} onChange={e => setCustomForm({ ...customForm, name: e.target.value })} placeholder="What it is" aria-label="Custom amount name" maxLength={60} className={INPUT + ' flex-1 min-w-[8rem]'} autoFocus />
+                          <div className="relative w-24"><span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
+                            <input value={customForm.amount} onChange={e => setCustomForm({ ...customForm, amount: e.target.value })} inputMode="decimal" aria-label="Custom amount price" className={INPUT + ' w-full pl-6'} /></div>
+                          <button type="submit" className="bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-[13px] px-3 py-2">Add</button>
+                        </form>
+                      )}
+                      {empty ? <p className="text-sm text-ink-soft py-2">Tap or scan items.</p> : (
+                        <ul className="divide-y divide-line-soft">
+                          {lines.map(l => (
+                            <li key={l.item.id} className="flex items-center justify-between gap-2 py-2.5 text-sm">
+                              <span className="min-w-0 truncate text-ink">{l.item.name}</span>
+                              <span className="flex items-center gap-1.5 shrink-0">
+                                <button onClick={() => add(l.item.id, -1)} aria-label={`One fewer ${l.item.name}`} className="w-8 h-8 rounded-[7px] border border-line bg-white text-ink-soft hover:text-ink">−</button>
+                                <span className="w-6 text-center tabular-nums">{l.quantity}</span>
+                                <button onClick={() => add(l.item.id, 1)} aria-label={`One more ${l.item.name}`} className="w-8 h-8 rounded-[7px] border border-line bg-white text-ink-soft hover:text-ink">+</button>
+                                <span className="w-16 text-right tabular-nums text-ink">{usd(l.item.priceCents * l.quantity)}</span>
                               </span>
-                            </button>
-                            {picking === it.id && (
-                              <div className="mt-1.5 flex flex-wrap gap-1.5 bg-paper/70 rounded-md p-2" role="group" aria-label={`${it.name} options`}>
-                                {opts.map(o => (
-                                  <button key={o.id} onClick={() => add(o.id, 1)}
-                                    className={'rounded-md border px-3 py-1.5 text-[13px] ' + (cart[o.id] ? 'border-pine/50 bg-white text-ink font-medium' : 'border-line bg-white text-ink hover:border-line-strong')}>
-                                    {o.optionLabel}
-                                    {o.priceCents !== it.priceCents && <span className="text-ink-muted tabular-nums"> {usd(o.priceCents)}</span>}
-                                    {o.stockCount !== null && <span className={'tabular-nums ' + (o.stockCount <= 0 ? 'text-bad' : 'text-ink-muted')}> ({o.stockCount})</span>}
-                                    {cart[o.id] ? <span className="text-pine font-semibold"> ×{cart[o.id]}</span> : null}
-                                  </button>
+                            </li>
+                          ))}
+                          {customs.map(c => (
+                            <li key={c.key} className="flex items-center justify-between gap-2 py-2.5 text-sm">
+                              <span className="min-w-0 truncate text-ink">{c.name}</span>
+                              <span className="flex items-center gap-1.5 shrink-0">
+                                <button onClick={() => addCustom(c.key, -1)} aria-label={`One fewer ${c.name}`} className="w-8 h-8 rounded-[7px] border border-line bg-white text-ink-soft hover:text-ink">−</button>
+                                <span className="w-6 text-center tabular-nums">{c.quantity}</span>
+                                <button onClick={() => addCustom(c.key, 1)} aria-label={`One more ${c.name}`} className="w-8 h-8 rounded-[7px] border border-line bg-white text-ink-soft hover:text-ink">+</button>
+                                <span className="w-16 text-right tabular-nums text-ink">{usd(c.priceCents * c.quantity)}</span>
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      {!itemsEmpty && canDiscount && (
+                        discount === null
+                          ? <button type="button" onClick={() => setDiscount({ mode: 'percent', value: '', note: '' })} className={LINK + ' mt-3'}>Add a discount</button>
+                          : (
+                            <div className="mt-3 bg-paper/70 rounded-md p-3 space-y-2">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <div className="flex gap-1" role="group" aria-label="Discount as">
+                                  {(['percent', 'amount'] as const).map(m => (
+                                    <button key={m} type="button" aria-pressed={discount.mode === m} onClick={() => setDiscount({ ...discount, mode: m })}
+                                      className={'px-2.5 py-1 rounded-md border text-[12.5px] ' + (discount.mode === m ? 'border-pine/40 bg-white text-ink font-medium' : 'border-line bg-white text-ink-soft')}>{m === 'percent' ? '% off' : '$ off'}</button>
+                                  ))}
+                                </div>
+                                <input value={discount.value} onChange={e => setDiscount({ ...discount, value: e.target.value })} inputMode="decimal" aria-label={discount.mode === 'percent' ? 'Percent off' : 'Dollars off'} placeholder={discount.mode === 'percent' ? '10' : '5.00'} className={INPUT + ' w-20'} />
+                                <button type="button" onClick={() => setDiscount(null)} className="text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2">Remove</button>
+                              </div>
+                              <input value={discount.note} onChange={e => setDiscount({ ...discount, note: e.target.value })} maxLength={120} placeholder="Reason (shown on the receipt)" aria-label="Discount reason" className={INPUT + ' w-full'} />
+                            </div>
+                          )
+                      )}
+                    </div>
+                    <div className="px-5 pt-3 pb-5 border-t border-line">
+                      {!empty && (
+                        <dl className="text-[13.5px] space-y-1 mb-3">
+                          <div className="flex justify-between text-ink-soft"><dt>Subtotal</dt><dd className="tabular-nums">{usd(subtotal)}</dd></div>
+                          {priced && priced.discountCents > 0 && <div className="flex justify-between text-ink-soft"><dt>Discount{discount?.note.trim() ? ` (${discount.note.trim()})` : ''}</dt><dd className="tabular-nums">−{usd(priced.discountCents)}</dd></div>}
+                          {priced && priced.taxCents > 0 && <div className="flex justify-between text-ink-soft"><dt>Sales tax</dt><dd className="tabular-nums">{usd(priced.taxCents)}</dd></div>}
+                          <div className="flex items-baseline justify-between pt-2 text-ink"><dt className="text-[16px] font-semibold">Total</dt><dd className="text-[24px] font-bold tabular-nums">{cashNoQuote ? <span className="text-ink-muted font-normal text-base">—</span> : priced ? usd(due) : <span className="text-ink-muted font-normal text-sm">Working it out…</span>}</dd></div>
+                        </dl>
+                      )}
+                      {noTax && <p className="text-[13px] text-warn mb-2" role="status">No sales tax right now — cash or on account only. <button type="button" onClick={() => setQuoteTry(n => n + 1)} className="underline font-medium">Try again</button></p>}
+                      {quoteError && <p className="text-[13px] text-bad mb-2" role="alert">{quoteError} <button type="button" onClick={() => { setQuoteError(''); setQuoteTry(n => n + 1); }} className="underline font-medium">Try again</button></p>}
+                      <button type="button" onClick={() => { setError(''); setNote(''); setStep('pay'); }} disabled={empty || (!priced && !(quoteDown && canCash)) || payChoices.length === 0}
+                        className="w-full min-h-[56px] bg-pine hover:bg-pine-hover text-white font-semibold rounded-[7px] text-[17px] disabled:opacity-50">{chargeLabel}</button>
+                      {error && <p className="mt-3 text-[13px] text-bad" role="alert">{error}</p>}
+                      {note && <p className="mt-3 text-[13px] text-ok flex items-center gap-1.5"><StatusDot status="ok" />{note}</p>}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between gap-2 px-5 py-4 border-b border-line">
+                      <h2 className="text-[15px] font-semibold text-ink tabular-nums">{step === 'done' ? (linkSent ? 'Sent' : 'Paid') : onReader ? `Charge ${usd(onReader.sale.totalCents)}` : chargeLabel}</h2>
+                      {step !== 'done' && onReader?.state !== 'waiting' && <button type="button" onClick={() => { setStep(null); setOnReader(null); }} className={LINK}>Back to sale</button>}
+                    </div>
+                    <ol className="flex gap-4 px-5 pt-3 text-[12.5px] text-ink-muted" aria-label="Steps">
+                      {([['pay', '1. How they pay'], ['take', '2. Take it'], ['done', '3. Receipt']] as const).map(([k, l]) => (
+                        <li key={k} aria-current={step === k ? 'step' : undefined} className={step === k ? 'text-ink font-semibold' : ''}>{l}</li>
+                      ))}
+                    </ol>
+                    <div className="px-5 py-4 space-y-3 flex-1">
+                      {step === 'pay' && (
+                        <>
+                          <h3 className="text-[15px] font-semibold text-ink">How are they paying?</h3>
+                          <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="How they pay">
+                            {payChoices.map(k => {
+                              const off = k !== 'cash' && (quoteDown || (k !== 'account' && noTax));
+                              return (
+                                <button key={k} type="button" role="radio" aria-checked={pay === k} disabled={off} onClick={() => { setPay(k); setError(''); setStep('take'); }}
+                                  className={CHOICE + (pay === k ? 'border-pine border-2' : 'border-line hover:border-line-strong')}>{PAY_WORDS[k]}</button>
+                              );
+                            })}
+                          </div>
+                        </>
+                      )}
+                      {step === 'take' && (
+                        <>
+                          <h3 className="text-[15px] font-semibold text-ink">{PAY_WORDS[pay]}</h3>
+                          {pay === 'cash' && !cashNoQuote && due > 0 && (
+                            <div className="space-y-2">
+                              <div className="grid grid-cols-4 gap-1.5">
+                                {quickCash.map(n => (
+                                  <button key={n} type="button" onClick={() => setTendered((n / 100).toFixed(2))} aria-pressed={tenderedCents === n}
+                                    className={'min-h-[44px] rounded-[7px] text-[13.5px] font-medium tabular-nums ' + (tenderedCents === n ? 'bg-ink text-white' : 'bg-page text-ink hover:bg-line')}>{n === due ? 'Exact' : usd(n)}</button>
                                 ))}
                               </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </section>
-                ); })}
-              </Card>
-
-              <Card className="p-5 lg:sticky lg:top-6">
-                <div className="flex items-baseline justify-between gap-2">
-                  <h2 className="text-[15px] font-semibold text-ink">This sale</h2>
-                  <span className="flex gap-3">
-                    <button type="button" onClick={() => setPackPick(o => !o)} aria-expanded={packPick} className={LINK}>Round pack</button>
-                    <button type="button" onClick={() => setCustomForm(f => f ? null : { name: '', amount: '' })} aria-expanded={!!customForm} className={LINK}>Custom amount</button>
-                  </span>
-                </div>
-                {packPick && <PackPicker onClose={() => setPackPick(false)} onPick={p => setCustoms(cs => cs.some(c => c.roundPackId === p.id) ? cs.map(c => c.roundPackId === p.id ? { ...c, quantity: Math.min(99, c.quantity + 1) } : c) : [...cs, { key: `p${p.id}`, name: p.name, priceCents: p.priceCents, quantity: 1, roundPackId: p.id }])} />}
-                {customForm && (
-                  <form className="mt-2 bg-paper/70 rounded-md p-3 flex flex-wrap gap-2 items-end" onSubmit={e => {
-                    e.preventDefault();
-                    const c = toCents(customForm.amount);
-                    if (!customForm.name.trim() || !c) { setError('Give the custom amount a name and a price.'); return; }
-                    setCustoms(cs => [...cs, { key: `c${Date.now()}`, name: customForm.name.trim().slice(0, 60), priceCents: c, quantity: 1 }]);
-                    setCustomForm(null); setError('');
-                  }}>
-                    <input value={customForm.name} onChange={e => setCustomForm({ ...customForm, name: e.target.value })} placeholder="What it is" aria-label="Custom amount name" maxLength={60} className={INPUT + ' flex-1 min-w-[8rem]'} autoFocus />
-                    <div className="relative w-24"><span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
-                      <input value={customForm.amount} onChange={e => setCustomForm({ ...customForm, amount: e.target.value })} inputMode="decimal" aria-label="Custom amount price" className={INPUT + ' w-full pl-6'} /></div>
-                    <button type="submit" className="bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-[13px] px-3 py-2">Add</button>
-                  </form>
-                )}
-                {empty ? <p className="text-sm text-ink-soft mt-2">Tap or scan items.</p> : (
-                  <ul className="mt-2 divide-y divide-line-soft">
-                    {lines.map(l => (
-                      <li key={l.item.id} className="flex items-center justify-between gap-2 py-2 text-sm">
-                        <span className="min-w-0 truncate text-ink">{l.item.name}</span>
-                        <span className="flex items-center gap-1.5 shrink-0">
-                          <button onClick={() => add(l.item.id, -1)} aria-label={`One fewer ${l.item.name}`} className="w-8 h-8 rounded-[7px] border border-line bg-white text-ink-soft hover:text-ink">−</button>
-                          <span className="w-6 text-center tabular-nums">{l.quantity}</span>
-                          <button onClick={() => add(l.item.id, 1)} aria-label={`One more ${l.item.name}`} className="w-8 h-8 rounded-[7px] border border-line bg-white text-ink-soft hover:text-ink">+</button>
-                          <span className="w-16 text-right tabular-nums text-ink">{usd(l.item.priceCents * l.quantity)}</span>
-                        </span>
-                      </li>
-                    ))}
-                    {pickedRounds.map(o => (
-                      <li key={o.bookingId} className="flex items-center justify-between gap-2 py-2 text-sm">
-                        <span className="min-w-0 truncate text-ink">{clock(o.time)} round · {o.golferName} · {o.players}</span>
-                        <span className="flex items-center gap-3 shrink-0">
-                          <button onClick={() => setPicked(p => p.filter(x => x !== o.bookingId))} className="text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2">Remove</button>
-                          <span className="w-16 text-right tabular-nums text-ink">{usd(owed(o))}</span>
-                        </span>
-                      </li>
-                    ))}
-                    {walkIns.map(w => (
-                      <li key={w.key} className="flex items-center justify-between gap-2 py-2 text-sm">
-                        <span className="min-w-0 truncate text-ink">{clock(w.time)} walk-in · {w.golferName} · {w.players}{w.cart ? ' · cart' : ''}</span>
-                        <span className="flex items-center gap-3 shrink-0">
-                          <button onClick={() => setWalkIns(ws => ws.filter(x => x.key !== w.key))} className="text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2">Remove</button>
-                          <span className="w-16 text-right tabular-nums text-ink">{usd(w.estimateCents)}</span>
-                        </span>
-                      </li>
-                    ))}
-                    {customs.map(c => (
-                      <li key={c.key} className="flex items-center justify-between gap-2 py-2 text-sm">
-                        <span className="min-w-0 truncate text-ink">{c.name}</span>
-                        <span className="flex items-center gap-1.5 shrink-0">
-                          <button onClick={() => addCustom(c.key, -1)} aria-label={`One fewer ${c.name}`} className="w-8 h-8 rounded-[7px] border border-line bg-white text-ink-soft hover:text-ink">−</button>
-                          <span className="w-6 text-center tabular-nums">{c.quantity}</span>
-                          <button onClick={() => addCustom(c.key, 1)} aria-label={`One more ${c.name}`} className="w-8 h-8 rounded-[7px] border border-line bg-white text-ink-soft hover:text-ink">+</button>
-                          <span className="w-16 text-right tabular-nums text-ink">{usd(c.priceCents * c.quantity)}</span>
-                        </span>
-                      </li>
-                    ))}
-                    {priced && priced.discountCents > 0 && <li className="flex justify-between py-2 text-sm text-ink-soft"><span>Discount{discount?.note.trim() ? ` (${discount.note.trim()})` : ''}</span><span className="tabular-nums">−{usd(priced.discountCents)}</span></li>}
-                    {priced && priced.taxCents > 0 && <li className="flex justify-between py-2 text-sm text-ink-soft"><span>Sales tax</span><span className="tabular-nums">{usd(priced.taxCents)}</span></li>}
-                    <li className="flex items-baseline justify-between pt-3 pb-1 text-[15px] font-semibold text-ink"><span>Total</span><span className="tabular-nums text-[24px]">{cashNoQuote ? <span className="text-ink-muted font-normal">—</span> : ready ? usd(due) : <span className="text-ink-muted font-normal text-sm">Working out the total…</span>}</span></li>
-                  </ul>
-                )}
-
-                {!itemsEmpty && canDiscount && (
-                  discount === null
-                    ? <button type="button" onClick={() => setDiscount({ mode: 'percent', value: '', note: '' })} className={LINK + ' mt-2'}>Add a discount</button>
-                    : (
-                      <div className="mt-2 bg-paper/70 rounded-md p-3 space-y-2">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <div className="flex gap-1" role="group" aria-label="Discount as">
-                            {(['percent', 'amount'] as const).map(m => (
-                              <button key={m} type="button" aria-pressed={discount.mode === m} onClick={() => setDiscount({ ...discount, mode: m })}
-                                className={'px-2.5 py-1 rounded-md border text-[12.5px] ' + (discount.mode === m ? 'border-pine/40 bg-white text-ink font-medium' : 'border-line bg-white text-ink-soft')}>{m === 'percent' ? '% off' : '$ off'}</button>
-                            ))}
-                          </div>
-                          <input value={discount.value} onChange={e => setDiscount({ ...discount, value: e.target.value })} inputMode="decimal" aria-label={discount.mode === 'percent' ? 'Percent off' : 'Dollars off'} placeholder={discount.mode === 'percent' ? '10' : '5.00'} className={INPUT + ' w-20'} />
-                          <button type="button" onClick={() => setDiscount(null)} className="text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2">Remove</button>
-                        </div>
-                        <input value={discount.note} onChange={e => setDiscount({ ...discount, note: e.target.value })} maxLength={120} placeholder="Reason (shown on the receipt)" aria-label="Discount reason" className={INPUT + ' w-full'} />
-                      </div>
-                    )
-                )}
-
-                {!empty && (
-                  <div className="mt-3 space-y-3">
-                    <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="How they pay">
-                      {payChoices.map(([k, label]) => (
-                        <label key={k} className={'flex items-center gap-2 px-3 min-h-[44px] rounded-[7px] border cursor-pointer text-[13.5px] text-ink ' + (pay === k ? 'border-pine/50 bg-pine/[0.05] font-medium' : 'border-line bg-white hover:border-line-strong')}>
-                          <input type="radio" name="pay" checked={pay === k} onChange={() => setPay(k)} className="accent-pine" />{label}
-                        </label>
-                      ))}
-                    </div>
-                    {pay === 'reader' && readers.length > 1 && (
-                      <select value={readerId} onChange={e => setReaderId(e.target.value)} aria-label="Card reader" className={INPUT + ' w-full'}>
-                        {readers.map(x => <option key={x.id} value={x.id}>{x.label}{x.online ? '' : ' (offline)'}</option>)}
-                      </select>
-                    )}
-                    {hasRounds && <p className="text-[12.5px] text-ink-muted">{pay === 'reader'
-                      ? 'Booking fee included; checked in when it goes through.'
-                      : 'Checked in and paid here, one receipt. Discounts are for shop items only.'}</p>}
-                    {/* CASH-1: a login with check-in but not counter payment can only use the reader, for one group at a time. */}
-                    {!payChoices.some(([k]) => k === pay) && <p className="text-[12.5px] text-bad" role="alert">{hasRounds && !canCash ? 'One group alone can go on the card reader. Cash needs “Mark paid at the counter”.' : 'Pick how they pay.'}</p>}
-                    {pay === 'cash' && ready && due > 0 && !cashNoQuote && (
-                      <div>
-                        <span className="block text-[13px] font-medium text-ink mb-1.5">Cash handed over <span className="font-normal text-ink-muted">(optional)</span></span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {quickCash.map(n => (
-                            <button key={n} type="button" onClick={() => setTendered((n / 100).toFixed(2))} aria-pressed={tenderedCents === n}
-                              className={'px-2.5 py-1.5 rounded-md border text-[13px] tabular-nums ' + (tenderedCents === n ? 'border-pine/40 text-ink font-medium' : 'border-line text-ink-soft hover:text-ink')}>{n === due ? 'Exact' : usd(n)}</button>
-                          ))}
-                          <div className="relative w-24"><span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
-                            <input value={tendered} onChange={e => setTendered(e.target.value)} inputMode="decimal" aria-label="Cash handed over" className={INPUT + ' w-full pl-6'} /></div>
-                        </div>
-                        {tenderedCents > 0 && (tenderedCents >= due
-                          ? <p className="text-[15px] font-semibold text-ink mt-2">Change: <span className="tabular-nums">{usd(tenderedCents - due)}</span></p>
-                          : <p className="text-[13px] text-bad mt-2">That’s {usd(due - tenderedCents)} short.</p>)}
-                      </div>
-                    )}
-                    {pay === 'account' && <AccountPicker picked={accountMember} onPick={setAccountMember} className={INPUT} />}
-                    {(pay === 'sms' || pay === 'email') && (
-                      <div className="space-y-2">
-                        <input value={customer.name} onChange={e => setCustomer(c => ({ ...c, name: e.target.value }))} placeholder="Name (optional)" aria-label="Customer name" className={INPUT + ' w-full'} />
-                        {pay === 'sms'
-                          ? <input value={customer.phone} onChange={e => { setCustomer(c => ({ ...c, phone: e.target.value })); setSmsYes(false); }} placeholder="Mobile number" type="tel" aria-label="Mobile number" className={INPUT + ' w-full'} />
-                          : <input value={customer.email} onChange={e => setCustomer(c => ({ ...c, email: e.target.value }))} placeholder="Email address" type="email" aria-label="Email address" className={INPUT + ' w-full'} />}
-                        {pay === 'sms' && customer.phone.replace(/\D/g, '').length >= 10 && <SmsConsentAsk courseName="" checked={smsYes} onChange={setSmsYes} />}
-                      </div>
-                    )}
-                    {noTax && <p className="text-[13px] text-warn" role="status">{pay === 'cash' || pay === 'account' ? 'No sales tax right now — taken without it.' : 'No sales tax right now — cash only.'} <button type="button" onClick={() => setQuoteTry(n => n + 1)} className="underline font-medium">Try again</button></p>}
-                    {quoteError && <p className="text-[13px] text-bad" role="alert">{quoteError} <button type="button" onClick={() => { setQuoteError(''); setQuoteTry(n => n + 1); }} className="underline font-medium">Try again</button></p>}
-                    <button onClick={ringUp} disabled={!payChoices.some(([k]) => k === pay) || busy === 'sale' || needContact || !ready || (pay === 'cash' && !cashNoQuote && tenderedCents > 0 && tenderedCents < due) || (pay === 'account' && !accountMember) || (pay === 'reader' && (!readerId || onReader?.state === 'waiting' || roundOnReader?.state === 'waiting'))}
-                      className="w-full min-h-[52px] bg-pine hover:bg-pine-hover text-white font-semibold rounded-[7px] text-[15px] disabled:opacity-50">
-                      {busy === 'sale' ? 'Saving…' : pay === 'cash' ? (cashNoQuote ? 'Take cash' : `Take ${usd(due)} cash`) : pay === 'account' ? `${usd(due)} on account` : pay === 'reader' ? `Charge ${usd(due)} on the reader` : `Send ${usd(due)} pay link`}
-                    </button>
-                  </div>
-                )}
-                {roundOnReader && (
-                  <div className={'mt-4 border-l-[3px] pl-3 space-y-2 ' + (roundOnReader.state === 'waiting' ? 'border-warn' : 'border-bad')} role="status" aria-live="polite">
-                    <p className="text-[14px] text-ink">
-                      {roundOnReader.state === 'waiting'
-                        ? <>{roundOnReader.dueCents > 0 && <span className="font-semibold tabular-nums">{usd(roundOnReader.dueCents)} </span>}{roundOnReader.label} on {readerName(roundOnReader.readerId)} — waiting for the card.</>
-                        : <>{roundOnReader.label} — not paid. {roundOnReader.message}</>}
-                    </p>
-                    {roundOnReader.state === 'waiting' && roundOnReader.message && <p className="text-[12.5px] text-ink-muted">{roundOnReader.message}</p>}
-                    <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-                      {roundOnReader.state === 'waiting'
-                        ? <button type="button" onClick={() => roundReaderAct('cancel')} disabled={busy === 'reader'} className="text-[12.5px] text-bad hover:underline disabled:opacity-50">Cancel on the reader</button>
-                        : <button type="button" onClick={() => roundToReader(roundOnReader)} disabled={busy === 'sale'} className={LINK}>Try the reader again</button>}
-                      {roundOnReader.state === 'waiting' && testMode && readers.find(x => x.id === roundOnReader.readerId)?.simulated && (
-                        <>
-                          <button type="button" onClick={() => roundReaderAct('simulate', 'ok')} disabled={busy === 'reader'} className={LINK}>Simulate a tap</button>
-                          <button type="button" onClick={() => roundReaderAct('simulate', 'declined')} disabled={busy === 'reader'} className={LINK}>Simulate a decline</button>
+                              <label className="flex items-center justify-between gap-3 rounded-[7px] border border-line px-3 min-h-[52px]">
+                                <span className="text-[14px] font-medium text-ink">Cash given <span className="font-normal text-ink-muted">(optional)</span></span>
+                                <span className="relative w-28"><span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-muted">$</span>
+                                  <input value={tendered} onChange={e => setTendered(e.target.value)} inputMode="decimal" aria-label="Cash handed over" className={INPUT + ' w-full pl-6 text-right text-[16px] font-semibold tabular-nums'} /></span>
+                              </label>
+                              {tenderedCents > 0 && (tenderedCents >= due
+                                ? <p className="flex justify-between rounded-[7px] bg-ok/10 px-3 py-3 text-[15px] text-ink"><span>Change</span><b className="tabular-nums">{usd(tenderedCents - due)}</b></p>
+                                : <p className="text-[13px] text-bad">That’s {usd(due - tenderedCents)} short.</p>)}
+                            </div>
+                          )}
+                          {pay === 'cash' && cashNoQuote && <p className="text-[13px] text-ink-soft">The total with tax is worked out when you take it — the next screen says what to collect.</p>}
+                          {pay === 'reader' && readers.length > 1 && (
+                            <select value={readerId} onChange={e => setReaderId(e.target.value)} aria-label="Card reader" className={INPUT + ' w-full'}>
+                              {readers.map(x => <option key={x.id} value={x.id}>{x.label}{x.online ? '' : ' (offline)'}</option>)}
+                            </select>
+                          )}
+                          {pay === 'account' && <AccountPicker picked={accountMember} onPick={setAccountMember} className={INPUT} />}
+                          {(pay === 'sms' || pay === 'email') && (
+                            <div className="space-y-2">
+                              <input value={customer.name} onChange={e => setCustomer(c => ({ ...c, name: e.target.value }))} placeholder="Name (optional)" aria-label="Customer name" className={INPUT + ' w-full'} />
+                              {pay === 'sms'
+                                ? <input value={customer.phone} onChange={e => { setCustomer(c => ({ ...c, phone: e.target.value })); setSmsYes(false); }} placeholder="Mobile number" type="tel" aria-label="Mobile number" className={INPUT + ' w-full'} />
+                                : <input value={customer.email} onChange={e => setCustomer(c => ({ ...c, email: e.target.value }))} placeholder="Email address" type="email" aria-label="Email address" className={INPUT + ' w-full'} />}
+                              {pay === 'sms' && customer.phone.replace(/\D/g, '').length >= 10 && <SmsConsentAsk courseName="" checked={smsYes} onChange={setSmsYes} />}
+                            </div>
+                          )}
+                          {onReader && (
+                            <div className={'border-l-[3px] pl-3 space-y-2 ' + (onReader.state === 'waiting' ? 'border-warn' : 'border-bad')} role="status" aria-live="polite">
+                              <p className="text-[14px] text-ink">
+                                {onReader.state === 'waiting'
+                                  ? <><span className="font-semibold tabular-nums">{usd(onReader.sale.totalCents)}</span> on {readerName(onReader.readerId)} — waiting for the card.</>
+                                  : <><span className="font-semibold tabular-nums">{usd(onReader.sale.totalCents)}</span> not paid. {onReader.message}</>}
+                              </p>
+                              {onReader.state === 'waiting' && onReader.message && <p className="text-[12.5px] text-ink-muted">{onReader.message}</p>}
+                              <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+                                {onReader.state === 'waiting'
+                                  ? <button type="button" onClick={() => readerAct('reader_cancel')} disabled={busy === 'reader'} className="text-[12.5px] text-bad hover:underline disabled:opacity-50">Cancel on the reader</button>
+                                  : <button type="button" onClick={() => readerAct('reader_start')} disabled={busy === 'reader'} className={LINK}>Try the reader again</button>}
+                                {onReader.state === 'waiting' && testMode && readers.find(x => x.id === onReader.readerId)?.simulated && (
+                                  <>
+                                    <button type="button" onClick={() => readerAct('reader_simulate', 'ok')} disabled={busy === 'reader'} className={LINK}>Simulate a tap</button>
+                                    <button type="button" onClick={() => readerAct('reader_simulate', 'declined')} disabled={busy === 'reader'} className={LINK}>Simulate a decline</button>
+                                  </>
+                                )}
+                                {onReader.state !== 'waiting' && canCash && <button type="button" onClick={async () => { await act(onReader.sale, 'paid_cash'); setStep(null); }} disabled={!!busy} className={LINK}>Took cash instead</button>}
+                                {onReader.state !== 'waiting' && <button type="button" onClick={async () => { await act(onReader.sale, 'void'); setStep(null); }} disabled={!!busy} className="text-[12.5px] text-bad hover:underline disabled:opacity-50">Void</button>}
+                              </div>
+                            </div>
+                          )}
+                          {noTax && (pay === 'cash' || pay === 'account') && <p className="text-[13px] text-warn" role="status">No sales tax right now — taken without it.</p>}
+                          {quoteError && <p className="text-[13px] text-bad" role="alert">{quoteError} <button type="button" onClick={() => { setQuoteError(''); setQuoteTry(n => n + 1); }} className="underline font-medium">Try again</button></p>}
+                          {error && <p className="text-[13px] text-bad" role="alert">{error}</p>}
+                          {!onReader && (
+                            <div className="flex gap-2 pt-1">
+                              <button type="button" onClick={() => { setStep('pay'); setError(''); }} className="px-5 min-h-[52px] rounded-[7px] border border-line bg-white text-[14px] font-medium text-ink hover:bg-paper">Back</button>
+                              <button type="button" onClick={ringUp} disabled={takeDisabled}
+                                className="flex-1 min-h-[52px] bg-pine hover:bg-pine-hover text-white font-semibold rounded-[7px] text-[15px] disabled:opacity-50">
+                                {busy === 'sale' ? 'Saving…' : pay === 'cash' ? (cashNoQuote ? 'Take cash' : `Take ${usd(due)} cash`) : pay === 'account' ? `Put ${usd(due)} on account` : pay === 'reader' ? `Send ${usd(due)} to the reader` : `Send ${usd(due)} pay link`}
+                              </button>
+                            </div>
+                          )}
                         </>
                       )}
-                      {roundOnReader.state !== 'waiting' && <button type="button" onClick={() => setRoundOnReader(null)} className="text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2">Close</button>}
-                    </div>
-                  </div>
-                )}
-                {onReader && (
-                  <div className={'mt-4 border-l-[3px] pl-3 space-y-2 ' + (onReader.state === 'waiting' ? 'border-warn' : 'border-bad')} role="status" aria-live="polite">
-                    <p className="text-[14px] text-ink">
-                      {onReader.state === 'waiting'
-                        ? <><span className="font-semibold tabular-nums">{usd(onReader.sale.totalCents)}</span> on {readerName(onReader.readerId)} — waiting for the card.</>
-                        : <><span className="font-semibold tabular-nums">{usd(onReader.sale.totalCents)}</span> not paid. {onReader.message}</>}
-                    </p>
-                    {onReader.state === 'waiting' && onReader.message && <p className="text-[12.5px] text-ink-muted">{onReader.message}</p>}
-                    <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-                      {onReader.state === 'waiting'
-                        ? <button type="button" onClick={() => readerAct('reader_cancel')} disabled={busy === 'reader'} className="text-[12.5px] text-bad hover:underline disabled:opacity-50">Cancel on the reader</button>
-                        : <button type="button" onClick={() => readerAct('reader_start')} disabled={busy === 'reader'} className={LINK}>Try the reader again</button>}
-                      {onReader.state === 'waiting' && testMode && readers.find(x => x.id === onReader.readerId)?.simulated && (
+                      {step === 'done' && (
                         <>
-                          <button type="button" onClick={() => readerAct('reader_simulate', 'ok')} disabled={busy === 'reader'} className={LINK}>Simulate a tap</button>
-                          <button type="button" onClick={() => readerAct('reader_simulate', 'declined')} disabled={busy === 'reader'} className={LINK}>Simulate a decline</button>
+                          {justPaid ? (
+                            <div className="text-center pt-2">
+                              <p className="text-[30px] font-bold tabular-nums text-ink">{usd(justPaid.totalCents)}</p>
+                              <p className="text-[13.5px] text-ok font-medium mt-1">
+                                {justPaid.status === 'paid_card' ? 'Paid by card' : justPaid.status === 'paid_account' ? 'On their account' : 'Paid in cash'}
+                                {justPaid.cashTenderedCents != null && justPaid.cashTenderedCents > justPaid.totalCents && <> · change <span className="tabular-nums">{usd(justPaid.cashTenderedCents - justPaid.totalCents)}</span></>}
+                              </p>
+                              {justNoQuote && <p className="text-[14px] font-semibold text-ink mt-2">Collect {usd(justPaid.totalCents)}.</p>}
+                            </div>
+                          ) : <p className="text-[14px] text-ink flex items-center gap-1.5"><StatusDot status="ok" />{linkSent}</p>}
+                          {error && <p className="text-[13px] text-bad" role="alert">{error}</p>}
+                          {note && <p className="text-[13px] text-ok">{note}</p>}
+                          {justPaid && receipt?.id === justPaid.id && (
+                            <div className="pt-2 space-y-2">
+                              <h3 className="text-[15px] font-semibold text-ink">Receipt?</h3>
+                              <div className="grid grid-cols-3 gap-2" role="group" aria-label="Receipt">
+                                {(['sms', 'email'] as const).map(v => (
+                                  <button key={v} type="button" aria-pressed={rcptOpen && receipt.via === v} onClick={() => { setReceipt({ ...receipt, via: v, to: v === 'email' ? justPaid.customerEmail || '' : justPaid.customerPhone || '' }); setRcptOpen(true); }}
+                                    className={CHOICE + (rcptOpen && receipt.via === v ? 'border-pine border-2' : 'border-line hover:border-line-strong')}>{v === 'sms' ? 'Text' : 'Email'}</button>
+                                ))}
+                                <button type="button" onClick={newSale} className={CHOICE + 'border-line hover:border-line-strong'}>No receipt</button>
+                              </div>
+                              {rcptOpen && (
+                                <form className="flex gap-2" onSubmit={e => { e.preventDefault(); sendReceipt(); }}>
+                                  <input value={receipt.to} onChange={e => setReceipt({ ...receipt, to: e.target.value })} type={receipt.via === 'email' ? 'email' : 'tel'} required autoFocus
+                                    placeholder={receipt.via === 'email' ? 'Their email' : 'Their mobile'} aria-label={receipt.via === 'email' ? 'Receipt email' : 'Receipt mobile number'} className={INPUT + ' flex-1 min-h-[48px]'} />
+                                  <button type="submit" disabled={busy === 'receipt' + justPaid.id} className="px-4 min-h-[48px] bg-pine hover:bg-pine-hover text-white font-semibold rounded-[7px] text-[14px] disabled:opacity-50">{busy === 'receipt' + justPaid.id ? 'Sending…' : 'Send'}</button>
+                                </form>
+                              )}
+                            </div>
+                          )}
+                          {(!justPaid || receipt?.id !== justPaid.id) && (
+                            <button type="button" onClick={newSale} className="w-full min-h-[52px] bg-pine hover:bg-pine-hover text-white font-semibold rounded-[7px] text-[15px]">New sale</button>
+                          )}
                         </>
                       )}
-                      {onReader.state !== 'waiting' && canCash && <button type="button" onClick={() => act(onReader.sale, 'paid_cash')} disabled={!!busy} className={LINK}>Took cash instead</button>}
-                      {onReader.state !== 'waiting' && <button type="button" onClick={() => act(onReader.sale, 'void')} disabled={!!busy} className="text-[12.5px] text-bad hover:underline disabled:opacity-50">Void</button>}
                     </div>
-                  </div>
+                  </>
                 )}
-                {justPaid && (
-                  <div className="mt-4 border-l-[3px] border-ok pl-3 space-y-2">
-                    <p className="text-[14px] text-ink"><span className="font-semibold tabular-nums">{usd(justPaid.totalCents)}</span> {justPaid.status === 'paid_card' ? 'paid by card' : justPaid.status === 'paid_account' ? 'on account' : 'in cash'} — recorded.{justNoQuote && <> <strong className="text-ink">Collect {usd(justPaid.totalCents)}.</strong></>}
-                      {justPaid.cashTenderedCents != null && <> Change: <span className="font-semibold tabular-nums">{usd(justPaid.cashTenderedCents - justPaid.totalCents)}</span>.</>}</p>
-                    {receipt?.id === justPaid.id && <ReceiptForm receipt={receipt} setReceipt={setReceipt} onSend={sendReceipt} busy={busy === 'receipt' + justPaid.id} onSkip={() => { setReceipt(null); setJustPaid(null); }} />}
-                  </div>
-                )}
-                {error && <p className="mt-3 text-[13px] text-bad" role="alert">{error}</p>}
-                {note && <p className="mt-3 text-[13px] text-ok flex items-center gap-1.5"><StatusDot status="ok" />{note}</p>}
               </Card>
             </div>
+            )}
 
+            {view === 'sales' && (
+            <>
             <Card className="mt-5">
               <div className="flex flex-wrap items-center justify-between gap-2 px-5 pt-4 pb-2">
                 <h2 className="text-[15px] font-semibold text-ink">{hist ? (hist.day ? `Sales, ${hist.day}` : 'Sales, last 90 days') : 'Today’s sales'}</h2>
@@ -854,7 +762,7 @@ export default function ShopPage() {
                             <>
                               {s.link
                                 ? <button onClick={() => act(s, 'resend', s.customerPhone ? 'sms' : 'email')} disabled={!!busy} className="text-[12.5px] text-pine font-medium hover:underline disabled:opacity-50">Send again</button>
-                                : readers.length > 0 && <button onClick={() => { setOnReader({ sale: s, readerId: readerId || readers[0].id, state: 'cancelled', message: '' }); setError(''); }} disabled={!!busy || onReader?.state === 'waiting'} className="text-[12.5px] text-pine font-medium hover:underline disabled:opacity-50">Card reader</button>}
+                                : readers.length > 0 && <button onClick={() => { setOnReader({ sale: s, readerId: readerId || readers[0].id, state: 'cancelled', message: '' }); setPay('reader'); setStep('take'); setView('register'); setError(''); }} disabled={!!busy || onReader?.state === 'waiting'} className="text-[12.5px] text-pine font-medium hover:underline disabled:opacity-50">Card reader</button>}
                               {canCash && <button onClick={() => act(s, 'paid_cash')} disabled={!!busy} className="text-[12.5px] text-pine font-medium hover:underline disabled:opacity-50">Took cash</button>}
                               <button onClick={() => act(s, 'void')} disabled={!!busy} className="text-[12.5px] text-bad hover:underline disabled:opacity-50">Void</button>
                             </>
@@ -910,11 +818,15 @@ export default function ShopPage() {
               )}
               </>; })()}
             </Card>
+            {/* SHOP-4: low stock, deliveries, reorder points and cost; round packs people hold. */}
+            <div className="mt-5 space-y-5">
+              {(access.can('shop.sell') || access.can('shop.catalog')) && <ShopStock refreshKey={loads} />}
+              {access.can('shop.sell') && <PackHolders />}
+            </div>
+            </>
+            )}
             {/* POS-3 R4: count the drawer at the end of the day. */}
-            {/* SHOP-4: low stock, deliveries, reorder points and cost. */}
-            {(access.can('shop.sell') || access.can('shop.catalog')) && <ShopStock refreshKey={loads} />}
-            {access.can('shop.sell') && <PackHolders />}
-            {access.can('shop.close') && <RegisterClose />}
+            {view === 'close' && access.can('shop.close') && <RegisterClose />}
           </div>
         )}
       </main>

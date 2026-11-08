@@ -9137,7 +9137,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 945,
+      "lines": 857,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -9162,7 +9162,6 @@
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/components/ui/field",
-        "@/lib/cart-pricing",
         "@/lib/dashboard-fetch",
         "@/lib/shop-tree",
         "@/lib/use-dashboard-access",
@@ -16444,7 +16443,6 @@
         "src/app/api/bookings/route.ts",
         "src/app/book/BookClient.tsx",
         "src/app/courses/[slug]/CourseBookingClient.tsx",
-        "src/app/dashboard/shop/page.tsx",
         "src/app/manage/[bookingId]/page.tsx",
         "src/lib/change-party.ts",
         "src/lib/checkin-booking.ts",

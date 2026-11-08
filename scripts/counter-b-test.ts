@@ -15,7 +15,7 @@ check('Home: each coming-up time and a single late group open their card', home.
 // Members 22
 check('a member search result opens their golfer record', search.includes('`/dashboard/golfers/${encodeURIComponent(`e:${email}`)}`') && search.includes('`/dashboard/golfers/${encodeURIComponent(`a:${m.golferId}`)}`'));
 // Shop 16
-check('a failed tax quote never blocks cash', shop.includes("const cashNoQuote = pay === 'cash' && !itemsEmpty && !priced && !!quoteError;") && shop.includes('|| cashNoQuote;'));
+check('a failed tax quote never blocks cash', shop.includes("const quoteDown = !itemsEmpty && !priced && !!quoteError;") && shop.includes("const cashNoQuote = pay === 'cash' && quoteDown;") && shop.includes('|| cashNoQuote);'));
 check('…and nothing is rung up against a total the screen never showed (no tendered, no expected total)', shop.includes("cashTenderedCents: pay === 'cash' && tenderedCents && !cashNoQuote ? tenderedCents : undefined") && shop.includes("expectedItemsCents: (pay === 'cash' || pay === 'account') && !itemsEmpty && priced ? priced.totalCents : undefined"));
 
 // Final review 2026-11-02: no pre-tax figure on the button when the total isn't known; the result says what to collect.
