@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-08 19:31 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `17a1933d` · working tree **19 dirty file(s)**
+Generated 2026-11-08 19:50 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `7523787b` · working tree **10 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 145 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 147 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `d6083d50` | 2026-11-08 | Time card: reader charges who's here, receipts, day actions in the sheet bar (#335) |
+| `480f7d0e` | 2026-11-08 | Time card: the reader charges who's here, receipts, day actions in the sheet bar |
 | `086b9403` | 2026-11-08 | Tee sheet: check-in in order — who's here, add to order, payment, done (#334) |
 | `f7245efa` | 2026-11-08 | Fix the split-booking pin for the check-in steps' rest line |
 | `506f38f0` | 2026-11-08 | Tee sheet: check-in in order — who's here, add to order, payment, done |
@@ -160,27 +162,18 @@ Generated 2026-11-08 19:31 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (19 file(s))
+### Uncommitted working tree (10 file(s))
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/add-tee-time-test.ts`
-- `M scripts/checkout-card-test.ts`
-- `M scripts/group-card-checkout-test.ts`
-- `M scripts/reader-rounds-db-test.ts`
-- `M scripts/teesheet-1-test.ts`
-- `M scripts/teesheet-2-test.ts`
-- `M scripts/teesheet-3-test.ts`
-- `M scripts/tt-card-test.ts`
+- `M scripts/teesheet-till-test.ts`
 - `M scripts/words-guard.baseline.json`
-- `M src/app/api/operator/bookings/route.ts`
-- `M src/app/api/operator/reader-rounds/route.ts`
+- `M src/app/api/receipt/[bookingId]/route.ts`
 - `M src/app/dashboard/page.tsx`
 - `M src/app/receipt/[bookingId]/page.tsx`
-- `M src/components/dashboard/SmsConsentAsk.tsx`
-- `M src/components/home/TeeSheetDemo.tsx`
-- `M src/lib/email.ts`
-- `M src/lib/reader-rounds.ts`
+- `M src/components/GolferExitLinks.tsx`
+- `M src/lib/counter-pay.ts`
+- `?? scripts/receipt-cash-test.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -306,6 +299,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `d6083d50` 2026-11-08 — Time card: reader charges who's here, receipts, day actions in the sheet bar (#335)
+- `480f7d0e` 2026-11-08 — Time card: the reader charges who's here, receipts, day actions in the sheet bar
 - `086b9403` 2026-11-08 — Tee sheet: check-in in order — who's here, add to order, payment, done (#334)
 - `f7245efa` 2026-11-08 — Fix the split-booking pin for the check-in steps' rest line
 - `506f38f0` 2026-11-08 — Tee sheet: check-in in order — who's here, add to order, payment, done
@@ -316,8 +311,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `ba23e030` 2026-11-06 — Tee sheet: a Square-style Charge screen, and one "Paying now" control (#331)
 - `d9f007fa` 2026-11-06 — Tee sheet: a Square-style Charge screen, and one "Paying now" control
 - `54cc0d80` 2026-11-05 — Tee sheet: the group card asks how they're paying, then one button that says what it does (#330)
-- `bd10ddf4` 2026-11-06 — Tee sheet: the group card asks how they're paying, then one button that says what it does
-- `337e9a0a` 2026-11-05 — Tee sheet: Message golfers by email, text or both, with ready-made messages and a preview (#329)
 
 ---
 

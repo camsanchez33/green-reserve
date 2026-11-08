@@ -5,6 +5,8 @@ import { resolveAdminSession, requireRole, SUPPORT_PLUS } from '@/lib/admin-sess
 import { hasArea } from '@/lib/admin-areas';
 import { receiptCharges, chargedNowCents } from '@/lib/receipt-charges';
 import { roundChargedTotal, shopLinesFor } from '@/lib/shop';
+import { stripe } from '@/lib/stripe';
+import { counterPaidCents } from '@/lib/counter-pay';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
@@ -29,7 +31,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     where: { id: bookingId },
     include: {
       teeTime: { select: { date: true, time: true, holes: true, product: { select: { label: true } } } },
-      course: { select: { name: true, slug: true, city: true, state: true, brandColor: true } },
+      course: { select: { name: true, slug: true, city: true, state: true, brandColor: true, stripeAccountId: true, timezone: true } },
     },
   });
 
@@ -39,6 +41,38 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
 
   // R-GOLF-010: what actually reached the golfer's card, from the money records.
   const charges = await receiptCharges(booking.id);
+
+  // RECEIPT-2 (Cam 2026-11-08, "fix it … a smooth receipt for the card readers and printers"): how the round was
+  // paid, when, and with what — cash (and the cash handed over, from the register sale), or the card that paid.
+  // Cash collects no GreenReserve fee (PAY-2), so a cash round's paid figure leaves it out.
+  let payment: { method: 'cash' | 'card' | 'account'; paidAt: string | null; amountCents: number; card?: string; tenderedCents?: number; changeCents?: number } | null = null;
+  const played = booking.status === 'completed' && booking.paymentStatus !== 'refunded';
+  if (played && booking.paidOffline) {
+    const amountCents = counterPaidCents(booking, 'cash');
+    // The register sale that took it — the cash handed over is only this round's when the sale was this round alone.
+    const line = await prisma.shopSaleLine.findFirst({ where: { bookingId: booking.id }, select: { sale: { select: { cashTenderedCents: true, totalCents: true, paidAt: true, _count: { select: { lines: true } } } } } });
+    const sale = line?.sale;
+    const own = !!sale && sale._count.lines === 1 && sale.totalCents === amountCents;
+    payment = {
+      method: 'cash', paidAt: (sale?.paidAt ?? booking.paidAt)?.toISOString() ?? null, amountCents,
+      ...(own && sale!.cashTenderedCents && sale!.cashTenderedCents > amountCents ? { tenderedCents: sale!.cashTenderedCents, changeCents: sale!.cashTenderedCents - amountCents } : {}),
+    };
+  } else if (played && booking.paymentStatus === 'on_account') {
+    payment = { method: 'account', paidAt: booking.paidAt?.toISOString() ?? null, amountCents: counterPaidCents(booking, 'account') };
+  } else if (played && booking.roundPaymentIntentId) {
+    // The card's brand and last four, from Stripe — best effort, never blocking the receipt.
+    let card: string | undefined;
+    if (booking.course.stripeAccountId) {
+      try {
+        const pi = await stripe.paymentIntents.retrieve(booking.roundPaymentIntentId, { expand: ['latest_charge'] }, { stripeAccount: booking.course.stripeAccountId, timeout: 4000 });
+        const ch = typeof pi.latest_charge === 'object' ? pi.latest_charge : null;
+        const d = ch?.payment_method_details;
+        const c = d?.card ?? d?.card_present ?? null;
+        if (c?.last4) card = `${(c.brand ?? 'Card').replace(/^./, x => x.toUpperCase())} ····${c.last4}${d?.card_present ? ' · tapped or inserted' : ''}`;
+      } catch { /* the receipt shows "Card" */ }
+    }
+    payment = { method: 'card', paidAt: booking.paidAt?.toISOString() ?? null, amountCents: roundChargedTotal(booking), ...(card ? { card } : {}) };
+  }
 
   return NextResponse.json({
     bookingId: booking.id,
@@ -71,6 +105,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     roundRefunded: booking.paymentStatus === 'refunded',
     charges,
     chargedNowCents: chargedNowCents(charges),
+    payment,
+    timezone: booking.course.timezone,
+    // "View my bookings" only for a golfer with an account (a walk-in paying cash usually has none).
+    hasAccount: !!booking.golferAccountId,
     createdAt: booking.createdAt,
   });
 }

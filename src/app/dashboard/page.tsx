@@ -1615,10 +1615,8 @@ function DashboardPageInner() {
               </div>
 
               <div className="flex-1 overflow-y-auto px-5">
+                {/* Cam 2026-11-08: who checked in, how they paid, and the receipt — no "Next group" button. */}
                 {justDone && groups.some(g => g.id === justDone.bookingId) && (() => {
-                  // The next time today with a group still to check in — one tap to the next ticket.
-                  const next = selectedDate === today() ? teeTimes.find(t => t.time > panelSlot.time && (t.bookings ?? []).some(g => g.status === 'confirmed' && !g.noShowAt)) : undefined;
-                  const nextGroup = next?.bookings?.find(g => g.status === 'confirmed' && !g.noShowAt);
                   return (
                     <div role="status" className="mt-4 rounded-[7px] bg-ok-fill px-4 py-3.5">
                       <p className="flex items-baseline gap-2 text-[15px] font-semibold text-ink"><StatusDot status="ok" />{justDone.name} · {justDone.players} checked in</p>
@@ -1648,11 +1646,6 @@ function DashboardPageInner() {
                           </div>
                         );
                       })()}
-                      {next && nextGroup && (
-                        <button onClick={() => setPanelId(next.id)} className="mt-3 w-full min-h-[44px] rounded-[7px] bg-pine hover:bg-pine-hover text-white text-[14px] font-semibold">
-                          Next: {nextGroup.golferName} · {nextGroup.players} at {fmtTime(next.time)}
-                        </button>
-                      )}
                     </div>
                   );
                 })()}

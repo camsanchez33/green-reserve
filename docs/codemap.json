@@ -7892,7 +7892,7 @@
     },
     {
       "path": "src/app/api/receipt/[bookingId]/route.ts",
-      "lines": 77,
+      "lines": 115,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7911,10 +7911,12 @@
       "imports": [
         "@/lib/admin-areas",
         "@/lib/admin-session",
+        "@/lib/counter-pay",
         "@/lib/prisma",
         "@/lib/rate-limit",
         "@/lib/receipt-charges",
         "@/lib/shop",
+        "@/lib/stripe",
         "next/server"
       ],
       "usedBy": []
@@ -8943,7 +8945,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 2257,
+      "lines": 2250,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9775,7 +9777,7 @@
     },
     {
       "path": "src/app/receipt/[bookingId]/page.tsx",
-      "lines": 272,
+      "lines": 304,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10178,7 +10180,7 @@
     },
     {
       "path": "src/components/GolferExitLinks.tsx",
-      "lines": 24,
+      "lines": 26,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -16885,7 +16887,7 @@
     },
     {
       "path": "src/lib/counter-pay.ts",
-      "lines": 328,
+      "lines": 338,
       "purpose": "A group pays for its round at the counter (cash, or the course's own card machine):",
       "brain": [],
       "exports": [
@@ -16899,6 +16901,10 @@
         },
         {
           "name": "counterDueCents",
+          "kind": "fn"
+        },
+        {
+          "name": "counterPaidCents",
           "kind": "fn"
         },
         {
@@ -16948,6 +16954,7 @@
       ],
       "usedBy": [
         "src/app/api/operator/bookings/route.ts",
+        "src/app/api/receipt/[bookingId]/route.ts",
         "src/lib/register-close.ts",
         "src/lib/register.ts"
       ]
@@ -25986,6 +25993,7 @@
         "src/app/api/operator/stripe/connect/route.ts",
         "src/app/api/operator/stripe/dashboard-link/route.ts",
         "src/app/api/operator/stripe/payouts/route.ts",
+        "src/app/api/receipt/[bookingId]/route.ts",
         "src/app/api/statement/[id]/route.ts",
         "src/app/api/stripe/webhook/route.ts",
         "src/lib/access-fee.ts",
@@ -32443,6 +32451,7 @@
         "src/lib/sample-data.ts"
       ],
       "readers": [
+        "src/app/api/receipt/[bookingId]/route.ts",
         "src/lib/register-close.ts",
         "src/lib/round-packs.ts",
         "src/lib/shop-report.ts",

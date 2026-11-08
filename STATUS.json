@@ -1,35 +1,40 @@
 {
-  "generatedAt": "2026-11-08T19:31:32.337Z",
+  "generatedAt": "2026-11-08T19:50:48.069Z",
   "repo": {
-    "head": "17a1933d",
+    "head": "7523787b",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 19,
+    "dirtyCount": 10,
     "dirty": [
       "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/add-tee-time-test.ts",
-      " M scripts/checkout-card-test.ts",
-      " M scripts/group-card-checkout-test.ts",
-      " M scripts/reader-rounds-db-test.ts",
-      " M scripts/teesheet-1-test.ts",
-      " M scripts/teesheet-2-test.ts",
-      " M scripts/teesheet-3-test.ts",
-      " M scripts/tt-card-test.ts",
+      " M scripts/teesheet-till-test.ts",
       " M scripts/words-guard.baseline.json",
-      " M src/app/api/operator/bookings/route.ts",
-      " M src/app/api/operator/reader-rounds/route.ts",
+      " M src/app/api/receipt/[bookingId]/route.ts",
       " M src/app/dashboard/page.tsx",
       " M src/app/receipt/[bookingId]/page.tsx",
-      " M src/components/dashboard/SmsConsentAsk.tsx",
-      " M src/components/home/TeeSheetDemo.tsx",
-      " M src/lib/email.ts",
-      " M src/lib/reader-rounds.ts"
+      " M src/components/GolferExitLinks.tsx",
+      " M src/lib/counter-pay.ts",
+      "?? scripts/receipt-cash-test.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "d6083d50",
+        "date": "2026-11-08T14:38:22-05:00",
+        "subject": "Time card: reader charges who's here, receipts, day actions in the sheet bar (#335)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "480f7d0e",
+        "date": "2026-11-08T19:31:35+00:00",
+        "subject": "Time card: the reader charges who's here, receipts, day actions in the sheet bar",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "086b9403",
         "date": "2026-11-08T03:05:42-05:00",
@@ -1442,6 +1447,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "d6083d50",
+      "date": "2026-11-08",
+      "subject": "Time card: reader charges who's here, receipts, day actions in the sheet bar (#335)"
+    },
+    {
+      "h": "480f7d0e",
+      "date": "2026-11-08",
+      "subject": "Time card: the reader charges who's here, receipts, day actions in the sheet bar"
+    },
+    {
       "h": "086b9403",
       "date": "2026-11-08",
       "subject": "Tee sheet: check-in in order — who's here, add to order, payment, done (#334)"
@@ -1490,16 +1505,6 @@
       "h": "54cc0d80",
       "date": "2026-11-05",
       "subject": "Tee sheet: the group card asks how they're paying, then one button that says what it does (#330)"
-    },
-    {
-      "h": "bd10ddf4",
-      "date": "2026-11-06",
-      "subject": "Tee sheet: the group card asks how they're paying, then one button that says what it does"
-    },
-    {
-      "h": "337e9a0a",
-      "date": "2026-11-05",
-      "subject": "Tee sheet: Message golfers by email, text or both, with ready-made messages and a preview (#329)"
     }
   ]
 }
