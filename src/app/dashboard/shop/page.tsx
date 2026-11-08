@@ -118,7 +118,18 @@ export default function ShopPage() {
   }
   const searchRef = useRef<HTMLInputElement>(null);
   // POS-4: the page's tabs, and where the sale is in the Charge steps (null = building the sale).
-  const [view, setView] = useState<'register' | 'sales' | 'close'>('register');
+  const [view, setView] = useState<'register' | 'sales' | 'stock' | 'packs' | 'close'>('register');
+  // POS-5 (Cam 2026-11-08, "the animation of it"): the tab highlight slides to the tab picked (off with reduced motion).
+  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const [pill, setPill] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
+  useEffect(() => {
+    const place = () => { const el = tabRefs.current[view]; if (el) setPill({ left: el.offsetLeft, top: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight }); };
+    place();
+    // Geist swaps in after the first paint: measure again once it has.
+    document.fonts?.ready.then(place).catch(() => {});
+    window.addEventListener('resize', place);
+    return () => window.removeEventListener('resize', place);
+  }, [view, access.loaded]);
   const [step, setStep] = useState<null | 'pay' | 'take' | 'done'>(null);
   // A pay link just sent: the done step says where it went.
   const [linkSent, setLinkSent] = useState('');
@@ -399,10 +410,15 @@ export default function ShopPage() {
           <div className="px-4 sm:px-8 py-6">
             <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
               <h1 className="text-[26px] font-bold leading-none text-ink">Pro shop</h1>
-              <div className="inline-flex gap-1 p-1 rounded-[7px] bg-white shadow-card" role="tablist" aria-label="Pro shop">
-                {([['register', 'Register'], ['sales', 'Sales'], ...(access.can('shop.close') ? [['close', 'Close out']] : [])] as [typeof view, string][]).map(([k, l]) => (
-                  <button key={k} role="tab" aria-selected={view === k} onClick={() => { setView(k); if (k !== view) { setError(''); setNote(''); } }}
-                    className={'px-3.5 min-h-[34px] rounded-[5px] text-[13.5px] ' + (view === k ? 'bg-page text-ink font-semibold' : 'text-ink-soft hover:text-ink')}>{l}</button>
+              {/* One row always: on a phone the tabs scroll sideways rather than wrap (a wrapped row would split the highlight). */}
+              <div className="relative inline-flex max-w-full overflow-x-auto gap-1 p-1 rounded-[7px] bg-white shadow-card whitespace-nowrap" role="tablist" aria-label="Pro shop">
+                {pill && <span aria-hidden="true" className="absolute rounded-[5px] bg-page transition-[left,top,width,height] duration-200 ease-out motion-reduce:transition-none" style={{ left: pill.left, top: pill.top, width: pill.width, height: pill.height }} />}
+                {([['register', 'Register'], ['sales', 'Sales'],
+                  ...((access.can('shop.sell') || access.can('shop.catalog')) ? [['stock', 'Stock']] : []),
+                  ...(access.can('shop.sell') ? [['packs', 'Round packs']] : []),
+                  ...(access.can('shop.close') ? [['close', 'Close out']] : [])] as [typeof view, string][]).map(([k, l]) => (
+                  <button key={k} ref={el => { tabRefs.current[k] = el; }} role="tab" aria-selected={view === k} onClick={() => { setView(k); if (k !== view) { setError(''); setNote(''); } }}
+                    className={'relative z-10 shrink-0 px-3.5 min-h-[34px] rounded-[5px] text-[13.5px] transition-colors ' + (view === k ? 'text-ink font-semibold' : 'text-ink-soft hover:text-ink')}>{l}</button>
                 ))}
               </div>
               {sales && <p className="sm:ml-auto text-[13px] text-ink-muted tabular-nums">{usd(todayTotal)} today · {paidTodaySales.length} sale{paidTodaySales.length === 1 ? '' : 's'}</p>}
@@ -818,15 +834,13 @@ export default function ShopPage() {
               )}
               </>; })()}
             </Card>
-            {/* SHOP-4: low stock, deliveries, reorder points and cost; round packs people hold. */}
-            <div className="mt-5 space-y-5">
-              {(access.can('shop.sell') || access.can('shop.catalog')) && <ShopStock refreshKey={loads} />}
-              {access.can('shop.sell') && <PackHolders />}
-            </div>
             </>
             )}
-            {/* POS-3 R4: count the drawer at the end of the day. */}
-            {view === 'close' && access.can('shop.close') && <RegisterClose />}
+            {/* POS-5 (Cam 2026-11-08, "own tabs"): stock, round packs and the close-out each open full on their own tab. */}
+            {view === 'stock' && (access.can('shop.sell') || access.can('shop.catalog')) && <div className="mt-5"><ShopStock refreshKey={loads} page /></div>}
+            {view === 'packs' && access.can('shop.sell') && <div className="mt-5"><PackHolders page /></div>}
+            {/* POS-3 R4: count the drawer at the end of the day (blind until saved). */}
+            {view === 'close' && access.can('shop.close') && <RegisterClose page />}
           </div>
         )}
       </main>

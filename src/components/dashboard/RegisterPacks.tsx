@@ -41,10 +41,12 @@ export function PackPicker({ onPick, onClose }: { onPick: (p: PackRow) => void; 
   );
 }
 
-export function PackHolders() {
+// POS-5: on the Pro shop's Round packs tab it is the whole page — always open.
+export function PackHolders({ page = false }: { page?: boolean } = {}) {
   const [rows, setRows] = useState<Holding[] | null>(null);
   const [error, setError] = useState('');
-  const [open, setOpen] = useState(false);
+  const [openState, setOpen] = useState(false);
+  const open = page || openState;
   const [q, setQ] = useState('');
   const load = useCallback(async () => {
     const r = await dfetch<{ holders: Holding[] }>('/api/operator/round-packs?holders=1');
@@ -56,8 +58,9 @@ export function PackHolders() {
     <Card className="p-5">
       <div className="flex items-center gap-3">
         <h2 className="text-[15px] font-semibold text-ink">Round packs</h2>
-        <button onClick={() => setOpen(o => !o)} aria-expanded={open} className="ml-auto text-[13px] font-medium text-pine hover:underline underline-offset-4">{open ? 'Hide' : 'Holders'}</button>
+        {!page && <button onClick={() => setOpen(o => !o)} aria-expanded={open} className="ml-auto text-[13px] font-medium text-pine hover:underline underline-offset-4">{open ? 'Hide' : 'Holders'}</button>}
       </div>
+      {open && !rows && !error && <p className="mt-3 text-[13px] text-ink-muted">Loading holders…</p>}
       {open && (error ? <div className="mt-3"><LoadError message={`Couldn't load holders — ${error}`} onRetry={load} /></div> : rows && (
         <div className="mt-3">
           <input value={q} onChange={e => setQ(e.target.value)} placeholder="Find a holder" aria-label="Find a holder" className={INPUT + ' w-full max-w-xs'} />

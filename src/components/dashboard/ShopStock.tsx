@@ -18,10 +18,13 @@ type Edit = { id: string; qty: string; cost: string; reorder: string; unitCost: 
 const usd = (c: number | null | undefined) => (c == null ? '' : (c / 100).toFixed(2));
 const toCents = (s: string) => { const t = s.trim(); if (!t) return ''; const n = Math.round(Number(t) * 100); return Number.isFinite(n) && n >= 0 ? n : NaN; };
 
-export function ShopStock({ refreshKey = 0 }: { refreshKey?: number }) {
+// POS-5 (Cam 2026-11-08, "own tabs"): on the Pro shop's Stock tab it is the whole page — always open, with a search.
+export function ShopStock({ refreshKey = 0, page = false }: { refreshKey?: number; page?: boolean }) {
   const [data, setData] = useState<Data | null>(null);
   const [error, setError] = useState('');
-  const [open, setOpen] = useState(false);
+  const [openState, setOpen] = useState(false);
+  const open = page || openState;
+  const [find, setFind] = useState('');
   const [edit, setEdit] = useState<Edit | null>(null);
   const [busy, setBusy] = useState(false);
   const [rowError, setRowError] = useState('');
@@ -33,7 +36,7 @@ export function ShopStock({ refreshKey = 0 }: { refreshKey?: number }) {
   useEffect(() => { load(); }, [load, refreshKey]);
 
   if (error && !data) return <LoadError message={`Couldn't load stock — ${error}`} onRetry={load} />;
-  if (!data) return null;
+  if (!data) return page ? <Card className="p-5"><p className="text-[13px] text-ink-muted">Loading stock…</p></Card> : null;
   const counted = data.rows.filter(r => r.stockCount !== null || r.reorderAt !== null || (data.canCost && r.costCents != null));
   // Accuracy pass (Cam 2026-11-02, the Polo said 'none left' on its tile and 'low' here): an empty shelf is 'sold out' everywhere.
   const out = data.rows.filter(r => r.stockCount !== null && r.stockCount <= 0);
@@ -74,7 +77,9 @@ export function ShopStock({ refreshKey = 0 }: { refreshKey?: number }) {
         {out.length > 0 && <StatusDot status="bad" label={`${out.length} sold out: ${names(out)}`} />}
         {low.length > 0 && <StatusDot status="warn" label={`${low.length} low: ${names(low)}`} />}
         {!out.length && !low.length && <span className="text-[13px] text-ink-muted">{counted.length ? 'Nothing low' : 'No items counted'}</span>}
-        <button onClick={() => setOpen(o => !o)} aria-expanded={open} className="ml-auto text-[13px] font-medium text-pine hover:underline underline-offset-4">{open ? 'Hide' : data.canEdit ? 'Receive stock' : 'Open'}</button>
+        {page
+          ? <input value={find} onChange={e => setFind(e.target.value)} placeholder="Find an item" aria-label="Find an item" className={INPUT + ' ml-auto w-56'} />
+          : <button onClick={() => setOpen(o => !o)} aria-expanded={open} className="ml-auto text-[13px] font-medium text-pine hover:underline underline-offset-4">{open ? 'Hide' : data.canEdit ? 'Receive stock' : 'Open'}</button>}
       </div>
       {error && <p role="alert" className="text-[12.5px] text-bad mt-2">{error}</p>}
       {open && (
@@ -90,7 +95,7 @@ export function ShopStock({ refreshKey = 0 }: { refreshKey?: number }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-line-soft">
-              {data.rows.map(r => edit?.id === r.id ? (
+              {data.rows.filter(r => !find.trim() || r.name.toLowerCase().includes(find.trim().toLowerCase())).map(r => edit?.id === r.id ? (
                 <tr key={r.id} className="bg-paper/70">
                   <td className="py-2 pr-3 text-ink" colSpan={data.canCost ? 5 : 4}>
                     <div className="flex flex-wrap items-end gap-2">

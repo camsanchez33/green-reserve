@@ -8,7 +8,7 @@
 // match; starting cash carries over from the last close-out; any of the last two weeks.
 // (Shown in the browser only after counting; the route still returns them for the reveal.)
 import { LEDGER_WHAT } from '@/lib/ledger-words';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { INPUT_COMPACT as INPUT } from '@/components/ui/field';
@@ -34,8 +34,16 @@ const dayLabel = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString('en
 const overShort = (d: number) => (d === 0 ? { label: 'Even', tone: 'ok' as const } : d > 0 ? { label: `Over ${usd(d)}`, tone: 'warn' as const } : { label: `Short ${usd(-d)}`, tone: 'bad' as const });
 const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : 's'}`;
 
-export function RegisterClose() {
-  const [open, setOpen] = useState(false);
+// POS-5 (Cam 2026-11-08): on the Close out tab it opens straight to the count. The count stays BLIND (Cam: "shouldn't be
+// live so like it's more secure") — what the drawer should hold shows only once the count is saved.
+// Bills & coins: count each denomination and the total adds itself up (the same countedCashCents is saved).
+const NOTES: [number, string][] = [[10000, '$100'], [5000, '$50'], [2000, '$20'], [1000, '$10'], [500, '$5'], [100, '$1'], [25, '25¢'], [10, '10¢'], [5, '5¢'], [1, '1¢']];
+
+export function RegisterClose({ page = false }: { page?: boolean } = {}) {
+  const [openState, setOpen] = useState(false);
+  const open = page || openState;
+  const [by, setBy] = useState<'total' | 'notes'>('total');
+  const [notes, setNotes] = useState<Record<number, string>>({});
   const [day, setDay] = useState<string | undefined>(undefined);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [recent, setRecent] = useState<Close[]>([]);
@@ -57,6 +65,12 @@ export function RegisterClose() {
     if (last) setFloat(f => f || (last.openingFloatCents / 100).toFixed(2));
   }, []);
 
+  useEffect(() => { if (page) load(); }, [page, load]);
+  const notesCents = NOTES.reduce((s, [v]) => { const n = Number(notes[v] ?? ''); return s + (Number.isInteger(n) && n > 0 ? n * v : 0); }, 0);
+  // Any count typed — zeros too — is a count (an empty drawer can be closed out); nothing typed yet is no count.
+  const notesTyped = Object.values(notes).some(v => v !== '');
+  useEffect(() => { if (by === 'notes') setCounted(notesTyped ? (notesCents / 100).toFixed(2) : ''); }, [by, notesCents, notesTyped]);
+
   async function close() {
     if (!summary) return;
     setBusy(true); setError(''); setSaved(null);
@@ -65,7 +79,7 @@ export function RegisterClose() {
     });
     setBusy(false);
     if (!r.ok) { setError(r.error); return; }
-    setSaved(r.data.close); setNote('');
+    setSaved(r.data.close); setNote(''); setNotes({});
     load(summary.day); // the figures may have moved since the page loaded; show what was saved
   }
 
@@ -81,11 +95,11 @@ export function RegisterClose() {
     <Card className="mt-5">
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-4 pb-3">
         <h2 className="text-[15px] font-semibold text-ink">Close out the day</h2>
-        {!open
+        {!open && !page
           ? <button type="button" onClick={() => { setOpen(true); load(); }} className="text-[13px] text-pine font-medium hover:underline">Count the drawer</button>
           : summary && (
             <input type="date" aria-label="Day" value={day ?? summary.day} min={addDaysStr(summary.today, -13)} max={summary.today}
-              onChange={e => { if (e.target.value) { setSaved(null); setCounted(''); load(e.target.value); } }} className={INPUT} />
+              onChange={e => { if (e.target.value) { setSaved(null); setCounted(''); setNotes({}); load(e.target.value); } }} className={INPUT} />
           )}
       </div>
       {open && (
@@ -94,6 +108,50 @@ export function RegisterClose() {
           {!summary && !loadError && <p className="text-sm text-ink-muted">Adding up the day…</p>}
           {summary && (
             <div className="grid gap-6 md:grid-cols-2">
+              <div>
+                <h3 className="text-[13.5px] font-semibold text-ink mb-2">Count the drawer</h3>
+                <label className="block text-[13px] text-ink">Starting cash
+                  <div className="relative mt-1 max-w-[12rem]"><span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
+                    <input value={float} onChange={e => setFloat(e.target.value)} inputMode="decimal" placeholder="0.00" className={INPUT + ' w-full pl-6'} /></div>
+                </label>
+                <div className="mt-4 inline-flex gap-1 p-1 rounded-[7px] bg-page" role="group" aria-label="Count by">
+                  {([['total', 'Total'], ['notes', 'Bills & coins']] as const).map(([k, l]) => (
+                    <button key={k} type="button" aria-pressed={by === k} onClick={() => setBy(k)}
+                      className={'px-3 min-h-[32px] rounded-[5px] text-[13px] ' + (by === k ? 'bg-white text-ink font-semibold shadow-card' : 'text-ink-soft hover:text-ink')}>{l}</button>
+                  ))}
+                </div>
+                {by === 'total' ? (
+                  <label className="mt-3 block text-[13px] text-ink">Cash counted
+                    <div className="relative mt-1 max-w-[12rem]"><span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
+                      <input value={counted} onChange={e => setCounted(e.target.value)} inputMode="decimal" placeholder="0.00" className={INPUT + ' w-full pl-6'} /></div>
+                  </label>
+                ) : (
+                  <div className="mt-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                      {NOTES.map(([v, l]) => (
+                        <label key={v} className="flex items-center gap-2 rounded-[7px] border border-line px-2.5 py-1.5 text-[13px] text-ink">
+                          <span className="w-9 shrink-0 tabular-nums">{l}</span>
+                          <input value={notes[v] ?? ''} onChange={e => setNotes(n => ({ ...n, [v]: e.target.value.replace(/\D/g, '').slice(0, 5) }))} inputMode="numeric" placeholder="0" aria-label={`How many ${l}`} className="w-full min-w-0 bg-transparent text-right tabular-nums outline-none" />
+                        </label>
+                      ))}
+                    </div>
+                    <p className="mt-2 text-[14px] text-ink">Counted <b className="tabular-nums">${(notesCents / 100).toFixed(2)}</b></p>
+                  </div>
+                )}
+                {revealed && (
+                  <ul className="mt-3 divide-y divide-line-soft text-sm">
+                    <li className="flex justify-between py-2"><span className="text-ink">Should be in the drawer</span><span className="tabular-nums font-semibold">{usd(expected)}</span></li>
+                    <li className="flex justify-between py-2"><span className="text-ink">Counted</span>{diff === null ? <span className="text-ink-muted">—</span> : <StatusDot status={overShort(diff).tone} label={overShort(diff).label} />}</li>
+                  </ul>
+                )}
+                <input value={note} onChange={e => setNote(e.target.value)} maxLength={500} placeholder="Note (optional)" aria-label="Note" className={INPUT + ' w-full mt-3'} />
+                <button type="button" onClick={close} disabled={busy || countedCents === null}
+                  className="mt-3 w-full bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-sm py-2.5 disabled:opacity-50">
+                  {busy ? 'Saving…' : dayCloses.length ? 'Save this recount' : `Close out ${summary.day === summary.today ? 'today' : dayLabel(summary.day)}`}
+                </button>
+                {error && <p className="mt-2 text-[13px] text-bad" role="alert">{error}</p>}
+                {saved && <p className="mt-2 text-[13px] text-ok flex items-center gap-1.5"><StatusDot status="ok" />Saved — {overShort(saved.differenceCents).label.toLowerCase()} against {usd(saved.expectedCashCents)} expected.</p>}
+              </div>
               <div>
                 {!revealed ? (
                   <p className="text-[13.5px] text-ink-soft">Count first; the day&apos;s cash shows after.</p>
@@ -133,32 +191,6 @@ export function RegisterClose() {
                   {summary.card.refundsCents > 0 && <li className="flex justify-between py-2"><span className="text-ink">Shop card refunds</span><span className="tabular-nums">{usd(-summary.card.refundsCents)}</span></li>}
                 </ul>
                 <p className="text-[12.5px] text-ink-muted mt-2">Card goes to Stripe — nothing to count.</p>
-              </div>
-              <div>
-                <h3 className="text-[13.5px] font-semibold text-ink mb-2">Count the drawer</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <label className="text-[13px] text-ink">Starting cash
-                    <div className="relative mt-1"><span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
-                      <input value={float} onChange={e => setFloat(e.target.value)} inputMode="decimal" placeholder="0.00" className={INPUT + ' w-full pl-6'} /></div>
-                  </label>
-                  <label className="text-[13px] text-ink">Cash counted
-                    <div className="relative mt-1"><span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
-                      <input value={counted} onChange={e => setCounted(e.target.value)} inputMode="decimal" placeholder="0.00" className={INPUT + ' w-full pl-6'} /></div>
-                  </label>
-                </div>
-                {revealed && (
-                  <ul className="mt-3 divide-y divide-line-soft text-sm">
-                    <li className="flex justify-between py-2"><span className="text-ink">Should be in the drawer</span><span className="tabular-nums font-semibold">{usd(expected)}</span></li>
-                    <li className="flex justify-between py-2"><span className="text-ink">Counted</span>{diff === null ? <span className="text-ink-muted">—</span> : <StatusDot status={overShort(diff).tone} label={overShort(diff).label} />}</li>
-                  </ul>
-                )}
-                <input value={note} onChange={e => setNote(e.target.value)} maxLength={500} placeholder="Note (optional)" aria-label="Note" className={INPUT + ' w-full mt-3'} />
-                <button type="button" onClick={close} disabled={busy || countedCents === null}
-                  className="mt-3 w-full bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-sm py-2.5 disabled:opacity-50">
-                  {busy ? 'Saving…' : dayCloses.length ? 'Save this recount' : `Close out ${summary.day === summary.today ? 'today' : dayLabel(summary.day)}`}
-                </button>
-                {error && <p className="mt-2 text-[13px] text-bad" role="alert">{error}</p>}
-                {saved && <p className="mt-2 text-[13px] text-ok flex items-center gap-1.5"><StatusDot status="ok" />Saved — {overShort(saved.differenceCents).label.toLowerCase()} against {usd(saved.expectedCashCents)} expected.</p>}
               </div>
             </div>
           )}
