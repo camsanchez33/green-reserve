@@ -55,6 +55,8 @@ type TeeTime = {
   tee?: string | null;
   teeRank?: number;
   playersAvailable: number; playersBooked: number;
+  /** SEATS-1: open seats staff closed (playersAvailable already leaves them out). */
+  seatsClosed?: number;
   greenFee: number; cartFee: number; walkingAllowed: boolean;
   /** RES-1: the tee time's resident price (cents); null = none. */
   residentRateCents?: number | null;
@@ -173,7 +175,7 @@ function DashboardPageInner() {
   const [flow, setFlow] = useState<{ id: string; step: 1 | 2 | 3 } | null>(null);
   const [moreFor, setMoreFor] = useState<string | null>(null);
   // The payment screen closes with the time's card.
-  useEffect(() => { setFlow(null); setMoreFor(null); setTimeOpts(false); }, [panelId]);
+  useEffect(() => { setFlow(null); setMoreFor(null); }, [panelId]);
   // VIEWS-1 (Cam 2026-11-03): Grid (seat rows), List (one line per group) or Calendar (the month).
   // Remembered per browser; the grid is the default and always works without it.
   const [sheetView, setSheetViewState] = useState<SheetView>('grid');
@@ -181,7 +183,6 @@ function DashboardPageInner() {
   const setSheetView = (v: SheetView) => { setSheetViewState(v); try { localStorage.setItem('gr_sheet_view', v); } catch {} };
   // DASH-D: the till's result — the group just checked in, shown at the top of its time's card.
   const [dayMenu, setDayMenu] = useState(false);
-  const [timeOpts, setTimeOpts] = useState(false);
   const [justDone, setJustDone] = useState<{ bookingId: string; name: string; players: number; how: string } | null>(null);
   // RECEIPT-1 (Cam 2026-11-08): the receipt the golfer wants — print, text or email; '' = not asked yet.
   const [receiptFor, setReceiptFor] = useState<{ via: 'sms' | 'email'; to: string } | null>(null);
@@ -690,6 +691,17 @@ function DashboardPageInner() {
   // SD-10: every write is checked, and the row stays busy until the sheet has re-read it.
   type SeatAccess = 'anyone' | 'counter' | 'none';
   const seatAccessOf = (tt: TeeTime): SeatAccess => tt.status === 'blocked' ? 'none' : tt.staffOnly ? 'counter' : 'anyone';
+  // SEATS-1: close or reopen open seats (the route re-checks who's booked).
+  async function setSeatsClosed(tt: TeeTime, n: number) {
+    setSlotBusy(tt.id);
+    try {
+      const r = await dfetch('/api/operator/tee-times', { method: 'PATCH', body: JSON.stringify({ id: tt.id, seatsClosed: n }) });
+      if (!r.ok) toast(r.error);
+    } finally {
+      await loadTimes(selectedDate, true); // quiet: the sheet stays where staff scrolled
+      setSlotBusy(null);
+    }
+  }
   async function setSeatAccess(tt: TeeTime, to: SeatAccess) {
     if (seatAccessOf(tt) === to) return;
     setSlotBusy(tt.id);
@@ -1608,7 +1620,7 @@ function DashboardPageInner() {
                   <button onClick={() => setPanelId(null)} className="shrink-0 -mr-1 p-1.5 rounded-md text-ink-muted hover:text-ink hover:bg-paper" aria-label="Close"><X className="w-5 h-5" /></button>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-ink">
-                  <span>{panelSlot.status === 'blocked' ? <span className="italic text-ink-muted">{panelSlot.event ? `Held for ${panelSlot.event.name}` : 'Blocked'}</span> : <>{panelSlot.playersBooked} of {panelSlot.playersAvailable} players · {open <= 0 ? <span className="text-bad font-medium">Full</span> : `${open} open`}</>}</span>
+                  <span>{panelSlot.status === 'blocked' ? <span className="italic text-ink-muted">{panelSlot.event ? `Held for ${panelSlot.event.name}` : 'Blocked'}</span> : <>{panelSlot.playersBooked} of {panelSlot.playersAvailable + (panelSlot.seatsClosed ?? 0)} players · {open > 0 ? `${open} open` : (panelSlot.seatsClosed ?? 0) > 0 ? `${panelSlot.seatsClosed} closed` : <span className="text-bad font-medium">Full</span>}</>}</span>
                   <span className="text-ink-soft">{panelSlot.tee && (teeTimes ?? []).some(t => t.tee !== panelSlot.tee) ? `${panelSlot.tee} · ` : ''}{roundName(panelSlot)} · ${panelSlot.greenFee.toFixed(2)} a player{panelSlot.cartFee > 0 ? ` + $${panelSlot.cartFee.toFixed(2)} cart` : ''}</span>
                   {panelSlot.residentRateCents != null && <span className="text-ink-soft">Residents ${(panelSlot.residentRateCents / 100).toFixed(2)}</span>}
                 </div>
@@ -1667,24 +1679,30 @@ function DashboardPageInner() {
                 {panelSlot.status !== 'blocked' && open > 0 && access.can('sheet.walkin') && selectedDate === today() && lateForAdding(panelSlot.time, nowHM) && (
                   <button onClick={() => { setWalkInLate(true); setWalkInSlot(panelSlot); }} className="px-3.5 min-h-[36px] rounded-md border border-line text-[13px] font-medium text-ink hover:bg-paper">Add a walk-in who already played</button>
                 )}
-                {/* A full time has no open seats to decide about; a closed one still shows, so it can be reopened. */}
-                {access.can('sheet.block') && !panelSlot.event && !past && (open > 0 || panelSlot.status === 'blocked') && (
-                  <button type="button" aria-expanded={timeOpts} onClick={() => setTimeOpts(o => !o)} className="ml-auto px-2 min-h-[36px] text-[13px] font-medium text-ink-soft hover:text-ink">
-                    {seatAccessOf(panelSlot) === 'none' ? 'Closed · options' : seatAccessOf(panelSlot) === 'counter' ? 'Counter only · options' : 'Time options'}
-                  </button>
-                )}
-                {timeOpts && access.can('sheet.block') && !panelSlot.event && !past && (open > 0 || panelSlot.status === 'blocked') && (
-                  <div className="w-full flex flex-wrap items-center gap-x-3 gap-y-1.5" role="radiogroup" aria-label="Who can book the open seats">
-                    <span className="text-[13px] text-ink-soft">Open seats{open > 0 ? ` (${open})` : ''} can be booked by</span>
-                    <div className="inline-flex rounded-[7px] border border-line overflow-hidden">
-                      {([['anyone', 'Anyone'], ['counter', 'Counter only'], ['none', 'No one']] as const).map(([k, l]) => (
-                        <button key={k} type="button" role="radio" aria-checked={seatAccessOf(panelSlot) === k} disabled={slotBusy === panelSlot.id}
-                          onClick={() => setSeatAccess(panelSlot, k)}
-                          className={'px-3 min-h-[34px] text-[13px] font-medium border-l border-line first:border-l-0 disabled:opacity-50 ' + (seatAccessOf(panelSlot) === k ? 'bg-pine text-white' : 'text-ink hover:bg-paper')}>{l}</button>
-                      ))}
+                {/* SEATS-1 (Cam 2026-11-08: "close it by one individual spot or as many as there are"): − closes an open seat,
+                    + reopens one. Booked groups are never touched. A full time with nothing closed has nothing to decide. */}
+                {access.can('sheet.block') && !panelSlot.event && !past && panelSlot.status !== 'blocked' && (open > 0 || (panelSlot.seatsClosed ?? 0) > 0) && (() => {
+                  const closed = panelSlot.seatsClosed ?? 0;
+                  const size = panelSlot.playersAvailable + closed;
+                  const freeSeats = size - panelSlot.playersBooked; // seats not taken by a group: open + closed
+                  return (
+                    <div className="w-full flex items-center justify-between gap-3">
+                      <span className="text-[13px] text-ink-soft">Open seats{closed > 0 ? <span className="text-ink-muted"> · {closed} closed</span> : ''}</span>
+                      <div className="flex items-center gap-1" role="group" aria-label="Open seats on this time">
+                        <button type="button" aria-label="Close a seat" disabled={slotBusy === panelSlot.id || open <= 0} onClick={() => setSeatsClosed(panelSlot, closed + 1)}
+                          className="w-9 h-9 rounded-[7px] border border-line text-[16px] text-ink hover:bg-paper disabled:opacity-40">−</button>
+                        <span className="min-w-[4.5rem] text-center text-[14px] tabular-nums text-ink" aria-live="polite"><b>{open}</b> of {freeSeats}</span>
+                        <button type="button" aria-label="Reopen a seat" disabled={slotBusy === panelSlot.id || closed <= 0} onClick={() => setSeatsClosed(panelSlot, closed - 1)}
+                          className="w-9 h-9 rounded-[7px] border border-line text-[16px] text-ink hover:bg-paper disabled:opacity-40">+</button>
+                      </div>
                     </div>
-                    {seatAccessOf(panelSlot) !== 'anyone' && (panelSlot.bookings ?? []).some(b => b.status !== 'cancelled') && <span className="text-[12.5px] text-ink-muted">Booked groups stay.</span>}
-                  </div>
+                  );
+                })()}
+                {access.can('sheet.block') && !panelSlot.event && !past && panelSlot.status === 'blocked' && (
+                  <button type="button" onClick={() => setSeatAccess(panelSlot, 'anyone')} disabled={slotBusy === panelSlot.id} className="px-2 min-h-[36px] text-[13px] font-medium text-pine hover:underline disabled:opacity-50">Closed · reopen this time</button>
+                )}
+                {access.can('sheet.block') && !panelSlot.event && !past && panelSlot.status !== 'blocked' && panelSlot.staffOnly && (
+                  <button type="button" onClick={() => setSeatAccess(panelSlot, 'anyone')} disabled={slotBusy === panelSlot.id} className="px-2 min-h-[36px] text-[13px] font-medium text-pine hover:underline disabled:opacity-50">Hidden online · show it</button>
                 )}
                 {/* Cam 2026-11-06: never offered while a group is on the time (the route refuses it too). */}
                 {access.can('sheet.edit_times') && !past && !panelSlot.event && !(panelSlot.bookings ?? []).length && (

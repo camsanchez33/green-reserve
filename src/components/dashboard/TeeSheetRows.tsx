@@ -36,6 +36,8 @@ export type BoardSlot = {
   holes?: number; tierName?: string | null; product?: { label: string } | null;
   /** ADDTIME-1: kept for staff — labelled on the row. */
   staffOnly?: boolean;
+  /** SEATS-1: open seats staff closed. */
+  seatsClosed?: number;
 };
 type Tone = 'ok' | 'warn' | 'bad';
 
@@ -108,7 +110,7 @@ export default function TeeSheetRows({ slots: allSlots, isPast, isGone, nextUpId
     && s.playersAvailable - s.playersBooked >= dragging.group.players;
 
   // Every row has the same seat columns (the biggest time's), so seats line up down the sheet.
-  const cols = Math.max(4, ...allSlots.map(s => s.playersAvailable));
+  const cols = Math.max(4, ...allSlots.map(s => s.playersAvailable + (s.seatsClosed ?? 0)));
   const gridOf = (w: string): React.CSSProperties => ({ gridTemplateColumns: `3.75rem ${w} repeat(${cols}, minmax(0, 1fr))` });
   const nowIndex = slots.findIndex(s => !isPast(s));
   // TEES-1 (Cam 2026-11-04, "side by side"): the day's tees, in the order the times first use them.
@@ -142,7 +144,7 @@ export default function TeeSheetRows({ slots: allSlots, isPast, isGone, nextUpId
     const groups = s.bookings ?? [];
     let used = 0;
     const tag = tagOf(s);
-    const openLabel = `${formatTeeTime(s.time)}${withTime ? '' : `, ${s.tee ?? ''}`}${tag ? `, ${tag}` : ''}${next ? ', next up' : ''}${blocked ? ', blocked' : `, ${s.playersBooked} of ${s.playersAvailable} booked`}. Open`;
+    const openLabel = `${formatTeeTime(s.time)}${withTime ? '' : `, ${s.tee ?? ''}`}${tag ? `, ${tag}` : ''}${next ? ', next up' : ''}${blocked ? ', blocked' : `, ${s.playersBooked} of ${s.playersAvailable + (s.seatsClosed ?? 0)} booked${s.seatsClosed ? `, ${s.seatsClosed} closed` : ''}`}. Open`;
     return (
             <div
               key={s.id}
@@ -198,6 +200,9 @@ export default function TeeSheetRows({ slots: allSlots, isPast, isGone, nextUpId
                 })}
                 {Array.from({ length: Math.max(0, s.playersAvailable - used) }, (_, k) => (
                   <span key={`open-${k}`} aria-hidden="true" className="h-8 rounded-[4px] bg-paper border border-dashed border-line" />
+                ))}
+                {Array.from({ length: Math.max(0, s.seatsClosed ?? 0) }, (_, k) => (
+                  <span key={`closed-${k}`} className="h-8 rounded-[4px] bg-line/70 flex items-center justify-center text-[11px] font-medium text-ink-muted">Closed</span>
                 ))}
               </>)}
             </div>

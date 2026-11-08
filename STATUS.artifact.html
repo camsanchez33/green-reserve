@@ -117,14 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-11-08 19:50 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 7523787b</span>
-    <span>10 uncommitted</span>
+    <span>2026-11-08 20:09 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 7c498a10</span>
+    <span>15 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">147 runs have shipped that the queue doesn't know about</div>
+<div class="lede">149 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-31. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">b324c547</span><span>Receipt: what was actually paid, how and when; prints on a receipt printer (#336)</span></li>
+<li><span class="h">d26d15c1</span><span>Receipt: what was actually paid, how and when; prints on a receipt printer</span></li>
 <li><span class="h">d6083d50</span><span>Time card: reader charges who's here, receipts, day actions in the sheet bar (#335)</span></li>
 <li><span class="h">480f7d0e</span><span>Time card: the reader charges who's here, receipts, day actions in the sheet bar</span></li>
 <li><span class="h">086b9403</span><span>Tee sheet: check-in in order — who's here, add to order, payment, done (#334)</span></li>
@@ -284,7 +286,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/teesheet-till-test.ts</code></li><li><code>M scripts/words-guard.baseline.json</code></li><li><code>M src/app/api/receipt/[bookingId]/route.ts</code></li><li><code>M src/app/dashboard/page.tsx</code></li><li><code>M src/app/receipt/[bookingId]/page.tsx</code></li><li><code>M src/components/GolferExitLinks.tsx</code></li><li><code>M src/lib/counter-pay.ts</code></li><li><code>?? scripts/receipt-cash-test.ts</code></li></ul>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M prisma/schema.prisma</code></li><li><code>M scripts/add-tee-time-test.ts</code></li><li><code>M scripts/checkout-card-test.ts</code></li><li><code>M scripts/tee-time-slot-test.ts</code></li><li><code>M scripts/tt-card-test.ts</code></li><li><code>M scripts/words-guard.baseline.json</code></li><li><code>M src/app/api/operator/tee-times/route.ts</code></li><li><code>M src/app/dashboard/page.tsx</code></li><li><code>M src/components/dashboard/TeeSheetRows.tsx</code></li><li><code>M src/lib/tee-sheet-engine.ts</code></li><li><code>?? prisma/migrations/20261108000000_seats_closed/</code></li><li><code>?? scripts/seats-closed-test.ts</code></li><li><code>?? src/lib/tee-time-seats.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -366,6 +368,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 18d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">b324c547</td><td class="num">2026-11-08</td><td>Receipt: what was actually paid, how and when; prints on a receipt printer (#336)</td></tr>
+<tr><td class="num">d26d15c1</td><td class="num">2026-11-08</td><td>Receipt: what was actually paid, how and when; prints on a receipt printer</td></tr>
 <tr><td class="num">d6083d50</td><td class="num">2026-11-08</td><td>Time card: reader charges who's here, receipts, day actions in the sheet bar (#335)</td></tr>
 <tr><td class="num">480f7d0e</td><td class="num">2026-11-08</td><td>Time card: the reader charges who's here, receipts, day actions in the sheet bar</td></tr>
 <tr><td class="num">086b9403</td><td class="num">2026-11-08</td><td>Tee sheet: check-in in order — who's here, add to order, payment, done (#334)</td></tr>
@@ -376,8 +380,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">de19b14e</td><td class="num">2026-11-06</td><td>Carts: per player or per cart (2 riders), set in Settings (#332)</td></tr>
 <tr><td class="num">fe626db0</td><td class="num">2026-11-06</td><td>Carts: per player or per cart (2 riders), set by the owner in Settings</td></tr>
 <tr><td class="num">ba23e030</td><td class="num">2026-11-06</td><td>Tee sheet: a Square-style Charge screen, and one &quot;Paying now&quot; control (#331)</td></tr>
-<tr><td class="num">d9f007fa</td><td class="num">2026-11-06</td><td>Tee sheet: a Square-style Charge screen, and one &quot;Paying now&quot; control</td></tr>
-<tr><td class="num">54cc0d80</td><td class="num">2026-11-05</td><td>Tee sheet: the group card asks how they're paying, then one button that says what it does (#330)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>
