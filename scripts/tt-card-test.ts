@@ -14,11 +14,11 @@ check('on a laptop the card has no backdrop over the sheet', /md:inset-auto md:t
 check('on a phone it is a full sheet from the bottom', /absolute inset-x-0 bottom-0 top-12 md:static/.test(card));
 check('the slide respects reduced motion', /prefers-reduced-motion: no-preference[\s\S]*tt-card-up/.test(readFileSync('src/app/globals.css', 'utf8')));
 check('the price line is in the card', card.includes('a player{panelSlot.cartFee > 0'));
-check('each group shows what it owes, to logins that see payments', page.includes("const showMoney = access.can('money.payments');") && page.includes('{showMoney && !showTicket && <span className="shrink-0 text-[14px] font-semibold text-ink tabular-nums">') && page.includes('${(cardDue / 100).toFixed(2)}</span>')); // DASH-D: unpaid groups show it as the ticket's Total
+check('each group shows what it owes, to logins that see payments', page.includes("const showMoney = access.can('money.payments');") && page.includes('{showMoney && unpaid && !b.noShowAt && !inFlow && <span className="shrink-0 text-[14px] font-semibold text-ink tabular-nums">${(cashDue / 100).toFixed(2)}</span>}')); // DASH-D: unpaid groups show it as the ticket's Total
 for (const a of ["checkInBooking(b, cardDue)", "bookingLifecycle(b, 'take_cash', cashDue, ", "sendPayLink(b, 'sms')", "sendPayLink(b)", 'setMoveTarget(', "bookingLifecycle(b, 'still_coming')", "bookingLifecycle(b, 'no_show')", 'cancelGroup(b, false)', 'cancelGroup(b, true)', 'setResidents(b,', '<ShopItemsForGroup', 'setWalkInSlot(panelSlot)', 'setSeatAccess(panelSlot, k)', 'deleteTime(panelSlot)']) {
   check(`the card keeps ${a}`, page.includes(a));
 }
-check('cancel sits last, apart from the other actions', /ml-auto flex items-center gap-x-4[\s\S]{0,700}Cancel booking/.test(page));
+check('cancel sits last in Edit group: keep or waive the fee when one could be kept, each confirming once', /canRemove && \([\s\S]{0,400}canCancel && canWaive && \([\s\S]{0,600}canCancel && \(/.test(page) && page.includes("{canWaive ? 'Cancel, keep the fee' : 'Cancel booking'}") && page.includes('<span>Cancel, waive the fee</span>'));
 check('no box inside the card: groups are rows with hairlines', card.includes('divide-y divide-line-soft') && !page.includes('bg-paper/60 rounded-md px-3 py-2'));
 const demo = readFileSync('src/components/home/TeeSheetDemo.tsx', 'utf8');
 check('the homepage demo mirrors: price line, money per group, walk-in wording', demo.includes('a player</span>') && demo.includes('money(roundTotal(d, g.n))') && demo.includes('Add a walk-in or phone booking'));

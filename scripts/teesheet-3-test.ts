@@ -12,7 +12,7 @@ const side = read('src/components/OperatorSidebar.tsx');
 const search = read('src/components/dashboard/OperatorSearch.tsx');
 
 // Tee 14
-check('no browser prompt for the headcount — the card\'s "Here" picker, set to the whole group', !sheet.includes('window.prompt') && sheet.includes('const n = here[b.id] ?? b.players;') && sheet.includes('<b>{herePlayers}</b> of {b.players}')); // CHECKOUT-1: a − / + stepper now
+check('no browser prompt for the headcount — the card\'s "Here" picker, set to the whole group', !sheet.includes('window.prompt') && sheet.includes('const n = here[b.id] ?? b.players;') && sheet.includes('<b className="text-[24px]">{herePlayers}</b> of {b.players}')); // CHECKOUT-1: a − / + stepper now
 check('…the picker never shows a count above the group (after a party-size change)', sheet.includes('const herePlayers = Math.min(here[b.id] ?? b.players, b.players);') && sheet.includes('disabled={herePlayers >= b.players}') && sheet.includes('Math.min(b.players, herePlayers + 1)'));
 // Tee 26 / 25
 check('"Mark no-show" waits 10 minutes past the time', sheet.includes('mins(nowHM) - mins(tt.time) >= 10') && sheet.includes("noShowReady && access.can('sheet.no_show')"));

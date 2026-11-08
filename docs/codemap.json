@@ -8943,7 +8943,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 2154,
+      "lines": 2200,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11193,7 +11193,7 @@
     },
     {
       "path": "src/components/dashboard/GroupTicket.tsx",
-      "lines": 62,
+      "lines": 63,
       "purpose": "DASH-D (Cam 2026-11-01, \"make checking someone in a little more POS like\"):",
       "brain": [],
       "exports": [

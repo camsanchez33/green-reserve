@@ -16,7 +16,7 @@ export type TicketLine = { label: string; detail: string; cents: number };
 const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : 's'}`;
 
 /** The round's lines for `n` of the group, and the round total the card is charged (shop items aside). */
-export function ticketLines(b: TicketBooking, n: number): { lines: TicketLine[]; roundCents: number } {
+export function ticketLines(b: TicketBooking, n: number, withFee = true): { lines: TicketLine[]; roundCents: number } {
   const whole = n >= b.players;
   const access = Math.round((b.accessFeeTotal ?? 0) * (whole ? 1 : n / b.players));
   const lines: TicketLine[] = [];
@@ -34,7 +34,8 @@ export function ticketLines(b: TicketBooking, n: number): { lines: TicketLine[];
     parts = (whole ? Math.round(b.totalAmount) : Math.round(b.totalAmount * n / b.players)) - access;
     lines.push({ label: 'Round', detail: plural(n, 'player'), cents: parts });
   }
-  if (access > 0) lines.push({ label: 'Booking fee', detail: plural(n, 'player'), cents: access });
+  // CHECKIN-1 (Cam 2026-11-08): the counter shows the round without GreenReserve's fee; the card rows say it.
+  if (access > 0 && withFee) lines.push({ label: 'Booking fee', detail: plural(n, 'player'), cents: access });
   // The whole group is charged the booking's own total; anything the pieces don't explain
   // (a promo code, a price set by staff) shows as its own line, so the lines add up.
   const roundCents = whole ? Math.round(b.totalAmount) : parts + access;
@@ -45,8 +46,8 @@ export function ticketLines(b: TicketBooking, n: number): { lines: TicketLine[];
 
 const usd = (c: number) => (c < 0 ? '−$' : '$') + (Math.abs(c) / 100).toFixed(2);
 
-export default function GroupTicket({ booking, here }: { booking: TicketBooking; here: number }) {
-  const { lines } = ticketLines(booking, here);
+export default function GroupTicket({ booking, here, withFee = true }: { booking: TicketBooking; here: number; withFee?: boolean }) {
+  const { lines } = ticketLines(booking, here, withFee);
   return (
     <div className="divide-y divide-line">
       {lines.map(l => (

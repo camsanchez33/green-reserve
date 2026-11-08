@@ -14,32 +14,33 @@ const page = readFileSync('src/app/dashboard/page.tsx', 'utf8');
 const route = readFileSync('src/app/api/operator/bookings/route.ts', 'utf8');
 const sales = readFileSync('src/lib/shop-sales.ts', 'utf8');
 
-ok('one "Paying now" stepper; Pay separately is gone', page.includes('<span className="text-[13px] font-medium text-ink">Paying now</span>') && !page.includes('>Pay separately</button>') && !page.includes('>Showed up</span>'));
-ok('short of the group: no choice for the rest — they stay booked (only a group that can\'t split is told they won\'t be charged)', !page.includes('Pays on their own now') && !page.includes('restMode') && page.includes('{rest > 0 && !restSplit && <p className="text-[12.5px] text-warn">The other {rest} won’t be charged.</p>}'));
-ok('Charge opens the payment screen; the server splits the rest off as it charges (PARTIAL-1)', page.includes('const charge = () => setPaySheet(b.id);'));
-ok('one Charge button with the card total', page.includes("`Charge${showMoney ? ` $${(cardDue / 100).toFixed(2)}` : ''}`"));
+ok('CHECKIN-1: check-in goes in order — who\'s here, add to order, payment (Cam 2026-11-08)', page.includes("const STEPS = ['Who’s here', 'Add to order', 'Payment'];") && page.includes('How many are here?') && page.includes('Anything to add?') && !page.includes('>Pay separately</button>'));
+ok('short of the group: the rest stay booked (a group that can\'t split is told they won\'t be charged)', !page.includes('Pays on their own now') && page.includes("{restSplit ? `The other ${rest} stay booked.` : `The other ${rest} won’t be charged.`}"));
+ok('one Check in button: who\'s here first for a group (declined too), then payment; paid ahead checks in whole (review 2026-11-08)', page.includes("const start = () => prepaid ? checkInBooking(b, cardDue) : go(b.players > 1 ? 1 : b.checkInFailReason ? 3 : 2);") && page.includes("onClick={() => go(b.checkInFailReason ? 3 : 2)}") && page.includes("const inFlow = flow?.id === b.id && b.status === 'confirmed' && unpaid && !prepaid;"));
+ok('the round is shown without the booking fee; card rows say the card total with it', page.includes('<GroupTicket booking={b} here={herePlayers} withFee={false} />') && page.includes('with booking fee</span>'));
+ok('one price for the round on the payment step (cash), the card total only on the card rows', page.includes("{showMoney && <div className=\"text-[34px] font-semibold tracking-[-0.02em] text-ink tabular-nums\">${(cashDue / 100).toFixed(2)}</div>}"));
 ok('type a card for every unpaid group (Cam 2026-11-06), counter bookings too', page.includes("const cardOk = b.status !== 'completed' && b.status !== 'cancelled' && access.can('sheet.checkin');") && page.includes("{b.checkInFailReason ? 'Type a new card' : 'Type a card'}"));
 ok('the ways keep their old permissions', page.includes("const cardOk = b.status !== 'completed' && b.status !== 'cancelled' && access.can('sheet.checkin');")
   && page.includes("const cashOk = canCash || (b.status === 'confirmed' && b.paymentStatus === 'manual' && access.can('sheet.counter_payment'));")
   && page.includes('{canReader && onReader?.bookingId !== b.id && (') && page.includes('{canTextLink && <button') && page.includes('{canEmailLink && <button') && page.includes('{canAccount && ('));
 ok('the payment screen: the amount, then a row per way to pay', page.includes('How are they paying?') && page.includes('>Card on file</span>') && page.includes('Text a pay link') && page.includes('Email a pay link'));
-ok('cash: one tap for exact or the next $20 / $50 / $100, or Custom', page.includes('[2000, 5000, 10000].map(u => Math.ceil((cashDue + 1) / u) * u)') && page.includes('onClick={() => takeCash()}') && page.includes('onClick={() => takeCash(c)}') && page.includes('>Custom</button>'));
+ok('cash: one tap for exact or the next $20 / $50 / $100, or Custom', page.includes('[2000, 5000, 10000].map(u => Math.ceil((cashDue + 1) / u) * u)') && page.includes('onClick={() => takeCash()}') && page.includes('onClick={() => takeCash(c)}') && page.includes('>Other</button>'));
 ok('the cash handed over goes to the register sale; the server checks it covers the total', page.includes('{ tenderedCents: tendered && tendered > cashDue ? tendered : undefined }') && page.includes('...(cash?.tenderedCents ? { cashTenderedCents: cash.tenderedCents } : {})')
   && route.includes('cashTenderedCents, soldBy: session.email, actor: staff,') && sales.includes('has to cover the'));
 ok('custom cash: short or garbled cannot be taken', page.includes('disabled={rowBusy === b.id || garbled || givenCents < cashDue}') && page.includes('const garbled = !Number.isFinite(givenRaw);'));
-ok('cash shows its own price once, never beside a second figure for the same person', page.includes('cashDue !== cardDue ? <span className="text-ink-muted"> · ${(cashDue / 100).toFixed(2)}, no booking fee</span>'));
+ok('cash shows its own price once — the round total — never a second figure', page.includes('<span className="text-[14px] text-ink mr-auto">Cash</span>') && !page.includes(', no booking fee</span>'));
 ok("the change toast uses the sale's own total and tender", page.includes('r.data.cashTenderedCents - r.data.totalCents'));
 ok("no browser pop-up from the card's cash", page.includes('if (!cash && !confirm(`Take $'));
 ok('the reader says when it charges the whole group (the register has no headcount)', page.includes('charges the whole group'));
-ok('Move / Change group size / Cancel sit under More', page.includes("{moreFor === b.id ? 'Less' : 'More'}") && page.includes('moreFor === b.id && canSizeGroup && (') && page.includes("moreFor === b.id && b.status === 'confirmed' && !teedOff && access.can('sheet.cancel') && ("));
+ok('Move / number of players / residents / cancel sit under one Edit group menu (Cam 2026-11-08)', page.includes('>Edit group</button>') && page.includes('<span>Move to another time</span>') && page.includes('{canResidents && (') && page.includes("const canCancel = b.status === 'confirmed' && !teedOff && access.can('sheet.cancel');"));
 ok('no-show and running late stay in sight', page.includes("{noShowReady && access.can('sheet.no_show') && (") && page.includes('Running late</button>'));
 ok("the time's header names the round once", page.includes('{roundName(panelSlot)} · ${panelSlot.greenFee.toFixed(2)} a player'));
-ok('"No card saved" stands alone', page.includes("b.paymentStatus !== 'manual' && <span className=\"text-ink-muted\"> · {bStatus.sublabel}</span>"));
-ok('no reader: owners get the link, staff are told', page.includes('>Connect a card reader</Link>') && page.includes('No card reader connected'));
+ok('an unpaid group says how it booked and whether a card is saved (Cam 2026-11-08), not a status sentence', page.includes("{b.source === 'phone' ? 'Phone booking' : b.source === 'walk_in' ? 'Walk-in' : 'Booked online'} · {b.hasCard ? 'card saved' : 'no card saved'}") && !page.includes('{bStatus.sublabel}'));
+ok('no reader: owners get the link, staff are told', page.includes('<span className="text-ink-soft">Connect a card reader</span>') && page.includes('No card reader connected'));
 
 ok('no split happens in the browser before a charge (nothing to half-finish)', !page.includes('async function splitOff('));
-ok('review: the payment screen only for a group that still pays, and closes with the card', page.includes('const sheetOpen = paySheet === b.id && anyWay && unpaid && !prepaid;') && page.includes('useEffect(() => { setPaySheet(null); setMoreFor(null); }, [panelId]);'));
-ok('review: no ruled box inside the card', page.includes('<div className="mt-3 rounded-[7px] bg-paper/70">') && !page.includes('rounded-[10px] border border-line bg-white'));
+ok('review: the steps only for a group that still has something to do, and close with the card', page.includes("const inFlow = flow?.id === b.id && b.status === 'confirmed' && unpaid && !prepaid;") && page.includes('useEffect(() => { setFlow(null); setMoreFor(null); }, [panelId]);'));
+ok('review: no ruled box inside the card', page.includes('<div className="mt-3 rounded-[7px] bg-paper/70 px-4 pt-3 pb-4">') && !page.includes('rounded-[10px] border border-line bg-white'));
 
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
 process.exit(failed === 0 ? 0 : 1);

@@ -152,7 +152,7 @@ export default function TeeSheetRows({ slots: allSlots, isPast, isGone, nextUpId
               onDrop={e => { e.preventDefault(); if (dragging && target) onMove(dragging.group, dragging.fromId, s.id); setDragging(null); setOver(null); }}
               style={withTime ? gridOf(priceW) : laneVars}
               className={(extra || 'grid ') + (withTime ? '' : laneGridCls) + 'items-center gap-[3px] rounded-md cursor-pointer min-w-0 '
-                + (over === s.id ? 'ring-2 ring-pine ' : selectedId === s.id ? 'ring-2 ring-pine/50 ' : target ? 'ring-1 ring-pine/30 ' : '')
+                + (over === s.id ? 'ring-2 ring-pine ' : selectedId === s.id ? 'bg-white shadow-card ' : target ? 'ring-1 ring-pine/30 ' : '')
                 + (dragging && !target && s.id !== dragging.fromId ? 'opacity-40 ' : past ? 'opacity-55 ' : '')}>
               {/* The time (or, side by side, the price) is the row's button for keyboard and screen readers; groups stay siblings. */}
               {withTime ? (
