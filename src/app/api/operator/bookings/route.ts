@@ -1,4 +1,5 @@
 import { SMS_NO_CONSENT_STAFF } from '@/lib/sms-consent-copy';
+import { requireRegisterOpen } from '@/lib/register-open';
 import { optInAndConfirm } from '@/lib/sms-consent';
 import { setCheckoutExtras } from '@/lib/checkout-extras';
 import { roundChargeCents } from '@/lib/shop';
@@ -164,6 +165,8 @@ export async function PATCH(req: NextRequest) {
   // into their own booking (lib/split-booking-db); with thenCash, take their cash in the same
   // request — the same register cash sale as Take cash.
   if (action === 'split') {
+    // DRAWER-1: split + cash needs the register open — refuse before splitting anything.
+    if (thenCash === true) { const closed = await requireRegisterOpen(session.courseId); if (closed) return NextResponse.json({ error: closed, registerClosed: true }, { status: 409 }); }
     const r = await splitBooking(session.courseId, id, Number(splitPlayers), { name: typeof splitName === 'string' ? splitName : '', phone: typeof splitPhone === 'string' ? splitPhone : '', actor: staff });
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
     if (thenCash !== true) return NextResponse.json({ success: true, newBookingId: r.newBookingId, leaveCents: r.leaveCents, keepCents: r.keepCents, fee: r.note });
@@ -368,6 +371,8 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ success: true, amountCents: r.amountCents, fee: r.note });
   }
   if (action === 'take_cash' || action === 'paid_offline') {
+    // DRAWER-1 (Cam 2026-11-09): no cash goes in a drawer that isn't open.
+    { const closed = await requireRegisterOpen(session.courseId); if (closed) return NextResponse.json({ error: closed, registerClosed: true }, { status: 409 }); }
     // CASH-1 (Cam 2026-10-25: "can't just be paid at counter — it's either paid online
     // or rung up in store"): cash for a group is a register cash sale of its round —
     // checked in, paid, one receipt, and the close-out counts it exactly.
@@ -405,6 +410,8 @@ export async function POST(req: NextRequest) {
   const golferName = String(body.golferName ?? '').trim().slice(0, 120);
   const golferEmail = String(body.golferEmail ?? '').trim().toLowerCase().slice(0, 200);
   const players = Number(body.players);
+  // DRAWER-1: "paying cash now" needs the register open — refuse before the booking is made.
+  if (checkInNow) { const closed = await requireRegisterOpen(session.courseId); if (closed) return NextResponse.json({ error: closed, registerClosed: true }, { status: 409 }); }
   // One place for a counter booking (lib/counter-pay) — the register calls it too.
   const made = await createCounterBooking(session.courseId, {
     teeTimeId: String(body.teeTimeId ?? ''), golferName, golferEmail, golferPhone: String(body.golferPhone ?? ''),

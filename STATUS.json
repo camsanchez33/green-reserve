@@ -1,36 +1,46 @@
 {
-  "generatedAt": "2026-11-09T05:14:06.728Z",
+  "generatedAt": "2026-11-09T06:02:33.056Z",
   "repo": {
-    "head": "fd175d55",
+    "head": "ae63a885",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 27,
+    "dirtyCount": 2,
     "dirty": [
-      "M LAUNCH_PLAN_SPEC.md",
-      "M  STATUS.artifact.html",
-      "M  STATUS.json",
-      "M  STATUS.md",
-      "MM docs/CODEMAP.md",
-      "MM docs/codemap.json",
-      "M  scripts/cart-pricing-test.ts",
-      "A  scripts/checkout-extras-db-test.ts",
-      "M  scripts/words-guard.baseline.json",
-      "M  src/app/api/operator/bookings/route.ts",
-      "A  src/app/api/operator/checkout-options/route.ts",
-      "M  src/app/api/operator/tee-times/route.ts",
-      "M  src/app/dashboard/page.tsx",
-      "M  src/app/manage/[bookingId]/page.tsx",
-      "A  src/components/dashboard/CheckoutExtras.tsx",
-      "M  src/components/dashboard/GroupTicket.tsx",
-      "M  src/lib/cart-pricing.ts",
-      "M  src/lib/change-party.ts",
-      "A  src/lib/checkout-extras.ts",
-      "M  src/lib/counter-pay.ts"
+      "M docs/CODEMAP.md",
+      " M docs/codemap.json"
     ],
-    "looksLikeRunInProgress": true
+    "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "ae63a885",
+        "date": "2026-11-09T05:55:11+00:00",
+        "subject": "DRAWER-1: open/reopen/fix take their seq from the snapshot checked (CI race)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "79c3f826",
+        "date": "2026-11-09T05:42:32+00:00",
+        "subject": "DRAWER-1 + CART-4: the register is a loop; cart numbers, cart ticket, starter's sheet",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "84ccc1ed",
+        "date": "2026-11-09T00:27:36-05:00",
+        "subject": "CART-3: riders and range balls at checkout (#345)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "29496778",
+        "date": "2026-11-09T05:14:09+00:00",
+        "subject": "CART-3: riders and range balls at checkout (Riding − N +, buckets − N +)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "235630c1",
         "date": "2026-11-08T23:38:13-05:00",
@@ -1340,7 +1350,7 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 1,
-      "lastTouched": "2026-11-08",
+      "lastTouched": "2026-11-09",
       "ageDays": 0
     },
     {
@@ -1358,7 +1368,7 @@
     {
       "file": "LAUNCH_PLAN_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-11-08",
+      "lastTouched": "2026-11-09",
       "ageDays": 0
     },
     {
@@ -1575,6 +1585,31 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "ae63a885",
+      "date": "2026-11-09",
+      "subject": "DRAWER-1: open/reopen/fix take their seq from the snapshot checked (CI race)"
+    },
+    {
+      "h": "79c3f826",
+      "date": "2026-11-09",
+      "subject": "DRAWER-1 + CART-4: the register is a loop; cart numbers, cart ticket, starter's sheet"
+    },
+    {
+      "h": "84ccc1ed",
+      "date": "2026-11-09",
+      "subject": "CART-3: riders and range balls at checkout (#345)"
+    },
+    {
+      "h": "ded0ed45",
+      "date": "2026-11-09",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "29496778",
+      "date": "2026-11-09",
+      "subject": "CART-3: riders and range balls at checkout (Riding − N +, buckets − N +)"
+    },
+    {
       "h": "235630c1",
       "date": "2026-11-08",
       "subject": "POS-8: Stock list + one item form, upload what you have, sell anyway, Sales cleanup (#344)"
@@ -1608,31 +1643,6 @@
       "h": "def61397",
       "date": "2026-11-09",
       "subject": "POS-6: Stock is where items are added; round packs off; tiles, ticket, Sales filters"
-    },
-    {
-      "h": "0682ac62",
-      "date": "2026-11-08",
-      "subject": "POS-5: Pro shop Stock, Round packs and Close out tabs; sliding tab highlight (#340)"
-    },
-    {
-      "h": "b99b4c8a",
-      "date": "2026-11-08",
-      "subject": "POS-5: Pro shop Stock, Round packs and Close out as their own tabs; sliding tab highlight"
-    },
-    {
-      "h": "b8512431",
-      "date": "2026-11-08",
-      "subject": "ACC-1: every booking and payment figure agrees across the site (#339)"
-    },
-    {
-      "h": "260583c3",
-      "date": "2026-11-08",
-      "subject": "ACC-1: one set of definitions so every booking and payment figure agrees"
-    },
-    {
-      "h": "437456cc",
-      "date": "2026-11-08",
-      "subject": "POS-4: Pro shop register as a real POS (#338)"
     }
   ]
 }

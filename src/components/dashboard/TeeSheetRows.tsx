@@ -21,6 +21,8 @@ export type BoardGroup = {
   source?: string; totalAmount?: number;
   /** LIST-2: what the card would charge (roundChargeCents) — shop items, their fee and tax, less a booking fee already paid. */
   shopTotalCents?: number | null; shopFeeCents?: number | null; shopTaxCents?: number | null; accessFeeTotal?: number; feePaidCents?: number | null;
+  /** CART-4: the cart numbers the group took, shown on the row. */
+  cartNumbers?: string;
 };
 export type BoardSlot = {
   id: string; time: string; status: string; playersAvailable: number; playersBooked: number;
@@ -193,6 +195,7 @@ export default function TeeSheetRows({ slots: allSlots, isPast, isGone, nextUpId
                         + (can ? 'cursor-grab active:cursor-grabbing' : '')}>
                       <span className={'truncate ' + (t === 'bad' ? 'text-bad font-medium' : 'text-ink')}>{g.golferName}</span>
                       {g.players > 1 && <span className="shrink-0 text-ink-soft tabular-nums">+{g.players - 1}</span>}
+                      {g.cartNumbers && <span className="shrink-0 text-ink-soft tabular-nums">Cart {g.cartNumbers}</span>}
                       {noShow ? <span className="shrink-0 ml-auto text-[11px] font-semibold text-bad">No-show</span>
                         : groupTags(g).length > 0 && <span className="shrink-0 ml-auto flex gap-1 text-[10.5px] font-semibold text-ink-soft">{groupTags(g).map(x => <span key={x}>{x}</span>)}</span>}
                     </button>

@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 682,
-    "routes": 295,
-    "libs": 250,
+    "files": 687,
+    "routes": 298,
+    "libs": 251,
     "models": 72,
     "orphans": 11,
     "ungatedRoutes": 3
@@ -5379,7 +5379,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 455,
+      "lines": 462,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5423,6 +5423,7 @@
         "@/lib/no-show-fee",
         "@/lib/prisma",
         "@/lib/register",
+        "@/lib/register-open",
         "@/lib/session",
         "@/lib/shop",
         "@/lib/sms-consent",
@@ -5503,6 +5504,37 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/cart-numbers/route.ts",
+      "lines": 30,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "PATCH",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/cart-numbers",
+      "kind": "api",
+      "methods": [
+        "GET",
+        "PATCH"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/prisma",
+        "@/lib/session",
+        "@/lib/starter-sheet",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/change-password/route.ts",
       "lines": 40,
       "purpose": "",
@@ -5532,7 +5564,7 @@
     },
     {
       "path": "src/app/api/operator/checkout-options/route.ts",
-      "lines": 22,
+      "lines": 23,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5552,6 +5584,7 @@
         "@/lib/cart-pricing",
         "@/lib/prisma",
         "@/lib/session",
+        "@/lib/starter-sheet",
         "next/server"
       ],
       "usedBy": []
@@ -6641,7 +6674,7 @@
     },
     {
       "path": "src/app/api/operator/reader-rounds/route.ts",
-      "lines": 52,
+      "lines": 55,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6666,6 +6699,7 @@
         "@/lib/agreement-required",
         "@/lib/card-reader",
         "@/lib/reader-rounds",
+        "@/lib/register-open",
         "@/lib/session",
         "next/server"
       ],
@@ -6701,7 +6735,7 @@
     },
     {
       "path": "src/app/api/operator/register-close/route.ts",
-      "lines": 36,
+      "lines": 38,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7038,7 +7072,7 @@
     },
     {
       "path": "src/app/api/operator/settings/route.ts",
-      "lines": 134,
+      "lines": 136,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7295,7 +7329,7 @@
     },
     {
       "path": "src/app/api/operator/shop-sales/route.ts",
-      "lines": 294,
+      "lines": 299,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7330,6 +7364,7 @@
         "@/lib/prisma",
         "@/lib/rate-limit",
         "@/lib/register",
+        "@/lib/register-open",
         "@/lib/session",
         "@/lib/shop-sales",
         "@/lib/sms-consent",
@@ -7601,7 +7636,7 @@
     },
     {
       "path": "src/app/api/operator/tee-times/route.ts",
-      "lines": 279,
+      "lines": 281,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7953,7 +7988,7 @@
     },
     {
       "path": "src/app/api/receipt/[bookingId]/route.ts",
-      "lines": 115,
+      "lines": 118,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7977,6 +8012,7 @@
         "@/lib/rate-limit",
         "@/lib/receipt-charges",
         "@/lib/shop",
+        "@/lib/starter-sheet",
         "@/lib/stripe",
         "next/server"
       ],
@@ -8675,6 +8711,30 @@
       "usedBy": []
     },
     {
+      "path": "src/app/dashboard/cart-ticket/page.tsx",
+      "lines": 66,
+      "purpose": "CART-4 (Cam 2026-11-09:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (CartTicketPage)",
+          "kind": "component"
+        }
+      ],
+      "route": "/dashboard/cart-ticket",
+      "kind": "page",
+      "methods": [],
+      "auth": "operator",
+      "guard": "middleware",
+      "imports": [
+        "@/components/dashboard/carts/starter-data",
+        "@/lib/dashboard-fetch",
+        "next/navigation",
+        "react"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/dashboard/events/page.tsx",
       "lines": 186,
       "purpose": "W2-9 Events (Cam 2026-10-21/22):",
@@ -9009,7 +9069,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 2271,
+      "lines": 2276,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9155,7 +9215,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 1168,
+      "lines": 1203,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9191,6 +9251,7 @@
         "@/lib/image-resize",
         "@/lib/password",
         "@/lib/setup-missing",
+        "@/lib/starter-sheet",
         "@/lib/unsaved-guard",
         "@/lib/use-dashboard-access",
         "lucide-react",
@@ -9202,7 +9263,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 926,
+      "lines": 908,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -9256,6 +9317,32 @@
         "@/components/dashboard/SignAgreements",
         "next/image",
         "next/navigation"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/dashboard/starter/page.tsx",
+      "lines": 90,
+      "purpose": "CART-4 (Cam 2026-11-09:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (StarterSheetPage)",
+          "kind": "component"
+        }
+      ],
+      "route": "/dashboard/starter",
+      "kind": "page",
+      "methods": [],
+      "auth": "operator",
+      "guard": "middleware",
+      "imports": [
+        "@/components/dashboard/carts/starter-data",
+        "@/lib/dashboard-fetch",
+        "@/lib/starter-sheet",
+        "next/link",
+        "next/navigation",
+        "react"
       ],
       "usedBy": []
     },
@@ -9843,7 +9930,7 @@
     },
     {
       "path": "src/app/receipt/[bookingId]/page.tsx",
-      "lines": 304,
+      "lines": 308,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11055,7 +11142,7 @@
     },
     {
       "path": "src/components/dashboard/CheckoutExtras.tsx",
-      "lines": 71,
+      "lines": 105,
       "purpose": "CART-3 (Cam 2026-11-09:",
       "brain": [],
       "exports": [
@@ -11073,6 +11160,7 @@
         "@/lib/cart-pricing",
         "@/lib/dashboard-fetch",
         "@/lib/range-balls",
+        "@/lib/starter-sheet",
         "react"
       ],
       "usedBy": [
@@ -11544,7 +11632,7 @@
     },
     {
       "path": "src/components/dashboard/OpenRegister.tsx",
-      "lines": 105,
+      "lines": 140,
       "purpose": "POS-7 (Cam 2026-11-09:",
       "brain": [],
       "exports": [
@@ -11629,7 +11717,7 @@
     },
     {
       "path": "src/components/dashboard/RegisterClose.tsx",
-      "lines": 239,
+      "lines": 278,
       "purpose": "POS-3 R4 (Cam 2026-10-24):",
       "brain": [],
       "exports": [
@@ -12073,7 +12161,7 @@
     },
     {
       "path": "src/components/dashboard/TeeSheetRows.tsx",
-      "lines": 304,
+      "lines": 307,
       "purpose": "DENSE-4 (DENSE_UI_SPEC D1, Cam 2026-10-27:",
       "brain": [],
       "exports": [
@@ -12250,6 +12338,62 @@
       ],
       "usedBy": [
         "src/app/dashboard/analytics/page.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/carts/starter-data.ts",
+      "lines": 20,
+      "purpose": "CART-4:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "bucketWords",
+          "kind": "fn"
+        },
+        {
+          "name": "CartSettings",
+          "kind": "type"
+        },
+        {
+          "name": "clock",
+          "kind": "fn"
+        },
+        {
+          "name": "isPaid",
+          "kind": "fn"
+        },
+        {
+          "name": "longDate",
+          "kind": "fn"
+        },
+        {
+          "name": "riding",
+          "kind": "fn"
+        },
+        {
+          "name": "ridingWords",
+          "kind": "fn"
+        },
+        {
+          "name": "SheetBooking",
+          "kind": "type"
+        },
+        {
+          "name": "SheetTime",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/lib/range-balls"
+      ],
+      "usedBy": [
+        "src/app/dashboard/cart-ticket/page.tsx",
+        "src/app/dashboard/starter/page.tsx"
       ]
     },
     {
@@ -18574,6 +18718,7 @@
       "imports": [],
       "usedBy": [
         "src/app/dashboard/analytics/page.tsx",
+        "src/app/dashboard/cart-ticket/page.tsx",
         "src/app/dashboard/events/page.tsx",
         "src/app/dashboard/golfers/[key]/page.tsx",
         "src/app/dashboard/home/page.tsx",
@@ -18583,6 +18728,7 @@
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
         "src/app/dashboard/shop/page.tsx",
+        "src/app/dashboard/starter/page.tsx",
         "src/components/AnnouncementBanner.tsx",
         "src/components/dashboard/AccountPicker.tsx",
         "src/components/dashboard/CardReaderCard.tsx",
@@ -23256,6 +23402,7 @@
         "src/app/api/operator/approve-page/route.ts",
         "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/bookings/route.ts",
+        "src/app/api/operator/cart-numbers/route.ts",
         "src/app/api/operator/change-password/route.ts",
         "src/app/api/operator/checkout-options/route.ts",
         "src/app/api/operator/conditions/route.ts",
@@ -23698,6 +23845,7 @@
       "usedBy": [
         "src/components/dashboard/CheckoutExtras.tsx",
         "src/components/dashboard/GroupTicket.tsx",
+        "src/components/dashboard/carts/starter-data.ts",
         "src/lib/checkout-extras.ts"
       ]
     },
@@ -23972,7 +24120,7 @@
     },
     {
       "path": "src/lib/register-close.ts",
-      "lines": 150,
+      "lines": 187,
       "purpose": "POS-3 R4 (Cam 2026-10-24:",
       "brain": [],
       "exports": [
@@ -23997,6 +24145,10 @@
           "kind": "type"
         },
         {
+          "name": "drawerBase",
+          "kind": "fn"
+        },
+        {
           "name": "recentCloses",
           "kind": "fn"
         }
@@ -24011,6 +24163,7 @@
         "./counter-pay",
         "./course-time",
         "./prisma",
+        "./register-open",
         "./shop"
       ],
       "usedBy": [
@@ -24021,10 +24174,22 @@
     },
     {
       "path": "src/lib/register-open.ts",
-      "lines": 72,
+      "lines": 148,
       "purpose": "POS-7 (Cam 2026-11-09:",
       "brain": [],
       "exports": [
+        {
+          "name": "Handoff",
+          "kind": "type"
+        },
+        {
+          "name": "kindOf",
+          "kind": "fn"
+        },
+        {
+          "name": "OpenKind",
+          "kind": "type"
+        },
         {
           "name": "openRegister",
           "kind": "fn"
@@ -24040,6 +24205,18 @@
         {
           "name": "registerOpenFor",
           "kind": "fn"
+        },
+        {
+          "name": "RegisterStatus",
+          "kind": "type"
+        },
+        {
+          "name": "requireRegisterOpen",
+          "kind": "fn"
+        },
+        {
+          "name": "sessionRows",
+          "kind": "fn"
         }
       ],
       "route": null,
@@ -24053,8 +24230,12 @@
         "@prisma/client"
       ],
       "usedBy": [
+        "src/app/api/operator/bookings/route.ts",
+        "src/app/api/operator/reader-rounds/route.ts",
         "src/app/api/operator/register-close/route.ts",
-        "src/app/api/operator/register-open/route.ts"
+        "src/app/api/operator/register-open/route.ts",
+        "src/app/api/operator/shop-sales/route.ts",
+        "src/lib/register-close.ts"
       ]
     },
     {
@@ -25030,6 +25211,7 @@
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/bookings/shop/route.ts",
         "src/app/api/operator/card-readers/route.ts",
+        "src/app/api/operator/cart-numbers/route.ts",
         "src/app/api/operator/checkout-options/route.ts",
         "src/app/api/operator/conditions/route.ts",
         "src/app/api/operator/counter-members/route.ts",
@@ -25102,7 +25284,7 @@
     },
     {
       "path": "src/lib/settings-validation.ts",
-      "lines": 157,
+      "lines": 166,
       "purpose": "SD-1.",
       "brain": [],
       "exports": [
@@ -25128,7 +25310,9 @@
       "methods": [],
       "auth": null,
       "guard": null,
-      "imports": [],
+      "imports": [
+        "./starter-sheet"
+      ],
       "usedBy": [
         "src/app/api/admin/course-settings/route.ts",
         "src/app/api/admin/inquiries/route.ts",
@@ -26242,6 +26426,89 @@
       ],
       "usedBy": [
         "src/app/api/operator/bookings/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/starter-sheet.ts",
+      "lines": 58,
+      "purpose": "CART-4 (Cam 2026-11-09):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "CART_NUMBER_LABEL",
+          "kind": "const"
+        },
+        {
+          "name": "CART_NUMBER_MODES",
+          "kind": "const"
+        },
+        {
+          "name": "CART_TICKET_LABEL",
+          "kind": "const"
+        },
+        {
+          "name": "CART_TICKET_MODES",
+          "kind": "const"
+        },
+        {
+          "name": "cartNumberMode",
+          "kind": "fn"
+        },
+        {
+          "name": "CartNumberMode",
+          "kind": "type"
+        },
+        {
+          "name": "cartTicketMode",
+          "kind": "fn"
+        },
+        {
+          "name": "CartTicketMode",
+          "kind": "type"
+        },
+        {
+          "name": "DEFAULT_STARTER_COLUMNS",
+          "kind": "const"
+        },
+        {
+          "name": "STARTER_COLUMNS",
+          "kind": "const"
+        },
+        {
+          "name": "StarterColumn",
+          "kind": "type"
+        },
+        {
+          "name": "starterColumns",
+          "kind": "fn"
+        },
+        {
+          "name": "ticketOnReceipt",
+          "kind": "fn"
+        },
+        {
+          "name": "ticketPrinted",
+          "kind": "fn"
+        },
+        {
+          "name": "tidyCartNumbers",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/api/operator/cart-numbers/route.ts",
+        "src/app/api/operator/checkout-options/route.ts",
+        "src/app/api/receipt/[bookingId]/route.ts",
+        "src/app/dashboard/settings/page.tsx",
+        "src/app/dashboard/starter/page.tsx",
+        "src/components/dashboard/CheckoutExtras.tsx",
+        "src/lib/settings-validation.ts"
       ]
     },
     {
@@ -28145,6 +28412,10 @@
           "type": "Int?"
         },
         {
+          "name": "cartNumbers",
+          "type": "String"
+        },
+        {
           "name": "createdAt",
           "type": "DateTime"
         },
@@ -28164,6 +28435,7 @@
       "writers": [
         "src/app/api/golfer/auth/otp/verify/route.ts",
         "src/app/api/operator/bookings/route.ts",
+        "src/app/api/operator/cart-numbers/route.ts",
         "src/app/api/stripe/webhook/route.ts",
         "src/lib/access-fee.ts",
         "src/lib/booking-fee.ts",
@@ -28623,6 +28895,18 @@
         {
           "name": "cartPricing",
           "type": "String"
+        },
+        {
+          "name": "cartNumbers",
+          "type": "String"
+        },
+        {
+          "name": "cartTicket",
+          "type": "String"
+        },
+        {
+          "name": "starterColumns",
+          "type": "String[]"
         },
         {
           "name": "dresscode",
@@ -29219,6 +29503,7 @@
         "src/app/api/operator/analytics/shop/route.ts",
         "src/app/api/operator/approve-page/route.ts",
         "src/app/api/operator/bookings/route.ts",
+        "src/app/api/operator/cart-numbers/route.ts",
         "src/app/api/operator/checkout-options/route.ts",
         "src/app/api/operator/counter-members/route.ts",
         "src/app/api/operator/courses/route.ts",
@@ -32318,6 +32603,14 @@
           "type": "String"
         },
         {
+          "name": "leaveInCents",
+          "type": "Int?"
+        },
+        {
+          "name": "depositCents",
+          "type": "Int?"
+        },
+        {
           "name": "closedBy",
           "type": "String"
         },
@@ -32333,6 +32626,7 @@
       ],
       "readers": [
         "src/lib/register-close.ts",
+        "src/lib/register-open.ts",
         "src/lib/shop-sales.ts"
       ]
     },
@@ -32370,6 +32664,14 @@
         {
           "name": "openedBy",
           "type": "String"
+        },
+        {
+          "name": "kind",
+          "type": "String"
+        },
+        {
+          "name": "leftCents",
+          "type": "Int?"
         },
         {
           "name": "createdAt",

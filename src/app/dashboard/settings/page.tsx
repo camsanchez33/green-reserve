@@ -27,6 +27,7 @@ import { showSetupField } from '@/lib/setup-missing';
 import { missingSetup } from '@/lib/setup-missing';
 import { ImageUpload } from '@/components/dashboard/ImageUpload';
 import { WhoPaysWhat } from '@/components/dashboard/settings/WhoPaysWhat';
+import { CART_NUMBER_MODES, CART_NUMBER_LABEL, CART_TICKET_MODES, CART_TICKET_LABEL, STARTER_COLUMNS, starterColumns } from '@/lib/starter-sheet';
 
 type Course = Record<string, unknown>;
 // U-O (UI_REVISE_SPEC §3, "Settings: sub-nav on the left naming the existing
@@ -76,7 +77,7 @@ const SECTION_FIELDS: Record<Section, string[]> = {
   'Course layout': [],
   'Booking rules': [
     'timezone', 'publicAdvanceDays', 'memberAdvanceDays', 'memberGraceDays', 'counterMemberRate', 'minPlayers', 'maxPlayers', 'dresscode',
-    'walkingAllowed', 'walkingNote', 'cartRequired', 'cartPricing',
+    'walkingAllowed', 'walkingNote', 'cartRequired', 'cartPricing', 'cartNumbers', 'cartTicket', 'starterColumns',
   ],
   'Prices & fees': [
     'hasMemberPricing', 'hasResidentPricing', 'residentCounty', 'residentState', 'residentProofRequired',
@@ -767,6 +768,40 @@ function SettingsPageInner() {
                   <Field label="Fewest players in a booking"><FInput value={form.minPlayers as number} onChange={v=>set('minPlayers',Number(v))} type="number"/></Field>
                   <Field label="Most players in a booking"><FInput value={form.maxPlayers as number} onChange={v=>set('maxPlayers',Number(v))} type="number"/></Field>
                 </div>
+              </SectionCard>
+              {/* CART-4 (Cam 2026-11-09: "up to the course … then needs to flow into the tee sheet"): cart numbers, the
+                  cart ticket and the starter's day sheet. Not prices — anyone who can edit settings. */}
+              <SectionCard title="Carts at the starter">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Field label="Cart numbers">
+                    <select value={(form.cartNumbers as string) || 'off'} onChange={e=>set('cartNumbers',e.target.value)} className={iCls}>
+                      {CART_NUMBER_MODES.map(m => <option key={m} value={m}>{CART_NUMBER_LABEL[m]}</option>)}
+                    </select>
+                  </Field>
+                  <Field label="Cart ticket">
+                    <select value={(form.cartTicket as string) || 'off'} onChange={e=>set('cartTicket',e.target.value)} className={iCls}>
+                      {CART_TICKET_MODES.map(m => <option key={m} value={m}>{CART_TICKET_LABEL[m]}</option>)}
+                    </select>
+                  </Field>
+                </div>
+                <Field label="Starter’s sheet">
+                  <div className="flex flex-wrap gap-x-4 gap-y-2">
+                    {STARTER_COLUMNS.map(c => {
+                      const on = starterColumns(form.starterColumns as string[]).includes(c.key);
+                      return (
+                        <label key={c.key} className="flex items-center gap-2 text-[14px] text-ink">
+                          <input type="checkbox" checked={on} onChange={() => {
+                            const cur = starterColumns(form.starterColumns as string[]);
+                            const next = on ? cur.filter(k => k !== c.key) : [...cur, c.key];
+                            set('starterColumns', next.length ? next : cur);
+                          }} />
+                          {c.label}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </Field>
+                <Link href="/dashboard/starter" className="text-[13px] font-medium text-pine hover:underline">Open today’s starter’s sheet</Link>
               </SectionCard>
               <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
                 <SectionCard title="What golfers should know">

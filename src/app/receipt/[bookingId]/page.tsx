@@ -14,6 +14,8 @@ type ReceiptData = {
   hasAccount?: boolean; timezone?: string;
   bookingId: string; golferName: string; courseName: string; courseSlug: string; courseLocation: string; brandColor?: string;
   date: string; time: string; holes: number; productLabel?: string | null; players: number; cartSelected: boolean;
+  /** CART-4: shown when the course puts the cart ticket on the receipt. */
+  cartTicket?: { riders: number; numbers: string } | null;
   greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number;
   accessFeeTotal: number; totalAmount: number; status: string;
   /** POS-1a: pro-shop items charged with the round; totalAmount includes them. */
@@ -175,7 +177,9 @@ function ReceiptPageInner() {
                 <div className="flex justify-between"><span className="text-ink-muted">Tee Time</span><span className="font-medium text-ink">{fmtTime(data.time)}</span></div>
                 <div className="flex justify-between"><span className="text-ink-muted">Players</span><span className="font-medium text-ink">{data.players}</span></div>
                 <div className="flex justify-between"><span className="text-ink-muted">{data.productLabel ? 'Round' : 'Holes'}</span><span className="font-medium text-ink">{data.productLabel ? `${data.productLabel} · ${data.holes} holes` : data.holes}</span></div>
-                {data.cartSelected && <div className="flex justify-between"><span className="text-ink-muted">Cart</span><span className="font-medium text-ink">Yes</span></div>}
+                {data.cartSelected && !data.cartTicket && <div className="flex justify-between"><span className="text-ink-muted">Cart</span><span className="font-medium text-ink">Yes</span></div>}
+                {data.cartTicket && <div className="flex justify-between"><span className="text-ink-muted">Riding</span><span className="font-medium text-ink">{data.cartTicket.riders} of {data.players}</span></div>}
+                {data.cartTicket?.numbers && <div className="flex justify-between"><span className="text-ink-muted">Cart numbers</span><span className="font-medium text-ink">{data.cartTicket.numbers}</span></div>}
               </div>
 
               {/* Line items */}

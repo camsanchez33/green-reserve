@@ -7,6 +7,7 @@
 // Every rule here is intentionally generous — it rejects nonsense, not edge
 // cases a real course might have. Money fields are not handled here: they go
 // through course-wire's cents conversion, which already coerces.
+import { starterColumns } from './starter-sheet';
 
 export type SettingsValidation =
   | { ok: true; data: Record<string, unknown> }
@@ -52,6 +53,9 @@ const ENUMS: Record<string, string[]> = {
   counterMemberRate: ['member', 'any'],
   noShowFeeBasis: ['booking', 'player'],
   cartPricing: ['per_player', 'per_cart'],
+  // CART-4: cart numbers and the cart ticket (lib/starter-sheet).
+  cartNumbers: ['off', 'checkin', 'required', 'starter'],
+  cartTicket: ['off', 'printed', 'receipt', 'both'],
   lateFeeTiming: ['hold_at_cutoff', 'late_cancel', 'late_cancel_or_no_show'],
   timezone: ['America/New_York', 'America/Chicago', 'America/Denver', 'America/Phoenix', 'America/Los_Angeles', 'America/Anchorage', 'Pacific/Honolulu'],
 };
@@ -116,6 +120,11 @@ export function validateSettingsPatch(body: Record<string, unknown>, allowed: st
     // Settings page sends the whole course row, so EVERY save returned 400.
     // SD-8 review: `dresscode` is the same String[] shape and was missed by
     // that hotfix — it sat in STRING_MAX, so every Booking rules save 400'd.
+    // CART-4: the starter's sheet columns — only keys from the catalog, in its order.
+    if (key === 'starterColumns') {
+      if (!Array.isArray(v)) return { ok: false, error: 'starterColumns must be a list.' };
+      data[key] = starterColumns(v.map(String)); continue;
+    }
     if (key === 'amenities' || key === 'dresscode') {
       if (!Array.isArray(v)) return { ok: false, error: `${key} must be a list.` };
       data[key] = v.map(x => String(x).trim().slice(0, 120)).filter(Boolean).slice(0, 50);

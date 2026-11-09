@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireRegisterOpen } from '@/lib/register-open';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { startRoundOnReader, roundReaderStatus, cancelRoundOnReader } from '@/lib/reader-rounds';
@@ -28,6 +29,8 @@ export async function POST(req: NextRequest) {
   if (!bookingId || !readerId) return NextResponse.json({ error: 'Pick a group and a card reader.' }, { status: 400 });
   // Who's paying now (the check-in's "How many are here?"); absent = the whole group, as before.
   const here = body.here === undefined ? undefined : Number(body.here);
+  // DRAWER-1: the card reader is the register's — a round goes on it only while the register is open.
+  { const closed = await requireRegisterOpen(g.session.courseId); if (closed) return NextResponse.json({ error: closed, registerClosed: true }, { status: 409 }); }
   const r = await startRoundOnReader(g.session.courseId, bookingId, readerId, g.actor, { here });
   if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
   return NextResponse.json(r.value);

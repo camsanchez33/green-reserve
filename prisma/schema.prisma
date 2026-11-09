@@ -65,6 +65,13 @@ model Course {
   /// CART-2 (Cam 2026-11-06): how a cart is charged — 'per_player' (each rider) or 'per_cart' (the schedule's cart
   /// price is a cart for two; riders round up: 3 = 2 carts). lib/cart-pricing. Copied onto each booking (cartUnitCents).
   cartPricing                String                @default("per_player")
+  /// CART-4 (Cam 2026-11-09: "up to the course … flow into the tee sheet"): cart numbers — off · checkin (asked at
+  /// check-in, optional) · required (check-in asks until set) · starter (left blank on the starter's sheet to write in).
+  cartNumbers                String                @default("off")
+  /// CART-4: the cart ticket — off · printed (a slip at check-in) · receipt (on the texted/emailed receipt) · both.
+  cartTicket                 String                @default("off")
+  /// CART-4: the starter's day sheet columns, in order (lib/starter-sheet STARTER_COLUMNS). Empty = the default set.
+  starterColumns             String[]              @default([])
   dresscode                  String[]
   minPlayers                 Int                   @default(1)
   maxPlayers                 Int                   @default(4)
@@ -745,6 +752,8 @@ model Booking {
   cartUnitCents              Int?
   /// CART-2: the riders who pay for a cart (per cart: carts = riders / 2, rounded up); null = per player.
   cartRiders                 Int?
+  /// CART-4: the cart numbers the group took, as staff typed them ("12, 14"). Not a price — editable after payment.
+  cartNumbers                String            @default("")
   createdAt                  DateTime          @default(now())
   /// PARTIAL-1 (Cam 2026-11-04): the booking this one was split off — the players of a group still
   /// on their way when the rest checked in (or who paid separately, SPLIT-1). The tee sheet shows
@@ -1899,6 +1908,10 @@ model RegisterClose {
   /// For reference: card taken that day (walk-up sales by reader or pay link, rounds by card).
   cardCents          Int
   note               String   @default("")
+  /// DRAWER-1 (Cam 2026-11-09): cash left in the drawer for the next opening, and taken out to deposit
+  /// (counted − left). Null on close-outs before DRAWER-1.
+  leaveInCents       Int?
+  depositCents       Int?
   closedBy           String   @default("")
   createdAt          DateTime @default(now())
 
@@ -1920,6 +1933,12 @@ model RegisterOpen {
   /// Why a correction changed it ('' on the opening).
   reason            String   @default("")
   openedBy          String   @default("")
+  /// DRAWER-1 (Cam 2026-11-09): 'open' (the day's first opening), 'fix' (a correction), 'reopen' (opened again after
+  /// a close-out the same day).
+  kind              String   @default("open")
+  /// DRAWER-1: what the last close-out left in the drawer for this opening (null = none on record). The opener's
+  /// count is startingCashCents; a different count needs a reason.
+  leftCents         Int?
   createdAt         DateTime @default(now())
 
   @@unique([courseId, day, seq])

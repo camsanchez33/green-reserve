@@ -63,6 +63,8 @@ export async function PATCH(req: NextRequest) {
     'hasMemberPricing','memberAdvanceDays','memberGraceDays','counterMemberRate',
     'hasResidentPricing','residentCounty','residentState','residentProofRequired',
     'walkingAllowed','walkingNote','cartRequired','cartPricing',
+    // CART-4: how the course runs carts at the starter (not prices — anyone with settings.edit).
+    'cartNumbers','cartTicket','starterColumns',
     'cancellationHours','checkInWindowHours','rainCheckPolicy','publicAdvanceDays','timezone',
     // SP-B: the cancellation & card policy (money: noShowFee goes through courseMoneyFromWire below).
     'lateFeeBasis','lateFeeTiming','noShowFeeBasis','autoNoShowMinutes','onlineBlockNoShows','onlineBlockLateCancels','onlineBlockMonths',

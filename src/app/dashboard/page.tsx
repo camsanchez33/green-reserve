@@ -17,7 +17,7 @@ import { useEffect, useState, useCallback, Suspense, useRef } from 'react';
 import { todayIn, clockIn, DEFAULT_TZ } from '@/lib/course-time';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  ChevronLeft, ChevronRight, X, Loader2, Search, Cloud, MessageCircle,
+  ChevronLeft, ChevronRight, X, Loader2, Search, Cloud, MessageCircle, Printer,
 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -120,7 +120,7 @@ type Booking = {
   greenFeeTotal?: number; cartFeeTotal?: number; rangeBallsTotal?: number;
   residentRateCents?: number | null; memberRateCents?: number | null; memberCartCents?: number | null;
   /** CART-3: riders (null = all, when a cart is on), per-cart price, and the range-ball buckets ("small:2,large:1"). */
-  cartSelected?: boolean; cartRiders?: number | null; cartUnitCents?: number | null; rangeBallsSize?: string;
+  cartSelected?: boolean; cartRiders?: number | null; cartUnitCents?: number | null; rangeBallsSize?: string; cartNumbers?: string;
   /** The golfer's latest staff notes, and this booking's (golfer record). */
   notes?: string[];
 };
@@ -195,6 +195,8 @@ function DashboardPageInner() {
   // RECEIPT-1 (Cam 2026-11-08): the receipt the golfer wants — print, text or email; '' = not asked yet.
   const [receiptFor, setReceiptFor] = useState<{ via: 'sms' | 'email'; to: string } | null>(null);
   const [receiptDone, setReceiptDone] = useState('');
+  // CART-4: the course requires cart numbers and this group's aren't typed yet — checkout waits.
+  const [numbersNeeded, setNumbersNeeded] = useState(false);
   const [receiptBusy, setReceiptBusy] = useState(false);
   const [receiptAsk, setReceiptAsk] = useState(false);
   const [receiptAskYes, setReceiptAskYes] = useState(false);
@@ -1073,7 +1075,7 @@ function DashboardPageInner() {
                           onChanged={() => loadTimes(selectedDate)} />
                       </div>
                       {/* CART-3 (Cam 2026-11-09): who rides and the range-ball buckets, set before they pay. */}
-                      <CheckoutExtras booking={b} cartFeeCents={Math.round(tt.cartFee * 100)} walkingAllowed={tt.walkingAllowed !== false}
+                      <CheckoutExtras booking={b} date={tt.date} onNumbersNeeded={setNumbersNeeded} cartFeeCents={Math.round(tt.cartFee * 100)} walkingAllowed={tt.walkingAllowed !== false}
                         locked={b.roundPaid || b.shopLocked || b.paidOffline || b.paymentStatus === 'paid' || b.status !== 'confirmed' ? 'Paid.'
                           : b.noShowAt ? 'No-show.'
                           : b.appliedRate === 'pack' ? 'Round pack.'
@@ -1091,7 +1093,7 @@ function DashboardPageInner() {
                       )}
                       <div className="mt-4 flex gap-2">
                         {b.players > 1 && <button type="button" onClick={() => go(1)} className="px-4 min-h-[48px] rounded-[7px] border border-line bg-white text-[14px] font-medium text-ink hover:bg-paper">Back</button>}
-                        <button type="button" onClick={() => go(3)} className={next}>Next</button>
+                        <button type="button" disabled={numbersNeeded} onClick={() => go(3)} className={next + ' disabled:opacity-50'}>Next</button>
                       </div>
                     </div>
                   )}
@@ -1495,6 +1497,9 @@ function DashboardPageInner() {
                       <button type="button" aria-label={WX_LABEL} title={WX_LABEL} onClick={() => { setFrostOpen(true); setWxMode(wxTabs[0][0]); setWxSpan(selectedDate === today() ? 'rest' : 'day'); setFrostPlan(null); setFrostPlanKey(''); setFrostErr(''); setFrostApplyErr(''); setFrostResult(null); setWxPlan(null); setWxPlanKey(''); setWxErr(''); setWxApplyErr(''); setWxResult(null); }}
                         className="w-8 h-8 rounded-md inline-flex items-center justify-center text-ink-muted hover:text-ink hover:bg-paper transition-colors"><Cloud className="w-4 h-4" aria-hidden="true" /></button>
                     )}
+                    {/* CART-4: the starter's day sheet for this date, in the columns the course picked. */}
+                    <a href={`/dashboard/starter?date=${selectedDate}`} target="_blank" rel="noreferrer" aria-label="Starter’s sheet" title="Starter’s sheet"
+                      className="w-8 h-8 rounded-md inline-flex items-center justify-center text-ink-muted hover:text-ink hover:bg-paper transition-colors"><Printer className="w-4 h-4" aria-hidden="true" /></a>
                     {access.can('sheet.message_golfers') && (
                       <button type="button" aria-label={msgLabel(selectedDate === today())} title={msgLabel(selectedDate === today())} onClick={() => setMessageOpen(true)}
                         className="w-8 h-8 rounded-md inline-flex items-center justify-center text-ink-muted hover:text-ink hover:bg-paper transition-colors"><MessageCircle className="w-4 h-4" aria-hidden="true" /></button>
