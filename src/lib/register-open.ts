@@ -119,10 +119,12 @@ export async function openRegister(courseId: string, input: { startingCashCents?
   if (!now.ok) return now;
   const { day, status, handoff } = now.value;
   const reason = typeof input.reason === 'string' ? input.reason.trim().slice(0, 300) : '';
-  const last = await prisma.registerOpen.findFirst({ where: { courseId, day }, orderBy: { seq: 'desc' }, select: { seq: true } });
+  // The next row's seq comes from the SAME snapshot the status was read from: two people opening (or reopening, or
+  // fixing) at once both aim at that seq, and the unique (course, day, seq) lets exactly one through.
+  const nextSeq = now.value.history.length;
   let kind: OpenKind;
   if (mode === 'fix') {
-    if (status !== 'open' || !last) return fail(409, status === 'closed' ? 'The register is closed out — reopen it instead.' : 'Open the register first.');
+    if (status !== 'open' || nextSeq === 0) return fail(409, status === 'closed' ? 'The register is closed out — reopen it instead.' : 'Open the register first.');
     if (!reason) return fail(400, 'Say why the starting cash is changing.');
     if (now.value.current?.startingCashCents === amount) return fail(400, 'That is already the starting cash.');
     kind = 'fix';
@@ -133,7 +135,7 @@ export async function openRegister(courseId: string, input: { startingCashCents?
   }
   try {
     await prisma.registerOpen.create({ data: {
-      courseId, day, seq: last ? last.seq + 1 : 0, startingCashCents: amount, reason, openedBy: by.slice(0, 200), kind,
+      courseId, day, seq: nextSeq, startingCashCents: amount, reason, openedBy: by.slice(0, 200), kind,
       leftCents: kind === 'fix' ? null : handoff?.leaveInCents ?? null,
     } });
   } catch (e) {

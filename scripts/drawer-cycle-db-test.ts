@@ -72,6 +72,12 @@ const cashSale = (courseId: string, cents: number) => prisma.shopSale.create({ d
   const tomorrow = await registerOpenFor(c.id, addDaysStr(today, 1));
   ok('…tomorrow morning: not open, sees today\'s $100 left, nothing "never closed"', tomorrow.ok && tomorrow.value.status === 'not_open' && tomorrow.value.handoff?.leaveInCents === 10000 && tomorrow.value.notClosed === null, tomorrow);
 
+  // 6c. CI caught it: two people reopening at once — exactly one wins (the seq comes from the snapshot checked).
+  const twice = await Promise.all([openRegister(c.id, { startingCashCents: 10000 }, 'x@t', 'open'), openRegister(c.id, { startingCashCents: 10000 }, 'y@t', 'open')]);
+  ok('two reopening at once: exactly one wins', twice.filter(r => r.ok).length === 1, twice.map(r => r.ok ? r.value.current?.openedBy : r.error));
+  const openSrc = readFileSync('src/lib/register-open.ts', 'utf8');
+  ok('…and the seq always comes from the snapshot checked, never a second read (timing-proof)', openSrc.includes('const nextSeq = now.value.history.length;') && openSrc.includes('seq: nextSeq,') && !openSrc.includes("orderBy: { seq: 'desc' }"));
+
   // 7. Not given, "leave" defaults to the float (never more than counted) — older callers keep working.
   const c2 = await prisma.course.create({ data: { name: 'Drawer 2', slug: `${TAG}-b`, operatorId: op.id, address: '1', city: 'X', state: 'NJ', zipCode: '9', holes: 18, timezone: 'UTC' } });
   await openRegister(c2.id, { startingCashCents: 10000 }, 'a', 'open');
