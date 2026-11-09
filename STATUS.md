@@ -4,14 +4,17 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-09 07:30 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `989226e3` · working tree **20 dirty file(s)**
+Generated 2026-11-09 19:32 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `606ed81b` · working tree **13 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 176 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 179 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `ba4de30f` | 2026-11-09 | AUDIT-1109: close two register gaps; no silent failures in tonight's pages (#350) |
+| `3ffa5f8f` | 2026-11-09 | AUDIT-1109: update two source pins for the new register gate and the Register's key |
+| `74f02e7c` | 2026-11-09 | AUDIT-1109: close two register gaps; no silent failures in tonight's pages |
 | `de83521b` | 2026-11-09 | EVENTS-2 + SCHED-2: event walk-through and guided event page; Schedule in tabs (#349) |
 | `c40ae5e7` | 2026-11-09 | SCHED-2: Schedule in tabs, days adjusted like memberships, demand pricing explained |
 | `9713a9b6` | 2026-11-09 | EVENTS-2: event setup walk-through and a guided event page |
@@ -191,28 +194,21 @@ Generated 2026-11-09 07:30 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (20 file(s))
+### Uncommitted working tree (13 file(s))
 
-- `M CLAUDE.md`
 - `M STATUS.artifact.html`
 - `M STATUS.json`
 - `M STATUS.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/drawer-cycle-db-test.ts`
+- `M scripts/cart-numbers-test.ts`
 - `M scripts/words-guard.baseline.json`
-- `M src/app/api/operator/shop-sales/route.ts`
-- `M src/app/dashboard/messages/page.tsx`
-- `M src/app/dashboard/page.tsx`
+- `M src/app/api/receipt/[bookingId]/route.ts`
+- `D  src/app/dashboard/cart-ticket/page.tsx`
 - `M src/app/dashboard/settings/page.tsx`
-- `M src/app/dashboard/shop/page.tsx`
+- `M src/app/dashboard/starter/page.tsx`
+- `M src/app/receipt/[bookingId]/page.tsx`
 - `M src/components/dashboard/CheckoutExtras.tsx`
-- `M src/components/dashboard/DeclinedCardList.tsx`
-- `M src/components/dashboard/OpenRegister.tsx`
-- `M src/components/dashboard/events/EventSetup.tsx`
-- `M src/lib/dashboard-fetch.ts`
-- `?? scripts/audit-1109-test.ts`
-- `?? src/components/dashboard/RegisterClosedNotice.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -229,7 +225,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 109d | `b88c8bf3` | `RUN_QUEUE.md:2412` |
+| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 110d | `b88c8bf3` | `RUN_QUEUE.md:2412` |
 
 ## Not started — the actual queue
 
@@ -298,7 +294,7 @@ This is the distinction a raw checkbox count gets wrong.
 | spec | open refs | last touched | age |
 |---|---|---|---|
 | `CLAUDE.md` | 1 | 2026-11-09 | 0d |
-| `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 7d |
+| `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 8d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 19d |
 | `LAUNCH_PLAN_SPEC.md` | 0 | 2026-11-09 | 0d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 13d |
@@ -339,6 +335,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `ba4de30f` 2026-11-09 — AUDIT-1109: close two register gaps; no silent failures in tonight's pages (#350)
+- `3ffa5f8f` 2026-11-09 — AUDIT-1109: update two source pins for the new register gate and the Register's key
+- `74f02e7c` 2026-11-09 — AUDIT-1109: close two register gaps; no silent failures in tonight's pages
 - `de83521b` 2026-11-09 — EVENTS-2 + SCHED-2: event walk-through and guided event page; Schedule in tabs (#349)
 - `c40ae5e7` 2026-11-09 — SCHED-2: Schedule in tabs, days adjusted like memberships, demand pricing explained
 - `9713a9b6` 2026-11-09 — EVENTS-2: event setup walk-through and a guided event page
@@ -348,9 +347,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `2981ca95` 2026-11-09 — RECEIPT-3 + MSG-1: receipts staff can see and text as a link; Messages from Cam's notes
 - `69eb6ce5` 2026-11-09 — DRAWER-1 + CART-4: the register is a loop; cart numbers, cart ticket, starter's sheet (#346)
 - `62742a74` 2026-11-09 — Regenerate code map and status board
-- `ae63a885` 2026-11-09 — DRAWER-1: open/reopen/fix take their seq from the snapshot checked (CI race)
-- `79c3f826` 2026-11-09 — DRAWER-1 + CART-4: the register is a loop; cart numbers, cart ticket, starter's sheet
-- `84ccc1ed` 2026-11-09 — CART-3: riders and range balls at checkout (#345)
 
 ---
 

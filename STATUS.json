@@ -1,36 +1,50 @@
 {
-  "generatedAt": "2026-11-09T07:30:46.467Z",
+  "generatedAt": "2026-11-09T19:32:58.664Z",
   "repo": {
-    "head": "989226e3",
+    "head": "606ed81b",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 20,
+    "dirtyCount": 13,
     "dirty": [
-      "M CLAUDE.md",
-      " M STATUS.artifact.html",
+      "M STATUS.artifact.html",
       " M STATUS.json",
       " M STATUS.md",
       " M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/drawer-cycle-db-test.ts",
+      " M scripts/cart-numbers-test.ts",
       " M scripts/words-guard.baseline.json",
-      " M src/app/api/operator/shop-sales/route.ts",
-      " M src/app/dashboard/messages/page.tsx",
-      " M src/app/dashboard/page.tsx",
+      " M src/app/api/receipt/[bookingId]/route.ts",
+      "D  src/app/dashboard/cart-ticket/page.tsx",
       " M src/app/dashboard/settings/page.tsx",
-      " M src/app/dashboard/shop/page.tsx",
-      " M src/components/dashboard/CheckoutExtras.tsx",
-      " M src/components/dashboard/DeclinedCardList.tsx",
-      " M src/components/dashboard/OpenRegister.tsx",
-      " M src/components/dashboard/events/EventSetup.tsx",
-      " M src/lib/dashboard-fetch.ts",
-      "?? scripts/audit-1109-test.ts",
-      "?? src/components/dashboard/RegisterClosedNotice.tsx"
+      " M src/app/dashboard/starter/page.tsx",
+      " M src/app/receipt/[bookingId]/page.tsx",
+      " M src/components/dashboard/CheckoutExtras.tsx"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "ba4de30f",
+        "date": "2026-11-09T02:46:29-05:00",
+        "subject": "AUDIT-1109: close two register gaps; no silent failures in tonight's pages (#350)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "3ffa5f8f",
+        "date": "2026-11-09T07:39:51+00:00",
+        "subject": "AUDIT-1109: update two source pins for the new register gate and the Register's key",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "74f02e7c",
+        "date": "2026-11-09T07:31:37+00:00",
+        "subject": "AUDIT-1109: close two register gaps; no silent failures in tonight's pages",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "de83521b",
         "date": "2026-11-09T02:09:25-05:00",
@@ -1290,7 +1304,7 @@
       "line": 2412,
       "hash": "b88c8bf3",
       "shipDate": "2026-07-22",
-      "ageDays": 109
+      "ageDays": 110
     }
   ],
   "next": [
@@ -1438,7 +1452,7 @@
       "file": "DENSE_UI_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-11-01",
-      "ageDays": 7
+      "ageDays": 8
     },
     {
       "file": "PLATFORM_ROADMAP_SPEC.md",
@@ -1666,6 +1680,21 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "ba4de30f",
+      "date": "2026-11-09",
+      "subject": "AUDIT-1109: close two register gaps; no silent failures in tonight's pages (#350)"
+    },
+    {
+      "h": "3ffa5f8f",
+      "date": "2026-11-09",
+      "subject": "AUDIT-1109: update two source pins for the new register gate and the Register's key"
+    },
+    {
+      "h": "74f02e7c",
+      "date": "2026-11-09",
+      "subject": "AUDIT-1109: close two register gaps; no silent failures in tonight's pages"
+    },
+    {
       "h": "de83521b",
       "date": "2026-11-09",
       "subject": "EVENTS-2 + SCHED-2: event walk-through and guided event page; Schedule in tabs (#349)"
@@ -1709,21 +1738,6 @@
       "h": "62742a74",
       "date": "2026-11-09",
       "subject": "Regenerate code map and status board"
-    },
-    {
-      "h": "ae63a885",
-      "date": "2026-11-09",
-      "subject": "DRAWER-1: open/reopen/fix take their seq from the snapshot checked (CI race)"
-    },
-    {
-      "h": "79c3f826",
-      "date": "2026-11-09",
-      "subject": "DRAWER-1 + CART-4: the register is a loop; cart numbers, cart ticket, starter's sheet"
-    },
-    {
-      "h": "84ccc1ed",
-      "date": "2026-11-09",
-      "subject": "CART-3: riders and range balls at checkout (#345)"
     }
   ]
 }
