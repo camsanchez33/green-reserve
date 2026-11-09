@@ -87,7 +87,8 @@ const cashSale = (courseId: string, cents: number) => prisma.shopSale.create({ d
   // 8. Wiring: every place that takes money at the counter checks the register.
   const read = (p: string) => readFileSync(p, 'utf8');
   const sales = read('src/app/api/operator/shop-sales/route.ts'), bk = read('src/app/api/operator/bookings/route.ts'), rr = read('src/app/api/operator/reader-rounds/route.ts');
-  ok('register sales (cash, reader, pay link, on account) and cash on an open sale are refused while closed', (sales.match(/requireRegisterOpen\(g\.session\.courseId\)/g) ?? []).length === 2);
+  // 4 since the 2026-11-09 security audit: new sales, cash on an open sale, a sale put on the reader, and a cash refund.
+  ok('register sales (cash, reader, pay link, on account), cash on an open sale, a sale on the reader and a cash refund are refused while closed', (sales.match(/requireRegisterOpen\(g\.session\.courseId\)/g) ?? []).length === 4);
   ok('the tee sheet\'s Take cash, Pay separately + cash and the walk-in paying cash are refused while closed', (bk.match(/requireRegisterOpen\(session\.courseId\)/g) ?? []).length === 3);
   ok('a round on the card reader is refused while closed', rr.includes('requireRegisterOpen(g.session.courseId)'));
   ok('the Register shows only the opening until it is open', read('src/app/dashboard/shop/page.tsx').includes("view === 'register' && regStatus === 'open' && ("));

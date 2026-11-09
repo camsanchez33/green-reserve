@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-09 06:59 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `9713a9b6` · working tree **6 dirty file(s)**
+Generated 2026-11-09 07:30 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `989226e3` · working tree **20 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 174 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 176 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `de83521b` | 2026-11-09 | EVENTS-2 + SCHED-2: event walk-through and guided event page; Schedule in tabs (#349) |
+| `c40ae5e7` | 2026-11-09 | SCHED-2: Schedule in tabs, days adjusted like memberships, demand pricing explained |
 | `9713a9b6` | 2026-11-09 | EVENTS-2: event setup walk-through and a guided event page |
 | `7b62a972` | 2026-11-09 | MONEY-1: Money tab from Cam's notes (#348) |
 | `3932b9fc` | 2026-11-09 | MONEY-1: Money tab from Cam's notes |
@@ -189,14 +191,28 @@ Generated 2026-11-09 06:59 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (6 file(s))
+### Uncommitted working tree (20 file(s))
 
+- `M CLAUDE.md`
+- `M STATUS.artifact.html`
+- `M STATUS.json`
+- `M STATUS.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/schedule-rework-test.ts`
+- `M scripts/drawer-cycle-db-test.ts`
 - `M scripts/words-guard.baseline.json`
-- `M src/app/dashboard/schedules/page.tsx`
-- `M src/components/dashboard/DemandPricing.tsx`
+- `M src/app/api/operator/shop-sales/route.ts`
+- `M src/app/dashboard/messages/page.tsx`
+- `M src/app/dashboard/page.tsx`
+- `M src/app/dashboard/settings/page.tsx`
+- `M src/app/dashboard/shop/page.tsx`
+- `M src/components/dashboard/CheckoutExtras.tsx`
+- `M src/components/dashboard/DeclinedCardList.tsx`
+- `M src/components/dashboard/OpenRegister.tsx`
+- `M src/components/dashboard/events/EventSetup.tsx`
+- `M src/lib/dashboard-fetch.ts`
+- `?? scripts/audit-1109-test.ts`
+- `?? src/components/dashboard/RegisterClosedNotice.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -323,6 +339,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `de83521b` 2026-11-09 — EVENTS-2 + SCHED-2: event walk-through and guided event page; Schedule in tabs (#349)
+- `c40ae5e7` 2026-11-09 — SCHED-2: Schedule in tabs, days adjusted like memberships, demand pricing explained
 - `9713a9b6` 2026-11-09 — EVENTS-2: event setup walk-through and a guided event page
 - `7b62a972` 2026-11-09 — MONEY-1: Money tab from Cam's notes (#348)
 - `3932b9fc` 2026-11-09 — MONEY-1: Money tab from Cam's notes
@@ -333,8 +351,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `ae63a885` 2026-11-09 — DRAWER-1: open/reopen/fix take their seq from the snapshot checked (CI race)
 - `79c3f826` 2026-11-09 — DRAWER-1 + CART-4: the register is a loop; cart numbers, cart ticket, starter's sheet
 - `84ccc1ed` 2026-11-09 — CART-3: riders and range balls at checkout (#345)
-- `ded0ed45` 2026-11-09 — queue/spec update
-- `29496778` 2026-11-09 — CART-3: riders and range balls at checkout (Riding − N +, buckets − N +)
 
 ---
 

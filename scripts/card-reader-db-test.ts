@@ -222,7 +222,7 @@ async function cleanup() {
   const route = readFileSync('src/app/api/operator/card-readers/route.ts', 'utf8');
   ok('only the owner connects or removes a reader', (route.match(/if \(session\.isStaff\) return NextResponse\.json\(\{ error: STAFF_FORBIDDEN \}/g) ?? []).length === 2 && route.includes("requirePermission(session, 'shop.sell')"));
   const sales = readFileSync('src/app/api/operator/shop-sales/route.ts', 'utf8');
-  ok('starting a reader payment needs a current agreement, like a pay link', /action === 'reader_start'\) \{\s*const agreementBlock = await requireAgreementCurrent/.test(sales));
+  ok('starting a reader payment needs a current agreement, like a pay link', /action === 'reader_start'\) \{[\s\S]{0,400}?const agreementBlock = await requireAgreementCurrent/.test(sales)); // the register check (DRAWER-1) comes first since 2026-11-09
 
   await cleanup(); await prisma.$disconnect();
   if (failed) { console.error(`${failed} failed`); process.exit(1); }

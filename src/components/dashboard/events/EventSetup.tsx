@@ -108,6 +108,8 @@ export default function EventSetup({ initial, eventId, products, nines, courseHo
   const [tried, setTried] = useState<Set<number>>(new Set());
   // Changing the hold's end keeps the review on screen but has to be checked again before saving.
   const [stale, setStale] = useState(false);
+  // The hold preview couldn't be worked out (the server's reason) — shown in the tee-sheet box with Try again.
+  const [previewError, setPreviewError] = useState('');
   const set = <K extends keyof EventForm>(k: K, v: EventForm[K]) => { setF(p => ({ ...p, [k]: v })); if (k === 'holdTo' || k === 'keepOpen') setStale(true); else setPreview(null); };
 
   const errs = (s: number) => tried.has(s) ? fieldErrors(f, s) : {};
@@ -123,11 +125,11 @@ export default function EventSetup({ initial, eventId, products, nines, courseHo
   });
 
   async function loadPreview() {
-    setBusy(true); setError('');
+    setBusy(true); setError(''); setPreviewError('');
     const url = eventId ? `/api/operator/events/${eventId}` : '/api/operator/events';
     const r = await dfetch<{ preview: Preview }>(url, { method: eventId ? 'PATCH' : 'POST', body: JSON.stringify({ ...body(), action: 'update', preview: true }) });
     setBusy(false);
-    if (!r.ok) { setError(r.error); return; }
+    if (!r.ok) { setPreviewError(r.error); return; }
     setPreview(r.data.preview); setStale(false);
   }
 
@@ -407,7 +409,9 @@ export default function EventSetup({ initial, eventId, products, nines, courseHo
             <h3 className={H3}>What saving does to the tee sheet</h3>
             <div className="bg-paper/70 rounded-md px-4 py-3">
               {busy && !preview ? <p className="text-[13.5px] text-ink-muted">Working out which tee times it holds…</p>
-                : !preview ? <p className="text-[13.5px] text-ink-muted">Fix the details to see which tee times it holds.</p> : (
+                : !preview ? (previewError
+                  ? <p role="alert" className="text-[13.5px] text-bad">Couldn&apos;t work out the hold: {previewError} <button type="button" onClick={loadPreview} className="underline font-medium">Try again</button></p>
+                  : <p className="text-[13.5px] text-ink-muted">Working out which tee times it holds…</p>) : (
                 <div className="space-y-2 text-[13.5px] text-ink">
                   <p>Holds <span className="tabular-nums">{formatTeeTime(preview.holdFrom)}–{formatTeeTime(preview.holdTo)}</span>{preview.teeTimes ? <> — <span className="font-medium">{preview.teeTimes} tee time{preview.teeTimes === 1 ? '' : 's'}</span></> : ''}. Golfers can&apos;t book them.</p>
                   {preview.teeTimesFound !== null && Number(f.groups) > preview.teeTimesFound && (

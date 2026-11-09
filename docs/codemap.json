@@ -1,7 +1,7 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 694,
+    "files": 695,
     "routes": 300,
     "libs": 253,
     "models": 72,
@@ -7354,7 +7354,7 @@
     },
     {
       "path": "src/app/api/operator/shop-sales/route.ts",
-      "lines": 309,
+      "lines": 315,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9097,7 +9097,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 2276,
+      "lines": 2278,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9121,6 +9121,7 @@
         "@/components/dashboard/GroupTicket",
         "@/components/dashboard/LoadError",
         "@/components/dashboard/MoveGroupModal",
+        "@/components/dashboard/RegisterClosedNotice",
         "@/components/dashboard/RegisterPacks",
         "@/components/dashboard/ShopItemsForGroup",
         "@/components/dashboard/SlidingTabs",
@@ -9244,7 +9245,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 1206,
+      "lines": 1207,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9292,7 +9293,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 890,
+      "lines": 898,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -9311,10 +9312,12 @@
         "@/components/dashboard/AccountPicker",
         "@/components/dashboard/OpenRegister",
         "@/components/dashboard/RegisterClose",
+        "@/components/dashboard/RegisterClosedNotice",
         "@/components/dashboard/SlidingTabs",
         "@/components/dashboard/SmsConsentAsk",
         "@/components/dashboard/StaffNotice",
         "@/components/dashboard/StockTab",
+        "@/components/dashboard/Toast",
         "@/components/dashboard/shop/SaleReceiptPanel",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
@@ -11206,7 +11209,7 @@
     },
     {
       "path": "src/components/dashboard/CheckoutExtras.tsx",
-      "lines": 105,
+      "lines": 111,
       "purpose": "CART-3 (Cam 2026-11-09:",
       "brain": [],
       "exports": [
@@ -11221,6 +11224,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/components/dashboard/Toast",
         "@/lib/cart-pricing",
         "@/lib/dashboard-fetch",
         "@/lib/range-balls",
@@ -11327,7 +11331,7 @@
     },
     {
       "path": "src/components/dashboard/DeclinedCardList.tsx",
-      "lines": 92,
+      "lines": 95,
       "purpose": "Declined cards — the same rows on Home and Money → Action needed (Revamp 3 dead end 16, Cam 2026-10-29).",
       "brain": [],
       "exports": [
@@ -11342,6 +11346,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/components/dashboard/Toast",
         "@/components/ui/StatusDot",
         "@/lib/dashboard-fetch",
         "@/lib/format",
@@ -11696,7 +11701,7 @@
     },
     {
       "path": "src/components/dashboard/OpenRegister.tsx",
-      "lines": 140,
+      "lines": 141,
       "purpose": "POS-7 (Cam 2026-11-09:",
       "brain": [],
       "exports": [
@@ -11807,6 +11812,32 @@
         "react"
       ],
       "usedBy": [
+        "src/app/dashboard/shop/page.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/RegisterClosedNotice.tsx",
+      "lines": 28,
+      "purpose": "DRAWER-1 follow-up (no-silent-failures audit, 2026-11-09):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "RegisterClosedNotice",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/lib/dashboard-fetch",
+        "next/link",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/page.tsx",
         "src/app/dashboard/shop/page.tsx"
       ]
     },
@@ -12346,8 +12377,11 @@
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
         "src/app/dashboard/settings/page.tsx",
+        "src/app/dashboard/shop/page.tsx",
         "src/components/AnnouncementBanner.tsx",
         "src/components/OperatorSidebar.tsx",
+        "src/components/dashboard/CheckoutExtras.tsx",
+        "src/components/dashboard/DeclinedCardList.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx"
@@ -12594,7 +12628,7 @@
     },
     {
       "path": "src/components/dashboard/events/EventSetup.tsx",
-      "lines": 508,
+      "lines": 512,
       "purpose": "W2-9 Events:",
       "brain": [],
       "exports": [
@@ -18861,7 +18895,7 @@
     },
     {
       "path": "src/lib/dashboard-fetch.ts",
-      "lines": 43,
+      "lines": 51,
       "purpose": "SD-10 (from the SD review).",
       "brain": [],
       "exports": [
@@ -18872,6 +18906,10 @@
         {
           "name": "DFetchResult",
           "kind": "type"
+        },
+        {
+          "name": "REGISTER_CLOSED_EVENT",
+          "kind": "const"
         }
       ],
       "route": null,
@@ -18911,6 +18949,7 @@
         "src/components/dashboard/OperatorSearch.tsx",
         "src/components/dashboard/PromoCodes.tsx",
         "src/components/dashboard/RegisterClose.tsx",
+        "src/components/dashboard/RegisterClosedNotice.tsx",
         "src/components/dashboard/RegisterPacks.tsx",
         "src/components/dashboard/RoundPacks.tsx",
         "src/components/dashboard/SalesTaxCard.tsx",

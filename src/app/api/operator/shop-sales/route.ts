@@ -213,6 +213,8 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ sale: r.value });
   }
   if (body.action === 'reader_start') {
+    // DRAWER-1 (security audit 2026-11-09): a sale on the card reader is a register payment — refused while it's closed.
+    { const closed = await requireRegisterOpen(g.session.courseId); if (closed) return NextResponse.json({ error: closed, registerClosed: true }, { status: 409 }); }
     const agreementBlock = await requireAgreementCurrent(g.session.courseId); // AG-3 §3: card payments
     if (agreementBlock) return agreementBlock;
     const r = await startReaderPayment(g.session.courseId, id, typeof body.readerId === 'string' ? body.readerId : '');
@@ -253,6 +255,10 @@ export async function PATCH(req: NextRequest) {
     const byItem = Array.isArray(body.lines) && body.lines.length > 0;
     const denied = byItem && can(g.session, 'shop.return') ? null : requirePermission(g.session, 'money.refund');
     if (denied) return denied;
+    // DRAWER-1 (security audit 2026-11-09): cash handed back comes out of the drawer, so not while it's closed — the
+    // next opener's count would be off. Card and account refunds don't touch the drawer and are never refused.
+    const paidCash = await prisma.shopSale.findFirst({ where: { id, courseId: g.session.courseId, status: 'paid_cash' }, select: { id: true } });
+    if (paidCash) { const closed = await requireRegisterOpen(g.session.courseId); if (closed) return NextResponse.json({ error: closed, registerClosed: true }, { status: 409 }); }
     const r = await refundSale(g.session.courseId, id, { amountCents: body.amountCents, reason: body.reason, restock: body.restock, lines: body.lines }, g.session.email);
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
     return NextResponse.json(r.value);

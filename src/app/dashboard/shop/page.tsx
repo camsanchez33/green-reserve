@@ -30,6 +30,8 @@ import { StatusDot } from '@/components/ui/StatusDot';
 import { INPUT_COMPACT as INPUT } from '@/components/ui/field';
 import { AccountPicker, type AccountMember } from '@/components/dashboard/AccountPicker';
 import { dfetch } from '@/lib/dashboard-fetch';
+import { toast } from '@/components/dashboard/Toast';
+import { RegisterClosedNotice } from '@/components/dashboard/RegisterClosedNotice';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import { shopTree, matches, bySku, skuHits, stockOf, type FlatItem, type TreeItem } from '@/lib/shop-tree';
 
@@ -112,6 +114,10 @@ export default function ShopPage() {
   const [customs, setCustoms] = useState<Custom[]>([]);
   // DRAWER-1: the register sells only while it's open (null until known).
   const [regStatus, setRegStatus] = useState<'not_open' | 'open' | 'closed' | null>(null);
+  // A sale refused because the register was closed meanwhile (another login closed out): read it again, so the
+  // Open/Reopen card replaces the cart instead of every retry failing the same way.
+  const [regKey, setRegKey] = useState(0);
+  const regRefused = useCallback(() => { setRegStatus(null); setRegKey(k => k + 1); }, []);
   const [discount, setDiscount] = useState<Discount | null>(null);
   const [tendered, setTendered] = useState('');
   const [justPaid, setJustPaid] = useState<Sale | null>(null);
@@ -344,8 +350,10 @@ export default function ShopPage() {
     setBusy('receipt' + receipt.id); setError(''); setNote('');
     const r = await dfetch('/api/operator/shop-sales', { method: 'PATCH', body: JSON.stringify({ id: receipt.id, action: 'receipt', via: receipt.via, to: receipt.to }) });
     setBusy('');
-    if (!r.ok) { setError(r.error); return; }
+    // Said where the user is (the panel can be far down the Sales list), and at the top as before.
+    if (!r.ok) { setError(r.error); toast(r.error, 'bad'); return; }
     setNote(`Receipt ${receipt.via === 'sms' ? 'texted' : 'emailed'}.`);
+    toast(`Receipt ${receipt.via === 'sms' ? 'texted' : 'emailed'}.`, 'ok');
     const fromDone = step === 'done' && justPaid?.id === receipt.id;
     setReceipt(null); setJustPaid(null); setRcptOpen(false);
     if (fromDone) setStep(null);
@@ -458,7 +466,7 @@ export default function ShopPage() {
 
             {/* DRAWER-1 (Cam 2026-11-09: "shouldn't be able to start taking charges until the register is open"): until
                 it's open (or reopened after a close-out) the register shows only the opening — the server refuses sales too. */}
-            {view === 'register' && <div className="mt-5"><OpenRegister where="register" onStatus={setRegStatus} /></div>}
+            {view === 'register' && <div className="mt-5 space-y-3"><RegisterClosedNotice onRefused={regRefused} /><OpenRegister key={regKey} where="register" onStatus={setRegStatus} /></div>}
             {view === 'register' && regStatus === 'open' && (
             <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
               <Card className="p-4">

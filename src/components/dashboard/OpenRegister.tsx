@@ -48,8 +48,9 @@ export function OpenRegister({ where, onOpened, onStatus }: { where: 'home' | 'r
   useEffect(() => { if (access.loaded && canSell) load(); }, [access.loaded, canSell, load]);
 
   if (!access.loaded || !canSell) return null;
-  if (loadError) return where === 'home' ? null : (
-    <p role="alert" className="text-[13px] text-bad">Couldn&apos;t check the register — {loadError} <button type="button" onClick={load} className="underline font-medium">Retry</button></p>
+  // Home too (no-silent-failures audit 2026-11-09): a closed register blocks cash, so not knowing is worth a line.
+  if (loadError) return (
+    <p role="alert" className={'text-[13px] ' + (where === 'home' ? 'text-warn' : 'text-bad')}>Couldn&apos;t check the register — {loadError} <button type="button" onClick={load} className="underline font-medium">Retry</button></p>
   );
   if (!data || (where === 'home' && !data.hasShop)) return null;
 

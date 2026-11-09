@@ -122,7 +122,7 @@ function MessagesContent() {
               ) : (
                 <>
                   <p className="text-[20px] font-semibold text-ink">Within {REPLY_HOURS} hours</p>
-                  <p className="text-[12.5px] text-ink-muted">Nothing waiting on us</p>
+                  <p className="text-[12.5px] text-ink-muted">{loadError ? 'Couldn’t check your messages' : loading ? 'Checking…' : 'Nothing waiting on us'}</p>
                 </>
               )}
             </Card>

@@ -790,7 +790,8 @@ function SettingsPageInner() {
                       const on = starterColumns(form.starterColumns as string[]).includes(c.key);
                       return (
                         <label key={c.key} className="flex items-center gap-2 text-[14px] text-ink">
-                          <input type="checkbox" checked={on} onChange={() => {
+                          {/* The sheet needs at least one column: the last one can't be unticked (it used to do nothing). */}
+                          <input type="checkbox" checked={on} disabled={on && starterColumns(form.starterColumns as string[]).length === 1} title={on && starterColumns(form.starterColumns as string[]).length === 1 ? 'At least one column' : undefined} onChange={() => {
                             const cur = starterColumns(form.starterColumns as string[]);
                             const next = on ? cur.filter(k => k !== c.key) : [...cur, c.key];
                             set('starterColumns', next.length ? next : cur);

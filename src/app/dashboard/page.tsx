@@ -28,6 +28,7 @@ import ShopItemsForGroup, { type ShopLine } from '@/components/dashboard/ShopIte
 import GroupTicket from '@/components/dashboard/GroupTicket';
 import { splitShares } from '@/lib/split-booking';
 import { LoadError } from '@/components/dashboard/LoadError';
+import { RegisterClosedNotice } from '@/components/dashboard/RegisterClosedNotice';
 import { toast } from '@/components/dashboard/Toast';
 import GettingStartedChecklist from '@/components/dashboard/GettingStartedChecklist';
 import { getBookingStatus, statusDot } from '@/lib/booking-status';
@@ -1448,6 +1449,7 @@ function DashboardPageInner() {
               )}
 
               {sheetError && <LoadError message={sheetError} onRetry={() => loadTimes(selectedDate)} />}
+              <RegisterClosedNotice />
 
               {/* FLOW-1 (Cam 2026-10-01: "why does the dashboard not look like the
                   greenreserve.app demo"): the sheet IS the homepage demo now — one
