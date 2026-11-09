@@ -1,11 +1,11 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 672,
+    "files": 673,
     "routes": 293,
-    "libs": 246,
+    "libs": 247,
     "models": 71,
-    "orphans": 10,
+    "orphans": 11,
     "ungatedRoutes": 3
   },
   "brain": {
@@ -3712,7 +3712,7 @@
     },
     {
       "path": "src/app/api/bookings/route.ts",
-      "lines": 510,
+      "lines": 511,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8947,7 +8947,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 2270,
+      "lines": 2271,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8992,6 +8992,7 @@
         "@/lib/member-rates",
         "@/lib/on-course",
         "@/lib/round-packs",
+        "@/lib/round-packs-switch",
         "@/lib/setup-missing",
         "@/lib/sms-consent-copy",
         "@/lib/split-booking",
@@ -9090,7 +9091,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 1173,
+      "lines": 1168,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9110,9 +9111,7 @@
         "@/components/dashboard/CourseLayoutTab",
         "@/components/dashboard/CoursePreview",
         "@/components/dashboard/ImageUpload",
-        "@/components/dashboard/RoundPacks",
         "@/components/dashboard/SalesTaxCard",
-        "@/components/dashboard/ShopCatalog",
         "@/components/dashboard/StaffNotice",
         "@/components/dashboard/StaffPermissions",
         "@/components/dashboard/Toast",
@@ -9139,7 +9138,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 871,
+      "lines": 917,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -9157,17 +9156,15 @@
         "@/components/OperatorSidebar",
         "@/components/dashboard/AccountPicker",
         "@/components/dashboard/RegisterClose",
-        "@/components/dashboard/RegisterPacks",
-        "@/components/dashboard/ShopStock",
         "@/components/dashboard/SmsConsentAsk",
         "@/components/dashboard/StaffNotice",
+        "@/components/dashboard/StockTab",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/components/ui/field",
         "@/lib/dashboard-fetch",
         "@/lib/shop-tree",
         "@/lib/use-dashboard-access",
-        "next/link",
         "react"
       ],
       "usedBy": []
@@ -11314,7 +11311,7 @@
         "src/components/dashboard/PromoCodes.tsx",
         "src/components/dashboard/RegisterPacks.tsx",
         "src/components/dashboard/RoundPacks.tsx",
-        "src/components/dashboard/ShopStock.tsx",
+        "src/components/dashboard/StockTab.tsx",
         "src/components/dashboard/TeeSheetCalendar.tsx",
         "src/components/dashboard/analytics/ShopTab.tsx",
         "src/components/dashboard/members/ImportMembers.tsx",
@@ -11544,8 +11541,7 @@
         "react"
       ],
       "usedBy": [
-        "src/app/dashboard/page.tsx",
-        "src/app/dashboard/shop/page.tsx"
+        "src/app/dashboard/page.tsx"
       ]
     },
     {
@@ -11572,9 +11568,7 @@
         "@/lib/round-packs",
         "react"
       ],
-      "usedBy": [
-        "src/app/dashboard/settings/page.tsx"
-      ]
+      "usedBy": []
     },
     {
       "path": "src/components/dashboard/RoundRulesCard.tsx",
@@ -11639,13 +11633,37 @@
     },
     {
       "path": "src/components/dashboard/ShopCatalog.tsx",
-      "lines": 414,
+      "lines": 266,
       "purpose": "POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08):",
       "brain": [],
       "exports": [
         {
-          "name": "ShopCatalog",
+          "name": "BulkAdd",
           "kind": "component"
+        },
+        {
+          "name": "draftOf",
+          "kind": "fn"
+        },
+        {
+          "name": "emptyDraft",
+          "kind": "fn"
+        },
+        {
+          "name": "ItemEditor",
+          "kind": "component"
+        },
+        {
+          "name": "ItemPhoto",
+          "kind": "component"
+        },
+        {
+          "name": "PreviewRow",
+          "kind": "type"
+        },
+        {
+          "name": "STARTERS",
+          "kind": "const"
         }
       ],
       "route": null,
@@ -11655,17 +11673,15 @@
       "guard": null,
       "imports": [
         "@/components/ui/field",
-        "@/lib/booking-fees",
         "@/lib/dashboard-fetch",
         "@/lib/image-resize",
         "@/lib/shop-import",
         "@/lib/shop-tree",
         "@/lib/tax-categories",
-        "@/lib/use-dashboard-access",
         "react"
       ],
       "usedBy": [
-        "src/app/dashboard/settings/page.tsx"
+        "src/components/dashboard/StockTab.tsx"
       ]
     },
     {
@@ -11696,36 +11712,6 @@
       ],
       "usedBy": [
         "src/app/dashboard/page.tsx"
-      ]
-    },
-    {
-      "path": "src/components/dashboard/ShopStock.tsx",
-      "lines": 146,
-      "purpose": "SHOP-4 (Cam 2026-10-30:",
-      "brain": [],
-      "exports": [
-        {
-          "name": "ShopStock",
-          "kind": "component"
-        }
-      ],
-      "route": null,
-      "kind": null,
-      "methods": [],
-      "auth": null,
-      "guard": null,
-      "imports": [
-        "@/components/dashboard/LoadError",
-        "@/components/ui/Card",
-        "@/components/ui/StatusDot",
-        "@/components/ui/field",
-        "@/lib/dashboard-fetch",
-        "@/lib/shop-stock",
-        "@/lib/shop-tree",
-        "react"
-      ],
-      "usedBy": [
-        "src/app/dashboard/shop/page.tsx"
       ]
     },
     {
@@ -11844,6 +11830,40 @@
       ],
       "usedBy": [
         "src/app/dashboard/settings/page.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/StockTab.tsx",
+      "lines": 309,
+      "purpose": "POS-6 (Cam 2026-11-09:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "StockTab",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/dashboard/LoadError",
+        "@/components/dashboard/ShopCatalog",
+        "@/components/ui/Card",
+        "@/components/ui/StatusDot",
+        "@/components/ui/field",
+        "@/lib/booking-fees",
+        "@/lib/dashboard-fetch",
+        "@/lib/shop-stock",
+        "@/lib/shop-tree",
+        "@/lib/use-dashboard-access",
+        "lucide-react",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/shop/page.tsx"
       ]
     },
     {
@@ -12901,8 +12921,8 @@
         "src/components/dashboard/RegisterClose.tsx",
         "src/components/dashboard/RegisterPacks.tsx",
         "src/components/dashboard/RoundRulesCard.tsx",
-        "src/components/dashboard/ShopStock.tsx",
         "src/components/dashboard/SmsConsentAsk.tsx",
+        "src/components/dashboard/StockTab.tsx",
         "src/components/dashboard/events/EventDay.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
         "src/components/dashboard/events/EventMoney.tsx",
@@ -13198,9 +13218,9 @@
         "src/components/dashboard/RoundPacks.tsx",
         "src/components/dashboard/RoundRulesCard.tsx",
         "src/components/dashboard/SalesTaxCard.tsx",
-        "src/components/dashboard/ShopStock.tsx",
         "src/components/dashboard/SignAgreements.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
+        "src/components/dashboard/StockTab.tsx",
         "src/components/dashboard/Toast.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
         "src/components/dashboard/events/EventMoney.tsx",
@@ -13282,8 +13302,8 @@
         "src/components/dashboard/RoundRulesCard.tsx",
         "src/components/dashboard/SalesTaxCard.tsx",
         "src/components/dashboard/ShopCatalog.tsx",
-        "src/components/dashboard/ShopStock.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
+        "src/components/dashboard/StockTab.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
         "src/components/dashboard/events/EventMoney.tsx",
         "src/components/dashboard/events/EventSetup.tsx",
@@ -15541,8 +15561,8 @@
         "src/app/checkin/[bookingId]/page.tsx",
         "src/app/courses/[slug]/CourseBookingClient.tsx",
         "src/app/receipt/[bookingId]/page.tsx",
-        "src/components/dashboard/ShopCatalog.tsx",
         "src/components/dashboard/ShopItemsForGroup.tsx",
+        "src/components/dashboard/StockTab.tsx",
         "src/components/dashboard/TeeSheetList.tsx",
         "src/components/dashboard/money/PayoutsPanel.tsx",
         "src/components/home/TeeSheetDemo.tsx",
@@ -16308,7 +16328,7 @@
     },
     {
       "path": "src/lib/card-reader.ts",
-      "lines": 278,
+      "lines": 279,
       "purpose": "POS-3 R3 (Cam 2026-10-24:",
       "brain": [],
       "exports": [
@@ -16889,7 +16909,7 @@
     },
     {
       "path": "src/lib/counter-pay.ts",
-      "lines": 338,
+      "lines": 339,
       "purpose": "A group pays for its round at the counter (cash, or the course's own card machine):",
       "brain": [],
       "exports": [
@@ -18390,8 +18410,8 @@
         "src/components/dashboard/SalesTaxCard.tsx",
         "src/components/dashboard/ShopCatalog.tsx",
         "src/components/dashboard/ShopItemsForGroup.tsx",
-        "src/components/dashboard/ShopStock.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
+        "src/components/dashboard/StockTab.tsx",
         "src/components/dashboard/TeeSheetCalendar.tsx",
         "src/components/dashboard/analytics/ShopTab.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
@@ -23367,7 +23387,7 @@
     },
     {
       "path": "src/lib/public-course.ts",
-      "lines": 37,
+      "lines": 38,
       "purpose": "PERF-1:",
       "brain": [],
       "exports": [
@@ -23384,7 +23404,8 @@
       "imports": [
         "@/lib/money",
         "@/lib/normalize-course",
-        "@/lib/prisma"
+        "@/lib/prisma",
+        "@/lib/round-packs-switch"
       ],
       "usedBy": [
         "src/app/api/courses/[slug]/route.ts",
@@ -23841,8 +23862,36 @@
       ]
     },
     {
+      "path": "src/lib/round-packs-switch.ts",
+      "lines": 8,
+      "purpose": "POS-6 (Cam 2026-11-09, round packs:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "PACKS_OFF",
+          "kind": "const"
+        },
+        {
+          "name": "ROUND_PACKS_ON",
+          "kind": "const"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/dashboard/page.tsx",
+        "src/lib/public-course.ts",
+        "src/lib/round-packs.ts",
+        "src/lib/shop-sales.ts"
+      ]
+    },
+    {
       "path": "src/lib/round-packs.ts",
-      "lines": 288,
+      "lines": 289,
       "purpose": "PRICE-3 (Cam 2026-10-30:",
       "brain": [],
       "exports": [
@@ -23915,6 +23964,10 @@
           "kind": "type"
         },
         {
+          "name": "PACKS_OFF",
+          "kind": "reexport"
+        },
+        {
           "name": "packSeats",
           "kind": "fn"
         },
@@ -23929,6 +23982,10 @@
         {
           "name": "releaseBookingRounds",
           "kind": "fn"
+        },
+        {
+          "name": "ROUND_PACKS_ON",
+          "kind": "reexport"
         },
         {
           "name": "saleTerms",
@@ -23950,6 +24007,7 @@
       "guard": null,
       "imports": [
         "./prisma",
+        "./round-packs-switch",
         "./shop-sales",
         "@prisma/client"
       ],
@@ -25163,7 +25221,7 @@
     },
     {
       "path": "src/lib/shop-sales.ts",
-      "lines": 849,
+      "lines": 859,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -25210,6 +25268,10 @@
         {
           "name": "PACK_NO_DISCOUNT",
           "kind": "const"
+        },
+        {
+          "name": "packSaleOff",
+          "kind": "fn"
         },
         {
           "name": "quoteSale",
@@ -25307,6 +25369,7 @@
         "./member-account",
         "./money-ledger",
         "./prisma",
+        "./round-packs-switch",
         "./sales-tax",
         "./shop",
         "./stripe",
@@ -25368,7 +25431,7 @@
       ],
       "usedBy": [
         "src/app/api/operator/shop-stock/route.ts",
-        "src/components/dashboard/ShopStock.tsx"
+        "src/components/dashboard/StockTab.tsx"
       ]
     },
     {
@@ -25419,7 +25482,7 @@
       "usedBy": [
         "src/app/dashboard/shop/page.tsx",
         "src/components/dashboard/ShopCatalog.tsx",
-        "src/components/dashboard/ShopStock.tsx"
+        "src/components/dashboard/StockTab.tsx"
       ]
     },
     {
@@ -26633,8 +26696,8 @@
         "src/app/dashboard/settings/page.tsx",
         "src/app/dashboard/shop/page.tsx",
         "src/components/OperatorSidebar.tsx",
-        "src/components/dashboard/ShopCatalog.tsx",
         "src/components/dashboard/StaffNotice.tsx",
+        "src/components/dashboard/StockTab.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
         "src/components/dashboard/events/EventMoney.tsx"
       ]
@@ -33198,6 +33261,7 @@
   ],
   "orphans": [
     "src/components/CourseCard.tsx",
+    "src/components/dashboard/RoundPacks.tsx",
     "src/components/dashboard/TabIntro.tsx",
     "src/components/ui/PageHeader.tsx",
     "src/components/ui/SidebarShell.tsx",

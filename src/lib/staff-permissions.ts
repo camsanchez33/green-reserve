@@ -71,7 +71,7 @@ export const PERMISSIONS: PermissionDef[] = [
   { key: 'shop.close', group: 'Pro shop', label: 'Close out the register', help: 'See the day’s cash and card totals, count the drawer and record any over or short.', requires: ['shop.sell'] },
   // Launch walk (Cam 2026-10-31): the counter takes items back without the wider refund power — Front desk has it.
   { key: 'shop.return', group: 'Pro shop', label: 'Return items', help: 'Take items back from a pro shop sale and give their money back the way it was paid. Refunding a typed amount needs Issue refunds.', requires: ['shop.sell'], movesMoney: true },
-  { key: 'shop.catalog', group: 'Pro shop', label: 'Edit the shop catalog', help: 'Add items and change prices in Settings → Pro shop, record deliveries and set reorder points.', requires: ['settings.edit'] },
+  { key: 'shop.catalog', group: 'Pro shop', label: 'Edit the shop catalog', help: 'Add items and change prices on Pro shop → Stock, record deliveries and set reorder points.', requires: ['settings.edit'] },
   // W2-9 (Cam 2026-10-22): owner + staff given it; Manager has it, Front desk doesn't.
   { key: 'events.manage', group: 'Events', label: 'Run events', help: 'Set up outings and tournaments, hold their tee times, keep the checklist and the player list.' },
   { key: 'analytics.view', group: 'Course', label: 'See analytics', help: 'Revenue, utilization, no-shows and customers.' },

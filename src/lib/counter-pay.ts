@@ -24,7 +24,7 @@ import { applyTierRates } from './tier-rates';
 import { applyPromo, reserveUse, releaseUse, seatAfter, NOTHING_OFF, PROMO_USED, type PromoRow } from './promo-codes';
 import { dealPct, dealSeat, dealRateSeat } from './last-minute';
 import { addCharge } from './member-account';
-import { holdingById, packSeats, packPrice, takeRounds, giveBack, PackError, PACK_NO_CODE } from './round-packs';
+import { holdingById, packSeats, packPrice, takeRounds, giveBack, PackError, PACK_NO_CODE, ROUND_PACKS_ON, PACKS_OFF } from './round-packs';
 import { memberPlayers, splitTotal, memberSpot, partyFees, membershipLive, type PartyBooking } from './member-rates';
 import { cartCharge, cartRuleOf } from './cart-pricing';
 
@@ -226,6 +226,7 @@ export async function createCounterBooking(courseId: string, input: CounterBooki
   // first, then every seat below is priced after it (seatAfter), so the per-seat rates kept on
   // the booking add up to its total.
   let promoRow: PromoRow | null = null;
+  if (rate.startsWith('pack:') && !ROUND_PACKS_ON) return { ok: false, status: 410, error: PACKS_OFF };
   if (rate.startsWith('pack:') && input.promoCode && String(input.promoCode).trim()) return { ok: false, status: 400, error: PACK_NO_CODE };
   if (input.promoCode && String(input.promoCode).trim()) {
     const p = await applyPromo(courseId, input.promoCode, { date: teeTime.date, time: teeTime.time, rateApplied: rate !== 'standard', golferEmail: golferEmail || null });

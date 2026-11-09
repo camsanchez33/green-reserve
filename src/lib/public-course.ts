@@ -3,6 +3,7 @@
 // ship the course in its first HTML instead of a skeleton that swaps out after
 // a client fetch (the swap was the page's layout shift and most of its LCP).
 import { prisma } from '@/lib/prisma';
+import { ROUND_PACKS_ON } from '@/lib/round-packs-switch';
 import { centsToDollarsOr0 } from '@/lib/money';
 import { normalizeDbCourse } from '@/lib/normalize-course';
 
@@ -29,7 +30,7 @@ export async function loadPublicCourse(slug: string) {
   // JSON round trip: the page receives exactly what the API sends (Dates as
   // ISO strings), so the client component sees one shape either way.
   const payable = dbCourse.stripeAccountActive && !!dbCourse.stripeAccountId;
-  const sellsPacks = dbCourse._count.roundPacks > 0 && payable;
+  const sellsPacks = ROUND_PACKS_ON && dbCourse._count.roundPacks > 0 && payable;
   // MEM-JOIN: whether the page shows memberships to join online.
   const joinsOnline = dbCourse._count.membershipTiers > 0 && payable;
   return JSON.parse(JSON.stringify({ ...normalizeDbCourse(dbCourse, centsToDollarsOr0(cheapestCents)), sells_packs: sellsPacks, joins_online: joinsOnline }));

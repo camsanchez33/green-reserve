@@ -6,7 +6,7 @@ import { applyTierRates } from '@/lib/tier-rates';
 import { membershipLive } from '@/lib/member-rates';
 import { dealPct, dealRateSeat } from '@/lib/last-minute';
 import { demandPctFor, onlinePublicSeat } from '@/lib/demand-pricing';
-import { holdingsFor } from '@/lib/round-packs';
+import { holdingsFor, ROUND_PACKS_ON } from '@/lib/round-packs';
 import { getGolferSession } from '@/lib/auth';
 
 // What the booking page shows the signed-in golfer before they book — the same
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
   const rated = (cents: number) => Math.min(pub, dealRateSeat(pct, cents, tt.greenFeeCents, tt.course.lastMinuteStack));
   // PRICE-3: the signed-in golfer's own round packs at this course (their account email is the holder).
   const golfer = await getGolferSession();
-  const packs = golfer?.email ? (await holdingsFor(tt.courseId, golfer.email)).map(h => ({ lineId: h.lineId, name: h.name, left: h.left, coversCart: h.coversCart, guests: h.guests, expiresAt: h.expiresAt })) : [];
+  const packs = ROUND_PACKS_ON && golfer?.email ? (await holdingsFor(tt.courseId, golfer.email)).map(h => ({ lineId: h.lineId, name: h.name, left: h.left, coversCart: h.coversCart, guests: h.guests, expiresAt: h.expiresAt })) : [];
 
   let tier: { name: string; guestsPayMemberRate: boolean; greenFeeWeekdayCents: number | null; greenFeeWeekendCents: number | null; cartFeeWeekdayCents: number | null; cartFeeWeekendCents: number | null; discountPct: number | null } | null = null;
   const golferMembership = await getGolferMembership(tt.courseId, grace);

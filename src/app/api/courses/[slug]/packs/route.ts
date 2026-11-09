@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getGolferSession } from '@/lib/auth';
 import { rateLimit } from '@/lib/rate-limit';
-import { holdingsFor, buyPackOnline } from '@/lib/round-packs';
+import { holdingsFor, buyPackOnline, ROUND_PACKS_ON } from '@/lib/round-packs';
 
 // PRICE-3 (Cam 2026-10-30: round packs sold "online + counter"): a live course's packs for
 // sale online, and the signed-in golfer's own rounds left here. Buying needs a signed-in
@@ -20,7 +20,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ slu
   if (!course) return NextResponse.json({ error: 'Course not found' }, { status: 404 });
   const golfer = await getGolferSession();
   const [packs, mine] = await Promise.all([
-    course.stripeAccountActive && course.stripeAccountId
+    ROUND_PACKS_ON && course.stripeAccountActive && course.stripeAccountId
       ? prisma.roundPack.findMany({ where: { courseId: course.id, active: true, sellOnline: true }, orderBy: { priceCents: 'asc' }, select: { id: true, name: true, rounds: true, priceCents: true, coversCart: true, guests: true, validDays: true } })
       : Promise.resolve([]),
     golfer?.email ? holdingsFor(course.id, golfer.email) : Promise.resolve([]),

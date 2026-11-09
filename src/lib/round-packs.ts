@@ -38,6 +38,7 @@ const fail = (error: string): Fail => ({ ok: false, error });
 type Tx = Prisma.TransactionClient;
 
 export const MAX_PACK_ROUNDS = 200;
+export { ROUND_PACKS_ON, PACKS_OFF } from './round-packs-switch';
 export const PACK_NO_CODE = 'A promo code can’t be used with a round pack.';
 
 export type OpenLinks = 'keep' | 'current';

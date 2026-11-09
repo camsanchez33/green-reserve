@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-672 source files · 293 routes · 246 libraries · 71 models
+673 source files · 293 routes · 247 libraries · 71 models
 
 ## Single sources of truth
 
@@ -155,7 +155,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/auth/reset-password` | public | entry | GET POST | `src/app/api/auth/reset-password/route.ts` | 106 |
 | `/api/auth/verify` | public | public | POST | `src/app/api/auth/verify/route.ts` | 36 |
 | `/api/birdie/chat` | operator | file | GET POST PUT | `src/app/api/birdie/chat/route.ts` | 246 |
-| `/api/bookings` | member | file | GET POST | `src/app/api/bookings/route.ts` | 510 |
+| `/api/bookings` | member | file | GET POST | `src/app/api/bookings/route.ts` | 511 |
 | `/api/bookings/cancel` | golfer | file | POST | `src/app/api/bookings/cancel/route.ts` | 44 |
 | `/api/bookings/resident-rate` | public | public | GET | `src/app/api/bookings/resident-rate/route.ts` | 65 |
 | `/api/bookings/setup-intent` | public | public | POST | `src/app/api/bookings/setup-intent/route.ts` | 74 |
@@ -306,7 +306,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/courses/[slug]/account` | golfer | **NONE FOUND** | page | `src/app/courses/[slug]/account/page.tsx` | 11 |
 | `/courses/[slug]/account/accept-invite` | golfer | entry | page | `src/app/courses/[slug]/account/accept-invite/page.tsx` | 144 |
 | `/courses/[slug]/member` | member | **NONE FOUND** | page | `src/app/courses/[slug]/member/page.tsx` | 874 |
-| `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 2270 |
+| `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 2271 |
 | `/dashboard/2fa` | operator | entry | page | `src/app/dashboard/2fa/page.tsx` | 110 |
 | `/dashboard/analytics` | operator | middleware | page | `src/app/dashboard/analytics/page.tsx` | 822 |
 | `/dashboard/cancellations` | operator | middleware | page | `src/app/dashboard/cancellations/page.tsx` | 17 |
@@ -323,8 +323,8 @@ this script with a non-zero exit — that is the point of the tag.
 | `/dashboard/payments` | operator | middleware | page | `src/app/dashboard/payments/page.tsx` | 18 |
 | `/dashboard/reset-password` | operator | entry | page | `src/app/dashboard/reset-password/page.tsx` | 123 |
 | `/dashboard/schedules` | operator | middleware | page | `src/app/dashboard/schedules/page.tsx` | 671 |
-| `/dashboard/settings` | operator | middleware | page | `src/app/dashboard/settings/page.tsx` | 1173 |
-| `/dashboard/shop` | operator | middleware | page | `src/app/dashboard/shop/page.tsx` | 871 |
+| `/dashboard/settings` | operator | middleware | page | `src/app/dashboard/settings/page.tsx` | 1168 |
+| `/dashboard/shop` | operator | middleware | page | `src/app/dashboard/shop/page.tsx` | 917 |
 | `/dashboard/sign` | operator | middleware | page | `src/app/dashboard/sign/page.tsx` | 26 |
 | `/dashboard/tournaments` | operator | middleware | page | `src/app/dashboard/tournaments/page.tsx` | 5 |
 | `/dashboard/verify` | operator | token | page | `src/app/dashboard/verify/page.tsx` | 148 |
@@ -380,7 +380,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/pricing-switch.ts` | 15 | 76 | Settings → "Who gets their own price" (Cam 2026-11-01: | `memberPricingOn`, `residentPricingOn`, `switchOnWherePriced`, `withPriceSwitch` |
 | `src/lib/use-dashboard-access.ts` | 14 | 51 | SP-A: | `DashboardAccess`, `useDashboardAccess` |
 | `src/lib/admin-areas.ts` | 13 | 44 | AW-11 (Cam 2026-10-22: | `ADMIN_AREAS`, `AdminArea`, `ALL_AREAS`, `effectiveAreas`, `hasArea`, `isAdminArea` |
-| `src/lib/round-packs.ts` | 13 | 288 | PRICE-3 (Cam 2026-10-30: | `buyPackOnline`, `closeStalePackLinks`, `endPacksRefundedOutside`, `findHoldings`, `giveBack`, `Holding`, `holdingById`, `holdingsFor` +16 more |
+| `src/lib/round-packs.ts` | 13 | 289 | PRICE-3 (Cam 2026-10-30: | `buyPackOnline`, `closeStalePackLinks`, `endPacksRefundedOutside`, `findHoldings`, `giveBack`, `Holding`, `holdingById`, `holdingsFor` +18 more |
 | `src/lib/admin-session-context.tsx` | 12 | 80 | MP-11a (ADMIN_V4 V4-7, LAW rule 2): | `AdminSessionProvider`, `AdminSessionView`, `isAdminAuthPath`, `useAdminSession` |
 | `src/lib/sms-consent-copy.ts` | 12 | 49 | SMS-1 (Cam 2026-11-02, Twilio A2P 10DLC — docs/SMS_OPT_IN.md): | `SMS_CONFIRMATION`, `SMS_CONSENT_VERSION`, `SMS_FREQUENCY`, `SMS_HELP`, `SMS_NO_CONSENT`, `SMS_NO_CONSENT_STAFF`, `smsKeyword`, `smsVerbalScript` +1 more |
 | `src/lib/analytics.ts` | 11 | 651 | AN-1 (Cam 2026-10-01): | `Analytics`, `bookingPace`, `computeAnalytics`, `courseShareCents`, `EVENT_LOG_START`, `headline`, `NO_SHOW_GRACE_MIN`, `PaceDay` +4 more |
@@ -417,7 +417,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/money-problems.ts` | 7 | 89 |  | `FAILED_CHARGE_WHERE`, `missedCheckInWhere`, `MONEY_EVENT_LOOKBACK_DAYS`, `openDisputes`, `openMoneyEventProblems` |
 | `src/lib/owner-session.ts` | 7 | 170 | AW-1 (Cam 2026-10-20: | `alertTime`, `approveDevice`, `clearOwnerCookie`, `createOwnerSession`, `DEVICE_COOKIE`, `deviceForApproval`, `deviceLabel`, `deviceTokenFromCookie` +13 more |
 | `src/lib/round-shop-tax.ts` | 7 | 147 | W2-7 part B2 (Cam 2026-10-20: | `EnsureResult`, `ensureShopTax`, `recordPendingRoundShopTax`, `recordRoundShopTax`, `refreshOpenRoundShopTax`, `shopTaxKey`, `TAX_UNAVAILABLE` |
-| `src/lib/shop-sales.ts` | 7 | 849 | POS-2 (Cam 2026-10-19: | `cancelSaleIntent`, `chargeSale`, `createSale`, `discountFor`, `DiscountInput`, `findSales`, `hasDiscount`, `markCardPaid` +24 more |
+| `src/lib/shop-sales.ts` | 7 | 859 | POS-2 (Cam 2026-10-19: | `cancelSaleIntent`, `chargeSale`, `createSale`, `discountFor`, `DiscountInput`, `findSales`, `hasDiscount`, `markCardPaid` +25 more |
 | `src/lib/admin-today.ts` | 6 | 194 |  | `paidWindow`, `STAFF_QUIET_DAYS`, `staffSeenSignal`, `STUCK_DAYS`, `TodayCourse`, `todayCourses`, `todayHealth`, `todayMoney` +1 more |
 | `src/lib/calcom.ts` | 6 | 93 | CAL-1 — Cal.com as the call scheduler, in place of the Google Calendar grid. | `calcomBookingUrl`, `calcomCreatedBy`, `calcomEmbedUrl`, `calcomManageLinks`, `calcomStatus`, `calcomUidOf`, `verifyCalcomSignature` |
 | `src/lib/call-answers.ts` | 6 | 349 | INQUIRY_CALL_SPEC IC-5 — structured discovery-call answers. | `BOOKING_METHOD_OPTIONS`, `CALL_FIELDS`, `CallAnswers`, `callRecapLines`, `DAY_SHORT`, `emptyAnswers`, `FieldSpec`, `FieldType` +19 more |
@@ -447,9 +447,9 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/birdie/ask.ts` | 4 | 33 | AN-3 (Cam 2026-10-19: | `APPLIED_EVENT`, `ASK_EVENT`, `askBirdie`, `markBirdieReady`, `useBirdieReady` |
 | `src/lib/birdie/proposal-types.ts` | 4 | 65 | BIRDIE_AI_SPEC B4b — the confirm-card shape, shared by the server (which builds cards in proposals.ts) and the widget (which shows them and makes the call). | `cardCalls`, `isProposalCard`, `PROPOSAL_ROUTES`, `ProposalCall`, `ProposalCard` |
 | `src/lib/call-invite.ts` | 4 | 106 | CALL_SCHEDULING_SPEC SC-2 §1 — the "pick a call time" invite. | `deliverCallInvite`, `INVITE_DAYS`, `inviteAgendaLines`, `InviteSendResult`, `inviteUrl`, `issueCallInvite`, `sendCallInvite`, `sendCallReminders` |
-| `src/lib/card-reader.ts` | 4 | 278 | POS-3 R3 (Cam 2026-10-24: | `cancelReaderPayment`, `courseStripe`, `listReaders`, `ownReader`, `readerSaleStatus`, `ReaderSaleStatus`, `ReaderView`, `registerReader` +7 more |
+| `src/lib/card-reader.ts` | 4 | 279 | POS-3 R3 (Cam 2026-10-24: | `cancelReaderPayment`, `courseStripe`, `listReaders`, `ownReader`, `readerSaleStatus`, `ReaderSaleStatus`, `ReaderView`, `registerReader` +7 more |
 | `src/lib/company-documents.ts` | 4 | 61 | CO-DOCS (Cam 2026-10-01): | `COMPANY_DOC_CATEGORIES`, `COMPANY_DOC_MAX_BYTES`, `COMPANY_DOC_PREFIX`, `COMPANY_DOC_TYPES`, `CompanyDocCategory`, `companyDocPathOf`, `describeCompanyPath`, `isAllowedCompanyPath` +1 more |
-| `src/lib/counter-pay.ts` | 4 | 338 | A group pays for its round at the counter (cash, or the course's own card machine): | `accountDueCents`, `CounterBookingInput`, `counterDueCents`, `counterPaidCents`, `CounterResult`, `createCounterBooking`, `roundNote`, `settleAtCounter` |
+| `src/lib/counter-pay.ts` | 4 | 339 | A group pays for its round at the counter (cash, or the course's own card machine): | `accountDueCents`, `CounterBookingInput`, `counterDueCents`, `counterPaidCents`, `CounterResult`, `createCounterBooking`, `roundNote`, `settleAtCounter` |
 | `src/lib/course-conditions.ts` | 4 | 66 | DASH-D Home (Cam 2026-11-01, "the course conditions"): | `cleanConditions`, `CONDITION_FIELDS`, `CONDITION_LINE_CHARS`, `CONDITION_LINES_MAX`, `CONDITION_SUGGESTIONS`, `ConditionKey`, `conditionLabel`, `CONDITIONS_FRESH_HOURS` +3 more |
 | `src/lib/course-events.ts` | 4 | 403 | W2-9 Events (Cam 2026-10-21: | `applyHold`, `autoPairings`, `cancelEvent`, `createEvent`, `DEFAULT_TASKS`, `dueFor`, `EVENT_KINDS`, `EventError` +20 more |
 | `src/lib/course-group.ts` | 4 | 13 | GRP-1 (Cam 2026-10-19, after golfbergencounty.com): | `groupCourseIds` |
@@ -461,6 +461,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/move-booking.ts` | 4 | 307 | ACT-1 (PLATFORM_ROADMAP_SPEC §2, Cam 2026-10-07): | `moveBooking`, `MoveCode`, `MoveFail`, `MoveOk`, `MovePricing` |
 | `src/lib/platform-stripe.ts` | 4 | 58 |  | `fetchStripeFeeWindow`, `fetchStripeProcessingCostCents`, `StripeFeeWindow` |
 | `src/lib/public-tee-times.ts` | 4 | 105 | PERF-1: | `loadPublicTeeTimes`, `normalizeDbTeeTime`, `PublicTeeTimes` |
+| `src/lib/round-packs-switch.ts` | 4 | 8 | POS-6 (Cam 2026-11-09, round packs: | `PACKS_OFF`, `ROUND_PACKS_ON` |
 | `src/lib/sales-tax.ts` | 4 | 176 | W2-7 part B (Cam 2026-10-20: | `isTaxCategory`, `quoteShopTax`, `recordPendingShopTax`, `recordShopSaleTax`, `reuseShopTaxQuote`, `setTaxOn`, `setUpTax`, `TAX_CATEGORIES` +6 more |
 | `src/lib/schedule-conflict.ts` | 4 | 143 | COURSE_LAYOUT_SPEC L2 — checks for schedules that share ground. | `checkSchedule`, `ConflictNine`, `ConflictProduct`, `ConflictSchedule`, `findScheduleConflict`, `TURN_MINUTES` |
 | `src/lib/settings-validation.ts` | 4 | 157 | SD-1. | `CANCELLATION_HOURS_MAX`, `normalizeHttpUrl`, `SettingsValidation`, `validateSettingsPatch` |
@@ -489,7 +490,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/owner-passkey.ts` | 3 | 111 | AW-1b (Cam 2026-10-21: | `addPasskey`, `authenticationOptions`, `hasPasskey`, `registrationOptions`, `relyingParty`, `verifyPasskeySignIn` |
 | `src/lib/owner-totp.ts` | 3 | 103 | OWNER TOTP 2FA (RUN_QUEUE) — the authenticator-app second factor for the owner account. | `generateRecoveryCodes`, `generateTotpSecret`, `looksLikeRecoveryCode`, `matchRecoveryCode`, `normalizeRecoveryCode`, `RECOVERY_CODE_COUNT`, `signEnrolToken`, `TOTP_ISSUER` +8 more |
 | `src/lib/problems.ts` | 3 | 61 | BRAIN-2a (Cam 2026-10-22): | `listProblems`, `openProblemCount`, `ProblemView`, `SNOOZE_DAYS` |
-| `src/lib/public-course.ts` | 3 | 37 | PERF-1: | `loadPublicCourse` |
+| `src/lib/public-course.ts` | 3 | 38 | PERF-1: | `loadPublicCourse` |
 | `src/lib/reader-rounds.ts` | 3 | 243 | POS-3 R3b (Cam 2026-10-24, "Ok go"): | `cancelRoundOnReader`, `roundReaderStatus`, `RoundReaderStatus`, `settleRoundReader`, `startRoundOnReader` |
 | `src/lib/register-close.ts` | 3 | 147 | POS-3 R4 (Cam 2026-10-24: | `CLOSE_BACK_DAYS`, `closeDay`, `CloseView`, `daySummary`, `DaySummary`, `recentCloses` |
 | `src/lib/register.ts` | 3 | 128 | POS-3 R2 (Cam 2026-10-24: | `MAX_REGISTER_ROUNDS`, `registerRounds`, `ringUpCash` |
@@ -638,7 +639,6 @@ Sorted the same way.
 | `src/components/dashboard/events/EventSetup.tsx` | 2 | 379 | W2-9 Events: | `blankForm`, `default (EventSetup)`, `EventForm`, `KINDS`, `NineOpt`, `PAYERS`, `Product` |
 | `src/components/dashboard/ImageUpload.tsx` | 2 | 62 | The course's logo or course photo: | `ImageUpload` |
 | `src/components/dashboard/money/RefundForm.tsx` | 2 | 47 | Revamp 3 dead end 14 (Cam 2026-10-29): | `RefundForm` |
-| `src/components/dashboard/RegisterPacks.tsx` | 2 | 111 | PRICE-3 (Cam 2026-10-30: | `PACK_RATE`, `PackHolderPick`, `PackHolders`, `PackPicker` |
 | `src/components/dashboard/settings/FinishSetup.tsx` | 2 | 68 | Settings rework (Cam 2026-10-19: | `FinishSetup`, `SetupItem` |
 | `src/components/dashboard/TeeSheetRows.tsx` | 2 | 304 | DENSE-4 (DENSE_UI_SPEC D1, Cam 2026-10-27: | `BoardGroup`, `BoardSlot`, `default (TeeSheetRows)`, `FILL`, `groupTags`, `groupTone`, `isMemberRate`, `rateWords` +1 more |
 | `src/components/home/ProductShot.tsx` | 2 | 16 |  | `default (ProductShot)` |
@@ -686,14 +686,14 @@ Sorted the same way.
 | `src/components/dashboard/OperatorSearch.tsx` | 1 | 116 | DASH-C: | `default (OperatorSearch)` |
 | `src/components/dashboard/PromoCodes.tsx` | 1 | 119 | PRICE-1 (Cam 2026-10-30: | `PromoCodes` |
 | `src/components/dashboard/RegisterClose.tsx` | 1 | 226 | POS-3 R4 (Cam 2026-10-24): | `RegisterClose` |
-| `src/components/dashboard/RoundPacks.tsx` | 1 | 109 | PRICE-3 (Cam 2026-10-30: | `RoundPacks` |
+| `src/components/dashboard/RegisterPacks.tsx` | 1 | 111 | PRICE-3 (Cam 2026-10-30: | `PACK_RATE`, `PackHolderPick`, `PackHolders`, `PackPicker` |
 | `src/components/dashboard/RoundRulesCard.tsx` | 1 | 89 | W2-6 slice 3 (Cam 2026-10-20): | `CourseRules`, `default (RoundRulesCard)`, `RoundRules` |
 | `src/components/dashboard/SalesTaxCard.tsx` | 1 | 82 | W2-7 part B (Cam 2026-10-20): | `SalesTaxCard` |
 | `src/components/dashboard/settings/WhoPaysWhat.tsx` | 1 | 99 | Settings → Prices & fees: | `WhoPaysWhat` |
-| `src/components/dashboard/ShopCatalog.tsx` | 1 | 414 | POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): | `ShopCatalog` |
+| `src/components/dashboard/ShopCatalog.tsx` | 1 | 266 | POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): | `BulkAdd`, `draftOf`, `emptyDraft`, `ItemEditor`, `ItemPhoto`, `PreviewRow`, `STARTERS` |
 | `src/components/dashboard/ShopItemsForGroup.tsx` | 1 | 188 | POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): | `default (ShopItemsForGroup)`, `ShopLine` |
-| `src/components/dashboard/ShopStock.tsx` | 1 | 146 | SHOP-4 (Cam 2026-10-30: | `ShopStock` |
 | `src/components/dashboard/StaffPermissions.tsx` | 1 | 243 | SP-A (STAFF_POLICY_SPEC A6): | `StaffPermissions` |
+| `src/components/dashboard/StockTab.tsx` | 1 | 309 | POS-6 (Cam 2026-11-09: | `StockTab` |
 | `src/components/dashboard/TeeSheetCalendar.tsx` | 1 | 90 | VIEWS-1 (Cam 2026-11-03): | `default (TeeSheetCalendar)` |
 | `src/components/dashboard/TeeSheetList.tsx` | 1 | 74 | VIEWS-1 (Cam 2026-11-03, the glass/views canvas: | `default (TeeSheetList)` |
 | `src/components/dashboard/ThemeSwitch.tsx` | 1 | 22 | DASH-D: | `default (ThemeSwitch)` |
@@ -703,6 +703,7 @@ Sorted the same way.
 | `src/components/Nav.tsx` | 1 | 126 |  | `default (Nav)` |
 | `src/components/ui/MonthPicker.tsx` | 1 | 75 |  | `MonthPicker` |
 | `src/components/CourseCard.tsx` | 0 | 121 |  | `default (CourseCard)` |
+| `src/components/dashboard/RoundPacks.tsx` | 0 | 109 | PRICE-3 (Cam 2026-10-30: | `RoundPacks` |
 | `src/components/dashboard/TabIntro.tsx` | 0 | 36 |  | `TabIntroButton`, `TabIntroCard` |
 | `src/components/ui/PageHeader.tsx` | 0 | 18 |  | `PageHeader` |
 | `src/components/ui/SidebarShell.tsx` | 0 | 24 |  | `SidebarShell` |
@@ -1289,6 +1290,7 @@ Nothing imports these and no route serves them. Framework-owned filenames
 Next.js, not imported, so "nothing imports it" proves nothing about them.
 
 - `src/components/CourseCard.tsx` (121 lines)
+- `src/components/dashboard/RoundPacks.tsx` (109 lines)
 - `src/components/dashboard/TabIntro.tsx` (36 lines)
 - `src/components/ui/PageHeader.tsx` (18 lines)
 - `src/components/ui/SidebarShell.tsx` (24 lines)

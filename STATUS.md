@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-08 23:27 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `7d699c81` · working tree **11 dirty file(s)**
+Generated 2026-11-09 03:41 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `e981f434` · working tree **29 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 155 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 157 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `0682ac62` | 2026-11-08 | POS-5: Pro shop Stock, Round packs and Close out tabs; sliding tab highlight (#340) |
+| `b99b4c8a` | 2026-11-08 | POS-5: Pro shop Stock, Round packs and Close out as their own tabs; sliding tab highlight |
 | `b8512431` | 2026-11-08 | ACC-1: every booking and payment figure agrees across the site (#339) |
 | `260583c3` | 2026-11-08 | ACC-1: one set of definitions so every booking and payment figure agrees |
 | `437456cc` | 2026-11-08 | POS-4: Pro shop register as a real POS (#338) |
@@ -170,19 +172,28 @@ Generated 2026-11-08 23:27 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (11 file(s))
+### Uncommitted working tree (29 file(s))
 
-- `M STATUS.artifact.html`
-- `M STATUS.json`
-- `M STATUS.md`
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M scripts/pos-register-test.ts`
-- `M scripts/words-guard.baseline.json`
-- `M src/app/dashboard/shop/page.tsx`
-- `M src/components/dashboard/RegisterClose.tsx`
-- `M src/components/dashboard/RegisterPacks.tsx`
-- `M src/components/dashboard/ShopStock.tsx`
+- `M  STATUS.artifact.html`
+- `M  STATUS.json`
+- `M  STATUS.md`
+- `M  docs/CODEMAP.md`
+- `M  docs/codemap.json`
+- `M  scripts/design-guard.baseline.json`
+- `D  scripts/pack-open-links-db-test.ts`
+- `M  scripts/pos-register-test.ts`
+- `M  scripts/register-photo-test.ts`
+- `M  scripts/revamp3-fixes-test.ts`
+- `D  scripts/round-packs-db-test.ts`
+- `A  scripts/round-packs-off-test.ts`
+- `M  scripts/words-guard.baseline.json`
+- `M  src/app/api/bookings/resident-rate/route.ts`
+- `M  src/app/api/bookings/route.ts`
+- `M  src/app/api/courses/[slug]/packs/route.ts`
+- `M  src/app/dashboard/page.tsx`
+- `M  src/app/dashboard/settings/page.tsx`
+- `M  src/app/dashboard/shop/page.tsx`
+- `M  src/components/dashboard/ShopCatalog.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -269,45 +280,47 @@ This is the distinction a raw checkbox count gets wrong.
 |---|---|---|---|
 | `CLAUDE.md` | 1 | 2026-11-08 | 0d |
 | `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 7d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 18d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 19d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 13d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 14d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 16d |
-| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 16d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 17d |
 | `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 17d |
+| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 17d |
 | `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 17d |
 | `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 17d |
 | `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 17d |
 | `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 17d |
-| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 18d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 18d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 18d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-10-20 | 18d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-10-20 | 18d |
-| `ARCHITECTURE.md` | 0 | 2026-10-20 | 18d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-20 | 18d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-20 | 18d |
-| `CODEMAP_SPEC.md` | 0 | 2026-10-20 | 18d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-20 | 18d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-20 | 18d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-20 | 18d |
-| `FB2_COPY_SPEC.md` | 0 | 2026-10-20 | 18d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-20 | 18d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-20 | 18d |
-| `GOLFER_SPEC.md` | 0 | 2026-10-20 | 18d |
-| `HARDENING_SPEC.md` | 0 | 2026-10-20 | 18d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-20 | 18d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-20 | 18d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-20 | 18d |
-| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-20 | 18d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-20 | 18d |
-| `REVIEW_SPEC.md` | 0 | 2026-10-20 | 18d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-20 | 18d |
-| `UI_REVISE_SPEC.md` | 0 | 2026-10-20 | 18d |
+| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 19d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 19d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 19d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-10-20 | 19d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-10-20 | 19d |
+| `ARCHITECTURE.md` | 0 | 2026-10-20 | 19d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-20 | 19d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-20 | 19d |
+| `CODEMAP_SPEC.md` | 0 | 2026-10-20 | 19d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-20 | 19d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-20 | 19d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-20 | 19d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-10-20 | 19d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-20 | 19d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-20 | 19d |
+| `GOLFER_SPEC.md` | 0 | 2026-10-20 | 19d |
+| `HARDENING_SPEC.md` | 0 | 2026-10-20 | 19d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-20 | 19d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-20 | 19d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-20 | 19d |
+| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-20 | 19d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-20 | 19d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-20 | 19d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-20 | 19d |
+| `UI_REVISE_SPEC.md` | 0 | 2026-10-20 | 19d |
 
 ## Recent commits
 
+- `0682ac62` 2026-11-08 — POS-5: Pro shop Stock, Round packs and Close out tabs; sliding tab highlight (#340)
+- `b99b4c8a` 2026-11-08 — POS-5: Pro shop Stock, Round packs and Close out as their own tabs; sliding tab highlight
 - `b8512431` 2026-11-08 — ACC-1: every booking and payment figure agrees across the site (#339)
 - `260583c3` 2026-11-08 — ACC-1: one set of definitions so every booking and payment figure agrees
 - `437456cc` 2026-11-08 — POS-4: Pro shop register as a real POS (#338)
@@ -318,8 +331,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `d26d15c1` 2026-11-08 — Receipt: what was actually paid, how and when; prints on a receipt printer
 - `d6083d50` 2026-11-08 — Time card: reader charges who's here, receipts, day actions in the sheet bar (#335)
 - `480f7d0e` 2026-11-08 — Time card: the reader charges who's here, receipts, day actions in the sheet bar
-- `086b9403` 2026-11-08 — Tee sheet: check-in in order — who's here, add to order, payment, done (#334)
-- `f7245efa` 2026-11-08 — Fix the split-booking pin for the check-in steps' rest line
 
 ---
 
