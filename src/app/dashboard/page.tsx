@@ -1,5 +1,6 @@
 'use client';
 import { onCourse } from '@/lib/on-course';
+import { CheckoutExtras } from '@/components/dashboard/CheckoutExtras';
 import { SlidingTabs } from '@/components/dashboard/SlidingTabs';
 import { timeSpots, livePlayers as livePlayersOf } from '@/lib/day-fill';
 import { roundName } from '@/lib/tee-rounds';
@@ -118,6 +119,8 @@ type Booking = {
   /** The round's parts, so part of a group is priced as the server charges it (lib/member-rates partyFees). */
   greenFeeTotal?: number; cartFeeTotal?: number; rangeBallsTotal?: number;
   residentRateCents?: number | null; memberRateCents?: number | null; memberCartCents?: number | null;
+  /** CART-3: riders (null = all, when a cart is on), per-cart price, and the range-ball buckets ("small:2,large:1"). */
+  cartSelected?: boolean; cartRiders?: number | null; cartUnitCents?: number | null; rangeBallsSize?: string;
   /** The golfer's latest staff notes, and this booking's (golfer record). */
   notes?: string[];
 };
@@ -126,7 +129,7 @@ const shopExtra = (b: Booking) => (b.shopTotalCents ?? 0) + (b.shopFeeCents ?? 0
 /** The round for `n` of the group (card check-in: green + cart + booking fee for those who showed, range balls whole). */
 function partRound(b: Booking, n: number, withAccess: boolean): number {
   if (b.greenFeeTotal == null) return Math.round((b.totalAmount - (withAccess ? 0 : b.accessFeeTotal ?? 0)) * n / b.players);
-  const f = partyFees({ players: b.players, greenFeeTotal: b.greenFeeTotal, cartFeeTotal: b.cartFeeTotal ?? 0, residentPlayers: b.residentPlayers ?? 0, residentRateCents: b.residentRateCents ?? null, memberRateCents: b.memberRateCents ?? null, memberCartCents: b.memberCartCents ?? null }, n, { greenFeeCents: 0, cartFeeCents: 0 });
+  const f = partyFees({ players: b.players, greenFeeTotal: b.greenFeeTotal, cartFeeTotal: b.cartFeeTotal ?? 0, residentPlayers: b.residentPlayers ?? 0, residentRateCents: b.residentRateCents ?? null, memberRateCents: b.memberRateCents ?? null, memberCartCents: b.memberCartCents ?? null, cartRiders: b.cartRiders ?? null, cartUnitCents: b.cartUnitCents ?? null }, n, { greenFeeCents: 0, cartFeeCents: 0 });
   return f.greenFeeTotal + f.cartFeeTotal + (b.rangeBallsTotal ?? 0) + (withAccess ? Math.round((b.accessFeeTotal ?? 0) * n / b.players) : 0);
 }
 /* ─── Helpers ──────────────────────────────────────────────────────────── */
@@ -906,7 +909,7 @@ function DashboardPageInner() {
     const prepaid = b.paymentStatus === 'paid';
     // PARTIAL-1 (Cam 2026-11-04): checking in some of the group splits the rest off, still booked — priced as the server
     // splits it (lib/split-booking splitShares). A group that can't be split is charged for who's here (SD-5).
-    const splitSrc = { players: b.players, greenFeeTotal: b.greenFeeTotal ?? (b.totalAmount - (b.accessFeeTotal ?? 0)), cartFeeTotal: b.cartFeeTotal ?? 0, rangeBallsTotal: b.rangeBallsTotal ?? 0, accessFeeTotal: b.accessFeeTotal ?? 0, totalAmount: b.totalAmount, residentPlayers: b.residentPlayers ?? 0, residentRateCents: b.residentRateCents ?? null, memberRateCents: b.memberRateCents ?? null, memberCartCents: b.memberCartCents ?? null };
+    const splitSrc = { players: b.players, greenFeeTotal: b.greenFeeTotal ?? (b.totalAmount - (b.accessFeeTotal ?? 0)), cartFeeTotal: b.cartFeeTotal ?? 0, rangeBallsTotal: b.rangeBallsTotal ?? 0, accessFeeTotal: b.accessFeeTotal ?? 0, totalAmount: b.totalAmount, residentPlayers: b.residentPlayers ?? 0, residentRateCents: b.residentRateCents ?? null, memberRateCents: b.memberRateCents ?? null, memberCartCents: b.memberCartCents ?? null, cartRiders: b.cartRiders ?? null, cartUnitCents: b.cartUnitCents ?? null };
     const keepsRest = herePlayers < b.players && b.appliedRate !== 'pack' && !tt.event && !b.roundPaid && !b.shopLocked && !b.noShowAt;
     const restSplit = keepsRest ? splitShares(splitSrc, b.players - herePlayers, { greenFeeCents: Math.round(tt.greenFee * 100), cartFeeCents: Math.round(tt.cartFee * 100) }) : null;
     // The amounts the existing confirms quote: the card (round + booking fee for who's here, shop items whole)…
@@ -1069,6 +1072,14 @@ function DashboardPageInner() {
                           editable={shopEditable} canSell={access.can('shop.sell')} showMoney={showMoney}
                           onChanged={() => loadTimes(selectedDate)} />
                       </div>
+                      {/* CART-3 (Cam 2026-11-09): who rides and the range-ball buckets, set before they pay. */}
+                      <CheckoutExtras booking={b} cartFeeCents={Math.round(tt.cartFee * 100)} walkingAllowed={tt.walkingAllowed !== false}
+                        locked={b.roundPaid || b.shopLocked || b.paidOffline || b.paymentStatus === 'paid' || b.status !== 'confirmed' ? 'Paid.'
+                          : b.noShowAt ? 'No-show.'
+                          : b.appliedRate === 'pack' ? 'Round pack.'
+                          : tt.event ? 'Event time.'
+                          : !access.can('sheet.counter_payment') ? 'Not allowed for your login.' : null}
+                        onChanged={() => loadTimes(selectedDate, true)} />
                       {showMoney && (
                         <div className="mt-3 rounded-[7px] bg-white px-3 py-1">
                           <GroupTicket booking={b} here={herePlayers} withFee={false} />

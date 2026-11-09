@@ -1,5 +1,6 @@
 import { SMS_NO_CONSENT_STAFF } from '@/lib/sms-consent-copy';
 import { optInAndConfirm } from '@/lib/sms-consent';
+import { setCheckoutExtras } from '@/lib/checkout-extras';
 import { roundChargeCents } from '@/lib/shop';
 import { splitBooking } from '@/lib/split-booking-db';
 import { NextRequest, NextResponse } from 'next/server';
@@ -106,13 +107,13 @@ export async function PATCH(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { id, action, paymentMethodId, checkedInPlayers: cipRaw, waiveFee: waiveRaw, via: viaRaw, newTeeTimeId, reprice, dryRun, residentPlayers, cashTenderedCents, amountCents, reason, newPlayers, membershipId, smsConsent, splitPlayers, splitName, splitPhone, thenCash, to: toRawIn } = await req.json();
+  const { id, action, paymentMethodId, checkedInPlayers: cipRaw, waiveFee: waiveRaw, via: viaRaw, newTeeTimeId, reprice, dryRun, residentPlayers, cashTenderedCents, amountCents, reason, newPlayers, membershipId, smsConsent, splitPlayers, splitName, splitPhone, thenCash, riders, balls, to: toRawIn } = await req.json();
   const waiveFee = action === 'cancel' && waiveRaw === true;
   // SD-5: partial party — how many actually showed (1 .. players-1); absent = all.
   const cip = cipRaw == null ? undefined : Number(cipRaw);
   if (cip !== undefined && (!Number.isInteger(cip) || cip < 1)) return NextResponse.json({ error: 'Invalid headcount.' }, { status: 400 });
   // CASH-1: 'take_cash' (the old 'paid_offline' still arrives from open tabs — it is the same cash sale).
-  const ACTIONS = ['cancel', 'checkin', 'no_show', 'still_coming', 'take_cash', 'paid_offline', 'send_pay_link', 'move', 'set_residents', 'refund_round', 'waive_late_fee', 'change_players', 'charge_account', 'split', 'send_receipt'];
+  const ACTIONS = ['cancel', 'checkin', 'no_show', 'still_coming', 'take_cash', 'paid_offline', 'send_pay_link', 'move', 'set_residents', 'refund_round', 'waive_late_fee', 'change_players', 'charge_account', 'split', 'send_receipt', 'set_extras'];
   if (!id || !ACTIONS.includes(action)) {
     return NextResponse.json({ error: 'Missing id or unsupported action' }, { status: 400 });
   }
@@ -124,6 +125,8 @@ export async function PATCH(req: NextRequest) {
     change_players: 'sheet.counter_payment',
     // MEM-ACCT: the group's round on a member's account — paid at the counter, settled later.
     charge_account: 'sheet.counter_payment',
+    // CART-3: who rides and the range-ball buckets change the group's price at the counter, like residents.
+    set_extras: 'sheet.counter_payment',
     // SPLIT-1: paying separately changes the group's price at the counter, like a party-size change.
     split: 'sheet.counter_payment' };
   const deniedAction = requirePermission(session, NEEDS[action]);
@@ -197,6 +200,11 @@ export async function PATCH(req: NextRequest) {
     const r = action === 'refund_round'
       ? await refundRound(session.courseId, id, { amountCents, reason, actorName, actor: staff })
       : await waiveLateFee(session.courseId, id, { reason, actorName, actor: staff });
+    if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+    return NextResponse.json(r);
+  }
+  if (action === 'set_extras') {
+    const r = await setCheckoutExtras(session.courseId, id, { riders, balls }, staff);
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
     return NextResponse.json(r);
   }

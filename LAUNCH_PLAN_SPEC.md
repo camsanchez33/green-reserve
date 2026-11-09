@@ -94,3 +94,19 @@ the printable starter's day sheet with course-chosen columns.
   (Overseer note: the golfer-facing $1.50 must stay shown to golfers at booking — price transparency / junk-fee
   rules, and the Operator Agreement lists it. What can come off is GreenReserve's take shown on the COURSE
   dashboard. Confirm with Cam before removing any golfer-facing fee line.)
+
+---
+
+## Notes — Events tab (Cam 2026-11-09, handwritten; "if you get there before I wake up")
+- Keep having **Active** and then **Past**.
+- **Setting up an event:** make it a much clearer, organized process that walks the course straight through
+  setting an event up — organized, efficient and effective.
+  - "If we are going to offer 4 different events we better be able to accommodate for all" (each event type's
+    setup has to fit that type).
+- **2. When** — "just so jumbled and clunky".
+- **3. Who and what** — "just not organized, very everything and sloppy".
+  - **Whole site:** required fields that aren't filled in turn red where they are, instead of only a message at
+    the bottom (transcription of "for things that are required have them … red … when not filled out instead of
+    just saying at the bottom and this is for whole site" — confirm with Cam).
+- **4. Review** — "just needs to be better and have purpose".
+- **After the event is made** — "the whole thing is just a cluster fuck", gives no guidance or structure. **Redo.**

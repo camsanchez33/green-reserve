@@ -5,11 +5,13 @@
 // total is the one the check-in confirm already quotes. Shop items are listed by
 // ShopItemsForGroup under it; their fee and tax ride in `extraCents`.
 import { partyFees } from '@/lib/member-rates';
+import { ballCounts, ballWords } from '@/lib/range-balls';
 
 export type TicketBooking = {
   players: number; totalAmount: number; accessFeeTotal?: number;
   greenFeeTotal?: number; cartFeeTotal?: number; rangeBallsTotal?: number;
   residentPlayers?: number; residentRateCents?: number | null; memberRateCents?: number | null; memberCartCents?: number | null;
+  cartRiders?: number | null; cartUnitCents?: number | null; rangeBallsSize?: string;
 };
 export type TicketLine = { label: string; detail: string; cents: number };
 
@@ -24,10 +26,14 @@ export function ticketLines(b: TicketBooking, n: number, withFee = true): { line
   if (b.greenFeeTotal != null) {
     const f = whole
       ? { greenFeeTotal: b.greenFeeTotal, cartFeeTotal: b.cartFeeTotal ?? 0 }
-      : partyFees({ players: b.players, greenFeeTotal: b.greenFeeTotal, cartFeeTotal: b.cartFeeTotal ?? 0, residentPlayers: b.residentPlayers ?? 0, residentRateCents: b.residentRateCents ?? null, memberRateCents: b.memberRateCents ?? null, memberCartCents: b.memberCartCents ?? null }, n, { greenFeeCents: 0, cartFeeCents: 0 });
+      : partyFees({ players: b.players, greenFeeTotal: b.greenFeeTotal, cartFeeTotal: b.cartFeeTotal ?? 0, residentPlayers: b.residentPlayers ?? 0, residentRateCents: b.residentRateCents ?? null, memberRateCents: b.memberRateCents ?? null, memberCartCents: b.memberCartCents ?? null, cartRiders: b.cartRiders ?? null, cartUnitCents: b.cartUnitCents ?? null }, n, { greenFeeCents: 0, cartFeeCents: 0 });
     lines.push({ label: 'Green fee', detail: plural(n, 'player'), cents: f.greenFeeTotal });
-    if (f.cartFeeTotal > 0) lines.push({ label: 'Cart', detail: '', cents: f.cartFeeTotal });
-    if ((b.rangeBallsTotal ?? 0) > 0) lines.push({ label: 'Range balls', detail: '', cents: b.rangeBallsTotal! });
+    // CART-3: say who rides and which buckets.
+    const riding = b.cartRiders != null && b.cartRiders < b.players ? Math.min(n, b.cartRiders) : null;
+    if (f.cartFeeTotal > 0) lines.push({ label: 'Cart', detail: riding != null ? `${riding} riding` : '', cents: f.cartFeeTotal });
+    // Free buckets still show, so the counter hands them over.
+    const buckets = ballWords(ballCounts(b.rangeBallsSize));
+    if ((b.rangeBallsTotal ?? 0) > 0 || buckets) lines.push({ label: 'Range balls', detail: buckets, cents: b.rangeBallsTotal ?? 0 });
     parts = f.greenFeeTotal + f.cartFeeTotal + (b.rangeBallsTotal ?? 0);
   } else {
     // No parts stored: the sheet prorates the whole total (partRound), so the round line is that less the fee.

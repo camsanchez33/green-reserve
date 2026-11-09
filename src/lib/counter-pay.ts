@@ -76,7 +76,7 @@ export async function settleAtCounter(courseId: string, bookingId: string, opts:
   const booking = await prisma.booking.findFirst({
     where: { id: bookingId, courseId },
     select: { readerStartedAt: true, shopLockedAt: true, noShowAt: true, courseId: true, golferName: true, status: true, paymentStatus: true, players: true, totalAmount: true, accessFeeTotal: true, shopTotalCents: true, shopTaxCents: true,
-      greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, residentPlayers: true, residentRateCents: true, memberRateCents: true, memberCartCents: true, feePaidCents: true,
+      greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, residentPlayers: true, residentRateCents: true, memberRateCents: true, memberCartCents: true, cartRiders: true, cartUnitCents: true, feePaidCents: true,
       cancellationFeeChargeId: true, cancellationFeeTotal: true, teeTime: { select: { date: true, time: true } }, course: { select: { timezone: true, stripeAccountId: true } } },
   });
   if (!booking) return { ok: false, status: 404, error: 'Not found' };
@@ -176,7 +176,7 @@ export async function settleAtCounter(courseId: string, bookingId: string, opts:
     const r = await refundSeparateAccessFee(bookingId, 'paid at the counter — no GreenReserve fee on cash', 'operator', opts.actorName);
     if (!r.ok) refundNote = `GreenReserve's booking fee could not be refunded to the golfer's card (${r.error}) — GreenReserve will follow up.`;
   }
-  const after = await prisma.booking.findUniqueOrThrow({ where: { id: bookingId }, select: { totalAmount: true, accessFeeTotal: true, players: true, shopTotalCents: true, shopTaxCents: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, residentPlayers: true, residentRateCents: true, memberRateCents: true, memberCartCents: true } });
+  const after = await prisma.booking.findUniqueOrThrow({ where: { id: bookingId }, select: { totalAmount: true, accessFeeTotal: true, players: true, shopTotalCents: true, shopTaxCents: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, residentPlayers: true, residentRateCents: true, memberRateCents: true, memberCartCents: true, cartRiders: true, cartUnitCents: true } });
   return { ok: true, amountCents: acct ? acct.amountCents : counterDueCents(after, cip), note: [holdNote, refundNote].filter(Boolean).join(' ') || null };
 }
 

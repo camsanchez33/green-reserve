@@ -67,6 +67,8 @@ export type PartyBooking = {
   players: number; greenFeeTotal: number; cartFeeTotal: number;
   residentPlayers: number; residentRateCents: number | null;
   memberRateCents: number | null; memberCartCents: number | null;
+  /** CART-3: how many of the group ride (null = all of them), and the per-cart price when carts are priced per cart. */
+  cartRiders?: number | null; cartUnitCents?: number | null;
 };
 
 /**
@@ -78,23 +80,29 @@ export type PartyBooking = {
  */
 export function partyFees(b: PartyBooking, n: number, publicRate: { greenFeeCents: number; cartFeeCents: number }): { greenFeeTotal: number; cartFeeTotal: number } {
   const per = (total: number) => (b.players > 0 ? Math.round((total * n) / b.players) : 0);
+  // CART-3: a per-player cart where only some of the group ride — the booker's side holds the riders first, so the
+  // part that showed (or stays) pays for min(n, riders) of them; the walkers pay no cart. Per cart keeps its old rule.
+  const riders = b.cartUnitCents == null && b.cartRiders != null && b.cartRiders < b.players ? b.cartRiders : null;
+  const cartFor = (total: number) => (riders == null ? per(total) : riders > 0 ? Math.round((total * Math.min(n, riders)) / riders) : 0);
   if (b.memberRateCents != null && n >= 1) {
     const guests = b.players - 1;
     const guestGreen = guests > 0 ? Math.round((b.greenFeeTotal - b.memberRateCents) / guests) : publicRate.greenFeeCents;
     const greenFeeTotal = b.memberRateCents + (n - 1) * guestGreen;
     let cartFeeTotal = 0;
     if (b.cartFeeTotal > 0) {
-      if (b.memberCartCents == null) cartFeeTotal = per(b.cartFeeTotal);
+      if (b.memberCartCents == null) cartFeeTotal = cartFor(b.cartFeeTotal);
       else {
-        const guestCart = guests > 0 ? Math.round((b.cartFeeTotal - b.memberCartCents) / guests) : publicRate.cartFeeCents;
-        cartFeeTotal = b.memberCartCents + (n - 1) * guestCart;
+        // The member rides first; the other riders pay what a rider on this booking pays.
+        const otherRiders = (riders ?? b.players) - 1;
+        const guestCart = otherRiders > 0 ? Math.round((b.cartFeeTotal - b.memberCartCents) / otherRiders) : publicRate.cartFeeCents;
+        cartFeeTotal = b.memberCartCents + ((riders == null ? n : Math.min(n, riders)) - 1) * guestCart;
       }
     }
     return { greenFeeTotal, cartFeeTotal };
   }
   if (b.residentPlayers > 0) {
     const others = otherPerPlayerCents(b) ?? publicRate.greenFeeCents;
-    return { greenFeeTotal: groupGreenFee(n, others, b.residentPlayers, b.residentRateCents).greenFeeTotal, cartFeeTotal: per(b.cartFeeTotal) };
+    return { greenFeeTotal: groupGreenFee(n, others, b.residentPlayers, b.residentRateCents).greenFeeTotal, cartFeeTotal: cartFor(b.cartFeeTotal) };
   }
-  return { greenFeeTotal: per(b.greenFeeTotal), cartFeeTotal: per(b.cartFeeTotal) };
+  return { greenFeeTotal: per(b.greenFeeTotal), cartFeeTotal: cartFor(b.cartFeeTotal) };
 }

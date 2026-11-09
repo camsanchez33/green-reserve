@@ -21,7 +21,7 @@ export async function registerRounds(courseId: string, date: string, nowTime: st
   const [owing, open, switches] = await Promise.all([
     prisma.booking.findMany({
       where: { courseId, status: 'confirmed', paymentStatus: { notIn: ['paid', 'paid_offline', 'on_account'] }, teeTime: { date } },
-      select: { id: true, golferName: true, players: true, totalAmount: true, accessFeeTotal: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, residentPlayers: true, residentRateCents: true, memberRateCents: true, memberCartCents: true, feePaidCents: true, shopTotalCents: true, shopFeeCents: true, shopTaxCents: true, noShowAt: true, teeTime: { select: { time: true, holes: true } } },
+      select: { id: true, golferName: true, players: true, totalAmount: true, accessFeeTotal: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, residentPlayers: true, residentRateCents: true, memberRateCents: true, memberCartCents: true, cartRiders: true, cartUnitCents: true, feePaidCents: true, shopTotalCents: true, shopFeeCents: true, shopTaxCents: true, noShowAt: true, teeTime: { select: { time: true, holes: true } } },
       orderBy: { teeTime: { time: 'asc' } },
     }),
     prisma.teeTime.findMany({

@@ -190,7 +190,7 @@ export async function moveBooking(opts: {
         rate = lapsed ? rate : tier
           ? applyTierRates(slot, tier)
           // A member rate whose tier is gone: keep what they paid per player.
-          : { greenFeeCents: Math.round(b.greenFeeTotal / b.players), cartFeeCents: b.cartSelected ? Math.round(b.cartFeeTotal / b.players) : slot.cartFeeCents };
+          : { greenFeeCents: Math.round(b.greenFeeTotal / b.players), cartFeeCents: b.cartSelected ? Math.round(b.cartFeeTotal / (b.cartUnitCents == null && b.cartRiders ? b.cartRiders : b.players)) : slot.cartFeeCents };
         memberN = lapsed ? 0 : tier ? memberPlayers(b.players, tier) : b.players;
         rateIsOwn = !lapsed && !tier;
         spot = memberSpot(tier, rate);
@@ -223,7 +223,11 @@ export async function moveBooking(opts: {
       spot = spot.memberRateCents != null ? { ...spot, memberRateCents: seat(ownSeat) } : spot;
       // CART-1: a group moved onto a cart-only time takes a cart there.
       const cartOn = b.cartSelected || slot.walkingAllowed === false;
-      let newCart = cartOn ? (memberN ? splitTotal(b.players, memberN, rate.cartFeeCents, slot.cartFeeCents) : rate.cartFeeCents * b.players) : 0;
+      // CART-3: a per-player cart where only some ride — only the riders pay at the new time, the member riding
+      // first (lib/member-rates partyFees' rule). A cart-only time puts everyone back in a cart.
+      const ppRiders = b.cartUnitCents == null && b.cartSelected && b.cartRiders != null && b.cartRiders < b.players && slot.walkingAllowed !== false ? b.cartRiders : null;
+      const riding = ppRiders ?? b.players;
+      let newCart = cartOn ? (memberN ? splitTotal(riding, Math.min(memberN, riding), rate.cartFeeCents, slot.cartFeeCents) : rate.cartFeeCents * riding) : 0;
       // PRICE-3: a round pack's seats stay free on the new time (the rounds are already taken); the rest
       // of the group pays the new time's public price.
       let coveredSeats = 0;
@@ -272,7 +276,7 @@ export async function moveBooking(opts: {
       if (!keep) {
         data.residentPlayers = residents.residentPlayers; data.residentRateCents = residents.residentRateCents;
         data.cartSelected = cartOn;
-        data.cartUnitCents = cartPriced.cartUnitCents; data.cartRiders = cartPriced.cartRiders;
+        data.cartUnitCents = cartPriced.cartUnitCents; data.cartRiders = cartPriced.cartRiders ?? ppRiders;
         data.memberRateCents = spot.memberRateCents; data.memberCartCents = spot.memberCartCents;
         data.lastMinutePct = dealSet ? lmPct : 0;
         data.demandPct = dealSet ? 0 : dmPct;

@@ -418,7 +418,7 @@ function ManagePageInner() {
   if (view === 'change-players') {
     // The same pricing the server applies: the member's spot or residents first (lib/member-rates).
     const p = info.party;
-    const fees = partyFees({ players: info.players, greenFeeTotal: info.greenFeeTotal, cartFeeTotal: info.cartFeeTotal, residentPlayers: p?.residentPlayers ?? 0, residentRateCents: p?.residentRateCents ?? null, memberRateCents: p?.memberRateCents ?? null, memberCartCents: p?.memberCartCents ?? null },
+    const fees = partyFees({ players: info.players, greenFeeTotal: info.greenFeeTotal, cartFeeTotal: info.cartFeeTotal, residentPlayers: p?.residentPlayers ?? 0, residentRateCents: p?.residentRateCents ?? null, memberRateCents: p?.memberRateCents ?? null, memberCartCents: p?.memberCartCents ?? null, cartRiders: p?.cartRiders ?? null, cartUnitCents: p?.cartUnitCents ?? null },
       selectedPlayers, { greenFeeCents: p?.publicGreenCents ?? 0, cartFeeCents: p?.publicCartCents ?? 0 });
     const newGreen = fees.greenFeeTotal;
     // CART-2: a per-cart booking re-counts its carts at its own cart price (lib/cart-pricing resizeCart, the server's rule).
