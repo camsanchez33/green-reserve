@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 687,
-    "routes": 298,
-    "libs": 251,
+    "files": 692,
+    "routes": 299,
+    "libs": 253,
     "models": 72,
     "orphans": 11,
     "ungatedRoutes": 3
@@ -7329,7 +7329,7 @@
     },
     {
       "path": "src/app/api/operator/shop-sales/route.ts",
-      "lines": 299,
+      "lines": 309,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7366,6 +7366,7 @@
         "@/lib/register",
         "@/lib/register-open",
         "@/lib/session",
+        "@/lib/shop-receipt",
         "@/lib/shop-sales",
         "@/lib/sms-consent",
         "@/lib/sms-consent-copy",
@@ -8950,8 +8951,8 @@
     },
     {
       "path": "src/app/dashboard/messages/page.tsx",
-      "lines": 195,
-      "purpose": "",
+      "lines": 231,
+      "purpose": "MSG-1 (Cam 2026-11-09, his notes on the Messages tab):",
       "brain": [],
       "exports": [
         {
@@ -8969,10 +8970,11 @@
         "@/components/dashboard/LoadError",
         "@/components/dashboard/Toast",
         "@/components/ui/Card",
+        "@/lib/birdie/ask",
         "@/lib/contact",
         "@/lib/dashboard-fetch",
         "@/lib/format",
-        "lucide-react",
+        "@/lib/support-ticket",
         "next/navigation",
         "react"
       ],
@@ -9263,7 +9265,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 908,
+      "lines": 890,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -9286,6 +9288,7 @@
         "@/components/dashboard/SmsConsentAsk",
         "@/components/dashboard/StaffNotice",
         "@/components/dashboard/StockTab",
+        "@/components/dashboard/shop/SaleReceiptPanel",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/components/ui/field",
@@ -9957,6 +9960,39 @@
       "usedBy": []
     },
     {
+      "path": "src/app/receipt/shop/[id]/page.tsx",
+      "lines": 38,
+      "purpose": "RECEIPT-3 (Cam 2026-11-09:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (ShopReceiptPage)",
+          "kind": "component"
+        },
+        {
+          "name": "dynamic",
+          "kind": "const"
+        },
+        {
+          "name": "metadata",
+          "kind": "const"
+        }
+      ],
+      "route": "/receipt/shop/[id]",
+      "kind": "page",
+      "methods": [],
+      "auth": "golfer",
+      "guard": "token",
+      "imports": [
+        "@/components/CourseHeaderBar",
+        "@/components/dashboard/shop/ShopReceiptBody",
+        "@/components/ui/Card",
+        "@/lib/shop-receipt",
+        "next"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/robots.ts",
       "lines": 13,
       "purpose": "",
@@ -10225,6 +10261,7 @@
         "src/app/pay/event/[id]/page.tsx",
         "src/app/pay/shop/[id]/page.tsx",
         "src/app/receipt/[bookingId]/page.tsx",
+        "src/app/receipt/shop/[id]/page.tsx",
         "src/app/statement/[id]/page.tsx"
       ]
     },
@@ -13060,6 +13097,66 @@
       ]
     },
     {
+      "path": "src/components/dashboard/shop/SaleReceiptPanel.tsx",
+      "lines": 65,
+      "purpose": "RECEIPT-3 (Cam 2026-11-09:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "ReceiptSendRow",
+          "kind": "component"
+        },
+        {
+          "name": "ReceiptTarget",
+          "kind": "type"
+        },
+        {
+          "name": "SaleReceiptPanel",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/dashboard/shop/ShopReceiptBody",
+        "@/components/ui/field",
+        "@/lib/dashboard-fetch",
+        "@/lib/shop-receipt",
+        "lucide-react",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/shop/page.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/shop/ShopReceiptBody.tsx",
+      "lines": 39,
+      "purpose": "RECEIPT-3:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "ShopReceiptBody",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/lib/shop-receipt"
+      ],
+      "usedBy": [
+        "src/app/receipt/shop/[id]/page.tsx",
+        "src/components/dashboard/shop/SaleReceiptPanel.tsx"
+      ]
+    },
+    {
       "path": "src/components/home/ProductShot.tsx",
       "lines": 16,
       "purpose": "",
@@ -13200,6 +13297,7 @@
         "src/app/g/[slug]/page.tsx",
         "src/app/pay/event/[id]/page.tsx",
         "src/app/pay/shop/[id]/page.tsx",
+        "src/app/receipt/shop/[id]/page.tsx",
         "src/app/sms-consent/page.tsx",
         "src/app/statement/[id]/page.tsx",
         "src/components/CourseJoin.tsx",
@@ -13613,7 +13711,8 @@
         "src/components/dashboard/members/ImportMembers.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
         "src/components/dashboard/money/RefundForm.tsx",
-        "src/components/dashboard/onboarding/PageReviewStep.tsx"
+        "src/components/dashboard/onboarding/PageReviewStep.tsx",
+        "src/components/dashboard/shop/SaleReceiptPanel.tsx"
       ]
     },
     {
@@ -15382,6 +15481,7 @@
       ],
       "usedBy": [
         "src/app/dashboard/analytics/page.tsx",
+        "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/settings/page.tsx",
         "src/components/birdie/BirdieWidget.tsx",
         "src/components/birdie/ConfirmCard.tsx"
@@ -18766,7 +18866,8 @@
         "src/components/dashboard/money/PayoutsTable.tsx",
         "src/components/dashboard/money/RefundForm.tsx",
         "src/components/dashboard/money/SalesPanel.tsx",
-        "src/components/dashboard/settings/WhoPaysWhat.tsx"
+        "src/components/dashboard/settings/WhoPaysWhat.tsx",
+        "src/components/dashboard/shop/SaleReceiptPanel.tsx"
       ]
     },
     {
@@ -23572,6 +23673,7 @@
         "src/lib/session.ts",
         "src/lib/sheet-token.ts",
         "src/lib/shop-catalog.ts",
+        "src/lib/shop-receipt.ts",
         "src/lib/shop-report.ts",
         "src/lib/shop-sales.ts",
         "src/lib/shop-stock.ts",
@@ -25667,6 +25769,49 @@
       ]
     },
     {
+      "path": "src/lib/shop-receipt.ts",
+      "lines": 70,
+      "purpose": "RECEIPT-3 (Cam 2026-11-09:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "publicShopReceipt",
+          "kind": "fn"
+        },
+        {
+          "name": "receiptView",
+          "kind": "fn"
+        },
+        {
+          "name": "ShopReceipt",
+          "kind": "type"
+        },
+        {
+          "name": "shopReceiptUrl",
+          "kind": "fn"
+        },
+        {
+          "name": "staffShopReceipt",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./prisma",
+        "crypto"
+      ],
+      "usedBy": [
+        "src/app/api/operator/shop-sales/route.ts",
+        "src/app/receipt/shop/[id]/page.tsx",
+        "src/components/dashboard/shop/SaleReceiptPanel.tsx",
+        "src/components/dashboard/shop/ShopReceiptBody.tsx"
+      ]
+    },
+    {
       "path": "src/lib/shop-report.ts",
       "lines": 88,
       "purpose": "SHOP-4 (Cam 2026-10-30:",
@@ -26725,6 +26870,39 @@
       "usedBy": [
         "src/app/api/operator/request-changes/route.ts",
         "src/app/api/preview/[courseId]/request-changes/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/support-ticket.ts",
+      "lines": 25,
+      "purpose": "MSG-1 (Cam 2026-11-09):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "dueIn",
+          "kind": "fn"
+        },
+        {
+          "name": "REPLY_HOURS",
+          "kind": "const"
+        },
+        {
+          "name": "ticketRef",
+          "kind": "fn"
+        },
+        {
+          "name": "waitingSince",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/dashboard/messages/page.tsx"
       ]
     },
     {
@@ -33080,6 +33258,10 @@
           "type": "String"
         },
         {
+          "name": "receiptToken",
+          "type": "String"
+        },
+        {
           "name": "paymentIntentId",
           "type": "String"
         },
@@ -33158,6 +33340,7 @@
         "src/lib/data-reset.ts",
         "src/lib/sales-tax.ts",
         "src/lib/sample-data.ts",
+        "src/lib/shop-receipt.ts",
         "src/lib/shop-sales.ts"
       ],
       "readers": [
@@ -33171,6 +33354,7 @@
         "src/lib/round-packs.ts",
         "src/lib/sales-tax.ts",
         "src/lib/sample-data.ts",
+        "src/lib/shop-receipt.ts",
         "src/lib/shop-report.ts",
         "src/lib/shop-sales.ts"
       ]
