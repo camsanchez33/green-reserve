@@ -53,7 +53,8 @@ async function cleanup() {
   const route = readFileSync('src/app/api/operator/register-open/route.ts', 'utf8');
   ok('the route gates open and fix on their own permission', route.includes("requirePermission(session, mode === 'fix' ? 'shop.open_fix' : 'shop.open')") && route.includes("requirePermission(session, 'shop.sell')"));
   const home = readFileSync('src/app/dashboard/home/page.tsx', 'utf8'), shop = readFileSync('src/app/dashboard/shop/page.tsx', 'utf8');
-  ok('Home and the Register ask until it is open; it never blocks a sale', home.includes('<OpenRegister where="home" />') && shop.includes('<OpenRegister where="register" />') && !readFileSync('src/lib/shop-sales.ts', 'utf8').includes('registerOpen'));
+  // DRAWER-1 (Cam 2026-11-09) reverses "never blocks a sale": nothing is charged at the register until it is open (scripts/drawer-cycle-db-test.ts).
+  ok('Home and the Register ask until it is open', home.includes('<OpenRegister where="home" />') && shop.includes('<OpenRegister where="register" onStatus={setRegStatus} />'));
   ok('opens are cleared by the launch wipe and a test-course reset', WIPED_TABLES.includes('RegisterOpen') && readFileSync('src/lib/data-reset.ts', 'utf8').includes('prisma.registerOpen.deleteMany({ where: { courseId } })'));
 
   await cleanup(); await prisma.$disconnect();

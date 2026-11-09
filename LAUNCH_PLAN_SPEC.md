@@ -110,3 +110,11 @@ the printable starter's day sheet with course-chosen columns.
     just saying at the bottom and this is for whole site" — confirm with Cam).
 - **4. Review** — "just needs to be better and have purpose".
 - **After the event is made** — "the whole thing is just a cluster fuck", gives no guidance or structure. **Redo.**
+
+---
+
+## Notes — Schedule tab (Cam 2026-11-09, handwritten)
+- "All the info is good, just want the process of adding and adjusting easier — think kind of how we adjust the
+  membership."
+- "The whole tab is just kind of jumbled."
+- "The dynamic demand pricing — lets lay that out a bit more so the course can understand."

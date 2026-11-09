@@ -117,14 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-11-09 05:14 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ fd175d55</span>
-    <span>27 uncommitted</span>
+    <span>2026-11-09 05:40 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 0b64873f</span>
+    <span>40 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">163 runs have shipped that the queue doesn't know about</div>
+<div class="lede">165 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-31. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">84ccc1ed</span><span>CART-3: riders and range balls at checkout (#345)</span></li>
+<li><span class="h">29496778</span><span>CART-3: riders and range balls at checkout (Riding − N +, buckets − N +)</span></li>
 <li><span class="h">235630c1</span><span>POS-8: Stock list + one item form, upload what you have, sell anyway, Sales cleanup (#344)</span></li>
 <li><span class="h">3d31bc28</span><span>POS-8: Stock list + one item form, upload what you have, sell anyway, Sales cleanup</span></li>
 <li><span class="h">44217555</span><span>POS-7: Open the register (locked starting cash), tee sheet icons, sliding tabs (#343)</span></li>
@@ -300,7 +302,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M LAUNCH_PLAN_SPEC.md</code></li><li><code>M  STATUS.artifact.html</code></li><li><code>M  STATUS.json</code></li><li><code>M  STATUS.md</code></li><li><code>MM docs/CODEMAP.md</code></li><li><code>MM docs/codemap.json</code></li><li><code>M  scripts/cart-pricing-test.ts</code></li><li><code>A  scripts/checkout-extras-db-test.ts</code></li><li><code>M  scripts/words-guard.baseline.json</code></li><li><code>M  src/app/api/operator/bookings/route.ts</code></li><li><code>A  src/app/api/operator/checkout-options/route.ts</code></li><li><code>M  src/app/api/operator/tee-times/route.ts</code></li><li><code>M  src/app/dashboard/page.tsx</code></li><li><code>M  src/app/manage/[bookingId]/page.tsx</code></li><li><code>A  src/components/dashboard/CheckoutExtras.tsx</code></li><li><code>M  src/components/dashboard/GroupTicket.tsx</code></li><li><code>M  src/lib/cart-pricing.ts</code></li><li><code>M  src/lib/change-party.ts</code></li><li><code>A  src/lib/checkout-extras.ts</code></li><li><code>M  src/lib/counter-pay.ts</code></li></ul>
+<ul class="plain"><li><code>MM CLAUDE.md</code></li><li><code>M  LAUNCH_PLAN_SPEC.md</code></li><li><code>M  STATUS.artifact.html</code></li><li><code>M  STATUS.json</code></li><li><code>M  STATUS.md</code></li><li><code>MM docs/CODEMAP.md</code></li><li><code>MM docs/codemap.json</code></li><li><code>A  prisma/migrations/20261109120000_drawer_cycle/migration.sql</code></li><li><code>A  prisma/migrations/20261110000000_cart_numbers/migration.sql</code></li><li><code>M  prisma/schema.prisma</code></li><li><code>A  scripts/cart-numbers-test.ts</code></li><li><code>M  scripts/design-guard.baseline.json</code></li><li><code>AM scripts/drawer-cycle-db-test.ts</code></li><li><code>M  scripts/pos-register-test.ts</code></li><li><code>M  scripts/register-open-db-test.ts</code></li><li><code>M  scripts/words-guard.baseline.json</code></li><li><code>M  src/app/api/operator/bookings/route.ts</code></li><li><code>A  src/app/api/operator/cart-numbers/route.ts</code></li><li><code>M  src/app/api/operator/checkout-options/route.ts</code></li><li><code>M  src/app/api/operator/reader-rounds/route.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -345,7 +347,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-11-08 &middot; 0d</td></tr>
 <tr><td><code>DENSE_UI_SPEC.md</code></td><td class="num">1</td><td class="num">2026-11-01 &middot; 7d</td></tr>
 <tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-20 &middot; 19d</td></tr>
-<tr><td><code>LAUNCH_PLAN_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-11-08 &middot; 0d</td></tr>
+<tr><td><code>LAUNCH_PLAN_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-11-09 &middot; 0d</td></tr>
 <tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-26 &middot; 13d</td></tr>
 <tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-25 &middot; 14d</td></tr>
 <tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 16d</td></tr>
@@ -383,6 +385,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 19d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">84ccc1ed</td><td class="num">2026-11-09</td><td>CART-3: riders and range balls at checkout (#345)</td></tr>
+<tr><td class="num">ded0ed45</td><td class="num">2026-11-09</td><td>queue/spec update</td></tr>
+<tr><td class="num">29496778</td><td class="num">2026-11-09</td><td>CART-3: riders and range balls at checkout (Riding − N +, buckets − N +)</td></tr>
 <tr><td class="num">235630c1</td><td class="num">2026-11-08</td><td>POS-8: Stock list + one item form, upload what you have, sell anyway, Sales cleanup (#344)</td></tr>
 <tr><td class="num">44944043</td><td class="num">2026-11-09</td><td>queue/spec update</td></tr>
 <tr><td class="num">3d31bc28</td><td class="num">2026-11-09</td><td>POS-8: Stock list + one item form, upload what you have, sell anyway, Sales cleanup</td></tr>
@@ -392,9 +397,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">def61397</td><td class="num">2026-11-09</td><td>POS-6: Stock is where items are added; round packs off; tiles, ticket, Sales filters</td></tr>
 <tr><td class="num">0682ac62</td><td class="num">2026-11-08</td><td>POS-5: Pro shop Stock, Round packs and Close out tabs; sliding tab highlight (#340)</td></tr>
 <tr><td class="num">b99b4c8a</td><td class="num">2026-11-08</td><td>POS-5: Pro shop Stock, Round packs and Close out as their own tabs; sliding tab highlight</td></tr>
-<tr><td class="num">b8512431</td><td class="num">2026-11-08</td><td>ACC-1: every booking and payment figure agrees across the site (#339)</td></tr>
-<tr><td class="num">260583c3</td><td class="num">2026-11-08</td><td>ACC-1: one set of definitions so every booking and payment figure agrees</td></tr>
-<tr><td class="num">437456cc</td><td class="num">2026-11-08</td><td>POS-4: Pro shop register as a real POS (#338)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

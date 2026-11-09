@@ -20,6 +20,7 @@ import { todayIn, addDaysStr } from './course-time';
 import { teeTimeInstant } from './booking-events';
 import { counterDueCents } from './counter-pay';
 import { roundChargeCents } from './shop';
+import { sessionRows, kindOf } from './register-open';
 
 type Result<T> = { ok: true; value: T } | { ok: false; status: number; error: string };
 const fail = (status: number, error: string) => ({ ok: false as const, status, error });
@@ -44,6 +45,8 @@ export type DaySummary = {
 export type CloseView = {
   id: string; day: string; openingFloatCents: number; expectedCashCents: number; countedCashCents: number; differenceCents: number;
   cashSalesCents: number; counterRoundsCents: number; cashRefundsCents: number; otherCashCents: number; cardCents: number; note: string; closedBy: string; createdAt: string;
+  /** DRAWER-1: left in the drawer for the next opening, and taken out to deposit. Null before DRAWER-1. */
+  leaveInCents: number | null; depositCents: number | null;
 };
 type CloseRow = Omit<CloseView, 'createdAt'> & { createdAt: Date; courseId: string };
 const closeView = ({ courseId: _c, ...c }: CloseRow): CloseView => ({ ...c, createdAt: c.createdAt.toISOString() });
@@ -119,23 +122,57 @@ const cents = (v: unknown) => {
   return Number.isInteger(n) && n >= 0 && n <= MAX_CENTS ? n : null;
 };
 
-/** Count the drawer: snapshot the day's figures with the count. */
-export async function closeDay(courseId: string, input: { day?: unknown; openingFloatCents?: unknown; countedCashCents?: unknown; note?: unknown }, closedBy: string): Promise<Result<CloseView>> {
-  let float = cents(input.openingFloatCents ?? 0);
+/** The cash a close-out row counted as taken that day (before the float). */
+const takenOf = (c: { cashSalesCents: number; counterRoundsCents: number; otherCashCents: number; cashRefundsCents: number }) =>
+  c.cashSalesCents + c.counterRoundsCents + c.otherCashCents - c.cashRefundsCents;
+
+/**
+ * The drawer a close-out counts against (DRAWER-1). A day the register was opened counts from the LOCKED starting cash
+ * of the session that stands (POS-7 — never a number typed here). A session reopened after a close-out the same day
+ * counts only the cash taken since that close-out: its float is what the reopen counted.
+ */
+export async function drawerBase(courseId: string, day: string): Promise<{ floatCents: number; takenBaseCents: number; opened: boolean }> {
+  const rows = await prisma.registerOpen.findMany({ where: { courseId, day }, orderBy: { seq: 'asc' }, select: { seq: true, kind: true, startingCashCents: true, createdAt: true } });
+  if (!rows.length) return { floatCents: 0, takenBaseCents: 0, opened: false };
+  const session = sessionRows(rows);
+  const start = session[0];
+  const floatCents = session[session.length - 1].startingCashCents;
+  if (kindOf(start) !== 'reopen') return { floatCents, takenBaseCents: 0, opened: true };
+  const before = await prisma.registerClose.findFirst({ where: { courseId, day, createdAt: { lt: start.createdAt } }, orderBy: { createdAt: 'desc' }, select: { cashSalesCents: true, counterRoundsCents: true, otherCashCents: true, cashRefundsCents: true } });
+  return { floatCents, takenBaseCents: before ? takenOf(before) : 0, opened: true };
+}
+
+/**
+ * Count the drawer and close the register (DRAWER-1): snapshot the day's figures with the count, what is left in the
+ * drawer for the next opening, what is taken out to deposit (counted − left), and a note for the next person.
+ * A recount adds a row; the latest stands.
+ */
+export async function closeDay(courseId: string, input: { day?: unknown; openingFloatCents?: unknown; countedCashCents?: unknown; leaveInCents?: unknown; note?: unknown }, closedBy: string): Promise<Result<CloseView>> {
   const counted = cents(input.countedCashCents);
-  if (float === null) return fail(400, 'Enter the starting cash as an amount (0 if the drawer started empty).');
   if (counted === null) return fail(400, 'Enter the cash you counted in the drawer.');
+  const leaveGiven = !(input.leaveInCents === undefined || input.leaveInCents === null || input.leaveInCents === '');
+  const leaveTyped = leaveGiven ? cents(input.leaveInCents) : null;
+  if (leaveGiven && leaveTyped === null) return fail(400, 'Enter what stays in the drawer for the next opening (0 to take it all out).');
+  if (leaveTyped !== null && leaveTyped > counted) return fail(400, 'You can’t leave more than you counted.');
   const s = await daySummary(courseId, typeof input.day === 'string' ? input.day : undefined);
   if (!s.ok) return s;
-  // POS-7: a day the register was opened counts from its LOCKED starting cash — never a number typed here.
-  const opened = await prisma.registerOpen.findFirst({ where: { courseId, day: s.value.day }, orderBy: { seq: 'desc' }, select: { startingCashCents: true } });
-  if (opened) float = opened.startingCashCents;
-  const expected = float + s.value.cashTakenCents;
+  const base = await drawerBase(courseId, s.value.day);
+  let float = base.floatCents;
+  if (!base.opened) {
+    // A day the register was never opened: the starting cash is typed here, as before POS-7.
+    const typed = cents(input.openingFloatCents ?? 0);
+    if (typed === null) return fail(400, 'Enter the starting cash as an amount (0 if the drawer started empty).');
+    float = typed;
+  }
+  const expected = float + s.value.cashTakenCents - base.takenBaseCents;
+  // Not given: the drawer keeps the float it started with (never more than is there).
+  const leave = leaveTyped ?? Math.min(float, counted);
   const row = await prisma.registerClose.create({
     data: {
       courseId, day: s.value.day, openingFloatCents: float,
       cashSalesCents: s.value.cashSales.cents, counterRoundsCents: s.value.counterRounds.cents, cashRefundsCents: s.value.cashRefunds.cents, otherCashCents: s.value.otherCash.cents,
       expectedCashCents: expected, countedCashCents: counted, differenceCents: counted - expected,
+      leaveInCents: leave, depositCents: counted - leave,
       cardCents: s.value.card.cents, note: String(input.note ?? '').trim().slice(0, 500), closedBy: closedBy.slice(0, 200),
     },
   });

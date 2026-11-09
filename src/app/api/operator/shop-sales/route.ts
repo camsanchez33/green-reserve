@@ -1,4 +1,5 @@
 import { SMS_NO_CONSENT_STAFF } from '@/lib/sms-consent-copy';
+import { requireRegisterOpen } from '@/lib/register-open';
 import { optInAndConfirm } from '@/lib/sms-consent';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
@@ -102,6 +103,8 @@ export async function POST(req: NextRequest) {
   if (!pay) return NextResponse.json({ error: 'Choose cash, the card reader or a pay link.' }, { status: 400 });
   const readerId = typeof body.readerId === 'string' ? body.readerId : '';
   if (pay === 'reader' && !readerId) return NextResponse.json({ error: 'Pick a card reader.' }, { status: 400 });
+  // DRAWER-1 (Cam 2026-11-09: "shouldn't be able to start taking charges until the register is open").
+  { const closed = await requireRegisterOpen(g.session.courseId); if (closed) return NextResponse.json({ error: closed, registerClosed: true }, { status: 409 }); }
   if (pay === 'cash' || pay === 'account') {
     const denied = requirePermission(g.session, 'sheet.counter_payment');
     if (denied) return denied;
@@ -177,6 +180,8 @@ export async function PATCH(req: NextRequest) {
   if (!id) return NextResponse.json({ error: 'Missing sale.' }, { status: 400 });
   if (body.action === 'void' || body.action === 'paid_cash') {
     if (body.action === 'paid_cash') {
+      // DRAWER-1: cash for an open sale goes in the drawer — only while the register is open.
+      { const closed = await requireRegisterOpen(g.session.courseId); if (closed) return NextResponse.json({ error: closed, registerClosed: true }, { status: 409 }); }
       const denied = requirePermission(g.session, 'sheet.counter_payment');
       if (denied) return denied;
     }

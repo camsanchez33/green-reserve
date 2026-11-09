@@ -109,7 +109,8 @@ export default function ShopPage() {
   const [quote, setQuote] = useState<Quote | null>(null);
   // POS-3: custom amounts, a discount, the cash handed over, and the sale just taken (for its receipt).
   const [customs, setCustoms] = useState<Custom[]>([]);
-  const [customForm, setCustomForm] = useState<{ name: string; amount: string } | null>(null);
+  // DRAWER-1: the register sells only while it's open (null until known).
+  const [regStatus, setRegStatus] = useState<'not_open' | 'open' | 'closed' | null>(null);
   const [discount, setDiscount] = useState<Discount | null>(null);
   const [tendered, setTendered] = useState('');
   const [justPaid, setJustPaid] = useState<Sale | null>(null);
@@ -454,9 +455,10 @@ export default function ShopPage() {
               </div>
             )}
 
-            {/* POS-7: until today's register is open, the register asks for the starting cash (it never blocks a sale). */}
-            {view === 'register' && <div className="mt-5"><OpenRegister where="register" /></div>}
-            {view === 'register' && (
+            {/* DRAWER-1 (Cam 2026-11-09: "shouldn't be able to start taking charges until the register is open"): until
+                it's open (or reopened after a close-out) the register shows only the opening — the server refuses sales too. */}
+            {view === 'register' && <div className="mt-5"><OpenRegister where="register" onStatus={setRegStatus} /></div>}
+            {view === 'register' && regStatus === 'open' && (
             <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
               <Card className="p-4">
                 {!items && !loadError && <p className="text-sm text-ink-muted">Loading your shop…</p>}
@@ -523,12 +525,6 @@ export default function ShopPage() {
                         </div>
                       );
                     })}
-                    {!q.trim() && !cat && (
-                      <>
-                        <button type="button" onClick={() => setCustomForm(f => f ? null : { name: '', amount: '' })} aria-expanded={!!customForm}
-                          className="min-h-[104px] rounded-[10px] border border-dashed border-line-strong text-[14px] font-medium text-ink-soft hover:text-ink">Custom amount</button>
-                      </>
-                    )}
                   </div>
                 )}
               </Card>
@@ -542,20 +538,6 @@ export default function ShopPage() {
                       {!empty && <button type="button" onClick={() => { setCart({}); setCustoms([]); setDiscount(null); setTendered(''); setError(''); setOutOk(new Set()); setOutAsk(null); }} className="text-[12.5px] text-ink-soft hover:text-ink">Clear</button>}
                     </div>
                     <div className="flex-1 px-5 py-2">
-                      {customForm && (
-                        <form className="my-2 bg-paper/70 rounded-md p-3 flex flex-wrap gap-2 items-end" onSubmit={e => {
-                          e.preventDefault();
-                          const c = toCents(customForm.amount);
-                          if (!customForm.name.trim() || !c) { setError('Give the custom amount a name and a price.'); return; }
-                          setCustoms(cs => [...cs, { key: `c${Date.now()}`, name: customForm.name.trim().slice(0, 60), priceCents: c, quantity: 1 }]);
-                          setCustomForm(null); setError('');
-                        }}>
-                          <input value={customForm.name} onChange={e => setCustomForm({ ...customForm, name: e.target.value })} placeholder="What it is" aria-label="Custom amount name" maxLength={60} className={INPUT + ' flex-1 min-w-[8rem]'} autoFocus />
-                          <div className="relative w-24"><span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
-                            <input value={customForm.amount} onChange={e => setCustomForm({ ...customForm, amount: e.target.value })} inputMode="decimal" aria-label="Custom amount price" className={INPUT + ' w-full pl-6'} /></div>
-                          <button type="submit" className="bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-[13px] px-3 py-2">Add</button>
-                        </form>
-                      )}
                       {empty ? <p className="text-sm text-ink-soft py-2">Tap or scan items.</p> : (
                         <ul className="divide-y divide-line-soft">
                           {lines.map(l => (

@@ -88,6 +88,8 @@ export async function GET(req: NextRequest) {
         greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, residentRateCents: true, memberRateCents: true, memberCartCents: true,
         // CART-3: who rides and the range-ball buckets, for checkout's Riding and Range balls rows.
         cartSelected: true, cartRiders: true, cartUnitCents: true, rangeBallsSize: true,
+        // CART-4: the cart numbers the group took (the row, the card, the ticket and the starter's sheet).
+        cartNumbers: true,
         // POS-1a: pro-shop items added to the round, for the panel.
         shopTotalCents: true, shopFeeCents: true, shopTaxCents: true, shopLockedAt: true, shopItems: { orderBy: { createdAt: 'asc' }, select: { id: true, name: true, unitPriceCents: true, quantity: true } } },
     } } : {}),
