@@ -29,6 +29,7 @@ import { formatTeeTime as fmtTime } from '@/lib/format';
 import { PromoCodes } from '@/components/dashboard/PromoCodes';
 import { LastMinuteDeals } from '@/components/dashboard/LastMinuteDeals';
 import { DemandPricing } from '@/components/dashboard/DemandPricing';
+import { SlidingTabs } from '@/components/dashboard/SlidingTabs';
 import { readPlan, checkPlan, columnNames, daysOf, snap, emptyCell, isTime, setRoundSale, type CoursePlan, type DayPlan, type PlanRound, type PriceCell } from '@/lib/course-plan';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -157,6 +158,14 @@ export default function SchedulesPage() {
   const showAges = addAges || rows.some(s => s.seniorRateWeekday != null || s.juniorRateWeekday != null);
   // PRICES-1: on a phone the price table shows one round at a time.
   const [priceRound, setPriceRound] = useState('');
+  // SCHED-2 (Cam 2026-11-09: "the whole tab is just kind of jumbled"): the page in tabs, every part kept mounted
+  // (only hidden) so unsaved prices survive a tab change. Home's demand-pricing link (#demand-pricing) opens its tab.
+  type Tab = 'hours' | 'deals' | 'demand' | 'closed' | 'rules';
+  const [tab, setTab] = useState<Tab>('hours');
+  useEffect(() => { if (window.location.hash === '#demand-pricing') setTab('demand'); }, []);
+  const shownTab = (t: Tab) => tab === t ? '' : 'hidden';
+  // The set of days open for editing (0 = the usual week); one at a time, like a membership.
+  const [openSet, setOpenSet] = useState<number | null>(null);
 
   // ── Editing the plan ───────────────────────────────────────────────────────
   const edit = (f: (p: CoursePlan) => CoursePlan) => setPlan(p => p ? f(p) : p);
@@ -238,10 +247,10 @@ export default function SchedulesPage() {
     setBusy(true);
     try {
       const r = await dfetch<Row[]>('/api/operator/schedule', { method: 'PUT', body: JSON.stringify({ coursePlan: plan }) });
-      if (!r.ok || !Array.isArray(r.data)) { toast(r.ok ? 'It came back empty — refresh and check.' : r.error); return; }
+      if (!r.ok || !Array.isArray(r.data)) { toast(r.ok ? 'Came back empty — refresh.' : r.error); return; }
       setRows(r.data);
       setPending(null);
-      toast('Saved. Your tee sheet is updated.', 'ok');
+      toast('Saved.', 'ok');
     } finally { setBusy(false); }
   }
 
@@ -264,7 +273,7 @@ export default function SchedulesPage() {
     setBusy(false);
     if (!r.ok) { toast(r.error); return; }
     setBlackouts(prev => prev.filter(b => b.id !== id));
-    toast('Reopened. That day’s tee times are back on the sheet.', 'ok');
+    toast('Reopened.', 'ok');
   }
 
   if (pageAccess.loaded && !pageAccess.can('schedule.view')) return (
@@ -286,6 +295,20 @@ export default function SchedulesPage() {
   const dayPlans = plan ? [plan.usual, ...plan.different] : [];
   const sold = plan ? plan.rounds.filter(r => r.on && rounds.some(x => x.key === r.key)) : [];
   const labelOf = (key: string) => rounds.find(r => r.key === key)?.label ?? 'Round';
+  const dollars = (n: number) => '$' + (Number.isInteger(n) ? n : n.toFixed(2));
+  /** One set of days in a line: its hours, then each round's first price (weekday/weekend when they differ). */
+  const setSummary = (d: DayPlan) => {
+    if (d.closed) return 'Closed';
+    const days = plan ? daysOf(plan, d) : [];
+    const wd = days.some(x => x >= 1 && x <= 5), we = days.some(x => x === 0 || x === 6);
+    const prices = sold.map(r => {
+      const c = d.prices[r.key]?.[0];
+      if (!c) return null;
+      const p = wd && we && c.weekday !== c.weekend ? `${dollars(c.weekday)}/${dollars(c.weekend)}` : dollars(wd ? c.weekday : c.weekend);
+      return sold.length > 1 ? `${labelOf(r.key)} ${p}` : p;
+    }).filter(Boolean);
+    return [`${fmtTime(d.first)}–${fmtTime(d.last)}, every ${d.interval} min`, ...prices, d.changes.length ? `${d.changes.length + 1} prices a day` : ''].filter(Boolean).join(' · ');
+  };
 
   /** One set of days' hours: first tee, last tee, minutes apart. */
   const hoursFields = (i: number, d: DayPlan) => (
@@ -443,49 +466,25 @@ export default function SchedulesPage() {
           <div className="min-w-0 max-w-[46em]">
             <h1 className="font-serif text-[32px] leading-none text-ink">Schedule</h1>
           </div>
+          <SlidingTabs<Tab> value={tab} onChange={setTab} label="Schedule"
+            tabs={[['hours', 'Hours and prices'], ['deals', 'Deals'], ['demand', 'Demand pricing'], ['closed', 'Closed days'], ['rules', 'Booking rules']]} />
 
           {loadError && <LoadError message={loadError} onRetry={loadSchedules} />}
           {productsError && <LoadError message={`Couldn't load your rounds — ${productsError}`} onRetry={loadProducts} />}
           {!plan && !loadError && <Card className="p-5 text-[14px] text-ink-muted">Loading your schedule…</Card>}
           {plan && !loading && rows.length === 0 && !loadError && (
-            <p className="bg-warn/5 border border-warn/20 rounded-md px-4 py-3 text-[13.5px] text-ink">No tee times yet.</p>
+            <p className={'bg-warn/5 border border-warn/20 rounded-md px-4 py-3 text-[13.5px] text-ink ' + shownTab('hours')}>No tee times yet.</p>
           )}
 
           {plan && (
-            <>
-              {/* 1. When you're open */}
-              <Card className="p-5 space-y-5">
-                <div>
-                  <h2 className="text-[17px] font-semibold text-ink">When you&apos;re open</h2>
-                  <p className="text-[13px] text-ink-soft mt-1">{plan.different.length ? dayList(daysOf(plan, plan.usual)) : 'Every day'}</p>
-                </div>
-                {plan.usual.closed ? null : hoursFields(0, plan.usual)}
-                {plan.different.map((d, j) => (
-                  <div key={j} className="bg-paper/70 rounded-md p-4 space-y-3">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex flex-wrap gap-1.5" role="group" aria-label="Days">
-                        {WEEK.map(day => (
-                          <button key={day} type="button" disabled={!canEdit} onClick={() => toggleDiffDay(j + 1, day)} aria-pressed={d.days.includes(day)}
-                            className={'px-2.5 py-1 rounded-md text-[13px] border ' + (d.days.includes(day) ? 'bg-pine text-white border-pine' : 'bg-white text-ink-soft border-line hover:text-ink')}>{DAYS[day]}</button>
-                        ))}
-                      </div>
-                      {canEdit && <button type="button" onClick={() => edit(p => ({ ...p, different: p.different.filter((_, k) => k !== j) }))} className="text-[13px] text-ink-muted hover:text-bad">Remove</button>}
-                    </div>
-                    <label className="flex items-center gap-2 text-[13.5px] text-ink">
-                      <input type="checkbox" checked={d.closed} disabled={!canEdit} onChange={e => setDay(j + 1, { closed: e.target.checked })} className="w-4 h-4 accent-pine" />
-                      Closed these days
-                    </label>
-                    {!d.closed && hoursFields(j + 1, d)}
-                  </div>
-                ))}
-                {canEdit && <button type="button" onClick={addDifferentDays} className="text-[13px] font-medium text-pine hover:underline">Different hours on some days</button>}
-              </Card>
-
-              {/* 2. What golfers can book */}
+            <div className={'space-y-6 ' + shownTab('hours')}>
+              {/* What golfers can book */}
               <Card className="p-5">
-                <h2 className="text-[17px] font-semibold text-ink">What golfers can book</h2>
-                <p className="text-[13px] text-ink-soft mt-1 mb-3"><Link href="/dashboard/settings?section=Your+course" className="text-pine hover:underline">Edit rounds</Link></p>
-                <div className="divide-y divide-line-soft">
+                <div className="flex flex-wrap items-baseline justify-between gap-3">
+                  <h2 className="text-[17px] font-semibold text-ink">What golfers can book</h2>
+                  <Link href="/dashboard/settings?section=Your+course" className="text-[13px] font-medium text-pine hover:underline">Edit rounds</Link>
+                </div>
+                <div className="mt-2 divide-y divide-line-soft">
                   {plan.rounds.filter(r => rounds.some(x => x.key === r.key)).map(r => (
                     <div key={r.key} className="py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
                       <label className="flex items-center gap-2 min-w-[10rem]">
@@ -513,30 +512,79 @@ export default function SchedulesPage() {
                 </div>
               </Card>
 
-              {/* 3. What it costs */}
-              <Card className="p-5 space-y-6">
-                <div>
-                  <h2 className="text-[17px] font-semibold text-ink">What it costs</h2>
-                  {!showAges && canEdit && <p className="text-[13px] mt-1"><button type="button" onClick={() => setAddAges(true)} className="text-pine font-medium hover:underline">Add senior/junior prices</button></p>}
+              {/* SCHED-2 (Cam 2026-11-09: "the process of adding and adjusting easier — think how we adjust the
+                  membership"): one row per set of days — its hours and prices in a line, Edit opens that set's hours and
+                  price table in place (one at a time), "Add different days" adds a set and opens it. */}
+              <Card className="p-5">
+                <div className="flex flex-wrap items-baseline justify-between gap-3">
+                  <h2 className="text-[17px] font-semibold text-ink">Hours and prices</h2>
+                  <div className="flex flex-wrap gap-4">
+                    {!showAges && canEdit && <button type="button" onClick={() => setAddAges(true)} className="text-[13px] font-medium text-pine hover:underline">Add senior/junior prices</button>}
+                    {canEdit && <button type="button" onClick={() => { addDifferentDays(); setOpenSet(plan.different.length + 1); }} className="text-[13px] font-medium text-pine hover:underline">Add different days</button>}
+                  </div>
                 </div>
-                {dayPlans.map((d, i) => d.closed ? null : (
-                  <section key={i}>
-                    {plan.different.length > 0 && <h3 className="text-[14px] font-semibold text-ink mb-2">{dayList(daysOf(plan, d))}</h3>}
-                    {sold.length === 0 ? <p className="text-[13.5px] text-ink-muted">Turn on a round above to price it.</p> : priceTable(i, d)}
-                  </section>
-                ))}
+                <ul className="mt-2 divide-y divide-line-soft">
+                  {dayPlans.map((d, i) => {
+                    const isOpen = openSet === i;
+                    const name = i === 0 ? (plan.different.length ? dayList(daysOf(plan, d)) || 'No days left' : 'Every day') : dayList(d.days) || 'Pick the days';
+                    return (
+                      <li key={i} className="py-3">
+                        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                          <span className="text-[14px] font-semibold text-ink min-w-[9rem]">{name}</span>
+                          <span className="text-[13px] text-ink-soft flex-1 min-w-0 tabular-nums">{setSummary(d)}</span>
+                          <span className="flex gap-3">
+                            <button type="button" onClick={() => setOpenSet(isOpen ? null : i)} aria-expanded={isOpen} className="text-[13px] font-medium text-pine hover:underline">{isOpen ? 'Done' : canEdit ? 'Edit' : 'Open'}</button>
+                            {i > 0 && canEdit && <button type="button" onClick={() => { edit(p => ({ ...p, different: p.different.filter((_, k) => k !== i - 1) })); setOpenSet(null); }} className="text-[13px] font-medium text-bad hover:underline">Remove</button>}
+                          </span>
+                        </div>
+                        {isOpen && (
+                          <div className="mt-3 pt-4 border-t border-line-soft space-y-5">
+                            {i > 0 && (
+                              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                                <div className="flex flex-wrap gap-1.5" role="group" aria-label="Days">
+                                  {WEEK.map(day => (
+                                    <button key={day} type="button" disabled={!canEdit} onClick={() => toggleDiffDay(i, day)} aria-pressed={d.days.includes(day)}
+                                      className={'px-2.5 py-1 rounded-md text-[13px] border ' + (d.days.includes(day) ? 'bg-pine text-white border-pine' : 'bg-white text-ink-soft border-line hover:text-ink')}>{DAYS[day]}</button>
+                                  ))}
+                                </div>
+                                <label className="flex items-center gap-2 text-[13.5px] text-ink">
+                                  <input type="checkbox" checked={d.closed} disabled={!canEdit} onChange={e => setDay(i, { closed: e.target.checked })} className="w-4 h-4 accent-pine" />
+                                  Closed these days
+                                </label>
+                              </div>
+                            )}
+                            {!d.closed && <>
+                              <section>
+                                <h3 className="text-[14px] font-semibold text-ink mb-2">Hours</h3>
+                                {hoursFields(i, d)}
+                              </section>
+                              <section>
+                                <h3 className="text-[14px] font-semibold text-ink mb-2">Prices</h3>
+                                {sold.length === 0 ? <p className="text-[13.5px] text-ink-muted">Turn on a round to price it.</p> : priceTable(i, d)}
+                              </section>
+                            </>}
+                          </div>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
               </Card>
-            </>
+            </div>
           )}
 
-          {/* PRICE-1: promo codes, beside the prices. */}
-          <PromoCodes canEdit={canEdit} />
-          <LastMinuteDeals canEdit={canEdit} />
-          <DemandPricing canEdit={canEdit} />
+          <div className={'space-y-6 ' + shownTab('deals')}>
+            {/* PRICE-1: promo codes; PRICE-2: last-minute deals. */}
+            <PromoCodes canEdit={canEdit} />
+            <LastMinuteDeals canEdit={canEdit} />
+          </div>
+          <div className={shownTab('demand')}>
+            <DemandPricing canEdit={canEdit} />
+          </div>
 
-          {/* Closed days + booking rules + booking windows */}
-          <div className="grid lg:grid-cols-[1fr_320px] gap-6 items-start">
-            <Card className="p-5">
+          {/* Closed days · booking rules + booking windows */}
+          <div>
+            <Card className={'p-5 max-w-2xl ' + shownTab('closed')}>
               <div className="flex items-baseline justify-between gap-3">
                 <h2 className="text-[17px] font-semibold text-ink">Closed days</h2>
                 <div className="flex items-center gap-1">
@@ -590,7 +638,7 @@ export default function SchedulesPage() {
               )}
             </Card>
 
-            <div className="space-y-6">
+            <div className={'space-y-6 max-w-xl ' + shownTab('rules')}>
               {/* W2-6 slice 3: per-round booking rules (group size, how far ahead). */}
               {activeProducts.length > 0 && (() => {
                 const round = activeProducts.find(p => p.id === rulesView) ?? activeProducts[0];
@@ -627,7 +675,7 @@ export default function SchedulesPage() {
       {dirty && canEdit && (
         <div className="fixed bottom-16 md:bottom-0 inset-x-0 md:left-[var(--op-rail-w)] z-40 bg-white border-t border-line">
           <div className="px-4 sm:px-10 py-3 flex items-center justify-between gap-3">
-            <span className="text-[13.5px] text-ink">You have changes that aren&apos;t saved yet.</span>
+            <span className="text-[13.5px] text-ink">Unsaved changes.</span>
             <div className="flex items-center gap-2">
               <button type="button" onClick={() => setPlan(JSON.parse(saved))} className="px-3 py-2 rounded-md text-[13px] text-ink-soft hover:text-ink">Undo changes</button>
               <button type="button" onClick={review} className="px-4 py-2 rounded-md bg-pine hover:bg-pine-hover text-white text-[13px] font-medium">Review and save</button>

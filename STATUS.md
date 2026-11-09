@@ -4,14 +4,17 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-09 06:40 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `c21eac9b` · working tree **27 dirty file(s)**
+Generated 2026-11-09 06:59 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `9713a9b6` · working tree **6 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 171 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 174 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `9713a9b6` | 2026-11-09 | EVENTS-2: event setup walk-through and a guided event page |
+| `7b62a972` | 2026-11-09 | MONEY-1: Money tab from Cam's notes (#348) |
+| `3932b9fc` | 2026-11-09 | MONEY-1: Money tab from Cam's notes |
 | `bd16e6d6` | 2026-11-09 | RECEIPT-3 + MSG-1: receipts you can see and text as a link; Messages from Cam's notes (#347) |
 | `2981ca95` | 2026-11-09 | RECEIPT-3 + MSG-1: receipts staff can see and text as a link; Messages from Cam's notes |
 | `69eb6ce5` | 2026-11-09 | DRAWER-1 + CART-4: the register is a loop; cart numbers, cart ticket, starter's sheet (#346) |
@@ -186,28 +189,14 @@ Generated 2026-11-09 06:40 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (27 file(s))
+### Uncommitted working tree (6 file(s))
 
-- `M  STATUS.artifact.html`
-- `M  STATUS.json`
-- `M  STATUS.md`
-- `MM docs/CODEMAP.md`
-- `MM docs/codemap.json`
-- `A  prisma/migrations/20261110020000_decline_dismissed/migration.sql`
-- `M  prisma/schema.prisma`
-- `M  scripts/design-guard.baseline.json`
-- `M  scripts/launch-batch2-test.ts`
-- `A  scripts/money-1-db-test.ts`
-- `M  scripts/money-rework-test.ts`
-- `M  scripts/sms-consent-db-test.ts`
-- `M  scripts/words-guard.baseline.json`
-- `A  src/app/api/operator/declined/route.ts`
-- `M  src/app/dashboard/money/page.tsx`
-- `M  src/app/dashboard/settings/page.tsx`
-- `M  src/app/globals.css`
-- `M  src/components/dashboard/DateRangeButton.tsx`
-- `M  src/components/dashboard/DeclinedCardList.tsx`
-- `M  src/components/dashboard/money/CancellationsPanel.tsx`
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
+- `M scripts/schedule-rework-test.ts`
+- `M scripts/words-guard.baseline.json`
+- `M src/app/dashboard/schedules/page.tsx`
+- `M src/components/dashboard/DemandPricing.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -334,6 +323,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `9713a9b6` 2026-11-09 — EVENTS-2: event setup walk-through and a guided event page
+- `7b62a972` 2026-11-09 — MONEY-1: Money tab from Cam's notes (#348)
+- `3932b9fc` 2026-11-09 — MONEY-1: Money tab from Cam's notes
 - `bd16e6d6` 2026-11-09 — RECEIPT-3 + MSG-1: receipts you can see and text as a link; Messages from Cam's notes (#347)
 - `2981ca95` 2026-11-09 — RECEIPT-3 + MSG-1: receipts staff can see and text as a link; Messages from Cam's notes
 - `69eb6ce5` 2026-11-09 — DRAWER-1 + CART-4: the register is a loop; cart numbers, cart ticket, starter's sheet (#346)
@@ -343,9 +335,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `84ccc1ed` 2026-11-09 — CART-3: riders and range balls at checkout (#345)
 - `ded0ed45` 2026-11-09 — queue/spec update
 - `29496778` 2026-11-09 — CART-3: riders and range balls at checkout (Riding − N +, buckets − N +)
-- `235630c1` 2026-11-08 — POS-8: Stock list + one item form, upload what you have, sell anyway, Sales cleanup (#344)
-- `44944043` 2026-11-09 — queue/spec update
-- `3d31bc28` 2026-11-09 — POS-8: Stock list + one item form, upload what you have, sell anyway, Sales cleanup
 
 ---
 

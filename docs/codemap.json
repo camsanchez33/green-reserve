@@ -9208,7 +9208,7 @@
     },
     {
       "path": "src/app/dashboard/schedules/page.tsx",
-      "lines": 671,
+      "lines": 719,
       "purpose": "W2-6 Schedule simplification (Cam 2026-10-21:",
       "brain": [],
       "exports": [
@@ -9229,6 +9229,7 @@
         "@/components/dashboard/LoadError",
         "@/components/dashboard/PromoCodes",
         "@/components/dashboard/RoundRulesCard",
+        "@/components/dashboard/SlidingTabs",
         "@/components/dashboard/StaffNotice",
         "@/components/dashboard/Toast",
         "@/components/ui/Card",
@@ -11355,7 +11356,7 @@
     },
     {
       "path": "src/components/dashboard/DemandPricing.tsx",
-      "lines": 130,
+      "lines": 157,
       "purpose": "PRICE-5 (Cam 2026-10-30:",
       "brain": [],
       "exports": [
@@ -11375,6 +11376,7 @@
         "@/components/ui/StatusDot",
         "@/components/ui/field",
         "@/lib/dashboard-fetch",
+        "@/lib/demand-pricing",
         "react"
       ],
       "usedBy": [
@@ -12016,7 +12018,9 @@
         "src/app/dashboard/analytics/page.tsx",
         "src/app/dashboard/money/page.tsx",
         "src/app/dashboard/page.tsx",
+        "src/app/dashboard/schedules/page.tsx",
         "src/app/dashboard/shop/page.tsx",
+        "src/components/dashboard/events/EventDetail.tsx",
         "src/components/dashboard/money/CancellationsPanel.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
         "src/components/dashboard/money/SalesPanel.tsx"
@@ -12490,7 +12494,7 @@
     },
     {
       "path": "src/components/dashboard/events/EventDetail.tsx",
-      "lines": 458,
+      "lines": 515,
       "purpose": "W2-9 Events:",
       "brain": [],
       "exports": [
@@ -12525,6 +12529,7 @@
         "./EventMoney",
         "./EventSetup",
         "./EventSignup",
+        "@/components/dashboard/SlidingTabs",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/components/ui/field",
@@ -12589,7 +12594,7 @@
     },
     {
       "path": "src/components/dashboard/events/EventSetup.tsx",
-      "lines": 379,
+      "lines": 508,
       "purpose": "W2-9 Events:",
       "brain": [],
       "exports": [
@@ -12604,6 +12609,10 @@
         {
           "name": "EventForm",
           "kind": "type"
+        },
+        {
+          "name": "fieldErrors",
+          "kind": "fn"
         },
         {
           "name": "KINDS",
@@ -12630,6 +12639,7 @@
       "imports": [
         "@/components/ui/Card",
         "@/components/ui/field",
+        "@/lib/course-events",
         "@/lib/course-time",
         "@/lib/dashboard-fetch",
         "@/lib/format",
@@ -17828,6 +17838,7 @@
         "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/events/route.ts",
         "src/components/dashboard/events/EventDetail.tsx",
+        "src/components/dashboard/events/EventSetup.tsx",
         "src/lib/sample-data.ts"
       ]
     },
@@ -19195,6 +19206,7 @@
         "src/app/api/member/[courseSlug]/tee-times/route.ts",
         "src/app/api/operator/demand-pricing/route.ts",
         "src/app/api/preview/[courseId]/tee-times/route.ts",
+        "src/components/dashboard/DemandPricing.tsx",
         "src/lib/booking-residents.ts",
         "src/lib/move-booking.ts",
         "src/lib/public-tee-times.ts"
@@ -19745,7 +19757,7 @@
     },
     {
       "path": "src/lib/event-command.ts",
-      "lines": 68,
+      "lines": 109,
       "purpose": "EVENTS-1 (Cam 2026-11-04, \"events command center\"):",
       "brain": [],
       "exports": [
@@ -19754,12 +19766,32 @@
           "kind": "fn"
         },
         {
+          "name": "eventNextSteps",
+          "kind": "fn"
+        },
+        {
+          "name": "EventStep",
+          "kind": "type"
+        },
+        {
+          "name": "EventStepKey",
+          "kind": "type"
+        },
+        {
           "name": "eventStrip",
           "kind": "fn"
         },
         {
+          "name": "EventTab",
+          "kind": "type"
+        },
+        {
           "name": "pastHeadcount",
           "kind": "fn"
+        },
+        {
+          "name": "StepsInput",
+          "kind": "type"
         },
         {
           "name": "Strip",

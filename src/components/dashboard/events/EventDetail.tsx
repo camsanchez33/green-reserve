@@ -2,6 +2,11 @@
 // W2-9 Events: one event — what it holds on the tee sheet, its prep checklist,
 // and its players with their groups. Every write shows its pending state and
 // then the result or the server's reason (dfetch never throws).
+// EVENTS-2 (Cam 2026-11-09: "the whole thing … gives no guidance or structure. Redo"): the strip, then "Next up" —
+// the steps from saved to played, done or not from the event's own state (eventNextSteps), each opening the part
+// that does it — then the event in tabs: Overview (tee sheet + details) · Players · Sign-up · Money · Checklist.
+// Every part stays mounted (only hidden), so a half-typed list or payment survives a tab change; the Players
+// part still prints from any tab.
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import { useEffect, useState } from 'react';
 import { shotgunLabels, groupStartTime } from '@/lib/course-events';
@@ -14,7 +19,8 @@ import { KINDS } from './EventSetup';
 import EventMoney, { type EventPayment, type Money } from './EventMoney';
 import EventSignup, { type SignupQuestion } from './EventSignup';
 import { EventDay, CartSigns } from './EventDay';
-import { eventStrip, coveredCount, pastHeadcount, STRIP_TERMS as T } from '@/lib/event-command';
+import { eventStrip, coveredCount, pastHeadcount, eventNextSteps, STRIP_TERMS as T, type EventTab } from '@/lib/event-command';
+import { SlidingTabs } from '@/components/dashboard/SlidingTabs';
 
 export type EventTask = { id: string; label: string; dueDate: string | null; doneAt: string | null; doneBy: string };
 export type EventPlayer = {
@@ -62,6 +68,8 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
   const [paste, setPaste] = useState('');
   const [size, setSize] = useState(4);
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [tab, setTab] = useState<Exclude<EventTab, 'edit'>>('overview');
+  const shown = (k: Exclude<EventTab, 'edit'>) => tab === k ? '' : 'hidden';
   // Event day: what the next print shows — the pairings sheet or a cart sign per group.
   const [printWhat, setPrintWhat] = useState<'pairings' | 'signs'>('pairings');
   const printNow = (what: 'pairings' | 'signs') => { setPrintWhat(what); setTimeout(() => window.print(), 50); };
@@ -196,11 +204,50 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
         <EventDay groups={sortedGroups} ungrouped={ungrouped} startOf={startOf} onList={onList} busy={busy}
           owes={p => playersPay && stateOf(p) !== 'paid' && stateOf(p) !== 'paying'}
           onCheck={(ids, on, key) => { act(key, { action: 'checkin', playerIds: ids, on }); }}
-          onTakePayment={canRecord ? p => { setPaidHere({ id: p.id, amount: price, method: 'cash' }); document.getElementById(`player-${p.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); } : undefined}
+          onTakePayment={canRecord ? p => { setPaidHere({ id: p.id, amount: price, method: 'cash' }); setTab('players'); setTimeout(() => document.getElementById(`player-${p.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 0); } : undefined}
           onPrintSigns={() => printNow('signs')} />
       )}
 
-      <div className="grid lg:grid-cols-[1fr_1fr] gap-5 print:hidden">
+      {live && (() => {
+        const steps = eventNextSteps({
+          payer: e.payer, priceCents: e.pricePerPlayerCents, heldCount: held.length, toMove: toMove.length, unheld: data.unheld.length,
+          onList: onList.length, ungrouped: ungrouped.length, unpaid: onList.filter(p => stateOf(p) !== 'paid').length, signupOpen: e.signupOpen, keptCents: data.money.keptCents,
+          guaranteeDue: data.guaranteeDue ? formatTeeDay(data.guaranteeDue) : null, guaranteedAt: e.guaranteedAt,
+          tasksOpen: open.length, tasksOverdue: overdue.length,
+        });
+        const next = steps.find(s => !s.done);
+        const goTo = (t: EventTab) => { if (t === 'edit') onEdit(); else setTab(t); };
+        return (
+          <Card className="print:hidden p-5">
+            <div className="flex flex-wrap items-baseline justify-between gap-2 mb-3">
+              <h2 className="text-[15px] font-semibold text-ink">Next up</h2>
+              <span className="text-[12.5px] text-ink-muted tabular-nums">{steps.filter(s => s.done).length} of {steps.length} done</span>
+            </div>
+            {next && (
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-md bg-paper/70 px-3.5 py-3 mb-3">
+                <div><div className="text-[14px] font-medium text-ink">{next.label}</div><div className="text-[12.5px] text-ink-muted">{next.detail}</div></div>
+                <button onClick={() => goTo(next.tab)} className={PRIMARY}>{next.tab === 'edit' ? 'Change details' : 'Do it'}</button>
+              </div>
+            )}
+            <ol className="grid sm:grid-cols-2 lg:grid-cols-4 gap-x-5">
+              {steps.map(s => (
+                <li key={s.key} className="flex items-center gap-2 py-1.5 text-[13px] border-b border-line-soft">
+                  <StatusDot status={s.done ? 'ok' : s === next ? 'warn' : 'neutral'} label="" />
+                  <button onClick={() => goTo(s.tab)} className={'flex-1 min-w-0 text-left truncate ' + (s.done ? 'text-ink-muted' : 'text-ink hover:underline underline-offset-4')}>{s.label}</button>
+                  <span className="text-[12px] text-ink-muted truncate max-w-[45%]">{s.detail}</span>
+                </li>
+              ))}
+            </ol>
+          </Card>
+        );
+      })()}
+
+      <div className="print:hidden">
+        <SlidingTabs<Exclude<EventTab, 'edit'>> value={tab} onChange={setTab} label="Event"
+          tabs={[['overview', 'Overview'], ['players', `Players ${onList.length}`], ['signup', 'Sign-up'], ['money', 'Money'], ['checklist', `Checklist ${e.tasks.length - open.length}/${e.tasks.length}`]]} />
+      </div>
+
+      <div className={'grid lg:grid-cols-[1fr_1fr] gap-5 print:hidden ' + shown('overview')}>
         <Card className="p-5">
           <h2 className="text-[15px] font-semibold text-ink mb-2">On the tee sheet</h2>
           {held.length === 0 && live
@@ -228,7 +275,14 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
             </div>
           )}
           {data.blockedOther > 0 && <p className="text-[13px] text-ink-soft mt-2">{data.blockedOther} time{data.blockedOther === 1 ? ' is' : 's are'} held by another event.</p>}
-          <div className="divide-y divide-line-soft text-[13.5px] mt-4">
+        </Card>
+
+        <Card className="p-5">
+          <div className="flex items-baseline justify-between gap-2 mb-1">
+            <h2 className="text-[15px] font-semibold text-ink">Details</h2>
+            {live && <button onClick={onEdit} className="text-[13px] font-medium text-pine hover:underline underline-offset-4">Change</button>}
+          </div>
+          <div className="divide-y divide-line-soft text-[13.5px]">
             {[
               ['Players', [e.players && `${e.players} expected`, e.groups && `${e.groups} groups`, onList.length && `${onList.length} on the list`, notYet.length && `${notYet.length} signed up, not on it yet`].filter(Boolean).join(', ') || 'Not set yet'],
               ['Organizer', [e.organizerName, e.organizerEmail, e.organizerPhone].filter(Boolean).join(' · ') || 'Not set yet'],
@@ -242,7 +296,9 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
             ))}
           </div>
         </Card>
+      </div>
 
+      <div className={'print:hidden max-w-2xl ' + shown('checklist')}>
         <Card className="p-5">
           <div className="flex items-baseline justify-between mb-2">
             <h2 className="text-[15px] font-semibold text-ink">Checklist</h2>
@@ -277,19 +333,20 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
         </Card>
       </div>
 
-      <div className="print:hidden">
+      <div className={'print:hidden ' + shown('signup')}>
         <EventSignup live={live} payer={e.payer} url={data.signup.url} priceSet={e.pricePerPlayerCents > 0} spotsLeft={spotsLeft} waiting={notYet} busy={busy}
           settings={{ signupOpen: e.signupOpen, signupPay: e.signupPay, signupMaxGroup: e.signupMaxGroup, signupQuestions: questions }}
           act={(key, body, done) => act(key, body, done ? r => done(r) : undefined)} />
       </div>
 
-      <div className="print:hidden">
+      <div className={'print:hidden ' + shown('money')}>
         <EventMoney eventId={e.id} live={live} pricePerPlayerCents={e.pricePerPlayerCents} money={data.money} payments={e.payments} canRefund={canRefund} reload={reload}
           guarantee={e.payer === 'players' ? null : { due: data.guaranteeDue, players: e.guaranteedPlayers, at: e.guaranteedAt, today, onList: e.entrants.filter(p => p.status === 'in').length }}
           organizer={{ name: e.organizerName, email: e.organizerEmail, phone: e.organizerPhone }} />
       </div>
 
-      <Card className="p-5 print:shadow-none print:p-0">
+      {/* Printing (pairings or cart signs) prints this part from any tab. */}
+      <Card className={'p-5 print:shadow-none print:p-0 ' + (tab === 'players' ? '' : 'hidden print:block')}>
         <div className="flex flex-wrap items-baseline justify-between gap-2 mb-3 print:hidden">
           <h2 className="text-[15px] font-semibold text-ink">Players and pairings</h2>
           <span className="text-[12.5px] text-ink-muted">{onList.length} player{onList.length === 1 ? '' : 's'}{sortedGroups.length ? ` in ${sortedGroups.length} group${sortedGroups.length === 1 ? '' : 's'}` : ''}</span>
@@ -297,7 +354,7 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
 
         {live && (
           <div className="print:hidden mb-4">
-            <label className="block text-[13px] font-medium text-ink mb-1.5" htmlFor="paste-players">Add players — one per line: name, email, phone. You can paste from a spreadsheet.</label>
+            <label className="block text-[13px] font-medium text-ink mb-1.5" htmlFor="paste-players">Add players — one per line: name, email, phone.</label>
             <textarea id="paste-players" rows={3} className={INPUT + ' w-full font-sans'} value={paste} onChange={ev => setPaste(ev.target.value)} placeholder={'Jane Smith, jane@example.com, 555-201-3344\nTom Lee'} />
             <button disabled={!!busy || !paste.trim()} onClick={async () => { if (await act('players_add', { action: 'players_add', text: paste })) setPaste(''); }} className={SECONDARY + ' mt-2'}>
               {busy === 'players_add' ? 'Adding…' : 'Add players'}
@@ -310,7 +367,7 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
             <label className="text-[13px] text-ink-soft flex items-center gap-2">Groups of
               <select className={INPUT} value={size} onChange={ev => setSize(Number(ev.target.value))}>{[2, 3, 4, 5].map(n => <option key={n}>{n}</option>)}</select>
             </label>
-            <button disabled={!!busy} onClick={() => act('auto', { action: 'pairings_auto', size }, () => 'Grouped in list order; sign-ups stay together. Change any group or hole below.')} className={SECONDARY}>
+            <button disabled={!!busy} onClick={() => act('auto', { action: 'pairings_auto', size }, () => 'Grouped in list order; sign-ups stay together.')} className={SECONDARY}>
               {busy === 'auto' ? 'Pairing…' : 'Pair in list order'}
             </button>
             {sortedGroups.length > 0 && <>
@@ -334,7 +391,7 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
                 : 'Players sign up on the event’s page — send its link to the organizer.'}
               {unpaid > 0 && ` ${unpaid} player${unpaid === 1 ? '' : 's'} on the list ${unpaid === 1 ? 'hasn’t' : 'haven’t'} paid: send ${unpaid === 1 ? 'them their' : 'each their'} own link below, or take it at the course.`}
             </p>
-            {e.signupOpen && <button onClick={async () => { try { await navigator.clipboard.writeText(data.signup.url); setLinkCopied(true); setTimeout(() => setLinkCopied(false), 2000); } catch { setError('Couldn’t copy — use the link on the Sign-up page card.'); } }}
+            {e.signupOpen && <button onClick={async () => { try { await navigator.clipboard.writeText(data.signup.url); setLinkCopied(true); setTimeout(() => setLinkCopied(false), 2000); } catch { setError('Couldn’t copy — see the Sign-up tab.'); } }}
               className={SECONDARY}>{linkCopied ? 'Copied' : 'Copy the link'}</button>}
           </div>
         )}

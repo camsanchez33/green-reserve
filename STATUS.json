@@ -1,36 +1,43 @@
 {
-  "generatedAt": "2026-11-09T06:40:46.944Z",
+  "generatedAt": "2026-11-09T06:59:01.290Z",
   "repo": {
-    "head": "c21eac9b",
+    "head": "9713a9b6",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 27,
+    "dirtyCount": 6,
     "dirty": [
-      "M  STATUS.artifact.html",
-      "M  STATUS.json",
-      "M  STATUS.md",
-      "MM docs/CODEMAP.md",
-      "MM docs/codemap.json",
-      "A  prisma/migrations/20261110020000_decline_dismissed/migration.sql",
-      "M  prisma/schema.prisma",
-      "M  scripts/design-guard.baseline.json",
-      "M  scripts/launch-batch2-test.ts",
-      "A  scripts/money-1-db-test.ts",
-      "M  scripts/money-rework-test.ts",
-      "M  scripts/sms-consent-db-test.ts",
-      "M  scripts/words-guard.baseline.json",
-      "A  src/app/api/operator/declined/route.ts",
-      "M  src/app/dashboard/money/page.tsx",
-      "M  src/app/dashboard/settings/page.tsx",
-      "M  src/app/globals.css",
-      "M  src/components/dashboard/DateRangeButton.tsx",
-      "M  src/components/dashboard/DeclinedCardList.tsx",
-      "M  src/components/dashboard/money/CancellationsPanel.tsx"
+      "M docs/CODEMAP.md",
+      " M docs/codemap.json",
+      " M scripts/schedule-rework-test.ts",
+      " M scripts/words-guard.baseline.json",
+      " M src/app/dashboard/schedules/page.tsx",
+      " M src/components/dashboard/DemandPricing.tsx"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "9713a9b6",
+        "date": "2026-11-09T06:56:34+00:00",
+        "subject": "EVENTS-2: event setup walk-through and a guided event page",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "7b62a972",
+        "date": "2026-11-09T01:52:35-05:00",
+        "subject": "MONEY-1: Money tab from Cam's notes (#348)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "3932b9fc",
+        "date": "2026-11-09T06:43:19+00:00",
+        "subject": "MONEY-1: Money tab from Cam's notes",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "bd16e6d6",
         "date": "2026-11-09T01:22:44-05:00",
@@ -1631,6 +1638,21 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "9713a9b6",
+      "date": "2026-11-09",
+      "subject": "EVENTS-2: event setup walk-through and a guided event page"
+    },
+    {
+      "h": "7b62a972",
+      "date": "2026-11-09",
+      "subject": "MONEY-1: Money tab from Cam's notes (#348)"
+    },
+    {
+      "h": "3932b9fc",
+      "date": "2026-11-09",
+      "subject": "MONEY-1: Money tab from Cam's notes"
+    },
+    {
       "h": "bd16e6d6",
       "date": "2026-11-09",
       "subject": "RECEIPT-3 + MSG-1: receipts you can see and text as a link; Messages from Cam's notes (#347)"
@@ -1674,21 +1696,6 @@
       "h": "29496778",
       "date": "2026-11-09",
       "subject": "CART-3: riders and range balls at checkout (Riding − N +, buckets − N +)"
-    },
-    {
-      "h": "235630c1",
-      "date": "2026-11-08",
-      "subject": "POS-8: Stock list + one item form, upload what you have, sell anyway, Sales cleanup (#344)"
-    },
-    {
-      "h": "44944043",
-      "date": "2026-11-09",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "3d31bc28",
-      "date": "2026-11-09",
-      "subject": "POS-8: Stock list + one item form, upload what you have, sell anyway, Sales cleanup"
     }
   ]
 }
