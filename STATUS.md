@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-09 05:40 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `0b64873f` · working tree **40 dirty file(s)**
+Generated 2026-11-09 06:02 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `ae63a885` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 165 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 167 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `ae63a885` | 2026-11-09 | DRAWER-1: open/reopen/fix take their seq from the snapshot checked (CI race) |
+| `79c3f826` | 2026-11-09 | DRAWER-1 + CART-4: the register is a loop; cart numbers, cart ticket, starter's sheet |
 | `84ccc1ed` | 2026-11-09 | CART-3: riders and range balls at checkout (#345) |
 | `29496778` | 2026-11-09 | CART-3: riders and range balls at checkout (Riding − N +, buckets − N +) |
 | `235630c1` | 2026-11-08 | POS-8: Stock list + one item form, upload what you have, sell anyway, Sales cleanup (#344) |
@@ -180,31 +182,13 @@ Generated 2026-11-09 05:40 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (40 file(s))
+### Uncommitted working tree (2 file(s))
 
-- `MM CLAUDE.md`
-- `M  LAUNCH_PLAN_SPEC.md`
-- `M  STATUS.artifact.html`
-- `M  STATUS.json`
-- `M  STATUS.md`
-- `MM docs/CODEMAP.md`
-- `MM docs/codemap.json`
-- `A  prisma/migrations/20261109120000_drawer_cycle/migration.sql`
-- `A  prisma/migrations/20261110000000_cart_numbers/migration.sql`
-- `M  prisma/schema.prisma`
-- `A  scripts/cart-numbers-test.ts`
-- `M  scripts/design-guard.baseline.json`
-- `AM scripts/drawer-cycle-db-test.ts`
-- `M  scripts/pos-register-test.ts`
-- `M  scripts/register-open-db-test.ts`
-- `M  scripts/words-guard.baseline.json`
-- `M  src/app/api/operator/bookings/route.ts`
-- `A  src/app/api/operator/cart-numbers/route.ts`
-- `M  src/app/api/operator/checkout-options/route.ts`
-- `M  src/app/api/operator/reader-rounds/route.ts`
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
 
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -286,7 +270,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-11-08 | 0d |
+| `CLAUDE.md` | 1 | 2026-11-09 | 0d |
 | `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 7d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 19d |
 | `LAUNCH_PLAN_SPEC.md` | 0 | 2026-11-09 | 0d |
@@ -328,6 +312,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `ae63a885` 2026-11-09 — DRAWER-1: open/reopen/fix take their seq from the snapshot checked (CI race)
+- `79c3f826` 2026-11-09 — DRAWER-1 + CART-4: the register is a loop; cart numbers, cart ticket, starter's sheet
 - `84ccc1ed` 2026-11-09 — CART-3: riders and range balls at checkout (#345)
 - `ded0ed45` 2026-11-09 — queue/spec update
 - `29496778` 2026-11-09 — CART-3: riders and range balls at checkout (Riding − N +, buckets − N +)
@@ -338,8 +324,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `9b6e7f6b` 2026-11-09 — POS-7: Open the register (locked starting cash), tee sheet icons, sliding tabs
 - `4a51c27b` 2026-11-08 — POS-6: Stock is where items are added; round packs off; tiles, ticket, Sales filters (#342)
 - `def61397` 2026-11-09 — POS-6: Stock is where items are added; round packs off; tiles, ticket, Sales filters
-- `0682ac62` 2026-11-08 — POS-5: Pro shop Stock, Round packs and Close out tabs; sliding tab highlight (#340)
-- `b99b4c8a` 2026-11-08 — POS-5: Pro shop Stock, Round packs and Close out as their own tabs; sliding tab highlight
 
 ---
 

@@ -24174,7 +24174,7 @@
     },
     {
       "path": "src/lib/register-open.ts",
-      "lines": 146,
+      "lines": 148,
       "purpose": "POS-7 (Cam 2026-11-09:",
       "brain": [],
       "exports": [

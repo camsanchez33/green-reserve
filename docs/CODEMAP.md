@@ -433,7 +433,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/manage-access.ts` | 6 | 17 | R-AUTH-003 / R-GOLF-003 (G13) — who may manage a booking from the golfer side. | `canManageBooking` |
 | `src/lib/password.ts` | 6 | 14 | Shared password strength rule — used on registration, reset, and in-dashboard change-password, both server-side (enforcement) and client-side (live hint). | `PASSWORD_REQUIREMENTS_HINT`, `validatePasswordStrength` |
 | `src/lib/promo-codes.ts` | 6 | 122 | PRICE-1 (Cam 2026-10-30: | `applyPromo`, `listPromos`, `normCode`, `NOTHING_OFF`, `PROMO_USED`, `promoDiscount`, `promoFits`, `PromoRow` +4 more |
-| `src/lib/register-open.ts` | 6 | 146 | POS-7 (Cam 2026-11-09: | `Handoff`, `kindOf`, `OpenKind`, `openRegister`, `OpenRow`, `OpenView`, `registerOpenFor`, `RegisterStatus` +2 more |
+| `src/lib/register-open.ts` | 6 | 148 | POS-7 (Cam 2026-11-09: | `Handoff`, `kindOf`, `OpenKind`, `openRegister`, `OpenRow`, `OpenView`, `registerOpenFor`, `RegisterStatus` +2 more |
 | `src/lib/tax-categories.ts` | 6 | 21 | W2-7 part B: | `isTaxCategory`, `TAX_CATEGORIES`, `TaxCategory`, `US_STATES` |
 | `src/lib/tier-rates.ts` | 6 | 61 | The member-rate rules, shared by booking (api/bookings) and moving a group to another time (lib/move-booking.ts) so both price a member the same way. | `applyTierRates`, `isWeekend` |
 | `src/lib/birdie/guardrails.ts` | 5 | 74 | BIRDIE_AI_SPEC B1 — scope, caps and the kill switch. | `BIRDIE_MODEL`, `birdieEnabled`, `BirdieTurn`, `birdieUsageToday`, `checkCaps`, `logConversation`, `MAX_HISTORY_TURNS`, `MAX_REPLY_TOKENS` +4 more |
