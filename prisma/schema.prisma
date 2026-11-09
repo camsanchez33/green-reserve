@@ -1548,6 +1548,10 @@ model ShopSale {
   customerEmail     String           @default("")
   /// The pay link's secret (open sales only); '' for cash.
   payToken          String           @default("")
+  /// RECEIPT-3 (Cam 2026-11-09: "this is the receipt text, not even a link"): the secret for the customer's receipt page
+  /// (/receipt/shop/[id]); minted the first time a receipt is texted or emailed. '' = never sent. Separate from payToken,
+  /// which marks a sale sent as a pay link.
+  receiptToken      String           @default("")
   paymentIntentId   String           @default("")
   /// Set while a card charge is in flight (status 'paying'); a void waits for it.
   chargeStartedAt   DateTime?

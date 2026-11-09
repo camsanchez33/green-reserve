@@ -1,18 +1,50 @@
 {
-  "generatedAt": "2026-11-09T06:02:33.056Z",
+  "generatedAt": "2026-11-09T06:10:38.553Z",
   "repo": {
-    "head": "ae63a885",
+    "head": "baeaffe1",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 2,
+    "dirtyCount": 20,
     "dirty": [
-      "M docs/CODEMAP.md",
-      " M docs/codemap.json"
+      "M STATUS.artifact.html",
+      " M STATUS.json",
+      " M STATUS.md",
+      " M docs/CODEMAP.md",
+      " M docs/codemap.json",
+      "A  prisma/migrations/20261110010000_shop_receipt_token/migration.sql",
+      " M prisma/schema.prisma",
+      " M scripts/birdie-messages-test.ts",
+      " M scripts/design-guard.baseline.json",
+      "A  scripts/messages-tickets-test.ts",
+      "A  scripts/shop-receipt-db-test.ts",
+      " M scripts/words-guard.baseline.json",
+      " M src/app/api/operator/shop-sales/route.ts",
+      " M src/app/dashboard/messages/page.tsx",
+      " M src/app/dashboard/shop/page.tsx",
+      "A  src/app/receipt/shop/[id]/page.tsx",
+      "A  src/components/dashboard/shop/SaleReceiptPanel.tsx",
+      "A  src/components/dashboard/shop/ShopReceiptBody.tsx",
+      "A  src/lib/shop-receipt.ts",
+      "A  src/lib/support-ticket.ts"
     ],
-    "looksLikeRunInProgress": false
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "69eb6ce5",
+        "date": "2026-11-09T01:10:15-05:00",
+        "subject": "DRAWER-1 + CART-4: the register is a loop; cart numbers, cart ticket, starter's sheet (#346)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "62742a74",
+        "date": "2026-11-09T06:02:36+00:00",
+        "subject": "Regenerate code map and status board",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "ae63a885",
         "date": "2026-11-09T05:55:11+00:00",
@@ -1585,6 +1617,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "69eb6ce5",
+      "date": "2026-11-09",
+      "subject": "DRAWER-1 + CART-4: the register is a loop; cart numbers, cart ticket, starter's sheet (#346)"
+    },
+    {
+      "h": "62742a74",
+      "date": "2026-11-09",
+      "subject": "Regenerate code map and status board"
+    },
+    {
       "h": "ae63a885",
       "date": "2026-11-09",
       "subject": "DRAWER-1: open/reopen/fix take their seq from the snapshot checked (CI race)"
@@ -1633,16 +1675,6 @@
       "h": "9b6e7f6b",
       "date": "2026-11-09",
       "subject": "POS-7: Open the register (locked starting cash), tee sheet icons, sliding tabs"
-    },
-    {
-      "h": "4a51c27b",
-      "date": "2026-11-08",
-      "subject": "POS-6: Stock is where items are added; round packs off; tiles, ticket, Sales filters (#342)"
-    },
-    {
-      "h": "def61397",
-      "date": "2026-11-09",
-      "subject": "POS-6: Stock is where items are added; round packs off; tiles, ticket, Sales filters"
     }
   ]
 }

@@ -19,7 +19,8 @@ check('an empty question only opens the panel, keeping a draft', /if \(q\.trim\(
 const bar = readFileSync('src/components/OperatorSidebar.tsx', 'utf8');
 check('the top bar no longer carries a second Ask Birdie', !bar.includes('openBirdie'));
 const m = readFileSync('src/app/dashboard/messages/page.tsx', 'utf8');
-check('Messages says when to expect a reply', m.includes('We reply within one business day.'));
+// MSG-1 (Cam 2026-11-09): 48 hours, not one business day.
+check('Messages says when to expect a reply', m.includes('Within {REPLY_HOURS} hours') && readFileSync('src/lib/support-ticket.ts', 'utf8').includes('export const REPLY_HOURS = 48;'));
 check('…and offers email', m.includes('mailto:${ADMIN_EMAIL}'));
 check('the compose bar clears Birdie\'s corner buttons on every screen', m.includes('pr-[8.5rem]') && !m.includes('md:pr-6'));
 check('no eyebrow label', !m.includes('<Eyebrow'));

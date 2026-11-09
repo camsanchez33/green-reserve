@@ -117,14 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-11-09 06:02 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ ae63a885</span>
-    <span>2 uncommitted</span>
+    <span>2026-11-09 06:10 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ baeaffe1</span>
+    <span>20 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">167 runs have shipped that the queue doesn't know about</div>
+<div class="lede">169 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-31. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">69eb6ce5</span><span>DRAWER-1 + CART-4: the register is a loop; cart numbers, cart ticket, starter's sheet (#346)</span></li>
+<li><span class="h">62742a74</span><span>Regenerate code map and status board</span></li>
 <li><span class="h">ae63a885</span><span>DRAWER-1: open/reopen/fix take their seq from the snapshot checked (CI race)</span></li>
 <li><span class="h">79c3f826</span><span>DRAWER-1 + CART-4: the register is a loop; cart numbers, cart ticket, starter's sheet</span></li>
 <li><span class="h">84ccc1ed</span><span>CART-3: riders and range balls at checkout (#345)</span></li>
@@ -302,9 +304,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">17</span><span class="l">Ideas parked</span></div>
 </div>
 <section><h2>Working tree right now</h2>
-<div class="card">
-<h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li></ul>
+<div class="card flag">
+<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
+<ul class="plain"><li><code>M STATUS.artifact.html</code></li><li><code>M STATUS.json</code></li><li><code>M STATUS.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>A  prisma/migrations/20261110010000_shop_receipt_token/migration.sql</code></li><li><code>M prisma/schema.prisma</code></li><li><code>M scripts/birdie-messages-test.ts</code></li><li><code>M scripts/design-guard.baseline.json</code></li><li><code>A  scripts/messages-tickets-test.ts</code></li><li><code>A  scripts/shop-receipt-db-test.ts</code></li><li><code>M scripts/words-guard.baseline.json</code></li><li><code>M src/app/api/operator/shop-sales/route.ts</code></li><li><code>M src/app/dashboard/messages/page.tsx</code></li><li><code>M src/app/dashboard/shop/page.tsx</code></li><li><code>A  src/app/receipt/shop/[id]/page.tsx</code></li><li><code>A  src/components/dashboard/shop/SaleReceiptPanel.tsx</code></li><li><code>A  src/components/dashboard/shop/ShopReceiptBody.tsx</code></li><li><code>A  src/lib/shop-receipt.ts</code></li><li><code>A  src/lib/support-ticket.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -387,6 +389,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 19d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">69eb6ce5</td><td class="num">2026-11-09</td><td>DRAWER-1 + CART-4: the register is a loop; cart numbers, cart ticket, starter's sheet (#346)</td></tr>
+<tr><td class="num">62742a74</td><td class="num">2026-11-09</td><td>Regenerate code map and status board</td></tr>
 <tr><td class="num">ae63a885</td><td class="num">2026-11-09</td><td>DRAWER-1: open/reopen/fix take their seq from the snapshot checked (CI race)</td></tr>
 <tr><td class="num">79c3f826</td><td class="num">2026-11-09</td><td>DRAWER-1 + CART-4: the register is a loop; cart numbers, cart ticket, starter's sheet</td></tr>
 <tr><td class="num">84ccc1ed</td><td class="num">2026-11-09</td><td>CART-3: riders and range balls at checkout (#345)</td></tr>
@@ -397,8 +401,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">3d31bc28</td><td class="num">2026-11-09</td><td>POS-8: Stock list + one item form, upload what you have, sell anyway, Sales cleanup</td></tr>
 <tr><td class="num">44217555</td><td class="num">2026-11-08</td><td>POS-7: Open the register (locked starting cash), tee sheet icons, sliding tabs (#343)</td></tr>
 <tr><td class="num">9b6e7f6b</td><td class="num">2026-11-09</td><td>POS-7: Open the register (locked starting cash), tee sheet icons, sliding tabs</td></tr>
-<tr><td class="num">4a51c27b</td><td class="num">2026-11-08</td><td>POS-6: Stock is where items are added; round packs off; tiles, ticket, Sales filters (#342)</td></tr>
-<tr><td class="num">def61397</td><td class="num">2026-11-09</td><td>POS-6: Stock is where items are added; round packs off; tiles, ticket, Sales filters</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

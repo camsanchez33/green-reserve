@@ -1,5 +1,6 @@
 import { SMS_NO_CONSENT_STAFF } from '@/lib/sms-consent-copy';
 import { requireRegisterOpen } from '@/lib/register-open';
+import { shopReceiptUrl, staffShopReceipt } from '@/lib/shop-receipt';
 import { optInAndConfirm } from '@/lib/sms-consent';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
@@ -41,6 +42,13 @@ async function gate() {
 export async function GET(req: NextRequest) {
   const g = await gate();
   if ('res' in g) return g.res;
+  // RECEIPT-3 (Cam 2026-11-09: "if I click receipt as the course I should be able to see it"): one paid sale's receipt.
+  const receiptOf = req.nextUrl.searchParams.get('receipt');
+  if (receiptOf) {
+    const r = await staffShopReceipt(g.session.courseId, receiptOf);
+    if (!r) return NextResponse.json({ error: 'No receipt — the sale isn’t paid, or it isn’t this course’s.' }, { status: 404 });
+    return NextResponse.json({ receipt: r });
+  }
   // Dead end 15: a past day, or a search across 90 days (the register's history).
   const day = req.nextUrl.searchParams.get('day') ?? '';
   const q = req.nextUrl.searchParams.get('q') ?? '';
@@ -278,8 +286,10 @@ export async function PATCH(req: NextRequest) {
         if (to.replace(/\D/g, '').length < 10) return NextResponse.json({ error: 'Enter a mobile number for the receipt.' }, { status: 400 });
         const phone = normalizePhone(to);
         if (!phone.startsWith('+1')) return NextResponse.json({ error: 'Receipts can only be texted to US and Canadian numbers — email it instead.' }, { status: 400 });
-        const items = v.lines.reduce((n, l) => n + l.quantity, 0);
-        await sendSms(phone, `GreenReserve receipt from ${s.course.name}: ${items} item${items === 1 ? '' : 's'}, $${(s.totalCents / 100).toFixed(2)} ${s.status === 'paid_account' ? 'on your account' : `paid by ${paidWith.toLowerCase()}`}${s.refundedCents ? `, $${(s.refundedCents / 100).toFixed(2)} refunded` : ''}. Ref ${s.id.slice(-8).toUpperCase()}. Thank you! Reply STOP to opt out.`, { kind: 'shop_receipt_text', courseId: g.session.courseId });
+        // RECEIPT-3 (Cam 2026-11-09: "this is the receipt text, not even a link"): the text is the link; the page is the receipt.
+        const url = await shopReceiptUrl(g.session.courseId, s.id);
+        if (!url) return NextResponse.json({ error: 'The receipt link couldn’t be made — try again.' }, { status: 500 });
+        await sendSms(phone, `GreenReserve: your receipt from ${s.course.name} ($${(s.totalCents / 100).toFixed(2)}): ${url} Reply STOP to opt out.`, { kind: 'shop_receipt_text', courseId: g.session.courseId });
       } else {
         if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to) || isPlaceholderEmail(to)) return NextResponse.json({ error: 'Enter an email address for the receipt.' }, { status: 400 });
         await sendShopReceiptEmail({ email: to.toLowerCase(), name: s.customerName, courseName: s.course.name, courseId: g.session.courseId, saleId: s.id, lines: v.lines,

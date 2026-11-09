@@ -23,6 +23,7 @@ import { RegisterClose } from '@/components/dashboard/RegisterClose';
 import { StockTab } from '@/components/dashboard/StockTab';
 import { CalendarDays } from 'lucide-react';
 import { OpenRegister } from '@/components/dashboard/OpenRegister';
+import { SaleReceiptPanel } from '@/components/dashboard/shop/SaleReceiptPanel';
 import { SlidingTabs } from '@/components/dashboard/SlidingTabs';
 import { Card } from '@/components/ui/Card';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -776,12 +777,12 @@ export default function ShopPage() {
                 return <>
               {all && all.length > 0 && (
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 pb-3">
-                  <div className="flex flex-wrap gap-1.5" role="group" aria-label="Show">
-                    {SALES_SHOW.filter(([k]) => k === 'all' || count(k) > 0 || salesShow === k).map(([k, l]) => (
-                      <button key={k} type="button" aria-pressed={salesShow === k} onClick={() => setSalesShow(k)}
-                        className={'text-[12.5px] rounded-[7px] px-2.5 min-h-[30px] tabular-nums ' + (salesShow === k ? 'bg-ink text-white font-medium' : 'bg-page text-ink-soft hover:text-ink')}>{l} {count(k)}</button>
-                    ))}
-                  </div>
+                  {/* Cam 2026-11-09: "just have a filter by button" — one control, not a row of chips. */}
+                  <label className="flex items-center gap-1 text-[13px] text-ink-soft">Filter by
+                    <select value={salesShow} onChange={e => setSalesShow(e.target.value as SalesShow)} className="bg-transparent text-ink font-medium cursor-pointer rounded-[5px] focus:outline-none focus-visible:ring-2 focus-visible:ring-pine/30">
+                      {SALES_SHOW.filter(([k]) => k === 'all' || count(k) > 0 || salesShow === k).map(([k, l]) => <option key={k} value={k}>{l} ({count(k)})</option>)}
+                    </select>
+                  </label>
                   <span className="ml-auto text-[12.5px] text-ink-muted tabular-nums">{list?.length ?? 0} sale{list?.length === 1 ? '' : 's'} · {usd(paidCents)}</span>
                 </div>
               )}
@@ -829,7 +830,7 @@ export default function ShopPage() {
                           </div>
                         ))}
                         {receipt?.id === s.id && justPaid?.id !== s.id && (
-                          <div className="mt-2 max-w-md"><ReceiptForm receipt={receipt} setReceipt={setReceipt} onSend={sendReceipt} busy={busy === 'receipt' + s.id} onSkip={() => setReceipt(null)} skipLabel="Close" /></div>
+                          <SaleReceiptPanel receipt={receipt} setReceipt={setReceipt} onSend={sendReceipt} busy={busy === 'receipt' + s.id} onClose={() => setReceipt(null)} />
                         )}
                         {refund?.id === s.id && (
                           <div className="mt-2 bg-paper/70 rounded-md p-3 space-y-2 max-w-md">
@@ -886,22 +887,3 @@ export default function ShopPage() {
 }
 
 /** POS-3: send a paid sale's receipt by email or text. */
-function ReceiptForm({ receipt, setReceipt, onSend, onSkip, busy, skipLabel = 'No receipt' }: {
-  receipt: { id: string; via: 'email' | 'sms'; to: string }; setReceipt: (r: { id: string; via: 'email' | 'sms'; to: string }) => void;
-  onSend: () => void; onSkip: () => void; busy: boolean; skipLabel?: string;
-}) {
-  return (
-    <form className="flex flex-wrap items-center gap-2" onSubmit={e => { e.preventDefault(); onSend(); }}>
-      <div className="flex gap-1" role="group" aria-label="Send the receipt by">
-        {(['email', 'sms'] as const).map(v => (
-          <button key={v} type="button" aria-pressed={receipt.via === v} onClick={() => setReceipt({ ...receipt, via: v, to: '' })}
-            className={'px-2.5 py-1 rounded-md border text-[12.5px] ' + (receipt.via === v ? 'border-pine/40 bg-white text-ink font-medium' : 'border-line bg-white text-ink-soft')}>{v === 'email' ? 'Email' : 'Text'}</button>
-        ))}
-      </div>
-      <input value={receipt.to} onChange={e => setReceipt({ ...receipt, to: e.target.value })} type={receipt.via === 'email' ? 'email' : 'tel'} required
-        placeholder={receipt.via === 'email' ? 'Their email' : 'Their mobile'} aria-label={receipt.via === 'email' ? 'Receipt email' : 'Receipt mobile number'} className={INPUT + ' flex-1 min-w-[10rem]'} />
-      <button type="submit" disabled={busy} className="bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-[13px] px-3 py-2 disabled:opacity-50">{busy ? 'Sending…' : 'Send receipt'}</button>
-      <button type="button" onClick={onSkip} className="text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2">{skipLabel}</button>
-    </form>
-  );
-}

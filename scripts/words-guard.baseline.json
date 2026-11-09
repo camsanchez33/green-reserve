@@ -46,7 +46,7 @@
   "src/app/dashboard/layout.tsx": 0,
   "src/app/dashboard/login/page.tsx": 40,
   "src/app/dashboard/members/page.tsx": 488,
-  "src/app/dashboard/messages/page.tsx": 49,
+  "src/app/dashboard/messages/page.tsx": 114,
   "src/app/dashboard/money/page.tsx": 94,
   "src/app/dashboard/onboarding/page.tsx": 228,
   "src/app/dashboard/outings/page.tsx": 0,
@@ -55,7 +55,7 @@
   "src/app/dashboard/reset-password/page.tsx": 95,
   "src/app/dashboard/schedules/page.tsx": 329,
   "src/app/dashboard/settings/page.tsx": 1266,
-  "src/app/dashboard/shop/page.tsx": 539,
+  "src/app/dashboard/shop/page.tsx": 520,
   "src/app/dashboard/sign/page.tsx": 26,
   "src/app/dashboard/starter/page.tsx": 22,
   "src/app/dashboard/tournaments/page.tsx": 0,
@@ -135,5 +135,7 @@
   "src/components/dashboard/money/SalesPanel.tsx": 132,
   "src/components/dashboard/onboarding/PageReviewStep.tsx": 264,
   "src/components/dashboard/settings/FinishSetup.tsx": 18,
-  "src/components/dashboard/settings/WhoPaysWhat.tsx": 116
+  "src/components/dashboard/settings/WhoPaysWhat.tsx": 116,
+  "src/components/dashboard/shop/SaleReceiptPanel.tsx": 30,
+  "src/components/dashboard/shop/ShopReceiptBody.tsx": 14
 }
