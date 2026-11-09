@@ -10,9 +10,10 @@ let failed = 0;
 const ok = (l: string, c: boolean) => { console.log(`${c ? 'PASS' : 'FAIL'}  ${l}`); if (!c) failed++; };
 const page = readFileSync('src/app/dashboard/shop/page.tsx', 'utf8');
 
-ok('tabs: Register · Sales · Stock · Close out, each gated as before (POS-5; POS-6 took Round packs off)', page.includes("[['register', 'Register'], ['sales', 'Sales'],") && page.includes("[['stock', 'Stock']]") && !page.includes("'Round packs'") && page.includes("[['close', 'Close out']]") && page.includes("{view === 'close' && access.can('shop.close') && <RegisterClose page />}"));
+ok('tabs: Register · Sales · Stock · Close out, each gated as before (POS-5; POS-6 took Round packs off)', page.includes("tabs={[['register', 'Register'], ['sales', 'Sales'],") && page.includes("[['stock', 'Stock'] as const]") && !page.includes("'Round packs'") && page.includes("[['close', 'Close out'] as const]") && page.includes("{view === 'close' && access.can('shop.close') && <RegisterClose page />}"));
 ok('POS-6: Stock is where items are added and changed; the register re-reads them after', page.includes('<StockTab refreshKey={loads} onChanged={load} />') && page.includes("onClick={() => setView('stock')}") && !page.includes('Add them in Settings'));
-ok('POS-5: the tab highlight slides, and not with reduced motion', page.includes('transition-[left,top,width,height] duration-200 ease-out motion-reduce:transition-none') && page.includes('document.fonts?.ready.then(place)') && !page.includes('inline-flex flex-wrap gap-1 p-1'));
+const slide = readFileSync('src/components/dashboard/SlidingTabs.tsx', 'utf8');
+ok('POS-5/7: the tab highlight slides (shared SlidingTabs), and not with reduced motion', page.includes('<SlidingTabs look="pill" label="Pro shop"') && slide.includes('transition-[left,top,width,height] duration-200 ease-out motion-reduce:transition-none') && slide.includes('document.fonts?.ready.then(place)'));
 ok('one flat list of tiles filtered by the chip — no category headings', page.includes('const shown = useMemo(() => tree') && !page.includes('<h2 className="text-[13px] font-semibold text-ink mb-2">{group}</h2>'));
 ok('Custom amount is a tile; no round pack on the register (POS-6)', page.includes('>Custom amount</button>') && !page.includes('>Round pack</button>') && !page.includes('PackPicker') && !page.includes('roundPackId'));
 ok('POS-6: a tile says how many are "in sale" and its stock on its own line', page.includes('{n} in sale</span>') && page.includes('const stockN = stockOf(it);'));

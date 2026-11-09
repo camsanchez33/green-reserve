@@ -17,6 +17,7 @@ import { StatusDot } from '@/components/ui/StatusDot';
 import { DeclinedCardList } from '@/components/dashboard/DeclinedCardList';
 import type { DeclinedCard } from '@/lib/operator-home';
 import { LoadError } from '@/components/dashboard/LoadError';
+import { OpenRegister } from '@/components/dashboard/OpenRegister';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import type { PayoutsData } from '@/components/dashboard/money/PayoutsTable';
@@ -202,6 +203,9 @@ export default function DashboardHome() {
           </div>
 
           {error && <LoadError message={`Couldn't load today — ${error}`} onRetry={load} />}
+
+          {/* POS-7 (Cam 2026-11-09): until today's register is open, Home asks for the starting cash. */}
+          <OpenRegister where="home" />
 
           {/* Cam 2026-10-27 / 2026-11-05: what's still missing, one line; each button lands on the field in Settings. */}
           {home && home.setupMissing.length > 0 && (

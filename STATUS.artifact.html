@@ -117,14 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-11-09 03:41 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ e981f434</span>
+    <span>2026-11-09 04:01 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 83eedae6</span>
     <span>29 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">157 runs have shipped that the queue doesn't know about</div>
+<div class="lede">159 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-31. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">4a51c27b</span><span>POS-6: Stock is where items are added; round packs off; tiles, ticket, Sales filters (#342)</span></li>
+<li><span class="h">def61397</span><span>POS-6: Stock is where items are added; round packs off; tiles, ticket, Sales filters</span></li>
 <li><span class="h">0682ac62</span><span>POS-5: Pro shop Stock, Round packs and Close out tabs; sliding tab highlight (#340)</span></li>
 <li><span class="h">b99b4c8a</span><span>POS-5: Pro shop Stock, Round packs and Close out as their own tabs; sliding tab highlight</span></li>
 <li><span class="h">b8512431</span><span>ACC-1: every booking and payment figure agrees across the site (#339)</span></li>
@@ -294,7 +296,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M  STATUS.artifact.html</code></li><li><code>M  STATUS.json</code></li><li><code>M  STATUS.md</code></li><li><code>M  docs/CODEMAP.md</code></li><li><code>M  docs/codemap.json</code></li><li><code>M  scripts/design-guard.baseline.json</code></li><li><code>D  scripts/pack-open-links-db-test.ts</code></li><li><code>M  scripts/pos-register-test.ts</code></li><li><code>M  scripts/register-photo-test.ts</code></li><li><code>M  scripts/revamp3-fixes-test.ts</code></li><li><code>D  scripts/round-packs-db-test.ts</code></li><li><code>A  scripts/round-packs-off-test.ts</code></li><li><code>M  scripts/words-guard.baseline.json</code></li><li><code>M  src/app/api/bookings/resident-rate/route.ts</code></li><li><code>M  src/app/api/bookings/route.ts</code></li><li><code>M  src/app/api/courses/[slug]/packs/route.ts</code></li><li><code>M  src/app/dashboard/page.tsx</code></li><li><code>M  src/app/dashboard/settings/page.tsx</code></li><li><code>M  src/app/dashboard/shop/page.tsx</code></li><li><code>M  src/components/dashboard/ShopCatalog.tsx</code></li></ul>
+<ul class="plain"><li><code>M  STATUS.artifact.html</code></li><li><code>M  STATUS.json</code></li><li><code>M  STATUS.md</code></li><li><code>MM docs/CODEMAP.md</code></li><li><code>MM docs/codemap.json</code></li><li><code>A  prisma/migrations/20261109000000_register_open/migration.sql</code></li><li><code>M  prisma/schema.prisma</code></li><li><code>M  scripts/checkout-card-test.ts</code></li><li><code>M  scripts/design-guard.baseline.json</code></li><li><code>M  scripts/home-page-test.ts</code></li><li><code>M  scripts/pos-register-test.ts</code></li><li><code>A  scripts/register-open-db-test.ts</code></li><li><code>M  scripts/sheet-views-test.ts</code></li><li><code>M  scripts/teesheet-2-test.ts</code></li><li><code>M  scripts/words-guard.baseline.json</code></li><li><code>M  src/app/api/operator/register-close/route.ts</code></li><li><code>AM src/app/api/operator/register-open/route.ts</code></li><li><code>M  src/app/dashboard/analytics/page.tsx</code></li><li><code>M  src/app/dashboard/home/page.tsx</code></li><li><code>M  src/app/dashboard/money/page.tsx</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -376,6 +378,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 19d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">4a51c27b</td><td class="num">2026-11-08</td><td>POS-6: Stock is where items are added; round packs off; tiles, ticket, Sales filters (#342)</td></tr>
+<tr><td class="num">def61397</td><td class="num">2026-11-09</td><td>POS-6: Stock is where items are added; round packs off; tiles, ticket, Sales filters</td></tr>
 <tr><td class="num">0682ac62</td><td class="num">2026-11-08</td><td>POS-5: Pro shop Stock, Round packs and Close out tabs; sliding tab highlight (#340)</td></tr>
 <tr><td class="num">b99b4c8a</td><td class="num">2026-11-08</td><td>POS-5: Pro shop Stock, Round packs and Close out as their own tabs; sliding tab highlight</td></tr>
 <tr><td class="num">b8512431</td><td class="num">2026-11-08</td><td>ACC-1: every booking and payment figure agrees across the site (#339)</td></tr>
@@ -386,8 +390,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">ab8c4f43</td><td class="num">2026-11-08</td><td>SEATS-1: close seats on a tee time one at a time (Open seats − N + on the card)</td></tr>
 <tr><td class="num">b324c547</td><td class="num">2026-11-08</td><td>Receipt: what was actually paid, how and when; prints on a receipt printer (#336)</td></tr>
 <tr><td class="num">d26d15c1</td><td class="num">2026-11-08</td><td>Receipt: what was actually paid, how and when; prints on a receipt printer</td></tr>
-<tr><td class="num">d6083d50</td><td class="num">2026-11-08</td><td>Time card: reader charges who's here, receipts, day actions in the sheet bar (#335)</td></tr>
-<tr><td class="num">480f7d0e</td><td class="num">2026-11-08</td><td>Time card: the reader charges who's here, receipts, day actions in the sheet bar</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

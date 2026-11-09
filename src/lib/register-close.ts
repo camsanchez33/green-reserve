@@ -121,12 +121,15 @@ const cents = (v: unknown) => {
 
 /** Count the drawer: snapshot the day's figures with the count. */
 export async function closeDay(courseId: string, input: { day?: unknown; openingFloatCents?: unknown; countedCashCents?: unknown; note?: unknown }, closedBy: string): Promise<Result<CloseView>> {
-  const float = cents(input.openingFloatCents ?? 0);
+  let float = cents(input.openingFloatCents ?? 0);
   const counted = cents(input.countedCashCents);
   if (float === null) return fail(400, 'Enter the starting cash as an amount (0 if the drawer started empty).');
   if (counted === null) return fail(400, 'Enter the cash you counted in the drawer.');
   const s = await daySummary(courseId, typeof input.day === 'string' ? input.day : undefined);
   if (!s.ok) return s;
+  // POS-7: a day the register was opened counts from its LOCKED starting cash — never a number typed here.
+  const opened = await prisma.registerOpen.findFirst({ where: { courseId, day: s.value.day }, orderBy: { seq: 'desc' }, select: { startingCashCents: true } });
+  if (opened) float = opened.startingCashCents;
   const expected = float + s.value.cashTakenCents;
   const row = await prisma.registerClose.create({
     data: {

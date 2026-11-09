@@ -16,7 +16,7 @@ export type PermissionKey =
   | 'members.view' | 'members.edit'
   | 'schedule.view' | 'schedule.edit'
   | 'analytics.view' | 'messages.use' | 'settings.edit'
-  | 'shop.sell' | 'shop.discount' | 'shop.catalog' | 'shop.close' | 'shop.return'
+  | 'shop.sell' | 'shop.discount' | 'shop.catalog' | 'shop.open' | 'shop.open_fix' | 'shop.close' | 'shop.return'
   | 'events.manage';
 
 export interface PermissionDef {
@@ -68,6 +68,10 @@ export const PERMISSIONS: PermissionDef[] = [
   // POS-3 (Cam 2026-10-24): money off a walk-up sale — Manager has it, Front desk doesn't.
   { key: 'shop.discount', group: 'Pro shop', label: 'Give discounts', help: 'Take money off a walk-up sale (an amount or a percent), with a note saying why.', requires: ['shop.sell'], movesMoney: true },
   // POS-3 R4 (Cam 2026-10-24): count the drawer at the end of the day — Manager and Front desk.
+  // POS-7 (Cam 2026-11-09: "any staff member at the register … they can allow to set permissions for it"): open
+  // the register with the day's starting cash (Front desk has it); change it once locked is given person by person.
+  { key: 'shop.open', group: 'Pro shop', label: 'Open the register', help: 'Enter the day’s starting cash. It locks once confirmed.', requires: ['shop.sell'] },
+  { key: 'shop.open_fix', group: 'Pro shop', label: 'Change the starting cash', help: 'Correct the day’s starting cash after it’s locked, with a reason. The first amount stays on record.', requires: ['shop.open'] },
   { key: 'shop.close', group: 'Pro shop', label: 'Close out the register', help: 'See the day’s cash and card totals, count the drawer and record any over or short.', requires: ['shop.sell'] },
   // Launch walk (Cam 2026-10-31): the counter takes items back without the wider refund power — Front desk has it.
   { key: 'shop.return', group: 'Pro shop', label: 'Return items', help: 'Take items back from a pro shop sale and give their money back the way it was paid. Refunding a typed amount needs Issue refunds.', requires: ['shop.sell'], movesMoney: true },
@@ -89,7 +93,7 @@ export const PRESETS: { key: PresetKey; label: string; help: string; keys: Permi
   { key: 'starter', label: 'Starter', help: 'Sees the sheet, checks groups in, marks no-shows.',
     keys: ['sheet.view', 'sheet.checkin', 'sheet.no_show', 'messages.use'] },
   { key: 'front_desk', label: 'Front desk', help: 'Runs the counter: payments, walk-ins, cancellations, blocking, shop items.',
-    keys: ['sheet.view', 'sheet.checkin', 'sheet.no_show', 'messages.use', 'sheet.counter_payment', 'sheet.walkin', 'sheet.move', 'sheet.cancel', 'sheet.block', 'sheet.golfer_contact', 'sheet.message_golfers', 'sheet.course_alert', 'money.cancellations', 'shop.sell', 'shop.close', 'shop.return'] },
+    keys: ['sheet.view', 'sheet.checkin', 'sheet.no_show', 'messages.use', 'sheet.counter_payment', 'sheet.walkin', 'sheet.move', 'sheet.cancel', 'sheet.block', 'sheet.golfer_contact', 'sheet.message_golfers', 'sheet.course_alert', 'money.cancellations', 'shop.sell', 'shop.open', 'shop.close', 'shop.return'] },
   // Cam 2026-10-29: "Refund rounds" is in no preset — the owner gives it person by person.
   { key: 'manager', label: 'Manager', help: 'Everything a staff login can be given, but refunding rounds.', keys: ALL_KEYS.filter(k => k !== 'money.refund_rounds') },
 ];

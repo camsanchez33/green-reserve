@@ -1,5 +1,6 @@
 'use client';
 import { onCourse } from '@/lib/on-course';
+import { SlidingTabs } from '@/components/dashboard/SlidingTabs';
 import { timeSpots, livePlayers as livePlayersOf } from '@/lib/day-fill';
 import { roundName } from '@/lib/tee-rounds';
 import SmsConsentAsk, { SmsConsentDialog } from '@/components/dashboard/SmsConsentAsk';
@@ -15,7 +16,7 @@ import { useEffect, useState, useCallback, Suspense, useRef } from 'react';
 import { todayIn, clockIn, DEFAULT_TZ } from '@/lib/course-time';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  ChevronLeft, ChevronRight, X, Loader2, Search,
+  ChevronLeft, ChevronRight, X, Loader2, Search, Cloud, MessageCircle,
 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -73,6 +74,9 @@ type TeeTime = {
   event?: { id: string; name: string } | null;
 };
 type SheetView = 'grid' | 'list' | 'calendar';
+// Cam 2026-11-09: the sheet bar's two icon buttons, named for screen readers and on hover.
+const WX_LABEL = 'Weather delay or cancel';
+const msgLabel = (isToday: boolean) => (isToday ? 'Message today’s golfers' : 'Message this day’s golfers');
 const SHEET_VIEWS: { id: SheetView; label: string }[] = [{ id: 'grid', label: 'Grid' }, { id: 'list', label: 'List' }, { id: 'calendar', label: 'Calendar' }];
 
 type Booking = {
@@ -184,7 +188,6 @@ function DashboardPageInner() {
   useEffect(() => { try { const v = localStorage.getItem('gr_sheet_view'); if (v === 'list' || v === 'calendar') setSheetViewState(v); } catch {} }, []);
   const setSheetView = (v: SheetView) => { setSheetViewState(v); try { localStorage.setItem('gr_sheet_view', v); } catch {} };
   // DASH-D: the till's result — the group just checked in, shown at the top of its time's card.
-  const [dayMenu, setDayMenu] = useState(false);
   const [justDone, setJustDone] = useState<{ bookingId: string; name: string; players: number; how: string } | null>(null);
   // RECEIPT-1 (Cam 2026-11-08): the receipt the golfer wants — print, text or email; '' = not asked yet.
   const [receiptFor, setReceiptFor] = useState<{ via: 'sms' | 'email'; to: string } | null>(null);
@@ -1459,14 +1462,9 @@ function DashboardPageInner() {
                   {/* Cam 2026-10-19: Find golfer sits in the sheet's own bar, and
                       refresh is a small icon beside it instead of a button. */}
                   <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
-                    <div role="group" aria-label="Sheet view" className="flex items-center gap-3 mr-1">
-                      {SHEET_VIEWS.map(v => (
-                        <button key={v.id} type="button" aria-pressed={sheetView === v.id} onClick={() => setSheetView(v.id)}
-                          className={'py-1 text-[13px] transition-colors border-b-2 ' + (sheetView === v.id ? 'text-ink font-semibold border-pine' : 'text-ink-muted font-medium border-transparent hover:text-ink')}>
-                          {v.label}
-                        </button>
-                      ))}
-                    </div>
+                    {/* POS-7 (Cam 2026-11-09, "use it on other tab bars"): the underline slides to the view picked. */}
+                    <SlidingTabs label="Sheet view" value={sheetView} onChange={setSheetView} className="mr-1 !gap-3 !border-b-0" tabClassName="!pb-1 !pt-0.5 !text-[13px]"
+                      tabs={SHEET_VIEWS.map(v => [v.id, v.label] as const)} />
                     <label className="sr-only" htmlFor="sheet-search">Find golfer</label>
                     <div className="relative">
                       <Search aria-hidden="true" className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ink-faint pointer-events-none" />
@@ -1479,25 +1477,16 @@ function DashboardPageInner() {
                       className="w-8 h-8 rounded-md inline-flex items-center justify-center text-[16px] leading-none text-ink-muted hover:text-ink hover:bg-paper transition-colors">
                       <span aria-hidden="true">↻</span>
                     </button>
-                    {/* Cam 2026-11-08 ("feels like it's just there"): the day's actions live in the sheet's own bar —
-                        "This day" holds weather and messages; "+ Time" adds a tee time. Each keeps its old permission. */}
-                    {((selectedDate >= today() && wxTabs.length > 0) || access.can('sheet.message_golfers')) && (
-                      <div className="relative">
-                        <button type="button" aria-haspopup="menu" aria-expanded={dayMenu} onClick={() => setDayMenu(o => !o)} onBlur={e => { if (!e.currentTarget.parentElement?.contains(e.relatedTarget as Node | null)) setDayMenu(false); }} onKeyDown={e => { if (e.key === 'Escape') setDayMenu(false); }}
-                          className="whitespace-nowrap px-2.5 py-1.5 rounded-md text-[13px] font-medium text-ink-soft hover:text-ink hover:bg-paper transition-colors">This day ▾</button>
-                        {dayMenu && (
-                          <div role="menu" onKeyDown={e => { if (e.key === 'Escape') setDayMenu(false); }} className="absolute right-0 top-full mt-1 z-20 w-60 rounded-lg bg-white shadow-card py-1">
-                            {selectedDate >= today() && wxTabs.length > 0 && (
-                              <button role="menuitem" type="button" onClick={() => { setDayMenu(false); (() => { setFrostOpen(true); setWxMode(wxTabs[0][0]); setWxSpan(selectedDate === today() ? 'rest' : 'day'); setFrostPlan(null); setFrostPlanKey(''); setFrostErr(''); setFrostApplyErr(''); setFrostResult(null); setWxPlan(null); setWxPlanKey(''); setWxErr(''); setWxApplyErr(''); setWxResult(null); })(); }}
-                                className="w-full text-left px-3.5 py-2 text-[13.5px] text-ink hover:bg-paper">Weather delay or cancel</button>
-                            )}
-                            {access.can('sheet.message_golfers') && (
-                              <button role="menuitem" type="button" onClick={() => { setDayMenu(false); setMessageOpen(true); }}
-                                className="w-full text-left px-3.5 py-2 text-[13.5px] text-ink hover:bg-paper">{selectedDate === today() ? 'Message today’s golfers' : 'Message this day’s golfers'}</button>
-                            )}
-                          </div>
-                        )}
-                      </div>
+                    {/* Cam 2026-11-09 ("this should just be like a little message bubble"): the day's two actions are icon
+                        buttons in the sheet's bar — a cloud for weather delay or cancel, a speech bubble for messaging the
+                        day's golfers. Each keeps its old permission. */}
+                    {selectedDate >= today() && wxTabs.length > 0 && (
+                      <button type="button" aria-label={WX_LABEL} title={WX_LABEL} onClick={() => { setFrostOpen(true); setWxMode(wxTabs[0][0]); setWxSpan(selectedDate === today() ? 'rest' : 'day'); setFrostPlan(null); setFrostPlanKey(''); setFrostErr(''); setFrostApplyErr(''); setFrostResult(null); setWxPlan(null); setWxPlanKey(''); setWxErr(''); setWxApplyErr(''); setWxResult(null); }}
+                        className="w-8 h-8 rounded-md inline-flex items-center justify-center text-ink-muted hover:text-ink hover:bg-paper transition-colors"><Cloud className="w-4 h-4" aria-hidden="true" /></button>
+                    )}
+                    {access.can('sheet.message_golfers') && (
+                      <button type="button" aria-label={msgLabel(selectedDate === today())} title={msgLabel(selectedDate === today())} onClick={() => setMessageOpen(true)}
+                        className="w-8 h-8 rounded-md inline-flex items-center justify-center text-ink-muted hover:text-ink hover:bg-paper transition-colors"><MessageCircle className="w-4 h-4" aria-hidden="true" /></button>
                     )}
                     {access.can('sheet.edit_times') && (
                       <button type="button" onClick={() => setShowAddModal(true)} className="whitespace-nowrap px-2.5 py-1.5 rounded-md text-[13px] font-semibold text-pine hover:bg-paper transition-colors">+ Time</button>

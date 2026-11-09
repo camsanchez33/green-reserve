@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { daySummary, closeDay, recentCloses } from '@/lib/register-close';
+import { registerOpenFor } from '@/lib/register-open';
 
 // POS-3 R4: the end-of-day close-out. Seeing the day's money and counting the
 // drawer is "Close out the register" (shop.close). The course is always the session's.
@@ -19,7 +20,9 @@ export async function GET(req: NextRequest) {
   const day = new URL(req.url).searchParams.get('day') ?? undefined;
   const s = await daySummary(g.session.courseId, day || undefined);
   if (!s.ok) return NextResponse.json({ error: s.error }, { status: s.status });
-  return NextResponse.json({ summary: s.value, recent: await recentCloses(g.session.courseId) });
+  // POS-7: the day's locked starting cash, when the register was opened.
+  const opened = await registerOpenFor(g.session.courseId, s.value.day);
+  return NextResponse.json({ summary: s.value, recent: await recentCloses(g.session.courseId), opened: opened.ok ? opened.value.current : null });
 }
 
 export async function POST(req: NextRequest) {

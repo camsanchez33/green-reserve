@@ -4,6 +4,7 @@
 // /dashboard/payments and /dashboard/cancellations redirect here, so every
 // bookmark, email link and tee-sheet deep link still lands in the right place.
 import { Card } from '@/components/ui/Card';
+import { SlidingTabs } from '@/components/dashboard/SlidingTabs';
 import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
@@ -221,14 +222,8 @@ function MoneyPageInner() {
             </section>
           )}
 
-          <div className="flex gap-6 border-b border-line mb-5" role="tablist">
-            {tabs.map(t => (
-              <button key={t.key} role="tab" aria-selected={active === t.key} onClick={() => setTab(t.key)}
-                className={'pb-2.5 -mb-px text-[14px] font-semibold border-b-2 transition-colors ' + (active === t.key ? 'text-ink border-fairway' : 'text-ink-soft border-transparent hover:text-ink')}>
-                {t.label}
-              </button>
-            ))}
-          </div>
+          {/* POS-7 (Cam 2026-11-09): the underline slides to the tab picked. */}
+          <SlidingTabs value={active} onChange={k => setTab(k)} className="w-full mb-5" tabs={tabs.map(t => [t.key, t.label] as const)} />
 
           {roleUnknown && (
             <div className="bg-white border border-line border-l-[3px] border-l-warn rounded-md px-4 py-3 text-[13.5px] text-ink-soft mb-4">
