@@ -9,6 +9,11 @@ import { isTaxCategory } from './tax-categories';
 
 export const SHOP_READ_MODEL = 'claude-opus-5-5';
 export const MAX_READ_CHARS = 20000;
+/** POS-8 (Cam 2026-11-09: "they can just upload what they have"): a photo of a price sheet or a PDF invoice. */
+export const READ_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'] as const;
+export type ReadFileType = typeof READ_FILE_TYPES[number];
+/** Vercel refuses a request body over 4.5 MB; base64 grows a file by a third, so the file itself stays under 3 MB. */
+export const MAX_READ_FILE_BYTES = 3_000_000;
 
 const SYSTEM = `You turn a golf course pro shop's list of things it sells into catalog rows.
 The text may be a supplier invoice, a price list, a spreadsheet pasted as text, or notes.
@@ -78,15 +83,22 @@ export function cleanRows(raw: unknown): ReadRow[] {
   return out;
 }
 
-export async function readShopList(text: string): Promise<{ ok: true; rows: ReadRow[] } | { ok: false; error: string }> {
+export async function readShopList(input: string | { file: { mediaType: ReadFileType; data: string }; text?: string }): Promise<{ ok: true; rows: ReadRow[] } | { ok: false; error: string }> {
   const client = new Anthropic();
+  // A file goes first, then what to do with it (the model reads the same rules either way).
+  const content: Anthropic.ContentBlockParam[] | string = typeof input === 'string' ? input : [
+    input.file.mediaType === 'application/pdf'
+      ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: input.file.data } }
+      : { type: 'image', source: { type: 'base64', media_type: input.file.mediaType as 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif', data: input.file.data } },
+    { type: 'text', text: input.text?.trim() ? input.text.trim() : 'Read every product in this file into catalog rows.' },
+  ];
   // Opus 5.5 always thinks, and thinking counts toward max_tokens.
   const msg = await client.messages.create({
     model: SHOP_READ_MODEL, max_tokens: 32000, system: SYSTEM,
     output_config: { effort: 'low', format: { type: 'json_schema', schema: SCHEMA } },
-    messages: [{ role: 'user', content: text }],
+    messages: [{ role: 'user', content }],
   } as Anthropic.MessageCreateParamsNonStreaming);
-  if (msg.stop_reason === 'refusal') return { ok: false, error: 'The assistant couldn’t read that list. Try pasting it as plain rows instead.' };
+  if (msg.stop_reason === 'refusal') return { ok: false, error: 'The assistant couldn’t read that. Try a clearer photo, or a CSV.' };
   if (msg.stop_reason === 'max_tokens') return { ok: false, error: 'That list is too long to read at once — split it into a few smaller pastes.' };
   const body = msg.content.flatMap(b => (b.type === 'text' ? [b.text] : [])).join('');
   let parsed: unknown;

@@ -848,8 +848,8 @@ export async function findSales(courseId: string, opts: { day?: string; q?: stri
         // Audit 2026-10-31: only a login that may see golfer contact details finds a sale by email or phone.
         ...(opts.contact ? [{ customerEmail: contains }, ...(digits.length >= 4 ? [{ customerPhone: { contains: digits } }] : [])] : []),
         { lines: { some: { name: contains } } },
-        // The receipt shows the sale's id — its last characters are enough.
-        { id: { endsWith: q.toLowerCase() } },
+        // The receipt shows the sale's id — its last characters are enough (POS-8: the Sales list shows #XXXXXXXX too).
+        { id: { endsWith: q.replace(/^#/, '').toLowerCase() } },
       ] } : {}),
     },
     orderBy: { createdAt: 'desc' }, take: 100, include: SALE_INCLUDE,

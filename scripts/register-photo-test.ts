@@ -25,9 +25,9 @@ ok('tiles shown with any photo all get the same picture area (POS-4: one flat li
 const initials = (name: string) => name.split(/\s+/).filter(w => /^[A-Za-z0-9]/.test(w)).slice(0, 2).map(w => w[0]).join('').toUpperCase();
 ok('initials skip punctuation ("Tees (bag of 50)" → TO, never "T(")', initials('Tees (bag of 50)') === 'TO' && initials('Pro V1') === 'PV' && shop.includes(".filter(w => /^[A-Za-z0-9]/.test(w)).slice(0, 2)"));
 
-const cat = read('src/components/dashboard/ShopCatalog.tsx');
-ok('a phone photo is shrunk before upload (Vercel refuses bodies over 4.5 MB)', cat.includes("fd.append('file', await downscaleImage(file));"));
-ok('the catalog uploads and removes the photo, and shows the error', cat.includes("fetch('/api/operator/shop-items/photo', { method: 'POST', body: fd })") && cat.includes("method: 'DELETE'") && cat.includes("onError(d.error || 'Upload failed — try again.')") && read('src/components/dashboard/StockTab.tsx').includes('{canEdit ? <ItemPhoto'));
+const form = read('src/components/dashboard/ItemForm.tsx');
+ok('a phone photo is shrunk before upload (Vercel refuses bodies over 4.5 MB)', form.includes("fd.append('file', await downscaleImage(file));"));
+ok('the item form uploads, replaces and removes the photo, and says when it fails (POS-8)', form.includes("fetch('/api/operator/shop-items/photo', { method: 'POST', body: fd })") && form.includes("{ method: 'DELETE' }") && form.includes("'The photo didn’t upload — try again.'") && form.includes('>Replace photo</button>'));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);

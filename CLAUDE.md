@@ -8,6 +8,9 @@ GreenReserve is an OpenTable-style golf tee sheet platform. Golf courses list fo
 
 ---
 
+## Launch plan — READ `LAUNCH_PLAN_SPEC.md` FIRST (Cam 2026-11-09)
+Cam's handwritten plan to be live by Thanksgiving (Nov 26 2026): finish /dashboard page by page in his order (Pro shop + the tee sheet's carts → Messages → Money → Members → Events → Schedule → Analytics → Settings → Course alert → Sign out; then links, then UI/layout/animations), then a complete Admin redo, then the homepage, then golfer-facing pages, then the outreach rework (every text, email, receipt and confirmation: how they look and what they do), then a security pass, then run it like a real company; outreach starts Mon Nov 30. Work in that order.
+
 ## Key architectural decisions
 
 ### Payment flow (deferred, not immediate)

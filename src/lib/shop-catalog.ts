@@ -25,7 +25,7 @@ function stockOf(v: unknown): number | null | 'bad' {
 }
 
 /** Validate one item (with its options) from a browser body. */
-export function readItem(body: Record<string, unknown>): { ok: true; item: ItemIn } | { ok: false; error: string } {
+export function readItem(body: Record<string, unknown>, keepOpt: Set<string> = new Set()): { ok: true; item: ItemIn } | { ok: false; error: string } {
   const v = validItemInput(body);
   if (typeof v === 'string') return fail(v);
   const stock = stockOf(body.stockCount);
@@ -43,7 +43,7 @@ export function readItem(body: Record<string, unknown>): { ok: true; item: ItemI
     seen.add(label.toLowerCase());
     const p = o.priceCents === null || o.priceCents === undefined || o.priceCents === '' ? null : Number(o.priceCents);
     if (p !== null && (!Number.isInteger(p) || p <= 0 || p > MAX_ITEM_PRICE_CENTS)) return fail(`${v.name} — ${label}: enter a price above $0, or leave it blank to use the item's price.`);
-    const s = stockOf(o.stockCount);
+    const s = typeof o.id === 'string' && keepOpt.has(o.id) ? null : stockOf(o.stockCount);
     if (s === 'bad') return fail(`${v.name} — ${label}: stock must be a whole number, or blank.`);
     options.push({ id: typeof o.id === 'string' ? o.id : undefined, label, priceCents: p, stockCount: s, sku: typeof o.sku === 'string' ? o.sku.trim().slice(0, 64) : '' });
   }
@@ -97,7 +97,8 @@ export async function createItems(courseId: string, bodies: unknown[]) {
     }
     return out;
   }, { timeout: 30000 });
-  return { ok: true as const, created: ids.length };
+  // POS-8: the ids, so Add item can save the photo, reorder point and cost onto the item it just made.
+  return { ok: true as const, created: ids.length, ids };
 }
 
 /**
@@ -110,7 +111,12 @@ export async function updateItem(courseId: string, id: string, body: Record<stri
   const existing = await prisma.shopItem.findFirst({ where: { id, courseId }, include: { options: { include: { _count: { select: { sales: true, saleLines: true } } } } } });
   if (!existing) return null;
   if (existing.parentId) return fail('Change an option from its item.');
-  const r = readItem({ ...body, taxCategory: body.taxCategory ?? existing.taxCategory, options: Array.isArray(body.options) ? body.options : existing.options.filter(o => o.active).map(o => ({ id: o.id, label: o.optionLabel, priceCents: o.priceCents === existing.priceCents ? null : o.priceCents, stockCount: o.stockCount, sku: o.sku })) });
+  // POS-8 review: `keepStock: true` (on the item, or on a kept option) leaves its count exactly as stored — never
+  // re-written from what the form loaded. A count can be below 0 (sold past it), and the register may be selling while
+  // the form is open; a rename or a delivery must not reset either. (A delivery adds through lib/shop-stock receive.)
+  const keepItem = body.keepStock === true;
+  const keepOpt = new Set((Array.isArray(body.options) ? body.options as Record<string, unknown>[] : []).filter(o => o && o.keepStock === true && typeof o.id === 'string').map(o => o.id as string));
+  const r = readItem({ ...body, ...(keepItem ? { stockCount: null } : {}), taxCategory: body.taxCategory ?? existing.taxCategory, options: Array.isArray(body.options) ? body.options : existing.options.filter(o => o.active).map(o => ({ id: o.id, label: o.optionLabel, priceCents: o.priceCents === existing.priceCents ? null : o.priceCents, stockCount: o.stockCount, sku: o.sku })) }, keepOpt);
   if (!r.ok) return r;
   const it = r.item;
   const active = typeof body.active === 'boolean' ? body.active : existing.active;
@@ -119,10 +125,10 @@ export async function updateItem(courseId: string, id: string, body: Record<stri
   const clash = await skuClash(courseId, [it], [id, ...existing.options.map(o => o.id)]);
   if (clash) return fail(clash);
   await prisma.$transaction(async tx => {
-    await tx.shopItem.update({ where: { id }, data: { name: it.name, category: it.category, priceCents: it.priceCents, stockCount: it.stockCount, sku: it.sku, taxCategory: it.taxCategory, active } });
+    await tx.shopItem.update({ where: { id }, data: { name: it.name, category: it.category, priceCents: it.priceCents, ...(keepItem && !it.options.length ? {} : { stockCount: it.stockCount }), sku: it.sku, taxCategory: it.taxCategory, active } });
     const keep = new Set<string>();
     for (const [i, o] of it.options.entries()) {
-      const data = { optionLabel: o.label, name: optionName(it.name, o.label), category: it.category, priceCents: o.priceCents ?? it.priceCents, stockCount: o.stockCount, sku: o.sku, sortOrder: i, taxCategory: it.taxCategory, active: true };
+      const data = { optionLabel: o.label, name: optionName(it.name, o.label), category: it.category, priceCents: o.priceCents ?? it.priceCents, ...(o.id && keepOpt.has(o.id) ? {} : { stockCount: o.stockCount }), sku: o.sku, sortOrder: i, taxCategory: it.taxCategory, active: true };
       if (o.id) { keep.add(o.id); await tx.shopItem.update({ where: { id: o.id }, data }); }
       else await tx.shopItem.create({ data: { courseId, parentId: id, ...data } });
     }
