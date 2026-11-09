@@ -21,6 +21,7 @@ import OperatorSidebar from '@/components/OperatorSidebar';
 import { StaffNotice } from '@/components/dashboard/StaffNotice';
 import { RegisterClose } from '@/components/dashboard/RegisterClose';
 import { StockTab } from '@/components/dashboard/StockTab';
+import { CalendarDays } from 'lucide-react';
 import { OpenRegister } from '@/components/dashboard/OpenRegister';
 import { SlidingTabs } from '@/components/dashboard/SlidingTabs';
 import { Card } from '@/components/ui/Card';
@@ -29,7 +30,7 @@ import { INPUT_COMPACT as INPUT } from '@/components/ui/field';
 import { AccountPicker, type AccountMember } from '@/components/dashboard/AccountPicker';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
-import { shopTree, matches, bySku, skuHits, stockWords, stockOf, type FlatItem, type TreeItem } from '@/lib/shop-tree';
+import { shopTree, matches, bySku, skuHits, stockOf, type FlatItem, type TreeItem } from '@/lib/shop-tree';
 
 type Item = FlatItem;
 type Refund = { id: string; amountCents: number; method: string; status: string; reason: string; restocked: boolean; error: string; createdAt: string };
@@ -132,6 +133,7 @@ export default function ShopPage() {
     setHistSales(r.data.sales);
   }
   const searchRef = useRef<HTMLInputElement>(null);
+  const dayRef = useRef<HTMLInputElement>(null);
   // POS-4: the page's tabs, and where the sale is in the Charge steps (null = building the sale).
   const [view, setView] = useState<'register' | 'sales' | 'stock' | 'close'>('register');
   // POS-5/POS-7: the tab highlight slides to the tab picked (components/dashboard/SlidingTabs, off with reduced motion).
@@ -212,13 +214,23 @@ export default function ShopPage() {
   const ready = !itemsEmpty && ((!!priced && (!noTax || pay === 'cash' || pay === 'account')) || cashNoQuote);
   const tenderedCents = toCents(tendered);
   const add = (id: string, d: number) => setCart(c => { const q = Math.max(0, Math.min(99, (c[id] ?? 0) + d)); const n = { ...c }; if (q) n[id] = q; else delete n[id]; return n; });
+  // POS-8 (Cam 2026-11-09: "shouldnt be able to sell a sold out item?"; picked "Warn, Sell anyway"): at a count of 0
+  // the register asks before adding one — the shelf may hold what the count missed. Asked once per item per sale.
+  const [outAsk, setOutAsk] = useState<string | null>(null);
+  const [outOk, setOutOk] = useState<Set<string>>(new Set());
+  const leftOf = (id: string) => { const it = (items ?? []).find(x => x.id === id); return it?.stockCount == null ? null : it.stockCount - (cart[id] ?? 0); };
+  function tryAdd(id: string) {
+    const l = leftOf(id);
+    if (l !== null && l <= 0 && !outOk.has(id)) { setOutAsk(id); return false; }
+    add(id, 1); return true;
+  }
   const addCustom = (key: string, d: number) => setCustoms(cs => cs.map(c => c.key === key ? { ...c, quantity: Math.max(0, Math.min(99, c.quantity + d)) } : c).filter(c => c.quantity > 0));
   const empty = itemsEmpty;
 
   // A scanner types the code and presses Enter: an exact SKU goes straight into the sale.
   function scan(code: string) {
     const hit = bySku(items ?? [], code);
-    if (hit) { add(hit.id, 1); setQ(''); setNote(`Added ${hit.name}.${hit.stockCount !== null && hit.stockCount - (cart[hit.id] ?? 0) <= 0 ? ' Sold out.' : ''}`); setError(''); return true; }
+    if (hit) { setQ(''); setError(''); if (tryAdd(hit.id)) setNote(`Added ${hit.name}.`); else setNote(''); return true; }
     // Two items with one code: say so instead of adding nothing silently.
     if (skuHits(items ?? [], code).length > 1) { setError(`Code ${code.trim()} is on two items.`); return true; }
     return false;
@@ -273,7 +285,7 @@ export default function ShopPage() {
       if (r.status === 409 && /sales tax changed/.test(r.error)) { setQuoteTry(n => n + 1); setStep(null); }
       return;
     }
-    setCart({}); setCustoms([]); setDiscount(null); setTendered(''); setCustomer({ name: '', phone: '', email: '' }); setSmsYes(false); setAccountMember(null);
+    setCart({}); setCustoms([]); setDiscount(null); setTendered(''); setCustomer({ name: '', phone: '', email: '' }); setSmsYes(false); setAccountMember(null); setOutOk(new Set()); setOutAsk(null);
     if (r.data.skipped?.length) setError(`Not rung up: ${r.data.skipped.join(' ')} The total shown is what was taken.`);
     if (r.data.notes?.length) setNote(r.data.notes.join(' '));
     if (pay === 'reader') setOnReader({ sale: r.data.sale, readerId, state: r.data.readerError ? 'error' : 'waiting', message: r.data.readerError ?? '' });
@@ -462,6 +474,13 @@ export default function ShopPage() {
                     ))}</div>}
                   </div>
                 )}
+                {outAsk && (() => { const it = (items ?? []).find(x => x.id === outAsk); return it && (
+                  <div role="alert" className="mb-3 flex flex-wrap items-center gap-3 rounded-[7px] border-l-[3px] border-warn bg-white shadow-card px-3 py-2.5 text-[13.5px]">
+                    <span className="text-ink mr-auto"><b>{it.name}</b> — none left by the count. Sell anyway?</span>
+                    <button type="button" autoFocus onClick={() => { setOutOk(o => new Set(o).add(it.id)); add(it.id, 1); setOutAsk(null); searchRef.current?.focus(); }} className="bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-[13px] px-3 py-1.5">Sell anyway</button>
+                    <button type="button" onClick={() => { setOutAsk(null); searchRef.current?.focus(); }} className="text-[13px] text-ink-soft hover:text-ink">Cancel</button>
+                  </div>
+                ); })()}
                 {tree.length > 0 && shown.length === 0 && <p className="text-sm text-ink-soft mb-3">Nothing matches.</p>}
                 {items && (
                   <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2.5">
@@ -471,7 +490,7 @@ export default function ShopPage() {
                       const stockN = stockOf(it);
                       return (
                         <div key={it.id} className={picking === it.id ? 'col-span-2 sm:col-span-3 xl:col-span-4 2xl:col-span-5' : ''}>
-                          <button onClick={() => (opts.length ? setPicking(p => (p === it.id ? null : it.id)) : add(it.id, 1))} aria-expanded={opts.length ? picking === it.id : undefined}
+                          <button onClick={() => (opts.length ? setPicking(p => (p === it.id ? null : it.id)) : tryAdd(it.id))} aria-expanded={opts.length ? picking === it.id : undefined}
                             className={'w-full min-h-[104px] text-left rounded-[10px] border overflow-hidden flex flex-col transition-colors ' + (n ? 'border-pine/50 bg-pine/[0.05]' : 'border-line bg-white hover:border-line-strong')}>
                             {/* DASH-D (Cam 2026-11-01, "photo tiles"): the item's photo when it has one; otherwise the name is the tile. */}
                             {withPhotos && (it.photoUrl
@@ -485,17 +504,17 @@ export default function ShopPage() {
                             </span>
                             <span className="mt-auto px-3 pt-1 pb-3 tabular-nums">
                               <b className="block text-[15px] font-semibold text-ink">{usd(it.priceCents)}</b>
-                              <span className={'block text-[12px] ' + (stockN !== null && stockN <= 0 ? 'text-bad' : 'text-ink-muted')}>{opts.length ? `${opts.length} sizes${stockN !== null ? ` · ${stockN <= 0 ? stockWords(stockN) : `${stockN} left`}` : ''}` : stockN !== null ? stockWords(stockN) : '\u00a0'}</span>
+                              <span className={'block text-[12px] ' + (stockN !== null && stockN <= 0 ? 'text-bad' : 'text-ink-muted')}>{opts.length ? `${opts.length} sizes${stockN !== null ? ` · ${stockN <= 0 ? 'Sold out' : `${stockN} left`}` : ''}` : stockN !== null ? (stockN <= 0 ? 'Sold out' : `${stockN} left`) : '\u00a0'}</span>
                             </span>
                           </button>
                           {picking === it.id && (
                             <div className="mt-1.5 flex flex-wrap gap-1.5 bg-paper/70 rounded-md p-2" role="group" aria-label={`${it.name} options`}>
                               {opts.map(o => (
-                                <button key={o.id} onClick={() => add(o.id, 1)}
+                                <button key={o.id} onClick={() => tryAdd(o.id)}
                                   className={'rounded-md border px-3 py-2 text-[13px] ' + (cart[o.id] ? 'border-pine/50 bg-white text-ink font-medium' : 'border-line bg-white text-ink hover:border-line-strong')}>
                                   {o.optionLabel}
                                   {o.priceCents !== it.priceCents && <span className="text-ink-muted tabular-nums"> {usd(o.priceCents)}</span>}
-                                  {o.stockCount !== null && <span className={'tabular-nums ' + (o.stockCount <= 0 ? 'text-bad' : 'text-ink-muted')}> ({o.stockCount})</span>}
+                                  {o.stockCount !== null && <span className={'tabular-nums ' + (o.stockCount <= 0 ? 'text-bad' : 'text-ink-muted')}> {o.stockCount <= 0 ? '· Sold out' : `(${o.stockCount})`}</span>}
                                   {cart[o.id] ? <span className="text-pine font-semibold"> ×{cart[o.id]}</span> : null}
                                 </button>
                               ))}
@@ -520,7 +539,7 @@ export default function ShopPage() {
                   <>
                     <div className="flex items-center justify-between gap-2 px-5 py-4 border-b border-line">
                       <h2 className="text-[15px] font-semibold text-ink">This sale</h2>
-                      {!empty && <button type="button" onClick={() => { setCart({}); setCustoms([]); setDiscount(null); setTendered(''); setError(''); }} className="text-[12.5px] text-ink-soft hover:text-ink">Clear</button>}
+                      {!empty && <button type="button" onClick={() => { setCart({}); setCustoms([]); setDiscount(null); setTendered(''); setError(''); setOutOk(new Set()); setOutAsk(null); }} className="text-[12.5px] text-ink-soft hover:text-ink">Clear</button>}
                     </div>
                     <div className="flex-1 px-5 py-2">
                       {customForm && (
@@ -545,7 +564,7 @@ export default function ShopPage() {
                               <span className="flex items-center gap-1.5 shrink-0">
                                 <button onClick={() => add(l.item.id, -1)} aria-label={`One fewer ${l.item.name}`} className="w-8 h-8 rounded-[7px] border border-line bg-white text-ink-soft hover:text-ink">−</button>
                                 <span className="w-6 text-center tabular-nums">{l.quantity}</span>
-                                <button onClick={() => add(l.item.id, 1)} aria-label={`One more ${l.item.name}`} className="w-8 h-8 rounded-[7px] border border-line bg-white text-ink-soft hover:text-ink">+</button>
+                                <button onClick={() => tryAdd(l.item.id)} aria-label={`One more ${l.item.name}`} className="w-8 h-8 rounded-[7px] border border-line bg-white text-ink-soft hover:text-ink">+</button>
                                 <span className="w-16 text-right tabular-nums text-ink">{usd(l.item.priceCents * l.quantity)}</span>
                               </span>
                             </li>
@@ -748,16 +767,23 @@ export default function ShopPage() {
             {view === 'sales' && (
             <>
             <Card className="mt-5">
-              <div className="flex flex-wrap items-center justify-between gap-2 px-5 pt-4 pb-2">
-                <h2 className="text-[15px] font-semibold text-ink">{hist ? (hist.day ? `Sales, ${hist.day}` : 'Sales, last 90 days') : 'Today’s sales'}</h2>
-                <div className="flex flex-wrap items-center gap-2">
-                  <input value={hist?.q ?? ''} onChange={e => loadHistory({ q: e.target.value, day: hist?.day ?? '' })} placeholder="Find a sale" aria-label="Find a sale" className={INPUT + ' w-56'} />
-                  {(() => { const today = new Date().toLocaleDateString('en-CA'); const yd = new Date(); yd.setDate(yd.getDate() - 1); const y = yd.toLocaleDateString('en-CA'); return <>
-                    <button type="button" aria-pressed={!hist?.day && !hist?.q} onClick={() => loadHistory({ q: '', day: '' })} className={'text-[13px] rounded-[7px] px-3 min-h-[34px] ' + (!hist?.day && !hist?.q ? 'bg-ink text-white font-medium' : 'bg-page text-ink-soft hover:text-ink')}>Today</button>
-                    <button type="button" aria-pressed={hist?.day === y} onClick={() => loadHistory({ q: hist?.q ?? '', day: y })} className={'text-[13px] rounded-[7px] px-3 min-h-[34px] ' + (hist?.day === y ? 'bg-ink text-white font-medium' : 'bg-page text-ink-soft hover:text-ink')}>Yesterday</button>
-                    <input type="date" value={hist?.day && hist.day !== y ? hist.day : ''} max={today} onChange={e => loadHistory({ q: hist?.q ?? '', day: e.target.value })} aria-label="Sales on a day" className={INPUT} />
-                  </>; })()}
-                </div>
+              {/* POS-8 (Cam 2026-11-09: no Today / Yesterday, "just have the little calendar icon"; "sort by"; "shouldnt all be
+                  so cardy and on top of each other"): one flat line — the day as words, a calendar icon that opens the
+                  picker, the search (a name, an item or the receipt # printed on every receipt), and Sort by. */}
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 pt-4 pb-2">
+                <h2 className="text-[15px] font-semibold text-ink">{hist?.q && !hist.day ? 'Sales, last 90 days' : `Sales · ${hist?.day ? new Date(`${hist.day}T12:00:00`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : 'today'}`}</h2>
+                <span className="relative inline-flex">
+                  <button type="button" aria-label="Pick a day" title="Pick a day" onClick={() => { const el = dayRef.current; if (!el) return; try { el.showPicker(); } catch { el.focus(); } }}
+                    className="w-8 h-8 rounded-md inline-flex items-center justify-center text-ink-muted hover:text-ink hover:bg-paper"><CalendarDays className="w-4 h-4" aria-hidden="true" /></button>
+                  <input ref={dayRef} type="date" tabIndex={-1} aria-label="Sales on a day" value={hist?.day ?? ''} max={new Date().toLocaleDateString('en-CA')} onChange={e => loadHistory({ q: hist?.q ?? '', day: e.target.value === new Date().toLocaleDateString('en-CA') ? '' : e.target.value })}
+                    className="absolute inset-0 opacity-0 pointer-events-none" />
+                </span>
+                <input value={hist?.q ?? ''} onChange={e => loadHistory({ q: e.target.value, day: hist?.day ?? '' })} placeholder="Name, item or receipt #" aria-label="Find a sale" className={INPUT + ' w-56 sm:ml-auto'} />
+                <label className="flex items-center gap-1 text-[13px] text-ink-soft">Sort by
+                  <select value={salesSort} onChange={e => setSalesSort(e.target.value as typeof salesSort)} className="bg-transparent text-ink font-medium cursor-pointer rounded-[5px] focus:outline-none focus-visible:ring-2 focus-visible:ring-pine/30">
+                    <option value="new">Newest</option><option value="old">Oldest</option><option value="big">Largest</option>
+                  </select>
+                </label>
               </div>
               {histError && <p className="px-5 pb-3 text-[13px] text-bad" role="alert">{histError} <button type="button" onClick={() => hist && loadHistory(hist)} className="underline font-medium">Try again</button></p>}
               {(() => { const all = hist ? histSales : sales;
@@ -774,12 +800,7 @@ export default function ShopPage() {
                         className={'text-[12.5px] rounded-[7px] px-2.5 min-h-[30px] tabular-nums ' + (salesShow === k ? 'bg-ink text-white font-medium' : 'bg-page text-ink-soft hover:text-ink')}>{l} {count(k)}</button>
                     ))}
                   </div>
-                  <label className="ml-auto flex items-center gap-2 text-[12.5px] text-ink-soft">
-                    <select aria-label="Sort" value={salesSort} onChange={e => setSalesSort(e.target.value as typeof salesSort)} className={INPUT + ' py-1'}>
-                      <option value="new">Newest</option><option value="old">Oldest</option><option value="big">Largest</option>
-                    </select>
-                  </label>
-                  <span className="w-full text-[12.5px] text-ink-muted tabular-nums">{list?.length ?? 0} sale{list?.length === 1 ? '' : 's'} · {usd(paidCents)}</span>
+                  <span className="ml-auto text-[12.5px] text-ink-muted tabular-nums">{list?.length ?? 0} sale{list?.length === 1 ? '' : 's'} · {usd(paidCents)}</span>
                 </div>
               )}
               {all && all.length === 0 && <p className="px-5 pb-4 text-sm text-ink-soft">{hist ? 'No sales match.' : 'No walk-up sales yet today.'}</p>}
@@ -799,7 +820,7 @@ export default function ShopPage() {
                       <li key={s.id} className="px-5 py-3 text-sm">
                         <div className="flex flex-wrap items-center justify-between gap-3">
                         <div className="min-w-0">
-                          <div className="text-ink"><span className="tabular-nums text-ink-soft">{time(s.createdAt)}</span> · <span className="font-medium tabular-nums">{usd(s.totalCents)}</span>{s.customerName ? ` · ${s.customerName}` : ''}</div>
+                          <div className="text-ink"><span className="tabular-nums text-ink-soft">{time(s.createdAt)}</span> · <span className="font-medium tabular-nums">{usd(s.totalCents)}</span>{s.customerName ? ` · ${s.customerName}` : ''} <span className="text-[12px] text-ink-muted tabular-nums">#{s.id.slice(-8).toUpperCase()}</span></div>
                           <div className="text-[12.5px] text-ink-muted truncate">{s.lines.map(l => `${l.name}${l.quantity > 1 ? ` × ${l.quantity}` : ''}`).join(', ')}{s.discountCents ? ` · ${usd(s.discountCents)} off${s.discountNote ? ` (${s.discountNote})` : ''}` : ''}</div>
                         </div>
                         <div className="flex items-center gap-3 shrink-0">

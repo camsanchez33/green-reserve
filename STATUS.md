@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-09 04:01 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `83eedae6` · working tree **29 dirty file(s)**
+Generated 2026-11-09 04:29 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `accf7fa8` · working tree **22 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 159 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 161 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `44217555` | 2026-11-08 | POS-7: Open the register (locked starting cash), tee sheet icons, sliding tabs (#343) |
+| `9b6e7f6b` | 2026-11-09 | POS-7: Open the register (locked starting cash), tee sheet icons, sliding tabs |
 | `4a51c27b` | 2026-11-08 | POS-6: Stock is where items are added; round packs off; tiles, ticket, Sales filters (#342) |
 | `def61397` | 2026-11-09 | POS-6: Stock is where items are added; round packs off; tiles, ticket, Sales filters |
 | `0682ac62` | 2026-11-08 | POS-5: Pro shop Stock, Round packs and Close out tabs; sliding tab highlight (#340) |
@@ -174,28 +176,28 @@ Generated 2026-11-09 04:01 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (29 file(s))
+### Uncommitted working tree (22 file(s))
 
+- `M CLAUDE.md`
 - `M  STATUS.artifact.html`
 - `M  STATUS.json`
 - `M  STATUS.md`
 - `MM docs/CODEMAP.md`
 - `MM docs/codemap.json`
-- `A  prisma/migrations/20261109000000_register_open/migration.sql`
-- `M  prisma/schema.prisma`
-- `M  scripts/checkout-card-test.ts`
 - `M  scripts/design-guard.baseline.json`
-- `M  scripts/home-page-test.ts`
 - `M  scripts/pos-register-test.ts`
-- `A  scripts/register-open-db-test.ts`
-- `M  scripts/sheet-views-test.ts`
-- `M  scripts/teesheet-2-test.ts`
-- `M  scripts/words-guard.baseline.json`
-- `M  src/app/api/operator/register-close/route.ts`
-- `AM src/app/api/operator/register-open/route.ts`
-- `M  src/app/dashboard/analytics/page.tsx`
-- `M  src/app/dashboard/home/page.tsx`
-- `M  src/app/dashboard/money/page.tsx`
+- `M  scripts/register-photo-test.ts`
+- `M  scripts/revamp3-fixes-test.ts`
+- `M  scripts/shop-options-db-test.ts`
+- `MM scripts/words-guard.baseline.json`
+- `M  src/app/api/operator/shop-items/read/route.ts`
+- `M  src/app/dashboard/shop/page.tsx`
+- `AM src/components/dashboard/ItemForm.tsx`
+- `D  src/components/dashboard/ShopCatalog.tsx`
+- `M  src/components/dashboard/StockTab.tsx`
+- `A  src/components/dashboard/UploadMany.tsx`
+- `M  src/lib/shop-ai-import.ts`
+- `M  src/lib/shop-catalog.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -321,6 +323,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `44217555` 2026-11-08 — POS-7: Open the register (locked starting cash), tee sheet icons, sliding tabs (#343)
+- `9b6e7f6b` 2026-11-09 — POS-7: Open the register (locked starting cash), tee sheet icons, sliding tabs
 - `4a51c27b` 2026-11-08 — POS-6: Stock is where items are added; round packs off; tiles, ticket, Sales filters (#342)
 - `def61397` 2026-11-09 — POS-6: Stock is where items are added; round packs off; tiles, ticket, Sales filters
 - `0682ac62` 2026-11-08 — POS-5: Pro shop Stock, Round packs and Close out tabs; sliding tab highlight (#340)
@@ -331,8 +335,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `f4cc7d76` 2026-11-08 — POS-4: Pro shop register as a real POS — tiles, one ticket, Charge in steps
 - `63efbf69` 2026-11-08 — SEATS-1: close seats on a tee time one at a time (#337)
 - `ab8c4f43` 2026-11-08 — SEATS-1: close seats on a tee time one at a time (Open seats − N + on the card)
-- `b324c547` 2026-11-08 — Receipt: what was actually paid, how and when; prints on a receipt printer (#336)
-- `d26d15c1` 2026-11-08 — Receipt: what was actually paid, how and when; prints on a receipt printer
 
 ---
 

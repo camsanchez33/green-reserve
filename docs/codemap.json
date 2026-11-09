@@ -1,7 +1,7 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 677,
+    "files": 678,
     "routes": 294,
     "libs": 248,
     "models": 72,
@@ -7142,7 +7142,7 @@
     },
     {
       "path": "src/app/api/operator/shop-items/read/route.ts",
-      "lines": 33,
+      "lines": 43,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9174,7 +9174,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 905,
+      "lines": 926,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -9203,6 +9203,7 @@
         "@/lib/dashboard-fetch",
         "@/lib/shop-tree",
         "@/lib/use-dashboard-access",
+        "lucide-react",
         "react"
       ],
       "usedBy": []
@@ -11291,6 +11292,36 @@
       ]
     },
     {
+      "path": "src/components/dashboard/ItemForm.tsx",
+      "lines": 315,
+      "purpose": "POS-8 (Cam 2026-11-09:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "ItemForm",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/ui/field",
+        "@/lib/dashboard-fetch",
+        "@/lib/image-resize",
+        "@/lib/shop-import",
+        "@/lib/shop-stock",
+        "@/lib/shop-tree",
+        "@/lib/tax-categories",
+        "react"
+      ],
+      "usedBy": [
+        "src/components/dashboard/StockTab.tsx"
+      ]
+    },
+    {
       "path": "src/components/dashboard/LastMinuteDeals.tsx",
       "lines": 71,
       "purpose": "PRICE-2 (Cam 2026-10-30:",
@@ -11700,59 +11731,6 @@
       ]
     },
     {
-      "path": "src/components/dashboard/ShopCatalog.tsx",
-      "lines": 266,
-      "purpose": "POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08):",
-      "brain": [],
-      "exports": [
-        {
-          "name": "BulkAdd",
-          "kind": "component"
-        },
-        {
-          "name": "draftOf",
-          "kind": "fn"
-        },
-        {
-          "name": "emptyDraft",
-          "kind": "fn"
-        },
-        {
-          "name": "ItemEditor",
-          "kind": "component"
-        },
-        {
-          "name": "ItemPhoto",
-          "kind": "component"
-        },
-        {
-          "name": "PreviewRow",
-          "kind": "type"
-        },
-        {
-          "name": "STARTERS",
-          "kind": "const"
-        }
-      ],
-      "route": null,
-      "kind": null,
-      "methods": [],
-      "auth": null,
-      "guard": null,
-      "imports": [
-        "@/components/ui/field",
-        "@/lib/dashboard-fetch",
-        "@/lib/image-resize",
-        "@/lib/shop-import",
-        "@/lib/shop-tree",
-        "@/lib/tax-categories",
-        "react"
-      ],
-      "usedBy": [
-        "src/components/dashboard/StockTab.tsx"
-      ]
-    },
-    {
       "path": "src/components/dashboard/ShopItemsForGroup.tsx",
       "lines": 188,
       "purpose": "POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08):",
@@ -11928,8 +11906,8 @@
     },
     {
       "path": "src/components/dashboard/StockTab.tsx",
-      "lines": 309,
-      "purpose": "POS-6 (Cam 2026-11-09:",
+      "lines": 207,
+      "purpose": "POS-6/POS-8 (Cam 2026-11-09:",
       "brain": [],
       "exports": [
         {
@@ -11943,8 +11921,9 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/components/dashboard/ItemForm",
         "@/components/dashboard/LoadError",
-        "@/components/dashboard/ShopCatalog",
+        "@/components/dashboard/UploadMany",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/components/ui/field",
@@ -12161,6 +12140,34 @@
         "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/UploadMany.tsx",
+      "lines": 117,
+      "purpose": "POS-8 (Cam 2026-11-09:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "UploadMany",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/ui/field",
+        "@/lib/dashboard-fetch",
+        "@/lib/image-resize",
+        "@/lib/shop-import",
+        "@/lib/tax-categories",
+        "react"
+      ],
+      "usedBy": [
+        "src/components/dashboard/StockTab.tsx"
       ]
     },
     {
@@ -13387,6 +13394,7 @@
         "src/components/dashboard/CardReaderCard.tsx",
         "src/components/dashboard/DemandPricing.tsx",
         "src/components/dashboard/GolferMessageModal.tsx",
+        "src/components/dashboard/ItemForm.tsx",
         "src/components/dashboard/LastMinuteDeals.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/OpenRegister.tsx",
@@ -13396,9 +13404,9 @@
         "src/components/dashboard/RoundPacks.tsx",
         "src/components/dashboard/RoundRulesCard.tsx",
         "src/components/dashboard/SalesTaxCard.tsx",
-        "src/components/dashboard/ShopCatalog.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
         "src/components/dashboard/StockTab.tsx",
+        "src/components/dashboard/UploadMany.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
         "src/components/dashboard/events/EventMoney.tsx",
         "src/components/dashboard/events/EventSetup.tsx",
@@ -18494,6 +18502,7 @@
         "src/components/dashboard/DeclinedCardList.tsx",
         "src/components/dashboard/DemandPricing.tsx",
         "src/components/dashboard/GolferMessageModal.tsx",
+        "src/components/dashboard/ItemForm.tsx",
         "src/components/dashboard/LastMinuteDeals.tsx",
         "src/components/dashboard/MemberAccount.tsx",
         "src/components/dashboard/MemberJoin.tsx",
@@ -18505,11 +18514,11 @@
         "src/components/dashboard/RegisterPacks.tsx",
         "src/components/dashboard/RoundPacks.tsx",
         "src/components/dashboard/SalesTaxCard.tsx",
-        "src/components/dashboard/ShopCatalog.tsx",
         "src/components/dashboard/ShopItemsForGroup.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
         "src/components/dashboard/StockTab.tsx",
         "src/components/dashboard/TeeSheetCalendar.tsx",
+        "src/components/dashboard/UploadMany.tsx",
         "src/components/dashboard/analytics/ShopTab.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
         "src/components/dashboard/events/EventMoney.tsx",
@@ -20360,7 +20369,8 @@
         "src/app/dashboard/settings/page.tsx",
         "src/app/for-courses/details/page.tsx",
         "src/components/dashboard/ImageUpload.tsx",
-        "src/components/dashboard/ShopCatalog.tsx",
+        "src/components/dashboard/ItemForm.tsx",
+        "src/components/dashboard/UploadMany.tsx",
         "src/components/dashboard/onboarding/PageReviewStep.tsx"
       ]
     },
@@ -25146,7 +25156,7 @@
     },
     {
       "path": "src/lib/shop-ai-import.ts",
-      "lines": 96,
+      "lines": 108,
       "purpose": "W2-7 (Cam 2026-10-20:",
       "brain": [],
       "exports": [
@@ -25157,6 +25167,18 @@
         {
           "name": "MAX_READ_CHARS",
           "kind": "const"
+        },
+        {
+          "name": "MAX_READ_FILE_BYTES",
+          "kind": "const"
+        },
+        {
+          "name": "READ_FILE_TYPES",
+          "kind": "const"
+        },
+        {
+          "name": "ReadFileType",
+          "kind": "type"
         },
         {
           "name": "ReadRow",
@@ -25187,7 +25209,7 @@
     },
     {
       "path": "src/lib/shop-catalog.ts",
-      "lines": 163,
+      "lines": 169,
       "purpose": "W2-7 (Cam 2026-10-20):",
       "brain": [],
       "exports": [
@@ -25285,7 +25307,8 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/components/dashboard/ShopCatalog.tsx",
+        "src/components/dashboard/ItemForm.tsx",
+        "src/components/dashboard/UploadMany.tsx",
         "src/lib/shop-ai-import.ts",
         "src/lib/shop-catalog.ts"
       ]
@@ -25569,6 +25592,7 @@
       ],
       "usedBy": [
         "src/app/api/operator/shop-stock/route.ts",
+        "src/components/dashboard/ItemForm.tsx",
         "src/components/dashboard/StockTab.tsx"
       ]
     },
@@ -25619,7 +25643,7 @@
       "imports": [],
       "usedBy": [
         "src/app/dashboard/shop/page.tsx",
-        "src/components/dashboard/ShopCatalog.tsx",
+        "src/components/dashboard/ItemForm.tsx",
         "src/components/dashboard/StockTab.tsx"
       ]
     },
@@ -26326,8 +26350,9 @@
       "guard": null,
       "imports": [],
       "usedBy": [
+        "src/components/dashboard/ItemForm.tsx",
         "src/components/dashboard/SalesTaxCard.tsx",
-        "src/components/dashboard/ShopCatalog.tsx",
+        "src/components/dashboard/UploadMany.tsx",
         "src/lib/sales-tax.ts",
         "src/lib/shop-ai-import.ts",
         "src/lib/shop-catalog.ts"

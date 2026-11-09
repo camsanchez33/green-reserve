@@ -85,6 +85,28 @@ async function cleanup() {
   ok('a never-sold item is deleted', !!del2 && !del2.hidden && !(await prisma.shopItem.findUnique({ where: { id: glove.id } })));
   ok('another course cannot delete', (await deleteItem(other.id, polo.id)) === null);
 
+  // POS-8 review: keepStock leaves a count exactly as stored — an oversold item still saves, and a delivery adds to
+  // what's there (not to what the form loaded).
+  const ball = await createItems(c.id, [{ name: 'Sleeve', category: 'Balls', priceCents: 1200, stockCount: 0, sku: 'SLV' }, { name: 'Cap', category: 'Apparel', priceCents: 2500, options: [{ label: 'S', stockCount: 0 }, { label: 'L', stockCount: 2 }] }]);
+  const sleeve = await prisma.shopItem.findFirstOrThrow({ where: { courseId: c.id, name: 'Sleeve' } });
+  await prisma.shopItem.update({ where: { id: sleeve.id }, data: { stockCount: -3 } });
+  const renamed = await updateItem(c.id, sleeve.id, { name: 'Sleeve of balls', category: 'Balls', priceCents: 1300, stockCount: 0, keepStock: true, sku: 'SLV' });
+  ok('an oversold item (count -3) can be renamed and repriced; its count stays -3', !!renamed?.ok && (await prisma.shopItem.findUniqueOrThrow({ where: { id: sleeve.id } })).stockCount === -3, JSON.stringify(renamed));
+  await prisma.shopItem.update({ where: { id: sleeve.id }, data: { stockCount: { decrement: 2 } } }); // the register sold 2 while the form was open
+  const { receiveStock } = await import('../src/lib/shop-stock');
+  await updateItem(c.id, sleeve.id, { name: 'Sleeve of balls', category: 'Balls', priceCents: 1300, stockCount: 0, keepStock: true, sku: 'SLV' });
+  const rec = await receiveStock(c.id, sleeve.id, { quantity: 10 }, 'test', true);
+  ok('…a delivery of 10 after 2 more sold lands on 5 (-3 - 2 + 10), never on the loaded number', rec.ok && (await prisma.shopItem.findUniqueOrThrow({ where: { id: sleeve.id } })).stockCount === 5, JSON.stringify(rec));
+  const typed = await updateItem(c.id, sleeve.id, { name: 'Sleeve of balls', category: 'Balls', priceCents: 1300, stockCount: 12, sku: 'SLV' });
+  ok('…and a typed recount sets it', !!typed?.ok && (await prisma.shopItem.findUniqueOrThrow({ where: { id: sleeve.id } })).stockCount === 12);
+  const cap = await prisma.shopItem.findFirstOrThrow({ where: { courseId: c.id, name: 'Cap' }, include: { options: true } });
+  const capS = cap.options.find(o => o.optionLabel === 'S')!, capL = cap.options.find(o => o.optionLabel === 'L')!;
+  await prisma.shopItem.update({ where: { id: capS.id }, data: { stockCount: -1 } });
+  const capEdit = await updateItem(c.id, cap.id, { name: 'Club cap', category: 'Apparel', priceCents: 2500, options: [{ id: capS.id, label: 'S', stockCount: 0, keepStock: true }, { id: capL.id, label: 'L', stockCount: 5 }] });
+  const capAfter = await prisma.shopItem.findMany({ where: { parentId: cap.id } });
+  ok('…per size too: a kept size stays -1, a typed size is set', !!capEdit?.ok && capAfter.find(o => o.id === capS.id)?.stockCount === -1 && capAfter.find(o => o.id === capL.id)?.stockCount === 5, JSON.stringify(capEdit));
+  ok('(setup) both items were made', ball.ok);
+
   await cleanup(); await prisma.$disconnect();
   if (failed) { console.error(`${failed} failed`); process.exit(1); }
   console.log('shop-options-db: all passed');

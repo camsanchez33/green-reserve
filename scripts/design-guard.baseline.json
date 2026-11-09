@@ -148,6 +148,9 @@
     "input": 1,
     "lucide": 3
   },
+  "src/app/dashboard/shop/page.tsx": {
+    "lucide": 1
+  },
   "src/app/dashboard/sign/page.tsx": {
     "card": 1
   },

@@ -1,36 +1,50 @@
 {
-  "generatedAt": "2026-11-09T04:01:43.463Z",
+  "generatedAt": "2026-11-09T04:29:55.146Z",
   "repo": {
-    "head": "83eedae6",
+    "head": "accf7fa8",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 29,
+    "dirtyCount": 22,
     "dirty": [
+      "M CLAUDE.md",
       "M  STATUS.artifact.html",
       "M  STATUS.json",
       "M  STATUS.md",
       "MM docs/CODEMAP.md",
       "MM docs/codemap.json",
-      "A  prisma/migrations/20261109000000_register_open/migration.sql",
-      "M  prisma/schema.prisma",
-      "M  scripts/checkout-card-test.ts",
       "M  scripts/design-guard.baseline.json",
-      "M  scripts/home-page-test.ts",
       "M  scripts/pos-register-test.ts",
-      "A  scripts/register-open-db-test.ts",
-      "M  scripts/sheet-views-test.ts",
-      "M  scripts/teesheet-2-test.ts",
-      "M  scripts/words-guard.baseline.json",
-      "M  src/app/api/operator/register-close/route.ts",
-      "AM src/app/api/operator/register-open/route.ts",
-      "M  src/app/dashboard/analytics/page.tsx",
-      "M  src/app/dashboard/home/page.tsx",
-      "M  src/app/dashboard/money/page.tsx"
+      "M  scripts/register-photo-test.ts",
+      "M  scripts/revamp3-fixes-test.ts",
+      "M  scripts/shop-options-db-test.ts",
+      "MM scripts/words-guard.baseline.json",
+      "M  src/app/api/operator/shop-items/read/route.ts",
+      "M  src/app/dashboard/shop/page.tsx",
+      "AM src/components/dashboard/ItemForm.tsx",
+      "D  src/components/dashboard/ShopCatalog.tsx",
+      "M  src/components/dashboard/StockTab.tsx",
+      "A  src/components/dashboard/UploadMany.tsx",
+      "M  src/lib/shop-ai-import.ts",
+      "M  src/lib/shop-catalog.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "44217555",
+        "date": "2026-11-08T23:14:38-05:00",
+        "subject": "POS-7: Open the register (locked starting cash), tee sheet icons, sliding tabs (#343)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "9b6e7f6b",
+        "date": "2026-11-09T04:01:46+00:00",
+        "subject": "POS-7: Open the register (locked starting cash), tee sheet icons, sliding tabs",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "4a51c27b",
         "date": "2026-11-08T22:52:41-05:00",
@@ -1541,6 +1555,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "44217555",
+      "date": "2026-11-08",
+      "subject": "POS-7: Open the register (locked starting cash), tee sheet icons, sliding tabs (#343)"
+    },
+    {
+      "h": "9b6e7f6b",
+      "date": "2026-11-09",
+      "subject": "POS-7: Open the register (locked starting cash), tee sheet icons, sliding tabs"
+    },
+    {
       "h": "4a51c27b",
       "date": "2026-11-08",
       "subject": "POS-6: Stock is where items are added; round packs off; tiles, ticket, Sales filters (#342)"
@@ -1589,16 +1613,6 @@
       "h": "ab8c4f43",
       "date": "2026-11-08",
       "subject": "SEATS-1: close seats on a tee time one at a time (Open seats − N + on the card)"
-    },
-    {
-      "h": "b324c547",
-      "date": "2026-11-08",
-      "subject": "Receipt: what was actually paid, how and when; prints on a receipt printer (#336)"
-    },
-    {
-      "h": "d26d15c1",
-      "date": "2026-11-08",
-      "subject": "Receipt: what was actually paid, how and when; prints on a receipt printer"
     }
   ]
 }
