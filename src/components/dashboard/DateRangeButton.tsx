@@ -37,6 +37,9 @@ export function rangeLabel(r: DateRange, today: string) {
   return r.from === r.to ? fmt(r.from, year) : `${fmt(r.from, year)} – ${fmt(r.to, year)}`;
 }
 
+/** The ranges shown as one-tap buttons; the rest sit in the calendar's list. */
+const QUICK = ['7d', '30d', 'month'];
+
 export default function DateRangeButton({ value, today, onChange }: { value: DateRange; today: string; onChange: (r: DateRange) => void }) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<{ from: string; to: string | null }>({ from: value.from, to: value.to });
@@ -69,13 +72,23 @@ export default function DateRangeButton({ value, today, onChange }: { value: Dat
 
   return (
     <div className="relative" ref={box}>
-      <button onClick={() => setOpen(o => !o)} aria-expanded={open} aria-haspopup="dialog"
-        className="inline-flex items-center gap-2 bg-white border border-line hover:border-line-strong rounded-md px-3.5 py-2 text-[13.5px] font-medium text-ink transition-colors">
-        <span className="tabular-nums">{today ? rangeLabel(value, today) : 'Loading…'}</span>
-        <span aria-hidden="true" className="text-ink-muted text-[11px]">▾</span>
-      </button>
+      {/* Cam 2026-11-09 (Money notes): "make the date picker better and look different" — the three ranges people
+          use most are one tap; anything else opens the calendar. The chosen dates are always written out. */}
+      <div className="inline-flex flex-wrap items-center gap-2">
+        <div className="inline-flex gap-1 p-1 rounded-[7px] bg-white shadow-card" role="group" aria-label="Dates">
+          {QUICK.map(k => list.find(p => p.key === k)).filter((p): p is NonNullable<typeof p> => !!p).map(p => (
+            <button key={p.key} type="button" aria-pressed={activeKey === p.key} onClick={() => apply(p.range)}
+              className={'px-3 min-h-[30px] rounded-[7px] text-[13px] whitespace-nowrap ' + (activeKey === p.key ? 'bg-ink text-white font-semibold' : 'text-ink-soft hover:text-ink hover:bg-page')}>{p.label.replace('Last ', '')}</button>
+          ))}
+          <button type="button" onClick={() => setOpen(o => !o)} aria-expanded={open} aria-haspopup="dialog"
+            className={'px-3 min-h-[30px] rounded-[7px] text-[13px] whitespace-nowrap ' + (activeKey && QUICK.includes(activeKey) ? 'text-ink-soft hover:text-ink hover:bg-page' : 'bg-ink text-white font-semibold')}>
+            Dates <span aria-hidden="true" className="text-[10px] opacity-70">▾</span>
+          </button>
+        </div>
+        <span className="text-[13px] text-ink-soft tabular-nums">{today ? rangeLabel(value, today) : 'Loading…'}</span>
+      </div>
       {open && today && (
-        <Card role="dialog" aria-label="Choose dates" className="absolute left-0 sm:left-auto sm:right-0 top-full mt-2 z-40 flex flex-col sm:flex-row w-[min(560px,calc(100vw-32px))]">
+        <Card role="dialog" aria-label="Dates" className="absolute left-0 sm:left-auto sm:right-0 top-full mt-2 z-40 flex flex-col sm:flex-row w-[min(560px,calc(100vw-32px))]">
           <ul className="sm:w-44 shrink-0 p-2 border-b sm:border-b-0 sm:border-r border-line-soft grid grid-cols-2 sm:grid-cols-1 gap-0.5">
             {list.map(p => (
               <li key={p.key}>
@@ -104,7 +117,7 @@ export default function DateRangeButton({ value, today, onChange }: { value: Dat
               })}
             </div>
             <div className="flex items-center justify-between gap-3 mt-3 pt-3 border-t border-line-soft">
-              <span className="text-[12.5px] text-ink-soft">{draft.to === null ? 'Now pick the last day' : rangeLabel({ from: draft.from, to: draft.to }, today)}</span>
+              <span className="text-[12.5px] text-ink-soft">{draft.to === null ? 'Pick the last day' : rangeLabel({ from: draft.from, to: draft.to }, today)}</span>
               <button onClick={() => draft.to && apply({ from: draft.from, to: draft.to })} disabled={draft.to === null}
                 className="px-3.5 py-1.5 rounded-md bg-pine hover:bg-pine-hover text-white text-[13px] font-medium disabled:opacity-50">Show</button>
             </div>

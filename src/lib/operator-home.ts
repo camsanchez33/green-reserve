@@ -31,7 +31,7 @@ async function dayShape(courseId: string, date: string) {
   return { hours, players, fillPct: offered ? Math.round((players / offered) * 100) : null };
 }
 
-export type DeclinedCard = { id: string; name: string; date: string; time: string; amountCents: number | null; canText: boolean; canEmail: boolean };
+export type DeclinedCard = { id: string; name: string; date: string; time: string; amountCents: number | null; canText: boolean; canEmail: boolean; players?: number; reason?: string };
 
 /** A card that was tried at check-in and declined, and nobody has collected
  *  since — newest first, the first `take`, and how many there are in all. Home
@@ -39,13 +39,14 @@ export type DeclinedCard = { id: string; name: string; date: string; time: strin
  *  checkInFailReason, so a group that paid another way drops off. canText /
  *  canEmail say which pay link the booking can be sent (the route's own rules). */
 export async function declinedCards(courseId: string, withAmounts: boolean, take = 10): Promise<{ rows: DeclinedCard[]; total: number }> {
-  const where = { courseId, checkInFailReason: { not: '' }, checkedInAt: null, status: { not: 'cancelled' } };
+  // MONEY-1: a card staff took off the list (declineDismissedAt) stays off until it declines again.
+  const where = { courseId, checkInFailReason: { not: '' }, checkedInAt: null, status: { not: 'cancelled' as const }, declineDismissedAt: null };
   const [rows, total] = await Promise.all([
     prisma.booking.findMany({
       // The round's own day, latest first (dead end 16: it was by when the booking was made).
       where, orderBy: [{ teeTime: { date: 'desc' } }, { teeTime: { time: 'desc' } }], take,
       // POS-1a: what the retry will charge — the round plus any shop items on it.
-      select: { id: true, golferName: true, golferEmail: true, golferPhone: true, checkInToken: true, totalAmount: true, shopTotalCents: true, shopFeeCents: true, shopTaxCents: true, accessFeeTotal: true, feePaidCents: true, teeTime: { select: { date: true, time: true } } },
+      select: { id: true, golferName: true, golferEmail: true, golferPhone: true, checkInToken: true, players: true, checkInFailReason: true, totalAmount: true, shopTotalCents: true, shopFeeCents: true, shopTaxCents: true, accessFeeTotal: true, feePaidCents: true, teeTime: { select: { date: true, time: true } } },
     }),
     prisma.booking.count({ where }),
   ]);
@@ -57,6 +58,8 @@ export async function declinedCards(courseId: string, withAmounts: boolean, take
       amountCents: withAmounts ? roundChargeCents(d) : null,
       canText: (d.golferPhone || '').replace(/\D/g, '').length >= 10,
       canEmail: !!d.checkInToken && !!d.golferEmail && !isPlaceholderEmail(d.golferEmail),
+      // MONEY-1: what Open shows in place — the group and why the card was declined.
+      players: d.players, reason: d.checkInFailReason,
     })),
   };
 }

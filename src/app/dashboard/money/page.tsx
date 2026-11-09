@@ -24,6 +24,7 @@ import type { DeclinedCard } from '@/lib/operator-home';
 import { DeclinedCardList } from '@/components/dashboard/DeclinedCardList';
 import { toast } from '@/components/dashboard/Toast';
 import { LedgerPanel } from '@/components/dashboard/money/LedgerPanel';
+import { StripeButton } from '@/components/dashboard/money/StripeButton';
 
 type Overview = { week: { from: string; to: string }; today: string; clock: string; paidCents: number; notPaidCents: number; notPaidGroups: number; declined: DeclinedCard[]; declinedTotal: number; stripeConnected: boolean };
 const usd2 = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -153,7 +154,6 @@ function MoneyPageInner() {
   useEffect(() => { loadBookings(); }, [loadBookings]);
   useEffect(() => { loadCourse(); }, [loadCourse]);
   useEffect(() => { if (access.loaded) loadOverview(); }, [access.loaded, loadOverview]);
-  const refresh = () => { loadBookings(); loadCourse(); loadOverview(); };
 
   // DASH-C Needs you: the declined-card rows are shared with Home (DeclinedCardList), pay links included.
   const canSendLink = access.can('sheet.checkin');
@@ -174,20 +174,11 @@ function MoneyPageInner() {
       <OperatorSidebar active="money"/>
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <div className="px-4 sm:px-10 py-7">
-          <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
-            <div className="min-w-0">
-              <h1 className="font-serif text-[32px] leading-none text-ink">Payments and payouts</h1>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              {!treatAsStaff && courseLoaded && course.stripeAccountActive && (
-                <button onClick={openStripe} disabled={openingStripe}
-                  className="text-[13px] font-medium text-ink px-3.5 py-2 rounded-md bg-white border border-line hover:border-line-strong disabled:opacity-50">
-                  {openingStripe ? 'Opening…' : 'Open your Stripe dashboard ↗'}
-                </button>
-              )}
-              <button onClick={refresh} aria-label="Refresh" title="Refresh"
-                className="w-9 h-9 rounded-md bg-white border border-line hover:border-line-strong text-ink-soft text-[17px] leading-none">↻</button>
-            </div>
+          {/* Cam 2026-11-09 (Money notes): Stripe's own button; no reload button. The title stays (Cam 2026-10-19: "says
+              what it is"); his note says "maybe change it" — on the morning checklist. */}
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <h1 className="text-[26px] font-bold leading-none text-ink">Payments and payouts</h1>
+            {!treatAsStaff && courseLoaded && course.stripeAccountActive && <StripeButton onClick={openStripe} busy={openingStripe} />}
           </div>
           {stripeError && <div className="mb-4"><LoadError message={stripeError} onRetry={openStripe} /></div>}
           {courseError && <div className="mb-4"><LoadError message={`Couldn't load your course — ${courseError}`} onRetry={loadCourse} /></div>}

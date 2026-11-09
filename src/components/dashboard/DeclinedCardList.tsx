@@ -1,19 +1,20 @@
 'use client';
-// Declined cards — the same rows on Home and Money → Needs you (Revamp 3 dead end 16,
-// Cam 2026-10-29). Each opens the tee sheet on the round's own day with the golfer
-// found, and can (re)send the pay link — the tee sheet's own action and permission
-// (`sheet.checkin`). One send at a time; each row says what happened.
+// Declined cards — the same rows on Home and Money → Action needed (Revamp 3 dead end 16, Cam 2026-10-29).
+// MONEY-1 (Cam 2026-11-09, Money notes): "get rid of Text pay link"; "option to delete an item from the list";
+// "Open should open the issue right there, not take you to a new tab". So each row:
+//  • Open — shows the group, what the card is charged and why it was declined, in place, with a link to the tee sheet;
+//  • Email pay link — the tee sheet's own action and permission (`sheet.checkin`);
+//  • Remove — takes it off this list (POST /api/operator/declined). It still owes: Payments → Not paid yet.
+// One action at a time; each row says what happened.
 import { useState } from 'react';
 import Link from 'next/link';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { formatTeeDate, formatTeeTime } from '@/lib/format';
 import type { DeclinedCard } from '@/lib/operator-home';
-import { SmsConsentDialog } from '@/components/dashboard/SmsConsentAsk';
-import { SMS_NO_CONSENT_STAFF } from '@/lib/sms-consent-copy';
 
 const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-const BTN = 'text-[13px] font-medium text-ink px-3 py-1.5 rounded-md bg-white border border-line hover:border-line-strong disabled:opacity-50';
+const BTN = 'text-[13px] font-medium text-ink px-3 py-1.5 rounded-[7px] bg-white border border-line hover:border-line-strong disabled:opacity-50';
 
 export function DeclinedCardList({ rows, total, canSendLink, moreHref }: {
   rows: DeclinedCard[]; total: number; canSendLink: boolean;
@@ -21,49 +22,67 @@ export function DeclinedCardList({ rows, total, canSendLink, moreHref }: {
   moreHref?: string;
 }) {
   const [busy, setBusy] = useState<string | null>(null);
+  const [open, setOpen] = useState<string | null>(null);
+  const [gone, setGone] = useState<Set<string>>(new Set());
+  // A long list shows the newest five until asked for the rest.
+  const [all, setAll] = useState(false);
   const [result, setResult] = useState<Record<string, { ok: boolean; text: string }>>({});
-  // SMS-1: a number that never agreed to texts — read the script, record the yes, then send (as on the tee sheet).
-  const [ask, setAsk] = useState<DeclinedCard | null>(null);
-  const [askYes, setAskYes] = useState(false);
-  async function send(d: DeclinedCard, via: 'sms' | 'email', saidYes = false) {
+  async function send(d: DeclinedCard) {
     setBusy(d.id);
-    const r = await dfetch<{ sentTo: string }>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: d.id, action: 'send_pay_link', via, ...(saidYes ? { smsConsent: 'verbal' } : {}) }) });
+    const r = await dfetch<{ sentTo: string }>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: d.id, action: 'send_pay_link', via: 'email' }) });
     setBusy(null);
-    if (!r.ok && r.status === 409 && r.error === SMS_NO_CONSENT_STAFF) { setAsk(d); setAskYes(false); return; }
-    setAsk(null);
-    setResult(m => ({ ...m, [d.id]: r.ok
-      ? { ok: true, text: `${via === 'sms' ? 'Texted' : 'Emailed'} to ${r.data.sentTo}. This clears once they pay.` }
-      : { ok: false, text: r.error } }));
+    setResult(m => ({ ...m, [d.id]: r.ok ? { ok: true, text: `Sent to ${r.data.sentTo}.` } : { ok: false, text: r.error } }));
   }
+  async function remove(d: DeclinedCard) {
+    setBusy(d.id);
+    const r = await dfetch('/api/operator/declined', { method: 'POST', body: JSON.stringify({ id: d.id }) });
+    setBusy(null);
+    if (r.ok) setGone(g => new Set(g).add(d.id));
+    else setResult(m => ({ ...m, [d.id]: { ok: false, text: r.error } }));
+  }
+  const left = rows.filter(d => !gone.has(d.id));
+  const shown = all ? left : left.slice(0, 5);
   const more = total - rows.length;
+  if (left.length === 0 && more <= 0) return <p className="px-4 py-3 text-[13.5px] text-ink-muted">None.</p>;
   return (
     <>
-      {ask && <SmsConsentDialog courseName="" name={ask.name} busy={busy === ask.id} yes={askYes} onYes={setAskYes}
-        onEmail={ask.canEmail ? () => { const d = ask; setAsk(null); send(d, 'email'); } : undefined}
-        onSend={() => send(ask, 'sms', true)} onClose={() => setAsk(null)} />}
-      {rows.map(d => {
+      {shown.map(d => {
         const res = result[d.id];
+        const isOpen = open === d.id;
         return (
-          <div key={d.id} className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-3 text-[13.5px]">
-            <StatusDot status="bad" label="" />
-            <div className="flex-1 min-w-[12rem]">
-              <div className="text-ink truncate">Card declined — {d.name}</div>
-              <div className="text-[12.5px] text-ink-muted tabular-nums">{formatTeeDate(d.date)} {formatTeeTime(d.time)}{d.amountCents !== null ? ` · ${usd(d.amountCents)}` : ''}</div>
-              {res && <div role={res.ok ? 'status' : 'alert'} className={'text-[12.5px] mt-0.5 ' + (res.ok ? 'text-ok' : 'text-bad')}>{res.text}</div>}
+          <div key={d.id} className="px-4 py-3 text-[13.5px]">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+              <StatusDot status="bad" label="" />
+              <div className="flex-1 min-w-[12rem]">
+                <div className="text-ink truncate">Card declined — {d.name}</div>
+                <div className="text-[12.5px] text-ink-muted tabular-nums">{formatTeeDate(d.date)} {formatTeeTime(d.time)}{d.amountCents !== null ? ` · ${usd(d.amountCents)}` : ''}</div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <button type="button" onClick={() => setOpen(isOpen ? null : d.id)} aria-expanded={isOpen} className="text-[13px] font-medium text-pine hover:underline underline-offset-4">{isOpen ? 'Close' : 'Open'}</button>
+                {canSendLink && d.canEmail && <button type="button" onClick={() => send(d)} disabled={busy !== null} className={BTN}>{busy === d.id ? 'Sending…' : 'Email pay link'}</button>}
+                {canSendLink && <button type="button" onClick={() => remove(d)} disabled={busy !== null} className="text-[13px] text-ink-soft hover:text-bad disabled:opacity-50">Remove</button>}
+              </div>
             </div>
-            <div className="flex flex-wrap items-center gap-2 shrink-0">
-              {canSendLink && d.canText && <button onClick={() => send(d, 'sms')} disabled={busy !== null} className={BTN}>{busy === d.id ? 'Sending…' : 'Text pay link'}</button>}
-              {canSendLink && d.canEmail && <button onClick={() => send(d, 'email')} disabled={busy !== null} className={BTN}>{busy === d.id ? 'Sending…' : 'Email pay link'}</button>}
-              {canSendLink && !d.canText && !d.canEmail && <span className="text-[12.5px] text-ink-muted">No phone or email on file</span>}
-              <Link href={`/dashboard?date=${d.date}&q=${encodeURIComponent(d.name)}`} className="text-[13px] font-medium text-pine">Open</Link>
-            </div>
+            {res && <div role={res.ok ? 'status' : 'alert'} className={'text-[12.5px] mt-1 pl-4 ' + (res.ok ? 'text-ok' : 'text-bad')}>{res.text}</div>}
+            {isOpen && (
+              <dl className="mt-2 ml-4 rounded-md bg-paper/70 px-3 py-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-[13px]">
+                {d.players != null && <><dt className="text-ink-muted">Players</dt><dd className="text-ink">{d.players}</dd></>}
+                {d.amountCents !== null && <><dt className="text-ink-muted">Owes</dt><dd className="text-ink tabular-nums">{usd(d.amountCents)}</dd></>}
+                {d.reason && <><dt className="text-ink-muted">Reason</dt><dd className="text-ink">{d.reason}</dd></>}
+                {!d.canEmail && <><dt className="text-ink-muted">Pay link</dt><dd className="text-ink">No email</dd></>}
+                <dd className="col-span-2 pt-1"><Link href={`/dashboard?date=${d.date}&q=${encodeURIComponent(d.name)}`} className="font-medium text-pine hover:underline underline-offset-4">Tee sheet</Link></dd>
+              </dl>
+            )}
           </div>
         );
       })}
+      {!all && left.length > 5 && (
+        <button type="button" onClick={() => setAll(true)} className="w-full px-4 py-2.5 text-left text-[13px] font-medium text-pine hover:underline underline-offset-4">Show all {left.length}</button>
+      )}
       {more > 0 && (
         <div className="flex items-center gap-3 px-4 py-3 text-[13px] text-ink-soft">
           <StatusDot status="bad" label="" />
-          <span className="flex-1">and {more} more declined card{more === 1 ? '' : 's'}</span>
+          <span className="flex-1">+{more} more</span>
           {moreHref && <Link href={moreHref} className="text-[13px] font-medium text-pine">See all</Link>}
         </div>
       )}

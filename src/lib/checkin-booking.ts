@@ -436,7 +436,7 @@ async function chargeBooking(
       const inProgress = /in[- ]progress/i.test(message);
       const definite = !inProgress && (errType === 'StripeCardError' || errType === 'StripeIdempotencyError' || /idempotent|idempotency/i.test(message));
       console.error(JSON.stringify({ ev: `${ev}.charge.fail`, bookingId, errType, definite, error: message }));
-      await prisma.booking.update({ where: { id: bookingId }, data: { checkInFailReason: message, ...(cartAddedCents > 0 && definite ? preCart : {}), ...(partialApplied && definite ? { ...prePartial, checkedInPlayers: null } : {}) } });
+      await prisma.booking.update({ where: { id: bookingId }, data: { checkInFailReason: message, declineDismissedAt: null, ...(cartAddedCents > 0 && definite ? preCart : {}), ...(partialApplied && definite ? { ...prePartial, checkedInPlayers: null } : {}) } });
       if (definite) await unlock();
       if (inProgress) {
         return { error: BEING_CHARGED, status: 409 } as const;

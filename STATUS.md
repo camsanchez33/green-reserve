@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-09 06:10 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `baeaffe1` · working tree **20 dirty file(s)**
+Generated 2026-11-09 06:40 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `c21eac9b` · working tree **27 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 169 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 171 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `bd16e6d6` | 2026-11-09 | RECEIPT-3 + MSG-1: receipts you can see and text as a link; Messages from Cam's notes (#347) |
+| `2981ca95` | 2026-11-09 | RECEIPT-3 + MSG-1: receipts staff can see and text as a link; Messages from Cam's notes |
 | `69eb6ce5` | 2026-11-09 | DRAWER-1 + CART-4: the register is a loop; cart numbers, cart ticket, starter's sheet (#346) |
 | `62742a74` | 2026-11-09 | Regenerate code map and status board |
 | `ae63a885` | 2026-11-09 | DRAWER-1: open/reopen/fix take their seq from the snapshot checked (CI race) |
@@ -184,28 +186,28 @@ Generated 2026-11-09 06:10 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (20 file(s))
+### Uncommitted working tree (27 file(s))
 
-- `M STATUS.artifact.html`
-- `M STATUS.json`
-- `M STATUS.md`
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `A  prisma/migrations/20261110010000_shop_receipt_token/migration.sql`
-- `M prisma/schema.prisma`
-- `M scripts/birdie-messages-test.ts`
-- `M scripts/design-guard.baseline.json`
-- `A  scripts/messages-tickets-test.ts`
-- `A  scripts/shop-receipt-db-test.ts`
-- `M scripts/words-guard.baseline.json`
-- `M src/app/api/operator/shop-sales/route.ts`
-- `M src/app/dashboard/messages/page.tsx`
-- `M src/app/dashboard/shop/page.tsx`
-- `A  src/app/receipt/shop/[id]/page.tsx`
-- `A  src/components/dashboard/shop/SaleReceiptPanel.tsx`
-- `A  src/components/dashboard/shop/ShopReceiptBody.tsx`
-- `A  src/lib/shop-receipt.ts`
-- `A  src/lib/support-ticket.ts`
+- `M  STATUS.artifact.html`
+- `M  STATUS.json`
+- `M  STATUS.md`
+- `MM docs/CODEMAP.md`
+- `MM docs/codemap.json`
+- `A  prisma/migrations/20261110020000_decline_dismissed/migration.sql`
+- `M  prisma/schema.prisma`
+- `M  scripts/design-guard.baseline.json`
+- `M  scripts/launch-batch2-test.ts`
+- `A  scripts/money-1-db-test.ts`
+- `M  scripts/money-rework-test.ts`
+- `M  scripts/sms-consent-db-test.ts`
+- `M  scripts/words-guard.baseline.json`
+- `A  src/app/api/operator/declined/route.ts`
+- `M  src/app/dashboard/money/page.tsx`
+- `M  src/app/dashboard/settings/page.tsx`
+- `M  src/app/globals.css`
+- `M  src/components/dashboard/DateRangeButton.tsx`
+- `M  src/components/dashboard/DeclinedCardList.tsx`
+- `M  src/components/dashboard/money/CancellationsPanel.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -332,6 +334,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `bd16e6d6` 2026-11-09 — RECEIPT-3 + MSG-1: receipts you can see and text as a link; Messages from Cam's notes (#347)
+- `2981ca95` 2026-11-09 — RECEIPT-3 + MSG-1: receipts staff can see and text as a link; Messages from Cam's notes
 - `69eb6ce5` 2026-11-09 — DRAWER-1 + CART-4: the register is a loop; cart numbers, cart ticket, starter's sheet (#346)
 - `62742a74` 2026-11-09 — Regenerate code map and status board
 - `ae63a885` 2026-11-09 — DRAWER-1: open/reopen/fix take their seq from the snapshot checked (CI race)
@@ -342,8 +346,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `235630c1` 2026-11-08 — POS-8: Stock list + one item form, upload what you have, sell anyway, Sales cleanup (#344)
 - `44944043` 2026-11-09 — queue/spec update
 - `3d31bc28` 2026-11-09 — POS-8: Stock list + one item form, upload what you have, sell anyway, Sales cleanup
-- `44217555` 2026-11-08 — POS-7: Open the register (locked starting cash), tee sheet icons, sliding tabs (#343)
-- `9b6e7f6b` 2026-11-09 — POS-7: Open the register (locked starting cash), tee sheet icons, sliding tabs
 
 ---
 

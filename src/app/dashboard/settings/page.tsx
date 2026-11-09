@@ -850,6 +850,8 @@ function SettingsPageInner() {
             <div className="space-y-5">
               {/* SP-B: the course's cancellation & card policy. The preview is
                   describePolicy() — word for word what golfers are shown. */}
+              {/* MONEY-1: Money → Cancellations links straight here (?focus=cancellation-policy). */}
+              <div data-setup="cancellation-policy">
               {isStaffLogin ? (
                 <SectionCard title="Fees golfers can be charged">
                   <ul className="space-y-1 text-sm text-ink-soft">{formTerms.lines.map((l, i) => <li key={i}>{l}</li>)}</ul>
@@ -950,6 +952,7 @@ function SettingsPageInner() {
                   <p className="text-xs text-ink-soft mt-2">{formTerms.cardNeeded ? 'A card is saved at booking because a fee above can be charged.' : 'No card is asked for at booking — there is nothing to charge it for.'} Weather and course-closed cancellations are always free.</p>
                 </div>
               </SectionCard>)}
+              </div>
             </div>
           )}
 

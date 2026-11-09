@@ -1,8 +1,8 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 692,
-    "routes": 299,
+    "files": 694,
+    "routes": 300,
     "libs": 253,
     "models": 72,
     "orphans": 11,
@@ -5759,6 +5759,31 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/declined/route.ts",
+      "lines": 20,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/declined",
+      "kind": "api",
+      "methods": [
+        "POST"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/prisma",
+        "@/lib/session",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/demand-pricing/route.ts",
       "lines": 85,
       "purpose": "",
@@ -8982,7 +9007,7 @@
     },
     {
       "path": "src/app/dashboard/money/page.tsx",
-      "lines": 268,
+      "lines": 259,
       "purpose": "SD-8 — Payments and Cancellations were two pages querying the same endpoint, and Payouts was buried in Settings.",
       "brain": [],
       "exports": [
@@ -9008,6 +9033,7 @@
         "@/components/dashboard/money/PayoutsPanel",
         "@/components/dashboard/money/PayoutsTable",
         "@/components/dashboard/money/SalesPanel",
+        "@/components/dashboard/money/StripeButton",
         "@/components/dashboard/money/types",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
@@ -9217,7 +9243,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 1203,
+      "lines": 1206,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11261,7 +11287,7 @@
     },
     {
       "path": "src/components/dashboard/DateRangeButton.tsx",
-      "lines": 117,
+      "lines": 130,
       "purpose": "AN-3 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -11294,13 +11320,14 @@
       "usedBy": [
         "src/app/dashboard/analytics/page.tsx",
         "src/components/dashboard/money/LedgerPanel.tsx",
+        "src/components/dashboard/money/PaymentsPanel.tsx",
         "src/components/dashboard/money/SalesPanel.tsx"
       ]
     },
     {
       "path": "src/components/dashboard/DeclinedCardList.tsx",
-      "lines": 73,
-      "purpose": "Declined cards — the same rows on Home and Money → Needs you (Revamp 3 dead end 16, Cam 2026-10-29).",
+      "lines": 92,
+      "purpose": "Declined cards — the same rows on Home and Money → Action needed (Revamp 3 dead end 16, Cam 2026-10-29).",
       "brain": [],
       "exports": [
         {
@@ -11314,12 +11341,10 @@
       "auth": null,
       "guard": null,
       "imports": [
-        "@/components/dashboard/SmsConsentAsk",
         "@/components/ui/StatusDot",
         "@/lib/dashboard-fetch",
         "@/lib/format",
         "@/lib/operator-home",
-        "@/lib/sms-consent-copy",
         "next/link",
         "react"
       ],
@@ -11991,7 +12016,10 @@
         "src/app/dashboard/analytics/page.tsx",
         "src/app/dashboard/money/page.tsx",
         "src/app/dashboard/page.tsx",
-        "src/app/dashboard/shop/page.tsx"
+        "src/app/dashboard/shop/page.tsx",
+        "src/components/dashboard/money/CancellationsPanel.tsx",
+        "src/components/dashboard/money/PaymentsPanel.tsx",
+        "src/components/dashboard/money/SalesPanel.tsx"
       ]
     },
     {
@@ -12021,7 +12049,6 @@
       "usedBy": [
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/shop/page.tsx",
-        "src/components/dashboard/DeclinedCardList.tsx",
         "src/components/dashboard/events/EventMoney.tsx"
       ]
     },
@@ -12763,7 +12790,7 @@
     },
     {
       "path": "src/components/dashboard/money/CancellationsPanel.tsx",
-      "lines": 88,
+      "lines": 90,
       "purpose": "Money rework (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -12780,6 +12807,8 @@
       "imports": [
         "./RefundForm",
         "./types",
+        "@/components/dashboard/SlidingTabs",
+        "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/lib/format",
         "@/lib/no-fee-labels",
@@ -12823,7 +12852,7 @@
     },
     {
       "path": "src/components/dashboard/money/PaymentsPanel.tsx",
-      "lines": 132,
+      "lines": 135,
       "purpose": "Money rework (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -12844,6 +12873,8 @@
       "imports": [
         "./RefundForm",
         "./types",
+        "@/components/dashboard/DateRangeButton",
+        "@/components/dashboard/SlidingTabs",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/lib/format",
@@ -12856,7 +12887,7 @@
     },
     {
       "path": "src/components/dashboard/money/PayoutsPanel.tsx",
-      "lines": 102,
+      "lines": 96,
       "purpose": "SD-8 — the Stripe card, moved here out of Settings.",
       "brain": [],
       "exports": [
@@ -12874,7 +12905,6 @@
         "./PayoutsTable",
         "./types",
         "@/components/ui/StatusDot",
-        "@/lib/booking-fees",
         "lucide-react",
         "react"
       ],
@@ -12884,7 +12914,7 @@
     },
     {
       "path": "src/components/dashboard/money/PayoutsTable.tsx",
-      "lines": 73,
+      "lines": 78,
       "purpose": "Money rework (Cam 2026-10-19):",
       "brain": [],
       "exports": [
@@ -12954,7 +12984,7 @@
     },
     {
       "path": "src/components/dashboard/money/SalesPanel.tsx",
-      "lines": 244,
+      "lines": 243,
       "purpose": "DENSE-2 (Cam 2026-10-27, after Toast's Sales Summary and Stripe's Today):",
       "brain": [],
       "exports": [
@@ -12971,11 +13001,34 @@
       "imports": [
         "@/components/dashboard/DateRangeButton",
         "@/components/dashboard/LoadError",
+        "@/components/dashboard/SlidingTabs",
         "@/components/ui/Card",
         "@/lib/dashboard-fetch",
         "@/lib/register-close",
+        "next/link",
         "react"
       ],
+      "usedBy": [
+        "src/app/dashboard/money/page.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/money/StripeButton.tsx",
+      "lines": 12,
+      "purpose": "Cam 2026-11-09 (Money notes):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "StripeButton",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
       "usedBy": [
         "src/app/dashboard/money/page.tsx"
       ]
@@ -13329,6 +13382,7 @@
         "src/components/dashboard/home/HomeBoard.tsx",
         "src/components/dashboard/members/ImportMembers.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
+        "src/components/dashboard/money/CancellationsPanel.tsx",
         "src/components/dashboard/money/LedgerPanel.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
         "src/components/dashboard/money/SalesPanel.tsx",
@@ -15967,7 +16021,6 @@
         "src/components/dashboard/ShopItemsForGroup.tsx",
         "src/components/dashboard/StockTab.tsx",
         "src/components/dashboard/TeeSheetList.tsx",
-        "src/components/dashboard/money/PayoutsPanel.tsx",
         "src/components/home/TeeSheetDemo.tsx",
         "src/lib/booking-fee.ts",
         "src/lib/cancel-policy.ts",
@@ -22812,7 +22865,7 @@
     },
     {
       "path": "src/lib/operator-home.ts",
-      "lines": 165,
+      "lines": 168,
       "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the course dashboard mockups):",
       "brain": [],
       "exports": [
@@ -23510,6 +23563,7 @@
         "src/app/api/operator/counter-members/route.ts",
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/courses/route.ts",
+        "src/app/api/operator/declined/route.ts",
         "src/app/api/operator/demand-pricing/route.ts",
         "src/app/api/operator/events/[id]/payments/route.ts",
         "src/app/api/operator/events/[id]/route.ts",
@@ -25320,6 +25374,7 @@
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/course-shape/route.ts",
         "src/app/api/operator/courses/route.ts",
+        "src/app/api/operator/declined/route.ts",
         "src/app/api/operator/demand-pricing/route.ts",
         "src/app/api/operator/events/[id]/payments/route.ts",
         "src/app/api/operator/events/[id]/route.ts",
@@ -26286,7 +26341,6 @@
         "src/app/dashboard/page.tsx",
         "src/app/events/[id]/SignupForm.tsx",
         "src/app/sms-consent/page.tsx",
-        "src/components/dashboard/DeclinedCardList.tsx",
         "src/components/dashboard/SmsConsentAsk.tsx",
         "src/lib/sms-consent.ts",
         "src/lib/twilio.ts"
@@ -28594,6 +28648,10 @@
           "type": "String"
         },
         {
+          "name": "declineDismissedAt",
+          "type": "DateTime?"
+        },
+        {
           "name": "createdAt",
           "type": "DateTime"
         },
@@ -28614,6 +28672,7 @@
         "src/app/api/golfer/auth/otp/verify/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/cart-numbers/route.ts",
+        "src/app/api/operator/declined/route.ts",
         "src/app/api/stripe/webhook/route.ts",
         "src/lib/access-fee.ts",
         "src/lib/booking-fee.ts",

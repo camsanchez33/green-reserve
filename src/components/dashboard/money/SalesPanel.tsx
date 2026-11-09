@@ -5,11 +5,17 @@
 // for, how golfers paid, and the latest cash-drawer count. Every number comes from
 // /api/operator/money/sales (computeAnalytics' definitions). Plain HTML/SVG, no
 // chart library.
+// MONEY-1 (Cam 2026-11-09, Money notes): the top chart reads cleaner (today filled in, last week dashed, hour ticks,
+// a legend); the dates' total is labelled; the three charts are tabs like the homepage's; the bottom is one card —
+// what was sold and how it was paid — and the cash drawer is one line pointing at Pro shop → Close out. GreenReserve's
+// own fees are not listed on the course's Money page (Cam: "we don't want to disclose how much we make").
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { LoadError } from '@/components/dashboard/LoadError';
 import DateRangeButton, { type DateRange } from '@/components/dashboard/DateRangeButton';
 import { dfetch } from '@/lib/dashboard-fetch';
+import { SlidingTabs } from '@/components/dashboard/SlidingTabs';
+import Link from 'next/link';
 import type { CloseView } from '@/lib/register-close';
 
 type Sales = {
@@ -70,19 +76,28 @@ function TodayLine({ s }: { s: Sales }) {
   const max = Math.max(1, ...today.map(p => p[1]), ...before.map(p => p[1])) * 1.08;
   const xy = (pts: [number, number][]) => pts.map(([h, v]) => `${((h - first) / (last - first)) * 100},${100 - (v / max) * 100}`).join(' ');
   const nowX = ((Math.min(Math.max(nowH, first), last) - first) / (last - first)) * 100;
-  if (hours.length === 0) return <div className="h-32 flex items-center justify-center text-[13px] text-ink-muted border-b border-line">Fills in as rounds are paid</div>;
+  if (hours.length === 0) return <div className="h-36 flex items-center justify-center text-[13px] text-ink-muted border-b border-line">Fills in as rounds are paid</div>;
+  const area = today.length > 1 ? `${xy([[today[0][0], 0], ...today, [today[today.length - 1][0], 0]])}` : '';
+  // Every third hour, and always the first and last, so a short day still has labels.
+  const ticks: number[] = [first]; for (let h = Math.ceil((first + 1) / 3) * 3; h < last; h += 3) ticks.push(h); if (last > first) ticks.push(last);
   return (
     <div>
-      <div className="relative h-32 border-b border-line">
+      <div className="relative h-36 border-b border-line">
         <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none" role="img"
           aria-label={`Paid so far today ${usd(s.todayCollectedCents)}, against ${usd(s.lastWeekCollectedCents)} all day last week`}>
-          <polyline points={xy(before)} fill="none" stroke="#9AA89E" strokeWidth="2" strokeDasharray="5 4" vectorEffect="non-scaling-stroke" />
+          {[25, 50, 75].map(y => <line key={y} x1="0" x2="100" y1={y} y2={y} stroke="var(--color-line)" strokeWidth="1" vectorEffect="non-scaling-stroke" />)}
+          {area && <polygon points={area} fill="var(--color-pine)" fillOpacity="0.10" />}
+          <polyline points={xy(before)} fill="none" stroke="var(--color-ink-faint)" strokeWidth="1.5" strokeDasharray="4 4" vectorEffect="non-scaling-stroke" />
           <polyline points={xy(today)} fill="none" stroke="var(--color-pine)" strokeWidth="2.5" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
           <line x1={nowX} y1="0" x2={nowX} y2="100" stroke="var(--color-pine)" strokeWidth="1" strokeDasharray="2 3" vectorEffect="non-scaling-stroke" />
         </svg>
       </div>
-      <div className="flex justify-between text-[11.5px] text-ink-muted mt-1 tabular-nums">
-        <span>{hourLabel(first)}</span><span className="font-semibold text-pine">Now</span><span>{hourLabel(last)}</span>
+      <div className="relative h-4 mt-1 text-[11.5px] text-ink-muted tabular-nums">
+        {ticks.map(h => <span key={h} className="absolute -translate-x-1/2" style={{ left: `${((h - first) / (last - first)) * 100}%` }}>{hourLabel(h)}</span>)}
+      </div>
+      <div className="flex items-center gap-4 mt-2 text-[12px] text-ink-soft">
+        <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-4 h-[3px] rounded bg-pine" />Today</span>
+        <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-4 border-t-2 border-dashed border-ink-faint" />Same day last week</span>
       </div>
     </div>
   );
@@ -101,6 +116,7 @@ export function SalesPanel({ nextPayout, showPayout, stripeConnected, notPaid, o
   const [range, setRange] = useState<DateRange | null>(null);
   const [data, setData] = useState<Sales | null>(null);
   const [error, setError] = useState('');
+  const [chart, setChart] = useState<'series' | 'dow' | 'hour'>('series');
   const seq = useRef(0);
 
   const load = useCallback(async (r: DateRange | null) => {
@@ -156,6 +172,9 @@ export function SalesPanel({ nextPayout, showPayout, stripeConnected, notPaid, o
           <div className="flex flex-wrap gap-x-10 gap-y-2 mb-3">
             <div><div className="text-[13px] text-ink-soft">Today</div><div className="text-[26px] font-semibold text-ink tabular-nums">{usd(s.todayCollectedCents)}</div></div>
             <div><div className="text-[13px] text-ink-soft">Same day last week</div><div className="text-[26px] font-semibold text-ink-muted tabular-nums">{usd(s.lastWeekCollectedCents)}</div></div>
+            {s.lastWeekCollectedCents > 0 && (() => { const pct = Math.round(((s.todayCollectedCents - s.lastWeekCollectedCents) / s.lastWeekCollectedCents) * 100); return pct === 0 ? null : (
+              <div className="self-end pb-1 text-[13px] font-semibold tabular-nums"><span className={pct > 0 ? 'text-ok' : 'text-ink-muted'}>{pct > 0 ? '↑' : '↓'} {Math.abs(pct)}%</span> <span className="font-normal text-ink-muted">so far</span></div>
+            ); })()}
           </div>
           <TodayLine s={s} />
         </div>
@@ -164,33 +183,27 @@ export function SalesPanel({ nextPayout, showPayout, stripeConnected, notPaid, o
 
       <div className="flex flex-wrap items-center gap-3">
         {range && <DateRangeButton value={range} today={s.today} onChange={r => { setRange(r); load(r); }} />}
+        <span className="text-[13px] text-ink-soft">Collected</span>
         <span className="text-[15px] font-semibold text-ink tabular-nums">{usd(s.collectedCents)}</span>
         {change !== null && change !== 0 && <span className={'text-[13px] font-semibold tabular-nums ' + (change > 0 ? 'text-ok' : 'text-bad')}>{change > 0 ? '↑' : '↓'} {Math.abs(change)}%</span>}
         <span className="text-[12.5px] text-ink-muted">vs the period before</span>
       </div>
 
-      <Card className="px-5 py-4 space-y-6">
+      <Card className="px-5 py-4">
         {s.collectedCents === 0 ? <div className="h-28 flex items-center justify-center text-[13px] text-ink-muted">Fills in as rounds are paid</div> : (<>
-          <div>
-            <h3 className="text-[15px] font-semibold text-ink mb-2">Sales by {s.bucket === 'week' ? 'week' : 'day'}</h3>
-            <Bars values={s.series.map(x => x.collectedCents)} labels={s.series.map(x => fmtDay(x.key))} aria={`Sales by ${s.bucket}`} highlightLast />
-          </div>
-          <div className="grid lg:grid-cols-[2fr_3fr] gap-8">
-            <div>
-              <h3 className="text-[15px] font-semibold text-ink mb-2">Day of week</h3>
-              <Bars values={[1, 2, 3, 4, 5, 6, 0].map(i => s.byDow[i].collectedCents)} labels={[1, 2, 3, 4, 5, 6, 0].map(i => s.byDow[i].dow)} aria="Sales by day of week" />
-            </div>
-            <div>
-              <h3 className="text-[15px] font-semibold text-ink mb-2">Time of day</h3>
-              <Bars values={hours.map(h => atHour.get(h) ?? 0)} labels={hours.map(hourLabel)} aria="Sales by tee time hour" />
-            </div>
-          </div>
+          {/* Cam 2026-11-09: "make it look better, like the homepage tabs" — one chart at a time. */}
+          <SlidingTabs value={chart} onChange={k => setChart(k as typeof chart)} className="mb-4" tabs={[['series', `By ${s.bucket === 'week' ? 'week' : 'day'}`], ['dow', 'Day of week'], ['hour', 'Time of day']] as const} />
+          {chart === 'series' && <Bars values={s.series.map(x => x.collectedCents)} labels={s.series.map(x => fmtDay(x.key))} aria={`Sales by ${s.bucket}`} highlightLast />}
+          {chart === 'dow' && <Bars values={[1, 2, 3, 4, 5, 6, 0].map(i => s.byDow[i].collectedCents)} labels={[1, 2, 3, 4, 5, 6, 0].map(i => s.byDow[i].dow)} aria="Sales by day of week" />}
+          {chart === 'hour' && <Bars values={hours.map(h => atHour.get(h) ?? 0)} labels={hours.map(hourLabel)} aria="Sales by tee time hour" />}
         </>)}
       </Card>
 
-      <div className="grid lg:grid-cols-3 gap-4">
-        <Card className="px-5 py-4">
-          <h3 className="text-[15px] font-semibold text-ink mb-1">Sales summary</h3>
+      {/* Cam 2026-11-09: "rethink what is really needed" — what was sold and how it was paid, side by side; the drawer
+          lives on Pro shop → Close out, so here it is one line. */}
+      <Card className="grid md:grid-cols-2 md:divide-x divide-line-soft">
+        <div className="px-5 py-4">
+          <h3 className="text-[15px] font-semibold text-ink mb-1">What was sold</h3>
           <div className="divide-y divide-line-soft">
             <Row label="Green fees" value={usd2(s.summary.greenCents)} />
             <Row label="Carts" value={usd2(s.summary.cartCents)} />
@@ -201,15 +214,13 @@ export function SalesPanel({ nextPayout, showPayout, stripeConnected, notPaid, o
             {s.summary.shopOnRoundsCents > 0 && <Row label="Shop on rounds" value={usd2(s.summary.shopOnRoundsCents)} />}
             {s.summary.walkUpSales > 0 && <Row label={`Register sales · ${s.summary.walkUpSales}`} value={usd2(s.summary.walkUpCents)} />}
             {(s.summary.eventPayments ?? 0) > 0 && <Row label={`Event payments · ${s.summary.eventPayments}`} value={usd2(s.summary.eventCents ?? 0)} />}
-            {s.summary.greenReserveFeesCents > 0 && <Row label="GreenReserve booking fees" value={usd2(s.summary.greenReserveFeesCents)} muted />}
           </div>
-        </Card>
-
-        <Card className="px-5 py-4">
-          <h3 className="text-[15px] font-semibold text-ink mb-3">How golfers paid</h3>
+        </div>
+        <div className="px-5 py-4 border-t md:border-t-0 border-line-soft">
+          <h3 className="text-[15px] font-semibold text-ink mb-3">How it was paid</h3>
           {totalPaid > 0 && (
             <div role="img" aria-label={`By card ${usd(s.paid.cardCents)}, at the counter ${usd(s.paid.counterCents)}`} className="flex h-3 rounded-[3px] overflow-hidden gap-[2px] mb-2">
-              <span className="bg-pine" style={{ width: `${cardPct}%` }} /><span className="bg-[#8FA898]" style={{ width: `${100 - cardPct}%` }} />
+              <span className="bg-pine" style={{ width: `${cardPct}%` }} /><span className="bg-ink-faint/50" style={{ width: `${100 - cardPct}%` }} />
             </div>
           )}
           <div className="divide-y divide-line-soft">
@@ -218,26 +229,14 @@ export function SalesPanel({ nextPayout, showPayout, stripeConnected, notPaid, o
             {!!s.paid.accountCents && <Row label="On accounts" value={usd2(s.paid.accountCents)} />}
             <Row label={`Not paid yet · ${s.paid.outstandingGroups}`} value={usd2(s.paid.outstandingCents)} />
           </div>
-        </Card>
-
-        {d && (
-          <Card className="px-5 py-4">
-            <h3 className="text-[15px] font-semibold text-ink mb-1">Cash drawer · {fmtDay(d.day)}</h3>
-            <div className="divide-y divide-line-soft">
-              <Row label="Starting cash" value={usd2(d.openingFloatCents)} />
-              <Row label="Cash sales" value={usd2(d.cashSalesCents)} />
-              {d.counterRoundsCents !== 0 && <Row label="Paid at counter" value={usd2(d.counterRoundsCents)} />}
-              {d.otherCashCents !== 0 && <Row label="Dues and events" value={usd2(d.otherCashCents)} />}
-              {d.cashRefundsCents > 0 && <Row label="Cash refunds" value={usd2(-d.cashRefundsCents)} />}
-              <Row label="Expected" value={usd2(d.expectedCashCents)} strong />
-              <Row label="Counted" value={usd2(d.countedCashCents)} />
-              <div className={'flex justify-between py-2 text-[13.5px] font-semibold tabular-nums ' + (d.differenceCents === 0 ? 'text-ok' : 'text-bad')}>
-                <span>{d.differenceCents === 0 ? 'Even' : d.differenceCents > 0 ? 'Over' : 'Short'}</span><span>{usd2(d.differenceCents)}</span>
-              </div>
-            </div>
-          </Card>
-        )}
-      </div>
+          {d && (
+            <p className="mt-3 text-[13px] text-ink-soft">
+              Last close-out {fmtDay(d.day)} · <span className={d.differenceCents === 0 ? 'text-ok' : 'text-bad'}>{d.differenceCents === 0 ? 'even' : d.differenceCents > 0 ? `over ${usd2(d.differenceCents)}` : `short ${usd2(-d.differenceCents)}`}</span>
+              {' · '}<Link href="/dashboard/shop" className="font-medium text-pine hover:underline underline-offset-4">Pro shop</Link>
+            </p>
+          )}
+        </div>
+      </Card>
     </div>
   );
 }

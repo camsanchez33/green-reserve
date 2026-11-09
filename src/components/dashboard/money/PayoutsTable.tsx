@@ -36,14 +36,19 @@ export function PayoutsTable() {
   const b = data.balance;
   return (
     <div className="space-y-5">
-      {b && (
-        <div className="grid grid-cols-2 gap-px bg-line rounded-md overflow-hidden">
-          <div className="bg-white px-4 py-3"><div className="text-[13px] font-semibold text-ink">On its way to your bank</div><div className="text-[22px] font-semibold tabular-nums text-ink mt-0.5">{usd(b.pendingCents)}</div><div className="text-[12.5px] text-ink-muted">card payments Stripe is still settling</div></div>
-          <div className="bg-white px-4 py-3"><div className="text-[13px] font-semibold text-ink">Ready to pay out</div><div className="text-[22px] font-semibold tabular-nums text-ink mt-0.5">{usd(b.availableCents)}</div><div className="text-[12.5px] text-ink-muted">goes out in your next payout</div></div>
+      {/* MONEY-1 (Cam 2026-11-09: "reorganize the Payouts tab"): the three things a course asks — when is the next
+          one, what's on its way, what's ready — then every payout. */}
+      <div className="grid sm:grid-cols-3 gap-px bg-line rounded-md overflow-hidden">
+        <div className="bg-white px-4 py-3"><div className="text-[13px] text-ink-soft">Next payout</div>
+          {data.next ? <><div className="text-[22px] font-semibold tabular-nums text-ink mt-0.5">{usd(data.next.amountCents)}</div><div className="text-[12.5px] text-ink-muted">lands {fmtDay(data.next.arrivalDate)}</div></>
+            : <div className="text-[14px] text-ink-muted mt-1">None on its way</div>}
         </div>
-      )}
+        {b && <div className="bg-white px-4 py-3"><div className="text-[13px] text-ink-soft">Settling at Stripe</div><div className="text-[22px] font-semibold tabular-nums text-ink mt-0.5">{usd(b.pendingCents)}</div><div className="text-[12.5px] text-ink-muted">card payments still clearing</div></div>}
+        {b && <div className="bg-white px-4 py-3"><div className="text-[13px] text-ink-soft">Ready to pay out</div><div className="text-[22px] font-semibold tabular-nums text-ink mt-0.5">{usd(b.availableCents)}</div><div className="text-[12.5px] text-ink-muted">goes in the next payout</div></div>}
+      </div>
+      <h3 className="text-[15px] font-semibold text-ink">Every payout</h3>
       {data.payouts.length === 0 ? (
-        <p className="text-[13.5px] text-ink-soft">No payouts yet. Stripe sends your first one a few days after your first card payment, then on its normal schedule.</p>
+        <p className="text-[13.5px] text-ink-soft">No payouts yet. The first comes a few days after your first card payment.</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-[13.5px]">

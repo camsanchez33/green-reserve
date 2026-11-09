@@ -754,6 +754,9 @@ model Booking {
   cartRiders                 Int?
   /// CART-4: the cart numbers the group took, as staff typed them ("12, 14"). Not a price — editable after payment.
   cartNumbers                String            @default("")
+  /// MONEY-1 (Cam 2026-11-09: "option to delete an item from the list"): staff took this declined card off Action
+  /// needed. It still owes (Payments → Not paid yet); a new decline at check-in clears this and shows it again.
+  declineDismissedAt         DateTime?
   createdAt                  DateTime          @default(now())
   /// PARTIAL-1 (Cam 2026-11-04): the booking this one was split off — the players of a group still
   /// on their way when the rest checked in (or who paid separately, SPLIT-1). The tee sheet shows
