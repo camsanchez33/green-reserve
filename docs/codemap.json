@@ -1,8 +1,8 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 695,
-    "routes": 300,
+    "files": 694,
+    "routes": 299,
     "libs": 253,
     "models": 72,
     "orphans": 11,
@@ -8014,7 +8014,7 @@
     },
     {
       "path": "src/app/api/receipt/[bookingId]/route.ts",
-      "lines": 118,
+      "lines": 119,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8038,7 +8038,6 @@
         "@/lib/rate-limit",
         "@/lib/receipt-charges",
         "@/lib/shop",
-        "@/lib/starter-sheet",
         "@/lib/stripe",
         "next/server"
       ],
@@ -8737,30 +8736,6 @@
       "usedBy": []
     },
     {
-      "path": "src/app/dashboard/cart-ticket/page.tsx",
-      "lines": 66,
-      "purpose": "CART-4 (Cam 2026-11-09:",
-      "brain": [],
-      "exports": [
-        {
-          "name": "default (CartTicketPage)",
-          "kind": "component"
-        }
-      ],
-      "route": "/dashboard/cart-ticket",
-      "kind": "page",
-      "methods": [],
-      "auth": "operator",
-      "guard": "middleware",
-      "imports": [
-        "@/components/dashboard/carts/starter-data",
-        "@/lib/dashboard-fetch",
-        "next/navigation",
-        "react"
-      ],
-      "usedBy": []
-    },
-    {
       "path": "src/app/dashboard/events/page.tsx",
       "lines": 186,
       "purpose": "W2-9 Events (Cam 2026-10-21/22):",
@@ -9245,7 +9220,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 1207,
+      "lines": 1202,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9355,7 +9330,7 @@
     },
     {
       "path": "src/app/dashboard/starter/page.tsx",
-      "lines": 90,
+      "lines": 91,
       "purpose": "CART-4 (Cam 2026-11-09:",
       "brain": [],
       "exports": [
@@ -9963,7 +9938,7 @@
     },
     {
       "path": "src/app/receipt/[bookingId]/page.tsx",
-      "lines": 308,
+      "lines": 310,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11209,7 +11184,7 @@
     },
     {
       "path": "src/components/dashboard/CheckoutExtras.tsx",
-      "lines": 111,
+      "lines": 108,
       "purpose": "CART-3 (Cam 2026-11-09:",
       "brain": [],
       "exports": [
@@ -12494,7 +12469,6 @@
         "@/lib/range-balls"
       ],
       "usedBy": [
-        "src/app/dashboard/cart-ticket/page.tsx",
         "src/app/dashboard/starter/page.tsx"
       ]
     },
@@ -18920,7 +18894,6 @@
       "imports": [],
       "usedBy": [
         "src/app/dashboard/analytics/page.tsx",
-        "src/app/dashboard/cart-ticket/page.tsx",
         "src/app/dashboard/events/page.tsx",
         "src/app/dashboard/golfers/[key]/page.tsx",
         "src/app/dashboard/home/page.tsx",
@@ -26774,7 +26747,6 @@
       "usedBy": [
         "src/app/api/operator/cart-numbers/route.ts",
         "src/app/api/operator/checkout-options/route.ts",
-        "src/app/api/receipt/[bookingId]/route.ts",
         "src/app/dashboard/settings/page.tsx",
         "src/app/dashboard/starter/page.tsx",
         "src/components/dashboard/CheckoutExtras.tsx",

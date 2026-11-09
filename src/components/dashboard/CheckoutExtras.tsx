@@ -8,7 +8,7 @@ import { dfetch } from '@/lib/dashboard-fetch';
 import { toast } from '@/components/dashboard/Toast';
 import { ballCounts, MAX_BUCKETS, type BallSize } from '@/lib/range-balls';
 import { cartsFor } from '@/lib/cart-pricing';
-import { ticketPrinted, type CartNumberMode, type CartTicketMode } from '@/lib/starter-sheet';
+import { type CartNumberMode, type CartTicketMode } from '@/lib/starter-sheet';
 
 type Options = { cartRule: 'per_player' | 'per_cart'; range: { size: BallSize; priceCents: number }[]; cartNumbers: CartNumberMode; cartTicket: CartTicketMode };
 
@@ -91,9 +91,6 @@ export function CheckoutExtras({ booking, date, cartFeeCents, walkingAllowed, lo
         </label>
       )}
       {numbersNeeded && <p className="py-1.5 text-[12px] text-bad">Cart numbers are required at check-in.</p>}
-      {opts && ticketPrinted(opts.cartTicket) && riders > 0 && (
-        <div className="py-2.5"><a href={`/dashboard/cart-ticket?date=${encodeURIComponent(date)}&id=${encodeURIComponent(booking.id)}`} target="_blank" rel="noreferrer" className="text-[13px] font-medium text-pine hover:underline">Print cart ticket</a></div>
-      )}
       {!walkingAllowed && <p className="py-1.5 text-[12px] text-ink-muted">This time can’t be walked — everyone rides.</p>}
       {(opts?.range ?? []).map(({ size, priceCents }) => (
         <div key={size} className="flex items-center gap-3 py-2.5">

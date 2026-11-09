@@ -1,5 +1,5 @@
 // CART-4 (Cam 2026-11-09): cart numbers, the cart ticket and the starter's day sheet. Pure + string pins.
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { starterColumns, DEFAULT_STARTER_COLUMNS, tidyCartNumbers, cartNumberMode, cartTicketMode, ticketPrinted, ticketOnReceipt } from '../src/lib/starter-sheet';
 import { validateSettingsPatch } from '../src/lib/settings-validation';
 
@@ -21,7 +21,12 @@ ok('the settings route allows them', read('src/app/api/operator/settings/route.t
 const route = read('src/app/api/operator/cart-numbers/route.ts');
 ok('cart numbers: sheet.checkin to write, sheet.view to read', route.includes("requirePermission(session, 'sheet.checkin')") && route.includes("requirePermission(session, 'sheet.view')"));
 ok('cart numbers: only this course, never a cancelled booking', route.includes("where: { id, courseId: session.courseId, status: { not: 'cancelled' } }"));
-ok('the receipt shows cart numbers only when the course picked it', read('src/app/api/receipt/[bookingId]/route.ts').includes('ticketOnReceipt(booking.course.cartTicket) && booking.cartSelected'));
+ok('every receipt with a cart shows the cart line (no separate cart ticket)', read('src/app/api/receipt/[bookingId]/route.ts').includes('cartTicket: booking.cartSelected ? { riders: booking.cartRiders ?? booking.players } : null'));
+// CART-5 (Cam 2026-11-09): "on the receipt it should just say that they paid for a cart … the starter will write the
+// cart number onto their sheet": no cart number on the receipt or the printed slip; the sheet keeps a line to write on.
+ok('the receipt says the cart is paid, never a cart number', !read('src/app/api/receipt/[bookingId]/route.ts').includes('numbers: booking.cartNumbers') && read('src/app/receipt/[bookingId]/page.tsx').includes('{cartState} · {data.cartTicket.riders} of {data.players} riding') && read('src/app/receipt/[bookingId]/page.tsx').includes("isCompleted ? 'Paid' : isCancelled ? 'Cancelled' : 'Due at course'") && !read('src/app/receipt/[bookingId]/page.tsx').includes('Cart numbers'));
+ok('no printed cart ticket: no page, no link, no setting', !existsSync('src/app/dashboard/cart-ticket/page.tsx') && !read('src/components/dashboard/CheckoutExtras.tsx').includes('cart-ticket') && !read('src/app/dashboard/settings/page.tsx').includes('label="Cart ticket"'));
+ok('the starter sheet gives an empty cart cell a line to write on', read('src/app/dashboard/starter/page.tsx').includes('data-write-in="cart"'));
 ok('the starter writes them in: the column is left blank', read('src/app/dashboard/starter/page.tsx').includes("case 'carts': return mode === 'starter' ? '' : (b.cartNumbers ?? '');"));
 ok('phone on the starter sheet comes from the sheet route, blank without sheet.golfer_contact', read('src/app/api/operator/tee-times/route.ts').includes("...(contact ? {} : { golferEmail: '', golferPhone: '' })"));
 

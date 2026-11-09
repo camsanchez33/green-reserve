@@ -6,7 +6,6 @@ import { hasArea } from '@/lib/admin-areas';
 import { receiptCharges, chargedNowCents } from '@/lib/receipt-charges';
 import { roundChargedTotal, shopLinesFor } from '@/lib/shop';
 import { stripe } from '@/lib/stripe';
-import { ticketOnReceipt } from '@/lib/starter-sheet';
 import { counterPaidCents } from '@/lib/counter-pay';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
@@ -32,7 +31,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     where: { id: bookingId },
     include: {
       teeTime: { select: { date: true, time: true, holes: true, product: { select: { label: true } } } },
-      course: { select: { name: true, slug: true, city: true, state: true, brandColor: true, stripeAccountId: true, timezone: true, cartTicket: true } },
+      course: { select: { name: true, slug: true, city: true, state: true, brandColor: true, stripeAccountId: true, timezone: true } },
     },
   });
 
@@ -90,7 +89,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     players: booking.players,
     cartSelected: booking.cartSelected,
     // CART-4: the cart ticket on the receipt (Settings → Booking rules) — who rides and the cart numbers.
-    cartTicket: ticketOnReceipt(booking.course.cartTicket) && booking.cartSelected ? { riders: booking.cartRiders ?? booking.players, numbers: booking.cartNumbers } : null,
+    // CART-5 (Cam 2026-11-09): every receipt says whether the cart is paid — no separate cart ticket, no cart number (the starter
+    // writes that on the starter's sheet).
+    cartTicket: booking.cartSelected ? { riders: booking.cartRiders ?? booking.players } : null,
     greenFeeTotal: booking.greenFeeTotal,
     cartFeeTotal: booking.cartFeeTotal,
     rangeBallsTotal: booking.rangeBallsTotal,

@@ -15,7 +15,7 @@ type ReceiptData = {
   bookingId: string; golferName: string; courseName: string; courseSlug: string; courseLocation: string; brandColor?: string;
   date: string; time: string; holes: number; productLabel?: string | null; players: number; cartSelected: boolean;
   /** CART-4: shown when the course puts the cart ticket on the receipt. */
-  cartTicket?: { riders: number; numbers: string } | null;
+  cartTicket?: { riders: number } | null;
   greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number;
   accessFeeTotal: number; totalAmount: number; status: string;
   /** POS-1a: pro-shop items charged with the round; totalAmount includes them. */
@@ -117,6 +117,8 @@ function ReceiptPageInner() {
     : isCompleted ? 'Paid at check-in'
     : isCancelled ? 'Cancelled'
     : 'Due at course';
+  // CART-5: the same page is the booking confirmation, so "Paid" only once the round is — never before (review 2026-11-09).
+  const cartState = refunded ? 'Refunded' : onAccount ? 'On account' : isCompleted ? 'Paid' : isCancelled ? 'Cancelled' : 'Due at course';
 
   // The card block below says what the card took; these totals are the booking's price.
   const totalLabel = refunded || paidAtCourse || onAccount ? 'Booking total'
@@ -177,9 +179,9 @@ function ReceiptPageInner() {
                 <div className="flex justify-between"><span className="text-ink-muted">Tee Time</span><span className="font-medium text-ink">{fmtTime(data.time)}</span></div>
                 <div className="flex justify-between"><span className="text-ink-muted">Players</span><span className="font-medium text-ink">{data.players}</span></div>
                 <div className="flex justify-between"><span className="text-ink-muted">{data.productLabel ? 'Round' : 'Holes'}</span><span className="font-medium text-ink">{data.productLabel ? `${data.productLabel} · ${data.holes} holes` : data.holes}</span></div>
-                {data.cartSelected && !data.cartTicket && <div className="flex justify-between"><span className="text-ink-muted">Cart</span><span className="font-medium text-ink">Yes</span></div>}
-                {data.cartTicket && <div className="flex justify-between"><span className="text-ink-muted">Riding</span><span className="font-medium text-ink">{data.cartTicket.riders} of {data.players}</span></div>}
-                {data.cartTicket?.numbers && <div className="flex justify-between"><span className="text-ink-muted">Cart numbers</span><span className="font-medium text-ink">{data.cartTicket.numbers}</span></div>}
+                {/* CART-5 (Cam 2026-11-09): the receipt only says the cart is paid for; the golfer takes a cart and the
+                    starter writes its number on the starter's sheet. */}
+                {data.cartTicket && <div className="flex justify-between"><span className="text-ink-muted">Cart</span><span className="font-medium text-ink">{cartState} · {data.cartTicket.riders} of {data.players} riding</span></div>}
               </div>
 
               {/* Line items */}

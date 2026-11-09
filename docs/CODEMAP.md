@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-695 source files · 300 routes · 253 libraries · 72 models
+694 source files · 299 routes · 253 libraries · 72 models
 
 ## Single sources of truth
 
@@ -294,7 +294,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/preview/[courseId]/tee-times` | public | token | GET | `src/app/api/preview/[courseId]/tee-times/route.ts` | 40 |
 | `/api/preview/send` | admin | file | POST | `src/app/api/preview/send/route.ts` | 133 |
 | `/api/promo/check` | public | public | POST | `src/app/api/promo/check/route.ts` | 26 |
-| `/api/receipt/[bookingId]` | admin | file | GET | `src/app/api/receipt/[bookingId]/route.ts` | 118 |
+| `/api/receipt/[bookingId]` | admin | file | GET | `src/app/api/receipt/[bookingId]/route.ts` | 119 |
 | `/api/shop-sale/[id]` | public | token | GET POST | `src/app/api/shop-sale/[id]/route.ts` | 43 |
 | `/api/statement/[id]` | public | token | GET POST | `src/app/api/statement/[id]/route.ts` | 73 |
 | `/api/stripe/webhook` | public | secret header | POST | `src/app/api/stripe/webhook/route.ts` | 175 |
@@ -314,7 +314,6 @@ this script with a non-zero exit — that is the point of the tag.
 | `/dashboard/2fa` | operator | entry | page | `src/app/dashboard/2fa/page.tsx` | 110 |
 | `/dashboard/analytics` | operator | middleware | page | `src/app/dashboard/analytics/page.tsx` | 821 |
 | `/dashboard/cancellations` | operator | middleware | page | `src/app/dashboard/cancellations/page.tsx` | 17 |
-| `/dashboard/cart-ticket` | operator | middleware | page | `src/app/dashboard/cart-ticket/page.tsx` | 66 |
 | `/dashboard/events` | operator | middleware | page | `src/app/dashboard/events/page.tsx` | 186 |
 | `/dashboard/forgot-password` | operator | entry | page | `src/app/dashboard/forgot-password/page.tsx` | 63 |
 | `/dashboard/golfers/[key]` | operator | middleware | page | `src/app/dashboard/golfers/[key]/page.tsx` | 149 |
@@ -328,10 +327,10 @@ this script with a non-zero exit — that is the point of the tag.
 | `/dashboard/payments` | operator | middleware | page | `src/app/dashboard/payments/page.tsx` | 18 |
 | `/dashboard/reset-password` | operator | entry | page | `src/app/dashboard/reset-password/page.tsx` | 123 |
 | `/dashboard/schedules` | operator | middleware | page | `src/app/dashboard/schedules/page.tsx` | 719 |
-| `/dashboard/settings` | operator | middleware | page | `src/app/dashboard/settings/page.tsx` | 1207 |
+| `/dashboard/settings` | operator | middleware | page | `src/app/dashboard/settings/page.tsx` | 1202 |
 | `/dashboard/shop` | operator | middleware | page | `src/app/dashboard/shop/page.tsx` | 898 |
 | `/dashboard/sign` | operator | middleware | page | `src/app/dashboard/sign/page.tsx` | 26 |
-| `/dashboard/starter` | operator | middleware | page | `src/app/dashboard/starter/page.tsx` | 90 |
+| `/dashboard/starter` | operator | middleware | page | `src/app/dashboard/starter/page.tsx` | 91 |
 | `/dashboard/tournaments` | operator | middleware | page | `src/app/dashboard/tournaments/page.tsx` | 5 |
 | `/dashboard/verify` | operator | token | page | `src/app/dashboard/verify/page.tsx` | 148 |
 | `/demo` | public | public | GET | `src/app/demo/route.ts` | 18 |
@@ -346,7 +345,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/pay/shop/[id]` | public | token | page | `src/app/pay/shop/[id]/page.tsx` | 154 |
 | `/preview/[courseId]` | public | token | page | `src/app/preview/[courseId]/page.tsx` | 60 |
 | `/privacy` | public | public | page | `src/app/privacy/page.tsx` | 258 |
-| `/receipt/[bookingId]` | golfer | token | page | `src/app/receipt/[bookingId]/page.tsx` | 308 |
+| `/receipt/[bookingId]` | golfer | token | page | `src/app/receipt/[bookingId]/page.tsx` | 310 |
 | `/receipt/shop/[id]` | golfer | token | page | `src/app/receipt/shop/[id]/page.tsx` | 38 |
 | `/sms-consent` | public | public | page | `src/app/sms-consent/page.tsx` | 56 |
 | `/statement/[id]` | public | token | page | `src/app/statement/[id]/page.tsx` | 131 |
@@ -366,7 +365,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/course-time.ts` | 61 | 63 | SD-3 — course-local time. | `addDaysStr`, `clockIn`, `DEFAULT_TZ`, `isPastIn`, `isValidTimezone`, `payLinkOpensOn`, `todayIn`, `US_TIMEZONES` |
 | `src/lib/rate-limit.ts` | 58 | 78 |  | `clientIp`, `evidentiaryIp`, `rateLimit`, `rateLimitCount` |
 | `src/lib/format.ts` | 53 | 78 | MP-9 (ADMIN_V4 V4-6 §3) — the one place admin pages format money and time. | `formatCents`, `formatDate`, `formatDateTime`, `formatEasternDate`, `formatEasternDay`, `formatMoney`, `formatRelative`, `formatStamp` +3 more |
-| `src/lib/dashboard-fetch.ts` | 52 | 51 | SD-10 (from the SD review). | `dfetch`, `DFetchResult`, `REGISTER_CLOSED_EVENT` |
+| `src/lib/dashboard-fetch.ts` | 51 | 51 | SD-10 (from the SD review). | `dfetch`, `DFetchResult`, `REGISTER_CLOSED_EVENT` |
 | `src/lib/admin-audit.ts` | 42 | 194 | BRAIN-1a (Cam 2026-10-22): | `ACTION_LABELS`, `auditAdmin`, `AuditEntry`, `bodyWithReason`, `changedFields`, `courseOfBooking`, `needReason`, `REASON_ACTIONS` +5 more |
 | `src/lib/stripe.ts` | 36 | 147 | Every charge, refund and SetupIntent GreenReserve makes goes through here. | `ACCESS_FEE_CENTS`, `chargeOnConnectedAccount`, `chargeOneIntent`, `MEMBERSHIP_FEE_RATE`, `membershipFeeCents`, `refundOnConnectedAccount`, `stripe` |
 | `src/lib/agreement-required.ts` | 32 | 124 | AGREEMENT_SPEC AG-3 — version bumps and re-acceptance. | `AGREEMENT_REQUIRED_MESSAGE`, `agreementDueByCourse`, `agreementOverdueCourses`, `agreementReacceptance`, `currentReacceptWindow`, `Reacceptance`, `ReacceptWindow`, `requireAgreementCurrent` +1 more |
@@ -425,7 +424,6 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/owner-session.ts` | 7 | 170 | AW-1 (Cam 2026-10-20: | `alertTime`, `approveDevice`, `clearOwnerCookie`, `createOwnerSession`, `DEVICE_COOKIE`, `deviceForApproval`, `deviceLabel`, `deviceTokenFromCookie` +13 more |
 | `src/lib/round-shop-tax.ts` | 7 | 147 | W2-7 part B2 (Cam 2026-10-20: | `EnsureResult`, `ensureShopTax`, `recordPendingRoundShopTax`, `recordRoundShopTax`, `refreshOpenRoundShopTax`, `shopTaxKey`, `TAX_UNAVAILABLE` |
 | `src/lib/shop-sales.ts` | 7 | 859 | POS-2 (Cam 2026-10-19: | `cancelSaleIntent`, `chargeSale`, `createSale`, `discountFor`, `DiscountInput`, `findSales`, `hasDiscount`, `markCardPaid` +25 more |
-| `src/lib/starter-sheet.ts` | 7 | 58 | CART-4 (Cam 2026-11-09): | `CART_NUMBER_LABEL`, `CART_NUMBER_MODES`, `CART_TICKET_LABEL`, `CART_TICKET_MODES`, `cartNumberMode`, `CartNumberMode`, `cartTicketMode`, `CartTicketMode` +7 more |
 | `src/lib/admin-today.ts` | 6 | 194 |  | `paidWindow`, `STAFF_QUIET_DAYS`, `staffSeenSignal`, `STUCK_DAYS`, `TodayCourse`, `todayCourses`, `todayHealth`, `todayMoney` +1 more |
 | `src/lib/calcom.ts` | 6 | 93 | CAL-1 — Cal.com as the call scheduler, in place of the Google Calendar grid. | `calcomBookingUrl`, `calcomCreatedBy`, `calcomEmbedUrl`, `calcomManageLinks`, `calcomStatus`, `calcomUidOf`, `verifyCalcomSignature` |
 | `src/lib/call-answers.ts` | 6 | 349 | INQUIRY_CALL_SPEC IC-5 — structured discovery-call answers. | `BOOKING_METHOD_OPTIONS`, `CALL_FIELDS`, `CallAnswers`, `callRecapLines`, `DAY_SHORT`, `emptyAnswers`, `FieldSpec`, `FieldType` +19 more |
@@ -436,6 +434,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/password.ts` | 6 | 14 | Shared password strength rule — used on registration, reset, and in-dashboard change-password, both server-side (enforcement) and client-side (live hint). | `PASSWORD_REQUIREMENTS_HINT`, `validatePasswordStrength` |
 | `src/lib/promo-codes.ts` | 6 | 122 | PRICE-1 (Cam 2026-10-30: | `applyPromo`, `listPromos`, `normCode`, `NOTHING_OFF`, `PROMO_USED`, `promoDiscount`, `promoFits`, `PromoRow` +4 more |
 | `src/lib/register-open.ts` | 6 | 148 | POS-7 (Cam 2026-11-09: | `Handoff`, `kindOf`, `OpenKind`, `openRegister`, `OpenRow`, `OpenView`, `registerOpenFor`, `RegisterStatus` +2 more |
+| `src/lib/starter-sheet.ts` | 6 | 58 | CART-4 (Cam 2026-11-09): | `CART_NUMBER_LABEL`, `CART_NUMBER_MODES`, `CART_TICKET_LABEL`, `CART_TICKET_MODES`, `cartNumberMode`, `CartNumberMode`, `cartTicketMode`, `CartTicketMode` +7 more |
 | `src/lib/tax-categories.ts` | 6 | 21 | W2-7 part B: | `isTaxCategory`, `TAX_CATEGORIES`, `TaxCategory`, `US_STATES` |
 | `src/lib/tier-rates.ts` | 6 | 61 | The member-rate rules, shared by booking (api/bookings) and moving a group to another time (lib/move-booking.ts) so both price a member the same way. | `applyTierRates`, `isWeekend` |
 | `src/lib/birdie/ask.ts` | 5 | 33 | AN-3 (Cam 2026-10-19: | `APPLIED_EVENT`, `ASK_EVENT`, `askBirdie`, `markBirdieReady`, `useBirdieReady` |
@@ -649,7 +648,6 @@ Sorted the same way.
 | `src/components/CourseJoin.tsx` | 2 | 70 | MEM-JOIN (Cam 2026-10-30: | `CourseJoin` |
 | `src/components/CoursePacks.tsx` | 2 | 63 | PRICE-3 (Cam 2026-10-30: | `CoursePacks` |
 | `src/components/dashboard/AccountPicker.tsx` | 2 | 55 | MEM-ACCT 1b (Cam 2026-10-31: | `AccountMember`, `AccountPicker` |
-| `src/components/dashboard/carts/starter-data.ts` | 2 | 20 | CART-4: | `bucketWords`, `CartSettings`, `clock`, `isPaid`, `longDate`, `riding`, `ridingWords`, `SheetBooking` +1 more |
 | `src/components/dashboard/ChangeAccount.tsx` | 2 | 33 | MEM-ACCT (Cam 2026-10-31, "move to the right member"): | `ChangeAccount` |
 | `src/components/dashboard/DeclinedCardList.tsx` | 2 | 95 | Declined cards — the same rows on Home and Money → Action needed (Revamp 3 dead end 16, Cam 2026-10-29). | `DeclinedCardList` |
 | `src/components/dashboard/events/EventSetup.tsx` | 2 | 512 | W2-9 Events: | `blankForm`, `default (EventSetup)`, `EventForm`, `fieldErrors`, `KINDS`, `NineOpt`, `PAYERS`, `Product` |
@@ -678,8 +676,9 @@ Sorted the same way.
 | `src/components/dashboard/AgreementNotice.tsx` | 1 | 68 | AGREEMENT_SPEC AG-3 §3 — the re-acceptance banner and, after the deadline, the modal. | `AGREEMENT_REQUIRED_EVENT`, `default (AgreementNotice)` |
 | `src/components/dashboard/analytics/ShopTab.tsx` | 1 | 96 | SHOP-4 (Cam 2026-10-30: | `ShopTab` |
 | `src/components/dashboard/CardReaderCard.tsx` | 1 | 90 | POS-3 R3: | `CardReaderCard` |
+| `src/components/dashboard/carts/starter-data.ts` | 1 | 20 | CART-4: | `bucketWords`, `CartSettings`, `clock`, `isPaid`, `longDate`, `riding`, `ridingWords`, `SheetBooking` +1 more |
 | `src/components/dashboard/ChargeToAccount.tsx` | 1 | 66 | MEM-ACCT (Cam 2026-10-30: | `ChargeToAccount` |
-| `src/components/dashboard/CheckoutExtras.tsx` | 1 | 111 | CART-3 (Cam 2026-11-09: | `CheckoutExtras` |
+| `src/components/dashboard/CheckoutExtras.tsx` | 1 | 108 | CART-3 (Cam 2026-11-09: | `CheckoutExtras` |
 | `src/components/dashboard/CourseLayoutTab.tsx` | 1 | 495 | Settings rework (Cam 2026-10-19: | `default (CourseLayoutTab)` |
 | `src/components/dashboard/CoursePreview.tsx` | 1 | 80 | B-6 (UI_REVISE_SPEC §4): | `CoursePreviewProps`, `default (CoursePreview)` |
 | `src/components/dashboard/DemandPricing.tsx` | 1 | 157 | PRICE-5 (Cam 2026-10-30: | `DemandPricing` |

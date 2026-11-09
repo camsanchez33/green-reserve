@@ -72,7 +72,8 @@ function StarterSheet() {
               <tbody>
                 {rows.map(({ t, b }) => (
                   <tr key={b.id} className="border-b border-line align-top break-inside-avoid">
-                    {cols.map(c => <td key={c.key} className={`py-2 pr-3 text-ink tabular-nums ${c.key === 'carts' ? 'min-w-[110px]' : ''}`}>{cell(c.key, t, b, cfg.mode)}</td>)}
+                    {/* CART-5 (Cam 2026-11-09): the starter writes the cart number in — an empty cart cell is a line to write on. */}
+                    {cols.map(c => { const v = cell(c.key, t, b, cfg.mode); return <td key={c.key} className={`py-2 pr-3 text-ink tabular-nums ${c.key === 'carts' ? 'min-w-[110px]' : ''}`}>{c.key === 'carts' && !v ? <span aria-hidden="true" data-write-in="cart" className="block h-5 w-24 border-b border-ink" /> : v}</td>; })}
                   </tr>
                 ))}
               </tbody>
