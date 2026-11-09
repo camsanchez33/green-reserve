@@ -65,3 +65,44 @@ export const STRIP_TERMS = {
   notCovered: { label: 'Not covered yet', def: 'The organizer’s payments don’t reach this player yet' },
   coverage: { label: 'Organizer’s bill covers', def: 'Players paid for so far, a full price each, in list order' },
 } as const;
+
+/**
+ * EVENTS-2 (Cam 2026-11-09: the event page "gives no guidance or structure"): the steps that get an event from
+ * saved to played, in order, each done or not from the event's own state — never a guess. The first one not done
+ * is what to do next. Which steps apply follows who pays: an organizer's one bill (deposit, headcount, their list)
+ * or each player paying on the sign-up page.
+ */
+export type EventStepKey = 'hold' | 'price' | 'list' | 'deposit' | 'headcount' | 'signup' | 'paid' | 'pairings' | 'checklist';
+export type EventTab = 'overview' | 'players' | 'signup' | 'money' | 'checklist' | 'edit';
+export type EventStep = { key: EventStepKey; label: string; done: boolean; detail: string; tab: EventTab };
+export type StepsInput = {
+  payer: string; priceCents: number; heldCount: number; toMove: number; unheld: number;
+  onList: number; ungrouped: number; unpaid: number; signupOpen: boolean;
+  keptCents: number; guaranteeDue: string | null; guaranteedAt: string | null;
+  tasksOpen: number; tasksOverdue: number;
+};
+const count = (k: number, one: string) => `${k} ${one}${k === 1 ? '' : 's'}`;
+const dollars = (c: number) => '$' + (c / 100).toFixed(2);
+export function eventNextSteps(i: StepsInput): EventStep[] {
+  const org = i.payer === 'organizer', players = i.payer === 'players';
+  const steps: EventStep[] = [
+    { key: 'hold', label: 'Tee times held', tab: 'overview',
+      // No times yet (the day is weeks out) is fine: they are made already held. Only a gap needs the course.
+      done: i.toMove === 0 && i.unheld === 0,
+      detail: i.toMove ? count(i.toMove, 'booked group') + ' in the way' : i.unheld ? count(i.unheld, 'open time') + ' not held' : i.heldCount ? count(i.heldCount, 'tee time') : 'Held as they’re made' },
+    { key: 'price', label: 'Price per player', tab: 'edit', done: i.priceCents > 0, detail: i.priceCents > 0 ? dollars(i.priceCents) : 'Not set' },
+  ];
+  if (org) {
+    steps.push({ key: 'deposit', label: 'Deposit taken', tab: 'money', done: i.keptCents > 0, detail: i.keptCents > 0 ? dollars(i.keptCents) + ' in' : 'Nothing in yet' });
+    if (i.guaranteeDue) steps.push({ key: 'headcount', label: 'Headcount confirmed', tab: 'money', done: !!i.guaranteedAt, detail: i.guaranteedAt ? 'Confirmed' : 'Due ' + i.guaranteeDue });
+    steps.push({ key: 'list', label: 'Player list in', tab: 'players', done: i.onList > 0, detail: i.onList ? count(i.onList, 'player') : 'From the organizer' });
+  } else {
+    steps.push({ key: 'signup', label: 'Sign-up page open', tab: 'signup', done: i.signupOpen, detail: i.signupOpen ? 'Open' : 'Closed' });
+    if (players) steps.push({ key: 'paid', label: 'Everyone paid', tab: 'players', done: i.onList > 0 && i.unpaid === 0, detail: i.onList ? (i.unpaid ? i.unpaid + ' not paid' : 'All paid') : 'No players yet' });
+  }
+  steps.push(
+    { key: 'pairings', label: 'Pairings made', tab: 'players', done: i.onList > 0 && i.ungrouped === 0, detail: i.onList ? (i.ungrouped ? i.ungrouped + ' not in a group' : 'Everyone grouped') : 'No players yet' },
+    { key: 'checklist', label: 'Checklist done', tab: 'checklist', done: i.tasksOpen === 0, detail: i.tasksOverdue ? i.tasksOverdue + ' overdue' : i.tasksOpen ? i.tasksOpen + ' left' : 'All done' },
+  );
+  return steps;
+}

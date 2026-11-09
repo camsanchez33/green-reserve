@@ -133,7 +133,7 @@ function EventsInner() {
                 key={mode + (detail?.event.id ?? '')}
                 initial={mode === 'edit' && detail ? toForm(detail) : blankForm(list.today)}
                 eventId={mode === 'edit' ? detail?.event.id : undefined}
-                products={list.products} nines={list.nines} courseHoles={list.courseHoles}
+                products={list.products} nines={list.nines} courseHoles={list.courseHoles} today={list.today}
                 onSaved={saved} onCancel={() => setMode('view')} />
             )}
 
@@ -161,13 +161,13 @@ function EventsInner() {
                 )}
                 {upcoming.length > 0 && (
                   <section>
-                    <h2 className="text-[15px] font-semibold text-ink mb-2">Coming up</h2>
+                    <h2 className="text-[15px] font-semibold text-ink mb-2">Active</h2>
                     <Card className="divide-y divide-line-soft overflow-hidden">{head}{upcoming.map(row)}</Card>
                   </section>
                 )}
                 {past.length > 0 && (
                   <section>
-                    <h2 className="text-[15px] font-semibold text-ink mb-2">Past and cancelled</h2>
+                    <h2 className="text-[15px] font-semibold text-ink mb-2">Past</h2>
                     <Card className="divide-y divide-line-soft overflow-hidden">{head}{past.map(row)}</Card>
                   </section>
                 )}

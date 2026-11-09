@@ -12017,6 +12017,7 @@
         "src/app/dashboard/money/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/shop/page.tsx",
+        "src/components/dashboard/events/EventDetail.tsx",
         "src/components/dashboard/money/CancellationsPanel.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
         "src/components/dashboard/money/SalesPanel.tsx"
@@ -12490,7 +12491,7 @@
     },
     {
       "path": "src/components/dashboard/events/EventDetail.tsx",
-      "lines": 458,
+      "lines": 515,
       "purpose": "W2-9 Events:",
       "brain": [],
       "exports": [
@@ -12525,6 +12526,7 @@
         "./EventMoney",
         "./EventSetup",
         "./EventSignup",
+        "@/components/dashboard/SlidingTabs",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/components/ui/field",
@@ -12589,7 +12591,7 @@
     },
     {
       "path": "src/components/dashboard/events/EventSetup.tsx",
-      "lines": 379,
+      "lines": 508,
       "purpose": "W2-9 Events:",
       "brain": [],
       "exports": [
@@ -12604,6 +12606,10 @@
         {
           "name": "EventForm",
           "kind": "type"
+        },
+        {
+          "name": "fieldErrors",
+          "kind": "fn"
         },
         {
           "name": "KINDS",
@@ -12630,6 +12636,7 @@
       "imports": [
         "@/components/ui/Card",
         "@/components/ui/field",
+        "@/lib/course-events",
         "@/lib/course-time",
         "@/lib/dashboard-fetch",
         "@/lib/format",
@@ -17828,6 +17835,7 @@
         "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/events/route.ts",
         "src/components/dashboard/events/EventDetail.tsx",
+        "src/components/dashboard/events/EventSetup.tsx",
         "src/lib/sample-data.ts"
       ]
     },
@@ -19745,7 +19753,7 @@
     },
     {
       "path": "src/lib/event-command.ts",
-      "lines": 68,
+      "lines": 109,
       "purpose": "EVENTS-1 (Cam 2026-11-04, \"events command center\"):",
       "brain": [],
       "exports": [
@@ -19754,12 +19762,32 @@
           "kind": "fn"
         },
         {
+          "name": "eventNextSteps",
+          "kind": "fn"
+        },
+        {
+          "name": "EventStep",
+          "kind": "type"
+        },
+        {
+          "name": "EventStepKey",
+          "kind": "type"
+        },
+        {
           "name": "eventStrip",
           "kind": "fn"
         },
         {
+          "name": "EventTab",
+          "kind": "type"
+        },
+        {
           "name": "pastHeadcount",
           "kind": "fn"
+        },
+        {
+          "name": "StepsInput",
+          "kind": "type"
         },
         {
           "name": "Strip",
