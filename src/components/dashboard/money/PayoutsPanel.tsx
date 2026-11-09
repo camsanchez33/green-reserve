@@ -2,10 +2,11 @@
 // SD-8 — the Stripe card, moved here out of Settings. Getting paid is money,
 // not configuration, and an operator looking for "where is my money" was
 // being sent to a settings sub-tab.
+// MONEY-1 (Cam 2026-11-09: "we don't want to disclose how much we make"): the GreenReserve-fee explainer is off the
+// course's Money page; the fee itself is in the Operator Agreement and on the golfer's booking.
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { PayoutsTable } from './PayoutsTable';
-import { ACCESS_FEE_PER_PLAYER } from '@/lib/booking-fees';
 import type { MoneyCourse } from './types';
 import { StatusDot } from '@/components/ui/StatusDot';
 
@@ -89,13 +90,6 @@ export function PayoutsPanel({ course, stripeParam, onConnected, canConnect }: {
         </div>
       </div>
 
-      {/* Cam 2026-10-19: keep the GreenReserve note, cleaner. Sentences only from legal/LQ-2_FEE_COPY.md's allowed list. */}
-      <div className="bg-white rounded-lg shadow-card px-5 py-4">
-        <h3 className="text-[15px] font-semibold text-ink">GreenReserve&apos;s fee</h3>
-        <p className="text-[13.5px] text-ink mt-1.5 leading-relaxed">
-          Golfers pay ${ACCESS_FEE_PER_PLAYER.toFixed(2)} per player on each online booking, added to your price. Your green fee and our fee are collected in one card payment to your own Stripe account; our ${ACCESS_FEE_PER_PLAYER.toFixed(2)} per player is then passed to GreenReserve. Stripe&apos;s standard card-processing fee applies to the payment, the same as any card you take today. GreenReserve charges you nothing on top of it.
-        </p>
-      </div>
     </div>
   );
 }

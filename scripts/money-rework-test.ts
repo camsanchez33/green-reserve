@@ -23,20 +23,23 @@ const page = readFileSync('src/app/dashboard/money/page.tsx', 'utf8');
 const cx = readFileSync('src/components/dashboard/money/CancellationsPanel.tsx', 'utf8');
 const pay = readFileSync('src/components/dashboard/money/PaymentsPanel.tsx', 'utf8');
 check('title says what it is, not "Money"', page.includes('>Payments and payouts</h1>') && !page.includes("'Stripe connected'"));
-check('Stripe dashboard is a button for owners, not a status line', page.includes('Open your Stripe dashboard') && page.includes('!treatAsStaff'));
+// MONEY-1 (Cam 2026-11-09): Stripe's own button.
+check('Stripe dashboard is a button for owners, not a status line', page.includes('<StripeButton onClick={openStripe}') && page.includes('!treatAsStaff') && readFileSync('src/components/dashboard/money/StripeButton.tsx', 'utf8').includes('Open your Stripe dashboard'));
 // DENSE-2 (Cam 2026-10-27): the overview line became the Sales view — today against last week, next payout, not paid yet.
 const sales = readFileSync('src/components/dashboard/money/SalesPanel.tsx', 'utf8');
 check('overview line: today, not paid yet, next payout', ['>Today<', 'Not paid yet', 'Next payout'].every(x => sales.includes(x)) && page.includes('<SalesPanel'));
-check('Refresh is an icon', page.includes('aria-label="Refresh"') && page.includes('↻'));
-check('cancellation policy is not edited here', !cx.includes('savePolicy') && cx.includes('/dashboard/settings?section=Prices+%26+fees'));
+// MONEY-1 (Cam 2026-11-09: "the reload button isn't needed").
+check('no reload button', !page.includes('aria-label="Refresh"') && !page.includes('↻'));
+check('cancellation policy is not edited here — Change goes straight to it in Settings', !cx.includes('savePolicy') && cx.includes('/dashboard/settings?section=Prices+%26+fees&focus=cancellation-policy') && readFileSync('src/app/dashboard/settings/page.tsx', 'utf8').includes('data-setup="cancellation-policy"'));
 check('no upcoming-bookings list on Money', !cx.includes('Upcoming bookings'));
 check('payments grouped by day, future rounds left to the tee sheet', pay.includes("s.group === 'upcoming') return false"));
 check('payouts come from Stripe, read-only, behind the payouts permission', readFileSync('src/app/api/operator/stripe/payouts/route.ts', 'utf8').includes("requirePermission(session, 'money.payouts')"));
 check('settings opens the linked section', readFileSync('src/app/dashboard/settings/page.tsx', 'utf8').includes("searchParams.get('section')"));
 const payouts = readFileSync('src/components/dashboard/money/PayoutsPanel.tsx', 'utf8');
-check('fee note uses only LQ-2 allowed sentences', payouts.includes('our ${ACCESS_FEE_PER_PLAYER.toFixed(2)} per player is then passed to GreenReserve') && !payouts.includes('Nothing. Golfers') && !/from your payouts/.test(payouts));
+// MONEY-1 (Cam 2026-11-09: "we don't want to disclose how much we make"): the fee explainer is off the course's Money page.
+check('no GreenReserve fee explainer on Payouts', !payouts.includes('passed to GreenReserve') && !/from your payouts/.test(payouts));
 check('a failed payouts load is an error, never "nothing on its way"', page.includes('setPayoutError(p && !p.ok ? p.error') && page.includes('nextPayout === null ?'));
-check('no money totals summed from the capped 200-row list', !pay.includes('$ paid') && !pay.includes("`${usd(paid)} paid`") && !cx.includes('in fees kept'));
+check('no money totals summed from the capped 200-row list', !pay.includes('$ paid') && !pay.includes("`${usd(paid)} paid`") && !pay.includes('{usd(paid)} paid') && !cx.includes('in fees kept') && !cx.includes('keptCents'));
 check('an unconnected course is told to connect Stripe, not that nothing is on its way', page.includes('p.data.connected ?') && sales.includes('Connect Stripe') && sales.indexOf('!stripeConnected ?') !== -1 && sales.indexOf('!stripeConnected ?') < sales.indexOf('nextPayout === null ?'));
 // DENSE-2: the Sales view's route is money.payments only, and the cash drawer count stays behind the close-out's own permission.
 const salesRoute = readFileSync('src/app/api/operator/money/sales/route.ts', 'utf8');

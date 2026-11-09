@@ -1,36 +1,50 @@
 {
-  "generatedAt": "2026-11-09T06:10:38.553Z",
+  "generatedAt": "2026-11-09T06:40:46.944Z",
   "repo": {
-    "head": "baeaffe1",
+    "head": "c21eac9b",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 20,
+    "dirtyCount": 27,
     "dirty": [
-      "M STATUS.artifact.html",
-      " M STATUS.json",
-      " M STATUS.md",
-      " M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      "A  prisma/migrations/20261110010000_shop_receipt_token/migration.sql",
-      " M prisma/schema.prisma",
-      " M scripts/birdie-messages-test.ts",
-      " M scripts/design-guard.baseline.json",
-      "A  scripts/messages-tickets-test.ts",
-      "A  scripts/shop-receipt-db-test.ts",
-      " M scripts/words-guard.baseline.json",
-      " M src/app/api/operator/shop-sales/route.ts",
-      " M src/app/dashboard/messages/page.tsx",
-      " M src/app/dashboard/shop/page.tsx",
-      "A  src/app/receipt/shop/[id]/page.tsx",
-      "A  src/components/dashboard/shop/SaleReceiptPanel.tsx",
-      "A  src/components/dashboard/shop/ShopReceiptBody.tsx",
-      "A  src/lib/shop-receipt.ts",
-      "A  src/lib/support-ticket.ts"
+      "M  STATUS.artifact.html",
+      "M  STATUS.json",
+      "M  STATUS.md",
+      "MM docs/CODEMAP.md",
+      "MM docs/codemap.json",
+      "A  prisma/migrations/20261110020000_decline_dismissed/migration.sql",
+      "M  prisma/schema.prisma",
+      "M  scripts/design-guard.baseline.json",
+      "M  scripts/launch-batch2-test.ts",
+      "A  scripts/money-1-db-test.ts",
+      "M  scripts/money-rework-test.ts",
+      "M  scripts/sms-consent-db-test.ts",
+      "M  scripts/words-guard.baseline.json",
+      "A  src/app/api/operator/declined/route.ts",
+      "M  src/app/dashboard/money/page.tsx",
+      "M  src/app/dashboard/settings/page.tsx",
+      "M  src/app/globals.css",
+      "M  src/components/dashboard/DateRangeButton.tsx",
+      "M  src/components/dashboard/DeclinedCardList.tsx",
+      "M  src/components/dashboard/money/CancellationsPanel.tsx"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "bd16e6d6",
+        "date": "2026-11-09T01:22:44-05:00",
+        "subject": "RECEIPT-3 + MSG-1: receipts you can see and text as a link; Messages from Cam's notes (#347)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "2981ca95",
+        "date": "2026-11-09T06:10:58+00:00",
+        "subject": "RECEIPT-3 + MSG-1: receipts staff can see and text as a link; Messages from Cam's notes",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "69eb6ce5",
         "date": "2026-11-09T01:10:15-05:00",
@@ -1617,6 +1631,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "bd16e6d6",
+      "date": "2026-11-09",
+      "subject": "RECEIPT-3 + MSG-1: receipts you can see and text as a link; Messages from Cam's notes (#347)"
+    },
+    {
+      "h": "2981ca95",
+      "date": "2026-11-09",
+      "subject": "RECEIPT-3 + MSG-1: receipts staff can see and text as a link; Messages from Cam's notes"
+    },
+    {
       "h": "69eb6ce5",
       "date": "2026-11-09",
       "subject": "DRAWER-1 + CART-4: the register is a loop; cart numbers, cart ticket, starter's sheet (#346)"
@@ -1665,16 +1689,6 @@
       "h": "3d31bc28",
       "date": "2026-11-09",
       "subject": "POS-8: Stock list + one item form, upload what you have, sell anyway, Sales cleanup"
-    },
-    {
-      "h": "44217555",
-      "date": "2026-11-08",
-      "subject": "POS-7: Open the register (locked starting cash), tee sheet icons, sliding tabs (#343)"
-    },
-    {
-      "h": "9b6e7f6b",
-      "date": "2026-11-09",
-      "subject": "POS-7: Open the register (locked starting cash), tee sheet icons, sliding tabs"
     }
   ]
 }

@@ -1,6 +1,8 @@
 @import "tailwindcss";
 
 @theme {
+  /* MONEY-1 (Cam 2026-11-09): Stripe's own purple, only for the button that opens the course's Stripe dashboard. */
+  --color-stripe: #635BFF;
   /* FLOW-1 (Cam 2026-10-01: "the whole site flows together"): ONE palette for
      every page, taken from the approved homepage (home.module.css .root) —
      off-white ground, forest green, cool ink. The token NAMES are unchanged, so
@@ -155,6 +157,7 @@ body {
    the card colour; white TEXT on a solid fill takes the dark page colour,
    because in dark the fills are the bright tints. */
 .op-look[data-theme="dark"]:has(.op-rail) {
+  --color-stripe: #635BFF;
   color-scheme: dark;
   --color-page: #0F1110; --color-paper: #141715; --color-card: #181B19; --color-white: #181B19;
   --color-rail: #141715; --color-rail-line: #2A2E2B;

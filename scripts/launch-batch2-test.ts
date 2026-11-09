@@ -19,7 +19,8 @@ check('…in the build notes and on the onboarding price review', read('src/app/
 
 // 2. The cash drawer adds up, and a short can be traced.
 const sales = read('src/components/dashboard/money/SalesPanel.tsx');
-check('Money\'s drawer shows the dues and events cash its Expected includes', sales.includes('d.otherCashCents !== 0 && <Row label="Dues and events"'));
+// MONEY-1 (Cam 2026-11-09: "rethink what is really needed"): the drawer lives on Pro shop → Close out; Money shows one line.
+check('Money points at the last close-out, the drawer itself lives on the Pro shop', sales.includes('Last close-out {fmtDay(d.day)}') && sales.includes('href="/dashboard/shop"'));
 const close = read('src/lib/register-close.ts');
 check('the close-out lists each cash movement from the money ledger', close.includes("prisma.moneyMove.findMany({ where: { courseId, method: 'cash', at: inDay }") && read('src/components/dashboard/RegisterClose.tsx').includes('summary.cashMoves!.map('));
 

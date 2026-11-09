@@ -83,7 +83,8 @@ async function main() {
   ok('changing the phone clears "They said yes" (walk-in, register, event link)', sheet.includes('setPhone(e.target.value); setSmsYes(false);') && shopPage.includes('setSmsYes(false); }}') && evMoney.includes('payerPhone: e.target.value })); setSmsYes(false);'));
   ok('the text promise names only texts we send (no "confirmation" of the booking by text)', !read('src/lib/sms-consent-copy.ts').includes('the confirmation, a pay link'));
   const dcl = read('src/components/dashboard/DeclinedCardList.tsx');
-  ok('Home / Money declined cards ask the same way before texting', dcl.includes('r.error === SMS_NO_CONSENT_STAFF') && dcl.includes('<SmsConsentDialog') && dcl.includes("smsConsent: 'verbal'"));
+  // MONEY-1 (Cam 2026-11-09: "get rid of Text pay link"): Home / Money declined cards only email the pay link now.
+  ok('Home / Money declined cards never text (email only)', !dcl.includes("via: 'sms'") && dcl.includes("via: 'email'"));
   ok('staff routes record a verbal yes against the login', [ops, shop, ev].every(s => s.includes("method: 'verbal'") && s.includes('recordedBy: ') && s.includes("smsConsent === 'verbal'")));
   ok('course notices text only numbers that agreed (preview too)', read('src/lib/golfer-messages.ts').includes('const list = await withTextConsent(') && read('src/app/api/operator/golfer-messages/route.ts').includes('.then(withTextConsent)'));
   ok('the webhook checks Twilio\'s signature', read('src/app/api/twilio/inbound/route.ts').includes('twilio.validateRequest(token, signature, url, params)'));
