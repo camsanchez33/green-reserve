@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-09 06:56 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `f1f47c89` · working tree **9 dirty file(s)**
+Generated 2026-11-09 06:59 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `9713a9b6` · working tree **6 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 173 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 174 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `9713a9b6` | 2026-11-09 | EVENTS-2: event setup walk-through and a guided event page |
 | `7b62a972` | 2026-11-09 | MONEY-1: Money tab from Cam's notes (#348) |
 | `3932b9fc` | 2026-11-09 | MONEY-1: Money tab from Cam's notes |
 | `bd16e6d6` | 2026-11-09 | RECEIPT-3 + MSG-1: receipts you can see and text as a link; Messages from Cam's notes (#347) |
@@ -188,17 +189,14 @@ Generated 2026-11-09 06:56 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (9 file(s))
+### Uncommitted working tree (6 file(s))
 
-- `M CLAUDE.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
+- `M scripts/schedule-rework-test.ts`
 - `M scripts/words-guard.baseline.json`
-- `M src/app/dashboard/events/page.tsx`
-- `M src/components/dashboard/events/EventDetail.tsx`
-- `M src/components/dashboard/events/EventSetup.tsx`
-- `M src/lib/event-command.ts`
-- `?? scripts/events-2-test.ts`
+- `M src/app/dashboard/schedules/page.tsx`
+- `M src/components/dashboard/DemandPricing.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -325,6 +323,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `9713a9b6` 2026-11-09 — EVENTS-2: event setup walk-through and a guided event page
 - `7b62a972` 2026-11-09 — MONEY-1: Money tab from Cam's notes (#348)
 - `3932b9fc` 2026-11-09 — MONEY-1: Money tab from Cam's notes
 - `bd16e6d6` 2026-11-09 — RECEIPT-3 + MSG-1: receipts you can see and text as a link; Messages from Cam's notes (#347)
@@ -336,7 +335,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `84ccc1ed` 2026-11-09 — CART-3: riders and range balls at checkout (#345)
 - `ded0ed45` 2026-11-09 — queue/spec update
 - `29496778` 2026-11-09 — CART-3: riders and range balls at checkout (Riding − N +, buckets − N +)
-- `235630c1` 2026-11-08 — POS-8: Stock list + one item form, upload what you have, sell anyway, Sales cleanup (#344)
 
 ---
 

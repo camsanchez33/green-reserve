@@ -41,7 +41,13 @@ const page = readFileSync('src/app/dashboard/schedules/page.tsx', 'utf8');
 check('no Apply-to-tee-sheet button', !page.includes('Apply to tee sheet') && !page.includes('regenerate-tee-times'));
 // W2-6 simplification: one save for the whole page, and only after the preview has answered.
 check('every save shows the preview first', page.includes("JSON.stringify({ op: 'course', plan })") && page.includes('/api/operator/schedule/preview') && page.includes("disabled={busy || !pending.preview || !!pending.preview.refusal}"));
-check('open hours, what golfers can book, what it costs, closed days', ["When you&apos;re open", '>What golfers can book</h2>', '>What it costs</h2>', '>Closed days</h2>'].every(h => page.includes(h)));
+check('open hours, what golfers can book, what it costs, closed days', ['>Hours and prices</h2>', '>What golfers can book</h2>', '>Closed days</h2>'].every(h => page.includes(h)));
+// SCHED-2 (Cam 2026-11-09): tabs, and a set of days is adjusted like a membership — a summary row, Edit opens it.
+check('the page is in tabs, every part kept mounted', page.includes("['hours', 'Hours and prices'], ['deals', 'Deals'], ['demand', 'Demand pricing'], ['closed', 'Closed days'], ['rules', 'Booking rules']") && page.includes("const shownTab = (t: Tab) => tab === t ? '' : 'hidden';"));
+check('Home\'s demand-pricing link opens its tab', page.includes("if (window.location.hash === '#demand-pricing') setTab('demand');"));
+check('one row per set of days with its hours and prices; Edit opens it in place, one at a time', page.includes('{setSummary(d)}') && page.includes('setOpenSet(isOpen ? null : i)') && page.includes('{hoursFields(i, d)}') && page.includes(': priceTable(i, d)}'));
+const demand = readFileSync('src/components/dashboard/DemandPricing.tsx', 'utf8');
+check('demand pricing explains itself from the lib\'s own rules, the modes as choices, a key for the grid', demand.includes('`Looks at the last ${WEEKS_LOOKED_AT} weeks') && demand.includes('at most ${MAX_WEEKLY_STEP} points a week') && demand.includes('role="radiogroup" aria-label="Mode"') && demand.includes('→ suggested'));
 check('price names are automatic and the course can rename them', page.includes('Tap to rename') && page.includes('columnNames(d)'));
 const engine = readFileSync('src/lib/tee-sheet-engine.ts', 'utf8');
 check('the generator uses the same desiredSlots as the preview', engine.includes('const desired = desiredSlots(dateStr, schedules, products);'));

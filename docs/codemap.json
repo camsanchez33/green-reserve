@@ -9208,7 +9208,7 @@
     },
     {
       "path": "src/app/dashboard/schedules/page.tsx",
-      "lines": 671,
+      "lines": 719,
       "purpose": "W2-6 Schedule simplification (Cam 2026-10-21:",
       "brain": [],
       "exports": [
@@ -9229,6 +9229,7 @@
         "@/components/dashboard/LoadError",
         "@/components/dashboard/PromoCodes",
         "@/components/dashboard/RoundRulesCard",
+        "@/components/dashboard/SlidingTabs",
         "@/components/dashboard/StaffNotice",
         "@/components/dashboard/Toast",
         "@/components/ui/Card",
@@ -11355,7 +11356,7 @@
     },
     {
       "path": "src/components/dashboard/DemandPricing.tsx",
-      "lines": 130,
+      "lines": 157,
       "purpose": "PRICE-5 (Cam 2026-10-30:",
       "brain": [],
       "exports": [
@@ -11375,6 +11376,7 @@
         "@/components/ui/StatusDot",
         "@/components/ui/field",
         "@/lib/dashboard-fetch",
+        "@/lib/demand-pricing",
         "react"
       ],
       "usedBy": [
@@ -12016,6 +12018,7 @@
         "src/app/dashboard/analytics/page.tsx",
         "src/app/dashboard/money/page.tsx",
         "src/app/dashboard/page.tsx",
+        "src/app/dashboard/schedules/page.tsx",
         "src/app/dashboard/shop/page.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
         "src/components/dashboard/money/CancellationsPanel.tsx",
@@ -19203,6 +19206,7 @@
         "src/app/api/member/[courseSlug]/tee-times/route.ts",
         "src/app/api/operator/demand-pricing/route.ts",
         "src/app/api/preview/[courseId]/tee-times/route.ts",
+        "src/components/dashboard/DemandPricing.tsx",
         "src/lib/booking-residents.ts",
         "src/lib/move-booking.ts",
         "src/lib/public-tee-times.ts"
