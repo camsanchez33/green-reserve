@@ -246,6 +246,9 @@
     "uppercase": 5,
     "lucide": 6
   },
+  "src/components/dashboard/StockTab.tsx": {
+    "lucide": 1
+  },
   "src/components/dashboard/TabIntro.tsx": {
     "lucide": 2
   },

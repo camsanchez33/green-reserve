@@ -1,23 +1,22 @@
 'use client';
-// POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): Settings → Pro shop. The
-// items staff sell on the Pro shop page or add to a group's round. Each change
-// saves on its own. An item that was ever sold is hidden rather than deleted.
+// POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): the pieces of the shop catalog — the item editor, the
+// photo, adding many at once. POS-6 (Cam 2026-11-09, "stock is where everything should be inputed"): they are
+// used on Pro shop → Stock (StockTab.tsx), the one place items are added and changed; Settings no longer lists them.
+// Each change saves on its own. An item that was ever sold is hidden rather than deleted.
 // W2-7 (Cam 2026-10-20: "they need to add a ton of stuff … really think this
 // out"): sizes and colors are options of one item; many items go in at once by
 // pasting rows, uploading a CSV, or having the AI read a list or invoice — all
 // three land in one preview to check before anything is added.
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { dfetch } from '@/lib/dashboard-fetch';
-import { useDashboardAccess } from '@/lib/use-dashboard-access';
-import { SHOP_SALE_FEE_CENTS, SHOP_FEE_ON } from '@/lib/booking-fees';
 import { INPUT_COMPACT as INPUT } from '@/components/ui/field';
 import { parseImport, parsePriceCents, type ImportItem } from '@/lib/shop-import';
-import { shopTree, matches, stockOf, stockWords, type FlatItem, type TreeItem } from '@/lib/shop-tree';
+import type { FlatItem, TreeItem } from '@/lib/shop-tree';
 import { TAX_CATEGORIES } from '@/lib/tax-categories';
 import { downscaleImage } from '@/lib/image-resize';
 
 /** DASH-D (Cam 2026-11-01, "photo tiles"): an item's register photo — a 40px thumbnail that opens the file picker. */
-function ItemPhoto({ item, onChanged, onError }: { item: FlatItem; onChanged: () => Promise<void> | void; onError: (m: string) => void }) {
+export function ItemPhoto({ item, onChanged, onError }: { item: FlatItem; onChanged: () => Promise<void> | void; onError: (m: string) => void }) {
   const [busy, setBusy] = useState(false);
   async function upload(file: File) {
     setBusy(true);
@@ -58,7 +57,7 @@ const TAX_OPTIONS = Object.entries(TAX_CATEGORIES) as [string, { label: string; 
 
 // POS-2 (Cam 2026-10-19): a new shop starts from the things nearly every pro
 // shop sells — one tap each, edit the price after.
-const STARTERS: { name: string; category: string; priceCents: number }[] = [
+export const STARTERS: { name: string; category: string; priceCents: number }[] = [
   { name: 'Sleeve of balls', category: 'Balls', priceCents: 1200 },
   { name: 'Dozen balls', category: 'Balls', priceCents: 4500 },
   { name: 'Glove', category: 'Accessories', priceCents: 2000 },
@@ -69,14 +68,13 @@ const STARTERS: { name: string; category: string; priceCents: number }[] = [
   { name: 'Sports drink', category: 'Drinks', priceCents: 400 },
 ];
 
-const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
 const dollars = (c: number | null) => (c === null ? '' : (c / 100).toFixed(2));
 const LBL = 'block text-[12.5px] text-ink-soft mb-1';
 
 type OptRow = { id?: string; label: string; price: string; stock: string; sku: string };
 type Draft = { name: string; category: string; price: string; stock: string; sku: string; taxCategory: string; sized: boolean; options: OptRow[] };
-const emptyDraft = (): Draft => ({ name: '', category: '', price: '', stock: '', sku: '', taxCategory: 'general', sized: false, options: [] });
-const draftOf = (i: TreeItem): Draft => ({
+export const emptyDraft = (): Draft => ({ name: '', category: '', price: '', stock: '', sku: '', taxCategory: 'general', sized: false, options: [] });
+export const draftOf = (i: TreeItem): Draft => ({
   name: i.name, category: i.category, price: dollars(i.priceCents), stock: i.stockCount === null ? '' : String(i.stockCount), sku: i.sku, taxCategory: i.taxCategory ?? 'general',
   sized: i.options.some(o => o.active),
   options: i.options.filter(o => o.active).map(o => ({ id: o.id, label: o.optionLabel, price: o.priceCents === i.priceCents ? '' : dollars(o.priceCents), stock: o.stockCount === null ? '' : String(o.stockCount), sku: o.sku })),
@@ -92,7 +90,7 @@ function bodyOf(d: Draft) {
   };
 }
 
-function ItemEditor({ initial, categories, busy, submitLabel, onSubmit, onCancel }: {
+export function ItemEditor({ initial, categories, busy, submitLabel, onSubmit, onCancel }: {
   initial: Draft; categories: string[]; busy: boolean; submitLabel: string;
   onSubmit: (body: ReturnType<typeof bodyOf>) => void; onCancel?: () => void;
 }) {
@@ -115,7 +113,7 @@ function ItemEditor({ initial, categories, busy, submitLabel, onSubmit, onCancel
         <label className="w-28"><span className={LBL}>Price</span>
           <input value={d.price} onChange={e => set('price', e.target.value)} inputMode="decimal" placeholder="45.00" className={INPUT + ' w-full tabular-nums'} /></label>
         {!d.sized && <>
-          <label className="w-24"><span className={LBL}>In stock</span>
+          <label className="w-24"><span className={LBL}>On hand</span>
             <input value={d.stock} onChange={e => set('stock', e.target.value)} inputMode="numeric" placeholder="—" className={INPUT + ' w-full tabular-nums'} /></label>
           <label className="w-36"><span className={LBL}>SKU or barcode</span>
             <input value={d.sku} onChange={e => set('sku', e.target.value)} maxLength={64} placeholder="Optional" className={INPUT + ' w-full'} /></label>
@@ -166,12 +164,12 @@ function ItemEditor({ initial, categories, busy, submitLabel, onSubmit, onCancel
 
 // Each preview row gets a stable key and its own price text, so removing a row
 // never leaves another row's input showing the wrong price.
-type PreviewRow = ImportItem & { note?: string; key: string; priceText: string };
+export type PreviewRow = ImportItem & { note?: string; key: string; priceText: string };
 let rowSeq = 0;
 const toPreview = (items: (ImportItem & { note?: string })[]): PreviewRow[] => items.map(r => ({ ...r, key: `r${++rowSeq}`, priceText: r.priceCents ? dollars(r.priceCents) : '' }));
 
 /** Many at once: paste, CSV or AI → one preview → Add. */
-function BulkAdd({ busy, onAdd }: { busy: boolean; onAdd: (rows: PreviewRow[]) => Promise<boolean> }) {
+export function BulkAdd({ busy, onAdd }: { busy: boolean; onAdd: (rows: PreviewRow[]) => Promise<boolean> }) {
   const [mode, setMode] = useState<'paste' | 'ai'>('paste');
   const [text, setText] = useState('');
   const [rows, setRows] = useState<PreviewRow[] | null>(null);
@@ -260,152 +258,6 @@ function BulkAdd({ busy, onAdd }: { busy: boolean; onAdd: (rows: PreviewRow[]) =
               className="bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-sm px-4 py-2 disabled:opacity-50">{busy ? 'Adding…' : `Add ${ready.length} item${ready.length === 1 ? '' : 's'}`}</button>
             {ready.length < rows.length && <span className="text-[12.5px] text-ink-muted">{rows.length - ready.length} without a price won&apos;t be added until you give them one.</span>}
           </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-export function ShopCatalog() {
-  const access = useDashboardAccess();
-  const canEdit = access.can('shop.catalog');
-  const [flat, setFlat] = useState<FlatItem[] | null>(null);
-  const [loadError, setLoadError] = useState('');
-  const [busy, setBusy] = useState<string | null>(null);
-  const [error, setError] = useState('');
-  const [note, setNote] = useState('');
-  const [editing, setEditing] = useState<string | null>(null);
-  const [adding, setAdding] = useState<'' | 'one' | 'many'>('');
-  const [formKey, setFormKey] = useState(0);
-  const [q, setQ] = useState('');
-  const [cat, setCat] = useState('');
-
-  const load = useCallback(async () => {
-    setLoadError('');
-    const r = await dfetch<{ items: FlatItem[] }>('/api/operator/shop-items');
-    if (!r.ok) { setLoadError(r.error); return; }
-    setFlat(r.data.items);
-  }, []);
-  useEffect(() => { load(); }, [load]);
-
-  const tree = useMemo(() => shopTree(flat ?? []), [flat]);
-  const categories = useMemo(() => [...new Set(tree.map(i => i.category).filter(Boolean))].sort(), [tree]);
-  const shown = tree.filter(i => matches(i, q) && (!cat || i.category === cat));
-
-  async function write(key: string, method: 'POST' | 'PATCH' | 'DELETE', body: object, done: string) {
-    setBusy(key); setError(''); setNote('');
-    const r = await dfetch<{ hidden?: boolean; created?: number }>('/api/operator/shop-items', { method, body: JSON.stringify(body) });
-    setBusy(null);
-    if (!r.ok) { setError(r.error); return false; }
-    await load();
-    setNote(method === 'DELETE' && r.data?.hidden ? 'That item has been sold before, so it was hidden instead of deleted.' : done);
-    return true;
-  }
-
-  return (
-    <div className="space-y-4">
-      <p className="text-sm text-ink-soft -mt-1">
-        Sold at the register, or added to a round and charged with it{SHOP_FEE_ON ? <>, plus GreenReserve&apos;s {usd(SHOP_SALE_FEE_CENTS)} per sale, paid by the golfer</> : null}. A price change never touches items already sold.
-      </p>
-      {loadError && (
-        <div className="rounded-md bg-bad/5 border border-bad/20 px-4 py-2.5 flex items-center justify-between gap-3">
-          <p className="text-xs text-bad">{loadError}</p>
-          <button type="button" onClick={load} className="text-xs font-medium text-ink-soft hover:text-ink">Retry</button>
-        </div>
-      )}
-      {!loadError && !flat && <p className="text-xs text-ink-muted">Loading your shop…</p>}
-
-      {canEdit && flat && (
-        <div className="space-y-3">
-          <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={() => setAdding(a => (a === 'one' ? '' : 'one'))} className={'text-sm rounded-md px-3 py-1.5 border ' + (adding === 'one' ? 'border-pine/40 text-ink' : 'border-line text-ink hover:border-pine/40')}>Add an item</button>
-            <button type="button" onClick={() => setAdding(a => (a === 'many' ? '' : 'many'))} className={'text-sm rounded-md px-3 py-1.5 border ' + (adding === 'many' ? 'border-pine/40 text-ink' : 'border-line text-ink hover:border-pine/40')}>Add many at once</button>
-          </div>
-          {adding === 'one' && (
-            <ItemEditor key={formKey} initial={emptyDraft()} categories={categories} busy={busy === 'new'} submitLabel="Add item"
-              onSubmit={async b => { if (await write('new', 'POST', b, `${b.name} added.`)) setFormKey(k => k + 1); }} onCancel={() => setAdding('')} />
-          )}
-          {adding === 'many' && (
-            <BulkAdd busy={busy === 'bulk'} onAdd={rows => write('bulk', 'POST', { items: rows.map(({ note: _n, key: _k, priceText: _p, ...r }) => r) }, `${rows.length} item${rows.length === 1 ? '' : 's'} added.`)} />
-          )}
-          {(() => {
-            const have = new Set(tree.map(i => i.name.toLowerCase()));
-            const left = STARTERS.filter(st => !have.has(st.name.toLowerCase()));
-            return left.length > 0 && tree.length < 10 && (
-              <div>
-                <p className="text-[12.5px] text-ink-soft mb-1.5">Quick add — tap one, then fix its price:</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {left.map(st => (
-                    <button key={st.name} type="button" disabled={busy !== null} onClick={() => write(`q-${st.name}`, 'POST', st, `${st.name} added at ${usd(st.priceCents)} — edit it if your price differs.`)}
-                      className="text-[12.5px] text-ink border border-line rounded-md px-2.5 py-1 hover:border-pine/40 disabled:opacity-50">
-                      {st.name} · {usd(st.priceCents)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            );
-          })()}
-        </div>
-      )}
-      {!canEdit && flat && <p className="text-xs text-ink-muted">Changing these needs “Edit the shop catalog” from the owner.</p>}
-      {error && <p className="text-xs text-bad">{error}</p>}
-      {note && <p className="text-xs text-ok">{note}</p>}
-
-      {flat && tree.length === 0 && <p className="text-sm text-ink-soft">No items yet.</p>}
-      {tree.length > 0 && (
-        <div className="space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <input value={q} onChange={e => setQ(e.target.value)} placeholder="Find an item, size or SKU" aria-label="Find an item" className={INPUT + ' w-56'} />
-            <div className="flex flex-wrap gap-1">
-              {['', ...categories].map(c => (
-                <button key={c || 'all'} type="button" onClick={() => setCat(c)} aria-pressed={cat === c}
-                  className={'text-[12.5px] rounded-md px-2.5 py-1 border ' + (cat === c ? 'border-pine/40 text-ink font-medium' : 'border-line text-ink-soft hover:text-ink')}>{c || 'All'}</button>
-              ))}
-            </div>
-            <span className="text-[12.5px] text-ink-muted ml-auto">{shown.length} of {tree.length}</span>
-          </div>
-          <ul className="divide-y divide-line border-t border-line">
-            {shown.map(i => {
-              const stock = stockOf(i);
-              const opts = i.options.filter(o => o.active);
-              return (
-                <li key={i.id} className="py-2.5">
-                  {editing === i.id ? (
-                    <ItemEditor initial={draftOf(i)} categories={categories} busy={busy === i.id} submitLabel="Save"
-                      onSubmit={async b => { if (await write(i.id, 'PATCH', { id: i.id, ...b }, `${b.name} saved.`)) setEditing(null); }}
-                      onCancel={() => setEditing(null)} />
-                  ) : (
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="min-w-0">
-                        <span className={'text-sm ' + (i.active ? 'text-ink' : 'text-ink-muted')}>{i.name}</span>
-                        {i.category && <span className="text-[12.5px] text-ink-muted"> · {i.category}</span>}
-                        {!i.active && <span className="text-[12.5px] text-ink-muted"> · hidden</span>}
-                        {stock !== null && <span className={'text-[12.5px] ' + (stock <= 0 ? 'text-bad' : 'text-ink-muted')}> · {stock <= 0 ? stockWords(stock) : `${stock} in stock`}</span>}
-                        {i.sku && <span className="text-[12.5px] text-ink-muted"> · {i.sku}</span>}
-                        {opts.length > 0 && (
-                          <div className="text-[12.5px] text-ink-soft mt-0.5">
-                            {opts.map(o => <span key={o.id} className="mr-3 whitespace-nowrap">{o.optionLabel}{o.priceCents !== i.priceCents ? ` ${usd(o.priceCents)}` : ''}{o.stockCount !== null ? <span className={o.stockCount <= 0 ? 'text-bad' : 'text-ink-muted'}> ({o.stockCount})</span> : null}</span>)}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        {canEdit && <ItemPhoto item={i} onChanged={load} onError={m => { setNote(''); setError(m); }} />}
-                        <span className="text-sm tabular-nums text-ink">{usd(i.priceCents)}</span>
-                        {canEdit && (
-                          <>
-                            <button type="button" onClick={() => { setEditing(i.id); setError(''); setNote(''); }} disabled={busy !== null} className="text-xs text-ink-soft hover:text-ink px-1.5 disabled:opacity-50">Edit</button>
-                            <button type="button" onClick={() => write(i.id, 'PATCH', { id: i.id, active: !i.active }, i.active ? `${i.name} hidden.` : `${i.name} shown.`)} disabled={busy !== null} className="text-xs text-ink-soft hover:text-ink px-1.5 disabled:opacity-50">{i.active ? 'Hide' : 'Show'}</button>
-                            <button type="button" onClick={() => { if (confirm(`Delete ${i.name}${opts.length ? ' and all its options' : ''}?`)) write(i.id, 'DELETE', { id: i.id }, `${i.name} deleted.`); }} disabled={busy !== null} className="text-xs text-bad hover:bg-bad/5 rounded-md px-1.5 disabled:opacity-50">{busy === i.id ? '…' : 'Delete'}</button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-          {shown.length === 0 && <p className="text-sm text-ink-soft">Nothing matches.</p>}
         </div>
       )}
     </div>

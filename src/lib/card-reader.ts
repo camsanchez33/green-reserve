@@ -22,7 +22,7 @@ import Stripe from 'stripe';
 import { createHash } from 'crypto';
 import { prisma } from './prisma';
 import { stripe } from './stripe';
-import { saleIntent, markCardPaid, whyNotOpen } from './shop-sales';
+import { saleIntent, markCardPaid, whyNotOpen, packSaleOff } from './shop-sales';
 
 type Result<T> = { ok: true; value: T } | { ok: false; status: number; error: string };
 const fail = (status: number, error: string) => ({ ok: false as const, status, error });
@@ -143,6 +143,7 @@ export async function startReaderPayment(courseId: string, saleId: string, reade
   const sale = await prisma.shopSale.findFirst({ where: { id: saleId, courseId }, select: { status: true, payToken: true, totalCents: true, paymentIntentId: true } });
   if (!sale) return fail(404, 'Sale not found.');
   if (sale.payToken) return fail(409, 'This sale was sent as a pay link — take cash for it or void it, and ring it up again on the reader.');
+  { const off = await packSaleOff(saleId); if (off) return fail(410, off); }
   if (sale.status !== 'open') return fail(409, sale.status === 'paying' ? 'This sale is already on the card reader — wait for it, or cancel it on the register.' : whyNotOpen(sale.status));
   const reader = await ownReader(c.value.account, c.value.terminalLocationId, readerId);
   if (!reader.ok) return reader;

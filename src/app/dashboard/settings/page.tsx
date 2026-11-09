@@ -7,8 +7,6 @@ import { Save, Loader2, X } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { StaffNotice } from '@/components/dashboard/StaffNotice';
 import { StaffPermissions } from '@/components/dashboard/StaffPermissions';
-import { ShopCatalog } from '@/components/dashboard/ShopCatalog';
-import { RoundPacks } from '@/components/dashboard/RoundPacks';
 import { CardReaderCard } from '@/components/dashboard/CardReaderCard';
 import { SalesTaxCard } from '@/components/dashboard/SalesTaxCard';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
@@ -1016,11 +1014,8 @@ function SettingsPageInner() {
           {/* ── Pro shop (POS-1a) ── items save themselves. */}
           {active==='Pro shop' && (
             <div className="space-y-5">
-              <SectionCard title="Pro shop">
-                <ShopCatalog />
-                {/* PRICE-3: round packs, sold at the register. */}
-                <RoundPacks />
-              </SectionCard>
+              {/* POS-6 (Cam 2026-11-09): items are added and changed on Pro shop → Stock; round packs are turned off. */}
+              <Link href="/dashboard/shop" className="inline-block text-sm text-pine font-medium underline underline-offset-4">Shop items</Link>
               {/* W2-7 part B: owner only — staff can't change anything Stripe. */}
               {access.loaded && !isStaffLogin && (
                 <SectionCard title="Sales tax">

@@ -20,6 +20,7 @@
 // link"). A charge claims the sale first, so two taps cannot both charge, and
 // the sale has ONE PaymentIntent, so a retry can never charge twice.
 import { randomUUID } from 'crypto';
+import { ROUND_PACKS_ON, PACKS_OFF } from './round-packs-switch';
 import { prisma } from './prisma';
 import Stripe from 'stripe';
 import { stripe } from './stripe';
@@ -32,7 +33,7 @@ import { addCharge } from './member-account';
 
 export const MAX_SALE_CENTS = 1_000_000; // $10,000 — a typo guard
 export const MAX_SALE_LINES = 40;
-export const PACK_NO_DISCOUNT = 'A round pack can’t be discounted — set its price in Settings → Pro shop.';
+export const PACK_NO_DISCOUNT = 'A round pack can’t be discounted.';
 /** A claim this old belongs to a request that is gone (longer than any function run). The sale's single PaymentIntent keeps a retry to one charge either way. */
 export const STALE_CHARGE_MS = 10 * 60 * 1000;
 
@@ -121,6 +122,7 @@ async function priceLines(courseId: string, raw: unknown): Promise<Result<{ line
   const items = wanted.size ? await prisma.shopItem.findMany({ where: { id: { in: [...wanted.keys()] }, courseId, active: true, options: { none: {} }, OR: [{ parentId: null }, { parent: { active: true } }] } }) : [];
   if (items.length !== wanted.size) return fail(404, 'One of those items is not in your shop any more — refresh and try again.');
   // PRICE-3: this course's active round packs, priced from the catalog.
+  if (wantedPacks.size && !ROUND_PACKS_ON) return fail(410, PACKS_OFF);
   const packs = wantedPacks.size ? await prisma.roundPack.findMany({ where: { id: { in: [...wantedPacks.keys()] }, courseId, active: true } }) : [];
   if (packs.length !== wantedPacks.size) return fail(404, 'That round pack is not on sale any more — refresh and try again.');
   const packLines: PricedLine[] = packs.map(k => ({ shopItemId: null, reference: `pack-${k.id}`, name: k.name, unitPriceCents: k.priceCents, quantity: wantedPacks.get(k.id)!, taxCategory: 'general', pack: { roundPackId: k.id, packRounds: k.rounds, packCoversCart: k.coversCart, packGuests: k.guests, packValidDays: k.validDays } }));
@@ -333,9 +335,16 @@ export const whyNotOpen = (status: string) =>
     : 'This sale was voided.';
 
 /** Void an unpaid link sale, or take cash for it at the counter instead. */
+/** POS-6: with round packs turned off, a sale left open from before the switch that holds a pack is never paid. */
+export async function packSaleOff(saleId: string, courseId?: string): Promise<string | null> {
+  if (ROUND_PACKS_ON) return null;
+  return (await prisma.shopSaleLine.findFirst({ where: { saleId, roundPackId: { not: null }, ...(courseId ? { sale: { courseId } } : {}) }, select: { id: true } })) ? `${PACKS_OFF} Void this sale.` : null;
+}
+
 export async function settleOpenSale(courseId: string, saleId: string, to: 'void' | 'paid_cash', voidNote = ''): Promise<Result<SaleView>> {
   // PRICE-3: a golfer's own online purchase (a round pack) is paid on their link, never marked paid at the counter.
   const ONLINE_ONLY = 'The golfer bought this online — it’s paid on their own link. Void it if it’s not wanted.';
+  if (to === 'paid_cash') { const off = await packSaleOff(saleId, courseId); if (off) return fail(410, off); }
   const r = await prisma.$transaction(async tx => {
     const done = await tx.shopSale.updateMany({
       where: { id: saleId, courseId, status: 'open', ...(to === 'paid_cash' ? { soldBy: { not: 'online' } } : {}) },
@@ -383,6 +392,7 @@ export async function chargeSale(saleId: string, token: string, paymentMethodId:
   if (!sale) return fail(404, 'This pay link is not valid any more. Ask the pro shop for a new one.');
   if (sale.status === 'paid_card' || sale.status === 'paid_cash') return fail(409, 'This sale is already paid. Thank you!');
   if (sale.status === 'void') return fail(409, 'The pro shop cancelled this sale.');
+  if (await packSaleOff(saleId)) return fail(410, 'Round packs aren’t sold any more — ask the pro shop.');
   // PRICE-4: a round pack is paid only after the golfer ticks its terms (the route builds them: lib/round-packs saleTerms).
   if (terms.text && !terms.agreed) return fail(400, 'Tick the box to agree to the round pack’s terms first.');
   if (!sale.course.stripeAccountId || !sale.course.stripeAccountActive) return fail(409, 'This course can’t take card payments yet — please pay at the pro shop.');

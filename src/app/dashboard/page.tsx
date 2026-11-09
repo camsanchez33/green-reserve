@@ -6,6 +6,7 @@ import SmsConsentAsk, { SmsConsentDialog } from '@/components/dashboard/SmsConse
 import { SMS_NO_CONSENT_STAFF } from '@/lib/sms-consent-copy';
 import { PackHolderPick, PACK_RATE } from '@/components/dashboard/RegisterPacks';
 import type { Holding } from '@/lib/round-packs';
+import { ROUND_PACKS_ON } from '@/lib/round-packs-switch';
 import { Card, CARD } from '@/components/ui/Card';
 import { partyFees } from '@/lib/member-rates';
 import Link from 'next/link';
@@ -2021,7 +2022,7 @@ function WalkInForm({ slot, late, courseName, onSave, onCancel }: { slot: TeeTim
     return () => clearTimeout(t);
   }, [rate, memberQ]);
   const perCents: Record<string, number | null | undefined> = { resident: switches.residentsOn ? slot.residentRateCents : null, senior: slot.seniorRateCents, junior: slot.juniorRateCents };
-  const rates = [['standard', `Standard $${slot.greenFee}`], ...(['resident', 'senior', 'junior'] as const).filter(k => perCents[k] != null).map(k => [k, `${k[0].toUpperCase()}${k.slice(1)} $${((perCents[k] as number) / 100).toFixed(0)}`]), ...(switches.membersOn ? [['member', 'Member']] : []), PACK_RATE, ...tiers.map(t => [`tier:${t.id}`, t.name])];
+  const rates = [['standard', `Standard $${slot.greenFee}`], ...(['resident', 'senior', 'junior'] as const).filter(k => perCents[k] != null).map(k => [k, `${k[0].toUpperCase()}${k.slice(1)} $${((perCents[k] as number) / 100).toFixed(0)}`]), ...(switches.membersOn ? [['member', 'Member']] : []), ...(ROUND_PACKS_ON ? [PACK_RATE] : []), ...tiers.map(t => [`tier:${t.id}`, t.name])];
   const sentRate = rate === 'member' ? (member ? `member:${member.id}` : 'standard') : rate === 'pack' ? (pack ? `pack:${pack.lineId}` : 'standard') : rate;
   const inp = 'bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors w-full';
   // A membership is priced by the server (its member and guest rules); the rest show here.

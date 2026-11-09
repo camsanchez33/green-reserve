@@ -9,7 +9,7 @@ import { groupGreenFee } from '@/lib/residents';
 import { applyPromo, reserveUse, releaseUse, seatAfter, NOTHING_OFF, PROMO_USED, type PromoRow } from '@/lib/promo-codes';
 import { dealPct, dealRateSeat } from '@/lib/last-minute';
 import { demandPctFor, onlinePublicSeat, dealWins } from '@/lib/demand-pricing';
-import { holdingById, packSeats, packPrice, takeRounds, giveBack, PackError, PACK_NO_CODE } from '@/lib/round-packs';
+import { holdingById, packSeats, packPrice, takeRounds, giveBack, PackError, PACK_NO_CODE, ROUND_PACKS_ON, PACKS_OFF } from '@/lib/round-packs';
 import { isPastIn, payLinkOpensOn } from '@/lib/course-time';
 import Stripe from 'stripe';
 import { describePolicy, policyFrom, cardAtBooking, lateFeeTotalCents, noShowTotalCents as noShowFeeCents } from '@/lib/cancel-policy';
@@ -189,6 +189,7 @@ export async function POST(req: NextRequest) {
   const dealSet = dealWins(teeTimeFull.greenFeeCents, lastMinutePct, demandPct);
   const kept = { lastMinutePct: dealSet ? lastMinutePct : 0, demandPct: dealSet ? 0 : demandPct };
   let pack: { lineId: string; seats: number; coversCart: boolean; greenFeeTotal: number; cartFeeTotal: number; memberRateCents: number | null; memberCartCents: number | null } | null = null;
+  if (usePack && !ROUND_PACKS_ON) return NextResponse.json({ error: PACKS_OFF, code: 'pack' }, { status: 410 });
   if (usePack) {
     if (!golferSession?.email) return NextResponse.json({ error: 'Sign in to use your round pack.', code: 'pack' }, { status: 401 });
     const h = await holdingById(teeTimeFull.courseId, packLineId);

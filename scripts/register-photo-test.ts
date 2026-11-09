@@ -27,7 +27,7 @@ ok('initials skip punctuation ("Tees (bag of 50)" → TO, never "T(")', initials
 
 const cat = read('src/components/dashboard/ShopCatalog.tsx');
 ok('a phone photo is shrunk before upload (Vercel refuses bodies over 4.5 MB)', cat.includes("fd.append('file', await downscaleImage(file));"));
-ok('the catalog uploads and removes the photo, and shows the error', cat.includes("fetch('/api/operator/shop-items/photo', { method: 'POST', body: fd })") && cat.includes("method: 'DELETE'") && cat.includes("onError(d.error || 'Upload failed — try again.')") && cat.includes('{canEdit && <ItemPhoto'));
+ok('the catalog uploads and removes the photo, and shows the error', cat.includes("fetch('/api/operator/shop-items/photo', { method: 'POST', body: fd })") && cat.includes("method: 'DELETE'") && cat.includes("onError(d.error || 'Upload failed — try again.')") && read('src/components/dashboard/StockTab.tsx').includes('{canEdit ? <ItemPhoto'));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);

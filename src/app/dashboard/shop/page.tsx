@@ -16,20 +16,18 @@
 // take it → receipt. Tee times are paid on the tee sheet only (Cam: "tee times shouldnt be paid for in pro shop
 // they are paid on tee times"), so the register no longer lists rounds or walk-ins; the server routes are unchanged.
 import SmsConsentAsk from '@/components/dashboard/SmsConsentAsk';
-import { PackPicker, PackHolders } from '@/components/dashboard/RegisterPacks';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Link from 'next/link';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { StaffNotice } from '@/components/dashboard/StaffNotice';
 import { RegisterClose } from '@/components/dashboard/RegisterClose';
-import { ShopStock } from '@/components/dashboard/ShopStock';
+import { StockTab } from '@/components/dashboard/StockTab';
 import { Card } from '@/components/ui/Card';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { INPUT_COMPACT as INPUT } from '@/components/ui/field';
 import { AccountPicker, type AccountMember } from '@/components/dashboard/AccountPicker';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
-import { shopTree, matches, bySku, skuHits, stockWords, type FlatItem, type TreeItem } from '@/lib/shop-tree';
+import { shopTree, matches, bySku, skuHits, stockWords, stockOf, type FlatItem, type TreeItem } from '@/lib/shop-tree';
 
 type Item = FlatItem;
 type Refund = { id: string; amountCents: number; method: string; status: string; reason: string; restocked: boolean; error: string; createdAt: string };
@@ -45,7 +43,19 @@ type Sale = {
 type Reader = { id: string; label: string; online: boolean; simulated: boolean };
 /** A sale on the card reader: waiting for the card, or what happened. */
 type ReaderSale = { sale: Sale; readerId: string; state: 'waiting' | 'declined' | 'cancelled' | 'error'; message: string };
-type Custom = { key: string; name: string; priceCents: number; quantity: number; roundPackId?: string };
+type Custom = { key: string; name: string; priceCents: number; quantity: number };
+type SalesShow = 'all' | 'fix' | 'card' | 'cash' | 'account' | 'refunded';
+/** POS-6: what a sale counts as on the Sales tab's filter. "Needs fixing" = not paid yet, or a refund Stripe hasn't confirmed. */
+function salesShowOf(s: Pick<Sale, 'status' | 'refundedCents' | 'refunds'>): SalesShow[] {
+  const out: SalesShow[] = ['all'];
+  if (s.status === 'open' || s.status === 'paying' || s.refunds.some(r => r.status === 'pending')) out.push('fix');
+  if (s.status === 'paid_card') out.push('card');
+  if (s.status === 'paid_cash') out.push('cash');
+  if (s.status === 'paid_account') out.push('account');
+  if (s.refundedCents > 0) out.push('refunded');
+  return out;
+}
+const SALES_SHOW: [SalesShow, string][] = [['all', 'All'], ['fix', 'To fix'], ['card', 'Card'], ['cash', 'Cash'], ['account', 'On account'], ['refunded', 'Refunded']];
 type Discount = { mode: 'percent' | 'amount'; value: string; note: string };
 type Quote = { key: string; subtotalCents: number; discountCents: number; taxCents: number; totalCents: number; taxCalculationId: string; taxUnavailable?: boolean };
 
@@ -97,7 +107,6 @@ export default function ShopPage() {
   // POS-3: custom amounts, a discount, the cash handed over, and the sale just taken (for its receipt).
   const [customs, setCustoms] = useState<Custom[]>([]);
   const [customForm, setCustomForm] = useState<{ name: string; amount: string } | null>(null);
-  const [packPick, setPackPick] = useState(false);
   const [discount, setDiscount] = useState<Discount | null>(null);
   const [tendered, setTendered] = useState('');
   const [justPaid, setJustPaid] = useState<Sale | null>(null);
@@ -108,6 +117,10 @@ export default function ShopPage() {
   const [hist, setHist] = useState<{ q: string; day: string } | null>(null);
   const [histSales, setHistSales] = useState<Sale[] | null>(null);
   const [histError, setHistError] = useState('');
+  // POS-6 (Cam 2026-11-09, Sales: "make sure that it can be sorted and fixed easily and then can be found and organized
+  // nicely"): which sales show (how they paid, or what needs fixing) and in what order. Client-side over the list loaded.
+  const [salesShow, setSalesShow] = useState<SalesShow>('all');
+  const [salesSort, setSalesSort] = useState<'new' | 'old' | 'big'>('new');
   async function loadHistory(h: { q: string; day: string }) {
     setHist(h); setHistError('');
     if (!h.q.trim() && !h.day) { setHist(null); setHistSales(null); return; }
@@ -118,7 +131,7 @@ export default function ShopPage() {
   }
   const searchRef = useRef<HTMLInputElement>(null);
   // POS-4: the page's tabs, and where the sale is in the Charge steps (null = building the sale).
-  const [view, setView] = useState<'register' | 'sales' | 'stock' | 'packs' | 'close'>('register');
+  const [view, setView] = useState<'register' | 'sales' | 'stock' | 'close'>('register');
   // POS-5 (Cam 2026-11-08, "the animation of it"): the tab highlight slides to the tab picked (off with reduced motion).
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const [pill, setPill] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
@@ -177,7 +190,7 @@ export default function ShopPage() {
   const subtotal = lines.reduce((s, l) => s + l.item.priceCents * l.quantity, 0) + customs.reduce((s, c) => s + c.priceCents * c.quantity, 0);
   const salePayload = useMemo(() => [
     ...lines.map(l => ({ shopItemId: l.item.id, quantity: l.quantity })),
-    ...customs.map(c => (c.roundPackId ? { roundPackId: c.roundPackId, quantity: c.quantity } : { name: c.name, priceCents: c.priceCents, quantity: c.quantity })),
+    ...customs.map(c => ({ name: c.name, priceCents: c.priceCents, quantity: c.quantity })),
   ], [lines, customs]); // eslint-disable-line react-hooks/exhaustive-deps
   const discountPayload = discount && Number(discount.value) > 0
     ? (discount.mode === 'percent' ? { percent: Number(discount.value), note: discount.note } : { amountCents: toCents(discount.value), note: discount.note })
@@ -406,7 +419,13 @@ export default function ShopPage() {
     <div className="flex flex-col min-h-screen md:h-screen bg-page md:overflow-hidden">
       <OperatorSidebar active="shop" />
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-8">
-        {access.loaded && !canSell ? <StaffNotice what="the pro shop" view="shop.sell" /> : (
+        {access.loaded && !canSell && access.can('shop.catalog') ? (
+          // POS-6: a login that edits the catalog but doesn't sell gets Stock alone (it used to edit items in Settings).
+          <div className="px-4 sm:px-8 py-6">
+            <h1 className="text-[26px] font-bold leading-none text-ink">Stock</h1>
+            <div className="mt-5"><StockTab /></div>
+          </div>
+        ) : access.loaded && !canSell ? <StaffNotice what="the pro shop" view="shop.sell" /> : (
           <div className="px-4 sm:px-8 py-6">
             <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
               <h1 className="text-[26px] font-bold leading-none text-ink">Pro shop</h1>
@@ -415,7 +434,6 @@ export default function ShopPage() {
                 {pill && <span aria-hidden="true" className="absolute rounded-[5px] bg-page transition-[left,top,width,height] duration-200 ease-out motion-reduce:transition-none" style={{ left: pill.left, top: pill.top, width: pill.width, height: pill.height }} />}
                 {([['register', 'Register'], ['sales', 'Sales'],
                   ...((access.can('shop.sell') || access.can('shop.catalog')) ? [['stock', 'Stock']] : []),
-                  ...(access.can('shop.sell') ? [['packs', 'Round packs']] : []),
                   ...(access.can('shop.close') ? [['close', 'Close out']] : [])] as [typeof view, string][]).map(([k, l]) => (
                   <button key={k} ref={el => { tabRefs.current[k] = el; }} role="tab" aria-selected={view === k} onClick={() => { setView(k); if (k !== view) { setError(''); setNote(''); } }}
                     className={'relative z-10 shrink-0 px-3.5 min-h-[34px] rounded-[5px] text-[13.5px] transition-colors ' + (view === k ? 'text-ink font-semibold' : 'text-ink-soft hover:text-ink')}>{l}</button>
@@ -443,7 +461,7 @@ export default function ShopPage() {
               <Card className="p-4">
                 {!items && !loadError && <p className="text-sm text-ink-muted">Loading your shop…</p>}
                 {items && items.length === 0 && (
-                  <p className="text-sm text-ink-soft">Your shop has no items yet. <Link href="/dashboard/settings?section=Pro+shop" className="text-pine font-medium underline">Add them in Settings → Pro shop</Link>.</p>
+                  <p className="text-sm text-ink-soft">No items yet.{(access.can('shop.sell') || access.can('shop.catalog')) && <> <button type="button" onClick={() => setView('stock')} className="text-pine font-medium underline">Add on Stock</button>.</>}</p>
                 )}
                 {tree.length > 0 && (
                   <div className="space-y-3 mb-4">
@@ -456,12 +474,13 @@ export default function ShopPage() {
                     ))}</div>}
                   </div>
                 )}
-                {tree.length > 0 && shown.length === 0 && <p className="text-sm text-ink-soft mb-3">Nothing matches.{q.trim() ? ' Unknown code? Add it as a SKU in Settings → Pro shop.' : ''}</p>}
+                {tree.length > 0 && shown.length === 0 && <p className="text-sm text-ink-soft mb-3">Nothing matches.</p>}
                 {items && (
                   <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2.5">
                     {shown.map(it => {
                       const n = inCart(it);
                       const opts = it.options.filter(o => o.active);
+                      const stockN = stockOf(it);
                       return (
                         <div key={it.id} className={picking === it.id ? 'col-span-2 sm:col-span-3 xl:col-span-4 2xl:col-span-5' : ''}>
                           <button onClick={() => (opts.length ? setPicking(p => (p === it.id ? null : it.id)) : add(it.id, 1))} aria-expanded={opts.length ? picking === it.id : undefined}
@@ -471,10 +490,14 @@ export default function ShopPage() {
                               // eslint-disable-next-line @next/next/no-img-element
                               ? <img src={it.photoUrl} alt="" loading="lazy" className="block w-full h-20 object-cover bg-paper" />
                               : <span aria-hidden="true" className="flex w-full h-20 items-center justify-center bg-paper text-[18px] font-semibold text-ink-faint">{it.name.split(/\s+/).filter(w => /^[A-Za-z0-9]/.test(w)).slice(0, 2).map(w => w[0]).join('').toUpperCase()}</span>)}
-                            <span className="block px-3 pt-3 text-[14px] font-medium text-ink leading-snug">{it.name}</span>
-                            <span className="mt-auto flex items-baseline justify-between gap-2 px-3 pt-1 pb-3 text-[12px] text-ink-muted tabular-nums">
-                              <span><b className="text-[15px] font-semibold text-ink">{usd(it.priceCents)}</b>{n ? <span className="text-pine font-semibold"> · {n}</span> : null}</span>
-                              {opts.length ? <span className="shrink-0 whitespace-nowrap">{opts.length} options</span> : it.stockCount !== null && it.stockCount <= 0 && <span className="shrink-0 whitespace-nowrap text-bad">{stockWords(it.stockCount)}</span>}
+                            {/* POS-6 (Cam 2026-11-09): "in sale" is how many are on this ticket; the stock is its own line, never beside the price. */}
+                            <span className="flex items-start justify-between gap-2 px-3 pt-3">
+                              <span className="text-[14px] font-medium text-ink leading-snug">{it.name}</span>
+                              {n ? <span className="shrink-0 text-[12px] font-semibold text-pine tabular-nums whitespace-nowrap">{n} in sale</span> : null}
+                            </span>
+                            <span className="mt-auto px-3 pt-1 pb-3 tabular-nums">
+                              <b className="block text-[15px] font-semibold text-ink">{usd(it.priceCents)}</b>
+                              <span className={'block text-[12px] ' + (stockN !== null && stockN <= 0 ? 'text-bad' : 'text-ink-muted')}>{opts.length ? `${opts.length} sizes${stockN !== null ? ` · ${stockN <= 0 ? stockWords(stockN) : `${stockN} left`}` : ''}` : stockN !== null ? stockWords(stockN) : '\u00a0'}</span>
                             </span>
                           </button>
                           {picking === it.id && (
@@ -495,17 +518,16 @@ export default function ShopPage() {
                     })}
                     {!q.trim() && !cat && (
                       <>
-                        <button type="button" onClick={() => { setCustomForm(f => f ? null : { name: '', amount: '' }); setPackPick(false); }} aria-expanded={!!customForm}
+                        <button type="button" onClick={() => setCustomForm(f => f ? null : { name: '', amount: '' })} aria-expanded={!!customForm}
                           className="min-h-[104px] rounded-[10px] border border-dashed border-line-strong text-[14px] font-medium text-ink-soft hover:text-ink">Custom amount</button>
-                        <button type="button" onClick={() => { setPackPick(o => !o); setCustomForm(null); }} aria-expanded={packPick}
-                          className="min-h-[104px] rounded-[10px] border border-dashed border-line-strong text-[14px] font-medium text-ink-soft hover:text-ink">Round pack</button>
                       </>
                     )}
                   </div>
                 )}
               </Card>
 
-              <Card className="lg:sticky lg:top-6 flex flex-col lg:min-h-[calc(100vh-9rem)]">
+              {/* POS-6 (Cam 2026-11-09): the ticket is only as tall as the sale — Charge sits under the items. */}
+              <Card className="lg:sticky lg:top-6 flex flex-col">
                 {step === null ? (
                   <>
                     <div className="flex items-center justify-between gap-2 px-5 py-4 border-b border-line">
@@ -513,7 +535,6 @@ export default function ShopPage() {
                       {!empty && <button type="button" onClick={() => { setCart({}); setCustoms([]); setDiscount(null); setTendered(''); setError(''); }} className="text-[12.5px] text-ink-soft hover:text-ink">Clear</button>}
                     </div>
                     <div className="flex-1 px-5 py-2">
-                      {packPick && <PackPicker onClose={() => setPackPick(false)} onPick={p => setCustoms(cs => cs.some(c => c.roundPackId === p.id) ? cs.map(c => c.roundPackId === p.id ? { ...c, quantity: Math.min(99, c.quantity + 1) } : c) : [...cs, { key: `p${p.id}`, name: p.name, priceCents: p.priceCents, quantity: 1, roundPackId: p.id }])} />}
                       {customForm && (
                         <form className="my-2 bg-paper/70 rounded-md p-3 flex flex-wrap gap-2 items-end" onSubmit={e => {
                           e.preventDefault();
@@ -742,16 +763,41 @@ export default function ShopPage() {
               <div className="flex flex-wrap items-center justify-between gap-2 px-5 pt-4 pb-2">
                 <h2 className="text-[15px] font-semibold text-ink">{hist ? (hist.day ? `Sales, ${hist.day}` : 'Sales, last 90 days') : 'Today’s sales'}</h2>
                 <div className="flex flex-wrap items-center gap-2">
-                  <input value={hist?.q ?? ''} onChange={e => loadHistory({ q: e.target.value, day: hist?.day ?? '' })} placeholder="Find a sale" aria-label="Find a sale" className={INPUT + ' w-44'} />
-                  <input type="date" value={hist?.day ?? ''} max={new Date().toLocaleDateString('en-CA')} onChange={e => loadHistory({ q: hist?.q ?? '', day: e.target.value })} aria-label="Sales on a day" className={INPUT} />
-                  {hist && <button type="button" onClick={() => loadHistory({ q: '', day: '' })} className={LINK}>Today</button>}
+                  <input value={hist?.q ?? ''} onChange={e => loadHistory({ q: e.target.value, day: hist?.day ?? '' })} placeholder="Find a sale" aria-label="Find a sale" className={INPUT + ' w-56'} />
+                  {(() => { const today = new Date().toLocaleDateString('en-CA'); const yd = new Date(); yd.setDate(yd.getDate() - 1); const y = yd.toLocaleDateString('en-CA'); return <>
+                    <button type="button" aria-pressed={!hist?.day && !hist?.q} onClick={() => loadHistory({ q: '', day: '' })} className={'text-[13px] rounded-[7px] px-3 min-h-[34px] ' + (!hist?.day && !hist?.q ? 'bg-ink text-white font-medium' : 'bg-page text-ink-soft hover:text-ink')}>Today</button>
+                    <button type="button" aria-pressed={hist?.day === y} onClick={() => loadHistory({ q: hist?.q ?? '', day: y })} className={'text-[13px] rounded-[7px] px-3 min-h-[34px] ' + (hist?.day === y ? 'bg-ink text-white font-medium' : 'bg-page text-ink-soft hover:text-ink')}>Yesterday</button>
+                    <input type="date" value={hist?.day && hist.day !== y ? hist.day : ''} max={today} onChange={e => loadHistory({ q: hist?.q ?? '', day: e.target.value })} aria-label="Sales on a day" className={INPUT} />
+                  </>; })()}
                 </div>
               </div>
               {histError && <p className="px-5 pb-3 text-[13px] text-bad" role="alert">{histError} <button type="button" onClick={() => hist && loadHistory(hist)} className="underline font-medium">Try again</button></p>}
-              {(() => { const list = hist ? histSales : sales; return <>
-              {list && list.length === 0 && <p className="px-5 pb-4 text-sm text-ink-soft">{hist ? 'No sales match.' : 'No walk-up sales yet today.'}</p>}
+              {(() => { const all = hist ? histSales : sales;
+                const count = (k: SalesShow) => (all ?? []).filter(s => salesShowOf(s).includes(k)).length;
+                const list = all && [...all].filter(s => salesShowOf(s).includes(salesShow))
+                  .sort((a, b) => salesSort === 'big' ? b.totalCents - a.totalCents : (salesSort === 'old' ? 1 : -1) * (Date.parse(a.createdAt) - Date.parse(b.createdAt)));
+                const paidCents = (list ?? []).filter(isPaid).reduce((t, s) => t + s.totalCents - s.refundedCents, 0);
+                return <>
+              {all && all.length > 0 && (
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 pb-3">
+                  <div className="flex flex-wrap gap-1.5" role="group" aria-label="Show">
+                    {SALES_SHOW.filter(([k]) => k === 'all' || count(k) > 0 || salesShow === k).map(([k, l]) => (
+                      <button key={k} type="button" aria-pressed={salesShow === k} onClick={() => setSalesShow(k)}
+                        className={'text-[12.5px] rounded-[7px] px-2.5 min-h-[30px] tabular-nums ' + (salesShow === k ? 'bg-ink text-white font-medium' : 'bg-page text-ink-soft hover:text-ink')}>{l} {count(k)}</button>
+                    ))}
+                  </div>
+                  <label className="ml-auto flex items-center gap-2 text-[12.5px] text-ink-soft">
+                    <select aria-label="Sort" value={salesSort} onChange={e => setSalesSort(e.target.value as typeof salesSort)} className={INPUT + ' py-1'}>
+                      <option value="new">Newest</option><option value="old">Oldest</option><option value="big">Largest</option>
+                    </select>
+                  </label>
+                  <span className="w-full text-[12.5px] text-ink-muted tabular-nums">{list?.length ?? 0} sale{list?.length === 1 ? '' : 's'} · {usd(paidCents)}</span>
+                </div>
+              )}
+              {all && all.length === 0 && <p className="px-5 pb-4 text-sm text-ink-soft">{hist ? 'No sales match.' : 'No walk-up sales yet today.'}</p>}
+              {all && all.length > 0 && list && list.length === 0 && <p className="px-5 pb-4 text-sm text-ink-soft">None. <button type="button" onClick={() => setSalesShow('all')} className={LINK}>Show all</button></p>}
               {list && list.length > 0 && (
-                <ul className="divide-y divide-line-soft">
+                <ul className="divide-y divide-line-soft border-t border-line-soft">
                   {list.map(s => {
                     const itemsCents = s.totalCents - (s.roundsCents ?? 0);
                     const fully = isPaid(s) && itemsCents > 0 && s.refundedCents >= itemsCents;
@@ -836,9 +882,9 @@ export default function ShopPage() {
             </Card>
             </>
             )}
-            {/* POS-5 (Cam 2026-11-08, "own tabs"): stock, round packs and the close-out each open full on their own tab. */}
-            {view === 'stock' && (access.can('shop.sell') || access.can('shop.catalog')) && <div className="mt-5"><ShopStock refreshKey={loads} page /></div>}
-            {view === 'packs' && access.can('shop.sell') && <div className="mt-5"><PackHolders page /></div>}
+            {/* POS-5: stock and the close-out each open full on their own tab. POS-6 (Cam 2026-11-09): Stock is where items
+                are added and changed — the register only sells them. Round packs are turned off (lib/round-packs-switch). */}
+            {view === 'stock' && (access.can('shop.sell') || access.can('shop.catalog')) && <div className="mt-5"><StockTab refreshKey={loads} onChanged={load} /></div>}
             {/* POS-3 R4: count the drawer at the end of the day (blind until saved). */}
             {view === 'close' && access.can('shop.close') && <RegisterClose page />}
           </div>
