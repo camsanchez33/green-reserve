@@ -7,6 +7,9 @@
 // Never throws. `error` is always a sentence a person at a counter can act on:
 // the server's own message when it sent one, otherwise a fixed line per status.
 
+/** Fired on window when a route refuses a payment because the register isn't open (detail: the server's sentence). */
+export const REGISTER_CLOSED_EVENT = 'gr:register-closed';
+
 export type DFetchResult<T> =
   | { ok: true; status: number; data: T }
   | { ok: false; status: number; data: null; error: string };
@@ -24,6 +27,11 @@ export async function dfetch<T = unknown>(input: string, init?: RequestInit): Pr
       if (res.status === 428 && body?.error === 'agreement_required') {
         if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('gr:agreement-required'));
         return { ok: false, status: 428, data: null, error: typeof body.message === 'string' ? body.message : 'Sign the updated Operator Agreement to keep editing your course.' };
+      }
+      // DRAWER-1: a payment refused because the register isn't open — pages show a lasting notice with the way to
+      // open it (RegisterClosedNotice), on top of the usual error where the button was.
+      if (res.status === 409 && body?.registerClosed === true && typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(REGISTER_CLOSED_EVENT, { detail: typeof body.error === 'string' ? body.error : '' }));
       }
       const server = typeof body?.error === 'string' && body.error.trim() ? body.error.trim() : '';
       const error = server

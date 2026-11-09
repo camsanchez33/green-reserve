@@ -5,6 +5,7 @@
 // the booking, so the ticket and the total below show the new price. Locked once the round is paid or being paid.
 import { useEffect, useState } from 'react';
 import { dfetch } from '@/lib/dashboard-fetch';
+import { toast } from '@/components/dashboard/Toast';
 import { ballCounts, MAX_BUCKETS, type BallSize } from '@/lib/range-balls';
 import { cartsFor } from '@/lib/cart-pricing';
 import { ticketPrinted, type CartNumberMode, type CartTicketMode } from '@/lib/starter-sheet';
@@ -41,14 +42,18 @@ export function CheckoutExtras({ booking, date, cartFeeCents, walkingAllowed, lo
   // CART-4: cart numbers, when the course asks for them at check-in (Settings → Booking rules). Not a price — they
   // can be typed after payment too; the starter's mode leaves them to the starter's sheet.
   const askNumbers = riders > 0 && (opts?.cartNumbers === 'checkin' || opts?.cartNumbers === 'required');
-  const numbersNeeded = askNumbers && opts?.cartNumbers === 'required' && !(booking.cartNumbers ?? '').trim();
+  // From what's typed (saved on blur), so Next works the moment numbers are in — a click right after typing used to land
+  // on a button still disabled while the save went through (no-silent-failures audit 2026-11-09).
+  const numbersNeeded = askNumbers && opts?.cartNumbers === 'required' && !nums.trim();
+  const [numsSaved, setNumsSaved] = useState(false);
   useEffect(() => { onNumbersNeeded?.(numbersNeeded); }, [numbersNeeded]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => onNumbersNeeded?.(false), []); // eslint-disable-line react-hooks/exhaustive-deps
   async function saveNumbers() {
     if (nums.trim() === (booking.cartNumbers ?? '').trim()) return;
-    setNumsBusy(true); setError('');
+    setNumsBusy(true); setError(''); setNumsSaved(false);
     const r = await dfetch<{ cartNumbers: string }>('/api/operator/cart-numbers', { method: 'PATCH', body: JSON.stringify({ id: booking.id, cartNumbers: nums }) });
-    if (!r.ok) setError(r.error);
+    // A toast too: Next may already have moved the card on (this box unmounts), and the failure must still be seen.
+    if (!r.ok) { setError(r.error); toast(`Cart numbers not saved — ${r.error}`, 'bad'); } else setNumsSaved(true);
     await onChanged();
     setNumsBusy(false);
   }
@@ -79,7 +84,8 @@ export function CheckoutExtras({ booking, date, cartFeeCents, walkingAllowed, lo
       {askNumbers && (
         <label className="flex items-center gap-3 py-2.5">
           <span className="text-[14px] text-ink mr-auto">Cart numbers</span>
-          <input value={nums} onChange={e => setNums(e.target.value)} onBlur={saveNumbers} onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+          {(numsBusy || numsSaved) && <span className="text-[12px] text-ink-muted" role="status">{numsBusy ? 'Saving…' : 'Saved'}</span>}
+          <input value={nums} onChange={e => { setNums(e.target.value); setNumsSaved(false); }} onBlur={saveNumbers} onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
             disabled={numsBusy} inputMode="numeric" placeholder={cartsFor(riders) > 1 || riders > 1 ? 'e.g. 12, 14' : 'e.g. 12'} aria-invalid={numbersNeeded}
             className={'w-36 rounded-[7px] border bg-white px-3 py-2 text-[14px] text-ink tabular-nums placeholder-ink-faint ' + (numbersNeeded ? 'border-bad' : 'border-line')} />
         </label>

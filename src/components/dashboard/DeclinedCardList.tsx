@@ -10,6 +10,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { dfetch } from '@/lib/dashboard-fetch';
+import { toast } from '@/components/dashboard/Toast';
 import { formatTeeDate, formatTeeTime } from '@/lib/format';
 import type { DeclinedCard } from '@/lib/operator-home';
 
@@ -34,10 +35,11 @@ export function DeclinedCardList({ rows, total, canSendLink, moreHref }: {
     setResult(m => ({ ...m, [d.id]: r.ok ? { ok: true, text: `Sent to ${r.data.sentTo}.` } : { ok: false, text: r.error } }));
   }
   async function remove(d: DeclinedCard) {
-    setBusy(d.id);
+    setBusy('rm:' + d.id);
     const r = await dfetch('/api/operator/declined', { method: 'POST', body: JSON.stringify({ id: d.id }) });
     setBusy(null);
-    if (r.ok) setGone(g => new Set(g).add(d.id));
+    // Say what happened: the row goes, the money is still owed (no-silent-failures audit 2026-11-09).
+    if (r.ok) { setGone(g => new Set(g).add(d.id)); toast(`${d.name} removed. Still owed under Payments → Not paid yet.`, 'ok'); }
     else setResult(m => ({ ...m, [d.id]: { ok: false, text: r.error } }));
   }
   const left = rows.filter(d => !gone.has(d.id));
@@ -59,8 +61,9 @@ export function DeclinedCardList({ rows, total, canSendLink, moreHref }: {
               </div>
               <div className="flex flex-wrap items-center gap-2 shrink-0">
                 <button type="button" onClick={() => setOpen(isOpen ? null : d.id)} aria-expanded={isOpen} className="text-[13px] font-medium text-pine hover:underline underline-offset-4">{isOpen ? 'Close' : 'Open'}</button>
+                {canSendLink && !d.canEmail && <span className="text-[12.5px] text-ink-muted">No email on file</span>}
                 {canSendLink && d.canEmail && <button type="button" onClick={() => send(d)} disabled={busy !== null} className={BTN}>{busy === d.id ? 'Sending…' : 'Email pay link'}</button>}
-                {canSendLink && <button type="button" onClick={() => remove(d)} disabled={busy !== null} className="text-[13px] text-ink-soft hover:text-bad disabled:opacity-50">Remove</button>}
+                {canSendLink && <button type="button" onClick={() => remove(d)} disabled={busy !== null} className="text-[13px] text-ink-soft hover:text-bad disabled:opacity-50">{busy === 'rm:' + d.id ? 'Removing…' : 'Remove'}</button>}
               </div>
             </div>
             {res && <div role={res.ok ? 'status' : 'alert'} className={'text-[12.5px] mt-1 pl-4 ' + (res.ok ? 'text-ok' : 'text-bad')}>{res.text}</div>}

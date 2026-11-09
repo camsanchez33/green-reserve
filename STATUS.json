@@ -1,22 +1,50 @@
 {
-  "generatedAt": "2026-11-09T06:59:01.290Z",
+  "generatedAt": "2026-11-09T07:30:46.467Z",
   "repo": {
-    "head": "9713a9b6",
+    "head": "989226e3",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 6,
+    "dirtyCount": 20,
     "dirty": [
-      "M docs/CODEMAP.md",
+      "M CLAUDE.md",
+      " M STATUS.artifact.html",
+      " M STATUS.json",
+      " M STATUS.md",
+      " M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/schedule-rework-test.ts",
+      " M scripts/drawer-cycle-db-test.ts",
       " M scripts/words-guard.baseline.json",
-      " M src/app/dashboard/schedules/page.tsx",
-      " M src/components/dashboard/DemandPricing.tsx"
+      " M src/app/api/operator/shop-sales/route.ts",
+      " M src/app/dashboard/messages/page.tsx",
+      " M src/app/dashboard/page.tsx",
+      " M src/app/dashboard/settings/page.tsx",
+      " M src/app/dashboard/shop/page.tsx",
+      " M src/components/dashboard/CheckoutExtras.tsx",
+      " M src/components/dashboard/DeclinedCardList.tsx",
+      " M src/components/dashboard/OpenRegister.tsx",
+      " M src/components/dashboard/events/EventSetup.tsx",
+      " M src/lib/dashboard-fetch.ts",
+      "?? scripts/audit-1109-test.ts",
+      "?? src/components/dashboard/RegisterClosedNotice.tsx"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "de83521b",
+        "date": "2026-11-09T02:09:25-05:00",
+        "subject": "EVENTS-2 + SCHED-2: event walk-through and guided event page; Schedule in tabs (#349)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "c40ae5e7",
+        "date": "2026-11-09T06:59:11+00:00",
+        "subject": "SCHED-2: Schedule in tabs, days adjusted like memberships, demand pricing explained",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "9713a9b6",
         "date": "2026-11-09T06:56:34+00:00",
@@ -1638,6 +1666,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "de83521b",
+      "date": "2026-11-09",
+      "subject": "EVENTS-2 + SCHED-2: event walk-through and guided event page; Schedule in tabs (#349)"
+    },
+    {
+      "h": "c40ae5e7",
+      "date": "2026-11-09",
+      "subject": "SCHED-2: Schedule in tabs, days adjusted like memberships, demand pricing explained"
+    },
+    {
       "h": "9713a9b6",
       "date": "2026-11-09",
       "subject": "EVENTS-2: event setup walk-through and a guided event page"
@@ -1686,16 +1724,6 @@
       "h": "84ccc1ed",
       "date": "2026-11-09",
       "subject": "CART-3: riders and range balls at checkout (#345)"
-    },
-    {
-      "h": "ded0ed45",
-      "date": "2026-11-09",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "29496778",
-      "date": "2026-11-09",
-      "subject": "CART-3: riders and range balls at checkout (Riding − N +, buckets − N +)"
     }
   ]
 }

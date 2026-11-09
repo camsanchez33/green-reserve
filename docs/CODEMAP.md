@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-694 source files · 300 routes · 253 libraries · 72 models
+695 source files · 300 routes · 253 libraries · 72 models
 
 ## Single sources of truth
 
@@ -272,7 +272,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/operator/shop-items` | operator | NONE FOUND for POST/PATCH/DELETE | DELETE GET PATCH POST | `src/app/api/operator/shop-items/route.ts` | 91 |
 | `/api/operator/shop-items/photo` | operator | file | DELETE POST | `src/app/api/operator/shop-items/photo/route.ts` | 55 |
 | `/api/operator/shop-items/read` | operator | file | POST | `src/app/api/operator/shop-items/read/route.ts` | 43 |
-| `/api/operator/shop-sales` | operator | file | GET PATCH POST | `src/app/api/operator/shop-sales/route.ts` | 309 |
+| `/api/operator/shop-sales` | operator | file | GET PATCH POST | `src/app/api/operator/shop-sales/route.ts` | 315 |
 | `/api/operator/shop-sales/quote` | operator | file | POST | `src/app/api/operator/shop-sales/quote/route.ts` | 22 |
 | `/api/operator/shop-sales/rounds` | operator | file | GET | `src/app/api/operator/shop-sales/rounds/route.ts` | 24 |
 | `/api/operator/shop-stock` | operator | file | GET POST | `src/app/api/operator/shop-stock/route.ts` | 40 |
@@ -310,7 +310,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/courses/[slug]/account` | golfer | **NONE FOUND** | page | `src/app/courses/[slug]/account/page.tsx` | 11 |
 | `/courses/[slug]/account/accept-invite` | golfer | entry | page | `src/app/courses/[slug]/account/accept-invite/page.tsx` | 144 |
 | `/courses/[slug]/member` | member | **NONE FOUND** | page | `src/app/courses/[slug]/member/page.tsx` | 874 |
-| `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 2276 |
+| `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 2278 |
 | `/dashboard/2fa` | operator | entry | page | `src/app/dashboard/2fa/page.tsx` | 110 |
 | `/dashboard/analytics` | operator | middleware | page | `src/app/dashboard/analytics/page.tsx` | 821 |
 | `/dashboard/cancellations` | operator | middleware | page | `src/app/dashboard/cancellations/page.tsx` | 17 |
@@ -328,8 +328,8 @@ this script with a non-zero exit — that is the point of the tag.
 | `/dashboard/payments` | operator | middleware | page | `src/app/dashboard/payments/page.tsx` | 18 |
 | `/dashboard/reset-password` | operator | entry | page | `src/app/dashboard/reset-password/page.tsx` | 123 |
 | `/dashboard/schedules` | operator | middleware | page | `src/app/dashboard/schedules/page.tsx` | 719 |
-| `/dashboard/settings` | operator | middleware | page | `src/app/dashboard/settings/page.tsx` | 1206 |
-| `/dashboard/shop` | operator | middleware | page | `src/app/dashboard/shop/page.tsx` | 890 |
+| `/dashboard/settings` | operator | middleware | page | `src/app/dashboard/settings/page.tsx` | 1207 |
+| `/dashboard/shop` | operator | middleware | page | `src/app/dashboard/shop/page.tsx` | 898 |
 | `/dashboard/sign` | operator | middleware | page | `src/app/dashboard/sign/page.tsx` | 26 |
 | `/dashboard/starter` | operator | middleware | page | `src/app/dashboard/starter/page.tsx` | 90 |
 | `/dashboard/tournaments` | operator | middleware | page | `src/app/dashboard/tournaments/page.tsx` | 5 |
@@ -366,7 +366,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/course-time.ts` | 61 | 63 | SD-3 — course-local time. | `addDaysStr`, `clockIn`, `DEFAULT_TZ`, `isPastIn`, `isValidTimezone`, `payLinkOpensOn`, `todayIn`, `US_TIMEZONES` |
 | `src/lib/rate-limit.ts` | 58 | 78 |  | `clientIp`, `evidentiaryIp`, `rateLimit`, `rateLimitCount` |
 | `src/lib/format.ts` | 53 | 78 | MP-9 (ADMIN_V4 V4-6 §3) — the one place admin pages format money and time. | `formatCents`, `formatDate`, `formatDateTime`, `formatEasternDate`, `formatEasternDay`, `formatMoney`, `formatRelative`, `formatStamp` +3 more |
-| `src/lib/dashboard-fetch.ts` | 51 | 43 | SD-10 (from the SD review). | `dfetch`, `DFetchResult` |
+| `src/lib/dashboard-fetch.ts` | 52 | 51 | SD-10 (from the SD review). | `dfetch`, `DFetchResult`, `REGISTER_CLOSED_EVENT` |
 | `src/lib/admin-audit.ts` | 42 | 194 | BRAIN-1a (Cam 2026-10-22): | `ACTION_LABELS`, `auditAdmin`, `AuditEntry`, `bodyWithReason`, `changedFields`, `courseOfBooking`, `needReason`, `REASON_ACTIONS` +5 more |
 | `src/lib/stripe.ts` | 36 | 147 | Every charge, refund and SetupIntent GreenReserve makes goes through here. | `ACCESS_FEE_CENTS`, `chargeOnConnectedAccount`, `chargeOneIntent`, `MEMBERSHIP_FEE_RATE`, `membershipFeeCents`, `refundOnConnectedAccount`, `stripe` |
 | `src/lib/agreement-required.ts` | 32 | 124 | AGREEMENT_SPEC AG-3 — version bumps and re-acceptance. | `AGREEMENT_REQUIRED_MESSAGE`, `agreementDueByCourse`, `agreementOverdueCourses`, `agreementReacceptance`, `currentReacceptWindow`, `Reacceptance`, `ReacceptWindow`, `requireAgreementCurrent` +1 more |
@@ -624,8 +624,8 @@ Sorted the same way.
 | `src/components/ui/field.ts` | 57 | 8 | MP-9: | `INPUT`, `INPUT_COMPACT` |
 | `src/components/dashboard/LoadError.tsx` | 22 | 16 | SD-10. | `LoadError` |
 | `src/components/admin/AdminSidebar.tsx` | 19 | 238 |  | `AdminNavKey`, `default (AdminSidebar)` |
+| `src/components/dashboard/Toast.tsx` | 15 | 70 | SD-2. | `toast`, `Toaster`, `ToastKind` |
 | `src/components/ui/Eyebrow.tsx` | 13 | 19 |  | `Eyebrow`, `EYEBROW` |
-| `src/components/dashboard/Toast.tsx` | 12 | 70 | SD-2. | `toast`, `Toaster`, `ToastKind` |
 | `src/components/OperatorSidebar.tsx` | 12 | 334 |  | `default (OperatorSidebar)`, `OperatorNavKey` |
 | `src/components/CourseHeaderBar.tsx` | 10 | 46 | White-label rule: | `CourseHeaderBar` |
 | `src/components/dashboard/SlidingTabs.tsx` | 9 | 40 | POS-7 (Cam 2026-11-09, "use it on other tab bars"): | `SlidingTabs` |
@@ -637,7 +637,7 @@ Sorted the same way.
 | `src/components/dashboard/money/types.ts` | 4 | 22 | SD-8 — one booking shape for all three Money tabs. | `MoneyBooking`, `MoneyCourse` |
 | `src/components/dashboard/events/EventDetail.tsx` | 3 | 515 | W2-9 Events: | `default (EventDetail)`, `EventData`, `EventFull`, `EventPlayer`, `EventTask` |
 | `src/components/dashboard/money/PayoutsTable.tsx` | 3 | 78 | Money rework (Cam 2026-10-19): | `fmtDay`, `Payout`, `PayoutsData`, `PayoutsTable`, `usd` |
-| `src/components/dashboard/OpenRegister.tsx` | 3 | 140 | POS-7 (Cam 2026-11-09: | `OpenRegister` |
+| `src/components/dashboard/OpenRegister.tsx` | 3 | 141 | POS-7 (Cam 2026-11-09: | `OpenRegister` |
 | `src/components/dashboard/SignAgreements.tsx` | 3 | 222 | AGREEMENT_SPEC AG-2 §1 — the "Sign" step. | `default (SignAgreements)` |
 | `src/components/dashboard/SmsConsentAsk.tsx` | 3 | 41 | SMS-1 (Cam 2026-11-02, Twilio A2P 10DLC — docs/SMS_OPT_IN.md): | `default (SmsConsentAsk)`, `SmsConsentDialog` |
 | `src/components/EmptyState.tsx` | 3 | 22 |  | `EmptyState` |
@@ -651,10 +651,11 @@ Sorted the same way.
 | `src/components/dashboard/AccountPicker.tsx` | 2 | 55 | MEM-ACCT 1b (Cam 2026-10-31: | `AccountMember`, `AccountPicker` |
 | `src/components/dashboard/carts/starter-data.ts` | 2 | 20 | CART-4: | `bucketWords`, `CartSettings`, `clock`, `isPaid`, `longDate`, `riding`, `ridingWords`, `SheetBooking` +1 more |
 | `src/components/dashboard/ChangeAccount.tsx` | 2 | 33 | MEM-ACCT (Cam 2026-10-31, "move to the right member"): | `ChangeAccount` |
-| `src/components/dashboard/DeclinedCardList.tsx` | 2 | 92 | Declined cards — the same rows on Home and Money → Action needed (Revamp 3 dead end 16, Cam 2026-10-29). | `DeclinedCardList` |
-| `src/components/dashboard/events/EventSetup.tsx` | 2 | 508 | W2-9 Events: | `blankForm`, `default (EventSetup)`, `EventForm`, `fieldErrors`, `KINDS`, `NineOpt`, `PAYERS`, `Product` |
+| `src/components/dashboard/DeclinedCardList.tsx` | 2 | 95 | Declined cards — the same rows on Home and Money → Action needed (Revamp 3 dead end 16, Cam 2026-10-29). | `DeclinedCardList` |
+| `src/components/dashboard/events/EventSetup.tsx` | 2 | 512 | W2-9 Events: | `blankForm`, `default (EventSetup)`, `EventForm`, `fieldErrors`, `KINDS`, `NineOpt`, `PAYERS`, `Product` |
 | `src/components/dashboard/ImageUpload.tsx` | 2 | 62 | The course's logo or course photo: | `ImageUpload` |
 | `src/components/dashboard/money/RefundForm.tsx` | 2 | 47 | Revamp 3 dead end 14 (Cam 2026-10-29): | `RefundForm` |
+| `src/components/dashboard/RegisterClosedNotice.tsx` | 2 | 28 | DRAWER-1 follow-up (no-silent-failures audit, 2026-11-09): | `RegisterClosedNotice` |
 | `src/components/dashboard/settings/FinishSetup.tsx` | 2 | 68 | Settings rework (Cam 2026-10-19: | `FinishSetup`, `SetupItem` |
 | `src/components/dashboard/shop/ShopReceiptBody.tsx` | 2 | 39 | RECEIPT-3: | `ShopReceiptBody` |
 | `src/components/dashboard/TeeSheetRows.tsx` | 2 | 307 | DENSE-4 (DENSE_UI_SPEC D1, Cam 2026-10-27: | `BoardGroup`, `BoardSlot`, `default (TeeSheetRows)`, `FILL`, `groupTags`, `groupTone`, `isMemberRate`, `rateWords` +1 more |
@@ -678,7 +679,7 @@ Sorted the same way.
 | `src/components/dashboard/analytics/ShopTab.tsx` | 1 | 96 | SHOP-4 (Cam 2026-10-30: | `ShopTab` |
 | `src/components/dashboard/CardReaderCard.tsx` | 1 | 90 | POS-3 R3: | `CardReaderCard` |
 | `src/components/dashboard/ChargeToAccount.tsx` | 1 | 66 | MEM-ACCT (Cam 2026-10-30: | `ChargeToAccount` |
-| `src/components/dashboard/CheckoutExtras.tsx` | 1 | 105 | CART-3 (Cam 2026-11-09: | `CheckoutExtras` |
+| `src/components/dashboard/CheckoutExtras.tsx` | 1 | 111 | CART-3 (Cam 2026-11-09: | `CheckoutExtras` |
 | `src/components/dashboard/CourseLayoutTab.tsx` | 1 | 495 | Settings rework (Cam 2026-10-19: | `default (CourseLayoutTab)` |
 | `src/components/dashboard/CoursePreview.tsx` | 1 | 80 | B-6 (UI_REVISE_SPEC §4): | `CoursePreviewProps`, `default (CoursePreview)` |
 | `src/components/dashboard/DemandPricing.tsx` | 1 | 157 | PRICE-5 (Cam 2026-10-30: | `DemandPricing` |
