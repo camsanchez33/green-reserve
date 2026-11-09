@@ -36,7 +36,7 @@ export const WIPED_TABLES = [
   'AgreementAcceptance', 'ShopItem',
   // golfers and activity
   'GolferAccount', 'CourseResident', 'CourseMembership', 'TeeTime', 'Booking', 'TeeTimeAlert', 'PaymentEvent',
-  'BookingEvent', 'BookingShopItem', 'SentMessage', 'SmsConsent', 'ShopSale', 'ShopSaleLine', 'ShopSaleRefund', 'RegisterClose', 'MoneyMove', 'ShopStockReceipt', 'PromoCode', 'RoundPack', 'DemandPrice', 'MemberCharge', 'MemberStatement', 'MonthlyReview',
+  'BookingEvent', 'BookingShopItem', 'SentMessage', 'SmsConsent', 'ShopSale', 'ShopSaleLine', 'ShopSaleRefund', 'RegisterClose', 'RegisterOpen', 'MoneyMove', 'ShopStockReceipt', 'PromoCode', 'RoundPack', 'DemandPrice', 'MemberCharge', 'MemberStatement', 'MonthlyReview',
   'GolferNote', 'GolferBlock', 'ShiftNote', 'CourseMonthGoal', 'CourseGoal',
   'CourseEvent', 'CourseEventTask', 'CourseEventPlayer', 'CourseEventPayment', 'CourseEventRefund',
   // the pipeline
@@ -138,6 +138,7 @@ export async function resetTestCourse(courseId: string): Promise<{ ok: true; cle
     prisma.courseResident.deleteMany({ where: { courseId } }),
     prisma.shopSale.deleteMany({ where: { courseId } }),
     prisma.registerClose.deleteMany({ where: { courseId } }),
+    prisma.registerOpen.deleteMany({ where: { courseId } }),
     prisma.moneyMove.deleteMany({ where: { courseId } }),
     prisma.shopStockReceipt.deleteMany({ where: { courseId } }),
     // Promo codes are setup and stay; their use counts were activity.

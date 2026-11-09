@@ -57,7 +57,7 @@ ok('conditions editor: label above, equal options, "+" shortcuts', board.include
 // and past tee times at the top.
 const sheet = read('src/app/dashboard/page.tsx'), sheetRows = read('src/components/dashboard/TeeSheetRows.tsx');
 ok('tee sheet: the groups count is in the day strip, not a footer', sheet.includes('const dayGroups = ') && sheet.includes('>On the course</div>') && !sheet.includes("group{teeTimes.reduce("));
-ok('tee sheet: the view switch highlights the word', sheet.includes("'text-ink font-semibold border-pine'") && !sheet.includes("className=\"flex p-0.5 rounded-md bg-paper border border-line\""));
+ok('tee sheet: the view switch highlights the word (POS-7: a sliding underline)', sheet.includes('<SlidingTabs label="Sheet view"') && !sheet.includes("className=\"flex p-0.5 rounded-md bg-paper border border-line\""));
 ok('tee sheet: the key says what the colours and the tags mean', sheet.includes('" />Declined or no-show</span>') && sheet.includes('>M</b> member') && sheet.includes('>R</b> resident'));
 ok('tee sheet: today shows who is on the course; another day, the groups booked', sheet.includes('>On the course</div>') && sheet.includes('const onCourseNow = onCourse(teeTimes, today(), nowHM)') && sheet.includes('>Groups booked</div>'));
 ok('tee sheet: past tee times come first', sheetRows.indexOf('{PAST} · {gone.length}') < sheetRows.indexOf("rows(slots, 'Tee times', true)"));

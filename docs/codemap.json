@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 673,
-    "routes": 293,
-    "libs": 247,
-    "models": 71,
+    "files": 677,
+    "routes": 294,
+    "libs": 248,
+    "models": 72,
     "orphans": 11,
     "ungatedRoutes": 3
   },
@@ -6674,7 +6674,7 @@
     },
     {
       "path": "src/app/api/operator/register-close/route.ts",
-      "lines": 33,
+      "lines": 36,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6697,6 +6697,38 @@
       "guard": "file",
       "imports": [
         "@/lib/register-close",
+        "@/lib/register-open",
+        "@/lib/session",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/operator/register-open/route.ts",
+      "lines": 34,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/register-open",
+      "kind": "api",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/prisma",
+        "@/lib/register-open",
         "@/lib/session",
         "next/server"
       ],
@@ -8558,7 +8590,7 @@
     },
     {
       "path": "src/app/dashboard/analytics/page.tsx",
-      "lines": 822,
+      "lines": 821,
       "purpose": "DENSE-1 (DENSE_UI_SPEC.md, Cam 2026-10-27:",
       "brain": [],
       "exports": [
@@ -8576,6 +8608,7 @@
         "@/components/OperatorSidebar",
         "@/components/dashboard/DateRangeButton",
         "@/components/dashboard/LoadError",
+        "@/components/dashboard/SlidingTabs",
         "@/components/dashboard/Toast",
         "@/components/dashboard/analytics/ShopTab",
         "@/components/ui/Card",
@@ -8700,7 +8733,7 @@
     },
     {
       "path": "src/app/dashboard/home/page.tsx",
-      "lines": 332,
+      "lines": 336,
       "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the mockups):",
       "brain": [],
       "exports": [
@@ -8718,6 +8751,7 @@
         "@/components/OperatorSidebar",
         "@/components/dashboard/DeclinedCardList",
         "@/components/dashboard/LoadError",
+        "@/components/dashboard/OpenRegister",
         "@/components/dashboard/home/HomeBoard",
         "@/components/dashboard/money/PayoutsTable",
         "@/components/dashboard/settings/FinishSetup",
@@ -8859,7 +8893,7 @@
     },
     {
       "path": "src/app/dashboard/money/page.tsx",
-      "lines": 273,
+      "lines": 268,
       "purpose": "SD-8 — Payments and Cancellations were two pages querying the same endpoint, and Payouts was buried in Settings.",
       "brain": [],
       "exports": [
@@ -8877,6 +8911,7 @@
         "@/components/OperatorSidebar",
         "@/components/dashboard/DeclinedCardList",
         "@/components/dashboard/LoadError",
+        "@/components/dashboard/SlidingTabs",
         "@/components/dashboard/Toast",
         "@/components/dashboard/money/CancellationsPanel",
         "@/components/dashboard/money/LedgerPanel",
@@ -8947,7 +8982,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 2271,
+      "lines": 2260,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8972,6 +9007,7 @@
         "@/components/dashboard/MoveGroupModal",
         "@/components/dashboard/RegisterPacks",
         "@/components/dashboard/ShopItemsForGroup",
+        "@/components/dashboard/SlidingTabs",
         "@/components/dashboard/SmsConsentAsk",
         "@/components/dashboard/TeeSheetCalendar",
         "@/components/dashboard/TeeSheetList",
@@ -9138,7 +9174,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 917,
+      "lines": 905,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -9155,7 +9191,9 @@
       "imports": [
         "@/components/OperatorSidebar",
         "@/components/dashboard/AccountPicker",
+        "@/components/dashboard/OpenRegister",
         "@/components/dashboard/RegisterClose",
+        "@/components/dashboard/SlidingTabs",
         "@/components/dashboard/SmsConsentAsk",
         "@/components/dashboard/StaffNotice",
         "@/components/dashboard/StockTab",
@@ -11419,6 +11457,34 @@
       ]
     },
     {
+      "path": "src/components/dashboard/OpenRegister.tsx",
+      "lines": 105,
+      "purpose": "POS-7 (Cam 2026-11-09:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "OpenRegister",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/ui/field",
+        "@/lib/dashboard-fetch",
+        "@/lib/use-dashboard-access",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/home/page.tsx",
+        "src/app/dashboard/shop/page.tsx",
+        "src/components/dashboard/RegisterClose.tsx"
+      ]
+    },
+    {
       "path": "src/components/dashboard/OperatorSearch.tsx",
       "lines": 116,
       "purpose": "DASH-C:",
@@ -11477,7 +11543,7 @@
     },
     {
       "path": "src/components/dashboard/RegisterClose.tsx",
-      "lines": 226,
+      "lines": 239,
       "purpose": "POS-3 R4 (Cam 2026-10-24):",
       "brain": [],
       "exports": [
@@ -11492,12 +11558,14 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/components/dashboard/OpenRegister",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/components/ui/field",
         "@/lib/course-time",
         "@/lib/dashboard-fetch",
         "@/lib/ledger-words",
+        "@/lib/use-dashboard-access",
         "react"
       ],
       "usedBy": [
@@ -11740,6 +11808,32 @@
         "src/app/dashboard/onboarding/page.tsx",
         "src/app/dashboard/sign/page.tsx",
         "src/components/dashboard/AgreementNotice.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/SlidingTabs.tsx",
+      "lines": 40,
+      "purpose": "POS-7 (Cam 2026-11-09, \"use it on other tab bars\"):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "SlidingTabs",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/analytics/page.tsx",
+        "src/app/dashboard/money/page.tsx",
+        "src/app/dashboard/page.tsx",
+        "src/app/dashboard/shop/page.tsx"
       ]
     },
     {
@@ -13295,6 +13389,7 @@
         "src/components/dashboard/GolferMessageModal.tsx",
         "src/components/dashboard/LastMinuteDeals.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
+        "src/components/dashboard/OpenRegister.tsx",
         "src/components/dashboard/PromoCodes.tsx",
         "src/components/dashboard/RegisterClose.tsx",
         "src/components/dashboard/RegisterPacks.tsx",
@@ -17909,6 +18004,7 @@
         "src/lib/operator-search.ts",
         "src/lib/public-tee-times.ts",
         "src/lib/register-close.ts",
+        "src/lib/register-open.ts",
         "src/lib/sample-data.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/shop-report.ts",
@@ -18402,6 +18498,7 @@
         "src/components/dashboard/MemberAccount.tsx",
         "src/components/dashboard/MemberJoin.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
+        "src/components/dashboard/OpenRegister.tsx",
         "src/components/dashboard/OperatorSearch.tsx",
         "src/components/dashboard/PromoCodes.tsx",
         "src/components/dashboard/RegisterClose.tsx",
@@ -18474,7 +18571,7 @@
     },
     {
       "path": "src/lib/data-reset.ts",
-      "lines": 161,
+      "lines": 162,
       "purpose": "TEST-1 (Cam 2026-10-22:",
       "brain": [],
       "exports": [
@@ -23092,6 +23189,7 @@
         "src/app/api/operator/profile/route.ts",
         "src/app/api/operator/promo-codes/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
+        "src/app/api/operator/register-open/route.ts",
         "src/app/api/operator/residents/route.ts",
         "src/app/api/operator/round-packs/route.ts",
         "src/app/api/operator/round-rules/route.ts",
@@ -23211,6 +23309,7 @@
         "src/lib/receipt-charges.ts",
         "src/lib/refund-booking.ts",
         "src/lib/register-close.ts",
+        "src/lib/register-open.ts",
         "src/lib/register.ts",
         "src/lib/round-packs.ts",
         "src/lib/round-shop-tax.ts",
@@ -23724,7 +23823,7 @@
     },
     {
       "path": "src/lib/register-close.ts",
-      "lines": 147,
+      "lines": 150,
       "purpose": "POS-3 R4 (Cam 2026-10-24:",
       "brain": [],
       "exports": [
@@ -23769,6 +23868,44 @@
         "src/app/api/operator/money/sales/route.ts",
         "src/app/api/operator/register-close/route.ts",
         "src/components/dashboard/money/SalesPanel.tsx"
+      ]
+    },
+    {
+      "path": "src/lib/register-open.ts",
+      "lines": 72,
+      "purpose": "POS-7 (Cam 2026-11-09:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "openRegister",
+          "kind": "fn"
+        },
+        {
+          "name": "OpenRow",
+          "kind": "type"
+        },
+        {
+          "name": "OpenView",
+          "kind": "type"
+        },
+        {
+          "name": "registerOpenFor",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./course-time",
+        "./prisma",
+        "@prisma/client"
+      ],
+      "usedBy": [
+        "src/app/api/operator/register-close/route.ts",
+        "src/app/api/operator/register-open/route.ts"
       ]
     },
     {
@@ -24780,6 +24917,7 @@
         "src/app/api/operator/reader-rounds/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
         "src/app/api/operator/register-close/route.ts",
+        "src/app/api/operator/register-open/route.ts",
         "src/app/api/operator/request-changes/route.ts",
         "src/app/api/operator/residents/route.ts",
         "src/app/api/operator/round-packs/route.ts",
@@ -25824,7 +25962,7 @@
     },
     {
       "path": "src/lib/staff-permissions.ts",
-      "lines": 152,
+      "lines": 156,
       "purpose": "SP-A (STAFF_POLICY_SPEC Part A).",
       "brain": [],
       "exports": [
@@ -26696,6 +26834,8 @@
         "src/app/dashboard/settings/page.tsx",
         "src/app/dashboard/shop/page.tsx",
         "src/components/OperatorSidebar.tsx",
+        "src/components/dashboard/OpenRegister.tsx",
+        "src/components/dashboard/RegisterClose.tsx",
         "src/components/dashboard/StaffNotice.tsx",
         "src/components/dashboard/StockTab.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
@@ -28816,6 +28956,10 @@
           "type": "RegisterClose[]"
         },
         {
+          "name": "registerOpens",
+          "type": "RegisterOpen[]"
+        },
+        {
           "name": "moneyMoves",
           "type": "MoneyMove[]"
         },
@@ -28929,6 +29073,7 @@
         "src/app/api/operator/my-courses/route.ts",
         "src/app/api/operator/preview-link/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
+        "src/app/api/operator/register-open/route.ts",
         "src/app/api/operator/round-rules/route.ts",
         "src/app/api/operator/settings/route.ts",
         "src/app/api/operator/shop-sales/rounds/route.ts",
@@ -28991,6 +29136,7 @@
         "src/lib/public-tee-times.ts",
         "src/lib/real-courses.ts",
         "src/lib/register-close.ts",
+        "src/lib/register-open.ts",
         "src/lib/register.ts",
         "src/lib/sales-tax.ts",
         "src/lib/sample-data.ts",
@@ -32025,6 +32171,55 @@
       ]
     },
     {
+      "name": "RegisterOpen",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "courseId",
+          "type": "String"
+        },
+        {
+          "name": "course",
+          "type": "Course"
+        },
+        {
+          "name": "day",
+          "type": "String"
+        },
+        {
+          "name": "seq",
+          "type": "Int"
+        },
+        {
+          "name": "startingCashCents",
+          "type": "Int"
+        },
+        {
+          "name": "reason",
+          "type": "String"
+        },
+        {
+          "name": "openedBy",
+          "type": "String"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ],
+      "writers": [
+        "src/lib/data-reset.ts",
+        "src/lib/register-open.ts"
+      ],
+      "readers": [
+        "src/lib/register-close.ts",
+        "src/lib/register-open.ts"
+      ]
+    },
+    {
       "name": "RoundPack",
       "fields": [
         {
@@ -32347,6 +32542,7 @@
         "src/lib/shop-stock.ts"
       ],
       "readers": [
+        "src/app/api/operator/register-open/route.ts",
         "src/app/api/operator/shop-items/photo/route.ts",
         "src/app/api/operator/shop-items/route.ts",
         "src/lib/sample-data.ts",

@@ -12,6 +12,7 @@
 // never as a sentence under it. Every number still comes from lib/analytics.ts
 // (AN-1). Charts are plain HTML/CSS/SVG — no chart library.
 import { useCallback, useEffect, useId, useRef, useState, Suspense } from 'react';
+import { SlidingTabs } from '@/components/dashboard/SlidingTabs';
 import Link from 'next/link';
 import { toast } from '@/components/dashboard/Toast';
 import { Loader2 } from 'lucide-react';
@@ -795,11 +796,9 @@ function AnalyticsInner() {
 
               {/* The detail, one subject at a time */}
               <Card className="p-5">
-                <div ref={tabsRef} className="flex gap-x-6 gap-y-1 border-b border-line mb-6 overflow-x-auto scroll-mt-4" role="tablist">
-                  {TABS.map(([k, l]) => (
-                    <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
-                      className={'shrink-0 pb-2.5 -mb-px text-[14px] font-semibold border-b-2 transition-colors ' + (tab === k ? 'text-ink border-fairway' : 'text-ink-soft border-transparent hover:text-ink')}>{l}</button>
-                  ))}
+                {/* POS-7 (Cam 2026-11-09): the underline slides to the tab picked. */}
+                <div ref={tabsRef} className="mb-6 scroll-mt-4">
+                  <SlidingTabs value={tab} onChange={setTab} className="w-full" tabs={TABS} />
                 </div>
                 {tab === 'revenue' && <RevenueTab d={d} />}
                 {tab === 'busy' && <BusyTab d={d} />}

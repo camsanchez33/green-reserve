@@ -133,7 +133,7 @@
   },
   "src/app/dashboard/page.tsx": {
     "input": 4,
-    "lucide": 5
+    "lucide": 7
   },
   "src/app/dashboard/reset-password/page.tsx": {
     "card": 1,

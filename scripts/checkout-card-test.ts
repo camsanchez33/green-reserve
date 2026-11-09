@@ -52,7 +52,7 @@ ok('review: no ruled box inside the card', page.includes('<div className="mt-3 r
 ok('RECEIPT-1: after paying, Print · Text · Email · No receipt on the confirmation (Cam 2026-11-08)', page.includes("onClick={() => sendReceipt(justDone.bookingId, 'print')}") && page.includes('>No receipt</button>') && page.includes("action: 'send_receipt'"));
 ok('RECEIPT-1: only a paid round gets a receipt; a text only to a number that agreed (SMS-1)', route.includes("if (action === 'send_receipt') {") && route.includes("send_receipt: 'sheet.checkin'") && route.includes('A receipt is for a round that’s been paid.') && route.includes('if (err instanceof SmsNoConsentError) return NextResponse.json({ error: SMS_NO_CONSENT_STAFF, needsConsent: true }, { status: 409 });'));
 ok('RECEIPT-1: Print opens the receipt page, which prints itself', readFileSync('src/app/receipt/[bookingId]/page.tsx', 'utf8').includes("const autoPrint = search.get('print') === '1';"));
-ok('the day\'s actions sit in the sheet\'s bar, not floating above it (Cam 2026-11-08)', page.includes('>This day ▾</button>') && page.includes('>+ Time</button>') && !page.includes("SHEET-3 (Cam 2026-11-06, \"a little cleaner\"): the day's other actions"));
+ok('the day\'s actions sit in the sheet\'s bar, not floating above it (Cam 2026-11-08)', page.includes('aria-label={WX_LABEL}') && page.includes('>+ Time</button>') && !page.includes("SHEET-3 (Cam 2026-11-06, \"a little cleaner\"): the day's other actions"));
 ok('the time card\'s foot: Add players, and the Open seats stepper (SEATS-1)', page.includes('>Add players</button>') && page.includes('aria-label="Open seats on this time"'));
 
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);

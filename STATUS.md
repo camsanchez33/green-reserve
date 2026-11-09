@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-09 03:41 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `e981f434` · working tree **29 dirty file(s)**
+Generated 2026-11-09 04:01 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `83eedae6` · working tree **29 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 157 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 159 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `4a51c27b` | 2026-11-08 | POS-6: Stock is where items are added; round packs off; tiles, ticket, Sales filters (#342) |
+| `def61397` | 2026-11-09 | POS-6: Stock is where items are added; round packs off; tiles, ticket, Sales filters |
 | `0682ac62` | 2026-11-08 | POS-5: Pro shop Stock, Round packs and Close out tabs; sliding tab highlight (#340) |
 | `b99b4c8a` | 2026-11-08 | POS-5: Pro shop Stock, Round packs and Close out as their own tabs; sliding tab highlight |
 | `b8512431` | 2026-11-08 | ACC-1: every booking and payment figure agrees across the site (#339) |
@@ -177,23 +179,23 @@ Generated 2026-11-09 03:41 UTC · branch `claude/walkthrough-2-prioritization-ui
 - `M  STATUS.artifact.html`
 - `M  STATUS.json`
 - `M  STATUS.md`
-- `M  docs/CODEMAP.md`
-- `M  docs/codemap.json`
+- `MM docs/CODEMAP.md`
+- `MM docs/codemap.json`
+- `A  prisma/migrations/20261109000000_register_open/migration.sql`
+- `M  prisma/schema.prisma`
+- `M  scripts/checkout-card-test.ts`
 - `M  scripts/design-guard.baseline.json`
-- `D  scripts/pack-open-links-db-test.ts`
+- `M  scripts/home-page-test.ts`
 - `M  scripts/pos-register-test.ts`
-- `M  scripts/register-photo-test.ts`
-- `M  scripts/revamp3-fixes-test.ts`
-- `D  scripts/round-packs-db-test.ts`
-- `A  scripts/round-packs-off-test.ts`
+- `A  scripts/register-open-db-test.ts`
+- `M  scripts/sheet-views-test.ts`
+- `M  scripts/teesheet-2-test.ts`
 - `M  scripts/words-guard.baseline.json`
-- `M  src/app/api/bookings/resident-rate/route.ts`
-- `M  src/app/api/bookings/route.ts`
-- `M  src/app/api/courses/[slug]/packs/route.ts`
-- `M  src/app/dashboard/page.tsx`
-- `M  src/app/dashboard/settings/page.tsx`
-- `M  src/app/dashboard/shop/page.tsx`
-- `M  src/components/dashboard/ShopCatalog.tsx`
+- `M  src/app/api/operator/register-close/route.ts`
+- `AM src/app/api/operator/register-open/route.ts`
+- `M  src/app/dashboard/analytics/page.tsx`
+- `M  src/app/dashboard/home/page.tsx`
+- `M  src/app/dashboard/money/page.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -319,6 +321,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `4a51c27b` 2026-11-08 — POS-6: Stock is where items are added; round packs off; tiles, ticket, Sales filters (#342)
+- `def61397` 2026-11-09 — POS-6: Stock is where items are added; round packs off; tiles, ticket, Sales filters
 - `0682ac62` 2026-11-08 — POS-5: Pro shop Stock, Round packs and Close out tabs; sliding tab highlight (#340)
 - `b99b4c8a` 2026-11-08 — POS-5: Pro shop Stock, Round packs and Close out as their own tabs; sliding tab highlight
 - `b8512431` 2026-11-08 — ACC-1: every booking and payment figure agrees across the site (#339)
@@ -329,8 +333,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `ab8c4f43` 2026-11-08 — SEATS-1: close seats on a tee time one at a time (Open seats − N + on the card)
 - `b324c547` 2026-11-08 — Receipt: what was actually paid, how and when; prints on a receipt printer (#336)
 - `d26d15c1` 2026-11-08 — Receipt: what was actually paid, how and when; prints on a receipt printer
-- `d6083d50` 2026-11-08 — Time card: reader charges who's here, receipts, day actions in the sheet bar (#335)
-- `480f7d0e` 2026-11-08 — Time card: the reader charges who's here, receipts, day actions in the sheet bar
 
 ---
 

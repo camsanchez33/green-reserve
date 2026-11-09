@@ -21,6 +21,8 @@ import OperatorSidebar from '@/components/OperatorSidebar';
 import { StaffNotice } from '@/components/dashboard/StaffNotice';
 import { RegisterClose } from '@/components/dashboard/RegisterClose';
 import { StockTab } from '@/components/dashboard/StockTab';
+import { OpenRegister } from '@/components/dashboard/OpenRegister';
+import { SlidingTabs } from '@/components/dashboard/SlidingTabs';
 import { Card } from '@/components/ui/Card';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { INPUT_COMPACT as INPUT } from '@/components/ui/field';
@@ -132,17 +134,7 @@ export default function ShopPage() {
   const searchRef = useRef<HTMLInputElement>(null);
   // POS-4: the page's tabs, and where the sale is in the Charge steps (null = building the sale).
   const [view, setView] = useState<'register' | 'sales' | 'stock' | 'close'>('register');
-  // POS-5 (Cam 2026-11-08, "the animation of it"): the tab highlight slides to the tab picked (off with reduced motion).
-  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
-  const [pill, setPill] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
-  useEffect(() => {
-    const place = () => { const el = tabRefs.current[view]; if (el) setPill({ left: el.offsetLeft, top: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight }); };
-    place();
-    // Geist swaps in after the first paint: measure again once it has.
-    document.fonts?.ready.then(place).catch(() => {});
-    window.addEventListener('resize', place);
-    return () => window.removeEventListener('resize', place);
-  }, [view, access.loaded]);
+  // POS-5/POS-7: the tab highlight slides to the tab picked (components/dashboard/SlidingTabs, off with reduced motion).
   const [step, setStep] = useState<null | 'pay' | 'take' | 'done'>(null);
   // A pay link just sent: the done step says where it went.
   const [linkSent, setLinkSent] = useState('');
@@ -429,16 +421,10 @@ export default function ShopPage() {
           <div className="px-4 sm:px-8 py-6">
             <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
               <h1 className="text-[26px] font-bold leading-none text-ink">Pro shop</h1>
-              {/* One row always: on a phone the tabs scroll sideways rather than wrap (a wrapped row would split the highlight). */}
-              <div className="relative inline-flex max-w-full overflow-x-auto gap-1 p-1 rounded-[7px] bg-white shadow-card whitespace-nowrap" role="tablist" aria-label="Pro shop">
-                {pill && <span aria-hidden="true" className="absolute rounded-[5px] bg-page transition-[left,top,width,height] duration-200 ease-out motion-reduce:transition-none" style={{ left: pill.left, top: pill.top, width: pill.width, height: pill.height }} />}
-                {([['register', 'Register'], ['sales', 'Sales'],
-                  ...((access.can('shop.sell') || access.can('shop.catalog')) ? [['stock', 'Stock']] : []),
-                  ...(access.can('shop.close') ? [['close', 'Close out']] : [])] as [typeof view, string][]).map(([k, l]) => (
-                  <button key={k} ref={el => { tabRefs.current[k] = el; }} role="tab" aria-selected={view === k} onClick={() => { setView(k); if (k !== view) { setError(''); setNote(''); } }}
-                    className={'relative z-10 shrink-0 px-3.5 min-h-[34px] rounded-[5px] text-[13.5px] transition-colors ' + (view === k ? 'text-ink font-semibold' : 'text-ink-soft hover:text-ink')}>{l}</button>
-                ))}
-              </div>
+              <SlidingTabs look="pill" label="Pro shop" value={view} onChange={k => { if (k !== view) { setError(''); setNote(''); } setView(k); }}
+                tabs={[['register', 'Register'], ['sales', 'Sales'],
+                  ...((access.can('shop.sell') || access.can('shop.catalog')) ? [['stock', 'Stock'] as const] : []),
+                  ...(access.can('shop.close') ? [['close', 'Close out'] as const] : [])] as [typeof view, string][]} />
               {sales && <p className="sm:ml-auto text-[13px] text-ink-muted tabular-nums">{usd(todayTotal)} today · {paidTodaySales.length} sale{paidTodaySales.length === 1 ? '' : 's'}</p>}
             </div>
 
@@ -456,6 +442,8 @@ export default function ShopPage() {
               </div>
             )}
 
+            {/* POS-7: until today's register is open, the register asks for the starting cash (it never blocks a sale). */}
+            {view === 'register' && <div className="mt-5"><OpenRegister where="register" /></div>}
             {view === 'register' && (
             <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
               <Card className="p-4">

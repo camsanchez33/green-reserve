@@ -8,6 +8,8 @@
 // match; starting cash carries over from the last close-out; any of the last two weeks.
 // (Shown in the browser only after counting; the route still returns them for the reveal.)
 import { LEDGER_WHAT } from '@/lib/ledger-words';
+import { OpenRegister } from '@/components/dashboard/OpenRegister';
+import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import { useCallback, useEffect, useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -42,6 +44,7 @@ const NOTES: [number, string][] = [[10000, '$100'], [5000, '$50'], [2000, '$20']
 export function RegisterClose({ page = false }: { page?: boolean } = {}) {
   const [openState, setOpen] = useState(false);
   const open = page || openState;
+  const access = useDashboardAccess();
   const [by, setBy] = useState<'total' | 'notes'>('total');
   const [notes, setNotes] = useState<Record<number, string>>({});
   const [day, setDay] = useState<string | undefined>(undefined);
@@ -54,12 +57,15 @@ export function RegisterClose({ page = false }: { page?: boolean } = {}) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState<Close | null>(null);
+  // POS-7: the day's locked starting cash, when the register was opened (null = type it here, as before).
+  const [opened, setOpened] = useState<number | null>(null);
 
   const load = useCallback(async (d?: string) => {
     setLoadError('');
-    const r = await dfetch<{ summary: Summary; recent: Close[] }>(`/api/operator/register-close${d ? `?day=${d}` : ''}`);
+    const r = await dfetch<{ summary: Summary; recent: Close[]; opened?: { startingCashCents: number } | null }>(`/api/operator/register-close${d ? `?day=${d}` : ''}`);
     if (!r.ok) { setLoadError(r.error); return; }
     setSummary(r.data.summary); setRecent(r.data.recent); setDay(r.data.summary.day);
+    setOpened(r.data.opened ? r.data.opened.startingCashCents : null);
     // The drawer usually starts each day with the same float: offer the last one used.
     const last = r.data.recent[0];
     if (last) setFloat(f => f || (last.openingFloatCents / 100).toFixed(2));
@@ -83,7 +89,9 @@ export function RegisterClose({ page = false }: { page?: boolean } = {}) {
     load(summary.day); // the figures may have moved since the page loaded; show what was saved
   }
 
-  const floatCents = toCents(float) ?? 0;
+  const floatCents = opened ?? toCents(float) ?? 0;
+  // POS-7: today, a login that can open the register opens it before counting (the count starts from it).
+  const needsOpen = !!summary && summary.day === summary.today && opened === null && access.can('shop.open');
   const countedCents = toCents(counted);
   const expected = summary ? floatCents + summary.cashTakenCents : 0;
   const diff = countedCents === null ? null : countedCents - expected;
@@ -110,10 +118,14 @@ export function RegisterClose({ page = false }: { page?: boolean } = {}) {
             <div className="grid gap-6 md:grid-cols-2">
               <div>
                 <h3 className="text-[13.5px] font-semibold text-ink mb-2">Count the drawer</h3>
-                <label className="block text-[13px] text-ink">Starting cash
-                  <div className="relative mt-1 max-w-[12rem]"><span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
-                    <input value={float} onChange={e => setFloat(e.target.value)} inputMode="decimal" placeholder="0.00" className={INPUT + ' w-full pl-6'} /></div>
-                </label>
+                {/* POS-7: opened today → the locked amount (Change for shop.open_fix); a past day opened → its amount; else type it. */}
+                {summary.day === summary.today && (opened !== null || access.can('shop.open'))
+                  ? <OpenRegister where="close" onOpened={c => setOpened(c)} />
+                  : <label className="block text-[13px] text-ink">Starting cash
+                      <div className="relative mt-1 max-w-[12rem]"><span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
+                        {/* A past day the register was opened: its locked amount, read-only. */}
+                        <input value={opened !== null ? (opened / 100).toFixed(2) : float} readOnly={opened !== null} onChange={e => setFloat(e.target.value)} inputMode="decimal" placeholder="0.00" className={INPUT + ' w-full pl-6' + (opened !== null ? ' opacity-70' : '')} /></div>
+                    </label>}
                 <div className="mt-4 inline-flex gap-1 p-1 rounded-[7px] bg-page" role="group" aria-label="Count by">
                   {([['total', 'Total'], ['notes', 'Bills & coins']] as const).map(([k, l]) => (
                     <button key={k} type="button" aria-pressed={by === k} onClick={() => setBy(k)}
@@ -145,7 +157,8 @@ export function RegisterClose({ page = false }: { page?: boolean } = {}) {
                   </ul>
                 )}
                 <input value={note} onChange={e => setNote(e.target.value)} maxLength={500} placeholder="Note (optional)" aria-label="Note" className={INPUT + ' w-full mt-3'} />
-                <button type="button" onClick={close} disabled={busy || countedCents === null}
+                {needsOpen && <p className="mb-2 text-[12.5px] text-warn">Open the register first.</p>}
+                <button type="button" onClick={close} disabled={busy || countedCents === null || needsOpen}
                   className="mt-3 w-full bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-sm py-2.5 disabled:opacity-50">
                   {busy ? 'Saving…' : dayCloses.length ? 'Save this recount' : `Close out ${summary.day === summary.today ? 'today' : dayLabel(summary.day)}`}
                 </button>
