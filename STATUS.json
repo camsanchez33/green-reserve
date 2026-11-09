@@ -1,36 +1,50 @@
 {
-  "generatedAt": "2026-11-09T04:29:55.146Z",
+  "generatedAt": "2026-11-09T05:14:06.728Z",
   "repo": {
-    "head": "accf7fa8",
+    "head": "fd175d55",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 22,
+    "dirtyCount": 27,
     "dirty": [
-      "M CLAUDE.md",
+      "M LAUNCH_PLAN_SPEC.md",
       "M  STATUS.artifact.html",
       "M  STATUS.json",
       "M  STATUS.md",
       "MM docs/CODEMAP.md",
       "MM docs/codemap.json",
-      "M  scripts/design-guard.baseline.json",
-      "M  scripts/pos-register-test.ts",
-      "M  scripts/register-photo-test.ts",
-      "M  scripts/revamp3-fixes-test.ts",
-      "M  scripts/shop-options-db-test.ts",
-      "MM scripts/words-guard.baseline.json",
-      "M  src/app/api/operator/shop-items/read/route.ts",
-      "M  src/app/dashboard/shop/page.tsx",
-      "AM src/components/dashboard/ItemForm.tsx",
-      "D  src/components/dashboard/ShopCatalog.tsx",
-      "M  src/components/dashboard/StockTab.tsx",
-      "A  src/components/dashboard/UploadMany.tsx",
-      "M  src/lib/shop-ai-import.ts",
-      "M  src/lib/shop-catalog.ts"
+      "M  scripts/cart-pricing-test.ts",
+      "A  scripts/checkout-extras-db-test.ts",
+      "M  scripts/words-guard.baseline.json",
+      "M  src/app/api/operator/bookings/route.ts",
+      "A  src/app/api/operator/checkout-options/route.ts",
+      "M  src/app/api/operator/tee-times/route.ts",
+      "M  src/app/dashboard/page.tsx",
+      "M  src/app/manage/[bookingId]/page.tsx",
+      "A  src/components/dashboard/CheckoutExtras.tsx",
+      "M  src/components/dashboard/GroupTicket.tsx",
+      "M  src/lib/cart-pricing.ts",
+      "M  src/lib/change-party.ts",
+      "A  src/lib/checkout-extras.ts",
+      "M  src/lib/counter-pay.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "235630c1",
+        "date": "2026-11-08T23:38:13-05:00",
+        "subject": "POS-8: Stock list + one item form, upload what you have, sell anyway, Sales cleanup (#344)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "3d31bc28",
+        "date": "2026-11-09T04:29:58+00:00",
+        "subject": "POS-8: Stock list + one item form, upload what you have, sell anyway, Sales cleanup",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "44217555",
         "date": "2026-11-08T23:14:38-05:00",
@@ -1342,6 +1356,12 @@
       "ageDays": 19
     },
     {
+      "file": "LAUNCH_PLAN_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-11-08",
+      "ageDays": 0
+    },
+    {
       "file": "STAFF_POLICY_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-26",
@@ -1555,6 +1575,21 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "235630c1",
+      "date": "2026-11-08",
+      "subject": "POS-8: Stock list + one item form, upload what you have, sell anyway, Sales cleanup (#344)"
+    },
+    {
+      "h": "44944043",
+      "date": "2026-11-09",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "3d31bc28",
+      "date": "2026-11-09",
+      "subject": "POS-8: Stock list + one item form, upload what you have, sell anyway, Sales cleanup"
+    },
+    {
       "h": "44217555",
       "date": "2026-11-08",
       "subject": "POS-7: Open the register (locked starting cash), tee sheet icons, sliding tabs (#343)"
@@ -1598,21 +1633,6 @@
       "h": "437456cc",
       "date": "2026-11-08",
       "subject": "POS-4: Pro shop register as a real POS (#338)"
-    },
-    {
-      "h": "f4cc7d76",
-      "date": "2026-11-08",
-      "subject": "POS-4: Pro shop register as a real POS — tiles, one ticket, Charge in steps"
-    },
-    {
-      "h": "63efbf69",
-      "date": "2026-11-08",
-      "subject": "SEATS-1: close seats on a tee time one at a time (#337)"
-    },
-    {
-      "h": "ab8c4f43",
-      "date": "2026-11-08",
-      "subject": "SEATS-1: close seats on a tee time one at a time (Open seats − N + on the card)"
     }
   ]
 }

@@ -16,6 +16,8 @@ import { groupGreenFee, otherPerPlayerCents } from './residents';
 export type SplitSource = {
   players: number; greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number; accessFeeTotal: number; totalAmount: number;
   residentPlayers: number; residentRateCents: number | null; memberRateCents: number | null; memberCartCents: number | null;
+  /** CART-3: riders (null = all) and the per-cart price, when set. */
+  cartRiders?: number | null; cartUnitCents?: number | null;
 };
 export type SplitPart = {
   players: number; greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number; accessFeeTotal: number; totalAmount: number;
@@ -31,7 +33,7 @@ export function splitShares(b: SplitSource, leave: number, publicRate: { greenFe
   if (!Number.isInteger(leave) || leave < 1 || leave >= b.players) return null;
   const n = b.players - leave;
   // The booker's side is priced exactly as a party-size change to n would price it (lib/change-party).
-  const fees = partyFees({ players: b.players, greenFeeTotal: b.greenFeeTotal, cartFeeTotal: b.cartFeeTotal, residentPlayers: b.residentPlayers, residentRateCents: b.residentRateCents, memberRateCents: b.memberRateCents, memberCartCents: b.memberCartCents }, n, publicRate);
+  const fees = partyFees({ players: b.players, greenFeeTotal: b.greenFeeTotal, cartFeeTotal: b.cartFeeTotal, residentPlayers: b.residentPlayers, residentRateCents: b.residentRateCents, memberRateCents: b.memberRateCents, memberCartCents: b.memberCartCents, cartRiders: b.cartRiders ?? null, cartUnitCents: b.cartUnitCents ?? null }, n, publicRate);
   const keepResidents = b.residentPlayers > 0 ? groupGreenFee(n, otherPerPlayerCents(b) ?? publicRate.greenFeeCents, b.residentPlayers, b.residentRateCents).residentPlayers : 0;
   const leaveResidents = Math.max(0, b.residentPlayers - keepResidents);
   const green = b.greenFeeTotal - fees.greenFeeTotal;

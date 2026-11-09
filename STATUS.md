@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-09 04:29 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `accf7fa8` · working tree **22 dirty file(s)**
+Generated 2026-11-09 05:14 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `fd175d55` · working tree **27 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 161 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 163 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `235630c1` | 2026-11-08 | POS-8: Stock list + one item form, upload what you have, sell anyway, Sales cleanup (#344) |
+| `3d31bc28` | 2026-11-09 | POS-8: Stock list + one item form, upload what you have, sell anyway, Sales cleanup |
 | `44217555` | 2026-11-08 | POS-7: Open the register (locked starting cash), tee sheet icons, sliding tabs (#343) |
 | `9b6e7f6b` | 2026-11-09 | POS-7: Open the register (locked starting cash), tee sheet icons, sliding tabs |
 | `4a51c27b` | 2026-11-08 | POS-6: Stock is where items are added; round packs off; tiles, ticket, Sales filters (#342) |
@@ -176,28 +178,28 @@ Generated 2026-11-09 04:29 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (22 file(s))
+### Uncommitted working tree (27 file(s))
 
-- `M CLAUDE.md`
+- `M LAUNCH_PLAN_SPEC.md`
 - `M  STATUS.artifact.html`
 - `M  STATUS.json`
 - `M  STATUS.md`
 - `MM docs/CODEMAP.md`
 - `MM docs/codemap.json`
-- `M  scripts/design-guard.baseline.json`
-- `M  scripts/pos-register-test.ts`
-- `M  scripts/register-photo-test.ts`
-- `M  scripts/revamp3-fixes-test.ts`
-- `M  scripts/shop-options-db-test.ts`
-- `MM scripts/words-guard.baseline.json`
-- `M  src/app/api/operator/shop-items/read/route.ts`
-- `M  src/app/dashboard/shop/page.tsx`
-- `AM src/components/dashboard/ItemForm.tsx`
-- `D  src/components/dashboard/ShopCatalog.tsx`
-- `M  src/components/dashboard/StockTab.tsx`
-- `A  src/components/dashboard/UploadMany.tsx`
-- `M  src/lib/shop-ai-import.ts`
-- `M  src/lib/shop-catalog.ts`
+- `M  scripts/cart-pricing-test.ts`
+- `A  scripts/checkout-extras-db-test.ts`
+- `M  scripts/words-guard.baseline.json`
+- `M  src/app/api/operator/bookings/route.ts`
+- `A  src/app/api/operator/checkout-options/route.ts`
+- `M  src/app/api/operator/tee-times/route.ts`
+- `M  src/app/dashboard/page.tsx`
+- `M  src/app/manage/[bookingId]/page.tsx`
+- `A  src/components/dashboard/CheckoutExtras.tsx`
+- `M  src/components/dashboard/GroupTicket.tsx`
+- `M  src/lib/cart-pricing.ts`
+- `M  src/lib/change-party.ts`
+- `A  src/lib/checkout-extras.ts`
+- `M  src/lib/counter-pay.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -285,6 +287,7 @@ This is the distinction a raw checkbox count gets wrong.
 | `CLAUDE.md` | 1 | 2026-11-08 | 0d |
 | `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 7d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 19d |
+| `LAUNCH_PLAN_SPEC.md` | 0 | 2026-11-08 | 0d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 13d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 14d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 16d |
@@ -323,6 +326,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `235630c1` 2026-11-08 — POS-8: Stock list + one item form, upload what you have, sell anyway, Sales cleanup (#344)
+- `44944043` 2026-11-09 — queue/spec update
+- `3d31bc28` 2026-11-09 — POS-8: Stock list + one item form, upload what you have, sell anyway, Sales cleanup
 - `44217555` 2026-11-08 — POS-7: Open the register (locked starting cash), tee sheet icons, sliding tabs (#343)
 - `9b6e7f6b` 2026-11-09 — POS-7: Open the register (locked starting cash), tee sheet icons, sliding tabs
 - `4a51c27b` 2026-11-08 — POS-6: Stock is where items are added; round packs off; tiles, ticket, Sales filters (#342)
@@ -332,9 +338,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `b8512431` 2026-11-08 — ACC-1: every booking and payment figure agrees across the site (#339)
 - `260583c3` 2026-11-08 — ACC-1: one set of definitions so every booking and payment figure agrees
 - `437456cc` 2026-11-08 — POS-4: Pro shop register as a real POS (#338)
-- `f4cc7d76` 2026-11-08 — POS-4: Pro shop register as a real POS — tiles, one ticket, Charge in steps
-- `63efbf69` 2026-11-08 — SEATS-1: close seats on a tee time one at a time (#337)
-- `ab8c4f43` 2026-11-08 — SEATS-1: close seats on a tee time one at a time (Open seats − N + on the card)
 
 ---
 

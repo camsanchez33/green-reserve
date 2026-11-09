@@ -99,6 +99,9 @@ export async function changePartySize(bookingId: string, newPlayers: number, who
       // CART-2: a per-cart booking re-counts its carts (riders follow the players) at its own cart price.
       const cartResized = resizeCart(booking, newPlayers);
       const cartFeeTotal = cartResized ? cartResized.cartFeeTotal : fees.cartFeeTotal;
+      // CART-3: per-player riders never outnumber the players (a player added walks unless staff set them riding);
+      // a group where everyone rode still all rides — what partyFees already charges.
+      const ridersAfter = !cartResized && booking.cartUnitCents == null && booking.cartRiders != null ? (booking.cartRiders < booking.players ? Math.min(newPlayers, booking.cartRiders) : newPlayers) : null;
       const accessFeeTotal = perPlayerAccess * newPlayers;
       const totalAmount = greenFeeTotal + cartFeeTotal + Math.round(booking.rangeBallsTotal) + accessFeeTotal;
 
@@ -111,7 +114,7 @@ export async function changePartySize(bookingId: string, newPlayers: number, who
       await tx.booking.update({
         where: { id: bookingId },
         data: {
-          players: newPlayers, greenFeeTotal, cartFeeTotal, ...(cartResized ? { cartRiders: cartResized.cartRiders } : {}), ...(packBack > 0 ? { packRounds: booking.packRounds - packBack } : {}),
+          players: newPlayers, greenFeeTotal, cartFeeTotal, ...(cartResized ? { cartRiders: cartResized.cartRiders } : ridersAfter != null ? { cartRiders: ridersAfter } : {}), ...(packBack > 0 ? { packRounds: booking.packRounds - packBack } : {}),
           ...(res ? { residentPlayers: res.residentPlayers, residentRateCents: res.residentRateCents } : {}), accessFeeTotal, totalAmount, cancellationFeeTotal, noShowFeeTotal,
           ...(who.by === 'golfer' ? { termsAcceptedAt: new Date(), termsVersion: CURRENT_TERMS_VERSION } : {}),
         },

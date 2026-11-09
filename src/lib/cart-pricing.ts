@@ -54,7 +54,12 @@ export function resizeCart(b: { players: number; cartSelected: boolean; cartUnit
 
 /** Splitting a per-cart booking: who leaves takes their riders with them (the money is split by splitShares). */
 export function splitRiders(b: { players: number; cartUnitCents: number | null; cartRiders: number | null }, leave: number): { keep: number | null; leave: number | null } {
-  if (b.cartUnitCents == null) return { keep: null, leave: null };
+  // CART-3: a per-player cart where only some ride — the booker's side keeps the riders first (as partyFees prices it).
+  if (b.cartUnitCents == null) {
+    if (b.cartRiders == null || b.cartRiders >= b.players) return { keep: null, leave: null };
+    const keep = Math.min(b.players - leave, b.cartRiders);
+    return { keep, leave: b.cartRiders - keep };
+  }
   const riders = b.cartRiders ?? b.players;
   // Seats whose cart is covered (a pack) stay with the booker, so everyone who leaves is a paying rider.
   const leaving = Math.max(0, Math.min(riders, leave));

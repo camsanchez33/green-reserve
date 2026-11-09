@@ -89,7 +89,7 @@ export async function splitBooking(courseId: string, bookingId: string, leave: n
         where: { id: b.id, courseId, status: 'confirmed', players: b.players, paymentStatus: b.paymentStatus, roundPaymentIntentId: '', shopLockedAt: null, readerStartedAt: null, noShowAt: null, totalAmount: b.totalAmount },
         data: {
           players: keep.players, greenFeeTotal: keep.greenFeeTotal, cartFeeTotal: keep.cartFeeTotal, accessFeeTotal: keep.accessFeeTotal, totalAmount: keep.totalAmount,
-          ...(b.cartUnitCents != null ? { cartRiders: riders.keep } : {}),
+          ...(riders.keep != null ? { cartRiders: riders.keep } : {}),
           residentPlayers: keep.residentPlayers, residentRateCents: keep.residentRateCents,
           cancellationFeeTotal: fees.cancellationFeeTotal, noShowFeeTotal: fees.noShowFeeTotal,
         },
@@ -109,6 +109,8 @@ export async function splitBooking(courseId: string, bookingId: string, leave: n
         players: off.players, appliedRate: off.residentPlayers > 0 ? 'resident' : 'standard',
         greenFeeTotal: off.greenFeeTotal, cartFeeTotal: off.cartFeeTotal, cartSelected: b.cartSelected && off.cartFeeTotal > 0,
         ...(b.cartUnitCents != null && off.cartFeeTotal > 0 ? { cartUnitCents: b.cartUnitCents, cartRiders: riders.leave } : {}),
+        // CART-3: per-player riders — who leaves carries the riders the booker's side didn't keep.
+        ...(b.cartUnitCents == null && riders.leave != null ? { cartRiders: riders.leave > 0 ? riders.leave : null } : {}),
         accessFeeTotal: off.accessFeeTotal, totalAmount: off.totalAmount,
         residentPlayers: off.residentPlayers, residentRateCents: off.residentRateCents,
         status: 'confirmed', cancellationHoursAtBooking: b.cancellationHoursAtBooking,
