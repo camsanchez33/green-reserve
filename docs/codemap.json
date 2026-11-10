@@ -8821,7 +8821,7 @@
     },
     {
       "path": "src/app/dashboard/home/page.tsx",
-      "lines": 336,
+      "lines": 347,
       "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the mockups):",
       "brain": [],
       "exports": [
@@ -9072,7 +9072,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 2278,
+      "lines": 2281,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10452,7 +10452,7 @@
     },
     {
       "path": "src/components/OperatorSidebar.tsx",
-      "lines": 334,
+      "lines": 339,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11306,7 +11306,7 @@
     },
     {
       "path": "src/components/dashboard/DeclinedCardList.tsx",
-      "lines": 95,
+      "lines": 97,
       "purpose": "Declined cards — the same rows on Home and Money → Action needed (Revamp 3 dead end 16, Cam 2026-10-29).",
       "brain": [],
       "exports": [
@@ -16159,7 +16159,7 @@
     },
     {
       "path": "src/lib/booking-status.ts",
-      "lines": 79,
+      "lines": 81,
       "purpose": "Single source of truth for what to show a user (operator, staff, or golfer) given a booking's current status + paymentStatus pair.",
       "brain": [],
       "exports": [
@@ -22909,7 +22909,7 @@
     },
     {
       "path": "src/lib/operator-home.ts",
-      "lines": 168,
+      "lines": 169,
       "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the course dashboard mockups):",
       "brain": [],
       "exports": [

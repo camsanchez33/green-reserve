@@ -1,29 +1,44 @@
 {
-  "generatedAt": "2026-11-09T19:32:58.664Z",
+  "generatedAt": "2026-11-10T01:00:47.708Z",
   "repo": {
-    "head": "606ed81b",
+    "head": "ab07947a",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 13,
+    "dirtyCount": 14,
     "dirty": [
-      "M STATUS.artifact.html",
-      " M STATUS.json",
-      " M STATUS.md",
-      " M docs/CODEMAP.md",
+      "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/cart-numbers-test.ts",
+      " M scripts/cancel-wording-test.ts",
+      " M scripts/checkout-card-test.ts",
+      " M scripts/split-booking-db-test.ts",
       " M scripts/words-guard.baseline.json",
-      " M src/app/api/receipt/[bookingId]/route.ts",
-      "D  src/app/dashboard/cart-ticket/page.tsx",
-      " M src/app/dashboard/settings/page.tsx",
-      " M src/app/dashboard/starter/page.tsx",
-      " M src/app/receipt/[bookingId]/page.tsx",
-      " M src/components/dashboard/CheckoutExtras.tsx"
+      " M src/app/dashboard/home/page.tsx",
+      " M src/app/dashboard/page.tsx",
+      " M src/components/OperatorSidebar.tsx",
+      " M src/components/dashboard/DeclinedCardList.tsx",
+      " M src/lib/booking-status.ts",
+      " M src/lib/cancel-confirm.ts",
+      " M src/lib/operator-home.ts",
+      "?? scripts/stress-1110-test.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "dea6f5b4",
+        "date": "2026-11-09T14:41:23-05:00",
+        "subject": "CART-5: the receipt says the cart is paid; no cart ticket, no cart number (#351)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "a47a7025",
+        "date": "2026-11-09T19:34:28+00:00",
+        "subject": "CART-5: the receipt says the cart is paid; no cart ticket, no cart number",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "ba4de30f",
         "date": "2026-11-09T02:46:29-05:00",
@@ -1470,30 +1485,18 @@
       "file": "STAFF_POLICY_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-26",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "OPERATOR_REWORK_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-25",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "ADMIN_V5_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-23",
-      "ageDays": 16
-    },
-    {
-      "file": "AGREEMENT_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-22",
-      "ageDays": 17
-    },
-    {
-      "file": "CALL_SCHEDULING_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-22",
       "ageDays": 17
     },
     {
@@ -1503,28 +1506,40 @@
       "ageDays": 17
     },
     {
+      "file": "AGREEMENT_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 18
+    },
+    {
+      "file": "CALL_SCHEDULING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 18
+    },
+    {
       "file": "ONBOARDING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 17
+      "ageDays": 18
     },
     {
       "file": "ONBOARDING_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 17
+      "ageDays": 18
     },
     {
       "file": "PUBLIC_SITE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 17
+      "ageDays": 18
     },
     {
       "file": "RECEIPT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 17
+      "ageDays": 18
     },
     {
       "file": "ADMIN_MASTER_PLAN.md",
@@ -1680,6 +1695,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "dea6f5b4",
+      "date": "2026-11-09",
+      "subject": "CART-5: the receipt says the cart is paid; no cart ticket, no cart number (#351)"
+    },
+    {
+      "h": "a47a7025",
+      "date": "2026-11-09",
+      "subject": "CART-5: the receipt says the cart is paid; no cart ticket, no cart number"
+    },
+    {
       "h": "ba4de30f",
       "date": "2026-11-09",
       "subject": "AUDIT-1109: close two register gaps; no silent failures in tonight's pages (#350)"
@@ -1728,16 +1753,6 @@
       "h": "2981ca95",
       "date": "2026-11-09",
       "subject": "RECEIPT-3 + MSG-1: receipts staff can see and text as a link; Messages from Cam's notes"
-    },
-    {
-      "h": "69eb6ce5",
-      "date": "2026-11-09",
-      "subject": "DRAWER-1 + CART-4: the register is a loop; cart numbers, cart ticket, starter's sheet (#346)"
-    },
-    {
-      "h": "62742a74",
-      "date": "2026-11-09",
-      "subject": "Regenerate code map and status board"
     }
   ]
 }

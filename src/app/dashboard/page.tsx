@@ -263,7 +263,7 @@ function DashboardPageInner() {
     setReaderBusy(false);
     const base = { bookingId: b.id, readerId, name: b.golferName, players: here && here < b.players ? here : b.players };
     // The rest may have split off already (here < players) — show the sheet as it is now, whatever happens next.
-    if (here && here < b.players) loadTimes(selectedDate);
+    if (here && here < b.players) loadTimes(selectedDate, true);
     if (!r.ok) { setOnReader({ ...base, dueCents: 0, state: 'error', message: r.error }); return; }
     setOnReader({ ...base, dueCents: r.data.dueCents ?? 0, state: 'waiting', message: r.data.message ?? '' });
   }
@@ -278,9 +278,9 @@ function DashboardPageInner() {
       if (r.data.status === 'paid') {
         toast('Paid by card — checked in.', 'ok');
         setJustDone({ bookingId: onReader.bookingId, name: onReader.name, players: onReader.players, how: `$${(onReader.dueCents / 100).toFixed(2)} · card reader` });
-        setOnReader(null); setFlow(null); loadTimes(selectedDate); return;
+        setOnReader(null); setFlow(null); loadTimes(selectedDate, true); return;
       }
-      if (r.data.status === 'refunded') { toast(r.data.message ?? 'This round was already paid — the card payment was refunded.', 'warn'); setOnReader(null); loadTimes(selectedDate); return; }
+      if (r.data.status === 'refunded') { toast(r.data.message ?? 'This round was already paid — the card payment was refunded.', 'warn'); setOnReader(null); loadTimes(selectedDate, true); return; }
       if (r.data.status === 'declined') setOnReader(o => o && { ...o, state: 'declined', message: r.data.message || 'The card was declined.' });
       else if (r.data.status === 'cancelled' || r.data.status === 'open') setOnReader(o => o && { ...o, state: 'cancelled', message: 'Stopped — nothing was charged.' });
       else if (r.data.message) setOnReader(o => o && { ...o, message: r.data.message ?? '' });
@@ -294,10 +294,10 @@ function DashboardPageInner() {
     setReaderBusy(false);
     if (!r.ok) { setOnReader(o => o && { ...o, message: r.error }); return; }
     if (action !== 'cancel') return;
-    if (r.data.status === 'paid') { toast('The card went through — paid and checked in.', 'ok'); setOnReader(null); setFlow(null); loadTimes(selectedDate); return; }
-    if (r.data.status === 'refunded') { toast(r.data.message ?? '', 'warn'); setOnReader(null); loadTimes(selectedDate); return; }
+    if (r.data.status === 'paid') { toast('The card went through — paid and checked in.', 'ok'); setOnReader(null); setFlow(null); loadTimes(selectedDate, true); return; }
+    if (r.data.status === 'refunded') { toast(r.data.message ?? '', 'warn'); setOnReader(null); loadTimes(selectedDate, true); return; }
     if (r.data.status === 'waiting') { setOnReader(o => o && { ...o, message: r.data.message ?? 'Still on the reader — try again in a moment.' }); return; }
-    setOnReader(null); loadTimes(selectedDate); toast('Cancelled — nothing was charged.', 'ok');
+    setOnReader(null); loadTimes(selectedDate, true); toast('Cancelled — nothing was charged.', 'ok');
   }
   // MEM-ACCT: "On account" shows only when the course has members who can charge to one.
   const [hasAccounts, setHasAccounts] = useState(false);
@@ -437,7 +437,7 @@ function DashboardPageInner() {
       if (!r.ok) { toast(r.error, 'warn'); return; }
       const out = cancelResultText(c, waive, r.data ?? {});
       toast(out.text, out.tone);
-      await loadTimes(selectedDate);
+      await loadTimes(selectedDate, true);
     } finally {
       setRowBusy(null);
     }
@@ -451,7 +451,7 @@ function DashboardPageInner() {
       const r = await dfetch<{ residentPlayers: number; totalAmount: number }>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: b.id, action: 'set_residents', residentPlayers: n }) });
       if (!r.ok) { toast(r.error, 'warn'); return; }
       toast(`${b.golferName}: ${n === 0 ? 'no residents' : `${n} at the resident rate`}${access.can('money.payments') ? ` — round now $${(r.data.totalAmount / 100).toFixed(2)}` : ''}.`, 'ok');
-      await loadTimes(selectedDate);
+      await loadTimes(selectedDate, true);
     } finally {
       setRowBusy(null);
     }
@@ -464,7 +464,7 @@ function DashboardPageInner() {
       const r = await dfetch<{ totalAmount: number; feeRefundError?: string }>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: b.id, action: 'change_players', newPlayers: n }) });
       if (!r.ok) { toast(r.error, 'warn'); return; }
       toast(r.data.feeRefundError || `${b.golferName}: now ${n} player${n === 1 ? '' : 's'}${access.can('money.payments') ? ` — round $${(r.data.totalAmount / 100).toFixed(2)}` : ''}.`, r.data.feeRefundError ? 'warn' : 'ok');
-      await loadTimes(selectedDate);
+      await loadTimes(selectedDate, true);
     } finally {
       setRowBusy(null);
     }
@@ -496,8 +496,9 @@ function DashboardPageInner() {
       const change = r.data?.cashTenderedCents != null && r.data.totalCents != null ? r.data.cashTenderedCents - r.data.totalCents : 0;
       toast(action === 'no_show' ? `${b.golferName} marked as a no-show.` : action === 'still_coming' ? `${b.golferName} is still coming.` : `Cash taken — ${b.golferName} is checked in.${change > 0 ? ` Change $${(change / 100).toFixed(2)}.` : ''}`, 'ok');
       if (action === 'take_cash') { setCashGiven(c => { const n = { ...c }; delete n[b.id]; return n; }); }
-      if (action === 'take_cash') setJustDone({ bookingId: b.id, name: b.golferName, players: checkedInPlayers ?? b.players, how: 'Cash' });
-      await loadTimes(selectedDate);
+      // The change due stays in the checked-in box, not only in the passing toast.
+      if (action === 'take_cash') setJustDone({ bookingId: b.id, name: b.golferName, players: checkedInPlayers ?? b.players, how: change > 0 ? `Cash · change $${(change / 100).toFixed(2)}` : 'Cash' });
+      await loadTimes(selectedDate, true);
     } finally {
       setRowBusy(null);
     }
@@ -557,14 +558,14 @@ function DashboardPageInner() {
       if (res.status === 402) {
         // The headcount already given carries over: the card form charges the same players.
         openCardModal(b, data.error || 'The saved card was declined.', partial ?? b.players);
-        loadTimes(selectedDate); // the row now carries the decline
+        loadTimes(selectedDate, true); // the row now carries the decline
         return;
       }
       toast(data.error || 'Check-in failed'); return;
     }
     chargeOutcome(data);
     setJustDone({ bookingId: b.id, name: b.golferName, players: partial ?? b.players, how: data.alreadyPaid ? 'Paid ahead' : `$${(data.totalCharged / 100).toFixed(2)} · card on file` });
-    loadTimes(selectedDate);
+    loadTimes(selectedDate, true);
   }
 
   async function checkInWithCard(b: Booking, paymentMethodId: string) {
@@ -582,13 +583,13 @@ function DashboardPageInner() {
       // A second decline: show the new reason where the first one was, and let
       // the row catch up.
       const msg = data.error || 'Check-in failed';
-      setCardModalReason(msg); loadTimes(selectedDate);
+      setCardModalReason(msg); loadTimes(selectedDate, true);
       return msg;
     }
     chargeOutcome(data);
     setJustDone({ bookingId: b.id, name: b.golferName, players: cardModalShowed ?? b.players, how: `$${(data.totalCharged / 100).toFixed(2)} · new card` });
     setCardModalBooking(null); setCardModalReason(''); setCardModalShowed(undefined);
-    loadTimes(selectedDate);
+    loadTimes(selectedDate, true);
     return null;
   }
 
@@ -728,7 +729,7 @@ function DashboardPageInner() {
       }
       toast(to === 'none' ? 'Closed to new bookings.' : to === 'counter' ? 'Counter only — hidden online.' : 'Open to everyone.', 'ok');
     } finally {
-      await loadTimes(selectedDate);
+      await loadTimes(selectedDate, true);
       setSlotBusy(null);
     }
   }
@@ -737,7 +738,7 @@ function DashboardPageInner() {
     setSlotBusy(tt.id);
     const r = await dfetch('/api/operator/tee-times', { method: 'DELETE', body: JSON.stringify({ id: tt.id }) });
     if (!r.ok) toast(r.error);
-    await loadTimes(selectedDate);
+    await loadTimes(selectedDate, true);
     setSlotBusy(null);
   }
 
@@ -851,7 +852,8 @@ function DashboardPageInner() {
   // 30 seconds while the tab is in front, and as soon as it comes back to the front. Never
   // mid-action: a check-in, a row being changed or a modal open waits for the next round.
   const busyRef = useRef(false);
-  busyRef.current = !!(checkingInId || rowBusy || cardModalBooking || moveTarget);
+  // The check-in steps too: a re-read mid-checkout could change the total under staff (stress test 2026-11-10).
+  busyRef.current = !!(checkingInId || rowBusy || cardModalBooking || moveTarget || flow);
   useEffect(() => {
     const tick = () => { if (document.visibilityState === 'visible' && !busyRef.current) loadTimes(selectedDate, true); };
     const i = setInterval(tick, 30_000);
@@ -940,8 +942,9 @@ function DashboardPageInner() {
     // No reader at all → say so on any day it could pay (owners get the link to connect one); a reader but not its day → "on the day".
     const readerWhyNot = canReader || !readerWanted || selectedDate < today() ? null : !hasReader ? 'none' : 'day';
     const canSizeGroup = b.status === 'confirmed' && !b.noShowAt && !b.paidOffline && !b.roundPaid && !b.shopLocked && b.paymentStatus !== 'paid' && b.paymentStatus !== 'cancellation_fee_charged' && access.can('sheet.counter_payment');
-    const canTextLink = b.status === 'confirmed' && b.hasCard === false && access.can('sheet.checkin') && b.hasPhone && selectedDate <= today();
-    const canEmailLink = b.status === 'confirmed' && b.hasCard === false && b.paymentStatus !== 'manual' && access.can('sheet.checkin') && !b.golferEmail.endsWith('@noemail.greenreserve.app') && selectedDate <= today();
+    // A declined card can be sent a pay link too (the route allows it; Home and Money already offer it).
+    const canTextLink = b.status === 'confirmed' && (b.hasCard === false || !!b.checkInFailReason) && access.can('sheet.checkin') && b.hasPhone && selectedDate <= today();
+    const canEmailLink = b.status === 'confirmed' && (b.hasCard === false || !!b.checkInFailReason) && b.paymentStatus !== 'manual' && access.can('sheet.checkin') && !b.golferEmail.endsWith('@noemail.greenreserve.app') && selectedDate <= today();
     // In the check-in steps — only while the group still has something to do (it closes itself once paid).
     const inFlow = flow?.id === b.id && b.status === 'confirmed' && unpaid && !prepaid;
     // Edit group (Cam 2026-11-08: one menu): each item keeps exactly its old permission and condition.
@@ -1031,11 +1034,11 @@ function DashboardPageInner() {
                 <div className="mt-2.5">
                   <ShopItemsForGroup bookingId={b.id} lines={b.shopItems ?? []} shopFeeCents={b.shopFeeCents ?? 0} shopTaxCents={b.shopTaxCents ?? 0}
                     editable={shopEditable} canSell={access.can('shop.sell')} showMoney={showMoney}
-                    onChanged={() => loadTimes(selectedDate)} />
+                    onChanged={() => loadTimes(selectedDate, true)} />
                 </div>
               )}
               {!inFlow && b.paymentStatus === 'on_account' && access.can('sheet.counter_payment') && (
-                <div className="mt-2"><ChangeAccount target={{ bookingId: b.id }} className={tile} inputClass="bg-white border border-line rounded-md px-2 py-1.5 text-ink placeholder-ink-faint focus:border-pine/40 focus:ring-2 focus:ring-pine/10" onDone={async msg => { toast(msg, 'ok'); await loadTimes(selectedDate); }} /></div>
+                <div className="mt-2"><ChangeAccount target={{ bookingId: b.id }} className={tile} inputClass="bg-white border border-line rounded-md px-2 py-1.5 text-ink placeholder-ink-faint focus:border-pine/40 focus:ring-2 focus:ring-pine/10" onDone={async msg => { toast(msg, 'ok'); await loadTimes(selectedDate, true); }} /></div>
               )}
 
               {inFlow && (
@@ -1061,7 +1064,7 @@ function DashboardPageInner() {
                         <button type="button" aria-label="One more" disabled={herePlayers >= b.players} onClick={() => setHere(h => ({ ...h, [b.id]: Math.min(b.players, herePlayers + 1) }))}
                           className="w-11 h-11 rounded-[7px] border border-line bg-white text-[18px] text-ink hover:bg-paper disabled:opacity-40">+</button>
                       </div>
-                      {rest > 0 && <p className={'mt-2 text-center text-[12.5px] ' + (restSplit ? 'text-ink-muted' : 'text-warn')}>{restSplit ? `The other ${rest} stay booked.` : `The other ${rest} won’t be charged.`}</p>}
+                      {rest > 0 && <p className={'mt-2 text-center text-[12.5px] ' + (restSplit ? 'text-ink-muted' : 'text-warn')}>{restSplit ? `The other ${rest} ${rest === 1 ? 'stays' : 'stay'} booked.` : `The other ${rest} won’t be charged.`}</p>}
                       <button type="button" onClick={() => go(b.checkInFailReason ? 3 : 2)} className={next + ' mt-4'}>Next</button>
                     </div>
                   )}
@@ -1073,7 +1076,7 @@ function DashboardPageInner() {
                       <div className="mt-2">
                         <ShopItemsForGroup bookingId={b.id} lines={b.shopItems ?? []} shopFeeCents={b.shopFeeCents ?? 0} shopTaxCents={b.shopTaxCents ?? 0}
                           editable={shopEditable} canSell={access.can('shop.sell')} showMoney={showMoney}
-                          onChanged={() => loadTimes(selectedDate)} />
+                          onChanged={() => loadTimes(selectedDate, true)} />
                       </div>
                       {/* CART-3 (Cam 2026-11-09): who rides and the range-ball buckets, set before they pay. */}
                       <CheckoutExtras booking={b} date={tt.date} onNumbersNeeded={setNumbersNeeded} cartFeeCents={Math.round(tt.cartFee * 100)} walkingAllowed={tt.walkingAllowed !== false}
@@ -1110,9 +1113,9 @@ function DashboardPageInner() {
                           <div className="py-3">
                             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                               <span className="text-[14px] text-ink mr-auto">Cash</span>
-                              <button type="button" disabled={rowBusy === b.id} onClick={() => takeCash()} className="text-[14px] font-semibold text-pine hover:underline disabled:opacity-50 tabular-nums">{showMoney ? 'Exact' : 'Take cash'}</button>
-                              {showMoney && quick.map(c => <button key={c} type="button" disabled={rowBusy === b.id} onClick={() => takeCash(c)} className="text-[14px] font-semibold text-pine hover:underline disabled:opacity-50 tabular-nums">${c / 100}</button>)}
-                              {showMoney && <button type="button" onClick={() => setCashGiven(g => ({ ...g, [b.id]: g[b.id] ?? '' }))} className="text-[14px] font-semibold text-pine hover:underline">Other</button>}
+                              <button type="button" disabled={rowBusy === b.id} onClick={() => takeCash()} className="min-h-[40px] min-w-[56px] px-3 rounded-[7px] bg-white border border-line hover:border-line-strong text-[14px] font-semibold text-ink disabled:opacity-50 tabular-nums">{showMoney ? 'Exact' : 'Take cash'}</button>
+                              {showMoney && quick.map(c => <button key={c} type="button" disabled={rowBusy === b.id} onClick={() => takeCash(c)} className="min-h-[40px] min-w-[56px] px-3 rounded-[7px] bg-white border border-line hover:border-line-strong text-[14px] font-semibold text-ink disabled:opacity-50 tabular-nums">${c / 100}</button>)}
+                              {showMoney && <button type="button" onClick={() => setCashGiven(g => ({ ...g, [b.id]: g[b.id] ?? '' }))} className="min-h-[40px] px-3 rounded-[7px] bg-white border border-line hover:border-line-strong text-[14px] font-semibold text-ink">Other</button>}
                             </div>
                             {cashGiven[b.id] !== undefined && (
                               <div className="mt-2 flex items-center gap-2">
@@ -1170,7 +1173,7 @@ function DashboardPageInner() {
                         {canTextLink && <button type="button" disabled={rowBusy === b.id} onClick={() => sendPayLink(b, 'sms')} className={row}><span>Text a pay link</span><span className="text-ink-muted">{rowBusy === b.id ? 'Sending…' : '›'}</span></button>}
                         {canEmailLink && <button type="button" disabled={rowBusy === b.id} onClick={() => sendPayLink(b)} className={row}><span>Email a pay link</span><span className="text-ink-muted">{rowBusy === b.id ? 'Sending…' : '›'}</span></button>}
                         {canAccount && (
-                          <div className="py-3"><ChargeToAccount booking={b} className={row + ' py-0'} onDone={async (msg, note) => { if (note) toast(note, 'warn'); toast(msg, 'ok'); setFlow(null); await loadTimes(selectedDate); }} /></div>
+                          <div className="py-3"><ChargeToAccount booking={b} className={row + ' py-0'} onDone={async (msg, note) => { if (note) toast(note, 'warn'); toast(msg, 'ok'); setFlow(null); await loadTimes(selectedDate, true); }} /></div>
                         )}
                       </div>
                       {(!b.checkInFailReason || b.players > 1) && <button type="button" onClick={() => go(b.checkInFailReason ? 1 : 2)} className={link + ' mt-3'}>Back</button>}
@@ -1728,7 +1731,7 @@ function DashboardPageInner() {
       {moveTarget && (
         <MoveGroupModal booking={moveTarget.booking} fromTeeTimeId={moveTarget.fromTeeTimeId} initialPickId={moveTarget.toTeeTimeId} date={selectedDate} today={today()} nowHM={nowHM}
           onClose={() => setMoveTarget(null)}
-          onMoved={toDate => { setMoveTarget(null); if (toDate !== selectedDate) setSelectedDate(toDate); else loadTimes(selectedDate); }} />
+          onMoved={toDate => { setMoveTarget(null); if (toDate !== selectedDate) setSelectedDate(toDate); else loadTimes(selectedDate, true); }} />
       )}
 
       {/* ── Add Tee Time Modal ── */}
@@ -1740,7 +1743,7 @@ function DashboardPageInner() {
               <button onClick={() => setShowAddModal(false)} className="text-ink-muted hover:text-ink" aria-label="Close"><X className="w-5 h-5"/></button>
             </div>
             {/* ADDTIME-1: a new time opens its card, ready to book. */}
-            <AddTeeTimeForm date={selectedDate} dayTimes={teeTimes} canPrice={!access.isStaff} onSave={async id => { setShowAddModal(false); await loadTimes(selectedDate); setPanelId(id); }} onCancel={()=>setShowAddModal(false)}/>
+            <AddTeeTimeForm date={selectedDate} dayTimes={teeTimes} canPrice={!access.isStaff} onSave={async id => { setShowAddModal(false); await loadTimes(selectedDate, true); setPanelId(id); }} onCancel={()=>setShowAddModal(false)}/>
           </div>
         </div>
       )}
@@ -1840,14 +1843,14 @@ function DashboardPageInner() {
                   setWxApplyErr(r.status >= 500 || r.status === 0
                     ? `The cancellation stopped partway${r.status ? ` (error ${r.status})` : ''}. Some groups may already be cancelled and emailed — the sheet has been refreshed; check it, then run Weather again for any still booked.`
                     : r.error);
-                  loadTimes(selectedDate); return;
+                  loadTimes(selectedDate, true); return;
                 }
                 const calls: FrostCall[] = [
                   ...r.data.failed.map(f => ({ name: f.name, players: f.players, why: `${fmtTime(f.time)} — NOT cancelled: ${f.error}` })),
                   ...r.data.cancelled.filter(c => c.noEmail).map(c => ({ name: c.name, players: c.players, why: `${fmtTime(c.time)} — cancelled, no email on file` })),
                 ];
                 toast(`Play called off: ${r.data.cancelled.length} group${r.data.cancelled.length === 1 ? '' : 's'} cancelled.`, calls.length ? 'warn' : 'ok');
-                setWxPlan(null); setWxPlanKey(''); setWxResult({ cancelled: r.data.cancelled.length, blocked: r.data.blocked, feeRefundsFailed: r.data.feeRefundsFailed, calls }); loadTimes(selectedDate);
+                setWxPlan(null); setWxPlanKey(''); setWxResult({ cancelled: r.data.cancelled.length, blocked: r.data.blocked, feeRefundsFailed: r.data.feeRefundsFailed, calls }); loadTimes(selectedDate, true);
               }} className="flex-1 bg-bad hover:bg-bad/90 text-white py-2.5 rounded-md text-[13px] font-semibold disabled:opacity-50">
                 {wxBusy ? 'Cancelling…' : wxSpan === 'custom' && !/^\d\d:\d\d$/.test(wxFrom) ? 'Pick a start time' : !wxPlan || wxPlanKey !== wxKey ? (wxErr ? 'Fix the times' : 'Checking…')
                   : wxPlan.groups.length > 0 ? `Cancel ${wxPlan.groups.length} group${wxPlan.groups.length === 1 ? '' : 's'}`
@@ -1903,7 +1906,7 @@ function DashboardPageInner() {
                   ...r.data.moved.filter(m => m.emailed !== true).map(m => ({ name: m.name, players: m.players, why: `moved to ${fmtTime(m.toTime)} — ${m.emailed === false ? 'email failed' : 'no email on file'}` })),
                 ];
                 toast(`Frost delay set: ${r.data.moved.length} group${r.data.moved.length === 1 ? '' : 's'} moved.`, calls.length ? 'warn' : 'ok');
-                setFrostPlan(null); setFrostPlanKey(''); setFrostResult({ moved: r.data.moved.length, blocked: r.data.blocked, calls }); loadTimes(selectedDate);
+                setFrostPlan(null); setFrostPlanKey(''); setFrostResult({ moved: r.data.moved.length, blocked: r.data.blocked, calls }); loadTimes(selectedDate, true);
               }} className="flex-1 bg-pine hover:bg-pine-hover text-white py-2.5 rounded-md text-[13px] font-semibold disabled:opacity-50">
                 {frostBusy ? 'Applying…' : !/^\d\d:\d\d$/.test(frostTime) ? 'Pick a time' : !frostPlan || frostPlanKey !== `${selectedDate}|${frostTime}` ? (frostErr ? 'Pick another time' : 'Checking…')
                   : frostPlan.moves.length > 0 ? `Move ${frostPlan.moves.length} group${frostPlan.moves.length === 1 ? '' : 's'}`
@@ -1926,7 +1929,7 @@ function DashboardPageInner() {
               <h3 className="font-serif font-semibold text-ink text-[17px]">{walkInLate ? 'Already played' : 'Walk-in'} — {fmtTime(walkInSlot.time)}</h3>
               <button onClick={() => setWalkInSlot(null)} className="text-ink-muted hover:text-ink"><X className="w-5 h-5"/></button>
             </div>
-            <WalkInForm slot={walkInSlot} late={walkInLate} courseName={courseName} onSave={(msg, tone) => { setWalkInSlot(null); toast(msg, tone ?? 'ok'); loadTimes(selectedDate); }} onCancel={() => setWalkInSlot(null)} />
+            <WalkInForm slot={walkInSlot} late={walkInLate} courseName={courseName} onSave={(msg, tone) => { setWalkInSlot(null); toast(msg, tone ?? 'ok'); loadTimes(selectedDate, true); }} onCancel={() => setWalkInSlot(null)} />
           </div>
         </div>
       )}

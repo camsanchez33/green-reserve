@@ -87,7 +87,8 @@ function diff(now: number, then: number, unit = '') {
 
 /** The forecast hour a tee time falls in (the forecast's own local hour is the course's), or null. */
 const forecastAt = (hours: WeatherHour[], date: string, hhmm: string) => hours.find(h => hourKey(h.at) === `${date} ${hhmm.slice(0, 2)}`) ?? null;
-const rainLine = (h: WeatherHour) => `${h.tempF}°${h.rainPct ? ` · ${h.rainPct}% rain` : ''}`;
+// Stress test 2026-11-10: "1% rain" six times said nothing — rain shows from 20%.
+const rainLine = (h: WeatherHour) => `${h.tempF}°${(h.rainPct ?? 0) >= 20 ? ` · ${h.rainPct}% rain` : ''}`;
 const WEATHER_WHY: Record<string, string> = {
   no_address: 'No address on file',
   address_not_found: 'Address not found',
@@ -113,13 +114,13 @@ function NextUpBar({ home, weather, weatherError }: { home: Home; weather: Weath
         {home.comingUp.length === 0 ? (
           <p className="px-5 py-3 text-[14px] text-ink-soft">None left.</p>
         ) : (
-          <div className="flex overflow-x-auto px-2 pb-2 pt-1">
+          <div className="relative flex overflow-x-auto px-2 pb-2 pt-1">
             {home.comingUp.map(s => {
               const w = forecastAt(hours, home.today, s.time);
               return (
                 // Home audit: a time opens its card on the tee sheet (check in, pay, move).
                 <Link key={s.id} href={`/dashboard?tt=${s.id}`} className="shrink-0 w-[150px] rounded-[7px] px-3 py-2 hover:bg-paper/70">
-                  <div className="flex items-baseline gap-2"><span className="text-[14px] font-semibold tabular-nums text-pine">{fmtTime(s.time)}</span>
+                  <div className="flex items-baseline gap-2 whitespace-nowrap"><span className="text-[14px] font-semibold tabular-nums text-pine">{fmtTime(s.time)}</span>
                     {w && <span className="text-[12px] text-ink-muted tabular-nums" title={w.summary}>{rainLine(w)}</span>}</div>
                   <div className="mt-1 flex flex-col gap-0.5 text-[12.5px]">
                     {/* DENSE-3 (Cam 2026-10-28): each group says whether it's checked in, paid or not yet. */}
@@ -152,10 +153,11 @@ export default function DashboardHome() {
   const [weather, setWeather] = useState<Weather | null>(null);
   const [weatherError, setWeatherError] = useState('');
 
-  const load = useCallback(async () => {
-    setError('');
+  // quiet: a background re-read keeps what's on screen when it fails (the next one tries again).
+  const load = useCallback(async (quiet = false) => {
+    if (!quiet) setError('');
     const r = await dfetch<Home>('/api/operator/home');
-    if (!r.ok || !r.data) { setError(r.ok ? 'Nothing came back — try again.' : r.error); return; }
+    if (!r.ok || !r.data) { if (!quiet) setError(r.ok ? 'Nothing came back — try again.' : r.error); return; }
     setHome(r.data);
   }, []);
   const loadPayouts = useCallback(async () => {
@@ -171,6 +173,15 @@ export default function DashboardHome() {
     setWeather(r.data);
   }, []);
   useEffect(() => { load(); loadWeather(); }, [load, loadWeather]);
+  // Stress test 2026-11-10 ("it told me all clear and three groups were standing there"): Home left open on the
+  // counter re-reads itself each minute and when the tab comes back — never while someone is typing on it.
+  useEffect(() => {
+    const typing = () => { const el = document.activeElement; return !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT'); };
+    const tick = () => { if (document.visibilityState === 'visible' && !typing()) load(true); };
+    const id = setInterval(tick, 60_000);
+    document.addEventListener('visibilitychange', tick);
+    return () => { clearInterval(id); document.removeEventListener('visibilitychange', tick); };
+  }, [load]);
   useEffect(() => { if (access.loaded && seesPayouts) loadPayouts(); }, [access.loaded, seesPayouts, loadPayouts]);
 
   // The chart spans the hours that have tee times either day (at least 6am–6pm).
@@ -185,7 +196,7 @@ export default function DashboardHome() {
     { label: 'Cards declined', n: home.declinedTotal, tone: 'text-bad' },
     { label: 'Past their time', n: home.late.length, tone: 'text-warn' },
     { label: 'No-shows today', n: home.noShows, tone: 'text-ink' },
-    { label: 'Unread messages', n: home.unreadMessages, tone: 'text-warn' },
+    ...(access.can('messages.use') ? [{ label: 'Unread messages', n: home.unreadMessages, tone: 'text-warn' }] : []),
   ] : [];
 
   return (
@@ -290,7 +301,7 @@ export default function DashboardHome() {
                   ) : (
                     <div className="-mx-5 border-y border-line divide-y divide-line-soft text-[14px]">
                       {/* HOME-1 ("more concise"): three here; See all opens the rest on Money. */}
-                      <DeclinedCardList rows={home.declined.slice(0, 3)} total={home.declinedTotal} canSendLink={access.can('sheet.checkin')} moreHref={access.can('money.payments') ? '/dashboard/money' : undefined} />
+                      {home.declinedTotal > 0 && <DeclinedCardList key={home.declined.map(d => d.id).join()} rows={home.declined.slice(0, 3)} total={home.declinedTotal} canSendLink={access.can('sheet.checkin')} moreHref={access.can('money.payments') ? '/dashboard/money' : undefined} onRemoved={() => load(true)} />}
                       {home.late.length > 0 && (
                         <div className="flex items-center gap-3 px-4 py-3">
                           <StatusDot status="warn" label="" />
@@ -321,10 +332,10 @@ export default function DashboardHome() {
                 </section>
 
                 {/* DASH-D (Cam 2026-11-01): the shift's notes and the course conditions. */}
-                <ShiftNotes key={home.board.notes.map(n => n.id).join()} initial={home.board.notes} />
-                <ConditionsCard key={home.board.conditions.updatedAt ?? ''} initial={home.board.conditions} canEdit={access.can('sheet.course_alert')} />
+                <ShiftNotes key={'notes:' + home.board.notes.map(n => n.id).join()} initial={home.board.notes} />
+                <ConditionsCard key={'cond:' + (home.board.conditions.updatedAt ?? '')} initial={home.board.conditions} canEdit={access.can('sheet.course_alert')} />
                 {/* HOME-2 (Cam 2026-11-05): goals on the numbers the course picks; setting one is settings.edit (money ones also money.payments, checked by the route). */}
-                <GoalsCard key={home.board.goals.goals.map(g => `${g.metric}:${g.target}`).join()} goals={home.board.goals} canSet={access.can('settings.edit')} onSaved={load} />
+                <GoalsCard key={'goals:' + home.board.goals.goals.map(g => `${g.metric}:${g.target}`).join()} goals={home.board.goals} canSet={access.can('settings.edit')} onSaved={() => load()} />
               </div>
             </div>
           )}

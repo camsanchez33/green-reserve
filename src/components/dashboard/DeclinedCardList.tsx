@@ -17,8 +17,10 @@ import type { DeclinedCard } from '@/lib/operator-home';
 const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const BTN = 'text-[13px] font-medium text-ink px-3 py-1.5 rounded-[7px] bg-white border border-line hover:border-line-strong disabled:opacity-50';
 
-export function DeclinedCardList({ rows, total, canSendLink, moreHref }: {
+export function DeclinedCardList({ rows, total, canSendLink, moreHref, onRemoved }: {
   rows: DeclinedCard[]; total: number; canSendLink: boolean;
+  /** After a remove, so the page's counts re-read (Home's "Cards declined"). */
+  onRemoved?: () => void;
   /** Where "and N more" goes — Money lists more of them. */
   moreHref?: string;
 }) {
@@ -39,7 +41,7 @@ export function DeclinedCardList({ rows, total, canSendLink, moreHref }: {
     const r = await dfetch('/api/operator/declined', { method: 'POST', body: JSON.stringify({ id: d.id }) });
     setBusy(null);
     // Say what happened: the row goes, the money is still owed (no-silent-failures audit 2026-11-09).
-    if (r.ok) { setGone(g => new Set(g).add(d.id)); toast(`${d.name} removed. Still owed under Payments → Not paid yet.`, 'ok'); }
+    if (r.ok) { setGone(g => new Set(g).add(d.id)); toast(`${d.name} removed. Still owed under Payments → Not paid yet.`, 'ok'); onRemoved?.(); }
     else setResult(m => ({ ...m, [d.id]: { ok: false, text: r.error } }));
   }
   const left = rows.filter(d => !gone.has(d.id));
