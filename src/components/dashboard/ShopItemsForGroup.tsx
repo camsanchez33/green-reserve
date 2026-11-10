@@ -161,7 +161,7 @@ export default function ShopItemsForGroup({ bookingId, lines, shopFeeCents, shop
                     aria-label={`Add ${i.name}${showMoney ? `, ${usd(i.priceCents)}` : ''}${out ? ', sold out' : ''}`}
                     className="min-w-0 rounded-[7px] bg-white shadow-[0_0_0_1px_var(--color-line)] hover:shadow-[0_0_0_2px_var(--color-pine)] text-left overflow-hidden disabled:opacity-60 transition-shadow">
                     {anyPhoto && (i.photoUrl
-                      ? <img src={i.photoUrl} alt="" loading="lazy" className="w-full h-14 object-cover" />
+                      ? <img src={i.photoUrl} alt="" loading="lazy" className="w-full h-14 object-contain bg-paper" />
                       : <span aria-hidden="true" className="w-full h-14 flex items-center justify-center bg-paper text-[13px] font-semibold text-ink-muted">{initials(i.name)}</span>)}
                     <span className="block px-2 py-1.5">
                       <span className="block text-[12.5px] leading-tight text-ink line-clamp-2">{busy === `add:${i.id}` ? 'Adding…' : i.name}</span>

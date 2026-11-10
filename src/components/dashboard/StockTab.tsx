@@ -80,7 +80,8 @@ export function StockTab({ refreshKey = 0, onChanged }: { refreshKey?: number; o
   );
 
   return (
-    <div className={'grid gap-4 lg:items-start ' + (panel ? 'lg:grid-cols-[minmax(0,1fr)_440px]' : '')}>
+    // IMPORT-2: "add many" is a wide table — it takes the page's width above the list instead of the 440px side card.
+    <div className={'grid gap-4 lg:items-start ' + (panel && panel.kind !== 'many' ? 'lg:grid-cols-[minmax(0,1fr)_440px]' : '')}>
       <Card className="p-5 min-w-0">
         <div className="flex flex-wrap items-center gap-3">
           <h2 className="text-[15px] font-semibold text-ink">Items <span className="font-normal text-ink-muted tabular-nums">{counts.all}</span></h2>
@@ -171,7 +172,7 @@ export function StockTab({ refreshKey = 0, onChanged }: { refreshKey?: number; o
 
       {panel && (
         // A card beside the list on a laptop; a full sheet on a phone.
-        <div className="fixed inset-0 z-40 bg-page overflow-y-auto p-4 lg:static lg:inset-auto lg:z-auto lg:bg-transparent lg:p-0 lg:sticky lg:top-6">
+        <div className={'fixed inset-0 z-40 bg-page overflow-y-auto p-4 lg:static lg:inset-auto lg:z-auto lg:bg-transparent lg:p-0 ' + (panel.kind === 'many' ? 'lg:order-first' : 'lg:sticky lg:top-6')}>
           <Card className="p-5">
             <div className="flex items-center justify-between gap-2 mb-4">
               <h2 className="text-[15px] font-semibold text-ink truncate">{panel.kind === 'new' ? 'Add an item' : panel.kind === 'many' ? 'Add many items' : open?.name ?? 'Item'}</h2>
@@ -183,7 +184,7 @@ export function StockTab({ refreshKey = 0, onChanged }: { refreshKey?: number; o
               <ItemForm key={`new-${counts.all}`} rows={rowOf} categories={categories} canCost={canCost} onCancel={() => pick(null)} onSaved={done} />
             )}
             {panel.kind === 'many' && (
-              <UploadMany onAdd={async rows => {
+              <UploadMany canCost={canCost} onAdd={async rows => {
                 const r = await dfetch<{ created?: number }>('/api/operator/shop-items', { method: 'POST', body: JSON.stringify({ items: rows }) });
                 if (!r.ok) { setError(r.error); setNote(''); return false; }
                 await done(`${rows.length} item${rows.length === 1 ? '' : 's'} added.`);
