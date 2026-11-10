@@ -33,6 +33,10 @@ Asked with the question feature on 2026-11-10. Each line is Cam's answer; build 
 13. **The security sweep's 7 mediums** (lanes/security/2026-11-10-full-sweep.md M1–M7) — Cam: "after STRESS-1110".
     Build does them, two PRs, before Nov 30. The High (member sign-in link) is already fixed.
 
+14. **Admin: confirm again before cancelling a booking or taking a course offline** (sweep L3) — Cam: yes, but with
+    the Admin redo, not now ("let's go through the dashboard first"). The security mediums that are admin-only (M2,
+    M3, M4) wait for the Admin redo too; the dashboard and golfer ones (M1, M5, M6, M7) come after STRESS-1110.
+
 ## Not building
 - **Yesterday line on Home** — Cam: unpaid rounds are covered by the course's no-show / cancellation fee and the
   midnight auto no-show set in Settings.
