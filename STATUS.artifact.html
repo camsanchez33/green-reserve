@@ -117,14 +117,19 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-11-09 19:32 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 606ed81b</span>
-    <span>13 uncommitted</span>
+    <span>2026-11-10 01:12 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 2c69d16b</span>
+    <span>2 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">179 runs have shipped that the queue doesn't know about</div>
+<div class="lede">184 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-31. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">2c69d16b</span><span>Golfer pay page: hide the saved card only after a definite decline</span></li>
+<li><span class="h">53857cdc</span><span>Stress fixes, review: sheet keeps re-reading during checkout; Home Retry clears; a declined card gets a new-card pay page</span></li>
+<li><span class="h">dcaec7c7</span><span>Tee sheet + Home stress-test fixes: phone width, live Home, quiet re-reads, declined pay link, clearer cash</span></li>
+<li><span class="h">dea6f5b4</span><span>CART-5: the receipt says the cart is paid; no cart ticket, no cart number (#351)</span></li>
+<li><span class="h">a47a7025</span><span>CART-5: the receipt says the cart is paid; no cart ticket, no cart number</span></li>
 <li><span class="h">ba4de30f</span><span>AUDIT-1109: close two register gaps; no silent failures in tonight's pages (#350)</span></li>
 <li><span class="h">3ffa5f8f</span><span>AUDIT-1109: update two source pins for the new register gate and the Register's key</span></li>
 <li><span class="h">74f02e7c</span><span>AUDIT-1109: close two register gaps; no silent failures in tonight's pages</span></li>
@@ -314,9 +319,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">17</span><span class="l">Ideas parked</span></div>
 </div>
 <section><h2>Working tree right now</h2>
-<div class="card flag">
-<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M STATUS.artifact.html</code></li><li><code>M STATUS.json</code></li><li><code>M STATUS.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/cart-numbers-test.ts</code></li><li><code>M scripts/words-guard.baseline.json</code></li><li><code>M src/app/api/receipt/[bookingId]/route.ts</code></li><li><code>D  src/app/dashboard/cart-ticket/page.tsx</code></li><li><code>M src/app/dashboard/settings/page.tsx</code></li><li><code>M src/app/dashboard/starter/page.tsx</code></li><li><code>M src/app/receipt/[bookingId]/page.tsx</code></li><li><code>M src/components/dashboard/CheckoutExtras.tsx</code></li></ul>
+<div class="card">
+<h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -362,16 +367,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>DENSE_UI_SPEC.md</code></td><td class="num">1</td><td class="num">2026-11-01 &middot; 8d</td></tr>
 <tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-20 &middot; 19d</td></tr>
 <tr><td><code>LAUNCH_PLAN_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-11-09 &middot; 0d</td></tr>
-<tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-26 &middot; 13d</td></tr>
-<tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-25 &middot; 14d</td></tr>
-<tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 16d</td></tr>
-<tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 17d</td></tr>
-<tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 17d</td></tr>
+<tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-26 &middot; 14d</td></tr>
+<tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-25 &middot; 15d</td></tr>
+<tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 17d</td></tr>
 <tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 17d</td></tr>
-<tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 17d</td></tr>
-<tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 17d</td></tr>
-<tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 17d</td></tr>
-<tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 17d</td></tr>
+<tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 18d</td></tr>
+<tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 18d</td></tr>
+<tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 18d</td></tr>
+<tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 18d</td></tr>
+<tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 18d</td></tr>
+<tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 18d</td></tr>
 <tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 19d</td></tr>
 <tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 19d</td></tr>
 <tr><td><code>ADMIN_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 19d</td></tr>
@@ -399,6 +404,11 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 19d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">2c69d16b</td><td class="num">2026-11-10</td><td>Golfer pay page: hide the saved card only after a definite decline</td></tr>
+<tr><td class="num">53857cdc</td><td class="num">2026-11-10</td><td>Stress fixes, review: sheet keeps re-reading during checkout; Home Retry clears; a declined card gets a new-card pay page</td></tr>
+<tr><td class="num">dcaec7c7</td><td class="num">2026-11-10</td><td>Tee sheet + Home stress-test fixes: phone width, live Home, quiet re-reads, declined pay link, clearer cash</td></tr>
+<tr><td class="num">dea6f5b4</td><td class="num">2026-11-09</td><td>CART-5: the receipt says the cart is paid; no cart ticket, no cart number (#351)</td></tr>
+<tr><td class="num">a47a7025</td><td class="num">2026-11-09</td><td>CART-5: the receipt says the cart is paid; no cart ticket, no cart number</td></tr>
 <tr><td class="num">ba4de30f</td><td class="num">2026-11-09</td><td>AUDIT-1109: close two register gaps; no silent failures in tonight's pages (#350)</td></tr>
 <tr><td class="num">3ffa5f8f</td><td class="num">2026-11-09</td><td>AUDIT-1109: update two source pins for the new register gate and the Register's key</td></tr>
 <tr><td class="num">74f02e7c</td><td class="num">2026-11-09</td><td>AUDIT-1109: close two register gaps; no silent failures in tonight's pages</td></tr>
@@ -406,11 +416,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">c40ae5e7</td><td class="num">2026-11-09</td><td>SCHED-2: Schedule in tabs, days adjusted like memberships, demand pricing explained</td></tr>
 <tr><td class="num">9713a9b6</td><td class="num">2026-11-09</td><td>EVENTS-2: event setup walk-through and a guided event page</td></tr>
 <tr><td class="num">7b62a972</td><td class="num">2026-11-09</td><td>MONEY-1: Money tab from Cam's notes (#348)</td></tr>
-<tr><td class="num">3932b9fc</td><td class="num">2026-11-09</td><td>MONEY-1: Money tab from Cam's notes</td></tr>
-<tr><td class="num">bd16e6d6</td><td class="num">2026-11-09</td><td>RECEIPT-3 + MSG-1: receipts you can see and text as a link; Messages from Cam's notes (#347)</td></tr>
-<tr><td class="num">2981ca95</td><td class="num">2026-11-09</td><td>RECEIPT-3 + MSG-1: receipts staff can see and text as a link; Messages from Cam's notes</td></tr>
-<tr><td class="num">69eb6ce5</td><td class="num">2026-11-09</td><td>DRAWER-1 + CART-4: the register is a loop; cart numbers, cart ticket, starter's sheet (#346)</td></tr>
-<tr><td class="num">62742a74</td><td class="num">2026-11-09</td><td>Regenerate code map and status board</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

@@ -4,14 +4,19 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-09 19:32 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `606ed81b` · working tree **13 dirty file(s)**
+Generated 2026-11-10 01:12 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `2c69d16b` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 179 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 184 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `2c69d16b` | 2026-11-10 | Golfer pay page: hide the saved card only after a definite decline |
+| `53857cdc` | 2026-11-10 | Stress fixes, review: sheet keeps re-reading during checkout; Home Retry clears; a declined card gets a new-card pay page |
+| `dcaec7c7` | 2026-11-10 | Tee sheet + Home stress-test fixes: phone width, live Home, quiet re-reads, declined pay link, clearer cash |
+| `dea6f5b4` | 2026-11-09 | CART-5: the receipt says the cart is paid; no cart ticket, no cart number (#351) |
+| `a47a7025` | 2026-11-09 | CART-5: the receipt says the cart is paid; no cart ticket, no cart number |
 | `ba4de30f` | 2026-11-09 | AUDIT-1109: close two register gaps; no silent failures in tonight's pages (#350) |
 | `3ffa5f8f` | 2026-11-09 | AUDIT-1109: update two source pins for the new register gate and the Register's key |
 | `74f02e7c` | 2026-11-09 | AUDIT-1109: close two register gaps; no silent failures in tonight's pages |
@@ -194,24 +199,13 @@ Generated 2026-11-09 19:32 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (13 file(s))
+### Uncommitted working tree (2 file(s))
 
-- `M STATUS.artifact.html`
-- `M STATUS.json`
-- `M STATUS.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/cart-numbers-test.ts`
-- `M scripts/words-guard.baseline.json`
-- `M src/app/api/receipt/[bookingId]/route.ts`
-- `D  src/app/dashboard/cart-ticket/page.tsx`
-- `M src/app/dashboard/settings/page.tsx`
-- `M src/app/dashboard/starter/page.tsx`
-- `M src/app/receipt/[bookingId]/page.tsx`
-- `M src/components/dashboard/CheckoutExtras.tsx`
 
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -297,16 +291,16 @@ This is the distinction a raw checkbox count gets wrong.
 | `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 8d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 19d |
 | `LAUNCH_PLAN_SPEC.md` | 0 | 2026-11-09 | 0d |
-| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 13d |
-| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 14d |
-| `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 16d |
-| `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 17d |
-| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 17d |
+| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 14d |
+| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 15d |
+| `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 17d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 17d |
-| `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 17d |
-| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 17d |
-| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 17d |
-| `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 17d |
+| `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 18d |
+| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 18d |
+| `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 18d |
+| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 18d |
+| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 18d |
+| `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 18d |
 | `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 19d |
 | `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 19d |
 | `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 19d |
@@ -335,6 +329,11 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `2c69d16b` 2026-11-10 — Golfer pay page: hide the saved card only after a definite decline
+- `53857cdc` 2026-11-10 — Stress fixes, review: sheet keeps re-reading during checkout; Home Retry clears; a declined card gets a new-card pay page
+- `dcaec7c7` 2026-11-10 — Tee sheet + Home stress-test fixes: phone width, live Home, quiet re-reads, declined pay link, clearer cash
+- `dea6f5b4` 2026-11-09 — CART-5: the receipt says the cart is paid; no cart ticket, no cart number (#351)
+- `a47a7025` 2026-11-09 — CART-5: the receipt says the cart is paid; no cart ticket, no cart number
 - `ba4de30f` 2026-11-09 — AUDIT-1109: close two register gaps; no silent failures in tonight's pages (#350)
 - `3ffa5f8f` 2026-11-09 — AUDIT-1109: update two source pins for the new register gate and the Register's key
 - `74f02e7c` 2026-11-09 — AUDIT-1109: close two register gaps; no silent failures in tonight's pages
@@ -342,11 +341,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `c40ae5e7` 2026-11-09 — SCHED-2: Schedule in tabs, days adjusted like memberships, demand pricing explained
 - `9713a9b6` 2026-11-09 — EVENTS-2: event setup walk-through and a guided event page
 - `7b62a972` 2026-11-09 — MONEY-1: Money tab from Cam's notes (#348)
-- `3932b9fc` 2026-11-09 — MONEY-1: Money tab from Cam's notes
-- `bd16e6d6` 2026-11-09 — RECEIPT-3 + MSG-1: receipts you can see and text as a link; Messages from Cam's notes (#347)
-- `2981ca95` 2026-11-09 — RECEIPT-3 + MSG-1: receipts staff can see and text as a link; Messages from Cam's notes
-- `69eb6ce5` 2026-11-09 — DRAWER-1 + CART-4: the register is a loop; cart numbers, cart ticket, starter's sheet (#346)
-- `62742a74` 2026-11-09 — Regenerate code map and status board
 
 ---
 

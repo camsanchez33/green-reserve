@@ -71,11 +71,16 @@ export default function OperatorSidebar({ active, onAlertClick }: {
   // "look around your dashboard" step without touching every page.
   useEffect(() => { recordTabVisit(active); }, [active]);
 
+  // A login without Messages never asks for its count (it was a 403 on every page).
+  const seesMessages = access.loaded && access.can('messages.use');
   useEffect(() => {
+    if (!seesMessages) return;
     fetch('/api/operator/messages?unreadCount=1')
       .then(r => r.ok ? r.json() : { count: 0 })
       .then(d => setUnreadMessages(d.count ?? 0))
       .catch(() => {});
+  }, [seesMessages]);
+  useEffect(() => {
     fetch('/api/operator/courses')
       .then(r => r.ok ? r.json() : null)
       .then(c => {

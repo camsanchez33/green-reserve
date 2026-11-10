@@ -19,11 +19,11 @@ export function cancelConfirmText(b: Cancelable, waive: boolean, canWaive: boole
       : b.cancellationFeeTotal > 0 && b.lateFeeOnCancel === true
         ? b.hasCard === false
           ? `Cancel ${b.golferName}'s booking?\n\nTheir free-cancellation window has closed, but there's no card on file, so the ${fee} late fee can't be charged.`
-          : `Cancel ${b.golferName}'s booking?\n\nTheir free-cancellation window has closed, so the ${fee} late fee is charged to their card now.${canWaive ? ' Use “Cancel, no fee” to cancel without it.' : ''}`
+          : `Cancel ${b.golferName}'s booking?\n\nTheir free-cancellation window has closed, so the ${fee} late fee is charged to their card now.${canWaive ? ' Use “Cancel, waive the fee” to cancel without it.' : ''}`
       : b.cancellationFeeTotal > 0 && b.lateFeeOnCancel === false
         ? `Cancel ${b.golferName}'s booking?\n\nThey're inside the free-cancellation window — nothing is charged.`
       : b.cancellationFeeTotal > 0
-        ? `Cancel ${b.golferName}'s booking?\n\nIf their free-cancellation window has already closed, the ${fee} late fee is charged to their card now.${canWaive ? ' Use “Cancel, no fee” to cancel without it.' : ''}`
+        ? `Cancel ${b.golferName}'s booking?\n\nIf their free-cancellation window has already closed, the ${fee} late fee is charged to their card now.${canWaive ? ' Use “Cancel, waive the fee” to cancel without it.' : ''}`
         : `Cancel ${b.golferName}'s booking?\n\nNo late fee on this booking — nothing is charged.`;
   return body + paid + noShow;
 }

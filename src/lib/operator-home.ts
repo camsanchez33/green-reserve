@@ -83,9 +83,10 @@ export async function operatorHome(courseId: string, opts: { money: boolean; mes
     dayShape(courseId, today),
     Promise.all(weeksBack.map(d => dayShape(courseId, d))),
     prisma.teeTime.findMany({
-      where: { courseId, date: today, status: { not: 'blocked' } },
+      // A blocked time that still holds a group keeps it on Home (late, no-shows, next) — stress test 2026-11-10.
+      where: { courseId, date: today, OR: [{ status: { not: 'blocked' } }, { bookings: { some: LIVE } }] },
       orderBy: { time: 'asc' },
-      select: { id: true, time: true, playersAvailable: true, playersBooked: true,
+      select: { id: true, time: true, status: true, playersAvailable: true, playersBooked: true,
         bookings: { where: LIVE, orderBy: { createdAt: 'asc' }, select: { id: true, golferName: true, players: true, paymentStatus: true, checkedInAt: true, noShowAt: true, status: true } } },
     }),
     declinedCards(courseId, opts.money),
@@ -110,7 +111,7 @@ export async function operatorHome(courseId: string, opts: { money: boolean; mes
   const comingUp: HomeSlot[] = slots.filter(s => s.time.slice(0, 5) >= clock.slice(0, 5)).slice(0, 6).map(s => ({
     id: s.id,
     time: s.time.slice(0, 5),
-    open: Math.max(0, s.playersAvailable - s.playersBooked),
+    open: s.status === 'blocked' ? 0 : Math.max(0, s.playersAvailable - s.playersBooked),
     groups: s.bookings.map(b => ({ id: b.id, name: b.golferName, players: b.players, paymentStatus: b.paymentStatus, checkedIn: !!b.checkedInAt || b.status === 'completed' })),
   }));
 

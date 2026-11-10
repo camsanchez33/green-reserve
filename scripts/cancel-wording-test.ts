@@ -10,8 +10,8 @@ const check = (label: string, ok: boolean, detail?: string) => { console.log(`${
 const b = (o: Partial<{ paymentStatus: string; cancellationFeeTotal: number; noShowAt: string | null }> = {}) => ({ golferName: 'Ann', paymentStatus: 'card_on_file', cancellationFeeTotal: 0, noShowAt: null, ...o });
 
 check('no fee: says nothing is charged', /nothing is charged/.test(cancelConfirmText(b(), false, true)));
-check('late fee: says it is charged if the window closed, offers no-fee', /\$10\.00 late fee is charged[\s\S]*Cancel, no fee/.test(cancelConfirmText(b({ cancellationFeeTotal: 1000 }), false, true)));
-check('late fee, no waive permission: no-fee not offered', !/Cancel, no fee/.test(cancelConfirmText(b({ cancellationFeeTotal: 1000 }), false, false)));
+check('late fee: says it is charged if the window closed, offers no-fee', /\$10\.00 late fee is charged[\s\S]*Cancel, waive the fee/.test(cancelConfirmText(b({ cancellationFeeTotal: 1000 }), false, true)));
+check('late fee, no waive permission: no-fee not offered', !/Cancel, waive the fee/.test(cancelConfirmText(b({ cancellationFeeTotal: 1000 }), false, false)));
 check('hold already taken: kept', /will NOT be refunded/.test(cancelConfirmText(b({ paymentStatus: 'cancellation_fee_charged', cancellationFeeTotal: 1000 }), false, true)));
 check('paid round: refunded', /already paid — it is refunded/.test(cancelConfirmText(b({ paymentStatus: 'paid' }), false, true)));
 check('no-show: charge taken now', /no-show charge is taken now/.test(cancelConfirmText(b({ noShowAt: '2026-10-08T10:00:00Z' }), false, true)));
