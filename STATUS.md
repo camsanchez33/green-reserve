@@ -4,14 +4,18 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-10 22:29 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `d56baf3a` · working tree **13 dirty file(s)**
+Generated 2026-11-10 22:56 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `26c63493` · working tree **7 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 185 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 189 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `26c63493` | 2026-11-10 | Member sign-in link: rate-limited, and the same answer for members and non-members |
+| `64b7ad04` | 2026-11-10 | STRESS-1110 #1: front desk sees what each group owes; lanes for parallel work |
+| `56d3f877` | 2026-11-10 | IMPORT-2: pro shop import reads real POS files and says what it couldn't (#353) |
+| `48c91709` | 2026-11-10 | IMPORT-2: the pro shop import reads real POS files and says what it couldn't |
 | `cb7a92cf` | 2026-11-10 | Tee sheet + Home: fixes from the stress test (#352) |
 | `f4f4057e` | 2026-11-10 | Golfer pay page: hide the saved card only after a definite decline |
 | `53857cdc` | 2026-11-10 | Stress fixes, review: sheet keeps re-reading during checkout; Home Retry clears; a declined card gets a new-card pay page |
@@ -200,21 +204,15 @@ Generated 2026-11-10 22:29 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (13 file(s))
+### Uncommitted working tree (7 file(s))
 
-- `A  STRESS_1110_SPEC.md`
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M  scripts/shop-import-test.ts`
-- `M  scripts/shop-options-db-test.ts`
-- `M  scripts/words-guard.baseline.json`
-- `M  src/app/api/operator/shop-items/route.ts`
-- `M  src/app/dashboard/shop/page.tsx`
-- `M  src/components/dashboard/ShopItemsForGroup.tsx`
-- `M  src/components/dashboard/StockTab.tsx`
-- `M  src/components/dashboard/UploadMany.tsx`
-- `M  src/lib/shop-catalog.ts`
-- `M  src/lib/shop-import.ts`
+- `M CLAUDE.md`
+- `M LANES.md`
+- `M STRESS_1110_SPEC.md`
+- `M scripts/stress-1110-test.ts`
+- `M src/app/dashboard/page.tsx`
+- `M src/components/dashboard/ShopItemsForGroup.tsx`
+- `M src/components/dashboard/TeeSheetList.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -299,10 +297,10 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-11-09 | 1d |
+| `CLAUDE.md` | 1 | 2026-11-10 | 0d |
 | `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 9d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 20d |
-| `STRESS_1110_SPEC.md` | 0 |  | nulld |
+| `STRESS_1110_SPEC.md` | 0 | 2026-11-10 | 0d |
 | `LAUNCH_PLAN_SPEC.md` | 0 | 2026-11-09 | 1d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 15d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 15d |
@@ -342,6 +340,10 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `26c63493` 2026-11-10 — Member sign-in link: rate-limited, and the same answer for members and non-members
+- `64b7ad04` 2026-11-10 — STRESS-1110 #1: front desk sees what each group owes; lanes for parallel work
+- `56d3f877` 2026-11-10 — IMPORT-2: pro shop import reads real POS files and says what it couldn't (#353)
+- `48c91709` 2026-11-10 — IMPORT-2: the pro shop import reads real POS files and says what it couldn't
 - `cb7a92cf` 2026-11-10 — Tee sheet + Home: fixes from the stress test (#352)
 - `f4f4057e` 2026-11-10 — Golfer pay page: hide the saved card only after a definite decline
 - `53857cdc` 2026-11-10 — Stress fixes, review: sheet keeps re-reading during checkout; Home Retry clears; a declined card gets a new-card pay page
@@ -350,10 +352,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `a47a7025` 2026-11-09 — CART-5: the receipt says the cart is paid; no cart ticket, no cart number
 - `ba4de30f` 2026-11-09 — AUDIT-1109: close two register gaps; no silent failures in tonight's pages (#350)
 - `3ffa5f8f` 2026-11-09 — AUDIT-1109: update two source pins for the new register gate and the Register's key
-- `74f02e7c` 2026-11-09 — AUDIT-1109: close two register gaps; no silent failures in tonight's pages
-- `de83521b` 2026-11-09 — EVENTS-2 + SCHED-2: event walk-through and guided event page; Schedule in tabs (#349)
-- `c40ae5e7` 2026-11-09 — SCHED-2: Schedule in tabs, days adjusted like memberships, demand pricing explained
-- `9713a9b6` 2026-11-09 — EVENTS-2: event setup walk-through and a guided event page
 
 ---
 

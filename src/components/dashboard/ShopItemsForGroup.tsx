@@ -27,7 +27,7 @@ export default function ShopItemsForGroup({ bookingId, lines, shopFeeCents, shop
   editable: boolean;
   /** shop.sell */
   canSell: boolean;
-  /** money.payments — staff without it see what was added, not the prices. */
+  /** Prices: what's owed for whoever can take the payment (STRESS-1110); on a paid round, money.payments only. */
   showMoney: boolean;
   onChanged: () => void | Promise<void>;
 }) {
@@ -128,7 +128,7 @@ export default function ShopItemsForGroup({ bookingId, lines, shopFeeCents, shop
           )}
         </ul>
       )}
-      {lines.length > 0 && !editable && <p className="text-[12px] text-ink-muted">{usd(shopTotal)} paid with the round.</p>}
+      {lines.length > 0 && !editable && showMoney && <p className="text-[12px] text-ink-muted">{usd(shopTotal)} paid with the round.</p>}
 
       {canEdit && !picking && (
         <button type="button" onClick={e => { e.stopPropagation(); openPicker(); }}
