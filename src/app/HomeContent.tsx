@@ -12,7 +12,7 @@ import s from './home.module.css';
 // /teesheet ("Learn more about the tee sheet"). Copy rules still hold: NO
 // durations, NO contract terms, fee sentences only from legal/LQ-2_FEE_COPY.md
 // (never "keep 100%" or that the course nets its green fee to the cent), and
-// only features that exist today (pro-shop access waits until it's built).
+// only features that exist today (pro shop marketing waits on Cam's scope).
 //
 // A server component; the only client JS is the demo island (TeeSheetDemo).
 
@@ -27,7 +27,7 @@ const DOES = [
   'Payments at the counter or on the golfer’s own phone, with a card on file for late-cancel and no-show fees',
   'Staff logins, with permissions you set for each person',
   'An AI assistant that answers questions about your day and drafts changes for you to confirm',
-  'Analytics for every day, and at the end of each month a written review of how the course did',
+  'Analytics for every day, and at the start of each month a written review of the month before',
 ];
 
 const FEATURES: { h: string; p: string; shot: string; device: 'laptop' | 'phone'; alt: string }[] = [
@@ -39,7 +39,7 @@ const FEATURES: { h: string; p: string; shot: string; device: 'laptop' | 'phone'
   },
   {
     h: 'Know how your course is doing.',
-    p: 'Revenue, how full the sheet was and what each round brought in, against the week before, in plain words. At the start of every month you get a written review of the month before, built only from your own numbers.',
+    p: 'Revenue, how full the sheet was and what each round brought in, against the period before, in plain words. At the start of every month you get a written review of the month before, built only from your own numbers.',
     shot: 'analytics', device: 'laptop',
     alt: 'The analytics page: revenue, tee sheet filled, rounds played and average per round, what to look at, and September’s monthly review',
   },

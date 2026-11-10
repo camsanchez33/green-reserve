@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-10 23:19 UTC · branch `claude/golfer-booking` · HEAD `2daa2c1` · working tree **2 dirty file(s)**
+Generated 2026-11-10 23:30 UTC · branch `claude/golfer-booking` · HEAD `66e1bb5` · working tree **8 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-11-03**. 53 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-11-03**. 54 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `66e1bb5` | 2026-11-10 | Regenerate code map and status board |
 | `802e9cd` | 2026-11-10 | Golfer booking: back links return where the golfer picked (members too); pin them in a test |
 | `90687d5` | 2026-11-10 | Golfer booking flow: soft cards, real links, phone layout, readable sign-in, honest empty state |
 | `3c6464b` | 2026-11-10 | Security lane: full sweep report 2026-11-10 (#354) |
@@ -68,13 +69,19 @@ Generated 2026-11-10 23:19 UTC · branch `claude/golfer-booking` · HEAD `2daa2c
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (2 file(s))
+### Uncommitted working tree (8 file(s))
 
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
+- `UU STATUS.artifact.html`
+- `UU STATUS.json`
+- `UU STATUS.md`
+- `M  docs/CODEMAP.md`
+- `M  docs/codemap.json`
+- `A  lanes/testing/2026-11-10-first-day.md`
+- `M  src/app/HomeContent.tsx`
+- `M  src/app/teesheet/page.tsx`
 
-Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
-these actually are first.
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -198,6 +205,7 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `66e1bb5` 2026-11-10 — Regenerate code map and status board
 - `802e9cd` 2026-11-10 — Golfer booking: back links return where the golfer picked (members too); pin them in a test
 - `90687d5` 2026-11-10 — Golfer booking flow: soft cards, real links, phone layout, readable sign-in, honest empty state
 - `3c6464b` 2026-11-10 — Security lane: full sweep report 2026-11-10 (#354)
@@ -209,7 +217,6 @@ Nothing awaiting review.
 - `ba4de30` 2026-11-09 — AUDIT-1109: close two register gaps; no silent failures in tonight's pages (#350)
 - `de83521` 2026-11-09 — EVENTS-2 + SCHED-2: event walk-through and guided event page; Schedule in tabs (#349)
 - `7b62a97` 2026-11-09 — MONEY-1: Money tab from Cam's notes (#348)
-- `bd16e6d` 2026-11-09 — RECEIPT-3 + MSG-1: receipts you can see and text as a link; Messages from Cam's notes (#347)
 
 ---
 

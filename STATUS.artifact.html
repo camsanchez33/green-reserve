@@ -117,14 +117,15 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-11-10 23:19 UTC</span><span>claude/golfer-booking @ 2daa2c1</span>
-    <span>2 uncommitted</span>
+    <span>2026-11-10 23:30 UTC</span><span>claude/golfer-booking @ 66e1bb5</span>
+    <span>8 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">53 runs have shipped that the queue doesn't know about</div>
+<div class="lede">54 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-11-03. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">66e1bb5</span><span>Regenerate code map and status board</span></li>
 <li><span class="h">802e9cd</span><span>Golfer booking: back links return where the golfer picked (members too); pin them in a test</span></li>
 <li><span class="h">90687d5</span><span>Golfer booking flow: soft cards, real links, phone layout, readable sign-in, honest empty state</span></li>
 <li><span class="h">3c6464b</span><span>Security lane: full sweep report 2026-11-10 (#354)</span></li>
@@ -188,9 +189,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">17</span><span class="l">Ideas parked</span></div>
 </div>
 <section><h2>Working tree right now</h2>
-<div class="card">
-<h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li></ul>
+<div class="card flag">
+<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
+<ul class="plain"><li><code>UU STATUS.artifact.html</code></li><li><code>UU STATUS.json</code></li><li><code>UU STATUS.md</code></li><li><code>M  docs/CODEMAP.md</code></li><li><code>M  docs/codemap.json</code></li><li><code>A  lanes/testing/2026-11-10-first-day.md</code></li><li><code>M  src/app/HomeContent.tsx</code></li><li><code>M  src/app/teesheet/page.tsx</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -274,6 +275,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-11-03 &middot; 6d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">66e1bb5</td><td class="num">2026-11-10</td><td>Regenerate code map and status board</td></tr>
 <tr><td class="num">802e9cd</td><td class="num">2026-11-10</td><td>Golfer booking: back links return where the golfer picked (members too); pin them in a test</td></tr>
 <tr><td class="num">90687d5</td><td class="num">2026-11-10</td><td>Golfer booking flow: soft cards, real links, phone layout, readable sign-in, honest empty state</td></tr>
 <tr><td class="num">3c6464b</td><td class="num">2026-11-10</td><td>Security lane: full sweep report 2026-11-10 (#354)</td></tr>
@@ -285,7 +287,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">ba4de30</td><td class="num">2026-11-09</td><td>AUDIT-1109: close two register gaps; no silent failures in tonight's pages (#350)</td></tr>
 <tr><td class="num">de83521</td><td class="num">2026-11-09</td><td>EVENTS-2 + SCHED-2: event walk-through and guided event page; Schedule in tabs (#349)</td></tr>
 <tr><td class="num">7b62a97</td><td class="num">2026-11-09</td><td>MONEY-1: Money tab from Cam's notes (#348)</td></tr>
-<tr><td class="num">bd16e6d</td><td class="num">2026-11-09</td><td>RECEIPT-3 + MSG-1: receipts you can see and text as a link; Messages from Cam's notes (#347)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

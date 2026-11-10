@@ -349,7 +349,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/receipt/shop/[id]` | golfer | token | page | `src/app/receipt/shop/[id]/page.tsx` | 38 |
 | `/sms-consent` | public | public | page | `src/app/sms-consent/page.tsx` | 56 |
 | `/statement/[id]` | public | token | page | `src/app/statement/[id]/page.tsx` | 131 |
-| `/teesheet` | public | public | page | `src/app/teesheet/page.tsx` | 219 |
+| `/teesheet` | public | public | page | `src/app/teesheet/page.tsx` | 220 |
 | `/terms` | public | public | page | `src/app/terms/page.tsx` | 239 |
 
 ## Libraries
