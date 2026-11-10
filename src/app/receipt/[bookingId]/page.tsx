@@ -240,7 +240,7 @@ function ReceiptPageInner() {
                   {charges.map((c, i) => (
                     <div key={i} className="flex justify-between gap-3 px-4 py-3">
                       <span className="text-ink-soft">{c.label}{c.refunded ? ' · refunded' : ''}</span>
-                      <span className={c.refunded ? 'text-ink-muted line-through' : 'font-medium text-ink'}>{c.amountCents < 0 ? `−${dollars(-c.amountCents)}` : dollars(c.amountCents)}</span>
+                      <span className={`shrink-0 ${c.refunded ? 'text-ink-muted line-through' : 'font-medium text-ink'}`}>{c.amountCents < 0 ? `−${dollars(-c.amountCents)}` : dollars(c.amountCents)}</span>
                     </div>
                   ))}
                   <div className="flex justify-between items-baseline px-4 py-3.5 bg-paper">
