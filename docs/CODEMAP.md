@@ -53,7 +53,7 @@ this script with a non-zero exit — that is the point of the tag.
 | url | auth | guard | methods | file | lines |
 |---|---|---|---|---|---|
 | `/` | public | public | page | `src/app/page.tsx` | 15 |
-| `/admin` | admin | client-side | page | `src/app/admin/page.tsx` | 453 |
+| `/admin` | admin | client-side | page | `src/app/admin/page.tsx` | 462 |
 | `/admin/activity` | admin | client-side | page | `src/app/admin/activity/page.tsx` | 9 |
 | `/admin/announcements` | admin | client-side | page | `src/app/admin/announcements/page.tsx` | 261 |
 | `/admin/audit` | admin | client-side | page | `src/app/admin/audit/page.tsx` | 137 |
@@ -622,7 +622,7 @@ Sorted the same way.
 | `src/components/ui/StatusDot.tsx` | 76 | 36 |  | `StatusDot` |
 | `src/components/ui/field.ts` | 57 | 8 | MP-9: | `INPUT`, `INPUT_COMPACT` |
 | `src/components/dashboard/LoadError.tsx` | 22 | 16 | SD-10. | `LoadError` |
-| `src/components/admin/AdminSidebar.tsx` | 19 | 238 |  | `AdminNavKey`, `default (AdminSidebar)` |
+| `src/components/admin/AdminSidebar.tsx` | 19 | 285 |  | `AdminNavKey`, `default (AdminSidebar)` |
 | `src/components/dashboard/Toast.tsx` | 15 | 70 | SD-2. | `toast`, `Toaster`, `ToastKind` |
 | `src/components/ui/Eyebrow.tsx` | 13 | 19 |  | `Eyebrow`, `EYEBROW` |
 | `src/components/OperatorSidebar.tsx` | 12 | 339 |  | `default (OperatorSidebar)`, `OperatorNavKey` |

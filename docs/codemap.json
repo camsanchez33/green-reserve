@@ -1048,7 +1048,7 @@
     },
     {
       "path": "src/app/admin/page.tsx",
-      "lines": 453,
+      "lines": 462,
       "purpose": "ADMIN-C (Cam 2026-10-22, mockup C \"Clean hub\", after Stripe's dashboard):",
       "brain": [],
       "exports": [
@@ -10554,7 +10554,7 @@
     },
     {
       "path": "src/components/admin/AdminSidebar.tsx",
-      "lines": 238,
+      "lines": 285,
       "purpose": "",
       "brain": [],
       "exports": [
