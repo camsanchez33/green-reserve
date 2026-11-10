@@ -29,6 +29,7 @@ for (const [tok, cls] of [['--color-paid-fill:   #CFE8D6', '.seatPaid { backgrou
 check('the strip sums green fees only', demo.includes('courseShare(d, paid)') && demo.includes('courseShare(d, owes)') && demo.includes('v + g.n * d.rate'));
 check('the card leaves the booking fee off unpaid and counter-paid groups', demo.includes("g.done && g.src === 'online' ? roundTotal(d, g.n) : g.n * d.rate"));
 check('the header says closed before Full, as the real card', page.includes("`${panelSlot.seatsClosed} closed`") && demo.includes('closed > 0 ? `${closed} closed`'));
+check('closed seats cut what the golfer phone offers', demo.includes('const free = (r: Row) => CAP - booked(r) - (r.closed ?? 0);') && demo.includes('free(r) >= st.n'));
 // Labels the product no longer has stay out of the demo.
 for (const gone of ['Take cash · check in', 'Close to new bookings', 'Open to anyone', 'tee times</span>', 'No Card Required']) check(`the demo no longer says "${gone}"`, !demo.includes(gone));
 

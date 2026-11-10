@@ -150,7 +150,7 @@ function TeeSheet() {
         <div className={s.strip}>
           <div><small>Players</small><span><b>{players}</b> of {spots}</span><small>spots booked</small></div>
           {d.today
-            ? <div><small>On the course</small><span><b>{onCourse.length}</b> {onCourse.length === 1 ? 'group' : 'groups'}</span><small>{onCourse.reduce((n, g) => n + g.n, 0)} players</small></div>
+            ? <div><small>On the course</small><span><b>{onCourse.length}</b> {onCourse.length === 1 ? 'group' : 'groups'}</span><small>{(n => `${n} player${n === 1 ? '' : 's'}`)(onCourse.reduce((n, g) => n + g.n, 0))}</small></div>
             : <div><small>Groups booked</small><span><b>{groups.length}</b></span><small>on {timesBooked} of {d.rows.filter(r => !r.blocked).length} tee times</small></div>}
           <div><small>Checked in</small><span><b>{inPlayers}</b> of {players}</span><small>players</small></div>
           <div><small>Paid</small><span><b>{dollars(courseShare(d, paid))}</b></span><small>{paid.length} group{paid.length === 1 ? '' : 's'}</small></div>
@@ -213,7 +213,7 @@ function TeeSheet() {
             <div>
               <b>{fmt(panel.t)}{panel.t === nextUp && <em>Next up</em>}</b>
               <span>{d.short}</span>
-              <span className={s.pnlFacts}>{panel.blocked ? <i>Blocked</i> : <>{booked(panel)} of {CAP} players · {open > 0 ? `${open} open` : closed > 0 ? `${closed} closed` : <span className={s.full}>Full</span>}</>}<span className={s.dim}>18 holes · {money(d.rate)} a player</span></span>
+              <span className={s.pnlFacts}>{panel.blocked ? <i>Blocked</i> : <span>{booked(panel)} of {CAP} players · {open > 0 ? `${open} open` : closed > 0 ? `${closed} closed` : <span className={s.full}>Full</span>}</span>}<span className={s.dim}>18 holes · {money(d.rate)} a player</span></span>
             </div>
             <button type="button" aria-label="Close" onClick={() => update(x => ({ ...x, open: null, edit: null, toast: '' }))}>×</button>
           </div>
@@ -319,7 +319,7 @@ function GolferPhone() {
               <div className={s.slotRow}>
                 <span><b>{fmt(r.t)}</b><small>{free(r)} spots</small></span>
                 <span className={s.slotR}><em>${d.rate} / player</em>
-                  <button type="button" aria-pressed={st.sel === r.t} onClick={() => update(x => ({ ...x, sel: x.sel === r.t ? null : r.t }))}>{st.sel === r.t ? 'Selected' : 'Select'}</button>
+                  <button type="button" aria-pressed={st.sel === r.t} onClick={() => update(x => ({ ...x, step: 'pick', sel: x.sel === r.t ? null : r.t }))}>{st.sel === r.t ? 'Selected' : 'Select'}</button>
                 </span>
               </div>
               {st.sel === r.t && (

@@ -67,7 +67,7 @@
 .main { flex: 1 1 auto; min-width: 0; padding: 12px 12px 10px; display: flex; flex-direction: column; gap: 8px; }
 .sheetTitle { font-size: 21px; font-weight: 700; line-height: 1.1; letter-spacing: -.01em; }
 /* The number strip above the sheet: label · value · what it counts. */
-.strip { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; background: #fff; border-radius: 8px; box-shadow: 0 0 0 1px rgba(20,24,20,.06), 0 1px 2px rgba(20,24,20,.05); padding: 8px 10px; }
+.strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; background: #fff; border-radius: 8px; box-shadow: 0 0 0 1px rgba(20,24,20,.06), 0 1px 2px rgba(20,24,20,.05); padding: 8px 10px; }
 .strip > div { display: flex; flex-direction: column; min-width: 0; }
 .strip small { font-size: 10.5px; color: var(--muted); white-space: nowrap; }
 .strip > div > small:first-child { color: #3F453E; }
@@ -151,7 +151,7 @@
 .ci:hover { background: #0F2C1F; }
 .appFoot { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 4; padding: 6px 12px; border-radius: 7px; background: #fff; box-shadow: 0 0 0 1px rgba(20,24,20,.08), 0 1px 2px rgba(20,24,20,.05); font-size: 12px; white-space: nowrap; pointer-events: none; }
 .appFoot[data-empty] { background: none; box-shadow: none; padding: 0; }
-.full { color: #A3452F; font-weight: 500; }
+.pnlFacts .full { display: inline; color: #A3452F; font-weight: 500; }
 .mName { display: none; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; }
 .mName i { width: 18px; height: 18px; border-radius: 4px; color: #fff; font-style: normal; font-size: 8.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
 .toast { color: var(--forest); font-weight: 600; }
@@ -287,8 +287,6 @@
   .rail { display: none; }
   .mName { display: flex; }
   .main { padding-bottom: 48px; }
-  .strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .strip > div:last-child { grid-column: span 2; }
   .views, .addTime { display: none; }
   .find { width: 100%; }
   .appFoot { white-space: normal; width: max-content; max-width: 90%; }
