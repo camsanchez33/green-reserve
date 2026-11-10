@@ -75,7 +75,7 @@ starts cold. So the savings come from:
    ┌──────────┬───────┼─────────┬──────────┬──────────┐
  Admin    Homepage  Golfer   Testing   Security   Company      ← lanes: plan, build, report
    │          │       │         │          │          │
- scout · Explore · builder · auditors · final-reviewer          ← each lane's own helpers, cheapest that fits
+ scout · check-runner · builder · auditors · light/final-reviewer ← each lane's own helpers, cheapest that fits
 ```
 - **Every question goes up to Cam, whoever raises it:** a lane, a helper or a reviewer. A lane sends it to Build and
   keeps working on whatever doesn't depend on it.
@@ -96,17 +96,35 @@ piece of work to the cheapest agent that can do it right. The agents and their m
 | Work inside a lane | Give it to | Model · effort |
 |---|---|---|
 | Lookups: "where is X", "which routes write Y", "what does route Z check" | `scout` | Haiku · low |
-| Broad searches across many files where only the answer is needed | `Explore` | session model · pass `effort: "low"` |
-| Mechanical edits from an exact plan you wrote (UI, copy, tests) | `builder` | Sonnet · medium |
-| Design / no-silent-failure sweeps of pages | `design-auditor`, `admin-ux-auditor` | Sonnet · medium |
-| Checking shipped code against a spec | `spec-conformance` | Opus · medium |
-| Security sweeps of routes and money | `security-auditor` | Opus · high |
-| Every diff before a push | `final-reviewer` | Fable · high |
-| Judgement, planning, money, sign-in, anything ambiguous | the lane session itself | — |
+| Running the checks (parse, tsc, guards, pinned tests) before a review | `check-runner` | Haiku · low |
+| Broad searches across many files where only the answer is needed | `Explore` | pass `model: "haiku"`, `effort: "low"` |
+| Mechanical edits from an exact plan you wrote | `builder` | Sonnet · pass `effort: "low"` for copy/markup, medium for logic |
+| Design / no-silent-failure sweeps of pages | `design-auditor`, `admin-ux-auditor` | Sonnet · low |
+| Checking shipped code against a spec | `spec-conformance` | Sonnet · medium |
+| Security sweeps — only when a diff touches sign-in, money or routes | `security-auditor` | Opus · high |
+| Review of a UI / copy / test-only diff | `light-reviewer` | Sonnet · medium |
+| Review of a diff touching money, sign-in, `src/lib`, `src/app/api`, `prisma`, crons, pay pages or config | `final-reviewer` | Fable · high |
+| Docs-only or generated-file diff (codemap, STATUS, lanes/, specs) | no reviewer — CI's drift check covers it | — |
+| Judgement, planning, money, sign-in, anything ambiguous | the lane session itself | see "Lane heads" |
 
-Model and effort are fixed in each `.claude/agents/*.md` frontmatter, so picking the agent picks both. For a
-general-purpose or `Explore` helper, pass `effort: "low"` (Cam 2026-11-10 asked for lower effort on easy work);
-never lower the effort of `final-reviewer` or `security-auditor`.
+**Reviewer tiers (Cam 2026-11-10: "tiered … some haiku too … save money but keep it effective").** Run
+`check-runner` first, then hand the reviewer its output so the reviewer reads instead of running commands. Pick
+the reviewer by the files in the diff, not by how small it looks: one changed line in `src/lib` is a
+`final-reviewer` diff. `light-reviewer` answers `ESCALATE` when it sees such a file — then use `final-reviewer`.
+Never lower the effort of `final-reviewer` or `security-auditor`.
+
+**Lane heads (Cam 2026-11-10).** Build and Admin run on Opus (money, sign-in, security). Homepage and Golfer run on
+Sonnet — their files hold no money or sign-in, and anything that does goes to Build. A lane head never runs
+on a bigger model than its table says; a job that needs more goes up to Build.
+
+**Spend rules (Cam 2026-11-10: "we are burning usage").**
+- Build does not subscribe to lane PRs. A lane messages Build once its PR's GitHub CI is green; Build checks once and merges.
+- Lanes don't commit `STATUS.*`. Build regenerates the status board on its own branch after merges. Lanes still
+  regenerate `docs/CODEMAP.md` / `docs/codemap.json`, which CI checks.
+- One job at a time per lane. When the job is done, the lane reports and goes idle; Build archives it and starts the
+  next job in a fresh session, so no session carries a long context.
+- A job that passes about 30 turns stops and reports to Build with what's left.
+- Build hands itself over to a fresh session (a short note in `lanes/build/`) once its context is large.
 
 - **Don't delegate small work.** Under about 3 files, or anything the session already has open, it does itself: a
   sub-agent starts cold and re-reads everything.
@@ -117,7 +135,7 @@ never lower the effort of `final-reviewer` or `security-auditor`.
 
 ## Build
 - Works LAUNCH_PLAN_SPEC.md in order for the dashboard; since Cam 2026-11-10 ("let's get 4 lanes going: the homepage, the dashboard, the admin and the golfer booking page") plan sections 1–4 run at once, one lane each, then the decision files (e.g. STRESS_1110_SPEC.md), one PR at a time.
-- Every push: final-reviewer PASS first; merge only on green GitHub CI (Vercel preview is not a gate).
+- Every push: a PASS from the reviewer its files call for (above) first; merge only on green GitHub CI (Vercel preview is not a gate).
 - Money, sign-in, tenant isolation and schema are done by Build's main session only, never a cheaper model.
 - Picks up findings from `lanes/*/` after they merge: confirmed bugs are fixed, product questions go to Cam.
 

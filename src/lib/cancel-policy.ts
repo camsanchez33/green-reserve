@@ -187,7 +187,7 @@ export function cancelNowWords(b: {
     return { banner: s, confirm: s, subtitle: s };
   }
   if (b.feeCents <= 0) {
-    return { banner: 'Free cancellation any time — no late-cancellation fee.', confirm: 'Cancel for free — no charge to your card.', subtitle: 'Free to cancel any time — no late-cancellation fee.' };
+    return { banner: 'Free cancellation any time — no late-cancellation fee.', confirm: 'Cancel for free — nothing is charged.', subtitle: 'Free to cancel any time — no late-cancellation fee.' };
   }
   const fee = money(b.feeCents);
   const isHold = (b.timing ?? 'hold_at_cutoff') === 'hold_at_cutoff';

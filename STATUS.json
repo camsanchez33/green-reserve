@@ -1,24 +1,49 @@
 {
-  "generatedAt": "2026-11-10T23:24:46.109Z",
+  "generatedAt": "2026-11-10T23:36:40.733Z",
   "repo": {
-    "head": "260602c0",
+    "head": "6b4f9bd6",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 8,
+    "dirtyCount": 12,
     "dirty": [
-      "UU STATUS.artifact.html",
-      "UU STATUS.json",
-      "UU STATUS.md",
-      "M  docs/CODEMAP.md",
-      "M  docs/codemap.json",
-      "A  lanes/testing/2026-11-10-first-day.md",
-      "M  src/app/HomeContent.tsx",
-      "M  src/app/teesheet/page.tsx"
+      "M .claude/agents/admin-ux-auditor.md",
+      " M .claude/agents/design-auditor.md",
+      " M .claude/agents/final-reviewer.md",
+      " M .claude/agents/spec-conformance.md",
+      " M CLAUDE.md",
+      " M LANES.md",
+      " M scripts/policy-wording-test.ts",
+      " M src/lib/cancel-policy.ts",
+      " M src/lib/email.ts",
+      "?? .claude/agents/check-runner.md",
+      "?? .claude/agents/light-reviewer.md",
+      "?? lanes/build/"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "8546021e",
+        "date": "2026-11-10T18:30:49-05:00",
+        "subject": "Lanes: four build lanes, one merge queue, effort per worker (#358)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "38567aa6",
+        "date": "2026-11-10T18:24:32-05:00",
+        "subject": "Testing lane: a course's first day — findings report (#359)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "55ae3814",
+        "date": "2026-11-10T18:21:37-05:00",
+        "subject": "Homepage writing: true to what ships today (#357)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "2b439771",
         "date": "2026-11-10T23:08:08+00:00",
@@ -1793,6 +1818,21 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "8546021e",
+      "date": "2026-11-10",
+      "subject": "Lanes: four build lanes, one merge queue, effort per worker (#358)"
+    },
+    {
+      "h": "38567aa6",
+      "date": "2026-11-10",
+      "subject": "Testing lane: a course's first day — findings report (#359)"
+    },
+    {
+      "h": "55ae3814",
+      "date": "2026-11-10",
+      "subject": "Homepage writing: true to what ships today (#357)"
+    },
+    {
       "h": "260602c0",
       "date": "2026-11-10",
       "subject": "queue/spec update"
@@ -1836,21 +1876,6 @@
       "h": "3f552007",
       "date": "2026-11-10",
       "subject": "STRESS-1110 #1, review: paid shop items stay behind money.payments; decisions from the security sweep"
-    },
-    {
-      "h": "26c63493",
-      "date": "2026-11-10",
-      "subject": "Member sign-in link: rate-limited, and the same answer for members and non-members"
-    },
-    {
-      "h": "64b7ad04",
-      "date": "2026-11-10",
-      "subject": "STRESS-1110 #1: front desk sees what each group owes; lanes for parallel work"
-    },
-    {
-      "h": "56d3f877",
-      "date": "2026-11-10",
-      "subject": "IMPORT-2: pro shop import reads real POS files and says what it couldn't (#353)"
     }
   ]
 }
