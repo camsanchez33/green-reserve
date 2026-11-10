@@ -41,7 +41,7 @@ const FEATURES: { h: string; p: string; shot: string; device: 'laptop' | 'phone'
     h: 'Know how your course is doing.',
     p: 'Revenue, how full the sheet was and what each round brought in, against the week before, in plain words. At the start of every month you get a written review of the month before, built only from your own numbers.',
     shot: 'analytics', device: 'laptop',
-    alt: 'The analytics page: revenue, tee sheet filled, rounds played and average per round, what to look at, and September’s monthly review',
+    alt: 'The analytics page: what to look at, with a button beside each, and the monthly review of the month before',
   },
   {
     h: 'Paid at the counter or on their phone.',

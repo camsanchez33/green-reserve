@@ -78,7 +78,7 @@ async function main() {
   {
     const ctx = await laptop(); const p = await ctx.newPage();
     await p.goto(`${BASE}/dashboard`, { waitUntil: 'load', timeout: 240000 });
-    await p.getByText('Next up').first().waitFor({ timeout: 120000 });
+    await p.locator('[aria-label*=" booked"]').first().waitFor({ timeout: 120000 }); // DENSE-4: the seat rows
     await clean(p);
     await p.evaluate(() => window.scrollTo(0, 0));
     await shot(p, 'tee-sheet');
@@ -105,7 +105,7 @@ async function main() {
       return route.fulfill({ status: 200, contentType: 'application/x-ndjson', body: lines.map(l => JSON.stringify(l)).join('\n') + '\n' });
     });
     await p.goto(`${BASE}/dashboard`, { waitUntil: 'load', timeout: 240000 });
-    await p.getByText('Next up').first().waitFor({ timeout: 120000 });
+    await p.locator('[aria-label*=" booked"]').first().waitFor({ timeout: 120000 }); // DENSE-4: the seat rows
     await clean(p);
     await p.getByRole('button', { name: /Open the assistant|Ask the assistant/ }).first().click();
     await p.getByLabel('Message the assistant').fill('Who’s still to check in this afternoon?');
