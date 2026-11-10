@@ -8191,10 +8191,14 @@
     },
     {
       "path": "src/app/book/BookClient.tsx",
-      "lines": 827,
+      "lines": 842,
       "purpose": "",
       "brain": [],
       "exports": [
+        {
+          "name": "backToTimesHref",
+          "kind": "fn"
+        },
         {
           "name": "BookInitial",
           "kind": "type"
@@ -8220,6 +8224,7 @@
       "imports": [
         "@/components/CourseHeaderBar",
         "@/components/TrustNote",
+        "@/components/ui/Card",
         "@/components/ui/field",
         "@/lib/booking-fees",
         "@/lib/cancel-policy",
@@ -8230,6 +8235,7 @@
         "@stripe/stripe-js",
         "@stripe/stripe-js/pure",
         "lucide-react",
+        "next/link",
         "next/navigation",
         "react"
       ],
@@ -8476,7 +8482,7 @@
     },
     {
       "path": "src/app/courses/[slug]/CourseBookingClient.tsx",
-      "lines": 1883,
+      "lines": 1888,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8494,6 +8500,7 @@
         "@/components/CourseJoin",
         "@/components/CoursePacks",
         "@/components/TrustNote",
+        "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/lib/booking-fees",
         "@/lib/booking-window",
@@ -8519,7 +8526,7 @@
     },
     {
       "path": "src/app/courses/[slug]/account/AccountPortalClient.tsx",
-      "lines": 291,
+      "lines": 293,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8536,6 +8543,7 @@
       "imports": [
         "@/components/CourseJoin",
         "@/components/CoursePacks",
+        "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "lucide-react",
         "next/link",
@@ -8599,7 +8607,7 @@
     },
     {
       "path": "src/app/courses/[slug]/member/page.tsx",
-      "lines": 874,
+      "lines": 875,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -13349,9 +13357,12 @@
         "src/app/admin/login/page.tsx",
         "src/app/admin/security/page.tsx",
         "src/app/admin/set-password/page.tsx",
+        "src/app/book/BookClient.tsx",
         "src/app/cam/approve/page.tsx",
         "src/app/cam/page.tsx",
         "src/app/contact/page.tsx",
+        "src/app/courses/[slug]/CourseBookingClient.tsx",
+        "src/app/courses/[slug]/account/AccountPortalClient.tsx",
         "src/app/dashboard/analytics/page.tsx",
         "src/app/dashboard/events/page.tsx",
         "src/app/dashboard/golfers/[key]/page.tsx",
