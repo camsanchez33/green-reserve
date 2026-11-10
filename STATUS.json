@@ -1,19 +1,31 @@
 {
-  "generatedAt": "2026-11-10T23:08:04.985Z",
+  "generatedAt": "2026-11-10T23:24:46.109Z",
   "repo": {
-    "head": "c14fb38e",
+    "head": "260602c0",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 3,
+    "dirtyCount": 8,
     "dirty": [
-      "M CLAUDE.md",
-      " M LANES.md",
-      "M  src/app/globals.css"
+      "UU STATUS.artifact.html",
+      "UU STATUS.json",
+      "UU STATUS.md",
+      "M  docs/CODEMAP.md",
+      "M  docs/codemap.json",
+      "A  lanes/testing/2026-11-10-first-day.md",
+      "M  src/app/HomeContent.tsx",
+      "M  src/app/teesheet/page.tsx"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "2b439771",
+        "date": "2026-11-10T23:08:08+00:00",
+        "subject": "Lanes, review: sign-in and money routes stay with Build; the admin phone CSS lands with the Admin sidebar PR",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "c14fb38e",
         "date": "2026-11-10T23:05:17+00:00",
@@ -1568,16 +1580,16 @@
       "ageDays": 1
     },
     {
-      "file": "OPERATOR_REWORK_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-25",
-      "ageDays": 15
-    },
-    {
       "file": "STAFF_POLICY_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-26",
       "ageDays": 15
+    },
+    {
+      "file": "OPERATOR_REWORK_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-25",
+      "ageDays": 16
     },
     {
       "file": "ADMIN_V5_SPEC.md",
@@ -1781,6 +1793,21 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "260602c0",
+      "date": "2026-11-10",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "9c71d7a0",
+      "date": "2026-11-10",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "2b439771",
+      "date": "2026-11-10",
+      "subject": "Lanes, review: sign-in and money routes stay with Build; the admin phone CSS lands with the Admin sidebar PR"
+    },
+    {
       "h": "c14fb38e",
       "date": "2026-11-10",
       "subject": "Lanes: four build lanes, one merge queue, worker effort levels; admin content full width on phones"
@@ -1824,21 +1851,6 @@
       "h": "56d3f877",
       "date": "2026-11-10",
       "subject": "IMPORT-2: pro shop import reads real POS files and says what it couldn't (#353)"
-    },
-    {
-      "h": "48c91709",
-      "date": "2026-11-10",
-      "subject": "IMPORT-2: the pro shop import reads real POS files and says what it couldn't"
-    },
-    {
-      "h": "cb7a92cf",
-      "date": "2026-11-10",
-      "subject": "Tee sheet + Home: fixes from the stress test (#352)"
-    },
-    {
-      "h": "f4f4057e",
-      "date": "2026-11-10",
-      "subject": "Golfer pay page: hide the saved card only after a definite decline"
     }
   ]
 }

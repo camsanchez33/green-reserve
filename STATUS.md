@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-10 23:08 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `c14fb38e` · working tree **3 dirty file(s)**
+Generated 2026-11-10 23:24 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `260602c0` · working tree **8 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 194 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 195 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `2b439771` | 2026-11-10 | Lanes, review: sign-in and money routes stay with Build; the admin phone CSS lands with the Admin sidebar PR |
 | `c14fb38e` | 2026-11-10 | Lanes: four build lanes, one merge queue, worker effort levels; admin content full width on phones |
 | `3c6464b6` | 2026-11-10 | Security lane: full sweep report 2026-11-10 (#354) |
 | `807abc12` | 2026-11-10 | Front desk sees what each group owes; member sign-in link rate-limited; lanes (#356) |
@@ -209,11 +210,16 @@ Generated 2026-11-10 23:08 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (3 file(s))
+### Uncommitted working tree (8 file(s))
 
-- `M CLAUDE.md`
-- `M LANES.md`
-- `M  src/app/globals.css`
+- `UU STATUS.artifact.html`
+- `UU STATUS.json`
+- `UU STATUS.md`
+- `M  docs/CODEMAP.md`
+- `M  docs/codemap.json`
+- `A  lanes/testing/2026-11-10-first-day.md`
+- `M  src/app/HomeContent.tsx`
+- `M  src/app/teesheet/page.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -303,8 +309,8 @@ This is the distinction a raw checkbox count gets wrong.
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 20d |
 | `STRESS_1110_SPEC.md` | 0 | 2026-11-10 | 0d |
 | `LAUNCH_PLAN_SPEC.md` | 0 | 2026-11-09 | 1d |
-| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 15d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 15d |
+| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 16d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 18d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 18d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 19d |
@@ -341,6 +347,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `260602c0` 2026-11-10 — queue/spec update
+- `9c71d7a0` 2026-11-10 — queue/spec update
+- `2b439771` 2026-11-10 — Lanes, review: sign-in and money routes stay with Build; the admin phone CSS lands with the Admin sidebar PR
 - `c14fb38e` 2026-11-10 — Lanes: four build lanes, one merge queue, worker effort levels; admin content full width on phones
 - `3c6464b6` 2026-11-10 — Security lane: full sweep report 2026-11-10 (#354)
 - `807abc12` 2026-11-10 — Front desk sees what each group owes; member sign-in link rate-limited; lanes (#356)
@@ -350,9 +359,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `26c63493` 2026-11-10 — Member sign-in link: rate-limited, and the same answer for members and non-members
 - `64b7ad04` 2026-11-10 — STRESS-1110 #1: front desk sees what each group owes; lanes for parallel work
 - `56d3f877` 2026-11-10 — IMPORT-2: pro shop import reads real POS files and says what it couldn't (#353)
-- `48c91709` 2026-11-10 — IMPORT-2: the pro shop import reads real POS files and says what it couldn't
-- `cb7a92cf` 2026-11-10 — Tee sheet + Home: fixes from the stress test (#352)
-- `f4f4057e` 2026-11-10 — Golfer pay page: hide the saved card only after a definite decline
 
 ---
 
