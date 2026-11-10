@@ -1,21 +1,39 @@
 {
-  "generatedAt": "2026-11-10T01:12:42.646Z",
+  "generatedAt": "2026-11-10T22:29:08.818Z",
   "repo": {
-    "head": "2c69d16b",
+    "head": "d56baf3a",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 2,
+    "dirtyCount": 13,
     "dirty": [
-      "M docs/CODEMAP.md",
-      " M docs/codemap.json"
+      "A  STRESS_1110_SPEC.md",
+      " M docs/CODEMAP.md",
+      " M docs/codemap.json",
+      "M  scripts/shop-import-test.ts",
+      "M  scripts/shop-options-db-test.ts",
+      "M  scripts/words-guard.baseline.json",
+      "M  src/app/api/operator/shop-items/route.ts",
+      "M  src/app/dashboard/shop/page.tsx",
+      "M  src/components/dashboard/ShopItemsForGroup.tsx",
+      "M  src/components/dashboard/StockTab.tsx",
+      "M  src/components/dashboard/UploadMany.tsx",
+      "M  src/lib/shop-catalog.ts",
+      "M  src/lib/shop-import.ts"
     ],
-    "looksLikeRunInProgress": false
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
       {
-        "h": "2c69d16b",
-        "date": "2026-11-10T01:12:40+00:00",
+        "h": "cb7a92cf",
+        "date": "2026-11-10T17:22:17-05:00",
+        "subject": "Tee sheet + Home: fixes from the stress test (#352)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "f4f4057e",
+        "date": "2026-11-10T01:12:45+00:00",
         "subject": "Golfer pay page: hide the saved card only after a definite decline",
         "ids": [],
         "matches": []
@@ -1328,7 +1346,7 @@
       "line": 2412,
       "hash": "b88c8bf3",
       "shipDate": "2026-07-22",
-      "ageDays": 110
+      "ageDays": 111
     }
   ],
   "next": [
@@ -1470,31 +1488,31 @@
       "file": "CLAUDE.md",
       "openRefs": 1,
       "lastTouched": "2026-11-09",
-      "ageDays": 0
+      "ageDays": 1
     },
     {
       "file": "DENSE_UI_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-11-01",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
+    },
+    {
+      "file": "STRESS_1110_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "",
+      "ageDays": null
     },
     {
       "file": "LAUNCH_PLAN_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-11-09",
-      "ageDays": 0
-    },
-    {
-      "file": "STAFF_POLICY_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-26",
-      "ageDays": 14
+      "ageDays": 1
     },
     {
       "file": "OPERATOR_REWORK_SPEC.md",
@@ -1503,208 +1521,219 @@
       "ageDays": 15
     },
     {
+      "file": "STAFF_POLICY_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-26",
+      "ageDays": 15
+    },
+    {
       "file": "ADMIN_V5_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-23",
-      "ageDays": 17
+      "ageDays": 18
     },
     {
       "file": "HOMEPAGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-23",
-      "ageDays": 17
+      "ageDays": 18
     },
     {
       "file": "AGREEMENT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 18
+      "ageDays": 19
     },
     {
       "file": "CALL_SCHEDULING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 18
+      "ageDays": 19
     },
     {
       "file": "ONBOARDING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 18
+      "ageDays": 19
     },
     {
       "file": "ONBOARDING_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 18
+      "ageDays": 19
     },
     {
       "file": "PUBLIC_SITE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 18
+      "ageDays": 19
     },
     {
       "file": "RECEIPT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 18
+      "ageDays": 19
     },
     {
       "file": "ADMIN_MASTER_PLAN.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "ADMIN_REBUILD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "ADMIN_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "ADMIN_V3_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "ADMIN_V4_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "ARCHITECTURE.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "BACKUP_OPS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "BIRDIE_AI_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "CODEMAP_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "COURSES_SHEET_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "COURSE_LAYOUT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "DESIGN_SYSTEM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "FB2_COPY_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "FB3_FEE_PLAN_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "GOLFER_EDGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "GOLFER_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "HARDENING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "INQUIRY_CALL_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "INQUIRY_FORM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "MANAGE_BOOKING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "PRIVATE_BILLING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "PRODUCTION_READINESS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "REVIEW_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "SITE_DASHBOARD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "UI_REVISE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     }
   ],
   "bank": null,
   "recentCommits": [
     {
-      "h": "2c69d16b",
+      "h": "cb7a92cf",
+      "date": "2026-11-10",
+      "subject": "Tee sheet + Home: fixes from the stress test (#352)"
+    },
+    {
+      "h": "f4f4057e",
       "date": "2026-11-10",
       "subject": "Golfer pay page: hide the saved card only after a definite decline"
     },
@@ -1757,11 +1786,6 @@
       "h": "9713a9b6",
       "date": "2026-11-09",
       "subject": "EVENTS-2: event setup walk-through and a guided event page"
-    },
-    {
-      "h": "7b62a972",
-      "date": "2026-11-09",
-      "subject": "MONEY-1: Money tab from Cam's notes (#348)"
     }
   ]
 }
