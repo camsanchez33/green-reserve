@@ -45,6 +45,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
     closeButtonRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') { setMenuOpen(false); return; }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { setMenuOpen(false); return; } // the palette opens on top
       const panel = menuRef.current;
       if (e.key !== 'Tab' || !panel) return;
       const items = Array.from(panel.querySelectorAll<HTMLElement>('a[href], button:not([disabled])')).filter(n => n.offsetParent !== null);
