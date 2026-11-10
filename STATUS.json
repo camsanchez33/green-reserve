@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-11-10T23:35:36.332Z",
+  "generatedAt": "2026-11-10T23:35:56.304Z",
   "repo": {
-    "head": "bd78daf9",
+    "head": "4a3ba842",
     "branch": "claude/admin-problems",
     "dirtyCount": 0,
     "dirty": [],
@@ -10,6 +10,20 @@
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "4a3ba842",
+        "date": "2026-11-10T23:35:54+00:00",
+        "subject": "Admin Problems: fewer words",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "b0c1de28",
+        "date": "2026-11-10T23:35:38+00:00",
+        "subject": "Regenerate status board",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "bd78daf9",
         "date": "2026-11-10T23:35:36+00:00",
@@ -972,6 +986,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "4a3ba842",
+      "date": "2026-11-10",
+      "subject": "Admin Problems: fewer words"
+    },
+    {
+      "h": "b0c1de28",
+      "date": "2026-11-10",
+      "subject": "Regenerate status board"
+    },
+    {
       "h": "bd78daf9",
       "date": "2026-11-10",
       "subject": "Regenerate code map"
@@ -1020,16 +1044,6 @@
       "h": "dea6f5b4",
       "date": "2026-11-09",
       "subject": "CART-5: the receipt says the cart is paid; no cart ticket, no cart number (#351)"
-    },
-    {
-      "h": "ba4de30f",
-      "date": "2026-11-09",
-      "subject": "AUDIT-1109: close two register gaps; no silent failures in tonight's pages (#350)"
-    },
-    {
-      "h": "de83521b",
-      "date": "2026-11-09",
-      "subject": "EVENTS-2 + SCHED-2: event walk-through and guided event page; Schedule in tabs (#349)"
     }
   ]
 }

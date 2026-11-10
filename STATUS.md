@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-10 23:35 UTC · branch `claude/admin-problems` · HEAD `bd78daf9` · working tree clean
+Generated 2026-11-10 23:35 UTC · branch `claude/admin-problems` · HEAD `4a3ba842` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 79 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 81 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `4a3ba842` | 2026-11-10 | Admin Problems: fewer words |
+| `b0c1de28` | 2026-11-10 | Regenerate status board |
 | `bd78daf9` | 2026-11-10 | Regenerate code map |
 | `0945d07b` | 2026-11-10 | Admin Problems: course link and Who has it follow the login's access; every admin page has a gate |
 | `1c329580` | 2026-11-10 | Admin Problems: no dead "Go to it", assign only to who can open it, tab stays put |
@@ -217,6 +219,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `4a3ba842` 2026-11-10 — Admin Problems: fewer words
+- `b0c1de28` 2026-11-10 — Regenerate status board
 - `bd78daf9` 2026-11-10 — Regenerate code map
 - `0945d07b` 2026-11-10 — Admin Problems: course link and Who has it follow the login's access; every admin page has a gate
 - `1c329580` 2026-11-10 — Admin Problems: no dead "Go to it", assign only to who can open it, tab stays put
@@ -227,8 +231,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `56d3f877` 2026-11-10 — IMPORT-2: pro shop import reads real POS files and says what it couldn't (#353)
 - `cb7a92cf` 2026-11-10 — Tee sheet + Home: fixes from the stress test (#352)
 - `dea6f5b4` 2026-11-09 — CART-5: the receipt says the cart is paid; no cart ticket, no cart number (#351)
-- `ba4de30f` 2026-11-09 — AUDIT-1109: close two register gaps; no silent failures in tonight's pages (#350)
-- `de83521b` 2026-11-09 — EVENTS-2 + SCHED-2: event walk-through and guided event page; Schedule in tabs (#349)
 
 ---
 
