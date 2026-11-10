@@ -117,14 +117,15 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-11-10 22:42 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 91b69a07</span>
-    <span>9 uncommitted</span>
+    <span>2026-11-10 22:44 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 64b7ad04</span>
+    <span>4 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">187 runs have shipped that the queue doesn't know about</div>
+<div class="lede">188 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-31. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">64b7ad04</span><span>STRESS-1110 #1: front desk sees what each group owes; lanes for parallel work</span></li>
 <li><span class="h">56d3f877</span><span>IMPORT-2: pro shop import reads real POS files and says what it couldn't (#353)</span></li>
 <li><span class="h">48c91709</span><span>IMPORT-2: the pro shop import reads real POS files and says what it couldn't</span></li>
 <li><span class="h">cb7a92cf</span><span>Tee sheet + Home: fixes from the stress test (#352)</span></li>
@@ -324,7 +325,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M CLAUDE.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/checkout-card-test.ts</code></li><li><code>M scripts/sheet-views-test.ts</code></li><li><code>M scripts/teesheet-till-test.ts</code></li><li><code>M scripts/tt-card-test.ts</code></li><li><code>M src/app/dashboard/page.tsx</code></li><li><code>?? LANES.md</code></li></ul>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M src/app/api/member/[courseSlug]/send-code/route.ts</code></li><li><code>?? scripts/member-link-rate-test.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -366,7 +367,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Spec inventory</h2>
 <p class="note">Open refs = how many open queue items still point at that spec. Zero and old means consumed.</p>
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
-<tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-11-09 &middot; 1d</td></tr>
+<tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-11-10 &middot; 0d</td></tr>
 <tr><td><code>DENSE_UI_SPEC.md</code></td><td class="num">1</td><td class="num">2026-11-01 &middot; 9d</td></tr>
 <tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-20 &middot; 20d</td></tr>
 <tr><td><code>STRESS_1110_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-11-10 &middot; 0d</td></tr>
@@ -408,6 +409,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 20d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">64b7ad04</td><td class="num">2026-11-10</td><td>STRESS-1110 #1: front desk sees what each group owes; lanes for parallel work</td></tr>
 <tr><td class="num">56d3f877</td><td class="num">2026-11-10</td><td>IMPORT-2: pro shop import reads real POS files and says what it couldn't (#353)</td></tr>
 <tr><td class="num">48c91709</td><td class="num">2026-11-10</td><td>IMPORT-2: the pro shop import reads real POS files and says what it couldn't</td></tr>
 <tr><td class="num">cb7a92cf</td><td class="num">2026-11-10</td><td>Tee sheet + Home: fixes from the stress test (#352)</td></tr>
@@ -419,7 +421,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">ba4de30f</td><td class="num">2026-11-09</td><td>AUDIT-1109: close two register gaps; no silent failures in tonight's pages (#350)</td></tr>
 <tr><td class="num">3ffa5f8f</td><td class="num">2026-11-09</td><td>AUDIT-1109: update two source pins for the new register gate and the Register's key</td></tr>
 <tr><td class="num">74f02e7c</td><td class="num">2026-11-09</td><td>AUDIT-1109: close two register gaps; no silent failures in tonight's pages</td></tr>
-<tr><td class="num">de83521b</td><td class="num">2026-11-09</td><td>EVENTS-2 + SCHED-2: event walk-through and guided event page; Schedule in tabs (#349)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

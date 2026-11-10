@@ -4971,7 +4971,7 @@
     },
     {
       "path": "src/app/api/member/[courseSlug]/send-code/route.ts",
-      "lines": 66,
+      "lines": 61,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4991,6 +4991,8 @@
         "@/lib/email",
         "@/lib/member-session",
         "@/lib/prisma",
+        "@/lib/rate-limit",
+        "@/lib/security-events",
         "next/server"
       ],
       "usedBy": []
@@ -24116,6 +24118,7 @@
         "src/app/api/manage/[bookingId]/route.ts",
         "src/app/api/manage/[bookingId]/send-modified-email/route.ts",
         "src/app/api/manage/[bookingId]/swap-time/route.ts",
+        "src/app/api/member/[courseSlug]/send-code/route.ts",
         "src/app/api/member/[courseSlug]/verify/route.ts",
         "src/app/api/membership/[id]/auto-renew/route.ts",
         "src/app/api/membership/[id]/route.ts",
@@ -25236,6 +25239,7 @@
         "src/app/api/cam/login/route.ts",
         "src/app/api/cam/step-up/route.ts",
         "src/app/api/golfer/auth/otp/verify/route.ts",
+        "src/app/api/member/[courseSlug]/send-code/route.ts",
         "src/app/api/member/[courseSlug]/verify/route.ts",
         "src/lib/admin-checks.ts"
       ]
