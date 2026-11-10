@@ -4,14 +4,18 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-10 22:56 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `26c63493` · working tree **7 dirty file(s)**
+Generated 2026-11-10 23:05 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `3c115162` · working tree **8 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 189 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 193 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `3c6464b6` | 2026-11-10 | Security lane: full sweep report 2026-11-10 (#354) |
+| `807abc12` | 2026-11-10 | Front desk sees what each group owes; member sign-in link rate-limited; lanes (#356) |
+| `0704cbb6` | 2026-11-10 | company: Nov 30 outreach kit (drafts) (#355) |
+| `3f552007` | 2026-11-10 | STRESS-1110 #1, review: paid shop items stay behind money.payments; decisions from the security sweep |
 | `26c63493` | 2026-11-10 | Member sign-in link: rate-limited, and the same answer for members and non-members |
 | `64b7ad04` | 2026-11-10 | STRESS-1110 #1: front desk sees what each group owes; lanes for parallel work |
 | `56d3f877` | 2026-11-10 | IMPORT-2: pro shop import reads real POS files and says what it couldn't (#353) |
@@ -204,15 +208,16 @@ Generated 2026-11-10 22:56 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (7 file(s))
+### Uncommitted working tree (8 file(s))
 
+- `M .claude/agents/admin-ux-auditor.md`
+- `M .claude/agents/design-auditor.md`
+- `M .claude/agents/reskin-worker.md`
+- `M .claude/agents/security-auditor.md`
+- `M .claude/agents/spec-conformance.md`
 - `M CLAUDE.md`
 - `M LANES.md`
-- `M STRESS_1110_SPEC.md`
-- `M scripts/stress-1110-test.ts`
-- `M src/app/dashboard/page.tsx`
-- `M src/components/dashboard/ShopItemsForGroup.tsx`
-- `M src/components/dashboard/TeeSheetList.tsx`
+- `M src/app/globals.css`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -340,6 +345,11 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `3c6464b6` 2026-11-10 — Security lane: full sweep report 2026-11-10 (#354)
+- `807abc12` 2026-11-10 — Front desk sees what each group owes; member sign-in link rate-limited; lanes (#356)
+- `0704cbb6` 2026-11-10 — company: Nov 30 outreach kit (drafts) (#355)
+- `1245f673` 2026-11-10 — queue/spec update
+- `3f552007` 2026-11-10 — STRESS-1110 #1, review: paid shop items stay behind money.payments; decisions from the security sweep
 - `26c63493` 2026-11-10 — Member sign-in link: rate-limited, and the same answer for members and non-members
 - `64b7ad04` 2026-11-10 — STRESS-1110 #1: front desk sees what each group owes; lanes for parallel work
 - `56d3f877` 2026-11-10 — IMPORT-2: pro shop import reads real POS files and says what it couldn't (#353)
@@ -347,11 +357,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `cb7a92cf` 2026-11-10 — Tee sheet + Home: fixes from the stress test (#352)
 - `f4f4057e` 2026-11-10 — Golfer pay page: hide the saved card only after a definite decline
 - `53857cdc` 2026-11-10 — Stress fixes, review: sheet keeps re-reading during checkout; Home Retry clears; a declined card gets a new-card pay page
-- `dcaec7c7` 2026-11-10 — Tee sheet + Home stress-test fixes: phone width, live Home, quiet re-reads, declined pay link, clearer cash
-- `dea6f5b4` 2026-11-09 — CART-5: the receipt says the cart is paid; no cart ticket, no cart number (#351)
-- `a47a7025` 2026-11-09 — CART-5: the receipt says the cart is paid; no cart ticket, no cart number
-- `ba4de30f` 2026-11-09 — AUDIT-1109: close two register gaps; no silent failures in tonight's pages (#350)
-- `3ffa5f8f` 2026-11-09 — AUDIT-1109: update two source pins for the new register gate and the Register's key
 
 ---
 

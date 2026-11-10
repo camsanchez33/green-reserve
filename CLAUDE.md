@@ -106,10 +106,11 @@ here listed `src/app/account/`, which has never existed.
 ---
 
 ## Lanes — parallel sessions (Cam 2026-11-10): READ `LANES.md`
-Work runs in lanes, one per session, titled by lane: **Build** (the only lane that writes app code until an Admin lane opens; owns `src/lib`,
-`src/app/api`, `prisma`), **Testing** and **Security** (read-only; findings under `lanes/`), **Company** (outreach and
-copy drafts under `company/`, no app code), Admin later. Hand-offs go to Build by `send_message`; product questions go
-to Cam through Build. Rules, outputs and the local-app setup are in `LANES.md`.
+Work runs in lanes, one per session, each a head agent with its own cheaper workers. Build lanes: **Build/Dashboard**
+(coordinator; also owns ALL shared code — `src/lib`, `src/app/api`, `prisma`, `globals.css` — and merges every PR),
+**Admin**, **Homepage**, **Golfer**, each in its own folders. Read-only lanes: **Testing**, **Security**; **Company**
+writes drafts under `company/`. Every question from any lane goes to Cam through Build; Cam's answers come back down.
+Ownership, the merge queue, delegation (model + effort per worker) and the local-app setup are in `LANES.md`.
 
 ## Overseer protocol — who does what (Cam 2026-10-06)
 

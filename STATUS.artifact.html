@@ -117,14 +117,18 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-11-10 22:56 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 26c63493</span>
-    <span>7 uncommitted</span>
+    <span>2026-11-10 23:05 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 3c115162</span>
+    <span>8 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">189 runs have shipped that the queue doesn't know about</div>
+<div class="lede">193 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-31. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">3c6464b6</span><span>Security lane: full sweep report 2026-11-10 (#354)</span></li>
+<li><span class="h">807abc12</span><span>Front desk sees what each group owes; member sign-in link rate-limited; lanes (#356)</span></li>
+<li><span class="h">0704cbb6</span><span>company: Nov 30 outreach kit (drafts) (#355)</span></li>
+<li><span class="h">3f552007</span><span>STRESS-1110 #1, review: paid shop items stay behind money.payments; decisions from the security sweep</span></li>
 <li><span class="h">26c63493</span><span>Member sign-in link: rate-limited, and the same answer for members and non-members</span></li>
 <li><span class="h">64b7ad04</span><span>STRESS-1110 #1: front desk sees what each group owes; lanes for parallel work</span></li>
 <li><span class="h">56d3f877</span><span>IMPORT-2: pro shop import reads real POS files and says what it couldn't (#353)</span></li>
@@ -326,7 +330,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M CLAUDE.md</code></li><li><code>M LANES.md</code></li><li><code>M STRESS_1110_SPEC.md</code></li><li><code>M scripts/stress-1110-test.ts</code></li><li><code>M src/app/dashboard/page.tsx</code></li><li><code>M src/components/dashboard/ShopItemsForGroup.tsx</code></li><li><code>M src/components/dashboard/TeeSheetList.tsx</code></li></ul>
+<ul class="plain"><li><code>M .claude/agents/admin-ux-auditor.md</code></li><li><code>M .claude/agents/design-auditor.md</code></li><li><code>M .claude/agents/reskin-worker.md</code></li><li><code>M .claude/agents/security-auditor.md</code></li><li><code>M .claude/agents/spec-conformance.md</code></li><li><code>M CLAUDE.md</code></li><li><code>M LANES.md</code></li><li><code>M src/app/globals.css</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -410,6 +414,11 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 20d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">3c6464b6</td><td class="num">2026-11-10</td><td>Security lane: full sweep report 2026-11-10 (#354)</td></tr>
+<tr><td class="num">807abc12</td><td class="num">2026-11-10</td><td>Front desk sees what each group owes; member sign-in link rate-limited; lanes (#356)</td></tr>
+<tr><td class="num">0704cbb6</td><td class="num">2026-11-10</td><td>company: Nov 30 outreach kit (drafts) (#355)</td></tr>
+<tr><td class="num">1245f673</td><td class="num">2026-11-10</td><td>queue/spec update</td></tr>
+<tr><td class="num">3f552007</td><td class="num">2026-11-10</td><td>STRESS-1110 #1, review: paid shop items stay behind money.payments; decisions from the security sweep</td></tr>
 <tr><td class="num">26c63493</td><td class="num">2026-11-10</td><td>Member sign-in link: rate-limited, and the same answer for members and non-members</td></tr>
 <tr><td class="num">64b7ad04</td><td class="num">2026-11-10</td><td>STRESS-1110 #1: front desk sees what each group owes; lanes for parallel work</td></tr>
 <tr><td class="num">56d3f877</td><td class="num">2026-11-10</td><td>IMPORT-2: pro shop import reads real POS files and says what it couldn't (#353)</td></tr>
@@ -417,11 +426,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">cb7a92cf</td><td class="num">2026-11-10</td><td>Tee sheet + Home: fixes from the stress test (#352)</td></tr>
 <tr><td class="num">f4f4057e</td><td class="num">2026-11-10</td><td>Golfer pay page: hide the saved card only after a definite decline</td></tr>
 <tr><td class="num">53857cdc</td><td class="num">2026-11-10</td><td>Stress fixes, review: sheet keeps re-reading during checkout; Home Retry clears; a declined card gets a new-card pay page</td></tr>
-<tr><td class="num">dcaec7c7</td><td class="num">2026-11-10</td><td>Tee sheet + Home stress-test fixes: phone width, live Home, quiet re-reads, declined pay link, clearer cash</td></tr>
-<tr><td class="num">dea6f5b4</td><td class="num">2026-11-09</td><td>CART-5: the receipt says the cart is paid; no cart ticket, no cart number (#351)</td></tr>
-<tr><td class="num">a47a7025</td><td class="num">2026-11-09</td><td>CART-5: the receipt says the cart is paid; no cart ticket, no cart number</td></tr>
-<tr><td class="num">ba4de30f</td><td class="num">2026-11-09</td><td>AUDIT-1109: close two register gaps; no silent failures in tonight's pages (#350)</td></tr>
-<tr><td class="num">3ffa5f8f</td><td class="num">2026-11-09</td><td>AUDIT-1109: update two source pins for the new register gate and the Register's key</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

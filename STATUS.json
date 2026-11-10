@@ -1,23 +1,52 @@
 {
-  "generatedAt": "2026-11-10T22:56:19.146Z",
+  "generatedAt": "2026-11-10T23:05:14.604Z",
   "repo": {
-    "head": "26c63493",
+    "head": "3c115162",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 7,
+    "dirtyCount": 8,
     "dirty": [
-      "M CLAUDE.md",
+      "M .claude/agents/admin-ux-auditor.md",
+      " M .claude/agents/design-auditor.md",
+      " M .claude/agents/reskin-worker.md",
+      " M .claude/agents/security-auditor.md",
+      " M .claude/agents/spec-conformance.md",
+      " M CLAUDE.md",
       " M LANES.md",
-      " M STRESS_1110_SPEC.md",
-      " M scripts/stress-1110-test.ts",
-      " M src/app/dashboard/page.tsx",
-      " M src/components/dashboard/ShopItemsForGroup.tsx",
-      " M src/components/dashboard/TeeSheetList.tsx"
+      " M src/app/globals.css"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "3c6464b6",
+        "date": "2026-11-10T18:04:29-05:00",
+        "subject": "Security lane: full sweep report 2026-11-10 (#354)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "807abc12",
+        "date": "2026-11-10T18:04:26-05:00",
+        "subject": "Front desk sees what each group owes; member sign-in link rate-limited; lanes (#356)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "0704cbb6",
+        "date": "2026-11-10T17:57:58-05:00",
+        "subject": "company: Nov 30 outreach kit (drafts) (#355)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "3f552007",
+        "date": "2026-11-10T22:56:22+00:00",
+        "subject": "STRESS-1110 #1, review: paid shop items stay behind money.payments; decisions from the security sweep",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "26c63493",
         "date": "2026-11-10T22:44:05+00:00",
@@ -1750,6 +1779,31 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "3c6464b6",
+      "date": "2026-11-10",
+      "subject": "Security lane: full sweep report 2026-11-10 (#354)"
+    },
+    {
+      "h": "807abc12",
+      "date": "2026-11-10",
+      "subject": "Front desk sees what each group owes; member sign-in link rate-limited; lanes (#356)"
+    },
+    {
+      "h": "0704cbb6",
+      "date": "2026-11-10",
+      "subject": "company: Nov 30 outreach kit (drafts) (#355)"
+    },
+    {
+      "h": "1245f673",
+      "date": "2026-11-10",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "3f552007",
+      "date": "2026-11-10",
+      "subject": "STRESS-1110 #1, review: paid shop items stay behind money.payments; decisions from the security sweep"
+    },
+    {
       "h": "26c63493",
       "date": "2026-11-10",
       "subject": "Member sign-in link: rate-limited, and the same answer for members and non-members"
@@ -1783,31 +1837,6 @@
       "h": "53857cdc",
       "date": "2026-11-10",
       "subject": "Stress fixes, review: sheet keeps re-reading during checkout; Home Retry clears; a declined card gets a new-card pay page"
-    },
-    {
-      "h": "dcaec7c7",
-      "date": "2026-11-10",
-      "subject": "Tee sheet + Home stress-test fixes: phone width, live Home, quiet re-reads, declined pay link, clearer cash"
-    },
-    {
-      "h": "dea6f5b4",
-      "date": "2026-11-09",
-      "subject": "CART-5: the receipt says the cart is paid; no cart ticket, no cart number (#351)"
-    },
-    {
-      "h": "a47a7025",
-      "date": "2026-11-09",
-      "subject": "CART-5: the receipt says the cart is paid; no cart ticket, no cart number"
-    },
-    {
-      "h": "ba4de30f",
-      "date": "2026-11-09",
-      "subject": "AUDIT-1109: close two register gaps; no silent failures in tonight's pages (#350)"
-    },
-    {
-      "h": "3ffa5f8f",
-      "date": "2026-11-09",
-      "subject": "AUDIT-1109: update two source pins for the new register gate and the Register's key"
     }
   ]
 }
