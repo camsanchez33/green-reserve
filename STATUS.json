@@ -1,54 +1,35 @@
 {
-  "generatedAt": "2026-11-10T23:35:56.304Z",
+  "generatedAt": "2026-11-10T23:24:46.109Z",
   "repo": {
-    "head": "4a3ba842",
-    "branch": "claude/admin-problems",
-    "dirtyCount": 0,
-    "dirty": [],
-    "looksLikeRunInProgress": false
+    "head": "260602c0",
+    "branch": "claude/walkthrough-2-prioritization-ui5xyu",
+    "dirtyCount": 8,
+    "dirty": [
+      "UU STATUS.artifact.html",
+      "UU STATUS.json",
+      "UU STATUS.md",
+      "M  docs/CODEMAP.md",
+      "M  docs/codemap.json",
+      "A  lanes/testing/2026-11-10-first-day.md",
+      "M  src/app/HomeContent.tsx",
+      "M  src/app/teesheet/page.tsx"
+    ],
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
       {
-        "h": "4a3ba842",
-        "date": "2026-11-10T23:35:54+00:00",
-        "subject": "Admin Problems: fewer words",
+        "h": "2b439771",
+        "date": "2026-11-10T23:08:08+00:00",
+        "subject": "Lanes, review: sign-in and money routes stay with Build; the admin phone CSS lands with the Admin sidebar PR",
         "ids": [],
         "matches": []
       },
       {
-        "h": "b0c1de28",
-        "date": "2026-11-10T23:35:38+00:00",
-        "subject": "Regenerate status board",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "bd78daf9",
-        "date": "2026-11-10T23:35:36+00:00",
-        "subject": "Regenerate code map",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "0945d07b",
-        "date": "2026-11-10T23:35:34+00:00",
-        "subject": "Admin Problems: course link and Who has it follow the login's access; every admin page has a gate",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "1c329580",
-        "date": "2026-11-10T23:30:12+00:00",
-        "subject": "Admin Problems: no dead \"Go to it\", assign only to who can open it, tab stays put",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "55ae3814",
-        "date": "2026-11-10T18:21:37-05:00",
-        "subject": "Homepage writing: true to what ships today (#357)",
+        "h": "c14fb38e",
+        "date": "2026-11-10T23:05:17+00:00",
+        "subject": "Lanes: four build lanes, one merge queue, worker effort levels; admin content full width on phones",
         "ids": [],
         "matches": []
       },
@@ -74,9 +55,37 @@
         "matches": []
       },
       {
+        "h": "3f552007",
+        "date": "2026-11-10T22:56:22+00:00",
+        "subject": "STRESS-1110 #1, review: paid shop items stay behind money.payments; decisions from the security sweep",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "26c63493",
+        "date": "2026-11-10T22:44:05+00:00",
+        "subject": "Member sign-in link: rate-limited, and the same answer for members and non-members",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "64b7ad04",
+        "date": "2026-11-10T22:42:47+00:00",
+        "subject": "STRESS-1110 #1: front desk sees what each group owes; lanes for parallel work",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "56d3f877",
         "date": "2026-11-10T17:41:55-05:00",
         "subject": "IMPORT-2: pro shop import reads real POS files and says what it couldn't (#353)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "48c91709",
+        "date": "2026-11-10T22:29:11+00:00",
+        "subject": "IMPORT-2: the pro shop import reads real POS files and says what it couldn't",
         "ids": [],
         "matches": []
       },
@@ -88,9 +97,37 @@
         "matches": []
       },
       {
+        "h": "f4f4057e",
+        "date": "2026-11-10T01:12:45+00:00",
+        "subject": "Golfer pay page: hide the saved card only after a definite decline",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "53857cdc",
+        "date": "2026-11-10T01:08:50+00:00",
+        "subject": "Stress fixes, review: sheet keeps re-reading during checkout; Home Retry clears; a declined card gets a new-card pay page",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "dcaec7c7",
+        "date": "2026-11-10T01:00:50+00:00",
+        "subject": "Tee sheet + Home stress-test fixes: phone width, live Home, quiet re-reads, declined pay link, clearer cash",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "dea6f5b4",
         "date": "2026-11-09T14:41:23-05:00",
         "subject": "CART-5: the receipt says the cart is paid; no cart ticket, no cart number (#351)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "a47a7025",
+        "date": "2026-11-09T19:34:28+00:00",
+        "subject": "CART-5: the receipt says the cart is paid; no cart ticket, no cart number",
         "ids": [],
         "matches": []
       },
@@ -102,9 +139,37 @@
         "matches": []
       },
       {
+        "h": "3ffa5f8f",
+        "date": "2026-11-09T07:39:51+00:00",
+        "subject": "AUDIT-1109: update two source pins for the new register gate and the Register's key",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "74f02e7c",
+        "date": "2026-11-09T07:31:37+00:00",
+        "subject": "AUDIT-1109: close two register gaps; no silent failures in tonight's pages",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "de83521b",
         "date": "2026-11-09T02:09:25-05:00",
         "subject": "EVENTS-2 + SCHED-2: event walk-through and guided event page; Schedule in tabs (#349)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "c40ae5e7",
+        "date": "2026-11-09T06:59:11+00:00",
+        "subject": "SCHED-2: Schedule in tabs, days adjusted like memberships, demand pricing explained",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "9713a9b6",
+        "date": "2026-11-09T06:56:34+00:00",
+        "subject": "EVENTS-2: event setup walk-through and a guided event page",
         "ids": [],
         "matches": []
       },
@@ -116,9 +181,23 @@
         "matches": []
       },
       {
+        "h": "3932b9fc",
+        "date": "2026-11-09T06:43:19+00:00",
+        "subject": "MONEY-1: Money tab from Cam's notes",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "bd16e6d6",
         "date": "2026-11-09T01:22:44-05:00",
         "subject": "RECEIPT-3 + MSG-1: receipts you can see and text as a link; Messages from Cam's notes (#347)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "2981ca95",
+        "date": "2026-11-09T06:10:58+00:00",
+        "subject": "RECEIPT-3 + MSG-1: receipts staff can see and text as a link; Messages from Cam's notes",
         "ids": [],
         "matches": []
       },
@@ -130,9 +209,37 @@
         "matches": []
       },
       {
+        "h": "62742a74",
+        "date": "2026-11-09T06:02:36+00:00",
+        "subject": "Regenerate code map and status board",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "ae63a885",
+        "date": "2026-11-09T05:55:11+00:00",
+        "subject": "DRAWER-1: open/reopen/fix take their seq from the snapshot checked (CI race)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "79c3f826",
+        "date": "2026-11-09T05:42:32+00:00",
+        "subject": "DRAWER-1 + CART-4: the register is a loop; cart numbers, cart ticket, starter's sheet",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "84ccc1ed",
         "date": "2026-11-09T00:27:36-05:00",
         "subject": "CART-3: riders and range balls at checkout (#345)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "29496778",
+        "date": "2026-11-09T05:14:09+00:00",
+        "subject": "CART-3: riders and range balls at checkout (Riding − N +, buckets − N +)",
         "ids": [],
         "matches": []
       },
@@ -144,9 +251,23 @@
         "matches": []
       },
       {
+        "h": "3d31bc28",
+        "date": "2026-11-09T04:29:58+00:00",
+        "subject": "POS-8: Stock list + one item form, upload what you have, sell anyway, Sales cleanup",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "44217555",
         "date": "2026-11-08T23:14:38-05:00",
         "subject": "POS-7: Open the register (locked starting cash), tee sheet icons, sliding tabs (#343)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "9b6e7f6b",
+        "date": "2026-11-09T04:01:46+00:00",
+        "subject": "POS-7: Open the register (locked starting cash), tee sheet icons, sliding tabs",
         "ids": [],
         "matches": []
       },
@@ -158,9 +279,23 @@
         "matches": []
       },
       {
+        "h": "def61397",
+        "date": "2026-11-09T03:41:54+00:00",
+        "subject": "POS-6: Stock is where items are added; round packs off; tiles, ticket, Sales filters",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "0682ac62",
         "date": "2026-11-08T18:34:43-05:00",
         "subject": "POS-5: Pro shop Stock, Round packs and Close out tabs; sliding tab highlight (#340)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "b99b4c8a",
+        "date": "2026-11-08T23:27:58+00:00",
+        "subject": "POS-5: Pro shop Stock, Round packs and Close out as their own tabs; sliding tab highlight",
         "ids": [],
         "matches": []
       },
@@ -172,9 +307,23 @@
         "matches": []
       },
       {
+        "h": "260583c3",
+        "date": "2026-11-08T21:33:24+00:00",
+        "subject": "ACC-1: one set of definitions so every booking and payment figure agrees",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "437456cc",
         "date": "2026-11-08T16:16:36-05:00",
         "subject": "POS-4: Pro shop register as a real POS (#338)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "f4cc7d76",
+        "date": "2026-11-08T21:09:17+00:00",
+        "subject": "POS-4: Pro shop register as a real POS — tiles, one ticket, Charge in steps",
         "ids": [],
         "matches": []
       },
@@ -186,9 +335,23 @@
         "matches": []
       },
       {
+        "h": "ab8c4f43",
+        "date": "2026-11-08T20:09:11+00:00",
+        "subject": "SEATS-1: close seats on a tee time one at a time (Open seats − N + on the card)",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "b324c547",
         "date": "2026-11-08T15:03:09-05:00",
         "subject": "Receipt: what was actually paid, how and when; prints on a receipt printer (#336)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "d26d15c1",
+        "date": "2026-11-08T19:50:51+00:00",
+        "subject": "Receipt: what was actually paid, how and when; prints on a receipt printer",
         "ids": [],
         "matches": []
       },
@@ -200,9 +363,30 @@
         "matches": []
       },
       {
+        "h": "480f7d0e",
+        "date": "2026-11-08T19:31:35+00:00",
+        "subject": "Time card: the reader charges who's here, receipts, day actions in the sheet bar",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "086b9403",
         "date": "2026-11-08T03:05:42-05:00",
         "subject": "Tee sheet: check-in in order — who's here, add to order, payment, done (#334)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "f7245efa",
+        "date": "2026-11-08T07:59:11+00:00",
+        "subject": "Fix the split-booking pin for the check-in steps' rest line",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "506f38f0",
+        "date": "2026-11-08T07:54:46+00:00",
+        "subject": "Tee sheet: check-in in order — who's here, add to order, payment, done",
         "ids": [],
         "matches": []
       },
@@ -214,9 +398,23 @@
         "matches": []
       },
       {
+        "h": "23a4f354",
+        "date": "2026-11-06T22:05:08+00:00",
+        "subject": "Tee sheet time card: who can book the open seats, the reader on the card, type a card",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "de19b14e",
         "date": "2026-11-06T16:59:06-05:00",
         "subject": "Carts: per player or per cart (2 riders), set in Settings (#332)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "fe626db0",
+        "date": "2026-11-06T21:50:55+00:00",
+        "subject": "Carts: per player or per cart (2 riders), set by the owner in Settings",
         "ids": [],
         "matches": []
       },
@@ -228,9 +426,23 @@
         "matches": []
       },
       {
+        "h": "d9f007fa",
+        "date": "2026-11-06T18:40:57+00:00",
+        "subject": "Tee sheet: a Square-style Charge screen, and one \"Paying now\" control",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "54cc0d80",
         "date": "2026-11-05T23:55:18-05:00",
         "subject": "Tee sheet: the group card asks how they're paying, then one button that says what it does (#330)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "bd10ddf4",
+        "date": "2026-11-06T04:48:03+00:00",
+        "subject": "Tee sheet: the group card asks how they're paying, then one button that says what it does",
         "ids": [],
         "matches": []
       },
@@ -242,9 +454,37 @@
         "matches": []
       },
       {
+        "h": "e616bb78",
+        "date": "2026-11-06T04:40:42+00:00",
+        "subject": "Regenerate the code map and status board",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "2e16380b",
+        "date": "2026-11-06T04:39:35+00:00",
+        "subject": "Owner 2FA: match a code and its step on one clock",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "c146bfe6",
+        "date": "2026-11-06T04:27:47+00:00",
+        "subject": "Tee sheet: Message golfers by email, text or both, with ready-made messages and a preview",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "2bea8fe8",
         "date": "2026-11-05T23:20:48-05:00",
         "subject": "Tee sheet: a cleaner weather window that updates as you pick the times (#328)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "97875d10",
+        "date": "2026-11-06T04:12:25+00:00",
+        "subject": "Tee sheet: a cleaner weather window that updates as you pick the times",
         "ids": [],
         "matches": []
       },
@@ -256,9 +496,30 @@
         "matches": []
       },
       {
+        "h": "60b0470c",
+        "date": "2026-11-06T04:05:11+00:00",
+        "subject": "Test: the engine's delete pin includes the staff-only guard",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "ff613483",
+        "date": "2026-11-06T03:57:29+00:00",
+        "subject": "Tee sheet: Add tee time from the day's prices, keep a time for staff, safer Block and Delete",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "c5f4ba4b",
         "date": "2026-11-05T22:41:38-05:00",
         "subject": "Tee sheet: On the course, a fuller List, a Calendar that says why (#326)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "f8d6b25b",
+        "date": "2026-11-06T03:35:46+00:00",
+        "subject": "Tee sheet: On the course, a List with the grid's details, a Calendar that says why",
         "ids": [],
         "matches": []
       },
@@ -270,9 +531,23 @@
         "matches": []
       },
       {
+        "h": "58a9e0d0",
+        "date": "2026-11-06T02:56:30+00:00",
+        "subject": "Home: the week-ahead link offers demand pricing and lands on it",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "b9baa354",
         "date": "2026-11-05T21:52:11-05:00",
         "subject": "Tee sheet: cleaner top bar, Times booked, filled groups, 9-hole/twilight labels, no glow (#324)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "52978014",
+        "date": "2026-11-06T02:45:15+00:00",
+        "subject": "Tee sheet: cleaner top bar, Times booked, filled groups with In/M/R, 9-hole and twilight labels, no glow",
         "ids": [],
         "matches": []
       },
@@ -284,9 +559,23 @@
         "matches": []
       },
       {
+        "h": "41e8a0af",
+        "date": "2026-11-06T01:52:44+00:00",
+        "subject": "Public SMS consent page at /sms-consent for Twilio's checker",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "b147abf7",
         "date": "2026-11-05T20:29:02-05:00",
         "subject": "Host the SMS consent screenshot at /sms-opt-in.png for Twilio (#322)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "9db7e811",
+        "date": "2026-11-06T01:22:14+00:00",
+        "subject": "Host the SMS consent screenshot at /sms-opt-in.png for Twilio",
         "ids": [],
         "matches": []
       },
@@ -298,9 +587,23 @@
         "matches": []
       },
       {
+        "h": "8ec892ce",
+        "date": "2026-11-05T23:05:51+00:00",
+        "subject": "Home: goals on the numbers the course picks, and its own course-condition lines",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "e14b7752",
         "date": "2026-11-05T18:00:27-05:00",
         "subject": "Home: weather + next tee times on top, field-level setup links, Needs you counts, Staff notes (#320)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "a5bb5088",
+        "date": "2026-11-05T22:47:16+00:00",
+        "subject": "Home: weather and next tee times on top, field-level setup links, Needs you counts, Staff notes",
         "ids": [],
         "matches": []
       },
@@ -312,9 +615,23 @@
         "matches": []
       },
       {
+        "h": "d12656c7",
+        "date": "2026-11-05T19:51:35+00:00",
+        "subject": "Text-message opt-in names GreenReserve as the sender, with the carriers' disclosure phrases; texts lead with GreenReserve",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "211403ca",
         "date": "2026-11-05T11:22:09-05:00",
         "subject": "Terms and Privacy: Twilio A2P campaign wording (#318)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "acd00f57",
+        "date": "2026-11-05T15:53:31+00:00",
+        "subject": "Terms and Privacy: Twilio A2P campaign wording (SMS Terms heading, no selling or sharing opt-in data)",
         "ids": [],
         "matches": []
       },
@@ -326,9 +643,30 @@
         "matches": []
       },
       {
+        "h": "ba4df316",
+        "date": "2026-11-05T04:49:48+00:00",
+        "subject": "Database load from the audit: crons read only due tee dates, Stripe-id indexes, rate-limit sweep, sheet money strip asks less",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "15c9cb2e",
         "date": "2026-11-04T23:49:20-05:00",
         "subject": "Security audit: money races (keyed refunds, recharge after refund, holds vs check-in, no-show vs still coming) (#316)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "37df560b",
+        "date": "2026-11-05T04:42:46+00:00",
+        "subject": "Regenerate the code map and status board for lib/hold-key.ts",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "7cc238df",
+        "date": "2026-11-05T04:38:36+00:00",
+        "subject": "Money races from the security audit: keyed refunds, recharge after refund, cron hold vs check-in, no-show vs still coming",
         "ids": [],
         "matches": []
       },
@@ -340,9 +678,30 @@
         "matches": []
       },
       {
+        "h": "8286cf5a",
+        "date": "2026-11-05T04:15:59+00:00",
+        "subject": "Tests: give each test tee time its own slot (one row per slot is now enforced)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "ab7235ec",
+        "date": "2026-11-05T04:07:54+00:00",
+        "subject": "One tee-time row per slot: fold existing duplicates, unique index, generation skips and never deletes a booked slot",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "596b4b52",
         "date": "2026-11-04T21:15:55-05:00",
         "subject": "Security audit: one card charge per round at a time (#314)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "5be9c0cf",
+        "date": "2026-11-05T02:08:44+00:00",
+        "subject": "One card charge per round at a time: claim the round before charging; cash and the reader refuse a live claim",
         "ids": [],
         "matches": []
       },
@@ -354,9 +713,23 @@
         "matches": []
       },
       {
+        "h": "bfa71331",
+        "date": "2026-11-05T01:55:57+00:00",
+        "subject": "Sign-in hardening from the security audit: US/Canada-only texts, escaped email, exact phone linking, trimmed memberships list",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "24b7474c",
         "date": "2026-11-04T20:30:04-05:00",
         "subject": "Settings restyle to the DASH-D mockup (#312)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "56471e89",
+        "date": "2026-11-05T01:23:04+00:00",
+        "subject": "Settings restyle to the DASH-D mockup: 26px title, section nav as raised tabs, 7px inputs and choice tiles",
         "ids": [],
         "matches": []
       },
@@ -368,9 +741,23 @@
         "matches": []
       },
       {
+        "h": "5e0a462c",
+        "date": "2026-11-05T01:15:54+00:00",
+        "subject": "Members restyle to the DASH-D mockup: 26px title, four stat cards with 24px numbers, 7px buttons",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "e43e8996",
         "date": "2026-11-04T20:15:35-05:00",
         "subject": "Register restyle to the DASH-D mockup (#310)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "b36fe621",
+        "date": "2026-11-05T01:07:35+00:00",
+        "subject": "Register restyle to the DASH-D mockup: segmented tabs, tiles, steppers, total, pay tiles",
         "ids": [],
         "matches": []
       },
@@ -382,9 +769,37 @@
         "matches": []
       },
       {
+        "h": "537fb89a",
+        "date": "2026-11-05T00:43:10+00:00",
+        "subject": "SEG-1 review fix: golfer contact on Analytics only with See golfer email and phone",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "241549e9",
+        "date": "2026-11-05T00:37:08+00:00",
+        "subject": "Analytics: golfer groups — regulars, new, at risk, inactive (SEG-1)",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "3bf3f7fa",
         "date": "2026-11-04T16:02:22-05:00",
         "subject": "Events: command center strip and organizer bill coverage (EVENTS-1) (#308)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "4c554dc8",
+        "date": "2026-11-04T20:54:32+00:00",
+        "subject": "EVENTS-1 review fix: name players past the confirmed headcount instead of hiding them",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "fed27d5f",
+        "date": "2026-11-04T20:51:21+00:00",
+        "subject": "Events: command center strip and organizer bill coverage per player (EVENTS-1)",
         "ids": [],
         "matches": []
       },
@@ -396,9 +811,51 @@
         "matches": []
       },
       {
+        "h": "533f74d5",
+        "date": "2026-11-04T20:36:43+00:00",
+        "subject": "EARNED-1 review fixes: payout arrival day, one minus sign, per-day filter, keyboard detail",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "3e901199",
+        "date": "2026-11-04T20:31:44+00:00",
+        "subject": "EARNED-1: CLAUDE.md wording",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "3b06f8d3",
+        "date": "2026-11-04T20:31:38+00:00",
+        "subject": "Money: earned vs paid out on the Ledger (EARNED-1)",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "ddeaa003",
         "date": "2026-11-04T14:08:21-05:00",
         "subject": "Tee sheet: 1st and 10th tee side by side; Schedule: prices as one table (#306)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "56fffcae",
+        "date": "2026-11-04T04:44:34+00:00",
+        "subject": "TEES-1 / PRICES-1 review fixes: same-tee times stack, nine order; one rename field, every price change shown",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "988566c5",
+        "date": "2026-11-04T04:38:07+00:00",
+        "subject": "Schedule: prices as one table, rounds side by side (PRICES-1)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "497612df",
+        "date": "2026-11-04T04:36:22+00:00",
+        "subject": "Tee sheet: 1st and 10th tee side by side (TEES-1)",
         "ids": [],
         "matches": []
       },
@@ -410,9 +867,65 @@
         "matches": []
       },
       {
+        "h": "c4ee41dd",
+        "date": "2026-11-04T04:20:35+00:00",
+        "subject": "PARTIAL-1: split parts are not new bookings on Analytics",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "d88474dc",
+        "date": "2026-11-04T04:17:31+00:00",
+        "subject": "PARTIAL-1 review fixes: split parts off Admin Home counts, confirms quote the card's figure",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "fce72d26",
+        "date": "2026-11-04T04:06:46+00:00",
+        "subject": "Partial check-in keeps the rest of the group booked (PARTIAL-1)",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "327461ef",
         "date": "2026-11-03T21:58:38-05:00",
         "subject": "Glass that actually shows, and a cleaner group-card checkout (#304)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "5fb78584",
+        "date": "2026-11-04T02:51:18+00:00",
+        "subject": "Status board",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "b689a296",
+        "date": "2026-11-04T02:51:06+00:00",
+        "subject": "Glass: soften the glow a step and move the second one low right, darker light text and lighter dark text, so every token clears 4.5:1 on cards and on the bare page",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "38ea94b2",
+        "date": "2026-11-04T02:51:06+00:00",
+        "subject": "Group card checkout: + adds on first tap, − says when it removes several, exact SKU scan, no reader promised where none is, tests",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "2ab4d6b2",
+        "date": "2026-11-04T02:51:06+00:00",
+        "subject": "Group card checkout: party size behind Edit group, the card reader always shown with its reason, register-style tiles for shop items",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "c472b412",
+        "date": "2026-11-04T02:51:06+00:00",
+        "subject": "Glass: let the glow through the page layer, stronger glow and clearer cards, darker text tokens so it stays readable",
         "ids": [],
         "matches": []
       },
@@ -424,9 +937,30 @@
         "matches": []
       },
       {
+        "h": "3298d526",
+        "date": "2026-11-04T02:37:47+00:00",
+        "subject": "Booking: a golfer signed in to an account that no longer exists books as a guest instead of crashing",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "9aea09cc",
         "date": "2026-11-03T14:30:44-05:00",
         "subject": "Tee sheet views: Grid, List and Calendar (#302)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "9652f9f5",
+        "date": "2026-11-03T19:20:54+00:00",
+        "subject": "Tee sheet views: say the shown state to screen readers, no price on checked-in lines, calendar follows the day stepper",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "659066c6",
+        "date": "2026-11-03T19:15:39+00:00",
+        "subject": "Tee sheet views: Grid, List and Calendar",
         "ids": [],
         "matches": []
       },
@@ -438,9 +972,30 @@
         "matches": []
       },
       {
+        "h": "f45e3113",
+        "date": "2026-11-03T00:14:58+00:00",
+        "subject": "Glass: keep pop-up panels solid and darken faint text so both clear AA",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "52abf641",
+        "date": "2026-11-03T00:07:25+00:00",
+        "subject": "Glass dashboard: green glow behind the page, frosted cards and rail, tab lifts on hover",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "66238486",
         "date": "2026-11-02T17:49:56-05:00",
         "subject": "Accuracy pass: plain Analytics definitions and one stock wording (#300)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "d2052372",
+        "date": "2026-11-02T22:42:25+00:00",
+        "subject": "Accuracy pass: plain Analytics definitions, sold-out dates in the download, one stock wording",
         "ids": [],
         "matches": []
       },
@@ -452,9 +1007,37 @@
         "matches": []
       },
       {
+        "h": "5cfea0f0",
+        "date": "2026-11-02T21:54:32+00:00",
+        "subject": "Regenerate code map and status board",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "7458886d",
+        "date": "2026-11-02T21:53:05+00:00",
+        "subject": "Pay separately: give back the leavers' share of a hold already taken",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "f3ad66bb",
+        "date": "2026-11-02T21:44:21+00:00",
+        "subject": "Tee sheet: pay separately — split players off a group and pay their share",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "90f8f79d",
         "date": "2026-11-02T01:38:38-05:00",
         "subject": "Dashboard: \"/\" or Cmd/Ctrl K jumps to golfer search; Home flags stale conditions (#298)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "06d5e4c6",
+        "date": "2026-11-02T06:30:22+00:00",
+        "subject": "Dashboard: / or Ctrl/Cmd K jumps to golfer search; Home says when conditions are off the booking page",
         "ids": [],
         "matches": []
       },
@@ -466,9 +1049,23 @@
         "matches": []
       },
       {
+        "h": "449bd296",
+        "date": "2026-11-02T06:21:33+00:00",
+        "subject": "Booking page: today's course conditions (carts, range, greens, pins) while fresh",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "360913a3",
         "date": "2026-11-02T01:21:10-05:00",
         "subject": "Register: item photos on the tiles (+ Home review follow-ups) (#296)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "b04c0c83",
+        "date": "2026-11-02T06:14:09+00:00",
+        "subject": "Register: item photos on the tiles (+ Home review follow-ups)",
         "ids": [],
         "matches": []
       },
@@ -480,9 +1077,44 @@
         "matches": []
       },
       {
+        "h": "7de2b772",
+        "date": "2026-11-02T06:05:51+00:00",
+        "subject": "operator-home test: accept the money permission read once and passed to operatorHome",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "61cb526c",
+        "date": "2026-11-02T05:52:37+00:00",
+        "subject": "Home: shift note, course conditions, week ahead, month vs goal",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "0ca08896",
         "date": "2026-11-02T00:51:45-05:00",
         "subject": "Tee sheet: till-style check-in on the time card (#294)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "383b5af1",
+        "date": "2026-11-02T05:45:21+00:00",
+        "subject": "Regenerate code map and status board",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "1b7f3b82",
+        "date": "2026-11-02T05:44:18+00:00",
+        "subject": "Tests follow the till: Here-now buttons, pay-link day rule, owed amount as the ticket Total",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "d65d1332",
+        "date": "2026-11-02T05:43:39+00:00",
+        "subject": "Tee sheet: till-style check-in on the time card",
         "ids": [],
         "matches": []
       },
@@ -494,9 +1126,107 @@
         "matches": []
       },
       {
+        "h": "ba7d3ab1",
+        "date": "2026-11-02T05:33:26+00:00",
+        "subject": "Regenerate code map and status board",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "14d6254a",
+        "date": "2026-11-02T05:32:26+00:00",
+        "subject": "Dark mode is screen-only (prints stay light); theme cookie Secure only over https",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "7ca659d0",
+        "date": "2026-11-02T05:28:19+00:00",
+        "subject": "Rail groups never drop a tab; tests follow the grouped rail and the mem-fill token",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "46a688fc",
+        "date": "2026-11-02T05:25:51+00:00",
+        "subject": "Dashboard foundation: Geist, grey page + white panels, grouped rail, Light/Dark",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "3ae2293d",
         "date": "2026-11-02T00:08:35-05:00",
         "subject": "Pricing switches + busy-season data + speed + counter fixes + SMS opt-in (Twilio) (#289)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "3659755c",
+        "date": "2026-11-02T04:06:49+00:00",
+        "subject": "SMS-1 follow-up: Home / Money declined cards ask before texting, like the tee sheet",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "bffab6e9",
+        "date": "2026-11-02T03:58:16+00:00",
+        "subject": "Event money needs \"Mark paid at the counter\"; a member with history can't be deleted",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "53e31df1",
+        "date": "2026-11-02T03:49:42+00:00",
+        "subject": "Counter friction B: card beside the sheet, Home opens a time's card, member opens golfer record, cash through a failed tax quote",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "b80496f3",
+        "date": "2026-11-02T03:42:32+00:00",
+        "subject": "SMS-1: texts only to numbers that agreed (Twilio A2P 10DLC opt-in)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "db252e4b",
+        "date": "2026-11-02T03:22:21+00:00",
+        "subject": "Status board refresh",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "b199995d",
+        "date": "2026-11-02T01:39:22+00:00",
+        "subject": "Counter friction: one-tap check-in, no-show waits 10 min, cart off by default, search on phones",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "45ca1d0e",
+        "date": "2026-11-02T01:23:17+00:00",
+        "subject": "Speed with volume: one time-zone formatter per zone (Analytics 90 days 10.7s → 1.2s)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "4054bff4",
+        "date": "2026-11-02T00:22:43+00:00",
+        "subject": "Test course: busy-season sample data, with every money table filled",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "91745c5a",
+        "date": "2026-11-01T23:39:42+00:00",
+        "subject": "member-portal-price test: its course has member prices, so the switches are on",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "96cd687f",
+        "date": "2026-11-01T23:24:19+00:00",
+        "subject": "Pricing switches: Members / Residents off means the public price (backfill + auto-on)",
         "ids": [],
         "matches": []
       },
@@ -508,9 +1238,23 @@
         "matches": []
       },
       {
+        "h": "93f3ff63",
+        "date": "2026-11-01T19:42:33+00:00",
+        "subject": "Audit wording: what the sheet, members, settings and golfer page say, made true",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "b5d27f01",
         "date": "2026-11-01T14:09:25-05:00",
         "subject": "Audit numbers: partial refunds, event money, event player swap, shop today, payout tile (#287)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "c6efa694",
+        "date": "2026-11-01T19:02:21+00:00",
+        "subject": "Audit numbers: partial refunds, event money, event player swap, shop today, payout tile",
         "ids": [],
         "matches": []
       },
@@ -522,9 +1266,23 @@
         "matches": []
       },
       {
+        "h": "6bbb7c6d",
+        "date": "2026-11-01T18:11:01+00:00",
+        "subject": "DENSE-10 Settings part 2: the Settings cards, labels over sentences",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "bda21776",
         "date": "2026-11-01T13:10:46-05:00",
         "subject": "DENSE-10 Settings part 1: labels over sentences (#285)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "e4bc0f02",
+        "date": "2026-11-01T18:04:20+00:00",
+        "subject": "DENSE-10 Settings part 1: labels over sentences",
         "ids": [],
         "matches": []
       },
@@ -536,9 +1294,23 @@
         "matches": []
       },
       {
+        "h": "d74792b2",
+        "date": "2026-11-01T17:57:41+00:00",
+        "subject": "DENSE-9 Messages: the intro is the reply-time line and the email",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "fe34fcb1",
         "date": "2026-11-01T12:41:57-05:00",
         "subject": "DENSE-8 Events: the list is a table with what each event still owes (#283)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "1bbbbbc8",
+        "date": "2026-11-01T17:34:57+00:00",
+        "subject": "DENSE-8 Events: the list is a table with what each event still owes",
         "ids": [],
         "matches": []
       },
@@ -550,9 +1322,23 @@
         "matches": []
       },
       {
+        "h": "06c09849",
+        "date": "2026-11-01T11:25:16+00:00",
+        "subject": "DENSE-7 Pro shop: labels over sentences (text only)",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "4274c1a6",
         "date": "2026-11-01T01:58:35-04:00",
         "subject": "DENSE-6 Schedule: labels over sentences (#281)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "3ee7b212",
+        "date": "2026-11-01T05:51:42+00:00",
+        "subject": "DENSE-6 Schedule: labels over sentences",
         "ids": [],
         "matches": []
       },
@@ -564,6 +1350,13 @@
         "matches": []
       },
       {
+        "h": "20f25179",
+        "date": "2026-11-01T02:00:04+00:00",
+        "subject": "Audit cleanups: ledger guard sees statement and renewal charges, ledger takes Stripe's fee, Return items retries returns only, admin actions confirm",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "f353d52a",
         "date": "2026-10-31T20:57:45-04:00",
         "subject": "Security follow-ups: once-per-golfer promo codes, contact details behind their permission, paused membership blocks online join (#279)",
@@ -571,9 +1364,23 @@
         "matches": []
       },
       {
+        "h": "5db27c7b",
+        "date": "2026-11-01T00:35:42+00:00",
+        "subject": "Security follow-ups: once-per-golfer promo codes hold, contact details stay behind their permission, a paused membership stops joining online",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "46be1bc6",
         "date": "2026-10-31T20:29:18-04:00",
         "subject": "Money audit fixes: dues total pinned, term change stops auto-renew, credited round returns our fee, pay link on the day (#278)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "efef5f62",
+        "date": "2026-11-01T00:22:54+00:00",
+        "subject": "Money audit fixes: dues charge only the shown total, tier term change stops auto-renew, credited round returns our fee, pay link opens on the day",
         "ids": [],
         "matches": []
       }
@@ -757,8 +1564,8 @@
     {
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
-      "lastTouched": "2026-10-17",
-      "ageDays": 24
+      "lastTouched": "2026-10-20",
+      "ageDays": 20
     },
     {
       "file": "STRESS_1110_SPEC.md",
@@ -833,187 +1640,177 @@
       "ageDays": 19
     },
     {
-      "file": "BIRDIE_AI_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-05",
-      "ageDays": 36
-    },
-    {
-      "file": "REVIEW_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-05",
-      "ageDays": 36
-    },
-    {
-      "file": "UI_REVISE_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-01",
-      "ageDays": 40
-    },
-    {
-      "file": "FB2_COPY_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 42
-    },
-    {
-      "file": "FB3_FEE_PLAN_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 42
-    },
-    {
-      "file": "PRIVATE_BILLING_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 42
-    },
-    {
-      "file": "ARCHITECTURE.md",
-      "openRefs": 0,
-      "lastTouched": "2026-09-16",
-      "ageDays": 55
-    },
-    {
-      "file": "CODEMAP_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 55
-    },
-    {
-      "file": "INQUIRY_CALL_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 55
-    },
-    {
-      "file": "INQUIRY_FORM_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 56
-    },
-    {
-      "file": "COURSES_SHEET_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-09-13",
-      "ageDays": 57
-    },
-    {
-      "file": "DESIGN_SYSTEM_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-09-11",
-      "ageDays": 59
-    },
-    {
-      "file": "SITE_DASHBOARD_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-08-29",
-      "ageDays": 72
-    },
-    {
       "file": "ADMIN_MASTER_PLAN.md",
       "openRefs": 0,
-      "lastTouched": "2026-08-28",
-      "ageDays": 73
-    },
-    {
-      "file": "ADMIN_V4_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-08-28",
-      "ageDays": 74
-    },
-    {
-      "file": "COURSE_LAYOUT_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-07-16",
-      "ageDays": 117
-    },
-    {
-      "file": "GOLFER_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-07-14",
-      "ageDays": 118
-    },
-    {
-      "file": "ADMIN_V3_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-07-09",
-      "ageDays": 124
-    },
-    {
-      "file": "GOLFER_EDGE_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-07-09",
-      "ageDays": 124
-    },
-    {
-      "file": "ADMIN_V2_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-07-07",
-      "ageDays": 125
-    },
-    {
-      "file": "BACKUP_OPS_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-07-07",
-      "ageDays": 125
-    },
-    {
-      "file": "HARDENING_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-07-07",
-      "ageDays": 125
-    },
-    {
-      "file": "MANAGE_BOOKING_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-07-08",
-      "ageDays": 125
-    },
-    {
-      "file": "PRODUCTION_READINESS_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-07-08",
-      "ageDays": 125
+      "lastTouched": "2026-10-20",
+      "ageDays": 20
     },
     {
       "file": "ADMIN_REBUILD_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-07-06",
-      "ageDays": 126
+      "lastTouched": "2026-10-20",
+      "ageDays": 20
+    },
+    {
+      "file": "ADMIN_V2_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-20",
+      "ageDays": 20
+    },
+    {
+      "file": "ADMIN_V3_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-20",
+      "ageDays": 20
+    },
+    {
+      "file": "ADMIN_V4_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-20",
+      "ageDays": 20
+    },
+    {
+      "file": "ARCHITECTURE.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-20",
+      "ageDays": 20
+    },
+    {
+      "file": "BACKUP_OPS_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-20",
+      "ageDays": 20
+    },
+    {
+      "file": "BIRDIE_AI_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-20",
+      "ageDays": 20
+    },
+    {
+      "file": "CODEMAP_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-20",
+      "ageDays": 20
+    },
+    {
+      "file": "COURSES_SHEET_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-20",
+      "ageDays": 20
+    },
+    {
+      "file": "COURSE_LAYOUT_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-20",
+      "ageDays": 20
+    },
+    {
+      "file": "DESIGN_SYSTEM_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-20",
+      "ageDays": 20
+    },
+    {
+      "file": "FB2_COPY_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-20",
+      "ageDays": 20
+    },
+    {
+      "file": "FB3_FEE_PLAN_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-20",
+      "ageDays": 20
+    },
+    {
+      "file": "GOLFER_EDGE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-20",
+      "ageDays": 20
+    },
+    {
+      "file": "GOLFER_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-20",
+      "ageDays": 20
+    },
+    {
+      "file": "HARDENING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-20",
+      "ageDays": 20
+    },
+    {
+      "file": "INQUIRY_CALL_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-20",
+      "ageDays": 20
+    },
+    {
+      "file": "INQUIRY_FORM_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-20",
+      "ageDays": 20
+    },
+    {
+      "file": "MANAGE_BOOKING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-20",
+      "ageDays": 20
+    },
+    {
+      "file": "PRIVATE_BILLING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-20",
+      "ageDays": 20
+    },
+    {
+      "file": "PRODUCTION_READINESS_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-20",
+      "ageDays": 20
+    },
+    {
+      "file": "REVIEW_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-20",
+      "ageDays": 20
+    },
+    {
+      "file": "SITE_DASHBOARD_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-20",
+      "ageDays": 20
+    },
+    {
+      "file": "UI_REVISE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-20",
+      "ageDays": 20
     }
   ],
   "bank": null,
   "recentCommits": [
     {
-      "h": "4a3ba842",
+      "h": "260602c0",
       "date": "2026-11-10",
-      "subject": "Admin Problems: fewer words"
+      "subject": "queue/spec update"
     },
     {
-      "h": "b0c1de28",
+      "h": "9c71d7a0",
       "date": "2026-11-10",
-      "subject": "Regenerate status board"
+      "subject": "queue/spec update"
     },
     {
-      "h": "bd78daf9",
+      "h": "2b439771",
       "date": "2026-11-10",
-      "subject": "Regenerate code map"
+      "subject": "Lanes, review: sign-in and money routes stay with Build; the admin phone CSS lands with the Admin sidebar PR"
     },
     {
-      "h": "0945d07b",
+      "h": "c14fb38e",
       "date": "2026-11-10",
-      "subject": "Admin Problems: course link and Who has it follow the login's access; every admin page has a gate"
-    },
-    {
-      "h": "1c329580",
-      "date": "2026-11-10",
-      "subject": "Admin Problems: no dead \"Go to it\", assign only to who can open it, tab stays put"
-    },
-    {
-      "h": "55ae3814",
-      "date": "2026-11-10",
-      "subject": "Homepage writing: true to what ships today (#357)"
+      "subject": "Lanes: four build lanes, one merge queue, worker effort levels; admin content full width on phones"
     },
     {
       "h": "3c6464b6",
@@ -1031,19 +1828,29 @@
       "subject": "company: Nov 30 outreach kit (drafts) (#355)"
     },
     {
+      "h": "1245f673",
+      "date": "2026-11-10",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "3f552007",
+      "date": "2026-11-10",
+      "subject": "STRESS-1110 #1, review: paid shop items stay behind money.payments; decisions from the security sweep"
+    },
+    {
+      "h": "26c63493",
+      "date": "2026-11-10",
+      "subject": "Member sign-in link: rate-limited, and the same answer for members and non-members"
+    },
+    {
+      "h": "64b7ad04",
+      "date": "2026-11-10",
+      "subject": "STRESS-1110 #1: front desk sees what each group owes; lanes for parallel work"
+    },
+    {
       "h": "56d3f877",
       "date": "2026-11-10",
       "subject": "IMPORT-2: pro shop import reads real POS files and says what it couldn't (#353)"
-    },
-    {
-      "h": "cb7a92cf",
-      "date": "2026-11-10",
-      "subject": "Tee sheet + Home: fixes from the stress test (#352)"
-    },
-    {
-      "h": "dea6f5b4",
-      "date": "2026-11-09",
-      "subject": "CART-5: the receipt says the cart is paid; no cart ticket, no cart number (#351)"
     }
   ]
 }

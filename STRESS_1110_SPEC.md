@@ -37,6 +37,20 @@ Asked with the question feature on 2026-11-10. Each line is Cam's answer; build 
     the Admin redo, not now ("let's go through the dashboard first"). The security mediums that are admin-only (M2,
     M3, M4) wait for the Admin redo too; the dashboard and golfer ones (M1, M5, M6, M7) come after STRESS-1110.
 
+15. **"Not paid yet" has ONE definition everywhere** (Money's strip, its paid list, Payments' filter, Home) — Testing
+    lane M2; Cam: groups that played or are playing today and still owe. No-shows are their own line, counted as owed
+    only when there's a card and a no-show fee to charge.
+16. **Where each revenue number lives** (Testing lane S1; Cam: "the tee sheet [shows] the revenue they are generating
+    from anything on there, the pro shop already has the revenue from pro shops, and they are all accounted for in
+    overall Money and Analytics because it is total revenue, and the register is supposed to show cash sales"):
+    - Tee sheet: revenue from what's on the sheet (rounds, carts, items added to rounds);
+    - Pro shop: pro shop revenue (its header says so — today it reads "$34 · 1 sale" while the register took $594);
+    - Money and Analytics: TOTAL revenue — rounds + pro shop + events + dues ("Collected" and "Today" included);
+    - Register / close-out: cash sales only.
+17. **The booking confirmation keeps one price ($X online, booking fee included).** Cam: "we want them to pay online,
+    so we don't advertise that paying cash at the course skips the fee." No change to the golfer wording.
+18. **Owner sign-in stays strict** — a second check every time, no "remember this device" (the passkey is the quick way).
+
 ## Not building
 - **Yesterday line on Home** — Cam: unpaid rounds are covered by the course's no-show / cancellation fee and the
   midnight auto no-show set in Settings.
