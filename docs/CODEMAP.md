@@ -164,7 +164,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/cam/device` | public | token | GET POST | `src/app/api/cam/device/route.ts` | 24 |
 | `/api/cam/login` | public | entry | POST | `src/app/api/cam/login/route.ts` | 310 |
 | `/api/cam/step-up` | admin | file | GET POST | `src/app/api/cam/step-up/route.ts` | 81 |
-| `/api/checkin/[bookingId]` | public | token | GET POST | `src/app/api/checkin/[bookingId]/route.ts` | 125 |
+| `/api/checkin/[bookingId]` | public | token | GET POST | `src/app/api/checkin/[bookingId]/route.ts` | 126 |
 | `/api/courses` | public | public | GET | `src/app/api/courses/route.ts` | 45 |
 | `/api/courses/[slug]` | public | public | GET | `src/app/api/courses/[slug]/route.ts` | 13 |
 | `/api/courses/[slug]/account` | golfer | file | GET | `src/app/api/courses/[slug]/account/route.ts` | 86 |

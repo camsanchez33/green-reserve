@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-11-10T01:08:47.328Z",
+  "generatedAt": "2026-11-10T01:12:42.646Z",
   "repo": {
-    "head": "9bd41dd7",
+    "head": "2c69d16b",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
     "dirtyCount": 2,
     "dirty": [
@@ -14,8 +14,15 @@
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
       {
-        "h": "9bd41dd7",
-        "date": "2026-11-10T01:08:38+00:00",
+        "h": "2c69d16b",
+        "date": "2026-11-10T01:12:40+00:00",
+        "subject": "Golfer pay page: hide the saved card only after a definite decline",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "53857cdc",
+        "date": "2026-11-10T01:08:50+00:00",
         "subject": "Stress fixes, review: sheet keeps re-reading during checkout; Home Retry clears; a declined card gets a new-card pay page",
         "ids": [],
         "matches": []
@@ -1697,7 +1704,12 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "9bd41dd7",
+      "h": "2c69d16b",
+      "date": "2026-11-10",
+      "subject": "Golfer pay page: hide the saved card only after a definite decline"
+    },
+    {
+      "h": "53857cdc",
       "date": "2026-11-10",
       "subject": "Stress fixes, review: sheet keeps re-reading during checkout; Home Retry clears; a declined card gets a new-card pay page"
     },
@@ -1750,11 +1762,6 @@
       "h": "7b62a972",
       "date": "2026-11-09",
       "subject": "MONEY-1: Money tab from Cam's notes (#348)"
-    },
-    {
-      "h": "3932b9fc",
-      "date": "2026-11-09",
-      "subject": "MONEY-1: Money tab from Cam's notes"
     }
   ]
 }

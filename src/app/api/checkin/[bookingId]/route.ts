@@ -74,10 +74,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     cartFeeTotal: booking.cartFeeTotal,
     rangeBallsTotal: booking.rangeBallsTotal,
     accessFeeTotal: booking.accessFeeTotal,
-    // A saved card that was declined isn't offered again — the golfer gets Apple Pay / Google Pay and the card form
-    // (performCheckIn lets a fresh card win). A charge that may have gone through keeps the booking claimed, so a
-    // second card is refused until it is settled (stress test review 2026-11-10).
-    hasCard: !!booking.stripePaymentMethodId && !booking.checkInFailReason,
+    // A saved card that was definitely declined isn't offered again — the golfer gets Apple Pay / Google Pay and the
+    // card form (performCheckIn lets a fresh card win). Only a definite decline lifts the claim (shopLockedAt); after a
+    // charge that may have gone through (timeout, lost reply) the claim stays, and so does the saved card — retrying it
+    // reuses the same key and replays the first result, so it can't charge twice (stress test review 2026-11-10).
+    hasCard: !!booking.stripePaymentMethodId && !(booking.checkInFailReason && !booking.shopLockedAt),
     // B-5: a cart can be added at check-in when the booking has none, the
     // round is not yet paid, and a cart is priced — at the member's tier
     // rate when they have one. Same helper the charge uses.
