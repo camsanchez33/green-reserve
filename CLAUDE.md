@@ -105,6 +105,12 @@ here listed `src/app/account/`, which has never existed.
 
 ---
 
+## Lanes — parallel sessions (Cam 2026-11-10): READ `LANES.md`
+Work runs in lanes, one per session, titled by lane: **Build** (the only lane that writes app code until an Admin lane opens; owns `src/lib`,
+`src/app/api`, `prisma`), **Testing** and **Security** (read-only; findings under `lanes/`), **Company** (outreach and
+copy drafts under `company/`, no app code), Admin later. Hand-offs go to Build by `send_message`; product questions go
+to Cam through Build. Rules, outputs and the local-app setup are in `LANES.md`.
+
 ## Overseer protocol — who does what (Cam 2026-10-06)
 
 The main session is the **overseer** (the strongest model available — set with
@@ -237,7 +243,7 @@ available, skip the Control Room and say so once in the first reply.
 
 ### Doc-file commit rule
 After every run, `git status` — if dirty:
-- **Doc files** (`RUN_QUEUE.md`, `*_SPEC.md`, `CLAUDE.md`, everything under `.claude/`, `scripts/*.mjs`, everything under `legal/`): COMMIT with message `"queue/spec update"` — never discard; Cowork edits them between runs.
+- **Doc files** (`RUN_QUEUE.md`, `*_SPEC.md`, `CLAUDE.md`, `LANES.md`, everything under `.claude/`, `lanes/`, `company/`, `scripts/*.mjs`, everything under `legal/`): COMMIT with message `"queue/spec update"` — never discard; Cowork edits them between runs.
 - **Non-doc files**: never auto-discard. If they belong to the run, commit them with it; if you cannot tell whose they are, stop and ask Cam. (Changed 2026-09-29 — this used to be `git checkout -- .`, which silently destroyed any uncommitted code.)
 
 First action of every run: commit any dirty doc files BEFORE reading the queue.

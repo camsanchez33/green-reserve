@@ -20,7 +20,7 @@ ok('the month summary is scoped to the course and counts blocked times only for 
 ok('a bad month is refused', month.includes('status: 400') && month.includes('(0[1-9]|1[0-2])'));
 ok('List and Calendar never write (no POST/PATCH/DELETE)', ![list, cal].some(f => /method:\s*'(POST|PATCH|DELETE)'/.test(f)));
 ok('a list line opens the time\'s card', list.includes('onClick={() => onSelect(s.id)}'));
-ok('the list amount only with money.payments', page.includes("showMoney={access.can('money.payments')}") && list.includes('showMoney && g.totalAmount != null') && list.includes('roundChargeCents(') && !list.includes('`$${(g.totalAmount')
+ok('the list amount to whoever can take the payment (STRESS-1110)', page.includes("showMoney={access.can('money.payments') || access.can('sheet.counter_payment') || access.can('sheet.checkin')}") && list.includes('showMoney && g.totalAmount != null') && list.includes('roundChargeCents(') && !list.includes('`$${(g.totalAmount')
   && !list.includes('min-w-[30rem]'));
 ok('LIST-2: a line carries the grid\'s fill and tags, what they play, how booked and the exact rate', list.includes('FILL[t]') && list.includes('groupTags(g)') && list.includes('roundName(s)') && list.includes('rateWords(g)') && !list.includes('member or resident'));
 ok('LIST-2: paid and checked-in groups owe nothing in words', list.includes("t === 'ok' ? ''"));

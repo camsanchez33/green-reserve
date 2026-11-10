@@ -18,7 +18,7 @@ export default function TeeSheetList({ slots, isPast, selectedId, showMoney, onS
   slots: BoardSlot[];
   isPast: (s: BoardSlot) => boolean;
   selectedId: string | null;
-  /** money.payments — without it no amounts are shown. */
+  /** Whoever can take the payment sees what a group owes (STRESS-1110); paid groups show no amount here. */
   showMoney: boolean;
   onSelect: (teeTimeId: string) => void;
 }) {
