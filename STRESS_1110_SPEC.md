@@ -21,6 +21,22 @@ Asked with the question feature on 2026-11-10. Each line is Cam's answer; build 
 9. **Required fields go red under themselves on every dashboard form**, page by page as each is touched.
 10. **The organizer's contact stays required** when the organizer pays as one bill (as built).
 
+11. **Voiding a cash sale needs "Take payment at the counter"** (security sweep L5; Cam: "if they don't have
+    permission then they shouldn't be able to do it"). The register stays the one secure, simple cash loop Cam
+    described: open → count the starting cash → every cash sale counted by the site → close → count, see over/short →
+    the owner's set amount left in + a note for the rest → locked for the night, every step stored (DRAWER-1/R4).
+12. **Permissions tightened** (security sweep; Cam picked all three — a full Settings / permissions simplification
+    comes when the launch plan reaches Settings):
+    - changing a membership tier's price or dues amount also needs `settings.edit`;
+    - marking dues paid needs `sheet.counter_payment` (as every in-person payment), not `members.edit`;
+    - switching member / resident pricing off is owner-only.
+13. **The security sweep's 7 mediums** (lanes/security/2026-11-10-full-sweep.md M1–M7) — Cam: "after STRESS-1110".
+    Build does them, two PRs, before Nov 30. The High (member sign-in link) is already fixed.
+
+14. **Admin: confirm again before cancelling a booking or taking a course offline** (sweep L3) — Cam: yes, but with
+    the Admin redo, not now ("let's go through the dashboard first"). The security mediums that are admin-only (M2,
+    M3, M4) wait for the Admin redo too; the dashboard and golfer ones (M1, M5, M6, M7) come after STRESS-1110.
+
 ## Not building
 - **Yesterday line on Home** — Cam: unpaid rounds are covered by the course's no-show / cancellation fee and the
   midnight auto no-show set in Settings.
