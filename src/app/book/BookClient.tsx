@@ -67,6 +67,18 @@ type ConfirmedData = {
   golferEmail: string;
 };
 
+// "Back to tee times": where the golfer picked the time — the member list for a
+// member booking, else the course page with the date, party and filters it had.
+export function backToTimesHref(courseSlug: string, params: { get(key: string): string | null }, players: number): string {
+  if (params.get('from') === 'member') return `/courses/${courseSlug}/member`;
+  const q = new URLSearchParams();
+  const date = params.get('date');
+  if (date) q.set('date', date);
+  q.set('players', String(players));
+  for (const k of ['tod', 'holes', 'product']) { const v = params.get(k); if (v) q.set(k, v); }
+  return `/courses/${courseSlug}?${q}`;
+}
+
 function formatTime(t: string) {
   if (!t) return '';
   const [h, m] = t.split(':').map(Number);
@@ -308,6 +320,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
 
             <Link
               href={`/courses/${courseSlug}/account?email=${encodeURIComponent(confirmedData.golferEmail)}`}
+              prefetch={false}
               className="inline-flex items-center justify-center w-full py-3.5 rounded-md font-medium text-white text-sm mb-3 transition-colors"
               style={{ backgroundColor: accent }}
             >
@@ -334,7 +347,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
           <h1 className="font-serif text-[24px] leading-tight text-ink mb-2">Can&apos;t complete this booking</h1>
           <p className="text-ink-soft text-sm mb-6">{loadError || 'This tee time is no longer available.'}</p>
           <Link
-            href={courseSlug ? `/courses/${courseSlug}${date ? `?date=${date}` : ''}` : '/'}
+            href={courseSlug ? backToTimesHref(courseSlug, params, requestedPlayers) : '/'}
             className="inline-block px-5 py-2.5 rounded-md text-sm font-medium text-white bg-pine hover:bg-pine-hover transition-colors"
           >
             Pick another time
@@ -352,7 +365,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
         <div className={`${CARD} max-w-md w-full p-8 text-center`}>
           <h1 className="font-serif text-[24px] leading-tight text-ink mb-2">This tee time is for groups of {minPlayers} or more</h1>
           <p className="text-ink-soft text-sm mb-6">You picked {players} player{players === 1 ? '' : 's'}. Pick another time, or add players and choose this one again.</p>
-          <Link href={courseSlug ? `/courses/${courseSlug}${date ? `?date=${date}` : ''}` : '/'}
+          <Link href={courseSlug ? backToTimesHref(courseSlug, params, requestedPlayers) : '/'}
             className="inline-block px-5 py-2.5 rounded-md text-sm font-medium text-white transition-colors"
             style={{ backgroundColor: accent }}>
             Pick another time
@@ -403,7 +416,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   return (
     <div className="min-h-screen bg-paper">
       <div className="max-w-2xl mx-auto px-4 py-10">
-        <Link href={`/courses/${courseSlug}?date=${date}&players=${players}`} className="inline-flex items-center gap-1.5 text-ink-soft hover:text-ink text-sm mb-6 transition-colors">
+        <Link href={backToTimesHref(courseSlug, params, players)} className="inline-flex items-center gap-1.5 text-ink-soft hover:text-ink text-sm mb-6 transition-colors">
           Back to tee times
         </Link>
 
@@ -544,7 +557,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
 
           {/* SP-B: the course's cancellation terms, in the words describePolicy()
               gives every golfer surface. */}
-          <div className="bg-white rounded-lg p-5 border border-line">
+          <div className={`${CARD} p-5`}>
             <p className="text-ink text-sm font-medium mb-1.5">Cancellation policy</p>
             <ul className="space-y-1">
               {terms.lines.map((l, i) => <li key={i} className="text-ink-soft text-xs leading-relaxed">{l}</li>)}

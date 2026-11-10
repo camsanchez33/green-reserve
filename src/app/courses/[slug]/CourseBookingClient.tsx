@@ -709,6 +709,10 @@ export default function CourseDetailPage({
       players: String(players),
       cart: withCart ? '1' : '0',
     });
+    // /book's "Back to tee times" rebuilds this page's filters from these.
+    if (todFilter !== 'all') qp.set('tod', todFilter);
+    if (holesFilter !== 'all') qp.set('holes', holesFilter);
+    if (productFilter !== 'all') qp.set('product', productFilter);
     router.push(`/book?${qp}`);
   }
 
@@ -884,7 +888,7 @@ export default function CourseDetailPage({
         {memberSession ? (
           <Link
             href={`/courses/${slug}/account`}
-            className="absolute top-3 right-4 z-10 flex items-center gap-1.5 text-xs text-white/80 hover:text-white transition-colors"
+            className="absolute top-3 right-4 z-10 flex items-center gap-1.5 text-xs font-medium text-white bg-black/55 hover:bg-black/70 rounded-md px-2.5 py-1.5 transition-colors"
           >
             <span>{memberSession.name}</span>
             <span className="bg-white/15 rounded px-1.5 py-0.5 text-[10px] font-medium">Member{memberSession.tier?.name ? ` — ${memberSession.tier.name}` : ''}</span>
@@ -892,14 +896,14 @@ export default function CourseDetailPage({
         ) : golferProfile ? (
           <Link
             href={`/courses/${slug}/account`}
-            className="absolute top-3 right-4 z-10 text-xs font-medium text-white bg-black/35 hover:bg-black/50 rounded-md px-2.5 py-1.5 transition-colors"
+            className="absolute top-3 right-4 z-10 text-xs font-medium text-white bg-black/55 hover:bg-black/70 rounded-md px-2.5 py-1.5 transition-colors"
           >
             Hi, {golferProfile.firstName}
           </Link>
         ) : (
           <Link
             href={`/courses/${slug}/account`}
-            className="absolute top-3 right-4 z-10 text-xs font-medium text-white bg-black/35 hover:bg-black/50 rounded-md px-2.5 py-1.5 transition-colors"
+            className="absolute top-3 right-4 z-10 text-xs font-medium text-white bg-black/55 hover:bg-black/70 rounded-md px-2.5 py-1.5 transition-colors"
           >
             Sign in
           </Link>
