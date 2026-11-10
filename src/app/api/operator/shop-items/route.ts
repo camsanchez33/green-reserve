@@ -48,7 +48,8 @@ export async function POST(req: NextRequest) {
   if ('res' in g) return g.res;
   const body = await req.json().catch(() => ({})) as Record<string, unknown>;
   // W2-7: one item (with any options), or many at once — a paste, a CSV or the AI's rows.
-  const r = await createItems(g.session.courseId, Array.isArray(body.items) ? body.items : [body]);
+  // IMPORT-2: a file's Cost column is saved only for the owner (costs are owner-only, api/operator/shop-stock).
+  const r = await createItems(g.session.courseId, Array.isArray(body.items) ? body.items : [body], { cost: !g.session.isStaff });
   if (!r.ok) return NextResponse.json({ error: r.error }, { status: 400 });
   return NextResponse.json(r);
 }

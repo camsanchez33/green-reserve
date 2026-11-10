@@ -4971,7 +4971,7 @@
     },
     {
       "path": "src/app/api/member/[courseSlug]/send-code/route.ts",
-      "lines": 66,
+      "lines": 61,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4991,6 +4991,8 @@
         "@/lib/email",
         "@/lib/member-session",
         "@/lib/prisma",
+        "@/lib/rate-limit",
+        "@/lib/security-events",
         "next/server"
       ],
       "usedBy": []
@@ -7259,7 +7261,7 @@
     },
     {
       "path": "src/app/api/operator/shop-items/route.ts",
-      "lines": 91,
+      "lines": 92,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9072,7 +9074,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 2280,
+      "lines": 2283,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -12123,7 +12125,7 @@
     },
     {
       "path": "src/components/dashboard/StockTab.tsx",
-      "lines": 207,
+      "lines": 208,
       "purpose": "POS-6/POS-8 (Cam 2026-11-09:",
       "brain": [],
       "exports": [
@@ -12364,7 +12366,7 @@
     },
     {
       "path": "src/components/dashboard/UploadMany.tsx",
-      "lines": 117,
+      "lines": 189,
       "purpose": "POS-8 (Cam 2026-11-09:",
       "brain": [],
       "exports": [
@@ -24116,6 +24118,7 @@
         "src/app/api/manage/[bookingId]/route.ts",
         "src/app/api/manage/[bookingId]/send-modified-email/route.ts",
         "src/app/api/manage/[bookingId]/swap-time/route.ts",
+        "src/app/api/member/[courseSlug]/send-code/route.ts",
         "src/app/api/member/[courseSlug]/verify/route.ts",
         "src/app/api/membership/[id]/auto-renew/route.ts",
         "src/app/api/membership/[id]/route.ts",
@@ -25236,6 +25239,7 @@
         "src/app/api/cam/login/route.ts",
         "src/app/api/cam/step-up/route.ts",
         "src/app/api/golfer/auth/otp/verify/route.ts",
+        "src/app/api/member/[courseSlug]/send-code/route.ts",
         "src/app/api/member/[courseSlug]/verify/route.ts",
         "src/lib/admin-checks.ts"
       ]
@@ -25734,7 +25738,7 @@
     },
     {
       "path": "src/lib/shop-catalog.ts",
-      "lines": 169,
+      "lines": 191,
       "purpose": "W2-7 (Cam 2026-10-20):",
       "brain": [],
       "exports": [
@@ -25792,10 +25796,42 @@
     },
     {
       "path": "src/lib/shop-import.ts",
-      "lines": 133,
+      "lines": 352,
       "purpose": "W2-7 (Cam 2026-10-20:",
       "brain": [],
       "exports": [
+        {
+          "name": "barcodeChecks",
+          "kind": "fn"
+        },
+        {
+          "name": "CategoryMerge",
+          "kind": "type"
+        },
+        {
+          "name": "categoryMerges",
+          "kind": "fn"
+        },
+        {
+          "name": "checkList",
+          "kind": "fn"
+        },
+        {
+          "name": "cleanSku",
+          "kind": "fn"
+        },
+        {
+          "name": "clearRepeatedSkus",
+          "kind": "fn"
+        },
+        {
+          "name": "HeaderClash",
+          "kind": "type"
+        },
+        {
+          "name": "HeaderGuess",
+          "kind": "type"
+        },
         {
           "name": "ImportItem",
           "kind": "type"
@@ -25807,6 +25843,10 @@
         {
           "name": "ImportRow",
           "kind": "type"
+        },
+        {
+          "name": "LIST_WARN",
+          "kind": "const"
         },
         {
           "name": "MAX_IMPORT_ITEMS",

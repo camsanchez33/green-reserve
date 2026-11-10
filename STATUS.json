@@ -1,21 +1,61 @@
 {
-  "generatedAt": "2026-11-10T01:12:42.646Z",
+  "generatedAt": "2026-11-10T22:56:19.146Z",
   "repo": {
-    "head": "2c69d16b",
+    "head": "26c63493",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 2,
+    "dirtyCount": 7,
     "dirty": [
-      "M docs/CODEMAP.md",
-      " M docs/codemap.json"
+      "M CLAUDE.md",
+      " M LANES.md",
+      " M STRESS_1110_SPEC.md",
+      " M scripts/stress-1110-test.ts",
+      " M src/app/dashboard/page.tsx",
+      " M src/components/dashboard/ShopItemsForGroup.tsx",
+      " M src/components/dashboard/TeeSheetList.tsx"
     ],
-    "looksLikeRunInProgress": false
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
       {
-        "h": "2c69d16b",
-        "date": "2026-11-10T01:12:40+00:00",
+        "h": "26c63493",
+        "date": "2026-11-10T22:44:05+00:00",
+        "subject": "Member sign-in link: rate-limited, and the same answer for members and non-members",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "64b7ad04",
+        "date": "2026-11-10T22:42:47+00:00",
+        "subject": "STRESS-1110 #1: front desk sees what each group owes; lanes for parallel work",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "56d3f877",
+        "date": "2026-11-10T17:41:55-05:00",
+        "subject": "IMPORT-2: pro shop import reads real POS files and says what it couldn't (#353)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "48c91709",
+        "date": "2026-11-10T22:29:11+00:00",
+        "subject": "IMPORT-2: the pro shop import reads real POS files and says what it couldn't",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "cb7a92cf",
+        "date": "2026-11-10T17:22:17-05:00",
+        "subject": "Tee sheet + Home: fixes from the stress test (#352)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "f4f4057e",
+        "date": "2026-11-10T01:12:45+00:00",
         "subject": "Golfer pay page: hide the saved card only after a definite decline",
         "ids": [],
         "matches": []
@@ -1328,7 +1368,7 @@
       "line": 2412,
       "hash": "b88c8bf3",
       "shipDate": "2026-07-22",
-      "ageDays": 110
+      "ageDays": 111
     }
   ],
   "next": [
@@ -1469,32 +1509,32 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 1,
-      "lastTouched": "2026-11-09",
+      "lastTouched": "2026-11-10",
       "ageDays": 0
     },
     {
       "file": "DENSE_UI_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-11-01",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
+    },
+    {
+      "file": "STRESS_1110_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-11-10",
+      "ageDays": 0
     },
     {
       "file": "LAUNCH_PLAN_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-11-09",
-      "ageDays": 0
-    },
-    {
-      "file": "STAFF_POLICY_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-26",
-      "ageDays": 14
+      "ageDays": 1
     },
     {
       "file": "OPERATOR_REWORK_SPEC.md",
@@ -1503,208 +1543,239 @@
       "ageDays": 15
     },
     {
+      "file": "STAFF_POLICY_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-26",
+      "ageDays": 15
+    },
+    {
       "file": "ADMIN_V5_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-23",
-      "ageDays": 17
+      "ageDays": 18
     },
     {
       "file": "HOMEPAGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-23",
-      "ageDays": 17
+      "ageDays": 18
     },
     {
       "file": "AGREEMENT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 18
+      "ageDays": 19
     },
     {
       "file": "CALL_SCHEDULING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 18
+      "ageDays": 19
     },
     {
       "file": "ONBOARDING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 18
+      "ageDays": 19
     },
     {
       "file": "ONBOARDING_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 18
+      "ageDays": 19
     },
     {
       "file": "PUBLIC_SITE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 18
+      "ageDays": 19
     },
     {
       "file": "RECEIPT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 18
+      "ageDays": 19
     },
     {
       "file": "ADMIN_MASTER_PLAN.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "ADMIN_REBUILD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "ADMIN_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "ADMIN_V3_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "ADMIN_V4_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "ARCHITECTURE.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "BACKUP_OPS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "BIRDIE_AI_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "CODEMAP_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "COURSES_SHEET_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "COURSE_LAYOUT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "DESIGN_SYSTEM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "FB2_COPY_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "FB3_FEE_PLAN_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "GOLFER_EDGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "GOLFER_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "HARDENING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "INQUIRY_CALL_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "INQUIRY_FORM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "MANAGE_BOOKING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "PRIVATE_BILLING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "PRODUCTION_READINESS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "REVIEW_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "SITE_DASHBOARD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "UI_REVISE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 19
+      "ageDays": 20
     }
   ],
   "bank": null,
   "recentCommits": [
     {
-      "h": "2c69d16b",
+      "h": "26c63493",
+      "date": "2026-11-10",
+      "subject": "Member sign-in link: rate-limited, and the same answer for members and non-members"
+    },
+    {
+      "h": "64b7ad04",
+      "date": "2026-11-10",
+      "subject": "STRESS-1110 #1: front desk sees what each group owes; lanes for parallel work"
+    },
+    {
+      "h": "56d3f877",
+      "date": "2026-11-10",
+      "subject": "IMPORT-2: pro shop import reads real POS files and says what it couldn't (#353)"
+    },
+    {
+      "h": "48c91709",
+      "date": "2026-11-10",
+      "subject": "IMPORT-2: the pro shop import reads real POS files and says what it couldn't"
+    },
+    {
+      "h": "cb7a92cf",
+      "date": "2026-11-10",
+      "subject": "Tee sheet + Home: fixes from the stress test (#352)"
+    },
+    {
+      "h": "f4f4057e",
       "date": "2026-11-10",
       "subject": "Golfer pay page: hide the saved card only after a definite decline"
     },
@@ -1737,31 +1808,6 @@
       "h": "3ffa5f8f",
       "date": "2026-11-09",
       "subject": "AUDIT-1109: update two source pins for the new register gate and the Register's key"
-    },
-    {
-      "h": "74f02e7c",
-      "date": "2026-11-09",
-      "subject": "AUDIT-1109: close two register gaps; no silent failures in tonight's pages"
-    },
-    {
-      "h": "de83521b",
-      "date": "2026-11-09",
-      "subject": "EVENTS-2 + SCHED-2: event walk-through and guided event page; Schedule in tabs (#349)"
-    },
-    {
-      "h": "c40ae5e7",
-      "date": "2026-11-09",
-      "subject": "SCHED-2: Schedule in tabs, days adjusted like memberships, demand pricing explained"
-    },
-    {
-      "h": "9713a9b6",
-      "date": "2026-11-09",
-      "subject": "EVENTS-2: event setup walk-through and a guided event page"
-    },
-    {
-      "h": "7b62a972",
-      "date": "2026-11-09",
-      "subject": "MONEY-1: Money tab from Cam's notes (#348)"
     }
   ]
 }

@@ -506,7 +506,7 @@ export default function ShopPage() {
                             {/* DASH-D (Cam 2026-11-01, "photo tiles"): the item's photo when it has one; otherwise the name is the tile. */}
                             {withPhotos && (it.photoUrl
                               // eslint-disable-next-line @next/next/no-img-element
-                              ? <img src={it.photoUrl} alt="" loading="lazy" className="block w-full h-20 object-cover bg-paper" />
+                              ? <img src={it.photoUrl} alt="" loading="lazy" className="block w-full h-20 object-contain bg-paper" />
                               : <span aria-hidden="true" className="flex w-full h-20 items-center justify-center bg-paper text-[18px] font-semibold text-ink-faint">{it.name.split(/\s+/).filter(w => /^[A-Za-z0-9]/.test(w)).slice(0, 2).map(w => w[0]).join('').toUpperCase()}</span>)}
                             {/* POS-6 (Cam 2026-11-09): "in sale" is how many are on this ticket; the stock is its own line, never beside the price. */}
                             <span className="flex items-start justify-between gap-2 px-3 pt-3">

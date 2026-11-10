@@ -4,15 +4,20 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-10 01:12 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `2c69d16b` · working tree **2 dirty file(s)**
+Generated 2026-11-10 22:56 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `26c63493` · working tree **7 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 184 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 189 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `2c69d16b` | 2026-11-10 | Golfer pay page: hide the saved card only after a definite decline |
+| `26c63493` | 2026-11-10 | Member sign-in link: rate-limited, and the same answer for members and non-members |
+| `64b7ad04` | 2026-11-10 | STRESS-1110 #1: front desk sees what each group owes; lanes for parallel work |
+| `56d3f877` | 2026-11-10 | IMPORT-2: pro shop import reads real POS files and says what it couldn't (#353) |
+| `48c91709` | 2026-11-10 | IMPORT-2: the pro shop import reads real POS files and says what it couldn't |
+| `cb7a92cf` | 2026-11-10 | Tee sheet + Home: fixes from the stress test (#352) |
+| `f4f4057e` | 2026-11-10 | Golfer pay page: hide the saved card only after a definite decline |
 | `53857cdc` | 2026-11-10 | Stress fixes, review: sheet keeps re-reading during checkout; Home Retry clears; a declined card gets a new-card pay page |
 | `dcaec7c7` | 2026-11-10 | Tee sheet + Home stress-test fixes: phone width, live Home, quiet re-reads, declined pay link, clearer cash |
 | `dea6f5b4` | 2026-11-09 | CART-5: the receipt says the cart is paid; no cart ticket, no cart number (#351) |
@@ -199,13 +204,18 @@ Generated 2026-11-10 01:12 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (2 file(s))
+### Uncommitted working tree (7 file(s))
 
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
+- `M CLAUDE.md`
+- `M LANES.md`
+- `M STRESS_1110_SPEC.md`
+- `M scripts/stress-1110-test.ts`
+- `M src/app/dashboard/page.tsx`
+- `M src/components/dashboard/ShopItemsForGroup.tsx`
+- `M src/components/dashboard/TeeSheetList.tsx`
 
-Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
-these actually are first.
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -219,7 +229,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 110d | `b88c8bf3` | `RUN_QUEUE.md:2412` |
+| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 111d | `b88c8bf3` | `RUN_QUEUE.md:2412` |
 
 ## Not started — the actual queue
 
@@ -287,60 +297,61 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-11-09 | 0d |
-| `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 8d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 19d |
-| `LAUNCH_PLAN_SPEC.md` | 0 | 2026-11-09 | 0d |
-| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 14d |
+| `CLAUDE.md` | 1 | 2026-11-10 | 0d |
+| `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 9d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 20d |
+| `STRESS_1110_SPEC.md` | 0 | 2026-11-10 | 0d |
+| `LAUNCH_PLAN_SPEC.md` | 0 | 2026-11-09 | 1d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 15d |
-| `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 17d |
-| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 17d |
-| `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 18d |
-| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 18d |
-| `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 18d |
-| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 18d |
-| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 18d |
-| `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 18d |
-| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 19d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 19d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 19d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-10-20 | 19d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-10-20 | 19d |
-| `ARCHITECTURE.md` | 0 | 2026-10-20 | 19d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-20 | 19d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-20 | 19d |
-| `CODEMAP_SPEC.md` | 0 | 2026-10-20 | 19d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-20 | 19d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-20 | 19d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-20 | 19d |
-| `FB2_COPY_SPEC.md` | 0 | 2026-10-20 | 19d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-20 | 19d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-20 | 19d |
-| `GOLFER_SPEC.md` | 0 | 2026-10-20 | 19d |
-| `HARDENING_SPEC.md` | 0 | 2026-10-20 | 19d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-20 | 19d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-20 | 19d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-20 | 19d |
-| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-20 | 19d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-20 | 19d |
-| `REVIEW_SPEC.md` | 0 | 2026-10-20 | 19d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-20 | 19d |
-| `UI_REVISE_SPEC.md` | 0 | 2026-10-20 | 19d |
+| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 15d |
+| `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 18d |
+| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 18d |
+| `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 19d |
+| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 19d |
+| `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 19d |
+| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 19d |
+| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 19d |
+| `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 19d |
+| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 20d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 20d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 20d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-10-20 | 20d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-10-20 | 20d |
+| `ARCHITECTURE.md` | 0 | 2026-10-20 | 20d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-20 | 20d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-20 | 20d |
+| `CODEMAP_SPEC.md` | 0 | 2026-10-20 | 20d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-20 | 20d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-20 | 20d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-20 | 20d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-10-20 | 20d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-20 | 20d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-20 | 20d |
+| `GOLFER_SPEC.md` | 0 | 2026-10-20 | 20d |
+| `HARDENING_SPEC.md` | 0 | 2026-10-20 | 20d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-20 | 20d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-20 | 20d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-20 | 20d |
+| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-20 | 20d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-20 | 20d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-20 | 20d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-20 | 20d |
+| `UI_REVISE_SPEC.md` | 0 | 2026-10-20 | 20d |
 
 ## Recent commits
 
-- `2c69d16b` 2026-11-10 — Golfer pay page: hide the saved card only after a definite decline
+- `26c63493` 2026-11-10 — Member sign-in link: rate-limited, and the same answer for members and non-members
+- `64b7ad04` 2026-11-10 — STRESS-1110 #1: front desk sees what each group owes; lanes for parallel work
+- `56d3f877` 2026-11-10 — IMPORT-2: pro shop import reads real POS files and says what it couldn't (#353)
+- `48c91709` 2026-11-10 — IMPORT-2: the pro shop import reads real POS files and says what it couldn't
+- `cb7a92cf` 2026-11-10 — Tee sheet + Home: fixes from the stress test (#352)
+- `f4f4057e` 2026-11-10 — Golfer pay page: hide the saved card only after a definite decline
 - `53857cdc` 2026-11-10 — Stress fixes, review: sheet keeps re-reading during checkout; Home Retry clears; a declined card gets a new-card pay page
 - `dcaec7c7` 2026-11-10 — Tee sheet + Home stress-test fixes: phone width, live Home, quiet re-reads, declined pay link, clearer cash
 - `dea6f5b4` 2026-11-09 — CART-5: the receipt says the cart is paid; no cart ticket, no cart number (#351)
 - `a47a7025` 2026-11-09 — CART-5: the receipt says the cart is paid; no cart ticket, no cart number
 - `ba4de30f` 2026-11-09 — AUDIT-1109: close two register gaps; no silent failures in tonight's pages (#350)
 - `3ffa5f8f` 2026-11-09 — AUDIT-1109: update two source pins for the new register gate and the Register's key
-- `74f02e7c` 2026-11-09 — AUDIT-1109: close two register gaps; no silent failures in tonight's pages
-- `de83521b` 2026-11-09 — EVENTS-2 + SCHED-2: event walk-through and guided event page; Schedule in tabs (#349)
-- `c40ae5e7` 2026-11-09 — SCHED-2: Schedule in tabs, days adjusted like memberships, demand pricing explained
-- `9713a9b6` 2026-11-09 — EVENTS-2: event setup walk-through and a guided event page
-- `7b62a972` 2026-11-09 — MONEY-1: Money tab from Cam's notes (#348)
 
 ---
 

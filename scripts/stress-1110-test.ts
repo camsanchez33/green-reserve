@@ -34,5 +34,9 @@ ok('"The other 1 stays booked"', page.includes("${rest === 1 ? 'stays' : 'stay'}
 ok('the cancel confirm names the button the card shows', read('src/lib/cancel-confirm.ts').includes('Use “Cancel, waive the fee”') && page.includes('<span>Cancel, waive the fee</span>'));
 ok('a group paid online, not yet here, reads "Paid online" (not "Card on File")', getBookingStatus('confirmed', 'paid').label === 'Paid online' && getBookingStatus('confirmed', 'card_on_file').label === 'Card on File');
 
+// STRESS-1110 #1 review: shop items on a paid round show prices only with money.payments.
+const items = read('src/components/dashboard/ShopItemsForGroup.tsx');
+ok('shop items: owed prices for whoever takes payment, paid ones only with money.payments', page.includes("showMoney={unpaid ? seesDue : showMoney}") && (page.match(/canSell=\{access\.can\('shop\.sell'\)\} showMoney=\{seesDue\}/g) ?? []).length === 1 && items.includes("!editable && showMoney && <p"));
+
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);

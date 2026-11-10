@@ -38,6 +38,16 @@ async function cleanup() {
   ok('a code already on another item is refused, by name', !dupImport.ok && /already on Glove/.test(dupImport.error), JSON.stringify(dupImport));
   const twice = await createItems(c.id, [{ name: 'A', priceCents: 100, sku: 'Z9' }, { name: 'B', priceCents: 100, sku: 'z9' }]);
   ok('…and a code used twice in one import', !twice.ok && /used twice/.test(twice.error));
+  // IMPORT-2: every clash named at once; a file's cost saved only for the owner.
+  const many = await createItems(c.id, [{ name: 'A', priceCents: 100, sku: 'Q1' }, { name: 'B', priceCents: 100, sku: 'q1' }, { name: 'C', priceCents: 100, sku: 'Q2' }, { name: 'D', priceCents: 100, sku: 'Q2' }]);
+  ok('…every code used twice is named at once', !many.ok && /Codes Q1, Q2 are used twice/i.test(many.error), JSON.stringify(many));
+  const twoBad = await createItems(c.id, [{ name: 'E', priceCents: 0 }, { name: 'F', priceCents: 100, options: [{ label: 'M' }, { label: 'm' }] }]);
+  ok('…every wrong row is named at once', !twoBad.ok && /^2 items need fixing/.test(twoBad.error), JSON.stringify(twoBad));
+  const owner = await createItems(c.id, [{ name: 'Costed', priceCents: 1000, costCents: 400 }, { name: 'Costed polo', priceCents: 5000, options: [{ label: 'S', costCents: 2000 }, { label: 'L', costCents: 2100 }] }], { cost: true });
+  const staffAdd = await createItems(c.id, [{ name: 'Staff costed', priceCents: 1000, costCents: 400 }]);
+  const costs = await prisma.shopItem.findMany({ where: { courseId: c.id, name: { in: ['Costed', 'Staff costed', 'Costed polo — S', 'Costed polo — L'] } }, select: { name: true, costCents: true } });
+  const costOf = (n: string) => costs.find(x => x.name === n)?.costCents;
+  ok('…the owner\'s import saves cost, on items and sizes; a staff import ignores it', owner.ok && staffAdd.ok && costOf('Costed') === 400 && costOf('Costed polo — S') === 2000 && costOf('Costed polo — L') === 2100 && costOf('Staff costed') === null, JSON.stringify(costs));
   const otherCourse = await createItems(other.id, [{ name: 'Their glove', priceCents: 2000, sku: 'G1' }]);
   ok('…another course may use the same code', otherCourse.ok);
   const gloveRow = rows.find(x => x.name === 'Glove')!;

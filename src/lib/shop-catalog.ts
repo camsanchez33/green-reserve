@@ -13,10 +13,18 @@ export const ITEM_SELECT = { id: true, name: true, category: true, priceCents: t
 
 export const optionName = (item: string, option: string) => `${item} — ${option}`;
 
-type OptionIn = { id?: string; label: string; priceCents: number | null; stockCount: number | null; sku: string };
-export type ItemIn = { name: string; category: string; priceCents: number; stockCount: number | null; sku: string; taxCategory: string; options: OptionIn[] };
+type OptionIn = { id?: string; label: string; priceCents: number | null; stockCount: number | null; sku: string; costCents?: number | null };
+export type ItemIn = { name: string; category: string; priceCents: number; stockCount: number | null; sku: string; taxCategory: string; options: OptionIn[]; costCents?: number | null };
+const MAX_COST = 10_000_000; // $100,000 — lib/shop-stock's limit
 
 const fail = (error: string) => ({ ok: false as const, error });
+
+/** IMPORT-2: what one costs the shop — owner only (opts.cost); anything else is ignored, never refused. */
+function costOf(v: unknown): number | null {
+  if (v === null || v === undefined || v === '') return null;
+  const n = Number(v);
+  return Number.isInteger(n) && n >= 0 && n <= MAX_COST ? n : null;
+}
 
 function stockOf(v: unknown): number | null | 'bad' {
   if (v === null || v === undefined || v === '') return null;
@@ -25,7 +33,7 @@ function stockOf(v: unknown): number | null | 'bad' {
 }
 
 /** Validate one item (with its options) from a browser body. */
-export function readItem(body: Record<string, unknown>, keepOpt: Set<string> = new Set()): { ok: true; item: ItemIn } | { ok: false; error: string } {
+export function readItem(body: Record<string, unknown>, keepOpt: Set<string> = new Set(), opts: { cost?: boolean } = {}): { ok: true; item: ItemIn } | { ok: false; error: string } {
   const v = validItemInput(body);
   if (typeof v === 'string') return fail(v);
   const stock = stockOf(body.stockCount);
@@ -45,12 +53,12 @@ export function readItem(body: Record<string, unknown>, keepOpt: Set<string> = n
     if (p !== null && (!Number.isInteger(p) || p <= 0 || p > MAX_ITEM_PRICE_CENTS)) return fail(`${v.name} — ${label}: enter a price above $0, or leave it blank to use the item's price.`);
     const s = typeof o.id === 'string' && keepOpt.has(o.id) ? null : stockOf(o.stockCount);
     if (s === 'bad') return fail(`${v.name} — ${label}: stock must be a whole number, or blank.`);
-    options.push({ id: typeof o.id === 'string' ? o.id : undefined, label, priceCents: p, stockCount: s, sku: typeof o.sku === 'string' ? o.sku.trim().slice(0, 64) : '' });
+    options.push({ id: typeof o.id === 'string' ? o.id : undefined, label, priceCents: p, stockCount: s, sku: typeof o.sku === 'string' ? o.sku.trim().slice(0, 64) : '', ...(opts.cost ? { costCents: costOf(o.costCents) } : {}) });
   }
   if (options.length === 1) return fail(`${v.name}: one option is just the item — add a second option, or remove it.`);
   // W2-7 part B: how it's taxed; options are taxed like their item.
   const taxCategory = isTaxCategory(body.taxCategory) ? body.taxCategory : 'general';
-  return { ok: true, item: { ...v, stockCount: options.length ? null : stock, sku: options.length ? '' : sku, taxCategory, options } };
+  return { ok: true, item: { ...v, stockCount: options.length ? null : stock, sku: options.length ? '' : sku, taxCategory, options, ...(opts.cost && !options.length ? { costCents: costOf(body.costCents) } : {}) } };
 }
 
 /**
@@ -59,40 +67,54 @@ export function readItem(body: Record<string, unknown>, keepOpt: Set<string> = n
  * re-import used to make a second item with the same code, and scanning it then
  * added nothing.
  */
+const listOf = (xs: string[]) => xs.length > 5 ? `${xs.slice(0, 5).join(', ')} and ${xs.length - 5} more` : xs.join(', ');
+
 async function skuClash(courseId: string, items: ItemIn[], exceptIds: string[] = []): Promise<string | null> {
   const codes: string[] = [];
   for (const it of items) { if (it.sku) codes.push(it.sku); for (const o of it.options) if (o.sku) codes.push(o.sku); }
-  const seen = new Set<string>();
-  for (const c of codes) { const k = c.toLowerCase(); if (seen.has(k)) return `Code ${c} is used twice — give each item its own.`; seen.add(k); }
+  // IMPORT-2 (stress test 2026-11-10: "it took 3 tries"): every clash at once, not the first one.
+  const seen = new Set<string>(), twice = new Map<string, string>();
+  for (const c of codes) { const k = c.toLowerCase(); if (seen.has(k) && !twice.has(k)) twice.set(k, c); seen.add(k); }
+  const reused = [...twice.values()];
+  if (reused.length) return `${reused.length === 1 ? `Code ${reused[0]} is` : `Codes ${listOf(reused)} are`} used twice — give each item its own.`;
   if (!codes.length) return null;
-  const taken = await prisma.shopItem.findFirst({
+  const taken = await prisma.shopItem.findMany({
     // A hidden item's options keep active: true — only codes the register can still scan count.
     where: { courseId, active: true, id: { notIn: exceptIds }, AND: [{ OR: [{ parentId: null }, { parent: { active: true } }] }], OR: codes.map(c => ({ sku: { equals: c, mode: 'insensitive' as const } })) },
     select: { name: true, sku: true },
+    take: 50,
   });
-  return taken ? `Code ${taken.sku} is already on ${taken.name} — change one of them.` : null;
+  if (!taken.length) return null;
+  return taken.length === 1 ? `Code ${taken[0].sku} is already on ${taken[0].name} — change one of them.`
+    : `These codes are already on other items — change them: ${listOf(taken.map(t => `${t.sku} (${t.name})`))}.`;
 }
 
 /** Create one or many items (a bulk add), all or nothing. */
-export async function createItems(courseId: string, bodies: unknown[]) {
+export async function createItems(courseId: string, bodies: unknown[], opts: { cost?: boolean } = {}) {
   if (!bodies.length) return fail('Nothing to add.');
   if (bodies.length > MAX_IMPORT_ITEMS) return fail(`Up to ${MAX_IMPORT_ITEMS} items at a time.`);
   const items: ItemIn[] = [];
-  for (const b of bodies) {
-    const r = readItem((b && typeof b === 'object' ? b : {}) as Record<string, unknown>);
-    if (!r.ok) return r;
-    items.push(r.item);
-  }
+  // Nothing is added while any row is wrong — and every wrong row is named at once (IMPORT-2).
+  const errors: string[] = [];
+  bodies.forEach((b, i) => {
+    const body = (b && typeof b === 'object' ? b : {}) as Record<string, unknown>;
+    const r = readItem(body, new Set(), opts);
+    if (r.ok) { items.push(r.item); return; }
+    // Every message names its row: some checks (lib/shop validItemInput) don't say which item.
+    const label = typeof body.name === 'string' && body.name.trim() ? body.name.trim().slice(0, 80) : `Row ${i + 1}`;
+    errors.push(r.error.startsWith(label) ? r.error : `${label}: ${r.error}`);
+  });
+  if (errors.length) return fail(errors.length === 1 ? errors[0] : `${errors.length} items need fixing: ${listOf(errors)}`);
   const clash = await skuClash(courseId, items);
   if (clash) return fail(clash);
   const ids = await prisma.$transaction(async tx => {
     const out: string[] = [];
     for (const it of items) {
-      const parent = await tx.shopItem.create({ data: { courseId, name: it.name, category: it.category, priceCents: it.priceCents, stockCount: it.stockCount, sku: it.sku, taxCategory: it.taxCategory } });
+      const parent = await tx.shopItem.create({ data: { courseId, name: it.name, category: it.category, priceCents: it.priceCents, stockCount: it.stockCount, sku: it.sku, taxCategory: it.taxCategory, costCents: it.costCents ?? null } });
       out.push(parent.id);
       if (it.options.length) await tx.shopItem.createMany({ data: it.options.map((o, i) => ({
         courseId, parentId: parent.id, optionLabel: o.label, name: optionName(it.name, o.label), category: it.category,
-        priceCents: o.priceCents ?? it.priceCents, stockCount: o.stockCount, sku: o.sku, sortOrder: i, taxCategory: it.taxCategory,
+        priceCents: o.priceCents ?? it.priceCents, stockCount: o.stockCount, sku: o.sku, sortOrder: i, taxCategory: it.taxCategory, costCents: o.costCents ?? null,
       })) });
     }
     return out;
