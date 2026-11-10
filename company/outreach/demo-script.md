@@ -1,8 +1,14 @@
-# Demo script — 15 minutes on the live product
+# Demo script — 15 minutes on the product
 
 In the order a course lives a day: a golfer books → the counter sees it → the group checks in and
 pays → the shop sells → the owner checks the money. Run it on **The GreenReserve Test Course**
-(`Course.isTest`), never a real course, and with Stripe test keys so the card reader can be simulated.
+(`Course.isTest`), never a real course.
+
+**Where it runs matters.** "Simulate a tap" on the card reader exists only on a deployment whose
+Stripe key is a test key — it is one key for the whole site, not per course. On greenreserve.app with
+live keys there is no simulated tap, and checking in a group with a saved card is a **real charge**.
+So either run the demo on a test-key deployment, or on production: use a real test card you refund, or
+show check-in with Take cash and the pay link only, and skip the reader tap (see Questions for Cam).
 
 ## Before the call (not in the 15 minutes)
 
@@ -25,8 +31,8 @@ one thing that sounded painful. Every step below is shown as the fix to somethin
 Open `greenreserve.app/courses/{slug}`.
 
 - It's the course's own name, logo, colors and photo — "this is what your golfers see, not us."
-- Pick a day, party size, a time. The full price shows before they book, the $1.50 per player
-  shown before they book ("Your green fee goes to the course; the $1.50 per player is GreenReserve's.").
+- Pick a day, party size, a time. The full price, including the $1.50 per player, shows before they
+  book.
 - The cancellation policy in plain words before they book. "These words come from your settings —
   you never write the policy twice."
 - A card is asked for only when your policy can charge it (a late-cancel or no-show fee). No fees, no
@@ -42,8 +48,8 @@ Open `/dashboard`.
 
 - The booking just made is already on the sheet. Online, phone and walk-ins on one sheet — "online
   golfers only see what's really open."
-- One row per tee time, a cell per seat. The left edge is the money: green paid, amber booked not
-  paid, red a declined card or no-show. Filled is checked in; M and R are member and resident.
+- One row per tee time, a cell per seat. The cell's colour is the money: green paid, amber booked not
+  paid, red a declined card or no-show. In, M and R tags are checked in, member, resident.
 - Grid · List · Calendar switch — Calendar shows the month by how full each day is.
 - Tap a time → its card: who's in it, what they owe, the buttons. Add a phone booking or a walk-in
   here.
@@ -70,7 +76,7 @@ Open `/dashboard/shop`.
 
 - **Open the register** — count the drawer.
 - Ring up a sleeve of balls and a hat from the photo tiles: cash, or a pay link to the customer, or the
-  card reader (simulate a tap).
+  card reader (simulated tap on a test-key deployment only).
 - Back on the tee sheet: Take cash on that group now works, and lands in the register.
 - **Close out** — count, leave a float, take out the deposit, a note for the next person. Expected cash
   is worked out from the day.
@@ -81,7 +87,8 @@ Open `/dashboard/shop`.
 Open `/dashboard/money` (owner login).
 
 - The last 7 days: paid, not paid yet, the next payout.
-- Needs you: declined cards, with a pay-link button right there.
+- Needs you: declined cards, with a pay-link button right there. (Cam's Nov 9 notes take "Text pay
+  link" off this list — check before Nov 30 and drop this line if it's gone.)
 - Ledger: every dollar in and out — card, cash, refunds — and **Earned vs Paid out** for the dates
   picked. Download CSV for the bookkeeper.
 - One line to close: "Payouts come from Stripe to your bank on Stripe's normal schedule. We never hold

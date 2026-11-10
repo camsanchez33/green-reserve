@@ -109,7 +109,8 @@ If week one has zero replies, change email 1 before sending more — don't just 
 2. **Launch wipe timing vs. demos.** The wipe closes at midnight Dec 1. If it runs after Nov 30, any
    demo course set up for Nov 30 calls disappears. *Recommendation:* run the wipe before Thanksgiving,
    then make "The GreenReserve Test Course" and fill it with a believable week of tee times for demos.
-3. **Municipal money.** A town or county may not be allowed to open its own Stripe account, or its
+3. **Municipal money.** A course cannot go live without its own connected Stripe account — the go-live
+   step refuses, no exceptions. A town or county may not be allowed to open one, or its
    treasurer may need the money in a specific bank account with specific reports. *Recommendation:*
    ask the first two municipal courses directly in the demo, before promising anything; it may decide
    whether municipal courses are first or third.
@@ -118,7 +119,10 @@ If week one has zero replies, change email 1 before sending more — don't just 
    you during setup — and switch over in the winter, when few bookings are on the books.
 5. **Phone number in the email signature.** `(845) 499-3515` is already public on `/contact`.
    *Recommendation:* use it — a founder's number is the strongest trust signal we have.
-6. **Pilot region.** Hudson Valley + Bergen County is assumed because that is where you are.
+6. **Where demos run.** "Simulate a tap" on the card reader only exists with test Stripe keys, which are
+   site-wide; on greenreserve.app a saved-card check-in is a real charge. *Recommendation:* a separate
+   test-key demo deployment, or demo on production with a refunded test card and no reader tap.
+7. **Pilot region.** Hudson Valley + Bergen County is assumed because that is where you are.
    *Alternative:* add a warm-weather region (Florida, Arizona) in parallel, where courses are busy now and
    could show real bookings in December. The cost is that you can't visit them. *Recommendation:* stay
    local for the first ten; decide on a warm region after week two's numbers.

@@ -40,7 +40,7 @@ advertises, a management company running it (the decision is elsewhere), closed 
 Keep the list outside the repo (it will hold names of contacts). This file only holds the method and
 the public examples below.
 
-## Pilot region — 30 example public courses (Hudson Valley NY + Bergen County NJ)
+## Pilot region — 26 example listings, 36 public courses (Hudson Valley NY + Bergen County NJ)
 
 Public listing data only, gathered 2026-11-10. **Booking systems come from third-party listings and
 news articles, several of them years old — confirm on each course's own site before the first touch.**
@@ -76,7 +76,7 @@ site at list-building time.
 | 25 | Westchester County golf (6 courses: Dunwoodie, Sprain Lake, Maple Moor, Saxon Woods, Hudson Hills, Mohansic) | Yonkers, White Plains, Scarsdale, Ossining, Yorktown Heights | Westchester County (county system) | golf.westchestercountyny.gov | Online for non-Park-Pass holders, or by phone; walk-ups taken |
 | 26 | Bergen County golf (6 courses: Darlington, Orchard Hills, Overpeck, Rockleigh, Soldier Hill, Valley Brook) | Mahwah, Paramus, Teaneck, Rockleigh, Emerson, River Vale | Bergen County NJ (county system) | golfbergencounty.com | Own online system, registered golfers, 7 days ahead (opens 7 PM) |
 
-Rows 25 and 26 are county systems (12 courses between them, 36 courses on the list in total). They are
+Rows 25 and 26 are county systems (12 courses between them; 24 single-course rows + 12 = 36 courses). They are
 the course-group case and a long sale — see plan.md, priority 3. Bergen County is also the model the
 course-group page was built after.
 

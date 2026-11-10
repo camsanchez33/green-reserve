@@ -44,22 +44,23 @@ course nets its green fee to the cent.
 
 ### 4. "What about our data? Who owns our golfers?"
 
-**Answer:** "Your booking history, your golfers' contact details and your revenue data belong to you —
-that's written into the Operator Agreement, and we never sell golfer or course data or use it to
-promote another course. Day to day, Money gives you every payment as a CSV for your bookkeeper,
-Analytics downloads your golfer lists, and if you ever leave, you get a full export on request."
+**Answer:** "The Operator Agreement says it in one sentence: your booking history, the golfer contact
+data collected through your bookings, and your revenue data belong to you, not GreenReserve. And we
+never sell golfer or course data, or use your golfers or your data to promote another course. Day to
+day, Money downloads every payment as a CSV for your bookkeeper, and Analytics downloads your golfer
+lists."
 
-(Every clause there is the Operator Agreement's own wording, §7–8; point to it, don't paraphrase its
-terms.)
+(The first two sentences follow the Operator Agreement's §8 wording; the last is the product. If
+they ask what happens if they leave, send the agreement — don't recite its terms.)
 
 ### 5. "Who supports us? You're one person."
 
 **Answer, straight:** "Right now, me — and you'll talk to the person who builds it. I set every course
-up myself. From the dashboard you send a message and get an answer within 48 hours, or email
+up myself. From the dashboard you send a message and I answer it, or email
 admin@greenreserve.app, or call me at 845-499-3515. There's also an assistant in the dashboard that
 answers questions about your day right away."
 
-Don't promise phone support hours or response times beyond what the Messages tab says (48 hours).
+Don't promise phone support hours or a response time out loud — the Messages tab shows its own reply time.
 Being small is honest and, for a town muni, often a plus. Being small *and* overpromising is the risk.
 
 ### 6. "Our golfers are older — they won't book online."
@@ -74,8 +75,8 @@ counter in cash. Nobody is forced online."
 close-out with an exact count. A card is asked for at booking only if you set a late-cancel or no-show
 fee. If you set no fees, no card." (True per SP-B and CASH-1.)
 
-*Honest limit:* online payments go to the course's own **Stripe** account. A course that can't or won't
-open one can still use the tee sheet and cash, but not online pay.
+*Honest limit:* every course connects its own **Stripe** account before it goes live — no exceptions
+(the go-live step refuses without it). A course that can't open one isn't a fit today.
 
 ### 8. "We're a town/county course — the money has to go through our treasurer."
 
@@ -109,6 +110,6 @@ doesn't guarantee uptime, if asked directly — it says so, and pretending other
   up." Never invent a reference.
 - **"Can we do tournaments and outings?"** — Events exist (sign-up, payments, checklist). Show it only if
   asked; it's not in the 15 minutes.
-- **"Will you raise the price later?"** — Don't answer with a promise. "The fee today is $1.50 per player
-  on each online booking, added to your price. Anything that changes would be in the Operator Agreement."
+- **"Will you raise the price later?"** — Don't answer with a promise. "Golfers pay $1.50 per player on each
+  online booking, added to your price. Anything that changes would be in the Operator Agreement."
   Flag to Cam if it comes up more than twice.

@@ -12,7 +12,8 @@ A course manager has said yes to nothing. So:
 
 - **No texts to a course** in the cold sequence, from any phone — not the GreenReserve number, not
   Cam's own. A cell number on a course's website is not consent.
-- If a manager **asks** to be texted ("text me a time"), that is a yes for that one conversation. Note
+- If a manager **asks** to be texted ("text me a time"), that is a yes for that one conversation —
+  from Cam's own phone, never the GreenReserve number. Note
   who asked and when; stop the moment they say stop.
 - The pay-link texts shown in the demo go to golfers who opted in on the booking form — say so if asked.
 
