@@ -53,8 +53,8 @@ const FEATURES: { h: string; p: string; items: string[]; shot?: Shot }[] = [
     items: [
       'The round is charged when the group checks in, not when they book',
       'Send a golfer a pay link, and they pay on their own phone with Apple Pay, Google Pay or a card',
-      'Cash at the counter is marked paid from the tee sheet',
-      'Staff can take a card at the counter when they need to',
+      'Cash taken at the counter is rung up on your register, so it counts in the day’s close-out',
+      'Staff can take a card on a Stripe card reader, or type one in when they need to',
     ],
     shot: { shot: 'pay', device: 'phone', alt: 'A golfer’s phone showing their tee time, the total and a card field to check in and pay' },
   },
@@ -74,6 +74,7 @@ const FEATURES: { h: string; p: string; items: string[]; shot?: Shot }[] = [
     items: [
       'Membership tiers with their own rates',
       'Booking windows by tier, so members can book further ahead',
+      'Resident rates for the people you list',
     ],
   },
   {
