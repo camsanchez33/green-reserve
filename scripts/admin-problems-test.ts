@@ -45,7 +45,7 @@ check('Go to it only when the login can open it, else the course, else who can',
 check('a #id link opens its tab once, not after every reload', /if \(!data \|\| !hash \|\| hashDone\) return;\s*setHashDone\(true\)/.test(page));
 check('the course name is linked inside the title, not printed twice', /<TitleWithCourse p=\{p\} \/>/.test(page) && !/\{p\.courseName && p\.courseId && <>/.test(page));
 check('the title links the course only for a login that can open it', /!canOpenAdminHref\(href, role, areas\)\) return <>\{p\.title\}<\/>/.test(page));
-check('a holder outside the list still shows in Who has it', /\(can’t open Problems\)<\/option>/.test(page));
+check('a holder outside the list still shows in Who has it', /\(no access\)<\/option>/.test(page));
 check('assign offers only people who can open Problems', /const CAN_WORK = \{ active: true, role: \{ in: SUPPORT_PLUS \}, OR: \[\{ role: 'owner' \}, \{ areasSetAt: null \}, \{ areas: \{ has: 'problems' \} \}\] \}/.test(route)
   && /findMany\(\{ where: CAN_WORK/.test(route) && /findFirst\(\{ where: \{ \.\.\.CAN_WORK, id: body\.adminId \}/.test(route));
 

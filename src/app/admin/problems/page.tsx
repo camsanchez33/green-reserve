@@ -119,7 +119,7 @@ function ProblemRow({ p, data, onDone, startOpen }: { p: Problem; data: Data; on
                 <label htmlFor={`assign-${p.id}`} className="text-[13px] text-ink-soft">Who has it</label>
                 <select id={`assign-${p.id}`} value={p.ownerId ?? ''} disabled={!!busy} onChange={e => act('assign', { adminId: e.target.value || null })} className={`${INPUT} self-start`}>
                   <option value="">Nobody</option>
-                  {p.ownerId && !data.admins.some(a => a.id === p.ownerId) && <option value={p.ownerId} disabled>{p.ownerName || 'Someone'} (can’t open Problems)</option>}
+                  {p.ownerId && !data.admins.some(a => a.id === p.ownerId) && <option value={p.ownerId} disabled>{p.ownerName} (no access)</option>}
                   {data.admins.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                 </select>
               </div>
@@ -199,7 +199,7 @@ export default function AdminProblemsPage() {
           <div className="flex items-end justify-between border-b border-line pb-4 gap-4">
             <div>
               <h1 className="m-0 text-[32px] font-bold tracking-[-0.02em] text-ink leading-none">Problems</h1>
-              <p className="mt-2 text-[13.5px] text-ink-soft">Found by the hourly check. Each clears itself once fixed.</p>
+              <p className="mt-2 text-[13.5px] text-ink-soft">Found hourly; each clears itself once fixed.</p>
             </div>
           </div>
 
