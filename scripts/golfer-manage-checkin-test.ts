@@ -24,7 +24,10 @@ check('manage action cards carry no icons', !/icon=\{</.test(manage) && !manage.
 check('manage icon-only back buttons have an aria-label', (manage.match(/aria-label="Back"/g) ?? []).length === 2);
 
 // Colour follows meaning: no fee to cancel is good news, not a warning.
-check('manage policy notice is green when cancelling costs nothing', manage.includes("!info.teedOff && (info.windowOpen || info.cancellationFeeTotal <= 0) ? 'bg-ok/5"));
+check('manage: "free" means no hold or no-show fee kept, and inside the window or no fee', manage.includes('const cancelFree = !info.cancellationFeeCharged && !info.noShowKept && (info.windowOpen || info.cancellationFeeTotal <= 0);'));
+check('…the policy notice, the cancel box and its dot all follow it', manage.includes("!info.teedOff && cancelFree ? 'bg-ok/5") && manage.includes("${cancelFree ? 'border-ok/30 bg-ok/5' : 'border-bad/30 bg-bad/5'}") && manage.includes("<StatusDot status={cancelFree ? 'ok' : 'bad'} />") && !manage.includes('<StatusDot status="ok" />'));
+check('a cancelled no-card booking is not told its card was released', manage.includes("{info.hasCard ? 'No charge — your card has been released' : 'No charge'}"));
+check('manage shows the short booking reference the receipt uses', manage.includes('Booking #{info.bookingId.slice(0, 8).toUpperCase()}') && !manage.includes('Booking ID: {info.bookingId}'));
 
 // Receipt: a no-card booking is not told about "your card".
 check('receipt does not mention a card when nothing was charged', receipt.includes("'Nothing has been charged yet. The round is paid when you check in.'"));

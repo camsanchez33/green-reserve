@@ -245,7 +245,7 @@ function ReceiptPageInner() {
                   ))}
                   <div className="flex justify-between items-baseline px-4 py-3.5 bg-paper">
                     <span className="font-medium text-ink">On your card</span>
-                    <span className="font-semibold text-ink">{dollars(chargedNow)}</span>
+                    <span className="shrink-0 font-semibold text-ink">{dollars(chargedNow)}</span>
                   </div>
                 </div>
               )}

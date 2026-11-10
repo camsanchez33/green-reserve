@@ -304,7 +304,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/call/[token]` | public | public | page | `src/app/call/[token]/page.tsx` | 142 |
 | `/cam` | public | public | page | `src/app/cam/page.tsx` | 155 |
 | `/cam/approve` | public | token | page | `src/app/cam/approve/page.tsx` | 64 |
-| `/checkin/[bookingId]` | golfer | token | page | `src/app/checkin/[bookingId]/page.tsx` | 397 |
+| `/checkin/[bookingId]` | golfer | token | page | `src/app/checkin/[bookingId]/page.tsx` | 413 |
 | `/contact` | public | public | page | `src/app/contact/page.tsx` | 79 |
 | `/courses/[slug]` | public | public | page | `src/app/courses/[slug]/page.tsx` | 51 |
 | `/courses/[slug]/account` | golfer | **NONE FOUND** | page | `src/app/courses/[slug]/account/page.tsx` | 11 |
@@ -338,7 +338,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/for-courses` | public | public | page | `src/app/for-courses/page.tsx` | 18 |
 | `/for-courses/details` | public | token | page | `src/app/for-courses/details/page.tsx` | 1996 |
 | `/g/[slug]` | public | public | page | `src/app/g/[slug]/page.tsx` | 133 |
-| `/manage/[bookingId]` | golfer | token | page | `src/app/manage/[bookingId]/page.tsx` | 588 |
+| `/manage/[bookingId]` | golfer | token | page | `src/app/manage/[bookingId]/page.tsx` | 590 |
 | `/membership/[id]` | public | token | page | `src/app/membership/[id]/page.tsx` | 240 |
 | `/operator-agreement` | public | public | page | `src/app/operator-agreement/page.tsx` | 85 |
 | `/pay/event/[id]` | public | token | page | `src/app/pay/event/[id]/page.tsx` | 147 |
@@ -618,7 +618,7 @@ Sorted the same way.
 
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
-| `src/components/ui/Card.tsx` | 81 | 17 |  | `Card`, `CARD` |
+| `src/components/ui/Card.tsx` | 84 | 17 |  | `Card`, `CARD` |
 | `src/components/ui/StatusDot.tsx` | 76 | 36 |  | `StatusDot` |
 | `src/components/ui/field.ts` | 57 | 8 | MP-9: | `INPUT`, `INPUT_COMPACT` |
 | `src/components/dashboard/LoadError.tsx` | 22 | 16 | SD-10. | `LoadError` |

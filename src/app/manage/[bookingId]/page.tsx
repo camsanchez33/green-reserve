@@ -90,7 +90,7 @@ function PriceBreakdown({ greenFeeTotal, cartFeeTotal, rangeBallsTotal, accessFe
   );
 }
 
-// One of the three things you can do to a booking: an icon, what it is,
+// One of the three things you can do to a booking: what it is,
 // and a line of plain English about what happens if you tap it.
 function ActionCard({ title, subtitle, onClick, tone = 'neutral' }: {
   title: string; subtitle: string;
@@ -108,7 +108,6 @@ function ActionCard({ title, subtitle, onClick, tone = 'neutral' }: {
         <span className={`block font-medium text-sm ${bad ? 'text-bad' : 'text-ink'}`}>{title}</span>
         <span className="block text-xs text-ink mt-0.5 leading-relaxed">{subtitle}</span>
       </span>
-      
     </button>
   );
 }
@@ -318,6 +317,9 @@ function ManagePageInner() {
   const alreadyCancelled = info.status === 'cancelled';
   const alreadyCompleted = info.status === 'completed';
   const canModify = !alreadyCancelled && !alreadyCompleted && info.windowOpen;
+  // Colour follows meaning: green only when cancelling now costs nothing — no hold or
+  // no-show fee already kept, and inside the window or at a course with no fee.
+  const cancelFree = !info.cancellationFeeCharged && !info.noShowKept && (info.windowOpen || info.cancellationFeeTotal <= 0);
 
   // R-GOLF-008: every cancel sentence comes from cancel-policy.ts and matches
   // what performCancellation() charges (amounts are cents).
@@ -512,7 +514,7 @@ function ManagePageInner() {
 
           {/* Policy */}
           {!alreadyCancelled && !alreadyCompleted && (
-            <div className={`rounded-md border p-4 mb-5 text-sm ${!info.teedOff && (info.windowOpen || info.cancellationFeeTotal <= 0) ? 'bg-ok/5 border-ok/20 text-ok' : 'bg-warn/5 border-warn/20 text-warn'}`}>
+            <div className={`rounded-md border p-4 mb-5 text-sm ${!info.teedOff && cancelFree ? 'bg-ok/5 border-ok/20 text-ok' : 'bg-warn/5 border-warn/20 text-warn'}`}>
               {policyText}
             </div>
           )}
@@ -549,9 +551,9 @@ function ManagePageInner() {
           )}
 
           {view === 'cancel-confirm' && (
-            <div className={`rounded-md border p-5 space-y-4 mt-4 ${info.windowOpen || info.cancellationFeeTotal <= 0 ? 'border-ok/30 bg-ok/5' : 'border-bad/30 bg-bad/5'}`}>
+            <div className={`rounded-md border p-5 space-y-4 mt-4 ${cancelFree ? 'border-ok/30 bg-ok/5' : 'border-bad/30 bg-bad/5'}`}>
               <div className="flex items-start gap-2">
-                <StatusDot status={info.windowOpen || info.cancellationFeeTotal <= 0 ? 'ok' : 'bad'} />
+                <StatusDot status={cancelFree ? 'ok' : 'bad'} />
                 <p className="text-sm text-ink">{confirmCancelMsg}</p>
               </div>
               {cancelError && <p className="text-bad text-xs">{cancelError}</p>}
