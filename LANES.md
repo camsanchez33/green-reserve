@@ -7,7 +7,7 @@ feature. Lanes exist so work can run side by side without two sessions writing t
 
 | Lane | Session title | Writes code? | Owns | Never touches |
 |---|---|---|---|---|
-| **Build** | `Build — <what it's doing>` | Yes — the only lane that writes app code | `src/`, `prisma/`, `scripts/*-test.ts`, config, CLAUDE.md, the launch-plan specs | — |
+| **Build** | `Build — <what it's doing>` | Yes — the only lane that writes app code until the Admin lane opens | `src/`, `prisma/`, `scripts/*-test.ts`, config, CLAUDE.md, the launch-plan specs | — |
 | **Testing** | `Testing — <flow>` | No | `lanes/testing/` (its findings) | `src/`, `prisma/`, `scripts/`, any spec Build owns |
 | **Security** | `Security — <area>` | No | `lanes/security/` (its findings) | same as Testing |
 | **Company** | `Company — <task>` | No app code | `company/` (outreach, course lists, email and copy drafts, agreement notes) | `src/`, `prisma/`, `scripts/`, `legal/` published files |
@@ -104,6 +104,7 @@ piece of work to the cheapest agent that can do it right. The agents and their m
   (`requirePermission` / `areaGate`), course data isolation, payment paths (double charges, refunds, the ledger),
   sign-in doors (`securityEvent`), headers and packages, secrets in code or logs.
 - **Use** the `security-auditor` agent definition as the checklist; verify each finding by tracing a real path.
+- **The repo must stay private** while a report names an unfixed path; Build fixes Critical/High before the report merges.
 - **Output:** `lanes/security/<YYYY-MM-DD>-<area>.md` ranked Critical / High / Medium / Low, each with the path to
   exploit, evidence and the smallest fix. A Critical or High finding is also sent to Build at once with
   `send_message`.

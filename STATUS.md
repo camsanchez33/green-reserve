@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-10 22:44 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `64b7ad04` · working tree **4 dirty file(s)**
+Generated 2026-11-10 22:56 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `26c63493` · working tree **7 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 188 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 189 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `26c63493` | 2026-11-10 | Member sign-in link: rate-limited, and the same answer for members and non-members |
 | `64b7ad04` | 2026-11-10 | STRESS-1110 #1: front desk sees what each group owes; lanes for parallel work |
 | `56d3f877` | 2026-11-10 | IMPORT-2: pro shop import reads real POS files and says what it couldn't (#353) |
 | `48c91709` | 2026-11-10 | IMPORT-2: the pro shop import reads real POS files and says what it couldn't |
@@ -203,12 +204,15 @@ Generated 2026-11-10 22:44 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (4 file(s))
+### Uncommitted working tree (7 file(s))
 
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M src/app/api/member/[courseSlug]/send-code/route.ts`
-- `?? scripts/member-link-rate-test.ts`
+- `M CLAUDE.md`
+- `M LANES.md`
+- `M STRESS_1110_SPEC.md`
+- `M scripts/stress-1110-test.ts`
+- `M src/app/dashboard/page.tsx`
+- `M src/components/dashboard/ShopItemsForGroup.tsx`
+- `M src/components/dashboard/TeeSheetList.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -336,6 +340,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `26c63493` 2026-11-10 — Member sign-in link: rate-limited, and the same answer for members and non-members
 - `64b7ad04` 2026-11-10 — STRESS-1110 #1: front desk sees what each group owes; lanes for parallel work
 - `56d3f877` 2026-11-10 — IMPORT-2: pro shop import reads real POS files and says what it couldn't (#353)
 - `48c91709` 2026-11-10 — IMPORT-2: the pro shop import reads real POS files and says what it couldn't
@@ -347,7 +352,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `a47a7025` 2026-11-09 — CART-5: the receipt says the cart is paid; no cart ticket, no cart number
 - `ba4de30f` 2026-11-09 — AUDIT-1109: close two register gaps; no silent failures in tonight's pages (#350)
 - `3ffa5f8f` 2026-11-09 — AUDIT-1109: update two source pins for the new register gate and the Register's key
-- `74f02e7c` 2026-11-09 — AUDIT-1109: close two register gaps; no silent failures in tonight's pages
 
 ---
 

@@ -1035,7 +1035,7 @@ function DashboardPageInner() {
               {!inFlow && !(unpaid && !b.noShowAt) && (b.shopItems?.length ?? 0) > 0 && (
                 <div className="mt-2.5">
                   <ShopItemsForGroup bookingId={b.id} lines={b.shopItems ?? []} shopFeeCents={b.shopFeeCents ?? 0} shopTaxCents={b.shopTaxCents ?? 0}
-                    editable={shopEditable} canSell={access.can('shop.sell')} showMoney={seesDue}
+                    editable={shopEditable} canSell={access.can('shop.sell')} showMoney={unpaid ? seesDue : showMoney}
                     onChanged={() => loadTimes(selectedDate, true)} />
                 </div>
               )}
