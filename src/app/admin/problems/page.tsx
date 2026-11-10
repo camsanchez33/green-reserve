@@ -10,6 +10,8 @@ import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { formatRelative as fmtAgo } from '@/lib/format';
 import { INPUT_COMPACT as INPUT } from '@/components/ui/field';
+import { useAdminSession } from '@/lib/admin-session-context';
+import { canOpenAdminHref, whoCanOpen } from '@/components/admin/admin-href';
 
 interface Problem {
   id: string; title: string; detail: string; href: string;
@@ -27,10 +29,19 @@ interface Data {
 type Tab = 'open' | 'snoozed' | 'cleared';
 const TABS: { key: Tab; label: string }[] = [{ key: 'open', label: 'Open' }, { key: 'snoozed', label: 'Snoozed' }, { key: 'cleared', label: 'Cleared, last 30 days' }];
 const KIND: Record<string, string> = {
-  opened: 'Found', reopened: 'Came back', cleared: 'Cleared', claimed: 'Took it', assigned: 'Assigned',
+  opened: 'Found', reopened: 'Came back', cleared: 'Cleared', claimed: 'Taken', assigned: 'Assigned',
   note: 'Note', snoozed: 'Snoozed', unsnoozed: 'Woken up',
 };
 const BTN = 'text-[13px] font-medium px-3 py-1.5 rounded-md border border-line text-ink hover:border-pine/40 disabled:opacity-50';
+/** The course name in the title becomes its link, so the name isn't printed twice. */
+function TitleWithCourse({ p }: { p: Problem }) {
+  const name = p.courseName, at = name ? p.title.indexOf(name) : -1;
+  const link = (t: string) => <Link href={`/admin/courses/${p.courseId}`} className="hover:underline underline-offset-2">{t}</Link>;
+  if (!name || !p.courseId) return <>{p.title}</>;
+  if (at < 0) return <>{link(name)} · {p.title}</>;
+  return <>{p.title.slice(0, at)}{link(name)}{p.title.slice(at + name.length)}</>;
+}
+
 const when = (iso: string) => new Date(iso).toLocaleString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 
 function ProblemRow({ p, data, onDone, startOpen }: { p: Problem; data: Data; onDone: () => Promise<void>; startOpen: boolean }) {
@@ -41,6 +52,10 @@ function ProblemRow({ p, data, onDone, startOpen }: { p: Problem; data: Data; on
   const [days, setDays] = useState(String(data.snoozeDays[0] ?? 1));
   const [reason, setReason] = useState('');
   const live = p.state !== 'cleared';
+  // AW-11: "Go to it" only when this login can open the page; else the course, else who can.
+  const { role, areas } = useAdminSession();
+  const go = canOpenAdminHref(p.href, role, areas) ? { href: p.href, label: 'Go to it' }
+    : p.courseId && canOpenAdminHref('/admin/courses', role, areas) ? { href: `/admin/courses/${p.courseId}`, label: 'Open course' } : null;
 
   async function act(action: string, extra: Record<string, unknown> = {}) {
     setBusy(action); setErr('');
@@ -59,14 +74,11 @@ function ProblemRow({ p, data, onDone, startOpen }: { p: Problem; data: Data; on
 
   return (
     <div id={p.id} className="py-4 border-b border-line-soft last:border-0 scroll-mt-20">
-      <div className="flex items-start gap-3">
+      <div className="flex flex-wrap items-start gap-x-3 gap-y-2">
         <span className="pt-1.5"><StatusDot status={p.state === 'open' ? 'bad' : p.state === 'snoozed' ? 'warn' : 'ok'} /></span>
-        <div className="flex-1 min-w-0">
-          <div className="text-[14.5px] font-medium text-ink">{p.title}</div>
-          <div className="text-[13px] text-ink-soft">
-            {p.courseName && p.courseId && <><Link href={`/admin/courses/${p.courseId}`} className="hover:underline underline-offset-2">{p.courseName}</Link> · </>}
-            {p.detail}
-          </div>
+        <div className="flex-1 min-w-[220px]">
+          <div className="text-[14.5px] font-medium text-ink"><TitleWithCourse p={p} /></div>
+          <div className="text-[13px] text-ink-soft">{p.detail}</div>
           <div className="mt-0.5 text-[12.5px] text-ink-muted">
             {p.state === 'cleared' && p.clearedAt ? `Cleared ${fmtAgo(new Date(p.clearedAt).getTime())} · ` : ''}
             Found {fmtAgo(new Date(p.openedAt).getTime())}
@@ -74,13 +86,13 @@ function ProblemRow({ p, data, onDone, startOpen }: { p: Problem; data: Data; on
             {p.snoozedUntil && ` · snoozed until ${when(p.snoozedUntil)}: ${p.snoozeReason}`}
           </div>
         </div>
-        <div className="shrink-0 flex items-center gap-2">
+        <div className="shrink-0 ml-[17px] sm:ml-0 flex flex-wrap items-center gap-2">
           {live && (!p.ownerId || (p.ownerId !== data.me && data.canManage)) && (
             <button type="button" onClick={() => act('claim')} disabled={!!busy} className="text-[13px] font-medium px-3 py-1.5 rounded-md bg-pine hover:bg-pine-hover text-white disabled:opacity-50">
               {busy === 'claim' ? 'Taking…' : p.ownerId ? 'Take it over' : 'Take it'}
             </button>
           )}
-          <Link href={p.href} className={BTN}>Go to it</Link>
+          {go ? <Link href={go.href} className={BTN}>{go.label}</Link> : <span className="text-[12.5px] text-ink-muted">{whoCanOpen(p.href)}</span>}
           <button type="button" onClick={() => setOpen(o => !o)} aria-expanded={open} className="text-[13px] text-ink-soft hover:text-ink px-1">
             {open ? 'Less' : 'More'}
           </button>
@@ -162,13 +174,16 @@ export default function AdminProblemsPage() {
     setLoading(false);
   }, []);
 
+  const [hashDone, setHashDone] = useState(false);
   useEffect(() => { setHash(window.location.hash.slice(1)); load(); }, [load]);
-  // A link from Home (#id) opens that problem on whichever tab holds it.
+  // A link from Home (#id) opens that problem on whichever tab holds it — once,
+  // on the first load; later reloads (after an action) leave the tab alone.
   useEffect(() => {
-    if (!data || !hash) return;
+    if (!data || !hash || hashDone) return;
+    setHashDone(true);
     const t = (['open', 'snoozed', 'cleared'] as Tab[]).find(k => data[k].some(p => p.id === hash));
     if (t) { setTab(t); setTimeout(() => document.getElementById(hash)?.scrollIntoView({ block: 'start' }), 50); }
-  }, [data, hash]);
+  }, [data, hash, hashDone]);
 
   const list = data ? data[tab] : [];
 
@@ -176,11 +191,11 @@ export default function AdminProblemsPage() {
     <div className="min-h-screen bg-white flex">
       <AdminSidebar active="problems" />
       <div className="admin-content flex-1 min-h-screen">
-        <div className="px-10 pt-2.5 pb-10">
+        <div className="px-4 md:px-10 pt-2.5 pb-10">
           <div className="flex items-end justify-between border-b border-line pb-4 gap-4">
             <div>
               <h1 className="m-0 text-[32px] font-bold tracking-[-0.02em] text-ink leading-none">Problems</h1>
-              <p className="mt-2 text-[13.5px] text-ink-soft">What the hourly check found that someone has to fix. Each one clears by itself once it’s fixed.</p>
+              <p className="mt-2 text-[13.5px] text-ink-soft">Found by the hourly check. Each clears itself once fixed.</p>
             </div>
           </div>
 
@@ -194,11 +209,11 @@ export default function AdminProblemsPage() {
 
           {data && (
             <>
-              <div role="tablist" className="mt-5 flex gap-6 border-b border-line">
+              <div role="tablist" className="mt-5 flex gap-6 border-b border-line overflow-x-auto">
                 {TABS.map(t => (
                   <button
                     key={t.key} type="button" role="tab" aria-selected={tab === t.key} onClick={() => setTab(t.key)}
-                    className={`pb-2.5 -mb-px text-[14px] border-b-2 ${tab === t.key ? 'border-fairway text-ink font-semibold' : 'border-transparent text-ink-soft hover:text-ink'}`}
+                    className={`pb-2.5 -mb-px text-[14px] border-b-2 whitespace-nowrap ${tab === t.key ? 'border-fairway text-ink font-semibold' : 'border-transparent text-ink-soft hover:text-ink'}`}
                   >
                     {t.label} <span className="text-ink-muted font-normal tabular-nums">{data[t.key].length}</span>
                   </button>

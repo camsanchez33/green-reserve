@@ -29,7 +29,7 @@
   "src/app/admin/login/page.tsx": 51,
   "src/app/admin/messages/page.tsx": 200,
   "src/app/admin/page.tsx": 257,
-  "src/app/admin/problems/page.tsx": 140,
+  "src/app/admin/problems/page.tsx": 133,
   "src/app/admin/profile/page.tsx": 61,
   "src/app/admin/revenue/page.tsx": 1051,
   "src/app/admin/security/page.tsx": 169,
