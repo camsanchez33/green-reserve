@@ -3,8 +3,9 @@ import { smsWebConsentText } from '@/lib/sms-consent-copy';
 import { splitTotal } from '@/lib/member-rates';
 import { cartsFor } from '@/lib/cart-pricing';
 import { FEE_AT_BOOKING_ON } from '@/lib/booking-fees';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useState, useEffect, useRef, Suspense } from 'react';
+import Link from 'next/link';
 // SP-B: the /pure entry injects Stripe.js only when loadStripe() is called — the
 // main entry injects it on import, which loaded Stripe even on no-card courses.
 import { loadStripe } from '@stripe/stripe-js/pure';
@@ -16,6 +17,7 @@ import type { PaymentRequest } from '@stripe/stripe-js';
 import { Loader2 } from 'lucide-react';
 import { ACCESS_FEE_PER_PLAYER, serviceFeeLabel, hoursLabel } from '@/lib/booking-fees';
 import { TrustNote } from '@/components/TrustNote';
+import { CARD } from '@/components/ui/Card';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
 import { INPUT_COMPACT } from '@/components/ui/field';
 import { describePolicy, policyFrom, afterCutoffLine, insideWindowLine, policyMoney, holdTodayLine, holdsAtCutoff, type CancelPolicy } from '@/lib/cancel-policy';
@@ -140,7 +142,6 @@ export type BookInitial = { course: CourseInfo | null; teeTime: LiveTeeTime | nu
 
 function BookPageInner({ initial }: { initial?: BookInitial }) {
   const params = useSearchParams();
-  const router = useRouter();
 
   const teeTimeId  = params.get('tee_time_id') || '';
   const courseSlug = params.get('course_slug') || '';
@@ -229,10 +230,10 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
 
   if (confirmedData) {
     return (
-      <div className="min-h-screen bg-paper flex items-center justify-center px-4">
-        <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
+      <div className="min-h-screen bg-paper flex items-center justify-center px-4 py-8">
+        <div className={`${CARD} max-w-lg w-full overflow-hidden`}>
           <CourseHeaderBar courseName={confirmedData.courseName} accent={accent} photoUrl={course?.hero_image_url} logoUrl={course?.logo_url} />
-          <div className="p-8 text-center">
+          <div className="p-6 sm:p-8 text-center">
             <h1 className="text-[34px] font-serif leading-none text-ink mb-3">You&apos;re all set</h1>
             <p className="text-ink-soft mb-6 text-sm">
               {confirmedData.noCard
@@ -252,7 +253,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
 
             {/* What happens next — the same three facts the policy copy already
                 states, laid out in the order they actually happen. */}
-            <div className="rounded-lg border border-line p-5 mb-6 text-left">
+            <div className="rounded-lg bg-paper/70 p-5 mb-6 text-left">
               <div className="text-[15px] font-semibold text-ink mb-4">What happens next</div>
               <TimelineStep
                 accent={accent}
@@ -290,7 +291,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
               />
             </div>
 
-            <div className="bg-paper rounded-lg p-5 mb-6 text-left space-y-2 text-sm border border-line">
+            <div className="bg-paper/70 rounded-lg p-5 mb-6 text-left space-y-2 text-sm">
               <div className="flex justify-between"><span className="text-ink-muted">Date</span><span className="font-medium text-ink">{displayDate(confirmedData.date)}</span></div>
               <div className="flex justify-between"><span className="text-ink-muted">Tee time</span><span className="font-medium text-ink">{formatTime(confirmedData.time)}</span></div>
               <div className="flex justify-between"><span className="text-ink-muted">Players</span><span className="font-medium text-ink">{confirmedData.players}</span></div>
@@ -298,23 +299,23 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
                 <div className="flex justify-between text-ink-soft"><span>Green fee</span><span>${confirmedData.greenFeeTotal.toFixed(2)}</span></div>
                 {confirmedData.cartFeeTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Cart fee</span><span>${confirmedData.cartFeeTotal.toFixed(2)}</span></div>}
                 {confirmedData.rangeBallsTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Range balls</span><span>${confirmedData.rangeBallsTotal.toFixed(2)}</span></div>}
-                <div className="flex justify-between text-ink-soft"><span>{serviceFeeLabel(confirmedData.players)}</span><span>${confirmedData.accessFeeTotal.toFixed(2)}</span></div>
+                <div className="flex justify-between gap-3 text-ink-soft"><span>{serviceFeeLabel(confirmedData.players)}</span><span className="shrink-0">${confirmedData.accessFeeTotal.toFixed(2)}</span></div>
                 <div className="flex justify-between font-semibold text-ink border-t border-line pt-2">
                   <span>Estimated total at check-in</span><span>${confirmedData.totalAmount.toFixed(2)}</span>
                 </div>
               </div>
             </div>
 
-            <button
-              onClick={() => router.push(`/courses/${courseSlug}/account?email=${encodeURIComponent(confirmedData.golferEmail)}`)}
+            <Link
+              href={`/courses/${courseSlug}/account?email=${encodeURIComponent(confirmedData.golferEmail)}`}
               className="inline-flex items-center justify-center w-full py-3.5 rounded-md font-medium text-white text-sm mb-3 transition-colors"
               style={{ backgroundColor: accent }}
             >
               View my bookings
-            </button>
-            <button onClick={() => router.push(`/courses/${courseSlug}`)} className="text-sm text-ink-soft hover:text-ink transition-colors">
+            </Link>
+            <Link href={`/courses/${courseSlug}`} className="inline-block text-sm text-ink-soft hover:text-ink transition-colors">
               Back to {confirmedData.courseName}
-            </button>
+            </Link>
           </div>
         </div>
       </div>
@@ -328,16 +329,16 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   if (loadError || !teeTime || !course) {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-lg border border-line p-8 text-center">
+        <div className={`${CARD} max-w-md w-full p-8 text-center`}>
           
-          <h1 className="font-semibold text-ink mb-2">Can&apos;t complete this booking</h1>
+          <h1 className="font-serif text-[24px] leading-tight text-ink mb-2">Can&apos;t complete this booking</h1>
           <p className="text-ink-soft text-sm mb-6">{loadError || 'This tee time is no longer available.'}</p>
-          <button
-            onClick={() => router.push(courseSlug ? `/courses/${courseSlug}` : '/')}
-            className="px-5 py-2.5 rounded-md text-sm font-medium text-white bg-pine hover:bg-pine-hover transition-colors"
+          <Link
+            href={courseSlug ? `/courses/${courseSlug}${date ? `?date=${date}` : ''}` : '/'}
+            className="inline-block px-5 py-2.5 rounded-md text-sm font-medium text-white bg-pine hover:bg-pine-hover transition-colors"
           >
-            Pick Another Time
-          </button>
+            Pick another time
+          </Link>
         </div>
       </div>
     );
@@ -348,13 +349,14 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   if (players < minPlayers) {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-lg border border-line p-8 text-center">
-          <h1 className="font-semibold text-ink mb-2">This tee time is for groups of {minPlayers} or more</h1>
+        <div className={`${CARD} max-w-md w-full p-8 text-center`}>
+          <h1 className="font-serif text-[24px] leading-tight text-ink mb-2">This tee time is for groups of {minPlayers} or more</h1>
           <p className="text-ink-soft text-sm mb-6">You picked {players} player{players === 1 ? '' : 's'}. Pick another time, or add players and choose this one again.</p>
-          <button onClick={() => router.push(courseSlug ? `/courses/${courseSlug}` : '/')}
-            className="px-5 py-2.5 rounded-md text-sm font-medium text-white bg-pine hover:bg-pine-hover transition-colors">
+          <Link href={courseSlug ? `/courses/${courseSlug}${date ? `?date=${date}` : ''}` : '/'}
+            className="inline-block px-5 py-2.5 rounded-md text-sm font-medium text-white transition-colors"
+            style={{ backgroundColor: accent }}>
             Pick another time
-          </button>
+          </Link>
         </div>
       </div>
     );
@@ -401,9 +403,9 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   return (
     <div className="min-h-screen bg-paper">
       <div className="max-w-2xl mx-auto px-4 py-10">
-        <button onClick={() => router.back()} className="inline-flex items-center gap-1.5 text-ink-soft hover:text-ink text-sm mb-6 transition-colors">
-           Back to tee times
-        </button>
+        <Link href={`/courses/${courseSlug}?date=${date}&players=${players}`} className="inline-flex items-center gap-1.5 text-ink-soft hover:text-ink text-sm mb-6 transition-colors">
+          Back to tee times
+        </Link>
 
         <h1 className="text-[34px] font-serif leading-none text-ink mb-3">Confirm your tee time</h1>
         <p className="text-ink-soft text-sm mb-8">
@@ -415,7 +417,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
         </p>
 
         <div className="grid gap-6">
-          <div className="bg-white rounded-lg border border-line overflow-hidden">
+          <div className={`${CARD} overflow-hidden`}>
             <CourseHeaderBar courseName={course.name} accent={accent} photoUrl={course.hero_image_url} logoUrl={course.logo_url} />
             <div className="p-6 space-y-3 text-sm">
               <div className="flex justify-between"><span className="text-ink-muted">Date</span><span className="font-medium text-ink">{displayDate(date)}</span></div>
@@ -430,7 +432,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
                     <p className="text-xs text-ink">${teeTime.cart_fee.toFixed(2)} {perCart ? `a cart (2 riders)${withCart ? ` · ${cartsN} cart${cartsN === 1 ? '' : 's'}` : ''}` : 'per player'}</p>
                   </div>
                   {cartForced ? (
-                    <span className="text-xs font-medium text-ink-muted bg-paper px-2.5 py-1 rounded-md border border-line">Required</span>
+                    <span className="text-xs font-medium text-ink-muted">Required</span>
                   ) : (
                     <button
                       type="button"
@@ -743,13 +745,13 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
   // INVIOLABLE: No GolferAccount required to book. Name/email are for the
   // confirmation email only — never for registration or sign-up prompts.
   return (
-    <div className="bg-white rounded-lg border border-line p-6 space-y-5">
+    <div className={`${CARD} p-6 space-y-5`}>
       <StepHeading title="Your details" note="Where your confirmation goes — no account is created." />
       <div>
         <label className={lCls}>Full name</label>
         <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="John Smith" className={iCls} />
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className={lCls}>Email</label>
           <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="john@example.com" className={iCls} />

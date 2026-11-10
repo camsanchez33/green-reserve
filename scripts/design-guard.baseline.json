@@ -85,7 +85,6 @@
     "lucide": 1
   },
   "src/app/courses/[slug]/CourseBookingClient.tsx": {
-    "card": 1,
     "input": 3,
     "lucide": 4
   },

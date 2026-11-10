@@ -14,6 +14,7 @@ import Image from 'next/image';
 import { Star, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
 import type { Course, TeeTime } from '@/lib/courses-data';
 import { TrustNote } from '@/components/TrustNote';
+import { CARD } from '@/components/ui/Card';
 import { ACCESS_FEE_PER_PLAYER, hoursLabel } from '@/lib/booking-fees';
 import { DEMO_COURSE_SLUGS } from '@/lib/demo-courses';
 import { CHANGE_CATEGORIES } from '@/lib/change-requests';
@@ -641,7 +642,7 @@ export default function CourseDetailPage({
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-card p-6 sticky top-20">
+            <div className={`${CARD} p-6 sticky top-20`}>
               <p className="text-[15px] font-semibold text-ink mb-1">Member access</p>
               <p className="text-ink text-sm leading-relaxed mb-5">
                 This is a private club. Tee time booking is reserved for members. Sign in to your member account to view availability and book.
@@ -891,14 +892,14 @@ export default function CourseDetailPage({
         ) : golferProfile ? (
           <Link
             href={`/courses/${slug}/account`}
-            className="absolute top-3 right-4 z-10 text-xs text-white/70 hover:text-white transition-colors"
+            className="absolute top-3 right-4 z-10 text-xs font-medium text-white bg-black/35 hover:bg-black/50 rounded-md px-2.5 py-1.5 transition-colors"
           >
             Hi, {golferProfile.firstName}
           </Link>
         ) : (
           <Link
             href={`/courses/${slug}/account`}
-            className="absolute top-3 right-4 z-10 text-xs text-white/60 hover:text-white transition-colors"
+            className="absolute top-3 right-4 z-10 text-xs font-medium text-white bg-black/35 hover:bg-black/50 rounded-md px-2.5 py-1.5 transition-colors"
           >
             Sign in
           </Link>
@@ -972,7 +973,7 @@ export default function CourseDetailPage({
         <div className={`max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 ${selectedTime ? 'pb-48' : ''}`}>
 
           {(course.type === 'member' ? (
-            <div className="max-w-md mx-auto bg-white rounded-lg border border-line p-8 text-center">
+            <div className={`${CARD} max-w-md mx-auto p-8 text-center`}>
               
               <h2 className="font-serif font-semibold text-ink text-xl mb-2">Member-only club</h2>
               <p className="text-ink-soft text-sm mb-5">
@@ -1288,7 +1289,7 @@ export default function CourseDetailPage({
                 {/* BOOKING WINDOWS: the soft line under the picker, and the
                     honest state when a chosen date is past the window. */}
                 {(membersBookEarlier || windowNotice) && !loadingTimes && (
-                  <div className="mb-4 bg-white rounded-lg border border-line px-4 py-3 text-sm text-ink-soft flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <div className={`${CARD} mb-4 px-4 py-3 text-sm text-ink-soft flex flex-wrap items-center gap-x-3 gap-y-1`}>
                     {windowNotice ? (
                       <span>
                         <b className="font-semibold text-ink">{displayDate(selectedDate)} isn&rsquo;t open for booking yet.</b>{' '}
@@ -1303,7 +1304,7 @@ export default function CourseDetailPage({
                   </div>
                 )}
                 {!loadingTimes && teeTimes.length > 0 && !teeTimes.some(t => t.players_available >= players) && (
-                  <div className="mb-4 bg-white rounded-lg border border-line px-4 py-3.5 flex flex-wrap items-center gap-3">
+                  <div className={`${CARD} mb-4 px-4 py-3.5 flex flex-wrap items-center gap-3`}>
                     <div className="text-sm text-ink flex-1 min-w-[200px]">
                       <b className="font-semibold">Nothing fits {players} on {displayDate(selectedDate)}.</b>{' '}
                       {searchingNext ? 'Looking for the nearest open dates…' : nearestDates.length > 0 ? 'Nearest dates with room:' : bestFewer > 0 ? '' : 'Nothing with room in the next week either.'}
@@ -1335,12 +1336,12 @@ export default function CourseDetailPage({
                     ))}
                   </div>
                 ) : filtered.length === 0 ? (
-                  <div className="bg-white rounded-lg border border-line text-center py-16 px-6">
+                  <div className={`${CARD} text-center py-16 px-6`}>
                     
                     {teeTimes.length === 0 ? (
                       <div>
                         <p className="font-serif font-semibold text-ink text-xl mb-1.5">Nothing open on {displayDate(selectedDate)}</p>
-                        <p className="text-ink text-sm mb-5">Every slot for this date is taken.</p>
+                        <p className="text-ink text-sm mb-5">No times left to book on this date.</p>
                         {/* B-4: nearest fits — the two closest dates with room for this party. */}
                         {searchingNext ? (
                           <p className="text-xs text-ink">Looking for the nearest open dates…</p>
@@ -1425,7 +1426,7 @@ export default function CourseDetailPage({
                             // CART-2: a per-cart course charges a cart for every two riders (rounded up) — the server's rule.
                             const perCart = course.cart_pricing === 'per_cart';
                             const carts = perCart ? cartsFor(slotPlayers) : slotPlayers;
-                            const slotTotal = displayGreenFee * slotPlayers + cartFee * carts + 1.5 * slotPlayers;
+                            const slotTotal = displayGreenFee * slotPlayers + cartFee * carts + ACCESS_FEE_PER_PLAYER * slotPlayers;
 
                             return (
                               <div key={t.id} className={`transition-colors ${isFull ? 'opacity-60' : ''}`} style={slotMark}>
@@ -1577,7 +1578,7 @@ export default function CourseDetailPage({
                                       )}
                                       <div className="flex justify-between text-sm text-ink-soft">
                                         <span>GR booking fee × {slotPlayers}</span>
-                                        <span>${(1.5 * slotPlayers).toFixed(2)}</span>
+                                        <span>${(ACCESS_FEE_PER_PLAYER * slotPlayers).toFixed(2)}</span>
                                       </div>
                                       <div className="flex justify-between font-semibold text-ink pt-2 border-t border-line">
                                         <span>Total</span>
