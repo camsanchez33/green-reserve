@@ -202,8 +202,8 @@ export default function AdminHomePage() {
     <div className="min-h-screen bg-white flex">
       <AdminSidebar active="overview" />
       <div className="admin-content flex-1 min-h-screen">
-        <div className="px-10 pt-2.5 pb-10 flex flex-col gap-7">
-          <div className="flex items-end justify-between border-b border-line pb-4 gap-4">
+        <div className="px-4 md:px-10 pt-2.5 pb-10 flex flex-col gap-7">
+          <div className="flex flex-wrap items-end justify-between border-b border-line pb-4 gap-x-4 gap-y-2">
             <h1 className="m-0 text-[32px] font-bold tracking-[-0.02em] text-ink leading-none">Today</h1>
             <div className="flex items-center gap-3 text-[13px] text-ink-muted">
               <span>
@@ -238,7 +238,7 @@ export default function AdminHomePage() {
               <div className="flex-[1_1_600px] min-w-0 flex flex-col gap-8">
                 {today && (
                   <section>
-                    <div className="flex gap-12 flex-wrap">
+                    <div className="flex gap-x-12 gap-y-4 flex-wrap">
                       <div>
                         <div className="text-[14px] text-ink-soft">Online bookings today</div>
                         <div className="mt-1 text-[26px] font-medium text-ink tabular-nums">{today.bookings}</div>
@@ -254,7 +254,9 @@ export default function AdminHomePage() {
                         <div className="text-[12.5px] text-ink-muted">{fmtMoney(today.lastWeekFeesCents / 100)} by now last week</div>
                       </div>
                     </div>
-                    <DayChart today={today} at={data.at} />
+                    {today.bookings === 0 && today.lastWeekHours.every(n => n === 0) ? (
+                      <p className="mt-4 text-[13px] text-ink-muted">No online bookings either day.</p>
+                    ) : <DayChart today={today} at={data.at} />}
                   </section>
                 )}
 
@@ -273,8 +275,8 @@ export default function AdminHomePage() {
                         <Stat cls="sm:border-r border-b" label="GreenReserve fees" value={fmtMoney(c.feesCents / 100)} note={fe?.text} tone={fe?.tone} />
                         <Stat cls="border-b" label="Online share" value={c.onlineSharePct === null ? '—' : `${c.onlineSharePct}%`}
                           note={c.allBookings ? `of ${c.allBookings} booking${c.allBookings === 1 ? '' : 's'}` : 'no bookings yet'} />
-                        <Stat href="/admin/goals" cls="sm:border-r border-b sm:border-b-0" label="Live courses" value={String(ov.liveCourses)}
-                            note={ov.liveGoal ? `goal ${ov.liveGoal.target} by ${dateText(ov.liveGoal.dueAt)}` : 'set a goal'} />
+                        <Stat href={areas.includes('company') ? '/admin/goals' : undefined} cls="sm:border-r border-b sm:border-b-0" label="Live courses" value={String(ov.liveCourses)}
+                            note={ov.liveGoal ? `goal ${ov.liveGoal.target} by ${dateText(ov.liveGoal.dueAt)}` : areas.includes('company') ? 'set a goal' : 'no goal'} />
                         <Stat cls="sm:border-r border-b sm:border-b-0" label="No-show rate" value={c.noShowPct === null ? '—' : `${c.noShowPct}%`}
                           note={c.rounds ? `${c.noShows} of ${c.rounds} rounds, to yesterday` : 'no rounds played'} />
                         <Stat href="/admin/revenue" cls="" label="Fees not collected" value={fmtMoney(c.uncollectedCents / 100)}
@@ -301,7 +303,7 @@ export default function AdminHomePage() {
                               <th className="py-2 font-medium">Bookings 7d</th>
                               <th className="py-2 font-medium">Online share</th>
                               <th className="py-2 font-medium">Fees 7d</th>
-                              <th className="py-2 font-medium">Staff seen</th>
+                              <th className="py-2 font-medium" title="Amber: nobody in 3 days, with tee times">Staff seen</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -323,7 +325,7 @@ export default function AdminHomePage() {
                                   {!c.live ? (
                                     <td colSpan={4} className="py-3 text-ink-muted">Not live yet</td>
                                   ) : c.closed ? (
-                                    <td colSpan={4} className="py-3 text-ink-muted">No open tee times this week or the next two · {fmtMoney(c.fees7d)} in fees</td>
+                                    <td colSpan={4} className="py-3 text-ink-muted">No open tee times · {fmtMoney(c.fees7d)} fees</td>
                                   ) : (
                                     <>
                                       <td className="py-3 tabular-nums">
@@ -340,39 +342,36 @@ export default function AdminHomePage() {
                             })}
                           </tbody>
                         </table>
-                        {courses.some(c => c.staffQuiet) && (
-                          <p className="mt-2 text-[12px] text-ink-muted">Staff seen in amber: nobody from the course has opened the dashboard in 3 days while it had tee times.</p>
-                        )}
                       </div>
                     )}
                   </section>
                 )}
               </div>
 
-              {(problems || needs || goals) && (
-                <aside className="flex-[0_1_360px] min-w-[280px] bg-paper rounded-lg p-5 flex flex-col gap-[18px]">
-                  {problems && (
+              {(problems || courseTodos.length > 0 || needs || goals) && (
+                <aside className="flex-[1_1_360px] md:flex-[0_1_360px] min-w-0 md:min-w-[280px] bg-paper rounded-lg p-5 flex flex-col gap-[18px]">
+                  {(problems || courseTodos.length > 0) && (
                     <div>
                       <div className="flex items-baseline justify-between">
                         <h2 className="text-[16px] font-semibold text-ink">Needs you</h2>
-                        <Link href="/admin/problems" className="text-[13px] text-ink-soft hover:text-ink">Problems</Link>
+                        {problems && <Link href="/admin/problems" className="text-[13px] text-ink-soft hover:text-ink">Problems</Link>}
                       </div>
-                      {problems.length === 0 && courseTodos.length === 0 ? (
+                      {(problems ?? []).length === 0 && courseTodos.length === 0 ? (
                         <p className="mt-3 text-[14px] text-ink flex items-center gap-2"><StatusDot status="ok" />Nothing is broken.</p>
                       ) : (
                         <div className="mt-3 flex flex-col gap-3.5 text-[14px]">
-                          {problems.slice(0, 6).map(p => (
+                          {(problems ?? []).slice(0, 6).map(p => (
                             <div key={p.id}>
                               <div className="font-medium text-ink">{p.title}{p.courseName && !p.title.includes(p.courseName) ? ` — ${p.courseName}` : ''}</div>
                               <div className="text-[13px] text-ink-muted">{p.detail ? `${p.detail} · ` : ''}{ageText(dayAge(p.openedAt))}{p.ownerName ? ` · ${p.ownerName} has it` : ''}</div>
                               <Link href={`/admin/problems#${p.id}`} className="text-[13.5px] font-medium text-pine hover:underline underline-offset-2">{p.ownerName ? 'Open' : 'Take it'}</Link>
                             </div>
                           ))}
-                          {problems.length > 6 && <Link href="/admin/problems" className="text-[13px] text-ink-soft hover:text-ink">{problems.length - 6} more problems</Link>}
+                          {problems && problems.length > 6 && <Link href="/admin/problems" className="text-[13px] text-ink-soft hover:text-ink">{problems.length - 6} more problems</Link>}
                           {courseTodos.slice(0, 4).map(c => (
                             <div key={c.id}>
                               <div className="font-medium text-ink">{c.name}</div>
-                              <div className="text-[13px] text-ink-muted">{c.rows[0].why} · {c.rows[0].doThis}</div>
+                              <div className="text-[13px] text-ink-muted">{c.rows[0].why}{c.rows.length > 1 ? ` · ${c.rows.length - 1} more` : ''}</div>
                               <Link href={c.rows[0].href} className="text-[13.5px] font-medium text-pine hover:underline underline-offset-2">{c.rows[0].actionLabel}</Link>
                             </div>
                           ))}
@@ -396,7 +395,7 @@ export default function AdminHomePage() {
                             return (
                               <div key={row.id}>
                                 <div className="flex justify-between gap-3">
-                                  <Link href={row.href} className="text-ink hover:underline underline-offset-2 truncate">{row.why} · {row.who}</Link>
+                                  <Link href={row.href} title={row.doThis} className="text-ink hover:underline underline-offset-2 truncate">{row.why} · {row.who}</Link>
                                   <span className={`shrink-0 ${row.severity === 'bad' ? 'text-bad' : row.ageDays >= 7 ? 'text-warn' : 'text-ink-muted'}`}>{ageText(row.ageDays)}</span>
                                 </div>
                                 {row.fire && canFire(row) && (

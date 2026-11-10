@@ -33,6 +33,14 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
   const { role, name, areas } = useAdminSession();
   const [signingOut, setSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState(false);
+  // Below md the rail is a drawer behind the top bar's menu button.
+  const [menuOpen, setMenuOpen] = useState(false);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [menuOpen]);
   useEffect(() => { setUnread(unreadMessages); }, [unreadMessages]);
 
   // MP-8a: ONE fetch for all three badges (was two, and none for inquiries).
@@ -138,6 +146,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
       // browser shows the destination, and the nav works before hydration.
       <Link
         href={item.href}
+        onClick={() => setMenuOpen(false)}
         aria-current={isActive ? 'page' : undefined}
         className={`w-full flex items-center gap-2.5 rounded-md transition-colors ${item.sub ? 'pl-9 pr-2.5 py-1.5 text-[13px]' : 'px-2.5 py-2 text-[14px]'} ${
           isActive ? 'bg-pine/[0.07] text-pine font-semibold' : 'text-ink-soft hover:text-ink hover:bg-paper'
@@ -155,11 +164,17 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
   return (
     <>
     <CommandPalette/>
-    <div className="fixed left-0 top-0 h-full w-60 bg-white border-r border-line flex flex-col z-20">
-      <Link href="/admin" className="flex items-center px-5 h-14 shrink-0" aria-label="GreenReserve admin home">
-        {/* LOGO-1: the vector lockup, top-left, as on every page. */}
-        <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={150} height={28} className="w-[150px] h-auto" />
-      </Link>
+    {menuOpen && <div className="md:hidden fixed inset-0 bg-ink/20 z-30" onClick={() => setMenuOpen(false)} aria-hidden="true" />}
+    <div id="admin-menu" className={`fixed left-0 top-0 h-full w-60 bg-white border-r border-line flex-col z-40 md:z-20 md:flex ${menuOpen ? 'flex' : 'hidden'}`}>
+      <div className="flex items-center justify-between pr-2 h-14 shrink-0">
+        <Link href="/admin" className="flex items-center px-5 h-14" aria-label="GreenReserve admin home">
+          {/* LOGO-1: the vector lockup, top-left, as on every page. */}
+          <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={150} height={28} className="w-[150px] h-auto" />
+        </Link>
+        <button type="button" onClick={() => setMenuOpen(false)} aria-label="Close menu" className="md:hidden w-9 h-9 flex items-center justify-center rounded-md text-ink-soft hover:bg-paper">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
+      </div>
 
       <nav aria-label="Admin" className="flex-1 px-3 pb-3 pt-2 space-y-5 overflow-y-auto">
         {groups.map(g => (
@@ -184,27 +199,34 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
         </div>
         {signOutError && (
           <p role="alert" className="px-2.5 pb-1 text-[11px] text-bad leading-snug">
-            Sign-out failed — you are still signed in. Check your connection and try again.
+            Sign-out failed — still signed in. Try again.
           </p>
         )}
       </div>
     </div>
 
     {/* ADMIN-C: the top bar — search (and "ask"), and one live line on the systems. */}
-    <div className="fixed top-0 right-0 left-60 h-14 bg-white/95 backdrop-blur-sm border-b border-line z-10 flex items-center gap-4 px-10">
+    <div className="fixed top-0 right-0 left-0 md:left-60 h-14 bg-white/95 backdrop-blur-sm border-b border-line z-10 flex items-center gap-3 md:gap-4 px-4 md:px-10">
+      <button
+        type="button" onClick={() => setMenuOpen(true)} aria-label="Open menu" aria-expanded={menuOpen} aria-controls="admin-menu"
+        className="md:hidden w-9 h-9 -ml-1 shrink-0 flex items-center justify-center rounded-md text-ink-soft hover:bg-paper"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+      </button>
       <button
         type="button"
         onClick={openPalette}
-        className="w-full max-w-[460px] flex items-center gap-2 text-left bg-paper rounded-md px-3 py-2 text-[14px] text-ink-muted hover:bg-line-soft transition-colors"
+        className="min-w-0 w-full max-w-[460px] flex items-center gap-2 text-left bg-paper rounded-md px-3 py-2 text-[14px] text-ink-muted hover:bg-line-soft transition-colors"
       >
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>
-        <span className="flex-1">Search or ask anything</span>
-        <kbd className="text-[11px] text-ink-faint">Ctrl K</kbd>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true" className="shrink-0"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>
+        <span className="flex-1 truncate">Search<span className="hidden sm:inline"> or ask anything</span></span>
+        <kbd className="hidden sm:inline text-[11px] text-ink-faint">Ctrl K</kbd>
       </button>
       {systemsOk !== null && (
-        <Link href="/admin/system" className={`ml-auto flex items-center gap-2 text-[13px] ${systemsOk ? 'text-ok' : 'text-bad font-medium'}`}>
+        <Link href="/admin/system" className={`ml-auto shrink-0 flex items-center gap-2 text-[13px] ${systemsOk ? 'text-ok' : 'text-bad font-medium'}`}>
           <StatusDot status={systemsOk ? 'ok' : 'bad'} />
-          {systemsOk ? 'All systems running' : 'A system needs attention'}
+          <span className="hidden sm:inline">{systemsOk ? 'All systems running' : 'A system needs attention'}</span>
+          <span className="sm:hidden">Systems</span>
         </Link>
       )}
     </div>
