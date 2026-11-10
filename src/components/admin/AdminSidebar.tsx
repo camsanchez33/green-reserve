@@ -3,7 +3,7 @@ import { SUPPORT_PLUS, MANAGER_PLUS, VIEWER_PLUS, OWNER_ONLY } from '@/lib/admin
 import Link from 'next/link';
 import Image from 'next/image';
 import { StatusDot } from '@/components/ui/StatusDot';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import CommandPalette from '@/components/admin/CommandPalette';
 import { useAdminSession } from '@/lib/admin-session-context';
 import type { AdminArea } from '@/lib/admin-areas';
@@ -34,12 +34,28 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
   const [signingOut, setSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState(false);
   // Below md the rail is a drawer behind the top bar's menu button.
+  // While open it is a dialog (MP-9's rules, as in ui/Modal): focus moves in,
+  // Tab stays inside, Escape closes, and focus goes back to the menu button.
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     if (!menuOpen) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuOpen(false); };
+    closeButtonRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setMenuOpen(false); return; }
+      const panel = menuRef.current;
+      if (e.key !== 'Tab' || !panel) return;
+      const items = Array.from(panel.querySelectorAll<HTMLElement>('a[href], button:not([disabled])')).filter(n => n.offsetParent !== null);
+      if (items.length === 0) return;
+      const first = items[0], last = items[items.length - 1], at = document.activeElement;
+      if (e.shiftKey && (at === first || !panel.contains(at))) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && (at === last || !panel.contains(at))) { e.preventDefault(); first.focus(); }
+    };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    const opener = menuButtonRef.current;
+    return () => { window.removeEventListener('keydown', onKey); opener?.focus(); };
   }, [menuOpen]);
   useEffect(() => { setUnread(unreadMessages); }, [unreadMessages]);
 
@@ -165,13 +181,13 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
     <>
     <CommandPalette/>
     {menuOpen && <div className="md:hidden fixed inset-0 bg-ink/20 z-30" onClick={() => setMenuOpen(false)} aria-hidden="true" />}
-    <div id="admin-menu" className={`fixed left-0 top-0 h-full w-60 bg-white border-r border-line flex-col z-40 md:z-20 md:flex ${menuOpen ? 'flex' : 'hidden'}`}>
+    <div id="admin-menu" ref={menuRef} role={menuOpen ? 'dialog' : undefined} aria-modal={menuOpen || undefined} aria-label={menuOpen ? 'Menu' : undefined} className={`fixed left-0 top-0 h-full w-60 bg-white border-r border-line flex-col z-40 md:z-20 md:flex ${menuOpen ? 'flex' : 'hidden'}`}>
       <div className="flex items-center justify-between pr-2 h-14 shrink-0">
-        <Link href="/admin" className="flex items-center px-5 h-14" aria-label="GreenReserve admin home">
+        <Link href="/admin" onClick={() => setMenuOpen(false)} className="flex items-center px-5 h-14" aria-label="GreenReserve admin home">
           {/* LOGO-1: the vector lockup, top-left, as on every page. */}
           <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={150} height={28} className="w-[150px] h-auto" />
         </Link>
-        <button type="button" onClick={() => setMenuOpen(false)} aria-label="Close menu" className="md:hidden w-9 h-9 flex items-center justify-center rounded-md text-ink-soft hover:bg-paper">
+        <button ref={closeButtonRef} type="button" onClick={() => setMenuOpen(false)} aria-label="Close menu" className="md:hidden w-9 h-9 flex items-center justify-center rounded-md text-ink-soft hover:bg-paper">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
         </button>
       </div>
@@ -188,7 +204,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
       <div className="px-3 py-3 border-t border-line">
         <div className="px-2.5 text-[12.5px] text-ink-muted truncate">{name || 'Signed in'} · {role}</div>
         <div className="flex items-center gap-1 mt-1">
-          <Link href={profile.href} aria-current={active === 'profile' ? 'page' : undefined} className={`px-2.5 py-1.5 text-[13px] rounded-md transition-colors ${active === 'profile' ? 'bg-pine/[0.07] text-pine font-semibold' : 'text-ink-soft hover:text-ink hover:bg-paper'}`}>{profile.label}</Link>
+          <Link href={profile.href} onClick={() => setMenuOpen(false)} aria-current={active === 'profile' ? 'page' : undefined} className={`px-2.5 py-1.5 text-[13px] rounded-md transition-colors ${active === 'profile' ? 'bg-pine/[0.07] text-pine font-semibold' : 'text-ink-soft hover:text-ink hover:bg-paper'}`}>{profile.label}</Link>
           <button
             onClick={signOut}
             disabled={signingOut}
@@ -208,7 +224,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
     {/* ADMIN-C: the top bar — search (and "ask"), and one live line on the systems. */}
     <div className="fixed top-0 right-0 left-0 md:left-60 h-14 bg-white/95 backdrop-blur-sm border-b border-line z-10 flex items-center gap-3 md:gap-4 px-4 md:px-10">
       <button
-        type="button" onClick={() => setMenuOpen(true)} aria-label="Open menu" aria-expanded={menuOpen} aria-controls="admin-menu"
+        ref={menuButtonRef} type="button" onClick={() => setMenuOpen(true)} aria-label="Open menu" aria-expanded={menuOpen} aria-controls="admin-menu"
         className="md:hidden w-9 h-9 -ml-1 shrink-0 flex items-center justify-center rounded-md text-ink-soft hover:bg-paper"
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>

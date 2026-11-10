@@ -123,6 +123,13 @@ function rankCourses(list: HomeCourse[]): HomeCourse[] {
     || a.name.localeCompare(b.name));
 }
 
+/** AW-11: a to-do whose fix lives in an area this login lacks opens the course instead (no 403 dead end). */
+const TODO_AREAS: [string, string][] = [['/admin/revenue', 'money'], ['/admin/messages', 'messages'], ['/admin/golfers', 'golfers'], ['/admin/problems', 'problems'], ['/admin/inquiries', 'pipeline']];
+function todoLink(row: ActionRow, courseId: string, areas: readonly string[]): { href: string; label: string } {
+  const need = TODO_AREAS.find(([p]) => row.href === p || row.href.startsWith(`${p}?`) || row.href.startsWith(`${p}/`))?.[1];
+  return need && !areas.includes(need) ? { href: `/admin/courses/${courseId}`, label: 'Open' } : { href: row.href, label: row.actionLabel };
+}
+
 function seenText(c: HomeCourse): string {
   if (!c.staffSeenAt) return 'Not yet';
   return fmtAgo(new Date(c.staffSeenAt).getTime(), Date.now());
@@ -325,7 +332,7 @@ export default function AdminHomePage() {
                                   {!c.live ? (
                                     <td colSpan={4} className="py-3 text-ink-muted">Not live yet</td>
                                   ) : c.closed ? (
-                                    <td colSpan={4} className="py-3 text-ink-muted">No open tee times · {fmtMoney(c.fees7d)} fees</td>
+                                    <td colSpan={4} className="py-3 text-ink-muted">No open tee times this week or the next two · {fmtMoney(c.fees7d)} fees</td>
                                   ) : (
                                     <>
                                       <td className="py-3 tabular-nums">
@@ -368,13 +375,16 @@ export default function AdminHomePage() {
                             </div>
                           ))}
                           {problems && problems.length > 6 && <Link href="/admin/problems" className="text-[13px] text-ink-soft hover:text-ink">{problems.length - 6} more problems</Link>}
-                          {courseTodos.slice(0, 4).map(c => (
-                            <div key={c.id}>
-                              <div className="font-medium text-ink">{c.name}</div>
-                              <div className="text-[13px] text-ink-muted">{c.rows[0].why}{c.rows.length > 1 ? ` · ${c.rows.length - 1} more` : ''}</div>
-                              <Link href={c.rows[0].href} className="text-[13.5px] font-medium text-pine hover:underline underline-offset-2">{c.rows[0].actionLabel}</Link>
-                            </div>
-                          ))}
+                          {courseTodos.slice(0, 4).map(c => {
+                            const todo = todoLink(c.rows[0], c.id, areas);
+                            return (
+                              <div key={c.id}>
+                                <div className="font-medium text-ink">{c.name}</div>
+                                <div className="text-[13px] text-ink-muted">{c.rows[0].why}{c.rows.length > 1 ? ` · ${c.rows.length - 1} more` : ''}</div>
+                                <Link href={todo.href} className="text-[13.5px] font-medium text-pine hover:underline underline-offset-2">{todo.label}</Link>
+                              </div>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
