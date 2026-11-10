@@ -924,6 +924,9 @@ function DashboardPageInner() {
     const partsOff = (tt.bookings ?? []).filter(c => c.splitFromId === b.id);
     const groupOf = partsOff.reduce((n, c) => n + c.players, b.players);
     const showMoney = access.can('money.payments');
+    // STRESS-1110 (Cam 2026-11-10, "show what this group owes"): whoever can take the payment sees what this group owes,
+    // the cash due and the change; what was already paid (and day totals) stays behind money.payments.
+    const seesDue = showMoney || access.can('sheet.counter_payment') || access.can('sheet.checkin');
     // A group checked in short (only some showed) paid for those players only — show that, not the booked total.
     const partlyPlayed = b.status === 'completed' && b.checkedInPlayers != null && b.checkedInPlayers < b.players;
     const paidShownCents = partlyPlayed
@@ -981,7 +984,7 @@ function DashboardPageInner() {
             {(b.notes?.length ?? 0) > 0 && <p className="text-[12.5px] text-ink mt-0.5">{b.notes!.join(' · ')}</p>}
           </div>
           {showMoney && !(unpaid && !b.noShowAt) && <span className="shrink-0 text-[14px] font-semibold text-ink tabular-nums">${(paidShownCents / 100).toFixed(2)}</span>}
-          {showMoney && unpaid && !b.noShowAt && !inFlow && <span className="shrink-0 text-[14px] font-semibold text-ink tabular-nums">${(cashDue / 100).toFixed(2)}</span>}
+          {seesDue && unpaid && !b.noShowAt && !inFlow && <span className="shrink-0 text-[14px] font-semibold text-ink tabular-nums">${(cashDue / 100).toFixed(2)}</span>}
         </div>
         {/* Only what isn't plain "booked, not paid": a no-show, a declined card, paid ahead, checked in, on account. */}
         {(b.noShowAt || declined || !unpaid || b.status !== 'confirmed') && (
@@ -1019,7 +1022,7 @@ function DashboardPageInner() {
           const takeCash = (tendered?: number) => bookingLifecycle(b, 'take_cash', cashDue, { tenderedCents: tendered && tendered > cashDue ? tendered : undefined });
           const row = 'w-full flex items-center justify-between gap-3 py-3 text-left text-[14px] text-ink hover:bg-paper/70 disabled:opacity-50 transition-colors';
           const next = 'w-full min-h-[48px] rounded-[7px] bg-pine hover:bg-pine-hover text-white text-[15px] font-semibold disabled:opacity-50';
-          const withFee = showMoney && cardDue !== cashDue ? <span className="text-ink-muted tabular-nums">${(cardDue / 100).toFixed(2)} with booking fee</span> : null;
+          const withFee = seesDue && cardDue !== cashDue ? <span className="text-ink-muted tabular-nums">${(cardDue / 100).toFixed(2)} with booking fee</span> : null;
           const STEPS = ['Who’s here', 'Add to order', 'Payment'];
           return (
             <div onClick={e => e.stopPropagation()}>
@@ -1032,7 +1035,7 @@ function DashboardPageInner() {
               {!inFlow && !(unpaid && !b.noShowAt) && (b.shopItems?.length ?? 0) > 0 && (
                 <div className="mt-2.5">
                   <ShopItemsForGroup bookingId={b.id} lines={b.shopItems ?? []} shopFeeCents={b.shopFeeCents ?? 0} shopTaxCents={b.shopTaxCents ?? 0}
-                    editable={shopEditable} canSell={access.can('shop.sell')} showMoney={showMoney}
+                    editable={shopEditable} canSell={access.can('shop.sell')} showMoney={seesDue}
                     onChanged={() => loadTimes(selectedDate, true)} />
                 </div>
               )}
@@ -1074,7 +1077,7 @@ function DashboardPageInner() {
                       {/* POS-1a: pro-shop items charged with this round. Same lock as the server (lib/shop shopLockedReason). */}
                       <div className="mt-2">
                         <ShopItemsForGroup bookingId={b.id} lines={b.shopItems ?? []} shopFeeCents={b.shopFeeCents ?? 0} shopTaxCents={b.shopTaxCents ?? 0}
-                          editable={shopEditable} canSell={access.can('shop.sell')} showMoney={showMoney}
+                          editable={shopEditable} canSell={access.can('shop.sell')} showMoney={seesDue}
                           onChanged={() => loadTimes(selectedDate, true)} />
                       </div>
                       {/* CART-3 (Cam 2026-11-09): who rides and the range-ball buckets, set before they pay. */}
@@ -1085,7 +1088,7 @@ function DashboardPageInner() {
                           : tt.event ? 'Event time.'
                           : !access.can('sheet.counter_payment') ? 'Not allowed for your login.' : null}
                         onChanged={() => loadTimes(selectedDate, true)} />
-                      {showMoney && (
+                      {seesDue && (
                         <div className="mt-3 rounded-[7px] bg-white px-3 py-1">
                           <GroupTicket booking={b} here={herePlayers} withFee={false} />
                           <div className="flex items-baseline justify-between border-t border-line py-2.5">
@@ -1104,7 +1107,7 @@ function DashboardPageInner() {
                   {step === 3 && (
                     <div className="mt-4">
                       <div className="text-center">
-                        {showMoney && <div className="text-[34px] font-semibold tracking-[-0.02em] text-ink tabular-nums">${(cashDue / 100).toFixed(2)}</div>}
+                        {seesDue && <div className="text-[34px] font-semibold tracking-[-0.02em] text-ink tabular-nums">${(cashDue / 100).toFixed(2)}</div>}
                         <div className="text-[13px] text-ink-soft">{b.checkInFailReason ? `Card declined · ${b.checkInFailReason}` : `How are they paying? · ${herePlayers} player${herePlayers === 1 ? '' : 's'}`}</div>
                       </div>
                       <div className="mt-3 divide-y divide-line border-t border-line">
@@ -1112,9 +1115,9 @@ function DashboardPageInner() {
                           <div className="py-3">
                             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                               <span className="text-[14px] text-ink mr-auto">Cash</span>
-                              <button type="button" disabled={rowBusy === b.id} onClick={() => takeCash()} className="min-h-[40px] min-w-[56px] px-3 rounded-[7px] bg-white border border-line hover:border-line-strong text-[14px] font-semibold text-ink disabled:opacity-50 tabular-nums">{showMoney ? 'Exact' : 'Take cash'}</button>
-                              {showMoney && quick.map(c => <button key={c} type="button" disabled={rowBusy === b.id} onClick={() => takeCash(c)} className="min-h-[40px] min-w-[56px] px-3 rounded-[7px] bg-white border border-line hover:border-line-strong text-[14px] font-semibold text-ink disabled:opacity-50 tabular-nums">${c / 100}</button>)}
-                              {showMoney && <button type="button" onClick={() => setCashGiven(g => ({ ...g, [b.id]: g[b.id] ?? '' }))} className="min-h-[40px] px-3 rounded-[7px] bg-white border border-line hover:border-line-strong text-[14px] font-semibold text-ink">Other</button>}
+                              <button type="button" disabled={rowBusy === b.id} onClick={() => takeCash()} className="min-h-[40px] min-w-[56px] px-3 rounded-[7px] bg-white border border-line hover:border-line-strong text-[14px] font-semibold text-ink disabled:opacity-50 tabular-nums">{seesDue ? 'Exact' : 'Take cash'}</button>
+                              {seesDue && quick.map(c => <button key={c} type="button" disabled={rowBusy === b.id} onClick={() => takeCash(c)} className="min-h-[40px] min-w-[56px] px-3 rounded-[7px] bg-white border border-line hover:border-line-strong text-[14px] font-semibold text-ink disabled:opacity-50 tabular-nums">${c / 100}</button>)}
+                              {seesDue && <button type="button" onClick={() => setCashGiven(g => ({ ...g, [b.id]: g[b.id] ?? '' }))} className="min-h-[40px] px-3 rounded-[7px] bg-white border border-line hover:border-line-strong text-[14px] font-semibold text-ink">Other</button>}
                             </div>
                             {cashGiven[b.id] !== undefined && (
                               <div className="mt-2 flex items-center gap-2">
@@ -1573,7 +1576,7 @@ function DashboardPageInner() {
                       slots={visibleTimes}
                       isPast={t => selectedDate < today() || (selectedDate === today() && t.time <= nowHM)}
                       selectedId={panelId}
-                      showMoney={access.can('money.payments')}
+                      showMoney={access.can('money.payments') || access.can('sheet.counter_payment') || access.can('sheet.checkin')}
                       onSelect={setPanelId} />
                   ) : (
                   <TeeSheetRows

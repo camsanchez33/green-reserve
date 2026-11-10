@@ -9072,7 +9072,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 2280,
+      "lines": 2283,
       "purpose": "",
       "brain": [],
       "exports": [
