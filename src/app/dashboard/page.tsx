@@ -852,8 +852,7 @@ function DashboardPageInner() {
   // 30 seconds while the tab is in front, and as soon as it comes back to the front. Never
   // mid-action: a check-in, a row being changed or a modal open waits for the next round.
   const busyRef = useRef(false);
-  // The check-in steps too: a re-read mid-checkout could change the total under staff (stress test 2026-11-10).
-  busyRef.current = !!(checkingInId || rowBusy || cardModalBooking || moveTarget || flow);
+  busyRef.current = !!(checkingInId || rowBusy || cardModalBooking || moveTarget);
   useEffect(() => {
     const tick = () => { if (document.visibilityState === 'visible' && !busyRef.current) loadTimes(selectedDate, true); };
     const i = setInterval(tick, 30_000);
@@ -1743,7 +1742,7 @@ function DashboardPageInner() {
               <button onClick={() => setShowAddModal(false)} className="text-ink-muted hover:text-ink" aria-label="Close"><X className="w-5 h-5"/></button>
             </div>
             {/* ADDTIME-1: a new time opens its card, ready to book. */}
-            <AddTeeTimeForm date={selectedDate} dayTimes={teeTimes} canPrice={!access.isStaff} onSave={async id => { setShowAddModal(false); await loadTimes(selectedDate, true); setPanelId(id); }} onCancel={()=>setShowAddModal(false)}/>
+            <AddTeeTimeForm date={selectedDate} dayTimes={teeTimes} canPrice={!access.isStaff} onSave={async id => { setShowAddModal(false); await loadTimes(selectedDate); setPanelId(id); }} onCancel={()=>setShowAddModal(false)}/>
           </div>
         </div>
       )}
@@ -1843,7 +1842,7 @@ function DashboardPageInner() {
                   setWxApplyErr(r.status >= 500 || r.status === 0
                     ? `The cancellation stopped partway${r.status ? ` (error ${r.status})` : ''}. Some groups may already be cancelled and emailed — the sheet has been refreshed; check it, then run Weather again for any still booked.`
                     : r.error);
-                  loadTimes(selectedDate, true); return;
+                  loadTimes(selectedDate); return;
                 }
                 const calls: FrostCall[] = [
                   ...r.data.failed.map(f => ({ name: f.name, players: f.players, why: `${fmtTime(f.time)} — NOT cancelled: ${f.error}` })),

@@ -158,7 +158,7 @@ export default function DashboardHome() {
     if (!quiet) setError('');
     const r = await dfetch<Home>('/api/operator/home');
     if (!r.ok || !r.data) { if (!quiet) setError(r.ok ? 'Nothing came back — try again.' : r.error); return; }
-    setHome(r.data);
+    setHome(r.data); setError('');
   }, []);
   const loadPayouts = useCallback(async () => {
     setPayoutError('');
@@ -213,7 +213,7 @@ export default function DashboardHome() {
             <Link href="/dashboard" className="text-[13px] font-medium text-white bg-pine hover:bg-pine-hover px-4 py-2 rounded-[7px]">Open tee sheet</Link>
           </div>
 
-          {error && <LoadError message={`Couldn't load today — ${error}`} onRetry={load} />}
+          {error && <LoadError message={`Couldn't load today — ${error}`} onRetry={() => load()} />}
 
           {/* POS-7 (Cam 2026-11-09): until today's register is open, Home asks for the starting cash. */}
           <OpenRegister where="home" />

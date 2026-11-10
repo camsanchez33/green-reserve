@@ -3951,7 +3951,7 @@
     },
     {
       "path": "src/app/api/checkin/[bookingId]/route.ts",
-      "lines": 122,
+      "lines": 125,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9072,7 +9072,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 2281,
+      "lines": 2280,
       "purpose": "",
       "brain": [],
       "exports": [

@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-10 01:00 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `ab07947a` · working tree **14 dirty file(s)**
+Generated 2026-11-10 01:08 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `9bd41dd7` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 181 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 183 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `9bd41dd7` | 2026-11-10 | Stress fixes, review: sheet keeps re-reading during checkout; Home Retry clears; a declined card gets a new-card pay page |
+| `dcaec7c7` | 2026-11-10 | Tee sheet + Home stress-test fixes: phone width, live Home, quiet re-reads, declined pay link, clearer cash |
 | `dea6f5b4` | 2026-11-09 | CART-5: the receipt says the cart is paid; no cart ticket, no cart number (#351) |
 | `a47a7025` | 2026-11-09 | CART-5: the receipt says the cart is paid; no cart ticket, no cart number |
 | `ba4de30f` | 2026-11-09 | AUDIT-1109: close two register gaps; no silent failures in tonight's pages (#350) |
@@ -196,25 +198,13 @@ Generated 2026-11-10 01:00 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (14 file(s))
+### Uncommitted working tree (2 file(s))
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/cancel-wording-test.ts`
-- `M scripts/checkout-card-test.ts`
-- `M scripts/split-booking-db-test.ts`
-- `M scripts/words-guard.baseline.json`
-- `M src/app/dashboard/home/page.tsx`
-- `M src/app/dashboard/page.tsx`
-- `M src/components/OperatorSidebar.tsx`
-- `M src/components/dashboard/DeclinedCardList.tsx`
-- `M src/lib/booking-status.ts`
-- `M src/lib/cancel-confirm.ts`
-- `M src/lib/operator-home.ts`
-- `?? scripts/stress-1110-test.ts`
 
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -338,6 +328,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `9bd41dd7` 2026-11-10 — Stress fixes, review: sheet keeps re-reading during checkout; Home Retry clears; a declined card gets a new-card pay page
+- `dcaec7c7` 2026-11-10 — Tee sheet + Home stress-test fixes: phone width, live Home, quiet re-reads, declined pay link, clearer cash
 - `dea6f5b4` 2026-11-09 — CART-5: the receipt says the cart is paid; no cart ticket, no cart number (#351)
 - `a47a7025` 2026-11-09 — CART-5: the receipt says the cart is paid; no cart ticket, no cart number
 - `ba4de30f` 2026-11-09 — AUDIT-1109: close two register gaps; no silent failures in tonight's pages (#350)
@@ -348,8 +340,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `9713a9b6` 2026-11-09 — EVENTS-2: event setup walk-through and a guided event page
 - `7b62a972` 2026-11-09 — MONEY-1: Money tab from Cam's notes (#348)
 - `3932b9fc` 2026-11-09 — MONEY-1: Money tab from Cam's notes
-- `bd16e6d6` 2026-11-09 — RECEIPT-3 + MSG-1: receipts you can see and text as a link; Messages from Cam's notes (#347)
-- `2981ca95` 2026-11-09 — RECEIPT-3 + MSG-1: receipts staff can see and text as a link; Messages from Cam's notes
 
 ---
 

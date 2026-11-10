@@ -23,8 +23,10 @@ ok('a blocked time that still holds a group stays on Home (late, no-shows, next)
 // Tee sheet.
 const page = read('src/app/dashboard/page.tsx');
 const loud = page.split('\n').filter(l => l.includes('loadTimes(selectedDate)'));
-ok('after an action the sheet re-reads quietly (no spinner); only the day change, Retry and Refresh show it', loud.length === 3);
-ok('the background re-read waits while the check-in steps are open', page.includes('moveTarget || flow);'));
+ok('after an action the sheet re-reads quietly (no spinner); only the day change, Retry, Refresh, a failed weather run and a new time show it', loud.length === 5);
+ok('the background re-read keeps running while the check-in steps are open (a pay link sent from them shows paid)', page.includes('busyRef.current = !!(checkingInId || rowBusy || cardModalBooking || moveTarget);'));
+ok('the golfer\'s pay page offers a new card after a decline, not the declined one again', read('src/app/api/checkin/[bookingId]/route.ts').includes('hasCard: !!booking.stripePaymentMethodId && !booking.checkInFailReason,'));
+ok('Home\'s Retry re-reads loudly and a good read clears the error', home.includes('onRetry={() => load()}') && !home.includes('onRetry={load}') && home.includes("setHome(r.data); setError('');"));
 ok('a declined card can be texted or emailed a pay link', page.includes("const canTextLink = b.status === 'confirmed' && (b.hasCard === false || !!b.checkInFailReason) &&") && page.includes("const canEmailLink = b.status === 'confirmed' && (b.hasCard === false || !!b.checkInFailReason) &&"));
 ok('the change due stays in the checked-in box', page.includes("how: change > 0 ? `Cash · change $${(change / 100).toFixed(2)}` : 'Cash'"));
 ok('cash tenders are real buttons, 40px tall', (page.match(/onClick=\{\(\) => takeCash\(c?\)\} className="min-h-\[40px\]/g) ?? []).length === 2);

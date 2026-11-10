@@ -55,7 +55,7 @@ export function getBookingStatus(status: string, paymentStatus: string): Booking
     return { label: 'Awaiting Check-In', sublabel: 'Cutoff passed, no fee policy', tone: 'amber' };
   }
   // Paid online ahead of the round, not checked in yet (stress test 2026-11-10: it read "Card on File").
-  if (paymentStatus === 'paid') return { label: 'Paid online', sublabel: 'Not yet checked in', tone: 'blue' };
+  if (paymentStatus === 'paid') return { label: 'Paid online', sublabel: 'Not yet checked in', tone: 'emerald' };
   // default: card_on_file, before cutoff
   return { label: 'Card on File', sublabel: 'Not yet checked in', tone: 'blue' };
 }
