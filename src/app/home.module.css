@@ -53,7 +53,7 @@
 
 .app { position: relative; background: #F4F5F1; border-radius: 4px; overflow: hidden; font-size: 13.5px; min-height: 470px; display: flex; }
 /* The dashboard rail (DASH-D): a darker tint, grouped tabs, the current one a white raised card with the course's dot. */
-.rail { flex: 0 0 118px; background: #E3E6DE; border-right: 1px solid #C9CEC2; padding: 10px 8px; display: flex; flex-direction: column; gap: 8px; font-size: 11.5px; color: #3A403A; }
+.rail { flex: 0 0 118px; min-width: 0; background: #E3E6DE; border-right: 1px solid #C9CEC2; padding: 10px 8px; display: flex; flex-direction: column; gap: 8px; font-size: 11.5px; color: #3A403A; }
 .railCourse { display: flex; align-items: center; gap: 6px; padding: 0 2px 4px; }
 .railCourse > i { flex: 0 0 22px; height: 22px; border-radius: 5px; color: #fff; font-style: normal; font-size: 9.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
 .railCourse span { min-width: 0; display: flex; flex-direction: column; }
@@ -126,6 +126,7 @@
 .pnlHd b em { font-style: normal; font-size: 11px; font-weight: 600; color: var(--forest); margin-left: 6px; vertical-align: middle; }
 .pnlFacts { margin-top: 6px; color: var(--ink) !important; display: flex !important; flex-wrap: wrap; column-gap: 12px; }
 .pnlFacts i { font-style: italic; color: var(--muted); }
+.pnlFacts > span:first-child { color: var(--ink); }
 .pnlHow { display: block; margin-top: 2px; font-size: 11.5px; color: var(--muted); }
 .ciWide { font: inherit; display: block; width: 100%; margin-top: 8px; padding: 8px 0; border: 0; border-radius: 7px; background: var(--forest); color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; }
 .ciWide:hover { background: #0F2C1F; }
