@@ -35,9 +35,12 @@ const KIND: Record<string, string> = {
 const BTN = 'text-[13px] font-medium px-3 py-1.5 rounded-md border border-line text-ink hover:border-pine/40 disabled:opacity-50';
 /** The course name in the title becomes its link, so the name isn't printed twice. */
 function TitleWithCourse({ p }: { p: Problem }) {
-  const name = p.courseName, at = name ? p.title.indexOf(name) : -1;
-  const link = (t: string) => <Link href={`/admin/courses/${p.courseId}`} className="hover:underline underline-offset-2">{t}</Link>;
-  if (!name || !p.courseId) return <>{p.title}</>;
+  const { role, areas } = useAdminSession();
+  // Titles end "— <course>", so the last match is the name.
+  const name = p.courseName, at = name ? p.title.lastIndexOf(name) : -1;
+  const href = `/admin/courses/${p.courseId}`;
+  const link = (t: string) => <Link href={href} className="hover:underline underline-offset-2">{t}</Link>;
+  if (!name || !p.courseId || !canOpenAdminHref(href, role, areas)) return <>{p.title}</>;
   if (at < 0) return <>{link(name)} · {p.title}</>;
   return <>{p.title.slice(0, at)}{link(name)}{p.title.slice(at + name.length)}</>;
 }
@@ -55,7 +58,7 @@ function ProblemRow({ p, data, onDone, startOpen }: { p: Problem; data: Data; on
   // AW-11: "Go to it" only when this login can open the page; else the course, else who can.
   const { role, areas } = useAdminSession();
   const go = canOpenAdminHref(p.href, role, areas) ? { href: p.href, label: 'Go to it' }
-    : p.courseId && canOpenAdminHref('/admin/courses', role, areas) ? { href: `/admin/courses/${p.courseId}`, label: 'Open course' } : null;
+    : p.courseId && canOpenAdminHref(`/admin/courses/${p.courseId}`, role, areas) ? { href: `/admin/courses/${p.courseId}`, label: 'Open course' } : null;
 
   async function act(action: string, extra: Record<string, unknown> = {}) {
     setBusy(action); setErr('');
@@ -86,7 +89,7 @@ function ProblemRow({ p, data, onDone, startOpen }: { p: Problem; data: Data; on
             {p.snoozedUntil && ` · snoozed until ${when(p.snoozedUntil)}: ${p.snoozeReason}`}
           </div>
         </div>
-        <div className="shrink-0 ml-[17px] sm:ml-0 flex flex-wrap items-center gap-2">
+        <div className="sm:shrink-0 ml-[17px] sm:ml-0 flex flex-wrap items-center gap-2">
           {live && (!p.ownerId || (p.ownerId !== data.me && data.canManage)) && (
             <button type="button" onClick={() => act('claim')} disabled={!!busy} className="text-[13px] font-medium px-3 py-1.5 rounded-md bg-pine hover:bg-pine-hover text-white disabled:opacity-50">
               {busy === 'claim' ? 'Taking…' : p.ownerId ? 'Take it over' : 'Take it'}
@@ -116,6 +119,7 @@ function ProblemRow({ p, data, onDone, startOpen }: { p: Problem; data: Data; on
                 <label htmlFor={`assign-${p.id}`} className="text-[13px] text-ink-soft">Who has it</label>
                 <select id={`assign-${p.id}`} value={p.ownerId ?? ''} disabled={!!busy} onChange={e => act('assign', { adminId: e.target.value || null })} className={`${INPUT} self-start`}>
                   <option value="">Nobody</option>
+                  {p.ownerId && !data.admins.some(a => a.id === p.ownerId) && <option value={p.ownerId} disabled>{p.ownerName || 'Someone'} (can’t open Problems)</option>}
                   {data.admins.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                 </select>
               </div>

@@ -7,8 +7,15 @@ import type { AdminArea } from '@/lib/admin-areas';
 
 type Gate = { roles: readonly string[]; area?: AdminArea };
 
-/** Longest prefix first: /admin/courses/… and /admin/courses?… both mean Courses. */
+/**
+ * First match wins. A key ending in "/" or "=" matches as a prefix; any other
+ * key matches itself or itself followed by ?, / or #. A course's own page (and
+ * the old ?courseId= link that redirects to it) is support+, though the list is
+ * viewer+ (course-detail/route.ts).
+ */
 export const ADMIN_PAGE_GATES: [string, Gate][] = [
+  ['/admin/courses/', { roles: SUPPORT_PLUS, area: 'courses' }],
+  ['/admin/courses?courseId=', { roles: SUPPORT_PLUS, area: 'courses' }],
   ['/admin/problems', { roles: SUPPORT_PLUS, area: 'problems' }],
   ['/admin/inquiries', { roles: VIEWER_PLUS, area: 'pipeline' }],
   ['/admin/courses', { roles: VIEWER_PLUS, area: 'courses' }],
@@ -17,6 +24,9 @@ export const ADMIN_PAGE_GATES: [string, Gate][] = [
   ['/admin/revenue', { roles: SUPPORT_PLUS, area: 'money' }],
   ['/admin/messages', { roles: SUPPORT_PLUS, area: 'messages' }],
   ['/admin/announcements', { roles: SUPPORT_PLUS, area: 'messages' }],
+  ['/admin/broadcasts', { roles: SUPPORT_PLUS, area: 'messages' }],
+  ['/admin/create', { roles: MANAGER_PLUS, area: 'pipeline' }],
+  ['/admin/activity', { roles: OWNER_ONLY }],
   ['/admin/goals', { roles: SUPPORT_PLUS, area: 'company' }],
   ['/admin/employees', { roles: MANAGER_PLUS, area: 'company' }],
   ['/admin/system', { roles: MANAGER_PLUS, area: 'company' }],
@@ -26,11 +36,12 @@ export const ADMIN_PAGE_GATES: [string, Gate][] = [
 ];
 
 function gateFor(href: string): Gate | null {
-  const hit = ADMIN_PAGE_GATES.find(([p]) => href === p || href.startsWith(`${p}?`) || href.startsWith(`${p}/`) || href.startsWith(`${p}#`));
+  const hit = ADMIN_PAGE_GATES.find(([p]) => /[/=]$/.test(p) ? href.startsWith(p)
+    : href === p || href.startsWith(`${p}?`) || href.startsWith(`${p}/`) || href.startsWith(`${p}#`));
   return hit ? hit[1] : null;
 }
 
-/** True when this login can open the page; an href we don't know (Home, profile) is open to everyone. */
+/** True when this login can open the page. Pages open to every login (Home, My profile) have no entry. */
 export function canOpenAdminHref(href: string, role: string, areas: readonly string[]): boolean {
   const g = gateFor(href);
   if (!g) return true;

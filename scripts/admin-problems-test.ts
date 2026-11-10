@@ -1,7 +1,7 @@
 // Admin lane, Problems PR (2026-11-10): no "Go to it" a login can't open, the
 // assign list only offers people who can open Problems, and a #id link opens
 // its tab once. Run: npx tsx scripts/admin-problems-test.ts
-import { readFileSync } from 'fs';
+import { readFileSync, readdirSync } from 'fs';
 import { VIEWER_PLUS, SUPPORT_PLUS, MANAGER_PLUS, OWNER_ONLY } from '../src/lib/admin-roles';
 import { ADMIN_PAGE_GATES, canOpenAdminHref, whoCanOpen } from '../src/components/admin/admin-href';
 
@@ -29,7 +29,13 @@ check('…but not Money', !canOpenAdminHref('/admin/revenue?tab=uncollected', 's
 check('…nor Systems', !canOpenAdminHref('/admin/system', 'support', ['problems', 'courses', 'company']));
 check('a manager with Company opens Systems', canOpenAdminHref('/admin/system', 'manager', ['company']));
 check('Security is the owner’s only', !canOpenAdminHref('/admin/security', 'manager', ['company']) && canOpenAdminHref('/admin/security', 'owner', []));
-check('an unknown admin page is open to all', canOpenAdminHref('/admin/profile', 'viewer', []));
+check('a page with no gate (My profile) is open to all', canOpenAdminHref('/admin/profile', 'viewer', []));
+check('a viewer with Courses opens the list but not a course’s page', canOpenAdminHref('/admin/courses', 'viewer', ['courses'])
+  && !canOpenAdminHref('/admin/courses/x', 'viewer', ['courses']) && !canOpenAdminHref('/admin/courses?courseId=x&tab=setup', 'viewer', ['courses']));
+for (const page of readdirSync('src/app/admin', { withFileTypes: true }).filter(d => d.isDirectory()).map(d => d.name)) {
+  if (['login', 'forgot-password', 'set-password', 'profile'].includes(page)) continue;
+  check(`/admin/${page} has a gate (no admin page fails open)`, ADMIN_PAGE_GATES.some(([p]) => p === `/admin/${page}`));
+}
 check('who-can-open words', whoCanOpen('/admin/security') === 'Owner only' && whoCanOpen('/admin/system') === 'Managers with Company access');
 
 // The page and the route.
@@ -38,6 +44,8 @@ const route = readFileSync('src/app/api/admin/problems/route.ts', 'utf8');
 check('Go to it only when the login can open it, else the course, else who can', /canOpenAdminHref\(p\.href, role, areas\)/.test(page) && /label: 'Open course'/.test(page) && /whoCanOpen\(p\.href\)/.test(page));
 check('a #id link opens its tab once, not after every reload', /if \(!data \|\| !hash \|\| hashDone\) return;\s*setHashDone\(true\)/.test(page));
 check('the course name is linked inside the title, not printed twice', /<TitleWithCourse p=\{p\} \/>/.test(page) && !/\{p\.courseName && p\.courseId && <>/.test(page));
+check('the title links the course only for a login that can open it', /!canOpenAdminHref\(href, role, areas\)\) return <>\{p\.title\}<\/>/.test(page));
+check('a holder outside the list still shows in Who has it', /\(can’t open Problems\)<\/option>/.test(page));
 check('assign offers only people who can open Problems', /const CAN_WORK = \{ active: true, role: \{ in: SUPPORT_PLUS \}, OR: \[\{ role: 'owner' \}, \{ areasSetAt: null \}, \{ areas: \{ has: 'problems' \} \}\] \}/.test(route)
   && /findMany\(\{ where: CAN_WORK/.test(route) && /findFirst\(\{ where: \{ \.\.\.CAN_WORK, id: body\.adminId \}/.test(route));
 
