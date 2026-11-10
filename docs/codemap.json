@@ -13256,7 +13256,7 @@
     },
     {
       "path": "src/components/home/TeeSheetDemo.tsx",
-      "lines": 322,
+      "lines": 391,
       "purpose": "HOME-2 (HOMEPAGE_SPEC.md, Cam 2026-10-07:",
       "brain": [],
       "exports": [

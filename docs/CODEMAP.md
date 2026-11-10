@@ -719,7 +719,7 @@ Sorted the same way.
 | `src/components/dashboard/ThemeSwitch.tsx` | 1 | 22 | DASH-D: | `default (ThemeSwitch)` |
 | `src/components/dashboard/UploadMany.tsx` | 1 | 189 | POS-8 (Cam 2026-11-09: | `UploadMany` |
 | `src/components/Footer.tsx` | 1 | 79 |  | `default (Footer)` |
-| `src/components/home/TeeSheetDemo.tsx` | 1 | 322 | HOME-2 (HOMEPAGE_SPEC.md, Cam 2026-10-07: | `LaptopDemo` |
+| `src/components/home/TeeSheetDemo.tsx` | 1 | 391 | HOME-2 (HOMEPAGE_SPEC.md, Cam 2026-10-07: | `LaptopDemo` |
 | `src/components/MainOffset.tsx` | 1 | 32 |  | `default (MainOffset)` |
 | `src/components/Nav.tsx` | 1 | 126 |  | `default (Nav)` |
 | `src/components/ui/MonthPicker.tsx` | 1 | 75 |  | `MonthPicker` |
