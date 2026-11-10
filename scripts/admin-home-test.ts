@@ -16,6 +16,7 @@ check('a menu button opens it and names what it controls', /aria-label="Open men
 check('while open it is a modal dialog', /role=\{menuOpen \? 'dialog' : undefined\} aria-modal=\{menuOpen \|\| undefined\}/.test(rail));
 check('Escape closes it', /e\.key === 'Escape'\) \{ setMenuOpen\(false\)/.test(rail));
 check('focus moves in, Tab wraps inside, focus returns to the menu button', /closeButtonRef\.current\?\.focus\(\)/.test(rail) && /e\.key !== 'Tab'/.test(rail) && /opener\?\.focus\(\)/.test(rail));
+check('widening past md or opening search closes it', /matchMedia\('\(min-width: 768px\)'\)/.test(rail) && /addEventListener\('open-cmd-palette', close\)/.test(rail));
 check('every link in the drawer closes it', (rail.match(/onClick=\{\(\) => setMenuOpen\(false\)\}/g) ?? []).length >= 4);
 check('the content clears the rail only from md up', /@media \(min-width: 768px\) \{ \.admin-content \{ margin-left: var\(--admin-sidebar-w\); \} \}/.test(css)
   && /^\.admin-content \{ padding-top: var\(--admin-topbar-h\);/m.test(css) && !/^\.admin-content \{[^}]*margin-left/m.test(css));

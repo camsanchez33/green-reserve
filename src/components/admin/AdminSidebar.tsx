@@ -54,8 +54,17 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
       else if (!e.shiftKey && (at === last || !panel.contains(at))) { e.preventDefault(); first.focus(); }
     };
     window.addEventListener('keydown', onKey);
+    // Widening past md turns the drawer back into the fixed rail; opening search puts the palette on top. Either closes it.
+    const wide = window.matchMedia('(min-width: 768px)');
+    const close = () => setMenuOpen(false);
+    const onWide = () => { if (wide.matches) close(); };
+    wide.addEventListener('change', onWide);
+    window.addEventListener('open-cmd-palette', close);
     const opener = menuButtonRef.current;
-    return () => { window.removeEventListener('keydown', onKey); opener?.focus(); };
+    return () => {
+      window.removeEventListener('keydown', onKey); wide.removeEventListener('change', onWide); window.removeEventListener('open-cmd-palette', close);
+      if (!wide.matches) opener?.focus();
+    };
   }, [menuOpen]);
   useEffect(() => { setUnread(unreadMessages); }, [unreadMessages]);
 
