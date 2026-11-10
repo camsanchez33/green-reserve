@@ -5,8 +5,10 @@
 // time booked on the phone lands on the sheet. Every label, status word and
 // button copies the real product: the sheet is seat rows (DENSE-4,
 // components/dashboard/TeeSheetRows.tsx: one row per time, price, a cell per
-// seat, the money edge, checked-in fill, the now line, the legend) and its side panel (groupRow() in
-// src/app/dashboard/page.tsx: the same status words and buttons),
+// seat, the fills, the now line, the legend) inside the dashboard's rail and
+// number strip (DASH-D), and the time's card (TT-CARD; groupRow() in
+// src/app/dashboard/page.tsx: the same status words, Check in, Edit group, Add
+// players and Open seats),
 // the phone from courses/[slug]/CourseBookingClient.tsx and book/BookClient.tsx.
 // CLAUDE.md: change one, check the other.
 // Bundle note (perf rules): the page's only client island, plain React, no
@@ -18,14 +20,16 @@ import s from '@/app/home.module.css';
 
 type Src = 'online' | 'phone' | 'walk_in';
 type Group = { name: string; n: number; src: Src; done?: boolean; isNew?: boolean };
-type Row = { t: string; groups: Group[]; blocked?: boolean };
+type Row = { t: string; groups: Group[]; blocked?: boolean; closed?: number };
 type Day = { chip: string; num: string; short: string; long: string; today?: boolean; rate: number; rows: Row[] };
 type Step = 'pick' | 'confirm' | 'done';
 type State = {
   days: Day[]; day: number; n: number; sel: string | null; step: Step;
   acc: string; find: string; toast: string;
-  /** The board square whose panel is open. */
+  /** The tee time whose card is open. */
   open: string | null;
+  /** The group whose Edit group menu is open. */
+  edit: string | null;
 };
 
 const CAP = 4;
@@ -63,7 +67,7 @@ const INITIAL_DAYS: Day[] = [
     { t: '08:45', groups: [] } ] },
 ];
 
-let state: State = { days: INITIAL_DAYS, day: 0, n: 2, sel: null, step: 'pick', acc: '#2B4A38', find: '', toast: '', open: null };
+let state: State = { days: INITIAL_DAYS, day: 0, n: 2, sel: null, step: 'pick', acc: '#2B4A38', find: '', toast: '', open: null, edit: null };
 const listeners = new Set<() => void>();
 const subscribe = (fn: () => void) => { listeners.add(fn); return () => { listeners.delete(fn); }; };
 const getState = () => state;
@@ -81,15 +85,23 @@ const ACCENTS = [
   { c: '#23395B', label: 'Navy' },
   { c: '#8A5A1C', label: 'Bronze' },
 ];
-const TABS = ['Tee sheet', 'Analytics', 'Schedule', 'Members', 'Money', 'Messages', 'Settings'];
+/** The dashboard rail (OperatorSidebar.tsx, DASH-D): Today · Business · Settings. */
+const RAIL: { group?: string; tabs: string[] }[] = [
+  { group: 'Today', tabs: ['Home', 'Tee sheet', 'Pro shop', 'Messages'] },
+  { group: 'Business', tabs: ['Money', 'Members', 'Events', 'Schedule', 'Analytics'] },
+  { tabs: ['Settings'] },
+];
+/** $1,234 — the strip's money, as dollars. */
+const dollars = (v: number) => '$' + Math.round(v).toLocaleString('en-US');
 
-/* ── the operator tee sheet: seat rows (TeeSheetRows.tsx) and its panel ──── */
+/* ── the operator tee sheet: seat rows (TeeSheetRows.tsx) and its card ───── */
 type Tone = 'ok' | 'warn';
 /** groupTone() in TeeSheetRows: paid = checked in. */
 const toneOf = (g: Group): Tone => g.done ? 'ok' : 'warn';
-/** getBookingStatus() labels, as the panel shows them. The demo course takes no
- *  card (the phone says so), so an online booking is "No Card Required". */
-const statusOf = (g: Group) => g.done ? (g.src === 'online' ? 'Checked In & Paid' : 'Checked In · Paid at the register') : g.src === 'online' ? 'No Card Required' : 'No card saved';
+/** The card's status line once paid (getBookingStatus()). */
+const statusOf = (g: Group) => g.src === 'online' ? 'Checked In & Paid' : 'Checked In · Paid at the register';
+/** How they booked, for a group that hasn't paid: "Booked online · no card saved". The demo course takes no card. */
+const bookedHow = (g: Group) => `${g.src === 'phone' ? 'Phone booking' : g.src === 'walk_in' ? 'Walk-in' : 'Booked online'} · no card saved`;
 const hourOf = (t: string) => Number(t.slice(0, 2));
 const hourLabel = (h: number) => `${h % 12 || 12} ${h >= 12 ? 'PM' : 'AM'}`;
 
@@ -100,105 +112,148 @@ function TeeSheet() {
   const q = st.find.trim().toLowerCase();
   const rows = q ? d.rows.filter(r => r.groups.some(g => g.name.toLowerCase().includes(q))) : d.rows;
   const nextUp = d.today ? d.rows.find(r => !r.blocked && r.t > NOW)?.t : undefined;
-  const step = (by: number) => update(x => ({ ...x, day: Math.max(0, Math.min(x.days.length - 1, x.day + by)), sel: null, step: 'pick', toast: '', open: null }));
+  const step = (by: number) => update(x => ({ ...x, day: Math.max(0, Math.min(x.days.length - 1, x.day + by)), sel: null, step: 'pick', toast: '', open: null, edit: null }));
   const toast = (msg: string) => { update(x => ({ ...x, toast: msg })); };
   // isPast on the real sheet is time <= now.
   const nowAt = d.today ? rows.findIndex(r => r.t > NOW) : -1;
   const panel = st.open ? d.rows.find(r => r.t === st.open) ?? null : null;
   const setRow = (t: string, fn: (r: Row) => Row) => update(x => ({ ...x, days: x.days.map((dd, di) => di !== x.day ? dd : { ...dd, rows: dd.rows.map(r => r.t !== t ? r : fn(r)) }) }));
+  // The strip above the sheet (the real one's Players · Checked in · Paid · Not paid yet).
+  const players = groups.reduce((n, g) => n + g.n, 0);
+  const inPlayers = groups.filter(g => g.done).reduce((n, g) => n + g.n, 0);
+  const paid = groups.filter(g => g.done);
+  const owes = groups.filter(g => !g.done);
+  const spots = d.rows.filter(r => !r.blocked).reduce((n, r) => n + CAP - (r.closed ?? 0), 0);
 
   return (
     <div className={s.app}>
-      <div className={s.top} style={{ background: st.acc }}>
-        <b className={s.topName}>Hollow Creek Golf Club</b>
-        <span className={s.topTabs} aria-hidden="true">{TABS.map((t, i) => <span key={t} className={i === 0 ? s.on : ''}>{t}</span>)}</span>
+      <div className={s.rail} aria-hidden="true">
+        <div className={s.railCourse}><i style={{ background: st.acc }}>HC</i><span><b>Hollow Creek Golf Club</b><small>Public course</small></span></div>
+        {RAIL.map((g, gi) => (
+          <div key={gi} className={s.railGrp}>
+            {g.group && <small>{g.group}</small>}
+            {g.tabs.map(t => <span key={t} className={t === 'Tee sheet' ? s.on : ''}>{t === 'Tee sheet' && <i style={{ background: st.acc }} />}{t}</span>)}
+          </div>
+        ))}
       </div>
-      <div className={s.sheetHead}>
-        <div>
-          <div className={s.sheetTitle}>{d.long}</div>
-          <div className={s.sheetLine}>Players <b>{groups.reduce((n, g) => n + g.n, 0)}</b> of {d.rows.filter(r => !r.blocked).length * CAP} · Checked in <b>{groups.filter(g => g.done).reduce((n, g) => n + g.n, 0)}</b></div>
+      <div className={s.main}>
+        <div className={s.sheetTitle}>{d.long}</div>
+        <div className={s.strip}>
+          <div><small>Players</small><span><b>{players}</b> of {spots}</span><small>spots booked</small></div>
+          <div><small>Checked in</small><span><b>{inPlayers}</b> of {players}</span><small>players</small></div>
+          <div><small>Paid</small><span><b>{dollars(paid.reduce((v, g) => v + roundTotal(d, g.n), 0))}</b></span><small>{paid.length} group{paid.length === 1 ? '' : 's'}</small></div>
+          <div><small>Not paid yet</small><span><b className={s.due}>{dollars(owes.reduce((v, g) => v + roundTotal(d, g.n), 0))}</b></span><small>{owes.length} group{owes.length === 1 ? '' : 's'}</small></div>
         </div>
-        <input className={s.find} value={st.find} placeholder="Find golfer..." aria-label="Find golfer"
-          onChange={e => { const v = e.target.value; update(x => ({ ...x, find: v })); }} />
-      </div>
-      <div className={s.day}>
-        <button type="button" aria-label="Previous day" disabled={st.day === 0} onClick={() => step(-1)}>‹</button>
-        <span>{d.short}</span>
-        <button type="button" aria-label="Next day" disabled={st.day === st.days.length - 1} onClick={() => step(1)}>›</button>
-        {!d.today && <button type="button" className={s.todayLink} onClick={() => step(-st.day)}>Today</button>}
-      </div>
-      <div className={s.bd}>
-        {/* The key sits above the sheet, as on the real one. */}
-        <div className={s.lg}><span><i className={s.kOk} />Paid</span><span><i className={s.kWarn} />Owes</span><span><i className={s.kBad} />Declined or no-show</span><i className={s.lgRule} aria-hidden="true" /><span><b>In</b>checked in</span><span><b>M</b>member</span><span><b>R</b>resident</span></div>
-        {rows.map((r, i) => {
-          const past = d.today && r.t <= NOW;
-          const newHour = i === 0 || hourOf(rows[i - 1].t) !== hourOf(r.t);
-          return (
-            <div key={r.t}>
-              {newHour && <div className={s.rwHr}>{hourLabel(hourOf(r.t))}</div>}
-              {i === nowAt && nowAt > 0 && <div className={s.rwNow} aria-hidden="true">Now</div>}
-              <button type="button" aria-label={`${fmt(r.t)}${r.t === nextUp ? ', next up' : ''}. Open`} onClick={() => update(x => ({ ...x, open: r.t, toast: '' }))}
-                className={[s.rw, past ? s.rwPast : '', r.t === nextUp ? s.rwNext : '', st.open === r.t ? s.rwSel : ''].join(' ')}>
-                <span className={s.rwT}>{fmt(r.t).replace(/ (AM|PM)$/, '')}</span>
-                <span className={s.rwP}>{r.blocked ? '' : `$${d.rate}`}</span>
-                {r.blocked ? <span className={s.rwBlocked}>Blocked</span> : <>
-                  {r.groups.map((g, gi) => (
-                    <span key={`${g.name}-${gi}`} style={{ gridColumn: `span ${Math.min(g.n, CAP)}` }}
-                      className={[s.seat, toneOf(g) === 'ok' ? s.seatPaid : '', g.isNew ? s.seatNew : ''].join(' ')}>
-                      <span>{g.name}</span>{g.n > 1 && <small>+{g.n - 1}</small>}{g.done && <b>In</b>}
-                    </span>
-                  ))}
-                  {Array.from({ length: Math.max(0, CAP - booked(r)) }, (_, k) => <span key={k} className={s.seatOpen} />)}
-                </>}
-              </button>
+        <div className={s.sheetCard}>
+          <div className={s.bar}>
+            <div className={s.day}>
+              <button type="button" aria-label="Previous day" disabled={st.day === 0} onClick={() => step(-1)}>‹</button>
+              <span>{d.short}</span>
+              <button type="button" aria-label="Next day" disabled={st.day === st.days.length - 1} onClick={() => step(1)}>›</button>
+              {!d.today && <button type="button" className={s.todayLink} onClick={() => step(-st.day)}>Today</button>}
             </div>
-          );
-        })}
-        {!rows.length && <p className={s.dim}>No golfer matches “{st.find}”.</p>}
+            <span className={s.views} aria-hidden="true"><b>Grid</b><span>List</span><span>Calendar</span></span>
+            <input className={s.find} value={st.find} placeholder="Find golfer" aria-label="Find golfer"
+              onChange={e => { const v = e.target.value; update(x => ({ ...x, find: v })); }} />
+            <span className={s.addTime} aria-hidden="true">+ Time</span>
+          </div>
+          <div className={s.bd}>
+            {/* The key sits above the sheet, as on the real one. */}
+            <div className={s.lg}>{d.today && <span>All on time</span>}<span><i className={s.kOk} />Paid</span><span><i className={s.kWarn} />Owes</span><span><i className={s.kBad} />Declined or no-show</span><i className={s.lgRule} aria-hidden="true" /><span><b>In</b>checked in</span><span><b>M</b>member</span><span><b>R</b>resident</span></div>
+            {rows.map((r, i) => {
+              const past = d.today && r.t <= NOW;
+              const newHour = i === 0 || hourOf(rows[i - 1].t) !== hourOf(r.t);
+              const closed = r.closed ?? 0;
+              return (
+                <div key={r.t}>
+                  {newHour && <div className={s.rwHr}>{hourLabel(hourOf(r.t))}</div>}
+                  {i === nowAt && nowAt > 0 && <div className={s.rwNow} aria-hidden="true">Now</div>}
+                  <button type="button" aria-label={`${fmt(r.t)}${r.t === nextUp ? ', next up' : ''}${r.blocked ? ', blocked' : `, ${booked(r)} of ${CAP} booked`}. Open`} onClick={() => update(x => ({ ...x, open: r.t, edit: null, toast: '' }))}
+                    className={[s.rw, past ? s.rwPast : '', r.t === nextUp ? s.rwNext : '', st.open === r.t ? s.rwSel : ''].join(' ')}>
+                    <span className={s.rwT}>{fmt(r.t).replace(/ (AM|PM)$/, '')}</span>
+                    <span className={s.rwP}>{r.blocked ? '' : `$${d.rate}`}</span>
+                    {r.blocked ? <span className={s.rwBlocked}>Blocked</span> : <>
+                      {r.groups.map((g, gi) => (
+                        <span key={`${g.name}-${gi}`} style={{ gridColumn: `span ${Math.min(g.n, CAP)}` }}
+                          className={[s.seat, toneOf(g) === 'ok' ? s.seatPaid : '', g.isNew ? s.seatNew : ''].join(' ')}>
+                          <span>{g.name}</span>{g.n > 1 && <small>+{g.n - 1}</small>}{g.done && <b>In</b>}
+                        </span>
+                      ))}
+                      {Array.from({ length: Math.max(0, CAP - booked(r) - closed) }, (_, k) => <span key={k} className={s.seatOpen} />)}
+                      {Array.from({ length: closed }, (_, k) => <span key={`c${k}`} className={s.seatClosed}>Closed</span>)}
+                    </>}
+                  </button>
+                </div>
+              );
+            })}
+            {!rows.length && <p className={s.dim}>No golfer matches “{st.find}”.</p>}
+          </div>
+        </div>
       </div>
 
-      {panel && (
+      {panel && (() => {
+        const free = CAP - booked(panel);
+        const closed = panel.closed ?? 0;
+        const open = free - closed;
+        return (
         <div className={s.pnl} role="dialog" aria-label={`${fmt(panel.t)} tee time`}>
           <div className={s.pnlHd}>
             <div>
               <b>{fmt(panel.t)}{panel.t === nextUp && <em>Next up</em>}</b>
               <span>{d.short}</span>
-              <span className={s.pnlFacts}>{panel.blocked ? 'Blocked' : `${booked(panel)} of ${CAP} players · ${CAP - booked(panel) <= 0 ? 'Full' : `${CAP - booked(panel)} open`}`} · 18 holes · {money(d.rate)} a player</span>
+              <span className={s.pnlFacts}>{panel.blocked ? <i>Blocked</i> : <>{booked(panel)} of {CAP} players · {open <= 0 ? 'Full' : `${open} open`}</>}<span className={s.dim}>18 holes · {money(d.rate)} a player</span></span>
             </div>
-            <button type="button" aria-label="Close" onClick={() => update(x => ({ ...x, open: null }))}>×</button>
+            <button type="button" aria-label="Close" onClick={() => update(x => ({ ...x, open: null, edit: null }))}>×</button>
           </div>
           {!panel.groups.length && <p className={s.dim}>{panel.blocked ? 'This time is blocked — golfers can’t book it.' : 'Nobody is booked yet.'}</p>}
-          {panel.groups.map((g, gi) => (
+          {panel.groups.map((g, gi) => {
+            const key = `${panel.t}-${gi}`;
+            return (
             <div key={`${g.name}-${gi}`} className={s.pnlG}>
-              <div className={s.pnlWho}><span><b>{g.name}</b><span className={s.dim}> · {g.n} player{g.n === 1 ? '' : 's'}{g.src !== 'online' ? ` · ${g.src === 'phone' ? 'Phone' : 'Walk-in'}` : ''}</span></span><b>{money(roundTotal(d, g.n))}</b></div>
-              <span className={s.pnlSt}><i className={toneOf(g) === 'ok' ? s.dOk : s.dWarn} />{statusOf(g)}</span>
-              <div className={s.pnlAct}>
-                {!g.done && <button type="button" className={s.ci} onClick={() => {
-                  setRow(panel.t, r => ({ ...r, groups: r.groups.map((x, i) => i === gi ? { ...x, done: true, isNew: false } : x) }));
-                  toast(g.src === 'online' ? `Checked in — charged ${money(roundTotal(d, g.n))}.` : `Cash taken — ${g.name} is checked in.`);
-                }}>{g.src === 'online' ? 'Check in' : 'Take cash · check in'}</button>}
-                {!g.done && <button type="button" className={s.cx} onClick={() => {
-                  setRow(panel.t, r => ({ ...r, groups: r.groups.filter((_, i) => i !== gi) }));
-                  toast('Cancelled — no charge was made.');
-                }}>Cancel booking</button>}
-              </div>
+              <div className={s.pnlWho}><span><b>{g.name}</b><span className={s.dim}> · {g.n} player{g.n === 1 ? '' : 's'}</span></span><b>{money(roundTotal(d, g.n))}</b></div>
+              {g.done
+                ? <span className={s.pnlSt}><i className={s.dOk} />{statusOf(g)}</span>
+                : <span className={s.pnlHow}>{bookedHow(g)}</span>}
+              {!g.done && <button type="button" className={s.ciWide} onClick={() => {
+                setRow(panel.t, r => ({ ...r, groups: r.groups.map((x, i) => i === gi ? { ...x, done: true, isNew: false } : x) }));
+                toast(`${g.name} is checked in · ${money(roundTotal(d, g.n))} paid.`);
+              }}>Check in</button>}
+              {/* The real menu also moves, resizes and no-shows a group; the demo keeps the cancel. */}
+              {!g.done && <button type="button" className={s.editLink} aria-expanded={st.edit === key} onClick={() => update(x => ({ ...x, edit: x.edit === key ? null : key }))}>Edit group</button>}
+              {!g.done && st.edit === key && (
+                <div className={s.editMenu}>
+                  <button type="button" onClick={() => {
+                    setRow(panel.t, r => ({ ...r, groups: r.groups.filter((_, i) => i !== gi) }));
+                    update(x => ({ ...x, edit: null }));
+                    toast('Cancelled — no charge was made.');
+                  }}><span>Cancel booking</span><span aria-hidden="true">›</span></button>
+                </div>
+              )}
             </div>
-          ))}
+            );
+          })}
           <div className={s.pnlSlot}>
-            {!panel.blocked && booked(panel) < CAP && <button type="button" className={s.ci} onClick={() => {
+            {!panel.blocked && open > 0 && <button type="button" className={s.ci} onClick={() => {
               setRow(panel.t, r => ({ ...r, groups: [...r.groups, { name: 'Dana Price', n: 1, src: 'walk_in' as Src }] }));
               toast('Dana Price added.');
             }}>Add players</button>}
-            {/* Mirrors the dashboard card's "Who can book the open seats" (Cam 2026-11-06): Anyone · No one here. */}
-            {(booked(panel) < CAP || panel.blocked) && <button type="button" className={s.wk} onClick={() => setRow(panel.t, r => ({ ...r, blocked: !r.blocked }))}>{panel.blocked ? 'Open to anyone' : 'Close to new bookings'}</button>}
+            {!panel.blocked && (open > 0 || closed > 0) && (
+              <div className={s.seats}>
+                <span>Open seats{closed > 0 && <span className={s.dim}> · {closed} closed</span>}</span>
+                <span role="group" aria-label="Open seats on this time">
+                  <button type="button" aria-label="Close a seat" disabled={open <= 0} onClick={() => setRow(panel.t, r => ({ ...r, closed: closed + 1 }))}>−</button>
+                  <span aria-live="polite"><b>{open}</b> of {free}</span>
+                  <button type="button" aria-label="Reopen a seat" disabled={closed <= 0} onClick={() => setRow(panel.t, r => ({ ...r, closed: closed - 1 }))}>+</button>
+                </span>
+              </div>
+            )}
+            {panel.blocked && <button type="button" className={s.reopen} onClick={() => setRow(panel.t, r => ({ ...r, blocked: false }))}>Closed · reopen this time</button>}
           </div>
         </div>
-      )}
+        );
+      })()}
 
-      <div className={s.appFoot}>
-        <span className={s.toast} role="status">{st.toast}</span>
-        <span>{groups.length} group{groups.length === 1 ? '' : 's'} booked · {d.rows.filter(r => !r.blocked).length} tee times</span>
-      </div>
+      {st.toast && <div className={s.appFoot}><span className={s.toast} role="status">{st.toast}</span></div>}
     </div>
   );
 }
@@ -207,7 +262,8 @@ function TeeSheet() {
 function GolferPhone() {
   const st = useDemo();
   const d = st.days[st.day];
-  const open = d.rows.filter(r => !r.blocked && CAP - booked(r) >= st.n && !(d.today && r.t < NOW));
+  const free = (r: Row) => CAP - booked(r) - (r.closed ?? 0);
+  const open = d.rows.filter(r => !r.blocked && free(r) >= st.n && !(d.today && r.t < NOW));
   const sel = open.find(r => r.t === st.sel) ?? null;
   const total = roundTotal(d, st.n);
   const pickDay = (i: number) => update(y => ({ ...y, day: i, sel: null, toast: '' }));
@@ -248,7 +304,7 @@ function GolferPhone() {
           {open.map(r => (
             <div key={r.t} className={`${s.slot} ${st.sel === r.t ? s.sel : ''}`}>
               <div className={s.slotRow}>
-                <span><b>{fmt(r.t)}</b><small>{CAP - booked(r)} spots</small></span>
+                <span><b>{fmt(r.t)}</b><small>{free(r)} spots</small></span>
                 <span className={s.slotR}><em>${d.rate} / player</em>
                   <button type="button" aria-pressed={st.sel === r.t} onClick={() => update(x => ({ ...x, sel: x.sel === r.t ? null : r.t }))}>{st.sel === r.t ? 'Selected' : 'Select'}</button>
                 </span>
