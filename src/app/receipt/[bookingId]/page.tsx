@@ -5,6 +5,7 @@ import { Loader2 } from 'lucide-react';
 import { serviceFeeLabel, SHOP_FEE_LABEL } from '@/lib/booking-fees';
 import { GolferExitLinks } from '@/components/GolferExitLinks';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
+import { CARD } from '@/components/ui/Card';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { BILLING_EMAIL } from '@/lib/contact';
 
@@ -91,9 +92,8 @@ function ReceiptPageInner() {
   if (error || !data) {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-lg border border-line p-8 text-center">
-          
-          <h1 className="font-semibold text-ink mb-2">Receipt not found</h1>
+        <div className={`${CARD} max-w-md w-full p-8 text-center`}>
+          <h1 className="font-serif text-[24px] leading-tight text-ink mb-2">Receipt not found</h1>
           <p className="text-ink-soft text-sm">{error || 'This link is invalid.'}</p>
         </div>
       </div>
@@ -156,13 +156,13 @@ function ReceiptPageInner() {
             </button>
           </div>
 
-          <div className="receipt-card bg-white rounded-lg border border-line overflow-hidden">
+          <div className={`${CARD} receipt-card overflow-hidden`}>
             {/* The course's bar, not GreenReserve's — this document belongs to
                 the round the golfer played, not to the platform. */}
             <CourseHeaderBar
               courseName={data.courseName}
               accent={data.brandColor}
-              right={isCompleted ? 'Receipt' : isCancelled ? 'Cancellation' : 'Booking Confirmation'}
+              right={isCompleted ? 'Receipt' : isCancelled ? 'Cancellation' : 'Booking confirmation'}
             />
 
             <div className="px-6 py-6">
@@ -174,9 +174,9 @@ function ReceiptPageInner() {
               </div>
 
               {/* Booking details */}
-              <div className="bg-paper rounded-md border border-line p-4 mb-5 space-y-2 text-sm">
+              <div className="bg-paper/70 rounded-md p-4 mb-5 space-y-2 text-sm">
                 <div className="flex justify-between"><span className="text-ink-muted">Date</span><span className="font-medium text-ink">{fmtDate(data.date)}</span></div>
-                <div className="flex justify-between"><span className="text-ink-muted">Tee Time</span><span className="font-medium text-ink">{fmtTime(data.time)}</span></div>
+                <div className="flex justify-between"><span className="text-ink-muted">Tee time</span><span className="font-medium text-ink">{fmtTime(data.time)}</span></div>
                 <div className="flex justify-between"><span className="text-ink-muted">Players</span><span className="font-medium text-ink">{data.players}</span></div>
                 <div className="flex justify-between"><span className="text-ink-muted">{data.productLabel ? 'Round' : 'Holes'}</span><span className="font-medium text-ink">{data.productLabel ? `${data.productLabel} · ${data.holes} holes` : data.holes}</span></div>
                 {/* CART-5 (Cam 2026-11-09): the receipt only says the cart is paid for; the golfer takes a cart and the
@@ -186,44 +186,44 @@ function ReceiptPageInner() {
 
               {/* Line items */}
               <div className="border border-line rounded-md divide-y divide-line text-sm mb-5">
-                <div className="flex justify-between px-4 py-3">
-                  <span className="text-ink-soft">Green Fee</span>
-                  <span className="font-medium text-ink">{dollars(data.greenFeeTotal)}</span>
+                <div className="flex justify-between gap-3 px-4 py-3">
+                  <span className="text-ink-soft">Green fee</span>
+                  <span className="shrink-0 font-medium text-ink">{dollars(data.greenFeeTotal)}</span>
                 </div>
                 {data.cartFeeTotal > 0 && (
-                  <div className="flex justify-between px-4 py-3">
-                    <span className="text-ink-soft">Cart Fee</span>
-                    <span className="font-medium text-ink">{dollars(data.cartFeeTotal)}</span>
+                  <div className="flex justify-between gap-3 px-4 py-3">
+                    <span className="text-ink-soft">Cart fee</span>
+                    <span className="shrink-0 font-medium text-ink">{dollars(data.cartFeeTotal)}</span>
                   </div>
                 )}
                 {data.rangeBallsTotal > 0 && (
-                  <div className="flex justify-between px-4 py-3">
-                    <span className="text-ink-soft">Range Balls</span>
-                    <span className="font-medium text-ink">{dollars(data.rangeBallsTotal)}</span>
+                  <div className="flex justify-between gap-3 px-4 py-3">
+                    <span className="text-ink-soft">Range balls</span>
+                    <span className="shrink-0 font-medium text-ink">{dollars(data.rangeBallsTotal)}</span>
                   </div>
                 )}
                 {data.accessFeeTotal > 0 && payment?.method !== 'cash' && (
-                  <div className="flex justify-between px-4 py-3">
+                  <div className="flex justify-between gap-3 px-4 py-3">
                     <span className="text-ink-soft">{serviceFeeLabel(data.players)}</span>
-                    <span className="font-medium text-ink">{dollars(data.accessFeeTotal)}</span>
+                    <span className="shrink-0 font-medium text-ink">{dollars(data.accessFeeTotal)}</span>
                   </div>
                 )}
                 {(data.shopLines ?? []).map((l, i) => (
-                  <div key={i} className="flex justify-between px-4 py-3">
+                  <div key={i} className="flex justify-between gap-3 px-4 py-3">
                     <span className="text-ink-soft">{l.name}{l.quantity > 1 ? ` × ${l.quantity}` : ''}</span>
-                    <span className="font-medium text-ink">{dollars(l.unitPriceCents * l.quantity)}</span>
+                    <span className="shrink-0 font-medium text-ink">{dollars(l.unitPriceCents * l.quantity)}</span>
                   </div>
                 ))}
                 {(data.shopFeeCents ?? 0) > 0 && (
-                  <div className="flex justify-between px-4 py-3">
+                  <div className="flex justify-between gap-3 px-4 py-3">
                     <span className="text-ink-soft">{SHOP_FEE_LABEL}</span>
-                    <span className="font-medium text-ink">{dollars(data.shopFeeCents ?? 0)}</span>
+                    <span className="shrink-0 font-medium text-ink">{dollars(data.shopFeeCents ?? 0)}</span>
                   </div>
                 )}
                 {(data.shopTaxCents ?? 0) > 0 && (
-                  <div className="flex justify-between px-4 py-3">
+                  <div className="flex justify-between gap-3 px-4 py-3">
                     <span className="text-ink-soft">Sales tax on shop items</span>
-                    <span className="font-medium text-ink">{dollars(data.shopTaxCents ?? 0)}</span>
+                    <span className="shrink-0 font-medium text-ink">{dollars(data.shopTaxCents ?? 0)}</span>
                   </div>
                 )}
                 <div className="flex justify-between items-baseline px-4 py-3.5 bg-paper">
@@ -238,7 +238,7 @@ function ReceiptPageInner() {
                 <div className="border border-line rounded-md divide-y divide-line text-sm mb-5">
                   <div className="px-4 py-3 font-medium text-ink">Charged to your card</div>
                   {charges.map((c, i) => (
-                    <div key={i} className="flex justify-between px-4 py-3">
+                    <div key={i} className="flex justify-between gap-3 px-4 py-3">
                       <span className="text-ink-soft">{c.label}{c.refunded ? ' · refunded' : ''}</span>
                       <span className={c.refunded ? 'text-ink-muted line-through' : 'font-medium text-ink'}>{c.amountCents < 0 ? `−${dollars(-c.amountCents)}` : dollars(c.amountCents)}</span>
                     </div>
@@ -270,7 +270,7 @@ function ReceiptPageInner() {
               )}
               {!isCompleted && !isCancelled && (
                 <div className="text-sm text-ink mb-5">
-                  {chargedNow > 0 ? 'The round itself is paid when you check in.' : 'Nothing has been charged to your card yet. The round is paid when you check in.'} · Booking #{data.bookingId.slice(0, 8).toUpperCase()}
+                  {chargedNow > 0 ? 'The round itself is paid when you check in.' : 'Nothing has been charged yet. The round is paid when you check in.'} · Booking #{data.bookingId.slice(0, 8).toUpperCase()}
                 </div>
               )}
               {isCancelled && (
