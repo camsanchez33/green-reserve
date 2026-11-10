@@ -9,7 +9,7 @@ GreenReserve is an OpenTable-style golf tee sheet platform. Golf courses list fo
 ---
 
 ## Launch plan — READ `LAUNCH_PLAN_SPEC.md` FIRST (Cam 2026-11-09)
-Cam's handwritten plan to be live by Thanksgiving (Nov 26 2026): finish /dashboard page by page in his order (Pro shop + the tee sheet's carts → Messages → Money → Members → Events → Schedule → Analytics → Settings → Course alert → Sign out; then links, then UI/layout/animations), then a complete Admin redo, then the homepage, then golfer-facing pages, then the outreach rework (every text, email, receipt and confirmation: how they look and what they do), then a security pass, then run it like a real company; outreach starts Mon Nov 30. Work in that order.
+Cam's handwritten plan to be live by Thanksgiving (Nov 26 2026): finish /dashboard page by page in his order (Pro shop + the tee sheet's carts → Messages → Money → Members → Events → Schedule → Analytics → Settings → Course alert → Sign out; then links, then UI/layout/animations), then a complete Admin redo, then the homepage, then golfer-facing pages, then the outreach rework (every text, email, receipt and confirmation: how they look and what they do), then a security pass, then run it like a real company; outreach starts Mon Nov 30. Work in that order; since Cam 2026-11-10 sections 1–4 (dashboard, admin, homepage, golfer pages) run at once in four lanes (`LANES.md`).
 
 ## Key architectural decisions
 
@@ -107,7 +107,7 @@ here listed `src/app/account/`, which has never existed.
 
 ## Lanes — parallel sessions (Cam 2026-11-10): READ `LANES.md`
 Work runs in lanes, one per session, each a head agent with its own cheaper workers. Build lanes: **Build/Dashboard**
-(coordinator; also owns ALL shared code — `src/lib`, `src/app/api`, `prisma`, `globals.css` — and merges every PR),
+(coordinator; also owns ALL shared code — `src/lib`, `src/app/api` (Admin may edit admin routes that only read or display; every sign-in and money route stays Build's), `prisma`, `globals.css` — and merges every PR),
 **Admin**, **Homepage**, **Golfer**, each in its own folders. Read-only lanes: **Testing**, **Security**; **Company**
 writes drafts under `company/`. Every question from any lane goes to Cam through Build; Cam's answers come back down.
 Ownership, the merge queue, delegation (model + effort per worker) and the local-app setup are in `LANES.md`.

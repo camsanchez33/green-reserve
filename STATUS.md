@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-10 23:05 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `3c115162` · working tree **8 dirty file(s)**
+Generated 2026-11-10 23:08 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `c14fb38e` · working tree **3 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 193 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 194 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `c14fb38e` | 2026-11-10 | Lanes: four build lanes, one merge queue, worker effort levels; admin content full width on phones |
 | `3c6464b6` | 2026-11-10 | Security lane: full sweep report 2026-11-10 (#354) |
 | `807abc12` | 2026-11-10 | Front desk sees what each group owes; member sign-in link rate-limited; lanes (#356) |
 | `0704cbb6` | 2026-11-10 | company: Nov 30 outreach kit (drafts) (#355) |
@@ -208,16 +209,11 @@ Generated 2026-11-10 23:05 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (8 file(s))
+### Uncommitted working tree (3 file(s))
 
-- `M .claude/agents/admin-ux-auditor.md`
-- `M .claude/agents/design-auditor.md`
-- `M .claude/agents/reskin-worker.md`
-- `M .claude/agents/security-auditor.md`
-- `M .claude/agents/spec-conformance.md`
 - `M CLAUDE.md`
 - `M LANES.md`
-- `M src/app/globals.css`
+- `M  src/app/globals.css`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -345,6 +341,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `c14fb38e` 2026-11-10 — Lanes: four build lanes, one merge queue, worker effort levels; admin content full width on phones
 - `3c6464b6` 2026-11-10 — Security lane: full sweep report 2026-11-10 (#354)
 - `807abc12` 2026-11-10 — Front desk sees what each group owes; member sign-in link rate-limited; lanes (#356)
 - `0704cbb6` 2026-11-10 — company: Nov 30 outreach kit (drafts) (#355)
@@ -356,7 +353,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `48c91709` 2026-11-10 — IMPORT-2: the pro shop import reads real POS files and says what it couldn't
 - `cb7a92cf` 2026-11-10 — Tee sheet + Home: fixes from the stress test (#352)
 - `f4f4057e` 2026-11-10 — Golfer pay page: hide the saved card only after a definite decline
-- `53857cdc` 2026-11-10 — Stress fixes, review: sheet keeps re-reading during checkout; Home Retry clears; a declined card gets a new-card pay page
 
 ---
 

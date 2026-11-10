@@ -8,7 +8,7 @@ feature. Lanes exist so work can run side by side without two sessions writing t
 | Lane | Session title | Writes code? | Owns | Never touches |
 |---|---|---|---|---|
 | **Build / Dashboard** (coordinator) | `Build — <what it's doing>` | Yes | `src/app/dashboard/**`, `src/components/dashboard/**`, and ALL shared code: `src/lib/**`, `src/app/api/**` (except admin's), `prisma/**`, `globals.css`, `layout.tsx`, `src/components/ui/**`, config, CLAUDE.md, specs. Merges every PR. | — |
-| **Admin** | `Admin — <tab>` | Yes | `src/app/admin/**`, `src/app/cam/**`, `src/components/admin/**`, `src/app/api/admin/**`, `src/app/api/cam/**` (sign-in, step-up or money changes also need `security-auditor`) | `src/lib/**`, other routes, schema |
+| **Admin** | `Admin — <tab>` | Yes | `src/app/admin/**`, `src/components/admin/**`, and the admin routes that only read or display (`src/app/api/admin/**` minus the ones below) | sign-in and money: `src/app/cam/**`, `src/app/api/cam/**`, `api/admin/{login,logout,forgot-password,set-password,two-factor,passkeys,owner-devices,step-up,refund,retry-charge,course-payouts,data-reset,disputes,transactions}` and any route that charges, refunds, signs in or steps up — those stay Build's (CLAUDE.md: money and auth never delegated); `src/lib/**`, schema |
 | **Homepage** | `Homepage — <task>` | Yes | `src/app/page.tsx`, `HomeContent.tsx`, `home.module.css`, `opengraph-image.tsx`, `src/app/{teesheet,for-courses,demo,contact}/**`, `src/components/home/**`, `Nav.tsx`, `Footer.tsx`, `PlainHeader.tsx`, `public/home/shots/**`, `scripts/screenshots/**`; privacy/terms layout only | `legal/`, `src/lib/**` (e.g. `faq.ts` wording goes to Build) |
 | **Golfer** | `Golfer — <flow>` | Yes | `src/app/{courses,book,g,checkin,manage,pay,receipt,statement,events,membership}/**`, `CourseCard`, `CourseHeaderBar`, `CourseJoin`, `CoursePacks`, `GolferExitLinks`, `TrustNote`, `AuthPhotoShell` | every price, fee and charge (`src/lib/**`, `src/app/api/**`) |
 | **Testing** | `Testing — <flow>` | No | `lanes/testing/` (its findings) | all code |
@@ -116,7 +116,7 @@ never lower the effort of `final-reviewer` or `security-auditor`.
 - **At most 1 sub-agent at a time** (Security: 2), each with a narrow, complete brief.
 
 ## Build
-- Works LAUNCH_PLAN_SPEC.md in order, then the decision files (e.g. STRESS_1110_SPEC.md), one PR at a time.
+- Works LAUNCH_PLAN_SPEC.md in order for the dashboard; since Cam 2026-11-10 ("let's get 4 lanes going: the homepage, the dashboard, the admin and the golfer booking page") plan sections 1–4 run at once, one lane each, then the decision files (e.g. STRESS_1110_SPEC.md), one PR at a time.
 - Every push: final-reviewer PASS first; merge only on green GitHub CI (Vercel preview is not a gate).
 - Money, sign-in, tenant isolation and schema are done by Build's main session only, never a cheaper model.
 - Picks up findings from `lanes/*/` after they merge: confirmed bugs are fixed, product questions go to Cam.

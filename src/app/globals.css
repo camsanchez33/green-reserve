@@ -120,10 +120,7 @@ body {
    admin's one face — titles included (the site's Garamond display face stays on
    the site) — loaded by app/admin/layout.tsx as --font-inter. */
 :root { --admin-sidebar-w: 15rem; --admin-topbar-h: 3.5rem; }
-/* Admin lane 2026-11-10: below md the rail becomes a slim top bar with a menu drawer (AdminSidebar), so the page
-   takes the full width; the rail's 240px is kept only from 768px up. */
-.admin-content { padding-top: var(--admin-topbar-h); background: #FFFFFF; min-height: 100vh; }
-@media (min-width: 768px) { .admin-content { margin-left: var(--admin-sidebar-w); } }
+.admin-content { margin-left: var(--admin-sidebar-w); padding-top: var(--admin-topbar-h); background: #FFFFFF; min-height: 100vh; }
 .admin-look { --font-sans: var(--font-inter), 'Helvetica Neue', Arial, sans-serif; font-family: var(--font-sans); }
 .admin-look .font-serif { font-family: var(--font-sans); font-weight: 700; letter-spacing: -0.02em; }
 

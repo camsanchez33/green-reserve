@@ -1,24 +1,26 @@
 {
-  "generatedAt": "2026-11-10T23:05:14.604Z",
+  "generatedAt": "2026-11-10T23:08:04.985Z",
   "repo": {
-    "head": "3c115162",
+    "head": "c14fb38e",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 8,
+    "dirtyCount": 3,
     "dirty": [
-      "M .claude/agents/admin-ux-auditor.md",
-      " M .claude/agents/design-auditor.md",
-      " M .claude/agents/reskin-worker.md",
-      " M .claude/agents/security-auditor.md",
-      " M .claude/agents/spec-conformance.md",
-      " M CLAUDE.md",
+      "M CLAUDE.md",
       " M LANES.md",
-      " M src/app/globals.css"
+      "M  src/app/globals.css"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "c14fb38e",
+        "date": "2026-11-10T23:05:17+00:00",
+        "subject": "Lanes: four build lanes, one merge queue, worker effort levels; admin content full width on phones",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "3c6464b6",
         "date": "2026-11-10T18:04:29-05:00",
@@ -1779,6 +1781,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "c14fb38e",
+      "date": "2026-11-10",
+      "subject": "Lanes: four build lanes, one merge queue, worker effort levels; admin content full width on phones"
+    },
+    {
       "h": "3c6464b6",
       "date": "2026-11-10",
       "subject": "Security lane: full sweep report 2026-11-10 (#354)"
@@ -1832,11 +1839,6 @@
       "h": "f4f4057e",
       "date": "2026-11-10",
       "subject": "Golfer pay page: hide the saved card only after a definite decline"
-    },
-    {
-      "h": "53857cdc",
-      "date": "2026-11-10",
-      "subject": "Stress fixes, review: sheet keeps re-reading during checkout; Home Retry clears; a declined card gets a new-card pay page"
     }
   ]
 }
