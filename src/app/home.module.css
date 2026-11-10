@@ -53,27 +53,26 @@
 
 .app { position: relative; background: #F4F5F1; border-radius: 4px; overflow: hidden; font-size: 13.5px; min-height: 470px; display: flex; }
 /* The dashboard rail (DASH-D): a darker tint, grouped tabs, the current one a white raised card with the course's dot. */
-.rail { flex: 0 0 118px; background: #E3E6DE; border-right: 1px solid #C9CEC2; padding: 10px 8px; display: flex; flex-direction: column; gap: 8px; font-size: 11.5px; color: #3F453E; }
+.rail { flex: 0 0 118px; background: #E3E6DE; border-right: 1px solid #C9CEC2; padding: 10px 8px; display: flex; flex-direction: column; gap: 8px; font-size: 11.5px; color: #3A403A; }
 .railCourse { display: flex; align-items: center; gap: 6px; padding: 0 2px 4px; }
 .railCourse > i { flex: 0 0 22px; height: 22px; border-radius: 5px; color: #fff; font-style: normal; font-size: 9.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
 .railCourse span { min-width: 0; display: flex; flex-direction: column; }
 .railCourse b { font-size: 11px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.railCourse small { font-size: 10px; color: var(--muted); }
+.railCourse small { font-size: 10px; color: #4E534D; }
 .railGrp { display: flex; flex-direction: column; gap: 1px; }
-.railGrp small { font-size: 10px; color: var(--muted); padding: 0 6px 2px; }
+.railGrp small { font-size: 10px; color: #4E534D; padding: 0 6px 2px; }
 .railGrp > span { padding: 3px 6px; border-radius: 5px; white-space: nowrap; display: flex; align-items: center; gap: 5px; }
 .railGrp > span.on { background: #fff; color: var(--ink); font-weight: 600; box-shadow: 0 0 0 1px rgba(20,24,20,.06), 0 1px 2px rgba(20,24,20,.05); }
 .railGrp > span.on i { width: 5px; height: 5px; border-radius: 50%; flex: 0 0 auto; }
 .main { flex: 1 1 auto; min-width: 0; padding: 12px 12px 10px; display: flex; flex-direction: column; gap: 8px; }
 .sheetTitle { font-size: 21px; font-weight: 700; line-height: 1.1; letter-spacing: -.01em; }
 /* The number strip above the sheet: label · value · what it counts. */
-.strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; background: #fff; border-radius: 8px; box-shadow: 0 0 0 1px rgba(20,24,20,.06), 0 1px 2px rgba(20,24,20,.05); padding: 8px 10px; }
+.strip { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; background: #fff; border-radius: 8px; box-shadow: 0 0 0 1px rgba(20,24,20,.06), 0 1px 2px rgba(20,24,20,.05); padding: 8px 10px; }
 .strip > div { display: flex; flex-direction: column; min-width: 0; }
 .strip small { font-size: 10.5px; color: var(--muted); white-space: nowrap; }
 .strip > div > small:first-child { color: #3F453E; }
 .strip span { font-size: 11.5px; color: #3F453E; font-variant-numeric: tabular-nums; }
 .strip span b { font-size: 16px; font-weight: 600; color: var(--ink); }
-.strip span b.due { color: var(--due); }
 .sheetCard { background: #fff; border-radius: 8px; box-shadow: 0 0 0 1px rgba(20,24,20,.06), 0 1px 2px rgba(20,24,20,.05); overflow: hidden; }
 .bar { display: flex; align-items: center; gap: 10px; padding: 8px 10px; flex-wrap: wrap; }
 .views { display: inline-flex; gap: 9px; font-size: 12px; color: #3F453E; margin-left: auto; }
@@ -102,7 +101,7 @@
 .seatPaid { background: #CFE8D6; }
 .seatNew { background: #EEF4EC; box-shadow: 0 0 0 1px rgba(23,59,42,.35); }
 .seatOpen { height: 26px; border-radius: 4px; background: var(--paper); border: 1px dashed var(--line); }
-.seatClosed { height: 26px; border-radius: 4px; background: rgba(227,228,222,.7); display: flex; align-items: center; justify-content: center; font-size: 10.5px; font-weight: 500; color: var(--muted); }
+.seatClosed { height: 26px; border-radius: 4px; background: rgba(227,228,222,.7); display: flex; align-items: center; justify-content: center; font-size: 10.5px; font-weight: 500; color: #4E534D; }
 .rwBlocked { height: 26px; border-radius: 4px; background: var(--paper) repeating-linear-gradient(135deg, #E3E4DE 0 1px, transparent 1px 7px); font-size: 11.5px; font-style: italic; color: var(--muted); display: flex; align-items: center; padding: 0 8px; grid-column: span 4; }
 .rwPast { opacity: .55; }
 .rwNext .rwT { color: var(--forest); box-shadow: inset 3px 0 0 var(--forest); padding-left: 7px; }
@@ -150,7 +149,11 @@
 .ci { font: inherit; font-size: 12.5px; font-weight: 600; width: 72px; padding: 5px 0; border-radius: 6px; cursor: pointer; }
 .ci { color: #fff; background: var(--forest); border: 0; }
 .ci:hover { background: #0F2C1F; }
-.appFoot { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 4; padding: 6px 12px; border-radius: 7px; background: #fff; box-shadow: 0 0 0 1px rgba(20,24,20,.08), 0 1px 2px rgba(20,24,20,.05); font-size: 12px; white-space: nowrap; }
+.appFoot { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 4; padding: 6px 12px; border-radius: 7px; background: #fff; box-shadow: 0 0 0 1px rgba(20,24,20,.08), 0 1px 2px rgba(20,24,20,.05); font-size: 12px; white-space: nowrap; pointer-events: none; }
+.appFoot[data-empty] { background: none; box-shadow: none; padding: 0; }
+.full { color: #A3452F; font-weight: 500; }
+.mName { display: none; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; }
+.mName i { width: 18px; height: 18px; border-radius: 4px; color: #fff; font-style: normal; font-size: 8.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
 .toast { color: var(--forest); font-weight: 600; }
 
 /* the golfer's booking page */
@@ -282,7 +285,10 @@
 @media (max-width: 560px) {
   .laptopScreen { padding: 8px 8px 10px; border-radius: 10px 10px 4px 4px; }
   .rail { display: none; }
+  .mName { display: flex; }
+  .main { padding-bottom: 48px; }
   .strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .strip > div:last-child { grid-column: span 2; }
   .views, .addTime { display: none; }
   .find { width: 100%; }
   .appFoot { white-space: normal; width: max-content; max-width: 90%; }
