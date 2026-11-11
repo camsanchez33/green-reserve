@@ -1,0 +1,321 @@
+<title>Course Booking Page Mockup</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600&family=Libre+Franklin:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a mockup control strip, then the course page in Cam's order — header (banner, logo, name, details, Find a
+   tee time) → booking (date strip, players, holes, walking/riding, times by part of day, sticky summary) → course
+   information → gallery → facilities → footer. Clean light page; the course's own colour is --course. */
+:root{
+  --paper:#FAFAF7;--card:#FFFFFF;--ink:#141814;--soft:#3A3F39;--muted:#6B706A;--line:#E3E4DE;--wash:#F2F3EE;
+  --ok:#3D7A55;--warn:#9A5B13;--pine:#173B2A;
+  --course:#1F4D3A;--course-ink:#FFFFFF;--course-wash:rgba(31,77,58,.08);
+  --serif:"EB Garamond",Georgia,"Times New Roman",serif;
+  --sans:"Libre Franklin",-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+  --shadow:0 0 0 1px rgba(20,24,20,.06),0 1px 2px rgba(20,24,20,.06);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#FAFAF7;--card:#FFFFFF;--ink:#141814;color-scheme:light}}
+:root[data-theme="dark"]{--paper:#FAFAF7;--card:#FFFFFF;--ink:#141814;color-scheme:light}
+/* The golfer page is light-only on purpose (a course's own page, matches the live site). */
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5}
+.ctl{background:#E9EAE4;border-bottom:1px solid var(--line)}
+.ctl .in{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px;display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;font-size:12.5px;color:var(--muted)}
+.ctl b{color:var(--ink);font-weight:600;margin-right:auto}
+.sw{display:inline-flex;gap:6px;align-items:center}
+.sw button{width:22px;height:22px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px var(--line);cursor:pointer}
+.sw button[aria-pressed="true"]{box-shadow:0 0 0 2px var(--ink)}
+.tg{font:inherit;font-size:12.5px;font-weight:500;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:4px 12px;cursor:pointer}
+.tg[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.in{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button:focus-visible,a:focus-visible{outline:2px solid var(--course);outline-offset:2px}
+a{color:inherit}
+
+/* 1 · Header */
+.banner{height:300px;position:relative;overflow:hidden;background:var(--course)}
+.banner svg{position:absolute;inset:0;width:100%;height:100%}
+.banner .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 45%,rgba(0,0,0,.35))}
+body.nophoto .banner{height:120px}
+body.nophoto .banner svg,body.nophoto .banner .shade{display:none}
+.head{position:relative;margin-top:-56px;display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap}
+.logo{width:112px;height:112px;border-radius:18px;background:var(--card);box-shadow:0 0 0 4px var(--paper),0 6px 18px rgba(0,0,0,.12);display:grid;place-items:center;flex:none}
+.logo span{width:88px;height:88px;border-radius:50%;background:var(--course);color:var(--course-ink);display:grid;place-items:center;font-family:var(--serif);font-size:34px;font-weight:600}
+.title{flex:1 1 320px;min-width:0;padding-top:68px}
+.title h1{font-family:var(--serif);font-weight:600;font-size:44px;line-height:1.02;margin:0;text-wrap:balance}
+.meta{display:flex;flex-wrap:wrap;gap:4px 14px;color:var(--muted);font-size:14px;margin-top:8px}
+.meta span+span::before{content:"·";margin-right:14px;color:var(--line)}
+.cta{font:inherit;font-weight:600;font-size:15px;border:0;border-radius:8px;background:var(--course);color:var(--course-ink);padding:14px 22px;cursor:pointer;margin-top:74px;text-decoration:none;display:inline-block}
+
+/* 2 · Booking */
+.booking > div{min-width:0}
+.booking{margin-top:32px;display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:24px;align-items:start}
+.panel{background:var(--card);border-radius:10px;box-shadow:var(--shadow)}
+.filters{padding:18px 18px 16px;display:flex;flex-direction:column;gap:16px}
+.dates{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:thin}
+.date{flex:none;width:76px;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 0;text-align:center;cursor:pointer;font:inherit;color:var(--ink)}
+.date small{display:block;font-size:12px;color:var(--muted)}
+.date b{display:block;font-size:20px;font-weight:600;line-height:1.2}
+.date em{display:block;font-style:normal;font-size:11.5px;color:var(--muted)}
+.date[aria-pressed="true"]{border-color:var(--course);background:var(--course-wash);box-shadow:inset 0 0 0 1px var(--course)}
+.row{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center}
+.lab{font-size:13px;color:var(--muted);margin-right:8px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{font:inherit;font-size:14px;font-weight:500;border:0;border-right:1px solid var(--line);background:var(--card);color:var(--soft);padding:8px 14px;cursor:pointer}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--course);color:var(--course-ink)}
+.part{margin-top:22px}
+.part h3{font-size:14px;font-weight:600;margin:0 0 10px;display:flex;gap:8px;align-items:baseline}
+.part h3 span{font-weight:400;color:var(--muted);font-size:13px}
+.times{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.tt{font:inherit;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:12px 14px;cursor:pointer;color:var(--ink);display:flex;flex-direction:column;gap:2px;transition:border-color .15s}
+.tt:hover{border-color:var(--course)}
+.tt b{font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
+.tt .p{font-size:14px;font-weight:600;color:var(--course)}
+.tt .s{font-size:12px;color:var(--muted)}
+.tt .s.few{color:var(--warn)}
+.tt[aria-pressed="true"]{border-color:var(--course);box-shadow:inset 0 0 0 1px var(--course);background:var(--course-wash)}
+.tt:disabled{opacity:.45;cursor:not-allowed}
+.summary{position:sticky;top:16px;padding:20px;display:flex;flex-direction:column;gap:12px}
+.summary h2{font-family:var(--serif);font-weight:600;font-size:24px;margin:0;line-height:1.1}
+.summary .when{color:var(--muted);font-size:14px;margin-top:-6px}
+.lines{display:flex;flex-direction:column;gap:6px;font-size:14px;font-variant-numeric:tabular-nums;border-top:1px solid var(--line);padding-top:12px}
+.lines div{display:flex;justify-content:space-between;gap:12px}
+.lines .tot{border-top:1px solid var(--line);padding-top:8px;font-weight:700;font-size:16px}
+.go{font:inherit;font-weight:600;font-size:15px;border:0;border-radius:8px;background:var(--course);color:var(--course-ink);padding:13px;cursor:pointer}
+.go:disabled{opacity:.45;cursor:not-allowed}
+.fine{font-size:12.5px;color:var(--muted)}
+.empty{color:var(--muted);font-size:14px}
+
+/* 3–5 · Information, gallery, facilities */
+section.blk{margin-top:56px}
+section.blk > h2{font-family:var(--serif);font-weight:600;font-size:30px;margin:0 0 4px;line-height:1.1}
+section.blk > p.sub{color:var(--muted);margin:0 0 18px}
+.info{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:20px}
+.about{padding:20px;font-size:15px;color:var(--soft)}
+.about p{margin:0;max-width:62ch}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border-radius:10px;overflow:hidden;box-shadow:var(--shadow);margin-top:16px}
+.facts div{background:var(--card);padding:14px 16px}
+.facts small{display:block;font-size:12.5px;color:var(--muted)}
+.facts b{font-weight:600}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:11px 18px;border-top:1px solid var(--line);font-size:14px}
+th{border-top:0;font-size:12.5px;color:var(--muted);font-weight:500}
+td:last-child,th:last-child{text-align:right}
+.chip{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;vertical-align:0;box-shadow:0 0 0 1px rgba(0,0,0,.15)}
+.gal{display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:180px 180px;gap:10px}
+.gal div{border-radius:10px;overflow:hidden;position:relative}
+.gal div:first-child{grid-row:1 / 3}
+.gal svg{width:100%;height:100%;display:block}
+.gal span{position:absolute;left:10px;bottom:8px;font-size:12px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+body.nophoto #gallery{display:none}
+.fac{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.fac div{background:var(--card);box-shadow:var(--shadow);border-radius:10px;padding:14px 16px;font-weight:500;display:flex;align-items:center;gap:10px}
+.fac div::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--course);flex:none}
+
+/* 6 · Footer */
+footer{margin-top:64px;border-top:1px solid var(--line);background:var(--card)}
+footer .in{padding-block:28px;display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:24px;font-size:14px}
+footer h4{font-size:13px;font-weight:600;margin:0 0 8px}
+footer p{margin:0 0 4px;color:var(--soft)}
+footer a{color:var(--soft);text-decoration-color:var(--line);text-underline-offset:3px;display:block;margin-bottom:4px}
+.powered{grid-column:1 / -1;border-top:1px solid var(--line);padding-top:16px;color:var(--muted);font-size:12.5px;display:flex;align-items:center;gap:8px}
+.powered svg{width:14px;height:14px}
+
+/* Phone: one column, summary becomes a bar at the bottom */
+.bar{display:none}
+@media (max-width:860px){
+  .booking{grid-template-columns:minmax(0,1fr)}
+  .summary-wrap{display:none}
+  .bar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--card);box-shadow:0 -1px 0 var(--line),0 -6px 18px rgba(0,0,0,.06);
+    padding:12px max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));gap:12px;align-items:center}
+  .bar div{flex:1;min-width:0;font-size:13px;color:var(--muted)}
+  .bar div b{display:block;color:var(--ink);font-size:16px}
+  .bar .go{padding:12px 18px}
+  .info{grid-template-columns:1fr}
+  .gal{grid-template-columns:1fr 1fr;grid-template-rows:160px 120px 120px}
+  .gal div:first-child{grid-column:1 / 3;grid-row:auto}
+  footer .in{grid-template-columns:1fr}
+  body{padding-bottom:84px}
+}
+@media (max-width:520px){
+  .banner{height:200px}
+  .head{margin-top:-44px;gap:14px}
+  .title{padding-top:0;flex-basis:100%}
+  .cta{margin-top:0}
+  .logo{width:84px;height:84px;border-radius:14px}.logo span{width:66px;height:66px;font-size:26px}
+  .title h1{font-size:32px}
+  .cta{width:100%;text-align:center}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+html{scroll-behavior:smooth}
+</style>
+
+<div class="ctl"><div class="in">
+  <b>Golfer booking page mockup · example course and prices</b>
+  <span class="sw" role="group" aria-label="Course colour">Course colour
+    <button type="button" data-c="#1F4D3A" style="background:#1F4D3A" aria-label="Forest" aria-pressed="true"></button>
+    <button type="button" data-c="#7A2E2E" style="background:#7A2E2E" aria-label="Burgundy" aria-pressed="false"></button>
+    <button type="button" data-c="#1E3A5F" style="background:#1E3A5F" aria-label="Navy" aria-pressed="false"></button>
+    <button type="button" data-c="#8A6A2F" style="background:#8A6A2F" aria-label="Gold" aria-pressed="false"></button>
+  </span>
+  <span class="sw">Photos <button type="button" class="tg" id="photos" aria-pressed="true" style="width:auto;height:auto;border-radius:999px;box-shadow:none">Course has photos</button></span>
+</div></div>
+
+<!-- 1 · Header -->
+<header>
+  <div class="banner" aria-label="Course banner photo">
+    <svg viewBox="0 0 1200 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <rect width="1200" height="300" fill="#BFD9E6"/>
+      <rect y="0" width="1200" height="150" fill="#D7E8EF"/>
+      <path d="M0 170 Q200 120 420 160 T820 150 T1200 140 V300 H0Z" fill="#6E9B6A"/>
+      <path d="M0 210 Q260 170 520 205 T1000 190 T1200 200 V300 H0Z" fill="#4E8250"/>
+      <path d="M0 250 Q300 225 640 245 T1200 238 V300 H0Z" fill="#3E6E42"/>
+      <ellipse cx="760" cy="232" rx="140" ry="20" fill="#8DBE7C"/>
+      <line x1="800" y1="232" x2="800" y2="182" stroke="#F4F4F0" stroke-width="3"/><path d="M800 182 L826 190 L800 198Z" fill="#C8453A"/>
+      <g fill="#2F5A35"><circle cx="120" cy="150" r="34"/><circle cx="165" cy="140" r="40"/><circle cx="1060" cy="135" r="44"/><circle cx="1110" cy="148" r="30"/></g>
+    </svg>
+    <span class="shade"></span>
+  </div>
+  <div class="in head">
+    <div class="logo"><span>PH</span></div>
+    <div class="title">
+      <h1>Pine Hollow Golf Club</h1>
+      <div class="meta"><span>Saratoga Springs, NY</span><span>Public</span><span>18 holes</span><span>Par 72</span><span>Walking any time</span></div>
+    </div>
+    <a class="cta" href="#book">Find a tee time</a>
+  </div>
+</header>
+
+<main class="in">
+  <!-- 2 · Booking -->
+  <div class="booking" id="book">
+    <div>
+      <div class="panel filters">
+        <div class="dates" id="dates" role="group" aria-label="Date"></div>
+        <div class="row">
+          <span><span class="lab">Players</span><span class="seg" id="players" role="group" aria-label="Players"><button type="button">1</button><button type="button" aria-pressed="true">2</button><button type="button">3</button><button type="button">4</button></span></span>
+          <span><span class="lab">Holes</span><span class="seg" id="holes" role="group" aria-label="Holes"><button type="button">9</button><button type="button" aria-pressed="true">18</button></span></span>
+          <span><span class="lab">Getting around</span><span class="seg" id="ride" role="group" aria-label="Walking or riding"><button type="button" aria-pressed="true">Walking</button><button type="button">Riding</button></span></span>
+        </div>
+      </div>
+      <div id="slots"></div>
+    </div>
+    <aside class="summary-wrap"><div class="panel summary" id="summary"></div></aside>
+  </div>
+
+  <!-- 3 · Course information -->
+  <section class="blk" id="info">
+    <h2>Course information</h2>
+    <p class="sub">What to know before your round.</p>
+    <div class="info">
+      <div>
+        <div class="panel about"><p>A walkable parkland course set among old pines on the edge of Saratoga Springs. Wide fairways off the tee, quick bentgrass greens and a closing stretch along the creek that decides most matches.</p></div>
+        <div class="facts">
+          <div><small>Course</small><b>18 holes · Par 72</b></div>
+          <div><small>Walking</small><b>Walking any time</b></div>
+          <div><small>Carts</small><b>Optional, $22 a rider</b></div>
+          <div><small>Location</small><b>Saratoga Springs, NY</b></div>
+        </div>
+      </div>
+      <div class="panel" style="overflow:hidden">
+        <table><thead><tr><th>Tee</th><th>Yards</th></tr></thead><tbody>
+          <tr><td><span class="chip" style="background:#1A1A1A"></span>Black</td><td>6,840</td></tr>
+          <tr><td><span class="chip" style="background:#2D5DA8"></span>Blue</td><td>6,420</td></tr>
+          <tr><td><span class="chip" style="background:#F2F2EE"></span>White</td><td>6,010</td></tr>
+          <tr><td><span class="chip" style="background:#B8322E"></span>Red</td><td>5,230</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · Gallery (optional) -->
+  <section class="blk" id="gallery">
+    <h2>Photos</h2>
+    <p class="sub">From the course.</p>
+    <div class="gal" id="gal"></div>
+  </section>
+
+  <!-- 5 · Facilities -->
+  <section class="blk">
+    <h2>Facilities</h2>
+    <p class="sub">At the course.</p>
+    <div class="fac"><div>Driving range</div><div>Putting green</div><div>Pro shop</div><div>Push carts</div><div>Snack bar</div><div>Locker rooms</div></div>
+  </section>
+</main>
+
+<!-- 6 · Footer -->
+<footer><div class="in">
+  <div><h4>Pine Hollow Golf Club</h4><p>412 Hollow Road, Saratoga Springs, NY 12866</p><p>(518) 555-0142</p><a href="#" onclick="return false">Get directions</a><a href="#" onclick="return false">pinehollowgolf.com</a></div>
+  <div><h4>Before you book</h4><a href="#" onclick="return false">Cancellation policy</a><a href="#" onclick="return false">Manage a booking</a></div>
+  <div><h4>Legal</h4><a href="#" onclick="return false">Privacy</a><a href="#" onclick="return false">Terms</a></div>
+  <div class="powered"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="5" r="2"/><path d="M12 8v6l-3 6M12 14l3 6M8 11l4-1 5-3"/></svg>Booking powered by GreenReserve</div>
+</div></footer>
+
+<div class="bar" id="bar"><div id="barTxt">Pick a tee time</div><button class="go" type="button" id="barGo" disabled>Continue</button></div>
+
+<script>
+(function(){
+  const root=document.documentElement, body=document.body;
+  // Course colour + photos toggles (mockup controls)
+  document.querySelectorAll('.sw button[data-c]').forEach(b=>b.addEventListener('click',()=>{
+    root.style.setProperty('--course',b.dataset.c);
+    const h=b.dataset.c, r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),bl=parseInt(h.slice(5,7),16);
+    root.style.setProperty('--course-wash',`rgba(${r},${g},${bl},.08)`);
+    document.querySelectorAll('.sw button[data-c]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+  }));
+  const pb=document.getElementById('photos');
+  pb.addEventListener('click',()=>{const on=pb.getAttribute('aria-pressed')!=='true';pb.setAttribute('aria-pressed',String(on));pb.textContent=on?'Course has photos':'No photos yet';body.classList.toggle('nophoto',!on);});
+
+  // Gallery tiles: simple drawn scenes standing in for the course's own photos.
+  const scenes=[['#CFE3EC','#5E9160','#3F6F45','Hole 7 from the tee'],['#E8DCC4','#7FA36A','#56804A','The 18th green'],['#D9E6EE','#6B8F5C','#4A7444','Clubhouse'],['#F0E1CF','#8AA86E','#5D8350','Range'],['#DCE8E2','#5E8A63','#3C6544','Creek on 16']];
+  document.getElementById('gal').innerHTML=scenes.map(([sky,a,b,cap])=>`<div><svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="400" height="300" fill="${sky}"/><path d="M0 170 Q120 130 240 165 T400 155 V300 H0Z" fill="${a}"/><path d="M0 220 Q150 190 300 215 T400 210 V300 H0Z" fill="${b}"/></svg><span>${cap}</span></div>`).join('');
+
+  // Booking: example times and prices.
+  const st={day:0,players:2,holes:18,ride:'Walking',pick:null};
+  const base=new Date(2026,10,12);
+  const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const days=[...Array(10)].map((_,i)=>{const d=new Date(base);d.setDate(d.getDate()+i);return d;});
+  const fromPrice=d=>(d.getDay()===0||d.getDay()===6)?58:45;
+  function renderDates(){document.getElementById('dates').innerHTML=days.map((d,i)=>`<button type="button" class="date" data-i="${i}" aria-pressed="${i===st.day}"><small>${i===0?'Today':DOW[d.getDay()]}</small><b>${d.getDate()}</b><em>from $${fromPrice(d)}</em></button>`).join('');}
+  document.getElementById('dates').addEventListener('click',e=>{const b=e.target.closest('.date');if(!b)return;st.day=+b.dataset.i;st.pick=null;render();});
+  function seg(id,key,parse){document.getElementById(id).addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;st[key]=parse(b.textContent);st.pick=null;
+    document.querySelectorAll('#'+id+' button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));render();});}
+  seg('players','players',Number); seg('holes','holes',Number); seg('ride','ride',s=>s);
+
+  const PARTS=[['Morning','before 11'],['Midday','11 to 3'],['Twilight','after 3, lower rate']];
+  function slotsFor(i){
+    const d=days[i], wk=d.getDay()===0||d.getDay()===6, out=[];
+    const times=['7:00','7:10','7:20','7:40','8:00','8:30','9:10','9:50','10:30','11:00','11:40','12:20','1:00','1:50','2:40','3:30','4:10','4:50'];
+    times.forEach((t,k)=>{const h=+t.split(':')[0];const hr=h<7?h+12:h;const part=hr<11?0:hr<15?1:2;
+      const left=((k*7+i*3)%5); const spots=left===0?0:left;
+      let p=(wk?58:45)+(part===2?-15:0); if(st.holes===9)p=Math.round(p*0.6);
+      out.push({t:t+(hr<12?' AM':' PM'),part,spots,price:p});});
+    return out;
+  }
+  const cart=()=>st.ride==='Riding'?22:0;
+  function render(){
+    renderDates();
+    const list=slotsFor(st.day);
+    document.getElementById('slots').innerHTML=PARTS.map(([name,hint],pi)=>{
+      const its=list.filter(x=>x.part===pi);
+      return `<div class="part"><h3>${name} <span>${hint}</span></h3><div class="times">${its.map((x,k)=>{const full=x.spots<st.players;const id=pi+'-'+k;
+        return `<button type="button" class="tt" data-id="${id}" ${full?'disabled':''} aria-pressed="${st.pick&&st.pick.id===id}"><b>${x.t}</b><span class="p">$${x.price + cart()} a player</span><span class="s ${x.spots<=2&&!full?'few':''}">${full?(x.spots?`Only ${x.spots} left`:'Full'):x.spots===4?'4 spots open':`${x.spots} left`}</span></button>`;}).join('')}</div></div>`;
+    }).join('');
+    document.querySelectorAll('.tt').forEach(b=>b.addEventListener('click',()=>{const [pi,k]=b.dataset.id.split('-').map(Number);const x=list.filter(y=>y.part===pi)[k];st.pick={...x,id:b.dataset.id};render();}));
+    renderSummary();
+  }
+  function money(n){return '$'+n.toFixed(2);}
+  function renderSummary(){
+    const s=document.getElementById('summary'), d=days[st.day];
+    const dateTxt=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+    if(!st.pick){s.innerHTML=`<h2>Your round</h2><div class="when">${dateTxt}</div><p class="empty">Pick a tee time to see the total.</p><button class="go" type="button" disabled>Continue</button>`;
+      document.getElementById('barTxt').innerHTML='Pick a tee time';document.getElementById('barGo').disabled=true;return;}
+    const n=st.players, green=st.pick.price*n, c=cart()*n, fee=1.5*n, tot=green+c+fee;
+    s.innerHTML=`<h2>${st.pick.t}</h2><div class="when">${dateTxt} · ${st.holes} holes · ${n} ${n===1?'player':'players'}</div>
+      <div class="lines"><div><span>Green fee × ${n}</span><span>${money(green)}</span></div>${c?`<div><span>Cart × ${n}</span><span>${money(c)}</span></div>`:''}<div><span>Service fee × ${n}</span><span>${money(fee)}</span></div><div class="tot"><span>Total</span><span>${money(tot)}</span></div></div>
+      <button class="go" type="button">Continue</button><p class="fine">Nothing is charged now. Free cancellation until 24 hours before.</p>`;
+    document.getElementById('barTxt').innerHTML=`<b>${st.pick.t} · ${money(tot)}</b>${n} ${n===1?'player':'players'} · ${st.holes} holes`;
+    document.getElementById('barGo').disabled=false;
+  }
+  render();
+})();
+</script>
