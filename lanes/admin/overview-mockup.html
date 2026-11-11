@@ -1,0 +1,354 @@
+<title>GreenReserve HQ Overview</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600&family=Libre+Franklin:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a picker strip on top (direction · theme · accents), then the admin Overview inside a framed "app":
+   rail on the left, top bar with search / quick actions / alerts, six number cards, the revenue chart,
+   then Recent activity and Needs attention. Every look is a token swap on .app[data-dir][data-mode][data-acc]. */
+:root{
+  --page:#EDEEE9;--page-ink:#141814;--page-muted:#5F645E;--page-line:#D7D9D1;--chip:#FFFFFF;
+  --serif:"EB Garamond",Georgia,"Times New Roman",serif;
+  --sans:"Libre Franklin",-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--page:#121512;--page-ink:#ECEEE8;--page-muted:#9A9F97;--page-line:#2C312C;--chip:#1C211C;color-scheme:dark}}
+:root[data-theme="dark"]{--page:#121512;--page-ink:#ECEEE8;--page-muted:#9A9F97;--page-line:#2C312C;--chip:#1C211C;color-scheme:dark}
+body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-size:14px;line-height:1.45}
+.wrap{max-width:1320px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px;display:flex;flex-direction:column;gap:16px}
+.picker{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center}
+.picker h1{font-family:var(--serif);font-weight:600;font-size:24px;margin:0 auto 0 0;line-height:1.1}
+.pick{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pick > span{font-size:12.5px;color:var(--page-muted)}
+.seg{display:inline-flex;background:var(--chip);border:1px solid var(--page-line);border-radius:999px;padding:3px}
+.seg button{font:inherit;font-size:13px;font-weight:500;border:0;background:transparent;color:var(--page-ink);padding:6px 12px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--page-ink);color:var(--page)}
+.seg button:focus-visible{outline:2px solid #3BAA6B;outline-offset:2px}
+.note{font-size:12.5px;color:var(--page-muted);max-width:75ch}
+
+/* ───────── The app: tokens per direction × mode ───────── */
+.app{
+  --bg:#E6EFEA; --blob1:#9FD3B5; --blob2:#CFE7D8; --blob3:#F1E3C4;
+  --panel:rgba(255,255,255,.52); --panel-solid:#FFFFFF; --panel-edge:rgba(255,255,255,.75); --panel-blur:22px;
+  --ink:#122219; --ink-soft:#3B4A41; --muted:#5E6C63; --line:rgba(18,34,25,.10);
+  --rail:rgba(255,255,255,.38); --hover:rgba(255,255,255,.55); --active:rgba(255,255,255,.85);
+  --shadow:0 1px 0 rgba(255,255,255,.6) inset, 0 8px 30px rgba(23,59,42,.08);
+  --radius:18px; --radius-s:12px;
+  --brand:#173B2A; --brand-ink:#FFFFFF; --fair:#3BAA6B; --up:#1F7A4A; --down:#A3452F; --warn:#9A5B13;
+  --chart:#173B2A; --chart-fill:rgba(23,59,42,.16); --chart-prev:rgba(18,34,25,.28); --grid:rgba(18,34,25,.08);
+  --t1:#173B2A; --t1-ink:#F3F7F4; --t2:#C9A24A; --t2-ink:#1E1606;
+  position:relative;isolation:isolate;overflow:hidden;border-radius:24px;background:var(--bg);color:var(--ink);
+  display:grid;grid-template-columns:232px minmax(0,1fr);min-height:760px;
+  box-shadow:0 0 0 1px var(--page-line);
+}
+/* Green glass, dark */
+.app[data-dir="green"][data-mode="dark"]{
+  --bg:#0D1F19; --blob1:#1E6B4A; --blob2:#123B2E; --blob3:#3B5E3A;
+  --panel:rgba(22,52,42,.48); --panel-solid:#14302A; --panel-edge:rgba(160,230,195,.14);
+  --ink:#E8F2EC; --ink-soft:#BFD2C7; --muted:#8FA79A; --line:rgba(200,240,220,.10);
+  --rail:rgba(14,36,29,.45); --hover:rgba(60,140,100,.16); --active:rgba(120,210,160,.18);
+  --shadow:0 1px 0 rgba(200,255,225,.08) inset, 0 10px 34px rgba(0,0,0,.30);
+  --brand:#4CC183; --brand-ink:#0B1F16; --up:#6DD39A; --down:#F08C78; --warn:#E3B05C;
+  --chart:#7FE0A8; --chart-fill:rgba(127,224,168,.16); --chart-prev:rgba(232,242,236,.30); --grid:rgba(232,242,236,.07);
+  --t1:#2E8F5E; --t1-ink:#F1FBF5; --t2:#D9B45A; --t2-ink:#1E1606;
+}
+/* Light iridescent glass */
+.app[data-dir="iri"]{
+  --bg:#EEF0F5; --blob1:#C8E8D6; --blob2:#E6D5F2; --blob3:#F7E0C8;
+  --panel:rgba(255,255,255,.58); --panel-edge:rgba(255,255,255,.85);
+  --ink:#16181D; --ink-soft:#3D4250; --muted:#646A78; --line:rgba(22,24,29,.09);
+  --rail:rgba(255,255,255,.45); --hover:rgba(255,255,255,.6); --active:#FFFFFF;
+  --shadow:0 1px 0 rgba(255,255,255,.9) inset, 0 10px 34px rgba(40,40,80,.08);
+  --chart:#173B2A; --chart-fill:rgba(59,170,107,.15); --grid:rgba(22,24,29,.07); --chart-prev:rgba(22,24,29,.25);
+}
+.app[data-dir="iri"][data-mode="dark"]{
+  --bg:#14151C; --blob1:#1F5B43; --blob2:#3E2D5C; --blob3:#5A3F24;
+  --panel:rgba(32,34,46,.55); --panel-solid:#20222E; --panel-edge:rgba(255,255,255,.10);
+  --ink:#ECEEF4; --ink-soft:#C3C7D3; --muted:#9298A8; --line:rgba(255,255,255,.08);
+  --rail:rgba(24,25,34,.5); --hover:rgba(255,255,255,.06); --active:rgba(255,255,255,.12);
+  --shadow:0 1px 0 rgba(255,255,255,.06) inset, 0 10px 34px rgba(0,0,0,.35);
+  --brand:#4CC183; --brand-ink:#0B1F16; --up:#6DD39A; --down:#F08C78; --warn:#E3B05C;
+  --chart:#7FE0A8; --chart-fill:rgba(127,224,168,.14); --chart-prev:rgba(236,238,244,.28); --grid:rgba(236,238,244,.06);
+  --t1:#2E8F5E; --t1-ink:#F1FBF5; --t2:#D9B45A; --t2-ink:#1E1606;
+}
+/* Charcoal (solid, raised cards — no glass) */
+.app[data-dir="char"]{
+  --bg:#E9EAE6; --blob1:transparent; --blob2:transparent; --blob3:transparent;
+  --panel:#F7F7F4; --panel-solid:#FFFFFF; --panel-edge:rgba(255,255,255,.9); --panel-blur:0px;
+  --ink:#191B19; --ink-soft:#3E423E; --muted:#686D68; --line:rgba(0,0,0,.07);
+  --rail:#E1E2DD; --hover:rgba(255,255,255,.6); --active:#F7F7F4;
+  --shadow:0 1px 0 #fff inset, 0 6px 18px rgba(0,0,0,.07);
+}
+.app[data-dir="char"][data-mode="dark"]{
+  --bg:#1E1F1E; --panel:#292A29; --panel-solid:#292A29; --panel-edge:rgba(255,255,255,.05);
+  --ink:#EDEEEB; --ink-soft:#C6C8C3; --muted:#959893; --line:rgba(255,255,255,.07);
+  --rail:#252625; --hover:rgba(255,255,255,.05); --active:#323432;
+  --shadow:0 1px 0 rgba(255,255,255,.04) inset, 0 10px 28px rgba(0,0,0,.35);
+  --brand:#4CC183; --brand-ink:#0B1F16; --up:#6DD39A; --down:#F08C78; --warn:#E3B05C;
+  --chart:#E7B45E; --chart-fill:rgba(231,180,94,.16); --chart-prev:rgba(237,238,235,.28); --grid:rgba(237,238,235,.06);
+  --t1:#2E8F5E; --t1-ink:#F1FBF5; --t2:#D9B45A; --t2-ink:#1E1606;
+}
+/* Accent sets for the two highlighted tiles */
+.app[data-acc="green"]{--t2:#3BAA6B;--t2-ink:#06180E}
+.app[data-acc="multi"]{--t1:#E9874A;--t1-ink:#1F0E03;--t2:#4E8FE8;--t2-ink:#06142A}
+
+/* Backdrop blobs: what the glass frosts. Plain blurred shapes, not a page gradient. */
+.blob{position:absolute;border-radius:50%;filter:blur(70px);z-index:-1;pointer-events:none;opacity:.9}
+.b1{width:520px;height:520px;background:var(--blob1);left:-120px;top:-140px}
+.b2{width:560px;height:560px;background:var(--blob2);right:-160px;top:120px}
+.b3{width:420px;height:420px;background:var(--blob3);left:38%;bottom:-200px}
+
+.glass{background:var(--panel);-webkit-backdrop-filter:blur(var(--panel-blur)) saturate(1.3);backdrop-filter:blur(var(--panel-blur)) saturate(1.3);
+  border:1px solid var(--panel-edge);border-radius:var(--radius);box-shadow:var(--shadow)}
+@media (prefers-reduced-transparency:reduce){.glass{background:var(--panel-solid);-webkit-backdrop-filter:none;backdrop-filter:none}}
+
+/* Rail */
+.rail{background:var(--rail);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;gap:18px;min-width:0}
+.brand{display:flex;align-items:center;gap:10px;padding:0 6px}
+.mark{width:34px;height:34px;border-radius:10px;background:var(--brand);display:grid;place-items:center;flex:none}
+.mark svg{width:20px;height:20px}
+.brand b{font-family:var(--serif);font-size:18px;font-weight:600;line-height:1}
+.brand small{display:block;font-size:11.5px;color:var(--muted);margin-top:3px}
+.grp{display:flex;flex-direction:column;gap:2px}
+.grp > span{font-size:11.5px;color:var(--muted);padding:0 10px 4px;letter-spacing:.06em}
+.nav{font:inherit;font-size:13.5px;text-align:left;border:0;background:transparent;color:var(--ink-soft);padding:8px 10px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;cursor:default}
+.nav:hover{background:var(--hover)}
+.nav.on{background:var(--active);color:var(--ink);font-weight:600;box-shadow:var(--shadow)}
+.nav i{font-style:normal;font-size:11.5px;font-weight:600;background:var(--warn);color:var(--panel-solid);border-radius:999px;padding:0 7px;line-height:18px}
+.rail .foot{margin-top:auto;display:flex;align-items:center;gap:10px;padding:8px 6px;font-size:12.5px;color:var(--muted)}
+.av{width:30px;height:30px;border-radius:50%;background:var(--t2);color:var(--t2-ink);display:grid;place-items:center;font-weight:700;font-size:12px;flex:none}
+
+/* Main */
+.main{padding:20px 24px 28px;display:flex;flex-direction:column;gap:18px;min-width:0}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.top h2{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1;margin:0 auto 0 0;letter-spacing:-.005em}
+.top h2 small{display:block;font-family:var(--sans);font-size:13px;font-weight:400;color:var(--muted);margin-top:6px}
+.search{display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:12px;min-width:min(280px,100%);color:var(--muted);font-size:13px}
+.search kbd{margin-left:auto;font:inherit;font-size:11.5px;border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+.ibtn{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;border:1px solid var(--panel-edge);color:var(--ink);position:relative}
+.ibtn .dotn{position:absolute;top:9px;right:10px;width:7px;height:7px;border-radius:50%;background:var(--down)}
+.qa{font:inherit;font-size:13px;font-weight:600;border:0;background:var(--brand);color:var(--brand-ink);padding:11px 16px;border-radius:12px;cursor:pointer;position:relative}
+.qa:focus-visible{outline:2px solid var(--fair);outline-offset:2px}
+.qmenu{position:absolute;right:0;top:calc(100% + 8px);width:220px;padding:6px;z-index:5;display:flex;flex-direction:column}
+.qmenu span{padding:9px 12px;border-radius:9px;font-size:13.5px;color:var(--ink);font-weight:500;text-align:left}
+.qmenu span:hover{background:var(--hover)}
+.qwrap{position:relative}
+.qmenu[hidden]{display:none}
+
+/* KPI cards */
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+.kpi{padding:16px 16px 14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.kpi .l{font-size:12.5px;color:var(--muted);font-weight:500}
+.kpi .v{font-size:28px;font-weight:600;letter-spacing:-.02em;line-height:1.05;font-variant-numeric:tabular-nums}
+.kpi .c{font-size:12px;font-variant-numeric:tabular-nums;color:var(--muted)}
+.kpi .c b{font-weight:600}
+.up{color:var(--up)}.down{color:var(--down)}.wa{color:var(--warn)}
+.kpi.t1{background:var(--t1);color:var(--t1-ink);border-color:transparent}
+.kpi.t2{background:var(--t2);color:var(--t2-ink);border-color:transparent}
+.kpi.t1 .l,.kpi.t1 .c,.kpi.t1 .c b,.kpi.t2 .l,.kpi.t2 .c,.kpi.t2 .c b{color:inherit;opacity:.85}
+.spark{height:26px;margin-top:2px}
+.spark path{fill:none;stroke:currentColor;stroke-width:1.6;opacity:.55}
+
+/* Chart */
+.chartcard{padding:18px 18px 10px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.chead{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 18px}
+.chead .big{font-size:30px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+.chead .sub{font-size:12.5px;color:var(--muted)}
+.chead .tabs{margin-left:auto;display:inline-flex;gap:2px;padding:3px;border-radius:11px;background:var(--hover);border:1px solid var(--line)}
+.chead .tabs button{font:inherit;font-size:12.5px;font-weight:500;border:0;background:transparent;color:var(--ink-soft);padding:5px 11px;border-radius:8px;cursor:pointer}
+.chead .tabs button[aria-pressed="true"]{background:var(--panel-solid);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.app[data-mode="dark"] .chead .tabs button[aria-pressed="true"]{background:var(--active)}
+.legend{display:flex;gap:16px;font-size:12px;color:var(--muted)}
+.legend span::before{content:"";display:inline-block;width:14px;height:2px;margin-right:6px;vertical-align:3px;background:var(--chart)}
+.legend span.prev::before{background:var(--chart-prev);height:0;border-top:2px dashed var(--chart-prev)}
+.chartbox{width:100%;overflow-x:auto}
+#chart{display:block;width:100%;min-width:520px;height:auto}
+#chart text{fill:var(--muted);font-family:var(--sans);font-size:11px}
+
+/* Two columns */
+.two{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:12px}
+.list{padding:16px 0 6px;min-width:0}
+.list h3{font-size:15px;font-weight:600;margin:0;padding:0 18px 10px;display:flex;justify-content:space-between;align-items:baseline}
+.list h3 span{font-size:12px;font-weight:500;color:var(--muted)}
+.li{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:2px 12px;padding:11px 18px;border-top:1px solid var(--line);align-items:baseline}
+.li .d{width:7px;height:7px;border-radius:50%;background:var(--muted);align-self:center}
+.li .d.ok{background:var(--up)}.li .d.bad{background:var(--down)}.li .d.warn{background:var(--warn)}.li .d.br{background:var(--brand)}
+.li .t{font-size:13.5px;overflow-wrap:anywhere}
+.li .w{font-size:12px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.li .act{grid-column:3;grid-row:1;font:inherit;font-size:12.5px;font-weight:600;border:1px solid var(--line);background:var(--hover);color:var(--ink);padding:5px 10px;border-radius:9px;cursor:default;white-space:nowrap}
+.attn .li{grid-template-columns:3px minmax(0,1fr) auto;padding-left:15px}
+.attn .li .d{width:3px;height:100%;border-radius:2px;align-self:stretch}
+.ex{font-size:11.5px;font-weight:600;letter-spacing:.04em;color:var(--warn);border:1px dashed currentColor;border-radius:999px;padding:2px 9px;white-space:nowrap}
+
+@media (max-width:1180px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:900px){
+  .app{grid-template-columns:1fr}
+  .rail{flex-direction:row;flex-wrap:wrap;align-items:center;border-right:0;border-bottom:1px solid var(--line);gap:8px 12px;padding:14px}
+  .rail .grp,.rail .foot{display:none}
+  .two{grid-template-columns:1fr}
+}
+@media (max-width:560px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.main{padding:16px 14px 22px}.kpi .v{font-size:23px}.top h2{font-size:26px}.app{border-radius:18px}}
+@media (prefers-reduced-motion:no-preference){.app,.app *{transition:background-color .25s ease,color .25s ease,border-color .25s ease}}
+</style>
+
+<div class="wrap">
+  <div class="picker">
+    <h1>Admin Overview mockup</h1>
+    <div class="pick"><span>Direction</span>
+      <div class="seg" id="segDir" role="group" aria-label="Direction">
+        <button type="button" data-v="green">Green glass</button>
+        <button type="button" data-v="iri">Light iridescent</button>
+        <button type="button" data-v="char">Charcoal</button>
+      </div></div>
+    <div class="pick"><span>Theme</span>
+      <div class="seg" id="segMode" role="group" aria-label="Theme">
+        <button type="button" data-v="light">Light</button>
+        <button type="button" data-v="dark">Dark</button>
+      </div></div>
+    <div class="pick"><span>Highlights</span>
+      <div class="seg" id="segAcc" role="group" aria-label="Highlight colours">
+        <button type="button" data-v="gold">Greens + gold</button>
+        <button type="button" data-v="green">Greens only</button>
+        <button type="button" data-v="multi">Multi-colour</button>
+      </div></div>
+  </div>
+  <p class="note">Every number on this page is an example, not GreenReserve's. The live Overview shows only counted numbers, and test courses never count. Pick a direction, theme and highlight colour, then tell me which one in chat.</p>
+
+  <div class="app" id="app" data-dir="green" data-mode="light" data-acc="gold">
+    <span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span>
+
+    <aside class="rail">
+      <div class="brand">
+        <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="var(--brand-ink)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><path d="M12 8v6l-3 6M12 14l3 6M8 11l4-1 5-3"/></svg></span>
+        <div><b>GreenReserve</b><small>Headquarters</small></div>
+      </div>
+      <div class="grp"><span>Workspace</span>
+        <button class="nav on" type="button">Overview</button>
+        <button class="nav" type="button">Golf courses</button>
+        <button class="nav" type="button">Onboarding <i>4</i></button>
+        <button class="nav" type="button">Bookings</button>
+        <button class="nav" type="button">Users &amp; golfers</button>
+      </div>
+      <div class="grp"><span>Financials</span>
+        <button class="nav" type="button">Revenue &amp; payments</button>
+        <button class="nav" type="button">Expenses</button>
+        <button class="nav" type="button">Financial analytics</button>
+      </div>
+      <div class="grp"><span>Management</span>
+        <button class="nav" type="button">Business analytics</button>
+        <button class="nav" type="button">Support &amp; issues <i>3</i></button>
+        <button class="nav" type="button">Platform activity</button>
+        <button class="nav" type="button">Settings</button>
+      </div>
+      <div class="foot"><span class="av">CS</span><span>Cam · Owner</span></div>
+    </aside>
+
+    <main class="main">
+      <div class="top">
+        <h2>Overview<small>Wednesday, November 11 · all systems running</small></h2>
+        <div class="search glass" role="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Search courses, golfers, payments<kbd>⌘K</kbd></div>
+        <span class="ibtn glass" aria-label="Alerts" role="img"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0"/></svg><span class="dotn"></span></span>
+        <div class="qwrap"><button class="qa" type="button" id="qa" aria-expanded="false">Quick actions</button>
+          <div class="qmenu glass" id="qmenu" hidden><span>Add a course</span><span>Add a user</span><span>Record an expense</span><span>Create a report</span><span>View alerts</span><span>Export data</span></div></div>
+      </div>
+
+      <section class="kpis" aria-label="The business at a glance">
+        <div class="kpi glass"><span class="l">Courses live</span><span class="v">42</span><span class="c"><b class="up">+6</b> this month</span></div>
+        <div class="kpi glass t1"><span class="l">Revenue this month</span><span class="v">$18,450</span><span class="c"><b>+14.2%</b> vs October</span><svg class="spark" viewBox="0 0 100 26" preserveAspectRatio="none" aria-hidden="true"><path d="M0 22 L14 19 L28 20 L42 14 L56 15 L70 10 L84 8 L100 4"/></svg></div>
+        <div class="kpi glass"><span class="l">Players booked</span><span class="v">12,300</span><span class="c"><b class="up">+8.5%</b> vs October</span></div>
+        <div class="kpi glass"><span class="l">Golfers who booked</span><span class="v">8,291</span><span class="c"><b class="up">+11.3%</b> vs October</span></div>
+        <div class="kpi glass"><span class="l">Waiting to onboard</span><span class="v">4</span><span class="c"><b class="wa">2 need you</b></span></div>
+        <div class="kpi glass t2"><span class="l">Net profit</span><span class="v">$11,280</span><span class="c"><b>+9.7%</b> vs October</span><svg class="spark" viewBox="0 0 100 26" preserveAspectRatio="none" aria-hidden="true"><path d="M0 20 L14 21 L28 17 L42 18 L56 12 L70 13 L84 9 L100 6"/></svg></div>
+      </section>
+
+      <section class="chartcard glass" aria-label="Revenue">
+        <div class="chead">
+          <div><div class="sub">Service fees collected · November</div><div class="big" id="bigNum">$18,450</div></div>
+          <div class="legend"><span>This period</span><span class="prev">Period before</span></div>
+          <div class="tabs" id="tabs" role="group" aria-label="Group by">
+            <button type="button" data-v="day">Day</button><button type="button" data-v="week" aria-pressed="true">Week</button><button type="button" data-v="month">Month</button><button type="button" data-v="quarter">Quarter</button><button type="button" data-v="year">Year</button>
+          </div>
+        </div>
+        <div class="chartbox"><svg id="chart" viewBox="0 0 760 250" role="img" aria-label="Revenue chart, example numbers"></svg></div>
+      </section>
+
+      <div class="two">
+        <section class="list glass" aria-label="Recent activity">
+          <h3>Recent activity <span>Today</span></h3>
+          <div class="li"><span class="d ok"></span><span class="t">Pine Hollow Golf Club went live</span><span class="w">9:42 AM</span></div>
+          <div class="li"><span class="d br"></span><span class="t">$145.50 in service fees collected across 11 courses</span><span class="w">9:15 AM</span></div>
+          <div class="li"><span class="d"></span><span class="t">New course enquiry: Ridgewood Country Club</span><span class="w">8:58 AM</span></div>
+          <div class="li"><span class="d"></span><span class="t">37 new golfer accounts</span><span class="w">8:00 AM</span></div>
+          <div class="li"><span class="d bad"></span><span class="t">Card declined on a round at Oak Valley GC, $68.50</span><span class="w">7:31 AM</span></div>
+          <div class="li"><span class="d ok"></span><span class="t">Lakeview GC signed the operator agreement</span><span class="w">Yesterday</span></div>
+        </section>
+        <section class="list glass attn" aria-label="Needs attention">
+          <h3>Needs attention <span class="ex">Example</span></h3>
+          <div class="li"><span class="d warn"></span><span class="t">2 courses haven't finished onboarding in 10 days</span><span class="act">Open</span></div>
+          <div class="li"><span class="d bad"></span><span class="t">1 payment failed and hasn't been retried</span><span class="act">Retry</span></div>
+          <div class="li"><span class="d warn"></span><span class="t">3 support requests waiting over a day</span><span class="act">Open</span></div>
+          <div class="li"><span class="d warn"></span><span class="t">Lakeview GC: no bookings in 14 days</span><span class="act">Call</span></div>
+        </section>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+(function(){
+  const app=document.getElementById("app");
+  const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+  function bindSeg(id,attr,key){
+    const seg=document.getElementById(id), saved=store.get(key);
+    if(saved&&seg.querySelector(`[data-v="${saved}"]`)) app.dataset[attr]=saved;
+    const sync=()=>seg.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===app.dataset[attr])));
+    seg.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;app.dataset[attr]=b.dataset.v;store.set(key,b.dataset.v);sync();drawChart();});
+    sync();
+  }
+  bindSeg("segDir","dir","gr-mock-dir"); bindSeg("segMode","mode","gr-mock-mode"); bindSeg("segAcc","acc","gr-mock-acc");
+
+  const qa=document.getElementById("qa"), qm=document.getElementById("qmenu");
+  qa.addEventListener("click",()=>{qm.hidden=!qm.hidden;qa.setAttribute("aria-expanded",String(!qm.hidden));});
+  document.addEventListener("click",e=>{if(!e.target.closest(".qwrap")){qm.hidden=true;qa.setAttribute("aria-expanded","false");}});
+
+  // Example series (dollars) per grouping: this period and the one before.
+  const SER={
+    day:{labels:["Nov 1","","","","Nov 5","","","","","Nov 10","Nov 11"],cur:[420,510,380,690,720,560,610,830,770,690,540],prev:[380,420,400,520,600,470,530,640,700,610,500],big:"$18,450",sub:"Service fees collected · last 11 days"},
+    week:{labels:["Oct 6","Oct 13","Oct 20","Oct 27","Nov 3","Nov 10"],cur:[3100,3650,3420,4280,4890,5110],prev:[2700,3050,3010,3480,3920,4300],big:"$18,450",sub:"Service fees collected · November"},
+    month:{labels:["Jun","Jul","Aug","Sep","Oct","Nov"],cur:[6200,8900,10400,12800,16150,18450],prev:[4100,5600,7300,9000,11200,13900],big:"$18,450",sub:"Service fees collected · November"},
+    quarter:{labels:["Q1","Q2","Q3","Q4"],cur:[9800,21600,32100,34600],prev:[6100,14300,22800,27400],big:"$34,600",sub:"Service fees collected · Q4 so far"},
+    year:{labels:["2025","2026"],cur:[41200,98100],prev:[0,41200],big:"$98,100",sub:"Service fees collected · 2026 so far"}
+  };
+  let group="week";
+  document.getElementById("tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;group=b.dataset.v;
+    document.querySelectorAll("#tabs button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));drawChart();});
+
+  function niceMax(v){const p=Math.pow(10,Math.floor(Math.log10(v)));const m=v/p;const n=m<=1?1:m<=2?2:m<=2.5?2.5:m<=5?5:10;return n*p;}
+  function smooth(pts){ if(pts.length<2) return ""; let d=`M${pts[0][0]},${pts[0][1]}`;
+    for(let i=0;i<pts.length-1;i++){const p0=pts[i-1]||pts[i],p1=pts[i],p2=pts[i+1],p3=pts[i+2]||p2;
+      const c1=[p1[0]+(p2[0]-p0[0])/6,p1[1]+(p2[1]-p0[1])/6],c2=[p2[0]-(p3[0]-p1[0])/6,p2[1]-(p3[1]-p1[1])/6];
+      d+=` C${c1[0].toFixed(1)},${c1[1].toFixed(1)} ${c2[0].toFixed(1)},${c2[1].toFixed(1)} ${p2[0]},${p2[1]}`;} return d; }
+  function fmt(v){return v>=1000?`$${(v/1000).toFixed(v%1000===0?0:1)}K`:`$${v}`;}
+  function drawChart(){
+    const s=SER[group], svg=document.getElementById("chart");
+    document.getElementById("bigNum").textContent=s.big; document.querySelector(".chead .sub").textContent=s.sub;
+    const W=760,H=250,L=52,R=16,T=14,B=30, w=W-L-R, h=H-T-B;
+    const max=niceMax(Math.max(...s.cur,...s.prev)*1.08), ticks=4;
+    const x=i=>L+(s.cur.length===1?w/2:i*w/(s.cur.length-1)), y=v=>T+h-(v/max)*h;
+    let g="";
+    for(let k=0;k<=ticks;k++){const v=max*k/ticks,yy=y(v).toFixed(1);
+      g+=`<line x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}" stroke="var(--grid)" stroke-width="1"/><text x="${L-8}" y="${(+yy+4).toFixed(1)}" text-anchor="end">${fmt(Math.round(v))}</text>`;}
+    s.labels.forEach((lb,i)=>{ if(lb){ const a=i===s.labels.length-1&&s.labels.length>1?"end":i===0&&s.labels.length>1?"start":"middle"; g+=`<text x="${x(i).toFixed(1)}" y="${H-8}" text-anchor="${a}">${lb}</text>`; } });
+    const pc=s.cur.map((v,i)=>[+x(i).toFixed(1),+y(v).toFixed(1)]), pp=s.prev.map((v,i)=>[+x(i).toFixed(1),+y(v).toFixed(1)]);
+    const line=smooth(pc), area=line+` L${pc[pc.length-1][0]},${T+h} L${pc[0][0]},${T+h} Z`;
+    const last=pc[pc.length-1];
+    g+=`<path d="${area}" fill="var(--chart-fill)" stroke="none"/>`;
+    g+=`<path d="${smooth(pp)}" fill="none" stroke="var(--chart-prev)" stroke-width="1.6" stroke-dasharray="5 5"/>`;
+    g+=`<path d="${line}" fill="none" stroke="var(--chart)" stroke-width="2.4" stroke-linecap="round"/>`;
+    g+=`<circle cx="${last[0]}" cy="${last[1]}" r="5" fill="var(--panel-solid)" stroke="var(--chart)" stroke-width="2.4"/>`;
+    const tag=fmt(s.cur[s.cur.length-1]), tw=tag.length*7.5+16, tx=Math.min(last[0]-tw/2,W-R-tw);
+    g+=`<rect x="${tx.toFixed(1)}" y="${(last[1]-34).toFixed(1)}" width="${tw}" height="22" rx="7" fill="var(--chart)"/><text x="${(tx+tw/2).toFixed(1)}" y="${(last[1]-19).toFixed(1)}" text-anchor="middle" style="fill:var(--panel-solid);font-weight:600">${tag}</text>`;
+    svg.innerHTML=g;
+  }
+  drawChart();
+})();
+</script>

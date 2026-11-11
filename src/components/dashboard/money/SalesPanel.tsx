@@ -109,8 +109,9 @@ export function SalesPanel({ nextPayout, showPayout, stripeConnected, notPaid, o
   /** The login sees payouts and the payouts load didn't fail. */
   showPayout: boolean;
   stripeConnected: boolean;
-  /** Not paid yet, the last 7 days (the overview's figure). */
-  notPaid: { cents: number; groups: number } | null;
+  /** Not paid yet, the last 7 days (the overview's figure — lib/analytics notPaid). STRESS-1110 #15: no-shows are
+   *  their own line — today's, with a card and a no-show fee to charge at midnight. */
+  notPaid: { cents: number; groups: number; noShowCents?: number; noShowGroups?: number } | null;
   onSeeUnpaid?: () => void;
 }) {
   const [range, setRange] = useState<DateRange | null>(null);
@@ -136,7 +137,7 @@ export function SalesPanel({ nextPayout, showPayout, stripeConnected, notPaid, o
           <div className="text-[13px] text-ink-soft">Next payout</div>
           {nextPayout ? <><div className="text-[22px] font-semibold text-ink tabular-nums">{usd(nextPayout.amountCents)}</div><div className="text-[12.5px] text-ink-muted">{fmtArrival(nextPayout.arrivalDate)}</div></>
             : !stripeConnected ? <div className="text-[13.5px] text-ink mt-1">Connect Stripe</div>
-            : <div className="text-[13.5px] text-ink-muted mt-1">{nextPayout === null ? 'None on its way' : 'Checking Stripe…'}</div>}
+            : <div className="text-[13.5px] text-ink-muted mt-1">{nextPayout === null ? 'None coming' : 'Checking Stripe…'}</div>}
         </div>
       )}
       {notPaid && (
@@ -144,6 +145,7 @@ export function SalesPanel({ nextPayout, showPayout, stripeConnected, notPaid, o
           <div className="text-[13px] text-ink-soft">Not paid yet · 7 days</div>
           <div className={'text-[22px] font-semibold tabular-nums ' + (notPaid.cents > 0 ? 'text-warn' : 'text-ink')}>{usd(notPaid.cents)}</div>
           {notPaid.groups > 0 && onSeeUnpaid && <button onClick={onSeeUnpaid} className="text-[12.5px] font-medium text-pine hover:underline underline-offset-4">{notPaid.groups} {notPaid.groups === 1 ? 'group' : 'groups'}</button>}
+          {!!notPaid.noShowGroups && <div className="text-[12.5px] text-ink-muted tabular-nums mt-1">No-shows · {notPaid.noShowGroups} · {usd(notPaid.noShowCents ?? 0)}</div>}
         </div>
       )}
     </>

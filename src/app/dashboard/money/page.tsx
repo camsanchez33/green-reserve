@@ -26,7 +26,7 @@ import { toast } from '@/components/dashboard/Toast';
 import { LedgerPanel } from '@/components/dashboard/money/LedgerPanel';
 import { StripeButton } from '@/components/dashboard/money/StripeButton';
 
-type Overview = { week: { from: string; to: string }; today: string; clock: string; paidCents: number; notPaidCents: number; notPaidGroups: number; declined: DeclinedCard[]; declinedTotal: number; stripeConnected: boolean };
+type Overview = { week: { from: string; to: string }; today: string; clock: string; paidCents: number; notPaidCents: number; notPaidGroups: number; noShowToChargeCents?: number; noShowToChargeGroups?: number; declined: DeclinedCard[]; declinedTotal: number; stripeConnected: boolean };
 const usd2 = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
 const fmtArrival = (iso: string) => new Date(iso).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
@@ -190,7 +190,7 @@ function MoneyPageInner() {
           {seesPayments && (
             <SalesPanel nextPayout={nextPayout} showPayout={seesPayouts && !payoutError}
               stripeConnected={payoutsConnected ?? (courseLoaded && course.stripeAccountActive)}
-              notPaid={overview ? { cents: overview.notPaidCents, groups: overview.notPaidGroups } : null}
+              notPaid={overview ? { cents: overview.notPaidCents, groups: overview.notPaidGroups, noShowCents: overview.noShowToChargeCents ?? 0, noShowGroups: overview.noShowToChargeGroups ?? 0 } : null}
               onSeeUnpaid={tabs.some(t => t.key === 'payments') ? () => setTab('payments', 'unpaid') : undefined} />
           )}
           {!seesPayments && seesPayouts && !payoutError && (
