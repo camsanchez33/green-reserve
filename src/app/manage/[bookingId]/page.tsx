@@ -4,10 +4,11 @@ import { partyFees } from '@/lib/member-rates';
 import { cartsFor, resizeCart } from '@/lib/cart-pricing';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { XCircle, Loader2, Clock, Users, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
 import { GolferExitLinks } from '@/components/GolferExitLinks';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
 import { StatusDot } from '@/components/ui/StatusDot';
+import { CARD } from '@/components/ui/Card';
 import { cancelNowWords } from '@/lib/cancel-policy';
 
 type BookingInfo = {
@@ -80,7 +81,7 @@ function PriceBreakdown({ greenFeeTotal, cartFeeTotal, rangeBallsTotal, accessFe
       <div className="flex justify-between text-ink-soft"><span>Green fee</span><span>{dollars(greenFeeTotal)}</span></div>
       {cartFeeTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Cart fee</span><span>{dollars(cartFeeTotal)}</span></div>}
       {rangeBallsTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Range balls</span><span>{dollars(rangeBallsTotal)}</span></div>}
-      <div className="flex justify-between text-ink-soft"><span>GreenReserve service fee ($1.50 × {players})</span><span>{dollars(accessFeeTotal)}</span></div>
+      <div className="flex justify-between gap-3 text-ink-soft"><span>GreenReserve service fee ($1.50 × {players})</span><span className="shrink-0">{dollars(accessFeeTotal)}</span></div>
       {shopChargeCents > 0 && <div className="flex justify-between text-ink-soft"><span>Pro-shop items added by the course</span><span>{dollars(shopChargeCents)}</span></div>}
       <div className="flex justify-between font-semibold text-ink text-base border-t border-line pt-2">
         <span>Total due at check-in</span><span>{dollars(totalAmount + shopChargeCents)}</span>
@@ -89,10 +90,10 @@ function PriceBreakdown({ greenFeeTotal, cartFeeTotal, rangeBallsTotal, accessFe
   );
 }
 
-// One of the three things you can do to a booking: an icon, what it is,
+// One of the three things you can do to a booking: what it is,
 // and a line of plain English about what happens if you tap it.
-function ActionCard({ icon, title, subtitle, onClick, tone = 'neutral' }: {
-  icon: React.ReactNode; title: string; subtitle: string;
+function ActionCard({ title, subtitle, onClick, tone = 'neutral' }: {
+  title: string; subtitle: string;
   onClick: () => void; tone?: 'neutral' | 'bad';
 }) {
   const bad = tone === 'bad';
@@ -103,12 +104,10 @@ function ActionCard({ icon, title, subtitle, onClick, tone = 'neutral' }: {
         bad ? 'border-bad/25 hover:bg-bad/5' : 'border-line hover:border-pine/30'
       }`}
     >
-      <span className={`mt-0.5 shrink-0 ${bad ? 'text-bad' : 'text-ink-muted'}`}>{icon}</span>
       <span className="min-w-0 flex-1">
         <span className={`block font-medium text-sm ${bad ? 'text-bad' : 'text-ink'}`}>{title}</span>
         <span className="block text-xs text-ink mt-0.5 leading-relaxed">{subtitle}</span>
       </span>
-      
     </button>
   );
 }
@@ -246,7 +245,7 @@ function ManagePageInner() {
   if (expired) {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-lg border border-line p-8 text-center">
+        <div className={`${CARD} max-w-md w-full p-8 text-center`}>
           
           <h1 className="font-semibold text-ink mb-2">This link has expired</h1>
           <p className="text-ink-soft text-sm">Booking links expire 24 hours after your tee time. Contact the course directly for assistance.</p>
@@ -258,7 +257,7 @@ function ManagePageInner() {
   if (errorMsg) {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-lg border border-line p-8 text-center">
+        <div className={`${CARD} max-w-md w-full p-8 text-center`}>
           
           <h1 className="font-semibold text-ink mb-2">Link not recognized</h1>
           <p className="text-ink-soft text-sm">{errorMsg}</p>
@@ -273,14 +272,14 @@ function ManagePageInner() {
   if (cancelled) {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
-        <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
+        <div className={`${CARD} max-w-lg w-full overflow-hidden`}>
           <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} photoUrl={info.heroImageUrl} logoUrl={info.logoUrl} />
           <div className="p-8 text-center">
             <h1 className="text-[30px] font-serif leading-none text-ink mb-3">Booking cancelled</h1>
             <p className="text-ink-soft text-sm mb-6">Your spot at {info.courseName} on {fmtDate(info.date)} has been cancelled.</p>
             {cancelResult?.feeCharged
               ? <div className="bg-warn/5 border border-warn/20 rounded-md p-4 mb-4 text-left"><p className="text-warn text-sm font-medium">Late-cancellation fee applied</p><p className="text-ink-soft text-xs mt-1">A {dollars(info.cancellationFeeTotal)} fee was charged — this cancellation came after the free-cancel window closed. Non-refundable.</p></div>
-              : <div className="bg-ok/5 border border-ok/20 rounded-md p-4 mb-4 text-left"><p className="text-ok text-sm font-medium">No charge — your card has been released</p></div>
+              : <div className="bg-ok/5 border border-ok/20 rounded-md p-4 mb-4 text-left"><p className="text-ok text-sm font-medium">{info.hasCard ? 'No charge — your card has been released' : 'No charge'}</p></div>
             }
             <p className="text-xs text-ink mb-6">A confirmation email has been sent to you.</p>
             <GolferExitLinks courseSlug={info.courseSlug} courseName={info.courseName} accent={info.brandColor} />
@@ -294,12 +293,12 @@ function ManagePageInner() {
   if (view === 'modified' && modifyResult) {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
-        <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
+        <div className={`${CARD} max-w-lg w-full overflow-hidden`}>
           <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} photoUrl={info.heroImageUrl} logoUrl={info.logoUrl} />
           <div className="p-8 text-center">
             <h1 className="text-[30px] font-serif leading-none text-ink mb-3">Booking updated</h1>
             <p className="text-ink-soft text-sm mb-6">A confirmation email has been sent with your updated details.</p>
-            <div className="bg-paper rounded-md border border-line p-4 mb-6 text-left space-y-2 text-sm">
+            <div className="bg-paper/70 rounded-md p-4 mb-6 text-left space-y-2 text-sm">
               <div className="flex justify-between"><span className="text-ink-muted">Date</span><span className="font-medium text-ink">{fmtDate(modifyResult.date)}</span></div>
               <div className="flex justify-between"><span className="text-ink-muted">Time</span><span className="font-medium text-ink">{fmtTime(modifyResult.time)}</span></div>
               <div className="flex justify-between"><span className="text-ink-muted">Players</span><span className="font-medium text-ink">{modifyResult.players}</span></div>
@@ -318,6 +317,9 @@ function ManagePageInner() {
   const alreadyCancelled = info.status === 'cancelled';
   const alreadyCompleted = info.status === 'completed';
   const canModify = !alreadyCancelled && !alreadyCompleted && info.windowOpen;
+  // Colour follows meaning: green only when cancelling now costs nothing — no hold or
+  // no-show fee already kept, and inside the window or at a course with no fee.
+  const cancelFree = !info.cancellationFeeCharged && !info.noShowKept && (info.windowOpen || info.cancellationFeeTotal <= 0);
 
   // R-GOLF-008: every cancel sentence comes from cancel-policy.ts and matches
   // what performCancellation() charges (amounts are cents).
@@ -341,9 +343,9 @@ function ManagePageInner() {
     const slotCarts = info.party?.cartUnitCents != null ? cartsFor(info.party.cartRiders ?? info.players) : info.players;
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4 py-10">
-        <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
+        <div className={`${CARD} max-w-lg w-full overflow-hidden`}>
           <div className="h-14 flex items-center px-6 gap-3" style={headerStyle}>
-            <button onClick={() => { setView('main'); setSelectedSlot(null); }} className="text-white/70 hover:text-white transition-colors"><ArrowLeft size={18} /></button>
+            <button onClick={() => { setView('main'); setSelectedSlot(null); }} aria-label="Back" className="text-white/70 hover:text-white transition-colors"><ArrowLeft size={18} /></button>
             <span className="text-white font-medium">Choose a new time</span>
           </div>
           <div className="p-6">
@@ -381,13 +383,13 @@ function ManagePageInner() {
             )}
 
             {selectedSlot && (
-              <div className="mt-4 border border-line rounded-md p-4 space-y-3">
+              <div className="mt-4 bg-paper/70 rounded-md p-4 space-y-3">
                 <p className="text-sm font-medium text-ink">Confirm new time: {fmtTime(selectedSlot.time)}</p>
                 <div className="text-sm space-y-1">
                   <div className="flex justify-between text-ink-soft"><span>New green fee</span><span>{dollars(selectedSlot.greenFee * info.players)}</span></div>
                   {info.cartFeeTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Cart fee</span><span>{dollars(selectedSlot.cartFee * slotCarts)}</span></div>}
                   {info.rangeBallsTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Range balls</span><span>{dollars(info.rangeBallsTotal)}</span></div>}
-                  <div className="flex justify-between text-ink-soft"><span>GreenReserve service fee ($1.50 × {info.players})</span><span>{dollars(info.accessFeeTotal)}</span></div>
+                  <div className="flex justify-between gap-3 text-ink-soft"><span>GreenReserve service fee ($1.50 × {info.players})</span><span className="shrink-0">{dollars(info.accessFeeTotal)}</span></div>
                   <div className="flex justify-between font-semibold text-ink border-t border-line pt-2">
                     <span>New total at check-in</span>
                     <span>{dollars(selectedSlot.greenFee * info.players + (info.cartFeeTotal > 0 ? selectedSlot.cartFee * slotCarts : 0) + info.rangeBallsTotal + info.accessFeeTotal)}</span>
@@ -430,9 +432,9 @@ function ManagePageInner() {
 
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4 py-10">
-        <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
+        <div className={`${CARD} max-w-lg w-full overflow-hidden`}>
           <div className="h-14 flex items-center px-6 gap-3" style={headerStyle}>
-            <button onClick={() => { setView('main'); setSelectedPlayers(info.players); }} className="text-white/70 hover:text-white transition-colors"><ArrowLeft size={18} /></button>
+            <button onClick={() => { setView('main'); setSelectedPlayers(info.players); }} aria-label="Back" className="text-white/70 hover:text-white transition-colors"><ArrowLeft size={18} /></button>
             <span className="text-white font-medium">Change party size</span>
           </div>
           <div className="p-6">
@@ -456,7 +458,7 @@ function ManagePageInner() {
             </div>
 
             {selectedPlayers !== info.players && (
-              <div className="border border-line rounded-md p-4 mb-4 space-y-2">
+              <div className="bg-paper/70 rounded-md p-4 mb-4 space-y-2">
                 <p className="text-[15px] font-semibold text-ink">Updated pricing</p>
                 <PriceBreakdown greenFeeTotal={newGreen} cartFeeTotal={newCart} rangeBallsTotal={info.rangeBallsTotal} accessFeeTotal={newAccess} totalAmount={newTotal} players={selectedPlayers} />
                 <p className="text-xs text-ink">
@@ -488,7 +490,7 @@ function ManagePageInner() {
   // ── Main view ─────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-paper flex items-center justify-center px-4 py-10">
-      <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
+      <div className={`${CARD} max-w-lg w-full overflow-hidden`}>
         <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} photoUrl={info.heroImageUrl} logoUrl={info.logoUrl} />
         <div className="p-8">
           <h1 className="text-[30px] font-serif leading-none text-ink mb-2">
@@ -499,7 +501,7 @@ function ManagePageInner() {
           </p>
 
           {/* Details */}
-          <div className="bg-paper rounded-md border border-line p-5 mb-5 space-y-3">
+          <div className="bg-paper/70 rounded-md p-5 mb-5 space-y-3">
             <div className="flex items-center gap-2.5 text-sm"><span className="text-ink font-medium">{fmtDate(info.date)}</span></div>
             <div className="flex items-center gap-2.5 text-sm"><span className="text-ink font-medium">{fmtTime(info.time)} &middot; {info.productLabel ? `${info.productLabel} · ` : ''}{info.holes} holes</span></div>
             <div className="flex items-center gap-2.5 text-sm"><span className="text-ink font-medium">{info.players} player{info.players !== 1 ? 's' : ''}</span></div>
@@ -512,7 +514,7 @@ function ManagePageInner() {
 
           {/* Policy */}
           {!alreadyCancelled && !alreadyCompleted && (
-            <div className={`rounded-md border p-4 mb-5 text-sm ${info.windowOpen && !info.teedOff ? 'bg-ok/5 border-ok/20 text-ok' : 'bg-warn/5 border-warn/20 text-warn'}`}>
+            <div className={`rounded-md border p-4 mb-5 text-sm ${!info.teedOff && cancelFree ? 'bg-ok/5 border-ok/20 text-ok' : 'bg-warn/5 border-warn/20 text-warn'}`}>
               {policyText}
             </div>
           )}
@@ -525,7 +527,6 @@ function ManagePageInner() {
             <div className="space-y-2.5 mb-4">
               {canModify && (
                 <ActionCard
-                  icon={<Clock size={16} />}
                   title="Change time"
                   subtitle="Move to another tee time on the same day."
                   onClick={openChangeTime}
@@ -533,7 +534,6 @@ function ManagePageInner() {
               )}
               {canModify && (
                 <ActionCard
-                  icon={<Users size={16} />}
                   title="Change players"
                   subtitle="Add or drop players — your total updates to match."
                   onClick={() => { setSelectedPlayers(info.players); setView('change-players'); }}
@@ -542,7 +542,6 @@ function ManagePageInner() {
               {!info.teedOff && (
                 <ActionCard
                   tone="bad"
-                  icon={<XCircle size={16} />}
                   title="Cancel"
                   subtitle={cancelSubtitle}
                   onClick={() => setView('cancel-confirm')}
@@ -552,26 +551,29 @@ function ManagePageInner() {
           )}
 
           {view === 'cancel-confirm' && (
-            <div className={`rounded-md border p-5 space-y-4 mt-4 ${info.windowOpen ? 'border-ok/30 bg-ok/5' : 'border-bad/30 bg-bad/5'}`}>
+            <div className={`rounded-md border p-5 space-y-4 mt-4 ${cancelFree ? 'border-ok/30 bg-ok/5' : 'border-bad/30 bg-bad/5'}`}>
               <div className="flex items-start gap-2">
-                <StatusDot status="ok" />
+                <StatusDot status={cancelFree ? 'ok' : 'bad'} />
                 <p className="text-sm text-ink">{confirmCancelMsg}</p>
               </div>
               {cancelError && <p className="text-bad text-xs">{cancelError}</p>}
               <div className="flex gap-3">
-                <button onClick={() => setView('main')} className="flex-1 py-2.5 rounded-md border border-line text-ink-soft font-medium text-sm hover:bg-paper transition-colors">Keep Booking</button>
+                <button onClick={() => setView('main')} className="flex-1 py-2.5 rounded-md border border-line text-ink-soft font-medium text-sm hover:bg-paper transition-colors">Keep booking</button>
                 <button
                   onClick={handleCancel}
                   disabled={cancelling}
                   className="flex-1 py-2.5 rounded-md bg-bad text-white font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-60 flex items-center justify-center gap-2"
                 >
-                  {cancelling ? <><Loader2 size={14} className="animate-spin" /> Cancelling…</> : 'Yes, Cancel'}
+                  {cancelling ? <><Loader2 size={14} className="animate-spin" /> Cancelling…</> : 'Yes, cancel'}
                 </button>
               </div>
             </div>
           )}
 
-          <p className="text-xs text-ink-muted text-center mt-5">Booking ID: {info.bookingId}</p>
+          <Link href={`/courses/${info.courseSlug}`} className="block text-center text-sm text-ink-soft hover:text-ink transition-colors mt-5">
+            Back to {info.courseName}
+          </Link>
+          <p className="text-xs text-ink-muted text-center mt-3">Booking #{info.bookingId.slice(0, 8).toUpperCase()}</p>
         </div>
       </div>
     </div>
