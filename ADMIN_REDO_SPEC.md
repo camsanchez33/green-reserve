@@ -46,3 +46,12 @@ attention side by side.
 - Test courses never count in platform numbers (TEST-2).
 - There are no course subscriptions today; no subscription or MRR figures until there are.
 - Admin areas (AW-11) and the owner-only doors stay; every new page gets an area and `areaGate`.
+
+## Overview review (Cam 2026-11-11, on the built page)
+- "Very nice" on the look. The top bar's "A system needs attention" line goes: each broken system is its own row in
+  Needs attention, linking to the fix.
+- Cards: courses live, revenue, onboarding pipeline, net profit, EXPENSES (new), and FEES MISSED (service fees not
+  collected because golfers paid cash at the counter — PAY-2's counterFeesUncollected). Players and golfers come off.
+- Quick actions: removed.
+- Later: an AI assistant in the admin, like the course dashboard's — read-only, never shares information outside
+  GreenReserve. Its own mockup and decisions when we get there.
