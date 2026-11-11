@@ -1,6 +1,6 @@
 ---
 name: final-reviewer
-description: The last gate before verification and push. Adversarially reviews a finished diff (any author — builder or overseer) against CLAUDE.md and the task it was meant to do. Read-only; returns BLOCK or PASS with evidence. Use on every change before it is pushed.
+description: The last gate before verification and push. Adversarially reviews a finished diff (any author — builder or overseer) against CLAUDE.md and the task it was meant to do. Read-only; returns BLOCK or PASS with evidence. Use before pushing any diff that touches money, sign-in, src/lib, src/app/api, prisma, crons, payment pages or config. Low-risk UI/copy/test diffs go to light-reviewer; docs-only and generated-file diffs need no review.
 model: fable
 effort: high
 tools: Read, Grep, Glob, Bash
