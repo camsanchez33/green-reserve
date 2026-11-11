@@ -30,6 +30,13 @@ check('the strip sums green fees only', demo.includes('courseShare(d, paid)') &&
 check('the card leaves the booking fee off unpaid and counter-paid groups', demo.includes("g.done && g.src === 'online' ? roundTotal(d, g.n) : g.n * d.rate"));
 check('the header says closed before Full, as the real card', page.includes("`${panelSlot.seatsClosed} closed`") && demo.includes('closed > 0 ? `${closed} closed`'));
 check('closed seats cut what the golfer phone offers', demo.includes('const free = (r: Row) => CAP - booked(r) - (r.closed ?? 0);') && demo.includes('free(r) >= st.n'));
+// Cam 2026-11-11: no GreenReserve fee sentence on the homepage (the hero's "Free for your course." stays); the pro
+// shop has its own section, in the register's words; the demo and screenshot course is "GreenReserve Test Course".
+const homeCopy = readFileSync('src/app/HomeContent.tsx', 'utf8');
+const seed = readFileSync('scripts/screenshots/seed.ts', 'utf8');
+check('the homepage carries no fee sentence', !homeCopy.includes('$1.50') && !homeCopy.includes('per player on each online booking') && homeCopy.includes('Free for your course.'));
+check('the pro shop has its own section with its own screenshot', homeCopy.includes("shot: 'shop'") && ['Take cash', 'Close out'].every(l => readFileSync('src/app/dashboard/shop/page.tsx', 'utf8').includes(l)));
+check('the demo and the screenshot seed are the GreenReserve Test Course', demo.includes('GreenReserve Test Course') && seed.includes("name: 'GreenReserve Test Course'") && !demo.includes('Hollow') && !/name: 'Hollow/.test(seed));
 // Labels the product no longer has stay out of the demo.
 for (const gone of ['Take cash · check in', 'Close to new bookings', 'Open to anyone', 'tee times</span>', 'No Card Required']) check(`the demo no longer says "${gone}"`, !demo.includes(gone));
 

@@ -25,6 +25,7 @@ const DOES = [
   'A booking page with your course’s name, colors and photos, linked from your own website',
   'Online, phone and walk-in bookings on one sheet, with your public, resident and member rates',
   'Payments at the counter or on the golfer’s own phone, with a card on file for late-cancel and no-show fees',
+  'A pro shop register for walk-up sales, with stock counts and an end-of-day close-out',
   'Staff logins, with permissions you set for each person',
   'An AI assistant that answers questions about your day and drafts changes for you to confirm',
   'Analytics for every day, and at the start of each month a written review of the month before',
@@ -42,6 +43,14 @@ const FEATURES: { h: string; p: string; shot: string; device: 'laptop' | 'phone'
     p: 'Revenue, how full the sheet was and what each round brought in, against the period before, in plain words. At the start of every month you get a written review of the month before, built only from your own numbers.',
     shot: 'analytics', device: 'laptop',
     alt: 'The analytics page: what to look at, with a button beside each, and the monthly review of the month before',
+  },
+  {
+    // Cam 2026-11-11: the pro shop gets its own section; its words are the register's own (Take cash, Card reader,
+    // Text a pay link, Stock, Close out on /dashboard/shop).
+    h: 'Your pro shop, on the same system.',
+    p: 'Ring up range balls, a sleeve of balls or a hot dog at the register. Take cash, use a Stripe card reader or text the customer a pay link. Count stock if you want to, and close out the drawer at the end of the day.',
+    shot: 'shop', device: 'laptop',
+    alt: 'The pro shop register: a tile for each item with its price and how many are left, sorted into accessories, apparel, balls, range and the snack bar, beside an empty sale',
   },
   {
     h: 'Paid at the counter or on their phone.',
@@ -82,8 +91,6 @@ export default function HomeContent() {
             <ul className={s.does}>
               {DOES.map(d => <li key={d}>{d}</li>)}
             </ul>
-            {/* W2-H1 (Cam 2026-10-19): the hero only says free; the golfer fee is disclosed here, once (LQ-2 wording). */}
-            <p className={s.fee}><b>Free for your course.</b> No setup fee, no monthly fee, no commission on your green fees. Golfers pay $1.50 per player on each online booking, added to your price.</p>
           </div>
           <div className={s.cards}>
             <a href="#see" className={s.card}>

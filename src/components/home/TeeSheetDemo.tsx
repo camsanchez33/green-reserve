@@ -136,7 +136,7 @@ function TeeSheet() {
   return (
     <div className={s.app}>
       <div className={s.rail} aria-hidden="true">
-        <div className={s.railCourse}><i style={{ background: st.acc }}>HC</i><span><b>Hollow Creek Golf Club</b><small>Public course</small></span></div>
+        <div className={s.railCourse}><i style={{ background: st.acc }}>GT</i><span><b>GreenReserve Test Course</b><small>Public course</small></span></div>
         {RAIL.map((g, gi) => (
           <div key={gi} className={s.railGrp}>
             {g.group && <small>{g.group}</small>}
@@ -145,7 +145,7 @@ function TeeSheet() {
         ))}
       </div>
       <div className={s.main}>
-        <div className={s.mName} aria-hidden="true"><i style={{ background: st.acc }}>HC</i>Hollow Creek Golf Club</div>
+        <div className={s.mName} aria-hidden="true"><i style={{ background: st.acc }}>GT</i>GreenReserve Test Course</div>
         <div className={s.sheetTitle}>{d.long}</div>
         <div className={s.strip}>
           <div><small>Players</small><span><b>{players}</b> of {spots}</span><small>spots booked</small></div>
@@ -293,7 +293,7 @@ function GolferPhone() {
     <div className={s.phone} style={{ '--acc': st.acc } as React.CSSProperties}>
       <div className={s.phHead}>
         <Image src="/home/course-hollow-creek.jpg" alt="" fill sizes="300px" className={s.phImg} />
-        <div><b>Hollow Creek Golf Club</b><span>Suffern, NY · 18 holes</span></div>
+        <div><b>GreenReserve Test Course</b><span>Suffern, NY · 18 holes</span></div>
       </div>
 
       {(st.step === 'pick' || (st.step === 'confirm' && !sel)) && <>
@@ -356,7 +356,7 @@ function GolferPhone() {
           <span className={s.ok}>You&apos;re all set</span>
           <p>Your spot is reserved — no card required. Pay at the course or use the check-in link in your confirmation email.</p>
           {st.sel && <small>Check in at {fmt(st.sel)} and pay {money(total)}</small>}
-          <button type="button" className={s.again} onClick={() => update(x => ({ ...x, step: 'pick', sel: null }))}>Back to Hollow Creek Golf Club</button>
+          <button type="button" className={s.again} onClick={() => update(x => ({ ...x, step: 'pick', sel: null }))}>Back to GreenReserve Test Course</button>
         </div>
       )}
     </div>

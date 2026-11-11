@@ -14,7 +14,9 @@ import { logAgreementAccepted } from '../../src/lib/course-timeline';
 const url = process.env.DATABASE_URL ?? '';
 if (!/@(localhost|127\.0\.0\.1)[:/]/.test(url)) { console.error('Refusing: the screenshot seed only runs against a local database.'); process.exit(1); }
 
-const SLUG = 'hollow-brook-demo';
+const SLUG = 'greenreserve-test-course';
+// Cam 2026-11-11: the screenshot course is "GreenReserve Test Course" — never a name a real club could have.
+const OLD_SLUGS = ['hollow-brook-demo'];
 const TZ = 'America/New_York';
 // Realistic, varied, not famous (HOMEPAGE_SPEC: no Smith/Johnson/celebrities).
 const FIRST = ['Marcus', 'Priya', 'Tom', 'Dana', 'Luis', 'Grace', 'Kevin', 'Erin', 'Sam', 'Nora', 'Jamal', 'Hannah', 'Owen', 'Rosa', 'Brian', 'Mei',
@@ -35,7 +37,8 @@ const pad = (n: number) => String(n).padStart(2, '0');
 const addDays = (d: string, n: number) => { const t = new Date(`${d}T12:00:00Z`); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); };
 
 async function main() {
-  const old = await prisma.course.findUnique({ where: { slug: SLUG }, select: { id: true, operatorId: true } });
+  for (const slug of [SLUG, ...OLD_SLUGS]) {
+  const old = await prisma.course.findUnique({ where: { slug }, select: { id: true, operatorId: true } });
   if (old) {
     await prisma.monthlyReview.deleteMany({ where: { courseId: old.id } });
     await prisma.agreementAcceptance.deleteMany({ where: { courseId: old.id } });
@@ -44,10 +47,11 @@ async function main() {
     await prisma.teeTime.deleteMany({ where: { courseId: old.id } });
     await prisma.course.delete({ where: { id: old.id } });
   }
+  }
   const op = await prisma.courseOperator.upsert({ where: { email: 'shots@greenreserve.test' }, update: { emailVerified: true, onboardingStep: 4 }, create: { name: 'Dana Whitfield', email: 'shots@greenreserve.test', password: 'x', emailVerified: true, onboardingStep: 4 } });
   const today = todayIn(TZ);
   const course = await prisma.course.create({ data: {
-    name: 'Hollow Brook Golf Club', slug: SLUG, operatorId: op.id, address: '400 Brook Road', city: 'Warwick', state: 'NY', zipCode: '10990',
+    name: 'GreenReserve Test Course', slug: SLUG, operatorId: op.id, address: '400 Brook Road', city: 'Warwick', state: 'NY', zipCode: '10990',
     holes: 18, liveStatus: 'live', active: true, timezone: TZ, brandColor: '#24513B', stripeAccountId: 'acct_shots', stripeAccountActive: true,
     firstWentLiveAt: new Date(`${addDays(today, -95)}T12:00:00Z`),
   } });
@@ -85,6 +89,19 @@ async function main() {
         noShowAt: noShow ? new Date(`${date}T${time}:00Z`) : null,
       } });
     }
+  }
+
+  // The pro shop: a register opened this morning and the shelf it sells from (the homepage's pro shop shot).
+  await prisma.registerOpen.create({ data: { courseId: course.id, day: today, seq: 0, startingCashCents: 20000, openedBy: 'Dana Whitfield', kind: 'open' } });
+  const SHELF: [string, string, number, number | null][] = [
+    ['Range balls, small bucket', 'Range', 600, null], ['Range balls, large bucket', 'Range', 1000, null],
+    ['Titleist Pro V1, sleeve', 'Balls', 1800, 36], ['Callaway Supersoft, sleeve', 'Balls', 1000, 48],
+    ['Glove', 'Accessories', 1600, 22], ['Tees, bag of 50', 'Accessories', 400, 60], ['Ball marker', 'Accessories', 500, 30],
+    ['Logo cap', 'Apparel', 2800, 14], ['Logo polo', 'Apparel', 5500, 9],
+    ['Water', 'Snack bar', 250, null], ['Sports drink', 'Snack bar', 350, null], ['Hot dog', 'Snack bar', 500, null],
+  ];
+  for (const [i, [name, category, priceCents, stockCount]] of SHELF.entries()) {
+    await prisma.shopItem.create({ data: { courseId: course.id, name, category, priceCents, stockCount, sortOrder: i } });
   }
 
   // The inquiry it came from (the onboarding timeline, which the dashboard reads for the agreement, hangs off it).

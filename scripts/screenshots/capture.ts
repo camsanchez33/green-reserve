@@ -26,7 +26,7 @@ import { runProposeTool } from '../../src/lib/birdie/proposals';
 
 const BASE = process.env.SHOTS_URL ?? 'http://localhost:3124';
 const OUT = path.join(process.cwd(), 'public/home/shots');
-const SLUG = 'hollow-brook-demo';
+const SLUG = 'greenreserve-test-course';
 const TZ = 'America/New_York';
 /** The seed plays today's rounds before 10:00; the browser's clock is fixed just after. */
 const CLOCK = '10:05';
@@ -55,8 +55,11 @@ async function main() {
   const phoneGroups = unpaid.filter(b => b.source !== 'online');
   if (phoneGroups.length < 2) throw new Error('The seed left too few unpaid phone groups this afternoon — reseed.');
   const payFor = phoneGroups[0];
-  const checkInToken = payFor.checkInToken ?? randomUUID();
-  if (!payFor.checkInToken) await prisma.booking.update({ where: { id: payFor.id }, data: { checkInToken } });
+  // The pay shot is an ONLINE booking, so it shows GreenReserve's $1.50 a player (Cam 2026-11-11); a counter booking carries none.
+  const payOnline = unpaid.find(b => b.source === 'online' && b.accessFeeTotal > 0);
+  if (!payOnline) throw new Error('The seed left no unpaid online group this afternoon — reseed.');
+  const payOnlineToken = payOnline.checkInToken ?? randomUUID();
+  if (!payOnline.checkInToken) await prisma.booking.update({ where: { id: payOnline.id }, data: { checkInToken: payOnlineToken } });
 
   const b = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
   const laptop = async () => {
@@ -159,10 +162,21 @@ async function main() {
     await ctx.close();
   }
 
+  // ── The pro shop register (Cam 2026-11-11: the homepage's pro shop section) ──
+  {
+    const ctx = await laptop(); const p = await ctx.newPage();
+    await p.goto(`${BASE}/dashboard/shop`, { waitUntil: 'load', timeout: 240000 });
+    await p.getByText('Logo cap').first().waitFor({ timeout: 120000 });
+    await clean(p);
+    await p.waitForTimeout(600);
+    await shot(p, 'shop');
+    await ctx.close();
+  }
+
   // ── The golfer pays on their phone ──
   {
     const ctx = await phone(); const p = await ctx.newPage();
-    await p.goto(`${BASE}/checkin/${payFor.id}?token=${checkInToken}`, { waitUntil: 'load', timeout: 240000 });
+    await p.goto(`${BASE}/checkin/${payOnline.id}?token=${payOnlineToken}`, { waitUntil: 'load', timeout: 240000 });
     await p.getByText(/pay \$/i).first().waitFor({ timeout: 120000 });
     await clean(p);
     await p.waitForTimeout(1500);
