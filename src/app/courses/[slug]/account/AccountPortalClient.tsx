@@ -6,6 +6,7 @@ import { Loader2, ArrowLeft, Receipt } from 'lucide-react';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { CoursePacks } from '@/components/CoursePacks';
 import { CourseJoin } from '@/components/CourseJoin';
+import { CARD } from '@/components/ui/Card';
 
 type PortalBooking = {
   id: string; date: string; time: string; holes?: number;
@@ -32,8 +33,8 @@ function dollars(cents: number) { return `$${(cents / 100).toFixed(2)}`; }
 
 const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 
-function SignIn({ courseName, courseSlug, accent, prefillEmail, onSignedIn }: {
-  courseName: string; courseSlug: string; accent: string; prefillEmail: string; onSignedIn: () => void;
+function SignIn({ courseName, courseSlug, accent, logoUrl, prefillEmail, onSignedIn }: {
+  courseName: string; courseSlug: string; accent: string; logoUrl?: string; prefillEmail: string; onSignedIn: () => void;
 }) {
   const [identifier, setIdentifier] = useState(prefillEmail);
   const [step, setStep] = useState<'identifier' | 'code'>('identifier');
@@ -76,10 +77,10 @@ function SignIn({ courseName, courseSlug, accent, prefillEmail, onSignedIn }: {
 
   return (
     <div className="min-h-screen bg-paper flex items-center justify-center px-4">
-      <div className="max-w-sm w-full bg-white rounded-lg border border-line p-8">
-        <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-5" style={{ backgroundColor: accent + '14', color: accent }}>
-          
-        </div>
+      <div className={`${CARD} max-w-sm w-full p-8`}>
+        {/* PERS-1: the course's own logo when it has one; no empty tile otherwise. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {logoUrl && <img src={logoUrl} alt="" className="h-12 w-12 rounded-md object-contain mb-5" />}
         <h1 className="text-[20px] font-serif font-semibold text-ink mb-1">Sign in to {courseName}</h1>
         <p className="text-sm text-ink-soft mb-6">View and manage your tee times here.</p>
 
@@ -175,9 +176,9 @@ function PortalInner({ params }: { params: Promise<{ slug: string }> }) {
   if (error) {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
-        <div className="max-w-sm w-full bg-white rounded-lg border border-line p-8 text-center">
-          
-          <p className="text-ink-soft text-sm">{error}</p>
+        <div className={`${CARD} max-w-sm w-full p-8 text-center`}>
+          <p className="text-ink-soft text-sm mb-4">{error}</p>
+          <button onClick={() => { setError(''); load(); }} className="text-sm font-medium text-ink underline underline-offset-2">Try again</button>
         </div>
       </div>
     );
@@ -189,6 +190,7 @@ function PortalInner({ params }: { params: Promise<{ slug: string }> }) {
         courseName={publicCourse?.name || 'your course'}
         courseSlug={slug}
         accent={publicCourse?.brand_color || '#173B2A'}
+        logoUrl={publicCourse?.logo_url}
         prefillEmail={prefillEmail}
         onSignedIn={load}
       />
