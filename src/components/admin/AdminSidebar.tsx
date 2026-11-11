@@ -1,9 +1,10 @@
 'use client';
 import { SUPPORT_PLUS, MANAGER_PLUS, VIEWER_PLUS, OWNER_ONLY } from '@/lib/admin-roles';
 import Link from 'next/link';
-import Image from 'next/image';
-import { StatusDot } from '@/components/ui/StatusDot';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { usePathname } from 'next/navigation';
+import g from '@/app/admin/admin-glass.module.css';
+import { setAdminTheme, currentAdminTheme, type AdminTheme } from '@/components/admin/admin-theme';
 import CommandPalette from '@/components/admin/CommandPalette';
 import { useAdminSession } from '@/lib/admin-session-context';
 import type { AdminArea } from '@/lib/admin-areas';
@@ -51,6 +52,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
         setProblems(Number(d.openProblems) || 0);
         if (typeof d.systemsOk === 'boolean') setSystemsOk(d.systemsOk);
       })
+      // The badges are hints, not the work: a failed fetch leaves them at 0 and every page still loads its own data.
       .catch(() => {});
     return () => { cancelled = true; };
   }, [role, pendingInquiries, unreadMessages]);
@@ -80,158 +82,165 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
     }
   }
 
-  // MP-2c: the nav is a map of the company, and it was showing every role a
-  // door it could not open. Not offering the link is the root fix; the pages
-  // still handle 403 for anyone who types the URL. `minRole` mirrors the API
-  // gate on each surface. Home and My profile are open to every role.
-  //
-  // ADMIN-C (Cam 2026-10-22, mockup C "Clean hub", Stripe as the reference):
-  // a white left menu with one outline icon per section, the work first
-  // (Home, Problems, Pipeline, Courses, Golfers, Money, Messages), the company
-  // after. Course groups sit under Courses and Announcements under Messages.
-  // Activity is retired from the menu (the course timelines replaced it) and
-  // Manual build lives inside Pipeline.
-  type NavItem = { key: AdminNavKey; label: string; href: string; minRole?: string[]; sub?: boolean; area?: AdminArea };
-  type NavGroup = { label: string | null; items: NavItem[] };
+  // ADMIN-REDO (Cam 2026-11-11, ADMIN_REDO_SPEC.md "Navigation"): Workspace ·
+  // Financials · Management. Pages that don't exist yet show as "Soon" — never a
+  // dead link. Every page that existed keeps a door (Goals, Team, Audit,
+  // Security, Systems and Company docs sit under Settings). `minRole` + `area`
+  // mirror each page's API gate (MP-2c, AW-11); the routes are the control.
+  type NavItem = { key: AdminNavKey | null; label: string; href?: string; minRole?: string[]; sub?: boolean; area?: AdminArea };
+  type NavGroup = { label: string; items: NavItem[] };
 
   const allGroups: NavGroup[] = [
-    { label: null, items: [
-      { key: 'overview', label: 'Home', href: '/admin' },
-      { key: 'problems', label: 'Problems', href: '/admin/problems', minRole: SUPPORT_PLUS, area: 'problems' },
-      { key: 'inquiries', label: 'Pipeline', href: '/admin/inquiries', minRole: VIEWER_PLUS, area: 'pipeline' },
-      { key: 'courses', label: 'Courses', href: '/admin/courses', minRole: VIEWER_PLUS, area: 'courses' },
+    { label: 'Workspace', items: [
+      { key: 'overview', label: 'Overview', href: '/admin' },
+      { key: 'courses', label: 'Golf courses', href: '/admin/courses', minRole: VIEWER_PLUS, area: 'courses' },
       { key: 'groups', label: 'Course groups', href: '/admin/groups', minRole: SUPPORT_PLUS, sub: true, area: 'courses' },
-      { key: 'golfers', label: 'Golfers', href: '/admin/golfers', minRole: SUPPORT_PLUS, area: 'golfers' },
-      { key: 'revenue', label: 'Money', href: '/admin/revenue', minRole: SUPPORT_PLUS, area: 'money' },
-      { key: 'messages', label: 'Messages', href: '/admin/messages', minRole: SUPPORT_PLUS, area: 'messages' },
-      { key: 'announcements', label: 'Announcements', href: '/admin/announcements', minRole: SUPPORT_PLUS, sub: true, area: 'messages' },
+      { key: 'inquiries', label: 'Onboarding', href: '/admin/inquiries', minRole: VIEWER_PLUS, area: 'pipeline' },
+      { key: null, label: 'Bookings' },
+      { key: 'golfers', label: 'Users & golfers', href: '/admin/golfers', minRole: SUPPORT_PLUS, area: 'golfers' },
     ] },
-    { label: 'Company', items: [
-      { key: 'goals', label: 'Goals', href: '/admin/goals', minRole: SUPPORT_PLUS, area: 'company' },
-      { key: 'employees', label: 'Team', href: '/admin/employees', minRole: MANAGER_PLUS, area: 'company' },
-      { key: 'audit', label: 'Audit', href: '/admin/audit', minRole: OWNER_ONLY },
-      { key: 'security', label: 'Security', href: '/admin/security', minRole: OWNER_ONLY },
-      { key: 'system', label: 'Systems', href: '/admin/system', minRole: MANAGER_PLUS, area: 'company' },
-      { key: 'company', label: 'Company docs', href: '/admin/company-documents', minRole: OWNER_ONLY },
+    { label: 'Financials', items: [
+      { key: 'revenue', label: 'Revenue & payments', href: '/admin/revenue', minRole: SUPPORT_PLUS, area: 'money' },
+      { key: null, label: 'Expenses' },
+      { key: null, label: 'Financial analytics' },
+    ] },
+    { label: 'Management', items: [
+      { key: null, label: 'Business analytics' },
+      { key: 'problems', label: 'Support & issues', href: '/admin/problems', minRole: SUPPORT_PLUS, area: 'problems' },
+      { key: 'messages', label: 'Messages', href: '/admin/messages', minRole: SUPPORT_PLUS, sub: true, area: 'messages' },
+      { key: 'announcements', label: 'Announcements', href: '/admin/announcements', minRole: SUPPORT_PLUS, sub: true, area: 'messages' },
+      { key: 'system', label: 'Platform activity', href: '/admin/system', minRole: MANAGER_PLUS, area: 'company' },
+      // My profile is open to every login, so it sits outside the gate tables' pattern (admin-nav-test).
+      { label: 'Settings', key: 'profile', href: '/admin/profile' },
+      { key: 'employees', label: 'Team', href: '/admin/employees', minRole: MANAGER_PLUS, sub: true, area: 'company' },
+      { key: 'goals', label: 'Goals', href: '/admin/goals', minRole: SUPPORT_PLUS, sub: true, area: 'company' },
+      { key: 'audit', label: 'Audit', href: '/admin/audit', minRole: OWNER_ONLY, sub: true },
+      { key: 'security', label: 'Security', href: '/admin/security', minRole: OWNER_ONLY, sub: true },
+      { key: 'company', label: 'Company docs', href: '/admin/company-documents', minRole: OWNER_ONLY, sub: true },
     ] },
   ];
 
   // AW-11: the role says how much; the person's areas say where. Both must allow it (the routes check both too).
-  const canSee = (item: NavItem) => (!item.minRole || item.minRole.includes(role)) && (!item.area || areas.includes(item.area));
-  const groups = allGroups.map(g => ({ ...g, items: g.items.filter(canSee) })).filter(g => g.items.length > 0);
+  const canSee = (minRole?: string[], area?: AdminArea) => (!minRole || minRole.includes(role)) && (!area || areas.includes(area));
+  const groups = allGroups.map(grp => ({ ...grp, items: grp.items.filter(i => !i.href || canSee(i.minRole, i.area)) }))
+    .filter(grp => grp.items.some(i => i.href));
 
-  const count = (n: number, tone: string, title?: string) => n > 0 ? (
-    <span className={`${tone} text-[12px] font-semibold tabular-nums shrink-0`} title={title}>{n > 99 ? '99+' : n}</span>
+  const count = (n: number, bad: boolean, title: string) => n > 0 ? (
+    <span className={`${g.count} ${bad ? g.countBad : ''}`} title={title}>{n > 99 ? '99+' : n}</span>
   ) : undefined;
   const badges: Partial<Record<AdminNavKey, React.ReactNode>> = {
-    problems: count(problems, 'text-bad', `${problems} open problem${problems === 1 ? '' : 's'}`),
-    inquiries: count(pending, 'text-warn', `${pending} new inquir${pending === 1 ? 'y' : 'ies'}`),
+    problems: count(problems, true, `${problems} open problem${problems === 1 ? '' : 's'}`),
+    inquiries: count(pending, false, `${pending} new inquir${pending === 1 ? 'y' : 'ies'}`),
     // MP-6a: failed charges and open chargebacks — money that should exist and does not.
-    revenue: count(moneyProblems, 'text-bad', `${moneyProblems} money problem${moneyProblems === 1 ? '' : 's'} — failed charges and open chargebacks`),
-    messages: count(unread, 'text-ink-muted', `${unread} unread`),
+    revenue: count(moneyProblems, true, `${moneyProblems} money problem${moneyProblems === 1 ? '' : 's'} — failed charges and open chargebacks`),
+    messages: count(unread, false, `${unread} unread`),
   };
 
-  function NavLink({ item }: { item: NavItem }) {
-    const isActive = active === item.key;
-    return (
-      // MP-8a: a real link — middle-click and cmd-click open a tab, the
-      // browser shows the destination, and the nav works before hydration.
-      <Link
-        href={item.href}
-        aria-current={isActive ? 'page' : undefined}
-        className={`w-full flex items-center gap-2.5 rounded-md transition-colors ${item.sub ? 'pl-9 pr-2.5 py-1.5 text-[13px]' : 'px-2.5 py-2 text-[14px]'} ${
-          isActive ? 'bg-pine/[0.07] text-pine font-semibold' : 'text-ink-soft hover:text-ink hover:bg-paper'
-        }`}
-      >
-        {!item.sub && <NavIcon k={item.key} />}
-        <span className="flex-1 truncate">{item.label}</span>
-        {badges[item.key]}
-      </Link>
-    );
-  }
+  // Phone: the rail slides in from the Menu button and closes on navigation.
+  const [railOpen, setRailOpen] = useState(false);
+  const pathname = usePathname();
+  useEffect(() => { setRailOpen(false); }, [pathname]);
 
-  const profile: NavItem = { key: 'profile', label: 'My profile', href: '/admin/profile' };
+  const [theme, setTheme] = useState<AdminTheme>('light');
+  useEffect(() => { setTheme(currentAdminTheme()); }, []);
+  const pickTheme = (t: AdminTheme) => { setAdminTheme(t); setTheme(t); };
+
+  // Quick actions (ADMIN_REDO_SPEC): only doors to pages that exist, and only the ones this login can open.
+  const quick = [
+    { label: 'Add a course', href: '/admin/create', ok: canSee(MANAGER_PLUS, 'pipeline') },
+    { label: 'Add a team member', href: '/admin/employees', ok: canSee(MANAGER_PLUS, 'company') },
+    { label: 'Record an expense', href: '/admin/revenue', ok: canSee(OWNER_ONLY) },
+    { label: 'View alerts', href: '/admin/problems', ok: canSee(SUPPORT_PLUS, 'problems') },
+    { label: 'Export transactions', href: '/admin/revenue', ok: canSee(OWNER_ONLY) },
+  ].filter(q => q.ok);
+  const [qOpen, setQOpen] = useState(false);
+  const qRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!qOpen) return;
+    const close = (e: MouseEvent | KeyboardEvent) => {
+      if (e instanceof KeyboardEvent ? e.key === 'Escape' : !qRef.current?.contains(e.target as Node)) setQOpen(false);
+    };
+    document.addEventListener('mousedown', close); document.addEventListener('keydown', close);
+    return () => { document.removeEventListener('mousedown', close); document.removeEventListener('keydown', close); };
+  }, [qOpen]);
+  const seesProblems = canSee(SUPPORT_PLUS, 'problems');
 
   return (
     <>
     <CommandPalette/>
-    <div className="fixed left-0 top-0 h-full w-60 bg-white border-r border-line flex flex-col z-20">
-      <Link href="/admin" className="flex items-center px-5 h-14 shrink-0" aria-label="GreenReserve admin home">
-        {/* LOGO-1: the vector lockup, top-left, as on every page. */}
-        <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={150} height={28} className="w-[150px] h-auto" />
+    <aside className={`${g.rail} ${railOpen ? g.railOpen : ''}`} aria-label="Admin menu">
+      <Link href="/admin" className={g.brand} aria-label="GreenReserve admin overview">
+        <span className={g.mark} aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="5" r="2"/><path d="M12 8v6l-3 6M12 14l3 6M8 11l4-1 5-3"/></svg>
+        </span>
+        <span><b>GreenReserve</b><small>Headquarters</small></span>
       </Link>
 
-      <nav aria-label="Admin" className="flex-1 px-3 pb-3 pt-2 space-y-5 overflow-y-auto">
-        {groups.map(g => (
-          <div key={g.label ?? 'top'} className="space-y-0.5">
-            {g.label && <div className="px-2.5 pb-1.5 text-[12px] text-ink-muted">{g.label}</div>}
-            {g.items.map(item => <NavLink key={item.key} item={item} />)}
+      <nav aria-label="Admin" className={g.nav}>
+        {groups.map(grp => (
+          <div key={grp.label} className={g.grp}>
+            <div className={g.grpLabel}>{grp.label}</div>
+            {grp.items.map(item => item.href && item.key ? (
+              // MP-8a: a real link — middle-click opens a tab and the nav works before hydration.
+              <Link key={item.key} href={item.href} aria-current={active === item.key ? 'page' : undefined}
+                className={`${g.item} ${item.sub ? g.sub : ''} ${active === item.key ? g.on : ''}`}>
+                <span>{item.label}</span>{badges[item.key]}
+              </Link>
+            ) : (
+              <span key={item.label} className={g.soon} title="This page isn't built yet">{item.label}<em>Soon</em></span>
+            ))}
           </div>
         ))}
       </nav>
 
-      <div className="px-3 py-3 border-t border-line">
-        <div className="px-2.5 text-[12.5px] text-ink-muted truncate">{name || 'Signed in'} · {role}</div>
-        <div className="flex items-center gap-1 mt-1">
-          <Link href={profile.href} aria-current={active === 'profile' ? 'page' : undefined} className={`px-2.5 py-1.5 text-[13px] rounded-md transition-colors ${active === 'profile' ? 'bg-pine/[0.07] text-pine font-semibold' : 'text-ink-soft hover:text-ink hover:bg-paper'}`}>{profile.label}</Link>
-          <button
-            onClick={signOut}
-            disabled={signingOut}
-            className="px-2.5 py-1.5 text-[13px] text-ink-muted hover:text-ink hover:bg-paper rounded-md transition-colors disabled:opacity-50"
-          >
+      <div className={g.foot}>
+        <div className={g.who}>{name || 'Signed in'} · {role}</div>
+        <div className={g.footRow}>
+          <div className={g.seg} role="group" aria-label="Theme">
+            <button type="button" aria-pressed={theme === 'light'} onClick={() => pickTheme('light')}>Light</button>
+            <button type="button" aria-pressed={theme === 'dark'} onClick={() => pickTheme('dark')}>Dark</button>
+          </div>
+          <button type="button" onClick={signOut} disabled={signingOut} className={g.btn}>
             {signingOut ? 'Signing out…' : 'Sign out'}
           </button>
         </div>
         {signOutError && (
-          <p role="alert" className="px-2.5 pb-1 text-[11px] text-bad leading-snug">
-            Sign-out failed — you are still signed in. Check your connection and try again.
-          </p>
+          <p role="alert" className={g.err}>Sign-out failed — you are still signed in. Check your connection and try again.</p>
         )}
       </div>
-    </div>
+    </aside>
 
-    {/* ADMIN-C: the top bar — search (and "ask"), and one live line on the systems. */}
-    <div className="fixed top-0 right-0 left-60 h-14 bg-white/95 backdrop-blur-sm border-b border-line z-10 flex items-center gap-4 px-10">
-      <button
-        type="button"
-        onClick={openPalette}
-        className="w-full max-w-[460px] flex items-center gap-2 text-left bg-paper rounded-md px-3 py-2 text-[14px] text-ink-muted hover:bg-line-soft transition-colors"
-      >
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>
-        <span className="flex-1">Search or ask anything</span>
-        <kbd className="text-[11px] text-ink-faint">Ctrl K</kbd>
+    <div className={g.top}>
+      <button type="button" className={`${g.ibtn} ${g.glass} ${g.menuBtn}`} aria-label="Menu" aria-expanded={railOpen} onClick={() => setRailOpen(o => !o)}>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
       </button>
-      {systemsOk !== null && (
-        <Link href="/admin/system" className={`ml-auto flex items-center gap-2 text-[13px] ${systemsOk ? 'text-ok' : 'text-bad font-medium'}`}>
-          <StatusDot status={systemsOk ? 'ok' : 'bad'} />
-          {systemsOk ? 'All systems running' : 'A system needs attention'}
+      <button type="button" onClick={openPalette} className={`${g.search} ${g.glass}`} aria-label="Search or ask anything">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>
+        <span>Search courses, golfers, payments</span>
+        <kbd>Ctrl K</kbd>
+      </button>
+      {systemsOk !== null ? (
+        <Link href="/admin/system" className={`${g.status} ${systemsOk ? g.statusOk : g.statusBad}`} aria-label={systemsOk ? 'All systems running' : 'A system needs attention'}>
+          <i aria-hidden="true" /><span>{systemsOk ? 'All systems running' : 'A system needs attention'}</span>
         </Link>
+      ) : <span className={g.status} />}
+      {seesProblems && (
+        <Link href="/admin/problems" className={`${g.ibtn} ${g.glass}`} aria-label={problems > 0 ? `Alerts: ${problems} open` : 'Alerts: none open'}>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0" /></svg>
+          {problems > 0 && <b aria-hidden="true">{problems > 99 ? '99+' : problems}</b>}
+        </Link>
+      )}
+      {quick.length > 0 && (
+        <div className={g.qwrap} ref={qRef}>
+          <button type="button" className={g.qa} aria-expanded={qOpen} aria-haspopup="true" onClick={() => setQOpen(o => !o)}>Quick actions</button>
+          {qOpen && (
+            <div className={`${g.qmenu} ${g.glass}`}>
+              {quick.map(q => <Link key={q.label} href={q.href} onClick={() => setQOpen(false)}>{q.label}</Link>)}
+            </div>
+          )}
+        </div>
       )}
     </div>
     </>
-  );
-}
-
-/** ADMIN-C: one outline icon per section, decorative (the label names it). */
-function NavIcon({ k }: { k: AdminNavKey }) {
-  const paths: Partial<Record<AdminNavKey, React.ReactNode>> = {
-    overview: <path d="M3 11l9-8 9 8v10H5V11" />,
-    problems: <><circle cx="12" cy="12" r="9" /><path d="M12 8v5M12 16h.01" /></>,
-    inquiries: <path d="M4 6h16M7 12h10M10 18h4" />,
-    courses: <path d="M6 21V4l10 4-10 4" />,
-    golfers: <><circle cx="12" cy="8" r="4" /><path d="M4 21c1-4 4-6 8-6s7 2 8 6" /></>,
-    revenue: <><path d="M4 15l5-5 4 4 7-7" /><path d="M14 7h6v6" /></>,
-    messages: <path d="M4 5h16v11H8l-4 4z" />,
-    goals: <><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="4" /></>,
-    employees: <><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c.8-3.5 3.3-5.5 6.5-5.5s5.7 2 6.5 5.5" /><path d="M16 4.5a3.5 3.5 0 010 7M18.5 14.8c1.6.9 2.7 2.7 3 5.2" /></>,
-    audit: <><path d="M6 3h9l4 4v14H6z" /><path d="M9 12h7M9 16h5" /></>,
-    security: <><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z" /><path d="M9 12l2 2 4-4" /></>,
-    system: <><rect x="3" y="4" width="18" height="12" rx="1.5" /><path d="M8 20h8M12 16v4" /></>,
-    company: <><path d="M4 21V8l8-5 8 5v13" /><path d="M9 21v-6h6v6" /></>,
-  };
-  return (
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0 opacity-80">
-      {paths[k] ?? <circle cx="12" cy="12" r="2" />}
-    </svg>
   );
 }

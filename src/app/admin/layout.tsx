@@ -1,14 +1,16 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { cookies } from 'next/headers';
 import { resolveAdminSession, AdminSessionUnavailable } from '@/lib/admin-session';
 import { AdminSessionProvider, type AdminSessionView } from '@/lib/admin-session-context';
 import { effectiveAreas } from '@/lib/admin-areas';
 import { STAFF_LOOK_CLASS } from '@/lib/staff-fonts';
 import StepUpDialog from '@/components/admin/StepUpDialog';
 import ReasonDialog from '@/components/admin/ReasonDialog';
+import { ADMIN_THEME_COOKIE, readAdminTheme } from '@/components/admin/admin-theme';
+import glass from './admin-glass.module.css';
 
-// ADMIN-C: the admin's one face (see globals.css .admin-look).
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
+// ADMIN-REDO (Cam 2026-11-11): green glass, EB Garamond + Libre Franklin (the
+// root layout's fonts — ADMIN-C's Inter and its .admin-look mapping are gone).
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 // Reads the session cookie on every request — never cache this shell.
@@ -33,16 +35,20 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     if (err instanceof AdminSessionUnavailable) unavailable = true;
     else throw err;
   }
-  // The staff wrapper (src/lib/staff-fonts.ts). Since FLOW-1 it carries no
-  // look of its own — admin renders in the site's one look.
+  // Light by default; the dark choice is a per-browser cookie read here so the first paint is right.
+  const theme = readAdminTheme((await cookies()).get(ADMIN_THEME_COOKIE)?.value);
   return (
     <AdminSessionProvider session={session} unavailable={unavailable}>
-      <div className={`${STAFF_LOOK_CLASS} admin-look ${inter.variable}`}>
+      {/* staff-look is display:contents (a hook only), so the glass shell is its own box inside it. */}
+      <div className={STAFF_LOOK_CLASS}>
+      <div className={glass.shell} data-theme={theme} data-admin-shell="">
+        <div className={glass.blobs} aria-hidden="true"><span /><span /><span /></div>
         {children}
         {/* AW-1c: only the owner is ever asked to confirm a risky action. */}
         {session?.role === 'owner' && <StepUpDialog />}
         {/* BRAIN-1a: anyone signed in may be asked why (money, access, deletes). */}
         {session && <ReasonDialog />}
+      </div>
       </div>
     </AdminSessionProvider>
   );
