@@ -114,9 +114,6 @@
 }
 .search kbd { margin-left: auto; font: inherit; font-size: 11.5px; border: 1px solid var(--g-line); border-radius: 6px; padding: 1px 6px; }
 .status { margin-left: auto; font-size: 13px; text-decoration: none; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
-.status i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
-.statusOk { color: var(--g-up); }
-.statusBad { color: var(--g-down); font-weight: 600; }
 .ibtn {
   width: 38px; height: 38px; border-radius: var(--g-radius-s); display: grid; place-items: center; color: var(--g-ink);
   position: relative; text-decoration: none; flex: none;

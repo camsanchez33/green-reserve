@@ -108,6 +108,8 @@ export async function GET() {
   const support = requireRole(session, SUPPORT_PLUS);
   const can = (a: AdminArea) => support && hasArea(session, a);
   const owner = requireOwner(session);
+  // Systems is manager+ with Company, as the menu link to it and /api/admin/system.
+  const seesSystems = can('company') && requireRole(session, MANAGER_PLUS);
   const now = new Date();
   const today = dayKey(now);
   const start = startOfPlatformMonth(now);
@@ -126,8 +128,7 @@ export async function GET() {
     can('money') ? counterFeesUncollected({ gte: start, lt: now }) : null,
     can('money') ? counterFeesUncollected({ gte: priorStart, lt: priorEnd }) : null,
     owner ? prisma.expense.findMany() : null,
-    // Systems is manager+ with Company, as the menu link to it.
-    can('company') && requireRole(session, MANAGER_PLUS) ? todayHealth(now).catch(() => null) : null,
+    seesSystems ? todayHealth(now).catch(() => 'failed' as const) : null,
     can('pipeline') ? todayOnboarding(now) : null,
     can('pipeline') || can('courses') || can('money') || can('messages') ? buildActionQueue(now) : null,
     can('problems') ? listProblems(now) : null,
@@ -154,16 +155,19 @@ export async function GET() {
   const toAttn = (r: (typeof queueRows)[number]): Attention => ({ id: `q-${r.id}`, text: `${r.who}: ${r.why}`, tone: r.severity, href: r.href, action: r.actionLabel });
   const problemRows: Attention[] = (problems?.open ?? []).map(p => ({ id: `p-${p.id}`, text: p.title, tone: 'bad' as const, href: '/admin/problems', action: 'Open' }));
   // Cam 2026-11-11: no systems line in the top bar — each broken system is its own row here, going to Systems.
-  const systemRows: Attention[] = health ? [
+  const systemRows: Attention[] = health === 'failed'
+    ? [{ id: 'sys-unread', text: "Systems couldn't be checked", tone: 'warn', href: '/admin/system', action: 'Open' }]
+    : health ? [
     ...health.jobs.bad.map(j => ({ id: `sys-job-${j.job}`, text: `${j.job}: ${j.note}`, tone: 'bad' as const, href: '/admin/system', action: 'Open' })),
     ...(health.stripeWebhook.lastError ? [{ id: 'sys-webhook-error', text: `Stripe webhook: ${health.stripeWebhook.lastError}`, tone: 'bad' as const, href: '/admin/system', action: 'Open' }]
       : health.stripeWebhook.lastAt !== null && !health.stripeWebhook.ok ? [{ id: 'sys-webhook-quiet', text: 'Stripe webhook has gone quiet', tone: 'warn' as const, href: '/admin/system', action: 'Open' }] : []),
   ] : [];
-  const todoRows: Attention[] = [...systemRows, ...queueRows.map(toAttn)].sort((a, b) => (a.tone === b.tone ? 0 : a.tone === 'bad' ? -1 : 1));
+  // Broken systems always lead (never pushed past the cap by course to-dos).
+  const todoRows: Attention[] = [...systemRows, ...queueRows.map(toAttn).sort((a, b) => (a.tone === b.tone ? 0 : a.tone === 'bad' ? -1 : 1))];
   // Problems and to-dos are capped apart, so six open problems never hide every course to-do; each has its own door.
   const PROB_CAP = 3, TODO_CAP = 5;
   const seesActivity = can('pipeline') || can('courses');
-  const seesAttention = can('problems') || can('pipeline') || can('courses') || can('money') || can('messages') || can('company');
+  const seesAttention = can('problems') || can('pipeline') || can('courses') || can('money') || can('messages') || seesSystems;
 
   return NextResponse.json({
     at: now.toISOString(),

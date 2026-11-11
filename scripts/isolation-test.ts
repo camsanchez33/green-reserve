@@ -618,7 +618,8 @@ async function main() {
         check('Courses-only manager → Overview: no revenue, chart, net, expenses or fees missed', oc1?.revenue === null && oc1?.chart === null && oc1?.net === null && oc1?.expenses === null && oc1?.feesMissed === null, JSON.stringify(oc1));
         check('…and no failed charge in Needs attention', !!oc1?.attention && !oc1.attention.rows.some(r => r.id.startsWith('q-fc-')), JSON.stringify(oc1?.attention));
         await prisma.adminUser.update({ where: { id: limited.id }, data: { areas: ['courses', 'money'] } });
-        const oc2 = (await api('/api/admin/today/overview', { cookie: c })).body as { attention?: { rows: { id: string }[] } | null };
+        const oc2 = (await api('/api/admin/today/overview', { cookie: c })).body as { attention?: { rows: { id: string }[] } | null; expenses?: unknown; net?: unknown; feesMissed?: unknown };
+        check('…a manager with Money sees fees missed, but expenses and net stay the owner\'s', oc2?.feesMissed != null && oc2?.expenses === null && oc2?.net === null, JSON.stringify(oc2));
         check('…with Money added, the failed charge shows (the check above is not vacuous)', !!oc2?.attention && oc2.attention.rows.some(r => r.id.startsWith('q-fc-')), JSON.stringify(oc2?.attention));
       } finally {
         await prisma.booking.update({ where: { id: bookingA.id }, data: { checkInFailReason: '' } });

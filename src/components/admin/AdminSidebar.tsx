@@ -20,7 +20,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
   // MP-6a: failed charges, all-time. Red because it is money that should
   // exist and does not, and because the Revenue page is the only place to fix it.
   const [moneyProblems, setMoneyProblems] = useState(0);
-  // ADMIN-C: open problems (BRAIN-2a) and the one-line system status for the top bar.
+  // ADMIN-C: open problems (BRAIN-2a) for the alerts bell.
   const [problems, setProblems] = useState(0);
   // MP-8a: the inquiries badge self-fetches. It used to render only when the
   // Overview passed the prop, so leaving the Overview made pending inquiries
