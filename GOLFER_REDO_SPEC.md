@@ -4,6 +4,7 @@ Cam's notes (chat 2026-11-11): keep the information, change the hierarchy — "a
 a course information profile. Mockup: `lanes/golfer/booking-page-mockup.html` (claude.ai/artifact/K8kASEuuMnpubSV3gLHJpm).
 
 ## Decisions (question feature, 2026-11-11)
+- **APPROVED (Cam 2026-11-11: "yes i like it but make it less cartoonish")** — the mockup's photo stand-ins are now soft photo-like panels; the built page shows the course's real photos.
 - Mockup first, approved by Cam, then built by the Golfer lane.
 - The look: a regular clean light page, NO glass, the course's own photo, logo and colour leading.
 - #361 and #363 merged; the redesign builds on them.

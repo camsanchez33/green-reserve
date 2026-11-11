@@ -32,10 +32,16 @@ a{color:inherit}
 
 /* 1 · Header */
 .banner{height:300px;position:relative;overflow:hidden;background:var(--course)}
-.banner svg{position:absolute;inset:0;width:100%;height:100%}
+.photo{position:absolute;inset:0;filter:saturate(1.05)}
+.ph-banner{background:
+  radial-gradient(60% 55% at 70% 78%, rgba(146,182,120,.95), rgba(146,182,120,0) 70%),
+  radial-gradient(80% 60% at 20% 85%, rgba(58,94,58,.95), rgba(58,94,58,0) 70%),
+  radial-gradient(70% 50% at 85% 60%, rgba(46,78,50,.9), rgba(46,78,50,0) 70%),
+  linear-gradient(180deg,#C9DCE6 0%,#B7CFD9 38%,#7E9E78 58%,#4F7651 78%,#3B5E3F 100%)}
+.phlabel{position:absolute;right:14px;bottom:10px;font-size:12px;color:#fff;opacity:.85;text-shadow:0 1px 2px rgba(0,0,0,.4);z-index:1}
 .banner .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 45%,rgba(0,0,0,.35))}
 body.nophoto .banner{height:120px}
-body.nophoto .banner svg,body.nophoto .banner .shade{display:none}
+body.nophoto .banner .photo,body.nophoto .banner .shade,body.nophoto .banner .phlabel{display:none}
 .head{position:relative;margin-top:-56px;display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap}
 .logo{width:112px;height:112px;border-radius:18px;background:var(--card);box-shadow:0 0 0 4px var(--paper),0 6px 18px rgba(0,0,0,.12);display:grid;place-items:center;flex:none}
 .logo span{width:88px;height:88px;border-radius:50%;background:var(--course);color:var(--course-ink);display:grid;place-items:center;font-family:var(--serif);font-size:34px;font-weight:600}
@@ -158,7 +164,7 @@ html{scroll-behavior:smooth}
 </style>
 
 <div class="ctl"><div class="in">
-  <b>Golfer booking page mockup · example course and prices · drawings stand in for the course's photos</b>
+  <b>Golfer booking page mockup · example course and prices · grey-green panels stand in for the course's own photos</b>
   <span class="sw" role="group" aria-label="Course colour">Course colour
     <button type="button" data-c="#1F4D3A" style="background:#1F4D3A" aria-label="Forest" aria-pressed="true"></button>
     <button type="button" data-c="#7A2E2E" style="background:#7A2E2E" aria-label="Burgundy" aria-pressed="false"></button>
@@ -171,16 +177,7 @@ html{scroll-behavior:smooth}
 <!-- 1 · Header -->
 <header>
   <div class="banner" aria-label="Course banner photo">
-    <svg viewBox="0 0 1200 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-      <rect width="1200" height="300" fill="#BFD9E6"/>
-      <rect y="0" width="1200" height="150" fill="#D7E8EF"/>
-      <path d="M0 170 Q200 120 420 160 T820 150 T1200 140 V300 H0Z" fill="#6E9B6A"/>
-      <path d="M0 210 Q260 170 520 205 T1000 190 T1200 200 V300 H0Z" fill="#4E8250"/>
-      <path d="M0 250 Q300 225 640 245 T1200 238 V300 H0Z" fill="#3E6E42"/>
-      <ellipse cx="760" cy="232" rx="140" ry="20" fill="#8DBE7C"/>
-      <line x1="800" y1="232" x2="800" y2="182" stroke="#F4F4F0" stroke-width="3"/><path d="M800 182 L826 190 L800 198Z" fill="#C8453A"/>
-      <g fill="#2F5A35"><circle cx="120" cy="150" r="34"/><circle cx="165" cy="140" r="40"/><circle cx="1060" cy="135" r="44"/><circle cx="1110" cy="148" r="30"/></g>
-    </svg>
+    <div class="photo ph-banner" aria-hidden="true"></div><span class="phlabel">The course's banner photo</span>
     <span class="shade"></span>
   </div>
   <div class="in head">
@@ -280,7 +277,7 @@ html{scroll-behavior:smooth}
 
   // Gallery tiles: simple drawn scenes standing in for the course's own photos.
   const scenes=[['#CFE3EC','#5E9160','#3F6F45','Hole 7 from the tee'],['#E8DCC4','#7FA36A','#56804A','The 18th green'],['#D9E6EE','#6B8F5C','#4A7444','Clubhouse'],['#F0E1CF','#8AA86E','#5D8350','Range'],['#DCE8E2','#5E8A63','#3C6544','Creek on 16']];
-  document.getElementById('gal').innerHTML=scenes.map(([sky,a,b,cap])=>`<div><svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="400" height="300" fill="${sky}"/><path d="M0 170 Q120 130 240 165 T400 155 V300 H0Z" fill="${a}"/><path d="M0 220 Q150 190 300 215 T400 210 V300 H0Z" fill="${b}"/></svg><span>${cap}</span></div>`).join('');
+  document.getElementById('gal').innerHTML=scenes.map(([sky,a,b,cap],k)=>`<div style="background:radial-gradient(70% 60% at ${30+k*12}% 85%, ${a}, transparent 72%),radial-gradient(60% 50% at ${80-k*10}% 70%, ${b}, transparent 70%),linear-gradient(180deg,${sky} 0%,${sky} 35%,${a} 62%,${b} 100%)"><span>${cap}</span></div>`).join('');
 
   // Booking: example times and prices.
   const st={day:0,players:2,holes:18,ride:'Walking',pick:null};
