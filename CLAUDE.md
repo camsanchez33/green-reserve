@@ -126,9 +126,12 @@ and owns the final call. Agent models and effort are fixed in each
 | Money, auth/sessions, tenant isolation, charging crons, schema | **overseer only** — never delegated | session model |
 | Mechanical edits from an exact plan: UI pages/components, copy, admin screens, new tests | `builder` — allow-list in `.claude/agents/builder.md`: no lib/api/schema/config, no UI that writes through the API or handles cards/tokens | Sonnet · medium |
 | Zero-behavior reskin items, in a worktree (only via `/gr-batch`) | `reskin-worker` | Opus |
-| Design-system / admin no-silent-failure audits | `design-auditor`, `admin-ux-auditor` | Sonnet |
-| Security / spec audits | `security-auditor`, `spec-conformance` | Opus |
-| **Every diff, before verification and push** | `final-reviewer` | Fable · high (Cam 2026-10-06: the last gate reads only a diff, so the strongest model costs little here) |
+| Design-system / admin no-silent-failure audits | `design-auditor`, `admin-ux-auditor` | Sonnet · low |
+| Security audits (diffs touching sign-in, money, routes) | `security-auditor` | Opus · high |
+| Spec audits | `spec-conformance` | Sonnet · medium |
+| Running checks before a review | `check-runner` | Haiku · low |
+| Review of a UI / copy / test-only diff | `light-reviewer` | Sonnet · medium |
+| **Review of any diff touching money, sign-in, `src/lib`, `src/app/api`, `prisma`, crons, pay pages or config** | `final-reviewer` | Fable · high. Docs and generated files need no review (Cam 2026-11-10: tiered review, LANES.md) |
 
 Rules:
 - **Don't delegate small work.** A sub-agent starts cold and re-reads what the
@@ -136,7 +139,7 @@ Rules:
   context, the overseer does it itself.
 - **Money and auth never go to a cheaper model** — the 2026-10-05 review found
   the S1 bugs there.
-- **Nothing ships without `final-reviewer` PASS** — `/gr-run` and `/gr-debug` run it before every push. BLOCK → fix → re-review. The
+- **Nothing ships without the right reviewer's PASS** (`final-reviewer`, or `light-reviewer` for a UI/copy/test-only diff — LANES.md) — `/gr-run` and `/gr-debug` run it before every push. BLOCK → fix → re-review. The
   reviewer is never the agent that wrote the change. The overseer then verifies
   (tests, CI) and decides.
 - Parallel, independent lanes (a full-site review) use a Workflow only when Cam

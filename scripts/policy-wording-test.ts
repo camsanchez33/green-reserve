@@ -71,6 +71,10 @@ check('booking API returns cutoffPassed and the timing', /cutoffPassed,/.test(bo
   check('manage: no booking fee mentioned when none would be charged', !/booking fee/.test(noCard.confirm));
   const free = cancelNowWords({ ...base, feeCents: 0, windowOpen: false, timing: null, feeAlreadyCharged: false });
   check('manage: a no-fee course is free any time', /no late-cancellation fee/.test(free.banner));
+  check('manage: a free cancel never mentions a card (no-fee courses take none)', free.confirm === 'Cancel for free — nothing is charged.' && !/card/i.test(free.confirm), free.confirm);
+  const emailSrc = readFileSync('src/lib/email.ts', 'utf8');
+  check('cancellation email no longer says the card was released', !/card has been released/.test(emailSrc));
+  check('cancellation email names a refund when one was made', /data\.refunded \? 'What you paid has been refunded/.test(emailSrc));
   const chargedButOpen = cancelNowWords({ ...base, windowOpen: true, timing: 'hold_at_cutoff', feeAlreadyCharged: true });
   check('manage: a fee already charged is kept even if the window reads open', /already charged is kept/.test(chargedButOpen.confirm) && !/Cancel for free/.test(chargedButOpen.confirm), chargedButOpen.confirm);
   const noShow = cancelNowWords({ ...base, feeCents: 0, windowOpen: false, timing: null, feeAlreadyCharged: false, noShowKept: true });

@@ -276,7 +276,7 @@ export async function sendCancellationEmail(data: {
       : ''
     }
     ${!data.feeCharged
-      ? `<div style="background:#EEF3EC;border:1px solid #CFDCCD;border-radius:6px;padding:16px;margin-bottom:24px;"><p style="margin:0;color:#2F6B45;font-size:15px;font-weight:600;">&#10003; You weren't charged anything &mdash; your card has been released.</p></div>`
+      ? `<div style="background:#EEF3EC;border:1px solid #CFDCCD;border-radius:6px;padding:16px;margin-bottom:24px;"><p style="margin:0;color:#2F6B45;font-size:15px;font-weight:600;">&#10003; ${data.refunded ? 'What you paid has been refunded to your card. Nothing else was charged.' : 'You weren&rsquo;t charged anything.'}</p></div>`
       : `<div style="background:#F7EFE2;border:1px solid #E8D3B0;border-radius:6px;padding:16px;margin-bottom:24px;"><p style="margin:0;color:#7A4A10;font-size:14px;font-weight:600;">The $${(data.feeAmount / 100).toFixed(2)} cancellation fee you were charged is non-refundable &mdash; this cancellation came after the course&rsquo;s free-cancellation window closed.</p></div>`
     }
     <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking ID: ${data.bookingId}</p>

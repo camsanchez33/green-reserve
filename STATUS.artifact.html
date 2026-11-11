@@ -117,14 +117,17 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-11-10 23:24 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 260602c0</span>
-    <span>8 uncommitted</span>
+    <span>2026-11-10 23:36 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 6b4f9bd6</span>
+    <span>12 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">195 runs have shipped that the queue doesn't know about</div>
+<div class="lede">198 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-31. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">8546021e</span><span>Lanes: four build lanes, one merge queue, effort per worker (#358)</span></li>
+<li><span class="h">38567aa6</span><span>Testing lane: a course's first day — findings report (#359)</span></li>
+<li><span class="h">55ae3814</span><span>Homepage writing: true to what ships today (#357)</span></li>
 <li><span class="h">2b439771</span><span>Lanes, review: sign-in and money routes stay with Build; the admin phone CSS lands with the Admin sidebar PR</span></li>
 <li><span class="h">c14fb38e</span><span>Lanes: four build lanes, one merge queue, worker effort levels; admin content full width on phones</span></li>
 <li><span class="h">3c6464b6</span><span>Security lane: full sweep report 2026-11-10 (#354)</span></li>
@@ -332,7 +335,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>UU STATUS.artifact.html</code></li><li><code>UU STATUS.json</code></li><li><code>UU STATUS.md</code></li><li><code>M  docs/CODEMAP.md</code></li><li><code>M  docs/codemap.json</code></li><li><code>A  lanes/testing/2026-11-10-first-day.md</code></li><li><code>M  src/app/HomeContent.tsx</code></li><li><code>M  src/app/teesheet/page.tsx</code></li></ul>
+<ul class="plain"><li><code>M .claude/agents/admin-ux-auditor.md</code></li><li><code>M .claude/agents/design-auditor.md</code></li><li><code>M .claude/agents/final-reviewer.md</code></li><li><code>M .claude/agents/spec-conformance.md</code></li><li><code>M CLAUDE.md</code></li><li><code>M LANES.md</code></li><li><code>M scripts/policy-wording-test.ts</code></li><li><code>M src/lib/cancel-policy.ts</code></li><li><code>M src/lib/email.ts</code></li><li><code>?? .claude/agents/check-runner.md</code></li><li><code>?? .claude/agents/light-reviewer.md</code></li><li><code>?? lanes/build/</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -416,6 +419,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 20d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">8546021e</td><td class="num">2026-11-10</td><td>Lanes: four build lanes, one merge queue, effort per worker (#358)</td></tr>
+<tr><td class="num">38567aa6</td><td class="num">2026-11-10</td><td>Testing lane: a course's first day — findings report (#359)</td></tr>
+<tr><td class="num">55ae3814</td><td class="num">2026-11-10</td><td>Homepage writing: true to what ships today (#357)</td></tr>
 <tr><td class="num">260602c0</td><td class="num">2026-11-10</td><td>queue/spec update</td></tr>
 <tr><td class="num">9c71d7a0</td><td class="num">2026-11-10</td><td>queue/spec update</td></tr>
 <tr><td class="num">2b439771</td><td class="num">2026-11-10</td><td>Lanes, review: sign-in and money routes stay with Build; the admin phone CSS lands with the Admin sidebar PR</td></tr>
@@ -425,9 +431,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">0704cbb6</td><td class="num">2026-11-10</td><td>company: Nov 30 outreach kit (drafts) (#355)</td></tr>
 <tr><td class="num">1245f673</td><td class="num">2026-11-10</td><td>queue/spec update</td></tr>
 <tr><td class="num">3f552007</td><td class="num">2026-11-10</td><td>STRESS-1110 #1, review: paid shop items stay behind money.payments; decisions from the security sweep</td></tr>
-<tr><td class="num">26c63493</td><td class="num">2026-11-10</td><td>Member sign-in link: rate-limited, and the same answer for members and non-members</td></tr>
-<tr><td class="num">64b7ad04</td><td class="num">2026-11-10</td><td>STRESS-1110 #1: front desk sees what each group owes; lanes for parallel work</td></tr>
-<tr><td class="num">56d3f877</td><td class="num">2026-11-10</td><td>IMPORT-2: pro shop import reads real POS files and says what it couldn't (#353)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>
