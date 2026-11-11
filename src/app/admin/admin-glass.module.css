@@ -81,7 +81,7 @@
   display: flex; justify-content: space-between; align-items: center; gap: 8px;
 }
 .item:hover { background: var(--g-hover); color: var(--g-ink); }
-.item:focus-visible, .btn:focus-visible, .ibtn:focus-visible, .qa:focus-visible, .tabs button:focus-visible { outline: 2px solid var(--g-focus); outline-offset: 2px; }
+.item:focus-visible, .btn:focus-visible, .ibtn:focus-visible, .tabs button:focus-visible { outline: 2px solid var(--g-focus); outline-offset: 2px; }
 .sub { padding-left: 22px; font-size: 13px; }
 .on { background: var(--g-active); color: var(--g-ink); font-weight: 600; box-shadow: var(--g-shadow); }
 .soon { font-size: 13.5px; color: var(--g-muted); padding: 7px 10px; display: flex; justify-content: space-between; }
@@ -122,11 +122,6 @@
   position: relative; text-decoration: none; flex: none;
 }
 .ibtn b { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--g-down); color: var(--g-panel-solid); font-size: 11px; display: grid; place-items: center; }
-.qwrap { position: relative; flex: none; }
-.qa { font: inherit; font-size: 13px; font-weight: 600; border: 0; background: var(--g-brand); color: var(--g-brand-ink); padding: 10px 14px; border-radius: var(--g-radius-s); cursor: pointer; }
-.qmenu { position: absolute; right: 0; top: calc(100% + 8px); width: 220px; padding: 6px; display: flex; flex-direction: column; background: var(--g-panel-solid); }
-.qmenu a { padding: 9px 12px; border-radius: 9px; font-size: 13.5px; color: var(--g-ink); font-weight: 500; text-decoration: none; }
-.qmenu a:hover, .qmenu a:focus-visible { background: var(--g-hover); outline: none; }
 .menuBtn { display: none; }
 
 /* Below 900px the rail slides in from a Menu button; pages lose the left margin. */

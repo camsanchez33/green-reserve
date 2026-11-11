@@ -1,7 +1,7 @@
 'use client';
 import { SUPPORT_PLUS, MANAGER_PLUS, VIEWER_PLUS, OWNER_ONLY } from '@/lib/admin-roles';
 import Link from 'next/link';
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import g from '@/app/admin/admin-glass.module.css';
 import { setAdminTheme, currentAdminTheme, type AdminTheme } from '@/components/admin/admin-theme';
@@ -22,7 +22,6 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
   const [moneyProblems, setMoneyProblems] = useState(0);
   // ADMIN-C: open problems (BRAIN-2a) and the one-line system status for the top bar.
   const [problems, setProblems] = useState(0);
-  const [systemsOk, setSystemsOk] = useState<boolean | null>(null);
   // MP-8a: the inquiries badge self-fetches. It used to render only when the
   // Overview passed the prop, so leaving the Overview made pending inquiries
   // vanish from the nav.
@@ -50,7 +49,6 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
         if (unreadMessages === 0) setUnread(Number(d.unreadMessages) || 0);
         setMoneyProblems(Number(d.moneyProblems) || 0);
         setProblems(Number(d.openProblems) || 0);
-        if (typeof d.systemsOk === 'boolean') setSystemsOk(d.systemsOk);
       })
       // The badges are hints, not the work: a failed fetch leaves them at 0 and every page still loads its own data.
       .catch(() => {});
@@ -145,24 +143,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
   useEffect(() => { setTheme(currentAdminTheme()); }, []);
   const pickTheme = (t: AdminTheme) => { setAdminTheme(t); setTheme(t); };
 
-  // Quick actions (ADMIN_REDO_SPEC): only doors to pages that exist, and only the ones this login can open.
-  const quick = [
-    { label: 'Add a course', href: '/admin/create', ok: canSee(MANAGER_PLUS, 'pipeline') },
-    { label: 'Add a team member', href: '/admin/employees', ok: canSee(MANAGER_PLUS, 'company') },
-    { label: 'Record an expense', href: '/admin/revenue', ok: canSee(OWNER_ONLY) },
-    { label: 'View alerts', href: '/admin/problems', ok: canSee(SUPPORT_PLUS, 'problems') },
-    { label: 'Export transactions', href: '/admin/revenue', ok: canSee(OWNER_ONLY) },
-  ].filter(q => q.ok);
-  const [qOpen, setQOpen] = useState(false);
-  const qRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!qOpen) return;
-    const close = (e: MouseEvent | KeyboardEvent) => {
-      if (e instanceof KeyboardEvent ? e.key === 'Escape' : !qRef.current?.contains(e.target as Node)) setQOpen(false);
-    };
-    document.addEventListener('mousedown', close); document.addEventListener('keydown', close);
-    return () => { document.removeEventListener('mousedown', close); document.removeEventListener('keydown', close); };
-  }, [qOpen]);
+  // Cam 2026-11-11: no Quick actions button and no systems line — broken systems are rows in the Overview's Needs attention.
   const seesProblems = canSee(SUPPORT_PLUS, 'problems');
 
   return (
@@ -219,26 +200,12 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
         <span>Search courses, golfers, payments</span>
         <kbd>Ctrl K</kbd>
       </button>
-      {systemsOk !== null ? (
-        <Link href="/admin/system" className={`${g.status} ${systemsOk ? g.statusOk : g.statusBad}`} aria-label={systemsOk ? 'All systems running' : 'A system needs attention'}>
-          <i aria-hidden="true" /><span>{systemsOk ? 'All systems running' : 'A system needs attention'}</span>
-        </Link>
-      ) : <span className={g.status} />}
+      <span className={g.status} aria-hidden="true" />
       {seesProblems && (
         <Link href="/admin/problems" className={`${g.ibtn} ${g.glass}`} aria-label={problems > 0 ? `Alerts: ${problems} open` : 'Alerts: none open'}>
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0" /></svg>
           {problems > 0 && <b aria-hidden="true">{problems > 99 ? '99+' : problems}</b>}
         </Link>
-      )}
-      {quick.length > 0 && (
-        <div className={g.qwrap} ref={qRef}>
-          <button type="button" className={g.qa} aria-expanded={qOpen} aria-haspopup="true" onClick={() => setQOpen(o => !o)}>Quick actions</button>
-          {qOpen && (
-            <div className={`${g.qmenu} ${g.glass}`}>
-              {quick.map(q => <Link key={q.label} href={q.href} onClick={() => setQOpen(false)}>{q.label}</Link>)}
-            </div>
-          )}
-        </div>
       )}
     </div>
     </>

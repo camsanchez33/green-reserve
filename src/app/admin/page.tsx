@@ -18,8 +18,8 @@ type Overview = {
   at: string;
   coursesLive: { count: number; wentLive: number; wentLivePrior: number } | null;
   revenue: { cents: number; priorCents: number } | null;
-  players: { count: number; prior: number } | null;
-  golfers: { count: number; prior: number } | null;
+  feesMissed: { cents: number; rounds: number; priorCents: number } | null;
+  expenses: { cents: number; priorCents: number } | null;
   onboarding: { waiting: number; stuck: number; stuckDays: number } | null;
   net: { cents: number | null; priorCents: number | null; stripeUnavailable: boolean } | null;
   chart: Record<Grouping, Series> | null;
@@ -36,11 +36,11 @@ const money = (cents: number) => (cents < 0 ? '−' : '') + '$' + (Math.abs(cent
 const whole = (n: number) => n.toLocaleString('en-US');
 
 /** "+3 vs last month" — a plain difference; a percentage off zero is not information. */
-function versus(cur: number, prior: number, fmt: (n: number) => string, tinted: boolean) {
+function versus(cur: number, prior: number, fmt: (n: number) => string, tinted: boolean, upIsBad = false) {
   const d = cur - prior;
   if (d === 0) return <><b>Same</b> as last month</>;
   const pct = prior > 0 ? ` (${d > 0 ? '+' : '−'}${Math.round(Math.abs(d) / prior * 100)}%)` : '';
-  const cls = tinted ? '' : d > 0 ? g.up : g.down;
+  const cls = tinted ? '' : (d > 0) !== upIsBad ? g.up : g.down;
   return <><b className={cls}>{d > 0 ? '+' : '−'}{fmt(Math.abs(d))}{pct}</b> vs last month</>;
 }
 
@@ -119,7 +119,7 @@ export default function AdminOverview() {
   useEffect(() => { load(); }, [load]);
 
   const d = data;
-  const seesNothing = d && !d.coursesLive && !d.revenue && !d.players && !d.golfers && !d.onboarding && !d.net && !d.chart && !d.activity && !d.attention;
+  const seesNothing = d && !d.coursesLive && !d.revenue && !d.feesMissed && !d.expenses && !d.onboarding && !d.net && !d.chart && !d.activity && !d.attention;
   const series = d?.chart?.[group];
   const today = new Date().toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric' });
 
@@ -162,20 +162,6 @@ export default function AdminOverview() {
                   <span className={g.kpiC}>{versus(d.revenue.cents, d.revenue.priorCents, money, true)}</span>
                 </Link>
               )}
-              {d.players && (
-                <div className={`${g.glass} ${g.kpi}`}>
-                  <span className={g.kpiL} title="Players on bookings made this month that aren't cancelled">Players booked</span>
-                  <span className={g.kpiV}>{whole(d.players.count)}</span>
-                  <span className={g.kpiC}>{versus(d.players.count, d.players.prior, whole, false)}</span>
-                </div>
-              )}
-              {d.golfers && (
-                <Link href="/admin/golfers" className={`${g.glass} ${g.kpi}`}>
-                  <span className={g.kpiL} title="Different golfers (by email, phone or account) with a booking made this month">Golfers who booked</span>
-                  <span className={g.kpiV}>{whole(d.golfers.count)}</span>
-                  <span className={g.kpiC}>{versus(d.golfers.count, d.golfers.prior, whole, false)}</span>
-                </Link>
-              )}
               {d.onboarding && (
                 <Link href="/admin/inquiries" className={`${g.glass} ${g.kpi}`}>
                   <span className={g.kpiL}>Waiting to onboard</span>
@@ -183,6 +169,20 @@ export default function AdminOverview() {
                   <span className={g.kpiC}>{d.onboarding.stuck > 0
                     ? <b className={g.wa}>{d.onboarding.stuck} stuck {d.onboarding.stuckDays}+ days</b>
                     : d.onboarding.waiting > 0 ? 'None stuck' : 'Pipeline is empty'}</span>
+                </Link>
+              )}
+              {d.expenses && (
+                <Link href="/admin/revenue" className={`${g.glass} ${g.kpi}`}>
+                  <span className={g.kpiL} title="The month's expenses as the Revenue page counts them">Expenses</span>
+                  <span className={g.kpiV}>{money(d.expenses.cents)}</span>
+                  <span className={g.kpiC}>{versus(d.expenses.cents, d.expenses.priorCents, money, false, true)}</span>
+                </Link>
+              )}
+              {d.feesMissed && (
+                <Link href="/admin/revenue?tab=uncollected" className={`${g.glass} ${g.kpi}`}>
+                  <span className={g.kpiL} title="Service fees not collected because the round was paid in cash at the counter">Fees missed</span>
+                  <span className={g.kpiV}>{money(d.feesMissed.cents)}</span>
+                  <span className={g.kpiC}>{versus(d.feesMissed.cents, d.feesMissed.priorCents, money, false, true)}</span>
                 </Link>
               )}
               {d.net && (

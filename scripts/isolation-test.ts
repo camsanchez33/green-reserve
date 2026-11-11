@@ -518,7 +518,7 @@ async function main() {
     const r = await api('/api/admin/today/overview', { cookie: viewerCookie });
     checkStatus('Viewer can open the Overview → 200', r.status, 200);
     const o = r.body as Record<string, unknown>;
-    check('…with every section empty (null)', ['coursesLive', 'revenue', 'players', 'golfers', 'onboarding', 'net', 'chart', 'activity', 'attention'].every(k => o?.[k] === null), JSON.stringify(o));
+    check('…with every section empty (null)', ['coursesLive', 'revenue', 'feesMissed', 'expenses', 'onboarding', 'net', 'chart', 'activity', 'attention'].every(k => o?.[k] === null), JSON.stringify(o));
   }
   {
     // BRAIN-2a: Problems name golfers and money — support+ only, reads and writes.
@@ -605,7 +605,7 @@ async function main() {
       const t = (await api('/api/admin/today', { cookie: c })).body as Record<string, unknown>;
       check('…Home shows no section from another area, health included', t?.health === null && t?.today === null && t?.overview === null && t?.courses === null && t?.problems === null && t?.needs === null && t?.goals === null, JSON.stringify(t));
       const ov = (await api('/api/admin/today/overview', { cookie: c })).body as Record<string, unknown> & { attention?: { rows: { id: string }[] } | null };
-      check('…the Overview shows no number, chart or activity outside Messages', ['coursesLive', 'revenue', 'players', 'golfers', 'onboarding', 'net', 'chart', 'activity'].every(k => ov?.[k] === null), JSON.stringify(ov));
+      check('…the Overview shows no number, chart or activity outside Messages', ['coursesLive', 'revenue', 'feesMissed', 'expenses', 'onboarding', 'net', 'chart', 'activity'].every(k => ov?.[k] === null), JSON.stringify(ov));
       check('…and Needs attention carries no failed charge, problem or course to-do', !ov?.attention || ov.attention.rows.every(r => r.id.startsWith('q-msg-')), JSON.stringify(ov?.attention));
       const sr = (await api(`/api/admin/search?q=${encodeURIComponent('Isol')}`, { cookie: c })).body as { results?: { type: string; href: string }[] };
       check('…search finds no course, inquiry, golfer, teammate or Money page', !!sr?.results && !sr.results.some(x => ['course', 'inquiry', 'golfer', 'guest', 'booking', 'group', 'employee'].includes(x.type) || x.href === '/admin/revenue'), JSON.stringify(sr).slice(0, 300));
@@ -615,7 +615,7 @@ async function main() {
       try {
         await prisma.adminUser.update({ where: { id: limited.id }, data: { areas: ['courses'] } });
         const oc1 = (await api('/api/admin/today/overview', { cookie: c })).body as Record<string, unknown> & { attention?: { rows: { id: string }[] } | null };
-        check('Courses-only manager → Overview: no revenue, chart or net', oc1?.revenue === null && oc1?.chart === null && oc1?.net === null, JSON.stringify(oc1));
+        check('Courses-only manager → Overview: no revenue, chart, net, expenses or fees missed', oc1?.revenue === null && oc1?.chart === null && oc1?.net === null && oc1?.expenses === null && oc1?.feesMissed === null, JSON.stringify(oc1));
         check('…and no failed charge in Needs attention', !!oc1?.attention && !oc1.attention.rows.some(r => r.id.startsWith('q-fc-')), JSON.stringify(oc1?.attention));
         await prisma.adminUser.update({ where: { id: limited.id }, data: { areas: ['courses', 'money'] } });
         const oc2 = (await api('/api/admin/today/overview', { cookie: c })).body as { attention?: { rows: { id: string }[] } | null };

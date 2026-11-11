@@ -1,14 +1,15 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession, requireRole, requireOwner, SUPPORT_PLUS } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, requireOwner, SUPPORT_PLUS, MANAGER_PLUS } from '@/lib/admin-session';
 import { hasArea, type AdminArea } from '@/lib/admin-areas';
-import { todayMoney, todayOnboarding } from '@/lib/admin-today';
+import { todayMoney, todayOnboarding, todayHealth } from '@/lib/admin-today';
+import { counterFeesUncollected } from '@/lib/access-fee';
+import { sumExpensesForPeriodCents } from '@/lib/expenses';
 import { buildActionQueue } from '@/lib/admin-action-queue';
 import { listProblems } from '@/lib/problems';
 import { REAL_COURSE, ON_REAL_COURSE, ON_REAL_BOOKING } from '@/lib/real-courses';
 import { startOfPlatformMonth, startOfPlatformMonthsAgo, dayKey } from '@/lib/admin-day';
 import { addDaysStr } from '@/lib/course-time';
-import { golferKey } from '@/lib/golfer-key';
 
 // ADMIN-REDO Overview (Cam 2026-11-11, the "green glass" mockup): the admin's
 // first page. READ-ONLY. Every figure is counted here or by the libs the old
@@ -17,9 +18,10 @@ import { golferKey } from '@/lib/golfer-key';
 // Like /api/admin/today (its sibling), the route is open to every signed-in
 // support+ login and each section needs its own area (AW-11); a section the
 // person can't see comes back null and the page leaves it out:
-//   coursesLive, players  Courses        revenue, chart  Money
-//   golfers               Golfers        onboarding      Pipeline
-//   net                   owner only (Revenue's own net: fees − Stripe − expenses)
+//   coursesLive           Courses        revenue, chart, feesMissed  Money
+//   onboarding            Pipeline       systems rows in attention   Company (Systems)
+//   net, expenses         owner only (Revenue's own net: fees − Stripe − expenses; expenses as Revenue prorates them)
+//   feesMissed = service fees not collected because the round was paid in cash at the counter (PAY-2)
 //   activity / attention  each row by the area it comes from; null with none of those areas
 //                         (failed charges need Money, unanswered messages need Messages)
 //
@@ -28,7 +30,6 @@ import { golferKey } from '@/lib/golfer-key';
 
 const DAY = 86_400_000;
 const PAID = { paymentStatus: 'paid', roundPaymentIntentId: { not: '' }, ...ON_REAL_COURSE } as const;
-const LIVE = { status: { not: 'cancelled' }, ...ON_REAL_COURSE } as const;
 
 type Grouping = 'day' | 'week' | 'month' | 'quarter' | 'year';
 const SERIES: Record<Grouping, { n: number; sub: string }> = {
@@ -101,25 +102,6 @@ function buildChart(perDay: Map<string, number>, today: string) {
   return out;
 }
 
-/** Players booked and distinct golfers among bookings made in a window. */
-async function bookedIn(from: Date, to: Date) {
-  const rows = await prisma.booking.findMany({
-    where: { ...LIVE, createdAt: { gte: from, lt: to } },
-    select: { players: true, splitFromId: true, golferEmail: true, golferPhone: true, golferAccountId: true },
-  });
-  const keys = new Set<string>();
-  let players = 0;
-  for (const r of rows) {
-    // PARTIAL-1/SPLIT-1: a split part carries players taken off its group, so players add up across parts;
-    // the golfer is the group's, so only the group counts toward golfers.
-    players += r.players;
-    if (r.splitFromId) continue;
-    const k = golferKey(r);
-    if (k) keys.add(k);
-  }
-  return { players, golfers: keys.size };
-}
-
 export async function GET() {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Your session ended — sign in again.' }, { status: 401 });
@@ -135,14 +117,17 @@ export async function GET() {
   // The chart's earliest bucket: the year view's first "period before" year.
   const chartFrom = new Date(`${Number(today.slice(0, 4)) - 2 * SERIES.year.n + 1}-01-01T00:00:00Z`);
 
-  const [money, perDay, liveCount, wentLive, wentLivePrior, booked, bookedPrior, onboarding, queue, problems, newInquiries, liveEvents, agreements] = await Promise.all([
+  const [money, perDay, liveCount, wentLive, wentLivePrior, missed, missedPrior, expenseRows, health, onboarding, queue, problems, newInquiries, liveEvents, agreements] = await Promise.all([
     can('money') || owner ? todayMoney(now, owner) : null,
     can('money') ? feesPerDay(chartFrom) : null,
     can('courses') ? prisma.course.count({ where: { active: true, archivedAt: null, ...REAL_COURSE } }) : null,
     can('courses') ? prisma.course.count({ where: { firstWentLiveAt: { gte: start, lt: now }, ...REAL_COURSE } }) : null,
     can('courses') ? prisma.course.count({ where: { firstWentLiveAt: { gte: priorStart, lt: priorEnd }, ...REAL_COURSE } }) : null,
-    can('courses') || can('golfers') ? bookedIn(start, now) : null,
-    can('courses') || can('golfers') ? bookedIn(priorStart, priorEnd) : null,
+    can('money') ? counterFeesUncollected({ gte: start, lt: now }) : null,
+    can('money') ? counterFeesUncollected({ gte: priorStart, lt: priorEnd }) : null,
+    owner ? prisma.expense.findMany() : null,
+    // Systems is manager+ with Company, as the menu link to it.
+    can('company') && requireRole(session, MANAGER_PLUS) ? todayHealth(now).catch(() => null) : null,
     can('pipeline') ? todayOnboarding(now) : null,
     can('pipeline') || can('courses') || can('money') || can('messages') ? buildActionQueue(now) : null,
     can('problems') ? listProblems(now) : null,
@@ -168,19 +153,25 @@ export async function GET() {
   const queueRows = queue ? queue.rows.filter(r => can(rowArea(r))) : [];
   const toAttn = (r: (typeof queueRows)[number]): Attention => ({ id: `q-${r.id}`, text: `${r.who}: ${r.why}`, tone: r.severity, href: r.href, action: r.actionLabel });
   const problemRows: Attention[] = (problems?.open ?? []).map(p => ({ id: `p-${p.id}`, text: p.title, tone: 'bad' as const, href: '/admin/problems', action: 'Open' }));
-  const todoRows: Attention[] = queueRows.map(toAttn).sort((a, b) => (a.tone === b.tone ? 0 : a.tone === 'bad' ? -1 : 1));
+  // Cam 2026-11-11: no systems line in the top bar — each broken system is its own row here, going to Systems.
+  const systemRows: Attention[] = health ? [
+    ...health.jobs.bad.map(j => ({ id: `sys-job-${j.job}`, text: `${j.job}: ${j.note}`, tone: 'bad' as const, href: '/admin/system', action: 'Open' })),
+    ...(health.stripeWebhook.lastError ? [{ id: 'sys-webhook-error', text: `Stripe webhook: ${health.stripeWebhook.lastError}`, tone: 'bad' as const, href: '/admin/system', action: 'Open' }]
+      : health.stripeWebhook.lastAt !== null && !health.stripeWebhook.ok ? [{ id: 'sys-webhook-quiet', text: 'Stripe webhook has gone quiet', tone: 'warn' as const, href: '/admin/system', action: 'Open' }] : []),
+  ] : [];
+  const todoRows: Attention[] = [...systemRows, ...queueRows.map(toAttn)].sort((a, b) => (a.tone === b.tone ? 0 : a.tone === 'bad' ? -1 : 1));
   // Problems and to-dos are capped apart, so six open problems never hide every course to-do; each has its own door.
   const PROB_CAP = 3, TODO_CAP = 5;
   const seesActivity = can('pipeline') || can('courses');
-  const seesAttention = can('problems') || can('pipeline') || can('courses') || can('money') || can('messages');
+  const seesAttention = can('problems') || can('pipeline') || can('courses') || can('money') || can('messages') || can('company');
 
   return NextResponse.json({
     at: now.toISOString(),
     month: { from: dayKey(start), priorFrom: dayKey(priorStart), priorTo: dayKey(priorEnd) },
     coursesLive: liveCount === null ? null : { count: liveCount, wentLive: wentLive ?? 0, wentLivePrior: wentLivePrior ?? 0 },
     revenue: money && can('money') ? { cents: Math.round(money.current.fees * 100), priorCents: Math.round(money.prior.fees * 100) } : null,
-    players: booked && bookedPrior && can('courses') ? { count: booked.players, prior: bookedPrior.players } : null,
-    golfers: booked && bookedPrior && can('golfers') ? { count: booked.golfers, prior: bookedPrior.golfers } : null,
+    feesMissed: missed && missedPrior ? { cents: missed.cents, rounds: missed.rounds, priorCents: missedPrior.cents } : null,
+    expenses: expenseRows ? { cents: sumExpensesForPeriodCents(expenseRows, start, now), priorCents: sumExpensesForPeriodCents(expenseRows, priorStart, priorEnd) } : null,
     onboarding: waiting ? { waiting: waiting.reduce((a, s) => a + s.count, 0), stuck: waiting.reduce((a, s) => a + s.stuck.length, 0), stuckDays: onboarding!.stuckDays } : null,
     net: owner && money?.net ? {
       cents: money.net.current === null ? null : Math.round(money.net.current * 100),
@@ -194,7 +185,7 @@ export async function GET() {
       total: problemRows.length + todoRows.length,
       problemsMore: can('problems') ? Math.max(0, problemRows.length - PROB_CAP) : 0,
       todosMore: Math.max(0, todoRows.length - TODO_CAP),
-      todosHref: can('pipeline') ? '/admin/inquiries' : can('courses') ? '/admin/courses' : can('money') ? '/admin/revenue?tab=uncollected' : '/admin/messages',
+      todosHref: systemRows.length > TODO_CAP ? '/admin/system' : can('pipeline') ? '/admin/inquiries' : can('courses') ? '/admin/courses' : can('money') ? '/admin/revenue?tab=uncollected' : '/admin/messages',
     } : null,
   });
 }
