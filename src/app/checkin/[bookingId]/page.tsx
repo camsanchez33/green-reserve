@@ -2,15 +2,23 @@
 import { useEffect, useRef, useState, Suspense } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
-import { loadStripe } from '@stripe/stripe-js';
+import { loadStripe } from '@stripe/stripe-js/pure';
 import { Elements, CardElement, PaymentRequestButtonElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import type { PaymentRequest } from '@stripe/stripe-js';
 import { GolferExitLinks } from '@/components/GolferExitLinks';
+import Link from 'next/link';
+import { CARD } from '@/components/ui/Card';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
 import { SHOP_FEE_LABEL } from '@/lib/booking-fees';
 import { BILLING_EMAIL } from '@/lib/contact';
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
+// PERF: Stripe.js loads only when the card form is on screen (the /pure entry adds no
+// script on import) — never on "See you …", a finished check-in or a saved-card pay.
+let _stripePromise: ReturnType<typeof loadStripe> | null = null;
+function getStripePromise() {
+  if (!_stripePromise) _stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
+  return _stripePromise;
+}
 
 const cardStyle = {
   style: {
@@ -209,7 +217,7 @@ function CheckInPageInner() {
   if (error && !info) {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-lg border border-line p-8 text-center">
+        <div className={`${CARD} max-w-md w-full p-8 text-center`}>
           
           <h1 className="font-semibold text-ink mb-2">Can&apos;t check in</h1>
           <p className="text-ink-soft text-sm">{error}</p>
@@ -224,7 +232,7 @@ function CheckInPageInner() {
   if (info.status === 'cancelled' && !result) {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
-        <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
+        <div className={`${CARD} max-w-lg w-full overflow-hidden`}>
           <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} photoUrl={info.heroImageUrl} logoUrl={info.logoUrl} />
           <div className="p-8 text-center">
             <h1 className="text-[30px] font-serif leading-none text-ink mb-3">This booking was cancelled</h1>
@@ -242,7 +250,7 @@ function CheckInPageInner() {
     const onAccount = !result && !!info.onAccount;
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
-        <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
+        <div className={`${CARD} max-w-lg w-full overflow-hidden`}>
           <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} photoUrl={info.heroImageUrl} logoUrl={info.logoUrl} />
           <div className="p-8 text-center">
             <h1 className="text-[30px] font-serif leading-none text-ink mb-3">You&apos;re checked in!</h1>
@@ -280,7 +288,7 @@ function CheckInPageInner() {
   const cartCents = info.cartFeeTotal + (addCart ? cartAddOn : 0);
   const payTotal = info.totalAmount + (addCart ? cartAddOn : 0);
   const summary = (
-    <div className="bg-paper rounded-md p-5 mb-6 space-y-2 text-sm border border-line">
+    <div className="bg-paper/70 rounded-md p-5 mb-6 space-y-2 text-sm">
       <div className="flex justify-between"><span className="text-ink-muted">Date</span><span className="font-medium text-ink">{fmtDate(info.date)}</span></div>
       <div className="flex justify-between"><span className="text-ink-muted">Tee time</span><span className="font-medium text-ink">{fmtTime(info.time)}</span></div>
       <div className="flex justify-between"><span className="text-ink-muted">Players</span><span className="font-medium text-ink">{info.players} &middot; {info.productLabel ? `${info.productLabel} · ` : ''}{info.holes} holes</span></div>
@@ -289,7 +297,7 @@ function CheckInPageInner() {
         {cartCents > 0 && <div className="flex justify-between text-ink-soft"><span>Cart fee</span><span>${(cartCents / 100).toFixed(2)}</span></div>}
         {info.rangeBallsTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Range balls</span><span>${(info.rangeBallsTotal / 100).toFixed(2)}</span></div>}
         {/* Phone and walk-in bookings carry no booking fee: no "$1.50 × 4 … $0.00" line. */}
-        {info.accessFeeTotal > 0 && <div className="flex justify-between text-ink-soft"><span>GreenReserve service fee (${(info.accessFeeTotal / info.players / 100).toFixed(2)} × {info.players})</span><span>${(info.accessFeeTotal / 100).toFixed(2)}</span></div>}
+        {info.accessFeeTotal > 0 && <div className="flex justify-between gap-3 text-ink-soft"><span>GreenReserve service fee (${(info.accessFeeTotal / info.players / 100).toFixed(2)} × {info.players})</span><span className="shrink-0">${(info.accessFeeTotal / 100).toFixed(2)}</span></div>}
         {(info.shopLines ?? []).map((l, i) => (
           <div key={i} className="flex justify-between text-ink-soft"><span>{l.name}{l.quantity > 1 ? ` × ${l.quantity}` : ''}</span><span>${(l.unitPriceCents * l.quantity / 100).toFixed(2)}</span></div>
         ))}
@@ -318,12 +326,18 @@ function CheckInPageInner() {
   // Launch walk (Cam 2026-10-31): check-in and paying open on the round's day.
   if (info.opensOn) return (
     <div className="min-h-screen bg-paper flex items-center justify-center px-4 py-10">
-      <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
+      <div className={`${CARD} max-w-lg w-full overflow-hidden`}>
         <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} photoUrl={info.heroImageUrl} logoUrl={info.logoUrl} />
         <div className="p-8">
           <h1 className="text-[30px] font-serif leading-none text-ink mb-2">See you {new Date(`${info.opensOn}T12:00:00Z`).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC' })}</h1>
           <p className="text-ink-soft text-sm mb-6">Use this link that day to check in and pay.</p>
           {summary}
+          <Link href={`/manage/${bookingId}?token=${encodeURIComponent(token)}`} className="block w-full py-3 rounded-md text-sm font-medium text-ink text-center bg-paper hover:bg-line-soft transition-colors mb-3">
+            Change or cancel this booking
+          </Link>
+          <Link href={`/courses/${info.courseSlug}`} className="block text-center text-sm text-ink-soft hover:text-ink transition-colors">
+            Back to {info.courseName}
+          </Link>
         </div>
       </div>
     </div>
@@ -331,7 +345,7 @@ function CheckInPageInner() {
 
   return (
     <div className="min-h-screen bg-paper flex items-center justify-center px-4 py-10">
-      <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
+      <div className={`${CARD} max-w-lg w-full overflow-hidden`}>
         <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} photoUrl={info.heroImageUrl} logoUrl={info.logoUrl} />
         <div className="p-8">
           <h1 className="text-[30px] font-serif leading-none text-ink mb-2">Check in, {info.golferName.split(' ')[0]}?</h1>
@@ -344,7 +358,6 @@ function CheckInPageInner() {
           {summary}
 
           <div className="flex items-start gap-2 text-xs text-ink-muted mb-6">
-            
             <span>{info.courseAddress}</span>
           </div>
 
@@ -367,7 +380,7 @@ function CheckInPageInner() {
               </p>
             </>
           ) : (
-            <Elements stripe={stripePromise}>
+            <Elements stripe={getStripePromise()}>
               <WalkUpCheckInForm
                 bookingId={bookingId}
                 token={token}
@@ -381,6 +394,9 @@ function CheckInPageInner() {
               />
             </Elements>
           )}
+          <Link href={`/manage/${bookingId}?token=${encodeURIComponent(token)}`} className="block text-center text-xs text-ink-soft hover:text-ink underline underline-offset-2 mt-6 transition-colors">
+            Change or cancel this booking
+          </Link>
         </div>
       </div>
     </div>

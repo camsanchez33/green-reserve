@@ -374,6 +374,7 @@ function MemberDashboard({
       time: selectedTime.time,
       players: String(players),
       cart: '0',
+      from: 'member',
     });
     router.push(`/book?${qp}`);
   }
