@@ -132,7 +132,7 @@
   "src/components/dashboard/money/PayoutsPanel.tsx": 118,
   "src/components/dashboard/money/PayoutsTable.tsx": 60,
   "src/components/dashboard/money/RefundForm.tsx": 39,
-  "src/components/dashboard/money/SalesPanel.tsx": 122,
+  "src/components/dashboard/money/SalesPanel.tsx": 121,
   "src/components/dashboard/money/StripeButton.tsx": 11,
   "src/components/dashboard/onboarding/PageReviewStep.tsx": 264,
   "src/components/dashboard/settings/FinishSetup.tsx": 18,

@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
       eventCents: r.beyond.eventCents, eventPayments: r.beyond.eventPayments,
       greenReserveFeesCents: r.greenReserveFeesCents,
     },
-    paid: { cardCents: r.cardCents, counterCents: r.counterCents, accountCents: r.accountCents, outstandingCents: r.outstandingCents, outstandingGroups: r.outstandingBookings },
+    paid: { cardCents: r.cardCents, counterCents: r.counterCents, accountCents: r.accountCents, outstandingCents: r.notPaidCents, outstandingGroups: r.notPaidBookings },
     todayByHour: day.revenue.byHour, lastWeekByHour: dayBefore.revenue.byHour,
     todayCollectedCents: day.revenue.collectedCents, lastWeekCollectedCents: dayBefore.revenue.collectedCents,
     drawer: closes[0] ?? null,

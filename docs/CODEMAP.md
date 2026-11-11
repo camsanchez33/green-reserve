@@ -243,7 +243,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/operator/members/remind-overdue` | operator | file | POST | `src/app/api/operator/members/remind-overdue/route.ts` | 76 |
 | `/api/operator/messages` | operator | file | GET PATCH POST | `src/app/api/operator/messages/route.ts` | 123 |
 | `/api/operator/money/ledger` | operator | file | GET | `src/app/api/operator/money/ledger/route.ts` | 53 |
-| `/api/operator/money/overview` | operator | file | GET | `src/app/api/operator/money/overview/route.ts` | 39 |
+| `/api/operator/money/overview` | operator | file | GET | `src/app/api/operator/money/overview/route.ts` | 41 |
 | `/api/operator/money/sales` | operator | file | GET | `src/app/api/operator/money/sales/route.ts` | 64 |
 | `/api/operator/monthly-reviews` | operator | file | GET | `src/app/api/operator/monthly-reviews/route.ts` | 29 |
 | `/api/operator/my-courses` | operator | file | GET | `src/app/api/operator/my-courses/route.ts` | 33 |
@@ -268,7 +268,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/operator/schedule/preview` | operator | file | POST | `src/app/api/operator/schedule/preview/route.ts` | 32 |
 | `/api/operator/search` | operator | file | GET | `src/app/api/operator/search/route.ts` | 16 |
 | `/api/operator/settings` | operator | file | GET PATCH | `src/app/api/operator/settings/route.ts` | 136 |
-| `/api/operator/sheet-money` | operator | file | GET | `src/app/api/operator/sheet-money/route.ts` | 32 |
+| `/api/operator/sheet-money` | operator | file | GET | `src/app/api/operator/sheet-money/route.ts` | 33 |
 | `/api/operator/shift-notes` | operator | file | GET PATCH POST | `src/app/api/operator/shift-notes/route.ts` | 47 |
 | `/api/operator/shop-items` | operator | NONE FOUND for POST/PATCH/DELETE | DELETE GET PATCH POST | `src/app/api/operator/shop-items/route.ts` | 92 |
 | `/api/operator/shop-items/photo` | operator | file | DELETE POST | `src/app/api/operator/shop-items/photo/route.ts` | 55 |
@@ -311,7 +311,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/courses/[slug]/account` | golfer | **NONE FOUND** | page | `src/app/courses/[slug]/account/page.tsx` | 11 |
 | `/courses/[slug]/account/accept-invite` | golfer | entry | page | `src/app/courses/[slug]/account/accept-invite/page.tsx` | 144 |
 | `/courses/[slug]/member` | member | **NONE FOUND** | page | `src/app/courses/[slug]/member/page.tsx` | 875 |
-| `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 2283 |
+| `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 2284 |
 | `/dashboard/2fa` | operator | entry | page | `src/app/dashboard/2fa/page.tsx` | 110 |
 | `/dashboard/analytics` | operator | middleware | page | `src/app/dashboard/analytics/page.tsx` | 821 |
 | `/dashboard/cancellations` | operator | middleware | page | `src/app/dashboard/cancellations/page.tsx` | 17 |
@@ -393,7 +393,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/real-courses.ts` | 12 | 22 | TEST-2 (Cam 2026-10-22: | `ON_REAL_BOOKING`, `ON_REAL_COURSE`, `REAL_COURSE` |
 | `src/lib/security-events.ts` | 12 | 131 | SEC-3 (Cam 2026-10-26, "security has to be insane"; chose "log events" and "email + Problems"): | `BURST_PER_IP`, `BURST_TOTAL`, `lockedAccountsNow`, `MAX_EVENTS_PER_IP_HOUR`, `purgeOldSecurityEvents`, `SECURITY_KEEP_DAYS`, `securityEvent`, `securityFindings` +3 more |
 | `src/lib/access-fee.ts` | 11 | 192 | FB-3 (Cam 2026-09-29, FB3_FEE_PLAN_SPEC.md option B). | `bookingIdForFeeCharge`, `chargeAccessFeeSeparately`, `counterFeesUncollected`, `FeeChargeResult`, `liveSeparateFee`, `refundSeparateAccessFee` |
-| `src/lib/analytics.ts` | 11 | 651 | AN-1 (Cam 2026-10-01): | `Analytics`, `bookingPace`, `computeAnalytics`, `courseShareCents`, `EVENT_LOG_START`, `headline`, `NO_SHOW_GRACE_MIN`, `PaceDay` +4 more |
+| `src/lib/analytics.ts` | 11 | 665 | AN-1 (Cam 2026-10-01): | `Analytics`, `bookingPace`, `computeAnalytics`, `courseShareCents`, `EVENT_LOG_START`, `headline`, `NO_SHOW_GRACE_MIN`, `PaceDay` +4 more |
 | `src/lib/approval-state.ts` | 11 | 61 |  | `ApprovalState`, `coursePageDecision`, `getApprovalState`, `recordCoursePageDecision` |
 | `src/lib/demand-pricing.ts` | 11 | 151 | PRICE-5 (Cam 2026-10-30: | `Cell`, `dealWins`, `DemandCourse`, `demandDue`, `DemandMap`, `DemandMode`, `demandPctAt`, `demandPctFor` +10 more |
 | `src/lib/sms-consent-copy.ts` | 11 | 49 | SMS-1 (Cam 2026-11-02, Twilio A2P 10DLC — docs/SMS_OPT_IN.md): | `SMS_CONFIRMATION`, `SMS_CONSENT_VERSION`, `SMS_FREQUENCY`, `SMS_HELP`, `SMS_NO_CONSENT`, `SMS_NO_CONSENT_STAFF`, `smsKeyword`, `smsVerbalScript` +1 more |
@@ -449,7 +449,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/event-payments.ts` | 5 | 484 | W2-9b (Cam 2026-10-22: | `chargeEventPayment`, `COURSE_METHODS`, `createPayLink`, `eventFeeFor`, `eventMoney`, `HOLD_MINUTES`, `holdProblem`, `MAX_EVENT_PAYMENT_CENTS` +14 more |
 | `src/lib/golfer-key.ts` | 5 | 40 | Who a golfer is at a course: | `golferKey`, `golferKeys`, `keyMatch`, `parseGolferKey` |
 | `src/lib/membership-autorenew.ts` | 5 | 156 | MEM-RENEW (Cam 2026-10-30: | `autoRenewTermsText`, `chargeRenewal`, `chargesDue`, `duesIntentKey`, `markReminded`, `memberContact`, `reminderLeadDays`, `remindersDue` +5 more |
-| `src/lib/operator-home.ts` | 5 | 169 | DASH-C Home (Cam 2026-10-22, "very nice" on the course dashboard mockups): | `DeclinedCard`, `declinedCards`, `HomeGroup`, `HomeSlot`, `operatorHome` |
+| `src/lib/operator-home.ts` | 5 | 170 | DASH-C Home (Cam 2026-10-22, "very nice" on the course dashboard mockups): | `DeclinedCard`, `declinedCards`, `HomeGroup`, `HomeSlot`, `operatorHome` |
 | `src/lib/setup-missing.ts` | 5 | 64 | What is still missing from a course's booking page, each with the Settings section that fixes it. | `MissingItem`, `MissingKey`, `missingSetup`, `PAYMENTS_BLOCK_LIVE`, `paymentsMissing`, `settingsHref`, `SetupFacts`, `showSetupField` |
 | `src/lib/split-booking-db.ts` | 5 | 157 | SPLIT-1 (Cam 2026-11-02, "they all want to pay separately … has to be seamless"): | `hasShareToRefund`, `holdRefundCents`, `splitBooking`, `splitOffLateArrivals`, `SplitResult` |
 | `src/lib/terms.ts` | 5 | 10 | Bump this whenever /terms materially changes so old bookings keep an honest record of which version the golfer actually agreed to. | `CURRENT_TERMS_VERSION` |
@@ -702,7 +702,7 @@ Sorted the same way.
 | `src/components/dashboard/money/LedgerPanel.tsx` | 1 | 223 | LEDGER-2 (Cam 2026-10-30: | `LedgerPanel` |
 | `src/components/dashboard/money/PaymentsPanel.tsx` | 1 | 135 | Money rework (Cam 2026-10-19: | `PaymentsPanel`, `paymentStatus` |
 | `src/components/dashboard/money/PayoutsPanel.tsx` | 1 | 96 | SD-8 — the Stripe card, moved here out of Settings. | `PayoutsPanel` |
-| `src/components/dashboard/money/SalesPanel.tsx` | 1 | 243 | DENSE-2 (Cam 2026-10-27, after Toast's Sales Summary and Stripe's Today): | `SalesPanel` |
+| `src/components/dashboard/money/SalesPanel.tsx` | 1 | 245 | DENSE-2 (Cam 2026-10-27, after Toast's Sales Summary and Stripe's Today): | `SalesPanel` |
 | `src/components/dashboard/money/StripeButton.tsx` | 1 | 12 | Cam 2026-11-09 (Money notes): | `StripeButton` |
 | `src/components/dashboard/MoveGroupModal.tsx` | 1 | 154 | ACT-1 (PLATFORM_ROADMAP_SPEC §2): | `default (MoveGroupModal)` |
 | `src/components/dashboard/onboarding/PageReviewStep.tsx` | 1 | 257 | Onboarding step 1 (Cam 2026-10-27): | `PageReviewStep` |

@@ -1437,7 +1437,7 @@ function DashboardPageInner() {
               {teeTimes.length > 0 && (
                 // SHEET-3 (Cam 2026-11-06: "paid and unpaid should make more sense, like all metrics"; the groups-booked count
                 // moves up from under the sheet): every number the same shape — label, value, one line under it — spread across the row.
-                <div className={CARD + ' grid grid-cols-2 sm:grid-cols-3 ' + (dayMoney && dayMoney.date === selectedDate ? 'lg:grid-cols-5' : 'lg:grid-cols-3') + ' mb-4'} role="group" aria-label="The day">
+                <div className={CARD + ' grid grid-cols-2 sm:grid-cols-3 ' + (dayMoney && dayMoney.date === selectedDate ? (selectedDate <= today() ? 'lg:grid-cols-5' : 'lg:grid-cols-4') : 'lg:grid-cols-3') + ' mb-4'} role="group" aria-label="The day">
                   <div className="px-4 py-3"><div className="text-[12.5px] text-ink-soft">Players</div><div className="text-[20px] font-semibold text-ink tabular-nums leading-tight">{livePlayers}<span className="text-[13px] font-normal text-ink-muted"> of {spotsOffered}</span></div><div className="text-[12px] text-ink-muted">spots booked</div></div>
                   {/* ONCOURSE-1 (Cam 2026-11-06, "rounds on the course now"): today, who is out playing; another day, the groups booked. */}
                   {selectedDate === today() ? (
@@ -1448,7 +1448,8 @@ function DashboardPageInner() {
                   <div className="px-4 py-3"><div className="text-[12.5px] text-ink-soft">Checked in</div><div className="text-[20px] font-semibold text-ink tabular-nums leading-tight">{checkedInPlayers}<span className="text-[13px] font-normal text-ink-muted"> of {livePlayers}</span></div><div className="text-[12px] text-ink-muted">players</div></div>
                   {dayMoney && dayMoney.date === selectedDate && (<>
                     <div className="px-4 py-3"><div className="text-[12.5px] text-ink-soft">Paid</div><div className="text-[20px] font-semibold text-ink tabular-nums leading-tight">${(dayMoney.paidCents / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}</div><div className="text-[12px] text-ink-muted tabular-nums">{dayMoney.paidGroups} {dayMoney.paidGroups === 1 ? 'group' : 'groups'}{dayMoney.refundedGroups ? ` · ${dayMoney.refundedGroups} refunded` : ''}</div></div>
-                    <div className="px-4 py-3"><div className="text-[12.5px] text-ink-soft">Not paid yet</div><div className={'text-[20px] font-semibold tabular-nums leading-tight ' + (dayMoney.lateGroups > 0 ? 'text-warn' : 'text-ink')}>${(dayMoney.outstandingCents / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}</div><div className="text-[12px] text-ink-muted tabular-nums">{dayMoney.outstandingGroups} {dayMoney.outstandingGroups === 1 ? 'group' : 'groups'}{dayMoney.lateGroups > 0 && <span className="text-warn"> · {dayMoney.lateGroups} past</span>}</div></div>
+                    {/* STRESS-1110 #15: Not paid yet is today or earlier only (lib/analytics notPaid); a future day has none. */}
+                    {selectedDate <= today() && <div className="px-4 py-3"><div className="text-[12.5px] text-ink-soft">Not paid yet</div><div className={'text-[20px] font-semibold tabular-nums leading-tight ' + (dayMoney.lateGroups > 0 ? 'text-warn' : 'text-ink')}>${(dayMoney.outstandingCents / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}</div><div className="text-[12px] text-ink-muted tabular-nums">{dayMoney.outstandingGroups} {dayMoney.outstandingGroups === 1 ? 'group' : 'groups'}{dayMoney.lateGroups > 0 && <span className="text-warn"> · {dayMoney.lateGroups} past</span>}</div></div>}
                   </>)}
                 </div>
               )}
