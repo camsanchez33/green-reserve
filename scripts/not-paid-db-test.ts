@@ -39,11 +39,25 @@ async function main() {
   await book({ noShowAt: new Date('2031-05-13T09:00:00Z') }); // a marked no-show
   await book({ status: 'completed', paymentStatus: 'refunded', checkedInAt: new Date('2031-05-13T08:00:00Z') }); // refunded in full
   await book({ status: 'completed', paymentStatus: 'paid', roundPaymentIntentId: 'pi_x', checkedInAt: new Date('2031-05-13T08:00:00Z') });
+  // STRESS-1110 #15: today (2031-05-14) — one group later today, one no-show with a card and fee, one with neither; tomorrow.
+  const at = async (date: string, time: string, extra: Record<string, unknown>) => {
+    const t = await prisma.teeTime.create({ data: { courseId: course.id, date, time, holes: 18, greenFeeCents: 5000, cartFeeCents: 0, playersAvailable: 4 } });
+    return prisma.booking.create({ data: { teeTimeId: t.id, courseId: course.id, golferName: 'G', golferEmail: `${TAG}@test.local`, players: 1,
+      greenFeeTotal: 5000, cartFeeTotal: 0, accessFeeTotal: 150, totalAmount: 5150, status: 'confirmed', paymentStatus: 'card_on_file', ...extra } });
+  };
+  await at('2031-05-14', '15:00', {});
+  await at('2031-05-14', '07:00', { noShowAt: new Date('2031-05-14T07:30:00Z'), stripePaymentMethodId: 'pm_x', noShowFeeTotal: 2500 });
+  await at('2031-05-14', '07:10', { noShowAt: new Date('2031-05-14T07:30:00Z'), paymentStatus: 'no_payment_method' });
+  await at('2031-05-15', '09:00', {});
 
   const a = await computeAnalytics(course.id, { from: DAY, to: DAY }, NOW);
   check('not paid yet is the one round nobody paid for', a.revenue.outstandingBookings === 1 && a.revenue.outstandingCents === 10000, a.revenue);
   check('…the marked no-show is counted apart', a.revenue.noShowUnpaidBookings === 1 && a.revenue.noShowUnpaidCents === 10000, a.revenue);
   check('…a refunded round is neither owed nor expected', a.revenue.expectedCents === 30000 && a.revenue.collectedCents === 10000, a.revenue);
+  check('Not paid yet (one definition) on a past day is the owed round only', a.revenue.notPaidBookings === 1 && a.revenue.notPaidCents === 10000, a.revenue);
+  const wk = await computeAnalytics(course.id, { from: DAY, to: '2031-05-15' }, NOW);
+  check('Not paid yet = played or playing today and still owing — never tomorrow, never a no-show', wk.revenue.notPaidBookings === 2 && wk.revenue.notPaidCents === 15000, wk.revenue);
+  check('No-shows to charge: only today\'s with a card and a no-show fee, at the fee', wk.revenue.noShowToChargeBookings === 1 && wk.revenue.noShowToChargeCents === 2500, wk.revenue);
 
   // Payments: a no-show has its own list; a round later today is still to play (course time).
   const row = (o: Record<string, unknown>) => ({ status: 'confirmed', paymentStatus: 'card_on_file', cancellationFeeTotal: 0, noShowAt: null, teeTime: { date: '2031-05-14', time: '15:00', holes: 18 }, ...o }) as unknown as Parameters<typeof paymentStatus>[0];

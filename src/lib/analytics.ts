@@ -23,6 +23,10 @@
 //                    no-show staff marked (counted apart, never chased as a debt)
 //                    or a round refunded in full (Revamp 3 audit, Cam 2026-10-29).
 //                    Expected leaves fully refunded rounds out too.
+//   not paid yet     (STRESS-1110 #15) the one everywhere: non-cancelled, tee date on
+//                    or before today, not collected, not refunded, not a marked
+//                    no-show. No-shows to charge: today's marked no-shows with a
+//                    card and a no-show fee (the fee, charged at midnight).
 //   spots for sale   playersAvailable of every non-blocked tee time.
 //   no-show          non-cancelled, never checked in, tee time + grace passed.
 //   unfilled slot    non-blocked tee time that passed with open spots; lost
@@ -111,6 +115,8 @@ async function load(courseId: string, range: Range) {
           residentPlayers: true, residentRateCents: true, cancellationFeeApplies: true, appliedRate: true,
           // W2-8 (4): pro-shop items added to the round (POS-1a), before tax.
           shopTotalCents: true, shopTaxCents: true,
+          // STRESS-1110 #15: a no-show is owed only when there's a card and a no-show fee to charge.
+          noShowFeeTotal: true, stripePaymentMethodId: true,
         },
       },
     },
@@ -187,6 +193,12 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
   const outstanding = outstandingB.reduce((s, b) => s + share(b), 0);
   const noShowUnpaidB = pastMoney.filter(b => !collectedSet.has(b) && b.noShowAt);
   const upcomingB = live.filter(b => !b.passed && !collectedSet.has(b) && !refunded(b));
+  // STRESS-1110 #15 (Cam 2026-11-10): ONE "Not paid yet" for Money's strip, its paid list, Payments' filter, Home and
+  // the tee sheet — groups that played or are playing today (tee date on or before the course's today) and still owe.
+  // A marked no-show is never in it: no-shows are their own line, owed only when there's a card and a no-show fee
+  // still to charge (charged at the course's midnight, so only today's).
+  const notPaidB = live.filter(b => b.date <= today && !collectedSet.has(b) && !refunded(b) && !b.noShowAt);
+  const noShowToChargeB = live.filter(b => b.date === today && b.noShowAt && !collectedSet.has(b) && !refunded(b) && !!b.stripePaymentMethodId && b.noShowFeeTotal > 0);
   const upcoming = upcomingB.reduce((s, b) => s + share(b), 0);
   // Review (spec): the Money tab's Pending tiles, now here — upcoming rounds
   // with a card saved (charged at check-in), and upcoming rounds paid at the
@@ -488,6 +500,8 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
       expectedCents: expected, collectedCents: collected, gapCents: expected - collected, gapPct: pct(expected - collected, expected),
       cardCents: card, counterCents: counter, accountCents: onAccount, outstandingCents: outstanding, outstandingBookings: outstandingB.length, upcomingCents: upcoming,
       noShowUnpaidCents: noShowUnpaidB.reduce((s, b) => s + share(b), 0), noShowUnpaidBookings: noShowUnpaidB.length,
+      notPaidCents: notPaidB.reduce((s, b) => s + share(b), 0), notPaidBookings: notPaidB.length,
+      noShowToChargeCents: noShowToChargeB.reduce((s, b) => s + b.noShowFeeTotal, 0), noShowToChargeBookings: noShowToChargeB.length,
       // ACC-1: a round refunded in full is neither paid nor owed — counted here so the sheet can say so ("· 1 refunded")
       // instead of a checked-in group silently dropping out of both.
       refundedBookings: live.filter(refunded).length,

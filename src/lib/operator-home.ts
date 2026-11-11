@@ -129,8 +129,9 @@ export async function operatorHome(courseId: string, opts: { money: boolean; mes
     money = {
       // Paid bookings (groups), as Analytics' collected set; Analytics' "rounds" are players.
       paidCents: day.revenue.collectedCents, paidGroups: day.revenue.beyond.rounds,
-      outstandingCents: day.revenue.outstandingCents + day.revenue.upcomingCents,
-      outstandingGroups: day.revenue.outstandingBookings + day.revenue.pipeline.upcomingBookings,
+      // STRESS-1110 #15: the one Not paid yet (lib/analytics notPaid).
+      outstandingCents: day.revenue.notPaidCents,
+      outstandingGroups: day.revenue.notPaidBookings,
       lateGroups: day.revenue.outstandingBookings,
     };
     const byDate = new Map(weeks.revenue.series.map(x => [x.key, x.collectedCents]));

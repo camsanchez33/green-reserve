@@ -6349,7 +6349,7 @@
     },
     {
       "path": "src/app/api/operator/money/overview/route.ts",
-      "lines": 39,
+      "lines": 41,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7136,7 +7136,7 @@
     },
     {
       "path": "src/app/api/operator/sheet-money/route.ts",
-      "lines": 32,
+      "lines": 33,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9074,7 +9074,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 2283,
+      "lines": 2284,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -13004,7 +13004,7 @@
     },
     {
       "path": "src/components/dashboard/money/SalesPanel.tsx",
-      "lines": 243,
+      "lines": 245,
       "purpose": "DENSE-2 (Cam 2026-10-27, after Toast's Sales Summary and Stripe's Today):",
       "brain": [],
       "exports": [
@@ -15226,7 +15226,7 @@
     },
     {
       "path": "src/lib/analytics.ts",
-      "lines": 651,
+      "lines": 665,
       "purpose": "AN-1 (Cam 2026-10-01):",
       "brain": [],
       "exports": [
@@ -22911,7 +22911,7 @@
     },
     {
       "path": "src/lib/operator-home.ts",
-      "lines": 169,
+      "lines": 170,
       "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the course dashboard mockups):",
       "brain": [],
       "exports": [
