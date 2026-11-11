@@ -610,6 +610,20 @@ async function main() {
       const sr = (await api(`/api/admin/search?q=${encodeURIComponent('Isol')}`, { cookie: c })).body as { results?: { type: string; href: string }[] };
       check('…search finds no course, inquiry, golfer, teammate or Money page', !!sr?.results && !sr.results.some(x => ['course', 'inquiry', 'golfer', 'guest', 'booking', 'group', 'employee'].includes(x.type) || x.href === '/admin/revenue'), JSON.stringify(sr).slice(0, 300));
 
+      // ADMIN-REDO review: a failed charge names money, so it reaches the Overview's Needs attention only with Money.
+      await prisma.booking.update({ where: { id: bookingA.id }, data: { checkInFailReason: 'isolation: card declined' } });
+      try {
+        await prisma.adminUser.update({ where: { id: limited.id }, data: { areas: ['courses'] } });
+        const oc1 = (await api('/api/admin/today/overview', { cookie: c })).body as Record<string, unknown> & { attention?: { rows: { id: string }[] } | null };
+        check('Courses-only manager → Overview: no revenue, chart or net', oc1?.revenue === null && oc1?.chart === null && oc1?.net === null, JSON.stringify(oc1));
+        check('…and no failed charge in Needs attention', !!oc1?.attention && !oc1.attention.rows.some(r => r.id.startsWith('q-fc-')), JSON.stringify(oc1?.attention));
+        await prisma.adminUser.update({ where: { id: limited.id }, data: { areas: ['courses', 'money'] } });
+        const oc2 = (await api('/api/admin/today/overview', { cookie: c })).body as { attention?: { rows: { id: string }[] } | null };
+        check('…with Money added, the failed charge shows (the check above is not vacuous)', !!oc2?.attention && oc2.attention.rows.some(r => r.id.startsWith('q-fc-')), JSON.stringify(oc2?.attention));
+      } finally {
+        await prisma.booking.update({ where: { id: bookingA.id }, data: { checkInFailReason: '' } });
+        await prisma.adminUser.update({ where: { id: limited.id }, data: { areas: ['messages'] } });
+      }
       // Only the owner changes someone's areas — with a fresh confirmation and a reason.
       const self = await api('/api/admin/employees', { method: 'PATCH', cookie: c, body: { id: limited.id, action: 'areas', areas: ['money'], reason: 'give me money' } });
       checkStatus('An employee cannot change areas → 403', self.status, 403);
