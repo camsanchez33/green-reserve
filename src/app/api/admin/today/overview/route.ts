@@ -20,7 +20,8 @@ import { golferKey } from '@/lib/golfer-key';
 //   coursesLive, players  Courses        revenue, chart  Money
 //   golfers               Golfers        onboarding      Pipeline
 //   net                   owner only (Revenue's own net: fees − Stripe − expenses)
-//   activity / attention  each row by the area it comes from
+//   activity / attention  each row by the area it comes from; null with none of those areas
+//                         (failed charges need Money, unanswered messages need Messages)
 //
 // "This month" is the platform month so far; it is compared with last month
 // up to the same point (todayMoney's rule), never with a finished month.
@@ -143,7 +144,7 @@ export async function GET() {
     can('courses') || can('golfers') ? bookedIn(start, now) : null,
     can('courses') || can('golfers') ? bookedIn(priorStart, priorEnd) : null,
     can('pipeline') ? todayOnboarding(now) : null,
-    can('pipeline') || can('courses') ? buildActionQueue(now) : null,
+    can('pipeline') || can('courses') || can('money') || can('messages') ? buildActionQueue(now) : null,
     can('problems') ? listProblems(now) : null,
     can('pipeline') ? prisma.courseInquiry.findMany({ where: { createdAt: { gte: weekAgo } }, select: { id: true, courseName: true, createdAt: true }, orderBy: { createdAt: 'desc' }, take: 8 }) : null,
     can('courses') ? prisma.course.findMany({ where: { firstWentLiveAt: { gte: weekAgo }, ...REAL_COURSE }, select: { id: true, name: true, firstWentLiveAt: true }, orderBy: { firstWentLiveAt: 'desc' }, take: 8 }) : null,
@@ -160,12 +161,18 @@ export async function GET() {
   ].sort((a, b) => b.at.localeCompare(a.at)).slice(0, 8);
 
   type Attention = { id: string; text: string; tone: 'bad' | 'warn'; href: string; action: string };
-  const queueRows = queue ? queue.rows.filter(r => (r.courseId ? can('courses') : can('pipeline'))) : [];
-  const attention: Attention[] = [
-    ...(problems?.open ?? []).map(p => ({ id: `p-${p.id}`, text: p.title, tone: 'bad' as const, href: '/admin/problems', action: 'Open' })),
-    ...queueRows.map(r => ({ id: `q-${r.id}`, text: `${r.who}: ${r.why}`, tone: r.severity, href: r.href, action: r.actionLabel })),
-  ];
-  attention.sort((a, b) => (a.tone === b.tone ? 0 : a.tone === 'bad' ? -1 : 1));
+  // Each queue row by the area its CONTENT belongs to (review 2026-11-11): a failed charge carries money,
+  // an unanswered message carries a conversation — a Courses-only login sees neither.
+  const rowArea = (r: { id: string; courseId?: string | null }): AdminArea =>
+    r.id.startsWith('fc-') ? 'money' : r.id.startsWith('msg-') ? 'messages' : r.courseId ? 'courses' : 'pipeline';
+  const queueRows = queue ? queue.rows.filter(r => can(rowArea(r))) : [];
+  const toAttn = (r: (typeof queueRows)[number]): Attention => ({ id: `q-${r.id}`, text: `${r.who}: ${r.why}`, tone: r.severity, href: r.href, action: r.actionLabel });
+  const problemRows: Attention[] = (problems?.open ?? []).map(p => ({ id: `p-${p.id}`, text: p.title, tone: 'bad' as const, href: '/admin/problems', action: 'Open' }));
+  const todoRows: Attention[] = queueRows.map(toAttn).sort((a, b) => (a.tone === b.tone ? 0 : a.tone === 'bad' ? -1 : 1));
+  // Problems and to-dos are capped apart, so six open problems never hide every course to-do; each has its own door.
+  const PROB_CAP = 3, TODO_CAP = 5;
+  const seesActivity = can('pipeline') || can('courses');
+  const seesAttention = can('problems') || can('pipeline') || can('courses') || can('money') || can('messages');
 
   return NextResponse.json({
     at: now.toISOString(),
@@ -181,7 +188,13 @@ export async function GET() {
       stripeUnavailable: money.net.stripeUnavailable,
     } : null,
     chart: perDay ? buildChart(perDay, today) : null,
-    activity: support ? activity : null,
-    attention: support ? { rows: attention.slice(0, 6), total: attention.length } : null,
+    activity: support && seesActivity ? activity : null,
+    attention: support && seesAttention ? {
+      rows: [...problemRows.slice(0, PROB_CAP), ...todoRows.slice(0, TODO_CAP)],
+      total: problemRows.length + todoRows.length,
+      problemsMore: can('problems') ? Math.max(0, problemRows.length - PROB_CAP) : 0,
+      todosMore: Math.max(0, todoRows.length - TODO_CAP),
+      todosHref: can('pipeline') ? '/admin/inquiries' : '/admin/courses',
+    } : null,
   });
 }

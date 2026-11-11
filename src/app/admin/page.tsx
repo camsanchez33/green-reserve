@@ -24,7 +24,7 @@ type Overview = {
   net: { cents: number | null; priorCents: number | null; stripeUnavailable: boolean } | null;
   chart: Record<Grouping, Series> | null;
   activity: { id: string; at: string; text: string; tone: 'ok' | 'neutral' | 'brand'; href: string }[] | null;
-  attention: { rows: { id: string; text: string; tone: 'bad' | 'warn'; href: string; action: string }[]; total: number } | null;
+  attention: { rows: { id: string; text: string; tone: 'bad' | 'warn'; href: string; action: string }[]; total: number; problemsMore: number; todosMore: number; todosHref: string } | null;
 };
 
 const TZ = 'America/New_York';
@@ -119,7 +119,7 @@ export default function AdminOverview() {
   useEffect(() => { load(); }, [load]);
 
   const d = data;
-  const seesNothing = d && !d.coursesLive && !d.revenue && !d.players && !d.golfers && !d.onboarding && !d.net && !d.chart && !d.activity;
+  const seesNothing = d && !d.coursesLive && !d.revenue && !d.players && !d.golfers && !d.onboarding && !d.net && !d.chart && !d.activity && !d.attention;
   const series = d?.chart?.[group];
   const today = new Date().toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric' });
 
@@ -214,7 +214,7 @@ export default function AdminOverview() {
               {d.activity && (
                 <section className={`${g.glass} ${g.list}`} aria-label="Recent activity">
                   <h2>Recent activity <span>Last 7 days</span></h2>
-                  {d.activity.length === 0 && <p className={g.empty}>Nothing new this week: no enquiries, agreements or courses going live.</p>}
+                  {d.activity.length === 0 && <p className={g.empty}>Nothing new this week.</p>}
                   {d.activity.map(a => (
                     <Link key={a.id} href={a.href} className={g.li}>
                       <span className={`${g.d} ${a.tone === 'ok' ? g.dok : a.tone === 'brand' ? g.dbrand : ''}`} />
@@ -226,7 +226,7 @@ export default function AdminOverview() {
               )}
               {d.attention && (
                 <section className={`${g.glass} ${g.list} ${g.attn}`} aria-label="Needs attention">
-                  <h2>Needs attention {d.attention.total > d.attention.rows.length ? <Link href="/admin/problems">All {d.attention.total}</Link> : <span>{d.attention.total || 'Nothing'}</span>}</h2>
+                  <h2>Needs attention <span>{d.attention.total || 'Nothing'}</span></h2>
                   {d.attention.rows.length === 0 && <p className={g.empty}>Nothing needs you right now.</p>}
                   {d.attention.rows.map(r => (
                     <Link key={r.id} href={r.href} className={g.li}>
@@ -235,6 +235,13 @@ export default function AdminOverview() {
                       <span className={g.act}>{r.action}</span>
                     </Link>
                   ))}
+                  {(d.attention.problemsMore > 0 || d.attention.todosMore > 0) && (
+                    <p className={g.empty}>
+                      {d.attention.problemsMore > 0 && <Link href="/admin/problems">+{d.attention.problemsMore} problems</Link>}
+                      {d.attention.problemsMore > 0 && d.attention.todosMore > 0 && ' · '}
+                      {d.attention.todosMore > 0 && <Link href={d.attention.todosHref}>+{d.attention.todosMore} to-dos</Link>}
+                    </p>
+                  )}
                 </section>
               )}
             </div>

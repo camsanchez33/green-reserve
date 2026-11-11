@@ -170,9 +170,9 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
     <CommandPalette/>
     <aside className={`${g.rail} ${railOpen ? g.railOpen : ''}`} aria-label="Admin menu">
       <Link href="/admin" className={g.brand} aria-label="GreenReserve admin overview">
-        <span className={g.mark} aria-hidden="true">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="5" r="2"/><path d="M12 8v6l-3 6M12 14l3 6M8 11l4-1 5-3"/></svg>
-        </span>
+        {/* LOGO-2: the short mark (the golfer, cream on a pine square), never a drawn stand-in. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/brand/mark.svg" alt="" width={34} height={34} className={g.mark} />
         <span><b>GreenReserve</b><small>Headquarters</small></span>
       </Link>
 
