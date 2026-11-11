@@ -8401,7 +8401,7 @@
     },
     {
       "path": "src/app/checkin/[bookingId]/page.tsx",
-      "lines": 397,
+      "lines": 413,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8418,11 +8418,14 @@
       "imports": [
         "@/components/CourseHeaderBar",
         "@/components/GolferExitLinks",
+        "@/components/ui/Card",
         "@/lib/booking-fees",
         "@/lib/contact",
         "@stripe/react-stripe-js",
         "@stripe/stripe-js",
+        "@stripe/stripe-js/pure",
         "lucide-react",
+        "next/link",
         "next/navigation",
         "react"
       ],
@@ -9677,7 +9680,7 @@
     },
     {
       "path": "src/app/manage/[bookingId]/page.tsx",
-      "lines": 588,
+      "lines": 590,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9694,6 +9697,7 @@
       "imports": [
         "@/components/CourseHeaderBar",
         "@/components/GolferExitLinks",
+        "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/lib/cancel-policy",
         "@/lib/cart-pricing",
@@ -9967,6 +9971,7 @@
       "imports": [
         "@/components/CourseHeaderBar",
         "@/components/GolferExitLinks",
+        "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/lib/booking-fees",
         "@/lib/contact",
@@ -13394,6 +13399,7 @@
         "src/app/book/BookClient.tsx",
         "src/app/cam/approve/page.tsx",
         "src/app/cam/page.tsx",
+        "src/app/checkin/[bookingId]/page.tsx",
         "src/app/contact/page.tsx",
         "src/app/courses/[slug]/CourseBookingClient.tsx",
         "src/app/courses/[slug]/account/AccountPortalClient.tsx",
@@ -13413,8 +13419,10 @@
         "src/app/for-courses/ForCoursesContent.tsx",
         "src/app/for-courses/details/page.tsx",
         "src/app/g/[slug]/page.tsx",
+        "src/app/manage/[bookingId]/page.tsx",
         "src/app/pay/event/[id]/page.tsx",
         "src/app/pay/shop/[id]/page.tsx",
+        "src/app/receipt/[bookingId]/page.tsx",
         "src/app/receipt/shop/[id]/page.tsx",
         "src/app/sms-consent/page.tsx",
         "src/app/statement/[id]/page.tsx",

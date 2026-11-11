@@ -165,7 +165,7 @@
     "lucide": 4
   },
   "src/app/manage/[bookingId]/page.tsx": {
-    "lucide": 5
+    "lucide": 2
   },
   "src/app/membership/[id]/page.tsx": {
     "lucide": 1
