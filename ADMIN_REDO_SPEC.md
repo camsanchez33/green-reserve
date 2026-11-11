@@ -7,8 +7,16 @@ our fonts, serif headings where they fit, off-white page), its own visual identi
 ## Decisions (question feature, 2026-11-11)
 - **Now, one page at a time.** Each page: a mockup with example content (clearly marked) → Cam reviews what is on it
   and how it looks → built with real numbers only → Cam reviews live → next page. Nothing goes out all at once.
-- **Mockup first**, starting with Overview. The look is NOT decided: Cam will send how he wants it to look (the glass
-  built before "looked bad"); that applies to the course dashboard's UI too. No mockup until it arrives.
+- **Mockup first**, starting with Overview.
+- **The look (Cam 2026-11-11, on the Overview mockup `lanes/admin/overview-mockup.html`,
+  claude.ai/artifact/Lp9VdYJTqNEJeQ9jbj9hRk): the admin is GREEN GLASS** — green-tinted frosted panels over soft
+  blurred green shapes, light by default with a dark switch, highlight tiles in forest green + one warm gold, EB Garamond
+  headings + Libre Franklin. It replaces ADMIN-C (white, Inter) for `/admin/*` and overrides, for the admin only, the
+  bans on rounded-xl, shadows above 0 1px 2px and the dark background. Glass stays readable: solid panels under
+  `prefers-reduced-transparency`, text on glass clears 4.5:1 in both themes.
+- **The course dashboard goes CHARCOAL** (the mockup's third direction: solid raised cards, no glass, light default
+  with a dark option) — carried over page by page AFTER the admin Overview is built and approved. Build's job.
+- The homepage demo's phone keeps the $1.50 line (it mirrors the real booking page).
 - **#360 (old admin Home) closed; #365 (Problems) merged** — Problems becomes Support & Issues later.
 
 ## Navigation (Cam's)
