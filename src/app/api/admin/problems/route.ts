@@ -14,6 +14,10 @@ import { listProblems, SNOOZE_DAYS } from '@/lib/problems';
 // Every action is in the problem's history and the audit record. Nothing here
 // clears a problem: only the hourly check does, when it stops seeing it.
 
+// Only someone who can open Problems can be given one: support+ with the
+// Problems area (a never-set area list is every area; the owner has them all).
+const CAN_WORK = { active: true, role: { in: SUPPORT_PLUS }, OR: [{ role: 'owner' }, { areasSetAt: null }, { areas: { has: 'problems' } }] };
+
 export async function GET() {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Your session ended — sign in again.' }, { status: 401 });
@@ -22,7 +26,7 @@ export async function GET() {
   if (!requireRole(session, SUPPORT_PLUS)) return NextResponse.json({ error: 'Problems are for support and above.' }, { status: 403 });
   const [problems, admins] = await Promise.all([
     listProblems(),
-    prisma.adminUser.findMany({ where: { active: true }, select: { id: true, name: true }, orderBy: { name: 'asc' } }),
+    prisma.adminUser.findMany({ where: CAN_WORK, select: { id: true, name: true }, orderBy: { name: 'asc' } }),
   ]);
   return NextResponse.json({ ...problems, admins, canManage: requireRole(session, MANAGER_PLUS), me: session.adminId, snoozeDays: SNOOZE_DAYS });
 }
@@ -55,8 +59,8 @@ export async function PATCH(req: NextRequest) {
     case 'assign': {
       if (!manager) return NextResponse.json({ error: 'Assigning a problem to someone else needs manager access.' }, { status: 403 });
       if (alert.resolvedAt) return NextResponse.json({ error: 'This problem already cleared.' }, { status: 409 });
-      const to = typeof body.adminId === 'string' && body.adminId ? await prisma.adminUser.findFirst({ where: { id: body.adminId, active: true }, select: { id: true, name: true } }) : null;
-      if (body.adminId && !to) return NextResponse.json({ error: 'That person isn’t an active employee.' }, { status: 400 });
+      const to = typeof body.adminId === 'string' && body.adminId ? await prisma.adminUser.findFirst({ where: { ...CAN_WORK, id: body.adminId }, select: { id: true, name: true } }) : null;
+      if (body.adminId && !to) return NextResponse.json({ error: 'That person can’t open Problems — give it to someone with support access and the Problems area.' }, { status: 400 });
       await prisma.adminAlert.update({ where: { id }, data: { ownerId: to?.id ?? null, ownerName: to?.name ?? '' } });
       await event('assigned', to ? `to ${to.name}` : 'to no one');
       await audit('problem_assign', { owner: to?.name ?? null });

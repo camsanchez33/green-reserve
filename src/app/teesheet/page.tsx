@@ -45,7 +45,7 @@ const FEATURES: { h: string; p: string; items: string[]; shot?: Shot }[] = [
       'Call off a stormy afternoon in one step, with every golfer told',
       'A course alert banner on your booking page for closures and notices',
     ],
-    shot: { shot: 'tee-sheet', device: 'laptop', alt: 'The tee sheet: a square for every tee time with its groups, paid ones edged in green and unpaid in amber, and the next time marked Next up' },
+    shot: { shot: 'tee-sheet', device: 'laptop', alt: 'The tee sheet: a row for every tee time with a cell for each seat, paid groups filled green and unpaid ones amber, past times folded away and a line marking now' },
   },
   {
     h: 'Payments',
@@ -103,7 +103,7 @@ const FEATURES: { h: string; p: string; items: string[]; shot?: Shot }[] = [
       'No-shows, how far ahead golfers book, and where bookings come from',
       'At the start of each month, a written review of the month before, built only from your own numbers',
     ],
-    shot: { shot: 'analytics', device: 'laptop', alt: 'The analytics page: revenue, tee sheet filled, rounds played and average per round, what to look at, and September’s monthly review' },
+    shot: { shot: 'analytics', device: 'laptop', alt: 'The analytics page: what to look at, with a button beside each, and the monthly review of the month before' },
   },
 ];
 

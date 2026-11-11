@@ -41,6 +41,6 @@ check('a gone time offers only "a walk-in who already played", sent as late', pa
 check('only a staff walk-in marked late skips the cut-off', src('src/lib/counter-pay.ts').includes("{ allowLate: input.late === true && source === 'walk_in' && actor.type === 'staff' }") && claim.includes('if (!opts.allowLate && teeAt'));
 check('the sheet re-reads the clock every minute', page.includes('setInterval(() => setClockTick(t => t + 1), 60_000)'));
 const demo = src('src/components/home/TeeSheetDemo.tsx');
-check('the homepage demo mirrors: players and checked in, no rate, key above', demo.includes('Players <b>') && demo.includes('Checked in <b>') && !demo.includes('{HOLES} holes'));
+check('the homepage demo mirrors: players and checked in, no rate, key above', demo.includes('<small>Players</small>') && demo.includes('<small>Checked in</small>') && !demo.includes('{HOLES} holes'));
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
 process.exit(failed === 0 ? 0 : 1);
