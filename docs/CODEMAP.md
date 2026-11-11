@@ -53,7 +53,7 @@ this script with a non-zero exit — that is the point of the tag.
 | url | auth | guard | methods | file | lines |
 |---|---|---|---|---|---|
 | `/` | public | public | page | `src/app/page.tsx` | 15 |
-| `/admin` | admin | client-side | page | `src/app/admin/page.tsx` | 247 |
+| `/admin` | admin | client-side | page | `src/app/admin/page.tsx` | 254 |
 | `/admin/activity` | admin | client-side | page | `src/app/admin/activity/page.tsx` | 9 |
 | `/admin/announcements` | admin | client-side | page | `src/app/admin/announcements/page.tsx` | 261 |
 | `/admin/audit` | admin | client-side | page | `src/app/admin/audit/page.tsx` | 137 |
@@ -139,7 +139,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/admin/tee-sheet` | admin | file | GET PATCH POST | `src/app/api/admin/tee-sheet/route.ts` | 132 |
 | `/api/admin/test-course` | admin | file | GET PATCH POST PUT | `src/app/api/admin/test-course/route.ts` | 77 |
 | `/api/admin/today` | admin | file | GET | `src/app/api/admin/today/route.ts` | 52 |
-| `/api/admin/today/overview` | admin | file | GET | `src/app/api/admin/today/overview/route.ts` | 188 |
+| `/api/admin/today/overview` | admin | file | GET | `src/app/api/admin/today/overview/route.ts` | 196 |
 | `/api/admin/transactions` | admin | file | GET | `src/app/api/admin/transactions/route.ts` | 143 |
 | `/api/admin/transactions/export` | admin | file | GET | `src/app/api/admin/transactions/export/route.ts` | 94 |
 | `/api/admin/two-factor` | admin | file | GET POST | `src/app/api/admin/two-factor/route.ts` | 96 |
@@ -392,13 +392,13 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/round-packs.ts` | 13 | 289 | PRICE-3 (Cam 2026-10-30: | `buyPackOnline`, `closeStalePackLinks`, `endPacksRefundedOutside`, `findHoldings`, `giveBack`, `Holding`, `holdingById`, `holdingsFor` +18 more |
 | `src/lib/real-courses.ts` | 12 | 22 | TEST-2 (Cam 2026-10-22: | `ON_REAL_BOOKING`, `ON_REAL_COURSE`, `REAL_COURSE` |
 | `src/lib/security-events.ts` | 12 | 131 | SEC-3 (Cam 2026-10-26, "security has to be insane"; chose "log events" and "email + Problems"): | `BURST_PER_IP`, `BURST_TOTAL`, `lockedAccountsNow`, `MAX_EVENTS_PER_IP_HOUR`, `purgeOldSecurityEvents`, `SECURITY_KEEP_DAYS`, `securityEvent`, `securityFindings` +3 more |
+| `src/lib/access-fee.ts` | 11 | 192 | FB-3 (Cam 2026-09-29, FB3_FEE_PLAN_SPEC.md option B). | `bookingIdForFeeCharge`, `chargeAccessFeeSeparately`, `counterFeesUncollected`, `FeeChargeResult`, `liveSeparateFee`, `refundSeparateAccessFee` |
 | `src/lib/analytics.ts` | 11 | 651 | AN-1 (Cam 2026-10-01): | `Analytics`, `bookingPace`, `computeAnalytics`, `courseShareCents`, `EVENT_LOG_START`, `headline`, `NO_SHOW_GRACE_MIN`, `PaceDay` +4 more |
 | `src/lib/approval-state.ts` | 11 | 61 |  | `ApprovalState`, `coursePageDecision`, `getApprovalState`, `recordCoursePageDecision` |
 | `src/lib/demand-pricing.ts` | 11 | 151 | PRICE-5 (Cam 2026-10-30: | `Cell`, `dealWins`, `DemandCourse`, `demandDue`, `DemandMap`, `DemandMode`, `demandPctAt`, `demandPctFor` +10 more |
 | `src/lib/sms-consent-copy.ts` | 11 | 49 | SMS-1 (Cam 2026-11-02, Twilio A2P 10DLC — docs/SMS_OPT_IN.md): | `SMS_CONFIRMATION`, `SMS_CONSENT_VERSION`, `SMS_FREQUENCY`, `SMS_HELP`, `SMS_NO_CONSENT`, `SMS_NO_CONSENT_STAFF`, `smsKeyword`, `smsVerbalScript` +1 more |
 | `src/lib/staff-permissions.ts` | 11 | 156 | SP-A (STAFF_POLICY_SPEC Part A). | `ALL_KEYS`, `deniedMessage`, `labelFor`, `LEGACY_KEYS`, `normalizePermissions`, `PermissionDef`, `PermissionKey`, `PERMISSIONS` +5 more |
 | `src/lib/step-up-client.ts` | 11 | 70 | AW-1c: | `askReason`, `registerReasonHandler`, `registerStepUpHandler`, `stepUpFetch`, `withReason` |
-| `src/lib/access-fee.ts` | 10 | 192 | FB-3 (Cam 2026-09-29, FB3_FEE_PLAN_SPEC.md option B). | `bookingIdForFeeCharge`, `chargeAccessFeeSeparately`, `counterFeesUncollected`, `FeeChargeResult`, `liveSeparateFee`, `refundSeparateAccessFee` |
 | `src/lib/cron-log.ts` | 10 | 141 | MP-8b: | `cronHealth`, `CronHealth`, `cronRoute`, `lastStripeWebhook`, `logStripeWebhook`, `STRIPE_WEBHOOK_JOB` |
 | `src/lib/last-minute.ts` | 10 | 43 | PRICE-2 (Cam 2026-10-30: | `DealCourse`, `dealPct`, `dealRateSeat`, `dealSeat`, `dealSettingsError` |
 | `src/lib/residents.ts` | 10 | 66 | RES-1 (Cam 2026-10-19): | `cardValidOn`, `groupGreenFee`, `MAX_CARD_NUMBER`, `MAX_RESIDENT_NAME`, `otherPerPlayerCents`, `residentInput` |
@@ -430,7 +430,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/call-answers.ts` | 6 | 349 | INQUIRY_CALL_SPEC IC-5 — structured discovery-call answers. | `BOOKING_METHOD_OPTIONS`, `CALL_FIELDS`, `CallAnswers`, `callRecapLines`, `DAY_SHORT`, `emptyAnswers`, `FieldSpec`, `FieldType` +19 more |
 | `src/lib/cancel-booking.ts` | 6 | 369 |  | `CancellationOptions`, `performCancellation` |
 | `src/lib/checkin-booking.ts` | 6 | 581 |  | `BEING_CHARGED`, `cartAddOnCentsFor`, `CHARGE_STALE_MS`, `collectPayment`, `notBeingCharged`, `performCheckIn`, `READER_STALE_MS` |
-| `src/lib/golfer-key.ts` | 6 | 40 | Who a golfer is at a course: | `golferKey`, `golferKeys`, `keyMatch`, `parseGolferKey` |
+| `src/lib/expenses.ts` | 6 | 88 | EXPENSE TRACKER (RUN_QUEUE "EXPENSE TRACKER / real P&L") — the manual half of the P&L: | `EXPENSE_CADENCE_LABEL`, `EXPENSE_CADENCES`, `EXPENSE_CATEGORIES`, `EXPENSE_CATEGORY_LABEL`, `ExpenseCadence`, `ExpenseCategory`, `isExpenseCadence`, `isExpenseCategory` +4 more |
 | `src/lib/image-resize.ts` | 6 | 33 | Client-side downscale so a 12MB phone photo never has to travel over the wire or blow the perf budget on the page that eventually renders it. | `downscaleImage` |
 | `src/lib/manage-access.ts` | 6 | 17 | R-AUTH-003 / R-GOLF-003 (G13) — who may manage a booking from the golfer side. | `canManageBooking` |
 | `src/lib/password.ts` | 6 | 14 | Shared password strength rule — used on registration, reset, and in-dashboard change-password, both server-side (enforcement) and client-side (live hint). | `PASSWORD_REQUIREMENTS_HINT`, `validatePasswordStrength` |
@@ -447,7 +447,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/course-plan.ts` | 5 | 295 | W2-6 Schedule simplification (Cam 2026-10-21: | `ALL_DAYS`, `autoName`, `blankPlan`, `checkPlan`, `checkRows`, `columnNames`, `CompiledRow`, `compilePlan` +11 more |
 | `src/lib/day-fill.ts` | 5 | 28 | ACC-1 (Cam 2026-11-08, "make sure these completely link throughout the site so any booking or payment correlates"): | `fillOf`, `FillTime`, `livePlayers`, `timeSpots` |
 | `src/lib/event-payments.ts` | 5 | 484 | W2-9b (Cam 2026-10-22: | `chargeEventPayment`, `COURSE_METHODS`, `createPayLink`, `eventFeeFor`, `eventMoney`, `HOLD_MINUTES`, `holdProblem`, `MAX_EVENT_PAYMENT_CENTS` +14 more |
-| `src/lib/expenses.ts` | 5 | 88 | EXPENSE TRACKER (RUN_QUEUE "EXPENSE TRACKER / real P&L") — the manual half of the P&L: | `EXPENSE_CADENCE_LABEL`, `EXPENSE_CADENCES`, `EXPENSE_CATEGORIES`, `EXPENSE_CATEGORY_LABEL`, `ExpenseCadence`, `ExpenseCategory`, `isExpenseCadence`, `isExpenseCategory` +4 more |
+| `src/lib/golfer-key.ts` | 5 | 40 | Who a golfer is at a course: | `golferKey`, `golferKeys`, `keyMatch`, `parseGolferKey` |
 | `src/lib/membership-autorenew.ts` | 5 | 156 | MEM-RENEW (Cam 2026-10-30: | `autoRenewTermsText`, `chargeRenewal`, `chargesDue`, `duesIntentKey`, `markReminded`, `memberContact`, `reminderLeadDays`, `remindersDue` +5 more |
 | `src/lib/operator-home.ts` | 5 | 169 | DASH-C Home (Cam 2026-10-22, "very nice" on the course dashboard mockups): | `DeclinedCard`, `declinedCards`, `HomeGroup`, `HomeSlot`, `operatorHome` |
 | `src/lib/setup-missing.ts` | 5 | 64 | What is still missing from a course's booking page, each with the Settings section that fixes it. | `MissingItem`, `MissingKey`, `missingSetup`, `PAYMENTS_BLOCK_LIVE`, `paymentsMissing`, `settingsHref`, `SetupFacts`, `showSetupField` |
@@ -623,7 +623,7 @@ Sorted the same way.
 | `src/components/ui/StatusDot.tsx` | 74 | 36 |  | `StatusDot` |
 | `src/components/ui/field.ts` | 57 | 8 | MP-9: | `INPUT`, `INPUT_COMPACT` |
 | `src/components/dashboard/LoadError.tsx` | 22 | 16 | SD-10. | `LoadError` |
-| `src/components/admin/AdminSidebar.tsx` | 19 | 247 |  | `AdminNavKey`, `default (AdminSidebar)` |
+| `src/components/admin/AdminSidebar.tsx` | 19 | 214 |  | `AdminNavKey`, `default (AdminSidebar)` |
 | `src/components/dashboard/Toast.tsx` | 15 | 70 | SD-2. | `toast`, `Toaster`, `ToastKind` |
 | `src/components/ui/Eyebrow.tsx` | 13 | 19 |  | `Eyebrow`, `EYEBROW` |
 | `src/components/OperatorSidebar.tsx` | 12 | 339 |  | `default (OperatorSidebar)`, `OperatorNavKey` |
@@ -1021,11 +1021,11 @@ without opening anything.
 
 ### Expense
 
-9 fields · 2 writer(s) · 4 reader(s)
+9 fields · 2 writer(s) · 5 reader(s)
 
 - fields: `id`, `name`, `category`, `amountCents`, `cadence`, `startedAt`, `endedAt`, `createdAt`, `updatedAt`
 - writers: `src/app/api/admin/expenses/[id]/route.ts`, `src/app/api/admin/expenses/route.ts`
-- readers: `src/app/api/admin/expenses/[id]/route.ts`, `src/app/api/admin/expenses/route.ts`, `src/app/api/admin/revenue/route.ts`, `src/lib/admin-today.ts`
+- readers: `src/app/api/admin/expenses/[id]/route.ts`, `src/app/api/admin/expenses/route.ts`, `src/app/api/admin/revenue/route.ts`, `src/app/api/admin/today/overview/route.ts`, `src/lib/admin-today.ts`
 
 ### GolferAccount
 

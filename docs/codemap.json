@@ -1050,7 +1050,7 @@
     },
     {
       "path": "src/app/admin/page.tsx",
-      "lines": 247,
+      "lines": 254,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3164,7 +3164,7 @@
     },
     {
       "path": "src/app/api/admin/today/overview/route.ts",
-      "lines": 188,
+      "lines": 196,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3181,13 +3181,14 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/access-fee",
         "@/lib/admin-action-queue",
         "@/lib/admin-areas",
         "@/lib/admin-day",
         "@/lib/admin-session",
         "@/lib/admin-today",
         "@/lib/course-time",
-        "@/lib/golfer-key",
+        "@/lib/expenses",
         "@/lib/prisma",
         "@/lib/problems",
         "@/lib/real-courses",
@@ -10601,7 +10602,7 @@
     },
     {
       "path": "src/components/admin/AdminSidebar.tsx",
-      "lines": 247,
+      "lines": 214,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -13986,6 +13987,7 @@
       ],
       "usedBy": [
         "src/app/api/admin/revenue/route.ts",
+        "src/app/api/admin/today/overview/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/stripe/webhook/route.ts",
         "src/lib/admin-course-page.ts",
@@ -20260,6 +20262,7 @@
         "src/app/api/admin/expenses/[id]/route.ts",
         "src/app/api/admin/expenses/route.ts",
         "src/app/api/admin/revenue/route.ts",
+        "src/app/api/admin/today/overview/route.ts",
         "src/lib/admin-today.ts"
       ]
     },
@@ -20566,7 +20569,6 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/api/admin/today/overview/route.ts",
         "src/app/api/operator/golfers/[key]/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/lib/analytics.ts",
@@ -31768,6 +31770,7 @@
         "src/app/api/admin/expenses/[id]/route.ts",
         "src/app/api/admin/expenses/route.ts",
         "src/app/api/admin/revenue/route.ts",
+        "src/app/api/admin/today/overview/route.ts",
         "src/lib/admin-today.ts"
       ]
     },
