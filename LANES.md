@@ -23,6 +23,12 @@ The final reviewer reads one PR; what links the lanes together is CI on every PR
 whole flows across pages after merges.
 
 
+**No lane starts without Cam's plan (Cam 2026-11-11: "until I give plans for how the other two should work and operate
+idk why they just started working").** Admin and Golfer are PAUSED: Cam reviews their open PRs (#360, #365, #361, #363)
+and writes a plan per lane first; nothing in them merges and no new job starts until then. Homepage is reactive only —
+a job when the real product changes and the homepage must match (the demo vs the tee sheet, page info, privacy/terms),
+never a self-chosen polish pass. Build never dispatches a lane "because the launch plan says so"; Cam's plan does.
+
 ## Rules for every lane
 1. **One lane per session.** The session title starts with the lane name.
 2. **Stay in your files.** If the work needs a file outside your lane, stop and send it to Build (below). Shared code —
