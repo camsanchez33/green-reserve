@@ -245,6 +245,14 @@ available, skip the Control Room and say so once in the first reply.
   30 minutes without a write shows as **Silent** on the page.
 - Never put secrets, customer data or env values in a row; Cam may share the page.
 
+**The web (Cam 2026-11-11, "a web with you as the hub").** The Control Room page is now Build in the middle with
+Dashboard, Admin, Golfer pages and Homepage around it. Only Build writes it, through `ArtifactData` on the same URL:
+`areas/<dashboard|admin|golfer|homepage|build>` (`mode` working · paused · reactive, `doing`, `updatedAt`),
+`items/<id>` (`area`, `state` done · working · planned, `title`, `note`, `pr`, `hold` for a PR held for Cam's review,
+`order`), `questions/<id>` (`area`, `q`, `rec`, `askedAt`, `status` open · answered: set answered the moment Cam
+answers), `lookat/<id>` (`area`, `pr`, `title`, `url`, `clicks`, `question`, `date`: one per merge, what to try live).
+Update it after every merge, answer and change of plan. Lanes never write it.
+
 ### Doc-file commit rule
 After every run, `git status` — if dirty:
 - **Doc files** (`RUN_QUEUE.md`, `*_SPEC.md`, `CLAUDE.md`, `LANES.md`, everything under `.claude/`, `lanes/`, `company/`, `scripts/*.mjs`, everything under `legal/`): COMMIT with message `"queue/spec update"` — never discard; Cowork edits them between runs.
