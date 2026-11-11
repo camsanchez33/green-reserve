@@ -21,6 +21,6 @@ for (const a of ["checkInBooking(b, cardDue)", "bookingLifecycle(b, 'take_cash',
 check('cancel sits last in Edit group: keep or waive the fee when one could be kept, each confirming once', /canRemove && \([\s\S]{0,400}canCancel && canWaive && \([\s\S]{0,600}canCancel && \(/.test(page) && page.includes("{canWaive ? 'Cancel, keep the fee' : 'Cancel booking'}") && page.includes('<span>Cancel, waive the fee</span>'));
 check('no box inside the card: groups are rows with hairlines', card.includes('divide-y divide-line-soft') && !page.includes('bg-paper/60 rounded-md px-3 py-2'));
 const demo = readFileSync('src/components/home/TeeSheetDemo.tsx', 'utf8');
-check('the homepage demo mirrors: price line, money per group, walk-in wording', demo.includes('a player</span>') && demo.includes('money(roundTotal(d, g.n))') && demo.includes('>Add players</button>'));
+check('the homepage demo mirrors: price line, money per group, walk-in wording', demo.includes('a player</span>') && demo.includes('money(cardAmount(d, g))') && demo.includes('>Add players</button>'));
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
 process.exit(failed === 0 ? 0 : 1);

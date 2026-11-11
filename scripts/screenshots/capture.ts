@@ -26,7 +26,7 @@ import { runProposeTool } from '../../src/lib/birdie/proposals';
 
 const BASE = process.env.SHOTS_URL ?? 'http://localhost:3124';
 const OUT = path.join(process.cwd(), 'public/home/shots');
-const SLUG = 'hollow-brook-demo';
+const SLUG = 'greenreserve-test-course';
 const TZ = 'America/New_York';
 /** The seed plays today's rounds before 10:00; the browser's clock is fixed just after. */
 const CLOCK = '10:05';
@@ -55,8 +55,11 @@ async function main() {
   const phoneGroups = unpaid.filter(b => b.source !== 'online');
   if (phoneGroups.length < 2) throw new Error('The seed left too few unpaid phone groups this afternoon — reseed.');
   const payFor = phoneGroups[0];
-  const checkInToken = payFor.checkInToken ?? randomUUID();
-  if (!payFor.checkInToken) await prisma.booking.update({ where: { id: payFor.id }, data: { checkInToken } });
+  // The pay shot is an ONLINE booking, so it shows GreenReserve's $1.50 a player (Cam 2026-11-11); a counter booking carries none.
+  const payOnline = unpaid.find(b => b.source === 'online' && b.accessFeeTotal > 0);
+  if (!payOnline) throw new Error('The seed left no unpaid online group this afternoon — reseed.');
+  const payOnlineToken = payOnline.checkInToken ?? randomUUID();
+  if (!payOnline.checkInToken) await prisma.booking.update({ where: { id: payOnline.id }, data: { checkInToken: payOnlineToken } });
 
   const b = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
   const laptop = async () => {
@@ -73,12 +76,29 @@ async function main() {
   // Dev-only overlays never belong in a screenshot.
   const clean = (p: { addStyleTag: (o: { content: string }) => Promise<unknown> }) => p.addStyleTag({ content: 'nextjs-portal, [data-nextjs-toast] { display: none !important; }' });
   const shot = async (p: { screenshot: (o: { path: string }) => Promise<unknown> }, name: string) => { await p.screenshot({ path: path.join(OUT, `${name}.png`) }); console.log(`wrote ${name}.png`); };
+  // The browser's clock is fixed at CLOCK, but the strip's money (/api/operator/sheet-money) counts
+  // "past" groups on the server's real clock — at night every afternoon group reads late. The seed
+  // pays every round before CLOCK, so at CLOCK no group is late: say so, as the Analytics shot does.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const onTime = (p: any) => p.route('**/api/operator/sheet-money*', async (route: any) => {
+    const res = await route.fetch(); const json = await res.json();
+    return route.fulfill({ response: res, json: { ...json, lateGroups: 0 } });
+  });
+  // A shot never shows "All on time" beside late groups.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sane = async (p: any) => {
+    const strip = await p.getByRole('group', { name: 'The day' }).innerText();
+    if (/\bpast\b/.test(strip) && await p.getByText('All on time').count()) throw new Error('The strip shows late groups beside "All on time" — the clocks disagree.');
+  };
 
   // ── The tee sheet ──
   {
     const ctx = await laptop(); const p = await ctx.newPage();
+    await onTime(p);
     await p.goto(`${BASE}/dashboard`, { waitUntil: 'load', timeout: 240000 });
-    await p.getByText('Next up').first().waitFor({ timeout: 120000 });
+    await p.locator('[aria-label*=" booked"]').first().waitFor({ timeout: 120000 }); // DENSE-4: the seat rows
+    await p.getByText('Not paid yet').first().waitFor({ timeout: 120000 });
+    await sane(p);
     await clean(p);
     await p.evaluate(() => window.scrollTo(0, 0));
     await shot(p, 'tee-sheet');
@@ -104,8 +124,11 @@ async function main() {
       const lines = [{ t: 'status', d: 'Looking at today’s tee sheet…' }, { t: 'text', d: reply }, { t: 'card', d: card }];
       return route.fulfill({ status: 200, contentType: 'application/x-ndjson', body: lines.map(l => JSON.stringify(l)).join('\n') + '\n' });
     });
+    await onTime(p);
     await p.goto(`${BASE}/dashboard`, { waitUntil: 'load', timeout: 240000 });
-    await p.getByText('Next up').first().waitFor({ timeout: 120000 });
+    await p.locator('[aria-label*=" booked"]').first().waitFor({ timeout: 120000 }); // DENSE-4: the seat rows
+    await p.getByText('Not paid yet').first().waitFor({ timeout: 120000 });
+    await sane(p);
     await clean(p);
     await p.getByRole('button', { name: /Open the assistant|Ask the assistant/ }).first().click();
     await p.getByLabel('Message the assistant').fill('Who’s still to check in this afternoon?');
@@ -139,10 +162,21 @@ async function main() {
     await ctx.close();
   }
 
+  // ── The pro shop register (Cam 2026-11-11: the homepage's pro shop section) ──
+  {
+    const ctx = await laptop(); const p = await ctx.newPage();
+    await p.goto(`${BASE}/dashboard/shop`, { waitUntil: 'load', timeout: 240000 });
+    await p.getByText('Logo cap').first().waitFor({ timeout: 120000 });
+    await clean(p);
+    await p.waitForTimeout(600);
+    await shot(p, 'shop');
+    await ctx.close();
+  }
+
   // ── The golfer pays on their phone ──
   {
     const ctx = await phone(); const p = await ctx.newPage();
-    await p.goto(`${BASE}/checkin/${payFor.id}?token=${checkInToken}`, { waitUntil: 'load', timeout: 240000 });
+    await p.goto(`${BASE}/checkin/${payOnline.id}?token=${payOnlineToken}`, { waitUntil: 'load', timeout: 240000 });
     await p.getByText(/pay \$/i).first().waitFor({ timeout: 120000 });
     await clean(p);
     await p.waitForTimeout(1500);
