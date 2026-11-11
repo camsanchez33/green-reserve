@@ -50,7 +50,7 @@ const FEATURES: { h: string; p: string; shot: string; device: 'laptop' | 'phone'
     h: 'Your pro shop, on the same system.',
     p: 'Ring up range balls, a sleeve of balls or a hot dog at the register. Take cash, use a Stripe card reader or text the customer a pay link. Count stock if you want to, and close out the drawer at the end of the day.',
     shot: 'shop', device: 'laptop',
-    alt: 'The pro shop register: a tile for each item with its price and how many are left, sorted into accessories, apparel, balls, range and the snack bar, beside an empty sale',
+    alt: 'The pro shop register: a tile for each item with its price and, where counted, how many are left, sorted into accessories, apparel, balls, range and the snack bar, beside an empty sale',
   },
   {
     h: 'Paid at the counter or on their phone.',
