@@ -7,13 +7,21 @@ feature. Lanes exist so work can run side by side without two sessions writing t
 
 | Lane | Session title | Writes code? | Owns | Never touches |
 |---|---|---|---|---|
-| **Build** | `Build — <what it's doing>` | Yes — the only lane that writes app code until the Admin lane opens | `src/`, `prisma/`, `scripts/*-test.ts`, config, CLAUDE.md, the launch-plan specs | — |
-| **Testing** | `Testing — <flow>` | No | `lanes/testing/` (its findings) | `src/`, `prisma/`, `scripts/`, any spec Build owns |
-| **Security** | `Security — <area>` | No | `lanes/security/` (its findings) | same as Testing |
-| **Company** | `Company — <task>` | No app code | `company/` (outreach, course lists, email and copy drafts, agreement notes) | `src/`, `prisma/`, `scripts/`, `legal/` published files |
-| Admin (later) | `Admin — <page>` | Yes, only `src/app/admin/**`, `src/components/admin/**` | those folders | `src/lib/**`, `src/app/api/**` shared routes, schema |
+| **Build / Dashboard** (coordinator) | `Build — <what it's doing>` | Yes | `src/app/dashboard/**`, `src/components/dashboard/**`, and ALL shared code: `src/lib/**`, `src/app/api/**` (except admin's read/display routes), `prisma/**`, `globals.css`, `layout.tsx`, `src/components/ui/**`, config, CLAUDE.md, specs. Merges every PR. | — |
+| **Admin** | `Admin — <tab>` | Yes | `src/app/admin/**`, `src/components/admin/**`, and the admin routes that only read or display (`src/app/api/admin/**` minus the ones below) | sign-in and money: `src/app/cam/**`, `src/app/api/cam/**`, `api/admin/{login,logout,session,forgot-password,set-password,two-factor,passkeys,owner-devices,refund,retry-charge,course-payouts,data-reset,disputes,transactions}` and any route that charges, refunds, signs in or steps up — those stay Build's (CLAUDE.md: money and auth never delegated); `src/lib/**`, schema |
+| **Homepage** | `Homepage — <task>` | Yes | `src/app/page.tsx`, `HomeContent.tsx`, `home.module.css`, `opengraph-image.tsx`, `src/app/{teesheet,for-courses,demo,contact}/**`, `src/components/home/**`, `Nav.tsx`, `Footer.tsx`, `PlainHeader.tsx`, `public/home/shots/**`, `scripts/screenshots/**`; privacy/terms layout only | `legal/`, `src/lib/**` (e.g. `faq.ts` wording goes to Build) |
+| **Golfer** | `Golfer — <flow>` | Yes | `src/app/{courses,book,g,checkin,manage,pay,receipt,statement,events,membership}/**`, `CourseCard`, `CourseHeaderBar`, `CourseJoin`, `CoursePacks`, `GolferExitLinks`, `TrustNote`, `AuthPhotoShell` | every price, fee and charge (`src/lib/**`, `src/app/api/**`) |
+| **Testing** | `Testing — <flow>` | No | `lanes/testing/` (its findings) | all code |
+| **Security** | `Security — <area>` | No | `lanes/security/` (its findings) | all code |
+| **Company** | `Company — <task>` | No app code | `company/` (outreach, course lists, email and copy drafts) | all code, `legal/` published files |
 
-The Admin lane starts only after the dashboard pages in LAUNCH_PLAN_SPEC.md are done, and only with Cam's go.
+**One merge queue (Cam 2026-11-10: four build lanes at once).** Lanes never merge. Before asking Build to merge, a
+lane merges `origin/main` into its own branch and regenerates the code map and status board (`node scripts/codemap.mjs
+&& node scripts/status.mjs && node scripts/status-html.mjs`), so the generated files never conflict. Build merges one
+PR at a time on green GitHub CI. A change one lane needs in another lane's files is a `send_message` request to Build.
+The final reviewer reads one PR; what links the lanes together is CI on every PR, the one queue, and Testing walking
+whole flows across pages after merges.
+
 
 ## Rules for every lane
 1. **One lane per session.** The session title starts with the lane name.
@@ -59,21 +67,64 @@ starts cold. So the savings come from:
 - **Build itself:** starts a fresh Build session when its history gets long (past ~400k tokens), handing over with a
   short note: open PRs, decisions pending, what's next.
 
+## The web — how work and questions flow (Cam 2026-11-10: "every question from anywhere should come back to me")
+```
+                 Cam
+                  │  questions up (the question feature) · decisions down
+              Build (coordinator)
+   ┌──────────┬───────┼─────────┬──────────┬──────────┐
+ Admin    Homepage  Golfer   Testing   Security   Company      ← lanes: plan, build, report
+   │          │       │         │          │          │
+ scout · check-runner · builder · auditors · light/final-reviewer ← each lane's own helpers, cheapest that fits
+```
+- **Every question goes up to Cam, whoever raises it:** a lane, a helper or a reviewer. A lane sends it to Build and
+  keeps working on whatever doesn't depend on it.
+- **Build never answers a product question for Cam.** It collects them, asks Cam with the question feature (a few at
+  a time, each with a recommendation), then either sends the answer back down to the lane that asked or handles it
+  itself when the work is Build's (shared code, money, sign-in, schema). Every answer is written into a spec file
+  (`STRESS_1110_SPEC.md` or the lane's own notes), so no lane asks twice.
+- **What Build may decide without Cam:** only how to build something Cam already decided: file ownership, merge
+  order, which helper does a job, a requested shared-code change that follows an existing rule. Anything that changes
+  what a course, golfer or Cam sees or pays goes to Cam.
+- **Down:** Build sends each lane its jobs and Cam's answers. Lanes send their helpers narrow, complete briefs.
+
 ## Delegation inside every lane — the same routing Build uses (Cam 2026-11-10)
 Every lane session follows CLAUDE.md's "Overseer protocol": it is the overseer of its own job, and it gives each
 piece of work to the cheapest agent that can do it right. The agents and their models are fixed in
 `.claude/agents/*.md`, so choosing the agent IS choosing the model.
 
-| Work inside a lane | Give it to | Model |
+| Work inside a lane | Give it to | Model · effort |
 |---|---|---|
-| Lookups: "where is X", "which routes write Y", "what does route Z check" | `scout` | Haiku |
-| Broad searches across many files where only the answer is needed | `Explore` | session default |
-| Mechanical edits from an exact plan (Build only: UI, copy, tests) | `builder` | Sonnet |
-| Design / no-silent-failure sweeps of pages | `design-auditor`, `admin-ux-auditor` | Sonnet |
-| Security sweeps of routes and money | `security-auditor` | Opus |
-| Checking shipped code against a spec | `spec-conformance` | Opus |
-| Every diff before a push (Build only) | `final-reviewer` | Fable |
-| Judgement, planning, money, sign-in, anything ambiguous | the lane session itself | — |
+| Lookups: "where is X", "which routes write Y", "what does route Z check" | `scout` | Haiku · low |
+| Running the checks (parse, tsc, guards, pinned tests) before a review | `check-runner` | Haiku · low |
+| Broad searches across many files where only the answer is needed | `Explore` | pass `model: "haiku"`, `effort: "low"` |
+| Mechanical edits from an exact plan you wrote | `builder` | Sonnet · pass `effort: "low"` for copy/markup, medium for logic |
+| Design / no-silent-failure sweeps of pages | `design-auditor`, `admin-ux-auditor` | Sonnet · low |
+| Checking shipped code against a spec | `spec-conformance` | Sonnet · medium |
+| Security sweeps — only when a diff touches sign-in, money or routes | `security-auditor` | Opus · high |
+| Review of a UI / copy / test-only diff | `light-reviewer` | Sonnet · medium |
+| Review of a diff touching money, sign-in, `src/lib`, `src/app/api`, `prisma`, crons, pay pages or config | `final-reviewer` | Fable · high |
+| Docs-only or generated-file diff (codemap, STATUS, lanes/, specs) | no reviewer — CI's drift check covers it | — |
+| Judgement, planning, money, sign-in, anything ambiguous | the lane session itself | see "Lane heads" |
+
+**Reviewer tiers (Cam 2026-11-10: "tiered … some haiku too … save money but keep it effective").** Run
+`check-runner` first, then hand the reviewer its output so the reviewer reads instead of running commands. Pick
+the reviewer by the files in the diff, not by how small it looks: one changed line in `src/lib` is a
+`final-reviewer` diff. `light-reviewer` answers `ESCALATE` when it sees such a file — then use `final-reviewer`.
+Never lower the effort of `final-reviewer` or `security-auditor`.
+
+**Lane heads (Cam 2026-11-10).** Build and Admin run on Opus (money, sign-in, security). Homepage and Golfer run on
+Sonnet — their files hold no money or sign-in, and anything that does goes to Build. A lane head never runs
+on a bigger model than its table says; a job that needs more goes up to Build.
+
+**Spend rules (Cam 2026-11-10: "we are burning usage").**
+- Build does not subscribe to lane PRs. A lane messages Build once its PR's GitHub CI is green; Build checks once and merges.
+- Lanes don't commit `STATUS.*`. Build regenerates the status board on its own branch after merges. Lanes still
+  regenerate `docs/CODEMAP.md` / `docs/codemap.json`, which CI checks.
+- One job at a time per lane. When the job is done, the lane reports and goes idle; Build archives it and starts the
+  next job in a fresh session, so no session carries a long context.
+- A job that passes about 30 turns stops and reports to Build with what's left.
+- Build hands itself over to a fresh session (a short note in `lanes/build/`) once its context is large.
 
 - **Don't delegate small work.** Under about 3 files, or anything the session already has open, it does itself: a
   sub-agent starts cold and re-reads everything.
@@ -83,8 +134,8 @@ piece of work to the cheapest agent that can do it right. The agents and their m
 - **At most 1 sub-agent at a time** (Security: 2), each with a narrow, complete brief.
 
 ## Build
-- Works LAUNCH_PLAN_SPEC.md in order, then the decision files (e.g. STRESS_1110_SPEC.md), one PR at a time.
-- Every push: final-reviewer PASS first; merge only on green GitHub CI (Vercel preview is not a gate).
+- Works LAUNCH_PLAN_SPEC.md in order for the dashboard; since Cam 2026-11-10 ("let's get 4 lanes going: the homepage, the dashboard, the admin and the golfer booking page") plan sections 1–4 run at once, one lane each, then the decision files (e.g. STRESS_1110_SPEC.md), one PR at a time.
+- Every push: a PASS from the reviewer its files call for (above) first; merge only on green GitHub CI (Vercel preview is not a gate).
 - Money, sign-in, tenant isolation and schema are done by Build's main session only, never a cheaper model.
 - Picks up findings from `lanes/*/` after they merge: confirmed bugs are fixed, product questions go to Cam.
 

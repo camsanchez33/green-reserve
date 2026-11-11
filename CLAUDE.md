@@ -9,7 +9,7 @@ GreenReserve is an OpenTable-style golf tee sheet platform. Golf courses list fo
 ---
 
 ## Launch plan — READ `LAUNCH_PLAN_SPEC.md` FIRST (Cam 2026-11-09)
-Cam's handwritten plan to be live by Thanksgiving (Nov 26 2026): finish /dashboard page by page in his order (Pro shop + the tee sheet's carts → Messages → Money → Members → Events → Schedule → Analytics → Settings → Course alert → Sign out; then links, then UI/layout/animations), then a complete Admin redo, then the homepage, then golfer-facing pages, then the outreach rework (every text, email, receipt and confirmation: how they look and what they do), then a security pass, then run it like a real company; outreach starts Mon Nov 30. Work in that order.
+Cam's handwritten plan to be live by Thanksgiving (Nov 26 2026): finish /dashboard page by page in his order (Pro shop + the tee sheet's carts → Messages → Money → Members → Events → Schedule → Analytics → Settings → Course alert → Sign out; then links, then UI/layout/animations), then a complete Admin redo, then the homepage, then golfer-facing pages, then the outreach rework (every text, email, receipt and confirmation: how they look and what they do), then a security pass, then run it like a real company; outreach starts Mon Nov 30. Work in that order; since Cam 2026-11-10 sections 1–4 (dashboard, admin, homepage, golfer pages) run at once in four lanes (`LANES.md`).
 
 ## Key architectural decisions
 
@@ -106,10 +106,11 @@ here listed `src/app/account/`, which has never existed.
 ---
 
 ## Lanes — parallel sessions (Cam 2026-11-10): READ `LANES.md`
-Work runs in lanes, one per session, titled by lane: **Build** (the only lane that writes app code until an Admin lane opens; owns `src/lib`,
-`src/app/api`, `prisma`), **Testing** and **Security** (read-only; findings under `lanes/`), **Company** (outreach and
-copy drafts under `company/`, no app code), Admin later. Hand-offs go to Build by `send_message`; product questions go
-to Cam through Build. Rules, outputs and the local-app setup are in `LANES.md`.
+Work runs in lanes, one per session, each a head agent with its own cheaper workers. Build lanes: **Build/Dashboard**
+(coordinator; also owns ALL shared code — `src/lib`, `src/app/api` (Admin may edit admin routes that only read or display; every sign-in and money route stays Build's), `prisma`, `globals.css` — and merges every PR),
+**Admin**, **Homepage**, **Golfer**, each in its own folders. Read-only lanes: **Testing**, **Security**; **Company**
+writes drafts under `company/`. Every question from any lane goes to Cam through Build; Cam's answers come back down.
+Ownership, the merge queue, delegation (model + effort per worker) and the local-app setup are in `LANES.md`.
 
 ## Overseer protocol — who does what (Cam 2026-10-06)
 
@@ -125,9 +126,12 @@ and owns the final call. Agent models and effort are fixed in each
 | Money, auth/sessions, tenant isolation, charging crons, schema | **overseer only** — never delegated | session model |
 | Mechanical edits from an exact plan: UI pages/components, copy, admin screens, new tests | `builder` — allow-list in `.claude/agents/builder.md`: no lib/api/schema/config, no UI that writes through the API or handles cards/tokens | Sonnet · medium |
 | Zero-behavior reskin items, in a worktree (only via `/gr-batch`) | `reskin-worker` | Opus |
-| Design-system / admin no-silent-failure audits | `design-auditor`, `admin-ux-auditor` | Sonnet |
-| Security / spec audits | `security-auditor`, `spec-conformance` | Opus |
-| **Every diff, before verification and push** | `final-reviewer` | Fable · high (Cam 2026-10-06: the last gate reads only a diff, so the strongest model costs little here) |
+| Design-system / admin no-silent-failure audits | `design-auditor`, `admin-ux-auditor` | Sonnet · low |
+| Security audits (diffs touching sign-in, money, routes) | `security-auditor` | Opus · high |
+| Spec audits | `spec-conformance` | Sonnet · medium |
+| Running checks before a review | `check-runner` | Haiku · low |
+| Review of a UI / copy / test-only diff | `light-reviewer` | Sonnet · medium |
+| **Review of any diff touching money, sign-in, `src/lib`, `src/app/api`, `prisma`, crons, pay pages or config** | `final-reviewer` | Fable · high. Docs and generated files need no review (Cam 2026-11-10: tiered review, LANES.md) |
 
 Rules:
 - **Don't delegate small work.** A sub-agent starts cold and re-reads what the
@@ -135,7 +139,7 @@ Rules:
   context, the overseer does it itself.
 - **Money and auth never go to a cheaper model** — the 2026-10-05 review found
   the S1 bugs there.
-- **Nothing ships without `final-reviewer` PASS** — `/gr-run` and `/gr-debug` run it before every push. BLOCK → fix → re-review. The
+- **Nothing ships without the right reviewer's PASS** (`final-reviewer`, or `light-reviewer` for a UI/copy/test-only diff — LANES.md) — `/gr-run` and `/gr-debug` run it before every push. BLOCK → fix → re-review. The
   reviewer is never the agent that wrote the change. The overseer then verifies
   (tests, CI) and decides.
 - Parallel, independent lanes (a full-site review) use a Workflow only when Cam
