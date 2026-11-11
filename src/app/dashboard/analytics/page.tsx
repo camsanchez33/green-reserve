@@ -197,9 +197,9 @@ function insights(d: Data, can: (k: PermissionKey) => boolean, isOwner: boolean)
       ask: 'Who didn’t show up in these dates, and would a no-show fee help?',
     });
   }
-  if (d.revenue.notPaidBookings > 0) out.push({
+  if (d.revenue.outstandingBookings > 0) out.push({
     tone: 'warn',
-    text: `${usd(d.revenue.notPaidCents)} not paid · ${plural(d.revenue.notPaidBookings, 'group')}`,
+    text: `${usd(d.revenue.outstandingCents)} not paid · ${plural(d.revenue.outstandingBookings, 'group')}`,
     go: can('money.payments') ? { label: 'See them', href: '/dashboard/money?tab=payments&show=unpaid' } : undefined,
     ask: 'Which groups in these dates were never paid?',
   });
@@ -420,7 +420,7 @@ function RevenueTab({ d }: { d: Data }) {
             <Line label="By card" value={usd(d.revenue.cardCents)} />
             <Line label="At the counter" value={usd(d.revenue.counterCents)} />
             {d.revenue.accountCents > 0 && <Line label="On member accounts" value={usd(d.revenue.accountCents)} />}
-            <Line label="Not paid yet" sub={plural(d.revenue.notPaidBookings, 'group')} value={usd(d.revenue.notPaidCents)} />
+            <Line label="Not paid yet" sub={plural(d.revenue.outstandingBookings, 'group')} value={usd(d.revenue.outstandingCents)} />
             <Line label="Per round" sub={plural(d.revenue.roundsPlayed, 'round')} value={usd2(d.revenue.perRoundCents)} />
             {d.revenue.perAvailableTeeTimeCents != null && <Line label="Per tee time offered" value={usd2(d.revenue.perAvailableTeeTimeCents)} />}
           </div>

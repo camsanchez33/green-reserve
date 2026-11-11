@@ -116,7 +116,7 @@ async function load(courseId: string, range: Range) {
           // W2-8 (4): pro-shop items added to the round (POS-1a), before tax.
           shopTotalCents: true, shopTaxCents: true,
           // STRESS-1110 #15: a no-show is owed only when there's a card and a no-show fee to charge.
-          noShowFeeTotal: true, stripePaymentMethodId: true,
+          noShowFeeTotal: true, stripePaymentMethodId: true, stripeCustomerId: true,
         },
       },
     },
@@ -198,7 +198,7 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
   // A marked no-show is never in it: no-shows are their own line, owed only when there's a card and a no-show fee
   // still to charge (charged at the course's midnight, so only today's).
   const notPaidB = live.filter(b => b.date <= today && !collectedSet.has(b) && !refunded(b) && !b.noShowAt);
-  const noShowToChargeB = live.filter(b => b.date === today && b.noShowAt && !collectedSet.has(b) && !refunded(b) && !!b.stripePaymentMethodId && b.noShowFeeTotal > 0);
+  const noShowToChargeB = live.filter(b => b.date === today && b.noShowAt && !collectedSet.has(b) && !refunded(b) && !!b.stripePaymentMethodId && !!b.stripeCustomerId && b.noShowFeeTotal > 0);
   const upcoming = upcomingB.reduce((s, b) => s + share(b), 0);
   // Review (spec): the Money tab's Pending tiles, now here — upcoming rounds
   // with a card saved (charged at check-in), and upcoming rounds paid at the

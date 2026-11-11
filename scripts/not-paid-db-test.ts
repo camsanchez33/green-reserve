@@ -46,7 +46,7 @@ async function main() {
       greenFeeTotal: 5000, cartFeeTotal: 0, accessFeeTotal: 150, totalAmount: 5150, status: 'confirmed', paymentStatus: 'card_on_file', ...extra } });
   };
   await at('2031-05-14', '15:00', {});
-  await at('2031-05-14', '07:00', { noShowAt: new Date('2031-05-14T07:30:00Z'), stripePaymentMethodId: 'pm_x', noShowFeeTotal: 2500 });
+  await at('2031-05-14', '07:00', { noShowAt: new Date('2031-05-14T07:30:00Z'), stripePaymentMethodId: 'pm_x', stripeCustomerId: 'cus_x', noShowFeeTotal: 2500 });
   await at('2031-05-14', '07:10', { noShowAt: new Date('2031-05-14T07:30:00Z'), paymentStatus: 'no_payment_method' });
   await at('2031-05-15', '09:00', {});
 
