@@ -45,6 +45,14 @@ body.nophoto .banner svg,body.nophoto .banner .shade{display:none}
 .meta span+span::before{content:"·";margin-right:14px;color:var(--line)}
 .cta{font:inherit;font-weight:600;font-size:15px;border:0;border-radius:8px;background:var(--course);color:var(--course-ink);padding:14px 22px;cursor:pointer;margin-top:74px;text-decoration:none;display:inline-block}
 
+/* Tabs under the header: Tee times · Course info (each its own link) */
+.tabs{margin-top:22px;display:flex;gap:4px;border-bottom:1px solid var(--line)}
+.tabs a{font-size:15px;font-weight:600;color:var(--muted);text-decoration:none;padding:10px 4px;margin-right:20px;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--course)}
+.tabs a:hover{color:var(--ink)}
+.view[hidden]{display:none}
+.view#v-info section.blk:first-child{margin-top:28px}
+
 /* 2 · Booking */
 .booking > div{min-width:0}
 .booking{margin-top:32px;display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:24px;align-items:start}
@@ -150,7 +158,7 @@ html{scroll-behavior:smooth}
 </style>
 
 <div class="ctl"><div class="in">
-  <b>Golfer booking page mockup · example course and prices</b>
+  <b>Golfer booking page mockup · example course and prices · drawings stand in for the course's photos</b>
   <span class="sw" role="group" aria-label="Course colour">Course colour
     <button type="button" data-c="#1F4D3A" style="background:#1F4D3A" aria-label="Forest" aria-pressed="true"></button>
     <button type="button" data-c="#7A2E2E" style="background:#7A2E2E" aria-label="Burgundy" aria-pressed="false"></button>
@@ -181,11 +189,13 @@ html{scroll-behavior:smooth}
       <h1>Pine Hollow Golf Club</h1>
       <div class="meta"><span>Saratoga Springs, NY</span><span>Public</span><span>18 holes</span><span>Par 72</span><span>Walking any time</span></div>
     </div>
-    <a class="cta" href="#book">Find a tee time</a>
+    <a class="cta" href="#tee-times">Find a tee time</a>
   </div>
 </header>
 
 <main class="in">
+  <nav class="tabs" aria-label="Course page"><a href="#tee-times" id="t-times" aria-current="page">Tee times</a><a href="#course-info" id="t-info">Course info</a></nav>
+  <div class="view" id="v-times">
   <!-- 2 · Booking -->
   <div class="booking" id="book">
     <div>
@@ -202,6 +212,8 @@ html{scroll-behavior:smooth}
     <aside class="summary-wrap"><div class="panel summary" id="summary"></div></aside>
   </div>
 
+  </div>
+  <div class="view" id="v-info" hidden>
   <!-- 3 · Course information -->
   <section class="blk" id="info">
     <h2>Course information</h2>
@@ -240,6 +252,7 @@ html{scroll-behavior:smooth}
     <p class="sub">At the course.</p>
     <div class="fac"><div>Driving range</div><div>Putting green</div><div>Pro shop</div><div>Push carts</div><div>Snack bar</div><div>Locker rooms</div></div>
   </section>
+  </div>
 </main>
 
 <!-- 6 · Footer -->
@@ -317,5 +330,11 @@ html{scroll-behavior:smooth}
     document.getElementById('barGo').disabled=false;
   }
   render();
+  // Tabs: each view has its own link (#tee-times / #course-info); the live page uses its own URL per tab.
+  function showTab(){const info=location.hash==='#course-info';
+    document.getElementById('v-times').hidden=info;document.getElementById('v-info').hidden=!info;
+    document.getElementById('t-times').setAttribute('aria-current',info?'false':'page');document.getElementById('t-info').setAttribute('aria-current',info?'page':'false');
+    document.getElementById('bar').style.visibility=info?'hidden':'visible';}
+  window.addEventListener('hashchange',showTab);showTab();
 })();
 </script>

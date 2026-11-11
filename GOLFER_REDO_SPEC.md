@@ -10,6 +10,11 @@ a course information profile. Mockup: `lanes/golfer/booking-page-mockup.html` (c
 - "(TEST)" stays on test courses' pages (never on real ones); test pages stay noindex.
 - Fee wording on golfer pages is "service fee" (Cam 2026-11-11).
 
+- **Two tabs under the header (Cam 2026-11-11): Tee times · Course info**, each with its own URL (the course page
+  is Tee times; Course info at its own path) so the information stays indexable and linkable. Course info holds the
+  description, facts, yardages, photos and facilities; the header and footer show on both. The mockup's drawings
+  stand in for the course's real photos.
+
 ## The page, in order
 1. Header: banner photo (the course's), a large logo, the name as the main heading, a small details row (town,
    public/private, holes, par, walking), and "Find a tee time".
