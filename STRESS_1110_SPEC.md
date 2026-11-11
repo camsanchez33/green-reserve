@@ -58,3 +58,12 @@ Asked with the question feature on 2026-11-10. Each line is Cam's answer; build 
 - **Recording who removed a declined card** — Cam: it's rare; fine as is.
 - From the tee sheet extras, only one-tap card check-in was picked: no Block/Counter-only button, no not-today
   warning, phones don't default to List.
+
+## Decisions 2026-11-11 (asked with the question feature)
+- **Homepage fee line: taken off** (Cam: "do we need to put it on there … if not take it off" — it isn't required; then "Take it off"). The homepage carries no fee sentence; "Free for your course." in the hero stays. The fee is covered on the demo call and in the agreement.
+- **Pro shop on the homepage: its own section.**
+- **The demo / screenshot course is named "GreenReserve Test Course"** (replaces "Hollow Brook Golf Club", which may be a real club).
+- **The pay screenshot is an online booking** showing the $1.50 line.
+- **Golfer fee name: "service fee"** on every golfer page, email and receipt (Build: the wording lives in `describePolicy()` / shared copy).
+- **Golfer changes close at the same cutoff as free cancelling** at no-fee courses too (Build: shared rule).
+- **The check-in link comes back after booking only to a signed-in golfer** (Build: POST /api/bookings).

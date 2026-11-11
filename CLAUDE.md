@@ -279,7 +279,7 @@ HOME-2 is Cam's own layout: one full-screen photo with the cream logo
 centred, "The tee sheet your course deserves.", one sentence on what it is
 ending "Free for your course." (W2-H1, Cam 2026-10-19: no fee model in the hero), and Learn more (Cam 2026-10-19: Book a demo came off the hero; it stays top right and after the demo) → what it is and
 what your course gets, in ONE list (paragraph, bullets of features that exist
-today, then the one fee line in LQ-2 wording, "See how it works" + "Learn more
+today (Cam 2026-11-11: NO fee line on the homepage, and the pro shop gets its own section), "See how it works" + "Learn more
 about the tee sheet" cards; W2-H2 merged the separate "what your course gets"
 block, which repeated it) → the working demo (tee sheet on a laptop, golfer
 phone beside it) with Book a demo → the footer, "GreenReserve LLC" (W2-H3: the
