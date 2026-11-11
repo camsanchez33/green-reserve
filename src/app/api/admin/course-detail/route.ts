@@ -3,6 +3,7 @@ import { firstCheckInAfterGoLive } from '@/lib/course-checkin';
 import { prisma } from '@/lib/prisma';
 import { resolveStaffPermissions } from '@/lib/staff-permissions';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, SUPPORT_PLUS, areaGate } from '@/lib/admin-session';
+import { hasArea } from '@/lib/admin-areas';
 import { sendCourseLiveOrientationEmail } from '@/lib/email';
 import { getApprovalState } from '@/lib/approval-state';
 import { COMPLETED_BOOKING_STATUSES, computeCourseHealth } from '@/lib/course-metrics';
@@ -25,6 +26,11 @@ export async function GET(req: NextRequest) {
   if (!requireRole(session, SUPPORT_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const courseId = req.nextUrl.searchParams.get('courseId');
   if (!courseId) return NextResponse.json({ error: 'Missing courseId' }, { status: 400 });
+  // M2 (security sweep 2026-11-10): GreenReserve's money — its fees, the
+  // course's takings, counter fees not collected and failed charges with the
+  // golfer's contact — goes only to logins with the Money area (AW-11). Others
+  // get null and the page leaves the Money tab out.
+  const seesMoney = hasArea(session, 'money');
 
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -80,7 +86,7 @@ export async function GET(req: NextRequest) {
   ]);
 
   // AW-7: the Bookings and Money tabs.
-  const [weeks, money] = await Promise.all([courseWeeks(courseId, course.timezone), courseMoney(courseId)]);
+  const [weeks, money] = await Promise.all([courseWeeks(courseId, course.timezone), seesMoney ? courseMoney(courseId) : null]);
   // "Staff seen", as on Today: staff use of the dashboard, else the owner's last sign-in.
   const ownerLogin = course.operator?.lastLoginAt ?? null;
   const staffSeenAt = course.staffLastSeenAt && (!ownerLogin || course.staffLastSeenAt > ownerLogin) ? course.staffLastSeenAt : ownerLogin;
@@ -153,11 +159,11 @@ export async function GET(req: NextRequest) {
     }),
     recentBookings,
     totalBookings,
-    revenue30d: {
+    revenue30d: seesMoney ? {
       gross: (revenue._sum.totalAmount ?? 0) / 100,
       platform: (revenue._sum.accessFeeTotal ?? 0) / 100,
       greenFees: (revenue._sum.greenFeeTotal ?? 0) / 100,
-    },
+    } : null,
     bookings30d,
     lastBookingAt: lastBookingAgg._max.createdAt?.toISOString() ?? null,
     bookingsPrior30d: priorBookingsCount,
@@ -184,8 +190,8 @@ export async function GET(req: NextRequest) {
     relationship: {
       feed: buildRelationshipFeed({ timeline, messages: recentMessages, statusEvents: linkedInquiry?.events ?? [], calls }),
       operatorLastLoginAt: course.operator?.lastLoginAt?.toISOString() ?? null,
-      earnedCents: earnedAgg._sum.accessFeeTotal ?? 0,
-      paidRounds: earnedAgg._count.id,
+      earnedCents: seesMoney ? earnedAgg._sum.accessFeeTotal ?? 0 : null,
+      paidRounds: seesMoney ? earnedAgg._count.id : null,
       firstWentLiveAt: course.firstWentLiveAt?.toISOString() ?? null,
     },
     // A-05 items 4/5: course-timeline events (settings edits, reminders,

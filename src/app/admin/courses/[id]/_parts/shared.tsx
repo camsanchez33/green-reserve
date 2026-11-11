@@ -52,7 +52,8 @@ export interface CourseDetail {
     teeTime: { date: string; time: string };
   }[];
   totalBookings: number;
-  revenue30d: { gross: number; platform: number; greenFees: number };
+  /** M2: null without the Money area. */
+  revenue30d: { gross: number; platform: number; greenFees: number } | null;
   bookings30d: number;
   lastBookingAt: string | null;
   bookingsPrior30d: number;
@@ -73,7 +74,7 @@ export interface CourseDetail {
   /** MP-5e part 3 — see lib/course-feed.ts. */
   relationship?: {
     feed: { at: string; kind: string; text: string; by?: string }[];
-    operatorLastLoginAt: string | null; earnedCents: number; paidRounds: number; firstWentLiveAt: string | null;
+    operatorLastLoginAt: string | null; earnedCents: number | null; paidRounds: number | null; firstWentLiveAt: string | null;
   };
   /** CS-3: check-in calls + the linked inquiry's discovery calls, newest first. */
   calls?: CourseCallRow[];
@@ -87,12 +88,12 @@ export interface CourseDetail {
   agreements?: { signed: number; total: number; missing: string[] };
   /** AW-7: players per week, online vs at the counter, oldest first. */
   weeks: { weekStart: string; online: number; counter: number }[];
-  /** AW-7: lib/admin-course-page.ts courseMoney(). */
-  money: {
+  /** AW-7: lib/admin-course-page.ts courseMoney(). M2: null without the Money area (no Money tab). */
+  money: null | {
     feesThisMonth: number; roundsThisMonth: number; feesSamePointLastMonth: number;
     counterThisMonth: { rounds: number; fees: number }; counterAllTime: { rounds: number; fees: number };
     failedCharges: { bookingId: string; golferName: string; golferEmail: string; amount: number; teeDate: string; teeTime: string; reason: string }[];
-  };
+  } | null;
   /** AW-7: last time staff (or, failing that, the owner) used the dashboard. */
   staffSeenAt: string | null;
 }
