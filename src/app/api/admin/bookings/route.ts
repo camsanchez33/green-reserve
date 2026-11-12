@@ -75,9 +75,10 @@ export async function GET(req: NextRequest) {
   const q = (sp.get('q') ?? '').trim().slice(0, 100);
   const num = q ? numberQuery(q) : null;
   // Without Golfers, an email finds a booking only as the WHOLE address, compared in code: an insensitive equals is an
-  // ILIKE in Postgres, where % and _ would let a login read addresses it can't see a letter at a time.
+  // ILIKE in Postgres, where % and _ would let a login read addresses it can't see a letter at a time. The compare
+  // below keeps only the exact address, so _ (common in emails) is safe; % and \\ are refused outright.
   let exactEmailIds: string[] = [];
-  if (q && !seesContact && q.includes('@') && !/[%_\\]/.test(q)) {
+  if (q && !seesContact && q.includes('@') && !/[%\\]/.test(q)) {
     const hits = await prisma.booking.findMany({ where: { golferEmail: { equals: q, mode: 'insensitive' }, ...ON_REAL_COURSE }, select: { id: true, golferEmail: true }, take: 500 });
     exactEmailIds = hits.filter(h => h.golferEmail.toLowerCase() === q.toLowerCase()).map(h => h.id);
   }

@@ -235,7 +235,7 @@ export async function GET(req: NextRequest) {
     golferName: b.golferName, golferEmail: b.golferEmail,
     reason: friendlyStripeError(b.checkInFailReason),
     teeDate: b.teeTime.date, teeTime: b.teeTime.time,
-    // POS-1a: what collectPayment() will actually charge — the round plus any shop items.
+    // POS-1a: what the round's charge comes to — the round plus any shop items (shown, never charged here).
     amount: roundChargeCents(b) / 100, ourTake: roundApplicationFeeCents(b) / 100,
   }));
   const missedCheckIn = missedRaw.map(b => ({

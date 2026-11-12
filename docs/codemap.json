@@ -1,8 +1,8 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 706,
-    "routes": 304,
+    "files": 705,
+    "routes": 303,
     "libs": 253,
     "models": 72,
     "orphans": 11,
@@ -397,7 +397,7 @@
     },
     {
       "path": "src/app/admin/courses/[id]/_parts/MoneyTab.tsx",
-      "lines": 172,
+      "lines": 165,
       "purpose": "MP-12 (ADMIN_V4 V4-9):",
       "brain": [],
       "exports": [
@@ -425,7 +425,7 @@
     },
     {
       "path": "src/app/admin/courses/[id]/_parts/OperateTab.tsx",
-      "lines": 317,
+      "lines": 310,
       "purpose": "MP-12 (ADMIN_V4 V4-9):",
       "brain": [],
       "exports": [
@@ -684,7 +684,7 @@
     },
     {
       "path": "src/app/admin/courses/[id]/_parts/useCourseDetail.tsx",
-      "lines": 1092,
+      "lines": 1041,
       "purpose": "MP-12 (ADMIN_V4 V4-9):",
       "brain": [],
       "exports": [
@@ -950,7 +950,7 @@
     },
     {
       "path": "src/app/admin/golfers/page.tsx",
-      "lines": 457,
+      "lines": 415,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1266,7 +1266,7 @@
     },
     {
       "path": "src/app/admin/revenue/page.tsx",
-      "lines": 1074,
+      "lines": 1031,
       "purpose": "ADMIN-C Money (Cam 2026-10-22, from the Money mockup he approved:",
       "brain": [],
       "exports": [
@@ -1636,7 +1636,7 @@
     },
     {
       "path": "src/app/api/admin/bookings/route.ts",
-      "lines": 177,
+      "lines": 178,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2608,7 +2608,7 @@
     },
     {
       "path": "src/app/api/admin/golfers/route.ts",
-      "lines": 255,
+      "lines": 248,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2632,7 +2632,6 @@
       "imports": [
         "@/lib/admin-audit",
         "@/lib/admin-session",
-        "@/lib/cancel-booking",
         "@/lib/email",
         "@/lib/prisma",
         "@/lib/shop",
@@ -3097,33 +3096,6 @@
       "usedBy": []
     },
     {
-      "path": "src/app/api/admin/retry-charge/[bookingId]/route.ts",
-      "lines": 46,
-      "purpose": "",
-      "brain": [],
-      "exports": [
-        {
-          "name": "POST",
-          "kind": "route"
-        }
-      ],
-      "route": "/api/admin/retry-charge/[bookingId]",
-      "kind": "api",
-      "methods": [
-        "POST"
-      ],
-      "auth": "admin",
-      "guard": "file",
-      "imports": [
-        "@/lib/admin-audit",
-        "@/lib/admin-session",
-        "@/lib/checkin-booking",
-        "@/lib/stripe-errors",
-        "next/server"
-      ],
-      "usedBy": []
-    },
-    {
       "path": "src/app/api/admin/revenue/route.ts",
       "lines": 365,
       "purpose": "",
@@ -3423,7 +3395,7 @@
     },
     {
       "path": "src/app/api/admin/tee-sheet/route.ts",
-      "lines": 132,
+      "lines": 118,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3452,7 +3424,6 @@
       "imports": [
         "@/lib/admin-audit",
         "@/lib/admin-session",
-        "@/lib/cancel-booking",
         "@/lib/cart-pricing",
         "@/lib/claim-tee-time",
         "@/lib/course-metrics",
@@ -14681,7 +14652,6 @@
         "src/app/api/admin/refund/route.ts",
         "src/app/api/admin/request-re-review/route.ts",
         "src/app/api/admin/resend-staff-setup/route.ts",
-        "src/app/api/admin/retry-charge/[bookingId]/route.ts",
         "src/app/api/admin/schedule/route.ts",
         "src/app/api/admin/send-golive-reminder/route.ts",
         "src/app/api/admin/sentry-test/route.ts",
@@ -15301,7 +15271,6 @@
         "src/app/api/admin/refund/route.ts",
         "src/app/api/admin/request-re-review/route.ts",
         "src/app/api/admin/resend-staff-setup/route.ts",
-        "src/app/api/admin/retry-charge/[bookingId]/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/schedule/route.ts",
         "src/app/api/admin/search/route.ts",
@@ -17152,8 +17121,6 @@
         "./stripe"
       ],
       "usedBy": [
-        "src/app/api/admin/golfers/route.ts",
-        "src/app/api/admin/tee-sheet/route.ts",
         "src/app/api/bookings/cancel/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/lib/course-closure.ts",
@@ -17756,7 +17723,6 @@
         "./stripe"
       ],
       "usedBy": [
-        "src/app/api/admin/retry-charge/[bookingId]/route.ts",
         "src/app/api/checkin/[bookingId]/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/lib/counter-pay.ts",
@@ -27408,7 +27374,7 @@
     },
     {
       "path": "src/lib/stripe-errors.ts",
-      "lines": 26,
+      "lines": 27,
       "purpose": "Friendly-message map for Stripe decline/error strings (REVISE_QUEUE A-06 item 4:",
       "brain": [],
       "exports": [
@@ -27424,7 +27390,6 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/api/admin/retry-charge/[bookingId]/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/lib/admin-course-page.ts"
       ]
