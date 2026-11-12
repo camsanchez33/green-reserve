@@ -15,6 +15,14 @@ const missedCheckInWhere = (today: string) => ({ ...missedAny(today), ...ON_REAL
 import { counterFeesUncollected } from '@/lib/access-fee';
 import { roundChargeCents, roundApplicationFeeCents } from '@/lib/shop';
 import { feesByDay } from '@/lib/fees-by-day';
+import { stripe } from '@/lib/stripe';
+import { terminalTestMode } from '@/lib/card-reader';
+import { csvCell } from '@/lib/ledger-view';
+import { dayKey } from '@/lib/admin-day';
+import {
+  REVENUE_PERIODS, resolveRevenuePeriod, centsPerDay, daysBetween, platformMoveLabel, platformSigned,
+  stripePaymentUrl, stripePayoutUrl, liveAt, type RevenuePeriodKind, type RevenuePeriod,
+} from '@/lib/revenue-period';
 
 // REVISE_QUEUE A-06 — /admin/revenue rebuilt as a real P&L. ONE period picker
 // (day / week / month-to-date / custom) drives the ENTIRE page. Support+ sees
@@ -32,7 +40,14 @@ import { feesByDay } from '@/lib/fees-by-day';
 // in time by paidAt (MP-6c schema half — stamped when the charge succeeds;
 // older rows were backfilled from checkedInAt in the migration).
 
-type PeriodKind = 'day' | 'week' | 'mtd' | 'custom';
+// ADMIN-REDO Revenue (Cam 2026-11-11): the page picks month / last_month / 30d /
+// year (lib/revenue-period, platform clock). The older day / week / mtd / custom
+// still answer for the page being replaced; 'mtd' is now 'month'.
+type LegacyKind = 'day' | 'week' | 'custom';
+type PeriodKind = LegacyKind | RevenuePeriodKind;
+/** GreenReserve's side of the ledger shown on the page; the CSV is the whole window. */
+const LEDGER_CAP = 500;
+const CSV_MAX_ROWS = 20_000;
 interface Win { start: Date; end: Date; }
 
 function startOfDayUTC(d: Date) { return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())); }
@@ -83,18 +98,6 @@ export async function GET(req: NextRequest) {
   const sp = req.nextUrl.searchParams;
   const todayStr = dayStr(new Date());
 
-  // MP-6a: the sidebar's red badge. Cheap counts only, no period, no owner
-  // lines — the same two ALL-TIME queries the Problems block is built from,
-  // so the badge and the block can never disagree.
-  if (sp.get('problemsCount') === '1') {
-    const [failed, missed, disputes] = await Promise.all([
-      prisma.booking.count({ where: FAILED_CHARGE_WHERE }),
-      prisma.booking.count({ where: missedCheckInWhere(todayStr) }),
-      openDisputes(),
-    ]);
-    return NextResponse.json({ failed, missed, disputes: disputes.length });
-  }
-
   // Owner sections need a 2FA-backed session, same as every other owner-only
   // surface. This one hides rather than 403s, so flag the mfa-less owner case
   // explicitly — otherwise the P&L just silently vanishes for the one person
@@ -103,8 +106,50 @@ export async function GET(req: NextRequest) {
   const ownerMfaRequired = session.role === 'owner' && !isOwner;
 
   const kindParam = sp.get('period');
-  const kind: PeriodKind = kindParam === 'day' || kindParam === 'week' || kindParam === 'custom' ? kindParam : 'mtd';
-  const { current, prior, label } = resolveWindows(kind, new Date(), sp.get('from'), sp.get('to'));
+  const now = new Date();
+  const kind: PeriodKind = kindParam === 'day' || kindParam === 'week' || kindParam === 'custom'
+    ? kindParam
+    : (REVENUE_PERIODS as string[]).includes(kindParam ?? '') ? (kindParam as RevenuePeriodKind) : 'month';
+  let rp: RevenuePeriod;
+  if (kind === 'day' || kind === 'week' || kind === 'custom') {
+    const w = resolveWindows(kind, now, sp.get('from'), sp.get('to'));
+    const from = dayKey(w.current.start), to = dayKey(new Date(w.current.end.getTime() - 1));
+    const days = Math.max(1, daysBetween(from, to) + 1);
+    const priorFrom = dayKey(w.prior.start);
+    rp = { kind: 'month', label: w.label, priorLabel: 'The period before', from, to, elapsedDays: days, totalDays: days,
+      current: w.current, prior: w.prior, priorWhole: w.prior, priorFrom, priorDays: Math.max(1, daysBetween(priorFrom, dayKey(new Date(w.prior.end.getTime() - 1))) + 1) };
+  } else {
+    rp = resolveRevenuePeriod(kind, now);
+  }
+  const { current, prior } = rp;
+  const label = rp.label;
+
+  // ---- GreenReserve's money, from the ledger (LEDGER-1): Σ platform fee, in − out ----
+  // TEST-2: real courses only. A row with no GreenReserve part is not ours.
+  const OURS = { platformFeeCents: { gt: 0 }, course: { isTest: false } } as const;
+  if (sp.get('format') === 'csv') {
+    const rows = await prisma.moneyMove.findMany({
+      where: { ...OURS, at: { gte: current.start, lt: current.end } },
+      select: { id: true, at: true, what: true, direction: true, account: true, platformFeeCents: true, stripeId: true, bookingId: true, course: { select: { name: true } } },
+      orderBy: { at: 'desc' }, take: CSV_MAX_ROWS + 1,
+    });
+    if (rows.length > CSV_MAX_ROWS) {
+      return NextResponse.json({ error: `More than ${CSV_MAX_ROWS.toLocaleString()} rows in this period — pick a shorter one.` }, { status: 413 });
+    }
+    const lines = ['Date,Time (ET),Course,What,Booking,Amount,Stripe id'];
+    for (const r of rows) {
+      const time = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit' }).format(r.at);
+      lines.push([dayKey(r.at), time, r.course.name, platformMoveLabel(r.what, r.direction), r.bookingId ? r.bookingId.slice(0, 8).toUpperCase() : '',
+        (platformSigned(r) / 100).toFixed(2), r.stripeId ?? ''].map(csvCell).join(','));
+    }
+    return new NextResponse(lines.join('\n') + '\n', {
+      headers: {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="greenreserve-revenue-${rp.from}-to-${rp.to}.csv"`,
+        'Cache-Control': 'no-store',
+      },
+    });
+  }
 
   const inCurrent = { gte: current.start, lt: current.end };
   const inPrior = { gte: prior.start, lt: prior.end };
@@ -164,6 +209,55 @@ export async function GET(req: NextRequest) {
     openDisputes(),
   ]);
 
+  const [ledgerSeriesRows, ledgerPriorAgg, ledgerByCourseCur, ledgerByCoursePrior, ledgerRows, courseLife] = await Promise.all([
+    // Every GreenReserve row from the start of the whole prior period to now: the
+    // current series, the prior series, and revenue.cents (= Σ the current series).
+    prisma.moneyMove.findMany({ where: { ...OURS, at: { gte: rp.priorWhole.start, lt: current.end } }, select: { at: true, direction: true, platformFeeCents: true } }),
+    prisma.moneyMove.groupBy({ by: ['direction'], where: { ...OURS, at: { gte: prior.start, lt: prior.end } }, _sum: { platformFeeCents: true } }),
+    prisma.moneyMove.groupBy({ by: ['courseId', 'direction'], where: { ...OURS, at: { gte: current.start, lt: current.end } }, _sum: { platformFeeCents: true } }),
+    prisma.moneyMove.groupBy({ by: ['courseId', 'direction'], where: { ...OURS, at: { gte: prior.start, lt: prior.end } }, _sum: { platformFeeCents: true } }),
+    prisma.moneyMove.findMany({
+      where: { ...OURS, at: { gte: current.start, lt: current.end } },
+      select: { id: true, at: true, what: true, direction: true, account: true, platformFeeCents: true, stripeId: true, bookingId: true, courseId: true, course: { select: { name: true, stripeAccountId: true } } },
+      orderBy: { at: 'desc' }, take: LEDGER_CAP + 1,
+    }),
+    prisma.course.findMany({ where: REAL_COURSE, select: { active: true, archivedAt: true, firstWentLiveAt: true, offlineAt: true, createdAt: true } }),
+  ]);
+  const signedSum = (rows: { direction: string; _sum: { platformFeeCents: number | null } }[]) =>
+    rows.reduce((t, r) => t + (r.direction === 'out' ? -1 : 1) * (r._sum.platformFeeCents ?? 0), 0);
+  const inCur = (at: Date) => at >= current.start && at < current.end;
+  const curSeriesRows = ledgerSeriesRows.filter(r => inCur(r.at)).map(r => ({ at: r.at, cents: platformSigned(r) }));
+  const priorSeriesRows = ledgerSeriesRows.filter(r => r.at >= rp.priorWhole.start && r.at < rp.priorWhole.end).map(r => ({ at: r.at, cents: platformSigned(r) }));
+  const revenueSeries = {
+    current: centsPerDay(curSeriesRows, rp.from, rp.elapsedDays),
+    prior: centsPerDay(priorSeriesRows, rp.priorFrom, rp.priorDays),
+  };
+  const revenueCents = curSeriesRows.reduce((t, r) => t + r.cents, 0);
+  const revenuePriorCents = signedSum(ledgerPriorAgg);
+  const byCourseLedger = (rows: { courseId: string; direction: string; _sum: { platformFeeCents: number | null } }[]) => {
+    const m = new Map<string, number>();
+    for (const r of rows) m.set(r.courseId, (m.get(r.courseId) ?? 0) + (r.direction === 'out' ? -1 : 1) * (r._sum.platformFeeCents ?? 0));
+    return m;
+  };
+  const revByCourse = byCourseLedger(ledgerByCourseCur);
+  const revPriorByCourse = byCourseLedger(ledgerByCoursePrior);
+  const testMode = terminalTestMode();
+  const ledger = {
+    rows: ledgerRows.slice(0, LEDGER_CAP).map(r => ({
+      id: r.id, at: r.at.toISOString(),
+      bookingId: r.bookingId, bookingRef: r.bookingId ? r.bookingId.slice(0, 8).toUpperCase() : null,
+      courseId: r.courseId, courseName: r.course.name,
+      what: platformMoveLabel(r.what, r.direction),
+      amountCents: platformSigned(r),
+      stripeUrl: stripePaymentUrl(r.stripeId, r.account, r.course.stripeAccountId || null, testMode),
+    })),
+    truncated: ledgerRows.length > LEDGER_CAP,
+  };
+  const liveCourses = {
+    count: courseLife.filter(c => liveAt(c, current.end)).length,
+    priorCount: courseLife.filter(c => liveAt(c, prior.end)).length,
+  };
+
   const failedCountByCourse = new Map(failedByCourseRaw.map(r => [r.courseId, r._count.id]));
   const collectedByCourse = new Map(perCourseCollectedRaw.map(r => [r.courseId, r]));
   const bookedByCourse = new Map(perCourseBookedRaw.map(r => [r.courseId, r._count.id]));
@@ -182,6 +276,8 @@ export async function GET(req: NextRequest) {
       greenFeeVolume: ((agg?._sum.greenFeeTotal ?? 0) + (agg?._sum.cartFeeTotal ?? 0)) / 100,
       failedCharges: failedCountByCourse.get(c.id) ?? 0,
       counterRounds: 0, counterFeesUncollected: 0,
+      revenueCents: revByCourse.get(c.id) ?? 0,
+      priorRevenueCents: revPriorByCourse.get(c.id) ?? 0,
     };
   });
 
@@ -266,7 +362,11 @@ export async function GET(req: NextRequest) {
   }));
 
   const base = {
-    period: { kind, label, from: dayStr(current.start), to: dayStr(current.end) },
+    period: { kind, label, from: rp.from, to: rp.to, priorLabel: rp.priorLabel, elapsedDays: rp.elapsedDays, totalDays: rp.totalDays },
+    revenue: { cents: revenueCents, priorCents: revenuePriorCents },
+    revenueSeries,
+    liveCourses,
+    ledger,
     isOwner,
     ownerMfaRequired,
     pnl: {
@@ -342,8 +442,42 @@ export async function GET(req: NextRequest) {
   const gapCents = collectedCents - stripeGrossCents;
   const reconciles: boolean | null = stripeUnavailable ? null : Math.abs(gapCents) < 100;
 
+  // ---- Owner-only: payouts to the courses' banks in the window, read from each
+  // course's own Stripe account the way /api/admin/course-payouts does. Kept whole
+  // (test courses included) like that route — it answers to Stripe (TEST-2).
+  // Placed by arrival date. One course Stripe can't answer for makes the whole
+  // answer "unavailable": a partial total would read as a real one.
+  const payoutCourses = await prisma.course.findMany({ where: { stripeAccountId: { not: '' } }, select: { id: true, name: true, stripeAccountId: true } });
+  const winFrom = Math.floor(current.start.getTime() / 1000), winTo = Math.floor(current.end.getTime() / 1000);
+  let payoutsUnavailable = false;
+  const payoutRows: { courseId: string; name: string; kind: 'failed' | 'short'; amountCents: number; at: string; reason: string; stripeUrl: string | null }[] = [];
+  let paidOutCents = 0;
+  const paidCourses = new Set<string>();
+  await Promise.all(payoutCourses.map(async c => {
+    try {
+      const list = await stripe.payouts.list({ limit: 100, arrival_date: { gte: winFrom, lt: winTo } }, { stripeAccount: c.stripeAccountId }).autoPagingToArray({ limit: 2000 });
+      for (const p of list) {
+        const at = new Date(p.arrival_date * 1000).toISOString();
+        const url = stripePayoutUrl(p.id, c.stripeAccountId, testMode);
+        if (p.status === 'failed') {
+          payoutRows.push({ courseId: c.id, name: c.name, kind: 'failed', amountCents: p.amount, at, reason: p.failure_message || p.failure_code || 'The bank sent it back.', stripeUrl: url });
+        } else if (p.status === 'paid' && p.reversed_by) {
+          // Paid, then pulled back by a reversal: the bank got less than was sent.
+          payoutRows.push({ courseId: c.id, name: c.name, kind: 'short', amountCents: p.amount, at, reason: 'Reversed after it was paid.', stripeUrl: url });
+        }
+        if (p.status === 'paid' && p.amount > 0) { paidOutCents += p.amount; paidCourses.add(c.id); }
+      }
+    } catch (e) {
+      console.error('[revenue] Stripe payouts read failed for', c.id, e);
+      payoutsUnavailable = true;
+    }
+  }));
+  payoutRows.sort((a, b) => b.at.localeCompare(a.at));
+
   return NextResponse.json({
     ...base,
+    coursePayoutProblems: { rows: payoutRows, unavailable: payoutsUnavailable },
+    payouts: { toCourses: payoutsUnavailable ? null : { cents: paidOutCents, courses: paidCourses.size }, unavailable: payoutsUnavailable },
     pnl: {
       ...base.pnl,
       stripeProcessing: pnlCurrent.stripeProcessing,
