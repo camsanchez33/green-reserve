@@ -132,3 +132,5 @@ One list of golfers (with an account), guests (booked without one) and course st
 Guests · Course staff · Problems. The search finds a name, email, phone or course. Card: their standing, the account
 or login details (texts consent, sign-in, 2-step for staff), their record, their bookings (→ Bookings) and history.
 Read-only, like Bookings.
+Note for the Home build (Cam 2026-11-12): "Open the register" shows ONLY when the course has turned on, in Settings,
+that it takes cash and we keep track of the register. Courses that don't take cash never see it.
