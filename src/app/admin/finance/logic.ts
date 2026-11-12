@@ -10,7 +10,7 @@ export const PERIODS: { v: Per; label: string; vs: string }[] = [
   { v: 'ytd', label: 'This year', vs: 'last year by today' },
 ];
 
-export const SOURCES = ['serviceFees', 'noShowLateFees', 'membershipDues'] as const;
+export const SOURCES = ['serviceFees', 'noShowLateFees', 'membershipDues', 'other'] as const; // other = pro shop and event fees
 export type Source = typeof SOURCES[number];
 export const CATEGORIES = ['infra', 'tools', 'legal', 'other'] as const; // Expenses' four (src/lib/expenses.ts)
 export type Category = typeof CATEGORIES[number];
@@ -25,7 +25,7 @@ export interface Month {
 export interface FinanceData {
   period: { kind: string; from: string; to: string; priorFrom: string; priorTo: string };
   months: Month[];
-  monthBefore: { revenue: Month['revenue']; expenses: Month['expenses'] } | null;
+  monthBefore: { revenue: Month['revenue'] | number; expenses: Month['expenses'] | number } | null;
   prior: { revenueCents: number; expensesCents: number; bookings: number };
 }
 
@@ -76,7 +76,9 @@ export function ticks(maxCents: number): number[] {
   return [1, 2, 3, 4].map(i => i * step).filter(v => v <= maxCents * 1.15);
 }
 
-const SOURCE_WORDS: Record<Source, string> = { serviceFees: 'Booking service fees', noShowLateFees: 'No-show & late-cancel fees', membershipDues: 'Membership dues fees' };
+const SOURCE_WORDS: Record<Source, string> = { serviceFees: 'Booking service fees', noShowLateFees: 'No-show & late-cancel fees', membershipDues: 'Membership dues fees', other: 'Pro shop & event fees' };
+/** Cents from a month's total, whether the route sends the object or the plain number. */
+export const centsOf = (v: { cents: number } | number | undefined | null) => (typeof v === 'number' ? v : v?.cents ?? 0);
 export const sourceLabel = (k: Source) => SOURCE_WORDS[k];
 
 /** A CSV cell: quoted, inner quotes doubled, and a leading = + - @ written as text so a spreadsheet never runs it. */

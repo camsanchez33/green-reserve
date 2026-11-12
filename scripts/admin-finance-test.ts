@@ -1,13 +1,13 @@
 // Admin Financial analytics (ADMIN-REDO, Cam approved 2026-11-12): the page's pure rules — the route's numbers
 // added up, profit and margin taken, nothing estimated. Run: npx tsx scripts/admin-finance-test.ts
 import { readFileSync } from 'fs';
-import { isAnswer, totals, windowTotals, pct, pointsChange, monthLabel, spansYears, ticks, toCsv, cell, type Month } from '../src/app/admin/finance/logic';
+import { centsOf, isAnswer, totals, windowTotals, pct, pointsChange, monthLabel, spansYears, ticks, toCsv, cell, type Month } from '../src/app/admin/finance/logic';
 
 let failed = 0;
 const check = (label: string, ok: boolean, detail = '') => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${!ok && detail ? ` — ${detail}` : ''}`); if (!ok) failed++; };
 const mo = (month: string, rev: number, exp: number, bookings = 0, partial = false): Month => ({
   month, partial, bookings,
-  revenue: { cents: rev, bySource: { serviceFees: rev, noShowLateFees: 0, membershipDues: 0 } },
+  revenue: { cents: rev, bySource: { serviceFees: rev, noShowLateFees: 0, membershipDues: 0, other: 0 } },
   expenses: { cents: exp, byCategory: { infra: exp, tools: 0, legal: 0, other: 0 } },
   liveCourses: 2, newLiveCourses: 0, byCourse: [],
 });
@@ -31,6 +31,8 @@ const ok = { period: { kind: 'm6' }, months: [], prior: { revenueCents: 0, expen
 check('the matching answer is accepted', isAnswer('m6', ok));
 check('another period is refused', !isAnswer('y12', ok));
 check('an answer without prior totals is refused', !isAnswer('m6', { period: { kind: 'm6' }, months: [] }));
+
+check('the month before reads as an object or a plain number', centsOf({ cents: 5 }) === 5 && centsOf(7) === 7 && centsOf(null) === 0);
 
 // Labels.
 check('a running month says so', monthLabel('2026-11', true) === 'Nov so far');

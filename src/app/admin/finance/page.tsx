@@ -11,7 +11,7 @@ import s from './finance.module.css';
 import { TERMS, SESSION_ENDED, loadFailed, NOT_YET } from './terms';
 import {
   type Per, type Month, type FinanceData, type Totals, type Category, PERIODS, SOURCES, CATEGORIES,
-  isAnswer, totals, windowTotals, pct, pointsChange, monthLabel, spansYears, curve, ticks, sourceLabel, toCsv,
+  isAnswer, centsOf, totals, windowTotals, pct, pointsChange, monthLabel, spansYears, curve, ticks, sourceLabel, toCsv,
 } from './logic';
 
 // ADMIN-REDO Financial analytics (Cam approved the mockup 2026-11-12, ADMIN_REDO_SPEC.md "Financial analytics:
@@ -84,16 +84,16 @@ function Bars({ rows, tone }: { rows: { label: string; cents: number }[]; tone: 
   );
 }
 
-function MonthDetail({ m, before }: { m: Month; before: { revenue: Month['revenue']; expenses: Month['expenses'] } | null }) {
+function MonthDetail({ m, before }: { m: Month; before: { revenue: Month['revenue'] | number; expenses: Month['expenses'] | number } | null }) {
   const t = totals(m.revenue.cents, m.expenses.cents);
   return (
     <div className={s.md}>
       <div>
-        <h3>Revenue {usd(m.revenue.cents)} {before && <Change now={m.revenue.cents} was={before.revenue.cents} vs="the month before" />}</h3>
-        {SOURCES.map(k => <p key={k}><span>{sourceLabel(k)}</span><b>{usd(m.revenue.bySource[k] ?? 0)}</b></p>)}
+        <h3>Revenue {usd(m.revenue.cents)} {before && <Change now={m.revenue.cents} was={centsOf(before.revenue)} vs="the month before" />}</h3>
+        {SOURCES.filter(k => k !== 'other' || (m.revenue.bySource.other ?? 0) !== 0).map(k => <p key={k}><span>{sourceLabel(k)}</span><b>{usd(m.revenue.bySource[k] ?? 0)}</b></p>)}
       </div>
       <div>
-        <h3>Expenses <span className={g.down}>{usd(m.expenses.cents)}</span> {before && <Change now={m.expenses.cents} was={before.expenses.cents} vs="the month before" goodUp={false} />}</h3>
+        <h3>Expenses <span className={g.down}>{usd(m.expenses.cents)}</span> {before && <Change now={m.expenses.cents} was={centsOf(before.expenses)} vs="the month before" goodUp={false} />}</h3>
         {CATEGORIES.map(k => <p key={k}><span>{catLabel(k)}</span><b>{usd(m.expenses.byCategory[k] ?? 0)}</b></p>)}
       </div>
       <div>
@@ -154,7 +154,7 @@ export default function FinancePage() {
   const now: Totals | null = useMemo(() => (data ? windowTotals(data.months) : null), [data]);
   const was: Totals | null = useMemo(() => (data ? totals(data.prior.revenueCents, data.prior.expensesCents, data.prior.bookings) : null), [data]);
   const wy = data ? spansYears(data.months) : false;
-  const bySource = data ? SOURCES.map(k => ({ label: sourceLabel(k), cents: data.months.reduce((t, m) => t + (m.revenue.bySource[k] ?? 0), 0) })) : [];
+  const bySource = data ? SOURCES.map(k => ({ key: k, label: sourceLabel(k), cents: data.months.reduce((t, m) => t + (m.revenue.bySource[k] ?? 0), 0) })).filter(x => x.key !== 'other' || x.cents !== 0) : [];
   const byCat = data ? CATEGORIES.map(k => ({ label: catLabel(k), cents: data.months.reduce((t, m) => t + (m.expenses.byCategory[k] ?? 0), 0) })) : [];
 
   function downloadCsv() {
