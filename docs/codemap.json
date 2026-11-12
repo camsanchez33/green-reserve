@@ -1,7 +1,7 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 719,
+    "files": 721,
     "routes": 308,
     "libs": 259,
     "models": 75,
@@ -795,9 +795,101 @@
       "usedBy": []
     },
     {
+      "path": "src/app/admin/expenses/logic.ts",
+      "lines": 148,
+      "purpose": "Expenses (ADMIN-REDO, Cam approved the mockup 2026-11-12):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "activeOn",
+          "kind": "fn"
+        },
+        {
+          "name": "byCost",
+          "kind": "fn"
+        },
+        {
+          "name": "cards",
+          "kind": "fn"
+        },
+        {
+          "name": "Cards",
+          "kind": "type"
+        },
+        {
+          "name": "Exp",
+          "kind": "type"
+        },
+        {
+          "name": "FilterKey",
+          "kind": "type"
+        },
+        {
+          "name": "FILTERS",
+          "kind": "const"
+        },
+        {
+          "name": "historyLine",
+          "kind": "fn"
+        },
+        {
+          "name": "HistoryRow",
+          "kind": "type"
+        },
+        {
+          "name": "isEnded",
+          "kind": "fn"
+        },
+        {
+          "name": "MAX_AMOUNT_CENTS",
+          "kind": "const"
+        },
+        {
+          "name": "monthEarlier",
+          "kind": "fn"
+        },
+        {
+          "name": "monthlyCostsOn",
+          "kind": "fn"
+        },
+        {
+          "name": "nextRenewal",
+          "kind": "fn"
+        },
+        {
+          "name": "parseAmount",
+          "kind": "fn"
+        },
+        {
+          "name": "pct",
+          "kind": "fn"
+        },
+        {
+          "name": "startDay",
+          "kind": "fn"
+        },
+        {
+          "name": "yearEarlier",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/lib/admin-day",
+        "@/lib/expenses"
+      ],
+      "usedBy": [
+        "src/app/admin/expenses/page.tsx"
+      ]
+    },
+    {
       "path": "src/app/admin/expenses/page.tsx",
-      "lines": 186,
-      "purpose": "Expenses (owner only):",
+      "lines": 391,
+      "purpose": "",
       "brain": [],
       "exports": [
         {
@@ -811,15 +903,58 @@
       "auth": "admin",
       "guard": "client-side",
       "imports": [
+        "../admin-glass.module.css",
+        "../courses/courses.module.css",
+        "../revenue/revenue.module.css",
+        "./expenses.module.css",
+        "./logic",
+        "./terms",
         "@/components/admin/AdminSidebar",
-        "@/components/ui/field",
+        "@/lib/admin-day",
         "@/lib/expenses",
-        "@/lib/format",
+        "@/lib/goal-pace",
         "@/lib/step-up-client",
         "next/link",
         "react"
       ],
       "usedBy": []
+    },
+    {
+      "path": "src/app/admin/expenses/terms.ts",
+      "lines": 33,
+      "purpose": "Expenses (ADMIN-REDO, Cam approved the mockup 2026-11-12):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "CADENCE_WORDS",
+          "kind": "const"
+        },
+        {
+          "name": "loadFailed",
+          "kind": "fn"
+        },
+        {
+          "name": "MSG",
+          "kind": "const"
+        },
+        {
+          "name": "SESSION_ENDED",
+          "kind": "const"
+        },
+        {
+          "name": "TERMS",
+          "kind": "const"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/admin/expenses/page.tsx"
+      ]
     },
     {
       "path": "src/app/admin/forgot-password/page.tsx",
@@ -14467,7 +14602,6 @@
         "src/app/admin/courses/[id]/_parts/shared.tsx",
         "src/app/admin/create/page.tsx",
         "src/app/admin/employees/page.tsx",
-        "src/app/admin/expenses/page.tsx",
         "src/app/admin/forgot-password/page.tsx",
         "src/app/admin/goals/page.tsx",
         "src/app/admin/golfers/page.tsx",
@@ -15117,6 +15251,8 @@
       "guard": null,
       "imports": [],
       "usedBy": [
+        "src/app/admin/expenses/logic.ts",
+        "src/app/admin/expenses/page.tsx",
         "src/app/api/admin/ask/route.ts",
         "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/finance/route.ts",
@@ -20981,6 +21117,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
+        "src/app/admin/expenses/logic.ts",
         "src/app/admin/expenses/page.tsx",
         "src/app/api/admin/expenses/[id]/route.ts",
         "src/app/api/admin/expenses/route.ts",
@@ -21199,7 +21336,6 @@
         "src/app/admin/courses/[id]/_parts/SetupTab.tsx",
         "src/app/admin/courses/[id]/_parts/useCourseDetail.tsx",
         "src/app/admin/employees/page.tsx",
-        "src/app/admin/expenses/page.tsx",
         "src/app/admin/goals/page.tsx",
         "src/app/admin/golfers/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
@@ -21355,6 +21491,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
+        "src/app/admin/expenses/page.tsx",
         "src/components/dashboard/home/HomeBoard.tsx",
         "src/lib/home-board.ts"
       ]
