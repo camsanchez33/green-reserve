@@ -54,8 +54,6 @@ ok('a lead we closed (lead→rejected) is not responded either',
   const r = ff.steps.find(s => s.key === 'reached')!;
   ok('…it still counts as Reached, but adds no 0 to "days at Reached" (only the logged 4-day one)', r.count === 2 && r.avgDaysAtStep === 4, r);
 }
-{
-}
 
 const all = [outLive, outSilent, leadUntouched, inLive, inTalking].map(milestones);
 const f = joiningFunnel(all, d(1), d(31));
