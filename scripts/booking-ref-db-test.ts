@@ -31,7 +31,7 @@ for (const f of ['src/app/manage/[bookingId]/page.tsx', 'src/app/receipt/[bookin
   check(`${f} shows the GR label`, readFileSync(f, 'utf8').includes('bookingRef ??'));
 }
 const mig = readFileSync('prisma/migrations/20261112010000_booking_ref_expected_launch/migration.sql', 'utf8');
-check('migration: course number is max+1 under an advisory lock (no sequence, no backfill)', /ADD COLUMN "number" INTEGER;/.test(mig) && /pg_advisory_xact_lock/.test(mig) && /COALESCE\(MAX\("number"\), 0\) \+ 1/.test(mig) && !/Course_number_seq|\bSERIAL\b|UPDATE "Booking" SET|UPDATE "Course" SET/.test(mig));
+check('migration: course number comes from the counter row (no sequence, no MAX+1, no backfill)', /CREATE TABLE "CourseNumberCounter"/.test(mig) && /ON CONFLICT \("id"\) DO UPDATE SET "last" = "CourseNumberCounter"\."last" \+ 1/.test(mig) && !/Course_number_seq|MAX\("number"\)|\bSERIAL\b|UPDATE "Booking" SET|UPDATE "Course" SET/.test(mig));
 check('migration: the booking number comes from the course\'s own sequence (no shared row written — no serialization conflicts)', /BEFORE INSERT ON "Booking"/.test(mig) && /nextval\("bookref_seq"\(NEW\."courseId"\)\)/.test(mig) && !/bookingRefSeq/.test(mig));
 
 // ---- database ----
@@ -63,7 +63,7 @@ async function main() {
   check('a new course gets the next number', ca.number != null && cb.number === ca.number + 1, { ca, cb });
   // Course numbers never skip (Cam 2026-11-12): concurrent creations, and one that rolls back.
   {
-    const before = (await prisma.course.aggregate({ _max: { number: true } }))._max.number ?? 0;
+    const before = (await prisma.courseNumberCounter.findUnique({ where: { id: 'course' } }))?.last ?? 0;
     const ROLL = new Error('rollback');
     await prisma.$transaction(async tx => {
       const op = await tx.courseOperator.create({ data: { name: 'Roll', email: `${TAG}-roll@test.local`, password: 'x' } });
@@ -76,6 +76,12 @@ async function main() {
     }));
     const nums = made.map(m => m.number!).sort((x, y) => x - y);
     check('8 courses created at once after a rolled-back one: the next 8 numbers, none skipped or repeated', JSON.stringify(nums) === JSON.stringify(Array.from({ length: 8 }, (_, i) => before + 1 + i)), { before, nums });
+    // A deleted course's number is never given again (Cam 2026-11-12: a GR28-5 must never point at another course).
+    const top = await prisma.course.findFirstOrThrow({ where: { number: nums.at(-1) }, select: { id: true, operatorId: true } });
+    await prisma.course.delete({ where: { id: top.id } });
+    const op9 = await prisma.courseOperator.create({ data: { name: 'C9', email: `${TAG}-c9@test.local`, password: 'x' } });
+    const next = await prisma.course.create({ data: { name: `${TAG} c9`, slug: `${TAG}-c9`, operatorId: op9.id, address: '1', city: 'T', state: 'CA', zipCode: '90210', holes: 18 }, select: { number: true } });
+    check('deleting the highest-numbered course leaves a hole; its number is not reused', next.number === nums.at(-1)! + 1, { deleted: nums.at(-1), next: next.number });
   }
   check('each course numbers its bookings from 1', a.booking.ref === 1 && b.booking.ref === 1, { a: a.booking.ref, b: b.booking.ref });
   check('bookingRefFor reads it', (await bookingRefFor(a.booking.id)) === `GR${ca.number}-1`);

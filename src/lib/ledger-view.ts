@@ -223,7 +223,7 @@ async function describe(courseId: string, rows: Row[]): Promise<LedgerRow[]> {
   });
 }
 
-const csvCell = (v: string | number) => {
+export const csvCell = (v: string | number) => {
   const t = String(v);
   // A leading = + - @ would run as a formula in a spreadsheet.
   const safe = /^[=+\-@\t\r]/.test(t) && !/^-?\d+(\.\d+)?$/.test(t) ? `'${t}` : t;

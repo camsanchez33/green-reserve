@@ -42,9 +42,9 @@ model Course {
   /// Only these can be reset from the admin, and they stay out of the
   /// platform's numbers, Problems and public lists (src/lib/real-courses.ts).
   isTest                     Boolean               @default(false)
-  /// BOOKING-REF (Cam 2026-11-12): the course's number, shown as GR<number> — the highest so far + 1,
-  /// set by the BEFORE INSERT trigger "Course_number_assign" (never skips); null on courses made
-  /// before it (no backfill).
+  /// BOOKING-REF (Cam 2026-11-12): the course's number, shown as GR<number> — the next value of
+  /// CourseNumberCounter, set by the BEFORE INSERT trigger "Course_number_assign": never skips, never
+  /// reused after a delete. Null on courses made before it (no backfill).
   number                     Int?                  @unique
   slug                       String                @unique
   name                       String
@@ -625,6 +625,13 @@ model TeeTime {
   @@index([eventId])
   // MP-3: the tee-sheet and generation paths filter on date alone across courses.
   @@index([date])
+}
+
+/// BOOKING-REF (Cam 2026-11-12): the last course number given (see Course.number). One row, id
+/// "course", written only by the "Course_number_assign" trigger. Wiped with the courses at launch.
+model CourseNumberCounter {
+  id   String @id @default("course")
+  last Int    @default(0)
 }
 
 model Booking {

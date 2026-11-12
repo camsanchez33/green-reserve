@@ -1,5 +1,5 @@
-// BOOKING-REF (Cam 2026-11-12): courses are numbered GR1, GR2, … (Course.number, the
-// highest so far + 1, set by an insert trigger) and bookings within their course, GR1-1, GR1-2, … (Booking.ref, set
+// BOOKING-REF (Cam 2026-11-12): courses are numbered GR1, GR2, … (Course.number, from
+// a counter that never skips or reuses, set by an insert trigger) and bookings within their course, GR1-1, GR1-2, … (Booking.ref, set
 // by the "Booking_ref_assign" insert trigger from the course's own sequence "bookref_<id>"). A booking or
 // course from before the columns (either number null) keeps the old 8-character id, so
 // every label still names exactly one booking. The ONE place the format lives.
