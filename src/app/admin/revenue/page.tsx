@@ -39,7 +39,9 @@ interface RevenueData {
   period: { kind: string; label: string; from: string; to: string; priorLabel?: string; elapsedDays?: number; totalDays?: number };
   revenue?: { cents: number; priorCents: number };
   revenueSeries?: { current: number[]; prior: number[] };
-  liveCourses?: { count: number; priorCount: number };
+  // count is null for a finished period (last_month) and priorCount always null: nothing records when a course was
+  // switched off and on, so those are a dash, never a guess.
+  liveCourses?: { count: number | null; priorCount: number | null };
   ledger?: { rows: LedgerRow[]; truncated: boolean };
   coursePayoutProblems?: { rows: PayoutProblem[]; unavailable: boolean };
   payouts?: { toCourses: { cents: number; courses: number } | null; unavailable: boolean };
@@ -222,9 +224,10 @@ export default function RevenuePage() {
     // Older route: its comparison covers round fees only while Revenue also counts fees charged on their own,
     // whose prior it doesn't give — so no comparison until the ledger answer.
     const revenuePct: number | null | undefined = ledger ? pct(shown.revenue!.cents, shown.revenue!.priorCents) : undefined;
-    const live = shown.liveCourses ? shown.liveCourses.count : shown.byCourse.filter(r => r.active && !r.archived).length;
-    const avgPct = ledger && shown.liveCourses && shown.liveCourses.count > 0 && shown.liveCourses.priorCount > 0
-      ? pct(shown.revenue!.cents / shown.liveCourses.count, shown.revenue!.priorCents / shown.liveCourses.priorCount) : undefined;
+    const live: number | null = shown.liveCourses ? shown.liveCourses.count : shown.byCourse.filter(r => r.active && !r.archived).length;
+    const lc = shown.liveCourses;
+    const avgPct = ledger && lc && lc.count !== null && lc.count > 0 && lc.priorCount !== null && lc.priorCount > 0
+      ? pct(shown.revenue!.cents / lc.count, shown.revenue!.priorCents / lc.priorCount) : undefined;
     const rev = (r: CourseRow) => (r.revenueCents !== undefined ? r.revenueCents / 100 : r.serviceFees);
     const courses = shown.byCourse
       .filter(r => (r.active && !r.archived) || r.booked > 0 || rev(r) !== 0)
@@ -284,8 +287,8 @@ export default function RevenuePage() {
               </div>
               <div className={`${g.glass} ${s.rkc}`}>
                 <span className={s.l} title={view.ledger ? TERMS.average : TERMS.averageNow}>Average per live course</span>
-                {view.live > 0 ? <b className={s.v}>{usd(view.revenue / view.live)}</b> : <b className={s.na}>No live courses</b>}
-                <span className={s.c}>{view.avgPct !== undefined ? <Change pct={view.avgPct} vs={view.vs} /> : <>{view.live} live course{view.live === 1 ? '' : 's'}</>}</span>
+                {view.live === null ? <b className={s.na}>—</b> : view.live > 0 ? <b className={s.v}>{usd(view.revenue / view.live)}</b> : <b className={s.na}>No live courses</b>}
+                <span className={s.c}>{view.live === null ? 'Live courses for a past period aren\u2019t recorded' : view.avgPct !== undefined ? <Change pct={view.avgPct} vs={view.vs} /> : <>{view.live} live course{view.live === 1 ? '' : 's'}</>}</span>
               </div>
               <div className={`${g.glass} ${s.rkc}`}>
                 <span className={s.l} title={TERMS.payout}>Stripe payout</span>
@@ -426,7 +429,7 @@ export default function RevenuePage() {
               <div className={s.rh}>
                 <h2 title={TERMS.ledger}>Ledger</h2>
                 {canExport && (
-                  <a className={c.plink} href={`/api/admin/transactions/export?from=${shown.period.from}&to=${shown.period.to}`} download title={TERMS.transactions}>All transactions <span aria-hidden="true">↓</span></a>
+                  <a className={c.plink} href={view.ledger ? `/api/admin/transactions/export?period=${KIND[shown.per]}` : `/api/admin/transactions/export?from=${shown.period.from}&to=${shown.period.to}`} download title={TERMS.transactions}>All transactions <span aria-hidden="true">↓</span></a>
                 )}
                 {shown.ledger && shown.ledger.rows.length > 0 && (
                   <a className={s.ico} href={`/api/admin/revenue?period=${KIND[shown.per]}&format=csv`} download aria-label="Download CSV" title="Download CSV"><DownloadIcon /></a>
