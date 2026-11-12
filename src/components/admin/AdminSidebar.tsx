@@ -8,7 +8,7 @@ import CommandPalette from '@/components/admin/CommandPalette';
 import { useAdminSession } from '@/lib/admin-session-context';
 import type { AdminArea } from '@/lib/admin-areas';
 
-export type AdminNavKey = 'overview' | 'problems' | 'goals' | 'inquiries' | 'courses' | 'groups' | 'create' | 'employees' | 'announcements' | 'messages' | 'profile' | 'revenue' | 'expenses' | 'golfers' | 'system' | 'company' | 'audit' | 'security';
+export type AdminNavKey = 'overview' | 'bookings' | 'problems' | 'goals' | 'inquiries' | 'courses' | 'groups' | 'create' | 'employees' | 'announcements' | 'messages' | 'profile' | 'revenue' | 'expenses' | 'golfers' | 'system' | 'company' | 'audit' | 'security';
 
 export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessages = 0 }: {
   active: AdminNavKey;
@@ -89,7 +89,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
       { key: 'courses', label: 'Golf courses', href: '/admin/courses', minRole: VIEWER_PLUS, area: 'courses' },
       { key: 'groups', label: 'Course groups', href: '/admin/groups', minRole: SUPPORT_PLUS, sub: true, area: 'courses' },
       { key: 'inquiries', label: 'Onboarding', href: '/admin/onboarding', minRole: VIEWER_PLUS, area: 'pipeline' },
-      { key: null, label: 'Bookings' },
+      { key: 'bookings', label: 'Bookings', href: '/admin/bookings', minRole: SUPPORT_PLUS, area: 'money' },
       // Users & golfers is dropped (Cam 2026-11-12): golfers are found on Bookings; a course's people go on its profile later.
     ] },
     { label: 'Financials', items: [
