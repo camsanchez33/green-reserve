@@ -745,7 +745,7 @@ async function main() {
         try {
           await prisma.booking.update({ where: { id: bookingA.id }, data: { paymentStatus: 'paid', roundPaymentIntentId: `pi_isol_exp_${TS}`, checkedInAt: new Date(monthStart.getTime() + 60_000) } });
           const inMonth = await exp('period=month');
-          check('Export (period=month) includes a round checked in just after the platform month starts', inMonth.status === 200 && inMonth.text.includes(`pi_isol_exp_${TS}`), inMonth.status);
+          check('Export (period=month) includes a round checked in just after the platform month starts', inMonth.status === 200 && inMonth.text.includes(`pi_isol_exp_${TS}`), String(inMonth.status));
           await prisma.booking.update({ where: { id: bookingA.id }, data: { checkedInAt: new Date(monthStart.getTime() - 60_000) } });
           check('…and leaves out one a minute before (last month, Eastern)', !(await exp('period=month')).text.includes(`pi_isol_exp_${TS}`));
           check('…which period=last_month has', (await exp('period=last_month')).text.includes(`pi_isol_exp_${TS}`));
