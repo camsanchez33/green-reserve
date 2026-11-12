@@ -450,7 +450,7 @@ export async function GET(req: NextRequest) {
   const payoutCourses = await prisma.course.findMany({ where: { stripeAccountId: { not: '' } }, select: { id: true, name: true, stripeAccountId: true } });
   const winFrom = Math.floor(current.start.getTime() / 1000), winTo = Math.floor(current.end.getTime() / 1000);
   let payoutsUnavailable = false;
-  const payoutRows: { courseId: string; name: string; kind: 'failed' | 'short'; amountCents: number; at: string; reason: string; stripeUrl: string | null }[] = [];
+  const payoutRows: { courseId: string; name: string; kind: 'failed' | 'short' | 'canceled'; amountCents: number; at: string; reason: string; stripeUrl: string | null }[] = [];
   let paidOutCents = 0;
   const paidCourses = new Set<string>();
   await Promise.all(payoutCourses.map(async c => {
@@ -461,6 +461,8 @@ export async function GET(req: NextRequest) {
         const url = stripePayoutUrl(p.id, c.stripeAccountId, testMode);
         if (p.status === 'failed') {
           payoutRows.push({ courseId: c.id, name: c.name, kind: 'failed', amountCents: p.amount, at, reason: p.failure_message || p.failure_code || 'The bank sent it back.', stripeUrl: url });
+        } else if (p.status === 'canceled') {
+          payoutRows.push({ courseId: c.id, name: c.name, kind: 'canceled', amountCents: p.amount, at, reason: 'Canceled before it reached the bank.', stripeUrl: url });
         } else if (p.status === 'paid' && p.reversed_by) {
           // Paid, then pulled back by a reversal: the bank got less than was sent.
           payoutRows.push({ courseId: c.id, name: c.name, kind: 'short', amountCents: p.amount, at, reason: 'Reversed after it was paid.', stripeUrl: url });

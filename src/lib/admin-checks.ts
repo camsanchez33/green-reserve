@@ -52,10 +52,10 @@ export async function urgentFindings(now = new Date()): Promise<Finding[]> {
     g.n++; g.cents += b.totalAmount; byCourse.set(b.courseId, g);
   }
   for (const [courseId, g] of byCourse) {
-    out.push({ key: `failed:${courseId}`, title: `Card declined at check-in — ${g.name}`, detail: `${g.n} round${g.n === 1 ? '' : 's'}, $${(g.cents / 100).toFixed(2)} not collected.`, href: '/admin/revenue?tab=uncollected', courseId });
+    out.push({ key: `failed:${courseId}`, title: `Card declined at check-in — ${g.name}`, detail: `${g.n} round${g.n === 1 ? '' : 's'}, $${(g.cents / 100).toFixed(2)} not collected.`, href: `/admin/courses/${courseId}`, courseId });
   }
   for (const d of disputes) {
-    out.push({ key: `dispute:${d.id}`, title: `Chargeback opened — ${d.booking?.course.name ?? 'a course'}`, detail: `$${(d.amountCents / 100).toFixed(2)} from ${d.booking?.golferName ?? 'a golfer'}. Answer it in Stripe before the deadline.`, href: '/admin/revenue?tab=disputes', courseId: d.booking?.course.id ?? null });
+    out.push({ key: `dispute:${d.id}`, title: `Chargeback opened — ${d.booking?.course.name ?? 'a course'}`, detail: `$${(d.amountCents / 100).toFixed(2)} from ${d.booking?.golferName ?? 'a golfer'}. The course answers it in its Stripe before the deadline — check the course knows.`, href: d.booking?.course.id ? `/admin/courses/${d.booking.course.id}` : '/admin/courses', courseId: d.booking?.course.id ?? null });
   }
   const dollars = (c: number) => `$${(c / 100).toFixed(2)}`;
   for (const r of moneyEvents.refundsOwed) {
