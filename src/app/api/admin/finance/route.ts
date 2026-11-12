@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireOwner, ownerGateError } from '@/lib/admin-session';
 import { prorateExpenseCents, isExpenseCategory, type ExpenseCategory } from '@/lib/expenses';
-import { REAL_COURSE } from '@/lib/real-courses';
+import { REAL_COURSE, ON_REAL_COURSE } from '@/lib/real-courses';
 import { PLATFORM_TZ } from '@/lib/admin-day';
 import { parseFinancePeriod, resolveFinancePeriod, revenueSource, type RevenueSource } from '@/lib/finance-period';
 
@@ -10,7 +10,8 @@ import { parseFinancePeriod, resolveFinancePeriod, revenueSource, type RevenueSo
 // company's private books), so no area gate. Read-only; every figure is counted, none estimated.
 //
 //   revenue   GreenReserve's side of the money ledger (MoneyMove.platformFeeCents, taken minus given
-//             back), by month and by source (lib/finance-period revenueSource). TEST-2: real courses only.
+//             back), by month and by source (lib/finance-period revenueSource): a booking fee on a
+//             no-show or cancelled booking is noShowLateFees. TEST-2: real courses only.
 //   bookings  Revenue's definition: confirmed or completed bookings made in the month, real courses.
 //   expenses  prorateExpenseCents per month (one-time costs in their month); the running month to now.
 //   liveCourses  only for the running month (nothing records when a course was switched off and on);
@@ -27,14 +28,15 @@ export async function GET(req: NextRequest) {
 
   const now = new Date();
   const p = resolveFinancePeriod(parseFinancePeriod(req.nextUrl.searchParams.get('period')), now);
-  // One read from the earliest needed instant (the prior window, or the month before) to now.
-  const from = new Date(Math.min(p.prior.start.getTime(), p.monthBefore.start.getTime()));
+  // Monthly reads start at the month before the period (the prior window is summed by instant below).
+  const from = p.monthBefore.start;
 
   const [moneyBySource, moneyByCourse, bookingRows, expenses, courses, liveNow] = await Promise.all([
     prisma.$queryRaw<MonthRow[]>`
-      SELECT to_char((m."at" AT TIME ZONE 'UTC') AT TIME ZONE ${PLATFORM_TZ}, 'YYYY-MM') AS month, m."what",
+      SELECT to_char((m."at" AT TIME ZONE 'UTC') AT TIME ZONE ${PLATFORM_TZ}, 'YYYY-MM') AS month,
+             CASE WHEN m."what" = 'booking_fee' AND (b."noShowAt" IS NOT NULL OR b."status" = 'cancelled') THEN 'booking_fee_no_show_late' ELSE m."what" END AS what,
              SUM(CASE WHEN m."direction" = 'out' THEN -m."platformFeeCents" ELSE m."platformFeeCents" END)::bigint AS cents
-      FROM "MoneyMove" m JOIN "Course" c ON c."id" = m."courseId"
+      FROM "MoneyMove" m JOIN "Course" c ON c."id" = m."courseId" LEFT JOIN "Booking" b ON b."id" = m."bookingId"
       WHERE c."isTest" = false AND m."platformFeeCents" > 0 AND m."at" >= ${from} AND m."at" < ${now}
       GROUP BY 1, 2`,
     prisma.$queryRaw<CourseMonthRow[]>`
@@ -46,7 +48,7 @@ export async function GET(req: NextRequest) {
     prisma.$queryRaw<BookingMonthRow[]>`
       SELECT to_char((b."createdAt" AT TIME ZONE 'UTC') AT TIME ZONE ${PLATFORM_TZ}, 'YYYY-MM') AS month, b."courseId", COUNT(*)::bigint AS n
       FROM "Booking" b JOIN "Course" c ON c."id" = b."courseId"
-      WHERE c."isTest" = false AND b."status" IN ('confirmed', 'completed') AND b."createdAt" >= ${from} AND b."createdAt" < ${now}
+      WHERE c."isTest" = false AND b."status" IN ('confirmed', 'completed') AND b."createdAt" >= ${p.current.start} AND b."createdAt" < ${now}
       GROUP BY 1, 2`,
     prisma.expense.findMany(),
     prisma.course.findMany({ where: REAL_COURSE, select: { id: true, name: true, firstWentLiveAt: true } }),
@@ -108,7 +110,7 @@ export async function GET(req: NextRequest) {
       SELECT SUM(CASE WHEN m."direction" = 'out' THEN -m."platformFeeCents" ELSE m."platformFeeCents" END)::bigint AS cents
       FROM "MoneyMove" m JOIN "Course" c ON c."id" = m."courseId"
       WHERE c."isTest" = false AND m."platformFeeCents" > 0 AND m."at" >= ${p.prior.start} AND m."at" < ${p.prior.end}`,
-    prisma.booking.count({ where: { status: { in: ['confirmed', 'completed'] }, createdAt: { gte: p.prior.start, lt: p.prior.end }, course: { isTest: false } } }),
+    prisma.booking.count({ where: { status: { in: ['confirmed', 'completed'] }, createdAt: { gte: p.prior.start, lt: p.prior.end }, ...ON_REAL_COURSE } }),
   ]);
   const before = revByMonth.get(p.monthBefore.month);
 

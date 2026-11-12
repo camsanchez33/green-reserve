@@ -39,20 +39,23 @@ const nov12 = new Date('2026-11-12T19:30:00Z'); // 2:30pm EST
 {
   // Mar 31: February has no 31st — the prior window clamps to the end of Feb 28.
   const p = resolveFinancePeriod('m3', new Date('2026-05-31T16:00:00Z'));
-  check('May 31 (m3, prior ends Feb 28 at the same time, not Mar 3)', p.priorTo === '2026-02-28', p.priorTo);
+  check('May 31 (m3): Feb has no 31st, so the prior window is the whole of February (as Revenue does)', p.priorTo === '2026-02-28' && iso(p.prior.end) === '2026-03-01T05:00:00.000Z', iso(p.prior.end));
+  const leap = resolveFinancePeriod('ytd', new Date('2028-02-29T17:00:00Z'));
+  check('Feb 29 (ytd): last year to the end of Feb 28', iso(leap.prior.end) === '2027-03-01T05:00:00.000Z', iso(leap.prior.end));
   // DST: 11pm EST on Nov 1 (the fall-back day) is still Nov 1.
   const d = resolveFinancePeriod('m3', new Date('2026-11-02T04:00:00Z'));
   check('11pm on the DST day is still that day', d.to === '2026-11-01' && d.priorTo === '2026-08-01', [d.to, d.priorTo]);
 }
 check('unknown period → y12', parseFinancePeriod('week') === 'y12' && parseFinancePeriod('ytd') === 'ytd');
-check('sources: round, booking fee, hold → service fees', ['round', 'booking_fee', 'hold'].every(w => revenueSource(w) === 'serviceFees'));
-check('sources: no-show and late fees together', revenueSource('no_show_fee') === 'noShowLateFees' && revenueSource('late_fee') === 'noShowLateFees');
-check('sources: dues and member account → membership dues', revenueSource('dues') === 'membershipDues' && revenueSource('account') === 'membershipDues');
+check('sources: round, booking fee, hold and member-account payments → service fees', ['round', 'booking_fee', 'hold', 'account'].every(w => revenueSource(w) === 'serviceFees'));
+check('sources: a booking fee on a no-show or late cancel → no-show & late fees', revenueSource('booking_fee_no_show_late') === 'noShowLateFees' && revenueSource('no_show_fee') === 'noShowLateFees' && revenueSource('late_fee') === 'noShowLateFees');
+check('sources: only dues → membership dues', revenueSource('dues') === 'membershipDues');
 check('sources: shop and event → other (so the parts add up to the total)', revenueSource('shop') === 'other' && revenueSource('event') === 'other');
 
 const route = readFileSync('src/app/api/admin/finance/route.ts', 'utf8');
 check('route: owner only', /if \(!requireOwner\(session\)\) return/.test(route));
-check('route: every money and booking query leaves test courses out', (route.match(/c\."isTest" = false/g) ?? []).length === 4 && /course: \{ isTest: false \}/.test(route));
+check('route: every money and booking query leaves test courses out', (route.match(/c\."isTest" = false/g) ?? []).length === 4 && /\.\.\.ON_REAL_COURSE \}/.test(route));
+check('route: a booking fee on a no-show or cancelled booking is classed by the booking', /WHEN m\."what" = 'booking_fee' AND \(b\."noShowAt" IS NOT NULL OR b\."status" = 'cancelled'\) THEN 'booking_fee_no_show_late'/.test(route));
 check('route: a past month\'s live-course count is not reconstructed', /liveCourses: m\.partial \? liveNow : null/.test(route));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');

@@ -68,7 +68,8 @@ export function resolveFinancePeriod(kind: FinancePeriodKind, now: Date, tz: str
   // date compares with last year to date: Jan 1 last year to the same day and time last year.
   const back = kind === 'ytd' ? 12 : n;
   const [py, pm] = norm(y, m - back);
-  const priorEnd = sameWallTime(now, py, pm, d, tz);
+  // A day that month doesn't have (May 31 → Feb, Feb 29 → last year): the whole month, as Revenue does.
+  const priorEnd = d > daysIn(py, pm) ? monthStart(py, pm + 1, tz) : sameWallTime(now, py, pm, d, tz);
   const priorStartYM = kind === 'ytd' ? [y - 1, 1] as [number, number] : norm(y, m - n - (n - 1));
   const prior = { start: monthStart(priorStartYM[0], priorStartYM[1], tz), end: priorEnd < current.start ? priorEnd : current.start };
   const [by, bm] = norm(y, m - n);
@@ -83,11 +84,18 @@ export function resolveFinancePeriod(kind: FinancePeriodKind, now: Date, tz: str
 
 // ---- GreenReserve's money by source ----
 
-/** Where a MoneyMove row's GreenReserve part comes from. */
+/**
+ * Where a MoneyMove row's GreenReserve part comes from. GreenReserve takes no cut of a course's
+ * no-show, late-cancel or hold charge (applicationFeeCents 0): its money on a no-show or late cancel
+ * is its own booking fee, charged separately on the platform account ('booking_fee'). The route
+ * therefore labels a booking_fee row on a no-show or cancelled booking 'booking_fee_no_show_late'
+ * (by the booking's state, so a refund of it lands in the same bucket). A member's house-account
+ * payment ('account') carries the booking fees of the rounds on it — service fees, not dues.
+ */
 export type RevenueSource = 'serviceFees' | 'noShowLateFees' | 'membershipDues' | 'other';
 export function revenueSource(what: string): RevenueSource {
-  if (what === 'round' || what === 'booking_fee' || what === 'hold') return 'serviceFees';
-  if (what === 'no_show_fee' || what === 'late_fee') return 'noShowLateFees';
-  if (what === 'dues' || what === 'account') return 'membershipDues';
+  if (what === 'booking_fee_no_show_late' || what === 'no_show_fee' || what === 'late_fee') return 'noShowLateFees';
+  if (what === 'round' || what === 'booking_fee' || what === 'hold' || what === 'account') return 'serviceFees';
+  if (what === 'dues') return 'membershipDues';
   return 'other'; // shop, event
 }

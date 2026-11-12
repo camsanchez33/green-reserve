@@ -2370,7 +2370,7 @@
     },
     {
       "path": "src/app/api/admin/finance/route.ts",
-      "lines": 122,
+      "lines": 124,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -20800,7 +20800,7 @@
     },
     {
       "path": "src/lib/finance-period.ts",
-      "lines": 94,
+      "lines": 102,
       "purpose": "ADMIN-REDO Financial analytics (Cam 2026-11-12):",
       "brain": [],
       "exports": [
