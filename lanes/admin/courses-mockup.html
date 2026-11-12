@@ -109,7 +109,7 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
 .brand b{font-family:var(--serif);font-size:18px;font-weight:600;line-height:1}
 .brand small{display:block;font-size:11.5px;color:var(--muted);margin-top:3px}
 .grp{display:flex;flex-direction:column;gap:2px}
-.grp > span{font-size:11.5px;color:var(--muted);padding:0 10px 4px;letter-spacing:.06em}
+.grp > span{font-size:12.5px;font-weight:700;color:var(--ink);padding:0 10px 4px;letter-spacing:.02em}
 .nav{font:inherit;font-size:13.5px;text-align:left;border:0;background:transparent;color:var(--ink-soft);padding:8px 10px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;cursor:default}
 .nav:hover{background:var(--hover)}
 .nav.on{background:var(--active);color:var(--ink);font-weight:600;box-shadow:var(--shadow)}
@@ -192,6 +192,12 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
 
 <style>
 /* Golf Courses page: a filter strip + the course directory (glass table), and the picked course's profile beside it. */
+.fwrap{position:relative;align-self:flex-start}
+.fbtn{font:inherit;font-size:13px;font-weight:600;color:var(--ink);display:inline-flex;align-items:center;gap:8px;padding:8px 14px;cursor:pointer}
+.fmenu{position:absolute;left:0;top:calc(100% + 6px);z-index:5;flex-direction:column;align-items:stretch!important;padding:6px;min-width:200px;background:var(--panel-solid)}
+.fmenu[hidden]{display:none!important}
+.fmenu .chip{border:0;background:transparent;border-radius:9px;text-align:left;display:flex;justify-content:space-between}
+.fmenu .chip[aria-pressed="true"]{background:var(--active);color:var(--ink)}
 .filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .chip{font:inherit;font-size:13px;font-weight:500;border:1px solid var(--line);background:var(--hover);color:var(--ink-soft);padding:6px 12px;border-radius:999px;cursor:pointer}
 .chip[aria-pressed="true"]{background:var(--brand);color:var(--brand-ink);border-color:transparent}
@@ -228,6 +234,20 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
 .pnums small{font-size:12px;color:var(--muted)}
 .pnums b{font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
 .pnums em{font-style:normal;font-size:12px;color:var(--muted)}
+/* Cam 2026-11-12, "don't like how these cards look in the bottom": the bottom buttons and note boxes become plain lines and links. */
+#prof .pbtns{gap:18px;border-top:1px solid var(--line);padding-top:12px}
+#prof .pbtn{border:0;background:none;padding:0;font-weight:600;color:var(--brand);text-decoration:underline;text-decoration-color:var(--fair);text-underline-offset:3px}
+#prof .pbtn.pri{background:none;color:var(--brand)}
+#prof .psec .pbtns{border-top:0;padding-top:0}
+#prof .note{background:none;border:0;border-left:2px solid var(--line);border-radius:0;padding:2px 0 2px 10px}
+/* Cam 2026-11-12, "how could we make this look different": the two links move up beside the course name as small pills, not a row at the bottom. */
+.ph{flex-wrap:wrap}
+.plinks{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.plink{font-size:12.5px;font-weight:600;color:var(--brand);background:var(--hover);border:1px solid var(--line);border-radius:999px;padding:5px 11px;white-space:nowrap;cursor:default}
+.plink:hover{background:var(--active)}
+.psec{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);padding-top:14px}
+.psec h4{margin:0;font-size:13.5px;font-weight:600}
+.pempty{margin:0;color:var(--muted);font-size:13.5px}
 .kv{display:grid;grid-template-columns:130px minmax(0,1fr);gap:8px 12px;font-size:13.5px}
 .kv dt{color:var(--muted)}.kv dd{margin:0;overflow-wrap:anywhere}
 .steps{display:flex;flex-direction:column;gap:2px}
@@ -242,7 +262,19 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
 .pbtns{display:flex;gap:8px;flex-wrap:wrap}
 .pbtn{font:inherit;font-size:13px;font-weight:600;border:1px solid var(--line);background:var(--hover);color:var(--ink);padding:8px 12px;border-radius:10px;cursor:default}
 .pbtn.pri{background:var(--brand);color:var(--brand-ink);border-color:transparent}
-@media (max-width:1100px){.split{grid-template-columns:1fr}.prof{position:static}}
+/* Cam 2026-11-12, "no need for all these cards": one panel for list + profile, no boxes around search/find/alerts, numbers as rows. */
+/* Cam 2026-11-12: the list and the profile are separate things, so two separate glass cards with a gap, as on the Overview. */
+.split{gap:16px}
+.top .search{min-width:min(320px,100%);border-radius:14px}
+.top .ibtn,.filters .find{background:transparent;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;border-bottom:1px solid var(--line);border-radius:0}
+.top .ibtn{border-bottom:0}
+.pnums{display:block;background:none;border-radius:0}
+.pnums div{background:none!important;padding:9px 0;border-top:1px solid var(--line);flex-direction:row;align-items:baseline;gap:10px}
+.pnums div:first-child{border-top:0}
+.pnums small{flex:1;font-size:13.5px;color:var(--ink-soft)}
+.pnums b{font-size:16px}
+.pnums em{min-width:110px;text-align:right}
+@media (max-width:1100px){.split{grid-template-columns:1fr}}
 @media (max-width:640px){.dir .hide-s{display:none}.kv{grid-template-columns:1fr}}
 </style>
 <div class="wrap">
@@ -285,24 +317,26 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
     </aside>
     <main class="main">
       <div class="top">
-        <h2>Golf courses<small>Every course on GreenReserve, how it's doing, and what it needs</small></h2>
-        <div class="search glass" role="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Search courses, golfers, payments<kbd>⌘K</kbd></div>
+        <h2>Golf courses</h2>
+        <div class="search glass" role="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" aria-label="Search" style="font:inherit;border:0;background:transparent;color:var(--ink);outline:none;width:100%"></div>
         <span class="ibtn glass" aria-label="Alerts" role="img"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0"/></svg><span class="dotn"></span></span>
       </div>
 
-      <div class="filters" id="filters" role="group" aria-label="Show">
+      <div class="fwrap">
+      <button class="fbtn glass" type="button" id="fbtn" aria-expanded="false" aria-haspopup="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg><span id="flabel">Filter</span></button>
+      <div class="filters fmenu glass" id="filters" role="group" aria-label="Show" hidden>
         <button class="chip" type="button" data-f="all" aria-pressed="true">All<b>8</b></button>
         <button class="chip" type="button" data-f="live">Live<b>5</b></button>
         <button class="chip" type="button" data-f="risk">At risk<b>1</b></button>
         <button class="chip" type="button" data-f="onb">Onboarding<b>2</b></button>
         <button class="chip" type="button" data-f="off">Offline<b>1</b></button>
-        <div class="find glass"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Find a course</div>
+      </div>
       </div>
 
       <div class="split">
         <section class="glass dir" aria-label="Course directory">
           <table>
-            <thead><tr><th>Course</th><th>Status</th><th class="n">Bookings<br>this month</th><th class="n">Our fees<br>this month</th><th class="n hide-s">Last booking</th></tr></thead>
+            <thead><tr><th>Course</th><th>Status</th><th class="n">Bookings<br>this month</th><th class="n">Our fees<br>this month</th><th class="n hide-s" title="Share of this month's rounds booked online, where our $1.50 is earned">Booked online</th></tr></thead>
             <tbody id="rows"></tbody>
           </table>
         </section>
@@ -332,6 +366,7 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
     {id:8,name:"Stone Brook Golf Course",town:"Schenectady, NY",st:"off",bk:0,bkp:41,fee:0,feep:88,last:"Oct 18",joined:"Sep 30, 2026",gm:"Avery Cole",contact:"Avery Cole · (518) 555-0122",agr:"v2026-10 · signed Oct 2",stripe:"Connected",missed:0,failed:0,steps:8,notes:[["Oct 19 · Cam","Taken offline at their request for the winter."]]},
   ];
   const ST={live:"Live",risk:"At risk",onb:"Onboarding",off:"Offline"};
+  const ONL={1:78,2:41,3:66,4:50,5:72,6:null,7:null,8:null};
   const STEPS=["Course information submitted","Agreement signed","Prices and fees set","Tee sheet schedule built","Stripe payments connected","Staff logins created","Test booking made","Approved and live"];
   let filter="all", pick=1, tab="overview";
   const $=id=>document.getElementById(id);
@@ -339,7 +374,7 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
   const trend=(c,p,money)=>{ if(!p&&!c) return ""; const d=c-p; if(!d) return '<span class="trend">same</span>'; const pct=p?Math.round(Math.abs(d)/p*100)+"%":""; return '<span class="trend '+(d>0?"up":"down")+'">'+(d>0?"+":"−")+(pct||(money?usd(Math.abs(d)):Math.abs(d)))+'</span>'; };
   function rows(){
     const list=C.filter(c=>filter==="all"||c.st===filter||(filter==="live"&&c.st==="risk"&&false));
-    $("rows").innerHTML=list.map(c=>'<tr tabindex="0" data-id="'+c.id+'" aria-selected="'+(c.id===pick)+'"><td><span class="cname">'+c.name+'</span><span class="csub">'+c.town+'</span></td><td><span class="st '+c.st+'"><i></i>'+ST[c.st]+'</span></td><td class="n">'+(c.st==="onb"?"—":c.bk)+' '+(c.st==="onb"?"":trend(c.bk,c.bkp))+'</td><td class="n">'+(c.st==="onb"?"—":usd(c.fee))+'</td><td class="n hide-s">'+c.last+'</td></tr>').join("");
+    $("rows").innerHTML=list.map(c=>'<tr tabindex="0" data-id="'+c.id+'" aria-selected="'+(c.id===pick)+'"><td><span class="cname">'+c.name+'</span><span class="csub">'+c.town+'</span></td><td><span class="st '+c.st+'"><i></i>'+ST[c.st]+'</span></td><td class="n">'+(c.st==="onb"?"—":c.bk)+' '+(c.st==="onb"?"":trend(c.bk,c.bkp))+'</td><td class="n">'+(c.st==="onb"?"—":usd(c.fee))+'</td><td class="n hide-s">'+(ONL[c.id]==null?'—':ONL[c.id]+'%')+'</td></tr>').join("");
     $("rows").querySelectorAll("tr").forEach(tr=>{const go=()=>{pick=+tr.dataset.id;render();}; tr.addEventListener("click",go); tr.addEventListener("keydown",e=>{if(e.key==="Enter")go();});});
   }
   function prof(){
@@ -351,10 +386,20 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
     if(tab==="setup") body='<div class="steps">'+STEPS.map((s,i)=>'<div class="step '+(i<c.steps?"done":"")+'"><i></i><span>'+s+'</span></div>').join("")+'</div>';
     if(tab==="money") body='<dl class="kv"><dt>Stripe</dt><dd>'+c.stripe+'</dd><dt>Fees this month</dt><dd>'+usd(c.fee)+'</dd><dt>Fees missed</dt><dd>'+usd(c.missed)+' (rounds paid in cash)</dd><dt>Failed charges</dt><dd>'+c.failed+'</dd></dl>';
     if(tab==="notes") body=(c.notes.length?c.notes.map(n=>'<div class="note"><small>'+n[0]+'</small>'+n[1]+'</div>').join(""):'<p style="margin:0;color:var(--muted);font-size:13.5px">No notes yet.</p>')+'<div class="pbtns"><span class="pbtn">Add a note</span></div>';
-    $("prof").innerHTML='<div class="ph"><span class="plogo">'+init+'</span><div><h3>'+c.name+'</h3><p>'+c.town+' · <span class="st '+c.st+'"><i></i>'+ST[c.st]+'</span></p></div></div><div class="ptabs" role="group" aria-label="Profile">'+tabs.map(t=>'<button type="button" data-t="'+t[0]+'" aria-pressed="'+(t[0]===tab)+'">'+t[1]+'</button>').join("")+'</div>'+body+'<div class="pbtns"><span class="pbtn pri">Open full profile</span><span class="pbtn">Open their booking page</span></div>';
-    $("prof").querySelectorAll(".ptabs button").forEach(b=>b.addEventListener("click",()=>{tab=b.dataset.t;prof();}));
+    // Cam 2026-11-12, "should be reorganized": no tabs — one column, most useful first; setup only while unfinished.
+    const sec=(t,h)=>'<div class="psec"><h4>'+t+'</h4>'+h+'</div>';
+    const left=STEPS.slice(c.steps);
+    const numbers='<div class="pnums"><div><small>Bookings this month</small><b>'+(c.st==="onb"?"—":c.bk)+'</b><em>last month '+c.bkp+'</em></div><div><small>Our fees this month</small><b>'+usd(c.fee)+'</b><em>last month '+usd(c.feep)+'</em></div><div><small>Fees missed (paid cash)</small><b>'+usd(c.missed)+'</b><em>this month</em></div><div><small>Failed card charges</small><b>'+c.failed+'</b><em>'+(c.failed?"need a retry":"none")+'</em></div></div>';
+    const setup=left.length?sec('Setup · '+c.steps+' of '+STEPS.length+' done','<div class="steps">'+left.map(s=>'<div class="step"><i></i><span>'+s+'</span></div>').join('')+'</div>'):'';
+    const people=sec('Contact','<dl class="kv"><dt>General manager</dt><dd>'+c.gm+'</dd><dt>Main contact</dt><dd>'+c.contact+'</dd><dt>Address</dt><dd>'+c.town+'</dd></dl>');
+    const deal=sec('Agreement & payments','<dl class="kv"><dt>Agreement</dt><dd>'+c.agr+'</dd><dt>Stripe</dt><dd>'+c.stripe+'</dd><dt>On GreenReserve since</dt><dd>'+c.joined+'</dd><dt>Last booking</dt><dd>'+c.last+'</dd></dl>');
+    const notes=sec('Notes',(c.notes.length?c.notes.map(n=>'<div class="note"><small>'+n[0]+'</small>'+n[1]+'</div>').join(''):'<p class="pempty">No notes yet.</p>')+'<div class="pbtns"><span class="pbtn">Add a note</span></div>');
+    $("prof").innerHTML='<div class="ph"><span class="plogo">'+init+'</span><div><h3>'+c.name+'</h3><p>'+c.town+' · <span class="st '+c.st+'"><i></i>'+ST[c.st]+'</span></p></div><div class="plinks"><span class="plink" title="Open full profile">Full profile <span aria-hidden="true">→</span></span>'+(c.st==="onb"?'':'<span class="plink" title="Open their booking page">Booking page <span aria-hidden="true">↗</span></span>')+'</div></div>'+(c.st==="onb"?setup+numbers:numbers+setup)+people+deal+notes;
   }
-  $("filters").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;filter=b.dataset.f;$("filters").querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));const l=C.filter(c=>filter==="all"||c.st===filter);if(l.length&&!l.some(c=>c.id===pick))pick=l[0].id;render();});
+  const fb=$("fbtn"), fm=$("filters");
+  fb.addEventListener("click",()=>{fm.hidden=!fm.hidden;fb.setAttribute("aria-expanded",String(!fm.hidden));});
+  document.addEventListener("click",e=>{if(!e.target.closest(".fwrap")){fm.hidden=true;fb.setAttribute("aria-expanded","false");}});
+  $("filters").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;filter=b.dataset.f;$("flabel").textContent=filter==="all"?"Filter":"Filter: "+b.firstChild.textContent;fm.hidden=true;fb.setAttribute("aria-expanded","false");$("filters").querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));const l=C.filter(c=>filter==="all"||c.st===filter);if(l.length&&!l.some(c=>c.id===pick))pick=l[0].id;render();});
   function render(){rows();prof();}
   render();
 })();

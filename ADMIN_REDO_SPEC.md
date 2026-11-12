@@ -56,10 +56,33 @@ attention side by side.
 - Later: an AI assistant in the admin, like the course dashboard's — read-only, never shares information outside
   GreenReserve. Its own mockup and decisions when we get there.
 
-## Page 2 — Golf Courses (Cam approved the mockup 2026-11-12, "yeah looks good")
+## Page 2 — Golf Courses (Cam's comments 2026-11-12, then "approved, build it to match the mockup")
 Mockup: `lanes/admin/courses-mockup.html` (claude.ai/artifact/S9uejLkUeukpvf9f3Hcgw2). A directory — course, status,
 bookings this month (vs last month to the same day), our fees this month, last booking — with filters All · Live ·
 At risk · Onboarding · Offline and a find box; clicking a course opens its profile beside the list (Overview: bookings,
 fees, fees missed, failed charges, last booking, joined; Contact & agreement; Setup checklist; Payments; Notes) with
 "Open full profile" (the existing admin course page) and "Open their booking page". Readable without signing in to the
 course's dashboard. At risk = a live course with no bookings in 14 days (Build's default; Cam can change it).
+
+Final mockup (after Cam's comments): `lanes/admin/courses-mockup.html` v13. The directory's last column is
+"Booked online" (% of the month's rounds booked online — where our fee is earned), not last booking. The profile is
+one column, no tabs: numbers (bookings, our fees, fees missed, failed charges) → Setup only while unfinished (first
+for an onboarding course) → Contact → Agreement & payments (agreement, Stripe, joined, last booking) → Notes; "Full
+profile →" and "Booking page ↗" are small pills beside the course name.
+
+## ADMIN FORMAT — every admin page follows this (Cam 2026-11-12, from his comments on Golf Courses)
+1. **No subheadings.** A page title is the title alone ("Golf courses") — no sentence under it, no date line.
+2. **One search, in the top bar, frosted glass, no wording** — a magnifier and the field. Never a second search box
+   on the page; the top search finds courses, golfers and payments.
+3. **Filters are one "Filter" button** that opens a short menu with counts; the button then reads "Filter: At risk".
+   No rows of filter chips.
+4. **Separate things are separate glass cards with a gap** (as the Overview's cards). Inside a card: no boxes —
+   numbers, facts and notes are plain rows divided by hairlines.
+5. **Few cards, no decoration:** the alerts bell and other top-bar controls sit without boxes; only search is glass.
+6. **Links to elsewhere are small pills at the top of their panel**, never a row of boxed buttons at the bottom.
+7. **Menu group headings (Workspace, Financials, Management) are bold, full ink** — readable, not faint grey.
+8. **One column over tabs** when a panel's parts fit in one scroll; the most useful part first.
+9. **Columns and cards show business numbers** — what earns, leaks or needs action (e.g. "Booked online", "Fees
+   missed"), not trivia like "last booking".
+The Overview is brought into line with these (no date line under the title, glass search with no wording, bold menu
+headings, no boxed top-bar controls).
