@@ -74,6 +74,13 @@ export async function GET(req: NextRequest) {
   const f: BookingFilter = isFilter(sp.get('filter')) ? (sp.get('filter') as BookingFilter) : 'all';
   const q = (sp.get('q') ?? '').trim().slice(0, 100);
   const num = q ? numberQuery(q) : null;
+  // Without Golfers, an email finds a booking only as the WHOLE address, compared in code: an insensitive equals is an
+  // ILIKE in Postgres, where % and _ would let a login read addresses it can't see a letter at a time.
+  let exactEmailIds: string[] = [];
+  if (q && !seesContact && q.includes('@') && !/[%_\\]/.test(q)) {
+    const hits = await prisma.booking.findMany({ where: { golferEmail: { equals: q, mode: 'insensitive' }, ...ON_REAL_COURSE }, select: { id: true, golferEmail: true }, take: 500 });
+    exactEmailIds = hits.filter(h => h.golferEmail.toLowerCase() === q.toLowerCase()).map(h => h.id);
+  }
   const search: Prisma.BookingWhereInput = !q ? {} : {
     OR: [
       ...(num ? [{ id: { startsWith: num } }] : []),
@@ -81,7 +88,7 @@ export async function GET(req: NextRequest) {
       { course: { name: { contains: q, mode: 'insensitive' } } },
       // Cam 2026-11-12 (Users & golfers dropped): support finds a golfer here, by email too. Without Golfers only the
       // whole address matches (support has it from the caller) — a part would let a login read emails it can't see.
-      { golferEmail: seesContact ? { contains: q, mode: 'insensitive' } : { equals: q, mode: 'insensitive' } },
+      ...(seesContact ? [{ golferEmail: { contains: q, mode: 'insensitive' } }] : exactEmailIds.length ? [{ id: { in: exactEmailIds } }] : []),
     ],
   } as Prisma.BookingWhereInput;
   const base: Prisma.BookingWhereInput = { ...ON_REAL_COURSE, ...search };

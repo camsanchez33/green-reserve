@@ -1527,7 +1527,7 @@
     },
     {
       "path": "src/app/api/admin/bookings/plan.ts",
-      "lines": 131,
+      "lines": 132,
       "purpose": "ADMIN-REDO page 4 — Bookings (Cam 2026-11-12).",
       "brain": [],
       "exports": [
@@ -1636,7 +1636,7 @@
     },
     {
       "path": "src/app/api/admin/bookings/route.ts",
-      "lines": 170,
+      "lines": 177,
       "purpose": "",
       "brain": [],
       "exports": [

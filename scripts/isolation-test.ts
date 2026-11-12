@@ -583,6 +583,11 @@ async function main() {
       const byEmail = (await api(`/api/admin/bookings?q=${encodeURIComponent(TS + '-golfera@test.local')}`, { cookie: c })).body as L;
       check('…Bookings finds a golfer by their whole email (support looks golfers up here)', !!byEmail?.rows?.some(r => r.id === data.bookingA.id), JSON.stringify(byEmail?.rows?.map(r => r.id)));
       const byPart = (await api(`/api/admin/bookings?q=${encodeURIComponent('@test.local')}`, { cookie: c })).body as L;
+      const em = `${TS}-golfera@test.local`;
+      for (const probe of ['%@test.local', '_' + em.slice(1), em.slice(0, 5) + '%']) {
+        const w = (await api(`/api/admin/bookings?q=${encodeURIComponent(probe)}`, { cookie: c })).body as L;
+        check(`…without Golfers the wildcard "${probe.replace(TS, 'TS')}" matches nothing`, !!w?.rows && !w.rows.some(r => r.id === data.bookingA.id), JSON.stringify(w?.rows?.map(r => r.id)));
+      }
       check('…but without Golfers a part of an address matches nothing (no reading emails letter by letter)', !!byPart?.rows && !byPart.rows.some(r => r.id === data.bookingA.id), JSON.stringify(byPart?.rows?.map(r => r.id)));
       const p1 = (await api(`/api/admin/bookings?id=${data.bookingA.id}`, { cookie: c })).body as { contact?: unknown; pay?: { key?: string }; fee?: { key?: string } };
       check('…the card has where it stands and our fee, but no golfer contact without Golfers', p1?.contact === null && !!p1?.pay?.key && !!p1?.fee?.key, JSON.stringify(p1).slice(0, 300));

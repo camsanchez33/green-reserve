@@ -83,7 +83,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/admin/ask` | admin | file | POST | `src/app/api/admin/ask/route.ts` | 121 |
 | `/api/admin/audit` | admin | file | GET | `src/app/api/admin/audit/route.ts` | 48 |
 | `/api/admin/backfill-orphaned-inquiries` | admin | file | POST | `src/app/api/admin/backfill-orphaned-inquiries/route.ts` | 46 |
-| `/api/admin/bookings` | admin | file | GET | `src/app/api/admin/bookings/route.ts` | 170 |
+| `/api/admin/bookings` | admin | file | GET | `src/app/api/admin/bookings/route.ts` | 177 |
 | `/api/admin/bootstrap` | admin | secret header | POST | `src/app/api/admin/bootstrap/route.ts` | 31 |
 | `/api/admin/broadcasts` | admin | file | GET POST | `src/app/api/admin/broadcasts/route.ts` | 140 |
 | `/api/admin/change-password` | admin | file | POST | `src/app/api/admin/change-password/route.ts` | 31 |

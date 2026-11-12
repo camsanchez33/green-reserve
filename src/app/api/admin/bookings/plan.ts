@@ -56,7 +56,8 @@ export function payState(b: BookingFacts): PayState {
   if (b.status === 'cancelled') return net > 0
     ? { key: 'cancelled_kept', short: 'Fee kept', headline: 'Cancelled — a fee was kept', tone: 'warn' }
     : { key: 'cancelled', short: 'Cancelled', headline: 'Cancelled — nothing kept', tone: 'neutral' };
-  if (b.noShow && !b.checkedIn) return net > 0
+  // A group that paid ahead (Collect payment) and was then marked a no-show: the money is the round, not a no-show fee.
+  if (b.noShow && !b.checkedIn && !b.paidByCard) return net > 0
     ? { key: 'no_show_paid', short: 'No-show fee', headline: "Didn't play — no-show fee paid", tone: 'warn' }
     : { key: 'no_show', short: 'No-show', headline: "Didn't play — nothing charged yet", tone: 'warn' };
   if (b.status === 'completed') {
@@ -95,7 +96,7 @@ export function feeState(b: BookingFacts): { key: FeeKey; cents: number } {
   if (kept > 0) return { key: 'collected', cents: kept };
   if (b.accessFeeTotal <= 0) return { key: 'none', cents: 0 };
   // No ledger row but paid by card: Revenue counts the fee as collected (paidWindow) — so does this record.
-  if (b.paidByCard && b.ledger.inCents === 0 && b.status === 'completed') return { key: 'collected', cents: b.accessFeeTotal };
+  if (b.paidByCard && b.ledger.inCents === 0 && b.status !== 'cancelled') return { key: 'collected', cents: b.accessFeeTotal };
   // Cancelled: our fee was due if anything was kept (a late fee on the course's account; ours is a separate platform
   // charge that can be declined on its own), or was taken and given back.
   if (b.status === 'cancelled') return netCents(b.ledger) > 0 || b.ledger.feeInCents > 0 ? { key: 'not_collected', cents: b.accessFeeTotal } : { key: 'none', cents: 0 };
