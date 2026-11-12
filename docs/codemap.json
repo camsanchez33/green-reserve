@@ -1083,7 +1083,7 @@
     },
     {
       "path": "src/app/admin/onboarding/page.tsx",
-      "lines": 315,
+      "lines": 320,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1111,7 +1111,7 @@
     },
     {
       "path": "src/app/admin/onboarding/terms.ts",
-      "lines": 10,
+      "lines": 11,
       "purpose": "Onboarding (ADMIN-REDO page 3):",
       "brain": [],
       "exports": [
@@ -1125,6 +1125,10 @@
         },
         {
           "name": "FOOT_PIPELINE",
+          "kind": "const"
+        },
+        {
+          "name": "LAUNCH_SOON",
           "kind": "const"
         },
         {

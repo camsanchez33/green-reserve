@@ -7,7 +7,7 @@ import g from '../admin-glass.module.css';
 import s from '../courses/courses.module.css';
 import o from './onboarding.module.css';
 import { SESSION_ENDED, loadFailed, NO_CONTACT } from '../courses/terms';
-import { overdueTitle, ACTION_FAILED, NO_CAL_LINK, FOOT_PIPELINE, FOOT_CSV } from './terms';
+import { overdueTitle, ACTION_FAILED, NO_CAL_LINK, FOOT_PIPELINE, FOOT_CSV, LAUNCH_SOON } from './terms';
 
 // ADMIN-REDO page 3 — Onboarding (Cam approved the mockup 2026-11-12, ADMIN_REDO_SPEC.md "Page 3").
 // No cards on top: one list of every course in onboarding, sorted by what it needs (overdue, then call or email,
@@ -177,7 +177,12 @@ function ProfilePanel({ rowKey, support }: { rowKey: string; support: boolean })
             <dt>Phone</dt><dd>{p.contact.phone ?? '—'}</dd>
           </> : <><dt>Main contact</dt><dd className={s.muted}>{NO_CONTACT}</dd></>}
           {p.contact && <><dt>Came from</dt><dd>{p.source ?? 'Not recorded'}</dd></>}
-          <dt>Expected launch</dt><dd>Not set</dd>
+          <dt>Expected launch</dt><dd>
+            Not set
+            {/* TODO(Build): wire to Build's expected-launch route once CourseInquiry.expectedLaunchAt lands (Cam 2026-11-12:
+                "to start setting deadlines for courses"). Until then the field is shown but can't be saved. */}
+            {p.canNote && <input type="date" className={o.launch} aria-label="Expected launch date" disabled title={LAUNCH_SOON} />}
+          </dd>
           <dt>Agreement</dt><dd>{p.agreement ? `${p.agreement.version} · signed ${date(p.agreement.signedAt)}` : 'Not signed yet'}</dd>
         </dl>
       </div>
