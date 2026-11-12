@@ -97,7 +97,7 @@
   "src/components/dashboard/OpenRegister.tsx": 126,
   "src/components/dashboard/OperatorSearch.tsx": 24,
   "src/components/dashboard/PromoCodes.tsx": 49,
-  "src/components/dashboard/RegisterClose.tsx": 166,
+  "src/components/dashboard/RegisterClose.tsx": 177,
   "src/components/dashboard/RegisterClosedNotice.tsx": 10,
   "src/components/dashboard/RegisterPacks.tsx": 61,
   "src/components/dashboard/RoundPacks.tsx": 81,

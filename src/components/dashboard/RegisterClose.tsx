@@ -66,6 +66,8 @@ export function RegisterClose({ page = false }: { page?: boolean } = {}) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState<Close | null>(null);
+  // The past close-out opened from Recent close-outs.
+  const [openClose, setOpenClose] = useState<string | null>(null);
   // POS-7: the day's locked starting cash, when the register was opened (null = type it here, as before).
   const [opened, setOpened] = useState<number | null>(null);
   // DRAWER-1: a session reopened after a close-out counts only the cash taken since.
@@ -252,12 +254,29 @@ export function RegisterClose({ page = false }: { page?: boolean } = {}) {
                 <h3 className="text-[15px] font-semibold text-ink mt-5 mb-1">Recent close-outs</h3>
                 {latest.map(c => {
                   const os = overShort(c.differenceCents);
-                  const recounts = recent.filter(x => x.day === c.day).length - 1;
+                  const counts = recent.filter(x => x.day === c.day);
+                  const on = openClose === c.id;
+                  // Cam 2026-11-12: the short list (day · who · over/short); a tap opens the full close-out.
                   return (
-                    <div key={c.id} className="flex justify-between gap-3 py-2 border-t border-line text-[13.5px]">
-                      <span className="min-w-0 text-ink">{dayLabel(c.day)}{c.closedBy ? ` · ${c.closedBy}` : ''}{recounts > 0 ? <span className="text-ink-muted"> · recounted</span> : null}
-                        {c.note ? <span className="block text-[12px] text-ink-muted truncate">{c.note}</span> : null}</span>
-                      <b className={'font-semibold tabular-nums shrink-0 ' + TONE[os.tone]}>{os.label}</b>
+                    <div key={c.id} className="border-t border-line">
+                      <button type="button" onClick={() => setOpenClose(on ? null : c.id)} aria-expanded={on}
+                        className="w-full flex justify-between gap-3 py-2 text-left text-[13.5px] hover:bg-page rounded-[6px]">
+                        <span className="min-w-0 text-ink">{dayLabel(c.day)}{c.closedBy ? ` · ${c.closedBy}` : ''}{counts.length > 1 ? <span className="text-ink-muted"> · recounted</span> : null}</span>
+                        <b className={'font-semibold tabular-nums shrink-0 ' + TONE[os.tone]}>{os.label}</b>
+                      </button>
+                      {on && (
+                        <dl className="mb-2 rounded-[8px] bg-page px-3 py-1 text-[13px]">
+                          {([['Expected', usd(c.expectedCashCents)], ['Counted', usd(c.countedCashCents)], ['Left in the drawer', c.leaveInCents == null ? '—' : usd(c.leaveInCents)], ['Deposit', c.depositCents == null ? '—' : usd(c.depositCents)]] as const).map(([l, v]) => (
+                            <div key={l} className="flex justify-between gap-3 py-1.5 border-b border-line-soft last:border-b-0"><dt className="text-ink-soft">{l}</dt><dd className="font-semibold tabular-nums text-ink">{v}</dd></div>
+                          ))}
+                          {c.note && <div className="py-1.5 border-t border-line-soft"><dt className="text-ink-soft">Note</dt><dd className="text-ink whitespace-pre-wrap">{c.note}</dd></div>}
+                          {counts.length > 1 && (
+                            <div className="py-1.5 border-t border-line-soft"><dt className="text-ink-soft">Earlier counts</dt>
+                              {counts.slice(1).map(x => <dd key={x.id} className="text-ink-muted tabular-nums">{new Date(x.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} · {x.closedBy} · counted {usd(x.countedCashCents)} · {overShort(x.differenceCents).label}</dd>)}
+                            </div>
+                          )}
+                        </dl>
+                      )}
                     </div>
                   );
                 })}
