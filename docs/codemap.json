@@ -15068,6 +15068,7 @@
         "src/lib/admin-course-page.ts",
         "src/lib/admin-home.ts",
         "src/lib/admin-today.ts",
+        "src/lib/expenses.ts",
         "src/lib/revenue-period.ts"
       ]
     },
@@ -20857,8 +20858,8 @@
     },
     {
       "path": "src/lib/expenses.ts",
-      "lines": 88,
-      "purpose": "EXPENSE TRACKER (RUN_QUEUE \"EXPENSE TRACKER / real P&L\") — the manual half of the P&L:",
+      "lines": 134,
+      "purpose": "",
       "brain": [],
       "exports": [
         {
@@ -20894,6 +20895,10 @@
           "kind": "fn"
         },
         {
+          "name": "monthCostPace",
+          "kind": "fn"
+        },
+        {
           "name": "monthlyEquivalentCents",
           "kind": "fn"
         },
@@ -20915,7 +20920,9 @@
       "methods": [],
       "auth": null,
       "guard": null,
-      "imports": [],
+      "imports": [
+        "./admin-day"
+      ],
       "usedBy": [
         "src/app/admin/expenses/page.tsx",
         "src/app/api/admin/expenses/[id]/route.ts",
@@ -21199,7 +21206,7 @@
     },
     {
       "path": "src/lib/goal-pace.ts",
-      "lines": 72,
+      "lines": 75,
       "purpose": "GOAL-PACE (Cam 2026-11-12, ADMIN_REDO_SPEC \"Goals:",
       "brain": [],
       "exports": [
