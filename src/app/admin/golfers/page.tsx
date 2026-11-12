@@ -17,7 +17,7 @@ import { INPUT } from '@/components/ui/field';
 // call needs: who is this person and can I trust them (rounds, no-shows, late
 // cancels, failed charges, lifetime collected), what happened to their money
 // (the PaymentEvent ledger MP-6b started writing), and the actions — resend
-// confirmation, resend receipt, cancel on their behalf, refund.
+// confirmation, resend receipt, refund. (No cancel: Cam 2026-11-12.)
 
 const BASE_URL = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_URL ?? '');
 const iCls = INPUT;
@@ -304,7 +304,7 @@ function GolfersInner() {
                       })}
                     </div>
                   )}
-                  {!canMoveMoney && <p className="text-[11px] text-ink-soft">Cancelling or refunding on a golfer&apos;s behalf needs manager access.</p>}
+                  {!canMoveMoney && <p className="text-[11px] text-ink-soft">Refunding on a golfer&apos;s behalf needs manager access.</p>}
                 </div>
               )}
             </div>

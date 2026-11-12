@@ -13,7 +13,7 @@
 // Data: /api/admin/revenue (+ platform-stripe and expenses for the owner).
 import { stepUpFetch } from '@/lib/step-up-client';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { X, Search, ChevronUp, ChevronDown, ExternalLink } from 'lucide-react';
+import { Search, ChevronUp, ChevronDown, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';

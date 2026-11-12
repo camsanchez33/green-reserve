@@ -572,8 +572,8 @@ export async function performCheckIn(bookingId: string, actor: EventActor, opts?
 
 /**
  * Charge the round ONLY. The golfer is not checked in and gets no receipt —
- * used by admin "Collect payment" on a previously failed charge, where the
- * round may be days away.
+ * Its only caller was the admin's "Retry charge", removed Cam 2026-11-12
+ * (GreenReserve never charges a golfer); nothing in production calls it now.
  */
 export async function collectPayment(bookingId: string, actor: EventActor, opts?: ChargeOpts) {
   return chargeBooking(bookingId, opts, { recordCheckIn: false }, actor);

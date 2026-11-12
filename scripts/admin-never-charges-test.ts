@@ -12,7 +12,7 @@ const walk = (d: string): string[] => existsSync(d) ? readdirSync(d).flatMap(f =
 check('the retry-charge route is gone', !existsSync('src/app/api/admin/retry-charge'));
 
 // Anything that takes money from a golfer's card, or cancels (which can charge a late fee).
-const CHARGERS = /@\/lib\/checkin-booking|@\/lib\/cancel-booking|performCancellation\(|chargeOnConnectedAccount|chargeOneIntent|paymentIntents\.create|chargeNoShow|chargeAccessFeeSeparately|collectPayment\(|performCheckIn\(/;
+const CHARGERS = /@\/lib\/checkin-booking|@\/lib\/cancel-booking|performCancellation\(|chargeOnConnectedAccount|chargeOneIntent|paymentIntents\.create|chargeNoShow|chargeAccessFeeSeparately|collectPayment\(|performCheckIn\(|chargeCutoffHold|chargeBookingFee|chargeSale|chargeEventPayment|chargeRenewal|chargeStatement/;
 for (const f of [...walk('src/app/api/admin'), ...walk('src/app/api/cam')]) {
   // Comments may name a charger (to explain a figure); only code counts.
   const src = readFileSync(f, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '').replace(/\s\/\/.*$/gm, '');
@@ -25,7 +25,7 @@ for (const f of [...walk('src/app/api/admin'), ...walk('src/app/api/cam')]) {
 for (const f of ['src/app/admin/revenue/page.tsx', 'src/app/admin/courses/[id]/_parts/MoneyTab.tsx', 'src/app/admin/courses/[id]/_parts/OperateTab.tsx', 'src/app/admin/golfers/page.tsx', 'src/app/admin/courses/[id]/_parts/useCourseDetail.tsx']) {
   const src = readFileSync(f, 'utf8');
   check(`${f} offers no retry`, !/Retry charge|Retrying|retry-charge/.test(src));
-  check(`${f} offers no cancel for a golfer`, !/cancel_booking|action: 'cancel'|Cancel for them/.test(src));
+  check(`${f} offers no cancel for a golfer`, !/cancel_booking|action: 'cancel'|Cancel for them|cancelBooking\(|Cancelling or refunding/.test(src));
 }
 
 const errs = readFileSync('src/lib/stripe-errors.ts', 'utf8');

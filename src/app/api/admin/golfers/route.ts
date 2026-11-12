@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession, requireRole, SUPPORT_PLUS, MANAGER_PLUS, areaGate } from '@/lib/admin-session';
-import { reasonOf, auditAdmin, REASON_MIN } from '@/lib/admin-audit';
+import { resolveAdminSession, requireRole, SUPPORT_PLUS, areaGate } from '@/lib/admin-session';
+import { auditAdmin } from '@/lib/admin-audit';
 import { sendBookingConfirmation, sendCheckInReceiptEmail } from '@/lib/email';
 import { roundChargedTotal, roundApplicationFeeCents } from '@/lib/shop';
 

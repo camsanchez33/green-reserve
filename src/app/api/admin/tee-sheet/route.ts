@@ -5,7 +5,7 @@ import { resolveAdminSession, requireRole, MANAGER_PLUS, SUPPORT_PLUS, areaGate 
 import { claimTeeTime, TeeTimeClaimError, LATE_ADD_MESSAGE } from '@/lib/claim-tee-time';
 import { COMPLETED_BOOKING_STATUSES } from '@/lib/course-metrics';
 import { setTeeTimeBlocked } from '@/lib/schedule-service';
-import { needReason, reasonOf, auditAdmin, courseOfBooking } from '@/lib/admin-audit';
+import { auditAdmin } from '@/lib/admin-audit';
 
 // GET /api/admin/tee-sheet?courseId=X&date=Y
 export async function GET(req: NextRequest) {
