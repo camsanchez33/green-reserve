@@ -1021,6 +1021,106 @@ async function main() {
     }
   }
 
+  console.log('\n── Business analytics (ADMIN-REDO: /api/admin/business) + outreach log ──');
+  {
+    const { signAdminToken } = await import('../src/lib/admin-session');
+    const { dayKey } = await import('../src/lib/admin-day');
+    const { teeTimeInstant } = await import('../src/lib/booking-events');
+    const mk = (name: string, role: string, areas?: string[]) => prisma.adminUser.create({ data: { name, email: `${TS}-biz-${name.replace(/\W/g, '').toLowerCase()}@test.local`, passwordHash: 'x', role, active: true, ...(areas ? { areas, areasSetAt: new Date() } : {}) } });
+    const [sup, mgrNoCourses, mgr] = [await mk('Biz Support', 'support'), await mk('Biz Mgr Pipeline', 'manager', ['pipeline']), await mk('Biz Mgr', 'manager')];
+    const ck = async (u: { id: string; email: string; name: string; role: string }) => `admin_session=${await signAdminToken({ adminId: u.id, email: u.email, name: u.name, role: u.role as 'manager', mfa: true })}`;
+    const [sc, nc, mc] = [await ck(sup), await ck(mgrNoCourses), await ck(mgr)];
+    type Biz = {
+      cards: { liveCourses: { now: number; prior: null }; onlineBookings: { count: number; prior: number }; teeSheetFill: { pct: number | null; prior: number | null } };
+      months: { month: string; partial: boolean; online: number; counter: number }[];
+      value: { onlineGreenFeesCents: number; afterHours: { count: number; pctOfOnline: number | null }; paidBeforeArrival: { count: number; cents: number }; noShowLateFeesCents: number };
+      joining: { entered: number; steps: { key: string; count: number }[]; inProgress: number; waitingOnUs: number };
+      courses: { courseId: string; online: number; onlinePrior: number; fillPct: number | null; onlineSharePct: number | null; ourRevenueCents: number }[];
+    };
+    const get = async () => (await api('/api/admin/business?period=m3', { cookie: mc })).body as Biz;
+    checkStatus('No session → 401', (await api('/api/admin/business?period=m3')).status, 401);
+    checkStatus('Support cannot read business analytics → 403', (await api('/api/admin/business?period=m3', { cookie: sc })).status, 403);
+    checkStatus('A manager without Courses → 403', (await api('/api/admin/business?period=m3', { cookie: nc })).status, 403);
+    const before = await get();
+    check('A manager with Courses reads it', !!before?.cards && Array.isArray(before.months) && before.months.length === 3, JSON.stringify(before).slice(0, 200));
+
+    // A fresh real course with one known day: yesterday on its own clock.
+    const tz = 'America/New_York';
+    const day = dayKey(new Date(Date.now() - 86_400_000), tz);
+    const at = (hm: string) => teeTimeInstant(tz, day, hm)!;
+    const op = await prisma.courseOperator.create({ data: { name: 'Isol Biz Op', email: `${TS}-biz-op@test.local`, password: 'x' } });
+    const course = await prisma.course.create({ data: { name: 'Isol Biz Course', slug: `${TS}-biz-course`, operatorId: op.id, address: '1', city: 'B', state: 'NY', zipCode: '10001', holes: 18, liveStatus: 'live', active: true, timezone: tz, cancellationHours: 24 } });
+    const tt = async (time: string, status = 'available', playersAvailable = 4) => prisma.teeTime.create({ data: { courseId: course.id, date: day, time, holes: 18, greenFeeCents: 0, cartFeeCents: 0, playersAvailable, playersBooked: 0, status } });
+    const [t8, t9, t10, t11] = [await tt('08:00'), await tt('09:00'), await tt('10:00', 'blocked'), await tt('11:00', 'blocked', 2)];
+    const bk = (teeTimeId: string, o: Record<string, unknown>) => prisma.booking.create({ data: { teeTimeId, courseId: course.id, golferName: 'Isol Biz', golferEmail: `${TS}-biz-golfer@test.local`, players: 1, greenFeeTotal: 0, cartFeeTotal: 0, accessFeeTotal: 0, totalAmount: 0, status: 'confirmed', paymentStatus: 'manual', ...o } as never });
+    // b1: online, booked 6am (before the first tee time), paid by the golfer at 7:30 before their 8:00 time.
+    const b1 = await bk(t8.id, { players: 2, greenFeeTotal: 5000, source: 'online', createdAt: at('06:00'), paidAt: at('07:30'), paymentStatus: 'paid' });
+    // b2: online, booked 9:30 (inside the day's tee times), paid after its 9:00 time.
+    const b2 = await bk(t9.id, { players: 1, greenFeeTotal: 3000, source: 'online', status: 'completed', createdAt: at('09:30'), paidAt: at('09:30'), paymentStatus: 'paid' });
+    // b3: a walk-in on a blocked time (the time counts as exactly its players).
+    const b3 = await bk(t11.id, { players: 2, source: 'walk_in', createdAt: at('10:00') });
+    // b4: cancelled online — counts nowhere.
+    const b4 = await bk(t8.id, { players: 1, greenFeeTotal: 9999, source: 'online', status: 'cancelled', createdAt: at('07:00') });
+    await prisma.bookingEvent.createMany({ data: [b1, b2].map(b => ({ bookingId: b.id, courseId: course.id, type: 'checked_in' as const, actorType: 'golfer' as const })) });
+    const mv = (what: string, direction: string, account: string, amountCents: number, platformFeeCents: number, bookingId: string | null, n: number) =>
+      ({ courseId: course.id, what, direction, method: 'card', account, amountCents, platformFeeCents, bookingId, stripeId: `pi_isol_biz_${TS}_${n}`, at: new Date(Date.now() - 3600_000) });
+    await prisma.moneyMove.createMany({ data: [
+      mv('round', 'in', 'course', 5150, 150, b1.id, 1),       // b1's round: GreenReserve's 150 rides along
+      mv('booking_fee', 'in', 'platform', 150, 150, b2.id, 2), // GreenReserve's own fee: revenue, not a course fee
+      mv('no_show_fee', 'in', 'course', 2000, 0, b2.id, 3),
+      mv('late_fee', 'in', 'course', 500, 0, b2.id, 4),
+      mv('hold', 'in', 'course', 1000, 0, b1.id, 5),
+      mv('hold', 'out', 'course', 1000, 0, b1.id, 6),          // refunded at check-in: nets to 0
+    ] });
+    const lead = await prisma.courseInquiry.create({ data: { contactName: 'Isol Biz Lead', contactTitle: 'GM', email: `${TS}-biz-lead@test.local`, phone: '1', courseName: 'Isol Biz Lead Course', address: '1', city: 'B', state: 'NY', zipCode: '10001', courseType: 'public', status: 'lead', source: 'Cold outreach' } });
+    try {
+      const a = await get();
+      const row = a.courses.find(c => c.courseId === course.id);
+      const m = (b: Biz) => b.months.find(x => x.month === day.slice(0, 7)) ?? { online: 0, counter: 0 };
+      check('Online bookings +2 (the cancelled one and the walk-in don\'t count)', a.cards.onlineBookings.count - before.cards.onlineBookings.count === 2, JSON.stringify(a.cards));
+      check('…by month: online +2, phone & counter +1', m(a).online - m(before).online === 2 && m(a).counter - m(before).counter === 1, JSON.stringify({ a: m(a), b: m(before) }));
+      check('Live courses +1', a.cards.liveCourses.now - before.cards.liveCourses.now === 1 && a.cards.liveCourses.prior === null);
+      check('Green fees booked online +$80 (5000 + 3000; the cancelled one left out)', a.value.onlineGreenFeesCents - before.value.onlineGreenFeesCents === 8000);
+      check('Outside tee-sheet hours +1 (booked 6am, before the 8:00 first time; 9:30 is inside)', a.value.afterHours.count - before.value.afterHours.count === 1, JSON.stringify(a.value.afterHours));
+      check('Paid before they arrived +1, +$51.50 (b1 paid 7:30 for 8:00; b2 paid after its time)', a.value.paidBeforeArrival.count - before.value.paidBeforeArrival.count === 1 && a.value.paidBeforeArrival.cents - before.value.paidBeforeArrival.cents === 5150, JSON.stringify(a.value.paidBeforeArrival));
+      check('No-show & late fees for courses +$25 (2000 + 500; the refunded hold nets 0; our booking fee left out)', a.value.noShowLateFeesCents - before.value.noShowLateFeesCents === 2500, JSON.stringify(a.value));
+      check('The course\'s row: 2 online, none before, filled 50% (2+1+2 of 4+4+2; the empty blocked time left out), 67% online, our revenue $3', !!row && row.online === 2 && row.onlinePrior === 0 && row.fillPct === 50 && row.onlineSharePct === 67 && row.ourRevenueCents === 300, JSON.stringify(row));
+
+      // The outreach log (inquiries add_touch): manager+ in Pipeline, allowed on a lead, validated, audited.
+      const touch = (cookie: string, body: Record<string, unknown>) => api('/api/admin/inquiries', { method: 'PATCH', cookie, body: { id: lead.id, action: 'add_touch', ...body } });
+      checkStatus('Support cannot log a touch → 403', (await touch(sc, { channel: 'email', direction: 'out' })).status, 403);
+      checkStatus('A bad channel → 400', (await touch(mc, { channel: 'fax', direction: 'out' })).status, 400);
+      checkStatus('A bad direction → 400', (await touch(mc, { channel: 'email', direction: 'sideways' })).status, 400);
+      checkStatus('A time in the future → 400', (await touch(mc, { channel: 'email', direction: 'out', at: new Date(Date.now() + 86_400_000).toISOString() })).status, 400);
+      checkStatus('A lead we emailed → 200 (allowed on a lead)', (await touch(nc, { channel: 'email', direction: 'out', note: 'Email 1' })).status, 200);
+      check('…stored and audited', (await prisma.outreachTouch.count({ where: { inquiryId: lead.id, direction: 'out', channel: 'email', adminId: mgrNoCourses.id } })) === 1
+        && !!(await prisma.adminAuditLog.findFirst({ where: { adminId: mgrNoCourses.id, action: 'inquiry_add_touch', targetId: lead.id } })));
+      const detail = (await api(`/api/admin/inquiries?id=${lead.id}`, { cookie: mc })).body as { touches?: { channel: string }[] };
+      check('…and read back with the inquiry', detail.touches?.length === 1 && detail.touches[0].channel === 'email', JSON.stringify(detail).slice(0, 200));
+      const step = (b: Biz, k: string) => b.joining.steps.find(s => s.key === k)?.count ?? 0;
+      const b2nd = await get();
+      check('Courses joining: first contact this period → entered +1, Reached +1, Responded unchanged', b2nd.joining.entered - a.joining.entered === 1 && step(b2nd, 'reached') - step(a, 'reached') === 1 && step(b2nd, 'responded') === step(a, 'responded'), JSON.stringify(b2nd.joining).slice(0, 300));
+      await touch(mc, { channel: 'call', direction: 'in' });
+      const b3rd = await get();
+      check('…their reply → Responded +1', step(b3rd, 'responded') - step(b2nd, 'responded') === 1);
+
+      await prisma.course.update({ where: { id: course.id }, data: { isTest: true } });
+      const t = await get();
+      check('A test course leaves every number (TEST-2)', !t.courses.some(c => c.courseId === course.id) && t.cards.onlineBookings.count === before.cards.onlineBookings.count && t.value.noShowLateFeesCents === before.value.noShowLateFeesCents && t.value.paidBeforeArrival.count === before.value.paidBeforeArrival.count && t.cards.liveCourses.now === before.cards.liveCourses.now, JSON.stringify(t.cards));
+    } finally {
+      await prisma.courseInquiry.delete({ where: { id: lead.id } }).catch(() => {});
+      await prisma.moneyMove.deleteMany({ where: { courseId: course.id } });
+      await prisma.bookingEvent.deleteMany({ where: { courseId: course.id } });
+      await prisma.booking.deleteMany({ where: { courseId: course.id } });
+      await prisma.teeTime.deleteMany({ where: { courseId: course.id } });
+      await prisma.course.delete({ where: { id: course.id } });
+      await prisma.courseOperator.delete({ where: { id: op.id } });
+      await prisma.adminAuditLog.deleteMany({ where: { adminId: { in: [sup.id, mgrNoCourses.id, mgr.id] } } }).catch(() => {});
+      await prisma.adminUser.deleteMany({ where: { id: { in: [sup.id, mgrNoCourses.id, mgr.id] } } });
+    }
+    void t10; void b3; void b4;
+  }
+
   console.log('\n── Double-tapped Book (online duplicate guard) ──');
   {
     // A no-fee course takes no card, so the booking route can be driven end to end.

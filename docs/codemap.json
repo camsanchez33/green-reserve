@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 718,
-    "routes": 308,
-    "libs": 258,
-    "models": 75,
+    "files": 720,
+    "routes": 309,
+    "libs": 259,
+    "models": 76,
     "orphans": 11,
     "ungatedRoutes": 3
   },
@@ -1673,6 +1673,36 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/admin/business/route.ts",
+      "lines": 224,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/business",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-day",
+        "@/lib/admin-session",
+        "@/lib/business-analytics",
+        "@/lib/finance-period",
+        "@/lib/inquiry-status",
+        "@/lib/prisma",
+        "@/lib/real-courses",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/admin/change-password/route.ts",
       "lines": 31,
       "purpose": "",
@@ -2672,7 +2702,7 @@
     },
     {
       "path": "src/app/api/admin/inquiries/route.ts",
-      "lines": 1341,
+      "lines": 1367,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -15116,6 +15146,7 @@
       "imports": [],
       "usedBy": [
         "src/app/api/admin/ask/route.ts",
+        "src/app/api/admin/business/route.ts",
         "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/finance/route.ts",
         "src/app/api/admin/goals/route.ts",
@@ -15453,6 +15484,7 @@
         "src/app/api/admin/audit/route.ts",
         "src/app/api/admin/backfill-orphaned-inquiries/route.ts",
         "src/app/api/admin/broadcasts/route.ts",
+        "src/app/api/admin/business/route.ts",
         "src/app/api/admin/change-password/route.ts",
         "src/app/api/admin/company-documents/download/route.ts",
         "src/app/api/admin/company-documents/route.ts",
@@ -17052,6 +17084,59 @@
         "src/app/courses/[slug]/CourseBookingClient.tsx",
         "src/lib/public-tee-times.ts",
         "src/lib/tee-sheet-engine.ts"
+      ]
+    },
+    {
+      "path": "src/lib/business-analytics.ts",
+      "lines": 118,
+      "purpose": "ADMIN-REDO Business analytics (Cam 2026-11-12, ADMIN_REDO_SPEC \"Business analytics:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "averageFill",
+          "kind": "fn"
+        },
+        {
+          "name": "fillPct",
+          "kind": "fn"
+        },
+        {
+          "name": "InquiryForFunnel",
+          "kind": "type"
+        },
+        {
+          "name": "JOIN_STEPS",
+          "kind": "const"
+        },
+        {
+          "name": "joiningFunnel",
+          "kind": "fn"
+        },
+        {
+          "name": "JoiningSteps",
+          "kind": "type"
+        },
+        {
+          "name": "JoinStep",
+          "kind": "type"
+        },
+        {
+          "name": "milestones",
+          "kind": "fn"
+        },
+        {
+          "name": "Milestones",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/api/admin/business/route.ts"
       ]
     },
     {
@@ -21124,6 +21209,7 @@
         "./admin-day"
       ],
       "usedBy": [
+        "src/app/api/admin/business/route.ts",
         "src/app/api/admin/finance/route.ts"
       ]
     },
@@ -22171,7 +22257,7 @@
     },
     {
       "path": "src/lib/inquiry-status.ts",
-      "lines": 501,
+      "lines": 507,
       "purpose": "Single source of truth for what every inquiry status means and which pipeline segment it belongs to.",
       "brain": [
         "inquiry-statuses",
@@ -22303,6 +22389,22 @@
           "kind": "fn"
         },
         {
+          "name": "TOUCH_CHANNELS",
+          "kind": "const"
+        },
+        {
+          "name": "TOUCH_DIRECTIONS",
+          "kind": "const"
+        },
+        {
+          "name": "TouchChannel",
+          "kind": "type"
+        },
+        {
+          "name": "TouchDirection",
+          "kind": "type"
+        },
+        {
           "name": "unreviewedResubmit",
           "kind": "fn"
         }
@@ -22319,6 +22421,7 @@
       "usedBy": [
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/inquiries/page.tsx",
+        "src/app/api/admin/business/route.ts",
         "src/app/api/admin/inquiries/route.ts",
         "src/app/api/admin/onboarding/plan.ts",
         "src/app/api/admin/onboarding/route.ts",
@@ -24495,6 +24598,7 @@
         "src/app/api/admin/backfill-orphaned-inquiries/route.ts",
         "src/app/api/admin/bootstrap/route.ts",
         "src/app/api/admin/broadcasts/route.ts",
+        "src/app/api/admin/business/route.ts",
         "src/app/api/admin/change-password/route.ts",
         "src/app/api/admin/company-documents/route.ts",
         "src/app/api/admin/course-calls/route.ts",
@@ -25229,6 +25333,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
+        "src/app/api/admin/business/route.ts",
         "src/app/api/admin/finance/route.ts",
         "src/app/api/admin/nav-badges/route.ts",
         "src/app/api/admin/revenue/route.ts",
@@ -29428,6 +29533,7 @@
         "src/lib/agreement-sign.ts"
       ],
       "readers": [
+        "src/app/api/admin/business/route.ts",
         "src/app/api/admin/course-documents/route.ts",
         "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/onboarding/route.ts",
@@ -30957,6 +31063,7 @@
       "readers": [
         "src/app/api/admin/audit/route.ts",
         "src/app/api/admin/broadcasts/route.ts",
+        "src/app/api/admin/business/route.ts",
         "src/app/api/admin/course-calls/route.ts",
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/admin/course-documents/route.ts",
@@ -31860,6 +31967,10 @@
           "type": "Call[]"
         },
         {
+          "name": "touches",
+          "type": "OutreachTouch[]"
+        },
+        {
           "name": "callInviteToken",
           "type": "String?"
         },
@@ -31884,6 +31995,7 @@
       ],
       "readers": [
         "src/app/api/admin/backfill-orphaned-inquiries/route.ts",
+        "src/app/api/admin/business/route.ts",
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/create-course/route.ts",
@@ -33722,6 +33834,55 @@
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts"
       ]
+    },
+    {
+      "name": "OutreachTouch",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "inquiryId",
+          "type": "String"
+        },
+        {
+          "name": "inquiry",
+          "type": "CourseInquiry"
+        },
+        {
+          "name": "at",
+          "type": "DateTime"
+        },
+        {
+          "name": "channel",
+          "type": "String"
+        },
+        {
+          "name": "direction",
+          "type": "String"
+        },
+        {
+          "name": "note",
+          "type": "String?"
+        },
+        {
+          "name": "adminId",
+          "type": "String?"
+        },
+        {
+          "name": "adminName",
+          "type": "String?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ],
+      "writers": [
+        "src/app/api/admin/inquiries/route.ts"
+      ],
+      "readers": []
     },
     {
       "name": "OwnerDevice",
