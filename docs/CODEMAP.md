@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-709 source files · 303 routes · 256 libraries · 72 models
+714 source files · 306 routes · 256 libraries · 73 models
 
 ## Single sources of truth
 
@@ -53,7 +53,7 @@ this script with a non-zero exit — that is the point of the tag.
 | url | auth | guard | methods | file | lines |
 |---|---|---|---|---|---|
 | `/` | public | public | page | `src/app/page.tsx` | 15 |
-| `/admin` | admin | client-side | page | `src/app/admin/page.tsx` | 252 |
+| `/admin` | admin | client-side | page | `src/app/admin/page.tsx` | 257 |
 | `/admin/activity` | admin | client-side | page | `src/app/admin/activity/page.tsx` | 9 |
 | `/admin/announcements` | admin | client-side | page | `src/app/admin/announcements/page.tsx` | 261 |
 | `/admin/audit` | admin | client-side | page | `src/app/admin/audit/page.tsx` | 137 |
@@ -63,6 +63,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/admin/courses/[id]` | admin | client-side | page | `src/app/admin/courses/[id]/page.tsx` | 326 |
 | `/admin/create` | admin | client-side | page | `src/app/admin/create/page.tsx` | 759 |
 | `/admin/employees` | admin | client-side | page | `src/app/admin/employees/page.tsx` | 278 |
+| `/admin/expenses` | admin | client-side | page | `src/app/admin/expenses/page.tsx` | 186 |
 | `/admin/forgot-password` | admin | client-side | page | `src/app/admin/forgot-password/page.tsx` | 67 |
 | `/admin/goals` | admin | client-side | page | `src/app/admin/goals/page.tsx` | 164 |
 | `/admin/golfers` | admin | client-side | page | `src/app/admin/golfers/page.tsx` | 415 |
@@ -74,7 +75,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/admin/onboarding` | admin | client-side | page | `src/app/admin/onboarding/page.tsx` | 320 |
 | `/admin/problems` | admin | client-side | page | `src/app/admin/problems/page.tsx` | 240 |
 | `/admin/profile` | admin | client-side | page | `src/app/admin/profile/page.tsx` | 123 |
-| `/admin/revenue` | admin | client-side | page | `src/app/admin/revenue/page.tsx` | 1031 |
+| `/admin/revenue` | admin | client-side | page | `src/app/admin/revenue/page.tsx` | 467 |
 | `/admin/security` | admin | client-side | page | `src/app/admin/security/page.tsx` | 220 |
 | `/admin/set-password` | admin | client-side | page | `src/app/admin/set-password/page.tsx` | 159 |
 | `/admin/system` | admin | client-side | page | `src/app/admin/system/page.tsx` | 603 |
@@ -108,8 +109,10 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/admin/data-reset` | admin | file | GET POST | `src/app/api/admin/data-reset/route.ts` | 32 |
 | `/api/admin/disputes/[bookingId]/evidence` | admin | file | GET | `src/app/api/admin/disputes/[bookingId]/evidence/route.ts` | 29 |
 | `/api/admin/employees` | admin | file | GET PATCH POST | `src/app/api/admin/employees/route.ts` | 146 |
-| `/api/admin/expenses` | admin | file | GET POST | `src/app/api/admin/expenses/route.ts` | 47 |
-| `/api/admin/expenses/[id]` | admin | file | DELETE PATCH | `src/app/api/admin/expenses/[id]/route.ts` | 78 |
+| `/api/admin/expenses` | admin | file | GET POST | `src/app/api/admin/expenses/route.ts` | 51 |
+| `/api/admin/expenses/[id]` | admin | file | DELETE PATCH | `src/app/api/admin/expenses/[id]/route.ts` | 87 |
+| `/api/admin/expenses/[id]/history` | admin | file | GET | `src/app/api/admin/expenses/[id]/history/route.ts` | 20 |
+| `/api/admin/expenses/budget` | admin | file | PUT | `src/app/api/admin/expenses/budget/route.ts` | 36 |
 | `/api/admin/forgot-password` | admin | entry | POST | `src/app/api/admin/forgot-password/route.ts` | 45 |
 | `/api/admin/goals` | admin | file | DELETE GET POST | `src/app/api/admin/goals/route.ts` | 61 |
 | `/api/admin/golfers` | admin | file | GET POST | `src/app/api/admin/golfers/route.ts` | 248 |
@@ -362,15 +365,15 @@ Sorted by how many files import them, so the load-bearing ones are first.
 
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
-| `src/lib/prisma.ts` | 296 | 15 |  | `prisma` |
+| `src/lib/prisma.ts` | 298 | 15 |  | `prisma` |
 | `src/lib/session.ts` | 82 | 120 |  | `ACTIVE_COURSE_COOKIE`, `can`, `requirePermission`, `resolveDashboardSession`, `ResolvedSession`, `STAFF_FORBIDDEN`, `touchStaffSeen` |
-| `src/lib/admin-session.ts` | 72 | 201 |  | `AdminSession`, `AdminSessionUnavailable`, `areaGate`, `MANAGER_PLUS`, `OWNER_ONLY`, `ownerGateError`, `requireOwner`, `requireRole` +7 more |
+| `src/lib/admin-session.ts` | 74 | 201 |  | `AdminSession`, `AdminSessionUnavailable`, `areaGate`, `MANAGER_PLUS`, `OWNER_ONLY`, `ownerGateError`, `requireOwner`, `requireRole` +7 more |
 | `src/lib/email.ts` | 65 | 2178 |  | `BookingEmailData`, `courseNoticeEmail`, `escapeHtml`, `firstName`, `isPlaceholderEmail`, `PLACEHOLDER_EMAIL_DOMAIN`, `sendAdminDigest`, `sendAdminPasswordChangedNotification` +74 more |
 | `src/lib/course-time.ts` | 62 | 63 | SD-3 — course-local time. | `addDaysStr`, `clockIn`, `DEFAULT_TZ`, `isPastIn`, `isValidTimezone`, `payLinkOpensOn`, `todayIn`, `US_TIMEZONES` |
 | `src/lib/rate-limit.ts` | 59 | 78 |  | `clientIp`, `evidentiaryIp`, `rateLimit`, `rateLimitCount` |
 | `src/lib/dashboard-fetch.ts` | 52 | 51 | SD-10 (from the SD review). | `dfetch`, `DFetchResult`, `REGISTER_CLOSED_EVENT` |
 | `src/lib/format.ts` | 51 | 78 | MP-9 (ADMIN_V4 V4-6 §3) — the one place admin pages format money and time. | `formatCents`, `formatDate`, `formatDateTime`, `formatEasternDate`, `formatEasternDay`, `formatMoney`, `formatRelative`, `formatStamp` +3 more |
-| `src/lib/admin-audit.ts` | 41 | 194 | BRAIN-1a (Cam 2026-10-22): | `ACTION_LABELS`, `auditAdmin`, `AuditEntry`, `bodyWithReason`, `changedFields`, `courseOfBooking`, `needReason`, `REASON_ACTIONS` +5 more |
+| `src/lib/admin-audit.ts` | 42 | 194 | BRAIN-1a (Cam 2026-10-22): | `ACTION_LABELS`, `auditAdmin`, `AuditEntry`, `bodyWithReason`, `changedFields`, `courseOfBooking`, `needReason`, `REASON_ACTIONS` +5 more |
 | `src/lib/stripe.ts` | 37 | 147 | Every charge, refund and SetupIntent GreenReserve makes goes through here. | `ACCESS_FEE_CENTS`, `chargeOnConnectedAccount`, `chargeOneIntent`, `MEMBERSHIP_FEE_RATE`, `membershipFeeCents`, `refundOnConnectedAccount`, `stripe` |
 | `src/lib/agreement-required.ts` | 33 | 124 | AGREEMENT_SPEC AG-3 — version bumps and re-acceptance. | `AGREEMENT_REQUIRED_MESSAGE`, `agreementDueByCourse`, `agreementOverdueCourses`, `agreementReacceptance`, `currentReacceptWindow`, `Reacceptance`, `ReacceptWindow`, `requireAgreementCurrent` +1 more |
 | `src/lib/auth.ts` | 31 | 212 |  | `DashboardSession`, `getGolferSession`, `getOperatorSession`, `signGolferToken`, `signMemberInviteToken`, `signPendingTwoFactorToken`, `signStaffResetToken`, `signStaffToken` +4 more |
@@ -489,7 +492,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/walking.ts` | 4 | 23 | Settings rework (Cam 2026-10-19): | `walkingSummary`, `walkingWords` |
 | `src/lib/booking-fee.ts` | 3 | 126 | FEE-AT-BOOKING (Cam 2026-10-24: | `chargeBookingFee`, `feeCoveredCents`, `refundBookingFee`, `releaseUnpaidBooking` |
 | `src/lib/booking-mode.ts` | 3 | 22 | Course-world pages: | `isBookingMode`, `isCourseWorld` |
-| `src/lib/claim-tee-time.ts` | 3 | 197 |  | `CLAIM_ATTEMPTS`, `ClaimResult`, `claimTeeTime`, `DOUBLE_TAP_MS`, `findDoubleTap`, `LATE_ADD_MESSAGE`, `LATE_ADD_MINUTES`, `TeeTimeClaimError` |
+| `src/lib/claim-tee-time.ts` | 3 | 199 |  | `CLAIM_ATTEMPTS`, `ClaimResult`, `claimTeeTime`, `DOUBLE_TAP_MS`, `findDoubleTap`, `LATE_ADD_MESSAGE`, `LATE_ADD_MINUTES`, `TeeTimeClaimError` |
 | `src/lib/course-goals.ts` | 3 | 33 | HOME-2 (Cam 2026-11-05, "if you want to track goals track them here … set goals for certain metrics"): | `formatGoal`, `GOAL_MAX`, `GOAL_METRICS`, `goalMetric`, `GoalMetric`, `isGoalMetric`, `neededPerDay` |
 | `src/lib/course-setup.ts` | 3 | 52 | COURSES_SHEET_SPEC CS-1 §1 — the five setup steps a built course goes through before it is live. | `SETUP_STEPS`, `SetupCourseLike`, `setupProgress`, `SetupProgress`, `SetupStep`, `SetupStepKey` |
 | `src/lib/course-wire.ts` | 3 | 57 |  | `COURSE_MONEY_WIRE_FIELDS`, `courseMoneyFromWire`, `courseToWire` |
@@ -538,7 +541,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/cron-windows.ts` | 2 | 42 | R-CRON-003 — when the hourly cron sends its time-based emails. | `CHECKIN_DATES`, `checkInEmailDue`, `cutoffWarningDue`, `FEE_DATES`, `teeDateWindow` |
 | `src/lib/cutoff-hold.ts` | 2 | 134 | The cancellation-window hold (SP-B timing "hold_at_cutoff"): | `chargeCutoffHold`, `HOLD_STALE_MS`, `HoldResult` |
 | `src/lib/data-reset.ts` | 2 | 162 | TEST-1 (Cam 2026-10-22: | `CourseResetPreview`, `KEPT_TABLES`, `previewCourseReset`, `previewWipeAll`, `resetTestCourse`, `TableCounts`, `WIPE_ALL_UNTIL`, `WIPE_CONFIRM_WORDS` +3 more |
-| `src/lib/goal-pace.ts` | 2 | 64 | GOAL-PACE (Cam 2026-11-12, ADMIN_REDO_SPEC "Goals: | `EARLY_DAYS`, `elapsedDays`, `elapsedShare`, `GoalKind`, `goalPace`, `PaceTone`, `projectAtEnd` |
+| `src/lib/goal-pace.ts` | 2 | 72 | GOAL-PACE (Cam 2026-11-12, ADMIN_REDO_SPEC "Goals: | `EARLY_DAYS`, `elapsedDays`, `elapsedShare`, `GoalKind`, `goalPace`, `PaceTone`, `projectAtEnd` |
 | `src/lib/golfer-messages.ts` | 2 | 140 | MSG-1 (PLATFORM_ROADMAP_SPEC §5, Cam 2026-10-07: | `audience`, `checkWindow`, `isVia`, `MAX_MESSAGE_CHARS`, `noticeText`, `reach`, `Recipient`, `sendCourseMessage` +6 more |
 | `src/lib/golfer-record.ts` | 2 | 174 | The golfer record (Revamp 3, Cam 2026-10-29): | `autoBlockReason`, `golferRecord`, `GolferRecord`, `isLateCancel`, `onlineBookingBlock`, `recordKeys`, `recordKeysFor` |
 | `src/lib/golfer-segments.ts` | 2 | 71 | SEG-1 (Cam 2026-11-05, golfer segments): | `golferSegments`, `INACTIVE_DAYS`, `NEW_DAYS`, `REGULAR_DAYS`, `REGULAR_ROUNDS`, `SEG_UI`, `Segment`, `SEGMENT_LABEL` +3 more |
@@ -587,13 +590,13 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/earned-terms.ts` | 1 | 36 | EARNED-1 (Cam 2026-11-04, "earned vs paid out"): | `EARNED_TERMS`, `EARNED_TITLE`, `EarnedKey`, `LEDGER_UI`, `PAID_OUT_TERMS`, `PAID_OUT_TITLE`, `PaidOutKey`, `Term` |
 | `src/lib/email-failed-notice.ts` | 1 | 9 | Launch walk (Cam 2026-10-31): | `emailFailedNotice` |
 | `src/lib/event-command.ts` | 1 | 109 | EVENTS-1 (Cam 2026-11-04, "events command center"): | `coveredCount`, `eventNextSteps`, `EventStep`, `EventStepKey`, `eventStrip`, `EventTab`, `pastHeadcount`, `StepsInput` +3 more |
+| `src/lib/expense-history.ts` | 1 | 36 | ADMIN-REDO Expenses (Cam 2026-11-12): | `expenseHistory`, `ExpenseHistoryEntry`, `ExpenseHistoryKind` |
 | `src/lib/faq.ts` | 1 | 26 | SD-7: | `faqJsonLd`, `HOME_FAQ` |
 | `src/lib/fees-by-day.ts` | 1 | 28 | ADMIN-C Money → Overview chart: | `feesByDay`, `Window` |
 | `src/lib/frost-delay.ts` | 1 | 100 | B-9 frost delay (Cam 2026-10-01: | `applyFrostDelay`, `FrostMove`, `FrostPlan`, `isFrostTime`, `planFrostDelay` |
 | `src/lib/ledger-words.ts` | 1 | 4 | The money ledger's kinds (MoneyMove.what), in words — for staff screens that list ledger rows. | `LEDGER_WHAT` |
 | `src/lib/member-import.ts` | 1 | 65 | Members → Import a list (Cam 2026-10-19, OPERATOR_REWORK_SPEC "Members = list first … Add member and Import list at the top"). | `importMembers`, `ImportOptions`, `ImportResult` |
 | `src/lib/member-stats.ts` | 1 | 46 | DENSE-5 (Cam 2026-10-28): | `MemberKeys`, `memberRoundStats`, `MemberRoundStats` |
-| `src/lib/money-tabs.ts` | 1 | 15 | ADMIN-C Money: | `isMoneyTab`, `MONEY_TABS`, `MoneyTab`, `visibleMoneyTab` |
 | `src/lib/notice-draft.ts` | 1 | 35 | MSG-2 (Cam 2026-11-06, Message golfers: | `addedNumbers`, `draftNotice` |
 | `src/lib/notice-templates.ts` | 1 | 12 | MSG-2 (Cam 2026-11-06): | `BLANK`, `READY` |
 | `src/lib/receipt-charges.ts` | 1 | 104 | R-GOLF-010 — what was actually charged to (and refunded from) the golfer's card, for the receipt. | `chargedNowCents`, `ReceiptCharge`, `receiptCharges` |
@@ -626,10 +629,10 @@ Sorted the same way.
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
 | `src/components/ui/Card.tsx` | 87 | 17 |  | `Card`, `CARD` |
-| `src/components/ui/StatusDot.tsx` | 73 | 36 |  | `StatusDot` |
+| `src/components/ui/StatusDot.tsx` | 72 | 36 |  | `StatusDot` |
 | `src/components/ui/field.ts` | 57 | 8 | MP-9: | `INPUT`, `INPUT_COMPACT` |
 | `src/components/dashboard/LoadError.tsx` | 22 | 16 | SD-10. | `LoadError` |
-| `src/components/admin/AdminSidebar.tsx` | 20 | 212 |  | `AdminNavKey`, `default (AdminSidebar)` |
+| `src/components/admin/AdminSidebar.tsx` | 21 | 199 |  | `AdminNavKey`, `default (AdminSidebar)` |
 | `src/components/dashboard/Toast.tsx` | 15 | 70 | SD-2. | `toast`, `Toaster`, `ToastKind` |
 | `src/components/OperatorSidebar.tsx` | 12 | 357 |  | `default (OperatorSidebar)`, `OperatorNavKey` |
 | `src/components/ui/Eyebrow.tsx` | 12 | 19 |  | `Eyebrow`, `EYEBROW` |
@@ -648,7 +651,7 @@ Sorted the same way.
 | `src/components/dashboard/SmsConsentAsk.tsx` | 3 | 41 | SMS-1 (Cam 2026-11-02, Twilio A2P 10DLC — docs/SMS_OPT_IN.md): | `default (SmsConsentAsk)`, `SmsConsentDialog` |
 | `src/components/GolferExitLinks.tsx` | 3 | 26 |  | `GolferExitLinks` |
 | `src/components/PlainHeader.tsx` | 3 | 17 |  | `default (PlainHeader)` |
-| `src/components/admin/admin-theme.ts` | 2 | 20 | ADMIN-REDO (Cam 2026-11-11): | `ADMIN_THEME_COOKIE`, `AdminTheme`, `currentAdminTheme`, `readAdminTheme`, `setAdminTheme` |
+| `src/components/admin/admin-href.ts` | 2 | 62 | Admin lane (2026-11-10): | `ADMIN_PAGE_GATES`, `canOpenAdminHref`, `whoCanOpen` |
 | `src/components/admin/CourseCheckInCard.tsx` | 2 | 364 | COURSES_SHEET_SPEC CS-3 §2 — the "Next check-in" card on a live course's Overview. | `CourseCallRow`, `default (CourseCheckInCard)`, `describeCheckIn` |
 | `src/components/admin/LeadDialogs.tsx` | 2 | 129 | AW-6c (Cam 2026-10-21: | `AddLeadDialog`, `MoveToTalkingDialog` |
 | `src/components/admin/TestDataTools.tsx` | 2 | 185 | TEST-1 (Cam 2026-10-22): | `LaunchWipeCard`, `TestCourseCard` |
@@ -670,7 +673,7 @@ Sorted the same way.
 | `src/components/home/ProductShot.tsx` | 2 | 16 |  | `default (ProductShot)` |
 | `src/components/TrustNote.tsx` | 2 | 12 |  | `TrustNote` |
 | `src/components/ui/Btn.tsx` | 2 | 27 |  | `Btn` |
-| `src/components/admin/admin-href.ts` | 1 | 61 | Admin lane (2026-11-10): | `ADMIN_PAGE_GATES`, `canOpenAdminHref`, `whoCanOpen` |
+| `src/components/admin/admin-theme.ts` | 1 | 6 | ADMIN-REDO (Cam 2026-11-12, ADMIN_REDO_SPEC.md "Theme changes"): | `ADMIN_THEME` |
 | `src/components/admin/AgreementVersionsCard.tsx` | 1 | 117 | AG-3 — Admin → System → Agreement versions (Cam 2026-10-12: | `default (AgreementVersionsCard)` |
 | `src/components/admin/CommandPalette.tsx` | 1 | 341 |  | `default (CommandPalette)` |
 | `src/components/admin/InquiryBoard.tsx` | 1 | 137 | AW-6a (Cam 2026-10-21: | `BoardCardInquiry`, `default (InquiryBoard)` |
@@ -765,11 +768,11 @@ without opening anything.
 
 ### AdminAuditLog
 
-13 fields · 1 writer(s) · 2 reader(s)
+13 fields · 1 writer(s) · 3 reader(s)
 
 - fields: `id`, `adminId`, `admin`, `action`, `targetType`, `targetId`, `detail`, `reason`, `before`, `after`, `courseId`, `actorName`, `createdAt`
 - writers: `src/lib/admin-audit.ts`
-- readers: `src/app/api/admin/audit/route.ts`, `src/lib/course-timeline.ts`
+- readers: `src/app/api/admin/audit/route.ts`, `src/app/api/admin/expenses/[id]/history/route.ts`, `src/lib/course-timeline.ts`
 
 ### AdminGoal
 
@@ -1034,6 +1037,14 @@ without opening anything.
 - fields: `id`, `name`, `category`, `amountCents`, `cadence`, `startedAt`, `endedAt`, `createdAt`, `updatedAt`
 - writers: `src/app/api/admin/expenses/[id]/route.ts`, `src/app/api/admin/expenses/route.ts`
 - readers: `src/app/api/admin/expenses/[id]/route.ts`, `src/app/api/admin/expenses/route.ts`, `src/app/api/admin/revenue/route.ts`, `src/app/api/admin/today/overview/route.ts`, `src/lib/admin-today.ts`
+
+### ExpenseBudget
+
+4 fields · 1 writer(s) · 2 reader(s)
+
+- fields: `id`, `cents`, `setAt`, `setBy`
+- writers: `src/app/api/admin/expenses/budget/route.ts`
+- readers: `src/app/api/admin/expenses/budget/route.ts`, `src/app/api/admin/expenses/route.ts`
 
 ### GolferAccount
 

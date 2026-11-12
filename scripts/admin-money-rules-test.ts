@@ -1,9 +1,8 @@
-// ADMIN-C Money: the pure rules behind the new tabs — fees by day for the
-// Overview chart, and what an expense comes to per month on Expenses.
-// Run: npx tsx scripts/money-tabs-test.ts
+// Admin money: the pure rules behind Revenue and Expenses — fees by day for the chart, what an expense comes to
+// per month, the monthly Stripe match and the dispute evidence text. (Was money-tabs-test; the tabs are gone.)
+// Run: npx tsx scripts/admin-money-rules-test.ts
 import { feesByDay } from '../src/lib/fees-by-day';
 import { monthlyEquivalentCents } from '../src/lib/expenses';
-import { visibleMoneyTab, isMoneyTab } from '../src/lib/money-tabs';
 import { evidenceText, type EvidenceInput } from '../src/lib/dispute-evidence';
 import { lastFullMonths, matchResult } from '../src/lib/stripe-match';
 
@@ -32,11 +31,6 @@ check('monthly costs count in full each month', monthlyEquivalentCents({ amountC
 check('a yearly cost counts a twelfth a month', monthlyEquivalentCents({ amountCents: 120000, cadence: 'annual' }) === 10000);
 check('a one-time cost has no monthly rate', monthlyEquivalentCents({ amountCents: 50000, cadence: 'one-time' }) === 0);
 
-check('a link to Expenses from someone who is not the owner opens Overview', visibleMoneyTab('expenses', false) === 'overview');
-check('…and Payouts too', visibleMoneyTab('payouts', false) === 'overview');
-check('the owner gets the tab the link names', visibleMoneyTab('expenses', true) === 'expenses');
-check('everyone gets Not collected and Disputes', visibleMoneyTab('uncollected', false) === 'uncollected' && visibleMoneyTab('disputes', false) === 'disputes');
-check('an unknown ?tab= is ignored', !isMoneyTab('ledger') && isMoneyTab('disputes'));
 
 // PR2b: months against Stripe.
 const m = lastFullMonths(d('2026-10-22T15:00:00Z'), 3);
