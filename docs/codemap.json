@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 699,
+    "files": 700,
     "routes": 301,
-    "libs": 253,
+    "libs": 254,
     "models": 72,
     "orphans": 11,
     "ungatedRoutes": 3
@@ -6123,7 +6123,7 @@
     },
     {
       "path": "src/app/api/operator/home/route.ts",
-      "lines": 28,
+      "lines": 31,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8902,8 +8902,8 @@
     },
     {
       "path": "src/app/dashboard/home/page.tsx",
-      "lines": 347,
-      "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the mockups):",
+      "lines": 300,
+      "purpose": "DASH-C Home (Cam 2026-10-22) → HOME-3 (Cam 2026-11-12, \"approved, build the home page to match the mockup\"; ADMIN_REDO_SPEC.md \"Course dashboard Home:",
       "brain": [],
       "exports": [
         {
@@ -8921,6 +8921,7 @@
         "@/components/dashboard/DeclinedCardList",
         "@/components/dashboard/LoadError",
         "@/components/dashboard/OpenRegister",
+        "@/components/dashboard/OperatorSearch",
         "@/components/dashboard/home/HomeBoard",
         "@/components/dashboard/money/PayoutsTable",
         "@/components/dashboard/settings/FinishSetup",
@@ -8928,6 +8929,7 @@
         "@/components/ui/StatusDot",
         "@/lib/analytics-terms",
         "@/lib/dashboard-fetch",
+        "@/lib/home-today",
         "@/lib/operator-home",
         "@/lib/setup-missing",
         "@/lib/use-dashboard-access",
@@ -8940,7 +8942,7 @@
     },
     {
       "path": "src/app/dashboard/layout.tsx",
-      "lines": 22,
+      "lines": 20,
       "purpose": "Auth protection for /dashboard/* is handled by src/middleware.ts.",
       "brain": [],
       "exports": [
@@ -8962,7 +8964,6 @@
         "@/lib/op-theme",
         "@/lib/staff-fonts",
         "next",
-        "next/font/google",
         "next/headers"
       ],
       "usedBy": []
@@ -10535,7 +10536,7 @@
     },
     {
       "path": "src/components/OperatorSidebar.tsx",
-      "lines": 339,
+      "lines": 357,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11830,7 +11831,7 @@
     },
     {
       "path": "src/components/dashboard/OpenRegister.tsx",
-      "lines": 141,
+      "lines": 149,
       "purpose": "POS-7 (Cam 2026-11-09:",
       "brain": [],
       "exports": [
@@ -11882,6 +11883,7 @@
         "react"
       ],
       "usedBy": [
+        "src/app/dashboard/home/page.tsx",
         "src/components/OperatorSidebar.tsx"
       ]
     },
@@ -12845,7 +12847,7 @@
     },
     {
       "path": "src/components/dashboard/home/HomeBoard.tsx",
-      "lines": 273,
+      "lines": 297,
       "purpose": "DASH-D Home (Cam 2026-11-01, mockup S1):",
       "brain": [],
       "exports": [
@@ -12858,12 +12860,24 @@
           "kind": "component"
         },
         {
+          "name": "EventsCard",
+          "kind": "component"
+        },
+        {
           "name": "Goals",
           "kind": "type"
         },
         {
           "name": "GoalsCard",
           "kind": "component"
+        },
+        {
+          "name": "heatStep",
+          "kind": "fn"
+        },
+        {
+          "name": "HomeEvent",
+          "kind": "reexport"
         },
         {
           "name": "ShiftNote",
@@ -12893,6 +12907,8 @@
         "@/lib/course-conditions",
         "@/lib/course-goals",
         "@/lib/dashboard-fetch",
+        "@/lib/home-board",
+        "@/lib/home-today",
         "next/link",
         "react"
       ],
@@ -15397,7 +15413,7 @@
     },
     {
       "path": "src/lib/analytics-terms.ts",
-      "lines": 59,
+      "lines": 63,
       "purpose": "DENSE-1 (DENSE_UI_SPEC P2):",
       "brain": [],
       "exports": [
@@ -17856,7 +17872,7 @@
     },
     {
       "path": "src/lib/course-conditions.ts",
-      "lines": 66,
+      "lines": 82,
       "purpose": "DASH-D Home (Cam 2026-11-01, \"the course conditions\"):",
       "brain": [],
       "exports": [
@@ -17874,6 +17890,10 @@
         },
         {
           "name": "CONDITION_LINES_MAX",
+          "kind": "const"
+        },
+        {
+          "name": "CONDITION_NOTE_CHARS",
           "kind": "const"
         },
         {
@@ -17903,6 +17923,10 @@
         {
           "name": "golferConditionLines",
           "kind": "fn"
+        },
+        {
+          "name": "HOME_CONDITIONS",
+          "kind": "const"
         }
       ],
       "route": null,
@@ -20939,7 +20963,7 @@
     },
     {
       "path": "src/lib/home-board.ts",
-      "lines": 112,
+      "lines": 127,
       "purpose": "DASH-D Home (Cam 2026-11-01, mockups S1 + \"week-ahead heat map and month vs goal\"):",
       "brain": [],
       "exports": [
@@ -20949,6 +20973,10 @@
         },
         {
           "name": "GoalRow",
+          "kind": "type"
+        },
+        {
+          "name": "HomeEvent",
           "kind": "type"
         },
         {
@@ -20966,6 +20994,10 @@
         {
           "name": "ShiftNoteRow",
           "kind": "type"
+        },
+        {
+          "name": "upcomingEvents",
+          "kind": "fn"
         },
         {
           "name": "weekAhead",
@@ -20987,7 +21019,70 @@
       ],
       "usedBy": [
         "src/app/api/operator/home/route.ts",
-        "src/app/api/operator/shift-notes/route.ts"
+        "src/app/api/operator/shift-notes/route.ts",
+        "src/components/dashboard/home/HomeBoard.tsx"
+      ]
+    },
+    {
+      "path": "src/lib/home-today.ts",
+      "lines": 114,
+      "purpose": "HOME-3 (Cam 2026-11-12, \"approved, build the home page to match the mockup\", ADMIN_REDO_SPEC.md \"Course dashboard Home:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "checkedInOf",
+          "kind": "fn"
+        },
+        {
+          "name": "CONDITION_TONE",
+          "kind": "const"
+        },
+        {
+          "name": "goalTone",
+          "kind": "fn"
+        },
+        {
+          "name": "GoalTone",
+          "kind": "type"
+        },
+        {
+          "name": "HourBar",
+          "kind": "type"
+        },
+        {
+          "name": "HourSlot",
+          "kind": "type"
+        },
+        {
+          "name": "RAIN_PCT",
+          "kind": "const"
+        },
+        {
+          "name": "sameWeekdayAverage",
+          "kind": "fn"
+        },
+        {
+          "name": "todayByHour",
+          "kind": "fn"
+        },
+        {
+          "name": "weatherLine",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./on-course",
+        "./weather"
+      ],
+      "usedBy": [
+        "src/app/dashboard/home/page.tsx",
+        "src/components/dashboard/home/HomeBoard.tsx",
+        "src/lib/operator-home.ts"
       ]
     },
     {
@@ -23074,12 +23169,13 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/dashboard/page.tsx"
+        "src/app/dashboard/page.tsx",
+        "src/lib/home-today.ts"
       ]
     },
     {
       "path": "src/lib/op-theme.ts",
-      "lines": 24,
+      "lines": 26,
       "purpose": "DASH-D (Cam 2026-11-01:",
       "brain": [],
       "exports": [
@@ -23117,7 +23213,7 @@
     },
     {
       "path": "src/lib/operator-home.ts",
-      "lines": 170,
+      "lines": 173,
       "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the course dashboard mockups):",
       "brain": [],
       "exports": [
@@ -23152,6 +23248,7 @@
         "./course-time",
         "./day-fill",
         "./email",
+        "./home-today",
         "./prisma",
         "./setup-missing",
         "./shop"
@@ -27967,7 +28064,8 @@
       ],
       "usedBy": [
         "src/app/api/operator/weather/route.ts",
-        "src/app/dashboard/home/page.tsx"
+        "src/app/dashboard/home/page.tsx",
+        "src/lib/home-today.ts"
       ]
     },
     {
@@ -30326,6 +30424,7 @@
         "src/lib/data-reset.ts",
         "src/lib/event-payments.ts",
         "src/lib/event-signup.ts",
+        "src/lib/home-board.ts",
         "src/lib/sample-data.ts",
         "src/lib/tee-sheet-engine.ts"
       ]

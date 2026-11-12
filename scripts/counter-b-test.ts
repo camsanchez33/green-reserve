@@ -11,7 +11,8 @@ const sheet = read('src/app/dashboard/page.tsx'), shop = read('src/app/dashboard
 check('on a wide screen the sheet narrows beside the open card instead of being covered', sheet.includes("${panelSlot ? 'xl:pr-[536px]' : ''}") && sheet.includes('md:w-[min(520px,calc(100vw-2rem))]'));
 // Home → card
 check('the sheet opens ?tt=<tee time> as that time’s card once loaded', sheet.includes("const tt = searchParams.get('tt');") && sheet.includes('if (tt && teeTimes.some(t => t.id === tt)) { pendingTtRef.current = null; setPanelId(tt); }'));
-check('Home: each coming-up time and a single late group open their card', home.includes('href={`/dashboard?tt=${s.id}`}') && home.includes('`/dashboard?tt=${home.late[0].teeTimeId}`'));
+// HOME-3 (Cam 2026-11-12): the next time off is one card, and it opens its time's card.
+check('Home: the next time off and a single late group open their card', home.includes('href={`/dashboard?tt=${next.id}`}') && home.includes('`/dashboard?tt=${home.late[0].teeTimeId}`'));
 // Members 22
 check('a member search result opens their golfer record', search.includes('`/dashboard/golfers/${encodeURIComponent(`e:${email}`)}`') && search.includes('`/dashboard/golfers/${encodeURIComponent(`a:${m.golferId}`)}`'));
 // Shop 16

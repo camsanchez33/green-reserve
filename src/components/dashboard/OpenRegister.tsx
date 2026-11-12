@@ -31,6 +31,8 @@ export function OpenRegister({ where, onOpened, onStatus }: { where: 'home' | 'r
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [justOpened, setJustOpened] = useState(false);
+  // HOME-3 (Cam 2026-11-12, "just the action, no sentence"): on Home it's one bar until tapped.
+  const [expanded, setExpanded] = useState(false);
   const opened = useRef(onOpened); opened.current = onOpened;
   const statusCb = useRef(onStatus); statusCb.current = onStatus;
   // Prefill the count with what was left, once.
@@ -99,6 +101,12 @@ export function OpenRegister({ where, onOpened, onStatus }: { where: 'home' | 'r
   const h = data.handoff;
   const differs = !!h && cents !== null && cents !== h.leaveInCents;
   if (!data.canOpen) return <div className={box}><p className="text-[13.5px] text-ink">{reopen ? 'The register is closed out.' : 'The register isn’t open yet today.'} Nothing can be charged until someone opens it.</p></div>;
+  if (where === 'home' && !expanded) return (
+    <button type="button" onClick={() => setExpanded(true)} aria-expanded={false}
+      className="bg-white shadow-card rounded-[10px] border-l-[3px] border-warn px-4 py-3 flex items-center justify-between gap-3 text-left hover:opacity-90">
+      <span className="text-[14.5px] font-semibold text-warn">{title}</span><span aria-hidden="true" className="font-semibold text-warn">→</span>
+    </button>
+  );
   return (
     <div className={box}>
       <p className="text-[14px] font-semibold text-ink">{title}</p>

@@ -11,7 +11,11 @@ export const CONDITION_FIELDS = [
 
 export type ConditionKey = typeof CONDITION_FIELDS[number]['key'];
 /** HOME-2 (Cam 2026-11-05, "open to what they want — how the greens are rolling, cart path only"): the course's own lines beside the four choices. */
-export type CourseConditions = Partial<Record<ConditionKey, string>> & { lines?: string[] };
+export type CourseConditions = Partial<Record<ConditionKey, string>> & { lines?: string[]; notes?: Partial<Record<ConditionKey, string>> };
+
+/** HOME-3 (Cam 2026-11-12, the approved Home): the card shows cart path, greens and pins only, each with an optional detail line. */
+export const HOME_CONDITIONS: { key: ConditionKey; label: string }[] = [{ key: 'carts', label: 'Cart path' }, { key: 'greens', label: 'Greens' }, { key: 'pins', label: 'Pins' }];
+export const CONDITION_NOTE_CHARS = 80;
 
 export const CONDITION_LINES_MAX = 6;
 export const CONDITION_LINE_CHARS = 80;
@@ -38,6 +42,18 @@ export function cleanConditions(raw: unknown): CourseConditions {
     }
     if (lines.length) out.lines = lines;
   }
+  // HOME-3: a detail line per condition, kept only beside a condition that is set.
+  const raw3 = (raw as { notes?: unknown }).notes;
+  if (raw3 && typeof raw3 === 'object') {
+    const notes: Partial<Record<ConditionKey, string>> = {};
+    for (const f of CONDITION_FIELDS) {
+      const v = (raw3 as Record<string, unknown>)[f.key];
+      if (!out[f.key] || typeof v !== 'string') continue;
+      const t = v.replace(/\s+/g, ' ').trim().slice(0, CONDITION_NOTE_CHARS);
+      if (t) notes[f.key] = t;
+    }
+    if (Object.keys(notes).length) out.notes = notes;
+  }
   return out;
 }
 
@@ -56,7 +72,7 @@ export function golferConditionLines(raw: unknown, at: Date | string | null | un
   const t = new Date(at).getTime();
   if (!Number.isFinite(t) || now.getTime() - t > CONDITIONS_FRESH_HOURS * 3600000) return [];
   const c = cleanConditions(raw);
-  return [...CONDITION_FIELDS.filter(f => c[f.key]).map(f => `${f.label}: ${conditionLabel(f.key, c[f.key])}`), ...(c.lines ?? [])];
+  return [...CONDITION_FIELDS.filter(f => c[f.key]).map(f => `${f.label}: ${conditionLabel(f.key, c[f.key])}${c.notes?.[f.key] ? ` (${c.notes[f.key]})` : ''}`), ...(c.lines ?? [])];
 }
 
 /** Home's warning: conditions are set but golfers no longer see them — the same rule as the booking page, by construction. */
