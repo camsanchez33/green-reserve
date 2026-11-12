@@ -55,3 +55,11 @@ attention side by side.
 - Quick actions: removed.
 - Later: an AI assistant in the admin, like the course dashboard's — read-only, never shares information outside
   GreenReserve. Its own mockup and decisions when we get there.
+
+## Page 2 — Golf Courses (Cam approved the mockup 2026-11-12, "yeah looks good")
+Mockup: `lanes/admin/courses-mockup.html` (claude.ai/artifact/S9uejLkUeukpvf9f3Hcgw2). A directory — course, status,
+bookings this month (vs last month to the same day), our fees this month, last booking — with filters All · Live ·
+At risk · Onboarding · Offline and a find box; clicking a course opens its profile beside the list (Overview: bookings,
+fees, fees missed, failed charges, last booking, joined; Contact & agreement; Setup checklist; Payments; Notes) with
+"Open full profile" (the existing admin course page) and "Open their booking page". Readable without signing in to the
+course's dashboard. At risk = a live course with no bookings in 14 days (Build's default; Cam can change it).
