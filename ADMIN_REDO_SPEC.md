@@ -161,3 +161,14 @@ There is no separate tab. Instead, each course's profile (Golf courses → the c
 logins (role, 2-step, last sign-in), its members, and the golfers with sign-ins who book there. Looking up one golfer
 across courses (a support email) is done from the Bookings search (name, email, booking number). The menu loses
 "Users & golfers".
+
+## Revenue (mockup `lanes/admin/revenue-mockup.html`, in review; Cam 2026-11-12 comments so far)
+- Called "Revenue" everywhere (title, menu, cards). One column, no tabs. The Filter picks the period and everything follows it, the chart included.
+- Cards: Revenue (vs the period before) · Average per live course · Stripe payout. No Stripe-fee card: rounds are
+  charged on the COURSE's Stripe account, so the processing fee is theirs.
+- Revenue chart: a running total for the period against the one before, plus a sentence saying ahead or behind by $X.
+- By course (revenue, missed, vs last period, CSV) beside: Course payment problems (only a course NOT paid right:
+  failed or short payouts; golfer disputes are the course's, with its player) · Payouts · Books vs Stripe.
+- Ledger: every movement of our money (the MoneyMove ledger, GreenReserve's side), one row each, with a Stripe link and CSV.
+- Removed: Disputes, Never reached us, Courses earning, Kept after Stripe fees.
+- Legal to-do: the Operator Agreement's next version should say golfer disputes and chargebacks are the course's.

@@ -378,7 +378,7 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
 <style>
 /* Revenue & payments: what GreenReserve earns. One column, no tabs (ADMIN FORMAT rule 8): numbers, fees by day,
    by course beside disputes/payouts/Stripe match, then the fees that never reached us. Read-only. */
-.rk{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.rk{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .rkc{padding:16px;display:flex;flex-direction:column;gap:4px;min-width:0}
 .rkc .l{font-size:12.5px;color:var(--muted);font-weight:500}
 .rkc .v{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.15}
@@ -390,7 +390,15 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
 .rk2{display:flex;gap:12px;font-size:12.5px;color:var(--muted)}
 .sw2{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
 .rnote{font-size:12.5px;color:var(--muted)}
-.fbars{display:flex;align-items:flex-end;gap:4px;height:150px}
+.fbars{display:block}
+.rline{width:100%;height:200px;display:block;overflow:visible}
+.rline .gl{stroke:var(--grid);stroke-width:1;vector-effect:non-scaling-stroke}
+.rline .lp{fill:none;stroke:var(--chart-prev);stroke-width:2;stroke-dasharray:6 6;vector-effect:non-scaling-stroke}
+.rline .lt{fill:none;stroke:var(--chart);stroke-width:3;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.rline .la{fill:rgba(59,170,107,.18)}
+.rline .ld{fill:var(--chart);stroke:var(--panel-solid);stroke-width:3;vector-effect:non-scaling-stroke}
+.rlab{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:6px}
+.rsum{margin-top:10px;font-size:13.5px;color:var(--muted)}.rsum b{color:var(--ink);font-size:16px}
 .fbars .d{flex:1;height:100%;display:flex;align-items:flex-end;gap:1px;min-width:0}
 .fbars .d i{flex:1;border-radius:2px 2px 0 0}
 .fbars .d .p{background:var(--chart-prev)} .fbars .d .t{background:var(--chart)}
@@ -419,7 +427,7 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
         <button type="button" data-v="dark">Dark</button>
       </div></div>
   </div>
-  <p style="font-size:12.5px;color:var(--page-muted);margin:0;max-width:75ch">Example numbers, not real ones. What GreenReserve earns (our service fees), what never reached us, disputes, and the money moving to our bank and the courses' banks. Read-only: nothing here charges or retries anyone.</p>
+  <p style="font-size:12.5px;color:var(--page-muted);margin:0;max-width:75ch">Example numbers, not real ones. What GreenReserve earns (our service fees), by course, and the money moving to our bank and the courses' banks. Read-only: nothing here charges or retries anyone.</p>
 
   <div class="app" id="app" data-dir="green" data-mode="light" data-acc="gold">
     <span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span>
@@ -460,13 +468,12 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
 
       <div class="rk">
         <div class="glass rkc"><span class="l">Revenue</span><b class="v" id="k1"></b><span class="c" id="k1c"></span></div>
-        <div class="glass rkc"><span class="l">Rounds paid online</span><b class="v" id="k2"></b><span class="c" id="k2c"></span></div>
-        <div class="glass rkc"><span class="l">Fees missed</span><b class="v dn" id="k3"></b><span class="c">paid at the counter</span></div>
-        <div class="glass rkc"><span class="l">Next payout to us</span><b class="v" id="k4"></b><span class="c" id="k4c"></span></div>
+        <div class="glass rkc"><span class="l">Average per live course</span><b class="v" id="k2"></b><span class="c" id="k2c"></span></div>
+        <div class="glass rkc"><span class="l">Stripe payout</span><b class="v" id="k4"></b><span class="c" id="k4c"></span></div>
       </div>
 
       <section class="glass rpad" aria-label="Revenue by day">
-        <div class="rh"><b>Revenue by day</b><span class="rk2"><span><i class="sw2" style="background:var(--chart)"></i>This month</span><span><i class="sw2" style="background:var(--chart-prev)"></i>Last month</span></span></div>
+        <div class="rh"><b id="rtitle">Revenue this month</b><span class="rk2"><span><i class="sw2" style="background:var(--chart)"></i><span id="rcur">This month</span></span><span><i class="sw2" style="background:transparent;border-top:2px dashed var(--chart-prev);height:0;width:14px;vertical-align:3px"></i><span id="rprev">Last month</span></span></span></div>
         <div class="fbars" id="fbars"></div>
       </section>
 
@@ -476,24 +483,27 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
           <table class="rt"><thead><tr><th>Course</th><th class="n">Rounds online</th><th class="n">Revenue</th><th class="n">Missed</th><th class="n">vs last month</th></tr></thead><tbody id="bycourse"></tbody></table>
         </section>
         <div class="rstack">
-          <section class="glass rpad" aria-label="Disputes">
-            <div class="rh"><b>Disputes</b><span class="plink">Stripe ↗</span></div>
+          <!-- Cam 2026-11-12: golfer disputes are the course's, with its player (Operator Agreement). We only show when a
+               COURSE wasn't paid right: a payout to its bank that failed or came up short. -->
+          <section class="glass rpad" aria-label="Course payment problems">
+            <div class="rh"><b>Course payment problems</b><span class="plink">Stripe ↗</span></div>
             <div class="rrows" id="disputes"></div>
           </section>
           <section class="glass rpad" aria-label="Payouts">
             <div class="rh"><b>Payouts</b><span class="plink">Stripe ↗</span></div>
             <div class="rrows" id="payouts"></div>
           </section>
-          <section class="glass rpad" aria-label="Matches Stripe">
-            <div class="rh"><b>Matches Stripe</b></div>
+          <section class="glass rpad" aria-label="Books vs Stripe">
+            <div class="rh"><b>Books vs Stripe</b></div>
             <div class="rrows" id="match"></div>
           </section>
         </div>
       </div>
-
-      <section class="glass rpad" aria-label="Never reached us">
-        <div class="rh"><b>Never reached us</b><span class="rnote">The course's to collect. We only keep the record.</span></div>
-        <table class="rt"><thead><tr><th>Booking</th><th>Course</th><th>Round</th><th>Why</th><th class="n">Our fee</th></tr></thead><tbody id="missed"></tbody></table>
+      <!-- Cam 2026-11-12, "where is our actual ledger": every dollar of ours, one row each (the MoneyMove ledger,
+           GreenReserve's side), for the period the Filter picks. Read-only; each row links to its Stripe record. -->
+      <section class="glass rpad" aria-label="Ledger">
+        <div class="rh"><b>Ledger</b><span class="plink">Download CSV</span></div>
+        <table class="rt"><thead><tr><th>When</th><th>Booking</th><th>Course</th><th>What</th><th class="n">Amount</th><th class="hide-s">Stripe</th></tr></thead><tbody id="ledger"></tbody></table>
       </section>
     </main>
   </div>
@@ -519,19 +529,45 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
     const pct=(a,b)=>b?Math.round((a-b)/b*100):null;
     const up=pct(p.fees,p.feesPrev), upr=pct(p.rounds,p.roundsPrev);
     $("k1").textContent=usd(p.fees); $("k1c").innerHTML=up==null?'first year':'<span class="'+(up>=0?'upc':'dn')+'">'+(up>=0?'Up ':'Down ')+Math.abs(up)+'%</span> vs the period before';
-    $("k2").textContent=p.rounds.toLocaleString(); $("k2c").innerHTML=upr==null?'':'<span class="'+(upr>=0?'upc':'dn')+'">'+(upr>=0?'Up ':'Down ')+Math.abs(upr)+'%</span> vs the period before';
-    $("k3").textContent=usd(p.missed);
+    // Cam 2026-11-12, "think what would actually be important": what we actually keep, and how many live courses
+    // are producing revenue (a live course earning nothing is the first sign of trouble).
+    // Cam 2026-11-12, "we don't pay the Stripe fee": rounds are charged on the course's own Stripe account, so the
+    // processing fee is theirs. Instead: what an earning course brings us, against the period before.
+    const avg=p.fees/5, avgPrev=(p.feesPrev||0)/5, ap=avgPrev?Math.round((avg-avgPrev)/avgPrev*100):null;
+    $("k2").textContent=usd(avg); $("k2c").innerHTML=ap==null?'a course':'<span class="'+(ap>=0?'upc':'dn')+'">'+(ap>=0?'Up ':'Down ')+Math.abs(ap)+'%</span> vs the period before';
     $("k4").textContent="$1,206.40"; $("k4c").textContent="Arrives Fri, Nov 13";
-    // Fees by day: this period vs the same days of the one before.
-    let h="";for(let i=0;i<Math.min(p.days,31);i++){const t=40+((i*37)%55)+(i%7>4?40:0), q=35+((i*29)%50)+(i%7>4?35:0);h+='<div class="d" title="Day '+(i+1)+': '+usd(t*1.5)+' this period, '+usd(q*1.5)+' before"><i class="p" style="height:'+q+'%"></i><i class="t" style="height:'+t+'%"></i></div>';}
-    $("fbars").innerHTML=h;
+    // Cam 2026-11-12, "make this look better": running total this month against last month at the same day, as two
+    // smooth lines with a soft fill under this month's; the gap at today says ahead or behind in one look.
+    // Cam 2026-11-12: the chart follows the Filter — its span, its labels and what it's compared with.
+    const SPAN={month:{n:30,today:12,lab:['Nov 1','Nov 15','Nov 30'],t:'Revenue this month',vs:'last month',cur:'This month'},
+      last:{n:31,today:31,lab:['Oct 1','Oct 16','Oct 31'],t:'Revenue last month',vs:'September',cur:'October'},
+      d30:{n:30,today:30,lab:['Oct 14','Oct 28','Nov 12'],t:'Revenue, last 30 days',vs:'the 30 days before',cur:'Last 30 days'},
+      year:{n:52,today:46,lab:['Jan','Jun','Dec'],t:'Revenue this year',vs:'last year',cur:'This year'}}[per];
+    const N=SPAN.n, today=SPAN.today;
+    const dayT=i=>40+((i*37)%55)+(i%7>4?40:0), dayP=i=>35+((i*29)%50)+(i%7>4?35:0);
+    const scale=p.feesPrev?p.feesPrev/Array.from({length:N},(_,i)=>dayP(i)).reduce((a,b)=>a+b,0):3920/1900;
+    let ct=0,cp=0;const T=[],Q=[];for(let i=0;i<N;i++){cp+=dayP(i);Q.push(cp);if(i<today){ct+=dayT(i);T.push(ct);}}
+    // The line ends at the Revenue card's number; last month is scaled so day-for-day it equals 'the period before'.
+    const kt=p.fees/T[T.length-1], kq=(p.feesPrev||p.fees*0.85)/Q[T.length-1];
+    for(let i=0;i<T.length;i++)T[i]*=kt; for(let i=0;i<N;i++)Q[i]*=kq; cp=Q[N-1]; ct=T[T.length-1];
+    const W=1000,H=200,pad=8,max=Math.max(cp,ct)*1.08;const x=i=>pad+i*(W-2*pad)/(N-1),y=v=>H-pad-(v/max)*(H-2*pad);
+    const path=a=>a.map((v,i)=>(i?'L':'M')+x(i).toFixed(1)+' '+y(v).toFixed(1)).join(' ');
+    const area=path(T)+' L'+x(T.length-1)+' '+(H-pad)+' L'+x(0)+' '+(H-pad)+' Z';
+    const ahead=T[T.length-1]-Q[T.length-1];
+    $("fbars").innerHTML='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" class="rline" role="img" aria-label="Revenue so far this month against last month">'+
+      [0.25,0.5,0.75].map(f=>'<line x1="0" x2="'+W+'" y1="'+(H*f)+'" y2="'+(H*f)+'" class="gl"/>').join('')+
+      '<path d="'+path(Q)+'" class="lp"/><path d="'+area+'" class="la"/><path d="'+path(T)+'" class="lt"/>'+
+      '<circle cx="'+x(T.length-1)+'" cy="'+y(T[T.length-1])+'" r="5" class="ld"/></svg>'+
+      '<div class="rlab">'+SPAN.lab.map(x=>'<span>'+x+'</span>').join('')+'</div>'+
+      '<div class="rsum"><b>'+usd(T[T.length-1])+'</b> so far · <span class="'+(ahead>=0?'upc':'dn')+'">'+usd(Math.abs(ahead))+(ahead>=0?' ahead of ':' behind ')+SPAN.vs+'</span>'+(today<N?' at the same day':'')+'</div>';
+    $("rtitle").textContent=SPAN.t; $("rcur").textContent=SPAN.cur; $("rprev").textContent=SPAN.vs.charAt(0).toUpperCase()+SPAN.vs.slice(1);
     const C=[["Ridgewood Country Club",412,618,12,18],["Pine Hollow Golf Club",356,534,9,-4],["Oak Valley Golf Course",288,432,36,22],["Cedar Ridge Golf Links",172,258,39,-12]];
     $("bycourse").innerHTML=C.map(c=>'<tr><td>'+c[0]+'</td><td class="n">'+c[1]+'</td><td class="n">'+usd(c[2])+'</td><td class="n '+(c[3]?'dn':'')+'">'+usd(c[3])+'</td><td class="n '+(c[4]>=0?'upc':'dn')+'">'+(c[4]>=0?'Up ':'Down ')+Math.abs(c[4])+'%</td></tr>').join("");
-    $("disputes").innerHTML='<div><span>GR-1042 · Oak Valley<small>Opened Nov 11 · the course answers it in its Stripe</small></span><b class="dn">$157.00</b></div><div><span>Closed this month<small>1 won, 0 lost</small></span><b>$90.00</b></div>';
+    $("disputes").innerHTML='<div><span>Cedar Ridge Golf Links<small>Payout to its bank failed Nov 10 · bank account closed</small></span><b class="dn">$2,140.00</b></div><div><span>Every other course<small>Paid in full</small></span><b class="upc">OK</b></div>';
     $("payouts").innerHTML='<div><span>To our bank<small>Next: Fri, Nov 13</small></span><b>$1,206.40</b></div><div><span>Balance at Stripe<small>Available now</small></span><b>$312.60</b></div><div><span>To the courses<small>This month, 4 courses</small></span><b>$41,880.00</b></div>';
+    const LG=[["Nov 12 9:58 AM","GR-1044","Pine Hollow","Service fee collected",3],["Nov 12 7:31 AM","GR-1045","Cedar Ridge","Paid in cash, no fee",0],["Nov 11 4:41 PM","GR-1043","Pine Hollow","Service fee collected with no-show fee",4.5],["Nov 11 2:05 PM","GR-1039","Ridgewood","Service fee collected",6],["Nov 10 6:12 PM","GR-1048","Cedar Ridge","Cancelled in time, no fee",0],["Nov 10 9:02 AM","GR-1036","Oak Valley","Service fee refunded (course called it off)",-3],["Nov 9 3:20 PM","GR-1034","Ridgewood","Service fee collected",4.5]];
+    $("ledger").innerHTML=LG.map(r=>'<tr><td style="white-space:nowrap">'+r[0]+'</td><td class="bn">'+r[1]+'</td><td>'+r[2]+'</td><td>'+r[3]+'</td><td class="n '+(r[4]<0?'dn':'')+'">'+(r[4]<0?'−'+usd(-r[4]):usd(r[4]))+'</td><td class="hide-s">'+(r[4]?'<span class="plink">↗</span>':'')+'</td></tr>').join("");
     $("match").innerHTML='<div><span>October<small>Our ledger vs Stripe</small></span><b class="upc">Matches</b></div><div><span>November so far</span><b class="upc">Matches</b></div>';
-    const M=[["GR-1041","Ridgewood","Today 9:40 AM","Card declined at check-in",6],["GR-1038","Cedar Ridge","Nov 10 8:20 AM","Paid in cash at the counter",4.5],["GR-1033","Oak Valley","Nov 9 1:00 PM","Never checked in",3],["GR-1029","Cedar Ridge","Nov 8 7:50 AM","Paid in cash at the counter",6]];
-    $("missed").innerHTML=M.map(m=>'<tr><td class="bn">'+m[0]+'</td><td>'+m[1]+'</td><td>'+m[2]+'</td><td>'+m[3]+'</td><td class="n dn">'+usd(m[4])+'</td></tr>').join("");
   }
   const fb=$("fbtn"), fm=$("filters");
   fb.addEventListener("click",()=>{fm.hidden=!fm.hidden;fb.setAttribute("aria-expanded",String(!fm.hidden));});
