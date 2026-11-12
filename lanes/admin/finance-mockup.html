@@ -397,7 +397,21 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
 .ico{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;color:var(--muted)}.ico:hover{color:var(--ink);background:var(--hover)}
 
 .fk{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+.rsplit2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:stretch}
+.cat .bar i.rv{background:var(--chart)}
+@media (max-width:1100px){.rsplit2{grid-template-columns:minmax(0,1fr)}}
 .rsplit3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:stretch}
+.fx{position:relative;height:220px;margin-left:44px;margin-right:56px}
+.fxs{width:100%;height:100%;display:block;overflow:visible}
+.fxs .fg{stroke:var(--grid);stroke-width:1;vector-effect:non-scaling-stroke}
+.fxs .fra{fill:rgba(59,170,107,.10)}
+.fxs .fgap{fill:rgba(59,170,107,.22)} .fxs .floss{fill:rgba(163,69,47,.22)}
+.fxs .frl{fill:none;stroke:var(--chart);stroke-width:3;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.fxs .fel{fill:none;stroke:var(--t2);stroke-width:2.5;stroke-dasharray:1 0;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.fxs .frd{fill:var(--panel-solid);stroke:var(--chart);stroke-width:2;vector-effect:non-scaling-stroke}
+.fyl{position:absolute;left:-46px;transform:translateY(-50%);font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.fend{position:absolute;right:-56px;transform:translateY(-50%);font-size:12.5px;font-weight:700;color:var(--chart);font-variant-numeric:tabular-nums}
+.fx + .ml{margin-left:44px;margin-right:56px;justify-content:space-between}.fx + .ml span{flex:0 0 auto;text-align:center;min-width:0}
 .mc{display:flex;align-items:flex-end;gap:10px;height:190px;position:relative}
 .mc .m{flex:1;height:100%;display:flex;align-items:flex-end;justify-content:center;gap:3px;min-width:0}
 .mc .m i{flex:1;max-width:16px;border-radius:3px 3px 0 0}
@@ -519,21 +533,18 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
       </div>
 
       <section class="glass rpad" aria-label="Month by month">
-        <div class="rh"><b>Month by month</b><span class="rk2"><span><i class="sw2" style="background:var(--chart)"></i>Revenue</span><span><i class="sw2" style="background:var(--t2)"></i>Expenses</span><span><i class="sw2" style="background:transparent;border-top:2px solid var(--ink);height:0;width:14px;vertical-align:3px"></i>Profit</span></span></div>
+        <div class="rh"><b>Month by month</b><span class="rk2"><span><i class="sw2" style="background:var(--chart)"></i>Revenue</span><span><i class="sw2" style="background:transparent;border-top:2.5px solid var(--t2);height:0;width:14px;vertical-align:3px"></i>Expenses</span><span><i class="sw2" style="background:rgba(59,170,107,.3)"></i>Profit</span><span><i class="sw2" style="background:rgba(163,69,47,.3)"></i>Loss</span></span></div>
         <div id="mchart"></div>
       </section>
 
-      <div class="rsplit3">
-        <section class="glass rpad" aria-label="Per booking">
-          <div class="rh"><b>Per booking</b></div>
-          <div class="rrows" id="perbk"></div>
+      <!-- Cam 2026-11-12: a revenue breakdown and an expenses breakdown, side by side; no third card. -->
+      <div class="rsplit2">
+        <section class="glass rpad" aria-label="Revenue breakdown">
+          <div class="rh"><b>Revenue breakdown</b></div>
+          <div id="revcats"></div>
         </section>
-        <section class="glass rpad" aria-label="Per live course">
-          <div class="rh"><b>Per live course</b></div>
-          <div class="rrows" id="percs"></div>
-        </section>
-        <section class="glass rpad" aria-label="Where the money goes">
-          <div class="rh"><b>Where the money goes</b><a class="ico" href="#" aria-label="Open Expenses" title="Open Expenses"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg></a></div>
+        <section class="glass rpad" aria-label="Expenses breakdown">
+          <div class="rh"><b>Expenses breakdown</b><a class="ico" href="#" aria-label="Open Expenses" title="Open Expenses"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg></a></div>
           <div id="cats"></div>
         </section>
       </div>
@@ -562,21 +573,42 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
     $("filters").innerHTML=Object.entries(P).map(([k,v])=>'<button class="chip" type="button" data-f="'+k+'" aria-pressed="'+(per===k)+'">'+v[0]+'</button>').join("");
     const M=ALL.slice(-P[per][1]);
     const rev=M.reduce((a,m)=>a+m[2],0), exp=M.reduce((a,m)=>a+m[3],0), prof=rev-exp, bk=M.reduce((a,m)=>a+m[1],0);
-    $("k1").textContent=usd(rev); $("k1c").textContent=bk.toLocaleString()+" bookings";
-    $("k2").textContent=usd(exp); $("k2c").textContent=usd(Math.round(exp/M.length))+" a month";
-    $("k3").textContent=usd(prof); $("k3").className="v "+(prof>=0?"upc":"dn");
-    const lastProfitable=M.filter(m=>m[2]>m[3]).length; $("k3c").textContent=lastProfitable+" of "+M.length+" months in profit";
-    $("k4").textContent=Math.round(prof/rev*100)+"%"; $("k4").className="v "+(prof>=0?"upc":"dn"); $("k4c").textContent="of revenue kept";
-    // Month by month: revenue and expenses as bars, profit as a line across them.
-    const max=Math.max(...M.map(m=>Math.max(m[2],m[3])))*1.1, minP=Math.min(0,...M.map(m=>m[2]-m[3]));
-    let h='<div class="mc">'+M.map(m=>'<div class="m" title="'+m[0]+': revenue '+usd(m[2])+', expenses '+usd(m[3])+', profit '+usd(m[2]-m[3])+'"><i class="rv" style="height:'+(m[2]/max*100)+'%"></i><i class="ex" style="height:'+(m[3]/max*100)+'%"></i></div>').join("");
-    const n=M.length, x=i=>((i+0.5)/n*1000), y=v=>(1-(v-minP)/(max-minP))*190;
-    h+='<svg viewBox="0 0 1000 190" preserveAspectRatio="none"><path d="'+M.map((m,i)=>(i?'L':'M')+x(i).toFixed(1)+' '+y(m[2]-m[3]).toFixed(1)).join(' ')+'"/></svg></div>';
+    // Cam 2026-11-12: Revenue, Expenses, Profit, Margin, and under each only "Up/Down X% vs <the period before>".
+    // The period before = the same length just before (counted the same way in the build).
+    const PR={y12:[0.58,0.71],m6:[0.64,0.93],m3:[0.86,0.97],ytd:[0.55,0.72]}[per];
+    const prevRev=rev*PR[0], prevExp=exp*PR[1], prevProf=prevRev-prevExp, mg=prof/rev*100, prevMg=prevProf/prevRev*100;
+    const vs={y12:'the 12 months before',m6:'the 6 months before',m3:'the 3 months before',ytd:'last year'}[per];
+    const ch=(now,was,goodUp)=>{if(!was)return '';const pc=Math.round((now-was)/Math.abs(was)*100);const good=goodUp?pc>=0:pc<=0;return '<span class="'+(good?'upc':'dn')+'">'+(pc>=0?'Up ':'Down ')+Math.abs(pc)+'%</span> vs '+vs;};
+    $("k1").textContent=usd(rev); $("k1").className="v"; $("k1c").innerHTML=ch(rev,prevRev,true);
+    $("k2").textContent=usd(exp); $("k2c").innerHTML=ch(exp,prevExp,false);
+    $("k3").textContent=usd(prof); $("k3").className="v "+(prof>=0?"upc":"dn"); $("k3c").innerHTML=ch(prof,prevProf,true);
+    $("k4").textContent=Math.round(mg)+"%"; $("k4").className="v "+(mg>=0?"upc":"dn"); $("k4c").innerHTML=ch(mg,prevMg,true);
+    // Cam 2026-11-12, "make it look more aesthetic": two smooth lines — revenue (green, soft fill) and expenses (gold)
+    // — with the gap between them shaded: green where we made money, red where we didn't. Dots and values on the last month.
+    const n=M.length, W=1000, H=220, pt=14, pb=8;
+    const max=Math.max(...M.map(m=>Math.max(m[2],m[3])))*1.12;
+    const X=i=>n===1?W/2:i*(W/(n-1)), Y=v=>pt+(1-v/max)*(H-pt-pb);
+    const curve=pts=>pts.map((p,i)=>{if(!i)return 'M'+p[0]+' '+p[1];const a=pts[i-1],b=p,c0=pts[i-2]||a,c3=pts[i+1]||b;const t=0.12;
+      return ' C'+(a[0]+(b[0]-c0[0])*t).toFixed(1)+' '+(a[1]+(b[1]-c0[1])*t).toFixed(1)+' '+(b[0]-(c3[0]-a[0])*t).toFixed(1)+' '+(b[1]-(c3[1]-a[1])*t).toFixed(1)+' '+b[0].toFixed(1)+' '+b[1].toFixed(1);}).join('');
+    const R=M.map((m,i)=>[X(i),Y(m[2])]), E=M.map((m,i)=>[X(i),Y(m[3])]);
+    const rLine=curve(R), eLine=curve(E);
+    const eBack=curve(E.slice().reverse()).replace(/^M/,'L');
+    const gap=rLine+' '+eBack+' Z';
+    const ticks=[0.25,0.5,0.75,1].map(f=>max/1.12*f);
+    let h='<div class="fx"><svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" class="fxs" role="img" aria-label="Revenue and expenses, month by month">'+
+      '<defs><clipPath id="abvE"><path d="'+eLine+' L'+W+' 0 L0 0 Z"/></clipPath><clipPath id="blwE"><path d="'+eLine+' L'+W+' '+H+' L0 '+H+' Z"/></clipPath></defs>'+
+      ticks.map(t=>'<line x1="0" x2="'+W+'" y1="'+Y(t).toFixed(1)+'" y2="'+Y(t).toFixed(1)+'" class="fg"/>').join('')+
+      
+      '<path d="'+gap+'" class="fgap" clip-path="url(#abvE)"/><path d="'+gap+'" class="floss" clip-path="url(#blwE)"/>'+
+      '<path d="'+eLine+'" class="fel"/><path d="'+rLine+'" class="frl"/>'+
+      M.map((m,i)=>'<circle cx="'+X(i)+'" cy="'+Y(m[2])+'" r="'+(i===n-1?5:3)+'" class="frd"/>').join('')+
+      '</svg>'+ticks.map(t=>'<span class="fyl" style="top:'+(Y(t)/H*100)+'%">'+usd(t)+'</span>').join('')+
+      '<span class="fend" style="top:'+(Y(M[n-1][2])/H*100)+'%">'+usd(M[n-1][2])+'</span></div>';
     h+='<div class="ml">'+M.map(m=>'<span>'+m[0]+'</span>').join("")+'</div>';
     $("mchart").innerHTML=h;
-    const live=5;
-    $("perbk").innerHTML='<div><span>Revenue a booking</span><b>$'+(rev/bk).toFixed(2)+'</b></div><div><span>Cost a booking<small>Expenses ÷ bookings</small></span><b>$'+(exp/bk).toFixed(2)+'</b></div><div><span>Profit a booking</span><b class="'+(prof>=0?'upc':'dn')+'">$'+(prof/bk).toFixed(2)+'</b></div>';
-    $("percs").innerHTML='<div><span>Revenue a course, a month</span><b>'+usd(rev/M.length/live)+'</b></div><div><span>Cost a course, a month</span><b>'+usd(exp/M.length/live)+'</b></div><div><span>Courses to cover costs<small>at this month\'s revenue a course</small></span><b>'+Math.ceil(ALL[ALL.length-1][3]/(ALL[ALL.length-2][2]/live))+'</b></div>';
+    // Revenue by where it comes from (our side of the ledger only).
+    const RV=[["Booking service fees",0.86],["No-show & late-cancel fees",0.09],["Membership dues fees",0.05]];
+    $("revcats").innerHTML=RV.map(c=>'<div class="cat"><div class="cl"><span>'+c[0]+'</span><b>'+usd(rev*c[1])+'</b></div><div class="bar"><i class="rv" style="width:'+(c[1]/RV[0][1]*100)+'%"></i></div></div>').join("");
     const C=[["Software & hosting",0.34],["Marketing",0.26],["Legal & insurance",0.18],["Texts & email",0.08],["Other",0.14]];
     $("cats").innerHTML=C.map(c=>'<div class="cat"><div class="cl"><span>'+c[0]+'</span><b>'+usd(exp*c[1])+'</b></div><div class="bar"><i style="width:'+(c[1]/C[0][1]*100)+'%"></i></div></div>').join("");
     $("months").innerHTML=M.slice().reverse().map(m=>{const p=m[2]-m[3];return '<tr><td>'+m[0]+'</td><td class="n">'+m[1].toLocaleString()+'</td><td class="n">'+usd(m[2])+'</td><td class="n">'+usd(m[3])+'</td><td class="n '+(p>=0?'upc':'dn')+'">'+usd(p)+'</td><td class="n hide-s">'+Math.round(p/m[2]*100)+'%</td></tr>'}).join("");
