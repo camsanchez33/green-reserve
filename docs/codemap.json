@@ -796,7 +796,7 @@
     },
     {
       "path": "src/app/admin/expenses/logic.ts",
-      "lines": 147,
+      "lines": 148,
       "purpose": "Expenses (ADMIN-REDO, Cam approved the mockup 2026-11-12):",
       "brain": [],
       "exports": [
