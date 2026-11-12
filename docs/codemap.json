@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 706,
-    "routes": 304,
-    "libs": 253,
+    "files": 707,
+    "routes": 303,
+    "libs": 254,
     "models": 72,
     "orphans": 11,
     "ungatedRoutes": 3
@@ -295,7 +295,7 @@
     },
     {
       "path": "src/app/admin/courses/[id]/_parts/MoneyTab.tsx",
-      "lines": 172,
+      "lines": 165,
       "purpose": "MP-12 (ADMIN_V4 V4-9):",
       "brain": [],
       "exports": [
@@ -323,7 +323,7 @@
     },
     {
       "path": "src/app/admin/courses/[id]/_parts/OperateTab.tsx",
-      "lines": 317,
+      "lines": 310,
       "purpose": "MP-12 (ADMIN_V4 V4-9):",
       "brain": [],
       "exports": [
@@ -582,7 +582,7 @@
     },
     {
       "path": "src/app/admin/courses/[id]/_parts/useCourseDetail.tsx",
-      "lines": 1092,
+      "lines": 1041,
       "purpose": "MP-12 (ADMIN_V4 V4-9):",
       "brain": [],
       "exports": [
@@ -848,7 +848,7 @@
     },
     {
       "path": "src/app/admin/golfers/page.tsx",
-      "lines": 457,
+      "lines": 415,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1233,7 +1233,7 @@
     },
     {
       "path": "src/app/admin/revenue/page.tsx",
-      "lines": 1074,
+      "lines": 1031,
       "purpose": "ADMIN-C Money (Cam 2026-10-22, from the Money mockup he approved:",
       "brain": [],
       "exports": [
@@ -2435,7 +2435,7 @@
     },
     {
       "path": "src/app/api/admin/golfers/route.ts",
-      "lines": 255,
+      "lines": 248,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2459,7 +2459,6 @@
       "imports": [
         "@/lib/admin-audit",
         "@/lib/admin-session",
-        "@/lib/cancel-booking",
         "@/lib/email",
         "@/lib/prisma",
         "@/lib/shop",
@@ -3052,33 +3051,6 @@
       "usedBy": []
     },
     {
-      "path": "src/app/api/admin/retry-charge/[bookingId]/route.ts",
-      "lines": 46,
-      "purpose": "",
-      "brain": [],
-      "exports": [
-        {
-          "name": "POST",
-          "kind": "route"
-        }
-      ],
-      "route": "/api/admin/retry-charge/[bookingId]",
-      "kind": "api",
-      "methods": [
-        "POST"
-      ],
-      "auth": "admin",
-      "guard": "file",
-      "imports": [
-        "@/lib/admin-audit",
-        "@/lib/admin-session",
-        "@/lib/checkin-booking",
-        "@/lib/stripe-errors",
-        "next/server"
-      ],
-      "usedBy": []
-    },
-    {
       "path": "src/app/api/admin/revenue/route.ts",
       "lines": 365,
       "purpose": "",
@@ -3378,7 +3350,7 @@
     },
     {
       "path": "src/app/api/admin/tee-sheet/route.ts",
-      "lines": 132,
+      "lines": 118,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3407,7 +3379,6 @@
       "imports": [
         "@/lib/admin-audit",
         "@/lib/admin-session",
-        "@/lib/cancel-booking",
         "@/lib/cart-pricing",
         "@/lib/claim-tee-time",
         "@/lib/course-metrics",
@@ -6425,7 +6396,7 @@
     },
     {
       "path": "src/app/api/operator/home/route.ts",
-      "lines": 28,
+      "lines": 31,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7436,7 +7407,7 @@
     },
     {
       "path": "src/app/api/operator/settings/route.ts",
-      "lines": 136,
+      "lines": 138,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9204,8 +9175,8 @@
     },
     {
       "path": "src/app/dashboard/home/page.tsx",
-      "lines": 347,
-      "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the mockups):",
+      "lines": 302,
+      "purpose": "DASH-C Home (Cam 2026-10-22) → HOME-3 (Cam 2026-11-12, \"approved, build the home page to match the mockup\"; ADMIN_REDO_SPEC.md \"Course dashboard Home:",
       "brain": [],
       "exports": [
         {
@@ -9223,6 +9194,7 @@
         "@/components/dashboard/DeclinedCardList",
         "@/components/dashboard/LoadError",
         "@/components/dashboard/OpenRegister",
+        "@/components/dashboard/OperatorSearch",
         "@/components/dashboard/home/HomeBoard",
         "@/components/dashboard/money/PayoutsTable",
         "@/components/dashboard/settings/FinishSetup",
@@ -9230,6 +9202,7 @@
         "@/components/ui/StatusDot",
         "@/lib/analytics-terms",
         "@/lib/dashboard-fetch",
+        "@/lib/home-today",
         "@/lib/operator-home",
         "@/lib/setup-missing",
         "@/lib/use-dashboard-access",
@@ -9242,7 +9215,7 @@
     },
     {
       "path": "src/app/dashboard/layout.tsx",
-      "lines": 22,
+      "lines": 20,
       "purpose": "Auth protection for /dashboard/* is handled by src/middleware.ts.",
       "brain": [],
       "exports": [
@@ -9264,7 +9237,6 @@
         "@/lib/op-theme",
         "@/lib/staff-fonts",
         "next",
-        "next/font/google",
         "next/headers"
       ],
       "usedBy": []
@@ -9603,7 +9575,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 1202,
+      "lines": 1205,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9628,6 +9600,7 @@
         "@/components/dashboard/StaffPermissions",
         "@/components/dashboard/Toast",
         "@/components/dashboard/settings/FinishSetup",
+        "@/components/dashboard/settings/TakesCashToggle",
         "@/components/dashboard/settings/WhoPaysWhat",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
@@ -10836,7 +10809,7 @@
     },
     {
       "path": "src/components/OperatorSidebar.tsx",
-      "lines": 339,
+      "lines": 357,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -12132,7 +12105,7 @@
     },
     {
       "path": "src/components/dashboard/OpenRegister.tsx",
-      "lines": 141,
+      "lines": 149,
       "purpose": "POS-7 (Cam 2026-11-09:",
       "brain": [],
       "exports": [
@@ -12184,6 +12157,7 @@
         "react"
       ],
       "usedBy": [
+        "src/app/dashboard/home/page.tsx",
         "src/components/OperatorSidebar.tsx"
       ]
     },
@@ -13147,7 +13121,7 @@
     },
     {
       "path": "src/components/dashboard/home/HomeBoard.tsx",
-      "lines": 273,
+      "lines": 303,
       "purpose": "DASH-D Home (Cam 2026-11-01, mockup S1):",
       "brain": [],
       "exports": [
@@ -13160,12 +13134,24 @@
           "kind": "component"
         },
         {
+          "name": "EventsCard",
+          "kind": "component"
+        },
+        {
           "name": "Goals",
           "kind": "type"
         },
         {
           "name": "GoalsCard",
           "kind": "component"
+        },
+        {
+          "name": "heatStep",
+          "kind": "fn"
+        },
+        {
+          "name": "HomeEvent",
+          "kind": "reexport"
         },
         {
           "name": "ShiftNote",
@@ -13195,6 +13181,8 @@
         "@/lib/course-conditions",
         "@/lib/course-goals",
         "@/lib/dashboard-fetch",
+        "@/lib/home-board",
+        "@/lib/home-today",
         "next/link",
         "react"
       ],
@@ -13592,6 +13580,30 @@
       ],
       "usedBy": [
         "src/app/dashboard/home/page.tsx",
+        "src/app/dashboard/settings/page.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/settings/TakesCashToggle.tsx",
+      "lines": 31,
+      "purpose": "HOME-3 (Cam 2026-11-12:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "TakesCashToggle",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/lib/dashboard-fetch",
+        "react"
+      ],
+      "usedBy": [
         "src/app/dashboard/settings/page.tsx"
       ]
     },
@@ -14635,7 +14647,6 @@
         "src/app/api/admin/refund/route.ts",
         "src/app/api/admin/request-re-review/route.ts",
         "src/app/api/admin/resend-staff-setup/route.ts",
-        "src/app/api/admin/retry-charge/[bookingId]/route.ts",
         "src/app/api/admin/schedule/route.ts",
         "src/app/api/admin/send-golive-reminder/route.ts",
         "src/app/api/admin/sentry-test/route.ts",
@@ -15254,7 +15265,6 @@
         "src/app/api/admin/refund/route.ts",
         "src/app/api/admin/request-re-review/route.ts",
         "src/app/api/admin/resend-staff-setup/route.ts",
-        "src/app/api/admin/retry-charge/[bookingId]/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/schedule/route.ts",
         "src/app/api/admin/search/route.ts",
@@ -15700,7 +15710,7 @@
     },
     {
       "path": "src/lib/analytics-terms.ts",
-      "lines": 59,
+      "lines": 63,
       "purpose": "DENSE-1 (DENSE_UI_SPEC P2):",
       "brain": [],
       "exports": [
@@ -17105,8 +17115,6 @@
         "./stripe"
       ],
       "usedBy": [
-        "src/app/api/admin/golfers/route.ts",
-        "src/app/api/admin/tee-sheet/route.ts",
         "src/app/api/bookings/cancel/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/lib/course-closure.ts",
@@ -17711,7 +17719,6 @@
         "./stripe"
       ],
       "usedBy": [
-        "src/app/api/admin/retry-charge/[bookingId]/route.ts",
         "src/app/api/checkin/[bookingId]/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/lib/counter-pay.ts",
@@ -18162,7 +18169,7 @@
     },
     {
       "path": "src/lib/course-conditions.ts",
-      "lines": 66,
+      "lines": 101,
       "purpose": "DASH-D Home (Cam 2026-11-01, \"the course conditions\"):",
       "brain": [],
       "exports": [
@@ -18180,6 +18187,10 @@
         },
         {
           "name": "CONDITION_LINES_MAX",
+          "kind": "const"
+        },
+        {
+          "name": "CONDITION_NOTE_CHARS",
           "kind": "const"
         },
         {
@@ -18208,6 +18219,14 @@
         },
         {
           "name": "golferConditionLines",
+          "kind": "fn"
+        },
+        {
+          "name": "HOME_CONDITIONS",
+          "kind": "const"
+        },
+        {
+          "name": "mergeHomeConditions",
           "kind": "fn"
         }
       ],
@@ -19455,6 +19474,7 @@
         "src/components/dashboard/money/PayoutsTable.tsx",
         "src/components/dashboard/money/RefundForm.tsx",
         "src/components/dashboard/money/SalesPanel.tsx",
+        "src/components/dashboard/settings/TakesCashToggle.tsx",
         "src/components/dashboard/settings/WhoPaysWhat.tsx",
         "src/components/dashboard/shop/SaleReceiptPanel.tsx"
       ]
@@ -21244,7 +21264,7 @@
     },
     {
       "path": "src/lib/home-board.ts",
-      "lines": 112,
+      "lines": 127,
       "purpose": "DASH-D Home (Cam 2026-11-01, mockups S1 + \"week-ahead heat map and month vs goal\"):",
       "brain": [],
       "exports": [
@@ -21254,6 +21274,10 @@
         },
         {
           "name": "GoalRow",
+          "kind": "type"
+        },
+        {
+          "name": "HomeEvent",
           "kind": "type"
         },
         {
@@ -21271,6 +21295,10 @@
         {
           "name": "ShiftNoteRow",
           "kind": "type"
+        },
+        {
+          "name": "upcomingEvents",
+          "kind": "fn"
         },
         {
           "name": "weekAhead",
@@ -21292,7 +21320,70 @@
       ],
       "usedBy": [
         "src/app/api/operator/home/route.ts",
-        "src/app/api/operator/shift-notes/route.ts"
+        "src/app/api/operator/shift-notes/route.ts",
+        "src/components/dashboard/home/HomeBoard.tsx"
+      ]
+    },
+    {
+      "path": "src/lib/home-today.ts",
+      "lines": 118,
+      "purpose": "HOME-3 (Cam 2026-11-12, \"approved, build the home page to match the mockup\", ADMIN_REDO_SPEC.md \"Course dashboard Home:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "checkedInOf",
+          "kind": "fn"
+        },
+        {
+          "name": "CONDITION_TONE",
+          "kind": "const"
+        },
+        {
+          "name": "goalTone",
+          "kind": "fn"
+        },
+        {
+          "name": "GoalTone",
+          "kind": "type"
+        },
+        {
+          "name": "HourBar",
+          "kind": "type"
+        },
+        {
+          "name": "HourSlot",
+          "kind": "type"
+        },
+        {
+          "name": "RAIN_PCT",
+          "kind": "const"
+        },
+        {
+          "name": "sameWeekdayAverage",
+          "kind": "fn"
+        },
+        {
+          "name": "todayByHour",
+          "kind": "fn"
+        },
+        {
+          "name": "weatherLine",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./on-course",
+        "./weather"
+      ],
+      "usedBy": [
+        "src/app/dashboard/home/page.tsx",
+        "src/components/dashboard/home/HomeBoard.tsx",
+        "src/lib/operator-home.ts"
       ]
     },
     {
@@ -23382,12 +23473,13 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/dashboard/page.tsx"
+        "src/app/dashboard/page.tsx",
+        "src/lib/home-today.ts"
       ]
     },
     {
       "path": "src/lib/op-theme.ts",
-      "lines": 24,
+      "lines": 26,
       "purpose": "DASH-D (Cam 2026-11-01:",
       "brain": [],
       "exports": [
@@ -23425,7 +23517,7 @@
     },
     {
       "path": "src/lib/operator-home.ts",
-      "lines": 170,
+      "lines": 180,
       "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the course dashboard mockups):",
       "brain": [],
       "exports": [
@@ -23460,6 +23552,7 @@
         "./course-time",
         "./day-fill",
         "./email",
+        "./home-today",
         "./prisma",
         "./setup-missing",
         "./shop"
@@ -27365,7 +27458,7 @@
     },
     {
       "path": "src/lib/stripe-errors.ts",
-      "lines": 26,
+      "lines": 27,
       "purpose": "Friendly-message map for Stripe decline/error strings (REVISE_QUEUE A-06 item 4:",
       "brain": [],
       "exports": [
@@ -27381,7 +27474,6 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/api/admin/retry-charge/[bookingId]/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/lib/admin-course-page.ts"
       ]
@@ -28278,7 +28370,8 @@
       ],
       "usedBy": [
         "src/app/api/operator/weather/route.ts",
-        "src/app/dashboard/home/page.tsx"
+        "src/app/dashboard/home/page.tsx",
+        "src/lib/home-today.ts"
       ]
     },
     {
@@ -29893,6 +29986,10 @@
           "type": "Boolean"
         },
         {
+          "name": "takesCash",
+          "type": "Boolean"
+        },
+        {
           "name": "proShopPhone",
           "type": "String"
         },
@@ -30642,6 +30739,7 @@
         "src/lib/data-reset.ts",
         "src/lib/event-payments.ts",
         "src/lib/event-signup.ts",
+        "src/lib/home-board.ts",
         "src/lib/sample-data.ts",
         "src/lib/tee-sheet-engine.ts"
       ]

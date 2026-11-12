@@ -9,14 +9,16 @@ const read = (p: string) => readFileSync(p, 'utf8');
 
 // Home.
 const home = read('src/app/dashboard/home/page.tsx');
-ok('the Next tee times scroller holds its screen-reader text (no sideways page scroll on a phone)', home.includes('<div className="relative flex overflow-x-auto px-2 pb-2 pt-1">'));
+// HOME-3 (Cam 2026-11-12) replaced the Next tee times scroller with one "Next off" card that truncates.
+ok('Next off is one line that truncates (no sideways page scroll on a phone)', home.includes('<b className="font-semibold text-ink truncate">{fmtTime(next.time)}'));
 ok('Home re-reads itself each minute and when the tab comes back, quietly, never while typing', home.includes('setInterval(tick, 60_000)') && home.includes("addEventListener('visibilitychange', tick)") && home.includes('load(true)') && home.includes("el.tagName === 'INPUT'"));
 ok('a quiet re-read that fails keeps what is on screen', home.includes("if (!quiet) setError(r.ok ? 'Nothing came back — try again.' : r.error)"));
 ok('no stray "None." in Action needed: the declined list shows only when there are declined cards', home.includes('{home.declinedTotal > 0 && <DeclinedCardList'));
 ok('removing a declined card re-reads the counts', home.includes('onRemoved={() => load(true)}') && read('src/components/dashboard/DeclinedCardList.tsx').includes('onRemoved?.();'));
 ok('the three board cards never share a React key', home.includes("key={'notes:' +") && home.includes("key={'cond:' +") && home.includes("key={'goals:' +"));
-ok('rain shows on a tee time only from 20%, and the time never wraps', home.includes('(h.rainPct ?? 0) >= 20') && home.includes('flex items-baseline gap-2 whitespace-nowrap'));
-ok('a login without Messages sees no unread tile and never asks for the count', home.includes("access.can('messages.use') ? [{ label: 'Unread messages'") && read('src/components/OperatorSidebar.tsx').includes("const seesMessages = access.loaded && access.can('messages.use');"));
+ok('rain shows only from 20%', read('src/lib/home-today.ts').includes('export const RAIN_PCT = 20;') && read('src/lib/home-today.ts').includes('(h.rainPct ?? 0) >= RAIN_PCT'));
+// HOME-3: no count tiles; the unread line shows only with a count, and the route counts only for messages.use.
+ok('a login without Messages sees no unread line and never asks for the count', home.includes('{home.unreadMessages > 0 && (') && read('src/app/api/operator/home/route.ts').includes("messages: can(session, 'messages.use')") && read('src/components/OperatorSidebar.tsx').includes("const seesMessages = access.loaded && access.can('messages.use');"));
 const oh = read('src/lib/operator-home.ts');
 ok('a blocked time that still holds a group stays on Home (late, no-shows, next), with no open seats', oh.includes("OR: [{ status: { not: 'blocked' } }, { bookings: { some: LIVE } }]") && oh.includes("open: s.status === 'blocked' ? 0 :"));
 

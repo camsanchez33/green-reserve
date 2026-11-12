@@ -36,7 +36,7 @@ Everything else belongs to the overseer. In particular, never:
   `src/app/preview/**`, `src/app/call/**`, `src/app/dashboard/verify/**`,
   `src/app/for-courses/details/**`, `src/app/courses/[slug]/member/**`,
   `src/app/dashboard/page.tsx` (tee sheet), `src/app/dashboard/settings/**`,
-  `src/app/admin/courses/[id]/_parts/**` (refunds, retry-charge)
+  `src/app/admin/courses/[id]/_parts/**` (refunds)
 - `legal/**` (the signed operator agreement and the frozen fee copy), generated files
   (`docs/CODEMAP.md`, `docs/codemap.json`, `STATUS.*`), and the queue and spec files
   Cowork owns (`RUN_QUEUE.md`, `REVISE_QUEUE.md`, `*_SPEC.md`)

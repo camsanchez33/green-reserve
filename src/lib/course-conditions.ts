@@ -11,7 +11,11 @@ export const CONDITION_FIELDS = [
 
 export type ConditionKey = typeof CONDITION_FIELDS[number]['key'];
 /** HOME-2 (Cam 2026-11-05, "open to what they want — how the greens are rolling, cart path only"): the course's own lines beside the four choices. */
-export type CourseConditions = Partial<Record<ConditionKey, string>> & { lines?: string[] };
+export type CourseConditions = Partial<Record<ConditionKey, string>> & { lines?: string[]; notes?: Partial<Record<ConditionKey, string>> };
+
+/** HOME-3 (Cam 2026-11-12, the approved Home): the card shows cart path, greens and pins only, each with an optional detail line. */
+export const HOME_CONDITIONS: { key: ConditionKey; label: string }[] = [{ key: 'carts', label: 'Cart path' }, { key: 'greens', label: 'Greens' }, { key: 'pins', label: 'Pins' }];
+export const CONDITION_NOTE_CHARS = 80;
 
 export const CONDITION_LINES_MAX = 6;
 export const CONDITION_LINE_CHARS = 80;
@@ -38,7 +42,38 @@ export function cleanConditions(raw: unknown): CourseConditions {
     }
     if (lines.length) out.lines = lines;
   }
+  // HOME-3: a detail line per condition, kept only beside a condition that is set.
+  const raw3 = (raw as { notes?: unknown }).notes;
+  if (raw3 && typeof raw3 === 'object') {
+    const notes: Partial<Record<ConditionKey, string>> = {};
+    for (const f of CONDITION_FIELDS) {
+      const v = (raw3 as Record<string, unknown>)[f.key];
+      if (!out[f.key] || typeof v !== 'string') continue;
+      const t = v.replace(/\s+/g, ' ').trim().slice(0, CONDITION_NOTE_CHARS);
+      if (t) notes[f.key] = t;
+    }
+    if (Object.keys(notes).length) out.notes = notes;
+  }
   return out;
+}
+
+/**
+ * HOME-3 (Build 2026-11-12, "don't drop data"): what Home saves. Home sets cart path, greens and pins (and their
+ * detail lines). Range and the course's own lines are shown on Home and can only be KEPT or REMOVED there: a range
+ * or a line `home` no longer carries is removed; nothing new is added. Fields `home` doesn't mention at all are kept.
+ */
+export function mergeHomeConditions(current: unknown, home: CourseConditions): CourseConditions {
+  const base = cleanConditions(current);
+  const out: CourseConditions = { ...base, notes: { ...(base.notes ?? {}) } };
+  if ('range' in home && home.range !== base.range) delete out.range;
+  if (home.lines !== undefined) { const keep = (home.lines ?? []).map(l => l.toLowerCase()); out.lines = (base.lines ?? []).filter(l => keep.includes(l.toLowerCase())); if (!out.lines.length) delete out.lines; }
+  for (const { key } of HOME_CONDITIONS) {
+    const v = home[key];
+    if (v) out[key] = v; else delete out[key];
+    const n = home.notes?.[key]?.trim();
+    if (v && n) out.notes![key] = n; else delete out.notes![key];
+  }
+  return cleanConditions(out);
 }
 
 /** "Path only" for carts=path, or '' when unset. */
@@ -56,7 +91,7 @@ export function golferConditionLines(raw: unknown, at: Date | string | null | un
   const t = new Date(at).getTime();
   if (!Number.isFinite(t) || now.getTime() - t > CONDITIONS_FRESH_HOURS * 3600000) return [];
   const c = cleanConditions(raw);
-  return [...CONDITION_FIELDS.filter(f => c[f.key]).map(f => `${f.label}: ${conditionLabel(f.key, c[f.key])}`), ...(c.lines ?? [])];
+  return [...CONDITION_FIELDS.filter(f => c[f.key]).map(f => `${f.label}: ${conditionLabel(f.key, c[f.key])}${c.notes?.[f.key] ? ` (${c.notes[f.key]})` : ''}`), ...(c.lines ?? [])];
 }
 
 /** Home's warning: conditions are set but golfers no longer see them — the same rule as the booking page, by construction. */
