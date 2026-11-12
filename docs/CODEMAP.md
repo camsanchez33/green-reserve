@@ -141,7 +141,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/admin/today` | admin | file | GET | `src/app/api/admin/today/route.ts` | 52 |
 | `/api/admin/today/overview` | admin | file | GET | `src/app/api/admin/today/overview/route.ts` | 196 |
 | `/api/admin/transactions` | admin | file | GET | `src/app/api/admin/transactions/route.ts` | 143 |
-| `/api/admin/transactions/export` | admin | file | GET | `src/app/api/admin/transactions/export/route.ts` | 94 |
+| `/api/admin/transactions/export` | admin | file | GET | `src/app/api/admin/transactions/export/route.ts` | 107 |
 | `/api/admin/two-factor` | admin | file | GET POST | `src/app/api/admin/two-factor/route.ts` | 96 |
 | `/api/admin/verify-operator` | admin | file | POST | `src/app/api/admin/verify-operator/route.ts` | 44 |
 | `/api/alerts` | public | public | POST | `src/app/api/alerts/route.ts` | 52 |
@@ -548,6 +548,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/op-theme.ts` | 2 | 24 | DASH-D (Cam 2026-11-01: | `currentOpTheme`, `OP_THEME_COOKIE`, `OpTheme`, `readOpTheme`, `setOpTheme` |
 | `src/lib/operator-search.ts` | 2 | 86 | DASH-C search (the mockups' "Find a golfer, booking or member"): | `bySearchOrder`, `operatorSearch`, `SearchResult` |
 | `src/lib/page-review.ts` | 2 | 109 | Cam 2026-10-27 (onboarding walk): | `pageReview`, `PageReview`, `ReviewPart`, `ReviewPartKey`, `ReviewRow` |
+| `src/lib/revenue-period.ts` | 2 | 254 | ADMIN-REDO Revenue (Cam 2026-11-11): | `addDays`, `centsPerDay`, `dayIndex`, `daysBetween`, `daySeries`, `parseRevenuePeriod`, `payoutArrivalRange`, `PayoutIn` +11 more |
 | `src/lib/security-checklist.ts` | 2 | 67 | SEC-3: | `Check`, `securityChecklist` |
 | `src/lib/sentry-issues.ts` | 2 | 48 | SEC-3 (Cam 2026-10-26: | `openSentryIssues`, `sentryApiBase`, `SentryIssue`, `SentryIssuesResult` |
 | `src/lib/sheet-token.ts` | 2 | 52 |  | `CLOSED_TO_SHEET`, `DETAILS_TOKEN_TTL_DAYS`, `gateSheetAccess`, `SheetGate` |
@@ -592,7 +593,6 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/notice-templates.ts` | 1 | 12 | MSG-2 (Cam 2026-11-06): | `BLANK`, `READY` |
 | `src/lib/on-course.ts` | 1 | 25 | ONCOURSE-1 (Cam 2026-11-06: | `onCourse`, `ROUND_MINUTES` |
 | `src/lib/receipt-charges.ts` | 1 | 104 | R-GOLF-010 — what was actually charged to (and refunded from) the golfer's card, for the receipt. | `chargedNowCents`, `ReceiptCharge`, `receiptCharges` |
-| `src/lib/revenue-period.ts` | 1 | 254 | ADMIN-REDO Revenue (Cam 2026-11-11): | `addDays`, `centsPerDay`, `dayIndex`, `daysBetween`, `daySeries`, `parseRevenuePeriod`, `payoutArrivalRange`, `PayoutIn` +11 more |
 | `src/lib/sample-data.ts` | 1 | 501 | Cam 2026-10-28 ("add a shit ton of test tee times, members and shit to the test course … do a lot of fake bookings"); Cam 2026-11-01 chose "Busy season": | `fillTestCourse`, `hasSampleData`, `SAMPLE_AHEAD_DAYS`, `SAMPLE_PAST_DAYS`, `SAMPLE_SOLD_BY`, `SampleResult` |
 | `src/lib/schedule-plans.ts` | 1 | 98 | W2-4 (Cam 2026-10-19: | `checkPeriods`, `groupSchedules`, `normDays`, `PlanGroup`, `PlanRow`, `snapToGrid` |
 | `src/lib/schedule-preview.ts` | 1 | 153 | Schedule rework (Cam 2026-10-19: | `diffDay`, `previewScheduleChange`, `ScheduleChange`, `SchedulePreview` |

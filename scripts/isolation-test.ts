@@ -735,6 +735,25 @@ async function main() {
       check('…and the series adds up to the headline', (before.revenueSeries?.current ?? []).reduce((a, n) => a + n, 0) === before.revenue?.cents, JSON.stringify(before.revenue));
       const csv = await fetch(`${BASE_URL}/api/admin/revenue?period=month&format=csv`, { headers: { cookie: mc } });
       check('…the CSV lists it', csv.status === 200 && (csv.headers.get('content-type') ?? '').startsWith('text/csv') && (await csv.text()).includes(`pi_isol_rev_${TS}`));
+      {
+        // The transactions export takes the Revenue page's own window (?period=), Eastern days:
+        // a round checked in one minute before the platform month starts is last month's.
+        const { startOfPlatformMonth } = await import('../src/lib/admin-day');
+        const monthStart = startOfPlatformMonth(new Date());
+        const saved = await prisma.booking.findUniqueOrThrow({ where: { id: bookingA.id }, select: { paymentStatus: true, roundPaymentIntentId: true, checkedInAt: true } });
+        const exp = async (q: string) => { const r = await fetch(`${BASE_URL}/api/admin/transactions/export?${q}`, { headers: { cookie: mc } }); return { status: r.status, text: await r.text() }; };
+        try {
+          await prisma.booking.update({ where: { id: bookingA.id }, data: { paymentStatus: 'paid', roundPaymentIntentId: `pi_isol_exp_${TS}`, checkedInAt: new Date(monthStart.getTime() + 60_000) } });
+          const inMonth = await exp('period=month');
+          check('Export (period=month) includes a round checked in just after the platform month starts', inMonth.status === 200 && inMonth.text.includes(`pi_isol_exp_${TS}`), inMonth.status);
+          await prisma.booking.update({ where: { id: bookingA.id }, data: { checkedInAt: new Date(monthStart.getTime() - 60_000) } });
+          check('…and leaves out one a minute before (last month, Eastern)', !(await exp('period=month')).text.includes(`pi_isol_exp_${TS}`));
+          check('…which period=last_month has', (await exp('period=last_month')).text.includes(`pi_isol_exp_${TS}`));
+          checkStatus('…and an unknown period with no from/to → 400', (await exp('period=fortnight')).status, 400);
+        } finally {
+          await prisma.booking.update({ where: { id: bookingA.id }, data: saved });
+        }
+      }
       await prisma.course.update({ where: { id: data.courseA.id }, data: { isTest: true } });
       try {
         const after = (await api('/api/admin/revenue?period=month', { cookie: mc })).body as Rev;

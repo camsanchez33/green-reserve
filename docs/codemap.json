@@ -3307,7 +3307,7 @@
     },
     {
       "path": "src/app/api/admin/transactions/export/route.ts",
-      "lines": 94,
+      "lines": 107,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3326,6 +3326,7 @@
       "imports": [
         "@/lib/admin-session",
         "@/lib/prisma",
+        "@/lib/revenue-period",
         "@/lib/shop",
         "next/server"
       ],
@@ -24915,7 +24916,8 @@
         "./admin-day"
       ],
       "usedBy": [
-        "src/app/api/admin/revenue/route.ts"
+        "src/app/api/admin/revenue/route.ts",
+        "src/app/api/admin/transactions/export/route.ts"
       ]
     },
     {
