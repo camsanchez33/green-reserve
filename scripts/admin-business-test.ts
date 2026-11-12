@@ -23,6 +23,7 @@ check('first step has no rate', stepRate(steps, 0) === null);
 check('20 of 80 → 25%', stepRate(steps, 1) === 25);
 check('a missing count has no rate', stepRate(steps, 3) === null && stepRate(steps, 4) === null);
 check('after a zero step there is no rate', stepRate(steps, 5) === null);
+check('the route\'s own rate wins (Responded counts inbound too)', stepRate([{ count: 10 }, { count: 30, fromPrevPct: 20 }], 1) === 20 && stepRate([{ count: 10 }, { count: 3, fromPrevPct: null }], 1) === null);
 
 // The bar chart's scale: round steps, the top above the tallest bar.
 const sc = barScale([310, 2613, 1228]);
@@ -50,6 +51,8 @@ check('tee-sheet fill compares in points', /teeSheetFill\.prior\} vs=\{P\.vs\} p
 check('after-hours shows a dash when the route can\'t count it (never a guess)', /d\.value\.afterHours \? n\(d\.value\.afterHours\.count\) : '—'/.test(page));
 check('never a chart library', !/from '(recharts|chart\.js|d3)/.test(page));
 const nav = readFileSync('src/components/admin/AdminSidebar.tsx', 'utf8');
+check('first contact to live, never "reached out" (inbound counts too)', /First contact to live/.test(page) && !/Reached out to live/.test(page));
+check('paid before arrival reads the route\'s {count, cents}', /paidBeforeArrival\.cents/.test(page) && /paidBeforeArrival\.count/.test(page));
 check('the menu shows it to managers+ with the Courses area', /key: 'business'.*minRole: MANAGER_PLUS, area: 'courses'/.test(nav));
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

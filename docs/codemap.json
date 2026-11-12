@@ -255,7 +255,7 @@
     },
     {
       "path": "src/app/admin/business/logic.ts",
-      "lines": 91,
+      "lines": 96,
       "purpose": "Business analytics (ADMIN-REDO, Cam approved the mockup 2026-11-12):",
       "brain": [],
       "exports": [
@@ -328,7 +328,7 @@
     },
     {
       "path": "src/app/admin/business/page.tsx",
-      "lines": 247,
+      "lines": 250,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -357,7 +357,7 @@
     },
     {
       "path": "src/app/admin/business/terms.ts",
-      "lines": 25,
+      "lines": 26,
       "purpose": "Business analytics (ADMIN-REDO, Cam approved the mockup 2026-11-12):",
       "brain": [],
       "exports": [
@@ -371,6 +371,10 @@
         },
         {
           "name": "SESSION_ENDED",
+          "kind": "const"
+        },
+        {
+          "name": "SHORT_PERIOD",
           "kind": "const"
         },
         {

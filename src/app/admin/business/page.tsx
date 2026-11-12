@@ -7,7 +7,7 @@ import g from '../admin-glass.module.css';
 import c from '../courses/courses.module.css';
 import r from '../revenue/revenue.module.css';
 import s from './business.module.css';
-import { TERMS, SESSION_ENDED, NOT_YET, loadFailed } from './terms';
+import { TERMS, SESSION_ENDED, NOT_YET, SHORT_PERIOD, loadFailed } from './terms';
 import { type Per, type BusinessData, PERIODS, STEP_LABEL, isAnswer, pct, points, stepRate, barScale, monthLabel, axisLabel, coursesCsv } from './logic';
 
 // ADMIN-REDO Business analytics (Cam approved the mockup 2026-11-12, ADMIN_REDO_SPEC.md "Business analytics:
@@ -171,10 +171,10 @@ export default function BusinessPage() {
                 <div className={s.vrows}>
                   <div><span title={TERMS.greenFees}>Green fees booked online</span><b>{usd(d.value.onlineGreenFeesCents)}</b></div>
                   <div>
-                    <span title={TERMS.afterHours}>Booked outside tee-sheet hours{d.value.afterHours && <small>{pctText(d.value.afterHours.pctOfOnline)} of online bookings</small>}</span>
+                    <span title={TERMS.afterHours}>Booked outside tee-sheet hours{d.value.afterHours && d.value.afterHours.pctOfOnline !== null && <small>{pctText(d.value.afterHours.pctOfOnline)} of online bookings</small>}</span>
                     <b>{d.value.afterHours ? n(d.value.afterHours.count) : '—'}</b>
                   </div>
-                  <div><span title={TERMS.paidBefore}>Paid before they arrived</span><b>{usd(d.value.paidBeforeArrivalCents)}</b></div>
+                  <div><span title={TERMS.paidBefore}>Paid before they arrived<small>{n(d.value.paidBeforeArrival.count)} round{d.value.paidBeforeArrival.count === 1 ? '' : 's'}</small></span><b>{usd(d.value.paidBeforeArrival.cents)}</b></div>
                   <div><span title={TERMS.noShowFees}>No-show &amp; late fees collected</span><b>{usd(d.value.noShowLateFeesCents)}</b></div>
                 </div>
               </section>
@@ -195,9 +195,10 @@ export default function BusinessPage() {
                     );
                   })}
                 </div>
+                {(per === 'm3' || per === 'm6') && <p className={s.caveat}>{SHORT_PERIOD}</p>}
                 <div className={`${s.vrows} ${s.after}`}>
                   <div>
-                    <span title={TERMS.reachedToLive}>Reached out to live</span>
+                    <span title={TERMS.reachedToLive}>First contact to live</span>
                     <b>{d.joining.reachedToLive.pct === null ? '—' : `${pctText(d.joining.reachedToLive.pct)}${d.joining.reachedToLive.avgDays === null ? '' : ` · ${Math.round(d.joining.reachedToLive.avgDays)} days`}`}</b>
                   </div>
                   <div><span>In progress now</span><b>{n(d.joining.inProgress)} course{d.joining.inProgress === 1 ? '' : 's'}</b></div>

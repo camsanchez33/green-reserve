@@ -59,7 +59,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/admin/audit` | admin | client-side | page | `src/app/admin/audit/page.tsx` | 137 |
 | `/admin/bookings` | admin | client-side | page | `src/app/admin/bookings/page.tsx` | 292 |
 | `/admin/broadcasts` | admin | client-side | page | `src/app/admin/broadcasts/page.tsx` | 12 |
-| `/admin/business` | admin | client-side | page | `src/app/admin/business/page.tsx` | 247 |
+| `/admin/business` | admin | client-side | page | `src/app/admin/business/page.tsx` | 250 |
 | `/admin/company-documents` | admin | client-side | page | `src/app/admin/company-documents/page.tsx` | 165 |
 | `/admin/courses` | admin | client-side | page | `src/app/admin/courses/page.tsx` | 329 |
 | `/admin/courses/[id]` | admin | client-side | page | `src/app/admin/courses/[id]/page.tsx` | 326 |

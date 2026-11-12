@@ -25,12 +25,15 @@ export interface BusinessData {
   months: { month: string; partial: boolean; online: number; counter: number }[];
   value: {
     onlineGreenFeesCents: number;
-    afterHours: { count: number; pctOfOnline: number } | null;
-    paidBeforeArrivalCents: number;
+    afterHours: { count: number; pctOfOnline: number | null } | null;
+    paidBeforeArrival: { count: number; cents: number }; // the course's share, our fee taken out
     noShowLateFeesCents: number;
   };
   joining: {
-    steps: { key: StepKey; count: number | null; avgDaysAtStep: number | null }[];
+    // In Cam's order (Built before Signed). Responded's fromPrevPct is the share of outbound courses that replied; its count
+    // also holds inbound inquiries, which start there. avgDaysAtStep is null for Live and where no course has both dates.
+    steps: { key: StepKey; count: number | null; fromPrevPct?: number | null; avgDaysAtStep: number | null }[];
+    entered?: number;
     reachedToLive: { pct: number | null; avgDays: number | null };
     inProgress: number;
     waitingOnUs: number;
@@ -50,8 +53,10 @@ export const pct = (now: number | null, was: number | null): number | null =>
 /** A fill rate moves in points, not in percent of a percent. */
 export const points = (now: number | null, was: number | null): number | null => (now === null || was === null ? null : now - was);
 
-/** One step's share of the step before it, or null for the first step or when either count is missing or zero. */
-export function stepRate(steps: { count: number | null }[], i: number): number | null {
+/** One step's share of the step before it: the route's fromPrevPct when sent (Responded counts inbound too, so only the
+ *  route can say what share replied), else counted here; null for the first step or across a missing or zero count. */
+export function stepRate(steps: { count: number | null; fromPrevPct?: number | null }[], i: number): number | null {
+  if (steps[i] && steps[i].fromPrevPct !== undefined) return steps[i].fromPrevPct ?? null; // the route's own rate wins
   if (i === 0) return null;
   const a = steps[i - 1]?.count, b = steps[i]?.count;
   return a && b !== null && b !== undefined ? (b / a) * 100 : null;
