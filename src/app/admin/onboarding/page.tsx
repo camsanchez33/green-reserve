@@ -176,7 +176,7 @@ function ProfilePanel({ rowKey, support }: { rowKey: string; support: boolean })
             <dt>Email</dt><dd>{p.contact.email ? <a href={`mailto:${p.contact.email}`}>{p.contact.email}</a> : '—'}</dd>
             <dt>Phone</dt><dd>{p.contact.phone ?? '—'}</dd>
           </> : <><dt>Main contact</dt><dd className={s.muted}>{NO_CONTACT}</dd></>}
-          <dt>Came from</dt><dd>{p.source ?? 'Not recorded'}</dd>
+          {p.contact && <><dt>Came from</dt><dd>{p.source ?? 'Not recorded'}</dd></>}
           <dt>Expected launch</dt><dd>Not set</dd>
           <dt>Agreement</dt><dd>{p.agreement ? `${p.agreement.version} · signed ${date(p.agreement.signedAt)}` : 'Not signed yet'}</dd>
         </dl>

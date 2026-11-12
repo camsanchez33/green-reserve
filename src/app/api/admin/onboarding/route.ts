@@ -142,7 +142,7 @@ export async function GET(req: NextRequest) {
     contact: support ? (inq
       ? { name: inq.contactName, title: inq.contactTitle || null, email: inq.email || null, phone: inq.phone || null }
       : { name: course?.operator?.name ?? null, title: 'Owner', email: course?.operator?.email ?? null, phone: course?.operator?.phone || course?.phone || null }) : null,
-    source: inq ? inq.source ?? null : 'Built by hand',
+    source: !support ? null : inq ? inq.source ?? null : 'Built by hand',
     agreement: agreement ? { version: agreement.version, signedAt: agreement.acceptedAt.toISOString() } : null,
     history,
     notes: support ? (inq ? inq.adminNotes : course?.adminNotes ?? '') : null,
