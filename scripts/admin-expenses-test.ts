@@ -2,6 +2,7 @@
 // never estimated. Run: npx tsx scripts/admin-expenses-test.ts
 import { readFileSync } from 'fs';
 import { goalPace } from '../src/lib/goal-pace';
+import { monthCostPace } from '../src/lib/expenses';
 import { isEnded, historyLine, cards, nextRenewal, monthEarlier, yearEarlier, pct, parseAmount, FILTERS, byCost, activeOn, type Exp } from '../src/app/admin/expenses/logic';
 
 let failed = 0;
@@ -34,13 +35,20 @@ check('last year by today had nothing (all started in 2026)', k.yearPrior === 0)
 check('ended on May 1 → not running in November', !activeOn(list[3], NOW));
 
 // The budget's pace (final review 2026-11-12): running costs are projected, one-time costs are added as they are.
-// $200 a month running, a $150 one-off on Nov 10, a $400 budget, Nov 12 10:00 ET → ends near $347.40, green.
+// $200 a month running, a $150 one-off on Nov 10, a $400 budget, Nov 12 10:00 ET → the month ends at $350, green.
+// #389 (full calendar months count exactly): the running $200 is exactly $200 for November, so the true end is
+// $200 + $150 = $350.00 (it was $347.40 under the old mean-year proration). This page path still divides a
+// day-counted figure by a clock-time share that includes November's 25-hour day, so it lands within a dollar
+// ($349.55); monthCostPace, which the page moves to next, gives exactly $350. The one-off is never projected either way.
 {
   const at = new Date('2026-11-12T15:00:00Z');
   const kk = cards([ex({ amountCents: 20000, startedAt: '2026-01-01T12:00:00.000Z' }), ex({ amountCents: 15000, cadence: 'one-time', startedAt: '2026-11-10T12:00:00.000Z' })], at);
   const days = (kk.monthEnd.getTime() - kk.monthStart.getTime()) / 86_400_000;
   const p = goalPace({ progress: kk.monthSoFar - kk.monthOneTime, fixed: kk.monthOneTime, target: 40000, share: kk.elapsedShare, kind: 'cap', daysElapsed: kk.elapsedShare * days });
-  check('a one-off is never projected: the month ends near $347.40, on pace to stay under', Math.abs(p.projected - 34740) < 100 && p.tone === 'ok', JSON.stringify(p));
+  check('a one-off is never projected: the month ends near $350, on pace to stay under', Math.abs(p.projected - 35000) < 100 && p.tone === 'ok', JSON.stringify(p));
+  const exact = monthCostPace([ex({ amountCents: 20000, startedAt: '2026-01-01T12:00:00.000Z' }), ex({ amountCents: 15000, cadence: 'one-time', startedAt: '2026-11-10T12:00:00.000Z' })], at);
+  const q = goalPace({ progress: exact.progress, fixed: exact.fixed, scheduled: exact.scheduled, share: exact.share, target: 40000, kind: 'cap', daysElapsed: exact.share * days });
+  check('…monthCostPace gives exactly $350 ($200 running + the $150 one-off as it is)', exact.projected === 35000 && q.projected === 35000 && q.tone === 'ok', JSON.stringify({ exact, q }));
 }
 check('the page passes running costs as progress and one-time costs as fixed', /progress: k\.monthSoFar - k\.monthOneTime, fixed: k\.monthOneTime/.test(readFileSync('src/app/admin/expenses/page.tsx', 'utf8')));
 
