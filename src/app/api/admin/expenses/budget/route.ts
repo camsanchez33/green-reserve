@@ -6,7 +6,7 @@ import { auditAdmin } from '@/lib/admin-audit';
 // ADMIN-REDO Expenses (Cam 2026-11-12): the one standing monthly expense budget. OWNER only
 // (the company's private books, like every expense route), with a fresh second factor
 // (step-up), and audited. Body { cents: number | null } — null clears it.
-const MAX_CENTS = 100_000_000_00; // $100M a month: anything above is a typo
+const MAX_CENTS = 2_000_000_000; // $20M a month: anything above is a typo (the column is a 32-bit INTEGER)
 
 export async function PUT(req: NextRequest) {
   const session = await resolveAdminSession();
@@ -16,7 +16,7 @@ export async function PUT(req: NextRequest) {
   if (stepUp) return stepUp;
 
   const body = await req.json().catch(() => null) as { cents?: unknown } | null;
-  if (!body || !('cents' in body)) return NextResponse.json({ error: 'Send { cents } — a whole number of cents, or null to clear it.' }, { status: 400 });
+  if (!body || typeof body !== 'object' || Array.isArray(body) || !('cents' in body)) return NextResponse.json({ error: 'Send { cents } — a whole number of cents, or null to clear it.' }, { status: 400 });
   const raw = body.cents;
   let cents: number | null;
   if (raw === null) cents = null;
@@ -30,5 +30,6 @@ export async function PUT(req: NextRequest) {
     update: { cents, setAt: new Date(), setBy: session.name || '' },
   });
   await auditAdmin(session, { action: 'expense_budget', targetType: 'expense_budget', targetId: 'monthly', before: { cents: before?.cents ?? null }, after: { cents } });
-  return NextResponse.json({ budget: { cents: budget.cents, setAt: budget.setAt.toISOString() } });
+  // Same shape as GET: no budget means no date.
+  return NextResponse.json({ budget: { cents: budget.cents, setAt: budget.cents != null ? budget.setAt.toISOString() : null } });
 }

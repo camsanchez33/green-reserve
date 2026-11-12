@@ -753,6 +753,8 @@ async function main() {
       const noStep = await api('/api/admin/expenses/budget', { method: 'PUT', cookie: os, body: { cents: 50000 } });
       check('The owner without a fresh second factor is asked to confirm (step_up)', noStep.status === 403 && (noStep.body as { code?: string })?.code === 'step_up', JSON.stringify(noStep.body));
       checkStatus('A bad amount → 400', (await api('/api/admin/expenses/budget', { method: 'PUT', cookie: oc, body: { cents: 12.5 } })).status, 400);
+      checkStatus('An amount past the column\'s limit → 400, not 500', (await api('/api/admin/expenses/budget', { method: 'PUT', cookie: oc, body: { cents: 3_000_000_000 } })).status, 400);
+      checkStatus('A body that isn\'t an object → 400, not 500', (await api('/api/admin/expenses/budget', { method: 'PUT', cookie: oc, body: 5 })).status, 400);
       const set = await api('/api/admin/expenses/budget', { method: 'PUT', cookie: oc, body: { cents: 50000 } });
       checkStatus('The owner sets it → 200', set.status, 200);
       const g = (await api('/api/admin/expenses', { cookie: oc })).body as { budget?: { cents: number | null; setAt: string | null } };
@@ -763,8 +765,13 @@ async function main() {
       check('…and it reads as no budget', g2.budget?.cents === null && g2.budget.setAt === null, JSON.stringify(g2.budget));
       await api(`/api/admin/expenses/${exp.id}`, { method: 'PATCH', cookie: oc, body: { amountCents: 2500 } });
       await api(`/api/admin/expenses/${exp.id}`, { method: 'PATCH', cookie: oc, body: { endedAt: new Date().toISOString() } });
+      const unend = await api(`/api/admin/expenses/${exp.id}`, { method: 'PATCH', cookie: oc, body: { endedAt: null } });
+      check('An ended expense can\'t be un-ended (start it again as a new one) → 400 ended', unend.status === 400 && (unend.body as { code?: string })?.code === 'ended', JSON.stringify(unend.body));
+      const later = await api(`/api/admin/expenses/${exp.id}`, { method: 'PATCH', cookie: oc, body: { endedAt: '2099-01-01T00:00:00Z' } });
+      check('…nor have its end moved later → 400 ended', later.status === 400 && (later.body as { code?: string })?.code === 'ended', JSON.stringify(later.body));
+      checkStatus('…but it can be corrected earlier → 200', (await api(`/api/admin/expenses/${exp.id}`, { method: 'PATCH', cookie: oc, body: { endedAt: '2020-01-01T00:00:00Z' } })).status, 200);
       const hist = (await api(`/api/admin/expenses/${exp.id}/history`, { cookie: oc })).body as { history?: { kind: string; by: string; changes?: { field: string }[] }[] };
-      check('The owner reads an expense\'s history, newest first', JSON.stringify(hist.history?.map(x => x.kind)) === JSON.stringify(['ended', 'changed']) && hist.history?.[1].changes?.[0].field === 'amountCents', JSON.stringify(hist));
+      check('The owner reads an expense\'s history, newest first', JSON.stringify(hist.history?.map(x => x.kind)) === JSON.stringify(['changed', 'ended', 'changed']) && hist.history?.[2].changes?.[0].field === 'amountCents', JSON.stringify(hist));
     } finally {
       await prisma.expense.delete({ where: { id: exp.id } }).catch(() => {});
       if (savedBudget) await prisma.expenseBudget.update({ where: { id: 'monthly' }, data: { cents: savedBudget.cents, setAt: savedBudget.setAt, setBy: savedBudget.setBy } });

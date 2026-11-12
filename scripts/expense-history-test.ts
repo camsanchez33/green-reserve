@@ -13,11 +13,12 @@ const h = expenseHistory([
   { action: 'expense_edit', actorName: 'Cam', before: { endedAt: '2026-11-05T00:00:00.000Z', amountCents: 2500 }, after: { endedAt: null, amountCents: 3000 }, createdAt: t('07') },
   { action: 'expense_edit', actorName: 'Cam', before: {}, after: {}, createdAt: t('08') },
 ]);
-check('history is newest first, with kinds added / changed / ended / restarted', JSON.stringify(h.map(x => x.kind)) === JSON.stringify(['restarted', 'ended', 'changed', 'added']), h);
+check('history is newest first, with kinds added / changed / ended — never restarted', JSON.stringify(h.map(x => x.kind)) === JSON.stringify(['changed', 'ended', 'changed', 'added']), h);
 check('…an edit that changed nothing is left out', h.length === 4);
 check('…"by" is the first name', h.every(x => x.by === 'Cam'));
 check('…changes carry field, from and to', JSON.stringify(h[2].changes) === JSON.stringify([{ field: 'amountCents', from: 2000, to: 2500 }]));
-check('…a restart carries the other fields it changed, not endedAt', JSON.stringify(h[0].changes) === JSON.stringify([{ field: 'amountCents', from: 2500, to: 3000 }]));
+check('…an old row that cleared endedAt reads as a change, endedAt included', JSON.stringify(h[0].changes) === JSON.stringify([{ field: 'amountCents', from: 2500, to: 3000 }, { field: 'endedAt', from: '2026-11-05T00:00:00.000Z', to: null }]), h[0]);
+check('the PATCH route refuses to un-end an ended expense', /if \(existing\.endedAt\) return NextResponse\.json\(\{ error: 'This expense has ended/.test(readFileSync('src/app/api/admin/expenses/[id]/route.ts', 'utf8')));
 check('…an end with nothing else has no changes', h[1].changes === undefined);
 
 // Source guards

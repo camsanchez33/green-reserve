@@ -1,9 +1,10 @@
 // ADMIN-REDO Expenses (Cam 2026-11-12): an expense's history from its audit rows. Pure.
-// expense_add → 'added'; expense_edit → 'ended' when endedAt went from empty to a date,
-// 'restarted' when it went back to empty, else 'changed'. The fields that changed (other than
+// expense_add → 'added'; expense_edit → 'ended' when endedAt went from empty to a date, else
+// 'changed'. There is no restart: an ended expense can't be un-ended (the PATCH route refuses;
+// starting again is a new expense), and an old row that cleared endedAt reads as a change. The fields that changed (other than
 // endedAt) ride along as { field, from, to }. An edit that changed nothing is left out.
 
-export type ExpenseHistoryKind = 'added' | 'changed' | 'ended' | 'restarted';
+export type ExpenseHistoryKind = 'added' | 'changed' | 'ended';
 export type ExpenseHistoryEntry = { at: string; by: string; kind: ExpenseHistoryKind; changes?: { field: string; from: unknown; to: unknown }[] };
 type AuditRow = { action: string; actorName: string; before: unknown; after: unknown; createdAt: Date };
 
@@ -24,7 +25,6 @@ export function expenseHistory(rows: AuditRow[]): ExpenseHistoryEntry[] {
     let kind: ExpenseHistoryKind = 'changed';
     if ('endedAt' in after || 'endedAt' in before) {
       if (empty(before.endedAt) && !empty(after.endedAt)) kind = 'ended';
-      else if (!empty(before.endedAt) && empty(after.endedAt)) kind = 'restarted';
       else if (JSON.stringify(before.endedAt ?? null) !== JSON.stringify(after.endedAt ?? null)) changes.push({ field: 'endedAt', from: before.endedAt ?? null, to: after.endedAt ?? null });
     }
     if (kind === 'changed' && !changes.length) continue;
