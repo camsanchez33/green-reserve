@@ -13,7 +13,7 @@ import { DAYS, ScheduleFields } from './shared';
 import { useCourse } from './context';
 
 export function OperateTab() {
-  const { detail, setupForm, sched, schedules, newSchedule, setNewSchedule, showAddSched, setShowAddSched, schedSaving, schedMsg, setSchedMsg, editSched, setEditSched, editSaving, editError, setEditError, tsDate, setTsDate, ts, tsSlots, tsLoading, slotBusy, opNote, setOpNote, setManualSlot, setManualError, membersData, membersError, setSchedDeleteTarget, setSchedDeleteError, membersLoading, loadSchedules, loadTeeSheet, loadMembers, addSchedule, beginScheduleEdit, saveScheduleEdit, blockSlot, cancelBooking } = useCourse();
+  const { detail, setupForm, sched, schedules, newSchedule, setNewSchedule, showAddSched, setShowAddSched, schedSaving, schedMsg, setSchedMsg, editSched, setEditSched, editSaving, editError, setEditError, tsDate, setTsDate, ts, tsSlots, tsLoading, slotBusy, opNote, setOpNote, setManualSlot, setManualError, membersData, membersError, setSchedDeleteTarget, setSchedDeleteError, membersLoading, loadSchedules, loadTeeSheet, loadMembers, addSchedule, beginScheduleEdit, saveScheduleEdit, blockSlot } = useCourse();
   return (
             <div className="max-w-3xl space-y-6">
 
@@ -107,13 +107,6 @@ export function OperateTab() {
                               </div>
                               <div className="flex items-center gap-3">
                                 <span className="text-xs font-medium text-ok">{fmtMoney(b.totalAmount / 100)}</span>
-                                <button
-                                  onClick={() => cancelBooking(b.id, slot.id)}
-                                  disabled={busy}
-                                  className="text-xs text-bad hover:text-bad/80 px-2 py-0.5 border border-bad/20 rounded-md hover:bg-bad/5 transition-colors disabled:opacity-50"
-                                >
-                                  Cancel
-                                </button>
                               </div>
                             </div>
                           ))}
