@@ -3,6 +3,8 @@
 // the next step in plain words, and the history wording.
 import { SETTINGS_CHANGED_PREFIX, REMINDER_SENT_PREFIX, REMINDERS_PAUSED_PREFIX, REMINDERS_RESUMED_PREFIX, AGREEMENT_ACCEPTED_PREFIX, DOCUMENT_UPLOADED_PREFIX, NOTE_ADDED_PREFIX, CHECKIN_CALL_PREFIX } from '../src/lib/course-timeline';
 import { encodeChangesRequested, encodeChangeAddressed } from '../src/lib/change-requests';
+import { readFileSync } from 'fs';
+import { launchTone, launchDay } from '../src/app/admin/onboarding/launch';
 import { MARKER_WORDS, STAGES, isOnboardingStatus, needOf, rankOf, compareRows, isOverdue, OVERDUE_DAYS, checklist, STEPS, inquiryNext, historyLine } from '../src/app/api/admin/onboarding/plan';
 
 let failed = 0;
@@ -66,6 +68,22 @@ check('…and no marker text (it can carry an email)', historyLine(ev('in_review
 check('…while support+ sees it', historyLine(ev('in_review', 'in_review', 'Booking link sent to pro@example.test by Cam'))?.text === 'Booking link sent to pro@example.test by Cam');
 check('an empty marker is left out', historyLine(ev('building', 'building', null)) === null);
 check('contact updates read in plain words', historyLine(ev('contact_updated', 'contact_updated', 'Cam'))?.text === 'Contact details updated');
+
+// The Launch column (Build #380): red once the day has passed, yellow within 7 days, nothing when not set.
+check('launch: a passed day is overdue (red)', launchTone('2026-11-11', '2026-11-12') === 'bad');
+check('launch: today and the next 7 days are soon (yellow)', launchTone('2026-11-12', '2026-11-12') === 'warn' && launchTone('2026-11-19', '2026-11-12') === 'warn');
+check('launch: 8+ days out has no colour', launchTone('2026-11-20', '2026-11-12') === null);
+check('launch: not set or malformed has no colour', launchTone(null, '2026-11-12') === null && launchTone('Dec 4', '2026-11-12') === null);
+check('launch: across a month end', launchTone('2026-12-03', '2026-11-28') === 'warn');
+check('launch: the year shows only when it is not this year', launchDay('2026-12-04', '2026-11-12') === 'Dec 4' && launchDay('2027-01-08', '2026-11-12') === 'Jan 8, 2027');
+{
+  const page = readFileSync('src/app/admin/onboarding/page.tsx', 'utf8');
+  const route = readFileSync('src/app/api/admin/onboarding/route.ts', 'utf8');
+  check('launch is saved through the pipeline route\'s set_expected_launch', /inquiryAction\(p\.inquiryId, 'set_expected_launch'/.test(page));
+  check('only a manager sets it (canSetLaunch = manager && inquiry)', /canSetLaunch: manager && !!inq/.test(route) && /p\.canSetLaunch &&/.test(page));
+  check('the inquiries CSV link is hidden from viewers (support+ only, as the route)', /d\?\.support && <a href="\/api\/admin\/inquiries\?format=csv"/.test(page));
+  check('the page never imports the route folder (server modules stay off the browser)', !/from '\.\.\/\.\.\/api\//.test(page));
+}
 
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }
 console.log('\nALL PASS');

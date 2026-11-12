@@ -1,7 +1,7 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 715,
+    "files": 716,
     "routes": 306,
     "libs": 257,
     "models": 74,
@@ -1108,8 +1108,37 @@
       "usedBy": []
     },
     {
+      "path": "src/app/admin/onboarding/launch.ts",
+      "lines": 20,
+      "purpose": "Onboarding's Launch column (Build #380; Cam 2026-11-12:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "LAUNCH_SOON_DAYS",
+          "kind": "const"
+        },
+        {
+          "name": "launchDay",
+          "kind": "fn"
+        },
+        {
+          "name": "launchTone",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/admin/onboarding/page.tsx"
+      ]
+    },
+    {
       "path": "src/app/admin/onboarding/page.tsx",
-      "lines": 320,
+      "lines": 351,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1127,6 +1156,7 @@
         "../admin-glass.module.css",
         "../courses/courses.module.css",
         "../courses/terms",
+        "./launch",
         "./onboarding.module.css",
         "./terms",
         "@/components/admin/AdminSidebar",
@@ -1137,7 +1167,7 @@
     },
     {
       "path": "src/app/admin/onboarding/terms.ts",
-      "lines": 11,
+      "lines": 13,
       "purpose": "Onboarding (ADMIN-REDO page 3):",
       "brain": [],
       "exports": [
@@ -1154,7 +1184,15 @@
           "kind": "const"
         },
         {
-          "name": "LAUNCH_SOON",
+          "name": "LAUNCH_CLEARED",
+          "kind": "const"
+        },
+        {
+          "name": "LAUNCH_SAVED",
+          "kind": "const"
+        },
+        {
+          "name": "LAUNCH_TITLE",
           "kind": "const"
         },
         {
@@ -2925,7 +2963,7 @@
     },
     {
       "path": "src/app/api/admin/onboarding/route.ts",
-      "lines": 153,
+      "lines": 162,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2944,6 +2982,7 @@
       "imports": [
         "../courses/directory/status",
         "./plan",
+        "@/lib/admin-day",
         "@/lib/admin-session",
         "@/lib/approval-state",
         "@/lib/change-requests",
@@ -15061,6 +15100,7 @@
         "src/app/api/admin/ask/route.ts",
         "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/goals/route.ts",
+        "src/app/api/admin/onboarding/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/today/overview/route.ts",
         "src/lib/admin-ask.ts",
