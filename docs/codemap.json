@@ -21025,7 +21025,7 @@
     },
     {
       "path": "src/lib/goal-pace.ts",
-      "lines": 64,
+      "lines": 71,
       "purpose": "GOAL-PACE (Cam 2026-11-12, ADMIN_REDO_SPEC \"Goals:",
       "brain": [],
       "exports": [

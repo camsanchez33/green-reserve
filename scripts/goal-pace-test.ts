@@ -51,5 +51,19 @@ ok('early: a reach goal already met is green; a budget already over is red', ear
 ok('no daysElapsed given: no early rule (callers opt in)', goalPace({ progress: 0, target: 10, share: 0.01 }).tone === 'bad');
 ok('Home passes the elapsed days and greys an early goal', (() => { const b = require('fs').readFileSync('src/components/dashboard/home/HomeBoard.tsx', 'utf8'); return b.includes("daysElapsed: goals.elapsed ?? dayOfMonth") && b.includes("early: 'bg-dot-neutral'"); })());
 
+// Expenses (Cam via Build 2026-11-12): one-time costs ride along unprojected. A $1,500 bill three days
+// into a 30-day month must not extrapolate to $15,000.
+{
+  const share = elapsedShare(3, 30);
+  const oneOff = goalPace({ progress: 0, fixed: 150_000, target: 200_000, share, kind: 'cap', daysElapsed: 5 });
+  ok('a one-time $1,500 projects to $1,500, not $15,000', oneOff.projected === 150_000 && oneOff.tone === 'ok', oneOff);
+  const wrong = goalPace({ progress: 150_000, target: 200_000, share, kind: 'cap', daysElapsed: 5 });
+  ok('(the same bill counted as running cost would project to $15,000 and go red)', Math.round(wrong.projected) === 1_500_000 && wrong.tone === 'bad', wrong);
+  const mixed = goalPace({ progress: 10_000, fixed: 150_000, target: 200_000, share, kind: 'cap', daysElapsed: 5 });
+  ok('running costs are projected, the one-off is added once: $100 ÷ 0.1 + $1,500 = $2,500 → over a $2,000 budget', Math.round(mixed.projected) === 250_000 && mixed.tone === 'bad', mixed);
+  ok('a one-off already past the budget is red even early', goalPace({ progress: 0, fixed: 250_000, target: 200_000, share: elapsedShare(1, 30), kind: 'cap', daysElapsed: 1 }).tone === 'bad');
+  ok('no fixed given: unchanged', goalPace({ progress: 100, target: 3000, share: 0.5 }).projected === 200);
+}
+
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);

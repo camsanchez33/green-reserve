@@ -42,22 +42,29 @@ export function projectAtEnd(progress: number, share: number, rate = false): num
   return progress / share;
 }
 
-/** The colour of a goal (see the rule above). The 10% band is of the target. */
-export function goalPace(o: { progress: number; target: number; share: number; kind?: GoalKind; rate?: boolean; daysElapsed?: number }): { projected: number; tone: PaceTone } {
+/**
+ * The colour of a goal (see the rule above). The 10% band is of the target.
+ * `fixed` (Expenses, Cam via Build 2026-11-12): amounts already in the period that don't recur — a
+ * one-time bill. They are added AFTER projecting, never extrapolated: a $1,500 one-off three days
+ * into a month is $1,500 at its end, not $15,000. `progress` is then the running part only.
+ */
+export function goalPace(o: { progress: number; target: number; share: number; kind?: GoalKind; rate?: boolean; daysElapsed?: number; fixed?: number }): { projected: number; tone: PaceTone } {
   const kind = o.kind ?? 'reach';
-  const projected = projectAtEnd(o.progress, o.share, o.rate);
+  const fixed = Number.isFinite(o.fixed) ? (o.fixed as number) : 0;
+  const projected = projectAtEnd(o.progress, o.share, o.rate) + fixed;
+  const soFar = o.progress + fixed;
   if (!(o.target > 0)) return { projected, tone: 'ok' };
   // A reach goal already met is green even early; a budget already over is red even early. Otherwise no verdict yet.
   if (o.daysElapsed !== undefined && o.daysElapsed < EARLY_DAYS) {
-    if (kind === 'reach' && atLeast(o.progress, o.target)) return { projected, tone: 'ok' };
-    if (kind === 'cap' && !atMost(o.progress, o.target)) return { projected, tone: 'bad' };
+    if (kind === 'reach' && atLeast(soFar, o.target)) return { projected, tone: 'ok' };
+    if (kind === 'cap' && !atMost(soFar, o.target)) return { projected, tone: 'bad' };
     return { projected, tone: 'early' };
   }
   if (kind === 'reach') {
-    if (atLeast(o.progress, o.target) || atLeast(projected, o.target)) return { projected, tone: 'ok' };
+    if (atLeast(soFar, o.target) || atLeast(projected, o.target)) return { projected, tone: 'ok' };
     return { projected, tone: atLeast(projected, o.target * 0.9) ? 'warn' : 'bad' };
   }
-  if (!atMost(o.progress, o.target)) return { projected, tone: 'bad' }; // already over the budget
+  if (!atMost(soFar, o.target)) return { projected, tone: 'bad' }; // already over the budget
   if (atMost(projected, o.target)) return { projected, tone: 'ok' };
   return { projected, tone: atMost(projected, o.target * 1.1) ? 'warn' : 'bad' };
 }
