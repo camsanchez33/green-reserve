@@ -1,8 +1,8 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 704,
-    "routes": 301,
+    "files": 708,
+    "routes": 303,
     "libs": 255,
     "models": 72,
     "orphans": 11,
@@ -667,7 +667,7 @@
     },
     {
       "path": "src/app/admin/courses/page.tsx",
-      "lines": 330,
+      "lines": 329,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -730,7 +730,8 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/admin/courses/page.tsx"
+        "src/app/admin/courses/page.tsx",
+        "src/app/admin/onboarding/page.tsx"
       ]
     },
     {
@@ -1079,6 +1080,75 @@
         "react"
       ],
       "usedBy": []
+    },
+    {
+      "path": "src/app/admin/onboarding/page.tsx",
+      "lines": 320,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (OnboardingPage)",
+          "kind": "component"
+        }
+      ],
+      "route": "/admin/onboarding",
+      "kind": "page",
+      "methods": [],
+      "auth": "admin",
+      "guard": "client-side",
+      "imports": [
+        "../admin-glass.module.css",
+        "../courses/courses.module.css",
+        "../courses/terms",
+        "./onboarding.module.css",
+        "./terms",
+        "@/components/admin/AdminSidebar",
+        "next/link",
+        "react"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/admin/onboarding/terms.ts",
+      "lines": 11,
+      "purpose": "Onboarding (ADMIN-REDO page 3):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "ACTION_FAILED",
+          "kind": "component"
+        },
+        {
+          "name": "FOOT_CSV",
+          "kind": "const"
+        },
+        {
+          "name": "FOOT_PIPELINE",
+          "kind": "const"
+        },
+        {
+          "name": "LAUNCH_SOON",
+          "kind": "const"
+        },
+        {
+          "name": "NO_CAL_LINK",
+          "kind": "const"
+        },
+        {
+          "name": "overdueTitle",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/admin/onboarding/page.tsx"
+      ]
     },
     {
       "path": "src/app/admin/page.tsx",
@@ -1998,7 +2068,7 @@
     },
     {
       "path": "src/app/api/admin/courses/directory/route.ts",
-      "lines": 162,
+      "lines": 159,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2064,7 +2134,8 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/api/admin/courses/directory/route.ts"
+        "src/app/api/admin/courses/directory/route.ts",
+        "src/app/api/admin/onboarding/route.ts"
       ]
     },
     {
@@ -2576,6 +2647,134 @@
         "@/lib/prisma",
         "@/lib/problems",
         "@/lib/real-courses",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/admin/onboarding/plan.ts",
+      "lines": 152,
+      "purpose": "ADMIN-REDO page 3 — Onboarding (Cam approved the mockup 2026-11-12).",
+      "brain": [],
+      "exports": [
+        {
+          "name": "BY_HAND_STAGE",
+          "kind": "const"
+        },
+        {
+          "name": "checklist",
+          "kind": "fn"
+        },
+        {
+          "name": "compareRows",
+          "kind": "fn"
+        },
+        {
+          "name": "HistoryEvent",
+          "kind": "type"
+        },
+        {
+          "name": "historyLine",
+          "kind": "fn"
+        },
+        {
+          "name": "inquiryNext",
+          "kind": "fn"
+        },
+        {
+          "name": "isOnboardingStatus",
+          "kind": "fn"
+        },
+        {
+          "name": "isOverdue",
+          "kind": "fn"
+        },
+        {
+          "name": "MARKER_WORDS",
+          "kind": "const"
+        },
+        {
+          "name": "Need",
+          "kind": "type"
+        },
+        {
+          "name": "needOf",
+          "kind": "fn"
+        },
+        {
+          "name": "OnboardingStatus",
+          "kind": "type"
+        },
+        {
+          "name": "OVERDUE_DAYS",
+          "kind": "const"
+        },
+        {
+          "name": "rankOf",
+          "kind": "fn"
+        },
+        {
+          "name": "Sortable",
+          "kind": "type"
+        },
+        {
+          "name": "stageName",
+          "kind": "fn"
+        },
+        {
+          "name": "STAGES",
+          "kind": "const"
+        },
+        {
+          "name": "StepFacts",
+          "kind": "type"
+        },
+        {
+          "name": "STEPS",
+          "kind": "const"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/lib/change-requests",
+        "@/lib/inquiry-board",
+        "@/lib/inquiry-status"
+      ],
+      "usedBy": [
+        "src/app/api/admin/onboarding/route.ts"
+      ]
+    },
+    {
+      "path": "src/app/api/admin/onboarding/route.ts",
+      "lines": 153,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/onboarding",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "../courses/directory/status",
+        "./plan",
+        "@/lib/admin-session",
+        "@/lib/approval-state",
+        "@/lib/change-requests",
+        "@/lib/inquiry-status",
+        "@/lib/operator-setup",
+        "@/lib/prisma",
         "next/server"
       ],
       "usedBy": []
@@ -10755,6 +10954,7 @@
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/inquiries/page.tsx",
         "src/app/admin/messages/page.tsx",
+        "src/app/admin/onboarding/page.tsx",
         "src/app/admin/page.tsx",
         "src/app/admin/problems/page.tsx",
         "src/app/admin/profile/page.tsx",
@@ -11154,7 +11354,7 @@
     },
     {
       "path": "src/components/admin/admin-href.ts",
-      "lines": 60,
+      "lines": 61,
       "purpose": "Admin lane (2026-11-10):",
       "brain": [],
       "exports": [
@@ -15057,6 +15257,7 @@
         "src/app/api/admin/login/route.ts",
         "src/app/api/admin/messages/route.ts",
         "src/app/api/admin/nav-badges/route.ts",
+        "src/app/api/admin/onboarding/route.ts",
         "src/app/api/admin/orphan-sweep/route.ts",
         "src/app/api/admin/owner-devices/route.ts",
         "src/app/api/admin/passkeys/route.ts",
@@ -15727,6 +15928,7 @@
         "src/app/api/admin/course-documents/route.ts",
         "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/courses/route.ts",
+        "src/app/api/admin/onboarding/route.ts",
         "src/app/api/admin/request-re-review/route.ts",
         "src/app/api/cron/chase-onboarding/route.ts",
         "src/app/api/operator/approve-page/route.ts",
@@ -17417,6 +17619,8 @@
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/inquiries/route.ts",
         "src/app/api/admin/messages/route.ts",
+        "src/app/api/admin/onboarding/plan.ts",
+        "src/app/api/admin/onboarding/route.ts",
         "src/app/api/admin/request-re-review/route.ts",
         "src/app/api/operator/approve-page/route.ts",
         "src/app/api/operator/courses/route.ts",
@@ -21300,6 +21504,7 @@
       ],
       "usedBy": [
         "src/app/admin/inquiries/[id]/page.tsx",
+        "src/app/api/admin/onboarding/plan.ts",
         "src/components/admin/InquiryBoard.tsx"
       ]
     },
@@ -21703,6 +21908,8 @@
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/inquiries/page.tsx",
         "src/app/api/admin/inquiries/route.ts",
+        "src/app/api/admin/onboarding/plan.ts",
+        "src/app/api/admin/onboarding/route.ts",
         "src/app/api/calcom/webhook/route.ts",
         "src/app/api/call/[token]/route.ts",
         "src/app/api/inquiries/route.ts",
@@ -23426,6 +23633,7 @@
       "usedBy": [
         "src/app/api/admin/create-course/route.ts",
         "src/app/api/admin/inquiries/route.ts",
+        "src/app/api/admin/onboarding/route.ts",
         "src/app/api/preview/send/route.ts"
       ]
     },
@@ -23925,6 +24133,7 @@
         "src/app/api/admin/login/route.ts",
         "src/app/api/admin/messages/route.ts",
         "src/app/api/admin/nav-badges/route.ts",
+        "src/app/api/admin/onboarding/route.ts",
         "src/app/api/admin/owner-devices/route.ts",
         "src/app/api/admin/passkeys/route.ts",
         "src/app/api/admin/platform-stripe/route.ts",
@@ -28737,6 +28946,7 @@
       "readers": [
         "src/app/api/admin/course-documents/route.ts",
         "src/app/api/admin/courses/directory/route.ts",
+        "src/app/api/admin/onboarding/route.ts",
         "src/app/api/admin/today/overview/route.ts",
         "src/lib/agreement-gate.ts",
         "src/lib/agreement-required.ts",
@@ -30266,6 +30476,7 @@
         "src/app/api/admin/create-course/route.ts",
         "src/app/api/admin/inquiries/route.ts",
         "src/app/api/admin/messages/route.ts",
+        "src/app/api/admin/onboarding/route.ts",
         "src/app/api/admin/request-re-review/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/search/route.ts",
@@ -31176,12 +31387,12 @@
       "readers": [
         "src/app/api/admin/backfill-orphaned-inquiries/route.ts",
         "src/app/api/admin/course-detail/route.ts",
-        "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/create-course/route.ts",
         "src/app/api/admin/inquiries/route.ts",
         "src/app/api/admin/messages/route.ts",
         "src/app/api/admin/nav-badges/route.ts",
+        "src/app/api/admin/onboarding/route.ts",
         "src/app/api/admin/request-re-review/route.ts",
         "src/app/api/admin/search/route.ts",
         "src/app/api/admin/today/overview/route.ts",
@@ -34713,6 +34924,7 @@
         "src/lib/schedule-service.ts"
       ],
       "readers": [
+        "src/app/api/admin/onboarding/route.ts",
         "src/app/api/admin/schedule/route.ts",
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/residents/route.ts",
