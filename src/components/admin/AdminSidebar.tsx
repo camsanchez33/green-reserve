@@ -8,7 +8,7 @@ import CommandPalette from '@/components/admin/CommandPalette';
 import { useAdminSession } from '@/lib/admin-session-context';
 import type { AdminArea } from '@/lib/admin-areas';
 
-export type AdminNavKey = 'overview' | 'bookings' | 'problems' | 'goals' | 'inquiries' | 'courses' | 'groups' | 'create' | 'employees' | 'announcements' | 'messages' | 'profile' | 'revenue' | 'expenses' | 'golfers' | 'system' | 'company' | 'audit' | 'security';
+export type AdminNavKey = 'overview' | 'bookings' | 'problems' | 'goals' | 'inquiries' | 'courses' | 'groups' | 'create' | 'employees' | 'announcements' | 'messages' | 'profile' | 'revenue' | 'expenses' | 'business' | 'golfers' | 'system' | 'company' | 'audit' | 'security';
 
 export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessages = 0 }: {
   active: AdminNavKey;
@@ -99,7 +99,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
       { key: null, label: 'Financial analytics' },
     ] },
     { label: 'Management', items: [
-      { key: null, label: 'Business analytics' },
+      { key: 'business', label: 'Business analytics', href: '/admin/business', minRole: MANAGER_PLUS, area: 'courses' },
       { key: 'problems', label: 'Support & issues', href: '/admin/problems', minRole: SUPPORT_PLUS, area: 'problems' },
       { key: 'messages', label: 'Messages', href: '/admin/messages', minRole: SUPPORT_PLUS, sub: true, area: 'messages' },
       { key: 'announcements', label: 'Announcements', href: '/admin/announcements', minRole: SUPPORT_PLUS, sub: true, area: 'messages' },

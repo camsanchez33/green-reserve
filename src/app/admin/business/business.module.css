@@ -1,0 +1,51 @@
+/* ADMIN-REDO Business analytics (Cam approved the mockup 2026-11-12). Built on the green-glass tokens (--g-*) of
+   admin-glass.module.css; the cards, panels and table are Revenue's (revenue.module.css). */
+
+.stack { display: flex; flex-direction: column; gap: 16px; }
+.stale { opacity: .6; transition: opacity .15s; }
+@media (prefers-reduced-motion: reduce) { .stale { transition: none; } }
+
+.swOn, .swOff { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.swOn { background: var(--g-chart); }
+.swOff { background: color-mix(in srgb, var(--g-warn) 75%, transparent); }
+
+/* Bookings by month: stacked bars on a scale, the total above each, the running month faded. */
+.bcw { position: relative; height: 220px; margin: 22px 0 0 40px; }
+.gl { position: absolute; left: 0; right: 0; border-top: 1px dashed var(--g-grid); font-size: 11px; color: var(--g-muted); }
+.gl span { position: absolute; left: -40px; top: -8px; width: 34px; text-align: right; font-variant-numeric: tabular-nums; }
+.bc { position: absolute; inset: 0; display: flex; align-items: flex-end; gap: 14px; }
+.col { flex: 1; height: 100%; display: flex; align-items: flex-end; min-width: 0; }
+.m { position: relative; width: 100%; max-width: 40px; margin: 0 auto; display: flex; flex-direction: column; justify-content: flex-end; }
+.m i { display: block; min-height: 0; }
+.m i:first-of-type { border-radius: 8px 8px 0 0; }
+.m i:last-of-type { border-radius: 0 0 3px 3px; }
+.on { background: var(--g-chart); }
+.of { background: color-mix(in srgb, var(--g-warn) 75%, transparent); }
+.part { opacity: .55; }
+.val { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); margin-bottom: 5px; font-size: 11.5px; font-weight: 600; color: var(--g-ink-soft); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.bl { display: flex; gap: 14px; margin: 8px 0 0 40px; font-size: 11.5px; color: var(--g-muted); }
+.bl span { flex: 1; text-align: center; min-width: 0; }
+@media (max-width: 640px) {
+  .bc, .bl { gap: 5px; }
+  .val { display: none; }
+  .bl span:nth-child(even) { visibility: hidden; }
+}
+
+.split2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: stretch; }
+@media (max-width: 1100px) { .split2 { grid-template-columns: minmax(0, 1fr); } }
+
+/* ADMIN FORMAT 4: plain rows divided by hairlines. */
+.vrows { display: flex; flex-direction: column; }
+.vrows > div { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--g-line); font-size: 13.5px; }
+.vrows > div:first-child { border-top: 0; padding-top: 0; }
+.vrows small { display: block; color: var(--g-muted); font-size: 12.5px; }
+.vrows b { font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.after { margin-top: 12px; border-top: 1px solid var(--g-line); padding-top: 12px; }
+
+.fun { display: flex; flex-direction: column; gap: 9px; }
+.fs { display: grid; grid-template-columns: 96px minmax(0, 1fr) 36px 40px 56px; gap: 10px; align-items: center; font-size: 13px; }
+.fs b { text-align: right; font-variant-numeric: tabular-nums; }
+.fs em { font-style: normal; color: var(--g-muted); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
+.bar { height: 10px; border-radius: 999px; background: var(--g-line); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--g-chart); }
+@media (max-width: 480px) { .fs { grid-template-columns: 84px minmax(0, 1fr) 32px 36px 48px; gap: 6px; } }
