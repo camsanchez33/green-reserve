@@ -3,7 +3,7 @@
 // and the month against its goal. HOME-3 (Cam 2026-11-12, the approved charcoal Home mockup): staff notes as a
 // plain list with "Add a note", conditions as cart path / greens / pins with a detail line each (no "set by"
 // line), the week ahead in four clear steps of red with each cell's % printed, goals coloured by how close they
-// are to where they should be today (no line, no key), and the next events. Data comes with /api/operator/home;
+// are to hitting their target at today's pace (lib/goal-pace; no line, no key), and the next events. Data comes with /api/operator/home;
 // each card writes through its own route and shows its own pending / error state (no silent failures).
 import { useState } from 'react';
 import Link from 'next/link';
@@ -12,7 +12,8 @@ import { StatusDot } from '@/components/ui/StatusDot';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { goalMetric, formatGoal, type GoalMetric } from '@/lib/course-goals';
 import { CONDITION_FIELDS, HOME_CONDITIONS, CONDITION_NOTE_CHARS, mergeHomeConditions, conditionLabel, conditionsOffBookingPage, type CourseConditions, type ConditionKey } from '@/lib/course-conditions';
-import { goalTone, CONDITION_TONE, type GoalTone } from '@/lib/home-today';
+import { CONDITION_TONE, type GoalTone } from '@/lib/home-today';
+import { goalPace, elapsedShare } from '@/lib/goal-pace';
 import type { HomeEvent } from '@/lib/home-board';
 
 export type ShiftNote = { id: string; body: string; authorName: string; createdAt: string };
@@ -280,7 +281,8 @@ export function GoalsCard({ goals, canSet, onSaved }: { goals: Goals; canSet: bo
       {goals.goals.map(g => {
         const m = goalMetric(g.metric);
         const pct = Math.min(100, g.target ? (g.actual / g.target) * 100 : 0);
-        const tone = goalTone({ actual: g.actual, target: g.target, dayOfMonth, daysInMonth, rate: m.unit === 'pct' });
+        // GOAL-PACE (Cam 2026-11-12): the bar is progress; the colour is where the month ends at today's pace.
+        const { tone } = goalPace({ progress: g.actual, target: g.target, share: elapsedShare(dayOfMonth, daysInMonth), rate: m.unit === 'pct' });
         return (
           <div key={g.metric} className="flex flex-col gap-1.5">
             <div className="flex items-baseline gap-2">

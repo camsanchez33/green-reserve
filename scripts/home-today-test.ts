@@ -4,7 +4,7 @@
 // own rules (no Open tee sheet button, no count tiles, the one search, events behind events.manage).
 // Pure. Run: npx tsx scripts/home-today-test.ts
 import { readFileSync } from 'fs';
-import { todayByHour, checkedInOf, sameWeekdayAverage, goalTone, weatherLine } from '../src/lib/home-today';
+import { todayByHour, checkedInOf, sameWeekdayAverage, weatherLine } from '../src/lib/home-today';
 import { cleanConditions, golferConditionLines, mergeHomeConditions } from '../src/lib/course-conditions';
 
 let failed = 0;
@@ -44,13 +44,8 @@ ok('Tuesday uses the Tuesdays before today', sameWeekdayAverage('2031-05-20', '2
 ok('no history → no line', sameWeekdayAverage('2031-05-15', '2031-05-14', past) === null);
 ok('days before the last 4 weeks never count', sameWeekdayAverage('2031-05-14', '2031-05-14', new Map([['2031-04-09', 50]])) === null);
 
-// ── Goals for today ── (the mockup: day 12 of 30 = 40%)
-const g = (actual: number, target: number, rate = false) => goalTone({ actual, target, dayOfMonth: 12, daysInMonth: 30, rate });
-ok('ahead of where it should be is green', g(1140, 1600) === 'ok');
-ok('within 10 points behind is amber', g(19800, 60000) === 'warn');
-ok('further behind is red', g(2, 20) === 'bad');
-ok('reached is green', g(20, 20) === 'ok');
-ok('a rate (fill %) is held to its target all month', g(70, 75, true) === 'warn' && g(60, 75, true) === 'bad' && g(76, 75, true) === 'ok');
+// Goals: their colour is lib/goal-pace's (scripts/goal-pace-test.ts).
+ok('Home colours goals with the shared pace rule', readFileSync('src/components/dashboard/home/HomeBoard.tsx', 'utf8').includes('goalPace({ progress: g.actual, target: g.target, share: elapsedShare(dayOfMonth, daysInMonth), rate: m.unit === \'pct\' })'));
 
 // ── Weather line ──
 const H = (hh: string, rain: number | null, temp = 54, summary = 'Clear') => ({ at: `2031-05-14T${hh}:00:00-04:00`, tempF: temp, summary, windMph: 5, rainPct: rain });

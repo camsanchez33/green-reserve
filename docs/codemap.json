@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 703,
+    "files": 704,
     "routes": 301,
-    "libs": 254,
+    "libs": 255,
     "models": 72,
     "orphans": 11,
     "ungatedRoutes": 3
@@ -12921,7 +12921,7 @@
     },
     {
       "path": "src/components/dashboard/home/HomeBoard.tsx",
-      "lines": 303,
+      "lines": 305,
       "purpose": "DASH-D Home (Cam 2026-11-01, mockup S1):",
       "brain": [],
       "exports": [
@@ -12981,6 +12981,7 @@
         "@/lib/course-conditions",
         "@/lib/course-goals",
         "@/lib/dashboard-fetch",
+        "@/lib/goal-pace",
         "@/lib/home-board",
         "@/lib/home-today",
         "next/link",
@@ -20735,6 +20736,43 @@
       ]
     },
     {
+      "path": "src/lib/goal-pace.ts",
+      "lines": 38,
+      "purpose": "GOAL-PACE (Cam 2026-11-12, ADMIN_REDO_SPEC \"Goals:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "elapsedShare",
+          "kind": "fn"
+        },
+        {
+          "name": "GoalKind",
+          "kind": "type"
+        },
+        {
+          "name": "goalPace",
+          "kind": "fn"
+        },
+        {
+          "name": "PaceTone",
+          "kind": "type"
+        },
+        {
+          "name": "projectAtEnd",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/components/dashboard/home/HomeBoard.tsx"
+      ]
+    },
+    {
       "path": "src/lib/golfer-key.ts",
       "lines": 40,
       "purpose": "Who a golfer is at a course:",
@@ -21122,7 +21160,7 @@
     },
     {
       "path": "src/lib/home-today.ts",
-      "lines": 118,
+      "lines": 107,
       "purpose": "HOME-3 (Cam 2026-11-12, \"approved, build the home page to match the mockup\", ADMIN_REDO_SPEC.md \"Course dashboard Home:",
       "brain": [],
       "exports": [
@@ -21133,10 +21171,6 @@
         {
           "name": "CONDITION_TONE",
           "kind": "const"
-        },
-        {
-          "name": "goalTone",
-          "kind": "fn"
         },
         {
           "name": "GoalTone",

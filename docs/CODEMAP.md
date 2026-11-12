@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-703 source files · 301 routes · 254 libraries · 72 models
+704 source files · 301 routes · 255 libraries · 72 models
 
 ## Single sources of truth
 
@@ -495,7 +495,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/facilities.ts` | 3 | 55 | Settings rework (Cam 2026-10-19: | `FacilityFields`, `facilityLines`, `FOOD_TYPES`, `RANGE_TYPES`, `TOURNAMENT_FREQ` |
 | `src/lib/go-live-preflight.ts` | 3 | 35 |  | `computeStripeGoLiveCheck`, `StripeGoLiveCheck` |
 | `src/lib/home-board.ts` | 3 | 127 | DASH-D Home (Cam 2026-11-01, mockups S1 + "week-ahead heat map and month vs goal"): | `courseConditions`, `GoalRow`, `HomeEvent`, `monthGoals`, `openShiftNotes`, `SHIFT_NOTE_MAX`, `ShiftNoteRow`, `upcomingEvents` +1 more |
-| `src/lib/home-today.ts` | 3 | 118 | HOME-3 (Cam 2026-11-12, "approved, build the home page to match the mockup", ADMIN_REDO_SPEC.md "Course dashboard Home: | `checkedInOf`, `CONDITION_TONE`, `goalTone`, `GoalTone`, `HourBar`, `HourSlot`, `RAIN_PCT`, `sameWeekdayAverage` +2 more |
+| `src/lib/home-today.ts` | 3 | 107 | HOME-3 (Cam 2026-11-12, "approved, build the home page to match the mockup", ADMIN_REDO_SPEC.md "Course dashboard Home: | `checkedInOf`, `CONDITION_TONE`, `GoalTone`, `HourBar`, `HourSlot`, `RAIN_PCT`, `sameWeekdayAverage`, `todayByHour` +1 more |
 | `src/lib/inquiry-needs.ts` | 3 | 39 | INQUIRY_CALL_SPEC IC-1 §3 — "Still need from them", the sheet's column. | `NeedItem`, `stillNeed` |
 | `src/lib/login-guard.ts` | 3 | 45 | SEC-3 security audit (2026-10-26): | `failUnknownLogin`, `LOGIN_LOCKOUT_MS`, `LOGIN_MAX_ATTEMPTS`, `unknownLoginLockedUntil` |
 | `src/lib/member-csv.ts` | 3 | 101 | Members → Import a list: | `ImportProblem`, `ImportRow`, `MAX_IMPORT_ROWS`, `parseCsv`, `parseCsvLines`, `readMemberCsv`, `toYmd` |
@@ -586,6 +586,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/faq.ts` | 1 | 26 | SD-7: | `faqJsonLd`, `HOME_FAQ` |
 | `src/lib/fees-by-day.ts` | 1 | 28 | ADMIN-C Money → Overview chart: | `feesByDay`, `Window` |
 | `src/lib/frost-delay.ts` | 1 | 100 | B-9 frost delay (Cam 2026-10-01: | `applyFrostDelay`, `FrostMove`, `FrostPlan`, `isFrostTime`, `planFrostDelay` |
+| `src/lib/goal-pace.ts` | 1 | 38 | GOAL-PACE (Cam 2026-11-12, ADMIN_REDO_SPEC "Goals: | `elapsedShare`, `GoalKind`, `goalPace`, `PaceTone`, `projectAtEnd` |
 | `src/lib/ledger-words.ts` | 1 | 4 | The money ledger's kinds (MoneyMove.what), in words — for staff screens that list ledger rows. | `LEDGER_WHAT` |
 | `src/lib/member-import.ts` | 1 | 65 | Members → Import a list (Cam 2026-10-19, OPERATOR_REWORK_SPEC "Members = list first … Add member and Import list at the top"). | `importMembers`, `ImportOptions`, `ImportResult` |
 | `src/lib/member-stats.ts` | 1 | 46 | DENSE-5 (Cam 2026-10-28): | `MemberKeys`, `memberRoundStats`, `MemberRoundStats` |
@@ -695,7 +696,7 @@ Sorted the same way.
 | `src/components/dashboard/GettingStartedChecklist.tsx` | 1 | 187 |  | `default (GettingStartedChecklist)` |
 | `src/components/dashboard/GolferMessageModal.tsx` | 1 | 227 | MSG-1 (PLATFORM_ROADMAP_SPEC §5): | `default (GolferMessageModal)` |
 | `src/components/dashboard/GroupTicket.tsx` | 1 | 69 | DASH-D (Cam 2026-11-01, "make checking someone in a little more POS like"): | `default (GroupTicket)`, `TicketBooking`, `TicketLine`, `ticketLines` |
-| `src/components/dashboard/home/HomeBoard.tsx` | 1 | 303 | DASH-D Home (Cam 2026-11-01, mockup S1): | `Conditions`, `ConditionsCard`, `EventsCard`, `Goals`, `GoalsCard`, `heatStep`, `HomeEvent`, `ShiftNote` +3 more |
+| `src/components/dashboard/home/HomeBoard.tsx` | 1 | 305 | DASH-D Home (Cam 2026-11-01, mockup S1): | `Conditions`, `ConditionsCard`, `EventsCard`, `Goals`, `GoalsCard`, `heatStep`, `HomeEvent`, `ShiftNote` +3 more |
 | `src/components/dashboard/ItemForm.tsx` | 1 | 315 | POS-8 (Cam 2026-11-09: | `ItemForm` |
 | `src/components/dashboard/LastMinuteDeals.tsx` | 1 | 71 | PRICE-2 (Cam 2026-10-30: | `LastMinuteDeals` |
 | `src/components/dashboard/MemberAccount.tsx` | 1 | 134 | MEM-ACCT (Cam 2026-10-30: | `AccountFields`, `MemberAccount` |
