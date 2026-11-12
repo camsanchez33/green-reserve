@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useEffect, useState, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import g from '@/app/admin/admin-glass.module.css';
-import { setAdminTheme, currentAdminTheme, type AdminTheme } from '@/components/admin/admin-theme';
 import CommandPalette from '@/components/admin/CommandPalette';
 import { useAdminSession } from '@/lib/admin-session-context';
 import type { AdminArea } from '@/lib/admin-areas';
@@ -134,9 +133,6 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
   const pathname = usePathname();
   useEffect(() => { setRailOpen(false); }, [pathname]);
 
-  const [theme, setTheme] = useState<AdminTheme>('light');
-  useEffect(() => { setTheme(currentAdminTheme()); }, []);
-  const pickTheme = (t: AdminTheme) => { setAdminTheme(t); setTheme(t); };
 
   // Cam 2026-11-11: no Quick actions button and no systems line — broken systems are rows in the Overview's Needs attention.
   const seesProblems = canSee(SUPPORT_PLUS, 'problems');
@@ -172,10 +168,6 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
       <div className={g.foot}>
         <div className={g.who}>{name || 'Signed in'} · {role}</div>
         <div className={g.footRow}>
-          <div className={g.seg} role="group" aria-label="Theme">
-            <button type="button" aria-pressed={theme === 'light'} onClick={() => pickTheme('light')}>Light</button>
-            <button type="button" aria-pressed={theme === 'dark'} onClick={() => pickTheme('dark')}>Dark</button>
-          </div>
           <button type="button" onClick={signOut} disabled={signingOut} className={g.btn}>
             {signingOut ? 'Signing out…' : 'Sign out'}
           </button>

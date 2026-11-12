@@ -13,8 +13,12 @@ export async function GET() {
   if (!requireOwner(session)) {
     return NextResponse.json({ error: ownerGateError(session) }, { status: 403 });
   }
-  const expenses = await prisma.expense.findMany({ orderBy: [{ endedAt: 'asc' }, { startedAt: 'desc' }] });
-  return NextResponse.json({ expenses });
+  const [expenses, budget] = await Promise.all([
+    prisma.expense.findMany({ orderBy: [{ endedAt: 'asc' }, { startedAt: 'desc' }] }),
+    prisma.expenseBudget.findUnique({ where: { id: 'monthly' } }),
+  ]);
+  // ADMIN-REDO: the standing monthly budget; null cents = none set.
+  return NextResponse.json({ expenses, budget: { cents: budget?.cents ?? null, setAt: budget?.cents != null ? budget.setAt.toISOString() : null } });
 }
 
 export async function POST(req: NextRequest) {
