@@ -73,7 +73,7 @@ const MESSAGES: Record<MoveCode, string> = {
   CUTOFF: 'The free-change window for this booking has closed. Call the course to change it.',
   OTHER_DAY: 'You can change to another time on the same day. To play a different day, cancel and book again.',
   PLAYED: 'That round was on an earlier day — it has already been played.',
-  NO_SHOW: 'This group is marked as a no-show. Mark them “Still coming” first, then move them.',
+  NO_SHOW: 'This group is marked as a no-show. Use “Undo no-show” first, then move them.',
   MOVED: 'This group was already moved.',
   NOT_FOUND: 'That booking no longer exists.',
   WRONG_COURSE: 'That tee time belongs to a different course.',

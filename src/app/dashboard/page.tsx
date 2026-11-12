@@ -494,7 +494,7 @@ function DashboardPageInner() {
       if (r.data?.fee) toast(r.data.fee, 'warn');
       // The change the sale recorded (review 2026-11-06): the server's own total and tender, never the card's guess.
       const change = r.data?.cashTenderedCents != null && r.data.totalCents != null ? r.data.cashTenderedCents - r.data.totalCents : 0;
-      toast(action === 'no_show' ? `${b.golferName} marked as a no-show.` : action === 'still_coming' ? `${b.golferName} is still coming.` : `Cash taken — ${b.golferName} is checked in.${change > 0 ? ` Change $${(change / 100).toFixed(2)}.` : ''}`, 'ok');
+      toast(action === 'no_show' ? `${b.golferName} marked as a no-show.` : action === 'still_coming' ? `No-show undone — ${b.golferName}.` : `Cash taken — ${b.golferName} is checked in.${change > 0 ? ` Change $${(change / 100).toFixed(2)}.` : ''}`, 'ok');
       if (action === 'take_cash') { setCashGiven(c => { const n = { ...c }; delete n[b.id]; return n; }); }
       // The change due stays in the checked-in box, not only in the passing toast.
       if (action === 'take_cash') setJustDone({ bookingId: b.id, name: b.golferName, players: checkedInPlayers ?? b.players, how: change > 0 ? `Cash · change $${(change / 100).toFixed(2)}` : 'Cash' });
@@ -1193,8 +1193,10 @@ function DashboardPageInner() {
             {(canMove || canSizeGroup || canResidents || canCancel || canRemove) && (
               <button type="button" aria-expanded={moreFor === b.id} onClick={() => { setMoreFor(moreFor === b.id ? null : b.id); setEditGroupId(null); }} className={link}>Edit group</button>
             )}
+            {/* TT-CARD (Cam 2026-11-12): "Still coming" is now "Undo no-show" — only on a group already marked a no-show;
+                the same still_coming action (it refunds the no-show fee as before). */}
             {b.status === 'confirmed' && b.noShowAt && access.can('sheet.no_show') && (
-              <button onClick={() => bookingLifecycle(b, 'still_coming')} disabled={rowBusy === b.id} className={link}>{rowBusy === b.id ? '…' : 'Still coming'}</button>
+              <button onClick={() => bookingLifecycle(b, 'still_coming')} disabled={rowBusy === b.id} className={link}>{rowBusy === b.id ? '…' : 'Undo no-show'}</button>
             )}
             {/* A group past its time and not checked in: "Mark no-show" records it — the no-show fee's path.
                 (Cam 2026-11-08: no local "late" hide — it recorded nothing.) */}
@@ -1433,23 +1435,24 @@ function DashboardPageInner() {
                 </div>
               </div>
 
-              {/* DENSE-4b: the day strip — players, checked in, and (money.payments) paid / not paid yet. */}
+              {/* DENSE-4b: the day strip — players, checked in, and (money.payments) paid / not paid yet.
+                  TT-CARD (Cam 2026-11-12, the approved tee sheet): each number its own card; Not paid yet in red. */}
               {teeTimes.length > 0 && (
                 // SHEET-3 (Cam 2026-11-06: "paid and unpaid should make more sense, like all metrics"; the groups-booked count
                 // moves up from under the sheet): every number the same shape — label, value, one line under it — spread across the row.
-                <div className={CARD + ' grid grid-cols-2 sm:grid-cols-3 ' + (dayMoney && dayMoney.date === selectedDate ? (selectedDate <= today() ? 'lg:grid-cols-5' : 'lg:grid-cols-4') : 'lg:grid-cols-3') + ' mb-4'} role="group" aria-label="The day">
-                  <div className="px-4 py-3"><div className="text-[12.5px] text-ink-soft">Players</div><div className="text-[20px] font-semibold text-ink tabular-nums leading-tight">{livePlayers}<span className="text-[13px] font-normal text-ink-muted"> of {spotsOffered}</span></div><div className="text-[12px] text-ink-muted">spots booked</div></div>
+                <div className={'grid gap-3 grid-cols-2 sm:grid-cols-3 ' + (dayMoney && dayMoney.date === selectedDate ? (selectedDate <= today() ? 'lg:grid-cols-5' : 'lg:grid-cols-4') : 'lg:grid-cols-3') + ' mb-4'} role="group" aria-label="The day">
+                  <div className={CARD + ' px-4 py-3'}><div className="text-[12.5px] text-ink-soft">Players</div><div className="text-[20px] font-semibold text-ink tabular-nums leading-tight">{livePlayers}<span className="text-[13px] font-normal text-ink-muted"> of {spotsOffered}</span></div><div className="text-[12px] text-ink-muted">spots booked</div></div>
                   {/* ONCOURSE-1 (Cam 2026-11-06, "rounds on the course now"): today, who is out playing; another day, the groups booked. */}
                   {selectedDate === today() ? (
-                    <div className="px-4 py-3"><div className="text-[12.5px] text-ink-soft">On the course</div><div className="text-[20px] font-semibold text-ink tabular-nums leading-tight">{onCourseNow.groups}<span className="text-[13px] font-normal text-ink-muted"> {onCourseNow.groups === 1 ? 'group' : 'groups'}</span></div><div className="text-[12px] text-ink-muted tabular-nums">{onCourseNow.players} {onCourseNow.players === 1 ? 'player' : 'players'}</div></div>
+                    <div className={CARD + ' px-4 py-3'}><div className="text-[12.5px] text-ink-soft">On the course</div><div className="text-[20px] font-semibold text-ink tabular-nums leading-tight">{onCourseNow.groups}<span className="text-[13px] font-normal text-ink-muted"> {onCourseNow.groups === 1 ? 'group' : 'groups'}</span></div><div className="text-[12px] text-ink-muted tabular-nums">{onCourseNow.players} {onCourseNow.players === 1 ? 'player' : 'players'}</div></div>
                   ) : (
-                    <div className="px-4 py-3"><div className="text-[12.5px] text-ink-soft">Groups booked</div><div className="text-[20px] font-semibold text-ink tabular-nums leading-tight">{dayGroups}</div><div className="text-[12px] text-ink-muted tabular-nums">on {timesBooked} of {teeTimes.filter(x => x.status !== 'blocked').length} tee times</div></div>
+                    <div className={CARD + ' px-4 py-3'}><div className="text-[12.5px] text-ink-soft">Groups booked</div><div className="text-[20px] font-semibold text-ink tabular-nums leading-tight">{dayGroups}</div><div className="text-[12px] text-ink-muted tabular-nums">on {timesBooked} of {teeTimes.filter(x => x.status !== 'blocked').length} tee times</div></div>
                   )}
-                  <div className="px-4 py-3"><div className="text-[12.5px] text-ink-soft">Checked in</div><div className="text-[20px] font-semibold text-ink tabular-nums leading-tight">{checkedInPlayers}<span className="text-[13px] font-normal text-ink-muted"> of {livePlayers}</span></div><div className="text-[12px] text-ink-muted">players</div></div>
+                  <div className={CARD + ' px-4 py-3'}><div className="text-[12.5px] text-ink-soft">Checked in</div><div className="text-[20px] font-semibold text-ink tabular-nums leading-tight">{checkedInPlayers}<span className="text-[13px] font-normal text-ink-muted"> of {livePlayers}</span></div><div className="text-[12px] text-ink-muted">players</div></div>
                   {dayMoney && dayMoney.date === selectedDate && (<>
-                    <div className="px-4 py-3"><div className="text-[12.5px] text-ink-soft">Paid</div><div className="text-[20px] font-semibold text-ink tabular-nums leading-tight">${(dayMoney.paidCents / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}</div><div className="text-[12px] text-ink-muted tabular-nums">{dayMoney.paidGroups} {dayMoney.paidGroups === 1 ? 'group' : 'groups'}{dayMoney.refundedGroups ? ` · ${dayMoney.refundedGroups} refunded` : ''}</div></div>
+                    <div className={CARD + ' px-4 py-3'}><div className="text-[12.5px] text-ink-soft">Paid</div><div className="text-[20px] font-semibold text-ink tabular-nums leading-tight">${(dayMoney.paidCents / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}</div><div className="text-[12px] text-ink-muted tabular-nums">{dayMoney.paidGroups} {dayMoney.paidGroups === 1 ? 'group' : 'groups'}{dayMoney.refundedGroups ? ` · ${dayMoney.refundedGroups} refunded` : ''}</div></div>
                     {/* STRESS-1110 #15: Not paid yet is today or earlier only (lib/analytics notPaid); a future day has none. */}
-                    {selectedDate <= today() && <div className="px-4 py-3"><div className="text-[12.5px] text-ink-soft">Not paid yet</div><div className={'text-[20px] font-semibold tabular-nums leading-tight ' + (dayMoney.lateGroups > 0 ? 'text-warn' : 'text-ink')}>${(dayMoney.outstandingCents / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}</div><div className="text-[12px] text-ink-muted tabular-nums">{dayMoney.outstandingGroups} {dayMoney.outstandingGroups === 1 ? 'group' : 'groups'}{dayMoney.lateGroups > 0 && <span className="text-warn"> · {dayMoney.lateGroups} past</span>}</div></div>}
+                    {selectedDate <= today() && <div className={CARD + ' px-4 py-3'}><div className="text-[12.5px] text-ink-soft">Not paid yet</div><div className={'text-[20px] font-semibold tabular-nums leading-tight ' + (dayMoney.outstandingCents > 0 ? 'text-bad' : 'text-ink')}>${(dayMoney.outstandingCents / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}</div><div className="text-[12px] text-ink-muted tabular-nums">{dayMoney.outstandingGroups} {dayMoney.outstandingGroups === 1 ? 'group' : 'groups'}{dayMoney.lateGroups > 0 && <span className="text-warn"> · {dayMoney.lateGroups} past</span>}</div></div>}
                   </>)}
                 </div>
               )}
@@ -1619,6 +1622,7 @@ function DashboardPageInner() {
         })();
         const open = panelSlot.playersAvailable - panelSlot.playersBooked;
         const past = selectedDate < today() || (selectedDate === today() && panelSlot.time < nowHM);
+        const nobodyBooked = !(panelSlot.bookings ?? []).some(b => b.status === 'confirmed' || b.status === 'completed');
         return (
           <div className="fixed inset-0 z-40 md:inset-auto md:top-4 md:right-4 md:bottom-4 md:w-[min(520px,calc(100vw-2rem))]">
             <div className="absolute inset-0 bg-ink/20 md:hidden" aria-hidden="true" onClick={() => setPanelId(null)} />
@@ -1691,10 +1695,7 @@ function DashboardPageInner() {
                 {panelSlot.status !== 'blocked' && open > 0 && access.can('sheet.walkin') && (selectedDate > today() || (selectedDate === today() && !lateForAdding(panelSlot.time, nowHM))) && (
                   <button onClick={() => { setWalkInLate(false); setWalkInSlot(panelSlot); }} className="px-3.5 min-h-[36px] rounded-md bg-pine hover:bg-pine-hover text-white text-[13px] font-medium">Add players</button>
                 )}
-                {/* …except a walk-in staff forgot to put on the sheet (Cam 2026-10-27), today only. */}
-                {panelSlot.status !== 'blocked' && open > 0 && access.can('sheet.walkin') && selectedDate === today() && lateForAdding(panelSlot.time, nowHM) && (
-                  <button onClick={() => { setWalkInLate(true); setWalkInSlot(panelSlot); }} className="px-3.5 min-h-[36px] rounded-md border border-line text-[13px] font-medium text-ink hover:bg-paper">Add a walk-in who already played</button>
-                )}
+                {/* TT-CARD (Cam 2026-11-12): the late walk-in button is gone from the card; LATE-ADD's route path stays. */}
                 {/* SEATS-1 (Cam 2026-11-08: "close it by one individual spot or as many as there are"): − closes an open seat,
                     + reopens one. Booked groups are never touched. A full time with nothing closed has nothing to decide. */}
                 {access.can('sheet.block') && !panelSlot.event && !past && panelSlot.status !== 'blocked' && (open > 0 || (panelSlot.seatsClosed ?? 0) > 0) && (() => {
@@ -1720,9 +1721,10 @@ function DashboardPageInner() {
                 {access.can('sheet.block') && !panelSlot.event && !past && panelSlot.status !== 'blocked' && panelSlot.staffOnly && (
                   <button type="button" onClick={() => setSeatAccess(panelSlot, 'anyone')} disabled={slotBusy === panelSlot.id} className="px-2 min-h-[36px] text-[13px] font-medium text-pine hover:underline disabled:opacity-50">Hidden online · show it</button>
                 )}
-                {/* Cam 2026-11-06: never offered while a group is on the time (the route refuses it too). */}
-                {access.can('sheet.edit_times') && !past && !panelSlot.event && !(panelSlot.bookings ?? []).length && (
-                  <button onClick={() => deleteTime(panelSlot)} disabled={slotBusy === panelSlot.id} className="ml-auto px-2 min-h-[36px] rounded-md text-[13px] font-medium text-ink-muted hover:text-bad disabled:opacity-50">Delete time</button>
+                {/* TT-CLOSE (Cam 2026-11-12): Delete time only on a time with nobody booked — the route refuses closing, hiding
+                    or deleting a booked time (lib/tee-time-close). The seat stepper and the undo rows above are unchanged. */}
+                {nobodyBooked && access.can('sheet.edit_times') && !past && !panelSlot.event && (
+                  <button onClick={() => deleteTime(panelSlot)} disabled={slotBusy === panelSlot.id} className="px-2 min-h-[36px] rounded-md text-[13px] font-medium text-bad hover:underline underline-offset-4 disabled:opacity-50">Delete time</button>
                 )}
               </div>
             </aside>

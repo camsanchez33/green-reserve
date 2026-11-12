@@ -38,7 +38,7 @@ export async function setCheckoutExtras(courseId: string, bookingId: string, inp
     });
     if (!b || b.courseId !== courseId) return fail(404, 'Booking not found.');
     if (b.status !== 'confirmed' || b.checkedInAt) return fail(409, 'This group is already checked in — its price can’t change now.');
-    if (b.noShowAt) return fail(409, 'This group is marked a no-show. Use "Still coming" first.');
+    if (b.noShowAt) return fail(409, 'This group is marked a no-show. Use "Undo no-show" first.');
     if (b.paymentStatus === 'paid' || b.paidOffline || b.roundPaymentIntentId || b.shopLockedAt || b.readerStartedAt) return fail(409, 'This round is already paid or being paid — its price can’t change now.');
     if (b.appliedRate === 'pack') return fail(409, 'This group is on a round pack — change it at the register.');
     if (b.teeTime.eventId) return fail(409, 'This is an event time — carts and range balls are set on the event.');

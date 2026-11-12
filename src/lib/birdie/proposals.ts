@@ -16,6 +16,7 @@
 // cancellation policy, Stripe or staff — there is no tool for those, the
 // widget refuses any card body asking for them (proposal-types BODY_RULES),
 // and the system prompt tells Birdie to say so.
+import { ACTIVE_BOOKING } from '../tee-time-close';
 import type Anthropic from '@anthropic-ai/sdk';
 import { prisma } from '../prisma';
 import { listSchedules } from '../schedule-service';
@@ -97,7 +98,7 @@ export const PROPOSE_TOOLS: Anthropic.Beta.BetaTool[] = [
   {
     name: 'propose_block_times',
     description:
-      "Draft blocking (or reopening) the tee times on one day from one time to another, for the operator to confirm. Blocking stops new bookings on those times; groups already booked on them stay booked — nobody is cancelled. This does NOT change anything — it shows a confirm card.",
+      "Draft blocking (or reopening) the tee times on one day from one time to another, for the operator to confirm. Blocking stops new bookings on those times; a time with a group booked on it is left open (it can't be closed until the group is moved or cancelled). This does NOT change anything — it shows a confirm card.",
     input_schema: {
       type: 'object',
       properties: {
@@ -339,15 +340,18 @@ async function blockTimes(input: Record<string, unknown>, ctx: ToolContext): Pro
   const slots = await prisma.teeTime.findMany({
     where: { courseId: ctx.courseId, date, time: { gte: input.from, lte: to } },
     orderBy: { time: 'asc' },
-    select: { id: true, time: true, status: true, playersBooked: true, eventId: true },
+    select: { id: true, time: true, status: true, eventId: true, _count: { select: { bookings: { where: ACTIVE_BOOKING } } } },
   });
+  // TT-CLOSE (Cam 2026-11-12): a time with a group on it can't be closed (the route refuses it), so it's left out.
+  const withGroups = block ? slots.filter(t => t.status !== 'blocked' && t._count.bookings > 0) : [];
   // W2-9: a time an event holds is changed on the event, never reopened here.
   const eventHeld = block ? 0 : slots.filter(t => t.status === 'blocked' && t.eventId).length;
-  const change = slots.filter(t => block ? t.status !== 'blocked' : t.status === 'blocked' && !t.eventId);
+  const change = slots.filter(t => block ? t.status !== 'blocked' && t._count.bookings === 0 : t.status === 'blocked' && !t.eventId);
   if (slots.length === 0) return err(`There are no tee times from ${fmtTime(input.from)} to ${fmtTime(to)} on ${fmtDate(date)}.`);
+  if (change.length === 0 && withGroups.length) return err(`${withGroups.length === 1 ? 'That time has a group' : 'Those times have groups'} booked — move or cancel ${withGroups.length === 1 ? 'it' : 'them'} before closing.`);
   if (change.length === 0) return err(eventHeld ? 'Those times are held for an event — change the event on the Events tab to free them.' : `Those times are already ${block ? 'blocked' : 'open'}.`);
   if (change.length > 60) return err('That’s more than 60 tee times — block the whole day instead.');
-  const booked = change.filter(t => t.playersBooked > 0).length;
+  const booked = withGroups.length;
   const span = change.length === 1 ? fmtTime(change[0].time) : `${fmtTime(change[0].time)} – ${fmtTime(change[change.length - 1].time)}`;
   const calls = change.map(t => ({ method: 'PATCH' as const, path: '/api/operator/tee-times' as const, body: { id: t.id, status: block ? 'blocked' : 'available' } }));
   return shown({
@@ -355,7 +359,7 @@ async function blockTimes(input: Record<string, unknown>, ctx: ToolContext): Pro
     title: `${block ? 'Block' : 'Reopen'} ${change.length} tee time${change.length === 1 ? '' : 's'} on ${fmtDate(date)}`,
     changes: [{ label: span, from: block ? 'Open' : 'Blocked', to: block ? 'Blocked' : 'Open' }],
     note: block
-      ? (booked ? `${booked} of these already ${booked === 1 ? 'has a booked group' : 'have booked groups'} — they stay booked; nobody is cancelled. New bookings stop.` : 'Nobody is booked on these times. New bookings stop.')
+      ? `Nobody is booked on these times. New bookings stop.${booked ? ` ${booked} time${booked === 1 ? ' has a group' : 's have groups'} booked and stay${booked === 1 ? 's' : ''} open — move or cancel ${booked === 1 ? 'it' : 'them'} to close ${booked === 1 ? 'it' : 'them'}.` : ''}`
       : `Golfers can book these times again.${eventHeld ? ` ${eventHeld} time${eventHeld === 1 ? ' is' : 's are'} held for an event and stay${eventHeld === 1 ? 's' : ''} blocked — change the event to free ${eventHeld === 1 ? 'it' : 'them'}.` : ''}`,
     call: calls[0],
     calls,
