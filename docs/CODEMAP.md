@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-703 source files · 302 routes · 253 libraries · 72 models
+704 source files · 302 routes · 253 libraries · 72 models
 
 ## Single sources of truth
 
@@ -74,7 +74,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/admin/messages` | admin | client-side | page | `src/app/admin/messages/page.tsx` | 479 |
 | `/admin/problems` | admin | client-side | page | `src/app/admin/problems/page.tsx` | 240 |
 | `/admin/profile` | admin | client-side | page | `src/app/admin/profile/page.tsx` | 123 |
-| `/admin/revenue` | admin | client-side | page | `src/app/admin/revenue/page.tsx` | 454 |
+| `/admin/revenue` | admin | client-side | page | `src/app/admin/revenue/page.tsx` | 453 |
 | `/admin/security` | admin | client-side | page | `src/app/admin/security/page.tsx` | 220 |
 | `/admin/set-password` | admin | client-side | page | `src/app/admin/set-password/page.tsx` | 159 |
 | `/admin/system` | admin | client-side | page | `src/app/admin/system/page.tsx` | 603 |

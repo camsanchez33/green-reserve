@@ -1,7 +1,7 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 703,
+    "files": 704,
     "routes": 302,
     "libs": 253,
     "models": 72,
@@ -1189,8 +1189,61 @@
       "usedBy": []
     },
     {
+      "path": "src/app/admin/revenue/logic.ts",
+      "lines": 56,
+      "purpose": "Revenue page's pure rules, kept apart so scripts/admin-revenue-test.ts can pin them:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "fallbackQuery",
+          "kind": "fn"
+        },
+        {
+          "name": "fallbackWindow",
+          "kind": "fn"
+        },
+        {
+          "name": "isFallbackAnswer",
+          "kind": "fn"
+        },
+        {
+          "name": "isNewAnswer",
+          "kind": "fn"
+        },
+        {
+          "name": "KIND",
+          "kind": "const"
+        },
+        {
+          "name": "payoutState",
+          "kind": "fn"
+        },
+        {
+          "name": "PayoutState",
+          "kind": "type"
+        },
+        {
+          "name": "pct",
+          "kind": "fn"
+        },
+        {
+          "name": "Per",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/admin/revenue/page.tsx"
+      ]
+    },
+    {
       "path": "src/app/admin/revenue/page.tsx",
-      "lines": 454,
+      "lines": 453,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1207,6 +1260,7 @@
       "imports": [
         "../admin-glass.module.css",
         "../courses/courses.module.css",
+        "./logic",
         "./revenue.module.css",
         "./terms",
         "@/components/admin/AdminSidebar",
@@ -1217,7 +1271,7 @@
     },
     {
       "path": "src/app/admin/revenue/terms.ts",
-      "lines": 21,
+      "lines": 23,
       "purpose": "Revenue (ADMIN-REDO, Cam approved the mockup 2026-11-12):",
       "brain": [],
       "exports": [

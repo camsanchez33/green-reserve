@@ -7,6 +7,7 @@ import g from '../admin-glass.module.css';
 import c from '../courses/courses.module.css';
 import s from './revenue.module.css';
 import { TERMS, NOT_YET, OWNER_ONLY, SESSION_ENDED, loadFailed } from './terms';
+import { type Per, KIND, fallbackQuery, isNewAnswer, isFallbackAnswer, pct, payoutState } from './logic';
 
 // ADMIN-REDO Revenue (Cam approved the mockup 2026-11-12, ADMIN_REDO_SPEC.md "Revenue: APPROVED"): what
 // GreenReserve earns. One column, no tabs; ONE Filter (This month · Last month · Last 30 days · This year) drives
@@ -24,7 +25,6 @@ import { TERMS, NOT_YET, OWNER_ONLY, SESSION_ENDED, loadFailed } from './terms';
 // to the older answer (custom windows compared with the same number of days before) and says "Not available yet"
 // for what it lacks.
 
-type Per = 'month' | 'last' | 'd30' | 'year';
 const PERIODS: { v: Per; label: string }[] = [
   { v: 'month', label: 'This month' }, { v: 'last', label: 'Last month' }, { v: 'd30', label: 'Last 30 days' }, { v: 'year', label: 'This year' },
 ];
@@ -60,22 +60,9 @@ const short = (day: string, withYear = false) => new Date(day + 'T12:00:00Z').to
 const when = (iso: string) => new Date(iso).toLocaleString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 const weekday = (day: string) => new Date(day + 'T12:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' });
 
-/** The route's own period kinds (Build's revenue data). */
-const KIND: Record<Per, string> = { month: 'month', last: 'last_month', d30: '30d', year: 'year' };
 /** What the period is compared with, in words. */
 const versusName = (per: Per, priorLabel?: string) =>
   per === 'month' ? 'last month' : per === 'last' ? (priorLabel ?? 'the month before') : per === 'd30' ? 'the 30 days before' : 'last year';
-
-/** The older route's query: mtd, or a custom window (UTC days) compared with the same number of days before. */
-function fallbackQuery(per: Per, now = new Date()): string {
-  const today = ymd(now);
-  if (per === 'month') return 'period=mtd';
-  if (per === 'd30') return `period=custom&from=${addDays(today, -29)}&to=${today}`;
-  if (per === 'year') return `period=custom&from=${today.slice(0, 4)}-01-01&to=${today}`;
-  const first = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
-  const last = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 0));
-  return `period=custom&from=${ymd(first)}&to=${ymd(last)}`;
-}
 
 type Got<T> = { ok: true; data: T } | { ok: false; msg: string; status?: number };
 async function getJson<T>(url: string, what: string): Promise<Got<T>> {
@@ -124,14 +111,14 @@ function StripeLink({ href }: { href: string }) {
 }
 
 function Change({ pct, vs = 'the period before' }: { pct: number | null; vs?: string }) {
-  if (pct === null) return <span title={TERMS.vsPrior}>{vs ? `Nothing in ${vs}` : 'New'}</span>;
+  if (pct === null) return <span title={TERMS.vsPrior}>{vs ? `No comparison with ${vs}` : '—'}</span>;
   const r = Math.round(pct);
   if (r === 0) return <span title={TERMS.vsPrior}>{vs ? `Same as ${vs}` : 'Same'}</span>;
   return <span title={TERMS.vsPrior}><span className={r > 0 ? g.up : g.down}>{r > 0 ? 'Up' : 'Down'} {Math.abs(r)}%</span>{vs && ` vs ${vs}`}</span>;
 }
 
 /** Running total through the period against the period before, from the route's fees by day. */
-function RunningChart({ current, prior, from, days, done, vs }: { current: number[]; prior: number[]; from: string; days?: number; done: boolean; vs: string }) {
+function RunningChart({ current, prior, from, days, done, vs, unit }: { current: number[]; prior: number[]; from: string; days?: number; done: boolean; vs: string; unit: string }) {
   const run = (a: number[]) => { let t = 0; return a.map(v => (t += v)); };
   const T = run(current), Q = run(prior);
   const n = Math.max(T.length, Q.length, 2);
@@ -141,7 +128,8 @@ function RunningChart({ current, prior, from, days, done, vs }: { current: numbe
   const y = (v: number) => H - pad - (v / max) * (H - 2 * pad);
   const path = (a: number[]) => a.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(' ');
   const total = T[T.length - 1] ?? 0;
-  const priorAt = Q[Math.min(T.length, Q.length) - 1] ?? 0;
+  // A finished period is compared with the whole period before (a 30-day month against all 31 days of the one before).
+  const priorAt = (done ? Q[Q.length - 1] : Q[Math.min(T.length, Q.length) - 1]) ?? 0;
   const ahead = total - priorAt;
   // Labelled by this period's own days (a 31-day prior month may run one step past a 30-day one).
   const span = days ?? n;
@@ -157,7 +145,7 @@ function RunningChart({ current, prior, from, days, done, vs }: { current: numbe
       </svg>
       <div className={s.lab} aria-hidden="true">{labels.map((l, i) => <span key={i}>{l}</span>)}</div>
       <p className={s.sum}>
-        <b>{usd(total)}</b> {done ? 'in the period' : 'so far'} · <span className={ahead >= 0 ? g.up : g.down}>{usd(Math.abs(ahead))} {ahead >= 0 ? 'ahead of' : 'behind'} {vs}</span>{!done && ' at the same day'}
+        <b>{usd(total)}</b>{unit} {done ? 'in the period' : 'so far'} · <span className={ahead >= 0 ? g.up : g.down}>{usd(Math.abs(ahead))} {ahead >= 0 ? 'ahead of' : 'behind'} {vs}</span>{!done && ' at the same day'}
       </p>
     </>
   );
@@ -188,7 +176,12 @@ export default function RevenuePage() {
     setLoading(true); setError(null);
     let r = await getJson<RevenueData>(`/api/admin/revenue?period=${KIND[p]}`, 'Revenue');
     // The older route doesn't know the new kinds (it answers this month for all of them): ask it the old way.
-    if (r.ok && !r.data.revenueSeries) r = await getJson<RevenueData>(`/api/admin/revenue?${fallbackQuery(p)}`, 'Revenue');
+    // Either answer is shown only if it is the period asked for, never another period under this one's name.
+    if (r.ok && !isNewAnswer(p, r.data.period, !!r.data.revenueSeries)) {
+      const now = new Date();
+      r = await getJson<RevenueData>(`/api/admin/revenue?${fallbackQuery(p, now)}`, 'Revenue');
+      if (r.ok && !isFallbackAnswer(p, r.data.period, now)) r = { ok: false, msg: loadFailed('Revenue for this period') };
+    }
     if (mine !== seq.current) return; // a later Filter pick won
     if (r.ok) setD({ ...r.data, per: p }); else setError(r.msg);
     setLoading(false);
@@ -218,8 +211,9 @@ export default function RevenuePage() {
     // Older route: round fees + fees charged on their own; its comparison only covers round fees.
     const separate = ledger ? 0 : shown.pnl.separateFees ?? 0;
     const revenue = ledger ? shown.revenue!.cents / 100 : shown.pnl.feesCollected + separate;
-    const pct = (cur: number, prior: number) => (prior === 0 ? null : ((cur - prior) / prior) * 100);
-    const revenuePct: number | null | undefined = ledger ? pct(shown.revenue!.cents, shown.revenue!.priorCents) : separate === 0 ? shown.pnl.feesCollectedDelta.pct : undefined;
+    // Older route: its comparison covers round fees only while Revenue also counts fees charged on their own,
+    // whose prior it doesn't give — so no comparison until the ledger answer.
+    const revenuePct: number | null | undefined = ledger ? pct(shown.revenue!.cents, shown.revenue!.priorCents) : undefined;
     const live = shown.liveCourses ? shown.liveCourses.count : shown.byCourse.filter(r => r.active && !r.archived).length;
     const avgPct = ledger && shown.liveCourses && shown.liveCourses.count > 0 && shown.liveCourses.priorCount > 0
       ? pct(shown.revenue!.cents / shown.liveCourses.count, shown.revenue!.priorCents / shown.liveCourses.priorCount) : undefined;
@@ -229,14 +223,16 @@ export default function RevenuePage() {
       .sort((a, b) => rev(b) - rev(a) || b.booked - a.booked || a.name.localeCompare(b.name));
     const done = shown.period.elapsedDays !== undefined && shown.period.totalDays !== undefined
       ? shown.period.elapsedDays >= shown.period.totalDays : shown.period.to < ymd(new Date());
+    const elapsed = shown.period.elapsedDays;
     const series = shown.revenueSeries
-      ? { current: shown.revenueSeries.current.map(c => c / 100), prior: shown.revenueSeries.prior.map(c => c / 100) }
+      ? { current: shown.revenueSeries.current.slice(0, elapsed ?? undefined).map(c => c / 100), prior: shown.revenueSeries.prior.map(c => c / 100) }
       : shown.daily ?? null;
     const vs = ledger ? versusName(shown.per, shown.period.priorLabel) : 'the period before';
     return { ledger, separate, revenue, revenuePct, live, avgPct, rev, courses, done, series, vs };
   }, [shown]);
 
-  const problemCourses = (payouts.data?.courses ?? []).filter(x => x.error || !x.payoutsEnabled || x.needsInfo);
+  const ownerNote = shown?.ownerMfaRequired ? 'Sign in again with your second factor to see this' : OWNER_ONLY;
+  const problemCourses = (payouts.data?.courses ?? []).filter(x => payoutState(x) !== null);
   const okCourses = (payouts.data?.courses ?? []).length - problemCourses.length;
 
   return (
@@ -279,13 +275,13 @@ export default function RevenuePage() {
                 <span className={s.c}>{view.revenuePct !== undefined ? <Change pct={view.revenuePct} vs={view.vs} /> : <>vs the period before: {NOT_YET.toLowerCase()}</>}</span>
               </div>
               <div className={`${g.glass} ${s.rkc}`}>
-                <span className={s.l} title={TERMS.average}>Average per live course</span>
+                <span className={s.l} title={view.ledger ? TERMS.average : TERMS.averageNow}>Average per live course</span>
                 {view.live > 0 ? <b className={s.v}>{usd(view.revenue / view.live)}</b> : <b className={s.na}>No live courses</b>}
                 <span className={s.c}>{view.avgPct !== undefined ? <Change pct={view.avgPct} vs={view.vs} /> : <>{view.live} live course{view.live === 1 ? '' : 's'}</>}</span>
               </div>
               <div className={`${g.glass} ${s.rkc}`}>
                 <span className={s.l} title={TERMS.payout}>Stripe payout</span>
-                {!owner ? <><b className={s.na}>—</b><span className={s.c}>{shown.ownerMfaRequired ? 'Sign in with your second factor to see it' : OWNER_ONLY}</span></>
+                {!owner ? <><b className={s.na}>—</b><span className={s.c}>{ownerNote}</span></>
                   : platform.err ? <Retry msg={platform.err} onRetry={platform.load} busy={platform.busy} />
                   : !platform.data ? <><b className={s.na} aria-busy="true">…</b><span className={s.c}>Asking Stripe</span></>
                   : platform.data.nextPayout ? <><b className={s.v}>{usd(platform.data.nextPayout.amount)}</b><span className={s.c}>Arrives {weekday(platform.data.nextPayout.arrivalDate)}</span></>
@@ -299,25 +295,28 @@ export default function RevenuePage() {
                 <span className={s.leg}><span><i className={s.sw} />{label}</span><span title={TERMS.vsPrior}><i className={s.swPrev} />{view.vs.charAt(0).toUpperCase() + view.vs.slice(1)}</span></span>
               </div>
               {view.series
-                ? <RunningChart current={view.series.current} prior={view.series.prior} from={shown.period.from} days={shown.period.totalDays} done={view.done} vs={view.vs} />
+                ? <RunningChart current={view.series.current} prior={view.series.prior} from={shown.period.from} days={shown.period.totalDays} done={view.done} vs={view.vs} unit={view.ledger ? '' : ' in round fees'} />
                 : <p className={s.muted}>{NOT_YET}</p>}
-              {view.separate !== 0 && <p className={s.note}>{usd(view.separate)} in fees charged on their own is in Revenue but not in the chart yet.</p>}
+              {!view.ledger && <p className={s.note}>The chart is round fees only{view.separate !== 0 ? `; ${usd(view.separate)} in fees charged on their own is in Revenue but not in it` : ''}.</p>}
             </section>
 
             <div className={s.stack}>
               <section className={`${g.glass} ${s.pad}`} aria-label="Course payments">
                 <div className={s.rh}><h2 title={TERMS.coursePayments}>Course payments</h2>{owner && <StripeLink href="https://dashboard.stripe.com/connect/accounts/overview" />}</div>
-                {!owner ? <p className={s.muted}>{OWNER_ONLY}</p>
+                {!owner ? <p className={s.muted}>{ownerNote}</p>
                   : payouts.err ? <Retry msg={payouts.err} onRetry={payouts.load} busy={payouts.busy} />
                   : !payouts.data ? <p className={s.muted} aria-busy="true">Asking Stripe…</p>
                   : (
                     <div className={s.rows}>
-                      {problemCourses.map(x => (
-                        <div key={x.courseId}>
-                          <span>{x.name}<small>{x.error ? `Couldn't read its payouts: ${x.error}` : !x.payoutsEnabled ? 'Stripe has paused its payouts' : 'Stripe needs information from it'}</small></span>
-                          <b className={g.down}>Not paid</b>
-                        </div>
-                      ))}
+                      {problemCourses.map(x => {
+                        const st = payoutState(x)!;
+                        return (
+                          <div key={x.courseId}>
+                            <span>{x.name}<small>{x.error ? x.error : !x.payoutsEnabled ? 'Stripe has paused its payouts' : 'Paying out; Stripe wants more information'}</small></span>
+                            <b className={st.tone === 'bad' ? g.down : g.wa}>{st.label}</b>
+                          </div>
+                        );
+                      })}
                       {shown.coursePayoutProblems?.rows.map((x, i) => (
                         <div key={`${x.courseId}-${i}`}>
                           <span>{x.name}<small>Payout to its bank {x.kind === 'failed' ? 'failed' : 'came up short'} {short(x.at.slice(0, 10))}{x.reason && ` · ${x.reason}`}</small></span>
@@ -336,7 +335,7 @@ export default function RevenuePage() {
 
               <section className={`${g.glass} ${s.pad}`} aria-label="Payouts">
                 <div className={s.rh}><h2>Payouts</h2>{owner && <StripeLink href="https://dashboard.stripe.com/payouts" />}</div>
-                {!owner ? <p className={s.muted}>{OWNER_ONLY}</p>
+                {!owner ? <p className={s.muted}>{ownerNote}</p>
                   : platform.err ? <Retry msg={platform.err} onRetry={platform.load} busy={platform.busy} />
                   : !platform.data ? <p className={s.muted} aria-busy="true">Asking Stripe…</p>
                   : (
@@ -353,7 +352,7 @@ export default function RevenuePage() {
 
               <section className={`${g.glass} ${s.pad}`} aria-label="Books vs Stripe">
                 <div className={s.rh}><h2 title={TERMS.books}>Books vs Stripe</h2></div>
-                {!owner ? <p className={s.muted}>{OWNER_ONLY}</p> : (
+                {!owner ? <p className={s.muted}>{ownerNote}</p> : (
                   <div className={s.rows}>
                     {shown.reconciliation && (
                       <div>
@@ -397,7 +396,7 @@ export default function RevenuePage() {
                     <thead><tr>
                       <th>Course</th>
                       <th className={s.n} title={TERMS.bookings}>Bookings</th>
-                      <th className={s.n} title={TERMS.courseRevenue}>Revenue</th>
+                      <th className={s.n} title={view.ledger ? TERMS.courseRevenue : TERMS.courseRoundFees}>Revenue</th>
                       <th className={`${s.n} ${s.hideS}`} title={TERMS.vsPrior}>vs {view.vs}</th>
                     </tr></thead>
                     <tbody>
@@ -406,7 +405,7 @@ export default function RevenuePage() {
                           <td><Link href={`/admin/courses/${r.courseId}`}>{r.name}</Link></td>
                           <td className={s.n}>{r.booked.toLocaleString('en-US')}</td>
                           <td className={s.n}>{usd(view.rev(r))}</td>
-                          <td className={`${s.n} ${s.hideS}`}>{r.revenueCents === undefined || r.priorRevenueCents === undefined ? <span title={NOT_YET}>—</span> : <Change pct={r.priorRevenueCents === 0 ? null : ((r.revenueCents - r.priorRevenueCents) / r.priorRevenueCents) * 100} vs="" />}</td>
+                          <td className={`${s.n} ${s.hideS}`}>{r.revenueCents === undefined || r.priorRevenueCents === undefined ? <span title={NOT_YET}>—</span> : <Change pct={pct(r.revenueCents, r.priorRevenueCents)} vs="" />}</td>
                         </tr>
                       ))}
                     </tbody>

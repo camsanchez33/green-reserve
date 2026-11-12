@@ -170,22 +170,22 @@ export default function AdminOverview() {
                 </Link>
               )}
               {d.expenses && (
-                <Link href="/admin/revenue" className={`${g.glass} ${g.kpi}`}>
-                  <span className={g.kpiL} title="The month's expenses as the Revenue page counts them">Expenses</span>
+                <Link href="/admin/expenses" className={`${g.glass} ${g.kpi}`}>
+                  <span className={g.kpiL} title="The month's share of the company's expenses (Expenses page)">Expenses</span>
                   <span className={g.kpiV}>{money(d.expenses.cents)}</span>
                   <span className={g.kpiC}>{versus(d.expenses.cents, d.expenses.priorCents, money, false, true)}</span>
                 </Link>
               )}
               {d.feesMissed && (
-                <Link href="/admin/revenue?tab=uncollected" className={`${g.glass} ${g.kpi}`}>
+                <Link href="/admin/courses" className={`${g.glass} ${g.kpi}`}>
                   <span className={g.kpiL} title="Service fees not collected because the round was paid in cash at the counter">Fees missed</span>
                   <span className={g.kpiV}>{money(d.feesMissed.cents)}</span>
                   <span className={g.kpiC}>{versus(d.feesMissed.cents, d.feesMissed.priorCents, money, false, true)}</span>
                 </Link>
               )}
               {d.net && (
-                <Link href="/admin/revenue" className={`${g.glass} ${g.kpi} ${g.t2}`}>
-                  <span className={g.kpiL} title="Service fees, less Stripe's processing and the month's expenses — the Revenue page's net">Net profit</span>
+                <Link href="/admin/expenses" className={`${g.glass} ${g.kpi} ${g.t2}`}>
+                  <span className={g.kpiL} title="Service fees, less Stripe's processing and the month's expenses">Net profit</span>
                   <span className={g.kpiV}>{d.net.cents === null ? '—' : money(d.net.cents)}</span>
                   <span className={g.kpiC}>{d.net.cents === null || d.net.priorCents === null
                     ? "Stripe couldn't be read"
