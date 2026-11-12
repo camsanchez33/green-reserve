@@ -18,9 +18,11 @@ import { TERMS, NOT_YET, OWNER_ONLY, SESSION_ENDED, loadFailed } from './terms';
 //   /api/admin/platform-stripe  owner: the next payout to our bank and the Stripe balance
 //   /api/admin/course-payouts   owner: each course's payout state at Stripe
 //   /api/admin/stripe-match     owner: the last full months, our books against Stripe
-// What the routes don't answer yet shows "Not available yet" (asked of Build 2026-11-12): the ledger, prior
-// revenue per course, failed or short course payouts, paid out to courses in the period, and the period kinds
-// last_month / 30d / year (until then they are custom windows compared with the same number of days before).
+// Build's revenue data (claude/build-revenue-data, 2026-11-12) adds the period kinds month / last_month / 30d /
+// year, ledger revenue and its series, live courses, prior revenue per course, the GreenReserve-side ledger (+ CSV)
+// and, for the owner, course payout problems and paid out to courses. Until that route is live the page falls back
+// to the older answer (custom windows compared with the same number of days before) and says "Not available yet"
+// for what it lacks.
 
 type Per = 'month' | 'last' | 'd30' | 'year';
 const PERIODS: { v: Per; label: string }[] = [
@@ -28,9 +30,17 @@ const PERIODS: { v: Per; label: string }[] = [
 ];
 
 interface Delta { pct: number | null; direction: 'up' | 'down' | 'flat' | null }
-interface CourseRow { courseId: string; name: string; active: boolean; archived: boolean; booked: number; serviceFees: number }
+interface CourseRow { courseId: string; name: string; active: boolean; archived: boolean; booked: number; serviceFees: number; revenueCents?: number; priorRevenueCents?: number }
+interface LedgerRow { id: string; at: string; bookingId: string | null; bookingRef: string | null; courseId: string; courseName: string; what: string; amountCents: number; stripeUrl: string | null }
+interface PayoutProblem { courseId: string; name: string; kind: 'failed' | 'short'; amountCents: number; at: string; reason: string; stripeUrl: string | null }
 interface RevenueData {
-  period: { kind: string; label: string; from: string; to: string };
+  period: { kind: string; label: string; from: string; to: string; priorLabel?: string; elapsedDays?: number; totalDays?: number };
+  revenue?: { cents: number; priorCents: number };
+  revenueSeries?: { current: number[]; prior: number[] };
+  liveCourses?: { count: number; priorCount: number };
+  ledger?: { rows: LedgerRow[]; truncated: boolean };
+  coursePayoutProblems?: { rows: PayoutProblem[]; unavailable: boolean };
+  payouts?: { toCourses: { cents: number; courses: number } | null; unavailable: boolean };
   isOwner: boolean;
   ownerMfaRequired?: boolean;
   pnl: { feesCollected: number; feesCollectedDelta: Delta; separateFees?: number };
@@ -47,11 +57,17 @@ const usd = (n: number) => (n < 0 ? '−' : '') + '$' + Math.abs(n).toLocaleStri
 const ymd = (d: Date) => d.toISOString().slice(0, 10);
 const addDays = (day: string, n: number) => ymd(new Date(Date.parse(day + 'T00:00:00Z') + n * DAY));
 const short = (day: string, withYear = false) => new Date(day + 'T12:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', ...(withYear ? { year: 'numeric' } : {}) });
+const when = (iso: string) => new Date(iso).toLocaleString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 const weekday = (day: string) => new Date(day + 'T12:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' });
 
-/** The query for a period. The route answers mtd today; the other three are custom windows (UTC days) until
- *  Build adds them as their own kinds. */
-function query(per: Per, now = new Date()): string {
+/** The route's own period kinds (Build's revenue data). */
+const KIND: Record<Per, string> = { month: 'month', last: 'last_month', d30: '30d', year: 'year' };
+/** What the period is compared with, in words. */
+const versusName = (per: Per, priorLabel?: string) =>
+  per === 'month' ? 'last month' : per === 'last' ? (priorLabel ?? 'the month before') : per === 'd30' ? 'the 30 days before' : 'last year';
+
+/** The older route's query: mtd, or a custom window (UTC days) compared with the same number of days before. */
+function fallbackQuery(per: Per, now = new Date()): string {
   const today = ymd(now);
   if (per === 'month') return 'period=mtd';
   if (per === 'd30') return `period=custom&from=${addDays(today, -29)}&to=${today}`;
@@ -107,15 +123,15 @@ function StripeLink({ href }: { href: string }) {
   return <a className={s.ico} href={href} target="_blank" rel="noopener noreferrer" aria-label="Open in Stripe" title="Open in Stripe"><ArrowIcon /></a>;
 }
 
-function Change({ pct }: { pct: number | null }) {
-  if (pct === null) return <span title={TERMS.vsPrior}>Nothing the period before</span>;
+function Change({ pct, vs = 'the period before' }: { pct: number | null; vs?: string }) {
+  if (pct === null) return <span title={TERMS.vsPrior}>{vs ? `Nothing in ${vs}` : 'New'}</span>;
   const r = Math.round(pct);
-  if (r === 0) return <span title={TERMS.vsPrior}>Same as the period before</span>;
-  return <span title={TERMS.vsPrior}><span className={r > 0 ? g.up : g.down}>{r > 0 ? 'Up' : 'Down'} {Math.abs(r)}%</span> vs the period before</span>;
+  if (r === 0) return <span title={TERMS.vsPrior}>{vs ? `Same as ${vs}` : 'Same'}</span>;
+  return <span title={TERMS.vsPrior}><span className={r > 0 ? g.up : g.down}>{r > 0 ? 'Up' : 'Down'} {Math.abs(r)}%</span>{vs && ` vs ${vs}`}</span>;
 }
 
 /** Running total through the period against the period before, from the route's fees by day. */
-function RunningChart({ current, prior, from, done }: { current: number[]; prior: number[]; from: string; done: boolean }) {
+function RunningChart({ current, prior, from, days, done, vs }: { current: number[]; prior: number[]; from: string; days?: number; done: boolean; vs: string }) {
   const run = (a: number[]) => { let t = 0; return a.map(v => (t += v)); };
   const T = run(current), Q = run(prior);
   const n = Math.max(T.length, Q.length, 2);
@@ -127,12 +143,13 @@ function RunningChart({ current, prior, from, done }: { current: number[]; prior
   const total = T[T.length - 1] ?? 0;
   const priorAt = Q[Math.min(T.length, Q.length) - 1] ?? 0;
   const ahead = total - priorAt;
-  const last = addDays(from, n - 1);
-  const labels = [short(from), short(addDays(from, Math.floor((n - 1) / 2))), short(last)];
+  // Labelled by this period's own days (a 31-day prior month may run one step past a 30-day one).
+  const span = days ?? n;
+  const labels = [short(from), short(addDays(from, Math.floor((span - 1) / 2))), short(addDays(from, span - 1))];
   return (
     <>
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className={s.line} role="img"
-        aria-label={`Revenue ${usd(total)} so far, ${usd(Math.abs(ahead))} ${ahead >= 0 ? 'ahead of' : 'behind'} the period before`}>
+        aria-label={`Revenue ${usd(total)} so far, ${usd(Math.abs(ahead))} ${ahead >= 0 ? 'ahead of' : 'behind'} ${vs}`}>
         {[0.25, 0.5, 0.75].map(f => <line key={f} x1="0" x2={W} y1={H * f} y2={H * f} className={s.gl} />)}
         {Q.length > 1 && <path d={path(Q)} className={s.lp} />}
         {T.length > 1 && <path d={`${path(T)} L${x(T.length - 1)} ${H - pad} L${x(0)} ${H - pad} Z`} className={s.la} />}
@@ -140,7 +157,7 @@ function RunningChart({ current, prior, from, done }: { current: number[]; prior
       </svg>
       <div className={s.lab} aria-hidden="true">{labels.map((l, i) => <span key={i}>{l}</span>)}</div>
       <p className={s.sum}>
-        <b>{usd(total)}</b> {done ? 'in the period' : 'so far'} · <span className={ahead >= 0 ? g.up : g.down}>{usd(Math.abs(ahead))} {ahead >= 0 ? 'ahead of' : 'behind'} the period before</span>{!done && ' at the same day'}
+        <b>{usd(total)}</b> {done ? 'in the period' : 'so far'} · <span className={ahead >= 0 ? g.up : g.down}>{usd(Math.abs(ahead))} {ahead >= 0 ? 'ahead of' : 'behind'} {vs}</span>{!done && ' at the same day'}
       </p>
     </>
   );
@@ -169,7 +186,9 @@ export default function RevenuePage() {
   const load = useCallback(async (p: Per) => {
     const mine = ++seq.current;
     setLoading(true); setError(null);
-    const r = await getJson<RevenueData>(`/api/admin/revenue?${query(p)}`, 'Revenue');
+    let r = await getJson<RevenueData>(`/api/admin/revenue?period=${KIND[p]}`, 'Revenue');
+    // The older route doesn't know the new kinds (it answers this month for all of them): ask it the old way.
+    if (r.ok && !r.data.revenueSeries) r = await getJson<RevenueData>(`/api/admin/revenue?${fallbackQuery(p)}`, 'Revenue');
     if (mine !== seq.current) return; // a later Filter pick won
     if (r.ok) setD({ ...r.data, per: p }); else setError(r.msg);
     setLoading(false);
@@ -195,14 +214,26 @@ export default function RevenuePage() {
 
   const view = useMemo(() => {
     if (!shown) return null;
-    const separate = shown.pnl.separateFees ?? 0;
-    const revenue = shown.pnl.feesCollected + separate;
-    const live = shown.byCourse.filter(r => r.active && !r.archived).length;
+    const ledger = !!shown.revenue;
+    // Older route: round fees + fees charged on their own; its comparison only covers round fees.
+    const separate = ledger ? 0 : shown.pnl.separateFees ?? 0;
+    const revenue = ledger ? shown.revenue!.cents / 100 : shown.pnl.feesCollected + separate;
+    const pct = (cur: number, prior: number) => (prior === 0 ? null : ((cur - prior) / prior) * 100);
+    const revenuePct: number | null | undefined = ledger ? pct(shown.revenue!.cents, shown.revenue!.priorCents) : separate === 0 ? shown.pnl.feesCollectedDelta.pct : undefined;
+    const live = shown.liveCourses ? shown.liveCourses.count : shown.byCourse.filter(r => r.active && !r.archived).length;
+    const avgPct = ledger && shown.liveCourses && shown.liveCourses.count > 0 && shown.liveCourses.priorCount > 0
+      ? pct(shown.revenue!.cents / shown.liveCourses.count, shown.revenue!.priorCents / shown.liveCourses.priorCount) : undefined;
+    const rev = (r: CourseRow) => (r.revenueCents !== undefined ? r.revenueCents / 100 : r.serviceFees);
     const courses = shown.byCourse
-      .filter(r => (r.active && !r.archived) || r.booked > 0 || r.serviceFees !== 0)
-      .sort((a, b) => b.serviceFees - a.serviceFees || b.booked - a.booked || a.name.localeCompare(b.name));
-    const done = shown.period.to < ymd(new Date());
-    return { separate, revenue, live, courses, done };
+      .filter(r => (r.active && !r.archived) || r.booked > 0 || rev(r) !== 0)
+      .sort((a, b) => rev(b) - rev(a) || b.booked - a.booked || a.name.localeCompare(b.name));
+    const done = shown.period.elapsedDays !== undefined && shown.period.totalDays !== undefined
+      ? shown.period.elapsedDays >= shown.period.totalDays : shown.period.to < ymd(new Date());
+    const series = shown.revenueSeries
+      ? { current: shown.revenueSeries.current.map(c => c / 100), prior: shown.revenueSeries.prior.map(c => c / 100) }
+      : shown.daily ?? null;
+    const vs = ledger ? versusName(shown.per, shown.period.priorLabel) : 'the period before';
+    return { ledger, separate, revenue, revenuePct, live, avgPct, rev, courses, done, series, vs };
   }, [shown]);
 
   const problemCourses = (payouts.data?.courses ?? []).filter(x => x.error || !x.payoutsEnabled || x.needsInfo);
@@ -245,12 +276,12 @@ export default function RevenuePage() {
               <div className={`${g.glass} ${s.rkc}`}>
                 <span className={s.l} title={TERMS.revenue}>Revenue</span>
                 <b className={s.v}>{usd(view.revenue)}</b>
-                <span className={s.c}>{view.separate === 0 ? <Change pct={shown.pnl.feesCollectedDelta.pct} /> : <>vs the period before: {NOT_YET.toLowerCase()}</>}</span>
+                <span className={s.c}>{view.revenuePct !== undefined ? <Change pct={view.revenuePct} vs={view.vs} /> : <>vs the period before: {NOT_YET.toLowerCase()}</>}</span>
               </div>
               <div className={`${g.glass} ${s.rkc}`}>
                 <span className={s.l} title={TERMS.average}>Average per live course</span>
                 {view.live > 0 ? <b className={s.v}>{usd(view.revenue / view.live)}</b> : <b className={s.na}>No live courses</b>}
-                <span className={s.c}>{view.live} live course{view.live === 1 ? '' : 's'}</span>
+                <span className={s.c}>{view.avgPct !== undefined ? <Change pct={view.avgPct} vs={view.vs} /> : <>{view.live} live course{view.live === 1 ? '' : 's'}</>}</span>
               </div>
               <div className={`${g.glass} ${s.rkc}`}>
                 <span className={s.l} title={TERMS.payout}>Stripe payout</span>
@@ -265,10 +296,10 @@ export default function RevenuePage() {
             <section className={`${g.glass} ${s.pad}`} aria-label="Revenue over the period">
               <div className={s.rh}>
                 <h2>Revenue, {label.toLowerCase()}</h2>
-                <span className={s.leg}><span><i className={s.sw} />{label}</span><span title={TERMS.vsPrior}><i className={s.swPrev} />The period before</span></span>
+                <span className={s.leg}><span><i className={s.sw} />{label}</span><span title={TERMS.vsPrior}><i className={s.swPrev} />{view.vs.charAt(0).toUpperCase() + view.vs.slice(1)}</span></span>
               </div>
-              {shown.daily
-                ? <RunningChart current={shown.daily.current} prior={shown.daily.prior} from={shown.period.from} done={view.done} />
+              {view.series
+                ? <RunningChart current={view.series.current} prior={view.series.prior} from={shown.period.from} days={shown.period.totalDays} done={view.done} vs={view.vs} />
                 : <p className={s.muted}>{NOT_YET}</p>}
               {view.separate !== 0 && <p className={s.note}>{usd(view.separate)} in fees charged on their own is in Revenue but not in the chart yet.</p>}
             </section>
@@ -287,8 +318,18 @@ export default function RevenuePage() {
                           <b className={g.down}>Not paid</b>
                         </div>
                       ))}
-                      <div><span>Failed or short payouts<small>This period</small></span><b className={s.na}>{NOT_YET}</b></div>
-                      {okCourses > 0 && <div><span>{problemCourses.length ? 'Every other course' : `All ${okCourses} course${okCourses === 1 ? '' : 's'}`}<small>Payouts on at Stripe</small></span><b className={g.up}>OK</b></div>}
+                      {shown.coursePayoutProblems?.rows.map((x, i) => (
+                        <div key={`${x.courseId}-${i}`}>
+                          <span>{x.name}<small>Payout to its bank {x.kind === 'failed' ? 'failed' : 'came up short'} {short(x.at.slice(0, 10))}{x.reason && ` · ${x.reason}`}</small></span>
+                          <b className={g.down}>{usd(x.amountCents / 100)}{x.stripeUrl && <> <StripeLink href={x.stripeUrl} /></>}</b>
+                        </div>
+                      ))}
+                      {!shown.coursePayoutProblems ? <div><span>Failed or short payouts<small>{label}</small></span><b className={s.na}>{NOT_YET}</b></div>
+                        : shown.coursePayoutProblems.unavailable ? <div><span>Failed or short payouts<small>{label}</small></span><b className={g.wa}>Stripe didn&rsquo;t answer</b></div>
+                        : problemCourses.length + shown.coursePayoutProblems.rows.length === 0
+                          ? <div><span>Every course<small>Paid in full</small></span><b className={g.up}>OK</b></div>
+                          : <div><span>Every other course<small>Paid in full</small></span><b className={g.up}>OK</b></div>}
+                      {!shown.coursePayoutProblems && okCourses > 0 && <div><span>{problemCourses.length ? 'Every other course' : `All ${okCourses} course${okCourses === 1 ? '' : 's'}`}<small>Payouts on at Stripe</small></span><b className={g.up}>OK</b></div>}
                     </div>
                   )}
               </section>
@@ -302,7 +343,10 @@ export default function RevenuePage() {
                     <div className={s.rows}>
                       <div><span>To our bank<small>{platform.data.nextPayout ? `Next: ${weekday(platform.data.nextPayout.arrivalDate)}` : 'Nothing on the way'}</small></span><b>{platform.data.nextPayout ? usd(platform.data.nextPayout.amount) : '—'}</b></div>
                       <div><span>Balance at Stripe<small>Available now</small></span><b>{usd(platform.data.balance.available)}</b></div>
-                      <div><span>To the courses<small>{label}</small></span><b className={s.na}>{NOT_YET}</b></div>
+                      {shown.payouts?.toCourses
+                        ? <div><span>To the courses<small>{label}, {shown.payouts.toCourses.courses} course{shown.payouts.toCourses.courses === 1 ? '' : 's'}</small></span><b>{usd(shown.payouts.toCourses.cents / 100)}</b></div>
+                        : shown.payouts?.unavailable ? <div><span>To the courses<small>{label}</small></span><b className={g.wa}>Stripe didn&rsquo;t answer</b></div>
+                        : <div><span>To the courses<small>{label}</small></span><b className={s.na}>{NOT_YET}</b></div>}
                     </div>
                   )}
               </section>
@@ -340,8 +384,8 @@ export default function RevenuePage() {
                 {view.courses.length > 0 && (
                   <button type="button" className={s.ico} aria-label="Download CSV" title="Download CSV"
                     onClick={() => download(`revenue-by-course-${shown.period.from}-to-${shown.period.to}.csv`, [
-                      ['Course', 'Bookings', 'Revenue'],
-                      ...view.courses.map(r => [r.name, r.booked, r.serviceFees.toFixed(2)]),
+                      ['Course', 'Bookings', 'Revenue', 'Revenue the period before'],
+                      ...view.courses.map(r => [r.name, r.booked, view.rev(r).toFixed(2), r.priorRevenueCents !== undefined ? (r.priorRevenueCents / 100).toFixed(2) : '']),
                     ])}>
                     <DownloadIcon />
                   </button>
@@ -354,15 +398,15 @@ export default function RevenuePage() {
                       <th>Course</th>
                       <th className={s.n} title={TERMS.bookings}>Bookings</th>
                       <th className={s.n} title={TERMS.courseRevenue}>Revenue</th>
-                      <th className={`${s.n} ${s.hideS}`} title={TERMS.vsPrior}>vs the period before</th>
+                      <th className={`${s.n} ${s.hideS}`} title={TERMS.vsPrior}>vs {view.vs}</th>
                     </tr></thead>
                     <tbody>
                       {view.courses.map(r => (
                         <tr key={r.courseId}>
                           <td><Link href={`/admin/courses/${r.courseId}`}>{r.name}</Link></td>
                           <td className={s.n}>{r.booked.toLocaleString('en-US')}</td>
-                          <td className={s.n}>{usd(r.serviceFees)}</td>
-                          <td className={`${s.n} ${s.hideS}`} title={NOT_YET}>—</td>
+                          <td className={s.n}>{usd(view.rev(r))}</td>
+                          <td className={`${s.n} ${s.hideS}`}>{r.revenueCents === undefined || r.priorRevenueCents === undefined ? <span title={NOT_YET}>—</span> : <Change pct={r.priorRevenueCents === 0 ? null : ((r.revenueCents - r.priorRevenueCents) / r.priorRevenueCents) * 100} vs="" />}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -372,8 +416,34 @@ export default function RevenuePage() {
             </section>
 
             <section className={`${g.glass} ${s.pad}`} aria-label="Ledger">
-              <div className={s.rh}><h2>Ledger</h2></div>
-              <p className={s.muted}>{NOT_YET}</p>
+              <div className={s.rh}>
+                <h2 title={TERMS.ledger}>Ledger</h2>
+                {shown.ledger && shown.ledger.rows.length > 0 && (
+                  <a className={s.ico} href={`/api/admin/revenue?period=${KIND[shown.per]}&format=csv`} download aria-label="Download CSV" title="Download CSV"><DownloadIcon /></a>
+                )}
+              </div>
+              {!shown.ledger ? <p className={s.muted}>{NOT_YET}</p>
+                : shown.ledger.rows.length === 0 ? <p className={s.muted}>No money of ours moved in this period.</p>
+                : (
+                  <div className={s.tw}>
+                    <table className={s.rt}>
+                      <thead><tr><th>When</th><th>Booking</th><th className={s.hideS}>Course</th><th>What</th><th className={s.n}>Amount</th><th className={s.hideS}><span className="sr-only">Stripe</span></th></tr></thead>
+                      <tbody>
+                        {shown.ledger.rows.map(r => (
+                          <tr key={r.id}>
+                            <td className={s.nw}>{when(r.at)}</td>
+                            <td className={s.bn}>{r.bookingRef ?? '—'}</td>
+                            <td className={s.hideS}>{r.courseName}</td>
+                            <td>{r.what}</td>
+                            <td className={`${s.n} ${r.amountCents < 0 ? g.down : ''}`}>{usd(r.amountCents / 100)}</td>
+                            <td className={s.hideS}>{r.stripeUrl && <StripeLink href={r.stripeUrl} />}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {shown.ledger.truncated && <p className={s.note}>Showing the newest {shown.ledger.rows.length}. The download has every row.</p>}
+                  </div>
+                )}
             </section>
           </>
         )}

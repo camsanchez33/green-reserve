@@ -2,13 +2,14 @@
 // behind the label, not on the page) and the page's fixed wording.
 
 export const TERMS = {
-  revenue: "GreenReserve's service fees on rounds paid in the period, plus fees charged on their own, less fees given back",
-  average: 'Revenue divided by the courses live now (active and not archived; test courses never count)',
+  revenue: "GreenReserve's own money in the period: every fee we took, less every fee we gave back",
+  average: 'Revenue divided by the courses live at the end of the period (test courses never count)',
   payout: "The next payout from GreenReserve's Stripe balance to our bank",
-  vsPrior: 'The same number of days just before this period, up to the same point',
+  vsPrior: 'The period before this one, up to the same point when this one is still running',
   bookings: 'Bookings made in the period that are still on (confirmed or played)',
-  courseRevenue: 'Service fees on rounds paid at this course in the period',
+  courseRevenue: "GreenReserve's fees from this course in the period, less fees given back",
   books: 'Service fees we recorded against what Stripe reports as application fees for the same dates',
+  ledger: "Every movement of GreenReserve's own money in the period: our fee taken or given back, one row each",
   coursePayments: "Only a course that wasn't paid right shows here. Golfer disputes are the course's, with its player",
 } as const;
 

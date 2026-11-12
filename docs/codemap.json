@@ -1190,7 +1190,7 @@
     },
     {
       "path": "src/app/admin/revenue/page.tsx",
-      "lines": 384,
+      "lines": 454,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1217,7 +1217,7 @@
     },
     {
       "path": "src/app/admin/revenue/terms.ts",
-      "lines": 20,
+      "lines": 21,
       "purpose": "Revenue (ADMIN-REDO, Cam approved the mockup 2026-11-12):",
       "brain": [],
       "exports": [
