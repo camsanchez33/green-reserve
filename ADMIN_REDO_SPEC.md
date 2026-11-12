@@ -217,3 +217,13 @@ Every goal bar fills with progress so far, and its COLOUR says where the period 
 - Revenue / bookings (admin Revenue's revenue goal, course dashboard Home goals): green = on pace to hit · yellow = within 10% short · red = on pace to miss.
 Pace = progress so far ÷ elapsed share of the period, projected to the period's end. One shared helper for admin and
 dashboard. Admin Revenue gains a revenue-goal card (owner sets it); Expenses gains a monthly budget (owner sets it).
+
+## Expenses: APPROVED (Cam 2026-11-12)
+Mockup `lanes/admin/expenses-mockup.html` (final). Owner only.
+- Glass "Filter" and "+ Add" buttons side by side.
+- Cards: Monthly costs (vs last month) · <Month> budget (spent of budget; the bar is coloured by pace: green under, yellow within 10%, red over; with the forecast for month end) · Spent this year (vs last year by today).
+- Big numbers in ink. Colour only on the change line and the bar: coral, honey, leaf.
+- Table: What it is · Category · How much · How often.
+- Card: when it renews ("Renews in X days · date") or "Finished"/"Paid once", then the details shown saved. Pills at the top: Edit · End it/Restart · Delete. History is just a dated log, with no explanation text.
+- Real categories: Infrastructure · Tools & services · Legal & professional · Other. Financial analytics uses the same four.
+- Needs (Build): a monthly expense budget the owner sets, and expense change history.
