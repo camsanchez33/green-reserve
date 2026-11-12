@@ -13,13 +13,13 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { useAdminSession } from '@/lib/admin-session-context';
 import { adminFetch, type AdminFetchFailure } from '@/lib/admin-fetch';
-import { formatDateTime, formatDate } from '@/lib/format';
+import { formatDateTime } from '@/lib/format';
 import g from '../admin-glass.module.css';
 import r from '../revenue/revenue.module.css';
 import s from './announcements.module.css';
 import {
   type Broadcast, type SendOutcome, type Reach,
-  pl, firstLine, matches, isBroadcasts, outcomeLine, outcomeBad, reachLine,
+  pl, firstLine, listDate, matches, isBroadcasts, outcomeLine, outcomeBad, reachLine,
 } from './logic';
 
 type Failure = { msg: string; kind: AdminFetchFailure };
@@ -136,7 +136,7 @@ function AnnouncementsContent() {
                   <b>{b.title}</b>
                   <span className={s.pv}>{firstLine(b.body)}</span>
                   <span className={s.dm}>{b.dismissalCount > 0 ? `${b.dismissalCount} dismissed` : ''}</span>
-                  <span className={s.dt}>{formatDate(b.createdAt)}</span>
+                  <span className={s.dt}>{listDate(b.createdAt)}</span>
                   <span className="sr-only">{b.emailSent ? 'Emailed' : 'Dashboard only'}</span>
                 </button>
               </li>

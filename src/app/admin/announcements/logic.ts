@@ -40,3 +40,10 @@ export function reachLine(reach: Reach | null, email: boolean): string {
   const dash = reach ? pl(reach.courses, 'course dashboard') : 'every live course’s dashboard';
   return `Shows on ${dash}${email ? ` and emails ${reach ? pl(reach.operators, 'operator') : 'their operators'}.` : '. No email.'}`;
 }
+
+/** The list's date: "Nov 10", with the year only when it isn't this year (Eastern, the platform clock). */
+export function listDate(iso: string, now = new Date()): string {
+  const tz = 'America/New_York', d = new Date(iso);
+  const sameYear = d.toLocaleDateString('en-US', { timeZone: tz, year: 'numeric' }) === now.toLocaleDateString('en-US', { timeZone: tz, year: 'numeric' });
+  return d.toLocaleDateString('en-US', { timeZone: tz, month: 'short', day: 'numeric', ...(sameYear ? {} : { year: 'numeric' }) });
+}

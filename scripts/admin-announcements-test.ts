@@ -1,7 +1,7 @@
 // ADMIN-REDO Announcements (Cam approved the mockup 2026-11-12, ADMIN_REDO_SPEC.md "Admin Announcements").
 // Pins the page's helpers and the behaviour it must keep from before the redo. Run: npx tsx scripts/admin-announcements-test.ts
 import { readFileSync } from 'fs';
-import { pl, firstLine, matches, outcomeLine, outcomeBad, reachLine, isBroadcasts, type Broadcast, type SendOutcome } from '../src/app/admin/announcements/logic';
+import { pl, firstLine, listDate, matches, outcomeLine, outcomeBad, reachLine, isBroadcasts, type Broadcast, type SendOutcome } from '../src/app/admin/announcements/logic';
 
 let failed = 0;
 const check = (name: string, ok: boolean) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}`); if (!ok) failed++; };
@@ -10,6 +10,7 @@ const b: Broadcast = { id: 'a', title: 'Maintenance Sunday', body: '\n  Booking 
 check('plural', pl(1, 'operator') === '1 operator' && pl(0, 'operator') === '0 operators');
 check('preview is the first non-empty line', firstLine(b.body) === 'Booking pages pause 2–3am.');
 check('search: title or message, any case; empty matches all', matches(b, 'MAINT') && matches(b, 'pause') && matches(b, '  ') && !matches(b, 'refund'));
+check('list date: no year this year, year otherwise', listDate('2026-11-10T15:00:00Z', new Date('2026-11-12T12:00:00Z')) === 'Nov 10' && listDate('2025-12-31T15:00:00Z', new Date('2026-11-12T12:00:00Z')) === 'Dec 31, 2025');
 check('shape guard', isBroadcasts([b]) && !isBroadcasts({}) && !isBroadcasts([{ id: 1 }]));
 
 const ok: SendOutcome = { courses: 12, emailRequested: true, emailRecipients: 15, emailsSent: 15, emailFailures: [] };
