@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 712,
-    "routes": 305,
-    "libs": 255,
-    "models": 73,
+    "files": 715,
+    "routes": 307,
+    "libs": 256,
+    "models": 74,
     "orphans": 11,
     "ungatedRoutes": 3
   },
@@ -2428,8 +2428,34 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/admin/expenses/[id]/history/route.ts",
+      "lines": 20,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/expenses/[id]/history",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-session",
+        "@/lib/expense-history",
+        "@/lib/prisma",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/admin/expenses/[id]/route.ts",
-      "lines": 78,
+      "lines": 87,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2460,8 +2486,34 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/admin/expenses/budget/route.ts",
+      "lines": 36,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "PUT",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/expenses/budget",
+      "kind": "api",
+      "methods": [
+        "PUT"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-audit",
+        "@/lib/admin-session",
+        "@/lib/prisma",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/admin/expenses/route.ts",
-      "lines": 47,
+      "lines": 51,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14774,6 +14826,7 @@
         "src/app/api/admin/disputes/[bookingId]/evidence/route.ts",
         "src/app/api/admin/employees/route.ts",
         "src/app/api/admin/expenses/[id]/route.ts",
+        "src/app/api/admin/expenses/budget/route.ts",
         "src/app/api/admin/expenses/route.ts",
         "src/app/api/admin/goals/route.ts",
         "src/app/api/admin/golfers/route.ts",
@@ -15389,7 +15442,9 @@
         "src/app/api/admin/data-reset/route.ts",
         "src/app/api/admin/disputes/[bookingId]/evidence/route.ts",
         "src/app/api/admin/employees/route.ts",
+        "src/app/api/admin/expenses/[id]/history/route.ts",
         "src/app/api/admin/expenses/[id]/route.ts",
+        "src/app/api/admin/expenses/budget/route.ts",
         "src/app/api/admin/expenses/route.ts",
         "src/app/api/admin/forgot-password/route.ts",
         "src/app/api/admin/goals/route.ts",
@@ -20746,6 +20801,35 @@
       ]
     },
     {
+      "path": "src/lib/expense-history.ts",
+      "lines": 36,
+      "purpose": "ADMIN-REDO Expenses (Cam 2026-11-12):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "expenseHistory",
+          "kind": "fn"
+        },
+        {
+          "name": "ExpenseHistoryEntry",
+          "kind": "type"
+        },
+        {
+          "name": "ExpenseHistoryKind",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/api/admin/expenses/[id]/history/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/expenses.ts",
       "lines": 88,
       "purpose": "EXPENSE TRACKER (RUN_QUEUE \"EXPENSE TRACKER / real P&L\") — the manual half of the P&L:",
@@ -21089,7 +21173,7 @@
     },
     {
       "path": "src/lib/goal-pace.ts",
-      "lines": 64,
+      "lines": 72,
       "purpose": "GOAL-PACE (Cam 2026-11-12, ADMIN_REDO_SPEC \"Goals:",
       "brain": [],
       "exports": [
@@ -24285,7 +24369,9 @@
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/create-course/route.ts",
         "src/app/api/admin/employees/route.ts",
+        "src/app/api/admin/expenses/[id]/history/route.ts",
         "src/app/api/admin/expenses/[id]/route.ts",
+        "src/app/api/admin/expenses/budget/route.ts",
         "src/app/api/admin/expenses/route.ts",
         "src/app/api/admin/forgot-password/route.ts",
         "src/app/api/admin/goals/route.ts",
@@ -28900,6 +28986,7 @@
       ],
       "readers": [
         "src/app/api/admin/audit/route.ts",
+        "src/app/api/admin/expenses/[id]/history/route.ts",
         "src/lib/course-timeline.ts"
       ]
     },
@@ -32572,6 +32659,34 @@
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/today/overview/route.ts",
         "src/lib/admin-today.ts"
+      ]
+    },
+    {
+      "name": "ExpenseBudget",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "cents",
+          "type": "Int?"
+        },
+        {
+          "name": "setAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "setBy",
+          "type": "String"
+        }
+      ],
+      "writers": [
+        "src/app/api/admin/expenses/budget/route.ts"
+      ],
+      "readers": [
+        "src/app/api/admin/expenses/budget/route.ts",
+        "src/app/api/admin/expenses/route.ts"
       ]
     },
     {

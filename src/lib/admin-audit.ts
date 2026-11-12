@@ -48,7 +48,7 @@ export const ACTION_LABELS: Record<string, string> = {
   booking_add: 'Add a booking', tee_time_block: 'Block a tee time', tee_time_unblock: 'Reopen a tee time',
   resend_confirmation: 'Resend a booking confirmation', resend_receipt: 'Resend a receipt',
   note_add: 'Add a note', document_add: 'Add a document', company_document_add: 'Add a company document',
-  revenue_goal: 'Set a monthly revenue goal', expense_add: 'Add an expense', expense_edit: 'Edit an expense', goal_add: 'Add a goal',
+  revenue_goal: 'Set a monthly revenue goal', expense_add: 'Add an expense', expense_edit: 'Edit an expense', expense_budget: 'Set the monthly expense budget', goal_add: 'Add a goal',
   schedule_add: 'Add a schedule', schedule_edit: 'Edit a schedule', reminders_pause: 'Pause onboarding reminders',
   reminders_resume: 'Resume onboarding reminders', thread_close: 'Close a conversation', thread_reopen: 'Reopen a conversation',
   announcement_send: 'Send an announcement', password_change: 'Change own password', two_factor_confirm: 'Turn on two-factor',

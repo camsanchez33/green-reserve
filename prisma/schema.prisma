@@ -1245,6 +1245,17 @@ model Expense {
   @@index([startedAt])
 }
 
+/// ADMIN-REDO Expenses (Cam 2026-11-12): the company's one standing monthly expense budget,
+/// set by the owner. A single row (id "monthly"); cents null = no budget set. Company side:
+/// kept by the launch wipe.
+model ExpenseBudget {
+  id    String   @id @default("monthly")
+  cents Int?
+  setAt DateTime @default(now())
+  /// The owner's name when it was set.
+  setBy String   @default("")
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // MP-3 — the three tables §5 asks for. Storage only in this run; the code that
 // writes to them ships with the features that need them (MP-6 money, MP-4
