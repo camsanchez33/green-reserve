@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-704 source files · 302 routes · 253 libraries · 72 models
+703 source files · 302 routes · 252 libraries · 72 models
 
 ## Single sources of truth
 
@@ -611,7 +611,6 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/api-response.ts` | 0 | 22 | Common JSON response helpers to reduce boilerplate in API routes. | `badRequest`, `conflict`, `forbidden`, `notFound`, `serverError`, `unauthorized` |
 | `src/lib/data.ts` | 0 | 3 | Deprecated — use @/lib/courses-data instead |  |
 | `src/lib/db.ts` | 0 | 2 |  |  |
-| `src/lib/money-tabs.ts` | 0 | 15 | ADMIN-C Money: | `isMoneyTab`, `MONEY_TABS`, `MoneyTab`, `visibleMoneyTab` |
 | `src/lib/seed.ts` | 0 | 2 |  |  |
 | `src/lib/use-tab-intro.ts` | 0 | 18 |  | `useTabIntro` |
 
@@ -1333,7 +1332,6 @@ Next.js, not imported, so "nothing imports it" proves nothing about them.
 - `src/lib/api-response.ts` (22 lines)
 - `src/lib/data.ts` (3 lines)
 - `src/lib/db.ts` (2 lines)
-- `src/lib/money-tabs.ts` (15 lines)
 - `src/lib/seed.ts` (2 lines)
 - `src/lib/use-tab-intro.ts` (18 lines)
 
