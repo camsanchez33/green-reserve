@@ -397,6 +397,14 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
 .ico{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;color:var(--muted)}.ico:hover{color:var(--ink);background:var(--hover)}
 
 .fk{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+.mrow{cursor:pointer}.mrow:hover{background:var(--hover)}.mrow[aria-expanded="true"]{background:var(--active)}
+.chev{display:inline-block;width:16px;color:var(--muted);font-size:11px}
+.mdet td{padding:0 10px 14px!important;background:var(--active)}
+.md{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;padding-top:6px}
+.md h5{margin:0 0 6px;font-size:13px;font-weight:700}.md h5 span{font-weight:600;font-size:12px}
+.md p{display:flex;justify-content:space-between;gap:8px;margin:0;padding:5px 0;border-top:1px solid var(--line);font-size:12.5px}
+.md p span{color:var(--ink-soft)}.md p b{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+@media (max-width:900px){.md{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .rsplit2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:stretch}
 .cat .bar i.rv{background:var(--chart)}
 @media (max-width:1100px){.rsplit2{grid-template-columns:minmax(0,1fr)}}
@@ -611,8 +619,21 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
     $("revcats").innerHTML=RV.map(c=>'<div class="cat"><div class="cl"><span>'+c[0]+'</span><b>'+usd(rev*c[1])+'</b></div><div class="bar"><i class="rv" style="width:'+(c[1]/RV[0][1]*100)+'%"></i></div></div>').join("");
     const C=[["Software & hosting",0.34],["Marketing",0.26],["Legal & insurance",0.18],["Texts & email",0.08],["Other",0.14]];
     $("cats").innerHTML=C.map(c=>'<div class="cat"><div class="cl"><span>'+c[0]+'</span><b>'+usd(exp*c[1])+'</b></div><div class="bar"><i style="width:'+(c[1]/C[0][1]*100)+'%"></i></div></div>').join("");
-    $("months").innerHTML=M.slice().reverse().map(m=>{const p=m[2]-m[3];return '<tr><td>'+m[0]+'</td><td class="n">'+m[1].toLocaleString()+'</td><td class="n">'+usd(m[2])+'</td><td class="n">'+usd(m[3])+'</td><td class="n '+(p>=0?'upc':'dn')+'">'+usd(p)+'</td><td class="n hide-s">'+Math.round(p/m[2]*100)+'%</td></tr>'}).join("");
+    // Cam 2026-11-12: each month opens to show what happened in it.
+    const detail=(m,idx)=>{const p=m[2]-m[3];const prev=ALL[ALL.indexOf(m)-1];
+      const pc=(a,b)=>b?'<span class="'+(a>=b?'upc':'dn')+'">'+(a>=b?'Up ':'Down ')+Math.abs(Math.round((a-b)/b*100))+'%</span>':'';
+      const crs=[["Ridgewood Country Club",0.34],["Pine Hollow Golf Club",0.29],["Oak Valley Golf Course",0.23],["Cedar Ridge Golf Links",0.14]];
+      return '<tr class="mdet"><td colspan="6"><div class="md">'+
+        '<div><h5>Revenue '+usd(m[2])+' '+(prev?pc(m[2],prev[2]):'')+'</h5>'+[["Booking service fees",0.86],["No-show & late-cancel fees",0.09],["Membership dues fees",0.05]].map(c=>'<p><span>'+c[0]+'</span><b>'+usd(m[2]*c[1])+'</b></p>').join('')+'</div>'+
+        '<div><h5>Expenses '+usd(m[3])+' '+(prev?pc(m[3],prev[3]).replace('upc','tmp').replace('dn','upc').replace('tmp','dn'):'')+'</h5>'+[["Software & hosting",0.34],["Marketing",0.26],["Legal & insurance",0.18],["Texts & email",0.08],["Other",0.14]].map(c=>'<p><span>'+c[0]+'</span><b>'+usd(m[3]*c[1])+'</b></p>').join('')+'</div>'+
+        '<div><h5>By course</h5>'+crs.map(c=>'<p><span>'+c[0]+'</span><b>'+Math.round(m[1]*c[1])+' · '+usd(m[2]*c[1])+'</b></p>').join('')+'</div>'+
+        '<div><h5>The month</h5><p><span>Bookings</span><b>'+m[1].toLocaleString()+'</b></p><p><span>Live courses</span><b>'+(idx<3?3:5)+'</b></p><p><span>New courses live</span><b>'+(m[0]==="Mar"||m[0]==="Apr"?1:0)+'</b></p><p><span>Profit</span><b class="'+(p>=0?'upc':'dn')+'">'+usd(p)+'</b></p></div>'+
+        '</div></td></tr>';};
+    let open=window.__openM||null;
+    $("months").innerHTML=M.slice().reverse().map((m,j)=>{const p=m[2]-m[3];const on=open===m[0];return '<tr class="mrow" data-m="'+m[0]+'" aria-expanded="'+on+'" tabindex="0"><td><span class="chev">'+(on?'▾':'▸')+'</span>'+m[0]+'</td><td class="n">'+m[1].toLocaleString()+'</td><td class="n">'+usd(m[2])+'</td><td class="n">'+usd(m[3])+'</td><td class="n '+(p>=0?'upc':'dn')+'">'+usd(p)+'</td><td class="n hide-s">'+Math.round(p/m[2]*100)+'%</td></tr>'+(on?detail(m,ALL.indexOf(m)):'')}).join("");
+    $("months").querySelectorAll(".mrow").forEach(r=>{const go=()=>{window.__openM=(window.__openM===r.dataset.m?null:r.dataset.m);render();};r.addEventListener("click",go);r.addEventListener("keydown",e=>{if(e.key==="Enter")go();});});
   }
+  window.__openM='Oct';
   const fb=$("fbtn"), fm=$("filters");
   fb.addEventListener("click",()=>{fm.hidden=!fm.hidden;fb.setAttribute("aria-expanded",String(!fm.hidden));});
   document.addEventListener("click",e=>{if(!e.target.closest(".fwrap")){fm.hidden=true;fb.setAttribute("aria-expanded","false");}});
