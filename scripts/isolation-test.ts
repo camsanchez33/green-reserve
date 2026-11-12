@@ -521,6 +521,13 @@ async function main() {
     check('…with every section empty (null)', ['coursesLive', 'revenue', 'feesMissed', 'expenses', 'onboarding', 'net', 'chart', 'activity', 'attention'].every(k => o?.[k] === null), JSON.stringify(o));
   }
   {
+    // ADMIN-REDO Golf Courses: a viewer sees the list, but no fees, contact details, signer or admin notes.
+    const r = await api(`/api/admin/courses/directory?id=${data.courseA.id}`, { cookie: viewerCookie });
+    checkStatus('Viewer can open a course on Golf courses → 200', r.status, 200);
+    const p = r.body as { money?: unknown; contact?: unknown; notes?: unknown; agreement?: { signer?: unknown; signerEmail?: unknown } | null };
+    check('…with no money, contact details, notes or agreement signer', p?.money === null && p?.contact === null && p?.notes === null && (!p?.agreement || (p.agreement.signer === null && p.agreement.signerEmail === null)), JSON.stringify(p).slice(0, 300));
+  }
+  {
     // BRAIN-2a: Problems name golfers and money — support+ only, reads and writes.
     // Money PR2b: the evidence pack is manager+, payouts to courses and the monthly Stripe match owner only.
     const ev = await api(`/api/admin/disputes/${data.bookingA.id}/evidence`, { cookie: viewerCookie });
@@ -617,10 +624,21 @@ async function main() {
         const oc1 = (await api('/api/admin/today/overview', { cookie: c })).body as Record<string, unknown> & { attention?: { rows: { id: string }[] } | null };
         check('Courses-only manager → Overview: no revenue, chart, net, expenses or fees missed', oc1?.revenue === null && oc1?.chart === null && oc1?.net === null && oc1?.expenses === null && oc1?.feesMissed === null, JSON.stringify(oc1));
         check('…and no failed charge in Needs attention', !!oc1?.attention && !oc1.attention.rows.some(r => r.id.startsWith('q-fc-')), JSON.stringify(oc1?.attention));
+        // ADMIN-REDO page 2: the Golf Courses directory and a course's profile carry no money without Money.
+        type Dir = { seesMoney?: boolean; rows?: { id: string; feesCents: number | null }[] };
+        type Prof = { money?: unknown; contact?: { operatorEmail?: string | null } | null };
+        const dc1 = (await api('/api/admin/courses/directory', { cookie: c })).body as Dir;
+        check('Courses-only manager → Golf courses: listed, with no fee column', !!dc1?.rows?.some(r => r.id === data.courseA.id) && dc1.seesMoney === false && dc1.rows!.every(r => r.feesCents === null), JSON.stringify(dc1).slice(0, 300));
+        const pc1 = (await api(`/api/admin/courses/directory?id=${data.courseA.id}`, { cookie: c })).body as Prof;
+        check('…and the profile has no fees, fees missed, failed charges or Payments', pc1?.money === null && !!pc1?.contact, JSON.stringify(pc1).slice(0, 300));
         await prisma.adminUser.update({ where: { id: limited.id }, data: { areas: ['courses', 'money'] } });
         const oc2 = (await api('/api/admin/today/overview', { cookie: c })).body as { attention?: { rows: { id: string }[] } | null; expenses?: unknown; net?: unknown; feesMissed?: unknown };
         check('…a manager with Money sees fees missed, but expenses and net stay the owner\'s', oc2?.feesMissed != null && oc2?.expenses === null && oc2?.net === null, JSON.stringify(oc2));
         check('…with Money added, the failed charge shows (the check above is not vacuous)', !!oc2?.attention && oc2.attention.rows.some(r => r.id.startsWith('q-fc-')), JSON.stringify(oc2?.attention));
+        const dc2 = (await api('/api/admin/courses/directory', { cookie: c })).body as { seesMoney?: boolean; rows?: { id: string; feesCents: number | null }[] };
+        check('…with Money, Golf courses shows our fees', dc2?.seesMoney === true && !!dc2.rows?.some(r => r.id === data.courseA.id && typeof r.feesCents === 'number'), JSON.stringify(dc2).slice(0, 300));
+        const pc2 = (await api(`/api/admin/courses/directory?id=${data.courseA.id}`, { cookie: c })).body as { money?: { failed?: { id: string }[] } | null };
+        check('…and the profile shows Payments with the failed charge', !!pc2?.money?.failed?.some(f => f.id === bookingA.id), JSON.stringify(pc2?.money));
       } finally {
         await prisma.booking.update({ where: { id: bookingA.id }, data: { checkInFailReason: '' } });
         await prisma.adminUser.update({ where: { id: limited.id }, data: { areas: ['messages'] } });
