@@ -224,7 +224,7 @@ body {
   box-shadow: 0 0 0 1px var(--op-edge), 0 1px 0 rgb(255 255 255 / .06) inset, 0 8px 26px rgb(0 0 0 / .10);
 }
 .op-look[data-theme="dark"]:has(.op-rail) .bg-white.shadow-card:not(.op-tab) { box-shadow: 0 0 0 1px var(--op-edge), 0 1px 0 rgb(255 255 255 / .06) inset, 0 10px 30px rgb(0 0 0 / .32); }
-.op-look:has(.op-rail) .op-home .bg-white.shadow-card { border-radius: 14px; } /* HOME-3: Home's panels, as the mockup */
+.op-look:has(.op-rail) .op-home .bg-white.shadow-card:not([role="radio"]) { border-radius: 14px; } /* HOME-3: Home's panels, as the mockup */
 .op-look:has(.op-rail) .op-rail { background-color: var(--op-rail-glass); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
 .op-look:has(.op-rail) .op-tab { transition: transform .18s ease, background-color .18s ease, box-shadow .18s ease, color .18s ease; }
 .op-look:has(.op-rail) .op-tab:not([aria-current]):hover {

@@ -188,7 +188,7 @@ export async function PATCH(req: NextRequest) {
         INVALID: [404, 'Not found'],
         NOT_CONFIRMED: [409, 'This group is checked in or cancelled — its party can’t change now.'],
         PAID: [409, 'This round is paid or being paid, or its hold was taken — refund or move it instead.'],
-        STARTED: [409, 'This group is marked a no-show. Use “Still coming” first.'],
+        STARTED: [409, 'This group is marked a no-show. Use “Undo no-show” first.'],
         SAME: [409, `The group is already ${n}.`],
         SIZE: [400, e.msg ?? 'That group size isn’t allowed on this round.'],
         FULL: [409, `Only ${e.max ?? 0} spot${e.max === 1 ? '' : 's'} left on this time.`],
@@ -344,8 +344,8 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ success: true, noShowAt: new Date().toISOString(), fee: outcome === 'never'
       ? 'Marked a no-show. The hourly charge no longer reaches that day, so no no-show charge is taken.'
       : outcome === 'next_hour'
-      ? 'Marked a no-show. Any no-show charge is taken within the hour — “Still coming” before then cancels it.'
-      : 'Marked a no-show. Any no-show charge is taken at midnight if they still haven’t checked in — “Still coming” or checking them in before then cancels it.' });
+      ? 'Marked a no-show. Any no-show charge is taken within the hour — “Undo no-show” before then cancels it.'
+      : 'Marked a no-show. Any no-show charge is taken at midnight if they still haven’t checked in — “Undo no-show” or checking them in before then cancels it.' });
   }
   if (action === 'still_coming') {
     // G14 (review ledger): only a confirmed booking flagged a no-show has
@@ -357,7 +357,7 @@ export async function PATCH(req: NextRequest) {
       if (booking.noShowAt) await recordBookingEvent(tx, { ...evBase, type: 'no_show_cleared', playerCount: booking.players });
     });
     // The no-show charges were taken in error — they are here after all.
-    const r = await refundSeparateAccessFee(id, 'no-show marked in error (still coming)', 'operator', actorName);
+    const r = await refundSeparateAccessFee(id, 'no-show marked in error (no-show undone)', 'operator', actorName);
     const c = await refundNoShowFee(id, actorName); // SP-B: the course's no-show fee too
     const notes = [r.ok ? null : `The booking fee could not be refunded (${r.error}) — GreenReserve will follow up.`, c.ok ? null : `The no-show fee could not be refunded (${c.error}) — refund it from Stripe.`].filter(Boolean);
     return NextResponse.json({ success: true, ...(notes.length ? { fee: notes.join(' ') } : {}) });

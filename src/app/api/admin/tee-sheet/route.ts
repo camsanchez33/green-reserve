@@ -5,6 +5,7 @@ import { resolveAdminSession, requireRole, MANAGER_PLUS, SUPPORT_PLUS, areaGate 
 import { claimTeeTime, TeeTimeClaimError, LATE_ADD_MESSAGE } from '@/lib/claim-tee-time';
 import { COMPLETED_BOOKING_STATUSES } from '@/lib/course-metrics';
 import { setTeeTimeBlocked } from '@/lib/schedule-service';
+import { closeFreeTime } from '@/lib/tee-time-close';
 import { auditAdmin } from '@/lib/admin-audit';
 
 // GET /api/admin/tee-sheet?courseId=X&date=Y
@@ -53,9 +54,18 @@ export async function PATCH(req: NextRequest) {
   if (body.action === 'block' || body.action === 'unblock') {
     // MP-5d: same service the operator dashboard's Block button calls.
     if (!body.teeTimeId) return NextResponse.json({ error: 'Missing teeTimeId' }, { status: 400 });
-    const row = await setTeeTimeBlocked(body.teeTimeId, body.action === 'block');
-    if (!row) return NextResponse.json({ error: 'Tee time not found' }, { status: 404 });
-    await auditAdmin(session, { action: body.action === 'block' ? 'tee_time_block' : 'tee_time_unblock', targetType: 'tee_time', targetId: String(body.teeTimeId), courseId: (await prisma.teeTime.findUnique({ where: { id: String(body.teeTimeId) }, select: { courseId: true } }))?.courseId ?? null });
+    const tt = await prisma.teeTime.findUnique({ where: { id: String(body.teeTimeId) }, select: { courseId: true } });
+    if (!tt) return NextResponse.json({ error: 'Tee time not found' }, { status: 404 });
+    if (body.action === 'block') {
+      // TT-CLOSE (Cam 2026-11-12, Build): the same rule as the course dashboard — a time with a group booked on it
+      // can't be closed; one Serializable check-and-write (lib/tee-time-close).
+      const r = await closeFreeTime(tt.courseId, String(body.teeTimeId));
+      if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+    } else {
+      const row = await setTeeTimeBlocked(body.teeTimeId, false);
+      if (!row) return NextResponse.json({ error: 'Tee time not found' }, { status: 404 });
+    }
+    await auditAdmin(session, { action: body.action === 'block' ? 'tee_time_block' : 'tee_time_unblock', targetType: 'tee_time', targetId: String(body.teeTimeId), courseId: tt.courseId });
     return NextResponse.json({ success: true });
   }
 
