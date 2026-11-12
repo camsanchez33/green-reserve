@@ -49,7 +49,7 @@ const party = read('src/lib/change-party.ts');
 ok('a party change re-counts the carts', party.includes('const cartResized = resizeCart(booking, newPlayers);') && party.includes('...(cartResized ? { cartRiders: cartResized.cartRiders } : ridersAfter != null ? { cartRiders: ridersAfter } : {})'));
 const split = read('src/lib/split-booking-db.ts');
 ok('a split carries the riders and the cart price', split.includes('const riders = splitRiders(b, off.players);') && split.includes('cartUnitCents: b.cartUnitCents, cartRiders: riders.leave'));
-ok('the booking page and checkout count carts the server\'s way', read('src/app/courses/[slug]/CourseBookingClient.tsx').includes('const carts = perCart ? cartsFor(slotPlayers) : slotPlayers;') && read('src/app/book/BookClient.tsx').includes('perCart ? cartsN * teeTime.cart_fee'));
+ok('the booking page and checkout count carts the server\'s way', read('src/app/courses/[slug]/CourseBookingClient.tsx').includes('const cartsSel = perCartSel ? cartsFor(sp) : sp;') && read('src/app/book/BookClient.tsx').includes('perCart ? cartsN * teeTime.cart_fee'));
 ok('the manage page previews the same', read('src/app/manage/[bookingId]/page.tsx').includes('resizeCart({ players: info.players') && read('src/app/manage/[bookingId]/page.tsx').includes('cartsFor(info.party.cartRiders ?? info.players)'));
 const checkin = read('src/lib/checkin-booking.ts');
 ok('"Add a cart today?" at check-in: per cart on a per-cart course, and the booking becomes per cart', checkin.includes("if (cartRuleOf(grace.cartPricing) === 'per_cart') return cartCharge({ rule: 'per_cart', cart: true, players: booking.players, unitCents: standard, perPlayerTotal: 0 }).cartFeeTotal;")

@@ -9,6 +9,8 @@ export default function Footer() {
   const pathname = usePathname();
 
   if (pathname.startsWith('/admin') || pathname.startsWith('/dashboard') || pathname.startsWith('/cam')) return null;
+  // GOLFER-REDO (Cam 2026-11-11): a course's booking page and its Course info tab carry the course's own footer — one footer only.
+  if (/^\/courses\/[^/]+(\/info)?\/?$/.test(pathname)) return null;
 
   // Course-world pages (course page, member portal, golfer portal) get the
   // minimal text-only "Powered by GreenReserve" footer — no marketing links,

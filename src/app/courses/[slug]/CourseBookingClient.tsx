@@ -225,7 +225,7 @@ export default function CourseDetailPage({
   // L2: which bookable product the golfer is looking at ('all' until they pick;
   // the selector only shows when the day has more than one product).
   const [productFilter, setProductFilter] = useState<string>(() => searchParams.get('product') || 'all');
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [showCal, setShowCal] = useState(false);
   // B-4: the nearest dates (up to two) with a slot that fits the party.
   const [nearestDates, setNearestDates] = useState<string[]>([]);
   const [searchingNext, setSearchingNext] = useState(false);
@@ -1013,23 +1013,44 @@ export default function CourseDetailPage({
               </div>
             </section>
           ) : (
-            <div key="booking" className="grid lg:grid-cols-[220px_minmax(0,1fr)_300px] gap-6 xl:gap-8 items-start">
+            <div key="booking" className="grid lg:grid-cols-[minmax(0,1fr)_320px] gap-6 items-start">
 
-              {/* LEFT: Filters */}
-              <aside className={`${filtersOpen ? 'block' : 'hidden'} lg:block`}>
-                <div className="lg:sticky lg:top-20 divide-y divide-line">
+              {/* RIGHT: Tee sheet */}
+              <section id="times" className="min-w-0 scroll-mt-4">
 
-                  <div className="pb-4 flex items-center justify-between">
-                    <span className="font-serif text-ink text-[22px] leading-none">Filters</span>
-                    {activeFilterCount > 0 && (
-                      <button onClick={resetFilters} className="text-xs font-medium transition-opacity hover:opacity-70" style={{ color: accent }}>
-                        Reset all
-                      </button>
-                    )}
+                {/* GOLFER-REDO (Cam 2026-11-11): ONE filter row — dates, players, holes, walking or riding. */}
+                <Card className="p-4 sm:p-5 mb-6 space-y-4">
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-2 overflow-x-auto pb-1 flex-1" role="group" aria-label="Date">
+                      {strip.map(d => {
+                        const ds = formatDate(d);
+                        const isSelected = ds === selectedDate;
+                        const isToday = ds === todayStr;
+                        const isBeyond = beyondWindow(d);
+                        return (
+                          <button key={ds} disabled={isBeyond} aria-pressed={isSelected}
+                            title={isBeyond ? (membersBookEarlier ? 'Members can book earlier — sign in' : `Opens ${viewerWindowDays} days ahead`) : undefined}
+                            onClick={() => setSelectedDate(ds)}
+                            className="flex-none w-[64px] sm:w-[76px] py-2 rounded-lg text-center transition-colors disabled:cursor-not-allowed"
+                            style={isSelected
+                              ? { border: `1px solid ${accent}`, backgroundColor: `${accent}14`, boxShadow: `inset 0 0 0 1px ${accent}`, color: 'var(--color-ink)' }
+                              : isBeyond
+                                ? { backgroundColor: '#fff', border: '1px dashed var(--color-line)', color: 'var(--color-ink-faint)' }
+                                : { backgroundColor: '#fff', border: '1px solid var(--color-line)', color: 'var(--color-ink)' }}>
+                            <span className="block text-xs text-ink-muted">{isToday ? 'Today' : d.toLocaleDateString('en-US', { weekday: 'short' })}</span>
+                            <span className="block text-xl font-semibold leading-tight">{d.getDate()}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <button type="button" onClick={() => setShowCal(v => !v)} aria-expanded={showCal}
+                      className="flex-none text-[13px] font-medium rounded-md border border-line bg-white px-3 py-2 text-ink-soft hover:text-ink transition-colors">
+                      More dates
+                    </button>
                   </div>
-
+                  {showCal && <div className="max-w-xs border-t border-line pt-4">
                   {/* Calendar */}
-                  <div className="py-5">
+                  <div>
                     <div className="flex items-center justify-between mb-3">
                       <button
                         onClick={() => setCalMonth(new Date(calMonth.getFullYear(), calMonth.getMonth() - 1, 1))}
@@ -1076,96 +1097,52 @@ export default function CourseDetailPage({
                     </div>
                   </div>
 
-                  {/* Players */}
-                  <div className="py-5">
-                    <div className="font-serif text-ink text-[19px] leading-none mb-3">Players</div>
-                    <div className="flex gap-1.5">
-                      {[1, 2, 3, 4].map(n => {
-                        const isSel = players === n;
-                        return (
-                          <button
-                            key={n}
+                  </div>}
+                  <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[13px] text-ink-muted">Players</span>
+                      <div className="inline-flex rounded-lg border border-line overflow-hidden" role="group" aria-label="Players">
+                        {[1, 2, 3, 4].map(n => (
+                          <button key={n} type="button" aria-pressed={players === n}
                             onClick={() => { setPlayers(n); setSelectedTime(null); }}
-                            className="flex-1 flex flex-col items-center gap-0.5 py-2 rounded-md border text-sm font-medium transition-all"
-                            style={isSel ? { borderColor: accent, backgroundColor: `${accent}12`, color: accent } : { borderColor: 'var(--color-line)', color: 'var(--color-ink-muted)' }}
-                          >
-                            
+                            className="px-3.5 py-2 font-medium border-r border-line last:border-r-0 transition-colors"
+                            style={players === n ? { backgroundColor: accent, color: '#fff' } : { backgroundColor: '#fff', color: 'var(--color-ink-soft)' }}>
                             {n}
                           </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Time of day */}
-                  <div className="py-5">
-                    <div className="font-serif text-ink text-[19px] leading-none mb-3">Time of day</div>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {TOD_OPTIONS.map(o => {
-                        const isSel = todFilter === o.key;
-                        return (
-                          <button
-                            key={o.key}
-                            onClick={() => setTodFilter(o.key)}
-                            className="py-2 rounded-md border text-xs font-medium transition-all"
-                            style={isSel ? { borderColor: accent, backgroundColor: `${accent}12`, color: accent } : { borderColor: 'var(--color-line)', color: 'var(--color-ink-muted)' }}
-                          >
-                            {o.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Max price */}
-                  {priceBounds && priceBounds.min < priceBounds.max && (
-                    <div className="py-5">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-serif text-ink text-[19px] leading-none">Max price</span>
-                        <span className="text-xs font-medium text-ink">${maxPrice ?? priceBounds.max}</span>
-                      </div>
-                      <input
-                        type="range"
-                        min={priceBounds.min}
-                        max={priceBounds.max}
-                        step={1}
-                        value={maxPrice ?? priceBounds.max}
-                        onChange={e => setMaxPrice(Number(e.target.value))}
-                        className="w-full accent-pine"
-                      />
-                      <div className="flex justify-between text-[10px] text-ink-faint mt-1">
-                        <span>${priceBounds.min}</span>
-                        <span>${priceBounds.max}</span>
+                        ))}
                       </div>
                     </div>
-                  )}
-
-                  {/* Holes */}
-                  {hasHolesData && (
-                    <div className="py-5">
-                      <div className="font-serif text-ink text-[19px] leading-none mb-3">Holes</div>
-                      <div className="grid grid-cols-3 gap-1.5">
-                        {(['all', '9', '18'] as const).map(h => {
-                          const isSel = holesFilter === h;
-                          return (
-                            <button
-                              key={h}
-                              onClick={() => setHolesFilter(h)}
-                              className="py-2 rounded-md border text-xs font-medium transition-all"
-                              style={isSel ? { borderColor: accent, backgroundColor: `${accent}12`, color: accent } : { borderColor: 'var(--color-line)', color: 'var(--color-ink-muted)' }}
-                            >
-                              {h === 'all' ? 'Any' : h}
+                    {hasHolesData && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-[13px] text-ink-muted">Holes</span>
+                        <div className="inline-flex rounded-lg border border-line overflow-hidden" role="group" aria-label="Holes">
+                          {(['9', '18'] as const).map(h => (
+                            <button key={h} type="button" aria-pressed={holesFilter === h}
+                              onClick={() => setHolesFilter(holesFilter === h ? 'all' : h)}
+                              className="px-3.5 py-2 font-medium border-r border-line last:border-r-0 transition-colors"
+                              style={holesFilter === h ? { backgroundColor: accent, color: '#fff' } : { backgroundColor: '#fff', color: 'var(--color-ink-soft)' }}>
+                              {h}
                             </button>
-                          );
-                        })}
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              </aside>
-
-              {/* RIGHT: Tee sheet */}
-              <section id="times" className="min-w-0 scroll-mt-4">
+                    )}
+                    {teeTimes.some(t => t.cart_fee > 0 && !t.cart_required) && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-[13px] text-ink-muted">Getting around</span>
+                        <div className="inline-flex rounded-lg border border-line overflow-hidden" role="group" aria-label="Walking or riding">
+                          {([['Walking', false], ['Riding', true]] as const).map(([label, riding]) => (
+                            <button key={label} type="button" aria-pressed={withCart === riding} onClick={() => setWithCart(riding)}
+                              className="px-3.5 py-2 font-medium border-r border-line last:border-r-0 transition-colors"
+                              style={withCart === riding ? { backgroundColor: accent, color: '#fff' } : { backgroundColor: '#fff', color: 'var(--color-ink-soft)' }}>
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </Card>
 
                 {/* L2: product selector — only when the day sells more than one product. */}
                 {dayProducts.length > 1 && (
@@ -1186,64 +1163,6 @@ export default function CourseDetailPage({
                     </div>
                   </div>
                 )}
-
-                {/* Mobile controls */}
-                <div className="mb-4 space-y-3">
-                  <div className="flex items-center gap-2 lg:hidden">
-                    <button
-                      onClick={() => setFiltersOpen(!filtersOpen)}
-                      className="inline-flex items-center gap-2 px-3.5 py-2 rounded-md border border-line bg-white text-sm font-medium text-ink shrink-0"
-                    >
-                      
-                      Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
-                    </button>
-                    {/* Inline player count — saves opening the filter panel just to change players */}
-                    <div className="flex items-center gap-1 ml-1">
-                      <button
-                        onClick={() => { setPlayers(p => Math.max(1, p - 1)); setSelectedTime(null); }}
-                        className="w-7 h-7 flex items-center justify-center rounded-md border border-line bg-white text-ink font-medium text-sm leading-none hover:bg-paper transition-colors"
-                        aria-label="Fewer players"
-                      >−</button>
-                      <div className="flex items-center gap-1 px-1.5">
-                        
-                        <span className="text-sm font-medium text-ink tabular-nums">{players}</span>
-                      </div>
-                      <button
-                        onClick={() => { setPlayers(p => Math.min(4, p + 1)); setSelectedTime(null); }}
-                        className="w-7 h-7 flex items-center justify-center rounded-md border border-line bg-white text-ink font-medium text-sm leading-none hover:bg-paper transition-colors"
-                        aria-label="More players"
-                      >+</button>
-                    </div>
-                    <span className="text-sm font-medium text-ink-soft ml-auto">{displayDate(selectedDate)}</span>
-                  </div>
-                  <div className="flex gap-1.5 overflow-x-auto pb-1">
-                    {strip.map(d => {
-                      const ds = formatDate(d);
-                      const isSelected = ds === selectedDate;
-                      const isToday = ds === todayStr;
-                      const isBeyond = beyondWindow(d);
-                      return (
-                        <button
-                          key={ds}
-                          disabled={isBeyond}
-                          title={isBeyond ? (membersBookEarlier ? 'Members can book earlier — sign in' : `Opens ${viewerWindowDays} days ahead`) : undefined}
-                          onClick={() => setSelectedDate(ds)}
-                          className="flex flex-col items-center px-3 py-2 rounded-md text-xs font-medium min-w-[3.25rem] transition-all disabled:cursor-not-allowed"
-                          style={isSelected
-                            ? { backgroundColor: accent, color: '#fff' }
-                            : isBeyond
-                              ? { backgroundColor: '#fff', border: '1px dashed var(--color-line)', color: 'var(--color-ink-faint)' }
-                              : { backgroundColor: '#fff', border: '1px solid var(--color-line)', color: 'var(--color-ink)' }}
-                        >
-                          <span className="text-[10px] font-medium opacity-70">
-                            {isToday ? 'Today' : d.toLocaleDateString('en-US', { weekday: 'short' })}
-                          </span>
-                          <span className="text-base font-semibold leading-tight">{d.getDate()}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
 
                 {/* Header */}
                 <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
@@ -1271,19 +1190,6 @@ export default function CourseDetailPage({
                     )}
                   </div>
                 </div>
-
-                {/* GOLFER-REDO: walking or riding, for the day — the cart choice that used to sit inside the picked row. */}
-                {teeTimes.some(t => t.cart_fee > 0 && !t.cart_required) && (
-                  <div className="mb-3 inline-flex rounded-md border border-line bg-white p-0.5 text-sm font-medium" role="group" aria-label="Walking or riding">
-                    {([['Walking', false], ['Riding', true]] as const).map(([label, riding]) => (
-                      <button key={label} type="button" aria-pressed={withCart === riding} onClick={() => setWithCart(riding)}
-                        className="px-4 py-1.5 rounded transition-colors"
-                        style={withCart === riding ? { backgroundColor: accent, color: '#fff' } : { color: 'var(--color-ink-soft)' }}>
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                )}
 
                 {/* B-1: the trust line, above the first slot, from the course's
                     own policy — the same facts /book states after the golfer
@@ -1421,98 +1327,59 @@ export default function CourseDetailPage({
                     )}
                   </div>
                 ) : (
-                  <div className="space-y-6">
-                    {groups.map(g => (
+                  <div className="space-y-7">
+                    {groups.map(g => {
+                      const alertItem = g.items.find(t => t.players_available === 0 && alertModal?.teeTimeId === t.id);
+                      return (
                       <div key={g.key}>
                         {todFilter === 'all' && (
-                          <div className="font-serif text-ink text-[20px] leading-none mb-2.5">
-                            {g.label}
-                          </div>
+                          <h3 className="text-sm font-semibold text-ink mb-2.5">{g.label}</h3>
                         )}
-                        {/* FLOW-2 (Cam 2026-10-01): one sheet with hairline rows, like the
-                            homepage's golfer phone — not a stack of bordered boxes. */}
-                        <div className="bg-white border-t-2 border-ink divide-y divide-line">
+                        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2.5">
                           {g.items.map(t => {
                             const isSel = selectedTime?.id === t.id;
                             const h = holesOf(t);
                             const isFull = t.players_available === 0;
-                            const slotMark = isSel ? { boxShadow: `inset 3px 0 0 ${accent}` } : undefined;
-                            const slotPlayers = Math.min(players, t.players_available || players);
                             const hasMemberRate = !!(t.member_green_fee != null && t.has_member_rate && t.member_green_fee < t.green_fee);
                             const displayGreenFee = hasMemberRate ? t.member_green_fee! : t.green_fee;
-                            const cartFee = isSel && (withCart || t.cart_required) && t.cart_fee > 0 ? t.cart_fee : 0;
-                            // CART-2: a per-cart course charges a cart for every two riders (rounded up) — the server's rule.
-                            const perCart = course.cart_pricing === 'per_cart';
-                            const carts = perCart ? cartsFor(slotPlayers) : slotPlayers;
-                            const slotTotal = displayGreenFee * slotPlayers + cartFee * carts + ACCESS_FEE_PER_PLAYER * slotPlayers;
-
                             return (
-                              <div key={t.id} className={`transition-colors ${isFull ? 'opacity-60' : ''}`} style={slotMark}>
-                                <div
-                                  className="w-full flex items-center justify-between gap-3 sm:gap-4 px-4 sm:px-5 py-3"
-                                  style={{ backgroundColor: isSel ? `${accent}0d` : '#fff', cursor: 'pointer' }}
-                                  onClick={isFull ? () => openAlert(t.id) : () => {
-                                    const next = isSel ? null : t;
-                                    setSelectedTime(next);
-                                    if (next && players > next.players_available) setPlayers(next.players_available);
-                                  }}
-                                >
-                                  <div className="min-w-0">
-                                    <div className="text-[19px] sm:text-[22px] font-sans font-bold text-ink leading-none whitespace-nowrap tabular-nums">
-                                      {formatTime(t.time)}
-                                    </div>
-                                    <div className="text-xs mt-1.5 flex items-center gap-1.5 flex-wrap">
-                                      {isFull ? (
-                                        <span className="text-ink-faint">Full</span>
-                                      ) : (
-                                        <>
-                                          {/* FLOW-2: "4 spots", as on the homepage phone; only a
-                                              non-default status (Limited…) earns a word. */}
-                                          {STATUS_LABEL[t.status] && t.status !== 'available' && <span className={STATUS_STYLE[t.status] || 'text-ink-muted'}>{STATUS_LABEL[t.status]} ·</span>}
-                                          <span className="text-ink-muted">{t.players_available} {t.players_available === 1 ? 'spot' : 'spots'}</span>
-                                        </>
-                                      )}
-                                      {h !== undefined && <span className="text-ink-muted hidden sm:inline">· {t.product_label ? `${t.product_label} · ` : ''}{h} holes{t.product_rating ? ` · ${t.product_rating.toFixed(1)} / ${t.product_slope}` : ''}</span>}
-                                    </div>
-                                  </div>
-                                  <div className="flex items-center gap-3 sm:gap-5 flex-shrink-0">
-                                    <div className="text-right">
-                                      {/* The unit always rides with the number — a bare
-                                          "$62" reads as the total, which it never is. */}
-                                      <div className="font-medium text-ink whitespace-nowrap">
-                                        ${displayGreenFee}<span className="text-ink-muted font-normal text-[13px]"> / player</span>
-                                      </div>
-                                      {!hasMemberRate && t.list_green_fee != null && (
-                                        <div className="text-[11px] text-ink-faint">
-                                          <span className="line-through">${t.list_green_fee}</span> · last-minute
-                                        </div>
-                                      )}
-                                      {hasMemberRate && (
-                                        <div className="text-[11px] text-ink-faint">
-                                          <span className="line-through">${t.green_fee}</span> · member rate
-                                        </div>
-                                      )}
-                                    </div>
-                                    {isFull ? (
-                                      <span className="inline-flex items-center gap-1 px-3 sm:px-4 py-2 rounded-md text-xs font-medium border border-line text-ink-soft">
-                                         Tell me if it opens
-                                      </span>
-                                    ) : (
-                                      <span
-                                        className={`${isSel ? 'inline-flex' : 'hidden sm:inline-flex'} items-center gap-1 px-3 sm:px-4 py-2 rounded-md text-[13px] font-semibold transition-colors`}
-                                        style={isSel ? { backgroundColor: accent, color: '#fff' } : { border: `1px solid ${accent}`, color: accent }}
-                                      >
-                                        {isSel ? 'Selected' : 'Select'}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-
-                                {/* B-2: the alert form opens inside the full row — no modal. Same API. */}
-                                {isFull && alertModal?.teeTimeId === t.id && (
-                                  <div className="border-t px-4 sm:px-5 py-4" style={{ borderColor: `${accent}25`, backgroundColor: `${accent}05` }} onClick={e => e.stopPropagation()}>
+                              <button key={t.id} type="button" aria-pressed={isSel}
+                                className={`text-left rounded-lg border bg-white px-3.5 py-3 flex flex-col gap-0.5 transition-colors hover:border-ink-faint ${isFull ? 'opacity-60' : ''}`}
+                                style={isSel ? { borderColor: accent, backgroundColor: `${accent}14`, boxShadow: `inset 0 0 0 1px ${accent}` } : { borderColor: 'var(--color-line)' }}
+                                onClick={isFull ? () => openAlert(t.id) : () => {
+                                  const next = isSel ? null : t;
+                                  setSelectedTime(next);
+                                  if (next && players > next.players_available) setPlayers(next.players_available);
+                                }}
+                              >
+                                <span className="text-lg font-semibold text-ink tabular-nums whitespace-nowrap">{formatTime(t.time)}</span>
+                                {/* The unit always rides with the number — a bare "$62" reads as the total, which it never is. */}
+                                <span className="text-sm font-semibold" style={{ color: accent }}>${displayGreenFee} a player</span>
+                                <span className="text-xs text-ink-muted">
+                                  {isFull ? 'Full · tell me if it opens' : (
+                                    <>
+                                      {STATUS_LABEL[t.status] && t.status !== 'available' && <span className={STATUS_STYLE[t.status] || 'text-ink-muted'}>{STATUS_LABEL[t.status]} · </span>}
+                                      {t.players_available} {t.players_available === 1 ? 'spot' : 'spots'}
+                                    </>
+                                  )}
+                                </span>
+                                {(h !== undefined && (hasHolesData || t.product_label)) && (
+                                  <span className="text-[11px] text-ink-faint">{t.product_label ? `${t.product_label} · ` : ''}{h} holes{t.product_rating ? ` · ${t.product_rating.toFixed(1)} / ${t.product_slope}` : ''}</span>
+                                )}
+                                {!hasMemberRate && t.list_green_fee != null && (
+                                  <span className="text-[11px] text-ink-faint"><span className="line-through">${t.list_green_fee}</span> · last-minute</span>
+                                )}
+                                {hasMemberRate && (
+                                  <span className="text-[11px] text-ink-faint"><span className="line-through">${t.green_fee}</span> · member rate</span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                                {alertItem && (
+                                  <div className="mt-3 rounded-lg border px-4 sm:px-5 py-4" style={{ borderColor: `${accent}25`, backgroundColor: `${accent}05` }} onClick={e => e.stopPropagation()}>
                                     {alertSent ? (
-                                      <p className="text-sm text-ink"><b className="font-semibold">Alert set.</b> We&apos;ll email you the moment {formatTime(t.time)} opens up on {displayDate(selectedDate)}.</p>
+                                      <p className="text-sm text-ink"><b className="font-semibold">Alert set.</b> We&apos;ll email you the moment {formatTime(alertItem.time)} opens up on {displayDate(selectedDate)}.</p>
                                     ) : (
                                       <>
                                         <p className="text-sm text-ink-soft mb-3">We&apos;ll email you the moment this time opens up. One email, nothing else.</p>
@@ -1540,12 +1407,9 @@ export default function CourseDetailPage({
                                     )}
                                   </div>
                                 )}
-                              </div>
-                            );
-                          })}
-                        </div>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
                 </div>
