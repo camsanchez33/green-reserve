@@ -58,8 +58,9 @@ function SupportContent() {
 
   const loadChat = useCallback(async (id: string) => {
     const r = await dfetch<{ chat: Chat; messages: ChatMessage[] }>(`/api/operator/support/${encodeURIComponent(id)}`);
+    if (r.status === 401) { router.push('/dashboard/login'); return; }
     if (r.ok) { setChat(r.data.chat); setMessages(r.data.messages); setChatError(''); } else setChatError(r.error);
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     fetch('/api/operator/profile').then(r => r.ok ? r.json() : null).then(p => {
@@ -69,7 +70,11 @@ function SupportContent() {
     }).catch(() => {});
   }, [router]);
   // A prefilled message with no chat open starts a new one.
-  useEffect(() => { if (!open && params.get('prefill')) go(NEW); }, [open, params, go]);
+  // replace, not push: Back from the new chat must leave Support, not land on ?prefill= and bounce back (review 2026-11-12).
+  useEffect(() => { if (!open && params.get('prefill')) router.replace(`/dashboard/support?c=${NEW}`); }, [open, params, router]);
+  // A half-typed message stays with its chat: moving to another one starts empty (the prefill landing keeps its text).
+  const lastOpen = useRef(open);
+  useEffect(() => { if (lastOpen.current !== open && lastOpen.current !== null) setCompose(''); lastOpen.current = open; }, [open]);
   useEffect(() => { if (!open) loadList(); }, [open, loadList]);
   useEffect(() => {
     setSendError('');
@@ -136,7 +141,7 @@ function SupportContent() {
                         className="w-full text-left grid grid-cols-[10px_minmax(0,1fr)_auto] items-center gap-2.5 px-2.5 py-3 rounded-[10px] hover:bg-page">
                         <span aria-hidden="true" className={'w-1.5 h-1.5 rounded-full ' + s.dot} />
                         <span className="min-w-0">
-                          <span className={'block truncate text-[14px] ' + (bold ? 'text-ink font-semibold' : 'text-ink-soft')}>{c.fromGreenReserve ? `GreenReserve · ${c.subject}` : c.subject}</span>
+                          <span className={'block truncate text-[14px] ' + (bold ? 'text-ink font-semibold' : 'text-ink-soft')}>{c.subject}</span>
                           {c.last && <span className="block truncate text-[12.5px] text-ink-muted">{c.last.fromUs ? 'You: ' : ''}{c.last.body}</span>}
                         </span>
                         <span className={'text-[12px] whitespace-nowrap ' + s.tone}>{s.label}</span>
@@ -172,7 +177,8 @@ function SupportContent() {
               ))}
               <div ref={endRef} />
             </div>
-            {(open === NEW || chat) && (
+            {/* GreenReserve's announcements chat takes no replies. */}
+            {(open === NEW || (chat && !chat.fromGreenReserve)) && (
               // Right inset clears the assistant's corner launcher (W2-1).
               <div className="border-t border-line mt-3 pt-3 pr-[4.5rem] sm:pr-[5.5rem]">
                 <div className="flex items-end gap-2">
