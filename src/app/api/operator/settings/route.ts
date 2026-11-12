@@ -70,7 +70,9 @@ export async function PATCH(req: NextRequest) {
     'lateFeeBasis','lateFeeTiming','noShowFeeBasis','autoNoShowMinutes','onlineBlockNoShows','onlineBlockLateCancels','onlineBlockMonths',
     'dresscode','minPlayers','maxPlayers',
     'hasDrivingRange','drivingRangeType','rangeBallsFree','hasPuttingGreen','hasShortGameArea',
-    'hasProShop','proShopPhone','restaurantType','hasCartGirl','hasLessons','hasClubRental',
+    'hasProShop','proShopPhone',
+    // HOME-3 (Cam 2026-11-12): "We take cash" — display only (Home's Open the register bar); never gates cash.
+    'takesCash','restaurantType','hasCartGirl','hasLessons','hasClubRental',
     'hasPushCartRental','hasBagStorage','hasLockerRoom','hasGpsCarts',
     'hasTournaments','tournamentFrequency','hasCaddies','caddieType','caddieNote',
     'amenities',

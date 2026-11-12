@@ -550,16 +550,44 @@ async function main() {
     try {
       type R = { id: string; status: string };
       const listed = async () => ((await api('/api/admin/courses/directory', { cookie: viewerCookie })).body as { rows?: R[] }).rows;
+      type O = { key: string; courseId: string | null; inquiryId: string | null; stage: string };
+      const onb = async () => ((await api('/api/admin/onboarding', { cookie: viewerCookie })).body as { rows?: O[] }).rows;
       const r0 = await listed();
-      check('Golf courses keeps a never-live course built by hand (no inquiry, so Onboarding cannot show it)', !!r0?.some(x => x.id === data.courseA.id && x.status === 'onboarding'), JSON.stringify(r0?.map(x => [x.id, x.status])));
+      check('Golf courses leaves out a never-live course built by hand (no inquiry)', !!r0 && !r0.some(x => x.id === data.courseA.id), JSON.stringify(r0?.map(x => [x.id, x.status])));
+      const o0 = await onb();
+      check('…and Onboarding lists it, built by hand', !!o0?.some(x => x.key === `c:${data.courseA.id}` && x.inquiryId === null && x.stage === 'Built by hand'), JSON.stringify(o0));
+      type St = { steps: { steps: { label: string; done: boolean }[] } };
+      const ownerStep = (r?: O & Partial<St>) => r?.steps?.steps.find(x => x.label === 'Owner login set up')?.done;
+      await prisma.courseOperator.update({ where: { email: `${TS}-opa@test.local` }, data: { emailVerified: true, lastLoginAt: null } });
+      check('…its "Owner login set up" step waits for a first sign-in (not emailVerified, which create-course sets)', ownerStep((await onb())?.find(x => x.key === `c:${data.courseA.id}`) as O & St) === false);
+      await prisma.courseOperator.update({ where: { email: `${TS}-opa@test.local` }, data: { lastLoginAt: new Date() } });
+      check('…and is done once the owner has signed in', ownerStep((await onb())?.find(x => x.key === `c:${data.courseA.id}`) as O & St) === true);
       inq = await prisma.courseInquiry.create({ data: { contactName: 'Isol', contactTitle: 'GM', email: `${TS}-inq@test.local`, phone: '1', courseName: 'Isol Course A', address: '1', city: 'A City', state: 'CA', zipCode: '90000', courseType: 'public', status: 'building', builtCourseId: data.courseA.id } });
       const r1 = await listed();
-      check('…but leaves out a course onboarding from an inquiry (its home is Onboarding)', !!r1 && !r1.some(x => x.id === data.courseA.id), JSON.stringify(r1?.map(x => [x.id, x.status])));
+      check('…a course onboarding from an inquiry is not on Golf courses either', !!r1 && !r1.some(x => x.id === data.courseA.id), JSON.stringify(r1?.map(x => [x.id, x.status])));
+      const o1 = await onb();
+      check('…Onboarding lists it once, through its inquiry', o1?.filter(x => x.courseId === data.courseA.id).length === 1 && !!o1.some(x => x.key === `i:${inq!.id}` && x.stage === 'Building'), JSON.stringify(o1));
+      // Who sees what on the profile: a viewer gets no contact or notes and can't save a note.
+      const pv = (await api(`/api/admin/onboarding?key=i:${inq.id}`, { cookie: viewerCookie })).body as { contact?: unknown; notes?: unknown; canNote?: boolean; canBookCall?: boolean; steps?: { total?: number } };
+      await prisma.inquiryStatusEvent.create({ data: { inquiryId: inq.id, fromStatus: 'building', toStatus: 'building', trigger: 'admin', actorName: `Booking link sent to ${TS}-inq@test.local by Isol` } });
+      const pvRaw = (await api(`/api/admin/onboarding?key=i:${inq.id}`, { cookie: viewerCookie })).text;
+      check('Onboarding profile → viewer: the inquiry\'s email appears nowhere (history included)', !pvRaw.includes(`${TS}-inq@test.local`), pvRaw.slice(0, 300));
+      check('Onboarding profile → viewer: no contact, notes, note field or Cal.com', pv?.contact === null && pv?.notes === null && pv?.canNote === false && pv?.canBookCall === false && pv?.steps?.total === 8, JSON.stringify(pv).slice(0, 300));
+      const { signAdminToken } = await import('../src/lib/admin-session');
+      const mgr = await prisma.adminUser.create({ data: { name: 'Isol Onboarding Manager', email: `${TS}-onbmgr@test.local`, passwordHash: 'x', role: 'manager', active: true } });
+      try {
+        const mc = `admin_session=${await signAdminToken({ adminId: mgr.id, email: mgr.email, name: mgr.name, role: 'manager', mfa: true })}`;
+        const pa = (await api(`/api/admin/onboarding?key=i:${inq.id}`, { cookie: mc })).body as { contact?: { email?: string } | null; canNote?: boolean };
+        check('…manager: contact and the note field', pa?.contact?.email === `${TS}-inq@test.local` && pa?.canNote === true, JSON.stringify(pa).slice(0, 300));
+      } finally {
+        await prisma.adminUser.delete({ where: { id: mgr.id } });
+      }
     } finally {
       if (inq) await prisma.courseInquiry.delete({ where: { id: inq.id } });
       await prisma.course.update({ where: { id: data.courseA.id }, data: { active: data.courseA.active, liveStatus: data.courseA.liveStatus, firstWentLiveAt: data.courseA.firstWentLiveAt, welcomeEmailSentAt: data.courseA.welcomeEmailSentAt } });
     }
     check('…and lists it again once live', !!((await api('/api/admin/courses/directory', { cookie: viewerCookie })).body as { rows?: { id: string }[] }).rows?.some(x => x.id === data.courseA.id));
+    check('…and Onboarding no longer does', !((await api('/api/admin/onboarding', { cookie: viewerCookie })).body as { rows?: { courseId: string | null }[] }).rows?.some(x => x.courseId === data.courseA.id));
   }
   {
     // BRAIN-2a: Problems name golfers and money — support+ only, reads and writes.
@@ -646,7 +674,7 @@ async function main() {
     const limited = await prisma.adminUser.create({ data: { name: 'Isol Messages Only', email: `${TS}-msgonly@test.local`, passwordHash: 'x', role: 'manager', active: true, areas: ['messages'], areasSetAt: new Date() } });
     try {
       const c = `admin_session=${await signAdminToken({ adminId: limited.id, email: limited.email, name: limited.name, role: 'manager', mfa: true })}`;
-      for (const [path, label] of [['/api/admin/revenue', 'Money'], ['/api/admin/golfers?q=isol', 'Golfers'], ['/api/admin/problems', 'Problems'], ['/api/admin/course-feed?courseId=' + data.courseA.id, 'a course timeline'], ['/api/admin/goals', 'Goals'], ['/api/admin/courses/directory', 'Golf courses']] as const) {
+      for (const [path, label] of [['/api/admin/revenue', 'Money'], ['/api/admin/golfers?q=isol', 'Golfers'], ['/api/admin/problems', 'Problems'], ['/api/admin/course-feed?courseId=' + data.courseA.id, 'a course timeline'], ['/api/admin/goals', 'Goals'], ['/api/admin/courses/directory', 'Golf courses'], ['/api/admin/onboarding', 'Onboarding']] as const) {
         const r = await api(path, { cookie: c });
         check(`Messages-only manager → ${label} → 403 (area)`, r.status === 403 && (r.body as { code?: string })?.code === 'area', JSON.stringify({ status: r.status, body: r.body }));
       }
@@ -714,6 +742,82 @@ async function main() {
       await prisma.ownerSession.delete({ where: { id: live.id } });
     } finally {
       await prisma.adminUser.delete({ where: { id: limited.id } });
+    }
+  }
+
+  console.log('\n── Admin Revenue (ADMIN-REDO: GreenReserve\'s money from the ledger) ──');
+  {
+    const { signAdminToken } = await import('../src/lib/admin-session');
+    const { signOwnerToken } = await import('../src/lib/owner-session');
+    const sup = await prisma.adminUser.create({ data: { name: 'Isol Rev Support', email: `${TS}-revsup@test.local`, passwordHash: 'x', role: 'support', active: true, areas: ['messages'], areasSetAt: new Date() } });
+    const mgr = await prisma.adminUser.create({ data: { name: 'Isol Rev Manager', email: `${TS}-revmgr@test.local`, passwordHash: 'x', role: 'manager', active: true, areas: ['money'], areasSetAt: new Date() } });
+    const move = await prisma.moneyMove.create({ data: { courseId: data.courseA.id, what: 'round', direction: 'in', method: 'card', account: 'course', amountCents: 5150, platformFeeCents: 150, stripeId: `pi_isol_rev_${TS}`, bookingId: bookingA.id, at: new Date(Date.now() - 60_000) } });
+    try {
+      const sc = `admin_session=${await signAdminToken({ adminId: sup.id, email: sup.email, name: sup.name, role: 'support', mfa: true })}`;
+      checkStatus('Support without Money → Revenue → 403', (await api('/api/admin/revenue?period=month', { cookie: sc })).status, 403);
+      checkStatus('…and the ledger CSV → 403', (await api('/api/admin/revenue?period=month&format=csv', { cookie: sc })).status, 403);
+      const mc = `admin_session=${await signAdminToken({ adminId: mgr.id, email: mgr.email, name: mgr.name, role: 'manager', mfa: true })}`;
+      type Rev = { revenue?: { cents: number }; ledger?: { rows: { id: string; amountCents: number; what: string }[] }; byCourse?: { courseId: string; revenueCents: number }[]; period?: { kind: string; elapsedDays: number }; revenueSeries?: { current: number[] }; coursePayoutProblems?: unknown; payouts?: unknown };
+      for (const period of ['month', 'last_month', '30d', 'year']) {
+        const r = await api(`/api/admin/revenue?period=${period}`, { cookie: mc });
+        const b = r.body as Rev;
+        check(`Manager with Money → Revenue (${period}) → 200 with the period, revenue and series`, r.status === 200 && b.period?.kind === period && typeof b.revenue?.cents === 'number' && b.revenueSeries?.current.length === b.period?.elapsedDays, JSON.stringify({ status: r.status, period: b.period }));
+        check(`…no owner-only payout fields (${period})`, !('coursePayoutProblems' in (b ?? {})) && !('payouts' in (b ?? {})), Object.keys(b ?? {}).join(','));
+      }
+      const legacy = (await api('/api/admin/revenue?period=custom&from=2026-11-01&to=2026-11-10', { cookie: mc })).body as { period?: { from: string; to: string } };
+      check('The older page\'s custom period still says the days it was given', legacy.period?.from === '2026-11-01' && legacy.period?.to === '2026-11-10', JSON.stringify(legacy.period));
+      const before = (await api('/api/admin/revenue?period=month', { cookie: mc })).body as Rev;
+      const row = before.ledger?.rows.find(x => x.id === move.id);
+      check('…the ledger shows the real course\'s service fee', row?.amountCents === 150 && row.what === 'Service fee collected', JSON.stringify(row));
+      check('…its course\'s revenue counts it', (before.byCourse?.find(c => c.courseId === data.courseA.id)?.revenueCents ?? 0) >= 150);
+      check('…and the series adds up to the headline', (before.revenueSeries?.current ?? []).reduce((a, n) => a + n, 0) === before.revenue?.cents, JSON.stringify(before.revenue));
+      const csv = await fetch(`${BASE_URL}/api/admin/revenue?period=month&format=csv`, { headers: { cookie: mc } });
+      check('…the CSV lists it', csv.status === 200 && (csv.headers.get('content-type') ?? '').startsWith('text/csv') && (await csv.text()).includes(`pi_isol_rev_${TS}`));
+      {
+        // The transactions export takes the Revenue page's own window (?period=), Eastern days:
+        // a round checked in one minute before the platform month starts is last month's.
+        const { startOfPlatformMonth } = await import('../src/lib/admin-day');
+        const monthStart = startOfPlatformMonth(new Date());
+        const saved = await prisma.booking.findUniqueOrThrow({ where: { id: bookingA.id }, select: { paymentStatus: true, roundPaymentIntentId: true, checkedInAt: true } });
+        const exp = async (q: string) => { const r = await fetch(`${BASE_URL}/api/admin/transactions/export?${q}`, { headers: { cookie: mc } }); return { status: r.status, text: await r.text() }; };
+        try {
+          await prisma.booking.update({ where: { id: bookingA.id }, data: { paymentStatus: 'paid', roundPaymentIntentId: `pi_isol_exp_${TS}`, checkedInAt: new Date(monthStart.getTime() + 60_000) } });
+          const inMonth = await exp('period=month');
+          check('Export (period=month) includes a round checked in just after the platform month starts', inMonth.status === 200 && inMonth.text.includes(`pi_isol_exp_${TS}`), String(inMonth.status));
+          await prisma.booking.update({ where: { id: bookingA.id }, data: { checkedInAt: new Date(monthStart.getTime() - 60_000) } });
+          check('…and leaves out one a minute before (last month, Eastern)', !(await exp('period=month')).text.includes(`pi_isol_exp_${TS}`));
+          check('…which period=last_month has', (await exp('period=last_month')).text.includes(`pi_isol_exp_${TS}`));
+          checkStatus('…and an unknown period with no from/to → 400', (await exp('period=fortnight')).status, 400);
+        } finally {
+          await prisma.booking.update({ where: { id: bookingA.id }, data: saved });
+        }
+      }
+      await prisma.course.update({ where: { id: data.courseA.id }, data: { isTest: true } });
+      try {
+        const after = (await api('/api/admin/revenue?period=month', { cookie: mc })).body as Rev;
+        check('A test course\'s fee leaves the ledger (TEST-2)', !after.ledger?.rows.some(x => x.id === move.id));
+        check('…and the headline drops by it', (before.revenue?.cents ?? 0) - (after.revenue?.cents ?? 0) === 150, JSON.stringify({ before: before.revenue, after: after.revenue }));
+        check('…and the course is not in the table', !after.byCourse?.some(c => c.courseId === data.courseA.id));
+        const csv2 = await fetch(`${BASE_URL}/api/admin/revenue?period=month&format=csv`, { headers: { cookie: mc } });
+        check('…nor in the CSV', !(await csv2.text()).includes(`pi_isol_rev_${TS}`));
+      } finally {
+        await prisma.course.update({ where: { id: data.courseA.id }, data: { isTest: false } });
+      }
+      const live = await prisma.ownerSession.create({ data: { adminId: data.adminOwner.id, method: 'totp', expiresAt: new Date(Date.now() + 3600_000), stepUpAt: new Date() } });
+      try {
+        const oc = `gr_owner=${await signOwnerToken(live.id, data.adminOwner.id, live.expiresAt)}`;
+        const o = (await api('/api/admin/revenue?period=month', { cookie: oc })).body as Rev;
+        check('The owner gets course payout problems and payouts to courses', !!o && 'coursePayoutProblems' in o && 'payouts' in o, Object.keys(o ?? {}).join(','));
+        // No course here has a readable Stripe account (test keys): nothing was checked, so it must not read as "all paid".
+        const pp = (o as { coursePayoutProblems?: { rows: unknown[]; checkedCourses: number; unavailable: boolean } }).coursePayoutProblems;
+        check('…and says how many courses it checked (0 here, not "all paid")', typeof pp?.checkedCourses === 'number' && (pp.checkedCourses > 0 || pp.rows.length === 0), JSON.stringify(pp));
+      } finally {
+        await prisma.ownerSession.delete({ where: { id: live.id } });
+      }
+    } finally {
+      await prisma.moneyMove.delete({ where: { id: move.id } });
+      await prisma.adminAuditLog.deleteMany({ where: { adminId: { in: [sup.id, mgr.id] } } }).catch(() => {});
+      await prisma.adminUser.deleteMany({ where: { id: { in: [sup.id, mgr.id] } } });
     }
   }
 

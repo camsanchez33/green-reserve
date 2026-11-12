@@ -1,5 +1,5 @@
-// DASH-C Home — src/lib/operator-home.ts against a database: players by hour
-// today vs the same weekday last week, the fill, groups past their time, a
+// DASH-C Home — src/lib/operator-home.ts against a database: players today vs the same weekday last
+// week, today by hour (HOME-3), the 4-week average, the fill, groups past their time, a
 // declined card, the next tee times, and what a login without payments sees.
 // Needs a database. Run: npx tsx scripts/operator-home-db-test.ts
 import { readFileSync } from 'fs';
@@ -58,7 +58,14 @@ async function main() {
   const owner = await operatorHome(course.id, { money: true, messages: true }, NOW);
   check('players today count live bookings only (cancelled left out)', owner.players.today === 10, owner.players);
   check('…against the same weekday last week', owner.players.lastWeek === 4, owner.players);
-  check('players land in their tee-time hour', owner.hours[10].today === 3 && owner.hours[9].today === 1 && owner.hours[8].today === 2 && owner.hours[11].today === 3 && owner.hours[13].today === 1 && owner.hours[14].today === 0 && owner.hours[8].lastWeek === 4);
+  // HOME-3 (Cam 2026-11-12): today by hour as played · playing · booked · open. At noon the 8:00 and 9:30 groups are
+  // checked in and still inside an 18-hole round (ROUND_MINUTES), so playing; the rest are booked.
+  const bh = Object.fromEntries(owner.byHour.map(b => [b.hour, b]));
+  check('by hour: checked-in groups still out are playing', bh[8]?.playing === 2 && bh[9]?.playing === 1 && bh[8]?.played === 0, owner.byHour);
+  check('…unchecked groups are booked, the rest of the spots open', bh[10]?.booked === 3 && bh[11]?.booked === 3 && bh[13]?.booked === 1 && bh[10]?.spots === 8 && bh[10]?.open === 5, owner.byHour);
+  check('…a blocked empty time adds no spots; a cancelled group adds no players', !bh[15] && bh[14]?.booked === 0 && bh[14]?.open === 4, owner.byHour);
+  check('next off: the next tee time from now with a group on it', owner.nextOff?.time === '13:00' && owner.nextOff.players === 1, owner.nextOff);
+  check('checked in: players checked in of players booked', owner.checkedIn.checkedIn === 3 && owner.checkedIn.booked === 10, owner.checkedIn);
   check('fill counts spots in times that are not blocked', owner.fillPct.today === Math.round((10 / 28) * 100), owner.fillPct);
   check('a group past its tee time plus the grace, not checked in, needs you', owner.late.length === 1 && owner.late[0].time === '11:00', owner.late);
   const shopDecline = owner.declined.find(d => d.time === '10:30');
@@ -70,14 +77,13 @@ async function main() {
   check('money uses the Analytics definitions (paid today by card or at the counter, counted in groups)', !!owner.money && owner.money.paidCents === 15000 && owner.money.paidGroups === 2, owner.money);
 
   // DENSE-3 (Cam 2026-10-28): trend lines, the 14-day pace, and Not paid yet as on the tee sheet strip.
-  check('trend: the same weekday for seven weeks, then today', owner.trend.dates.length === 8 && owner.trend.dates[7] === TODAY && owner.trend.dates[6] === LAST_WEEK, owner.trend.dates);
-  check('…players and fill per week, today last', owner.trend.players[6] === 4 && owner.trend.players[7] === 10 && owner.trend.fillPct[7] === owner.fillPct.today, owner.trend);
-  check('…paid per week from computeAnalytics, today last', owner.trend.paidCents?.[7] === 15000 && owner.trend.paidCents.slice(0, 7).every(c => c === 0), owner.trend.paidCents);
+  check('the 4-week average: the last 4 Wednesdays with tee times (only last week had any)', owner.pace[0].avg4 === 4 && owner.pace[7].avg4 === 4, owner.pace.map(p => p.avg4));
+  check('…a weekday with no tee times in the last 4 weeks has no line', owner.pace[1].avg4 === null, owner.pace[1]);
   check('pace: 14 days from today, today\'s live players against spots offered', owner.pace.length === 14 && owner.pace[0].date === TODAY && owner.pace[0].booked === 10 && owner.pace[0].offered === 28, owner.pace[0]);
   check('not paid yet counts every unpaid group today, past their time and still to play', !!owner.money && owner.money.lateGroups > 0 && owner.money.outstandingGroups > owner.money.lateGroups, owner.money);
   const staff = await operatorHome(course.id, { money: false, messages: false }, NOW);
-  check('a login without payments gets no money', staff.money === null && staff.trend.paidCents === null);
-  check('…but still sees players, fill and the pace', staff.trend.players[7] === 10 && staff.pace.length === 14);
+  check('a login without payments gets no money', staff.money === null);
+  check('…but still sees players, fill, the hours and the pace', staff.players.today === 10 && staff.byHour.length === owner.byHour.length && staff.pace.length === 14);
   check('…and sees who declined, not how much', staff.declined.length === 3 && staff.declined.every(d => d.amountCents === null));
   check('…and no unread count without messages', staff.unreadMessages === 0);
 

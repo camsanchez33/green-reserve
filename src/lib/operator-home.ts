@@ -11,24 +11,23 @@ import { todayIn, clockIn, addDaysStr } from './course-time';
 import { computeAnalytics, bookingPace, NO_SHOW_GRACE_MIN } from './analytics';
 import { roundChargeCents } from './shop';
 import { isPlaceholderEmail } from './email';
+import { todayByHour, checkedInOf, sameWeekdayAverage } from './home-today';
 
 const LIVE = { status: { in: ['confirmed', 'completed'] } };
 
-/** Players booked on a day, per tee-time hour (0–23), and the spots offered that day. */
+/** Players booked on a day and how full it is (players of the spots offered). */
 async function dayShape(courseId: string, date: string) {
   const times = await prisma.teeTime.findMany({
     where: { courseId, date },
     select: { time: true, status: true, playersAvailable: true, bookings: { where: LIVE, select: { players: true } } },
   });
-  const hours = Array(24).fill(0) as number[];
   let players = 0, offered = 0;
   for (const t of times) {
     const n = t.bookings.reduce((s, b) => s + b.players, 0);
-    hours[Number(t.time.slice(0, 2))] += n;
     players += n;
     offered += timeSpots(t, n); // ACC-1: one rule for spots (lib/day-fill)
   }
-  return { hours, players, fillPct: offered ? Math.round((players / offered) * 100) : null };
+  return { players, fillPct: offered ? Math.round((players / offered) * 100) : null };
 }
 
 export type DeclinedCard = { id: string; name: string; date: string; time: string; amountCents: number | null; canText: boolean; canEmail: boolean; players?: number; reason?: string };
@@ -69,7 +68,7 @@ export type HomeSlot = { id: string; time: string; open: number; groups: HomeGro
 
 export async function operatorHome(courseId: string, opts: { money: boolean; messages: boolean; setup?: boolean; owner?: boolean }, now = new Date()) {
   const course = await prisma.course.findUnique({ where: { id: courseId }, select: {
-    timezone: true, name: true, logoUrl: true, heroImageUrl: true, description: true, phone: true, holes: true, par: true, stripeAccountActive: true,
+    timezone: true, name: true, takesCash: true, logoUrl: true, heroImageUrl: true, description: true, phone: true, holes: true, par: true, stripeAccountActive: true,
     _count: { select: { photos: true, teeSets: true } },
   } });
   const tz = course?.timezone;
@@ -77,17 +76,16 @@ export async function operatorHome(courseId: string, opts: { money: boolean; mes
   const clock = clockIn(tz, now);
   const lastWeek = addDaysStr(today, -7);
 
-  // DENSE-3 (Cam 2026-10-28, "yes, add trend lines"): the same weekday for the last seven weeks, oldest first, then today.
-  const weeksBack = [7, 6, 5, 4, 3, 2, 1].map(k => addDaysStr(today, -7 * k));
-  const [cur, earlier, slots, { rows: declined, total: declinedTotal }, unread, pace] = await Promise.all([
+  const [cur, prev, slots, { rows: declined, total: declinedTotal }, unread, pace] = await Promise.all([
     dayShape(courseId, today),
-    Promise.all(weeksBack.map(d => dayShape(courseId, d))),
+    // HOME-3: the numbers compare with the same weekday last week (the trend lines went with the mockup).
+    dayShape(courseId, lastWeek),
     prisma.teeTime.findMany({
       // A blocked time that still holds a group keeps it on Home (late, no-shows, next) — stress test 2026-11-10.
       where: { courseId, date: today, OR: [{ status: { not: 'blocked' } }, { bookings: { some: LIVE } }] },
       orderBy: { time: 'asc' },
-      select: { id: true, time: true, status: true, playersAvailable: true, playersBooked: true,
-        bookings: { where: LIVE, orderBy: { createdAt: 'asc' }, select: { id: true, golferName: true, players: true, paymentStatus: true, checkedInAt: true, noShowAt: true, status: true } } },
+      select: { id: true, time: true, status: true, holes: true, playersAvailable: true, playersBooked: true,
+        bookings: { where: LIVE, orderBy: { createdAt: 'asc' }, select: { id: true, golferName: true, players: true, checkedInPlayers: true, paymentStatus: true, checkedInAt: true, noShowAt: true, status: true } } },
     }),
     declinedCards(courseId, opts.money),
     // The same count as the menu's Messages badge (/api/operator/messages?unreadCount=1).
@@ -95,7 +93,24 @@ export async function operatorHome(courseId: string, opts: { money: boolean; mes
     // DENSE-3 (Cam 2026-10-28): the next 14 days against the usual by now — Analytics' own pace.
     bookingPace(courseId, today, now.getTime()),
   ]);
-  const prev = earlier[earlier.length - 1];
+
+  // HOME-3 (Cam 2026-11-12): today by hour as played · playing · booked · open (lib/home-today), the players
+  // checked in, and the next 14 days' line — the average of the last 4 of the same weekday (final counts).
+  const hourSlots = slots.map(s => ({ time: s.time, holes: s.holes, spots: timeSpots(s, s.bookings.reduce((n, b) => n + b.players, 0)), bookings: s.bookings }));
+  const byHour = todayByHour(hourSlots, clock);
+  const checkedIn = checkedInOf(hourSlots);
+  const pastDays = await prisma.teeTime.findMany({
+    where: { courseId, date: { gte: addDaysStr(today, -28), lte: addDaysStr(today, -1) } },
+    select: { date: true, status: true, bookings: { where: LIVE, select: { players: true } } },
+  });
+  const finalOn = new Map<string, number | null>();
+  for (const t of pastDays) {
+    const n = t.bookings.reduce((m, b) => m + b.players, 0);
+    // A day counts only when it had tee times on offer (or a group on a blocked one) — a closed day isn't a zero.
+    if (t.status === 'blocked' && n === 0) { if (!finalOn.has(t.date)) finalOn.set(t.date, null); continue; }
+    finalOn.set(t.date, (finalOn.get(t.date) ?? 0) + n);
+  }
+  const next14 = pace.map(d => ({ ...d, avg4: sameWeekdayAverage(d.date, today, finalOn) }));
 
   const declinedIds = new Set(declined.map(d => d.id));
   // Past their tee time plus the no-show grace, still not checked in or marked.
@@ -119,13 +134,8 @@ export async function operatorHome(courseId: string, opts: { money: boolean; mes
   // past their time (marked no-shows and refunded rounds aside, lib/analytics) plus still to play — as on the tee sheet's strip; lateGroups
   // is the part past their time (Cam 2026-10-27, "how have none of them not paid").
   let money: null | { paidCents: number; paidGroups: number; outstandingCents: number; outstandingGroups: number; lateGroups: number } = null;
-  let paidTrend: number[] | null = null;
   if (opts.money) {
-    const [day, weeks] = await Promise.all([
-      computeAnalytics(courseId, { from: today, to: today }, now),
-      // 43 days, so the series stays by day (analytics buckets by week past 45).
-      computeAnalytics(courseId, { from: weeksBack[0], to: weeksBack[weeksBack.length - 1] }, now),
-    ]);
+    const day = await computeAnalytics(courseId, { from: today, to: today }, now);
     money = {
       // Paid bookings (groups), as Analytics' collected set; Analytics' "rounds" are players.
       paidCents: day.revenue.collectedCents, paidGroups: day.revenue.beyond.rounds,
@@ -134,22 +144,22 @@ export async function operatorHome(courseId: string, opts: { money: boolean; mes
       outstandingGroups: day.revenue.notPaidBookings,
       lateGroups: day.revenue.outstandingBookings,
     };
-    const byDate = new Map(weeks.revenue.series.map(x => [x.key, x.collectedCents]));
-    paidTrend = [...weeksBack.map(d => byDate.get(d) ?? 0), day.revenue.collectedCents];
   }
 
+  // HOME-3: the next tee time from now with a group on it — every slot, not just the next six.
+  const nx = slots.find(s => s.time.slice(0, 5) >= clock.slice(0, 5) && s.bookings.some(b => b.status === 'confirmed' || b.status === 'completed'));
+  const nextOff = nx ? { id: nx.id, time: nx.time.slice(0, 5), name: nx.bookings[0].golferName, groups: nx.bookings.length, players: nx.bookings.reduce((n, b) => n + b.players, 0) } : null;
+
   return {
+    nextOff,
     courseName: course?.name ?? '', today, lastWeek, clock,
-    hours: cur.hours.map((n, h) => ({ hour: h, today: n, lastWeek: prev.hours[h] })),
+    // HOME-3 (Cam 2026-11-12): "Open the register" shows only when the course says it takes cash (Settings → Pro shop).
+    takesCash: !!course?.takesCash,
     players: { today: cur.players, lastWeek: prev.players },
     fillPct: { today: cur.fillPct, lastWeek: prev.fillPct },
-    trend: {
-      dates: [...weeksBack, today],
-      players: [...earlier.map(e => e.players), cur.players],
-      fillPct: [...earlier.map(e => e.fillPct), cur.fillPct],
-      paidCents: paidTrend,
-    },
-    pace,
+    pace: next14,
+    byHour,
+    checkedIn,
     money,
     declined,
     declinedTotal,

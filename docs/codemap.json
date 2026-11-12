@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 703,
-    "routes": 302,
-    "libs": 252,
+    "files": 711,
+    "routes": 304,
+    "libs": 255,
     "models": 72,
     "orphans": 11,
     "ungatedRoutes": 3
@@ -667,7 +667,7 @@
     },
     {
       "path": "src/app/admin/courses/page.tsx",
-      "lines": 330,
+      "lines": 329,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -730,7 +730,8 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/admin/courses/page.tsx"
+        "src/app/admin/courses/page.tsx",
+        "src/app/admin/onboarding/page.tsx"
       ]
     },
     {
@@ -1106,6 +1107,75 @@
         "react"
       ],
       "usedBy": []
+    },
+    {
+      "path": "src/app/admin/onboarding/page.tsx",
+      "lines": 320,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (OnboardingPage)",
+          "kind": "component"
+        }
+      ],
+      "route": "/admin/onboarding",
+      "kind": "page",
+      "methods": [],
+      "auth": "admin",
+      "guard": "client-side",
+      "imports": [
+        "../admin-glass.module.css",
+        "../courses/courses.module.css",
+        "../courses/terms",
+        "./onboarding.module.css",
+        "./terms",
+        "@/components/admin/AdminSidebar",
+        "next/link",
+        "react"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/admin/onboarding/terms.ts",
+      "lines": 11,
+      "purpose": "Onboarding (ADMIN-REDO page 3):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "ACTION_FAILED",
+          "kind": "component"
+        },
+        {
+          "name": "FOOT_CSV",
+          "kind": "const"
+        },
+        {
+          "name": "FOOT_PIPELINE",
+          "kind": "const"
+        },
+        {
+          "name": "LAUNCH_SOON",
+          "kind": "const"
+        },
+        {
+          "name": "NO_CAL_LINK",
+          "kind": "const"
+        },
+        {
+          "name": "overdueTitle",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/admin/onboarding/page.tsx"
+      ]
     },
     {
       "path": "src/app/admin/page.tsx",
@@ -2122,7 +2192,7 @@
     },
     {
       "path": "src/app/api/admin/courses/directory/route.ts",
-      "lines": 162,
+      "lines": 159,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2188,7 +2258,8 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/api/admin/courses/directory/route.ts"
+        "src/app/api/admin/courses/directory/route.ts",
+        "src/app/api/admin/onboarding/route.ts"
       ]
     },
     {
@@ -2705,6 +2776,134 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/admin/onboarding/plan.ts",
+      "lines": 152,
+      "purpose": "ADMIN-REDO page 3 — Onboarding (Cam approved the mockup 2026-11-12).",
+      "brain": [],
+      "exports": [
+        {
+          "name": "BY_HAND_STAGE",
+          "kind": "const"
+        },
+        {
+          "name": "checklist",
+          "kind": "fn"
+        },
+        {
+          "name": "compareRows",
+          "kind": "fn"
+        },
+        {
+          "name": "HistoryEvent",
+          "kind": "type"
+        },
+        {
+          "name": "historyLine",
+          "kind": "fn"
+        },
+        {
+          "name": "inquiryNext",
+          "kind": "fn"
+        },
+        {
+          "name": "isOnboardingStatus",
+          "kind": "fn"
+        },
+        {
+          "name": "isOverdue",
+          "kind": "fn"
+        },
+        {
+          "name": "MARKER_WORDS",
+          "kind": "const"
+        },
+        {
+          "name": "Need",
+          "kind": "type"
+        },
+        {
+          "name": "needOf",
+          "kind": "fn"
+        },
+        {
+          "name": "OnboardingStatus",
+          "kind": "type"
+        },
+        {
+          "name": "OVERDUE_DAYS",
+          "kind": "const"
+        },
+        {
+          "name": "rankOf",
+          "kind": "fn"
+        },
+        {
+          "name": "Sortable",
+          "kind": "type"
+        },
+        {
+          "name": "stageName",
+          "kind": "fn"
+        },
+        {
+          "name": "STAGES",
+          "kind": "const"
+        },
+        {
+          "name": "StepFacts",
+          "kind": "type"
+        },
+        {
+          "name": "STEPS",
+          "kind": "const"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/lib/change-requests",
+        "@/lib/inquiry-board",
+        "@/lib/inquiry-status"
+      ],
+      "usedBy": [
+        "src/app/api/admin/onboarding/route.ts"
+      ]
+    },
+    {
+      "path": "src/app/api/admin/onboarding/route.ts",
+      "lines": 153,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/onboarding",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "../courses/directory/status",
+        "./plan",
+        "@/lib/admin-session",
+        "@/lib/approval-state",
+        "@/lib/change-requests",
+        "@/lib/inquiry-status",
+        "@/lib/operator-setup",
+        "@/lib/prisma",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/admin/orphan-sweep/route.ts",
       "lines": 49,
       "purpose": "",
@@ -2977,7 +3176,7 @@
     },
     {
       "path": "src/app/api/admin/revenue/route.ts",
-      "lines": 365,
+      "lines": 514,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2995,15 +3194,20 @@
       "guard": "file",
       "imports": [
         "@/lib/access-fee",
+        "@/lib/admin-day",
         "@/lib/admin-session",
+        "@/lib/card-reader",
         "@/lib/course-metrics",
         "@/lib/expenses",
         "@/lib/fees-by-day",
+        "@/lib/ledger-view",
         "@/lib/money-problems",
         "@/lib/platform-stripe",
         "@/lib/prisma",
         "@/lib/real-courses",
+        "@/lib/revenue-period",
         "@/lib/shop",
+        "@/lib/stripe",
         "@/lib/stripe-errors",
         "next/server"
       ],
@@ -3426,7 +3630,7 @@
     },
     {
       "path": "src/app/api/admin/transactions/export/route.ts",
-      "lines": 94,
+      "lines": 107,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3445,6 +3649,7 @@
       "imports": [
         "@/lib/admin-session",
         "@/lib/prisma",
+        "@/lib/revenue-period",
         "@/lib/shop",
         "next/server"
       ],
@@ -6321,7 +6526,7 @@
     },
     {
       "path": "src/app/api/operator/home/route.ts",
-      "lines": 28,
+      "lines": 31,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7332,7 +7537,7 @@
     },
     {
       "path": "src/app/api/operator/settings/route.ts",
-      "lines": 136,
+      "lines": 138,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9100,8 +9305,8 @@
     },
     {
       "path": "src/app/dashboard/home/page.tsx",
-      "lines": 347,
-      "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the mockups):",
+      "lines": 302,
+      "purpose": "DASH-C Home (Cam 2026-10-22) → HOME-3 (Cam 2026-11-12, \"approved, build the home page to match the mockup\"; ADMIN_REDO_SPEC.md \"Course dashboard Home:",
       "brain": [],
       "exports": [
         {
@@ -9119,6 +9324,7 @@
         "@/components/dashboard/DeclinedCardList",
         "@/components/dashboard/LoadError",
         "@/components/dashboard/OpenRegister",
+        "@/components/dashboard/OperatorSearch",
         "@/components/dashboard/home/HomeBoard",
         "@/components/dashboard/money/PayoutsTable",
         "@/components/dashboard/settings/FinishSetup",
@@ -9126,6 +9332,7 @@
         "@/components/ui/StatusDot",
         "@/lib/analytics-terms",
         "@/lib/dashboard-fetch",
+        "@/lib/home-today",
         "@/lib/operator-home",
         "@/lib/setup-missing",
         "@/lib/use-dashboard-access",
@@ -9138,7 +9345,7 @@
     },
     {
       "path": "src/app/dashboard/layout.tsx",
-      "lines": 22,
+      "lines": 20,
       "purpose": "Auth protection for /dashboard/* is handled by src/middleware.ts.",
       "brain": [],
       "exports": [
@@ -9160,7 +9367,6 @@
         "@/lib/op-theme",
         "@/lib/staff-fonts",
         "next",
-        "next/font/google",
         "next/headers"
       ],
       "usedBy": []
@@ -9499,7 +9705,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 1202,
+      "lines": 1205,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9524,6 +9730,7 @@
         "@/components/dashboard/StaffPermissions",
         "@/components/dashboard/Toast",
         "@/components/dashboard/settings/FinishSetup",
+        "@/components/dashboard/settings/TakesCashToggle",
         "@/components/dashboard/settings/WhoPaysWhat",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
@@ -10732,7 +10939,7 @@
     },
     {
       "path": "src/components/OperatorSidebar.tsx",
-      "lines": 339,
+      "lines": 357,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10876,6 +11083,7 @@
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/inquiries/page.tsx",
         "src/app/admin/messages/page.tsx",
+        "src/app/admin/onboarding/page.tsx",
         "src/app/admin/page.tsx",
         "src/app/admin/problems/page.tsx",
         "src/app/admin/profile/page.tsx",
@@ -11275,7 +11483,7 @@
     },
     {
       "path": "src/components/admin/admin-href.ts",
-      "lines": 61,
+      "lines": 62,
       "purpose": "Admin lane (2026-11-10):",
       "brain": [],
       "exports": [
@@ -12029,7 +12237,7 @@
     },
     {
       "path": "src/components/dashboard/OpenRegister.tsx",
-      "lines": 141,
+      "lines": 149,
       "purpose": "POS-7 (Cam 2026-11-09:",
       "brain": [],
       "exports": [
@@ -12081,6 +12289,7 @@
         "react"
       ],
       "usedBy": [
+        "src/app/dashboard/home/page.tsx",
         "src/components/OperatorSidebar.tsx"
       ]
     },
@@ -13044,7 +13253,7 @@
     },
     {
       "path": "src/components/dashboard/home/HomeBoard.tsx",
-      "lines": 273,
+      "lines": 305,
       "purpose": "DASH-D Home (Cam 2026-11-01, mockup S1):",
       "brain": [],
       "exports": [
@@ -13057,12 +13266,24 @@
           "kind": "component"
         },
         {
+          "name": "EventsCard",
+          "kind": "component"
+        },
+        {
           "name": "Goals",
           "kind": "type"
         },
         {
           "name": "GoalsCard",
           "kind": "component"
+        },
+        {
+          "name": "heatStep",
+          "kind": "fn"
+        },
+        {
+          "name": "HomeEvent",
+          "kind": "reexport"
         },
         {
           "name": "ShiftNote",
@@ -13092,6 +13313,9 @@
         "@/lib/course-conditions",
         "@/lib/course-goals",
         "@/lib/dashboard-fetch",
+        "@/lib/goal-pace",
+        "@/lib/home-board",
+        "@/lib/home-today",
         "next/link",
         "react"
       ],
@@ -13489,6 +13713,30 @@
       ],
       "usedBy": [
         "src/app/dashboard/home/page.tsx",
+        "src/app/dashboard/settings/page.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/settings/TakesCashToggle.tsx",
+      "lines": 31,
+      "purpose": "HOME-3 (Cam 2026-11-12:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "TakesCashToggle",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/lib/dashboard-fetch",
+        "react"
+      ],
+      "usedBy": [
         "src/app/dashboard/settings/page.tsx"
       ]
     },
@@ -14776,12 +15024,14 @@
         "src/app/api/admin/ask/route.ts",
         "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/goals/route.ts",
+        "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/today/overview/route.ts",
         "src/lib/admin-ask.ts",
         "src/lib/admin-checks.ts",
         "src/lib/admin-course-page.ts",
         "src/lib/admin-home.ts",
-        "src/lib/admin-today.ts"
+        "src/lib/admin-today.ts",
+        "src/lib/revenue-period.ts"
       ]
     },
     {
@@ -15139,6 +15389,7 @@
         "src/app/api/admin/login/route.ts",
         "src/app/api/admin/messages/route.ts",
         "src/app/api/admin/nav-badges/route.ts",
+        "src/app/api/admin/onboarding/route.ts",
         "src/app/api/admin/orphan-sweep/route.ts",
         "src/app/api/admin/owner-devices/route.ts",
         "src/app/api/admin/passkeys/route.ts",
@@ -15593,7 +15844,7 @@
     },
     {
       "path": "src/lib/analytics-terms.ts",
-      "lines": 59,
+      "lines": 63,
       "purpose": "DENSE-1 (DENSE_UI_SPEC P2):",
       "brain": [],
       "exports": [
@@ -15809,6 +16060,7 @@
         "src/app/api/admin/course-documents/route.ts",
         "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/courses/route.ts",
+        "src/app/api/admin/onboarding/route.ts",
         "src/app/api/admin/request-re-review/route.ts",
         "src/app/api/cron/chase-onboarding/route.ts",
         "src/app/api/operator/approve-page/route.ts",
@@ -17281,6 +17533,7 @@
         "stripe"
       ],
       "usedBy": [
+        "src/app/api/admin/revenue/route.ts",
         "src/app/api/operator/card-readers/route.ts",
         "src/app/api/operator/reader-rounds/route.ts",
         "src/app/api/operator/shop-sales/route.ts",
@@ -17498,6 +17751,8 @@
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/inquiries/route.ts",
         "src/app/api/admin/messages/route.ts",
+        "src/app/api/admin/onboarding/plan.ts",
+        "src/app/api/admin/onboarding/route.ts",
         "src/app/api/admin/request-re-review/route.ts",
         "src/app/api/operator/approve-page/route.ts",
         "src/app/api/operator/courses/route.ts",
@@ -18049,7 +18304,7 @@
     },
     {
       "path": "src/lib/course-conditions.ts",
-      "lines": 66,
+      "lines": 101,
       "purpose": "DASH-D Home (Cam 2026-11-01, \"the course conditions\"):",
       "brain": [],
       "exports": [
@@ -18067,6 +18322,10 @@
         },
         {
           "name": "CONDITION_LINES_MAX",
+          "kind": "const"
+        },
+        {
+          "name": "CONDITION_NOTE_CHARS",
           "kind": "const"
         },
         {
@@ -18095,6 +18354,14 @@
         },
         {
           "name": "golferConditionLines",
+          "kind": "fn"
+        },
+        {
+          "name": "HOME_CONDITIONS",
+          "kind": "const"
+        },
+        {
+          "name": "mergeHomeConditions",
           "kind": "fn"
         }
       ],
@@ -19342,6 +19609,7 @@
         "src/components/dashboard/money/PayoutsTable.tsx",
         "src/components/dashboard/money/RefundForm.tsx",
         "src/components/dashboard/money/SalesPanel.tsx",
+        "src/components/dashboard/settings/TakesCashToggle.tsx",
         "src/components/dashboard/settings/WhoPaysWhat.tsx",
         "src/components/dashboard/shop/SaleReceiptPanel.tsx"
       ]
@@ -20806,6 +21074,52 @@
       ]
     },
     {
+      "path": "src/lib/goal-pace.ts",
+      "lines": 64,
+      "purpose": "GOAL-PACE (Cam 2026-11-12, ADMIN_REDO_SPEC \"Goals:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "EARLY_DAYS",
+          "kind": "const"
+        },
+        {
+          "name": "elapsedDays",
+          "kind": "fn"
+        },
+        {
+          "name": "elapsedShare",
+          "kind": "fn"
+        },
+        {
+          "name": "GoalKind",
+          "kind": "type"
+        },
+        {
+          "name": "goalPace",
+          "kind": "fn"
+        },
+        {
+          "name": "PaceTone",
+          "kind": "type"
+        },
+        {
+          "name": "projectAtEnd",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/components/dashboard/home/HomeBoard.tsx",
+        "src/lib/home-board.ts"
+      ]
+    },
+    {
       "path": "src/lib/golfer-key.ts",
       "lines": 40,
       "purpose": "Who a golfer is at a course:",
@@ -21131,7 +21445,7 @@
     },
     {
       "path": "src/lib/home-board.ts",
-      "lines": 112,
+      "lines": 130,
       "purpose": "DASH-D Home (Cam 2026-11-01, mockups S1 + \"week-ahead heat map and month vs goal\"):",
       "brain": [],
       "exports": [
@@ -21141,6 +21455,10 @@
         },
         {
           "name": "GoalRow",
+          "kind": "type"
+        },
+        {
+          "name": "HomeEvent",
           "kind": "type"
         },
         {
@@ -21160,6 +21478,10 @@
           "kind": "type"
         },
         {
+          "name": "upcomingEvents",
+          "kind": "fn"
+        },
+        {
           "name": "weekAhead",
           "kind": "fn"
         }
@@ -21175,11 +21497,71 @@
         "./course-goals",
         "./course-time",
         "./day-fill",
+        "./goal-pace",
         "./prisma"
       ],
       "usedBy": [
         "src/app/api/operator/home/route.ts",
-        "src/app/api/operator/shift-notes/route.ts"
+        "src/app/api/operator/shift-notes/route.ts",
+        "src/components/dashboard/home/HomeBoard.tsx"
+      ]
+    },
+    {
+      "path": "src/lib/home-today.ts",
+      "lines": 107,
+      "purpose": "HOME-3 (Cam 2026-11-12, \"approved, build the home page to match the mockup\", ADMIN_REDO_SPEC.md \"Course dashboard Home:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "checkedInOf",
+          "kind": "fn"
+        },
+        {
+          "name": "CONDITION_TONE",
+          "kind": "const"
+        },
+        {
+          "name": "GoalTone",
+          "kind": "type"
+        },
+        {
+          "name": "HourBar",
+          "kind": "type"
+        },
+        {
+          "name": "HourSlot",
+          "kind": "type"
+        },
+        {
+          "name": "RAIN_PCT",
+          "kind": "const"
+        },
+        {
+          "name": "sameWeekdayAverage",
+          "kind": "fn"
+        },
+        {
+          "name": "todayByHour",
+          "kind": "fn"
+        },
+        {
+          "name": "weatherLine",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./on-course",
+        "./weather"
+      ],
+      "usedBy": [
+        "src/app/dashboard/home/page.tsx",
+        "src/components/dashboard/home/HomeBoard.tsx",
+        "src/lib/operator-home.ts"
       ]
     },
     {
@@ -21297,6 +21679,7 @@
       ],
       "usedBy": [
         "src/app/admin/inquiries/[id]/page.tsx",
+        "src/app/api/admin/onboarding/plan.ts",
         "src/components/admin/InquiryBoard.tsx"
       ]
     },
@@ -21700,6 +22083,8 @@
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/inquiries/page.tsx",
         "src/app/api/admin/inquiries/route.ts",
+        "src/app/api/admin/onboarding/plan.ts",
+        "src/app/api/admin/onboarding/route.ts",
         "src/app/api/calcom/webhook/route.ts",
         "src/app/api/call/[token]/route.ts",
         "src/app/api/inquiries/route.ts",
@@ -21804,6 +22189,10 @@
           "kind": "fn"
         },
         {
+          "name": "csvCell",
+          "kind": "fn"
+        },
+        {
           "name": "dayOf",
           "kind": "fn"
         },
@@ -21884,6 +22273,7 @@
         "./stripe"
       ],
       "usedBy": [
+        "src/app/api/admin/revenue/route.ts",
         "src/app/api/operator/money/ledger/route.ts",
         "src/components/dashboard/money/LedgerPanel.tsx"
       ]
@@ -23233,12 +23623,13 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/dashboard/page.tsx"
+        "src/app/dashboard/page.tsx",
+        "src/lib/home-today.ts"
       ]
     },
     {
       "path": "src/lib/op-theme.ts",
-      "lines": 24,
+      "lines": 26,
       "purpose": "DASH-D (Cam 2026-11-01:",
       "brain": [],
       "exports": [
@@ -23276,7 +23667,7 @@
     },
     {
       "path": "src/lib/operator-home.ts",
-      "lines": 170,
+      "lines": 180,
       "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the course dashboard mockups):",
       "brain": [],
       "exports": [
@@ -23311,6 +23702,7 @@
         "./course-time",
         "./day-fill",
         "./email",
+        "./home-today",
         "./prisma",
         "./setup-missing",
         "./shop"
@@ -23388,6 +23780,7 @@
       "usedBy": [
         "src/app/api/admin/create-course/route.ts",
         "src/app/api/admin/inquiries/route.ts",
+        "src/app/api/admin/onboarding/route.ts",
         "src/app/api/preview/send/route.ts"
       ]
     },
@@ -23887,6 +24280,7 @@
         "src/app/api/admin/login/route.ts",
         "src/app/api/admin/messages/route.ts",
         "src/app/api/admin/nav-badges/route.ts",
+        "src/app/api/admin/onboarding/route.ts",
         "src/app/api/admin/owner-devices/route.ts",
         "src/app/api/admin/passkeys/route.ts",
         "src/app/api/admin/platform-stripe/route.ts",
@@ -24900,6 +25294,102 @@
         "src/lib/move-booking.ts",
         "src/lib/sample-data.ts",
         "src/lib/split-booking.ts"
+      ]
+    },
+    {
+      "path": "src/lib/revenue-period.ts",
+      "lines": 254,
+      "purpose": "ADMIN-REDO Revenue (Cam 2026-11-11):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "addDays",
+          "kind": "fn"
+        },
+        {
+          "name": "centsPerDay",
+          "kind": "fn"
+        },
+        {
+          "name": "dayIndex",
+          "kind": "fn"
+        },
+        {
+          "name": "daysBetween",
+          "kind": "fn"
+        },
+        {
+          "name": "daySeries",
+          "kind": "fn"
+        },
+        {
+          "name": "parseRevenuePeriod",
+          "kind": "fn"
+        },
+        {
+          "name": "payoutArrivalRange",
+          "kind": "fn"
+        },
+        {
+          "name": "PayoutIn",
+          "kind": "type"
+        },
+        {
+          "name": "PayoutProblem",
+          "kind": "type"
+        },
+        {
+          "name": "platformMoveLabel",
+          "kind": "fn"
+        },
+        {
+          "name": "platformSigned",
+          "kind": "fn"
+        },
+        {
+          "name": "resolveRevenuePeriod",
+          "kind": "fn"
+        },
+        {
+          "name": "REVENUE_PERIODS",
+          "kind": "const"
+        },
+        {
+          "name": "RevenuePeriod",
+          "kind": "type"
+        },
+        {
+          "name": "RevenuePeriodKind",
+          "kind": "type"
+        },
+        {
+          "name": "RevenueWindow",
+          "kind": "type"
+        },
+        {
+          "name": "stripePaymentUrl",
+          "kind": "fn"
+        },
+        {
+          "name": "stripePayoutUrl",
+          "kind": "fn"
+        },
+        {
+          "name": "summarisePayouts",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./admin-day"
+      ],
+      "usedBy": [
+        "src/app/api/admin/revenue/route.ts",
+        "src/app/api/admin/transactions/export/route.ts"
       ]
     },
     {
@@ -27312,6 +27802,7 @@
         "src/app/api/admin/course-documents/route.ts",
         "src/app/api/admin/course-payouts/route.ts",
         "src/app/api/admin/platform-stripe/route.ts",
+        "src/app/api/admin/revenue/route.ts",
         "src/app/api/bookings/route.ts",
         "src/app/api/bookings/setup-intent/route.ts",
         "src/app/api/cron/send-reminders/route.ts",
@@ -28126,7 +28617,8 @@
       ],
       "usedBy": [
         "src/app/api/operator/weather/route.ts",
-        "src/app/dashboard/home/page.tsx"
+        "src/app/dashboard/home/page.tsx",
+        "src/lib/home-today.ts"
       ]
     },
     {
@@ -28648,6 +29140,7 @@
       "readers": [
         "src/app/api/admin/course-documents/route.ts",
         "src/app/api/admin/courses/directory/route.ts",
+        "src/app/api/admin/onboarding/route.ts",
         "src/app/api/admin/today/overview/route.ts",
         "src/lib/agreement-gate.ts",
         "src/lib/agreement-required.ts",
@@ -29740,6 +30233,10 @@
           "type": "Boolean"
         },
         {
+          "name": "takesCash",
+          "type": "Boolean"
+        },
+        {
           "name": "proShopPhone",
           "type": "String"
         },
@@ -30172,6 +30669,7 @@
         "src/app/api/admin/create-course/route.ts",
         "src/app/api/admin/inquiries/route.ts",
         "src/app/api/admin/messages/route.ts",
+        "src/app/api/admin/onboarding/route.ts",
         "src/app/api/admin/request-re-review/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/search/route.ts",
@@ -30488,6 +30986,7 @@
         "src/lib/data-reset.ts",
         "src/lib/event-payments.ts",
         "src/lib/event-signup.ts",
+        "src/lib/home-board.ts",
         "src/lib/sample-data.ts",
         "src/lib/tee-sheet-engine.ts"
       ]
@@ -31081,12 +31580,12 @@
       "readers": [
         "src/app/api/admin/backfill-orphaned-inquiries/route.ts",
         "src/app/api/admin/course-detail/route.ts",
-        "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/create-course/route.ts",
         "src/app/api/admin/inquiries/route.ts",
         "src/app/api/admin/messages/route.ts",
         "src/app/api/admin/nav-badges/route.ts",
+        "src/app/api/admin/onboarding/route.ts",
         "src/app/api/admin/request-re-review/route.ts",
         "src/app/api/admin/search/route.ts",
         "src/app/api/admin/today/overview/route.ts",
@@ -32746,6 +33245,7 @@
         "src/lib/sample-data.ts"
       ],
       "readers": [
+        "src/app/api/admin/revenue/route.ts",
         "src/app/api/member/[courseSlug]/payments/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/lib/analytics.ts",
@@ -34617,6 +35117,7 @@
         "src/lib/schedule-service.ts"
       ],
       "readers": [
+        "src/app/api/admin/onboarding/route.ts",
         "src/app/api/admin/schedule/route.ts",
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/residents/route.ts",

@@ -27,30 +27,31 @@ ok('…and never throws: a failure is a reason the card says in words', wx.inclu
 ok('the weather route is gated like the tee sheet', read('src/app/api/operator/weather/route.ts').includes("requirePermission(session, 'sheet.view')"));
 
 const home = read('src/app/dashboard/home/page.tsx');
-ok('the weather and next tee times are one bar at the top; Coming up is gone from the bottom', home.includes('<NextUpBar home={home}') && !home.includes('>Coming up<') && home.includes('forecastAt(hours, home.today, s.time)'));
+// HOME-3 (Cam 2026-11-12, the approved charcoal Home) replaces HOME-1's bar: three cards — next off, checked in, the weather.
+ok('next off, checked in and the weather are three cards at the top', home.includes('>Next off<') && home.includes('>Checked in<') && home.includes('aria-label="Weather"') && home.includes('weatherLine(weather.hours, home.today)') && !home.includes('>Coming up<'));
 ok('Finish setting up is one line on Home', home.includes('<FinishSetup compact items='));
 ok('…and each button lands on the field itself', settingsHref('Your course', 'gallery') === '/dashboard/settings?section=Your%20course&focus=gallery' && read('src/app/dashboard/settings/page.tsx').includes('data-setup="gallery"') && read('src/app/dashboard/settings/page.tsx').includes("searchParams.get('focus')"));
-ok('Needs you leads with counts: cards declined, past their time, no-shows, unread', ['Cards declined', 'Past their time', 'No-shows today', 'Unread messages'].every(l => home.includes(`label: '${l}'`)) && read('src/lib/operator-home.ts').includes('const noShows = '));
+ok('Action needed is just the list (HOME-3: the count tiles are gone)', !['Cards declined', 'No-shows today', 'Unread messages'].some(l => home.includes(`label: '${l}'`)) && home.includes('{home.late.length} past their time'));
 ok('the refresh button sits beside the time, not in its own box', home.includes('aria-label="Refresh"') && !home.includes('w-9 h-9 rounded-md bg-white border border-line'));
-ok('two columns that stack, so no card leaves a gap under its neighbour', home.includes('lg:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)] items-start') && !home.includes('self-start'));
-ok('the bar chart has room between hours', home.includes('gap-2 sm:gap-3 h-44') && home.includes('max-w-[14px]'));
+ok('two columns that stack, so no card leaves a gap under its neighbour', home.includes('lg:grid-cols-[minmax(0,2fr)_minmax(290px,1fr)] items-start') && !home.includes('self-start'));
+ok('today by hour: every bar the same height, room between hours', home.includes('gap-1 sm:gap-2.5 h-40') && home.includes('max-w-[30px] h-full flex flex-col'));
 
 const board = read('src/components/dashboard/home/HomeBoard.tsx');
-ok('staff notes: what the last shift left, and a box for the next', board.includes('>Staff notes<') && board.includes('Nothing from the last shift.') && board.includes('Leave a note for the next shift…'));
-ok('the heat map says what it shows, with a scale and each day\'s total', board.includes('how full each hour is') && board.includes('Empty') && board.includes('no tee times</span>') && board.includes('>Booked<'));
+ok('staff notes: what the last shift left, and Add a note for the next', board.includes('>Staff notes<') && board.includes('Nothing from the last shift.') && board.includes('>Add a note<'));
+ok('the heat map says what it shows, four steps with the % printed, and each day\'s total', board.includes('How full each hour is') && board.includes('heatStep(pct)') && board.includes('Math.round(pct * 100)') && board.includes('>Booked<'));
 
 // HOME-2 (Cam 2026-11-05): goals on the numbers the course picks; conditions open to what the course wants golfers to know.
 const goalsLib = read('src/lib/course-goals.ts');
 ok('goals can be set on money, rounds, players booked, fill and new golfers', ['collected', 'rounds', 'booked', 'fill', 'new_golfers'].every(k => goalsLib.includes(`key: '${k}'`)));
 ok('Home shows the goals card to every login; setting needs settings.edit', home.includes('<GoalsCard key=') && home.includes("canSet={access.can('settings.edit')}") && !home.includes('MonthGoalCard'));
-ok('each goal: actual of target, a day to go, last month, change and remove', board.includes(' a day to go') && board.includes('>Change<') && board.includes('>Remove<') && board.includes('Add a goal'));
+ok('each goal: actual of target coloured for today (HOME-3), change and remove', board.includes('goalPace({') && board.includes('>Change<') && board.includes('>Remove<') && board.includes('Add a goal'));
 ok('the old single money goal and its route are gone', !existsSync('src/app/api/operator/month-goal/route.ts'));
 const cond = read('src/lib/course-conditions.ts');
-ok('conditions: the course\'s own lines, shown to golfers with the four choices', cond.includes('...(c.lines ?? [])') && board.includes('Your own · golfers see these too') && board.includes('CONDITION_SUGGESTIONS'));
+ok('conditions (HOME-3): cart path, greens, pins, each with a detail line golfers see too', cond.includes('...(c.lines ?? [])') && cond.includes('c.notes?.[f.key]') && board.includes('HOME_CONDITIONS.map') && board.includes('Detail (optional)'));
 
 // Cam 2026-11-06: "Action needed" on Home and Money; the conditions editor lines up and its suggestions read as shortcuts.
 ok('"Action needed", not "Needs you", on Home and Money', home.includes('>Action needed</h2>') && read('src/app/dashboard/money/page.tsx').includes('>Action needed</h2>') && !home.includes('>Needs you</h2>'));
-ok('conditions editor: label above, equal options, "+" shortcuts', board.includes('repeat(${f.options.length}, minmax(0, 1fr))') && board.includes('>+ {x}</button>'));
+ok('conditions editor: label above, equal options', board.includes('repeat(${options(f.key).length}, minmax(0, 1fr))'));
 
 // SHEET-3 (Cam 2026-11-06, the tee sheet notes): quiet actions, one shape for every day number (groups moved up),
 // highlighted view words, a search field, no boxed arrows or reload, a one-line late bar, a key that says Edge / Fill,
