@@ -1185,6 +1185,17 @@ model AdminGoal {
   @@index([dueAt])
 }
 
+/// ADMIN-REDO Revenue goal (Cam via Build 2026-11-12): the owner's revenue target for one platform
+/// month ('YYYY-MM', Eastern), on the same ledger basis as Revenue's revenue.cents. cents null = no
+/// goal. Company side: kept by the launch wipe.
+model AdminMonthGoal {
+  id        String   @id @default(cuid())
+  month     String   @unique
+  cents     Int?
+  setById   String   @default("")
+  updatedAt DateTime @updatedAt
+}
+
 /// BRAIN-1b (Cam 2026-10-22): every email and text GreenReserve sends, one row
 /// each — what kind, to whom, about which course/booking/inquiry, and whether
 /// the provider took it. Never the subject or body (some carry sign-in codes).
