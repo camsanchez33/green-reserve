@@ -9,8 +9,7 @@ import s from './courses.module.css';
 import { TERMS, SESSION_ENDED, loadFailed, STRIPE_STATE, NO_CONTACT, NO_NOTES } from './terms';
 
 // ADMIN-REDO page 2 — Golf Courses (Cam approved the mockup 2026-11-12, ADMIN_REDO_SPEC.md).
-// One home per course: courses that have been live; onboarding ones are on Onboarding (a course built by
-// hand, with no inquiry, stays here under All until Onboarding can list it).
+// One home per course: courses that have been live; onboarding ones (built by hand or not) are on Onboarding.
 // The directory with one Filter menu (the top-bar search finds courses); a course opens its profile beside the list.
 // Every number is counted by /api/admin/courses/directory; a field the login can't see
 // comes back null and is left out. "Open full profile" is the existing course page.
@@ -84,7 +83,7 @@ function ProfilePanel({ id, riskDays, support }: { id: string; riskDays: number;
   useEffect(() => { setP(null); load(); }, [load]);
 
   if (error) return (
-    <section className={`${g.glass} ${s.prof}`} role="alert" aria-label="Course profile">
+    <section id="course-profile" className={`${g.glass} ${s.prof}`} role="alert" aria-label="Course profile">
       <p className={`${s.muted} ${g.down}`}>{error}</p>
       <div className={s.plinks}>
         {error === SESSION_ENDED ? <Link className={s.plink} href="/admin/login">Sign in</Link>
@@ -92,7 +91,7 @@ function ProfilePanel({ id, riskDays, support }: { id: string; riskDays: number;
       </div>
     </section>
   );
-  if (!p) return <section className={`${g.glass} ${s.prof} ${s.skel}`} aria-busy="true" aria-label="Loading the course" />;
+  if (!p) return <section id="course-profile" className={`${g.glass} ${s.prof} ${s.skel}`} aria-busy="true" aria-label="Loading the course" />;
 
   const failedCents = p.money ? p.money.failed.reduce((a, f) => a + f.cents, 0) : 0;
   const live = p.status === 'live' || p.status === 'risk';
