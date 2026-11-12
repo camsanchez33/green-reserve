@@ -196,3 +196,9 @@ unchanged in layout, in the charcoal glass, with:
 - Time card: no "Still coming", no "Add a walk-in who already played". Mark no-show stays.
 - Close this time / Hide online / Delete time show only on a time with nobody booked, and the server refuses them on a
   booked time.
+
+## Disputes (Cam 2026-11-12)
+Golfer chargebacks are the course's. Our Connect accounts are Express, so a course can answer one only when "Manage
+disputes" is ON in GreenReserve's Stripe (Settings → Connect → Express Dashboard → features). Cam is turning it on
+(Stripe docs: docs.stripe.com/connect/disputes and /connect/express-dashboard). The admin has no evidence pack. The
+Operator Agreement's next version should say chargebacks are the course's to answer.
