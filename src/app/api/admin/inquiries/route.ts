@@ -7,7 +7,7 @@ import { dollarsToCents, dollarsToCentsOr0 } from '@/lib/money';
 import {
   ACTIVE_STATUSES, ARCHIVED_STATUSES, ALIVE_STATUSES, INQUIRY_SOURCES, CLOSED_REASONS,
   RESUBMIT_PREFIX, RESUBMIT_REVIEWED_ACTOR, RESUBMIT_FIELDS, RESUBMIT_FIELD_LABEL,
-  decodeResubmit, stageEnteredAt, daysSince, STATUS_LABEL, LEAD_STATUS, LEAD_ACTIONS, type InquiryStatus,
+  decodeResubmit, stageEnteredAt, daysSince, STATUS_LABEL, LEAD_STATUS, LEAD_ACTIONS, TOUCH_CHANNELS, TOUCH_DIRECTIONS, type InquiryStatus,
 } from '@/lib/inquiry-status';
 import { stillNeed } from '@/lib/inquiry-needs';
 import { randomBytes } from 'crypto';
@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
   }
   const id = req.nextUrl.searchParams.get('id');
   if (id) {
-    const inquiry = await prisma.courseInquiry.findUnique({ where: { id }, include: { events: { orderBy: { createdAt: 'asc' } }, calls: { where: { kind: 'discovery' }, orderBy: { scheduledAt: 'desc' } } } });
+    const inquiry = await prisma.courseInquiry.findUnique({ where: { id }, include: { events: { orderBy: { createdAt: 'asc' } }, calls: { where: { kind: 'discovery' }, orderBy: { scheduledAt: 'desc' } }, touches: { orderBy: { at: 'desc' } } } });
     if (!inquiry) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json(stripSecrets(inquiry));
   }
@@ -477,6 +477,32 @@ async function handleAction(
       at ? `Expected launch set to ${raw} by ${adminName}` : `Expected launch cleared by ${adminName}`);
     await auditAdmin(session, { action: 'inquiry_expected_launch', targetType: 'inquiry', targetId: inquiryId, before: { expectedLaunchAt: before }, after: { expectedLaunchAt: at ? raw : null } });
     return NextResponse.json({ success: true, expectedLaunchAt: at ? raw : null });
+  }
+
+  // ADMIN-REDO Business analytics (Cam via Build 2026-11-12): log one contact with a course — an
+  // email, call or text we sent ('out') or a reply ('in'). Append-only; allowed on a lead (that is
+  // where outreach happens). Manager+ in Pipeline (the PATCH/POST gates); withAudit records it.
+  if (action === 'add_touch') {
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const channel = String(payload?.channel ?? '');
+    const direction = String(payload?.direction ?? '');
+    if (!(TOUCH_CHANNELS as readonly string[]).includes(channel)) return NextResponse.json({ error: `Pick how: ${TOUCH_CHANNELS.join(', ')}.` }, { status: 400 });
+    if (!(TOUCH_DIRECTIONS as readonly string[]).includes(direction)) return NextResponse.json({ error: "Say whether we reached out ('out') or they replied ('in')." }, { status: 400 });
+    const now = Date.now();
+    let at = new Date(now);
+    if (payload?.at != null && payload.at !== '') {
+      const d = new Date(String(payload.at));
+      if (Number.isNaN(d.getTime()) || d.getTime() > now + 5 * 60_000 || d.getUTCFullYear() < 2020) {
+        return NextResponse.json({ error: 'When it happened must be a real date, not in the future.' }, { status: 400 });
+      }
+      at = d;
+    }
+    const note = payload?.note == null ? '' : String(payload.note).trim();
+    if (note.length > 1000) return NextResponse.json({ error: 'Keep the note under 1,000 characters.' }, { status: 400 });
+    const touch = await prisma.outreachTouch.create({
+      data: { inquiryId, at, channel, direction, note: note || null, adminId: session.adminId, adminName },
+    });
+    return NextResponse.json({ success: true, touch });
   }
 
   // Where this lead came from. The pre-launch question the schema could not
