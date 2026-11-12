@@ -18,9 +18,10 @@ export class TeeTimeClaimError extends Error {
 
 /**
  * Atomically creates a booking and updates tee-time capacity.
- * Runs in a SERIALIZABLE transaction — concurrent requests that would exceed
- * capacity trigger a PostgreSQL serialization failure (P2034), which is caught
- * and re-thrown as TeeTimeClaimError('CONFLICT').
+ * Runs in a SERIALIZABLE transaction. A serialization failure (P2034) is retried
+ * in a fresh transaction up to CLAIM_ATTEMPTS times; only then is it thrown as
+ * TeeTimeClaimError('CONFLICT'). A claim that truly lost the time fails as
+ * FULL / SPOTS / PROMO_USED on its retry.
  *
  * All booking fields must be pre-computed by the caller. The teeTimeId and
  * players fields in `data` drive the capacity check.
@@ -39,7 +40,43 @@ export async function claimTeeTime(
   const teeTimeId = String(data.teeTimeId);
   const players = Number(data.players);
 
-  try {
+  // Serializable: two claims at once can conflict even on different tee times (Postgres
+  // predicate locks), and the loser used to get "That time just filled up" on an empty time —
+  // from 1–2% up to most of a burst, depending on table size and plan (measured 2026-11-12). The transaction rolls back whole, so
+  // running it again is safe: a fresh transaction re-reads capacity and the promo rule, and a
+  // claim that truly lost the time now fails as FULL / SPOTS / PROMO_USED, not CONFLICT.
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await claimOnce(data, actor, opts, teeTimeId, players);
+    } catch (err) {
+      if (err instanceof TeeTimeClaimError) throw err;
+      if ((err as { code?: string }).code === 'P2034') {
+        if (attempt < CLAIM_ATTEMPTS) {
+          await new Promise(r => setTimeout(r, Math.floor(Math.random() * 25 * attempt) + 5));
+          continue;
+        }
+        throw new TeeTimeClaimError('CONFLICT');
+      }
+      throw err;
+    }
+  }
+}
+
+/**
+ * Attempts at a claim that loses a serialization race before it answers CONFLICT. Measured
+ * 2026-11-12 (scripts/claim-retry-db-test.ts, 8 claims at once on empty times): no retry lost up to
+ * 105 of 120, 3 attempts still lost 21 of 120, 8 lost none of 360 — at 8 at once; it is not a guarantee
+ * for much bigger bursts (final review: 5 of 320 lost at 32 at once). Waits add up to at most ~0.73s.
+ */
+export const CLAIM_ATTEMPTS = 8;
+
+async function claimOnce(
+  data: Prisma.BookingUncheckedCreateInput,
+  actor: EventActor,
+  opts: { allowLate?: boolean; online?: boolean },
+  teeTimeId: string,
+  players: number,
+): Promise<{ id: string; checkInToken: string | null }> {
     return await prisma.$transaction(
       async (tx) => {
         const teeTime = await tx.teeTime.findUnique({
@@ -63,7 +100,7 @@ export async function claimTeeTime(
 
         // Audit 2026-10-31: a "once per golfer" promo code is checked again here, inside the same
         // SERIALIZABLE transaction as the booking — two bookings at once by one golfer (same email, or
-        // the same signed-in account) can't both use it; the second fails as a serialization conflict.
+        // the same signed-in account) can't both use it; the second hits a serialization conflict, is retried, and then fails as PROMO_USED.
         if (data.promoCodeId) {
           const code = await tx.promoCode.findUnique({ where: { id: String(data.promoCodeId) }, select: { onePerGolfer: true } });
           const email = String(data.golferEmail ?? '').trim();
@@ -110,12 +147,4 @@ export async function claimTeeTime(
       },
       { isolationLevel: 'Serializable' }
     );
-  } catch (err) {
-    if (err instanceof TeeTimeClaimError) throw err;
-    // PostgreSQL serialization failure: two concurrent transactions conflicted
-    if ((err as { code?: string }).code === 'P2034') {
-      throw new TeeTimeClaimError('CONFLICT');
-    }
-    throw err;
-  }
 }
