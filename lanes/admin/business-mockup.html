@@ -442,6 +442,8 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
 .bc .m i{display:block}.bc .on{background:var(--chart)}.bc .of{background:color-mix(in srgb,var(--t2) 75%,transparent)}
 .bl{display:flex;gap:14px;margin:8px 0 0 40px;font-size:11.5px;color:var(--muted)}.bl span{flex:1;text-align:center}
 .wr{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line);font-size:13.5px}.wr:first-child{border-top:0;padding-top:0}.wr .d{width:8px;height:8px;border-radius:50%}.wr .why{color:var(--muted);font-size:12.5px}.wr a{font-size:12.5px;font-weight:600;color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+.vr{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line);font-size:13.5px}.vr:first-child{border-top:0;padding-top:0}.vr .why{color:var(--muted);font-size:12.5px}.vr .vv{font-size:16px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.fun2{display:flex;flex-direction:column;gap:9px}.fs2{display:grid;grid-template-columns:100px minmax(0,1fr) 32px 38px 52px;gap:10px;align-items:center;font-size:13px}.fs2 .bar{height:10px;border-radius:999px;background:var(--line);overflow:hidden}.fs2 .bar i{display:block;height:100%;background:var(--chart)}.fs2 b{text-align:right;font-variant-numeric:tabular-nums}.fs2 .cv,.fs2 .dd{color:var(--muted);font-size:12px;text-align:right;font-variant-numeric:tabular-nums}.fh{margin-top:8px;font-size:11.5px;color:var(--muted);text-align:right}
 .kvr{display:flex;justify-content:space-between;padding:9px 0;border-top:1px solid var(--line);font-size:13.5px}.kvr:first-child{border-top:0;padding-top:0}.kvr b{font-variant-numeric:tabular-nums}
 .funnel{display:flex;flex-direction:column;gap:8px}
 .fs{display:grid;grid-template-columns:120px minmax(0,1fr) 40px;gap:10px;align-items:center;font-size:13px}
@@ -547,19 +549,18 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
         <button class="fbtn glass" type="button" id="fbtn" aria-expanded="false" aria-haspopup="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg><span id="flabel">Last 12 months</span></button>
         <div class="filters fmenu glass" id="filters" role="group" aria-label="Period" hidden></div>
       </div>
-      <div class="rk fk">
+      <div class="rk">
         <div class="glass rkc"><span class="l">Live courses</span><b class="v" id="k1"></b><span class="c" id="k1c"></span></div>
         <div class="glass rkc"><span class="l">Online bookings</span><b class="v" id="k2"></b><span class="c" id="k2c"></span></div>
         <div class="glass rkc"><span class="l">Tee sheets filled</span><b class="v" id="k3"></b><span class="c" id="k3c"></span></div>
-        <div class="glass rkc"><span class="l">Courses slipping</span><b class="v" id="k4"></b><span class="c" id="k4c"></span></div>
       </div>
       <section class="glass rpad" aria-label="Bookings by month">
         <div class="rh"><b>Bookings by month</b><span class="rk2"><span><i class="sw2" style="background:var(--chart)"></i>Online</span><span><i class="sw2" style="background:var(--t2)"></i>Phone &amp; counter</span></span></div>
         <div id="bchart"></div>
       </section>
       <div class="rsplit2">
-        <section class="glass rpad" aria-label="Courses to watch">
-          <div class="rh"><b>Courses to watch</b></div>
+        <section class="glass rpad" aria-label="What courses get from us">
+          <div class="rh"><b>What courses get from us</b></div>
           <div id="gol"></div>
         </section>
         <section class="glass rpad" aria-label="Courses joining">
@@ -569,7 +570,7 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
       </div>
       <section class="glass rpad" aria-label="Courses">
         <div class="rh"><b>Courses</b><a class="ico" href="#" aria-label="Download CSV" title="Download CSV"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></a></div>
-        <table class="rt"><thead><tr><th>Course</th><th class="n">Online bookings</th><th class="n">vs before</th><th class="n hide-s">Tee sheet filled</th><th class="n hide-s">Booked online</th><th class="n">Last online booking</th></tr></thead><tbody id="crs"></tbody></table>
+        <table class="rt"><thead><tr><th>Course</th><th class="n">Online bookings</th><th class="n">vs before</th><th class="n hide-s">Tee sheet filled</th><th class="n hide-s">Booked online</th><th class="n">Our revenue</th></tr></thead><tbody id="crs"></tbody></table>
       </section>
     </main>
   </div>
@@ -593,20 +594,20 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
     const M=ALL.slice(-P[per][1]), f=P[per][2];
     const on=M.reduce((a,m)=>a+m[1],0), off=M.reduce((a,m)=>a+m[2],0), bk=on+off, live=M[M.length-1][3];
     const golfers=Math.round(bk*0.38), share=Math.round(on/bk*100);
-    const fill=Math.round(54+ (P[per][1]<=3?6:0)), slip=2;
+    const fill=Math.round(54+ (P[per][1]<=3?6:0));
     $("k1").textContent=live; $("k1c").innerHTML=ch(live,Math.max(1,Math.round(live*f)));
     $("k2").textContent=on.toLocaleString(); $("k2c").innerHTML=ch(on,on*f);
     $("k3").textContent=fill+"%"; $("k3c").innerHTML=ch(fill,fill-5);
-    $("k4").textContent=slip; $("k4c").innerHTML='<span class="dn">Bookings down</span> vs '+vs[per];
+    
     const tot=M.map(m=>m[1]+m[2]), top=Math.max(...tot), step=top>1500?1000:top>600?250:100, max=Math.ceil(top*1.15/step)*step;
     let g=''; for(let v=0;v<=max;v+=step) g+='<div class="gl" style="bottom:'+(v/max*220)+'px"><span>'+(v>=1000?(v/1000)+'k':v)+'</span></div>';
     $("bchart").innerHTML='<div class="bcw">'+g+'<div class="bc">'+M.map((m,i)=>'<div class="col"><div class="m'+(m[0].includes('so far')?' part':'')+'" style="height:'+(tot[i]/max*100)+'%" title="'+m[0]+': '+m[1].toLocaleString()+' online, '+m[2].toLocaleString()+' phone & counter"><span class="val">'+tot[i].toLocaleString()+'</span><i class="on" style="flex:'+m[1]+'"></i><i class="of" style="flex:'+m[2]+'"></i></div></div>').join('')+'</div></div><div class="bl">'+M.map(m=>'<span>'+m[0].replace(' so far','*')+'</span>').join('')+'</div>';
-    const W=[["bad","Cedar Ridge Golf Links","Down 12%, no online booking in 9 days","Call them"],["warn","Pine Hollow Golf Club","Online bookings down 4%","Call them"],["warn","Maple Ridge","Live 3 weeks, 31% filled","Check setup"],["warn","Birch Creek GC","Signed 18 days ago, not built","Build it"]];
-    $("gol").innerHTML=W.map(w=>'<div class="wr"><i class="d" style="background:var(--'+(w[0]==='bad'?'down':'warn,#E7B45E')+')"></i><span><b>'+w[1]+'</b><div class="why">'+w[2]+'</div></span><a href="#">'+w[3]+'</a></div>').join('');
-    const S=[["Inquiries",24],["Calls held",17],["Signed",9],["Built",7],["Live",5]];
-    $("pipe").innerHTML='<div class="funnel">'+S.map(x=>'<div class="fs"><span>'+x[0]+'</span><div class="bar"><i style="width:'+(x[1]/S[0][1]*100)+'%"></i></div><b>'+x[1]+'</b></div>').join('')+'</div><div class="kvr" style="margin-top:10px;border-top:1px solid var(--line);padding-top:10px"><span>Inquiry to live, on average</span><b>23 days</b></div>';
+    const V=[["Green fees booked online",'$'+Math.round(on*41.5).toLocaleString(),"money that came in without staff on the phone"],["Booked after the shop closed",Math.round(on*0.34).toLocaleString(),"34% of online bookings, 7 PM to 7 AM"],["Paid before they arrived",'$'+Math.round(on*22.8).toLocaleString(),"by pay link or card at booking"],["No-show &amp; late fees collected",'$'+Math.round(on*0.62).toLocaleString(),"rounds that would have been lost"]];
+    $("gol").innerHTML=V.map(v=>'<div class="vr"><span><b>'+v[0]+'</b><div class="why">'+v[2]+'</div></span><b class="vv">'+v[1]+'</b></div>').join('');
+    const S=[["Reached out",86,null],["Responded",31,"4 days"],["Calls held",17,"6 days"],["Signed",9,"9 days"],["Built",7,"5 days"],["Live",5,"3 days"]];
+    $("pipe").innerHTML='<div class="fun2">'+S.map((x,i)=>'<div class="fs2"><span class="fl2">'+x[0]+'</span><div class="bar"><i style="width:'+(x[1]/S[0][1]*100)+'%"></i></div><b>'+x[1]+'</b><span class="cv">'+(i?Math.round(x[1]/S[i-1][1]*100)+'%':'')+'</span><span class="dd">'+(x[2]?x[2]:'')+'</span></div>').join('')+'</div><div class="fh"><span>Step → step · average days at each step</span></div><div class="kvr" style="margin-top:10px;border-top:1px solid var(--line);padding-top:10px"><span>Reached out to live</span><b>6% · 27 days</b></div><div class="kvr"><span>In progress now</span><b>12 courses</b></div><div class="kvr"><span>Waiting on us</span><b class="dn">2 to build</b></div>';
     const C=[["Ridgewood Country Club",0.31,18,78,72,0.33],["Pine Hollow Golf Club",0.27,-4,71,66,0.30],["Oak Valley Golf Course",0.21,22,64,81,0.22],["Cedar Ridge Golf Links",0.13,-12,52,58,0.10],["Maple Ridge",0.08,140,31,90,0.05]];
-    $("crs").innerHTML=C.map(c=>'<tr><td>'+c[0]+'</td><td class="n">'+Math.round(on*c[1]).toLocaleString()+'</td><td class="n '+(c[2]>=0?'upc':'dn')+'">'+(c[2]>=0?'Up ':'Down ')+Math.abs(c[2])+'%</td><td class="n hide-s">'+c[3]+'%</td><td class="n hide-s">'+c[4]+'%</td><td class="n">'+['Today','Today','Yesterday','9 days ago','Today'][C.indexOf(c)]+'</td></tr>').join('');
+    $("crs").innerHTML=C.map(c=>'<tr><td>'+c[0]+'</td><td class="n">'+Math.round(on*c[1]).toLocaleString()+'</td><td class="n '+(c[2]>=0?'upc':'dn')+'">'+(c[2]>=0?'Up ':'Down ')+Math.abs(c[2])+'%</td><td class="n hide-s">'+c[3]+'%</td><td class="n hide-s">'+c[4]+'%</td><td class="n">$'+Math.round(on*c[1]*1.5*1.1).toLocaleString()+'</td></tr>').join('');
   }
   const fb=$("fbtn"), fm=$("filters");
   fb.addEventListener("click",()=>{fm.hidden=!fm.hidden;fb.setAttribute("aria-expanded",String(!fm.hidden));});

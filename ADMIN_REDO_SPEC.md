@@ -227,3 +227,11 @@ Mockup `lanes/admin/expenses-mockup.html` (final). Owner only.
 - Card: when it renews ("Renews in X days · date") or "Finished"/"Paid once", then the details shown saved. Pills at the top: Edit · End it/Restart · Delete. History is just a dated log, with no explanation text.
 - Real categories: Infrastructure · Tools & services · Legal & professional · Other. Financial analytics uses the same four.
 - Needs (Build): a monthly expense budget the owner sets, and expense change history.
+
+## Business analytics: APPROVED (Cam 2026-11-12, "the business analytics is good to go")
+Mockup `lanes/admin/business-mockup.html` (final). Course-focused; nothing about who is golfing. Filter: last 12 / 6 / 3 months, this year.
+- Cards: Live courses · Online bookings (what earns our fee) · Tee sheets filled (average across live courses), each vs the stretch before.
+- Bookings by month: stacked bars (online · phone & counter), gridlines with a scale, the total above each bar, the running month faded and marked *.
+- What courses get from us (counted, never estimated): green fees booked online · bookings made after the shop closed · paid before they arrived · no-show & late fees collected for them.
+- Courses joining: Reached out → Responded → Calls held → Signed → Built → Live, each with its count, % from the step before and average days at that step; then reached out to live (% · days), in progress now, waiting on us (red). "Reached out" needs an outreach log (new data).
+- Courses table: online bookings, vs before, tee sheet filled, booked online, our revenue (GreenReserve's, the period picked). CSV.
