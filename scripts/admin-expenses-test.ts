@@ -1,7 +1,7 @@
 // Admin Expenses (ADMIN-REDO, Cam approved 2026-11-12): the page's pure rules — counted from the Expense rows,
 // never estimated. Run: npx tsx scripts/admin-expenses-test.ts
 import { readFileSync } from 'fs';
-import { historyLine, cards, nextRenewal, monthEarlier, yearEarlier, pct, parseAmount, FILTERS, byCost, activeOn, type Exp } from '../src/app/admin/expenses/logic';
+import { isEnded, historyLine, cards, nextRenewal, monthEarlier, yearEarlier, pct, parseAmount, FILTERS, byCost, activeOn, type Exp } from '../src/app/admin/expenses/logic';
 
 let failed = 0;
 const check = (label: string, ok: boolean, detail = '') => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${!ok && detail ? ` — ${detail}` : ''}`); if (!ok) failed++; };
@@ -45,6 +45,9 @@ const r3 = nextRenewal(ex({ cadence: 'annual', startedAt: '2026-07-06T12:00:00.0
 check('annual renews on its date next year', r3?.day === '2027-07-06');
 check('renews today when today is the day', nextRenewal(ex({ startedAt: '2026-10-12T12:00:00.000Z' }), NOW)?.inDays === 0);
 check('one-time never renews', nextRenewal(ex({ cadence: 'one-time' }), NOW) === null);
+const future = ex({ startedAt: '2026-03-30T12:00:00.000Z', endedAt: '2026-12-15T17:00:00.000Z' });
+check('a future end is still running: not ended, still active, still counts', !isEnded(future, NOW) && activeOn(future, NOW) && FILTERS.find(f => f.key === 'active')!.test(future, NOW));
+check('…and renews before its end, but never on or after it', nextRenewal(future, NOW)?.day === '2026-11-30' && nextRenewal(future, new Date('2026-12-02T15:00:00Z')) === null);
 check('an ended cost never renews', nextRenewal(ex({ endedAt: '2026-10-01T12:00:00.000Z' }), NOW) === null);
 
 // Amounts typed in the form.
@@ -56,7 +59,7 @@ check('over $20M is refused', parseAmount('20000001') === null && parseAmount('2
 check('a cost dated today counts today, even before noon UTC', activeOn(ex({ startedAt: '2026-11-12T12:00:00.000Z' }), new Date('2026-11-12T11:00:00Z')));
 
 // Filters and order.
-const counts = Object.fromEntries(FILTERS.map(f => [f.key, list.filter(f.test).length]));
+const counts = Object.fromEntries(FILTERS.map(f => [f.key, list.filter(e => f.test(e, NOW)).length]));
 check('filter counts', counts.active === 4 && counts.ended === 1 && counts.monthly === 2 && counts.annual === 1 && counts.once === 1 && counts.all === 5, JSON.stringify(counts));
 check('biggest monthly cost first', [...list].sort(byCost)[0].amountCents === 4500);
 
@@ -77,7 +80,7 @@ check('Delete goes through step-up', /stepUpFetch/.test(page) && /'DELETE'/.test
 check('the budget reads "Not set" until it is set', page.includes('Not set'));
 check('the budget bar is coloured by the ONE shared pace rule, as a cap', /goalPace\(\{[^}]*kind: 'cap'/.test(page) && !/0\.9\s*\*|1\.1\s*\*/.test(page));
 check('setting the budget goes through step-up', /stepUpFetch\('\/api\/admin\/expenses\/budget'/.test(page));
-check('an ended one-time cost has no Restart (it would book it twice)', /e\.endedAt \? e\.cadence !== 'one-time' &&/.test(page));
+check('an ended one-time cost has no Restart (it would book it twice)', /ended \? e\.cadence !== 'one-time' &&/.test(page));
 check('restart never wipes the stopped months (it adds the cost again from today)', /async function restart[\s\S]{0,300}'POST'/.test(page));
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

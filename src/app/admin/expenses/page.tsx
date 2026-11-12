@@ -11,7 +11,7 @@ import c from '../courses/courses.module.css';
 import r from '../revenue/revenue.module.css';
 import s from './expenses.module.css';
 import { TERMS, MSG, CADENCE_WORDS, SESSION_ENDED, loadFailed } from './terms';
-import { type Exp, type FilterKey, type HistoryRow, FILTERS, cards, pct, nextRenewal, startDay, byCost, parseAmount, historyLine } from './logic';
+import { type Exp, type FilterKey, type HistoryRow, FILTERS, isEnded, cards, pct, nextRenewal, startDay, byCost, parseAmount, historyLine } from './logic';
 import { goalPace } from '@/lib/goal-pace';
 
 // ADMIN-REDO Expenses (Cam approved the mockup 2026-11-12, ADMIN_REDO_SPEC.md "Expenses: APPROVED"). Owner only:
@@ -105,8 +105,8 @@ export default function ExpensesPage() {
   const k = useMemo(() => (list ? cards(list, now) : null), [list, now]);
   const shown = useMemo(() => {
     const f = FILTERS.find(x => x.key === filter)!;
-    return (list ?? []).filter(f.test).sort(byCost);
-  }, [list, filter]);
+    return (list ?? []).filter(e => f.test(e, now)).sort(byCost);
+  }, [list, filter, now]);
   const picked = (list ?? []).find(e => e.id === pick) ?? (mode === 'add' ? null : shown[0] ?? null);
   const pickedId = picked?.id ?? null;
   useEffect(() => { if (pickedId && list) loadHistory(pickedId); }, [pickedId, list, loadHistory]);
@@ -259,10 +259,12 @@ export default function ExpensesPage() {
     const today = todayKey();
     const begins = startDay(e.startedAt);
     const ren = nextRenewal(e, now);
-    const when = e.endedAt ? `Finished ${longDay(endDay(e.endedAt))}`
+    const ended = isEnded(e, now);
+    const endsOn = e.endedAt && !ended ? ` · Ends ${longDay(endDay(e.endedAt))}` : '';
+    const when = ended && e.endedAt ? `Finished ${longDay(endDay(e.endedAt))}`
       : e.cadence === 'one-time' ? `Paid once · ${longDay(begins)}`
       : begins > today ? `Starts ${longDay(begins)}`
-      : ren ? (ren.inDays === 0 ? `Renews today · ${longDay(ren.day)}` : `Renews in ${ren.inDays} day${ren.inDays === 1 ? '' : 's'} · ${longDay(ren.day)}`) : '';
+      : (ren ? (ren.inDays === 0 ? `Renews today · ${longDay(ren.day)}` : `Renews in ${ren.inDays} day${ren.inDays === 1 ? '' : 's'} · ${longDay(ren.day)}`) + endsOn : endsOn.slice(3));
     const per = e.cadence === 'one-time' ? `${usd(e.amountCents)} once`
       : `${usd(monthlyEquivalentCents(e))} a month · ${usd(e.cadence === 'annual' ? e.amountCents : e.amountCents * 12)} a year`;
     return (
@@ -272,7 +274,7 @@ export default function ExpensesPage() {
           {mode === 'view' && (
             <div className={c.plinks}>
               <button type="button" className={c.plink} onClick={() => startEdit(e)} disabled={busy}>Edit</button>
-              {e.endedAt ? e.cadence !== 'one-time' && <button type="button" className={c.plink} onClick={() => restart(e)} disabled={busy}>Restart</button>
+              {ended ? e.cadence !== 'one-time' && <button type="button" className={c.plink} onClick={() => restart(e)} disabled={busy}>Restart</button>
                 : e.cadence !== 'one-time' && <button type="button" className={c.plink} onClick={() => end(e)} disabled={busy}>End it</button>}
               <button type="button" className={`${c.plink} ${s.pdel}`} onClick={() => remove(e)} disabled={busy}>Delete</button>
             </div>
@@ -288,7 +290,7 @@ export default function ExpensesPage() {
               <dt>How much</dt><dd>{usd(e.amountCents)}</dd>
               <dt>How often</dt><dd>{CADENCE_WORDS[e.cadence] ?? e.cadence}</dd>
               <dt>Started</dt><dd>{longDay(begins)}</dd>
-              {e.endedAt && <><dt>Finished</dt><dd>{longDay(endDay(e.endedAt))}</dd></>}
+              {e.endedAt && <><dt>{ended ? 'Finished' : 'Ends'}</dt><dd>{longDay(endDay(e.endedAt))}</dd></>}
             </dl>
           </div>
         )}
@@ -321,7 +323,7 @@ export default function ExpensesPage() {
               <div className={c.fmenu} role="group" aria-label="Show">
                 {FILTERS.map(f => (
                   <button key={f.key} type="button" aria-pressed={filter === f.key} onClick={() => { setFilter(f.key); setPick(null); setMode('view'); setMenuOpen(false); }}>
-                    <span>{f.label}</span><b>{(list ?? []).filter(f.test).length}</b>
+                    <span>{f.label}</span><b>{(list ?? []).filter(e => f.test(e, now)).length}</b>
                   </button>
                 ))}
               </div>
@@ -367,7 +369,7 @@ export default function ExpensesPage() {
                       {shown.map(e => (
                         <tr key={e.id} className={c.row} tabIndex={0} aria-selected={mode !== 'add' && picked?.id === e.id}
                           onClick={() => choose(e)} onKeyDown={ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); choose(e); } }}>
-                          <td><span className={`${c.cname} ${e.endedAt ? s.ended : ''}`}>{e.name}</span>{e.endedAt && <span className={s.tag}> · ended {longDay(endDay(e.endedAt))}</span>}</td>
+                          <td><span className={`${c.cname} ${isEnded(e, now) ? s.ended : ''}`}>{e.name}</span>{e.endedAt && <span className={s.tag}> · {isEnded(e, now) ? 'ended' : 'ends'} {longDay(endDay(e.endedAt))}</span>}</td>
                           <td className={`${s.tag} ${c.hideS}`}>{catLabel(e.category)}</td>
                           <td className={`${c.n} ${s.amt}`}>{usd(e.amountCents)}</td>
                           <td className={r.nw}>{CADENCE_WORDS[e.cadence] ?? e.cadence}</td>

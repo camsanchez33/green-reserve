@@ -11,6 +11,9 @@ export interface Exp {
 
 const DAY = 86_400_000;
 
+/** Ended: its end has passed. A future end date is still running (Build #382). */
+export const isEnded = (e: Exp, at: Date) => !!e.endedAt && new Date(e.endedAt).getTime() <= at.getTime();
+
 /** Running on `at`: started by then and not yet ended. */
 export const activeOn = (e: Exp, at: Date) =>
   startDay(e.startedAt) <= dayKey(at) && (!e.endedAt || new Date(e.endedAt).getTime() > at.getTime());
@@ -78,7 +81,7 @@ const daysBetween = (a: string, b: string) => Math.round((Date.parse(b + 'T12:00
  * month (started the 31st → Feb 28). Null for a one-time cost or one that has ended.
  */
 export function nextRenewal(e: Exp, now: Date): { day: string; inDays: number } | null {
-  if (e.endedAt || (e.cadence !== 'monthly' && e.cadence !== 'annual')) return null;
+  if (isEnded(e, now) || (e.cadence !== 'monthly' && e.cadence !== 'annual')) return null;
   const today = dayKey(now);
   const [y0, m0, d0] = startDay(e.startedAt).split('-').map(Number);
   const step = e.cadence === 'annual' ? 12 : 1;
@@ -86,17 +89,17 @@ export function nextRenewal(e: Exp, now: Date): { day: string; inDays: number } 
     const y = y0 + Math.floor((m0 - 1 + k) / 12), m = ((m0 - 1 + k) % 12) + 1;
     const last = new Date(Date.UTC(y, m, 0)).getUTCDate();
     const day = `${y}-${String(m).padStart(2, '0')}-${String(Math.min(d0, last)).padStart(2, '0')}`;
-    if (day >= today) return { day, inDays: daysBetween(today, day) };
+    if (day >= today) return e.endedAt && day >= dayKey(new Date(e.endedAt)) ? null : { day, inDays: daysBetween(today, day) }; // no renewal on or after a set end
   }
   return null;
 }
 
 export type FilterKey = 'active' | 'ended' | 'monthly' | 'annual' | 'once' | 'all';
-export const FILTERS: { key: FilterKey; label: string; test: (e: Exp) => boolean }[] = [
-  { key: 'active', label: 'Active', test: e => !e.endedAt },
-  { key: 'ended', label: 'Ended', test: e => !!e.endedAt },
-  { key: 'monthly', label: 'Monthly', test: e => e.cadence === 'monthly' && !e.endedAt },
-  { key: 'annual', label: 'A year', test: e => e.cadence === 'annual' && !e.endedAt },
+export const FILTERS: { key: FilterKey; label: string; test: (e: Exp, now: Date) => boolean }[] = [
+  { key: 'active', label: 'Active', test: (e, now) => !isEnded(e, now) },
+  { key: 'ended', label: 'Ended', test: (e, now) => isEnded(e, now) },
+  { key: 'monthly', label: 'Monthly', test: (e, now) => e.cadence === 'monthly' && !isEnded(e, now) },
+  { key: 'annual', label: 'A year', test: (e, now) => e.cadence === 'annual' && !isEnded(e, now) },
   { key: 'once', label: 'One time', test: e => e.cadence === 'one-time' },
   { key: 'all', label: 'All', test: () => true },
 ];
