@@ -15207,7 +15207,7 @@
     },
     {
       "path": "src/lib/admin-day.ts",
-      "lines": 111,
+      "lines": 110,
       "purpose": "Platform day boundaries.",
       "brain": [],
       "exports": [
@@ -15264,6 +15264,7 @@
         "src/lib/admin-course-page.ts",
         "src/lib/admin-home.ts",
         "src/lib/admin-today.ts",
+        "src/lib/expenses.ts",
         "src/lib/finance-period.ts",
         "src/lib/revenue-period.ts"
       ]
@@ -21057,10 +21058,14 @@
     },
     {
       "path": "src/lib/expenses.ts",
-      "lines": 88,
+      "lines": 163,
       "purpose": "EXPENSE TRACKER (RUN_QUEUE \"EXPENSE TRACKER / real P&L\") — the manual half of the P&L:",
       "brain": [],
       "exports": [
+        {
+          "name": "endedAtForLastDay",
+          "kind": "fn"
+        },
         {
           "name": "EXPENSE_CADENCE_LABEL",
           "kind": "const"
@@ -21094,6 +21099,14 @@
           "kind": "fn"
         },
         {
+          "name": "lastDayOf",
+          "kind": "fn"
+        },
+        {
+          "name": "monthCostPace",
+          "kind": "fn"
+        },
+        {
           "name": "monthlyEquivalentCents",
           "kind": "fn"
         },
@@ -21115,7 +21128,9 @@
       "methods": [],
       "auth": null,
       "guard": null,
-      "imports": [],
+      "imports": [
+        "./admin-day"
+      ],
       "usedBy": [
         "src/app/admin/expenses/logic.ts",
         "src/app/admin/expenses/page.tsx",
@@ -21451,7 +21466,7 @@
     },
     {
       "path": "src/lib/goal-pace.ts",
-      "lines": 72,
+      "lines": 75,
       "purpose": "GOAL-PACE (Cam 2026-11-12, ADMIN_REDO_SPEC \"Goals:",
       "brain": [],
       "exports": [
