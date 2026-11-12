@@ -35,7 +35,7 @@ export interface BusinessData {
     inProgress: number;
     waitingOnUs: number;
   };
-  courses: { courseId: string; name: string; online: number; onlinePrior: number | null; fillPct: number | null; onlineSharePct: number | null; ourRevenueCents: number }[];
+  courses: { courseId: string; name: string; online: number; onlinePrior: number | null; fillPct: number | null; onlineSharePct: number | null; ourRevenueCents: number | null }[]; // ourRevenueCents null without the Money area
 }
 
 /** The route answered the period asked for, with the parts the page reads. */
@@ -83,8 +83,8 @@ export const cell = (v: string | number) => {
 };
 const blank = (v: number | null, f: (n: number) => string) => (v === null ? '' : f(v));
 /** The courses table as a CSV, in the table's order. */
-export function coursesCsv(rows: BusinessData['courses']): string {
-  const head = ['Course', 'Online bookings', 'Online bookings before', 'Tee sheet filled %', 'Booked online %', 'Our revenue'];
-  const body = rows.map(r => [r.name, r.online, blank(r.onlinePrior, String), blank(r.fillPct, n => n.toFixed(1)), blank(r.onlineSharePct, n => n.toFixed(1)), (r.ourRevenueCents / 100).toFixed(2)]);
+export function coursesCsv(rows: BusinessData['courses'], withRevenue = true): string {
+  const head = ['Course', 'Online bookings', 'Online bookings before', 'Tee sheet filled %', 'Booked online %', ...(withRevenue ? ['Our revenue'] : [])];
+  const body = rows.map(r => [r.name, r.online, blank(r.onlinePrior, String), blank(r.fillPct, n => n.toFixed(1)), blank(r.onlineSharePct, n => n.toFixed(1)), ...(withRevenue ? [blank(r.ourRevenueCents, c => (c / 100).toFixed(2))] : [])]);
   return [head, ...body].map(r => r.map(cell).join(',')).join('\r\n') + '\r\n';
 }

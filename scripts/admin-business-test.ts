@@ -38,6 +38,8 @@ check('axis: 1.5k and 250', axisLabel(1500) === '1.5k' && axisLabel(250) === '25
 const csv = coursesCsv([{ courseId: 'a', name: '=Example', online: 12, onlinePrior: null, fillPct: 54.25, onlineSharePct: null, ourRevenueCents: 1800 }]).trim().split('\r\n');
 check('a header and one row per course', csv.length === 2);
 check('a missing value is blank, money in dollars', csv[1] === `"'=Example","12","","54.3","","18.00"`, csv[1]);
+check('without the Money area the CSV has no revenue column', coursesCsv([{ courseId: 'a', name: 'A', online: 1, onlinePrior: 1, fillPct: null, onlineSharePct: null, ourRevenueCents: null }], false).split('\r\n')[0].split(',').length === 5);
+check('the page hides Our revenue when the route sends null', /showRevenue && <th/.test(readFileSync('src/app/admin/business/page.tsx', 'utf8')));
 check('formula-looking cells are text', cell('+1') === `"'+1"`);
 
 // The page.

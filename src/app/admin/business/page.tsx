@@ -97,11 +97,13 @@ export default function BusinessPage() {
   const d = got?.ok ? got.data : null;
   const P = PERIODS.find(x => x.v === per)!;
   const steps = d?.joining.steps ?? [];
+  // Our revenue per course needs the Money area too; the route sends null then, and the column is left out.
+  const showRevenue = !!d && d.courses.some(x => x.ourRevenueCents !== null);
   const topStep = useMemo(() => Math.max(1, ...steps.map(x => x.count ?? 0)), [steps]);
 
   function downloadCsv() {
     if (!d) return;
-    const url = URL.createObjectURL(new Blob([coursesCsv(d.courses)], { type: 'text/csv;charset=utf-8' }));
+    const url = URL.createObjectURL(new Blob([coursesCsv(d.courses, showRevenue)], { type: 'text/csv;charset=utf-8' }));
     const a = document.createElement('a');
     a.href = url; a.download = `greenreserve-courses-${d.period.from}-to-${d.period.to}.csv`;
     document.body.appendChild(a); a.click(); a.remove();
@@ -217,7 +219,7 @@ export default function BusinessPage() {
                     <thead><tr>
                       <th>Course</th><th className={r.n}>Online bookings</th><th className={r.n} title={TERMS.vsPrior}>vs before</th>
                       <th className={`${r.n} ${r.hideS}`} title={TERMS.fillCourse}>Tee sheet filled</th><th className={`${r.n} ${r.hideS}`} title={TERMS.share}>Booked online</th>
-                      <th className={r.n} title={TERMS.ourRevenue}>Our revenue</th>
+                      {showRevenue && <th className={r.n} title={TERMS.ourRevenue}>Our revenue</th>}
                     </tr></thead>
                     <tbody>
                       {d.courses.map(x => {
@@ -229,7 +231,7 @@ export default function BusinessPage() {
                             <td className={`${r.n} ${ch === null ? '' : Math.round(ch) > 0 ? g.up : Math.round(ch) < 0 ? g.down : ''}`}>{ch === null ? '—' : Math.round(ch) === 0 ? 'Same' : `${Math.round(ch) > 0 ? 'Up' : 'Down'} ${Math.abs(Math.round(ch))}%`}</td>
                             <td className={`${r.n} ${r.hideS}`}>{pctText(x.fillPct)}</td>
                             <td className={`${r.n} ${r.hideS}`}>{pctText(x.onlineSharePct)}</td>
-                            <td className={r.n}>{usd(x.ourRevenueCents)}</td>
+                            {showRevenue && <td className={r.n}>{x.ourRevenueCents === null ? '—' : usd(x.ourRevenueCents)}</td>}
                           </tr>
                         );
                       })}
