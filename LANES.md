@@ -190,3 +190,7 @@ nohup npx next dev -p 3100 > /tmp/next.log 2>&1 &
 ```
 Sign in as the seeded operator, or mint a `gr_operator` cookie the way the DB tests do. Playwright and Chromium are
 pre-installed (`require('playwright')`). Local only — never a production URL with real data.
+
+**Approved work goes to its lane (Cam 2026-11-12):** once Cam approves a mockup, Build sends it to the lane that owns
+that area, with the mockup path, spec section and rules. Build does not build another lane's pages. The course dashboard
+is Build/Dashboard's own lane.

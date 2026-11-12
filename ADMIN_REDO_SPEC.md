@@ -119,3 +119,15 @@ course's Stripe account; ours is the service fee per the policy. → Build: remo
 admin refund) from the live Revenue page — Cam's decision; ask before removing admin refund.
 
 **Purpose of the page (Cam 2026-11-12, "the whole point of the page to know while building"):** Bookings is the book-keeping record, so we can answer if anyone ever asks about a course or a player. GreenReserve gets paid through booking fees. We may NOT charge people ourselves, and retrying a golfer's payment is neither allowed nor our responsibility. The page only shows: every booking, what was owed, what was paid, whether our fee was collected, and the history. It has no charge, retry, refund or dispute actions, and the only links are Course → and Stripe ↗ (both view-only).
+
+## Course dashboard look (Cam 2026-11-12)
+Charcoal GLASS is the default, with a Light switch: soft grey blurred shapes behind frosted panels, the same build as
+the admin's green glass. Monochrome: no green or orange. Charts, links and buttons are white/grey; red only for a real
+problem (a declined card). The course's own colour appears only on its crest and the active tab's dot. Mockup:
+`lanes/dashboard/home-mockup.html`.
+
+## Page 5 — Users & golfers (mockup `lanes/admin/users-mockup.html`, awaiting Cam's comments)
+One list of golfers (with an account), guests (booked without one) and course staff logins. Filter: All · Golfers ·
+Guests · Course staff · Problems. The search finds a name, email, phone or course. Card: their standing, the account
+or login details (texts consent, sign-in, 2-step for staff), their record, their bookings (→ Bookings) and history.
+Read-only, like Bookings.

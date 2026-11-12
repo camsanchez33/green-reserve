@@ -154,6 +154,31 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
   .bars{gap:4px} .hl{gap:4px}
   .heatwrap{overflow-x:auto}
 }
+
+/* Cam 2026-11-12, "should look like glass like the admin home": charcoal glass. Soft blurred shapes behind
+   frosted panels, the same build as the admin's green glass, in greys with a hint of the course's green. */
+.app{isolation:isolate;--panel:rgba(48,50,48,.46);--edge:rgba(255,255,255,.09);--rail:rgba(30,31,30,.45);--blob1:#4C5E53;--blob2:#363D39;--blob3:#5A5240;
+  --shadow:0 1px 0 rgba(255,255,255,.07) inset, 0 12px 34px rgba(0,0,0,.34)}
+.app[data-mode="light"]{--panel:rgba(255,255,255,.55);--edge:rgba(255,255,255,.8);--rail:rgba(255,255,255,.38);--blob1:#C9D3CC;--blob2:#DADCD6;--blob3:#E6DFCF;
+  --shadow:0 1px 0 rgba(255,255,255,.7) inset, 0 8px 30px rgba(0,0,0,.07)}
+.blob{position:absolute;border-radius:50%;filter:blur(80px);z-index:-1;pointer-events:none}
+.b1{width:540px;height:540px;background:var(--blob1);left:-140px;top:-160px}
+.b2{width:600px;height:600px;background:var(--blob2);right:-180px;top:160px}
+.b3{width:440px;height:440px;background:var(--blob3);left:40%;bottom:-220px}
+.card,.search{-webkit-backdrop-filter:blur(22px) saturate(1.2);backdrop-filter:blur(22px) saturate(1.2)}
+.search{background:var(--panel)}
+.rail{-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+@media (prefers-reduced-transparency:reduce){.card,.search,.rail{-webkit-backdrop-filter:none;backdrop-filter:none}.app{--panel:#2A2B2A;--rail:#232423}.app[data-mode="light"]{--panel:#F8F8F5;--rail:#E0E1DC}}
+
+/* Cam 2026-11-12, "i dont want it green and orange i just want it dark with a glassy background":
+   monochrome charcoal glass. Charts, links and the button are white/grey; red stays only for a real problem
+   (a declined card), the course's dot in the rail is its own colour. */
+.app{--blob1:#4A4D4B;--blob2:#2E302F;--blob3:#3F4240;--brand:#EDEEEB;--brand-ink:#161716;--bar:#E6E7E3;--bar-prev:rgba(237,238,235,.22);--heat:230,231,227;--warn:#C9CBC6;--ok:#C9CBC6}
+.app[data-mode="light"]{--blob1:#CDD0CC;--blob2:#DEDFDB;--blob3:#D5D6D2;--brand:#1E201E;--brand-ink:#FFFFFF;--bar:#2A2C2A;--bar-prev:rgba(25,27,25,.18);--heat:30,32,30;--warn:#4A4D49;--ok:#4A4D49}
+.strip.warnl{border-left-color:var(--ink)}
+.nav i{background:var(--ink);color:var(--bg)}
+.wn,.up{font-weight:inherit}
+.trk .u{background:var(--muted);width:2px}
 </style>
 
 <div class="wrap">
@@ -162,9 +187,10 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
     <div class="pick"><span>Look</span><div class="seg" role="group" aria-label="Look">
       <button type="button" data-m="dark" aria-pressed="true">Charcoal</button><button type="button" data-m="light" aria-pressed="false">Light</button></div></div>
   </div>
-  <p class="note">Example numbers, not a real course. Home is the course's morning page: what today looks like, what needs doing, and what the shift left. The same content as today's Home, in the charcoal look and the admin format rules.</p>
+  <p class="note">Example numbers, not a real course. Home is the course's morning page: what today looks like, what needs doing, and what the shift left. The same content as today's Home, in charcoal glass and the admin format rules.</p>
 
   <div class="app" id="app" data-mode="dark">
+    <span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span>
     <aside class="rail">
       <div class="club"><span class="crest">RC</span><div><b>Ridgewood Country Club</b><small>Course dashboard</small></div></div>
       <div class="grp"><b>Today</b>
