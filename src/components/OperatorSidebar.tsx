@@ -175,7 +175,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
   const railGroups: { label: string; keys: OperatorNavKey[] }[] = [
     { label: 'Today', keys: ['home', 'teesheet', 'shop', 'messages'] },
     { label: 'Business', keys: ['money', 'members', 'events', 'schedule', 'analytics'] },
-    { label: '', keys: ['settings'] },
+    { label: 'Course', keys: ['settings'] },
   ];
   // A tab no group names still shows (in Business) — a new tab is never dropped from the rail.
   const grouped = new Set(railGroups.flatMap(g => g.keys));
@@ -188,6 +188,22 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     <BirdieWidget />
     <AgreementNotice />
     <Toaster />
+    {/* GLASS-2 (Cam 2026-11-12): what the glass frosts — blurred ribbons, fixed behind every rail page (globals.css .op-waves). */}
+    <svg className="op-waves" viewBox="0 0 1400 1100" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+      <defs>
+        <filter id="op-soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="38" /></filter>
+        <filter id="op-softer" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="16" /></filter>
+      </defs>
+      <g filter="url(#op-soft)">
+        <path className="w1" d="M-120 260 C 240 60, 520 420, 820 230 S 1300 40, 1560 300" />
+        <path className="w4" d="M-200 980 C 200 760, 460 1040, 760 820 S 1220 640, 1600 900" />
+        <path className="w2" d="M980 -80 C 860 220, 1180 380, 1040 640 S 1180 980, 1320 1180" />
+      </g>
+      <g filter="url(#op-softer)">
+        <path className="w3" d="M-60 520 C 300 380, 520 700, 900 520 S 1300 360, 1500 560" />
+        <path className="w3" d="M200 -60 C 300 200, 120 420, 380 640" />
+      </g>
+    </svg>
 
     {/* SD-2: below md the 224px rail is gone. A slim strip carries identity,
         the course switcher and sign-out; the tabs live in a bottom bar. */}
@@ -195,7 +211,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
       <div className="flex-1 min-w-0">
         <div className="font-serif text-[14px] text-ink leading-snug truncate">{name || 'GreenReserve'}</div>
         {name && <div className="text-[11.5px] text-ink-muted truncate">{meta}</div>}
-        <div className="flex items-center gap-1.5 text-[11.5px] text-ink-muted mt-1 whitespace-nowrap">Powered by <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={80} height={15} className="op-light-only h-[14px] w-auto" /><Image src="/brand/logo-cream.svg" unoptimized alt="GreenReserve" width={80} height={15} className="op-dark-only h-[14px] w-auto" /></div>
+        <div className="flex items-center gap-1.5 text-[11.5px] text-ink-muted mt-1 whitespace-nowrap">Powered by <b className="font-semibold" style={{ color: 'var(--op-brand-green)' }}>GreenReserve</b></div>
       </div>
       {myCourses.length > 1 && (
         <select
@@ -274,18 +290,19 @@ export default function OperatorSidebar({ active, onAlertClick }: {
           <span aria-hidden="true" className="w-[34px] h-[34px] rounded-md shrink-0 flex items-center justify-center text-white text-[13px] font-bold" style={{ backgroundColor: brandColor }}>{initials(name)}</span>
         )}
         <div className="min-w-0 leading-tight">
-          <div className="text-[14px] font-semibold text-ink truncate">{name || 'Your course'}</div>
+          <div className="font-serif text-[16px] text-ink leading-tight line-clamp-2 break-words">{name || 'Your course'}</div>
           <div className="text-[12px] text-ink-muted truncate">{meta}</div>
         </div>
       </div>
-      <OperatorSearch />
+      {/* HOME-3 (Cam 2026-11-12): Home carries the one search at its top; every other page keeps it here. */}
+      {active !== 'home' && <OperatorSearch />}
       <nav aria-label="Dashboard" className="flex flex-col gap-4 text-[14px]">
         {railGroups.map(g => {
           const items = navItems.filter(n => !n.soon && visible(n.key) && g.keys.includes(n.key)).sort((x, y) => g.keys.indexOf(x.key) - g.keys.indexOf(y.key));
           if (!items.length) return null;
           return (
             <div key={g.label || 'end'} className="flex flex-col gap-px">
-              {g.label && <div className="px-2.5 pb-1 text-[12px] font-medium text-ink-muted">{g.label}</div>}
+              {g.label && <div className="px-2.5 pb-1 text-[12.5px] font-bold text-ink">{g.label}</div>}
               {items.map(item => {
                 const isActive = active === item.key;
                 return (
@@ -298,7 +315,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
                     <span aria-hidden="true" className="w-[6px] h-[6px] rounded-full shrink-0" style={{ backgroundColor: isActive ? brandColor : 'transparent' }} />
                     <span className="flex-1">{item.label}</span>
                     {item.key === 'messages' && unreadMessages > 0 && (
-                      <span className="text-[12px] font-medium text-bad tabular-nums" aria-label={`${unreadMessages} unread`}>{unreadMessages > 99 ? '99+' : unreadMessages}</span>
+                      <span className="text-[12px] font-semibold text-warn tabular-nums" aria-label={`${unreadMessages} unread`}>{unreadMessages > 99 ? '99+' : unreadMessages}</span>
                     )}
                   </button>
                 );
@@ -330,7 +347,8 @@ export default function OperatorSidebar({ active, onAlertClick }: {
         <button onClick={logout} className="text-left px-2.5 py-2 rounded-md text-ink-soft hover:bg-white/60 hover:text-bad transition-colors">Sign out</button>
         <div className="px-1 pt-2"><ThemeSwitch /></div>
         {/* LOGO-2 (Cam 2026-10-20): "Powered by" and the GreenReserve lockup stay with the course's name. */}
-        <span className="flex items-center gap-1.5 px-2.5 pt-2 text-[11.5px] text-ink-muted whitespace-nowrap">Powered by <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={80} height={15} className="op-light-only h-[14px] w-auto" /><Image src="/brand/logo-cream.svg" unoptimized alt="GreenReserve" width={80} height={15} className="op-dark-only h-[14px] w-auto" /></span>
+        {/* CHARCOAL-1 (Cam 2026-11-12, the approved Home): "Powered by GreenReserve", GreenReserve in our green. */}
+        <span className="flex items-center gap-1.5 px-2.5 pt-2 text-[12px] text-ink-muted whitespace-nowrap">Powered by <b className="font-semibold" style={{ color: 'var(--op-brand-green)' }}>GreenReserve</b></span>
       </div>
     </aside>
     </>

@@ -1,6 +1,6 @@
 // DASH-D (Cam 2026-11-01/02): the dashboard's Light/Dark choice is ONLY a token swap.
 //  1. every colour token the dashboard scope sets has a dark twin;
-//  2. the layout reads the cookie into data-theme (first paint right), light by default;
+//  2. the layout reads the cookie into data-theme (first paint right) — CHARCOAL-1 (Cam 2026-11-12): charcoal ('dark') by default;
 //  3. Stripe's card frame and the golfer-page preview stay light;
 //  4. dashboard pages don't gain typed hex colours (they wouldn't follow the theme) — a ratchet.
 // Pure. Run: npx tsx scripts/op-theme-test.ts
@@ -21,16 +21,17 @@ const themeVars = [...css.slice(css.indexOf('@theme {'), css.indexOf('}', css.in
 const darkVars = vars(dark);
 const missing = [...new Set([...vars(light), ...themeVars])].filter(v => !darkVars.has(v));
 ok('every colour token has a dark twin', dark.length > 0 && missing.length === 0, missing);
-ok('bg-white is a panel in dark (card colour), dark knows its own scheme', dark.includes('--color-white: #181B19') && dark.includes('color-scheme: dark'));
+ok('bg-white is a panel in dark (card colour), dark knows its own scheme', dark.includes('--color-white: #2A2B2A') && dark.includes('color-scheme: dark'));
 // Final review 2026-11-02: a dark dashboard printed near-white text on white paper.
 const screenAt = css.indexOf('@media screen {');
 ok('dark mode is screen-only — print always gets the light tokens', screenAt > 0 && [...css.matchAll(/\[data-theme="dark"\]/g)].every(m => m.index! > screenAt && m.index! < css.indexOf('/* FB-2:')));
-ok('white text on a solid fill turns dark in dark mode', css.includes(':is(.bg-pine, .bg-ok, .bg-bad, .bg-warn, .bg-ink) .text-white { color: #0F1110; }'));
+ok('white text on a solid fill turns dark in dark mode', css.includes(':is(.bg-pine, .bg-ok, .bg-bad, .bg-warn, .bg-ink) .text-white { color: #161716; }'));
 
 const layout = read('src/app/dashboard/layout.tsx');
 ok('the layout reads the cookie into data-theme', layout.includes('readOpTheme((await cookies()).get(OP_THEME_COOKIE)?.value)') && layout.includes('data-theme={theme}'));
-ok('light by default; only "dark" means dark', readOpTheme(undefined) === 'light' && readOpTheme('nonsense') === 'light' && readOpTheme('dark') === 'dark');
-ok('Geist is the dashboard face', layout.includes("from 'next/font/google'") && layout.includes('Geist(') && css.includes('var(--font-geist)'));
+ok('charcoal by default; only "light" means light', readOpTheme(undefined) === 'dark' && readOpTheme('nonsense') === 'dark' && readOpTheme('light') === 'light');
+ok('the site type, not Geist (CHARCOAL-1)', !layout.includes('Geist(') && !css.includes('var(--font-geist)'));
+ok('the switch says Charcoal and Light, charcoal first', /\['dark', 'light'\]/.test(read('src/components/dashboard/ThemeSwitch.tsx')) && read('src/components/dashboard/ThemeSwitch.tsx').includes("'Charcoal'"));
 ok('the switch is on the rail and in the phone menu', (read('src/components/OperatorSidebar.tsx').match(/<ThemeSwitch \/>/g) || []).length === 2);
 
 ok('Stripe\'s card frame stays light', /op-keep-light[^"]*"[^]*?<CardElement/.test(read('src/app/dashboard/page.tsx')));
@@ -42,7 +43,6 @@ const BASE: Record<string, number> = {
   'src/app/dashboard/settings/page.tsx': 4,     // the brand colour picker's default
   'src/app/dashboard/members/page.tsx': 8,      // membership swatch palette (reads on both)
   'src/app/dashboard/onboarding/page.tsx': 2,   // Stripe's own button colours (no rail: site look)
-  'src/app/dashboard/home/page.tsx': 1,         // last week's comparison bar
   'src/app/dashboard/analytics/page.tsx': 2,    // chart comparison greys
   'src/components/dashboard/money/SalesPanel.tsx': 3, // chart fills
   'src/components/dashboard/CoursePreview.tsx': 1,    // golfer preview (op-keep-light)
