@@ -119,7 +119,7 @@ export async function GET(req: NextRequest) {
   });
   const ids = courses.map(c => c.id);
   const inIds = { courseId: { in: ids } };
-  const [cur, prior, last, fees, archivedCount, online] = await Promise.all([
+  const [cur, prior, last, fees, archivedCount, online, linked] = await Promise.all([
     prisma.booking.groupBy({ by: ['courseId'], where: { ...inIds, ...MADE, createdAt: { gte: start, lt: now } }, _count: { id: true } }),
     prisma.booking.groupBy({ by: ['courseId'], where: { ...inIds, ...MADE, createdAt: { gte: priorStart, lt: priorEnd } }, _count: { id: true } }),
     prisma.booking.groupBy({ by: ['courseId'], where: { ...inIds, ...MADE }, _max: { createdAt: true } }),
@@ -127,7 +127,10 @@ export async function GET(req: NextRequest) {
     archived ? null : prisma.course.count({ where: { archivedAt: { not: null } } }),
     // "Booked online": of this month's bookings (the Bookings column), the share made online by golfers.
     prisma.booking.groupBy({ by: ['courseId'], where: { ...inIds, ...MADE, source: 'online', createdAt: { gte: start, lt: now } }, _count: { id: true } }),
+    // Onboarding lists inquiries, so a course with none (built by hand) has no row there yet.
+    prisma.courseInquiry.findMany({ where: { builtCourseId: { in: ids } }, select: { builtCourseId: true } }),
   ]);
+  const hasInquiry = new Set(linked.map(i => i.builtCourseId));
   const onlineMap = new Map(online.map(r => [r.courseId, r._count.id]));
   const curMap = new Map(cur.map(r => [r.courseId, r._count.id]));
   const priorMap = new Map(prior.map(r => [r.courseId, r._count.id]));
@@ -141,8 +144,9 @@ export async function GET(req: NextRequest) {
     rows: courses.flatMap(c => {
       const lastAt = lastMap.get(c.id) ?? null;
       const status = courseStatus(c, lastAt, now);
-      // ONE HOME PER COURSE: an onboarding course is on Onboarding, not here (archived view excepted).
-      if (!archived && !onGolfCourses(status)) return [];
+      // ONE HOME PER COURSE: an onboarding course is on Onboarding, not here (archived view excepted) —
+      // except one with no inquiry (built by hand), which Onboarding can't show yet: it stays here, never on no list.
+      if (!archived && !onGolfCourses(status) && hasInquiry.has(c.id)) return [];
       return [{
         id: c.id, name: c.name, slug: c.slug, town: [c.city, c.state].filter(Boolean).join(', '), isTest: c.isTest,
         status,

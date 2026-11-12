@@ -9,7 +9,8 @@ import s from './courses.module.css';
 import { TERMS, SESSION_ENDED, loadFailed, STRIPE_STATE, NO_CONTACT, NO_NOTES } from './terms';
 
 // ADMIN-REDO page 2 — Golf Courses (Cam approved the mockup 2026-11-12, ADMIN_REDO_SPEC.md).
-// One home per course: only courses that have been live (onboarding ones are on Onboarding).
+// One home per course: courses that have been live; onboarding ones are on Onboarding (a course built by
+// hand, with no inquiry, stays here under All until Onboarding can list it).
 // The directory with one Filter menu (the top-bar search finds courses); a course opens its profile beside the list.
 // Every number is counted by /api/admin/courses/directory; a field the login can't see
 // comes back null and is left out. "Open full profile" is the existing course page.

@@ -59,7 +59,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/admin/audit` | admin | client-side | page | `src/app/admin/audit/page.tsx` | 137 |
 | `/admin/broadcasts` | admin | client-side | page | `src/app/admin/broadcasts/page.tsx` | 12 |
 | `/admin/company-documents` | admin | client-side | page | `src/app/admin/company-documents/page.tsx` | 165 |
-| `/admin/courses` | admin | client-side | page | `src/app/admin/courses/page.tsx` | 329 |
+| `/admin/courses` | admin | client-side | page | `src/app/admin/courses/page.tsx` | 330 |
 | `/admin/courses/[id]` | admin | client-side | page | `src/app/admin/courses/[id]/page.tsx` | 326 |
 | `/admin/create` | admin | client-side | page | `src/app/admin/create/page.tsx` | 759 |
 | `/admin/employees` | admin | client-side | page | `src/app/admin/employees/page.tsx` | 278 |
@@ -102,7 +102,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/admin/course-reminders` | admin | file | PATCH | `src/app/api/admin/course-reminders/route.ts` | 22 |
 | `/api/admin/course-settings` | admin | file | GET PATCH | `src/app/api/admin/course-settings/route.ts` | 91 |
 | `/api/admin/courses` | admin | file | GET | `src/app/api/admin/courses/route.ts` | 248 |
-| `/api/admin/courses/directory` | admin | file | GET | `src/app/api/admin/courses/directory/route.ts` | 158 |
+| `/api/admin/courses/directory` | admin | file | GET | `src/app/api/admin/courses/directory/route.ts` | 162 |
 | `/api/admin/create-course` | admin | file | GET POST | `src/app/api/admin/create-course/route.ts` | 206 |
 | `/api/admin/data-reset` | admin | file | GET POST | `src/app/api/admin/data-reset/route.ts` | 32 |
 | `/api/admin/disputes/[bookingId]/evidence` | admin | file | GET | `src/app/api/admin/disputes/[bookingId]/evidence/route.ts` | 29 |
@@ -926,11 +926,11 @@ without opening anything.
 
 ### CourseInquiry
 
-45 fields · 8 writer(s) · 31 reader(s)
+45 fields · 8 writer(s) · 32 reader(s)
 
 - fields: `id`, `firstName`, `lastName`, `contactName`, `contactTitle`, `email`, `phone`, `courseName`, `address`, `city`, `state`, `zipCode`, `website`, `courseType`, `currentBookingMethod`, `teeTimesPerDay`, `greenFeeRange`, `hasResidentPricing`, `hasMemberPricing`, `hasCaddies`, `pricingNotes`, `facilitiesNotes`, `lookingFor`, `additionalNotes`, `needsJson`, `status`, `adminNotes`, `builtCourseId`, `detailsToken`, `detailsJson`, `reviewStartedAt`, `wentLiveAt`, `source`, `closedReason`, `snoozeUntil`, `nextFollowUpAt`, `createdAt`, `updatedAt`, `events`, `changeRequests`, `callSkippedReason`, `calls`, `callInviteToken`, `callInviteSentAt`, `callInviteExpiresAt`
 - writers: `src/app/api/admin/backfill-orphaned-inquiries/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/create-course/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/inquiries/details/route.ts`, `src/app/api/inquiries/route.ts`, `src/lib/call-invite.ts`, `src/lib/lifecycle.ts`
-- readers: `src/app/api/admin/backfill-orphaned-inquiries/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/courses/route.ts`, `src/app/api/admin/create-course/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/admin/messages/route.ts`, `src/app/api/admin/nav-badges/route.ts`, `src/app/api/admin/request-re-review/route.ts`, `src/app/api/admin/search/route.ts`, `src/app/api/admin/today/overview/route.ts`, `src/app/api/calcom/webhook/route.ts`, `src/app/api/call/[token]/route.ts` +19 more (see `docs/codemap.json`)
+- readers: `src/app/api/admin/backfill-orphaned-inquiries/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/courses/directory/route.ts`, `src/app/api/admin/courses/route.ts`, `src/app/api/admin/create-course/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/admin/messages/route.ts`, `src/app/api/admin/nav-badges/route.ts`, `src/app/api/admin/request-re-review/route.ts`, `src/app/api/admin/search/route.ts`, `src/app/api/admin/today/overview/route.ts`, `src/app/api/calcom/webhook/route.ts` +20 more (see `docs/codemap.json`)
 
 ### CourseMembership
 

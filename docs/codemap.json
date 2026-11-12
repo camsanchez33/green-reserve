@@ -667,7 +667,7 @@
     },
     {
       "path": "src/app/admin/courses/page.tsx",
-      "lines": 329,
+      "lines": 330,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1998,7 +1998,7 @@
     },
     {
       "path": "src/app/api/admin/courses/directory/route.ts",
-      "lines": 158,
+      "lines": 162,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -30946,6 +30946,7 @@
       "readers": [
         "src/app/api/admin/backfill-orphaned-inquiries/route.ts",
         "src/app/api/admin/course-detail/route.ts",
+        "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/create-course/route.ts",
         "src/app/api/admin/inquiries/route.ts",

@@ -546,10 +546,17 @@ async function main() {
     }
     // ONE HOME PER COURSE: a course still onboarding is on Onboarding, never on Golf courses.
     await prisma.course.update({ where: { id: data.courseA.id }, data: { active: false, liveStatus: 'draft', firstWentLiveAt: null, welcomeEmailSentAt: null } });
+    let inq: { id: string } | null = null;
     try {
-      const rows = ((await api('/api/admin/courses/directory', { cookie: viewerCookie })).body as { rows?: { id: string; status: string }[] }).rows;
-      check('Golf courses leaves out a course still onboarding', !!rows && !rows.some(x => x.id === data.courseA.id) && rows.every(x => x.status !== 'onboarding'), JSON.stringify(rows?.map(x => [x.id, x.status])));
+      type R = { id: string; status: string };
+      const listed = async () => ((await api('/api/admin/courses/directory', { cookie: viewerCookie })).body as { rows?: R[] }).rows;
+      const r0 = await listed();
+      check('Golf courses keeps a never-live course built by hand (no inquiry, so Onboarding cannot show it)', !!r0?.some(x => x.id === data.courseA.id && x.status === 'onboarding'), JSON.stringify(r0?.map(x => [x.id, x.status])));
+      inq = await prisma.courseInquiry.create({ data: { contactName: 'Isol', contactTitle: 'GM', email: `${TS}-inq@test.local`, phone: '1', courseName: 'Isol Course A', address: '1', city: 'A City', state: 'CA', zipCode: '90000', courseType: 'public', status: 'building', builtCourseId: data.courseA.id } });
+      const r1 = await listed();
+      check('…but leaves out a course onboarding from an inquiry (its home is Onboarding)', !!r1 && !r1.some(x => x.id === data.courseA.id), JSON.stringify(r1?.map(x => [x.id, x.status])));
     } finally {
+      if (inq) await prisma.courseInquiry.delete({ where: { id: inq.id } });
       await prisma.course.update({ where: { id: data.courseA.id }, data: { active: data.courseA.active, liveStatus: data.courseA.liveStatus, firstWentLiveAt: data.courseA.firstWentLiveAt, welcomeEmailSentAt: data.courseA.welcomeEmailSentAt } });
     }
     check('…and lists it again once live', !!((await api('/api/admin/courses/directory', { cookie: viewerCookie })).body as { rows?: { id: string }[] }).rows?.some(x => x.id === data.courseA.id));
