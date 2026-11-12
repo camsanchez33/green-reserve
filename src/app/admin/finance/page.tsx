@@ -189,7 +189,7 @@ export default function FinancePage() {
         {got && !got.ok && (
           <div className={`${g.glass} ${g.note}`} role="alert">
             <span className={got.status === 404 ? g.wa : g.down}>{got.msg}</span>
-            {got.status === 401 ? <Link href="/admin/login">Sign in</Link> : <button type="button" onClick={() => load(per)} disabled={loading}>{loading ? 'Trying…' : 'Try again'}</button>}
+            {got.status === 401 ? <Link href="/cam">Sign in</Link> : <button type="button" onClick={() => load(per)} disabled={loading}>{loading ? 'Trying…' : 'Try again'}</button>}
           </div>
         )}
 
