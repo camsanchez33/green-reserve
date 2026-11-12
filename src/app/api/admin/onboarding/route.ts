@@ -4,6 +4,7 @@ import { resolveAdminSession, requireRole, VIEWER_PLUS, SUPPORT_PLUS, MANAGER_PL
 import { stageEnteredAt, daysSince } from '@/lib/inquiry-status';
 import { latestPageDecision } from '@/lib/change-requests';
 import { coursePageDecision, getApprovalState } from '@/lib/approval-state';
+import { hasSetUp } from '@/lib/operator-setup';
 import { courseStatus } from '../courses/directory/status';
 import { STAGES, BY_HAND_STAGE, stageName, needOf, isOverdue, compareRows, checklist, inquiryNext, historyLine, OVERDUE_DAYS, type StepFacts } from './plan';
 
@@ -28,7 +29,7 @@ type CourseFacts = {
   id: string; name: string; city: string; state: string; isTest: boolean; createdAt: Date; archivedAt: Date | null;
   active: boolean; liveStatus: string; firstWentLiveAt: Date | null; welcomeEmailSentAt: Date | null;
   stripeAccountActive: boolean; pageDecision: string | null; adminNotes: string;
-  operator: { emailVerified: boolean } | null;
+  operator: { lastLoginAt: Date | null } | null;
 };
 
 async function loadList(now: Date) {
@@ -48,7 +49,7 @@ async function loadList(now: Date) {
     select: {
       id: true, name: true, city: true, state: true, isTest: true, createdAt: true, archivedAt: true, active: true, liveStatus: true,
       firstWentLiveAt: true, welcomeEmailSentAt: true, stripeAccountActive: true, pageDecision: true, adminNotes: true,
-      operator: { select: { emailVerified: true } },
+      operator: { select: { lastLoginAt: true } },
     },
   });
   const onboarding = (c: CourseFacts) => courseStatus(c, null, now) === 'onboarding';
@@ -64,7 +65,8 @@ async function loadList(now: Date) {
   const signed = new Set(agreements.map(a => a.courseId));
   const facts = (c: CourseFacts | undefined, approved: boolean, infoIn: boolean): StepFacts => ({
     infoIn: infoIn || !!c, built: !!c, schedule: !!c && hasSchedule.has(c.id), approved: !!c && approved,
-    login: !!c?.operator?.emailVerified, agreement: !!c && signed.has(c.id), stripe: !!c?.stripeAccountActive, live: false,
+    // Signed in at least once (operator-setup's hasSetUp): create-course sets emailVerified before any password exists.
+    login: !!c?.operator && hasSetUp(c.operator), agreement: !!c && signed.has(c.id), stripe: !!c?.stripeAccountActive, live: false,
   });
 
   const rows = [];
@@ -130,8 +132,8 @@ export async function GET(req: NextRequest) {
     row.courseId ? prisma.agreementAcceptance.findFirst({ where: { courseId: row.courseId, document: 'operator_agreement' }, orderBy: { acceptedAt: 'desc' }, select: { version: true, acceptedAt: true } }) : null,
   ]);
   const history = inq
-    ? [...inq.events.flatMap(e => { const h = historyLine(e); return h ? [{ at: e.createdAt.toISOString(), ...h }] : []; }).slice(0, 39),
-       { at: inq.createdAt.toISOString(), text: 'Inquiry received', detail: inq.source ? `From ${inq.source}` : null }]
+    ? [...inq.events.flatMap(e => { const h = historyLine(e, support); return h ? [{ at: e.createdAt.toISOString(), ...h }] : []; }).slice(0, 39),
+       { at: inq.createdAt.toISOString(), text: 'Inquiry received', detail: support && inq.source ? `From ${inq.source}` : null }]
     : course ? [{ at: course.createdAt.toISOString(), text: 'Course built by hand', detail: null }] : [];
   // "Book on Cal.com" before the demo: a new or reviewing inquiry with no call talked through yet.
   const beforeDemo = !!inq && (inq.status === 'pending' || inq.status === 'in_review') && !inq.calls.some(c => c.outcome === 'talked');

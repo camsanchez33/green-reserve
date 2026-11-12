@@ -10,6 +10,7 @@
 
 import { BOARD_STUCK_DAYS, nextStep, type BoardInquiry } from '@/lib/inquiry-board';
 import { REPLY_EVENT_PREFIX } from '@/lib/inquiry-status';
+import { describeChangeEvent } from '@/lib/change-requests';
 
 /** The statuses that are onboarding, in order, with the stage name the page shows. */
 export const STAGES = [
@@ -107,20 +108,44 @@ export function inquiryNext(inq: BoardInquiry & { snoozeUntil?: Date | string | 
 
 // ── History ────────────────────────────────────────────────────────────────────
 export type HistoryEvent = { fromStatus: string; toStatus: string; actorName: string | null; createdAt: Date | string };
-/** Encoded payloads (re-submissions, change requests) carry data after '::' — the words before it are the event. */
-const clean = (s: string | null) => (s ?? '').split('::')[0].trim().slice(0, 160);
+/** Machine markers some writers log (course-timeline.ts / change-requests.ts prefixes), in plain words. Any other
+ *  ALL_CAPS:: marker is internal and left out — never shown raw. Pinned against the real constants in the test. */
+export const MARKER_WORDS: Record<string, string> = {
+  'SETTINGS_CHANGED::': 'Course settings changed',
+  'REMINDER_SENT::': 'Reminder sent to the course',
+  'REMINDERS_PAUSED::': 'Reminders paused',
+  'REMINDERS_RESUMED::': 'Reminders resumed',
+  'OPERATOR_AGREEMENT_ACCEPTED::': 'Agreement signed',
+  'DOCUMENT_UPLOADED::': 'Document uploaded',
+  'NOTE_ADDED::': 'Note added',
+  'CHECKIN_CALL::': 'Check-in call',
+};
 /** Pseudo statuses some writers log a marker under. */
 const MARKER_STATUS: Record<string, string> = { contact_updated: 'Contact details updated' };
 
-export function historyLine(e: HistoryEvent): { text: string; detail: string | null } | null {
-  const actor = clean(e.actorName);
+/**
+ * One history line, or null to leave the event out. `full` is support+: a viewer gets stage moves only, with no
+ * detail — marker text can carry an email address or a free-text reason (the route withholds contact and notes
+ * below support).
+ */
+export function historyLine(e: HistoryEvent, full = true): { text: string; detail: string | null } | null {
+  const raw = (e.actorName ?? '').trim();
   if (e.fromStatus !== e.toStatus) {
-    // A bare name ("Cam") reads "by Cam"; a sentence ("Stage overridden by Cam") is shown as written.
-    const detail = !actor ? null : /\s(by|—)\s|^(Moved|Restored|Stage|Call|Course|Preview|Setup|Replied)\b/.test(actor) ? actor : `by ${actor}`;
-    return { text: `Moved to ${stageName(e.toStatus)}`, detail };
+    if (!MARKER_STATUS[e.toStatus]) {
+      const actor = raw.split('::')[0].trim().slice(0, 160);
+      // A bare name ("Cam") reads "by Cam"; a sentence ("Stage overridden by Cam") is shown as written.
+      const detail = !full || !actor ? null : /\s(by|—)\s|^(Moved|Restored|Stage|Call|Course|Preview|Setup|Replied)\b/.test(actor) ? actor : `by ${actor}`;
+      return { text: `Moved to ${stageName(e.toStatus)}`, detail };
+    }
   }
-  if (MARKER_STATUS[e.toStatus]) return { text: MARKER_STATUS[e.toStatus], detail: actor ? `by ${actor}` : null };
-  if (!actor) return null;
-  if (actor.startsWith(REPLY_EVENT_PREFIX)) return { text: 'Replied by email', detail: actor.slice(REPLY_EVENT_PREFIX.length).trim() || null };
-  return { text: actor, detail: null };
+  if (!full) return null;
+  if (MARKER_STATUS[e.toStatus]) return { text: MARKER_STATUS[e.toStatus], detail: raw ? `by ${raw.slice(0, 80)}` : null };
+  if (!raw) return null;
+  const change = describeChangeEvent(raw);
+  if (change) return { text: change, detail: null };
+  const known = Object.keys(MARKER_WORDS).find(p => raw.startsWith(p));
+  if (known) return { text: MARKER_WORDS[known], detail: null };
+  if (/^[A-Z][A-Z_]+::/.test(raw)) return null;
+  if (raw.startsWith(REPLY_EVENT_PREFIX)) return { text: 'Replied by email', detail: raw.slice(REPLY_EVENT_PREFIX.length).trim() || null };
+  return { text: raw.slice(0, 160), detail: null };
 }

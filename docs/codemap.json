@@ -2650,7 +2650,7 @@
     },
     {
       "path": "src/app/api/admin/onboarding/plan.ts",
-      "lines": 127,
+      "lines": 152,
       "purpose": "ADMIN-REDO page 3 — Onboarding (Cam approved the mockup 2026-11-12).",
       "brain": [],
       "exports": [
@@ -2685,6 +2685,10 @@
         {
           "name": "isOverdue",
           "kind": "fn"
+        },
+        {
+          "name": "MARKER_WORDS",
+          "kind": "const"
         },
         {
           "name": "Need",
@@ -2733,6 +2737,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/lib/change-requests",
         "@/lib/inquiry-board",
         "@/lib/inquiry-status"
       ],
@@ -2742,7 +2747,7 @@
     },
     {
       "path": "src/app/api/admin/onboarding/route.ts",
-      "lines": 151,
+      "lines": 153,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2765,6 +2770,7 @@
         "@/lib/approval-state",
         "@/lib/change-requests",
         "@/lib/inquiry-status",
+        "@/lib/operator-setup",
         "@/lib/prisma",
         "next/server"
       ],
@@ -17598,6 +17604,7 @@
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/inquiries/route.ts",
         "src/app/api/admin/messages/route.ts",
+        "src/app/api/admin/onboarding/plan.ts",
         "src/app/api/admin/onboarding/route.ts",
         "src/app/api/admin/request-re-review/route.ts",
         "src/app/api/operator/approve-page/route.ts",
@@ -23526,6 +23533,7 @@
       "usedBy": [
         "src/app/api/admin/create-course/route.ts",
         "src/app/api/admin/inquiries/route.ts",
+        "src/app/api/admin/onboarding/route.ts",
         "src/app/api/preview/send/route.ts"
       ]
     },

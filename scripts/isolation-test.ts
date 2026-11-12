@@ -556,6 +556,12 @@ async function main() {
       check('Golf courses leaves out a never-live course built by hand (no inquiry)', !!r0 && !r0.some(x => x.id === data.courseA.id), JSON.stringify(r0?.map(x => [x.id, x.status])));
       const o0 = await onb();
       check('…and Onboarding lists it, built by hand', !!o0?.some(x => x.key === `c:${data.courseA.id}` && x.inquiryId === null && x.stage === 'Built by hand'), JSON.stringify(o0));
+      type St = { steps: { steps: { label: string; done: boolean }[] } };
+      const ownerStep = (r?: O & Partial<St>) => r?.steps?.steps.find(x => x.label === 'Owner login set up')?.done;
+      await prisma.courseOperator.update({ where: { email: `${TS}-opa@test.local` }, data: { emailVerified: true, lastLoginAt: null } });
+      check('…its "Owner login set up" step waits for a first sign-in (not emailVerified, which create-course sets)', ownerStep((await onb())?.find(x => x.key === `c:${data.courseA.id}`) as O & St) === false);
+      await prisma.courseOperator.update({ where: { email: `${TS}-opa@test.local` }, data: { lastLoginAt: new Date() } });
+      check('…and is done once the owner has signed in', ownerStep((await onb())?.find(x => x.key === `c:${data.courseA.id}`) as O & St) === true);
       inq = await prisma.courseInquiry.create({ data: { contactName: 'Isol', contactTitle: 'GM', email: `${TS}-inq@test.local`, phone: '1', courseName: 'Isol Course A', address: '1', city: 'A City', state: 'CA', zipCode: '90000', courseType: 'public', status: 'building', builtCourseId: data.courseA.id } });
       const r1 = await listed();
       check('…a course onboarding from an inquiry is not on Golf courses either', !!r1 && !r1.some(x => x.id === data.courseA.id), JSON.stringify(r1?.map(x => [x.id, x.status])));
@@ -563,6 +569,9 @@ async function main() {
       check('…Onboarding lists it once, through its inquiry', o1?.filter(x => x.courseId === data.courseA.id).length === 1 && !!o1.some(x => x.key === `i:${inq!.id}` && x.stage === 'Building'), JSON.stringify(o1));
       // Who sees what on the profile: a viewer gets no contact or notes and can't save a note.
       const pv = (await api(`/api/admin/onboarding?key=i:${inq.id}`, { cookie: viewerCookie })).body as { contact?: unknown; notes?: unknown; canNote?: boolean; canBookCall?: boolean; steps?: { total?: number } };
+      await prisma.inquiryStatusEvent.create({ data: { inquiryId: inq.id, fromStatus: 'building', toStatus: 'building', trigger: 'admin', actorName: `Booking link sent to ${TS}-inq@test.local by Isol` } });
+      const pvRaw = (await api(`/api/admin/onboarding?key=i:${inq.id}`, { cookie: viewerCookie })).text;
+      check('Onboarding profile → viewer: the inquiry\'s email appears nowhere (history included)', !pvRaw.includes(`${TS}-inq@test.local`), pvRaw.slice(0, 300));
       check('Onboarding profile → viewer: no contact, notes, note field or Cal.com', pv?.contact === null && pv?.notes === null && pv?.canNote === false && pv?.canBookCall === false && pv?.steps?.total === 8, JSON.stringify(pv).slice(0, 300));
       const { signAdminToken } = await import('../src/lib/admin-session');
       const mgr = await prisma.adminUser.create({ data: { name: 'Isol Onboarding Manager', email: `${TS}-onbmgr@test.local`, passwordHash: 'x', role: 'manager', active: true } });

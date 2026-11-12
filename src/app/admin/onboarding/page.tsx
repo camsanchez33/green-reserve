@@ -100,7 +100,7 @@ function Notes({ p, onSaved }: { p: Profile; onSaved: (notes: string) => void })
   );
 }
 
-function ProfilePanel({ rowKey }: { rowKey: string }) {
+function ProfilePanel({ rowKey, support }: { rowKey: string; support: boolean }) {
   const [p, setP] = useState<Profile | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -127,7 +127,7 @@ function ProfilePanel({ rowKey }: { rowKey: string }) {
   };
 
   if (error) return (
-    <section className={`${g.glass} ${s.prof}`} role="alert" aria-label="Onboarding profile">
+    <section id="onboarding-profile" className={`${g.glass} ${s.prof}`} role="alert" aria-label="Onboarding profile">
       <p className={`${s.muted} ${g.down}`}>{error}</p>
       <div className={s.plinks}>
         {error === SESSION_ENDED ? <Link className={s.plink} href="/admin/login">Sign in</Link>
@@ -135,7 +135,7 @@ function ProfilePanel({ rowKey }: { rowKey: string }) {
       </div>
     </section>
   );
-  if (!p) return <section className={`${g.glass} ${s.prof} ${s.skel}`} aria-busy="true" aria-label="Loading the course" />;
+  if (!p) return <section id="onboarding-profile" className={`${g.glass} ${s.prof} ${s.skel}`} aria-busy="true" aria-label="Loading the course" />;
 
   const st = p.steps;
   return (
@@ -148,7 +148,7 @@ function ProfilePanel({ rowKey }: { rowKey: string }) {
         </div>
         <div className={s.plinks}>
           {p.inquiryId && <Link className={s.plink} href={`/admin/inquiries/${p.inquiryId}`}>Inquiry <span aria-hidden="true">→</span></Link>}
-          {!p.inquiryId && p.courseId && <Link className={s.plink} href={`/admin/courses/${p.courseId}`}>Course <span aria-hidden="true">→</span></Link>}
+          {support && !p.inquiryId && p.courseId && <Link className={s.plink} href={`/admin/courses/${p.courseId}`}>Course <span aria-hidden="true">→</span></Link>}
           {p.canBookCall && <button type="button" className={s.plink} onClick={bookOnCalcom} disabled={calBusy} aria-busy={calBusy}>{calBusy ? 'Opening…' : <>Book on Cal.com <span aria-hidden="true">↗</span></>}</button>}
         </div>
       </div>
@@ -292,7 +292,7 @@ function OnboardingContent() {
                 </table>
               )}
             </section>
-            {pick && <ProfilePanel key={pick} rowKey={pick} />}
+            {pick && <ProfilePanel key={pick} rowKey={pick} support={d.support} />}
           </div>
         )}
 

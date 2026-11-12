@@ -83,7 +83,7 @@ function ProfilePanel({ id, riskDays, support }: { id: string; riskDays: number;
   useEffect(() => { setP(null); load(); }, [load]);
 
   if (error) return (
-    <section className={`${g.glass} ${s.prof}`} role="alert" aria-label="Course profile">
+    <section id="course-profile" className={`${g.glass} ${s.prof}`} role="alert" aria-label="Course profile">
       <p className={`${s.muted} ${g.down}`}>{error}</p>
       <div className={s.plinks}>
         {error === SESSION_ENDED ? <Link className={s.plink} href="/admin/login">Sign in</Link>
@@ -91,7 +91,7 @@ function ProfilePanel({ id, riskDays, support }: { id: string; riskDays: number;
       </div>
     </section>
   );
-  if (!p) return <section className={`${g.glass} ${s.prof} ${s.skel}`} aria-busy="true" aria-label="Loading the course" />;
+  if (!p) return <section id="course-profile" className={`${g.glass} ${s.prof} ${s.skel}`} aria-busy="true" aria-label="Loading the course" />;
 
   const failedCents = p.money ? p.money.failed.reduce((a, f) => a + f.cents, 0) : 0;
   const live = p.status === 'live' || p.status === 'risk';

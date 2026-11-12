@@ -1,7 +1,9 @@
 // ADMIN-REDO Onboarding: pins the page's rules (src/app/api/admin/onboarding/plan.ts) — which statuses are
 // onboarding, the order (overdue, then call or email, then our setup; longest wait first), the 8-step checklist,
 // the next step in plain words, and the history wording.
-import { STAGES, isOnboardingStatus, needOf, rankOf, compareRows, isOverdue, OVERDUE_DAYS, checklist, STEPS, inquiryNext, historyLine } from '../src/app/api/admin/onboarding/plan';
+import { SETTINGS_CHANGED_PREFIX, REMINDER_SENT_PREFIX, REMINDERS_PAUSED_PREFIX, REMINDERS_RESUMED_PREFIX, AGREEMENT_ACCEPTED_PREFIX, DOCUMENT_UPLOADED_PREFIX, NOTE_ADDED_PREFIX, CHECKIN_CALL_PREFIX } from '../src/lib/course-timeline';
+import { encodeChangesRequested, encodeChangeAddressed } from '../src/lib/change-requests';
+import { MARKER_WORDS, STAGES, isOnboardingStatus, needOf, rankOf, compareRows, isOverdue, OVERDUE_DAYS, checklist, STEPS, inquiryNext, historyLine } from '../src/app/api/admin/onboarding/plan';
 
 let failed = 0;
 const check = (name: string, ok: boolean, info?: unknown) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${ok || info === undefined ? '' : `  ${JSON.stringify(info)}`}`); if (!ok) failed++; };
@@ -55,7 +57,13 @@ check('no next step says "chase", "enquiry" or "with Cam"', ['pending', 'in_revi
 const ev = (fromStatus: string, toStatus: string, actorName: string | null) => ({ fromStatus, toStatus, actorName, createdAt: now });
 check('a move by a person: "Moved to Building", by them', JSON.stringify(historyLine(ev('details_submitted', 'building', 'Cam'))) === JSON.stringify({ text: 'Moved to Building', detail: 'by Cam' }));
 check('a move with a sentence keeps the sentence', historyLine(ev('in_review', 'building', 'Stage overridden by Cam'))?.detail === 'Stage overridden by Cam');
-check('a marker shows its words, never the encoded payload', historyLine(ev('building', 'building', 'Course submitted the interest form again::{"a":1}'))?.text === 'Course submitted the interest form again');
+check('every real course-timeline marker has plain words', [SETTINGS_CHANGED_PREFIX, REMINDER_SENT_PREFIX, REMINDERS_PAUSED_PREFIX, REMINDERS_RESUMED_PREFIX, AGREEMENT_ACCEPTED_PREFIX, DOCUMENT_UPLOADED_PREFIX, NOTE_ADDED_PREFIX, CHECKIN_CALL_PREFIX].every(p => MARKER_WORDS[p] && historyLine(ev('building', 'building', p + '{"x":1}'))?.text === MARKER_WORDS[p]));
+check('a change request reads in words, never CHANGES_REQUESTED', !/CHANGES?_/.test(historyLine(ev('building', 'building', encodeChangesRequested([{ category: 'photos', detail: 'new logo' }])))?.text ?? 'CHANGES_'));
+check('…and a change addressed too', !/CHANGE_/.test(historyLine(ev('building', 'building', encodeChangeAddressed('photos', 'Cam')))?.text ?? 'CHANGE_'));
+check('an unknown ALL_CAPS:: marker is left out, never shown raw', historyLine(ev('building', 'building', 'SOMETHING_NEW::{"a":1}')) === null);
+check('a viewer gets stage moves only, with no detail', JSON.stringify(historyLine(ev('in_review', 'details_requested', 'Cam'), false)) === JSON.stringify({ text: 'Moved to Waiting on them', detail: null }));
+check('…and no marker text (it can carry an email)', historyLine(ev('in_review', 'in_review', 'Booking link sent to pro@example.test by Cam'), false) === null);
+check('…while support+ sees it', historyLine(ev('in_review', 'in_review', 'Booking link sent to pro@example.test by Cam'))?.text === 'Booking link sent to pro@example.test by Cam');
 check('an empty marker is left out', historyLine(ev('building', 'building', null)) === null);
 check('contact updates read in plain words', historyLine(ev('contact_updated', 'contact_updated', 'Cam'))?.text === 'Contact details updated');
 
