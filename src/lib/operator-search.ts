@@ -43,13 +43,13 @@ export async function operatorSearch(courseId: string, rawQ: string, opts: { con
   const ref = parsed?.ref != null && course?.number != null && parsed.course === course.number ? parsed.ref : null;
   const bookingOr = [
     { golferName: contains(q) },
-    ...(ref ? [{ ref }] : []),
     ...(opts.contact ? [{ golferEmail: contains(q) }, ...(phoneIds.length ? [{ id: { in: phoneIds } }] : [])] : []),
   ];
   const [bookingRows, members, residents] = await Promise.all([
     prisma.booking.findMany({
       // Cancelled and no-show groups too (dead end 18) — they're what the counter gets asked about.
-      where: { courseId, status: { in: ['confirmed', 'completed', 'cancelled'] }, OR: bookingOr, teeTime: { date: { gte: since } } },
+      // Names and contacts from 60 days back; an exact GR number at any date (it names one booking).
+      where: { courseId, status: { in: ['confirmed', 'completed', 'cancelled'] }, OR: [{ OR: bookingOr, teeTime: { date: { gte: since } } }, ...(ref ? [{ ref }] : [])] },
       orderBy: [{ teeTime: { date: 'desc' } }, { teeTime: { time: 'asc' } }], take: 60,
       select: { id: true, ref: true, golferName: true, players: true, status: true, noShowAt: true, teeTime: { select: { date: true, time: true } } },
     }),
