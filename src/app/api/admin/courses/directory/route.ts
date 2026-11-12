@@ -9,7 +9,7 @@ import { setupProgress } from '@/lib/course-setup';
 import { getApprovalState } from '@/lib/approval-state';
 import { agreementDueByCourse } from '@/lib/agreement-required';
 import { startOfPlatformMonth, startOfPlatformMonthsAgo } from '@/lib/admin-day';
-import { courseStatus, RISK_DAYS } from './status';
+import { courseStatus, onGolfCourses, RISK_DAYS } from './status';
 
 // ADMIN-REDO page 2 — Golf Courses (Cam approved the mockup 2026-11-12). READ-ONLY.
 // The directory (?archived=1 for archived courses) and one course's profile (?id=).
@@ -138,17 +138,20 @@ export async function GET(req: NextRequest) {
     archivedCount,
     seesMoney,
     support,
-    rows: courses.map(c => {
+    rows: courses.flatMap(c => {
       const lastAt = lastMap.get(c.id) ?? null;
-      return {
+      const status = courseStatus(c, lastAt, now);
+      // ONE HOME PER COURSE: an onboarding course is on Onboarding, not here (archived view excepted).
+      if (!archived && !onGolfCourses(status)) return [];
+      return [{
         id: c.id, name: c.name, slug: c.slug, town: [c.city, c.state].filter(Boolean).join(', '), isTest: c.isTest,
-        status: courseStatus(c, lastAt, now),
+        status,
         bookings: curMap.get(c.id) ?? 0, bookingsPrior: priorMap.get(c.id) ?? 0,
         // null with no bookings this month — a share of nothing is not 0%.
         onlinePct: curMap.get(c.id) ? Math.round(((onlineMap.get(c.id) ?? 0) / curMap.get(c.id)!) * 100) : null,
         feesCents: fees ? fees.get(c.id) ?? 0 : null,
         lastBookingAt: lastAt?.toISOString() ?? null,
-      };
+      }];
     }),
   });
 }

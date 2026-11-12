@@ -20,3 +20,9 @@ export function courseStatus(c: StatusInput, lastBooking: Date | null, now: Date
   const cutoff = now.getTime() - RISK_DAYS * DAY;
   return since.getTime() <= cutoff && (!lastBooking || lastBooking.getTime() < cutoff) ? 'risk' : 'live';
 }
+
+/** ONE HOME PER COURSE (Cam 2026-11-12): Golf Courses lists a course only once it has been live —
+ *  Live, At risk, Offline. An onboarding course lives on Onboarding until the day it goes live. */
+export function onGolfCourses(s: CourseStatus): boolean {
+  return s === 'live' || s === 'risk' || s === 'offline';
+}

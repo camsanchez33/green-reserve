@@ -667,7 +667,7 @@
     },
     {
       "path": "src/app/admin/courses/page.tsx",
-      "lines": 328,
+      "lines": 329,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1998,7 +1998,7 @@
     },
     {
       "path": "src/app/api/admin/courses/directory/route.ts",
-      "lines": 155,
+      "lines": 158,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2032,7 +2032,7 @@
     },
     {
       "path": "src/app/api/admin/courses/directory/status.ts",
-      "lines": 23,
+      "lines": 29,
       "purpose": "ADMIN-REDO Golf Courses:",
       "brain": [],
       "exports": [
@@ -2043,6 +2043,10 @@
         {
           "name": "CourseStatus",
           "kind": "type"
+        },
+        {
+          "name": "onGolfCourses",
+          "kind": "fn"
         },
         {
           "name": "RISK_DAYS",

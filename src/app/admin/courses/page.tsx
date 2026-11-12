@@ -9,6 +9,7 @@ import s from './courses.module.css';
 import { TERMS, SESSION_ENDED, loadFailed, STRIPE_STATE, NO_CONTACT, NO_NOTES } from './terms';
 
 // ADMIN-REDO page 2 — Golf Courses (Cam approved the mockup 2026-11-12, ADMIN_REDO_SPEC.md).
+// One home per course: only courses that have been live (onboarding ones are on Onboarding).
 // The directory with one Filter menu (the top-bar search finds courses); a course opens its profile beside the list.
 // Every number is counted by /api/admin/courses/directory; a field the login can't see
 // comes back null and is left out. "Open full profile" is the existing course page.
@@ -26,12 +27,12 @@ type Profile = {
   notes: string | null;
   money: { stripeConnected: boolean; stripeActive: boolean; feesCents: number; feesPriorCents: number; missedCents: number; missedRounds: number; failedCount: number; failed: { id: string; golferName: string; cents: number; teeDate: string; reason: string }[] } | null;
 };
-type Filter = 'all' | 'live' | 'risk' | 'onboarding' | 'offline';
+type Filter = 'all' | 'live' | 'risk' | 'offline';
 
 const TZ = 'America/New_York';
 const LABEL: Record<Status, string> = { live: 'Live', risk: 'At risk', onboarding: 'Onboarding', offline: 'Offline', archived: 'Archived' };
 const FILTERS: { v: Filter; label: string }[] = [
-  { v: 'all', label: 'All' }, { v: 'live', label: 'Live' }, { v: 'risk', label: 'At risk' }, { v: 'onboarding', label: 'Onboarding' }, { v: 'offline', label: 'Offline' },
+  { v: 'all', label: 'All' }, { v: 'live', label: 'Live' }, { v: 'risk', label: 'At risk' }, { v: 'offline', label: 'Offline' },
 ];
 const ORDER: Record<Status, number> = { risk: 0, live: 1, onboarding: 2, offline: 3, archived: 4 };
 
@@ -211,7 +212,7 @@ function CoursesContent() {
   }, [menuOpen]);
 
   const counts = useMemo(() => {
-    const c: Record<Filter, number> = { all: 0, live: 0, risk: 0, onboarding: 0, offline: 0 };
+    const c: Record<Filter, number> = { all: 0, live: 0, risk: 0, offline: 0 };
     for (const r of d?.rows ?? []) { c.all++; if (r.status in c) c[r.status as Filter]++; if (r.status === 'risk') c.live++; }
     return c;
   }, [d]);

@@ -544,6 +544,15 @@ async function main() {
     } finally {
       await prisma.booking.deleteMany({ where: { id: { in: [split.id, ...(walkIn ? [walkIn.id] : [])] } } });
     }
+    // ONE HOME PER COURSE: a course still onboarding is on Onboarding, never on Golf courses.
+    await prisma.course.update({ where: { id: data.courseA.id }, data: { active: false, liveStatus: 'draft', firstWentLiveAt: null, welcomeEmailSentAt: null } });
+    try {
+      const rows = ((await api('/api/admin/courses/directory', { cookie: viewerCookie })).body as { rows?: { id: string; status: string }[] }).rows;
+      check('Golf courses leaves out a course still onboarding', !!rows && !rows.some(x => x.id === data.courseA.id) && rows.every(x => x.status !== 'onboarding'), JSON.stringify(rows?.map(x => [x.id, x.status])));
+    } finally {
+      await prisma.course.update({ where: { id: data.courseA.id }, data: { active: data.courseA.active, liveStatus: data.courseA.liveStatus, firstWentLiveAt: data.courseA.firstWentLiveAt, welcomeEmailSentAt: data.courseA.welcomeEmailSentAt } });
+    }
+    check('…and lists it again once live', !!((await api('/api/admin/courses/directory', { cookie: viewerCookie })).body as { rows?: { id: string }[] }).rows?.some(x => x.id === data.courseA.id));
   }
   {
     // BRAIN-2a: Problems name golfers and money — support+ only, reads and writes.
