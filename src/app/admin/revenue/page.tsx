@@ -43,7 +43,8 @@ interface RevenueData {
   // switched off and on, so those are a dash, never a guess.
   liveCourses?: { count: number | null; priorCount: number | null };
   ledger?: { rows: LedgerRow[]; truncated: boolean };
-  coursePayoutProblems?: { rows: PayoutProblem[]; unavailable: boolean };
+  // checkedCourses = how many courses' payouts were actually read; 0 means nothing was checked, never "paid in full".
+  coursePayoutProblems?: { rows: PayoutProblem[]; unavailable: boolean; checkedCourses?: number };
   payouts?: { toCourses: { cents: number; courses: number } | null; unavailable: boolean };
   isOwner: boolean;
   ownerMfaRequired?: boolean;
@@ -334,8 +335,9 @@ export default function RevenuePage() {
                           <b className={g.down}>{usd(x.amountCents / 100)}{x.stripeUrl && <> <StripeLink href={x.stripeUrl} /></>}</b>
                         </div>
                       ))}
-                      {!shown.coursePayoutProblems ? <div><span>Failed or short payouts<small>{label}</small></span><b className={s.na}>{NOT_YET}</b></div>
-                        : shown.coursePayoutProblems.unavailable ? <div><span>Failed or short payouts<small>{label}</small></span><b className={g.wa}>Stripe didn&rsquo;t answer</b></div>
+                      {!shown.coursePayoutProblems ? <div><span>Failed or reversed payouts<small>{label}</small></span><b className={s.na}>{NOT_YET}</b></div>
+                        : shown.coursePayoutProblems.unavailable ? <div><span>Failed or reversed payouts<small>{label}</small></span><b className={g.wa}>Stripe didn&rsquo;t answer</b></div>
+                        : shown.coursePayoutProblems.checkedCourses === 0 ? <div><span>No payouts checked<small>No course&rsquo;s payouts could be read</small></span><b className={s.na}>—</b></div>
                         : problemCourses.length + shown.coursePayoutProblems.rows.length === 0
                           ? <div><span>Every course<small>Paid in full</small></span><b className={g.up}>OK</b></div>
                           : <div><span>Every other course<small>Paid in full</small></span><b className={g.up}>OK</b></div>}
@@ -353,7 +355,9 @@ export default function RevenuePage() {
                     <div className={s.rows}>
                       <div><span>To our bank<small>{platform.data.nextPayout ? `Next: ${weekday(platform.data.nextPayout.arrivalDate)}` : 'Nothing on the way'}</small></span><b>{platform.data.nextPayout ? usd(platform.data.nextPayout.amount) : '—'}</b></div>
                       <div><span>Balance at Stripe<small>Available now</small></span><b>{usd(platform.data.balance.available)}</b></div>
-                      {shown.payouts?.toCourses
+                      {shown.coursePayoutProblems?.checkedCourses === 0
+                        ? <div><span>To the courses<small>No payouts checked</small></span><b className={s.na}>—</b></div>
+                        : shown.payouts?.toCourses
                         ? <div><span>To the courses<small>{label}, {shown.payouts.toCourses.courses} course{shown.payouts.toCourses.courses === 1 ? '' : 's'}</small></span><b>{usd(shown.payouts.toCourses.cents / 100)}</b></div>
                         : shown.payouts?.unavailable ? <div><span>To the courses<small>{label}</small></span><b className={g.wa}>Stripe didn&rsquo;t answer</b></div>
                         : <div><span>To the courses<small>{label}</small></span><b className={s.na}>{NOT_YET}</b></div>}

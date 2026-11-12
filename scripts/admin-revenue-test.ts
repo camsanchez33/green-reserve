@@ -42,6 +42,7 @@ const page = readFileSync('src/app/admin/revenue/page.tsx', 'utf8');
 check('the page uses the period guards', /isNewAnswer\(/.test(page) && /isFallbackAnswer\(/.test(page));
 check('the page has no own percentage rule', !/prior === 0 \?/.test(page));
 check('the page never says "Not paid"', !/Not paid/.test(page));
+check('nothing checked never reads as paid in full (checkedCourses 0 → "No payouts checked", before "Paid in full")', /checkedCourses === 0/.test(page) && page.indexOf('No payouts checked') > -1 && page.indexOf('No payouts checked') < page.indexOf('Paid in full'));
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
