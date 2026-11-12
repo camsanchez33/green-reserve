@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 708,
+    "files": 709,
     "routes": 303,
-    "libs": 255,
+    "libs": 256,
     "models": 72,
     "orphans": 11,
     "ungatedRoutes": 3
@@ -17789,7 +17789,7 @@
     },
     {
       "path": "src/lib/claim-tee-time.ts",
-      "lines": 149,
+      "lines": 151,
       "purpose": "",
       "brain": [],
       "exports": [
