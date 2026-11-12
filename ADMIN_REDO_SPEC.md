@@ -182,3 +182,9 @@ Final mockup: `lanes/admin/revenue-mockup.html`. The Admin lane builds the page;
 Build's): the period numbers, the running-total series, by course, payouts, course payout problems, Books vs Stripe, and
 the GreenReserve-side MoneyMove ledger with CSV. Owner-only parts stay owner-only (payouts and balances), and Money-area
 gating stays.
+
+## Theme changes (Cam 2026-11-12, queued; don't interrupt the work in flight)
+- Course dashboard LIGHT mode stays glass: the same ribbon backdrop as charcoal, but on a light page with BLACK/charcoal
+  ribbons behind frosted white panels (charcoal = dark page + light ribbons; light = light page + dark ribbons).
+- Admin: NO light mode. Green glass dark only: remove the Light/Dark switch and the gr_admin_theme cookie's light value
+  (treat any saved "light" as dark).
