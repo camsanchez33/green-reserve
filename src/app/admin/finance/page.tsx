@@ -8,7 +8,7 @@ import g from '../admin-glass.module.css';
 import c from '../courses/courses.module.css';
 import r from '../revenue/revenue.module.css';
 import s from './finance.module.css';
-import { TERMS, SESSION_ENDED, loadFailed, NOT_YET } from './terms';
+import { TERMS, SOURCE_TERMS, SESSION_ENDED, loadFailed, NOT_YET } from './terms';
 import {
   type Per, type Month, type FinanceData, type Totals, type Category, PERIODS, SOURCES, CATEGORIES,
   isAnswer, centsOf, totals, windowTotals, pct, pointsChange, monthLabel, spansYears, curve, ticks, sourceLabel, toCsv,
@@ -70,13 +70,13 @@ function MonthChart({ months, wy }: { months: Month[]; wy: boolean }) {
   );
 }
 
-function Bars({ rows, tone }: { rows: { label: string; cents: number }[]; tone: 'rev' | 'exp' }) {
+function Bars({ rows, tone }: { rows: { label: string; cents: number; title?: string }[]; tone: 'rev' | 'exp' }) {
   const top = Math.max(1, ...rows.map(x => x.cents));
   return (
     <div className={s.cats}>
       {rows.map(x => (
         <div key={x.label} className={s.cat}>
-          <div className={s.cl}><span>{x.label}</span><b className={tone === 'exp' ? g.down : undefined}>{usd(x.cents)}</b></div>
+          <div className={s.cl}><span title={x.title}>{x.label}</span><b className={tone === 'exp' ? g.down : undefined}>{usd(x.cents)}</b></div>
           <div className={s.bar}><i className={tone === 'exp' ? s.exp : s.rev} style={{ width: `${Math.max(0, (x.cents / top) * 100)}%` }} /></div>
         </div>
       ))}
@@ -90,7 +90,7 @@ function MonthDetail({ m, before }: { m: Month; before: { revenue: Month['revenu
     <div className={s.md}>
       <div>
         <h3>Revenue {usd(m.revenue.cents)} {before && <Change now={m.revenue.cents} was={centsOf(before.revenue)} vs="the month before" />}</h3>
-        {SOURCES.filter(k => k !== 'other' || (m.revenue.bySource.other ?? 0) !== 0).map(k => <p key={k}><span>{sourceLabel(k)}</span><b>{usd(m.revenue.bySource[k] ?? 0)}</b></p>)}
+        {SOURCES.filter(k => k !== 'other' || (m.revenue.bySource.other ?? 0) !== 0).map(k => <p key={k}><span title={SOURCE_TERMS[k]}>{sourceLabel(k)}</span><b>{usd(m.revenue.bySource[k] ?? 0)}</b></p>)}
       </div>
       <div>
         <h3>Expenses <span className={g.down}>{usd(m.expenses.cents)}</span> {before && <Change now={m.expenses.cents} was={centsOf(before.expenses)} vs="the month before" goodUp={false} />}</h3>
@@ -154,7 +154,7 @@ export default function FinancePage() {
   const now: Totals | null = useMemo(() => (data ? windowTotals(data.months) : null), [data]);
   const was: Totals | null = useMemo(() => (data ? totals(data.prior.revenueCents, data.prior.expensesCents, data.prior.bookings) : null), [data]);
   const wy = data ? spansYears(data.months) : false;
-  const bySource = data ? SOURCES.map(k => ({ key: k, label: sourceLabel(k), cents: data.months.reduce((t, m) => t + (m.revenue.bySource[k] ?? 0), 0) })).filter(x => x.key !== 'other' || x.cents !== 0) : [];
+  const bySource = data ? SOURCES.map(k => ({ key: k, label: sourceLabel(k), title: SOURCE_TERMS[k], cents: data.months.reduce((t, m) => t + (m.revenue.bySource[k] ?? 0), 0) })).filter(x => x.key !== 'other' || x.cents !== 0) : [];
   const byCat = data ? CATEGORIES.map(k => ({ label: catLabel(k), cents: data.months.reduce((t, m) => t + (m.expenses.byCategory[k] ?? 0), 0) })) : [];
 
   function downloadCsv() {

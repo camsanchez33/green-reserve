@@ -12,6 +12,14 @@ export const TERMS = {
   newLive: 'Courses that went live in the month',
 } as const;
 
+/** What each revenue source is (behind its label). GreenReserve takes no cut of a course's own no-show or late fee. */
+export const SOURCE_TERMS: Record<string, string> = {
+  serviceFees: "GreenReserve's service fee on rounds that were played and paid, member house-account payments included",
+  noShowLateFees: "GreenReserve's service fee on bookings charged as a no-show or a late cancel (not the course's own fee)",
+  membershipDues: 'The 1% fee on membership dues paid through GreenReserve',
+  other: 'Fees on pro shop sales and event payments',
+} as const;
+
 export const SESSION_ENDED = 'Your session ended — sign in again.';
 export const loadFailed = (status?: number) =>
   status ? `Financial analytics didn't load (error ${status}). Try again.` : "Financial analytics didn't load. Check your connection and try again.";
