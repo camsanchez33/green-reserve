@@ -188,3 +188,11 @@ gating stays.
   ribbons behind frosted white panels (charcoal = dark page + light ribbons; light = light page + dark ribbons).
 - Admin: NO light mode. Green glass dark only: remove the Light/Dark switch and the gr_admin_theme cookie's light value
   (treat any saved "light" as dark).
+
+## Course dashboard Tee sheet + time card: APPROVED (Cam 2026-11-12)
+Mockups: `lanes/dashboard/teesheet-mockup.html` and `lanes/dashboard/timecard-mockup.html` (final). Today's tee sheet,
+unchanged in layout, in the charcoal glass, with:
+- The five numbers as separate cards; Not paid yet in red.
+- Time card: no "Still coming", no "Add a walk-in who already played". Mark no-show stays.
+- Close this time / Hide online / Delete time show only on a time with nobody booked, and the server refuses them on a
+  booked time.
