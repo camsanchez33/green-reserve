@@ -745,6 +745,68 @@ async function main() {
     }
   }
 
+  console.log('\n── Pipeline: inquiries CSV and expected launch (BOOKING-REF PR) ──');
+  {
+    const { signAdminToken } = await import('../src/lib/admin-session');
+    const mk = (role: string) => prisma.adminUser.create({ data: { name: `Isol Pipe ${role}`, email: `${TS}-pipe-${role}@test.local`, passwordHash: 'x', role, active: true } });
+    const [viewer, sup, mgr] = [await mk('viewer'), await mk('support'), await mk('manager')];
+    const inq = await prisma.courseInquiry.create({ data: { contactName: 'Isol Pipe', contactTitle: 'GM', email: `${TS}-pipe@test.local`, phone: '1', courseName: 'Isol Pipe Course', address: '1', city: 'P', state: 'CA', zipCode: '90000', courseType: 'public', status: 'in_review' } });
+    try {
+      const ck = async (u: { id: string; email: string; name: string; role: string }) => `admin_session=${await signAdminToken({ adminId: u.id, email: u.email, name: u.name, role: u.role as 'viewer', mfa: true })}`;
+      const [vc, sc, mc] = [await ck(viewer), await ck(sup), await ck(mgr)];
+      checkStatus('A viewer cannot download the inquiries CSV → 403', (await api('/api/admin/inquiries?format=csv', { cookie: vc })).status, 403);
+      checkStatus('…but still reads the list → 200', (await api('/api/admin/inquiries', { cookie: vc })).status, 200);
+      const supCsv = await fetch(`${BASE_URL}/api/admin/inquiries?format=csv`, { headers: { cookie: sc } });
+      check('Support downloads it → 200 text/csv', supCsv.status === 200 && (supCsv.headers.get('content-type') ?? '').startsWith('text/csv'));
+      const body = { id: inq.id, action: 'set_expected_launch', expectedLaunchAt: '2026-12-15' };
+      checkStatus('Support cannot set an expected launch → 403', (await api('/api/admin/inquiries', { method: 'PATCH', cookie: sc, body })).status, 403);
+      checkStatus('A bad date → 400', (await api('/api/admin/inquiries', { method: 'PATCH', cookie: mc, body: { ...body, expectedLaunchAt: '2026-02-30' } })).status, 400);
+      checkStatus('A manager sets it → 200', (await api('/api/admin/inquiries', { method: 'PATCH', cookie: mc, body })).status, 200);
+      const row = await prisma.courseInquiry.findUnique({ where: { id: inq.id }, select: { expectedLaunchAt: true } });
+      check('…stored as that day', row?.expectedLaunchAt?.toISOString().slice(0, 10) === '2026-12-15', JSON.stringify(row));
+      const audit = await prisma.adminAuditLog.findFirst({ where: { adminId: mgr.id, action: 'inquiry_expected_launch', targetId: inq.id } });
+      check('…and audited', !!audit);
+      checkStatus('Clearing it → 200', (await api('/api/admin/inquiries', { method: 'PATCH', cookie: mc, body: { ...body, expectedLaunchAt: null } })).status, 200);
+      check('…cleared', (await prisma.courseInquiry.findUnique({ where: { id: inq.id }, select: { expectedLaunchAt: true } }))?.expectedLaunchAt === null);
+    } finally {
+      await prisma.inquiryStatusEvent.deleteMany({ where: { inquiryId: inq.id } }).catch(() => {});
+      await prisma.courseInquiry.delete({ where: { id: inq.id } }).catch(() => {});
+      await prisma.adminAuditLog.deleteMany({ where: { adminId: { in: [viewer.id, sup.id, mgr.id] } } }).catch(() => {});
+      await prisma.adminUser.deleteMany({ where: { id: { in: [viewer.id, sup.id, mgr.id] } } });
+    }
+  }
+
+  console.log('\n── Admin search by GR number (BOOKING-REF) ──');
+  {
+    const { signAdminToken } = await import('../src/lib/admin-session');
+    const c = await prisma.course.findUniqueOrThrow({ where: { id: data.courseA.id }, select: { number: true } });
+    const bk = await prisma.booking.findUniqueOrThrow({ where: { id: bookingA.id }, select: { ref: true } });
+    if (c.number == null || bk.ref == null) {
+      check('fixtures carry GR numbers (course and booking made after the migration)', false, JSON.stringify({ c, bk }));
+    } else {
+      const both = await prisma.adminUser.create({ data: { name: 'Isol GR Both', email: `${TS}-gr-both@test.local`, passwordHash: 'x', role: 'support', active: true, areas: ['courses', 'golfers'], areasSetAt: new Date() } });
+      const msgs = await prisma.adminUser.create({ data: { name: 'Isol GR Msgs', email: `${TS}-gr-msgs@test.local`, passwordHash: 'x', role: 'support', active: true, areas: ['messages'], areasSetAt: new Date() } });
+      try {
+        const ck = async (u: { id: string; email: string; name: string }) => `admin_session=${await signAdminToken({ adminId: u.id, email: u.email, name: u.name, role: 'support', mfa: true })}`;
+        type SR = { results?: { type: string; id: string; sub?: string }[] };
+        const search = async (q: string, cookie: string) => ((await api(`/api/admin/search?q=${encodeURIComponent(q)}`, { cookie })).body as SR).results ?? [];
+        const bc = await ck(both), mc = await ck(msgs);
+        const ref = `GR${c.number}-${bk.ref}`;
+        for (const q of [ref, ref.toLowerCase(), `${c.number}-${bk.ref}`]) {
+          const r = await search(q, bc);
+          check(`Admin search "${q}" finds the booking (Golfers area)`, r.some(x => x.type === 'booking' && x.id === `booking:${bookingA.id}` && (x.sub ?? '').startsWith(ref)), JSON.stringify(r).slice(0, 300));
+        }
+        const rc = await search(`GR${c.number}`, bc);
+        check(`Admin search "GR${c.number}" finds the course (Courses area)`, rc.some(x => x.type === 'course' && x.id === data.courseA.id), JSON.stringify(rc).slice(0, 300));
+        const none1 = await search(ref, mc), none2 = await search(`GR${c.number}`, mc);
+        check('…a login without Golfers or Courses gets neither', !none1.some(x => x.type === 'booking') && !none2.some(x => x.type === 'course'), JSON.stringify({ none1, none2 }).slice(0, 300));
+      } finally {
+        await prisma.adminAuditLog.deleteMany({ where: { adminId: { in: [both.id, msgs.id] } } }).catch(() => {});
+        await prisma.adminUser.deleteMany({ where: { id: { in: [both.id, msgs.id] } } });
+      }
+    }
+  }
+
   console.log('\n── Expenses: monthly budget and history (ADMIN-REDO) ──');
   {
     const { signAdminToken } = await import('../src/lib/admin-session');
@@ -881,6 +943,33 @@ async function main() {
       await prisma.moneyMove.delete({ where: { id: move.id } });
       await prisma.adminAuditLog.deleteMany({ where: { adminId: { in: [sup.id, mgr.id] } } }).catch(() => {});
       await prisma.adminUser.deleteMany({ where: { id: { in: [sup.id, mgr.id] } } });
+    }
+  }
+
+  console.log('\n── Double-tapped Book (online duplicate guard) ──');
+  {
+    // A no-fee course takes no card, so the booking route can be driven end to end.
+    const savedFees = await prisma.course.findUniqueOrThrow({ where: { id: data.courseA.id }, select: { lateCancellationFeeCents: true, noShowFeeCents: true } });
+    await prisma.course.update({ where: { id: data.courseA.id }, data: { lateCancellationFeeCents: 0, noShowFeeCents: 0 } });
+    const date = new Date(Date.now() + 5 * 86_400_000).toISOString().slice(0, 10);
+    const tt = await prisma.teeTime.create({ data: { courseId: data.courseA.id, date, time: '10:30', holes: 18, greenFeeCents: 0, cartFeeCents: 0, playersAvailable: 4, playersBooked: 0, status: 'available' } });
+    try {
+      const body = { teeTimeId: tt.id, players: 2, golferName: 'Tap Twice', golferEmail: `${TS}-tap@test.local`, termsAccepted: true };
+      const first = await api('/api/bookings', { method: 'POST', body });
+      const again = await api('/api/bookings', { method: 'POST', body: { ...body, golferEmail: body.golferEmail.toUpperCase() } });
+      const f = first.body as { bookingId?: string }, a = again.body as { bookingId?: string; duplicate?: boolean };
+      check('Two identical Book taps → one booking; the second gets it back (duplicate)', first.status === 200 && again.status === 200 && a.duplicate === true && a.bookingId === f.bookingId
+        && (await prisma.booking.count({ where: { teeTimeId: tt.id } })) === 1, JSON.stringify({ first: first.status, f, again: again.status, a }).slice(0, 300));
+      const probe = await api('/api/bookings', { method: 'POST', body: { ...body, golferEmail: '%' } });
+      check('…an email that isn\'t one ("%") is refused before anything else → 400', probe.status === 400, JSON.stringify(probe.body));
+      const other = await api('/api/bookings', { method: 'POST', body: { ...body, players: 1, golferName: 'Someone Else', golferEmail: `${TS}-tap@test.local` } });
+      check('…someone typing that email with another name books on their own; nothing about the first booking comes back', other.status === 200 && (other.body as { bookingId?: string }).bookingId !== f.bookingId && !(other.body as { duplicate?: boolean }).duplicate, JSON.stringify(other.body).slice(0, 200));
+    } finally {
+      const made = (await prisma.booking.findMany({ where: { teeTimeId: tt.id }, select: { id: true } })).map(b => b.id);
+      await prisma.bookingEvent.deleteMany({ where: { bookingId: { in: made } } }).catch(() => {});
+      await prisma.booking.deleteMany({ where: { teeTimeId: tt.id } });
+      await prisma.teeTime.delete({ where: { id: tt.id } });
+      await prisma.course.update({ where: { id: data.courseA.id }, data: savedFees });
     }
   }
 
