@@ -210,3 +210,10 @@ Mockup `lanes/admin/finance-mockup.html` (final). Owner only. Filter: last 12 / 
 - Revenue breakdown (by source: booking service fees, no-show & late-cancel fees, membership dues fees) and Expenses breakdown (by category, link to Expenses), side by side. Expenses are red everywhere.
 - Months table: bookings, revenue, expenses, profit, margin. Clicking a month opens its breakdown: revenue by source, expenses by category (each vs the month before), by course (bookings · revenue), and the month (bookings, live courses, new courses live, profit). CSV.
 Data from the MoneyMove ledger (GreenReserve side) and Expenses; counted, never estimated. The data is Build's.
+
+## Goals: one pace rule everywhere (Cam 2026-11-12)
+Every goal bar fills with progress so far, and its COLOUR says where the period ends at the current pace:
+- Costs (Expenses' monthly budget): green = on pace to stay under · yellow = within 10% · red = on pace to go over.
+- Revenue / bookings (admin Revenue's revenue goal, course dashboard Home goals): green = on pace to hit · yellow = within 10% short · red = on pace to miss.
+Pace = progress so far ÷ elapsed share of the period, projected to the period's end. One shared helper for admin and
+dashboard. Admin Revenue gains a revenue-goal card (owner sets it); Expenses gains a monthly budget (owner sets it).
