@@ -412,7 +412,7 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
 </style>
 <div class="wrap">
   <div class="picker">
-    <h1>Admin · Revenue &amp; payments mockup</h1>
+    <h1>Admin · Revenue mockup</h1>
     <div class="pick"><span>Theme</span>
       <div class="seg" id="segMode" role="group" aria-label="Theme">
         <button type="button" data-v="light">Light</button>
@@ -435,7 +435,7 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
         <button class="nav" type="button">Bookings</button>
       </div>
       <div class="grp"><span>Financials</span>
-        <button class="nav on" type="button">Revenue &amp; payments</button>
+        <button class="nav on" type="button">Revenue</button>
         <button class="nav" type="button">Expenses</button>
         <button class="nav" type="button">Financial analytics</button>
       </div>
@@ -449,7 +449,7 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
     </aside>
     <main class="main">
       <div class="top">
-        <h2>Revenue &amp; payments</h2>
+        <h2>Revenue</h2>
         <div class="search glass" role="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" aria-label="Search" style="font:inherit;border:0;background:transparent;color:var(--ink);outline:none;width:100%"></div>
         <span class="ibtn glass" aria-label="Alerts" role="img"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0"/></svg><span class="dotn"></span></span>
       </div>
@@ -459,21 +459,21 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
       </div>
 
       <div class="rk">
-        <div class="glass rkc"><span class="l">Our fees</span><b class="v" id="k1"></b><span class="c" id="k1c"></span></div>
+        <div class="glass rkc"><span class="l">Revenue</span><b class="v" id="k1"></b><span class="c" id="k1c"></span></div>
         <div class="glass rkc"><span class="l">Rounds paid online</span><b class="v" id="k2"></b><span class="c" id="k2c"></span></div>
         <div class="glass rkc"><span class="l">Fees missed</span><b class="v dn" id="k3"></b><span class="c">paid at the counter</span></div>
         <div class="glass rkc"><span class="l">Next payout to us</span><b class="v" id="k4"></b><span class="c" id="k4c"></span></div>
       </div>
 
-      <section class="glass rpad" aria-label="Fees by day">
-        <div class="rh"><b>Fees by day</b><span class="rk2"><span><i class="sw2" style="background:var(--chart)"></i>This month</span><span><i class="sw2" style="background:var(--chart-prev)"></i>Last month</span></span></div>
+      <section class="glass rpad" aria-label="Revenue by day">
+        <div class="rh"><b>Revenue by day</b><span class="rk2"><span><i class="sw2" style="background:var(--chart)"></i>This month</span><span><i class="sw2" style="background:var(--chart-prev)"></i>Last month</span></span></div>
         <div class="fbars" id="fbars"></div>
       </section>
 
       <div class="rsplit">
         <section class="glass rpad" aria-label="By course">
           <div class="rh"><b>By course</b><span class="plink">Download CSV</span></div>
-          <table class="rt"><thead><tr><th>Course</th><th class="n">Rounds online</th><th class="n">Our fees</th><th class="n">Missed</th><th class="n">vs last month</th></tr></thead><tbody id="bycourse"></tbody></table>
+          <table class="rt"><thead><tr><th>Course</th><th class="n">Rounds online</th><th class="n">Revenue</th><th class="n">Missed</th><th class="n">vs last month</th></tr></thead><tbody id="bycourse"></tbody></table>
         </section>
         <div class="rstack">
           <section class="glass rpad" aria-label="Disputes">
