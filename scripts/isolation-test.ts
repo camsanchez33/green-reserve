@@ -1027,15 +1027,15 @@ async function main() {
     const { dayKey } = await import('../src/lib/admin-day');
     const { teeTimeInstant } = await import('../src/lib/booking-events');
     const mk = (name: string, role: string, areas?: string[]) => prisma.adminUser.create({ data: { name, email: `${TS}-biz-${name.replace(/\W/g, '').toLowerCase()}@test.local`, passwordHash: 'x', role, active: true, ...(areas ? { areas, areasSetAt: new Date() } : {}) } });
-    const [sup, mgrNoCourses, mgr] = [await mk('Biz Support', 'support'), await mk('Biz Mgr Pipeline', 'manager', ['pipeline']), await mk('Biz Mgr', 'manager')];
+    const [sup, mgrNoCourses, mgr, mgrNoMoney] = [await mk('Biz Support', 'support'), await mk('Biz Mgr Pipeline', 'manager', ['pipeline']), await mk('Biz Mgr', 'manager'), await mk('Biz Mgr Courses', 'manager', ['courses'])];
     const ck = async (u: { id: string; email: string; name: string; role: string }) => `admin_session=${await signAdminToken({ adminId: u.id, email: u.email, name: u.name, role: u.role as 'manager', mfa: true })}`;
-    const [sc, nc, mc] = [await ck(sup), await ck(mgrNoCourses), await ck(mgr)];
+    const [sc, nc, mc, cc] = [await ck(sup), await ck(mgrNoCourses), await ck(mgr), await ck(mgrNoMoney)];
     type Biz = {
       cards: { liveCourses: { now: number; prior: null }; onlineBookings: { count: number; prior: number }; teeSheetFill: { pct: number | null; prior: number | null } };
       months: { month: string; partial: boolean; online: number; counter: number }[];
       value: { onlineGreenFeesCents: number; afterHours: { count: number; pctOfOnline: number | null }; paidBeforeArrival: { count: number; cents: number }; noShowLateFeesCents: number };
       joining: { entered: number; steps: { key: string; count: number }[]; inProgress: number; waitingOnUs: number };
-      courses: { courseId: string; online: number; onlinePrior: number; fillPct: number | null; onlineSharePct: number | null; ourRevenueCents: number }[];
+      courses: { courseId: string; online: number; onlinePrior: number; fillPct: number | null; onlineSharePct: number | null; ourRevenueCents: number | null }[];
     };
     const get = async () => (await api('/api/admin/business?period=m3', { cookie: mc })).body as Biz;
     checkStatus('No session → 401', (await api('/api/admin/business?period=m3')).status, 401);
@@ -1084,6 +1084,8 @@ async function main() {
       check('Outside tee-sheet hours +1 (booked 6am, before the 8:00 first time; 9:30 is inside)', a.value.afterHours.count - before.value.afterHours.count === 1, JSON.stringify(a.value.afterHours));
       check('Paid before they arrived +1, +$51.50 (b1 paid 7:30 for 8:00; b2 paid after its time)', a.value.paidBeforeArrival.count - before.value.paidBeforeArrival.count === 1 && a.value.paidBeforeArrival.cents - before.value.paidBeforeArrival.cents === 5150, JSON.stringify(a.value.paidBeforeArrival));
       check('No-show & late fees for courses +$25 (2000 + 500; the refunded hold nets 0; our booking fee left out)', a.value.noShowLateFeesCents - before.value.noShowLateFeesCents === 2500, JSON.stringify(a.value));
+      const noMoney = (await api('/api/admin/business?period=m3', { cookie: cc })).body as Biz;
+      check('A manager with Courses but not Money sees the course, without our revenue (null)', noMoney.courses.some(c => c.courseId === course.id && c.ourRevenueCents === null && c.online === 2) && noMoney.courses.every(c => c.ourRevenueCents === null), JSON.stringify(noMoney.courses).slice(0, 200));
       check('The course\'s row: 2 online, none before, filled 50% (2+1+2 of 4+4+2; the empty blocked time left out), 67% online, our revenue $3', !!row && row.online === 2 && row.onlinePrior === 0 && row.fillPct === 50 && row.onlineSharePct === 67 && row.ourRevenueCents === 300, JSON.stringify(row));
 
       // The outreach log (inquiries add_touch): manager+ in Pipeline, allowed on a lead, validated, audited.
@@ -1115,8 +1117,8 @@ async function main() {
       await prisma.teeTime.deleteMany({ where: { courseId: course.id } });
       await prisma.course.delete({ where: { id: course.id } });
       await prisma.courseOperator.delete({ where: { id: op.id } });
-      await prisma.adminAuditLog.deleteMany({ where: { adminId: { in: [sup.id, mgrNoCourses.id, mgr.id] } } }).catch(() => {});
-      await prisma.adminUser.deleteMany({ where: { id: { in: [sup.id, mgrNoCourses.id, mgr.id] } } });
+      await prisma.adminAuditLog.deleteMany({ where: { adminId: { in: [sup.id, mgrNoCourses.id, mgr.id, mgrNoMoney.id] } } }).catch(() => {});
+      await prisma.adminUser.deleteMany({ where: { id: { in: [sup.id, mgrNoCourses.id, mgr.id, mgrNoMoney.id] } } });
     }
     void t10; void b3; void b4;
   }

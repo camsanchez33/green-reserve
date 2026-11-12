@@ -86,7 +86,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/admin/backfill-orphaned-inquiries` | admin | file | POST | `src/app/api/admin/backfill-orphaned-inquiries/route.ts` | 46 |
 | `/api/admin/bootstrap` | admin | secret header | POST | `src/app/api/admin/bootstrap/route.ts` | 31 |
 | `/api/admin/broadcasts` | admin | file | GET POST | `src/app/api/admin/broadcasts/route.ts` | 140 |
-| `/api/admin/business` | admin | file | GET | `src/app/api/admin/business/route.ts` | 224 |
+| `/api/admin/business` | admin | file | GET | `src/app/api/admin/business/route.ts` | 230 |
 | `/api/admin/change-password` | admin | file | POST | `src/app/api/admin/change-password/route.ts` | 31 |
 | `/api/admin/company-documents` | admin | file | DELETE GET POST | `src/app/api/admin/company-documents/route.ts` | 71 |
 | `/api/admin/company-documents/download` | admin | file | GET | `src/app/api/admin/company-documents/download/route.ts` | 37 |
@@ -389,8 +389,8 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/inquiry-status.ts` | 19 | 507 | Single source of truth for what every inquiry status means and which pipeline segment it belongs to. | `ACTIVE_STATUSES`, `ALIVE_STATUSES`, `ARCHIVED_STATUSES`, `CLOSED_REASONS`, `compareQueue`, `daysSince`, `decodeResubmit`, `diffResubmit` +28 more |
 | `src/lib/money-ledger.ts` | 19 | 101 | LEDGER-1 (Cam 2026-10-30, "one new money table"): | `chargeWhat`, `feeBackCents`, `mirrorMove`, `Move`, `MoveMethod`, `MoveWhat`, `recordMove` |
 | `src/lib/member-rates.ts` | 18 | 109 | Cam 2026-10-29 (Revamp 3 audit, fixes 1 and 2 — "up to course"): | `LapseRule`, `liveMembershipWhere`, `memberPlayers`, `membershipLive`, `memberSpot`, `PartyBooking`, `partyFees`, `splitTotal` |
+| `src/lib/admin-areas.ts` | 17 | 44 | AW-11 (Cam 2026-10-22: | `ADMIN_AREAS`, `AdminArea`, `ALL_AREAS`, `effectiveAreas`, `hasArea`, `isAdminArea` |
 | `src/lib/booking-fees.ts` | 17 | 66 |  | `ACCESS_FEE_CENTS`, `ACCESS_FEE_PER_PLAYER`, `EVENT_FEE_LABEL`, `EVENT_FEE_ON`, `FEE_AT_BOOKING_ON`, `feeCoveredCents`, `hoursLabel`, `roundChargeCents` +4 more |
-| `src/lib/admin-areas.ts` | 16 | 44 | AW-11 (Cam 2026-10-22: | `ADMIN_AREAS`, `AdminArea`, `ALL_AREAS`, `effectiveAreas`, `hasArea`, `isAdminArea` |
 | `src/lib/admin-fetch.ts` | 16 | 153 | One place that decides what an admin fetch failure MEANS. | `adminErrorMessage`, `adminFetch`, `AdminFetchAction`, `AdminFetchFailure`, `AdminFetchResult`, `LOGIN_SESSION_ENDED` |
 | `src/lib/use-dashboard-access.ts` | 16 | 51 | SP-A: | `DashboardAccess`, `useDashboardAccess` |
 | `src/lib/course-timeline.ts` | 15 | 364 |  | `AGREEMENT_ACCEPTED_PREFIX`, `AgreementAcceptedPayload`, `buildCourseFeed`, `CHECKIN_CALL_PREFIX`, `CheckInCallPayload`, `CURRENT_AGREEMENT_VERSION`, `DOCUMENT_UPLOADED_PREFIX`, `DocumentUploadedPayload` +26 more |

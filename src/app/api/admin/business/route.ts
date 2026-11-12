@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, areaGate } from '@/lib/admin-session';
 import { REAL_COURSE } from '@/lib/real-courses';
+import { hasArea } from '@/lib/admin-areas';
 import { PLATFORM_TZ } from '@/lib/admin-day';
 import { parseFinancePeriod, resolveFinancePeriod } from '@/lib/finance-period';
 import { milestones, joiningFunnel, averageFill, fillPct } from '@/lib/business-analytics';
@@ -29,7 +30,9 @@ import { ACTIVE_STATUSES, queueSignal } from '@/lib/inquiry-status';
 //                           subtracted; a hold refunded at check-in nets to 0). GreenReserve's booking fee excluded.
 //   joining            the courses-joining funnel (lib/business-analytics), cohort = first contact in the period;
 //                      inProgress / waitingOnUs are now (active inquiries; waiting on us = the Pipeline queue's rule).
-//   courses            per real course live now or with online bookings in the period.
+//   courses            per real course live now or with online bookings in the period (or, with Money, revenue).
+//                      ourRevenueCents: GreenReserve's revenue from the course (platformFeeCents in − out), only
+//                      for a login with the Money area; null otherwise.
 //
 // Timestamps: the tables' DateTime columns are zone-less UTC, so every bound instant is compared as
 // (${d}::timestamptz AT TIME ZONE 'UTC'), never by the session's TimeZone.
@@ -49,6 +52,9 @@ export async function GET(req: NextRequest) {
   const noArea = areaGate(session, 'courses');
   if (noArea) return noArea;
 
+  // GreenReserve's revenue per course stays behind Money, as the Revenue page does (Build 2026-11-12): without the
+  // Money area it is not read, and each course's ourRevenueCents is null (the page hides the column).
+  const seesRevenue = hasArea(session, 'money');
   const now = new Date();
   const p = resolveFinancePeriod(parseFinancePeriod(req.nextUrl.searchParams.get('period')), now);
   const cur = { start: p.current.start, end: now };
@@ -126,7 +132,7 @@ export async function GET(req: NextRequest) {
         SUM(players) FILTER (WHERE starts >= ${prior.start}::timestamptz AND starts < ${prior.end}::timestamptz)::bigint AS "playersPrior",
         SUM(spots)   FILTER (WHERE starts >= ${prior.start}::timestamptz AND starts < ${prior.end}::timestamptz)::bigint AS "spotsPrior"
       FROM offered GROUP BY 1`,
-    prisma.$queryRaw<RevRow[]>`
+    !seesRevenue ? Promise.resolve([] as RevRow[]) : prisma.$queryRaw<RevRow[]>`
       SELECT m."courseId", SUM(CASE WHEN m."direction" = 'out' THEN -m."platformFeeCents" ELSE m."platformFeeCents" END)::bigint AS cents
       FROM "MoneyMove" m JOIN "Course" c ON c."id" = m."courseId"
       WHERE c."isTest" = false AND m."platformFeeCents" > 0
@@ -198,7 +204,7 @@ export async function GET(req: NextRequest) {
         online: on, onlinePrior: num(r?.onlinePrior),
         fillPct: fillPct(fillBy.get(c.id)),
         onlineSharePct: total > 0 ? Math.round((on / total) * 100) : null,
-        ourRevenueCents: revBy.get(c.id) ?? 0,
+        ourRevenueCents: seesRevenue ? revBy.get(c.id) ?? 0 : null,
       };
     })
     .sort((a, b) => b.online - a.online || a.name.localeCompare(b.name));
