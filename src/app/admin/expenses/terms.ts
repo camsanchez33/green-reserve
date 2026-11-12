@@ -22,7 +22,7 @@ export const MSG = {
   noDate: 'Pick the date it started.',
   saveFail: "Couldn't save the change", addFail: "Couldn't add it", endFail: "Couldn't end it",
   restartFail: "Couldn't restart it", deleteFail: "Couldn't delete it",
-  confirmEnd: (name: string) => `End "${name}" today? It stops counting from today and stays in the months it was paid. It can't be restarted; add it again instead.`,
+  confirmEnd: (name: string) => `End "${name}" today? It stops counting from today and stays in the months it was paid. It can't be reopened; Restart adds it again from that day.`,
   confirmDelete: (name: string) => `Delete "${name}"? It disappears from past months too. To stop counting it from today and keep its months, use End it.`,
   none: 'No expenses yet. Add what GreenReserve pays for.',
   noneHere: 'Nothing here for this filter.',

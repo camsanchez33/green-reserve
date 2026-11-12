@@ -138,7 +138,8 @@ export function historyLine(
     if (field === 'amountCents') return usd(Number(v));
     if (field === 'category') return cat(String(v));
     if (field === 'cadence') return cadence[String(v)] ?? String(v);
-    if (field === 'startedAt' || field === 'endedAt') return day(String(v).slice(0, 10));
+    if (field === 'startedAt') return day(String(v).slice(0, 10)); // noon UTC by construction: the date picked
+    if (field === 'endedAt') return day(dayKey(new Date(String(v)))); // a real instant: its platform day
     return String(v);
   };
   const parts = (h.changes ?? []).map(c => `${FIELD_WORDS[c.field] ?? c.field} changed ${show(c.field, c.from)} → ${show(c.field, c.to)}`);
