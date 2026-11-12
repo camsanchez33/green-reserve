@@ -4026,7 +4026,7 @@
     },
     {
       "path": "src/app/api/bookings/route.ts",
-      "lines": 511,
+      "lines": 536,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -17789,13 +17789,17 @@
     },
     {
       "path": "src/lib/claim-tee-time.ts",
-      "lines": 151,
+      "lines": 170,
       "purpose": "",
       "brain": [],
       "exports": [
         {
           "name": "CLAIM_ATTEMPTS",
           "kind": "const"
+        },
+        {
+          "name": "ClaimResult",
+          "kind": "type"
         },
         {
           "name": "claimTeeTime",

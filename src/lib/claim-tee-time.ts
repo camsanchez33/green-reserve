@@ -36,7 +36,7 @@ export async function claimTeeTime(
   // walk-ins after") — only the tee sheet's own "already played" button sets it.
   // ADDTIME-1: online bookings (the golfer booking route) can't take a time kept for staff.
   opts: { allowLate?: boolean; online?: boolean } = {},
-): Promise<{ id: string; checkInToken: string | null }> {
+): Promise<ClaimResult> {
   const teeTimeId = String(data.teeTimeId);
   const players = Number(data.players);
 
@@ -70,13 +70,20 @@ export async function claimTeeTime(
  */
 export const CLAIM_ATTEMPTS = 8;
 
+/**
+ * `duplicate`: an ONLINE claim found the same golfer (email, any case) already holding a confirmed
+ * online booking on this tee time, and returns that booking instead of making a second
+ * (Cam via Build 2026-11-12: a double-tapped Book button). Counter and staff bookings never dedupe.
+ */
+export type ClaimResult = { id: string; checkInToken: string | null; duplicate?: true };
+
 async function claimOnce(
   data: Prisma.BookingUncheckedCreateInput,
   actor: EventActor,
   opts: { allowLate?: boolean; online?: boolean },
   teeTimeId: string,
   players: number,
-): Promise<{ id: string; checkInToken: string | null }> {
+): Promise<ClaimResult> {
     return await prisma.$transaction(
       async (tx) => {
         const teeTime = await tx.teeTime.findUnique({
@@ -89,6 +96,18 @@ async function claimOnce(
         if (opts.online && teeTime.staffOnly) throw new TeeTimeClaimError('BLOCKED');
         const teeAt = teeTimeInstant(teeTime.course.timezone, teeTime.date, teeTime.time);
         if (!opts.allowLate && teeAt && teeAt.getTime() + LATE_ADD_MINUTES * 60_000 < Date.now()) throw new TeeTimeClaimError('PAST');
+
+        // A double submit: inside this Serializable transaction, so two at the same instant conflict,
+        // one retries, and the retry finds the other's booking here. Checked before capacity, so a
+        // repeat of a booking that filled the time still gets its booking back, not "full".
+        const golfer = String(data.golferEmail ?? '').trim();
+        if (opts.online && golfer) {
+          const mine = await tx.booking.findFirst({
+            where: { teeTimeId, status: 'confirmed', source: 'online', golferEmail: { equals: golfer, mode: 'insensitive' } },
+            select: { id: true, checkInToken: true }, orderBy: { createdAt: 'asc' },
+          });
+          if (mine) return { id: mine.id, checkInToken: mine.checkInToken, duplicate: true as const };
+        }
 
         const spotsLeft = teeTime.playersAvailable - teeTime.playersBooked;
         // Belt and braces (security review): a non-positive count must never

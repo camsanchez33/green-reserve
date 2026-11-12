@@ -23,7 +23,7 @@ import { getMemberSession, getGolferMembership, golferResident } from '@/lib/mem
 import { stripe, ACCESS_FEE_CENTS } from '@/lib/stripe';
 import { sendBookingConfirmation, sendOperatorBookingNotification, sendCancellationWarningEmail, sendCheckInAvailableEmail } from '@/lib/email';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
-import { claimTeeTime, TeeTimeClaimError } from '@/lib/claim-tee-time';
+import { claimTeeTime, TeeTimeClaimError, type ClaimResult } from '@/lib/claim-tee-time';
 import { windowFor, withinWindow } from '@/lib/booking-window';
 import { rulesFor, groupSizeError, walkingAllowedAt } from '@/lib/booking-rules';
 import { DEMO_COURSE_SLUGS } from '@/lib/demo-courses';
@@ -311,7 +311,7 @@ export async function POST(req: NextRequest) {
     }
   }
   // Atomically claim the tee time (Serializable isolation prevents double-booking)
-  let claimed: { id: string; checkInToken: string | null };
+  let claimed: ClaimResult;
   try {
     claimed = await claimTeeTime({
       teeTimeId,
@@ -370,6 +370,31 @@ export async function POST(req: NextRequest) {
     }
     console.error(JSON.stringify({ ev: 'booking.claim.fail', teeTimeId, players, error: err instanceof Error ? err.message : String(err) }));
     return NextResponse.json({ error: 'Something went wrong processing your booking. Please try again.' }, { status: 500 });
+  }
+
+  // A double-tapped Book (Cam via Build 2026-11-12): this golfer already holds a confirmed online
+  // booking on this time. Give back what this request took, charge nothing, send nothing, and answer
+  // with the booking they already have — its own figures, not this request's.
+  if (claimed.duplicate) {
+    if (promo) await releaseUse(promo.id);
+    if (pack) await giveBack(prisma, pack.lineId, pack.seats);
+    const b = await prisma.booking.findUniqueOrThrow({
+      where: { id: claimed.id },
+      select: { appliedRate: true, residentPlayers: true, greenFeeTotal: true, promoDiscountCents: true, cartFeeTotal: true, rangeBallsTotal: true, accessFeeTotal: true, totalAmount: true, cancellationFeeTotal: true, cancellationHoursAtBooking: true, lateFeeTimingAtBooking: true, players: true },
+    });
+    console.log(JSON.stringify({ ev: 'booking.duplicate', bookingId: claimed.id, teeTimeId }));
+    return NextResponse.json({
+      bookingId: claimed.id, duplicate: true,
+      appliedRate: b.appliedRate, memberRate: b.appliedRate !== 'standard' && b.appliedRate !== 'resident', residentPlayers: b.residentPlayers,
+      greenFeeTotal: b.greenFeeTotal / 100, promoDiscount: (b.promoDiscountCents ?? 0) / 100,
+      cartFeeTotal: b.cartFeeTotal / 100, rangeBallsTotal: b.rangeBallsTotal / 100, accessFeeTotal: b.accessFeeTotal / 100,
+      totalAmount: b.totalAmount / 100, cancellationFeeTotal: b.cancellationFeeTotal / 100,
+      cancellationHours: b.cancellationHoursAtBooking ?? teeTimeFull.course.cancellationHours,
+      lateFeeTiming: b.lateFeeTimingAtBooking ?? policy.lateFeeTiming,
+      cutoffPassed: teeToUtcMs(teeTimeFull.date, teeTimeFull.time, teeTimeFull.course.timezone || 'America/New_York')
+        - (b.cancellationHoursAtBooking ?? teeTimeFull.course.cancellationHours) * 3600 * 1000 <= Date.now(),
+      courseName: teeTimeFull.course.name, date: teeTimeFull.date, time: teeTimeFull.time, players: b.players,
+    });
   }
 
   // FEE-AT-BOOKING (Cam 2026-10-24): GreenReserve's fee is charged now, to the card just saved.
