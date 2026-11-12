@@ -602,7 +602,7 @@ async function main() {
     const limited = await prisma.adminUser.create({ data: { name: 'Isol Messages Only', email: `${TS}-msgonly@test.local`, passwordHash: 'x', role: 'manager', active: true, areas: ['messages'], areasSetAt: new Date() } });
     try {
       const c = `admin_session=${await signAdminToken({ adminId: limited.id, email: limited.email, name: limited.name, role: 'manager', mfa: true })}`;
-      for (const [path, label] of [['/api/admin/revenue', 'Money'], ['/api/admin/golfers?q=isol', 'Golfers'], ['/api/admin/problems', 'Problems'], ['/api/admin/course-feed?courseId=' + data.courseA.id, 'a course timeline'], ['/api/admin/goals', 'Goals']] as const) {
+      for (const [path, label] of [['/api/admin/revenue', 'Money'], ['/api/admin/golfers?q=isol', 'Golfers'], ['/api/admin/problems', 'Problems'], ['/api/admin/course-feed?courseId=' + data.courseA.id, 'a course timeline'], ['/api/admin/goals', 'Goals'], ['/api/admin/courses/directory', 'Golf courses']] as const) {
         const r = await api(path, { cookie: c });
         check(`Messages-only manager → ${label} → 403 (area)`, r.status === 403 && (r.body as { code?: string })?.code === 'area', JSON.stringify({ status: r.status, body: r.body }));
       }
@@ -637,6 +637,20 @@ async function main() {
         check('…with Money added, the failed charge shows (the check above is not vacuous)', !!oc2?.attention && oc2.attention.rows.some(r => r.id.startsWith('q-fc-')), JSON.stringify(oc2?.attention));
         const dc2 = (await api('/api/admin/courses/directory', { cookie: c })).body as { seesMoney?: boolean; rows?: { id: string; feesCents: number | null }[] };
         check('…with Money, Golf courses shows our fees', dc2?.seesMoney === true && !!dc2.rows?.some(r => r.id === data.courseA.id && typeof r.feesCents === 'number'), JSON.stringify(dc2).slice(0, 300));
+        {
+          // The directory's per-course fees are paidWindow's rule grouped — they must equal paidWindow for the course.
+          const { paidWindow } = await import('../src/lib/admin-today');
+          const { startOfPlatformMonth } = await import('../src/lib/admin-day');
+          await prisma.booking.update({ where: { id: bookingA.id }, data: { paymentStatus: 'paid', roundPaymentIntentId: 'pi_isol_dir', paidAt: new Date(), accessFeeTotal: 150 } });
+          try {
+            const pw = await paidWindow(startOfPlatformMonth(new Date()), new Date(Date.now() + 60_000), data.courseA.id);
+            const dc3 = (await api('/api/admin/courses/directory', { cookie: c })).body as { rows?: { id: string; feesCents: number | null }[] };
+            const rowA = dc3?.rows?.find(r => r.id === data.courseA.id);
+            check('…and its fees equal paidWindow for the course (not vacuous: a $1.50 fee is paid)', pw.feesCents === 150 && rowA?.feesCents === pw.feesCents, JSON.stringify({ pw: pw.feesCents, row: rowA }));
+          } finally {
+            await prisma.booking.update({ where: { id: bookingA.id }, data: { paymentStatus: bookingA.paymentStatus, roundPaymentIntentId: bookingA.roundPaymentIntentId, paidAt: bookingA.paidAt, accessFeeTotal: bookingA.accessFeeTotal } });
+          }
+        }
         const pc2 = (await api(`/api/admin/courses/directory?id=${data.courseA.id}`, { cookie: c })).body as { money?: { failed?: { id: string }[] } | null };
         check('…and the profile shows Payments with the failed charge', !!pc2?.money?.failed?.some(f => f.id === bookingA.id), JSON.stringify(pc2?.money));
       } finally {

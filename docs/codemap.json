@@ -1,7 +1,7 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 699,
+    "files": 700,
     "routes": 301,
     "libs": 253,
     "models": 72,
@@ -667,7 +667,7 @@
     },
     {
       "path": "src/app/admin/courses/page.tsx",
-      "lines": 307,
+      "lines": 316,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1998,7 +1998,7 @@
     },
     {
       "path": "src/app/api/admin/courses/directory/route.ts",
-      "lines": 160,
+      "lines": 148,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2015,8 +2015,9 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
-        "@/lib/access-fee",
+        "./status",
         "@/lib/admin-areas",
+        "@/lib/admin-course-page",
         "@/lib/admin-day",
         "@/lib/admin-session",
         "@/lib/agreement-required",
@@ -2028,6 +2029,39 @@
         "next/server"
       ],
       "usedBy": []
+    },
+    {
+      "path": "src/app/api/admin/courses/directory/status.ts",
+      "lines": 23,
+      "purpose": "ADMIN-REDO Golf Courses:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "courseStatus",
+          "kind": "fn"
+        },
+        {
+          "name": "CourseStatus",
+          "kind": "type"
+        },
+        {
+          "name": "RISK_DAYS",
+          "kind": "const"
+        },
+        {
+          "name": "StatusInput",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/api/admin/courses/directory/route.ts"
+      ]
     },
     {
       "path": "src/app/api/admin/courses/route.ts",
@@ -14046,7 +14080,6 @@
         "stripe"
       ],
       "usedBy": [
-        "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/today/overview/route.ts",
         "src/app/api/operator/bookings/route.ts",
@@ -14445,7 +14478,8 @@
         "./stripe-errors"
       ],
       "usedBy": [
-        "src/app/api/admin/course-detail/route.ts"
+        "src/app/api/admin/course-detail/route.ts",
+        "src/app/api/admin/courses/directory/route.ts"
       ]
     },
     {

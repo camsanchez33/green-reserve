@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import AdminSidebar from '@/components/admin/AdminSidebar';
@@ -15,7 +15,7 @@ import { TERMS, SESSION_ENDED, loadFailed, STRIPE_STATE, NO_CONTACT, NO_NOTES } 
 
 type Status = 'live' | 'risk' | 'onboarding' | 'offline' | 'archived';
 type Row = { id: string; name: string; slug: string; town: string; isTest: boolean; status: Status; bookings: number; bookingsPrior: number; feesCents: number | null; lastBookingAt: string | null };
-type Directory = { at: string; riskDays: number; archivedCount: number | null; seesMoney: boolean; rows: Row[] };
+type Directory = { at: string; riskDays: number; archivedCount: number | null; seesMoney: boolean; support: boolean; rows: Row[]; view: 'all' | 'archived' };
 type Profile = {
   id: string; name: string; slug: string; town: string; isTest: boolean; logoUrl: string | null; status: Status;
   bookings: { cur: number; prior: number }; lastBookingAt: string | null; joinedAt: string; liveSince: string | null;
@@ -24,7 +24,7 @@ type Profile = {
   agreementDue: { by: string; overdue: boolean } | null;
   contact: { operatorName: string | null; operatorEmail: string | null; operatorPhone: string | null; emailVerified: boolean; lastLoginAt: string | null; coursePhone: string | null; website: string | null; address: string | null } | null;
   notes: string | null;
-  money: { stripeConnected: boolean; stripeActive: boolean; feesCents: number; feesPriorCents: number; missedCents: number; missedRounds: number; failed: { id: string; golferName: string; cents: number; at: string; reason: string }[] } | null;
+  money: { stripeConnected: boolean; stripeActive: boolean; feesCents: number; feesPriorCents: number; missedCents: number; missedRounds: number; failedCount: number; failed: { id: string; golferName: string; cents: number; teeDate: string; reason: string }[] } | null;
 };
 type Filter = 'all' | 'live' | 'risk' | 'onboarding' | 'offline';
 type Tab = 'overview' | 'contact' | 'setup' | 'payments' | 'notes';
@@ -69,7 +69,7 @@ function Status({ st }: { st: Status }) {
   return <span className={`${s.st} ${s[st] ?? ''}`}><i />{LABEL[st]}</span>;
 }
 
-function ProfilePanel({ id, riskDays }: { id: string; riskDays: number }) {
+function ProfilePanel({ id, riskDays, support }: { id: string; riskDays: number; support: boolean }) {
   const [p, setP] = useState<Profile | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -120,7 +120,7 @@ function ProfilePanel({ id, riskDays }: { id: string; riskDays: number }) {
           <div><small>Bookings this month</small><b>{p.bookings.cur}</b><em title={TERMS.vsPrior}>prior {p.bookings.prior}</em></div>
           {p.money && <div><small title={TERMS.fees}>Our fees this month</small><b>{money(p.money.feesCents)}</b><em title={TERMS.vsPrior}>prior {money(p.money.feesPriorCents)}</em></div>}
           {p.money && <div><small title={TERMS.missed}>Fees missed</small><b>{money(p.money.missedCents)}</b><em>{p.money.missedRounds} rounds</em></div>}
-          {p.money && <div><small>Failed charges</small><b className={p.money.failed.length ? g.down : ''}>{p.money.failed.length}</b><em>{money(failedCents)}</em></div>}
+          {p.money && <div><small>Failed charges</small><b className={p.money.failedCount ? g.down : ''}>{p.money.failedCount}</b><em>{money(failedCents)}{p.money.failedCount > p.money.failed.length && ` (latest ${p.money.failed.length})`}</em></div>}
           <div><small>Last booking</small><b>{when(p.lastBookingAt)}</b><em title={p.status === 'risk' ? TERMS.risk(riskDays) : undefined}>{p.liveSince ? `live ${date(p.liveSince)}` : '—'}</em></div>
           <div><small>Joined</small><b>{date(p.joinedAt)}</b><em>setup {p.setup.done}/{p.setup.total}</em></div>
         </div>
@@ -155,11 +155,11 @@ function ProfilePanel({ id, riskDays }: { id: string; riskDays: number }) {
             <dt>Stripe</dt><dd>{STRIPE_STATE(p.money.stripeActive, p.money.stripeConnected)}</dd>
             <dt>Our fees this month</dt><dd>{money(p.money.feesCents)} <span className={s.vs} title={TERMS.vsPrior}>prior {money(p.money.feesPriorCents)}</span></dd>
             <dt>Fees missed</dt><dd title={TERMS.missed}>{money(p.money.missedCents)} <span className={s.vs}>{p.money.missedRounds} rounds</span></dd>
-            <dt>Failed charges</dt><dd>{p.money.failed.length} · {money(failedCents)}</dd>
+            <dt>Failed charges</dt><dd>{p.money.failedCount} · {money(failedCents)}{p.money.failedCount > p.money.failed.length && ` (latest ${p.money.failed.length})`}</dd>
           </dl>
           {p.money.failed.length > 0 && (
             <div className={s.fails}>
-              {p.money.failed.map(f => <div key={f.id}><span>{f.golferName} · {when(f.at)}</span><span>{money(f.cents)}</span></div>)}
+              {p.money.failed.map(f => <div key={f.id}><span>{f.golferName} · {date(f.teeDate + 'T12:00:00Z')}<span className={s.vs}>{f.reason}</span></span><span>{money(f.cents)}</span></div>)}
             </div>
           )}
         </>
@@ -168,7 +168,7 @@ function ProfilePanel({ id, riskDays }: { id: string; riskDays: number }) {
       {t === 'notes' && p.notes !== null && (p.notes.trim() ? <p className={s.notes}>{p.notes}</p> : <p className={s.muted}>{NO_NOTES}</p>)}
 
       <div className={s.pbtns}>
-        <Link className={`${s.btn} ${s.pri}`} href={`/admin/courses/${p.id}`}>Open full profile</Link>
+        {support && <Link className={`${s.btn} ${s.pri}`} href={`/admin/courses/${p.id}`}>Open full profile</Link>}
         {(p.status === 'live' || p.status === 'risk') && <a className={s.btn} href={`/courses/${p.slug}`} target="_blank" rel="noopener noreferrer">Open their booking page</a>}
       </div>
     </section>
@@ -193,12 +193,17 @@ function CoursesContent() {
     if (courseId) router.replace('/admin/courses/' + courseId + (tab ? '?tab=' + encodeURIComponent(tab) : ''));
   }, [params, router]);
 
+  const seq = useRef(0);
   const load = useCallback(async () => {
+    const mine = ++seq.current;
     setLoading(true); setError(null);
-    const r = await getJson<Directory>('/api/admin/courses/directory' + (archived ? '?archived=1' : ''), 'The course list');
-    if (r.ok) setD(r.data); else setError(r.msg);
+    const r = await getJson<Omit<Directory, 'view'>>('/api/admin/courses/directory' + (archived ? '?archived=1' : ''), 'The course list');
+    if (mine !== seq.current) return; // a later load (the other view) won
+    if (r.ok) setD({ ...r.data, view: archived ? 'archived' : 'all' }); else setError(r.msg);
     setLoading(false);
   }, [archived]);
+  // Switching views: never show the other view's list under this title.
+  useEffect(() => { setD(null); setPick(null); }, [archived]);
   useEffect(() => { load(); }, [load]);
 
   const counts = useMemo(() => {
@@ -213,7 +218,11 @@ function CoursesContent() {
       .filter(r => !term || r.name.toLowerCase().includes(term) || r.town.toLowerCase().includes(term) || r.slug.includes(term))
       .sort((a, b) => ORDER[a.status] - ORDER[b.status] || b.bookings - a.bookings || a.name.localeCompare(b.name));
   }, [d, filter, q, archived]);
-  const picked = pick && rows.some(r => r.id === pick) ? pick : rows[0]?.id ?? null;
+  // The first course opens once, when the list arrives; after that the profile follows clicks only
+  // (never the find box's top row, which would load a profile per keystroke).
+  const shown = d && d.view === (archived ? 'archived' : 'all') ? d : null;
+  useEffect(() => { if (shown && pick === null && rows[0]) setPick(rows[0].id); }, [shown, pick, rows]);
+  const picked = pick;
   // One column (phone, narrow window): the profile sits under the list, so bring it into view.
   const open = (id: string) => {
     setPick(id);
@@ -253,18 +262,18 @@ function CoursesContent() {
           </label>
         </div>
 
-        {!d && !error && <div className={`${g.glass} ${s.skel}`} aria-busy="true" aria-label="Loading courses" />}
+        {!shown && !error && <div className={`${g.glass} ${s.skel}`} aria-busy="true" aria-label="Loading courses" />}
 
-        {d && (
+        {shown && (
           <div className={s.split}>
             <section className={`${g.glass} ${s.dir}`} aria-label="Course directory">
               {rows.length === 0 ? (
-                <p className={s.empty}>{d.rows.length === 0 ? 'No courses.' : 'No match.'}</p>
+                <p className={s.empty}>{shown.rows.length === 0 ? 'No courses.' : 'No match.'}</p>
               ) : (
                 <table>
                   <thead><tr>
                     <th>Course</th><th>Status</th><th className={s.n}>Bookings this month</th>
-                    {d.seesMoney && <th className={`${s.n} ${s.hideS}`} title={TERMS.fees}>Our fees this month</th>}
+                    {shown.seesMoney && <th className={`${s.n} ${s.hideS}`} title={TERMS.fees}>Our fees this month</th>}
                     <th className={`${s.n} ${s.hideS}`}>Last booking</th>
                   </tr></thead>
                   <tbody>
@@ -274,7 +283,7 @@ function CoursesContent() {
                         <td><span className={s.cname}>{r.name}</span>{r.isTest && <span className={s.test} title={TERMS.test}>Test</span>}<span className={s.csub}>{r.town || '—'}</span></td>
                         <td><Status st={r.status} /></td>
                         <td className={s.n}>{r.bookings}{versus(r.bookings, r.bookingsPrior)}</td>
-                        {d.seesMoney && <td className={`${s.n} ${s.hideS}`}>{money(r.feesCents ?? 0)}</td>}
+                        {shown.seesMoney && <td className={`${s.n} ${s.hideS}`}>{money(r.feesCents ?? 0)}</td>}
                         <td className={`${s.n} ${s.hideS}`}>{when(r.lastBookingAt)}</td>
                       </tr>
                     ))}
@@ -282,12 +291,12 @@ function CoursesContent() {
                 </table>
               )}
             </section>
-            {picked && <ProfilePanel key={picked} id={picked} riskDays={d.riskDays} />}
+            {picked && <ProfilePanel key={picked} id={picked} riskDays={shown.riskDays} support={shown.support} />}
           </div>
         )}
 
         <div className={s.foot}>
-          <Link href="/admin/groups">Course groups</Link>
+          {d?.support && <Link href="/admin/groups">Course groups</Link>}
           {!archived && <a href="/api/admin/courses?format=csv">Download as CSV</a>}
           {archived ? <Link href="/admin/courses">Back to every course</Link>
             : d?.archivedCount ? <Link href="/admin/courses?view=archived">Archived courses ({d.archivedCount})</Link> : null}

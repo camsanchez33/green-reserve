@@ -3,12 +3,13 @@ import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, VIEWER_PLUS, SUPPORT_PLUS, areaGate } from '@/lib/admin-session';
 import { hasArea } from '@/lib/admin-areas';
 import { COMPLETED_BOOKING_STATUSES } from '@/lib/course-metrics';
-import { counterFeesUncollected } from '@/lib/access-fee';
 import { FAILED_CHARGE_WHERE } from '@/lib/money-problems';
+import { courseMoney } from '@/lib/admin-course-page';
 import { setupProgress } from '@/lib/course-setup';
 import { getApprovalState } from '@/lib/approval-state';
 import { agreementDueByCourse } from '@/lib/agreement-required';
 import { startOfPlatformMonth, startOfPlatformMonthsAgo } from '@/lib/admin-day';
+import { courseStatus, RISK_DAYS } from './status';
 
 // ADMIN-REDO page 2 — Golf Courses (Cam approved the mockup 2026-11-12). READ-ONLY.
 // The directory (?archived=1 for archived courses) and one course's profile (?id=).
@@ -19,27 +20,13 @@ import { startOfPlatformMonth, startOfPlatformMonthsAgo } from '@/lib/admin-day'
 //   money    our fees, fees missed, failed charges, the Payments tab  support+ with Money, else null
 //   contact  emails, phones, the agreement signer, admin notes        support+ (the course-detail route's rule), else null
 //
-// Status: Live (on the public site) · At risk (live 14+ days, no booking in 14 days)
-// · Onboarding (never been live) · Offline (was live, taken down) — the same
-// "was it ever live" test as computeCourseHealth. Bookings are booking rows made
+// Status: courseStatus() in ./status.ts (pinned by scripts/admin-courses-status-test.ts). Bookings are booking rows made
 // (confirmed or completed) this platform month, against last month to the same point.
 
-const DAY = 86_400_000;
-const RISK_DAYS = 14;
 // paidWindow's rule (admin-today.ts): a round's fee counts when the round is paid by card.
+// The isolation test checks these per-course sums against paidWindow(…, courseId).
 const PAID = { paymentStatus: 'paid', roundPaymentIntentId: { not: '' } } as const;
 const MADE = { status: { in: COMPLETED_BOOKING_STATUSES } };
-
-type Status = 'live' | 'risk' | 'onboarding' | 'offline' | 'archived';
-
-function statusOf(c: { archivedAt: Date | null; active: boolean; liveStatus: string; firstWentLiveAt: Date | null; welcomeEmailSentAt: Date | null; createdAt: Date }, lastBooking: Date | null, now: Date): Status {
-  if (c.archivedAt) return 'archived';
-  const live = c.active && c.liveStatus === 'live';
-  if (!live) return c.firstWentLiveAt || c.welcomeEmailSentAt ? 'offline' : 'onboarding';
-  const since = c.firstWentLiveAt ?? c.welcomeEmailSentAt ?? c.createdAt;
-  const cutoff = now.getTime() - RISK_DAYS * DAY;
-  return since.getTime() <= cutoff && (!lastBooking || lastBooking.getTime() < cutoff) ? 'risk' : 'live';
-}
 
 /** Our service fees per course in a window — paidWindow's rule, grouped. */
 async function feesByCourse(ids: string[], from: Date, to: Date): Promise<Map<string, number>> {
@@ -84,23 +71,22 @@ export async function GET(req: NextRequest) {
       },
     });
     if (!c) return NextResponse.json({ error: 'That course no longer exists — go back to the list.' }, { status: 404 });
-    const [cur, prior, last, approval, agreement, due, fees, feesPrior, missed, failed] = await Promise.all([
+    const [cur, prior, last, approval, agreement, due, m, failedCount] = await Promise.all([
       prisma.booking.count({ where: { courseId: id, ...MADE, createdAt: { gte: start, lt: now } } }),
       prisma.booking.count({ where: { courseId: id, ...MADE, createdAt: { gte: priorStart, lt: priorEnd } } }),
       prisma.booking.aggregate({ where: { courseId: id, ...MADE }, _max: { createdAt: true } }),
       getApprovalState(id),
       prisma.agreementAcceptance.findFirst({ where: { courseId: id, document: 'operator_agreement' }, orderBy: { acceptedAt: 'desc' }, select: { version: true, acceptedAt: true, signerName: true, signerTitle: true, signerEmail: true } }),
       agreementDueByCourse([id]),
-      seesMoney ? feesByCourse([id], start, now) : null,
-      seesMoney ? feesByCourse([id], priorStart, priorEnd) : null,
-      seesMoney ? counterFeesUncollected({ gte: start, lt: now }, id) : null,
-      seesMoney ? prisma.booking.findMany({ where: { courseId: id, ...FAILED_CHARGE_WHERE }, select: { id: true, golferName: true, totalAmount: true, createdAt: true, checkInFailReason: true }, orderBy: { createdAt: 'desc' }, take: 20 }) : null,
+      // The full profile's Money tab, unchanged: fees by paidWindow, fees missed, failed charges at roundChargeCents (POS-1a).
+      seesMoney ? courseMoney(id, now) : null,
+      seesMoney ? prisma.booking.count({ where: { courseId: id, ...FAILED_CHARGE_WHERE } }) : null,
     ]);
     const lastAt = last._max.createdAt;
     const setup = setupProgress({ ...c, operator: c.operator, approvalStatus: approval.status });
     return NextResponse.json({
       id: c.id, name: c.name, slug: c.slug, town: [c.city, c.state].filter(Boolean).join(', '), isTest: c.isTest, logoUrl: c.logoUrl || null,
-      status: statusOf(c, lastAt, now),
+      status: courseStatus(c, lastAt, now),
       bookings: { cur, prior }, lastBookingAt: lastAt?.toISOString() ?? null, joinedAt: c.createdAt.toISOString(),
       liveSince: (c.firstWentLiveAt ?? c.welcomeEmailSentAt)?.toISOString() ?? null,
       setup: { done: setup.done, total: setup.total, steps: setup.steps.map(s => ({ label: s.label, done: s.done })) },
@@ -113,11 +99,12 @@ export async function GET(req: NextRequest) {
         address: [c.address, [c.city, c.state].filter(Boolean).join(', '), c.zipCode].filter(Boolean).join(' · ') || null,
       } : null,
       notes: seesContact ? c.adminNotes : null,
-      money: seesMoney ? {
+      money: m ? {
         stripeConnected: !!c.stripeAccountId, stripeActive: c.stripeAccountActive,
-        feesCents: fees!.get(id) ?? 0, feesPriorCents: feesPrior!.get(id) ?? 0,
-        missedCents: missed!.cents, missedRounds: missed!.rounds,
-        failed: failed!.map(f => ({ id: f.id, golferName: f.golferName, cents: f.totalAmount, at: f.createdAt.toISOString(), reason: f.checkInFailReason })),
+        feesCents: Math.round(m.feesThisMonth * 100), feesPriorCents: Math.round(m.feesSamePointLastMonth * 100),
+        missedCents: Math.round(m.counterThisMonth.fees * 100), missedRounds: m.counterThisMonth.rounds,
+        failedCount: failedCount ?? 0,
+        failed: m.failedCharges.map(f => ({ id: f.bookingId, golferName: f.golferName, cents: Math.round(f.amount * 100), teeDate: f.teeDate, reason: f.reason })),
       } : null,
     });
   }
@@ -145,11 +132,12 @@ export async function GET(req: NextRequest) {
     riskDays: RISK_DAYS,
     archivedCount,
     seesMoney,
+    support,
     rows: courses.map(c => {
       const lastAt = lastMap.get(c.id) ?? null;
       return {
         id: c.id, name: c.name, slug: c.slug, town: [c.city, c.state].filter(Boolean).join(', '), isTest: c.isTest,
-        status: statusOf(c, lastAt, now),
+        status: courseStatus(c, lastAt, now),
         bookings: curMap.get(c.id) ?? 0, bookingsPrior: priorMap.get(c.id) ?? 0,
         feesCents: fees ? fees.get(c.id) ?? 0 : null,
         lastBookingAt: lastAt?.toISOString() ?? null,
