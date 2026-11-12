@@ -152,7 +152,8 @@ function RunningChart({ current, prior, from, days, done, vs, unit }: { current:
 }
 
 function csvCell(v: string | number) {
-  const t = String(v);
+  // A course name a spreadsheet would read as a formula is written as text.
+  const t = typeof v === 'string' && /^[=+\-@]/.test(v) && !/^-?\d+(\.\d+)?$/.test(v) ? `'${v}` : String(v);
   return /[",\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t;
 }
 function download(name: string, rows: (string | number)[][]) {

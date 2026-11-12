@@ -1109,7 +1109,7 @@
     },
     {
       "path": "src/app/admin/page.tsx",
-      "lines": 252,
+      "lines": 257,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1126,6 +1126,7 @@
       "imports": [
         "./admin-glass.module.css",
         "@/components/admin/AdminSidebar",
+        "@/components/admin/admin-href",
         "@/lib/admin-session-context",
         "next/link",
         "react"
@@ -1243,7 +1244,7 @@
     },
     {
       "path": "src/app/admin/revenue/page.tsx",
-      "lines": 453,
+      "lines": 454,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11291,6 +11292,7 @@
         "@/lib/admin-roles"
       ],
       "usedBy": [
+        "src/app/admin/page.tsx",
         "src/app/admin/problems/page.tsx"
       ]
     },
