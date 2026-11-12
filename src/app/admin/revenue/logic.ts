@@ -53,3 +53,20 @@ export function payoutState(c: { error: string | null; payoutsEnabled: boolean; 
   if (c.needsInfo) return { label: 'Needs information', tone: 'warn' };
   return null;
 }
+
+/** Whether the period is over. On Build's route only Last month is (its elapsedDays counts today, so the last day of
+ *  a running month is not over yet); on the older route, a window that ended before today. */
+export function periodDone(per: Per, ledger: boolean, to: string, today: string): boolean {
+  return ledger ? per === 'last' : to < today;
+}
+
+/** The chart sentence's numbers. On Build's route they are the Revenue card's own (prior to the same point), so the
+ *  sentence never contradicts the card; on the older route, the running series at the same day (or the whole prior
+ *  period once over). */
+export function chartSummary(series: { current: number[]; prior: number[] }, done: boolean, card?: { cents: number; priorCents: number }): { total: number; ahead: number } {
+  if (card) return { total: card.cents / 100, ahead: (card.cents - card.priorCents) / 100 };
+  const sum = (a: number[]) => a.reduce((x, y) => x + y, 0);
+  const total = sum(series.current);
+  const prior = done ? sum(series.prior) : sum(series.prior.slice(0, series.current.length));
+  return { total, ahead: total - prior };
+}

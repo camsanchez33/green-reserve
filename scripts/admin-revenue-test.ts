@@ -2,7 +2,7 @@
 // period's name, a percentage is never drawn across a zero or negative prior, and only paused payouts read as a
 // course not being paid. Run: npx tsx scripts/admin-revenue-test.ts
 import { readFileSync } from 'fs';
-import { KIND, fallbackQuery, isNewAnswer, isFallbackAnswer, pct, payoutState, type Per } from '../src/app/admin/revenue/logic';
+import { KIND, fallbackQuery, isNewAnswer, isFallbackAnswer, pct, payoutState, periodDone, chartSummary, type Per } from '../src/app/admin/revenue/logic';
 
 let failed = 0;
 const check = (label: string, ok: boolean, detail = '') => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${!ok && detail ? ` — ${detail}` : ''}`); if (!ok) failed++; };
@@ -36,6 +36,18 @@ check('paying out normally → nothing to show', payoutState({ error: null, payo
 check('paused → bad', payoutState({ error: null, payoutsEnabled: false, needsInfo: false })?.tone === 'bad');
 check('needs information but paying out → warn, not "not paid"', payoutState({ error: null, payoutsEnabled: true, needsInfo: true })?.tone === 'warn');
 check("Stripe didn't answer → warn (unknown, not unpaid)", payoutState({ error: 'timeout', payoutsEnabled: false, needsInfo: false })?.tone === 'warn');
+
+// The chart sentence never contradicts the Revenue card (review 2026-11-12, Nov 2 08:00 example: Oct 1 $60,
+// Oct 2 $70 taken after 9am, Nov 1 $65, Nov 2 nothing yet → the card says up $5, never "$65 behind").
+const card = { cents: 6500, priorCents: 6000 };
+const nov2 = chartSummary({ current: [65, 0], prior: [60, 70, 50] }, false, card);
+check('on Build\'s route the sentence is the card\'s own difference', nov2.total === 65 && nov2.ahead === 5, nov2);
+check('on the older route it is the series at the same day', chartSummary({ current: [65, 0], prior: [60, 70, 50] }, false).ahead === -65);
+check('…and the whole prior period once the period is over', chartSummary({ current: [10, 10], prior: [5, 5, 5] }, true).ahead === 5);
+check('the last day of a running month is not "over" on Build\'s route', !periodDone('month', true, '2026-11-30', '2026-11-30'));
+check('Last 30 days and This year are never "over" on Build\'s route', !periodDone('d30', true, '2026-11-30', '2026-11-30') && !periodDone('year', true, '2026-11-30', '2026-11-30'));
+check('Last month is over', periodDone('last', true, '2026-10-31', '2026-11-12'));
+check('older route: a window that ended before today is over', periodDone('last', false, '2026-10-31', '2026-11-12') && !periodDone('month', false, '2026-11-12', '2026-11-12'));
 
 // The page reads its rules from logic.ts, and never claims "Not paid".
 const page = readFileSync('src/app/admin/revenue/page.tsx', 'utf8');

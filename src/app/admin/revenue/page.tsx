@@ -9,7 +9,7 @@ import s from './revenue.module.css';
 import { TERMS, NOT_YET, OWNER_ONLY, SESSION_ENDED, loadFailed } from './terms';
 import { useAdminSession } from '@/lib/admin-session-context';
 import { MANAGER_PLUS } from '@/lib/admin-roles';
-import { type Per, KIND, fallbackQuery, isNewAnswer, isFallbackAnswer, pct, payoutState } from './logic';
+import { type Per, KIND, fallbackQuery, isNewAnswer, isFallbackAnswer, pct, payoutState, periodDone, chartSummary } from './logic';
 
 // ADMIN-REDO Revenue (Cam approved the mockup 2026-11-12, ADMIN_REDO_SPEC.md "Revenue: APPROVED"): what
 // GreenReserve earns. One column, no tabs; ONE Filter (This month · Last month · Last 30 days · This year) drives
@@ -125,7 +125,7 @@ function Change({ pct, vs = 'the period before' }: { pct: number | null; vs?: st
 }
 
 /** Running total through the period against the period before, from the route's fees by day. */
-function RunningChart({ current, prior, from, days, done, vs, unit }: { current: number[]; prior: number[]; from: string; days?: number; done: boolean; vs: string; unit: string }) {
+function RunningChart({ current, prior, from, days, done, vs, unit, card }: { current: number[]; prior: number[]; from: string; days?: number; done: boolean; vs: string; unit: string; card?: { cents: number; priorCents: number } }) {
   const run = (a: number[]) => { let t = 0; return a.map(v => (t += v)); };
   const T = run(current), Q = run(prior);
   const n = Math.max(T.length, Q.length, 2);
@@ -134,10 +134,7 @@ function RunningChart({ current, prior, from, days, done, vs, unit }: { current:
   const x = (i: number) => pad + (i * (W - 2 * pad)) / (n - 1);
   const y = (v: number) => H - pad - (v / max) * (H - 2 * pad);
   const path = (a: number[]) => a.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(' ');
-  const total = T[T.length - 1] ?? 0;
-  // A finished period is compared with the whole period before (a 30-day month against all 31 days of the one before).
-  const priorAt = (done ? Q[Q.length - 1] : Q[Math.min(T.length, Q.length) - 1]) ?? 0;
-  const ahead = total - priorAt;
+  const { total, ahead } = chartSummary({ current, prior }, done, card);
   // Labelled by this period's own days (a 31-day prior month may run one step past a 30-day one).
   const span = days ?? n;
   const labels = [short(from), short(addDays(from, Math.floor((span - 1) / 2))), short(addDays(from, span - 1))];
@@ -233,8 +230,7 @@ export default function RevenuePage() {
     const courses = shown.byCourse
       .filter(r => (r.active && !r.archived) || r.booked > 0 || rev(r) !== 0)
       .sort((a, b) => rev(b) - rev(a) || b.booked - a.booked || a.name.localeCompare(b.name));
-    const done = shown.period.elapsedDays !== undefined && shown.period.totalDays !== undefined
-      ? shown.period.elapsedDays >= shown.period.totalDays : shown.period.to < ymd(new Date());
+    const done = periodDone(shown.per, ledger, shown.period.to, ymd(new Date()));
     const elapsed = shown.period.elapsedDays;
     const series = shown.revenueSeries
       ? { current: shown.revenueSeries.current.slice(0, elapsed ?? undefined).map(c => c / 100), prior: shown.revenueSeries.prior.map(c => c / 100) }
@@ -307,7 +303,7 @@ export default function RevenuePage() {
                 <span className={s.leg}><span><i className={s.sw} />{label}</span><span title={TERMS.vsPrior}><i className={s.swPrev} />{view.vs.charAt(0).toUpperCase() + view.vs.slice(1)}</span></span>
               </div>
               {view.series
-                ? <RunningChart current={view.series.current} prior={view.series.prior} from={shown.period.from} days={shown.period.totalDays} done={view.done} vs={view.vs} unit={view.ledger ? '' : ' in round fees'} />
+                ? <RunningChart current={view.series.current} prior={view.series.prior} from={shown.period.from} days={shown.period.totalDays} done={view.done} vs={view.vs} unit={view.ledger ? '' : ' in round fees'} card={shown.revenue} />
                 : <p className={s.muted}>{NOT_YET}</p>}
               {!view.ledger && <p className={s.note}>The chart is round fees only{view.separate !== 0 ? `; ${usd(view.separate)} in fees charged on their own is in Revenue but not in it` : ''}.</p>}
             </section>
@@ -337,7 +333,7 @@ export default function RevenuePage() {
                       ))}
                       {!shown.coursePayoutProblems ? <div><span>Failed or reversed payouts<small>{label}</small></span><b className={s.na}>{NOT_YET}</b></div>
                         : shown.coursePayoutProblems.unavailable ? <div><span>Failed or reversed payouts<small>{label}</small></span><b className={g.wa}>Stripe didn&rsquo;t answer</b></div>
-                        : shown.coursePayoutProblems.checkedCourses === 0 ? <div><span>No payouts checked<small>No course&rsquo;s payouts could be read</small></span><b className={s.na}>—</b></div>
+                        : shown.coursePayoutProblems.checkedCourses === 0 ? <div><span>No payouts checked<small>No course payouts were read</small></span><b className={s.na}>—</b></div>
                         : problemCourses.length + shown.coursePayoutProblems.rows.length === 0
                           ? <div><span>Every course<small>Paid in full</small></span><b className={g.up}>OK</b></div>
                           : <div><span>Every other course<small>Paid in full</small></span><b className={g.up}>OK</b></div>}

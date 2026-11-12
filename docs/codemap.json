@@ -1191,10 +1191,14 @@
     },
     {
       "path": "src/app/admin/revenue/logic.ts",
-      "lines": 56,
+      "lines": 73,
       "purpose": "Revenue page's pure rules, kept apart so scripts/admin-revenue-test.ts can pin them:",
       "brain": [],
       "exports": [
+        {
+          "name": "chartSummary",
+          "kind": "fn"
+        },
         {
           "name": "fallbackQuery",
           "kind": "fn"
@@ -1230,6 +1234,10 @@
         {
           "name": "Per",
           "kind": "type"
+        },
+        {
+          "name": "periodDone",
+          "kind": "fn"
         }
       ],
       "route": null,
@@ -1244,7 +1252,7 @@
     },
     {
       "path": "src/app/admin/revenue/page.tsx",
-      "lines": 471,
+      "lines": 467,
       "purpose": "",
       "brain": [],
       "exports": [
