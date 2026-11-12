@@ -4,7 +4,7 @@
     "files": 721,
     "routes": 308,
     "libs": 259,
-    "models": 75,
+    "models": 76,
     "orphans": 11,
     "ungatedRoutes": 3
   },
@@ -19956,7 +19956,7 @@
     },
     {
       "path": "src/lib/data-reset.ts",
-      "lines": 175,
+      "lines": 177,
       "purpose": "TEST-1 (Cam 2026-10-22:",
       "brain": [],
       "exports": [
@@ -27265,7 +27265,7 @@
     },
     {
       "path": "src/lib/shop-sales.ts",
-      "lines": 859,
+      "lines": 867,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -34790,6 +34790,10 @@
           "type": "String"
         },
         {
+          "name": "number",
+          "type": "Int?"
+        },
+        {
           "name": "course",
           "type": "Course"
         },
@@ -34938,6 +34942,23 @@
         "src/lib/shop-report.ts",
         "src/lib/shop-sales.ts"
       ]
+    },
+    {
+      "name": "ShopSaleCounter",
+      "fields": [
+        {
+          "name": "courseId",
+          "type": "String"
+        },
+        {
+          "name": "last",
+          "type": "Int"
+        }
+      ],
+      "writers": [
+        "src/lib/data-reset.ts"
+      ],
+      "readers": []
     },
     {
       "name": "ShopSaleLine",

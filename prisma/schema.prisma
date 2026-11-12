@@ -629,6 +629,13 @@ model TeeTime {
 
 /// BOOKING-REF (Cam 2026-11-12): the last course number given (see Course.number). One row, id
 /// "course", written only by the "Course_number_assign" trigger. Wiped with the courses at launch.
+/// PRO-SHOP sale numbers: each course's last sale number (one row per course, made on its first sale).
+/// Written only by the ShopSale insert trigger; a plain row so a rolled-back sale gives its number back.
+model ShopSaleCounter {
+  courseId String @id
+  last     Int    @default(0)
+}
+
 model CourseNumberCounter {
   id   String @id @default("course")
   last Int    @default(0)
@@ -784,6 +791,7 @@ model Booking {
   paymentEvents              PaymentEvent[]
   shopItems                  BookingShopItem[]
 
+  @@unique([courseId, ref])
   // MP-3: Booking had ZERO indexes. Every admin money surface scans the table.
   @@index([courseId, createdAt])
   @@index([status, createdAt])
@@ -798,8 +806,6 @@ model Booking {
   @@index([cancellationFeeChargeId])
   @@index([stripePaymentIntentId])
   @@index([feePaymentIntentId])
-
-  @@unique([courseId, ref])
 }
 
 model TeeTimeSchedule {
@@ -1576,6 +1582,10 @@ model ShopItem {
 model ShopSale {
   id                String           @id @default(cuid())
   courseId          String
+  /// PRO-SHOP sale numbers (Cam 2026-11-12, via Build): #1, #2, … per course, set by the BEFORE INSERT trigger
+  /// "ShopSale_number_assign" from ShopSaleCounter: never reused, no skips (a sale that rolls back gives its number
+  /// back). Null on sales made before the column (no backfill).
+  number            Int?
   course            Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
   /// open (pay link sent, not paid) | paid_cash | paid_card | paid_account (MEM-ACCT 1b: on a member's statement) | void
   status            String           @default("open")
@@ -1630,6 +1640,7 @@ model ShopSale {
   refunds           ShopSaleRefund[]
   lines             ShopSaleLine[]
 
+  @@unique([courseId, number])
   @@index([courseId, createdAt])
 }
 

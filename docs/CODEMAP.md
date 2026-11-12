@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-721 source files · 308 routes · 259 libraries · 75 models
+721 source files · 308 routes · 259 libraries · 76 models
 
 ## Single sources of truth
 
@@ -434,7 +434,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/golfer-otp.ts` | 7 | 94 |  | `classifyIdentifier`, `EMAIL_RE`, `generateOtpCode`, `normalizePhone`, `OtpChallenge`, `otpCodeMatches`, `OtpIdentifierType`, `otpUsedKey` +2 more |
 | `src/lib/owner-session.ts` | 7 | 170 | AW-1 (Cam 2026-10-20: | `alertTime`, `approveDevice`, `clearOwnerCookie`, `createOwnerSession`, `DEVICE_COOKIE`, `deviceForApproval`, `deviceLabel`, `deviceTokenFromCookie` +13 more |
 | `src/lib/round-shop-tax.ts` | 7 | 147 | W2-7 part B2 (Cam 2026-10-20: | `EnsureResult`, `ensureShopTax`, `recordPendingRoundShopTax`, `recordRoundShopTax`, `refreshOpenRoundShopTax`, `shopTaxKey`, `TAX_UNAVAILABLE` |
-| `src/lib/shop-sales.ts` | 7 | 859 | POS-2 (Cam 2026-10-19: | `cancelSaleIntent`, `chargeSale`, `createSale`, `discountFor`, `DiscountInput`, `findSales`, `hasDiscount`, `markCardPaid` +25 more |
+| `src/lib/shop-sales.ts` | 7 | 867 | POS-2 (Cam 2026-10-19: | `cancelSaleIntent`, `chargeSale`, `createSale`, `discountFor`, `DiscountInput`, `findSales`, `hasDiscount`, `markCardPaid` +25 more |
 | `src/lib/calcom.ts` | 6 | 93 | CAL-1 — Cal.com as the call scheduler, in place of the Google Calendar grid. | `calcomBookingUrl`, `calcomCreatedBy`, `calcomEmbedUrl`, `calcomManageLinks`, `calcomStatus`, `calcomUidOf`, `verifyCalcomSignature` |
 | `src/lib/call-answers.ts` | 6 | 349 | INQUIRY_CALL_SPEC IC-5 — structured discovery-call answers. | `BOOKING_METHOD_OPTIONS`, `CALL_FIELDS`, `CallAnswers`, `callRecapLines`, `DAY_SHORT`, `emptyAnswers`, `FieldSpec`, `FieldType` +19 more |
 | `src/lib/image-resize.ts` | 6 | 33 | Client-side downscale so a 12MB phone photo never has to travel over the wire or blow the perf budget on the page that eventually renders it. | `downscaleImage` |
@@ -546,7 +546,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/courses-data.ts` | 2 | 335 |  | `Course`, `COURSES`, `generateTeeTimes`, `getCourseBySlug`, `searchCourses`, `TeeTime` |
 | `src/lib/cron-windows.ts` | 2 | 42 | R-CRON-003 — when the hourly cron sends its time-based emails. | `CHECKIN_DATES`, `checkInEmailDue`, `cutoffWarningDue`, `FEE_DATES`, `teeDateWindow` |
 | `src/lib/cutoff-hold.ts` | 2 | 134 | The cancellation-window hold (SP-B timing "hold_at_cutoff"): | `chargeCutoffHold`, `HOLD_STALE_MS`, `HoldResult` |
-| `src/lib/data-reset.ts` | 2 | 175 | TEST-1 (Cam 2026-10-22: | `CourseResetPreview`, `KEPT_TABLES`, `previewCourseReset`, `previewWipeAll`, `resetTestCourse`, `TableCounts`, `WIPE_ALL_UNTIL`, `WIPE_CONFIRM_WORDS` +3 more |
+| `src/lib/data-reset.ts` | 2 | 177 | TEST-1 (Cam 2026-10-22: | `CourseResetPreview`, `KEPT_TABLES`, `previewCourseReset`, `previewWipeAll`, `resetTestCourse`, `TableCounts`, `WIPE_ALL_UNTIL`, `WIPE_CONFIRM_WORDS` +3 more |
 | `src/lib/golfer-messages.ts` | 2 | 140 | MSG-1 (PLATFORM_ROADMAP_SPEC §5, Cam 2026-10-07: | `audience`, `checkWindow`, `isVia`, `MAX_MESSAGE_CHARS`, `noticeText`, `reach`, `Recipient`, `sendCourseMessage` +6 more |
 | `src/lib/golfer-record.ts` | 2 | 174 | The golfer record (Revamp 3, Cam 2026-10-29): | `autoBlockReason`, `golferRecord`, `GolferRecord`, `isLateCancel`, `onlineBookingBlock`, `recordKeys`, `recordKeysFor` |
 | `src/lib/golfer-segments.ts` | 2 | 71 | SEG-1 (Cam 2026-11-05, golfer segments): | `golferSegments`, `INACTIVE_DAYS`, `NEW_DAYS`, `REGULAR_DAYS`, `REGULAR_ROUNDS`, `SEG_UI`, `Segment`, `SEGMENT_LABEL` +3 more |
@@ -1269,11 +1269,19 @@ without opening anything.
 
 ### ShopSale
 
-33 fields · 7 writer(s) · 13 reader(s)
+34 fields · 7 writer(s) · 13 reader(s)
 
-- fields: `id`, `courseId`, `course`, `status`, `totalCents`, `taxCents`, `taxCalculationId`, `taxTransactionId`, `voidTaxReversalId`, `taxUnavailable`, `customerName`, `customerPhone`, `customerEmail`, `payToken`, `receiptToken`, `paymentIntentId`, `chargeStartedAt`, `paidAt`, `voidedAt`, `voidNote`, `termsAgreed`, `termsAgreedAt`, `soldBy`, `createdAt`, `discountCents`, `discountNote`, `cashTenderedCents`, `refundedCents`, `receiptSentAt`, `roundsCents`, `readerId`, `refunds`, `lines`
+- fields: `id`, `courseId`, `number`, `course`, `status`, `totalCents`, `taxCents`, `taxCalculationId`, `taxTransactionId`, `voidTaxReversalId`, `taxUnavailable`, `customerName`, `customerPhone`, `customerEmail`, `payToken`, `receiptToken`, `paymentIntentId`, `chargeStartedAt`, `paidAt`, `voidedAt`, `voidNote`, `termsAgreed`, `termsAgreedAt`, `soldBy`, `createdAt`, `discountCents`, `discountNote`, `cashTenderedCents`, `refundedCents`, `receiptSentAt`, `roundsCents`, `readerId`, `refunds`, `lines`
 - writers: `src/app/api/operator/shop-sales/route.ts`, `src/lib/card-reader.ts`, `src/lib/data-reset.ts`, `src/lib/sales-tax.ts`, `src/lib/sample-data.ts`, `src/lib/shop-receipt.ts`, `src/lib/shop-sales.ts`
 - readers: `src/app/api/operator/shop-sales/route.ts`, `src/lib/analytics.ts`, `src/lib/card-reader.ts`, `src/lib/data-reset.ts`, `src/lib/golfer-record.ts`, `src/lib/ledger-view.ts`, `src/lib/register-close.ts`, `src/lib/round-packs.ts`, `src/lib/sales-tax.ts`, `src/lib/sample-data.ts`, `src/lib/shop-receipt.ts`, `src/lib/shop-report.ts` +1 more (see `docs/codemap.json`)
+
+### ShopSaleCounter
+
+2 fields · 1 writer(s) · 0 reader(s)
+
+- fields: `courseId`, `last`
+- writers: `src/lib/data-reset.ts`
+- readers: **none**
 
 ### ShopSaleLine
 
