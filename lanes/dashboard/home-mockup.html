@@ -187,6 +187,43 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
 .nav i{background:var(--warn);color:#1A1406}
 .wn{color:var(--warn)} .up{color:var(--ok)} .dn{color:var(--bad)}
 .okv{color:var(--ok)}
+/* Cam 2026-11-12: the week-ahead heat is red. */
+.app{--heat:255,120,100}
+.app[data-mode="light"]{--heat:190,60,40}
+.grw{color:#3BAA6B;font-weight:600}.app[data-mode="light"] .grw{color:#173B2A}
+.goal .u{display:none} /* Cam 2026-11-12: no line on the goals; the colour says how it's going. */
+.regbtn{cursor:pointer;justify-content:space-between}.regbtn b{color:var(--warn);font-size:14.5px}.regbtn .arr{color:var(--warn);font-weight:600}.regbtn:hover{background:var(--hover)}
+/* Cam 2026-11-12, "easier to differentiate": four clear steps (under a quarter, half, three-quarters, nearly full)
+   instead of a smooth fade, and each cell shows its % full. */
+.heat .c{display:grid;place-items:center;font-size:10.5px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+.hv0{background:var(--heat0)} .hv1{background:rgba(var(--heat),.16)} .hv2{background:rgba(var(--heat),.38)}
+.hv3{background:rgba(var(--heat),.66)} .hv4{background:rgba(var(--heat),.95);color:#fff}
+.cond2{display:flex;flex-direction:column}
+.cond2 div{display:grid;grid-template-columns:8px 88px minmax(0,1fr);column-gap:10px;align-items:baseline;padding:8px 0;border-top:1px solid var(--line)}
+.cond2 div:first-child{border-top:0;padding-top:0}
+.cond2 .dot{align-self:center} .cond2 span{color:var(--muted);font-size:13px} .cond2 b{font-weight:600;font-size:13.5px}
+.cond2 small{grid-column:3;color:var(--muted);font-size:12.5px}
+.cmeta{margin-top:10px;font-size:12px;color:var(--muted)}
+.dcols{display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:8px;align-items:end}
+.dcol{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.dcol b{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.dbar{position:relative;width:100%;max-width:26px;height:120px;border-radius:5px;background:var(--track);overflow:visible}
+.dfill{position:absolute;left:0;right:0;bottom:0;border-radius:5px;background:var(--bar)}
+.dfill.dbehind{background:var(--warn)}
+.dtyp{position:absolute;left:-4px;right:-4px;height:2px;background:var(--ink);opacity:.55;border-radius:1px}
+.dcol span{font-size:11px;color:var(--muted);text-align:center;line-height:1.2}
+.dcol span.wk{color:var(--ink-soft);font-weight:600} .dcol span.td{color:var(--ink);font-weight:700}
+@media (max-width:760px){.dcols{gap:3px}.dcol b{font-size:11px}.dbar{height:90px}}
+.rain{color:#7DB8FF}.app[data-mode="light"] .rain{color:#1F5FAF}
+.bars .st{align-items:flex-end}
+.stack2{width:100%;max-width:30px;display:flex;flex-direction:column;border-radius:4px;overflow:hidden;gap:1px}
+.stack2 i{display:block;min-height:0}
+.stack2 .in{background:var(--warn)} .stack2 .pl{background:var(--ok)} .stack2 .c{background:var(--bar)} .stack2 .o{background:var(--bad);opacity:.75}
+.open{margin-top:12px;font-size:13px;color:var(--muted)} .open b{color:var(--ink);font-weight:600}
+.trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:760px){.trio{grid-template-columns:minmax(0,1fr)}}
+.g-ok .f{background:var(--ok)} .g-wn .f{background:var(--warn)} .g-bd .f{background:var(--bad)}
+.g-ok .gl b{color:var(--ok)} .g-wn .gl b{color:var(--warn)} .g-bd .gl b{color:var(--bad)}
 .trk .u{background:var(--muted);width:2px}
 
 /* Cam 2026-11-12, "a more abstract design then just 2 dots": the light behind the glass is sweeping ribbons and
@@ -232,37 +269,45 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
         <div class="nav">Money</div><div class="nav">Members</div><div class="nav">Events</div><div class="nav">Schedule</div><div class="nav">Analytics</div></div>
       <div class="grp"><b>Course</b><div class="nav">Settings</div></div>
       <div class="foot"><span>Course alert</span><span>Your booking page ↗</span><span>Sign out</span>
-        <div class="pw">Powered by GreenReserve</div></div>
+        <div class="pw">Powered by <b class="grw">GreenReserve</b></div></div>
     </aside>
 
     <main class="main">
       <div class="top">
         <h2>Thursday, November 12</h2>
         <div class="search" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></div>
-        <button class="btn" type="button">Open tee sheet</button>
       </div>
       <p class="sub">As of 9:42 AM</p>
 
-      <div class="card strip warnl"><span><b>The register isn't open.</b> <span class="m">Count the drawer to start taking cash.</span></span><span class="go">Open the register</span></div>
+      <!-- Cam 2026-11-12: just the action, no sentence. -->
+      <div class="card strip warnl regbtn" role="button" tabindex="0"><b>Open the register</b><span class="arr" aria-hidden="true">→</span></div>
 
-      <div class="card strip"><span><span class="m">Next off</span> <b>9:50 AM · Becker, 4 players</b></span><span class="sep"></span><span><span class="m">Then</span> 10:00 Ward 2 · 10:10 Chen 3</span><span class="sep"></span><span>54° clear <span class="m">· no rain until 4 PM</span></span></div>
+      <!-- Cam 2026-11-12, "seperate these bubbles": next off, then, and the weather are three cards. -->
+      <div class="trio">
+        <div class="card strip"><span><span class="m">Next off</span> <b>9:50 AM · Becker, 4 players</b></span></div>
+        <div class="card strip"><span><span class="m">Checked in</span> <b>31 of 92 players</b></span></div>
+        <div class="card strip"><span>54° clear <span class="m">·</span> <b class="rain">rain at 4 PM</b></span></div>
+      </div>
 
       <div class="kpis">
-        <div class="card kpi"><span class="l">Players booked</span><span class="v">86</span><span class="c"><span class="up">+12</span> vs last Thursday</span></div>
-        <div class="card kpi"><span class="l">Tee sheet filled</span><span class="v">72%</span><span class="c">64% last Thursday</span></div>
-        <div class="card kpi"><span class="l">Paid today</span><span class="v okv">$3,420</span><span class="c">24 groups</span></div>
-        <div class="card kpi"><span class="l">Not paid yet</span><span class="v wn">$1,180</span><span class="c">9 groups · <span class="wn">1 past their time</span></span></div>
+        <div class="card kpi"><span class="l">Players booked</span><span class="v">92</span><span class="c"><span class="up">+12</span> vs last week</span></div>
+        <div class="card kpi"><span class="l">Tee sheet filled</span><span class="v">72%</span><span class="c">64% last week</span></div>
+        <div class="card kpi"><span class="l">Collected today</span><span class="v okv">$3,420</span></div>
+        <div class="card kpi"><span class="l">Not paid yet</span><span class="v dn">$1,180</span></div>
       </div>
 
       <div class="cols">
         <div class="stack">
-          <section class="card pad" aria-label="Players by hour">
-            <div class="head"><b>Players by hour</b><span class="k"><span><span class="sw" style="background:var(--bar)"></span>Today</span><span><span class="sw" style="background:var(--bar-prev)"></span>Last Thursday</span></span></div>
+          <!-- Cam 2026-11-12, "does it really matter to compare to hours last week": today's hours as the shop needs them —
+               who's here, who's still coming, and where the open seats are (where a walk-in or a phone call fits). -->
+          <section class="card pad" aria-label="Today by hour">
+            <div class="head"><b>Today by hour</b><span class="k"><span><span class="sw" style="background:var(--ok)"></span>Played</span><span><span class="sw" style="background:var(--warn)"></span>Playing</span><span><span class="sw" style="background:var(--bar)"></span>Booked</span><span><span class="sw" style="background:var(--bad);opacity:.75"></span>Open</span></span></div>
             <div class="bars" id="bars"></div><div class="hl" id="hl"></div>
+            <div class="open" id="openline"></div>
           </section>
 
           <section class="card pad" aria-label="Next 14 days">
-            <div class="head"><b>Next 14 days</b><span class="k"><span>Booked · <span style="display:inline-block;width:1.5px;height:11px;background:var(--ink);vertical-align:-1px"></span> usual by now</span></span></div>
+            <div class="head"><b>Next 14 days</b><span class="k"><span>Booked · <span style="display:inline-block;width:12px;height:2px;background:var(--ink);opacity:.55;vertical-align:3px"></span> 4-week avg</span></span></div>
             <div class="days" id="days"></div>
           </section>
 
@@ -270,23 +315,31 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
             <div class="head"><b>Week ahead</b><span class="k">How full each hour is</span></div>
             <div class="heatwrap"><div class="heat" id="heat"></div></div>
           </section>
+
+          <!-- Cam 2026-11-12, "maybe an events coming up thing": the next events and how full they are (no money here). -->
+          <section class="card pad" aria-label="Events coming up">
+            <div class="head"><b>Events coming up</b><span class="k"><span class="lnk">All events</span></span></div>
+            <div class="rows" style="border-top:0">
+              <div class="row" style="padding-top:0"><span class="dot ok" style="visibility:hidden;width:0"></span><div class="w">Rotary Club scramble<small>Sat, Nov 14 · 8:00 AM shotgun · 64 of 72 players</small></div></div>
+              <div class="row"><span class="dot ok" style="visibility:hidden;width:0"></span><div class="w">Thanksgiving turkey shoot<small>Thu, Nov 26 · 10:00 AM · 28 of 40 players</small></div></div>
+              <div class="row" style="border-bottom:0"><span class="dot ok" style="visibility:hidden;width:0"></span><div class="w">Junior clinic<small>Sat, Dec 5 · 9:00 AM · 11 of 16 kids</small></div></div>
+            </div>
+          </section>
         </div>
 
         <div class="stack">
           <section class="card pad" aria-label="Action needed">
             <div class="head"><b>Action needed</b></div>
-            <div class="counts">
-              <div><span>Cards declined</span><b class="dn">2</b></div><div><span>Past their time</span><b class="wn">1</b></div>
-              <div><span>No-shows today</span><b>0</b></div><div><span>Unread messages</span><b class="wn">1</b></div>
-            </div>
-            <div class="rows">
+            <div class="rows" style="border-top:0">
               <div class="row"><span class="dot bd"></span><div class="w">Mike Torres · $266<small>9:40 AM · card declined</small></div><span class="lnk">Text pay link</span></div>
               <div class="row"><span class="dot bd"></span><div class="w">Sam Ortiz · $90<small>11:20 AM · card declined</small></div><span class="lnk">Text pay link</span></div>
               <div class="row"><span class="dot wn"></span><div class="w">1 past their time<small>9:30 AM Klein, 2 players</small></div><span class="lnk">Open</span></div>
               <div class="row"><span class="dot wn"></span><div class="w">1 unread from GreenReserve</div><span class="lnk">Read</span></div>
             </div>
-            <div class="pay"><span>Next payout</span><b>$5,812.40</b><span style="color:var(--muted);font-size:12.5px">Fri, Nov 13</span></div>
           </section>
+
+          <!-- Cam 2026-11-12: next payout is its own card. -->
+          <section class="card pad payc" aria-label="Next payout"><div class="pay" style="padding-top:0"><span>Next payout</span><b>$5,812.40</b><span style="color:var(--muted);font-size:12.5px">Fri, Nov 13</span></div></section>
 
           <section class="card pad notes" aria-label="Staff notes">
             <div class="head"><b>Staff notes</b><span class="k"><span class="lnk">Add a note</span></span></div>
@@ -296,14 +349,22 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
 
           <section class="card pad" aria-label="Course conditions">
             <div class="head"><b>Course conditions</b><span class="k"><span class="lnk">Change</span></span></div>
-            <div class="cond"><span>Carts</span><b>Path only on 4–7</b><span>Range</span><b>Open, mats</b><span>Greens</span><b>Rolling 10.5</b><span>Pins</span><b>Middle</b></div>
+            <!-- Cam 2026-11-12, "a little more in detail": every part of the course, its state and the detail, coloured by
+                 what it means for the golfer (green normal, amber limited, red closed), with who set it and when. -->
+            <div class="cond2">
+              <div><i class="dot wn"></i><span>Cart path</span><b>Path only</b><small>Holes 4–7, wet after last night's rain</small></div>
+              <div><i class="dot ok"></i><span>Greens</span><b>Fast</b><small>Rolling 10.5, cut and rolled this morning</small></div>
+              <div><i class="dot ok"></i><span>Pins</span><b>Middle</b><small>Back on 9 and 18</small></div>
+            </div>
           </section>
 
           <section class="card pad" aria-label="November goals">
             <div class="head"><b>November goals</b><span class="k"><span class="lnk">Set</span></span></div>
-            <div class="goal"><div class="gl"><span>Rounds</span><b>1,140 of 1,600</b></div><div class="trk"><div class="f" style="width:71%"></div><div class="u" style="left:40%"></div></div></div>
-            <div class="goal"><div class="gl"><span>Collected</span><b>$41,200 of $60,000</b></div><div class="trk"><div class="f" style="width:69%"></div><div class="u" style="left:40%"></div></div></div>
-            <div style="font-size:12px;color:var(--muted);margin-top:8px">The line is where the month is today.</div>
+            <!-- Cam 2026-11-12: each goal is coloured by how close it is to where it should be by today (the line).
+                 On or ahead = green; a little behind (within 10 points) = amber; well behind = red. No key. -->
+            <div class="goal g-ok"><div class="gl"><span>Rounds</span><b>1,140 of 1,600</b></div><div class="trk"><div class="f" style="width:71%"></div><div class="u" style="left:40%"></div></div></div>
+            <div class="goal g-wn"><div class="gl"><span>Collected</span><b>$19,800 of $60,000</b></div><div class="trk"><div class="f" style="width:33%"></div><div class="u" style="left:40%"></div></div></div>
+            <div class="goal g-bd"><div class="gl"><span>New members</span><b>2 of 20</b></div><div class="trk"><div class="f" style="width:10%"></div><div class="u" style="left:40%"></div></div></div>
           </section>
         </div>
       </div>
@@ -314,22 +375,35 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
 <script>
 (function(){
   const $=id=>document.getElementById(id);
-  // Players by hour: today vs the same weekday last week.
-  const H=[[6,4,2],[7,18,14],[8,24,20],[9,16,18],[10,12,10],[11,8,9],[12,4,6],[13,0,4],[14,0,3],[15,0,2]];
-  const peak=Math.max(...H.flatMap(h=>[h[1],h[2]]));
+  // Today by hour (Cam 2026-11-12: every bar the same height, filled by share — played green, playing yellow,
+  // booked white, open red; "played playing booked open"): [hour, seats, played, playing, booked]. At 9:42
+  // early groups have finished (played), the morning is on the course (playing), the rest are booked; the gap is open.
+  const H=[[6,8,4,0,0],[7,24,6,14,0],[8,24,0,21,3],[9,24,0,9,9],[10,24,0,0,12],[11,24,0,0,8],[12,24,0,0,4],[13,24,0,0,0],[14,24,0,0,2],[15,16,0,0,0]];
+  const cap=Math.max(...H.map(h=>h[1]));
   const lab=h=>(h%12||12)+(h<12?'a':'p');
-  $("bars").innerHTML=H.map(h=>'<div class="h" title="'+lab(h[0])+': '+h[1]+' today, '+h[2]+' last week"><div class="p" style="height:'+(h[2]/peak*100)+'%"></div><div class="t" style="height:'+(h[1]/peak*100)+'%"></div></div>').join("");
+  $("bars").innerHTML=H.map(h=>{const [hr,off,pl,pg,bk]=h;const open=off-pl-pg-bk;return '<div class="h st" title="'+lab(hr)+': '+pl+' played, '+pg+' playing, '+bk+' booked, '+open+' open"><div class="stack2" style="height:100%"><i class="o" style="flex:'+open+'"></i><i class="c" style="flex:'+bk+'"></i><i class="in" style="flex:'+pg+'"></i><i class="pl" style="flex:'+pl+'"></i></div></div>'}).join("");
   $("hl").innerHTML=H.map(h=>'<span>'+lab(h[0])+'</span>').join("");
+  const openOf=h=>h[1]-h[2]-h[3]-h[4];const best=H.filter(h=>h[0]>=10).sort((a,b)=>openOf(b)-openOf(a)).slice(0,3).sort((a,b)=>a[0]-b[0]);
+  // Cam 2026-11-12: one line — the day's spots, then how many are booked.
+  const spots=H.reduce((n,h)=>n+h[1],0), booked=H.reduce((n,h)=>n+h[2]+h[3]+h[4],0);
+  $("openline").innerHTML='<b>'+spots+'</b> spots · <b>'+booked+'</b> booked';
   // Next 14 days: booked of offered, against what that weekday usually has by now.
   const D=["Today","Fri 13","Sat 14","Sun 15","Mon 16","Tue 17","Wed 18","Thu 19","Fri 20","Sat 21","Sun 22","Mon 23","Tue 24","Wed 25"];
-  const B=[[86,120,80],[64,120,58],[118,140,110],[102,140,104],[22,96,18],[30,96,26],[24,96,30],[18,120,20],[26,120,22],[70,140,60],[48,140,52],[6,96,8],[4,96,6],[2,96,4]];
-  $("days").innerHTML=B.map((b,i)=>{const behind=b[0]<b[2];return '<div class="day"><div class="d">'+D[i]+'</div><div class="n'+(behind?' wn':'')+'">'+b[0]+'</div><div class="trk"><div class="f" style="width:'+Math.min(100,b[0]/b[1]*100)+'%"></div><div class="u" style="left:'+(b[2]/b[1]*100)+'%"></div></div><div class="us">usual '+b[2]+'</div></div>'}).join("");
+  // Cam 2026-11-12, "average like weekly … really got to think about this": the mark is what that weekday
+  // usually ends up with — the average final count of the last 4 of the same weekday (e.g. the last 4 Saturdays).
+  // [booked now, seats, typical final, behind its usual pace for this many days out]
+  const B=[[92,120,104,0],[64,120,98,0],[118,140,128,0],[102,140,121,1],[22,96,41,0],[30,96,44,0],[24,96,47,1],[18,120,104,0],[26,120,98,0],[70,140,128,0],[48,140,121,0],[6,96,41,0],[4,96,44,0],[2,96,47,0]];
+  // Cam 2026-11-12, "a better way to format this": one column per day, like Today by hour. The bar is booked out of
+  // the most seats any day has; the line across it is what that weekday typically ends with; amber = behind its pace.
+  const maxSeats=Math.max(...B.map(b=>b[1]));
+  $("days").className="dcols";
+  $("days").innerHTML=B.map((b,i)=>{const behind=!!b[3];const wk=/Sat|Sun/.test(D[i]);return '<div class="dcol" title="'+D[i]+': '+b[0]+' booked of '+b[1]+'. A typical '+(D[i]==='Today'?'Thursday':D[i].slice(0,3))+' averages '+b[2]+' (the last 4 weeks).">'+'<b class="'+(behind?'wn':'')+'">'+b[0]+'</b><div class="dbar"><div class="dfill'+(behind?' dbehind':'')+'" style="height:'+(b[0]/maxSeats*100)+'%"></div><div class="dtyp" style="bottom:'+(b[2]/maxSeats*100)+'%"></div></div><span class="'+(wk?'wk':'')+(i===0?' td':'')+'">'+(i===0?'Today<br>12':D[i].replace(' ','<br>'))+'</span></div>'}).join("");
   // Week ahead: share of seats booked per hour.
   const hrs=[7,8,9,10,11,12,13,14,15];
   const W=["Fri","Sat","Sun","Mon","Tue","Wed","Thu"];
   const seed=[.7,.95,.9,.25,.3,.28,.22];
   let html='<span></span>'+hrs.map(h=>'<span class="rl" style="text-align:center">'+lab(h)+'</span>').join("")+'<span class="tot">Booked</span>';
-  W.forEach((d,i)=>{let tot=0;html+='<span class="rl">'+d+'</span>';hrs.forEach((h,j)=>{const v=Math.max(0,Math.min(1,seed[i]*(1.25-j*.11)+((i*7+j*3)%5)*.03));tot+=Math.round(v*16);html+='<span class="c" title="'+d+' '+lab(h)+': '+Math.round(v*100)+'% full" style="background:'+(v<.05?'var(--heat0)':'rgba(var(--heat),'+(.12+v*.78).toFixed(2)+')')+'"></span>'});html+='<span class="tot">'+tot+'</span>'});
+  W.forEach((d,i)=>{let tot=0;html+='<span class="rl">'+d+'</span>';hrs.forEach((h,j)=>{const v=Math.max(0,Math.min(1,seed[i]*(1.25-j*.11)+((i*7+j*3)%5)*.03));tot+=Math.round(v*16);const lv=v<.05?0:v<.25?1:v<.5?2:v<.75?3:4;html+='<span class="c hv'+lv+'" title="'+d+' '+lab(h)+': '+Math.round(v*100)+'% full">'+(lv?Math.round(v*100):'')+'</span>'});html+='<span class="tot">'+tot+'</span>'});
   $("heat").style.gridTemplateColumns='40px repeat('+hrs.length+',minmax(22px,1fr)) 56px';
   $("heat").innerHTML=html;
   document.querySelectorAll('[data-m]').forEach(b=>b.addEventListener('click',()=>{$("app").dataset.mode=b.dataset.m;document.querySelectorAll('[data-m]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)))}));
