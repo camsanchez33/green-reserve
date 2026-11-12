@@ -550,16 +550,35 @@ async function main() {
     try {
       type R = { id: string; status: string };
       const listed = async () => ((await api('/api/admin/courses/directory', { cookie: viewerCookie })).body as { rows?: R[] }).rows;
+      type O = { key: string; courseId: string | null; inquiryId: string | null; stage: string };
+      const onb = async () => ((await api('/api/admin/onboarding', { cookie: viewerCookie })).body as { rows?: O[] }).rows;
       const r0 = await listed();
-      check('Golf courses keeps a never-live course built by hand (no inquiry, so Onboarding cannot show it)', !!r0?.some(x => x.id === data.courseA.id && x.status === 'onboarding'), JSON.stringify(r0?.map(x => [x.id, x.status])));
+      check('Golf courses leaves out a never-live course built by hand (no inquiry)', !!r0 && !r0.some(x => x.id === data.courseA.id), JSON.stringify(r0?.map(x => [x.id, x.status])));
+      const o0 = await onb();
+      check('…and Onboarding lists it, built by hand', !!o0?.some(x => x.key === `c:${data.courseA.id}` && x.inquiryId === null && x.stage === 'Built by hand'), JSON.stringify(o0));
       inq = await prisma.courseInquiry.create({ data: { contactName: 'Isol', contactTitle: 'GM', email: `${TS}-inq@test.local`, phone: '1', courseName: 'Isol Course A', address: '1', city: 'A City', state: 'CA', zipCode: '90000', courseType: 'public', status: 'building', builtCourseId: data.courseA.id } });
       const r1 = await listed();
-      check('…but leaves out a course onboarding from an inquiry (its home is Onboarding)', !!r1 && !r1.some(x => x.id === data.courseA.id), JSON.stringify(r1?.map(x => [x.id, x.status])));
+      check('…a course onboarding from an inquiry is not on Golf courses either', !!r1 && !r1.some(x => x.id === data.courseA.id), JSON.stringify(r1?.map(x => [x.id, x.status])));
+      const o1 = await onb();
+      check('…Onboarding lists it once, through its inquiry', o1?.filter(x => x.courseId === data.courseA.id).length === 1 && !!o1.some(x => x.key === `i:${inq!.id}` && x.stage === 'Building'), JSON.stringify(o1));
+      // Who sees what on the profile: a viewer gets no contact or notes and can't save a note.
+      const pv = (await api(`/api/admin/onboarding?key=i:${inq.id}`, { cookie: viewerCookie })).body as { contact?: unknown; notes?: unknown; canNote?: boolean; canBookCall?: boolean; steps?: { total?: number } };
+      check('Onboarding profile → viewer: no contact, notes, note field or Cal.com', pv?.contact === null && pv?.notes === null && pv?.canNote === false && pv?.canBookCall === false && pv?.steps?.total === 8, JSON.stringify(pv).slice(0, 300));
+      const { signAdminToken } = await import('../src/lib/admin-session');
+      const mgr = await prisma.adminUser.create({ data: { name: 'Isol Onboarding Manager', email: `${TS}-onbmgr@test.local`, passwordHash: 'x', role: 'manager', active: true } });
+      try {
+        const mc = `admin_session=${await signAdminToken({ adminId: mgr.id, email: mgr.email, name: mgr.name, role: 'manager', mfa: true })}`;
+        const pa = (await api(`/api/admin/onboarding?key=i:${inq.id}`, { cookie: mc })).body as { contact?: { email?: string } | null; canNote?: boolean };
+        check('…manager: contact and the note field', pa?.contact?.email === `${TS}-inq@test.local` && pa?.canNote === true, JSON.stringify(pa).slice(0, 300));
+      } finally {
+        await prisma.adminUser.delete({ where: { id: mgr.id } });
+      }
     } finally {
       if (inq) await prisma.courseInquiry.delete({ where: { id: inq.id } });
       await prisma.course.update({ where: { id: data.courseA.id }, data: { active: data.courseA.active, liveStatus: data.courseA.liveStatus, firstWentLiveAt: data.courseA.firstWentLiveAt, welcomeEmailSentAt: data.courseA.welcomeEmailSentAt } });
     }
     check('…and lists it again once live', !!((await api('/api/admin/courses/directory', { cookie: viewerCookie })).body as { rows?: { id: string }[] }).rows?.some(x => x.id === data.courseA.id));
+    check('…and Onboarding no longer does', !((await api('/api/admin/onboarding', { cookie: viewerCookie })).body as { rows?: { courseId: string | null }[] }).rows?.some(x => x.courseId === data.courseA.id));
   }
   {
     // BRAIN-2a: Problems name golfers and money — support+ only, reads and writes.
@@ -636,7 +655,7 @@ async function main() {
     const limited = await prisma.adminUser.create({ data: { name: 'Isol Messages Only', email: `${TS}-msgonly@test.local`, passwordHash: 'x', role: 'manager', active: true, areas: ['messages'], areasSetAt: new Date() } });
     try {
       const c = `admin_session=${await signAdminToken({ adminId: limited.id, email: limited.email, name: limited.name, role: 'manager', mfa: true })}`;
-      for (const [path, label] of [['/api/admin/revenue', 'Money'], ['/api/admin/golfers?q=isol', 'Golfers'], ['/api/admin/problems', 'Problems'], ['/api/admin/course-feed?courseId=' + data.courseA.id, 'a course timeline'], ['/api/admin/goals', 'Goals'], ['/api/admin/courses/directory', 'Golf courses']] as const) {
+      for (const [path, label] of [['/api/admin/revenue', 'Money'], ['/api/admin/golfers?q=isol', 'Golfers'], ['/api/admin/problems', 'Problems'], ['/api/admin/course-feed?courseId=' + data.courseA.id, 'a course timeline'], ['/api/admin/goals', 'Goals'], ['/api/admin/courses/directory', 'Golf courses'], ['/api/admin/onboarding', 'Onboarding']] as const) {
         const r = await api(path, { cookie: c });
         check(`Messages-only manager → ${label} → 403 (area)`, r.status === 403 && (r.body as { code?: string })?.code === 'area', JSON.stringify({ status: r.status, body: r.body }));
       }

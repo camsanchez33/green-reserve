@@ -1,0 +1,32 @@
+/* ADMIN-REDO page 3 — Onboarding. Builds on Golf Courses' list + profile (../courses/courses.module.css) and the
+   green-glass tokens (--g-*) of admin-glass.module.css; only what Onboarding adds is here. */
+
+.next { display: block; font-weight: 500; }
+.late { display: block; font-size: 12px; color: var(--g-warn); font-weight: 600; margin-top: 2px; }
+.bar { height: 5px; border-radius: 3px; background: var(--g-line); overflow: hidden; margin-top: 6px; max-width: 140px; }
+.bar i { display: block; height: 100%; background: var(--g-up); }
+
+/* Where they are: "Step 2 of 8", the step, then what to do. */
+.where { border-left: 3px solid var(--g-warn); padding: 2px 0 2px 12px; font-size: 14px; }
+.where small { display: block; color: var(--g-muted); font-size: 12px; }
+.where b { display: block; font-size: 15px; }
+.where span { display: block; font-size: 13px; color: var(--g-ink-soft); margin-top: 2px; }
+
+.now span { font-weight: 600; color: var(--g-ink); }
+.now i { border-color: var(--g-warn); border-width: 2px; }
+
+.log { display: flex; flex-direction: column; }
+.log > div { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; padding: 7px 0; border-top: 1px solid var(--g-line); font-size: 13.5px; }
+.log > div:first-child { border-top: 0; }
+.log small { color: var(--g-muted); font-size: 12px; }
+.log em { display: block; font-style: normal; font-size: 12px; color: var(--g-muted); overflow-wrap: anywhere; }
+
+/* Notes: a plain field with a quiet arrow to save — no button. */
+.addnote { position: relative; display: flex; }
+.addnote input { flex: 1; min-width: 0; font: inherit; font-size: 13.5px; color: var(--g-ink); background: var(--g-hover); border: 1px solid var(--g-line); border-radius: 10px; padding: 8px 40px 8px 12px; }
+.addnote input:focus { outline: 2px solid var(--g-focus); outline-offset: 1px; }
+.addnote button { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); border: 0; background: transparent; color: var(--g-muted); padding: 6px; border-radius: 8px; cursor: pointer; display: grid; place-items: center; }
+.addnote button:hover:not(:disabled) { color: var(--g-ink); background: var(--g-hover); }
+.addnote button:disabled { cursor: default; opacity: 0.5; }
+.addnote button:focus-visible { outline: 2px solid var(--g-focus); outline-offset: 2px; }
+.noteMsg { margin: 0; font-size: 12.5px; }

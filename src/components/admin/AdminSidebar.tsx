@@ -93,7 +93,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
       { key: 'overview', label: 'Overview', href: '/admin' },
       { key: 'courses', label: 'Golf courses', href: '/admin/courses', minRole: VIEWER_PLUS, area: 'courses' },
       { key: 'groups', label: 'Course groups', href: '/admin/groups', minRole: SUPPORT_PLUS, sub: true, area: 'courses' },
-      { key: 'inquiries', label: 'Onboarding', href: '/admin/inquiries', minRole: VIEWER_PLUS, area: 'pipeline' },
+      { key: 'inquiries', label: 'Onboarding', href: '/admin/onboarding', minRole: VIEWER_PLUS, area: 'pipeline' },
       { key: null, label: 'Bookings' },
       { key: 'golfers', label: 'Users & golfers', href: '/admin/golfers', minRole: SUPPORT_PLUS, area: 'golfers' },
     ] },
