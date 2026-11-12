@@ -4026,7 +4026,7 @@
     },
     {
       "path": "src/app/api/bookings/route.ts",
-      "lines": 536,
+      "lines": 547,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -17789,7 +17789,7 @@
     },
     {
       "path": "src/lib/claim-tee-time.ts",
-      "lines": 170,
+      "lines": 197,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -17803,6 +17803,14 @@
         },
         {
           "name": "claimTeeTime",
+          "kind": "fn"
+        },
+        {
+          "name": "DOUBLE_TAP_MS",
+          "kind": "const"
+        },
+        {
+          "name": "findDoubleTap",
           "kind": "fn"
         },
         {

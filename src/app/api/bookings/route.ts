@@ -23,7 +23,7 @@ import { getMemberSession, getGolferMembership, golferResident } from '@/lib/mem
 import { stripe, ACCESS_FEE_CENTS } from '@/lib/stripe';
 import { sendBookingConfirmation, sendOperatorBookingNotification, sendCancellationWarningEmail, sendCheckInAvailableEmail } from '@/lib/email';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
-import { claimTeeTime, TeeTimeClaimError, type ClaimResult } from '@/lib/claim-tee-time';
+import { claimTeeTime, TeeTimeClaimError, findDoubleTap, type ClaimResult } from '@/lib/claim-tee-time';
 import { windowFor, withinWindow } from '@/lib/booking-window';
 import { rulesFor, groupSizeError, walkingAllowedAt } from '@/lib/booking-rules';
 import { DEMO_COURSE_SLUGS } from '@/lib/demo-courses';
@@ -36,6 +36,8 @@ export async function POST(req: NextRequest) {
 
   if (!teeTimeId || !playersRaw || !golferName || !golferEmail)
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+  if (typeof golferEmail !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(golferEmail.trim()))
+    return NextResponse.json({ error: 'Please enter a valid email address.' }, { status: 400 });
   // Security review: `players` was only truthiness-checked, so a negative
   // count passed the capacity test and REWOUND playersBooked (a full slot
   // resold), and wrote negative totals. An integer between 1 and 8, or nothing.
@@ -75,6 +77,32 @@ export async function POST(req: NextRequest) {
   // built, paused or archived takes no online bookings.
   const c0 = teeTimeFull.course;
   if (!c0.active || c0.liveStatus !== 'live' || c0.archivedAt) return NextResponse.json({ error: 'Tee time not found.' }, { status: 404 });
+
+  // A double-tapped Book (findDoubleTap): the same golfer, name and party size booked this exact time
+  // in the last two minutes. Answer with that booking, before any code, pack or card is touched; the
+  // claim checks again inside its transaction for two taps at the same instant. Charges nothing,
+  // sends nothing, and gives back only figures the golfer was just shown.
+  const doubleTapResponse = async (bookingId: string) => {
+    const b = await prisma.booking.findUniqueOrThrow({
+      where: { id: bookingId },
+      select: { appliedRate: true, residentPlayers: true, greenFeeTotal: true, promoDiscountCents: true, cartFeeTotal: true, rangeBallsTotal: true, accessFeeTotal: true, totalAmount: true, cancellationFeeTotal: true, cancellationHoursAtBooking: true, lateFeeTimingAtBooking: true, players: true, packLineId: true },
+    });
+    const hours = b.cancellationHoursAtBooking ?? teeTimeFull.course.cancellationHours;
+    console.log(JSON.stringify({ ev: 'booking.double_tap', bookingId, teeTimeId }));
+    return NextResponse.json({
+      bookingId, duplicate: true,
+      appliedRate: b.appliedRate, memberRate: !b.packLineId && b.appliedRate !== 'standard' && b.appliedRate !== 'resident', residentPlayers: b.residentPlayers,
+      greenFeeTotal: b.greenFeeTotal / 100, promoDiscount: (b.promoDiscountCents ?? 0) / 100,
+      cartFeeTotal: b.cartFeeTotal / 100, rangeBallsTotal: b.rangeBallsTotal / 100, accessFeeTotal: b.accessFeeTotal / 100,
+      totalAmount: b.totalAmount / 100, cancellationFeeTotal: b.cancellationFeeTotal / 100,
+      cancellationHours: hours,
+      lateFeeTiming: b.lateFeeTimingAtBooking ?? policyFrom(teeTimeFull.course).lateFeeTiming,
+      cutoffPassed: teeToUtcMs(teeTimeFull.date, teeTimeFull.time, teeTimeFull.course.timezone || 'America/New_York') - hours * 3600 * 1000 <= Date.now(),
+      courseName: teeTimeFull.course.name, date: teeTimeFull.date, time: teeTimeFull.time, players: b.players,
+    });
+  };
+  const tapped = await findDoubleTap(prisma, { teeTimeId, golferEmail, golferName, players });
+  if (tapped) return doubleTapResponse(tapped.id);
 
   // Private clubs: public online booking is blocked server-side
   if (teeTimeFull.course.type === 'private') {
@@ -372,29 +400,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Something went wrong processing your booking. Please try again.' }, { status: 500 });
   }
 
-  // A double-tapped Book (Cam via Build 2026-11-12): this golfer already holds a confirmed online
-  // booking on this time. Give back what this request took, charge nothing, send nothing, and answer
-  // with the booking they already have — its own figures, not this request's.
+  // Two taps at the same instant: the other one won the claim (findDoubleTap inside the transaction).
+  // Give back what this request took and answer with that booking — charge nothing, send nothing.
   if (claimed.duplicate) {
     if (promo) await releaseUse(promo.id);
     if (pack) await giveBack(prisma, pack.lineId, pack.seats);
-    const b = await prisma.booking.findUniqueOrThrow({
-      where: { id: claimed.id },
-      select: { appliedRate: true, residentPlayers: true, greenFeeTotal: true, promoDiscountCents: true, cartFeeTotal: true, rangeBallsTotal: true, accessFeeTotal: true, totalAmount: true, cancellationFeeTotal: true, cancellationHoursAtBooking: true, lateFeeTimingAtBooking: true, players: true },
-    });
-    console.log(JSON.stringify({ ev: 'booking.duplicate', bookingId: claimed.id, teeTimeId }));
-    return NextResponse.json({
-      bookingId: claimed.id, duplicate: true,
-      appliedRate: b.appliedRate, memberRate: b.appliedRate !== 'standard' && b.appliedRate !== 'resident', residentPlayers: b.residentPlayers,
-      greenFeeTotal: b.greenFeeTotal / 100, promoDiscount: (b.promoDiscountCents ?? 0) / 100,
-      cartFeeTotal: b.cartFeeTotal / 100, rangeBallsTotal: b.rangeBallsTotal / 100, accessFeeTotal: b.accessFeeTotal / 100,
-      totalAmount: b.totalAmount / 100, cancellationFeeTotal: b.cancellationFeeTotal / 100,
-      cancellationHours: b.cancellationHoursAtBooking ?? teeTimeFull.course.cancellationHours,
-      lateFeeTiming: b.lateFeeTimingAtBooking ?? policy.lateFeeTiming,
-      cutoffPassed: teeToUtcMs(teeTimeFull.date, teeTimeFull.time, teeTimeFull.course.timezone || 'America/New_York')
-        - (b.cancellationHoursAtBooking ?? teeTimeFull.course.cancellationHours) * 3600 * 1000 <= Date.now(),
-      courseName: teeTimeFull.course.name, date: teeTimeFull.date, time: teeTimeFull.time, players: b.players,
-    });
+    return doubleTapResponse(claimed.id);
   }
 
   // FEE-AT-BOOKING (Cam 2026-10-24): GreenReserve's fee is charged now, to the card just saved.
