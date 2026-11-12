@@ -1,6 +1,7 @@
 // Admin Expenses (ADMIN-REDO, Cam approved 2026-11-12): the page's pure rules — counted from the Expense rows,
 // never estimated. Run: npx tsx scripts/admin-expenses-test.ts
 import { readFileSync } from 'fs';
+import { goalPace } from '../src/lib/goal-pace';
 import { isEnded, historyLine, cards, nextRenewal, monthEarlier, yearEarlier, pct, parseAmount, FILTERS, byCost, activeOn, type Exp } from '../src/app/admin/expenses/logic';
 
 let failed = 0;
@@ -31,6 +32,17 @@ check('this month\'s one-time costs are split out (none in November here)', k.mo
 check('this year counts the one-time cost', k.year > 150000);
 check('last year by today had nothing (all started in 2026)', k.yearPrior === 0);
 check('ended on May 1 → not running in November', !activeOn(list[3], NOW));
+
+// The budget's pace (final review 2026-11-12): running costs are projected, one-time costs are added as they are.
+// $200 a month running, a $150 one-off on Nov 10, a $400 budget, Nov 12 10:00 ET → ends near $347.40, green.
+{
+  const at = new Date('2026-11-12T15:00:00Z');
+  const kk = cards([ex({ amountCents: 20000, startedAt: '2026-01-01T12:00:00.000Z' }), ex({ amountCents: 15000, cadence: 'one-time', startedAt: '2026-11-10T12:00:00.000Z' })], at);
+  const days = (kk.monthEnd.getTime() - kk.monthStart.getTime()) / 86_400_000;
+  const p = goalPace({ progress: kk.monthSoFar - kk.monthOneTime, fixed: kk.monthOneTime, target: 40000, share: kk.elapsedShare, kind: 'cap', daysElapsed: kk.elapsedShare * days });
+  check('a one-off is never projected: the month ends near $347.40, on pace to stay under', Math.abs(p.projected - 34740) < 100 && p.tone === 'ok', JSON.stringify(p));
+}
+check('the page passes running costs as progress and one-time costs as fixed', /progress: k\.monthSoFar - k\.monthOneTime, fixed: k\.monthOneTime/.test(readFileSync('src/app/admin/expenses/page.tsx', 'utf8')));
 
 // Percentages.
 check('up 50%', pct(150, 100) === 50);

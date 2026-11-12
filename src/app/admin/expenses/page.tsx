@@ -185,7 +185,7 @@ export default function ExpensesPage() {
 
   // The budget card: spent so far this month against the budget, coloured by the shared pace rule (src/lib/goal-pace.ts).
   const monthDays = k ? (k.monthEnd.getTime() - k.monthStart.getTime()) / 86_400_000 : 0;
-  const pace = k && budget ? goalPace({ progress: k.monthSoFar, target: budget, share: k.elapsedShare, kind: 'cap', daysElapsed: k.elapsedShare * monthDays }) : null;
+  const pace = k && budget ? goalPace({ progress: k.monthSoFar - k.monthOneTime, fixed: k.monthOneTime, target: budget, share: k.elapsedShare, kind: 'cap', daysElapsed: k.elapsedShare * monthDays }) : null;
   const monthLast = k ? new Date(k.monthEnd.getTime() - 3_600_000).toLocaleDateString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric' }) : '';
   const budgetCard = k && (
     <div className={`${g.glass} ${r.rkc}`}>
