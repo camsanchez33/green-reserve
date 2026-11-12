@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 708,
-    "routes": 303,
-    "libs": 255,
+    "files": 711,
+    "routes": 304,
+    "libs": 257,
     "models": 72,
     "orphans": 11,
     "ungatedRoutes": 3
@@ -2364,6 +2364,35 @@
         "@/lib/admin-session",
         "@/lib/expenses",
         "@/lib/prisma",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/admin/finance/route.ts",
+      "lines": 122,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/finance",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-day",
+        "@/lib/admin-session",
+        "@/lib/expenses",
+        "@/lib/finance-period",
+        "@/lib/prisma",
+        "@/lib/real-courses",
         "next/server"
       ],
       "usedBy": []
@@ -14898,6 +14927,7 @@
       "usedBy": [
         "src/app/api/admin/ask/route.ts",
         "src/app/api/admin/courses/directory/route.ts",
+        "src/app/api/admin/finance/route.ts",
         "src/app/api/admin/goals/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/today/overview/route.ts",
@@ -14906,6 +14936,7 @@
         "src/lib/admin-course-page.ts",
         "src/lib/admin-home.ts",
         "src/lib/admin-today.ts",
+        "src/lib/finance-period.ts",
         "src/lib/revenue-period.ts"
       ]
     },
@@ -15257,6 +15288,7 @@
         "src/app/api/admin/employees/route.ts",
         "src/app/api/admin/expenses/[id]/route.ts",
         "src/app/api/admin/expenses/route.ts",
+        "src/app/api/admin/finance/route.ts",
         "src/app/api/admin/forgot-password/route.ts",
         "src/app/api/admin/goals/route.ts",
         "src/app/api/admin/golfers/route.ts",
@@ -20671,6 +20703,7 @@
         "src/app/admin/revenue/page.tsx",
         "src/app/api/admin/expenses/[id]/route.ts",
         "src/app/api/admin/expenses/route.ts",
+        "src/app/api/admin/finance/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/today/overview/route.ts",
         "src/lib/admin-today.ts"
@@ -20763,6 +20796,57 @@
       "imports": [],
       "usedBy": [
         "src/app/api/admin/revenue/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/finance-period.ts",
+      "lines": 94,
+      "purpose": "ADMIN-REDO Financial analytics (Cam 2026-11-12):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "FINANCE_PERIODS",
+          "kind": "const"
+        },
+        {
+          "name": "FinanceMonth",
+          "kind": "type"
+        },
+        {
+          "name": "FinancePeriod",
+          "kind": "type"
+        },
+        {
+          "name": "FinancePeriodKind",
+          "kind": "type"
+        },
+        {
+          "name": "parseFinancePeriod",
+          "kind": "fn"
+        },
+        {
+          "name": "resolveFinancePeriod",
+          "kind": "fn"
+        },
+        {
+          "name": "revenueSource",
+          "kind": "fn"
+        },
+        {
+          "name": "RevenueSource",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./admin-day"
+      ],
+      "usedBy": [
+        "src/app/api/admin/finance/route.ts"
       ]
     },
     {
@@ -24181,6 +24265,7 @@
         "src/app/api/admin/employees/route.ts",
         "src/app/api/admin/expenses/[id]/route.ts",
         "src/app/api/admin/expenses/route.ts",
+        "src/app/api/admin/finance/route.ts",
         "src/app/api/admin/forgot-password/route.ts",
         "src/app/api/admin/goals/route.ts",
         "src/app/api/admin/golfers/route.ts",
@@ -24894,6 +24979,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
+        "src/app/api/admin/finance/route.ts",
         "src/app/api/admin/nav-badges/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/today/overview/route.ts",
@@ -29549,6 +29635,7 @@
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/courses/route.ts",
+        "src/app/api/admin/finance/route.ts",
         "src/app/api/admin/golfers/route.ts",
         "src/app/api/admin/messages/route.ts",
         "src/app/api/admin/nav-badges/route.ts",
@@ -30575,6 +30662,7 @@
         "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/create-course/route.ts",
+        "src/app/api/admin/finance/route.ts",
         "src/app/api/admin/inquiries/route.ts",
         "src/app/api/admin/messages/route.ts",
         "src/app/api/admin/onboarding/route.ts",
@@ -32417,6 +32505,7 @@
       "readers": [
         "src/app/api/admin/expenses/[id]/route.ts",
         "src/app/api/admin/expenses/route.ts",
+        "src/app/api/admin/finance/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/today/overview/route.ts",
         "src/lib/admin-today.ts"
