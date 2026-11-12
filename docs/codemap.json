@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 708,
-    "routes": 303,
-    "libs": 255,
-    "models": 72,
+    "files": 719,
+    "routes": 308,
+    "libs": 259,
+    "models": 75,
     "orphans": 11,
     "ungatedRoutes": 3
   },
@@ -795,6 +795,33 @@
       "usedBy": []
     },
     {
+      "path": "src/app/admin/expenses/page.tsx",
+      "lines": 186,
+      "purpose": "Expenses (owner only):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (ExpensesPage)",
+          "kind": "component"
+        }
+      ],
+      "route": "/admin/expenses",
+      "kind": "page",
+      "methods": [],
+      "auth": "admin",
+      "guard": "client-side",
+      "imports": [
+        "@/components/admin/AdminSidebar",
+        "@/components/ui/field",
+        "@/lib/expenses",
+        "@/lib/format",
+        "@/lib/step-up-client",
+        "next/link",
+        "react"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/admin/forgot-password/page.tsx",
       "lines": 67,
       "purpose": "",
@@ -990,7 +1017,7 @@
     },
     {
       "path": "src/app/admin/layout.tsx",
-      "lines": 56,
+      "lines": 68,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1021,8 +1048,7 @@
         "@/lib/admin-session",
         "@/lib/admin-session-context",
         "@/lib/staff-fonts",
-        "next",
-        "next/headers"
+        "next"
       ],
       "usedBy": []
     },
@@ -1152,7 +1178,7 @@
     },
     {
       "path": "src/app/admin/page.tsx",
-      "lines": 252,
+      "lines": 257,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1169,6 +1195,7 @@
       "imports": [
         "./admin-glass.module.css",
         "@/components/admin/AdminSidebar",
+        "@/components/admin/admin-href",
         "@/lib/admin-session-context",
         "next/link",
         "react"
@@ -1232,13 +1259,74 @@
       "usedBy": []
     },
     {
-      "path": "src/app/admin/revenue/page.tsx",
-      "lines": 1031,
-      "purpose": "ADMIN-C Money (Cam 2026-10-22, from the Money mockup he approved:",
+      "path": "src/app/admin/revenue/logic.ts",
+      "lines": 73,
+      "purpose": "Revenue page's pure rules, kept apart so scripts/admin-revenue-test.ts can pin them:",
       "brain": [],
       "exports": [
         {
-          "name": "default (MoneyPage)",
+          "name": "chartSummary",
+          "kind": "fn"
+        },
+        {
+          "name": "fallbackQuery",
+          "kind": "fn"
+        },
+        {
+          "name": "fallbackWindow",
+          "kind": "fn"
+        },
+        {
+          "name": "isFallbackAnswer",
+          "kind": "fn"
+        },
+        {
+          "name": "isNewAnswer",
+          "kind": "fn"
+        },
+        {
+          "name": "KIND",
+          "kind": "const"
+        },
+        {
+          "name": "payoutState",
+          "kind": "fn"
+        },
+        {
+          "name": "PayoutState",
+          "kind": "type"
+        },
+        {
+          "name": "pct",
+          "kind": "fn"
+        },
+        {
+          "name": "Per",
+          "kind": "type"
+        },
+        {
+          "name": "periodDone",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/admin/revenue/page.tsx"
+      ]
+    },
+    {
+      "path": "src/app/admin/revenue/page.tsx",
+      "lines": 467,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (RevenuePage)",
           "kind": "component"
         }
       ],
@@ -1248,20 +1336,55 @@
       "auth": "admin",
       "guard": "client-side",
       "imports": [
+        "../admin-glass.module.css",
+        "../courses/courses.module.css",
+        "./logic",
+        "./revenue.module.css",
+        "./terms",
         "@/components/admin/AdminSidebar",
-        "@/components/ui/StatusDot",
-        "@/components/ui/field",
         "@/lib/admin-roles",
         "@/lib/admin-session-context",
-        "@/lib/expenses",
-        "@/lib/format",
-        "@/lib/money-tabs",
-        "@/lib/step-up-client",
-        "lucide-react",
         "next/link",
         "react"
       ],
       "usedBy": []
+    },
+    {
+      "path": "src/app/admin/revenue/terms.ts",
+      "lines": 24,
+      "purpose": "Revenue (ADMIN-REDO, Cam approved the mockup 2026-11-12):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "loadFailed",
+          "kind": "fn"
+        },
+        {
+          "name": "NOT_YET",
+          "kind": "const"
+        },
+        {
+          "name": "OWNER_ONLY",
+          "kind": "const"
+        },
+        {
+          "name": "SESSION_ENDED",
+          "kind": "const"
+        },
+        {
+          "name": "TERMS",
+          "kind": "const"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/admin/revenue/page.tsx"
+      ]
     },
     {
       "path": "src/app/admin/security/page.tsx",
@@ -2305,8 +2428,34 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/admin/expenses/[id]/history/route.ts",
+      "lines": 20,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/expenses/[id]/history",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-session",
+        "@/lib/expense-history",
+        "@/lib/prisma",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/admin/expenses/[id]/route.ts",
-      "lines": 78,
+      "lines": 87,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2337,8 +2486,34 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/admin/expenses/budget/route.ts",
+      "lines": 36,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "PUT",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/expenses/budget",
+      "kind": "api",
+      "methods": [
+        "PUT"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-audit",
+        "@/lib/admin-session",
+        "@/lib/prisma",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/admin/expenses/route.ts",
-      "lines": 47,
+      "lines": 51,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2364,6 +2539,35 @@
         "@/lib/admin-session",
         "@/lib/expenses",
         "@/lib/prisma",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/admin/finance/route.ts",
+      "lines": 124,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/finance",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-day",
+        "@/lib/admin-session",
+        "@/lib/expenses",
+        "@/lib/finance-period",
+        "@/lib/prisma",
+        "@/lib/real-courses",
         "next/server"
       ],
       "usedBy": []
@@ -2468,7 +2672,7 @@
     },
     {
       "path": "src/app/api/admin/inquiries/route.ts",
-      "lines": 1314,
+      "lines": 1341,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3052,7 +3256,7 @@
     },
     {
       "path": "src/app/api/admin/revenue/route.ts",
-      "lines": 365,
+      "lines": 524,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3070,16 +3274,48 @@
       "guard": "file",
       "imports": [
         "@/lib/access-fee",
+        "@/lib/admin-day",
         "@/lib/admin-session",
+        "@/lib/card-reader",
         "@/lib/course-metrics",
         "@/lib/expenses",
         "@/lib/fees-by-day",
+        "@/lib/ledger-view",
         "@/lib/money-problems",
         "@/lib/platform-stripe",
         "@/lib/prisma",
         "@/lib/real-courses",
+        "@/lib/revenue-period",
         "@/lib/shop",
+        "@/lib/stripe",
         "@/lib/stripe-errors",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/admin/revenue-goal/route.ts",
+      "lines": 42,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "PUT",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/revenue-goal",
+      "kind": "api",
+      "methods": [
+        "PUT"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-audit",
+        "@/lib/admin-session",
+        "@/lib/prisma",
+        "@/lib/revenue-period",
         "next/server"
       ],
       "usedBy": []
@@ -3133,7 +3369,7 @@
     },
     {
       "path": "src/app/api/admin/search/route.ts",
-      "lines": 234,
+      "lines": 238,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3152,6 +3388,7 @@
       "imports": [
         "@/lib/admin-areas",
         "@/lib/admin-session",
+        "@/lib/booking-ref",
         "@/lib/prisma",
         "next/server"
       ],
@@ -3502,7 +3739,7 @@
     },
     {
       "path": "src/app/api/admin/transactions/export/route.ts",
-      "lines": 94,
+      "lines": 107,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3521,6 +3758,7 @@
       "imports": [
         "@/lib/admin-session",
         "@/lib/prisma",
+        "@/lib/revenue-period",
         "@/lib/shop",
         "next/server"
       ],
@@ -4021,7 +4259,7 @@
     },
     {
       "path": "src/app/api/bookings/route.ts",
-      "lines": 511,
+      "lines": 547,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5142,7 +5380,7 @@
     },
     {
       "path": "src/app/api/manage/[bookingId]/route.ts",
-      "lines": 95,
+      "lines": 97,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5160,6 +5398,7 @@
       "guard": "file",
       "imports": [
         "@/lib/auth",
+        "@/lib/booking-ref",
         "@/lib/cancel-policy",
         "@/lib/manage-access",
         "@/lib/no-show-fee",
@@ -8326,7 +8565,7 @@
     },
     {
       "path": "src/app/api/receipt/[bookingId]/route.ts",
-      "lines": 119,
+      "lines": 121,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8345,6 +8584,7 @@
       "imports": [
         "@/lib/admin-areas",
         "@/lib/admin-session",
+        "@/lib/booking-ref",
         "@/lib/counter-pay",
         "@/lib/prisma",
         "@/lib/rate-limit",
@@ -10023,7 +10263,7 @@
     },
     {
       "path": "src/app/manage/[bookingId]/page.tsx",
-      "lines": 590,
+      "lines": 591,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10911,7 +11151,7 @@
     },
     {
       "path": "src/components/admin/AdminSidebar.tsx",
-      "lines": 212,
+      "lines": 199,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10932,7 +11172,6 @@
       "imports": [
         "@/app/admin/admin-glass.module.css",
         "@/components/admin/CommandPalette",
-        "@/components/admin/admin-theme",
         "@/lib/admin-areas",
         "@/lib/admin-roles",
         "@/lib/admin-session-context",
@@ -10948,6 +11187,7 @@
         "src/app/admin/courses/page.tsx",
         "src/app/admin/create/page.tsx",
         "src/app/admin/employees/page.tsx",
+        "src/app/admin/expenses/page.tsx",
         "src/app/admin/goals/page.tsx",
         "src/app/admin/golfers/page.tsx",
         "src/app/admin/groups/page.tsx",
@@ -11354,7 +11594,7 @@
     },
     {
       "path": "src/components/admin/admin-href.ts",
-      "lines": 61,
+      "lines": 62,
       "purpose": "Admin lane (2026-11-10):",
       "brain": [],
       "exports": [
@@ -11381,34 +11621,19 @@
         "@/lib/admin-roles"
       ],
       "usedBy": [
+        "src/app/admin/page.tsx",
         "src/app/admin/problems/page.tsx"
       ]
     },
     {
       "path": "src/components/admin/admin-theme.ts",
-      "lines": 20,
-      "purpose": "ADMIN-REDO (Cam 2026-11-11):",
+      "lines": 6,
+      "purpose": "ADMIN-REDO (Cam 2026-11-12, ADMIN_REDO_SPEC.md \"Theme changes\"):",
       "brain": [],
       "exports": [
         {
-          "name": "ADMIN_THEME_COOKIE",
+          "name": "ADMIN_THEME",
           "kind": "const"
-        },
-        {
-          "name": "AdminTheme",
-          "kind": "type"
-        },
-        {
-          "name": "currentAdminTheme",
-          "kind": "fn"
-        },
-        {
-          "name": "readAdminTheme",
-          "kind": "fn"
-        },
-        {
-          "name": "setAdminTheme",
-          "kind": "fn"
         }
       ],
       "route": null,
@@ -11418,8 +11643,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/admin/layout.tsx",
-        "src/components/admin/AdminSidebar.tsx"
+        "src/app/admin/layout.tsx"
       ]
     },
     {
@@ -13123,7 +13347,7 @@
     },
     {
       "path": "src/components/dashboard/home/HomeBoard.tsx",
-      "lines": 303,
+      "lines": 305,
       "purpose": "DASH-D Home (Cam 2026-11-01, mockup S1):",
       "brain": [],
       "exports": [
@@ -13183,6 +13407,7 @@
         "@/lib/course-conditions",
         "@/lib/course-goals",
         "@/lib/dashboard-fetch",
+        "@/lib/goal-pace",
         "@/lib/home-board",
         "@/lib/home-today",
         "next/link",
@@ -14158,7 +14383,6 @@
         "src/app/admin/inquiries/page.tsx",
         "src/app/admin/messages/page.tsx",
         "src/app/admin/problems/page.tsx",
-        "src/app/admin/revenue/page.tsx",
         "src/app/admin/security/page.tsx",
         "src/app/admin/system/page.tsx",
         "src/app/courses/[slug]/CourseBookingClient.tsx",
@@ -14243,6 +14467,7 @@
         "src/app/admin/courses/[id]/_parts/shared.tsx",
         "src/app/admin/create/page.tsx",
         "src/app/admin/employees/page.tsx",
+        "src/app/admin/expenses/page.tsx",
         "src/app/admin/forgot-password/page.tsx",
         "src/app/admin/goals/page.tsx",
         "src/app/admin/golfers/page.tsx",
@@ -14251,7 +14476,6 @@
         "src/app/admin/login/page.tsx",
         "src/app/admin/problems/page.tsx",
         "src/app/admin/profile/page.tsx",
-        "src/app/admin/revenue/page.tsx",
         "src/app/admin/set-password/page.tsx",
         "src/app/book/BookClient.tsx",
         "src/app/cam/page.tsx",
@@ -14636,6 +14860,7 @@
         "src/app/api/admin/disputes/[bookingId]/evidence/route.ts",
         "src/app/api/admin/employees/route.ts",
         "src/app/api/admin/expenses/[id]/route.ts",
+        "src/app/api/admin/expenses/budget/route.ts",
         "src/app/api/admin/expenses/route.ts",
         "src/app/api/admin/goals/route.ts",
         "src/app/api/admin/golfers/route.ts",
@@ -14649,6 +14874,7 @@
         "src/app/api/admin/refund/route.ts",
         "src/app/api/admin/request-re-review/route.ts",
         "src/app/api/admin/resend-staff-setup/route.ts",
+        "src/app/api/admin/revenue-goal/route.ts",
         "src/app/api/admin/schedule/route.ts",
         "src/app/api/admin/send-golive-reminder/route.ts",
         "src/app/api/admin/sentry-test/route.ts",
@@ -14893,13 +15119,17 @@
       "usedBy": [
         "src/app/api/admin/ask/route.ts",
         "src/app/api/admin/courses/directory/route.ts",
+        "src/app/api/admin/finance/route.ts",
         "src/app/api/admin/goals/route.ts",
+        "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/today/overview/route.ts",
         "src/lib/admin-ask.ts",
         "src/lib/admin-checks.ts",
         "src/lib/admin-course-page.ts",
         "src/lib/admin-home.ts",
-        "src/lib/admin-today.ts"
+        "src/lib/admin-today.ts",
+        "src/lib/finance-period.ts",
+        "src/lib/revenue-period.ts"
       ]
     },
     {
@@ -15248,8 +15478,11 @@
         "src/app/api/admin/data-reset/route.ts",
         "src/app/api/admin/disputes/[bookingId]/evidence/route.ts",
         "src/app/api/admin/employees/route.ts",
+        "src/app/api/admin/expenses/[id]/history/route.ts",
         "src/app/api/admin/expenses/[id]/route.ts",
+        "src/app/api/admin/expenses/budget/route.ts",
         "src/app/api/admin/expenses/route.ts",
+        "src/app/api/admin/finance/route.ts",
         "src/app/api/admin/forgot-password/route.ts",
         "src/app/api/admin/goals/route.ts",
         "src/app/api/admin/golfers/route.ts",
@@ -15267,6 +15500,7 @@
         "src/app/api/admin/refund/route.ts",
         "src/app/api/admin/request-re-review/route.ts",
         "src/app/api/admin/resend-staff-setup/route.ts",
+        "src/app/api/admin/revenue-goal/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/schedule/route.ts",
         "src/app/api/admin/search/route.ts",
@@ -16492,7 +16726,7 @@
     },
     {
       "path": "src/lib/booking-fees.ts",
-      "lines": 64,
+      "lines": 66,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -16596,6 +16830,45 @@
         "src/components/Footer.tsx",
         "src/components/MainOffset.tsx",
         "src/components/Nav.tsx"
+      ]
+    },
+    {
+      "path": "src/lib/booking-ref.ts",
+      "lines": 45,
+      "purpose": "BOOKING-REF (Cam 2026-11-12):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "bookingRefFor",
+          "kind": "fn"
+        },
+        {
+          "name": "bookingRefLabel",
+          "kind": "fn"
+        },
+        {
+          "name": "courseRefLabel",
+          "kind": "fn"
+        },
+        {
+          "name": "parseRef",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./prisma"
+      ],
+      "usedBy": [
+        "src/app/api/admin/search/route.ts",
+        "src/app/api/manage/[bookingId]/route.ts",
+        "src/app/api/receipt/[bookingId]/route.ts",
+        "src/lib/email.ts",
+        "src/lib/operator-search.ts"
       ]
     },
     {
@@ -17402,6 +17675,7 @@
         "stripe"
       ],
       "usedBy": [
+        "src/app/api/admin/revenue/route.ts",
         "src/app/api/operator/card-readers/route.ts",
         "src/app/api/operator/reader-rounds/route.ts",
         "src/app/api/operator/shop-sales/route.ts",
@@ -17782,12 +18056,28 @@
     },
     {
       "path": "src/lib/claim-tee-time.ts",
-      "lines": 122,
+      "lines": 199,
       "purpose": "",
       "brain": [],
       "exports": [
         {
+          "name": "CLAIM_ATTEMPTS",
+          "kind": "const"
+        },
+        {
+          "name": "ClaimResult",
+          "kind": "type"
+        },
+        {
           "name": "claimTeeTime",
+          "kind": "fn"
+        },
+        {
+          "name": "DOUBLE_TAP_MS",
+          "kind": "const"
+        },
+        {
+          "name": "findDoubleTap",
           "kind": "fn"
         },
         {
@@ -19529,7 +19819,7 @@
     },
     {
       "path": "src/lib/data-reset.ts",
-      "lines": 162,
+      "lines": 175,
       "purpose": "TEST-1 (Cam 2026-10-22:",
       "brain": [],
       "exports": [
@@ -19889,7 +20179,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 2178,
+      "lines": 2179,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -20230,6 +20520,7 @@
       "imports": [
         "./setup-sheet-recap",
         "@/lib/booking-fees",
+        "@/lib/booking-ref",
         "@/lib/cancel-policy",
         "@/lib/contact",
         "@/lib/sent-messages",
@@ -20600,6 +20891,35 @@
       ]
     },
     {
+      "path": "src/lib/expense-history.ts",
+      "lines": 36,
+      "purpose": "ADMIN-REDO Expenses (Cam 2026-11-12):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "expenseHistory",
+          "kind": "fn"
+        },
+        {
+          "name": "ExpenseHistoryEntry",
+          "kind": "type"
+        },
+        {
+          "name": "ExpenseHistoryKind",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/api/admin/expenses/[id]/history/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/expenses.ts",
       "lines": 88,
       "purpose": "EXPENSE TRACKER (RUN_QUEUE \"EXPENSE TRACKER / real P&L\") — the manual half of the P&L:",
@@ -20661,9 +20981,10 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/admin/revenue/page.tsx",
+        "src/app/admin/expenses/page.tsx",
         "src/app/api/admin/expenses/[id]/route.ts",
         "src/app/api/admin/expenses/route.ts",
+        "src/app/api/admin/finance/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/today/overview/route.ts",
         "src/lib/admin-today.ts"
@@ -20759,6 +21080,57 @@
       ]
     },
     {
+      "path": "src/lib/finance-period.ts",
+      "lines": 102,
+      "purpose": "ADMIN-REDO Financial analytics (Cam 2026-11-12):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "FINANCE_PERIODS",
+          "kind": "const"
+        },
+        {
+          "name": "FinanceMonth",
+          "kind": "type"
+        },
+        {
+          "name": "FinancePeriod",
+          "kind": "type"
+        },
+        {
+          "name": "FinancePeriodKind",
+          "kind": "type"
+        },
+        {
+          "name": "parseFinancePeriod",
+          "kind": "fn"
+        },
+        {
+          "name": "resolveFinancePeriod",
+          "kind": "fn"
+        },
+        {
+          "name": "revenueSource",
+          "kind": "fn"
+        },
+        {
+          "name": "RevenueSource",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./admin-day"
+      ],
+      "usedBy": [
+        "src/app/api/admin/finance/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/format.ts",
       "lines": 78,
       "purpose": "MP-9 (ADMIN_V4 V4-6 §3) — the one place admin pages format money and time.",
@@ -20827,13 +21199,13 @@
         "src/app/admin/courses/[id]/_parts/SetupTab.tsx",
         "src/app/admin/courses/[id]/_parts/useCourseDetail.tsx",
         "src/app/admin/employees/page.tsx",
+        "src/app/admin/expenses/page.tsx",
         "src/app/admin/goals/page.tsx",
         "src/app/admin/golfers/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/inquiries/page.tsx",
         "src/app/admin/messages/page.tsx",
         "src/app/admin/problems/page.tsx",
-        "src/app/admin/revenue/page.tsx",
         "src/app/admin/system/page.tsx",
         "src/app/api/event-payment/[id]/route.ts",
         "src/app/api/operator/bookings/route.ts",
@@ -20939,6 +21311,52 @@
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/inquiries/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/goal-pace.ts",
+      "lines": 72,
+      "purpose": "GOAL-PACE (Cam 2026-11-12, ADMIN_REDO_SPEC \"Goals:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "EARLY_DAYS",
+          "kind": "const"
+        },
+        {
+          "name": "elapsedDays",
+          "kind": "fn"
+        },
+        {
+          "name": "elapsedShare",
+          "kind": "fn"
+        },
+        {
+          "name": "GoalKind",
+          "kind": "type"
+        },
+        {
+          "name": "goalPace",
+          "kind": "fn"
+        },
+        {
+          "name": "PaceTone",
+          "kind": "type"
+        },
+        {
+          "name": "projectAtEnd",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/components/dashboard/home/HomeBoard.tsx",
+        "src/lib/home-board.ts"
       ]
     },
     {
@@ -21267,7 +21685,7 @@
     },
     {
       "path": "src/lib/home-board.ts",
-      "lines": 127,
+      "lines": 130,
       "purpose": "DASH-D Home (Cam 2026-11-01, mockups S1 + \"week-ahead heat map and month vs goal\"):",
       "brain": [],
       "exports": [
@@ -21319,6 +21737,7 @@
         "./course-goals",
         "./course-time",
         "./day-fill",
+        "./goal-pace",
         "./prisma"
       ],
       "usedBy": [
@@ -21329,7 +21748,7 @@
     },
     {
       "path": "src/lib/home-today.ts",
-      "lines": 118,
+      "lines": 107,
       "purpose": "HOME-3 (Cam 2026-11-12, \"approved, build the home page to match the mockup\", ADMIN_REDO_SPEC.md \"Course dashboard Home:",
       "brain": [],
       "exports": [
@@ -21340,10 +21759,6 @@
         {
           "name": "CONDITION_TONE",
           "kind": "const"
-        },
-        {
-          "name": "goalTone",
-          "kind": "fn"
         },
         {
           "name": "GoalTone",
@@ -22014,6 +22429,10 @@
           "kind": "fn"
         },
         {
+          "name": "csvCell",
+          "kind": "fn"
+        },
+        {
           "name": "dayOf",
           "kind": "fn"
         },
@@ -22094,6 +22513,7 @@
         "./stripe"
       ],
       "usedBy": [
+        "src/app/api/admin/revenue/route.ts",
         "src/app/api/operator/money/ledger/route.ts",
         "src/components/dashboard/money/LedgerPanel.tsx"
       ]
@@ -23009,39 +23429,6 @@
       ]
     },
     {
-      "path": "src/lib/money-tabs.ts",
-      "lines": 15,
-      "purpose": "ADMIN-C Money:",
-      "brain": [],
-      "exports": [
-        {
-          "name": "isMoneyTab",
-          "kind": "fn"
-        },
-        {
-          "name": "MONEY_TABS",
-          "kind": "const"
-        },
-        {
-          "name": "MoneyTab",
-          "kind": "type"
-        },
-        {
-          "name": "visibleMoneyTab",
-          "kind": "fn"
-        }
-      ],
-      "route": null,
-      "kind": null,
-      "methods": [],
-      "auth": null,
-      "guard": null,
-      "imports": [],
-      "usedBy": [
-        "src/app/admin/revenue/page.tsx"
-      ]
-    },
-    {
       "path": "src/lib/money.ts",
       "lines": 50,
       "purpose": "Money conversions, in one place.",
@@ -23570,7 +23957,7 @@
     },
     {
       "path": "src/lib/operator-search.ts",
-      "lines": 86,
+      "lines": 91,
       "purpose": "DASH-C search (the mockups' \"Find a golfer, booking or member\"):",
       "brain": [],
       "exports": [
@@ -23593,6 +23980,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./booking-ref",
         "./course-group",
         "./course-time",
         "./prisma"
@@ -24124,8 +24512,11 @@
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/create-course/route.ts",
         "src/app/api/admin/employees/route.ts",
+        "src/app/api/admin/expenses/[id]/history/route.ts",
         "src/app/api/admin/expenses/[id]/route.ts",
+        "src/app/api/admin/expenses/budget/route.ts",
         "src/app/api/admin/expenses/route.ts",
+        "src/app/api/admin/finance/route.ts",
         "src/app/api/admin/forgot-password/route.ts",
         "src/app/api/admin/goals/route.ts",
         "src/app/api/admin/golfers/route.ts",
@@ -24140,6 +24531,7 @@
         "src/app/api/admin/problems/route.ts",
         "src/app/api/admin/request-re-review/route.ts",
         "src/app/api/admin/resend-staff-setup/route.ts",
+        "src/app/api/admin/revenue-goal/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/schedule/route.ts",
         "src/app/api/admin/search/route.ts",
@@ -24312,6 +24704,7 @@
         "src/lib/blackouts.ts",
         "src/lib/booking-events.ts",
         "src/lib/booking-fee.ts",
+        "src/lib/booking-ref.ts",
         "src/lib/booking-residents.ts",
         "src/lib/call-invite.ts",
         "src/lib/cancel-booking.ts",
@@ -24840,6 +25233,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
+        "src/app/api/admin/finance/route.ts",
         "src/app/api/admin/nav-badges/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/today/overview/route.ts",
@@ -25148,6 +25542,115 @@
         "src/lib/move-booking.ts",
         "src/lib/sample-data.ts",
         "src/lib/split-booking.ts"
+      ]
+    },
+    {
+      "path": "src/lib/revenue-period.ts",
+      "lines": 273,
+      "purpose": "ADMIN-REDO Revenue (Cam 2026-11-11):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "addDays",
+          "kind": "fn"
+        },
+        {
+          "name": "centsPerDay",
+          "kind": "fn"
+        },
+        {
+          "name": "dayIndex",
+          "kind": "fn"
+        },
+        {
+          "name": "daysBetween",
+          "kind": "fn"
+        },
+        {
+          "name": "daySeries",
+          "kind": "fn"
+        },
+        {
+          "name": "goalMonthOk",
+          "kind": "fn"
+        },
+        {
+          "name": "monthPace",
+          "kind": "fn"
+        },
+        {
+          "name": "parseRevenuePeriod",
+          "kind": "fn"
+        },
+        {
+          "name": "payoutArrivalRange",
+          "kind": "fn"
+        },
+        {
+          "name": "PayoutIn",
+          "kind": "type"
+        },
+        {
+          "name": "PayoutProblem",
+          "kind": "type"
+        },
+        {
+          "name": "platformMonthKey",
+          "kind": "fn"
+        },
+        {
+          "name": "platformMoveLabel",
+          "kind": "fn"
+        },
+        {
+          "name": "platformSigned",
+          "kind": "fn"
+        },
+        {
+          "name": "resolveRevenuePeriod",
+          "kind": "fn"
+        },
+        {
+          "name": "REVENUE_PERIODS",
+          "kind": "const"
+        },
+        {
+          "name": "RevenuePeriod",
+          "kind": "type"
+        },
+        {
+          "name": "RevenuePeriodKind",
+          "kind": "type"
+        },
+        {
+          "name": "RevenueWindow",
+          "kind": "type"
+        },
+        {
+          "name": "stripePaymentUrl",
+          "kind": "fn"
+        },
+        {
+          "name": "stripePayoutUrl",
+          "kind": "fn"
+        },
+        {
+          "name": "summarisePayouts",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./admin-day"
+      ],
+      "usedBy": [
+        "src/app/api/admin/revenue-goal/route.ts",
+        "src/app/api/admin/revenue/route.ts",
+        "src/app/api/admin/transactions/export/route.ts"
       ]
     },
     {
@@ -27449,10 +27952,10 @@
       "usedBy": [
         "src/app/admin/courses/[id]/_parts/useCourseDetail.tsx",
         "src/app/admin/employees/page.tsx",
+        "src/app/admin/expenses/page.tsx",
         "src/app/admin/goals/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/inquiries/page.tsx",
-        "src/app/admin/revenue/page.tsx",
         "src/components/admin/OwnerDevicesCard.tsx",
         "src/components/admin/OwnerPasskeysCard.tsx",
         "src/components/admin/ReasonDialog.tsx",
@@ -27560,6 +28063,7 @@
         "src/app/api/admin/course-documents/route.ts",
         "src/app/api/admin/course-payouts/route.ts",
         "src/app/api/admin/platform-stripe/route.ts",
+        "src/app/api/admin/revenue/route.ts",
         "src/app/api/bookings/route.ts",
         "src/app/api/bookings/setup-intent/route.ts",
         "src/app/api/cron/send-reminders/route.ts",
@@ -28678,6 +29182,7 @@
       ],
       "readers": [
         "src/app/api/admin/audit/route.ts",
+        "src/app/api/admin/expenses/[id]/history/route.ts",
         "src/lib/course-timeline.ts"
       ]
     },
@@ -28720,6 +29225,38 @@
         "src/app/api/admin/goals/route.ts",
         "src/lib/admin-goals.ts",
         "src/lib/admin-home.ts"
+      ]
+    },
+    {
+      "name": "AdminMonthGoal",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "month",
+          "type": "String"
+        },
+        {
+          "name": "cents",
+          "type": "Int?"
+        },
+        {
+          "name": "setById",
+          "type": "String"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ],
+      "writers": [
+        "src/app/api/admin/revenue-goal/route.ts"
+      ],
+      "readers": [
+        "src/app/api/admin/revenue-goal/route.ts",
+        "src/app/api/admin/revenue/route.ts"
       ]
     },
     {
@@ -29123,6 +29660,10 @@
           "type": "String"
         },
         {
+          "name": "ref",
+          "type": "Int?"
+        },
+        {
           "name": "teeTimeId",
           "type": "String"
         },
@@ -29447,6 +29988,7 @@
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/courses/route.ts",
+        "src/app/api/admin/finance/route.ts",
         "src/app/api/admin/golfers/route.ts",
         "src/app/api/admin/messages/route.ts",
         "src/app/api/admin/nav-badges/route.ts",
@@ -29486,6 +30028,7 @@
         "src/lib/birdie/proposals.ts",
         "src/lib/blackouts.ts",
         "src/lib/booking-fee.ts",
+        "src/lib/booking-ref.ts",
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/counter-pay.ts",
@@ -29806,6 +30349,10 @@
         {
           "name": "isTest",
           "type": "Boolean"
+        },
+        {
+          "name": "number",
+          "type": "Int?"
         },
         {
           "name": "slug",
@@ -30474,6 +31021,7 @@
         "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/create-course/route.ts",
+        "src/app/api/admin/finance/route.ts",
         "src/app/api/admin/inquiries/route.ts",
         "src/app/api/admin/messages/route.ts",
         "src/app/api/admin/onboarding/route.ts",
@@ -31322,6 +31870,10 @@
           "type": "DateTime?"
         },
         {
+          "name": "expectedLaunchAt",
+          "type": "DateTime?"
+        },
+        {
           "name": "source",
           "type": "String?"
         },
@@ -31740,6 +32292,21 @@
       "readers": [
         "src/lib/home-board.ts"
       ]
+    },
+    {
+      "name": "CourseNumberCounter",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "last",
+          "type": "Int"
+        }
+      ],
+      "writers": [],
+      "readers": []
     },
     {
       "name": "CourseOperator",
@@ -32316,9 +32883,38 @@
       "readers": [
         "src/app/api/admin/expenses/[id]/route.ts",
         "src/app/api/admin/expenses/route.ts",
+        "src/app/api/admin/finance/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/today/overview/route.ts",
         "src/lib/admin-today.ts"
+      ]
+    },
+    {
+      "name": "ExpenseBudget",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "cents",
+          "type": "Int?"
+        },
+        {
+          "name": "setAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "setBy",
+          "type": "String"
+        }
+      ],
+      "writers": [
+        "src/app/api/admin/expenses/budget/route.ts"
+      ],
+      "readers": [
+        "src/app/api/admin/expenses/budget/route.ts",
+        "src/app/api/admin/expenses/route.ts"
       ]
     },
     {
@@ -33052,6 +33648,7 @@
         "src/lib/sample-data.ts"
       ],
       "readers": [
+        "src/app/api/admin/revenue/route.ts",
         "src/app/api/member/[courseSlug]/payments/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/lib/analytics.ts",

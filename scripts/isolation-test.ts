@@ -636,6 +636,16 @@ async function main() {
       // A support login (not manager) still can't take the evidence pack or owner money.
       checkStatus('Support cannot download a dispute evidence pack → 403', (await api(`/api/admin/disputes/${data.bookingA.id}/evidence`, { cookie: supCookie })).status, 403);
       checkStatus('Support cannot read courses’ payouts → 403', (await api('/api/admin/course-payouts', { cookie: supCookie })).status, 403);
+      // ADMIN-REDO Revenue: support with Money opens it, but payouts, balances and the Stripe match stay the owner's.
+      {
+        const rv = await api('/api/admin/revenue?period=custom&from=2026-01-01&to=2026-01-31', { cookie: supCookie });
+        checkStatus('Support with Money opens Revenue → 200', rv.status, 200);
+        const b = rv.body as { isOwner?: boolean; reconciliation?: unknown; pnl?: { net?: unknown; expenses?: unknown; stripeProcessing?: unknown } };
+        check('…without the owner’s lines (Books vs Stripe, net, expenses, Stripe fees)', b?.isOwner === false && b.reconciliation === undefined && b.pnl?.net === undefined && b.pnl?.expenses === undefined && b.pnl?.stripeProcessing === undefined, JSON.stringify(b).slice(0, 300));
+        checkStatus('Support cannot read the Stripe balance or next payout → 403', (await api('/api/admin/platform-stripe?period=30d', { cookie: supCookie })).status, 403);
+        checkStatus('Support cannot read the monthly Stripe match → 403', (await api('/api/admin/stripe-match', { cookie: supCookie })).status, 403);
+        checkStatus('Support cannot read Expenses → 403', (await api('/api/admin/expenses', { cookie: supCookie })).status, 403);
+      }
       await prisma.adminUser.update({ where: { id: sup.id }, data: { role: 'manager' } });
       const mgrCookie = `admin_session=${await signAdminToken({ adminId: sup.id, email: sup.email, name: sup.name, role: 'manager', mfa: true })}`;
       checkStatus('No pack for a booking without a dispute → 404', (await api(`/api/admin/disputes/${data.bookingA.id}/evidence`, { cookie: mgrCookie })).status, 404);
@@ -732,6 +742,309 @@ async function main() {
       await prisma.ownerSession.delete({ where: { id: live.id } });
     } finally {
       await prisma.adminUser.delete({ where: { id: limited.id } });
+    }
+  }
+
+  console.log('\n── Pipeline: inquiries CSV and expected launch (BOOKING-REF PR) ──');
+  {
+    const { signAdminToken } = await import('../src/lib/admin-session');
+    const mk = (role: string) => prisma.adminUser.create({ data: { name: `Isol Pipe ${role}`, email: `${TS}-pipe-${role}@test.local`, passwordHash: 'x', role, active: true } });
+    const [viewer, sup, mgr] = [await mk('viewer'), await mk('support'), await mk('manager')];
+    const inq = await prisma.courseInquiry.create({ data: { contactName: 'Isol Pipe', contactTitle: 'GM', email: `${TS}-pipe@test.local`, phone: '1', courseName: 'Isol Pipe Course', address: '1', city: 'P', state: 'CA', zipCode: '90000', courseType: 'public', status: 'in_review' } });
+    try {
+      const ck = async (u: { id: string; email: string; name: string; role: string }) => `admin_session=${await signAdminToken({ adminId: u.id, email: u.email, name: u.name, role: u.role as 'viewer', mfa: true })}`;
+      const [vc, sc, mc] = [await ck(viewer), await ck(sup), await ck(mgr)];
+      checkStatus('A viewer cannot download the inquiries CSV → 403', (await api('/api/admin/inquiries?format=csv', { cookie: vc })).status, 403);
+      checkStatus('…but still reads the list → 200', (await api('/api/admin/inquiries', { cookie: vc })).status, 200);
+      const supCsv = await fetch(`${BASE_URL}/api/admin/inquiries?format=csv`, { headers: { cookie: sc } });
+      check('Support downloads it → 200 text/csv', supCsv.status === 200 && (supCsv.headers.get('content-type') ?? '').startsWith('text/csv'));
+      const body = { id: inq.id, action: 'set_expected_launch', expectedLaunchAt: '2026-12-15' };
+      checkStatus('Support cannot set an expected launch → 403', (await api('/api/admin/inquiries', { method: 'PATCH', cookie: sc, body })).status, 403);
+      checkStatus('A bad date → 400', (await api('/api/admin/inquiries', { method: 'PATCH', cookie: mc, body: { ...body, expectedLaunchAt: '2026-02-30' } })).status, 400);
+      checkStatus('A manager sets it → 200', (await api('/api/admin/inquiries', { method: 'PATCH', cookie: mc, body })).status, 200);
+      const row = await prisma.courseInquiry.findUnique({ where: { id: inq.id }, select: { expectedLaunchAt: true } });
+      check('…stored as that day', row?.expectedLaunchAt?.toISOString().slice(0, 10) === '2026-12-15', JSON.stringify(row));
+      const audit = await prisma.adminAuditLog.findFirst({ where: { adminId: mgr.id, action: 'inquiry_expected_launch', targetId: inq.id } });
+      check('…and audited', !!audit);
+      checkStatus('Clearing it → 200', (await api('/api/admin/inquiries', { method: 'PATCH', cookie: mc, body: { ...body, expectedLaunchAt: null } })).status, 200);
+      check('…cleared', (await prisma.courseInquiry.findUnique({ where: { id: inq.id }, select: { expectedLaunchAt: true } }))?.expectedLaunchAt === null);
+    } finally {
+      await prisma.inquiryStatusEvent.deleteMany({ where: { inquiryId: inq.id } }).catch(() => {});
+      await prisma.courseInquiry.delete({ where: { id: inq.id } }).catch(() => {});
+      await prisma.adminAuditLog.deleteMany({ where: { adminId: { in: [viewer.id, sup.id, mgr.id] } } }).catch(() => {});
+      await prisma.adminUser.deleteMany({ where: { id: { in: [viewer.id, sup.id, mgr.id] } } });
+    }
+  }
+
+  console.log('\n── Admin search by GR number (BOOKING-REF) ──');
+  {
+    const { signAdminToken } = await import('../src/lib/admin-session');
+    const c = await prisma.course.findUniqueOrThrow({ where: { id: data.courseA.id }, select: { number: true } });
+    const bk = await prisma.booking.findUniqueOrThrow({ where: { id: bookingA.id }, select: { ref: true } });
+    if (c.number == null || bk.ref == null) {
+      check('fixtures carry GR numbers (course and booking made after the migration)', false, JSON.stringify({ c, bk }));
+    } else {
+      const both = await prisma.adminUser.create({ data: { name: 'Isol GR Both', email: `${TS}-gr-both@test.local`, passwordHash: 'x', role: 'support', active: true, areas: ['courses', 'golfers'], areasSetAt: new Date() } });
+      const msgs = await prisma.adminUser.create({ data: { name: 'Isol GR Msgs', email: `${TS}-gr-msgs@test.local`, passwordHash: 'x', role: 'support', active: true, areas: ['messages'], areasSetAt: new Date() } });
+      try {
+        const ck = async (u: { id: string; email: string; name: string }) => `admin_session=${await signAdminToken({ adminId: u.id, email: u.email, name: u.name, role: 'support', mfa: true })}`;
+        type SR = { results?: { type: string; id: string; sub?: string }[] };
+        const search = async (q: string, cookie: string) => ((await api(`/api/admin/search?q=${encodeURIComponent(q)}`, { cookie })).body as SR).results ?? [];
+        const bc = await ck(both), mc = await ck(msgs);
+        const ref = `GR${c.number}-${bk.ref}`;
+        for (const q of [ref, ref.toLowerCase(), `${c.number}-${bk.ref}`]) {
+          const r = await search(q, bc);
+          check(`Admin search "${q}" finds the booking (Golfers area)`, r.some(x => x.type === 'booking' && x.id === `booking:${bookingA.id}` && (x.sub ?? '').startsWith(ref)), JSON.stringify(r).slice(0, 300));
+        }
+        const rc = await search(`GR${c.number}`, bc);
+        check(`Admin search "GR${c.number}" finds the course (Courses area)`, rc.some(x => x.type === 'course' && x.id === data.courseA.id), JSON.stringify(rc).slice(0, 300));
+        const none1 = await search(ref, mc), none2 = await search(`GR${c.number}`, mc);
+        check('…a login without Golfers or Courses gets neither', !none1.some(x => x.type === 'booking') && !none2.some(x => x.type === 'course'), JSON.stringify({ none1, none2 }).slice(0, 300));
+      } finally {
+        await prisma.adminAuditLog.deleteMany({ where: { adminId: { in: [both.id, msgs.id] } } }).catch(() => {});
+        await prisma.adminUser.deleteMany({ where: { id: { in: [both.id, msgs.id] } } });
+      }
+    }
+  }
+
+  console.log('\n── Expenses: monthly budget and history (ADMIN-REDO) ──');
+  {
+    const { signAdminToken } = await import('../src/lib/admin-session');
+    const { signOwnerToken } = await import('../src/lib/owner-session');
+    const mgr = await prisma.adminUser.create({ data: { name: 'Isol Exp Manager', email: `${TS}-exp-mgr@test.local`, passwordHash: 'x', role: 'manager', active: true } });
+    const savedBudget = await prisma.expenseBudget.findUnique({ where: { id: 'monthly' } });
+    const fresh = await prisma.ownerSession.create({ data: { adminId: data.adminOwner.id, method: 'totp', expiresAt: new Date(Date.now() + 3600_000), stepUpAt: new Date() } });
+    const stale = await prisma.ownerSession.create({ data: { adminId: data.adminOwner.id, method: 'totp', expiresAt: new Date(Date.now() + 3600_000), stepUpAt: new Date(Date.now() - 24 * 3600_000) } });
+    const exp = await prisma.expense.create({ data: { name: 'Isol hosting', amountCents: 2000, cadence: 'monthly' } });
+    try {
+      const mc = `admin_session=${await signAdminToken({ adminId: mgr.id, email: mgr.email, name: mgr.name, role: 'manager', mfa: true })}`;
+      const oc = `gr_owner=${await signOwnerToken(fresh.id, data.adminOwner.id, fresh.expiresAt)}`;
+      const os = `gr_owner=${await signOwnerToken(stale.id, data.adminOwner.id, stale.expiresAt)}`;
+      checkStatus('A manager cannot set the expense budget → 403', (await api('/api/admin/expenses/budget', { method: 'PUT', cookie: mc, body: { cents: 50000 } })).status, 403);
+      checkStatus('…nor read an expense\'s history → 403', (await api(`/api/admin/expenses/${exp.id}/history`, { cookie: mc })).status, 403);
+      const noStep = await api('/api/admin/expenses/budget', { method: 'PUT', cookie: os, body: { cents: 50000 } });
+      check('The owner without a fresh second factor is asked to confirm (step_up)', noStep.status === 403 && (noStep.body as { code?: string })?.code === 'step_up', JSON.stringify(noStep.body));
+      checkStatus('A bad amount → 400', (await api('/api/admin/expenses/budget', { method: 'PUT', cookie: oc, body: { cents: 12.5 } })).status, 400);
+      checkStatus('An amount past the column\'s limit → 400, not 500', (await api('/api/admin/expenses/budget', { method: 'PUT', cookie: oc, body: { cents: 3_000_000_000 } })).status, 400);
+      checkStatus('A body that isn\'t an object → 400, not 500', (await api('/api/admin/expenses/budget', { method: 'PUT', cookie: oc, body: 5 })).status, 400);
+      const set = await api('/api/admin/expenses/budget', { method: 'PUT', cookie: oc, body: { cents: 50000 } });
+      checkStatus('The owner sets it → 200', set.status, 200);
+      const g = (await api('/api/admin/expenses', { cookie: oc })).body as { budget?: { cents: number | null; setAt: string | null } };
+      check('…GET /expenses carries it', g.budget?.cents === 50000 && !!g.budget.setAt, JSON.stringify(g.budget));
+      check('…and it is audited', !!(await prisma.adminAuditLog.findFirst({ where: { adminId: data.adminOwner.id, action: 'expense_budget' }, orderBy: { createdAt: 'desc' } })));
+      checkStatus('Clearing it (null) → 200', (await api('/api/admin/expenses/budget', { method: 'PUT', cookie: oc, body: { cents: null } })).status, 200);
+      const g2 = (await api('/api/admin/expenses', { cookie: oc })).body as { budget?: { cents: number | null; setAt: string | null } };
+      check('…and it reads as no budget', g2.budget?.cents === null && g2.budget.setAt === null, JSON.stringify(g2.budget));
+      await api(`/api/admin/expenses/${exp.id}`, { method: 'PATCH', cookie: oc, body: { amountCents: 2500 } });
+      await api(`/api/admin/expenses/${exp.id}`, { method: 'PATCH', cookie: oc, body: { endedAt: new Date().toISOString() } });
+      const unend = await api(`/api/admin/expenses/${exp.id}`, { method: 'PATCH', cookie: oc, body: { endedAt: null } });
+      check('An ended expense can\'t be un-ended (start it again as a new one) → 400 ended', unend.status === 400 && (unend.body as { code?: string })?.code === 'ended', JSON.stringify(unend.body));
+      const later = await api(`/api/admin/expenses/${exp.id}`, { method: 'PATCH', cookie: oc, body: { endedAt: '2099-01-01T00:00:00Z' } });
+      check('…nor have its end moved later → 400 ended', later.status === 400 && (later.body as { code?: string })?.code === 'ended', JSON.stringify(later.body));
+      checkStatus('…but it can be corrected earlier → 200', (await api(`/api/admin/expenses/${exp.id}`, { method: 'PATCH', cookie: oc, body: { endedAt: '2020-01-01T00:00:00Z' } })).status, 200);
+      const sched = await prisma.expense.create({ data: { name: 'Isol scheduled', amountCents: 1000, cadence: 'monthly', endedAt: new Date(Date.now() + 30 * 86_400_000) } });
+      try {
+        checkStatus('A scheduled (future) end can still be moved later → 200', (await api(`/api/admin/expenses/${sched.id}`, { method: 'PATCH', cookie: oc, body: { endedAt: new Date(Date.now() + 60 * 86_400_000).toISOString() } })).status, 200);
+        checkStatus('…or cleared → 200', (await api(`/api/admin/expenses/${sched.id}`, { method: 'PATCH', cookie: oc, body: { endedAt: null } })).status, 200);
+      } finally {
+        await prisma.expense.delete({ where: { id: sched.id } }).catch(() => {});
+      }
+      const hist = (await api(`/api/admin/expenses/${exp.id}/history`, { cookie: oc })).body as { history?: { kind: string; by: string; changes?: { field: string }[] }[] };
+      check('The owner reads an expense\'s history, newest first', JSON.stringify(hist.history?.map(x => x.kind)) === JSON.stringify(['changed', 'ended', 'changed']) && hist.history?.[2].changes?.[0].field === 'amountCents', JSON.stringify(hist));
+    } finally {
+      await prisma.expense.delete({ where: { id: exp.id } }).catch(() => {});
+      if (savedBudget) await prisma.expenseBudget.update({ where: { id: 'monthly' }, data: { cents: savedBudget.cents, setAt: savedBudget.setAt, setBy: savedBudget.setBy } });
+      else await prisma.expenseBudget.deleteMany({ where: { id: 'monthly' } });
+      await prisma.ownerSession.deleteMany({ where: { id: { in: [fresh.id, stale.id] } } });
+      await prisma.adminAuditLog.deleteMany({ where: { adminId: mgr.id } }).catch(() => {});
+      await prisma.adminUser.delete({ where: { id: mgr.id } });
+    }
+  }
+
+  console.log('\n── Admin Revenue (ADMIN-REDO: GreenReserve\'s money from the ledger) ──');
+  {
+    const { signAdminToken } = await import('../src/lib/admin-session');
+    const { signOwnerToken } = await import('../src/lib/owner-session');
+    const sup = await prisma.adminUser.create({ data: { name: 'Isol Rev Support', email: `${TS}-revsup@test.local`, passwordHash: 'x', role: 'support', active: true, areas: ['messages'], areasSetAt: new Date() } });
+    const mgr = await prisma.adminUser.create({ data: { name: 'Isol Rev Manager', email: `${TS}-revmgr@test.local`, passwordHash: 'x', role: 'manager', active: true, areas: ['money'], areasSetAt: new Date() } });
+    const move = await prisma.moneyMove.create({ data: { courseId: data.courseA.id, what: 'round', direction: 'in', method: 'card', account: 'course', amountCents: 5150, platformFeeCents: 150, stripeId: `pi_isol_rev_${TS}`, bookingId: bookingA.id, at: new Date(Date.now() - 60_000) } });
+    try {
+      const sc = `admin_session=${await signAdminToken({ adminId: sup.id, email: sup.email, name: sup.name, role: 'support', mfa: true })}`;
+      checkStatus('Support without Money → Revenue → 403', (await api('/api/admin/revenue?period=month', { cookie: sc })).status, 403);
+      checkStatus('…and the ledger CSV → 403', (await api('/api/admin/revenue?period=month&format=csv', { cookie: sc })).status, 403);
+      const mc = `admin_session=${await signAdminToken({ adminId: mgr.id, email: mgr.email, name: mgr.name, role: 'manager', mfa: true })}`;
+      type Rev = { revenue?: { cents: number }; ledger?: { rows: { id: string; amountCents: number; what: string }[] }; byCourse?: { courseId: string; revenueCents: number }[]; period?: { kind: string; elapsedDays: number }; revenueSeries?: { current: number[] }; coursePayoutProblems?: unknown; payouts?: unknown };
+      for (const period of ['month', 'last_month', '30d', 'year']) {
+        const r = await api(`/api/admin/revenue?period=${period}`, { cookie: mc });
+        const b = r.body as Rev;
+        check(`Manager with Money → Revenue (${period}) → 200 with the period, revenue and series`, r.status === 200 && b.period?.kind === period && typeof b.revenue?.cents === 'number' && b.revenueSeries?.current.length === b.period?.elapsedDays, JSON.stringify({ status: r.status, period: b.period }));
+        check(`…no owner-only payout fields (${period})`, !('coursePayoutProblems' in (b ?? {})) && !('payouts' in (b ?? {})), Object.keys(b ?? {}).join(','));
+      }
+      const legacy = (await api('/api/admin/revenue?period=custom&from=2026-11-01&to=2026-11-10', { cookie: mc })).body as { period?: { from: string; to: string } };
+      check('The older page\'s custom period still says the days it was given', legacy.period?.from === '2026-11-01' && legacy.period?.to === '2026-11-10', JSON.stringify(legacy.period));
+      const before = (await api('/api/admin/revenue?period=month', { cookie: mc })).body as Rev;
+      const row = before.ledger?.rows.find(x => x.id === move.id);
+      check('…the ledger shows the real course\'s service fee', row?.amountCents === 150 && row.what === 'Service fee collected', JSON.stringify(row));
+      check('…its course\'s revenue counts it', (before.byCourse?.find(c => c.courseId === data.courseA.id)?.revenueCents ?? 0) >= 150);
+      check('…and the series adds up to the headline', (before.revenueSeries?.current ?? []).reduce((a, n) => a + n, 0) === before.revenue?.cents, JSON.stringify(before.revenue));
+      const csv = await fetch(`${BASE_URL}/api/admin/revenue?period=month&format=csv`, { headers: { cookie: mc } });
+      check('…the CSV lists it', csv.status === 200 && (csv.headers.get('content-type') ?? '').startsWith('text/csv') && (await csv.text()).includes(`pi_isol_rev_${TS}`));
+      {
+        // The transactions export takes the Revenue page's own window (?period=), Eastern days:
+        // a round checked in one minute before the platform month starts is last month's.
+        const { startOfPlatformMonth } = await import('../src/lib/admin-day');
+        const monthStart = startOfPlatformMonth(new Date());
+        const saved = await prisma.booking.findUniqueOrThrow({ where: { id: bookingA.id }, select: { paymentStatus: true, roundPaymentIntentId: true, checkedInAt: true } });
+        const exp = async (q: string) => { const r = await fetch(`${BASE_URL}/api/admin/transactions/export?${q}`, { headers: { cookie: mc } }); return { status: r.status, text: await r.text() }; };
+        try {
+          await prisma.booking.update({ where: { id: bookingA.id }, data: { paymentStatus: 'paid', roundPaymentIntentId: `pi_isol_exp_${TS}`, checkedInAt: new Date(monthStart.getTime() + 60_000) } });
+          const inMonth = await exp('period=month');
+          check('Export (period=month) includes a round checked in just after the platform month starts', inMonth.status === 200 && inMonth.text.includes(`pi_isol_exp_${TS}`), String(inMonth.status));
+          await prisma.booking.update({ where: { id: bookingA.id }, data: { checkedInAt: new Date(monthStart.getTime() - 60_000) } });
+          check('…and leaves out one a minute before (last month, Eastern)', !(await exp('period=month')).text.includes(`pi_isol_exp_${TS}`));
+          check('…which period=last_month has', (await exp('period=last_month')).text.includes(`pi_isol_exp_${TS}`));
+          checkStatus('…and an unknown period with no from/to → 400', (await exp('period=fortnight')).status, 400);
+        } finally {
+          await prisma.booking.update({ where: { id: bookingA.id }, data: saved });
+        }
+      }
+      await prisma.course.update({ where: { id: data.courseA.id }, data: { isTest: true } });
+      try {
+        const after = (await api('/api/admin/revenue?period=month', { cookie: mc })).body as Rev;
+        check('A test course\'s fee leaves the ledger (TEST-2)', !after.ledger?.rows.some(x => x.id === move.id));
+        check('…and the headline drops by it', (before.revenue?.cents ?? 0) - (after.revenue?.cents ?? 0) === 150, JSON.stringify({ before: before.revenue, after: after.revenue }));
+        check('…and the course is not in the table', !after.byCourse?.some(c => c.courseId === data.courseA.id));
+        const csv2 = await fetch(`${BASE_URL}/api/admin/revenue?period=month&format=csv`, { headers: { cookie: mc } });
+        check('…nor in the CSV', !(await csv2.text()).includes(`pi_isol_rev_${TS}`));
+      } finally {
+        await prisma.course.update({ where: { id: data.courseA.id }, data: { isTest: false } });
+      }
+      const live = await prisma.ownerSession.create({ data: { adminId: data.adminOwner.id, method: 'totp', expiresAt: new Date(Date.now() + 3600_000), stepUpAt: new Date() } });
+      try {
+        const oc = `gr_owner=${await signOwnerToken(live.id, data.adminOwner.id, live.expiresAt)}`;
+        const o = (await api('/api/admin/revenue?period=month', { cookie: oc })).body as Rev;
+        check('The owner gets course payout problems and payouts to courses', !!o && 'coursePayoutProblems' in o && 'payouts' in o, Object.keys(o ?? {}).join(','));
+        // No course here has a readable Stripe account (test keys): nothing was checked, so it must not read as "all paid".
+        const pp = (o as { coursePayoutProblems?: { rows: unknown[]; checkedCourses: number; unavailable: boolean } }).coursePayoutProblems;
+        check('…and says how many courses it checked (0 here, not "all paid")', typeof pp?.checkedCourses === 'number' && (pp.checkedCourses > 0 || pp.rows.length === 0), JSON.stringify(pp));
+      } finally {
+        await prisma.ownerSession.delete({ where: { id: live.id } });
+      }
+    } finally {
+      await prisma.moneyMove.delete({ where: { id: move.id } });
+      await prisma.adminAuditLog.deleteMany({ where: { adminId: { in: [sup.id, mgr.id] } } }).catch(() => {});
+      await prisma.adminUser.deleteMany({ where: { id: { in: [sup.id, mgr.id] } } });
+    }
+  }
+
+  console.log('\n── Revenue goal (ADMIN-REDO: AdminMonthGoal) ──');
+  {
+    const { signAdminToken } = await import('../src/lib/admin-session');
+    const { signOwnerToken } = await import('../src/lib/owner-session');
+    const { platformMonthKey } = await import('../src/lib/revenue-period');
+    const month = platformMonthKey(new Date());
+    const [py, pm] = month.split('-').map(Number);
+    const lastMonth = `${pm === 1 ? py - 1 : py}-${String(pm === 1 ? 12 : pm - 1).padStart(2, '0')}`;
+    const saved = await prisma.adminMonthGoal.findUnique({ where: { month } });
+    const mgr = await prisma.adminUser.create({ data: { name: 'Isol Goal Manager', email: `${TS}-goal-mgr@test.local`, passwordHash: 'x', role: 'manager', active: true, areas: ['money'], areasSetAt: new Date() } });
+    const fresh = await prisma.ownerSession.create({ data: { adminId: data.adminOwner.id, method: 'totp', expiresAt: new Date(Date.now() + 3600_000), stepUpAt: new Date() } });
+    const stale = await prisma.ownerSession.create({ data: { adminId: data.adminOwner.id, method: 'totp', expiresAt: new Date(Date.now() + 3600_000), stepUpAt: new Date(Date.now() - 24 * 3600_000) } });
+    try {
+      const mc = `admin_session=${await signAdminToken({ adminId: mgr.id, email: mgr.email, name: mgr.name, role: 'manager', mfa: true })}`;
+      const oc = `gr_owner=${await signOwnerToken(fresh.id, data.adminOwner.id, fresh.expiresAt)}`;
+      const os = `gr_owner=${await signOwnerToken(stale.id, data.adminOwner.id, stale.expiresAt)}`;
+      const put = (cookie: string, body: unknown) => api('/api/admin/revenue-goal', { method: 'PUT', cookie, body });
+      checkStatus('A manager cannot set the revenue goal → 403', (await put(mc, { month, cents: 100000 })).status, 403);
+      const mg = (await api('/api/admin/revenue?period=month', { cookie: mc })).body as Record<string, unknown>;
+      check('…and Revenue carries no goal for a manager', !('revenueGoal' in (mg ?? {})), Object.keys(mg ?? {}).join(','));
+      const noStep = await put(os, { month, cents: 100000 });
+      check('The owner without a fresh second factor is asked to confirm (step_up)', noStep.status === 403 && (noStep.body as { code?: string })?.code === 'step_up', JSON.stringify(noStep.body));
+      const past = await put(oc, { month: lastMonth, cents: 100000 });
+      check('A month that has ended is refused → 400 past', past.status === 400 && (past.body as { code?: string })?.code === 'past', JSON.stringify(past.body));
+      checkStatus('A bad amount → 400', (await put(oc, { month, cents: 3_000_000_000 })).status, 400);
+      const set = await put(oc, { month, cents: 250000 });
+      check('The owner sets this month\'s goal → 200 { month, targetCents }', set.status === 200 && JSON.stringify(set.body) === JSON.stringify({ month, targetCents: 250000 }), JSON.stringify(set.body));
+      check('…and it is audited', !!(await prisma.adminAuditLog.findFirst({ where: { adminId: data.adminOwner.id, action: 'revenue_goal', targetId: month } })));
+      type G = { revenue?: { cents: number }; revenueGoal?: { month: string; targetCents: number | null; progressCents: number; dayOfPeriod: number; daysInPeriod: number } };
+      const og = (await api('/api/admin/revenue?period=month', { cookie: oc })).body as G;
+      check('…Revenue (month) gives the owner the goal, progress = revenue.cents, and the pace inputs',
+        og.revenueGoal?.month === month && og.revenueGoal.targetCents === 250000 && og.revenueGoal.progressCents === og.revenue?.cents
+        && og.revenueGoal.dayOfPeriod >= 0 && og.revenueGoal.dayOfPeriod <= og.revenueGoal.daysInPeriod && og.revenueGoal.daysInPeriod >= 28, JSON.stringify(og.revenueGoal));
+      const ol = (await api('/api/admin/revenue?period=last_month', { cookie: oc })).body as Record<string, unknown>;
+      check('…but not for another period', !('revenueGoal' in (ol ?? {})));
+      checkStatus('Clearing it (null) → 200', (await put(oc, { month, cents: null })).status, 200);
+    } finally {
+      if (saved) await prisma.adminMonthGoal.update({ where: { month }, data: { cents: saved.cents, setById: saved.setById } });
+      else await prisma.adminMonthGoal.deleteMany({ where: { month } });
+      await prisma.ownerSession.deleteMany({ where: { id: { in: [fresh.id, stale.id] } } });
+      await prisma.adminAuditLog.deleteMany({ where: { adminId: mgr.id } }).catch(() => {});
+      await prisma.adminUser.delete({ where: { id: mgr.id } });
+    }
+  }
+
+  console.log('\n── Financial analytics (ADMIN-REDO: /api/admin/finance) ──');
+  {
+    const { signAdminToken } = await import('../src/lib/admin-session');
+    const { signOwnerToken } = await import('../src/lib/owner-session');
+    const mgr = await prisma.adminUser.create({ data: { name: 'Isol Fin Manager', email: `${TS}-fin-mgr@test.local`, passwordHash: 'x', role: 'manager', active: true } });
+    const live = await prisma.ownerSession.create({ data: { adminId: data.adminOwner.id, method: 'totp', expiresAt: new Date(Date.now() + 3600_000), stepUpAt: new Date() } });
+    // The real shape: GreenReserve's fee on a no-show is its own booking fee, charged on the platform account.
+    const savedNoShow = (await prisma.booking.findUniqueOrThrow({ where: { id: bookingA.id }, select: { noShowAt: true } })).noShowAt;
+    await prisma.booking.update({ where: { id: bookingA.id }, data: { noShowAt: new Date() } });
+    const fee = await prisma.moneyMove.create({ data: { courseId: data.courseA.id, what: 'booking_fee', direction: 'in', method: 'card', account: 'platform', amountCents: 150, platformFeeCents: 150, stripeId: `pi_isol_fin_${TS}`, bookingId: bookingA.id, note: 'charged separately (no-show)', at: new Date(Date.now() - 60_000) } });
+    try {
+      const mc = `admin_session=${await signAdminToken({ adminId: mgr.id, email: mgr.email, name: mgr.name, role: 'manager', mfa: true })}`;
+      const oc = `gr_owner=${await signOwnerToken(live.id, data.adminOwner.id, live.expiresAt)}`;
+      checkStatus('No session → 401', (await api('/api/admin/finance?period=m3')).status, 401);
+      checkStatus('A manager cannot read financial analytics → 403', (await api('/api/admin/finance?period=m3', { cookie: mc })).status, 403);
+      type Fin = { period?: { kind: string }; months?: { month: string; partial: boolean; revenue: { cents: number; bySource: Record<string, number> }; liveCourses: number | null; byCourse: { courseId: string; revenueCents: number }[] }[]; prior?: unknown; monthBefore?: unknown };
+      const get = async () => (await api('/api/admin/finance?period=m3', { cookie: oc })).body as Fin;
+      const a = await get();
+      const cur = a.months?.at(-1);
+      check('The owner gets 3 months, the last partial, with prior and the month before', a.period?.kind === 'm3' && a.months?.length === 3 && !!cur?.partial && !!a.prior && !!a.monthBefore, JSON.stringify(a).slice(0, 300));
+      check('…this month counts the booking fee on a no-show under noShowLateFees, and its course', (cur?.revenue.bySource.noShowLateFees ?? 0) >= 150 && !!cur?.byCourse.some(c => c.courseId === data.courseA.id && c.revenueCents >= 150), JSON.stringify(cur).slice(0, 300));
+      check('…sources add up to the total', !!cur && Object.values(cur.revenue.bySource).reduce((x, y) => x + y, 0) === cur.revenue.cents);
+      check('…live courses only for the running month', typeof cur?.liveCourses === 'number' && a.months!.slice(0, -1).every(m => m.liveCourses === null));
+      await prisma.course.update({ where: { id: data.courseA.id }, data: { isTest: true } });
+      try {
+        const b = await get();
+        const cur2 = b.months?.at(-1);
+        check('A test course\'s fee leaves the numbers (TEST-2)', (cur?.revenue.cents ?? 0) - (cur2?.revenue.cents ?? 0) === 150 && !cur2?.byCourse.some(c => c.courseId === data.courseA.id), JSON.stringify({ before: cur?.revenue, after: cur2?.revenue }));
+      } finally {
+        await prisma.course.update({ where: { id: data.courseA.id }, data: { isTest: false } });
+      }
+    } finally {
+      await prisma.moneyMove.delete({ where: { id: fee.id } });
+      await prisma.booking.update({ where: { id: bookingA.id }, data: { noShowAt: savedNoShow } });
+      await prisma.ownerSession.delete({ where: { id: live.id } });
+      await prisma.adminUser.delete({ where: { id: mgr.id } });
+    }
+  }
+
+  console.log('\n── Double-tapped Book (online duplicate guard) ──');
+  {
+    // A no-fee course takes no card, so the booking route can be driven end to end.
+    const savedFees = await prisma.course.findUniqueOrThrow({ where: { id: data.courseA.id }, select: { lateCancellationFeeCents: true, noShowFeeCents: true } });
+    await prisma.course.update({ where: { id: data.courseA.id }, data: { lateCancellationFeeCents: 0, noShowFeeCents: 0 } });
+    const date = new Date(Date.now() + 5 * 86_400_000).toISOString().slice(0, 10);
+    const tt = await prisma.teeTime.create({ data: { courseId: data.courseA.id, date, time: '10:30', holes: 18, greenFeeCents: 0, cartFeeCents: 0, playersAvailable: 4, playersBooked: 0, status: 'available' } });
+    try {
+      const body = { teeTimeId: tt.id, players: 2, golferName: 'Tap Twice', golferEmail: `${TS}-tap@test.local`, termsAccepted: true };
+      const first = await api('/api/bookings', { method: 'POST', body });
+      const again = await api('/api/bookings', { method: 'POST', body: { ...body, golferEmail: body.golferEmail.toUpperCase() } });
+      const f = first.body as { bookingId?: string }, a = again.body as { bookingId?: string; duplicate?: boolean };
+      check('Two identical Book taps → one booking; the second gets it back (duplicate)', first.status === 200 && again.status === 200 && a.duplicate === true && a.bookingId === f.bookingId
+        && (await prisma.booking.count({ where: { teeTimeId: tt.id } })) === 1, JSON.stringify({ first: first.status, f, again: again.status, a }).slice(0, 300));
+      const probe = await api('/api/bookings', { method: 'POST', body: { ...body, golferEmail: '%' } });
+      check('…an email that isn\'t one ("%") is refused before anything else → 400', probe.status === 400, JSON.stringify(probe.body));
+      const other = await api('/api/bookings', { method: 'POST', body: { ...body, players: 1, golferName: 'Someone Else', golferEmail: `${TS}-tap@test.local` } });
+      check('…someone typing that email with another name books on their own; nothing about the first booking comes back', other.status === 200 && (other.body as { bookingId?: string }).bookingId !== f.bookingId && !(other.body as { duplicate?: boolean }).duplicate, JSON.stringify(other.body).slice(0, 200));
+    } finally {
+      const made = (await prisma.booking.findMany({ where: { teeTimeId: tt.id }, select: { id: true } })).map(b => b.id);
+      await prisma.bookingEvent.deleteMany({ where: { bookingId: { in: made } } }).catch(() => {});
+      await prisma.booking.deleteMany({ where: { teeTimeId: tt.id } });
+      await prisma.teeTime.delete({ where: { id: tt.id } });
+      await prisma.course.update({ where: { id: data.courseA.id }, data: savedFees });
     }
   }
 

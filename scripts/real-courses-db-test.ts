@@ -57,6 +57,7 @@ async function main() {
     ['src/lib/admin-action-queue.ts', /\.\.\.FAILED_CHARGE_WHERE, \.\.\.ON_REAL_COURSE/],
     ['src/app/api/admin/nav-badges/route.ts', /ON_REAL_COURSE/],
     ['src/app/api/admin/revenue/route.ts', /const PAID = \{[^}]*\}, \.\.\.ON_REAL_COURSE \}/],
+    ['src/app/api/admin/finance/route.ts', /c\."isTest" = false[\s\S]*\.\.\.ON_REAL_COURSE/],
     ['src/app/sitemap.ts', /isTest: false/],
     ['src/app/api/courses/route.ts', /isTest: false/],
     ['src/app/courses/[slug]/page.tsx', /course\.isTest \? \{ index: false/],

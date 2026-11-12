@@ -15,6 +15,14 @@ const missedCheckInWhere = (today: string) => ({ ...missedAny(today), ...ON_REAL
 import { counterFeesUncollected } from '@/lib/access-fee';
 import { roundChargeCents, roundApplicationFeeCents } from '@/lib/shop';
 import { feesByDay } from '@/lib/fees-by-day';
+import { stripe } from '@/lib/stripe';
+import { terminalTestMode } from '@/lib/card-reader';
+import { csvCell } from '@/lib/ledger-view';
+import { dayKey, PLATFORM_TZ } from '@/lib/admin-day';
+import {
+  REVENUE_PERIODS, resolveRevenuePeriod, daysBetween, platformMoveLabel, platformSigned,
+  stripePaymentUrl, stripePayoutUrl, payoutArrivalRange, summarisePayouts, daySeries, monthPace, type RevenuePeriodKind, type RevenuePeriod,
+} from '@/lib/revenue-period';
 
 // REVISE_QUEUE A-06 — /admin/revenue rebuilt as a real P&L. ONE period picker
 // (day / week / month-to-date / custom) drives the ENTIRE page. Support+ sees
@@ -32,7 +40,14 @@ import { feesByDay } from '@/lib/fees-by-day';
 // in time by paidAt (MP-6c schema half — stamped when the charge succeeds;
 // older rows were backfilled from checkedInAt in the migration).
 
-type PeriodKind = 'day' | 'week' | 'mtd' | 'custom';
+// ADMIN-REDO Revenue (Cam 2026-11-11): the page picks month / last_month / 30d /
+// year (lib/revenue-period, platform clock). The older day / week / mtd / custom
+// still answer for the page being replaced; 'mtd' is now 'month'.
+type LegacyKind = 'day' | 'week' | 'custom';
+type PeriodKind = LegacyKind | RevenuePeriodKind;
+/** GreenReserve's side of the ledger shown on the page; the CSV is the whole window. */
+const LEDGER_CAP = 500;
+const CSV_MAX_ROWS = 20_000;
 interface Win { start: Date; end: Date; }
 
 function startOfDayUTC(d: Date) { return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())); }
@@ -83,18 +98,6 @@ export async function GET(req: NextRequest) {
   const sp = req.nextUrl.searchParams;
   const todayStr = dayStr(new Date());
 
-  // MP-6a: the sidebar's red badge. Cheap counts only, no period, no owner
-  // lines — the same two ALL-TIME queries the Problems block is built from,
-  // so the badge and the block can never disagree.
-  if (sp.get('problemsCount') === '1') {
-    const [failed, missed, disputes] = await Promise.all([
-      prisma.booking.count({ where: FAILED_CHARGE_WHERE }),
-      prisma.booking.count({ where: missedCheckInWhere(todayStr) }),
-      openDisputes(),
-    ]);
-    return NextResponse.json({ failed, missed, disputes: disputes.length });
-  }
-
   // Owner sections need a 2FA-backed session, same as every other owner-only
   // surface. This one hides rather than 403s, so flag the mfa-less owner case
   // explicitly — otherwise the P&L just silently vanishes for the one person
@@ -103,8 +106,55 @@ export async function GET(req: NextRequest) {
   const ownerMfaRequired = session.role === 'owner' && !isOwner;
 
   const kindParam = sp.get('period');
-  const kind: PeriodKind = kindParam === 'day' || kindParam === 'week' || kindParam === 'custom' ? kindParam : 'mtd';
-  const { current, prior, label } = resolveWindows(kind, new Date(), sp.get('from'), sp.get('to'));
+  const now = new Date();
+  const kind: PeriodKind = kindParam === 'day' || kindParam === 'week' || kindParam === 'custom'
+    ? kindParam
+    : (REVENUE_PERIODS as string[]).includes(kindParam ?? '') ? (kindParam as RevenuePeriodKind) : 'month';
+  let rp: RevenuePeriod;
+  // What `period.from/to` says. The older page's periods are UTC days (its exports and CSVs
+  // read them that way); the series below is always on platform (Eastern) days.
+  let shownFrom: string, shownTo: string;
+  if (kind === 'day' || kind === 'week' || kind === 'custom') {
+    const w = resolveWindows(kind, now, sp.get('from'), sp.get('to'));
+    const from = dayKey(w.current.start), to = dayKey(new Date(w.current.end.getTime() - 1));
+    const days = Math.max(1, daysBetween(from, to) + 1);
+    const priorFrom = dayKey(w.prior.start);
+    rp = { kind: 'month', label: w.label, priorLabel: 'The period before', from, to, elapsedDays: days, totalDays: days,
+      current: w.current, prior: w.prior, priorWhole: w.prior, priorFrom, priorDays: Math.max(1, daysBetween(priorFrom, dayKey(new Date(w.prior.end.getTime() - 1))) + 1) };
+    shownFrom = dayStr(w.current.start); shownTo = dayStr(w.current.end);
+  } else {
+    rp = resolveRevenuePeriod(kind, now);
+    shownFrom = rp.from; shownTo = rp.to;
+  }
+  const { current, prior } = rp;
+  const label = rp.label;
+
+  // ---- GreenReserve's money, from the ledger (LEDGER-1): Σ platform fee, in − out ----
+  // TEST-2: real courses only. A row with no GreenReserve part is not ours.
+  const OURS = { platformFeeCents: { gt: 0 }, course: { isTest: false } } as const;
+  if (sp.get('format') === 'csv') {
+    const rows = await prisma.moneyMove.findMany({
+      where: { ...OURS, at: { gte: current.start, lt: current.end } },
+      select: { id: true, at: true, what: true, direction: true, account: true, platformFeeCents: true, stripeId: true, bookingId: true, course: { select: { name: true } } },
+      orderBy: { at: 'desc' }, take: CSV_MAX_ROWS + 1,
+    });
+    if (rows.length > CSV_MAX_ROWS) {
+      return NextResponse.json({ error: `More than ${CSV_MAX_ROWS.toLocaleString()} rows in this period — pick a shorter one.` }, { status: 413 });
+    }
+    const lines = ['Date,Time (ET),Course,What,Booking,Amount,Stripe id'];
+    for (const r of rows) {
+      const time = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit' }).format(r.at);
+      lines.push([dayKey(r.at), time, r.course.name, platformMoveLabel(r.what, r.direction), r.bookingId ? r.bookingId.slice(0, 8).toUpperCase() : '',
+        (platformSigned(r) / 100).toFixed(2), r.stripeId ?? ''].map(csvCell).join(','));
+    }
+    return new NextResponse(lines.join('\n') + '\n', {
+      headers: {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="greenreserve-revenue-${rp.from}-to-${rp.to}.csv"`,
+        'Cache-Control': 'no-store',
+      },
+    });
+  }
 
   const inCurrent = { gte: current.start, lt: current.end };
   const inPrior = { gte: prior.start, lt: prior.end };
@@ -164,6 +214,59 @@ export async function GET(req: NextRequest) {
     openDisputes(),
   ]);
 
+  // GreenReserve's part per platform day, summed in the database (a year and the year
+  // before is too many rows to read). TEST-2: real courses only — the same rule as OURS.
+  const perDay = (from: Date, to: Date) => prisma.$queryRaw<{ day: string; cents: bigint }[]>`
+    SELECT to_char((m."at" AT TIME ZONE 'UTC') AT TIME ZONE ${PLATFORM_TZ}, 'YYYY-MM-DD') AS day,
+           SUM(CASE WHEN m."direction" = 'out' THEN -m."platformFeeCents" ELSE m."platformFeeCents" END)::bigint AS cents
+    FROM "MoneyMove" m JOIN "Course" c ON c."id" = m."courseId"
+    WHERE c."isTest" = false AND m."platformFeeCents" > 0 AND m."at" >= ${from} AND m."at" < ${to}
+    GROUP BY 1`;
+  const [curDays, priorDays, ledgerPriorAgg, ledgerByCourseCur, ledgerByCoursePrior, ledgerRows, liveNow] = await Promise.all([
+    perDay(current.start, current.end),
+    perDay(rp.priorWhole.start, rp.priorWhole.end),
+    prisma.moneyMove.groupBy({ by: ['direction'], where: { ...OURS, at: { gte: prior.start, lt: prior.end } }, _sum: { platformFeeCents: true } }),
+    prisma.moneyMove.groupBy({ by: ['courseId', 'direction'], where: { ...OURS, at: { gte: current.start, lt: current.end } }, _sum: { platformFeeCents: true } }),
+    prisma.moneyMove.groupBy({ by: ['courseId', 'direction'], where: { ...OURS, at: { gte: prior.start, lt: prior.end } }, _sum: { platformFeeCents: true } }),
+    prisma.moneyMove.findMany({
+      where: { ...OURS, at: { gte: current.start, lt: current.end } },
+      select: { id: true, at: true, what: true, direction: true, account: true, platformFeeCents: true, stripeId: true, bookingId: true, courseId: true, course: { select: { name: true, stripeAccountId: true } } },
+      orderBy: { at: 'desc' }, take: LEDGER_CAP + 1,
+    }),
+    // Live courses: the Overview's own count. Only "now" can be counted — nothing records
+    // when a course was switched off and on, so a past window's count is not given.
+    prisma.course.count({ where: { active: true, archivedAt: null, ...REAL_COURSE } }),
+  ]);
+  const signedSum = (rows: { direction: string; _sum: { platformFeeCents: number | null } }[]) =>
+    rows.reduce((t, r) => t + (r.direction === 'out' ? -1 : 1) * (r._sum.platformFeeCents ?? 0), 0);
+  const revenueSeries = {
+    current: daySeries(curDays.map(d => ({ day: d.day, cents: Number(d.cents) })), rp.from, rp.elapsedDays),
+    prior: daySeries(priorDays.map(d => ({ day: d.day, cents: Number(d.cents) })), rp.priorFrom, rp.priorDays),
+  };
+  const revenueCents = curDays.reduce((t, d) => t + Number(d.cents), 0);
+  const revenuePriorCents = signedSum(ledgerPriorAgg);
+  const byCourseLedger = (rows: { courseId: string; direction: string; _sum: { platformFeeCents: number | null } }[]) => {
+    const m = new Map<string, number>();
+    for (const r of rows) m.set(r.courseId, (m.get(r.courseId) ?? 0) + (r.direction === 'out' ? -1 : 1) * (r._sum.platformFeeCents ?? 0));
+    return m;
+  };
+  const revByCourse = byCourseLedger(ledgerByCourseCur);
+  const revPriorByCourse = byCourseLedger(ledgerByCoursePrior);
+  const testMode = terminalTestMode();
+  const ledger = {
+    rows: ledgerRows.slice(0, LEDGER_CAP).map(r => ({
+      id: r.id, at: r.at.toISOString(),
+      bookingId: r.bookingId, bookingRef: r.bookingId ? r.bookingId.slice(0, 8).toUpperCase() : null,
+      courseId: r.courseId, courseName: r.course.name,
+      what: platformMoveLabel(r.what, r.direction),
+      amountCents: platformSigned(r),
+      stripeUrl: stripePaymentUrl(r.stripeId, r.account, r.course.stripeAccountId || null, testMode),
+    })),
+    truncated: ledgerRows.length > LEDGER_CAP,
+  };
+  const endsNow = now.getTime() - current.end.getTime() < 60_000;
+  const liveCourses = { count: endsNow ? liveNow : null, priorCount: null as number | null };
+
   const failedCountByCourse = new Map(failedByCourseRaw.map(r => [r.courseId, r._count.id]));
   const collectedByCourse = new Map(perCourseCollectedRaw.map(r => [r.courseId, r]));
   const bookedByCourse = new Map(perCourseBookedRaw.map(r => [r.courseId, r._count.id]));
@@ -182,6 +285,8 @@ export async function GET(req: NextRequest) {
       greenFeeVolume: ((agg?._sum.greenFeeTotal ?? 0) + (agg?._sum.cartFeeTotal ?? 0)) / 100,
       failedCharges: failedCountByCourse.get(c.id) ?? 0,
       counterRounds: 0, counterFeesUncollected: 0,
+      revenueCents: revByCourse.get(c.id) ?? 0,
+      priorRevenueCents: revPriorByCourse.get(c.id) ?? 0,
     };
   });
 
@@ -266,7 +371,11 @@ export async function GET(req: NextRequest) {
   }));
 
   const base = {
-    period: { kind, label, from: dayStr(current.start), to: dayStr(current.end) },
+    period: { kind, label, from: shownFrom, to: shownTo, priorLabel: rp.priorLabel, elapsedDays: rp.elapsedDays, totalDays: rp.totalDays },
+    revenue: { cents: revenueCents, priorCents: revenuePriorCents },
+    revenueSeries,
+    liveCourses,
+    ledger,
     isOwner,
     ownerMfaRequired,
     pnl: {
@@ -342,8 +451,58 @@ export async function GET(req: NextRequest) {
   const gapCents = collectedCents - stripeGrossCents;
   const reconciles: boolean | null = stripeUnavailable ? null : Math.abs(gapCents) < 100;
 
+  // ---- Owner-only: payouts to the courses' banks in the window, read from each
+  // course's own Stripe account the way /api/admin/course-payouts does (same courses:
+  // not archived, with an account). Kept whole (test courses included) like that route —
+  // it answers to Stripe (TEST-2). Placed by arrival DAY (lib/revenue-period). Only for the
+  // Revenue page's four periods — the older page never reads it. One course Stripe can't
+  // answer for, or one with more payouts than we read, makes the answer "unavailable":
+  // a partial total would read as a real one.
+  const payoutsWanted = kind !== 'day' && kind !== 'week' && kind !== 'custom';
+  let payoutsUnavailable = false;
+  const payoutRows: { courseId: string; name: string; kind: 'failed' | 'reversed' | 'canceled'; amountCents: number; at: string; reason: string; stripeUrl: string | null }[] = [];
+  let paidOutCents = 0;
+  const paidCourses = new Set<string>();
+  // Courses whose payouts were actually read: 0 means nothing was checked, never "all paid".
+  let checkedCourses = 0;
+  const PAYOUT_READ_CAP = 1000;
+  if (payoutsWanted) {
+    const payoutCourses = await prisma.course.findMany({ where: { archivedAt: null, stripeAccountId: { not: '' } }, select: { id: true, name: true, stripeAccountId: true } });
+    const range = payoutArrivalRange(rp.from, rp.to);
+    await Promise.all(payoutCourses.map(async c => {
+      try {
+        const list = await stripe.payouts.list({ limit: 100, arrival_date: range }, { stripeAccount: c.stripeAccountId }).autoPagingToArray({ limit: PAYOUT_READ_CAP + 1 });
+        if (list.length > PAYOUT_READ_CAP) { payoutsUnavailable = true; return; }
+        const sum = summarisePayouts(list);
+        checkedCourses++;
+        if (sum.paidCount > 0) { paidOutCents += sum.paidCents; paidCourses.add(c.id); }
+        for (const p of sum.problems) {
+          payoutRows.push({ courseId: c.id, name: c.name, kind: p.kind, amountCents: p.amountCents, at: p.date, reason: p.reason, stripeUrl: stripePayoutUrl(p.payoutId, c.stripeAccountId, testMode) });
+        }
+      } catch (e) {
+        console.error('[revenue] Stripe payouts read failed for', c.id, e);
+        payoutsUnavailable = true;
+      }
+    }));
+    payoutRows.sort((a, b) => b.at.localeCompare(a.at));
+  }
+
+  // ADMIN-REDO Revenue goal (Cam via Build 2026-11-12): this month's target and where it stands, on
+  // the same ledger basis as revenue.cents. Owner only, 'month' only (the running month).
+  let revenueGoal: { month: string; targetCents: number | null; progressCents: number; dayOfPeriod: number; daysInPeriod: number } | null = null;
+  if (kind === 'month') {
+    const pace = monthPace(now);
+    const goal = await prisma.adminMonthGoal.findUnique({ where: { month: pace.month }, select: { cents: true } });
+    revenueGoal = { month: pace.month, targetCents: goal?.cents ?? null, progressCents: base.revenue.cents, dayOfPeriod: pace.dayOfPeriod, daysInPeriod: pace.daysInPeriod };
+  }
+
   return NextResponse.json({
     ...base,
+    ...(revenueGoal ? { revenueGoal } : {}),
+    ...(payoutsWanted ? {
+      coursePayoutProblems: { rows: payoutRows, unavailable: payoutsUnavailable, checkedCourses },
+      payouts: { toCourses: payoutsUnavailable ? null : { cents: paidOutCents, courses: paidCourses.size }, unavailable: payoutsUnavailable },
+    } : {}),
     pnl: {
       ...base.pnl,
       stripeProcessing: pnlCurrent.stripeProcessing,

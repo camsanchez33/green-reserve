@@ -13,6 +13,7 @@ import { cancelNowWords } from '@/lib/cancel-policy';
 
 type BookingInfo = {
   bookingId: string;
+  bookingRef?: string;
   golferName: string;
   courseName: string;
   courseSlug: string;
@@ -573,7 +574,7 @@ function ManagePageInner() {
           <Link href={`/courses/${info.courseSlug}`} className="block text-center text-sm text-ink-soft hover:text-ink transition-colors mt-5">
             Back to {info.courseName}
           </Link>
-          <p className="text-xs text-ink-muted text-center mt-3">Booking #{info.bookingId.slice(0, 8).toUpperCase()}</p>
+          <p className="text-xs text-ink-muted text-center mt-3">Booking {info.bookingRef ?? info.bookingId.slice(0, 8).toUpperCase()}</p>
         </div>
       </div>
     </div>
