@@ -946,6 +946,90 @@ async function main() {
     }
   }
 
+  console.log('\n── Revenue goal (ADMIN-REDO: AdminMonthGoal) ──');
+  {
+    const { signAdminToken } = await import('../src/lib/admin-session');
+    const { signOwnerToken } = await import('../src/lib/owner-session');
+    const { platformMonthKey } = await import('../src/lib/revenue-period');
+    const month = platformMonthKey(new Date());
+    const [py, pm] = month.split('-').map(Number);
+    const lastMonth = `${pm === 1 ? py - 1 : py}-${String(pm === 1 ? 12 : pm - 1).padStart(2, '0')}`;
+    const saved = await prisma.adminMonthGoal.findUnique({ where: { month } });
+    const mgr = await prisma.adminUser.create({ data: { name: 'Isol Goal Manager', email: `${TS}-goal-mgr@test.local`, passwordHash: 'x', role: 'manager', active: true, areas: ['money'], areasSetAt: new Date() } });
+    const fresh = await prisma.ownerSession.create({ data: { adminId: data.adminOwner.id, method: 'totp', expiresAt: new Date(Date.now() + 3600_000), stepUpAt: new Date() } });
+    const stale = await prisma.ownerSession.create({ data: { adminId: data.adminOwner.id, method: 'totp', expiresAt: new Date(Date.now() + 3600_000), stepUpAt: new Date(Date.now() - 24 * 3600_000) } });
+    try {
+      const mc = `admin_session=${await signAdminToken({ adminId: mgr.id, email: mgr.email, name: mgr.name, role: 'manager', mfa: true })}`;
+      const oc = `gr_owner=${await signOwnerToken(fresh.id, data.adminOwner.id, fresh.expiresAt)}`;
+      const os = `gr_owner=${await signOwnerToken(stale.id, data.adminOwner.id, stale.expiresAt)}`;
+      const put = (cookie: string, body: unknown) => api('/api/admin/revenue-goal', { method: 'PUT', cookie, body });
+      checkStatus('A manager cannot set the revenue goal → 403', (await put(mc, { month, cents: 100000 })).status, 403);
+      const mg = (await api('/api/admin/revenue?period=month', { cookie: mc })).body as Record<string, unknown>;
+      check('…and Revenue carries no goal for a manager', !('revenueGoal' in (mg ?? {})), Object.keys(mg ?? {}).join(','));
+      const noStep = await put(os, { month, cents: 100000 });
+      check('The owner without a fresh second factor is asked to confirm (step_up)', noStep.status === 403 && (noStep.body as { code?: string })?.code === 'step_up', JSON.stringify(noStep.body));
+      const past = await put(oc, { month: lastMonth, cents: 100000 });
+      check('A month that has ended is refused → 400 past', past.status === 400 && (past.body as { code?: string })?.code === 'past', JSON.stringify(past.body));
+      checkStatus('A bad amount → 400', (await put(oc, { month, cents: 3_000_000_000 })).status, 400);
+      const set = await put(oc, { month, cents: 250000 });
+      check('The owner sets this month\'s goal → 200 { month, targetCents }', set.status === 200 && JSON.stringify(set.body) === JSON.stringify({ month, targetCents: 250000 }), JSON.stringify(set.body));
+      check('…and it is audited', !!(await prisma.adminAuditLog.findFirst({ where: { adminId: data.adminOwner.id, action: 'revenue_goal', targetId: month } })));
+      type G = { revenue?: { cents: number }; revenueGoal?: { month: string; targetCents: number | null; progressCents: number; dayOfPeriod: number; daysInPeriod: number } };
+      const og = (await api('/api/admin/revenue?period=month', { cookie: oc })).body as G;
+      check('…Revenue (month) gives the owner the goal, progress = revenue.cents, and the pace inputs',
+        og.revenueGoal?.month === month && og.revenueGoal.targetCents === 250000 && og.revenueGoal.progressCents === og.revenue?.cents
+        && og.revenueGoal.dayOfPeriod >= 0 && og.revenueGoal.dayOfPeriod <= og.revenueGoal.daysInPeriod && og.revenueGoal.daysInPeriod >= 28, JSON.stringify(og.revenueGoal));
+      const ol = (await api('/api/admin/revenue?period=last_month', { cookie: oc })).body as Record<string, unknown>;
+      check('…but not for another period', !('revenueGoal' in (ol ?? {})));
+      checkStatus('Clearing it (null) → 200', (await put(oc, { month, cents: null })).status, 200);
+    } finally {
+      if (saved) await prisma.adminMonthGoal.update({ where: { month }, data: { cents: saved.cents, setById: saved.setById } });
+      else await prisma.adminMonthGoal.deleteMany({ where: { month } });
+      await prisma.ownerSession.deleteMany({ where: { id: { in: [fresh.id, stale.id] } } });
+      await prisma.adminAuditLog.deleteMany({ where: { adminId: mgr.id } }).catch(() => {});
+      await prisma.adminUser.delete({ where: { id: mgr.id } });
+    }
+  }
+
+  console.log('\n── Financial analytics (ADMIN-REDO: /api/admin/finance) ──');
+  {
+    const { signAdminToken } = await import('../src/lib/admin-session');
+    const { signOwnerToken } = await import('../src/lib/owner-session');
+    const mgr = await prisma.adminUser.create({ data: { name: 'Isol Fin Manager', email: `${TS}-fin-mgr@test.local`, passwordHash: 'x', role: 'manager', active: true } });
+    const live = await prisma.ownerSession.create({ data: { adminId: data.adminOwner.id, method: 'totp', expiresAt: new Date(Date.now() + 3600_000), stepUpAt: new Date() } });
+    // The real shape: GreenReserve's fee on a no-show is its own booking fee, charged on the platform account.
+    const savedNoShow = (await prisma.booking.findUniqueOrThrow({ where: { id: bookingA.id }, select: { noShowAt: true } })).noShowAt;
+    await prisma.booking.update({ where: { id: bookingA.id }, data: { noShowAt: new Date() } });
+    const fee = await prisma.moneyMove.create({ data: { courseId: data.courseA.id, what: 'booking_fee', direction: 'in', method: 'card', account: 'platform', amountCents: 150, platformFeeCents: 150, stripeId: `pi_isol_fin_${TS}`, bookingId: bookingA.id, note: 'charged separately (no-show)', at: new Date(Date.now() - 60_000) } });
+    try {
+      const mc = `admin_session=${await signAdminToken({ adminId: mgr.id, email: mgr.email, name: mgr.name, role: 'manager', mfa: true })}`;
+      const oc = `gr_owner=${await signOwnerToken(live.id, data.adminOwner.id, live.expiresAt)}`;
+      checkStatus('No session → 401', (await api('/api/admin/finance?period=m3')).status, 401);
+      checkStatus('A manager cannot read financial analytics → 403', (await api('/api/admin/finance?period=m3', { cookie: mc })).status, 403);
+      type Fin = { period?: { kind: string }; months?: { month: string; partial: boolean; revenue: { cents: number; bySource: Record<string, number> }; liveCourses: number | null; byCourse: { courseId: string; revenueCents: number }[] }[]; prior?: unknown; monthBefore?: unknown };
+      const get = async () => (await api('/api/admin/finance?period=m3', { cookie: oc })).body as Fin;
+      const a = await get();
+      const cur = a.months?.at(-1);
+      check('The owner gets 3 months, the last partial, with prior and the month before', a.period?.kind === 'm3' && a.months?.length === 3 && !!cur?.partial && !!a.prior && !!a.monthBefore, JSON.stringify(a).slice(0, 300));
+      check('…this month counts the booking fee on a no-show under noShowLateFees, and its course', (cur?.revenue.bySource.noShowLateFees ?? 0) >= 150 && !!cur?.byCourse.some(c => c.courseId === data.courseA.id && c.revenueCents >= 150), JSON.stringify(cur).slice(0, 300));
+      check('…sources add up to the total', !!cur && Object.values(cur.revenue.bySource).reduce((x, y) => x + y, 0) === cur.revenue.cents);
+      check('…live courses only for the running month', typeof cur?.liveCourses === 'number' && a.months!.slice(0, -1).every(m => m.liveCourses === null));
+      await prisma.course.update({ where: { id: data.courseA.id }, data: { isTest: true } });
+      try {
+        const b = await get();
+        const cur2 = b.months?.at(-1);
+        check('A test course\'s fee leaves the numbers (TEST-2)', (cur?.revenue.cents ?? 0) - (cur2?.revenue.cents ?? 0) === 150 && !cur2?.byCourse.some(c => c.courseId === data.courseA.id), JSON.stringify({ before: cur?.revenue, after: cur2?.revenue }));
+      } finally {
+        await prisma.course.update({ where: { id: data.courseA.id }, data: { isTest: false } });
+      }
+    } finally {
+      await prisma.moneyMove.delete({ where: { id: fee.id } });
+      await prisma.booking.update({ where: { id: bookingA.id }, data: { noShowAt: savedNoShow } });
+      await prisma.ownerSession.delete({ where: { id: live.id } });
+      await prisma.adminUser.delete({ where: { id: mgr.id } });
+    }
+  }
+
   console.log('\n── Double-tapped Book (online duplicate guard) ──');
   {
     // A no-fee course takes no card, so the booking route can be driven end to end.
