@@ -5,6 +5,7 @@ import { afterCutoffLine, policyMoney } from '@/lib/cancel-policy';
 import { membershipFeeCents } from '@/lib/stripe';
 import { logSent, type SendMeta } from '@/lib/sent-messages';
 import { SUPPORT_EMAIL, ADMIN_EMAIL, BILLING_EMAIL, NOREPLY_EMAIL } from '@/lib/contact';
+import { bookingRefFor } from '@/lib/booking-ref';
 
 let _resend: Resend | null = null;
 /** Resend's options plus our own `meta` (BRAIN-1b), which never reaches Resend. */
@@ -225,7 +226,7 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
     </div>
     ${ctaButtons}
     ${data.checkInToken ? `<p style="margin:0 0 8px;text-align:center;"><a href="${process.env.NEXT_PUBLIC_URL}/receipt/${data.bookingId}?token=${data.checkInToken}" style="color:#6B706A;font-size:12px;text-decoration:underline;">View booking confirmation</a></p>` : ''}
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking ID: ${data.bookingId}</p>
+    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking ${await bookingRefFor(data.bookingId)}</p>
   `);
   await getResend().emails.send({ meta: { kind: 'booking_confirmation', bookingId: data.bookingId, courseSlug: data.courseSlug }, from: FROM_SUPPORT, to: data.golferEmail, subject: `Confirmed: ${data.courseName} — ${data.date} at ${data.time}`, html });
 }
@@ -279,7 +280,7 @@ export async function sendCancellationEmail(data: {
       ? `<div style="background:#EEF3EC;border:1px solid #CFDCCD;border-radius:6px;padding:16px;margin-bottom:24px;"><p style="margin:0;color:#2F6B45;font-size:15px;font-weight:600;">&#10003; ${data.refunded ? 'What you paid has been refunded to your card. Nothing else was charged.' : 'You weren&rsquo;t charged anything.'}</p></div>`
       : `<div style="background:#F7EFE2;border:1px solid #E8D3B0;border-radius:6px;padding:16px;margin-bottom:24px;"><p style="margin:0;color:#7A4A10;font-size:14px;font-weight:600;">The $${(data.feeAmount / 100).toFixed(2)} cancellation fee you were charged is non-refundable &mdash; this cancellation came after the course&rsquo;s free-cancellation window closed.</p></div>`
     }
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking ID: ${data.bookingId}</p>
+    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking ${await bookingRefFor(data.bookingId)}</p>
   `, data.feeCharged || data.refunded ? BILLING_EMAIL : SUPPORT_EMAIL);
   // Cam 2026-10-22: money moved (a fee kept, or a refund) → billing@; only about the round → support@.
   await getResend().emails.send({ meta: { kind: 'cancellation_email', bookingId: data.bookingId }, from: data.feeCharged || data.refunded ? FROM_BILLING : FROM_SUPPORT, to: data.golferEmail, subject: `Cancelled: ${data.courseName} — ${data.date} at ${data.time}`, html });
@@ -338,7 +339,7 @@ export async function sendCancellationFeeChargedEmail(data: {
       <p style="margin:0;color:#2F6B45;font-size:14px;font-weight:600;">This fee is refunded automatically when you check in and pay for your round — use the button below on the day of your round.</p>
     </div>
     ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:16px;">Check In &amp; Pay &rarr;</a>` : ''}
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking ID: ${data.bookingId}</p>
+    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking ${await bookingRefFor(data.bookingId)}</p>
   `, BILLING_EMAIL);
   await getResend().emails.send({ meta: { kind: 'cancellation_fee_charged_email', bookingId: data.bookingId }, from: FROM_BILLING, to: data.golferEmail, subject: `Charged $${(data.feeAmount / 100).toFixed(2)} — ${data.courseName} cancellation window closed`, html });
 }
@@ -391,7 +392,7 @@ export async function sendCheckInAvailableEmail(data: {
       Check in online now, or do it at the clubhouse when you arrive.
     </p>
     ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:16px;">Check In Online Now &rarr;</a>` : ''}
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking ID: ${data.bookingId}</p>
+    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking ${await bookingRefFor(data.bookingId)}</p>
   `);
   await getResend().emails.send({ meta: { kind: 'check_in_available_email', bookingId: data.bookingId }, from: FROM_SUPPORT, to: data.golferEmail, subject: `Ready to check in — ${data.courseName} ${data.date} at ${data.time}`, html });
 }
@@ -405,7 +406,7 @@ export async function sendRoundReceiptLinkEmail(data: {
     <h1 style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Your receipt from ${data.courseName}</h1>
     <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">Hi ${firstName(data.golferName)}, thanks for playing. Here is the receipt for your round on ${data.date} at ${data.time}.</p>
     <a href="${url}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:16px;">View receipt &rarr;</a>
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking #${data.bookingId.slice(0, 8).toUpperCase()}</p>
+    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking ${await bookingRefFor(data.bookingId)}</p>
   `);
   await getResend().emails.send({ meta: { kind: 'round_receipt_link_email', bookingId: data.bookingId }, from: FROM_BILLING, to: data.to, subject: `Your receipt from ${data.courseName}`, html });
 }
@@ -451,7 +452,7 @@ export async function sendBookingModifiedEmail(data: {
     </div>
     ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:10px;">Check In &amp; Pay &rarr;</a>` : ''}
     <a href="${manageUrl}" style="display:block;color:#173B2A;text-decoration:none;text-align:center;padding:8px;font-weight:700;font-size:13px;margin-bottom:16px;">Manage My Booking &rarr;</a>
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking ID: ${data.bookingId}</p>
+    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking ${await bookingRefFor(data.bookingId)}</p>
   `);
   await getResend().emails.send({ meta: { kind: 'booking_modified_email', bookingId: data.bookingId, courseSlug: data.courseSlug }, from: FROM_SUPPORT, to: data.golferEmail, subject: `Updated: ${data.courseName} — ${data.date} at ${data.time}`, html });
 }
@@ -519,7 +520,7 @@ export async function sendCheckInReceiptEmail(data: {
     ${data.feeRefundFailed ? `<div style="background:#F7EFE2;border:1px solid #E8D3B0;border-radius:6px;padding:16px;margin-bottom:24px;"><p style="margin:0;color:#7A4A10;font-size:14px;font-weight:600;">Your earlier $${(data.feeRefundAmount / 100).toFixed(2)} late-cancellation fee is owed back to you, but the automatic refund did not go through. The course has been notified — if it has not appeared within a few days, contact them or ${BILLING_EMAIL}.</p></div>` : ''}
     ${data.checkInToken ? `<a href="${process.env.NEXT_PUBLIC_URL}/receipt/${data.bookingId}?token=${data.checkInToken}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:16px;">View Receipt &rarr;</a>` : ''}
     ${data.courseSlug ? `<a href="${process.env.NEXT_PUBLIC_URL}/courses/${data.courseSlug}/account?email=${encodeURIComponent(data.golferEmail)}" style="display:block;color:#6B706A;text-decoration:none;text-align:center;padding:4px;font-weight:600;font-size:12px;margin-bottom:16px;">View your tee times at ${data.courseName} &rarr;</a>` : ''}
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking ID: ${data.bookingId}</p>
+    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking ${await bookingRefFor(data.bookingId)}</p>
   `, BILLING_EMAIL);
   await getResend().emails.send({ meta: { kind: 'check_in_receipt_email', bookingId: data.bookingId, courseSlug: data.courseSlug }, from: FROM_BILLING, to: data.golferEmail, subject: `Receipt: ${data.courseName} — $${(data.totalAmount / 100).toFixed(2)}`, html });
 }
@@ -1775,7 +1776,7 @@ export async function sendRefundEmail(data: {
     <p style="margin:0 0 16px;color:#3F453E;font-size:15px;">${data.courseName} &middot; ${data.date} at ${data.time}${data.full ? '' : ' &middot; partial refund'}</p>
     <p style="margin:0 0 24px;color:#3F453E;font-size:15px;line-height:1.6;">${data.reason}</p>
     <p style="margin:0 0 24px;color:#3F453E;font-size:14px;line-height:1.6;">Refunds usually appear on your statement within 5&ndash;10 business days, depending on your bank. It goes back to the card you paid with.</p>
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking ID: ${data.bookingId}</p>
+    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking ${await bookingRefFor(data.bookingId)}</p>
   `, BILLING_EMAIL);
   const r = await getResend().emails.send({ meta: { kind: 'refund_email', bookingId: data.bookingId }, from: FROM_BILLING, to: data.golferEmail, subject: `Refund: ${amount} from ${data.courseName}`, html });
   if (r.error) throw new Error(r.error.message || 'Resend rejected the email');
