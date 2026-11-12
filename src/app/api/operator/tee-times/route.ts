@@ -7,6 +7,7 @@ import { dollarsToCentsOr0 } from '@/lib/money';
 import { teeTimeToWire } from '@/lib/schedule-wire';
 import { resolveDashboardSession, can, requirePermission } from '@/lib/session';
 import { setTeeTimeBlocked } from '@/lib/schedule-service';
+import { closeFreeTime, setStaffOnly, deleteRefusal } from '@/lib/tee-time-close';
 import { golferKey } from '@/lib/golfer-key';
 import { bookingWindowHours, holdsAtCutoff, chargesOnLateCancel } from '@/lib/cancel-policy';
 import { teeTimeInstant } from '@/lib/booking-events';
@@ -227,9 +228,10 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json(r);
   }
   // ADDTIME-1: open a time online, or keep it for staff. Same permission as blocking (who can sell it).
+  // TT-CLOSE (Cam 2026-11-12): hiding a time online is refused while a group is booked on it (lib/tee-time-close).
   if (typeof staffOnly === 'boolean' && status === undefined) {
-    const r = await prisma.teeTime.updateMany({ where: { id, courseId: session.courseId }, data: { staffOnly } });
-    if (r.count === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    const r = await setStaffOnly(session.courseId, String(id), staffOnly);
+    if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
     return NextResponse.json({ ok: true, staffOnly });
   }
   // MP-5d: this used to write whatever `status` string arrived. The only two
@@ -243,6 +245,11 @@ export async function PATCH(req: NextRequest) {
   if (status === 'available') {
     const held = await prisma.teeTime.findFirst({ where: { id, courseId: session.courseId, eventId: { not: null } }, select: { event: { select: { name: true } } } });
     if (held?.event) return NextResponse.json({ error: `Held for ${held.event.name}. To sell this time, change the event on the Events tab.` }, { status: 409 });
+  }
+  // TT-CLOSE (Cam 2026-11-12): closing a time is refused while a group is booked on it — one conditional write.
+  if (status === 'blocked') {
+    const r = await closeFreeTime(session.courseId, String(id));
+    if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
   }
   const row = await setTeeTimeBlocked(id, status === 'blocked', { scopeCourseId: session.courseId });
   if (!row) return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -266,13 +273,12 @@ export async function DELETE(req: NextRequest) {
   if (slot && isPastIn(slot.course.timezone, slot.date, slot.time)) {
     return NextResponse.json({ error: 'That tee time has already gone off — past tee times stay on the sheet so your reports stay accurate.' }, { status: 409 });
   }
-  const booked = await prisma.booking.count({ where: { teeTimeId: id, courseId: session.courseId, status: { in: ['confirmed', 'completed'] } } });
-  if (booked > 0) {
-    return NextResponse.json({ error: `This tee time has ${booked} booking${booked === 1 ? '' : 's'} — cancel ${booked === 1 ? 'it' : 'them'} first, or block the time instead.` }, { status: 409 });
-  }
+  // TT-CLOSE: a booked time names who is on it (and no longer suggests closing it — that is refused too).
+  const refused = await deleteRefusal(session.courseId, String(id));
+  if (refused) return NextResponse.json({ error: refused }, { status: 409 });
   // Cam 2026-11-06: a cancelled booking still points at its time (and may carry a kept fee) — the time is history, not deletable.
   if (await prisma.booking.count({ where: { teeTimeId: id, courseId: session.courseId } }) > 0) {
-    return NextResponse.json({ error: 'This tee time has cancelled bookings on record, so it stays on the sheet. Block it instead.' }, { status: 409 });
+    return NextResponse.json({ error: 'This tee time has cancelled bookings on record, so it stays on the sheet. Close it instead.' }, { status: 409 });
   }
   const r = await prisma.teeTime.deleteMany({ where: { id, courseId: session.courseId } });
   if (r.count === 0) return NextResponse.json({ error: 'That tee time no longer exists.' }, { status: 404 });

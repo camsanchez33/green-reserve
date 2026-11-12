@@ -33,7 +33,7 @@ const patch = route.slice(route.indexOf('export async function PATCH'), route.in
 ok('the copy is this course and this day only', post.includes('where: { id: copyId, courseId: session.courseId, date }'));
 ok('staff never price it: staff take the copy or the schedule', post.includes('if (src && (session.isStaff || !ownFees))') && post.includes('const ownFees = !session.isStaff &&'));
 ok('the clash check looks at the copied round', post.includes('where: { courseId: session.courseId, date, time, productId }'));
-ok('open online / keep for staff is this course only, behind sheet.block', patch.includes("requirePermission(session, 'sheet.block')") && patch.includes('updateMany({ where: { id, courseId: session.courseId }, data: { staffOnly } })'));
+ok('open online / keep for staff is this course only, behind sheet.block', patch.includes("requirePermission(session, 'sheet.block')") && patch.includes('setStaffOnly(session.courseId, String(id), staffOnly)') && read('src/lib/tee-time-close.ts').includes('where: { id: teeTimeId, courseId,')); // TT-CLOSE: through lib/tee-time-close, still course-scoped
 
 const page = read('src/app/dashboard/page.tsx');
 ok('adding a time is "+ Time" in the sheet\'s own bar (Cam 2026-11-08), "Add tee time" when the day is empty', page.includes('>+ Time</button>') && page.includes('rounded-md text-[12.5px] font-medium transition-colors">Add tee time</button>'));
@@ -45,9 +45,9 @@ ok('a time closed or hidden the old way can be reopened from the card', page.inc
 ok('the row says Staff only', read('src/components/dashboard/TeeSheetRows.tsx').includes("s.staffOnly ? 'Staff only' : ''"));
 
 
-ok('Delete time is not offered while a group is on the time', page.includes("!panelSlot.event && !(panelSlot.bookings ?? []).length && ("));
+ok('Delete time is not offered while a group is on the time', page.includes("nobodyBooked && access.can('sheet.edit_times') && !past && !panelSlot.event && (")); // TT-CLOSE
 { const del = route.slice(route.indexOf('export async function DELETE'));
-  ok('the route refuses a time with any booking, cancelled ones included, before deleting', del.indexOf("status: { in: ['confirmed', 'completed'] }") > 0 && del.indexOf('where: { teeTimeId: id, courseId: session.courseId } }) > 0') < del.indexOf('teeTime.deleteMany')); }
+  ok('the route refuses a time with any booking, cancelled ones included, before deleting', del.indexOf('deleteRefusal(session.courseId, String(id))') > 0 && del.indexOf('where: { teeTimeId: id, courseId: session.courseId } }) > 0') < del.indexOf('teeTime.deleteMany')); }
 
 ok('a cancel on it never sends golfers a waitlist alert', read('src/lib/cancel-booking.ts').includes('notifySlotAlerts && !booking.teeTime.staffOnly'));
 ok('the booking route refuses it up front, before any card or code', bookings.includes('if (!teeTimeFull || teeTimeFull.staffOnly) return'));

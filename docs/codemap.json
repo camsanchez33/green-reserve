@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 703,
+    "files": 704,
     "routes": 301,
-    "libs": 254,
+    "libs": 255,
     "models": 72,
     "orphans": 11,
     "ungatedRoutes": 3
@@ -7773,7 +7773,7 @@
     },
     {
       "path": "src/app/api/operator/tee-times/route.ts",
-      "lines": 281,
+      "lines": 287,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7815,6 +7815,7 @@
         "@/lib/schedule-service",
         "@/lib/schedule-wire",
         "@/lib/session",
+        "@/lib/tee-time-close",
         "@/lib/tee-time-seats",
         "next/server"
       ],
@@ -9228,7 +9229,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 2284,
+      "lines": 2288,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -24186,6 +24187,7 @@
         "src/lib/staff-refund.ts",
         "src/lib/submit-change-request.ts",
         "src/lib/tee-sheet-engine.ts",
+        "src/lib/tee-time-close.ts",
         "src/lib/tee-time-seats.ts",
         "src/lib/two-factor.ts",
         "src/lib/weather-cancel.ts"
@@ -27629,6 +27631,53 @@
       ]
     },
     {
+      "path": "src/lib/tee-time-close.ts",
+      "lines": 59,
+      "purpose": "TT-CLOSE (Cam 2026-11-12, ADMIN_REDO_SPEC \"Course dashboard Tee sheet + time card:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "ACTIVE_BOOKING",
+          "kind": "const"
+        },
+        {
+          "name": "bookedOnTime",
+          "kind": "fn"
+        },
+        {
+          "name": "closeFreeTime",
+          "kind": "fn"
+        },
+        {
+          "name": "CloseResult",
+          "kind": "type"
+        },
+        {
+          "name": "deleteRefusal",
+          "kind": "fn"
+        },
+        {
+          "name": "refusal",
+          "kind": "fn"
+        },
+        {
+          "name": "setStaffOnly",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./prisma"
+      ],
+      "usedBy": [
+        "src/app/api/operator/tee-times/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/tee-time-fit.ts",
       "lines": 19,
       "purpose": "Cam 2026-10-19:",
@@ -29253,6 +29302,7 @@
         "src/lib/sent-messages.ts",
         "src/lib/split-booking-db.ts",
         "src/lib/staff-refund.ts",
+        "src/lib/tee-time-close.ts",
         "src/lib/weather-cancel.ts"
       ]
     },
@@ -34425,6 +34475,7 @@
         "src/lib/sample-data.ts",
         "src/lib/schedule-service.ts",
         "src/lib/tee-sheet-engine.ts",
+        "src/lib/tee-time-close.ts",
         "src/lib/tee-time-seats.ts",
         "src/lib/weather-cancel.ts"
       ],
@@ -34460,6 +34511,7 @@
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts",
         "src/lib/tee-sheet-engine.ts",
+        "src/lib/tee-time-close.ts",
         "src/lib/tee-time-seats.ts",
         "src/lib/weather-cancel.ts"
       ]
