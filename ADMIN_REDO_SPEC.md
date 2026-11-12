@@ -154,3 +154,10 @@ Mockup: `lanes/dashboard/home-mockup.html` (final version). What it settles:
 - Right column: Action needed (just the list, no count tiles) · Next payout (own card) · Staff notes · Course
   conditions (cart path, pins, greens only, each with a detail line, no "set by" line) · goals coloured by how close
   to target (no line, no key).
+
+## Page 5, Users & golfers: DROPPED (Cam 2026-11-12)
+"there isn't a need for users and golfers yet because they aren't making an account with us, it's with the course."
+There is no separate tab. Instead, each course's profile (Golf courses → the course) gets a People section: its staff
+logins (role, 2-step, last sign-in), its members, and the golfers with sign-ins who book there. Looking up one golfer
+across courses (a support email) is done from the Bookings search (name, email, booking number). The menu loses
+"Users & golfers".
