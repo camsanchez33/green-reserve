@@ -154,6 +154,16 @@ export function resolveRevenuePeriod(kind: RevenuePeriodKind, now: Date, tz: str
   };
 }
 
+/** Cents per platform day from `fromDay`, `days` long, from per-day sums (YYYY-MM-DD); days outside are ignored. */
+export function daySeries(rows: { day: string; cents: number }[], fromDay: string, days: number): number[] {
+  const out = new Array<number>(days).fill(0);
+  for (const r of rows) {
+    const i = daysBetween(fromDay, r.day);
+    if (i >= 0 && i < days) out[i] += r.cents;
+  }
+  return out;
+}
+
 /** Cents per platform day from `fromDay`, `days` long; rows outside are ignored. */
 export function centsPerDay(rows: { at: Date; cents: number }[], fromDay: string, days: number, tz: string = PLATFORM_TZ): number[] {
   const out = new Array<number>(days).fill(0);
@@ -197,22 +207,47 @@ export function stripePaymentUrl(stripeId: string | null, account: string, conne
   return `https://dashboard.stripe.com${mode}/payments/${stripeId}`;
 }
 
-/**
- * A course counted live at instant `t`: it had gone live before `t` and wasn't
- * archived or taken offline by then. A course live today with no recorded go-live
- * (from before MP-3 stamped it) counts from when it was created.
- */
-export function liveAt(c: { active: boolean; archivedAt: Date | null; firstWentLiveAt: Date | null; offlineAt: Date | null; createdAt: Date }, t: Date): boolean {
-  const wentLive = c.firstWentLiveAt ?? (c.active ? c.createdAt : null);
-  if (!wentLive || wentLive.getTime() >= t.getTime()) return false;
-  if (c.archivedAt && c.archivedAt.getTime() < t.getTime()) return false;
-  if (c.active) return true;
-  // Off now: it was still on at `t` only if it went offline after `t`.
-  return !!c.offlineAt && c.offlineAt.getTime() >= t.getTime();
-}
-
 /** The Stripe dashboard page for a payout to a course's bank: dashboard.stripe.com/<acct>[/test]/payouts/<po>. */
 export function stripePayoutUrl(payoutId: string, connectedAccountId: string, testMode: boolean): string | null {
   if (!payoutId.startsWith('po_') || !connectedAccountId) return null;
   return `https://dashboard.stripe.com/${connectedAccountId}${testMode ? '/test' : ''}/payouts/${payoutId}`;
+}
+
+// ---- Payouts to a course's bank (owner only), from its own Stripe account ----
+
+/** A payout as Stripe lists it (only the fields read here). */
+export type PayoutIn = {
+  id: string; amount: number; currency: string; status: string; arrival_date: number;
+  failure_message?: string | null; failure_code?: string | null;
+  reversed_by?: unknown; original_payout?: unknown;
+};
+export type PayoutProblem = { kind: 'failed' | 'short' | 'canceled'; payoutId: string; amountCents: number; date: string; reason: string };
+
+/**
+ * Stripe's arrival_date is a calendar day sent as midnight UTC: read it as a date, never
+ * through a timezone (ledger-view does the same). This is the [gte, lt) range of seconds
+ * that covers the platform days from..to inclusive.
+ */
+export function payoutArrivalRange(from: string, to: string): { gte: number; lt: number } {
+  return { gte: Date.parse(`${from}T00:00:00Z`) / 1000, lt: Date.parse(`${addDays(to, 1)}T00:00:00Z`) / 1000 };
+}
+
+/**
+ * One course's payouts in the window: what reached its bank, and the ones that didn't.
+ * US dollars only. A payout Stripe paid and then reversed is a problem ('short': the
+ * whole amount was taken back) and is NOT counted as paid out; the reversing payout
+ * itself (original_payout set) is neither.
+ */
+export function summarisePayouts(list: PayoutIn[]): { paidCents: number; paidCount: number; problems: PayoutProblem[] } {
+  let paidCents = 0, paidCount = 0;
+  const problems: PayoutProblem[] = [];
+  for (const p of list) {
+    if (p.currency !== 'usd' || p.original_payout) continue;
+    const date = new Date(p.arrival_date * 1000).toISOString().slice(0, 10);
+    if (p.status === 'failed') problems.push({ kind: 'failed', payoutId: p.id, amountCents: p.amount, date, reason: p.failure_message || p.failure_code || 'The bank sent it back.' });
+    else if (p.status === 'canceled') problems.push({ kind: 'canceled', payoutId: p.id, amountCents: p.amount, date, reason: 'Canceled before it reached the bank.' });
+    else if (p.status === 'paid' && p.reversed_by) problems.push({ kind: 'short', payoutId: p.id, amountCents: p.amount, date, reason: 'Reversed after it was paid — the whole amount was taken back.' });
+    else if (p.status === 'paid' && p.amount > 0) { paidCents += p.amount; paidCount++; }
+  }
+  return { paidCents, paidCount, problems };
 }

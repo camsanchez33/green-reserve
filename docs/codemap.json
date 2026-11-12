@@ -2853,7 +2853,7 @@
     },
     {
       "path": "src/app/api/admin/revenue/route.ts",
-      "lines": 501,
+      "lines": 511,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -24825,7 +24825,7 @@
     },
     {
       "path": "src/lib/revenue-period.ts",
-      "lines": 219,
+      "lines": 254,
       "purpose": "ADMIN-REDO Revenue (Cam 2026-11-11):",
       "brain": [],
       "exports": [
@@ -24846,12 +24846,24 @@
           "kind": "fn"
         },
         {
-          "name": "liveAt",
+          "name": "daySeries",
           "kind": "fn"
         },
         {
           "name": "parseRevenuePeriod",
           "kind": "fn"
+        },
+        {
+          "name": "payoutArrivalRange",
+          "kind": "fn"
+        },
+        {
+          "name": "PayoutIn",
+          "kind": "type"
+        },
+        {
+          "name": "PayoutProblem",
+          "kind": "type"
         },
         {
           "name": "platformMoveLabel",
@@ -24887,6 +24899,10 @@
         },
         {
           "name": "stripePayoutUrl",
+          "kind": "fn"
+        },
+        {
+          "name": "summarisePayouts",
           "kind": "fn"
         }
       ],

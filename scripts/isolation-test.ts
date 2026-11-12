@@ -726,6 +726,8 @@ async function main() {
         check(`Manager with Money → Revenue (${period}) → 200 with the period, revenue and series`, r.status === 200 && b.period?.kind === period && typeof b.revenue?.cents === 'number' && b.revenueSeries?.current.length === b.period?.elapsedDays, JSON.stringify({ status: r.status, period: b.period }));
         check(`…no owner-only payout fields (${period})`, !('coursePayoutProblems' in (b ?? {})) && !('payouts' in (b ?? {})), Object.keys(b ?? {}).join(','));
       }
+      const legacy = (await api('/api/admin/revenue?period=custom&from=2026-11-01&to=2026-11-10', { cookie: mc })).body as { period?: { from: string; to: string } };
+      check('The older page\'s custom period still says the days it was given', legacy.period?.from === '2026-11-01' && legacy.period?.to === '2026-11-10', JSON.stringify(legacy.period));
       const before = (await api('/api/admin/revenue?period=month', { cookie: mc })).body as Rev;
       const row = before.ledger?.rows.find(x => x.id === move.id);
       check('…the ledger shows the real course\'s service fee', row?.amountCents === 150 && row.what === 'Service fee collected', JSON.stringify(row));

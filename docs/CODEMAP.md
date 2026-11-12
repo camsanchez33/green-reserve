@@ -126,7 +126,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/admin/refund` | admin | file | POST | `src/app/api/admin/refund/route.ts` | 30 |
 | `/api/admin/request-re-review` | admin | file | POST | `src/app/api/admin/request-re-review/route.ts` | 48 |
 | `/api/admin/resend-staff-setup` | admin | file | POST | `src/app/api/admin/resend-staff-setup/route.ts` | 49 |
-| `/api/admin/revenue` | admin | file | GET | `src/app/api/admin/revenue/route.ts` | 501 |
+| `/api/admin/revenue` | admin | file | GET | `src/app/api/admin/revenue/route.ts` | 511 |
 | `/api/admin/schedule` | admin | file | DELETE GET PATCH POST | `src/app/api/admin/schedule/route.ts` | 90 |
 | `/api/admin/search` | admin | file | GET | `src/app/api/admin/search/route.ts` | 234 |
 | `/api/admin/security` | admin | file | GET | `src/app/api/admin/security/route.ts` | 18 |
@@ -592,7 +592,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/notice-templates.ts` | 1 | 12 | MSG-2 (Cam 2026-11-06): | `BLANK`, `READY` |
 | `src/lib/on-course.ts` | 1 | 25 | ONCOURSE-1 (Cam 2026-11-06: | `onCourse`, `ROUND_MINUTES` |
 | `src/lib/receipt-charges.ts` | 1 | 104 | R-GOLF-010 — what was actually charged to (and refunded from) the golfer's card, for the receipt. | `chargedNowCents`, `ReceiptCharge`, `receiptCharges` |
-| `src/lib/revenue-period.ts` | 1 | 219 | ADMIN-REDO Revenue (Cam 2026-11-11): | `addDays`, `centsPerDay`, `dayIndex`, `daysBetween`, `liveAt`, `parseRevenuePeriod`, `platformMoveLabel`, `platformSigned` +7 more |
+| `src/lib/revenue-period.ts` | 1 | 254 | ADMIN-REDO Revenue (Cam 2026-11-11): | `addDays`, `centsPerDay`, `dayIndex`, `daysBetween`, `daySeries`, `parseRevenuePeriod`, `payoutArrivalRange`, `PayoutIn` +11 more |
 | `src/lib/sample-data.ts` | 1 | 501 | Cam 2026-10-28 ("add a shit ton of test tee times, members and shit to the test course … do a lot of fake bookings"); Cam 2026-11-01 chose "Busy season": | `fillTestCourse`, `hasSampleData`, `SAMPLE_AHEAD_DAYS`, `SAMPLE_PAST_DAYS`, `SAMPLE_SOLD_BY`, `SampleResult` |
 | `src/lib/schedule-plans.ts` | 1 | 98 | W2-4 (Cam 2026-10-19: | `checkPeriods`, `groupSchedules`, `normDays`, `PlanGroup`, `PlanRow`, `snapToGrid` |
 | `src/lib/schedule-preview.ts` | 1 | 153 | Schedule rework (Cam 2026-10-19: | `diffDay`, `previewScheduleChange`, `ScheduleChange`, `SchedulePreview` |

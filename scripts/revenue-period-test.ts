@@ -4,7 +4,7 @@
 import { readFileSync } from 'fs';
 import {
   resolveRevenuePeriod, parseRevenuePeriod, centsPerDay, platformMoveLabel, platformSigned,
-  stripePaymentUrl, stripePayoutUrl, liveAt,
+  stripePaymentUrl, stripePayoutUrl, payoutArrivalRange, summarisePayouts, daySeries,
 } from '../src/lib/revenue-period';
 let failed = 0;
 const check = (label: string, ok: boolean, info: unknown = '') => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${ok || !info ? '' : ' — ' + JSON.stringify(info)}`); if (!ok) failed++; };
@@ -91,15 +91,27 @@ check('Stripe: platform charge, test', stripePaymentUrl('pi_1', 'platform', 'acc
 check('Stripe: refunds, cash and a course with no account get no link', stripePaymentUrl('re_1', 'course', 'acct_9', false) === null && stripePaymentUrl(null, 'course', 'acct_9', false) === null && stripePaymentUrl('pi_1', 'course', null, false) === null);
 check('Stripe: payout link', stripePayoutUrl('po_1', 'acct_9', true) === 'https://dashboard.stripe.com/acct_9/test/payouts/po_1');
 
+check('daySeries: per-day sums placed by day', JSON.stringify(daySeries([{ day: '2026-11-01', cents: 450 }, { day: '2026-11-02', cents: -150 }, { day: '2026-10-31', cents: 9 }], '2026-11-01', 3)) === '[450,-150,0]');
+
+// Payouts: arrival_date is a calendar day at midnight UTC — read as a date.
 {
-  const t = new Date('2026-11-01T00:00:00Z');
-  const base = { active: true, archivedAt: null, firstWentLiveAt: new Date('2026-10-01T00:00:00Z'), offlineAt: null, createdAt: new Date('2026-09-01T00:00:00Z') };
-  check('live: on since October', liveAt(base, t));
-  check('live: went live after t → not yet', !liveAt({ ...base, firstWentLiveAt: new Date('2026-11-05T00:00:00Z') }, t));
-  check('live: archived before t → no', !liveAt({ ...base, archivedAt: new Date('2026-10-20T00:00:00Z') }, t));
-  check('live: off now but went offline after t → was live', liveAt({ ...base, active: false, offlineAt: new Date('2026-11-03T00:00:00Z') }, t));
-  check('live: off now, offline before t → no', !liveAt({ ...base, active: false, offlineAt: new Date('2026-10-03T00:00:00Z') }, t));
-  check('live: never went live and off → no', !liveAt({ ...base, active: false, firstWentLiveAt: null }, t));
+  const r = payoutArrivalRange('2026-10-01', '2026-10-31');
+  const oct1 = Date.parse('2026-10-01T00:00:00Z') / 1000, nov1 = Date.parse('2026-11-01T00:00:00Z') / 1000;
+  check('a payout arriving Oct 1 is in October (not September)', r.gte === oct1 && oct1 >= r.gte && oct1 < r.lt);
+  check('…one arriving Nov 1 is not', nov1 === r.lt);
+  const day = (d: string) => Date.parse(`${d}T00:00:00Z`) / 1000;
+  const s = summarisePayouts([
+    { id: 'po_paid', amount: 120000, currency: 'usd', status: 'paid', arrival_date: day('2026-10-01') },
+    { id: 'po_rev', amount: 50000, currency: 'usd', status: 'paid', arrival_date: day('2026-10-05'), reversed_by: 'po_back' },
+    { id: 'po_back', amount: 50000, currency: 'usd', status: 'paid', arrival_date: day('2026-10-06'), original_payout: 'po_rev' },
+    { id: 'po_fail', amount: 3000, currency: 'usd', status: 'failed', arrival_date: day('2026-10-07'), failure_message: 'Account closed' },
+    { id: 'po_can', amount: 2000, currency: 'usd', status: 'canceled', arrival_date: day('2026-10-08') },
+    { id: 'po_eur', amount: 999, currency: 'eur', status: 'paid', arrival_date: day('2026-10-09') },
+    { id: 'po_pend', amount: 700, currency: 'usd', status: 'in_transit', arrival_date: day('2026-10-31') },
+  ]);
+  check('paid out counts only paid, unreversed, USD payouts', s.paidCents === 120000 && s.paidCount === 1, s);
+  check('problems: failed, canceled and reversed ("short"), each dated by its arrival day', JSON.stringify(s.problems.map(p => [p.kind, p.payoutId, p.date])) === JSON.stringify([['short', 'po_rev', '2026-10-05'], ['failed', 'po_fail', '2026-10-07'], ['canceled', 'po_can', '2026-10-08']]), s.problems);
+  check('a failed payout carries Stripe\'s reason', s.problems.find(p => p.kind === 'failed')?.reason === 'Account closed');
 }
 
 // Source guards: the route reads GreenReserve's money from the ledger, real courses only.
@@ -107,6 +119,9 @@ const route = readFileSync('src/app/api/admin/revenue/route.ts', 'utf8');
 check('route: ledger rows are GreenReserve\'s part on real courses', /const OURS = \{ platformFeeCents: \{ gt: 0 \}, course: \{ isTest: false \} \}/.test(route));
 check('route: payouts and payout problems only on the owner branch', route.indexOf('coursePayoutProblems') > route.indexOf('if (!isOwner) return NextResponse.json(base);'));
 check('route: the problemsCount badge mode is retired', !route.includes('problemsCount'));
+check('route: the older periods keep their UTC days in period.from/to (the old page\'s exports read them)', /shownFrom = dayStr\(w\.current\.start\); shownTo = dayStr\(w\.current\.end\)/.test(route));
+check('route: per-day sums leave test courses out', /JOIN "Course" c ON c\."id" = m\."courseId"\s+WHERE c\."isTest" = false/.test(route));
+check('route: a past window\'s live-course count is not reconstructed', /priorCount: null/.test(route));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);
