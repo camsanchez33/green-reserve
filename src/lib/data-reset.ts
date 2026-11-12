@@ -42,7 +42,7 @@ export const WIPED_TABLES = [
   // the pipeline
   'CourseInquiry', 'Call', 'InquiryStatusEvent', 'ChangeRequest',
   // messages, announcements, problems
-  'MessageThread', 'Message', 'CourseMessage', 'Announcement', 'AnnouncementDismissal', 'AdminAlert', 'AdminAlertEvent',
+  'MessageThread', 'Message', 'SupportChat', 'CourseMessage', 'Announcement', 'AnnouncementDismissal', 'AdminAlert', 'AdminAlertEvent',
   // sign-in throttles
   'RateLimit',
   // SEC-3: sign-ins before launch are test traffic.

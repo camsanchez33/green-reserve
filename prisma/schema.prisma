@@ -784,6 +784,7 @@ model Booking {
   paymentEvents              PaymentEvent[]
   shopItems                  BookingShopItem[]
 
+  @@unique([courseId, ref])
   // MP-3: Booking had ZERO indexes. Every admin money surface scans the table.
   @@index([courseId, createdAt])
   @@index([status, createdAt])
@@ -798,8 +799,6 @@ model Booking {
   @@index([cancellationFeeChargeId])
   @@index([stripePaymentIntentId])
   @@index([feePaymentIntentId])
-
-  @@unique([courseId, ref])
 }
 
 model TeeTimeSchedule {
@@ -1135,17 +1134,18 @@ model AnnouncementDismissal {
 }
 
 model MessageThread {
-  id                  String    @id @default(cuid())
-  courseId            String    @unique
+  id                  String        @id @default(cuid())
+  courseId            String        @unique
   adminLastEmailAt    DateTime?
   operatorLastEmailAt DateTime?
   /// MP-7b: an admin closed the conversation (it's finished). Any new message
   /// from either side clears it. Null = open.
   closedAt            DateTime?
-  updatedAt           DateTime  @updatedAt
-  createdAt           DateTime  @default(now())
-  course              Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  updatedAt           DateTime      @updatedAt
+  createdAt           DateTime      @default(now())
+  course              Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
   messages            Message[]
+  chats               SupportChat[]
 }
 
 model Message {
@@ -1159,8 +1159,34 @@ model Message {
   isBroadcast Boolean       @default(false)
   createdAt   DateTime      @default(now())
   thread      MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  /// SUPPORT (Cam 2026-11-12): the chat this message belongs to. Null = a message from before chats (or sent
+  /// through the old Messages routes): it reads as the course's one "earlier messages" chat, whose id is the
+  /// thread's id. Never backfilled.
+  chatId      String?
+  chat        SupportChat?  @relation(fields: [chatId], references: [id], onDelete: Cascade)
 
   @@index([threadId])
+  @@index([chatId])
+}
+
+/// SUPPORT (Cam 2026-11-12, ADMIN_REDO_SPEC "Course dashboard Support" + "Admin Course support"): a course's
+/// support conversations, each with its own subject and messages, inside the course's one MessageThread (which
+/// keeps the email throttles). State (waiting on us / new reply / answered) is derived from the messages
+/// (lib/support-chats). Made by the course's first message; the subject is that message's first line.
+model SupportChat {
+  id            String        @id @default(cuid())
+  threadId      String
+  thread        MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  /// The course (the thread's course, kept here so a chat is found by id and course in one read).
+  courseId      String
+  subject       String
+  /// The latest message's time, for "newest activity first".
+  lastMessageAt DateTime      @default(now())
+  createdAt     DateTime      @default(now())
+  messages      Message[]
+
+  @@index([courseId, lastMessageAt])
+  @@index([lastMessageAt])
 }
 
 // GreenReserve's own fixed operating costs (Vercel, Neon, Resend, Twilio,
