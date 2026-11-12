@@ -71,7 +71,7 @@ check('reads /api/admin/expenses', page.includes("'/api/admin/expenses'"));
 check('a rise in costs is the bad colour', /n > 0 \? g\.down : g\.up/.test(page));
 check('Delete goes through step-up', /stepUpFetch/.test(page) && /'DELETE'/.test(page));
 check('the budget reads "Not set" until it is set', page.includes('Not set'));
-check('the budget bar is coloured by the ONE shared pace rule, as a cost', /goalPace\(\{[^}]*kind: 'cost'/.test(page) && !/0\.9\s*\*/.test(page));
+check('the budget bar is coloured by the ONE shared pace rule, as a cap', /goalPace\(\{[^}]*kind: 'cap'/.test(page) && !/0\.9\s*\*|1\.1\s*\*/.test(page));
 check('setting the budget goes through step-up', /stepUpFetch\('\/api\/admin\/expenses\/budget'/.test(page));
 check('restart never wipes the stopped months (it adds the cost again from today)', /async function restart[\s\S]{0,300}'POST'/.test(page));
 

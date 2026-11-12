@@ -24,7 +24,7 @@ import { goalPace } from '@/lib/goal-pace';
 const usd = (cents: number) => '$' + (cents / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const longDay = (day: string) => new Date(day + 'T12:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' });
 const catLabel = (k: string) => EXPENSE_CATEGORY_LABEL[k as ExpenseCategory] ?? k;
-const PACE_WORDS = { ok: 'On pace to stay under', warn: 'Close to the budget', bad: 'On pace to go over' } as const;
+const PACE_WORDS = { ok: 'On pace to stay under', warn: 'Close to the budget', bad: 'On pace to go over', early: 'Too early to tell' } as const;
 const todayKey = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
 
 /** A change in costs: going up is the bad direction. */
@@ -177,7 +177,8 @@ export default function ExpensesPage() {
 
   // The budget card: spent so far this month against the budget. The pace colour waits for Build's shared pace rule
   // ("Goals: one pace rule everywhere") together with the budget itself.
-  const pace = k && budget ? goalPace({ progressCents: k.monthSoFar, targetCents: budget, elapsedShare: k.elapsedShare, kind: 'cost' }) : null;
+  const monthDays = k ? (k.monthEnd.getTime() - k.monthStart.getTime()) / 86_400_000 : 0;
+  const pace = k && budget ? goalPace({ progress: k.monthSoFar, target: budget, share: k.elapsedShare, kind: 'cap', daysElapsed: k.elapsedShare * monthDays }) : null;
   const monthLast = k ? new Date(k.monthEnd.getTime() - 3_600_000).toLocaleDateString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric' }) : '';
   const budgetCard = k && (
     <div className={`${g.glass} ${r.rkc}`}>
@@ -200,10 +201,10 @@ export default function ExpensesPage() {
       ) : budget ? (
         <>
           <b className={r.v}>{usd(k.monthSoFar)} <span className={s.of}>of {usd(budget)}</span></b>
-          <div className={s.gbar}><i className={pace?.state ? s[pace.state] : undefined} style={{ width: `${Math.min(100, (k.monthSoFar / budget) * 100)}%` }} /></div>
-          {pace?.state && pace.projectedCents !== null && (
-            <span className={r.c}><span className={pace.state === 'ok' ? g.up : pace.state === 'warn' ? g.wa : g.down}>{PACE_WORDS[pace.state]}</span> · {usd(pace.projectedCents)} by {monthLast}</span>
-          )}
+          <div className={s.gbar}><i className={pace && pace.tone !== 'early' ? s[pace.tone] : undefined} style={{ width: `${Math.min(100, (k.monthSoFar / budget) * 100)}%` }} /></div>
+          {pace && (pace.tone === 'early'
+            ? <span className={r.c}>{PACE_WORDS.early}</span>
+            : <span className={r.c}><span className={pace.tone === 'ok' ? g.up : pace.tone === 'warn' ? g.wa : g.down}>{PACE_WORDS[pace.tone]}</span> · {usd(Math.round(pace.projected))} by {monthLast}</span>)}
         </>
       ) : (
         <>
