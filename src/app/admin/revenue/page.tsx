@@ -200,8 +200,6 @@ export default function MoneyPage() {
   const [motionDay, setMotionDay] = useState<'today' | 'tomorrow'>('today');
   const [showAllComing, setShowAllComing] = useState(false);
   const [showAllLate, setShowAllLate] = useState(false);
-  const [retryingId, setRetryingId] = useState<string | null>(null);
-  const [retryMsg, setRetryMsg] = useState<{ id: string; ok: boolean; text: string } | null>(null);
 
   // By course
   const [search, setSearch] = useState('');
@@ -322,34 +320,6 @@ export default function MoneyPage() {
       setExpenseError('Network error — the expense was not deleted. Try again.');
     } finally {
       setExpenseBusy(null);
-    }
-  }
-
-  // MP-1 fix-now #5: collects payment only, and says so before moving any money.
-  async function retryCharge(p: FailedCharge) {
-    const ok = confirm(
-      `Charge ${fmtMoney(p.amount)} to ${p.golferName}'s saved card for their ${p.teeDate} ${p.teeTime} round at ${p.courseName}?\n\n`
-      + `This collects payment only. They will NOT be checked in and will not be emailed a receipt — `
-      + `check them in as normal when they arrive.`
-    );
-    if (!ok) return;
-    setRetryingId(p.bookingId); setRetryMsg(null);
-    try {
-      const res = await stepUpFetch(`/api/admin/retry-charge/${p.bookingId}`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ checkIn: false }),
-      });
-      if (res.ok) {
-        setRetryMsg({ id: p.bookingId, ok: true, text: `Charged ${fmtMoney(p.amount)} to ${p.golferName}. They are NOT checked in — check them in when they arrive.` });
-        load(period, customFrom, customTo);
-      } else {
-        const e = await res.json().catch(() => ({}));
-        setRetryMsg({ id: p.bookingId, ok: false, text: e.error || (res.status === 403 ? 'Retrying a charge needs manager access.' : 'The retry failed.') });
-      }
-    } catch {
-      setRetryMsg({ id: p.bookingId, ok: false, text: 'Network error — the card may or may not have been charged. Check Stripe before retrying.' });
-    } finally {
-      setRetryingId(null);
     }
   }
 
@@ -692,18 +662,12 @@ export default function MoneyPage() {
                   <span className="text-[13px] text-ink-muted">Retrying charges the card only — it never checks them in</span>
                 </div>
                 {/* MP-1b B4: above the list so a successful retry (which drops the row) can't hide the message. */}
-                {retryMsg && (
-                  <div role="status" className={'mt-3 rounded-md px-4 py-2.5 flex items-start justify-between gap-3 ' + (retryMsg.ok ? 'bg-ok/5 border border-ok/20' : 'bg-bad/5 border border-bad/20')}>
-                    <p className={'text-[13px] ' + (retryMsg.ok ? 'text-ok' : 'text-bad')}>{retryMsg.text}</p>
-                    <button type="button" onClick={() => setRetryMsg(null)} className="text-ink-muted hover:text-ink shrink-0" aria-label="Dismiss"><X aria-hidden="true" className="w-3.5 h-3.5"/></button>
-                  </div>
-                )}
                 {failed.length === 0 ? (
                   <p className="mt-3 text-[14px] text-ink flex items-center gap-2"><StatusDot status="ok" />Every card we tried went through.</p>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-[14px] border-collapse mt-3">
-                      <thead><tr className="text-[12.5px] text-ink-muted border-b border-line"><th className={TH}>Golfer</th><th className={TH}>Course</th><th className={TH}>Round</th><th className={TH}>Why it failed</th><th className={TH}>Owed</th><th></th></tr></thead>
+                      <thead><tr className="text-[12.5px] text-ink-muted border-b border-line"><th className={TH}>Golfer</th><th className={TH}>Course</th><th className={TH}>Round</th><th className={TH}>Why it failed</th><th className={TH}>Owed</th></tr></thead>
                       <tbody>
                         {failed.map(p => (
                           <tr key={p.bookingId} className="border-b border-line-soft last:border-0 align-top">
@@ -712,16 +676,11 @@ export default function MoneyPage() {
                             <td className="py-3 pr-4 tabular-nums">{p.teeDate} · {p.teeTime}</td>
                             <td className="py-3 pr-4 text-bad">{p.reason}</td>
                             <td className="py-3 pr-4 tabular-nums font-medium">{fmtMoney(p.amount)}</td>
-                            <td className="py-3 text-right">
-                              <button type="button" onClick={() => retryCharge(p)} disabled={retryingId !== null} className={PRIMARY}>
-                                {retryingId === p.bookingId ? 'Charging…' : 'Retry charge'}
-                              </button>
-                            </td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
-                    <p className="mt-2 text-[12.5px] text-ink-muted">A hard decline needs a new card or payment in person. Each course with a declined card is also on <Link href="/admin/problems" className="text-pine hover:underline">Problems</Link>, where someone takes it.</p>
+                    <p className="mt-2 text-[12.5px] text-ink-muted">Collecting it is the course's: GreenReserve never charges or retries a golfer's card (Cam 2026-11-12). Each course with a declined card is also on <Link href="/admin/problems" className="text-pine hover:underline">Problems</Link>, where someone takes it.</p>
                   </div>
                 )}
               </section>

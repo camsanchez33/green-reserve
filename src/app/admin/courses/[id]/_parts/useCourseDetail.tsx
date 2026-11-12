@@ -32,9 +32,6 @@ export function useCourseDetail() {
   const tabChosen = useRef(false);
   // AW-7: Setup's "Tee sheet & schedule" section (was the Operate tab).
   const [operateOpen, setOperateOpen] = useState(false);
-  // AW-7: retrying a failed charge from the Money tab (same route as Revenue).
-  const [retryingId, setRetryingId] = useState<string | null>(null);
-  const [retryMsg, setRetryMsg] = useState<{ id: string; ok: boolean; text: string } | null>(null);
 
   // CS-3: ?checkin=1 (from the courses sheet's Schedule link) opens the card.
   const [checkinFocus, setCheckinFocus] = useState<{ n: number } | null>(null);
@@ -597,26 +594,6 @@ export function useCourseDetail() {
     if (t === 'contact') { loadCourseThread(); loadDocuments(); }
   }
 
-  // AW-7: the same charge-only retry Revenue offers (manager+, owner step-up).
-  async function retryCharge(p: { bookingId: string; golferName: string; amount: number; teeDate: string; teeTime: string }) {
-    if (!confirm(`Charge ${fmtMoney(p.amount)} to ${p.golferName}'s saved card for their ${p.teeDate} ${p.teeTime} round?\n\nThis collects payment only. They will NOT be checked in and will not be emailed a receipt — check them in as normal when they arrive.`)) return;
-    setRetryingId(p.bookingId); setRetryMsg(null);
-    try {
-      const res = await stepUpFetch(`/api/admin/retry-charge/${p.bookingId}`, { method: 'POST', headers: H(), body: JSON.stringify({ checkIn: false }) });
-      if (res.ok) {
-        setRetryMsg({ id: p.bookingId, ok: true, text: `Charged ${fmtMoney(p.amount)} to ${p.golferName}. They are NOT checked in — check them in when they arrive.` });
-        loadDetail();
-      } else {
-        const e = await res.json().catch(() => ({}));
-        setRetryMsg({ id: p.bookingId, ok: false, text: e.error || 'Retry failed.' });
-      }
-    } catch {
-      setRetryMsg({ id: p.bookingId, ok: false, text: 'Network error — the card may or may not have been charged. Check Stripe before retrying.' });
-    } finally {
-      setRetryingId(null);
-    }
-  }
-
   // '' in a member-rate field means "no member rate" — the wire wants null.
   function schedulePayload(f: ScheduleFormState) {
     return { ...f, productId: f.productId || null, memberRateWeekday: f.memberRateWeekday || null, memberRateWeekend: f.memberRateWeekend || null };
@@ -873,9 +850,6 @@ export function useCourseDetail() {
     selectTab,
     operateOpen,
     setOperateOpen,
-    retryingId,
-    retryMsg,
-    retryCharge,
     checkinFocus,
     setCheckinFocus,
     verifyBusy,

@@ -1,8 +1,8 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 699,
-    "routes": 301,
+    "files": 698,
+    "routes": 300,
     "libs": 253,
     "models": 72,
     "orphans": 11,
@@ -295,7 +295,7 @@
     },
     {
       "path": "src/app/admin/courses/[id]/_parts/MoneyTab.tsx",
-      "lines": 172,
+      "lines": 165,
       "purpose": "MP-12 (ADMIN_V4 V4-9):",
       "brain": [],
       "exports": [
@@ -582,7 +582,7 @@
     },
     {
       "path": "src/app/admin/courses/[id]/_parts/useCourseDetail.tsx",
-      "lines": 1092,
+      "lines": 1066,
       "purpose": "MP-12 (ADMIN_V4 V4-9):",
       "brain": [],
       "exports": [
@@ -1131,7 +1131,7 @@
     },
     {
       "path": "src/app/admin/revenue/page.tsx",
-      "lines": 1074,
+      "lines": 1033,
       "purpose": "ADMIN-C Money (Cam 2026-10-22, from the Money mockup he approved:",
       "brain": [],
       "exports": [
@@ -2746,33 +2746,6 @@
         "@/lib/sent-messages",
         "next/server",
         "resend"
-      ],
-      "usedBy": []
-    },
-    {
-      "path": "src/app/api/admin/retry-charge/[bookingId]/route.ts",
-      "lines": 46,
-      "purpose": "",
-      "brain": [],
-      "exports": [
-        {
-          "name": "POST",
-          "kind": "route"
-        }
-      ],
-      "route": "/api/admin/retry-charge/[bookingId]",
-      "kind": "api",
-      "methods": [
-        "POST"
-      ],
-      "auth": "admin",
-      "guard": "file",
-      "imports": [
-        "@/lib/admin-audit",
-        "@/lib/admin-session",
-        "@/lib/checkin-booking",
-        "@/lib/stripe-errors",
-        "next/server"
       ],
       "usedBy": []
     },
@@ -14336,7 +14309,6 @@
         "src/app/api/admin/refund/route.ts",
         "src/app/api/admin/request-re-review/route.ts",
         "src/app/api/admin/resend-staff-setup/route.ts",
-        "src/app/api/admin/retry-charge/[bookingId]/route.ts",
         "src/app/api/admin/schedule/route.ts",
         "src/app/api/admin/send-golive-reminder/route.ts",
         "src/app/api/admin/sentry-test/route.ts",
@@ -14952,7 +14924,6 @@
         "src/app/api/admin/refund/route.ts",
         "src/app/api/admin/request-re-review/route.ts",
         "src/app/api/admin/resend-staff-setup/route.ts",
-        "src/app/api/admin/retry-charge/[bookingId]/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/schedule/route.ts",
         "src/app/api/admin/search/route.ts",
@@ -17404,7 +17375,6 @@
         "./stripe"
       ],
       "usedBy": [
-        "src/app/api/admin/retry-charge/[bookingId]/route.ts",
         "src/app/api/checkin/[bookingId]/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/lib/counter-pay.ts",
@@ -27070,7 +27040,6 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/api/admin/retry-charge/[bookingId]/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/lib/admin-course-page.ts"
       ]

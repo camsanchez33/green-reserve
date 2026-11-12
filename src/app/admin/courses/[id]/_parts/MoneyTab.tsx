@@ -5,7 +5,8 @@
 // and handlers come from useCourseDetail() via useCourse().
 // AW-7 (Cam 2026-10-21): leads with what GreenReserve earned from the course
 // this month, the cash rounds whose fee was never collected, and failed
-// charges with a retry; the transactions follow.
+// charges (shown only: GreenReserve never charges or retries a golfer's card,
+// Cam 2026-11-12); the transactions follow.
 
 import { X, Search } from 'lucide-react';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -15,7 +16,7 @@ import { TX_STATUS, iCls } from './shared';
 import { useCourse } from './context';
 
 export function MoneyTab() {
-  const { detail, retryingId, retryMsg, retryCharge, txItems, setRefundTarget, setRefundAmount, setRefundReason, setRefundError, refundNote, setRefundNote, txLoading, txError, txPage, setTxPage, txPages, txTotal, txFrom, setTxFrom, txTo, setTxTo, txSearch, setTxSearch, loadTransactions, openOperate } = useCourse();
+  const { detail, txItems, setRefundTarget, setRefundAmount, setRefundReason, setRefundError, refundNote, setRefundNote, txLoading, txError, txPage, setTxPage, txPages, txTotal, txFrom, setTxFrom, txTo, setTxTo, txSearch, setTxSearch, loadTransactions, openOperate } = useCourse();
   const m = detail.money;
   const vs = m.feesSamePointLastMonth;
   return (
@@ -32,7 +33,7 @@ export function MoneyTab() {
                 <Card className="mb-5 border-l-[3px] border-bad">
                   <div className="px-5 pt-4 pb-2">
                     <h2 className="text-[15px] font-semibold text-ink">Failed charges</h2>
-                    <p className="text-[13px] text-ink-soft mt-0.5">The saved card was declined at check-in. Ask the golfer to update it, then retry — retrying charges the card only; it doesn’t check them in.</p>
+                    <p className="text-[13px] text-ink-soft mt-0.5">The saved card was declined at check-in. Collecting it is the course’s.</p>
                   </div>
                   <div className="divide-y divide-line-soft">
                     {m.failedCharges.map(f => (
@@ -43,19 +44,11 @@ export function MoneyTab() {
                             <div className="text-xs text-ink-muted">{fmtDate(f.teeDate)} at {fmtTime(f.teeTime)}{f.reason ? ` · ${f.reason}` : ''}</div>
                           </div>
                           <span className="text-sm text-ink tabular-nums">{fmtMoney(f.amount)}</span>
-                          <button onClick={() => retryCharge(f)} disabled={retryingId !== null}
-                            className="text-[12.5px] font-medium text-white bg-pine hover:bg-pine-hover rounded-md px-2.5 py-1.5 disabled:opacity-50">
-                            {retryingId === f.bookingId ? 'Charging…' : 'Retry charge'}
-                          </button>
                         </div>
-                        {retryMsg?.id === f.bookingId && <p role="alert" className={'text-xs mt-1.5 ' + (retryMsg.ok ? 'text-ok' : 'text-bad')}>{retryMsg.text}</p>}
                       </div>
                     ))}
                   </div>
                 </Card>
-              )}
-              {retryMsg?.ok && !m.failedCharges.some(f => f.bookingId === retryMsg.id) && (
-                <p className="mb-5 text-sm text-ok">{retryMsg.text}</p>
               )}
 
               <h2 className="text-[15px] font-semibold text-ink mb-2">Transactions</h2>
