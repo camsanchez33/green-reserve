@@ -432,10 +432,16 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
 .cat .cl{display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:5px}.cat .cl b{font-variant-numeric:tabular-nums}
 .cat .bar{height:6px;border-radius:999px;background:var(--line);overflow:hidden}.cat .bar i{display:block;height:100%;background:var(--down)}
 @media (max-width:1100px){.fk{grid-template-columns:repeat(2,minmax(0,1fr))!important}.rsplit3{grid-template-columns:minmax(0,1fr)}}
-.bc{display:flex;align-items:flex-end;gap:10px;height:190px}
-.bc .m{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;min-width:0;max-width:44px;margin:0 auto;border-radius:6px 6px 0 0;overflow:hidden}
-.bc .m i{display:block}.bc .on{background:var(--chart)}.bc .of{background:var(--t2);opacity:.85}
-.bl{display:flex;gap:10px;margin-top:6px;font-size:11.5px;color:var(--muted)}.bl span{flex:1;text-align:center}
+.bcw{position:relative;padding-left:40px}.gl{position:absolute;left:40px;right:0;border-top:1px dashed var(--grid);font-size:11px;color:var(--muted)}.gl span{position:absolute;left:-40px;top:-8px;width:34px;text-align:right;font-variant-numeric:tabular-nums}
+.bc{position:relative;display:flex;align-items:flex-end;gap:14px;height:220px}
+.bc .m:hover{filter:brightness(1.12)}.bc .m.part{opacity:.55;background-image:repeating-linear-gradient(135deg,transparent 0 5px,rgba(255,255,255,.08) 5px 10px)}
+.bc .val{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:5px;font-size:11.5px;font-weight:600;color:var(--ink-soft,var(--ink));white-space:nowrap;font-variant-numeric:tabular-nums}
+.bc .col{flex:1;height:100%;display:flex;align-items:flex-end;min-width:0}
+.bc .col .m{position:relative;width:100%;max-width:40px;margin:0 auto}
+.bc .m{display:flex;flex-direction:column;justify-content:flex-end;border-radius:8px 8px 3px 3px;overflow:visible}.bc .m i:first-of-type{border-radius:8px 8px 0 0}.bc .m i:last-of-type{border-radius:0 0 3px 3px}
+.bc .m i{display:block}.bc .on{background:var(--chart)}.bc .of{background:color-mix(in srgb,var(--t2) 75%,transparent)}
+.bl{display:flex;gap:14px;margin:8px 0 0 40px;font-size:11.5px;color:var(--muted)}.bl span{flex:1;text-align:center}
+.wr{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line);font-size:13.5px}.wr:first-child{border-top:0;padding-top:0}.wr .d{width:8px;height:8px;border-radius:50%}.wr .why{color:var(--muted);font-size:12.5px}.wr a{font-size:12.5px;font-weight:600;color:var(--ink);text-decoration:underline;text-underline-offset:3px}
 .kvr{display:flex;justify-content:space-between;padding:9px 0;border-top:1px solid var(--line);font-size:13.5px}.kvr:first-child{border-top:0;padding-top:0}.kvr b{font-variant-numeric:tabular-nums}
 .funnel{display:flex;flex-direction:column;gap:8px}
 .fs{display:grid;grid-template-columns:120px minmax(0,1fr) 40px;gap:10px;align-items:center;font-size:13px}
@@ -543,17 +549,17 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
       </div>
       <div class="rk fk">
         <div class="glass rkc"><span class="l">Live courses</span><b class="v" id="k1"></b><span class="c" id="k1c"></span></div>
-        <div class="glass rkc"><span class="l">Bookings</span><b class="v" id="k2"></b><span class="c" id="k2c"></span></div>
-        <div class="glass rkc"><span class="l">Golfers</span><b class="v" id="k3"></b><span class="c" id="k3c"></span></div>
-        <div class="glass rkc"><span class="l">Booked online</span><b class="v" id="k4"></b><span class="c" id="k4c"></span></div>
+        <div class="glass rkc"><span class="l">Online bookings</span><b class="v" id="k2"></b><span class="c" id="k2c"></span></div>
+        <div class="glass rkc"><span class="l">Tee sheets filled</span><b class="v" id="k3"></b><span class="c" id="k3c"></span></div>
+        <div class="glass rkc"><span class="l">Courses slipping</span><b class="v" id="k4"></b><span class="c" id="k4c"></span></div>
       </div>
       <section class="glass rpad" aria-label="Bookings by month">
         <div class="rh"><b>Bookings by month</b><span class="rk2"><span><i class="sw2" style="background:var(--chart)"></i>Online</span><span><i class="sw2" style="background:var(--t2)"></i>Phone &amp; counter</span></span></div>
         <div id="bchart"></div>
       </section>
       <div class="rsplit2">
-        <section class="glass rpad" aria-label="Golfers">
-          <div class="rh"><b>Golfers</b></div>
+        <section class="glass rpad" aria-label="Courses to watch">
+          <div class="rh"><b>Courses to watch</b></div>
           <div id="gol"></div>
         </section>
         <section class="glass rpad" aria-label="Courses joining">
@@ -563,7 +569,7 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
       </div>
       <section class="glass rpad" aria-label="Courses">
         <div class="rh"><b>Courses</b><a class="ico" href="#" aria-label="Download CSV" title="Download CSV"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></a></div>
-        <table class="rt"><thead><tr><th>Course</th><th class="n">Bookings</th><th class="n">vs before</th><th class="n hide-s">Tee sheet filled</th><th class="n hide-s">Booked online</th><th class="n">Golfers</th></tr></thead><tbody id="crs"></tbody></table>
+        <table class="rt"><thead><tr><th>Course</th><th class="n">Online bookings</th><th class="n">vs before</th><th class="n hide-s">Tee sheet filled</th><th class="n hide-s">Booked online</th><th class="n">Last online booking</th></tr></thead><tbody id="crs"></tbody></table>
       </section>
     </main>
   </div>
@@ -587,18 +593,20 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
     const M=ALL.slice(-P[per][1]), f=P[per][2];
     const on=M.reduce((a,m)=>a+m[1],0), off=M.reduce((a,m)=>a+m[2],0), bk=on+off, live=M[M.length-1][3];
     const golfers=Math.round(bk*0.38), share=Math.round(on/bk*100);
+    const fill=Math.round(54+ (P[per][1]<=3?6:0)), slip=2;
     $("k1").textContent=live; $("k1c").innerHTML=ch(live,Math.max(1,Math.round(live*f)));
-    $("k2").textContent=bk.toLocaleString(); $("k2c").innerHTML=ch(bk,bk*f);
-    $("k3").textContent=golfers.toLocaleString(); $("k3c").innerHTML=ch(golfers,golfers*f*0.95);
-    $("k4").textContent=share+"%"; $("k4c").innerHTML=ch(share,share-6);
-    const max=Math.max(...M.map(m=>m[1]+m[2]))*1.08;
-    $("bchart").innerHTML='<div class="bc">'+M.map(m=>'<div class="m" style="height:'+((m[1]+m[2])/max*100)+'%" title="'+m[0]+': '+m[1]+' online, '+m[2]+' phone & counter"><i class="on" style="flex:'+m[1]+'"></i><i class="of" style="flex:'+m[2]+'"></i></div>').join('')+'</div><div class="bl">'+M.map(m=>'<span>'+m[0]+'</span>').join('')+'</div>';
-    const ret=Math.round(golfers*0.41);
-    $("gol").innerHTML='<div class="kvr"><span>Played more than once</span><b>'+ret.toLocaleString()+' · '+Math.round(ret/golfers*100)+'%</b></div><div class="kvr"><span>New this period</span><b>'+Math.round(golfers*0.62).toLocaleString()+'</b></div><div class="kvr"><span>Made an account</span><b>'+Math.round(golfers*0.47).toLocaleString()+'</b></div><div class="kvr"><span>Said yes to texts</span><b>'+Math.round(golfers*0.33).toLocaleString()+'</b></div><div class="kvr"><span>Rounds per golfer</span><b>'+(bk/golfers).toFixed(1)+'</b></div>';
+    $("k2").textContent=on.toLocaleString(); $("k2c").innerHTML=ch(on,on*f);
+    $("k3").textContent=fill+"%"; $("k3c").innerHTML=ch(fill,fill-5);
+    $("k4").textContent=slip; $("k4c").innerHTML='<span class="dn">Bookings down</span> vs '+vs[per];
+    const tot=M.map(m=>m[1]+m[2]), top=Math.max(...tot), step=top>1500?1000:top>600?250:100, max=Math.ceil(top*1.15/step)*step;
+    let g=''; for(let v=0;v<=max;v+=step) g+='<div class="gl" style="bottom:'+(v/max*220)+'px"><span>'+(v>=1000?(v/1000)+'k':v)+'</span></div>';
+    $("bchart").innerHTML='<div class="bcw">'+g+'<div class="bc">'+M.map((m,i)=>'<div class="col"><div class="m'+(m[0].includes('so far')?' part':'')+'" style="height:'+(tot[i]/max*100)+'%" title="'+m[0]+': '+m[1].toLocaleString()+' online, '+m[2].toLocaleString()+' phone & counter"><span class="val">'+tot[i].toLocaleString()+'</span><i class="on" style="flex:'+m[1]+'"></i><i class="of" style="flex:'+m[2]+'"></i></div></div>').join('')+'</div></div><div class="bl">'+M.map(m=>'<span>'+m[0].replace(' so far','*')+'</span>').join('')+'</div>';
+    const W=[["bad","Cedar Ridge Golf Links","Down 12%, no online booking in 9 days","Call them"],["warn","Pine Hollow Golf Club","Online bookings down 4%","Call them"],["warn","Maple Ridge","Live 3 weeks, 31% filled","Check setup"],["warn","Birch Creek GC","Signed 18 days ago, not built","Build it"]];
+    $("gol").innerHTML=W.map(w=>'<div class="wr"><i class="d" style="background:var(--'+(w[0]==='bad'?'down':'warn,#E7B45E')+')"></i><span><b>'+w[1]+'</b><div class="why">'+w[2]+'</div></span><a href="#">'+w[3]+'</a></div>').join('');
     const S=[["Inquiries",24],["Calls held",17],["Signed",9],["Built",7],["Live",5]];
     $("pipe").innerHTML='<div class="funnel">'+S.map(x=>'<div class="fs"><span>'+x[0]+'</span><div class="bar"><i style="width:'+(x[1]/S[0][1]*100)+'%"></i></div><b>'+x[1]+'</b></div>').join('')+'</div><div class="kvr" style="margin-top:10px;border-top:1px solid var(--line);padding-top:10px"><span>Inquiry to live, on average</span><b>23 days</b></div>';
     const C=[["Ridgewood Country Club",0.31,18,78,72,0.33],["Pine Hollow Golf Club",0.27,-4,71,66,0.30],["Oak Valley Golf Course",0.21,22,64,81,0.22],["Cedar Ridge Golf Links",0.13,-12,52,58,0.10],["Maple Ridge",0.08,140,31,90,0.05]];
-    $("crs").innerHTML=C.map(c=>'<tr><td>'+c[0]+'</td><td class="n">'+Math.round(bk*c[1]).toLocaleString()+'</td><td class="n '+(c[2]>=0?'upc':'dn')+'">'+(c[2]>=0?'Up ':'Down ')+Math.abs(c[2])+'%</td><td class="n hide-s">'+c[3]+'%</td><td class="n hide-s">'+c[4]+'%</td><td class="n">'+Math.round(golfers*c[5]).toLocaleString()+'</td></tr>').join('');
+    $("crs").innerHTML=C.map(c=>'<tr><td>'+c[0]+'</td><td class="n">'+Math.round(on*c[1]).toLocaleString()+'</td><td class="n '+(c[2]>=0?'upc':'dn')+'">'+(c[2]>=0?'Up ':'Down ')+Math.abs(c[2])+'%</td><td class="n hide-s">'+c[3]+'%</td><td class="n hide-s">'+c[4]+'%</td><td class="n">'+['Today','Today','Yesterday','9 days ago','Today'][C.indexOf(c)]+'</td></tr>').join('');
   }
   const fb=$("fbtn"), fm=$("filters");
   fb.addEventListener("click",()=>{fm.hidden=!fm.hidden;fb.setAttribute("aria-expanded",String(!fm.hidden));});

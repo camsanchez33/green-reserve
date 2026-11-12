@@ -330,8 +330,13 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
 .stabs{display:flex;gap:18px;font-size:14px}.stabs b{font-weight:500;color:var(--ink-soft);padding-bottom:6px;cursor:pointer}.stabs b.on{color:var(--ink);font-weight:600;box-shadow:inset 0 -2px 0 var(--ok)}
 .pgrid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;align-items:start}
 .pad2{padding:16px}
+.pgrid.nosale{grid-template-columns:minmax(0,1fr)}.pgrid.nosale .ticket{display:none}
+.pgrid.nosale .tiles{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
 .fsearch2{font-size:14px;min-height:44px;margin-bottom:10px}
-.cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.cats{position:relative;margin-bottom:12px}
+.fbtn2{font:inherit;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:7px;border:1px solid var(--edge);background:var(--panel);color:var(--ink);border-radius:10px;padding:8px 12px;cursor:pointer}
+.fmenu2{position:absolute;top:calc(100% + 6px);left:0;z-index:5;display:flex;flex-direction:column;gap:2px;padding:6px;border-radius:12px;background:var(--panel-hi);border:1px solid var(--edge);box-shadow:var(--shadow);min-width:160px}
+.fmenu2 button{text-align:left}
 .cats button{font:inherit;font-size:13px;border:0;border-radius:7px;padding:7px 12px;background:var(--hover);color:var(--ink-soft);cursor:pointer}
 .cats button.on{background:var(--ink);color:var(--bg);font-weight:600}
 .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
@@ -345,6 +350,7 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
 .ticket h4{margin:0;font-size:15px;display:flex;justify-content:space-between}.ticket h4 button{font:inherit;font-size:13px;border:0;background:transparent;color:var(--muted);cursor:pointer;text-decoration:underline}
 .tl{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line);font-size:13.5px}
 .tl .q{display:flex;align-items:center;gap:6px}.tl .q button{font:inherit;width:26px;height:26px;border-radius:7px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.tli{display:flex;align-items:center;gap:10px;min-width:0}.th{flex:none;width:36px;height:36px;border-radius:8px;background:var(--hover);display:grid;place-items:center;font-style:normal;font-weight:700;font-size:12px;color:var(--ink-soft)}
 .tl b{font-variant-numeric:tabular-nums;min-width:56px;text-align:right}
 .tsum{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}.tsum.big{font-size:16px;color:var(--ink);font-weight:700;border-top:1px solid var(--line);padding-top:8px}
 .chg{font:inherit;font-size:15px;font-weight:700;border:0;border-radius:10px;padding:13px;background:var(--brand);color:var(--brand-ink);cursor:pointer}
@@ -352,6 +358,25 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
 .payrow{display:flex;justify-content:space-between;padding:11px 0;border-top:1px solid var(--line);font-size:14px;cursor:pointer}.payrow span:last-child{color:var(--muted)}
 .cashq{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.cashq span{margin-right:auto;font-weight:600}.cashq button{font:inherit;font-size:12.5px;font-weight:600;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:8px;padding:6px 9px;cursor:pointer}
 @media (max-width:1100px){.pgrid{grid-template-columns:minmax(0,1fr)}.ticket{position:static}}
+</style>
+<style>
+.view[hidden]{display:none!important}
+.vh{display:flex;align-items:center;gap:10px;margin-bottom:10px}.vh b{font-size:15px}.vh .vsp{flex:1}.m{color:var(--muted);font-size:13px}
+.st{width:100%;border-collapse:collapse;font-size:13.5px}.st th{font-size:12px;font-weight:500;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+.st td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle}.st .n{text-align:right;font-variant-numeric:tabular-nums}
+.st tr.fix{background:rgba(242,196,107,.06)}.st .dot{display:inline-block;margin-right:7px;vertical-align:2px}
+.act{text-align:right;white-space:nowrap}.act button{font:inherit;font-size:12.5px;font-weight:600;border:0;background:transparent;color:var(--ink-soft);text-decoration:underline;text-underline-offset:3px;margin-left:10px;cursor:pointer}
+.vf{display:flex;justify-content:space-between;padding-top:12px;font-size:13.5px}
+.pri2{background:var(--brand)!important;color:var(--brand-ink)!important;border-color:transparent!important}
+.thumb{width:40px;height:40px;border-radius:8px;background:var(--hover);display:grid;place-items:center;font-weight:700;font-size:12px;color:var(--ink-soft)}
+.oh{display:inline-flex;align-items:center;gap:6px}.oh button{font:inherit;width:26px;height:26px;border-radius:7px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.cgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+.bills{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.bill{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}.bill input{font:inherit;font-size:14px;color:var(--ink);background:var(--hover);border:1px solid var(--line);border-radius:9px;padding:8px;width:100%;box-sizing:border-box;font-variant-numeric:tabular-nums}
+.crow{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:13.5px}.crow b{font-variant-numeric:tabular-nums}.crow.big{font-size:15px}.crow.big b{font-size:16px}
+.fl{display:flex;flex-direction:column;gap:5px;font-size:12.5px;color:var(--muted);margin:6px 0}.fl input{font:inherit;font-size:14px;color:var(--ink);background:var(--hover);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+.okc{color:var(--ok)}.dnc{color:var(--bad)}
+@media (max-width:1100px){.cgrid{grid-template-columns:minmax(0,1fr)}.bills{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 <div class="wrap">
   <div class="picker">
@@ -390,14 +415,66 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
 
     <main class="main">
       <div class="shoptop"><h2 class="ttl">Pro shop</h2>
-        <div class="stabs" role="tablist"><b class="on">Register</b><b>Sales</b><b>Stock</b><b>Close out</b></div></div>
-      <div class="pgrid">
+        <div class="stabs" role="tablist"><b class="on" data-v="reg">Register</b><b data-v="sales">Sales</b><b data-v="stock">Stock</b><b data-v="close">Close out</b></div></div>
+      <div class="pgrid view" data-view="reg">
         <section class="card pad2" aria-label="Items">
-          <div class="search fsearch2"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Find or scan an item</div>
+          <div class="search fsearch2"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></div>
           <div class="cats" id="cats"></div>
           <div class="tiles" id="tiles"></div>
         </section>
         <section class="card pad2 ticket" aria-label="This sale" id="ticket"></section>
+      </div>
+
+      <!-- Sales (as it works today) -->
+      <section class="card pad2 view" data-view="sales" hidden>
+        <div class="vh"><button class="ib" type="button">‹</button><b>Sales · Thu, Nov 12</b><button class="ib" type="button">›</button><span class="vsp"></span><button class="fbtn2" type="button"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>Filter</button></div>
+        <table class="st"><thead><tr><th>Time</th><th>Items</th><th>How paid</th><th class="n">Total</th><th></th></tr></thead><tbody>
+          <tr><td>11:42 AM</td><td>Pro V1 sleeve, Bottled water ×2</td><td><i class="dot ok"></i>Paid in cash</td><td class="n">$22.47</td><td class="act"><button>Receipt</button><button>Refund</button></td></tr>
+          <tr><td>11:15 AM</td><td>Club logo cap</td><td><i class="dot ok"></i>Paid by card</td><td class="n">$29.96</td><td class="act"><button>Receipt</button><button>Refund</button></td></tr>
+          <tr class="fix"><td>10:58 AM</td><td>Polo shirt · M</td><td><i class="dot wn"></i>Waiting on pay link</td><td class="n">$69.55</td><td class="act"><button>Send again</button><button>Took cash</button><button>Void</button></td></tr>
+          <tr><td>10:20 AM</td><td>Range bucket · large ×2</td><td><i class="dot ok"></i>On their account · Holt</td><td class="n">$25.68</td><td class="act"><button>Receipt</button><button>Refund</button></td></tr>
+          <tr><td>9:47 AM</td><td>Gatorade, Hot dog</td><td><i class="dot"></i>Refunded to their card</td><td class="n">$9.10</td><td class="act"><button>Receipt</button></td></tr>
+          <tr><td>9:05 AM</td><td>Glove</td><td><i class="dot"></i>Voided</td><td class="n">$19.26</td><td class="act"></td></tr>
+        </tbody></table>
+        <div class="vf"><span>6 sales · <b>$157.66</b> taken</span><span class="m">Sales, last 90 days ›</span></div>
+      </section>
+
+      <!-- Stock (as it works today) -->
+      <section class="card pad2 view" data-view="stock" hidden>
+        <div class="vh"><b>Items <span class="m">12</span></b><span class="vsp"></span><button class="fbtn2" type="button">Add many items</button><button class="fbtn2 pri2" type="button">+ Add an item</button></div>
+        <table class="st"><thead><tr><th>Photo</th><th>Item</th><th class="hide-s">Barcode</th><th class="n">Price</th><th class="n">On hand</th><th></th></tr></thead><tbody id="stockrows"></tbody></table>
+      </section>
+
+      <!-- Close out (as it works today) -->
+      <div class="cgrid view" data-view="close" hidden>
+        <section class="card pad2">
+          <div class="vh"><b>Count the drawer</b></div>
+          <div class="bills" id="bills"></div>
+          <div class="crow big"><span>Counted</span><b id="counted"></b></div>
+          <div class="vh" style="margin-top:14px"><b>Should be in the drawer</b></div>
+          <div class="crow"><span>Starting cash</span><b>$200.00</b></div>
+          <div class="crow"><span>Cash sales at the register</span><b>$186.40</b></div>
+          <div class="crow"><span>Marked paid at the counter (no tender recorded)</span><b>$130.00</b></div>
+          <div class="crow"><span>Cash dues and events</span><b>$0.00</b></div>
+          <div class="crow"><span>Cash refunds</span><b>−$9.10</b></div>
+          <div class="crow big"><span>Expected</span><b>$507.30</b></div>
+          <div class="crow big"><span>Over or short</span><b id="os"></b></div>
+        </section>
+        <section class="card pad2">
+          <div class="vh"><b>Close out the day</b></div>
+          <label class="fl">Leave in the drawer<input value="$200.00"></label>
+          <div class="crow"><span>Take out to deposit</span><b id="dep"></b></div>
+          <label class="fl">Note for the next person<input placeholder=""></label>
+          <button class="chg" type="button" style="margin-top:8px">Close the register</button>
+          <div class="vh" style="margin-top:16px"><b>Card, for reference</b></div>
+          <div class="crow"><span>Rounds paid by card</span><b>$2,940.00</b></div>
+          <div class="crow"><span>Shop sales by card</span><b>$99.51</b></div>
+          <div class="crow"><span>Shop card refunds</span><b>$9.10</b></div>
+          <p class="m" style="margin:6px 0 0">Card goes to Stripe — nothing to count.</p>
+          <div class="vh" style="margin-top:16px"><b>Recent close-outs</b></div>
+          <div class="crow"><span>Wed, Nov 11 · Dana</span><b class="okc">Even</b></div>
+          <div class="crow"><span>Tue, Nov 10 · Luis</span><b class="dnc">Short $4.00</b></div>
+        </section>
       </div>
     </main>
   </div>
@@ -411,10 +488,13 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
   // [id, name, category, price cents, stock (null = not counted), sizes]
   const I=[[1,"Pro V1 sleeve","Balls",1600,22,0],[2,"Range bucket · large","Range",1200,null,0],[3,"Range bucket · small","Range",800,null,0],[4,"Club logo cap","Apparel",2800,6,0],[5,"Polo shirt","Apparel",6500,null,4],[6,"Glove","Apparel",1800,0,0],[7,"Bottled water","Snacks",250,48,0],[8,"Gatorade","Snacks",350,30,0],[9,"Hot dog","Snacks",500,null,0],[10,"Club rental","Rentals",3500,null,0],[11,"Push cart","Rentals",800,4,0],[12,"Tees · bag","Balls",500,40,0]];
   const C=["All","Balls","Apparel","Snacks","Range","Rentals"];
-  let cat="All", cart={1:1,7:2}, step=null;
+  let cat="All", cart={}, step=null, fo=false; // picture: the item photo in the build
   function tiles(){
-    $("cats").innerHTML=C.map(c=>'<button type="button" class="'+(c===cat?'on':'')+'" data-c="'+c+'">'+c+'</button>').join("");
-    $("cats").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{cat=b.dataset.c;tiles();}));
+    // Cam 2026-11-12: just a Filter button; the categories are in its menu.
+    $("cats").innerHTML='<button type="button" class="fbtn2" id="pf" aria-expanded="'+fo+'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>'+(cat==="All"?"Filter":"Filter: "+cat)+'</button>'+
+      (fo?'<div class="fmenu2">'+C.map(c=>'<button type="button" class="'+(c===cat?'on':'')+'" data-c="'+c+'">'+c+'</button>').join("")+'</div>':'');
+    $("pf").addEventListener("click",()=>{fo=!fo;tiles();});
+    $("cats").querySelectorAll("[data-c]").forEach(b=>b.addEventListener("click",()=>{cat=b.dataset.c;fo=false;tiles();}));
     $("tiles").innerHTML=I.filter(i=>cat==="All"||i[2]===cat).map(i=>{const n=cart[i[0]]||0;const ini=i[1].split(/\s+/).filter(w=>/^[A-Za-z0-9]/.test(w)).slice(0,2).map(w=>w[0]).join('').toUpperCase();
       const st=i[5]?i[5]+' sizes':i[4]===null?'':i[4]<=0?'<span class="out">Sold out</span>':i[4]+' in stock';
       return '<button type="button" class="tile'+(n?' in':'')+'" data-i="'+i[0]+'"><span class="ph2">'+ini+'</span><span class="nm">'+i[1]+(n?'<small>'+n+' in sale</small>':'')+'</span><span class="pr2"><b>'+usd(i[3])+'</b>'+(st?'<span'+(i[4]===0?' class="out"':'')+'>'+st.replace(/<\/?span[^>]*>/g,'')+'</span>':'')+'</span></button>'}).join("");
@@ -426,7 +506,7 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
     let h;
     if(step===null){
       h='<h4>This sale'+(lines.length?'<button type="button" id="clr">Clear</button>':'')+'</h4>';
-      h+=lines.length?lines.map(([i,n])=>'<div class="tl"><span>'+i[1]+'</span><span class="q"><button type="button" data-d="'+i[0]+'" aria-label="One fewer">−</button>'+n+'<button type="button" data-u="'+i[0]+'" aria-label="One more">+</button><b>'+usd(i[3]*n)+'</b></span></div>').join(''):'<p class="tsum">Tap or scan items.</p>';
+      h+=lines.length?lines.map(([i,n])=>'<div class="tl"><span class="tli"><i class="th">'+i[1].split(/\s+/).filter(w=>/^[A-Za-z0-9]/.test(w)).slice(0,2).map(w=>w[0]).join('').toUpperCase()+'</i>'+i[1]+'</span><span class="q"><button type="button" data-d="'+i[0]+'" aria-label="One fewer">−</button>'+n+'<button type="button" data-u="'+i[0]+'" aria-label="One more">+</button><b>'+usd(i[3]*n)+'</b></span></div>').join(''):'<p class="tsum">Tap or scan items.</p>';
       h+='<button type="button" class="lnk2">Add a discount</button><div class="tsum"><span>Subtotal</span><span>'+usd(sub)+'</span></div><div class="tsum"><span>Sales tax 7%</span><span>'+usd(tax)+'</span></div><div class="tsum big"><span>Total</span><span>'+usd(tot)+'</span></div>';
       if(lines.length)h+='<button type="button" class="chg" id="chg">Charge '+usd(tot)+'</button>';
     } else {
@@ -439,7 +519,17 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
     $("ticket").querySelectorAll("[data-u]").forEach(b=>b.addEventListener("click",()=>{cart[b.dataset.u]++;render();}));
     const c=$("chg");if(c)c.addEventListener("click",()=>{step=1;render();});const bk=$("back");if(bk)bk.addEventListener("click",()=>{step=null;render();});const cl=$("clr");if(cl)cl.addEventListener("click",()=>{cart={};render();});
   }
-  function render(){tiles();ticket();}
+  // Cam 2026-11-12: with nothing in the sale, the items take the whole width; the sale opens beside them on the first tap.
+  function render(){const empty=!Object.values(cart).some(n=>n>0);document.querySelector('.pgrid').classList.toggle('nosale',empty);tiles();ticket();}
+
+  // Tabs: Register · Sales · Stock · Close out.
+  document.querySelectorAll('.stabs b').forEach(t=>t.addEventListener('click',()=>{document.querySelectorAll('.stabs b').forEach(x=>x.classList.toggle('on',x===t));document.querySelectorAll('.view').forEach(v=>v.hidden=v.dataset.view!==t.dataset.v);}));
+  $("stockrows").innerHTML=I.map(i=>{const ini=i[1].split(/\s+/).filter(w=>/^[A-Za-z0-9]/.test(w)).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+    const oh=i[5]?'<span class="m">Each size ›</span>':i[4]===null?'<span class="m">Not counted</span>':'<span class="oh"><button type="button">−</button><b'+(i[4]<=0?' class="dnc"':'')+'>'+(i[4]<=0?'Sold out':i[4])+'</b><button type="button">+</button></span>';
+    return '<tr><td><span class="thumb">'+ini+'</span></td><td><b>'+i[1]+'</b><div class="m">'+i[2]+'</div></td><td class="hide-s m">'+(i[4]!==null?'0'+(7000+i[0]*37):'—')+'</td><td class="n">'+usd(i[3])+'</td><td class="n">'+oh+'</td><td class="act"><button>Edit</button></td></tr>'}).join('');
+  const B=[["$100",1],["$50",2],["$20",8],["$10",6],["$5",9],["$1",22],["Quarters","$4.50"],["Other coins","$1.80"]];
+  $("bills").innerHTML=B.map(b=>'<label class="bill">'+b[0]+'<input value="'+b[1]+'"></label>').join('');
+  $("counted").textContent="$503.30"; $("os").innerHTML='<span class="dnc">Short $4.00</span>'; $("dep").textContent="$303.30";
   render();
 })();
 </script>
