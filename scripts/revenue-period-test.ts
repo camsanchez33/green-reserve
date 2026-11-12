@@ -110,7 +110,7 @@ check('daySeries: per-day sums placed by day', JSON.stringify(daySeries([{ day: 
     { id: 'po_pend', amount: 700, currency: 'usd', status: 'in_transit', arrival_date: day('2026-10-31') },
   ]);
   check('paid out counts only paid, unreversed, USD payouts', s.paidCents === 120000 && s.paidCount === 1, s);
-  check('problems: failed, canceled and reversed ("short"), each dated by its arrival day', JSON.stringify(s.problems.map(p => [p.kind, p.payoutId, p.date])) === JSON.stringify([['short', 'po_rev', '2026-10-05'], ['failed', 'po_fail', '2026-10-07'], ['canceled', 'po_can', '2026-10-08']]), s.problems);
+  check('problems: failed, canceled and reversed ("reversed"), each dated by its arrival day', JSON.stringify(s.problems.map(p => [p.kind, p.payoutId, p.date])) === JSON.stringify([['reversed', 'po_rev', '2026-10-05'], ['failed', 'po_fail', '2026-10-07'], ['canceled', 'po_can', '2026-10-08']]), s.problems);
   check('a failed payout carries Stripe\'s reason', s.problems.find(p => p.kind === 'failed')?.reason === 'Account closed');
 }
 

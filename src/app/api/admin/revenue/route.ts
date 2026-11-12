@@ -460,7 +460,7 @@ export async function GET(req: NextRequest) {
   // a partial total would read as a real one.
   const payoutsWanted = kind !== 'day' && kind !== 'week' && kind !== 'custom';
   let payoutsUnavailable = false;
-  const payoutRows: { courseId: string; name: string; kind: 'failed' | 'short' | 'canceled'; amountCents: number; at: string; reason: string; stripeUrl: string | null }[] = [];
+  const payoutRows: { courseId: string; name: string; kind: 'failed' | 'reversed' | 'canceled'; amountCents: number; at: string; reason: string; stripeUrl: string | null }[] = [];
   let paidOutCents = 0;
   const paidCourses = new Set<string>();
   const PAYOUT_READ_CAP = 1000;

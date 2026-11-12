@@ -221,7 +221,7 @@ export type PayoutIn = {
   failure_message?: string | null; failure_code?: string | null;
   reversed_by?: unknown; original_payout?: unknown;
 };
-export type PayoutProblem = { kind: 'failed' | 'short' | 'canceled'; payoutId: string; amountCents: number; date: string; reason: string };
+export type PayoutProblem = { kind: 'failed' | 'reversed' | 'canceled'; payoutId: string; amountCents: number; date: string; reason: string };
 
 /**
  * Stripe's arrival_date is a calendar day sent as midnight UTC: read it as a date, never
@@ -234,7 +234,7 @@ export function payoutArrivalRange(from: string, to: string): { gte: number; lt:
 
 /**
  * One course's payouts in the window: what reached its bank, and the ones that didn't.
- * US dollars only. A payout Stripe paid and then reversed is a problem ('short': the
+ * US dollars only. A payout Stripe paid and then reversed is a problem ('reversed': the
  * whole amount was taken back) and is NOT counted as paid out; the reversing payout
  * itself (original_payout set) is neither.
  */
@@ -246,7 +246,7 @@ export function summarisePayouts(list: PayoutIn[]): { paidCents: number; paidCou
     const date = new Date(p.arrival_date * 1000).toISOString().slice(0, 10);
     if (p.status === 'failed') problems.push({ kind: 'failed', payoutId: p.id, amountCents: p.amount, date, reason: p.failure_message || p.failure_code || 'The bank sent it back.' });
     else if (p.status === 'canceled') problems.push({ kind: 'canceled', payoutId: p.id, amountCents: p.amount, date, reason: 'Canceled before it reached the bank.' });
-    else if (p.status === 'paid' && p.reversed_by) problems.push({ kind: 'short', payoutId: p.id, amountCents: p.amount, date, reason: 'Reversed after it was paid — the whole amount was taken back.' });
+    else if (p.status === 'paid' && p.reversed_by) problems.push({ kind: 'reversed', payoutId: p.id, amountCents: p.amount, date, reason: 'Reversed after it was paid — the whole amount was taken back.' });
     else if (p.status === 'paid' && p.amount > 0) { paidCents += p.amount; paidCount++; }
   }
   return { paidCents, paidCount, problems };
