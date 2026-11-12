@@ -83,6 +83,7 @@ check('launch: the year shows only when it is not this year', launchDay('2026-12
   check('only a manager sets it (canSetLaunch = manager && inquiry)', /canSetLaunch: manager && !!inq/.test(route) && /p\.canSetLaunch &&/.test(page));
   check('the inquiries CSV link is hidden from viewers (support+ only, as the route)', /d\?\.support && <a href="\/api\/admin\/inquiries\?format=csv"/.test(page));
   check('the page never imports the route folder (server modules stay off the browser)', !/from ['"][^'"]*\/api\//.test(page));
+  check('the Pipeline page hides Export CSV from viewers too', /SUPPORT_PLUS\.includes\(role \?\? ''\) && <a\s+href="\/api\/admin\/inquiries\?format=csv"/.test(readFileSync('src/app/admin/inquiries/page.tsx', 'utf8')));
   check('a course whose inquiry was closed shows that inquiry\'s launch date (never a hard-coded null)', /launchOf\.get\(inquiryId\)/.test(route) && /expectedLaunchAt: true \}, orderBy/.test(route));
 }
 

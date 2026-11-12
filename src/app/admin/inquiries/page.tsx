@@ -20,7 +20,7 @@ import { Eyebrow } from '@/components/ui/Eyebrow';
 import { Card } from '@/components/ui/Card';
 import InquiryBoard from '@/components/admin/InquiryBoard';
 import { useAdminSession } from '@/lib/admin-session-context';
-import { MANAGER_PLUS } from '@/lib/admin-roles';
+import { MANAGER_PLUS, SUPPORT_PLUS } from '@/lib/admin-roles';
 import { stepUpFetch, askReason } from '@/lib/step-up-client';
 
 interface InquiryStatusEvent {
@@ -716,14 +716,14 @@ function InquiriesListInner() {
               >
                 <RefreshCw aria-hidden="true" className={`w-4 h-4 ${loading ? 'animate-spin motion-reduce:animate-none' : ''}`} />
               </button>
-              {/* IC-3 §5: every alive + closed row as a CSV, same auth as the list. */}
-              <a
+              {/* IC-3 §5: every alive + closed row as a CSV. Support+ only since #380 (the route refuses a viewer). */}
+              {SUPPORT_PLUS.includes(role ?? '') && <a
                 href="/api/admin/inquiries?format=csv"
                 download
                 className="flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-white border border-line transition-colors"
               >
                 Export CSV
-              </a>
+              </a>}
             </div>
           </div>
 
