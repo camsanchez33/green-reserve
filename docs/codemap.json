@@ -1,8 +1,8 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 695,
-    "routes": 299,
+    "files": 697,
+    "routes": 300,
     "libs": 253,
     "models": 72,
     "orphans": 11,
@@ -8487,7 +8487,7 @@
     },
     {
       "path": "src/app/courses/[slug]/CourseBookingClient.tsx",
-      "lines": 1888,
+      "lines": 1680,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8505,6 +8505,7 @@
         "@/components/CourseJoin",
         "@/components/CoursePacks",
         "@/components/TrustNote",
+        "@/components/golfer/CourseFrame",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/lib/booking-fees",
@@ -8515,9 +8516,7 @@
         "@/lib/contact",
         "@/lib/courses-data",
         "@/lib/demo-courses",
-        "@/lib/tee-colour",
         "@/lib/tee-time-utils",
-        "@/lib/walking",
         "lucide-react",
         "next/image",
         "next/link",
@@ -8607,6 +8606,39 @@
       "imports": [
         "./AccountPortalClient",
         "next"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/courses/[slug]/info/page.tsx",
+      "lines": 144,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (CourseInfoPage)",
+          "kind": "component"
+        },
+        {
+          "name": "generateMetadata",
+          "kind": "fn"
+        }
+      ],
+      "route": "/courses/[slug]/info",
+      "kind": "page",
+      "methods": [],
+      "auth": "public",
+      "guard": "public",
+      "imports": [
+        "@/components/golfer/CourseFrame",
+        "@/lib/demo-courses",
+        "@/lib/prisma",
+        "@/lib/public-course",
+        "@/lib/seo",
+        "@/lib/tee-colour",
+        "@/lib/walking",
+        "next",
+        "next/navigation"
       ],
       "usedBy": []
     },
@@ -13277,6 +13309,44 @@
       ]
     },
     {
+      "path": "src/components/golfer/CourseFrame.tsx",
+      "lines": 153,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "CourseFooter",
+          "kind": "component"
+        },
+        {
+          "name": "CourseHeader",
+          "kind": "component"
+        },
+        {
+          "name": "FrameCourse",
+          "kind": "type"
+        },
+        {
+          "name": "TYPE_LABELS",
+          "kind": "const"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/lib/cancel-policy",
+        "next/link",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/courses/[slug]/CourseBookingClient.tsx",
+        "src/app/courses/[slug]/info/page.tsx"
+      ]
+    },
+    {
       "path": "src/components/home/ProductShot.tsx",
       "lines": 16,
       "purpose": "",
@@ -16844,6 +16914,7 @@
         "src/app/courses/[slug]/CourseBookingClient.tsx",
         "src/app/dashboard/settings/page.tsx",
         "src/app/manage/[bookingId]/page.tsx",
+        "src/components/golfer/CourseFrame.tsx",
         "src/lib/cancel-booking.ts",
         "src/lib/cancel-fee-reason.ts",
         "src/lib/change-party.ts",
@@ -19302,6 +19373,7 @@
       "usedBy": [
         "src/app/api/bookings/route.ts",
         "src/app/courses/[slug]/CourseBookingClient.tsx",
+        "src/app/courses/[slug]/info/page.tsx",
         "src/app/courses/[slug]/page.tsx",
         "src/app/sitemap.ts"
       ]
@@ -23724,6 +23796,7 @@
         "src/app/api/receipt/[bookingId]/route.ts",
         "src/app/api/statement/[id]/route.ts",
         "src/app/api/stripe/webhook/route.ts",
+        "src/app/courses/[slug]/info/page.tsx",
         "src/app/courses/[slug]/page.tsx",
         "src/app/g/[slug]/page.tsx",
         "src/app/preview/[courseId]/page.tsx",
@@ -24016,6 +24089,7 @@
       "usedBy": [
         "src/app/api/courses/[slug]/route.ts",
         "src/app/book/page.tsx",
+        "src/app/courses/[slug]/info/page.tsx",
         "src/app/courses/[slug]/page.tsx"
       ]
     },
@@ -25402,6 +25476,7 @@
       ],
       "usedBy": [
         "src/app/contact/page.tsx",
+        "src/app/courses/[slug]/info/page.tsx",
         "src/app/courses/[slug]/page.tsx",
         "src/app/for-courses/page.tsx",
         "src/app/operator-agreement/page.tsx",
@@ -27154,7 +27229,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/courses/[slug]/CourseBookingClient.tsx",
+        "src/app/courses/[slug]/info/page.tsx",
         "src/components/dashboard/CourseLayoutTab.tsx"
       ]
     },
@@ -27717,7 +27792,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/courses/[slug]/CourseBookingClient.tsx",
+        "src/app/courses/[slug]/info/page.tsx",
         "src/lib/birdie/course-context.ts",
         "src/lib/normalize-course.ts",
         "src/lib/page-review.ts"
@@ -29919,6 +29994,7 @@
         "src/app/api/preview/[courseId]/route.ts",
         "src/app/api/preview/[courseId]/tee-times/route.ts",
         "src/app/api/preview/send/route.ts",
+        "src/app/courses/[slug]/info/page.tsx",
         "src/app/courses/[slug]/page.tsx",
         "src/app/preview/[courseId]/page.tsx",
         "src/app/sitemap.ts",
