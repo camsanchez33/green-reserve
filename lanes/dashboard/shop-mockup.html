@@ -362,10 +362,32 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
 <style>
 .sin{flex:1;font:inherit;font-size:13.5px;color:var(--ink);background:var(--hover);border:1px solid var(--line);border-radius:10px;padding:8px 11px}.sel{font:inherit;font-size:13px;color:var(--ink);background:var(--hover);border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin-left:4px}
 .chips2{display:flex;gap:6px;flex-wrap:wrap}.chips2 b{font-size:12.5px;font-weight:500;padding:5px 10px;border-radius:8px;border:1px solid var(--line);color:var(--ink-soft);cursor:pointer}.chips2 b.on{background:var(--active,var(--hover));color:var(--ink);font-weight:600}
+.st td.sn{font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
+.ssrch{flex:1;display:flex;align-items:center;gap:8px;background:var(--hover);border:1px solid var(--line);border-radius:10px;padding:0 11px;color:var(--muted)}.ssrch input{flex:1;font:inherit;font-size:13.5px;color:var(--ink);background:transparent;border:0;outline:none;padding:9px 0}
+.irow{grid-template-columns:44px minmax(0,1fr) auto 72px!important}.oh2{font-size:13px;color:var(--muted);white-space:nowrap}.oh2.dnc{color:var(--bad)}.iph{width:100%;aspect-ratio:4/3;border-radius:12px;background:var(--hover);display:grid;place-items:center;font-size:28px;font-weight:700;color:var(--ink-soft);margin-bottom:12px}
+.vh .ssrch,.vh .fbtn2{height:38px;box-sizing:border-box}.vh .fbtn2{padding:0 14px}.fbtn2.ghost{background:transparent;border-color:transparent;color:var(--ink-soft)}.fbtn2.ghost:hover{background:var(--hover)}.tsep{width:1px;height:22px;background:var(--line);margin:0 2px}
+.acts2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}.acts2 button{font:inherit;font-size:13.5px;font-weight:600;height:40px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}.acts2 button.pri{background:var(--ink);color:var(--bg,#111);border-color:transparent}.acts2 button:only-child{grid-column:1/-1}
+.lnk{display:block;margin:12px auto 0;font:inherit;font-size:12.5px;color:var(--muted);background:none;border:0;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.addw{position:relative}.addm{position:absolute;right:0;top:calc(100% + 6px);z-index:5;width:230px;display:flex;flex-direction:column;padding:6px;border-radius:12px;background:var(--panel-solid,#2a2b2a);border:1px solid var(--edge);box-shadow:0 12px 30px rgba(0,0,0,.35)}.addm[hidden]{display:none}.addm button{font:inherit;text-align:left;border:0;background:transparent;color:var(--ink);padding:9px 10px;border-radius:8px;cursor:pointer;display:flex;flex-direction:column;gap:2px}.addm button:hover{background:var(--hover)}.addm b{font-size:14px}.addm span{font-size:12px;color:var(--muted)}
+.mback{position:fixed;inset:0;background:rgba(0,0,0,.45);display:grid;place-items:center;z-index:20}.mback[hidden]{display:none}.modal{width:440px;max-width:calc(100vw - 32px);padding:20px;background:var(--panel-solid,#262726)}.mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.mh b{font-size:17px}.mph{height:96px;border:1px dashed var(--line);border-radius:12px;display:grid;place-items:center;color:var(--muted);font-size:13px;margin-bottom:8px}.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}.modal .fl input{box-sizing:border-box;width:100%;min-width:0}
+.cats2{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}.cats2 b{font-size:13px;font-weight:500;padding:6px 11px;border-radius:9px;border:1px solid var(--line);color:var(--ink-soft);cursor:pointer}.cats2 b.on{background:var(--ink);color:var(--bg,#111);font-weight:600;border-color:transparent}.cats2 b.nc{border-style:dashed}.newcat{display:flex;gap:8px;margin-top:8px}.newcat input{flex:1;font:inherit;font-size:14px;color:var(--ink);background:var(--hover);border:1px solid var(--line);border-radius:10px;padding:8px 11px}
+.bill2{display:flex;flex-direction:column;gap:5px}.bl2{font-size:12px;color:var(--muted)}.stp{display:flex;align-items:center;justify-content:space-between;background:var(--hover);border:1px solid var(--line);border-radius:10px;padding:3px}.stp button{font:inherit;font-size:17px;width:32px;height:32px;border:0;border-radius:8px;background:transparent;color:var(--ink);cursor:pointer}.stp button:hover{background:var(--line)}.stp b{font-variant-numeric:tabular-nums;font-size:15px}
+.sgrid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
+.sday{font-size:17px}.stot{font-size:13.5px;color:var(--muted)}.stot b{color:var(--ink);font-size:15px}
+.slist{display:flex;flex-direction:column}
+.srow{display:grid;grid-template-columns:62px 68px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 10px;border-top:1px solid var(--line);cursor:pointer;border-radius:10px}
+.srow:first-child{border-top:0}.srow:hover{background:var(--hover)}.srow.on{background:var(--hover);box-shadow:inset 0 0 0 1px var(--line)}
+.srow .sn{font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums;font-size:13px}.srow .tm{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+.srow .it{min-width:0}.srow .it b{display:block;font-size:14px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.srow .it span{font-size:12.5px;color:var(--muted)}
+.srow .am{font-size:15px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;text-align:right}.srow .am.x{color:var(--muted);text-decoration:line-through;font-weight:500}
+.sdet h3{margin:0;font-size:20px}.sdet .sub{color:var(--muted);font-size:13px;margin:4px 0 14px}
+.sdet .ln{display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid var(--line);font-size:13.5px}.sdet .ln b{font-variant-numeric:tabular-nums}
+.sdet .acts{display:flex;flex-direction:column;gap:8px;margin-top:16px}.sdet .acts button{font:inherit;font-size:14px;font-weight:600;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--hover);color:var(--ink);cursor:pointer}.sdet .acts button.pri{background:var(--ink);color:var(--bg,#111);border-color:transparent}.sdet .acts button.bad{color:var(--bad)}
+@media (max-width:1100px){.sgrid{grid-template-columns:minmax(0,1fr)}}
 .view[hidden]{display:none!important}
 .vh{display:flex;align-items:center;gap:10px;margin-bottom:10px}.vh b{font-size:15px}.vh .vsp{flex:1}.m{color:var(--muted);font-size:13px}
 .st{width:100%;border-collapse:collapse;font-size:13.5px}.st th{font-size:12px;font-weight:500;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
-.st td,.st td b{color:var(--ink)}.st td.m{color:var(--muted)}
+.st td,.st td b{color:var(--ink)}.st td.m{color:var(--muted)}.st td b.dnc{color:var(--bad)}
 .st td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle}.st .n{text-align:right;font-variant-numeric:tabular-nums}
 .st tr.fix{background:rgba(242,196,107,.06)}.st .dot{display:inline-block;margin-right:7px;vertical-align:2px}
 .act{text-align:right;white-space:nowrap}.act button{font:inherit;font-size:12.5px;font-weight:600;border:0;background:transparent;color:var(--ink-soft);text-decoration:underline;text-underline-offset:3px;margin-left:10px;cursor:pointer}
@@ -405,7 +427,7 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
     </svg>
     <aside class="rail">
       <div class="club"><span class="crest">PH</span><div><b>Pine Hollow Golf Club</b><small>Public course</small></div></div>
-      <div class="search lsearch" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Find a golfer or member</span><kbd>/</kbd></div>
+      <div class="search lsearch" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input aria-label="Find a golfer or member" style="font:inherit;border:0;background:transparent;color:inherit;outline:none;width:100%"></div>
       <div class="grp"><b>Today</b>
         <div class="nav">Home</div><div class="nav">Tee sheet</div><div class="nav on"><span>Pro shop</span></div><div class="nav">Messages</div></div>
       <div class="grp"><b>Business</b>
@@ -428,26 +450,21 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
         <section class="card pad2 ticket" aria-label="This sale" id="ticket"></section>
       </div>
 
-      <!-- Sales (as it works today) -->
-      <section class="card pad2 view" data-view="sales" hidden>
-        <div class="vh"><b>Sales · Thu, Nov 12</b><button class="ib" type="button" aria-label="Pick a day"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></button><span class="vsp"></span><span class="m">6 sales</span></div>
-        <div class="vh"><input class="sin" placeholder="Name, item or receipt #" aria-label="Search sales"><label class="m">Sort by <select class="sel"><option>Newest</option><option>Oldest</option><option>Largest</option></select></label><label class="m">Filter by <select class="sel"><option>All</option><option>Needs fixing</option></select></label></div>
-        <table class="st"><thead><tr><th>Time</th><th>Items</th><th>How paid</th><th class="n">Total</th><th></th></tr></thead><tbody>
-          <tr><td>11:42 AM</td><td>Pro V1 sleeve, Bottled water ×2</td><td><i class="dot ok"></i>Paid in cash</td><td class="n">$22.47</td><td class="act"><button>Receipt</button><button>Refund</button></td></tr>
-          <tr><td>11:15 AM</td><td>Club logo cap</td><td><i class="dot ok"></i>Paid by card</td><td class="n">$29.96</td><td class="act"><button>Receipt</button><button>Refund</button></td></tr>
-          <tr class="fix"><td>10:58 AM</td><td>Polo shirt · M</td><td><i class="dot wn"></i>Waiting on pay link</td><td class="n">$69.55</td><td class="act"><button>Send again</button><button>Took cash</button><button>Void</button></td></tr>
-          <tr><td>10:20 AM</td><td>Range bucket · large ×2</td><td><i class="dot ok"></i>On their account · Holt</td><td class="n">$25.68</td><td class="act"><button>Receipt</button><button>Refund</button></td></tr>
-          <tr><td>9:47 AM</td><td>Gatorade, Hot dog</td><td><i class="dot"></i>Refunded to their card</td><td class="n">$9.10</td><td class="act"><button>Receipt</button></td></tr>
-          <tr><td>9:05 AM</td><td>Glove</td><td><i class="dot"></i>Voided</td><td class="n">$19.26</td><td class="act"></td></tr>
-        </tbody></table>
-        
+      <!-- Sales -->
+      <div class="sgrid view" data-view="sales" hidden>
+      <section class="card pad2">
+        <div class="vh"><b class="sday">Thu, Nov 12</b><button class="ib" type="button" aria-label="Pick a day"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></button><span class="vsp"></span><span class="stot"><b>$157.66</b> taken · 6 sales</span></div>
+        <div class="vh stool"><label class="ssrch"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input aria-label="Search sales"></label><button class="fbtn2" type="button" aria-label="Sort and filter"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>Filter</button></div>
+        <div class="slist" id="slist"></div>
       </section>
+      <section class="card pad2 sdet" id="sdet"></section>
+      </div>
 
       <!-- Stock (as it works today) -->
-      <section class="card pad2 view" data-view="stock" hidden>
-        <div class="vh"><span class="chips2"><b class="on">All</b><b>Sold out</b><b>Low</b><b>Hidden</b><b>Apparel</b><b>Balls</b><b>Range</b><b>Rentals</b><b>Snacks</b></span><span class="vsp"></span><button class="fbtn2" type="button">Add many items</button><button class="fbtn2 pri2" type="button">+ Add an item</button></div>
-        <table class="st"><thead><tr><th>Photo</th><th>Item</th><th class="n">Price</th><th class="n">On hand</th><th class="hide-s">Barcode</th></tr></thead><tbody id="stockrows"></tbody></table>
-      </section>
+      <div class="sgrid view" data-view="stock" hidden><section class="card pad2">
+        <div class="vh"><label class="ssrch"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input aria-label="Find an item"></label><button class="fbtn2" type="button" aria-label="Filter items"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>Filter</button><span class="addw"><button class="fbtn2 pri2" type="button" id="addb" aria-haspopup="true" aria-expanded="false">+ Add</button><span class="addm" id="addm" hidden><button type="button" id="add1"><b>One item</b><span>Name, price, photo, stock</span></button><button type="button"><b>Many at once</b><span>Paste or upload a list</span></button></span></span></div>
+        <div class="slist" id="stockrows"></div>
+      </section><section class="card pad2 sdet" id="idet"></section></div>
 
       <!-- Close out (as it works today) -->
       <div class="cgrid view" data-view="close" hidden>
@@ -457,16 +474,16 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
           <div class="crow big"><span>Counted</span><b id="counted"></b></div>
           <div class="vh" style="margin-top:14px"><b>Should be in the drawer</b></div>
           <div class="crow"><span>Starting cash</span><b>$200.00</b></div>
-          <div class="crow"><span>Cash sales at the register</span><b>$186.40</b></div>
-          <div class="crow"><span>Marked paid at the counter (no tender recorded)</span><b>$130.00</b></div>
+          <div class="crow"><span>Shop sales in cash</span><b>$56.40</b></div>
+          <div class="crow"><span>Rounds paid in cash</span><b>$260.00</b></div>
           <div class="crow"><span>Cash dues and events</span><b>$0.00</b></div>
           <div class="crow"><span>Cash refunds</span><b>−$9.10</b></div>
           <div class="crow big"><span>Expected</span><b>$507.30</b></div>
-          <div class="crow big"><span>Over or short</span><b id="os"></b></div>
+          <div class="crow big"><span>Difference</span><b id="os"></b></div>
         </section>
         <section class="card pad2">
           <div class="vh"><b>Close out the day</b></div>
-          <label class="fl">Leave in the drawer<input value="$200.00"></label>
+          <div class="fl">Leave in the drawer<div class="cats2" id="leave"><b data-v="10000">$100</b><b data-v="15000">$150</b><b data-v="20000">$200</b><b data-v="25000">$250</b><b data-v="0" class="nc">Other</b></div></div>
           <div class="crow"><span>Take out to deposit</span><b id="dep"></b></div>
           <label class="fl">Note for the next person<input placeholder=""></label>
           <button class="chg" type="button" style="margin-top:8px">Close the register</button>
@@ -480,6 +497,18 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
           <div class="crow"><span>Tue, Nov 10 · Luis</span><b class="dnc">Short $4.00</b></div>
         </section>
       </div>
+<div class="mback" id="mback" hidden><div class="modal card">
+  <div class="mh"><b>Add an item</b><button class="ib" type="button" id="mx" aria-label="Close">×</button></div>
+  <div class="mph">Add a photo</div>
+  <label class="fl">Name<input value="Rain glove"></label>
+  <div class="frow"><label class="fl">Price<input value="$22.00"></label><label class="fl">In stock<input value="12"></label></div>
+  <div class="fl">Category
+    <div class="cats2" id="cats2"></div>
+    <div class="newcat" id="newcat" hidden><input id="ncin" placeholder="" aria-label="New category name"><button class="fbtn2 pri2" type="button" id="ncok">Add</button></div>
+  </div>
+  <label class="fl">Barcode<input placeholder=""></label>
+  <div class="acts2" style="margin-top:14px"><button type="button" id="mx2">Cancel</button><button class="pri" type="button">Save item</button></div>
+</div></div>
     </main>
   </div>
 </div>
@@ -528,12 +557,48 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
 
   // Tabs: Register · Sales · Stock · Close out.
   document.querySelectorAll('.stabs b').forEach(t=>t.addEventListener('click',()=>{document.querySelectorAll('.stabs b').forEach(x=>x.classList.toggle('on',x===t));document.querySelectorAll('.view').forEach(v=>v.hidden=v.dataset.view!==t.dataset.v);}));
-  $("stockrows").innerHTML=I.map(i=>{const ini=i[1].split(/\s+/).filter(w=>/^[A-Za-z0-9]/.test(w)).slice(0,2).map(w=>w[0]).join('').toUpperCase();
-    const oh=i[5]?'<span class="m">Each size ›</span>':i[4]===null?'<span class="m">Not counted</span>':'<b'+(i[4]<=0?' class="dnc"':'')+'>'+(i[4]<=0?'Sold out':i[4])+'</b>'+(i[4]>0&&i[4]<=5?' <i class="dot wn" title="Low — reorder"></i>':'');
-    return '<tr><td><span class="thumb">'+ini+'</span></td><td><b>'+i[1]+'</b><div class="m">'+i[2]+'</div></td><td class="n">'+usd(i[3])+'</td><td class="n">'+oh+'</td><td class="hide-s m">'+(i[4]!==null?'0'+(7000+i[0]*37):'—')+'</td></tr>'}).join('');
-  const B=[["$100",1],["$50",2],["$20",8],["$10",6],["$5",9],["$1",22],["25¢",18],["10¢",12],["5¢",8],["1¢",20]];
-  $("bills").innerHTML=B.map(b=>'<label class="bill">'+b[0]+'<input value="'+b[1]+'"></label>').join('');
-  $("counted").textContent="$503.30"; $("os").innerHTML='<span class="dnc">Short $4.00</span>'; $("dep").textContent="$303.30";
+  const ini=n=>n.split(/\s+/).filter(w=>/^[A-Za-z0-9]/.test(w)).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+  const ohs=i=>i[5]?'Each size':i[4]===null?'Not counted':i[4]<=0?'Sold out':i[4]+' in stock';
+  let ip=I[0][0];
+  function ri(){
+    $("stockrows").innerHTML=I.map(i=>'<div class="srow irow'+(i[0]===ip?' on':'')+'" data-i="'+i[0]+'"><span class="thumb">'+ini(i[1])+'</span><span class="it"><b>'+i[1]+'</b><span>'+i[2]+'</span></span><span class="oh2'+(i[4]!==null&&i[4]<=0?' dnc':'')+'">'+(i[4]>0&&i[4]<=5?'<i class="dot wn"></i> ':'')+ohs(i)+'</span><span class="am">'+usd(i[3])+'</span></div>').join('');
+    const i=I.find(x=>x[0]===ip);
+    $("idet").innerHTML='<div class="iph">'+ini(i[1])+'</div><h3>'+i[1]+'</h3><div class="sub">'+i[2]+'</div><div class="ln"><span>Price</span><b>'+usd(i[3])+'</b></div><div class="ln"><span>In stock</span><b'+(i[4]!==null&&i[4]<=0?' class="dnc"':'')+'>'+(i[5]?i[5].join(' · '):i[4]===null?'Not counted':i[4]<=0?'Sold out':i[4])+'</b></div><div class="ln"><span>Barcode</span><b>'+(i[4]!==null?'0'+(7000+i[0]*37):'—')+'</b></div><div class="acts2"><button class="pri">Edit</button>'+(i[4]!==null||i[5]?'<button>Receive stock</button>':'')+'</div><button class="lnk">Hide from the register</button>';
+  }
+  $("stockrows").addEventListener("click",e=>{const x=e.target.closest(".irow");if(!x)return;ip=+x.dataset.i;ri();}); ri();
+  const B=[["$100",10000,1],["$50",5000,2],["$20",2000,8],["$10",1000,7],["$5",500,9],["$1",100,22],["25¢",25,18],["10¢",10,12],["5¢",5,8],["1¢",1,20]];
+  let leave=20000; const EXP=50730;
+  function rb(){
+    $("bills").innerHTML=B.map((b,k)=>'<div class="bill2"><span class="bl2">'+b[0]+'</span><div class="stp"><button type="button" data-k="'+k+'" data-d="-1" aria-label="One less '+b[0]+'">−</button><b>'+b[2]+'</b><button type="button" data-k="'+k+'" data-d="1" aria-label="One more '+b[0]+'">+</button></div></div>').join('');
+    const c=B.reduce((a,b)=>a+b[1]*b[2],0), d=c-EXP;
+    $("counted").textContent=usd(c);
+    $("os").innerHTML=d===0?'<span class="okc">Even</span>':'<span class="dnc">'+(d<0?'Short ':'Over ')+usd(Math.abs(d))+'</span>';
+    $("dep").textContent=usd(Math.max(0,c-leave));
+    document.querySelectorAll('#leave b').forEach(x=>x.classList.toggle('on',+x.dataset.v===leave));
+  }
+  $("bills").addEventListener("click",e=>{const x=e.target.closest("button");if(!x)return;const b=B[+x.dataset.k];b[2]=Math.max(0,b[2]+ +x.dataset.d);rb();});
+  $("leave").addEventListener("click",e=>{const x=e.target.closest("b");if(!x||x.classList.contains("nc"))return;leave=+x.dataset.v;rb();});
+  rb();
+
+  // Sales: rows on the left, the picked sale on the right.
+  const SL=[[1047,"11:42 AM",[["Pro V1 sleeve",1,1600],["Bottled water",2,250]],"ok","Paid in cash"],[1046,"11:15 AM",[["Club logo cap",1,2800]],"ok","Paid by card"],[1045,"10:58 AM",[["Polo shirt · M",1,6500]],"ok","Paid by card reader"],[1044,"10:20 AM",[["Range bucket · large",2,1200]],"ok","On their account · Holt"],[1043,"9:47 AM",[["Gatorade",1,350],["Hot dog",1,500]],"","Refunded to their card"],[1042,"9:05 AM",[["Glove",1,1800]],"","Voided"]];
+  const tot=r=>Math.round(r[2].reduce((a,x)=>a+x[1]*x[2],0)*1.07);
+  let sp=1047;
+  function rs(){
+    $("slist").innerHTML=SL.map(r=>'<div class="srow'+(r[0]===sp?' on':'')+'" data-s="'+r[0]+'"><span class="sn">#'+r[0]+'</span><span class="tm">'+r[1]+'</span><span class="it"><b>'+r[2].map(x=>x[0]+(x[1]>1?' ×'+x[1]:'')).join(', ')+'</b><span><i class="dot '+r[3]+'"></i> '+r[4]+'</span></span><span class="am'+(r[4]==='Voided'?' x':'')+'">'+usd(tot(r))+'</span></div>').join('');
+    const r=SL.find(x=>x[0]===sp), sub=r[2].reduce((a,x)=>a+x[1]*x[2],0);
+    const A=r[4]==='Waiting on pay link'?'<button class="pri">Send the pay link again</button><button>They paid cash</button><button>Receipt</button><button class="bad">Void</button>':r[4]==='Voided'||r[4].startsWith('Refunded')?'<button class="pri">Receipt</button>':'<button class="pri">Receipt</button><button>Refund</button>';
+    $("sdet").innerHTML='<h3>Sale #'+r[0]+'</h3><div class="sub">'+r[1]+' · <i class="dot '+r[3]+'"></i> '+r[4]+'</div>'+r[2].map(x=>'<div class="ln"><span>'+x[0]+(x[1]>1?' ×'+x[1]:'')+'</span><b>'+usd(x[1]*x[2])+'</b></div>').join('')+'<div class="ln"><span>Tax</span><b>'+usd(tot(r)-sub)+'</b></div><div class="ln"><span><b>Total</b></span><b>'+usd(tot(r))+'</b></div><div class="acts">'+A+'</div>';
+  }
+  $("slist").addEventListener("click",e=>{const x=e.target.closest(".srow");if(!x)return;sp=+x.dataset.s;rs();}); rs();
+  $("addb").addEventListener("click",e=>{e.stopPropagation();const m=$("addm");m.hidden=!m.hidden;$("addb").setAttribute("aria-expanded",String(!m.hidden));});
+  document.addEventListener("click",e=>{if(!e.target.closest(".addw")){$("addm").hidden=true;$("addb").setAttribute("aria-expanded","false");}});
+  let CATS=["Apparel","Balls","Range","Rentals","Snacks"], pick="Apparel";
+  const rc=()=>{$("cats2").innerHTML=CATS.map(c=>'<b'+(c===pick?' class="on"':'')+' data-c="'+c+'">'+c+'</b>').join('')+'<b class="nc" data-new="1">+ New category</b>';};
+  $("cats2").addEventListener("click",e=>{const x=e.target.closest("b");if(!x)return;if(x.dataset.new){$("newcat").hidden=false;$("ncin").focus();return;}pick=x.dataset.c;rc();});
+  $("ncok").addEventListener("click",()=>{const v=$("ncin").value.trim();if(!v)return;if(!CATS.includes(v))CATS.push(v);pick=v;$("ncin").value="";$("newcat").hidden=true;rc();});
+  $("add1").addEventListener("click",()=>{$("addm").hidden=true;$("mback").hidden=false;rc();});
+  ["mx","mx2"].forEach(id=>$(id).addEventListener("click",()=>{$("mback").hidden=true;}));
   render();
 })();
 </script>

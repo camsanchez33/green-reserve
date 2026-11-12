@@ -235,3 +235,11 @@ Mockup `lanes/admin/business-mockup.html` (final). Course-focused; nothing about
 - What courses get from us (counted, never estimated): green fees booked online · bookings made after the shop closed · paid before they arrived · no-show & late fees collected for them.
 - Courses joining: Reached out → Responded → Calls held → Signed → Built → Live, each with its count, % from the step before and average days at that step; then reached out to live (% · days), in progress now, waiting on us (red). "Reached out" needs an outreach log (new data).
 - Courses table: online bookings, vs before, tee sheet filled, booked online, our revenue (GreenReserve's, the period picked). CSV.
+
+## Course dashboard Pro shop: APPROVED (Cam 2026-11-12, "approved, build the pro shop")
+Mockups `lanes/dashboard/shop-mockup.html` (Register) and `shop-sales|stock|close-mockup.html` (final). Charcoal glass.
+- Register: the items full width until the first tap; one Filter button for categories; photo thumbnails on sale lines.
+- Sales: a day with a calendar picker; "$taken · n sales" (taken = paid − refunds; voided and waiting not counted); a wordless search + one Filter (how paid, status). One line per sale: sale # (new per-course number, from the first new sale on, no backfill), time, items, how paid, total (voided struck through). Tap → detail on the right: items, tax, total, Receipt always, Refund on paid, and for an unpaid pay link Send again / They paid cash / Void.
+- Stock: a wordless search, Filter (sold out, low, hidden, categories), one "+ Add" → One item / Many at once. One line per item: photo, name + category, "n in stock" / Not counted / Each size / Sold out (red), price; low = the item's reorderAt. Tap → detail: photo, price, in stock, barcode, Edit + Receive stock, "Hide from the register" link. Adding an item: pick a category or "+ New category".
+- Close out: the drawer count is tap-only (− / + per bill and coin, summed on the client; only the total is stored). Expected = starting cash + Shop sales in cash + Rounds paid in cash (register sales carrying a round) − cash refunds (+ "Older rounds marked paid" only when non-zero). "Difference" (Short / Over / Even). Leave in the drawer: the last float, nearby amounts, Other.
+- The rail search loses its words on every dashboard page.
