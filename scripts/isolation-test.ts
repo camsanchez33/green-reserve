@@ -886,6 +886,15 @@ async function main() {
       checkStatus('A bad amount → 400', (await api('/api/admin/expenses/budget', { method: 'PUT', cookie: oc, body: { cents: 12.5 } })).status, 400);
       checkStatus('An amount past the column\'s limit → 400, not 500', (await api('/api/admin/expenses/budget', { method: 'PUT', cookie: oc, body: { cents: 3_000_000_000 } })).status, 400);
       checkStatus('A body that isn\'t an object → 400, not 500', (await api('/api/admin/expenses/budget', { method: 'PUT', cookie: oc, body: 5 })).status, 400);
+      for (const [method, path] of [['POST', '/api/admin/expenses'], ['PATCH', `/api/admin/expenses/${exp.id}`]] as const) {
+        for (const raw of ['null', '5', '[]']) {
+          const r = await fetch(`${BASE_URL}${path}`, { method, headers: { 'Content-Type': 'application/json', Cookie: oc }, body: raw });
+          checkStatus(`${method} ${path.replace(exp.id, ':id')} with a body of ${raw} → 400, not 500`, r.status, 400);
+        }
+      }
+      checkStatus('An amount past the column\'s limit → 400, not 500 (POST)', (await api('/api/admin/expenses', { method: 'POST', cookie: oc, body: { name: 'Too big', amountCents: 3_000_000_000 } })).status, 400);
+      checkStatus('…and on an edit (PATCH)', (await api(`/api/admin/expenses/${exp.id}`, { method: 'PATCH', cookie: oc, body: { amountCents: 3_000_000_000 } })).status, 400);
+      checkStatus('An edit with nothing in it → 400 (no empty audit row)', (await api(`/api/admin/expenses/${exp.id}`, { method: 'PATCH', cookie: oc, body: { nope: 1 } })).status, 400);
       const set = await api('/api/admin/expenses/budget', { method: 'PUT', cookie: oc, body: { cents: 50000 } });
       checkStatus('The owner sets it → 200', set.status, 200);
       const g = (await api('/api/admin/expenses', { cookie: oc })).body as { budget?: { cents: number | null; setAt: string | null } };
