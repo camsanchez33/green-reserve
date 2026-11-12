@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-727 source files · 311 routes · 260 libraries · 76 models
+728 source files · 311 routes · 260 libraries · 76 models
 
 ## Single sources of truth
 
@@ -73,7 +73,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/admin/inquiries/[id]` | admin | client-side | page | `src/app/admin/inquiries/[id]/page.tsx` | 2380 |
 | `/admin/login` | admin | client-side | page | `src/app/admin/login/page.tsx` | 137 |
 | `/admin/messages` | admin | client-side | page | `src/app/admin/messages/page.tsx` | 479 |
-| `/admin/onboarding` | admin | client-side | page | `src/app/admin/onboarding/page.tsx` | 320 |
+| `/admin/onboarding` | admin | client-side | page | `src/app/admin/onboarding/page.tsx` | 351 |
 | `/admin/problems` | admin | client-side | page | `src/app/admin/problems/page.tsx` | 240 |
 | `/admin/profile` | admin | client-side | page | `src/app/admin/profile/page.tsx` | 123 |
 | `/admin/revenue` | admin | client-side | page | `src/app/admin/revenue/page.tsx` | 467 |
@@ -125,7 +125,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/admin/logout` | admin | entry | POST | `src/app/api/admin/logout/route.ts` | 19 |
 | `/api/admin/messages` | admin | file | GET PATCH POST | `src/app/api/admin/messages/route.ts` | 221 |
 | `/api/admin/nav-badges` | admin | file | GET | `src/app/api/admin/nav-badges/route.ts` | 53 |
-| `/api/admin/onboarding` | admin | file | GET | `src/app/api/admin/onboarding/route.ts` | 153 |
+| `/api/admin/onboarding` | admin | file | GET | `src/app/api/admin/onboarding/route.ts` | 167 |
 | `/api/admin/orphan-sweep` | admin | file | GET POST | `src/app/api/admin/orphan-sweep/route.ts` | 49 |
 | `/api/admin/owner-devices` | admin | file | DELETE GET | `src/app/api/admin/owner-devices/route.ts` | 55 |
 | `/api/admin/passkeys` | admin | file | DELETE GET POST | `src/app/api/admin/passkeys/route.ts` | 82 |
@@ -387,11 +387,11 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/money.ts` | 27 | 50 | Money conversions, in one place. | `centsToDollars`, `centsToDollarsOr0`, `dollarsToCents`, `dollarsToCentsOr0`, `fmtCents` |
 | `src/lib/cancel-policy.ts` | 22 | 262 | SP-B (STAFF_POLICY_SPEC Part B). | `afterCutoffLine`, `afterCutoffShort`, `bookingWindowHours`, `cancelNowWords`, `CancelPolicy`, `cardAtBooking`, `cardRequired`, `chargesNoShow` +15 more |
 | `src/lib/shop.ts` | 20 | 151 | POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): | `addItemToBooking`, `MAX_BOOKING_SHOP_CENTS`, `MAX_ITEM_PRICE_CENTS`, `MAX_LINE_QUANTITY`, `removeLineFromBooking`, `roundApplicationFeeCents`, `roundChargeCents`, `roundChargedTotal` +9 more |
+| `src/lib/admin-day.ts` | 19 | 110 | Platform day boundaries. | `dayKey`, `PLATFORM_TZ`, `platformHour`, `startOfPlatformDay`, `startOfPlatformDaysAgo`, `startOfPlatformMonth`, `startOfPlatformMonthsAgo`, `startOfPlatformWeek` |
 | `src/lib/change-requests.ts` | 19 | 149 | Single source of truth for structured "request changes" data (V13b). | `APPROVED_MARKER`, `CATEGORY_LABEL`, `CHANGE_ADDRESSED_PREFIX`, `CHANGE_CATEGORIES`, `ChangeCategoryKey`, `ChangeItem`, `CHANGES_REQUESTED_PREFIX`, `computeOpenChanges` +14 more |
 | `src/lib/inquiry-status.ts` | 19 | 507 | Single source of truth for what every inquiry status means and which pipeline segment it belongs to. | `ACTIVE_STATUSES`, `ALIVE_STATUSES`, `ARCHIVED_STATUSES`, `CLOSED_REASONS`, `compareQueue`, `daysSince`, `decodeResubmit`, `diffResubmit` +28 more |
 | `src/lib/money-ledger.ts` | 19 | 101 | LEDGER-1 (Cam 2026-10-30, "one new money table"): | `chargeWhat`, `feeBackCents`, `mirrorMove`, `Move`, `MoveMethod`, `MoveWhat`, `recordMove` |
 | `src/lib/admin-areas.ts` | 18 | 44 | AW-11 (Cam 2026-10-22: | `ADMIN_AREAS`, `AdminArea`, `ALL_AREAS`, `effectiveAreas`, `hasArea`, `isAdminArea` |
-| `src/lib/admin-day.ts` | 18 | 110 | Platform day boundaries. | `dayKey`, `PLATFORM_TZ`, `platformHour`, `startOfPlatformDay`, `startOfPlatformDaysAgo`, `startOfPlatformMonth`, `startOfPlatformMonthsAgo`, `startOfPlatformWeek` |
 | `src/lib/booking-fees.ts` | 18 | 66 |  | `ACCESS_FEE_CENTS`, `ACCESS_FEE_PER_PLAYER`, `EVENT_FEE_LABEL`, `EVENT_FEE_ON`, `FEE_AT_BOOKING_ON`, `feeCoveredCents`, `hoursLabel`, `roundChargeCents` +4 more |
 | `src/lib/member-rates.ts` | 18 | 109 | Cam 2026-10-29 (Revamp 3 audit, fixes 1 and 2 — "up to course"): | `LapseRule`, `liveMembershipWhere`, `memberPlayers`, `membershipLive`, `memberSpot`, `PartyBooking`, `partyFees`, `splitTotal` |
 | `src/lib/admin-fetch.ts` | 16 | 153 | One place that decides what an admin fetch failure MEANS. | `adminErrorMessage`, `adminFetch`, `AdminFetchAction`, `AdminFetchFailure`, `AdminFetchResult`, `LOGIN_SESSION_ENDED` |
