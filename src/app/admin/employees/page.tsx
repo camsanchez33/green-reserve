@@ -25,7 +25,7 @@ interface Admin {
 }
 
 const ROLES = [
-  { value: 'manager', label: 'Manager', desc: 'Does everything in their areas: changes, refunds, retries, sends.' },
+  { value: 'manager', label: 'Manager', desc: 'Does everything in their areas: changes, refunds, sends.' },
   { value: 'support', label: 'Support', desc: 'Reads everything in their areas, answers messages, takes problems. No refunds, settings or deletes.' },
   { value: 'viewer',  label: 'Viewer',  desc: 'Read-only, and only Pipeline and the Courses list — no money, golfers or messages.' },
   { value: 'owner',   label: 'Owner',   desc: 'Everything, everywhere. Signs in at the owner door, not here.' },
