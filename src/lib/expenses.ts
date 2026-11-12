@@ -153,7 +153,10 @@ export function endedAtForLastDay(day: string): Date | null {
   return startOfPlatformDaysAgo(noon, -1);
 }
 
-/** The last day an expense was paid for (YYYY-MM-DD, Eastern): the day before the instant it stopped. */
-export function lastDayOf(endedAt: Date | string): string {
-  return dayKey(new Date(new Date(endedAt).getTime() - 1));
+/** The last day an expense was paid for (YYYY-MM-DD, Eastern): the day before the instant it stopped.
+ *  Null for no end or an unreadable one, so a page can render it safely. */
+export function lastDayOf(endedAt: Date | string | null | undefined): string | null {
+  if (endedAt == null || endedAt === '') return null;
+  const t = new Date(endedAt).getTime();
+  return Number.isNaN(t) ? null : dayKey(new Date(t - 1));
 }

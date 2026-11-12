@@ -20919,7 +20919,7 @@
     },
     {
       "path": "src/lib/expenses.ts",
-      "lines": 160,
+      "lines": 163,
       "purpose": "EXPENSE TRACKER (RUN_QUEUE \"EXPENSE TRACKER / real P&L\") — the manual half of the P&L:",
       "brain": [],
       "exports": [

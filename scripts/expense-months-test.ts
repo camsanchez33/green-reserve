@@ -63,7 +63,7 @@ ok('an unreadable start date counts from the window\'s start (and doesn\'t throw
   const now = at(2026, 11, 10, 12); // Nov 10, noon Eastern
   const ending = monthly(30000, longAgo, et(2026, 11, 21)); // ends after Nov 20: 20 of November's 30 days
   const p = monthCostPace([ending], now);
-  ok('a cost ending Nov 21 is scheduled for 20 of November\'s 30 days, not the whole month', p.scheduled === 20000 && p.projected === 20000, p);
+  ok('a cost that stops at the start of Nov 21 is scheduled for 20 of November\'s 30 days, not the whole month', p.scheduled === 20000 && p.projected === 20000, p);
   const pace = goalPace({ progress: p.progress, fixed: p.fixed, scheduled: p.scheduled, share: p.share, target: 25000, kind: 'cap', daysElapsed: 9.5 });
   ok('…so a $250 budget is green (20,000 ≤ 90% of 25,000), where projecting the pace said $300 and red', pace.tone === 'ok' && pace.projected === 20000, pace);
   ok('…while the old way (progress ÷ share) would have projected the whole $300',
@@ -86,6 +86,7 @@ ok('an unreadable start date counts from the window\'s start (and doesn\'t throw
   ok('…ending on the DST day (Nov 1) counts just that day', endedAtForLastDay('2026-11-01')?.getTime() === et(2026, 11, 2).getTime());
   ok('…ending Dec 31 stops at the new year', endedAtForLastDay('2026-12-31')?.getTime() === et(2027, 1, 1).getTime());
   ok('a date that isn\'t one is refused (null)', endedAtForLastDay('2026-02-30') === null && endedAtForLastDay('nope') === null);
+  ok('no end, or an unreadable one, shows nothing (no throw)', lastDayOf(null) === null && lastDayOf('garbage') === null);
   ok('End = now shows today as the last day paid', lastDayOf(at(2026, 11, 12, 15)) === '2026-11-12');
 }
 
