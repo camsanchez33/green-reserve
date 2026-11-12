@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireOwner, ownerGateError } from '@/lib/admin-session';
 import { isExpenseCategory, isExpenseCadence } from '@/lib/expenses';
+import { auditAdmin } from '@/lib/admin-audit';
 
 const MAX_CENTS = 2_000_000_000; // the column is a 32-bit INTEGER; anything above is a typo (as the budget route)
-import { auditAdmin } from '@/lib/admin-audit';
 
 // EXPENSE TRACKER (RUN_QUEUE) — GreenReserve's own fixed operating costs.
 // OWNER-only end to end: these are the company's private books, not per-course
