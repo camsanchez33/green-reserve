@@ -7,6 +7,8 @@ import g from '../admin-glass.module.css';
 import c from '../courses/courses.module.css';
 import s from './revenue.module.css';
 import { TERMS, NOT_YET, OWNER_ONLY, SESSION_ENDED, loadFailed } from './terms';
+import { useAdminSession } from '@/lib/admin-session-context';
+import { MANAGER_PLUS } from '@/lib/admin-roles';
 import { type Per, KIND, fallbackQuery, isNewAnswer, isFallbackAnswer, pct, payoutState } from './logic';
 
 // ADMIN-REDO Revenue (Cam approved the mockup 2026-11-12, ADMIN_REDO_SPEC.md "Revenue: APPROVED"): what
@@ -198,6 +200,9 @@ export default function RevenuePage() {
   }, [menuOpen]);
 
   const owner = !!d?.isOwner;
+  // Cam 2026-11-12: keep the full transactions export (for the accountant), manager and up, as before.
+  const { role } = useAdminSession();
+  const canExport = MANAGER_PLUS.includes(role);
   const platform = useOwnerSource<Platform>('/api/admin/platform-stripe?period=30d', 'The Stripe balance', owner);
   const payouts = useOwnerSource<{ courses: CoursePayout[] }>('/api/admin/course-payouts', 'Course payouts', owner);
   const months = useOwnerSource<{ months: MonthMatch[] }>('/api/admin/stripe-match', 'The monthly match', owner);
@@ -418,6 +423,9 @@ export default function RevenuePage() {
             <section className={`${g.glass} ${s.pad}`} aria-label="Ledger">
               <div className={s.rh}>
                 <h2 title={TERMS.ledger}>Ledger</h2>
+                {canExport && (
+                  <a className={c.plink} href={`/api/admin/transactions/export?from=${shown.period.from}&to=${shown.period.to}`} download title={TERMS.transactions}>All transactions <span aria-hidden="true">↓</span></a>
+                )}
                 {shown.ledger && shown.ledger.rows.length > 0 && (
                   <a className={s.ico} href={`/api/admin/revenue?period=${KIND[shown.per]}&format=csv`} download aria-label="Download CSV" title="Download CSV"><DownloadIcon /></a>
                 )}

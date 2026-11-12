@@ -12,6 +12,7 @@ export const TERMS = {
   courseRevenue: "GreenReserve's fees from this course in the period, less fees given back",
   books: 'Service fees we recorded against what Stripe reports as application fees for the same dates',
   ledger: "Every movement of GreenReserve's own money in the period: our fee taken or given back, one row each",
+  transactions: "Every course's charges and refunds in the period, for the accountant (CSV)",
   coursePayments: "Only a course that wasn't paid right shows here. Golfer disputes are the course's, with its player",
 } as const;
 
