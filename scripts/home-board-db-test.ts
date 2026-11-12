@@ -77,6 +77,8 @@ async function main() {
   ok('no goals set: none listed, every metric can be added', none.goals.length === 0 && none.metrics.length === 5);
   ok('…a login without money can\'t add a money goal', !(await monthGoals(a.id, 'UTC', { money: false })).metrics.includes('collected'));
   await prisma.courseMonthGoal.create({ data: { courseId: a.id, month, cents: 3_000_000 } });
+  // GOAL-PACE: monthGoals sends the month's elapsed days at the course clock (noon ET on Nov 12 → 11.5).
+  ok('monthGoals sends elapsed days counted by the hour, in the course timezone', (await monthGoals(a.id, 'America/New_York', { money: true }, new Date('2026-11-12T17:00:00Z'))).elapsed === 11.5);
   ok('an old month goal still shows as the collected goal', (await monthGoals(a.id, 'UTC', { money: true })).goals.find(g => g.metric === 'collected')?.target === 3_000_000);
   await prisma.courseGoal.createMany({ data: [{ courseId: a.id, month, metric: 'collected', target: 4_000_000 }, { courseId: a.id, month, metric: 'rounds', target: 500 }, { courseId: a.id, month, metric: 'booked', target: 800 }] });
   const g = await monthGoals(a.id, 'UTC', { money: true });
