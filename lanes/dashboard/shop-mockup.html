@@ -1,0 +1,445 @@
+<title>Course Pro Shop</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600&family=Libre+Franklin:wght@400;500;600;700&display=swap">
+<style>
+/* Course dashboard Home in the CHARCOAL look (Cam 2026-11-11: "for the dashboard lets go charcoal").
+   Solid raised cards, no glass. Built to the admin format rules: no subheadings, separate cards with gaps,
+   one search, bold menu group headings, plain business numbers. Every look is a token swap on .app[data-mode]. */
+:root{
+  --page:#EDEEE9;--page-ink:#141814;--page-muted:#5F645E;--page-line:#D7D9D1;--chip:#FFFFFF;
+  --serif:"EB Garamond",Georgia,"Times New Roman",serif;
+  --sans:"Libre Franklin",-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--page:#121312;--page-ink:#ECEEE8;--page-muted:#9A9F97;--page-line:#2C2E2C;--chip:#1C1D1C;color-scheme:dark}}
+:root[data-theme="dark"]{--page:#121312;--page-ink:#ECEEE8;--page-muted:#9A9F97;--page-line:#2C2E2C;--chip:#1C1D1C;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--sans);font-size:14px;line-height:1.45}
+.wrap{max-width:1320px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px;display:flex;flex-direction:column;gap:16px}
+.picker{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center}
+.picker h1{font-family:var(--serif);font-weight:600;font-size:24px;margin:0 auto 0 0;line-height:1.1}
+.pick{display:flex;align-items:center;gap:8px}
+.pick > span{font-size:12.5px;color:var(--page-muted)}
+.seg{display:inline-flex;background:var(--chip);border:1px solid var(--page-line);border-radius:999px;padding:3px}
+.seg button{font:inherit;font-size:13px;font-weight:500;border:0;background:transparent;color:var(--page-ink);padding:6px 12px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--page-ink);color:var(--page)}
+.note{font-size:12.5px;color:var(--page-muted);margin:0;max-width:75ch}
+
+/* ───────── The app ───────── */
+.app{
+  --bg:#1D1E1D; --panel:#282928; --panel-hi:#2F302F; --edge:rgba(255,255,255,.05);
+  --ink:#EDEEEB; --ink-soft:#C6C8C3; --muted:#979A95; --line:rgba(255,255,255,.08);
+  --rail:#232423; --hover:rgba(255,255,255,.05); --active:#323432;
+  --shadow:0 1px 0 rgba(255,255,255,.04) inset, 0 10px 28px rgba(0,0,0,.35);
+  --brand:#4CC183; --brand-ink:#0B1F16; --course:#2E8F5E;
+  --ok:#6DD39A; --warn:#E3B05C; --bad:#F08C78;
+  --bar:#4CC183; --bar-prev:rgba(237,238,235,.22); --track:rgba(255,255,255,.07);
+  --heat0:rgba(255,255,255,.04); --heat:76,193,131;
+  position:relative;overflow:hidden;border-radius:24px;background:var(--bg);color:var(--ink);
+  display:grid;grid-template-columns:232px minmax(0,1fr);min-height:760px;box-shadow:0 0 0 1px var(--page-line);
+}
+.app[data-mode="light"]{
+  --bg:#E9EAE6; --panel:#F8F8F5; --panel-hi:#FFFFFF; --edge:rgba(255,255,255,.9);
+  --ink:#191B19; --ink-soft:#3E423E; --muted:#62675F; --line:rgba(0,0,0,.08);
+  --rail:#E0E1DC; --hover:rgba(255,255,255,.6); --active:#F8F8F5;
+  --shadow:0 1px 0 #fff inset, 0 6px 18px rgba(0,0,0,.07);
+  --brand:#173B2A; --brand-ink:#FFFFFF; --course:#2E8F5E;
+  --ok:#285A3C; --warn:#7A4A10; --bad:#9A3B26;
+  --bar:#173B2A; --bar-prev:rgba(25,27,25,.18); --track:rgba(0,0,0,.07);
+  --heat0:rgba(0,0,0,.04); --heat:23,59,42;
+}
+.card{background:var(--panel);border:1px solid var(--edge);border-radius:16px;box-shadow:var(--shadow)}
+
+/* Rail */
+.rail{background:var(--rail);border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;gap:18px;min-width:0}
+.club{display:flex;align-items:center;gap:10px;padding:0 6px}
+.crest{width:34px;height:34px;border-radius:10px;background:var(--course);color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
+.club b{font-family:var(--serif);font-size:17px;font-weight:600;line-height:1.1;display:block}
+.club small{display:block;font-size:11.5px;color:var(--muted);margin-top:3px}
+.grp{display:flex;flex-direction:column;gap:2px}
+.grp > b{font-size:12.5px;color:var(--ink);padding:0 10px 4px;font-weight:700}
+.nav{font-size:13.5px;color:var(--ink-soft);padding:8px 10px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.nav:hover{background:var(--hover)}
+.nav.on{background:var(--active);color:var(--ink);font-weight:600;box-shadow:var(--shadow)}
+.nav.on::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--course);margin-right:-2px}
+.nav.on span{margin-right:auto}
+.nav i{font-style:normal;font-size:11.5px;font-weight:700;background:var(--warn);color:var(--bg);border-radius:999px;padding:0 7px;line-height:18px}
+.rail .foot{margin-top:auto;display:flex;flex-direction:column;gap:2px;font-size:12.5px;color:var(--muted);padding:0 4px}
+.rail .foot span{padding:6px 6px}
+.rail .pw{display:flex;align-items:center;gap:6px;padding:10px 6px 0;border-top:1px solid var(--line);margin-top:6px}
+
+/* Main */
+.main{padding:20px 24px 28px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.top h2{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1;margin:0 auto 0 0}
+.search{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;min-width:min(260px,100%);color:var(--muted);background:var(--panel);border:1px solid var(--edge);box-shadow:var(--shadow)}
+.btn{font:inherit;font-size:13px;font-weight:600;border:0;background:var(--brand);color:var(--brand-ink);padding:11px 16px;border-radius:12px}
+.sub{font-size:13px;color:var(--muted);margin:-8px 0 0}
+
+/* One-line bars: register, next up */
+.strip{display:flex;align-items:center;gap:14px;padding:12px 16px;flex-wrap:wrap}
+.strip.warnl{border-left:3px solid var(--warn)}
+.strip b{font-weight:600}
+.strip .go{margin-left:auto;font-weight:600;color:var(--brand);font-size:13px;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line)}
+.strip .sep{width:1px;align-self:stretch;background:var(--line)}
+.strip .m{color:var(--muted);font-size:13px}
+
+/* Numbers */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.kpi{padding:16px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.kpi .l{font-size:12.5px;color:var(--muted);font-weight:500}
+.kpi .v{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.15}
+.kpi .c{font-size:12.5px;color:var(--muted)}
+.up{color:var(--ok)}.dn{color:var(--bad)}.wn{color:var(--warn)}
+
+.cols{display:grid;grid-template-columns:minmax(0,2fr) minmax(290px,1fr);gap:16px;align-items:start}
+.stack{display:flex;flex-direction:column;gap:16px;min-width:0}
+.pad{padding:16px 18px}
+.head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.head b{font-size:15px;font-weight:600}
+.head .k{margin-left:auto;font-size:12.5px;color:var(--muted);display:flex;gap:12px;align-items:center}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+
+/* Players by hour */
+.bars{display:flex;align-items:flex-end;gap:10px;height:160px}
+.bars .h{flex:1;height:100%;display:flex;align-items:flex-end;justify-content:center;gap:3px}
+.bars .h div{flex:1;max-width:14px;border-radius:3px 3px 0 0}
+.bars .p{background:var(--bar-prev)} .bars .t{background:var(--bar)}
+.hl{display:flex;gap:10px;margin-top:6px;font-size:11.5px;color:var(--muted)} .hl span{flex:1;text-align:center}
+
+/* Next 14 days */
+.days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+.day{padding:8px 4px 2px;min-width:0}
+.day .d{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.day .n{font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
+.trk{position:relative;height:6px;border-radius:999px;background:var(--track);margin-top:6px}
+.trk .f{position:absolute;inset:0 auto 0 0;border-radius:999px;background:var(--bar)}
+.trk .u{position:absolute;top:-3px;bottom:-3px;width:1.5px;background:var(--ink)}
+.day .us{font-size:11px;color:var(--muted);margin-top:4px}
+
+/* Week ahead heat */
+.heat{display:grid;gap:3px;align-items:center;font-size:11.5px}
+.heat .c{height:22px;border-radius:5px}
+.heat .rl{color:var(--muted)} .heat .tot{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* Right column */
+.counts{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;margin-bottom:12px}
+.counts div span{display:block;font-size:12.5px;color:var(--muted)}
+.counts div b{font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
+.rows{border-top:1px solid var(--line)}
+.row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+.row .w{flex:1;min-width:0} .row .w small{display:block;color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dot{width:6px;height:6px;border-radius:50%;flex:none}
+.dot.ok{background:var(--ok)}.dot.wn{background:var(--warn)}.dot.bd{background:var(--bad)}
+.lnk{font-size:13px;font-weight:600;color:var(--brand);white-space:nowrap}
+.pay{display:flex;align-items:center;gap:10px;padding-top:12px}
+.pay span:first-child{flex:1}
+.notes p{margin:0 0 10px;padding-left:10px;border-left:2px solid var(--line)}
+.notes small{display:block;color:var(--muted);font-size:12px}
+.cond{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;font-size:13.5px}
+.cond span{color:var(--muted)}
+.goal{margin-bottom:12px} .goal:last-child{margin-bottom:0}
+.goal .gl{display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:6px}
+.goal .gl b{font-weight:600;font-variant-numeric:tabular-nums}
+
+@media (max-width:1080px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.cols{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:760px){
+  .app{grid-template-columns:minmax(0,1fr);border-radius:18px}
+  .rail{display:none}
+  .main{padding:16px 14px 22px}
+  .top h2{font-size:26px}
+  .search{min-width:0;flex:1}
+  .days{grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+  .day .n{font-size:14px} .day .us{display:none}
+  .bars{gap:4px} .hl{gap:4px}
+  .heatwrap{overflow-x:auto}
+}
+
+/* Cam 2026-11-12, "should look like glass like the admin home": charcoal glass. Soft blurred shapes behind
+   frosted panels, the same build as the admin's green glass, in greys with a hint of the course's green. */
+.app{isolation:isolate;--panel:rgba(48,50,48,.46);--edge:rgba(255,255,255,.09);--rail:rgba(30,31,30,.45);--blob1:#4C5E53;--blob2:#363D39;--blob3:#5A5240;
+  --shadow:0 1px 0 rgba(255,255,255,.07) inset, 0 12px 34px rgba(0,0,0,.34)}
+.app[data-mode="light"]{--panel:rgba(255,255,255,.55);--edge:rgba(255,255,255,.8);--rail:rgba(255,255,255,.38);--blob1:#C9D3CC;--blob2:#DADCD6;--blob3:#E6DFCF;
+  --shadow:0 1px 0 rgba(255,255,255,.7) inset, 0 8px 30px rgba(0,0,0,.07)}
+.blob{position:absolute;border-radius:50%;filter:blur(80px);z-index:-1;pointer-events:none}
+.b1{width:540px;height:540px;background:var(--blob1);left:-140px;top:-160px}
+.b2{width:600px;height:600px;background:var(--blob2);right:-180px;top:160px}
+.b3{width:440px;height:440px;background:var(--blob3);left:40%;bottom:-220px}
+.card,.search{-webkit-backdrop-filter:blur(22px) saturate(1.2);backdrop-filter:blur(22px) saturate(1.2)}
+.search{background:var(--panel)}
+.rail{-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+@media (prefers-reduced-transparency:reduce){.card,.search,.rail{-webkit-backdrop-filter:none;backdrop-filter:none}.app{--panel:#2A2B2A;--rail:#232423}.app[data-mode="light"]{--panel:#F8F8F5;--rail:#E0E1DC}}
+
+/* Cam 2026-11-12, "i dont want it green and orange i just want it dark with a glassy background":
+   monochrome charcoal glass. Charts, links and the button are white/grey; red stays only for a real problem
+   (a declined card), the course's dot in the rail is its own colour. */
+.app{--blob1:#4A4D4B;--blob2:#2E302F;--blob3:#3F4240;--brand:#EDEEEB;--brand-ink:#161716;--bar:#E6E7E3;--bar-prev:rgba(237,238,235,.22);--heat:230,231,227;--warn:#C9CBC6;--ok:#C9CBC6}
+.app[data-mode="light"]{--blob1:#CDD0CC;--blob2:#DEDFDB;--blob3:#D5D6D2;--brand:#1E201E;--brand-ink:#FFFFFF;--bar:#2A2C2A;--bar-prev:rgba(25,27,25,.18);--heat:30,32,30;--warn:#4A4D49;--ok:#4A4D49}
+.strip.warnl{border-left-color:var(--ink)}
+.nav i{background:var(--ink);color:var(--bg)}
+.wn,.up{font-weight:inherit}
+/* Cam 2026-11-12, "now the colors can actually have meaning": on monochrome glass, colour only where it means
+   something. Green = paid / ahead of usual; amber = needs doing soon (not paid yet, past their time, register closed,
+   behind usual, unread); red = a problem (declined card). Bars, links and chrome stay white/grey. */
+.app{--ok:#7BD9A4;--warn:#F2C46B;--bad:#FF8E7C}
+.app[data-mode="light"]{--ok:#22683F;--warn:#8A5309;--bad:#A93A24}
+.strip.warnl{border-left-color:var(--warn)}
+.nav i{background:var(--warn);color:#1A1406}
+.wn{color:var(--warn)} .up{color:var(--ok)} .dn{color:var(--bad)}
+.okv{color:var(--ok)}
+/* Cam 2026-11-12: the week-ahead heat is red. */
+.app{--heat:255,120,100}
+.app[data-mode="light"]{--heat:190,60,40}
+.grw{color:#3BAA6B;font-weight:600}.app[data-mode="light"] .grw{color:#173B2A}
+.goal .u{display:none} /* Cam 2026-11-12: no line on the goals; the colour says how it's going. */
+.regbtn{cursor:pointer;justify-content:space-between}.regbtn b{color:var(--warn);font-size:14.5px}.regbtn .arr{color:var(--warn);font-weight:600}.regbtn:hover{background:var(--hover)}
+/* Cam 2026-11-12, "easier to differentiate": four clear steps (under a quarter, half, three-quarters, nearly full)
+   instead of a smooth fade, and each cell shows its % full. */
+.heat .c{display:grid;place-items:center;font-size:10.5px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+.hv0{background:var(--heat0)} .hv1{background:rgba(var(--heat),.16)} .hv2{background:rgba(var(--heat),.38)}
+.hv3{background:rgba(var(--heat),.66)} .hv4{background:rgba(var(--heat),.95);color:#fff}
+.cond2{display:flex;flex-direction:column}
+.cond2 div{display:grid;grid-template-columns:8px 88px minmax(0,1fr);column-gap:10px;align-items:baseline;padding:8px 0;border-top:1px solid var(--line)}
+.cond2 div:first-child{border-top:0;padding-top:0}
+.cond2 .dot{align-self:center} .cond2 span{color:var(--muted);font-size:13px} .cond2 b{font-weight:600;font-size:13.5px}
+.cond2 small{grid-column:3;color:var(--muted);font-size:12.5px}
+.cmeta{margin-top:10px;font-size:12px;color:var(--muted)}
+.dcols{display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:8px;align-items:end}
+.dcol{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.dcol b{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.dbar{position:relative;width:100%;max-width:26px;height:120px;border-radius:5px;background:var(--track);overflow:visible}
+.dfill{position:absolute;left:0;right:0;bottom:0;border-radius:5px;background:var(--bar)}
+.dfill.dbehind{background:var(--warn)}
+.dtyp{position:absolute;left:-4px;right:-4px;height:2px;background:var(--ink);opacity:.55;border-radius:1px}
+.dcol span{font-size:11px;color:var(--muted);text-align:center;line-height:1.2}
+.dcol span.wk{color:var(--ink-soft);font-weight:600} .dcol span.td{color:var(--ink);font-weight:700}
+@media (max-width:760px){.dcols{gap:3px}.dcol b{font-size:11px}.dbar{height:90px}}
+.rain{color:#7DB8FF}.app[data-mode="light"] .rain{color:#1F5FAF}
+.bars .st{align-items:flex-end}
+.stack2{width:100%;max-width:30px;display:flex;flex-direction:column;border-radius:4px;overflow:hidden;gap:1px}
+.stack2 i{display:block;min-height:0}
+.stack2 .in{background:var(--warn)} .stack2 .pl{background:var(--ok)} .stack2 .c{background:var(--bar)} .stack2 .o{background:var(--bad);opacity:.75}
+.open{margin-top:12px;font-size:13px;color:var(--muted)} .open b{color:var(--ink);font-weight:600}
+.trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:760px){.trio{grid-template-columns:minmax(0,1fr)}}
+.g-ok .f{background:var(--ok)} .g-wn .f{background:var(--warn)} .g-bd .f{background:var(--bad)}
+.g-ok .gl b{color:var(--ok)} .g-wn .gl b{color:var(--warn)} .g-bd .gl b{color:var(--bad)}
+.trk .u{background:var(--muted);width:2px}
+
+/* Cam 2026-11-12, "a more abstract design then just 2 dots": the light behind the glass is sweeping ribbons and
+   folds (blurred SVG curves), not round blobs. Still plain shapes, never a page gradient; grey only. */
+.app .blob{display:none}
+.waves{position:absolute;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none}
+.waves path{fill:none;stroke-linecap:round}
+.waves .w1{stroke:var(--wv1);stroke-width:150}
+.waves .w2{stroke:var(--wv2);stroke-width:90}
+.waves .w3{stroke:var(--wv3);stroke-width:46}
+.waves .w4{stroke:var(--wv2);stroke-width:220}
+.app{--wv1:rgba(160,166,162,.38);--wv2:rgba(130,136,132,.28);--wv3:rgba(215,220,216,.26)}
+.app[data-mode="light"]{--wv1:rgba(120,126,122,.22);--wv2:rgba(150,156,152,.20);--wv3:rgba(255,255,255,.7)}
+</style>
+
+<style>
+/* Tee sheet in charcoal glass (DENSE-4 seat rows + TT-CARD time card), restyled to the approved Home look. */
+.tbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tbar h2{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1;margin:0}
+.step{display:flex;gap:4px}
+.step button,.seg2 button{font:inherit;font-size:13px;color:var(--ink);background:var(--panel);border:1px solid var(--edge);border-radius:10px;padding:7px 11px;cursor:pointer;-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+.seg2{display:inline-flex;gap:0;margin-left:auto}
+.seg2 button{border-radius:0}.seg2 button:first-child{border-radius:10px 0 0 10px}.seg2 button:last-child{border-radius:0 10px 10px 0}
+.seg2 button[aria-pressed="true"]{background:var(--ink);color:var(--bg);font-weight:600}
+.tline{font-size:13px;color:var(--muted)} .tline b{color:var(--ink)}
+.tsplit{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
+.sheet{padding:8px 0}
+.hr{font-size:11.5px;color:var(--muted);padding:10px 16px 4px;font-weight:600}
+.trow{display:grid;grid-template-columns:64px 56px repeat(4,minmax(0,1fr));gap:4px;align-items:center;padding:3px 16px;cursor:pointer;position:relative}
+.trow:hover{background:var(--hover)} .trow.sel{background:var(--active)}
+.trow.past{opacity:.5}
+.trow .tm{font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums}
+.trow .tm.next{color:var(--ok)}
+.trow .pr{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.seat{height:34px;border-radius:6px;border:1px dashed var(--line)}
+.tgrp{height:34px;border-radius:6px;display:flex;align-items:center;gap:6px;padding:0 10px;font-size:13px;font-weight:500;min-width:0;border-left:3px solid transparent}
+.tgrp span{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.tgrp.paid{background:rgba(123,217,164,.16);border-left-color:var(--ok)}
+.tgrp.owes{background:rgba(242,196,107,.16);border-left-color:var(--warn)}
+.tgrp.bad{background:rgba(255,142,124,.18);border-left-color:var(--bad)}
+.app[data-mode="light"] .tgrp.paid{background:rgba(34,104,63,.12)} .app[data-mode="light"] .tgrp.owes{background:rgba(138,83,9,.12)} .app[data-mode="light"] .tgrp.bad{background:rgba(169,58,36,.12)}
+.ttag{font-size:10.5px;font-weight:700;padding:1px 5px;border-radius:4px;background:var(--hover);color:var(--ink-soft);flex:none}
+.ttag.in{background:var(--ok);color:#0B1F16}
+.now{height:2px;background:var(--bad);margin:2px 16px;position:relative}
+.now::before{content:"9:42";position:absolute;left:0;top:-8px;font-size:10.5px;font-weight:700;color:var(--bad);background:var(--panel);padding:0 4px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);padding:10px 16px 6px;border-top:1px solid var(--line);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.tcard{padding:16px 18px;position:sticky;top:12px;display:flex;flex-direction:column;gap:14px}
+.tcard h3{font-family:var(--serif);font-size:24px;margin:0;font-weight:600}
+.tcard .sub{font-size:13px;color:var(--muted);margin:2px 0 0}
+.gc{border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:8px}
+.gc .gn{display:flex;justify-content:space-between;gap:8px}
+.gc .gn b{font-size:14.5px}
+.gc .st{font-size:13px;font-weight:600}
+.gc .meta{font-size:12.5px;color:var(--muted)}
+.acts{display:flex;flex-wrap:wrap;gap:6px}
+.acts button{font:inherit;font-size:12.5px;font-weight:600;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:9px;padding:7px 10px;cursor:pointer}
+.acts button.pri{background:var(--brand);color:var(--brand-ink);border-color:transparent}
+.acts button.dng{color:var(--bad)}
+.foot2{border-top:1px solid var(--line);padding-top:12px;display:flex;gap:6px;flex-wrap:wrap}
+@media (max-width:1100px){.tsplit{grid-template-columns:minmax(0,1fr)}.tcard{position:static}}
+@media (max-width:760px){.trow{grid-template-columns:52px repeat(4,minmax(0,1fr));padding:3px 10px}.trow .pr{display:none}.seg2{margin-left:0}.tgrp{padding:0 6px;font-size:12px}}
+</style>
+<style>
+/* Cam 2026-11-12: "don't change anything — this is what it looks like now". Every element of the live tee sheet,
+   in the same places, so each can be commented on. Only the skin is the approved charcoal glass. */
+.lsearch{margin:0 4px;font-size:13px}.lsearch kbd{margin-left:auto;font:inherit;font-size:11px;border:1px solid var(--line);border-radius:5px;padding:0 5px}
+.seg3{display:grid;grid-template-columns:1fr 1fr;gap:2px;border:1px solid var(--line);border-radius:10px;padding:3px;margin-top:8px}
+.seg3 button{font:inherit;font-size:13px;border:0;background:transparent;color:var(--muted);padding:7px;border-radius:8px}
+.seg3 button.on{background:var(--active);color:var(--ink);font-weight:600}
+.ttl{font-family:var(--serif);font-weight:600;font-size:34px;line-height:1;margin:4px 0 0}
+.kstrip{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px} /* Cam 2026-11-12: separate cards */
+.kc{padding:14px 16px}
+.kstrip span{display:block;font-size:13px;color:var(--ink-soft)}
+.kstrip b{display:block;font-size:22px;font-weight:600;font-variant-numeric:tabular-nums;margin:2px 0}
+.kstrip b small{font-size:14px;font-weight:400;color:var(--muted)}
+.kstrip em{font-style:normal;font-size:12.5px;color:var(--muted)} .kstrip i{font-style:normal}
+.sheetc{padding:0;overflow:hidden}
+.tool{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.ib{font:inherit;width:34px;height:34px;display:grid;place-items:center;border:0;background:transparent;color:var(--ink-soft);border-radius:8px;cursor:pointer}
+.ib:hover{background:var(--hover)}
+.dt{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-soft)} .dt b{color:var(--ink)}
+.views{margin-left:auto;display:flex;gap:14px;font-size:14px}.views b{font-weight:500;color:var(--ink-soft);padding-bottom:4px;cursor:pointer}.views b.on{color:var(--ink);font-weight:600;box-shadow:inset 0 -2px 0 var(--ok)}
+.fsearch{min-width:240px;font-size:13.5px}
+.addt{font:inherit;font-size:14px;font-weight:600;border:0;background:transparent;color:var(--ok);padding:8px 10px;cursor:pointer}
+.alerts{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--line);font-size:13.5px}
+.alerts .dot{display:inline-block;margin-right:6px;vertical-align:2px} .alerts em{font-style:normal;color:var(--muted)}
+.alerts .lg{margin-left:auto;display:flex;align-items:center;gap:8px;color:var(--ink-soft)}
+.alerts .lg i{display:inline-block;width:16px;height:16px;border-radius:4px;margin-left:6px}
+.lp{background:rgba(123,217,164,.25)}.lo{background:rgba(242,196,107,.25)}.lb{background:rgba(255,142,124,.28)}
+.sepv{width:1px;height:16px;background:var(--line);margin:0 6px}
+.tees{display:grid;grid-template-columns:1fr 1fr;padding:14px 16px 4px 120px;font-size:14px;color:var(--muted)} .tees b{color:var(--ink)}
+.past{display:flex;justify-content:space-between;margin:6px 16px;padding:8px 4px;border-bottom:1px solid var(--line);font-size:14px;font-weight:600}
+.trow2{display:grid;grid-template-columns:56px 48px repeat(4,minmax(0,1fr)) 18px repeat(4,minmax(0,1fr));gap:4px;align-items:center;padding:3px 16px}
+.trow2 .tm{font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums}.trow2 .pr{font-size:12px;color:var(--muted)}
+.trow2 .gap{width:18px}
+.hr2{font-size:11.5px;color:var(--muted);font-weight:600;padding:10px 16px 4px}
+.ask{position:fixed;display:none}
+@media (max-width:1100px){.kstrip{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:760px){.kstrip{grid-template-columns:repeat(2,minmax(0,1fr))}.trow2{grid-template-columns:44px repeat(4,minmax(0,1fr))}.trow2 .pr,.trow2 .t10,.trow2 .gap{display:none}.tees{padding-left:16px;grid-template-columns:1fr}.tees div:last-child{display:none}.fsearch{min-width:0;flex:1}.views{margin-left:0}}
+</style>
+<style>
+.shoptop{display:flex;align-items:flex-end;gap:24px;flex-wrap:wrap}
+.stabs{display:flex;gap:18px;font-size:14px}.stabs b{font-weight:500;color:var(--ink-soft);padding-bottom:6px;cursor:pointer}.stabs b.on{color:var(--ink);font-weight:600;box-shadow:inset 0 -2px 0 var(--ok)}
+.pgrid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;align-items:start}
+.pad2{padding:16px}
+.fsearch2{font-size:14px;min-height:44px;margin-bottom:10px}
+.cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.cats button{font:inherit;font-size:13px;border:0;border-radius:7px;padding:7px 12px;background:var(--hover);color:var(--ink-soft);cursor:pointer}
+.cats button.on{background:var(--ink);color:var(--bg);font-weight:600}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.tile{font:inherit;text-align:left;border:1px solid var(--line);background:var(--panel);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;cursor:pointer;color:var(--ink);padding:0}
+.tile.in{border-color:var(--ok);box-shadow:0 0 0 1px var(--ok) inset}
+.tile .ph2{height:76px;display:grid;place-items:center;background:var(--hover);font-weight:700;font-size:20px;color:var(--ink-soft);letter-spacing:.04em}
+.tile .nm{padding:8px 10px 0;font-size:13.5px;font-weight:600;display:flex;justify-content:space-between;gap:6px}
+.tile .nm small{color:var(--ok);font-weight:700;font-size:11.5px;white-space:nowrap}
+.tile .pr2{padding:2px 10px 10px;font-size:13px}.tile .pr2 b{font-variant-numeric:tabular-nums}.tile .pr2 span{display:block;font-size:12px;color:var(--muted)}.tile .pr2 span.out{color:var(--bad)}
+.ticket{position:sticky;top:12px;display:flex;flex-direction:column;gap:10px}
+.ticket h4{margin:0;font-size:15px;display:flex;justify-content:space-between}.ticket h4 button{font:inherit;font-size:13px;border:0;background:transparent;color:var(--muted);cursor:pointer;text-decoration:underline}
+.tl{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line);font-size:13.5px}
+.tl .q{display:flex;align-items:center;gap:6px}.tl .q button{font:inherit;width:26px;height:26px;border-radius:7px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.tl b{font-variant-numeric:tabular-nums;min-width:56px;text-align:right}
+.tsum{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}.tsum.big{font-size:16px;color:var(--ink);font-weight:700;border-top:1px solid var(--line);padding-top:8px}
+.chg{font:inherit;font-size:15px;font-weight:700;border:0;border-radius:10px;padding:13px;background:var(--brand);color:var(--brand-ink);cursor:pointer}
+.lnk2{font:inherit;font-size:13px;border:0;background:transparent;color:var(--ink-soft);text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:0;text-align:left}
+.payrow{display:flex;justify-content:space-between;padding:11px 0;border-top:1px solid var(--line);font-size:14px;cursor:pointer}.payrow span:last-child{color:var(--muted)}
+.cashq{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.cashq span{margin-right:auto;font-weight:600}.cashq button{font:inherit;font-size:12.5px;font-weight:600;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:8px;padding:6px 9px;cursor:pointer}
+@media (max-width:1100px){.pgrid{grid-template-columns:minmax(0,1fr)}.ticket{position:static}}
+</style>
+<div class="wrap">
+  <div class="picker">
+    <h1>Course dashboard · Pro shop (as it is now)</h1>
+    <div class="pick"><span>Look</span><div class="seg" role="group" aria-label="Look">
+      <button type="button" data-m="dark" aria-pressed="true">Charcoal</button><button type="button" data-m="light" aria-pressed="false">Light</button></div></div>
+  </div>
+  <p class="note">The Pro shop register exactly as it works today: the tabs, find-or-scan, item tiles with photos or initials and stock, and the sale on the right with Charge and "How are they paying?". Example items. Only the skin is the charcoal glass. Tap tiles to add them, then Charge.</p>
+
+  <div class="app" id="app" data-mode="dark">
+    <svg class="waves" viewBox="0 0 1400 1100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="38"/></filter>
+      <filter id="softer" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="16"/></filter></defs>
+      <g filter="url(#soft)">
+        <path class="w1" d="M-120 260 C 240 60, 520 420, 820 230 S 1300 40, 1560 300"/>
+        <path class="w4" d="M-200 980 C 200 760, 460 1040, 760 820 S 1220 640, 1600 900"/>
+        <path class="w2" d="M980 -80 C 860 220, 1180 380, 1040 640 S 1180 980, 1320 1180"/>
+      </g>
+      <g filter="url(#softer)">
+        <path class="w3" d="M-60 520 C 300 380, 520 700, 900 520 S 1300 360, 1500 560"/>
+        <path class="w3" d="M200 -60 C 300 200, 120 420, 380 640"/>
+      </g>
+    </svg>
+    <aside class="rail">
+      <div class="club"><span class="crest">PH</span><div><b>Pine Hollow Golf Club</b><small>Public course</small></div></div>
+      <div class="search lsearch" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Find a golfer or member</span><kbd>/</kbd></div>
+      <div class="grp"><b>Today</b>
+        <div class="nav">Home</div><div class="nav">Tee sheet</div><div class="nav on"><span>Pro shop</span></div><div class="nav">Messages</div></div>
+      <div class="grp"><b>Business</b>
+        <div class="nav">Money</div><div class="nav">Members</div><div class="nav">Events</div><div class="nav">Schedule</div><div class="nav">Analytics</div></div>
+      <div class="grp"><div class="nav">Settings</div></div>
+      <div class="foot"><span>Course alert</span><span>Your booking page ↗</span><span>Sign out</span>
+        <div class="seg3"><button type="button" data-m="light">Light</button><button type="button" data-m="dark" class="on">Dark</button></div>
+        <div class="pw">Powered by <b class="grw">GreenReserve</b></div></div>
+    </aside>
+
+    <main class="main">
+      <div class="shoptop"><h2 class="ttl">Pro shop</h2>
+        <div class="stabs" role="tablist"><b class="on">Register</b><b>Sales</b><b>Stock</b><b>Close out</b></div></div>
+      <div class="pgrid">
+        <section class="card pad2" aria-label="Items">
+          <div class="search fsearch2"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Find or scan an item</div>
+          <div class="cats" id="cats"></div>
+          <div class="tiles" id="tiles"></div>
+        </section>
+        <section class="card pad2 ticket" aria-label="This sale" id="ticket"></section>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  document.querySelectorAll('[data-m]').forEach(b=>b.addEventListener('click',()=>{$("app").dataset.mode=b.dataset.m;document.querySelectorAll('[data-m]').forEach(x=>x.classList.toggle('on',x===b))}));
+  const usd=n=>"$"+(n/100).toFixed(2);
+  // [id, name, category, price cents, stock (null = not counted), sizes]
+  const I=[[1,"Pro V1 sleeve","Balls",1600,22,0],[2,"Range bucket · large","Range",1200,null,0],[3,"Range bucket · small","Range",800,null,0],[4,"Club logo cap","Apparel",2800,6,0],[5,"Polo shirt","Apparel",6500,null,4],[6,"Glove","Apparel",1800,0,0],[7,"Bottled water","Snacks",250,48,0],[8,"Gatorade","Snacks",350,30,0],[9,"Hot dog","Snacks",500,null,0],[10,"Club rental","Rentals",3500,null,0],[11,"Push cart","Rentals",800,4,0],[12,"Tees · bag","Balls",500,40,0]];
+  const C=["All","Balls","Apparel","Snacks","Range","Rentals"];
+  let cat="All", cart={1:1,7:2}, step=null;
+  function tiles(){
+    $("cats").innerHTML=C.map(c=>'<button type="button" class="'+(c===cat?'on':'')+'" data-c="'+c+'">'+c+'</button>').join("");
+    $("cats").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{cat=b.dataset.c;tiles();}));
+    $("tiles").innerHTML=I.filter(i=>cat==="All"||i[2]===cat).map(i=>{const n=cart[i[0]]||0;const ini=i[1].split(/\s+/).filter(w=>/^[A-Za-z0-9]/.test(w)).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+      const st=i[5]?i[5]+' sizes':i[4]===null?'':i[4]<=0?'<span class="out">Sold out</span>':i[4]+' in stock';
+      return '<button type="button" class="tile'+(n?' in':'')+'" data-i="'+i[0]+'"><span class="ph2">'+ini+'</span><span class="nm">'+i[1]+(n?'<small>'+n+' in sale</small>':'')+'</span><span class="pr2"><b>'+usd(i[3])+'</b>'+(st?'<span'+(i[4]===0?' class="out"':'')+'>'+st.replace(/<\/?span[^>]*>/g,'')+'</span>':'')+'</span></button>'}).join("");
+    $("tiles").querySelectorAll(".tile").forEach(t=>t.addEventListener("click",()=>{const id=+t.dataset.i;cart[id]=(cart[id]||0)+1;step=null;render();}));
+  }
+  function ticket(){
+    const lines=Object.entries(cart).filter(([,n])=>n>0).map(([id,n])=>[I.find(i=>i[0]==+id),n]);
+    const sub=lines.reduce((a,[i,n])=>a+i[3]*n,0), tax=Math.round(sub*0.07), tot=sub+tax;
+    let h;
+    if(step===null){
+      h='<h4>This sale'+(lines.length?'<button type="button" id="clr">Clear</button>':'')+'</h4>';
+      h+=lines.length?lines.map(([i,n])=>'<div class="tl"><span>'+i[1]+'</span><span class="q"><button type="button" data-d="'+i[0]+'" aria-label="One fewer">−</button>'+n+'<button type="button" data-u="'+i[0]+'" aria-label="One more">+</button><b>'+usd(i[3]*n)+'</b></span></div>').join(''):'<p class="tsum">Tap or scan items.</p>';
+      h+='<button type="button" class="lnk2">Add a discount</button><div class="tsum"><span>Subtotal</span><span>'+usd(sub)+'</span></div><div class="tsum"><span>Sales tax 7%</span><span>'+usd(tax)+'</span></div><div class="tsum big"><span>Total</span><span>'+usd(tot)+'</span></div>';
+      if(lines.length)h+='<button type="button" class="chg" id="chg">Charge '+usd(tot)+'</button>';
+    } else {
+      h='<h4>Charge '+usd(tot)+'<button type="button" id="back">Back to sale</button></h4><p class="tsum" style="color:var(--ink);font-weight:600">How are they paying?</p>'+
+        '<div class="cashq"><span>Cash</span><button type="button">Exact</button><button type="button">$20</button><button type="button">$40</button><button type="button">Other</button></div>'+
+        '<div class="payrow"><span>Card reader</span><span>›</span></div><div class="payrow"><span>Text a pay link</span><span>›</span></div><div class="payrow"><span>Email a pay link</span><span>›</span></div><div class="payrow"><span>On their account</span><span>›</span></div>';
+    }
+    $("ticket").innerHTML=h;
+    $("ticket").querySelectorAll("[data-d]").forEach(b=>b.addEventListener("click",()=>{cart[b.dataset.d]--;render();}));
+    $("ticket").querySelectorAll("[data-u]").forEach(b=>b.addEventListener("click",()=>{cart[b.dataset.u]++;render();}));
+    const c=$("chg");if(c)c.addEventListener("click",()=>{step=1;render();});const bk=$("back");if(bk)bk.addEventListener("click",()=>{step=null;render();});const cl=$("clr");if(cl)cl.addEventListener("click",()=>{cart={};render();});
+  }
+  function render(){tiles();ticket();}
+  render();
+})();
+</script>
