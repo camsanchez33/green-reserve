@@ -246,7 +246,7 @@ export async function PATCH(req: NextRequest) {
     const held = await prisma.teeTime.findFirst({ where: { id, courseId: session.courseId, eventId: { not: null } }, select: { event: { select: { name: true } } } });
     if (held?.event) return NextResponse.json({ error: `Held for ${held.event.name}. To sell this time, change the event on the Events tab.` }, { status: 409 });
   }
-  // TT-CLOSE (Cam 2026-11-12): closing a time is refused while a group is booked on it — one conditional write.
+  // TT-CLOSE (Cam 2026-11-12): closing a time is refused while a group is booked on it — one Serializable transaction.
   if (status === 'blocked') {
     const r = await closeFreeTime(session.courseId, String(id));
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });

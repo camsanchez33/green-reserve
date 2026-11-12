@@ -357,7 +357,7 @@ export async function PATCH(req: NextRequest) {
       if (booking.noShowAt) await recordBookingEvent(tx, { ...evBase, type: 'no_show_cleared', playerCount: booking.players });
     });
     // The no-show charges were taken in error — they are here after all.
-    const r = await refundSeparateAccessFee(id, 'no-show marked in error (still coming)', 'operator', actorName);
+    const r = await refundSeparateAccessFee(id, 'no-show marked in error (no-show undone)', 'operator', actorName);
     const c = await refundNoShowFee(id, actorName); // SP-B: the course's no-show fee too
     const notes = [r.ok ? null : `The booking fee could not be refunded (${r.error}) — GreenReserve will follow up.`, c.ok ? null : `The no-show fee could not be refunded (${c.error}) — refund it from Stripe.`].filter(Boolean);
     return NextResponse.json({ success: true, ...(notes.length ? { fee: notes.join(' ') } : {}) });

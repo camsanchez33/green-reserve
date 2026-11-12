@@ -232,7 +232,7 @@ export async function refundNoShowFee(bookingId: string, actorName?: string): Pr
     await recordMove({ courseId: b.courseId, what: 'no_show_fee', direction: 'out', method: 'card', account: 'course', amountCents: r.amount, stripeId: r.id, bookingId, actor: 'staff', note: actorName ?? '' });
     // After a failed refund the webhook also records this refund (by its id) — once is enough.
     if (!(await prisma.paymentEvent.findFirst({ where: { stripeId: r.id }, select: { id: true } }))) {
-      await recordPaymentEvent({ bookingId, kind: 'no_show_fee_refunded', amountCents: live.amountCents, stripeId: r.id, actor: 'operator', actorName, detail: 'No-show fee refunded (still coming)' });
+      await recordPaymentEvent({ bookingId, kind: 'no_show_fee_refunded', amountCents: live.amountCents, stripeId: r.id, actor: 'operator', actorName, detail: 'No-show fee refunded (no-show undone)' });
     }
     await recordBookingEventSafe({ bookingId, courseId: b.courseId, type: 'fee_refunded', actor: { type: 'staff', id: actorName ?? null }, amountCents: live.amountCents, playerCount: b.players, teeTimeAt: null, stripeId: r.id, metadata: { reason: 'no_show_fee_refunded' } });
     return { ok: true, refunded: true };
