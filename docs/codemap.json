@@ -17895,10 +17895,14 @@
     },
     {
       "path": "src/lib/claim-tee-time.ts",
-      "lines": 122,
+      "lines": 151,
       "purpose": "",
       "brain": [],
       "exports": [
+        {
+          "name": "CLAIM_ATTEMPTS",
+          "kind": "const"
+        },
         {
           "name": "claimTeeTime",
           "kind": "fn"
