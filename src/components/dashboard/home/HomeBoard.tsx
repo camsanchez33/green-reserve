@@ -12,7 +12,7 @@ import { StatusDot } from '@/components/ui/StatusDot';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { goalMetric, formatGoal, type GoalMetric } from '@/lib/course-goals';
 import { CONDITION_FIELDS, HOME_CONDITIONS, CONDITION_NOTE_CHARS, mergeHomeConditions, conditionLabel, conditionsOffBookingPage, type CourseConditions, type ConditionKey } from '@/lib/course-conditions';
-import { CONDITION_TONE, type GoalTone } from '@/lib/home-today';
+import { CONDITION_TONE } from '@/lib/home-today';
 import { goalPace, elapsedShare, type PaceTone } from '@/lib/goal-pace';
 import type { HomeEvent } from '@/lib/home-board';
 

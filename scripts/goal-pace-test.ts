@@ -46,7 +46,7 @@ ok('a course exactly on pace is green morning, noon and night', ['08:00', '12:00
 // Cam 2026-11-12 (b): no verdict for the first 3 days — neutral grey — then the pace rule.
 const early = (p: number, t: number, days: number, kind: 'reach' | 'cap' = 'reach') => goalPace({ progress: p, target: t, share: elapsedShare(days, 30), kind, daysElapsed: days }).tone;
 ok('the first 3 days are early (grey), even with nothing yet', EARLY_DAYS === 3 && early(0, 3000, 0.3) === 'early' && early(0, 3000, 2.99) === 'early' && early(10, 3000, 1.5) === 'early');
-ok('from day 3 the pace rule applies', early(0, 3000, 3) === 'bad' && early(300, 3000, 3) === 'ok');
+ok('after 3 full days (from day 4) the pace rule applies', early(0, 3000, 3) === 'bad' && early(300, 3000, 3) === 'ok');
 ok('early: a reach goal already met is green; a budget already over is red', early(3000, 3000, 1) === 'ok' && early(1200, 1000, 1, 'cap') === 'bad' && early(100, 1000, 1, 'cap') === 'early');
 ok('no daysElapsed given: no early rule (callers opt in)', goalPace({ progress: 0, target: 10, share: 0.01 }).tone === 'bad');
 ok('Home passes the elapsed days and greys an early goal', (() => { const b = require('fs').readFileSync('src/components/dashboard/home/HomeBoard.tsx', 'utf8'); return b.includes("daysElapsed: goals.elapsed ?? dayOfMonth") && b.includes("early: 'bg-dot-neutral'"); })());
