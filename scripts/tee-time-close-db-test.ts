@@ -67,6 +67,8 @@ async function main() {
   ok('PATCH closes through the guard', route.includes("if (status === 'blocked') {\n    const r = await closeFreeTime(session.courseId, String(id));"));
   ok('PATCH hides through the guard', route.includes('const r = await setStaffOnly(session.courseId, String(id), staffOnly);'));
   ok('DELETE refuses a booked time through the guard', route.includes('const refused = await deleteRefusal(session.courseId, String(id));'));
+  const admin = read('src/app/api/admin/tee-sheet/route.ts');
+  ok('admin\'s block goes through the same guard (Build 2026-11-12); unblock unchanged', admin.includes('const r = await closeFreeTime(tt.courseId, String(body.teeTimeId));') && admin.includes('setTeeTimeBlocked(body.teeTimeId, false)') && admin.indexOf('areaGate(session') < admin.indexOf('closeFreeTime(tt.courseId') && admin.indexOf('requireRole(session, MANAGER_PLUS)') < admin.indexOf('closeFreeTime(tt.courseId'));
   ok('the seat stepper is untouched (SEATS-1)', route.includes('const r = await setSeatsClosed(session.courseId, String(id), seatsClosed);'));
   const page = read('src/app/dashboard/page.tsx');
   // TT-CARD: the five day numbers are separate cards; Not paid yet is red when anything is owed (was amber on "past").

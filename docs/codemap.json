@@ -3151,7 +3151,7 @@
     },
     {
       "path": "src/app/api/admin/tee-sheet/route.ts",
-      "lines": 118,
+      "lines": 128,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3185,6 +3185,7 @@
         "@/lib/course-metrics",
         "@/lib/prisma",
         "@/lib/schedule-service",
+        "@/lib/tee-time-close",
         "next/server"
       ],
       "usedBy": []
@@ -27675,6 +27676,7 @@
         "./prisma"
       ],
       "usedBy": [
+        "src/app/api/admin/tee-sheet/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/lib/birdie/proposals.ts"
       ]
