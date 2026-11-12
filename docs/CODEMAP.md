@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-721 source files · 308 routes · 259 libraries · 76 models
+722 source files · 308 routes · 260 libraries · 76 models
 
 ## Single sources of truth
 
@@ -370,7 +370,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/prisma.ts` | 302 | 15 |  | `prisma` |
 | `src/lib/session.ts` | 82 | 120 |  | `ACTIVE_COURSE_COOKIE`, `can`, `requirePermission`, `resolveDashboardSession`, `ResolvedSession`, `STAFF_FORBIDDEN`, `touchStaffSeen` |
 | `src/lib/admin-session.ts` | 76 | 201 |  | `AdminSession`, `AdminSessionUnavailable`, `areaGate`, `MANAGER_PLUS`, `OWNER_ONLY`, `ownerGateError`, `requireOwner`, `requireRole` +7 more |
-| `src/lib/email.ts` | 65 | 2179 |  | `BookingEmailData`, `courseNoticeEmail`, `escapeHtml`, `firstName`, `isPlaceholderEmail`, `PLACEHOLDER_EMAIL_DOMAIN`, `sendAdminDigest`, `sendAdminPasswordChangedNotification` +74 more |
+| `src/lib/email.ts` | 65 | 2182 |  | `BookingEmailData`, `courseNoticeEmail`, `escapeHtml`, `firstName`, `isPlaceholderEmail`, `PLACEHOLDER_EMAIL_DOMAIN`, `sendAdminDigest`, `sendAdminPasswordChangedNotification` +74 more |
 | `src/lib/course-time.ts` | 62 | 63 | SD-3 — course-local time. | `addDaysStr`, `clockIn`, `DEFAULT_TZ`, `isPastIn`, `isValidTimezone`, `payLinkOpensOn`, `todayIn`, `US_TIMEZONES` |
 | `src/lib/rate-limit.ts` | 59 | 78 |  | `clientIp`, `evidentiaryIp`, `rateLimit`, `rateLimitCount` |
 | `src/lib/dashboard-fetch.ts` | 52 | 51 | SD-10 (from the SD review). | `dfetch`, `DFetchResult`, `REGISTER_CLOSED_EVENT` |
@@ -490,7 +490,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/settings-validation.ts` | 4 | 166 | SD-1. | `CANCELLATION_HOURS_MAX`, `normalizeHttpUrl`, `SettingsValidation`, `validateSettingsPatch` |
 | `src/lib/setup-sheet-recap.ts` | 4 | 130 | Cam 2026-10-26 (onboarding walk): | `RecapRow`, `SHEET_NEXT_STEPS`, `sheetPricesNotBuilt`, `sheetRecap` |
 | `src/lib/shop-import.ts` | 4 | 352 | W2-7 (Cam 2026-10-20: | `barcodeChecks`, `CategoryMerge`, `categoryMerges`, `checkList`, `cleanSku`, `clearRepeatedSkus`, `HeaderClash`, `HeaderGuess` +8 more |
-| `src/lib/shop-receipt.ts` | 4 | 72 | RECEIPT-3 (Cam 2026-11-09: | `publicShopReceipt`, `receiptView`, `ShopReceipt`, `shopReceiptUrl`, `staffShopReceipt` |
+| `src/lib/shop-receipt.ts` | 4 | 70 | RECEIPT-3 (Cam 2026-11-09: | `publicShopReceipt`, `receiptView`, `ShopReceipt`, `shopReceiptUrl`, `staffShopReceipt` |
 | `src/lib/unsaved-guard.ts` | 4 | 95 | SD-8b — leaving a dashboard page with unsaved edits. | `confirmLeave`, `setLeaveGuard`, `useBackGuard` |
 | `src/lib/walking.ts` | 4 | 23 | Settings rework (Cam 2026-10-19): | `walkingSummary`, `walkingWords` |
 | `src/lib/booking-fee.ts` | 3 | 126 | FEE-AT-BOOKING (Cam 2026-10-24: | `chargeBookingFee`, `feeCoveredCents`, `refundBookingFee`, `releaseUnpaidBooking` |
@@ -562,6 +562,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/op-theme.ts` | 2 | 26 | DASH-D (Cam 2026-11-01: | `currentOpTheme`, `OP_THEME_COOKIE`, `OpTheme`, `readOpTheme`, `setOpTheme` |
 | `src/lib/operator-search.ts` | 2 | 91 | DASH-C search (the mockups' "Find a golfer, booking or member"): | `bySearchOrder`, `operatorSearch`, `SearchResult` |
 | `src/lib/page-review.ts` | 2 | 109 | Cam 2026-10-27 (onboarding walk): | `pageReview`, `PageReview`, `ReviewPart`, `ReviewPartKey`, `ReviewRow` |
+| `src/lib/sale-ref.ts` | 2 | 5 | PRO-SHOP sale numbers (Cam 2026-11-12, via Build): | `saleRef` |
 | `src/lib/security-checklist.ts` | 2 | 67 | SEC-3: | `Check`, `securityChecklist` |
 | `src/lib/sentry-issues.ts` | 2 | 48 | SEC-3 (Cam 2026-10-26: | `openSentryIssues`, `sentryApiBase`, `SentryIssue`, `SentryIssuesResult` |
 | `src/lib/sheet-token.ts` | 2 | 52 |  | `CLOSED_TO_SHEET`, `DETAILS_TOKEN_TTL_DAYS`, `gateSheetAccess`, `SheetGate` |

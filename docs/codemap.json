@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 721,
+    "files": 722,
     "routes": 308,
-    "libs": 259,
+    "libs": 260,
     "models": 76,
     "orphans": 11,
     "ungatedRoutes": 3
@@ -20316,7 +20316,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 2179,
+      "lines": 2182,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -20655,6 +20655,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./sale-ref",
         "./setup-sheet-recap",
         "@/lib/booking-fees",
         "@/lib/booking-ref",
@@ -26027,6 +26028,28 @@
       ]
     },
     {
+      "path": "src/lib/sale-ref.ts",
+      "lines": 5,
+      "purpose": "PRO-SHOP sale numbers (Cam 2026-11-12, via Build):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "saleRef",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/lib/email.ts",
+        "src/lib/shop-receipt.ts"
+      ]
+    },
+    {
       "path": "src/lib/sales-tax.ts",
       "lines": 176,
       "purpose": "W2-7 part B (Cam 2026-10-20:",
@@ -27184,7 +27207,7 @@
     },
     {
       "path": "src/lib/shop-receipt.ts",
-      "lines": 72,
+      "lines": 70,
       "purpose": "RECEIPT-3 (Cam 2026-11-09:",
       "brain": [],
       "exports": [
@@ -27216,6 +27239,7 @@
       "guard": null,
       "imports": [
         "./prisma",
+        "./sale-ref",
         "crypto"
       ],
       "usedBy": [

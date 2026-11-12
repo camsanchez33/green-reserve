@@ -298,7 +298,7 @@ export async function PATCH(req: NextRequest) {
         await sendSms(phone, `GreenReserve: your receipt from ${s.course.name} ($${(s.totalCents / 100).toFixed(2)}): ${url} Reply STOP to opt out.`, { kind: 'shop_receipt_text', courseId: g.session.courseId });
       } else {
         if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to) || isPlaceholderEmail(to)) return NextResponse.json({ error: 'Enter an email address for the receipt.' }, { status: 400 });
-        await sendShopReceiptEmail({ email: to.toLowerCase(), name: s.customerName, courseName: s.course.name, courseId: g.session.courseId, saleId: s.id, lines: v.lines,
+        await sendShopReceiptEmail({ email: to.toLowerCase(), name: s.customerName, courseName: s.course.name, courseId: g.session.courseId, saleId: s.id, saleNumber: s.number, lines: v.lines,
           discountCents: s.discountCents, discountNote: s.discountNote, taxCents: s.taxCents, totalCents: s.totalCents, paidWith, paidAt, cashTenderedCents: s.cashTenderedCents, refundedCents: s.refundedCents });
       }
     } catch (err) {

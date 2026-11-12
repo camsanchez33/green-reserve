@@ -4,6 +4,8 @@
 import { prisma } from '../src/lib/prisma';
 import { findSales } from '../src/lib/shop-sales';
 import { staffShopReceipt } from '../src/lib/shop-receipt';
+import { saleRef } from '../src/lib/sale-ref';
+import { readFileSync } from 'fs';
 import { resetTestCourse } from '../src/lib/data-reset';
 
 let failed = 0;
@@ -28,6 +30,12 @@ const sale = (courseId: string, extra: Record<string, unknown> = {}) =>
   prisma.shopSale.create({ data: { courseId, totalCents: 1000, status: 'paid_cash', paidAt: new Date(), soldBy: 'Isol', customerName: 'Sale Number', ...extra } as never, select: { id: true, number: true } });
 
 async function main() {
+  // ONE reference everywhere a receipt prints it (final review): the page, the staff view and the email.
+  ok('saleRef: "#18" for a numbered sale, else the last 8 of its id', saleRef('cmabcdefgh12345678', 18) === '#18' && saleRef('cmabcdefgh12345678', null) === '12345678');
+  const email = readFileSync('src/lib/email.ts', 'utf8');
+  ok('the emailed receipt prints saleRef(saleId, saleNumber), not the id suffix', email.includes('saleRef(data.saleId, data.saleNumber)') && !email.includes('data.saleId.slice(-8)'));
+  ok('…and the route passes the sale\'s number', readFileSync('src/app/api/operator/shop-sales/route.ts', 'utf8').includes('saleId: s.id, saleNumber: s.number,'));
+
   const a = await course('a', true), b = await course('b');
 
   const [a1, a2, a3] = [await sale(a.id), await sale(a.id), await sale(a.id)];

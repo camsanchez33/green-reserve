@@ -17,9 +17,7 @@ export type ShopReceipt = {
 };
 
 const PAID = ['paid_cash', 'paid_card', 'paid_account'];
-// PRO-SHOP sale numbers: the receipt reads like the Sales list, "#18"; a sale from before numbers keeps its old
-// reference, the last 8 of its id.
-const ref = (id: string, number: number | null) => (number != null ? `#${number}` : id.slice(-8).toUpperCase());
+import { saleRef } from './sale-ref';
 const paidWithOf = (status: string) => (status === 'paid_card' ? 'Card' : status === 'paid_account' ? 'On account' : 'Cash');
 
 type Row = {
@@ -37,7 +35,7 @@ const SELECT = {
 
 export function receiptView(s: Row): ShopReceipt {
   return {
-    ref: ref(s.id, s.number), courseName: s.course.name, brandColor: s.course.brandColor ?? '', logoUrl: s.course.logoUrl ?? '',
+    ref: saleRef(s.id, s.number), courseName: s.course.name, brandColor: s.course.brandColor ?? '', logoUrl: s.course.logoUrl ?? '',
     location: [s.course.city, s.course.state].filter(Boolean).join(', '),
     paidAt: (s.paidAt ?? s.createdAt).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: s.course.timezone || 'America/New_York' }),
     paidWith: paidWithOf(s.status), soldBy: s.soldBy, customerName: s.customerName,
