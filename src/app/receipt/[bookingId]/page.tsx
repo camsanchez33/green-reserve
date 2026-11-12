@@ -13,7 +13,7 @@ type ReceiptData = {
   /** RECEIPT-2: how it was paid (null = not paid yet / cancelled / refunded). */
   payment?: { method: 'cash' | 'card' | 'account'; paidAt: string | null; amountCents: number; card?: string; tenderedCents?: number; changeCents?: number } | null;
   hasAccount?: boolean; timezone?: string;
-  bookingId: string; golferName: string; courseName: string; courseSlug: string; courseLocation: string; brandColor?: string;
+  bookingId: string; bookingRef?: string; golferName: string; courseName: string; courseSlug: string; courseLocation: string; brandColor?: string;
   date: string; time: string; holes: number; productLabel?: string | null; players: number; cartSelected: boolean;
   /** CART-4: shown when the course puts the cart ticket on the receipt. */
   cartTicket?: { riders: number } | null;
@@ -260,22 +260,22 @@ function ReceiptPageInner() {
                   {payment.tenderedCents != null && payment.changeCents != null && (
                     <div className="flex justify-between gap-3 text-ink-soft tabular-nums"><span>Cash given {dollars(payment.tenderedCents)}</span><span>Change {dollars(payment.changeCents)}</span></div>
                   )}
-                  <div className="text-ink-muted">Booking #{data.bookingId.slice(0, 8).toUpperCase()}</div>
+                  <div className="text-ink-muted">Booking {data.bookingRef ?? data.bookingId.slice(0, 8).toUpperCase()}</div>
                 </div>
               )}
               {isCompleted && !payment && (
                 <div className="text-sm text-ink mb-5">
-                  {refunded ? 'Refunded' : onAccount ? 'On your member account' : paidAtCourse ? 'Paid at the course' : 'Paid at check-in'} · Booking #{data.bookingId.slice(0, 8).toUpperCase()}
+                  {refunded ? 'Refunded' : onAccount ? 'On your member account' : paidAtCourse ? 'Paid at the course' : 'Paid at check-in'} · Booking {data.bookingRef ?? data.bookingId.slice(0, 8).toUpperCase()}
                 </div>
               )}
               {!isCompleted && !isCancelled && (
                 <div className="text-sm text-ink mb-5">
-                  {chargedNow > 0 ? 'The round itself is paid when you check in.' : 'Nothing has been charged yet. The round is paid when you check in.'} · Booking #{data.bookingId.slice(0, 8).toUpperCase()}
+                  {chargedNow > 0 ? 'The round itself is paid when you check in.' : 'Nothing has been charged yet. The round is paid when you check in.'} · Booking {data.bookingRef ?? data.bookingId.slice(0, 8).toUpperCase()}
                 </div>
               )}
               {isCancelled && (
                 <div className="text-sm text-ink-muted mb-5">
-                  Booking #{data.bookingId.slice(0, 8).toUpperCase()} · Cancelled
+                  Booking {data.bookingRef ?? data.bookingId.slice(0, 8).toUpperCase()} · Cancelled
                 </div>
               )}
             </div>

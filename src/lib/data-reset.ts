@@ -31,7 +31,7 @@ export const KEPT_TABLES = [
 /** Everything courses, golfers and the pipeline made — cleared by the launch wipe. */
 export const WIPED_TABLES = [
   // courses and their setup
-  'CourseOperator', 'Course', 'CourseGroup', 'CoursePhoto', 'TeeSet', 'Nine', 'CourseProduct', 'TeeSetNine',
+  'CourseOperator', 'Course', 'CourseNumberCounter', 'CourseGroup', 'CoursePhoto', 'TeeSet', 'Nine', 'CourseProduct', 'TeeSetNine',
   'CourseProductTeeSet', 'CourseStaff', 'StaffPermissionChange', 'MembershipTier', 'TeeTimeSchedule', 'Blackout',
   'AgreementAcceptance', 'ShopItem',
   // golfers and activity
@@ -79,7 +79,16 @@ export async function previewWipeAll(): Promise<{ wiped: TableCounts; kept: Tabl
 export async function wipeAll(now = new Date(), db: Db = prisma): Promise<{ ok: true; cleared: TableCounts } | { ok: false; error: string }> {
   if (!wipeAllOpen(now)) return { ok: false, error: 'The launch wipe closed on Dec 1 — real courses are on the site now. Reset a single test course instead.' };
   const cleared = await countTables(WIPED_TABLES, db);
+  // BOOKING-REF (Cam 2026-11-12): the course-number counter is wiped with the courses, so the next
+  // course is GR1 again.
   await db.$executeRawUnsafe(`TRUNCATE TABLE ${WIPED_TABLES.map(t => `"${t}"`).join(', ')} RESTRICT`);
+  // Each course's booking-number sequence ("bookref_<id>") goes with its course. TRUNCATE fires no
+  // delete trigger, so drop them here — in the same transaction when the caller passes one.
+  await db.$executeRawUnsafe(`DO $$ DECLARE r RECORD; BEGIN
+    FOR r IN SELECT c.relname FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+             WHERE c.relkind = 'S' AND n.nspname = current_schema() AND c.relname LIKE 'bookref\\_%' LOOP
+      EXECUTE 'DROP SEQUENCE ' || quote_ident(r.relname);
+    END LOOP; END $$`);
   return { ok: true, cleared };
 }
 
@@ -128,6 +137,10 @@ export async function resetTestCourse(courseId: string): Promise<{ ok: true; cle
   // As releaseHold() does: a time an event held opens again, unless the course closed that day.
   const closedDays = (await prisma.blackout.findMany({ where: { courseId }, select: { date: true } })).map(b => b.date);
   await prisma.$transaction([
+    // BOOKING-REF: like new — its next booking is GR<n>-1 again (the course keeps its number). First,
+    // so nothing booked during the reset is numbered from the old count. setval is not undone by a
+    // rollback; a failed reset leaves the next number at 1 while old bookings remain — reset again.
+    prisma.$queryRaw`SELECT setval("bookref_seq"(${courseId}), 1, false)`,
     prisma.teeTime.updateMany({ where: { courseId, eventId: { not: null }, status: 'blocked', date: { notIn: closedDays } }, data: { status: 'available', eventId: null } }),
     // Booking children (PaymentEvent, BookingShopItem) go with their booking (cascade).
     prisma.bookingEvent.deleteMany({ where: { courseId } }),

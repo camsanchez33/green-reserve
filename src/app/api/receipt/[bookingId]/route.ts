@@ -7,6 +7,7 @@ import { receiptCharges, chargedNowCents } from '@/lib/receipt-charges';
 import { roundChargedTotal, shopLinesFor } from '@/lib/shop';
 import { stripe } from '@/lib/stripe';
 import { counterPaidCents } from '@/lib/counter-pay';
+import { bookingRefLabel } from '@/lib/booking-ref';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
@@ -31,7 +32,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     where: { id: bookingId },
     include: {
       teeTime: { select: { date: true, time: true, holes: true, product: { select: { label: true } } } },
-      course: { select: { name: true, slug: true, city: true, state: true, brandColor: true, stripeAccountId: true, timezone: true } },
+      course: { select: { name: true, number: true, slug: true, city: true, state: true, brandColor: true, stripeAccountId: true, timezone: true } },
     },
   });
 
@@ -76,6 +77,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
 
   return NextResponse.json({
     bookingId: booking.id,
+    bookingRef: bookingRefLabel(booking),
     golferName: booking.golferName,
     courseName: booking.course.name,
     courseSlug: booking.course.slug,
