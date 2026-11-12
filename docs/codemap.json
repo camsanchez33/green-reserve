@@ -2934,7 +2934,7 @@
     },
     {
       "path": "src/app/api/admin/search/route.ts",
-      "lines": 237,
+      "lines": 238,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -16357,7 +16357,7 @@
     },
     {
       "path": "src/lib/booking-ref.ts",
-      "lines": 32,
+      "lines": 45,
       "purpose": "BOOKING-REF (Cam 2026-11-12):",
       "brain": [],
       "exports": [
@@ -16370,7 +16370,11 @@
           "kind": "fn"
         },
         {
-          "name": "parseBookingRef",
+          "name": "courseRefLabel",
+          "kind": "fn"
+        },
+        {
+          "name": "parseRef",
           "kind": "fn"
         }
       ],
@@ -19306,7 +19310,7 @@
     },
     {
       "path": "src/lib/data-reset.ts",
-      "lines": 162,
+      "lines": 166,
       "purpose": "TEST-1 (Cam 2026-10-22:",
       "brain": [],
       "exports": [
@@ -23272,7 +23276,7 @@
     },
     {
       "path": "src/lib/operator-search.ts",
-      "lines": 90,
+      "lines": 91,
       "purpose": "DASH-C search (the mockups' \"Find a golfer, booking or member\"):",
       "brain": [],
       "exports": [
@@ -29462,6 +29466,14 @@
           "type": "Boolean"
         },
         {
+          "name": "number",
+          "type": "Int?"
+        },
+        {
+          "name": "bookingRefSeq",
+          "type": "Int"
+        },
+        {
           "name": "slug",
           "type": "String"
         },
@@ -30105,6 +30117,7 @@
         "src/lib/agreement-sign.ts",
         "src/lib/approval-state.ts",
         "src/lib/card-reader.ts",
+        "src/lib/data-reset.ts",
         "src/lib/demand-pricing.ts",
         "src/lib/lifecycle.ts",
         "src/lib/pricing-switch.ts",

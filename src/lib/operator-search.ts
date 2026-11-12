@@ -6,7 +6,7 @@
 import { prisma } from './prisma';
 import { todayIn, addDaysStr } from './course-time';
 import { groupCourseIds } from './course-group';
-import { bookingRefLabel, parseBookingRef } from './booking-ref';
+import { bookingRefLabel, parseRef } from './booking-ref';
 
 export type SearchResult =
   | { kind: 'booking'; id: string; ref: string; name: string; date: string; time: string; players: number; status: string; noShow: boolean; href: string }
@@ -29,7 +29,7 @@ const contains = (q: string) => ({ contains: q, mode: 'insensitive' as const });
 export async function operatorSearch(courseId: string, rawQ: string, opts: { contact: boolean; members: boolean }): Promise<SearchResult[]> {
   const q = rawQ.trim().slice(0, 80);
   if (q.length < 2) return [];
-  const course = await prisma.course.findUnique({ where: { id: courseId }, select: { timezone: true } });
+  const course = await prisma.course.findUnique({ where: { id: courseId }, select: { timezone: true, number: true } });
   // Bookings from 60 days back onward — the ones a counter is asked about.
   const today = todayIn(course?.timezone);
   const since = addDaysStr(today, -60);
@@ -38,8 +38,9 @@ export async function operatorSearch(courseId: string, rawQ: string, opts: { con
   const phoneIds = opts.contact && digits.length >= 4
     ? (await prisma.$queryRaw<{ id: string }[]>`SELECT b."id" FROM "Booking" b JOIN "TeeTime" t ON t."id" = b."teeTimeId" WHERE b."courseId" = ${courseId} AND b."status" IN ('confirmed', 'completed', 'cancelled') AND t."date" >= ${since} AND regexp_replace(b."golferPhone", '[^0-9]', '', 'g') LIKE ${'%' + digits + '%'} ORDER BY t."date" DESC LIMIT 50`).map(r => r.id)
     : [];
-  // BOOKING-REF: "GR-1042" finds that booking (this course's only, like every query here).
-  const ref = parseBookingRef(q);
+  // BOOKING-REF: "GR4-17" / "4-17" finds that booking — this course's only, like every query here.
+  const parsed = parseRef(q);
+  const ref = parsed?.ref != null && course?.number != null && parsed.course === course.number ? parsed.ref : null;
   const bookingOr = [
     { golferName: contains(q) },
     ...(ref ? [{ ref }] : []),
@@ -70,7 +71,7 @@ export async function operatorSearch(courseId: string, rawQ: string, opts: { con
   ]);
   const bookings = bySearchOrder(bookingRows.map(b => ({ ...b, date: b.teeTime.date, time: b.teeTime.time })), today).slice(0, 8);
   const out: SearchResult[] = bookings.map(b => ({
-    kind: 'booking', id: b.id, ref: bookingRefLabel(b), name: b.golferName, date: b.date, time: b.time.slice(0, 5), players: b.players, status: b.status, noShow: !!b.noShowAt,
+    kind: 'booking', id: b.id, ref: bookingRefLabel(b, course?.number), name: b.golferName, date: b.date, time: b.time.slice(0, 5), players: b.players, status: b.status, noShow: !!b.noShowAt,
     // A cancelled group isn't on the tee sheet: it opens Money → Cancellations.
     href: b.status === 'cancelled' ? `/dashboard/money?tab=cancellations&q=${encodeURIComponent(b.golferName)}` : `/dashboard?date=${b.date}&q=${encodeURIComponent(b.golferName)}`,
   }));

@@ -42,6 +42,11 @@ model Course {
   /// Only these can be reset from the admin, and they stay out of the
   /// platform's numbers, Problems and public lists (src/lib/real-courses.ts).
   isTest                     Boolean               @default(false)
+  /// BOOKING-REF (Cam 2026-11-12): the course's number, shown as GR<number> — from the Postgres
+  /// sequence Course_number_seq for every new course; null on courses made before it (no backfill).
+  number                     Int?                  @unique @default(autoincrement())
+  /// The last booking number given at this course; the "Booking_ref_assign" trigger counts it up.
+  bookingRefSeq              Int                   @default(0)
   slug                       String                @unique
   name                       String
   type                       String                @default("public")
@@ -623,10 +628,11 @@ model TeeTime {
 
 model Booking {
   id                         String            @id @default(cuid())
-  /// BOOKING-REF (Cam 2026-11-12): the short number golfers and staff read, shown as GR-<ref>
-  /// (bookingRefLabel in lib/booking-ref). From a Postgres sequence for every new booking; null on
-  /// bookings made before it (not backfilled — test data the launch wipe clears).
-  ref                        Int?              @unique @default(autoincrement())
+  /// BOOKING-REF (Cam 2026-11-12): this booking's number within its course — shown as
+  /// GR<course.number>-<ref> (bookingRefLabel in lib/booking-ref). Set by the Postgres BEFORE INSERT
+  /// trigger "Booking_ref_assign" from Course.bookingRefSeq, so every insert path gets one, atomically.
+  /// Null on bookings made before it (not backfilled — test data the launch wipe clears).
+  ref                        Int?
   teeTimeId                  String
   teeTime                    TeeTime           @relation(fields: [teeTimeId], references: [id])
   courseId                   String
@@ -783,6 +789,8 @@ model Booking {
   @@index([cancellationFeeChargeId])
   @@index([stripePaymentIntentId])
   @@index([feePaymentIntentId])
+
+  @@unique([courseId, ref])
 }
 
 model TeeTimeSchedule {

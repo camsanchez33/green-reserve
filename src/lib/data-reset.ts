@@ -79,7 +79,9 @@ export async function previewWipeAll(): Promise<{ wiped: TableCounts; kept: Tabl
 export async function wipeAll(now = new Date(), db: Db = prisma): Promise<{ ok: true; cleared: TableCounts } | { ok: false; error: string }> {
   if (!wipeAllOpen(now)) return { ok: false, error: 'The launch wipe closed on Dec 1 — real courses are on the site now. Reset a single test course instead.' };
   const cleared = await countTables(WIPED_TABLES, db);
-  await db.$executeRawUnsafe(`TRUNCATE TABLE ${WIPED_TABLES.map(t => `"${t}"`).join(', ')} RESTRICT`);
+  // RESTART IDENTITY (BOOKING-REF, Cam 2026-11-12): the course-number sequence starts again at GR1.
+  // Each course's booking counter lives on its row, so it goes with the course.
+  await db.$executeRawUnsafe(`TRUNCATE TABLE ${WIPED_TABLES.map(t => `"${t}"`).join(', ')} RESTART IDENTITY RESTRICT`);
   return { ok: true, cleared };
 }
 
@@ -134,6 +136,8 @@ export async function resetTestCourse(courseId: string): Promise<{ ok: true; cle
     prisma.sentMessage.deleteMany({ where: { courseId } }),
     prisma.teeTimeAlert.deleteMany({ where: { courseId } }),
     prisma.booking.deleteMany({ where: { courseId } }),
+    // BOOKING-REF: like new — its next booking is GR<n>-1 again. The course keeps its number.
+    prisma.course.update({ where: { id: courseId }, data: { bookingRefSeq: 0 } }),
     prisma.courseMembership.deleteMany({ where: { courseId } }),
     prisma.courseResident.deleteMany({ where: { courseId } }),
     prisma.shopSale.deleteMany({ where: { courseId } }),

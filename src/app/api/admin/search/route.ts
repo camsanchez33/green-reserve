@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS, MANAGER_PLUS } from '@/lib/admin-session';
 import { hasArea, type AdminArea } from '@/lib/admin-areas';
-import { bookingRefLabel, parseBookingRef } from '@/lib/booking-ref';
+import { bookingRefLabel, courseRefLabel, parseRef } from '@/lib/booking-ref';
 
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
@@ -22,8 +22,8 @@ export async function GET(req: NextRequest) {
 
   // AW-3: a booking id pasted from an email or a check-in link (whole, or the first 8+ characters).
   const idLike = /^[a-z0-9]{8,40}$/i.test(q) ? q.toLowerCase() : '';
-  // BOOKING-REF: or its GR-number ("GR-1042").
-  const ref = parseBookingRef(q);
+  // BOOKING-REF: "GR4-17" / "4-17" is a booking, "GR4" a course.
+  const ref = parseRef(q);
 
   const [courses, inquiries, golfers, guests, employees, groups, threads, bookings] = await Promise.all([
     prisma.course.findMany({
@@ -33,9 +33,10 @@ export async function GET(req: NextRequest) {
           { name: { contains: lq, mode: 'insensitive' } },
           { slug: { contains: lq, mode: 'insensitive' } },
           { city: { contains: lq, mode: 'insensitive' } },
+          ...(ref && ref.ref == null ? [{ number: ref.course }] : []),
         ],
       },
-      select: { id: true, name: true, slug: true, city: true, state: true, active: true },
+      select: { id: true, number: true, name: true, slug: true, city: true, state: true, active: true },
       take: 5,
       orderBy: { name: 'asc' },
     }),
@@ -109,10 +110,10 @@ export async function GET(req: NextRequest) {
           take: 3,
         })
       : Promise.resolve([]),
-    idLike || ref
+    idLike || ref?.ref
       ? prisma.booking.findMany({
-          where: { OR: [...(idLike ? [{ id: { startsWith: idLike } }] : []), ...(ref ? [{ ref }] : [])] },
-          select: { id: true, ref: true, golferName: true, golferEmail: true, golferAccountId: true, status: true, course: { select: { name: true } }, teeTime: { select: { date: true, time: true } } },
+          where: { OR: [...(idLike ? [{ id: { startsWith: idLike } }] : []), ...(ref?.ref ? [{ ref: ref.ref, course: { number: ref.course } }] : [])] },
+          select: { id: true, ref: true, golferName: true, golferEmail: true, golferAccountId: true, status: true, course: { select: { name: true, number: true } }, teeTime: { select: { date: true, time: true } } },
           take: 3,
         })
       : Promise.resolve([]),
@@ -157,7 +158,7 @@ export async function GET(req: NextRequest) {
       type: 'course' as const,
       id: c.id,
       label: c.name,
-      sub: [c.city, c.state].filter(Boolean).join(', ') + (c.active ? '' : ' · inactive'),
+      sub: [courseRefLabel(c), [c.city, c.state].filter(Boolean).join(', ')].filter(Boolean).join(' · ') + (c.active ? '' : ' · inactive'),
       href: `/admin/courses?courseId=${c.id}`,
     })),
     ...inquiries.map(i => ({

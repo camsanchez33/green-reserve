@@ -29,7 +29,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
       teeTime: { select: { date: true, time: true, holes: true, greenFeeCents: true, cartFeeCents: true, product: { select: { label: true } } } },
       course: {
         select: {
-          name: true, slug: true, address: true, city: true, state: true, phone: true,
+          name: true, number: true, slug: true, address: true, city: true, state: true, phone: true,
           timezone: true, cancellationHours: true, brandColor: true, heroImageUrl: true, logoUrl: true,
         },
       },

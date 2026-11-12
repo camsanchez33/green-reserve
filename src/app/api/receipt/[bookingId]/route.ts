@@ -32,7 +32,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     where: { id: bookingId },
     include: {
       teeTime: { select: { date: true, time: true, holes: true, product: { select: { label: true } } } },
-      course: { select: { name: true, slug: true, city: true, state: true, brandColor: true, stripeAccountId: true, timezone: true } },
+      course: { select: { name: true, number: true, slug: true, city: true, state: true, brandColor: true, stripeAccountId: true, timezone: true } },
     },
   });
 
