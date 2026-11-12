@@ -4,7 +4,8 @@
 // Server-only. Money (the goal) uses computeAnalytics()'s collected figure, never a new sum.
 import { prisma } from './prisma';
 import { timeSpots } from './day-fill';
-import { todayIn, addDaysStr } from './course-time';
+import { todayIn, addDaysStr, clockIn } from './course-time';
+import { elapsedDays } from './goal-pace';
 import { computeAnalytics } from './analytics';
 import { cleanConditions, type CourseConditions } from './course-conditions';
 import { GOAL_METRICS, type GoalMetric } from './course-goals';
@@ -87,6 +88,8 @@ export async function monthGoals(courseId: string, tz: string | null | undefined
   const last = prevMonth(month);
   const end = (m: string) => `${m}-${String(daysInMonth(m)).padStart(2, '0')}`;
   const daysLeft = daysInMonth(month) - Number(today.slice(8, 10)) + 1;
+  // GOAL-PACE: the month's elapsed days at the course clock (today counted by the hour), for the goals' pace.
+  const elapsed = elapsedDays(Number(today.slice(8, 10)), clockIn(tz, now));
   const allowed = GOAL_METRICS.filter(m => opts.money || !m.money).map(m => m.key) as GoalMetric[];
   const [rows, legacy] = await Promise.all([
     prisma.courseGoal.findMany({ where: { courseId, month }, select: { metric: true, target: true } }),
@@ -96,7 +99,7 @@ export async function monthGoals(courseId: string, tz: string | null | undefined
   for (const r of rows) if (r.target != null && (allowed as string[]).includes(r.metric)) targets.set(r.metric as GoalMetric, r.target);
   if (legacy?.cents != null && !rows.some(r => r.metric === 'collected')) targets.set('collected', legacy.cents);
   const set = allowed.filter(m => targets.has(m));
-  if (set.length === 0) return { month, daysLeft, lastMonth: last, goals: [] as GoalRow[], metrics: allowed };
+  if (set.length === 0) return { month, daysLeft, elapsed, lastMonth: last, goals: [] as GoalRow[], metrics: allowed };
   const [mtd, full, prev] = await Promise.all([
     computeAnalytics(courseId, { from: `${month}-01`, to: today }, now),
     set.includes('booked') ? computeAnalytics(courseId, { from: `${month}-01`, to: end(month) }, now) : Promise.resolve(null),
@@ -107,7 +110,7 @@ export async function monthGoals(courseId: string, tz: string | null | undefined
     actual: actualOf[metric](metric === 'booked' && full ? full : mtd),
     lastMonth: actualOf[metric](prev),
   }));
-  return { month, daysLeft, lastMonth: last, goals, metrics: allowed };
+  return { month, daysLeft, elapsed, lastMonth: last, goals, metrics: allowed };
 }
 
 export type HomeEvent = { id: string; name: string; date: string; startTime: string; format: string; onList: number; capacity: number | null };

@@ -45,7 +45,7 @@ ok('no history → no line', sameWeekdayAverage('2031-05-15', '2031-05-14', past
 ok('days before the last 4 weeks never count', sameWeekdayAverage('2031-05-14', '2031-05-14', new Map([['2031-04-09', 50]])) === null);
 
 // Goals: their colour is lib/goal-pace's (scripts/goal-pace-test.ts).
-ok('Home colours goals with the shared pace rule', readFileSync('src/components/dashboard/home/HomeBoard.tsx', 'utf8').includes('goalPace({ progress: g.actual, target: g.target, share: elapsedShare(dayOfMonth, daysInMonth), rate: m.unit === \'pct\' })'));
+ok('Home colours goals with the shared pace rule', readFileSync('src/components/dashboard/home/HomeBoard.tsx', 'utf8').includes('goalPace({ progress: g.actual, target: g.target, share: elapsedShare(goals.elapsed ?? dayOfMonth, daysInMonth), rate: m.unit === \'pct\' })'));
 
 // ── Weather line ──
 const H = (hh: string, rain: number | null, temp = 54, summary = 'Clear') => ({ at: `2031-05-14T${hh}:00:00-04:00`, tempF: temp, summary, windMph: 5, rainPct: rain });

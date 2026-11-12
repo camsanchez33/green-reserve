@@ -18,7 +18,7 @@ import type { HomeEvent } from '@/lib/home-board';
 
 export type ShiftNote = { id: string; body: string; authorName: string; createdAt: string };
 export type WeekAhead = { hours: number[]; days: { date: string; cells: { booked: number; offered: number }[] }[] };
-export type Goals = { month: string; daysLeft: number; lastMonth: string; goals: { metric: GoalMetric; target: number; actual: number; lastMonth: number }[]; metrics: GoalMetric[] };
+export type Goals = { month: string; daysLeft: number; elapsed?: number; lastMonth: string; goals: { metric: GoalMetric; target: number; actual: number; lastMonth: number }[]; metrics: GoalMetric[] };
 export type Conditions = { detail: CourseConditions; alert: string; updatedAt: string | null; detailAt: string | null };
 export type { HomeEvent };
 
@@ -231,7 +231,7 @@ export function EventsCard({ events }: { events: HomeEvent[] }) {
   );
 }
 
-/** HOME-2/HOME-3: this month's goals, each coloured by how close it is to where it should be today. */
+/** HOME-2/HOME-3: this month's goals; each bar is progress and its colour where the month ends at today's pace (lib/goal-pace). */
 export function GoalsCard({ goals, canSet, onSaved }: { goals: Goals; canSet: boolean; onSaved: () => void }) {
   const [managing, setManaging] = useState(false);
   const [editing, setEditing] = useState<GoalMetric | 'new' | null>(null);
@@ -282,7 +282,7 @@ export function GoalsCard({ goals, canSet, onSaved }: { goals: Goals; canSet: bo
         const m = goalMetric(g.metric);
         const pct = Math.min(100, g.target ? (g.actual / g.target) * 100 : 0);
         // GOAL-PACE (Cam 2026-11-12): the bar is progress; the colour is where the month ends at today's pace.
-        const { tone } = goalPace({ progress: g.actual, target: g.target, share: elapsedShare(dayOfMonth, daysInMonth), rate: m.unit === 'pct' });
+        const { tone } = goalPace({ progress: g.actual, target: g.target, share: elapsedShare(goals.elapsed ?? dayOfMonth, daysInMonth), rate: m.unit === 'pct' });
         return (
           <div key={g.metric} className="flex flex-col gap-1.5">
             <div className="flex items-baseline gap-2">

@@ -20737,10 +20737,14 @@
     },
     {
       "path": "src/lib/goal-pace.ts",
-      "lines": 38,
+      "lines": 53,
       "purpose": "GOAL-PACE (Cam 2026-11-12, ADMIN_REDO_SPEC \"Goals:",
       "brain": [],
       "exports": [
+        {
+          "name": "elapsedDays",
+          "kind": "fn"
+        },
         {
           "name": "elapsedShare",
           "kind": "fn"
@@ -20769,7 +20773,8 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/components/dashboard/home/HomeBoard.tsx"
+        "src/components/dashboard/home/HomeBoard.tsx",
+        "src/lib/home-board.ts"
       ]
     },
     {
@@ -21098,7 +21103,7 @@
     },
     {
       "path": "src/lib/home-board.ts",
-      "lines": 127,
+      "lines": 130,
       "purpose": "DASH-D Home (Cam 2026-11-01, mockups S1 + \"week-ahead heat map and month vs goal\"):",
       "brain": [],
       "exports": [
@@ -21150,6 +21155,7 @@
         "./course-goals",
         "./course-time",
         "./day-fill",
+        "./goal-pace",
         "./prisma"
       ],
       "usedBy": [

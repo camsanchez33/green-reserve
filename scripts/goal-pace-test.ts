@@ -1,7 +1,7 @@
 // GOAL-PACE (Cam 2026-11-12, "one pace rule everywhere"): the bar is progress, the colour is where the period ends
 // at the current pace — reach goals (revenue, bookings) and caps (costs), one helper for admin and dashboard.
 // Pure. Run: npx tsx scripts/goal-pace-test.ts
-import { goalPace, projectAtEnd, elapsedShare } from '../src/lib/goal-pace';
+import { goalPace, projectAtEnd, elapsedShare, elapsedDays } from '../src/lib/goal-pace';
 
 let failed = 0;
 const ok = (l: string, c: boolean, d: unknown = '') => { console.log(`${c ? 'PASS' : 'FAIL'}  ${l}${c ? '' : ' — ' + JSON.stringify(d)}`); if (!c) failed++; };
@@ -28,6 +28,20 @@ ok('cap: more than 10% over is red', cap(441, 1000) === 'bad');
 ok('cap: already over the budget is red', goalPace({ progress: 1001, target: 1000, share: 0.9, kind: 'cap' }).tone === 'bad');
 ok('no target: nothing to judge (green)', goalPace({ progress: 5, target: 0, share }).tone === 'ok');
 ok('the projection comes back with the tone', goalPace({ progress: 400, target: 1000, share }).projected === 1000);
+
+// Final review 2026-11-12: shares are rounded floats, so an exact pace must still land inside its band.
+const at = (p: number, t: number, d: number, D: number, kind: 'reach' | 'cap' = 'reach') => goalPace({ progress: p, target: t, share: elapsedShare(d, D), kind }).tone;
+ok('exactly on pace is green whatever the day (23 of 30 on day 23; 9 of 28 on day 9; 18 of 31 on day 18)', at(23, 30, 23, 30) === 'ok' && at(9, 28, 9, 28) === 'ok' && at(18, 28, 18, 28) === 'ok' && at(9, 31, 9, 31) === 'ok' && at(18, 31, 18, 31) === 'ok');
+ok('exactly 10% short is yellow (81 of 280 on day 9 of 28)', at(81, 280, 9, 28) === 'warn');
+ok('…one under that is red', at(80, 280, 9, 28) === 'bad');
+ok('cap exactly 10% over is yellow (3179 of 4930 on day 17 of 29)', at(3179, 4930, 17, 29, 'cap') === 'warn');
+ok('…one over that is red', at(3180, 4930, 17, 29, 'cap') === 'bad');
+ok('a sweep: every exact pace in 28–31-day months is green', (() => { for (const D of [28, 29, 30, 31]) for (let d = 1; d <= D; d++) for (let perDay = 1; perDay <= 200; perDay++) { if (at(perDay * d, perDay * D, d, D) !== 'ok') return false; } return true; })());
+
+// Today counts by the hour (the course clock): an on-pace course is green through the day, not red every morning.
+ok('elapsed days count today by the hour', elapsedDays(12, '12:00') === 11.5 && elapsedDays(1, '00:00') === 0 && elapsedDays(30, '24:00') === 30);
+const onPaceAt = (day: number, clock: string) => goalPace({ progress: 100 * elapsedDays(day, clock), target: 3000, share: elapsedShare(elapsedDays(day, clock), 30) }).tone;
+ok('a course exactly on pace is green morning, noon and night', ['08:00', '12:00', '20:00'].every(c => [1, 2, 15, 30].every(d => onPaceAt(d, c) === 'ok')));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);
