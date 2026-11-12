@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { INPUT } from '@/components/ui/field';
+import { TakesCashToggle } from '@/components/dashboard/settings/TakesCashToggle';
 import { US_TIMEZONES } from '@/lib/course-time';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Save, Loader2, X } from 'lucide-react';
@@ -1050,6 +1051,8 @@ function SettingsPageInner() {
             <div className="space-y-5">
               {/* POS-6 (Cam 2026-11-09): items are added and changed on Pro shop → Stock; round packs are turned off. */}
               <Link href="/dashboard/shop" className="inline-block text-sm text-pine font-medium underline underline-offset-4">Shop items</Link>
+              {/* HOME-3 (Cam 2026-11-12): Home asks to open the register only when this is on. */}
+              <TakesCashToggle key={String(form.takesCash === true)} initial={form.takesCash === true} canEdit={access.can('settings.edit')} />
               {/* W2-7 part B: owner only — staff can't change anything Stripe. */}
               {access.loaded && !isStaffLogin && (
                 <SectionCard title="Sales tax">
