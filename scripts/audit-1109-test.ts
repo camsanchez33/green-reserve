@@ -23,7 +23,7 @@ ok('Home says when it could not check the register', !read('src/components/dashb
 const dl = read('src/components/dashboard/DeclinedCardList.tsx');
 ok('Remove says Removing…, then that they still owe; a card with no email says so on the row', dl.includes("'Removing…'") && dl.includes('Still owed under Payments') && dl.includes('No email on file'));
 ok('a receipt send result shows where the user is', read('src/app/dashboard/shop/page.tsx').includes("toast(`Receipt ${receipt.via === 'sms' ? 'texted' : 'emailed'}.`, 'ok')"));
-ok('Messages does not say "nothing waiting" when it could not check', read('src/app/dashboard/messages/page.tsx').includes("loadError ? 'Couldn’t check your messages'"));
+ok('Support does not say "No chats yet" when it could not check', read('src/app/dashboard/support/page.tsx').includes("{listError && <LoadError message={`Couldn't load your chats — ${listError}`}") && read('src/app/dashboard/support/page.tsx').includes('{chats && chats.length === 0 &&'));
 ok('the last starter-sheet column cannot be unticked (it used to do nothing)', read('src/app/dashboard/settings/page.tsx').includes("'At least one column'"));
 const cx = read('src/components/dashboard/CheckoutExtras.tsx');
 ok('cart numbers say Saving… / Saved, and Next follows what is typed', cx.includes("numsBusy ? 'Saving…' : 'Saved'") && cx.includes("!nums.trim();") && cx.includes('Cart numbers not saved'));
