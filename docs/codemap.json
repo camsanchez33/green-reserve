@@ -888,7 +888,7 @@
     },
     {
       "path": "src/app/admin/expenses/page.tsx",
-      "lines": 392,
+      "lines": 391,
       "purpose": "",
       "brain": [],
       "exports": [

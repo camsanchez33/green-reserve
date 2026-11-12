@@ -63,7 +63,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/admin/courses/[id]` | admin | client-side | page | `src/app/admin/courses/[id]/page.tsx` | 326 |
 | `/admin/create` | admin | client-side | page | `src/app/admin/create/page.tsx` | 759 |
 | `/admin/employees` | admin | client-side | page | `src/app/admin/employees/page.tsx` | 278 |
-| `/admin/expenses` | admin | client-side | page | `src/app/admin/expenses/page.tsx` | 392 |
+| `/admin/expenses` | admin | client-side | page | `src/app/admin/expenses/page.tsx` | 391 |
 | `/admin/forgot-password` | admin | client-side | page | `src/app/admin/forgot-password/page.tsx` | 67 |
 | `/admin/goals` | admin | client-side | page | `src/app/admin/goals/page.tsx` | 164 |
 | `/admin/golfers` | admin | client-side | page | `src/app/admin/golfers/page.tsx` | 415 |
