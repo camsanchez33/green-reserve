@@ -8,14 +8,16 @@
 
 /** The ledger rows of one booking, summed. A dispute's money (the webhook mirrors it with a stripeId ending
  *  ":withdrawn" / ":reinstated") is kept apart from refunds, so a disputed charge still reads as what was paid. */
-export type LedgerSum = { inCents: number; outCents: number; feeInCents: number; feeOutCents: number; disputeOutCents: number; disputeInCents: number };
-export const EMPTY_LEDGER: LedgerSum = { inCents: 0, outCents: 0, feeInCents: 0, feeOutCents: 0, disputeOutCents: 0, disputeInCents: 0 };
-export type LedgerRow = { direction: string; amountCents: number; platformFeeCents: number; stripeId?: string | null };
+export type LedgerSum = { inCents: number; outCents: number; feeInCents: number; feeOutCents: number; disputeOutCents: number; disputeInCents: number; holdCents: number };
+export const EMPTY_LEDGER: LedgerSum = { inCents: 0, outCents: 0, feeInCents: 0, feeOutCents: 0, disputeOutCents: 0, disputeInCents: 0, holdCents: 0 };
+export type LedgerRow = { direction: string; amountCents: number; platformFeeCents: number; stripeId?: string | null; what?: string };
 export const isDisputeRow = (m: { stripeId?: string | null }) => !!m.stripeId && /:(withdrawn|reinstated)$/.test(m.stripeId);
 export function sumLedger(moves: LedgerRow[]): LedgerSum {
   const s = { ...EMPTY_LEDGER };
   for (const m of moves) {
     const dispute = isDisputeRow(m);
+    const sign = m.direction === 'out' ? -1 : 1;
+    if (m.what === 'hold' && !dispute) s.holdCents += sign * m.amountCents;
     if (m.direction === 'out') { s.outCents += m.amountCents; s.feeOutCents += m.platformFeeCents; if (dispute) s.disputeOutCents += m.amountCents; }
     else { s.inCents += m.amountCents; s.feeInCents += m.platformFeeCents; if (dispute) s.disputeInCents += m.amountCents; }
   }
@@ -66,8 +68,12 @@ export function payState(b: BookingFacts): PayState {
     if (b.paidByCard) return { key: 'unrecorded', short: 'Paid', headline: 'Paid by card — not in the money ledger', tone: 'ok' };
     return { key: 'nothing_due', short: 'Checked in', headline: 'Checked in — nothing paid through GreenReserve', tone: 'neutral' };
   }
-  // Still to play. A cancellation hold may already be taken (refunded at check-in).
-  if (net > 0) return { key: 'hold', short: 'Hold taken', headline: 'Not paid yet — a hold was taken', tone: 'neutral' };
+  // Still to play. Paid already (admin Collect payment / collectPayment leaves it confirmed until check-in):
+  if (b.paidByCard) return l.inCents > 0
+    ? { key: 'paid', short: 'Paid', headline: 'Paid — not checked in yet', tone: 'ok' }
+    : { key: 'unrecorded', short: 'Paid', headline: 'Paid by card — not in the money ledger', tone: 'ok' };
+  // A cancellation hold taken at the cutoff (ledger rows what 'hold'), given back at check-in.
+  if (l.holdCents > 0) return { key: 'hold', short: 'Hold taken', headline: 'Not paid yet — a hold was taken', tone: 'neutral' };
   return b.hasCard
     ? { key: 'card_on_file', short: 'Card on file', headline: 'Not paid yet — card on file', tone: 'neutral' }
     : { key: 'pays_later', short: 'Pays later', headline: 'Not paid yet — pays at check-in', tone: 'neutral' };
@@ -77,7 +83,8 @@ export function payState(b: BookingFacts): PayState {
 export function rowAmount(b: BookingFacts, owedCents: number | null): number | null {
   if (b.disputed) return paidBeforeDispute(b.ledger);
   if (b.ledger.inCents > 0) return netCents(b.ledger);
-  return b.status === 'cancelled' ? null : owedCents;
+  // Nothing moved and it never played (cancelled, or a no-show not charged): no price, as on the card.
+  return b.status === 'cancelled' || (b.noShow && !b.checkedIn) ? null : owedCents;
 }
 
 /** Our service fee: collected · not collected · collected when they pay · none. */
@@ -89,7 +96,9 @@ export function feeState(b: BookingFacts): { key: FeeKey; cents: number } {
   if (b.accessFeeTotal <= 0) return { key: 'none', cents: 0 };
   // No ledger row but paid by card: Revenue counts the fee as collected (paidWindow) — so does this record.
   if (b.paidByCard && b.ledger.inCents === 0 && b.status === 'completed') return { key: 'collected', cents: b.accessFeeTotal };
-  if (b.status === 'cancelled') return { key: b.ledger.feeInCents > 0 ? 'not_collected' : 'none', cents: 0 };
+  // Cancelled: our fee was due if anything was kept (a late fee on the course's account; ours is a separate platform
+  // charge that can be declined on its own), or was taken and given back.
+  if (b.status === 'cancelled') return netCents(b.ledger) > 0 || b.ledger.feeInCents > 0 ? { key: 'not_collected', cents: b.accessFeeTotal } : { key: 'none', cents: 0 };
   if (b.paymentStatus === 'on_account') return { key: 'when_paid', cents: b.accessFeeTotal };
   if (b.status === 'confirmed' && !b.failed && !b.noShow) return { key: 'when_paid', cents: b.accessFeeTotal };
   // Paid at the counter (PAY-2: we eat it), declined, a no-show with nothing charged, given back, checked in unpaid.

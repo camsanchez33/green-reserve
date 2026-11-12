@@ -580,12 +580,16 @@ async function main() {
       check('…the top search finds it by "#number" for a Money-only login and opens it on Bookings', !!sr?.results?.some(r => r.type === 'booking' && r.href === `/admin/bookings?id=${data.bookingA.id}`), JSON.stringify(sr).slice(0, 300));
       const sq = (await api('/api/admin/search?q=Isol', { cookie: c })).body as SR;
       check('…and offers "Bookings matching" for a name', !!sq?.results?.some(r => r.id === 'nav:bookings-q' && r.href === '/admin/bookings?q=Isol'), JSON.stringify(sq).slice(0, 300));
-      const byEmail = (await api(`/api/admin/bookings?q=${encodeURIComponent(TS + '-golfera')}`, { cookie: c })).body as L;
-      check('…Bookings finds a golfer by email (support looks golfers up here)', !!byEmail?.rows?.some(r => r.id === data.bookingA.id), JSON.stringify(byEmail?.rows?.map(r => r.id)));
+      const byEmail = (await api(`/api/admin/bookings?q=${encodeURIComponent(TS + '-golfera@test.local')}`, { cookie: c })).body as L;
+      check('…Bookings finds a golfer by their whole email (support looks golfers up here)', !!byEmail?.rows?.some(r => r.id === data.bookingA.id), JSON.stringify(byEmail?.rows?.map(r => r.id)));
+      const byPart = (await api(`/api/admin/bookings?q=${encodeURIComponent('@test.local')}`, { cookie: c })).body as L;
+      check('…but without Golfers a part of an address matches nothing (no reading emails letter by letter)', !!byPart?.rows && !byPart.rows.some(r => r.id === data.bookingA.id), JSON.stringify(byPart?.rows?.map(r => r.id)));
       const p1 = (await api(`/api/admin/bookings?id=${data.bookingA.id}`, { cookie: c })).body as { contact?: unknown; pay?: { key?: string }; fee?: { key?: string } };
       check('…the card has where it stands and our fee, but no golfer contact without Golfers', p1?.contact === null && !!p1?.pay?.key && !!p1?.fee?.key, JSON.stringify(p1).slice(0, 300));
       await prisma.adminUser.update({ where: { id: bm.id }, data: { areas: ['money', 'golfers'] } });
       const p2 = (await api(`/api/admin/bookings?id=${data.bookingA.id}`, { cookie: c })).body as { contact?: { email?: string } | null };
+      const byPart2 = (await api(`/api/admin/bookings?q=${encodeURIComponent(TS + '-golfera')}`, { cookie: c })).body as L;
+      check('…with Golfers, part of an email finds it', !!byPart2?.rows?.some(r => r.id === data.bookingA.id), JSON.stringify(byPart2?.rows?.map(r => r.id)));
       check('…with Golfers, the golfer contact shows', !!p2?.contact?.email, JSON.stringify(p2?.contact));
       const byNum = (await api(`/api/admin/bookings?q=%23${data.bookingA.id.slice(0, 8).toUpperCase()}`, { cookie: c })).body as L;
       check('…a search by booking number finds it', !!byNum?.rows?.some(r => r.id === data.bookingA.id), JSON.stringify(byNum?.rows?.map(r => r.number)));
@@ -599,6 +603,10 @@ async function main() {
         const r2 = (await api('/api/admin/bookings', { cookie: c })).body as L;
         check('…a test course\'s booking is not listed', !!r2?.rows && !r2.rows.some(r => r.id === data.bookingB.id), JSON.stringify(r2?.rows?.map(r => r.id)));
         checkStatus('…nor opens', (await api(`/api/admin/bookings?id=${data.bookingB.id}`, { cookie: c })).status, 404);
+        await prisma.adminUser.update({ where: { id: bm.id }, data: { areas: ['money'] } });
+        // The whole id: the 8-character number is shared by bookings made within ~36ms (Build is adding Booking.ref).
+        const st = (await api(`/api/admin/search?q=${data.bookingB.id}`, { cookie: c })).body as { results?: { type: string; id: string; href: string }[] };
+        check('…and the top search gives a Money-only login no hit for it (no guest email link)', !!st?.results && !st.results.some(r => r.id === `booking:${data.bookingB.id}` || r.href.includes('guest=')), JSON.stringify(st).slice(0, 300));
       } finally {
         await prisma.course.update({ where: { id: data.courseB.id }, data: { isTest: false } });
       }

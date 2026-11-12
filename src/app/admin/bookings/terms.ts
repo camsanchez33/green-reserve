@@ -36,7 +36,9 @@ const usd = (c: number) => (c < 0 ? '−' : '') + '$' + (Math.abs(c) / 100).toFi
 export function payLine(p: PayInput): string {
   const net = p.paid.inCents - p.paid.outCents;
   const owed = p.owed.roundCents ?? 0;
-  const back = p.paid.outCents > 0 ? ` · ${usd(p.paid.outCents)} given back` : '';
+  // Refunds only: the bank's dispute movements are worded on their own (a won dispute gives the money back).
+  const refunds = p.paid.outCents - p.paid.disputeOutCents;
+  const back = refunds > 0 ? ` · ${usd(refunds)} given back` : '';
   switch (p.pay.key) {
     case 'disputed': return `${usd(p.paid.beforeDisputeCents)} paid; the golfer disputed it with their bank`;
     case 'returned': return `${usd(p.paid.inCents)} charged; ${usd(p.paid.outCents)} ${p.paid.disputeOutCents > 0 ? 'taken back by the bank after a dispute' : 'given back'}`;

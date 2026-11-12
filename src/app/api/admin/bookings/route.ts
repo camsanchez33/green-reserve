@@ -38,7 +38,7 @@ function filterWhere(f: BookingFilter, today: string, disputedIds: string[]): Pr
 }
 
 async function ledgerFor(ids: string[]) {
-  const moves = ids.length ? await prisma.moneyMove.findMany({ where: { bookingId: { in: ids } }, select: { bookingId: true, direction: true, amountCents: true, platformFeeCents: true, stripeId: true } }) : [];
+  const moves = ids.length ? await prisma.moneyMove.findMany({ where: { bookingId: { in: ids } }, select: { bookingId: true, direction: true, amountCents: true, platformFeeCents: true, stripeId: true, what: true } }) : [];
   const by = new Map<string, typeof moves>();
   for (const m of moves) { const k = m.bookingId!; by.set(k, [...(by.get(k) ?? []), m]); }
   return (id: string) => (by.has(id) ? sumLedger(by.get(id)!) : EMPTY_LEDGER);
@@ -79,8 +79,9 @@ export async function GET(req: NextRequest) {
       ...(num ? [{ id: { startsWith: num } }] : []),
       { golferName: { contains: q, mode: 'insensitive' } },
       { course: { name: { contains: q, mode: 'insensitive' } } },
-      // Cam 2026-11-12 (Users & golfers dropped): support finds a golfer here, by email too. Showing the contact still needs Golfers.
-      { golferEmail: { contains: q, mode: 'insensitive' } },
+      // Cam 2026-11-12 (Users & golfers dropped): support finds a golfer here, by email too. Without Golfers only the
+      // whole address matches (support has it from the caller) — a part would let a login read emails it can't see.
+      { golferEmail: seesContact ? { contains: q, mode: 'insensitive' } : { equals: q, mode: 'insensitive' } },
     ],
   } as Prisma.BookingWhereInput;
   const base: Prisma.BookingWhereInput = { ...ON_REAL_COURSE, ...search };

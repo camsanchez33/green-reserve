@@ -9,7 +9,7 @@ const check = (name: string, ok: boolean, info?: unknown) => { console.log(`${ok
 const base: BookingFacts = { status: 'confirmed', paymentStatus: 'card_on_file', paidOffline: false, paidByCard: false, accessFeeTotal: 300, hasCard: true, failed: false, disputed: false, noShow: false, checkedIn: false, ledger: EMPTY_LEDGER };
 const paidRound = sumLedger([{ direction: 'in', amountCents: 17300, platformFeeCents: 300 }]);
 
-check('the ledger sums in and out, with our fee apart', JSON.stringify(sumLedger([{ direction: 'in', amountCents: 1000, platformFeeCents: 150 }, { direction: 'out', amountCents: 400, platformFeeCents: 150 }])) === JSON.stringify({ inCents: 1000, outCents: 400, feeInCents: 150, feeOutCents: 150, disputeOutCents: 0, disputeInCents: 0 }));
+check('the ledger sums in and out, with our fee apart', JSON.stringify(sumLedger([{ direction: 'in', amountCents: 1000, platformFeeCents: 150 }, { direction: 'out', amountCents: 400, platformFeeCents: 150 }])) === JSON.stringify({ inCents: 1000, outCents: 400, feeInCents: 150, feeOutCents: 150, disputeOutCents: 0, disputeInCents: 0, holdCents: 0 }));
 
 // Paid?
 check('upcoming with a card → not paid yet, card on file', payState(base).key === 'card_on_file');
@@ -31,7 +31,13 @@ const open = { ...base, status: 'completed', checkedIn: true, paidByCard: true, 
 check('an open dispute shows what was paid ($157), not $0 after the bank withdrew it', payState(open).key === 'disputed' && rowAmount(open, 15700) === 15700 && paidBeforeDispute(lost) === 15700);
 const old = { ...base, status: 'completed', checkedIn: true, paymentStatus: 'paid', paidByCard: true };
 check('paid by card with no ledger row → says "not in the money ledger", fee counted as Revenue does', payState(old).key === 'unrecorded' && feeState(old).key === 'collected' && feeState(old).cents === 300);
-check('a hold taken before the round → "Hold taken"', payState({ ...base, ledger: sumLedger([{ direction: 'in', amountCents: 2650, platformFeeCents: 150 }]) }).key === 'hold');
+check('a hold taken before the round (ledger rows what "hold") → "Hold taken"', payState({ ...base, ledger: sumLedger([{ direction: 'in', amountCents: 2650, platformFeeCents: 150, what: 'hold' }]) }).key === 'hold');
+check('a round paid before check-in (admin Collect payment) → Paid, not "hold"', payState({ ...base, paymentStatus: 'paid', paidByCard: true, ledger: sumLedger([{ direction: 'in', amountCents: 15700, platformFeeCents: 300, what: 'round' }]) }).headline === 'Paid — not checked in yet');
+check('…and with no ledger row → paid, not in the ledger (never "card on file")', payState({ ...base, paymentStatus: 'paid', paidByCard: true }).key === 'unrecorded');
+check('money in that is not a hold (a booking fee) is not called a hold', payState({ ...base, ledger: sumLedger([{ direction: 'in', amountCents: 300, platformFeeCents: 300, what: 'booking_fee' }]) }).key === 'card_on_file');
+check('a late cancel kept with our separate fee declined → our fee "not collected", never "none"', feeState({ ...base, status: 'cancelled', ledger: sumLedger([{ direction: 'in', amountCents: 2500, platformFeeCents: 0, what: 'late_fee' }]) }).key === 'not_collected');
+check('a hold given back after the course calls it off → none', feeState({ ...base, status: 'cancelled', ledger: sumLedger([{ direction: 'in', amountCents: 2650, platformFeeCents: 0, what: 'hold' }, { direction: 'out', amountCents: 2650, platformFeeCents: 0, what: 'hold' }]) }).key === 'none');
+check('an uncharged no-show shows no price in the list, as on the card', rowAmount({ ...base, noShow: true }, 18600) === null);
 check('on a member account → its own state, fee collected when they pay', payState({ ...base, status: 'completed', checkedIn: true, paymentStatus: 'on_account' }).key === 'on_account' && feeState({ ...base, status: 'completed', paymentStatus: 'on_account' }).key === 'when_paid');
 check('checked in with nothing paid and no card payment → nothing paid', payState({ ...base, status: 'completed', checkedIn: true }).key === 'nothing_due');
 

@@ -233,9 +233,11 @@ export async function GET(req: NextRequest) {
   const TYPE_AREA: Partial<Record<ResultItem['type'], AdminArea>> = {
     course: 'courses', group: 'courses', inquiry: 'pipeline', employee: 'company', golfer: 'golfers', guest: 'golfers', booking: 'golfers', thread: 'messages',
   };
+  const testBookings = new Set(bookings.filter(b => b.course.isTest).map(b => `booking:${b.id}`));
   const allowed = results.filter(r => {
     // A booking found by its number opens on Bookings (Money) or the golfer (Golfers): either area may see it.
-    if (r.type === 'booking') return hasArea(session, 'golfers') || hasArea(session, 'money');
+    // A test course's booking is not on Bookings (TEST-2), so Money alone doesn't open it — and never gets the guest link.
+    if (r.type === 'booking') return hasArea(session, 'golfers') || (hasArea(session, 'money') && !testBookings.has(r.id));
     if (r.id === 'nav:bookings-q') return hasArea(session, 'money');
     const area = r.type === 'nav' ? NAV_AREA[r.href] : TYPE_AREA[r.type];
     return !area || hasArea(session, area);
