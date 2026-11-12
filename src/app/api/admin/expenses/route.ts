@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireOwner, ownerGateError } from '@/lib/admin-session';
 import { isExpenseCategory, isExpenseCadence } from '@/lib/expenses';
+
+const MAX_CENTS = 2_000_000_000; // the column is a 32-bit INTEGER; anything above is a typo (as the budget route)
 import { auditAdmin } from '@/lib/admin-audit';
 
 // EXPENSE TRACKER (RUN_QUEUE) — GreenReserve's own fixed operating costs.
@@ -38,7 +40,7 @@ export async function POST(req: NextRequest) {
   const cadence = body.cadence ?? 'monthly';
 
   if (!name) return NextResponse.json({ error: 'Name is required' }, { status: 400 });
-  if (!Number.isFinite(amountCents) || amountCents <= 0) return NextResponse.json({ error: 'Amount must be a positive number' }, { status: 400 });
+  if (!Number.isFinite(amountCents) || amountCents <= 0 || amountCents > MAX_CENTS) return NextResponse.json({ error: 'Amount must be a positive number, at most $20,000,000' }, { status: 400 });
   if (!isExpenseCategory(category)) return NextResponse.json({ error: 'Invalid category' }, { status: 400 });
   if (!isExpenseCadence(cadence)) return NextResponse.json({ error: 'Invalid cadence' }, { status: 400 });
 

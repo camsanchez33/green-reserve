@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireOwner, ownerGateError } from '@/lib/admin-session';
 import { isExpenseCategory, isExpenseCadence } from '@/lib/expenses';
+
+const MAX_CENTS = 2_000_000_000; // the column is a 32-bit INTEGER; anything above is a typo (as the budget route)
 import { needReason, reasonOf, auditAdmin, changedFields, bodyWithReason } from '@/lib/admin-audit';
 
 // EXPENSE TRACKER (RUN_QUEUE) — edit/end/delete a single fixed cost. Owner-only.
@@ -31,7 +33,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
   if (body.amountCents !== undefined) {
     const amountCents = Math.round(Number(body.amountCents));
-    if (!Number.isFinite(amountCents) || amountCents <= 0) return NextResponse.json({ error: 'Amount must be a positive number' }, { status: 400 });
+    if (!Number.isFinite(amountCents) || amountCents <= 0 || amountCents > MAX_CENTS) return NextResponse.json({ error: 'Amount must be a positive number, at most $20,000,000' }, { status: 400 });
     data.amountCents = amountCents;
   }
   if (body.category !== undefined) {
@@ -66,6 +68,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
   }
 
+  // Nothing to change (an empty object, or only unknown fields): say so, don't write an empty edit to the audit log.
+  if (Object.keys(data).length === 0) return NextResponse.json({ error: 'Nothing to change.' }, { status: 400 });
   const expense = await prisma.expense.update({ where: { id }, data });
   const pick = (e: Record<string, unknown>) => Object.fromEntries(Object.keys(data).map(k => [k, e[k]]));
   await auditAdmin(session, { action: 'expense_edit', targetType: 'expense', targetId: id, ...changedFields(pick(existing), pick(expense)) });
