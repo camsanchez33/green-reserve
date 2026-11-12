@@ -82,8 +82,10 @@ async function main() {
   const bl = await prisma.teeTime.findUnique({ where: { id: t.blocked.id } });
   check('its booked tee time opens back up', tt?.playersBooked === 0 && tt?.status === 'available');
   check('a time it blocked stays blocked', bl?.status === 'blocked');
-  const after = await prisma.course.findUniqueOrThrow({ where: { id: c }, select: { bookingRefSeq: true, number: true } });
-  check('its booking numbers start again at 1, and it keeps its course number (BOOKING-REF)', after.bookingRefSeq === 0 && after.number != null, after);
+  const after = await prisma.course.findUniqueOrThrow({ where: { id: c }, select: { number: true } });
+  const fresh = await prisma.booking.create({ data: { teeTimeId: t.tt.id, courseId: c, golferName: 'After reset', golferEmail: `${TAG}-after@test.local`, players: 1, greenFeeTotal: 0, cartFeeTotal: 0, accessFeeTotal: 0, totalAmount: 0, status: 'confirmed', paymentStatus: 'manual' }, select: { id: true, ref: true } });
+  check('its booking numbers start again at 1, and it keeps its course number (BOOKING-REF)', fresh.ref === 1 && after.number != null, { ref: fresh.ref, number: after.number });
+  await prisma.booking.delete({ where: { id: fresh.id } });
   const evt = await prisma.teeTime.findUnique({ where: { id: t.evTime.id } });
   check('a time its event held opens again, with no event left on it', evt?.status === 'available' && evt?.eventId === null, evt);
   check('its setup is kept: the course, its login, tiers and shop catalogue',
@@ -95,20 +97,22 @@ async function main() {
   await prisma.adminGoal.create({ data: { metric: 'courses_live', target: 1, dueAt: new Date('2030-01-01T00:00:00Z'), createdBy: TAG } });
   const keptBefore = await prisma.adminGoal.count();
   const ROLLBACK = new Error('rollback');
-  let inside: { wipedLeft: number; keptLeft: number; ok: boolean; nextCourse: number } | null = null;
+  let inside: { wipedLeft: number; keptLeft: number; ok: boolean; nextCourse: number; refSeqsLeft: number } | null = null;
   try {
     await prisma.$transaction(async tx => {
       const w = await wipeAll(new Date('2026-10-30T00:00:00Z'), tx);
       const left = await tx.$queryRawUnsafe<{ n: bigint }[]>(`SELECT (${WIPED_TABLES.map(x => `(SELECT COUNT(*) FROM "${x}")`).join(' + ')})::bigint AS n`);
       const seq = await tx.$queryRawUnsafe<{ n: bigint }[]>(`SELECT nextval('"Course_number_seq"')::bigint AS n`);
-      inside = { ok: w.ok, wipedLeft: Number(left[0].n), keptLeft: await tx.adminGoal.count(), nextCourse: Number(seq[0].n) };
+      const refSeqs = await tx.$queryRawUnsafe<{ n: bigint }[]>(`SELECT count(*)::bigint AS n FROM pg_class WHERE relkind = 'S' AND relname LIKE 'bookref\\_%'`);
+      inside = { ok: w.ok, wipedLeft: Number(left[0].n), keptLeft: await tx.adminGoal.count(), nextCourse: Number(seq[0].n), refSeqsLeft: Number(refSeqs[0].n) };
       throw ROLLBACK;
     }, { timeout: 60_000 });
   } catch (e) { if (e !== ROLLBACK) throw e; }
-  const got = inside as { wipedLeft: number; keptLeft: number; ok: boolean; nextCourse: number } | null;
+  const got = inside as { wipedLeft: number; keptLeft: number; ok: boolean; nextCourse: number; refSeqsLeft: number } | null;
   check('the launch wipe empties every wiped table', !!got && got.ok && got.wipedLeft === 0, got);
   check('…and keeps the company side', !!got && got.keptLeft === keptBefore, got);
   check('…and the next course is GR1 again (BOOKING-REF)', !!got && got.nextCourse === 1, got);
+  check('…and every course\'s booking-number sequence went with it', !!got && got.refSeqsLeft === 0, got);
   check('(rolled back here: the test courses are still there)', (await prisma.course.count({ where: { slug: { startsWith: TAG } } })) === 2);
 }
 

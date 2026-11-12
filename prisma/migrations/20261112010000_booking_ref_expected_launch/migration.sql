@@ -9,24 +9,59 @@ ALTER TABLE "Course" ALTER COLUMN "number" SET DEFAULT nextval('"Course_number_s
 ALTER SEQUENCE "Course_number_seq" OWNED BY "Course"."number";
 CREATE UNIQUE INDEX "Course_number_key" ON "Course"("number");
 
--- The course's booking counter: the last booking number it gave.
-ALTER TABLE "Course" ADD COLUMN "bookingRefSeq" INTEGER NOT NULL DEFAULT 0;
-
 -- The booking's number within its course.
 ALTER TABLE "Booking" ADD COLUMN "ref" INTEGER;
 CREATE UNIQUE INDEX "Booking_courseId_ref_key" ON "Booking"("courseId", "ref");
 
--- Every insert, whatever the path (online, counter, admin, walk-in, a split or late-arrival
--- part, an event), takes the next number from its course in the same statement. The UPDATE
--- locks the course row until the inserting transaction ends, so two bookings at one course
--- can never get the same number, and a rolled-back insert gives its number back. A value a
--- caller sends is ignored: the counter is the only source. Not in schema.prisma (Prisma does
--- not model triggers), so `migrate diff` never sees it.
+-- Each course counts its bookings in its OWN sequence, "bookref_<courseId>". A sequence, not a
+-- counter column: nextval() writes no row, so the booking claim (Serializable, lib/claim-tee-time)
+-- never hits a serialization conflict on it — at one course or across courses. The cost: a
+-- booking insert that rolls back (a claim that loses its race) uses up its number.
+CREATE FUNCTION "bookref_seq"(course_id TEXT) RETURNS TEXT LANGUAGE sql IMMUTABLE AS $$
+  SELECT quote_ident('bookref_' || left(course_id, 54))
+$$;
+
+-- A new course gets its sequence; a deleted one takes it with it.
+CREATE FUNCTION "course_bookref_create"() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  EXECUTE 'CREATE SEQUENCE IF NOT EXISTS ' || "bookref_seq"(NEW."id") || ' AS INTEGER';
+  RETURN NEW;
+END;
+$$;
+CREATE TRIGGER "Course_bookref_create" AFTER INSERT ON "Course"
+  FOR EACH ROW EXECUTE FUNCTION "course_bookref_create"();
+
+CREATE FUNCTION "course_bookref_drop"() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  EXECUTE 'DROP SEQUENCE IF EXISTS ' || "bookref_seq"(OLD."id");
+  RETURN OLD;
+END;
+$$;
+CREATE TRIGGER "Course_bookref_drop" AFTER DELETE ON "Course"
+  FOR EACH ROW EXECUTE FUNCTION "course_bookref_drop"();
+
+-- Courses that exist today get theirs now (their next booking is number 1; no row is changed).
+DO $$
+DECLARE c RECORD;
+BEGIN
+  FOR c IN SELECT "id" FROM "Course" LOOP
+    EXECUTE 'CREATE SEQUENCE IF NOT EXISTS ' || "bookref_seq"(c."id") || ' AS INTEGER';
+  END LOOP;
+END;
+$$;
+
+-- Every booking insert, whatever the path (online, counter, admin, walk-in, a split or
+-- late-arrival part, an event), takes its course's next number. A value a caller sends is
+-- ignored. If the course has no sequence (it never should), the booking is still made, unnumbered
+-- — it shows the old short id — rather than refused. Not in schema.prisma (Prisma does not model
+-- triggers or these sequences), so `migrate diff` never sees them.
 CREATE FUNCTION "booking_ref_assign"() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
-  UPDATE "Course" SET "bookingRefSeq" = "bookingRefSeq" + 1
-    WHERE "id" = NEW."courseId"
-    RETURNING "bookingRefSeq" INTO NEW."ref";
+  BEGIN
+    NEW."ref" := nextval("bookref_seq"(NEW."courseId"));
+  EXCEPTION WHEN undefined_table THEN
+    NEW."ref" := NULL;
+  END;
   RETURN NEW;
 END;
 $$;

@@ -738,6 +738,37 @@ async function main() {
     }
   }
 
+  console.log('\n── Admin search by GR number (BOOKING-REF) ──');
+  {
+    const { signAdminToken } = await import('../src/lib/admin-session');
+    const c = await prisma.course.findUniqueOrThrow({ where: { id: data.courseA.id }, select: { number: true } });
+    const bk = await prisma.booking.findUniqueOrThrow({ where: { id: bookingA.id }, select: { ref: true } });
+    if (c.number == null || bk.ref == null) {
+      check('fixtures carry GR numbers (course and booking made after the migration)', false, JSON.stringify({ c, bk }));
+    } else {
+      const both = await prisma.adminUser.create({ data: { name: 'Isol GR Both', email: `${TS}-gr-both@test.local`, passwordHash: 'x', role: 'support', active: true, areas: ['courses', 'golfers'], areasSetAt: new Date() } });
+      const msgs = await prisma.adminUser.create({ data: { name: 'Isol GR Msgs', email: `${TS}-gr-msgs@test.local`, passwordHash: 'x', role: 'support', active: true, areas: ['messages'], areasSetAt: new Date() } });
+      try {
+        const ck = async (u: { id: string; email: string; name: string }) => `admin_session=${await signAdminToken({ adminId: u.id, email: u.email, name: u.name, role: 'support', mfa: true })}`;
+        type SR = { results?: { type: string; id: string; sub?: string }[] };
+        const search = async (q: string, cookie: string) => ((await api(`/api/admin/search?q=${encodeURIComponent(q)}`, { cookie })).body as SR).results ?? [];
+        const bc = await ck(both), mc = await ck(msgs);
+        const ref = `GR${c.number}-${bk.ref}`;
+        for (const q of [ref, ref.toLowerCase(), `${c.number}-${bk.ref}`]) {
+          const r = await search(q, bc);
+          check(`Admin search "${q}" finds the booking (Golfers area)`, r.some(x => x.type === 'booking' && x.id === `booking:${bookingA.id}` && (x.sub ?? '').startsWith(ref)), JSON.stringify(r).slice(0, 300));
+        }
+        const rc = await search(`GR${c.number}`, bc);
+        check(`Admin search "GR${c.number}" finds the course (Courses area)`, rc.some(x => x.type === 'course' && x.id === data.courseA.id), JSON.stringify(rc).slice(0, 300));
+        const none1 = await search(ref, mc), none2 = await search(`GR${c.number}`, mc);
+        check('…a login without Golfers or Courses gets neither', !none1.some(x => x.type === 'booking') && !none2.some(x => x.type === 'course'), JSON.stringify({ none1, none2 }).slice(0, 300));
+      } finally {
+        await prisma.adminAuditLog.deleteMany({ where: { adminId: { in: [both.id, msgs.id] } } }).catch(() => {});
+        await prisma.adminUser.deleteMany({ where: { id: { in: [both.id, msgs.id] } } });
+      }
+    }
+  }
+
   console.log('\n── Admin owner auth boundary (AW-1: the owner signs in only at /cam) ──');
   {
     // (a) The employees' door never mentions an owner: the owner's correct
