@@ -179,6 +179,18 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
 .nav i{background:var(--ink);color:var(--bg)}
 .wn,.up{font-weight:inherit}
 .trk .u{background:var(--muted);width:2px}
+
+/* Cam 2026-11-12, "a more abstract design then just 2 dots": the light behind the glass is sweeping ribbons and
+   folds (blurred SVG curves), not round blobs. Still plain shapes, never a page gradient; grey only. */
+.app .blob{display:none}
+.waves{position:absolute;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none}
+.waves path{fill:none;stroke-linecap:round}
+.waves .w1{stroke:var(--wv1);stroke-width:150}
+.waves .w2{stroke:var(--wv2);stroke-width:90}
+.waves .w3{stroke:var(--wv3);stroke-width:46}
+.waves .w4{stroke:var(--wv2);stroke-width:220}
+.app{--wv1:rgba(160,166,162,.38);--wv2:rgba(130,136,132,.28);--wv3:rgba(215,220,216,.26)}
+.app[data-mode="light"]{--wv1:rgba(120,126,122,.22);--wv2:rgba(150,156,152,.20);--wv3:rgba(255,255,255,.7)}
 </style>
 
 <div class="wrap">
@@ -190,7 +202,19 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
   <p class="note">Example numbers, not a real course. Home is the course's morning page: what today looks like, what needs doing, and what the shift left. The same content as today's Home, in charcoal glass and the admin format rules.</p>
 
   <div class="app" id="app" data-mode="dark">
-    <span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span>
+    <svg class="waves" viewBox="0 0 1400 1100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="38"/></filter>
+      <filter id="softer" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="16"/></filter></defs>
+      <g filter="url(#soft)">
+        <path class="w1" d="M-120 260 C 240 60, 520 420, 820 230 S 1300 40, 1560 300"/>
+        <path class="w4" d="M-200 980 C 200 760, 460 1040, 760 820 S 1220 640, 1600 900"/>
+        <path class="w2" d="M980 -80 C 860 220, 1180 380, 1040 640 S 1180 980, 1320 1180"/>
+      </g>
+      <g filter="url(#softer)">
+        <path class="w3" d="M-60 520 C 300 380, 520 700, 900 520 S 1300 360, 1500 560"/>
+        <path class="w3" d="M200 -60 C 300 200, 120 420, 380 640"/>
+      </g>
+    </svg>
     <aside class="rail">
       <div class="club"><span class="crest">RC</span><div><b>Ridgewood Country Club</b><small>Course dashboard</small></div></div>
       <div class="grp"><b>Today</b>
