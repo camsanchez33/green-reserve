@@ -18,7 +18,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const existing = await prisma.expense.findUnique({ where: { id } });
   if (!existing) return NextResponse.json({ error: 'Expense not found' }, { status: 404 });
 
-  const body = await req.json().catch(() => ({}));
+  const raw: unknown = await req.json().catch(() => null);
+  // A JSON body that isn't an object (null, a number, a list) is a bad request, not a 500.
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return NextResponse.json({ error: 'Send the expense as a JSON object.' }, { status: 400 });
+  const body = raw as Record<string, unknown>;
   const data: Record<string, unknown> = {};
 
   if (body.name !== undefined) {
@@ -40,7 +43,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     data.cadence = body.cadence;
   }
   if (body.startedAt !== undefined) {
-    const d = new Date(body.startedAt);
+    const d = new Date(body.startedAt as string);
     if (isNaN(d.getTime())) return NextResponse.json({ error: 'Invalid start date' }, { status: 400 });
     data.startedAt = d;
   }
@@ -54,7 +57,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       if (endedAlready) return NextResponse.json({ error: 'This expense has ended. To start paying it again, add it as a new expense from today.', code: 'ended' }, { status: 400 });
       data.endedAt = null;
     } else {
-      const d = new Date(body.endedAt);
+      const d = new Date(body.endedAt as string);
       if (isNaN(d.getTime())) return NextResponse.json({ error: 'Invalid end date' }, { status: 400 });
       // Ended stays ended: the end can be corrected earlier, never moved later (that would bring
       // stopped months back into the costs).

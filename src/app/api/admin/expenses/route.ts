@@ -28,7 +28,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: ownerGateError(session) }, { status: 403 });
   }
 
-  const body = await req.json().catch(() => ({}));
+  const raw: unknown = await req.json().catch(() => null);
+  // A JSON body that isn't an object (null, a number, a list) is a bad request, not a 500.
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return NextResponse.json({ error: 'Send the expense as a JSON object.' }, { status: 400 });
+  const body = raw as Record<string, unknown>;
   const name = typeof body.name === 'string' ? body.name.trim() : '';
   const amountCents = Math.round(Number(body.amountCents));
   const category = body.category ?? 'other';
@@ -39,7 +42,7 @@ export async function POST(req: NextRequest) {
   if (!isExpenseCategory(category)) return NextResponse.json({ error: 'Invalid category' }, { status: 400 });
   if (!isExpenseCadence(cadence)) return NextResponse.json({ error: 'Invalid cadence' }, { status: 400 });
 
-  const startedAt = body.startedAt ? new Date(body.startedAt) : new Date();
+  const startedAt = body.startedAt ? new Date(body.startedAt as string) : new Date();
   if (isNaN(startedAt.getTime())) return NextResponse.json({ error: 'Invalid start date' }, { status: 400 });
 
   const expense = await prisma.expense.create({
