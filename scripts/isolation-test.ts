@@ -575,6 +575,13 @@ async function main() {
       type L = { rows?: { id: string; number: string }[]; counts?: Record<string, number> };
       const r1 = (await api('/api/admin/bookings', { cookie: c })).body as L;
       check('Money support → Bookings lists the booking with its number', !!r1?.rows?.some(r => r.id === data.bookingA.id && r.number === data.bookingA.id.slice(0, 8).toUpperCase()), JSON.stringify(r1).slice(0, 300));
+      type SR = { results?: { type: string; id: string; href: string }[] };
+      const sr = (await api(`/api/admin/search?q=%23${data.bookingA.id.slice(0, 8).toUpperCase()}`, { cookie: c })).body as SR;
+      check('…the top search finds it by "#number" for a Money-only login and opens it on Bookings', !!sr?.results?.some(r => r.type === 'booking' && r.href === `/admin/bookings?id=${data.bookingA.id}`), JSON.stringify(sr).slice(0, 300));
+      const sq = (await api('/api/admin/search?q=Isol', { cookie: c })).body as SR;
+      check('…and offers "Bookings matching" for a name', !!sq?.results?.some(r => r.id === 'nav:bookings-q' && r.href === '/admin/bookings?q=Isol'), JSON.stringify(sq).slice(0, 300));
+      const byEmail = (await api(`/api/admin/bookings?q=${encodeURIComponent(TS + '-golfera')}`, { cookie: c })).body as L;
+      check('…Bookings finds a golfer by email (support looks golfers up here)', !!byEmail?.rows?.some(r => r.id === data.bookingA.id), JSON.stringify(byEmail?.rows?.map(r => r.id)));
       const p1 = (await api(`/api/admin/bookings?id=${data.bookingA.id}`, { cookie: c })).body as { contact?: unknown; pay?: { key?: string }; fee?: { key?: string } };
       check('…the card has where it stands and our fee, but no golfer contact without Golfers', p1?.contact === null && !!p1?.pay?.key && !!p1?.fee?.key, JSON.stringify(p1).slice(0, 300));
       await prisma.adminUser.update({ where: { id: bm.id }, data: { areas: ['money', 'golfers'] } });

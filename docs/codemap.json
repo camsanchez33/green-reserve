@@ -131,7 +131,7 @@
     },
     {
       "path": "src/app/admin/bookings/page.tsx",
-      "lines": 280,
+      "lines": 292,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -160,7 +160,7 @@
     },
     {
       "path": "src/app/admin/bookings/terms.ts",
-      "lines": 52,
+      "lines": 59,
       "purpose": "Bookings (ADMIN-REDO page 4):",
       "brain": [],
       "exports": [
@@ -169,7 +169,19 @@
           "kind": "const"
         },
         {
+          "name": "DISPUTE_BACK",
+          "kind": "const"
+        },
+        {
+          "name": "DISPUTE_OUT",
+          "kind": "const"
+        },
+        {
           "name": "EVENT_WORDS",
+          "kind": "const"
+        },
+        {
+          "name": "FEE_LINES",
           "kind": "const"
         },
         {
@@ -1515,7 +1527,7 @@
     },
     {
       "path": "src/app/api/admin/bookings/plan.ts",
-      "lines": 98,
+      "lines": 122,
       "purpose": "ADMIN-REDO page 4 — Bookings (Cam 2026-11-12).",
       "brain": [],
       "exports": [
@@ -1552,15 +1564,31 @@
           "kind": "const"
         },
         {
+          "name": "isDisputeRow",
+          "kind": "fn"
+        },
+        {
           "name": "isFilter",
           "kind": "fn"
+        },
+        {
+          "name": "LedgerRow",
+          "kind": "type"
         },
         {
           "name": "LedgerSum",
           "kind": "type"
         },
         {
+          "name": "netCents",
+          "kind": "fn"
+        },
+        {
           "name": "numberQuery",
+          "kind": "fn"
+        },
+        {
+          "name": "paidBeforeDispute",
           "kind": "fn"
         },
         {
@@ -1577,6 +1605,10 @@
         },
         {
           "name": "policyLine",
+          "kind": "fn"
+        },
+        {
+          "name": "rowAmount",
           "kind": "fn"
         },
         {
@@ -1604,7 +1636,7 @@
     },
     {
       "path": "src/app/api/admin/bookings/route.ts",
-      "lines": 160,
+      "lines": 169,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3174,7 +3206,7 @@
     },
     {
       "path": "src/app/api/admin/search/route.ts",
-      "lines": 235,
+      "lines": 245,
       "purpose": "",
       "brain": [],
       "exports": [

@@ -8,7 +8,7 @@ import g from '../admin-glass.module.css';
 import s from '../courses/courses.module.css';
 import b from './bookings.module.css';
 import { SESSION_ENDED, loadFailed } from '../courses/terms';
-import { FILTER_LABEL, FILTER_TITLE, FEE_TITLE, PAID_TITLE, EVENT_WORDS, BY_WORDS, WHAT_WORDS, METHOD_WORDS, PROBLEM_WORDS, SOURCE_WORDS, payLine } from './terms';
+import { FILTER_LABEL, FILTER_TITLE, FEE_TITLE, PAID_TITLE, EVENT_WORDS, BY_WORDS, WHAT_WORDS, METHOD_WORDS, PROBLEM_WORDS, SOURCE_WORDS, DISPUTE_OUT, DISPUTE_BACK, FEE_LINES, payLine } from './terms';
 
 // ADMIN-REDO page 4 — Bookings (Cam 2026-11-12, ADMIN_REDO_SPEC.md "Page 4"). A READ-ONLY record: every booking,
 // newest booked first; a booking opens a card that says first whether it's paid, then the whole booking, the money
@@ -19,7 +19,7 @@ import { FILTER_LABEL, FILTER_TITLE, FEE_TITLE, PAID_TITLE, EVENT_WORDS, BY_WORD
 type Filter = keyof typeof FILTER_LABEL;
 type Tone = 'ok' | 'warn' | 'bad' | 'neutral';
 type Row = { id: string; number: string; golferName: string; course: string; courseId: string; teeDate: string; teeTime: string; players: number; bookedAt: string; amountCents: number | null; pay: { key: string; short: string; tone: Tone } };
-type List = { at: string; filter: Filter; q: string; counts: Record<Filter, number>; nextCursor: string | null; rows: Row[] };
+type List = { at: string; filter: Filter; q: string; seesCourses: boolean; counts: Record<Filter, number>; nextCursor: string | null; rows: Row[] };
 type Profile = {
   id: string; number: string; golferName: string; course: string; courseId: string; teeDate: string; teeTime: string; holes: number; players: number; riding: boolean;
   bookedAt: string; source: string; status: string; splitFromId: string | null;
@@ -28,8 +28,9 @@ type Profile = {
   pay: { key: string; short: string; headline: string; tone: Tone };
   fee: { key: 'collected' | 'not_collected' | 'when_paid' | 'none'; cents: number };
   owed: { greenCents: number; cartCents: number; rangeCents: number; shopCents: number; discountCents: number; feeCents: number; roundCents: number | null };
-  paid: { inCents: number; outCents: number };
-  moves: { at: string; what: string; direction: string; method: string; account: string; cents: number; feeCents: number }[];
+  paid: { inCents: number; outCents: number; beforeDisputeCents: number; disputeOutCents: number };
+  seesCourses: boolean;
+  moves: { at: string; what: string; direction: string; method: string; account: string; cents: number; feeCents: number; dispute: boolean }[];
   events: { at: string; type: string; by: string; cents: number | null; players: number | null }[];
   problems: { at: string; kind: string; cents: number; detail: string }[];
   stripeUrl: string | null;
@@ -82,10 +83,12 @@ function ProfilePanel({ id }: { id: string }) {
 
   const history = [
     ...p.events.map(e => ({ at: e.at, text: EVENT_WORDS[e.type] ?? e.type, detail: [BY_WORDS[e.by], e.cents ? usd(e.cents) : null].filter(Boolean).join(' · ') || null })),
-    ...p.moves.map(m => ({ at: m.at, text: `${WHAT_WORDS[m.what] ?? m.what} ${m.direction === 'out' ? 'given back' : 'paid'}, ${usd(m.cents)}`, detail: [METHOD_WORDS[m.method] ?? m.method, m.feeCents ? `our fee ${usd(m.feeCents)}` : null].filter(Boolean).join(' · ') })),
+    ...p.moves.map(m => ({ at: m.at, text: m.dispute ? `${m.direction === 'out' ? DISPUTE_OUT : DISPUTE_BACK}, ${usd(m.cents)}` : `${WHAT_WORDS[m.what] ?? m.what} ${m.direction === 'out' ? 'given back' : 'paid'}, ${usd(m.cents)}`, detail: [METHOD_WORDS[m.method] ?? m.method, m.feeCents ? `our fee ${usd(m.feeCents)}` : null].filter(Boolean).join(' · ') })),
     ...p.problems.map(x => ({ at: x.at, text: PROBLEM_WORDS[x.kind] ?? x.kind, detail: x.detail || null })),
   ].sort((a, z) => a.at.localeCompare(z.at));
   const o = p.owed;
+  // The course's own fees that were charged (a hold, a late cancellation, a no-show), from the ledger.
+  const feeLines = FEE_LINES.flatMap(([what, label]) => { const c = p.moves.filter(m => m.what === what && !m.dispute).reduce((a, m) => a + (m.direction === 'out' ? -m.cents : m.cents), 0); return c !== 0 ? [[label, c] as const] : []; });
 
   return (
     <section id="booking-card" className={`${g.glass} ${s.prof}`} aria-label={`Booking #${p.number}`}>
@@ -95,7 +98,7 @@ function ProfilePanel({ id }: { id: string }) {
           <p>{p.course}</p>
         </div>
         <div className={s.plinks}>
-          <Link className={s.plink} href={`/admin/courses/${p.courseId}`}>Course <span aria-hidden="true">→</span></Link>
+          {p.seesCourses && <Link className={s.plink} href={`/admin/courses/${p.courseId}`}>Course <span aria-hidden="true">→</span></Link>}
           {p.stripeUrl && <a className={s.plink} href={p.stripeUrl} target="_blank" rel="noopener noreferrer">Stripe <span aria-hidden="true">↗</span></a>}
         </div>
       </div>
@@ -127,8 +130,9 @@ function ProfilePanel({ id }: { id: string }) {
           {o.cartCents > 0 && <div><span>Carts</span><span>{usd(o.cartCents)}</span></div>}
           {o.rangeCents > 0 && <div><span>Range balls</span><span>{usd(o.rangeCents)}</span></div>}
           {o.shopCents > 0 && <div><span>Shop items</span><span>{usd(o.shopCents)}</span></div>}
+          {feeLines.map(([label, cents]) => <div key={label}><span>{label}</span><span>{usd(cents)}</span></div>)}
           {o.discountCents > 0 && <div><span>Promo discount</span><span>−{usd(o.discountCents)}</span></div>}
-          <div className={b.ours} title={FEE_TITLE}><span>Our service fee · {FEE_WORDS[p.fee.key]}</span><span>{usd(p.fee.key === 'collected' ? p.fee.cents : o.feeCents)}</span></div>
+          <div className={b.ours} title={FEE_TITLE}><span>Our service fee · {FEE_WORDS[p.fee.key]}</span><span>{usd(p.fee.key === 'collected' ? p.fee.cents : p.fee.key === 'none' ? 0 : o.feeCents)}</span></div>
           {o.roundCents !== null && <div className={b.tot}><span>Round comes to</span><span>{usd(o.roundCents)}</span></div>}
           <div className={b.tot} title={PAID_TITLE}><span>Paid</span><span>{usd(p.paid.inCents - p.paid.outCents)}</span></div>
         </div>
@@ -157,6 +161,11 @@ function BookingsContent() {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [pick, setPick] = useState<string | null>(openId);
+  // The top search opens another booking while this page stays mounted: follow ?id=.
+  useEffect(() => { if (openId) setPick(openId); }, [openId]);
+  // A new search from the top bar is a new list: open its first booking, not the last list's.
+  const lastQ = useRef(q);
+  useEffect(() => { if (lastQ.current !== q) { lastQ.current = q; if (!openId) setPick(null); } }, [q, openId]);
 
   const url = (cursor?: string) => '/api/admin/bookings?' + new URLSearchParams({ filter, ...(q ? { q } : {}), ...(cursor ? { cursor } : {}) }).toString();
   const seq = useRef(0);
@@ -173,7 +182,9 @@ function BookingsContent() {
   const loadMore = async () => {
     if (!d?.nextCursor) return;
     setMore({ busy: true, error: null });
+    const mine = seq.current;
     const r = await getJson<List>(url(d.nextCursor), 'More bookings');
+    if (mine !== seq.current) { setMore({ busy: false, error: null }); return; } // the filter or search changed meanwhile
     if (r.ok) { setD(cur => cur ? { ...cur, rows: [...cur.rows, ...r.data.rows], nextCursor: r.data.nextCursor } : r.data); setMore({ busy: false, error: null }); }
     else setMore({ busy: false, error: r.msg });
   };
@@ -187,12 +198,13 @@ function BookingsContent() {
   }, [menuOpen]);
 
   const rows = d?.rows ?? [];
-  useEffect(() => { if (d && pick === null && rows[0]) setPick(rows[0].id); }, [d, pick, rows]);
+  // Only once the list for this filter and search has arrived, never the previous one.
+  useEffect(() => { if (d && d.filter === filter && d.q === q.trim().slice(0, 100) && pick === null && rows[0]) setPick(rows[0].id); }, [d, filter, q, pick, rows]);
   const open = (id: string) => {
     setPick(id);
     if (window.matchMedia('(max-width: 1150px)').matches) requestAnimationFrame(() => document.getElementById('booking-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   };
-  const pickFilter = (f: Filter) => { setFilter(f); setMenuOpen(false); setPick(null); };
+  const pickFilter = (f: Filter) => { if (f === filter) { setMenuOpen(false); return; } setD(null); setFilter(f); setMenuOpen(false); setPick(null); };
 
   return (
     <>
@@ -225,7 +237,7 @@ function BookingsContent() {
               </div>
             )}
           </div>
-          {q && <span className={b.qline}>“{q}”<button type="button" onClick={() => router.replace('/admin/bookings')}>Clear</button></span>}
+          {q && <span className={b.qline}>“{q}”<button type="button" onClick={() => { setD(null); setPick(null); router.replace('/admin/bookings'); }}>Clear</button></span>}
         </div>
 
         {!d && !error && <div className={`${g.glass} ${s.skel}`} aria-busy="true" aria-label="Loading bookings" />}

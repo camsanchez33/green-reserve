@@ -2,14 +2,14 @@
 // our service fee was collected (collected / not collected / collected when they pay / none), the booking number,
 // and that the route offers no action (read-only, Cam 2026-11-12).
 import { readFileSync } from 'fs';
-import { payState, feeState, sumLedger, EMPTY_LEDGER, bookingNumber, numberQuery, policyLine, isFilter, type BookingFacts } from '../src/app/api/admin/bookings/plan';
+import { payState, feeState, rowAmount, paidBeforeDispute, sumLedger, EMPTY_LEDGER, bookingNumber, numberQuery, policyLine, isFilter, type BookingFacts } from '../src/app/api/admin/bookings/plan';
 
 let failed = 0;
 const check = (name: string, ok: boolean, info?: unknown) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${ok || info === undefined ? '' : `  ${JSON.stringify(info)}`}`); if (!ok) failed++; };
-const base: BookingFacts = { status: 'confirmed', paymentStatus: 'card_on_file', paidOffline: false, accessFeeTotal: 300, hasCard: true, failed: false, disputed: false, noShow: false, checkedIn: false, ledger: EMPTY_LEDGER };
+const base: BookingFacts = { status: 'confirmed', paymentStatus: 'card_on_file', paidOffline: false, paidByCard: false, accessFeeTotal: 300, hasCard: true, failed: false, disputed: false, noShow: false, checkedIn: false, ledger: EMPTY_LEDGER };
 const paidRound = sumLedger([{ direction: 'in', amountCents: 17300, platformFeeCents: 300 }]);
 
-check('the ledger sums in and out, with our fee apart', JSON.stringify(sumLedger([{ direction: 'in', amountCents: 1000, platformFeeCents: 150 }, { direction: 'out', amountCents: 400, platformFeeCents: 150 }])) === JSON.stringify({ inCents: 1000, outCents: 400, feeInCents: 150, feeOutCents: 150 }));
+check('the ledger sums in and out, with our fee apart', JSON.stringify(sumLedger([{ direction: 'in', amountCents: 1000, platformFeeCents: 150 }, { direction: 'out', amountCents: 400, platformFeeCents: 150 }])) === JSON.stringify({ inCents: 1000, outCents: 400, feeInCents: 150, feeOutCents: 150, disputeOutCents: 0, disputeInCents: 0 }));
 
 // Paid?
 check('upcoming with a card → not paid yet, card on file', payState(base).key === 'card_on_file');
@@ -22,7 +22,18 @@ check('a dispute outranks paid', payState({ ...base, status: 'completed', checke
 check('cancelled with nothing charged', payState({ ...base, status: 'cancelled' }).key === 'cancelled');
 check('cancelled with a fee kept', payState({ ...base, status: 'cancelled', ledger: sumLedger([{ direction: 'in', amountCents: 2650, platformFeeCents: 150 }]) }).key === 'cancelled_kept');
 check('a no-show charged', payState({ ...base, noShow: true, ledger: sumLedger([{ direction: 'in', amountCents: 7950, platformFeeCents: 450 }]) }).key === 'no_show_paid');
-check('a charge given back in full is not "paid"', payState({ ...base, status: 'completed', checkedIn: true, ledger: sumLedger([{ direction: 'in', amountCents: 5000, platformFeeCents: 150 }, { direction: 'out', amountCents: 5000, platformFeeCents: 150 }]) }).key === 'nothing_due');
+const charged = { direction: 'in', amountCents: 15700, platformFeeCents: 300, stripeId: 'pi_1' };
+const refunded = sumLedger([charged, { direction: 'out', amountCents: 15700, platformFeeCents: 300, stripeId: 're_1' }]);
+check('refunded in full → "Paid, then given back", never "nothing charged"', payState({ ...base, status: 'completed', checkedIn: true, paidByCard: true, ledger: refunded }).key === 'returned' && rowAmount({ ...base, status: 'completed', ledger: refunded }, 15700) === 0);
+const lost = sumLedger([charged, { direction: 'out', amountCents: 15700, platformFeeCents: 0, stripeId: 'du_1:withdrawn' }]);
+check('a dispute lost → "taken back by the bank"', payState({ ...base, status: 'completed', checkedIn: true, paidByCard: true, ledger: lost }).headline.includes('bank'));
+const open = { ...base, status: 'completed', checkedIn: true, paidByCard: true, disputed: true, ledger: lost };
+check('an open dispute shows what was paid ($157), not $0 after the bank withdrew it', payState(open).key === 'disputed' && rowAmount(open, 15700) === 15700 && paidBeforeDispute(lost) === 15700);
+const old = { ...base, status: 'completed', checkedIn: true, paymentStatus: 'paid', paidByCard: true };
+check('paid by card with no ledger row → says "not in the money ledger", fee counted as Revenue does', payState(old).key === 'unrecorded' && feeState(old).key === 'collected' && feeState(old).cents === 300);
+check('a hold taken before the round → "Hold taken"', payState({ ...base, ledger: sumLedger([{ direction: 'in', amountCents: 2650, platformFeeCents: 150 }]) }).key === 'hold');
+check('on a member account → its own state, fee collected when they pay', payState({ ...base, status: 'completed', checkedIn: true, paymentStatus: 'on_account' }).key === 'on_account' && feeState({ ...base, status: 'completed', paymentStatus: 'on_account' }).key === 'when_paid');
+check('checked in with nothing paid and no card payment → nothing paid', payState({ ...base, status: 'completed', checkedIn: true }).key === 'nothing_due');
 
 // Our fee
 check('fee collected = what the ledger kept', JSON.stringify(feeState({ ...base, status: 'completed', ledger: paidRound })) === JSON.stringify({ key: 'collected', cents: 300 }));

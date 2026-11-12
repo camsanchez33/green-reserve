@@ -19,12 +19,15 @@ export const WHAT_WORDS: Record<string, string> = {
   round: 'Round', hold: 'Cancellation hold', late_fee: 'Late cancellation fee', no_show_fee: 'No-show fee', booking_fee: 'Booking fee',
   shop: 'Shop items', dues: 'Dues', event: 'Event',
 };
+export const DISPUTE_OUT = 'Taken back by the bank (dispute)';
+export const DISPUTE_BACK = 'Returned to the course (dispute won)';
+export const FEE_LINES: [string, string][] = [['hold', 'Cancellation hold (the course\'s)'], ['late_fee', 'Late cancellation fee (the course\'s)'], ['no_show_fee', 'No-show fee (the course\'s)']];
 export const METHOD_WORDS: Record<string, string> = { card: 'card', card_present: 'card reader', cash: 'cash', other: 'other' };
 export const PROBLEM_WORDS: Record<string, string> = { charge_failed: 'Card declined', dispute_opened: 'The golfer disputed the charge with their bank', dispute_closed: 'The dispute was closed' };
 export const SOURCE_WORDS: Record<string, string> = { online: 'Online', walk_in: 'Walk-in at the counter', phone: 'By phone, entered by the course', counter: 'At the counter' };
 
 type PayInput = {
-  pay: { key: string }; paid: { inCents: number; outCents: number }; owed: { roundCents: number | null };
+  pay: { key: string }; paid: { inCents: number; outCents: number; beforeDisputeCents: number; disputeOutCents: number }; owed: { roundCents: number | null };
   declineReason: string | null; moves: { method: string }[];
 };
 const usd = (c: number) => (c < 0 ? '−' : '') + '$' + (Math.abs(c) / 100).toFixed(2);
@@ -35,7 +38,11 @@ export function payLine(p: PayInput): string {
   const owed = p.owed.roundCents ?? 0;
   const back = p.paid.outCents > 0 ? ` · ${usd(p.paid.outCents)} given back` : '';
   switch (p.pay.key) {
-    case 'disputed': return `${usd(net)} paid; the golfer disputed it with their bank`;
+    case 'disputed': return `${usd(p.paid.beforeDisputeCents)} paid; the golfer disputed it with their bank`;
+    case 'returned': return `${usd(p.paid.inCents)} charged; ${usd(p.paid.outCents)} ${p.paid.disputeOutCents > 0 ? 'taken back by the bank after a dispute' : 'given back'}`;
+    case 'unrecorded': return 'Revenue counts it as paid by card, but no payment row was written for it';
+    case 'on_account': return "Checked in; the course bills it on the member's statement";
+    case 'hold': return `${usd(net)} hold taken; it is given back at check-in`;
     case 'declined': return `${usd(owed)} owed${p.declineReason ? ` · ${p.declineReason}` : ''}`;
     case 'cancelled_kept': return `${usd(net)} kept under the course's policy${back}`;
     case 'cancelled': return p.paid.inCents > 0 ? `${usd(p.paid.inCents)} charged and given back` : 'Nothing charged';
