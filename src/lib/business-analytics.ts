@@ -9,8 +9,8 @@
 //   built      the course was made (builtCourseId → Course.createdAt)
 //   signed     the Operator Agreement was accepted (AgreementAcceptance, document 'operator_agreement')
 //   live       the inquiry went live (wentLiveAt)
-// Who counts (the cohort): inquiries whose FIRST CONTACT fell in the period — our first 'out' touch, or for an
-// inbound inquiry the day it came in. Every later step is counted as of now. A step counts a course that got at
+// Who counts (the cohort): inquiries whose FIRST CONTACT fell in the period — our first 'out' touch (or, with none
+// logged, the lead's move to Talking), or for an inbound inquiry the day it came in. Every later step is counted as of now. A step counts a course that got at
 // least that far (a course can go live without a logged call), so the funnel never grows going down — except
 // Responded, which also holds the inbound courses; its % is of the outbound courses that replied.
 // Average days at a step: from reaching it to reaching the next step the course reached, over the courses that
@@ -27,8 +27,8 @@ export type InquiryForFunnel = {
   status: string;
   wentLiveAt: Date | null;
   touches: { at: Date; direction: string }[];
-  /** Status events; only the moves off 'lead' are read. */
-  events: { fromStatus: string; createdAt: Date }[];
+  /** Status events; only a real move off 'lead' is read (not lead→lead notes or a rejected lead). */
+  events: { fromStatus: string; toStatus: string; createdAt: Date }[];
   /** Discovery calls. */
   calls: { outcome: string; scheduledAt: Date; completedAt: Date | null }[];
   /** The built course's createdAt, if one was built. */
@@ -47,12 +47,16 @@ const min = (ds: (Date | null | undefined)[]): Date | null => {
 
 /** When a course reached each step (null = not yet). */
 export function milestones(i: InquiryForFunnel): Milestones {
+  // A lead is a course WE added (createLead writes a lead→lead "Lead added" event; notes, snooze and source on a
+  // lead write lead→lead too). Anything else came in to us — and stays inbound even after we log our own follow-up.
   const wasLead = i.status === 'lead' || i.events.some(e => e.fromStatus === 'lead');
+  const inbound = !wasLead;
   const firstOut = min(i.touches.filter(t => t.direction === 'out').map(t => t.at));
-  const inbound = !wasLead && !firstOut;
   const firstIn = min(i.touches.filter(t => t.direction === 'in').map(t => t.at));
-  const offLead = min(i.events.filter(e => e.fromStatus === 'lead').map(e => e.createdAt));
-  const reached = inbound ? null : firstOut;
+  // The real move off lead: to Talking or further, never lead→lead or a lead we closed.
+  const offLead = min(i.events.filter(e => e.fromStatus === 'lead' && !['lead', 'rejected', 'archived'].includes(e.toStatus)).map(e => e.createdAt));
+  // A lead moved to Talking with no touch logged was still reached by us: it enters at that move.
+  const reached = inbound ? null : (firstOut ?? offLead);
   const responded = inbound ? i.createdAt : min([firstIn, offLead]);
   const calls = min(i.calls.filter(c => c.outcome === 'talked').map(c => c.completedAt ?? c.scheduledAt));
   return {

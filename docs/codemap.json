@@ -1674,7 +1674,7 @@
     },
     {
       "path": "src/app/api/admin/business/route.ts",
-      "lines": 230,
+      "lines": 235,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -17090,7 +17090,7 @@
     },
     {
       "path": "src/lib/business-analytics.ts",
-      "lines": 118,
+      "lines": 122,
       "purpose": "ADMIN-REDO Business analytics (Cam 2026-11-12, ADMIN_REDO_SPEC \"Business analytics:",
       "brain": [],
       "exports": [

@@ -16,14 +16,14 @@ const base = (o: Partial<InquiryForFunnel>): InquiryForFunnel => ({
 const outLive = base({
   status: 'live', createdAt: d(1),
   touches: [{ at: d(3), direction: 'out' }, { at: d(5), direction: 'out' }, { at: d(6), direction: 'in' }],
-  events: [{ fromStatus: 'lead', createdAt: d(7) }],
+  events: [{ fromStatus: 'lead', toStatus: 'lead', createdAt: d(1) }, { fromStatus: 'lead', toStatus: 'in_review', createdAt: d(7) }],
   calls: [{ outcome: 'talked', scheduledAt: d(9), completedAt: d(9) }],
   builtAt: d(12), signedAt: d(14), wentLiveAt: d(20),
 });
 // An outbound course that never replied.
-const outSilent = base({ status: 'lead', createdAt: d(2), touches: [{ at: d(4), direction: 'out' }] });
+const outSilent = base({ status: 'lead', createdAt: d(2), touches: [{ at: d(4), direction: 'out' }], events: [{ fromStatus: 'lead', toStatus: 'lead', createdAt: d(2) }, { fromStatus: 'lead', toStatus: 'lead', createdAt: d(5) }] });
 // A lead we added but haven't contacted: not in any cohort.
-const leadUntouched = base({ status: 'lead', createdAt: d(2) });
+const leadUntouched = base({ status: 'lead', createdAt: d(2), events: [{ fromStatus: 'lead', toStatus: 'lead', createdAt: d(2) }] });
 // An inbound inquiry that went live without a logged call.
 const inLive = base({ status: 'live', createdAt: d(10), builtAt: d(15), signedAt: d(16), wentLiveAt: d(25) });
 // An inbound inquiry still talking.
@@ -37,7 +37,20 @@ ok('inbound: starts at Responded on the day it came in; never Reached', mi.inbou
 ok('a lead we never contacted has no entry (in no cohort)', milestones(leadUntouched).entry === null);
 ok('a call that wasn\'t held (no answer) is not "calls"', milestones(inTalking).calls === null);
 ok('moving off lead counts as responded when no reply was logged',
-  milestones(base({ status: 'in_review', touches: [{ at: d(3), direction: 'out' }], events: [{ fromStatus: 'lead', createdAt: d(8) }] })).responded?.getTime() === d(8).getTime());
+  milestones(base({ status: 'in_review', touches: [{ at: d(3), direction: 'out' }], events: [{ fromStatus: 'lead', toStatus: 'in_review', createdAt: d(8) }] })).responded?.getTime() === d(8).getTime());
+// Final review 2026-11-12: lead→lead events (Lead added, notes, snooze, source) and a lead we closed are not replies.
+ok('a lead added, emailed, never replied: not responded (the "Lead added" lead→lead event is not a reply)',
+  milestones(base({ status: 'lead', createdAt: d(2), touches: [{ at: d(4), direction: 'out' }], events: [{ fromStatus: 'lead', toStatus: 'lead', createdAt: d(2) }, { fromStatus: 'lead', toStatus: 'lead', createdAt: d(6) }] })).responded === null);
+ok('a lead we closed (lead→rejected) is not responded either',
+  milestones(base({ status: 'rejected', createdAt: d(2), touches: [{ at: d(4), direction: 'out' }], events: [{ fromStatus: 'lead', toStatus: 'lead', createdAt: d(2) }, { fromStatus: 'lead', toStatus: 'rejected', createdAt: d(20) }] })).responded === null);
+{
+  const mm = milestones(base({ status: 'in_review', createdAt: d(10), touches: [{ at: d(12), direction: 'out' }] }));
+  ok('an inbound inquiry stays inbound after we log our call back (entry and Responded stay the day it came in)', mm.inbound && mm.reached === null && mm.entry?.getTime() === d(10).getTime() && mm.responded?.getTime() === d(10).getTime(), mm);
+}
+{
+  const mm = milestones(base({ status: 'live', createdAt: d(2), events: [{ fromStatus: 'lead', toStatus: 'lead', createdAt: d(2) }, { fromStatus: 'lead', toStatus: 'in_review', createdAt: d(5) }], builtAt: d(8), signedAt: d(9), wentLiveAt: d(12) }));
+  ok('a lead moved to Talking with no touch logged enters at that move (reached and responded then), through to live', !mm.inbound && mm.entry?.getTime() === d(5).getTime() && mm.reached?.getTime() === d(5).getTime() && mm.responded?.getTime() === d(5).getTime() && mm.live?.getTime() === d(12).getTime(), mm);
+}
 
 const all = [outLive, outSilent, leadUntouched, inLive, inTalking].map(milestones);
 const f = joiningFunnel(all, d(1), d(31));

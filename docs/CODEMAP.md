@@ -86,7 +86,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/admin/backfill-orphaned-inquiries` | admin | file | POST | `src/app/api/admin/backfill-orphaned-inquiries/route.ts` | 46 |
 | `/api/admin/bootstrap` | admin | secret header | POST | `src/app/api/admin/bootstrap/route.ts` | 31 |
 | `/api/admin/broadcasts` | admin | file | GET POST | `src/app/api/admin/broadcasts/route.ts` | 140 |
-| `/api/admin/business` | admin | file | GET | `src/app/api/admin/business/route.ts` | 230 |
+| `/api/admin/business` | admin | file | GET | `src/app/api/admin/business/route.ts` | 235 |
 | `/api/admin/change-password` | admin | file | POST | `src/app/api/admin/change-password/route.ts` | 31 |
 | `/api/admin/company-documents` | admin | file | DELETE GET POST | `src/app/api/admin/company-documents/route.ts` | 71 |
 | `/api/admin/company-documents/download` | admin | file | GET | `src/app/api/admin/company-documents/download/route.ts` | 37 |
@@ -583,7 +583,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/blackouts.ts` | 1 | 43 | Closing a day on the schedule (Blackout) and reopening it. | `bookedOn`, `closeDay`, `reopenDay` |
 | `src/lib/booking-residents.ts` | 1 | 72 | RES-1 (Cam 2026-10-19): | `setBookingResidents`, `SetResidentsResult` |
 | `src/lib/booking-status.ts` | 1 | 81 | Single source of truth for what to show a user (operator, staff, or golfer) given a booking's current status + paymentStatus pair. | `BookingStatusInfo`, `getBookingStatus`, `statusDot`, `StatusTone` |
-| `src/lib/business-analytics.ts` | 1 | 118 | ADMIN-REDO Business analytics (Cam 2026-11-12, ADMIN_REDO_SPEC "Business analytics: | `averageFill`, `fillPct`, `InquiryForFunnel`, `JOIN_STEPS`, `joiningFunnel`, `JoiningSteps`, `JoinStep`, `milestones` +1 more |
+| `src/lib/business-analytics.ts` | 1 | 122 | ADMIN-REDO Business analytics (Cam 2026-11-12, ADMIN_REDO_SPEC "Business analytics: | `averageFill`, `fillPct`, `InquiryForFunnel`, `JOIN_STEPS`, `joiningFunnel`, `JoiningSteps`, `JoinStep`, `milestones` +1 more |
 | `src/lib/calendar-days.ts` | 1 | 41 | CAL-2 (Cam 2026-11-06: | `bookableFrom`, `CalendarInfo`, `emptyDayWords`, `notYetWords` |
 | `src/lib/cancel-confirm.ts` | 1 | 44 | The words staff read before cancelling a booking from the tee sheet's panel, so the fee outcome they promise matches what lib/cancel-booking.ts actually does. | `cancelConfirmText`, `CancelResult`, `cancelResultText` |
 | `src/lib/cancel-fee-reason.ts` | 1 | 29 | Cam 2026-10-27 ("how is that no fee — looks within 24 hours to me"): | `CancelRecord`, `NO_FEE_LABEL`, `noFeeReason`, `NoFeeReason` |
