@@ -121,7 +121,6 @@ export default function AdminOverview() {
   const d = data;
   const seesNothing = d && !d.coursesLive && !d.revenue && !d.feesMissed && !d.expenses && !d.onboarding && !d.net && !d.chart && !d.activity && !d.attention;
   const series = d?.chart?.[group];
-  const today = new Date().toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric' });
 
   return (
     <>
@@ -129,7 +128,6 @@ export default function AdminOverview() {
       <main className={g.main}>
         <div className={g.head}>
           <h1>Overview</h1>
-          <p>{today}{d && <> · updated {when(d.at)}</>}</p>
         </div>
 
         {error && (

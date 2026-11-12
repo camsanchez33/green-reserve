@@ -1,519 +1,322 @@
 'use client';
-import { useState, useEffect, useCallback, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { adminFetch, type AdminFetchFailure } from '@/lib/admin-fetch';
-import { ErrorBanner } from '@/components/ui/ErrorState';
+
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Search } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import AdminSidebar from '@/components/admin/AdminSidebar';
-import { StatusDot } from '@/components/ui/StatusDot';
-import { EmptyState } from '@/components/EmptyState';
-import { HEALTH_STATUS_SEVERITY, periodDelta, lastBookingLabel, type CourseHealthStatus } from '@/lib/course-metrics';
-import { checkInSignal, type CheckinCallLike } from '@/lib/course-checkin';
-import { nextCall, overdueCall, fmtCallClock } from '@/lib/inquiry-call';
-import type { SetupProgress } from '@/lib/course-setup';
-import { formatDate as fmtDate, formatEasternDate as fmtShort, formatEasternDay as fmtDay } from '@/lib/format';
-import { Card } from '@/components/ui/Card';
-import { Eyebrow } from '@/components/ui/Eyebrow';
+import g from '../admin-glass.module.css';
+import s from './courses.module.css';
+import { TERMS, SESSION_ENDED, loadFailed, STRIPE_STATE, NO_CONTACT, NO_NOTES } from './terms';
 
-// COURSES_SHEET_SPEC CS-2 — /admin/courses as a sheet. One table, two
-// sections ("Getting live" above "Live"), eight fixed columns, the same
-// table chrome as the inquiries sheet (IC-3). The Live / Not live / Archived
-// segmented control and the sort control are gone: the sections ARE the
-// state, and ordering is fixed (decision B4) — furthest-along first while
-// getting live, worst health first once live. Archived is a footer link.
+// ADMIN-REDO page 2 — Golf Courses (Cam approved the mockup 2026-11-12, ADMIN_REDO_SPEC.md).
+// One home per course: courses that have been live; onboarding ones are on Onboarding (a course built by
+// hand, with no inquiry, stays here under All until Onboarding can list it).
+// The directory with one Filter menu (the top-bar search finds courses); a course opens its profile beside the list.
+// Every number is counted by /api/admin/courses/directory; a field the login can't see
+// comes back null and is left out. "Open full profile" is the existing course page.
 
-const PAGE_SIZE = 50;
-// A section longer than this is a signal in itself — show the top slice and
-// say how many are behind it (same rule as the inquiries sheet).
-const SECTION_CAP = 50;
+type Status = 'live' | 'risk' | 'onboarding' | 'offline' | 'archived';
+type Row = { id: string; name: string; slug: string; town: string; isTest: boolean; status: Status; bookings: number; bookingsPrior: number; feesCents: number | null; onlinePct: number | null; lastBookingAt: string | null };
+type Directory = { at: string; riskDays: number; archivedCount: number | null; seesMoney: boolean; support: boolean; rows: Row[]; view: 'all' | 'archived' };
+type Profile = {
+  id: string; name: string; slug: string; town: string; isTest: boolean; logoUrl: string | null; status: Status;
+  bookings: { cur: number; prior: number }; lastBookingAt: string | null; joinedAt: string; liveSince: string | null;
+  setup: { done: number; total: number; steps: { label: string; done: boolean }[] };
+  agreement: { version: string; signedAt: string; signer: string | null; signerEmail: string | null } | null;
+  agreementDue: { by: string; overdue: boolean } | null;
+  contact: { operatorName: string | null; operatorEmail: string | null; operatorPhone: string | null; emailVerified: boolean; lastLoginAt: string | null; coursePhone: string | null; website: string | null; address: string | null } | null;
+  notes: string | null;
+  money: { stripeConnected: boolean; stripeActive: boolean; feesCents: number; feesPriorCents: number; missedCents: number; missedRounds: number; failedCount: number; failed: { id: string; golferName: string; cents: number; teeDate: string; reason: string }[] } | null;
+};
+type Filter = 'all' | 'live' | 'risk' | 'offline';
 
-interface CourseCall extends CheckinCallLike {
-  id: string; kind: string; scheduledAt: string; outcome: string; durationMin: number; direction: string; completedAt?: string | null;
-}
-interface Course {
-  id: string; name: string; city: string; state: string; active: boolean; featured: boolean;
-  stripeAccountActive: boolean; slug: string; type?: string;
-  /** TEST-1: a test course — left out of the platform's numbers and Problems (TEST-2). */
-  isTest?: boolean;
-  operator: { email: string; name: string; onboardingStep: number; emailVerified: boolean } | null;
-  createdAt: string; archivedAt?: string | null; archivedBy?: string | null;
-  welcomeEmailSentAt?: string | null;
-  bookings30d: number; revenue30d: number | null; activeMemberCount: number;
-  lastBookingAt?: string | null; bookingsPrior30d?: number;
-  approvalStatus?: 'none' | 'approved' | 'changes_requested';
-  health: { status: CourseHealthStatus; label: string; dot: 'ok' | 'bad' | 'warn' | 'neutral'; reason: string };
-  // CS-1
-  nextCheckInAt?: string | null;
-  calls?: CourseCall[];
-  setup?: SetupProgress;
-  linkedInquiryId?: string | null;
-  inquiryCalls?: CourseCall[];
-  /** AG-3: re-acceptance deadline for a course on an older Operator Agreement */
-  agreementDue?: { by: string; overdue: boolean } | null;
-}
-
-// Health is the only filter left besides type — its options are named after
-// the sections. "Needs attention" is a synthetic umbrella (anything not
-// healthy), not a real CourseHealthStatus value.
-type HealthFilter = 'all' | 'needs_attention' | 'setup_incomplete' | 'payments_broken' | 'going_quiet';
-const HEALTH_FILTER_OPTIONS: { value: HealthFilter; label: string }[] = [
-  { value: 'all', label: 'All' },
-  { value: 'needs_attention', label: 'Needs attention' },
-  { value: 'setup_incomplete', label: 'Setup incomplete' },
-  { value: 'payments_broken', label: 'Payments broken' },
-  { value: 'going_quiet', label: 'Going quiet' },
+const TZ = 'America/New_York';
+const LABEL: Record<Status, string> = { live: 'Live', risk: 'At risk', onboarding: 'Onboarding', offline: 'Offline', archived: 'Archived' };
+const FILTERS: { v: Filter; label: string }[] = [
+  { v: 'all', label: 'All' }, { v: 'live', label: 'Live' }, { v: 'risk', label: 'At risk' }, { v: 'offline', label: 'Offline' },
 ];
-const HEALTH_FILTER_VALUES = HEALTH_FILTER_OPTIONS.map(o => o.value) as string[];
-const NEEDS_ATTENTION_STATUSES: CourseHealthStatus[] = ['setup_incomplete', 'payments_broken', 'going_quiet', 'offline', 'orphaned'];
-// Assumption B1: "Getting live" = never been on the public site. Offline sits
-// in Live because it WAS live; its Status cell says so.
-const GETTING_LIVE_STATUSES: CourseHealthStatus[] = ['setup_incomplete', 'orphaned'];
+const ORDER: Record<Status, number> = { risk: 0, live: 1, onboarding: 2, offline: 3, archived: 4 };
 
-const fmtWeekday = (d: Date) => d.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'America/New_York' });
-const daysSinceIso = (d: string) => Math.max(0, Math.floor((Date.now() - new Date(d).getTime()) / 86_400_000));
+const money = (cents: number) => (cents < 0 ? '−' : '') + '$' + (Math.abs(cents) / 100).toLocaleString('en-US', { minimumFractionDigits: Math.abs(cents) % 100 ? 2 : 0, maximumFractionDigits: 2 });
+const date = (iso: string) => new Date(iso).toLocaleDateString('en-US', { timeZone: TZ, month: 'short', day: 'numeric', year: 'numeric' });
+function when(iso: string | null, empty = 'None yet') {
+  if (!iso) return empty;
+  const d = new Date(iso);
+  const day = (x: Date) => x.toLocaleDateString('en-US', { timeZone: TZ });
+  if (day(d) === day(new Date())) return 'Today, ' + d.toLocaleTimeString('en-US', { timeZone: TZ, hour: 'numeric', minute: '2-digit' });
+  if (day(d) === day(new Date(Date.now() - 86_400_000))) return 'Yesterday';
+  return d.toLocaleDateString('en-US', { timeZone: TZ, month: 'short', day: 'numeric' });
+}
+function versus(cur: number, prior: number) {
+  const d = cur - prior;
+  if (d === 0) return <span className={s.vs} title={TERMS.vsPrior}>same</span>;
+  return <span className={s.vs} title={TERMS.vsPrior}><b className={d > 0 ? g.up : g.down}>{d > 0 ? '+' : '−'}{Math.abs(d)}</b></span>;
+}
+const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+
+async function getJson<T>(url: string, what: string): Promise<{ ok: true; data: T } | { ok: false; msg: string }> {
+  try {
+    const r = await fetch(url, { cache: 'no-store' });
+    const body = await r.json().catch(() => null);
+    if (r.status === 401) return { ok: false, msg: SESSION_ENDED };
+    if (!r.ok || !body) return { ok: false, msg: body?.error ?? loadFailed(what, r.status) };
+    return { ok: true, data: body as T };
+  } catch {
+    return { ok: false, msg: loadFailed(what) };
+  }
+}
+
+function Status({ st }: { st: Status }) {
+  return <span className={`${s.st} ${s[st] ?? ''}`}><i />{LABEL[st]}</span>;
+}
+
+function ProfilePanel({ id, riskDays, support }: { id: string; riskDays: number; support: boolean }) {
+  const [p, setP] = useState<Profile | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true); setError(null);
+    const r = await getJson<Profile>(`/api/admin/courses/directory?id=${encodeURIComponent(id)}`, 'This course');
+    if (r.ok) setP(r.data); else setError(r.msg);
+    setLoading(false);
+  }, [id]);
+  useEffect(() => { setP(null); load(); }, [load]);
+
+  if (error) return (
+    <section className={`${g.glass} ${s.prof}`} role="alert" aria-label="Course profile">
+      <p className={`${s.muted} ${g.down}`}>{error}</p>
+      <div className={s.plinks}>
+        {error === SESSION_ENDED ? <Link className={s.plink} href="/admin/login">Sign in</Link>
+          : <button type="button" className={s.plink} onClick={load} disabled={loading}>{loading ? 'Trying…' : 'Try again'}</button>}
+      </div>
+    </section>
+  );
+  if (!p) return <section className={`${g.glass} ${s.prof} ${s.skel}`} aria-busy="true" aria-label="Loading the course" />;
+
+  const failedCents = p.money ? p.money.failed.reduce((a, f) => a + f.cents, 0) : 0;
+  const live = p.status === 'live' || p.status === 'risk';
+  const unfinished = p.setup.steps.filter(x => !x.done);
+  // ADMIN FORMAT 8: one column, the most useful part first; Setup only while unfinished, first for an onboarding course.
+  const setup = unfinished.length > 0 && (
+    <div className={s.psec}>
+      <h3>Setup · {p.setup.done} of {p.setup.total} done</h3>
+      <div className={s.steps}>{unfinished.map(x => <div key={x.label} className={s.step}><i /><span>{x.label}</span></div>)}</div>
+    </div>
+  );
+
+  return (
+    <section id="course-profile" className={`${g.glass} ${s.prof}`} aria-label={`${p.name} profile`}>
+      <div className={s.ph}>
+        <span className={s.plogo}>{p.logoUrl ? <img src={p.logoUrl} alt="" loading="lazy" /> : initials(p.name)}</span>
+        <div className={s.pname}>
+          <h2>{p.name}</h2>
+          <p>{p.town && <>{p.town} · </>}<Status st={p.status} />{p.isTest && <span className={s.test}>Test course</span>}</p>
+        </div>
+        <div className={s.plinks}>
+          {support && <Link className={s.plink} href={`/admin/courses/${p.id}`}>Full profile <span aria-hidden="true">→</span></Link>}
+          {live && <a className={s.plink} href={`/courses/${p.slug}`} target="_blank" rel="noopener noreferrer">Booking page <span aria-hidden="true">↗</span></a>}
+        </div>
+      </div>
+
+      {p.status === 'onboarding' && setup}
+
+      <div className={s.rows}>
+        <div><span>Bookings this month</span><b>{p.bookings.cur}</b><em title={TERMS.vsPrior}>prior {p.bookings.prior}</em></div>
+        {p.money && <div><span title={TERMS.fees}>Our fees this month</span><b>{money(p.money.feesCents)}</b><em title={TERMS.vsPrior}>prior {money(p.money.feesPriorCents)}</em></div>}
+        {p.money && <div><span title={TERMS.missed}>Fees missed (paid cash)</span><b>{money(p.money.missedCents)}</b><em>{p.money.missedRounds} rounds</em></div>}
+        {p.money && <div><span>Failed card charges</span><b className={p.money.failedCount ? g.down : ''}>{p.money.failedCount}</b><em>{money(failedCents)}{p.money.failedCount > p.money.failed.length && ` (latest ${p.money.failed.length})`}</em></div>}
+      </div>
+      {p.money && p.money.failed.length > 0 && (
+        <div className={s.fails}>
+          {p.money.failed.map(f => <div key={f.id}><span>{f.golferName} · {date(f.teeDate + 'T12:00:00Z')}<span className={s.vs}>{f.reason}</span></span><span>{money(f.cents)}</span></div>)}
+        </div>
+      )}
+
+      {p.status !== 'onboarding' && setup}
+
+      <div className={s.psec}>
+        <h3>Contact</h3>
+        {p.contact ? (
+          <dl className={s.kv}>
+            <dt>Operator</dt><dd>{p.contact.operatorName ?? '—'}</dd>
+            <dt>Email</dt><dd>{p.contact.operatorEmail ? <a href={`mailto:${p.contact.operatorEmail}`}>{p.contact.operatorEmail}</a> : '—'}{p.contact.operatorEmail && !p.contact.emailVerified && ' (not verified)'}</dd>
+            <dt>Phone</dt><dd>{p.contact.operatorPhone ?? p.contact.coursePhone ?? '—'}</dd>
+            <dt>Address</dt><dd>{p.contact.address ?? '—'}</dd>
+            <dt>Website</dt><dd>{p.contact.website ? <a href={p.contact.website.startsWith('http') ? p.contact.website : `https://${p.contact.website}`} target="_blank" rel="noopener noreferrer">{p.contact.website}</a> : '—'}</dd>
+            <dt>Signed in</dt><dd>{when(p.contact.lastLoginAt, '—')}</dd>
+          </dl>
+        ) : <p className={s.muted}>{NO_CONTACT}</p>}
+      </div>
+
+      <div className={s.psec}>
+        <h3>Agreement &amp; payments</h3>
+        <dl className={s.kv}>
+          <dt>Agreement</dt>
+          <dd>{p.agreement ? <>{p.agreement.version} · signed {date(p.agreement.signedAt)}{p.agreement.signer && <> by {p.agreement.signer}</>}</> : 'Not signed'}
+            {p.agreementDue && <span className={`${s.vs} ${p.agreementDue.overdue ? g.down : g.wa}`}>{p.agreementDue.overdue ? 'New version overdue' : `New version by ${date(p.agreementDue.by)}`}</span>}</dd>
+          {p.money && <><dt>Stripe</dt><dd>{STRIPE_STATE(p.money.stripeActive, p.money.stripeConnected)}</dd></>}
+          <dt>Joined</dt><dd>{date(p.joinedAt)}{p.liveSince && <span className={s.vs}>live since {date(p.liveSince)}</span>}</dd>
+          <dt>Last booking</dt><dd title={p.status === 'risk' ? TERMS.risk(riskDays) : undefined}>{when(p.lastBookingAt)}</dd>
+        </dl>
+      </div>
+
+      {p.notes !== null && (
+        <div className={s.psec}>
+          <h3>Notes</h3>
+          {p.notes.trim() ? <p className={s.notes}>{p.notes}</p> : <p className={s.muted}>{NO_NOTES}</p>}
+        </div>
+      )}
+    </section>
+  );
+}
 
 function CoursesContent() {
   const router = useRouter();
   const params = useSearchParams();
-  // MP-11a: the layout resolved the session; a page never re-checks it.
-  const adminReady = true;
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [archivedCount, setArchivedCount] = useState<number | null>(null);
-  const [loadError, setLoadError] = useState<{ msg: string; kind: AdminFetchFailure } | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [search, setSearch] = useState('');
-  const [view, setView] = useState<'sheet' | 'archived'>(params.get('view') === 'archived' ? 'archived' : 'sheet');
-  const initialHealth = params.get('health') || '';
-  const [filterHealth, setFilterHealth] = useState<HealthFilter>(HEALTH_FILTER_VALUES.includes(initialHealth) ? initialHealth as HealthFilter : 'all');
-  const [filterType, setFilterType] = useState('');
-  const [page, setPage] = useState(0);
+  const archived = params.get('view') === 'archived';
+  const [d, setD] = useState<Directory | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<Filter>('all');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [pick, setPick] = useState<string | null>(null);
 
-  const loadCourses = useCallback(async (v: 'sheet' | 'archived') => {
-    setLoading(true);
-    try {
-      const url = '/api/admin/courses' + (v === 'archived' ? '?showArchived=1' : '');
-      // MP-2c: MP-2b gated this endpoint at SUPPORT_PLUS and this branch turned
-      // the 403 into an empty course list with no explanation.
-      const res = await adminFetch<Course[]>(url, { subject: 'courses' });
-      if (!res.ok) { setCourses([]); setLoadError({ msg: res.message, kind: res.kind }); }
-      else { setCourses(res.data); setLoadError(null); }
-      // The header line counts archived courses even while the sheet is up —
-      // the lightweight id/name/archivedAt list is enough for a count.
-      const simple = await adminFetch<{ id: string; archivedAt: string | null }[]>('/api/admin/courses?simple=1', { subject: 'courses' });
-      setArchivedCount(simple.ok ? simple.data.filter(c => !!c.archivedAt).length : null);
-    } catch { setCourses([]); setLoadError({ msg: 'Network error loading courses. Check your connection and try again.', kind: 'network' }); }
-    setLoading(false);
-  }, []);
-
+  // Old links (/admin/courses?courseId=…&tab=…) still open the course page.
   useEffect(() => {
-    if (!adminReady) return;
-    loadCourses(view);
     const courseId = params.get('courseId');
-    // AW-7: a ?tab= rides along so a link can open a course on the tab it means.
     const tab = params.get('tab');
     if (courseId) router.replace('/admin/courses/' + courseId + (tab ? '?tab=' + encodeURIComponent(tab) : ''));
-  }, [adminReady, view, loadCourses, params, router]);
+  }, [params, router]);
 
-  const goTo = (v: 'sheet' | 'archived') => {
-    setView(v); setPage(0);
-    window.history.replaceState(null, '', '/admin/courses' + (v === 'archived' ? '?view=archived' : ''));
+  const seq = useRef(0);
+  const load = useCallback(async () => {
+    const mine = ++seq.current;
+    setLoading(true); setError(null);
+    const r = await getJson<Omit<Directory, 'view'>>('/api/admin/courses/directory' + (archived ? '?archived=1' : ''), 'The course list');
+    if (mine !== seq.current) return; // a later load (the other view) won
+    if (r.ok) setD({ ...r.data, view: archived ? 'archived' : 'all' }); else setError(r.msg);
+    setLoading(false);
+  }, [archived]);
+  // Switching views: never show the other view's list under this title.
+  useEffect(() => { setD(null); setPick(null); }, [archived]);
+  useEffect(() => { load(); }, [load]);
+
+  // The filter menu closes on a click elsewhere or Escape.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const away = (e: MouseEvent) => { if (!menuRef.current?.contains(e.target as Node)) setMenuOpen(false); };
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuOpen(false); };
+    document.addEventListener('mousedown', away); document.addEventListener('keydown', esc);
+    return () => { document.removeEventListener('mousedown', away); document.removeEventListener('keydown', esc); };
+  }, [menuOpen]);
+
+  const counts = useMemo(() => {
+    const c: Record<Filter, number> = { all: 0, live: 0, risk: 0, offline: 0 };
+    for (const r of d?.rows ?? []) { c.all++; if (r.status in c) c[r.status as Filter]++; if (r.status === 'risk') c.live++; }
+    return c;
+  }, [d]);
+  const rows = useMemo(() => {
+    return (d?.rows ?? [])
+      .filter(r => archived || filter === 'all' || r.status === filter || (filter === 'live' && r.status === 'risk'))
+      .sort((a, b) => ORDER[a.status] - ORDER[b.status] || b.bookings - a.bookings || a.name.localeCompare(b.name));
+  }, [d, filter, archived]);
+  // A filter that leaves the open course out of the list opens the first course it shows (the mockup's rule).
+  const pickFilter = (f: Filter) => {
+    setFilter(f); setMenuOpen(false);
+    const inView = (st: Status) => f === 'all' || st === f || (f === 'live' && st === 'risk');
+    const open = (d?.rows ?? []).find(r => r.id === pick);
+    if (!open || !inView(open.status)) {
+      const first = (d?.rows ?? []).filter(r => inView(r.status)).sort((a, b) => ORDER[a.status] - ORDER[b.status] || b.bookings - a.bookings || a.name.localeCompare(b.name))[0];
+      setPick(first?.id ?? null);
+    }
   };
-
-  const q = search.toLowerCase().trim();
-  let filtered = q
-    ? courses.filter(c =>
-        c.name.toLowerCase().includes(q) ||
-        c.slug.toLowerCase().includes(q) ||
-        c.city.toLowerCase().includes(q) ||
-        c.state.toLowerCase().includes(q) ||
-        (c.operator?.email || '').toLowerCase().includes(q) ||
-        (c.operator?.name || '').toLowerCase().includes(q)
-      )
-    : [...courses];
-  if (view === 'sheet') {
-    if (filterHealth === 'needs_attention') filtered = filtered.filter(c => NEEDS_ATTENTION_STATUSES.includes(c.health.status));
-    else if (filterHealth !== 'all') filtered = filtered.filter(c => c.health.status === filterHealth);
-    if (filterType) filtered = filtered.filter(c => (c.type || 'public') === filterType);
-  }
-
-  const now = new Date();
-  const isGettingLive = (c: Course) => GETTING_LIVE_STATUSES.includes(c.health.status);
-  const signalOf = (c: Course) => checkInSignal(c, c.calls ?? [], now);
-
-  // Ordering (B4): furthest along first while getting live; worst health, then
-  // overdue check-ins, then name once live.
-  const gettingLive = filtered.filter(isGettingLive).sort((a, b) =>
-    (b.setup?.done ?? 0) - (a.setup?.done ?? 0) || new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-  const live = filtered.filter(c => !isGettingLive(c)).sort((a, b) => {
-    const sev = HEALTH_STATUS_SEVERITY[a.health.status] - HEALTH_STATUS_SEVERITY[b.health.status];
-    if (sev !== 0) return sev;
-    const ao = signalOf(a).state === 'overdue' ? 0 : 1;
-    const bo = signalOf(b).state === 'overdue' ? 0 : 1;
-    if (ao !== bo) return ao - bo;
-    return a.name.localeCompare(b.name);
-  });
-
-  // Archived paginates; the sheet caps per section instead.
-  const archivedSorted = [...filtered].sort((a, b) => new Date(b.archivedAt || b.createdAt).getTime() - new Date(a.archivedAt || a.createdAt).getTime());
-  const totalPages = Math.max(1, Math.ceil(archivedSorted.length / PAGE_SIZE));
-  const pagedArchived = archivedSorted.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-  useEffect(() => { setPage(0); }, [filterHealth, filterType, q]);
-
-  // Header line — counts over everything loaded on the sheet, not the filter.
-  const liveCount = courses.filter(c => !isGettingLive(c)).length;
-  const gettingLiveCount = courses.filter(isGettingLive).length;
-  const needsAttentionCount = courses.filter(c => NEEDS_ATTENTION_STATUSES.includes(c.health.status)).length;
-  const checkInsDueCount = courses.filter(c => !isGettingLive(c) && ['due', 'overdue'].includes(signalOf(c).state)).length;
-
-  if (!adminReady) return null;
-
-  // ── the sheet ────────────────────────────────────────────────────────
-  const thCls = 'text-[12.5px] font-semibold text-ink-muted font-medium text-left px-3 py-2 whitespace-nowrap';
-  const tdCls = 'px-3 py-2.5 align-top';
-  type RowMode = 'getting_live' | 'live' | 'archived';
-
-  const healthChip = (c: Course) => (
-    <span className={
-      'text-xs font-medium px-2 py-0.5 rounded-md inline-block ' + (
-        c.health.dot === 'ok' ? 'bg-ok/5 text-ok' :
-        c.health.dot === 'bad' ? 'bg-bad/5 text-bad' :
-        c.health.dot === 'warn' ? 'bg-warn/5 text-warn' :
-        'bg-line-soft text-ink-muted'
-      )
-    }>
-      {c.health.label}
-    </span>
-  );
-
-  const renderStatus = (c: Course, mode: RowMode) => {
-    if (mode === 'archived') {
-      return (
-        <>
-          <div className="text-sm text-ink-soft truncate">Archived{c.archivedAt ? ' ' + fmtShort(c.archivedAt) : ''}</div>
-          <div className="text-[12px] text-ink-faint truncate">{c.archivedBy ? 'by ' + c.archivedBy : ''}</div>
-        </>
-      );
-    }
-    if (mode === 'getting_live') {
-      const s = c.setup;
-      return (
-        <>
-          <div className="flex items-center gap-2 text-sm text-ink">
-            <StatusDot status={c.health.status === 'orphaned' ? 'bad' : 'warn'} />
-            <span>{s ? `${s.done} of ${s.total}` : '—'}</span>
-            {c.approvalStatus === 'approved' && <span className="text-[11px] text-ok">approved</span>}
-          </div>
-          <div className="text-[12px] text-ink-muted truncate">
-            {c.health.status === 'orphaned' ? 'no linked inquiry' : s?.next ? `next: ${s.next.short}` : 'ready to go live'}
-          </div>
-        </>
-      );
-    }
-    return (
-      <>
-        <div>{healthChip(c)}</div>
-        <div className="text-[12px] text-ink-muted truncate" title={c.health.reason}>{c.health.reason}</div>
-        {c.agreementDue && (
-          <div className="mt-1 text-[11px]">
-            <StatusDot status={c.agreementDue.overdue ? 'bad' : 'warn'} label={c.agreementDue.overdue ? 'Agreement overdue' : `Agreement due ${fmtShort(c.agreementDue.by)}`} />
-          </div>
-        )}
-      </>
-    );
+  // The first course opens once, when the list arrives; after that the profile follows clicks only.
+  const shown = d && d.view === (archived ? 'archived' : 'all') ? d : null;
+  useEffect(() => { if (shown && pick === null && rows[0]) setPick(rows[0].id); }, [shown, pick, rows]);
+  const picked = pick;
+  // One column (phone, narrow window): the profile sits under the list, so bring it into view.
+  const open = (id: string) => {
+    setPick(id);
+    if (window.matchMedia('(max-width: 1150px)').matches) requestAnimationFrame(() => document.getElementById('course-profile')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   };
-
-  const renderActivity = (c: Course, mode: RowMode) => {
-    if (mode === 'getting_live') {
-      const d = daysSinceIso(c.createdAt);
-      return (
-        <>
-          <div className="text-sm text-ink">{d}d in setup</div>
-          <div className="text-[12px] text-ink-muted">since {fmtShort(c.createdAt)}</div>
-        </>
-      );
-    }
-    // MP-5c: the API has always computed these — show the evidence.
-    const trend = periodDelta(c.bookings30d, c.bookingsPrior30d ?? 0);
-    const trendText = trend.pct === null ? null : `${trend.pct > 0 ? '+' : ''}${Math.round(trend.pct)}%`;
-    const trendClass = trend.direction === 'up' ? 'text-ok' : trend.direction === 'down' ? 'text-bad' : 'text-ink-faint';
-    return (
-      <>
-        <div className="text-sm text-ink">
-          {c.bookings30d}<span className="text-ink-muted"> in 30d</span>
-          {trendText && <span className={'ml-1.5 ' + trendClass}>{trendText}</span>}
-        </div>
-        <div className="text-[12px] text-ink-muted">last booking {lastBookingLabel(c.lastBookingAt).toLowerCase()}</div>
-      </>
-    );
-  };
-
-  const renderNextTouch = (c: Course, mode: RowMode) => {
-    const sub = 'text-[12px] text-ink-muted truncate';
-    if (mode === 'archived') return <span className="text-sm text-ink-faint">—</span>;
-    if (mode === 'getting_live') {
-      const calls = c.inquiryCalls ?? [];
-      const upcoming = nextCall(calls, now);
-      const missed = overdueCall(calls, now);
-      if (upcoming) {
-        return (
-          <>
-            <div className="text-sm text-ink font-medium truncate">{fmtDay(upcoming.scheduledAt)} · {fmtCallClock(upcoming.scheduledAt)}</div>
-            <div className={sub}>discovery call · {upcoming.durationMin} min</div>
-          </>
-        );
-      }
-      if (missed && c.linkedInquiryId) {
-        return (
-          <>
-            <Link href={`/admin/inquiries/${c.linkedInquiryId}`} onClick={e => e.stopPropagation()} className="text-sm text-pine font-medium hover:underline">Log the call</Link>
-            <div className={sub}>was {fmtDay(missed.scheduledAt)}</div>
-          </>
-        );
-      }
-      if (c.linkedInquiryId) {
-        return (
-          <Link
-            href={`/admin/inquiries/${c.linkedInquiryId}?call=1`}
-            onClick={e => e.stopPropagation()}
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-pine border border-pine/30 hover:bg-pine/5 rounded-md px-2.5 py-1 transition-colors"
-          >
-            Set up call
-          </Link>
-        );
-      }
-      return <span className="text-sm text-ink-faint">—</span>;
-    }
-    const sig = signalOf(c);
-    if (sig.state === 'overdue') {
-      return (
-        <>
-          <div className="text-sm text-bad font-semibold">Overdue · {sig.days}d</div>
-          <div className={sub}>check-in{sig.at ? ' was ' + fmtShort(sig.at) : ''}</div>
-        </>
-      );
-    }
-    if (sig.state === 'due') {
-      return (
-        <>
-          <div className="text-sm text-warn font-medium">Due {sig.days === 0 ? 'today' : sig.at ? fmtWeekday(sig.at) : 'soon'}</div>
-          <div className={sub}>check-in{sig.at && sig.hasCall ? ' · ' + fmtCallClock(sig.at) : ''}</div>
-        </>
-      );
-    }
-    if (sig.state === 'scheduled' && sig.at) {
-      return (
-        <>
-          <div className="text-sm text-ink">{fmtShort(sig.at)}</div>
-          <div className={sub}>{sig.hasCall ? 'check-in call · ' + fmtCallClock(sig.at) : 'check-in'}</div>
-        </>
-      );
-    }
-    return (
-      <Link
-        href={`/admin/courses/${c.id}?checkin=1`}
-        onClick={e => e.stopPropagation()}
-        className="inline-flex items-center gap-1.5 text-xs font-medium text-pine border border-pine/30 hover:bg-pine/5 rounded-md px-2.5 py-1 transition-colors"
-      >
-        Schedule
-      </Link>
-    );
-  };
-
-  const renderRow = (c: Course, mode: RowMode) => {
-    const href = '/admin/courses/' + c.id;
-    return (
-      <tr key={c.id} onClick={() => router.push(href)} className="border-t border-line cursor-pointer hover:bg-pine/[0.02] transition-colors">
-        {/* 1 · Course */}
-        <td className={tdCls}>
-          <div className="text-sm font-medium text-ink truncate">{c.name}</div>
-          <div className="text-[12px] text-ink-muted truncate">{c.city}, {c.state} · <span className="capitalize">{c.type || 'public'}</span></div>
-          {c.isTest && <span className="block mt-0.5"><StatusDot status="neutral" label="Test course — not in the platform numbers"/></span>}
-        </td>
-        {/* 2 · Operator */}
-        <td className={tdCls}>
-          <div className="text-sm text-ink truncate">{c.operator?.name || <span className="text-ink-faint">No operator</span>}</div>
-          <div className="text-[12px] text-ink-muted truncate">{c.operator?.email || ''}</div>
-          {c.operator && !c.operator.emailVerified && (
-            <span className="block mt-0.5"><StatusDot status="warn" label="Unverified"/></span>
-          )}
-        </td>
-        {/* 3 · Status */}
-        <td className={tdCls}>{renderStatus(c, mode)}</td>
-        {/* 4 · Activity */}
-        <td className={tdCls + ' hidden xl:table-cell'}>{renderActivity(c, mode)}</td>
-        {/* 5 · Fees 30d */}
-        <td className={tdCls + ' hidden lg:table-cell text-right text-sm text-ink whitespace-nowrap'}>
-          {mode === 'getting_live' || c.revenue30d === null ? <span className="text-ink-faint">—</span> : `$${Math.round(c.revenue30d)}`}
-        </td>
-        {/* 6 · Next touch */}
-        <td className={tdCls}>{renderNextTouch(c, mode)}</td>
-        {/* 7 · Live since */}
-        <td className={tdCls + ' hidden lg:table-cell text-right text-sm text-ink-soft whitespace-nowrap'}>
-          {mode !== 'getting_live' && c.welcomeEmailSentAt ? fmtDate(c.welcomeEmailSentAt) : <span className="text-ink-faint">—</span>}
-        </td>
-        {/* 8 · Action */}
-        <td className={tdCls + ' text-right whitespace-nowrap'}>
-          <Link href={href} onClick={e => e.stopPropagation()} className="text-xs font-medium text-pine hover:underline px-1">Open</Link>
-        </td>
-      </tr>
-    );
-  };
-
-  type Group = { key: string; title: string; hint: string; rows: Course[]; mode: RowMode };
-  const renderTable = (groups: Group[]) => {
-    const nonEmpty = groups.filter(g => g.rows.length > 0);
-    if (nonEmpty.length === 0) return null;
-    return (
-      <Card className="overflow-x-auto">
-        <table className="w-full table-fixed min-w-[760px]">
-          <thead>
-            <tr className="bg-paper">
-              <th className={thCls + ' w-[210px]'}>Course</th>
-              <th className={thCls + ' w-[180px]'}>Operator</th>
-              <th className={thCls + ' w-[150px]'}>Status</th>
-              <th className={thCls + ' w-[140px] hidden xl:table-cell'}>Activity</th>
-              <th className={thCls + ' w-[80px] hidden lg:table-cell text-right'}>Fees 30d</th>
-              <th className={thCls + ' w-[150px]'}>Next touch</th>
-              <th className={thCls + ' w-[96px] hidden lg:table-cell text-right'}>Live since</th>
-              <th className={thCls + ' w-[72px] text-right'}><span className="sr-only">Open</span></th>
-            </tr>
-          </thead>
-          {nonEmpty.map(g => {
-            const shown = g.rows.slice(0, SECTION_CAP);
-            return (
-              <tbody key={g.key}>
-                {g.title && (
-                  <tr className="border-t border-line">
-                    <td colSpan={8} className="bg-paper px-3 py-1.5">
-                      <Eyebrow as="span">{g.title}</Eyebrow>
-                      <span className="text-[11px] text-ink-faint ml-2">{g.rows.length}{g.hint ? ' · ' + g.hint : ''}</span>
-                    </td>
-                  </tr>
-                )}
-                {shown.map(c => renderRow(c, g.mode))}
-                {g.rows.length > SECTION_CAP && (
-                  <tr className="border-t border-line">
-                    <td colSpan={8} className="px-3 py-2 text-[11px] text-ink-faint">
-                      Showing the top {SECTION_CAP} of {g.rows.length} — narrow it with search or a filter.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            );
-          })}
-        </table>
-      </Card>
-    );
-  };
-
-  const selCls = 'bg-white border border-line text-ink-soft text-[11px] rounded-md px-3 py-1.5 outline-none focus:border-pine/40 cursor-pointer';
 
   return (
-    <div className="min-h-screen bg-paper flex">
+    <>
       <AdminSidebar active="courses" />
-      <div className="admin-content flex-1 flex flex-col min-h-screen">
-        <div className="px-10 py-8">
-          {/* MP-2d: was a sibling of this container — full-bleed, above the title. */}
-          {loadError && (
-            <ErrorBanner message={loadError.msg} kind={loadError.kind} onRetry={() => loadCourses(view)} />
-          )}
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-[30px] leading-none font-serif font-semibold text-ink">Courses</h1>
-              <p className="text-[13.5px] text-ink-soft mt-2">
-                {loadError ? '—' : view === 'archived'
-                  ? `${filtered.length} archived`
-                  : `${liveCount} live · ${gettingLiveCount} getting live · ${needsAttentionCount} need attention · ${checkInsDueCount} check-in${checkInsDueCount === 1 ? '' : 's'} due · ${archivedCount ?? '—'} archived`}
-              </p>
-            </div>
-            <div className="flex gap-2 items-center">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ink-muted pointer-events-none" />
-                <input
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  placeholder="Search name, slug, operator..."
-                  className="bg-white border border-line text-ink text-sm rounded-md pl-8 pr-3 py-2 outline-none focus:border-pine/40 w-56 placeholder-ink-faint"
-                />
-              </div>
-              <button
-                onClick={() => loadCourses(view)}
-                className="flex items-center gap-2 text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-white border border-line transition-colors"
-              >
-                Refresh
-              </button>
-              {/* CS-2 §1: every course as a CSV, same auth as the list. */}
-              <a
-                href="/api/admin/courses?format=csv"
-                download
-                className="flex items-center gap-2 text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-white border border-line transition-colors"
-              >
-                Export CSV
-              </a>
-            </div>
-          </div>
-
-          {view === 'sheet' && (
-            <div className="flex items-center gap-2 mb-4 flex-wrap">
-              <select value={filterHealth} onChange={e => setFilterHealth(e.target.value as HealthFilter)} className={selCls}>
-                {HEALTH_FILTER_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
-              <select value={filterType} onChange={e => setFilterType(e.target.value)} className={selCls}>
-                <option value="">All types</option>
-                <option value="public">Public</option>
-                <option value="private">Private</option>
-              </select>
-              {(filterHealth !== 'all' || filterType) && (
-                <button onClick={() => { setFilterHealth('all'); setFilterType(''); }} className="text-xs text-ink-faint hover:text-ink transition-colors">Clear filters</button>
-              )}
-            </div>
-          )}
-
-          {loading && <div className="text-ink-muted py-20 text-center text-sm">Loading...</div>}
-
-          {!loading && !loadError && view === 'sheet' && (
-            <div>
-              {renderTable([
-                { key: 'getting_live', title: 'Getting live', hint: 'not on the public site yet — furthest along first', rows: gettingLive, mode: 'getting_live' },
-                { key: 'live', title: 'Live', hint: 'worst health first', rows: live, mode: 'live' },
-              ])}
-              {filtered.length === 0 && <EmptyState message={q || filterHealth !== 'all' || filterType ? 'No courses match — clear your search or filters' : 'No courses yet'} />}
-            </div>
-          )}
-
-          {!loading && !loadError && view === 'archived' && (
-            <div>
-              {renderTable([{ key: 'archived', title: 'Archived', hint: 'off the public site, data retained', rows: pagedArchived, mode: 'archived' }])}
-              {archivedSorted.length === 0 && <EmptyState message={q ? 'No archived courses match' : 'Nothing archived'} />}
-              {archivedSorted.length > PAGE_SIZE && (
-                <div className="flex items-center justify-between mt-4 text-xs text-ink-muted">
-                  <span>Page {page + 1} of {totalPages} · {archivedSorted.length} total</span>
-                  <div className="flex items-center gap-2">
-                    <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}
-                      className="px-3 py-1.5 rounded-md border border-line bg-white hover:bg-paper disabled:opacity-40 transition-colors">Previous</button>
-                    <button onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}
-                      className="px-3 py-1.5 rounded-md border border-line bg-white hover:bg-paper disabled:opacity-40 transition-colors">Next</button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Records, demoted out of the work — like the inquiries sheet. */}
-          {!loading && (
-            <div className="mt-8 pt-4 border-t border-line-soft flex items-center gap-4 text-xs">
-              <button onClick={() => goTo('sheet')} className={'transition-colors ' + (view === 'sheet' ? 'text-ink font-medium' : 'text-pine hover:text-pine-hover font-medium')}>
-                {view === 'sheet' ? `All (${courses.length})` : 'Back to the sheet'}
-              </button>
-              <button onClick={() => goTo('archived')} className={'transition-colors ' + (view === 'archived' ? 'text-ink font-medium' : 'text-ink-muted hover:text-ink')}>
-                Archived ({view === 'archived' ? courses.length : (archivedCount ?? '—')})
-              </button>
-            </div>
-          )}
+      <main className={g.main}>
+        <div className={g.head}>
+          <h1>{archived ? 'Archived courses' : 'Golf courses'}</h1>
         </div>
-      </div>
-    </div>
+
+        {error && (
+          <div className={`${g.glass} ${g.note}`} role="alert">
+            <span className={g.down}>{error}</span>
+            {error === SESSION_ENDED ? <Link href="/admin/login">Sign in</Link> : <button type="button" onClick={load} disabled={loading}>{loading ? 'Trying…' : 'Try again'}</button>}
+          </div>
+        )}
+
+        {!archived && (
+          <div className={s.fwrap} ref={menuRef}>
+            <button type="button" className={`${g.glass} ${s.fbtn}`} aria-haspopup="true" aria-expanded={menuOpen} onClick={() => setMenuOpen(o => !o)}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" /></svg>
+              {filter === 'all' ? 'Filter' : `Filter: ${FILTERS.find(f => f.v === filter)!.label}`}
+            </button>
+            {menuOpen && (
+              <div className={s.fmenu} role="group" aria-label="Show">
+                {FILTERS.map(f => (
+                  <button key={f.v} type="button" aria-pressed={filter === f.v} onClick={() => pickFilter(f.v)}
+                    title={f.v === 'risk' && d ? TERMS.risk(d.riskDays) : undefined}>
+                    <span>{f.label}</span><b>{d ? counts[f.v] : '·'}</b>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {!shown && !error && <div className={`${g.glass} ${s.skel}`} aria-busy="true" aria-label="Loading courses" />}
+
+        {shown && (
+          <div className={s.split}>
+            <section className={`${g.glass} ${s.dir}`} aria-label="Course directory">
+              {rows.length === 0 ? (
+                <p className={s.empty}>{shown.rows.length === 0 ? 'No courses.' : 'No match.'}</p>
+              ) : (
+                <table>
+                  <thead><tr>
+                    <th>Course</th><th>Status</th><th className={s.n}>Bookings this month</th>
+                    {shown.seesMoney && <th className={s.n} title={TERMS.fees}>Our fees this month</th>}
+                    <th className={`${s.n} ${s.hideS}`} title={TERMS.online}>Booked online</th>
+                  </tr></thead>
+                  <tbody>
+                    {rows.map(r => (
+                      <tr key={r.id} className={s.row} tabIndex={0} aria-selected={r.id === picked}
+                        onClick={() => open(r.id)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(r.id); } }}>
+                        <td><span className={s.cname}>{r.name}</span>{r.isTest && <span className={s.test} title={TERMS.test}>Test</span>}<span className={s.csub}>{r.town || '—'}</span></td>
+                        <td><Status st={r.status} /></td>
+                        <td className={s.n}>{r.bookings}{versus(r.bookings, r.bookingsPrior)}</td>
+                        {shown.seesMoney && <td className={s.n}>{money(r.feesCents ?? 0)}</td>}
+                        <td className={`${s.n} ${s.hideS}`}>{r.onlinePct === null ? '—' : `${r.onlinePct}%`}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </section>
+            {picked && <ProfilePanel key={picked} id={picked} riskDays={shown.riskDays} support={shown.support} />}
+          </div>
+        )}
+
+        <div className={s.foot}>
+          {d?.support && <Link href="/admin/groups">Course groups</Link>}
+          {!archived && <a href="/api/admin/courses?format=csv">Download as CSV</a>}
+          {archived ? <Link href="/admin/courses">Back to every course</Link>
+            : d?.archivedCount ? <Link href="/admin/courses?view=archived">Archived courses ({d.archivedCount})</Link> : null}
+        </div>
+      </main>
+    </>
   );
 }
 
