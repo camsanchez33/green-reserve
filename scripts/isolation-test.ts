@@ -514,6 +514,13 @@ async function main() {
     check('…nor today, the overview, Problems or Goals', b?.today === null && b?.overview === null && b?.problems === null && b?.goals === null);
   }
   {
+    // ADMIN-REDO Overview: the same rule on its own route — a viewer sees no section at all.
+    const r = await api('/api/admin/today/overview', { cookie: viewerCookie });
+    checkStatus('Viewer can open the Overview → 200', r.status, 200);
+    const o = r.body as Record<string, unknown>;
+    check('…with every section empty (null)', ['coursesLive', 'revenue', 'feesMissed', 'expenses', 'onboarding', 'net', 'chart', 'activity', 'attention'].every(k => o?.[k] === null), JSON.stringify(o));
+  }
+  {
     // BRAIN-2a: Problems name golfers and money — support+ only, reads and writes.
     // Money PR2b: the evidence pack is manager+, payouts to courses and the monthly Stripe match owner only.
     const ev = await api(`/api/admin/disputes/${data.bookingA.id}/evidence`, { cookie: viewerCookie });
@@ -597,9 +604,27 @@ async function main() {
       check('…the menu counts nothing outside Messages, and no Systems line', nb?.moneyProblems === 0 && nb?.openProblems === 0 && nb?.pendingInquiries === 0 && (nb as { systemsOk?: unknown }).systemsOk === null, JSON.stringify(nb));
       const t = (await api('/api/admin/today', { cookie: c })).body as Record<string, unknown>;
       check('…Home shows no section from another area, health included', t?.health === null && t?.today === null && t?.overview === null && t?.courses === null && t?.problems === null && t?.needs === null && t?.goals === null, JSON.stringify(t));
+      const ov = (await api('/api/admin/today/overview', { cookie: c })).body as Record<string, unknown> & { attention?: { rows: { id: string }[] } | null };
+      check('…the Overview shows no number, chart or activity outside Messages', ['coursesLive', 'revenue', 'feesMissed', 'expenses', 'onboarding', 'net', 'chart', 'activity'].every(k => ov?.[k] === null), JSON.stringify(ov));
+      check('…and Needs attention carries no failed charge, problem or course to-do', !ov?.attention || ov.attention.rows.every(r => r.id.startsWith('q-msg-')), JSON.stringify(ov?.attention));
       const sr = (await api(`/api/admin/search?q=${encodeURIComponent('Isol')}`, { cookie: c })).body as { results?: { type: string; href: string }[] };
       check('…search finds no course, inquiry, golfer, teammate or Money page', !!sr?.results && !sr.results.some(x => ['course', 'inquiry', 'golfer', 'guest', 'booking', 'group', 'employee'].includes(x.type) || x.href === '/admin/revenue'), JSON.stringify(sr).slice(0, 300));
 
+      // ADMIN-REDO review: a failed charge names money, so it reaches the Overview's Needs attention only with Money.
+      await prisma.booking.update({ where: { id: bookingA.id }, data: { checkInFailReason: 'isolation: card declined' } });
+      try {
+        await prisma.adminUser.update({ where: { id: limited.id }, data: { areas: ['courses'] } });
+        const oc1 = (await api('/api/admin/today/overview', { cookie: c })).body as Record<string, unknown> & { attention?: { rows: { id: string }[] } | null };
+        check('Courses-only manager → Overview: no revenue, chart, net, expenses or fees missed', oc1?.revenue === null && oc1?.chart === null && oc1?.net === null && oc1?.expenses === null && oc1?.feesMissed === null, JSON.stringify(oc1));
+        check('…and no failed charge in Needs attention', !!oc1?.attention && !oc1.attention.rows.some(r => r.id.startsWith('q-fc-')), JSON.stringify(oc1?.attention));
+        await prisma.adminUser.update({ where: { id: limited.id }, data: { areas: ['courses', 'money'] } });
+        const oc2 = (await api('/api/admin/today/overview', { cookie: c })).body as { attention?: { rows: { id: string }[] } | null; expenses?: unknown; net?: unknown; feesMissed?: unknown };
+        check('…a manager with Money sees fees missed, but expenses and net stay the owner\'s', oc2?.feesMissed != null && oc2?.expenses === null && oc2?.net === null, JSON.stringify(oc2));
+        check('…with Money added, the failed charge shows (the check above is not vacuous)', !!oc2?.attention && oc2.attention.rows.some(r => r.id.startsWith('q-fc-')), JSON.stringify(oc2?.attention));
+      } finally {
+        await prisma.booking.update({ where: { id: bookingA.id }, data: { checkInFailReason: '' } });
+        await prisma.adminUser.update({ where: { id: limited.id }, data: { areas: ['messages'] } });
+      }
       // Only the owner changes someone's areas — with a fresh confirmation and a reason.
       const self = await api('/api/admin/employees', { method: 'PATCH', cookie: c, body: { id: limited.id, action: 'areas', areas: ['money'], reason: 'give me money' } });
       checkStatus('An employee cannot change areas → 403', self.status, 403);

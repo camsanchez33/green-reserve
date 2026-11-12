@@ -61,9 +61,6 @@
     "input": 3,
     "lucide": 1
   },
-  "src/app/admin/page.tsx": {
-    "lucide": 1
-  },
   "src/app/admin/revenue/page.tsx": {
     "lucide": 5
   },
