@@ -26,7 +26,9 @@ import { courseStatus, RISK_DAYS } from './status';
 // paidWindow's rule (admin-today.ts): a round's fee counts when the round is paid by card.
 // The isolation test checks these per-course sums against paidWindow(…, courseId).
 const PAID = { paymentStatus: 'paid', roundPaymentIntentId: { not: '' } } as const;
-const MADE = { status: { in: COMPLETED_BOOKING_STATUSES } };
+// A part split off a group (SPLIT-1 / PARTIAL-1, splitFromId set) is not a booking made — analytics.ts's
+// rule — so it never counts as another booking, channel or "last booking".
+const MADE = { status: { in: COMPLETED_BOOKING_STATUSES }, splitFromId: null };
 
 /** Our service fees per course in a window — paidWindow's rule, grouped. */
 async function feesByCourse(ids: string[], from: Date, to: Date): Promise<Map<string, number>> {

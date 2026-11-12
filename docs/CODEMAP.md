@@ -59,7 +59,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/admin/audit` | admin | client-side | page | `src/app/admin/audit/page.tsx` | 137 |
 | `/admin/broadcasts` | admin | client-side | page | `src/app/admin/broadcasts/page.tsx` | 12 |
 | `/admin/company-documents` | admin | client-side | page | `src/app/admin/company-documents/page.tsx` | 165 |
-| `/admin/courses` | admin | client-side | page | `src/app/admin/courses/page.tsx` | 318 |
+| `/admin/courses` | admin | client-side | page | `src/app/admin/courses/page.tsx` | 328 |
 | `/admin/courses/[id]` | admin | client-side | page | `src/app/admin/courses/[id]/page.tsx` | 326 |
 | `/admin/create` | admin | client-side | page | `src/app/admin/create/page.tsx` | 759 |
 | `/admin/employees` | admin | client-side | page | `src/app/admin/employees/page.tsx` | 278 |
@@ -102,7 +102,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/admin/course-reminders` | admin | file | PATCH | `src/app/api/admin/course-reminders/route.ts` | 22 |
 | `/api/admin/course-settings` | admin | file | GET PATCH | `src/app/api/admin/course-settings/route.ts` | 91 |
 | `/api/admin/courses` | admin | file | GET | `src/app/api/admin/courses/route.ts` | 248 |
-| `/api/admin/courses/directory` | admin | file | GET | `src/app/api/admin/courses/directory/route.ts` | 153 |
+| `/api/admin/courses/directory` | admin | file | GET | `src/app/api/admin/courses/directory/route.ts` | 155 |
 | `/api/admin/create-course` | admin | file | GET POST | `src/app/api/admin/create-course/route.ts` | 206 |
 | `/api/admin/data-reset` | admin | file | GET POST | `src/app/api/admin/data-reset/route.ts` | 32 |
 | `/api/admin/disputes/[bookingId]/evidence` | admin | file | GET | `src/app/api/admin/disputes/[bookingId]/evidence/route.ts` | 29 |

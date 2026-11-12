@@ -220,6 +220,16 @@ function CoursesContent() {
       .filter(r => archived || filter === 'all' || r.status === filter || (filter === 'live' && r.status === 'risk'))
       .sort((a, b) => ORDER[a.status] - ORDER[b.status] || b.bookings - a.bookings || a.name.localeCompare(b.name));
   }, [d, filter, archived]);
+  // A filter that leaves the open course out of the list opens the first course it shows (the mockup's rule).
+  const pickFilter = (f: Filter) => {
+    setFilter(f); setMenuOpen(false);
+    const inView = (st: Status) => f === 'all' || st === f || (f === 'live' && st === 'risk');
+    const open = (d?.rows ?? []).find(r => r.id === pick);
+    if (!open || !inView(open.status)) {
+      const first = (d?.rows ?? []).filter(r => inView(r.status)).sort((a, b) => ORDER[a.status] - ORDER[b.status] || b.bookings - a.bookings || a.name.localeCompare(b.name))[0];
+      setPick(first?.id ?? null);
+    }
+  };
   // The first course opens once, when the list arrives; after that the profile follows clicks only.
   const shown = d && d.view === (archived ? 'archived' : 'all') ? d : null;
   useEffect(() => { if (shown && pick === null && rows[0]) setPick(rows[0].id); }, [shown, pick, rows]);
@@ -254,7 +264,7 @@ function CoursesContent() {
             {menuOpen && (
               <div className={s.fmenu} role="group" aria-label="Show">
                 {FILTERS.map(f => (
-                  <button key={f.v} type="button" aria-pressed={filter === f.v} onClick={() => { setFilter(f.v); setMenuOpen(false); }}
+                  <button key={f.v} type="button" aria-pressed={filter === f.v} onClick={() => pickFilter(f.v)}
                     title={f.v === 'risk' && d ? TERMS.risk(d.riskDays) : undefined}>
                     <span>{f.label}</span><b>{d ? counts[f.v] : '·'}</b>
                   </button>

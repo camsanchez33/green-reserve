@@ -526,6 +526,24 @@ async function main() {
     checkStatus('Viewer can open a course on Golf courses → 200', r.status, 200);
     const p = r.body as { money?: unknown; contact?: unknown; notes?: unknown; agreement?: { signer?: unknown; signerEmail?: unknown } | null };
     check('…with no money, contact details, notes or agreement signer', p?.money === null && p?.contact === null && p?.notes === null && (!p?.agreement || (p.agreement.signer === null && p.agreement.signerEmail === null)), JSON.stringify(p).slice(0, 300));
+    // "Booked online": a part split off a group is not another booking (analytics.ts's rule).
+    type DirRow = { id: string; bookings: number; onlinePct: number | null };
+    const rowA = async () => ((await api('/api/admin/courses/directory', { cookie: viewerCookie })).body as { rows?: DirRow[] }).rows?.find(x => x.id === data.courseA.id);
+    const base = { teeTimeId: data.teeTimeA.id, courseId: data.courseA.id, golferName: 'Isol Split', golferEmail: `${TS}-split@test.local`, players: 1, greenFeeTotal: 5000, cartFeeTotal: 0, accessFeeTotal: 0, totalAmount: 5000, status: 'confirmed', paymentStatus: 'manual' };
+    const before = await rowA();
+    const split = await prisma.booking.create({ data: { ...base, source: 'walk_in', splitFromId: data.bookingA.id, checkInToken: randomUUID() } });
+    let walkIn: { id: string } | null = null;
+    try {
+      const r1 = await rowA();
+      check('Golf courses: a split-off part is not another booking (Bookings 1, Booked online 100%)', before?.bookings === 1 && before?.onlinePct === 100 && r1?.bookings === 1 && r1?.onlinePct === 100, JSON.stringify({ before, r1 }));
+      walkIn = await prisma.booking.create({ data: { ...base, source: 'walk_in', checkInToken: randomUUID() } });
+      const r2 = await rowA();
+      check('…a real walk-in counts: Bookings 2, Booked online 50%', r2?.bookings === 2 && r2?.onlinePct === 50, JSON.stringify(r2));
+      const all = ((await api('/api/admin/courses/directory', { cookie: viewerCookie })).body as { rows?: DirRow[] }).rows ?? [];
+      check('…and a course with no bookings this month shows no share (null, not 0%)', all.every(x => x.bookings > 0 || x.onlinePct === null), JSON.stringify(all.map(x => [x.bookings, x.onlinePct])));
+    } finally {
+      await prisma.booking.deleteMany({ where: { id: { in: [split.id, ...(walkIn ? [walkIn.id] : [])] } } });
+    }
   }
   {
     // BRAIN-2a: Problems name golfers and money — support+ only, reads and writes.
