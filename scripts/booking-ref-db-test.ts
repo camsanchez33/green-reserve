@@ -77,28 +77,29 @@ async function main() {
   const last = await prisma.booking.findMany({ where: { courseId: a.course.id, golferName: { in: ['Par 102', 'Par 103'] } }, select: { ref: true } });
   check('createMany numbers each row', last.map(l => l.ref).sort().join() === '28,29', last);
 
-  // The real booking claim (Serializable) at the same moment, each on its own empty tee time —
-  // at one course and across two. Numbering must never make a claim fail (final review, PR B).
+  // Numbering must never make a Serializable booking fail (final review, PR B). Pinned
+  // deterministically, not by a rate (a rate depends on autovacuum and the plan): T2 takes its
+  // snapshot, T1 books at the same course (or another) and commits, then T2 books a DIFFERENT
+  // tee time. With the old counter-row trigger T2 failed with P2034 every time.
   const date = new Date(Date.now() + 3 * 86_400_000).toISOString().slice(0, 10);
-  const freshTimes = async (courseId: string, n: number) => Promise.all(Array.from({ length: n }, (_, i) =>
-    prisma.teeTime.create({ data: { courseId, date, time: `${String(6 + Math.floor(i / 6)).padStart(2, '0')}:${String((i % 6) * 10).padStart(2, '0')}`, holes: 18, greenFeeCents: 0, cartFeeCents: 0, playersAvailable: 4, playersBooked: 0, status: 'available' } })));
-  for (const [label, plan] of [['8 at once, one course', [[a, 8]]], ['4 each at two courses at once', [[a, 4], [b, 4]]]] as const) {
-    let ok = 0, failed = 0; const errs: string[] = [];
-    for (let round = 0; round < 5; round++) {
-      const jobs: Promise<unknown>[] = [];
-      for (const [who, n] of plan) {
-        const times = await freshTimes(who.course.id, n);
-        for (const [i, t] of times.entries()) jobs.push(claimTeeTime(row(who.course.id, t.id, 1000 + round * 100 + i) as never, { type: 'system' } as never).then(() => { ok++; }, e => { failed++; errs.push(e?.code ?? e?.message ?? String(e)); }));
-      }
-      await Promise.all(jobs);
-      await prisma.booking.deleteMany({ where: { golferName: { startsWith: 'Par 1' }, courseId: { in: [a.course.id, b.course.id] }, teeTime: { date } } });
-      await prisma.teeTime.deleteMany({ where: { courseId: { in: [a.course.id, b.course.id] }, date } });
-    }
-    // The claim is Serializable, so a rare CONFLICT happens with or without numbering (measured: ~1–2%
-    // with the trigger off too). The counter-row design this replaced lost 35 of 40 here; allow a
-    // little of the existing noise, never that.
-    check(`claims don't fail because of numbering: ${label} (5 rounds, ≥ 37 of 40 succeed)`, ok >= 37 && ok + failed === 40, { ok, failed, errs: errs.slice(0, 5) });
-  }
+  const slot = (courseId: string, time: string) => prisma.teeTime.create({ data: { courseId, date, time, holes: 18, greenFeeCents: 0, cartFeeCents: 0, playersAvailable: 4, playersBooked: 0, status: 'available' }, select: { id: true } });
+  const interleave = async (first: { c: string; tt: string }, second: { c: string; tt: string }) => {
+    let release!: () => void; const gate = new Promise<void>(r => { release = r; });
+    let ready!: () => void; const snap = new Promise<void>(r => { ready = r; });
+    const t2 = prisma.$transaction(async tx => {
+      await tx.$queryRaw`SELECT 1`; ready(); await gate;
+      return tx.booking.create({ data: row(second.c, second.tt, 802), select: { ref: true } });
+    }, { isolationLevel: 'Serializable', timeout: 20_000 }).then(v => ({ ok: true, ref: v.ref, code: null as string | null }), (e: { code?: string }) => ({ ok: false, ref: null, code: e?.code ?? 'error' }));
+    await snap;
+    const t1 = await prisma.$transaction(tx => tx.booking.create({ data: row(first.c, first.tt, 801), select: { ref: true } }), { isolationLevel: 'Serializable' });
+    release();
+    return { t1: t1.ref, t2: await t2 };
+  };
+  const [a1, a2, b1] = await Promise.all([slot(a.course.id, '08:00'), slot(a.course.id, '08:10'), slot(b.course.id, '08:00')]);
+  const same = await interleave({ c: a.course.id, tt: a1.id }, { c: a.course.id, tt: a2.id });
+  check('a Serializable booking is not failed by another at the same course committing first', same.t2.ok && same.t1 != null && same.t2.ref != null && same.t2.ref !== same.t1, same);
+  const across = await interleave({ c: a.course.id, tt: a1.id }, { c: b.course.id, tt: b1.id });
+  check('…nor by one at another course', across.t2.ok && across.t2.ref != null, across);
 
   // A test-course reset starts its numbers at 1 again.
   await prisma.$queryRaw`SELECT setval("bookref_seq"(${b.course.id}), 1, false)`;
