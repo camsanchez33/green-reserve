@@ -141,7 +141,7 @@ function RunningChart({ current, prior, from, days, done, vs, unit, card }: { cu
   return (
     <>
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className={s.line} role="img"
-        aria-label={`Revenue ${usd(total)} so far, ${usd(Math.abs(ahead))} ${ahead >= 0 ? 'ahead of' : 'behind'} ${vs}`}>
+        aria-label={`Revenue ${usd(total)} ${done ? 'in the period' : 'so far'}, ${usd(Math.abs(ahead))} ${ahead >= 0 ? 'ahead of' : 'behind'} ${vs}`}>
         {[0.25, 0.5, 0.75].map(f => <line key={f} x1="0" x2={W} y1={H * f} y2={H * f} className={s.gl} />)}
         {Q.length > 1 && <path d={path(Q)} className={s.lp} />}
         {T.length > 1 && <path d={`${path(T)} L${x(T.length - 1)} ${H - pad} L${x(0)} ${H - pad} Z`} className={s.la} />}

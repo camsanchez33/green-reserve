@@ -41,7 +41,7 @@ check("Stripe didn't answer → warn (unknown, not unpaid)", payoutState({ error
 // Oct 2 $70 taken after 9am, Nov 1 $65, Nov 2 nothing yet → the card says up $5, never "$65 behind").
 const card = { cents: 6500, priorCents: 6000 };
 const nov2 = chartSummary({ current: [65, 0], prior: [60, 70, 50] }, false, card);
-check('on Build\'s route the sentence is the card\'s own difference', nov2.total === 65 && nov2.ahead === 5, nov2);
+check('on Build\'s route the sentence is the card\'s own difference', nov2.total === 65 && nov2.ahead === 5, JSON.stringify(nov2));
 check('on the older route it is the series at the same day', chartSummary({ current: [65, 0], prior: [60, 70, 50] }, false).ahead === -65);
 check('…and the whole prior period once the period is over', chartSummary({ current: [10, 10], prior: [5, 5, 5] }, true).ahead === 5);
 check('the last day of a running month is not "over" on Build\'s route', !periodDone('month', true, '2026-11-30', '2026-11-30'));
