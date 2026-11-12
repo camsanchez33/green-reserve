@@ -287,13 +287,50 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
 @media (max-width:1100px){.tsplit{grid-template-columns:minmax(0,1fr)}.tcard{position:static}}
 @media (max-width:760px){.trow{grid-template-columns:52px repeat(4,minmax(0,1fr));padding:3px 10px}.trow .pr{display:none}.seg2{margin-left:0}.tgrp{padding:0 6px;font-size:12px}}
 </style>
+<style>
+/* Cam 2026-11-12: "don't change anything — this is what it looks like now". Every element of the live tee sheet,
+   in the same places, so each can be commented on. Only the skin is the approved charcoal glass. */
+.lsearch{margin:0 4px;font-size:13px}.lsearch kbd{margin-left:auto;font:inherit;font-size:11px;border:1px solid var(--line);border-radius:5px;padding:0 5px}
+.seg3{display:grid;grid-template-columns:1fr 1fr;gap:2px;border:1px solid var(--line);border-radius:10px;padding:3px;margin-top:8px}
+.seg3 button{font:inherit;font-size:13px;border:0;background:transparent;color:var(--muted);padding:7px;border-radius:8px}
+.seg3 button.on{background:var(--active);color:var(--ink);font-weight:600}
+.ttl{font-family:var(--serif);font-weight:600;font-size:34px;line-height:1;margin:4px 0 0}
+.kstrip{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));padding:14px 20px;gap:12px}
+.kstrip span{display:block;font-size:13px;color:var(--ink-soft)}
+.kstrip b{display:block;font-size:22px;font-weight:600;font-variant-numeric:tabular-nums;margin:2px 0}
+.kstrip b small{font-size:14px;font-weight:400;color:var(--muted)}
+.kstrip em{font-style:normal;font-size:12.5px;color:var(--muted)} .kstrip i{font-style:normal}
+.sheetc{padding:0;overflow:hidden}
+.tool{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.ib{font:inherit;width:34px;height:34px;display:grid;place-items:center;border:0;background:transparent;color:var(--ink-soft);border-radius:8px;cursor:pointer}
+.ib:hover{background:var(--hover)}
+.dt{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-soft)} .dt b{color:var(--ink)}
+.views{margin-left:auto;display:flex;gap:14px;font-size:14px}.views b{font-weight:500;color:var(--ink-soft);padding-bottom:4px;cursor:pointer}.views b.on{color:var(--ink);font-weight:600;box-shadow:inset 0 -2px 0 var(--ok)}
+.fsearch{min-width:240px;font-size:13.5px}
+.addt{font:inherit;font-size:14px;font-weight:600;border:0;background:transparent;color:var(--ok);padding:8px 10px;cursor:pointer}
+.alerts{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--line);font-size:13.5px}
+.alerts .dot{display:inline-block;margin-right:6px;vertical-align:2px} .alerts em{font-style:normal;color:var(--muted)}
+.alerts .lg{margin-left:auto;display:flex;align-items:center;gap:8px;color:var(--ink-soft)}
+.alerts .lg i{display:inline-block;width:16px;height:16px;border-radius:4px;margin-left:6px}
+.lp{background:rgba(123,217,164,.25)}.lo{background:rgba(242,196,107,.25)}.lb{background:rgba(255,142,124,.28)}
+.sepv{width:1px;height:16px;background:var(--line);margin:0 6px}
+.tees{display:grid;grid-template-columns:1fr 1fr;padding:14px 16px 4px 120px;font-size:14px;color:var(--muted)} .tees b{color:var(--ink)}
+.past{display:flex;justify-content:space-between;margin:6px 16px;padding:8px 4px;border-bottom:1px solid var(--line);font-size:14px;font-weight:600}
+.trow2{display:grid;grid-template-columns:56px 48px repeat(4,minmax(0,1fr)) 18px repeat(4,minmax(0,1fr));gap:4px;align-items:center;padding:3px 16px}
+.trow2 .tm{font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums}.trow2 .pr{font-size:12px;color:var(--muted)}
+.trow2 .gap{width:18px}
+.hr2{font-size:11.5px;color:var(--muted);font-weight:600;padding:10px 16px 4px}
+.ask{position:fixed;display:none}
+@media (max-width:1100px){.kstrip{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:760px){.kstrip{grid-template-columns:repeat(2,minmax(0,1fr))}.trow2{grid-template-columns:44px repeat(4,minmax(0,1fr))}.trow2 .pr,.trow2 .t10,.trow2 .gap{display:none}.tees{padding-left:16px;grid-template-columns:1fr}.tees div:last-child{display:none}.fsearch{min-width:0;flex:1}.views{margin-left:0}}
+</style>
 <div class="wrap">
   <div class="picker">
-    <h1>Course dashboard · Tee sheet mockup</h1>
+    <h1>Course dashboard · Tee sheet (as it is now)</h1>
     <div class="pick"><span>Look</span><div class="seg" role="group" aria-label="Look">
       <button type="button" data-m="dark" aria-pressed="true">Charcoal</button><button type="button" data-m="light" aria-pressed="false">Light</button></div></div>
   </div>
-  <p class="note">Example tee sheet, not a real course. The same charcoal glass and colour meanings as Home: green paid, amber owes, red a problem. Tap a time to open its card beside the sheet.</p>
+  <p class="note">The live tee sheet exactly as it is today: every number, button, line and label in the same place, with example rows from mid-morning so the rows show. Only the skin is the approved charcoal glass. Comment on anything you want changed.</p>
 
   <div class="app" id="app" data-mode="dark">
     <svg class="waves" viewBox="0 0 1400 1100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -310,29 +347,52 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
       </g>
     </svg>
     <aside class="rail">
-      <div class="club"><span class="crest">RC</span><div><b>Ridgewood Country Club</b><small>Course dashboard</small></div></div>
+      <div class="club"><span class="crest">PH</span><div><b>Pine Hollow Golf Club</b><small>Public course</small></div></div>
+      <div class="search lsearch" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Find a golfer or member</span><kbd>/</kbd></div>
       <div class="grp"><b>Today</b>
-        <div class="nav">Home</div><div class="nav on"><span>Tee sheet</span></div><div class="nav">Pro shop</div><div class="nav">Messages <i>1</i></div></div>
+        <div class="nav">Home</div><div class="nav on"><span>Tee sheet</span></div><div class="nav">Pro shop</div><div class="nav">Messages</div></div>
       <div class="grp"><b>Business</b>
         <div class="nav">Money</div><div class="nav">Members</div><div class="nav">Events</div><div class="nav">Schedule</div><div class="nav">Analytics</div></div>
-      <div class="grp"><b>Course</b><div class="nav">Settings</div></div>
+      <div class="grp"><div class="nav">Settings</div></div>
       <div class="foot"><span>Course alert</span><span>Your booking page ↗</span><span>Sign out</span>
+        <div class="seg3"><button type="button" data-m="light">Light</button><button type="button" data-m="dark" class="on">Dark</button></div>
         <div class="pw">Powered by <b class="grw">GreenReserve</b></div></div>
     </aside>
 
-
     <main class="main">
-      <div class="tbar">
-        <h2>Thursday, November 12</h2>
-        <div class="step"><button type="button" aria-label="Previous day">‹</button><button type="button">Today</button><button type="button" aria-label="Next day">›</button></div>
-        <div class="seg2" role="group" aria-label="View"><button type="button" aria-pressed="true">Grid</button><button type="button" aria-pressed="false">List</button><button type="button" aria-pressed="false">Calendar</button></div>
-        <div class="search" role="search" style="min-width:200px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></div>
+      <h2 class="ttl">Wednesday, November 11</h2>
+
+      <div class="card kstrip">
+        <div><span>Players</span><b>32 <small>of 300</small></b><em>spots booked</em></div>
+        <div><span>On the course</span><b>3 <small>groups</small></b><em>10 players</em></div>
+        <div><span>Checked in</span><b>14 <small>of 32</small></b><em>players</em></div>
+        <div><span>Paid</span><b>$228</b><em>1 group</em></div>
+        <div><span>Not paid yet</span><b class="wn">$208</b><em>1 group · <i class="wn">1 past</i></em></div>
       </div>
-      <p class="tline"><b>92</b> booked · <b>31</b> checked in · <b>124</b> open</p>
-      <div class="tsplit">
-        <section class="card sheet" aria-label="Tee sheet" id="sheet"></section>
-        <section class="card tcard" aria-label="Tee time" id="tcard"></section>
-      </div>
+
+      <section class="card sheetc">
+        <div class="tool">
+          <button class="ib" type="button" aria-label="Previous day">‹</button>
+          <span class="dt"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><b>Wed, Nov 11</b></span>
+          <button class="ib" type="button" aria-label="Next day">›</button>
+          <span class="views"><b class="on">Grid</b><b>List</b><b>Calendar</b></span>
+          <span class="search fsearch"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Find golfer</span>
+          <button class="ib" type="button" aria-label="Refresh">↻</button>
+          <button class="ib" type="button" aria-label="Weather"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M7 18h10a4 4 0 0 0 0-8 6 6 0 0 0-11.5 1.5A3.5 3.5 0 0 0 7 18z"/></svg></button>
+          <button class="ib" type="button" aria-label="Print"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M7 9V3h10v6M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M7 14h10v7H7z"/></svg></button>
+          <button class="ib" type="button" aria-label="Messages"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></button>
+          <button class="addt" type="button">+ Time</button>
+        </div>
+        <div class="alerts">
+          <span><i class="dot wn"></i><b class="wn">1 not checked in</b> · 10:30 AM William Edwards <em>13h</em></span>
+          <span><i class="dot bd"></i><b class="dn">Cam Test: 5 checklist items overdue</b></span>
+          <span class="lg"><i class="lp"></i>Paid <i class="lo"></i>Owes <i class="lb"></i>Declined or no-show <span class="sepv"></span><b>In</b> checked in <b>M</b> member <b>R</b> resident</span>
+        </div>
+        <div class="tees"><div><b>1st tee</b> · 18 holes</div><div><b>10th tee</b> · Back 9 start</div></div>
+        <div class="past">Past tee times · 75<span>▾</span></div>
+        <div id="rows2"></div>
+      </section>
+      <button class="ask" type="button"><span>›</span></button>
     </main>
   </div>
 </div>
@@ -340,55 +400,16 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
 <script>
 (function(){
   const $=id=>document.getElementById(id);
-  document.querySelectorAll('[data-m]').forEach(b=>b.addEventListener('click',()=>{$("app").dataset.mode=b.dataset.m;document.querySelectorAll('[data-m]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)))}));
-  // [time, price, past?, groups:[name, seats, state paid|owes|bad, tags, detail]]
-  const T=[
-    ["9:00",65,1,[["Ortega",4,"paid",["In"],"Paid $260 by card · checked in"]]],
-    ["9:10",65,1,[["Park",1,"paid",["In"],"Paid $45 cash at the register"],["Lee",2,"paid",["In","M"],"Paid $96 · member rate"]]],
-    ["9:20",65,1,[["Nguyen",3,"paid",["In"],"Paid $195 by card"]]],
-    ["9:30",65,1,[["Klein",2,"owes",[],"$130 owed · past their time, not here yet"]]],
-    ["9:40",65,1,[["Torres",4,"bad",[],"$266 owed · card declined at check-in"]]],
-    "now",
-    ["9:50",65,0,[["Becker",4,"owes",[],"$354 · card on file, charged at check-in"]]],
-    ["10:00",65,0,[["Ward",2,"owes",["R"],"$113 · pays at check-in · 1 resident"]]],
-    ["10:10",65,0,[["Chen",3,"owes",[],"$195 · card on file"]]],
-    ["10:20",65,0,[]],
-    ["10:30",65,0,[["Davis",2,"owes",["M"],"$96 · member rate · card on file"]]],
-    ["10:40",65,0,[]],
-    ["10:50",55,0,[["Holt",1,"owes",[],"$55 · booked by phone, pays in store"]]],
-    ["11:00",55,0,[]],
-  ];
-  let pick="9:40";
-  function sheet(){
-    let h='<div class="hr">9 AM</div>';
-    T.forEach(r=>{
-      if(r==="now"){h+='<div class="now"></div>';return;}
-      if(r[0]==="10:00")h+='<div class="hr">10 AM</div>'; if(r[0]==="11:00")h+='<div class="hr">11 AM</div>';
-      let cells="",used=0;
-      r[3].forEach(g=>{cells+='<div class="tgrp '+g[2]+'" style="grid-column:span '+g[1]+'"><span>'+g[0]+' '+g[1]+'</span>'+g[3].map(t=>'<i class="ttag'+(t==="In"?" in":"")+'">'+t+'</i>').join("")+'</div>';used+=g[1];});
-      for(let i=used;i<4;i++)cells+='<div class="seat"></div>';
-      h+='<div class="trow'+(r[2]?' past':'')+(r[0]===pick?' sel':'')+'" data-t="'+r[0]+'" tabindex="0"><span class="tm'+(r[0]==="9:50"?" next":"")+'">'+r[0]+'</span><span class="pr">$'+r[1]+'</span>'+cells+'</div>';
-    });
-    h+='<div class="legend"><span><i style="background:var(--ok)"></i>Paid</span><span><i style="background:var(--warn)"></i>Owes</span><span><i style="background:var(--bad)"></i>Declined or no-show</span><span>In checked in · M member · R resident</span></div>';
-    $("sheet").innerHTML=h;
-    $("sheet").querySelectorAll(".trow").forEach(el=>{const go=()=>{pick=el.dataset.t;render();};el.addEventListener("click",go);el.addEventListener("keydown",e=>{if(e.key==="Enter")go();});});
-  }
-  const ST={paid:["Paid","upc"],owes:["Owes","wn"],bad:["Card declined","dn"]};
-  function card(){
-    const r=T.find(x=>x!=="now"&&x[0]===pick);
-    const open=4-r[3].reduce((n,g)=>n+g[1],0);
-    let h='<div><h3>'+r[0]+(+r[0].split(":")[0]<12?" AM":" PM")+'</h3><p class="sub">$'+r[1]+' a player · '+open+' open of 4</p></div>';
-    r[3].forEach(g=>{
-      const s=ST[g[2]];
-      const acts=g[3].includes("In")?'<button type="button">Move</button><button type="button">Receipt</button>':
-        g[2]==="bad"?'<button type="button" class="pri">Text pay link</button><button type="button">Take cash</button><button type="button">Card reader</button><button type="button">Still coming</button>':
-        '<button type="button" class="pri">Check in</button><button type="button">Take cash</button><button type="button">Text pay link</button><button type="button">Pay separately</button><button type="button">Move</button><button type="button">No-show</button><button type="button" class="dng">Cancel</button>';
-      h+='<div class="gc"><div class="gn"><b>'+g[0]+' · '+g[1]+(g[1]===1?' player':' players')+'</b><span class="st '+s[1]+'">'+(g[3].includes("In")?"Checked in":s[0])+'</span></div><div class="meta">'+g[4]+'</div><div class="acts">'+acts+'</div></div>';
-    });
-    h+='<div class="foot2 acts">'+(open?'<button type="button">Add walk-in</button><button type="button">Phone booking</button>':'')+'<button type="button">Block</button></div>';
-    $("tcard").innerHTML=h;
-  }
-  function render(){sheet();card();}
-  render();
+  document.querySelectorAll('[data-m]').forEach(b=>b.addEventListener('click',()=>{$("app").dataset.mode=b.dataset.m;document.querySelectorAll('[data-m]').forEach(x=>x.classList.toggle('on',x===b))}));
+  // Two tees side by side (TEES-1): [time, price, 1st tee groups, 10th tee groups]; group = [name, seats, state, tags]
+  const R=[["10:30",65,[["Edwards",2,"owes",[]]],[["Lopez",4,"paid",["In"]]]],
+    ["10:40",65,[["Hart",3,"paid",["In"]]],[]],
+    ["10:50",65,[],[["Kim",2,"owes",["M"]]]],
+    ["11:00",55,[["Reyes",4,"owes",[]]],[["Shaw",1,"bad",[]]]],
+    ["11:10",55,[],[]],["11:20",55,[["Bell",2,"owes",["R"]]],[]],["11:30",55,[],[]]];
+  const cells=gs=>{let h="",u=0;gs.forEach(g=>{h+='<div class="tgrp '+g[2]+'" style="grid-column:span '+g[1]+'"><span>'+g[0]+' '+g[1]+'</span>'+g[3].map(t=>'<i class="ttag'+(t==="In"?" in":"")+'">'+t+'</i>').join("")+'</div>';u+=g[1];});for(let i=u;i<4;i++)h+='<div class="seat"></div>';return h;};
+  let h='<div class="hr2">10 AM</div>';
+  R.forEach(r=>{if(r[0]==="11:00")h+='<div class="hr2">11 AM</div>';h+='<div class="trow2"><span class="tm">'+r[0]+'</span><span class="pr">$'+r[1]+'</span>'+cells(r[2])+'<span class="gap"></span>'+cells(r[3]).replace(/class="(tgrp|seat)/g,'class="t10 $1')+'</div>';});
+  $("rows2").innerHTML=h;
 })();
 </script>
