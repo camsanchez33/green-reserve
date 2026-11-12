@@ -10362,7 +10362,7 @@
     },
     {
       "path": "src/app/dashboard/support/page.tsx",
-      "lines": 203,
+      "lines": 209,
       "purpose": "SUPPORT-1 (Cam 2026-11-12, ADMIN_REDO_SPEC \"Course dashboard Support:",
       "brain": [],
       "exports": [
@@ -11488,7 +11488,7 @@
     },
     {
       "path": "src/components/OperatorSidebar.tsx",
-      "lines": 365,
+      "lines": 362,
       "purpose": "",
       "brain": [],
       "exports": [

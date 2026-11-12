@@ -342,7 +342,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/dashboard/shop` | operator | middleware | page | `src/app/dashboard/shop/page.tsx` | 898 |
 | `/dashboard/sign` | operator | middleware | page | `src/app/dashboard/sign/page.tsx` | 26 |
 | `/dashboard/starter` | operator | middleware | page | `src/app/dashboard/starter/page.tsx` | 91 |
-| `/dashboard/support` | operator | middleware | page | `src/app/dashboard/support/page.tsx` | 203 |
+| `/dashboard/support` | operator | middleware | page | `src/app/dashboard/support/page.tsx` | 209 |
 | `/dashboard/tournaments` | operator | middleware | page | `src/app/dashboard/tournaments/page.tsx` | 5 |
 | `/dashboard/verify` | operator | token | page | `src/app/dashboard/verify/page.tsx` | 148 |
 | `/demo` | public | public | GET | `src/app/demo/route.ts` | 18 |
@@ -642,7 +642,7 @@ Sorted the same way.
 | `src/components/admin/AdminSidebar.tsx` | 22 | 199 |  | `AdminNavKey`, `default (AdminSidebar)` |
 | `src/components/dashboard/LoadError.tsx` | 22 | 16 | SD-10. | `LoadError` |
 | `src/components/dashboard/Toast.tsx` | 14 | 70 | SD-2. | `toast`, `Toaster`, `ToastKind` |
-| `src/components/OperatorSidebar.tsx` | 12 | 365 |  | `default (OperatorSidebar)`, `OperatorNavKey` |
+| `src/components/OperatorSidebar.tsx` | 12 | 362 |  | `default (OperatorSidebar)`, `OperatorNavKey` |
 | `src/components/ui/Eyebrow.tsx` | 12 | 19 |  | `Eyebrow`, `EYEBROW` |
 | `src/components/CourseHeaderBar.tsx` | 10 | 46 | White-label rule: | `CourseHeaderBar` |
 | `src/components/dashboard/SlidingTabs.tsx` | 9 | 40 | POS-7 (Cam 2026-11-09, "use it on other tab bars"): | `SlidingTabs` |

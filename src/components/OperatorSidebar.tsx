@@ -245,9 +245,6 @@ export default function OperatorSidebar({ active, onAlertClick }: {
             {isActive && <span aria-hidden="true" className="absolute top-0 inset-x-[30%] h-[2px] rounded-full" style={{ backgroundColor: brandColor }} />}
             {item.icon}
             <span className="leading-none">{item.label}</span>
-            {item.key === 'messages' && unreadMessages > 0 && (
-              <span className="absolute top-1.5 right-[calc(50%-18px)] w-2 h-2 rounded-full bg-ok" aria-label={`${unreadMessages} unread`} />
-            )}
           </button>
         );
       })}
