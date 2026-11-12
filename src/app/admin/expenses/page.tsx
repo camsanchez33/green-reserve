@@ -294,12 +294,11 @@ export default function ExpensesPage() {
             </dl>
           </div>
         )}
-        {mode === 'view' && history?.id === e.id && !history.gone && (
+        {mode === 'view' && history?.id === e.id && !history.gone && !(history.rows && history.rows.length === 0) && (
           <div className={c.psec}>
             <h3>History</h3>
             {history.err ? <p className={s.err} role="alert">{history.err} <button type="button" className={c.plink} onClick={() => loadHistory(e.id)}>Try again</button></p>
               : !history.rows ? <p className={c.muted} aria-busy="true">Loading…</p>
-              : history.rows.length === 0 ? <p className={c.muted}>—</p>
               : <div className={s.log}>{history.rows.map((h, i) => <div key={i}><small>{longDay(dayKey(new Date(h.at)))}</small><span>{historyLine(h, catLabel, CADENCE_WORDS, usd, longDay)}</span></div>)}</div>}
           </div>
         )}
