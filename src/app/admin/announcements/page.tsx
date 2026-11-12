@@ -1,260 +1,241 @@
 'use client';
-// AW-8a (Cam 2026-10-21: "the announcements thing should probably be its own
-// thing"): Announcements left Messages for a page of its own. An announcement
-// is one row shown on every live course's dashboard (and, if chosen, emailed
-// to their owners) — never a message in a thread. The composer is owner-only
-// (the API requires the owner session and says so); what was sent is readable
-// by support+. Moved from admin/messages unchanged apart from headings.
-import { useState, useEffect, useCallback } from 'react';
-import { RefreshCw } from 'lucide-react';
+// AW-8a (Cam 2026-10-21): an announcement is one row shown on every live course's dashboard (and, if chosen, emailed to
+// their owners) — never a message in a thread. ADMIN-REDO (Cam approved the mockup 2026-11-12, ADMIN_REDO_SPEC.md "Admin
+// Announcements"): ONE card — a wordless search, a white refresh and "+", one line per announcement; tap one for its full
+// page; "+" opens the composer → review → the result line on the list. Same features as before: send now to every live
+// course, optional email, "Send test to me", no drafts, scheduling or recall. Sending stays owner-only (the route
+// requires the owner session and says so; the "+" only shows for the owner); the history is readable by support+.
+// The broadcasts route and how broadcasts are stored are Build's and unchanged. Which page is open is in the URL
+// (?id=… / ?new=1), so Back works.
+import { Suspense, useCallback, useEffect, useState, type ReactNode } from 'react';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { useAdminSession } from '@/lib/admin-session-context';
 import { adminFetch, type AdminFetchFailure } from '@/lib/admin-fetch';
-import { ErrorBanner } from '@/components/ui/ErrorState';
-import { StatusDot } from '@/components/ui/StatusDot';
-import { Card } from '@/components/ui/Card';
-import { INPUT } from '@/components/ui/field';
-import { formatDateTime as fmtDate } from '@/lib/format';
+import { formatDateTime, formatDate } from '@/lib/format';
+import g from '../admin-glass.module.css';
+import r from '../revenue/revenue.module.css';
+import s from './announcements.module.css';
+import {
+  type Broadcast, type SendOutcome, type Reach,
+  pl, firstLine, matches, isBroadcasts, outcomeLine, outcomeBad, reachLine,
+} from './logic';
 
-interface Broadcast {
-  id: string; title: string; body: string; emailSent: boolean;
-  sentByName: string; createdAt: string; dismissalCount: number;
-}
-interface SendOutcome {
-  courses: number;
-  emailRequested: boolean; emailRecipients: number; emailsSent: number; emailFailures: string[];
-}
+type Failure = { msg: string; kind: AdminFetchFailure };
+type Draft = { title: string; body: string; sendEmail: boolean };
+const EMPTY: Draft = { title: '', body: '', sendEmail: false };
 
-const iCls = `${INPUT} w-full`;
+const ICON = { width: 17, height: 17, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, 'aria-hidden': true };
 
-export default function AnnouncementsPage() {
-  const isOwner = useAdminSession().role === 'owner';
+function Problem({ got, retry, busy }: { got: Failure; retry: () => void; busy: boolean }) {
   return (
-    <div className="min-h-screen bg-paper flex">
-      <AdminSidebar active="announcements" />
-      <div className="admin-content flex-1 flex flex-col">
-        <AnnouncementsPane isOwner={isOwner} />
-      </div>
+    <div className={s.problem} role="alert">
+      <span className={g.down}>{got.msg}</span>
+      {got.kind === 'unauthorized' ? <Link href="/admin/login" className={s.pill}>Sign in</Link>
+        : <button type="button" className={s.pill} onClick={retry} disabled={busy}>{busy ? 'Trying…' : 'Try again'}</button>}
     </div>
   );
 }
 
-function AnnouncementsPane({ isOwner }: { isOwner: boolean }) {
-  const [loadError, setLoadError] = useState<{ msg: string; kind: AdminFetchFailure } | null>(null);
-  const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [title, setTitle] = useState('');
-  const [body, setBody] = useState('');
-  const [sendEmail, setSendEmail] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [reviewing, setReviewing] = useState(false);
-  // From the SAME filter the send uses — never a client-side guess.
-  const [reach, setReach] = useState<{ courses: number; operators: number } | null>(null);
-  const [outcome, setOutcome] = useState<SendOutcome | null>(null);
-  const [sendErr, setSendErr] = useState<{ msg: string; kind: AdminFetchFailure } | null>(null);
-  // MP-7b: send-test-to-self — emails only the signed-in admin, records nothing.
-  const [testing, setTesting] = useState(false);
-  const [testNote, setTestNote] = useState('');
+function AnnouncementsContent() {
+  const params = useSearchParams();
+  const router = useRouter();
+  const isOwner = useAdminSession().role === 'owner';
+  const openId = params.get('id');
+  const composing = params.get('new') === '1' && isOwner;
 
-  async function sendTest() {
-    if (!title.trim() || !body.trim() || testing) return;
-    setTesting(true); setTestNote(''); setSendErr(null);
-    try {
-      const res = await adminFetch<{ sentTo: string }>('/api/admin/broadcasts', {
-        method: 'POST',
-        body: JSON.stringify({ title: title.trim(), body: body.trim(), test: true }),
-        subject: 'the test email',
-        action: 'send',
-      });
-      if (!res.ok) { setSendErr({ msg: res.message, kind: res.kind }); return; }
-      setTestNote(`Test sent to ${res.data.sentTo} — nobody else got it.`);
-    } finally {
-      setTesting(false);
-    }
-  }
+  const [list, setList] = useState<Broadcast[] | null>(null);
+  const [loadErr, setLoadErr] = useState<Failure | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [q, setQ] = useState('');
+  // From the SAME filter the send uses — never a client-side guess.
+  const [reach, setReach] = useState<Reach | null>(null);
+  const [outcome, setOutcome] = useState<SendOutcome | null>(null);
+  const [draft, setDraft] = useState<Draft>(EMPTY);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await adminFetch<Broadcast[]>('/api/admin/broadcasts', { subject: 'announcements' });
-    if (!res.ok) { setBroadcasts([]); setLoadError({ msg: res.message, kind: res.kind }); }
-    else { setBroadcasts(res.data); setLoadError(null); }
+    const res = await adminFetch<unknown>('/api/admin/broadcasts', { subject: 'announcements' });
+    if (!res.ok) setLoadErr({ msg: res.message, kind: res.kind });
+    else if (!isBroadcasts(res.data)) setLoadErr({ msg: 'Announcements came back in a shape this page can’t read. Try again.', kind: 'server' });
+    else { setList(res.data); setLoadErr(null); }
     setLoading(false);
   }, []);
-
   useEffect(() => { load(); }, [load]);
   useEffect(() => {
-    adminFetch<{ courses: number; operators: number }>('/api/admin/broadcasts?recipients=1', { subject: 'the recipient list' })
-      .then(res => setReach(res.ok ? res.data : null));
-  }, []);
+    if (!isOwner) return;
+    adminFetch<Reach>('/api/admin/broadcasts?recipients=1', { subject: 'the recipient list' }).then(res => setReach(res.ok ? res.data : null));
+  }, [isOwner]);
 
-  async function sendBroadcast() {
-    if (!title.trim() || !body.trim() || sending) return;
-    setSending(true); setOutcome(null); setSendErr(null);
-    try {
-      const res = await adminFetch<SendOutcome>('/api/admin/broadcasts', {
-        method: 'POST',
-        body: JSON.stringify({ title: title.trim(), body: body.trim(), sendEmail }),
-        subject: 'this announcement',
-        action: 'send',
-      });
-      if (!res.ok) { setSendErr({ msg: res.message, kind: res.kind }); return; }
-      setOutcome(res.data);
-      setTitle(''); setBody(''); setSendEmail(false); setReviewing(false);
-      load();
-    } finally {
-      setSending(false);
-    }
+  const toList = () => router.push('/admin/announcements');
+  const sent = (o: SendOutcome) => { setOutcome(o); setDraft(EMPTY); load(); toList(); };
+
+  let body: ReactNode;
+  if (composing) body = <Composer draft={draft} setDraft={setDraft} reach={reach} onBack={toList} onSent={sent} />;
+  else if (openId) {
+    const a = list?.find(b => b.id === openId);
+    body = (
+      <section className={`${g.glass} ${s.card} ${s.page}`} aria-label="Announcement">
+        <button type="button" className={s.back} onClick={toList}>‹ Announcements</button>
+        {loadErr && <Problem got={loadErr} retry={load} busy={loading} />}
+        {!list && !loadErr && <div className={r.skel} aria-busy="true" aria-label="Loading the announcement" />}
+        {list && !a && <p className={s.empty}>Could not find this announcement.</p>}
+        {a && (
+          <>
+            <h2>{a.title}</h2>
+            <p className={s.abody}>{a.body}</p>
+            <div className={s.ameta}>
+              <span>{formatDateTime(a.createdAt)} · by {a.sentByName}</span>
+              {a.emailSent && <span className={s.sd}><i />Emailed</span>}
+              {a.dismissalCount > 0 && <span>{a.dismissalCount} dismissed</span>}
+            </div>
+          </>
+        )}
+      </section>
+    );
+  } else {
+    const rows = (list ?? []).filter(b => matches(b, q));
+    body = (
+      <section className={`${g.glass} ${s.card}`} aria-label="Announcements">
+        <div className={s.bar}>
+          <label className={s.search}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+            <input type="search" value={q} onChange={e => setQ(e.target.value)} aria-label="Search announcements" />
+          </label>
+          <button type="button" className={s.wb} onClick={load} disabled={loading} aria-label={loading ? 'Refreshing' : 'Refresh'} title="Refresh">
+            <svg {...ICON}><path d="M21 12a9 9 0 1 1-2.64-6.36" /><path d="M21 3v6h-6" /></svg>
+          </button>
+          {isOwner && (
+            <button type="button" className={s.wb} onClick={() => router.push('/admin/announcements?new=1')} aria-label="New announcement" title="New announcement">
+              <svg {...ICON}><path d="M12 5v14M5 12h14" /></svg>
+            </button>
+          )}
+        </div>
+        {outcome && (
+          <div className={`${s.outc} ${outcomeBad(outcome) ? s.bad : ''}`} role="status">
+            <span>
+              {outcomeLine(outcome)}
+              {outcome.emailFailures.length > 0 && <span className={s.fails}>Email failed for: {outcome.emailFailures.join(', ')}. They still see it on their dashboard.</span>}
+            </span>
+            <button type="button" className={s.wb} onClick={() => setOutcome(null)} aria-label="Dismiss">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+            </button>
+          </div>
+        )}
+        {loadErr && <Problem got={loadErr} retry={load} busy={loading} />}
+        {!list && !loadErr && <div className={r.skel} aria-busy="true" aria-label="Loading announcements" />}
+        {list && list.length === 0 && <p className={s.empty}>No announcements yet</p>}
+        {list && list.length > 0 && rows.length === 0 && <p className={s.empty}>Nothing matches</p>}
+        {rows.length > 0 && (
+          <ul className={`${s.list} ${loading ? s.stale : ''}`}>
+            {rows.map(b => (
+              <li key={b.id}>
+                <button type="button" className={s.row} onClick={() => router.push(`/admin/announcements?id=${encodeURIComponent(b.id)}`)}>
+                  <i className={`${s.dot} ${b.emailSent ? s.ok : ''}`} title={b.emailSent ? 'Emailed' : 'Dashboard only'} aria-hidden="true" />
+                  <b>{b.title}</b>
+                  <span className={s.pv}>{firstLine(b.body)}</span>
+                  <span className={s.dm}>{b.dismissalCount > 0 ? `${b.dismissalCount} dismissed` : ''}</span>
+                  <span className={s.dt}>{formatDate(b.createdAt)}</span>
+                  <span className="sr-only">{b.emailSent ? 'Emailed' : 'Dashboard only'}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    );
   }
 
-  const outcomeBad = outcome && (outcome.emailFailures.length > 0 || (outcome.emailRequested && outcome.emailsSent === 0));
+  return (
+    <>
+      <AdminSidebar active="announcements" />
+      <main className={g.main}>
+        <div className={g.head}><h1>Announcements</h1></div>
+        {body}
+      </main>
+    </>
+  );
+}
+
+function Composer({ draft, setDraft, reach, onBack, onSent }: {
+  draft: Draft; setDraft: (d: Draft) => void; reach: Reach | null; onBack: () => void; onSent: (o: SendOutcome) => void;
+}) {
+  const [reviewing, setReviewing] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [testNote, setTestNote] = useState('');
+  const [err, setErr] = useState('');
+  const title = draft.title.trim(), text = draft.body.trim();
+  const ready = !!title && !!text;
+
+  // MP-7b: send-test-to-self — emails only the signed-in admin, records nothing.
+  async function sendTest() {
+    if (!ready || testing || sending) return;
+    setTesting(true); setTestNote(''); setErr('');
+    try {
+      const res = await adminFetch<{ sentTo: string }>('/api/admin/broadcasts', {
+        method: 'POST', body: JSON.stringify({ title, body: text, test: true }), subject: 'the test email', action: 'send',
+      });
+      if (!res.ok) setErr(res.message);
+      else setTestNote(`Test sent to ${res.data.sentTo}. Nobody else got it.`);
+    } finally { setTesting(false); }
+  }
+
+  async function send() {
+    if (!ready || sending) return;
+    setSending(true); setErr('');
+    try {
+      const res = await adminFetch<SendOutcome>('/api/admin/broadcasts', {
+        method: 'POST', body: JSON.stringify({ title, body: text, sendEmail: draft.sendEmail }), subject: 'this announcement', action: 'send',
+      });
+      if (!res.ok) { setErr(res.message); return; }
+      onSent(res.data);
+    } finally { setSending(false); }
+  }
+
+  const edit = () => { setReviewing(false); setTestNote(''); setErr(''); };
 
   return (
-    <div className="flex-1 overflow-y-auto">
-      <div className="px-10 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-[30px] leading-none font-serif text-ink">Announcements</h1>
-            <p className="text-sm text-ink-soft mt-0.5">
-              Shown on every live course&apos;s dashboard{reach ? ` — ${reach.courses} course${reach.courses === 1 ? '' : 's'}, ${reach.operators} operator${reach.operators === 1 ? '' : 's'} right now` : ''}.
-            </p>
+    <section className={`${g.glass} ${s.card} ${s.page}`} aria-label={reviewing ? 'Review the announcement' : 'New announcement'}>
+      <button type="button" className={s.back} onClick={onBack} disabled={sending}>‹ Announcements</button>
+      {!reviewing ? (
+        <form className={s.cf} onSubmit={e => { e.preventDefault(); if (ready) setReviewing(true); }}>
+          <label className={s.f}>Title
+            <input className={s.fld} value={draft.title} onChange={e => setDraft({ ...draft, title: e.target.value })} maxLength={200} />
+          </label>
+          <label className={s.f}>Message
+            <textarea className={s.fld} rows={7} value={draft.body} onChange={e => setDraft({ ...draft, body: e.target.value })} />
+          </label>
+          <div className={s.crow}>
+            <label className={s.ck}>
+              <input type="checkbox" checked={draft.sendEmail} onChange={e => setDraft({ ...draft, sendEmail: e.target.checked })} />
+              <span>Also send as email<small>{reach ? `To ${pl(reach.operators, 'operator')} of live courses` : 'To every operator of a live course'}</small></span>
+            </label>
+            <button type="submit" className={`${s.btn} ${s.pri}`} disabled={!ready}>Preview &amp; confirm</button>
           </div>
-          <button onClick={load} aria-label="Refresh" className="w-9 h-9 flex items-center justify-center rounded-md border border-line text-ink-muted hover:text-ink hover:bg-white transition-colors">
-            <RefreshCw className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        {loadError && <ErrorBanner message={loadError.msg} kind={loadError.kind} onRetry={() => load()} />}
-
-        {/* What actually happened — counted from results, never from the
-            recipient list. */}
-        {outcome && (
-          <div className={'rounded-md px-4 py-3 text-sm mb-5 border ' + (outcomeBad ? 'bg-warn/5 border-warn/20 text-ink' : 'bg-ok/5 border-ok/20 text-ok')}>
-            <div className="font-medium">
-              Posted to {outcome.courses} course dashboard{outcome.courses === 1 ? '' : 's'}
-              {outcome.emailRequested ? ` · ${outcome.emailsSent} of ${outcome.emailRecipients} email${outcome.emailRecipients === 1 ? '' : 's'} delivered to Resend` : ' · no email'}
-            </div>
-            {outcome.emailFailures.length > 0 && (
-              <div className="text-xs text-bad mt-1">Email failed for: {outcome.emailFailures.join(', ')} — they still see it on their dashboard.</div>
-            )}
+        </form>
+      ) : (
+        <div className={s.cf}>
+          <div className={s.pvbox}>
+            <div className={s.crow}><span>Preview</span><button type="button" className={`${s.btn} ${s.sm}`} onClick={edit} disabled={sending}>Edit</button></div>
+            <b>{title}</b>
+            <p className={s.abody}>{text}</p>
           </div>
-        )}
-
-        {isOwner ? (
-          <Card className="p-6 mb-7">
-            <div className="flex items-center gap-2 mb-4">
-              
-              <span className="text-sm font-medium text-ink">{reviewing ? 'Review before sending' : 'New announcement'}</span>
-              {reviewing && (
-                <button onClick={() => setReviewing(false)} className="ml-auto text-xs text-ink-muted hover:text-ink transition-colors">Edit</button>
-              )}
-            </div>
-            {sendErr && <ErrorBanner message={sendErr.msg} kind={sendErr.kind} onDismiss={() => setSendErr(null)} />}
-
-            {!reviewing ? (
-              <div className="space-y-4">
-                <div>
-                  <label className="block"><span className="block text-[13px] font-semibold text-ink mb-1.5">Title</span>
-                  <input value={title} onChange={e => setTitle(e.target.value)} className={iCls} placeholder="Maintenance window this weekend"/></label>
-                </div>
-                <div>
-                  <label className="block"><span className="block text-[13px] font-semibold text-ink mb-1.5">Message</span>
-                  <textarea value={body} onChange={e => setBody(e.target.value)} rows={5} className={iCls + ' resize-none'} placeholder="Write your message here. Separate paragraphs with blank lines."/></label>
-                </div>
-                <div className="flex items-center justify-between flex-wrap gap-4">
-                  <label className="flex items-center gap-3 cursor-pointer select-none">
-                    <input type="checkbox" checked={sendEmail} onChange={e => setSendEmail(e.target.checked)} className="w-4 h-4 accent-pine rounded" />
-                    <div>
-                      <div className="text-sm font-medium text-ink flex items-center gap-1.5">
-                        Also send as email
-                      </div>
-                      <div className="text-xs text-ink-muted mt-0.5">
-                        {reach ? `To ${reach.operators} operator${reach.operators === 1 ? '' : 's'} of live courses` : 'To every operator of a live course'}
-                      </div>
-                    </div>
-                  </label>
-                  <button
-                    onClick={() => setReviewing(true)}
-                    disabled={!title.trim() || !body.trim()}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-pine hover:bg-pine-hover disabled:opacity-40 text-white font-medium rounded-md text-[12.5px] transition-colors"
-                  >
-                    Preview &amp; confirm
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="bg-paper border border-line rounded-lg p-4">
-                  <div className="text-[13px] font-semibold text-ink mb-2">Preview</div>
-                  <div className="text-sm font-medium text-ink mb-2">{title}</div>
-                  <div className="text-sm text-ink-soft whitespace-pre-line leading-relaxed">{body}</div>
-                </div>
-                <div className="text-xs text-ink-soft bg-pine/5 border border-pine/20 rounded-md px-3 py-2">
-                  Shows on {reach ? `${reach.courses} course dashboard${reach.courses === 1 ? '' : 's'}` : 'every live course’s dashboard'}
-                  {sendEmail ? ` and emails ${reach ? `${reach.operators} operator${reach.operators === 1 ? '' : 's'}` : 'their operators'}.` : '. No email.'}
-                  {' '}This cannot be recalled.
-                </div>
-                {testNote && <div className="text-xs text-ok">{testNote}</div>}
-                <div className="flex flex-wrap gap-3 pt-1">
-                  <button
-                    onClick={() => setReviewing(false)}
-                    className="px-4 py-2.5 border border-line text-ink-soft hover:text-ink hover:border-line-strong rounded-md text-[12.5px] font-medium transition-colors"
-                  >
-                    Back to edit
-                  </button>
-                  <button
-                    onClick={sendTest}
-                    disabled={testing || sending}
-                    className="flex items-center gap-2 px-4 py-2.5 border border-line text-ink-soft hover:text-ink hover:border-line-strong disabled:opacity-40 rounded-md text-[12.5px] font-medium transition-colors"
-                  >
-                    {testing ? 'Sending test…' : 'Send test to me'}
-                  </button>
-                  <button
-                    onClick={sendBroadcast}
-                    disabled={sending}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-pine hover:bg-pine-hover disabled:opacity-40 text-white font-medium rounded-md text-[12.5px] transition-colors"
-                  >
-                    
-                    {sending ? 'Sending…' : 'Confirm & send'}
-                  </button>
-                </div>
-              </div>
-            )}
-          </Card>
-        ) : (
-          <div className="bg-paper border border-line rounded-lg px-5 py-4 mb-7 text-sm text-ink-soft">
-            Only the owner can send an announcement. The history is below.
-          </div>
-        )}
-
-        <div>
-          <h2 className="text-[15px] font-semibold text-ink mb-3">Sent</h2>
-          {loading && <div className="text-ink-muted text-sm py-8 text-center">Loading...</div>}
-          {!loading && !loadError && broadcasts.length === 0 && (
-            <Card className="text-ink-muted text-sm py-12 text-center">
-              No announcements yet
-            </Card>
-          )}
-          <div className="space-y-3">
-            {broadcasts.map(b => (
-              <Card key={b.id} className="p-5">
-                <div className="flex items-start justify-between gap-4 mb-2">
-                  <div className="font-medium text-ink text-sm">{b.title}</div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    {b.emailSent && <StatusDot status="ok" label="Emailed" />}
-                    {b.dismissalCount > 0 && (
-                      <span className="flex items-center gap-1 text-[11px] text-ink-muted">
-                        {b.dismissalCount} dismissed
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="text-sm text-ink-soft whitespace-pre-line line-clamp-3 mb-3">{b.body}</div>
-                <div className="text-xs text-ink-muted">{fmtDate(b.createdAt)} · by {b.sentByName}</div>
-              </Card>
-            ))}
+          <div className={s.reach}>{reachLine(reach, draft.sendEmail)} <em>This cannot be recalled.</em></div>
+          {testNote && <p className={s.tnote} role="status">{testNote}</p>}
+          {err && <p className={s.err} role="alert">{err}</p>}
+          <div className={s.acts}>
+            <button type="button" className={s.btn} onClick={edit} disabled={sending}>Back to edit</button>
+            <button type="button" className={s.btn} onClick={sendTest} disabled={testing || sending}>{testing ? 'Sending test…' : 'Send test to me'}</button>
+            <button type="button" className={`${s.btn} ${s.pri}`} onClick={send} disabled={sending || testing} aria-busy={sending}>{sending ? 'Sending…' : 'Confirm & send'}</button>
           </div>
         </div>
-      </div>
-    </div>
+      )}
+    </section>
   );
+}
+
+export default function AnnouncementsPage() {
+  return <Suspense fallback={null}><AnnouncementsContent /></Suspense>;
 }

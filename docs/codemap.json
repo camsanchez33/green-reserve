@@ -1,7 +1,7 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 728,
+    "files": 729,
     "routes": 311,
     "libs": 260,
     "models": 76,
@@ -73,9 +73,66 @@
       "usedBy": []
     },
     {
+      "path": "src/app/admin/announcements/logic.ts",
+      "lines": 43,
+      "purpose": "ADMIN-REDO Announcements (Cam approved the mockup 2026-11-12, ADMIN_REDO_SPEC.md \"Admin Announcements\").",
+      "brain": [],
+      "exports": [
+        {
+          "name": "Broadcast",
+          "kind": "type"
+        },
+        {
+          "name": "firstLine",
+          "kind": "fn"
+        },
+        {
+          "name": "isBroadcasts",
+          "kind": "fn"
+        },
+        {
+          "name": "matches",
+          "kind": "fn"
+        },
+        {
+          "name": "outcomeBad",
+          "kind": "fn"
+        },
+        {
+          "name": "outcomeLine",
+          "kind": "fn"
+        },
+        {
+          "name": "pl",
+          "kind": "fn"
+        },
+        {
+          "name": "Reach",
+          "kind": "type"
+        },
+        {
+          "name": "reachLine",
+          "kind": "fn"
+        },
+        {
+          "name": "SendOutcome",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/admin/announcements/page.tsx"
+      ]
+    },
+    {
       "path": "src/app/admin/announcements/page.tsx",
-      "lines": 261,
-      "purpose": "AW-8a (Cam 2026-10-21:",
+      "lines": 242,
+      "purpose": "AW-8a (Cam 2026-10-21):",
       "brain": [],
       "exports": [
         {
@@ -89,15 +146,16 @@
       "auth": "admin",
       "guard": "client-side",
       "imports": [
+        "../admin-glass.module.css",
+        "../revenue/revenue.module.css",
+        "./announcements.module.css",
+        "./logic",
         "@/components/admin/AdminSidebar",
-        "@/components/ui/Card",
-        "@/components/ui/ErrorState",
-        "@/components/ui/StatusDot",
-        "@/components/ui/field",
         "@/lib/admin-fetch",
         "@/lib/admin-session-context",
         "@/lib/format",
-        "lucide-react",
+        "next/link",
+        "next/navigation",
         "react"
       ],
       "usedBy": []
@@ -14509,7 +14567,6 @@
         "react"
       ],
       "usedBy": [
-        "src/app/admin/announcements/page.tsx",
         "src/app/admin/audit/page.tsx",
         "src/app/admin/courses/[id]/_parts/BookingsTab.tsx",
         "src/app/admin/courses/[id]/_parts/ContactTab.tsx",
@@ -14625,7 +14682,6 @@
         "next/link"
       ],
       "usedBy": [
-        "src/app/admin/announcements/page.tsx",
         "src/app/admin/company-documents/page.tsx",
         "src/app/admin/employees/page.tsx",
         "src/app/admin/groups/page.tsx",
@@ -14815,7 +14871,6 @@
         "react"
       ],
       "usedBy": [
-        "src/app/admin/announcements/page.tsx",
         "src/app/admin/company-documents/page.tsx",
         "src/app/admin/courses/[id]/_parts/ContactTab.tsx",
         "src/app/admin/courses/[id]/_parts/MoneyTab.tsx",
@@ -14911,7 +14966,6 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/admin/announcements/page.tsx",
         "src/app/admin/audit/page.tsx",
         "src/app/admin/company-documents/page.tsx",
         "src/app/admin/courses/[id]/_parts/shared.tsx",
