@@ -1,11 +1,11 @@
-import { startOfPlatformDay, startOfPlatformDaysAgo, startOfPlatformMonth, startOfPlatformMonthsAgo } from './admin-day';
-
 // EXPENSE TRACKER (RUN_QUEUE "EXPENSE TRACKER / real P&L") — the manual half
 // of the P&L: GreenReserve's own fixed operating costs (Vercel, Neon, Resend,
 // Twilio, domain, legal…). Automatic Stripe processing costs are NOT here —
 // those come live from Stripe (see platform-stripe.ts). This module owns the
 // ONE definition of how a recurring cost prorates into an arbitrary period,
 // so the revenue page and any future Overview P&L header agree by construction.
+
+import { startOfPlatformDay, startOfPlatformDaysAgo, startOfPlatformMonth, startOfPlatformMonthsAgo } from './admin-day';
 
 export const EXPENSE_CATEGORIES = ['infra', 'tools', 'legal', 'other'] as const;
 export type ExpenseCategory = typeof EXPENSE_CATEGORIES[number];
@@ -34,7 +34,7 @@ export function isExpenseCadence(v: unknown): v is ExpenseCadence {
 
 // Calendar months on the platform clock (Eastern, lib/admin-day). Fix from the #385 review: a
 // monthly cost counts as EXACTLY its amount in every full calendar month (it used to prorate over a
-// mean year, so $100/mo came to $101.84 in a 31-day month and a budget equal to the monthly costs
+// mean year, so $100/mo came to $101.85 in a 31-day month and a budget equal to the monthly costs
 // read red). Only a part-month (the cost starts or ends inside it, or the window covers part of
 // it) prorates, by the days of that month it covers (a DST day is still one day). An annual cost is a twelfth of its amount a
 // month, the same rate monthlyEquivalentCents shows.
@@ -47,9 +47,13 @@ export interface ProratableExpense {
 
 /** [start, end) intersected with the expense's own lifespan, or null when they don't overlap. */
 function activeOverlap(expense: ProratableExpense, from: Date, to: Date): { start: Date; end: Date } | null {
-  const started = new Date(expense.startedAt);
+  // The start is a calendar date (the form saves it as noon UTC): the cost is paid from the start
+  // of that day, so a cost dated the 1st covers the whole month. An unreadable date is ignored
+  // (the cost counts from the window's start), as before. The end is an instant (End = now).
+  const raw = new Date(expense.startedAt);
+  const started = Number.isNaN(raw.getTime()) ? null : startOfPlatformDay(raw);
   const ended = expense.endedAt ? new Date(expense.endedAt) : null;
-  const start = started > from ? started : from;
+  const start = started && started > from ? started : from;
   const end = ended && ended < to ? ended : to;
   return end.getTime() > start.getTime() ? { start, end } : null;
 }
@@ -116,7 +120,8 @@ export function monthlyEquivalentCents(expense: Pick<ProratableExpense, 'amountC
  * Feed it straight to goalPace:
  *   goalPace({ progress: p.progress, fixed: p.fixed, scheduled: p.scheduled, share: p.share, target, kind: 'cap', daysElapsed })
  * progress = recurring costs so far; fixed = one-time costs so far (never projected); scheduled =
- * the recurring costs on the books for the whole month; share = the elapsed part of the month.
+ * what else is on the books for the whole month — the recurring costs, plus one-time costs dated
+ * later this month (known, so counted as they are); share = the elapsed part of the month.
  */
 export function monthCostPace(
   expenses: ProratableExpense[],
@@ -126,8 +131,10 @@ export function monthCostPace(
   const monthEnd = startOfPlatformMonthsAgo(now, -1);
   const recurring = expenses.filter(e => e.cadence !== 'one-time');
   const progress = recurring.reduce((s, e) => s + prorateExpenseCents(e, monthStart, now), 0);
-  const scheduled = recurring.reduce((s, e) => s + prorateExpenseCents(e, monthStart, monthEnd), 0);
-  const fixed = expenses.filter(e => e.cadence === 'one-time').reduce((s, e) => s + prorateExpenseCents(e, monthStart, now), 0);
+  const oneTime = expenses.filter(e => e.cadence === 'one-time');
+  const fixed = oneTime.reduce((s, e) => s + prorateExpenseCents(e, monthStart, now), 0);
+  const scheduled = recurring.reduce((s, e) => s + prorateExpenseCents(e, monthStart, monthEnd), 0)
+    + oneTime.reduce((s, e) => s + prorateExpenseCents(e, now, monthEnd), 0);
   const share = dayPosition(now, monthStart) / dayPosition(monthEnd, monthStart); // by days, like the costs
   return { soFar: progress + fixed, progress, fixed, scheduled, share, projected: scheduled + fixed, monthStart, monthEnd };
 }

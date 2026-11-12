@@ -33,6 +33,23 @@ ok('a window spanning two part-months adds each month\'s share (Oct 17–Nov 16:
 ok('a one-time cost still lands whole on its day', sumExpensesForPeriodCents([{ amountCents: 5000, cadence: 'one-time', startedAt: et(2026, 10, 5), endedAt: null }], et(2026, 10, 1), et(2026, 11, 1)) === 5000);
 ok('an ended cost adds nothing after its end', prorateExpenseCents(monthly(10000, longAgo, et(2026, 9, 1)), et(2026, 10, 1), et(2026, 11, 1)) === 0);
 
+// The shape the Expenses form actually saves: the picked date at noon UTC (final review).
+const stored = (day: string) => `${day}T12:00:00.000Z`;
+const asSaved = (cents: number, day: string) => ({ amountCents: cents, cadence: 'monthly', startedAt: stored(day), endedAt: null });
+ok('a cost dated Oct 1 (as saved) is exactly $100 for October', prorateExpenseCents(asSaved(10000, '2026-10-01'), et(2026, 10, 1), et(2026, 11, 1)) === 10000);
+ok('…dated Nov 1 (the DST month) is exactly $100 for November', prorateExpenseCents(asSaved(10000, '2026-11-01'), et(2026, 11, 1), et(2026, 12, 1)) === 10000);
+ok('…dated Jan 1 is exactly $1,200 over 2026', prorateExpenseCents(asSaved(10000, '2026-01-01'), et(2026, 1, 1), et(2027, 1, 1)) === 120000);
+ok('…dated Oct 16 counts 16 of October\'s 31 days', prorateExpenseCents(asSaved(31000, '2026-10-16'), et(2026, 10, 1), et(2026, 11, 1)) === 16000);
+ok('an unreadable start date counts from the window\'s start (and doesn\'t throw)', prorateExpenseCents({ amountCents: 10000, cadence: 'monthly', startedAt: 'not a date', endedAt: null }, et(2026, 10, 1), et(2026, 11, 1)) === 10000);
+{
+  const p = monthCostPace([asSaved(10000, '2026-11-01')], at(2026, 11, 12, 15));
+  ok('the budget card schedules a cost dated Nov 1 at exactly its $100', p.scheduled === 10000, p);
+}
+{
+  const p = monthCostPace([{ amountCents: 7000, cadence: 'one-time', startedAt: stored('2026-11-25'), endedAt: null }], at(2026, 11, 12, 15));
+  ok('a one-time cost dated later this month is in the projection, not in what\'s spent', p.soFar === 0 && p.fixed === 0 && p.projected === 7000, p);
+}
+
 // The bug as reported: a budget equal to the monthly costs isn't red.
 {
   const now = at(2026, 10, 20, 15);

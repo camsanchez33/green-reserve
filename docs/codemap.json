@@ -15014,7 +15014,7 @@
     },
     {
       "path": "src/lib/admin-day.ts",
-      "lines": 111,
+      "lines": 110,
       "purpose": "Platform day boundaries.",
       "brain": [],
       "exports": [
@@ -20858,8 +20858,8 @@
     },
     {
       "path": "src/lib/expenses.ts",
-      "lines": 134,
-      "purpose": "",
+      "lines": 141,
+      "purpose": "EXPENSE TRACKER (RUN_QUEUE \"EXPENSE TRACKER / real P&L\") — the manual half of the P&L:",
       "brain": [],
       "exports": [
         {
