@@ -13,7 +13,7 @@ import { dfetch } from '@/lib/dashboard-fetch';
 import { goalMetric, formatGoal, type GoalMetric } from '@/lib/course-goals';
 import { CONDITION_FIELDS, HOME_CONDITIONS, CONDITION_NOTE_CHARS, mergeHomeConditions, conditionLabel, conditionsOffBookingPage, type CourseConditions, type ConditionKey } from '@/lib/course-conditions';
 import { CONDITION_TONE, type GoalTone } from '@/lib/home-today';
-import { goalPace, elapsedShare } from '@/lib/goal-pace';
+import { goalPace, elapsedShare, type PaceTone } from '@/lib/goal-pace';
 import type { HomeEvent } from '@/lib/home-board';
 
 export type ShiftNote = { id: string; body: string; authorName: string; createdAt: string };
@@ -36,8 +36,8 @@ const BTN = 'px-3 min-h-[36px] rounded-[7px] bg-white border border-line text-[1
 const PRIMARY = 'px-3.5 min-h-[36px] rounded-[7px] bg-pine hover:bg-pine-hover text-white text-[13px] font-medium disabled:opacity-50';
 const INPUT = 'bg-paper border border-line rounded-[7px] px-3 py-2 text-[14px] text-ink placeholder-ink-faint focus:border-pine/40 focus:ring-2 focus:ring-pine/10';
 const LINK = 'text-[13px] font-semibold text-pine hover:underline underline-offset-4';
-const TONE_TEXT: Record<GoalTone, string> = { ok: 'text-ok', warn: 'text-warn', bad: 'text-bad' };
-const TONE_BG: Record<GoalTone, string> = { ok: 'bg-ok', warn: 'bg-warn', bad: 'bg-bad' };
+const TONE_TEXT: Record<PaceTone, string> = { ok: 'text-ok', warn: 'text-warn', bad: 'text-bad', early: 'text-ink' };
+const TONE_BG: Record<PaceTone, string> = { ok: 'bg-ok', warn: 'bg-warn', bad: 'bg-bad', early: 'bg-dot-neutral' };
 
 /** The notes the last shift left — and a box to leave one for the next. */
 export function ShiftNotes({ initial }: { initial: ShiftNote[] }) {
@@ -281,8 +281,8 @@ export function GoalsCard({ goals, canSet, onSaved }: { goals: Goals; canSet: bo
       {goals.goals.map(g => {
         const m = goalMetric(g.metric);
         const pct = Math.min(100, g.target ? (g.actual / g.target) * 100 : 0);
-        // GOAL-PACE (Cam 2026-11-12): the bar is progress; the colour is where the month ends at today's pace.
-        const { tone } = goalPace({ progress: g.actual, target: g.target, share: elapsedShare(goals.elapsed ?? dayOfMonth, daysInMonth), rate: m.unit === 'pct' });
+        // GOAL-PACE (Cam 2026-11-12): the bar is progress; the colour is where the month ends at today's pace — grey for the first 3 days.
+        const { tone } = goalPace({ progress: g.actual, target: g.target, share: elapsedShare(goals.elapsed ?? dayOfMonth, daysInMonth), rate: m.unit === 'pct', daysElapsed: goals.elapsed ?? dayOfMonth });
         return (
           <div key={g.metric} className="flex flex-col gap-1.5">
             <div className="flex items-baseline gap-2">

@@ -1,14 +1,14 @@
 // GOAL-PACE (Cam 2026-11-12, "one pace rule everywhere"): the bar is progress, the colour is where the period ends
 // at the current pace — reach goals (revenue, bookings) and caps (costs), one helper for admin and dashboard.
 // Pure. Run: npx tsx scripts/goal-pace-test.ts
-import { goalPace, projectAtEnd, elapsedShare, elapsedDays } from '../src/lib/goal-pace';
+import { goalPace, projectAtEnd, elapsedShare, elapsedDays, EARLY_DAYS } from '../src/lib/goal-pace';
 
 let failed = 0;
 const ok = (l: string, c: boolean, d: unknown = '') => { console.log(`${c ? 'PASS' : 'FAIL'}  ${l}${c ? '' : ' — ' + JSON.stringify(d)}`); if (!c) failed++; };
 
 // Day 12 of 30 → 40% of the month gone.
 const share = elapsedShare(12, 30);
-ok('elapsed share counts today as gone', share === 0.4 && elapsedShare(30, 30) === 1 && elapsedShare(40, 30) === 1 && elapsedShare(0, 30) === 0);
+ok('elapsed share is elapsed days over the period, capped 0–1', share === 0.4 && elapsedShare(30, 30) === 1 && elapsedShare(40, 30) === 1 && elapsedShare(0, 30) === 0);
 ok('pace projects progress to the period end', projectAtEnd(400, 0.4) === 1000);
 ok('a rate is not projected', projectAtEnd(70, 0.4, true) === 70);
 ok('a finished period is its value', projectAtEnd(900, 1) === 900);
@@ -42,6 +42,14 @@ ok('a sweep: every exact pace in 28–31-day months is green', (() => { for (con
 ok('elapsed days count today by the hour', elapsedDays(12, '12:00') === 11.5 && elapsedDays(1, '00:00') === 0 && elapsedDays(30, '24:00') === 30);
 const onPaceAt = (day: number, clock: string) => goalPace({ progress: 100 * elapsedDays(day, clock), target: 3000, share: elapsedShare(elapsedDays(day, clock), 30) }).tone;
 ok('a course exactly on pace is green morning, noon and night', ['08:00', '12:00', '20:00'].every(c => [1, 2, 15, 30].every(d => onPaceAt(d, c) === 'ok')));
+
+// Cam 2026-11-12 (b): no verdict for the first 3 days — neutral grey — then the pace rule.
+const early = (p: number, t: number, days: number, kind: 'reach' | 'cap' = 'reach') => goalPace({ progress: p, target: t, share: elapsedShare(days, 30), kind, daysElapsed: days }).tone;
+ok('the first 3 days are early (grey), even with nothing yet', EARLY_DAYS === 3 && early(0, 3000, 0.3) === 'early' && early(0, 3000, 2.99) === 'early' && early(10, 3000, 1.5) === 'early');
+ok('from day 3 the pace rule applies', early(0, 3000, 3) === 'bad' && early(300, 3000, 3) === 'ok');
+ok('early: a reach goal already met is green; a budget already over is red', early(3000, 3000, 1) === 'ok' && early(1200, 1000, 1, 'cap') === 'bad' && early(100, 1000, 1, 'cap') === 'early');
+ok('no daysElapsed given: no early rule (callers opt in)', goalPace({ progress: 0, target: 10, share: 0.01 }).tone === 'bad');
+ok('Home passes the elapsed days and greys an early goal', (() => { const b = require('fs').readFileSync('src/components/dashboard/home/HomeBoard.tsx', 'utf8'); return b.includes("daysElapsed: goals.elapsed ?? dayOfMonth") && b.includes("early: 'bg-dot-neutral'"); })());
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);

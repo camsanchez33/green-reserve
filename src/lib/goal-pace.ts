@@ -4,9 +4,14 @@
 //   pace = progress so far ÷ the elapsed share of the period, projected to the period's end.
 //   A goal to reach (revenue, bookings): ok = on pace to hit · warn = within 10% short · bad = on pace to miss.
 //   A cap (costs):                       ok = on pace to stay under · warn = within 10% over · bad = on pace to go over.
-// A rate (a fill %) is already "per period", so it isn't projected: its value now is its pace. Pure and client-safe.
+// A rate (a fill %) is already "per period", so it isn't projected: its value now is its pace.
+// Cam 2026-11-12 (option b): the first EARLY_DAYS of a period show no verdict ('early', neutral grey) — a few hours of
+// takings can't say where a month ends. Pure and client-safe.
 
-export type PaceTone = 'ok' | 'warn' | 'bad';
+export type PaceTone = 'ok' | 'warn' | 'bad' | 'early';
+
+/** Days at the start of a period with no verdict (Cam 2026-11-12). */
+export const EARLY_DAYS = 3;
 export type GoalKind = 'reach' | 'cap';
 
 /**
@@ -38,10 +43,16 @@ export function projectAtEnd(progress: number, share: number, rate = false): num
 }
 
 /** The colour of a goal (see the rule above). The 10% band is of the target. */
-export function goalPace(o: { progress: number; target: number; share: number; kind?: GoalKind; rate?: boolean }): { projected: number; tone: PaceTone } {
+export function goalPace(o: { progress: number; target: number; share: number; kind?: GoalKind; rate?: boolean; daysElapsed?: number }): { projected: number; tone: PaceTone } {
   const kind = o.kind ?? 'reach';
   const projected = projectAtEnd(o.progress, o.share, o.rate);
   if (!(o.target > 0)) return { projected, tone: 'ok' };
+  // A reach goal already met is green even early; a budget already over is red even early. Otherwise no verdict yet.
+  if (o.daysElapsed !== undefined && o.daysElapsed < EARLY_DAYS) {
+    if (kind === 'reach' && atLeast(o.progress, o.target)) return { projected, tone: 'ok' };
+    if (kind === 'cap' && !atMost(o.progress, o.target)) return { projected, tone: 'bad' };
+    return { projected, tone: 'early' };
+  }
   if (kind === 'reach') {
     if (atLeast(o.progress, o.target) || atLeast(projected, o.target)) return { projected, tone: 'ok' };
     return { projected, tone: atLeast(projected, o.target * 0.9) ? 'warn' : 'bad' };

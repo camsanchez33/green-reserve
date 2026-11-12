@@ -20737,10 +20737,14 @@
     },
     {
       "path": "src/lib/goal-pace.ts",
-      "lines": 53,
+      "lines": 64,
       "purpose": "GOAL-PACE (Cam 2026-11-12, ADMIN_REDO_SPEC \"Goals:",
       "brain": [],
       "exports": [
+        {
+          "name": "EARLY_DAYS",
+          "kind": "const"
+        },
         {
           "name": "elapsedDays",
           "kind": "fn"
