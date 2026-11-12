@@ -18,7 +18,6 @@
 
 export const PLATFORM_TZ = 'America/New_York';
 
-/** YYYY-MM-DD for the instant `d`, as seen in `tz`. */
 // Building an Intl.DateTimeFormat is slow (tens of microseconds); these run in loops (expense
 // months, day series), so each formatter is built once per time zone and reused.
 const formatters = new Map<string, Intl.DateTimeFormat>();
@@ -38,6 +37,7 @@ function formatter(kind: 'day' | 'hour' | 'parts', tz: string): Intl.DateTimeFor
   return f;
 }
 
+/** YYYY-MM-DD for the instant `d`, as seen in `tz`. */
 export function dayKey(d: Date, tz: string = PLATFORM_TZ): string {
   return formatter('day', tz).format(d);
 }

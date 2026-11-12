@@ -1,7 +1,7 @@
 // #385 review (Cam via Build 2026-11-12): a monthly cost is exactly its amount in every full
 // calendar month, and a cost with an end date later this month is projected only to that end.
 // Pure: run with `npx tsx scripts/expense-months-test.ts`.
-import { prorateExpenseCents, sumExpensesForPeriodCents, monthCostPace, monthlyEquivalentCents } from '../src/lib/expenses';
+import { prorateExpenseCents, sumExpensesForPeriodCents, monthCostPace, monthlyEquivalentCents, endedAtForLastDay, lastDayOf } from '../src/lib/expenses';
 import { startOfPlatformDay } from '../src/lib/admin-day';
 import { goalPace } from '../src/lib/goal-pace';
 
@@ -75,6 +75,18 @@ ok('an unreadable start date counts from the window\'s start (and doesn\'t throw
   const p = monthCostPace([later, { amountCents: 7000, cadence: 'one-time', startedAt: et(2026, 11, 3), endedAt: null }], now);
   ok('a cost starting later this month projects from its start (nothing spent on it yet)', p.progress === 0 && p.scheduled === 15000, p);
   ok('…one-time costs ride along as spent, never projected', p.fixed === 7000 && p.soFar === 7000 && p.projected === 22000, p);
+}
+
+// Inclusive end dates (Cam via Build 2026-11-12): "ends Nov 21" runs through Nov 21.
+{
+  const end = endedAtForLastDay('2026-11-21');
+  ok('"ends Nov 21" is saved as the start of Nov 22, Eastern', end?.getTime() === et(2026, 11, 22).getTime(), end);
+  ok('…and shows as Nov 21 again', !!end && lastDayOf(end) === '2026-11-21');
+  ok('…so a $300/mo cost counts 21 of November\'s 30 days', !!end && prorateExpenseCents({ amountCents: 30000, cadence: 'monthly', startedAt: '2026-01-01T12:00:00.000Z', endedAt: end }, et(2026, 11, 1), et(2026, 12, 1)) === 21000);
+  ok('…ending on the DST day (Nov 1) counts just that day', endedAtForLastDay('2026-11-01')?.getTime() === et(2026, 11, 2).getTime());
+  ok('…ending Dec 31 stops at the new year', endedAtForLastDay('2026-12-31')?.getTime() === et(2027, 1, 1).getTime());
+  ok('a date that isn\'t one is refused (null)', endedAtForLastDay('2026-02-30') === null && endedAtForLastDay('nope') === null);
+  ok('End = now shows today as the last day paid', lastDayOf(at(2026, 11, 12, 15)) === '2026-11-12');
 }
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');

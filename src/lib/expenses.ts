@@ -5,7 +5,7 @@
 // ONE definition of how a recurring cost prorates into an arbitrary period,
 // so the revenue page and any future Overview P&L header agree by construction.
 
-import { startOfPlatformDay, startOfPlatformDaysAgo, startOfPlatformMonth, startOfPlatformMonthsAgo } from './admin-day';
+import { dayKey, startOfPlatformDay, startOfPlatformDaysAgo, startOfPlatformMonth, startOfPlatformMonthsAgo } from './admin-day';
 
 export const EXPENSE_CATEGORIES = ['infra', 'tools', 'legal', 'other'] as const;
 export type ExpenseCategory = typeof EXPENSE_CATEGORIES[number];
@@ -137,4 +137,23 @@ export function monthCostPace(
     + oneTime.reduce((s, e) => s + prorateExpenseCents(e, now, monthEnd), 0);
   const share = dayPosition(now, monthStart) / dayPosition(monthEnd, monthStart); // by days, like the costs
   return { soFar: progress + fixed, progress, fixed, scheduled, share, projected: scheduled + fixed, monthStart, monthEnd };
+}
+
+/**
+ * End dates are inclusive for people and exclusive for the books (Cam via Build 2026-11-12): "ends
+ * Nov 21" means the cost runs THROUGH Nov 21, so what's saved is the instant it stops — the start
+ * of Nov 22, Eastern. A page that lets someone pick an end date saves endedAtForLastDay(day), and
+ * shows lastDayOf(endedAt). (End = now is already an instant and needs neither.)
+ */
+export function endedAtForLastDay(day: string): Date | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(day);
+  if (!m) return null;
+  const noon = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12));
+  if (Number.isNaN(noon.getTime()) || dayKey(noon, 'UTC') !== day) return null; // e.g. 2026-02-30
+  return startOfPlatformDaysAgo(noon, -1);
+}
+
+/** The last day an expense was paid for (YYYY-MM-DD, Eastern): the day before the instant it stopped. */
+export function lastDayOf(endedAt: Date | string): string {
+  return dayKey(new Date(new Date(endedAt).getTime() - 1));
 }
