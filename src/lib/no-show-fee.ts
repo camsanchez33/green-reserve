@@ -56,7 +56,7 @@ export const roundPaid = (b: { paymentStatus: string }) => b.paymentStatus === '
  */
 export const noShowClosed = (b: { noShowAt: Date | null; teeTime: { date: string }; course: { timezone: string | null } }, now: Date = new Date()) =>
   !!b.noShowAt && todayIn(b.course.timezone, now) > b.teeTime.date;
-export const NO_SHOW_CLOSED_ERROR = 'This group was marked a no-show and its day has ended, so the round can’t be checked in or paid. If they did play, the course can clear the no-show with “Still coming” first.';
+export const NO_SHOW_CLOSED_ERROR = 'This group was marked a no-show and its day has ended, so the round can’t be checked in or paid. If they did play, the course can clear the no-show with “Undo no-show” first.';
 
 /** Flag a booking as a no-show. Charges nothing — see chargeNoShow(), run at the course's midnight. */
 export async function markNoShow(bookingId: string, actor: EventActor, opts: { actorName?: string; auto?: boolean } = {}): Promise<void> {
@@ -232,7 +232,7 @@ export async function refundNoShowFee(bookingId: string, actorName?: string): Pr
     await recordMove({ courseId: b.courseId, what: 'no_show_fee', direction: 'out', method: 'card', account: 'course', amountCents: r.amount, stripeId: r.id, bookingId, actor: 'staff', note: actorName ?? '' });
     // After a failed refund the webhook also records this refund (by its id) — once is enough.
     if (!(await prisma.paymentEvent.findFirst({ where: { stripeId: r.id }, select: { id: true } }))) {
-      await recordPaymentEvent({ bookingId, kind: 'no_show_fee_refunded', amountCents: live.amountCents, stripeId: r.id, actor: 'operator', actorName, detail: 'No-show fee refunded (still coming)' });
+      await recordPaymentEvent({ bookingId, kind: 'no_show_fee_refunded', amountCents: live.amountCents, stripeId: r.id, actor: 'operator', actorName, detail: 'No-show fee refunded (no-show undone)' });
     }
     await recordBookingEventSafe({ bookingId, courseId: b.courseId, type: 'fee_refunded', actor: { type: 'staff', id: actorName ?? null }, amountCents: live.amountCents, playerCount: b.players, teeTimeAt: null, stripeId: r.id, metadata: { reason: 'no_show_fee_refunded' } });
     return { ok: true, refunded: true };

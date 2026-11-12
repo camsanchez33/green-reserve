@@ -4,6 +4,8 @@ import { resolveAdminSession, requireOwner, ownerGateError } from '@/lib/admin-s
 import { isExpenseCategory, isExpenseCadence } from '@/lib/expenses';
 import { needReason, reasonOf, auditAdmin, changedFields, bodyWithReason } from '@/lib/admin-audit';
 
+const MAX_CENTS = 2_000_000_000; // the column is a 32-bit INTEGER; anything above is a typo (as the budget route)
+
 // EXPENSE TRACKER (RUN_QUEUE) — edit/end/delete a single fixed cost. Owner-only.
 // Ending an expense (setting endedAt) is the non-destructive way to stop a cost
 // counting going forward while keeping its history in prior-period P&Ls; delete
@@ -18,7 +20,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const existing = await prisma.expense.findUnique({ where: { id } });
   if (!existing) return NextResponse.json({ error: 'Expense not found' }, { status: 404 });
 
-  const body = await req.json().catch(() => ({}));
+  const raw: unknown = await req.json().catch(() => null);
+  // A JSON body that isn't an object (null, a number, a list) is a bad request, not a 500.
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return NextResponse.json({ error: 'Send the expense as a JSON object.' }, { status: 400 });
+  const body = raw as Record<string, unknown>;
   const data: Record<string, unknown> = {};
 
   if (body.name !== undefined) {
@@ -28,7 +33,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
   if (body.amountCents !== undefined) {
     const amountCents = Math.round(Number(body.amountCents));
-    if (!Number.isFinite(amountCents) || amountCents <= 0) return NextResponse.json({ error: 'Amount must be a positive number' }, { status: 400 });
+    if (!Number.isFinite(amountCents) || amountCents <= 0 || amountCents > MAX_CENTS) return NextResponse.json({ error: 'Amount must be a positive number, at most $20,000,000' }, { status: 400 });
     data.amountCents = amountCents;
   }
   if (body.category !== undefined) {
@@ -40,7 +45,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     data.cadence = body.cadence;
   }
   if (body.startedAt !== undefined) {
-    const d = new Date(body.startedAt);
+    const d = new Date(body.startedAt as string);
     if (isNaN(d.getTime())) return NextResponse.json({ error: 'Invalid start date' }, { status: 400 });
     data.startedAt = d;
   }
@@ -54,7 +59,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       if (endedAlready) return NextResponse.json({ error: 'This expense has ended. To start paying it again, add it as a new expense from today.', code: 'ended' }, { status: 400 });
       data.endedAt = null;
     } else {
-      const d = new Date(body.endedAt);
+      const d = new Date(body.endedAt as string);
       if (isNaN(d.getTime())) return NextResponse.json({ error: 'Invalid end date' }, { status: 400 });
       // Ended stays ended: the end can be corrected earlier, never moved later (that would bring
       // stopped months back into the costs).
@@ -63,6 +68,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
   }
 
+  // Nothing to change (an empty object, or only unknown fields): say so, don't write an empty edit to the audit log.
+  if (Object.keys(data).length === 0) return NextResponse.json({ error: 'Nothing to change.' }, { status: 400 });
   const expense = await prisma.expense.update({ where: { id }, data });
   const pick = (e: Record<string, unknown>) => Object.fromEntries(Object.keys(data).map(k => [k, e[k]]));
   await auditAdmin(session, { action: 'expense_edit', targetType: 'expense', targetId: id, ...changedFields(pick(existing), pick(expense)) });

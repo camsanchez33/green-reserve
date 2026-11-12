@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 720,
-    "routes": 309,
-    "libs": 259,
+    "files": 727,
+    "routes": 311,
+    "libs": 260,
     "models": 76,
     "orphans": 11,
     "ungatedRoutes": 3
@@ -128,6 +128,108 @@
         "react"
       ],
       "usedBy": []
+    },
+    {
+      "path": "src/app/admin/bookings/page.tsx",
+      "lines": 292,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (BookingsPage)",
+          "kind": "component"
+        }
+      ],
+      "route": "/admin/bookings",
+      "kind": "page",
+      "methods": [],
+      "auth": "admin",
+      "guard": "client-side",
+      "imports": [
+        "../admin-glass.module.css",
+        "../courses/courses.module.css",
+        "../courses/terms",
+        "./bookings.module.css",
+        "./terms",
+        "@/components/admin/AdminSidebar",
+        "next/link",
+        "next/navigation",
+        "react"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/admin/bookings/terms.ts",
+      "lines": 61,
+      "purpose": "Bookings (ADMIN-REDO page 4):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "BY_WORDS",
+          "kind": "const"
+        },
+        {
+          "name": "DISPUTE_BACK",
+          "kind": "const"
+        },
+        {
+          "name": "DISPUTE_OUT",
+          "kind": "const"
+        },
+        {
+          "name": "EVENT_WORDS",
+          "kind": "const"
+        },
+        {
+          "name": "FEE_LINES",
+          "kind": "const"
+        },
+        {
+          "name": "FEE_TITLE",
+          "kind": "const"
+        },
+        {
+          "name": "FILTER_LABEL",
+          "kind": "const"
+        },
+        {
+          "name": "FILTER_TITLE",
+          "kind": "const"
+        },
+        {
+          "name": "METHOD_WORDS",
+          "kind": "const"
+        },
+        {
+          "name": "PAID_TITLE",
+          "kind": "const"
+        },
+        {
+          "name": "payLine",
+          "kind": "fn"
+        },
+        {
+          "name": "PROBLEM_WORDS",
+          "kind": "const"
+        },
+        {
+          "name": "SOURCE_WORDS",
+          "kind": "const"
+        },
+        {
+          "name": "WHAT_WORDS",
+          "kind": "const"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/admin/bookings/page.tsx"
+      ]
     },
     {
       "path": "src/app/admin/broadcasts/page.tsx",
@@ -730,6 +832,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
+        "src/app/admin/bookings/page.tsx",
         "src/app/admin/courses/page.tsx",
         "src/app/admin/onboarding/page.tsx"
       ]
@@ -795,9 +898,101 @@
       "usedBy": []
     },
     {
+      "path": "src/app/admin/expenses/logic.ts",
+      "lines": 148,
+      "purpose": "Expenses (ADMIN-REDO, Cam approved the mockup 2026-11-12):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "activeOn",
+          "kind": "fn"
+        },
+        {
+          "name": "byCost",
+          "kind": "fn"
+        },
+        {
+          "name": "cards",
+          "kind": "fn"
+        },
+        {
+          "name": "Cards",
+          "kind": "type"
+        },
+        {
+          "name": "Exp",
+          "kind": "type"
+        },
+        {
+          "name": "FilterKey",
+          "kind": "type"
+        },
+        {
+          "name": "FILTERS",
+          "kind": "const"
+        },
+        {
+          "name": "historyLine",
+          "kind": "fn"
+        },
+        {
+          "name": "HistoryRow",
+          "kind": "type"
+        },
+        {
+          "name": "isEnded",
+          "kind": "fn"
+        },
+        {
+          "name": "MAX_AMOUNT_CENTS",
+          "kind": "const"
+        },
+        {
+          "name": "monthEarlier",
+          "kind": "fn"
+        },
+        {
+          "name": "monthlyCostsOn",
+          "kind": "fn"
+        },
+        {
+          "name": "nextRenewal",
+          "kind": "fn"
+        },
+        {
+          "name": "parseAmount",
+          "kind": "fn"
+        },
+        {
+          "name": "pct",
+          "kind": "fn"
+        },
+        {
+          "name": "startDay",
+          "kind": "fn"
+        },
+        {
+          "name": "yearEarlier",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/lib/admin-day",
+        "@/lib/expenses"
+      ],
+      "usedBy": [
+        "src/app/admin/expenses/page.tsx"
+      ]
+    },
+    {
       "path": "src/app/admin/expenses/page.tsx",
-      "lines": 186,
-      "purpose": "Expenses (owner only):",
+      "lines": 391,
+      "purpose": "",
       "brain": [],
       "exports": [
         {
@@ -811,15 +1006,58 @@
       "auth": "admin",
       "guard": "client-side",
       "imports": [
+        "../admin-glass.module.css",
+        "../courses/courses.module.css",
+        "../revenue/revenue.module.css",
+        "./expenses.module.css",
+        "./logic",
+        "./terms",
         "@/components/admin/AdminSidebar",
-        "@/components/ui/field",
+        "@/lib/admin-day",
         "@/lib/expenses",
-        "@/lib/format",
+        "@/lib/goal-pace",
         "@/lib/step-up-client",
         "next/link",
         "react"
       ],
       "usedBy": []
+    },
+    {
+      "path": "src/app/admin/expenses/terms.ts",
+      "lines": 33,
+      "purpose": "Expenses (ADMIN-REDO, Cam approved the mockup 2026-11-12):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "CADENCE_WORDS",
+          "kind": "const"
+        },
+        {
+          "name": "loadFailed",
+          "kind": "fn"
+        },
+        {
+          "name": "MSG",
+          "kind": "const"
+        },
+        {
+          "name": "SESSION_ENDED",
+          "kind": "const"
+        },
+        {
+          "name": "TERMS",
+          "kind": "const"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/admin/expenses/page.tsx"
+      ]
     },
     {
       "path": "src/app/admin/forgot-password/page.tsx",
@@ -1611,6 +1849,147 @@
         "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/prisma",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/admin/bookings/plan.ts",
+      "lines": 132,
+      "purpose": "ADMIN-REDO page 4 — Bookings (Cam 2026-11-12).",
+      "brain": [],
+      "exports": [
+        {
+          "name": "BookingFacts",
+          "kind": "type"
+        },
+        {
+          "name": "BookingFilter",
+          "kind": "type"
+        },
+        {
+          "name": "bookingNumber",
+          "kind": "fn"
+        },
+        {
+          "name": "EMPTY_LEDGER",
+          "kind": "const"
+        },
+        {
+          "name": "FEE_LABEL",
+          "kind": "const"
+        },
+        {
+          "name": "FeeKey",
+          "kind": "type"
+        },
+        {
+          "name": "feeState",
+          "kind": "fn"
+        },
+        {
+          "name": "FILTERS",
+          "kind": "const"
+        },
+        {
+          "name": "isDisputeRow",
+          "kind": "fn"
+        },
+        {
+          "name": "isFilter",
+          "kind": "fn"
+        },
+        {
+          "name": "LedgerRow",
+          "kind": "type"
+        },
+        {
+          "name": "LedgerSum",
+          "kind": "type"
+        },
+        {
+          "name": "netCents",
+          "kind": "fn"
+        },
+        {
+          "name": "numberQuery",
+          "kind": "fn"
+        },
+        {
+          "name": "paidBeforeDispute",
+          "kind": "fn"
+        },
+        {
+          "name": "PayKey",
+          "kind": "type"
+        },
+        {
+          "name": "payState",
+          "kind": "fn"
+        },
+        {
+          "name": "PayState",
+          "kind": "type"
+        },
+        {
+          "name": "policyLine",
+          "kind": "fn"
+        },
+        {
+          "name": "rowAmount",
+          "kind": "fn"
+        },
+        {
+          "name": "sumLedger",
+          "kind": "fn"
+        },
+        {
+          "name": "Tone",
+          "kind": "type"
+        },
+        {
+          "name": "usd",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/api/admin/bookings/route.ts"
+      ]
+    },
+    {
+      "path": "src/app/api/admin/bookings/route.ts",
+      "lines": 178,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/bookings",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "./plan",
+        "@/lib/admin-areas",
+        "@/lib/admin-day",
+        "@/lib/admin-session",
+        "@/lib/booking-fees",
+        "@/lib/money-problems",
+        "@/lib/prisma",
+        "@/lib/real-courses",
+        "@prisma/client",
         "next/server"
       ],
       "usedBy": []
@@ -2486,7 +2865,7 @@
     },
     {
       "path": "src/app/api/admin/expenses/[id]/route.ts",
-      "lines": 87,
+      "lines": 94,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2544,7 +2923,7 @@
     },
     {
       "path": "src/app/api/admin/expenses/route.ts",
-      "lines": 51,
+      "lines": 56,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3400,7 +3779,7 @@
     },
     {
       "path": "src/app/api/admin/search/route.ts",
-      "lines": 238,
+      "lines": 251,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3618,7 +3997,7 @@
     },
     {
       "path": "src/app/api/admin/tee-sheet/route.ts",
-      "lines": 118,
+      "lines": 128,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3652,6 +4031,7 @@
         "@/lib/course-metrics",
         "@/lib/prisma",
         "@/lib/schedule-service",
+        "@/lib/tee-time-close",
         "next/server"
       ],
       "usedBy": []
@@ -8242,7 +8622,7 @@
     },
     {
       "path": "src/app/api/operator/tee-times/route.ts",
-      "lines": 281,
+      "lines": 291,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8284,6 +8664,7 @@
         "@/lib/schedule-service",
         "@/lib/schedule-wire",
         "@/lib/session",
+        "@/lib/tee-time-close",
         "@/lib/tee-time-seats",
         "next/server"
       ],
@@ -9698,7 +10079,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 2284,
+      "lines": 2286,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11211,6 +11592,7 @@
       "usedBy": [
         "src/app/admin/announcements/page.tsx",
         "src/app/admin/audit/page.tsx",
+        "src/app/admin/bookings/page.tsx",
         "src/app/admin/company-documents/page.tsx",
         "src/app/admin/courses/[id]/page.tsx",
         "src/app/admin/courses/page.tsx",
@@ -11623,7 +12005,7 @@
     },
     {
       "path": "src/components/admin/admin-href.ts",
-      "lines": 62,
+      "lines": 63,
       "purpose": "Admin lane (2026-11-10):",
       "brain": [],
       "exports": [
@@ -14496,7 +14878,6 @@
         "src/app/admin/courses/[id]/_parts/shared.tsx",
         "src/app/admin/create/page.tsx",
         "src/app/admin/employees/page.tsx",
-        "src/app/admin/expenses/page.tsx",
         "src/app/admin/forgot-password/page.tsx",
         "src/app/admin/goals/page.tsx",
         "src/app/admin/golfers/page.tsx",
@@ -14717,6 +15098,7 @@
       "usedBy": [
         "src/app/admin/employees/page.tsx",
         "src/app/admin/layout.tsx",
+        "src/app/api/admin/bookings/route.ts",
         "src/app/api/admin/business/route.ts",
         "src/app/api/admin/course-look/route.ts",
         "src/app/api/admin/courses/directory/route.ts",
@@ -15103,7 +15485,7 @@
     },
     {
       "path": "src/lib/admin-day.ts",
-      "lines": 111,
+      "lines": 110,
       "purpose": "Platform day boundaries.",
       "brain": [],
       "exports": [
@@ -15147,7 +15529,10 @@
       "guard": null,
       "imports": [],
       "usedBy": [
+        "src/app/admin/expenses/logic.ts",
+        "src/app/admin/expenses/page.tsx",
         "src/app/api/admin/ask/route.ts",
+        "src/app/api/admin/bookings/route.ts",
         "src/app/api/admin/business/route.ts",
         "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/finance/route.ts",
@@ -15159,6 +15544,7 @@
         "src/lib/admin-course-page.ts",
         "src/lib/admin-home.ts",
         "src/lib/admin-today.ts",
+        "src/lib/expenses.ts",
         "src/lib/finance-period.ts",
         "src/lib/revenue-period.ts"
       ]
@@ -15485,6 +15871,7 @@
         "src/app/api/admin/ask/route.ts",
         "src/app/api/admin/audit/route.ts",
         "src/app/api/admin/backfill-orphaned-inquiries/route.ts",
+        "src/app/api/admin/bookings/route.ts",
         "src/app/api/admin/broadcasts/route.ts",
         "src/app/api/admin/business/route.ts",
         "src/app/api/admin/change-password/route.ts",
@@ -16523,7 +16910,7 @@
     },
     {
       "path": "src/lib/birdie/proposals.ts",
-      "lines": 451,
+      "lines": 455,
       "purpose": "BIRDIE_AI_SPEC B4b (Cam 2026-10-05) — propose-and-confirm CHANGES.",
       "brain": [],
       "exports": [
@@ -16559,6 +16946,7 @@
         "../move-booking",
         "../prisma",
         "../schedule-service",
+        "../tee-time-close",
         "./proposal-types",
         "./tools",
         "@anthropic-ai/sdk"
@@ -16817,6 +17205,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
+        "src/app/api/admin/bookings/route.ts",
         "src/app/api/admin/system/route.ts",
         "src/app/api/bookings/route.ts",
         "src/app/api/operator/events/[id]/route.ts",
@@ -21005,10 +21394,14 @@
     },
     {
       "path": "src/lib/expenses.ts",
-      "lines": 88,
+      "lines": 163,
       "purpose": "EXPENSE TRACKER (RUN_QUEUE \"EXPENSE TRACKER / real P&L\") — the manual half of the P&L:",
       "brain": [],
       "exports": [
+        {
+          "name": "endedAtForLastDay",
+          "kind": "fn"
+        },
         {
           "name": "EXPENSE_CADENCE_LABEL",
           "kind": "const"
@@ -21042,6 +21435,14 @@
           "kind": "fn"
         },
         {
+          "name": "lastDayOf",
+          "kind": "fn"
+        },
+        {
+          "name": "monthCostPace",
+          "kind": "fn"
+        },
+        {
           "name": "monthlyEquivalentCents",
           "kind": "fn"
         },
@@ -21063,8 +21464,11 @@
       "methods": [],
       "auth": null,
       "guard": null,
-      "imports": [],
+      "imports": [
+        "./admin-day"
+      ],
       "usedBy": [
+        "src/app/admin/expenses/logic.ts",
         "src/app/admin/expenses/page.tsx",
         "src/app/api/admin/expenses/[id]/route.ts",
         "src/app/api/admin/expenses/route.ts",
@@ -21284,7 +21688,6 @@
         "src/app/admin/courses/[id]/_parts/SetupTab.tsx",
         "src/app/admin/courses/[id]/_parts/useCourseDetail.tsx",
         "src/app/admin/employees/page.tsx",
-        "src/app/admin/expenses/page.tsx",
         "src/app/admin/goals/page.tsx",
         "src/app/admin/golfers/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
@@ -21400,7 +21803,7 @@
     },
     {
       "path": "src/lib/goal-pace.ts",
-      "lines": 72,
+      "lines": 75,
       "purpose": "GOAL-PACE (Cam 2026-11-12, ADMIN_REDO_SPEC \"Goals:",
       "brain": [],
       "exports": [
@@ -21440,6 +21843,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
+        "src/app/admin/expenses/page.tsx",
         "src/components/dashboard/home/HomeBoard.tsx",
         "src/lib/home-board.ts"
       ]
@@ -23520,6 +23924,7 @@
         "./real-courses"
       ],
       "usedBy": [
+        "src/app/api/admin/bookings/route.ts",
         "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/messages/route.ts",
         "src/app/api/admin/nav-badges/route.ts",
@@ -24598,6 +25003,7 @@
         "src/app/api/admin/agreement-versions/route.ts",
         "src/app/api/admin/audit/route.ts",
         "src/app/api/admin/backfill-orphaned-inquiries/route.ts",
+        "src/app/api/admin/bookings/route.ts",
         "src/app/api/admin/bootstrap/route.ts",
         "src/app/api/admin/broadcasts/route.ts",
         "src/app/api/admin/business/route.ts",
@@ -24894,6 +25300,7 @@
         "src/lib/staff-refund.ts",
         "src/lib/submit-change-request.ts",
         "src/lib/tee-sheet-engine.ts",
+        "src/lib/tee-time-close.ts",
         "src/lib/tee-time-seats.ts",
         "src/lib/two-factor.ts",
         "src/lib/weather-cancel.ts"
@@ -25335,6 +25742,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
+        "src/app/api/admin/bookings/route.ts",
         "src/app/api/admin/business/route.ts",
         "src/app/api/admin/finance/route.ts",
         "src/app/api/admin/nav-badges/route.ts",
@@ -28449,6 +28857,55 @@
       ]
     },
     {
+      "path": "src/lib/tee-time-close.ts",
+      "lines": 70,
+      "purpose": "TT-CLOSE (Cam 2026-11-12, ADMIN_REDO_SPEC \"Course dashboard Tee sheet + time card:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "ACTIVE_BOOKING",
+          "kind": "const"
+        },
+        {
+          "name": "bookedOnTime",
+          "kind": "fn"
+        },
+        {
+          "name": "closeFreeTime",
+          "kind": "fn"
+        },
+        {
+          "name": "CloseResult",
+          "kind": "type"
+        },
+        {
+          "name": "deleteRefusal",
+          "kind": "fn"
+        },
+        {
+          "name": "refusal",
+          "kind": "fn"
+        },
+        {
+          "name": "setStaffOnly",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./prisma"
+      ],
+      "usedBy": [
+        "src/app/api/admin/tee-sheet/route.ts",
+        "src/app/api/operator/tee-times/route.ts",
+        "src/lib/birdie/proposals.ts"
+      ]
+    },
+    {
       "path": "src/lib/tee-time-fit.ts",
       "lines": 19,
       "purpose": "Cam 2026-10-19:",
@@ -30040,6 +30497,7 @@
         "src/lib/staff-refund.ts"
       ],
       "readers": [
+        "src/app/api/admin/bookings/route.ts",
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/courses/route.ts",
@@ -30114,6 +30572,7 @@
         "src/lib/sent-messages.ts",
         "src/lib/split-booking-db.ts",
         "src/lib/staff-refund.ts",
+        "src/lib/tee-time-close.ts",
         "src/lib/weather-cancel.ts"
       ]
     },
@@ -30174,6 +30633,7 @@
         "src/lib/sample-data.ts"
       ],
       "readers": [
+        "src/app/api/admin/bookings/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/lib/analytics.ts",
         "src/lib/course-timeline.ts",
@@ -33708,6 +34168,7 @@
         "src/lib/sample-data.ts"
       ],
       "readers": [
+        "src/app/api/admin/bookings/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/member/[courseSlug]/payments/route.ts",
         "src/app/api/operator/members/route.ts",
@@ -34119,6 +34580,7 @@
         "src/lib/staff-refund.ts"
       ],
       "readers": [
+        "src/app/api/admin/bookings/route.ts",
         "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/today/overview/route.ts",
@@ -35396,6 +35858,7 @@
         "src/lib/sample-data.ts",
         "src/lib/schedule-service.ts",
         "src/lib/tee-sheet-engine.ts",
+        "src/lib/tee-time-close.ts",
         "src/lib/tee-time-seats.ts",
         "src/lib/weather-cancel.ts"
       ],
