@@ -309,7 +309,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/courses/[slug]` | public | public | page | `src/app/courses/[slug]/page.tsx` | 51 |
 | `/courses/[slug]/account` | golfer | **NONE FOUND** | page | `src/app/courses/[slug]/account/page.tsx` | 11 |
 | `/courses/[slug]/account/accept-invite` | golfer | entry | page | `src/app/courses/[slug]/account/accept-invite/page.tsx` | 144 |
-| `/courses/[slug]/info` | public | public | page | `src/app/courses/[slug]/info/page.tsx` | 144 |
+| `/courses/[slug]/info` | public | public | page | `src/app/courses/[slug]/info/page.tsx` | 145 |
 | `/courses/[slug]/member` | member | **NONE FOUND** | page | `src/app/courses/[slug]/member/page.tsx` | 875 |
 | `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 2284 |
 | `/dashboard/2fa` | operator | entry | page | `src/app/dashboard/2fa/page.tsx` | 110 |
@@ -619,7 +619,7 @@ Sorted the same way.
 
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
-| `src/components/ui/Card.tsx` | 87 | 17 |  | `Card`, `CARD` |
+| `src/components/ui/Card.tsx` | 88 | 17 |  | `Card`, `CARD` |
 | `src/components/ui/StatusDot.tsx` | 76 | 36 |  | `StatusDot` |
 | `src/components/ui/field.ts` | 57 | 8 | MP-9: | `INPUT`, `INPUT_COMPACT` |
 | `src/components/dashboard/LoadError.tsx` | 22 | 16 | SD-10. | `LoadError` |

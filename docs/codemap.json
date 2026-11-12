@@ -8611,7 +8611,7 @@
     },
     {
       "path": "src/app/courses/[slug]/info/page.tsx",
-      "lines": 144,
+      "lines": 145,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8631,6 +8631,7 @@
       "guard": "public",
       "imports": [
         "@/components/golfer/CourseFrame",
+        "@/components/ui/Card",
         "@/lib/demo-courses",
         "@/lib/prisma",
         "@/lib/public-course",
@@ -13473,6 +13474,7 @@
         "src/app/contact/page.tsx",
         "src/app/courses/[slug]/CourseBookingClient.tsx",
         "src/app/courses/[slug]/account/AccountPortalClient.tsx",
+        "src/app/courses/[slug]/info/page.tsx",
         "src/app/dashboard/analytics/page.tsx",
         "src/app/dashboard/events/page.tsx",
         "src/app/dashboard/golfers/[key]/page.tsx",
