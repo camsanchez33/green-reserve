@@ -29,7 +29,7 @@ check('emails print the GR label', (email.match(/Booking \$\{await bookingRefFor
 for (const f of ['src/app/manage/[bookingId]/page.tsx', 'src/app/receipt/[bookingId]/page.tsx']) {
   check(`${f} shows the GR label`, readFileSync(f, 'utf8').includes('bookingRef ??'));
 }
-const mig = readFileSync('prisma/migrations/20261112000000_booking_ref_expected_launch/migration.sql', 'utf8');
+const mig = readFileSync('prisma/migrations/20261112010000_booking_ref_expected_launch/migration.sql', 'utf8');
 check('migration: course number column added with no default (no backfill), then the default set', mig.indexOf('ADD COLUMN "number" INTEGER;') >= 0 && mig.indexOf('ADD COLUMN "number"') < mig.indexOf('SET DEFAULT nextval') && !/SERIAL|UPDATE "Booking" SET|UPDATE "Course" SET "number"/i.test(mig));
 check('migration: the booking number comes from a BEFORE INSERT trigger on the course counter', /BEFORE INSERT ON "Booking"/.test(mig) && /SET "bookingRefSeq" = "bookingRefSeq" \+ 1/.test(mig));
 
