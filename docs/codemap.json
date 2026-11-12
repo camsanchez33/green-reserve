@@ -3052,7 +3052,7 @@
     },
     {
       "path": "src/app/api/admin/revenue/route.ts",
-      "lines": 365,
+      "lines": 514,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3070,15 +3070,20 @@
       "guard": "file",
       "imports": [
         "@/lib/access-fee",
+        "@/lib/admin-day",
         "@/lib/admin-session",
+        "@/lib/card-reader",
         "@/lib/course-metrics",
         "@/lib/expenses",
         "@/lib/fees-by-day",
+        "@/lib/ledger-view",
         "@/lib/money-problems",
         "@/lib/platform-stripe",
         "@/lib/prisma",
         "@/lib/real-courses",
+        "@/lib/revenue-period",
         "@/lib/shop",
+        "@/lib/stripe",
         "@/lib/stripe-errors",
         "next/server"
       ],
@@ -3501,7 +3506,7 @@
     },
     {
       "path": "src/app/api/admin/transactions/export/route.ts",
-      "lines": 94,
+      "lines": 107,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3520,6 +3525,7 @@
       "imports": [
         "@/lib/admin-session",
         "@/lib/prisma",
+        "@/lib/revenue-period",
         "@/lib/shop",
         "next/server"
       ],
@@ -14893,12 +14899,14 @@
         "src/app/api/admin/ask/route.ts",
         "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/goals/route.ts",
+        "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/today/overview/route.ts",
         "src/lib/admin-ask.ts",
         "src/lib/admin-checks.ts",
         "src/lib/admin-course-page.ts",
         "src/lib/admin-home.ts",
-        "src/lib/admin-today.ts"
+        "src/lib/admin-today.ts",
+        "src/lib/revenue-period.ts"
       ]
     },
     {
@@ -17400,6 +17408,7 @@
         "stripe"
       ],
       "usedBy": [
+        "src/app/api/admin/revenue/route.ts",
         "src/app/api/operator/card-readers/route.ts",
         "src/app/api/operator/reader-rounds/route.ts",
         "src/app/api/operator/shop-sales/route.ts",
@@ -22055,6 +22064,10 @@
           "kind": "fn"
         },
         {
+          "name": "csvCell",
+          "kind": "fn"
+        },
+        {
           "name": "dayOf",
           "kind": "fn"
         },
@@ -22135,6 +22148,7 @@
         "./stripe"
       ],
       "usedBy": [
+        "src/app/api/admin/revenue/route.ts",
         "src/app/api/operator/money/ledger/route.ts",
         "src/components/dashboard/money/LedgerPanel.tsx"
       ]
@@ -25191,6 +25205,102 @@
       ]
     },
     {
+      "path": "src/lib/revenue-period.ts",
+      "lines": 254,
+      "purpose": "ADMIN-REDO Revenue (Cam 2026-11-11):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "addDays",
+          "kind": "fn"
+        },
+        {
+          "name": "centsPerDay",
+          "kind": "fn"
+        },
+        {
+          "name": "dayIndex",
+          "kind": "fn"
+        },
+        {
+          "name": "daysBetween",
+          "kind": "fn"
+        },
+        {
+          "name": "daySeries",
+          "kind": "fn"
+        },
+        {
+          "name": "parseRevenuePeriod",
+          "kind": "fn"
+        },
+        {
+          "name": "payoutArrivalRange",
+          "kind": "fn"
+        },
+        {
+          "name": "PayoutIn",
+          "kind": "type"
+        },
+        {
+          "name": "PayoutProblem",
+          "kind": "type"
+        },
+        {
+          "name": "platformMoveLabel",
+          "kind": "fn"
+        },
+        {
+          "name": "platformSigned",
+          "kind": "fn"
+        },
+        {
+          "name": "resolveRevenuePeriod",
+          "kind": "fn"
+        },
+        {
+          "name": "REVENUE_PERIODS",
+          "kind": "const"
+        },
+        {
+          "name": "RevenuePeriod",
+          "kind": "type"
+        },
+        {
+          "name": "RevenuePeriodKind",
+          "kind": "type"
+        },
+        {
+          "name": "RevenueWindow",
+          "kind": "type"
+        },
+        {
+          "name": "stripePaymentUrl",
+          "kind": "fn"
+        },
+        {
+          "name": "stripePayoutUrl",
+          "kind": "fn"
+        },
+        {
+          "name": "summarisePayouts",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./admin-day"
+      ],
+      "usedBy": [
+        "src/app/api/admin/revenue/route.ts",
+        "src/app/api/admin/transactions/export/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/round-packs-switch.ts",
       "lines": 8,
       "purpose": "POS-6 (Cam 2026-11-09, round packs:",
@@ -27600,6 +27710,7 @@
         "src/app/api/admin/course-documents/route.ts",
         "src/app/api/admin/course-payouts/route.ts",
         "src/app/api/admin/platform-stripe/route.ts",
+        "src/app/api/admin/revenue/route.ts",
         "src/app/api/bookings/route.ts",
         "src/app/api/bookings/setup-intent/route.ts",
         "src/app/api/cron/send-reminders/route.ts",
@@ -33042,6 +33153,7 @@
         "src/lib/sample-data.ts"
       ],
       "readers": [
+        "src/app/api/admin/revenue/route.ts",
         "src/app/api/member/[courseSlug]/payments/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/lib/analytics.ts",

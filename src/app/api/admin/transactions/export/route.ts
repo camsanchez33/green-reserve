@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, areaGate } from '@/lib/admin-session';
 import { roundChargedTotal, roundApplicationFeeCents } from '@/lib/shop';
+import { REVENUE_PERIODS, resolveRevenuePeriod, type RevenuePeriodKind } from '@/lib/revenue-period';
 
 // MP-6c: a transaction-level export for an accountant. One row per money
 // event across every course in the period: round charges (placed by
@@ -9,7 +10,8 @@ import { roundChargedTotal, roundApplicationFeeCents } from '@/lib/shop';
 // the PaymentEvent ledger). The per-course table's CSV is a summary; this is
 // the ledger. Manager+ — it carries golfer names.
 //
-// GET /api/admin/transactions/export?from=YYYY-MM-DD&to=YYYY-MM-DD
+// GET /api/admin/transactions/export?from=YYYY-MM-DD&to=YYYY-MM-DD  (UTC days)
+// GET /api/admin/transactions/export?period=month|last_month|30d|year  (the Revenue page's window)
 
 const esc = (v: string | number) => {
   const s = String(v ?? '');
@@ -25,15 +27,26 @@ export async function GET(req: NextRequest) {
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'The transaction export needs manager access.' }, { status: 403 });
 
   const sp = req.nextUrl.searchParams;
-  const from = sp.get('from') ?? '';
-  const to = sp.get('to') ?? '';
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) {
-    return NextResponse.json({ error: 'from and to must be YYYY-MM-DD' }, { status: 400 });
+  // ADMIN-REDO Revenue: ?period=month|last_month|30d|year is the Revenue page's own window
+  // (platform clock, lib/revenue-period) — exactly the ledger's [start, now). Otherwise the
+  // older from/to, read as UTC days.
+  const periodKind = sp.get('period');
+  let from: string, to: string, win: { gte: Date; lt?: Date; lte?: Date };
+  if (periodKind && (REVENUE_PERIODS as string[]).includes(periodKind)) {
+    const rp = resolveRevenuePeriod(periodKind as RevenuePeriodKind, new Date());
+    from = rp.from; to = rp.to;
+    win = { gte: rp.current.start, lt: rp.current.end };
+  } else {
+    from = sp.get('from') ?? '';
+    to = sp.get('to') ?? '';
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) {
+      return NextResponse.json({ error: 'from and to must be YYYY-MM-DD, or period one of month, last_month, 30d, year' }, { status: 400 });
+    }
+    const start = new Date(from + 'T00:00:00.000Z');
+    const end = new Date(to + 'T23:59:59.999Z');
+    if (end.getTime() - start.getTime() > 400 * 86400000) return NextResponse.json({ error: 'Export at most 400 days at a time.' }, { status: 400 });
+    win = { gte: start, lte: end };
   }
-  const start = new Date(from + 'T00:00:00.000Z');
-  const end = new Date(to + 'T23:59:59.999Z');
-  if (end.getTime() - start.getTime() > 400 * 86400000) return NextResponse.json({ error: 'Export at most 400 days at a time.' }, { status: 400 });
-  const win = { gte: start, lte: end };
 
   const bookingSelect = {
     id: true, golferName: true, golferEmail: true, players: true,
