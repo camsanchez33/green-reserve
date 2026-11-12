@@ -23,7 +23,7 @@ const page = readFileSync('src/app/dashboard/settings/page.tsx', 'utf8');
 const booking = readFileSync('src/app/courses/[slug]/CourseBookingClient.tsx', 'utf8');
 check('settings preview uses the same lines', page.includes('facilityLines({'));
 check('no toggle switches left in Facilities', !page.includes('label="Driving Range"'));
-check('booking page lists facilities, no tinted pills', booking.includes('>Facilities</h2>') && !booking.includes('backgroundColor: `${accent}10`, color: accent'));
+check('booking page lists facilities, no tinted pills', readFileSync('src/app/courses/[slug]/info/page.tsx', 'utf8').includes('>Facilities</h2>') && !booking.includes('backgroundColor: `${accent}10`, color: accent'));
 
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }
 console.log('\nALL PASS');
