@@ -886,8 +886,8 @@ export default function ShopPage() {
               const sub = s.lines.reduce((t, l) => t + l.unitPriceCents * l.quantity, 0);
               const BTN = 'w-full min-h-[42px] rounded-[10px] text-[14px] font-semibold disabled:opacity-50 ';
               return (
-            <Card className="p-4 lg:sticky lg:top-6 scroll-mt-4">
-              <h2 ref={saleRef} tabIndex={-1} className="text-[20px] font-semibold text-ink outline-none">Sale {saleNo(s)}</h2>
+            <Card className="p-4 lg:sticky lg:top-6">
+              <h2 ref={saleRef} tabIndex={-1} className="text-[20px] font-semibold text-ink outline-none scroll-mt-8">Sale {saleNo(s)}</h2>
               <p className="text-[13px] text-ink-muted mt-1 mb-3">{time(s.createdAt)} · {st.tone === 'neutral' ? st.label : <StatusDot status={st.tone} label={st.label} />}{s.customerName ? ` · ${s.customerName}` : ''}</p>
               <dl className="text-[13.5px]">
                 {s.lines.map(l => (
