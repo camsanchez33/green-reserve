@@ -2455,7 +2455,7 @@
     },
     {
       "path": "src/app/api/admin/expenses/[id]/route.ts",
-      "lines": 90,
+      "lines": 94,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2513,7 +2513,7 @@
     },
     {
       "path": "src/app/api/admin/expenses/route.ts",
-      "lines": 54,
+      "lines": 56,
       "purpose": "",
       "brain": [],
       "exports": [

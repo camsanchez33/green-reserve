@@ -109,8 +109,8 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/admin/data-reset` | admin | file | GET POST | `src/app/api/admin/data-reset/route.ts` | 32 |
 | `/api/admin/disputes/[bookingId]/evidence` | admin | file | GET | `src/app/api/admin/disputes/[bookingId]/evidence/route.ts` | 29 |
 | `/api/admin/employees` | admin | file | GET PATCH POST | `src/app/api/admin/employees/route.ts` | 146 |
-| `/api/admin/expenses` | admin | file | GET POST | `src/app/api/admin/expenses/route.ts` | 54 |
-| `/api/admin/expenses/[id]` | admin | file | DELETE PATCH | `src/app/api/admin/expenses/[id]/route.ts` | 90 |
+| `/api/admin/expenses` | admin | file | GET POST | `src/app/api/admin/expenses/route.ts` | 56 |
+| `/api/admin/expenses/[id]` | admin | file | DELETE PATCH | `src/app/api/admin/expenses/[id]/route.ts` | 94 |
 | `/api/admin/expenses/[id]/history` | admin | file | GET | `src/app/api/admin/expenses/[id]/history/route.ts` | 20 |
 | `/api/admin/expenses/budget` | admin | file | PUT | `src/app/api/admin/expenses/budget/route.ts` | 36 |
 | `/api/admin/forgot-password` | admin | entry | POST | `src/app/api/admin/forgot-password/route.ts` | 45 |
