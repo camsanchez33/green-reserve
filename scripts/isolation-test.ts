@@ -608,6 +608,16 @@ async function main() {
       // A support login (not manager) still can't take the evidence pack or owner money.
       checkStatus('Support cannot download a dispute evidence pack → 403', (await api(`/api/admin/disputes/${data.bookingA.id}/evidence`, { cookie: supCookie })).status, 403);
       checkStatus('Support cannot read courses’ payouts → 403', (await api('/api/admin/course-payouts', { cookie: supCookie })).status, 403);
+      // ADMIN-REDO Revenue: support with Money opens it, but payouts, balances and the Stripe match stay the owner's.
+      {
+        const rv = await api('/api/admin/revenue?period=custom&from=2026-01-01&to=2026-01-31', { cookie: supCookie });
+        checkStatus('Support with Money opens Revenue → 200', rv.status, 200);
+        const b = rv.body as { isOwner?: boolean; reconciliation?: unknown; pnl?: { net?: unknown; expenses?: unknown; stripeProcessing?: unknown } };
+        check('…without the owner’s lines (Books vs Stripe, net, expenses, Stripe fees)', b?.isOwner === false && b.reconciliation === undefined && b.pnl?.net === undefined && b.pnl?.expenses === undefined && b.pnl?.stripeProcessing === undefined, JSON.stringify(b).slice(0, 300));
+        checkStatus('Support cannot read the Stripe balance or next payout → 403', (await api('/api/admin/platform-stripe?period=30d', { cookie: supCookie })).status, 403);
+        checkStatus('Support cannot read the monthly Stripe match → 403', (await api('/api/admin/stripe-match', { cookie: supCookie })).status, 403);
+        checkStatus('Support cannot read Expenses → 403', (await api('/api/admin/expenses', { cookie: supCookie })).status, 403);
+      }
       await prisma.adminUser.update({ where: { id: sup.id }, data: { role: 'manager' } });
       const mgrCookie = `admin_session=${await signAdminToken({ adminId: sup.id, email: sup.email, name: sup.name, role: 'manager', mfa: true })}`;
       checkStatus('No pack for a booking without a dispute → 404', (await api(`/api/admin/disputes/${data.bookingA.id}/evidence`, { cookie: mgrCookie })).status, 404);
