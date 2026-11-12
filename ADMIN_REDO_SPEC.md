@@ -176,3 +176,9 @@ across courses (a support email) is done from the Bookings search (name, email, 
   blurred SVG ribbons (greens + one gold thread), the same design as the course dashboard's charcoal.
 - Revenue: Stripe links are a small arrow icon ("Open in Stripe"); CSV is a download icon. By course = bookings, revenue,
   vs the period before. The three small cards sit in one row; By course and the Ledger are full width below them.
+
+## Revenue: APPROVED (Cam 2026-11-12, "approved, build the revenue page to match the mockup")
+Final mockup: `lanes/admin/revenue-mockup.html`. The Admin lane builds the page; Build owns its data (money routes stay
+Build's): the period numbers, the running-total series, by course, payouts, course payout problems, Books vs Stripe, and
+the GreenReserve-side MoneyMove ledger with CSV. Owner-only parts stay owner-only (payouts and balances), and Money-area
+gating stays.
