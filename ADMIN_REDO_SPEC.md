@@ -259,3 +259,10 @@ Mockup `lanes/admin/support-mockup.html` (final). The admin side of the course d
 - No who-has-it, take, assign or snooze. The top bar's alert bell loses its box on every admin page.
 - The hourly check's problem list moves to Overview's "Needs you" panel (Cam 2026-11-12: yes); /admin/problems then redirects to Overview.
 - Pro shop Close out (Cam 2026-11-12: yes): recent close-outs stay a short list; a row opens the full close-out (expected, counted, left in, deposit, note).
+
+## Admin Announcements: APPROVED (Cam 2026-11-12, "approved, build the announcements page")
+Mockup `lanes/admin/announcements-mockup.html` (final). Same features as today (send now to every live course's dashboard, optional email, review step with "Send test to me", no drafts/scheduling/recall).
+- One card: a wordless search, a white refresh and a white "+" (no boxes); one line per announcement: green dot = emailed, grey = dashboard only · title · first line · "N dismissed" · date.
+- Tap → full page: "‹ Announcements", title, full message, "date · by sender · Emailed · N dismissed". No actions.
+- "+" → the composer full page (Title, Message, Also send as email — To N operators of live courses, Preview & confirm) → review (Preview with Edit, reach line, "This cannot be recalled.", Back to edit / Send test to me / Confirm & send) → the green result line on the list (amber when some emails failed).
+- Headings "Sent", "New announcement", "Review before sending" dropped; the header reach line moves into the email option and the review step.
