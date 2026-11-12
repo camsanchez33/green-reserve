@@ -847,9 +847,16 @@ export async function findSales(courseId: string, opts: { day?: string; q?: stri
   // A typed sale number: "1047" or "#1047".
   const asNumber = /^#?\s*(\d{1,9})$/.exec(q);
   const saleNumber = asNumber && Number(asNumber[1]) <= 2_147_483_647 ? Number(asNumber[1]) : null;
+  // A typed number is the exact sale, looked up on its own and put first (final review): as one fuzzy match among
+  // many, a low number — an old sale — fell off the newest 100 behind lines and names that contain the digits.
+  // It ignores the 90-day window (a receipt can be older) but keeps a picked day.
+  const exact = saleNumber != null
+    ? await prisma.shopSale.findFirst({ where: { courseId, number: saleNumber, status: { not: 'open' }, ...(opts.day ? { createdAt: { gte: from, ...(to ? { lt: to } : {}) } } : {}) }, include: SALE_INCLUDE })
+    : null;
   const sales = await prisma.shopSale.findMany({
     where: {
       courseId, status: { not: 'open' }, createdAt: { gte: from, ...(to ? { lt: to } : {}) },
+      ...(exact ? { id: { not: exact.id } } : {}),
       ...(q ? { OR: [
         { customerName: contains },
         // Audit 2026-10-31: only a login that may see golfer contact details finds a sale by email or phone.
@@ -860,7 +867,7 @@ export async function findSales(courseId: string, opts: { day?: string; q?: stri
         ...(saleNumber != null ? [{ number: saleNumber }] : []),
       ] } : {}),
     },
-    orderBy: { createdAt: 'desc' }, take: 100, include: SALE_INCLUDE,
+    orderBy: { createdAt: 'desc' }, take: exact ? 99 : 100, include: SALE_INCLUDE,
   });
-  return { ok: true, value: sales.map(saleView) };
+  return { ok: true, value: (exact ? [exact, ...sales] : sales).map(saleView) };
 }

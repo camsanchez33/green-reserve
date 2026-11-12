@@ -629,16 +629,16 @@ model TeeTime {
 
 /// BOOKING-REF (Cam 2026-11-12): the last course number given (see Course.number). One row, id
 /// "course", written only by the "Course_number_assign" trigger. Wiped with the courses at launch.
+model CourseNumberCounter {
+  id   String @id @default("course")
+  last Int    @default(0)
+}
+
 /// PRO-SHOP sale numbers: each course's last sale number (one row per course, made on its first sale).
 /// Written only by the ShopSale insert trigger; a plain row so a rolled-back sale gives its number back.
 model ShopSaleCounter {
   courseId String @id
   last     Int    @default(0)
-}
-
-model CourseNumberCounter {
-  id   String @id @default("course")
-  last Int    @default(0)
 }
 
 model Booking {

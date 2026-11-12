@@ -17,17 +17,19 @@ export type ShopReceipt = {
 };
 
 const PAID = ['paid_cash', 'paid_card', 'paid_account'];
-const ref = (id: string) => id.slice(-8).toUpperCase();
+// PRO-SHOP sale numbers: the receipt reads like the Sales list, "#18"; a sale from before numbers keeps its old
+// reference, the last 8 of its id.
+const ref = (id: string, number: number | null) => (number != null ? `#${number}` : id.slice(-8).toUpperCase());
 const paidWithOf = (status: string) => (status === 'paid_card' ? 'Card' : status === 'paid_account' ? 'On account' : 'Cash');
 
 type Row = {
-  id: string; status: string; totalCents: number; taxCents: number; discountCents: number; discountNote: string; cashTenderedCents: number | null;
+  id: string; number: number | null; status: string; totalCents: number; taxCents: number; discountCents: number; discountNote: string; cashTenderedCents: number | null;
   refundedCents: number; paidAt: Date | null; createdAt: Date; soldBy: string; customerName: string;
   lines: { name: string; unitPriceCents: number; quantity: number }[];
   course: { name: string; brandColor: string | null; logoUrl: string | null; city: string; state: string; timezone: string | null };
 };
 const SELECT = {
-  id: true, status: true, totalCents: true, taxCents: true, discountCents: true, discountNote: true, cashTenderedCents: true, refundedCents: true,
+  id: true, number: true, status: true, totalCents: true, taxCents: true, discountCents: true, discountNote: true, cashTenderedCents: true, refundedCents: true,
   paidAt: true, createdAt: true, soldBy: true, customerName: true, receiptToken: true,
   lines: { orderBy: { id: 'asc' as const }, select: { name: true, unitPriceCents: true, quantity: true } },
   course: { select: { name: true, brandColor: true, logoUrl: true, city: true, state: true, timezone: true } },
@@ -35,7 +37,7 @@ const SELECT = {
 
 export function receiptView(s: Row): ShopReceipt {
   return {
-    ref: ref(s.id), courseName: s.course.name, brandColor: s.course.brandColor ?? '', logoUrl: s.course.logoUrl ?? '',
+    ref: ref(s.id, s.number), courseName: s.course.name, brandColor: s.course.brandColor ?? '', logoUrl: s.course.logoUrl ?? '',
     location: [s.course.city, s.course.state].filter(Boolean).join(', '),
     paidAt: (s.paidAt ?? s.createdAt).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: s.course.timezone || 'America/New_York' }),
     paidWith: paidWithOf(s.status), soldBy: s.soldBy, customerName: s.customerName,

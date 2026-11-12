@@ -26109,7 +26109,7 @@
     },
     {
       "path": "src/lib/sample-data.ts",
-      "lines": 501,
+      "lines": 503,
       "purpose": "Cam 2026-10-28 (\"add a shit ton of test tee times, members and shit to the test course … do a lot of fake bookings\"); Cam 2026-11-01 chose \"Busy season\":",
       "brain": [],
       "exports": [
@@ -27184,7 +27184,7 @@
     },
     {
       "path": "src/lib/shop-receipt.ts",
-      "lines": 70,
+      "lines": 72,
       "purpose": "RECEIPT-3 (Cam 2026-11-09:",
       "brain": [],
       "exports": [
@@ -27265,7 +27265,7 @@
     },
     {
       "path": "src/lib/shop-sales.ts",
-      "lines": 867,
+      "lines": 874,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [

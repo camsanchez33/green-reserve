@@ -3,6 +3,7 @@
 // findable by "1047" or "#1047". Needs DATABASE_URL (the CI database): `npx tsx scripts/shop-sale-number-db-test.ts`.
 import { prisma } from '../src/lib/prisma';
 import { findSales } from '../src/lib/shop-sales';
+import { staffShopReceipt } from '../src/lib/shop-receipt';
 import { resetTestCourse } from '../src/lib/data-reset';
 
 let failed = 0;
@@ -65,10 +66,33 @@ async function main() {
   ok('a number too big for the column searches safely (no error)', big.ok);
   ok('every sale read carries its number', (await findSales(a.id, {})).ok && ((await findSales(a.id, {})) as { value: { number: number | null }[] }).value.every(s => typeof s.number === 'number'));
 
+  // Final review: a bare number must find its sale even when over 100 newer sales contain those digits.
+  {
+    const c = await course('crowd');
+    const first = Array.from({ length: 17 }, () => sale(c.id, { customerName: 'Early', createdAt: new Date(Date.now() - 5 * 86_400_000) }));
+    await Promise.all(first);
+    const eighteen = await sale(c.id, { customerName: 'The one', createdAt: new Date(Date.now() - 5 * 86_400_000) });
+    for (let i = 0; i < 130; i++) await sale(c.id, { customerName: `Golfer 18${i}`, createdAt: new Date(Date.now() - (4 * 86_400_000 - i * 60_000)) });
+    const r = await findSales(c.id, { q: '18' });
+    ok('search "18" finds sale #18 first, though 130 newer sales mention 18', r.ok && r.value[0]?.id === eighteen.id && r.value[0].number === 18 && r.value.length === 100, r.ok ? { first: r.value[0]?.number, n: r.value.length } : r);
+    ok('…and lists it once', r.ok && r.value.filter(x => x.id === eighteen.id).length === 1);
+    // Older than the 90-day window: still found by its number.
+    await prisma.shopSale.update({ where: { id: eighteen.id }, data: { createdAt: new Date(Date.now() - 200 * 86_400_000), paidAt: new Date(Date.now() - 200 * 86_400_000) } });
+    const old = await findSales(c.id, { q: '#18' });
+    ok('a sale older than 90 days is found by its number', old.ok && old.value[0]?.id === eighteen.id);
+    const day = new Date().toISOString().slice(0, 10);
+    const picked = await findSales(c.id, { q: '#18', day });
+    ok('…but not on a day it wasn\'t made', picked.ok && !picked.value.some(x => x.id === eighteen.id));
+    const rc = await staffShopReceipt(c.id, eighteen.id);
+    ok('its receipt reads "#18", like the Sales list', rc?.ref === '#18', rc?.ref);
+  }
+
   // A sale made before the column has no number: shown as null.
   await prisma.$executeRaw`UPDATE "ShopSale" SET "number" = NULL WHERE "id" = ${a1.id}`;
   const old = await findSales(a.id, { q: 'Sale Number' });
   ok('a sale from before numbers reads as null', old.ok && old.value.some(s => s.id === a1.id && s.number === null));
+  const oldReceipt = await staffShopReceipt(a.id, a1.id);
+  ok('…and its receipt keeps the old reference (last 8 of the id)', oldReceipt?.ref === a1.id.slice(-8).toUpperCase(), oldReceipt?.ref);
 
   // A test-course reset makes it like new: the next sale is #1 again.
   const reset = await resetTestCourse(a.id);

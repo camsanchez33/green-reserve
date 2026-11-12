@@ -434,7 +434,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/golfer-otp.ts` | 7 | 94 |  | `classifyIdentifier`, `EMAIL_RE`, `generateOtpCode`, `normalizePhone`, `OtpChallenge`, `otpCodeMatches`, `OtpIdentifierType`, `otpUsedKey` +2 more |
 | `src/lib/owner-session.ts` | 7 | 170 | AW-1 (Cam 2026-10-20: | `alertTime`, `approveDevice`, `clearOwnerCookie`, `createOwnerSession`, `DEVICE_COOKIE`, `deviceForApproval`, `deviceLabel`, `deviceTokenFromCookie` +13 more |
 | `src/lib/round-shop-tax.ts` | 7 | 147 | W2-7 part B2 (Cam 2026-10-20: | `EnsureResult`, `ensureShopTax`, `recordPendingRoundShopTax`, `recordRoundShopTax`, `refreshOpenRoundShopTax`, `shopTaxKey`, `TAX_UNAVAILABLE` |
-| `src/lib/shop-sales.ts` | 7 | 867 | POS-2 (Cam 2026-10-19: | `cancelSaleIntent`, `chargeSale`, `createSale`, `discountFor`, `DiscountInput`, `findSales`, `hasDiscount`, `markCardPaid` +25 more |
+| `src/lib/shop-sales.ts` | 7 | 874 | POS-2 (Cam 2026-10-19: | `cancelSaleIntent`, `chargeSale`, `createSale`, `discountFor`, `DiscountInput`, `findSales`, `hasDiscount`, `markCardPaid` +25 more |
 | `src/lib/calcom.ts` | 6 | 93 | CAL-1 — Cal.com as the call scheduler, in place of the Google Calendar grid. | `calcomBookingUrl`, `calcomCreatedBy`, `calcomEmbedUrl`, `calcomManageLinks`, `calcomStatus`, `calcomUidOf`, `verifyCalcomSignature` |
 | `src/lib/call-answers.ts` | 6 | 349 | INQUIRY_CALL_SPEC IC-5 — structured discovery-call answers. | `BOOKING_METHOD_OPTIONS`, `CALL_FIELDS`, `CallAnswers`, `callRecapLines`, `DAY_SHORT`, `emptyAnswers`, `FieldSpec`, `FieldType` +19 more |
 | `src/lib/image-resize.ts` | 6 | 33 | Client-side downscale so a 12MB phone photo never has to travel over the wire or blow the perf budget on the page that eventually renders it. | `downscaleImage` |
@@ -490,7 +490,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/settings-validation.ts` | 4 | 166 | SD-1. | `CANCELLATION_HOURS_MAX`, `normalizeHttpUrl`, `SettingsValidation`, `validateSettingsPatch` |
 | `src/lib/setup-sheet-recap.ts` | 4 | 130 | Cam 2026-10-26 (onboarding walk): | `RecapRow`, `SHEET_NEXT_STEPS`, `sheetPricesNotBuilt`, `sheetRecap` |
 | `src/lib/shop-import.ts` | 4 | 352 | W2-7 (Cam 2026-10-20: | `barcodeChecks`, `CategoryMerge`, `categoryMerges`, `checkList`, `cleanSku`, `clearRepeatedSkus`, `HeaderClash`, `HeaderGuess` +8 more |
-| `src/lib/shop-receipt.ts` | 4 | 70 | RECEIPT-3 (Cam 2026-11-09: | `publicShopReceipt`, `receiptView`, `ShopReceipt`, `shopReceiptUrl`, `staffShopReceipt` |
+| `src/lib/shop-receipt.ts` | 4 | 72 | RECEIPT-3 (Cam 2026-11-09: | `publicShopReceipt`, `receiptView`, `ShopReceipt`, `shopReceiptUrl`, `staffShopReceipt` |
 | `src/lib/unsaved-guard.ts` | 4 | 95 | SD-8b — leaving a dashboard page with unsaved edits. | `confirmLeave`, `setLeaveGuard`, `useBackGuard` |
 | `src/lib/walking.ts` | 4 | 23 | Settings rework (Cam 2026-10-19): | `walkingSummary`, `walkingWords` |
 | `src/lib/booking-fee.ts` | 3 | 126 | FEE-AT-BOOKING (Cam 2026-10-24: | `chargeBookingFee`, `feeCoveredCents`, `refundBookingFee`, `releaseUnpaidBooking` |
@@ -605,7 +605,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/notice-draft.ts` | 1 | 35 | MSG-2 (Cam 2026-11-06, Message golfers: | `addedNumbers`, `draftNotice` |
 | `src/lib/notice-templates.ts` | 1 | 12 | MSG-2 (Cam 2026-11-06): | `BLANK`, `READY` |
 | `src/lib/receipt-charges.ts` | 1 | 104 | R-GOLF-010 — what was actually charged to (and refunded from) the golfer's card, for the receipt. | `chargedNowCents`, `ReceiptCharge`, `receiptCharges` |
-| `src/lib/sample-data.ts` | 1 | 501 | Cam 2026-10-28 ("add a shit ton of test tee times, members and shit to the test course … do a lot of fake bookings"); Cam 2026-11-01 chose "Busy season": | `fillTestCourse`, `hasSampleData`, `SAMPLE_AHEAD_DAYS`, `SAMPLE_PAST_DAYS`, `SAMPLE_SOLD_BY`, `SampleResult` |
+| `src/lib/sample-data.ts` | 1 | 503 | Cam 2026-10-28 ("add a shit ton of test tee times, members and shit to the test course … do a lot of fake bookings"); Cam 2026-11-01 chose "Busy season": | `fillTestCourse`, `hasSampleData`, `SAMPLE_AHEAD_DAYS`, `SAMPLE_PAST_DAYS`, `SAMPLE_SOLD_BY`, `SampleResult` |
 | `src/lib/schedule-plans.ts` | 1 | 98 | W2-4 (Cam 2026-10-19: | `checkPeriods`, `groupSchedules`, `normDays`, `PlanGroup`, `PlanRow`, `snapToGrid` |
 | `src/lib/schedule-preview.ts` | 1 | 153 | Schedule rework (Cam 2026-10-19: | `diffDay`, `previewScheduleChange`, `ScheduleChange`, `SchedulePreview` |
 | `src/lib/sheet-vs-live.ts` | 1 | 108 | MP-5e. | `ConfigDrift`, `InquirySide`, `LiveSide`, `sheetVsLive` |
