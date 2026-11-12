@@ -126,6 +126,9 @@ export function ConditionsCard({ initial, canEdit }: { initial: Conditions; canE
               </div>
             );
           })}
+          {/* Not edited here, but golfers see them too — shown so nothing reaches the booking page unseen. */}
+          {c.detail.range && <div className="grid grid-cols-[8px_88px_minmax(0,1fr)] gap-x-2.5 items-baseline py-2 border-t border-line"><span /><span className="text-[13px] text-ink-muted">Range</span><b className="text-[13.5px] font-semibold text-ink">{conditionLabel('range', c.detail.range)}</b></div>}
+          {(c.detail.lines ?? []).map(l => <div key={l} className="grid grid-cols-[8px_minmax(0,1fr)] gap-x-2.5 py-2 border-t border-line text-[13px] text-ink"><span />{l}</div>)}
         </div>
       ) : (
         <div className="flex flex-col gap-3">
@@ -145,6 +148,14 @@ export function ConditionsCard({ initial, canEdit }: { initial: Conditions; canE
               )}
             </div>
           ))}
+          {(draft.range || (draft.lines ?? []).length > 0) && (
+            <div className="flex flex-col gap-1.5 border-t border-line pt-3">
+              {draft.range && <div className="flex items-center gap-2 text-[13.5px] text-ink"><span className="flex-1">Range: {conditionLabel('range', draft.range)}</span>
+                <button type="button" className="text-[12.5px] font-medium text-ink-soft hover:text-bad" onClick={() => setDraft(d => ({ ...d, range: undefined }))}>Remove</button></div>}
+              {(draft.lines ?? []).map(l => <div key={l} className="flex items-center gap-2 text-[13.5px] text-ink"><span className="flex-1 min-w-0 break-words">{l}</span>
+                <button type="button" className="text-[12.5px] font-medium text-ink-soft hover:text-bad" onClick={() => setDraft(d => ({ ...d, lines: (d.lines ?? []).filter(x => x !== l) }))}>Remove</button></div>)}
+            </div>
+          )}
           <div className="flex justify-end gap-2">
             <button className={BTN} onClick={() => { setEditing(false); setError(''); }}>Cancel</button>
             <button className={PRIMARY} disabled={busy} onClick={save}>{busy ? 'Saving…' : 'Save'}</button>

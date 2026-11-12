@@ -64,6 +64,7 @@ async function main() {
   check('by hour: checked-in groups still out are playing', bh[8]?.playing === 2 && bh[9]?.playing === 1 && bh[8]?.played === 0, owner.byHour);
   check('…unchecked groups are booked, the rest of the spots open', bh[10]?.booked === 3 && bh[11]?.booked === 3 && bh[13]?.booked === 1 && bh[10]?.spots === 8 && bh[10]?.open === 5, owner.byHour);
   check('…a blocked empty time adds no spots; a cancelled group adds no players', !bh[15] && bh[14]?.booked === 0 && bh[14]?.open === 4, owner.byHour);
+  check('next off: the next tee time from now with a group on it', owner.nextOff?.time === '13:00' && owner.nextOff.players === 1, owner.nextOff);
   check('checked in: players checked in of players booked', owner.checkedIn.checkedIn === 3 && owner.checkedIn.booked === 10, owner.checkedIn);
   check('fill counts spots in times that are not blocked', owner.fillPct.today === Math.round((10 / 28) * 100), owner.fillPct);
   check('a group past its tee time plus the grace, not checked in, needs you', owner.late.length === 1 && owner.late[0].time === '11:00', owner.late);

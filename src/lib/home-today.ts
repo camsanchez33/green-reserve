@@ -16,7 +16,7 @@ export type HourBar = { hour: number; spots: number; played: number; playing: nu
 /**
  * Today by hour, in players. A checked-in group (status completed) has PLAYED once its round's length
  * (ROUND_MINUTES, ONCOURSE-1 — the rule the tee sheet's "on the course" uses) has passed since its tee time,
- * and is PLAYING until then; every other live group is BOOKED; what's left of the spots is OPEN.
+ * and is PLAYING from its tee time until then (checked in early = still booked); every other live group is BOOKED; what's left of the spots is OPEN.
  * Only hours with spots or players are returned, earliest first.
  */
 export function todayByHour(slots: HourSlot[], nowHM: string): HourBar[] {
@@ -25,11 +25,15 @@ export function todayByHour(slots: HourSlot[], nowHM: string): HourBar[] {
   for (const s of slots) {
     const hour = Number(s.time.slice(0, 2));
     const bar = by.get(hour) ?? { hour, spots: 0, played: 0, playing: 0, booked: 0, open: 0 };
+    // As onCourse(): a group checked in ahead of its tee time hasn't started — it's still booked.
+    const started = mins(s.time) <= now;
     const done = mins(s.time) + (s.holes === 9 ? ROUND_MINUTES[9] : ROUND_MINUTES[18]) <= now;
     for (const b of s.bookings) {
       if (b.status === 'completed') {
-        const n = b.checkedInPlayers ?? b.players;
-        if (done) bar.played += n; else bar.playing += n;
+        const n = Math.min(b.checkedInPlayers ?? b.players, b.players);
+        // A part-paid group that couldn't split (SD-5): the players not checked in are still booked.
+        bar.booked += b.players - n;
+        if (!started) bar.booked += n; else if (done) bar.played += n; else bar.playing += n;
       } else if (b.status === 'confirmed') bar.booked += b.players;
     }
     bar.spots += s.spots;
@@ -45,7 +49,7 @@ export function todayByHour(slots: HourSlot[], nowHM: string): HourBar[] {
 export function checkedInOf(slots: HourSlot[]): { checkedIn: number; booked: number } {
   let checkedIn = 0, booked = 0;
   for (const s of slots) for (const b of s.bookings) {
-    if (b.status === 'completed') { const n = b.checkedInPlayers ?? b.players; checkedIn += n; booked += n; }
+    if (b.status === 'completed') { checkedIn += Math.min(b.checkedInPlayers ?? b.players, b.players); booked += b.players; }
     else if (b.status === 'confirmed') booked += b.players;
   }
   return { checkedIn, booked };
@@ -101,7 +105,7 @@ export function weatherLine(hours: WeatherHour[], today: string): { now: string;
   const wet = hours.filter(h => h.at.slice(0, 10) === today).find(h => (h.rainPct ?? 0) >= RAIN_PCT);
   return {
     now: `${first.tempF}° ${first.summary.toLowerCase()}`.trim(),
-    rain: !wet ? null : wet === first ? 'rain now' : `rain at ${hourWord(wet.at)}`,
+    rain: !wet ? null : wet === first ? `${wet.rainPct}% rain now` : `${wet.rainPct}% rain at ${hourWord(wet.at)}`,
   };
 }
 

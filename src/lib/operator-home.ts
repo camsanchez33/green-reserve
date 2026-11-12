@@ -146,7 +146,12 @@ export async function operatorHome(courseId: string, opts: { money: boolean; mes
     };
   }
 
+  // HOME-3: the next tee time from now with a group on it — every slot, not just the next six.
+  const nx = slots.find(s => s.time.slice(0, 5) >= clock.slice(0, 5) && s.bookings.some(b => b.status === 'confirmed' || b.status === 'completed'));
+  const nextOff = nx ? { id: nx.id, time: nx.time.slice(0, 5), name: nx.bookings[0].golferName, groups: nx.bookings.length, players: nx.bookings.reduce((n, b) => n + b.players, 0) } : null;
+
   return {
+    nextOff,
     courseName: course?.name ?? '', today, lastWeek, clock,
     // HOME-3 (Cam 2026-11-12): "Open the register" shows only when the course says it takes cash (Settings → Pro shop).
     takesCash: !!course?.takesCash,

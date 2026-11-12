@@ -32,6 +32,7 @@ import { ShiftNotes, ConditionsCard, WeekAheadCard, GoalsCard, EventsCard, type 
 
 type Group = { id: string; name: string; players: number; paymentStatus: string; checkedIn: boolean };
 type Home = {
+  nextOff: { id: string; time: string; name: string; groups: number; players: number } | null;
   courseName: string; today: string; lastWeek: string; clock: string; takesCash: boolean;
   players: { today: number; lastWeek: number };
   fillPct: { today: number | null; lastWeek: number | null };
@@ -184,7 +185,7 @@ export default function DashboardHome() {
   useEffect(() => { if (access.loaded && seesPayouts) loadPayouts(); }, [access.loaded, seesPayouts, loadPayouts]);
 
   const needs = home ? home.declinedTotal + home.late.length + (home.unreadMessages > 0 ? 1 : 0) : 0;
-  const next = home?.comingUp.find(s => s.groups.length > 0) ?? null;
+  const next = home?.nextOff ?? null;
   const wx = weather?.ok && home ? weatherLine(weather.hours, home.today) : null;
 
   return (
@@ -217,7 +218,7 @@ export default function DashboardHome() {
               {next ? (
                 <Link href={`/dashboard?tt=${next.id}`} className={'bg-white shadow-card rounded-lg hover:opacity-90 ' + STRIP}>
                   <span className="text-ink-muted">Next off</span>
-                  <b className="font-semibold text-ink truncate">{fmtTime(next.time)} · {next.groups[0].name}{next.groups.length > 1 ? ` +${next.groups.length - 1}` : ''}, {next.groups.reduce((n, g) => n + g.players, 0)} players</b>
+                  <b className="font-semibold text-ink truncate">{fmtTime(next.time)} · {next.name}{next.groups > 1 ? ` +${next.groups - 1}` : ''}, {next.players} players</b>
                 </Link>
               ) : <Card className={STRIP}><span className="text-ink-muted">Next off</span><b className="font-semibold text-ink">None left today</b></Card>}
               <Card className={STRIP}><span className="text-ink-muted">Checked in</span><b className="font-semibold text-ink tabular-nums">{home.checkedIn.checkedIn} of {home.checkedIn.booked} players</b></Card>

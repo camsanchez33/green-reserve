@@ -30,7 +30,7 @@ export const TERMS = {
   memberRounds: 'Checked-in rounds by your members since January 1.',
   memberSpend: 'Green fees, carts and range balls on their checked-in rounds since January 1 — the same as Analytics. Pro-shop items aren’t counted.',
   // HOME-3 (Cam 2026-11-12): the charcoal Home's words.
-  playedPlaying: 'Players in each tee-time hour today. Played: checked in and their round (4½ hours for 18 holes, 2¼ for 9) is over. Playing: checked in and still out. Booked: not checked in yet. Open: spots nobody has booked.',
+  playedPlaying: 'Players in each tee-time hour today. Played: checked in and their round (4½ hours for 18 holes, 2¼ for 9) is over. Playing: checked in, their tee time has come and they are still out. Booked: not checked in yet, or checked in early for a later time. Open: spots nobody has booked.',
   avg4: 'The line is what that weekday usually ends up with: the average players booked on the last 4 of that weekday (days with no tee times left out). A day turns amber when it is behind where that weekday usually is this many days out.',
   fillVsLastWeek: 'Spots booked of spots offered today, against the same weekday last week (the difference in points).',
   pace: 'Players booked so far for each coming day, against the same weekday the same number of days out over the last four weeks.',

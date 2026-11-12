@@ -143,16 +143,18 @@ body {
 .op-look:has(.op-rail) {
   --color-page: #E9EAE6; --color-paper: #F2F3EF; --color-card: #FFFFFF; --color-white: #FFFFFF;
   --color-rail: #E0E1DC; --color-rail-line: #CDD0C8;
-  --color-ink: #191B19; --color-ink-soft: #3E423E; --color-ink-muted: #565B54; --color-ink-faint: #5A5F58;
+  --color-ink: #191B19; --color-ink-soft: #3E423E; --color-ink-muted: #50554E; --color-ink-faint: #53584F;
   --color-line: #D9DBD4; --color-line-soft: #E6E7E2; --color-line-strong: #C6C9C1;
   --color-pine: #1E201E; --color-pine-hover: #000000; --color-pine-soft: #E3E4E0;
-  --color-ok: #22683F; --color-warn: #835008; --color-bad: #A33822;
+  --color-ok: #1F603A; --color-warn: #7A4A07; --color-bad: #98331F;
   --op-panel: rgb(255 255 255 / .58); --op-panel-solid: #FAFAF8; --op-rail-glass: rgb(255 255 255 / .40); --op-edge: rgb(255 255 255 / .8);
-  --op-wv1: rgb(120 126 122 / .22); --op-wv2: rgb(150 156 152 / .20); --op-wv3: rgb(255 255 255 / .7);
+  --op-wv1: rgb(120 126 122 / .12); --op-wv2: rgb(150 156 152 / .10); --op-wv3: rgb(255 255 255 / .7);
   --op-brand-green: #173B2A;
   --op-heat0: rgb(0 0 0 / .04); --op-heat-ink3: var(--color-ink); --op-heat-ink4: #FFFFFF; --op-rain: #1F5FAF;
   background: var(--color-page); min-height: 100vh; color: var(--color-ink);
 }
+/* A golfer-page preview keeps the site's own colours (pine is green there) in Light too. */
+.op-look:has(.op-rail) .op-keep-light { --color-pine: #173B2A; --color-pine-hover: #0F2C1F; --color-ok: #3D7A55; --color-warn: #9A5B13; --color-bad: #A3452F; --color-ink-muted: #6B706A; --op-panel-solid: #FFFFFF; }
 .op-look:has(.op-rail) .tabular-nums, .op-look:has(.op-rail) table { font-variant-numeric: tabular-nums; }
 /* The logo pair: the pine lockup in light, the cream one in charcoal. */
 .op-look .op-dark-only { display: none; }
@@ -191,6 +193,7 @@ body {
   --color-ink: #141814; --color-ink-soft: #50554F; --color-ink-muted: #6B706A; --color-ink-faint: #70756F;
   --color-line: #E3E4DE; --color-line-soft: #EFF0EB; --color-line-strong: #D3D5CD;
   --color-pine: #173B2A; --color-pine-hover: #0F2C1F; --color-ok: #3D7A55; --color-warn: #9A5B13; --color-bad: #A3452F;
+  --op-panel-solid: #FFFFFF;
   color: var(--color-ink);
 }
 .op-look[data-theme="dark"]:has(.op-rail) .op-keep-light :is(.bg-pine, .bg-ok, .bg-bad, .bg-warn, .bg-ink) .text-white,
@@ -230,6 +233,7 @@ body {
 }
 .op-look[data-theme="dark"]:has(.op-rail) .op-tab:not([aria-current]):hover { box-shadow: 0 6px 18px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.08); }
 .op-look:has(.op-rail) .fixed.inset-0 .bg-white.shadow-card,
+.op-look:has(.op-rail) .fixed.bg-white.shadow-card,
 .op-look:has(.op-rail) .op-keep-light .bg-white.shadow-card { background-color: var(--color-white); -webkit-backdrop-filter: none; backdrop-filter: none; }
 }
 @media screen and (prefers-reduced-motion: reduce) { .op-look:has(.op-rail) .op-tab { transition: none; } .op-look:has(.op-rail) .op-tab:not([aria-current]):hover { transform: none; } }

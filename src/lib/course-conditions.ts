@@ -58,12 +58,15 @@ export function cleanConditions(raw: unknown): CourseConditions {
 }
 
 /**
- * HOME-3 (Build 2026-11-12, "don't drop data"): what Home saves. Home edits only cart path, greens and pins (and
- * their detail lines); everything else already set — range, the course's own lines — is kept as it was.
+ * HOME-3 (Build 2026-11-12, "don't drop data"): what Home saves. Home sets cart path, greens and pins (and their
+ * detail lines). Range and the course's own lines are shown on Home and can only be KEPT or REMOVED there: a range
+ * or a line `home` no longer carries is removed; nothing new is added. Fields `home` doesn't mention at all are kept.
  */
 export function mergeHomeConditions(current: unknown, home: CourseConditions): CourseConditions {
   const base = cleanConditions(current);
   const out: CourseConditions = { ...base, notes: { ...(base.notes ?? {}) } };
+  if ('range' in home && home.range !== base.range) delete out.range;
+  if (home.lines !== undefined) { const keep = (home.lines ?? []).map(l => l.toLowerCase()); out.lines = (base.lines ?? []).filter(l => keep.includes(l.toLowerCase())); if (!out.lines.length) delete out.lines; }
   for (const { key } of HOME_CONDITIONS) {
     const v = home[key];
     if (v) out[key] = v; else delete out[key];

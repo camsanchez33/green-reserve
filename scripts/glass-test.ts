@@ -28,6 +28,7 @@ ok('the tab lifts on hover, never the current tab', g.includes('.op-tab:not([ari
 ok('reduced motion turns the lift off', /prefers-reduced-motion: reduce\)[^\n]*transform: none/.test(g));
 ok('reduced transparency gets solid panels and no ribbons', g.includes('prefers-reduced-transparency: reduce') && g.includes('.op-waves { display: none; }') && g.includes('background-color: var(--op-panel-solid)'));
 ok('a pop-up window\'s panel (inside a fixed inset-0 backdrop) stays solid', g.includes('.op-look:has(.op-rail) .fixed.inset-0 .bg-white.shadow-card'));
+ok('a fixed panel (the phone More menu, the assistant) stays solid', g.includes('.op-look:has(.op-rail) .fixed.bg-white.shadow-card'));
 ok('a golfer-page preview stays solid', g.includes('.op-keep-light .bg-white.shadow-card'));
 ok('no cursor tracking: no pointer variables in the CSS', !/--(mouse|cursor|pointer)-?[xy]/i.test(g));
 ok('the rail tabs carry the hook class', side.includes("'op-tab flex items-center"));
@@ -48,14 +49,15 @@ for (const [theme, sel] of [['light', '.op-look:has(.op-rail)'], ['charcoal', '.
   const page = hex(tok(b, '--color-page'));
   const [panelC, panelA] = rgba(b, '--op-panel');
   // Worst case: every ribbon crossing at one spot (they overlap at the edges), blur ignored.
-  const worstUnder = ['--op-wv1', '--op-wv2', '--op-wv3'].map(n => rgba(b, n)).reduce((under, [c, a]) => over(c, a, under), page);
+  // Light: the darkening ribbons crossing (the white one only helps, so it's left out); charcoal: all three.
+  const worstUnder = (theme === 'light' ? ['--op-wv1', '--op-wv2'] : ['--op-wv1', '--op-wv2', '--op-wv3']).map(n => rgba(b, n)).reduce((under, [c, a]) => over(c, a, under), page);
   const panel = over(panelC, panelA, worstUnder);
   for (const t of ['--color-ink', '--color-ink-soft', '--color-ink-muted', '--color-ink-faint', '--color-ok', '--color-warn', '--color-bad']) {
     const r = ratio(hex(tok(b, t)), panel);
     ok(`${theme}: ${t} clears 4.5:1 on a frosted panel (${r.toFixed(2)})`, r >= 4.5, { panel, t: tok(b, t) });
   }
   // A page title and its "As of" line sit straight on the page, over the ribbons.
-  for (const t of ['--color-ink', '--color-ink-muted']) {
+  for (const t of ['--color-ink', '--color-ink-soft', '--color-ink-muted', '--color-ink-faint', '--color-ok', '--color-warn', '--color-bad']) {
     const r = ratio(hex(tok(b, t)), worstUnder);
     ok(`${theme}: ${t} clears 4.5:1 straight on the page over the ribbons (${r.toFixed(2)})`, r >= 4.5, { worstUnder, t: tok(b, t) });
   }

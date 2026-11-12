@@ -319,7 +319,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/dashboard/events` | operator | middleware | page | `src/app/dashboard/events/page.tsx` | 186 |
 | `/dashboard/forgot-password` | operator | entry | page | `src/app/dashboard/forgot-password/page.tsx` | 63 |
 | `/dashboard/golfers/[key]` | operator | middleware | page | `src/app/dashboard/golfers/[key]/page.tsx` | 149 |
-| `/dashboard/home` | operator | middleware | page | `src/app/dashboard/home/page.tsx` | 301 |
+| `/dashboard/home` | operator | middleware | page | `src/app/dashboard/home/page.tsx` | 302 |
 | `/dashboard/login` | operator | entry | page | `src/app/dashboard/login/page.tsx` | 77 |
 | `/dashboard/members` | operator | middleware | page | `src/app/dashboard/members/page.tsx` | 870 |
 | `/dashboard/messages` | operator | middleware | page | `src/app/dashboard/messages/page.tsx` | 231 |
@@ -451,7 +451,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/event-payments.ts` | 5 | 484 | W2-9b (Cam 2026-10-22: | `chargeEventPayment`, `COURSE_METHODS`, `createPayLink`, `eventFeeFor`, `eventMoney`, `HOLD_MINUTES`, `holdProblem`, `MAX_EVENT_PAYMENT_CENTS` +14 more |
 | `src/lib/golfer-key.ts` | 5 | 40 | Who a golfer is at a course: | `golferKey`, `golferKeys`, `keyMatch`, `parseGolferKey` |
 | `src/lib/membership-autorenew.ts` | 5 | 156 | MEM-RENEW (Cam 2026-10-30: | `autoRenewTermsText`, `chargeRenewal`, `chargesDue`, `duesIntentKey`, `markReminded`, `memberContact`, `reminderLeadDays`, `remindersDue` +5 more |
-| `src/lib/operator-home.ts` | 5 | 175 | DASH-C Home (Cam 2026-10-22, "very nice" on the course dashboard mockups): | `DeclinedCard`, `declinedCards`, `HomeGroup`, `HomeSlot`, `operatorHome` |
+| `src/lib/operator-home.ts` | 5 | 180 | DASH-C Home (Cam 2026-10-22, "very nice" on the course dashboard mockups): | `DeclinedCard`, `declinedCards`, `HomeGroup`, `HomeSlot`, `operatorHome` |
 | `src/lib/setup-missing.ts` | 5 | 64 | What is still missing from a course's booking page, each with the Settings section that fixes it. | `MissingItem`, `MissingKey`, `missingSetup`, `PAYMENTS_BLOCK_LIVE`, `paymentsMissing`, `settingsHref`, `SetupFacts`, `showSetupField` |
 | `src/lib/split-booking-db.ts` | 5 | 157 | SPLIT-1 (Cam 2026-11-02, "they all want to pay separately … has to be seamless"): | `hasShareToRefund`, `holdRefundCents`, `splitBooking`, `splitOffLateArrivals`, `SplitResult` |
 | `src/lib/terms.ts` | 5 | 10 | Bump this whenever /terms materially changes so old bookings keep an honest record of which version the golfer actually agreed to. | `CURRENT_TERMS_VERSION` |
@@ -463,7 +463,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/card-reader.ts` | 4 | 279 | POS-3 R3 (Cam 2026-10-24: | `cancelReaderPayment`, `courseStripe`, `listReaders`, `ownReader`, `readerSaleStatus`, `ReaderSaleStatus`, `ReaderView`, `registerReader` +7 more |
 | `src/lib/company-documents.ts` | 4 | 61 | CO-DOCS (Cam 2026-10-01): | `COMPANY_DOC_CATEGORIES`, `COMPANY_DOC_MAX_BYTES`, `COMPANY_DOC_PREFIX`, `COMPANY_DOC_TYPES`, `CompanyDocCategory`, `companyDocPathOf`, `describeCompanyPath`, `isAllowedCompanyPath` +1 more |
 | `src/lib/counter-pay.ts` | 4 | 339 | A group pays for its round at the counter (cash, or the course's own card machine): | `accountDueCents`, `CounterBookingInput`, `counterDueCents`, `counterPaidCents`, `CounterResult`, `createCounterBooking`, `roundNote`, `settleAtCounter` |
-| `src/lib/course-conditions.ts` | 4 | 98 | DASH-D Home (Cam 2026-11-01, "the course conditions"): | `cleanConditions`, `CONDITION_FIELDS`, `CONDITION_LINE_CHARS`, `CONDITION_LINES_MAX`, `CONDITION_NOTE_CHARS`, `CONDITION_SUGGESTIONS`, `ConditionKey`, `conditionLabel` +6 more |
+| `src/lib/course-conditions.ts` | 4 | 101 | DASH-D Home (Cam 2026-11-01, "the course conditions"): | `cleanConditions`, `CONDITION_FIELDS`, `CONDITION_LINE_CHARS`, `CONDITION_LINES_MAX`, `CONDITION_NOTE_CHARS`, `CONDITION_SUGGESTIONS`, `ConditionKey`, `conditionLabel` +6 more |
 | `src/lib/course-group.ts` | 4 | 13 | GRP-1 (Cam 2026-10-19, after golfbergencounty.com): | `groupCourseIds` |
 | `src/lib/event-signup.ts` | 4 | 232 | W2-9d (Cam 2026-10-22): | `cleanQuestions`, `HOLD_MINUTES`, `lapseHolds`, `MAX_GROUP`, `MAX_QUESTIONS`, `moveOntoList`, `questionsOf`, `sendSignupConfirmation` +7 more |
 | `src/lib/lifecycle.ts` | 4 | 416 |  | `archivePair`, `deleteInquiryOrPair`, `deletePair`, `forceDeleteOrphan`, `ForceDeleteResult`, `LifecycleResult`, `listAcknowledgedOrphans`, `ORPHAN_FLAG` +6 more |
@@ -495,7 +495,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/facilities.ts` | 3 | 55 | Settings rework (Cam 2026-10-19: | `FacilityFields`, `facilityLines`, `FOOD_TYPES`, `RANGE_TYPES`, `TOURNAMENT_FREQ` |
 | `src/lib/go-live-preflight.ts` | 3 | 35 |  | `computeStripeGoLiveCheck`, `StripeGoLiveCheck` |
 | `src/lib/home-board.ts` | 3 | 127 | DASH-D Home (Cam 2026-11-01, mockups S1 + "week-ahead heat map and month vs goal"): | `courseConditions`, `GoalRow`, `HomeEvent`, `monthGoals`, `openShiftNotes`, `SHIFT_NOTE_MAX`, `ShiftNoteRow`, `upcomingEvents` +1 more |
-| `src/lib/home-today.ts` | 3 | 114 | HOME-3 (Cam 2026-11-12, "approved, build the home page to match the mockup", ADMIN_REDO_SPEC.md "Course dashboard Home: | `checkedInOf`, `CONDITION_TONE`, `goalTone`, `GoalTone`, `HourBar`, `HourSlot`, `RAIN_PCT`, `sameWeekdayAverage` +2 more |
+| `src/lib/home-today.ts` | 3 | 118 | HOME-3 (Cam 2026-11-12, "approved, build the home page to match the mockup", ADMIN_REDO_SPEC.md "Course dashboard Home: | `checkedInOf`, `CONDITION_TONE`, `goalTone`, `GoalTone`, `HourBar`, `HourSlot`, `RAIN_PCT`, `sameWeekdayAverage` +2 more |
 | `src/lib/inquiry-needs.ts` | 3 | 39 | INQUIRY_CALL_SPEC IC-1 §3 — "Still need from them", the sheet's column. | `NeedItem`, `stillNeed` |
 | `src/lib/login-guard.ts` | 3 | 45 | SEC-3 security audit (2026-10-26): | `failUnknownLogin`, `LOGIN_LOCKOUT_MS`, `LOGIN_MAX_ATTEMPTS`, `unknownLoginLockedUntil` |
 | `src/lib/member-csv.ts` | 3 | 101 | Members → Import a list: | `ImportProblem`, `ImportRow`, `MAX_IMPORT_ROWS`, `parseCsv`, `parseCsvLines`, `readMemberCsv`, `toYmd` |
@@ -695,7 +695,7 @@ Sorted the same way.
 | `src/components/dashboard/GettingStartedChecklist.tsx` | 1 | 187 |  | `default (GettingStartedChecklist)` |
 | `src/components/dashboard/GolferMessageModal.tsx` | 1 | 227 | MSG-1 (PLATFORM_ROADMAP_SPEC §5): | `default (GolferMessageModal)` |
 | `src/components/dashboard/GroupTicket.tsx` | 1 | 69 | DASH-D (Cam 2026-11-01, "make checking someone in a little more POS like"): | `default (GroupTicket)`, `TicketBooking`, `TicketLine`, `ticketLines` |
-| `src/components/dashboard/home/HomeBoard.tsx` | 1 | 292 | DASH-D Home (Cam 2026-11-01, mockup S1): | `Conditions`, `ConditionsCard`, `EventsCard`, `Goals`, `GoalsCard`, `heatStep`, `HomeEvent`, `ShiftNote` +3 more |
+| `src/components/dashboard/home/HomeBoard.tsx` | 1 | 303 | DASH-D Home (Cam 2026-11-01, mockup S1): | `Conditions`, `ConditionsCard`, `EventsCard`, `Goals`, `GoalsCard`, `heatStep`, `HomeEvent`, `ShiftNote` +3 more |
 | `src/components/dashboard/ItemForm.tsx` | 1 | 315 | POS-8 (Cam 2026-11-09: | `ItemForm` |
 | `src/components/dashboard/LastMinuteDeals.tsx` | 1 | 71 | PRICE-2 (Cam 2026-10-30: | `LastMinuteDeals` |
 | `src/components/dashboard/MemberAccount.tsx` | 1 | 134 | MEM-ACCT (Cam 2026-10-30: | `AccountFields`, `MemberAccount` |

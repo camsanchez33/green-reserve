@@ -28,7 +28,12 @@ ok('not checked in is booked; cancelled counts nothing', at(8)?.booked === 3, at
 ok('open is the spots left', at(8)?.spots === 8 && at(8)?.open === 3 && at(13)?.open === 4, bars);
 ok('an hour with no spots and nobody on it is left out', !at(15), bars);
 ok('hours come earliest first', bars.map(b => b.hour).join() === '7,8,13');
-ok('checked in of booked (players)', JSON.stringify(checkedInOf(slots)) === JSON.stringify({ checkedIn: 6, booked: 9 }), checkedInOf(slots));
+ok('checked in of booked (players)', JSON.stringify(checkedInOf(slots)) === JSON.stringify({ checkedIn: 6, booked: 10 }), checkedInOf(slots));
+const early = todayByHour([{ time: '14:00', holes: 18, spots: 4, bookings: [{ status: 'completed', players: 4 }] }], '09:00');
+ok('a group checked in before its tee time is still booked, not playing (as onCourse)', early[0].booked === 4 && early[0].playing === 0, early);
+const part = todayByHour([{ time: '09:00', holes: 18, spots: 4, bookings: [{ status: 'completed', players: 4, checkedInPlayers: 2 }] }], '10:00');
+ok('a part-paid group (SD-5): the players not checked in are booked, not open', part[0].playing === 2 && part[0].booked === 2 && part[0].open === 0, part);
+ok('…and checked in reads 2 of 4', JSON.stringify(checkedInOf([{ time: '09:00', spots: 4, bookings: [{ status: 'completed', players: 4, checkedInPlayers: 2 }] }])) === JSON.stringify({ checkedIn: 2, booked: 4 }));
 ok('the rule is ROUND_MINUTES, not a typed duration', readFileSync('src/lib/home-today.ts', 'utf8').includes("from './on-course'") && !/\b(240|270|135)\b/.test(readFileSync('src/lib/home-today.ts', 'utf8')));
 
 // ── 4-week same-weekday average ── 2031-05-14 is a Wednesday.
@@ -49,9 +54,9 @@ ok('a rate (fill %) is held to its target all month', g(70, 75, true) === 'warn'
 
 // ── Weather line ──
 const H = (hh: string, rain: number | null, temp = 54, summary = 'Clear') => ({ at: `2031-05-14T${hh}:00:00-04:00`, tempF: temp, summary, windMph: 5, rainPct: rain });
-ok('the first hour of rain still to come today', JSON.stringify(weatherLine([H('09', 0), H('12', 10), H('16', 40), H('17', 80)], '2031-05-14')) === JSON.stringify({ now: '54° clear', rain: 'rain at 4 PM' }));
+ok('the first hour of rain still to come today', JSON.stringify(weatherLine([H('09', 0), H('12', 10), H('16', 40), H('17', 80)], '2031-05-14')) === JSON.stringify({ now: '54° clear', rain: '40% rain at 4 PM' }));
 ok('rain under 20% says nothing', weatherLine([H('09', 0), H('12', 19)], '2031-05-14')?.rain === null);
-ok('raining now says so', weatherLine([H('09', 60)], '2031-05-14')?.rain === 'rain now');
+ok('raining now says so', weatherLine([H('09', 60)], '2031-05-14')?.rain === '60% rain now');
 ok('tomorrow\'s rain is not today\'s', weatherLine([H('09', 0), { ...H('09', 90), at: '2031-05-15T09:00:00-04:00' }], '2031-05-14')?.rain === null);
 ok('no forecast hours → nothing', weatherLine([], '2031-05-14') === null);
 
@@ -67,6 +72,10 @@ const merged = mergeHomeConditions(before, { carts: 'path', greens: undefined, p
 ok('Home\'s three are replaced', merged.carts === 'path' && merged.notes?.carts === 'Holes 4–7' && merged.pins === 'back', merged);
 ok('…a cleared condition and its note go', !('greens' in merged) && !merged.notes?.pins, merged);
 ok('…range and the course\'s own lines are kept as they were', merged.range === 'mats' && JSON.stringify(merged.lines) === JSON.stringify(['Frost delay until 9 AM']), merged);
+const removed = mergeHomeConditions(before, { ...before, range: undefined, lines: [] });
+ok('…and removed on Home when staff take them off', !('range' in removed) && !removed.lines, removed);
+ok('…Home can\'t add a range or a line', !('range' in mergeHomeConditions({}, { range: 'mats', lines: ['new'] })) && !mergeHomeConditions({}, { lines: ['new'] }).lines);
+ok('…range and lines are on the card, view and edit, so nothing reaches golfers unseen', readFileSync('src/components/dashboard/home/HomeBoard.tsx', 'utf8').includes("conditionLabel('range', c.detail.range)") && readFileSync('src/components/dashboard/home/HomeBoard.tsx', 'utf8').includes("range: undefined }))}>Remove<"));
 ok('…and Home saves through the merge', readFileSync('src/components/dashboard/home/HomeBoard.tsx', 'utf8').includes('mergeHomeConditions(c.detail, draft)'));
 
 // ── "We take cash" (Cam 2026-11-12; Build: additive, default off, display only) ──
@@ -79,6 +88,7 @@ ok('it gates nothing: no cash path reads it', !/takesCash/.test(readFileSync('sr
 const page = readFileSync('src/app/dashboard/home/page.tsx', 'utf8');
 ok('no Open tee sheet button', !page.includes('Open tee sheet'));
 ok('no Action needed count tiles', !page.includes('Cards declined') && !page.includes('No-shows today'));
+ok('Next off is the server\'s next group from now, not the first of six slots', page.includes('home?.nextOff ?? null') && readFileSync('src/lib/operator-home.ts', 'utf8').includes('const nx = slots.find('));
 ok('next payout is its own card', /<Card className="px-5 py-4 flex items-center gap-3 text-\[14px\]">\s*<Link href="\/dashboard\/money\?tab=payouts" className="flex-1[^"]*">Next payout</.test(page));
 ok('the one search sits on Home and the rail leaves it there', page.includes('<OperatorSearch />') && readFileSync('src/components/OperatorSidebar.tsx', 'utf8').includes("{active !== 'home' && <OperatorSearch />}"));
 ok('money numbers only come with money (the route decides)', page.includes('{home.money && <>'));

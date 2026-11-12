@@ -8902,7 +8902,7 @@
     },
     {
       "path": "src/app/dashboard/home/page.tsx",
-      "lines": 301,
+      "lines": 302,
       "purpose": "DASH-C Home (Cam 2026-10-22) → HOME-3 (Cam 2026-11-12, \"approved, build the home page to match the mockup\"; ADMIN_REDO_SPEC.md \"Course dashboard Home:",
       "brain": [],
       "exports": [
@@ -12848,7 +12848,7 @@
     },
     {
       "path": "src/components/dashboard/home/HomeBoard.tsx",
-      "lines": 292,
+      "lines": 303,
       "purpose": "DASH-D Home (Cam 2026-11-01, mockup S1):",
       "brain": [],
       "exports": [
@@ -17897,7 +17897,7 @@
     },
     {
       "path": "src/lib/course-conditions.ts",
-      "lines": 98,
+      "lines": 101,
       "purpose": "DASH-D Home (Cam 2026-11-01, \"the course conditions\"):",
       "brain": [],
       "exports": [
@@ -21055,7 +21055,7 @@
     },
     {
       "path": "src/lib/home-today.ts",
-      "lines": 114,
+      "lines": 118,
       "purpose": "HOME-3 (Cam 2026-11-12, \"approved, build the home page to match the mockup\", ADMIN_REDO_SPEC.md \"Course dashboard Home:",
       "brain": [],
       "exports": [
@@ -23243,7 +23243,7 @@
     },
     {
       "path": "src/lib/operator-home.ts",
-      "lines": 175,
+      "lines": 180,
       "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the course dashboard mockups):",
       "brain": [],
       "exports": [
