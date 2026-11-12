@@ -8520,7 +8520,7 @@
     },
     {
       "path": "src/app/courses/[slug]/CourseBookingClient.tsx",
-      "lines": 1680,
+      "lines": 1544,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10431,7 +10431,7 @@
     },
     {
       "path": "src/components/Footer.tsx",
-      "lines": 79,
+      "lines": 81,
       "purpose": "",
       "brain": [],
       "exports": [
