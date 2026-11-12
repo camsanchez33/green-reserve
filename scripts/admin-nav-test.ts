@@ -16,7 +16,7 @@ check('the rail lists its items', items.length >= 10);
 // The gate of the API behind each page (the page's own data route).
 const GATE: Record<string, string[] | null> = {
   overview: null, inquiries: VIEWER_PLUS, courses: VIEWER_PLUS, groups: SUPPORT_PLUS, messages: SUPPORT_PLUS, announcements: SUPPORT_PLUS,
-  revenue: SUPPORT_PLUS, goals: SUPPORT_PLUS, employees: MANAGER_PLUS, system: MANAGER_PLUS, bookings: SUPPORT_PLUS,
+  revenue: SUPPORT_PLUS, expenses: OWNER_ONLY, goals: SUPPORT_PLUS, employees: MANAGER_PLUS, system: MANAGER_PLUS, bookings: SUPPORT_PLUS,
   // golfers: Users & golfers is off the rail (Cam 2026-11-12); its page and API keep their own support+ gate.
   company: OWNER_ONLY, audit: OWNER_ONLY, security: OWNER_ONLY, problems: SUPPORT_PLUS,
 };

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS, MANAGER_PLUS } from '@/lib/admin-session';
 import { hasArea, type AdminArea } from '@/lib/admin-areas';
+import { bookingRefLabel, courseRefLabel, parseRef } from '@/lib/booking-ref';
 
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
@@ -23,6 +24,8 @@ export async function GET(req: NextRequest) {
   // Bookings prints the number as "#CMWD1RSQ", so a leading # is dropped.
   const idQ = q.replace(/^#/, '');
   const idLike = /^[a-z0-9]{8,40}$/i.test(idQ) ? idQ.toLowerCase() : '';
+  // BOOKING-REF: "GR4-17" / "4-17" is a booking, "GR4" a course.
+  const ref = parseRef(q);
 
   const [courses, inquiries, golfers, guests, employees, groups, threads, bookings] = await Promise.all([
     prisma.course.findMany({
@@ -32,9 +35,10 @@ export async function GET(req: NextRequest) {
           { name: { contains: lq, mode: 'insensitive' } },
           { slug: { contains: lq, mode: 'insensitive' } },
           { city: { contains: lq, mode: 'insensitive' } },
+          ...(ref && ref.ref == null ? [{ number: ref.course }] : []),
         ],
       },
-      select: { id: true, name: true, slug: true, city: true, state: true, active: true },
+      select: { id: true, number: true, name: true, slug: true, city: true, state: true, active: true },
       take: 5,
       orderBy: { name: 'asc' },
     }),
@@ -108,10 +112,10 @@ export async function GET(req: NextRequest) {
           take: 3,
         })
       : Promise.resolve([]),
-    idLike
+    idLike || ref?.ref
       ? prisma.booking.findMany({
-          where: { id: { startsWith: idLike } },
-          select: { id: true, golferName: true, golferEmail: true, golferAccountId: true, status: true, course: { select: { name: true, isTest: true } }, teeTime: { select: { date: true, time: true } } },
+          where: { OR: [...(idLike ? [{ id: { startsWith: idLike } }] : []), ...(ref?.ref ? [{ ref: ref.ref, course: { number: ref.course } }] : [])] },
+          select: { id: true, ref: true, golferName: true, golferEmail: true, golferAccountId: true, status: true, course: { select: { name: true, number: true, isTest: true } }, teeTime: { select: { date: true, time: true } } },
           take: 3,
         })
       : Promise.resolve([]),
@@ -156,7 +160,7 @@ export async function GET(req: NextRequest) {
       type: 'course' as const,
       id: c.id,
       label: c.name,
-      sub: [c.city, c.state].filter(Boolean).join(', ') + (c.active ? '' : ' · inactive'),
+      sub: [courseRefLabel(c), [c.city, c.state].filter(Boolean).join(', ')].filter(Boolean).join(' · ') + (c.active ? '' : ' · inactive'),
       href: `/admin/courses?courseId=${c.id}`,
     })),
     ...inquiries.map(i => ({
@@ -192,7 +196,7 @@ export async function GET(req: NextRequest) {
       type: 'booking' as const,
       id: `booking:${b.id}`,
       label: `${b.golferName} · ${b.course.name}`,
-      sub: `${b.teeTime.date} ${b.teeTime.time} · ${b.status}`,
+      sub: `${bookingRefLabel(b)} · ${b.teeTime.date} ${b.teeTime.time} · ${b.status}`,
       // ADMIN-REDO Bookings: a booking found by its number opens on Bookings (Money); without Money, the golfer.
       href: hasArea(session, 'money') && !b.course.isTest ? `/admin/bookings?id=${b.id}` : b.golferAccountId ? `/admin/golfers?id=${b.golferAccountId}` : `/admin/golfers?guest=${encodeURIComponent(b.golferEmail.toLowerCase())}`,
     })),

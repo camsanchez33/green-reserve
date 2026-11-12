@@ -47,6 +47,10 @@ export async function GET(req: NextRequest) {
   const noArea = areaGate(session, 'pipeline');
   if (noArea) return noArea;
   if (!requireRole(session, VIEWER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  // The spreadsheet of every course's contact details leaves the building: support+ only, not viewers.
+  if (req.nextUrl.searchParams.get('format') === 'csv' && !requireRole(session, SUPPORT_PLUS)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
   const id = req.nextUrl.searchParams.get('id');
   if (id) {
     const inquiry = await prisma.courseInquiry.findUnique({ where: { id }, include: { events: { orderBy: { createdAt: 'asc' } }, calls: { where: { kind: 'discovery' }, orderBy: { scheduledAt: 'desc' } } } });
@@ -452,6 +456,29 @@ async function handleAction(
   }
 
   // ── MP-4c growth columns ──────────────────────────────────────────
+  // Onboarding's Launch column: when the course expects to go live. A platform day
+  // (YYYY-MM-DD), stored at noon UTC so it reads as that day in every US zone;
+  // null or '' clears it. Manager+ in Pipeline (the PATCH/POST gates), audited.
+  if (action === 'set_expected_launch') {
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const raw = payload?.expectedLaunchAt == null ? '' : String(payload.expectedLaunchAt).trim();
+    let at: Date | null = null;
+    if (raw) {
+      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
+      const d = m ? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], 12)) : null;
+      if (!m || !d || d.toISOString().slice(0, 10) !== raw || +m[1] < 2020 || +m[1] > 2100) {
+        return NextResponse.json({ error: 'Pick a real date (YYYY-MM-DD).' }, { status: 400 });
+      }
+      at = d;
+    }
+    const before = inquiry.expectedLaunchAt ? inquiry.expectedLaunchAt.toISOString().slice(0, 10) : null;
+    await prisma.courseInquiry.update({ where: { id: inquiryId }, data: { expectedLaunchAt: at } });
+    await logEvent(inquiryId, inquiry.status, inquiry.status, 'admin',
+      at ? `Expected launch set to ${raw} by ${adminName}` : `Expected launch cleared by ${adminName}`);
+    await auditAdmin(session, { action: 'inquiry_expected_launch', targetType: 'inquiry', targetId: inquiryId, before: { expectedLaunchAt: before }, after: { expectedLaunchAt: at ? raw : null } });
+    return NextResponse.json({ success: true, expectedLaunchAt: at ? raw : null });
+  }
+
   // Where this lead came from. The pre-launch question the schema could not
   // answer at all before MP-3 added the column.
   if (action === 'set_source') {

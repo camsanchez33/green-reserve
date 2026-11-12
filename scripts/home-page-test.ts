@@ -44,7 +44,7 @@ ok('the heat map says what it shows, four steps with the % printed, and each day
 const goalsLib = read('src/lib/course-goals.ts');
 ok('goals can be set on money, rounds, players booked, fill and new golfers', ['collected', 'rounds', 'booked', 'fill', 'new_golfers'].every(k => goalsLib.includes(`key: '${k}'`)));
 ok('Home shows the goals card to every login; setting needs settings.edit', home.includes('<GoalsCard key=') && home.includes("canSet={access.can('settings.edit')}") && !home.includes('MonthGoalCard'));
-ok('each goal: actual of target coloured for today (HOME-3), change and remove', board.includes('goalTone({') && board.includes('>Change<') && board.includes('>Remove<') && board.includes('Add a goal'));
+ok('each goal: actual of target coloured for today (HOME-3), change and remove', board.includes('goalPace({') && board.includes('>Change<') && board.includes('>Remove<') && board.includes('Add a goal'));
 ok('the old single money goal and its route are gone', !existsSync('src/app/api/operator/month-goal/route.ts'));
 const cond = read('src/lib/course-conditions.ts');
 ok('conditions (HOME-3): cart path, greens, pins, each with a detail line golfers see too', cond.includes('...(c.lines ?? [])') && cond.includes('c.notes?.[f.key]') && board.includes('HOME_CONDITIONS.map') && board.includes('Detail (optional)'));

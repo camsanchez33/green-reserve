@@ -104,7 +104,7 @@ export default function OperatorSearch({ dropUp = false, onPicked }: { dropUp?: 
                 className="w-full text-left px-3 py-2 hover:bg-paper flex flex-col">
                 <span className="truncate text-ink">{r.name}</span>
                 <span className="text-[12px] text-ink-muted truncate">
-                  {r.kind === 'booking' ? `${fmtDate(r.date)} ${fmtTime(r.time)} · ${r.players} player${r.players === 1 ? '' : 's'}${r.status === 'cancelled' ? ' · cancelled' : r.noShow ? ' · no-show' : ''}` : r.kind === 'member' ? `Member · ${r.tier}` : 'Resident'}
+                  {r.kind === 'booking' ? `${r.ref} · ${fmtDate(r.date)} ${fmtTime(r.time)} · ${r.players} player${r.players === 1 ? '' : 's'}${r.status === 'cancelled' ? ' · cancelled' : r.noShow ? ' · no-show' : ''}` : r.kind === 'member' ? `Member · ${r.tier}` : 'Resident'}
                 </span>
               </button>
             ))}

@@ -1,6 +1,6 @@
 // HOME-3 (Cam 2026-11-12, "approved, build the home page to match the mockup", ADMIN_REDO_SPEC.md "Course
 // dashboard Home: APPROVED"): the pure parts of the charcoal Home — today by hour (played · playing · booked ·
-// open), the 4-week same-weekday average under the next 14 days, how a month's goal is going for today, the
+// open), the 4-week same-weekday average under the next 14 days (goal colours: lib/goal-pace), the
 // weather's one line, and what each course condition means for a golfer. Counted, never estimated. Client-safe.
 import { ROUND_MINUTES } from './on-course';
 import type { WeatherHour } from './weather';
@@ -75,19 +75,8 @@ export function sameWeekdayAverage(date: string, today: string, past: Map<string
   return vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : null;
 }
 
+/** The tone a condition's dot takes (the same three as a goal's pace). */
 export type GoalTone = 'ok' | 'warn' | 'bad';
-/**
- * How a month's goal is going for today (Cam 2026-11-12): where it should be by now is the share of the month
- * gone (today counted); a rate (fill %) should be at its target all month. On or ahead = ok; within 10 points
- * of where it should be = warn; further behind = bad. Reached is always ok.
- */
-export function goalTone(o: { actual: number; target: number; dayOfMonth: number; daysInMonth: number; rate: boolean }): GoalTone {
-  if (o.target <= 0 || o.actual >= o.target) return 'ok';
-  const have = (o.actual / o.target) * 100;
-  const should = o.rate ? 100 : (Math.min(o.dayOfMonth, o.daysInMonth) / o.daysInMonth) * 100;
-  if (have >= should) return 'ok';
-  return have >= should - 10 ? 'warn' : 'bad';
-}
 
 /** Rain shows from 20% (stress test 2026-11-10: "1% rain" said nothing). */
 export const RAIN_PCT = 20;
