@@ -21,7 +21,8 @@ ok('the schema column has a default (additive migration)', read('prisma/schema.p
 ok('the item list returns the photo', read('src/lib/shop-catalog.ts').includes('photoUrl: true } as const;'));
 const shop = read('src/app/dashboard/shop/page.tsx');
 ok('the tile shows the photo, lazily', shop.includes('<img src={it.photoUrl} alt="" loading="lazy"'));
-ok('tiles shown with any photo all get the same picture area (POS-4: one flat list)', shop.includes('const withPhotos = shown.some(i => i.photoUrl);') && shop.includes('{withPhotos && (it.photoUrl'));
+// Cam 2026-11-12 (approved Register): every tile has the same picture area — the photo, or the item's initials.
+ok('every tile gets the same picture area (POS-4: one flat list)', !shop.includes('withPhotos') && shop.includes('{(it.photoUrl') && shop.includes('{initials(it.name)}</span>)}'));
 const initials = (name: string) => name.split(/\s+/).filter(w => /^[A-Za-z0-9]/.test(w)).slice(0, 2).map(w => w[0]).join('').toUpperCase();
 ok('initials skip punctuation ("Tees (bag of 50)" → TO, never "T(")', initials('Tees (bag of 50)') === 'TO' && initials('Pro V1') === 'PV' && shop.includes(".filter(w => /^[A-Za-z0-9]/.test(w)).slice(0, 2)"));
 

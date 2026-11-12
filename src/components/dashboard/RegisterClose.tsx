@@ -16,7 +16,6 @@ import { OpenRegister } from '@/components/dashboard/OpenRegister';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import { useCallback, useEffect, useState } from 'react';
 import { Card } from '@/components/ui/Card';
-import { StatusDot } from '@/components/ui/StatusDot';
 import { INPUT_COMPACT as INPUT } from '@/components/ui/field';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { addDaysStr } from '@/lib/course-time';
@@ -38,6 +37,7 @@ const usd = (c: number) => `${c < 0 ? '−' : ''}$${(Math.abs(c) / 100).toFixed(
 const toCents = (v: string) => { const n = Number(v.replace(/[$,\s]/g, '')); return v.trim() !== '' && Number.isFinite(n) && n >= 0 ? Math.round(n * 100) : null; };
 const dayLabel = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 const overShort = (d: number) => (d === 0 ? { label: 'Even', tone: 'ok' as const } : d > 0 ? { label: `Over ${usd(d)}`, tone: 'warn' as const } : { label: `Short ${usd(-d)}`, tone: 'bad' as const });
+const TONE = { ok: 'text-ok', warn: 'text-warn', bad: 'text-bad' } as const;
 const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : 's'}`;
 
 // POS-5 (Cam 2026-11-08): on the Close out tab it opens straight to the count. The count stays BLIND (Cam: "shouldn't be
@@ -49,16 +49,19 @@ export function RegisterClose({ page = false }: { page?: boolean } = {}) {
   const [openState, setOpen] = useState(false);
   const open = page || openState;
   const access = useDashboardAccess();
-  const [by, setBy] = useState<'total' | 'notes'>('total');
-  const [notes, setNotes] = useState<Record<number, string>>({});
+  // Cam 2026-11-12 (approved Close out): the drawer is counted by tapping each bill and coin — no typed total.
+  const [notes, setNotes] = useState<Record<number, number>>({});
+  const [touched, setTouched] = useState(false);
   const [day, setDay] = useState<string | undefined>(undefined);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [recent, setRecent] = useState<Close[]>([]);
   const [loadError, setLoadError] = useState('');
   const [float, setFloat] = useState('');
-  const [counted, setCounted] = useState('');
   const [note, setNote] = useState('');
   const [leave, setLeave] = useState('');
+  // The leave-in chips sit around this (Build 2026-11-12: the course's last float, nearby amounts, plus Other).
+  const [leaveBase, setLeaveBase] = useState<number | null>(null);
+  const [leaveOther, setLeaveOther] = useState(false);
   const [status, setStatus] = useState<'not_open' | 'open' | 'closed' | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -77,34 +80,33 @@ export function RegisterClose({ page = false }: { page?: boolean } = {}) {
     setStatus(r.data.status ?? null); setTakenBase(r.data.base?.takenBaseCents ?? 0);
     // What stays for the next opening: the float this drawer started with, unless someone typed another.
     const startWith = r.data.opened ? r.data.opened.startingCashCents : r.data.recent[0]?.leaveInCents ?? r.data.recent[0]?.openingFloatCents;
-    if (startWith != null) setLeave(l => l || (startWith / 100).toFixed(2));
+    if (startWith != null) { setLeave(l => l || (startWith / 100).toFixed(2)); setLeaveBase(b => b ?? startWith); }
     // The drawer usually starts each day with the same float: offer the last one used.
     const last = r.data.recent[0];
     if (last) setFloat(f => f || (last.openingFloatCents / 100).toFixed(2));
   }, []);
 
   useEffect(() => { if (page) load(); }, [page, load]);
-  const notesCents = NOTES.reduce((s, [v]) => { const n = Number(notes[v] ?? ''); return s + (Number.isInteger(n) && n > 0 ? n * v : 0); }, 0);
-  // Any count typed — zeros too — is a count (an empty drawer can be closed out); nothing typed yet is no count.
-  const notesTyped = Object.values(notes).some(v => v !== '');
-  useEffect(() => { if (by === 'notes') setCounted(notesTyped ? (notesCents / 100).toFixed(2) : ''); }, [by, notesCents, notesTyped]);
+  const notesCents = NOTES.reduce((s, [v]) => s + (notes[v] ?? 0) * v, 0);
+  const tap = (v: number, d: number) => { setTouched(true); setNotes(n => ({ ...n, [v]: Math.max(0, Math.min(9999, (n[v] ?? 0) + d)) })); };
 
   async function close() {
     if (!summary) return;
     setBusy(true); setError(''); setSaved(null);
     const r = await dfetch<{ close: Close }>('/api/operator/register-close', {
-      method: 'POST', body: JSON.stringify({ day: summary.day, openingFloatCents: toCents(float) ?? 0, countedCashCents: toCents(counted), leaveInCents: toCents(leave), note }),
+      method: 'POST', body: JSON.stringify({ day: summary.day, openingFloatCents: toCents(float) ?? 0, countedCashCents: countedCents, leaveInCents: toCents(leave), note }),
     });
     setBusy(false);
     if (!r.ok) { setError(r.error); return; }
-    setSaved(r.data.close); setNote(''); setNotes({});
+    setSaved(r.data.close); setNote(''); setNotes({}); setTouched(false);
     load(summary.day); // the figures may have moved since the page loaded; show what was saved
   }
 
   const floatCents = opened ?? toCents(float) ?? 0;
   // POS-7: today, a login that can open the register opens it before counting (the count starts from it).
   const needsOpen = !!summary && summary.day === summary.today && opened === null && access.can('shop.open');
-  const countedCents = toCents(counted);
+  // Any tap — down to zero too — is a count (an empty drawer can be closed out); no tap yet is no count.
+  const countedCents = touched ? notesCents : null;
   const expected = summary ? floatCents + summary.cashTakenCents - takenBase : 0;
   const leaveCents = toCents(leave);
   const depositCents = countedCents !== null && leaveCents !== null ? countedCents - leaveCents : null;
@@ -114,164 +116,156 @@ export function RegisterClose({ page = false }: { page?: boolean } = {}) {
   // A day already counted shows its figures (a recount compares against them); otherwise only after saving.
   const revealed = !!summary && (dayCloses.length > 0 || saved?.day === summary.day);
 
+  const leaveChips = leaveBase === null ? [] : [leaveBase - 10000, leaveBase - 5000, leaveBase, leaveBase + 5000].filter((c, k, a) => c >= 0 && a.indexOf(c) === k);
+  const show = (c: number) => (revealed ? usd(c) : '—');
+  const row = (label: string, value: string, strong = false) => (
+    <div className={'flex justify-between gap-3 py-2 border-t border-line ' + (strong ? 'text-[15px]' : 'text-[13.5px]')}>
+      <span className="text-ink">{label}</span><b className={'tabular-nums ' + (strong ? 'text-[16px] font-semibold' : 'font-semibold')}>{value}</b>
+    </div>
+  );
+  // Latest count of each day first; a day's earlier counts stay as "recounted".
+  const latest = recent.filter((c, i) => recent.findIndex(x => x.day === c.day) === i).slice(0, 5);
+
+  if (!open) return (
+    <Card className="mt-5 px-5 py-4 flex items-center justify-between gap-3">
+      <h2 className="text-[15px] font-semibold text-ink">Close out the day</h2>
+      <button type="button" onClick={() => { setOpen(true); load(); }} className="text-[13px] text-pine font-medium hover:underline">Count the drawer</button>
+    </Card>
+  );
   return (
-    <Card className="mt-5">
-      <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-4 pb-3">
-        <h2 className="text-[15px] font-semibold text-ink">Close out the day</h2>
-        {!open && !page
-          ? <button type="button" onClick={() => { setOpen(true); load(); }} className="text-[13px] text-pine font-medium hover:underline">Count the drawer</button>
-          : summary && (
-            <input type="date" aria-label="Day" value={day ?? summary.day} min={addDaysStr(summary.today, -13)} max={summary.today}
-              onChange={e => { if (e.target.value) { setSaved(null); setCounted(''); setNotes({}); load(e.target.value); } }} className={INPUT} />
-          )}
-      </div>
-      {open && (
-        <div className="px-5 pb-5">
-          {loadError && <p className="text-sm text-bad" role="alert">{loadError} <button type="button" onClick={() => load(day)} className="underline font-medium">Try again</button></p>}
-          {!summary && !loadError && <p className="text-sm text-ink-muted">Adding up the day…</p>}
-          {summary && (
-            <div className="grid gap-6 md:grid-cols-2">
-              <div>
-                <h3 className="text-[13.5px] font-semibold text-ink mb-2">Count the drawer</h3>
-                {/* POS-7: opened today → the locked amount (Change for shop.open_fix); a past day opened → its amount; else type it. */}
-                {summary.day === summary.today && (opened !== null || access.can('shop.open'))
-                  ? <OpenRegister key={saved?.id ?? 'open'} where="close" onOpened={c => setOpened(c)} />
-                  : <label className="block text-[13px] text-ink">Starting cash
-                      <div className="relative mt-1 max-w-[12rem]"><span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
-                        {/* A past day the register was opened: its locked amount, read-only. */}
-                        <input value={opened !== null ? (opened / 100).toFixed(2) : float} readOnly={opened !== null} onChange={e => setFloat(e.target.value)} inputMode="decimal" placeholder="0.00" className={INPUT + ' w-full pl-6' + (opened !== null ? ' opacity-70' : '')} /></div>
-                    </label>}
-                <div className="mt-4 inline-flex gap-1 p-1 rounded-[7px] bg-page" role="group" aria-label="Count by">
-                  {([['total', 'Total'], ['notes', 'Bills & coins']] as const).map(([k, l]) => (
-                    <button key={k} type="button" aria-pressed={by === k} onClick={() => setBy(k)}
-                      className={'px-3 min-h-[32px] rounded-[5px] text-[13px] ' + (by === k ? 'bg-white text-ink font-semibold shadow-card' : 'text-ink-soft hover:text-ink')}>{l}</button>
+    <div className="mt-5">
+      {loadError && <p className="mb-3 text-sm text-bad" role="alert">{loadError} <button type="button" onClick={() => load(day)} className="underline font-medium">Try again</button></p>}
+      {!summary && !loadError && <Card className="p-5"><p className="text-sm text-ink-muted">Adding up the day…</p></Card>}
+      {summary && (
+        <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+          <Card className="p-4">
+            <div className="flex flex-wrap items-center gap-3 mb-3">
+              <h2 className="text-[15px] font-semibold text-ink mr-auto">Count the drawer</h2>
+              <input type="date" aria-label="Day" value={day ?? summary.day} min={addDaysStr(summary.today, -13)} max={summary.today}
+                onChange={e => { if (e.target.value) { setSaved(null); setNotes({}); setTouched(false); load(e.target.value); } }} className={INPUT} />
+            </div>
+            {/* POS-7: opened today → the locked amount (Change for shop.open_fix); a past day opened → its amount; else type it. */}
+            {summary.day === summary.today && (opened !== null || access.can('shop.open'))
+              ? <div className="mb-3"><OpenRegister key={saved?.id ?? 'open'} where="close" onOpened={c => setOpened(c)} /></div>
+              : opened === null && (
+                <label className="mb-3 flex items-center justify-between gap-3 text-[13.5px] text-ink">Starting cash
+                  <span className="relative w-32"><span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
+                    <input value={float} onChange={e => setFloat(e.target.value)} inputMode="decimal" placeholder="0.00" aria-label="Starting cash" className={INPUT + ' w-full pl-6 text-right tabular-nums'} /></span>
+                </label>
+              )}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+              {NOTES.map(([v, l]) => (
+                <div key={v} className="flex flex-col gap-1">
+                  <span className="text-[12px] text-ink-muted tabular-nums">{l}</span>
+                  <div className="flex items-center justify-between bg-page border border-line rounded-[10px] p-[3px]">
+                    <button type="button" onClick={() => tap(v, -1)} aria-label={`One less ${l}`} className="w-8 h-8 rounded-[8px] text-[17px] text-ink hover:bg-line">−</button>
+                    <b className="text-[15px] font-semibold text-ink tabular-nums">{notes[v] ?? 0}</b>
+                    <button type="button" onClick={() => tap(v, 1)} aria-label={`One more ${l}`} className="w-8 h-8 rounded-[8px] text-[17px] text-ink hover:bg-line">+</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3">{row('Counted', countedCents === null ? '—' : usd(countedCents), true)}</div>
+            <h3 className="text-[15px] font-semibold text-ink mt-5 mb-1">Should be in the drawer</h3>
+            {row('Starting cash', show(floatCents))}
+            {row('Shop sales in cash', show(summary.cashSales.itemsCents))}
+            {row('Rounds paid in cash', show(summary.cashSales.roundsCents))}
+            {/* CASH-1: every counter payment is now a register sale; this is only older records' "paid at the counter". */}
+            {summary.counterRounds.count > 0 && row('Older rounds marked paid', show(summary.counterRounds.cents))}
+            {row('Cash dues and events', show(summary.otherCash?.cents ?? 0))}
+            {row('Cash refunds', show(-summary.cashRefunds.cents))}
+            {/* DRAWER-1: reopened after a close-out today — the drawer holds only what came in since. */}
+            {takenBase !== 0 && row('Counted at an earlier close-out', show(-takenBase))}
+            {row('Expected', show(expected), true)}
+            <div className="flex justify-between gap-3 py-2 border-t border-line text-[15px]">
+              <span className="text-ink">Difference</span>
+              {revealed && diff !== null ? <span className={'text-[16px] font-semibold tabular-nums ' + TONE[overShort(diff).tone]}>{overShort(diff).label}</span> : <b className="text-[16px] font-semibold">—</b>}
+            </div>
+            {!revealed && <p className="mt-1 text-[12.5px] text-ink-muted">Shows once the count is saved.</p>}
+            {revealed && (summary.cashSales.untaxed ?? 0) > 0 && <p className="mt-1 text-[12.5px] text-warn">{plural(summary.cashSales.untaxed ?? 0, 'sale')} taken without sales tax</p>}
+            {/* Launch walk (Cam 2026-10-31): each cash payment, so a short drawer can be traced. */}
+            {revealed && (summary.cashMoves?.length ?? 0) > 0 && (
+              <details className="mt-3 text-[13px]">
+                <summary className="cursor-pointer text-ink-soft font-medium underline underline-offset-4">Cash payments · {summary.cashMoves!.length}</summary>
+                <ul className="mt-1 divide-y divide-line-soft">
+                  {summary.cashMoves!.map((m, i) => (
+                    <li key={i} className="flex gap-3 py-1.5">
+                      <span className="tabular-nums text-ink-muted w-16 shrink-0">{new Date(m.at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</span>
+                      <span className="text-ink truncate">{LEDGER_WHAT[m.what] ?? m.what}{m.note ? ` · ${m.note}` : ''}</span>
+                      <span className="ml-auto tabular-nums">{usd(m.amountCents)}</span>
+                    </li>
                   ))}
-                </div>
-                {by === 'total' ? (
-                  <label className="mt-3 block text-[13px] text-ink">Cash counted
-                    <div className="relative mt-1 max-w-[12rem]"><span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
-                      <input value={counted} onChange={e => setCounted(e.target.value)} inputMode="decimal" placeholder="0.00" className={INPUT + ' w-full pl-6'} /></div>
-                  </label>
-                ) : (
-                  <div className="mt-3">
-                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                      {NOTES.map(([v, l]) => (
-                        <label key={v} className="flex items-center gap-2 rounded-[7px] border border-line px-2.5 py-1.5 text-[13px] text-ink">
-                          <span className="w-9 shrink-0 tabular-nums">{l}</span>
-                          <input value={notes[v] ?? ''} onChange={e => setNotes(n => ({ ...n, [v]: e.target.value.replace(/\D/g, '').slice(0, 5) }))} inputMode="numeric" placeholder="0" aria-label={`How many ${l}`} className="w-full min-w-0 bg-transparent text-right tabular-nums outline-none" />
-                        </label>
-                      ))}
+                </ul>
+              </details>
+            )}
+          </Card>
+
+          <Card className="p-4">
+            <h2 className="text-[15px] font-semibold text-ink mb-2">Close out the day</h2>
+            {/* DRAWER-1: what stays for the next opening, and what comes out to deposit. */}
+            <div className="text-[12.5px] text-ink-muted mb-1.5">Leave in the drawer</div>
+            <div className="flex flex-wrap gap-1.5" role="group" aria-label="Leave in the drawer">
+              {leaveChips.map(c => (
+                <button key={c} type="button" aria-pressed={!leaveOther && toCents(leave) === c} onClick={() => { setLeaveOther(false); setLeave((c / 100).toFixed(2)); }}
+                  className={'px-3 min-h-[34px] rounded-[9px] border text-[13px] tabular-nums ' + (!leaveOther && toCents(leave) === c ? 'bg-ink text-white border-transparent font-semibold' : 'border-line text-ink-soft hover:text-ink')}>{usd(c).replace('.00', '')}</button>
+              ))}
+              <button type="button" aria-pressed={leaveOther || (leaveChips.length > 0 && !leaveChips.includes(toCents(leave) ?? -1))} onClick={() => setLeaveOther(true)}
+                className={'px-3 min-h-[34px] rounded-[9px] border text-[13px] ' + (leaveOther || (leaveChips.length > 0 && !leaveChips.includes(toCents(leave) ?? -1)) ? 'bg-ink text-white border-transparent font-semibold' : 'border-dashed border-line text-ink-soft hover:text-ink')}>Other</button>
+            </div>
+            {(leaveOther || leaveChips.length === 0 || !leaveChips.includes(toCents(leave) ?? -1)) && (
+              <span className="relative block w-36 mt-2"><span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
+                <input value={leave} onChange={e => setLeave(e.target.value)} inputMode="decimal" placeholder="0.00" aria-label="Leave in the drawer" aria-invalid={leaveTooMuch} autoFocus={leaveOther}
+                  className={INPUT + ' w-full pl-6 text-right tabular-nums' + (leaveTooMuch || leaveCents === null ? ' border-bad' : '')} /></span>
+            )}
+            <div className="mt-3 flex justify-between gap-3 py-2 border-t border-line text-[13.5px]">
+              <span className="text-ink">Take out to deposit</span>
+              <b className={'tabular-nums font-semibold ' + (leaveTooMuch ? 'text-bad' : 'text-ink')}>{depositCents === null ? '—' : usd(depositCents)}</b>
+            </div>
+            {leaveTooMuch && <p className="text-[12.5px] text-bad">You can’t leave more than you counted.</p>}
+            <label className="block mt-2 text-[12.5px] text-ink-muted">Note for the next person
+              <input value={note} onChange={e => setNote(e.target.value)} maxLength={500} className={INPUT + ' w-full mt-1'} /></label>
+            {needsOpen && <p className="mt-2 text-[12.5px] text-warn">Open the register first.</p>}
+            <button type="button" onClick={close} disabled={busy || countedCents === null || leaveCents === null || leaveTooMuch || needsOpen}
+              className="mt-3 w-full min-h-[48px] bg-pine hover:bg-pine-hover text-white font-bold rounded-[10px] text-[15px] disabled:opacity-50">
+              {busy ? 'Saving…' : dayCloses.length && status !== 'open' ? 'Save this recount' : summary.day === summary.today ? 'Close the register' : `Close out ${dayLabel(summary.day)}`}
+            </button>
+            {countedCents === null && <p className="mt-1.5 text-[12.5px] text-ink-muted">Count the drawer first.</p>}
+            {error && <p className="mt-2 text-[13px] text-bad" role="alert">{error}</p>}
+            {saved && (
+              <div className="mt-3 rounded-[7px] border-l-[3px] border-ok bg-page px-3 py-2.5 text-[13.5px] text-ink" aria-live="polite">
+                <p className="font-semibold">{saved.day === summary.today ? 'Register closed.' : 'Saved.'} {overShort(saved.differenceCents).label} against {usd(saved.expectedCashCents)} expected.</p>
+                {saved.depositCents != null && <p className="mt-0.5">Take out <b className="tabular-nums">{usd(saved.depositCents)}</b> to deposit · leave <b className="tabular-nums">{usd(saved.leaveInCents ?? 0)}</b> for the next opening.</p>}
+              </div>
+            )}
+            {!saved && status === 'closed' && summary.day === summary.today && dayCloses[0] && (
+              <p className="mt-3 text-[13px] text-ink-muted">Closed {new Date(dayCloses[0].createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} by {dayCloses[0].closedBy}{dayCloses[0].leaveInCents != null ? ` · ${usd(dayCloses[0].leaveInCents)} left` : ''}. Reopen it on the Register.</p>
+            )}
+
+            <h3 className="text-[15px] font-semibold text-ink mt-5 mb-1">Card, for reference</h3>
+            {row('Rounds paid by card', usd(summary.card.roundsCents))}
+            {row('Shop sales by card', usd(summary.card.shopCents))}
+            {summary.card.refundsCents > 0 && row('Shop card refunds', usd(-summary.card.refundsCents))}
+            <p className="text-[12.5px] text-ink-muted mt-1.5">Card goes to Stripe — nothing to count.</p>
+
+            {latest.length > 0 && (
+              <>
+                <h3 className="text-[15px] font-semibold text-ink mt-5 mb-1">Recent close-outs</h3>
+                {latest.map(c => {
+                  const os = overShort(c.differenceCents);
+                  const recounts = recent.filter(x => x.day === c.day).length - 1;
+                  return (
+                    <div key={c.id} className="flex justify-between gap-3 py-2 border-t border-line text-[13.5px]">
+                      <span className="min-w-0 text-ink">{dayLabel(c.day)}{c.closedBy ? ` · ${c.closedBy}` : ''}{recounts > 0 ? <span className="text-ink-muted"> · recounted</span> : null}
+                        {c.note ? <span className="block text-[12px] text-ink-muted truncate">{c.note}</span> : null}</span>
+                      <b className={'font-semibold tabular-nums shrink-0 ' + TONE[os.tone]}>{os.label}</b>
                     </div>
-                    <p className="mt-2 text-[14px] text-ink">Counted <b className="tabular-nums">${(notesCents / 100).toFixed(2)}</b></p>
-                  </div>
-                )}
-                {revealed && (
-                  <ul className="mt-3 divide-y divide-line-soft text-sm">
-                    <li className="flex justify-between py-2"><span className="text-ink">Should be in the drawer</span><span className="tabular-nums font-semibold">{usd(expected)}</span></li>
-                    <li className="flex justify-between py-2"><span className="text-ink">Counted</span>{diff === null ? <span className="text-ink-muted">—</span> : <StatusDot status={overShort(diff).tone} label={overShort(diff).label} />}</li>
-                  </ul>
-                )}
-                {/* DRAWER-1: what stays for the next opening, and what comes out to deposit. */}
-                <div className="mt-4 rounded-[7px] bg-page px-3 py-1 divide-y divide-line-soft">
-                  <label className="flex items-center gap-3 py-2.5 text-[14px] text-ink">
-                    <span className="mr-auto">Leave in the drawer</span>
-                    <span className="relative w-32"><span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
-                      <input value={leave} onChange={e => setLeave(e.target.value)} inputMode="decimal" placeholder="0.00" aria-label="Leave in the drawer" aria-invalid={leaveTooMuch}
-                        className={INPUT + ' w-full pl-6 text-right tabular-nums' + (leaveTooMuch || leaveCents === null ? ' border-bad' : '')} /></span>
-                  </label>
-                  <div className="flex items-center gap-3 py-2.5 text-[14px] text-ink">
-                    <span className="mr-auto">Take out to deposit</span>
-                    <span className={'text-[20px] font-semibold tabular-nums ' + (leaveTooMuch ? 'text-bad' : 'text-ink')}>{depositCents === null ? '—' : usd(depositCents)}</span>
-                  </div>
-                </div>
-                {leaveTooMuch && <p className="mt-1.5 text-[12.5px] text-bad">You can’t leave more than you counted.</p>}
-                <textarea value={note} onChange={e => setNote(e.target.value)} maxLength={500} rows={2} placeholder="Note for the next person (optional)" aria-label="Note for the next person" className={INPUT + ' w-full mt-3 resize-none'} />
-                {needsOpen && <p className="mt-2 text-[12.5px] text-warn">Open the register first.</p>}
-                <button type="button" onClick={close} disabled={busy || countedCents === null || leaveCents === null || leaveTooMuch || needsOpen}
-                  className="mt-3 w-full bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-sm py-2.5 disabled:opacity-50">
-                  {busy ? 'Saving…' : dayCloses.length && status !== 'open' ? 'Save this recount' : summary.day === summary.today ? 'Close the register' : `Close out ${dayLabel(summary.day)}`}
-                </button>
-                {error && <p className="mt-2 text-[13px] text-bad" role="alert">{error}</p>}
-                {saved && (
-                  <div className="mt-3 rounded-[7px] border-l-[3px] border-ok bg-white shadow-card px-3 py-2.5 text-[13.5px] text-ink" aria-live="polite">
-                    <p className="font-semibold">{saved.day === summary.today ? 'Register closed.' : 'Saved.'} {overShort(saved.differenceCents).label} against {usd(saved.expectedCashCents)} expected.</p>
-                    {saved.depositCents != null && <p className="mt-0.5">Take out <b className="tabular-nums">{usd(saved.depositCents)}</b> to deposit · leave <b className="tabular-nums">{usd(saved.leaveInCents ?? 0)}</b> for the next opening.</p>}
-                  </div>
-                )}
-                {!saved && status === 'closed' && summary.day === summary.today && dayCloses[0] && (
-                  <p className="mt-3 text-[13px] text-ink-muted">Closed {new Date(dayCloses[0].createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} by {dayCloses[0].closedBy}{dayCloses[0].leaveInCents != null ? ` · ${usd(dayCloses[0].leaveInCents)} left` : ''}. Reopen it on the Register.</p>
-                )}
-              </div>
-              <div>
-                {!revealed ? (
-                  <p className="text-[13.5px] text-ink-soft">Count first; the day&apos;s cash shows after.</p>
-                ) : <>
-                <h3 className="text-[13.5px] font-semibold text-ink mb-1">Cash, {dayLabel(summary.day)}</h3>
-                <ul className="divide-y divide-line-soft text-sm">
-                  <li className="flex justify-between py-2"><span className="text-ink">Cash sales at the register <span className="text-ink-muted">· {plural(summary.cashSales.count, 'sale')}</span></span><span className="tabular-nums">{usd(summary.cashSales.cents)}</span></li>
-                  {summary.cashSales.roundsCents > 0 && <li className="flex justify-between py-1.5 pl-3 text-[12.5px] text-ink-soft"><span>Shop items {usd(summary.cashSales.itemsCents)} · green fees {usd(summary.cashSales.roundsCents)}</span></li>}
-                  {(summary.cashSales.untaxed ?? 0) > 0 && <li className="py-1.5 pl-3 text-[12.5px] text-warn">{plural(summary.cashSales.untaxed ?? 0, 'sale')} taken without sales tax</li>}
-                  {/* CASH-1: every counter payment is now a register sale; this is only older records' "paid at the counter". */}
-                  {summary.counterRounds.count > 0 && <li className="flex justify-between py-2"><span className="text-ink">Marked paid at the counter (no tender recorded) <span className="text-ink-muted">· {plural(summary.counterRounds.count, 'group')}</span></span><span className="tabular-nums">{usd(summary.counterRounds.cents)}</span></li>}
-                  {(summary.otherCash?.count ?? 0) > 0 && <li className="flex justify-between py-2"><span className="text-ink">Cash dues and events <span className="text-ink-muted">· {summary.otherCash!.count}</span></span><span className="tabular-nums">{usd(summary.otherCash!.cents)}</span></li>}
-                  <li className="flex justify-between py-2"><span className="text-ink">Cash refunds <span className="text-ink-muted">· {summary.cashRefunds.count}</span></span><span className="tabular-nums">{usd(-summary.cashRefunds.cents)}</span></li>
-                  <li className="flex justify-between py-2 font-semibold text-ink"><span>Cash taken</span><span className="tabular-nums">{usd(summary.cashTakenCents)}</span></li>
-                </ul>
-                {summary.counterRounds.count > 0 && <p className="text-[12.5px] text-ink-muted mt-2">Counted as cash.</p>}
-                {/* Launch walk (Cam 2026-10-31): each cash payment, so a short drawer can be traced. */}
-                {(summary.cashMoves?.length ?? 0) > 0 && (
-                  <details className="mt-3 text-[13px]">
-                    <summary className="cursor-pointer text-pine font-medium">Cash payments · {summary.cashMoves!.length}</summary>
-                    <ul className="mt-1 divide-y divide-line-soft">
-                      {summary.cashMoves!.map((m, i) => (
-                        <li key={i} className="flex gap-3 py-1.5">
-                          <span className="tabular-nums text-ink-muted w-16 shrink-0">{new Date(m.at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</span>
-                          <span className="text-ink truncate">{LEDGER_WHAT[m.what] ?? m.what}{m.note ? ` · ${m.note}` : ''}</span>
-                          <span className="ml-auto tabular-nums">{usd(m.amountCents)}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </details>
-                )}
-                </>}
-                <h3 className="text-[13.5px] font-semibold text-ink mt-5 mb-1">Card, for reference</h3>
-                <ul className="divide-y divide-line-soft text-sm">
-                  <li className="flex justify-between py-2"><span className="text-ink">Shop sales by card</span><span className="tabular-nums">{usd(summary.card.shopCents)}</span></li>
-                  <li className="flex justify-between py-2"><span className="text-ink">Rounds paid by card</span><span className="tabular-nums">{usd(summary.card.roundsCents)}</span></li>
-                  {summary.card.refundsCents > 0 && <li className="flex justify-between py-2"><span className="text-ink">Shop card refunds</span><span className="tabular-nums">{usd(-summary.card.refundsCents)}</span></li>}
-                </ul>
-                <p className="text-[12.5px] text-ink-muted mt-2">Card goes to Stripe — nothing to count.</p>
-              </div>
-            </div>
-          )}
-          {recent.length > 0 && (
-            <div className="mt-6">
-              <h3 className="text-[13.5px] font-semibold text-ink mb-1">Recent close-outs</h3>
-              <table className="w-full text-[13.5px]">
-                <thead><tr className="text-left text-ink-muted"><th className="font-normal py-1.5">Day</th><th className="font-normal">Expected</th><th className="font-normal">Counted</th><th className="font-normal">Over or short</th><th className="font-normal">Left</th><th className="font-normal">Deposit</th><th className="font-normal hidden md:table-cell">By</th></tr></thead>
-                <tbody className="divide-y divide-line-soft">
-                  {recent.map((c, i) => {
-                    // The latest count of a day stands; earlier ones are kept as recounted.
-                    const superseded = recent.findIndex(x => x.day === c.day) !== i;
-                    const os = overShort(c.differenceCents);
-                    return (
-                      <tr key={c.id} className={superseded ? 'text-ink-muted' : 'text-ink'}>
-                        <td className="py-2">{dayLabel(c.day)}{superseded ? ' (recounted)' : ''}</td>
-                        <td className="tabular-nums">{usd(c.expectedCashCents)}</td>
-                        <td className="tabular-nums">{usd(c.countedCashCents)}</td>
-                        <td>{superseded ? os.label : <StatusDot status={os.tone} label={os.label} />}{c.note ? <span className="block text-[12px] text-ink-muted">{c.note}</span> : null}</td>
-                        <td className="tabular-nums">{c.leaveInCents == null ? '—' : usd(c.leaveInCents)}</td>
-                        <td className="tabular-nums">{c.depositCents == null ? '—' : usd(c.depositCents)}</td>
-                        <td className="hidden md:table-cell text-ink-muted">{c.closedBy}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+                  );
+                })}
+              </>
+            )}
+          </Card>
         </div>
       )}
-    </Card>
+    </div>
   );
 }

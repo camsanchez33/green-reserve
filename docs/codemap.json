@@ -1,7 +1,7 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 721,
+    "files": 722,
     "routes": 308,
     "libs": 259,
     "models": 75,
@@ -10001,7 +10001,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 898,
+      "lines": 966,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -10027,6 +10027,7 @@
         "@/components/dashboard/StockTab",
         "@/components/dashboard/Toast",
         "@/components/dashboard/shop/SaleReceiptPanel",
+        "@/components/dashboard/shop/ShopMenu",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/components/ui/field",
@@ -12270,7 +12271,7 @@
     },
     {
       "path": "src/components/dashboard/ItemForm.tsx",
-      "lines": 315,
+      "lines": 318,
       "purpose": "POS-8 (Cam 2026-11-09:",
       "brain": [],
       "exports": [
@@ -12494,7 +12495,7 @@
     },
     {
       "path": "src/components/dashboard/OperatorSearch.tsx",
-      "lines": 116,
+      "lines": 115,
       "purpose": "DASH-C:",
       "brain": [],
       "exports": [
@@ -12552,7 +12553,7 @@
     },
     {
       "path": "src/components/dashboard/RegisterClose.tsx",
-      "lines": 278,
+      "lines": 272,
       "purpose": "POS-3 R4 (Cam 2026-10-24):",
       "brain": [],
       "exports": [
@@ -12569,7 +12570,6 @@
       "imports": [
         "@/components/dashboard/OpenRegister",
         "@/components/ui/Card",
-        "@/components/ui/StatusDot",
         "@/components/ui/field",
         "@/lib/course-time",
         "@/lib/dashboard-fetch",
@@ -12914,7 +12914,7 @@
     },
     {
       "path": "src/components/dashboard/StockTab.tsx",
-      "lines": 208,
+      "lines": 242,
       "purpose": "POS-6/POS-8 (Cam 2026-11-09:",
       "brain": [],
       "exports": [
@@ -12932,9 +12932,9 @@
         "@/components/dashboard/ItemForm",
         "@/components/dashboard/LoadError",
         "@/components/dashboard/UploadMany",
+        "@/components/dashboard/shop/ShopMenu",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
-        "@/components/ui/field",
         "@/lib/booking-fees",
         "@/lib/dashboard-fetch",
         "@/lib/shop-stock",
@@ -14034,6 +14034,34 @@
       ]
     },
     {
+      "path": "src/components/dashboard/shop/ShopMenu.tsx",
+      "lines": 55,
+      "purpose": "Pro shop (Cam 2026-11-12, approved mockups):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "MenuItem",
+          "kind": "type"
+        },
+        {
+          "name": "ShopMenu",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/shop/page.tsx",
+        "src/components/dashboard/StockTab.tsx"
+      ]
+    },
+    {
       "path": "src/components/dashboard/shop/ShopReceiptBody.tsx",
       "lines": 39,
       "purpose": "RECEIPT-3:",
@@ -14552,7 +14580,6 @@
         "src/components/dashboard/MemberAccount.tsx",
         "src/components/dashboard/MemberJoin.tsx",
         "src/components/dashboard/PromoCodes.tsx",
-        "src/components/dashboard/RegisterClose.tsx",
         "src/components/dashboard/RoundPacks.tsx",
         "src/components/dashboard/RoundRulesCard.tsx",
         "src/components/dashboard/SalesTaxCard.tsx",
@@ -14641,7 +14668,6 @@
         "src/components/dashboard/RoundRulesCard.tsx",
         "src/components/dashboard/SalesTaxCard.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
-        "src/components/dashboard/StockTab.tsx",
         "src/components/dashboard/UploadMany.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
         "src/components/dashboard/events/EventMoney.tsx",
