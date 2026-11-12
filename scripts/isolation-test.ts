@@ -735,6 +735,46 @@ async function main() {
     }
   }
 
+  console.log('\n── Expenses: monthly budget and history (ADMIN-REDO) ──');
+  {
+    const { signAdminToken } = await import('../src/lib/admin-session');
+    const { signOwnerToken } = await import('../src/lib/owner-session');
+    const mgr = await prisma.adminUser.create({ data: { name: 'Isol Exp Manager', email: `${TS}-exp-mgr@test.local`, passwordHash: 'x', role: 'manager', active: true } });
+    const savedBudget = await prisma.expenseBudget.findUnique({ where: { id: 'monthly' } });
+    const fresh = await prisma.ownerSession.create({ data: { adminId: data.adminOwner.id, method: 'totp', expiresAt: new Date(Date.now() + 3600_000), stepUpAt: new Date() } });
+    const stale = await prisma.ownerSession.create({ data: { adminId: data.adminOwner.id, method: 'totp', expiresAt: new Date(Date.now() + 3600_000), stepUpAt: new Date(Date.now() - 24 * 3600_000) } });
+    const exp = await prisma.expense.create({ data: { name: 'Isol hosting', amountCents: 2000, cadence: 'monthly' } });
+    try {
+      const mc = `admin_session=${await signAdminToken({ adminId: mgr.id, email: mgr.email, name: mgr.name, role: 'manager', mfa: true })}`;
+      const oc = `gr_owner=${await signOwnerToken(fresh.id, data.adminOwner.id, fresh.expiresAt)}`;
+      const os = `gr_owner=${await signOwnerToken(stale.id, data.adminOwner.id, stale.expiresAt)}`;
+      checkStatus('A manager cannot set the expense budget → 403', (await api('/api/admin/expenses/budget', { method: 'PUT', cookie: mc, body: { cents: 50000 } })).status, 403);
+      checkStatus('…nor read an expense\'s history → 403', (await api(`/api/admin/expenses/${exp.id}/history`, { cookie: mc })).status, 403);
+      const noStep = await api('/api/admin/expenses/budget', { method: 'PUT', cookie: os, body: { cents: 50000 } });
+      check('The owner without a fresh second factor is asked to confirm (step_up)', noStep.status === 403 && (noStep.body as { code?: string })?.code === 'step_up', JSON.stringify(noStep.body));
+      checkStatus('A bad amount → 400', (await api('/api/admin/expenses/budget', { method: 'PUT', cookie: oc, body: { cents: 12.5 } })).status, 400);
+      const set = await api('/api/admin/expenses/budget', { method: 'PUT', cookie: oc, body: { cents: 50000 } });
+      checkStatus('The owner sets it → 200', set.status, 200);
+      const g = (await api('/api/admin/expenses', { cookie: oc })).body as { budget?: { cents: number | null; setAt: string | null } };
+      check('…GET /expenses carries it', g.budget?.cents === 50000 && !!g.budget.setAt, JSON.stringify(g.budget));
+      check('…and it is audited', !!(await prisma.adminAuditLog.findFirst({ where: { adminId: data.adminOwner.id, action: 'expense_budget' }, orderBy: { createdAt: 'desc' } })));
+      checkStatus('Clearing it (null) → 200', (await api('/api/admin/expenses/budget', { method: 'PUT', cookie: oc, body: { cents: null } })).status, 200);
+      const g2 = (await api('/api/admin/expenses', { cookie: oc })).body as { budget?: { cents: number | null; setAt: string | null } };
+      check('…and it reads as no budget', g2.budget?.cents === null && g2.budget.setAt === null, JSON.stringify(g2.budget));
+      await api(`/api/admin/expenses/${exp.id}`, { method: 'PATCH', cookie: oc, body: { amountCents: 2500 } });
+      await api(`/api/admin/expenses/${exp.id}`, { method: 'PATCH', cookie: oc, body: { endedAt: new Date().toISOString() } });
+      const hist = (await api(`/api/admin/expenses/${exp.id}/history`, { cookie: oc })).body as { history?: { kind: string; by: string; changes?: { field: string }[] }[] };
+      check('The owner reads an expense\'s history, newest first', JSON.stringify(hist.history?.map(x => x.kind)) === JSON.stringify(['ended', 'changed']) && hist.history?.[1].changes?.[0].field === 'amountCents', JSON.stringify(hist));
+    } finally {
+      await prisma.expense.delete({ where: { id: exp.id } }).catch(() => {});
+      if (savedBudget) await prisma.expenseBudget.update({ where: { id: 'monthly' }, data: { cents: savedBudget.cents, setAt: savedBudget.setAt, setBy: savedBudget.setBy } });
+      else await prisma.expenseBudget.deleteMany({ where: { id: 'monthly' } });
+      await prisma.ownerSession.deleteMany({ where: { id: { in: [fresh.id, stale.id] } } });
+      await prisma.adminAuditLog.deleteMany({ where: { adminId: mgr.id } }).catch(() => {});
+      await prisma.adminUser.delete({ where: { id: mgr.id } });
+    }
+  }
+
   console.log('\n── Admin owner auth boundary (AW-1: the owner signs in only at /cam) ──');
   {
     // (a) The employees' door never mentions an owner: the owner's correct
