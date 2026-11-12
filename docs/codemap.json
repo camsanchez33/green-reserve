@@ -1,11 +1,11 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 711,
+    "files": 710,
     "routes": 305,
-    "libs": 256,
+    "libs": 255,
     "models": 73,
-    "orphans": 12,
+    "orphans": 11,
     "ungatedRoutes": 3
   },
   "brain": {
@@ -21023,37 +21023,6 @@
       ]
     },
     {
-      "path": "src/lib/goal-pace.ts",
-      "lines": 34,
-      "purpose": "ADMIN-REDO (Cam 2026-11-12):",
-      "brain": [],
-      "exports": [
-        {
-          "name": "goalPace",
-          "kind": "fn"
-        },
-        {
-          "name": "PACE_WARN_SHARE",
-          "kind": "const"
-        },
-        {
-          "name": "PaceKind",
-          "kind": "type"
-        },
-        {
-          "name": "PaceState",
-          "kind": "type"
-        }
-      ],
-      "route": null,
-      "kind": null,
-      "methods": [],
-      "auth": null,
-      "guard": null,
-      "imports": [],
-      "usedBy": []
-    },
-    {
       "path": "src/lib/golfer-key.ts",
       "lines": 40,
       "purpose": "Who a golfer is at a course:",
@@ -35041,7 +35010,6 @@
     "src/lib/api-response.ts",
     "src/lib/data.ts",
     "src/lib/db.ts",
-    "src/lib/goal-pace.ts",
     "src/lib/seed.ts",
     "src/lib/use-tab-intro.ts"
   ]

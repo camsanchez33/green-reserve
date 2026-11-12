@@ -1,33 +1,9 @@
-// ADMIN-REDO (Cam 2026-11-12): goalPace (lib/goal-pace) and an expense's history
-// (lib/expense-history). Pure. Run: npx tsx scripts/goal-pace-test.ts
+// ADMIN-REDO (Cam 2026-11-12): an expense's history (lib/expense-history) and the budget and
+// history routes' gates. Pure. Run: npx tsx scripts/expense-history-test.ts
 import { readFileSync } from 'fs';
-import { goalPace } from '../src/lib/goal-pace';
 import { expenseHistory } from '../src/lib/expense-history';
 let failed = 0;
 const check = (label: string, ok: boolean, info: unknown = '') => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${ok || !info ? '' : ' — ' + JSON.stringify(info)}`); if (!ok) failed++; };
-const p = (progressCents: number, targetCents: number | null, elapsedShare: number, kind: 'cost' | 'revenue') => goalPace({ progressCents, targetCents, elapsedShare, kind });
-
-// Halfway through the month: projected = progress × 2.
-check('projection is progress ÷ the share gone', p(40_00, 100_00, 0.5, 'cost').projectedCents === 80_00);
-// COST, target $100
-check('cost: projected $90 (= 0.9 × target) is ok', p(45_00, 100_00, 0.5, 'cost').state === 'ok');
-check('cost: projected $90.02 is warn', p(45_01, 100_00, 0.5, 'cost').state === 'warn');
-check('cost: projected exactly the target is warn', p(50_00, 100_00, 0.5, 'cost').state === 'warn');
-check('cost: projected $100.02 is bad', p(50_01, 100_00, 0.5, 'cost').state === 'bad');
-// REVENUE, target $100
-check('revenue: projected exactly the target is ok', p(50_00, 100_00, 0.5, 'revenue').state === 'ok');
-check('revenue: projected $99.98 is warn', p(49_99, 100_00, 0.5, 'revenue').state === 'warn');
-check('revenue: projected $90 (= 0.9 × target) is warn', p(45_00, 100_00, 0.5, 'revenue').state === 'warn');
-check('revenue: projected $89.98 is bad', p(44_99, 100_00, 0.5, 'revenue').state === 'bad');
-// Guards
-check('no share gone yet: no projection, no state', JSON.stringify(p(10_00, 100_00, 0, 'cost')) === '{"projectedCents":null,"state":null}');
-check('a negative share is treated the same', p(10_00, 100_00, -0.1, 'revenue').state === null);
-check('no target (null): projected, but no state', JSON.stringify(p(10_00, null, 0.5, 'cost')) === '{"projectedCents":2000,"state":null}');
-check('a zero target: no state', p(10_00, 0, 0.5, 'revenue').state === null);
-check('a share past the end counts as the whole period', p(120_00, 100_00, 1.4, 'cost').projectedCents === 120_00);
-check('nothing yet against a revenue goal is bad', p(0, 100_00, 0.5, 'revenue').state === 'bad');
-check('nothing yet against a cost budget is ok', p(0, 100_00, 0.5, 'cost').state === 'ok');
-
 // Expense history
 const t = (s: string) => new Date(`2026-11-${s}T12:00:00Z`);
 const h = expenseHistory([

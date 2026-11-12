@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-711 source files · 305 routes · 256 libraries · 73 models
+710 source files · 305 routes · 255 libraries · 73 models
 
 ## Single sources of truth
 
@@ -617,7 +617,6 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/api-response.ts` | 0 | 22 | Common JSON response helpers to reduce boilerplate in API routes. | `badRequest`, `conflict`, `forbidden`, `notFound`, `serverError`, `unauthorized` |
 | `src/lib/data.ts` | 0 | 3 | Deprecated — use @/lib/courses-data instead |  |
 | `src/lib/db.ts` | 0 | 2 |  |  |
-| `src/lib/goal-pace.ts` | 0 | 34 | ADMIN-REDO (Cam 2026-11-12): | `goalPace`, `PACE_WARN_SHARE`, `PaceKind`, `PaceState` |
 | `src/lib/seed.ts` | 0 | 2 |  |  |
 | `src/lib/use-tab-intro.ts` | 0 | 18 |  | `useTabIntro` |
 
@@ -1348,7 +1347,6 @@ Next.js, not imported, so "nothing imports it" proves nothing about them.
 - `src/lib/api-response.ts` (22 lines)
 - `src/lib/data.ts` (3 lines)
 - `src/lib/db.ts` (2 lines)
-- `src/lib/goal-pace.ts` (34 lines)
 - `src/lib/seed.ts` (2 lines)
 - `src/lib/use-tab-intro.ts` (18 lines)
 
