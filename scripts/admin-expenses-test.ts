@@ -51,6 +51,9 @@ check('an ended cost never renews', nextRenewal(ex({ endedAt: '2026-10-01T12:00:
 check('"$1,200.50" → 120050', parseAmount('$1,200.50') === 120050);
 check('"20" → 2000', parseAmount('20') === 2000);
 check('0, negatives, letters and three decimals are refused', [ '0', '-5', 'abc', '1.005', '' ].every(s => parseAmount(s) === null));
+check('commas only as thousands groups ("12,50" and "1,2,3" refused)', parseAmount('12,50') === null && parseAmount('1,2,3') === null && parseAmount('12,000') === 1200000);
+check('over $20M is refused', parseAmount('20000001') === null && parseAmount('20000000') === 2000000000);
+check('a cost dated today counts today, even before noon UTC', activeOn(ex({ startedAt: '2026-11-12T12:00:00.000Z' }), new Date('2026-11-12T11:00:00Z')));
 
 // Filters and order.
 const counts = Object.fromEntries(FILTERS.map(f => [f.key, list.filter(f.test).length]));
@@ -74,6 +77,7 @@ check('Delete goes through step-up', /stepUpFetch/.test(page) && /'DELETE'/.test
 check('the budget reads "Not set" until it is set', page.includes('Not set'));
 check('the budget bar is coloured by the ONE shared pace rule, as a cap', /goalPace\(\{[^}]*kind: 'cap'/.test(page) && !/0\.9\s*\*|1\.1\s*\*/.test(page));
 check('setting the budget goes through step-up', /stepUpFetch\('\/api\/admin\/expenses\/budget'/.test(page));
+check('an ended one-time cost has no Restart (it would book it twice)', /e\.endedAt \? e\.cadence !== 'one-time' &&/.test(page));
 check('restart never wipes the stopped months (it adds the cost again from today)', /async function restart[\s\S]{0,300}'POST'/.test(page));
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

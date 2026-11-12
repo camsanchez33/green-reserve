@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { stepUpFetch } from '@/lib/step-up-client';
+import { dayKey } from '@/lib/admin-day';
 import { EXPENSE_CATEGORIES, EXPENSE_CADENCES, EXPENSE_CATEGORY_LABEL, monthlyEquivalentCents, type ExpenseCategory } from '@/lib/expenses';
 import g from '../admin-glass.module.css';
 import c from '../courses/courses.module.css';
@@ -23,6 +24,8 @@ import { goalPace } from '@/lib/goal-pace';
 
 const usd = (cents: number) => '$' + (cents / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const longDay = (day: string) => new Date(day + 'T12:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' });
+/** An end is a real instant: its day on the platform clock (ending at 9pm ET on Nov 12 is Nov 12). */
+const endDay = (iso: string) => dayKey(new Date(iso));
 const catLabel = (k: string) => EXPENSE_CATEGORY_LABEL[k as ExpenseCategory] ?? k;
 const PACE_WORDS = { ok: 'On pace to stay under', warn: 'Close to the budget', bad: 'On pace to go over', early: 'Too early to tell' } as const;
 const todayKey = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
@@ -47,6 +50,7 @@ export default function ExpensesPage() {
   const [filter, setFilter] = useState<FilterKey>('active');
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const histFor = useRef<string | null>(null);
   const panelRef = useRef<HTMLElement>(null);
   const [pick, setPick] = useState<string | null>(null);
   const [mode, setMode] = useState<'view' | 'edit' | 'add'>('view');
@@ -65,6 +69,7 @@ export default function ExpensesPage() {
       if (res.status === 401) setLoadErr(SESSION_ENDED);
       else if (!res.ok || !body) setLoadErr(body?.error ?? loadFailed(res.status));
       else {
+        if (!Array.isArray(body.expenses)) { setLoadErr(loadFailed()); setLoading(false); return; }
         setList(body.expenses as Exp[]);
         setBudget(body.budget === undefined ? undefined : (body.budget?.cents ?? null));
       }
@@ -82,15 +87,18 @@ export default function ExpensesPage() {
   }, [menuOpen]);
 
   const loadHistory = useCallback(async (id: string) => {
+    histFor.current = id;
+    const done = (h: NonNullable<typeof history>) => { if (histFor.current === id) setHistory(h); }; // a later pick wins
     setHistory({ id, rows: null, err: '', gone: false });
     try {
       const res = await fetch(`/api/admin/expenses/${id}/history`, { cache: 'no-store' });
       const body = await res.json().catch(() => null);
-      if (res.status === 404 && !body?.error) { setHistory({ id, rows: null, err: '', gone: true }); return; } // route not live yet
-      if (res.status === 401) { setHistory({ id, rows: null, err: SESSION_ENDED, gone: false }); return; }
-      if (!res.ok || !body) { setHistory({ id, rows: null, err: body?.error ?? MSG.historyFail(res.status), gone: false }); return; }
-      setHistory({ id, rows: body.history as HistoryRow[], err: '', gone: false });
-    } catch { setHistory({ id, rows: null, err: MSG.historyFail(), gone: false }); }
+      if (res.status === 404 && !body?.error) { done({ id, rows: null, err: '', gone: true }); return; } // route not live yet
+      if (res.status === 401) { done({ id, rows: null, err: SESSION_ENDED, gone: false }); return; }
+      if (!res.ok || !body) { done({ id, rows: null, err: body?.error ?? MSG.historyFail(res.status), gone: false }); return; }
+      if (!Array.isArray(body.history)) { done({ id, rows: null, err: MSG.historyFail(), gone: false }); return; }
+      done({ id, rows: body.history as HistoryRow[], err: '', gone: false });
+    } catch { done({ id, rows: null, err: MSG.historyFail(), gone: false }); }
   }, []);
 
   const now = useMemo(() => new Date(), [list]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -170,13 +178,12 @@ export default function ExpensesPage() {
       const body = await res.json().catch(() => ({}));
       if (res.status === 401) setBudgetErr(SESSION_ENDED);
       else if (!res.ok) setBudgetErr(body.error || `${MSG.budgetFail} (error ${res.status}). Try again.`);
-      else { setBudget(body.budget?.cents ?? null); setBudgetDraft(null); }
+      else { setBudget(body.budget !== undefined ? (body.budget?.cents ?? null) : cents); setBudgetDraft(null); }
     } catch { setBudgetErr(`${MSG.budgetFail} ${MSG.offline}`); }
     setBusy(false);
   }
 
-  // The budget card: spent so far this month against the budget. The pace colour waits for Build's shared pace rule
-  // ("Goals: one pace rule everywhere") together with the budget itself.
+  // The budget card: spent so far this month against the budget, coloured by the shared pace rule (src/lib/goal-pace.ts).
   const monthDays = k ? (k.monthEnd.getTime() - k.monthStart.getTime()) / 86_400_000 : 0;
   const pace = k && budget ? goalPace({ progress: k.monthSoFar, target: budget, share: k.elapsedShare, kind: 'cap', daysElapsed: k.elapsedShare * monthDays }) : null;
   const monthLast = k ? new Date(k.monthEnd.getTime() - 3_600_000).toLocaleDateString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric' }) : '';
@@ -252,7 +259,7 @@ export default function ExpensesPage() {
     const today = todayKey();
     const begins = startDay(e.startedAt);
     const ren = nextRenewal(e, now);
-    const when = e.endedAt ? `Finished ${longDay(startDay(e.endedAt))}`
+    const when = e.endedAt ? `Finished ${longDay(endDay(e.endedAt))}`
       : e.cadence === 'one-time' ? `Paid once · ${longDay(begins)}`
       : begins > today ? `Starts ${longDay(begins)}`
       : ren ? (ren.inDays === 0 ? `Renews today · ${longDay(ren.day)}` : `Renews in ${ren.inDays} day${ren.inDays === 1 ? '' : 's'} · ${longDay(ren.day)}`) : '';
@@ -265,7 +272,7 @@ export default function ExpensesPage() {
           {mode === 'view' && (
             <div className={c.plinks}>
               <button type="button" className={c.plink} onClick={() => startEdit(e)} disabled={busy}>Edit</button>
-              {e.endedAt ? <button type="button" className={c.plink} onClick={() => restart(e)} disabled={busy}>Restart</button>
+              {e.endedAt ? e.cadence !== 'one-time' && <button type="button" className={c.plink} onClick={() => restart(e)} disabled={busy}>Restart</button>
                 : e.cadence !== 'one-time' && <button type="button" className={c.plink} onClick={() => end(e)} disabled={busy}>End it</button>}
               <button type="button" className={`${c.plink} ${s.pdel}`} onClick={() => remove(e)} disabled={busy}>Delete</button>
             </div>
@@ -281,7 +288,7 @@ export default function ExpensesPage() {
               <dt>How much</dt><dd>{usd(e.amountCents)}</dd>
               <dt>How often</dt><dd>{CADENCE_WORDS[e.cadence] ?? e.cadence}</dd>
               <dt>Started</dt><dd>{longDay(begins)}</dd>
-              {e.endedAt && <><dt>Finished</dt><dd>{longDay(startDay(e.endedAt))}</dd></>}
+              {e.endedAt && <><dt>Finished</dt><dd>{longDay(endDay(e.endedAt))}</dd></>}
             </dl>
           </div>
         )}
@@ -291,7 +298,7 @@ export default function ExpensesPage() {
             {history.err ? <p className={s.err} role="alert">{history.err} <button type="button" className={c.plink} onClick={() => loadHistory(e.id)}>Try again</button></p>
               : !history.rows ? <p className={c.muted} aria-busy="true">Loading…</p>
               : history.rows.length === 0 ? <p className={c.muted}>—</p>
-              : <div className={s.log}>{history.rows.map((h, i) => <div key={i}><small>{longDay(h.at.slice(0, 10))}</small><span>{historyLine(h, catLabel, CADENCE_WORDS, usd, longDay)}</span></div>)}</div>}
+              : <div className={s.log}>{history.rows.map((h, i) => <div key={i}><small>{longDay(dayKey(new Date(h.at)))}</small><span>{historyLine(h, catLabel, CADENCE_WORDS, usd, longDay)}</span></div>)}</div>}
           </div>
         )}
       </>
@@ -329,7 +336,7 @@ export default function ExpensesPage() {
         {loadErr && (
           <div className={`${g.glass} ${g.note}`} role="alert">
             <span className={g.down}>{loadErr}</span>
-            {loadErr === SESSION_ENDED ? <Link href="/admin/login">Sign in</Link> : <button type="button" onClick={load} disabled={loading}>{loading ? 'Trying…' : 'Try again'}</button>}
+            {loadErr === SESSION_ENDED ? <Link href="/cam">Sign in</Link> : <button type="button" onClick={load} disabled={loading}>{loading ? 'Trying…' : 'Try again'}</button>}
           </div>
         )}
 
@@ -360,7 +367,7 @@ export default function ExpensesPage() {
                       {shown.map(e => (
                         <tr key={e.id} className={c.row} tabIndex={0} aria-selected={mode !== 'add' && picked?.id === e.id}
                           onClick={() => choose(e)} onKeyDown={ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); choose(e); } }}>
-                          <td><span className={`${c.cname} ${e.endedAt ? s.ended : ''}`}>{e.name}</span>{e.endedAt && <span className={s.tag}> · ended {longDay(startDay(e.endedAt))}</span>}</td>
+                          <td><span className={`${c.cname} ${e.endedAt ? s.ended : ''}`}>{e.name}</span>{e.endedAt && <span className={s.tag}> · ended {longDay(endDay(e.endedAt))}</span>}</td>
                           <td className={`${s.tag} ${c.hideS}`}>{catLabel(e.category)}</td>
                           <td className={`${c.n} ${s.amt}`}>{usd(e.amountCents)}</td>
                           <td className={r.nw}>{CADENCE_WORDS[e.cadence] ?? e.cadence}</td>

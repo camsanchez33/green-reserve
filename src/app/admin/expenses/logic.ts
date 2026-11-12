@@ -13,7 +13,7 @@ const DAY = 86_400_000;
 
 /** Running on `at`: started by then and not yet ended. */
 export const activeOn = (e: Exp, at: Date) =>
-  new Date(e.startedAt).getTime() <= at.getTime() && (!e.endedAt || new Date(e.endedAt).getTime() > at.getTime());
+  startDay(e.startedAt) <= dayKey(at) && (!e.endedAt || new Date(e.endedAt).getTime() > at.getTime());
 
 /** What keeps GreenReserve running a month as of `at`: monthly costs, plus yearly ones over 12. One-time costs are not monthly. */
 export const monthlyCostsOn = (list: Exp[], at: Date) =>
@@ -104,12 +104,14 @@ export const FILTERS: { key: FilterKey; label: string; test: (e: Exp) => boolean
 /** Biggest monthly cost first, then the biggest amount. */
 export const byCost = (a: Exp, b: Exp) => monthlyEquivalentCents(b) - monthlyEquivalentCents(a) || b.amountCents - a.amountCents;
 
-/** "$12.50" → 1250; anything that isn't a positive amount → null. */
+/** "$12.50" → 1250; anything that isn't a positive amount up to $20M → null. */
+export const MAX_AMOUNT_CENTS = 2_000_000_000; // $20M, the budget route's cap; no single cost is near it
 export function parseAmount(s: string): number | null {
-  const t = s.replace(/[$,\s]/g, '');
-  if (!/^\d+(\.\d{1,2})?$/.test(t)) return null;
-  const c = Math.round(parseFloat(t) * 100);
-  return c > 0 ? c : null;
+  const t = s.replace(/[$\s]/g, '');
+  // Commas only as thousands groups ("1,200.50"); "12,50" or "1,2,3" are refused, never read as something else.
+  if (!/^(\d{1,3}(,\d{3})+|\d+)(\.\d{1,2})?$/.test(t)) return null;
+  const c = Math.round(parseFloat(t.replace(/,/g, '')) * 100);
+  return c > 0 && c <= MAX_AMOUNT_CENTS ? c : null;
 }
 
 /** One line of a cost's history, as Build's /api/admin/expenses/[id]/history answers it (newest first). */
