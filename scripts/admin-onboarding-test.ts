@@ -82,7 +82,8 @@ check('launch: the year shows only when it is not this year', launchDay('2026-12
   check('launch is saved through the pipeline route\'s set_expected_launch', /inquiryAction\(p\.inquiryId, 'set_expected_launch'/.test(page));
   check('only a manager sets it (canSetLaunch = manager && inquiry)', /canSetLaunch: manager && !!inq/.test(route) && /p\.canSetLaunch &&/.test(page));
   check('the inquiries CSV link is hidden from viewers (support+ only, as the route)', /d\?\.support && <a href="\/api\/admin\/inquiries\?format=csv"/.test(page));
-  check('the page never imports the route folder (server modules stay off the browser)', !/from '\.\.\/\.\.\/api\//.test(page));
+  check('the page never imports the route folder (server modules stay off the browser)', !/from ['"][^'"]*\/api\//.test(page));
+  check('a course whose inquiry was closed shows that inquiry\'s launch date (never a hard-coded null)', /launchOf\.get\(inquiryId\)/.test(route) && /expectedLaunchAt: true \}, orderBy/.test(route));
 }
 
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }

@@ -2963,7 +2963,7 @@
     },
     {
       "path": "src/app/api/admin/onboarding/route.ts",
-      "lines": 162,
+      "lines": 167,
       "purpose": "",
       "brain": [],
       "exports": [

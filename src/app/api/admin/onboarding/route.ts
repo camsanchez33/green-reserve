@@ -62,7 +62,7 @@ async function loadList(now: Date) {
     prisma.teeTimeSchedule.groupBy({ by: ['courseId'], where: { courseId: { in: ids } }, _count: { id: true } }),
     prisma.agreementAcceptance.groupBy({ by: ['courseId'], where: { courseId: { in: ids }, document: 'operator_agreement' }, _count: { id: true } }),
     // Any inquiry (open or closed) a never-live course came from — for its Inquiry → link.
-    prisma.courseInquiry.findMany({ where: { builtCourseId: { in: ids } }, select: { id: true, builtCourseId: true, status: true }, orderBy: { createdAt: 'desc' } }),
+    prisma.courseInquiry.findMany({ where: { builtCourseId: { in: ids } }, select: { id: true, builtCourseId: true, status: true, expectedLaunchAt: true }, orderBy: { createdAt: 'desc' } }),
   ]);
   const hasSchedule = new Set(schedules.map(s => s.courseId));
   const signed = new Set(agreements.map(a => a.courseId));
@@ -91,7 +91,11 @@ async function loadList(now: Date) {
     });
   }
   const inquiryOf = new Map<string, string>();
-  for (const l of linked) if (l.builtCourseId && !inquiryOf.has(l.builtCourseId)) inquiryOf.set(l.builtCourseId, l.id);
+  const launchOf = new Map<string, string | null>(); // the expected launch saved on that (possibly closed) inquiry
+  for (const l of linked) if (l.builtCourseId && !inquiryOf.has(l.builtCourseId)) {
+    inquiryOf.set(l.builtCourseId, l.id);
+    launchOf.set(l.id, l.expectedLaunchAt ? l.expectedLaunchAt.toISOString().slice(0, 10) : null);
+  }
   for (const c of courses) {
     if (listedCourses.has(c.id) || c.archivedAt || !onboarding(c)) continue;
     const inquiryId = inquiryOf.get(c.id) ?? null;
@@ -103,7 +107,8 @@ async function loadList(now: Date) {
       status: null, stage: inquiryId ? stageName('building') : BY_HAND_STAGE, need: needOf(null),
       daysWaiting: daysSince(c.createdAt, now), snoozed: false,
       next: steps.todo ?? 'Make the course live', steps,
-      launch: null as string | null, // a launch date lives on an inquiry; a course built by hand has none
+      // A launch date lives on an inquiry: the closed inquiry this course came from, or none when built by hand.
+      launch: inquiryId ? launchOf.get(inquiryId) ?? null : null,
     });
   }
   rows.sort(compareRows);

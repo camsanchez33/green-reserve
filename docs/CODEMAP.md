@@ -121,7 +121,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/admin/logout` | admin | entry | POST | `src/app/api/admin/logout/route.ts` | 19 |
 | `/api/admin/messages` | admin | file | GET PATCH POST | `src/app/api/admin/messages/route.ts` | 221 |
 | `/api/admin/nav-badges` | admin | file | GET | `src/app/api/admin/nav-badges/route.ts` | 53 |
-| `/api/admin/onboarding` | admin | file | GET | `src/app/api/admin/onboarding/route.ts` | 162 |
+| `/api/admin/onboarding` | admin | file | GET | `src/app/api/admin/onboarding/route.ts` | 167 |
 | `/api/admin/orphan-sweep` | admin | file | GET POST | `src/app/api/admin/orphan-sweep/route.ts` | 49 |
 | `/api/admin/owner-devices` | admin | file | DELETE GET | `src/app/api/admin/owner-devices/route.ts` | 55 |
 | `/api/admin/passkeys` | admin | file | DELETE GET POST | `src/app/api/admin/passkeys/route.ts` | 82 |
