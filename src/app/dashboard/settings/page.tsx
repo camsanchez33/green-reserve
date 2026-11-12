@@ -583,7 +583,7 @@ function SettingsPageInner() {
                 {changeSent ? (
                   <div className="flex items-center gap-2 bg-ok/5 border border-ok/20 text-ok rounded-md px-3 py-2.5 text-[13.5px]">
                     <StatusDot status="ok" />
-                    Sent. We&apos;ll reply on <a href="/dashboard/messages" className="underline font-medium">Messages</a>.
+                    Sent. We&apos;ll reply on <a href="/dashboard/support" className="underline font-medium">Support</a>.
                   </div>
                 ) : changeOpen ? (
                   <div className="space-y-2">
@@ -1100,7 +1100,7 @@ function SettingsPageInner() {
                     <div className="text-[13px] font-semibold text-ink">Email</div>
                     <div className="text-sm text-ink break-all">{operatorEmail || '…'}</div>
                   </div>
-                  <p className="text-[12.5px] text-ink-muted">{isStaffLogin ? 'To change it, ask the course owner.' : <>To change it, message us on <a href="/dashboard/messages" className="text-pine underline">Messages</a>.</>}</p>
+                  <p className="text-[12.5px] text-ink-muted">{isStaffLogin ? 'To change it, ask the course owner.' : <>To change it, message us on <a href="/dashboard/support" className="text-pine underline">Support</a>.</>}</p>
                 </div>
                 {/* Staff logins are a separate account: the password and two-step
                     routes here are the owner's only (both refuse staff). */}

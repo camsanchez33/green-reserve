@@ -41,7 +41,7 @@ export default function AnnouncementBanner() {
         <span className="font-semibold text-[14px] whitespace-nowrap">{announcement.title}</span>
         {firstLine && <span className="text-[13px] text-ink-soft truncate">{firstLine}</span>}
       </div>
-      <a href="/dashboard/messages#announcements" className="shrink-0 text-[12.5px] font-semibold text-pine hover:underline underline-offset-4">Read</a>
+      <a href="/dashboard/support" className="shrink-0 text-[12.5px] font-semibold text-pine hover:underline underline-offset-4">Read</a>
       <button onClick={dismiss} aria-label="Dismiss" className="shrink-0 w-7 h-7 flex items-center justify-center rounded-md text-ink-muted hover:text-ink hover:bg-paper transition-colors">
         <X className="w-4 h-4"/>
       </button>

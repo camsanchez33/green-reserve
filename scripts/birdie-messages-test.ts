@@ -18,12 +18,11 @@ check('the phone launcher says Ask, not just the logo', />Ask<\/span>/.test(w));
 check('an empty question only opens the panel, keeping a draft', /if \(q\.trim\(\)\) setInput/.test(w));
 const bar = readFileSync('src/components/OperatorSidebar.tsx', 'utf8');
 check('the top bar no longer carries a second Ask Birdie', !bar.includes('openBirdie'));
-const m = readFileSync('src/app/dashboard/messages/page.tsx', 'utf8');
+// SUPPORT-1 (Cam 2026-11-12): Messages is Support; the email card is gone with the other top cards.
+const m = readFileSync('src/app/dashboard/support/page.tsx', 'utf8');
 // MSG-1 (Cam 2026-11-09): 48 hours, not one business day.
-// SUPPORT (Cam 2026-11-12): the promise is 2 business days (was 48 hours).
-check('Messages says when to expect a reply', m.includes('Within {REPLY_PROMISE}') && readFileSync('src/lib/support-ticket.ts', 'utf8').includes("export const REPLY_PROMISE = '2 business days';"));
-check('…and offers email', m.includes('mailto:${ADMIN_EMAIL}'));
-check('the compose bar clears Birdie\'s corner buttons on every screen', m.includes('pr-[8.5rem]') && !m.includes('md:pr-6'));
+check('Support says when to expect a reply', m.includes('we reply within 2 business days'));
+check('the compose bar clears the assistant\'s corner buttons on every screen', m.includes('pr-[4.5rem] sm:pr-[5.5rem]'));
 check('no eyebrow label', !m.includes('<Eyebrow'));
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
 process.exit(failed === 0 ? 0 : 1);
