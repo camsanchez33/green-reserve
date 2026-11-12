@@ -9,7 +9,7 @@ import CommandPalette from '@/components/admin/CommandPalette';
 import { useAdminSession } from '@/lib/admin-session-context';
 import type { AdminArea } from '@/lib/admin-areas';
 
-export type AdminNavKey = 'overview' | 'problems' | 'goals' | 'inquiries' | 'courses' | 'groups' | 'create' | 'employees' | 'announcements' | 'messages' | 'profile' | 'revenue' | 'golfers' | 'system' | 'company' | 'audit' | 'security';
+export type AdminNavKey = 'overview' | 'bookings' | 'problems' | 'goals' | 'inquiries' | 'courses' | 'groups' | 'create' | 'employees' | 'announcements' | 'messages' | 'profile' | 'revenue' | 'golfers' | 'system' | 'company' | 'audit' | 'security';
 
 export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessages = 0 }: {
   active: AdminNavKey;
@@ -94,7 +94,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
       { key: 'courses', label: 'Golf courses', href: '/admin/courses', minRole: VIEWER_PLUS, area: 'courses' },
       { key: 'groups', label: 'Course groups', href: '/admin/groups', minRole: SUPPORT_PLUS, sub: true, area: 'courses' },
       { key: 'inquiries', label: 'Onboarding', href: '/admin/inquiries', minRole: VIEWER_PLUS, area: 'pipeline' },
-      { key: null, label: 'Bookings' },
+      { key: 'bookings', label: 'Bookings', href: '/admin/bookings', minRole: SUPPORT_PLUS, area: 'money' },
       { key: 'golfers', label: 'Users & golfers', href: '/admin/golfers', minRole: SUPPORT_PLUS, area: 'golfers' },
     ] },
     { label: 'Financials', items: [

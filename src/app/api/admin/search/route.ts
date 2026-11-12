@@ -191,7 +191,8 @@ export async function GET(req: NextRequest) {
       id: `booking:${b.id}`,
       label: `${b.golferName} · ${b.course.name}`,
       sub: `${b.teeTime.date} ${b.teeTime.time} · ${b.status}`,
-      href: b.golferAccountId ? `/admin/golfers?id=${b.golferAccountId}` : `/admin/golfers?guest=${encodeURIComponent(b.golferEmail.toLowerCase())}`,
+      // ADMIN-REDO Bookings: a booking found by its number opens on Bookings (Money); without Money, the golfer.
+      href: hasArea(session, 'money') ? `/admin/bookings?id=${b.id}` : b.golferAccountId ? `/admin/golfers?id=${b.golferAccountId}` : `/admin/golfers?guest=${encodeURIComponent(b.golferEmail.toLowerCase())}`,
     })),
     ...groups.map(g => ({
       type: 'group' as const,
