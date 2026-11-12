@@ -117,3 +117,5 @@ service fee and its state (collected / not collected / none), history. Pills: Co
 people … it is not allowed or in our responsibility to retry the payment"). The round is the course's sale on the
 course's Stripe account; ours is the service fee per the policy. → Build: remove the admin "Retry charge" (and check
 admin refund) from the live Revenue page — Cam's decision; ask before removing admin refund.
+
+**Purpose of the page (Cam 2026-11-12, "the whole point of the page to know while building"):** Bookings is the book-keeping record, so we can answer if anyone ever asks about a course or a player. GreenReserve gets paid through booking fees. We may NOT charge people ourselves, and retrying a golfer's payment is neither allowed nor our responsibility. The page only shows: every booking, what was owed, what was paid, whether our fee was collected, and the history. It has no charge, retry, refund or dispute actions, and the only links are Course → and Stripe ↗ (both view-only).
