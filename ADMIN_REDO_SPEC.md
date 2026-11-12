@@ -90,10 +90,10 @@ headings, no boxed top-bar controls).
 ## Page 3 — Onboarding (Cam commented through the mockup, then approved 2026-11-12)
 Mockup: `lanes/admin/onboarding-mockup.html` (claude.ai/artifact/U6Zot4ybuj3B8L6Lqg2hYY, v16). No cards on top — one
 list of every course in onboarding, SORTED BY WHAT IT NEEDS: overdue (waiting 7+ days) first, then call-or-email
-(new inquiry, reviewing, waiting on them), then our setup (details in, building), then first-month check-ins; longest
+(new inquiry, reviewing, waiting on them), then our setup (details in, building); longest
 wait first within each. Columns: Course · Stage (with a progress bar) · Next step (one plain sentence; a small amber
 "N days waiting" under it only when overdue) · Launch (expected date). A Filter button (All, Overdue, Call or email,
-Our setup, Check in). The profile card: name + town and an "Inquiry →" pill (plus "Book on Cal.com ↗" before a demo);
+Our setup). The profile card: name + town and an "Inquiry →" pill (plus "Book on Cal.com ↗" before a demo);
 a box saying where they are — "Step 2 of 8", the step in bold, the next action under it (no labels, no "with Cam",
 no jargon like "chase"); the 8-step setup checklist with the current step marked; Contact (contact, came from,
 expected launch, agreement); History (dated events); Notes with a plain field and a quiet arrow to save (no button).
@@ -103,5 +103,5 @@ Words: "Inquiry", never "enquiry".
 ## it's ready")
 A course lives on ONE admin page at a time: Onboarding from the first inquiry until it is approved and live; Golf
 Courses only once live. Golf Courses therefore lists Live, At risk and Offline courses only — no Onboarding filter or
-rows there — and a course appears on it the day it goes live (it leaves Onboarding after its first-month check-in
-window, shown there under "Check in").
+rows there — and a course moves there the day it goes live and leaves Onboarding the same day. Onboarding has no
+"Check in" group or live rows; a new course's first-month check-in is a to-do in the Overview's Needs attention.
