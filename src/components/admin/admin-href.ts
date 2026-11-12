@@ -18,6 +18,7 @@ export const ADMIN_PAGE_GATES: [string, Gate][] = [
   ['/admin/courses?courseId=', { roles: SUPPORT_PLUS, area: 'courses' }],
   ['/admin/problems', { roles: SUPPORT_PLUS, area: 'problems' }],
   ['/admin/inquiries', { roles: VIEWER_PLUS, area: 'pipeline' }],
+  ['/admin/onboarding', { roles: VIEWER_PLUS, area: 'pipeline' }],
   ['/admin/courses', { roles: VIEWER_PLUS, area: 'courses' }],
   ['/admin/groups', { roles: SUPPORT_PLUS, area: 'courses' }],
   ['/admin/golfers', { roles: SUPPORT_PLUS, area: 'golfers' }],
