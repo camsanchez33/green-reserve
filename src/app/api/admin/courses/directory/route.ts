@@ -117,13 +117,16 @@ export async function GET(req: NextRequest) {
   });
   const ids = courses.map(c => c.id);
   const inIds = { courseId: { in: ids } };
-  const [cur, prior, last, fees, archivedCount] = await Promise.all([
+  const [cur, prior, last, fees, archivedCount, online] = await Promise.all([
     prisma.booking.groupBy({ by: ['courseId'], where: { ...inIds, ...MADE, createdAt: { gte: start, lt: now } }, _count: { id: true } }),
     prisma.booking.groupBy({ by: ['courseId'], where: { ...inIds, ...MADE, createdAt: { gte: priorStart, lt: priorEnd } }, _count: { id: true } }),
     prisma.booking.groupBy({ by: ['courseId'], where: { ...inIds, ...MADE }, _max: { createdAt: true } }),
     seesMoney ? feesByCourse(ids, start, now) : null,
     archived ? null : prisma.course.count({ where: { archivedAt: { not: null } } }),
+    // "Booked online": of this month's bookings (the Bookings column), the share made online by golfers.
+    prisma.booking.groupBy({ by: ['courseId'], where: { ...inIds, ...MADE, source: 'online', createdAt: { gte: start, lt: now } }, _count: { id: true } }),
   ]);
+  const onlineMap = new Map(online.map(r => [r.courseId, r._count.id]));
   const curMap = new Map(cur.map(r => [r.courseId, r._count.id]));
   const priorMap = new Map(prior.map(r => [r.courseId, r._count.id]));
   const lastMap = new Map(last.map(r => [r.courseId, r._max.createdAt]));
@@ -139,6 +142,8 @@ export async function GET(req: NextRequest) {
         id: c.id, name: c.name, slug: c.slug, town: [c.city, c.state].filter(Boolean).join(', '), isTest: c.isTest,
         status: courseStatus(c, lastAt, now),
         bookings: curMap.get(c.id) ?? 0, bookingsPrior: priorMap.get(c.id) ?? 0,
+        // null with no bookings this month — a share of nothing is not 0%.
+        onlinePct: curMap.get(c.id) ? Math.round(((onlineMap.get(c.id) ?? 0) / curMap.get(c.id)!) * 100) : null,
         feesCents: fees ? fees.get(c.id) ?? 0 : null,
         lastBookingAt: lastAt?.toISOString() ?? null,
       };

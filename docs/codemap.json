@@ -667,7 +667,7 @@
     },
     {
       "path": "src/app/admin/courses/page.tsx",
-      "lines": 316,
+      "lines": 318,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -694,7 +694,7 @@
     },
     {
       "path": "src/app/admin/courses/terms.ts",
-      "lines": 19,
+      "lines": 20,
       "purpose": "Golf Courses (ADMIN-REDO page 2):",
       "brain": [],
       "exports": [
@@ -1082,7 +1082,7 @@
     },
     {
       "path": "src/app/admin/page.tsx",
-      "lines": 254,
+      "lines": 252,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1998,7 +1998,7 @@
     },
     {
       "path": "src/app/api/admin/courses/directory/route.ts",
-      "lines": 148,
+      "lines": 153,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10700,7 +10700,7 @@
     },
     {
       "path": "src/components/admin/AdminSidebar.tsx",
-      "lines": 214,
+      "lines": 212,
       "purpose": "",
       "brain": [],
       "exports": [

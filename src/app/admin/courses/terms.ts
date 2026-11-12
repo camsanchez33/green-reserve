@@ -7,6 +7,7 @@ export const TERMS = {
   risk: (days: number) => `Live ${days}+ days with no booking in the last ${days}`,
   test: "A test course — never in the platform's numbers",
   vsPrior: 'Last month to the same day',
+  online: "Share of this month's bookings made online by golfers, where our service fee is earned",
 } as const;
 
 export const SESSION_ENDED = 'Your session ended — sign in again.';

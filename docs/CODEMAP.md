@@ -53,13 +53,13 @@ this script with a non-zero exit — that is the point of the tag.
 | url | auth | guard | methods | file | lines |
 |---|---|---|---|---|---|
 | `/` | public | public | page | `src/app/page.tsx` | 15 |
-| `/admin` | admin | client-side | page | `src/app/admin/page.tsx` | 254 |
+| `/admin` | admin | client-side | page | `src/app/admin/page.tsx` | 252 |
 | `/admin/activity` | admin | client-side | page | `src/app/admin/activity/page.tsx` | 9 |
 | `/admin/announcements` | admin | client-side | page | `src/app/admin/announcements/page.tsx` | 261 |
 | `/admin/audit` | admin | client-side | page | `src/app/admin/audit/page.tsx` | 137 |
 | `/admin/broadcasts` | admin | client-side | page | `src/app/admin/broadcasts/page.tsx` | 12 |
 | `/admin/company-documents` | admin | client-side | page | `src/app/admin/company-documents/page.tsx` | 165 |
-| `/admin/courses` | admin | client-side | page | `src/app/admin/courses/page.tsx` | 316 |
+| `/admin/courses` | admin | client-side | page | `src/app/admin/courses/page.tsx` | 318 |
 | `/admin/courses/[id]` | admin | client-side | page | `src/app/admin/courses/[id]/page.tsx` | 326 |
 | `/admin/create` | admin | client-side | page | `src/app/admin/create/page.tsx` | 759 |
 | `/admin/employees` | admin | client-side | page | `src/app/admin/employees/page.tsx` | 278 |
@@ -102,7 +102,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/admin/course-reminders` | admin | file | PATCH | `src/app/api/admin/course-reminders/route.ts` | 22 |
 | `/api/admin/course-settings` | admin | file | GET PATCH | `src/app/api/admin/course-settings/route.ts` | 91 |
 | `/api/admin/courses` | admin | file | GET | `src/app/api/admin/courses/route.ts` | 248 |
-| `/api/admin/courses/directory` | admin | file | GET | `src/app/api/admin/courses/directory/route.ts` | 148 |
+| `/api/admin/courses/directory` | admin | file | GET | `src/app/api/admin/courses/directory/route.ts` | 153 |
 | `/api/admin/create-course` | admin | file | GET POST | `src/app/api/admin/create-course/route.ts` | 206 |
 | `/api/admin/data-reset` | admin | file | GET POST | `src/app/api/admin/data-reset/route.ts` | 32 |
 | `/api/admin/disputes/[bookingId]/evidence` | admin | file | GET | `src/app/api/admin/disputes/[bookingId]/evidence/route.ts` | 29 |
@@ -624,7 +624,7 @@ Sorted the same way.
 | `src/components/ui/StatusDot.tsx` | 73 | 36 |  | `StatusDot` |
 | `src/components/ui/field.ts` | 57 | 8 | MP-9: | `INPUT`, `INPUT_COMPACT` |
 | `src/components/dashboard/LoadError.tsx` | 22 | 16 | SD-10. | `LoadError` |
-| `src/components/admin/AdminSidebar.tsx` | 19 | 214 |  | `AdminNavKey`, `default (AdminSidebar)` |
+| `src/components/admin/AdminSidebar.tsx` | 19 | 212 |  | `AdminNavKey`, `default (AdminSidebar)` |
 | `src/components/dashboard/Toast.tsx` | 15 | 70 | SD-2. | `toast`, `Toaster`, `ToastKind` |
 | `src/components/OperatorSidebar.tsx` | 12 | 339 |  | `default (OperatorSidebar)`, `OperatorNavKey` |
 | `src/components/ui/Eyebrow.tsx` | 12 | 19 |  | `Eyebrow`, `EYEBROW` |
