@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 724,
+    "files": 725,
     "routes": 310,
-    "libs": 258,
+    "libs": 259,
     "models": 75,
     "orphans": 11,
     "ungatedRoutes": 3
@@ -3966,7 +3966,7 @@
     },
     {
       "path": "src/app/api/admin/tee-sheet/route.ts",
-      "lines": 118,
+      "lines": 128,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4000,6 +4000,7 @@
         "@/lib/course-metrics",
         "@/lib/prisma",
         "@/lib/schedule-service",
+        "@/lib/tee-time-close",
         "next/server"
       ],
       "usedBy": []
@@ -8590,7 +8591,7 @@
     },
     {
       "path": "src/app/api/operator/tee-times/route.ts",
-      "lines": 281,
+      "lines": 291,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8632,6 +8633,7 @@
         "@/lib/schedule-service",
         "@/lib/schedule-wire",
         "@/lib/session",
+        "@/lib/tee-time-close",
         "@/lib/tee-time-seats",
         "next/server"
       ],
@@ -10046,7 +10048,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 2284,
+      "lines": 2286,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -15451,7 +15453,7 @@
     },
     {
       "path": "src/lib/admin-day.ts",
-      "lines": 111,
+      "lines": 110,
       "purpose": "Platform day boundaries.",
       "brain": [],
       "exports": [
@@ -15509,6 +15511,7 @@
         "src/lib/admin-course-page.ts",
         "src/lib/admin-home.ts",
         "src/lib/admin-today.ts",
+        "src/lib/expenses.ts",
         "src/lib/finance-period.ts",
         "src/lib/revenue-period.ts"
       ]
@@ -16873,7 +16876,7 @@
     },
     {
       "path": "src/lib/birdie/proposals.ts",
-      "lines": 451,
+      "lines": 455,
       "purpose": "BIRDIE_AI_SPEC B4b (Cam 2026-10-05) — propose-and-confirm CHANGES.",
       "brain": [],
       "exports": [
@@ -16909,6 +16912,7 @@
         "../move-booking",
         "../prisma",
         "../schedule-service",
+        "../tee-time-close",
         "./proposal-types",
         "./tools",
         "@anthropic-ai/sdk"
@@ -21303,10 +21307,14 @@
     },
     {
       "path": "src/lib/expenses.ts",
-      "lines": 88,
+      "lines": 163,
       "purpose": "EXPENSE TRACKER (RUN_QUEUE \"EXPENSE TRACKER / real P&L\") — the manual half of the P&L:",
       "brain": [],
       "exports": [
+        {
+          "name": "endedAtForLastDay",
+          "kind": "fn"
+        },
         {
           "name": "EXPENSE_CADENCE_LABEL",
           "kind": "const"
@@ -21340,6 +21348,14 @@
           "kind": "fn"
         },
         {
+          "name": "lastDayOf",
+          "kind": "fn"
+        },
+        {
+          "name": "monthCostPace",
+          "kind": "fn"
+        },
+        {
           "name": "monthlyEquivalentCents",
           "kind": "fn"
         },
@@ -21361,7 +21377,9 @@
       "methods": [],
       "auth": null,
       "guard": null,
-      "imports": [],
+      "imports": [
+        "./admin-day"
+      ],
       "usedBy": [
         "src/app/admin/expenses/logic.ts",
         "src/app/admin/expenses/page.tsx",
@@ -21697,7 +21715,7 @@
     },
     {
       "path": "src/lib/goal-pace.ts",
-      "lines": 72,
+      "lines": 75,
       "purpose": "GOAL-PACE (Cam 2026-11-12, ADMIN_REDO_SPEC \"Goals:",
       "brain": [],
       "exports": [
@@ -25176,6 +25194,7 @@
         "src/lib/staff-refund.ts",
         "src/lib/submit-change-request.ts",
         "src/lib/tee-sheet-engine.ts",
+        "src/lib/tee-time-close.ts",
         "src/lib/tee-time-seats.ts",
         "src/lib/two-factor.ts",
         "src/lib/weather-cancel.ts"
@@ -28731,6 +28750,55 @@
       ]
     },
     {
+      "path": "src/lib/tee-time-close.ts",
+      "lines": 70,
+      "purpose": "TT-CLOSE (Cam 2026-11-12, ADMIN_REDO_SPEC \"Course dashboard Tee sheet + time card:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "ACTIVE_BOOKING",
+          "kind": "const"
+        },
+        {
+          "name": "bookedOnTime",
+          "kind": "fn"
+        },
+        {
+          "name": "closeFreeTime",
+          "kind": "fn"
+        },
+        {
+          "name": "CloseResult",
+          "kind": "type"
+        },
+        {
+          "name": "deleteRefusal",
+          "kind": "fn"
+        },
+        {
+          "name": "refusal",
+          "kind": "fn"
+        },
+        {
+          "name": "setStaffOnly",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./prisma"
+      ],
+      "usedBy": [
+        "src/app/api/admin/tee-sheet/route.ts",
+        "src/app/api/operator/tee-times/route.ts",
+        "src/lib/birdie/proposals.ts"
+      ]
+    },
+    {
       "path": "src/lib/tee-time-fit.ts",
       "lines": 19,
       "purpose": "Cam 2026-10-19:",
@@ -30396,6 +30464,7 @@
         "src/lib/sent-messages.ts",
         "src/lib/split-booking-db.ts",
         "src/lib/staff-refund.ts",
+        "src/lib/tee-time-close.ts",
         "src/lib/weather-cancel.ts"
       ]
     },
@@ -35626,6 +35695,7 @@
         "src/lib/sample-data.ts",
         "src/lib/schedule-service.ts",
         "src/lib/tee-sheet-engine.ts",
+        "src/lib/tee-time-close.ts",
         "src/lib/tee-time-seats.ts",
         "src/lib/weather-cancel.ts"
       ],

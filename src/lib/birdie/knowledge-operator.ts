@@ -38,7 +38,7 @@ export const OPERATOR_KNOWLEDGE = `
 - Settings → Prices & fees → "Cancellation & card" (owner login only) sets the policy, with a live preview of exactly what golfers read:
   - Late-cancellation fee: off, or an amount per booking or per player, and the free-cancel window in hours.
   - When the late fee is taken: "Hold at the cutoff, refunded at check-in" (charged when the window closes, refunded when they check in), "Only if they cancel late" (charged the moment they cancel inside the window), or "If they cancel late or don't show".
-  - No-show fee: an optional separate amount per booking or per player. "Mark no-shows automatically" marks a group not checked in N minutes after its tee time (checked hourly); "Still coming" on the Tee Sheet undoes it and refunds what it charged.
+  - No-show fee: an optional separate amount per booking or per player. "Mark no-shows automatically" marks a group not checked in N minutes after its tee time (checked hourly); "Undo no-show" on the group's card on the Tee Sheet undoes it and refunds what it charged.
   - A card is asked for at booking only when a late or no-show fee is set. With neither fee set, golfers book without a card and get a link (the "Pay link" hours before the round) to check in and pay, or pay at the course.
 - GreenReserve's $1.50/player booking fee is collected when the golfer pays, and is charged along with the course's late or no-show fee when one is charged.
 - Weather cancellations are always free and refund any hold.

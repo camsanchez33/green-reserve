@@ -57,7 +57,7 @@ export function splitRefusal(b: {
 }): string | null {
   if (b.status !== 'confirmed') return 'This group has already checked in or was cancelled.';
   if (b.players < 2) return 'One player — nothing to split.';
-  if (b.noShowAt) return 'This group is marked a no-show — use “Still coming” first.';
+  if (b.noShowAt) return 'This group is marked a no-show — use “Undo no-show” first.';
   if (b.paymentStatus === 'paid' || b.paymentStatus === 'paid_offline' || b.paymentStatus === 'on_account' || b.roundPaymentIntentId) return 'This round is already paid.';
   if (b.readerStartedAt) return 'This group is being paid on the card reader — finish or cancel it there first.';
   if (b.shopLockedAt) return 'A payment for this group has been started — refresh and look again.';

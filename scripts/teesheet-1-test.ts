@@ -37,7 +37,9 @@ check('the late-add rule is 20 minutes, in one place', late.includes('LATE_ADD_M
 check('every booking path refuses a time 20 minutes gone (claimTeeTime)', claim.includes("throw new TeeTimeClaimError('PAST')") && claim.includes('LATE_ADD_MINUTES * 60_000 < Date.now()'));
 check('the three callers map PAST to a message', ['src/app/api/bookings/route.ts', 'src/lib/counter-pay.ts', 'src/app/api/admin/tee-sheet/route.ts'].every(f => src(f).includes("'PAST'")));
 check('today\'s gone times move to a collapsed Past tee times section (not while searching)', page.includes('isGone={selectedDate === today() && !q ? (t => lateForAdding(t.time, nowHM))') && rows.includes("const PAST = 'Past tee times'") && rows.includes('{PAST} · {gone.length}') && rows.includes('useState(false)') && rows.includes('aria-expanded={goneOpen}'));
-check('a gone time offers only "a walk-in who already played", sent as late', page.includes("selectedDate === today() && !lateForAdding(panelSlot.time, nowHM)))") && page.includes('Add a walk-in who already played') && page.includes("...(late ? { late: true } : {})"));
+// TT-CARD (Cam 2026-11-12, the approved time card): the card no longer offers the late walk-in button; the form's
+// late path (sent as late, LATE-ADD's allowLate) stays for when it comes back.
+check('a gone time offers no new players on the card; the late path stays', page.includes("selectedDate === today() && !lateForAdding(panelSlot.time, nowHM)))") && !page.includes('Add a walk-in who already played') && page.includes("...(late ? { late: true } : {})"));
 check('only a staff walk-in marked late skips the cut-off', src('src/lib/counter-pay.ts').includes("{ allowLate: input.late === true && source === 'walk_in' && actor.type === 'staff' }") && claim.includes('if (!opts.allowLate && teeAt'));
 check('the sheet re-reads the clock every minute', page.includes('setInterval(() => setClockTick(t => t + 1), 60_000)'));
 const demo = src('src/components/home/TeeSheetDemo.tsx');

@@ -18,25 +18,33 @@
 
 export const PLATFORM_TZ = 'America/New_York';
 
+// Building an Intl.DateTimeFormat is slow (tens of microseconds); these run in loops (expense
+// months, day series), so each formatter is built once per time zone and reused.
+const formatters = new Map<string, Intl.DateTimeFormat>();
+function formatter(kind: 'day' | 'hour' | 'parts', tz: string): Intl.DateTimeFormat {
+  const key = `${kind}|${tz}`;
+  let f = formatters.get(key);
+  if (!f) {
+    f = kind === 'day'
+      // en-CA formats as YYYY-MM-DD, which is exactly the key format the tee-time
+      // tables already store dates in.
+      ? new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' })
+      : kind === 'hour'
+        ? new Intl.DateTimeFormat('en-US', { timeZone: tz, hour: '2-digit', hour12: false })
+        : new Intl.DateTimeFormat('en-US', { timeZone: tz, hour12: false, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    formatters.set(key, f);
+  }
+  return f;
+}
+
 /** YYYY-MM-DD for the instant `d`, as seen in `tz`. */
 export function dayKey(d: Date, tz: string = PLATFORM_TZ): string {
-  // en-CA formats as YYYY-MM-DD, which is exactly the key format the tee-time
-  // tables already store dates in.
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: tz,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(d);
+  return formatter('day', tz).format(d);
 }
 
 /** Hour 0–23 for the instant `d`, as seen in `tz`. Replaces getUTCHours(). */
 export function platformHour(d: Date, tz: string = PLATFORM_TZ): number {
-  const h = new Intl.DateTimeFormat('en-US', {
-    timeZone: tz,
-    hour: '2-digit',
-    hour12: false,
-  }).format(d);
+  const h = formatter('hour', tz).format(d);
   // Intl can render midnight as "24" in some ICU versions.
   return Number(h) % 24;
 }
@@ -46,16 +54,7 @@ export function platformHour(d: Date, tz: string = PLATFORM_TZ): number {
  * Positive east of Greenwich; ET is negative.
  */
 function tzOffsetMs(d: Date, tz: string): number {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: tz,
-    hour12: false,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  }).formatToParts(d);
+  const parts = formatter('parts', tz).formatToParts(d);
 
   const get = (t: string) => Number(parts.find(p => p.type === t)?.value ?? '0');
   const asIfUtc = Date.UTC(
