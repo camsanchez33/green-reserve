@@ -126,7 +126,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/admin/refund` | admin | file | POST | `src/app/api/admin/refund/route.ts` | 30 |
 | `/api/admin/request-re-review` | admin | file | POST | `src/app/api/admin/request-re-review/route.ts` | 48 |
 | `/api/admin/resend-staff-setup` | admin | file | POST | `src/app/api/admin/resend-staff-setup/route.ts` | 49 |
-| `/api/admin/revenue` | admin | file | GET | `src/app/api/admin/revenue/route.ts` | 511 |
+| `/api/admin/revenue` | admin | file | GET | `src/app/api/admin/revenue/route.ts` | 514 |
 | `/api/admin/schedule` | admin | file | DELETE GET PATCH POST | `src/app/api/admin/schedule/route.ts` | 90 |
 | `/api/admin/search` | admin | file | GET | `src/app/api/admin/search/route.ts` | 234 |
 | `/api/admin/security` | admin | file | GET | `src/app/api/admin/security/route.ts` | 18 |

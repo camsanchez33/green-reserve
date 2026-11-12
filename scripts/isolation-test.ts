@@ -770,6 +770,9 @@ async function main() {
         const oc = `gr_owner=${await signOwnerToken(live.id, data.adminOwner.id, live.expiresAt)}`;
         const o = (await api('/api/admin/revenue?period=month', { cookie: oc })).body as Rev;
         check('The owner gets course payout problems and payouts to courses', !!o && 'coursePayoutProblems' in o && 'payouts' in o, Object.keys(o ?? {}).join(','));
+        // No course here has a readable Stripe account (test keys): nothing was checked, so it must not read as "all paid".
+        const pp = (o as { coursePayoutProblems?: { rows: unknown[]; checkedCourses: number; unavailable: boolean } }).coursePayoutProblems;
+        check('…and says how many courses it checked (0 here, not "all paid")', typeof pp?.checkedCourses === 'number' && (pp.checkedCourses > 0 || pp.rows.length === 0), JSON.stringify(pp));
       } finally {
         await prisma.ownerSession.delete({ where: { id: live.id } });
       }

@@ -122,6 +122,7 @@ check('route: the problemsCount badge mode is retired', !route.includes('problem
 check('route: the older periods keep their UTC days in period.from/to (the old page\'s exports read them)', /shownFrom = dayStr\(w\.current\.start\); shownTo = dayStr\(w\.current\.end\)/.test(route));
 check('route: per-day sums leave test courses out', /JOIN "Course" c ON c\."id" = m\."courseId"\s+WHERE c\."isTest" = false/.test(route));
 check('route: a past window\'s live-course count is not reconstructed', /priorCount: null/.test(route));
+check('route: payout problems say how many courses were checked (0 = nothing checked, never "all paid")', /coursePayoutProblems: \{ rows: payoutRows, unavailable: payoutsUnavailable, checkedCourses \}/.test(route) && /checkedCourses\+\+/.test(route) && route.indexOf('checkedCourses++') > route.indexOf('if (list.length > PAYOUT_READ_CAP)'));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);

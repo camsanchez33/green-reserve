@@ -463,6 +463,8 @@ export async function GET(req: NextRequest) {
   const payoutRows: { courseId: string; name: string; kind: 'failed' | 'reversed' | 'canceled'; amountCents: number; at: string; reason: string; stripeUrl: string | null }[] = [];
   let paidOutCents = 0;
   const paidCourses = new Set<string>();
+  // Courses whose payouts were actually read: 0 means nothing was checked, never "all paid".
+  let checkedCourses = 0;
   const PAYOUT_READ_CAP = 1000;
   if (payoutsWanted) {
     const payoutCourses = await prisma.course.findMany({ where: { archivedAt: null, stripeAccountId: { not: '' } }, select: { id: true, name: true, stripeAccountId: true } });
@@ -472,6 +474,7 @@ export async function GET(req: NextRequest) {
         const list = await stripe.payouts.list({ limit: 100, arrival_date: range }, { stripeAccount: c.stripeAccountId }).autoPagingToArray({ limit: PAYOUT_READ_CAP + 1 });
         if (list.length > PAYOUT_READ_CAP) { payoutsUnavailable = true; return; }
         const sum = summarisePayouts(list);
+        checkedCourses++;
         if (sum.paidCount > 0) { paidOutCents += sum.paidCents; paidCourses.add(c.id); }
         for (const p of sum.problems) {
           payoutRows.push({ courseId: c.id, name: c.name, kind: p.kind, amountCents: p.amountCents, at: p.date, reason: p.reason, stripeUrl: stripePayoutUrl(p.payoutId, c.stripeAccountId, testMode) });
@@ -487,7 +490,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     ...base,
     ...(payoutsWanted ? {
-      coursePayoutProblems: { rows: payoutRows, unavailable: payoutsUnavailable },
+      coursePayoutProblems: { rows: payoutRows, unavailable: payoutsUnavailable, checkedCourses },
       payouts: { toCourses: payoutsUnavailable ? null : { cents: paidOutCents, courses: paidCourses.size }, unavailable: payoutsUnavailable },
     } : {}),
     pnl: {
