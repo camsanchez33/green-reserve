@@ -5,7 +5,7 @@
 // Pure. Run: npx tsx scripts/home-today-test.ts
 import { readFileSync } from 'fs';
 import { todayByHour, checkedInOf, sameWeekdayAverage, goalTone, weatherLine } from '../src/lib/home-today';
-import { cleanConditions, golferConditionLines } from '../src/lib/course-conditions';
+import { cleanConditions, golferConditionLines, mergeHomeConditions } from '../src/lib/course-conditions';
 
 let failed = 0;
 const ok = (l: string, c: boolean, d: unknown = '') => { console.log(`${c ? 'PASS' : 'FAIL'}  ${l}${c ? '' : ' — ' + JSON.stringify(d)}`); if (!c) failed++; };
@@ -60,6 +60,20 @@ const c = cleanConditions({ carts: 'path', greens: 'fast', notes: { carts: '  Ho
 ok('a note is trimmed and kept beside its condition', c.notes?.carts === 'Holes 4–7, wet');
 ok('a note on an unset condition or not text is dropped', !c.notes?.pins && !c.notes?.greens);
 ok('golfers see the note with its condition', golferConditionLines(c, new Date(), new Date()).includes('Carts: Path only (Holes 4–7, wet)'), golferConditionLines(c, new Date(), new Date()));
+
+// ── Saving from Home merges (Build 2026-11-12, "don't drop data") ──
+const before = { carts: 'open', range: 'mats', greens: 'slow', pins: 'back', lines: ['Frost delay until 9 AM'], notes: { carts: 'old', pins: 'Back on 9' } };
+const merged = mergeHomeConditions(before, { carts: 'path', greens: undefined, pins: 'back', notes: { carts: ' Holes 4–7 ', pins: '' } });
+ok('Home\'s three are replaced', merged.carts === 'path' && merged.notes?.carts === 'Holes 4–7' && merged.pins === 'back', merged);
+ok('…a cleared condition and its note go', !('greens' in merged) && !merged.notes?.pins, merged);
+ok('…range and the course\'s own lines are kept as they were', merged.range === 'mats' && JSON.stringify(merged.lines) === JSON.stringify(['Frost delay until 9 AM']), merged);
+ok('…and Home saves through the merge', readFileSync('src/components/dashboard/home/HomeBoard.tsx', 'utf8').includes('mergeHomeConditions(c.detail, draft)'));
+
+// ── "We take cash" (Cam 2026-11-12; Build: additive, default off, display only) ──
+ok('the column is additive with a default and no backfill', /ADD COLUMN "takesCash" BOOLEAN NOT NULL DEFAULT false;\s*$/.test(readFileSync('prisma/migrations/20261112000000_course_takes_cash/migration.sql', 'utf8')));
+ok('settings saves it (settings.edit route, a boolean)', readFileSync('src/app/api/operator/settings/route.ts', 'utf8').includes("'takesCash'") && readFileSync('src/lib/settings-validation.ts', 'utf8').includes("'takesCash'"));
+ok('Home shows Open the register only when it is on', readFileSync('src/app/dashboard/home/page.tsx', 'utf8').includes('{home?.takesCash && <OpenRegister where="home" />}'));
+ok('it gates nothing: no cash path reads it', !/takesCash/.test(readFileSync('src/lib/register-open.ts', 'utf8')) && !/takesCash/.test(readFileSync('src/lib/register.ts', 'utf8')));
 
 // ── The page ──
 const page = readFileSync('src/app/dashboard/home/page.tsx', 'utf8');

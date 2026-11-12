@@ -1,7 +1,7 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 700,
+    "files": 701,
     "routes": 301,
     "libs": 254,
     "models": 72,
@@ -7134,7 +7134,7 @@
     },
     {
       "path": "src/app/api/operator/settings/route.ts",
-      "lines": 136,
+      "lines": 138,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8902,7 +8902,7 @@
     },
     {
       "path": "src/app/dashboard/home/page.tsx",
-      "lines": 300,
+      "lines": 301,
       "purpose": "DASH-C Home (Cam 2026-10-22) → HOME-3 (Cam 2026-11-12, \"approved, build the home page to match the mockup\"; ADMIN_REDO_SPEC.md \"Course dashboard Home:",
       "brain": [],
       "exports": [
@@ -9302,7 +9302,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 1202,
+      "lines": 1205,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9327,6 +9327,7 @@
         "@/components/dashboard/StaffPermissions",
         "@/components/dashboard/Toast",
         "@/components/dashboard/settings/FinishSetup",
+        "@/components/dashboard/settings/TakesCashToggle",
         "@/components/dashboard/settings/WhoPaysWhat",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
@@ -12847,7 +12848,7 @@
     },
     {
       "path": "src/components/dashboard/home/HomeBoard.tsx",
-      "lines": 297,
+      "lines": 292,
       "purpose": "DASH-D Home (Cam 2026-11-01, mockup S1):",
       "brain": [],
       "exports": [
@@ -13306,6 +13307,30 @@
       ],
       "usedBy": [
         "src/app/dashboard/home/page.tsx",
+        "src/app/dashboard/settings/page.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/settings/TakesCashToggle.tsx",
+      "lines": 31,
+      "purpose": "HOME-3 (Cam 2026-11-12:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "TakesCashToggle",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/lib/dashboard-fetch",
+        "react"
+      ],
+      "usedBy": [
         "src/app/dashboard/settings/page.tsx"
       ]
     },
@@ -17872,7 +17897,7 @@
     },
     {
       "path": "src/lib/course-conditions.ts",
-      "lines": 82,
+      "lines": 98,
       "purpose": "DASH-D Home (Cam 2026-11-01, \"the course conditions\"):",
       "brain": [],
       "exports": [
@@ -17927,6 +17952,10 @@
         {
           "name": "HOME_CONDITIONS",
           "kind": "const"
+        },
+        {
+          "name": "mergeHomeConditions",
+          "kind": "fn"
         }
       ],
       "route": null,
@@ -19173,6 +19202,7 @@
         "src/components/dashboard/money/PayoutsTable.tsx",
         "src/components/dashboard/money/RefundForm.tsx",
         "src/components/dashboard/money/SalesPanel.tsx",
+        "src/components/dashboard/settings/TakesCashToggle.tsx",
         "src/components/dashboard/settings/WhoPaysWhat.tsx",
         "src/components/dashboard/shop/SaleReceiptPanel.tsx"
       ]
@@ -23213,7 +23243,7 @@
     },
     {
       "path": "src/lib/operator-home.ts",
-      "lines": 173,
+      "lines": 175,
       "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the course dashboard mockups):",
       "brain": [],
       "exports": [
@@ -29674,6 +29704,10 @@
         },
         {
           "name": "hasProShop",
+          "type": "Boolean"
+        },
+        {
+          "name": "takesCash",
           "type": "Boolean"
         },
         {

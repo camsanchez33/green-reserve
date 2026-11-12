@@ -57,6 +57,22 @@ export function cleanConditions(raw: unknown): CourseConditions {
   return out;
 }
 
+/**
+ * HOME-3 (Build 2026-11-12, "don't drop data"): what Home saves. Home edits only cart path, greens and pins (and
+ * their detail lines); everything else already set — range, the course's own lines — is kept as it was.
+ */
+export function mergeHomeConditions(current: unknown, home: CourseConditions): CourseConditions {
+  const base = cleanConditions(current);
+  const out: CourseConditions = { ...base, notes: { ...(base.notes ?? {}) } };
+  for (const { key } of HOME_CONDITIONS) {
+    const v = home[key];
+    if (v) out[key] = v; else delete out[key];
+    const n = home.notes?.[key]?.trim();
+    if (v && n) out.notes![key] = n; else delete out.notes![key];
+  }
+  return cleanConditions(out);
+}
+
 /** "Path only" for carts=path, or '' when unset. */
 export function conditionLabel(key: ConditionKey, value: string | undefined): string {
   const f = CONDITION_FIELDS.find(x => x.key === key);

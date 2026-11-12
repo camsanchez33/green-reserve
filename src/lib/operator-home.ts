@@ -68,7 +68,7 @@ export type HomeSlot = { id: string; time: string; open: number; groups: HomeGro
 
 export async function operatorHome(courseId: string, opts: { money: boolean; messages: boolean; setup?: boolean; owner?: boolean }, now = new Date()) {
   const course = await prisma.course.findUnique({ where: { id: courseId }, select: {
-    timezone: true, name: true, logoUrl: true, heroImageUrl: true, description: true, phone: true, holes: true, par: true, stripeAccountActive: true,
+    timezone: true, name: true, takesCash: true, logoUrl: true, heroImageUrl: true, description: true, phone: true, holes: true, par: true, stripeAccountActive: true,
     _count: { select: { photos: true, teeSets: true } },
   } });
   const tz = course?.timezone;
@@ -148,6 +148,8 @@ export async function operatorHome(courseId: string, opts: { money: boolean; mes
 
   return {
     courseName: course?.name ?? '', today, lastWeek, clock,
+    // HOME-3 (Cam 2026-11-12): "Open the register" shows only when the course says it takes cash (Settings → Pro shop).
+    takesCash: !!course?.takesCash,
     players: { today: cur.players, lastWeek: prev.players },
     fillPct: { today: cur.fillPct, lastWeek: prev.fillPct },
     pace: next14,

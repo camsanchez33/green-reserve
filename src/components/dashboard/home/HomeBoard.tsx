@@ -11,7 +11,7 @@ import { Card } from '@/components/ui/Card';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { goalMetric, formatGoal, type GoalMetric } from '@/lib/course-goals';
-import { CONDITION_FIELDS, HOME_CONDITIONS, CONDITION_NOTE_CHARS, conditionLabel, conditionsOffBookingPage, type CourseConditions, type ConditionKey } from '@/lib/course-conditions';
+import { CONDITION_FIELDS, HOME_CONDITIONS, CONDITION_NOTE_CHARS, mergeHomeConditions, conditionLabel, conditionsOffBookingPage, type CourseConditions, type ConditionKey } from '@/lib/course-conditions';
 import { goalTone, CONDITION_TONE, type GoalTone } from '@/lib/home-today';
 import type { HomeEvent } from '@/lib/home-board';
 
@@ -84,7 +84,7 @@ export function ShiftNotes({ initial }: { initial: ShiftNote[] }) {
   );
 }
 
-/** Cart path, greens, pins — a choice and a detail line each. Saving from here keeps only these three (HOME-3). */
+/** Cart path, greens, pins — a choice and a detail line each (HOME-3). Saving merges: what Home doesn't show is kept. */
 export function ConditionsCard({ initial, canEdit }: { initial: Conditions; canEdit: boolean }) {
   const [c, setC] = useState(initial);
   const [editing, setEditing] = useState(false);
@@ -94,13 +94,8 @@ export function ConditionsCard({ initial, canEdit }: { initial: Conditions; canE
   const start = () => { setDraft(c.detail); setEditing(true); setError(''); };
   async function save() {
     setBusy(true); setError('');
-    const detail: CourseConditions = { notes: {} };
-    for (const f of HOME_CONDITIONS) {
-      if (!draft[f.key]) continue;
-      detail[f.key] = draft[f.key];
-      const n = draft.notes?.[f.key]?.trim();
-      if (n) detail.notes![f.key] = n;
-    }
+    // Range and the course's own lines aren't shown here, so they are kept as they were (mergeHomeConditions).
+    const detail = mergeHomeConditions(c.detail, draft);
     const r = await dfetch<{ detail: CourseConditions; updatedAt: string | null }>('/api/operator/conditions', { method: 'PATCH', body: JSON.stringify({ detail }) });
     setBusy(false);
     if (!r.ok) { setError(r.error); return; }

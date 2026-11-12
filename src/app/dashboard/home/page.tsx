@@ -32,7 +32,7 @@ import { ShiftNotes, ConditionsCard, WeekAheadCard, GoalsCard, EventsCard, type 
 
 type Group = { id: string; name: string; players: number; paymentStatus: string; checkedIn: boolean };
 type Home = {
-  courseName: string; today: string; lastWeek: string; clock: string;
+  courseName: string; today: string; lastWeek: string; clock: string; takesCash: boolean;
   players: { today: number; lastWeek: number };
   fillPct: { today: number | null; lastWeek: number | null };
   pace: { date: string; offered: number; booked: number; usual: number | null; weeks: number; avg4: number | null }[];
@@ -202,8 +202,9 @@ export default function DashboardHome() {
 
           {error && <LoadError message={`Couldn't load today — ${error}`} onRetry={() => load()} />}
 
-          {/* POS-7 / HOME-3 (Cam 2026-11-12): "Open the register" — one bar until tapped, only while it isn't open. */}
-          <OpenRegister where="home" />
+          {/* POS-7 / HOME-3 (Cam 2026-11-12): "Open the register" — one bar until tapped, only while it isn't open, and
+              only for a course that takes cash (Settings → Pro shop). Display only: cash gating stays the route's. */}
+          {home?.takesCash && <OpenRegister where="home" />}
 
           {/* Cam 2026-10-27 / 2026-11-05: what's still missing, one line; each button lands on the field in Settings. */}
           {home && home.setupMissing.length > 0 && (
