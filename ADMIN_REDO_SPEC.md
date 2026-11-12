@@ -105,3 +105,15 @@ A course lives on ONE admin page at a time: Onboarding from the first inquiry un
 Courses only once live. Golf Courses therefore lists Live, At risk and Offline courses only — no Onboarding filter or
 rows there — and a course moves there the day it goes live and leaves Onboarding the same day. Onboarding has no
 "Check in" group or live rows; a new course's first-month check-in is a to-do in the Overview's Needs attention.
+
+## Page 4 — Bookings (Cam's comments 2026-11-12; mockup `lanes/admin/bookings-mockup.html`)
+**A read-only record** — "book keeping for legality if someone ever asks": every booking on GreenReserve, newest
+booked first, columns Booking (GR-number) · Golfer · Course · Tee time · Players · Booked · Money (amount, status
+under it). Top search finds by booking number, golfer or course; Filter: All, Problems, Today, Upcoming, No-shows,
+Cancelled. The card: whether it's paid first (big, coloured), then the whole booking (tee time, course, round, booked
+when/how, number, golfer contact, course policy, checked in — a declined card is NOT checked in), money lines with our
+service fee and its state (collected / not collected / none), history. Pills: Course →, Stripe ↗ (view only).
+**GreenReserve never charges, retries or refunds a golfer from the admin** (Cam: "we can't be able to just charge
+people … it is not allowed or in our responsibility to retry the payment"). The round is the course's sale on the
+course's Stripe account; ours is the service fee per the policy. → Build: remove the admin "Retry charge" (and check
+admin refund) from the live Revenue page — Cam's decision; ask before removing admin refund.
