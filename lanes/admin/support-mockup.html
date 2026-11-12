@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Support &amp; issues</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600&family=Libre+Franklin:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --page:#EDEEE9;--page-ink:#141814;--page-muted:#5F645E;--page-line:#D7D9D1;--chip:#FFFFFF;
+  --serif:"EB Garamond",Georgia,"Times New Roman",serif;
+  --sans:"Libre Franklin",-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+}
+body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-size:14px;line-height:1.45}
+.wrap{max-width:1320px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px;display:flex;flex-direction:column;gap:16px}
+.note{font-size:12.5px;color:var(--page-muted);max-width:75ch}
+
+/* ───────── The app: tokens per direction × mode ───────── */
+.app{
+  --bg:#E6EFEA; --blob1:#9FD3B5; --blob2:#CFE7D8; --blob3:#F1E3C4;
+  --panel:rgba(255,255,255,.52); --panel-solid:#FFFFFF; --panel-edge:rgba(255,255,255,.75); --panel-blur:22px;
+  --ink:#122219; --ink-soft:#3B4A41; --muted:#5E6C63; --line:rgba(18,34,25,.10);
+  --rail:rgba(255,255,255,.38); --hover:rgba(255,255,255,.55); --active:rgba(255,255,255,.85);
+  --shadow:0 1px 0 rgba(255,255,255,.6) inset, 0 8px 30px rgba(23,59,42,.08);
+  --radius:18px; --radius-s:12px;
+  --brand:#173B2A; --brand-ink:#FFFFFF; --fair:#3BAA6B; --up:#1F7A4A; --down:#A3452F; --warn:#9A5B13;
+  --chart:#173B2A; --chart-fill:rgba(23,59,42,.16); --chart-prev:rgba(18,34,25,.28); --grid:rgba(18,34,25,.08);
+  --t1:#173B2A; --t1-ink:#F3F7F4; --t2:#C9A24A; --t2-ink:#1E1606;
+  position:relative;isolation:isolate;overflow:hidden;border-radius:24px;background:var(--bg);color:var(--ink);
+  display:grid;grid-template-columns:232px minmax(0,1fr);min-height:760px;
+  box-shadow:0 0 0 1px var(--page-line);
+}
+/* Green glass, dark */
+.app[data-dir="green"][data-mode="dark"]{
+  --bg:#0D1F19; --blob1:#1E6B4A; --blob2:#123B2E; --blob3:#3B5E3A;
+  --panel:rgba(22,52,42,.48); --panel-solid:#14302A; --panel-edge:rgba(160,230,195,.14);
+  --ink:#E8F2EC; --ink-soft:#BFD2C7; --muted:#8FA79A; --line:rgba(200,240,220,.10);
+  --rail:rgba(14,36,29,.45); --hover:rgba(60,140,100,.16); --active:rgba(120,210,160,.18);
+  --shadow:0 1px 0 rgba(200,255,225,.08) inset, 0 10px 34px rgba(0,0,0,.30);
+  --brand:#4CC183; --brand-ink:#0B1F16; --up:#6DD39A; --down:#F08C78; --warn:#E3B05C;
+  --chart:#7FE0A8; --chart-fill:rgba(127,224,168,.16); --chart-prev:rgba(232,242,236,.30); --grid:rgba(232,242,236,.07);
+  --t1:#2E8F5E; --t1-ink:#F1FBF5; --t2:#D9B45A; --t2-ink:#1E1606;
+}
+/* Backdrop blobs: what the glass frosts. Plain blurred shapes, not a page gradient. */
+.blob{position:absolute;border-radius:50%;filter:blur(70px);z-index:-1;pointer-events:none;opacity:.9}
+.b1{width:520px;height:520px;background:var(--blob1);left:-120px;top:-140px}
+.b2{width:560px;height:560px;background:var(--blob2);right:-160px;top:120px}
+.b3{width:420px;height:420px;background:var(--blob3);left:38%;bottom:-200px}
+
+.glass{background:var(--panel);-webkit-backdrop-filter:blur(var(--panel-blur)) saturate(1.3);backdrop-filter:blur(var(--panel-blur)) saturate(1.3);
+  border:1px solid var(--panel-edge);border-radius:var(--radius);box-shadow:var(--shadow)}
+@media (prefers-reduced-transparency:reduce){.glass{background:var(--panel-solid);-webkit-backdrop-filter:none;backdrop-filter:none}}
+
+/* Rail */
+.rail{background:var(--rail);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;gap:18px;min-width:0}
+.brand{display:flex;align-items:center;gap:10px;padding:0 6px}
+.mark{width:34px;height:34px;border-radius:10px;background:var(--brand);display:grid;place-items:center;flex:none}
+.mark svg{width:20px;height:20px}
+.brand b{font-family:var(--serif);font-size:18px;font-weight:600;line-height:1}
+.brand small{display:block;font-size:11.5px;color:var(--muted);margin-top:3px}
+.grp{display:flex;flex-direction:column;gap:2px}
+.grp > span{font-size:12.5px;font-weight:700;color:var(--ink);padding:0 10px 4px;letter-spacing:.02em}
+.nav{font:inherit;font-size:13.5px;text-align:left;border:0;background:transparent;color:var(--ink-soft);padding:8px 10px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;cursor:default}
+.nav:hover{background:var(--hover)}
+.nav.on{background:var(--active);color:var(--ink);font-weight:600;box-shadow:var(--shadow)}
+.nav i{font-style:normal;font-size:11.5px;font-weight:600;background:var(--warn);color:var(--panel-solid);border-radius:999px;padding:0 7px;line-height:18px}
+.rail .foot{margin-top:auto;display:flex;align-items:center;gap:10px;padding:8px 6px;font-size:12.5px;color:var(--muted)}
+.av{width:30px;height:30px;border-radius:50%;background:var(--t2);color:var(--t2-ink);display:grid;place-items:center;font-weight:700;font-size:12px;flex:none}
+
+/* Main */
+.main{padding:20px 24px 28px;display:flex;flex-direction:column;gap:18px;min-width:0}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.top h2{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1;margin:0 auto 0 0;letter-spacing:-.005em}
+.top h2 small{display:block;font-family:var(--sans);font-size:13px;font-weight:400;color:var(--muted);margin-top:6px}
+.search{display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:12px;min-width:min(280px,100%);color:var(--muted);font-size:13px}
+.search kbd{margin-left:auto;font:inherit;font-size:11.5px;border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+.ibtn{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;border:1px solid var(--panel-edge);color:var(--ink);position:relative}
+.ibtn .dotn{position:absolute;top:9px;right:10px;width:7px;height:7px;border-radius:50%;background:var(--down)}
+.qa{font:inherit;font-size:13px;font-weight:600;border:0;background:var(--brand);color:var(--brand-ink);padding:11px 16px;border-radius:12px;cursor:pointer;position:relative}
+.qa:focus-visible{outline:2px solid var(--fair);outline-offset:2px}
+.qmenu{position:absolute;right:0;top:calc(100% + 8px);width:220px;padding:6px;z-index:5;display:flex;flex-direction:column}
+.qmenu span{padding:9px 12px;border-radius:9px;font-size:13.5px;color:var(--ink);font-weight:500;text-align:left}
+.qmenu span:hover{background:var(--hover)}
+.qwrap{position:relative}
+.qmenu[hidden]{display:none}
+.app .blob{display:none}
+.waves{position:absolute;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none}
+.waves path{fill:none;stroke-linecap:round}
+.waves .w1{stroke:var(--wv1);stroke-width:160} .waves .w2{stroke:var(--wv2);stroke-width:100}
+.waves .w3{stroke:var(--wv3);stroke-width:46} .waves .w4{stroke:var(--wv2);stroke-width:230}
+.app{--wv1:rgba(76,193,131,.42);--wv2:rgba(159,211,181,.55);--wv3:rgba(217,180,90,.35)}
+.app[data-mode="dark"]{--wv1:rgba(46,143,94,.45);--wv2:rgba(30,107,74,.45);--wv3:rgba(217,180,90,.22)}
+.ico{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;color:var(--muted)}.ico:hover{color:var(--ink);background:var(--hover)}
+.fwrap{position:relative;align-self:flex-start}
+.fbtn{font:inherit;font-size:13px;font-weight:600;color:var(--ink);display:inline-flex;align-items:center;gap:8px;padding:8px 14px;cursor:pointer}
+.fmenu{position:absolute;left:0;top:calc(100% + 6px);z-index:5;flex-direction:column;align-items:stretch!important;padding:6px;min-width:200px;background:var(--panel-solid)}
+.fmenu[hidden]{display:none!important}
+/* Dark only: the page around the app is dark too. */
+:root{--page:#0A1511;--page-ink:#E8F2EC;--page-muted:#8FA79A;--page-line:#1E3A30;--chip:#14302A;color-scheme:dark}
+body{margin:0}
+.app{min-height:820px}
+.fmenu .chip{font:inherit;font-size:13px;font-weight:500;border:0;background:transparent;color:var(--ink-soft);padding:8px 12px;border-radius:9px;cursor:pointer;text-align:left;display:flex;justify-content:space-between;gap:16px}
+.fmenu .chip:hover{background:var(--hover)}
+.fmenu .chip[aria-pressed="true"]{background:var(--active);color:var(--ink);font-weight:600}
+.fmenu .chip b{font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
+.fmenu{min-width:240px}
+
+/* Support & issues: one line per problem, the picked one opens beside the list. */
+.split{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px;align-items:start}
+.plist{overflow:hidden;padding:4px 0}
+.pl{font:inherit;width:100%;text-align:left;border:0;border-top:1px solid var(--line);background:transparent;color:var(--ink);padding:12px 18px;display:grid;grid-template-columns:8px minmax(0,1fr) auto;gap:12px;align-items:center;cursor:pointer}
+.pl:first-child{border-top:0}
+.pl:hover{background:var(--hover)}
+.pl[aria-selected="true"]{background:var(--active)}
+.pl:focus-visible{outline:2px solid var(--fair);outline-offset:-2px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--muted)}
+.dot.bad{background:var(--down)}.dot.warn{background:var(--warn)}.dot.ok{background:var(--up)}
+.pt{font-size:13.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pm{font-size:12.5px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.pm.none{color:var(--ink-soft);font-weight:600}
+.search kbd{white-space:nowrap}
+.empty{padding:28px 18px;color:var(--ink-soft);font-size:14px;display:flex;gap:10px;align-items:center}
+
+.det{padding:20px;display:flex;flex-direction:column;gap:16px;position:sticky;top:12px;min-width:0}
+.dh{display:flex;gap:10px;align-items:flex-start}
+.dh .dot{margin-top:9px;flex:none}
+.dh h3{margin:0;font-size:18px;font-weight:600;line-height:1.3}
+.dh h3 a,.clink{color:var(--ink);text-decoration:underline;text-decoration-color:var(--fair);text-underline-offset:3px}
+.dd{margin:0;font-size:13.5px;color:var(--ink-soft)}
+.dmeta{margin:0;font-size:12.5px;color:var(--muted)}
+.dmeta .sn{color:var(--warn)}
+.acts{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{font:inherit;font-size:13px;font-weight:600;border:1px solid var(--line);background:var(--hover);color:var(--ink);padding:8px 14px;border-radius:10px;cursor:pointer;text-decoration:none}
+.btn:hover{background:var(--active)}
+.btn.pri{background:var(--brand);color:var(--brand-ink);border-color:transparent}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn:focus-visible,.fld:focus{outline:2px solid var(--fair);outline-offset:1px}
+.who{font-size:12.5px;color:var(--muted)}
+.sec{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);padding-top:14px}
+.sec label,.sec .lab{font-size:13px;color:var(--ink-soft)}
+.fld{font:inherit;font-size:13.5px;color:var(--ink);background:rgba(10,30,24,.55);border:1px solid var(--line);border-radius:10px;padding:8px 12px;min-width:0}
+.fld::placeholder{color:var(--muted)}
+select.fld{padding-right:28px}
+textarea.fld{resize:vertical;min-height:52px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row .grow{flex:1;min-width:170px}
+.self{align-self:flex-start}
+.clr{margin:0;font-size:13.5px;color:var(--muted)}
+.hist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.hist li{font-size:13px;padding:7px 0;border-top:1px solid var(--line);display:grid;grid-template-columns:118px minmax(0,1fr);gap:10px}
+.hist li:first-child{border-top:0;padding-top:0}
+.hist time{color:var(--muted);font-variant-numeric:tabular-nums;font-size:12.5px}
+.hist span{overflow-wrap:anywhere}
+.toast{font-size:12.5px;color:var(--up);min-height:0}
+@media (max-width:1100px){.split{grid-template-columns:minmax(0,1fr)}.det{position:static}}
+@media (max-width:640px){.pl{grid-template-columns:8px minmax(0,1fr)}.pm{grid-column:2}.hist li{grid-template-columns:1fr}}
+@media (max-width:900px){.app{grid-template-columns:minmax(0,1fr)}.rail{flex-direction:row;flex-wrap:wrap;align-items:center;border-right:0;border-bottom:1px solid var(--line);gap:8px 12px;padding:14px}.rail .grp,.rail .foot{display:none}}
+@media (max-width:560px){.main{padding:16px 14px 22px}.top h2{font-size:26px;width:100%}.top .search{flex:1}.app{border-radius:18px}}
+</style>
+<div class="wrap">
+  <div class="app" id="app" data-dir="green" data-mode="dark">
+    <svg class="waves" viewBox="0 0 1400 1100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="40"/></filter>
+      <filter id="softer" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="16"/></filter></defs>
+      <g filter="url(#soft)">
+        <path class="w1" d="M-120 260 C 240 60, 520 420, 820 230 S 1300 40, 1560 300"/>
+        <path class="w4" d="M-200 980 C 200 760, 460 1040, 760 820 S 1220 640, 1600 900"/>
+        <path class="w2" d="M980 -80 C 860 220, 1180 380, 1040 640 S 1180 980, 1320 1180"/>
+      </g>
+      <g filter="url(#softer)">
+        <path class="w3" d="M-60 520 C 300 380, 520 700, 900 520 S 1300 360, 1500 560"/>
+        <path class="w3" d="M200 -60 C 300 200, 120 420, 380 640"/>
+      </g>
+    </svg>
+
+    <aside class="rail">
+      <div class="brand">
+        <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="var(--brand-ink)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><path d="M12 8v6l-3 6M12 14l3 6M8 11l4-1 5-3"/></svg></span>
+        <div><b>GreenReserve</b><small>Headquarters</small></div>
+      </div>
+      <div class="grp"><span>Workspace</span>
+        <button class="nav" type="button">Overview</button>
+        <button class="nav" type="button">Golf courses</button>
+        <button class="nav" type="button">Onboarding</button>
+        <button class="nav" type="button">Bookings</button>
+      </div>
+      <div class="grp"><span>Financials</span>
+        <button class="nav" type="button">Revenue</button>
+        <button class="nav" type="button">Expenses</button>
+        <button class="nav" type="button">Financial analytics</button>
+      </div>
+      <div class="grp"><span>Management</span>
+        <button class="nav" type="button">Business analytics</button>
+        <button class="nav on" type="button" aria-current="page">Support &amp; issues <i id="badge"></i></button>
+        <button class="nav" type="button">Platform activity</button>
+        <button class="nav" type="button">Settings</button>
+      </div>
+      <div class="foot"><span class="av">CS</span><span>Cam · Owner</span></div>
+    </aside>
+    <main class="main">
+      <div class="top">
+        <h2>Support &amp; issues</h2>
+        <div class="search glass" role="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" aria-label="Search" style="font:inherit;border:0;background:transparent;color:var(--ink);outline:none;width:100%"><kbd>Ctrl K</kbd></div>
+        <span class="ibtn glass" id="bell" role="img"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0"/></svg><span class="dotn" id="belldot"></span></span>
+      </div>
+      <div class="fwrap">
+        <button class="fbtn glass" type="button" id="fbtn" aria-expanded="false" aria-haspopup="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg><span id="flabel">Open</span></button>
+        <div class="fmenu glass" id="fmenu" role="group" aria-label="Show" hidden></div>
+      </div>
+      <div class="split">
+        <section class="glass plist" id="list" role="listbox" aria-label="Problems"></section>
+        <section class="glass det" id="det" aria-live="polite"></section>
+      </div>
+    </main>
+  </div>
+</div>
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const NOW=new Date('2026-11-12T15:20:00-05:00').getTime();
+  const H=3600e3, D=24*H, ago=ms=>new Date(NOW-ms).toISOString();
+  const ME={id:'a1',name:'Cam Sanchez'};
+  const ADMINS=[{id:'a1',name:'Cam Sanchez'},{id:'a2',name:'Jordan Lee'},{id:'a3',name:'Priya Shah'}];
+  const SNOOZE_DAYS=[1,3,7,14];
+  const KIND={opened:'Found',reopened:'Came back',cleared:'Cleared',claimed:'Taken',assigned:'Assigned',note:'Note',snoozed:'Snoozed',unsnoozed:'Woken up'};
+  // Real gates from admin-href: Security is owner only, System managers+ with Company access; Cam is the owner, so every link opens.
+  const P=[
+    {id:'p1',title:'Someone is guessing sign-ins',detail:'38 failed sign-in attempts from one address in the last hour. See Security for the address and the accounts tried.',href:'/admin/security',course:null,openedAt:ago(42*60e3),owner:null,
+      history:[[ago(42*60e3),'opened','hourly check','38 failed sign-in attempts from one address in the last hour. See Security for the address and the accounts tried.']]},
+    {id:'p2',title:"Live but can't take payments — Oak Valley Golf Course",detail:'Stripe setup isn’t finished.',href:'/admin/courses?tab=setup',course:'Oak Valley Golf Course',openedAt:ago(2*D+3*H),owner:null,
+      history:[[ago(2*D+3*H),'opened','hourly check','Stripe setup isn’t finished.']]},
+    {id:'p3',title:'Stuck in onboarding — Cedar Ridge Golf Links',detail:'12 days at "Details requested", waiting on the course.',href:'/admin/inquiries/cedar-ridge',course:null,openedAt:ago(1*D+6*H),owner:null,
+      history:[[ago(1*D+6*H),'opened','hourly check','12 days at "Details requested", waiting on the course.']]},
+    {id:'p4',title:'Refund failed — Ridgewood Country Club',detail:'$38.00 owed to Mark Davies. Refund it in Stripe; this clears once the refund is recorded.',href:'/admin/courses?tab=timeline',course:'Ridgewood Country Club',openedAt:ago(1*D+2*H),owner:'a2',
+      history:[[ago(3*H),'note','Jordan Lee','Asked Ridgewood to refund it from their Stripe dashboard; they said by end of day.'],[ago(20*H),'claimed','Jordan Lee',''],[ago(1*D+2*H),'opened','hourly check','$38.00 owed to Mark Davies. Refund it in Stripe; this clears once the refund is recorded.']]},
+    {id:'p5',title:'Card declined at check-in — Pine Hollow Golf Club',detail:'3 rounds, $142.50 not collected.',href:'/admin/courses/pine-hollow',course:'Pine Hollow Golf Club',openedAt:ago(5*H),owner:'a2',
+      history:[[ago(2*H),'note','Jordan Lee','Called the pro shop. They are texting pay links to the three groups.'],[ago(4*H),'claimed','Jordan Lee',''],[ago(5*H),'opened','hourly check','3 rounds, $142.50 not collected.']]},
+    {id:'p6',title:'Scheduled job failing — send-reminders',detail:'Last run failed at 12:00 PM: Resend returned 429 (rate limited).',href:'/admin/system',course:null,openedAt:ago(3*H),owner:'a3',
+      history:[[ago(1*H),'assigned','Cam Sanchez','to Priya Shah'],[ago(3*H),'opened','hourly check','Last run failed at 12:00 PM: Resend returned 429 (rate limited).']]},
+    {id:'p7',title:'Chargeback opened — Ridgewood Country Club',detail:'$84.00 from Sarah Klein. The course answers it in its Stripe before the deadline — check the course knows.',href:'/admin/courses/ridgewood',course:'Ridgewood Country Club',openedAt:ago(2*D),owner:'a1',
+      snoozedUntil:new Date(NOW+3*D-4*H).toISOString(),snoozeReason:'Ridgewood’s manager is answering it in Stripe on Friday',
+      history:[[ago(1*D+20*H),'snoozed','Cam Sanchez','3 days: Ridgewood’s manager is answering it in Stripe on Friday'],[ago(1*D+21*H),'note','Cam Sanchez','Spoke to Dana at Ridgewood; she has the evidence ready.'],[ago(1*D+22*H),'claimed','Cam Sanchez',''],[ago(2*D),'opened','hourly check','$84.00 from Sarah Klein. The course answers it in its Stripe before the deadline — check the course knows.']]},
+    {id:'p8',title:'Cancellation hold declined — Oak Valley Golf Course',detail:"$25.00 for Tom Bryant's round on 2026-11-14. The round is charged in full at check-in; until then the course has no late-cancel fee for it.",href:'/admin/courses?tab=timeline',course:'Oak Valley Golf Course',openedAt:ago(9*H),owner:null,
+      snoozedUntil:new Date(NOW+2*D+15*H).toISOString(),snoozeReason:'Round is Saturday; it is charged in full at check-in',
+      history:[[ago(8*H),'snoozed','Priya Shah','3 days: Round is Saturday; it is charged in full at check-in'],[ago(9*H),'opened','hourly check',"$25.00 for Tom Bryant's round on 2026-11-14. The round is charged in full at check-in; until then the course has no late-cancel fee for it."]]},
+    {id:'p9',title:'Stripe events are failing',detail:'The last Stripe event failed to process.',href:'/admin/system',course:null,openedAt:ago(1*D+9*H),clearedAt:ago(1*D+6*H),owner:'a3',
+      history:[[ago(1*D+6*H),'cleared','hourly check',''],[ago(1*D+7*H),'note','Priya Shah','Webhook secret was rotated in Stripe; updated it in Vercel.'],[ago(1*D+8*H),'claimed','Priya Shah',''],[ago(1*D+9*H),'opened','hourly check','The last Stripe event failed to process.']]},
+    {id:'p10',title:'Card declined at check-in — Oak Valley Golf Course',detail:'1 round, $46.00 not collected.',href:'/admin/courses/oak-valley',course:'Oak Valley Golf Course',openedAt:ago(4*D),clearedAt:ago(3*D+1*H),owner:'a2',
+      history:[[ago(3*D+1*H),'cleared','hourly check',''],[ago(3*D+5*H),'claimed','Jordan Lee',''],[ago(4*D),'opened','hourly check','1 round, $46.00 not collected.']]},
+    {id:'p11',title:'An admin account was locked out',detail:'Five wrong passwords in a row. If that wasn’t a person on the team, see Security.',href:'/admin/security',course:null,openedAt:ago(6*D+2*H),clearedAt:ago(6*D+1*H),owner:null,
+      history:[[ago(6*D+1*H),'cleared','hourly check',''],[ago(6*D+2*H),'opened','hourly check','Five wrong passwords in a row. If that wasn’t a person on the team, see Security.']]},
+  ];
+  const nameOf=id=>(ADMINS.find(a=>a.id===id)||{}).name||'';
+  const state=p=>p.clearedAt?'cleared':(p.snoozedUntil&&new Date(p.snoozedUntil).getTime()>NOW?'snoozed':'open');
+  const fmtAgo=iso=>{const s=Math.floor((NOW-new Date(iso).getTime())/1000);if(s<5)return'just now';if(s<60)return s+'s ago';const m=Math.floor(s/60);if(m<60)return m+'m ago';const h=Math.floor(m/60);if(h<24)return h+'h ago';return Math.floor(h/24)+'d ago';};
+  const when=iso=>new Date(iso).toLocaleString('en-US',{timeZone:'America/New_York',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+  const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const TABS=[['open','Open'],['snoozed','Snoozed'],['cleared','Cleared, last 30 days']];
+  const EMPTY={open:'Nothing is broken right now.',snoozed:'Nothing is snoozed.',cleared:'Nothing cleared in the last 30 days.'};
+  let tab='open', sel=null, drafts={};
+  function lists(){
+    const o=P.filter(p=>state(p)==='open').sort((a,b)=>Number(!!a.owner)-Number(!!b.owner)||a.openedAt.localeCompare(b.openedAt));
+    const s=P.filter(p=>state(p)==='snoozed').sort((a,b)=>a.openedAt.localeCompare(b.openedAt));
+    const c=P.filter(p=>state(p)==='cleared').sort((a,b)=>b.clearedAt.localeCompare(a.clearedAt));
+    return {open:o,snoozed:s,cleared:c};
+  }
+  // The course name in the title becomes its link, so the name isn't printed twice.
+  function titleHtml(p){
+    if(!p.course) return esc(p.title);
+    const at=p.title.lastIndexOf(p.course);
+    const a='<a href="#" class="clink" onclick="return false">'+esc(p.course)+'</a>';
+    return at<0?a+' · '+esc(p.title):esc(p.title.slice(0,at))+a+esc(p.title.slice(at+p.course.length));
+  }
+  function log(p,kind,text){p.history.unshift([new Date(NOW).toISOString(),kind,ME.name,text||'']);}
+  function render(){
+    const L=lists();
+    const openN=L.open.length;
+    $('badge').textContent=openN||''; $('badge').style.display=openN?'':'none';
+    $('bell').setAttribute('aria-label',openN?'Alerts: '+openN+' open':'Alerts: none open'); $('belldot').style.display=openN?'':'none';
+    $('flabel').textContent=TABS.find(t=>t[0]===tab)[1]+' · '+L[tab].length;
+    $('fmenu').innerHTML=TABS.map(t=>'<button class="chip" type="button" data-t="'+t[0]+'" aria-pressed="'+(tab===t[0])+'">'+t[1]+'<b>'+L[t[0]].length+'</b></button>').join('');
+    const list=L[tab];
+    if(!list.some(p=>p.id===sel)) sel=list[0]?list[0].id:null;
+    $('list').innerHTML=list.length?list.map(p=>{
+      const st=state(p), dc=st==='open'?'bad':st==='snoozed'?'warn':'ok';
+      const who=p.owner?nameOf(p.owner):'Nobody has it';
+      const right=st==='cleared'?'Cleared '+fmtAgo(p.clearedAt):st==='snoozed'?'Snoozed until '+when(p.snoozedUntil):fmtAgo(p.openedAt)+' · '+who;
+      return '<button class="pl" type="button" role="option" data-id="'+p.id+'" aria-selected="'+(p.id===sel)+'"><span class="dot '+dc+'"></span><span class="pt">'+esc(p.title)+'</span><span class="pm'+(st==='open'&&!p.owner?' none':'')+'">'+esc(right)+'</span></button>';
+    }).join(''):'<div class="empty">'+(tab==='open'?'<span class="dot ok"></span>':'')+EMPTY[tab]+'</div>';
+    renderDet(P.find(p=>p.id===sel));
+  }
+  function renderDet(p){
+    const d=$('det');
+    if(!p){d.innerHTML='<p class="clr">Pick a problem to see it here.</p>';return;}
+    const st=state(p), live=st!=='cleared', dc=st==='open'?'bad':st==='snoozed'?'warn':'ok';
+    const dr=drafts[p.id]||(drafts[p.id]={note:'',days:'1',reason:''});
+    let meta=(st==='cleared'?'Cleared '+fmtAgo(p.clearedAt)+' · ':'')+'Found '+fmtAgo(p.openedAt)+' · '+(p.owner?esc(nameOf(p.owner))+' has it':'Nobody has it');
+    if(st==='snoozed') meta+=' · <span class="sn">snoozed until '+when(p.snoozedUntil)+': '+esc(p.snoozeReason)+'</span>';
+    const take=live&&(!p.owner||p.owner!==ME.id)?'<button class="btn pri" type="button" data-a="claim">'+(p.owner?'Take it over':'Take it')+'</button>':'';
+    const go='<a class="btn" href="#" onclick="return false" title="'+esc(p.href)+'">Go to it</a>';
+    let h='<div class="dh"><span class="dot '+dc+'"></span><h3>'+titleHtml(p)+'</h3></div>'
+      +'<p class="dd">'+esc(p.detail)+'</p><p class="dmeta">'+meta+'</p>'
+      +'<div class="acts">'+take+go+'</div>';
+    if(live){
+      h+='<form class="sec" data-f="note"><label for="note">What did you do?</label><textarea class="fld" id="note" rows="2" maxlength="2000" placeholder="Called the course, they’ll update the card tonight">'+esc(dr.note)+'</textarea><button class="btn self" type="submit" '+(dr.note.trim()?'':'disabled')+'>Add note</button></form>';
+      h+='<div class="sec"><label for="assign">Who has it</label><select class="fld self" id="assign"><option value="">Nobody</option>'+ADMINS.map(a=>'<option value="'+a.id+'"'+(p.owner===a.id?' selected':'')+'>'+esc(a.name)+'</option>').join('')+'</select></div>';
+      if(st==='snoozed') h+='<div class="sec"><button class="btn self" type="button" data-a="unsnooze">Wake it up now</button></div>';
+      else h+='<form class="sec" data-f="snooze"><span class="lab">Snooze it</span><div class="row"><select class="fld" id="days" aria-label="How long">'+SNOOZE_DAYS.map(n=>'<option value="'+n+'"'+(String(n)===dr.days?' selected':'')+'>'+n+' day'+(n===1?'':'s')+'</option>').join('')+'</select><input class="fld grow" id="reason" aria-label="Why it can wait" maxlength="300" placeholder="Why it can wait" value="'+esc(dr.reason)+'"><button class="btn" type="submit" '+(dr.reason.trim().length<4?'disabled':'')+'>Snooze</button></div></form>';
+    } else h+='<p class="clr">The hourly check stopped seeing this, so it cleared on its own.</p>';
+    h+='<div class="sec"><span class="lab">History</span>'+(p.history.length?'<ol class="hist">'+p.history.map(x=>'<li><time>'+when(x[0])+'</time><span>'+(KIND[x[1]]||x[1])+(x[2]?' by '+esc(x[2]):'')+(x[3]?': '+esc(x[3]):'')+'</span></li>').join('')+'</ol>':'<p class="clr">Nothing yet.</p>')+'</div>';
+    d.innerHTML=h;
+  }
+  $('list').addEventListener('click',e=>{const b=e.target.closest('.pl');if(!b)return;sel=b.dataset.id;render();});
+  const det=$('det');
+  det.addEventListener('input',e=>{const p=P.find(x=>x.id===sel),dr=drafts[p.id];
+    if(e.target.id==='note'){dr.note=e.target.value;det.querySelector('[data-f=note] button').disabled=!dr.note.trim();}
+    if(e.target.id==='reason'){dr.reason=e.target.value;det.querySelector('[data-f=snooze] button').disabled=dr.reason.trim().length<4;}});
+  det.addEventListener('change',e=>{const p=P.find(x=>x.id===sel);
+    if(e.target.id==='days') drafts[p.id].days=e.target.value;
+    if(e.target.id==='assign'){const to=e.target.value||null;p.owner=to;log(p,'assigned',to?'to '+nameOf(to):'to no one');render();}});
+  det.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;const p=P.find(x=>x.id===sel);
+    if(b.dataset.a==='claim'){p.owner=ME.id;log(p,'claimed');}
+    if(b.dataset.a==='unsnooze'){p.snoozedUntil=null;p.snoozeReason='';log(p,'unsnoozed');tab='open';}
+    render();});
+  det.addEventListener('submit',e=>{e.preventDefault();const p=P.find(x=>x.id===sel),dr=drafts[p.id];
+    if(e.target.dataset.f==='note'&&dr.note.trim()){log(p,'note',dr.note.trim());dr.note='';}
+    if(e.target.dataset.f==='snooze'&&dr.reason.trim().length>=4){const n=Number(dr.days);p.snoozedUntil=new Date(NOW+n*D).toISOString();p.snoozeReason=dr.reason.trim();log(p,'snoozed',n+' day'+(n===1?'':'s')+': '+dr.reason.trim());dr.reason='';tab='snoozed';}
+    render();});
+  const fb=$('fbtn'), fm=$('fmenu');
+  fb.addEventListener('click',()=>{fm.hidden=!fm.hidden;fb.setAttribute('aria-expanded',String(!fm.hidden));});
+  document.addEventListener('click',e=>{if(!e.target.closest('.fwrap')){fm.hidden=true;fb.setAttribute('aria-expanded','false');}});
+  fm.addEventListener('click',e=>{const x=e.target.closest('.chip');if(!x)return;tab=x.dataset.t;sel=null;fm.hidden=true;fb.setAttribute('aria-expanded','false');render();});
+  render();
+})();
+</script>
+</html>
