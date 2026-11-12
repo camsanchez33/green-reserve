@@ -213,10 +213,8 @@ export default function CourseDetailPage({
   const pendingPick = useRef(searchParams.get('tt'));
   // A required cart is each tee time's call (cart_required, from its price-table cell — CART-1).
   const [withCart, setWithCart] = useState(false);
-  const [todFilter, setTodFilter] = useState<TimeOfDay>(() => {
-    const t = searchParams.get('tod');
-    return ['all', 'morning', 'afternoon', 'twilight'].includes(t ?? '') ? (t as TimeOfDay) : 'all';
-  });
+  // GOLFER-REDO: the page has no time-of-day control any more, so an old ?tod= link must not hide times silently.
+  const [todFilter, setTodFilter] = useState<TimeOfDay>('all');
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
   const [holesFilter, setHolesFilter] = useState<'all' | '9' | '18'>(() => {
     const h = searchParams.get('holes');
