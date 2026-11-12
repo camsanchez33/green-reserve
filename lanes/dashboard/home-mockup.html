@@ -178,6 +178,15 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
 .strip.warnl{border-left-color:var(--ink)}
 .nav i{background:var(--ink);color:var(--bg)}
 .wn,.up{font-weight:inherit}
+/* Cam 2026-11-12, "now the colors can actually have meaning": on monochrome glass, colour only where it means
+   something. Green = paid / ahead of usual; amber = needs doing soon (not paid yet, past their time, register closed,
+   behind usual, unread); red = a problem (declined card). Bars, links and chrome stay white/grey. */
+.app{--ok:#7BD9A4;--warn:#F2C46B;--bad:#FF8E7C}
+.app[data-mode="light"]{--ok:#22683F;--warn:#8A5309;--bad:#A93A24}
+.strip.warnl{border-left-color:var(--warn)}
+.nav i{background:var(--warn);color:#1A1406}
+.wn{color:var(--warn)} .up{color:var(--ok)} .dn{color:var(--bad)}
+.okv{color:var(--ok)}
 .trk .u{background:var(--muted);width:2px}
 
 /* Cam 2026-11-12, "a more abstract design then just 2 dots": the light behind the glass is sweeping ribbons and
@@ -241,7 +250,7 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
       <div class="kpis">
         <div class="card kpi"><span class="l">Players booked</span><span class="v">86</span><span class="c"><span class="up">+12</span> vs last Thursday</span></div>
         <div class="card kpi"><span class="l">Tee sheet filled</span><span class="v">72%</span><span class="c">64% last Thursday</span></div>
-        <div class="card kpi"><span class="l">Paid today</span><span class="v">$3,420</span><span class="c">24 groups</span></div>
+        <div class="card kpi"><span class="l">Paid today</span><span class="v okv">$3,420</span><span class="c">24 groups</span></div>
         <div class="card kpi"><span class="l">Not paid yet</span><span class="v wn">$1,180</span><span class="c">9 groups · <span class="wn">1 past their time</span></span></div>
       </div>
 

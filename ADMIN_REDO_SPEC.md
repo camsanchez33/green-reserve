@@ -122,8 +122,9 @@ admin refund) from the live Revenue page — Cam's decision; ask before removing
 
 ## Course dashboard look (Cam 2026-11-12)
 Charcoal GLASS is the default, with a Light switch: soft grey blurred shapes behind frosted panels, the same build as
-the admin's green glass. Monochrome: no green or orange. Charts, links and buttons are white/grey; red only for a real
-problem (a declined card). The course's own colour appears only on its crest and the active tab's dot. Mockup:
+the admin's green glass. Monochrome chrome (charts, links, buttons white/grey) so colour carries meaning: green = paid / ahead of usual,
+amber = to do soon (not paid yet, past their time, register closed, behind usual, unread), red = a problem (declined card).
+The light behind the glass is abstract blurred ribbons, not round blobs. The course's own colour appears only on its crest and the active tab's dot. Mockup:
 `lanes/dashboard/home-mockup.html`.
 
 ## Page 5 — Users & golfers (mockup `lanes/admin/users-mockup.html`, awaiting Cam's comments)
