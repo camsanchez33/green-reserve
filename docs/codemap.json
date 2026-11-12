@@ -16659,7 +16659,7 @@
     },
     {
       "path": "src/lib/booking-fees.ts",
-      "lines": 64,
+      "lines": 66,
       "purpose": "",
       "brain": [],
       "exports": [
