@@ -169,7 +169,7 @@ export default function BusinessPage() {
                 <div className={s.vrows}>
                   <div><span title={TERMS.greenFees}>Green fees booked online</span><b>{usd(d.value.onlineGreenFeesCents)}</b></div>
                   <div>
-                    <span title={TERMS.afterHours}>Booked after the shop closed{d.value.afterHours && <small>{pctText(d.value.afterHours.pctOfOnline)} of online bookings</small>}</span>
+                    <span title={TERMS.afterHours}>Booked outside tee-sheet hours{d.value.afterHours && <small>{pctText(d.value.afterHours.pctOfOnline)} of online bookings</small>}</span>
                     <b>{d.value.afterHours ? n(d.value.afterHours.count) : '—'}</b>
                   </div>
                   <div><span title={TERMS.paidBefore}>Paid before they arrived</span><b>{usd(d.value.paidBeforeArrivalCents)}</b></div>

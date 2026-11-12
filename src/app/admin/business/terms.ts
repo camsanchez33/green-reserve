@@ -7,7 +7,7 @@ export const TERMS = {
   fill: 'Players booked of the spots on every tee time that has gone off in the period, per live course, then averaged across courses. Its change is in points',
   vsPrior: 'The same stretch just before; up to the same day while this one is still running',
   greenFees: 'Green fees on online bookings: money that came in without staff on the phone',
-  afterHours: "Online bookings made while the course's shop was closed",
+  afterHours: "Online bookings made before that day's first tee time, after its last, or on a day with no tee times, in the course's time zone",
   paidBefore: 'Rounds paid online, by card at booking or pay link, before the golfer arrived',
   noShowFees: "The course's own no-show and late-cancel fees, collected for it",
   joining: 'Each step: courses, the share of the step before, and the average days at that step',
