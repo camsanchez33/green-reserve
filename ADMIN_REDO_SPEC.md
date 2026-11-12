@@ -251,3 +251,10 @@ Mockup `lanes/dashboard/messages-mockup.html` (final).
 - Tapping a chat opens it full page: "‹ Chats" back, the subject, "Waiting on us · we reply within 2 business days", the messages, a box and a white paper-airplane Send (faded until typed).
 - Gone: the three top cards (reply time, email, assistant questions), search, filter and the separate announcements list. GreenReserve announcements arrive as a chat from GreenReserve.
 - New data: one chat per question (today it is one running thread per course; each operator message opens a ticket). Reply promise is 2 business days (Cam reversed MSG-1's 48 hours): the due time skips weekends.
+
+## Admin Course support (was Support & issues / Problems): APPROVED (Cam 2026-11-12, "approved, build the course support page")
+Mockup `lanes/admin/support-mockup.html` (final). The admin side of the course dashboard's Support chats.
+- Menu item and title "Course support". One card fills the page, like iMessage: a wordless search at the top (course, subject, anything said), then every course chat: red dot = not answered, green = answered; course name, how long ago, subject, last message ("You: …" when ours).
+- Tap → the chat full page: "‹ Chats", course, subject, "Not answered yet" (red) / "Answered" (green), messages (theirs left, ours green right), a reply box and a white paper-airplane Send.
+- No who-has-it, take, assign or snooze. The top bar's alert bell loses its box on every admin page.
+- The hourly check's problem list moves out of this page. Recommendation (awaiting Cam): Overview's "Needs you" panel.
