@@ -384,7 +384,7 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
         <button type="button" data-v="dark">Dark</button>
       </div></div>
   </div>
-  <p style="font-size:12.5px;color:var(--page-muted);margin:0;max-width:75ch">Example bookings, not real ones. Newest booked first; Filter → Problems shows only those to fix; click a booking to see it.</p>
+  <p style="font-size:12.5px;color:var(--page-muted);margin:0;max-width:75ch">Example bookings, not real ones. A read-only record of every booking, newest first: nothing here charges, retries or refunds anyone.</p>
 
   <div class="app" id="app" data-dir="green" data-mode="light" data-acc="gold">
     <span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span>
@@ -471,15 +471,16 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
   const sec=(t,h)=>'<div class="psec"><h4>'+t+'</h4>'+h+'</div>';
   function prof(){
     const b=B.find(x=>x.id===pick); const init=b.g.replace("Walk-in · ","").split(" ").map(w=>w[0]).join("").slice(0,2);
-    const pills='<span class="plink">Course →</span>'+(b.via==="Online"?'<span class="plink">Stripe ↗</span>':'')+(b.prob===2?'<span class="plink">Message the course</span>':'');
-    const head='<div class="ph"><span class="plogo">'+init+'</span><div><h3>'+b.g+'</h3><p>'+b.course+'</p></div><div class="plinks">'+pills+'</div></div>';
+    const pills='<span class="plink">Course →</span>'+(b.via==="Online"?'<span class="plink">Stripe ↗</span>':'')+'';
+    // Cam 2026-11-12: Bookings is a read-only record. GreenReserve never charges, retries or refunds a golfer from here.
+    const head='<div class="ph"><div><h3>'+b.g+'</h3><p>'+b.course+'</p></div><div class="plinks">'+pills+'</div></div>';
     // Cam 2026-11-12: the card says everything about the booking, and first of all whether it's paid.
     const owed=b.green+b.cart+b.fee+(b.noshow||0);
     const PAY={"Card declined":["bad","Not paid",usd(owed)+" owed — the card on file was declined"],"Disputed":["bad","Paid, now disputed",usd(owed)+" paid Nov 8 by card; the golfer disputed it with their bank"],"No-show fee charged":["warn","Didn't play — no-show fee paid",usd(owed)+" charged to the card on file"],"Paid":["ok","Paid",usd(owed)+" by card at check-in"],"Paid in cash":["ok","Paid",usd(owed)+" in cash at the register"],"Card on file":["","Not paid yet",usd(owed)+" will be charged to the card on file at check-in"],"Pays at check-in":["","Not paid yet",usd(owed)+" due when they check in (no card saved)"],"Cancelled, no fee":["","Cancelled","Nothing charged — cancelled before the cutoff"]};
     const [pc,pt,pd]=PAY[b.ml];
     const state='<div class="sbox paybox '+pc+'"><b>'+pt+'</b><span>'+pd+'</span></div>';
     const round=b.green+b.cart, total=round+b.fee+(b.noshow||0);
-    const money=sec('Money','<div class="lines">'+(b.green?'<div><span>Green fees</span><span>'+usd(b.green)+'</span></div>':'')+(b.cart?'<div><span>Carts</span><span>'+usd(b.cart)+'</span></div>':'')+(b.noshow?'<div><span>No-show fee (the course\'s)</span><span>'+usd(b.noshow)+'</span></div>':'')+'<div class="ours"><span>Our service fee</span><span>'+usd(b.fee)+'</span></div><div class="tot"><span>Total</span><span>'+usd(total)+'</span></div></div>');
+    const money=sec('Money','<div class="lines">'+(b.green?'<div><span>Green fees</span><span>'+usd(b.green)+'</span></div>':'')+(b.cart?'<div><span>Carts</span><span>'+usd(b.cart)+'</span></div>':'')+(b.noshow?'<div><span>No-show fee (the course\'s)</span><span>'+usd(b.noshow)+'</span></div>':'')+'<div class="ours"><span>Our service fee · '+(b.cancelled?"none, cancelled in time":b.fee===0?"none, paid at the counter":b.ml==="Card declined"?"not collected":(b.ml==="Card on file"||b.ml==="Pays at check-in")?"collected when they pay":"collected")+'</span><span>'+usd(b.fee)+'</span></div><div class="tot"><span>Total</span><span>'+usd(total)+'</span></div></div>');
     const first=b.g.replace("Walk-in · ","").split(" ")[0].toLowerCase();
     const det=sec('Booking','<dl class="kv"><dt>Tee time</dt><dd>'+b.when+'</dd><dt>Course</dt><dd>'+b.course+'</dd><dt>Round</dt><dd>18 holes · '+b.p+' '+(b.p===1?"player":"players")+' · '+(b.cart?"riding":"walking")+'</dd><dt>Booked</dt><dd>'+b.booked+' · '+b.via+'</dd><dt>Booking number</dt><dd>GR-'+(1040+b.id)+'</dd><dt>Golfer</dt><dd>'+(b.via==="Online"?first+"@example.com · (518) 555-01"+(10+b.id):"Walk-in, no contact taken")+'</dd><dt>Course policy</dt><dd>'+(b.via==="Online"?"Free cancellation until 24 hours before · $25 a player no-show fee":"Paid at the counter")+'</dd><dt>Checked in</dt><dd>'+(b.ml==="Paid"||b.ml==="Paid in cash"||b.ml==="Disputed"?"Yes":b.ml==="Card declined"?"No — the card was declined, so check-in didn't go through":"No")+'</dd></dl>');
     const hist=sec('History','<div class="log">'+b.steps.map(s=>'<div><small>'+s[0]+'</small><span>'+s[1]+'</span></div>').join("")+'</div>');
