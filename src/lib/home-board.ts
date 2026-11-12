@@ -109,3 +109,18 @@ export async function monthGoals(courseId: string, tz: string | null | undefined
   }));
   return { month, daysLeft, lastMonth: last, goals, metrics: allowed };
 }
+
+export type HomeEvent = { id: string; name: string; date: string; startTime: string; format: string; onList: number; capacity: number | null };
+/**
+ * HOME-3 (Cam 2026-11-12, "maybe an events coming up thing"): the next planned events from today — name, day,
+ * start and how full (players on the list of the spots offered, as the event's own strip counts them). No money.
+ */
+export async function upcomingEvents(courseId: string, tz: string | null | undefined, take = 3, now = new Date()): Promise<HomeEvent[]> {
+  const today = todayIn(tz, now);
+  const rows = await prisma.courseEvent.findMany({
+    where: { courseId, status: 'planned', date: { gte: today } },
+    orderBy: [{ date: 'asc' }, { startTime: 'asc' }], take,
+    select: { id: true, name: true, date: true, startTime: true, format: true, players: true, _count: { select: { entrants: { where: { status: 'in' } } } } },
+  });
+  return rows.map(e => ({ id: e.id, name: e.name, date: e.date, startTime: e.startTime, format: e.format, onList: e._count.entrants, capacity: e.players > 0 ? e.players : null }));
+}
