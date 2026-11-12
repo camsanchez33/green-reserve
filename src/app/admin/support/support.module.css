@@ -1,0 +1,48 @@
+/* ADMIN-REDO Course support (Cam approved the mockup 2026-11-12): one card like iMessage — the chats, or one chat.
+   Built on the green-glass tokens (--g-*) of admin-glass.module.css. */
+
+.card { padding: 8px; min-height: 560px; display: flex; flex-direction: column; min-width: 0; }
+.search { display: flex; align-items: center; gap: 8px; margin: 6px 6px 8px; padding: 0 12px; height: 38px; border-radius: 12px; background: var(--g-hover); border: 1px solid var(--g-line); color: var(--g-muted); }
+.search input { flex: 1; font: inherit; font-size: 14px; color: var(--g-ink); background: transparent; border: 0; outline: none; min-width: 0; }
+.search:focus-within { outline: 2px solid var(--g-focus); outline-offset: 1px; }
+
+.list { list-style: none; margin: 0; padding: 0; }
+.stale { opacity: .6; }
+.row { width: 100%; font: inherit; color: inherit; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--g-line); display: grid; grid-template-columns: 12px minmax(0, 1fr); gap: 12px; align-items: start; padding: 14px; border-radius: 12px; cursor: pointer; }
+.list li:last-child .row { border-bottom: 0; }
+.row:hover { background: var(--g-hover); }
+.row:focus-visible, .back:focus-visible, .snd:focus-visible, .pill:focus-visible { outline: 2px solid var(--g-focus); outline-offset: 2px; }
+.dot { width: 9px; height: 9px; border-radius: 50%; margin-top: 6px; }
+.red { background: var(--g-down); } .green { background: var(--g-up); }
+.cm { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ctop { display: flex; justify-content: space-between; gap: 12px; }
+.ctop b { font-size: 14.5px; font-weight: 600; }
+.ago { font-size: 12.5px; color: var(--g-muted); white-space: nowrap; }
+.sub { font-size: 13.5px; color: var(--g-ink); }
+.pv { font-size: 12.5px; color: var(--g-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.test { margin-left: 6px; font-size: 11.5px; font-weight: 600; color: var(--g-warn); }
+.empty { margin: 0; padding: 16px 14px; font-size: 13.5px; color: var(--g-muted); }
+.problem { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 12px 14px; font-size: 13.5px; }
+.pill { font: inherit; font-size: 12.5px; font-weight: 600; color: var(--g-ink); background: var(--g-hover); border: 1px solid var(--g-line); border-radius: 999px; padding: 4px 11px; cursor: pointer; text-decoration: none; }
+
+.chat { padding: 16px 18px; }
+.back { font: inherit; font-size: 13.5px; font-weight: 600; border: 0; background: none; color: var(--g-muted); cursor: pointer; padding: 0; align-self: flex-start; margin-bottom: 10px; }
+.back:hover { color: var(--g-ink); }
+.chd { display: flex; flex-direction: column; gap: 2px; padding-bottom: 12px; border-bottom: 1px solid var(--g-line); font-size: 13.5px; }
+.chd b { font-size: 17px; font-weight: 600; }
+.chd span:last-child { font-size: 12.5px; }
+.thr { flex: 1; display: flex; flex-direction: column; gap: 14px; padding: 16px 4px; overflow-y: auto; max-height: 62vh; }
+.bb { max-width: 70%; }
+.us { align-self: flex-end; }
+.bt { padding: 10px 14px; border-radius: 16px; font-size: 14px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+.them .bt { background: var(--g-hover); border: 1px solid var(--g-line); border-bottom-left-radius: 4px; }
+.us .bt { background: var(--g-brand); color: var(--g-brand-ink); border-bottom-right-radius: 4px; }
+.bm { font-size: 11px; color: var(--g-muted); margin: 4px 2px 0; }
+.us .bm { text-align: right; }
+@media (max-width: 560px) { .bb { max-width: 88%; } }
+.cmp { display: flex; gap: 10px; align-items: flex-end; border-top: 1px solid var(--g-line); padding-top: 12px; }
+.cmp textarea { flex: 1; font: inherit; font-size: 14px; color: var(--g-ink); background: var(--g-hover); border: 1px solid var(--g-line); border-radius: 14px; padding: 10px 12px; resize: none; min-width: 0; }
+.cmp textarea:focus-visible { outline: 2px solid var(--g-focus); outline-offset: 1px; }
+.snd { width: 44px; height: 44px; border: 0; background: none; color: #FFFFFF; display: grid; place-items: center; cursor: pointer; flex: none; }
+.snd:disabled { opacity: .45; cursor: default; }
+.note { margin: 8px 0 0; font-size: 12.5px; color: var(--g-muted); }

@@ -8,7 +8,7 @@ import CommandPalette from '@/components/admin/CommandPalette';
 import { useAdminSession } from '@/lib/admin-session-context';
 import type { AdminArea } from '@/lib/admin-areas';
 
-export type AdminNavKey = 'overview' | 'bookings' | 'problems' | 'goals' | 'inquiries' | 'courses' | 'groups' | 'create' | 'employees' | 'announcements' | 'messages' | 'profile' | 'revenue' | 'expenses' | 'golfers' | 'system' | 'company' | 'audit' | 'security';
+export type AdminNavKey = 'overview' | 'bookings' | 'problems' | 'goals' | 'inquiries' | 'courses' | 'groups' | 'create' | 'employees' | 'announcements' | 'messages' | 'profile' | 'revenue' | 'expenses' | 'support' | 'golfers' | 'system' | 'company' | 'audit' | 'security';
 
 export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessages = 0 }: {
   active: AdminNavKey;
@@ -100,8 +100,10 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
     ] },
     { label: 'Management', items: [
       { key: null, label: 'Business analytics' },
-      { key: 'problems', label: 'Support & issues', href: '/admin/problems', minRole: SUPPORT_PLUS, area: 'problems' },
-      { key: 'messages', label: 'Messages', href: '/admin/messages', minRole: SUPPORT_PLUS, sub: true, area: 'messages' },
+      // Course support (Cam 2026-11-12, ADMIN_REDO_SPEC "Admin Course support"): every course's support chats. It replaces
+      // Messages; Problems stays reachable under it until its list moves to Overview's "Needs you" (awaiting Cam).
+      { key: 'support', label: 'Course support', href: '/admin/support', minRole: SUPPORT_PLUS, area: 'messages' },
+      { key: 'problems', label: 'Problems', href: '/admin/problems', minRole: SUPPORT_PLUS, sub: true, area: 'problems' },
       { key: 'announcements', label: 'Announcements', href: '/admin/announcements', minRole: SUPPORT_PLUS, sub: true, area: 'messages' },
       { key: 'system', label: 'Platform activity', href: '/admin/system', minRole: MANAGER_PLUS, area: 'company' },
       // My profile is open to every login, so it sits outside the gate tables' pattern (admin-nav-test).
@@ -125,7 +127,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
   const badges: Partial<Record<AdminNavKey, React.ReactNode>> = {
     problems: count(problems, true, `${problems} open problem${problems === 1 ? '' : 's'}`),
     inquiries: count(pending, false, `${pending} new inquir${pending === 1 ? 'y' : 'ies'}`),
-    messages: count(unread, false, `${unread} unread`),
+    support: count(unread, false, `${unread} unread`),
   };
 
   // Phone: the rail slides in from the Menu button and closes on navigation.
