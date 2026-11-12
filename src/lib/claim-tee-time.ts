@@ -18,9 +18,10 @@ export class TeeTimeClaimError extends Error {
 
 /**
  * Atomically creates a booking and updates tee-time capacity.
- * Runs in a SERIALIZABLE transaction — concurrent requests that would exceed
- * capacity trigger a PostgreSQL serialization failure (P2034), which is caught
- * and re-thrown as TeeTimeClaimError('CONFLICT').
+ * Runs in a SERIALIZABLE transaction. A serialization failure (P2034) is retried
+ * in a fresh transaction up to CLAIM_ATTEMPTS times; only then is it thrown as
+ * TeeTimeClaimError('CONFLICT'). A claim that truly lost the time fails as
+ * FULL / SPOTS / PROMO_USED on its retry.
  *
  * All booking fields must be pre-computed by the caller. The teeTimeId and
  * players fields in `data` drive the capacity check.
@@ -41,7 +42,7 @@ export async function claimTeeTime(
 
   // Serializable: two claims at once can conflict even on different tee times (Postgres
   // predicate locks), and the loser used to get "That time just filled up" on an empty time —
-  // ~1–2% of simultaneous claims (measured 2026-11-12). The transaction rolls back whole, so
+  // from 1–2% up to most of a burst, depending on table size and plan (measured 2026-11-12). The transaction rolls back whole, so
   // running it again is safe: a fresh transaction re-reads capacity and the promo rule, and a
   // claim that truly lost the time now fails as FULL / SPOTS / PROMO_USED, not CONFLICT.
   for (let attempt = 1; ; attempt++) {
@@ -64,7 +65,8 @@ export async function claimTeeTime(
 /**
  * Attempts at a claim that loses a serialization race before it answers CONFLICT. Measured
  * 2026-11-12 (scripts/claim-retry-db-test.ts, 8 claims at once on empty times): no retry lost up to
- * 105 of 120, 3 attempts still lost 21 of 120, 8 lost none of 360. Waits add up to under ~0.5s.
+ * 105 of 120, 3 attempts still lost 21 of 120, 8 lost none of 360 — at 8 at once; it is not a guarantee
+ * for much bigger bursts (final review: 5 of 320 lost at 32 at once). Waits add up to at most ~0.73s.
  */
 export const CLAIM_ATTEMPTS = 8;
 
@@ -98,7 +100,7 @@ async function claimOnce(
 
         // Audit 2026-10-31: a "once per golfer" promo code is checked again here, inside the same
         // SERIALIZABLE transaction as the booking — two bookings at once by one golfer (same email, or
-        // the same signed-in account) can't both use it; the second fails as a serialization conflict.
+        // the same signed-in account) can't both use it; the second hits a serialization conflict, is retried, and then fails as PROMO_USED.
         if (data.promoCodeId) {
           const code = await tx.promoCode.findUnique({ where: { id: String(data.promoCodeId) }, select: { onePerGolfer: true } });
           const email = String(data.golferEmail ?? '').trim();

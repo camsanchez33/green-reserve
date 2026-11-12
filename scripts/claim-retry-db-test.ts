@@ -6,6 +6,7 @@
 // players as fit, and a once-per-golfer promo is still used once.
 // Needs a database. Run: npx tsx scripts/claim-retry-db-test.ts
 import { readFileSync } from 'fs';
+import { randomUUID } from 'crypto';
 import { prisma } from '../src/lib/prisma';
 import { claimTeeTime, CLAIM_ATTEMPTS, TeeTimeClaimError } from '../src/lib/claim-tee-time';
 
@@ -37,7 +38,8 @@ async function course(n: string) {
 const time = (i: number) => `${String(6 + Math.floor(i / 6)).padStart(2, '0')}:${String((i % 6) * 10).padStart(2, '0')}`;
 const teeTime = (courseId: string, i: number, spots = 4) => prisma.teeTime.create({ data: { courseId, date: DATE, time: time(i), holes: 18, greenFeeCents: 0, cartFeeCents: 0, playersAvailable: spots, playersBooked: 0, status: 'available' } });
 const booking = (courseId: string, teeTimeId: string, n: number, extra: Record<string, unknown> = {}) =>
-  ({ teeTimeId, courseId, golferName: `Claim ${n}`, golferEmail: `${TAG}-g${n}@test.local`, players: 1, greenFeeTotal: 0, cartFeeTotal: 0, accessFeeTotal: 0, totalAmount: 0, status: 'confirmed', paymentStatus: 'manual', ...extra });
+  // A pre-generated unique checkInToken, as the real callers send: a retried attempt must reuse it cleanly.
+  ({ teeTimeId, courseId, checkInToken: randomUUID(), golferName: `Claim ${n}`, golferEmail: `${TAG}-g${n}@test.local`, players: 1, greenFeeTotal: 0, cartFeeTotal: 0, accessFeeTotal: 0, totalAmount: 0, status: 'confirmed', paymentStatus: 'manual', ...extra });
 const actor = { type: 'system' } as const;
 const outcome = (p: Promise<unknown>) => p.then(() => 'ok', (e: unknown) => (e instanceof TeeTimeClaimError ? e.code : `error: ${(e as Error)?.message ?? e}`));
 
