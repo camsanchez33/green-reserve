@@ -257,4 +257,5 @@ Mockup `lanes/admin/support-mockup.html` (final). The admin side of the course d
 - Menu item and title "Course support". One card fills the page, like iMessage: a wordless search at the top (course, subject, anything said), then every course chat: red dot = not answered, green = answered; course name, how long ago, subject, last message ("You: …" when ours).
 - Tap → the chat full page: "‹ Chats", course, subject, "Not answered yet" (red) / "Answered" (green), messages (theirs left, ours green right), a reply box and a white paper-airplane Send.
 - No who-has-it, take, assign or snooze. The top bar's alert bell loses its box on every admin page.
-- The hourly check's problem list moves out of this page. Recommendation (awaiting Cam): Overview's "Needs you" panel.
+- The hourly check's problem list moves to Overview's "Needs you" panel (Cam 2026-11-12: yes); /admin/problems then redirects to Overview.
+- Pro shop Close out (Cam 2026-11-12: yes): recent close-outs stay a short list; a row opens the full close-out (expected, counted, left in, deposit, note).
