@@ -489,7 +489,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/walking.ts` | 4 | 23 | Settings rework (Cam 2026-10-19): | `walkingSummary`, `walkingWords` |
 | `src/lib/booking-fee.ts` | 3 | 126 | FEE-AT-BOOKING (Cam 2026-10-24: | `chargeBookingFee`, `feeCoveredCents`, `refundBookingFee`, `releaseUnpaidBooking` |
 | `src/lib/booking-mode.ts` | 3 | 22 | Course-world pages: | `isBookingMode`, `isCourseWorld` |
-| `src/lib/claim-tee-time.ts` | 3 | 122 |  | `claimTeeTime`, `LATE_ADD_MESSAGE`, `LATE_ADD_MINUTES`, `TeeTimeClaimError` |
+| `src/lib/claim-tee-time.ts` | 3 | 149 |  | `CLAIM_ATTEMPTS`, `claimTeeTime`, `LATE_ADD_MESSAGE`, `LATE_ADD_MINUTES`, `TeeTimeClaimError` |
 | `src/lib/course-goals.ts` | 3 | 33 | HOME-2 (Cam 2026-11-05, "if you want to track goals track them here … set goals for certain metrics"): | `formatGoal`, `GOAL_MAX`, `GOAL_METRICS`, `goalMetric`, `GoalMetric`, `isGoalMetric`, `neededPerDay` |
 | `src/lib/course-setup.ts` | 3 | 52 | COURSES_SHEET_SPEC CS-1 §1 — the five setup steps a built course goes through before it is live. | `SETUP_STEPS`, `SetupCourseLike`, `setupProgress`, `SetupProgress`, `SetupStep`, `SetupStepKey` |
 | `src/lib/course-wire.ts` | 3 | 57 |  | `COURSE_MONEY_WIRE_FIELDS`, `courseMoneyFromWire`, `courseToWire` |

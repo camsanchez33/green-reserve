@@ -39,7 +39,42 @@ export async function claimTeeTime(
   const teeTimeId = String(data.teeTimeId);
   const players = Number(data.players);
 
-  try {
+  // Serializable: two claims at once can conflict even on different tee times (Postgres
+  // predicate locks), and the loser used to get "That time just filled up" on an empty time —
+  // ~1–2% of simultaneous claims (measured 2026-11-12). The transaction rolls back whole, so
+  // running it again is safe: a fresh transaction re-reads capacity and the promo rule, and a
+  // claim that truly lost the time now fails as FULL / SPOTS / PROMO_USED, not CONFLICT.
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await claimOnce(data, actor, opts, teeTimeId, players);
+    } catch (err) {
+      if (err instanceof TeeTimeClaimError) throw err;
+      if ((err as { code?: string }).code === 'P2034') {
+        if (attempt < CLAIM_ATTEMPTS) {
+          await new Promise(r => setTimeout(r, Math.floor(Math.random() * 25 * attempt) + 5));
+          continue;
+        }
+        throw new TeeTimeClaimError('CONFLICT');
+      }
+      throw err;
+    }
+  }
+}
+
+/**
+ * Attempts at a claim that loses a serialization race before it answers CONFLICT. Measured
+ * 2026-11-12 (scripts/claim-retry-db-test.ts, 8 claims at once on empty times): no retry lost up to
+ * 105 of 120, 3 attempts still lost 21 of 120, 8 lost none of 360. Waits add up to under ~0.5s.
+ */
+export const CLAIM_ATTEMPTS = 8;
+
+async function claimOnce(
+  data: Prisma.BookingUncheckedCreateInput,
+  actor: EventActor,
+  opts: { allowLate?: boolean; online?: boolean },
+  teeTimeId: string,
+  players: number,
+): Promise<{ id: string; checkInToken: string | null }> {
     return await prisma.$transaction(
       async (tx) => {
         const teeTime = await tx.teeTime.findUnique({
@@ -110,12 +145,4 @@ export async function claimTeeTime(
       },
       { isolationLevel: 'Serializable' }
     );
-  } catch (err) {
-    if (err instanceof TeeTimeClaimError) throw err;
-    // PostgreSQL serialization failure: two concurrent transactions conflicted
-    if ((err as { code?: string }).code === 'P2034') {
-      throw new TeeTimeClaimError('CONFLICT');
-    }
-    throw err;
-  }
 }
