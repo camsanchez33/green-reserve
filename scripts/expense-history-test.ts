@@ -18,7 +18,7 @@ check('…an edit that changed nothing is left out', h.length === 4);
 check('…"by" is the first name', h.every(x => x.by === 'Cam'));
 check('…changes carry field, from and to', JSON.stringify(h[2].changes) === JSON.stringify([{ field: 'amountCents', from: 2000, to: 2500 }]));
 check('…an old row that cleared endedAt reads as a change, endedAt included', JSON.stringify(h[0].changes) === JSON.stringify([{ field: 'amountCents', from: 2500, to: 3000 }, { field: 'endedAt', from: '2026-11-05T00:00:00.000Z', to: null }]), h[0]);
-check('the PATCH route refuses to un-end an ended expense', /if \(existing\.endedAt\) return NextResponse\.json\(\{ error: 'This expense has ended/.test(readFileSync('src/app/api/admin/expenses/[id]/route.ts', 'utf8')));
+check('the PATCH route refuses to un-end an ended expense — only once its end has passed', /const endedAlready = !!existing\.endedAt && existing\.endedAt\.getTime\(\) <= Date\.now\(\);/.test(readFileSync('src/app/api/admin/expenses/[id]/route.ts', 'utf8')) && /if \(endedAlready\) return NextResponse\.json\(\{ error: 'This expense has ended/.test(readFileSync('src/app/api/admin/expenses/[id]/route.ts', 'utf8')));
 check('…an end with nothing else has no changes', h[1].changes === undefined);
 
 // Source guards

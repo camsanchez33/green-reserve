@@ -44,18 +44,21 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (isNaN(d.getTime())) return NextResponse.json({ error: 'Invalid start date' }, { status: 400 });
     data.startedAt = d;
   }
+  // Ended = an end date that has passed.
+  const endedAlready = !!existing.endedAt && existing.endedAt.getTime() <= Date.now();
   if (body.endedAt !== undefined) {
     if (body.endedAt === null || body.endedAt === '') {
       // ADMIN-REDO (Cam via Build 2026-11-12): an ended expense stays ended, so the months it was
-      // stopped stay at $0. Starting it again is a new expense from today.
-      if (existing.endedAt) return NextResponse.json({ error: 'This expense has ended. To start paying it again, add it as a new expense from today.', code: 'ended' }, { status: 400 });
+      // stopped stay at $0. Starting it again is a new expense from today. An end still in the
+      // future is only scheduled: it can be cleared or moved.
+      if (endedAlready) return NextResponse.json({ error: 'This expense has ended. To start paying it again, add it as a new expense from today.', code: 'ended' }, { status: 400 });
       data.endedAt = null;
     } else {
       const d = new Date(body.endedAt);
       if (isNaN(d.getTime())) return NextResponse.json({ error: 'Invalid end date' }, { status: 400 });
       // Ended stays ended: the end can be corrected earlier, never moved later (that would bring
       // stopped months back into the costs).
-      if (existing.endedAt && d.getTime() > existing.endedAt.getTime()) return NextResponse.json({ error: 'This expense has ended. Its end date can only move earlier — to start paying it again, add it as a new expense from today.', code: 'ended' }, { status: 400 });
+      if (endedAlready && d.getTime() > existing.endedAt!.getTime()) return NextResponse.json({ error: 'This expense has ended. Its end date can only move earlier — to start paying it again, add it as a new expense from today.', code: 'ended' }, { status: 400 });
       data.endedAt = d;
     }
   }

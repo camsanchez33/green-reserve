@@ -770,6 +770,13 @@ async function main() {
       const later = await api(`/api/admin/expenses/${exp.id}`, { method: 'PATCH', cookie: oc, body: { endedAt: '2099-01-01T00:00:00Z' } });
       check('…nor have its end moved later → 400 ended', later.status === 400 && (later.body as { code?: string })?.code === 'ended', JSON.stringify(later.body));
       checkStatus('…but it can be corrected earlier → 200', (await api(`/api/admin/expenses/${exp.id}`, { method: 'PATCH', cookie: oc, body: { endedAt: '2020-01-01T00:00:00Z' } })).status, 200);
+      const sched = await prisma.expense.create({ data: { name: 'Isol scheduled', amountCents: 1000, cadence: 'monthly', endedAt: new Date(Date.now() + 30 * 86_400_000) } });
+      try {
+        checkStatus('A scheduled (future) end can still be moved later → 200', (await api(`/api/admin/expenses/${sched.id}`, { method: 'PATCH', cookie: oc, body: { endedAt: new Date(Date.now() + 60 * 86_400_000).toISOString() } })).status, 200);
+        checkStatus('…or cleared → 200', (await api(`/api/admin/expenses/${sched.id}`, { method: 'PATCH', cookie: oc, body: { endedAt: null } })).status, 200);
+      } finally {
+        await prisma.expense.delete({ where: { id: sched.id } }).catch(() => {});
+      }
       const hist = (await api(`/api/admin/expenses/${exp.id}/history`, { cookie: oc })).body as { history?: { kind: string; by: string; changes?: { field: string }[] }[] };
       check('The owner reads an expense\'s history, newest first', JSON.stringify(hist.history?.map(x => x.kind)) === JSON.stringify(['changed', 'ended', 'changed']) && hist.history?.[2].changes?.[0].field === 'amountCents', JSON.stringify(hist));
     } finally {

@@ -3,7 +3,7 @@
 // goal, Expenses' monthly budget) and the course dashboard (Home's goals):
 //   pace = progress so far ÷ the elapsed share of the period, projected to the period's end.
 //   A goal to reach (revenue, bookings): ok = on pace to hit · warn = within 10% short · bad = on pace to miss.
-//   A cap (costs):                       ok = on pace to stay under · warn = within 10% over · bad = on pace to go over.
+//   A cap (costs):                       ok = on pace to land 10%+ under · warn = within the last 10% · bad = on pace to go over.
 // A rate (a fill %) is already "per period", so it isn't projected: its value now is its pace.
 // Cam 2026-11-12 (option b): the first EARLY_DAYS of a period show no verdict ('early', neutral grey) — a few hours of
 // takings can't say where a month ends. Pure and client-safe.
@@ -65,6 +65,7 @@ export function goalPace(o: { progress: number; target: number; share: number; k
     return { projected, tone: atLeast(projected, o.target * 0.9) ? 'warn' : 'bad' };
   }
   if (!atMost(soFar, o.target)) return { projected, tone: 'bad' }; // already over the budget
-  if (atMost(projected, o.target)) return { projected, tone: 'ok' };
-  return { projected, tone: atMost(projected, o.target * 1.1) ? 'warn' : 'bad' };
+  // ADMIN_REDO_SPEC (Cam via Build 2026-11-12): a budget on course to land exactly at its limit is yellow.
+  if (atMost(projected, o.target * 0.9)) return { projected, tone: 'ok' };
+  return { projected, tone: atMost(projected, o.target) ? 'warn' : 'bad' };
 }
