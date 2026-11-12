@@ -31,7 +31,7 @@ for (const f of ['src/app/manage/[bookingId]/page.tsx', 'src/app/receipt/[bookin
   check(`${f} shows the GR label`, readFileSync(f, 'utf8').includes('bookingRef ??'));
 }
 const mig = readFileSync('prisma/migrations/20261112010000_booking_ref_expected_launch/migration.sql', 'utf8');
-check('migration: course number column added with no default (no backfill), then the default set', mig.indexOf('ADD COLUMN "number" INTEGER;') >= 0 && mig.indexOf('ADD COLUMN "number"') < mig.indexOf('SET DEFAULT nextval') && !/\bSERIAL\b|UPDATE "Booking" SET|UPDATE "Course" SET/.test(mig));
+check('migration: course number is max+1 under an advisory lock (no sequence, no backfill)', /ADD COLUMN "number" INTEGER;/.test(mig) && /pg_advisory_xact_lock/.test(mig) && /COALESCE\(MAX\("number"\), 0\) \+ 1/.test(mig) && !/Course_number_seq|\bSERIAL\b|UPDATE "Booking" SET|UPDATE "Course" SET/.test(mig));
 check('migration: the booking number comes from the course\'s own sequence (no shared row written — no serialization conflicts)', /BEFORE INSERT ON "Booking"/.test(mig) && /nextval\("bookref_seq"\(NEW\."courseId"\)\)/.test(mig) && !/bookingRefSeq/.test(mig));
 
 // ---- database ----
@@ -60,7 +60,23 @@ async function main() {
   const b = await seed('b');
   const ca = await prisma.course.findUniqueOrThrow({ where: { id: a.course.id }, select: { number: true } });
   const cb = await prisma.course.findUniqueOrThrow({ where: { id: b.course.id }, select: { number: true } });
-  check('a new course gets a number from the sequence', ca.number != null && cb.number != null && cb.number > ca.number, { ca, cb });
+  check('a new course gets the next number', ca.number != null && cb.number === ca.number + 1, { ca, cb });
+  // Course numbers never skip (Cam 2026-11-12): concurrent creations, and one that rolls back.
+  {
+    const before = (await prisma.course.aggregate({ _max: { number: true } }))._max.number ?? 0;
+    const ROLL = new Error('rollback');
+    await prisma.$transaction(async tx => {
+      const op = await tx.courseOperator.create({ data: { name: 'Roll', email: `${TAG}-roll@test.local`, password: 'x' } });
+      await tx.course.create({ data: { name: 'Roll', slug: `${TAG}-roll`, operatorId: op.id, address: '1', city: 'T', state: 'CA', zipCode: '90210', holes: 18 } });
+      throw ROLL;
+    }).catch(e => { if (e !== ROLL) throw e; });
+    const made = await Promise.all(Array.from({ length: 8 }, async (_, i) => {
+      const op = await prisma.courseOperator.create({ data: { name: `C${i}`, email: `${TAG}-c${i}@test.local`, password: 'x' } });
+      return prisma.course.create({ data: { name: `${TAG} c${i}`, slug: `${TAG}-c${i}`, operatorId: op.id, address: '1', city: 'T', state: 'CA', zipCode: '90210', holes: 18 }, select: { number: true } });
+    }));
+    const nums = made.map(m => m.number!).sort((x, y) => x - y);
+    check('8 courses created at once after a rolled-back one: the next 8 numbers, none skipped or repeated', JSON.stringify(nums) === JSON.stringify(Array.from({ length: 8 }, (_, i) => before + 1 + i)), { before, nums });
+  }
   check('each course numbers its bookings from 1', a.booking.ref === 1 && b.booking.ref === 1, { a: a.booking.ref, b: b.booking.ref });
   check('bookingRefFor reads it', (await bookingRefFor(a.booking.id)) === `GR${ca.number}-1`);
   check('bookingRefFor on an unknown id falls back without throwing', (await bookingRefFor('nosuchbooking0')) === 'NOSUCHBO');

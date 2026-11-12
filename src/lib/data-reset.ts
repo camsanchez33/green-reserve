@@ -79,8 +79,9 @@ export async function previewWipeAll(): Promise<{ wiped: TableCounts; kept: Tabl
 export async function wipeAll(now = new Date(), db: Db = prisma): Promise<{ ok: true; cleared: TableCounts } | { ok: false; error: string }> {
   if (!wipeAllOpen(now)) return { ok: false, error: 'The launch wipe closed on Dec 1 — real courses are on the site now. Reset a single test course instead.' };
   const cleared = await countTables(WIPED_TABLES, db);
-  // RESTART IDENTITY (BOOKING-REF, Cam 2026-11-12): the course-number sequence starts again at GR1.
-  await db.$executeRawUnsafe(`TRUNCATE TABLE ${WIPED_TABLES.map(t => `"${t}"`).join(', ')} RESTART IDENTITY RESTRICT`);
+  // BOOKING-REF (Cam 2026-11-12): course numbers are the highest so far + 1, so with every course
+  // gone the next one is GR1 again.
+  await db.$executeRawUnsafe(`TRUNCATE TABLE ${WIPED_TABLES.map(t => `"${t}"`).join(', ')} RESTRICT`);
   // Each course's booking-number sequence ("bookref_<id>") goes with its course. TRUNCATE fires no
   // delete trigger, so drop them here — in the same transaction when the caller passes one.
   await db.$executeRawUnsafe(`DO $$ DECLARE r RECORD; BEGIN

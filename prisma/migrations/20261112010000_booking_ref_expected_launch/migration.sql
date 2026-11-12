@@ -1,13 +1,27 @@
 -- BOOKING-REF (Cam 2026-11-12): courses are numbered GR1, GR2, …; bookings within their
 -- course, GR1-1, GR1-2, … Additive only, no backfill: existing courses and bookings keep a
--- null number (test data the launch wipe clears).
+-- null number (test data the launch wipe clears). Course numbers never skip; booking numbers
+-- may (a rolled-back booking uses its number up — accepted, Cam via Build 2026-11-12).
 
--- The course number: a sequence, attached AFTER the column exists so existing rows stay null.
-CREATE SEQUENCE "Course_number_seq" AS INTEGER;
+-- The course number: the highest so far + 1, given by a BEFORE INSERT trigger. Not a sequence
+-- (Cam 2026-11-12): a sequence skips numbers after a rollback or a restart, and GR2 followed by
+-- GR35 is visible. A transaction-level advisory lock queues concurrent course creations, and
+-- each one reads the committed maximum after taking it (a fresh snapshot per statement at READ
+-- COMMITTED, which is how every course is created), so numbers never repeat or skip. A course
+-- creation that rolls back leaves no gap: its number was never committed. Existing courses
+-- stay null (no backfill).
 ALTER TABLE "Course" ADD COLUMN "number" INTEGER;
-ALTER TABLE "Course" ALTER COLUMN "number" SET DEFAULT nextval('"Course_number_seq"');
-ALTER SEQUENCE "Course_number_seq" OWNED BY "Course"."number";
 CREATE UNIQUE INDEX "Course_number_key" ON "Course"("number");
+
+CREATE FUNCTION "course_number_assign"() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  PERFORM pg_advisory_xact_lock(hashtext('Course.number'));
+  SELECT COALESCE(MAX("number"), 0) + 1 INTO NEW."number" FROM "Course";
+  RETURN NEW;
+END;
+$$;
+CREATE TRIGGER "Course_number_assign" BEFORE INSERT ON "Course"
+  FOR EACH ROW EXECUTE FUNCTION "course_number_assign"();
 
 -- The booking's number within its course.
 ALTER TABLE "Booking" ADD COLUMN "ref" INTEGER;

@@ -102,9 +102,13 @@ async function main() {
     await prisma.$transaction(async tx => {
       const w = await wipeAll(new Date('2026-10-30T00:00:00Z'), tx);
       const left = await tx.$queryRawUnsafe<{ n: bigint }[]>(`SELECT (${WIPED_TABLES.map(x => `(SELECT COUNT(*) FROM "${x}")`).join(' + ')})::bigint AS n`);
-      const seq = await tx.$queryRawUnsafe<{ n: bigint }[]>(`SELECT nextval('"Course_number_seq"')::bigint AS n`);
       const refSeqs = await tx.$queryRawUnsafe<{ n: bigint }[]>(`SELECT count(*)::bigint AS n FROM pg_class WHERE relkind = 'S' AND relname LIKE 'bookref\\_%'`);
-      inside = { ok: w.ok, wipedLeft: Number(left[0].n), keptLeft: await tx.adminGoal.count(), nextCourse: Number(seq[0].n), refSeqsLeft: Number(refSeqs[0].n) };
+      const keptLeft = await tx.adminGoal.count();
+      // The first course after the wipe (counted above, before it brings its own booking sequence).
+      const op = await tx.courseOperator.create({ data: { name: 'After wipe', email: `${TAG}-afterwipe@test.local`, password: 'x' } });
+      const first = await tx.course.create({ data: { name: 'After wipe', slug: `${TAG}-afterwipe`, operatorId: op.id, address: '1', city: 'T', state: 'CA', zipCode: '90210', holes: 18 }, select: { number: true } });
+      const seq = [{ n: BigInt(first.number ?? -1) }];
+      inside = { ok: w.ok, wipedLeft: Number(left[0].n), keptLeft, nextCourse: Number(seq[0].n), refSeqsLeft: Number(refSeqs[0].n) };
       throw ROLLBACK;
     }, { timeout: 60_000 });
   } catch (e) { if (e !== ROLLBACK) throw e; }

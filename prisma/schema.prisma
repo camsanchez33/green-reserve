@@ -42,9 +42,10 @@ model Course {
   /// Only these can be reset from the admin, and they stay out of the
   /// platform's numbers, Problems and public lists (src/lib/real-courses.ts).
   isTest                     Boolean               @default(false)
-  /// BOOKING-REF (Cam 2026-11-12): the course's number, shown as GR<number> — from the Postgres
-  /// sequence Course_number_seq for every new course; null on courses made before it (no backfill).
-  number                     Int?                  @unique @default(autoincrement())
+  /// BOOKING-REF (Cam 2026-11-12): the course's number, shown as GR<number> — the highest so far + 1,
+  /// set by the BEFORE INSERT trigger "Course_number_assign" (never skips); null on courses made
+  /// before it (no backfill).
+  number                     Int?                  @unique
   slug                       String                @unique
   name                       String
   type                       String                @default("public")

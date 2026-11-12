@@ -19568,7 +19568,7 @@
     },
     {
       "path": "src/lib/data-reset.ts",
-      "lines": 174,
+      "lines": 175,
       "purpose": "TEST-1 (Cam 2026-10-22:",
       "brain": [],
       "exports": [
