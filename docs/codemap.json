@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 716,
+    "files": 717,
     "routes": 307,
-    "libs": 257,
-    "models": 73,
+    "libs": 258,
+    "models": 74,
     "orphans": 11,
     "ungatedRoutes": 3
   },
@@ -2672,7 +2672,7 @@
     },
     {
       "path": "src/app/api/admin/inquiries/route.ts",
-      "lines": 1314,
+      "lines": 1341,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3342,7 +3342,7 @@
     },
     {
       "path": "src/app/api/admin/search/route.ts",
-      "lines": 234,
+      "lines": 238,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3361,6 +3361,7 @@
       "imports": [
         "@/lib/admin-areas",
         "@/lib/admin-session",
+        "@/lib/booking-ref",
         "@/lib/prisma",
         "next/server"
       ],
@@ -5351,7 +5352,7 @@
     },
     {
       "path": "src/app/api/manage/[bookingId]/route.ts",
-      "lines": 95,
+      "lines": 97,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5369,6 +5370,7 @@
       "guard": "file",
       "imports": [
         "@/lib/auth",
+        "@/lib/booking-ref",
         "@/lib/cancel-policy",
         "@/lib/manage-access",
         "@/lib/no-show-fee",
@@ -8534,7 +8536,7 @@
     },
     {
       "path": "src/app/api/receipt/[bookingId]/route.ts",
-      "lines": 119,
+      "lines": 121,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8553,6 +8555,7 @@
       "imports": [
         "@/lib/admin-areas",
         "@/lib/admin-session",
+        "@/lib/booking-ref",
         "@/lib/counter-pay",
         "@/lib/prisma",
         "@/lib/rate-limit",
@@ -10231,7 +10234,7 @@
     },
     {
       "path": "src/app/manage/[bookingId]/page.tsx",
-      "lines": 590,
+      "lines": 591,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -16798,6 +16801,45 @@
       ]
     },
     {
+      "path": "src/lib/booking-ref.ts",
+      "lines": 45,
+      "purpose": "BOOKING-REF (Cam 2026-11-12):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "bookingRefFor",
+          "kind": "fn"
+        },
+        {
+          "name": "bookingRefLabel",
+          "kind": "fn"
+        },
+        {
+          "name": "courseRefLabel",
+          "kind": "fn"
+        },
+        {
+          "name": "parseRef",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./prisma"
+      ],
+      "usedBy": [
+        "src/app/api/admin/search/route.ts",
+        "src/app/api/manage/[bookingId]/route.ts",
+        "src/app/api/receipt/[bookingId]/route.ts",
+        "src/lib/email.ts",
+        "src/lib/operator-search.ts"
+      ]
+    },
+    {
       "path": "src/lib/booking-residents.ts",
       "lines": 72,
       "purpose": "RES-1 (Cam 2026-10-19):",
@@ -19733,7 +19775,7 @@
     },
     {
       "path": "src/lib/data-reset.ts",
-      "lines": 162,
+      "lines": 175,
       "purpose": "TEST-1 (Cam 2026-10-22:",
       "brain": [],
       "exports": [
@@ -20093,7 +20135,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 2178,
+      "lines": 2179,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -20434,6 +20476,7 @@
       "imports": [
         "./setup-sheet-recap",
         "@/lib/booking-fees",
+        "@/lib/booking-ref",
         "@/lib/cancel-policy",
         "@/lib/contact",
         "@/lib/sent-messages",
@@ -23870,7 +23913,7 @@
     },
     {
       "path": "src/lib/operator-search.ts",
-      "lines": 86,
+      "lines": 91,
       "purpose": "DASH-C search (the mockups' \"Find a golfer, booking or member\"):",
       "brain": [],
       "exports": [
@@ -23893,6 +23936,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./booking-ref",
         "./course-group",
         "./course-time",
         "./prisma"
@@ -24615,6 +24659,7 @@
         "src/lib/blackouts.ts",
         "src/lib/booking-events.ts",
         "src/lib/booking-fee.ts",
+        "src/lib/booking-ref.ts",
         "src/lib/booking-residents.ts",
         "src/lib/call-invite.ts",
         "src/lib/cancel-booking.ts",
@@ -29475,6 +29520,10 @@
           "type": "String"
         },
         {
+          "name": "ref",
+          "type": "Int?"
+        },
+        {
           "name": "teeTimeId",
           "type": "String"
         },
@@ -29839,6 +29888,7 @@
         "src/lib/birdie/proposals.ts",
         "src/lib/blackouts.ts",
         "src/lib/booking-fee.ts",
+        "src/lib/booking-ref.ts",
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/counter-pay.ts",
@@ -30158,6 +30208,10 @@
         {
           "name": "isTest",
           "type": "Boolean"
+        },
+        {
+          "name": "number",
+          "type": "Int?"
         },
         {
           "name": "slug",
@@ -31675,6 +31729,10 @@
           "type": "DateTime?"
         },
         {
+          "name": "expectedLaunchAt",
+          "type": "DateTime?"
+        },
+        {
           "name": "source",
           "type": "String?"
         },
@@ -32093,6 +32151,21 @@
       "readers": [
         "src/lib/home-board.ts"
       ]
+    },
+    {
+      "name": "CourseNumberCounter",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "last",
+          "type": "Int"
+        }
+      ],
+      "writers": [],
+      "readers": []
     },
     {
       "name": "CourseOperator",
