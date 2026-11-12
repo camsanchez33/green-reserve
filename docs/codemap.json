@@ -1,7 +1,7 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 701,
+    "files": 703,
     "routes": 301,
     "libs": 254,
     "models": 72,
@@ -295,7 +295,7 @@
     },
     {
       "path": "src/app/admin/courses/[id]/_parts/MoneyTab.tsx",
-      "lines": 172,
+      "lines": 165,
       "purpose": "MP-12 (ADMIN_V4 V4-9):",
       "brain": [],
       "exports": [
@@ -323,7 +323,7 @@
     },
     {
       "path": "src/app/admin/courses/[id]/_parts/OperateTab.tsx",
-      "lines": 317,
+      "lines": 310,
       "purpose": "MP-12 (ADMIN_V4 V4-9):",
       "brain": [],
       "exports": [
@@ -582,7 +582,7 @@
     },
     {
       "path": "src/app/admin/courses/[id]/_parts/useCourseDetail.tsx",
-      "lines": 1092,
+      "lines": 1041,
       "purpose": "MP-12 (ADMIN_V4 V4-9):",
       "brain": [],
       "exports": [
@@ -667,7 +667,7 @@
     },
     {
       "path": "src/app/admin/courses/page.tsx",
-      "lines": 527,
+      "lines": 330,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -682,24 +682,56 @@
       "auth": "admin",
       "guard": "client-side",
       "imports": [
-        "@/components/EmptyState",
+        "../admin-glass.module.css",
+        "./courses.module.css",
+        "./terms",
         "@/components/admin/AdminSidebar",
-        "@/components/ui/Card",
-        "@/components/ui/ErrorState",
-        "@/components/ui/Eyebrow",
-        "@/components/ui/StatusDot",
-        "@/lib/admin-fetch",
-        "@/lib/course-checkin",
-        "@/lib/course-metrics",
-        "@/lib/course-setup",
-        "@/lib/format",
-        "@/lib/inquiry-call",
-        "lucide-react",
         "next/link",
         "next/navigation",
         "react"
       ],
       "usedBy": []
+    },
+    {
+      "path": "src/app/admin/courses/terms.ts",
+      "lines": 20,
+      "purpose": "Golf Courses (ADMIN-REDO page 2):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "loadFailed",
+          "kind": "fn"
+        },
+        {
+          "name": "NO_CONTACT",
+          "kind": "const"
+        },
+        {
+          "name": "NO_NOTES",
+          "kind": "const"
+        },
+        {
+          "name": "SESSION_ENDED",
+          "kind": "const"
+        },
+        {
+          "name": "STRIPE_STATE",
+          "kind": "component"
+        },
+        {
+          "name": "TERMS",
+          "kind": "const"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/admin/courses/page.tsx"
+      ]
     },
     {
       "path": "src/app/admin/create/page.tsx",
@@ -815,7 +847,7 @@
     },
     {
       "path": "src/app/admin/golfers/page.tsx",
-      "lines": 457,
+      "lines": 415,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1050,7 +1082,7 @@
     },
     {
       "path": "src/app/admin/page.tsx",
-      "lines": 254,
+      "lines": 252,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1131,7 +1163,7 @@
     },
     {
       "path": "src/app/admin/revenue/page.tsx",
-      "lines": 1074,
+      "lines": 1031,
       "purpose": "ADMIN-C Money (Cam 2026-10-22, from the Money mockup he approved:",
       "brain": [],
       "exports": [
@@ -1965,6 +1997,77 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/admin/courses/directory/route.ts",
+      "lines": 162,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/courses/directory",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "./status",
+        "@/lib/admin-areas",
+        "@/lib/admin-course-page",
+        "@/lib/admin-day",
+        "@/lib/admin-session",
+        "@/lib/agreement-required",
+        "@/lib/approval-state",
+        "@/lib/course-metrics",
+        "@/lib/course-setup",
+        "@/lib/money-problems",
+        "@/lib/prisma",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/admin/courses/directory/status.ts",
+      "lines": 29,
+      "purpose": "ADMIN-REDO Golf Courses:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "courseStatus",
+          "kind": "fn"
+        },
+        {
+          "name": "CourseStatus",
+          "kind": "type"
+        },
+        {
+          "name": "onGolfCourses",
+          "kind": "fn"
+        },
+        {
+          "name": "RISK_DAYS",
+          "kind": "const"
+        },
+        {
+          "name": "StatusInput",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/api/admin/courses/directory/route.ts"
+      ]
+    },
+    {
       "path": "src/app/api/admin/courses/route.ts",
       "lines": 248,
       "purpose": "",
@@ -2261,7 +2364,7 @@
     },
     {
       "path": "src/app/api/admin/golfers/route.ts",
-      "lines": 255,
+      "lines": 248,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2285,7 +2388,6 @@
       "imports": [
         "@/lib/admin-audit",
         "@/lib/admin-session",
-        "@/lib/cancel-booking",
         "@/lib/email",
         "@/lib/prisma",
         "@/lib/shop",
@@ -2750,33 +2852,6 @@
       "usedBy": []
     },
     {
-      "path": "src/app/api/admin/retry-charge/[bookingId]/route.ts",
-      "lines": 46,
-      "purpose": "",
-      "brain": [],
-      "exports": [
-        {
-          "name": "POST",
-          "kind": "route"
-        }
-      ],
-      "route": "/api/admin/retry-charge/[bookingId]",
-      "kind": "api",
-      "methods": [
-        "POST"
-      ],
-      "auth": "admin",
-      "guard": "file",
-      "imports": [
-        "@/lib/admin-audit",
-        "@/lib/admin-session",
-        "@/lib/checkin-booking",
-        "@/lib/stripe-errors",
-        "next/server"
-      ],
-      "usedBy": []
-    },
-    {
       "path": "src/app/api/admin/revenue/route.ts",
       "lines": 365,
       "purpose": "",
@@ -3076,7 +3151,7 @@
     },
     {
       "path": "src/app/api/admin/tee-sheet/route.ts",
-      "lines": 132,
+      "lines": 118,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3105,7 +3180,6 @@
       "imports": [
         "@/lib/admin-audit",
         "@/lib/admin-session",
-        "@/lib/cancel-booking",
         "@/lib/cart-pricing",
         "@/lib/claim-tee-time",
         "@/lib/course-metrics",
@@ -10426,7 +10500,6 @@
         "next/image"
       ],
       "usedBy": [
-        "src/app/admin/courses/page.tsx",
         "src/app/admin/golfers/page.tsx",
         "src/app/admin/inquiries/page.tsx"
       ]
@@ -10637,7 +10710,7 @@
     },
     {
       "path": "src/components/admin/AdminSidebar.tsx",
-      "lines": 214,
+      "lines": 212,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -13570,7 +13643,6 @@
         "src/app/admin/courses/[id]/_parts/SetupTab.tsx",
         "src/app/admin/courses/[id]/_parts/TimelineTab.tsx",
         "src/app/admin/courses/[id]/page.tsx",
-        "src/app/admin/courses/page.tsx",
         "src/app/admin/create/page.tsx",
         "src/app/admin/forgot-password/page.tsx",
         "src/app/admin/goals/page.tsx",
@@ -13678,7 +13750,6 @@
       "usedBy": [
         "src/app/admin/announcements/page.tsx",
         "src/app/admin/company-documents/page.tsx",
-        "src/app/admin/courses/page.tsx",
         "src/app/admin/employees/page.tsx",
         "src/app/admin/groups/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
@@ -13714,7 +13785,6 @@
         "src/app/admin/courses/[id]/_parts/CourseDialogs.tsx",
         "src/app/admin/courses/[id]/_parts/OperateTab.tsx",
         "src/app/admin/courses/[id]/_parts/SetupTab.tsx",
-        "src/app/admin/courses/page.tsx",
         "src/app/admin/create/page.tsx",
         "src/app/admin/forgot-password/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
@@ -13877,7 +13947,6 @@
         "src/app/admin/courses/[id]/_parts/SetupTab.tsx",
         "src/app/admin/courses/[id]/_parts/TimelineTab.tsx",
         "src/app/admin/courses/[id]/page.tsx",
-        "src/app/admin/courses/page.tsx",
         "src/app/admin/create/page.tsx",
         "src/app/admin/employees/page.tsx",
         "src/app/admin/goals/page.tsx",
@@ -14194,6 +14263,7 @@
         "src/app/admin/employees/page.tsx",
         "src/app/admin/layout.tsx",
         "src/app/api/admin/course-look/route.ts",
+        "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/employees/route.ts",
         "src/app/api/admin/nav-badges/route.ts",
         "src/app/api/admin/search/route.ts",
@@ -14377,7 +14447,6 @@
         "src/app/api/admin/refund/route.ts",
         "src/app/api/admin/request-re-review/route.ts",
         "src/app/api/admin/resend-staff-setup/route.ts",
-        "src/app/api/admin/retry-charge/[bookingId]/route.ts",
         "src/app/api/admin/schedule/route.ts",
         "src/app/api/admin/send-golive-reminder/route.ts",
         "src/app/api/admin/sentry-test/route.ts",
@@ -14496,7 +14565,8 @@
         "./stripe-errors"
       ],
       "usedBy": [
-        "src/app/api/admin/course-detail/route.ts"
+        "src/app/api/admin/course-detail/route.ts",
+        "src/app/api/admin/courses/directory/route.ts"
       ]
     },
     {
@@ -14620,6 +14690,7 @@
       "imports": [],
       "usedBy": [
         "src/app/api/admin/ask/route.ts",
+        "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/goals/route.ts",
         "src/app/api/admin/today/overview/route.ts",
         "src/lib/admin-ask.ts",
@@ -14673,7 +14744,6 @@
         "src/app/admin/audit/page.tsx",
         "src/app/admin/company-documents/page.tsx",
         "src/app/admin/courses/[id]/_parts/TimelineTab.tsx",
-        "src/app/admin/courses/page.tsx",
         "src/app/admin/employees/page.tsx",
         "src/app/admin/golfers/page.tsx",
         "src/app/admin/groups/page.tsx",
@@ -14970,6 +15040,7 @@
         "src/app/api/admin/course-payouts/route.ts",
         "src/app/api/admin/course-reminders/route.ts",
         "src/app/api/admin/course-settings/route.ts",
+        "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/create-course/route.ts",
         "src/app/api/admin/data-reset/route.ts",
@@ -14993,7 +15064,6 @@
         "src/app/api/admin/refund/route.ts",
         "src/app/api/admin/request-re-review/route.ts",
         "src/app/api/admin/resend-staff-setup/route.ts",
-        "src/app/api/admin/retry-charge/[bookingId]/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/schedule/route.ts",
         "src/app/api/admin/search/route.ts",
@@ -15282,6 +15352,7 @@
         "next/server"
       ],
       "usedBy": [
+        "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/courses/route.ts",
         "src/app/api/cron/hourly/route.ts",
         "src/app/api/operator/blackouts/route.ts",
@@ -15652,6 +15723,7 @@
       "usedBy": [
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/admin/course-documents/route.ts",
+        "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/request-re-review/route.ts",
         "src/app/api/cron/chase-onboarding/route.ts",
@@ -16841,8 +16913,6 @@
         "./stripe"
       ],
       "usedBy": [
-        "src/app/api/admin/golfers/route.ts",
-        "src/app/api/admin/tee-sheet/route.ts",
         "src/app/api/bookings/cancel/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/lib/course-closure.ts",
@@ -17445,7 +17515,6 @@
         "./stripe"
       ],
       "usedBy": [
-        "src/app/api/admin/retry-charge/[bookingId]/route.ts",
         "src/app/api/checkin/[bookingId]/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/lib/counter-pay.ts",
@@ -17844,7 +17913,6 @@
       ],
       "usedBy": [
         "src/app/admin/courses/[id]/_parts/useCourseDetail.tsx",
-        "src/app/admin/courses/page.tsx",
         "src/app/api/admin/course-calls/route.ts",
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/admin/courses/route.ts",
@@ -18300,8 +18368,8 @@
       "usedBy": [
         "src/app/admin/courses/[id]/_parts/BookingsTab.tsx",
         "src/app/admin/courses/[id]/_parts/shared.tsx",
-        "src/app/admin/courses/page.tsx",
         "src/app/api/admin/course-detail/route.ts",
+        "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/tee-sheet/route.ts",
@@ -18475,7 +18543,7 @@
       "imports": [],
       "usedBy": [
         "src/app/admin/courses/[id]/_parts/SetupSections.tsx",
-        "src/app/admin/courses/page.tsx",
+        "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/courses/route.ts"
       ]
     },
@@ -20551,7 +20619,6 @@
         "src/app/admin/courses/[id]/_parts/SetupSections.tsx",
         "src/app/admin/courses/[id]/_parts/SetupTab.tsx",
         "src/app/admin/courses/[id]/_parts/useCourseDetail.tsx",
-        "src/app/admin/courses/page.tsx",
         "src/app/admin/employees/page.tsx",
         "src/app/admin/goals/page.tsx",
         "src/app/admin/golfers/page.tsx",
@@ -21336,7 +21403,6 @@
       ],
       "usedBy": [
         "src/app/admin/courses/[id]/_parts/SetupSections.tsx",
-        "src/app/admin/courses/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/inquiries/page.tsx",
         "src/app/api/admin/course-calls/route.ts",
@@ -22722,6 +22788,7 @@
         "./real-courses"
       ],
       "usedBy": [
+        "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/messages/route.ts",
         "src/app/api/admin/nav-badges/route.ts",
         "src/app/api/admin/revenue/route.ts",
@@ -23842,6 +23909,7 @@
         "src/app/api/admin/course-members/route.ts",
         "src/app/api/admin/course-payouts/route.ts",
         "src/app/api/admin/course-settings/route.ts",
+        "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/create-course/route.ts",
         "src/app/api/admin/employees/route.ts",
@@ -27181,7 +27249,7 @@
     },
     {
       "path": "src/lib/stripe-errors.ts",
-      "lines": 26,
+      "lines": 27,
       "purpose": "Friendly-message map for Stripe decline/error strings (REVISE_QUEUE A-06 item 4:",
       "brain": [],
       "exports": [
@@ -27197,7 +27265,6 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/api/admin/retry-charge/[bookingId]/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/lib/admin-course-page.ts"
       ]
@@ -28616,6 +28683,7 @@
       ],
       "readers": [
         "src/app/api/admin/course-documents/route.ts",
+        "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/today/overview/route.ts",
         "src/lib/agreement-gate.ts",
         "src/lib/agreement-required.ts",
@@ -29114,6 +29182,7 @@
       ],
       "readers": [
         "src/app/api/admin/course-detail/route.ts",
+        "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/golfers/route.ts",
         "src/app/api/admin/messages/route.ts",
@@ -30138,6 +30207,7 @@
         "src/app/api/admin/course-look/route.ts",
         "src/app/api/admin/course-payouts/route.ts",
         "src/app/api/admin/course-settings/route.ts",
+        "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/create-course/route.ts",
         "src/app/api/admin/inquiries/route.ts",
@@ -31052,6 +31122,7 @@
       "readers": [
         "src/app/api/admin/backfill-orphaned-inquiries/route.ts",
         "src/app/api/admin/course-detail/route.ts",
+        "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/create-course/route.ts",
         "src/app/api/admin/inquiries/route.ts",
@@ -33077,6 +33148,7 @@
         "src/lib/staff-refund.ts"
       ],
       "readers": [
+        "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/today/overview/route.ts",
         "src/app/api/admin/transactions/export/route.ts",

@@ -192,17 +192,15 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
     </aside>
 
     <div className={g.top}>
-      <button type="button" className={`${g.ibtn} ${g.glass} ${g.menuBtn}`} aria-label="Menu" aria-expanded={railOpen} onClick={() => setRailOpen(o => !o)}>
+      <button type="button" className={`${g.ibtn} ${g.menuBtn}`} aria-label="Menu" aria-expanded={railOpen} onClick={() => setRailOpen(o => !o)}>
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
       </button>
-      <button type="button" onClick={openPalette} className={`${g.search} ${g.glass}`} aria-label="Search or ask anything">
+      <button type="button" onClick={openPalette} className={`${g.search} ${g.glass}`} aria-label="Search courses, golfers and payments, or ask anything" title="Search (Ctrl K)">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>
-        <span>Search courses, golfers, payments</span>
-        <kbd>Ctrl K</kbd>
       </button>
       <span className={g.status} aria-hidden="true" />
       {seesProblems && (
-        <Link href="/admin/problems" className={`${g.ibtn} ${g.glass}`} aria-label={problems > 0 ? `Alerts: ${problems} open` : 'Alerts: none open'}>
+        <Link href="/admin/problems" className={g.ibtn} aria-label={problems > 0 ? `Alerts: ${problems} open` : 'Alerts: none open'}>
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0" /></svg>
           {problems > 0 && <b aria-hidden="true">{problems > 99 ? '99+' : problems}</b>}
         </Link>

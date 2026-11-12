@@ -16,7 +16,7 @@ import { cartCharge, cartRuleOf } from './cart-pricing';
 /**
  * Charging a round, and checking a golfer in, are two different things.
  *
- * MP-1 fix-now #5: they used to be one function. `/api/admin/retry-charge`
+ * MP-1 fix-now #5: they used to be one function. the old `/api/admin/retry-charge` (removed Cam 2026-11-12)
  * called `performCheckIn` verbatim, so an admin clearing tomorrow's failed
  * charge today also marked the golfer checked in and emailed them a receipt
  * for a round they had not played. The money logic is identical either way,
@@ -572,8 +572,8 @@ export async function performCheckIn(bookingId: string, actor: EventActor, opts?
 
 /**
  * Charge the round ONLY. The golfer is not checked in and gets no receipt —
- * used by admin "Collect payment" on a previously failed charge, where the
- * round may be days away.
+ * Its only caller was the admin's "Retry charge", removed Cam 2026-11-12
+ * (GreenReserve never charges a golfer); nothing in production calls it now.
  */
 export async function collectPayment(bookingId: string, actor: EventActor, opts?: ChargeOpts) {
   return chargeBooking(bookingId, opts, { recordCheckIn: false }, actor);
