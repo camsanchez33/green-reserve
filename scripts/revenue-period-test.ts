@@ -4,7 +4,7 @@
 import { readFileSync } from 'fs';
 import {
   resolveRevenuePeriod, parseRevenuePeriod, centsPerDay, platformMoveLabel, platformSigned,
-  stripePaymentUrl, stripePayoutUrl, payoutArrivalRange, summarisePayouts, daySeries,
+  stripePaymentUrl, stripePayoutUrl, payoutArrivalRange, summarisePayouts, daySeries, monthPace, goalMonthOk,
 } from '../src/lib/revenue-period';
 let failed = 0;
 const check = (label: string, ok: boolean, info: unknown = '') => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${ok || !info ? '' : ' — ' + JSON.stringify(info)}`); if (!ok) failed++; };
@@ -112,6 +112,21 @@ check('daySeries: per-day sums placed by day', JSON.stringify(daySeries([{ day: 
   check('paid out counts only paid, unreversed, USD payouts', s.paidCents === 120000 && s.paidCount === 1, s);
   check('problems: failed, canceled and reversed ("reversed"), each dated by its arrival day', JSON.stringify(s.problems.map(p => [p.kind, p.payoutId, p.date])) === JSON.stringify([['reversed', 'po_rev', '2026-10-05'], ['failed', 'po_fail', '2026-10-07'], ['canceled', 'po_can', '2026-10-08']]), s.problems);
   check('a failed payout carries Stripe\'s reason', s.problems.find(p => p.kind === 'failed')?.reason === 'Account closed');
+}
+
+// Revenue goal: pace inputs on the platform clock, and which months the owner may set.
+{
+  const p = monthPace(new Date('2026-11-12T17:00:00Z')); // noon EST
+  check('monthPace: day 12 at noon Eastern is 11.5 of 30', p.month === '2026-11' && Math.abs(p.dayOfPeriod - 11.5) < 1e-9 && p.daysInPeriod === 30, p);
+  const late = monthPace(new Date('2026-12-01T04:30:00Z')); // 11:30pm Nov 30 EST
+  check('…11:30pm on the last day is still that month, almost whole', late.month === '2026-11' && late.dayOfPeriod > 29.97 && late.dayOfPeriod <= 30, late);
+  const first = monthPace(new Date('2026-11-01T04:00:00Z')); // midnight Nov 1 EDT
+  check('…midnight on the 1st is 0', first.month === '2026-11' && first.dayOfPeriod === 0, first);
+  const nowNov = new Date('2026-11-12T17:00:00Z');
+  check('goal months: this month and later are ok; earlier is past; junk is bad',
+    goalMonthOk('2026-11', nowNov) === 'ok' && goalMonthOk('2027-01', nowNov) === 'ok' && goalMonthOk('2026-10', nowNov) === 'past'
+    && goalMonthOk('2026-13', nowNov) === 'bad' && goalMonthOk('2026-1', nowNov) === 'bad' && goalMonthOk("2026-11'; --", nowNov) === 'bad');
+  check('…on the platform clock: 11pm Oct 31 Eastern (03:00Z Nov 1) is still October', goalMonthOk('2026-10', new Date('2026-11-01T03:00:00Z')) === 'ok');
 }
 
 // Source guards: the route reads GreenReserve's money from the ledger, real courses only.

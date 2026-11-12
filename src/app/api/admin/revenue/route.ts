@@ -21,7 +21,7 @@ import { csvCell } from '@/lib/ledger-view';
 import { dayKey, PLATFORM_TZ } from '@/lib/admin-day';
 import {
   REVENUE_PERIODS, resolveRevenuePeriod, daysBetween, platformMoveLabel, platformSigned,
-  stripePaymentUrl, stripePayoutUrl, payoutArrivalRange, summarisePayouts, daySeries, type RevenuePeriodKind, type RevenuePeriod,
+  stripePaymentUrl, stripePayoutUrl, payoutArrivalRange, summarisePayouts, daySeries, monthPace, type RevenuePeriodKind, type RevenuePeriod,
 } from '@/lib/revenue-period';
 
 // REVISE_QUEUE A-06 — /admin/revenue rebuilt as a real P&L. ONE period picker
@@ -487,8 +487,18 @@ export async function GET(req: NextRequest) {
     payoutRows.sort((a, b) => b.at.localeCompare(a.at));
   }
 
+  // ADMIN-REDO Revenue goal (Cam via Build 2026-11-12): this month's target and where it stands, on
+  // the same ledger basis as revenue.cents. Owner only, 'month' only (the running month).
+  let revenueGoal: { month: string; targetCents: number | null; progressCents: number; dayOfPeriod: number; daysInPeriod: number } | null = null;
+  if (kind === 'month') {
+    const pace = monthPace(now);
+    const goal = await prisma.adminMonthGoal.findUnique({ where: { month: pace.month }, select: { cents: true } });
+    revenueGoal = { month: pace.month, targetCents: goal?.cents ?? null, progressCents: base.revenue.cents, dayOfPeriod: pace.dayOfPeriod, daysInPeriod: pace.daysInPeriod };
+  }
+
   return NextResponse.json({
     ...base,
+    ...(revenueGoal ? { revenueGoal } : {}),
     ...(payoutsWanted ? {
       coursePayoutProblems: { rows: payoutRows, unavailable: payoutsUnavailable, checkedCourses },
       payouts: { toCourses: payoutsUnavailable ? null : { cents: paidOutCents, courses: paidCourses.size }, unavailable: payoutsUnavailable },

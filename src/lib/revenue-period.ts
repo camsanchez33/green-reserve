@@ -251,3 +251,22 @@ export function summarisePayouts(list: PayoutIn[]): { paidCents: number; paidCou
   }
   return { paidCents, paidCount, problems };
 }
+
+/** "YYYY-MM" of the platform month an instant falls in. */
+export const platformMonthKey = (at: Date, tz: string = PLATFORM_TZ) => dayKey(at, tz).slice(0, 7);
+
+/**
+ * Revenue goal pace inputs for the platform month containing `now` (Cam via Build 2026-11-12):
+ * dayOfPeriod is fractional like goal-pace's elapsedDays — day 12 at noon is 11.5 — on the platform clock.
+ */
+export function monthPace(now: Date, tz: string = PLATFORM_TZ): { month: string; dayOfPeriod: number; daysInPeriod: number } {
+  const [y, m, d] = dayKey(now, tz).split('-').map(Number);
+  const sinceMidnight = (now.getTime() - startOfPlatformDay(now, tz).getTime()) / 86_400_000;
+  return { month: `${y}-${String(m).padStart(2, '0')}`, dayOfPeriod: Math.min(d, d - 1 + Math.max(0, Math.min(1, sinceMidnight))), daysInPeriod: daysInMonth(y, m) };
+}
+
+/** A goal month the owner may set: "YYYY-MM", this platform month or later. */
+export function goalMonthOk(month: string, now: Date, tz: string = PLATFORM_TZ): 'ok' | 'bad' | 'past' {
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return 'bad';
+  return month < platformMonthKey(now, tz) ? 'past' : 'ok';
+}

@@ -821,6 +821,51 @@ async function main() {
     }
   }
 
+  console.log('\n── Revenue goal (ADMIN-REDO: AdminMonthGoal) ──');
+  {
+    const { signAdminToken } = await import('../src/lib/admin-session');
+    const { signOwnerToken } = await import('../src/lib/owner-session');
+    const { platformMonthKey } = await import('../src/lib/revenue-period');
+    const month = platformMonthKey(new Date());
+    const [py, pm] = month.split('-').map(Number);
+    const lastMonth = `${pm === 1 ? py - 1 : py}-${String(pm === 1 ? 12 : pm - 1).padStart(2, '0')}`;
+    const saved = await prisma.adminMonthGoal.findUnique({ where: { month } });
+    const mgr = await prisma.adminUser.create({ data: { name: 'Isol Goal Manager', email: `${TS}-goal-mgr@test.local`, passwordHash: 'x', role: 'manager', active: true, areas: ['money'], areasSetAt: new Date() } });
+    const fresh = await prisma.ownerSession.create({ data: { adminId: data.adminOwner.id, method: 'totp', expiresAt: new Date(Date.now() + 3600_000), stepUpAt: new Date() } });
+    const stale = await prisma.ownerSession.create({ data: { adminId: data.adminOwner.id, method: 'totp', expiresAt: new Date(Date.now() + 3600_000), stepUpAt: new Date(Date.now() - 24 * 3600_000) } });
+    try {
+      const mc = `admin_session=${await signAdminToken({ adminId: mgr.id, email: mgr.email, name: mgr.name, role: 'manager', mfa: true })}`;
+      const oc = `gr_owner=${await signOwnerToken(fresh.id, data.adminOwner.id, fresh.expiresAt)}`;
+      const os = `gr_owner=${await signOwnerToken(stale.id, data.adminOwner.id, stale.expiresAt)}`;
+      const put = (cookie: string, body: unknown) => api('/api/admin/revenue-goal', { method: 'PUT', cookie, body });
+      checkStatus('A manager cannot set the revenue goal → 403', (await put(mc, { month, cents: 100000 })).status, 403);
+      const mg = (await api('/api/admin/revenue?period=month', { cookie: mc })).body as Record<string, unknown>;
+      check('…and Revenue carries no goal for a manager', !('revenueGoal' in (mg ?? {})), Object.keys(mg ?? {}).join(','));
+      const noStep = await put(os, { month, cents: 100000 });
+      check('The owner without a fresh second factor is asked to confirm (step_up)', noStep.status === 403 && (noStep.body as { code?: string })?.code === 'step_up', JSON.stringify(noStep.body));
+      const past = await put(oc, { month: lastMonth, cents: 100000 });
+      check('A month that has ended is refused → 400 past', past.status === 400 && (past.body as { code?: string })?.code === 'past', JSON.stringify(past.body));
+      checkStatus('A bad amount → 400', (await put(oc, { month, cents: 3_000_000_000 })).status, 400);
+      const set = await put(oc, { month, cents: 250000 });
+      check('The owner sets this month\'s goal → 200 { month, targetCents }', set.status === 200 && JSON.stringify(set.body) === JSON.stringify({ month, targetCents: 250000 }), JSON.stringify(set.body));
+      check('…and it is audited', !!(await prisma.adminAuditLog.findFirst({ where: { adminId: data.adminOwner.id, action: 'revenue_goal', targetId: month } })));
+      type G = { revenue?: { cents: number }; revenueGoal?: { month: string; targetCents: number | null; progressCents: number; dayOfPeriod: number; daysInPeriod: number } };
+      const og = (await api('/api/admin/revenue?period=month', { cookie: oc })).body as G;
+      check('…Revenue (month) gives the owner the goal, progress = revenue.cents, and the pace inputs',
+        og.revenueGoal?.month === month && og.revenueGoal.targetCents === 250000 && og.revenueGoal.progressCents === og.revenue?.cents
+        && og.revenueGoal.dayOfPeriod >= 0 && og.revenueGoal.dayOfPeriod <= og.revenueGoal.daysInPeriod && og.revenueGoal.daysInPeriod >= 28, JSON.stringify(og.revenueGoal));
+      const ol = (await api('/api/admin/revenue?period=last_month', { cookie: oc })).body as Record<string, unknown>;
+      check('…but not for another period', !('revenueGoal' in (ol ?? {})));
+      checkStatus('Clearing it (null) → 200', (await put(oc, { month, cents: null })).status, 200);
+    } finally {
+      if (saved) await prisma.adminMonthGoal.update({ where: { month }, data: { cents: saved.cents, setById: saved.setById } });
+      else await prisma.adminMonthGoal.deleteMany({ where: { month } });
+      await prisma.ownerSession.deleteMany({ where: { id: { in: [fresh.id, stale.id] } } });
+      await prisma.adminAuditLog.deleteMany({ where: { adminId: mgr.id } }).catch(() => {});
+      await prisma.adminUser.delete({ where: { id: mgr.id } });
+    }
+  }
+
   console.log('\n── Admin owner auth boundary (AW-1: the owner signs in only at /cam) ──');
   {
     // (a) The employees' door never mentions an owner: the owner's correct

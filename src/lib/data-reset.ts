@@ -25,7 +25,7 @@ export const WIPE_CONFIRM_WORDS = 'WIPE TEST DATA';
 /** The company side — kept by the launch wipe. */
 export const KEPT_TABLES = [
   'AdminUser', 'OwnerPasskey', 'OwnerSession', 'OwnerDevice',
-  'AdminGoal', 'Expense', 'AgreementVersion', 'AdminAuditLog', 'CronRunLog',
+  'AdminGoal', 'AdminMonthGoal', 'Expense', 'AgreementVersion', 'AdminAuditLog', 'CronRunLog',
 ] as const;
 
 /** Everything courses, golfers and the pipeline made — cleared by the launch wipe. */

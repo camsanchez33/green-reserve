@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 711,
-    "routes": 304,
+    "files": 712,
+    "routes": 305,
     "libs": 255,
-    "models": 72,
+    "models": 73,
     "orphans": 11,
     "ungatedRoutes": 3
   },
@@ -3175,7 +3175,7 @@
     },
     {
       "path": "src/app/api/admin/revenue/route.ts",
-      "lines": 514,
+      "lines": 524,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3208,6 +3208,33 @@
         "@/lib/shop",
         "@/lib/stripe",
         "@/lib/stripe-errors",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/admin/revenue-goal/route.ts",
+      "lines": 42,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "PUT",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/revenue-goal",
+      "kind": "api",
+      "methods": [
+        "PUT"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-audit",
+        "@/lib/admin-session",
+        "@/lib/prisma",
+        "@/lib/revenue-period",
         "next/server"
       ],
       "usedBy": []
@@ -14760,6 +14787,7 @@
         "src/app/api/admin/refund/route.ts",
         "src/app/api/admin/request-re-review/route.ts",
         "src/app/api/admin/resend-staff-setup/route.ts",
+        "src/app/api/admin/revenue-goal/route.ts",
         "src/app/api/admin/schedule/route.ts",
         "src/app/api/admin/send-golive-reminder/route.ts",
         "src/app/api/admin/sentry-test/route.ts",
@@ -15380,6 +15408,7 @@
         "src/app/api/admin/refund/route.ts",
         "src/app/api/admin/request-re-review/route.ts",
         "src/app/api/admin/resend-staff-setup/route.ts",
+        "src/app/api/admin/revenue-goal/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/schedule/route.ts",
         "src/app/api/admin/search/route.ts",
@@ -24268,6 +24297,7 @@
         "src/app/api/admin/problems/route.ts",
         "src/app/api/admin/request-re-review/route.ts",
         "src/app/api/admin/resend-staff-setup/route.ts",
+        "src/app/api/admin/revenue-goal/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/schedule/route.ts",
         "src/app/api/admin/search/route.ts",
@@ -25279,7 +25309,7 @@
     },
     {
       "path": "src/lib/revenue-period.ts",
-      "lines": 254,
+      "lines": 273,
       "purpose": "ADMIN-REDO Revenue (Cam 2026-11-11):",
       "brain": [],
       "exports": [
@@ -25304,6 +25334,14 @@
           "kind": "fn"
         },
         {
+          "name": "goalMonthOk",
+          "kind": "fn"
+        },
+        {
+          "name": "monthPace",
+          "kind": "fn"
+        },
+        {
           "name": "parseRevenuePeriod",
           "kind": "fn"
         },
@@ -25318,6 +25356,10 @@
         {
           "name": "PayoutProblem",
           "kind": "type"
+        },
+        {
+          "name": "platformMonthKey",
+          "kind": "fn"
         },
         {
           "name": "platformMoveLabel",
@@ -25369,6 +25411,7 @@
         "./admin-day"
       ],
       "usedBy": [
+        "src/app/api/admin/revenue-goal/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/transactions/export/route.ts"
       ]
@@ -28895,6 +28938,38 @@
         "src/app/api/admin/goals/route.ts",
         "src/lib/admin-goals.ts",
         "src/lib/admin-home.ts"
+      ]
+    },
+    {
+      "name": "AdminMonthGoal",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "month",
+          "type": "String"
+        },
+        {
+          "name": "cents",
+          "type": "Int?"
+        },
+        {
+          "name": "setById",
+          "type": "String"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ],
+      "writers": [
+        "src/app/api/admin/revenue-goal/route.ts"
+      ],
+      "readers": [
+        "src/app/api/admin/revenue-goal/route.ts",
+        "src/app/api/admin/revenue/route.ts"
       ]
     },
     {
