@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import AdminSidebar from '@/components/admin/AdminSidebar';
+import { canOpenAdminHref } from '@/components/admin/admin-href';
 import { useAdminSession } from '@/lib/admin-session-context';
 import g from './admin-glass.module.css';
 
@@ -96,7 +97,7 @@ function when(iso: string) {
 }
 
 export default function AdminOverview() {
-  const { role } = useAdminSession();
+  const { role, areas } = useAdminSession();
   const [data, setData] = useState<Overview | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -170,22 +171,26 @@ export default function AdminOverview() {
                 </Link>
               )}
               {d.expenses && (
-                <Link href="/admin/revenue" className={`${g.glass} ${g.kpi}`}>
-                  <span className={g.kpiL} title="The month's expenses as the Revenue page counts them">Expenses</span>
+                <Link href="/admin/expenses" className={`${g.glass} ${g.kpi}`}>
+                  <span className={g.kpiL} title="The month's share of the company's expenses (Expenses page)">Expenses</span>
                   <span className={g.kpiV}>{money(d.expenses.cents)}</span>
                   <span className={g.kpiC}>{versus(d.expenses.cents, d.expenses.priorCents, money, false, true)}</span>
                 </Link>
               )}
-              {d.feesMissed && (
-                <Link href="/admin/revenue?tab=uncollected" className={`${g.glass} ${g.kpi}`}>
+              {d.feesMissed && (() => {
+                const body = <>
                   <span className={g.kpiL} title="Service fees not collected because the round was paid in cash at the counter">Fees missed</span>
                   <span className={g.kpiV}>{money(d.feesMissed.cents)}</span>
                   <span className={g.kpiC}>{versus(d.feesMissed.cents, d.feesMissed.priorCents, money, false, true)}</span>
-                </Link>
-              )}
+                </>;
+                // Per course on Golf courses; a login without Courses gets the number without a link it can't open.
+                return canOpenAdminHref('/admin/courses', role, areas)
+                  ? <Link href="/admin/courses" className={`${g.glass} ${g.kpi}`}>{body}</Link>
+                  : <div className={`${g.glass} ${g.kpi}`}>{body}</div>;
+              })()}
               {d.net && (
-                <Link href="/admin/revenue" className={`${g.glass} ${g.kpi} ${g.t2}`}>
-                  <span className={g.kpiL} title="Service fees, less Stripe's processing and the month's expenses — the Revenue page's net">Net profit</span>
+                <Link href="/admin/expenses" className={`${g.glass} ${g.kpi} ${g.t2}`}>
+                  <span className={g.kpiL} title="Service fees, less Stripe's processing and the month's expenses">Net profit</span>
                   <span className={g.kpiV}>{d.net.cents === null ? '—' : money(d.net.cents)}</span>
                   <span className={g.kpiC}>{d.net.cents === null || d.net.priorCents === null
                     ? "Stripe couldn't be read"

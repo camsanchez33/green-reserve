@@ -42,7 +42,22 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       {/* staff-look is display:contents (a hook only), so the glass shell is its own box inside it. */}
       <div className={STAFF_LOOK_CLASS}>
       <div className={glass.shell} data-theme={theme} data-admin-shell="">
-        <div className={glass.blobs} aria-hidden="true"><span /><span /><span /></div>
+        {/* Cam 2026-11-12: blurred ribbons (greens + one gold thread) behind the glass, as on the Revenue mockup. */}
+        <svg className={glass.waves} viewBox="0 0 1400 1100" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+          <defs>
+            <filter id="gr-admin-soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="40" /></filter>
+            <filter id="gr-admin-softer" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="16" /></filter>
+          </defs>
+          <g filter="url(#gr-admin-soft)">
+            <path className={glass.w1} d="M-120 260 C 240 60, 520 420, 820 230 S 1300 40, 1560 300" />
+            <path className={glass.w4} d="M-200 980 C 200 760, 460 1040, 760 820 S 1220 640, 1600 900" />
+            <path className={glass.w2} d="M980 -80 C 860 220, 1180 380, 1040 640 S 1180 980, 1320 1180" />
+          </g>
+          <g filter="url(#gr-admin-softer)">
+            <path className={glass.w3} d="M-60 520 C 300 380, 520 700, 900 520 S 1300 360, 1500 560" />
+            <path className={glass.w3} d="M200 -60 C 300 200, 120 420, 380 640" />
+          </g>
+        </svg>
         {children}
         {/* AW-1c: only the owner is ever asked to confirm a risky action. */}
         {session?.role === 'owner' && <StepUpDialog />}

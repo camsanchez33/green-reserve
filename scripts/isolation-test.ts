@@ -636,6 +636,16 @@ async function main() {
       // A support login (not manager) still can't take the evidence pack or owner money.
       checkStatus('Support cannot download a dispute evidence pack → 403', (await api(`/api/admin/disputes/${data.bookingA.id}/evidence`, { cookie: supCookie })).status, 403);
       checkStatus('Support cannot read courses’ payouts → 403', (await api('/api/admin/course-payouts', { cookie: supCookie })).status, 403);
+      // ADMIN-REDO Revenue: support with Money opens it, but payouts, balances and the Stripe match stay the owner's.
+      {
+        const rv = await api('/api/admin/revenue?period=custom&from=2026-01-01&to=2026-01-31', { cookie: supCookie });
+        checkStatus('Support with Money opens Revenue → 200', rv.status, 200);
+        const b = rv.body as { isOwner?: boolean; reconciliation?: unknown; pnl?: { net?: unknown; expenses?: unknown; stripeProcessing?: unknown } };
+        check('…without the owner’s lines (Books vs Stripe, net, expenses, Stripe fees)', b?.isOwner === false && b.reconciliation === undefined && b.pnl?.net === undefined && b.pnl?.expenses === undefined && b.pnl?.stripeProcessing === undefined, JSON.stringify(b).slice(0, 300));
+        checkStatus('Support cannot read the Stripe balance or next payout → 403', (await api('/api/admin/platform-stripe?period=30d', { cookie: supCookie })).status, 403);
+        checkStatus('Support cannot read the monthly Stripe match → 403', (await api('/api/admin/stripe-match', { cookie: supCookie })).status, 403);
+        checkStatus('Support cannot read Expenses → 403', (await api('/api/admin/expenses', { cookie: supCookie })).status, 403);
+      }
       await prisma.adminUser.update({ where: { id: sup.id }, data: { role: 'manager' } });
       const mgrCookie = `admin_session=${await signAdminToken({ adminId: sup.id, email: sup.email, name: sup.name, role: 'manager', mfa: true })}`;
       checkStatus('No pack for a booking without a dispute → 404', (await api(`/api/admin/disputes/${data.bookingA.id}/evidence`, { cookie: mgrCookie })).status, 404);
@@ -786,6 +796,82 @@ async function main() {
       await prisma.ownerSession.deleteMany({ where: { id: { in: [fresh.id, stale.id] } } });
       await prisma.adminAuditLog.deleteMany({ where: { adminId: mgr.id } }).catch(() => {});
       await prisma.adminUser.delete({ where: { id: mgr.id } });
+    }
+  }
+
+  console.log('\n── Admin Revenue (ADMIN-REDO: GreenReserve\'s money from the ledger) ──');
+  {
+    const { signAdminToken } = await import('../src/lib/admin-session');
+    const { signOwnerToken } = await import('../src/lib/owner-session');
+    const sup = await prisma.adminUser.create({ data: { name: 'Isol Rev Support', email: `${TS}-revsup@test.local`, passwordHash: 'x', role: 'support', active: true, areas: ['messages'], areasSetAt: new Date() } });
+    const mgr = await prisma.adminUser.create({ data: { name: 'Isol Rev Manager', email: `${TS}-revmgr@test.local`, passwordHash: 'x', role: 'manager', active: true, areas: ['money'], areasSetAt: new Date() } });
+    const move = await prisma.moneyMove.create({ data: { courseId: data.courseA.id, what: 'round', direction: 'in', method: 'card', account: 'course', amountCents: 5150, platformFeeCents: 150, stripeId: `pi_isol_rev_${TS}`, bookingId: bookingA.id, at: new Date(Date.now() - 60_000) } });
+    try {
+      const sc = `admin_session=${await signAdminToken({ adminId: sup.id, email: sup.email, name: sup.name, role: 'support', mfa: true })}`;
+      checkStatus('Support without Money → Revenue → 403', (await api('/api/admin/revenue?period=month', { cookie: sc })).status, 403);
+      checkStatus('…and the ledger CSV → 403', (await api('/api/admin/revenue?period=month&format=csv', { cookie: sc })).status, 403);
+      const mc = `admin_session=${await signAdminToken({ adminId: mgr.id, email: mgr.email, name: mgr.name, role: 'manager', mfa: true })}`;
+      type Rev = { revenue?: { cents: number }; ledger?: { rows: { id: string; amountCents: number; what: string }[] }; byCourse?: { courseId: string; revenueCents: number }[]; period?: { kind: string; elapsedDays: number }; revenueSeries?: { current: number[] }; coursePayoutProblems?: unknown; payouts?: unknown };
+      for (const period of ['month', 'last_month', '30d', 'year']) {
+        const r = await api(`/api/admin/revenue?period=${period}`, { cookie: mc });
+        const b = r.body as Rev;
+        check(`Manager with Money → Revenue (${period}) → 200 with the period, revenue and series`, r.status === 200 && b.period?.kind === period && typeof b.revenue?.cents === 'number' && b.revenueSeries?.current.length === b.period?.elapsedDays, JSON.stringify({ status: r.status, period: b.period }));
+        check(`…no owner-only payout fields (${period})`, !('coursePayoutProblems' in (b ?? {})) && !('payouts' in (b ?? {})), Object.keys(b ?? {}).join(','));
+      }
+      const legacy = (await api('/api/admin/revenue?period=custom&from=2026-11-01&to=2026-11-10', { cookie: mc })).body as { period?: { from: string; to: string } };
+      check('The older page\'s custom period still says the days it was given', legacy.period?.from === '2026-11-01' && legacy.period?.to === '2026-11-10', JSON.stringify(legacy.period));
+      const before = (await api('/api/admin/revenue?period=month', { cookie: mc })).body as Rev;
+      const row = before.ledger?.rows.find(x => x.id === move.id);
+      check('…the ledger shows the real course\'s service fee', row?.amountCents === 150 && row.what === 'Service fee collected', JSON.stringify(row));
+      check('…its course\'s revenue counts it', (before.byCourse?.find(c => c.courseId === data.courseA.id)?.revenueCents ?? 0) >= 150);
+      check('…and the series adds up to the headline', (before.revenueSeries?.current ?? []).reduce((a, n) => a + n, 0) === before.revenue?.cents, JSON.stringify(before.revenue));
+      const csv = await fetch(`${BASE_URL}/api/admin/revenue?period=month&format=csv`, { headers: { cookie: mc } });
+      check('…the CSV lists it', csv.status === 200 && (csv.headers.get('content-type') ?? '').startsWith('text/csv') && (await csv.text()).includes(`pi_isol_rev_${TS}`));
+      {
+        // The transactions export takes the Revenue page's own window (?period=), Eastern days:
+        // a round checked in one minute before the platform month starts is last month's.
+        const { startOfPlatformMonth } = await import('../src/lib/admin-day');
+        const monthStart = startOfPlatformMonth(new Date());
+        const saved = await prisma.booking.findUniqueOrThrow({ where: { id: bookingA.id }, select: { paymentStatus: true, roundPaymentIntentId: true, checkedInAt: true } });
+        const exp = async (q: string) => { const r = await fetch(`${BASE_URL}/api/admin/transactions/export?${q}`, { headers: { cookie: mc } }); return { status: r.status, text: await r.text() }; };
+        try {
+          await prisma.booking.update({ where: { id: bookingA.id }, data: { paymentStatus: 'paid', roundPaymentIntentId: `pi_isol_exp_${TS}`, checkedInAt: new Date(monthStart.getTime() + 60_000) } });
+          const inMonth = await exp('period=month');
+          check('Export (period=month) includes a round checked in just after the platform month starts', inMonth.status === 200 && inMonth.text.includes(`pi_isol_exp_${TS}`), String(inMonth.status));
+          await prisma.booking.update({ where: { id: bookingA.id }, data: { checkedInAt: new Date(monthStart.getTime() - 60_000) } });
+          check('…and leaves out one a minute before (last month, Eastern)', !(await exp('period=month')).text.includes(`pi_isol_exp_${TS}`));
+          check('…which period=last_month has', (await exp('period=last_month')).text.includes(`pi_isol_exp_${TS}`));
+          checkStatus('…and an unknown period with no from/to → 400', (await exp('period=fortnight')).status, 400);
+        } finally {
+          await prisma.booking.update({ where: { id: bookingA.id }, data: saved });
+        }
+      }
+      await prisma.course.update({ where: { id: data.courseA.id }, data: { isTest: true } });
+      try {
+        const after = (await api('/api/admin/revenue?period=month', { cookie: mc })).body as Rev;
+        check('A test course\'s fee leaves the ledger (TEST-2)', !after.ledger?.rows.some(x => x.id === move.id));
+        check('…and the headline drops by it', (before.revenue?.cents ?? 0) - (after.revenue?.cents ?? 0) === 150, JSON.stringify({ before: before.revenue, after: after.revenue }));
+        check('…and the course is not in the table', !after.byCourse?.some(c => c.courseId === data.courseA.id));
+        const csv2 = await fetch(`${BASE_URL}/api/admin/revenue?period=month&format=csv`, { headers: { cookie: mc } });
+        check('…nor in the CSV', !(await csv2.text()).includes(`pi_isol_rev_${TS}`));
+      } finally {
+        await prisma.course.update({ where: { id: data.courseA.id }, data: { isTest: false } });
+      }
+      const live = await prisma.ownerSession.create({ data: { adminId: data.adminOwner.id, method: 'totp', expiresAt: new Date(Date.now() + 3600_000), stepUpAt: new Date() } });
+      try {
+        const oc = `gr_owner=${await signOwnerToken(live.id, data.adminOwner.id, live.expiresAt)}`;
+        const o = (await api('/api/admin/revenue?period=month', { cookie: oc })).body as Rev;
+        check('The owner gets course payout problems and payouts to courses', !!o && 'coursePayoutProblems' in o && 'payouts' in o, Object.keys(o ?? {}).join(','));
+        // No course here has a readable Stripe account (test keys): nothing was checked, so it must not read as "all paid".
+        const pp = (o as { coursePayoutProblems?: { rows: unknown[]; checkedCourses: number; unavailable: boolean } }).coursePayoutProblems;
+        check('…and says how many courses it checked (0 here, not "all paid")', typeof pp?.checkedCourses === 'number' && (pp.checkedCourses > 0 || pp.rows.length === 0), JSON.stringify(pp));
+      } finally {
+        await prisma.ownerSession.delete({ where: { id: live.id } });
+      }
+    } finally {
+      await prisma.moneyMove.delete({ where: { id: move.id } });
+      await prisma.adminAuditLog.deleteMany({ where: { adminId: { in: [sup.id, mgr.id] } } }).catch(() => {});
+      await prisma.adminUser.deleteMany({ where: { id: { in: [sup.id, mgr.id] } } });
     }
   }
 
