@@ -36,7 +36,7 @@ export async function claimTeeTime(
   // walk-ins after") — only the tee sheet's own "already played" button sets it.
   // ADDTIME-1: online bookings (the golfer booking route) can't take a time kept for staff.
   opts: { allowLate?: boolean; online?: boolean } = {},
-): Promise<{ id: string; checkInToken: string | null }> {
+): Promise<ClaimResult> {
   const teeTimeId = String(data.teeTimeId);
   const players = Number(data.players);
 
@@ -70,13 +70,53 @@ export async function claimTeeTime(
  */
 export const CLAIM_ATTEMPTS = 8;
 
+/**
+ * `duplicate`: an ONLINE claim was an identical repeat of one just made (findDoubleTap) and returns
+ * that booking instead of making a second (Cam via Build 2026-11-12: a double-tapped Book button).
+ * Counter, staff and admin bookings never dedupe.
+ */
+export type ClaimResult = { id: string; checkInToken: string | null; duplicate?: true };
+
+/** How recent a booking must be for an identical online submit to count as the same tap. */
+export const DOUBLE_TAP_MS = 2 * 60_000;
+
+/**
+ * The booking an identical ONLINE submit already made — a double-tapped Book button — or null.
+ * Deliberately narrow (final review 2026-11-12): the same tee time, the same golfer email (exact,
+ * case-folded: lower() = lower(), never a LIKE pattern), the same name and party size, a confirmed
+ * booking the golfer route made (termsAcceptedAt is stamped only there, so admin and counter
+ * bookings never match), made in the last DOUBLE_TAP_MS. Anything else is a new booking. So the
+ * answer can't be used to learn about someone else's booking, and a real second booking for the
+ * same time days later is still made.
+ */
+export async function findDoubleTap(
+  db: Pick<typeof prisma, '$queryRaw'>,
+  d: { teeTimeId: unknown; golferEmail?: unknown; golferName?: unknown; players?: unknown },
+  now: Date = new Date(),
+): Promise<{ id: string; checkInToken: string | null } | null> {
+  const email = String(d.golferEmail ?? '').trim();
+  const name = String(d.golferName ?? '').trim();
+  const players = Number(d.players);
+  if (!email || !name || !Number.isInteger(players)) return null;
+  const since = new Date(now.getTime() - DOUBLE_TAP_MS);
+  // "createdAt" is a zone-less timestamp holding UTC; a bound Date is timestamptz. Compare in UTC
+  // explicitly, or the session's TimeZone would shift the window by hours (final review).
+  const rows = await db.$queryRaw<{ id: string; checkInToken: string | null }[]>`
+    SELECT "id", "checkInToken" FROM "Booking"
+    WHERE "teeTimeId" = ${String(d.teeTimeId)} AND "status" = 'confirmed' AND "source" = 'online'
+      AND "termsAcceptedAt" IS NOT NULL AND "createdAt" >= (${since}::timestamptz AT TIME ZONE 'UTC')
+      AND lower("golferEmail") = lower(${email}) AND lower(btrim("golferName")) = lower(${name}) AND "players" = ${players}
+    ORDER BY "createdAt" ASC LIMIT 1`;
+  return rows[0] ?? null;
+}
+
 async function claimOnce(
   data: Prisma.BookingUncheckedCreateInput,
   actor: EventActor,
   opts: { allowLate?: boolean; online?: boolean },
   teeTimeId: string,
   players: number,
-): Promise<{ id: string; checkInToken: string | null }> {
+): Promise<ClaimResult> {
     return await prisma.$transaction(
       async (tx) => {
         const teeTime = await tx.teeTime.findUnique({
@@ -89,6 +129,14 @@ async function claimOnce(
         if (opts.online && teeTime.staffOnly) throw new TeeTimeClaimError('BLOCKED');
         const teeAt = teeTimeInstant(teeTime.course.timezone, teeTime.date, teeTime.time);
         if (!opts.allowLate && teeAt && teeAt.getTime() + LATE_ADD_MINUTES * 60_000 < Date.now()) throw new TeeTimeClaimError('PAST');
+
+        // A double-tap (see findDoubleTap): inside this Serializable transaction, so two submits at the
+        // same instant conflict, one retries, and the retry finds the other's booking here. Checked
+        // before capacity, so a repeat of a booking that filled the time gets it back, not "full".
+        if (opts.online) {
+          const mine = await findDoubleTap(tx, data);
+          if (mine) return { ...mine, duplicate: true as const };
+        }
 
         const spotsLeft = teeTime.playersAvailable - teeTime.playersBooked;
         // Belt and braces (security review): a non-positive count must never

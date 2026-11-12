@@ -44,6 +44,8 @@ export const EVENT_FEE_LABEL = 'GreenReserve service fee';
  * late cancel or a no-show. lib/booking-fee.ts owns it.
  * OFF until Operator Agreement v2026-11 and legal/LQ-2_FEE_COPY.md say the fee
  * is charged at booking (courses re-accept; golfer /terms updated).
+ * Before turning on, re-check the dup guard (findDoubleTap in lib/claim-tee-time.ts): a repeat
+ * can be told booked while the first fee is charging.
  */
 export const FEE_AT_BOOKING_ON = false;
 

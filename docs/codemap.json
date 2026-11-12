@@ -4202,7 +4202,7 @@
     },
     {
       "path": "src/app/api/bookings/route.ts",
-      "lines": 511,
+      "lines": 547,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -16662,7 +16662,7 @@
     },
     {
       "path": "src/lib/booking-fees.ts",
-      "lines": 64,
+      "lines": 66,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -17992,7 +17992,7 @@
     },
     {
       "path": "src/lib/claim-tee-time.ts",
-      "lines": 151,
+      "lines": 199,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -18001,7 +18001,19 @@
           "kind": "const"
         },
         {
+          "name": "ClaimResult",
+          "kind": "type"
+        },
+        {
           "name": "claimTeeTime",
+          "kind": "fn"
+        },
+        {
+          "name": "DOUBLE_TAP_MS",
+          "kind": "const"
+        },
+        {
+          "name": "findDoubleTap",
           "kind": "fn"
         },
         {
