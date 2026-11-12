@@ -269,7 +269,7 @@ export default function DashboardHome() {
                         <div className="flex items-center gap-3 px-5 py-3">
                           <StatusDot status="warn" label="" />
                           <div className="flex-1">{home.unreadMessages} unread from GreenReserve</div>
-                          <Link href="/dashboard/messages" className="text-[13px] font-semibold text-pine">Read</Link>
+                          <Link href="/dashboard/support" className="text-[13px] font-semibold text-pine">Read</Link>
                         </div>
                       )}
                     </div>

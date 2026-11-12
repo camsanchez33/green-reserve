@@ -145,8 +145,9 @@ export default function OperatorSidebar({ active, onAlertClick }: {
       icon: moneyOnlyCancellations ? <XCircle className="w-4 h-4"/> : <DollarSign className="w-4 h-4"/> },
     // POS-2 (Cam 2026-10-19): ring up walk-up sales — cash or a pay link.
     { key: 'shop',          label: 'Pro shop',     href: '/dashboard/shop',          icon: <ShoppingBag className="w-4 h-4"/> },
-    { key: 'messages',      label: 'Messages',     href: '/dashboard/messages',      icon: <MessageSquare className="w-4 h-4"/> },
     { key: 'settings',      label: 'Settings',     href: '/dashboard/settings',      icon: <Settings className="w-4 h-4"/> },
+    // SUPPORT-1 (Cam 2026-11-12): Messages is Support — at the bottom of the rail, after Settings; on a phone, last under More.
+    { key: 'messages',      label: 'Support',      href: '/dashboard/support',       icon: <MessageSquare className="w-4 h-4"/> },
   ];
 
   // SP-A: each item shows when the login may open it (owners: always). The
@@ -167,15 +168,15 @@ export default function OperatorSidebar({ active, onAlertClick }: {
   // SD-2: what fits in a thumb row. Revamp 3 dead end 26 (Cam 2026-10-29): everything
   // else — Home, Members, Events, Analytics, Settings — is one tap away under More,
   // so no page is out of reach on a phone.
-  const mobileKeys: OperatorNavKey[] = (['teesheet', 'shop', 'money', 'messages'] as OperatorNavKey[]).filter(visible);
+  const mobileKeys: OperatorNavKey[] = (['teesheet', 'shop', 'money'] as OperatorNavKey[]).filter(visible);
   const mobileItems = navItems.filter(n => mobileKeys.includes(n.key) && !n.soon);
   const moreItems = navItems.filter(n => !mobileKeys.includes(n.key) && !n.soon && visible(n.key));
   const [moreOpen, setMoreOpen] = useState(false);
   // DASH-D (Cam 2026-11-01, "grouped"): the day's work first, then the business, then Settings.
   const railGroups: { label: string; keys: OperatorNavKey[] }[] = [
-    { label: 'Today', keys: ['home', 'teesheet', 'shop', 'messages'] },
+    { label: 'Today', keys: ['home', 'teesheet', 'shop'] },
     { label: 'Business', keys: ['money', 'members', 'events', 'schedule', 'analytics'] },
-    { label: 'Course', keys: ['settings'] },
+    { label: 'Course', keys: ['settings', 'messages'] },
   ];
   // A tab no group names still shows (in Business) — a new tab is never dropped from the rail.
   const grouped = new Set(railGroups.flatMap(g => g.keys));
@@ -244,18 +245,19 @@ export default function OperatorSidebar({ active, onAlertClick }: {
             {isActive && <span aria-hidden="true" className="absolute top-0 inset-x-[30%] h-[2px] rounded-full" style={{ backgroundColor: brandColor }} />}
             {item.icon}
             <span className="leading-none">{item.label}</span>
-            {item.key === 'messages' && unreadMessages > 0 && (
-              <span className="absolute top-1.5 right-[calc(50%-18px)] w-2 h-2 rounded-full bg-ok" aria-label={`${unreadMessages} unread`} />
-            )}
           </button>
         );
       })}
       {/* Always there on a phone: it carries the golfer search even when every tab fits the bar. */}
       {(
         <button onClick={() => setMoreOpen(o => !o)} aria-expanded={moreOpen} aria-controls="op-more"
-          className={'flex-1 min-h-[56px] flex flex-col items-center justify-center gap-1 text-[10.5px] ' + (moreItems.some(i => i.key === active) ? 'text-ink font-semibold' : 'text-ink-muted font-medium')}>
+          className={'relative flex-1 min-h-[56px] flex flex-col items-center justify-center gap-1 text-[10.5px] ' + (moreItems.some(i => i.key === active) ? 'text-ink font-semibold' : 'text-ink-muted font-medium')}>
           <span aria-hidden="true" className="h-4 leading-4 text-[15px] tracking-[0.1em]">•••</span>
           <span className="leading-none">More</span>
+          {/* Support's unread count rides on More, where Support lives on a phone. */}
+          {unreadMessages > 0 && moreItems.some(i => i.key === 'messages') && (
+            <span className="absolute top-1.5 right-[calc(50%-18px)] w-2 h-2 rounded-full bg-ok" aria-label={`${unreadMessages} unread on Support`} />
+          )}
         </button>
       )}
     </nav>
@@ -267,8 +269,11 @@ export default function OperatorSidebar({ active, onAlertClick }: {
         {moreItems.map(item => (
           <button key={item.key} onClick={() => { setMoreOpen(false); if (confirmLeave()) router.push(item.href); }}
             aria-current={active === item.key ? 'page' : undefined}
-            className={'w-full text-left px-5 py-3.5 text-[14px] border-b border-line-soft text-ink ' + (active === item.key ? 'font-semibold' : '')}>
-            {item.label}
+            className={'w-full flex items-center justify-between gap-3 text-left px-5 py-3.5 text-[14px] border-b border-line-soft text-ink ' + (active === item.key ? 'font-semibold' : '')}>
+            <span>{item.label}</span>
+            {item.key === 'messages' && unreadMessages > 0 && (
+              <span className="text-[12px] font-semibold text-warn tabular-nums" aria-label={`${unreadMessages} unread`}>{unreadMessages > 99 ? '99+' : unreadMessages}</span>
+            )}
           </button>
         ))}
         <div className="px-4 py-3"><ThemeSwitch /></div>
