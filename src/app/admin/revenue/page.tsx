@@ -34,7 +34,7 @@ const PERIODS: { v: Per; label: string }[] = [
 interface Delta { pct: number | null; direction: 'up' | 'down' | 'flat' | null }
 interface CourseRow { courseId: string; name: string; active: boolean; archived: boolean; booked: number; serviceFees: number; revenueCents?: number; priorRevenueCents?: number }
 interface LedgerRow { id: string; at: string; bookingId: string | null; bookingRef: string | null; courseId: string; courseName: string; what: string; amountCents: number; stripeUrl: string | null }
-interface PayoutProblem { courseId: string; name: string; kind: 'failed' | 'short'; amountCents: number; at: string; reason: string; stripeUrl: string | null }
+interface PayoutProblem { courseId: string; name: string; kind: 'failed' | 'short' | 'canceled'; amountCents: number; at: string; reason: string; stripeUrl: string | null }
 interface RevenueData {
   period: { kind: string; label: string; from: string; to: string; priorLabel?: string; elapsedDays?: number; totalDays?: number };
   revenue?: { cents: number; priorCents: number };
@@ -55,6 +55,8 @@ interface CoursePayout { courseId: string; name: string; error: string | null; p
 interface MonthMatch { month: string; ours: number; stripe: number | null; result: 'match' | 'off' | 'unknown' }
 
 const DAY = 86_400_000;
+/** Build's payout problem kinds: returned by the bank, reversed after it was paid, canceled before it arrived. */
+const PAYOUT_PROBLEM: Record<string, string> = { failed: 'was returned by the bank', short: 'was reversed after it was paid', canceled: 'was canceled before it arrived' };
 const usd = (n: number) => (n < 0 ? '−' : '') + '$' + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const ymd = (d: Date) => d.toISOString().slice(0, 10);
 const addDays = (day: string, n: number) => ymd(new Date(Date.parse(day + 'T00:00:00Z') + n * DAY));
@@ -325,7 +327,7 @@ export default function RevenuePage() {
                       })}
                       {shown.coursePayoutProblems?.rows.map((x, i) => (
                         <div key={`${x.courseId}-${i}`}>
-                          <span>{x.name}<small>Payout to its bank {x.kind === 'failed' ? 'failed' : 'came up short'} {short(x.at.slice(0, 10))}{x.reason && ` · ${x.reason}`}</small></span>
+                          <span>{x.name}<small>Payout to its bank {PAYOUT_PROBLEM[x.kind] ?? 'had a problem'} {short(x.at.slice(0, 10))}{x.reason && ` · ${x.reason}`}</small></span>
                           <b className={g.down}>{usd(x.amountCents / 100)}{x.stripeUrl && <> <StripeLink href={x.stripeUrl} /></>}</b>
                         </div>
                       ))}
