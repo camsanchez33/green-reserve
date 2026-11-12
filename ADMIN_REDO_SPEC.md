@@ -172,3 +172,7 @@ across courses (a support email) is done from the Bookings search (name, email, 
 - Ledger: every movement of our money (the MoneyMove ledger, GreenReserve's side), one row each, with a Stripe link and CSV.
 - Removed: Disputes, Never reached us, Courses earning, Kept after Stripe fees.
 - Legal to-do: the Operator Agreement's next version should say golfer disputes and chargebacks are the course's.
+- Admin backdrop (Cam 2026-11-12, "more of a design, not just two dots"): every admin page swaps the round blobs for
+  blurred SVG ribbons (greens + one gold thread), the same design as the course dashboard's charcoal.
+- Revenue: Stripe links are a small arrow icon ("Open in Stripe"); CSV is a download icon. By course = bookings, revenue,
+  vs the period before. The three small cards sit in one row; By course and the Ledger are full width below them.

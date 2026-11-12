@@ -384,6 +384,17 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
 .rkc .v{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.15}
 .rkc .c{font-size:12.5px;color:var(--muted)}
 .v.dn,.dn{color:var(--down)} .upc{color:var(--up)}
+
+/* Cam 2026-11-12, "more of a design, not just two dots": the light behind the admin glass is sweeping blurred
+   ribbons (as on the course dashboard), in our greens with one gold thread. Shapes, never a page gradient. */
+.app .blob{display:none}
+.waves{position:absolute;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none}
+.waves path{fill:none;stroke-linecap:round}
+.waves .w1{stroke:var(--wv1);stroke-width:160} .waves .w2{stroke:var(--wv2);stroke-width:100}
+.waves .w3{stroke:var(--wv3);stroke-width:46} .waves .w4{stroke:var(--wv2);stroke-width:230}
+.app{--wv1:rgba(76,193,131,.42);--wv2:rgba(159,211,181,.55);--wv3:rgba(217,180,90,.35)}
+.app[data-mode="dark"]{--wv1:rgba(46,143,94,.45);--wv2:rgba(30,107,74,.45);--wv3:rgba(217,180,90,.22)}
+.ico{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;color:var(--muted)}.ico:hover{color:var(--ink);background:var(--hover)}
 .rpad{padding:16px 18px;min-width:0}
 .rh{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
 .rh b{font-size:15px;font-weight:600;margin-right:auto}
@@ -417,6 +428,13 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
 .rrows b{font-variant-numeric:tabular-nums;white-space:nowrap}
 @media (max-width:1100px){.rk{grid-template-columns:repeat(2,minmax(0,1fr))}.rsplit{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:640px){.rt .hide-s{display:none}}
+
+/* Cam 2026-11-12, "laid out where there is no blank space": the three small cards side by side, equal height, then
+   By course full width; no column left short. */
+.rsplit{grid-template-columns:minmax(0,1fr)!important;align-items:stretch}
+.rsplit .rstack{order:-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:stretch}
+
+@media (max-width:1100px){.rsplit .rstack{grid-template-columns:minmax(0,1fr)}}
 </style>
 <div class="wrap">
   <div class="picker">
@@ -430,7 +448,19 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
   <p style="font-size:12.5px;color:var(--page-muted);margin:0;max-width:75ch">Example numbers, not real ones. What GreenReserve earns (our service fees), by course, and the money moving to our bank and the courses' banks. Read-only: nothing here charges or retries anyone.</p>
 
   <div class="app" id="app" data-dir="green" data-mode="light" data-acc="gold">
-    <span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span>
+    <svg class="waves" viewBox="0 0 1400 1100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="40"/></filter>
+      <filter id="softer" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="16"/></filter></defs>
+      <g filter="url(#soft)">
+        <path class="w1" d="M-120 260 C 240 60, 520 420, 820 230 S 1300 40, 1560 300"/>
+        <path class="w4" d="M-200 980 C 200 760, 460 1040, 760 820 S 1220 640, 1600 900"/>
+        <path class="w2" d="M980 -80 C 860 220, 1180 380, 1040 640 S 1180 980, 1320 1180"/>
+      </g>
+      <g filter="url(#softer)">
+        <path class="w3" d="M-60 520 C 300 380, 520 700, 900 520 S 1300 360, 1500 560"/>
+        <path class="w3" d="M200 -60 C 300 200, 120 420, 380 640"/>
+      </g>
+    </svg>
     <aside class="rail">
       <div class="brand">
         <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="var(--brand-ink)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><path d="M12 8v6l-3 6M12 14l3 6M8 11l4-1 5-3"/></svg></span>
@@ -479,18 +509,18 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
 
       <div class="rsplit">
         <section class="glass rpad" aria-label="By course">
-          <div class="rh"><b>By course</b><span class="plink">Download CSV</span></div>
-          <table class="rt"><thead><tr><th>Course</th><th class="n">Rounds online</th><th class="n">Revenue</th><th class="n">Missed</th><th class="n">vs last month</th></tr></thead><tbody id="bycourse"></tbody></table>
+          <div class="rh"><b>By course</b><a class="ico" href="#" aria-label="Download CSV" title="Download CSV"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></a></div>
+          <table class="rt"><thead><tr><th>Course</th><th class="n">Bookings</th><th class="n">Revenue</th><th class="n" id="bcvs">vs last month</th></tr></thead><tbody id="bycourse"></tbody></table>
         </section>
         <div class="rstack">
           <!-- Cam 2026-11-12: golfer disputes are the course's, with its player (Operator Agreement). We only show when a
                COURSE wasn't paid right: a payout to its bank that failed or came up short. -->
           <section class="glass rpad" aria-label="Course payment problems">
-            <div class="rh"><b>Course payment problems</b><span class="plink">Stripe ↗</span></div>
+            <div class="rh"><b>Course payments</b><a class="ico" href="#" aria-label="Open in Stripe" title="Open in Stripe"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg></a></div>
             <div class="rrows" id="disputes"></div>
           </section>
           <section class="glass rpad" aria-label="Payouts">
-            <div class="rh"><b>Payouts</b><span class="plink">Stripe ↗</span></div>
+            <div class="rh"><b>Payouts</b><a class="ico" href="#" aria-label="Open in Stripe" title="Open in Stripe"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg></a></div>
             <div class="rrows" id="payouts"></div>
           </section>
           <section class="glass rpad" aria-label="Books vs Stripe">
@@ -502,7 +532,7 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
       <!-- Cam 2026-11-12, "where is our actual ledger": every dollar of ours, one row each (the MoneyMove ledger,
            GreenReserve's side), for the period the Filter picks. Read-only; each row links to its Stripe record. -->
       <section class="glass rpad" aria-label="Ledger">
-        <div class="rh"><b>Ledger</b><span class="plink">Download CSV</span></div>
+        <div class="rh"><b>Ledger</b><a class="ico" href="#" aria-label="Download CSV" title="Download CSV"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></a></div>
         <table class="rt"><thead><tr><th>When</th><th>Booking</th><th>Course</th><th>What</th><th class="n">Amount</th><th class="hide-s">Stripe</th></tr></thead><tbody id="ledger"></tbody></table>
       </section>
     </main>
@@ -562,11 +592,13 @@ body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-s
       '<div class="rsum"><b>'+usd(T[T.length-1])+'</b> so far · <span class="'+(ahead>=0?'upc':'dn')+'">'+usd(Math.abs(ahead))+(ahead>=0?' ahead of ':' behind ')+SPAN.vs+'</span>'+(today<N?' at the same day':'')+'</div>';
     $("rtitle").textContent=SPAN.t; $("rcur").textContent=SPAN.cur; $("rprev").textContent=SPAN.vs.charAt(0).toUpperCase()+SPAN.vs.slice(1);
     const C=[["Ridgewood Country Club",412,618,12,18],["Pine Hollow Golf Club",356,534,9,-4],["Oak Valley Golf Course",288,432,36,22],["Cedar Ridge Golf Links",172,258,39,-12]];
-    $("bycourse").innerHTML=C.map(c=>'<tr><td>'+c[0]+'</td><td class="n">'+c[1]+'</td><td class="n">'+usd(c[2])+'</td><td class="n '+(c[3]?'dn':'')+'">'+usd(c[3])+'</td><td class="n '+(c[4]>=0?'upc':'dn')+'">'+(c[4]>=0?'Up ':'Down ')+Math.abs(c[4])+'%</td></tr>').join("");
+    // Cam 2026-11-12: by course is just bookings, revenue, and the change against the period before (follows the Filter).
+    $("bcvs").textContent='vs '+SPAN.vs;
+    $("bycourse").innerHTML=C.map(c=>'<tr><td>'+c[0]+'</td><td class="n">'+c[1]+'</td><td class="n">'+usd(c[2])+'</td><td class="n '+(c[4]>=0?'upc':'dn')+'">'+(c[4]>=0?'Up ':'Down ')+Math.abs(c[4])+'%</td></tr>').join("");
     $("disputes").innerHTML='<div><span>Cedar Ridge Golf Links<small>Payout to its bank failed Nov 10 · bank account closed</small></span><b class="dn">$2,140.00</b></div><div><span>Every other course<small>Paid in full</small></span><b class="upc">OK</b></div>';
     $("payouts").innerHTML='<div><span>To our bank<small>Next: Fri, Nov 13</small></span><b>$1,206.40</b></div><div><span>Balance at Stripe<small>Available now</small></span><b>$312.60</b></div><div><span>To the courses<small>This month, 4 courses</small></span><b>$41,880.00</b></div>';
     const LG=[["Nov 12 9:58 AM","GR-1044","Pine Hollow","Service fee collected",3],["Nov 12 7:31 AM","GR-1045","Cedar Ridge","Paid in cash, no fee",0],["Nov 11 4:41 PM","GR-1043","Pine Hollow","Service fee collected with no-show fee",4.5],["Nov 11 2:05 PM","GR-1039","Ridgewood","Service fee collected",6],["Nov 10 6:12 PM","GR-1048","Cedar Ridge","Cancelled in time, no fee",0],["Nov 10 9:02 AM","GR-1036","Oak Valley","Service fee refunded (course called it off)",-3],["Nov 9 3:20 PM","GR-1034","Ridgewood","Service fee collected",4.5]];
-    $("ledger").innerHTML=LG.map(r=>'<tr><td style="white-space:nowrap">'+r[0]+'</td><td class="bn">'+r[1]+'</td><td>'+r[2]+'</td><td>'+r[3]+'</td><td class="n '+(r[4]<0?'dn':'')+'">'+(r[4]<0?'−'+usd(-r[4]):usd(r[4]))+'</td><td class="hide-s">'+(r[4]?'<span class="plink">↗</span>':'')+'</td></tr>').join("");
+    $("ledger").innerHTML=LG.map(r=>'<tr><td style="white-space:nowrap">'+r[0]+'</td><td class="bn">'+r[1]+'</td><td>'+r[2]+'</td><td>'+r[3]+'</td><td class="n '+(r[4]<0?'dn':'')+'">'+(r[4]<0?'−'+usd(-r[4]):usd(r[4]))+'</td><td class="hide-s">'+(r[4]?'<a class="ico" href="#" aria-label="Open in Stripe" title="Open in Stripe"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg></a>':'')+'</td></tr>').join("");
     $("match").innerHTML='<div><span>October<small>Our ledger vs Stripe</small></span><b class="upc">Matches</b></div><div><span>November so far</span><b class="upc">Matches</b></div>';
   }
   const fb=$("fbtn"), fm=$("filters");
