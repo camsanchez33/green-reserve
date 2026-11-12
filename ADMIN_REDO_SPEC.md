@@ -134,3 +134,23 @@ or login details (texts consent, sign-in, 2-step for staff), their record, their
 Read-only, like Bookings.
 Note for the Home build (Cam 2026-11-12): "Open the register" shows ONLY when the course has turned on, in Settings,
 that it takes cash and we keep track of the register. Courses that don't take cash never see it.
+
+## Course dashboard Home: APPROVED (Cam 2026-11-12, "approved, build the home page to match the mockup")
+Mockup: `lanes/dashboard/home-mockup.html` (final version). What it settles:
+- Look: charcoal glass by default with a Light switch. Monochrome chrome. Colour only where it means something:
+  green = paid / ahead, amber = to do soon, red = a problem or unpaid, blue = rain. Abstract blurred ribbons behind
+  frosted panels. "Powered by GreenReserve" with GreenReserve in our green.
+- Top: the date (no Open tee sheet button), "As of", one search. "Open the register →" bar only when the course has
+  switched on taking cash (new Settings switch; display only in this PR).
+- Three cards: Next off · Checked in N of M players · weather (rain in blue: "rain at 4 PM").
+- Four numbers: Players booked (+N vs last week) · Tee sheet filled (Up/Down X% vs last week) · Collected today
+  (green, no second line) · Not paid yet (red, no second line).
+- Today by hour: every bar the same height, filled by share. Played green, playing yellow, booked white, open red.
+  One line under it: "N spots · N booked".
+- Next 14 days: one column per day. The bar = booked out of the most seats any day has. The line = the 4-week average
+  for that weekday. Amber when behind its usual pace. Today labelled like the others.
+- Week ahead: four clear steps, with the % printed in each cell, heat in red.
+- Events coming up: name, date, time, how full. No money.
+- Right column: Action needed (just the list, no count tiles) · Next payout (own card) · Staff notes · Course
+  conditions (cart path, pins, greens only, each with a detail line, no "set by" line) · goals coloured by how close
+  to target (no line, no key).
