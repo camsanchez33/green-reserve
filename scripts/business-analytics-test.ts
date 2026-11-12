@@ -49,7 +49,12 @@ ok('a lead we closed (lead→rejected) is not responded either',
 }
 {
   const mm = milestones(base({ status: 'live', createdAt: d(2), events: [{ fromStatus: 'lead', toStatus: 'lead', createdAt: d(2) }, { fromStatus: 'lead', toStatus: 'in_review', createdAt: d(5) }], builtAt: d(8), signedAt: d(9), wentLiveAt: d(12) }));
-  ok('a lead moved to Talking with no touch logged enters at that move (reached and responded then), through to live', !mm.inbound && mm.entry?.getTime() === d(5).getTime() && mm.reached?.getTime() === d(5).getTime() && mm.responded?.getTime() === d(5).getTime() && mm.live?.getTime() === d(12).getTime(), mm);
+  ok('a lead moved to Talking with no touch logged enters at that move and responds then, through to live; no reach date', !mm.inbound && mm.entry?.getTime() === d(5).getTime() && mm.reached === null && mm.responded?.getTime() === d(5).getTime() && mm.live?.getTime() === d(12).getTime(), mm);
+  const ff = joiningFunnel([mm, milestones(base({ status: 'in_review', createdAt: d(2), touches: [{ at: d(3), direction: 'out' }], events: [{ fromStatus: 'lead', toStatus: 'in_review', createdAt: d(7) }] }))], d(1), d(31));
+  const r = ff.steps.find(s => s.key === 'reached')!;
+  ok('…it still counts as Reached, but adds no 0 to "days at Reached" (only the logged 4-day one)', r.count === 2 && r.avgDaysAtStep === 4, r);
+}
+{
 }
 
 const all = [outLive, outSilent, leadUntouched, inLive, inTalking].map(milestones);

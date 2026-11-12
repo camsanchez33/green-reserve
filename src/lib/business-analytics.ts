@@ -55,13 +55,15 @@ export function milestones(i: InquiryForFunnel): Milestones {
   const firstIn = min(i.touches.filter(t => t.direction === 'in').map(t => t.at));
   // The real move off lead: to Talking or further, never lead→lead or a lead we closed.
   const offLead = min(i.events.filter(e => e.fromStatus === 'lead' && !['lead', 'rejected', 'archived'].includes(e.toStatus)).map(e => e.createdAt));
-  // A lead moved to Talking with no touch logged was still reached by us: it enters at that move.
-  const reached = inbound ? null : (firstOut ?? offLead);
+  // Reached is our first LOGGED outreach. A lead moved to Talking with no touch logged still enters the cohort at
+  // that move (and counts as Reached — every outbound course in the cohort does), but has no reach date, so it
+  // never adds a made-up 0 to "days at Reached".
+  const reached = inbound ? null : firstOut;
   const responded = inbound ? i.createdAt : min([firstIn, offLead]);
   const calls = min(i.calls.filter(c => c.outcome === 'talked').map(c => c.completedAt ?? c.scheduledAt));
   return {
     inbound,
-    entry: inbound ? i.createdAt : reached,
+    entry: inbound ? i.createdAt : (firstOut ?? offLead),
     reached, responded, calls,
     built: i.builtAt, signed: i.signedAt, live: i.wentLiveAt,
   };

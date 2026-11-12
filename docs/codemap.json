@@ -17090,7 +17090,7 @@
     },
     {
       "path": "src/lib/business-analytics.ts",
-      "lines": 122,
+      "lines": 124,
       "purpose": "ADMIN-REDO Business analytics (Cam 2026-11-12, ADMIN_REDO_SPEC \"Business analytics:",
       "brain": [],
       "exports": [
