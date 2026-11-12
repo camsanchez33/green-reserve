@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 707,
+    "files": 708,
     "routes": 303,
-    "libs": 254,
+    "libs": 255,
     "models": 72,
     "orphans": 11,
     "ungatedRoutes": 3
@@ -3052,7 +3052,7 @@
     },
     {
       "path": "src/app/api/admin/revenue/route.ts",
-      "lines": 365,
+      "lines": 514,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3070,15 +3070,20 @@
       "guard": "file",
       "imports": [
         "@/lib/access-fee",
+        "@/lib/admin-day",
         "@/lib/admin-session",
+        "@/lib/card-reader",
         "@/lib/course-metrics",
         "@/lib/expenses",
         "@/lib/fees-by-day",
+        "@/lib/ledger-view",
         "@/lib/money-problems",
         "@/lib/platform-stripe",
         "@/lib/prisma",
         "@/lib/real-courses",
+        "@/lib/revenue-period",
         "@/lib/shop",
+        "@/lib/stripe",
         "@/lib/stripe-errors",
         "next/server"
       ],
@@ -3501,7 +3506,7 @@
     },
     {
       "path": "src/app/api/admin/transactions/export/route.ts",
-      "lines": 94,
+      "lines": 107,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3520,6 +3525,7 @@
       "imports": [
         "@/lib/admin-session",
         "@/lib/prisma",
+        "@/lib/revenue-period",
         "@/lib/shop",
         "next/server"
       ],
@@ -13121,7 +13127,7 @@
     },
     {
       "path": "src/components/dashboard/home/HomeBoard.tsx",
-      "lines": 303,
+      "lines": 305,
       "purpose": "DASH-D Home (Cam 2026-11-01, mockup S1):",
       "brain": [],
       "exports": [
@@ -13181,6 +13187,7 @@
         "@/lib/course-conditions",
         "@/lib/course-goals",
         "@/lib/dashboard-fetch",
+        "@/lib/goal-pace",
         "@/lib/home-board",
         "@/lib/home-today",
         "next/link",
@@ -14892,12 +14899,14 @@
         "src/app/api/admin/ask/route.ts",
         "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/goals/route.ts",
+        "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/today/overview/route.ts",
         "src/lib/admin-ask.ts",
         "src/lib/admin-checks.ts",
         "src/lib/admin-course-page.ts",
         "src/lib/admin-home.ts",
-        "src/lib/admin-today.ts"
+        "src/lib/admin-today.ts",
+        "src/lib/revenue-period.ts"
       ]
     },
     {
@@ -17399,6 +17408,7 @@
         "stripe"
       ],
       "usedBy": [
+        "src/app/api/admin/revenue/route.ts",
         "src/app/api/operator/card-readers/route.ts",
         "src/app/api/operator/reader-rounds/route.ts",
         "src/app/api/operator/shop-sales/route.ts",
@@ -20943,6 +20953,52 @@
       ]
     },
     {
+      "path": "src/lib/goal-pace.ts",
+      "lines": 64,
+      "purpose": "GOAL-PACE (Cam 2026-11-12, ADMIN_REDO_SPEC \"Goals:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "EARLY_DAYS",
+          "kind": "const"
+        },
+        {
+          "name": "elapsedDays",
+          "kind": "fn"
+        },
+        {
+          "name": "elapsedShare",
+          "kind": "fn"
+        },
+        {
+          "name": "GoalKind",
+          "kind": "type"
+        },
+        {
+          "name": "goalPace",
+          "kind": "fn"
+        },
+        {
+          "name": "PaceTone",
+          "kind": "type"
+        },
+        {
+          "name": "projectAtEnd",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/components/dashboard/home/HomeBoard.tsx",
+        "src/lib/home-board.ts"
+      ]
+    },
+    {
       "path": "src/lib/golfer-key.ts",
       "lines": 40,
       "purpose": "Who a golfer is at a course:",
@@ -21268,7 +21324,7 @@
     },
     {
       "path": "src/lib/home-board.ts",
-      "lines": 127,
+      "lines": 130,
       "purpose": "DASH-D Home (Cam 2026-11-01, mockups S1 + \"week-ahead heat map and month vs goal\"):",
       "brain": [],
       "exports": [
@@ -21320,6 +21376,7 @@
         "./course-goals",
         "./course-time",
         "./day-fill",
+        "./goal-pace",
         "./prisma"
       ],
       "usedBy": [
@@ -21330,7 +21387,7 @@
     },
     {
       "path": "src/lib/home-today.ts",
-      "lines": 118,
+      "lines": 107,
       "purpose": "HOME-3 (Cam 2026-11-12, \"approved, build the home page to match the mockup\", ADMIN_REDO_SPEC.md \"Course dashboard Home:",
       "brain": [],
       "exports": [
@@ -21341,10 +21398,6 @@
         {
           "name": "CONDITION_TONE",
           "kind": "const"
-        },
-        {
-          "name": "goalTone",
-          "kind": "fn"
         },
         {
           "name": "GoalTone",
@@ -22015,6 +22068,10 @@
           "kind": "fn"
         },
         {
+          "name": "csvCell",
+          "kind": "fn"
+        },
+        {
           "name": "dayOf",
           "kind": "fn"
         },
@@ -22095,6 +22152,7 @@
         "./stripe"
       ],
       "usedBy": [
+        "src/app/api/admin/revenue/route.ts",
         "src/app/api/operator/money/ledger/route.ts",
         "src/components/dashboard/money/LedgerPanel.tsx"
       ]
@@ -25151,6 +25209,102 @@
       ]
     },
     {
+      "path": "src/lib/revenue-period.ts",
+      "lines": 254,
+      "purpose": "ADMIN-REDO Revenue (Cam 2026-11-11):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "addDays",
+          "kind": "fn"
+        },
+        {
+          "name": "centsPerDay",
+          "kind": "fn"
+        },
+        {
+          "name": "dayIndex",
+          "kind": "fn"
+        },
+        {
+          "name": "daysBetween",
+          "kind": "fn"
+        },
+        {
+          "name": "daySeries",
+          "kind": "fn"
+        },
+        {
+          "name": "parseRevenuePeriod",
+          "kind": "fn"
+        },
+        {
+          "name": "payoutArrivalRange",
+          "kind": "fn"
+        },
+        {
+          "name": "PayoutIn",
+          "kind": "type"
+        },
+        {
+          "name": "PayoutProblem",
+          "kind": "type"
+        },
+        {
+          "name": "platformMoveLabel",
+          "kind": "fn"
+        },
+        {
+          "name": "platformSigned",
+          "kind": "fn"
+        },
+        {
+          "name": "resolveRevenuePeriod",
+          "kind": "fn"
+        },
+        {
+          "name": "REVENUE_PERIODS",
+          "kind": "const"
+        },
+        {
+          "name": "RevenuePeriod",
+          "kind": "type"
+        },
+        {
+          "name": "RevenuePeriodKind",
+          "kind": "type"
+        },
+        {
+          "name": "RevenueWindow",
+          "kind": "type"
+        },
+        {
+          "name": "stripePaymentUrl",
+          "kind": "fn"
+        },
+        {
+          "name": "stripePayoutUrl",
+          "kind": "fn"
+        },
+        {
+          "name": "summarisePayouts",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./admin-day"
+      ],
+      "usedBy": [
+        "src/app/api/admin/revenue/route.ts",
+        "src/app/api/admin/transactions/export/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/round-packs-switch.ts",
       "lines": 8,
       "purpose": "POS-6 (Cam 2026-11-09, round packs:",
@@ -27560,6 +27714,7 @@
         "src/app/api/admin/course-documents/route.ts",
         "src/app/api/admin/course-payouts/route.ts",
         "src/app/api/admin/platform-stripe/route.ts",
+        "src/app/api/admin/revenue/route.ts",
         "src/app/api/bookings/route.ts",
         "src/app/api/bookings/setup-intent/route.ts",
         "src/app/api/cron/send-reminders/route.ts",
@@ -33002,6 +33157,7 @@
         "src/lib/sample-data.ts"
       ],
       "readers": [
+        "src/app/api/admin/revenue/route.ts",
         "src/app/api/member/[courseSlug]/payments/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/lib/analytics.ts",

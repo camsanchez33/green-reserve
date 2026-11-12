@@ -12,6 +12,10 @@ on:
   pull_request:
     branches: [main]
 
+# Read-only token: this job runs a third-party action (setup-chrome) after checkout.
+permissions:
+  contents: read
+
 jobs:
   lighthouse:
     name: Lighthouse budget check
@@ -52,10 +56,14 @@ jobs:
       - name: Install Lighthouse + tsx
         run: npm install -D lighthouse tsx
 
-      - name: Install Chromium
-        run: |
-          sudo apt-get update -q
-          sudo apt-get install -y -q chromium-browser || sudo apt-get install -y -q chromium
+      # Not apt: on the runner's image apt's chromium is a snap shim, and the snap store
+      # going unreachable failed this step before any audit ran (Nov 12 2026).
+      - name: Install Chrome
+        id: chrome
+        uses: browser-actions/setup-chrome@48ad923757ca74d66703209fe939badbdf80f2f4 # v2.2.0 (pinned: third-party)
+        with:
+          chrome-version: stable
+          install-dependencies: true
 
       - name: Database with one live course
         run: |
@@ -83,6 +91,7 @@ jobs:
         env:
           AUDIT_BASE_URL: http://localhost:3000
           AUDIT_COURSE_SLUG: perf-audit
+          CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
 
       - name: Server log
         if: failure()

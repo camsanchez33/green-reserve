@@ -3,7 +3,7 @@
 // and the month against its goal. HOME-3 (Cam 2026-11-12, the approved charcoal Home mockup): staff notes as a
 // plain list with "Add a note", conditions as cart path / greens / pins with a detail line each (no "set by"
 // line), the week ahead in four clear steps of red with each cell's % printed, goals coloured by how close they
-// are to where they should be today (no line, no key), and the next events. Data comes with /api/operator/home;
+// are to hitting their target at today's pace (lib/goal-pace; no line, no key), and the next events. Data comes with /api/operator/home;
 // each card writes through its own route and shows its own pending / error state (no silent failures).
 import { useState } from 'react';
 import Link from 'next/link';
@@ -12,12 +12,13 @@ import { StatusDot } from '@/components/ui/StatusDot';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { goalMetric, formatGoal, type GoalMetric } from '@/lib/course-goals';
 import { CONDITION_FIELDS, HOME_CONDITIONS, CONDITION_NOTE_CHARS, mergeHomeConditions, conditionLabel, conditionsOffBookingPage, type CourseConditions, type ConditionKey } from '@/lib/course-conditions';
-import { goalTone, CONDITION_TONE, type GoalTone } from '@/lib/home-today';
+import { CONDITION_TONE } from '@/lib/home-today';
+import { goalPace, elapsedShare, type PaceTone } from '@/lib/goal-pace';
 import type { HomeEvent } from '@/lib/home-board';
 
 export type ShiftNote = { id: string; body: string; authorName: string; createdAt: string };
 export type WeekAhead = { hours: number[]; days: { date: string; cells: { booked: number; offered: number }[] }[] };
-export type Goals = { month: string; daysLeft: number; lastMonth: string; goals: { metric: GoalMetric; target: number; actual: number; lastMonth: number }[]; metrics: GoalMetric[] };
+export type Goals = { month: string; daysLeft: number; elapsed?: number; lastMonth: string; goals: { metric: GoalMetric; target: number; actual: number; lastMonth: number }[]; metrics: GoalMetric[] };
 export type Conditions = { detail: CourseConditions; alert: string; updatedAt: string | null; detailAt: string | null };
 export type { HomeEvent };
 
@@ -35,8 +36,8 @@ const BTN = 'px-3 min-h-[36px] rounded-[7px] bg-white border border-line text-[1
 const PRIMARY = 'px-3.5 min-h-[36px] rounded-[7px] bg-pine hover:bg-pine-hover text-white text-[13px] font-medium disabled:opacity-50';
 const INPUT = 'bg-paper border border-line rounded-[7px] px-3 py-2 text-[14px] text-ink placeholder-ink-faint focus:border-pine/40 focus:ring-2 focus:ring-pine/10';
 const LINK = 'text-[13px] font-semibold text-pine hover:underline underline-offset-4';
-const TONE_TEXT: Record<GoalTone, string> = { ok: 'text-ok', warn: 'text-warn', bad: 'text-bad' };
-const TONE_BG: Record<GoalTone, string> = { ok: 'bg-ok', warn: 'bg-warn', bad: 'bg-bad' };
+const TONE_TEXT: Record<PaceTone, string> = { ok: 'text-ok', warn: 'text-warn', bad: 'text-bad', early: 'text-ink' };
+const TONE_BG: Record<PaceTone, string> = { ok: 'bg-ok', warn: 'bg-warn', bad: 'bg-bad', early: 'bg-dot-neutral' };
 
 /** The notes the last shift left — and a box to leave one for the next. */
 export function ShiftNotes({ initial }: { initial: ShiftNote[] }) {
@@ -230,7 +231,7 @@ export function EventsCard({ events }: { events: HomeEvent[] }) {
   );
 }
 
-/** HOME-2/HOME-3: this month's goals, each coloured by how close it is to where it should be today. */
+/** HOME-2/HOME-3: this month's goals; each bar is progress and its colour where the month ends at today's pace (lib/goal-pace). */
 export function GoalsCard({ goals, canSet, onSaved }: { goals: Goals; canSet: boolean; onSaved: () => void }) {
   const [managing, setManaging] = useState(false);
   const [editing, setEditing] = useState<GoalMetric | 'new' | null>(null);
@@ -280,7 +281,8 @@ export function GoalsCard({ goals, canSet, onSaved }: { goals: Goals; canSet: bo
       {goals.goals.map(g => {
         const m = goalMetric(g.metric);
         const pct = Math.min(100, g.target ? (g.actual / g.target) * 100 : 0);
-        const tone = goalTone({ actual: g.actual, target: g.target, dayOfMonth, daysInMonth, rate: m.unit === 'pct' });
+        // GOAL-PACE (Cam 2026-11-12): the bar is progress; the colour is where the month ends at today's pace — grey for the first 3 days.
+        const { tone } = goalPace({ progress: g.actual, target: g.target, share: elapsedShare(goals.elapsed ?? dayOfMonth, daysInMonth), rate: m.unit === 'pct', daysElapsed: goals.elapsed ?? dayOfMonth });
         return (
           <div key={g.metric} className="flex flex-col gap-1.5">
             <div className="flex items-baseline gap-2">
