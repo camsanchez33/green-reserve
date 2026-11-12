@@ -22,7 +22,7 @@ ok('reach: already reached is green', reach(20, 20) === 'ok');
 ok('reach: the rate rule', goalPace({ progress: 70, target: 75, share, rate: true }).tone === 'warn' && goalPace({ progress: 60, target: 75, share, rate: true }).tone === 'bad' && goalPace({ progress: 76, target: 75, share, rate: true }).tone === 'ok');
 
 const cap = (p: number, t: number) => goalPace({ progress: p, target: t, share, kind: 'cap' }).tone;
-// ADMIN_REDO_SPEC cap bands: ok ≤ 0.9 × target · warn ≤ target · bad > target.
+// Cap bands (Cam via Build 2026-11-12, CLAUDE.md GOAL-PACE): ok ≤ 0.9 × target · warn ≤ target · bad > target.
 ok('cap: on pace to land 10% or more under is green', cap(360, 1000) === 'ok' && cap(300, 1000) === 'ok'); // 900, 750
 ok('cap: on pace for the last 10% is yellow — landing exactly at the limit too', cap(361, 1000) === 'warn' && cap(400, 1000) === 'warn'); // 902.5, 1000
 ok('cap: on pace to go over is red', cap(401, 1000) === 'bad'); // 1002.5

@@ -20788,7 +20788,7 @@
     },
     {
       "path": "src/lib/expense-history.ts",
-      "lines": 35,
+      "lines": 36,
       "purpose": "ADMIN-REDO Expenses (Cam 2026-11-12):",
       "brain": [],
       "exports": [

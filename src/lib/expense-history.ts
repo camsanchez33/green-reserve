@@ -1,7 +1,8 @@
 // ADMIN-REDO Expenses (Cam 2026-11-12): an expense's history from its audit rows. Pure.
 // expense_add → 'added'; expense_edit → 'ended' when endedAt went from empty to a date, else
-// 'changed'. There is no restart: an ended expense can't be un-ended (the PATCH route refuses;
-// starting again is a new expense), and an old row that cleared endedAt reads as a change. The fields that changed (other than
+// 'changed' (a scheduled future end set counts as 'ended' too). There is no restart: once its end
+// has passed an expense can't be un-ended (the PATCH route refuses; starting again is a new expense).
+// Clearing a still-scheduled end, or an old row that cleared endedAt, reads as a change. The fields that changed (other than
 // endedAt) ride along as { field, from, to }. An edit that changed nothing is left out.
 
 export type ExpenseHistoryKind = 'added' | 'changed' | 'ended';

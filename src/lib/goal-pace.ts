@@ -65,7 +65,7 @@ export function goalPace(o: { progress: number; target: number; share: number; k
     return { projected, tone: atLeast(projected, o.target * 0.9) ? 'warn' : 'bad' };
   }
   if (!atMost(soFar, o.target)) return { projected, tone: 'bad' }; // already over the budget
-  // ADMIN_REDO_SPEC (Cam via Build 2026-11-12): a budget on course to land exactly at its limit is yellow.
+  // Cam via Build 2026-11-12 (CLAUDE.md GOAL-PACE): a budget on course to land exactly at its limit is yellow.
   if (atMost(projected, o.target * 0.9)) return { projected, tone: 'ok' };
   return { projected, tone: atMost(projected, o.target) ? 'warn' : 'bad' };
 }
