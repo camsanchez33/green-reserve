@@ -202,3 +202,11 @@ Golfer chargebacks are the course's. Our Connect accounts are Express, so a cour
 disputes" is ON in GreenReserve's Stripe (Settings → Connect → Express Dashboard → features). Cam is turning it on
 (Stripe docs: docs.stripe.com/connect/disputes and /connect/express-dashboard). The admin has no evidence pack. The
 Operator Agreement's next version should say chargebacks are the course's to answer.
+
+## Financial analytics: APPROVED (Cam 2026-11-12)
+Mockup `lanes/admin/finance-mockup.html` (final). Owner only. Filter: last 12 / 6 / 3 months, this year.
+- Cards: Revenue · Expenses · Profit · Margin, each with "Up/Down X% vs <the same stretch before>". No other sub-lines.
+- Month by month: smooth revenue line (green) and expenses line (red). Between them, green where in profit and red where at a loss. $ levels on the left; the last month's value labelled.
+- Revenue breakdown (by source: booking service fees, no-show & late-cancel fees, membership dues fees) and Expenses breakdown (by category, link to Expenses), side by side. Expenses are red everywhere.
+- Months table: bookings, revenue, expenses, profit, margin. Clicking a month opens its breakdown: revenue by source, expenses by category (each vs the month before), by course (bookings · revenue), and the month (bookings, live courses, new courses live, profit). CSV.
+Data from the MoneyMove ledger (GreenReserve side) and Expenses; counted, never estimated. The data is Build's.
