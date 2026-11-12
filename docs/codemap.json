@@ -1,7 +1,7 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 718,
+    "files": 719,
     "routes": 308,
     "libs": 258,
     "models": 75,
@@ -1259,8 +1259,38 @@
       "usedBy": []
     },
     {
-      "path": "src/app/admin/revenue/logic.ts",
+      "path": "src/app/admin/revenue/GoalCard.tsx",
       "lines": 73,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (GoalCard)",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "../admin-glass.module.css",
+        "../courses/courses.module.css",
+        "./logic",
+        "./revenue.module.css",
+        "./terms",
+        "@/lib/goal-pace",
+        "@/lib/step-up-client",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/admin/revenue/page.tsx"
+      ]
+    },
+    {
+      "path": "src/app/admin/revenue/logic.ts",
+      "lines": 91,
       "purpose": "Revenue page's pure rules, kept apart so scripts/admin-revenue-test.ts can pin them:",
       "brain": [],
       "exports": [
@@ -1281,12 +1311,20 @@
           "kind": "fn"
         },
         {
+          "name": "isGoal",
+          "kind": "fn"
+        },
+        {
           "name": "isNewAnswer",
           "kind": "fn"
         },
         {
           "name": "KIND",
           "kind": "const"
+        },
+        {
+          "name": "parseGoalCents",
+          "kind": "fn"
         },
         {
           "name": "payoutState",
@@ -1307,6 +1345,10 @@
         {
           "name": "periodDone",
           "kind": "fn"
+        },
+        {
+          "name": "RevenueGoal",
+          "kind": "type"
         }
       ],
       "route": null,
@@ -1316,12 +1358,13 @@
       "guard": null,
       "imports": [],
       "usedBy": [
+        "src/app/admin/revenue/GoalCard.tsx",
         "src/app/admin/revenue/page.tsx"
       ]
     },
     {
       "path": "src/app/admin/revenue/page.tsx",
-      "lines": 467,
+      "lines": 472,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1338,6 +1381,7 @@
       "imports": [
         "../admin-glass.module.css",
         "../courses/courses.module.css",
+        "./GoalCard",
         "./logic",
         "./revenue.module.css",
         "./terms",
@@ -1351,7 +1395,7 @@
     },
     {
       "path": "src/app/admin/revenue/terms.ts",
-      "lines": 24,
+      "lines": 25,
       "purpose": "Revenue (ADMIN-REDO, Cam approved the mockup 2026-11-12):",
       "brain": [],
       "exports": [
@@ -1383,6 +1427,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
+        "src/app/admin/revenue/GoalCard.tsx",
         "src/app/admin/revenue/page.tsx"
       ]
     },
@@ -21352,6 +21397,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
+        "src/app/admin/revenue/GoalCard.tsx",
         "src/components/dashboard/home/HomeBoard.tsx",
         "src/lib/home-board.ts"
       ]
@@ -27952,6 +27998,7 @@
         "src/app/admin/goals/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/inquiries/page.tsx",
+        "src/app/admin/revenue/GoalCard.tsx",
         "src/components/admin/OwnerDevicesCard.tsx",
         "src/components/admin/OwnerPasskeysCard.tsx",
         "src/components/admin/ReasonDialog.tsx",
