@@ -26,7 +26,7 @@ check('route: a same-instant duplicate gives back the promo and pack, and return
   && route.indexOf('if (claimed.duplicate) {') < route.indexOf('chargeBookingFee(claimed.id)') && route.indexOf('if (claimed.duplicate) {') < route.indexOf('optInAndConfirm('));
 check('route: a golfer email must look like an email', /if \(typeof golferEmail !== 'string' \|\| !\/\^\[\^\\s@\]\+@/.test(route));
 check('lib: exact, case-folded email (lower() = lower()), never ILIKE / mode insensitive', /lower\("golferEmail"\) = lower\(\$\{email\}\)/.test(lib) && !/golferEmail: \{ equals: golfer, mode: 'insensitive'/.test(lib));
-check('lib: only bookings the golfer route made (termsAcceptedAt), in the last 2 minutes, same name and party', /"termsAcceptedAt" IS NOT NULL AND "createdAt" >= \$\{since\}/.test(lib) && /"players" = \$\{players\}/.test(lib) && DOUBLE_TAP_MS === 120_000);
+check('lib: only bookings the golfer route made (termsAcceptedAt), in the last 2 minutes, same name and party', /"termsAcceptedAt" IS NOT NULL AND "createdAt" >= \(\$\{since\}::timestamptz AT TIME ZONE 'UTC'\)/.test(lib) && /"players" = \$\{players\}/.test(lib) && DOUBLE_TAP_MS === 120_000);
 check('only the online claim dedupes', /if \(opts\.online\) \{\s+const mine = await findDoubleTap\(tx, data\)/.test(lib));
 
 const DATE = '2031-07-01';
@@ -107,6 +107,26 @@ async function main() {
     await prisma.booking.update({ where: { id: gone.id }, data: { status: 'cancelled' } });
     const back = await claimTeeTime(online(t3.id, `${TAG}-again@test.local`, 1) as never, actor, { online: true });
     check('after cancelling, the same golfer can book that time again', back.id !== gone.id && !back.duplicate);
+  }
+
+  // 6. The 2-minute window holds whatever the database session's timezone (final review).
+  {
+    const t = await slot();
+    const fresh = await claimTeeTime(online(t.id, `${TAG}-tz@test.local`, 2) as never, actor, { online: true });
+    const t2 = await slot();
+    const aged = await claimTeeTime(online(t2.id, `${TAG}-tzold@test.local`, 2) as never, actor, { online: true });
+    await prisma.booking.update({ where: { id: aged.id }, data: { createdAt: new Date(Date.now() - 3 * 60_000) } });
+    for (const tz of ['UTC', 'America/Los_Angeles', 'Asia/Tokyo']) {
+      const [hit, miss] = await prisma.$transaction(async tx => {
+        await tx.$executeRawUnsafe(`SET LOCAL TIME ZONE '${tz}'`);
+        return [
+          await findDoubleTap(tx as never, online(t.id, `${TAG}-tz@test.local`, 2)),
+          await findDoubleTap(tx as never, online(t2.id, `${TAG}-tzold@test.local`, 2)),
+        ];
+      });
+      check(`session timezone ${tz}: a tap seconds ago matches`, hit?.id === fresh.id, { hit });
+      check(`session timezone ${tz}: a booking 3 minutes old does not`, miss === null, { miss });
+    }
   }
 }
 

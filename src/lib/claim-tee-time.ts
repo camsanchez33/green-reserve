@@ -99,10 +99,12 @@ export async function findDoubleTap(
   const players = Number(d.players);
   if (!email || !name || !Number.isInteger(players)) return null;
   const since = new Date(now.getTime() - DOUBLE_TAP_MS);
+  // "createdAt" is a zone-less timestamp holding UTC; a bound Date is timestamptz. Compare in UTC
+  // explicitly, or the session's TimeZone would shift the window by hours (final review).
   const rows = await db.$queryRaw<{ id: string; checkInToken: string | null }[]>`
     SELECT "id", "checkInToken" FROM "Booking"
     WHERE "teeTimeId" = ${String(d.teeTimeId)} AND "status" = 'confirmed' AND "source" = 'online'
-      AND "termsAcceptedAt" IS NOT NULL AND "createdAt" >= ${since}
+      AND "termsAcceptedAt" IS NOT NULL AND "createdAt" >= (${since}::timestamptz AT TIME ZONE 'UTC')
       AND lower("golferEmail") = lower(${email}) AND lower(btrim("golferName")) = lower(${name}) AND "players" = ${players}
     ORDER BY "createdAt" ASC LIMIT 1`;
   return rows[0] ?? null;
