@@ -69,7 +69,7 @@ ok('6. the page buckets and alert windows use it', golfer.includes("if (hm < tw)
 ok('6. both course loaders select the period name and start', read('src/lib/public-course.ts').includes('tierName: true, startTime: true') && read('src/app/api/preview/[courseId]/route.ts').includes('tierName: true, startTime: true'));
 
 // 7
-ok('7. the cart button says when it is on', golfer.includes("{withCart ? 'Cart added · tap to remove' : 'Add cart'}") && golfer.includes('aria-pressed={withCart}'));
+ok('7. the Walking / Riding switch says when a cart is on', golfer.includes("['Walking', false], ['Riding', true]") && golfer.includes('aria-pressed={withCart === riding}'));
 
 // 8
 const settings = read('src/app/dashboard/settings/page.tsx');

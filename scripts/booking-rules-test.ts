@@ -23,9 +23,9 @@ check('golfer data carries a clean dress code', JSON.stringify(n.dress_code) ===
 const page = readFileSync('src/app/dashboard/settings/page.tsx', 'utf8');
 const booking = readFileSync('src/app/courses/[slug]/CourseBookingClient.tsx', 'utf8');
 check('no dress-code toggle chips left', !page.includes("'Collared shirt required'"));
-check('settings points walking at the Schedule price table', page.includes('Schedule → What it costs') && !page.includes('WALKING_CHOICES') && booking.includes('walkingWords(course.walking_policy)'));
+check('settings points walking at the Schedule price table', page.includes('Schedule → What it costs') && !page.includes('WALKING_CHOICES') && readFileSync('src/app/courses/[slug]/info/page.tsx', 'utf8').includes('walkingWords(course.walking_policy)'));
 check('booking page no longer says "Allowed" for a carts-only course', !booking.includes("course.walking_allowed ? 'Allowed' : 'Cart only'"));
-check('booking page shows the dress code', booking.includes('Dress code'));
+check('booking page shows the dress code', readFileSync('src/app/courses/[slug]/info/page.tsx', 'utf8').includes('Dress code'));
 
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }
 console.log('\nALL PASS');
