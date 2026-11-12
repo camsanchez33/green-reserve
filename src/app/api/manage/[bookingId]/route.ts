@@ -6,6 +6,7 @@ import { getGolferSession } from '@/lib/auth';
 import { canManageBooking } from '@/lib/manage-access';
 import { bookingWindowHours } from '@/lib/cancel-policy';
 import { liveNoShowCharge } from '@/lib/no-show-fee';
+import { bookingRefLabel } from '@/lib/booking-ref';
 
 const TOKEN_GRACE_MS = 24 * 60 * 60 * 1000; // 24h after tee time
 
@@ -54,6 +55,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
 
   return NextResponse.json({
     bookingId: booking.id,
+    bookingRef: bookingRefLabel(booking),
     golferName: booking.golferName,
     courseName: booking.course.name,
     courseSlug: booking.course.slug,

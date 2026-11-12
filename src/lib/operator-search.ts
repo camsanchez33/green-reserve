@@ -6,9 +6,10 @@
 import { prisma } from './prisma';
 import { todayIn, addDaysStr } from './course-time';
 import { groupCourseIds } from './course-group';
+import { bookingRefLabel, parseBookingRef } from './booking-ref';
 
 export type SearchResult =
-  | { kind: 'booking'; id: string; name: string; date: string; time: string; players: number; status: string; noShow: boolean; href: string }
+  | { kind: 'booking'; id: string; ref: string; name: string; date: string; time: string; players: number; status: string; noShow: boolean; href: string }
   | { kind: 'member'; id: string; name: string; tier: string; href: string }
   | { kind: 'resident'; id: string; name: string; href: string };
 
@@ -37,8 +38,11 @@ export async function operatorSearch(courseId: string, rawQ: string, opts: { con
   const phoneIds = opts.contact && digits.length >= 4
     ? (await prisma.$queryRaw<{ id: string }[]>`SELECT b."id" FROM "Booking" b JOIN "TeeTime" t ON t."id" = b."teeTimeId" WHERE b."courseId" = ${courseId} AND b."status" IN ('confirmed', 'completed', 'cancelled') AND t."date" >= ${since} AND regexp_replace(b."golferPhone", '[^0-9]', '', 'g') LIKE ${'%' + digits + '%'} ORDER BY t."date" DESC LIMIT 50`).map(r => r.id)
     : [];
+  // BOOKING-REF: "GR-1042" finds that booking (this course's only, like every query here).
+  const ref = parseBookingRef(q);
   const bookingOr = [
     { golferName: contains(q) },
+    ...(ref ? [{ ref }] : []),
     ...(opts.contact ? [{ golferEmail: contains(q) }, ...(phoneIds.length ? [{ id: { in: phoneIds } }] : [])] : []),
   ];
   const [bookingRows, members, residents] = await Promise.all([
@@ -46,7 +50,7 @@ export async function operatorSearch(courseId: string, rawQ: string, opts: { con
       // Cancelled and no-show groups too (dead end 18) — they're what the counter gets asked about.
       where: { courseId, status: { in: ['confirmed', 'completed', 'cancelled'] }, OR: bookingOr, teeTime: { date: { gte: since } } },
       orderBy: [{ teeTime: { date: 'desc' } }, { teeTime: { time: 'asc' } }], take: 60,
-      select: { id: true, golferName: true, players: true, status: true, noShowAt: true, teeTime: { select: { date: true, time: true } } },
+      select: { id: true, ref: true, golferName: true, players: true, status: true, noShowAt: true, teeTime: { select: { date: true, time: true } } },
     }),
     opts.members ? prisma.courseMembership.findMany({
       // Active members only: Members opens on its active list.
@@ -66,7 +70,7 @@ export async function operatorSearch(courseId: string, rawQ: string, opts: { con
   ]);
   const bookings = bySearchOrder(bookingRows.map(b => ({ ...b, date: b.teeTime.date, time: b.teeTime.time })), today).slice(0, 8);
   const out: SearchResult[] = bookings.map(b => ({
-    kind: 'booking', id: b.id, name: b.golferName, date: b.date, time: b.time.slice(0, 5), players: b.players, status: b.status, noShow: !!b.noShowAt,
+    kind: 'booking', id: b.id, ref: bookingRefLabel(b), name: b.golferName, date: b.date, time: b.time.slice(0, 5), players: b.players, status: b.status, noShow: !!b.noShowAt,
     // A cancelled group isn't on the tee sheet: it opens Money → Cancellations.
     href: b.status === 'cancelled' ? `/dashboard/money?tab=cancellations&q=${encodeURIComponent(b.golferName)}` : `/dashboard?date=${b.date}&q=${encodeURIComponent(b.golferName)}`,
   }));

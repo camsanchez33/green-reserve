@@ -707,6 +707,37 @@ async function main() {
     }
   }
 
+  console.log('\n── Pipeline: inquiries CSV and expected launch (BOOKING-REF PR) ──');
+  {
+    const { signAdminToken } = await import('../src/lib/admin-session');
+    const mk = (role: string) => prisma.adminUser.create({ data: { name: `Isol Pipe ${role}`, email: `${TS}-pipe-${role}@test.local`, passwordHash: 'x', role, active: true } });
+    const [viewer, sup, mgr] = [await mk('viewer'), await mk('support'), await mk('manager')];
+    const inq = await prisma.courseInquiry.create({ data: { contactName: 'Isol Pipe', contactTitle: 'GM', email: `${TS}-pipe@test.local`, phone: '1', courseName: 'Isol Pipe Course', address: '1', city: 'P', state: 'CA', zipCode: '90000', courseType: 'public', status: 'in_review' } });
+    try {
+      const ck = async (u: { id: string; email: string; name: string; role: string }) => `admin_session=${await signAdminToken({ adminId: u.id, email: u.email, name: u.name, role: u.role as 'viewer', mfa: true })}`;
+      const [vc, sc, mc] = [await ck(viewer), await ck(sup), await ck(mgr)];
+      checkStatus('A viewer cannot download the inquiries CSV → 403', (await api('/api/admin/inquiries?format=csv', { cookie: vc })).status, 403);
+      checkStatus('…but still reads the list → 200', (await api('/api/admin/inquiries', { cookie: vc })).status, 200);
+      const supCsv = await fetch(`${BASE_URL}/api/admin/inquiries?format=csv`, { headers: { cookie: sc } });
+      check('Support downloads it → 200 text/csv', supCsv.status === 200 && (supCsv.headers.get('content-type') ?? '').startsWith('text/csv'));
+      const body = { id: inq.id, action: 'set_expected_launch', expectedLaunchAt: '2026-12-15' };
+      checkStatus('Support cannot set an expected launch → 403', (await api('/api/admin/inquiries', { method: 'PATCH', cookie: sc, body })).status, 403);
+      checkStatus('A bad date → 400', (await api('/api/admin/inquiries', { method: 'PATCH', cookie: mc, body: { ...body, expectedLaunchAt: '2026-02-30' } })).status, 400);
+      checkStatus('A manager sets it → 200', (await api('/api/admin/inquiries', { method: 'PATCH', cookie: mc, body })).status, 200);
+      const row = await prisma.courseInquiry.findUnique({ where: { id: inq.id }, select: { expectedLaunchAt: true } });
+      check('…stored as that day', row?.expectedLaunchAt?.toISOString().slice(0, 10) === '2026-12-15', JSON.stringify(row));
+      const audit = await prisma.adminAuditLog.findFirst({ where: { adminId: mgr.id, action: 'inquiry_expected_launch', targetId: inq.id } });
+      check('…and audited', !!audit);
+      checkStatus('Clearing it → 200', (await api('/api/admin/inquiries', { method: 'PATCH', cookie: mc, body: { ...body, expectedLaunchAt: null } })).status, 200);
+      check('…cleared', (await prisma.courseInquiry.findUnique({ where: { id: inq.id }, select: { expectedLaunchAt: true } }))?.expectedLaunchAt === null);
+    } finally {
+      await prisma.inquiryStatusEvent.deleteMany({ where: { inquiryId: inq.id } }).catch(() => {});
+      await prisma.courseInquiry.delete({ where: { id: inq.id } }).catch(() => {});
+      await prisma.adminAuditLog.deleteMany({ where: { adminId: { in: [viewer.id, sup.id, mgr.id] } } }).catch(() => {});
+      await prisma.adminUser.deleteMany({ where: { id: { in: [viewer.id, sup.id, mgr.id] } } });
+    }
+  }
+
   console.log('\n── Admin owner auth boundary (AW-1: the owner signs in only at /cam) ──');
   {
     // (a) The employees' door never mentions an owner: the owner's correct

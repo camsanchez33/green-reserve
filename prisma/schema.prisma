@@ -623,6 +623,10 @@ model TeeTime {
 
 model Booking {
   id                         String            @id @default(cuid())
+  /// BOOKING-REF (Cam 2026-11-12): the short number golfers and staff read, shown as GR-<ref>
+  /// (bookingRefLabel in lib/booking-ref). From a Postgres sequence for every new booking; null on
+  /// bookings made before it (not backfilled — test data the launch wipe clears).
+  ref                        Int?              @unique @default(autoincrement())
   teeTimeId                  String
   teeTime                    TeeTime           @relation(fields: [teeTimeId], references: [id])
   courseId                   String
@@ -884,6 +888,8 @@ model CourseInquiry {
   detailsJson          String               @default("")
   reviewStartedAt      DateTime?
   wentLiveAt           DateTime?
+  /// When the course expects to go live (the Onboarding page's Launch column). Set by admin, Pipeline area, manager+.
+  expectedLaunchAt     DateTime?
   // MP-3 growth columns. Cheap now, unanswerable later:
   //   source        — which channel converts. THE pre-launch question, and
   //                   nothing in the schema can answer it today.
