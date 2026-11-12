@@ -2,8 +2,8 @@
 // Hide online / Delete time show only on a time with nobody booked, and the server refuses them on a booked time").
 // Closing a time (status blocked) or hiding it online (staffOnly) while a group is on it would leave that group on a
 // time golfers and staff no longer see as theirs, so the per-time route refuses it: move or cancel the group first.
-// Each write is conditional on "no active booking" so a booking that lands between the check and the write can't
-// slip under a closed time. SEATS-1's seat stepper (only open seats), day blackouts (block in place on purpose),
+// The check and the write are one SERIALIZABLE transaction (as claimTeeTime), so a booking that lands meanwhile
+// makes one of them fail instead of slipping under a closed time. SEATS-1's seat stepper (only open seats), day blackouts (block in place on purpose),
 // events, weather and frost are separate paths and are not changed here.
 import { prisma } from './prisma';
 
@@ -26,29 +26,40 @@ export function refusal(action: 'close' | 'hide' | 'delete', groups: { golferNam
   return `This time has ${n === 1 ? 'a group' : `${n} groups`} booked — ${bookedOnTime(groups)}. Move or cancel ${n === 1 ? 'it' : 'them'} before you ${what} the time.`;
 }
 
-async function why(courseId: string, teeTimeId: string, action: 'close' | 'hide' | 'delete'): Promise<CloseResult> {
-  const t = await prisma.teeTime.findFirst({
-    where: { id: teeTimeId, courseId },
-    select: { bookings: { where: ACTIVE_BOOKING, orderBy: { createdAt: 'asc' }, select: { golferName: true, players: true } } },
-  });
-  if (!t) return { ok: false, status: 404, error: 'Not found' };
-  if (t.bookings.length) return { ok: false, status: 409, error: refusal(action, t.bookings) };
-  return { ok: false, status: 409, error: 'This time just changed — look again.' };
+
+/**
+ * Read "who's booked" and write in one SERIALIZABLE transaction, as claimTeeTime does: a booking that commits while
+ * this runs (claimTeeTime writes the same TeeTime row) makes one of the two fail with P2034 instead of a closed time
+ * with a group on it. Returns the result; P2034 → "This time just changed — look again."
+ */
+async function guarded(courseId: string, teeTimeId: string, action: 'close' | 'hide', data: { status?: 'blocked'; staffOnly?: boolean }): Promise<CloseResult> {
+  try {
+    return await prisma.$transaction(async tx => {
+      const t = await tx.teeTime.findFirst({
+        where: { id: teeTimeId, courseId },
+        select: { id: true, bookings: { where: ACTIVE_BOOKING, orderBy: { createdAt: 'asc' }, select: { golferName: true, players: true } } },
+      });
+      if (!t) return { ok: false as const, status: 404, error: 'Not found' };
+      if (t.bookings.length) return { ok: false as const, status: 409, error: refusal(action, t.bookings) };
+      await tx.teeTime.update({ where: { id: t.id }, data });
+      return { ok: true as const };
+    }, { isolationLevel: 'Serializable' });
+  } catch (err) {
+    if ((err as { code?: string }).code === 'P2034') return { ok: false, status: 409, error: 'This time just changed — look again.' };
+    throw err;
+  }
 }
 
 /** Close the time to new bookings, only while nobody is booked on it. */
-export async function closeFreeTime(courseId: string, teeTimeId: string): Promise<CloseResult> {
-  const r = await prisma.teeTime.updateMany({ where: { id: teeTimeId, courseId, bookings: { none: ACTIVE_BOOKING } }, data: { status: 'blocked' } });
-  return r.count ? { ok: true } : why(courseId, teeTimeId, 'close');
+export function closeFreeTime(courseId: string, teeTimeId: string): Promise<CloseResult> {
+  return guarded(courseId, teeTimeId, 'close', { status: 'blocked' });
 }
 
 /** Hide the time online (counter only), only while nobody is booked on it. Showing it again is always allowed. */
 export async function setStaffOnly(courseId: string, teeTimeId: string, staffOnly: boolean): Promise<CloseResult> {
-  const r = await prisma.teeTime.updateMany({
-    where: { id: teeTimeId, courseId, ...(staffOnly ? { bookings: { none: ACTIVE_BOOKING } } : {}) },
-    data: { staffOnly },
-  });
-  return r.count ? { ok: true } : staffOnly ? why(courseId, teeTimeId, 'hide') : { ok: false, status: 404, error: 'Not found' };
+  if (staffOnly) return guarded(courseId, teeTimeId, 'hide', { staffOnly: true });
+  const r = await prisma.teeTime.updateMany({ where: { id: teeTimeId, courseId }, data: { staffOnly: false } });
+  return r.count ? { ok: true } : { ok: false, status: 404, error: 'Not found' };
 }
 
 /** Why a time can't be deleted for the groups on it (the route keeps its other checks), or null. */

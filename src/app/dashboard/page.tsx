@@ -494,7 +494,7 @@ function DashboardPageInner() {
       if (r.data?.fee) toast(r.data.fee, 'warn');
       // The change the sale recorded (review 2026-11-06): the server's own total and tender, never the card's guess.
       const change = r.data?.cashTenderedCents != null && r.data.totalCents != null ? r.data.cashTenderedCents - r.data.totalCents : 0;
-      toast(action === 'no_show' ? `${b.golferName} marked as a no-show.` : action === 'still_coming' ? `${b.golferName} is still coming.` : `Cash taken — ${b.golferName} is checked in.${change > 0 ? ` Change $${(change / 100).toFixed(2)}.` : ''}`, 'ok');
+      toast(action === 'no_show' ? `${b.golferName} marked as a no-show.` : action === 'still_coming' ? `No-show undone — ${b.golferName}.` : `Cash taken — ${b.golferName} is checked in.${change > 0 ? ` Change $${(change / 100).toFixed(2)}.` : ''}`, 'ok');
       if (action === 'take_cash') { setCashGiven(c => { const n = { ...c }; delete n[b.id]; return n; }); }
       // The change due stays in the checked-in box, not only in the passing toast.
       if (action === 'take_cash') setJustDone({ bookingId: b.id, name: b.golferName, players: checkedInPlayers ?? b.players, how: change > 0 ? `Cash · change $${(change / 100).toFixed(2)}` : 'Cash' });
@@ -1193,7 +1193,11 @@ function DashboardPageInner() {
             {(canMove || canSizeGroup || canResidents || canCancel || canRemove) && (
               <button type="button" aria-expanded={moreFor === b.id} onClick={() => { setMoreFor(moreFor === b.id ? null : b.id); setEditGroupId(null); }} className={link}>Edit group</button>
             )}
-            {/* TT-CARD (Cam 2026-11-12, the approved time card): no "Still coming" here — the route's action stays. */}
+            {/* TT-CARD (Cam 2026-11-12): "Still coming" is now "Undo no-show" — only on a group already marked a no-show;
+                the same still_coming action (it refunds the no-show fee as before). */}
+            {b.status === 'confirmed' && b.noShowAt && access.can('sheet.no_show') && (
+              <button onClick={() => bookingLifecycle(b, 'still_coming')} disabled={rowBusy === b.id} className={link}>{rowBusy === b.id ? '…' : 'Undo no-show'}</button>
+            )}
             {/* A group past its time and not checked in: "Mark no-show" records it — the no-show fee's path.
                 (Cam 2026-11-08: no local "late" hide — it recorded nothing.) */}
             {noShowReady && access.can('sheet.no_show') && (
@@ -1717,14 +1721,8 @@ function DashboardPageInner() {
                 {access.can('sheet.block') && !panelSlot.event && !past && panelSlot.status !== 'blocked' && panelSlot.staffOnly && (
                   <button type="button" onClick={() => setSeatAccess(panelSlot, 'anyone')} disabled={slotBusy === panelSlot.id} className="px-2 min-h-[36px] text-[13px] font-medium text-pine hover:underline disabled:opacity-50">Hidden online · show it</button>
                 )}
-                {/* TT-CLOSE (Cam 2026-11-12): Close this time / Hide online / Delete time only on a time with nobody booked —
-                    the route refuses all three on a booked time (lib/tee-time-close). */}
-                {nobodyBooked && access.can('sheet.block') && !panelSlot.event && !past && panelSlot.status !== 'blocked' && (
-                  <button type="button" onClick={() => setSeatAccess(panelSlot, 'none')} disabled={slotBusy === panelSlot.id} className="px-2 min-h-[36px] text-[13px] font-medium text-ink-soft hover:text-ink underline underline-offset-4 disabled:opacity-50">Close this time</button>
-                )}
-                {nobodyBooked && access.can('sheet.block') && !panelSlot.event && !past && panelSlot.status !== 'blocked' && !panelSlot.staffOnly && (
-                  <button type="button" onClick={() => setSeatAccess(panelSlot, 'counter')} disabled={slotBusy === panelSlot.id} className="px-2 min-h-[36px] text-[13px] font-medium text-ink-soft hover:text-ink underline underline-offset-4 disabled:opacity-50">Hide online</button>
-                )}
+                {/* TT-CLOSE (Cam 2026-11-12): Delete time only on a time with nobody booked — the route refuses closing, hiding
+                    or deleting a booked time (lib/tee-time-close). The seat stepper and the undo rows above are unchanged. */}
                 {nobodyBooked && access.can('sheet.edit_times') && !past && !panelSlot.event && (
                   <button onClick={() => deleteTime(panelSlot)} disabled={slotBusy === panelSlot.id} className="px-2 min-h-[36px] rounded-md text-[13px] font-medium text-bad hover:underline underline-offset-4 disabled:opacity-50">Delete time</button>
                 )}

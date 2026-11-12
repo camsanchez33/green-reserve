@@ -250,8 +250,12 @@ export async function PATCH(req: NextRequest) {
   if (status === 'blocked') {
     const r = await closeFreeTime(session.courseId, String(id));
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+    // The guarded write already closed it; read it back rather than writing again (a second write could close over a
+    // booking that landed in between).
+    const closed = await prisma.teeTime.findFirst({ where: { id: String(id), courseId: session.courseId } });
+    return closed ? NextResponse.json(teeTimeToWire(closed)) : NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
-  const row = await setTeeTimeBlocked(id, status === 'blocked', { scopeCourseId: session.courseId });
+  const row = await setTeeTimeBlocked(id, false, { scopeCourseId: session.courseId });
   if (!row) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   return NextResponse.json(row);
 }

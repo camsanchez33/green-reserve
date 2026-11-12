@@ -18,8 +18,8 @@ check('each group shows what it owes, to logins that can take the payment (STRES
 for (const a of ["checkInBooking(b, cardDue)", "bookingLifecycle(b, 'take_cash', cashDue, ", "sendPayLink(b, 'sms')", "sendPayLink(b)", 'setMoveTarget(', "bookingLifecycle(b, 'no_show')", 'cancelGroup(b, false)', 'cancelGroup(b, true)', 'setResidents(b,', '<ShopItemsForGroup', 'setWalkInSlot(panelSlot)', 'setSeatsClosed(panelSlot, ', 'deleteTime(panelSlot)']) {
   check(`the card keeps ${a}`, page.includes(a));
 }
-// TT-CARD (Cam 2026-11-12, the approved time card): no "Still coming" on the card — the route's still_coming stays.
-check('no Still coming on the card', !page.includes("bookingLifecycle(b, 'still_coming')"));
+// TT-CARD (Cam 2026-11-12): "Still coming" is now "Undo no-show", shown only on a group already marked a no-show.
+check('Undo no-show, only on a group marked a no-show, through still_coming', page.includes("{b.status === 'confirmed' && b.noShowAt && access.can('sheet.no_show') && (\n              <button onClick={() => bookingLifecycle(b, 'still_coming')}") && page.includes("'Undo no-show'") && !page.includes(">Still coming<") && !page.includes("'Still coming'"));
 check('cancel sits last in Edit group: keep or waive the fee when one could be kept, each confirming once', /canRemove && \([\s\S]{0,400}canCancel && canWaive && \([\s\S]{0,600}canCancel && \(/.test(page) && page.includes("{canWaive ? 'Cancel, keep the fee' : 'Cancel booking'}") && page.includes('<span>Cancel, waive the fee</span>'));
 check('no box inside the card: groups are rows with hairlines', card.includes('divide-y divide-line-soft') && !page.includes('bg-paper/60 rounded-md px-3 py-2'));
 const demo = readFileSync('src/components/home/TeeSheetDemo.tsx', 'utf8');

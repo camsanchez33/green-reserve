@@ -33,7 +33,7 @@ const patch = route.slice(route.indexOf('export async function PATCH'), route.in
 ok('the copy is this course and this day only', post.includes('where: { id: copyId, courseId: session.courseId, date }'));
 ok('staff never price it: staff take the copy or the schedule', post.includes('if (src && (session.isStaff || !ownFees))') && post.includes('const ownFees = !session.isStaff &&'));
 ok('the clash check looks at the copied round', post.includes('where: { courseId: session.courseId, date, time, productId }'));
-ok('open online / keep for staff is this course only, behind sheet.block', patch.includes("requirePermission(session, 'sheet.block')") && patch.includes('setStaffOnly(session.courseId, String(id), staffOnly)') && read('src/lib/tee-time-close.ts').includes('where: { id: teeTimeId, courseId,')); // TT-CLOSE: through lib/tee-time-close, still course-scoped
+ok('open online / keep for staff is this course only, behind sheet.block', patch.includes("requirePermission(session, 'sheet.block')") && patch.includes('setStaffOnly(session.courseId, String(id), staffOnly)') && read('src/lib/tee-time-close.ts').includes('where: { id: teeTimeId, courseId }')); // TT-CLOSE: through lib/tee-time-close, still course-scoped
 
 const page = read('src/app/dashboard/page.tsx');
 ok('adding a time is "+ Time" in the sheet\'s own bar (Cam 2026-11-08), "Add tee time" when the day is empty', page.includes('>+ Time</button>') && page.includes('rounded-md text-[12.5px] font-medium transition-colors">Add tee time</button>'));

@@ -284,7 +284,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/operator/stripe/dashboard-link` | operator | file | POST | `src/app/api/operator/stripe/dashboard-link/route.ts` | 29 |
 | `/api/operator/stripe/payouts` | operator | file | GET | `src/app/api/operator/stripe/payouts/route.ts` | 41 |
 | `/api/operator/tee-sets` | operator | file | DELETE GET PATCH POST PUT | `src/app/api/operator/tee-sets/route.ts` | 169 |
-| `/api/operator/tee-times` | operator | file | DELETE GET PATCH POST | `src/app/api/operator/tee-times/route.ts` | 287 |
+| `/api/operator/tee-times` | operator | file | DELETE GET PATCH POST | `src/app/api/operator/tee-times/route.ts` | 291 |
 | `/api/operator/tiers` | operator | file | DELETE GET PATCH POST | `src/app/api/operator/tiers/route.ts` | 189 |
 | `/api/operator/upload` | operator | file | DELETE POST | `src/app/api/operator/upload/route.ts` | 89 |
 | `/api/operator/weather` | operator | file | GET | `src/app/api/operator/weather/route.ts` | 15 |
@@ -312,7 +312,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/courses/[slug]/account/accept-invite` | golfer | entry | page | `src/app/courses/[slug]/account/accept-invite/page.tsx` | 144 |
 | `/courses/[slug]/info` | public | public | page | `src/app/courses/[slug]/info/page.tsx` | 145 |
 | `/courses/[slug]/member` | member | **NONE FOUND** | page | `src/app/courses/[slug]/member/page.tsx` | 875 |
-| `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 2288 |
+| `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 2286 |
 | `/dashboard/2fa` | operator | entry | page | `src/app/dashboard/2fa/page.tsx` | 110 |
 | `/dashboard/analytics` | operator | middleware | page | `src/app/dashboard/analytics/page.tsx` | 821 |
 | `/dashboard/cancellations` | operator | middleware | page | `src/app/dashboard/cancellations/page.tsx` | 17 |
@@ -560,6 +560,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/stripe-errors.ts` | 2 | 27 | Friendly-message map for Stripe decline/error strings (REVISE_QUEUE A-06 item 4: | `friendlyStripeError` |
 | `src/lib/submit-change-request.ts` | 2 | 91 |  | `cleanChangeItems`, `submitChangeRequest` |
 | `src/lib/tee-colour.ts` | 2 | 22 | Settings rework (Cam 2026-10-19: | `teeColour` |
+| `src/lib/tee-time-close.ts` | 2 | 70 | TT-CLOSE (Cam 2026-11-12, ADMIN_REDO_SPEC "Course dashboard Tee sheet + time card: | `ACTIVE_BOOKING`, `bookedOnTime`, `closeFreeTime`, `CloseResult`, `deleteRefusal`, `refusal`, `setStaffOnly` |
 | `src/lib/admin-ask-links.ts` | 1 | 15 | AW-3b: | `ADMIN_LINK`, `safeAdminPath` |
 | `src/lib/admin-ask.ts` | 1 | 161 | AW-3b (Cam 2026-10-21: | `ASK_TOOL_NAMES`, `ASK_TOOLS`, `AskOutcome`, `runAskTool` |
 | `src/lib/admin-checks.ts` | 1 | 239 | AW-5 (Cam 2026-10-21: | `DIGEST_HOUR_ET`, `digestFacts`, `DigestFacts`, `digestSummary`, `Finding`, `runAdminChecks`, `runMorningDigest`, `runUrgentChecks` +2 more |
@@ -567,7 +568,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/agreement-pdf.tsx` | 1 | 129 | AGREEMENT_SPEC AG-2 §2 — the signed-agreement PDF. | `AgreementPdf`, `markdownBlocks`, `renderAgreementPdf`, `SignatureBlock` |
 | `src/lib/birdie/course-context.ts` | 1 | 75 | BIRDIE_AI_SPEC B1 — read-only awareness of THE OPERATOR'S OWN course. | `describeCourseContext`, `operatorCourseContext`, `OperatorCourseContext` |
 | `src/lib/birdie/knowledge-operator.ts` | 1 | 64 | BIRDIE_AI_SPEC B1 — the operator knowledge pack. | `DASHBOARD_PAGES`, `DashboardPage`, `OPERATOR_KNOWLEDGE` |
-| `src/lib/birdie/proposals.ts` | 1 | 451 | BIRDIE_AI_SPEC B4b (Cam 2026-10-05) — propose-and-confirm CHANGES. | `isProposeTool`, `ProposalCard`, `ProposalOutcome`, `PROPOSE_TOOLS`, `runProposeTool` |
+| `src/lib/birdie/proposals.ts` | 1 | 455 | BIRDIE_AI_SPEC B4b (Cam 2026-10-05) — propose-and-confirm CHANGES. | `isProposeTool`, `ProposalCard`, `ProposalOutcome`, `PROPOSE_TOOLS`, `runProposeTool` |
 | `src/lib/blackouts.ts` | 1 | 43 | Closing a day on the schedule (Blackout) and reopening it. | `bookedOn`, `closeDay`, `reopenDay` |
 | `src/lib/booking-residents.ts` | 1 | 72 | RES-1 (Cam 2026-10-19): | `setBookingResidents`, `SetResidentsResult` |
 | `src/lib/booking-status.ts` | 1 | 81 | Single source of truth for what to show a user (operator, staff, or golfer) given a booking's current status + paymentStatus pair. | `BookingStatusInfo`, `getBookingStatus`, `statusDot`, `StatusTone` |
@@ -603,7 +604,6 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/staff-refund.ts` | 1 | 135 | Revamp 3 dead end 14 (Cam 2026-10-29): | `refundableCents`, `refundRound`, `StaffRefundResult`, `waiveLateFee` |
 | `src/lib/stripe-match.ts` | 1 | 25 | ADMIN-C Money → Disputes: | `lastFullMonths`, `matchResult`, `MonthWindow` |
 | `src/lib/support-ticket.ts` | 1 | 25 | MSG-1 (Cam 2026-11-09): | `dueIn`, `REPLY_HOURS`, `ticketRef`, `waitingSince` |
-| `src/lib/tee-time-close.ts` | 1 | 59 | TT-CLOSE (Cam 2026-11-12, ADMIN_REDO_SPEC "Course dashboard Tee sheet + time card: | `ACTIVE_BOOKING`, `bookedOnTime`, `closeFreeTime`, `CloseResult`, `deleteRefusal`, `refusal`, `setStaffOnly` |
 | `src/lib/tee-time-fit.ts` | 1 | 19 | Cam 2026-10-19: | `FIT_WINDOW_MIN`, `timesTooClose` |
 | `src/lib/tee-time-seats.ts` | 1 | 29 | SEATS-1 (Cam 2026-11-08: | `SeatsResult`, `setSeatsClosed` |
 | `src/lib/tier-wire.ts` | 1 | 43 |  | `tierToWire` |
@@ -1298,11 +1298,11 @@ without opening anything.
 
 ### TeeTime
 
-26 fields · 12 writer(s) · 34 reader(s)
+26 fields · 12 writer(s) · 33 reader(s)
 
 - fields: `id`, `courseId`, `course`, `date`, `time`, `holes`, `playersAvailable`, `playersBooked`, `greenFeeCents`, `memberRateCents`, `residentRateCents`, `seniorRateCents`, `juniorRateCents`, `cartFeeCents`, `walkingAllowed`, `tierName`, `status`, `staffOnly`, `seatsClosed`, `createdAt`, `bookings`, `teeTimeAlerts`, `eventId`, `event`, `productId`, `product`
 - writers: `src/app/api/operator/tee-times/route.ts`, `src/lib/blackouts.ts`, `src/lib/course-events.ts`, `src/lib/data-reset.ts`, `src/lib/frost-delay.ts`, `src/lib/lifecycle.ts`, `src/lib/sample-data.ts`, `src/lib/schedule-service.ts`, `src/lib/tee-sheet-engine.ts`, `src/lib/tee-time-close.ts`, `src/lib/tee-time-seats.ts`, `src/lib/weather-cancel.ts`
-- readers: `src/app/api/admin/tee-sheet/route.ts`, `src/app/api/bookings/resident-rate/route.ts`, `src/app/api/bookings/route.ts`, `src/app/api/manage/[bookingId]/available-times/route.ts`, `src/app/api/manage/[bookingId]/swap-time/route.ts`, `src/app/api/member/[courseSlug]/tee-times/route.ts`, `src/app/api/operator/events/[id]/route.ts`, `src/app/api/operator/tee-times/route.ts`, `src/app/api/preview/[courseId]/route.ts`, `src/app/api/preview/[courseId]/tee-times/route.ts`, `src/app/api/promo/check/route.ts`, `src/lib/admin-home.ts` +22 more (see `docs/codemap.json`)
+- readers: `src/app/api/admin/tee-sheet/route.ts`, `src/app/api/bookings/resident-rate/route.ts`, `src/app/api/bookings/route.ts`, `src/app/api/manage/[bookingId]/available-times/route.ts`, `src/app/api/manage/[bookingId]/swap-time/route.ts`, `src/app/api/member/[courseSlug]/tee-times/route.ts`, `src/app/api/operator/events/[id]/route.ts`, `src/app/api/operator/tee-times/route.ts`, `src/app/api/preview/[courseId]/route.ts`, `src/app/api/preview/[courseId]/tee-times/route.ts`, `src/app/api/promo/check/route.ts`, `src/lib/admin-home.ts` +21 more (see `docs/codemap.json`)
 
 ### TeeTimeAlert
 

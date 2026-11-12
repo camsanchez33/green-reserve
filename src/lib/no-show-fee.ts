@@ -56,7 +56,7 @@ export const roundPaid = (b: { paymentStatus: string }) => b.paymentStatus === '
  */
 export const noShowClosed = (b: { noShowAt: Date | null; teeTime: { date: string }; course: { timezone: string | null } }, now: Date = new Date()) =>
   !!b.noShowAt && todayIn(b.course.timezone, now) > b.teeTime.date;
-export const NO_SHOW_CLOSED_ERROR = 'This group was marked a no-show and its day has ended, so the round can’t be checked in or paid. If they did play, the course can clear the no-show with “Still coming” first.';
+export const NO_SHOW_CLOSED_ERROR = 'This group was marked a no-show and its day has ended, so the round can’t be checked in or paid. If they did play, the course can clear the no-show with “Undo no-show” first.';
 
 /** Flag a booking as a no-show. Charges nothing — see chargeNoShow(), run at the course's midnight. */
 export async function markNoShow(bookingId: string, actor: EventActor, opts: { actorName?: string; auto?: boolean } = {}): Promise<void> {

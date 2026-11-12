@@ -69,8 +69,15 @@ async function main() {
   ok('DELETE refuses a booked time through the guard', route.includes('const refused = await deleteRefusal(session.courseId, String(id));'));
   ok('the seat stepper is untouched (SEATS-1)', route.includes('const r = await setSeatsClosed(session.courseId, String(id), seatsClosed);'));
   const page = read('src/app/dashboard/page.tsx');
-  ok('the card offers close / hide / delete only on a time with nobody booked', page.includes('const nobodyBooked = !(panelSlot.bookings ?? []).some(b => b.status === \'confirmed\' || b.status === \'completed\');') && (page.match(/nobodyBooked && /g) ?? []).length >= 3);
-  ok('no "Still coming" on the card; the route action stays', !page.includes(">{rowBusy === b.id ? '…' : 'Still coming'}<") && read('src/app/api/operator/bookings/route.ts').includes("'still_coming'"));
+  // TT-CARD: the five day numbers are separate cards; Not paid yet is red when anything is owed (was amber on "past").
+  ok('the day strip is a grid of separate cards', page.includes("<div className={'grid gap-3 grid-cols-2 sm:grid-cols-3 ' +") && (page.slice(page.indexOf('DENSE-4b: the day strip'), page.indexOf('{sheetError && <LoadError')).match(/<div className=\{CARD \+ ' px-4 py-3'\}>/g) ?? []).length === 6);
+  ok('Not paid yet is red when anything is owed', page.includes("(dayMoney.outstandingCents > 0 ? 'text-bad' : 'text-ink')}>${(dayMoney.outstandingCents"));
+  ok('PATCH close returns the guarded row, never a second unconditional write', read('src/app/api/operator/tee-times/route.ts').includes('const closed = await prisma.teeTime.findFirst(') && read('src/app/api/operator/tee-times/route.ts').includes('setTeeTimeBlocked(id, false,'));
+  ok('the guard is one Serializable transaction (as claimTeeTime)', read('src/lib/tee-time-close.ts').includes("{ isolationLevel: 'Serializable' }") && read('src/lib/tee-time-close.ts').includes("=== 'P2034'"));
+  // Build 2026-11-12: today's seat stepper and the undo rows stay; Delete shows only on an empty time.
+  ok('the card offers Delete only on a time with nobody booked', page.includes('const nobodyBooked = !(panelSlot.bookings ?? []).some(b => b.status === \'confirmed\' || b.status === \'completed\');') && page.includes("{nobodyBooked && access.can('sheet.edit_times') && !past && !panelSlot.event && ("));
+  ok('no Close this time / Hide online buttons came back; the seat stepper and undo rows stay', !page.includes('>Close this time<') && !page.includes('>Hide online<') && page.includes('setSeatsClosed(panelSlot, closed + 1)') && page.includes('Closed · reopen this time') && page.includes('Hidden online · show it'));
+  ok('every staff message that names the button says "Undo no-show"', ['src/app/api/operator/bookings/route.ts', 'src/app/dashboard/settings/page.tsx', 'src/lib/move-booking.ts', 'src/lib/booking-residents.ts', 'src/lib/checkout-extras.ts', 'src/lib/split-booking.ts', 'src/lib/no-show-fee.ts', 'src/lib/staff-permissions.ts', 'src/lib/birdie/knowledge-operator.ts'].every(f => /Undo no-show/.test(read(f)) && !/['`][^'`\n]*(“Still coming”|"Still coming"|“still coming”)[^'`\n]*['`]/.test(read(f))));
   ok('no "Add a walk-in who already played" button; LATE-ADD stays', !page.includes('Add a walk-in who already played') && read('src/app/api/operator/bookings/route.ts').includes('late: body.late === true'));
 
   await cleanup();

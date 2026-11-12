@@ -70,9 +70,12 @@ async function main() {
   // Block a run of times
   const block = await runProposeTool('propose_block_times', { date: DAY, from: '08:00', to: '09:20', block: true }, ctx);
   const calls = block.card ? cardCalls(block.card) : [];
-  check('block: one card, one call per time that changes (the blocked one skipped)', calls.length === 3 && isProposalCard(block.card), String(calls.length));
+  // TT-CLOSE (Cam 2026-11-12): a time with a group on it can't be closed, so the draft leaves it out (the route would refuse it).
+  check('block: one card, one call per empty time that changes (the blocked one and the booked 8:00 skipped)', calls.length === 2 && isProposalCard(block.card) && !calls.some(c => c.body.id === t8.id), String(calls.length));
   check('block: every call blocks', calls.every(c => c.path === '/api/operator/tee-times' && c.body.status === 'blocked'));
-  check('block: it says the booked group stays', /stay booked; nobody is cancelled/.test(block.card?.note ?? ''), block.card?.note);
+  check('block: it says the booked time stays open', /1 time has a group booked and stays open/.test(block.card?.note ?? ''), block.card?.note);
+  const onlyBooked = await runProposeTool('propose_block_times', { date: DAY, from: '08:00', block: true }, ctx);
+  check('block: only a booked time → no card, says why', onlyBooked.isError && !onlyBooked.card && /move or cancel it before closing/.test(onlyBooked.content), onlyBooked.content);
   const reopen = await runProposeTool('propose_block_times', { date: DAY, from: '09:20', block: false }, ctx);
   check('reopen: the blocked time reopens', reopen.card?.call.body.id === t920.id && reopen.card.call.body.status === 'available');
   check('block: drafting blocked nothing', (await prisma.teeTime.findUnique({ where: { id: t910.id } }))?.status === 'available');

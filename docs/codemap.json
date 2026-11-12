@@ -7773,7 +7773,7 @@
     },
     {
       "path": "src/app/api/operator/tee-times/route.ts",
-      "lines": 287,
+      "lines": 291,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9229,7 +9229,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 2288,
+      "lines": 2286,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -16054,7 +16054,7 @@
     },
     {
       "path": "src/lib/birdie/proposals.ts",
-      "lines": 451,
+      "lines": 455,
       "purpose": "BIRDIE_AI_SPEC B4b (Cam 2026-10-05) — propose-and-confirm CHANGES.",
       "brain": [],
       "exports": [
@@ -16090,6 +16090,7 @@
         "../move-booking",
         "../prisma",
         "../schedule-service",
+        "../tee-time-close",
         "./proposal-types",
         "./tools",
         "@anthropic-ai/sdk"
@@ -27632,7 +27633,7 @@
     },
     {
       "path": "src/lib/tee-time-close.ts",
-      "lines": 59,
+      "lines": 70,
       "purpose": "TT-CLOSE (Cam 2026-11-12, ADMIN_REDO_SPEC \"Course dashboard Tee sheet + time card:",
       "brain": [],
       "exports": [
@@ -27674,7 +27675,8 @@
         "./prisma"
       ],
       "usedBy": [
-        "src/app/api/operator/tee-times/route.ts"
+        "src/app/api/operator/tee-times/route.ts",
+        "src/lib/birdie/proposals.ts"
       ]
     },
     {
@@ -34511,7 +34513,6 @@
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts",
         "src/lib/tee-sheet-engine.ts",
-        "src/lib/tee-time-close.ts",
         "src/lib/tee-time-seats.ts",
         "src/lib/weather-cancel.ts"
       ]

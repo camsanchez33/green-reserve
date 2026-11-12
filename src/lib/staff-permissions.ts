@@ -39,7 +39,7 @@ export const PERMISSIONS: PermissionDef[] = [
   { key: 'sheet.counter_payment', group: 'Tee sheet', label: 'Mark paid at the counter', help: 'Record a round, or event money, paid in cash or another way.' },
   { key: 'sheet.walkin', group: 'Tee sheet', label: 'Add walk-ins and phone bookings', help: 'Book an open time for someone at the counter or on the phone.' },
   { key: 'sheet.move', group: 'Tee sheet', label: 'Move a group to another time', help: 'Move a booking to another open time. The golfer is emailed; the price stays unless you choose the new time’s rate.' },
-  { key: 'sheet.no_show', group: 'Tee sheet', label: 'Mark no-shows', help: 'Mark a group that never arrived, or undo it with “still coming”.' },
+  { key: 'sheet.no_show', group: 'Tee sheet', label: 'Mark no-shows', help: 'Mark a group that never arrived, or undo it with “Undo no-show”.' },
   { key: 'sheet.cancel', group: 'Tee sheet', label: 'Cancel a booking', help: 'Cancel one booking. Your late-cancellation rule still applies.' },
   { key: 'sheet.waive_fee', group: 'Tee sheet', label: 'Waive the late fee', help: 'Cancel without the late fee — refunds a hold already taken.', requires: ['sheet.cancel'], movesMoney: true },
   { key: 'sheet.block', group: 'Tee sheet', label: 'Block and open times', help: 'Block a tee time so nobody can book it, or open it again.' },
