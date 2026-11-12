@@ -27,6 +27,7 @@ check('monthly costs = 20 + 120/12 + 45 (the ended and one-time costs left out)'
 check('a month ago the Nov 5 cost had not started', k.monthlyPrior === 3000, String(k.monthlyPrior));
 check('the month runs Nov 1 to Dec 1 on the platform clock', k.monthStart.toISOString() === '2026-11-01T04:00:00.000Z' && k.monthEnd.toISOString() === '2026-12-01T05:00:00.000Z');
 check('elapsed share is between 0 and 1', k.elapsedShare > 0.3 && k.elapsedShare < 0.45, String(k.elapsedShare));
+check('this month\'s one-time costs are split out (none in November here)', k.monthOneTime === 0 && cards([...list, ex({ amountCents: 9900, cadence: 'one-time', startedAt: '2026-11-03T12:00:00.000Z' })], NOW).monthOneTime === 9900);
 check('this year counts the one-time cost', k.year > 150000);
 check('last year by today had nothing (all started in 2026)', k.yearPrior === 0);
 check('ended on May 1 → not running in November', !activeOn(list[3], NOW));

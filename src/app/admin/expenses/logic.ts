@@ -44,7 +44,7 @@ export const pct = (now: number, was: number): number | null => (was > 0 ? ((now
 
 export interface Cards {
   monthly: number; monthlyPrior: number;
-  monthSoFar: number; monthStart: Date; monthEnd: Date; elapsedShare: number;
+  monthSoFar: number; monthOneTime: number; monthStart: Date; monthEnd: Date; elapsedShare: number;
   year: number; yearPrior: number;
 }
 
@@ -59,6 +59,8 @@ export function cards(list: Exp[], now: Date): Cards {
     monthly: monthlyCostsOn(list, now),
     monthlyPrior: monthlyCostsOn(list, monthEarlier(now)),
     monthSoFar: sumExpensesForPeriodCents(list, monthStart, now),
+    // One-time costs paid so far this month: counted as they are, never projected (Cam via Build 2026-11-12).
+    monthOneTime: sumExpensesForPeriodCents(list.filter(e => e.cadence === 'one-time'), monthStart, now),
     monthStart, monthEnd,
     elapsedShare: (now.getTime() - monthStart.getTime()) / (monthEnd.getTime() - monthStart.getTime()),
     year: sumExpensesForPeriodCents(list, yearStart, now),
