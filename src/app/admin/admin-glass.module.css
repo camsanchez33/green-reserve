@@ -1,5 +1,5 @@
 /* ADMIN-REDO (Cam 2026-11-11, ADMIN_REDO_SPEC.md): the admin is GREEN GLASS — green-tinted frosted
-   panels over soft blurred green shapes (plain circles, never a page gradient), light by default with a
+   panels over soft blurred green shapes (blurred ribbons since 2026-11-12, never a page gradient), light by default with a
    dark switch, highlight tiles in forest green + one warm gold, EB Garamond headings + Libre Franklin.
    For /admin only, it overrides the site bans on rounded-xl, shadows above 0 1px 2px and dark
    backgrounds (recorded in ADMIN_REDO_SPEC.md). Readability: every text colour below clears 4.5:1 on
@@ -8,7 +8,8 @@
    them, the dashboard's way (DASH-D). */
 
 .shell {
-  --g-bg: #E4EDE7; --g-blob1: #A9D8BC; --g-blob2: #CFE7D8; --g-blob3: #EFE1C2;
+  --g-bg: #E4EDE7;
+  --g-wv1: rgba(76, 193, 131, .42); --g-wv2: rgba(159, 211, 181, .55); --g-wv3: rgba(217, 180, 90, .35);
   --g-panel: rgba(255, 255, 255, .58); --g-panel-solid: #FFFFFF; --g-edge: rgba(255, 255, 255, .8); --g-blur: 22px;
   --g-ink: #122219; --g-ink-soft: #2F3D35; --g-muted: #45524A; --g-line: rgba(18, 34, 25, .12);
   --g-rail: rgba(255, 255, 255, .42); --g-hover: rgba(255, 255, 255, .6); --g-active: rgba(255, 255, 255, .9);
@@ -17,7 +18,6 @@
   --g-up: #17663D; --g-down: #93391F; --g-warn: #7E4A0E;
   --g-chart: #173B2A; --g-chart-fill: rgba(23, 59, 42, .14); --g-chart-prev: rgba(18, 34, 25, .38); --g-grid: rgba(18, 34, 25, .08);
   --g-t1: #173B2A; --g-t1-ink: #F3F7F4; --g-t2: #C9A24A; --g-t2-ink: #1E1606;
-  --g-blob-opacity: .75;
   --g-radius: 18px; --g-radius-s: 12px;
   position: relative; isolation: isolate; min-height: 100vh;
   background: var(--g-bg); color: var(--g-ink);
@@ -25,7 +25,8 @@
 }
 .shell[data-theme="dark"] {
   color-scheme: dark;
-  --g-bg: #0C1C17; --g-blob1: #17513A; --g-blob2: #10352A; --g-blob3: #34502F;
+  --g-bg: #0C1C17;
+  --g-wv1: rgba(46, 143, 94, .45); --g-wv2: rgba(30, 107, 74, .45); --g-wv3: rgba(217, 180, 90, .22);
   --g-panel: rgba(20, 48, 39, .55); --g-panel-solid: #132E26; --g-edge: rgba(160, 230, 195, .14);
   --g-ink: #EAF3EE; --g-ink-soft: #CFE0D6; --g-muted: #B4C8BC; --g-line: rgba(200, 240, 220, .12);
   --g-rail: rgba(12, 32, 26, .55); --g-hover: rgba(90, 170, 130, .16); --g-active: rgba(120, 210, 160, .2);
@@ -34,7 +35,6 @@
   --g-up: #7FDCA6; --g-down: #F49A87; --g-warn: #E9BC6C;
   --g-chart: #7FE0A8; --g-chart-fill: rgba(127, 224, 168, .14); --g-chart-prev: rgba(234, 243, 238, .4); --g-grid: rgba(234, 243, 238, .08);
   --g-t1: #1F6B45; --g-t1-ink: #F1FBF5; --g-t2: #D9B45A; --g-t2-ink: #1E1606;
-  --g-blob-opacity: .7;
   /* The site tokens, swapped for the admin pages not yet redone (their solid cards go dark). */
   --color-page: #0F1110; --color-paper: #141715; --color-card: #181B19; --color-white: #181B19;
   --color-ink: #E8EBE6; --color-ink-soft: #C3C8C1; --color-ink-muted: #A3A9A1; --color-ink-faint: #9AA098;
@@ -46,12 +46,15 @@
 .shell[data-theme="dark"] :global(.text-white) { color: #FFFFFF; }
 .shell[data-theme="dark"] :is(:global(.bg-pine), :global(.bg-ok), :global(.bg-bad), :global(.bg-ink)):global(.text-white) { color: #0F1110; }
 
-/* What the glass frosts: three blurred plain circles, fixed behind everything. */
-.blobs { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
-.blobs span { position: absolute; border-radius: 50%; filter: blur(80px); opacity: var(--g-blob-opacity); }
-.blobs span:nth-child(1) { width: 560px; height: 560px; background: var(--g-blob1); left: -140px; top: -160px; }
-.blobs span:nth-child(2) { width: 620px; height: 620px; background: var(--g-blob2); right: -180px; top: 140px; }
-.blobs span:nth-child(3) { width: 460px; height: 460px; background: var(--g-blob3); left: 40%; bottom: -220px; }
+/* What the glass frosts (Cam 2026-11-12, "more of a design, not just two dots"): sweeping blurred SVG ribbons in
+   our greens with one gold thread, fixed behind everything — shapes, never a page gradient. The paths are in
+   the admin layout (layout.tsx). */
+.waves { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+.waves path { fill: none; stroke-linecap: round; }
+.waves .w1 { stroke: var(--g-wv1); stroke-width: 160; }
+.waves .w2 { stroke: var(--g-wv2); stroke-width: 100; }
+.waves .w3 { stroke: var(--g-wv3); stroke-width: 46; }
+.waves .w4 { stroke: var(--g-wv2); stroke-width: 230; }
 
 .glass {
   background: var(--g-panel);
@@ -60,7 +63,7 @@
 }
 @media (prefers-reduced-transparency: reduce) {
   .glass, .rail, .top { background: var(--g-panel-solid); -webkit-backdrop-filter: none; backdrop-filter: none; }
-  .blobs { display: none; }
+  .waves { display: none; }
 }
 
 /* ── Rail (fixed, 240px — the width every admin page already makes room for) ── */

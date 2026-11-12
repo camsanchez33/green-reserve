@@ -8,7 +8,7 @@ import CommandPalette from '@/components/admin/CommandPalette';
 import { useAdminSession } from '@/lib/admin-session-context';
 import type { AdminArea } from '@/lib/admin-areas';
 
-export type AdminNavKey = 'overview' | 'problems' | 'goals' | 'inquiries' | 'courses' | 'groups' | 'create' | 'employees' | 'announcements' | 'messages' | 'profile' | 'revenue' | 'golfers' | 'system' | 'company' | 'audit' | 'security';
+export type AdminNavKey = 'overview' | 'problems' | 'goals' | 'inquiries' | 'courses' | 'groups' | 'create' | 'employees' | 'announcements' | 'messages' | 'profile' | 'revenue' | 'expenses' | 'golfers' | 'system' | 'company' | 'audit' | 'security';
 
 export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessages = 0 }: {
   active: AdminNavKey;
@@ -16,9 +16,6 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
   unreadMessages?: number;
 }) {
   const [unread, setUnread] = useState(unreadMessages);
-  // MP-6a: failed charges, all-time. Red because it is money that should
-  // exist and does not, and because the Revenue page is the only place to fix it.
-  const [moneyProblems, setMoneyProblems] = useState(0);
   // ADMIN-C: open problems (BRAIN-2a) for the alerts bell.
   const [problems, setProblems] = useState(0);
   // MP-8a: the inquiries badge self-fetches. It used to render only when the
@@ -46,7 +43,6 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
         if (cancelled || !d) return;
         if (pendingInquiries === 0) setPending(Number(d.pendingInquiries) || 0);
         if (unreadMessages === 0) setUnread(Number(d.unreadMessages) || 0);
-        setMoneyProblems(Number(d.moneyProblems) || 0);
         setProblems(Number(d.openProblems) || 0);
       })
       // The badges are hints, not the work: a failed fetch leaves them at 0 and every page still loads its own data.
@@ -97,8 +93,9 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
       // Users & golfers is dropped (Cam 2026-11-12): golfers are found on Bookings; a course's people go on its profile later.
     ] },
     { label: 'Financials', items: [
-      { key: 'revenue', label: 'Revenue & payments', href: '/admin/revenue', minRole: SUPPORT_PLUS, area: 'money' },
-      { key: null, label: 'Expenses' },
+      // Revenue (Cam 2026-11-12, approved): no badge — failed charges and golfer disputes are the course's, not this page's.
+      { key: 'revenue', label: 'Revenue', href: '/admin/revenue', minRole: SUPPORT_PLUS, area: 'money' },
+      { key: 'expenses', label: 'Expenses', href: '/admin/expenses', minRole: OWNER_ONLY },
       { key: null, label: 'Financial analytics' },
     ] },
     { label: 'Management', items: [
@@ -128,8 +125,6 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
   const badges: Partial<Record<AdminNavKey, React.ReactNode>> = {
     problems: count(problems, true, `${problems} open problem${problems === 1 ? '' : 's'}`),
     inquiries: count(pending, false, `${pending} new inquir${pending === 1 ? 'y' : 'ies'}`),
-    // MP-6a: failed charges and open chargebacks — money that should exist and does not.
-    revenue: count(moneyProblems, true, `${moneyProblems} money problem${moneyProblems === 1 ? '' : 's'} — failed charges and open chargebacks`),
     messages: count(unread, false, `${unread} unread`),
   };
 
