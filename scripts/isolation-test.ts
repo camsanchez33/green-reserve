@@ -937,6 +937,45 @@ async function main() {
     }
   }
 
+  console.log('\n── Financial analytics (ADMIN-REDO: /api/admin/finance) ──');
+  {
+    const { signAdminToken } = await import('../src/lib/admin-session');
+    const { signOwnerToken } = await import('../src/lib/owner-session');
+    const mgr = await prisma.adminUser.create({ data: { name: 'Isol Fin Manager', email: `${TS}-fin-mgr@test.local`, passwordHash: 'x', role: 'manager', active: true } });
+    const live = await prisma.ownerSession.create({ data: { adminId: data.adminOwner.id, method: 'totp', expiresAt: new Date(Date.now() + 3600_000), stepUpAt: new Date() } });
+    // The real shape: GreenReserve's fee on a no-show is its own booking fee, charged on the platform account.
+    const savedNoShow = (await prisma.booking.findUniqueOrThrow({ where: { id: bookingA.id }, select: { noShowAt: true } })).noShowAt;
+    await prisma.booking.update({ where: { id: bookingA.id }, data: { noShowAt: new Date() } });
+    const fee = await prisma.moneyMove.create({ data: { courseId: data.courseA.id, what: 'booking_fee', direction: 'in', method: 'card', account: 'platform', amountCents: 150, platformFeeCents: 150, stripeId: `pi_isol_fin_${TS}`, bookingId: bookingA.id, note: 'charged separately (no-show)', at: new Date(Date.now() - 60_000) } });
+    try {
+      const mc = `admin_session=${await signAdminToken({ adminId: mgr.id, email: mgr.email, name: mgr.name, role: 'manager', mfa: true })}`;
+      const oc = `gr_owner=${await signOwnerToken(live.id, data.adminOwner.id, live.expiresAt)}`;
+      checkStatus('No session → 401', (await api('/api/admin/finance?period=m3')).status, 401);
+      checkStatus('A manager cannot read financial analytics → 403', (await api('/api/admin/finance?period=m3', { cookie: mc })).status, 403);
+      type Fin = { period?: { kind: string }; months?: { month: string; partial: boolean; revenue: { cents: number; bySource: Record<string, number> }; liveCourses: number | null; byCourse: { courseId: string; revenueCents: number }[] }[]; prior?: unknown; monthBefore?: unknown };
+      const get = async () => (await api('/api/admin/finance?period=m3', { cookie: oc })).body as Fin;
+      const a = await get();
+      const cur = a.months?.at(-1);
+      check('The owner gets 3 months, the last partial, with prior and the month before', a.period?.kind === 'm3' && a.months?.length === 3 && !!cur?.partial && !!a.prior && !!a.monthBefore, JSON.stringify(a).slice(0, 300));
+      check('…this month counts the booking fee on a no-show under noShowLateFees, and its course', (cur?.revenue.bySource.noShowLateFees ?? 0) >= 150 && !!cur?.byCourse.some(c => c.courseId === data.courseA.id && c.revenueCents >= 150), JSON.stringify(cur).slice(0, 300));
+      check('…sources add up to the total', !!cur && Object.values(cur.revenue.bySource).reduce((x, y) => x + y, 0) === cur.revenue.cents);
+      check('…live courses only for the running month', typeof cur?.liveCourses === 'number' && a.months!.slice(0, -1).every(m => m.liveCourses === null));
+      await prisma.course.update({ where: { id: data.courseA.id }, data: { isTest: true } });
+      try {
+        const b = await get();
+        const cur2 = b.months?.at(-1);
+        check('A test course\'s fee leaves the numbers (TEST-2)', (cur?.revenue.cents ?? 0) - (cur2?.revenue.cents ?? 0) === 150 && !cur2?.byCourse.some(c => c.courseId === data.courseA.id), JSON.stringify({ before: cur?.revenue, after: cur2?.revenue }));
+      } finally {
+        await prisma.course.update({ where: { id: data.courseA.id }, data: { isTest: false } });
+      }
+    } finally {
+      await prisma.moneyMove.delete({ where: { id: fee.id } });
+      await prisma.booking.update({ where: { id: bookingA.id }, data: { noShowAt: savedNoShow } });
+      await prisma.ownerSession.delete({ where: { id: live.id } });
+      await prisma.adminUser.delete({ where: { id: mgr.id } });
+    }
+  }
+
   console.log('\n── Double-tapped Book (online duplicate guard) ──');
   {
     // A no-fee course takes no card, so the booking route can be driven end to end.
