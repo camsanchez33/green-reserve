@@ -590,6 +590,65 @@ async function main() {
     check('…and Onboarding no longer does', !((await api('/api/admin/onboarding', { cookie: viewerCookie })).body as { rows?: { courseId: string | null }[] }).rows?.some(x => x.courseId === data.courseA.id));
   }
   {
+    // ADMIN-REDO Bookings: a read-only record — Money area, support+; the golfer's contact needs Golfers too;
+    // test courses never show (TEST-2); no write method exists.
+    checkStatus('Viewer cannot open Bookings → 403', (await api('/api/admin/bookings', { cookie: viewerCookie })).status, 403);
+    const { signAdminToken } = await import('../src/lib/admin-session');
+    const bm = await prisma.adminUser.create({ data: { name: 'Isol Bookings', email: `${TS}-bookings@test.local`, passwordHash: 'x', role: 'support', active: true, areas: ['courses'], areasSetAt: new Date() } });
+    try {
+      const c = `admin_session=${await signAdminToken({ adminId: bm.id, email: bm.email, name: bm.name, role: 'support', mfa: true })}`;
+      const r0 = await api('/api/admin/bookings', { cookie: c });
+      check('Courses-only support → Bookings → 403 (area money)', r0.status === 403 && (r0.body as { area?: string })?.area === 'money', JSON.stringify(r0.body));
+      await prisma.adminUser.update({ where: { id: bm.id }, data: { areas: ['money'] } });
+      type L = { rows?: { id: string; number: string }[]; counts?: Record<string, number> };
+      const r1 = (await api('/api/admin/bookings', { cookie: c })).body as L;
+      check('Money support → Bookings lists the booking with its number', !!r1?.rows?.some(r => r.id === data.bookingA.id && r.number === data.bookingA.id.slice(0, 8).toUpperCase()), JSON.stringify(r1).slice(0, 300));
+      type SR = { results?: { type: string; id: string; href: string }[] };
+      const sr = (await api(`/api/admin/search?q=%23${data.bookingA.id.slice(0, 8).toUpperCase()}`, { cookie: c })).body as SR;
+      check('…the top search finds it by "#number" for a Money-only login and opens it on Bookings', !!sr?.results?.some(r => r.type === 'booking' && r.href === `/admin/bookings?id=${data.bookingA.id}`), JSON.stringify(sr).slice(0, 300));
+      const sq = (await api('/api/admin/search?q=Isol', { cookie: c })).body as SR;
+      check('…and offers "Bookings matching" for a name', !!sq?.results?.some(r => r.id === 'nav:bookings-q' && r.href === '/admin/bookings?q=Isol'), JSON.stringify(sq).slice(0, 300));
+      const byEmail = (await api(`/api/admin/bookings?q=${encodeURIComponent(TS + '-golfera@test.local')}`, { cookie: c })).body as L;
+      check('…Bookings finds a golfer by their whole email (support looks golfers up here)', !!byEmail?.rows?.some(r => r.id === data.bookingA.id), JSON.stringify(byEmail?.rows?.map(r => r.id)));
+      const byPart = (await api(`/api/admin/bookings?q=${encodeURIComponent('@test.local')}`, { cookie: c })).body as L;
+      const em = `${TS}-golfera@test.local`;
+      for (const probe of ['%@test.local', '_' + em.slice(1), em.slice(0, 5) + '%']) {
+        const w = (await api(`/api/admin/bookings?q=${encodeURIComponent(probe)}`, { cookie: c })).body as L;
+        check(`…without Golfers the wildcard "${probe.replace(TS, 'TS')}" matches nothing`, !!w?.rows && !w.rows.some(r => r.id === data.bookingA.id), JSON.stringify(w?.rows?.map(r => r.id)));
+      }
+      check('…but without Golfers a part of an address matches nothing (no reading emails letter by letter)', !!byPart?.rows && !byPart.rows.some(r => r.id === data.bookingA.id), JSON.stringify(byPart?.rows?.map(r => r.id)));
+      const p1 = (await api(`/api/admin/bookings?id=${data.bookingA.id}`, { cookie: c })).body as { contact?: unknown; pay?: { key?: string }; fee?: { key?: string } };
+      check('…the card has where it stands and our fee, but no golfer contact without Golfers', p1?.contact === null && !!p1?.pay?.key && !!p1?.fee?.key, JSON.stringify(p1).slice(0, 300));
+      await prisma.adminUser.update({ where: { id: bm.id }, data: { areas: ['money', 'golfers'] } });
+      const p2 = (await api(`/api/admin/bookings?id=${data.bookingA.id}`, { cookie: c })).body as { contact?: { email?: string } | null };
+      const byPart2 = (await api(`/api/admin/bookings?q=${encodeURIComponent(TS + '-golfera')}`, { cookie: c })).body as L;
+      check('…with Golfers, part of an email finds it', !!byPart2?.rows?.some(r => r.id === data.bookingA.id), JSON.stringify(byPart2?.rows?.map(r => r.id)));
+      check('…with Golfers, the golfer contact shows', !!p2?.contact?.email, JSON.stringify(p2?.contact));
+      const byNum = (await api(`/api/admin/bookings?q=%23${data.bookingA.id.slice(0, 8).toUpperCase()}`, { cookie: c })).body as L;
+      check('…a search by booking number finds it', !!byNum?.rows?.some(r => r.id === data.bookingA.id), JSON.stringify(byNum?.rows?.map(r => r.number)));
+      for (const method of ['POST', 'PATCH', 'DELETE']) {
+        const w = await api('/api/admin/bookings', { method, cookie: c, body: { id: data.bookingA.id, action: 'retry' } });
+        check(`Bookings is read-only: ${method} → 405`, w.status === 405, String(w.status));
+      }
+      // TEST-2: a test course's bookings never show here.
+      await prisma.course.update({ where: { id: data.courseB.id }, data: { isTest: true } });
+      try {
+        const r2 = (await api('/api/admin/bookings', { cookie: c })).body as L;
+        check('…a test course\'s booking is not listed', !!r2?.rows && !r2.rows.some(r => r.id === data.bookingB.id), JSON.stringify(r2?.rows?.map(r => r.id)));
+        checkStatus('…nor opens', (await api(`/api/admin/bookings?id=${data.bookingB.id}`, { cookie: c })).status, 404);
+        await prisma.adminUser.update({ where: { id: bm.id }, data: { areas: ['money'] } });
+        // The whole id: the 8-character number is shared by bookings made within ~36ms (Build is adding Booking.ref).
+        const st = (await api(`/api/admin/search?q=${data.bookingB.id}`, { cookie: c })).body as { results?: { type: string; id: string; href: string }[] };
+        check('…and the top search gives a Money-only login no hit for it (no guest email link)', !!st?.results && !st.results.some(r => r.id === `booking:${data.bookingB.id}` || r.href.includes('guest=')), JSON.stringify(st).slice(0, 300));
+      } finally {
+        await prisma.course.update({ where: { id: data.courseB.id }, data: { isTest: false } });
+      }
+      check('…and is listed again as a real course (the check above is not vacuous)', !!((await api('/api/admin/bookings', { cookie: c })).body as L)?.rows?.some(r => r.id === data.bookingB.id));
+    } finally {
+      await prisma.adminUser.delete({ where: { id: bm.id } });
+    }
+  }
+  {
     // BRAIN-2a: Problems name golfers and money — support+ only, reads and writes.
     // Money PR2b: the evidence pack is manager+, payouts to courses and the monthly Stripe match owner only.
     const ev = await api(`/api/admin/disputes/${data.bookingA.id}/evidence`, { cookie: viewerCookie });
@@ -674,7 +733,7 @@ async function main() {
     const limited = await prisma.adminUser.create({ data: { name: 'Isol Messages Only', email: `${TS}-msgonly@test.local`, passwordHash: 'x', role: 'manager', active: true, areas: ['messages'], areasSetAt: new Date() } });
     try {
       const c = `admin_session=${await signAdminToken({ adminId: limited.id, email: limited.email, name: limited.name, role: 'manager', mfa: true })}`;
-      for (const [path, label] of [['/api/admin/revenue', 'Money'], ['/api/admin/golfers?q=isol', 'Golfers'], ['/api/admin/problems', 'Problems'], ['/api/admin/course-feed?courseId=' + data.courseA.id, 'a course timeline'], ['/api/admin/goals', 'Goals'], ['/api/admin/courses/directory', 'Golf courses'], ['/api/admin/onboarding', 'Onboarding']] as const) {
+      for (const [path, label] of [['/api/admin/revenue', 'Money'], ['/api/admin/golfers?q=isol', 'Golfers'], ['/api/admin/problems', 'Problems'], ['/api/admin/course-feed?courseId=' + data.courseA.id, 'a course timeline'], ['/api/admin/goals', 'Goals'], ['/api/admin/courses/directory', 'Golf courses'], ['/api/admin/onboarding', 'Onboarding'], ['/api/admin/bookings', 'Bookings']] as const) {
         const r = await api(path, { cookie: c });
         check(`Messages-only manager → ${label} → 403 (area)`, r.status === 403 && (r.body as { code?: string })?.code === 'area', JSON.stringify({ status: r.status, body: r.body }));
       }

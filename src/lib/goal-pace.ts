@@ -47,11 +47,14 @@ export function projectAtEnd(progress: number, share: number, rate = false): num
  * `fixed` (Expenses, Cam via Build 2026-11-12): amounts already in the period that don't recur — a
  * one-time bill. They are added AFTER projecting, never extrapolated: a $1,500 one-off three days
  * into a month is $1,500 at its end, not $15,000. `progress` is then the running part only.
+ * `scheduled` (Expenses, #385 review): when the running part's total at the period's end is already
+ * known — costs on the books, including one that ends or starts later in the period — it is used as
+ * the projection instead of progress ÷ share (lib/expenses monthCostPace).
  */
-export function goalPace(o: { progress: number; target: number; share: number; kind?: GoalKind; rate?: boolean; daysElapsed?: number; fixed?: number }): { projected: number; tone: PaceTone } {
+export function goalPace(o: { progress: number; target: number; share: number; kind?: GoalKind; rate?: boolean; daysElapsed?: number; fixed?: number; scheduled?: number }): { projected: number; tone: PaceTone } {
   const kind = o.kind ?? 'reach';
   const fixed = Number.isFinite(o.fixed) ? (o.fixed as number) : 0;
-  const projected = projectAtEnd(o.progress, o.share, o.rate) + fixed;
+  const projected = (Number.isFinite(o.scheduled) ? (o.scheduled as number) : projectAtEnd(o.progress, o.share, o.rate)) + fixed;
   const soFar = o.progress + fixed;
   if (!(o.target > 0)) return { projected, tone: 'ok' };
   // A reach goal already met is green even early; a budget already over is red even early. Otherwise no verdict yet.

@@ -50,6 +50,8 @@ async function main() {
   const mustUse: [string, RegExp][] = [
     ['src/lib/admin-home.ts', /ON_REAL_COURSE[\s\S]*REAL_COURSE/],
     ['src/lib/admin-today.ts', /ON_REAL_BOOKING/],
+    // ADMIN-REDO Bookings: the list, every filter count and the card.
+    ['src/app/api/admin/bookings/route.ts', /const base: Prisma\.BookingWhereInput = \{ \.\.\.ON_REAL_COURSE[\s\S]*where: \{ id, \.\.\.ON_REAL_COURSE \}/],
     ['src/lib/access-fee.ts', /courseId \? \{ courseId \} : ON_REAL_COURSE/],
     ['src/lib/admin-goals.ts', /REAL_COURSE/],
     ['src/lib/admin-checks.ts', /\.\.\.FAILED_CHARGE_WHERE, \.\.\.ON_REAL_COURSE/],
