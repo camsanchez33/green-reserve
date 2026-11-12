@@ -23,6 +23,9 @@ ok('everything is under @media screen (print stays plain)', g.split('\n').filter
 ok('print hides the ribbons', /@media print \{[^\n]*\.op-waves/.test(css));
 ok('cards are frosted', g.includes('.bg-white.shadow-card:not(.op-tab) {') && g.includes('backdrop-filter: blur(22px)') && g.includes('background-color: var(--op-panel)'));
 ok('the rail is frosted', g.includes('.op-rail { background-color: var(--op-rail-glass); -webkit-backdrop-filter: blur(18px)'));
+// Theme changes (Cam 2026-11-12): Light stays glass — charcoal ribbons on the light page (the inverse of charcoal).
+const lb = css.slice(css.indexOf('.op-look:has(.op-rail) {'), css.indexOf('\n}', css.indexOf('.op-look:has(.op-rail) {')));
+ok('light ribbons are dark (charcoal on a light page)', ['--op-wv1', '--op-wv2', '--op-wv3'].every(n => { const m = lb.match(new RegExp(`${n}: rgb\\((\\d+) (\\d+) (\\d+)`)); return !!m && +m[1] < 80 && +m[2] < 80 && +m[3] < 80; }));
 ok('the page wrapper lets the ribbons through', g.includes('.op-look:has(.op-rail) .min-h-screen.bg-page { background-color: transparent; }'));
 ok('the tab lifts on hover, never the current tab', g.includes('.op-tab:not([aria-current]):hover') && g.includes('translateY(-2px)'));
 ok('reduced motion turns the lift off', /prefers-reduced-motion: reduce\)[^\n]*transform: none/.test(g));
@@ -49,8 +52,9 @@ for (const [theme, sel] of [['light', '.op-look:has(.op-rail)'], ['charcoal', '.
   const page = hex(tok(b, '--color-page'));
   const [panelC, panelA] = rgba(b, '--op-panel');
   // Worst case: every ribbon crossing at one spot (they overlap at the edges), blur ignored.
-  // Light: the darkening ribbons crossing (the white one only helps, so it's left out); charcoal: all three.
-  const worstUnder = (theme === 'light' ? ['--op-wv1', '--op-wv2'] : ['--op-wv1', '--op-wv2', '--op-wv3']).map(n => rgba(b, n)).reduce((under, [c, a]) => over(c, a, under), page);
+  // Worst case: all three ribbons crossing (each darkens the page in light, lightens it in charcoal).
+  // .w4 also uses --op-wv2 but sits low (y ≈ 650–1090) and never crosses .w1 (y ≈ 60–500), so w1+w2+w3 is the worst stack.
+  const worstUnder = ['--op-wv1', '--op-wv2', '--op-wv3'].map(n => rgba(b, n)).reduce((under, [c, a]) => over(c, a, under), page);
   const panel = over(panelC, panelA, worstUnder);
   for (const t of ['--color-ink', '--color-ink-soft', '--color-ink-muted', '--color-ink-faint', '--color-ok', '--color-warn', '--color-bad']) {
     const r = ratio(hex(tok(b, t)), panel);

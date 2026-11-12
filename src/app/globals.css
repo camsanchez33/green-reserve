@@ -139,16 +139,17 @@ body {
 @media (min-width: 768px) { .op-look:has(.op-rail) { padding-left: var(--op-rail-w); } }
 /* Printing (event pairings, cart signs): the page alone — no rail, no bars, no gap where the rail was. */
 @media print { .op-look:has(.op-rail) { padding-left: 0; } .op-rail, .op-look nav[aria-label="Dashboard"], #op-more, .op-waves { display: none !important; } }
-/* Light — the switch, and what print always gets. */
+/* Light — the switch, and what print always gets. Theme changes (Cam 2026-11-12): Light stays glass — the same
+   ribbons, inverted: charcoal ribbons on a light page behind frosted white panels (charcoal is the reverse). */
 .op-look:has(.op-rail) {
   --color-page: #E9EAE6; --color-paper: #F2F3EF; --color-card: #FFFFFF; --color-white: #FFFFFF;
   --color-rail: #E0E1DC; --color-rail-line: #CDD0C8;
-  --color-ink: #191B19; --color-ink-soft: #3E423E; --color-ink-muted: #50554E; --color-ink-faint: #53584F;
+  --color-ink: #191B19; --color-ink-soft: #3E423E; --color-ink-muted: #454A43; --color-ink-faint: #474C45;
   --color-line: #D9DBD4; --color-line-soft: #E6E7E2; --color-line-strong: #C6C9C1;
   --color-pine: #1E201E; --color-pine-hover: #000000; --color-pine-soft: #E3E4E0;
-  --color-ok: #1F603A; --color-warn: #7A4A07; --color-bad: #98331F;
+  --color-ok: #1A5734; --color-warn: #6C4205; --color-bad: #872C1A;
   --op-panel: rgb(255 255 255 / .58); --op-panel-solid: #FAFAF8; --op-rail-glass: rgb(255 255 255 / .40); --op-edge: rgb(255 255 255 / .8);
-  --op-wv1: rgb(120 126 122 / .12); --op-wv2: rgb(150 156 152 / .10); --op-wv3: rgb(255 255 255 / .7);
+  --op-wv1: rgb(20 22 20 / .10); --op-wv2: rgb(40 42 40 / .07); --op-wv3: rgb(10 12 10 / .05);
   --op-brand-green: #173B2A;
   --op-heat0: rgb(0 0 0 / .04); --op-heat-ink3: var(--color-ink); --op-heat-ink4: #FFFFFF; --op-rain: #1F5FAF;
   background: var(--color-page); min-height: 100vh; color: var(--color-ink);

@@ -191,8 +191,8 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     {/* GLASS-2 (Cam 2026-11-12): what the glass frosts — blurred ribbons, fixed behind every rail page (globals.css .op-waves). */}
     <svg className="op-waves" viewBox="0 0 1400 1100" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
       <defs>
-        <filter id="op-soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="38" /></filter>
-        <filter id="op-softer" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="16" /></filter>
+        <filter id="op-soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="38" /></filter>
+        <filter id="op-softer" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="16" /></filter>
       </defs>
       <g filter="url(#op-soft)">
         <path className="w1" d="M-120 260 C 240 60, 520 420, 820 230 S 1300 40, 1560 300" />
