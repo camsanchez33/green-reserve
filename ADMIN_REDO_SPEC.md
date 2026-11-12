@@ -243,3 +243,11 @@ Mockups `lanes/dashboard/shop-mockup.html` (Register) and `shop-sales|stock|clos
 - Stock: a wordless search, Filter (sold out, low, hidden, categories), one "+ Add" → One item / Many at once. One line per item: photo, name + category, "n in stock" / Not counted / Each size / Sold out (red), price; low = the item's reorderAt. Tap → detail: photo, price, in stock, barcode, Edit + Receive stock, "Hide from the register" link. Adding an item: pick a category or "+ New category".
 - Close out: the drawer count is tap-only (− / + per bill and coin, summed on the client; only the total is stored). Expected = starting cash + Shop sales in cash + Rounds paid in cash (register sales carrying a round) − cash refunds (+ "Older rounds marked paid" only when non-zero). "Difference" (Short / Over / Even). Leave in the drawer: the last float, nearby amounts, Other.
 - The rail search loses its words on every dashboard page.
+
+## Course dashboard Support (was Messages): APPROVED (Cam 2026-11-12, "approved, build the support page")
+Mockup `lanes/dashboard/messages-mockup.html` (final).
+- The tab is renamed "Support" and moves to the bottom of the rail, after Settings, with its unread count (on a phone it lives in More).
+- The page is only the chats: "Open chats" fills the page; each line = subject, last message ("You: …" when ours is last), and its state: Waiting on us (amber) · New reply (green) · Answered. A white "+" starts a new chat.
+- Tapping a chat opens it full page: "‹ Chats" back, the subject, "Waiting on us · we reply within 2 business days", the messages, a box and a white paper-airplane Send (faded until typed).
+- Gone: the three top cards (reply time, email, assistant questions), search, filter and the separate announcements list. GreenReserve announcements arrive as a chat from GreenReserve.
+- New data: one chat per question (today it is one running thread per course; each operator message opens a ticket). Reply promise is 2 business days (Cam reversed MSG-1's 48 hours): the due time skips weekends.

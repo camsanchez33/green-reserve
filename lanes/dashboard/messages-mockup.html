@@ -237,6 +237,7 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
 .waves .w4{stroke:var(--wv2);stroke-width:220}
 .app{--wv1:rgba(160,166,162,.38);--wv2:rgba(130,136,132,.28);--wv3:rgba(215,220,216,.26)}
 .app[data-mode="light"]{--wv1:rgba(120,126,122,.22);--wv2:rgba(150,156,152,.20);--wv3:rgba(255,255,255,.7)}
+.lt{font-size:15px}.send2{width:44px;height:44px;flex:none;align-self:flex-end;border:0;background:none;color:#fff;display:grid;place-items:center;cursor:pointer;padding:0}.send2 svg{width:24px;height:24px}.send2:disabled{opacity:.45;cursor:default}.newc{width:36px;height:36px;border:0;background:none;color:#fff;display:grid;place-items:center;cursor:pointer;padding:0}.newc svg{width:24px;height:24px}.newc:hover{opacity:.8}.mrow .t{display:flex;flex-direction:column;min-width:0}.mrow .t b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mrow .pv{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bub.me{margin-left:auto}.bub.them{margin-right:auto}
 </style>
 
 <style>
@@ -405,7 +406,7 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
 </style>
 <style>
 /* Messages in charcoal glass: the live page (one conversation with GreenReserve + announcements), list beside detail. */
-.mgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.45fr);gap:16px;align-items:start}
+.mgrid{display:flex;flex:1;min-height:640px}.mgrid>section{flex:1}.mgrid>section[hidden]{display:none}
 @media (max-width:1100px){.mgrid{grid-template-columns:minmax(0,1fr)}}
 .trio .kpi .v{font-size:20px}
 .trio a,.trio .askl{font:inherit;font-size:15px;font-weight:600;color:var(--ink);text-decoration:underline;text-underline-offset:4px;text-decoration-color:var(--line);background:none;border:0;padding:0;cursor:pointer;text-align:left;word-break:break-all}
@@ -421,10 +422,10 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
 .mrow .d{font-size:12px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
 .mrow .d.wn{color:var(--warn);font-weight:600}
 .showall{font:inherit;font-size:12.5px;font-weight:600;color:var(--ink-soft);background:none;border:0;border-top:1px solid var(--line);width:100%;text-align:left;padding:10px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
-.det{display:flex;flex-direction:column;min-height:560px}
+.det{display:flex;flex-direction:column;min-height:640px}.back{font:inherit;font-size:13.5px;font-weight:600;border:0;background:none;color:var(--muted);cursor:pointer;padding:0;margin-bottom:10px;align-self:flex-start}.back:hover{color:var(--ink)}
 .det h3{margin:0;font-size:17px;font-weight:600}
 .det .dsub{font-size:12.5px;color:var(--muted);margin:3px 0 14px}
-.thread{flex:1;display:flex;flex-direction:column;gap:14px;max-height:430px;overflow-y:auto;padding:2px 4px 6px 0}
+.thread{flex:1;display:flex;flex-direction:column;gap:14px;max-height:none;overflow-y:auto;padding:2px 4px 6px 0}
 .bub{max-width:78%}.bub.me{align-self:flex-end}
 .bub .tx{padding:10px 14px;border-radius:12px;font-size:14px;line-height:1.5;white-space:pre-wrap}
 .bub.me .tx{background:var(--ink);color:var(--bg);border-bottom-right-radius:3px}
@@ -477,34 +478,24 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
       <div class="club"><span class="crest">PH</span><div><b>Pine Hollow Golf Club</b><small>Public course</small></div></div>
       <div class="search lsearch" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input aria-label="Find a golfer or member" style="font:inherit;border:0;background:transparent;color:inherit;outline:none;width:100%"></div>
       <div class="grp"><b>Today</b>
-        <div class="nav">Home</div><div class="nav">Tee sheet</div><div class="nav">Pro shop</div><div class="nav on"><span>Messages</span><i id="navun">1</i></div></div>
+        <div class="nav">Home</div><div class="nav">Tee sheet</div><div class="nav">Pro shop</div></div>
       <div class="grp"><b>Business</b>
         <div class="nav">Money</div><div class="nav">Members</div><div class="nav">Events</div><div class="nav">Schedule</div><div class="nav">Analytics</div></div>
-      <div class="grp"><div class="nav">Settings</div></div>
+      <div class="grp"><div class="nav">Settings</div><div class="nav on"><span>Support</span><i id="navun">1</i></div></div>
       <div class="foot"><span>Course alert</span><span>Your booking page ↗</span><span>Sign out</span>
         <div class="seg3"><button type="button" data-m="light">Light</button><button type="button" data-m="dark" class="on">Dark</button></div>
         <div class="pw">Powered by <b class="grw">GreenReserve</b></div></div>
     </aside>
 
     <main class="main">
-      <h2 class="ttl">Messages</h2>
-      <div class="trio">
-        <div class="card kpi"><span class="l">Reply time</span><span class="v wn" id="rtv">26h 48m</span><span class="c" id="rtc">left on ticket X9K4A1</span></div>
-        <div class="card kpi"><span class="l">Prefer email?</span><a href="mailto:admin@greenreserve.app">admin@greenreserve.app</a><span class="c">Same team, same 48 hours</span></div>
-        <div class="card kpi"><span class="l">Need it now?</span><button class="askl" type="button">Ask the assistant</button>
-          <div class="asks"><button type="button">How do I open and close the register?</button><button type="button">How do I move a group to another time?</button><button type="button">How do I refund a round?</button><button type="button">How do I set member prices?</button></div></div>
-      </div>
-
+      <h2 class="ttl">Support</h2>
       <div class="mgrid">
-        <section class="card pad2" aria-label="Messages and announcements">
-          <div class="vh"><label class="ssrch"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" aria-label="Search messages"></label>
-            <span class="fwrap"><button class="fbtn2" type="button" id="fb" aria-haspopup="true" aria-expanded="false"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>Filter</button>
-            <span class="fmenu" id="fm" hidden><button type="button" data-f="all" class="on">Everything</button><button type="button" data-f="new">New only</button></span></span></div>
+        <section class="card pad2" aria-label="Chats" id="lsec">
+          <div class="vh"><b class="lt">Open chats</b><span class="vsp"></span><button class="newc" type="button" id="newc" aria-label="New chat" title="New chat"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke-width="2.4"/></svg></button></div>
           <div id="list"></div>
         </section>
-        <section class="card pad2 det" id="det"></section>
+        <section class="card pad2 det" id="det" hidden></section>
       </div>
-      <span class="askfab" aria-hidden="true">Ask</span>
     </main>
   </div>
 </div>
@@ -516,80 +507,30 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
     document.querySelectorAll('.seg [data-m]').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.m===b.dataset.m)));
     document.querySelectorAll('.seg3 [data-m]').forEach(x=>x.classList.toggle('on',x.dataset.m===b.dataset.m));}));
   const esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;");
-  // Now: Thu Nov 12, 2:15 PM. Ticket waiting since Wed Nov 11, 5:03 PM → due Fri Nov 13, 5:03 PM.
-  const NOW=new Date(2026,10,12,14,15);
-  const MSG=[
-    ["cmg01a8w2p7e","admin","Cam at GreenReserve","Welcome to GreenReserve, Pine Hollow. Your tee sheet is live and your booking page is at greenreserve.app/pine-hollow. Write here any time — we reply within 48 hours.",false,"Oct 28, 9:12 AM"],
-    ["cmg4k2r8d1zq","operator","Dana Whitfield","Two of our members say the member rate isn't showing when they book online for Saturday. Is there something we need to switch on?",false,"Nov 3, 8:41 AM"],
-    ["cmg4m9t1b6hc","admin","Cam at GreenReserve","Yes — Settings → Members has the switch for member prices. It was off for Pine Hollow; once it's on, signed-in members see their rate on the booking page. Let us know if it still doesn't show.",false,"Nov 3, 1:26 PM"],
-    ["cmg6p0v3n8ka","admin","GreenReserve","The card reader is now available for every course. Owners can connect one in Settings → Pro shop.",true,"Nov 6, 10:00 AM"],
-    ["cmh7q2x9k4a1","operator","Dana Whitfield","We're hosting the Pine Hollow Turkey Trot scramble on the 27th. Can the organizer pay for all 72 players as one bill, and can we still take a few walk-up sign-ups that morning?",false,"Nov 11, 5:03 PM"]
+  // Each chat: [id, title, state, messages[[who, name, text, when]]]
+  const CH=[
+    ["X9K4A1","Turkey Trot: one bill for 72 players?","wait",[["me","Dana Whitfield","We're hosting the Pine Hollow Turkey Trot scramble on the 27th. Can the organizer pay for all 72 players as one bill, and can we still take a few walk-up sign-ups that morning?","Nov 11, 5:03 PM"]]],
+    ["P2D7QM","Card reader not pairing","new",[["me","Dana Whitfield","The new card reader shows a code but Settings says it can't find it.","Nov 10, 9:20 AM"],["them","Cam at GreenReserve","Make sure the reader is on the same Wi-Fi as the shop computer, then enter the code again. If it still fails, send us the reader's serial number.","Nov 10, 3:44 PM"]]],
+    ["M3T8VZ","Member rate not showing online","ok",[["me","Dana Whitfield","Two of our members say the member rate isn't showing when they book online for Saturday.","Nov 3, 8:41 AM"],["them","Cam at GreenReserve","Settings → Members has the switch for member prices. It was off; once it's on, signed-in members see their rate.","Nov 3, 1:26 PM"]]]
   ];
-  let ANN=[
-    ["a7","Card reader at the register","Nov 6, 10:00 AM",false,"The card reader is now available for every course. Owners can connect one in Settings → Pro shop. Walk-up sales and one group's round can be paid by tap, chip or swipe."],
-    ["a6","Register open and close-out","Nov 9, 7:30 AM",false,"The register now opens with a count and closes out at the end of the day. Cash sales and cash on the tee sheet need the register open first."],
-    ["a5","Thanksgiving week hours","Nov 2, 4:15 PM",true,"Our team is replying as usual through Thanksgiving week. Reply time stays 48 hours."],
-    ["a4","Pay separately on the tee sheet","Nov 2, 9:00 AM",true,"Pay separately on the group card splits players off into their own booking on the same tee time, priced so the totals add up."],
-    ["a3","Text a pay link","Oct 21, 11:20 AM",true,"Text pay link on a tee sheet row sends the golfer a link to pay on their own phone with Apple Pay, Google Pay or a card."]
-  ];
-  ANN.sort((a,b)=>Date.parse(b[2]+" 2026")-Date.parse(a[2]+" 2026"));
-  let sel="conv", showAll=false, filter="all", ticketMade=null, convRead=false;
-  const ref=id=>id.slice(-6).toUpperCase();
-  function waiting(){let last=-1;MSG.forEach((m,i)=>{if(m[1]==="admin"&&!m[4])last=i;});return MSG.slice(last+1).find(m=>m[1]==="operator")||null;}
+  const ST={wait:['wn','Waiting on us'],new:['ok','New reply'],ok:['','Answered']};
+  let sel="X9K4A1";
   function renderList(){
-    const q=$("q").value.trim().toLowerCase();
-    const w=waiting(); const last=MSG[MSG.length-1];
-    let h='';
-    const convHit=!q||MSG.some(m=>m[3].toLowerCase().includes(q))||"your conversation with greenreserve".includes(q);
-    const convNew=!convRead;
-    if(convHit&&(filter==="all"||convNew)){
-      h+='<div class="lh"><b>Your conversation with GreenReserve</b></div>';
-      h+='<div class="mrow'+(sel==="conv"?' on':'')+(convNew?' unread':'')+'" data-k="conv"><i class="dot '+(w?'wn':'ok')+'"></i><span class="t">'+esc(last[1]==="operator"?"You: ":"")+esc(last[3])+'</span><span class="d'+(w?' wn':'')+'">'+(w?'Waiting on us':last[5])+'</span></div>';
-    }
-    let an=ANN.filter(a=>(!q||(a[1]+" "+a[4]).toLowerCase().includes(q))&&(filter==="all"||!a[3]));
-    if(an.length){
-      const nNew=ANN.filter(a=>!a[3]).length;
-      h+='<div class="lh"><b>From GreenReserve</b>'+(nNew?'<span class="nw">'+nNew+' new</span>':'')+'</div>';
-      const shown=showAll||q?an:an.slice(0,3);
-      h+=shown.map(a=>'<div class="mrow'+(sel===a[0]?' on':'')+(a[3]?'':' unread')+'" data-k="'+a[0]+'"><i class="dot '+(a[3]?'':'wn')+'"></i><span class="t">'+esc(a[1])+'</span><span class="d">'+a[2]+'</span></div>').join('');
-      if(an.length>3&&!showAll&&!q) h+='<button class="showall" type="button" id="sa">Show all '+an.length+'</button>';
-    }
-    if(!h) h='<p class="empty">Nothing matches.</p>';
-    $("list").innerHTML=h;
-    const sa=$("sa"); if(sa) sa.onclick=()=>{showAll=true;renderList();};
+    $("list").innerHTML=CH.map(c=>{const l=c[3][c[3].length-1];return '<div class="mrow'+(sel===c[0]?' on':'')+(c[2]==='new'?' unread':'')+'" data-k="'+c[0]+'"><i class="dot '+ST[c[2]][0]+'"></i><span class="t"><b>'+esc(c[1])+'</b><span class="pv">'+(l[0]==='me'?'You: ':'')+esc(l[2])+'</span></span><span class="d'+(c[2]==='wait'?' wn':'')+'">'+ST[c[2]][1]+'</span></div>';}).join('');
   }
   function renderDet(){
-    if(sel==="conv"){
-      convRead=true; $("navun").hidden=true;
-      const b=MSG.map(m=>{const me=m[1]==="operator";return '<div class="bub '+(me?'me':'them')+(m[4]?' bc':'')+'">'+(m[4]?'<p class="bl">Announcement</p>':'')+'<div class="tx">'+esc(m[3])+'</div><p class="mt">'+(me?esc(m[2])+' · ticket '+ref(m[0]):esc(m[2]))+' · '+m[5]+'</p></div>';}).join('');
-      $("det").innerHTML='<h3 style="margin-bottom:14px">Your conversation with GreenReserve</h3><div class="thread" id="th">'+b+'</div>'+
-        '<div class="comp">'+(ticketMade?'<div class="made" role="status"><b>Your ticket has been created</b> · '+ticketMade[0]+'. We’ll reply here '+ticketMade[1]+'.</div>':'')+
-        '<div class="crow2"><textarea id="ta" rows="3" aria-label="Message to GreenReserve" placeholder="Write to the GreenReserve team…"></textarea><button class="send" id="send" type="button" disabled>Send</button></div></div>';
-      const th=$("th"); th.scrollTop=th.scrollHeight;
-      $("ta").addEventListener("input",()=>{$("send").disabled=!$("ta").value.trim(); if(ticketMade){ticketMade=null;const md=document.querySelector('.made');if(md)md.remove();}});
-      $("send").addEventListener("click",send);
-    } else {
-      const a=ANN.find(x=>x[0]===sel); a[3]=true;
-      $("det").innerHTML='<h3>'+esc(a[1])+'</h3><p class="dsub">GreenReserve · '+a[2]+'</p><p class="abody">'+esc(a[4])+'</p>';
-    }
+    const c=CH.find(x=>x[0]===sel); if(c[2]==='new'){c[2]='ok';}
+    $("navun").hidden=!CH.some(x=>x[2]==='new');
+    const b=c[3].map(m=>'<div class="bub '+m[0]+'"><div class="tx">'+esc(m[2])+'</div><p class="mt">'+esc(m[1])+' · '+m[3]+'</p></div>').join('');
+    $("lsec").hidden=true;$("det").hidden=false;
+    $("det").innerHTML='<button class="back" type="button" id="back">‹ Chats</button><h3 style="margin-bottom:4px">'+esc(c[1])+'</h3><p class="dsub">'+(c[2]==='wait'?'Waiting on us · we reply within 2 business days':ST[c[2]][1])+'</p><div class="thread" id="th">'+b+'</div><div class="comp"><div class="crow2"><textarea id="ta" rows="3" aria-label="Message"></textarea><button class="send2" id="send" type="button" disabled aria-label="Send" title="Send"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg></button></div></div>';
+    $("back").addEventListener("click",()=>{$("det").hidden=true;$("lsec").hidden=false;renderList();});
+    $("ta").addEventListener("input",()=>{$("send").disabled=!$("ta").value.trim();});
+    $("send").addEventListener("click",()=>{const t=$("ta").value.trim();if(!t)return;c[3].push(["me","Dana Whitfield",t,"Nov 12, 2:15 PM"]);c[2]='wait';renderDet();});
     renderList();
   }
-  function send(){
-    const t=$("ta").value.trim(); if(!t) return;
-    $("send").disabled=true; $("send").textContent="Sending…";
-    setTimeout(()=>{
-      const id="cmh8"+Math.random().toString(36).slice(2,10);
-      MSG.push([id,"operator","Dana Whitfield",t,false,"Nov 12, 2:15 PM"]);
-      const w=waiting(); ticketMade=[ref(w[0]),"by Fri, Nov 13, 5:03 PM"];
-      renderDet(); renderTop();
-    },500);
-  }
-  function renderTop(){const w=waiting(); if(w){$("rtv").textContent="26h 48m";$("rtv").className="v wn";$("rtc").textContent="left on ticket "+ref(w[0]);}}
   $("list").addEventListener("click",e=>{const x=e.target.closest(".mrow");if(!x)return;sel=x.dataset.k;renderDet();});
-  $("q").addEventListener("input",renderList);
-  $("fb").addEventListener("click",e=>{e.stopPropagation();const m=$("fm");m.hidden=!m.hidden;$("fb").setAttribute("aria-expanded",String(!m.hidden));});
-  $("fm").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;filter=b.dataset.f;$("fm").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));$("fm").hidden=true;renderList();});
-  document.addEventListener("click",e=>{if(!e.target.closest(".fwrap"))$("fm").hidden=true;});
-  renderDet(); renderTop();
+  $("newc").addEventListener("click",()=>{const id="N"+Math.random().toString(36).slice(2,7).toUpperCase();CH.unshift([id,"New chat","wait",[]]);sel=id;renderDet();$("ta").focus();});
+  renderList();
 })();
 </script>
