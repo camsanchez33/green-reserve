@@ -10001,7 +10001,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 966,
+      "lines": 975,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -12914,7 +12914,7 @@
     },
     {
       "path": "src/components/dashboard/StockTab.tsx",
-      "lines": 242,
+      "lines": 250,
       "purpose": "POS-6/POS-8 (Cam 2026-11-09:",
       "brain": [],
       "exports": [

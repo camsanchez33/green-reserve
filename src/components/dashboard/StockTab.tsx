@@ -87,9 +87,10 @@ export function StockTab({ refreshKey = 0, onChanged }: { refreshKey?: number; o
   async function hide(i: TreeItem) {
     setHiding(true); setError(''); setNote('');
     const r = await dfetch('/api/operator/shop-items', { method: 'PATCH', body: JSON.stringify({ id: i.id, active: !i.active }) });
-    setHiding(false);
-    if (!r.ok) { setError(r.error); return; }
+    if (!r.ok) { setHiding(false); setError(r.error); return; }
+    // Held until the list reloads, so a second tap can't land on the next item.
     await done(i.active ? `${i.name} hidden from the register.` : `${i.name} back on the register.`);
+    setHiding(false);
   }
   const thumb = (i: TreeItem, big = false) => i.photoUrl
     // eslint-disable-next-line @next/next/no-img-element
@@ -99,7 +100,7 @@ export function StockTab({ refreshKey = 0, onChanged }: { refreshKey?: number; o
   return (
     // IMPORT-2: "add many" is a wide table — it takes the page's width above the list instead of the side card.
     <div className={'grid gap-4 lg:items-start ' + (panel?.kind === 'many' ? '' : 'lg:grid-cols-[minmax(0,1fr)_340px]')}>
-      <Card className="p-4 min-w-0">
+      <Card className="p-4 min-w-0 relative z-10">
         <div className="flex flex-wrap items-center gap-2.5">
           <label className="flex-1 min-w-0 flex items-center gap-2 bg-page border border-line rounded-[10px] px-3 min-h-[38px] text-ink-muted">
             <Search className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
@@ -119,7 +120,7 @@ export function StockTab({ refreshKey = 0, onChanged }: { refreshKey?: number; o
         </div>
         {SHOP_FEE_ON && <p className="mt-2 text-[12.5px] text-ink-muted">GreenReserve adds {usd(SHOP_SALE_FEE_CENTS)} a sale, paid by the golfer.</p>}
         {loadError && <div className="mt-3"><LoadError message={`Couldn't load your items — ${loadError}`} onRetry={load} /></div>}
-        {(error || note) && (!panel || panel.kind === 'item') && (
+        {(error || note) && !panel && (
           <div className="mt-3" aria-live="polite">
             {error && <p role="alert" className="text-[12.5px] text-bad">{error}</p>}
             {note && <p className="text-[12.5px] text-ok">{note}</p>}
@@ -176,6 +177,13 @@ export function StockTab({ refreshKey = 0, onChanged }: { refreshKey?: number; o
         // once something is tapped.
         <div className={(panel ? 'fixed inset-0 z-40 bg-page overflow-y-auto p-4 ' : 'hidden ') + 'lg:block lg:static lg:inset-auto lg:z-auto lg:bg-transparent lg:p-0 lg:overflow-visible ' + (panel?.kind === 'many' ? 'lg:order-first' : 'lg:sticky lg:top-6')}>
           <Card className="p-4">
+            {/* Review 2026-11-12: what saved and what didn't, in the panel itself — on a phone it covers the list. */}
+            {panel && (note || (error && panel.kind !== 'many')) && (
+              <div className="mb-3" aria-live="polite">
+                {note && <p className="text-[12.5px] text-ok">{note}</p>}
+                {error && panel.kind !== 'many' && <p role="alert" className="text-[12.5px] text-bad">{error}</p>}
+              </div>
+            )}
             {panel && (
               <div className="flex justify-end -mt-1 -mr-1 lg:hidden">
                 <button type="button" onClick={() => pick(null)} aria-label="Close" className="p-1 text-ink-soft hover:text-ink"><X className="w-4 h-4" /></button>

@@ -158,6 +158,13 @@ export default function ShopPage() {
   const [salesSort, setSalesSort] = useState<'new' | 'old' | 'big'>('new');
   // The sale open beside the list (none picked = the first one shown).
   const [salePick, setSalePick] = useState<string | null>(null);
+  // Review 2026-11-12: below a laptop the sale's panel sits under the list — a tap brings it (and its buttons) into view.
+  const saleRef = useRef<HTMLHeadingElement>(null);
+  const showSale = () => {
+    if (typeof window === 'undefined' || !window.matchMedia('(max-width: 1023px)').matches) return;
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    requestAnimationFrame(() => { saleRef.current?.scrollIntoView({ behavior: still ? 'auto' : 'smooth', block: 'start' }); saleRef.current?.focus({ preventScroll: true }); });
+  };
   async function loadHistory(h: { q: string; day: string }) {
     setHist(h); setHistError('');
     if (!h.q.trim() && !h.day) { setHist(null); setHistSales(null); return; }
@@ -484,7 +491,9 @@ export default function ShopPage() {
               </div>
             )}
 
-            {view !== 'register' && (error || note) && (
+            {/* Review 2026-11-12: with nothing in the sale the sale panel isn't there, so the register's errors and notes
+                (a pay link that didn't send, a scan that matched nothing, "Took cash instead") show up here instead. */}
+            {(view !== 'register' || !saleOpen) && (error || note) && (
               <div className="mt-4" aria-live="polite">
                 {error && <p className="bg-bad/5 border border-bad/20 rounded-md px-4 py-3 text-[13px] text-bad" role="alert">{error}</p>}
                 {note && <p className="text-[13px] text-ok flex items-center gap-1.5"><StatusDot status="ok" />{note}</p>}
@@ -498,7 +507,7 @@ export default function ShopPage() {
             // Cam 2026-11-12 (approved Register): with nothing in the sale the items take the whole width; the sale opens
             // beside them on the first tap (and stays while it is being charged).
             <div className={'mt-5 grid gap-4 lg:items-start ' + (saleOpen ? 'lg:grid-cols-[minmax(0,1fr)_360px]' : '')}>
-              <Card className="p-4">
+              <Card className="p-4 relative z-10">
                 {!items && !loadError && <p className="text-sm text-ink-muted">Loading your shop…</p>}
                 {items && items.length === 0 && (
                   <p className="text-sm text-ink-soft">No items yet.{(access.can('shop.sell') || access.can('shop.catalog')) && <> <button type="button" onClick={() => setView('stock')} className="text-pine font-medium underline">Add on Stock</button>.</>}</p>
@@ -667,12 +676,12 @@ export default function ShopPage() {
                             {payChoices.includes('cash') && (
                               <div className="flex flex-wrap items-center gap-1.5 py-2.5">
                                 <span className="mr-auto text-[14px] font-semibold text-ink">Cash</span>
-                                {(cashNoQuote ? [] : quickCash).map(n => (
+                                {(quoteDown ? [] : quickCash).map(n => (
                                   <button key={n} type="button" onClick={() => { setPay('cash'); setTendered((n / 100).toFixed(2)); setError(''); setStep('take'); }}
                                     className="min-h-[36px] px-2.5 rounded-[8px] border border-line text-[13px] font-semibold text-ink tabular-nums hover:bg-page">{n === due ? 'Exact' : usd(n).replace(/\.00$/, '')}</button>
                                 ))}
                                 <button type="button" onClick={() => { setPay('cash'); setTendered(''); setError(''); setStep('take'); }}
-                                  className="min-h-[36px] px-2.5 rounded-[8px] border border-line text-[13px] font-semibold text-ink hover:bg-page">{cashNoQuote ? 'Take cash' : 'Other'}</button>
+                                  className="min-h-[36px] px-2.5 rounded-[8px] border border-line text-[13px] font-semibold text-ink hover:bg-page">{quoteDown ? 'Take cash' : 'Other'}</button>
                               </div>
                             )}
                             {payChoices.filter(k => k !== 'cash').map(k => {
@@ -818,7 +827,7 @@ export default function ShopPage() {
               const filterLabel = salesShow === 'all' ? 'Filter' : `Filter: ${[...SALES_HOW, ...SALES_STATE].find(([k]) => k === salesShow)?.[1] ?? ''}`;
               return (
             <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
-            <Card className="p-4 min-w-0">
+            <Card className="p-4 min-w-0 relative z-10">
               {/* POS-8 (Cam 2026-11-09: no Today / Yesterday, "just have the little calendar icon"): the day as words and a
                   calendar icon that opens the picker; what was taken that day on the right. */}
               <div className="flex flex-wrap items-center gap-2.5 mb-2.5">
@@ -852,7 +861,7 @@ export default function ShopPage() {
                     const on = s?.id === x.id;
                     return (
                       <li key={x.id}>
-                        <button type="button" onClick={() => { setSalePick(x.id); setRefund(null); if (receipt?.id !== x.id) setReceipt(null); }} aria-current={on ? 'true' : undefined}
+                        <button type="button" onClick={() => { setSalePick(x.id); setRefund(null); if (receipt?.id !== x.id) setReceipt(null); showSale(); }} aria-current={on ? 'true' : undefined}
                           className={'w-full text-left grid grid-cols-[auto_minmax(0,1fr)_auto] sm:grid-cols-[auto_64px_minmax(0,1fr)_auto] items-center gap-3 px-2.5 py-3 rounded-[10px] hover:bg-page ' + (on ? 'bg-page ring-1 ring-inset ring-line' : '')}>
                           <span className="text-[13px] font-semibold text-ink-muted tabular-nums">{saleNo(x)}<span className="block sm:hidden font-normal">{time(x.createdAt)}</span></span>
                           <span className="hidden sm:block text-[13px] text-ink-muted tabular-nums">{time(x.createdAt)}</span>
@@ -877,8 +886,8 @@ export default function ShopPage() {
               const sub = s.lines.reduce((t, l) => t + l.unitPriceCents * l.quantity, 0);
               const BTN = 'w-full min-h-[42px] rounded-[10px] text-[14px] font-semibold disabled:opacity-50 ';
               return (
-            <Card className="p-4 lg:sticky lg:top-6">
-              <h2 className="text-[20px] font-semibold text-ink">Sale {saleNo(s)}</h2>
+            <Card className="p-4 lg:sticky lg:top-6 scroll-mt-4">
+              <h2 ref={saleRef} tabIndex={-1} className="text-[20px] font-semibold text-ink outline-none">Sale {saleNo(s)}</h2>
               <p className="text-[13px] text-ink-muted mt-1 mb-3">{time(s.createdAt)} · {st.tone === 'neutral' ? st.label : <StatusDot status={st.tone} label={st.label} />}{s.customerName ? ` · ${s.customerName}` : ''}</p>
               <dl className="text-[13.5px]">
                 {s.lines.map(l => (
