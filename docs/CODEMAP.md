@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-728 source files · 311 routes · 260 libraries · 76 models
+729 source files · 311 routes · 260 libraries · 76 models
 
 ## Single sources of truth
 
@@ -340,7 +340,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/dashboard/reset-password` | operator | entry | page | `src/app/dashboard/reset-password/page.tsx` | 123 |
 | `/dashboard/schedules` | operator | middleware | page | `src/app/dashboard/schedules/page.tsx` | 719 |
 | `/dashboard/settings` | operator | middleware | page | `src/app/dashboard/settings/page.tsx` | 1205 |
-| `/dashboard/shop` | operator | middleware | page | `src/app/dashboard/shop/page.tsx` | 898 |
+| `/dashboard/shop` | operator | middleware | page | `src/app/dashboard/shop/page.tsx` | 975 |
 | `/dashboard/sign` | operator | middleware | page | `src/app/dashboard/sign/page.tsx` | 26 |
 | `/dashboard/starter` | operator | middleware | page | `src/app/dashboard/starter/page.tsx` | 91 |
 | `/dashboard/tournaments` | operator | middleware | page | `src/app/dashboard/tournaments/page.tsx` | 5 |
@@ -638,8 +638,8 @@ Sorted the same way.
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
 | `src/components/ui/Card.tsx` | 87 | 17 |  | `Card`, `CARD` |
-| `src/components/ui/StatusDot.tsx` | 72 | 36 |  | `StatusDot` |
-| `src/components/ui/field.ts` | 56 | 8 | MP-9: | `INPUT`, `INPUT_COMPACT` |
+| `src/components/ui/StatusDot.tsx` | 71 | 36 |  | `StatusDot` |
+| `src/components/ui/field.ts` | 55 | 8 | MP-9: | `INPUT`, `INPUT_COMPACT` |
 | `src/components/admin/AdminSidebar.tsx` | 22 | 199 |  | `AdminNavKey`, `default (AdminSidebar)` |
 | `src/components/dashboard/LoadError.tsx` | 22 | 16 | SD-10. | `LoadError` |
 | `src/components/dashboard/Toast.tsx` | 15 | 70 | SD-2. | `toast`, `Toaster`, `ToastKind` |
@@ -672,9 +672,10 @@ Sorted the same way.
 | `src/components/dashboard/events/EventSetup.tsx` | 2 | 512 | W2-9 Events: | `blankForm`, `default (EventSetup)`, `EventForm`, `fieldErrors`, `KINDS`, `NineOpt`, `PAYERS`, `Product` |
 | `src/components/dashboard/ImageUpload.tsx` | 2 | 62 | The course's logo or course photo: | `ImageUpload` |
 | `src/components/dashboard/money/RefundForm.tsx` | 2 | 47 | Revamp 3 dead end 14 (Cam 2026-10-29): | `RefundForm` |
-| `src/components/dashboard/OperatorSearch.tsx` | 2 | 116 | DASH-C: | `default (OperatorSearch)` |
+| `src/components/dashboard/OperatorSearch.tsx` | 2 | 115 | DASH-C: | `default (OperatorSearch)` |
 | `src/components/dashboard/RegisterClosedNotice.tsx` | 2 | 28 | DRAWER-1 follow-up (no-silent-failures audit, 2026-11-09): | `RegisterClosedNotice` |
 | `src/components/dashboard/settings/FinishSetup.tsx` | 2 | 68 | Settings rework (Cam 2026-10-19: | `FinishSetup`, `SetupItem` |
+| `src/components/dashboard/shop/ShopMenu.tsx` | 2 | 55 | Pro shop (Cam 2026-11-12, approved mockups): | `MenuItem`, `ShopMenu` |
 | `src/components/dashboard/shop/ShopReceiptBody.tsx` | 2 | 39 | RECEIPT-3: | `ShopReceiptBody` |
 | `src/components/dashboard/TeeSheetRows.tsx` | 2 | 307 | DENSE-4 (DENSE_UI_SPEC D1, Cam 2026-10-27: | `BoardGroup`, `BoardSlot`, `default (TeeSheetRows)`, `FILL`, `groupTags`, `groupTone`, `isMemberRate`, `rateWords` +1 more |
 | `src/components/EmptyState.tsx` | 2 | 22 |  | `EmptyState` |
@@ -712,7 +713,7 @@ Sorted the same way.
 | `src/components/dashboard/GolferMessageModal.tsx` | 1 | 227 | MSG-1 (PLATFORM_ROADMAP_SPEC §5): | `default (GolferMessageModal)` |
 | `src/components/dashboard/GroupTicket.tsx` | 1 | 69 | DASH-D (Cam 2026-11-01, "make checking someone in a little more POS like"): | `default (GroupTicket)`, `TicketBooking`, `TicketLine`, `ticketLines` |
 | `src/components/dashboard/home/HomeBoard.tsx` | 1 | 305 | DASH-D Home (Cam 2026-11-01, mockup S1): | `Conditions`, `ConditionsCard`, `EventsCard`, `Goals`, `GoalsCard`, `heatStep`, `HomeEvent`, `ShiftNote` +3 more |
-| `src/components/dashboard/ItemForm.tsx` | 1 | 315 | POS-8 (Cam 2026-11-09: | `ItemForm` |
+| `src/components/dashboard/ItemForm.tsx` | 1 | 318 | POS-8 (Cam 2026-11-09: | `ItemForm` |
 | `src/components/dashboard/LastMinuteDeals.tsx` | 1 | 71 | PRICE-2 (Cam 2026-10-30: | `LastMinuteDeals` |
 | `src/components/dashboard/MemberAccount.tsx` | 1 | 134 | MEM-ACCT (Cam 2026-10-30: | `AccountFields`, `MemberAccount` |
 | `src/components/dashboard/MemberJoin.tsx` | 1 | 92 | MEM-JOIN (Cam 2026-10-30: | `AutoRenewFields`, `AutoRenewStop`, `JoinOnlineSelect`, `JoinRequests` |
@@ -727,7 +728,7 @@ Sorted the same way.
 | `src/components/dashboard/MoveGroupModal.tsx` | 1 | 154 | ACT-1 (PLATFORM_ROADMAP_SPEC §2): | `default (MoveGroupModal)` |
 | `src/components/dashboard/onboarding/PageReviewStep.tsx` | 1 | 257 | Onboarding step 1 (Cam 2026-10-27): | `PageReviewStep` |
 | `src/components/dashboard/PromoCodes.tsx` | 1 | 119 | PRICE-1 (Cam 2026-10-30: | `PromoCodes` |
-| `src/components/dashboard/RegisterClose.tsx` | 1 | 278 | POS-3 R4 (Cam 2026-10-24): | `RegisterClose` |
+| `src/components/dashboard/RegisterClose.tsx` | 1 | 291 | POS-3 R4 (Cam 2026-10-24): | `RegisterClose` |
 | `src/components/dashboard/RegisterPacks.tsx` | 1 | 111 | PRICE-3 (Cam 2026-10-30: | `PACK_RATE`, `PackHolderPick`, `PackHolders`, `PackPicker` |
 | `src/components/dashboard/RoundRulesCard.tsx` | 1 | 89 | W2-6 slice 3 (Cam 2026-10-20): | `CourseRules`, `default (RoundRulesCard)`, `RoundRules` |
 | `src/components/dashboard/SalesTaxCard.tsx` | 1 | 82 | W2-7 part B (Cam 2026-10-20): | `SalesTaxCard` |
@@ -736,7 +737,7 @@ Sorted the same way.
 | `src/components/dashboard/shop/SaleReceiptPanel.tsx` | 1 | 65 | RECEIPT-3 (Cam 2026-11-09: | `ReceiptSendRow`, `ReceiptTarget`, `SaleReceiptPanel` |
 | `src/components/dashboard/ShopItemsForGroup.tsx` | 1 | 188 | POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): | `default (ShopItemsForGroup)`, `ShopLine` |
 | `src/components/dashboard/StaffPermissions.tsx` | 1 | 243 | SP-A (STAFF_POLICY_SPEC A6): | `StaffPermissions` |
-| `src/components/dashboard/StockTab.tsx` | 1 | 208 | POS-6/POS-8 (Cam 2026-11-09: | `StockTab` |
+| `src/components/dashboard/StockTab.tsx` | 1 | 250 | POS-6/POS-8 (Cam 2026-11-09: | `StockTab` |
 | `src/components/dashboard/TeeSheetCalendar.tsx` | 1 | 90 | VIEWS-1 (Cam 2026-11-03): | `default (TeeSheetCalendar)` |
 | `src/components/dashboard/TeeSheetList.tsx` | 1 | 74 | VIEWS-1 (Cam 2026-11-03, the glass/views canvas: | `default (TeeSheetList)` |
 | `src/components/dashboard/ThemeSwitch.tsx` | 1 | 22 | DASH-D: | `default (ThemeSwitch)` |
