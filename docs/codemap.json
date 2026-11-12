@@ -1,8 +1,8 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 697,
-    "routes": 300,
+    "files": 699,
+    "routes": 301,
     "libs": 253,
     "models": 72,
     "orphans": 11,
@@ -957,7 +957,7 @@
     },
     {
       "path": "src/app/admin/layout.tsx",
-      "lines": 50,
+      "lines": 56,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -980,14 +980,16 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./admin-glass.module.css",
         "@/components/admin/ReasonDialog",
         "@/components/admin/StepUpDialog",
+        "@/components/admin/admin-theme",
         "@/lib/admin-areas",
         "@/lib/admin-session",
         "@/lib/admin-session-context",
         "@/lib/staff-fonts",
         "next",
-        "next/font/google"
+        "next/headers"
       ],
       "usedBy": []
     },
@@ -1048,12 +1050,12 @@
     },
     {
       "path": "src/app/admin/page.tsx",
-      "lines": 453,
-      "purpose": "ADMIN-C (Cam 2026-10-22, mockup C \"Clean hub\", after Stripe's dashboard):",
+      "lines": 254,
+      "purpose": "",
       "brain": [],
       "exports": [
         {
-          "name": "default (AdminHomePage)",
+          "name": "default (AdminOverview)",
           "kind": "component"
         }
       ],
@@ -1063,12 +1065,9 @@
       "auth": "admin",
       "guard": "client-side",
       "imports": [
+        "./admin-glass.module.css",
         "@/components/admin/AdminSidebar",
-        "@/components/ui/StatusDot",
-        "@/lib/admin-roles",
         "@/lib/admin-session-context",
-        "@/lib/format",
-        "lucide-react",
         "next/link",
         "react"
       ],
@@ -3159,6 +3158,40 @@
         "@/lib/data-reset",
         "@/lib/prisma",
         "@/lib/sample-data",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/admin/today/overview/route.ts",
+      "lines": 196,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/today/overview",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/access-fee",
+        "@/lib/admin-action-queue",
+        "@/lib/admin-areas",
+        "@/lib/admin-day",
+        "@/lib/admin-session",
+        "@/lib/admin-today",
+        "@/lib/course-time",
+        "@/lib/expenses",
+        "@/lib/prisma",
+        "@/lib/problems",
+        "@/lib/real-courses",
         "next/server"
       ],
       "usedBy": []
@@ -10602,7 +10635,7 @@
     },
     {
       "path": "src/components/admin/AdminSidebar.tsx",
-      "lines": 238,
+      "lines": 214,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10621,13 +10654,14 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/app/admin/admin-glass.module.css",
         "@/components/admin/CommandPalette",
-        "@/components/ui/StatusDot",
+        "@/components/admin/admin-theme",
         "@/lib/admin-areas",
         "@/lib/admin-roles",
         "@/lib/admin-session-context",
-        "next/image",
         "next/link",
+        "next/navigation",
         "react"
       ],
       "usedBy": [
@@ -11071,6 +11105,44 @@
       ],
       "usedBy": [
         "src/app/admin/problems/page.tsx"
+      ]
+    },
+    {
+      "path": "src/components/admin/admin-theme.ts",
+      "lines": 20,
+      "purpose": "ADMIN-REDO (Cam 2026-11-11):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "ADMIN_THEME_COOKIE",
+          "kind": "const"
+        },
+        {
+          "name": "AdminTheme",
+          "kind": "type"
+        },
+        {
+          "name": "currentAdminTheme",
+          "kind": "fn"
+        },
+        {
+          "name": "readAdminTheme",
+          "kind": "fn"
+        },
+        {
+          "name": "setAdminTheme",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/admin/layout.tsx",
+        "src/components/admin/AdminSidebar.tsx"
       ]
     },
     {
@@ -13773,7 +13845,6 @@
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/inquiries/page.tsx",
         "src/app/admin/messages/page.tsx",
-        "src/app/admin/page.tsx",
         "src/app/admin/problems/page.tsx",
         "src/app/admin/revenue/page.tsx",
         "src/app/admin/security/page.tsx",
@@ -13794,7 +13865,6 @@
         "src/app/dashboard/shop/page.tsx",
         "src/app/manage/[bookingId]/page.tsx",
         "src/app/receipt/[bookingId]/page.tsx",
-        "src/components/admin/AdminSidebar.tsx",
         "src/components/admin/AgreementVersionsCard.tsx",
         "src/components/admin/InquiryBoard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
@@ -13989,6 +14059,7 @@
       ],
       "usedBy": [
         "src/app/api/admin/revenue/route.ts",
+        "src/app/api/admin/today/overview/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/stripe/webhook/route.ts",
         "src/lib/admin-course-page.ts",
@@ -14035,6 +14106,7 @@
         "./thread-signal"
       ],
       "usedBy": [
+        "src/app/api/admin/today/overview/route.ts",
         "src/app/api/admin/today/route.ts",
         "src/lib/admin-checks.ts",
         "src/lib/admin-today.ts"
@@ -14085,6 +14157,7 @@
         "src/app/api/admin/nav-badges/route.ts",
         "src/app/api/admin/search/route.ts",
         "src/app/api/admin/session/route.ts",
+        "src/app/api/admin/today/overview/route.ts",
         "src/app/api/admin/today/route.ts",
         "src/app/api/receipt/[bookingId]/route.ts",
         "src/components/admin/AdminSidebar.tsx",
@@ -14507,6 +14580,7 @@
       "usedBy": [
         "src/app/api/admin/ask/route.ts",
         "src/app/api/admin/goals/route.ts",
+        "src/app/api/admin/today/overview/route.ts",
         "src/lib/admin-ask.ts",
         "src/lib/admin-checks.ts",
         "src/lib/admin-course-page.ts",
@@ -14692,7 +14766,6 @@
         "src/app/admin/golfers/page.tsx",
         "src/app/admin/groups/page.tsx",
         "src/app/admin/inquiries/page.tsx",
-        "src/app/admin/page.tsx",
         "src/app/admin/revenue/page.tsx",
         "src/components/admin/AdminSidebar.tsx",
         "src/components/admin/admin-href.ts",
@@ -14892,6 +14965,7 @@
         "src/app/api/admin/system/route.ts",
         "src/app/api/admin/tee-sheet/route.ts",
         "src/app/api/admin/test-course/route.ts",
+        "src/app/api/admin/today/overview/route.ts",
         "src/app/api/admin/today/route.ts",
         "src/app/api/admin/transactions/export/route.ts",
         "src/app/api/admin/transactions/route.ts",
@@ -14966,6 +15040,7 @@
       ],
       "usedBy": [
         "src/app/api/admin/nav-badges/route.ts",
+        "src/app/api/admin/today/overview/route.ts",
         "src/app/api/admin/today/route.ts",
         "src/lib/admin-checks.ts",
         "src/lib/admin-course-page.ts",
@@ -18494,6 +18569,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
+        "src/app/api/admin/today/overview/route.ts",
         "src/app/api/birdie/chat/route.ts",
         "src/app/api/bookings/route.ts",
         "src/app/api/checkin/[bookingId]/route.ts",
@@ -20260,6 +20336,7 @@
         "src/app/api/admin/expenses/[id]/route.ts",
         "src/app/api/admin/expenses/route.ts",
         "src/app/api/admin/revenue/route.ts",
+        "src/app/api/admin/today/overview/route.ts",
         "src/lib/admin-today.ts"
       ]
     },
@@ -20427,7 +20504,6 @@
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/inquiries/page.tsx",
         "src/app/admin/messages/page.tsx",
-        "src/app/admin/page.tsx",
         "src/app/admin/problems/page.tsx",
         "src/app/admin/revenue/page.tsx",
         "src/app/admin/system/page.tsx",
@@ -23666,6 +23742,7 @@
         "src/app/api/admin/system/route.ts",
         "src/app/api/admin/tee-sheet/route.ts",
         "src/app/api/admin/test-course/route.ts",
+        "src/app/api/admin/today/overview/route.ts",
         "src/app/api/admin/transactions/export/route.ts",
         "src/app/api/admin/transactions/route.ts",
         "src/app/api/admin/two-factor/route.ts",
@@ -23991,6 +24068,7 @@
       "usedBy": [
         "src/app/api/admin/nav-badges/route.ts",
         "src/app/api/admin/problems/route.ts",
+        "src/app/api/admin/today/overview/route.ts",
         "src/app/api/admin/today/route.ts"
       ]
     },
@@ -24356,6 +24434,7 @@
       "usedBy": [
         "src/app/api/admin/nav-badges/route.ts",
         "src/app/api/admin/revenue/route.ts",
+        "src/app/api/admin/today/overview/route.ts",
         "src/lib/access-fee.ts",
         "src/lib/admin-action-queue.ts",
         "src/lib/admin-ask.ts",
@@ -28409,6 +28488,7 @@
       ],
       "readers": [
         "src/app/api/admin/course-documents/route.ts",
+        "src/app/api/admin/today/overview/route.ts",
         "src/lib/agreement-gate.ts",
         "src/lib/agreement-required.ts",
         "src/lib/agreement-sign.ts"
@@ -28914,6 +28994,7 @@
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/search/route.ts",
         "src/app/api/admin/stripe-match/route.ts",
+        "src/app/api/admin/today/overview/route.ts",
         "src/app/api/admin/transactions/export/route.ts",
         "src/app/api/admin/transactions/route.ts",
         "src/app/api/bookings/cancel/route.ts",
@@ -29935,6 +30016,7 @@
         "src/app/api/admin/send-golive-reminder/route.ts",
         "src/app/api/admin/system/route.ts",
         "src/app/api/admin/test-course/route.ts",
+        "src/app/api/admin/today/overview/route.ts",
         "src/app/api/alerts/route.ts",
         "src/app/api/birdie/chat/route.ts",
         "src/app/api/courses/[slug]/account/route.ts",
@@ -30844,6 +30926,7 @@
         "src/app/api/admin/nav-badges/route.ts",
         "src/app/api/admin/request-re-review/route.ts",
         "src/app/api/admin/search/route.ts",
+        "src/app/api/admin/today/overview/route.ts",
         "src/app/api/calcom/webhook/route.ts",
         "src/app/api/call/[token]/route.ts",
         "src/app/api/inquiries/details/route.ts",
@@ -31765,6 +31848,7 @@
         "src/app/api/admin/expenses/[id]/route.ts",
         "src/app/api/admin/expenses/route.ts",
         "src/app/api/admin/revenue/route.ts",
+        "src/app/api/admin/today/overview/route.ts",
         "src/lib/admin-today.ts"
       ]
     },
@@ -32861,6 +32945,7 @@
       ],
       "readers": [
         "src/app/api/admin/revenue/route.ts",
+        "src/app/api/admin/today/overview/route.ts",
         "src/app/api/admin/transactions/export/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/stripe/webhook/route.ts",
