@@ -65,7 +65,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/admin/employees` | admin | client-side | page | `src/app/admin/employees/page.tsx` | 278 |
 | `/admin/forgot-password` | admin | client-side | page | `src/app/admin/forgot-password/page.tsx` | 67 |
 | `/admin/goals` | admin | client-side | page | `src/app/admin/goals/page.tsx` | 164 |
-| `/admin/golfers` | admin | client-side | page | `src/app/admin/golfers/page.tsx` | 457 |
+| `/admin/golfers` | admin | client-side | page | `src/app/admin/golfers/page.tsx` | 415 |
 | `/admin/groups` | admin | client-side | page | `src/app/admin/groups/page.tsx` | 208 |
 | `/admin/inquiries` | admin | client-side | page | `src/app/admin/inquiries/page.tsx` | 964 |
 | `/admin/inquiries/[id]` | admin | client-side | page | `src/app/admin/inquiries/[id]/page.tsx` | 2380 |
@@ -73,7 +73,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/admin/messages` | admin | client-side | page | `src/app/admin/messages/page.tsx` | 479 |
 | `/admin/problems` | admin | client-side | page | `src/app/admin/problems/page.tsx` | 240 |
 | `/admin/profile` | admin | client-side | page | `src/app/admin/profile/page.tsx` | 123 |
-| `/admin/revenue` | admin | client-side | page | `src/app/admin/revenue/page.tsx` | 1033 |
+| `/admin/revenue` | admin | client-side | page | `src/app/admin/revenue/page.tsx` | 1031 |
 | `/admin/security` | admin | client-side | page | `src/app/admin/security/page.tsx` | 220 |
 | `/admin/set-password` | admin | client-side | page | `src/app/admin/set-password/page.tsx` | 159 |
 | `/admin/system` | admin | client-side | page | `src/app/admin/system/page.tsx` | 603 |
@@ -110,7 +110,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/admin/expenses/[id]` | admin | file | DELETE PATCH | `src/app/api/admin/expenses/[id]/route.ts` | 78 |
 | `/api/admin/forgot-password` | admin | entry | POST | `src/app/api/admin/forgot-password/route.ts` | 45 |
 | `/api/admin/goals` | admin | file | DELETE GET POST | `src/app/api/admin/goals/route.ts` | 61 |
-| `/api/admin/golfers` | admin | file | GET POST | `src/app/api/admin/golfers/route.ts` | 255 |
+| `/api/admin/golfers` | admin | file | GET POST | `src/app/api/admin/golfers/route.ts` | 248 |
 | `/api/admin/inquiries` | admin | file | DELETE GET PATCH POST | `src/app/api/admin/inquiries/route.ts` | 1314 |
 | `/api/admin/login` | admin | entry | POST | `src/app/api/admin/login/route.ts` | 96 |
 | `/api/admin/logout` | admin | entry | POST | `src/app/api/admin/logout/route.ts` | 19 |
@@ -135,7 +135,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/admin/set-password` | admin | entry | POST | `src/app/api/admin/set-password/route.ts` | 73 |
 | `/api/admin/stripe-match` | admin | file | GET | `src/app/api/admin/stripe-match/route.ts` | 29 |
 | `/api/admin/system` | admin | file | GET | `src/app/api/admin/system/route.ts` | 109 |
-| `/api/admin/tee-sheet` | admin | file | GET PATCH POST | `src/app/api/admin/tee-sheet/route.ts` | 132 |
+| `/api/admin/tee-sheet` | admin | file | GET PATCH POST | `src/app/api/admin/tee-sheet/route.ts` | 118 |
 | `/api/admin/test-course` | admin | file | GET PATCH POST PUT | `src/app/api/admin/test-course/route.ts` | 77 |
 | `/api/admin/today` | admin | file | GET | `src/app/api/admin/today/route.ts` | 52 |
 | `/api/admin/today/overview` | admin | file | GET | `src/app/api/admin/today/overview/route.ts` | 196 |
@@ -428,7 +428,6 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/shop-sales.ts` | 7 | 859 | POS-2 (Cam 2026-10-19: | `cancelSaleIntent`, `chargeSale`, `createSale`, `discountFor`, `DiscountInput`, `findSales`, `hasDiscount`, `markCardPaid` +25 more |
 | `src/lib/calcom.ts` | 6 | 93 | CAL-1 — Cal.com as the call scheduler, in place of the Google Calendar grid. | `calcomBookingUrl`, `calcomCreatedBy`, `calcomEmbedUrl`, `calcomManageLinks`, `calcomStatus`, `calcomUidOf`, `verifyCalcomSignature` |
 | `src/lib/call-answers.ts` | 6 | 349 | INQUIRY_CALL_SPEC IC-5 — structured discovery-call answers. | `BOOKING_METHOD_OPTIONS`, `CALL_FIELDS`, `CallAnswers`, `callRecapLines`, `DAY_SHORT`, `emptyAnswers`, `FieldSpec`, `FieldType` +19 more |
-| `src/lib/cancel-booking.ts` | 6 | 369 |  | `CancellationOptions`, `performCancellation` |
 | `src/lib/expenses.ts` | 6 | 88 | EXPENSE TRACKER (RUN_QUEUE "EXPENSE TRACKER / real P&L") — the manual half of the P&L: | `EXPENSE_CADENCE_LABEL`, `EXPENSE_CADENCES`, `EXPENSE_CATEGORIES`, `EXPENSE_CATEGORY_LABEL`, `ExpenseCadence`, `ExpenseCategory`, `isExpenseCadence`, `isExpenseCategory` +4 more |
 | `src/lib/image-resize.ts` | 6 | 33 | Client-side downscale so a 12MB phone photo never has to travel over the wire or blow the perf budget on the page that eventually renders it. | `downscaleImage` |
 | `src/lib/manage-access.ts` | 6 | 17 | R-AUTH-003 / R-GOLF-003 (G13) — who may manage a booking from the golfer side. | `canManageBooking` |
@@ -459,6 +458,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/analytics-terms.ts` | 4 | 59 | DENSE-1 (DENSE_UI_SPEC P2): | `TermKey`, `TERMS`, `TURNED_AWAY_CSV` |
 | `src/lib/birdie/proposal-types.ts` | 4 | 65 | BIRDIE_AI_SPEC B4b — the confirm-card shape, shared by the server (which builds cards in proposals.ts) and the widget (which shows them and makes the call). | `cardCalls`, `isProposalCard`, `PROPOSAL_ROUTES`, `ProposalCall`, `ProposalCard` |
 | `src/lib/call-invite.ts` | 4 | 106 | CALL_SCHEDULING_SPEC SC-2 §1 — the "pick a call time" invite. | `deliverCallInvite`, `INVITE_DAYS`, `inviteAgendaLines`, `InviteSendResult`, `inviteUrl`, `issueCallInvite`, `sendCallInvite`, `sendCallReminders` |
+| `src/lib/cancel-booking.ts` | 4 | 369 |  | `CancellationOptions`, `performCancellation` |
 | `src/lib/card-reader.ts` | 4 | 279 | POS-3 R3 (Cam 2026-10-24: | `cancelReaderPayment`, `courseStripe`, `listReaders`, `ownReader`, `readerSaleStatus`, `ReaderSaleStatus`, `ReaderView`, `registerReader` +7 more |
 | `src/lib/company-documents.ts` | 4 | 61 | CO-DOCS (Cam 2026-10-01): | `COMPANY_DOC_CATEGORIES`, `COMPANY_DOC_MAX_BYTES`, `COMPANY_DOC_PREFIX`, `COMPANY_DOC_TYPES`, `CompanyDocCategory`, `companyDocPathOf`, `describeCompanyPath`, `isAllowedCompanyPath` +1 more |
 | `src/lib/counter-pay.ts` | 4 | 339 | A group pays for its round at the counter (cash, or the course's own card machine): | `accountDueCents`, `CounterBookingInput`, `counterDueCents`, `counterPaidCents`, `CounterResult`, `createCounterBooking`, `roundNote`, `settleAtCounter` |
@@ -552,7 +552,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/shop-report.ts` | 2 | 88 | SHOP-4 (Cam 2026-10-30: | `shopReport`, `ShopReport`, `ShopReportItem`, `summarize` |
 | `src/lib/split-booking.ts` | 2 | 68 | SPLIT-1 (Cam 2026-11-02: | `SplitPart`, `splitRefusal`, `splitShares`, `SplitSource` |
 | `src/lib/staff-fonts.ts` | 2 | 10 | U-0 (UI_REVISE_SPEC §1b) used to give /dashboard and /admin their own STAFF look here: | `STAFF_LOOK_CLASS` |
-| `src/lib/stripe-errors.ts` | 2 | 26 | Friendly-message map for Stripe decline/error strings (REVISE_QUEUE A-06 item 4: | `friendlyStripeError` |
+| `src/lib/stripe-errors.ts` | 2 | 27 | Friendly-message map for Stripe decline/error strings (REVISE_QUEUE A-06 item 4: | `friendlyStripeError` |
 | `src/lib/submit-change-request.ts` | 2 | 91 |  | `cleanChangeItems`, `submitChangeRequest` |
 | `src/lib/tee-colour.ts` | 2 | 22 | Settings rework (Cam 2026-10-19: | `teeColour` |
 | `src/lib/weather.ts` | 2 | 65 | HOME-W (Cam 2026-11-05, "weather bar up top with the next tee times"): | `courseWeather`, `geocodeAddress`, `hourKey`, `parseHourly`, `Weather`, `WeatherHour` |

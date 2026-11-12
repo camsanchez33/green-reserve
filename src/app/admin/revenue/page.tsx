@@ -4,7 +4,7 @@
 //   Overview       the period's fees, fees by day, your profit (owner), by
 //                  course + exports; beside it what needs you, money coming in
 //                  today/tomorrow, and late-cancel fees (the course's money)
-//   Not collected  cards that failed (retry, charge only), rounds never checked
+//   Not collected  cards that failed (read-only), rounds never checked
 //                  in, and online rounds paid at the counter (ALL TIME)
 //   Disputes       open chargebacks, and whether the period matches Stripe (owner)
 //   Payouts        GreenReserve's Stripe balance, payouts and unit economics (owner)
@@ -659,9 +659,7 @@ export default function MoneyPage() {
               <section>
                 <div className="flex flex-wrap justify-between items-baseline gap-2">
                   <h2 className={H2}>Cards that failed {failed.length > 0 && <span className="font-medium text-bad">{failed.length} · {fmtMoney(failed.reduce((s, f) => s + f.amount, 0))}</span>}</h2>
-                  <span className="text-[13px] text-ink-muted">Retrying charges the card only — it never checks them in</span>
                 </div>
-                {/* MP-1b B4: above the list so a successful retry (which drops the row) can't hide the message. */}
                 {failed.length === 0 ? (
                   <p className="mt-3 text-[14px] text-ink flex items-center gap-2"><StatusDot status="ok" />Every card we tried went through.</p>
                 ) : (
@@ -680,7 +678,7 @@ export default function MoneyPage() {
                         ))}
                       </tbody>
                     </table>
-                    <p className="mt-2 text-[12.5px] text-ink-muted">Collecting it is the course's: GreenReserve never charges or retries a golfer's card (Cam 2026-11-12). Each course with a declined card is also on <Link href="/admin/problems" className="text-pine hover:underline">Problems</Link>, where someone takes it.</p>
+                    <p className="mt-2 text-[12.5px] text-ink-muted">Collecting it is the course's. Each course with a declined card is also on <Link href="/admin/problems" className="text-pine hover:underline">Problems</Link>, where someone takes it.</p>
                   </div>
                 )}
               </section>

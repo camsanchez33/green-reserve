@@ -3,7 +3,6 @@ import { prisma } from '@/lib/prisma';
 import { cartCharge, cartRuleOf } from '@/lib/cart-pricing';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, SUPPORT_PLUS, areaGate } from '@/lib/admin-session';
 import { claimTeeTime, TeeTimeClaimError, LATE_ADD_MESSAGE } from '@/lib/claim-tee-time';
-import { performCancellation } from '@/lib/cancel-booking';
 import { COMPLETED_BOOKING_STATUSES } from '@/lib/course-metrics';
 import { setTeeTimeBlocked } from '@/lib/schedule-service';
 import { needReason, reasonOf, auditAdmin, courseOfBooking } from '@/lib/admin-audit';
@@ -40,7 +39,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(teeTimes);
 }
 
-// PATCH — block/unblock or cancel booking
+// PATCH — block/unblock
 export async function PATCH(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -49,21 +48,8 @@ export async function PATCH(req: NextRequest) {
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const body = await req.json();
 
-  if (body.action === 'cancel_booking') {
-    const nr = needReason('cancel_booking', body); if (nr) return nr;
-    // MP-1 fix-now #4: this used to flip status and adjust the slot counts
-    // inline — a second cancellation implementation that sent no golfer email,
-    // fired no tee-time alerts, and had no already-cancelled guard, so two
-    // clicks decremented playersBooked twice and overbooked the slot. The
-    // vetted service does all of it; there is exactly one cancellation path.
-    const result = await performCancellation(body.bookingId, { type: 'admin', id: session.adminId });
-    if ('error' in result) {
-      return NextResponse.json({ error: result.error }, { status: result.status });
-    }
-    await auditAdmin(session, { action: 'cancel_booking', targetType: 'booking', targetId: String(body.bookingId), courseId: await courseOfBooking(String(body.bookingId)), after: { status: 'cancelled', feeCharged: result.feeCharged }, reason: reasonOf(body) });
-    return NextResponse.json({ success: true, feeCharged: result.feeCharged });
-  }
-
+  // Cam 2026-11-12: GreenReserve never cancels a golfer's booking (an admin cancel inside the window
+  // charged the golfer's card). The course or the golfer cancels; nothing here does.
   if (body.action === 'block' || body.action === 'unblock') {
     // MP-5d: same service the operator dashboard's Block button calls.
     if (!body.teeTimeId) return NextResponse.json({ error: 'Missing teeTimeId' }, { status: 400 });

@@ -16,7 +16,7 @@ import { cartCharge, cartRuleOf } from './cart-pricing';
 /**
  * Charging a round, and checking a golfer in, are two different things.
  *
- * MP-1 fix-now #5: they used to be one function. `/api/admin/retry-charge`
+ * MP-1 fix-now #5: they used to be one function. the old `/api/admin/retry-charge` (removed Cam 2026-11-12)
  * called `performCheckIn` verbatim, so an admin clearing tomorrow's failed
  * charge today also marked the golfer checked in and emailed them a receipt
  * for a round they had not played. The money logic is identical either way,

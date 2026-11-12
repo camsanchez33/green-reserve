@@ -697,30 +697,6 @@ export function useCourseDetail() {
     setSlotBusy(null);
   }
 
-  async function cancelBooking(bookingId: string, teeTimeId: string) {
-    if (!confirm('Cancel this booking? The golfer will be emailed.')) return;
-    setSlotBusy(teeTimeId); setOpNote(null);
-    try {
-      const r = await stepUpFetch('/api/admin/tee-sheet', {
-        method: 'PATCH', headers: H(), body: JSON.stringify({ action: 'cancel_booking', bookingId }),
-      });
-      const d = await r.json().catch(() => ({}));
-      if (r.ok) {
-        await loadTeeSheet(tsDate);
-        // The shared cancellation service applies the course's own late policy;
-        // say so when it did, rather than letting a charge pass silently.
-        setOpNote(d.feeCharged
-          ? { ok: false, text: 'Booking cancelled. It was inside the course\'s cancellation window, so the late fee was charged to the golfer\'s card.' }
-          : { ok: true, text: 'Booking cancelled — the golfer has been emailed.' });
-      } else {
-        setOpNote({ ok: false, text: d.error || 'Could not cancel that booking — nothing was changed.' });
-      }
-    } catch {
-      setOpNote({ ok: false, text: 'Network error — the booking was not cancelled.' });
-    }
-    setSlotBusy(null);
-  }
-
   async function addManualBooking() {
     if (!manualSlot) return;
     setManualSaving(true); setManualError('');
@@ -1023,7 +999,6 @@ export function useCourseDetail() {
     saveScheduleEdit,
     deleteSchedule,
     blockSlot,
-    cancelBooking,
     addManualBooking,
     sendCourseMessage,
     submitRefund,

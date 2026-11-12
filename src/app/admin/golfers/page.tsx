@@ -81,8 +81,6 @@ function GolfersInner() {
   // One action at a time per booking, and the outcome stays on screen.
   const [busy, setBusy] = useState<string | null>(null);
   const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null);
-  const [cancelTarget, setCancelTarget] = useState<BookingDetail | null>(null);
-  const [cancelReason, setCancelReason] = useState('');
   const [refundTarget, setRefundTarget] = useState<BookingDetail | null>(null);
   const [refundAmount, setRefundAmount] = useState('');
   const [refundReason, setRefundReason] = useState('');
@@ -131,18 +129,6 @@ function GolfersInner() {
     setBusy(null);
     if (!res.ok) { setNote({ ok: false, text: res.message }); return; }
     setNote({ ok: true, text: `${action === 'resend_receipt' ? 'Receipt' : 'Confirmation'} sent to ${res.data.sentTo}.` });
-  }
-
-  async function submitCancel() {
-    if (!cancelTarget) return;
-    if (!cancelReason.trim()) { setModalError('A reason is required — the golfer reads it.'); return; }
-    setBusy(cancelTarget.id); setModalError('');
-    const res = await adminFetch<{ ok: boolean; feeCharged: boolean }>('/api/admin/golfers', { method: 'POST', body: JSON.stringify({ bookingId: cancelTarget.id, action: 'cancel', reason: cancelReason.trim() }), subject: 'this booking', action: 'send' });
-    setBusy(null);
-    if (!res.ok) { setModalError(res.message); return; }
-    setNote({ ok: true, text: res.data.feeCharged ? 'Cancelled. Their late-cancellation fee had already been charged and stays charged; they have been emailed.' : 'Cancelled — no charge, and they have been emailed.' });
-    setCancelTarget(null); setCancelReason('');
-    loadDetail();
   }
 
   async function submitRefund() {
@@ -306,12 +292,6 @@ function GolfersInner() {
                                   {isBusy ? 'Working…' : 'Resend receipt'}
                                 </button>
                               )}
-                              {canCancel && canMoveMoney && (
-                                <button onClick={() => { setCancelTarget(b); setCancelReason(''); setModalError(''); }} disabled={isBusy}
-                                  className="text-[11px] font-medium px-3 py-1.5 rounded-md border border-bad/30 text-bad hover:bg-bad/5 transition-colors disabled:opacity-50">
-                                  Cancel for them
-                                </button>
-                              )}
                               {canRefund && canMoveMoney && (
                                 <button onClick={() => { setRefundTarget(b); setRefundAmount(''); setRefundReason(''); setModalError(''); }} disabled={isBusy}
                                   className="text-[11px] font-medium px-3 py-1.5 rounded-md border border-bad/30 text-bad hover:bg-bad/5 transition-colors disabled:opacity-50">
@@ -398,28 +378,6 @@ function GolfersInner() {
           )}
         </div>
       </div>
-
-      {/* Cancel on the golfer's behalf */}
-      {cancelTarget && (
-        <Modal size="sm" pad="p-6" dismissable={!busy} onClose={() => setCancelTarget(null)}
-          title={`Cancel ${cancelTarget.courseName} for ${detail?.firstName ?? 'this golfer'}?`}
-          titleNode={<h3 className="text-[18px] font-bold text-ink mb-1">Cancel {cancelTarget.courseName} for {detail?.firstName}?</h3>}>
-            <p className="text-sm text-ink-soft mb-3">
-              {cancelTarget.teeDate} at {cancelTarget.teeTime}. {cancelTarget.paymentStatus === 'paid'
-                ? 'The round was already paid — it is refunded as part of the cancellation.'
-                : cancelTarget.paymentStatus === 'cancellation_fee_charged'
-                  ? 'Their late-cancellation fee was already charged and stays charged.'
-                  : 'Nothing has been charged; their card is simply never billed.'} They are emailed with your reason.
-            </p>
-            <label className="block"><span className="block mb-1.5 text-[13px] text-ink-soft">Reason — the golfer reads this</span>
-            <textarea value={cancelReason} onChange={e => setCancelReason(e.target.value)} rows={3} placeholder="You called to say you can't make it and asked us to cancel." className={iCls + ' w-full resize-none mb-3'} /></label>
-            {modalError && <p className="text-xs text-bad mb-3">{modalError}</p>}
-            <div className="flex gap-3">
-              <button onClick={() => setCancelTarget(null)} disabled={!!busy} className="flex-1 border border-line text-ink-soft py-2.5 rounded-md text-[12.5px] font-medium hover:border-line-strong transition-colors disabled:opacity-50">Keep it</button>
-              <button onClick={submitCancel} disabled={!!busy} className="flex-1 bg-bad hover:bg-bad/90 text-white py-2.5 rounded-md text-[12.5px] font-medium disabled:opacity-50 transition-colors">{busy ? 'Cancelling…' : 'Cancel booking'}</button>
-            </div>
-        </Modal>
-      )}
 
       {/* Refund */}
       {refundTarget && (
