@@ -266,3 +266,6 @@ Mockup `lanes/admin/announcements-mockup.html` (final). Same features as today (
 - Tap → full page: "‹ Announcements", title, full message, "date · by sender · Emailed · N dismissed". No actions.
 - "+" → the composer full page (Title, Message, Also send as email — To N operators of live courses, Preview & confirm) → review (Preview with Edit, reach line, "This cannot be recalled.", Back to edit / Send test to me / Confirm & send) → the green result line on the list (amber when some emails failed).
 - Headings "Sent", "New announcement", "Review before sending" dropped; the header reach line moves into the email option and the review step.
+
+## Rule: Light and Charcoal get the same redesign (Cam 2026-11-12)
+Every course-dashboard change ships in BOTH looks: same layout, glass cards, ribbons (dark ribbons on a light page in Light), colours with meaning. Only the palette swaps. Every page is screenshotted in both looks before review; scripts/glass-test.ts fails on a charcoal-only layout/glass rule.
