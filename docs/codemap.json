@@ -991,7 +991,7 @@
     },
     {
       "path": "src/app/admin/expenses/page.tsx",
-      "lines": 391,
+      "lines": 394,
       "purpose": "",
       "brain": [],
       "exports": [

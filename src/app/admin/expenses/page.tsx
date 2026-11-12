@@ -5,7 +5,7 @@ import Link from 'next/link';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { stepUpFetch } from '@/lib/step-up-client';
 import { dayKey } from '@/lib/admin-day';
-import { EXPENSE_CATEGORIES, EXPENSE_CADENCES, EXPENSE_CATEGORY_LABEL, monthlyEquivalentCents, type ExpenseCategory } from '@/lib/expenses';
+import { EXPENSE_CATEGORIES, EXPENSE_CADENCES, EXPENSE_CATEGORY_LABEL, monthlyEquivalentCents, monthCostPace, lastDayOf, type ExpenseCategory } from '@/lib/expenses';
 import g from '../admin-glass.module.css';
 import c from '../courses/courses.module.css';
 import r from '../revenue/revenue.module.css';
@@ -25,7 +25,7 @@ import { goalPace } from '@/lib/goal-pace';
 const usd = (cents: number) => '$' + (cents / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const longDay = (day: string) => new Date(day + 'T12:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' });
 /** An end is a real instant: its day on the platform clock (ending at 9pm ET on Nov 12 is Nov 12). */
-const endDay = (iso: string) => dayKey(new Date(iso));
+const endDay = (iso: string) => lastDayOf(iso) ?? dayKey(new Date(iso));
 const catLabel = (k: string) => EXPENSE_CATEGORY_LABEL[k as ExpenseCategory] ?? k;
 const PACE_WORDS = { ok: 'On pace to stay under', warn: 'Close to the budget', bad: 'On pace to go over', early: 'Too early to tell' } as const;
 const todayKey = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
@@ -103,6 +103,7 @@ export default function ExpensesPage() {
 
   const now = useMemo(() => new Date(), [list]); // eslint-disable-line react-hooks/exhaustive-deps
   const k = useMemo(() => (list ? cards(list, now) : null), [list, now]);
+  const mp = useMemo(() => (list ? monthCostPace(list, now) : null), [list, now]);
   const shown = useMemo(() => {
     const f = FILTERS.find(x => x.key === filter)!;
     return (list ?? []).filter(e => f.test(e, now)).sort(byCost);
@@ -185,7 +186,9 @@ export default function ExpensesPage() {
 
   // The budget card: spent so far this month against the budget, coloured by the shared pace rule (src/lib/goal-pace.ts).
   const monthDays = k ? (k.monthEnd.getTime() - k.monthStart.getTime()) / 86_400_000 : 0;
-  const pace = k && budget ? goalPace({ progress: k.monthSoFar - k.monthOneTime, fixed: k.monthOneTime, target: budget, share: k.elapsedShare, kind: 'cap', daysElapsed: k.elapsedShare * monthDays }) : null;
+  // Build's month helper (#389): running costs so far (progress), one-time costs so far (fixed, never projected) and the
+  // month's total already on the books (scheduled: a cost ending or starting later this month counts only its part).
+  const pace = k && mp && budget ? goalPace({ progress: mp.progress, fixed: mp.fixed, scheduled: mp.scheduled, target: budget, share: mp.share, kind: 'cap', daysElapsed: mp.share * monthDays }) : null;
   const monthLast = k ? new Date(k.monthEnd.getTime() - 3_600_000).toLocaleDateString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric' }) : '';
   const budgetCard = k && (
     <div className={`${g.glass} ${r.rkc}`}>
