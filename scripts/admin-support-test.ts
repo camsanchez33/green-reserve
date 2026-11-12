@@ -21,7 +21,7 @@ check('a later search wins over an earlier answer', /mine !== seq\.current/.test
 check('the open chat is in the URL', /\?id=\$\{encodeURIComponent/.test(page));
 const nav = readFileSync('src/components/admin/AdminSidebar.tsx', 'utf8');
 check('the menu: Course support, support+, Messages area', /key: 'support', label: 'Course support', href: '\/admin\/support', minRole: SUPPORT_PLUS, area: 'messages'/.test(nav));
-check('Problems stays reachable until it moves to Overview', /key: 'problems'.*href: '\/admin\/problems'/.test(nav));
+check('Problems is off the rail: its list is Overview\'s Needs attention', !/key: 'problems'/.test(nav) && /<Link href="\/admin" className=\{g\.ibtn\}/.test(nav));
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');

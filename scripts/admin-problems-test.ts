@@ -39,13 +39,16 @@ for (const page of readdirSync('src/app/admin', { withFileTypes: true }).filter(
 check('who-can-open words', whoCanOpen('/admin/security') === 'Owner only' && whoCanOpen('/admin/system') === 'Managers with Company access');
 
 // The page and the route.
-const page = readFileSync('src/app/admin/problems/page.tsx', 'utf8');
+// Cam 2026-11-12 (with Course support): the list lives in Overview's Needs attention; /admin/problems redirects there.
+const old = readFileSync('src/app/admin/problems/page.tsx', 'utf8');
+const page = readFileSync('src/app/admin/page.tsx', 'utf8') + readFileSync('src/app/admin/ProblemRow.tsx', 'utf8');
+const ov = readFileSync('src/app/api/admin/today/overview/route.ts', 'utf8');
 const route = readFileSync('src/app/api/admin/problems/route.ts', 'utf8');
-check('Go to it only when the login can open it, else the course, else who can', /canOpenAdminHref\(p\.href, role, areas\)/.test(page) && /label: 'Open course'/.test(page) && /whoCanOpen\(p\.href\)/.test(page));
-check('a #id link opens its tab once, not after every reload', /if \(!data \|\| !hash \|\| hashDone\) return;\s*setHashDone\(true\)/.test(page));
-check('the course name is linked inside the title, not printed twice', /<TitleWithCourse p=\{p\} \/>/.test(page) && !/\{p\.courseName && p\.courseId && <>/.test(page));
-check('the title links the course only for a login that can open it', /!canOpenAdminHref\(href, role, areas\)\) return <>\{p\.title\}<\/>/.test(page));
-check('a holder outside the list still shows in Who has it', /\(no access\)<\/option>/.test(page));
+check('/admin/problems redirects to Overview', /redirect\('\/admin'\)/.test(old));
+check('Overview lists problems only for the Problems area', /can\('problems'\) \? listProblems\(now\) : null/.test(ov));
+check('each problem carries its course, age and detail', /problem: \{ course: p\.courseName, courseId: p\.courseId, openedAt: p\.openedAt, detail: p\.detail, goTo: p\.href \}/.test(ov));
+check('Go to it only when the login can open it, else the course, else who can', /canOpenAdminHref\(p\.goTo, role, areas\)/.test(page) && /label: 'Open course'/.test(page) && /whoCanOpen\(p\.goTo\)/.test(page));
+check('a problem opens in place (no page to go to)', /aria-expanded=\{open\}/.test(page) && !/href="\/admin\/problems"/.test(page));
 check('assign offers only people who can open Problems', /const CAN_WORK = \{ active: true, role: \{ in: SUPPORT_PLUS \}, OR: \[\{ role: 'owner' \}, \{ areasSetAt: null \}, \{ areas: \{ has: 'problems' \} \}\] \}/.test(route)
   && /findMany\(\{ where: CAN_WORK/.test(route) && /findFirst\(\{ where: \{ \.\.\.CAN_WORK, id: body\.adminId \}/.test(route));
 

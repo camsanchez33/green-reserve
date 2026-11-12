@@ -124,7 +124,6 @@ export async function GET(req: NextRequest) {
   // Static nav items filtered by role
   const staticNav = [
     { id: 'nav:overview',    label: 'Home',          href: '/admin',            always: true },
-    { id: 'nav:problems',    label: 'Problems',      href: '/admin/problems',   support: true },
     { id: 'nav:goals',       label: 'Goals',         href: '/admin/goals',      support: true },
     { id: 'nav:inquiries',   label: 'Pipeline',      href: '/admin/inquiries',  always: true },
     { id: 'nav:courses',     label: 'Courses',       href: '/admin/courses',    always: true },
