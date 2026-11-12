@@ -976,6 +976,33 @@ async function main() {
     }
   }
 
+  console.log('\n── Double-tapped Book (online duplicate guard) ──');
+  {
+    // A no-fee course takes no card, so the booking route can be driven end to end.
+    const savedFees = await prisma.course.findUniqueOrThrow({ where: { id: data.courseA.id }, select: { lateCancellationFeeCents: true, noShowFeeCents: true } });
+    await prisma.course.update({ where: { id: data.courseA.id }, data: { lateCancellationFeeCents: 0, noShowFeeCents: 0 } });
+    const date = new Date(Date.now() + 5 * 86_400_000).toISOString().slice(0, 10);
+    const tt = await prisma.teeTime.create({ data: { courseId: data.courseA.id, date, time: '10:30', holes: 18, greenFeeCents: 0, cartFeeCents: 0, playersAvailable: 4, playersBooked: 0, status: 'available' } });
+    try {
+      const body = { teeTimeId: tt.id, players: 2, golferName: 'Tap Twice', golferEmail: `${TS}-tap@test.local`, termsAccepted: true };
+      const first = await api('/api/bookings', { method: 'POST', body });
+      const again = await api('/api/bookings', { method: 'POST', body: { ...body, golferEmail: body.golferEmail.toUpperCase() } });
+      const f = first.body as { bookingId?: string }, a = again.body as { bookingId?: string; duplicate?: boolean };
+      check('Two identical Book taps → one booking; the second gets it back (duplicate)', first.status === 200 && again.status === 200 && a.duplicate === true && a.bookingId === f.bookingId
+        && (await prisma.booking.count({ where: { teeTimeId: tt.id } })) === 1, JSON.stringify({ first: first.status, f, again: again.status, a }).slice(0, 300));
+      const probe = await api('/api/bookings', { method: 'POST', body: { ...body, golferEmail: '%' } });
+      check('…an email that isn\'t one ("%") is refused before anything else → 400', probe.status === 400, JSON.stringify(probe.body));
+      const other = await api('/api/bookings', { method: 'POST', body: { ...body, players: 1, golferName: 'Someone Else', golferEmail: `${TS}-tap@test.local` } });
+      check('…someone typing that email with another name books on their own; nothing about the first booking comes back', other.status === 200 && (other.body as { bookingId?: string }).bookingId !== f.bookingId && !(other.body as { duplicate?: boolean }).duplicate, JSON.stringify(other.body).slice(0, 200));
+    } finally {
+      const made = (await prisma.booking.findMany({ where: { teeTimeId: tt.id }, select: { id: true } })).map(b => b.id);
+      await prisma.bookingEvent.deleteMany({ where: { bookingId: { in: made } } }).catch(() => {});
+      await prisma.booking.deleteMany({ where: { teeTimeId: tt.id } });
+      await prisma.teeTime.delete({ where: { id: tt.id } });
+      await prisma.course.update({ where: { id: data.courseA.id }, data: savedFees });
+    }
+  }
+
   console.log('\n── Admin owner auth boundary (AW-1: the owner signs in only at /cam) ──');
   {
     // (a) The employees' door never mentions an owner: the owner's correct

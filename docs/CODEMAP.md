@@ -162,7 +162,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/auth/reset-password` | public | entry | GET POST | `src/app/api/auth/reset-password/route.ts` | 106 |
 | `/api/auth/verify` | public | public | POST | `src/app/api/auth/verify/route.ts` | 36 |
 | `/api/birdie/chat` | operator | file | GET POST PUT | `src/app/api/birdie/chat/route.ts` | 246 |
-| `/api/bookings` | member | file | GET POST | `src/app/api/bookings/route.ts` | 511 |
+| `/api/bookings` | member | file | GET POST | `src/app/api/bookings/route.ts` | 547 |
 | `/api/bookings/cancel` | golfer | file | POST | `src/app/api/bookings/cancel/route.ts` | 44 |
 | `/api/bookings/resident-rate` | public | public | GET | `src/app/api/bookings/resident-rate/route.ts` | 65 |
 | `/api/bookings/setup-intent` | public | public | POST | `src/app/api/bookings/setup-intent/route.ts` | 74 |
@@ -387,7 +387,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/money-ledger.ts` | 19 | 101 | LEDGER-1 (Cam 2026-10-30, "one new money table"): | `chargeWhat`, `feeBackCents`, `mirrorMove`, `Move`, `MoveMethod`, `MoveWhat`, `recordMove` |
 | `src/lib/inquiry-status.ts` | 18 | 501 | Single source of truth for what every inquiry status means and which pipeline segment it belongs to. | `ACTIVE_STATUSES`, `ALIVE_STATUSES`, `ARCHIVED_STATUSES`, `CLOSED_REASONS`, `compareQueue`, `daysSince`, `decodeResubmit`, `diffResubmit` +24 more |
 | `src/lib/member-rates.ts` | 18 | 109 | Cam 2026-10-29 (Revamp 3 audit, fixes 1 and 2 — "up to course"): | `LapseRule`, `liveMembershipWhere`, `memberPlayers`, `membershipLive`, `memberSpot`, `PartyBooking`, `partyFees`, `splitTotal` |
-| `src/lib/booking-fees.ts` | 17 | 64 |  | `ACCESS_FEE_CENTS`, `ACCESS_FEE_PER_PLAYER`, `EVENT_FEE_LABEL`, `EVENT_FEE_ON`, `FEE_AT_BOOKING_ON`, `feeCoveredCents`, `hoursLabel`, `roundChargeCents` +4 more |
+| `src/lib/booking-fees.ts` | 17 | 66 |  | `ACCESS_FEE_CENTS`, `ACCESS_FEE_PER_PLAYER`, `EVENT_FEE_LABEL`, `EVENT_FEE_ON`, `FEE_AT_BOOKING_ON`, `feeCoveredCents`, `hoursLabel`, `roundChargeCents` +4 more |
 | `src/lib/admin-areas.ts` | 16 | 44 | AW-11 (Cam 2026-10-22: | `ADMIN_AREAS`, `AdminArea`, `ALL_AREAS`, `effectiveAreas`, `hasArea`, `isAdminArea` |
 | `src/lib/admin-fetch.ts` | 16 | 153 | One place that decides what an admin fetch failure MEANS. | `adminErrorMessage`, `adminFetch`, `AdminFetchAction`, `AdminFetchFailure`, `AdminFetchResult`, `LOGIN_SESSION_ENDED` |
 | `src/lib/use-dashboard-access.ts` | 16 | 51 | SP-A: | `DashboardAccess`, `useDashboardAccess` |
@@ -494,7 +494,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/walking.ts` | 4 | 23 | Settings rework (Cam 2026-10-19): | `walkingSummary`, `walkingWords` |
 | `src/lib/booking-fee.ts` | 3 | 126 | FEE-AT-BOOKING (Cam 2026-10-24: | `chargeBookingFee`, `feeCoveredCents`, `refundBookingFee`, `releaseUnpaidBooking` |
 | `src/lib/booking-mode.ts` | 3 | 22 | Course-world pages: | `isBookingMode`, `isCourseWorld` |
-| `src/lib/claim-tee-time.ts` | 3 | 151 |  | `CLAIM_ATTEMPTS`, `claimTeeTime`, `LATE_ADD_MESSAGE`, `LATE_ADD_MINUTES`, `TeeTimeClaimError` |
+| `src/lib/claim-tee-time.ts` | 3 | 199 |  | `CLAIM_ATTEMPTS`, `ClaimResult`, `claimTeeTime`, `DOUBLE_TAP_MS`, `findDoubleTap`, `LATE_ADD_MESSAGE`, `LATE_ADD_MINUTES`, `TeeTimeClaimError` |
 | `src/lib/course-goals.ts` | 3 | 33 | HOME-2 (Cam 2026-11-05, "if you want to track goals track them here … set goals for certain metrics"): | `formatGoal`, `GOAL_MAX`, `GOAL_METRICS`, `goalMetric`, `GoalMetric`, `isGoalMetric`, `neededPerDay` |
 | `src/lib/course-setup.ts` | 3 | 52 | COURSES_SHEET_SPEC CS-1 §1 — the five setup steps a built course goes through before it is live. | `SETUP_STEPS`, `SetupCourseLike`, `setupProgress`, `SetupProgress`, `SetupStep`, `SetupStepKey` |
 | `src/lib/course-wire.ts` | 3 | 57 |  | `COURSE_MONEY_WIRE_FIELDS`, `courseMoneyFromWire`, `courseToWire` |
