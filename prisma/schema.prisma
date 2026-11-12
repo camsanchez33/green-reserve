@@ -120,6 +120,8 @@ model Course {
   hasPuttingGreen            Boolean               @default(false)
   hasShortGameArea           Boolean               @default(false)
   hasProShop                 Boolean               @default(false)
+  /// HOME-3 (Cam 2026-11-12): the course takes cash and keeps track of the register — Home asks to open it only when on.
+  takesCash                  Boolean               @default(false)
   proShopPhone               String                @default("")
   restaurantType             String                @default("none")
   hasCartGirl                Boolean               @default(false)
