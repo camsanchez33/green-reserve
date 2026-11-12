@@ -70,3 +70,21 @@ export function chartSummary(series: { current: number[]; prior: number[] }, don
   const prior = done ? sum(series.prior) : sum(series.prior.slice(0, series.current.length));
   return { total, ahead: total - prior };
 }
+
+/** The revenue goal (Build's revenueGoal on GET ?period=month, owner only). */
+export interface RevenueGoal { month: string; targetCents: number | null; progressCents: number; dayOfPeriod: number; daysInPeriod: number }
+
+/** The route sent a usable goal block. */
+export const isGoal = (v: unknown): v is RevenueGoal => {
+  const x = v as RevenueGoal | null;
+  return !!x && /^\d{4}-\d{2}$/.test(x.month) && typeof x.progressCents === 'number' && typeof x.dayOfPeriod === 'number' && typeof x.daysInPeriod === 'number'
+    && (x.targetCents === null || typeof x.targetCents === 'number');
+};
+
+/** "$4,000" or "4000.50" → cents; commas only as thousands groups; anything that isn't above zero and up to $20M → null. */
+export function parseGoalCents(s: string): number | null {
+  const t = s.replace(/[$\s]/g, '');
+  if (!/^(\d{1,3}(,\d{3})+|\d+)(\.\d{1,2})?$/.test(t)) return null;
+  const c = Math.round(parseFloat(t.replace(/,/g, '')) * 100);
+  return c > 0 && c <= 2_000_000_000 ? c : null;
+}

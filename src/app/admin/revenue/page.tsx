@@ -9,7 +9,8 @@ import s from './revenue.module.css';
 import { TERMS, NOT_YET, OWNER_ONLY, SESSION_ENDED, loadFailed } from './terms';
 import { useAdminSession } from '@/lib/admin-session-context';
 import { MANAGER_PLUS } from '@/lib/admin-roles';
-import { type Per, KIND, fallbackQuery, isNewAnswer, isFallbackAnswer, pct, payoutState, periodDone, chartSummary } from './logic';
+import GoalCard from './GoalCard';
+import { type Per, type RevenueGoal, isGoal, KIND, fallbackQuery, isNewAnswer, isFallbackAnswer, pct, payoutState, periodDone, chartSummary } from './logic';
 
 // ADMIN-REDO Revenue (Cam approved the mockup 2026-11-12, ADMIN_REDO_SPEC.md "Revenue: APPROVED"): what
 // GreenReserve earns. One column, no tabs; ONE Filter (This month · Last month · Last 30 days · This year) drives
@@ -47,6 +48,7 @@ interface RevenueData {
   coursePayoutProblems?: { rows: PayoutProblem[]; unavailable: boolean; checkedCourses?: number };
   payouts?: { toCourses: { cents: number; courses: number } | null; unavailable: boolean };
   isOwner: boolean;
+  revenueGoal?: RevenueGoal; // owner only, This month only (Build's revenue goal)
   ownerMfaRequired?: boolean;
   pnl: { feesCollected: number; feesCollectedDelta: Delta; separateFees?: number };
   daily?: { current: number[]; prior: number[] };
@@ -239,6 +241,8 @@ export default function RevenuePage() {
     return { ledger, separate, revenue, revenuePct, live, avgPct, rev, courses, done, series, vs };
   }, [shown]);
 
+  // The goal card: only for This month, only for the owner, only when the route sends it.
+  const goal = shown && per === 'month' && owner && isGoal(shown.revenueGoal) ? shown.revenueGoal : null;
   const ownerNote = shown?.ownerMfaRequired ? 'Sign in again with your second factor to see this' : OWNER_ONLY;
   const problemCourses = (payouts.data?.courses ?? []).filter(x => payoutState(x) !== null);
   const okCourses = (payouts.data?.courses ?? []).length - problemCourses.length;
@@ -276,7 +280,7 @@ export default function RevenuePage() {
 
         {shown && view && (
           <>
-            <div className={s.rk}>
+            <div className={`${s.rk} ${goal ? s.rk4 : ''}`}>
               <div className={`${g.glass} ${s.rkc}`}>
                 <span className={s.l} title={TERMS.revenue}>Revenue</span>
                 <b className={s.v}>{usd(view.revenue)}</b>
@@ -295,6 +299,7 @@ export default function RevenuePage() {
                   : platform.data.nextPayout ? <><b className={s.v}>{usd(platform.data.nextPayout.amount)}</b><span className={s.c}>Arrives {weekday(platform.data.nextPayout.arrivalDate)}</span></>
                   : <><b className={s.na}>None on the way</b><span className={s.c}>Balance {usd(platform.data.balance.available)}</span></>}
               </div>
+              {goal && <GoalCard goal={goal} onSaved={t => setD(x => (x && x.revenueGoal ? { ...x, revenueGoal: { ...x.revenueGoal, targetCents: t } } : x))} />}
             </div>
 
             <section className={`${g.glass} ${s.pad}`} aria-label="Revenue over the period">

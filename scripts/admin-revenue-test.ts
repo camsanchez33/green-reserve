@@ -2,7 +2,7 @@
 // period's name, a percentage is never drawn across a zero or negative prior, and only paused payouts read as a
 // course not being paid. Run: npx tsx scripts/admin-revenue-test.ts
 import { readFileSync } from 'fs';
-import { KIND, fallbackQuery, isNewAnswer, isFallbackAnswer, pct, payoutState, periodDone, chartSummary, type Per } from '../src/app/admin/revenue/logic';
+import { isGoal, parseGoalCents, KIND, fallbackQuery, isNewAnswer, isFallbackAnswer, pct, payoutState, periodDone, chartSummary, type Per } from '../src/app/admin/revenue/logic';
 
 let failed = 0;
 const check = (label: string, ok: boolean, detail = '') => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${!ok && detail ? ` — ${detail}` : ''}`); if (!ok) failed++; };
@@ -55,6 +55,15 @@ check('the page uses the period guards', /isNewAnswer\(/.test(page) && /isFallba
 check('the page has no own percentage rule', !/prior === 0 \?/.test(page));
 check('the page never says "Not paid"', !/Not paid/.test(page));
 check('nothing checked never reads as paid in full (checkedCourses 0 → "No payouts checked", before "Paid in full")', /checkedCourses === 0/.test(page) && page.indexOf('No payouts checked') > -1 && page.indexOf('No payouts checked') < page.indexOf('Paid in full'));
+
+// The revenue goal card (owner, This month): Build's block, the amount typed, and the ONE pace rule.
+check('a goal block with no target yet is usable', isGoal({ month: '2026-11', targetCents: null, progressCents: 0, dayOfPeriod: 11.5, daysInPeriod: 30 }));
+check('a malformed goal block is refused', !isGoal({ month: 'Nov', targetCents: 5, progressCents: 0, dayOfPeriod: 1, daysInPeriod: 30 }) && !isGoal(undefined));
+check('goal amounts: "$4,000" → 400000, "12,50" and over $20M refused', parseGoalCents('$4,000') === 400000 && parseGoalCents('12,50') === null && parseGoalCents('20000001') === null && parseGoalCents('0') === null);
+const goalCard = readFileSync('src/app/admin/revenue/GoalCard.tsx', 'utf8');
+check('the goal bar uses the shared pace rule as a goal to reach', /goalPace\(\{[^}]*kind: 'reach'/.test(goalCard) && !/0\.9\s*\*/.test(goalCard));
+check('setting the goal goes through step-up', /stepUpFetch\('\/api\/admin\/revenue-goal'/.test(goalCard));
+check('the goal card shows only for This month, only for the owner', /per === 'month' && owner && isGoal\(/.test(page));
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
