@@ -114,7 +114,7 @@ export function parseAmount(s: string): number | null {
 
 /** One line of a cost's history, as Build's /api/admin/expenses/[id]/history answers it (newest first). */
 export interface HistoryRow {
-  at: string; by: string; kind: 'added' | 'changed' | 'ended' | 'restarted';
+  at: string; by: string; kind: 'added' | 'changed' | 'ended';
   changes?: { field: string; from: string | number | null; to: string | number | null }[];
 }
 
@@ -128,7 +128,6 @@ export function historyLine(
   const by = h.by ? ` · ${h.by}` : '';
   if (h.kind === 'added') return `Added${by}`;
   if (h.kind === 'ended') return `Finished${by}`;
-  if (h.kind === 'restarted') return `Restarted${by}`;
   const show = (field: string, v: string | number | null): string => {
     if (v === null || v === '') return '—';
     if (field === 'amountCents') return usd(Number(v));
