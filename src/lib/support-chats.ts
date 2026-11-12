@@ -93,10 +93,12 @@ async function announcementRows(courseId: string, operatorId: string | null) {
 function announcementsChat(rows: Awaited<ReturnType<typeof announcementRows>>, operatorId: string | null): CourseChat | null {
   if (!rows.length) return null;
   const last = rows[rows.length - 1];
+  const unread = operatorId ? rows.filter(r => !r.seen).length : 0;
   return {
-    id: ANNOUNCEMENTS_CHAT_ID, subject: 'GreenReserve', state: 'answered',
+    // An unseen announcement is news from us, like a reply: 'reply' until seen (final review), then 'answered'.
+    id: ANNOUNCEMENTS_CHAT_ID, subject: 'GreenReserve', state: unread > 0 ? 'reply' : 'answered',
     last: { body: last.body, fromUs: false, at: last.at.toISOString() }, dueAt: null,
-    unread: operatorId ? rows.filter(r => !r.seen).length : 0, fromGreenReserve: true,
+    unread, fromGreenReserve: true,
   };
 }
 
@@ -144,7 +146,7 @@ export async function openCourseChat(courseId: string, id: string, operatorId: s
       await prisma.announcementDismissal.createMany({ data: rows.filter(r => !r.seen).map(r => ({ announcementId: r.id, operatorId })), skipDuplicates: true });
     }
     return {
-      chat: { ...announcementsChat(rows, operatorId)!, unread: 0 },
+      chat: { ...announcementsChat(rows, operatorId)!, unread: 0, state: 'answered' as const },
       messages: rows.map(r => ({ id: r.id, body: r.body, fromUs: false, senderName: 'GreenReserve', at: r.at.toISOString() })),
     };
   }
@@ -178,6 +180,8 @@ async function notifyGreenReserve(threadId: string, chatId: string, courseName: 
     if (t?.adminLastEmailAt && Date.now() - t.adminLastEmailAt.getTime() <= ONE_HOUR) return;
     await sendMessageNotificationEmail({
       recipientEmail: ADMIN_EMAIL, recipientName: 'there', senderName: sender.name, courseName, messageBody: text,
+      // Course support (Admin lane). Only the new course routes send this, so it never fires before that page exists as
+      // long as the Admin Course support page ships with or before the Dashboard Support page (Build, merge order).
       replyUrl: `${process.env.NEXT_PUBLIC_URL}/admin/support?id=${encodeURIComponent(chatId)}`,
     });
     await prisma.messageThread.update({ where: { id: threadId }, data: { adminLastEmailAt: new Date() } });

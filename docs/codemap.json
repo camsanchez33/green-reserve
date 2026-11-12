@@ -15163,7 +15163,7 @@
     },
     {
       "path": "src/lib/admin-action-queue.ts",
-      "lines": 116,
+      "lines": 128,
       "purpose": "AW-4 (Cam 2026-10-21):",
       "brain": [],
       "exports": [
@@ -28748,7 +28748,7 @@
     },
     {
       "path": "src/lib/support-chats.ts",
-      "lines": 324,
+      "lines": 328,
       "purpose": "SUPPORT (Cam 2026-11-12, ADMIN_REDO_SPEC \"Course dashboard Support\" + \"Admin Course support\"):",
       "brain": [],
       "exports": [

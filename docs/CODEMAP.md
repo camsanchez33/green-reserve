@@ -469,9 +469,9 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/operator-home.ts` | 5 | 180 | DASH-C Home (Cam 2026-10-22, "very nice" on the course dashboard mockups): | `DeclinedCard`, `declinedCards`, `HomeGroup`, `HomeSlot`, `operatorHome` |
 | `src/lib/setup-missing.ts` | 5 | 64 | What is still missing from a course's booking page, each with the Settings section that fixes it. | `MissingItem`, `MissingKey`, `missingSetup`, `PAYMENTS_BLOCK_LIVE`, `paymentsMissing`, `settingsHref`, `SetupFacts`, `showSetupField` |
 | `src/lib/split-booking-db.ts` | 5 | 157 | SPLIT-1 (Cam 2026-11-02, "they all want to pay separately … has to be seamless"): | `hasShareToRefund`, `holdRefundCents`, `splitBooking`, `splitOffLateArrivals`, `SplitResult` |
-| `src/lib/support-chats.ts` | 5 | 324 | SUPPORT (Cam 2026-11-12, ADMIN_REDO_SPEC "Course dashboard Support" + "Admin Course support"): | `addCourseMessage`, `AdminMessage`, `adminReply`, `AdminThread`, `adminThreads`, `ANNOUNCEMENTS_CHAT_ID`, `ChatState`, `chatSummary` +12 more |
+| `src/lib/support-chats.ts` | 5 | 328 | SUPPORT (Cam 2026-11-12, ADMIN_REDO_SPEC "Course dashboard Support" + "Admin Course support"): | `addCourseMessage`, `AdminMessage`, `adminReply`, `AdminThread`, `adminThreads`, `ANNOUNCEMENTS_CHAT_ID`, `ChatState`, `chatSummary` +12 more |
 | `src/lib/terms.ts` | 5 | 10 | Bump this whenever /terms materially changes so old bookings keep an honest record of which version the golfer actually agreed to. | `CURRENT_TERMS_VERSION` |
-| `src/lib/admin-action-queue.ts` | 4 | 116 | AW-4 (Cam 2026-10-21): | `ActionRow`, `buildActionQueue`, `QueueItem` |
+| `src/lib/admin-action-queue.ts` | 4 | 128 | AW-4 (Cam 2026-10-21): | `ActionRow`, `buildActionQueue`, `QueueItem` |
 | `src/lib/admin-course-tabs.ts` | 4 | 98 | AW-7 (Cam 2026-10-21): | `bucketWeeks`, `COURSE_TABS`, `COURSE_WEEKS`, `CourseTab`, `openingTab`, `ProblemInput`, `SetupCheck`, `SetupCheckKey` +5 more |
 | `src/lib/analytics-terms.ts` | 4 | 63 | DENSE-1 (DENSE_UI_SPEC P2): | `TermKey`, `TERMS`, `TURNED_AWAY_CSV` |
 | `src/lib/birdie/proposal-types.ts` | 4 | 65 | BIRDIE_AI_SPEC B4b — the confirm-card shape, shared by the server (which builds cards in proposals.ts) and the widget (which shows them and makes the call). | `cardCalls`, `isProposalCard`, `PROPOSAL_ROUTES`, `ProposalCall`, `ProposalCard` |

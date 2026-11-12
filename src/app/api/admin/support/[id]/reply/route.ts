@@ -16,7 +16,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!t.ok) return NextResponse.json({ error: t.error }, { status: 400 });
   const r = await adminReply(id, { adminId: session.adminId, name: session.name }, t.text);
   if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
-  await auditAdmin(session, { action: 'support_reply', targetType: 'course', targetId: r.courseId, after: { chatId: id, messageId: r.message.id } });
+  await auditAdmin(session, { action: 'support_reply', targetType: 'course', targetId: r.courseId, courseId: r.courseId, after: { chatId: id, messageId: r.message.id } });
   if (r.email) after(r.email);
   return NextResponse.json({ message: r.message });
 }
