@@ -25,6 +25,7 @@ export const ADMIN_PAGE_GATES: [string, Gate][] = [
   ['/admin/revenue', { roles: SUPPORT_PLUS, area: 'money' }],
   ['/admin/bookings', { roles: SUPPORT_PLUS, area: 'money' }],
   ['/admin/expenses', { roles: OWNER_ONLY }],
+  ['/admin/business', { roles: MANAGER_PLUS, area: 'courses' }],
   ['/admin/messages', { roles: SUPPORT_PLUS, area: 'messages' }],
   ['/admin/announcements', { roles: SUPPORT_PLUS, area: 'messages' }],
   ['/admin/broadcasts', { roles: SUPPORT_PLUS, area: 'messages' }],
