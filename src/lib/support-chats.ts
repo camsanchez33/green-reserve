@@ -316,7 +316,7 @@ export async function adminReply(id: string, admin: { adminId: string; name: str
     try {
       await sendMessageNotificationEmail({
         recipientEmail: op.email, recipientName: op.name, senderName: admin.name, courseName: r.course.name, messageBody: text,
-        replyUrl: `${process.env.NEXT_PUBLIC_URL}/dashboard/messages?chat=${encodeURIComponent(r.id)}`,
+        replyUrl: `${process.env.NEXT_PUBLIC_URL}/dashboard/support?chat=${encodeURIComponent(r.id)}`,
       });
       await prisma.messageThread.update({ where: { id: r.threadId }, data: { operatorLastEmailAt: new Date() } });
     } catch (e) {

@@ -12,7 +12,7 @@ export const DASHBOARD_PAGES: DashboardPage[] = [
   { key: 'schedule', label: 'Schedule', href: '/dashboard/schedules', does: 'the templates that generate tee times: days, hours, interval, green fees, member and resident rates, cart fee, blocked days, booking windows, and which round each schedule sells' },
   { key: 'members', label: 'Members', href: '/dashboard/members', does: 'membership tiers, member accounts, dues, and the residents list (golfers who showed a resident card get the resident rate)' },
   { key: 'payments', label: 'Money', href: '/dashboard/money', does: 'what was collected, cancellations, and the Stripe connection and payouts' },
-  { key: 'messages', label: 'Messages', href: '/dashboard/messages', does: 'messages with GreenReserve' },
+  { key: 'messages', label: 'Support', href: '/dashboard/support', does: 'chats with GreenReserve' },
   { key: 'settings', label: 'Settings', href: '/dashboard/settings', does: 'course info, cancellation policy and fee, check-in window, walking policy, brand colour, photos, staff logins, course and layout (nines, products, tee sets)' },
 ];
 
@@ -58,6 +58,7 @@ export const OPERATOR_KNOWLEDGE = `
 - Sections in setup order: Your course (logo, colour, photos, description, contact; name and address change by asking GreenReserve), Course layout (holes, par, nines, tee sets, bookable rounds), Booking rules, Prices & fees (member and resident pricing, cancellation policy, check-in window), Facilities, Pro shop, Staff (logins and what each person can do — per person, with Starter / Front desk / Manager presets) and Your account (sign-in email, password, two-step sign-in). A "Finish setting up" list at the top names what is still missing from the course page.
 - The course goes live when GreenReserve flips it after the preview is approved and Stripe is connected.
 
-## Messages (/dashboard/messages)
-- Write to GreenReserve here; replies land here and by email.
+## Support (/dashboard/support)
+- Write to GreenReserve here: start a chat for each question (its first line is its subject). We reply within 2 business days; replies land here and by email.
+- Announcements from GreenReserve show here too, as a chat from GreenReserve.
 `;
