@@ -28,5 +28,6 @@ ok('a chat waiting on us says when we reply', page.includes("'Waiting on us · w
 ok('the top cards are gone (Cam 2026-11-12)', !page.includes('Prefer email?') && !page.includes('askBirdie') && !page.includes('Reply time'));
 ok('old links land on Support with their query (?prefill= starts a new chat)', readFileSync('src/app/dashboard/messages/page.tsx', 'utf8').includes("redirect(`/dashboard/support${qs ? `?${qs}` : ''}`);") && page.includes("if (!open && params.get('prefill')) router.replace(`/dashboard/support?c=${NEW}`);"));
 
+ok('a reply email\'s ?chat=<id> link opens that chat', page.includes("const open = params.get('c') ?? params.get('chat');"));
 console.log(failed ? `${failed} FAILED` : 'ALL PASS');
 process.exit(failed ? 1 : 0);
