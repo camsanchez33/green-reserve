@@ -50,6 +50,8 @@ async function main() {
   const mustUse: [string, RegExp][] = [
     ['src/lib/admin-home.ts', /ON_REAL_COURSE[\s\S]*REAL_COURSE/],
     ['src/lib/admin-today.ts', /ON_REAL_BOOKING/],
+    // ADMIN-REDO Bookings: the list, every filter count and the card.
+    ['src/app/api/admin/bookings/route.ts', /const base: Prisma\.BookingWhereInput = \{ \.\.\.ON_REAL_COURSE[\s\S]*where: \{ id, \.\.\.ON_REAL_COURSE \}/],
     ['src/lib/access-fee.ts', /courseId \? \{ courseId \} : ON_REAL_COURSE/],
     ['src/lib/admin-goals.ts', /REAL_COURSE/],
     ['src/lib/admin-checks.ts', /\.\.\.FAILED_CHARGE_WHERE, \.\.\.ON_REAL_COURSE/],
@@ -58,6 +60,7 @@ async function main() {
     ['src/app/api/admin/nav-badges/route.ts', /ON_REAL_COURSE/],
     ['src/app/api/admin/revenue/route.ts', /const PAID = \{[^}]*\}, \.\.\.ON_REAL_COURSE \}/],
     ['src/app/api/admin/finance/route.ts', /c\."isTest" = false[\s\S]*\.\.\.ON_REAL_COURSE/],
+    ['src/app/api/admin/business/route.ts', /c\."isTest" = false[\s\S]*\.\.\.REAL_COURSE \}[\s\S]*where: REAL_COURSE,[\s\S]*builtBy\.get\(i\.builtCourseId\)\?\.isTest/],
     ['src/app/sitemap.ts', /isTest: false/],
     ['src/app/api/courses/route.ts', /isTest: false/],
     ['src/app/courses/[slug]/page.tsx', /course\.isTest \? \{ index: false/],
@@ -65,6 +68,13 @@ async function main() {
     ['src/lib/admin-ask.ts', /\.\.\.FAILED_CHARGE_WHERE, \.\.\.ON_REAL_COURSE/],
   ];
   for (const [f, re] of mustUse) check(`${f} leaves test courses out`, re.test(readFileSync(f, 'utf8')));
+  {
+    // Business analytics is all raw SQL: every query that joins Course must also leave test courses out.
+    const biz = readFileSync('src/app/api/admin/business/route.ts', 'utf8');
+    const joins = (biz.match(/JOIN "Course" c ON/g) ?? []).length;
+    const filters = (biz.match(/c\."isTest" = false/g) ?? []).length;
+    check(`business analytics: every Course join is filtered (${filters} of ${joins})`, joins > 0 && filters === joins);
+  }
   // The menu's unread count and the Messages page's count are the same rule (both include a test course's messages).
   const unread = /senderType: 'operator', readAt: null, isBroadcast: false \}/;
   check('the menu badge and Messages count unread messages the same way',

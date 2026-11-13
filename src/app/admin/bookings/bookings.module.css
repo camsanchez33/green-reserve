@@ -1,0 +1,39 @@
+/* ADMIN-REDO page 4 — Bookings. Builds on Golf Courses' list + profile (../courses/courses.module.css) and the
+   green-glass tokens (--g-*) of admin-glass.module.css; only what Bookings adds is here. */
+
+.num { font-variant-numeric: tabular-nums; font-size: 12.5px; color: var(--g-muted); white-space: nowrap; }
+.money { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; white-space: nowrap; }
+.amt { font-weight: 600; font-variant-numeric: tabular-nums; }
+.ms { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--g-muted); }
+.ms i { width: 6px; height: 6px; border-radius: 50%; background: var(--g-muted); }
+.ok i { background: var(--g-up); } .warn i { background: var(--g-warn); } .bad i { background: var(--g-down); }
+.bad .ms { color: var(--g-down); font-weight: 600; }
+
+/* Whether it's paid: first, big, in its colour. */
+.pay { border-left: 3px solid var(--g-muted); padding: 2px 0 2px 12px; }
+.pay b { display: block; font-size: 18px; font-weight: 600; }
+.pay span { display: block; font-size: 13.5px; color: var(--g-ink-soft); margin-top: 2px; }
+.pay.ok { border-color: var(--g-up); } .pay.ok b { color: var(--g-up); }
+.pay.warn { border-color: var(--g-warn); } .pay.warn b { color: var(--g-warn); }
+.pay.bad { border-color: var(--g-down); } .pay.bad b { color: var(--g-down); }
+
+.lines { display: flex; flex-direction: column; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+.lines > div { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-top: 1px solid var(--g-line); }
+.lines > div:first-child { border-top: 0; }
+.lines .tot { font-weight: 600; }
+.lines .ours span:first-child { color: var(--g-ink-soft); }
+
+.log { display: flex; flex-direction: column; }
+.log > div { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; padding: 7px 0; border-top: 1px solid var(--g-line); font-size: 13.5px; }
+.log > div:first-child { border-top: 0; }
+.log small { color: var(--g-muted); font-size: 12px; }
+.log em { display: block; font-style: normal; font-size: 12px; color: var(--g-muted); overflow-wrap: anywhere; }
+
+.more { display: flex; justify-content: center; padding: 12px; border-top: 1px solid var(--g-line); }
+.qline { font-size: 13px; color: var(--g-ink-soft); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.qline button { font: inherit; color: var(--g-ink-soft); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+/* On a phone the Course column is hidden; the course sits under the golfer instead. */
+.showS { display: none !important; }
+@media (max-width: 640px) { .showS { display: block !important; } }
+.nowrap { white-space: nowrap; }

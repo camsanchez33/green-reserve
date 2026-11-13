@@ -31,6 +31,7 @@
 .addnote button:focus-visible { outline: 2px solid var(--g-focus); outline-offset: 2px; }
 .noteMsg { margin: 0; font-size: 12.5px; }
 
-/* Expected launch: the date field waits for Build's route (TODO in page.tsx). */
-.launch { display: block; margin-top: 6px; font: inherit; font-size: 13px; color: var(--g-ink); background: var(--g-hover); border: 1px solid var(--g-line); border-radius: 8px; padding: 5px 8px; }
+/* Expected launch: set on the course's card (manager+). */
+.launchRow { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 6px; }
+.launch { font: inherit; font-size: 13px; color: var(--g-ink); background: var(--g-hover); border: 1px solid var(--g-line); border-radius: 8px; padding: 5px 8px; }
 .launch:disabled { opacity: 0.6; cursor: not-allowed; }

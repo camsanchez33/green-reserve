@@ -32,7 +32,7 @@ export async function setBookingResidents(courseId: string, bookingId: string, c
     if (!b || b.courseId !== courseId) return fail(404, 'Booking not found.');
     if (!Number.isInteger(n) || n < 0 || n > b.players) return fail(400, `Residents must be 0 to ${b.players}.`);
     if (b.status !== 'confirmed' || b.checkedInAt) return fail(409, 'This group is already checked in — its price can’t change now.');
-    if (b.noShowAt) return fail(409, 'This group is marked a no-show. Use "Still coming" first.');
+    if (b.noShowAt) return fail(409, 'This group is marked a no-show. Use "Undo no-show" first.');
     if (b.paymentStatus === 'paid' || b.paidOffline || b.roundPaymentIntentId || b.shopLockedAt || b.readerStartedAt) return fail(409, 'This round is already paid or being paid — its price can’t change now.');
     if (b.appliedRate === 'pack') return fail(409, 'This group is on a round pack — residents don’t combine with it.');
     if (b.appliedRate !== 'standard' && b.appliedRate !== 'resident') return fail(409, `This group is booked at the ${b.appliedRate} member rate — residents don’t combine with it.`);
