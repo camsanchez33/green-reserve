@@ -7,6 +7,7 @@ import g from '../admin-glass.module.css';
 import c from '../courses/courses.module.css';
 import r from '../revenue/revenue.module.css';
 import s from './business.module.css';
+import { whoCanOpen } from '@/components/admin/admin-href';
 import { TERMS, SESSION_ENDED, NOT_YET, SHORT_PERIOD, loadFailed } from './terms';
 import { type Per, type BusinessData, PERIODS, STEP_LABEL, isAnswer, pct, points, stepRate, barScale, monthLabel, axisLabel, coursesCsv } from './logic';
 
@@ -17,7 +18,7 @@ import { type Per, type BusinessData, PERIODS, STEP_LABEL, isAnswer, pct, points
 // and the courses table with CSV. Read-only. Data: GET /api/admin/business (Build's; manager+, Courses area) —
 // counted, never estimated; a figure the route can't count comes back null and shows a dash.
 
-const usd = (cents: number) => '$' + Math.round(cents / 100).toLocaleString('en-US');
+const usd = (cents: number) => (cents < 0 ? '−$' : '$') + Math.round(Math.abs(cents) / 100).toLocaleString('en-US');
 const n = (v: number) => v.toLocaleString('en-US');
 const pctText = (v: number | null) => (v === null ? '—' : `${Math.round(v)}%`);
 
@@ -77,6 +78,8 @@ export default function BusinessPage() {
       const body = await res.json().catch(() => null);
       if (res.status === 401) out = { ok: false, msg: SESSION_ENDED, status: 401 };
       else if (res.status === 404 && !body?.error) out = { ok: false, msg: NOT_YET, status: 404 }; // Build's route not live yet
+      // A role 403 says only "Forbidden": say who can open the page instead (retrying can't help).
+      else if (res.status === 403 && (!body?.error || /^forbidden\.?$/i.test(body.error))) out = { ok: false, msg: `Business analytics: ${whoCanOpen('/admin/business')}.`, status: 403 };
       else if (!res.ok || !body) out = { ok: false, msg: body?.error ?? loadFailed(res.status), status: res.status };
       else if (!isAnswer(p, body)) out = { ok: false, msg: loadFailed() };
       else out = { ok: true, data: body };
@@ -96,6 +99,8 @@ export default function BusinessPage() {
 
   const d = got?.ok ? got.data : null;
   const P = PERIODS.find(x => x.v === per)!;
+  // The figures on screen (dimmed while a new pick loads) keep their own period's words.
+  const PD = d ? PERIODS.find(x => x.v === d.period.kind) ?? P : P;
   const steps = d?.joining.steps ?? [];
   // Our revenue per course needs the Money area too; the route sends null then, and the column is left out.
   const showRevenue = !!d && d.courses.some(x => x.ourRevenueCents !== null);
@@ -131,7 +136,7 @@ export default function BusinessPage() {
         {got && !got.ok && (
           <div className={`${g.glass} ${g.note}`} role="alert">
             <span className={got.status === 404 ? g.wa : g.down}>{got.msg}</span>
-            {got.status === 401 ? <Link href="/admin/login">Sign in</Link> : <button type="button" onClick={() => load(per)} disabled={loading}>{loading ? 'Trying…' : 'Try again'}</button>}
+            {got.status === 401 ? <Link href="/admin/login">Sign in</Link> : got.status === 403 ? null : <button type="button" onClick={() => load(per)} disabled={loading}>{loading ? 'Trying…' : 'Try again'}</button>}
           </div>
         )}
 
@@ -143,17 +148,17 @@ export default function BusinessPage() {
               <div className={`${g.glass} ${r.rkc}`}>
                 <span className={r.l} title={TERMS.live}>Live courses</span>
                 <b className={r.v}>{n(d.cards.liveCourses.now)}</b>
-                <span className={r.c}><Change now={d.cards.liveCourses.now} was={d.cards.liveCourses.prior} vs={P.vs} /></span>
+                <span className={r.c}><Change now={d.cards.liveCourses.now} was={d.cards.liveCourses.prior} vs={PD.vs} /></span>
               </div>
               <div className={`${g.glass} ${r.rkc}`}>
                 <span className={r.l} title={TERMS.online}>Online bookings</span>
                 <b className={r.v}>{n(d.cards.onlineBookings.count)}</b>
-                <span className={r.c}><Change now={d.cards.onlineBookings.count} was={d.cards.onlineBookings.prior} vs={P.vs} /></span>
+                <span className={r.c}><Change now={d.cards.onlineBookings.count} was={d.cards.onlineBookings.prior} vs={PD.vs} /></span>
               </div>
               <div className={`${g.glass} ${r.rkc}`}>
                 <span className={r.l} title={TERMS.fill}>Tee sheets filled</span>
                 {d.cards.teeSheetFill.pct === null ? <b className={r.na}>—</b> : <b className={r.v}>{pctText(d.cards.teeSheetFill.pct)}</b>}
-                <span className={r.c}><Change now={d.cards.teeSheetFill.pct} was={d.cards.teeSheetFill.prior} vs={P.vs} pts /></span>
+                <span className={r.c}><Change now={d.cards.teeSheetFill.pct} was={d.cards.teeSheetFill.prior} vs={PD.vs} pts /></span>
               </div>
             </div>
 
@@ -195,11 +200,11 @@ export default function BusinessPage() {
                     );
                   })}
                 </div>
-                {(per === 'm3' || per === 'm6') && <p className={s.caveat}>{SHORT_PERIOD}</p>}
+                {d && (d.period.kind === 'm3' || d.period.kind === 'm6') && <p className={s.caveat}>{SHORT_PERIOD}</p>}
                 <div className={`${s.vrows} ${s.after}`}>
                   <div>
                     <span title={TERMS.reachedToLive}>First contact to live</span>
-                    <b>{d.joining.reachedToLive.pct === null ? '—' : `${pctText(d.joining.reachedToLive.pct)}${d.joining.reachedToLive.avgDays === null ? '' : ` · ${Math.round(d.joining.reachedToLive.avgDays)} days`}`}</b>
+                    <b>{d.joining.reachedToLive.pct === null ? '—' : `${pctText(d.joining.reachedToLive.pct)}${d.joining.reachedToLive.avgDays === null ? '' : ` · ${Math.round(d.joining.reachedToLive.avgDays)} day${Math.round(d.joining.reachedToLive.avgDays) === 1 ? '' : 's'}`}`}</b>
                   </div>
                   <div><span>In progress now</span><b>{n(d.joining.inProgress)} course{d.joining.inProgress === 1 ? '' : 's'}</b></div>
                   <div><span title={TERMS.waitingOnUs}>Waiting on us</span><b className={d.joining.waitingOnUs > 0 ? g.down : undefined}>{n(d.joining.waitingOnUs)}</b></div>

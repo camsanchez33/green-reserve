@@ -44,7 +44,11 @@ export interface BusinessData {
 /** The route answered the period asked for, with the parts the page reads. */
 export function isAnswer(per: Per, d: unknown): d is BusinessData {
   const x = d as BusinessData | null;
-  return !!x && x.period?.kind === per && Array.isArray(x.months) && Array.isArray(x.courses) && !!x.cards && !!x.value && !!x.joining && Array.isArray(x.joining.steps);
+  const obj = (v: unknown) => !!v && typeof v === 'object';
+  // Deep enough that the page never throws on a part it reads (no error boundary catches a render crash here).
+  return !!x && x.period?.kind === per && Array.isArray(x.months) && Array.isArray(x.courses) && obj(x.cards) && obj(x.value) && obj(x.joining)
+    && Array.isArray(x.joining.steps) && obj(x.cards.liveCourses) && obj(x.cards.onlineBookings) && obj(x.cards.teeSheetFill)
+    && obj(x.value.paidBeforeArrival) && obj(x.joining.reachedToLive);
 }
 
 /** A percentage change, or null when there is nothing to compare with (never drawn across a zero or negative prior). */
@@ -84,7 +88,7 @@ export const axisLabel = (v: number) => (v >= 1000 ? `${+(v / 1000).toFixed(1)}k
 /** A CSV cell: quoted, inner quotes doubled, and a leading = + - @ written as text so a spreadsheet never runs it. */
 export const cell = (v: string | number) => {
   const s = String(v);
-  return `"${(/^[=+\-@\t\r]/.test(s) ? "'" + s : s).replace(/"/g, '""')}"`;
+  return `"${(/^[=+\-@\t\r]/.test(s) && !/^-?\d+(\.\d+)?$/.test(s) ? "'" + s : s).replace(/"/g, '""')}"`;
 };
 const blank = (v: number | null, f: (n: number) => string) => (v === null ? '' : f(v));
 /** The courses table as a CSV, in the table's order. */

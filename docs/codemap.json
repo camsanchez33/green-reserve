@@ -255,7 +255,7 @@
     },
     {
       "path": "src/app/admin/business/logic.ts",
-      "lines": 96,
+      "lines": 100,
       "purpose": "Business analytics (ADMIN-REDO, Cam approved the mockup 2026-11-12):",
       "brain": [],
       "exports": [
@@ -328,7 +328,7 @@
     },
     {
       "path": "src/app/admin/business/page.tsx",
-      "lines": 250,
+      "lines": 255,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -350,6 +350,7 @@
         "./logic",
         "./terms",
         "@/components/admin/AdminSidebar",
+        "@/components/admin/admin-href",
         "next/link",
         "react"
       ],
@@ -12212,6 +12213,7 @@
         "@/lib/admin-roles"
       ],
       "usedBy": [
+        "src/app/admin/business/page.tsx",
         "src/app/admin/page.tsx",
         "src/app/admin/problems/page.tsx"
       ]

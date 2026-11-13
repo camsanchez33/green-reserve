@@ -7,10 +7,11 @@ let failed = 0;
 const check = (label: string, ok: boolean, detail = '') => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${!ok && detail ? ` — ${detail}` : ''}`); if (!ok) failed++; };
 
 // The route's answer counts only for the period asked.
-const ok = { period: { kind: 'm3' }, months: [], courses: [], cards: {}, value: {}, joining: { steps: [] } };
+const ok = { period: { kind: 'm3' }, months: [], courses: [], cards: { liveCourses: {}, onlineBookings: {}, teeSheetFill: {} }, value: { paidBeforeArrival: {} }, joining: { steps: [], reachedToLive: {} } };
 check('the matching answer is accepted', isAnswer('m3', ok));
 check('another period is refused', !isAnswer('y12', ok));
 check('an answer without the joining steps is refused', !isAnswer('m3', { ...ok, joining: {} }));
+check('an answer missing a part the page reads is refused (no render crash)', !isAnswer('m3', { ...ok, cards: {}, value: {} }) && !isAnswer('m3', { ...ok, value: {} }));
 
 // Changes.
 check('up 50%', pct(150, 100) === 50);
@@ -39,15 +40,18 @@ check('axis: 1.5k and 250', axisLabel(1500) === '1.5k' && axisLabel(250) === '25
 const csv = coursesCsv([{ courseId: 'a', name: '=Example', online: 12, onlinePrior: null, fillPct: 54.25, onlineSharePct: null, ourRevenueCents: 1800 }]).trim().split('\r\n');
 check('a header and one row per course', csv.length === 2);
 check('a missing value is blank, money in dollars', csv[1] === `"'=Example","12","","54.3","","18.00"`, csv[1]);
+check('a course netting below zero exports a number a spreadsheet can add', coursesCsv([{ courseId: 'a', name: 'A', online: 3, onlinePrior: 5, fillPct: 40, onlineSharePct: 50, ourRevenueCents: -1800 }]).split('\r\n')[1].endsWith('"-18.00"'));
 check('without the Money area the CSV has no revenue column', coursesCsv([{ courseId: 'a', name: 'A', online: 1, onlinePrior: 1, fillPct: null, onlineSharePct: null, ourRevenueCents: null }], false).split('\r\n')[0].split(',').length === 5);
 check('the page hides Our revenue when the route sends null', /showRevenue && <th/.test(readFileSync('src/app/admin/business/page.tsx', 'utf8')));
-check('formula-looking cells are text', cell('+1') === `"'+1"`);
+check('formula-looking cells are text', cell('+1') === `"'+1"` && cell('=Example') === `"'=Example"` && cell('-cmd') === `"'-cmd"`);
+check('a negative amount stays a number', cell(-5) === '"-5"' && cell('-18.00') === '"-18.00"');
 
 // The page.
 const page = readFileSync('src/app/admin/business/page.tsx', 'utf8');
 check('reads only /api/admin/business', /\/api\/admin\/business\?period=/.test(page) && !/\/api\/admin\/(revenue|finance|onboarding)/.test(page));
 check('a later Filter pick wins over an earlier answer', /mine !== seq\.current/.test(page));
-check('tee-sheet fill compares in points', /teeSheetFill\.prior\} vs=\{P\.vs\} pts/.test(page));
+check('tee-sheet fill compares in points', /teeSheetFill\.prior\} vs=\{PD\.vs\} pts/.test(page));
+check('the figures on screen keep their own period\'s words while a new pick loads', /const PD = d \?/.test(page) && /d\.period\.kind === 'm3'/.test(page));
 check('after-hours shows a dash when the route can\'t count it (never a guess)', /d\.value\.afterHours \? n\(d\.value\.afterHours\.count\) : '—'/.test(page));
 check('never a chart library', !/from '(recharts|chart\.js|d3)/.test(page));
 const nav = readFileSync('src/components/admin/AdminSidebar.tsx', 'utf8');
