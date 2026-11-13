@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-729 source files · 311 routes · 260 libraries · 76 models
+730 source files · 311 routes · 260 libraries · 76 models
 
 ## Single sources of truth
 
@@ -55,7 +55,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/` | public | public | page | `src/app/page.tsx` | 15 |
 | `/admin` | admin | client-side | page | `src/app/admin/page.tsx` | 257 |
 | `/admin/activity` | admin | client-side | page | `src/app/admin/activity/page.tsx` | 9 |
-| `/admin/announcements` | admin | client-side | page | `src/app/admin/announcements/page.tsx` | 261 |
+| `/admin/announcements` | admin | client-side | page | `src/app/admin/announcements/page.tsx` | 267 |
 | `/admin/audit` | admin | client-side | page | `src/app/admin/audit/page.tsx` | 137 |
 | `/admin/bookings` | admin | client-side | page | `src/app/admin/bookings/page.tsx` | 292 |
 | `/admin/broadcasts` | admin | client-side | page | `src/app/admin/broadcasts/page.tsx` | 12 |
@@ -637,9 +637,9 @@ Sorted the same way.
 
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
-| `src/components/ui/Card.tsx` | 87 | 17 |  | `Card`, `CARD` |
-| `src/components/ui/StatusDot.tsx` | 71 | 36 |  | `StatusDot` |
-| `src/components/ui/field.ts` | 55 | 8 | MP-9: | `INPUT`, `INPUT_COMPACT` |
+| `src/components/ui/Card.tsx` | 86 | 17 |  | `Card`, `CARD` |
+| `src/components/ui/StatusDot.tsx` | 70 | 36 |  | `StatusDot` |
+| `src/components/ui/field.ts` | 54 | 8 | MP-9: | `INPUT`, `INPUT_COMPACT` |
 | `src/components/admin/AdminSidebar.tsx` | 22 | 199 |  | `AdminNavKey`, `default (AdminSidebar)` |
 | `src/components/dashboard/LoadError.tsx` | 22 | 16 | SD-10. | `LoadError` |
 | `src/components/dashboard/Toast.tsx` | 15 | 70 | SD-2. | `toast`, `Toaster`, `ToastKind` |
@@ -648,7 +648,7 @@ Sorted the same way.
 | `src/components/CourseHeaderBar.tsx` | 10 | 46 | White-label rule: | `CourseHeaderBar` |
 | `src/components/dashboard/SlidingTabs.tsx` | 9 | 40 | POS-7 (Cam 2026-11-09, "use it on other tab bars"): | `SlidingTabs` |
 | `src/components/ui/Modal.tsx` | 9 | 141 | MP-9 (ADMIN_V4 V4-6 §4) — the one dialog. | `Modal`, `ModalActions` |
-| `src/components/ui/ErrorState.tsx` | 8 | 96 |  | `ErrorBanner`, `LoadFailure` |
+| `src/components/ui/ErrorState.tsx` | 7 | 96 |  | `ErrorBanner`, `LoadFailure` |
 | `src/components/dashboard/StaffNotice.tsx` | 5 | 30 | SD-11 / SP-A. | `StaffNotice` |
 | `src/components/AuthPhotoShell.tsx` | 4 | 23 |  | `AUTH_PHOTO_LINK`, `AUTH_PHOTO_LINKS`, `AuthPhotoShell` |
 | `src/components/dashboard/DateRangeButton.tsx` | 4 | 130 | AN-3 (Cam 2026-10-19: | `DateRange`, `default (DateRangeButton)`, `presets`, `rangeLabel` |
