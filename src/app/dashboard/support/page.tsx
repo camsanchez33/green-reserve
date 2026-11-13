@@ -35,7 +35,8 @@ function SupportContent() {
   const router = useRouter();
   const params = useSearchParams();
   const access = useDashboardAccess();
-  const open = params.get('c');
+  // ?chat=<id> is what our reply emails link to (the worker's #395); ?c= is the page's own.
+  const open = params.get('c') ?? params.get('chat');
   const [chats, setChats] = useState<Chat[] | null>(null);
   const [listError, setListError] = useState('');
   const [chat, setChat] = useState<Chat | null>(null);
