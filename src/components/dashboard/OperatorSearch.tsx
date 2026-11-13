@@ -88,10 +88,9 @@ export default function OperatorSearch({ dropUp = false, onPicked }: { dropUp?: 
     <div ref={box} className="relative">
       <label className="flex items-center gap-2 bg-paper rounded-md px-2.5 py-2 focus-within:ring-2 focus-within:ring-pine/10">
         <Search className="w-3.5 h-3.5 text-ink-faint shrink-0" aria-hidden="true" />
-        <span className="sr-only">Find a golfer, booking or member</span>
         <input ref={input} value={q} onChange={e => { setQ(e.target.value); setOpen(true); }} onFocus={() => setOpen(true)}
           onKeyDown={e => { if (e.key === 'Escape') setOpen(false); if (e.key === 'Enter' && results?.[0] && resultsFor === q.trim()) go(results[0].href); }}
-          placeholder="Find a golfer or member" aria-keyshortcuts={dropUp ? undefined : '/ Control+K Meta+K'} className="flex-1 min-w-0 bg-transparent text-[13px] text-ink placeholder-ink-faint outline-none" />
+          aria-label="Find a golfer, booking or member" aria-keyshortcuts={dropUp ? undefined : '/ Control+K Meta+K'} className="flex-1 min-w-0 bg-transparent text-[13px] text-ink placeholder-ink-faint outline-none" />
         {!dropUp && !q && <kbd aria-hidden="true" className="shrink-0 rounded-[4px] border border-line px-1.5 text-[11px] leading-[18px] text-ink-faint font-sans">/</kbd>}
       </label>
       {showPanel && (

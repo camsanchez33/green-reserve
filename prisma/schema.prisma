@@ -784,6 +784,7 @@ model Booking {
   paymentEvents              PaymentEvent[]
   shopItems                  BookingShopItem[]
 
+  @@unique([courseId, ref])
   // MP-3: Booking had ZERO indexes. Every admin money surface scans the table.
   @@index([courseId, createdAt])
   @@index([status, createdAt])
@@ -798,8 +799,6 @@ model Booking {
   @@index([cancellationFeeChargeId])
   @@index([stripePaymentIntentId])
   @@index([feePaymentIntentId])
-
-  @@unique([courseId, ref])
 }
 
 model TeeTimeSchedule {
@@ -926,6 +925,7 @@ model CourseInquiry {
   /// IC-1 (A1): build without a call, with a reason on record.
   callSkippedReason    String?
   calls                Call[]
+  touches              OutreachTouch[]
   /// SC-1: token for the public "pick a call time" page. Same pattern as
   /// detailsToken — unique, generated in app code, regenerated on resend.
   callInviteToken      String?              @unique
@@ -976,6 +976,29 @@ model Call {
 
   @@index([inquiryId, scheduledAt])
   @@index([courseId, scheduledAt])
+}
+
+/// ADMIN-REDO Business analytics (Cam via Build 2026-11-12): the outreach log. One row per contact
+/// with a course in the pipeline — an email, call or text we sent ('out') or a reply we got ('in').
+/// Append-only. "Reached out" = a course's first 'out' touch; "Responded" = its first 'in' touch
+/// (an inbound inquiry starts at Responded). Added by manager+ in Pipeline (inquiries add_touch).
+model OutreachTouch {
+  id        String        @id @default(cuid())
+  inquiryId String
+  inquiry   CourseInquiry @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  /// When the contact happened (may be earlier than createdAt — logged after the fact).
+  at        DateTime
+  /// 'email' | 'call' | 'text' | 'in_person'
+  channel   String
+  /// 'out' (we contacted them) | 'in' (they replied or reached us)
+  direction String
+  note      String?
+  adminId   String?
+  adminName String?
+  createdAt DateTime      @default(now())
+
+  @@index([inquiryId, at])
+  @@index([at])
 }
 
 model InquiryStatusEvent {
@@ -1183,6 +1206,17 @@ model AdminGoal {
   createdAt DateTime @default(now())
 
   @@index([dueAt])
+}
+
+/// ADMIN-REDO Revenue goal (Cam via Build 2026-11-12): the owner's revenue target for one platform
+/// month ('YYYY-MM', Eastern), on the same ledger basis as Revenue's revenue.cents. cents null = no
+/// goal. Company side: kept by the launch wipe.
+model AdminMonthGoal {
+  id        String   @id @default(cuid())
+  month     String   @unique
+  cents     Int?
+  setById   String   @default("")
+  updatedAt DateTime @updatedAt
 }
 
 /// BRAIN-1b (Cam 2026-10-22): every email and text GreenReserve sends, one row

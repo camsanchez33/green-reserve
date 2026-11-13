@@ -925,7 +925,7 @@ function SettingsPageInner() {
                 )}
                 <Toggle label="Mark no-shows automatically" checked={!!form.autoNoShowMinutes} onChange={() => set('autoNoShowMinutes', form.autoNoShowMinutes ? null : 30)}/>
                 {!!form.autoNoShowMinutes && (
-                  <Field label="Minutes after the tee time with nobody checked in" hint="Checked hourly. Nothing is charged until midnight; “Still coming” or a check-in clears it.">
+                  <Field label="Minutes after the tee time with nobody checked in" hint="Checked hourly. Nothing is charged until midnight; “Undo no-show” or a check-in clears it.">
                     <FInput value={form.autoNoShowMinutes as number} onChange={v=>set('autoNoShowMinutes',Number(v))} type="number"/>
                   </Field>
                 )}

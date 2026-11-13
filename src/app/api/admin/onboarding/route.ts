@@ -6,6 +6,7 @@ import { latestPageDecision } from '@/lib/change-requests';
 import { coursePageDecision, getApprovalState } from '@/lib/approval-state';
 import { hasSetUp } from '@/lib/operator-setup';
 import { courseStatus } from '../courses/directory/status';
+import { dayKey } from '@/lib/admin-day';
 import { STAGES, BY_HAND_STAGE, stageName, needOf, isOverdue, compareRows, checklist, inquiryNext, historyLine, OVERDUE_DAYS, type StepFacts } from './plan';
 
 // ADMIN-REDO page 3 — Onboarding (Cam approved the mockup 2026-11-12). READ-ONLY.
@@ -17,6 +18,8 @@ import { STAGES, BY_HAND_STAGE, stageName, needOf, isOverdue, compareRows, check
 //   contact, notes   support+ (Golf Courses' rule), else null
 //   canNote          manager+ — the note is saved by PATCH /api/admin/inquiries (add_note), which is manager+
 //   canBookCall      manager+ — "Book on Cal.com" is that route's calcom_link
+//   canSetLaunch     manager+ — the expected launch is saved by that route's set_expected_launch (Build #380)
+//   launch           every row: the expected launch day (YYYY-MM-DD) or null; today = the platform day it's judged against
 //
 // ONE HOME PER COURSE: an inquiry whose built course has gone live (or was archived) is not listed; it is on Golf
 // Courses. Every course that has never been live is listed: through its open inquiry, or on its own (built by
@@ -37,7 +40,7 @@ async function loadList(now: Date) {
     where: { status: { in: ONBOARDING_STATUSES } },
     select: {
       id: true, courseName: true, city: true, state: true, status: true, createdAt: true, snoozeUntil: true,
-      nextFollowUpAt: true, callInviteSentAt: true, callSkippedReason: true, builtCourseId: true,
+      nextFollowUpAt: true, callInviteSentAt: true, callSkippedReason: true, builtCourseId: true, expectedLaunchAt: true,
       events: { select: { fromStatus: true, toStatus: true, actorName: true, createdAt: true }, orderBy: { createdAt: 'asc' } },
       calls: { where: { kind: 'discovery' }, select: { scheduledAt: true, outcome: true, bookedByCourse: true } },
     },
@@ -59,7 +62,7 @@ async function loadList(now: Date) {
     prisma.teeTimeSchedule.groupBy({ by: ['courseId'], where: { courseId: { in: ids } }, _count: { id: true } }),
     prisma.agreementAcceptance.groupBy({ by: ['courseId'], where: { courseId: { in: ids }, document: 'operator_agreement' }, _count: { id: true } }),
     // Any inquiry (open or closed) a never-live course came from — for its Inquiry → link.
-    prisma.courseInquiry.findMany({ where: { builtCourseId: { in: ids } }, select: { id: true, builtCourseId: true, status: true }, orderBy: { createdAt: 'desc' } }),
+    prisma.courseInquiry.findMany({ where: { builtCourseId: { in: ids } }, select: { id: true, builtCourseId: true, status: true, expectedLaunchAt: true }, orderBy: { createdAt: 'desc' } }),
   ]);
   const hasSchedule = new Set(schedules.map(s => s.courseId));
   const signed = new Set(agreements.map(a => a.courseId));
@@ -83,10 +86,16 @@ async function loadList(now: Date) {
       status: inq.status, stage: stageName(inq.status), need: needOf(inq.status),
       daysWaiting: daysSince(stageEnteredAt(inq.status, inq.createdAt, inq.events), now), snoozed,
       next: inquiryNext(inq, now), steps,
+      // Set on the inquiry (stored at noon UTC, so the UTC date is the day picked).
+      launch: inq.expectedLaunchAt ? inq.expectedLaunchAt.toISOString().slice(0, 10) : null as string | null,
     });
   }
   const inquiryOf = new Map<string, string>();
-  for (const l of linked) if (l.builtCourseId && !inquiryOf.has(l.builtCourseId)) inquiryOf.set(l.builtCourseId, l.id);
+  const launchOf = new Map<string, string | null>(); // the expected launch saved on that (possibly closed) inquiry
+  for (const l of linked) if (l.builtCourseId && !inquiryOf.has(l.builtCourseId)) {
+    inquiryOf.set(l.builtCourseId, l.id);
+    launchOf.set(l.id, l.expectedLaunchAt ? l.expectedLaunchAt.toISOString().slice(0, 10) : null);
+  }
   for (const c of courses) {
     if (listedCourses.has(c.id) || c.archivedAt || !onboarding(c)) continue;
     const inquiryId = inquiryOf.get(c.id) ?? null;
@@ -98,6 +107,8 @@ async function loadList(now: Date) {
       status: null, stage: inquiryId ? stageName('building') : BY_HAND_STAGE, need: needOf(null),
       daysWaiting: daysSince(c.createdAt, now), snoozed: false,
       next: steps.todo ?? 'Make the course live', steps,
+      // A launch date lives on an inquiry: the closed inquiry this course came from, or none when built by hand.
+      launch: inquiryId ? launchOf.get(inquiryId) ?? null : null,
     });
   }
   rows.sort(compareRows);
@@ -115,7 +126,8 @@ export async function GET(req: NextRequest) {
   const now = new Date();
   const rows = await loadList(now);
   const key = req.nextUrl.searchParams.get('key');
-  if (!key) return NextResponse.json({ at: now.toISOString(), overdueDays: OVERDUE_DAYS, support, rows });
+  const today = dayKey(now);
+  if (!key) return NextResponse.json({ at: now.toISOString(), today, overdueDays: OVERDUE_DAYS, support, rows });
 
   const row = rows.find(r => r.key === key);
   if (!row) return NextResponse.json({ error: 'This course is no longer onboarding. If it went live, it is on Golf courses.' }, { status: 404 });
@@ -148,5 +160,7 @@ export async function GET(req: NextRequest) {
     notes: support ? (inq ? inq.adminNotes : course?.adminNotes ?? '') : null,
     canNote: manager && !!inq,
     canBookCall: manager && beforeDemo,
+    canSetLaunch: manager && !!inq,
+    today,
   });
 }

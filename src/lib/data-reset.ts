@@ -25,7 +25,7 @@ export const WIPE_CONFIRM_WORDS = 'WIPE TEST DATA';
 /** The company side — kept by the launch wipe. */
 export const KEPT_TABLES = [
   'AdminUser', 'OwnerPasskey', 'OwnerSession', 'OwnerDevice',
-  'AdminGoal', 'Expense', 'ExpenseBudget', 'AgreementVersion', 'AdminAuditLog', 'CronRunLog',
+  'AdminGoal', 'AdminMonthGoal', 'Expense', 'ExpenseBudget', 'AgreementVersion', 'AdminAuditLog', 'CronRunLog',
 ] as const;
 
 /** Everything courses, golfers and the pipeline made — cleared by the launch wipe. */
@@ -40,7 +40,7 @@ export const WIPED_TABLES = [
   'GolferNote', 'GolferBlock', 'ShiftNote', 'CourseMonthGoal', 'CourseGoal',
   'CourseEvent', 'CourseEventTask', 'CourseEventPlayer', 'CourseEventPayment', 'CourseEventRefund',
   // the pipeline
-  'CourseInquiry', 'Call', 'InquiryStatusEvent', 'ChangeRequest',
+  'CourseInquiry', 'Call', 'InquiryStatusEvent', 'OutreachTouch', 'ChangeRequest',
   // messages, announcements, problems
   'MessageThread', 'Message', 'CourseMessage', 'Announcement', 'AnnouncementDismissal', 'AdminAlert', 'AdminAlertEvent',
   // sign-in throttles

@@ -21,7 +21,9 @@ export async function GET(req: NextRequest) {
   const digits = q.replace(/\D/g, '');
 
   // AW-3: a booking id pasted from an email or a check-in link (whole, or the first 8+ characters).
-  const idLike = /^[a-z0-9]{8,40}$/i.test(q) ? q.toLowerCase() : '';
+  // Bookings prints the number as "#CMWD1RSQ", so a leading # is dropped.
+  const idQ = q.replace(/^#/, '');
+  const idLike = /^[a-z0-9]{8,40}$/i.test(idQ) ? idQ.toLowerCase() : '';
   // BOOKING-REF: "GR4-17" / "4-17" is a booking, "GR4" a course.
   const ref = parseRef(q);
 
@@ -113,7 +115,7 @@ export async function GET(req: NextRequest) {
     idLike || ref?.ref
       ? prisma.booking.findMany({
           where: { OR: [...(idLike ? [{ id: { startsWith: idLike } }] : []), ...(ref?.ref ? [{ ref: ref.ref, course: { number: ref.course } }] : [])] },
-          select: { id: true, ref: true, golferName: true, golferEmail: true, golferAccountId: true, status: true, course: { select: { name: true, number: true } }, teeTime: { select: { date: true, time: true } } },
+          select: { id: true, ref: true, golferName: true, golferEmail: true, golferAccountId: true, status: true, course: { select: { name: true, number: true, isTest: true } }, teeTime: { select: { date: true, time: true } } },
           take: 3,
         })
       : Promise.resolve([]),
@@ -195,7 +197,8 @@ export async function GET(req: NextRequest) {
       id: `booking:${b.id}`,
       label: `${b.golferName} · ${b.course.name}`,
       sub: `${bookingRefLabel(b)} · ${b.teeTime.date} ${b.teeTime.time} · ${b.status}`,
-      href: b.golferAccountId ? `/admin/golfers?id=${b.golferAccountId}` : `/admin/golfers?guest=${encodeURIComponent(b.golferEmail.toLowerCase())}`,
+      // ADMIN-REDO Bookings: a booking found by its number opens on Bookings (Money); without Money, the golfer.
+      href: hasArea(session, 'money') && !b.course.isTest ? `/admin/bookings?id=${b.id}` : b.golferAccountId ? `/admin/golfers?id=${b.golferAccountId}` : `/admin/golfers?guest=${encodeURIComponent(b.golferEmail.toLowerCase())}`,
     })),
     ...groups.map(g => ({
       type: 'group' as const,
@@ -211,6 +214,11 @@ export async function GET(req: NextRequest) {
       sub: 'Mentions your search',
       href: `/admin/messages?courseId=${t.courseId}`,
     })),
+    // ADMIN-REDO Bookings: support finds a golfer's bookings by name, email or course — the Bookings list, filtered.
+    ...(hasArea(session, 'money') && q.trim().length >= 2 ? [{
+      type: 'nav' as const, id: 'nav:bookings-q', label: `Bookings matching “${q.trim().slice(0, 60)}”`, sub: 'Golfer, email, course or booking number',
+      href: `/admin/bookings?q=${encodeURIComponent(q.trim().slice(0, 100))}`,
+    }] : []),
     ...staticNav.map(n => ({
       type: 'nav' as const,
       id: n.id,
@@ -224,12 +232,17 @@ export async function GET(req: NextRequest) {
   const NAV_AREA: Record<string, AdminArea> = {
     '/admin/problems': 'problems', '/admin/goals': 'company', '/admin/inquiries': 'pipeline', '/admin/courses': 'courses',
     '/admin/groups': 'courses', '/admin/messages': 'messages', '/admin/revenue': 'money', '/admin/golfers': 'golfers',
-    '/admin/announcements': 'messages', '/admin/system': 'company', '/admin/employees': 'company', '/admin/create': 'pipeline',
+    '/admin/announcements': 'messages', '/admin/bookings': 'money', '/admin/system': 'company', '/admin/employees': 'company', '/admin/create': 'pipeline',
   };
   const TYPE_AREA: Partial<Record<ResultItem['type'], AdminArea>> = {
     course: 'courses', group: 'courses', inquiry: 'pipeline', employee: 'company', golfer: 'golfers', guest: 'golfers', booking: 'golfers', thread: 'messages',
   };
+  const testBookings = new Set(bookings.filter(b => b.course.isTest).map(b => `booking:${b.id}`));
   const allowed = results.filter(r => {
+    // A booking found by its number opens on Bookings (Money) or the golfer (Golfers): either area may see it.
+    // A test course's booking is not on Bookings (TEST-2), so Money alone doesn't open it — and never gets the guest link.
+    if (r.type === 'booking') return hasArea(session, 'golfers') || (hasArea(session, 'money') && !testBookings.has(r.id));
+    if (r.id === 'nav:bookings-q') return hasArea(session, 'money');
     const area = r.type === 'nav' ? NAV_AREA[r.href] : TYPE_AREA[r.type];
     return !area || hasArea(session, area);
   });

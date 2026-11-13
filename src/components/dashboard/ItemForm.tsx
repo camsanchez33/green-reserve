@@ -34,7 +34,7 @@ async function uploadPhoto(itemId: string, file: File): Promise<string> {
   } catch { return 'The photo didn’t upload — try again.'; }
 }
 
-export function ItemForm({ item, rows, categories, canCost, onSaved, onCancel, onRemoved }: {
+export function ItemForm({ item, rows, categories, canCost, onSaved, onCancel, onRemoved, receive = false }: {
   /** The item to edit; absent = a new item. */
   item?: TreeItem;
   /** Its stock rows (reorder point, cost), by item or option id. */
@@ -45,6 +45,8 @@ export function ItemForm({ item, rows, categories, canCost, onSaved, onCancel, o
   onSaved: (msg: string, failed?: string) => Promise<void> | void;
   onCancel: () => void;
   onRemoved?: (msg: string) => void;
+  /** Pro shop Stock's "Receive stock": open with the delivery line ready (the item, or its first size). */
+  receive?: boolean;
 }) {
   const own = item && !item.options.length ? rows.get(item.id) : undefined;
   const activeOpts = useMemo(() => (item?.options ?? []).filter(o => o.active), [item]);
@@ -64,7 +66,8 @@ export function ItemForm({ item, rows, categories, canCost, onSaved, onCancel, o
     return { id: o.id, label: o.optionLabel, price: o.priceCents === item!.priceCents ? '' : dollars(o.priceCents), onHand: o.stockCount === null ? '' : String(Math.max(0, o.stockCount)), sku: o.sku, reorder: r?.reorderAt == null ? '' : String(r.reorderAt), cost: dollars(r?.costCents) };
   }));
   const [sizesText, setSizesText] = useState('');
-  const [delivery, setDelivery] = useState<{ optId: string; came: string; unit: string } | null>(null);
+  const [delivery, setDelivery] = useState<{ optId: string; came: string; unit: string } | null>(
+    receive && item ? { optId: activeOpts[0]?.id ?? item.id, came: '', unit: '' } : null);
   const [photo, setPhoto] = useState<File | null>(null);
   const [preview, setPreview] = useState('');
   const [busy, setBusy] = useState(false);
