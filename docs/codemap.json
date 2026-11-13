@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 726,
-    "routes": 310,
-    "libs": 259,
-    "models": 75,
+    "files": 729,
+    "routes": 311,
+    "libs": 260,
+    "models": 76,
     "orphans": 11,
     "ungatedRoutes": 3
   },
@@ -2090,6 +2090,37 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/admin/business/route.ts",
+      "lines": 235,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/business",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-areas",
+        "@/lib/admin-day",
+        "@/lib/admin-session",
+        "@/lib/business-analytics",
+        "@/lib/finance-period",
+        "@/lib/inquiry-status",
+        "@/lib/prisma",
+        "@/lib/real-courses",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/admin/change-password/route.ts",
       "lines": 31,
       "purpose": "",
@@ -3089,7 +3120,7 @@
     },
     {
       "path": "src/app/api/admin/inquiries/route.ts",
-      "lines": 1341,
+      "lines": 1367,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10284,7 +10315,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 898,
+      "lines": 975,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -10310,6 +10341,7 @@
         "@/components/dashboard/StockTab",
         "@/components/dashboard/Toast",
         "@/components/dashboard/shop/SaleReceiptPanel",
+        "@/components/dashboard/shop/ShopMenu",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/components/ui/field",
@@ -12554,7 +12586,7 @@
     },
     {
       "path": "src/components/dashboard/ItemForm.tsx",
-      "lines": 315,
+      "lines": 318,
       "purpose": "POS-8 (Cam 2026-11-09:",
       "brain": [],
       "exports": [
@@ -12778,7 +12810,7 @@
     },
     {
       "path": "src/components/dashboard/OperatorSearch.tsx",
-      "lines": 116,
+      "lines": 115,
       "purpose": "DASH-C:",
       "brain": [],
       "exports": [
@@ -12836,7 +12868,7 @@
     },
     {
       "path": "src/components/dashboard/RegisterClose.tsx",
-      "lines": 278,
+      "lines": 291,
       "purpose": "POS-3 R4 (Cam 2026-10-24):",
       "brain": [],
       "exports": [
@@ -12853,7 +12885,6 @@
       "imports": [
         "@/components/dashboard/OpenRegister",
         "@/components/ui/Card",
-        "@/components/ui/StatusDot",
         "@/components/ui/field",
         "@/lib/course-time",
         "@/lib/dashboard-fetch",
@@ -13198,7 +13229,7 @@
     },
     {
       "path": "src/components/dashboard/StockTab.tsx",
-      "lines": 208,
+      "lines": 250,
       "purpose": "POS-6/POS-8 (Cam 2026-11-09:",
       "brain": [],
       "exports": [
@@ -13216,9 +13247,9 @@
         "@/components/dashboard/ItemForm",
         "@/components/dashboard/LoadError",
         "@/components/dashboard/UploadMany",
+        "@/components/dashboard/shop/ShopMenu",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
-        "@/components/ui/field",
         "@/lib/booking-fees",
         "@/lib/dashboard-fetch",
         "@/lib/shop-stock",
@@ -14318,6 +14349,34 @@
       ]
     },
     {
+      "path": "src/components/dashboard/shop/ShopMenu.tsx",
+      "lines": 55,
+      "purpose": "Pro shop (Cam 2026-11-12, approved mockups):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "MenuItem",
+          "kind": "type"
+        },
+        {
+          "name": "ShopMenu",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/shop/page.tsx",
+        "src/components/dashboard/StockTab.tsx"
+      ]
+    },
+    {
       "path": "src/components/dashboard/shop/ShopReceiptBody.tsx",
       "lines": 39,
       "purpose": "RECEIPT-3:",
@@ -14836,7 +14895,6 @@
         "src/components/dashboard/MemberAccount.tsx",
         "src/components/dashboard/MemberJoin.tsx",
         "src/components/dashboard/PromoCodes.tsx",
-        "src/components/dashboard/RegisterClose.tsx",
         "src/components/dashboard/RoundPacks.tsx",
         "src/components/dashboard/RoundRulesCard.tsx",
         "src/components/dashboard/SalesTaxCard.tsx",
@@ -14925,7 +14983,6 @@
         "src/components/dashboard/RoundRulesCard.tsx",
         "src/components/dashboard/SalesTaxCard.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
-        "src/components/dashboard/StockTab.tsx",
         "src/components/dashboard/UploadMany.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
         "src/components/dashboard/events/EventMoney.tsx",
@@ -15107,6 +15164,7 @@
         "src/app/admin/employees/page.tsx",
         "src/app/admin/layout.tsx",
         "src/app/api/admin/bookings/route.ts",
+        "src/app/api/admin/business/route.ts",
         "src/app/api/admin/course-look/route.ts",
         "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/employees/route.ts",
@@ -15540,6 +15598,7 @@
         "src/app/admin/expenses/page.tsx",
         "src/app/api/admin/ask/route.ts",
         "src/app/api/admin/bookings/route.ts",
+        "src/app/api/admin/business/route.ts",
         "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/finance/route.ts",
         "src/app/api/admin/goals/route.ts",
@@ -15880,6 +15939,7 @@
         "src/app/api/admin/backfill-orphaned-inquiries/route.ts",
         "src/app/api/admin/bookings/route.ts",
         "src/app/api/admin/broadcasts/route.ts",
+        "src/app/api/admin/business/route.ts",
         "src/app/api/admin/change-password/route.ts",
         "src/app/api/admin/company-documents/download/route.ts",
         "src/app/api/admin/company-documents/route.ts",
@@ -17481,6 +17541,59 @@
         "src/app/courses/[slug]/CourseBookingClient.tsx",
         "src/lib/public-tee-times.ts",
         "src/lib/tee-sheet-engine.ts"
+      ]
+    },
+    {
+      "path": "src/lib/business-analytics.ts",
+      "lines": 124,
+      "purpose": "ADMIN-REDO Business analytics (Cam 2026-11-12, ADMIN_REDO_SPEC \"Business analytics:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "averageFill",
+          "kind": "fn"
+        },
+        {
+          "name": "fillPct",
+          "kind": "fn"
+        },
+        {
+          "name": "InquiryForFunnel",
+          "kind": "type"
+        },
+        {
+          "name": "JOIN_STEPS",
+          "kind": "const"
+        },
+        {
+          "name": "joiningFunnel",
+          "kind": "fn"
+        },
+        {
+          "name": "JoiningSteps",
+          "kind": "type"
+        },
+        {
+          "name": "JoinStep",
+          "kind": "type"
+        },
+        {
+          "name": "milestones",
+          "kind": "fn"
+        },
+        {
+          "name": "Milestones",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/api/admin/business/route.ts"
       ]
     },
     {
@@ -21568,6 +21681,7 @@
         "./admin-day"
       ],
       "usedBy": [
+        "src/app/api/admin/business/route.ts",
         "src/app/api/admin/finance/route.ts"
       ]
     },
@@ -22615,7 +22729,7 @@
     },
     {
       "path": "src/lib/inquiry-status.ts",
-      "lines": 501,
+      "lines": 507,
       "purpose": "Single source of truth for what every inquiry status means and which pipeline segment it belongs to.",
       "brain": [
         "inquiry-statuses",
@@ -22747,6 +22861,22 @@
           "kind": "fn"
         },
         {
+          "name": "TOUCH_CHANNELS",
+          "kind": "const"
+        },
+        {
+          "name": "TOUCH_DIRECTIONS",
+          "kind": "const"
+        },
+        {
+          "name": "TouchChannel",
+          "kind": "type"
+        },
+        {
+          "name": "TouchDirection",
+          "kind": "type"
+        },
+        {
           "name": "unreviewedResubmit",
           "kind": "fn"
         }
@@ -22763,6 +22893,7 @@
       "usedBy": [
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/inquiries/page.tsx",
+        "src/app/api/admin/business/route.ts",
         "src/app/api/admin/inquiries/route.ts",
         "src/app/api/admin/onboarding/plan.ts",
         "src/app/api/admin/onboarding/route.ts",
@@ -24941,6 +25072,7 @@
         "src/app/api/admin/bookings/route.ts",
         "src/app/api/admin/bootstrap/route.ts",
         "src/app/api/admin/broadcasts/route.ts",
+        "src/app/api/admin/business/route.ts",
         "src/app/api/admin/change-password/route.ts",
         "src/app/api/admin/company-documents/route.ts",
         "src/app/api/admin/course-calls/route.ts",
@@ -25677,6 +25809,7 @@
       "imports": [],
       "usedBy": [
         "src/app/api/admin/bookings/route.ts",
+        "src/app/api/admin/business/route.ts",
         "src/app/api/admin/finance/route.ts",
         "src/app/api/admin/nav-badges/route.ts",
         "src/app/api/admin/revenue/route.ts",
@@ -29925,6 +30058,7 @@
         "src/lib/agreement-sign.ts"
       ],
       "readers": [
+        "src/app/api/admin/business/route.ts",
         "src/app/api/admin/course-documents/route.ts",
         "src/app/api/admin/courses/directory/route.ts",
         "src/app/api/admin/onboarding/route.ts",
@@ -31457,6 +31591,7 @@
       "readers": [
         "src/app/api/admin/audit/route.ts",
         "src/app/api/admin/broadcasts/route.ts",
+        "src/app/api/admin/business/route.ts",
         "src/app/api/admin/course-calls/route.ts",
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/admin/course-documents/route.ts",
@@ -32360,6 +32495,10 @@
           "type": "Call[]"
         },
         {
+          "name": "touches",
+          "type": "OutreachTouch[]"
+        },
+        {
           "name": "callInviteToken",
           "type": "String?"
         },
@@ -32384,6 +32523,7 @@
       ],
       "readers": [
         "src/app/api/admin/backfill-orphaned-inquiries/route.ts",
+        "src/app/api/admin/business/route.ts",
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/create-course/route.ts",
@@ -34223,6 +34363,55 @@
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts"
       ]
+    },
+    {
+      "name": "OutreachTouch",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "inquiryId",
+          "type": "String"
+        },
+        {
+          "name": "inquiry",
+          "type": "CourseInquiry"
+        },
+        {
+          "name": "at",
+          "type": "DateTime"
+        },
+        {
+          "name": "channel",
+          "type": "String"
+        },
+        {
+          "name": "direction",
+          "type": "String"
+        },
+        {
+          "name": "note",
+          "type": "String?"
+        },
+        {
+          "name": "adminId",
+          "type": "String?"
+        },
+        {
+          "name": "adminName",
+          "type": "String?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ],
+      "writers": [
+        "src/app/api/admin/inquiries/route.ts"
+      ],
+      "readers": []
     },
     {
       "name": "OwnerDevice",
