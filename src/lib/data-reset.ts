@@ -40,7 +40,7 @@ export const WIPED_TABLES = [
   'GolferNote', 'GolferBlock', 'ShiftNote', 'CourseMonthGoal', 'CourseGoal',
   'CourseEvent', 'CourseEventTask', 'CourseEventPlayer', 'CourseEventPayment', 'CourseEventRefund',
   // the pipeline
-  'CourseInquiry', 'Call', 'InquiryStatusEvent', 'ChangeRequest',
+  'CourseInquiry', 'Call', 'InquiryStatusEvent', 'OutreachTouch', 'ChangeRequest',
   // messages, announcements, problems
   'MessageThread', 'Message', 'SupportChat', 'CourseMessage', 'Announcement', 'AnnouncementDismissal', 'AdminAlert', 'AdminAlertEvent',
   // sign-in throttles
