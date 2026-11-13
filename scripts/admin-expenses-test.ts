@@ -74,6 +74,8 @@ check('a future end is still running: not ended, still active, still counts', !i
 check('…and renews before its end, but never after its last day', nextRenewal(future, NOW)?.day === '2026-11-30' && nextRenewal(future, new Date('2026-12-02T15:00:00Z')) === null);
 const endsNov30 = ex({ startedAt: '2026-03-30T12:00:00.000Z', endedAt: endedAtForLastDay('2026-11-30')!.toISOString() });
 check('a cost whose last day is Nov 30 still renews on Nov 30', nextRenewal(endsNov30, NOW)?.day === '2026-11-30');
+// An end saved mid-day (End = now) still counts its own day: started the 15th, ending Nov 15 at noon Eastern → renews that day.
+check('an end saved mid-day still renews on its own day', nextRenewal(ex({ startedAt: '2026-03-15T12:00:00.000Z', endedAt: '2026-11-15T17:00:00.000Z' }), NOW)?.day === '2026-11-15');
 check('an ended cost never renews', nextRenewal(ex({ endedAt: '2026-10-01T12:00:00.000Z' }), NOW) === null);
 
 // Amounts typed in the form.
@@ -97,6 +99,7 @@ check('an amount change reads in dollars', line({ at: 'x', by: 'Cam', kind: 'cha
 check('a cadence change reads in words', line({ at: 'x', by: '', kind: 'changed', changes: [{ field: 'cadence', from: 'monthly', to: 'annual' }] }) === 'How often changed Every month → Every year');
 check('a date change reads as the day', line({ at: 'x', by: '', kind: 'changed', changes: [{ field: 'startedAt', from: '2026-03-01T12:00:00.000Z', to: '2026-03-05T12:00:00.000Z' }] }) === 'Started changed 2026-03-01 → 2026-03-05');
 check('ended', line({ at: 'x', by: 'Cam', kind: 'ended' }) === 'Finished · Cam');
+check('a finish date reads as its last day, not the next midnight', line({ at: 'x', by: '', kind: 'changed', changes: [{ field: 'endedAt', from: null, to: endedAtForLastDay('2026-11-21')!.toISOString() }] }) === 'Finished changed — → 2026-11-21');
 
 // The page: owner data only from the owner-only route, costs going up read red, no estimate.
 const page = readFileSync('src/app/admin/expenses/page.tsx', 'utf8');
