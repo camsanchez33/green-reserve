@@ -514,7 +514,7 @@ export default function ShopPage() {
                 )}
                 {tree.length > 0 && (
                   <div className="space-y-2.5 mb-3">
-                    <label className="flex items-center gap-2 bg-page border border-line rounded-[10px] px-3 min-h-[44px] text-ink-muted">
+                    <label className="flex items-center gap-2 bg-page op-well border border-line rounded-[10px] px-3 min-h-[44px] text-ink-muted">
                       <Search className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                       <input ref={searchRef} value={q} onChange={e => setQ(e.target.value)} autoFocus
                         onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); const t = q.trim(); if (scan(q) || !t) return; if (!tree.some(i => matches(i, q))) noMatch(q); else setNote(''); } }}
@@ -547,7 +547,7 @@ export default function ShopPage() {
                             {(it.photoUrl
                               // eslint-disable-next-line @next/next/no-img-element
                               ? <img src={it.photoUrl} alt="" loading="lazy" className="block w-full h-20 object-contain bg-paper" />
-                              : <span aria-hidden="true" className="flex w-full h-20 items-center justify-center bg-page text-[20px] font-bold text-ink-soft">{initials(it.name)}</span>)}
+                              : <span aria-hidden="true" className="flex w-full h-20 items-center justify-center bg-page op-well text-[20px] font-bold text-ink-soft">{initials(it.name)}</span>)}
                             {/* POS-6 (Cam 2026-11-09): "in sale" is how many are on this ticket; the stock is its own line, never beside the price. */}
                             <span className="flex items-start justify-between gap-2 px-3 pt-3">
                               <span className="text-[14px] font-medium text-ink leading-snug">{it.name}</span>
@@ -595,8 +595,8 @@ export default function ShopPage() {
                               <span className="flex items-center gap-2.5 min-w-0">
                                 {(() => { const ph = l.item.photoUrl || (items ?? []).find(x => x.id === l.item.parentId)?.photoUrl; return ph
                                   // eslint-disable-next-line @next/next/no-img-element
-                                  ? <img src={ph} alt="" loading="lazy" className="w-9 h-9 shrink-0 rounded-[8px] object-cover bg-page" />
-                                  : <span aria-hidden="true" className="flex w-9 h-9 shrink-0 rounded-[8px] bg-page items-center justify-center text-[12px] font-bold text-ink-soft">{initials(l.item.name)}</span>; })()}
+                                  ? <img src={ph} alt="" loading="lazy" className="w-9 h-9 shrink-0 rounded-[8px] object-cover bg-page op-well" />
+                                  : <span aria-hidden="true" className="flex w-9 h-9 shrink-0 rounded-[8px] bg-page op-well items-center justify-center text-[12px] font-bold text-ink-soft">{initials(l.item.name)}</span>; })()}
                                 <span className="min-w-0 truncate text-ink">{l.item.name}</span>
                               </span>
                               <span className="flex items-center gap-1.5 shrink-0">
@@ -610,7 +610,7 @@ export default function ShopPage() {
                           {customs.map(c => (
                             <li key={c.key} className="flex items-center justify-between gap-2 py-2.5 text-sm">
                               <span className="flex items-center gap-2.5 min-w-0">
-                                <span aria-hidden="true" className="flex w-9 h-9 shrink-0 rounded-[8px] bg-page items-center justify-center text-[12px] font-bold text-ink-soft">{initials(c.name) || '$'}</span>
+                                <span aria-hidden="true" className="flex w-9 h-9 shrink-0 rounded-[8px] bg-page op-well items-center justify-center text-[12px] font-bold text-ink-soft">{initials(c.name) || '$'}</span>
                                 <span className="min-w-0 truncate text-ink">{c.name}</span>
                               </span>
                               <span className="flex items-center gap-1.5 shrink-0">
@@ -841,7 +841,7 @@ export default function ShopPage() {
                 {all && <span className="ml-auto text-[13.5px] text-ink-muted tabular-nums"><b className="text-[15px] font-semibold text-ink">{usd(taken.cents)}</b> taken · {taken.count} sale{taken.count === 1 ? '' : 's'}</span>}
               </div>
               <div className="flex items-center gap-2.5 mb-2">
-                <label className="flex-1 min-w-0 flex items-center gap-2 bg-page border border-line rounded-[10px] px-3 min-h-[38px] text-ink-muted">
+                <label className="flex-1 min-w-0 flex items-center gap-2 bg-page op-well border border-line rounded-[10px] px-3 min-h-[38px] text-ink-muted">
                   <Search className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                   <input value={hist?.q ?? ''} onChange={e => loadHistory({ q: e.target.value, day: hist?.day ?? '' })} aria-label="Find a sale by name, item or sale number" className="flex-1 min-w-0 bg-transparent text-[13.5px] text-ink outline-none" />
                 </label>

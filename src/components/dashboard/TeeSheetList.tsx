@@ -10,7 +10,7 @@
 import { formatTeeTime } from '@/lib/format';
 import { roundName } from '@/lib/tee-rounds';
 import { roundChargeCents } from '@/lib/booking-fees';
-import { FILL, groupTags, groupTone, rateWords, type BoardSlot } from './TeeSheetRows';
+import { EDGE, FILL, groupTags, groupTone, rateWords, type BoardSlot } from './TeeSheetRows';
 
 const SOURCE: Record<string, string> = { online: 'Online', walk_in: 'Walk-in', phone: 'Phone', member: 'Member link' };
 
@@ -54,7 +54,7 @@ export default function TeeSheetList({ slots, isPast, selectedId, showMoney, onS
             <span className="tabular-nums font-semibold text-ink">{formatTeeTime(s.time)}</span>
             <span className="hidden sm:block min-w-0 truncate text-ink-soft">{playing}</span>
             <span className="min-w-0">
-              <span className={'inline-flex max-w-full items-center gap-1.5 rounded-[5px] px-2 py-1 ' + FILL[t]}>
+              <span className={'inline-flex max-w-full items-center gap-1.5 rounded-[5px] px-2 py-1 ' + FILL[t] + ' ' + EDGE[t]}>
                 <span className={'truncate ' + (t === 'bad' ? 'text-bad font-medium' : 'text-ink')}>{g.golferName}</span>
                 {tags.map(x => <span key={x} className="shrink-0 text-[11px] font-semibold text-ink">{x}</span>)}
               </span>

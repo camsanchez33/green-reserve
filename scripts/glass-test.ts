@@ -43,10 +43,35 @@ ok('Card is still the one place the panel is defined', readFileSync('src/compone
 // transforms, which elements show) must live in the shared rule so Light gets it too. The logo pair's show/hide is the
 // one exception (it swaps which colour of the logo shows).
 const COLOUR_PROPS = new Set(['color', 'background-color', 'border-color', 'box-shadow', 'color-scheme', 'filter', 'fill', 'stroke', 'outline-color', 'caret-color']);
-const darkOnly = [...css.matchAll(/([^{}]*data-theme="dark"[^{}]*)\{([^{}]*)\}/g)].map(m => ({ sel: m[1].trim(), props: m[2].split(';').map(d => d.split(':')[0].trim()).filter(Boolean) }));
-const layoutInDark = darkOnly.filter(r => !/\.op-(dark|light)-only/.test(r.sel)).flatMap(r => r.props.filter(p => !p.startsWith('--') && !COLOUR_PROPS.has(p)).map(p => `${r.sel.split('\n').pop()} → ${p}`));
-ok('charcoal-only rules change colour only — glass and layout are shared with Light', darkOnly.length > 5 && layoutInDark.length === 0, layoutInDark);
-ok('the Light block carries the same glass tokens as charcoal (panel, edge, rail, ribbons, well)', ['--op-panel', '--op-edge', '--op-rail-glass', '--op-wv1', '--op-wv2', '--op-wv3', '--op-well'].every(t => lb.includes(t + ':') && (() => { const i = css.indexOf('.op-look[data-theme="dark"]:has(.op-rail) {'); return css.slice(i, css.indexOf('\n}', i)); })().includes(t + ':')));
+const DARK = /\[data-theme=["']?dark["']?\]/;
+const darkOnly = [...css.matchAll(/([^{}]*\[data-theme=["']?dark["']?\][^{}]*)\{([^{}]*)\}/g)].map(m => ({
+  sel: m[1].trim(),
+  decls: m[2].split(';').map(d => { const k = d.indexOf(':'); return k < 0 ? null : [d.slice(0, k).trim(), d.slice(k + 1).trim()] as [string, string]; }).filter((d): d is [string, string] => !!d && !!d[0]),
+}));
+const COLOUR_VALUE = /^(#[0-9A-Fa-f]{3,8}|rgba?\([^)]*\)|var\(--color-[a-z0-9-]+\)|transparent|dark|light)$/;
+const bad: string[] = [];
+for (const r of darkOnly) {
+  const last = r.sel.split('\n').pop()!;
+  const logo = /\.op-(dark|light)-only/.test(r.sel);
+  // A charcoal-only shadow is only a recolour when the same rule exists for Light too.
+  const twin = r.sel.split(',').map(x => x.trim().replace(DARK, '')).every(x => css.includes(x + ' {') || css.includes(x + ',') || css.includes(x + '\n'));
+  for (const [p, v] of r.decls) {
+    if (logo) { if (p !== 'display') bad.push(`${last} → ${p}`); continue; }
+    if (p.startsWith('--')) { if (!COLOUR_VALUE.test(v)) bad.push(`${last} → ${p}: ${v} (a charcoal-only token must be a colour)`); continue; }
+    if (!COLOUR_PROPS.has(p)) { bad.push(`${last} → ${p}`); continue; }
+    if (p === 'filter' && !/^(brightness|contrast|saturate|grayscale)\([^)]*\)( (brightness|contrast|saturate|grayscale)\([^)]*\))*$/.test(v)) bad.push(`${last} → filter: ${v}`);
+    if (p === 'box-shadow' && !twin) bad.push(`${last} → box-shadow with no Light twin`);
+  }
+}
+ok('charcoal-only rules change colour only — glass and layout are shared with Light', darkOnly.length > 5 && bad.length === 0, bad);
+const charcoalBlock = (() => { const i = css.indexOf('.op-look[data-theme="dark"]:has(.op-rail) {'); return css.slice(i, css.indexOf('\n}', i)); })();
+const opTokens = [...new Set([...charcoalBlock.matchAll(/(--op-[a-z0-9-]+):/g)].map(m => m[1]))];
+ok('the Light block carries every --op- token charcoal has', opTokens.length >= 8 && opTokens.every(t => lb.includes(t + ':')), opTokens.filter(t => !lb.includes(t + ':')));
+// The time card frosts only where it sits beside the sheet (xl); narrower or on a phone it stays solid, and solid again
+// under reduced transparency. A well is opt-in (.op-well), never every bg-page.
+ok('the time card frosts only at xl, and is solid under reduced transparency', /@media screen and \(min-width: 1280px\) \{\s*\n\s*\.op-look:has\(\.op-rail\) \.fixed \.tt-card\.bg-white\.shadow-card \{ background-color: var\(--op-panel\)/.test(css) && /prefers-reduced-transparency: reduce\)[\s\S]*?\.fixed \.tt-card\.bg-white\.shadow-card \{ background-color: var\(--color-white\)/.test(css));
+ok('a frosted well is opt-in (.op-well), not every bg-page', css.includes('.op-look:has(.op-rail) .op-well { background-color: var(--op-well); }') && !css.includes('.bg-white.shadow-card .bg-page'));
+ok('tee sheet cells and List carry the money edge over the fill', readFileSync('src/components/dashboard/TeeSheetRows.tsx', 'utf8').includes("+ FILL[t] + ' ' + EDGE[t] + ' '") && readFileSync('src/components/dashboard/TeeSheetList.tsx', 'utf8').includes("FILL[t] + ' ' + EDGE[t]"));
 
 // ── Contrast: each text token on the worst frosted panel in its theme (panel over the page with the brightest
 // ribbon under it, blur ignored = the brightest case for charcoal, and the darkest ribbon for light).

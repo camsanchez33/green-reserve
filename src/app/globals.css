@@ -153,7 +153,7 @@ body {
      sweeps and one white fold — wells inside a panel are frosted white, and the tee sheet's money fills are tints. */
   --op-wv1: rgb(120 126 122 / .22); --op-wv2: rgb(150 156 152 / .20); --op-wv3: rgb(255 255 255 / .70);
   --op-well: rgb(255 255 255 / .60);
-  --color-paid-fill: rgb(34 104 63 / .14); --color-owes-fill: rgb(138 83 9 / .14); --color-bad-fill: rgb(169 58 36 / .14);
+  --color-paid-fill: rgb(34 104 63 / .12); --color-owes-fill: rgb(138 83 9 / .12); --color-bad-fill: rgb(169 58 36 / .12);
   --op-brand-green: #173B2A;
   --op-heat0: rgb(0 0 0 / .04); --op-heat-ink3: var(--color-ink); --op-heat-ink4: #FFFFFF; --op-rain: #1F5FAF;
   background: var(--color-page); min-height: 100vh; color: var(--color-ink);
@@ -230,9 +230,10 @@ body {
 }
 .op-look[data-theme="dark"]:has(.op-rail) .bg-white.shadow-card:not(.op-tab) { box-shadow: 0 0 0 1px var(--op-edge), 0 1px 0 rgb(255 255 255 / .06) inset, 0 10px 30px rgb(0 0 0 / .32); }
 .op-look:has(.op-rail) .op-home .bg-white.shadow-card:not([role="radio"]) { border-radius: 14px; } /* HOME-3: Home's panels, as the mockup */
-/* LIGHT-PARITY: a well inside a frosted panel (a search box, a tile's picture, a stepper) is frosted too — white in
-   Light, a faint lift in Charcoal (the mockups' --hover) — never the page's grey showing through as a flat block. */
-.op-look:has(.op-rail) .bg-white.shadow-card .bg-page { background-color: var(--op-well); }
+/* LIGHT-PARITY: a well marked .op-well (a search box, a tile's or row's picture) is frosted — white in Light, a faint
+   lift in Charcoal (the mockups' --hover). Opt-in on purpose: bg-page also draws selected states, chips and bubbles
+   that must keep their grey (final review 2026-11-13). */
+.op-look:has(.op-rail) .op-well { background-color: var(--op-well); }
 .op-look:has(.op-rail) .op-rail { background-color: var(--op-rail-glass); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
 .op-look:has(.op-rail) .op-tab { transition: transform .18s ease, background-color .18s ease, box-shadow .18s ease, color .18s ease; }
 .op-look:has(.op-rail) .op-tab:not([aria-current]):hover {
@@ -244,16 +245,18 @@ body {
 .op-look:has(.op-rail) .fixed.inset-0 .bg-white.shadow-card,
 .op-look:has(.op-rail) .fixed.bg-white.shadow-card,
 .op-look:has(.op-rail) .op-keep-light .bg-white.shadow-card { background-color: var(--color-white); -webkit-backdrop-filter: none; backdrop-filter: none; }
-/* TT-CARD (Cam 2026-11-12 mockup): the time card beside the sheet on a laptop is a frosted card like the others, in both
-   looks — it has no backdrop, so the sheet stays readable around it. On a phone it is a solid sheet over a backdrop. */
-@media screen and (min-width: 768px) {
+/* TT-CARD (Cam 2026-11-12 mockup): where the time card sits BESIDE the sheet (xl and up, the sheet makes room for it) it
+   is a frosted card like the others, in both looks. Narrower, it floats over the sheet, so it stays solid; on a phone it
+   is a solid sheet over a backdrop. */
+@media screen and (min-width: 1280px) {
   .op-look:has(.op-rail) .fixed .tt-card.bg-white.shadow-card { background-color: var(--op-panel); -webkit-backdrop-filter: blur(22px) saturate(1.2); backdrop-filter: blur(22px) saturate(1.2); }
 }
 }
 @media screen and (prefers-reduced-motion: reduce) { .op-look:has(.op-rail) .op-tab { transition: none; } .op-look:has(.op-rail) .op-tab:not([aria-current]):hover { transform: none; } }
 @media screen and (prefers-reduced-transparency: reduce) {
   .op-look:has(.op-rail) .op-waves { display: none; }
-  .op-look:has(.op-rail) .bg-white.shadow-card:not(.op-tab), .op-look:has(.op-rail) .fixed .tt-card.bg-white.shadow-card { background-color: var(--op-panel-solid); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .op-look:has(.op-rail) .bg-white.shadow-card:not(.op-tab) { background-color: var(--op-panel-solid); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .op-look:has(.op-rail) .fixed .tt-card.bg-white.shadow-card { background-color: var(--color-white); -webkit-backdrop-filter: none; backdrop-filter: none; }
   .op-look:has(.op-rail) .op-rail { background-color: var(--color-rail); -webkit-backdrop-filter: none; backdrop-filter: none; }
 }
 

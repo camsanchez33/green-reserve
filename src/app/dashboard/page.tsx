@@ -1495,7 +1495,7 @@ function DashboardPageInner() {
                       <input id="sheet-search" type="search" value={sheetView === 'calendar' ? '' : search} onChange={e => setSearch(e.target.value)}
                         // Search reads one day's sheet; the month has nothing to search (Cam 2026-11-06).
                         disabled={sheetView === 'calendar'} placeholder={sheetView === 'calendar' ? 'Pick a day to search' : 'Find golfer'}
-                        className="w-32 sm:w-56 disabled:opacity-70 disabled:cursor-not-allowed bg-paper rounded-md pl-8 pr-2.5 py-1.5 text-[13px] text-ink placeholder-ink-faint border border-transparent focus:bg-white focus:border-pine/40 focus:ring-2 focus:ring-pine/10 outline-none transition-colors"/>
+                        className="w-32 sm:w-56 disabled:opacity-70 disabled:cursor-not-allowed bg-paper op-well rounded-md pl-8 pr-2.5 py-1.5 text-[13px] text-ink placeholder-ink-faint border border-transparent focus:bg-white focus:border-pine/40 focus:ring-2 focus:ring-pine/10 outline-none transition-colors"/>
                     </div>
                     <button onClick={() => loadTimes(selectedDate)} aria-label="Refresh the sheet" title="Refresh the sheet"
                       className="w-8 h-8 rounded-md inline-flex items-center justify-center text-[16px] leading-none text-ink-muted hover:text-ink hover:bg-paper transition-colors">
@@ -1625,10 +1625,10 @@ function DashboardPageInner() {
         const nobodyBooked = !(panelSlot.bookings ?? []).some(b => b.status === 'confirmed' || b.status === 'completed');
         return (
           // TT-CARD mockup: on a laptop the card is as tall as what it holds (up to the screen), not a full-height drawer.
-          <div className="fixed inset-0 z-40 md:inset-auto md:top-4 md:right-4 md:max-h-[calc(100vh-2rem)] md:flex md:flex-col md:w-[min(520px,calc(100vw-2rem))]">
+          <div className="fixed inset-0 z-40 md:inset-auto md:top-4 md:right-4 md:max-h-[calc(100dvh-2rem)] md:flex md:flex-col md:w-[min(520px,calc(100vw-2rem))]">
             <div className="absolute inset-0 bg-ink/20 md:hidden" aria-hidden="true" onClick={() => setPanelId(null)} />
             <aside role="dialog" aria-label={`${fmtTime(panelSlot.time)} tee time`}
-              className="tt-card absolute inset-x-0 bottom-0 top-12 md:static md:min-h-0 md:max-h-full flex flex-col bg-white rounded-t-lg md:rounded-[14px] shadow-card overflow-hidden">
+              className="tt-card absolute inset-x-0 bottom-0 top-12 md:static md:min-h-0 md:max-h-full flex flex-col bg-white rounded-t-lg md:rounded-lg shadow-card overflow-hidden">
               <div className="px-5 pt-4 pb-3 border-b border-line-soft">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
