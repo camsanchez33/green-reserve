@@ -55,7 +55,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/` | public | public | page | `src/app/page.tsx` | 15 |
 | `/admin` | admin | client-side | page | `src/app/admin/page.tsx` | 257 |
 | `/admin/activity` | admin | client-side | page | `src/app/admin/activity/page.tsx` | 9 |
-| `/admin/announcements` | admin | client-side | page | `src/app/admin/announcements/page.tsx` | 242 |
+| `/admin/announcements` | admin | client-side | page | `src/app/admin/announcements/page.tsx` | 267 |
 | `/admin/audit` | admin | client-side | page | `src/app/admin/audit/page.tsx` | 137 |
 | `/admin/bookings` | admin | client-side | page | `src/app/admin/bookings/page.tsx` | 292 |
 | `/admin/broadcasts` | admin | client-side | page | `src/app/admin/broadcasts/page.tsx` | 12 |

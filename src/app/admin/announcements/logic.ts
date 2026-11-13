@@ -32,8 +32,8 @@ export function outcomeLine(o: SendOutcome): string {
   return `Posted to ${pl(o.courses, 'course dashboard')}`
     + (o.emailRequested ? ` · ${o.emailsSent} of ${pl(o.emailRecipients, 'email')} delivered to Resend` : ' · no email');
 }
-/** Amber when an email was asked for and any (or all) failed. */
-export const outcomeBad = (o: SendOutcome) => o.emailFailures.length > 0 || (o.emailRequested && o.emailsSent < o.emailRecipients);
+/** Amber when an email was asked for and any failed, or none went (0 of 0 included: nobody to email is still worth a look). */
+export const outcomeBad = (o: SendOutcome) => o.emailFailures.length > 0 || (o.emailRequested && (o.emailsSent === 0 || o.emailsSent < o.emailRecipients));
 
 /** The review step's reach line (the cannot-be-recalled warning is shown beside it). */
 export function reachLine(reach: Reach | null, email: boolean): string {

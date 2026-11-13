@@ -7,7 +7,7 @@
 // requires the owner session and says so; the "+" only shows for the owner); the history is readable by support+.
 // The broadcasts route and how broadcasts are stored are Build's and unchanged. Which page is open is in the URL
 // (?id=… / ?new=1), so Back works.
-import { Suspense, useCallback, useEffect, useState, type ReactNode } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import AdminSidebar from '@/components/admin/AdminSidebar';
@@ -33,7 +33,7 @@ function Problem({ got, retry, busy }: { got: Failure; retry: () => void; busy: 
     <div className={s.problem} role="alert">
       <span className={g.down}>{got.msg}</span>
       {got.kind === 'unauthorized' ? <Link href="/admin/login" className={s.pill}>Sign in</Link>
-        : <button type="button" className={s.pill} onClick={retry} disabled={busy}>{busy ? 'Trying…' : 'Try again'}</button>}
+        : got.kind === 'forbidden' ? null : <button type="button" className={s.pill} onClick={retry} disabled={busy}>{busy ? 'Trying…' : 'Try again'}</button>}
     </div>
   );
 }
@@ -69,15 +69,59 @@ function AnnouncementsContent() {
   }, [isOwner]);
 
   const toList = () => router.push('/admin/announcements');
-  const sent = (o: SendOutcome) => { setOutcome(o); setDraft(EMPTY); load(); toList(); };
+
+  // The send and the test live HERE, not in the composer: the composer unmounts on browser Back, and a flag inside it
+  // would let a second Confirm & send go out while the first is still sending (two announcements, two emails each,
+  // no recall). One in-flight flag (state for the buttons, a ref for a same-tick second click) guards both.
+  const [sending, setSending] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const busy = useRef(false);
+  const [sendErr, setSendErr] = useState<Failure | null>(null);
+  const [testNote, setTestNote] = useState('');
+
+  async function sendTest() {
+    const title = draft.title.trim(), text = draft.body.trim();
+    if (!title || !text || busy.current) return;
+    busy.current = true; setTesting(true); setTestNote(''); setSendErr(null);
+    try {
+      // MP-7b: send-test-to-self — emails only the signed-in admin, records nothing.
+      const res = await adminFetch<{ sentTo: string }>('/api/admin/broadcasts', {
+        method: 'POST', body: JSON.stringify({ title, body: text, test: true }), subject: 'the test email', action: 'send',
+      });
+      if (!res.ok) setSendErr({ msg: res.message, kind: res.kind });
+      else setTestNote(`Test sent to ${res.data.sentTo}. Nobody else got it.`);
+    } finally { busy.current = false; setTesting(false); }
+  }
+
+  async function send() {
+    const title = draft.title.trim(), text = draft.body.trim();
+    if (!title || !text || busy.current) return;
+    busy.current = true; setSending(true); setSendErr(null); setTestNote(''); setOutcome(null); // a stale result never sits beside a new send
+    try {
+      const res = await adminFetch<SendOutcome>('/api/admin/broadcasts', {
+        method: 'POST', body: JSON.stringify({ title, body: text, sendEmail: draft.sendEmail }), subject: 'this announcement', action: 'send',
+      });
+      if (!res.ok) { setSendErr({ msg: res.message, kind: res.kind }); return; } // shown on the composer AND the list
+      setOutcome(res.data); setDraft(EMPTY); load(); toList();
+    } finally { busy.current = false; setSending(false); }
+  }
+
+  // What the send is doing, for whichever page is open (the composer shows its own).
+  const sendStatus = !composing && (sending || sendErr) ? (
+    sending ? <p className={s.empty} role="status">Sending the announcement…</p>
+      : sendErr && <div className={s.problem} role="alert"><span className={g.down}>The announcement: {sendErr.msg}</span>
+        {sendErr.kind === 'unauthorized' && <Link href="/admin/login" className={s.pill}>Sign in</Link>}
+        <button type="button" className={s.pill} onClick={() => setSendErr(null)}>Dismiss</button></div>
+  ) : null;
 
   let body: ReactNode;
-  if (composing) body = <Composer draft={draft} setDraft={setDraft} reach={reach} onBack={toList} onSent={sent} />;
+  if (composing) body = <Composer draft={draft} setDraft={setDraft} reach={reach} onBack={toList} send={send} sendTest={sendTest} sending={sending} testing={testing} err={sendErr} testNote={testNote} clearNotes={() => { setSendErr(null); setTestNote(''); }} />;
   else if (openId) {
     const a = list?.find(b => b.id === openId);
     body = (
       <section className={`${g.glass} ${s.card} ${s.page}`} aria-label="Announcement">
         <button type="button" className={s.back} onClick={toList}>‹ Announcements</button>
+        {sendStatus}
         {loadErr && <Problem got={loadErr} retry={load} busy={loading} />}
         {!list && !loadErr && <div className={r.skel} aria-busy="true" aria-label="Loading the announcement" />}
         {list && !a && <p className={s.empty}>Could not find this announcement.</p>}
@@ -107,7 +151,7 @@ function AnnouncementsContent() {
             <svg {...ICON}><path d="M21 12a9 9 0 1 1-2.64-6.36" /><path d="M21 3v6h-6" /></svg>
           </button>
           {isOwner && (
-            <button type="button" className={s.wb} onClick={() => router.push('/admin/announcements?new=1')} aria-label="New announcement" title="New announcement">
+            <button type="button" className={s.wb} onClick={() => router.push('/admin/announcements?new=1')} disabled={sending} aria-label="New announcement" title="New announcement">
               <svg {...ICON}><path d="M12 5v14M5 12h14" /></svg>
             </button>
           )}
@@ -123,6 +167,7 @@ function AnnouncementsContent() {
             </button>
           </div>
         )}
+        {sendStatus}
         {loadErr && <Problem got={loadErr} retry={load} busy={loading} />}
         {!list && !loadErr && <div className={r.skel} aria-busy="true" aria-label="Loading announcements" />}
         {list && list.length === 0 && <p className={s.empty}>No announcements yet</p>}
@@ -158,51 +203,31 @@ function AnnouncementsContent() {
   );
 }
 
-function Composer({ draft, setDraft, reach, onBack, onSent }: {
-  draft: Draft; setDraft: (d: Draft) => void; reach: Reach | null; onBack: () => void; onSent: (o: SendOutcome) => void;
+function Composer({ draft, setDraft, reach, onBack, send, sendTest, sending, testing, err, testNote, clearNotes }: {
+  draft: Draft; setDraft: (d: Draft) => void; reach: Reach | null; onBack: () => void; send: () => void; sendTest: () => void;
+  sending: boolean; testing: boolean; err: Failure | null; testNote: string; clearNotes: () => void;
 }) {
   const [reviewing, setReviewing] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [testing, setTesting] = useState(false);
-  const [testNote, setTestNote] = useState('');
-  const [err, setErr] = useState('');
   const title = draft.title.trim(), text = draft.body.trim();
   const ready = !!title && !!text;
+  const inFlight = sending || testing;
+  // The test's result and any error show on both steps, so nothing reported while editing is lost.
+  const notes = (
+    <>
+      {testNote && <p className={s.tnote} role="status">{testNote}</p>}
+      {err && <p className={s.err} role="alert">{err.msg}{err.kind === 'unauthorized' && <> <Link href="/admin/login">Sign in</Link></>}</p>}
+    </>
+  );
 
-  // MP-7b: send-test-to-self — emails only the signed-in admin, records nothing.
-  async function sendTest() {
-    if (!ready || testing || sending) return;
-    setTesting(true); setTestNote(''); setErr('');
-    try {
-      const res = await adminFetch<{ sentTo: string }>('/api/admin/broadcasts', {
-        method: 'POST', body: JSON.stringify({ title, body: text, test: true }), subject: 'the test email', action: 'send',
-      });
-      if (!res.ok) setErr(res.message);
-      else setTestNote(`Test sent to ${res.data.sentTo}. Nobody else got it.`);
-    } finally { setTesting(false); }
-  }
-
-  async function send() {
-    if (!ready || sending) return;
-    setSending(true); setErr('');
-    try {
-      const res = await adminFetch<SendOutcome>('/api/admin/broadcasts', {
-        method: 'POST', body: JSON.stringify({ title, body: text, sendEmail: draft.sendEmail }), subject: 'this announcement', action: 'send',
-      });
-      if (!res.ok) { setErr(res.message); return; }
-      onSent(res.data);
-    } finally { setSending(false); }
-  }
-
-  const edit = () => { setReviewing(false); setTestNote(''); setErr(''); };
+  const edit = () => { setReviewing(false); if (!inFlight) clearNotes(); };
 
   return (
     <section className={`${g.glass} ${s.card} ${s.page}`} aria-label={reviewing ? 'Review the announcement' : 'New announcement'}>
-      <button type="button" className={s.back} onClick={onBack} disabled={sending}>‹ Announcements</button>
+      <button type="button" className={s.back} onClick={onBack} disabled={inFlight}>‹ Announcements</button>
       {!reviewing ? (
         <form className={s.cf} onSubmit={e => { e.preventDefault(); if (ready) setReviewing(true); }}>
           <label className={s.f}>Title
-            <input className={s.fld} value={draft.title} onChange={e => setDraft({ ...draft, title: e.target.value })} maxLength={200} />
+            <input className={s.fld} value={draft.title} onChange={e => setDraft({ ...draft, title: e.target.value })} />
           </label>
           <label className={s.f}>Message
             <textarea className={s.fld} rows={7} value={draft.body} onChange={e => setDraft({ ...draft, body: e.target.value })} />
@@ -212,21 +237,21 @@ function Composer({ draft, setDraft, reach, onBack, onSent }: {
               <input type="checkbox" checked={draft.sendEmail} onChange={e => setDraft({ ...draft, sendEmail: e.target.checked })} />
               <span>Also send as email<small>{reach ? `To ${pl(reach.operators, 'operator')} of live courses` : 'To every operator of a live course'}</small></span>
             </label>
-            <button type="submit" className={`${s.btn} ${s.pri}`} disabled={!ready}>Preview &amp; confirm</button>
+            <button type="submit" className={`${s.btn} ${s.pri}`} disabled={!ready || inFlight}>Preview &amp; confirm</button>
           </div>
+          {notes}
         </form>
       ) : (
         <div className={s.cf}>
           <div className={s.pvbox}>
-            <div className={s.crow}><span>Preview</span><button type="button" className={`${s.btn} ${s.sm}`} onClick={edit} disabled={sending}>Edit</button></div>
+            <div className={s.crow}><span>Preview</span><button type="button" className={`${s.btn} ${s.sm}`} onClick={edit} disabled={inFlight}>Edit</button></div>
             <b>{title}</b>
             <p className={s.abody}>{text}</p>
           </div>
           <div className={s.reach}>{reachLine(reach, draft.sendEmail)} <em>This cannot be recalled.</em></div>
-          {testNote && <p className={s.tnote} role="status">{testNote}</p>}
-          {err && <p className={s.err} role="alert">{err}</p>}
+          {notes}
           <div className={s.acts}>
-            <button type="button" className={s.btn} onClick={edit} disabled={sending}>Back to edit</button>
+            <button type="button" className={s.btn} onClick={edit} disabled={inFlight}>Back to edit</button>
             <button type="button" className={s.btn} onClick={sendTest} disabled={testing || sending}>{testing ? 'Sending test…' : 'Send test to me'}</button>
             <button type="button" className={`${s.btn} ${s.pri}`} onClick={send} disabled={sending || testing} aria-busy={sending}>{sending ? 'Sending…' : 'Confirm & send'}</button>
           </div>

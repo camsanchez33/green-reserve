@@ -135,7 +135,7 @@
     },
     {
       "path": "src/app/admin/announcements/page.tsx",
-      "lines": 242,
+      "lines": 267,
       "purpose": "AW-8a (Cam 2026-10-21):",
       "brain": [],
       "exports": [

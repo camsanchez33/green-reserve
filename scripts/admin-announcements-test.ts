@@ -18,6 +18,7 @@ check('result line counts what the send reports', outcomeLine(ok) === 'Posted to
 check('no email', outcomeLine({ ...ok, emailRequested: false, emailRecipients: 0, emailsSent: 0 }) === 'Posted to 12 course dashboards · no email');
 check('green when every email went', !outcomeBad(ok) && !outcomeBad({ ...ok, emailRequested: false, emailRecipients: 0, emailsSent: 0 }));
 check('amber when some emails failed', outcomeBad({ ...ok, emailsSent: 14, emailFailures: ['a@b'] }) && outcomeBad({ ...ok, emailsSent: 0 }));
+check('amber when email was asked for but there was nobody to send to (0 of 0)', outcomeBad({ courses: 3, emailRequested: true, emailRecipients: 0, emailsSent: 0, emailFailures: [] }));
 check('reach line', reachLine({ courses: 1, operators: 3 }, true) === 'Shows on 1 course dashboard and emails 3 operators.'
   && reachLine({ courses: 4, operators: 3 }, false) === 'Shows on 4 course dashboards. No email.'
   && reachLine(null, true).startsWith('Shows on every live course'));
@@ -28,7 +29,10 @@ check('the broadcasts route is unchanged: list, recipients, send, test', /'\/api
 check('review step: Preview with Edit, cannot be recalled, Back to edit / Send test to me / Confirm & send',
   />Edit</.test(page) && /This cannot be recalled\./.test(page) && />Back to edit</.test(page) && /'Send test to me'/.test(page) && /'Confirm & send'/.test(page));
 check('dropped headings stay dropped', !/Review before sending|>New announcement<|>Sent</.test(page));
-check('no silent failures: load, test and send all show their error', /setLoadErr\(\{ msg: res\.message/.test(page) && (page.match(/setErr\(res\.message\)/g) ?? []).length === 2);
+check('no silent failures: load, test and send all show their error', /setLoadErr\(\{ msg: res\.message/.test(page) && (page.match(/setSendErr\(\{ msg: res\.message, kind: res\.kind \}\)/g) ?? []).length === 2);
+check('the send lives on the page, not the composer: browser Back can never start a second send', /const busy = useRef\(false\)/.test(page) && (page.match(/busy\.current\) return;/g) ?? []).length === 2 && /disabled=\{sending\} aria-label="New announcement"/.test(page) && !/function Composer[\s\S]*useState\(false\);[\s\S]*setSending/.test(page));
+check('a send error shows on the list too, and a stale result is cleared when a send starts', /const sendStatus =/.test(page) && (page.match(/\{sendStatus\}/g) ?? []).length === 2 && /setOutcome\(null\); \/\/ a stale result/.test(page));
+check('a session that ended on send or test offers Sign in', /err\.kind === 'unauthorized' && <> <Link href="\/admin\/login">/.test(page));
 check('nothing that recalls, schedules or drafts', !/method: '(DELETE|PATCH|PUT)'/.test(page) && !/schedule/i.test(page));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
