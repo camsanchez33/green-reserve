@@ -1624,10 +1624,11 @@ function DashboardPageInner() {
         const past = selectedDate < today() || (selectedDate === today() && panelSlot.time < nowHM);
         const nobodyBooked = !(panelSlot.bookings ?? []).some(b => b.status === 'confirmed' || b.status === 'completed');
         return (
-          <div className="fixed inset-0 z-40 md:inset-auto md:top-4 md:right-4 md:bottom-4 md:w-[min(520px,calc(100vw-2rem))]">
+          // TT-CARD mockup: on a laptop the card is as tall as what it holds (up to the screen), not a full-height drawer.
+          <div className="fixed inset-0 z-40 md:inset-auto md:top-4 md:right-4 md:max-h-[calc(100vh-2rem)] md:flex md:flex-col md:w-[min(520px,calc(100vw-2rem))]">
             <div className="absolute inset-0 bg-ink/20 md:hidden" aria-hidden="true" onClick={() => setPanelId(null)} />
             <aside role="dialog" aria-label={`${fmtTime(panelSlot.time)} tee time`}
-              className="tt-card absolute inset-x-0 bottom-0 top-12 md:static md:h-full flex flex-col bg-white rounded-t-lg md:rounded-lg shadow-card overflow-hidden">
+              className="tt-card absolute inset-x-0 bottom-0 top-12 md:static md:min-h-0 md:max-h-full flex flex-col bg-white rounded-t-lg md:rounded-[14px] shadow-card overflow-hidden">
               <div className="px-5 pt-4 pb-3 border-b border-line-soft">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">

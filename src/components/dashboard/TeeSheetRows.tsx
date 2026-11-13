@@ -54,6 +54,8 @@ export function groupTone(g: BoardGroup): Tone {
 export const TONE_LABEL: Record<Tone, string> = { ok: 'paid', warn: 'booked, not paid yet', bad: 'needs attention' };
 /** FILL-1 (Cam 2026-11-06, "fully filled"): a group's whole cell is its money colour — the soft tints keep names readable. */
 export const FILL: Record<Tone, string> = { ok: 'bg-paid-fill', warn: 'bg-owes-fill', bad: 'bg-bad-fill' };
+/** TT-CARD mockup (Cam 2026-11-12): over the fill, a 3px left edge in the money colour, in both looks. */
+export const EDGE: Record<Tone, string> = { ok: 'border-l-[3px] border-ok', warn: 'border-l-[3px] border-warn', bad: 'border-l-[3px] border-bad' };
 /** Who they are, as a tag: checked in, member rate, resident rate. */
 /** The rates that aren't a member tier; any other appliedRate names the tier (review 2026-11-06: a resident
  *  rate was tagged M as well as R). */
@@ -191,7 +193,7 @@ export default function TeeSheetRows({ slots: allSlots, isPast, isGone, nextUpId
                       onDragEnd={() => { setDragging(null); setOver(null); }}
                       style={{ gridColumn: `span ${span}` }}
                       className={'h-8 min-w-0 flex items-center gap-1.5 px-2 rounded-[5px] text-left text-[12.5px] shadow-[0_0_0_1px_var(--color-line)] '
-                        + FILL[t] + ' '
+                        + FILL[t] + ' ' + EDGE[t] + ' '
                         + (can ? 'cursor-grab active:cursor-grabbing' : '')}>
                       <span className={'truncate ' + (t === 'bad' ? 'text-bad font-medium' : 'text-ink')}>{g.golferName}</span>
                       {g.players > 1 && <span className="shrink-0 text-ink-soft tabular-nums">+{g.players - 1}</span>}

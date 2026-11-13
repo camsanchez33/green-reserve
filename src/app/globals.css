@@ -149,13 +149,17 @@ body {
   --color-pine: #1E201E; --color-pine-hover: #000000; --color-pine-soft: #E3E4E0;
   --color-ok: #1A5734; --color-warn: #6C4205; --color-bad: #872C1A;
   --op-panel: rgb(255 255 255 / .58); --op-panel-solid: #FAFAF8; --op-rail-glass: rgb(255 255 255 / .40); --op-edge: rgb(255 255 255 / .8);
-  --op-wv1: rgb(20 22 20 / .10); --op-wv2: rgb(40 42 40 / .07); --op-wv3: rgb(10 12 10 / .05);
+  /* LIGHT-PARITY (Cam 2026-11-12: "Light and Charcoal get the SAME redesign"): the mockup's Light ribbons — grey
+     sweeps and one white fold — wells inside a panel are frosted white, and the tee sheet's money fills are tints. */
+  --op-wv1: rgb(120 126 122 / .22); --op-wv2: rgb(150 156 152 / .20); --op-wv3: rgb(255 255 255 / .70);
+  --op-well: rgb(255 255 255 / .60);
+  --color-paid-fill: rgb(34 104 63 / .14); --color-owes-fill: rgb(138 83 9 / .14); --color-bad-fill: rgb(169 58 36 / .14);
   --op-brand-green: #173B2A;
   --op-heat0: rgb(0 0 0 / .04); --op-heat-ink3: var(--color-ink); --op-heat-ink4: #FFFFFF; --op-rain: #1F5FAF;
   background: var(--color-page); min-height: 100vh; color: var(--color-ink);
 }
 /* A golfer-page preview keeps the site's own colours (pine is green there) in Light too. */
-.op-look:has(.op-rail) .op-keep-light { --color-pine: #173B2A; --color-pine-hover: #0F2C1F; --color-ok: #3D7A55; --color-warn: #9A5B13; --color-bad: #A3452F; --color-ink-muted: #6B706A; --op-panel-solid: #FFFFFF; }
+.op-look:has(.op-rail) .op-keep-light { --op-well: var(--color-page); --color-paid-fill: #CFE8D6; --color-owes-fill: #F7E1B5; --color-bad-fill: #F4CFC6; --color-pine: #173B2A; --color-pine-hover: #0F2C1F; --color-ok: #3D7A55; --color-warn: #9A5B13; --color-bad: #A3452F; --color-ink-muted: #6B706A; --op-panel-solid: #FFFFFF; }
 .op-look:has(.op-rail) .tabular-nums, .op-look:has(.op-rail) table { font-variant-numeric: tabular-nums; }
 /* The logo pair: the pine lockup in light, the cream one in charcoal. */
 .op-look .op-dark-only { display: none; }
@@ -177,6 +181,7 @@ body {
   --color-fairway: #3BAA6B;
   --op-panel: rgb(44 46 44 / .55); --op-panel-solid: #2A2B2A; --op-rail-glass: rgb(30 31 30 / .50); --op-edge: rgb(255 255 255 / .09);
   --op-wv1: rgb(160 166 162 / .15); --op-wv2: rgb(130 136 132 / .10); --op-wv3: rgb(215 220 216 / .08);
+  --op-well: rgb(255 255 255 / .05);
   --op-brand-green: #4CC183;
   --op-heat0: rgb(255 255 255 / .05); --op-heat-ink3: #161716; --op-heat-ink4: #161716; --op-rain: #7DB8FF;
 }
@@ -225,6 +230,9 @@ body {
 }
 .op-look[data-theme="dark"]:has(.op-rail) .bg-white.shadow-card:not(.op-tab) { box-shadow: 0 0 0 1px var(--op-edge), 0 1px 0 rgb(255 255 255 / .06) inset, 0 10px 30px rgb(0 0 0 / .32); }
 .op-look:has(.op-rail) .op-home .bg-white.shadow-card:not([role="radio"]) { border-radius: 14px; } /* HOME-3: Home's panels, as the mockup */
+/* LIGHT-PARITY: a well inside a frosted panel (a search box, a tile's picture, a stepper) is frosted too — white in
+   Light, a faint lift in Charcoal (the mockups' --hover) — never the page's grey showing through as a flat block. */
+.op-look:has(.op-rail) .bg-white.shadow-card .bg-page { background-color: var(--op-well); }
 .op-look:has(.op-rail) .op-rail { background-color: var(--op-rail-glass); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
 .op-look:has(.op-rail) .op-tab { transition: transform .18s ease, background-color .18s ease, box-shadow .18s ease, color .18s ease; }
 .op-look:has(.op-rail) .op-tab:not([aria-current]):hover {
@@ -236,11 +244,16 @@ body {
 .op-look:has(.op-rail) .fixed.inset-0 .bg-white.shadow-card,
 .op-look:has(.op-rail) .fixed.bg-white.shadow-card,
 .op-look:has(.op-rail) .op-keep-light .bg-white.shadow-card { background-color: var(--color-white); -webkit-backdrop-filter: none; backdrop-filter: none; }
+/* TT-CARD (Cam 2026-11-12 mockup): the time card beside the sheet on a laptop is a frosted card like the others, in both
+   looks — it has no backdrop, so the sheet stays readable around it. On a phone it is a solid sheet over a backdrop. */
+@media screen and (min-width: 768px) {
+  .op-look:has(.op-rail) .fixed .tt-card.bg-white.shadow-card { background-color: var(--op-panel); -webkit-backdrop-filter: blur(22px) saturate(1.2); backdrop-filter: blur(22px) saturate(1.2); }
+}
 }
 @media screen and (prefers-reduced-motion: reduce) { .op-look:has(.op-rail) .op-tab { transition: none; } .op-look:has(.op-rail) .op-tab:not([aria-current]):hover { transform: none; } }
 @media screen and (prefers-reduced-transparency: reduce) {
   .op-look:has(.op-rail) .op-waves { display: none; }
-  .op-look:has(.op-rail) .bg-white.shadow-card:not(.op-tab) { background-color: var(--op-panel-solid); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .op-look:has(.op-rail) .bg-white.shadow-card:not(.op-tab), .op-look:has(.op-rail) .fixed .tt-card.bg-white.shadow-card { background-color: var(--op-panel-solid); -webkit-backdrop-filter: none; backdrop-filter: none; }
   .op-look:has(.op-rail) .op-rail { background-color: var(--color-rail); -webkit-backdrop-filter: none; backdrop-filter: none; }
 }
 

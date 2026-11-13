@@ -10118,7 +10118,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 2286,
+      "lines": 2287,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -13341,7 +13341,7 @@
     },
     {
       "path": "src/components/dashboard/TeeSheetRows.tsx",
-      "lines": 307,
+      "lines": 309,
       "purpose": "DENSE-4 (DENSE_UI_SPEC D1, Cam 2026-10-27:",
       "brain": [],
       "exports": [
@@ -13356,6 +13356,10 @@
         {
           "name": "default (TeeSheetRows)",
           "kind": "component"
+        },
+        {
+          "name": "EDGE",
+          "kind": "const"
         },
         {
           "name": "FILL",

@@ -322,7 +322,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/courses/[slug]/account/accept-invite` | golfer | entry | page | `src/app/courses/[slug]/account/accept-invite/page.tsx` | 144 |
 | `/courses/[slug]/info` | public | public | page | `src/app/courses/[slug]/info/page.tsx` | 145 |
 | `/courses/[slug]/member` | member | **NONE FOUND** | page | `src/app/courses/[slug]/member/page.tsx` | 875 |
-| `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 2286 |
+| `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 2287 |
 | `/dashboard/2fa` | operator | entry | page | `src/app/dashboard/2fa/page.tsx` | 110 |
 | `/dashboard/analytics` | operator | middleware | page | `src/app/dashboard/analytics/page.tsx` | 821 |
 | `/dashboard/cancellations` | operator | middleware | page | `src/app/dashboard/cancellations/page.tsx` | 17 |
@@ -677,7 +677,7 @@ Sorted the same way.
 | `src/components/dashboard/settings/FinishSetup.tsx` | 2 | 68 | Settings rework (Cam 2026-10-19: | `FinishSetup`, `SetupItem` |
 | `src/components/dashboard/shop/ShopMenu.tsx` | 2 | 55 | Pro shop (Cam 2026-11-12, approved mockups): | `MenuItem`, `ShopMenu` |
 | `src/components/dashboard/shop/ShopReceiptBody.tsx` | 2 | 39 | RECEIPT-3: | `ShopReceiptBody` |
-| `src/components/dashboard/TeeSheetRows.tsx` | 2 | 307 | DENSE-4 (DENSE_UI_SPEC D1, Cam 2026-10-27: | `BoardGroup`, `BoardSlot`, `default (TeeSheetRows)`, `FILL`, `groupTags`, `groupTone`, `isMemberRate`, `rateWords` +1 more |
+| `src/components/dashboard/TeeSheetRows.tsx` | 2 | 309 | DENSE-4 (DENSE_UI_SPEC D1, Cam 2026-10-27: | `BoardGroup`, `BoardSlot`, `default (TeeSheetRows)`, `EDGE`, `FILL`, `groupTags`, `groupTone`, `isMemberRate` +2 more |
 | `src/components/EmptyState.tsx` | 2 | 22 |  | `EmptyState` |
 | `src/components/golfer/CourseFrame.tsx` | 2 | 153 |  | `CourseFooter`, `CourseHeader`, `FrameCourse`, `TYPE_LABELS` |
 | `src/components/home/ProductShot.tsx` | 2 | 16 |  | `default (ProductShot)` |
