@@ -1,10 +1,10 @@
 'use client';
-// MSG-1 (Cam 2026-11-09, his notes on the Messages tab): say 48 hours, not "one business day"; say they can email
+// MSG-1 (Cam 2026-11-09, his notes on the Messages tab): say 2 business days (SUPPORT, Cam 2026-11-12; was 48 hours), not "one business day"; say they can email
 // instead; send them to the assistant if they need it now (with ready questions); a formal "Your ticket has been
 // created" once a message is sent; a countdown to when we'll reply; no Ctrl/Cmd+Enter; tidier layout and boxes.
 // A "ticket" is a course's message that's still waiting on GreenReserve: its reference is the message's own
-// (last 6 of its id) and it's answered by the next reply from us. Replies are due 48 hours after the first message
-// still waiting (REPLY_HOURS, lib/support-ticket) — a promise to the course.
+// (last 6 of its id) and it's answered by the next reply from us. Replies are due 2 business days after the first message
+// still waiting (REPLY_PROMISE, 2 business days — lib/support-ticket) — a promise to the course.
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import OperatorSidebar from '@/components/OperatorSidebar';
@@ -15,7 +15,7 @@ import { formatStamp as fmtFull } from '@/lib/format';
 import { Card } from '@/components/ui/Card';
 import { ADMIN_EMAIL } from '@/lib/contact';
 import { askBirdie, useBirdieReady } from '@/lib/birdie/ask';
-import { REPLY_HOURS, waitingSince, ticketRef, dueIn } from '@/lib/support-ticket';
+import { REPLY_PROMISE, replyDueAt, waitingSince, ticketRef, dueIn } from '@/lib/support-ticket';
 
 interface MessageItem {
   id: string; senderType: 'admin' | 'operator'; senderName: string;
@@ -93,8 +93,8 @@ function MessagesContent() {
       const t = await loadThread();
       const since = t ? waitingSince(t.messages) : null;
       const mine = t?.messages.filter(m => m.senderType === 'operator').at(-1);
-      // A ticket already past its 48 hours never shows a reply time in the past.
-      if (since && mine) setCreated({ ref: ticketRef(since.id), due: dueIn(since.createdAt, Date.now()).overdue ? 'any moment now' : `by ${new Date(Date.parse(since.createdAt) + REPLY_HOURS * 3600_000).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}` });
+      // A ticket already past its 2 business days never shows a reply time in the past.
+      if (since && mine) setCreated({ ref: ticketRef(since.id), due: dueIn(since.createdAt, Date.now()).overdue ? 'any moment now' : `by ${replyDueAt(since.createdAt).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}` });
     } else toast(r.error === 'Network error — check your connection and try again.' ? 'The message did not send — check your connection and try again.' : r.error);
     setSending(false);
   }
@@ -121,7 +121,7 @@ function MessagesContent() {
                 </>
               ) : (
                 <>
-                  <p className="text-[20px] font-semibold text-ink">Within {REPLY_HOURS} hours</p>
+                  <p className="text-[20px] font-semibold text-ink">Within {REPLY_PROMISE}</p>
                   <p className="text-[12.5px] text-ink-muted">{loadError ? 'Couldn’t check your messages' : loading ? 'Checking…' : 'Nothing waiting on us'}</p>
                 </>
               )}
@@ -129,7 +129,7 @@ function MessagesContent() {
             <Card className="px-4 py-3">
               <p className="text-[12.5px] text-ink-muted">Prefer email?</p>
               <a href={`mailto:${ADMIN_EMAIL}`} className="block mt-0.5 text-[15px] font-semibold text-pine hover:underline underline-offset-4 break-all">{ADMIN_EMAIL}</a>
-              <p className="text-[12.5px] text-ink-muted">Same team, same {REPLY_HOURS} hours</p>
+              <p className="text-[12.5px] text-ink-muted">Same team, same {REPLY_PROMISE}</p>
             </Card>
             <Card className="px-4 py-3">
               <p className="text-[12.5px] text-ink-muted">Need it now?</p>
@@ -174,7 +174,7 @@ function MessagesContent() {
             <h2 className="text-[15px] font-semibold text-ink mb-3">Your conversation with GreenReserve</h2>
             {loadError && <LoadError message={loadError} onRetry={loadThread} />}
             {loading && <p className="py-6 text-center text-ink-muted text-sm">Loading…</p>}
-            {!loading && !loadError && messages.length === 0 && <p className="py-6 text-center text-[13.5px] text-ink-soft">No messages yet. Write below and we’ll reply within {REPLY_HOURS} hours.</p>}
+            {!loading && !loadError && messages.length === 0 && <p className="py-6 text-center text-[13.5px] text-ink-soft">No messages yet. Write below and we’ll reply within {REPLY_PROMISE}.</p>}
             <div className="space-y-4">
               {messages.map(msg => {
                 const isOperator = msg.senderType === 'operator';

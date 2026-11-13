@@ -37,7 +37,9 @@ export async function buildActionQueue(now = new Date()): Promise<{ rows: Action
     prisma.course.count({ where: { active: false, archivedAt: null, createdAt: { lt: twoDaysAgo }, ...REAL_COURSE } }),
     prisma.messageThread.findMany({
       where: { closedAt: null, ...ON_REAL_COURSE }, // MP-7b: a closed conversation is not unanswered
-      select: { id: true, courseId: true, course: { select: { name: true } }, messages: { orderBy: { createdAt: 'desc' }, take: 6, select: { senderType: true, senderName: true, createdAt: true, isBroadcast: true } } },
+      // SUPPORT (final review): per chat, so a reply in one chat never hides another left unanswered — enough recent
+      // messages that a quiet chat isn't pushed out by a busy one.
+      select: { id: true, courseId: true, course: { select: { name: true } }, messages: { orderBy: { createdAt: 'desc' }, take: 100, select: { senderType: true, senderName: true, createdAt: true, isBroadcast: true, chatId: true } } },
       take: 200, orderBy: { updatedAt: 'desc' },
     }),
     prisma.courseInquiry.findMany({
@@ -88,16 +90,26 @@ export async function buildActionQueue(now = new Date()): Promise<{ rows: Action
     ageDays: days(now, c.createdAt), actionLabel: 'Review', href: `/admin/courses?courseId=${c.id}&tab=setup`,
   }));
   // MP-7a: lib/thread-signal is THE derivation — Messages sorts from the same function.
-  const threadRows: ActionRow[] = threads
-    .map(t => ({ t, signal: threadSignal(t.messages, now), last: t.messages.find(m => !m.isBroadcast) }))
-    .filter(x => x.signal.overdue && x.last)
-    .map(({ t, signal, last }) => ({
+  // SUPPORT: each chat is judged on its own (null chatId = the course's earlier messages); a course gets one row when
+  // any of its chats is past the reply promise — the one waiting longest.
+  const threadRows: ActionRow[] = threads.flatMap(t => {
+    const byChat = new Map<string | null, typeof t.messages>();
+    for (const m of t.messages) { const k = m.chatId ?? null; (byChat.get(k) ?? byChat.set(k, []).get(k)!).push(m); }
+    const worst = [...byChat.entries()]
+      .map(([chatId, ms]) => ({ chatId, signal: threadSignal(ms, now), last: ms.find(m => !m.isBroadcast) }))
+      .filter(x => x.signal.overdue && x.last)
+      .sort((a, b) => (a.signal.dueAt?.getTime() ?? 0) - (b.signal.dueAt?.getTime() ?? 0))[0];
+    if (!worst) return [];
+    return [{
       id: `msg-${t.id}`, courseId: t.courseId, who: t.course.name, severity: 'warn' as const,
-      why: `Message from ${last!.senderName}, unanswered`,
+      why: `Message from ${worst.last!.senderName}, unanswered`,
       doThis: 'They’re waiting on a reply — send a quick nudge or a full response.',
-      ageDays: signal.ageDays, actionLabel: 'Reply', href: `/admin/messages?courseId=${t.courseId}`,
+      ageDays: worst.signal.ageDays, actionLabel: 'Reply',
+      // A chat opens on Course support; a course's earlier messages on Messages, as before.
+      href: worst.chatId ? `/admin/support?id=${worst.chatId}` : `/admin/messages?courseId=${t.courseId}`,
       fire: { kind: 'send_nudge' as const, courseId: t.courseId },
-    }));
+    }];
+  });
   // CS-1 §4: check-in calls due — never a second row for a course already red.
   const alreadyRed = new Set<string>([...noStripe.map(c => c.id), ...failedByCourse.keys()]);
   const checkInRows: ActionRow[] = buildCourseCheckInRows(activeCourses, now).filter(r => !alreadyRed.has(r.id.slice(3))).map(r => ({ ...r, courseId: r.id.slice(3), severity: 'warn' }));

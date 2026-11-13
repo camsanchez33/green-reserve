@@ -1,8 +1,18 @@
 // MSG-1 (Cam 2026-11-09): a course's message to GreenReserve is a ticket until we reply. Pure, browser-safe.
-/** How long GreenReserve has to reply (Cam: "take away one business day — say 48 hours"). */
-export const REPLY_HOURS = 48;
+// SUPPORT (Cam 2026-11-12, via Build): the reply promise is 2 business days (Eastern, weekends skipped), reversing
+// MSG-1's 48 hours. ONE definition, lib/business-days; the course's page, the admin overdue check and every
+// support email read it from here.
+import { addBusinessDays } from './business-days';
 
-type Msg = { id: string; senderType: string; createdAt: string; isBroadcast?: boolean };
+/** How long GreenReserve has to reply, in business days. */
+export const REPLY_BUSINESS_DAYS = 2;
+/** The promise in words, for every page and email that states it. */
+export const REPLY_PROMISE = '2 business days';
+
+/** When the reply to a message sent at `sentAt` is due. */
+export const replyDueAt = (sentAt: Date | string): Date => addBusinessDays(new Date(sentAt), REPLY_BUSINESS_DAYS);
+
+type Msg = { id: string; senderType: string; createdAt: string | Date; isBroadcast?: boolean };
 
 /** The first of the course's messages still waiting on a reply (after our last direct reply), or null. */
 export function waitingSince<T extends Msg>(messages: T[]): T | null {
@@ -15,8 +25,8 @@ export function waitingSince<T extends Msg>(messages: T[]): T | null {
 export const ticketRef = (id: string) => id.slice(-6).toUpperCase();
 
 /** Time left before the reply is due: "31h 12m", "45m"; overdue once it's past. */
-export function dueIn(createdAt: string, now: number): { label: string; overdue: boolean } {
-  const ms = Date.parse(createdAt) + REPLY_HOURS * 3600_000 - now;
+export function dueIn(createdAt: string | Date, now: number): { label: string; overdue: boolean } {
+  const ms = replyDueAt(createdAt).getTime() - now;
   if (!Number.isFinite(ms) || ms <= 0) return { label: '0m', overdue: true };
   const mins = Math.floor(ms / 60_000);
   const h = Math.floor(mins / 60), m = mins % 60;

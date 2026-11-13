@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 729,
-    "routes": 311,
-    "libs": 260,
-    "models": 76,
+    "files": 736,
+    "routes": 316,
+    "libs": 262,
+    "models": 77,
     "orphans": 11,
     "ungatedRoutes": 3
   },
@@ -4000,6 +4000,82 @@
         "@/lib/platform-stripe",
         "@/lib/prisma",
         "@/lib/stripe-match",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/admin/support/[id]/reply/route.ts",
+      "lines": 23,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/support/[id]/reply",
+      "kind": "api",
+      "methods": [
+        "POST"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-audit",
+        "@/lib/admin-session",
+        "@/lib/support-chats",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/admin/support/[id]/route.ts",
+      "lines": 16,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/support/[id]",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-session",
+        "@/lib/support-chats",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/admin/support/route.ts",
+      "lines": 14,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/support",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-session",
+        "@/lib/support-chats",
         "next/server"
       ],
       "usedBy": []
@@ -8609,6 +8685,66 @@
         "@/lib/prisma",
         "@/lib/session",
         "@/lib/stripe",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/operator/support/[id]/route.ts",
+      "lines": 31,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/support/[id]",
+      "kind": "api",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/session",
+        "@/lib/support-chats",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/operator/support/route.ts",
+      "lines": 27,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/support",
+      "kind": "api",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/session",
+        "@/lib/support-chats",
         "next/server"
       ],
       "usedBy": []
@@ -15084,7 +15220,7 @@
     },
     {
       "path": "src/lib/admin-action-queue.ts",
-      "lines": 116,
+      "lines": 128,
       "purpose": "AW-4 (Cam 2026-10-21):",
       "brain": [],
       "exports": [
@@ -15355,6 +15491,7 @@
         "src/app/api/admin/schedule/route.ts",
         "src/app/api/admin/send-golive-reminder/route.ts",
         "src/app/api/admin/sentry-test/route.ts",
+        "src/app/api/admin/support/[id]/reply/route.ts",
         "src/app/api/admin/tee-sheet/route.ts",
         "src/app/api/admin/test-course/route.ts",
         "src/app/api/admin/two-factor/route.ts",
@@ -15610,6 +15747,7 @@
         "src/lib/admin-course-page.ts",
         "src/lib/admin-home.ts",
         "src/lib/admin-today.ts",
+        "src/lib/business-days.ts",
         "src/lib/expenses.ts",
         "src/lib/finance-period.ts",
         "src/lib/revenue-period.ts"
@@ -15995,6 +16133,9 @@
         "src/app/api/admin/session/route.ts",
         "src/app/api/admin/set-password/route.ts",
         "src/app/api/admin/stripe-match/route.ts",
+        "src/app/api/admin/support/[id]/reply/route.ts",
+        "src/app/api/admin/support/[id]/route.ts",
+        "src/app/api/admin/support/route.ts",
         "src/app/api/admin/system/route.ts",
         "src/app/api/admin/tee-sheet/route.ts",
         "src/app/api/admin/test-course/route.ts",
@@ -16566,7 +16707,8 @@
       ],
       "usedBy": [
         "src/app/api/operator/announcements/dismiss/route.ts",
-        "src/app/api/operator/announcements/route.ts"
+        "src/app/api/operator/announcements/route.ts",
+        "src/lib/support-chats.ts"
       ]
     },
     {
@@ -17594,6 +17736,29 @@
       "imports": [],
       "usedBy": [
         "src/app/api/admin/business/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/business-days.ts",
+      "lines": 42,
+      "purpose": "SUPPORT (Cam 2026-11-12, via Build:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "addBusinessDays",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./admin-day"
+      ],
+      "usedBy": [
+        "src/lib/support-ticket.ts"
       ]
     },
     {
@@ -18763,6 +18928,7 @@
         "src/lib/email.ts",
         "src/lib/sms-consent-copy.ts",
         "src/lib/submit-change-request.ts",
+        "src/lib/support-chats.ts",
         "src/lib/weather.ts"
       ]
     },
@@ -21130,6 +21296,7 @@
         "src/lib/sample-data.ts",
         "src/lib/staff-refund.ts",
         "src/lib/submit-change-request.ts",
+        "src/lib/support-chats.ts",
         "src/lib/two-factor.ts",
         "src/lib/weather-cancel.ts"
       ]
@@ -25365,6 +25532,7 @@
         "src/lib/split-booking-db.ts",
         "src/lib/staff-refund.ts",
         "src/lib/submit-change-request.ts",
+        "src/lib/support-chats.ts",
         "src/lib/tee-sheet-engine.ts",
         "src/lib/tee-time-close.ts",
         "src/lib/tee-time-seats.ts",
@@ -27179,6 +27347,8 @@
         "src/app/api/operator/stripe/connect/route.ts",
         "src/app/api/operator/stripe/dashboard-link/route.ts",
         "src/app/api/operator/stripe/payouts/route.ts",
+        "src/app/api/operator/support/[id]/route.ts",
+        "src/app/api/operator/support/route.ts",
         "src/app/api/operator/tee-sets/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/operator/tiers/route.ts",
@@ -28710,8 +28880,115 @@
       ]
     },
     {
+      "path": "src/lib/support-chats.ts",
+      "lines": 328,
+      "purpose": "SUPPORT (Cam 2026-11-12, ADMIN_REDO_SPEC \"Course dashboard Support\" + \"Admin Course support\"):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "addCourseMessage",
+          "kind": "fn"
+        },
+        {
+          "name": "AdminMessage",
+          "kind": "type"
+        },
+        {
+          "name": "adminReply",
+          "kind": "fn"
+        },
+        {
+          "name": "AdminThread",
+          "kind": "type"
+        },
+        {
+          "name": "adminThreads",
+          "kind": "fn"
+        },
+        {
+          "name": "ANNOUNCEMENTS_CHAT_ID",
+          "kind": "const"
+        },
+        {
+          "name": "ChatState",
+          "kind": "type"
+        },
+        {
+          "name": "chatSummary",
+          "kind": "fn"
+        },
+        {
+          "name": "CourseChat",
+          "kind": "type"
+        },
+        {
+          "name": "courseChats",
+          "kind": "fn"
+        },
+        {
+          "name": "CourseMessage",
+          "kind": "type"
+        },
+        {
+          "name": "courseSender",
+          "kind": "fn"
+        },
+        {
+          "name": "MAX_MESSAGE",
+          "kind": "const"
+        },
+        {
+          "name": "messageText",
+          "kind": "fn"
+        },
+        {
+          "name": "openAdminChat",
+          "kind": "fn"
+        },
+        {
+          "name": "openCourseChat",
+          "kind": "fn"
+        },
+        {
+          "name": "Row",
+          "kind": "type"
+        },
+        {
+          "name": "Sender",
+          "kind": "type"
+        },
+        {
+          "name": "startCourseChat",
+          "kind": "fn"
+        },
+        {
+          "name": "subjectFrom",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./announcement-audience",
+        "./contact",
+        "./email",
+        "./prisma",
+        "./support-ticket"
+      ],
+      "usedBy": [
+        "src/app/api/admin/support/[id]/reply/route.ts",
+        "src/app/api/admin/support/[id]/route.ts",
+        "src/app/api/admin/support/route.ts",
+        "src/app/api/operator/support/[id]/route.ts",
+        "src/app/api/operator/support/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/support-ticket.ts",
-      "lines": 25,
+      "lines": 35,
       "purpose": "MSG-1 (Cam 2026-11-09):",
       "brain": [],
       "exports": [
@@ -28720,8 +28997,16 @@
           "kind": "fn"
         },
         {
-          "name": "REPLY_HOURS",
+          "name": "REPLY_BUSINESS_DAYS",
           "kind": "const"
+        },
+        {
+          "name": "REPLY_PROMISE",
+          "kind": "const"
+        },
+        {
+          "name": "replyDueAt",
+          "kind": "fn"
         },
         {
           "name": "ticketRef",
@@ -28737,9 +29022,13 @@
       "methods": [],
       "auth": null,
       "guard": null,
-      "imports": [],
+      "imports": [
+        "./business-days"
+      ],
       "usedBy": [
-        "src/app/dashboard/messages/page.tsx"
+        "src/app/dashboard/messages/page.tsx",
+        "src/lib/support-chats.ts",
+        "src/lib/thread-signal.ts"
       ]
     },
     {
@@ -29080,7 +29369,7 @@
     },
     {
       "path": "src/lib/thread-signal.ts",
-      "lines": 52,
+      "lines": 64,
       "purpose": "MP-7a.",
       "brain": [],
       "exports": [
@@ -29110,7 +29399,9 @@
       "methods": [],
       "auth": null,
       "guard": null,
-      "imports": [],
+      "imports": [
+        "./support-ticket"
+      ],
       "usedBy": [
         "src/app/admin/messages/page.tsx",
         "src/app/api/admin/messages/route.ts",
@@ -30152,7 +30443,8 @@
       "readers": [
         "src/app/api/admin/broadcasts/route.ts",
         "src/app/api/operator/announcements/dismiss/route.ts",
-        "src/app/api/operator/announcements/route.ts"
+        "src/app/api/operator/announcements/route.ts",
+        "src/lib/support-chats.ts"
       ]
     },
     {
@@ -30180,7 +30472,8 @@
         }
       ],
       "writers": [
-        "src/app/api/operator/announcements/dismiss/route.ts"
+        "src/app/api/operator/announcements/dismiss/route.ts",
+        "src/lib/support-chats.ts"
       ],
       "readers": []
     },
@@ -31729,6 +32022,7 @@
         "src/lib/shop-report.ts",
         "src/lib/shop-sales.ts",
         "src/lib/submit-change-request.ts",
+        "src/lib/support-chats.ts",
         "src/lib/tee-sheet-engine.ts"
       ]
     },
@@ -33021,7 +33315,8 @@
         "src/app/api/operator/staff/route.ts",
         "src/app/api/preview/send/route.ts",
         "src/lib/security-events.ts",
-        "src/lib/session.ts"
+        "src/lib/session.ts",
+        "src/lib/support-chats.ts"
       ]
     },
     {
@@ -33327,7 +33622,8 @@
         "src/app/api/operator/staff/route.ts",
         "src/lib/lifecycle.ts",
         "src/lib/security-events.ts",
-        "src/lib/session.ts"
+        "src/lib/session.ts",
+        "src/lib/support-chats.ts"
       ]
     },
     {
@@ -34082,12 +34378,21 @@
         {
           "name": "thread",
           "type": "MessageThread"
+        },
+        {
+          "name": "chatId",
+          "type": "String?"
+        },
+        {
+          "name": "chat",
+          "type": "SupportChat?"
         }
       ],
       "writers": [
         "src/app/api/admin/messages/route.ts",
         "src/app/api/operator/messages/route.ts",
-        "src/lib/submit-change-request.ts"
+        "src/lib/submit-change-request.ts",
+        "src/lib/support-chats.ts"
       ],
       "readers": [
         "src/app/api/admin/course-detail/route.ts",
@@ -34095,7 +34400,8 @@
         "src/app/api/admin/nav-badges/route.ts",
         "src/app/api/operator/messages/route.ts",
         "src/lib/course-timeline.ts",
-        "src/lib/operator-home.ts"
+        "src/lib/operator-home.ts",
+        "src/lib/support-chats.ts"
       ]
     },
     {
@@ -34136,13 +34442,18 @@
         {
           "name": "messages",
           "type": "Message[]"
+        },
+        {
+          "name": "chats",
+          "type": "SupportChat[]"
         }
       ],
       "writers": [
         "src/app/api/admin/messages/route.ts",
         "src/app/api/operator/messages/route.ts",
         "src/lib/data-reset.ts",
-        "src/lib/submit-change-request.ts"
+        "src/lib/submit-change-request.ts",
+        "src/lib/support-chats.ts"
       ],
       "readers": [
         "src/app/api/admin/messages/route.ts",
@@ -34150,7 +34461,8 @@
         "src/app/api/operator/messages/route.ts",
         "src/lib/admin-action-queue.ts",
         "src/lib/data-reset.ts",
-        "src/lib/submit-change-request.ts"
+        "src/lib/submit-change-request.ts",
+        "src/lib/support-chats.ts"
       ]
     },
     {
@@ -35712,6 +36024,47 @@
       "readers": [
         "src/app/api/operator/staff/route.ts",
         "src/lib/course-timeline.ts"
+      ]
+    },
+    {
+      "name": "SupportChat",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "threadId",
+          "type": "String"
+        },
+        {
+          "name": "thread",
+          "type": "MessageThread"
+        },
+        {
+          "name": "courseId",
+          "type": "String"
+        },
+        {
+          "name": "subject",
+          "type": "String"
+        },
+        {
+          "name": "lastMessageAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "messages",
+          "type": "Message[]"
+        }
+      ],
+      "writers": [],
+      "readers": [
+        "src/lib/support-chats.ts"
       ]
     },
     {

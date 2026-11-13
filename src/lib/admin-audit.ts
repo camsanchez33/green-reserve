@@ -37,7 +37,7 @@ export const ACTION_LABELS: Record<string, string> = {
   employee_create: 'Add an employee', employee_role: 'Change an employee’s role', employee_areas: 'Change what an employee can open', employee_deactivate: 'Turn off an employee’s access',
   employee_reactivate: 'Turn an employee’s access back on', employee_reset_password: 'Reset an employee’s password',
   verify_operator: 'Verify an operator’s email', course_archive: 'Archive a course', course_unarchive: 'Restore a course',
-  course_offline: 'Take a course offline', inquiry_delete: 'Delete an inquiry', inquiry_expected_launch: 'Set when a course expects to go live', inquiry_add_touch: 'Log an outreach touch', expense_delete: 'Delete an expense',
+  course_offline: 'Take a course offline', inquiry_delete: 'Delete an inquiry', inquiry_expected_launch: 'Set when a course expects to go live', inquiry_add_touch: 'Log an outreach touch', support_reply: 'Reply to a course in Support', expense_delete: 'Delete an expense',
   company_document_delete: 'Delete a company document', goal_delete: 'Remove a goal', course_group_delete: 'Delete a course group',
   schedule_delete: 'Delete a schedule',
   data_wipe: 'Clear all test data before launch', course_reset: 'Reset a test course', course_test_mark: 'Mark a course as a test course', course_sample_fill: 'Fill a test course with sample data',
