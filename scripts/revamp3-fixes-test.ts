@@ -22,7 +22,7 @@ ok('fix 5: a booked time still to come takes the new price for its open spots', 
 
 // Fix 9: an oversold count says so; a code on two items is named at the register, never a silent nothing.
 const item = (id: string, sku: string) => ({ id, sku, active: true, parentId: null, name: id, category: '', priceCents: 100, stockCount: null, optionLabel: null, sortOrder: 0, taxCategory: 'general' }) as unknown as FlatItem;
-ok('accuracy pass: an empty shelf is sold out on the Stock card, not low', src('src/components/dashboard/StockTab.tsx').includes('const isLow = (i: TreeItem) => !isOut(i) && sellable(i).some(s => rowOf.get(s.id)?.low);') && src('src/components/dashboard/StockTab.tsx').includes('<StatusDot status="bad" label="Sold out" />'));
+ok('accuracy pass: an empty shelf is sold out on the Stock card, not low', src('src/components/dashboard/StockTab.tsx').includes('const isLow = (i: TreeItem) => !isOut(i) && sellable(i).some(s => rowOf.get(s.id)?.low);') && src('src/components/dashboard/StockTab.tsx').includes("if (i.stockCount <= 0) return { text: 'Sold out', tone: 'bad' };"));
 ok('fix 9: below zero reads as oversold', stockWords(-2) === '2 oversold' && stockWords(0) === 'sold out' && stockWords(3) === '3 left');
 ok('fix 9: two items with one code are both found (the register names it)', skuHits([item('a', 'X1'), item('b', 'x1')], 'X1').length === 2 && bySku([item('a', 'X1'), item('b', 'x1')], 'X1') === null);
 ok('fix 9: the register reports a shared code', src('src/app/dashboard/shop/page.tsx').includes('skuHits(items ?? [], code).length > 1'));

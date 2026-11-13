@@ -21,7 +21,8 @@ import OperatorSidebar from '@/components/OperatorSidebar';
 import { StaffNotice } from '@/components/dashboard/StaffNotice';
 import { RegisterClose } from '@/components/dashboard/RegisterClose';
 import { StockTab } from '@/components/dashboard/StockTab';
-import { CalendarDays } from 'lucide-react';
+import { CalendarDays, Search } from 'lucide-react';
+import { ShopMenu } from '@/components/dashboard/shop/ShopMenu';
 import { OpenRegister } from '@/components/dashboard/OpenRegister';
 import { SaleReceiptPanel } from '@/components/dashboard/shop/SaleReceiptPanel';
 import { SlidingTabs } from '@/components/dashboard/SlidingTabs';
@@ -45,27 +46,38 @@ type Sale = {
   roundsCents: number;
   /** POS-3 R3: sent as a pay link (else rung up here — cash or the card reader). */
   link: boolean;
+  /** Cam 2026-11-12: the course's running sale number (#1047); null on sales made before numbers began. */
+  number?: number | null;
 };
 type Reader = { id: string; label: string; online: boolean; simulated: boolean };
 /** A sale on the card reader: waiting for the card, or what happened. */
 type ReaderSale = { sale: Sale; readerId: string; state: 'waiting' | 'declined' | 'cancelled' | 'error'; message: string };
 type Custom = { key: string; name: string; priceCents: number; quantity: number };
-type SalesShow = 'all' | 'fix' | 'card' | 'cash' | 'account' | 'refunded';
-/** POS-6: what a sale counts as on the Sales tab's filter. "Needs fixing" = not paid yet, or a refund Stripe hasn't confirmed. */
-function salesShowOf(s: Pick<Sale, 'status' | 'refundedCents' | 'refunds'>): SalesShow[] {
+// Cam 2026-11-12 (approved Sales; Build's decision 7): one Filter — how it was paid, then where it stands — plus the order.
+type SalesShow = 'all' | 'cash' | 'reader' | 'link' | 'account' | 'paid' | 'waiting' | 'fix' | 'refunded' | 'voided';
+/** What a sale counts as on the Sales tab's filter. "To fix" = a refund Stripe hasn't confirmed. */
+function salesShowOf(s: Pick<Sale, 'status' | 'refundedCents' | 'refunds' | 'link'>): SalesShow[] {
   const out: SalesShow[] = ['all'];
-  if (s.status === 'open' || s.status === 'paying' || s.refunds.some(r => r.status === 'pending')) out.push('fix');
-  if (s.status === 'paid_card') out.push('card');
   if (s.status === 'paid_cash') out.push('cash');
+  if (s.status === 'paid_card' && !s.link) out.push('reader');
+  if (s.link) out.push('link');
   if (s.status === 'paid_account') out.push('account');
+  if (s.status === 'paid_cash' || s.status === 'paid_card' || s.status === 'paid_account') out.push('paid');
+  if (s.status === 'open' || s.status === 'paying') out.push('waiting');
+  if (s.refunds.some(r => r.status === 'pending')) out.push('fix');
   if (s.refundedCents > 0) out.push('refunded');
+  if (s.status === 'void') out.push('voided');
   return out;
 }
-const SALES_SHOW: [SalesShow, string][] = [['all', 'All'], ['fix', 'To fix'], ['card', 'Card'], ['cash', 'Cash'], ['account', 'On account'], ['refunded', 'Refunded']];
+const SALES_HOW: [SalesShow, string][] = [['all', 'All'], ['cash', 'Cash'], ['reader', 'Card reader'], ['link', 'Pay link'], ['account', 'On account']];
+const SALES_STATE: [SalesShow, string][] = [['paid', 'Paid'], ['waiting', 'Waiting'], ['fix', 'To fix'], ['refunded', 'Refunded'], ['voided', 'Voided']];
+/** A sale's number as staff see it: the running number, or the receipt # printed on older receipts. */
+const saleNo = (s: Pick<Sale, 'id' | 'number'>) => (s.number != null ? `#${s.number}` : `#${s.id.slice(-8).toUpperCase()}`);
 type Discount = { mode: 'percent' | 'amount'; value: string; note: string };
 type Quote = { key: string; subtotalCents: number; discountCents: number; taxCents: number; totalCents: number; taxCalculationId: string; taxUnavailable?: boolean };
 
 const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
+const initials = (name: string) => name.split(/\s+/).filter(w => /^[A-Za-z0-9]/.test(w)).slice(0, 2).map(w => w[0]).join('').toUpperCase();
 const toCents = (v: string) => { const n = Number(v.replace(/[$,\s]/g, '')); return Number.isFinite(n) && n > 0 ? Math.round(n * 100) : 0; };
 const isPaid = (s: Sale) => s.status === 'paid_cash' || s.status === 'paid_card' || s.status === 'paid_account';
 const LINK = 'text-[12.5px] text-pine font-medium hover:underline disabled:opacity-50';
@@ -81,6 +93,18 @@ const STATUS: Record<string, { label: string; tone: 'ok' | 'warn' | 'neutral' }>
   paying: { label: 'Paying now', tone: 'warn' },
   void: { label: 'Voided', tone: 'neutral' },
 };
+
+/** How a sale reads on the Sales tab (Cam 2026-11-12 mockup): how it was paid, refunded, waiting or voided. */
+function saleState(s: Sale): { label: string; tone: 'ok' | 'warn' | 'neutral' } {
+  const itemsCents = s.totalCents - (s.roundsCents ?? 0);
+  const paidHow = s.status === 'paid_card' ? (s.link ? 'Paid by card' : 'Paid by card reader') : s.status === 'paid_account' ? 'On their account' : s.status === 'paid_cash' ? 'Paid in cash' : '';
+  if (paidHow && itemsCents > 0 && s.refundedCents >= itemsCents) return { label: s.status === 'paid_card' ? 'Refunded to their card' : s.status === 'paid_account' ? 'Credited to their account' : 'Refunded in cash', tone: 'neutral' };
+  if (paidHow) return { label: s.refundedCents > 0 ? `${paidHow} · ${usd(s.refundedCents)} refunded` : paidHow, tone: 'ok' };
+  // A sale rung up for the card reader, not paid yet (declined or cancelled), or on the reader now.
+  if (!s.link && s.status === 'open') return { label: 'Not paid — card reader', tone: 'warn' };
+  if (!s.link && s.status === 'paying') return { label: 'On the card reader', tone: 'warn' };
+  return STATUS[s.status] ?? { label: s.status, tone: 'neutral' };
+}
 
 export default function ShopPage() {
   const access = useDashboardAccess();
@@ -132,6 +156,15 @@ export default function ShopPage() {
   // nicely"): which sales show (how they paid, or what needs fixing) and in what order. Client-side over the list loaded.
   const [salesShow, setSalesShow] = useState<SalesShow>('all');
   const [salesSort, setSalesSort] = useState<'new' | 'old' | 'big'>('new');
+  // The sale open beside the list (none picked = the first one shown).
+  const [salePick, setSalePick] = useState<string | null>(null);
+  // Review 2026-11-12: below a laptop the sale's panel sits under the list — a tap brings it (and its buttons) into view.
+  const saleRef = useRef<HTMLHeadingElement>(null);
+  const showSale = () => {
+    if (typeof window === 'undefined' || !window.matchMedia('(max-width: 1023px)').matches) return;
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    requestAnimationFrame(() => { saleRef.current?.scrollIntoView({ behavior: still ? 'auto' : 'smooth', block: 'start' }); saleRef.current?.focus({ preventScroll: true }); });
+  };
   async function loadHistory(h: { q: string; day: string }) {
     setHist(h); setHistError('');
     if (!h.q.trim() && !h.day) { setHist(null); setHistSales(null); return; }
@@ -186,7 +219,6 @@ export default function ShopPage() {
   const shown = useMemo(() => tree
     .filter(it => matches(it, q) && (!cat || (it.category || 'Other') === cat))
     .sort((a, b) => (a.category || 'Other').localeCompare(b.category || 'Other')), [tree, q, cat]);
-  const withPhotos = shown.some(i => i.photoUrl);
   const inCart = (it: TreeItem) => (it.options.length ? it.options.reduce((s, o) => s + (cart[o.id] ?? 0), 0) : cart[it.id] ?? 0);
   const lines = (items ?? []).filter(i => cart[i.id]).map(i => ({ item: i, quantity: cart[i.id] }));
   const subtotal = lines.reduce((s, l) => s + l.item.priceCents * l.quantity, 0) + customs.reduce((s, c) => s + c.priceCents * c.quantity, 0);
@@ -234,6 +266,8 @@ export default function ShopPage() {
   }
   const addCustom = (key: string, d: number) => setCustoms(cs => cs.map(c => c.key === key ? { ...c, quantity: Math.max(0, Math.min(99, c.quantity + d)) } : c).filter(c => c.quantity > 0));
   const empty = itemsEmpty;
+  // The sale panel shows once something is in it, and while it is being charged or on the reader.
+  const saleOpen = !empty || step !== null || !!onReader;
 
   // A scanner types the code and presses Enter: an exact SKU goes straight into the sale.
   function scan(code: string) {
@@ -420,8 +454,9 @@ export default function ShopPage() {
   // Accuracy (figures audit 2026-11-08): the shop's "today" is what the shop sold — green fees taken in cash on the
   // tee sheet ring through the register (CASH-1) but are counted in the sheet's Paid, so they are left out here
   // (the same rule as Analytics' walk-up shop figure). Refunds on a sale are items only (green fees refund on the booking).
-  const paidTodaySales = (sales ?? []).filter(s => isPaid(s) && paidToday(s.paidAt) && s.totalCents - (s.roundsCents ?? 0) > 0);
-  const todayTotal = paidTodaySales.reduce((t, s) => t + s.totalCents - (s.roundsCents ?? 0) - s.refundedCents, 0);
+  // Build 2026-11-12 (decision 5): "taken" is paid less refunds; the count leaves out voided and still-waiting sales.
+  // Today's list also carries older sales still waiting; only what was paid on the course's day counts for today.
+  const takenOf = (list: Sale[], today: boolean) => { const paid = list.filter(s => isPaid(s) && (!today || paidToday(s.paidAt)) && s.totalCents - (s.roundsCents ?? 0) > 0); return { count: paid.length, cents: paid.reduce((t, s) => t + s.totalCents - (s.roundsCents ?? 0) - s.refundedCents, 0) }; };
   // A sale that changed under the steps (emptied, or the total is being worked out again) goes back to building.
   useEffect(() => { if ((step === 'pay' || step === 'take') && empty && !onReader) setStep(null); }, [step, empty, onReader]);
   const chargeLabel = cashNoQuote ? 'Charge' : `Charge ${usd(due)}`;
@@ -436,18 +471,17 @@ export default function ShopPage() {
         {access.loaded && !canSell && access.can('shop.catalog') ? (
           // POS-6: a login that edits the catalog but doesn't sell gets Stock alone (it used to edit items in Settings).
           <div className="px-4 sm:px-8 py-6">
-            <h1 className="text-[26px] font-bold leading-none text-ink">Stock</h1>
+            <h1 className="font-serif text-[30px] sm:text-[34px] font-semibold leading-none text-ink">Stock</h1>
             <div className="mt-5"><StockTab /></div>
           </div>
         ) : access.loaded && !canSell ? <StaffNotice what="the pro shop" view="shop.sell" /> : (
           <div className="px-4 sm:px-8 py-6">
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-              <h1 className="text-[26px] font-bold leading-none text-ink">Pro shop</h1>
-              <SlidingTabs look="pill" label="Pro shop" value={view} onChange={k => { if (k !== view) { setError(''); setNote(''); } setView(k); }}
+            <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
+              <h1 className="font-serif text-[30px] sm:text-[34px] font-semibold leading-none text-ink">Pro shop</h1>
+              <SlidingTabs look="line" label="Pro shop" value={view} onChange={k => { if (k !== view) { setError(''); setNote(''); } setView(k); }}
                 tabs={[['register', 'Register'], ['sales', 'Sales'],
                   ...((access.can('shop.sell') || access.can('shop.catalog')) ? [['stock', 'Stock'] as const] : []),
                   ...(access.can('shop.close') ? [['close', 'Close out'] as const] : [])] as [typeof view, string][]} />
-              {sales && <p className="sm:ml-auto text-[13px] text-ink-muted tabular-nums">{usd(todayTotal)} today · {paidTodaySales.length} sale{paidTodaySales.length === 1 ? '' : 's'}</p>}
             </div>
 
             {loadError && (
@@ -457,7 +491,9 @@ export default function ShopPage() {
               </div>
             )}
 
-            {view !== 'register' && (error || note) && (
+            {/* Review 2026-11-12: with nothing in the sale the sale panel isn't there, so the register's errors and notes
+                (a pay link that didn't send, a scan that matched nothing, "Took cash instead") show up here instead. */}
+            {(view !== 'register' || !saleOpen) && (error || note) && (
               <div className="mt-4" aria-live="polite">
                 {error && <p className="bg-bad/5 border border-bad/20 rounded-md px-4 py-3 text-[13px] text-bad" role="alert">{error}</p>}
                 {note && <p className="text-[13px] text-ok flex items-center gap-1.5"><StatusDot status="ok" />{note}</p>}
@@ -468,21 +504,25 @@ export default function ShopPage() {
                 it's open (or reopened after a close-out) the register shows only the opening — the server refuses sales too. */}
             {view === 'register' && <div className="mt-5 space-y-3"><RegisterClosedNotice onRefused={regRefused} /><OpenRegister key={regKey} where="register" onStatus={setRegStatus} /></div>}
             {view === 'register' && regStatus === 'open' && (
-            <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
-              <Card className="p-4">
+            // Cam 2026-11-12 (approved Register): with nothing in the sale the items take the whole width; the sale opens
+            // beside them on the first tap (and stays while it is being charged).
+            <div className={'mt-5 grid gap-4 lg:items-start ' + (saleOpen ? 'lg:grid-cols-[minmax(0,1fr)_360px]' : '')}>
+              <Card className="p-4 relative z-10">
                 {!items && !loadError && <p className="text-sm text-ink-muted">Loading your shop…</p>}
                 {items && items.length === 0 && (
                   <p className="text-sm text-ink-soft">No items yet.{(access.can('shop.sell') || access.can('shop.catalog')) && <> <button type="button" onClick={() => setView('stock')} className="text-pine font-medium underline">Add on Stock</button>.</>}</p>
                 )}
                 {tree.length > 0 && (
-                  <div className="space-y-3 mb-4">
-                    <input ref={searchRef} value={q} onChange={e => setQ(e.target.value)} autoFocus
-                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); const t = q.trim(); if (scan(q) || !t) return; if (!tree.some(i => matches(i, q))) noMatch(q); else setNote(''); } }}
-                      placeholder="Find or scan an item" aria-label="Find or scan an item" className={INPUT + ' w-full min-h-[44px]'} />
-                    {categories.length > 1 && <div className="flex flex-wrap gap-1.5" role="group" aria-label="Category">{['', ...categories].map(c => (
-                      <button key={c || 'all'} type="button" onClick={() => setCat(c)} aria-pressed={cat === c}
-                        className={'text-[13px] rounded-[7px] px-3 min-h-[34px] ' + (cat === c ? 'bg-ink text-white font-medium' : 'bg-page text-ink-soft hover:text-ink')}>{c || 'All'}</button>
-                    ))}</div>}
+                  <div className="space-y-2.5 mb-3">
+                    <label className="flex items-center gap-2 bg-page border border-line rounded-[10px] px-3 min-h-[44px] text-ink-muted">
+                      <Search className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                      <input ref={searchRef} value={q} onChange={e => setQ(e.target.value)} autoFocus
+                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); const t = q.trim(); if (scan(q) || !t) return; if (!tree.some(i => matches(i, q))) noMatch(q); else setNote(''); } }}
+                        aria-label="Find or scan an item" className="flex-1 min-w-0 bg-transparent text-[14px] text-ink outline-none" />
+                    </label>
+                    {/* Cam 2026-11-12: one Filter button; the categories are in its menu. */}
+                    {categories.length > 1 && <ShopMenu label={cat ? `Filter: ${cat}` : 'Filter'} ariaLabel="Filter by category" onPick={k => setCat(k)}
+                      sections={[[{ key: '', label: 'All', on: !cat }, ...categories.map(c => ({ key: c, label: c, on: cat === c }))]]} />}
                   </div>
                 )}
                 {outAsk && (() => { const it = (items ?? []).find(x => x.id === outAsk); return it && (
@@ -494,28 +534,28 @@ export default function ShopPage() {
                 ); })()}
                 {tree.length > 0 && shown.length === 0 && <p className="text-sm text-ink-soft mb-3">Nothing matches.</p>}
                 {items && (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2.5">
+                  <div className={'grid grid-cols-2 sm:grid-cols-3 gap-2.5 ' + (saleOpen ? 'xl:grid-cols-4 2xl:grid-cols-5' : 'lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7')}>
                     {shown.map(it => {
                       const n = inCart(it);
                       const opts = it.options.filter(o => o.active);
                       const stockN = stockOf(it);
                       return (
-                        <div key={it.id} className={picking === it.id ? 'col-span-2 sm:col-span-3 xl:col-span-4 2xl:col-span-5' : ''}>
+                        <div key={it.id} className={picking === it.id ? 'col-span-full' : ''}>
                           <button onClick={() => (opts.length ? setPicking(p => (p === it.id ? null : it.id)) : tryAdd(it.id))} aria-expanded={opts.length ? picking === it.id : undefined}
-                            className={'w-full min-h-[104px] text-left rounded-[10px] border overflow-hidden flex flex-col transition-colors ' + (n ? 'border-pine/50 bg-pine/[0.05]' : 'border-line bg-white hover:border-line-strong')}>
-                            {/* DASH-D (Cam 2026-11-01, "photo tiles"): the item's photo when it has one; otherwise the name is the tile. */}
-                            {withPhotos && (it.photoUrl
+                            className={'w-full min-h-[104px] text-left rounded-[10px] border overflow-hidden flex flex-col transition-colors ' + (n ? 'border-ok ring-1 ring-inset ring-ok bg-white' : 'border-line bg-white hover:border-line-strong')}>
+                            {/* DASH-D (Cam 2026-11-01, "photo tiles"): the item's photo when it has one; otherwise its initials. */}
+                            {(it.photoUrl
                               // eslint-disable-next-line @next/next/no-img-element
                               ? <img src={it.photoUrl} alt="" loading="lazy" className="block w-full h-20 object-contain bg-paper" />
-                              : <span aria-hidden="true" className="flex w-full h-20 items-center justify-center bg-paper text-[18px] font-semibold text-ink-faint">{it.name.split(/\s+/).filter(w => /^[A-Za-z0-9]/.test(w)).slice(0, 2).map(w => w[0]).join('').toUpperCase()}</span>)}
+                              : <span aria-hidden="true" className="flex w-full h-20 items-center justify-center bg-page text-[20px] font-bold text-ink-soft">{initials(it.name)}</span>)}
                             {/* POS-6 (Cam 2026-11-09): "in sale" is how many are on this ticket; the stock is its own line, never beside the price. */}
                             <span className="flex items-start justify-between gap-2 px-3 pt-3">
                               <span className="text-[14px] font-medium text-ink leading-snug">{it.name}</span>
-                              {n ? <span className="shrink-0 text-[12px] font-semibold text-pine tabular-nums whitespace-nowrap">{n} in sale</span> : null}
+                              {n ? <span className="shrink-0 text-[12px] font-bold text-ok tabular-nums whitespace-nowrap">{n} in sale</span> : null}
                             </span>
                             <span className="mt-auto px-3 pt-1 pb-3 tabular-nums">
                               <b className="block text-[15px] font-semibold text-ink">{usd(it.priceCents)}</b>
-                              <span className={'block text-[12px] ' + (stockN !== null && stockN <= 0 ? 'text-bad' : 'text-ink-muted')}>{opts.length ? `${opts.length} sizes${stockN !== null ? ` · ${stockN <= 0 ? 'Sold out' : `${stockN} left`}` : ''}` : stockN !== null ? (stockN <= 0 ? 'Sold out' : `${stockN} left`) : '\u00a0'}</span>
+                              <span className={'block text-[12px] ' + (stockN !== null && stockN <= 0 ? 'text-bad' : 'text-ink-muted')}>{opts.length ? `${opts.length} sizes${stockN !== null ? ` · ${stockN <= 0 ? 'Sold out' : `${stockN} in stock`}` : ''}` : stockN !== null ? (stockN <= 0 ? 'Sold out' : `${stockN} in stock`) : '\u00a0'}</span>
                             </span>
                           </button>
                           {picking === it.id && (
@@ -539,7 +579,7 @@ export default function ShopPage() {
               </Card>
 
               {/* POS-6 (Cam 2026-11-09): the ticket is only as tall as the sale — Charge sits under the items. */}
-              <Card className="lg:sticky lg:top-6 flex flex-col">
+              {saleOpen && <Card className="lg:sticky lg:top-6 flex flex-col">
                 {step === null ? (
                   <>
                     <div className="flex items-center justify-between gap-2 px-5 py-4 border-b border-line">
@@ -551,7 +591,14 @@ export default function ShopPage() {
                         <ul className="divide-y divide-line-soft">
                           {lines.map(l => (
                             <li key={l.item.id} className="flex items-center justify-between gap-2 py-2.5 text-sm">
-                              <span className="min-w-0 truncate text-ink">{l.item.name}</span>
+                              {/* Cam 2026-11-12: a 36px picture beside each line (the photo, or the item's initials). */}
+                              <span className="flex items-center gap-2.5 min-w-0">
+                                {(() => { const ph = l.item.photoUrl || (items ?? []).find(x => x.id === l.item.parentId)?.photoUrl; return ph
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  ? <img src={ph} alt="" loading="lazy" className="w-9 h-9 shrink-0 rounded-[8px] object-cover bg-page" />
+                                  : <span aria-hidden="true" className="flex w-9 h-9 shrink-0 rounded-[8px] bg-page items-center justify-center text-[12px] font-bold text-ink-soft">{initials(l.item.name)}</span>; })()}
+                                <span className="min-w-0 truncate text-ink">{l.item.name}</span>
+                              </span>
                               <span className="flex items-center gap-1.5 shrink-0">
                                 <button onClick={() => add(l.item.id, -1)} aria-label={`One fewer ${l.item.name}`} className="w-8 h-8 rounded-[7px] border border-line bg-white text-ink-soft hover:text-ink">−</button>
                                 <span className="w-6 text-center tabular-nums">{l.quantity}</span>
@@ -562,7 +609,10 @@ export default function ShopPage() {
                           ))}
                           {customs.map(c => (
                             <li key={c.key} className="flex items-center justify-between gap-2 py-2.5 text-sm">
-                              <span className="min-w-0 truncate text-ink">{c.name}</span>
+                              <span className="flex items-center gap-2.5 min-w-0">
+                                <span aria-hidden="true" className="flex w-9 h-9 shrink-0 rounded-[8px] bg-page items-center justify-center text-[12px] font-bold text-ink-soft">{initials(c.name) || '$'}</span>
+                                <span className="min-w-0 truncate text-ink">{c.name}</span>
+                              </span>
                               <span className="flex items-center gap-1.5 shrink-0">
                                 <button onClick={() => addCustom(c.key, -1)} aria-label={`One fewer ${c.name}`} className="w-8 h-8 rounded-[7px] border border-line bg-white text-ink-soft hover:text-ink">−</button>
                                 <span className="w-6 text-center tabular-nums">{c.quantity}</span>
@@ -616,21 +666,31 @@ export default function ShopPage() {
                       <h2 className="text-[15px] font-semibold text-ink tabular-nums">{step === 'done' ? (linkSent ? 'Sent' : 'Paid') : onReader ? `Charge ${usd(onReader.sale.totalCents)}` : chargeLabel}</h2>
                       {step !== 'done' && onReader?.state !== 'waiting' && <button type="button" onClick={() => { setStep(null); setOnReader(null); }} className={LINK}>Back to sale</button>}
                     </div>
-                    <ol className="flex gap-4 px-5 pt-3 text-[12.5px] text-ink-muted" aria-label="Steps">
-                      {([['pay', '1. How they pay'], ['take', '2. Take it'], ['done', '3. Receipt']] as const).map(([k, l]) => (
-                        <li key={k} aria-current={step === k ? 'step' : undefined} className={step === k ? 'text-ink font-semibold' : ''}>{l}</li>
-                      ))}
-                    </ol>
                     <div className="px-5 py-4 space-y-3 flex-1">
                       {step === 'pay' && (
                         <>
+                          {/* Cam 2026-11-12 (approved Register): cash first with its amounts — Exact, the next notes up, Other —
+                              then one row each for the reader, a texted or emailed pay link and the member's account. */}
                           <h3 className="text-[15px] font-semibold text-ink">How are they paying?</h3>
-                          <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="How they pay">
-                            {payChoices.map(k => {
-                              const off = k !== 'cash' && (quoteDown || (k !== 'account' && noTax));
+                          <div role="group" aria-label="How they pay">
+                            {payChoices.includes('cash') && (
+                              <div className="flex flex-wrap items-center gap-1.5 py-2.5">
+                                <span className="mr-auto text-[14px] font-semibold text-ink">Cash</span>
+                                {(quoteDown ? [] : quickCash).map(n => (
+                                  <button key={n} type="button" onClick={() => { setPay('cash'); setTendered((n / 100).toFixed(2)); setError(''); setStep('take'); }}
+                                    className="min-h-[36px] px-2.5 rounded-[8px] border border-line text-[13px] font-semibold text-ink tabular-nums hover:bg-page">{n === due ? 'Exact' : usd(n).replace(/\.00$/, '')}</button>
+                                ))}
+                                <button type="button" onClick={() => { setPay('cash'); setTendered(''); setError(''); setStep('take'); }}
+                                  className="min-h-[36px] px-2.5 rounded-[8px] border border-line text-[13px] font-semibold text-ink hover:bg-page">{quoteDown ? 'Take cash' : 'Other'}</button>
+                              </div>
+                            )}
+                            {payChoices.filter(k => k !== 'cash').map(k => {
+                              const off = quoteDown || (k !== 'account' && noTax);
                               return (
-                                <button key={k} type="button" role="radio" aria-checked={pay === k} disabled={off} onClick={() => { setPay(k); setError(''); setStep('take'); }}
-                                  className={CHOICE + (pay === k ? 'border-pine border-2' : 'border-line hover:border-line-strong')}>{PAY_WORDS[k]}</button>
+                                <button key={k} type="button" disabled={off} onClick={() => { setPay(k); setError(''); setStep('take'); }}
+                                  className="w-full flex items-center justify-between gap-3 py-3 border-t border-line text-[14px] text-ink text-left hover:bg-page disabled:opacity-50">
+                                  <span>{k === 'account' ? 'On their account' : PAY_WORDS[k]}</span><span aria-hidden="true" className="text-ink-muted">›</span>
+                                </button>
                               );
                             })}
                           </div>
@@ -751,137 +811,154 @@ export default function ShopPage() {
                     </div>
                   </>
                 )}
-              </Card>
+              </Card>}
             </div>
             )}
 
-            {view === 'sales' && (
-            <>
-            <Card className="mt-5">
-              {/* POS-8 (Cam 2026-11-09: no Today / Yesterday, "just have the little calendar icon"; "sort by"; "shouldnt all be
-                  so cardy and on top of each other"): one flat line — the day as words, a calendar icon that opens the
-                  picker, the search (a name, an item or the receipt # printed on every receipt), and Sort by. */}
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 pt-4 pb-2">
-                <h2 className="text-[15px] font-semibold text-ink">{hist?.q && !hist.day ? 'Sales, last 90 days' : `Sales · ${hist?.day ? new Date(`${hist.day}T12:00:00`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : 'today'}`}</h2>
+            {view === 'sales' && (() => {
+              // Cam 2026-11-12 (approved Sales): the day's sales as rows — sale number, time, what was sold and how it was paid,
+              // the amount — and the one tapped opens beside them with its lines and what can be done with it.
+              const all = hist ? histSales : sales;
+              const count = (k: SalesShow) => (all ?? []).filter(x => salesShowOf(x).includes(k)).length;
+              const list = all && [...all].filter(x => salesShowOf(x).includes(salesShow))
+                .sort((a, b) => salesSort === 'big' ? b.totalCents - a.totalCents : (salesSort === 'old' ? 1 : -1) * (Date.parse(a.createdAt) - Date.parse(b.createdAt)));
+              const taken = takenOf(all ?? [], !hist);
+              const s = (list ?? []).find(x => x.id === salePick) ?? list?.[0] ?? null;
+              const filterLabel = salesShow === 'all' ? 'Filter' : `Filter: ${[...SALES_HOW, ...SALES_STATE].find(([k]) => k === salesShow)?.[1] ?? ''}`;
+              return (
+            <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
+            <Card className="p-4 min-w-0 relative z-10">
+              {/* POS-8 (Cam 2026-11-09: no Today / Yesterday, "just have the little calendar icon"): the day as words and a
+                  calendar icon that opens the picker; what was taken that day on the right. */}
+              <div className="flex flex-wrap items-center gap-2.5 mb-2.5">
+                <h2 className="text-[17px] font-semibold text-ink">{hist?.q && !hist.day ? 'Last 90 days' : (hist?.day ? new Date(`${hist.day}T12:00:00`) : new Date()).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</h2>
                 <span className="relative inline-flex">
                   <button type="button" aria-label="Pick a day" title="Pick a day" onClick={() => { const el = dayRef.current; if (!el) return; try { el.showPicker(); } catch { el.focus(); } }}
-                    className="w-8 h-8 rounded-md inline-flex items-center justify-center text-ink-muted hover:text-ink hover:bg-paper"><CalendarDays className="w-4 h-4" aria-hidden="true" /></button>
+                    className="w-8 h-8 rounded-md inline-flex items-center justify-center text-ink-muted hover:text-ink hover:bg-page"><CalendarDays className="w-4 h-4" aria-hidden="true" /></button>
                   <input ref={dayRef} type="date" tabIndex={-1} aria-label="Sales on a day" value={hist?.day ?? ''} max={new Date().toLocaleDateString('en-CA')} onChange={e => loadHistory({ q: hist?.q ?? '', day: e.target.value === new Date().toLocaleDateString('en-CA') ? '' : e.target.value })}
                     className="absolute inset-0 opacity-0 pointer-events-none" />
                 </span>
-                <input value={hist?.q ?? ''} onChange={e => loadHistory({ q: e.target.value, day: hist?.day ?? '' })} placeholder="Name, item or receipt #" aria-label="Find a sale" className={INPUT + ' w-56 sm:ml-auto'} />
-                <label className="flex items-center gap-1 text-[13px] text-ink-soft">Sort by
-                  <select value={salesSort} onChange={e => setSalesSort(e.target.value as typeof salesSort)} className="bg-transparent text-ink font-medium cursor-pointer rounded-[5px] focus:outline-none focus-visible:ring-2 focus-visible:ring-pine/30">
-                    <option value="new">Newest</option><option value="old">Oldest</option><option value="big">Largest</option>
-                  </select>
-                </label>
+                {all && <span className="ml-auto text-[13.5px] text-ink-muted tabular-nums"><b className="text-[15px] font-semibold text-ink">{usd(taken.cents)}</b> taken · {taken.count} sale{taken.count === 1 ? '' : 's'}</span>}
               </div>
-              {histError && <p className="px-5 pb-3 text-[13px] text-bad" role="alert">{histError} <button type="button" onClick={() => hist && loadHistory(hist)} className="underline font-medium">Try again</button></p>}
-              {(() => { const all = hist ? histSales : sales;
-                const count = (k: SalesShow) => (all ?? []).filter(s => salesShowOf(s).includes(k)).length;
-                const list = all && [...all].filter(s => salesShowOf(s).includes(salesShow))
-                  .sort((a, b) => salesSort === 'big' ? b.totalCents - a.totalCents : (salesSort === 'old' ? 1 : -1) * (Date.parse(a.createdAt) - Date.parse(b.createdAt)));
-                const paidCents = (list ?? []).filter(isPaid).reduce((t, s) => t + s.totalCents - s.refundedCents, 0);
-                return <>
-              {all && all.length > 0 && (
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 pb-3">
-                  {/* Cam 2026-11-09: "just have a filter by button" — one control, not a row of chips. */}
-                  <label className="flex items-center gap-1 text-[13px] text-ink-soft">Filter by
-                    <select value={salesShow} onChange={e => setSalesShow(e.target.value as SalesShow)} className="bg-transparent text-ink font-medium cursor-pointer rounded-[5px] focus:outline-none focus-visible:ring-2 focus-visible:ring-pine/30">
-                      {SALES_SHOW.filter(([k]) => k === 'all' || count(k) > 0 || salesShow === k).map(([k, l]) => <option key={k} value={k}>{l} ({count(k)})</option>)}
-                    </select>
-                  </label>
-                  <span className="ml-auto text-[12.5px] text-ink-muted tabular-nums">{list?.length ?? 0} sale{list?.length === 1 ? '' : 's'} · {usd(paidCents)}</span>
-                </div>
-              )}
-              {all && all.length === 0 && <p className="px-5 pb-4 text-sm text-ink-soft">{hist ? 'No sales match.' : 'No walk-up sales yet today.'}</p>}
-              {all && all.length > 0 && list && list.length === 0 && <p className="px-5 pb-4 text-sm text-ink-soft">None. <button type="button" onClick={() => setSalesShow('all')} className={LINK}>Show all</button></p>}
+              <div className="flex items-center gap-2.5 mb-2">
+                <label className="flex-1 min-w-0 flex items-center gap-2 bg-page border border-line rounded-[10px] px-3 min-h-[38px] text-ink-muted">
+                  <Search className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                  <input value={hist?.q ?? ''} onChange={e => loadHistory({ q: e.target.value, day: hist?.day ?? '' })} aria-label="Find a sale by name, item or sale number" className="flex-1 min-w-0 bg-transparent text-[13.5px] text-ink outline-none" />
+                </label>
+                <ShopMenu label={filterLabel} ariaLabel="Sort and filter" align="right" onPick={k => { if (k.startsWith('sort:')) setSalesSort(k.slice(5) as typeof salesSort); else setSalesShow(k as SalesShow); }} sections={[
+                  SALES_HOW.filter(([k]) => k === 'all' || count(k) > 0 || salesShow === k).map(([k, l]) => ({ key: k, label: l, count: count(k), on: salesShow === k })),
+                  SALES_STATE.filter(([k]) => count(k) > 0 || salesShow === k).map(([k, l]) => ({ key: k, label: l, count: count(k), on: salesShow === k })),
+                  ([['new', 'Newest first'], ['old', 'Oldest first'], ['big', 'Largest first']] as const).map(([k, l]) => ({ key: `sort:${k}`, label: l, on: salesSort === k })),
+                ]} />
+              </div>
+              {histError && <p className="pb-3 text-[13px] text-bad" role="alert">{histError} <button type="button" onClick={() => hist && loadHistory(hist)} className="underline font-medium">Try again</button></p>}
+              {all && all.length === 0 && <p className="py-3 text-sm text-ink-soft">{hist ? 'No sales match.' : 'No walk-up sales yet today.'}</p>}
+              {all && all.length > 0 && list && list.length === 0 && <p className="py-3 text-sm text-ink-soft">None. <button type="button" onClick={() => setSalesShow('all')} className={LINK}>Show all</button></p>}
               {list && list.length > 0 && (
-                <ul className="divide-y divide-line-soft border-t border-line-soft">
-                  {list.map(s => {
-                    const itemsCents = s.totalCents - (s.roundsCents ?? 0);
-                    const fully = isPaid(s) && itemsCents > 0 && s.refundedCents >= itemsCents;
-                    // A sale rung up for the card reader, not paid yet (declined or cancelled), or on the reader now.
-                    const base = !s.link && s.status === 'open' ? { label: 'Not paid — card reader', tone: 'warn' as const } : !s.link && s.status === 'paying' ? { label: 'On the card reader', tone: 'warn' as const } : STATUS[s.status];
-                    const st = fully ? { label: 'Refunded', tone: 'neutral' as const } : s.refundedCents > 0 ? { label: `${base?.label ?? s.status} · ${usd(s.refundedCents)} refunded`, tone: 'ok' as const } : base ?? { label: s.status, tone: 'neutral' as const };
-                    // Green fees in the sale are refunded from their booking, not here.
-                    const left = itemsCents - s.refundedCents;
-                    const pending = s.refunds.filter(r => r.status === 'pending');
+                <ul>
+                  {list.map(x => {
+                    const st = saleState(x);
+                    const on = s?.id === x.id;
                     return (
-                      <li key={s.id} className="px-5 py-3 text-sm">
-                        <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div className="min-w-0">
-                          <div className="text-ink"><span className="tabular-nums text-ink-soft">{time(s.createdAt)}</span> · <span className="font-medium tabular-nums">{usd(s.totalCents)}</span>{s.customerName ? ` · ${s.customerName}` : ''} <span className="text-[12px] text-ink-muted tabular-nums">#{s.id.slice(-8).toUpperCase()}</span></div>
-                          <div className="text-[12.5px] text-ink-muted truncate">{s.lines.map(l => `${l.name}${l.quantity > 1 ? ` × ${l.quantity}` : ''}`).join(', ')}{s.discountCents ? ` · ${usd(s.discountCents)} off${s.discountNote ? ` (${s.discountNote})` : ''}` : ''}</div>
-                        </div>
-                        <div className="flex items-center gap-3 shrink-0">
-                          <StatusDot status={st.tone} label={st.label} />
-                          {isPaid(s) && <button onClick={() => { setReceipt(receipt?.id === s.id ? null : { id: s.id, via: s.customerEmail || !s.customerPhone ? 'email' : 'sms', to: s.customerEmail || s.customerPhone }); setError(''); }} disabled={!!busy} className={LINK}>Receipt</button>}
-                          {isPaid(s) && (canRefund || (canReturn && s.lines.some(l => !l.round && l.quantity > l.returnedQty))) && left > 0 && <button onClick={() => { setRefund(refund?.id === s.id ? null : { id: s.id, amount: (left / 100).toFixed(2), reason: '', restock: false, confirm: false }); setError(''); }} disabled={!!busy} className={LINK}>Refund</button>}
-                          {/* Dead end 23: a cash sale rung up by mistake, the same day (the server also checks the close-out). */}
-                          {(s.status === 'paid_cash' || s.status === 'paid_account') && !s.roundsCents && s.refundedCents === 0 && paidToday(s.paidAt) && <button onClick={() => act(s, 'void_cash')} disabled={!!busy} className="text-[12.5px] text-bad hover:underline disabled:opacity-50">Void</button>}
-                          {s.status === 'open' && (
-                            <>
-                              {s.link
-                                ? <button onClick={() => act(s, 'resend', s.customerPhone ? 'sms' : 'email')} disabled={!!busy} className="text-[12.5px] text-pine font-medium hover:underline disabled:opacity-50">Send again</button>
-                                : readers.length > 0 && <button onClick={() => { setOnReader({ sale: s, readerId: readerId || readers[0].id, state: 'cancelled', message: '' }); setPay('reader'); setStep('take'); setView('register'); setError(''); }} disabled={!!busy || onReader?.state === 'waiting'} className="text-[12.5px] text-pine font-medium hover:underline disabled:opacity-50">Card reader</button>}
-                              {canCash && <button onClick={() => act(s, 'paid_cash')} disabled={!!busy} className="text-[12.5px] text-pine font-medium hover:underline disabled:opacity-50">Took cash</button>}
-                              <button onClick={() => act(s, 'void')} disabled={!!busy} className="text-[12.5px] text-bad hover:underline disabled:opacity-50">Void</button>
-                            </>
-                          )}
-                        </div>
-                        </div>
-                        {pending.map(r => (
-                          <div key={r.id} className="flex flex-wrap items-center gap-3 mt-1.5 text-[12.5px]">
-                            <StatusDot status="warn" label={`Refund ${usd(r.amountCents)} not confirmed by Stripe yet`} />
-                            {canReturn && <button onClick={() => retryRefund(s, r.id)} disabled={!!busy} className={LINK}>{busy === 'retry' + r.id ? 'Asking Stripe…' : 'Try again'}</button>}
-                          </div>
-                        ))}
-                        {receipt?.id === s.id && justPaid?.id !== s.id && (
-                          <SaleReceiptPanel receipt={receipt} setReceipt={setReceipt} onSend={sendReceipt} busy={busy === 'receipt' + s.id} onClose={() => setReceipt(null)} />
-                        )}
-                        {refund?.id === s.id && (
-                          <div className="mt-2 bg-paper/70 rounded-md p-3 space-y-2 max-w-md">
-                            <div className={canRefund ? 'grid grid-cols-[110px_1fr] gap-2' : ''}>
-                              {canRefund && <label className="block"><span className="block text-[12.5px] font-medium text-ink mb-1">Amount</span>
-                                <div className="relative"><span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
-                                  <input value={refund.amount} onChange={e => setRefund({ ...refund, amount: e.target.value, confirm: false, restock: toCents(e.target.value) === itemsCents && s.refundedCents === 0 ? refund.restock : false })} inputMode="decimal" className={INPUT + ' w-full pl-6'} /></div></label>}
-                              <label className="block"><span className="block text-[12.5px] font-medium text-ink mb-1">Reason <span className="font-normal text-ink-muted">(for your records)</span></span>
-                                <input value={refund.reason} onChange={e => setRefund({ ...refund, reason: e.target.value })} maxLength={300} className={INPUT + ' w-full'} /></label>
-                            </div>
-                            {canRefund && s.refundedCents === 0 && toCents(refund.amount) === itemsCents && s.lines.some(l => !/ round · /.test(l.name)) && (
-                              <label className="flex items-center gap-2 text-[13px] text-ink"><input type="checkbox" checked={refund.restock} onChange={e => setRefund({ ...refund, restock: e.target.checked })} className="accent-pine" />Put the items back on the shelf</label>
-                            )}
-                            {s.lines.some(l => !l.round && l.quantity > l.returnedQty) && (
-                              <div className="space-y-1">
-                                <span className="block text-[12.5px] font-medium text-ink">Return items</span>
-                                {s.lines.filter(l => !l.round && l.quantity > l.returnedQty).map(l => (
-                                  <label key={l.id} className="flex items-center justify-between gap-2 text-[13px] text-ink">
-                                    <span className="truncate">{l.name} <span className="text-ink-muted">· {usd(l.unitPriceCents)}{l.returnedQty ? ` · ${l.returnedQty} back` : ''}</span></span>
-                                    <input type="number" min={0} max={l.quantity - l.returnedQty} value={refund.returns?.[l.id] ?? ''} placeholder="0" aria-label={`How many ${l.name} back`}
-                                      onChange={e => setRefund({ ...refund, confirm: false, restock: true, returns: { ...(refund.returns ?? {}), [l.id]: e.target.value } })} className={INPUT + ' w-16'} />
-                                  </label>
-                                ))}
-                              </div>
-                            )}
-                            <p className="text-[12.5px] text-ink-soft">{s.status === 'paid_card' ? 'To their card, for good.' : s.status === 'paid_account' ? 'To their account.' : 'Hand the cash back.'} Up to {usd(left)} can be refunded{s.roundsCents ? ' — green fees are refunded from the booking on the tee sheet' : ''}.</p>
-                            <div className="flex gap-2">
-                              {(() => { const byItem = Object.values(refund.returns ?? {}).some(q => Number(q) > 0); return !refund.confirm
-                                ? <button onClick={() => setRefund({ ...refund, confirm: true })} disabled={!byItem && (!canRefund || !toCents(refund.amount))} className="px-3 py-2 rounded-md text-[13px] font-medium bg-white border border-line text-ink hover:bg-paper disabled:opacity-50">{byItem ? 'Return these items' : `Refund $${refund.amount || '0'}`}</button>
-                                : <button onClick={() => doRefund(s)} disabled={!!busy} className="px-3 py-2 rounded-md text-[13px] font-medium bg-bad text-white disabled:opacity-50">{busy === 'refund' + s.id ? 'Refunding…' : byItem ? 'Yes, refund their share and restock' : `Yes, refund $${refund.amount}`}</button>; })()}
-                              <button onClick={() => setRefund(null)} className="px-3 py-2 rounded-md text-[13px] font-medium bg-white border border-line text-ink hover:bg-paper">Close</button>
-                            </div>
-                          </div>
-                        )}
+                      <li key={x.id}>
+                        <button type="button" onClick={() => { setSalePick(x.id); setRefund(null); if (receipt?.id !== x.id) setReceipt(null); showSale(); }} aria-current={on ? 'true' : undefined}
+                          className={'w-full text-left grid grid-cols-[auto_minmax(0,1fr)_auto] sm:grid-cols-[auto_64px_minmax(0,1fr)_auto] items-center gap-3 px-2.5 py-3 rounded-[10px] hover:bg-page ' + (on ? 'bg-page ring-1 ring-inset ring-line' : '')}>
+                          <span className="text-[13px] font-semibold text-ink-muted tabular-nums">{saleNo(x)}<span className="block sm:hidden font-normal">{time(x.createdAt)}</span></span>
+                          <span className="hidden sm:block text-[13px] text-ink-muted tabular-nums">{time(x.createdAt)}</span>
+                          <span className="min-w-0">
+                            <b className="block truncate text-[14px] font-semibold text-ink">{x.lines.map(l => `${l.name}${l.quantity > 1 ? ` ×${l.quantity}` : ''}`).join(', ') || 'Sale'}</b>
+                            <span className="block truncate text-[12.5px] text-ink-muted">{st.tone === 'neutral' ? st.label : <StatusDot status={st.tone} label={st.label} />}{x.customerName ? ` · ${x.customerName}` : ''}</span>
+                          </span>
+                          <span className={'text-right text-[15px] tabular-nums ' + (x.status === 'void' ? 'text-ink-muted line-through font-medium' : 'text-ink font-semibold')}>{usd(x.totalCents)}</span>
+                        </button>
                       </li>
                     );
                   })}
                 </ul>
               )}
-              </>; })()}
             </Card>
-            </>
-            )}
+            {s && (() => {
+              const itemsCents = s.totalCents - (s.roundsCents ?? 0);
+              // Green fees in the sale are refunded from their booking, not here.
+              const left = itemsCents - s.refundedCents;
+              const pending = s.refunds.filter(r => r.status === 'pending');
+              const st = saleState(s);
+              const sub = s.lines.reduce((t, l) => t + l.unitPriceCents * l.quantity, 0);
+              const BTN = 'w-full min-h-[42px] rounded-[10px] text-[14px] font-semibold disabled:opacity-50 ';
+              return (
+            <Card className="p-4 lg:sticky lg:top-6">
+              <h2 ref={saleRef} tabIndex={-1} className="text-[20px] font-semibold text-ink outline-none scroll-mt-8">Sale {saleNo(s)}</h2>
+              <p className="text-[13px] text-ink-muted mt-1 mb-3">{time(s.createdAt)} · {st.tone === 'neutral' ? st.label : <StatusDot status={st.tone} label={st.label} />}{s.customerName ? ` · ${s.customerName}` : ''}</p>
+              <dl className="text-[13.5px]">
+                {s.lines.map(l => (
+                  <div key={l.id} className="flex justify-between gap-3 py-2 border-t border-line"><dt className="min-w-0 truncate text-ink">{l.name}{l.quantity > 1 ? ` ×${l.quantity}` : ''}{l.returnedQty ? <span className="text-ink-muted"> · {l.returnedQty} back</span> : null}</dt><dd className="font-semibold tabular-nums">{usd(l.unitPriceCents * l.quantity)}</dd></div>
+                ))}
+                {s.discountCents > 0 && <div className="flex justify-between gap-3 py-2 border-t border-line"><dt className="text-ink-soft">Discount{s.discountNote ? ` (${s.discountNote})` : ''}</dt><dd className="font-semibold tabular-nums">−{usd(s.discountCents)}</dd></div>}
+                {(s.taxCents > 0 || sub !== s.totalCents) && <div className="flex justify-between gap-3 py-2 border-t border-line"><dt className="text-ink-soft">Tax</dt><dd className="font-semibold tabular-nums">{usd(s.taxCents)}</dd></div>}
+                <div className="flex justify-between gap-3 py-2 border-t border-line"><dt className="font-semibold text-ink">Total</dt><dd className="font-semibold tabular-nums">{usd(s.totalCents)}</dd></div>
+                {s.refundedCents > 0 && <div className="flex justify-between gap-3 py-2 border-t border-line"><dt className="text-ink-soft">Refunded</dt><dd className="font-semibold tabular-nums">−{usd(s.refundedCents)}</dd></div>}
+              </dl>
+              {pending.map(r => (
+                <div key={r.id} className="flex flex-wrap items-center gap-3 mt-2 text-[12.5px]">
+                  <StatusDot status="warn" label={`Refund ${usd(r.amountCents)} not confirmed by Stripe yet`} />
+                  {canReturn && <button onClick={() => retryRefund(s, r.id)} disabled={!!busy} className={LINK}>{busy === 'retry' + r.id ? 'Asking Stripe…' : 'Try again'}</button>}
+                </div>
+              ))}
+              <div className="mt-4 flex flex-col gap-2">
+                {isPaid(s) && <button type="button" onClick={() => { setReceipt(receipt?.id === s.id ? null : { id: s.id, via: s.customerEmail || !s.customerPhone ? 'email' : 'sms', to: s.customerEmail || s.customerPhone }); setRefund(null); setError(''); }} disabled={!!busy} className={BTN + 'bg-pine hover:bg-pine-hover text-white'}>Receipt</button>}
+                {isPaid(s) && (canRefund || (canReturn && s.lines.some(l => !l.round && l.quantity > l.returnedQty))) && left > 0 && <button type="button" onClick={() => { setRefund(refund?.id === s.id ? null : { id: s.id, amount: (left / 100).toFixed(2), reason: '', restock: false, confirm: false }); setReceipt(null); setError(''); }} disabled={!!busy} className={BTN + 'border border-line text-ink hover:bg-page'}>Refund</button>}
+                {/* Dead end 23: a cash sale rung up by mistake, the same day (the server also checks the close-out). */}
+                {(s.status === 'paid_cash' || s.status === 'paid_account') && !s.roundsCents && s.refundedCents === 0 && paidToday(s.paidAt) && <button type="button" onClick={() => act(s, 'void_cash')} disabled={!!busy} className={BTN + 'border border-line text-bad hover:bg-page'}>Void</button>}
+                {s.status === 'open' && (
+                  <>
+                    {s.link
+                      ? <button type="button" onClick={() => act(s, 'resend', s.customerPhone ? 'sms' : 'email')} disabled={!!busy} className={BTN + 'bg-pine hover:bg-pine-hover text-white'}>Send the pay link again</button>
+                      : readers.length > 0 && <button type="button" onClick={() => { setOnReader({ sale: s, readerId: readerId || readers[0].id, state: 'cancelled', message: '' }); setPay('reader'); setStep('take'); setView('register'); setError(''); }} disabled={!!busy || onReader?.state === 'waiting'} className={BTN + 'bg-pine hover:bg-pine-hover text-white'}>Card reader</button>}
+                    {canCash && <button type="button" onClick={() => act(s, 'paid_cash')} disabled={!!busy} className={BTN + 'border border-line text-ink hover:bg-page'}>They paid cash</button>}
+                    <button type="button" onClick={() => act(s, 'void')} disabled={!!busy} className={BTN + 'border border-line text-bad hover:bg-page'}>Void</button>
+                  </>
+                )}
+              </div>
+              {receipt?.id === s.id && justPaid?.id !== s.id && (
+                <SaleReceiptPanel receipt={receipt} setReceipt={setReceipt} onSend={sendReceipt} busy={busy === 'receipt' + s.id} onClose={() => setReceipt(null)} />
+              )}
+              {refund?.id === s.id && (
+                <div className="mt-3 bg-page rounded-[10px] p-3 space-y-2">
+                  <div className={canRefund ? 'grid grid-cols-[110px_1fr] gap-2' : ''}>
+                    {canRefund && <label className="block"><span className="block text-[12.5px] font-medium text-ink mb-1">Amount</span>
+                      <div className="relative"><span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
+                        <input value={refund.amount} onChange={e => setRefund({ ...refund, amount: e.target.value, confirm: false, restock: toCents(e.target.value) === itemsCents && s.refundedCents === 0 ? refund.restock : false })} inputMode="decimal" className={INPUT + ' w-full pl-6'} /></div></label>}
+                    <label className="block"><span className="block text-[12.5px] font-medium text-ink mb-1">Reason <span className="font-normal text-ink-muted">(for your records)</span></span>
+                      <input value={refund.reason} onChange={e => setRefund({ ...refund, reason: e.target.value })} maxLength={300} className={INPUT + ' w-full'} /></label>
+                  </div>
+                  {canRefund && s.refundedCents === 0 && toCents(refund.amount) === itemsCents && s.lines.some(l => !/ round · /.test(l.name)) && (
+                    <label className="flex items-center gap-2 text-[13px] text-ink"><input type="checkbox" checked={refund.restock} onChange={e => setRefund({ ...refund, restock: e.target.checked })} className="accent-pine" />Put the items back on the shelf</label>
+                  )}
+                  {s.lines.some(l => !l.round && l.quantity > l.returnedQty) && (
+                    <div className="space-y-1">
+                      <span className="block text-[12.5px] font-medium text-ink">Return items</span>
+                      {s.lines.filter(l => !l.round && l.quantity > l.returnedQty).map(l => (
+                        <label key={l.id} className="flex items-center justify-between gap-2 text-[13px] text-ink">
+                          <span className="truncate">{l.name} <span className="text-ink-muted">· {usd(l.unitPriceCents)}{l.returnedQty ? ` · ${l.returnedQty} back` : ''}</span></span>
+                          <input type="number" min={0} max={l.quantity - l.returnedQty} value={refund.returns?.[l.id] ?? ''} placeholder="0" aria-label={`How many ${l.name} back`}
+                            onChange={e => setRefund({ ...refund, confirm: false, restock: true, returns: { ...(refund.returns ?? {}), [l.id]: e.target.value } })} className={INPUT + ' w-16'} />
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                  <p className="text-[12.5px] text-ink-soft">{s.status === 'paid_card' ? 'To their card, for good.' : s.status === 'paid_account' ? 'To their account.' : 'Hand the cash back.'} Up to {usd(left)} can be refunded{s.roundsCents ? ' — green fees are refunded from the booking on the tee sheet' : ''}.</p>
+                  <div className="flex gap-2">
+                    {(() => { const byItem = Object.values(refund.returns ?? {}).some(q => Number(q) > 0); return !refund.confirm
+                      ? <button onClick={() => setRefund({ ...refund, confirm: true })} disabled={!byItem && (!canRefund || !toCents(refund.amount))} className="px-3 py-2 rounded-md text-[13px] font-medium bg-white border border-line text-ink hover:bg-paper disabled:opacity-50">{byItem ? 'Return these items' : `Refund $${refund.amount || '0'}`}</button>
+                      : <button onClick={() => doRefund(s)} disabled={!!busy} className="px-3 py-2 rounded-md text-[13px] font-medium bg-bad text-white disabled:opacity-50">{busy === 'refund' + s.id ? 'Refunding…' : byItem ? 'Yes, refund their share and restock' : `Yes, refund $${refund.amount}`}</button>; })()}
+                    <button onClick={() => setRefund(null)} className="px-3 py-2 rounded-md text-[13px] font-medium bg-white border border-line text-ink hover:bg-paper">Close</button>
+                  </div>
+                </div>
+              )}
+            </Card>
+              ); })()}
+            </div>
+              ); })()}
             {/* POS-5: stock and the close-out each open full on their own tab. POS-6 (Cam 2026-11-09): Stock is where items
                 are added and changed — the register only sells them. Round packs are turned off (lib/round-packs-switch). */}
             {view === 'stock' && (access.can('shop.sell') || access.can('shop.catalog')) && <div className="mt-5"><StockTab refreshKey={loads} onChanged={load} /></div>}
