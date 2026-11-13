@@ -48,7 +48,7 @@ async function cleanup() {
   ok('staff read a receipt by id, only their course\'s', route.includes('await staffShopReceipt(g.session.courseId, receiptOf)'));
   const page = read('src/app/dashboard/shop/page.tsx');
   ok('Sales → Receipt opens it in place with the send row', page.includes('<SaleReceiptPanel receipt={receipt}') && !page.includes('function ReceiptForm('));
-  ok('one "Filter by" control, not a row of chips', page.includes('Filter by') && !page.includes('aria-label="Show"'));
+  ok('one Filter control, not a row of chips', page.includes('ariaLabel="Sort and filter"') && !page.includes('aria-label="Show"'));
   ok('the send button is a small icon with a label', read('src/components/dashboard/shop/SaleReceiptPanel.tsx').includes('aria-label="Send receipt"'));
   ok('the customer\'s page is noindex and token-gated', read('src/app/receipt/shop/[id]/page.tsx').includes('robots: { index: false, follow: false }') && read('src/app/receipt/shop/[id]/page.tsx').includes('publicShopReceipt(id,'));
 

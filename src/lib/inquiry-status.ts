@@ -32,7 +32,13 @@ export const ALIVE_STATUSES: InquiryStatus[] = [...ACTIVE_STATUSES, 'live'];
 // a lead the admin route allows only LEAD_ACTIONS; "Move to Talking" turns it
 // into an ordinary in_review inquiry.
 export const LEAD_STATUS = 'lead' as const;
-export const LEAD_ACTIONS = ['start_talking', 'add_note', 'update_contact', 'set_source', 'snooze', 'unsnooze', 'reject'] as const;
+export const LEAD_ACTIONS = ['start_talking', 'add_note', 'update_contact', 'set_source', 'snooze', 'unsnooze', 'reject', 'add_touch'] as const;
+
+// ADMIN-REDO Business analytics: the outreach log (OutreachTouch). One list, read by the route and the page.
+export const TOUCH_CHANNELS = ['email', 'call', 'text', 'in_person'] as const;
+export const TOUCH_DIRECTIONS = ['out', 'in'] as const;
+export type TouchChannel = typeof TOUCH_CHANNELS[number];
+export type TouchDirection = typeof TOUCH_DIRECTIONS[number];
 
 // Every status the app knows about. Anything outside this set is "unmapped" —
 // a bug, not a silent omission.

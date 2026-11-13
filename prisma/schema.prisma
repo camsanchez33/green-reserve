@@ -932,6 +932,7 @@ model CourseInquiry {
   /// IC-1 (A1): build without a call, with a reason on record.
   callSkippedReason    String?
   calls                Call[]
+  touches              OutreachTouch[]
   /// SC-1: token for the public "pick a call time" page. Same pattern as
   /// detailsToken — unique, generated in app code, regenerated on resend.
   callInviteToken      String?              @unique
@@ -982,6 +983,29 @@ model Call {
 
   @@index([inquiryId, scheduledAt])
   @@index([courseId, scheduledAt])
+}
+
+/// ADMIN-REDO Business analytics (Cam via Build 2026-11-12): the outreach log. One row per contact
+/// with a course in the pipeline — an email, call or text we sent ('out') or a reply we got ('in').
+/// Append-only. "Reached out" = a course's first 'out' touch; "Responded" = its first 'in' touch
+/// (an inbound inquiry starts at Responded). Added by manager+ in Pipeline (inquiries add_touch).
+model OutreachTouch {
+  id        String        @id @default(cuid())
+  inquiryId String
+  inquiry   CourseInquiry @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  /// When the contact happened (may be earlier than createdAt — logged after the fact).
+  at        DateTime
+  /// 'email' | 'call' | 'text' | 'in_person'
+  channel   String
+  /// 'out' (we contacted them) | 'in' (they replied or reached us)
+  direction String
+  note      String?
+  adminId   String?
+  adminName String?
+  createdAt DateTime      @default(now())
+
+  @@index([inquiryId, at])
+  @@index([at])
 }
 
 model InquiryStatusEvent {

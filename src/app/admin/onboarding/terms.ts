@@ -7,4 +7,6 @@ export const ACTION_FAILED = (status?: number) =>
 export const NO_CAL_LINK = 'Cal.com did not send a link back — try again.';
 export const FOOT_PIPELINE = 'Leads, closed inquiries and the full pipeline';
 export const FOOT_CSV = 'Download inquiries as CSV';
-export const LAUNCH_SOON = 'Setting a launch date arrives with the next update';
+export const LAUNCH_TITLE = 'The day the course expects to go live. Red once it has passed, yellow within 7 days';
+export const LAUNCH_SAVED = 'Launch date saved.';
+export const LAUNCH_CLEARED = 'Launch date cleared.';

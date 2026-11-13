@@ -590,6 +590,65 @@ async function main() {
     check('…and Onboarding no longer does', !((await api('/api/admin/onboarding', { cookie: viewerCookie })).body as { rows?: { courseId: string | null }[] }).rows?.some(x => x.courseId === data.courseA.id));
   }
   {
+    // ADMIN-REDO Bookings: a read-only record — Money area, support+; the golfer's contact needs Golfers too;
+    // test courses never show (TEST-2); no write method exists.
+    checkStatus('Viewer cannot open Bookings → 403', (await api('/api/admin/bookings', { cookie: viewerCookie })).status, 403);
+    const { signAdminToken } = await import('../src/lib/admin-session');
+    const bm = await prisma.adminUser.create({ data: { name: 'Isol Bookings', email: `${TS}-bookings@test.local`, passwordHash: 'x', role: 'support', active: true, areas: ['courses'], areasSetAt: new Date() } });
+    try {
+      const c = `admin_session=${await signAdminToken({ adminId: bm.id, email: bm.email, name: bm.name, role: 'support', mfa: true })}`;
+      const r0 = await api('/api/admin/bookings', { cookie: c });
+      check('Courses-only support → Bookings → 403 (area money)', r0.status === 403 && (r0.body as { area?: string })?.area === 'money', JSON.stringify(r0.body));
+      await prisma.adminUser.update({ where: { id: bm.id }, data: { areas: ['money'] } });
+      type L = { rows?: { id: string; number: string }[]; counts?: Record<string, number> };
+      const r1 = (await api('/api/admin/bookings', { cookie: c })).body as L;
+      check('Money support → Bookings lists the booking with its number', !!r1?.rows?.some(r => r.id === data.bookingA.id && r.number === data.bookingA.id.slice(0, 8).toUpperCase()), JSON.stringify(r1).slice(0, 300));
+      type SR = { results?: { type: string; id: string; href: string }[] };
+      const sr = (await api(`/api/admin/search?q=%23${data.bookingA.id.slice(0, 8).toUpperCase()}`, { cookie: c })).body as SR;
+      check('…the top search finds it by "#number" for a Money-only login and opens it on Bookings', !!sr?.results?.some(r => r.type === 'booking' && r.href === `/admin/bookings?id=${data.bookingA.id}`), JSON.stringify(sr).slice(0, 300));
+      const sq = (await api('/api/admin/search?q=Isol', { cookie: c })).body as SR;
+      check('…and offers "Bookings matching" for a name', !!sq?.results?.some(r => r.id === 'nav:bookings-q' && r.href === '/admin/bookings?q=Isol'), JSON.stringify(sq).slice(0, 300));
+      const byEmail = (await api(`/api/admin/bookings?q=${encodeURIComponent(TS + '-golfera@test.local')}`, { cookie: c })).body as L;
+      check('…Bookings finds a golfer by their whole email (support looks golfers up here)', !!byEmail?.rows?.some(r => r.id === data.bookingA.id), JSON.stringify(byEmail?.rows?.map(r => r.id)));
+      const byPart = (await api(`/api/admin/bookings?q=${encodeURIComponent('@test.local')}`, { cookie: c })).body as L;
+      const em = `${TS}-golfera@test.local`;
+      for (const probe of ['%@test.local', '_' + em.slice(1), em.slice(0, 5) + '%']) {
+        const w = (await api(`/api/admin/bookings?q=${encodeURIComponent(probe)}`, { cookie: c })).body as L;
+        check(`…without Golfers the wildcard "${probe.replace(TS, 'TS')}" matches nothing`, !!w?.rows && !w.rows.some(r => r.id === data.bookingA.id), JSON.stringify(w?.rows?.map(r => r.id)));
+      }
+      check('…but without Golfers a part of an address matches nothing (no reading emails letter by letter)', !!byPart?.rows && !byPart.rows.some(r => r.id === data.bookingA.id), JSON.stringify(byPart?.rows?.map(r => r.id)));
+      const p1 = (await api(`/api/admin/bookings?id=${data.bookingA.id}`, { cookie: c })).body as { contact?: unknown; pay?: { key?: string }; fee?: { key?: string } };
+      check('…the card has where it stands and our fee, but no golfer contact without Golfers', p1?.contact === null && !!p1?.pay?.key && !!p1?.fee?.key, JSON.stringify(p1).slice(0, 300));
+      await prisma.adminUser.update({ where: { id: bm.id }, data: { areas: ['money', 'golfers'] } });
+      const p2 = (await api(`/api/admin/bookings?id=${data.bookingA.id}`, { cookie: c })).body as { contact?: { email?: string } | null };
+      const byPart2 = (await api(`/api/admin/bookings?q=${encodeURIComponent(TS + '-golfera')}`, { cookie: c })).body as L;
+      check('…with Golfers, part of an email finds it', !!byPart2?.rows?.some(r => r.id === data.bookingA.id), JSON.stringify(byPart2?.rows?.map(r => r.id)));
+      check('…with Golfers, the golfer contact shows', !!p2?.contact?.email, JSON.stringify(p2?.contact));
+      const byNum = (await api(`/api/admin/bookings?q=%23${data.bookingA.id.slice(0, 8).toUpperCase()}`, { cookie: c })).body as L;
+      check('…a search by booking number finds it', !!byNum?.rows?.some(r => r.id === data.bookingA.id), JSON.stringify(byNum?.rows?.map(r => r.number)));
+      for (const method of ['POST', 'PATCH', 'DELETE']) {
+        const w = await api('/api/admin/bookings', { method, cookie: c, body: { id: data.bookingA.id, action: 'retry' } });
+        check(`Bookings is read-only: ${method} → 405`, w.status === 405, String(w.status));
+      }
+      // TEST-2: a test course's bookings never show here.
+      await prisma.course.update({ where: { id: data.courseB.id }, data: { isTest: true } });
+      try {
+        const r2 = (await api('/api/admin/bookings', { cookie: c })).body as L;
+        check('…a test course\'s booking is not listed', !!r2?.rows && !r2.rows.some(r => r.id === data.bookingB.id), JSON.stringify(r2?.rows?.map(r => r.id)));
+        checkStatus('…nor opens', (await api(`/api/admin/bookings?id=${data.bookingB.id}`, { cookie: c })).status, 404);
+        await prisma.adminUser.update({ where: { id: bm.id }, data: { areas: ['money'] } });
+        // The whole id: the 8-character number is shared by bookings made within ~36ms (Build is adding Booking.ref).
+        const st = (await api(`/api/admin/search?q=${data.bookingB.id}`, { cookie: c })).body as { results?: { type: string; id: string; href: string }[] };
+        check('…and the top search gives a Money-only login no hit for it (no guest email link)', !!st?.results && !st.results.some(r => r.id === `booking:${data.bookingB.id}` || r.href.includes('guest=')), JSON.stringify(st).slice(0, 300));
+      } finally {
+        await prisma.course.update({ where: { id: data.courseB.id }, data: { isTest: false } });
+      }
+      check('…and is listed again as a real course (the check above is not vacuous)', !!((await api('/api/admin/bookings', { cookie: c })).body as L)?.rows?.some(r => r.id === data.bookingB.id));
+    } finally {
+      await prisma.adminUser.delete({ where: { id: bm.id } });
+    }
+  }
+  {
     // BRAIN-2a: Problems name golfers and money — support+ only, reads and writes.
     // Money PR2b: the evidence pack is manager+, payouts to courses and the monthly Stripe match owner only.
     const ev = await api(`/api/admin/disputes/${data.bookingA.id}/evidence`, { cookie: viewerCookie });
@@ -674,7 +733,7 @@ async function main() {
     const limited = await prisma.adminUser.create({ data: { name: 'Isol Messages Only', email: `${TS}-msgonly@test.local`, passwordHash: 'x', role: 'manager', active: true, areas: ['messages'], areasSetAt: new Date() } });
     try {
       const c = `admin_session=${await signAdminToken({ adminId: limited.id, email: limited.email, name: limited.name, role: 'manager', mfa: true })}`;
-      for (const [path, label] of [['/api/admin/revenue', 'Money'], ['/api/admin/golfers?q=isol', 'Golfers'], ['/api/admin/problems', 'Problems'], ['/api/admin/course-feed?courseId=' + data.courseA.id, 'a course timeline'], ['/api/admin/goals', 'Goals'], ['/api/admin/courses/directory', 'Golf courses'], ['/api/admin/onboarding', 'Onboarding']] as const) {
+      for (const [path, label] of [['/api/admin/revenue', 'Money'], ['/api/admin/golfers?q=isol', 'Golfers'], ['/api/admin/problems', 'Problems'], ['/api/admin/course-feed?courseId=' + data.courseA.id, 'a course timeline'], ['/api/admin/goals', 'Goals'], ['/api/admin/courses/directory', 'Golf courses'], ['/api/admin/onboarding', 'Onboarding'], ['/api/admin/bookings', 'Bookings']] as const) {
         const r = await api(path, { cookie: c });
         check(`Messages-only manager → ${label} → 403 (area)`, r.status === 403 && (r.body as { code?: string })?.code === 'area', JSON.stringify({ status: r.status, body: r.body }));
       }
@@ -1028,6 +1087,114 @@ async function main() {
       await prisma.ownerSession.delete({ where: { id: live.id } });
       await prisma.adminUser.delete({ where: { id: mgr.id } });
     }
+  }
+
+  console.log('\n── Business analytics (ADMIN-REDO: /api/admin/business) + outreach log ──');
+  {
+    const { signAdminToken } = await import('../src/lib/admin-session');
+    const { dayKey } = await import('../src/lib/admin-day');
+    const { teeTimeInstant } = await import('../src/lib/booking-events');
+    const mk = (name: string, role: string, areas?: string[]) => prisma.adminUser.create({ data: { name, email: `${TS}-biz-${name.replace(/\W/g, '').toLowerCase()}@test.local`, passwordHash: 'x', role, active: true, ...(areas ? { areas, areasSetAt: new Date() } : {}) } });
+    const [sup, mgrNoCourses, mgr, mgrNoMoney] = [await mk('Biz Support', 'support'), await mk('Biz Mgr Pipeline', 'manager', ['pipeline']), await mk('Biz Mgr', 'manager'), await mk('Biz Mgr Courses', 'manager', ['courses'])];
+    const ck = async (u: { id: string; email: string; name: string; role: string }) => `admin_session=${await signAdminToken({ adminId: u.id, email: u.email, name: u.name, role: u.role as 'manager', mfa: true })}`;
+    const [sc, nc, mc, cc] = [await ck(sup), await ck(mgrNoCourses), await ck(mgr), await ck(mgrNoMoney)];
+    type Biz = {
+      cards: { liveCourses: { now: number; prior: null }; onlineBookings: { count: number; prior: number }; teeSheetFill: { pct: number | null; prior: number | null } };
+      months: { month: string; partial: boolean; online: number; counter: number }[];
+      value: { onlineGreenFeesCents: number; afterHours: { count: number; pctOfOnline: number | null }; paidBeforeArrival: { count: number; cents: number }; noShowLateFeesCents: number };
+      joining: { entered: number; steps: { key: string; count: number }[]; inProgress: number; waitingOnUs: number };
+      courses: { courseId: string; online: number; onlinePrior: number; fillPct: number | null; onlineSharePct: number | null; ourRevenueCents: number | null }[];
+    };
+    const get = async () => (await api('/api/admin/business?period=m3', { cookie: mc })).body as Biz;
+    checkStatus('No session → 401', (await api('/api/admin/business?period=m3')).status, 401);
+    checkStatus('Support cannot read business analytics → 403', (await api('/api/admin/business?period=m3', { cookie: sc })).status, 403);
+    checkStatus('A manager without Courses → 403', (await api('/api/admin/business?period=m3', { cookie: nc })).status, 403);
+    const before = await get();
+    check('A manager with Courses reads it', !!before?.cards && Array.isArray(before.months) && before.months.length === 3, JSON.stringify(before).slice(0, 200));
+
+    // A fresh real course with one known day: yesterday on its own clock.
+    const tz = 'America/New_York';
+    const day = dayKey(new Date(Date.now() - 86_400_000), tz);
+    const at = (hm: string) => teeTimeInstant(tz, day, hm)!;
+    const op = await prisma.courseOperator.create({ data: { name: 'Isol Biz Op', email: `${TS}-biz-op@test.local`, password: 'x' } });
+    const course = await prisma.course.create({ data: { name: 'Isol Biz Course', slug: `${TS}-biz-course`, operatorId: op.id, address: '1', city: 'B', state: 'NY', zipCode: '10001', holes: 18, liveStatus: 'live', active: true, timezone: tz, cancellationHours: 24 } });
+    const tt = async (time: string, status = 'available', playersAvailable = 4) => prisma.teeTime.create({ data: { courseId: course.id, date: day, time, holes: 18, greenFeeCents: 0, cartFeeCents: 0, playersAvailable, playersBooked: 0, status } });
+    // 05:00 is blocked: it doesn't stretch the day's hours (the first time offered is 08:00).
+    const [t5, t8, t9, t10, t11] = [await tt('05:00', 'blocked'), await tt('08:00'), await tt('09:00'), await tt('10:00', 'blocked'), await tt('11:00', 'blocked', 2)];
+    const bk = (teeTimeId: string, o: Record<string, unknown>) => prisma.booking.create({ data: { teeTimeId, courseId: course.id, golferName: 'Isol Biz', golferEmail: `${TS}-biz-golfer@test.local`, players: 1, greenFeeTotal: 0, cartFeeTotal: 0, accessFeeTotal: 0, totalAmount: 0, status: 'confirmed', paymentStatus: 'manual', ...o } as never });
+    // b1: online, booked 6am (before the first tee time), paid by the golfer at 7:30 before their 8:00 time.
+    const b1 = await bk(t8.id, { players: 2, greenFeeTotal: 5000, source: 'online', createdAt: at('06:00'), paidAt: at('07:30'), paymentStatus: 'paid' });
+    // b2: online, booked 8:30 (inside the day's offered times, 8:00–9:00; 10:00 and 11:00 are blocked), paid after its 9:00 time.
+    const b2 = await bk(t9.id, { players: 1, greenFeeTotal: 3000, source: 'online', status: 'completed', createdAt: at('08:30'), paidAt: at('09:30'), paymentStatus: 'paid' });
+    // b3: a walk-in on a blocked time (the time counts as exactly its players).
+    const b3 = await bk(t11.id, { players: 2, source: 'walk_in', createdAt: at('10:00') });
+    // b4: cancelled online — counts nowhere.
+    const b4 = await bk(t8.id, { players: 1, greenFeeTotal: 9999, source: 'online', status: 'cancelled', createdAt: at('07:00') });
+    // b5: a part split off b2 (PARTIAL-1 keeps the group's source): part of its group, not a booking made.
+    const b5 = await bk(t9.id, { players: 0, source: 'online', status: 'completed', splitFromId: b2.id, createdAt: new Date(Date.now() - 3600_000) });
+    await prisma.bookingEvent.createMany({ data: [b1, b2].map(b => ({ bookingId: b.id, courseId: course.id, type: 'checked_in' as const, actorType: 'golfer' as const })) });
+    const mv = (what: string, direction: string, account: string, amountCents: number, platformFeeCents: number, bookingId: string | null, n: number) =>
+      ({ courseId: course.id, what, direction, method: 'card', account, amountCents, platformFeeCents, bookingId, stripeId: `pi_isol_biz_${TS}_${n}`, at: new Date(Date.now() - 3600_000) });
+    await prisma.moneyMove.createMany({ data: [
+      mv('round', 'in', 'course', 5150, 150, b1.id, 1),       // b1's round: GreenReserve's 150 rides along
+      mv('booking_fee', 'in', 'platform', 150, 150, b2.id, 2), // GreenReserve's own fee: revenue, not a course fee
+      mv('no_show_fee', 'in', 'course', 2000, 0, b2.id, 3),
+      mv('late_fee', 'in', 'course', 500, 0, b2.id, 4),
+      mv('hold', 'in', 'course', 1000, 0, b1.id, 5),
+      mv('hold', 'out', 'course', 1000, 0, b1.id, 6),          // refunded at check-in: nets to 0
+    ] });
+    // The lead through the real route, so it carries its "Lead added" (lead→lead) event.
+    const made = await api('/api/admin/inquiries', { method: 'POST', cookie: mc, body: { action: 'create_lead', courseName: `Isol Biz Lead Course ${TS}`, contactName: 'Isol Biz Lead', email: `${TS}-biz-lead@test.local` } });
+    const lead = { id: String((made.body as { id?: string }).id ?? '') };
+    try {
+      checkStatus('The test lead is created through the route', made.status, 200);
+      const a = await get();
+      const row = a.courses.find(c => c.courseId === course.id);
+      const m = (b: Biz) => b.months.find(x => x.month === day.slice(0, 7)) ?? { online: 0, counter: 0 };
+      check('Online bookings +2 (the cancelled one, the walk-in and the split-off part don\'t count)', a.cards.onlineBookings.count - before.cards.onlineBookings.count === 2, JSON.stringify(a.cards));
+      check('…by month: online +2, phone & counter +1', m(a).online - m(before).online === 2 && m(a).counter - m(before).counter === 1, JSON.stringify({ a: m(a), b: m(before) }));
+      check('Live courses +1', a.cards.liveCourses.now - before.cards.liveCourses.now === 1 && a.cards.liveCourses.prior === null);
+      check('Green fees booked online +$80 (5000 + 3000; the cancelled one left out)', a.value.onlineGreenFeesCents - before.value.onlineGreenFeesCents === 8000);
+      check('Outside tee-sheet hours +1 (booked 6am, before the 8:00 first time offered — the blocked 5:00 doesn\'t count; 8:30 is inside)', a.value.afterHours.count - before.value.afterHours.count === 1, JSON.stringify(a.value.afterHours));
+      check('Paid before they arrived +1, +$50 — the course\'s share of the $51.50 (b1 paid 7:30 for 8:00; b2 paid after its time)', a.value.paidBeforeArrival.count - before.value.paidBeforeArrival.count === 1 && a.value.paidBeforeArrival.cents - before.value.paidBeforeArrival.cents === 5000, JSON.stringify(a.value.paidBeforeArrival));
+      check('No-show & late fees for courses +$25 (2000 + 500; the refunded hold nets 0; our booking fee left out)', a.value.noShowLateFeesCents - before.value.noShowLateFeesCents === 2500, JSON.stringify(a.value));
+      const noMoney = (await api('/api/admin/business?period=m3', { cookie: cc })).body as Biz;
+      check('A manager with Courses but not Money sees the course, without our revenue (null)', noMoney.courses.some(c => c.courseId === course.id && c.ourRevenueCents === null && c.online === 2) && noMoney.courses.every(c => c.ourRevenueCents === null), JSON.stringify(noMoney.courses).slice(0, 200));
+      check('The course\'s row: 2 online, none before, filled 50% (2+1+2 of 4+4+2; the empty blocked time left out), 67% online, our revenue $3', !!row && row.online === 2 && row.onlinePrior === 0 && row.fillPct === 50 && row.onlineSharePct === 67 && row.ourRevenueCents === 300, JSON.stringify(row));
+
+      // The outreach log (inquiries add_touch): manager+ in Pipeline, allowed on a lead, validated, audited.
+      const touch = (cookie: string, body: Record<string, unknown>) => api('/api/admin/inquiries', { method: 'PATCH', cookie, body: { id: lead.id, action: 'add_touch', ...body } });
+      checkStatus('Support cannot log a touch → 403', (await touch(sc, { channel: 'email', direction: 'out' })).status, 403);
+      checkStatus('A bad channel → 400', (await touch(mc, { channel: 'fax', direction: 'out' })).status, 400);
+      checkStatus('A bad direction → 400', (await touch(mc, { channel: 'email', direction: 'sideways' })).status, 400);
+      checkStatus('A time in the future → 400', (await touch(mc, { channel: 'email', direction: 'out', at: new Date(Date.now() + 86_400_000).toISOString() })).status, 400);
+      checkStatus('A lead we emailed → 200 (allowed on a lead)', (await touch(nc, { channel: 'email', direction: 'out', note: 'Email 1' })).status, 200);
+      check('…stored and audited', (await prisma.outreachTouch.count({ where: { inquiryId: lead.id, direction: 'out', channel: 'email', adminId: mgrNoCourses.id } })) === 1
+        && !!(await prisma.adminAuditLog.findFirst({ where: { adminId: mgrNoCourses.id, action: 'inquiry_add_touch', targetId: lead.id } })));
+      const detail = (await api(`/api/admin/inquiries?id=${lead.id}`, { cookie: mc })).body as { touches?: { channel: string }[] };
+      check('…and read back with the inquiry', detail.touches?.length === 1 && detail.touches[0].channel === 'email', JSON.stringify(detail).slice(0, 200));
+      const step = (b: Biz, k: string) => b.joining.steps.find(s => s.key === k)?.count ?? 0;
+      const b2nd = await get();
+      check('Courses joining: first contact this period → entered +1, Reached +1, Responded unchanged', b2nd.joining.entered - a.joining.entered === 1 && step(b2nd, 'reached') - step(a, 'reached') === 1 && step(b2nd, 'responded') === step(a, 'responded'), JSON.stringify(b2nd.joining).slice(0, 300));
+      await touch(mc, { channel: 'call', direction: 'in' });
+      const b3rd = await get();
+      check('…their reply → Responded +1', step(b3rd, 'responded') - step(b2nd, 'responded') === 1);
+
+      await prisma.course.update({ where: { id: course.id }, data: { isTest: true } });
+      const t = await get();
+      check('A test course leaves every number (TEST-2)', !t.courses.some(c => c.courseId === course.id) && t.cards.onlineBookings.count === before.cards.onlineBookings.count && t.value.noShowLateFeesCents === before.value.noShowLateFeesCents && t.value.paidBeforeArrival.count === before.value.paidBeforeArrival.count && t.cards.liveCourses.now === before.cards.liveCourses.now, JSON.stringify(t.cards));
+    } finally {
+      await prisma.courseInquiry.delete({ where: { id: lead.id } }).catch(() => {});
+      await prisma.moneyMove.deleteMany({ where: { courseId: course.id } });
+      await prisma.bookingEvent.deleteMany({ where: { courseId: course.id } });
+      await prisma.booking.deleteMany({ where: { courseId: course.id } });
+      await prisma.teeTime.deleteMany({ where: { courseId: course.id } });
+      await prisma.course.delete({ where: { id: course.id } });
+      await prisma.courseOperator.delete({ where: { id: op.id } });
+      await prisma.adminAuditLog.deleteMany({ where: { adminId: { in: [sup.id, mgrNoCourses.id, mgr.id, mgrNoMoney.id] } } }).catch(() => {});
+      await prisma.adminUser.deleteMany({ where: { id: { in: [sup.id, mgrNoCourses.id, mgr.id, mgrNoMoney.id] } } });
+    }
+    void t5; void t10; void b3; void b4; void b5;
   }
 
   console.log('\n── Double-tapped Book (online duplicate guard) ──');

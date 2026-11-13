@@ -7,7 +7,8 @@ import g from '../admin-glass.module.css';
 import s from '../courses/courses.module.css';
 import o from './onboarding.module.css';
 import { SESSION_ENDED, loadFailed, NO_CONTACT } from '../courses/terms';
-import { overdueTitle, ACTION_FAILED, NO_CAL_LINK, FOOT_PIPELINE, FOOT_CSV, LAUNCH_SOON } from './terms';
+import { overdueTitle, ACTION_FAILED, NO_CAL_LINK, FOOT_PIPELINE, FOOT_CSV, LAUNCH_TITLE, LAUNCH_SAVED, LAUNCH_CLEARED } from './terms';
+import { launchTone, launchDay } from './launch';
 
 // ADMIN-REDO page 3 — Onboarding (Cam approved the mockup 2026-11-12, ADMIN_REDO_SPEC.md "Page 3").
 // No cards on top: one list of every course in onboarding, sorted by what it needs (overdue, then call or email,
@@ -20,14 +21,15 @@ type Steps = { steps: { label: string; done: boolean }[]; done: number; total: n
 type Row = {
   key: string; inquiryId: string | null; courseId: string | null; name: string; town: string; isTest: boolean;
   status: string | null; stage: string; need: Need; daysWaiting: number; snoozed: boolean; overdue: boolean; next: string; steps: Steps;
+  launch: string | null; // the expected launch day (YYYY-MM-DD), set on the inquiry
 };
-type List = { at: string; overdueDays: number; support: boolean; rows: Row[] };
+type List = { at: string; today: string; overdueDays: number; support: boolean; rows: Row[] };
 type Profile = Row & {
   contact: { name: string | null; title: string | null; email: string | null; phone: string | null } | null;
   source: string | null;
   agreement: { version: string; signedAt: string } | null;
   history: { at: string; text: string; detail: string | null }[];
-  notes: string | null; canNote: boolean; canBookCall: boolean;
+  notes: string | null; canNote: boolean; canBookCall: boolean; canSetLaunch: boolean; today: string;
 };
 type Filter = 'all' | 'overdue' | 'call' | 'setup';
 
@@ -100,7 +102,39 @@ function Notes({ p, onSaved }: { p: Profile; onSaved: (notes: string) => void })
   );
 }
 
-function ProfilePanel({ rowKey, support }: { rowKey: string; support: boolean }) {
+/** The expected launch: shown to everyone, set or cleared by a manager (PATCH /api/admin/inquiries set_expected_launch). */
+function Launch({ p, onSaved }: { p: Profile; onSaved: (launch: string | null) => void }) {
+  const [draft, setDraft] = useState(p.launch ?? '');
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  useEffect(() => { setDraft(p.launch ?? ''); }, [p.launch]);
+  const tone = launchTone(p.launch, p.today);
+  const save = async (value: string | null) => {
+    if (busy || !p.inquiryId) return;
+    setBusy(true); setMsg(null);
+    const r = await inquiryAction(p.inquiryId, 'set_expected_launch', { expectedLaunchAt: value });
+    setBusy(false);
+    if (!r.ok) { setMsg({ ok: false, text: r.msg }); return; }
+    const saved = typeof r.data.expectedLaunchAt === 'string' ? r.data.expectedLaunchAt : null;
+    setMsg({ ok: true, text: saved ? LAUNCH_SAVED : LAUNCH_CLEARED });
+    onSaved(saved);
+  };
+  return (
+    <>
+      <span className={tone === 'bad' ? g.down : tone === 'warn' ? g.wa : undefined}>{p.launch ? launchDay(p.launch, p.today) : 'Not set'}</span>
+      {p.canSetLaunch && (
+        <span className={o.launchRow}>
+          <input type="date" className={o.launch} aria-label="Expected launch date" value={draft} onChange={e => setDraft(e.target.value)} disabled={busy} />
+          <button type="button" className={s.plink} onClick={() => save(draft || null)} disabled={busy || draft === (p.launch ?? '') || !draft}>{busy ? 'Saving…' : 'Save'}</button>
+          {p.launch && <button type="button" className={s.plink} onClick={() => save(null)} disabled={busy}>Clear</button>}
+        </span>
+      )}
+      {msg && <span className={`${o.noteMsg} ${msg.ok ? g.up : g.down}`} role={msg.ok ? 'status' : 'alert'}>{msg.text}</span>}
+    </>
+  );
+}
+
+function ProfilePanel({ rowKey, support, onLaunch }: { rowKey: string; support: boolean; onLaunch: (key: string, launch: string | null) => void }) {
   const [p, setP] = useState<Profile | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -177,11 +211,8 @@ function ProfilePanel({ rowKey, support }: { rowKey: string; support: boolean })
             <dt>Phone</dt><dd>{p.contact.phone ?? '—'}</dd>
           </> : <><dt>Main contact</dt><dd className={s.muted}>{NO_CONTACT}</dd></>}
           {p.contact && <><dt>Came from</dt><dd>{p.source ?? 'Not recorded'}</dd></>}
-          <dt>Expected launch</dt><dd>
-            Not set
-            {/* TODO(Build): wire to Build's expected-launch route once CourseInquiry.expectedLaunchAt lands (Cam 2026-11-12:
-                "to start setting deadlines for courses"). Until then the field is shown but can't be saved. */}
-            {p.canNote && <input type="date" className={o.launch} aria-label="Expected launch date" disabled title={LAUNCH_SOON} />}
+          <dt title={LAUNCH_TITLE}>Expected launch</dt><dd>
+            {p.inquiryId ? <Launch p={p} onSaved={launch => { setP(cur => cur ? { ...cur, launch } : cur); onLaunch(p.key, launch); }} /> : 'Not set'}
           </dd>
           <dt>Agreement</dt><dd>{p.agreement ? `${p.agreement.version} · signed ${date(p.agreement.signedAt)}` : 'Not signed yet'}</dd>
         </dl>
@@ -290,20 +321,20 @@ function OnboardingContent() {
                         <td><span className={s.cname}>{r.name}</span>{r.isTest && <span className={s.test}>Test</span>}<span className={s.csub}>{r.town || '—'}</span></td>
                         <td>{r.stage}<div className={o.bar} role="img" aria-label={`${r.steps.done} of ${r.steps.total} setup steps done`}><i style={{ width: `${(r.steps.done / r.steps.total) * 100}%` }} /></div></td>
                         <td><span className={o.next}>{r.next}</span>{r.overdue && <span className={o.late} title={overdueTitle(d.overdueDays)}>{r.daysWaiting} days waiting</span>}</td>
-                        <td className={`${s.n} ${s.hideS}`}>Not set</td>
+                        <td className={`${s.n} ${s.hideS} ${r.launch ? (launchTone(r.launch, d.today) === 'bad' ? g.down : launchTone(r.launch, d.today) === 'warn' ? g.wa : '') : s.muted}`} title={LAUNCH_TITLE}>{r.launch ? launchDay(r.launch, d.today) : 'Not set'}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               )}
             </section>
-            {pick && <ProfilePanel key={pick} rowKey={pick} support={d.support} />}
+            {pick && <ProfilePanel key={pick} rowKey={pick} support={d.support} onLaunch={(key, launch) => setD(cur => cur ? { ...cur, rows: cur.rows.map(r => (r.key === key ? { ...r, launch } : r)) } : cur)} />}
           </div>
         )}
 
         <div className={s.foot}>
           <Link href="/admin/inquiries">{FOOT_PIPELINE}</Link>
-          <a href="/api/admin/inquiries?format=csv">{FOOT_CSV}</a>
+          {d?.support && <a href="/api/admin/inquiries?format=csv">{FOOT_CSV}</a>}
         </div>
       </main>
     </>
