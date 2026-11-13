@@ -77,14 +77,18 @@ export interface RevenueGoal { month: string; targetCents: number | null; progre
 /** The route sent a usable goal block. */
 export const isGoal = (v: unknown): v is RevenueGoal => {
   const x = v as RevenueGoal | null;
-  return !!x && /^\d{4}-\d{2}$/.test(x.month) && typeof x.progressCents === 'number' && typeof x.dayOfPeriod === 'number' && typeof x.daysInPeriod === 'number'
-    && (x.targetCents === null || typeof x.targetCents === 'number');
+  const fin = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n);
+  return !!x && /^\d{4}-(0[1-9]|1[0-2])$/.test(x.month) && fin(x.progressCents) && fin(x.dayOfPeriod) && fin(x.daysInPeriod) && x.daysInPeriod > 0
+    && (x.targetCents === null || (fin(x.targetCents) && x.targetCents > 0));
 };
 
 /** "$4,000" or "4000.50" → cents; commas only as thousands groups; anything that isn't above zero and up to $20M → null. */
 export function parseGoalCents(s: string): number | null {
-  const t = s.replace(/[$\s]/g, '');
+  const t = s.trim().replace(/^\$/, '');
   if (!/^(\d{1,3}(,\d{3})+|\d+)(\.\d{1,2})?$/.test(t)) return null;
   const c = Math.round(parseFloat(t.replace(/,/g, '')) * 100);
   return c > 0 && c <= 2_000_000_000 ? c : null;
 }
+
+/** The goal bar's fill: never below empty (a negative month: more given back than taken) nor past full. */
+export const fillPct = (progress: number, target: number) => Math.max(0, Math.min(100, (progress / target) * 100));

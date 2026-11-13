@@ -1536,7 +1536,7 @@
     },
     {
       "path": "src/app/admin/revenue/GoalCard.tsx",
-      "lines": 73,
+      "lines": 76,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1566,7 +1566,7 @@
     },
     {
       "path": "src/app/admin/revenue/logic.ts",
-      "lines": 91,
+      "lines": 95,
       "purpose": "Revenue page's pure rules, kept apart so scripts/admin-revenue-test.ts can pin them:",
       "brain": [],
       "exports": [
@@ -1580,6 +1580,10 @@
         },
         {
           "name": "fallbackWindow",
+          "kind": "fn"
+        },
+        {
+          "name": "fillPct",
           "kind": "fn"
         },
         {

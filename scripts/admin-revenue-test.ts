@@ -2,7 +2,7 @@
 // period's name, a percentage is never drawn across a zero or negative prior, and only paused payouts read as a
 // course not being paid. Run: npx tsx scripts/admin-revenue-test.ts
 import { readFileSync } from 'fs';
-import { isGoal, parseGoalCents, KIND, fallbackQuery, isNewAnswer, isFallbackAnswer, pct, payoutState, periodDone, chartSummary, type Per } from '../src/app/admin/revenue/logic';
+import { isGoal, parseGoalCents, fillPct, KIND, fallbackQuery, isNewAnswer, isFallbackAnswer, pct, payoutState, periodDone, chartSummary, type Per } from '../src/app/admin/revenue/logic';
 
 let failed = 0;
 const check = (label: string, ok: boolean, detail = '') => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${!ok && detail ? ` — ${detail}` : ''}`); if (!ok) failed++; };
@@ -61,7 +61,13 @@ check('a goal block with no target yet is usable', isGoal({ month: '2026-11', ta
 check('a malformed goal block is refused', !isGoal({ month: 'Nov', targetCents: 5, progressCents: 0, dayOfPeriod: 1, daysInPeriod: 30 }) && !isGoal(undefined));
 check('goal amounts: "$4,000" → 400000, "12,50" and over $20M refused', parseGoalCents('$4,000') === 400000 && parseGoalCents('12,50') === null && parseGoalCents('20000001') === null && parseGoalCents('0') === null);
 const goalCard = readFileSync('src/app/admin/revenue/GoalCard.tsx', 'utf8');
-check('the goal bar uses the shared pace rule as a goal to reach', /goalPace\(\{[^}]*kind: 'reach'/.test(goalCard) && !/0\.9\s*\*/.test(goalCard));
+check('the goal bar uses the shared pace rule as a goal to reach, with its early grey days', /goalPace\(\{[^}]*share: elapsedShare\(goal\.dayOfPeriod, goal\.daysInPeriod\)[^}]*kind: 'reach'[^}]*daysElapsed: goal\.dayOfPeriod/.test(goalCard) && !/0\.9\s*\*/.test(goalCard));
+check('no projected month-end figure on the goal card', !/projected/.test(goalCard));
+check('the goal prefill keeps cents (Change never rewrites the goal)', /\(target \/ 100\)\.toFixed\(2\)/.test(goalCard));
+check('the bar never fills on a negative month nor past full', fillPct(-500, 400000) === 0 && fillPct(500000, 400000) === 100 && fillPct(100000, 400000) === 25);
+check('a met goal says so', /goal\.progressCents >= target \?/.test(goalCard));
+check('bad goal blocks refused: NaN, negative target, 0 days, month 13', !isGoal({ month: '2026-11', targetCents: NaN, progressCents: 0, dayOfPeriod: 1, daysInPeriod: 30 }) && !isGoal({ month: '2026-11', targetCents: -5, progressCents: 0, dayOfPeriod: 1, daysInPeriod: 30 }) && !isGoal({ month: '2026-11', targetCents: 5, progressCents: 0, dayOfPeriod: 1, daysInPeriod: 0 }) && !isGoal({ month: '2026-13', targetCents: 5, progressCents: 0, dayOfPeriod: 1, daysInPeriod: 30 }));
+check('stray $ or spaces inside an amount are refused', parseGoalCents('40$00') === null && parseGoalCents('400 500') === null && parseGoalCents(' $4,000.50 ') === 400050);
 check('setting the goal goes through step-up', /stepUpFetch\('\/api\/admin\/revenue-goal'/.test(goalCard));
 check('the goal card shows only for This month, only for the owner', /per === 'month' && owner && isGoal\(/.test(page));
 
