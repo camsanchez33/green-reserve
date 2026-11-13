@@ -95,14 +95,14 @@ export function StockTab({ refreshKey = 0, onChanged }: { refreshKey?: number; o
   const thumb = (i: TreeItem, big = false) => i.photoUrl
     // eslint-disable-next-line @next/next/no-img-element
     ? <img src={i.photoUrl} alt="" loading="lazy" className={big ? 'block w-full aspect-[4/3] rounded-[12px] object-contain bg-page mb-3' : 'w-10 h-10 rounded-[8px] object-cover bg-page'} />
-    : <span aria-hidden="true" className={big ? 'flex w-full aspect-[4/3] rounded-[12px] bg-page items-center justify-center text-[28px] font-bold text-ink-soft mb-3' : 'flex w-10 h-10 rounded-[8px] bg-page items-center justify-center text-[12px] font-bold text-ink-soft'}>{initials(i.name)}</span>;
+    : <span aria-hidden="true" className={big ? 'flex w-full aspect-[4/3] rounded-[12px] bg-page op-well items-center justify-center text-[28px] font-bold text-ink-soft mb-3' : 'flex w-10 h-10 rounded-[8px] bg-page op-well items-center justify-center text-[12px] font-bold text-ink-soft'}>{initials(i.name)}</span>;
 
   return (
     // IMPORT-2: "add many" is a wide table — it takes the page's width above the list instead of the side card.
     <div className={'grid gap-4 lg:items-start ' + (panel?.kind === 'many' ? '' : 'lg:grid-cols-[minmax(0,1fr)_340px]')}>
       <Card className="p-4 min-w-0 relative z-10">
         <div className="flex flex-wrap items-center gap-2.5">
-          <label className="flex-1 min-w-0 flex items-center gap-2 bg-page border border-line rounded-[10px] px-3 min-h-[38px] text-ink-muted">
+          <label className="flex-1 min-w-0 flex items-center gap-2 bg-page op-well border border-line rounded-[10px] px-3 min-h-[38px] text-ink-muted">
             <Search className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
             <input value={find} onChange={e => setFind(e.target.value)} aria-label="Find an item or barcode" className="flex-1 min-w-0 bg-transparent text-[13.5px] text-ink outline-none" />
           </label>
