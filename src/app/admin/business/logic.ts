@@ -45,10 +45,11 @@ export interface BusinessData {
 export function isAnswer(per: Per, d: unknown): d is BusinessData {
   const x = d as BusinessData | null;
   const obj = (v: unknown) => !!v && typeof v === 'object';
-  // Deep enough that the page never throws on a part it reads (no error boundary catches a render crash here).
+  // Deep enough that the parts the page reads unguarded are there (no error boundary catches a render crash here).
   return !!x && x.period?.kind === per && Array.isArray(x.months) && Array.isArray(x.courses) && obj(x.cards) && obj(x.value) && obj(x.joining)
     && Array.isArray(x.joining.steps) && obj(x.cards.liveCourses) && obj(x.cards.onlineBookings) && obj(x.cards.teeSheetFill)
-    && obj(x.value.paidBeforeArrival) && obj(x.joining.reachedToLive);
+    && obj(x.value.paidBeforeArrival) && obj(x.joining.reachedToLive)
+    && typeof x.cards.liveCourses.now === 'number' && typeof x.cards.onlineBookings.count === 'number' && typeof x.joining.inProgress === 'number';
 }
 
 /** A percentage change, or null when there is nothing to compare with (never drawn across a zero or negative prior). */

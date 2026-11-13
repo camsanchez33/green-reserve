@@ -7,11 +7,11 @@ let failed = 0;
 const check = (label: string, ok: boolean, detail = '') => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${!ok && detail ? ` — ${detail}` : ''}`); if (!ok) failed++; };
 
 // The route's answer counts only for the period asked.
-const ok = { period: { kind: 'm3' }, months: [], courses: [], cards: { liveCourses: {}, onlineBookings: {}, teeSheetFill: {} }, value: { paidBeforeArrival: {} }, joining: { steps: [], reachedToLive: {} } };
+const ok = { period: { kind: 'm3' }, months: [], courses: [], cards: { liveCourses: { now: 3 }, onlineBookings: { count: 10 }, teeSheetFill: {} }, value: { paidBeforeArrival: {} }, joining: { steps: [], reachedToLive: {}, inProgress: 1 } };
 check('the matching answer is accepted', isAnswer('m3', ok));
 check('another period is refused', !isAnswer('y12', ok));
 check('an answer without the joining steps is refused', !isAnswer('m3', { ...ok, joining: {} }));
-check('an answer missing a part the page reads is refused (no render crash)', !isAnswer('m3', { ...ok, cards: {}, value: {} }) && !isAnswer('m3', { ...ok, value: {} }));
+check('an answer missing a part the page reads is refused (no render crash)', !isAnswer('m3', { ...ok, cards: {}, value: {} }) && !isAnswer('m3', { ...ok, value: {} }) && !isAnswer('m3', { ...ok, cards: { ...ok.cards, liveCourses: {} } }));
 
 // Changes.
 check('up 50%', pct(150, 100) === 50);
