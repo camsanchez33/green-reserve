@@ -263,7 +263,8 @@ export default function FinancePage() {
                         const t = totals(m.revenue.cents, m.expenses.cents);
                         const on = open === m.month;
                         const i = data.months.indexOf(m);
-                        const before = i > 0 ? data.months[i - 1] : data.monthBefore;
+                        // The running month has no like-for-like figure for the month before (the route sends whole months), so no change.
+                        const before = m.partial ? null : i > 0 ? data.months[i - 1] : data.monthBefore;
                         const toggle = () => setOpen(on ? null : m.month);
                         return (
                           <Fragment key={m.month}>

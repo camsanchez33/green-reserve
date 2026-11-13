@@ -81,10 +81,11 @@ const SOURCE_WORDS: Record<Source, string> = { serviceFees: 'Booking service fee
 export const centsOf = (v: { cents: number } | number | undefined | null) => (typeof v === 'number' ? v : v?.cents ?? 0);
 export const sourceLabel = (k: Source) => SOURCE_WORDS[k];
 
-/** A CSV cell: quoted, inner quotes doubled, and a leading = + - @ written as text so a spreadsheet never runs it. */
+/** A CSV cell: quoted, inner quotes doubled, and a leading = + - @ written as text so a spreadsheet never runs it —
+ *  except a plain number (a loss is "-20.00", which must stay a number a spreadsheet can add). */
 export const cell = (v: string | number) => {
   const s = String(v);
-  return `"${(/^[=+\-@\t\r]/.test(s) ? "'" + s : s).replace(/"/g, '""')}"`;
+  return `"${(/^[=+\-@\t\r]/.test(s) && !/^-?\d+(\.\d+)?$/.test(s) ? "'" + s : s).replace(/"/g, '""')}"`;
 };
 const dollars = (c: number) => (c / 100).toFixed(2);
 /** Months, oldest first: month, bookings, revenue (and by source), expenses (and by category), profit, margin. */

@@ -8,7 +8,7 @@ export const TERMS = {
   margin: 'Profit as a share of revenue. Its change is in points',
   vsPrior: 'The same stretch just before; up to the same day while this one is still running',
   bookings: 'Bookings made in the month that are still on (test courses never count)',
-  liveCourses: 'Courses live at the end of the month',
+  liveCourses: 'Courses live now; shown for the running month only',
   newLive: 'Courses that went live in the month',
 } as const;
 

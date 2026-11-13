@@ -50,13 +50,15 @@ const lines = csv.trim().split('\r\n');
 check('a header and one row per month', lines.length === 3, String(lines.length));
 check('dollars, profit and margin per month', lines[1].includes('"300.00"') && lines[1].includes('"200.00"') && lines[1].includes('"66.7"'));
 check('a running month is marked "so far"', lines[2].startsWith('"2026-11 (so far)"'));
-check('a formula-looking cell is written as text', cell('=HYPERLINK("x")') === `"'=HYPERLINK(""x"")"`);
+check('a loss stays a number a spreadsheet can add', lines[2].includes('"-20.00"') && !lines[2].includes("'-") && cell('-1.50') === '"-1.50"');
+check('a formula-looking cell is written as text', cell('-1+2') === `"'-1+2"` && cell('=HYPERLINK("x")') === `"'=HYPERLINK(""x"")"`);
 
 // The page.
 const page = readFileSync('src/app/admin/finance/page.tsx', 'utf8');
 check('reads only /api/admin/finance', /\/api\/admin\/finance\?period=/.test(page) && !/\/api\/admin\/(revenue|expenses)['?]/.test(page));
 check('expenses rising is the bad colour', /goodUp=\{false\}/.test(page));
 check('the margin compares in points', /points \/>/.test(page));
+check('the running month shows no change against a whole month', /const before = m\.partial \? null :/.test(page));
 check('a later Filter pick wins over an earlier answer', /mine !== seq\.current/.test(page));
 check('never a chart library', !/from '(recharts|chart\.js|d3)/.test(page));
 
