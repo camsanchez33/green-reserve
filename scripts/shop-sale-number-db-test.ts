@@ -88,7 +88,8 @@ async function main() {
     await prisma.shopSale.update({ where: { id: eighteen.id }, data: { createdAt: new Date(Date.now() - 200 * 86_400_000), paidAt: new Date(Date.now() - 200 * 86_400_000) } });
     const old = await findSales(c.id, { q: '#18' });
     ok('a sale older than 90 days is found by its number', old.ok && old.value[0]?.id === eighteen.id);
-    const day = new Date().toISOString().slice(0, 10);
+    // Today on the course's clock (a UTC date is tomorrow in New York every evening, which findSales refuses).
+    const day = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
     const picked = await findSales(c.id, { q: '#18', day });
     ok('…but not on a day it wasn\'t made', picked.ok && !picked.value.some(x => x.id === eighteen.id));
     const rc = await staffShopReceipt(c.id, eighteen.id);
