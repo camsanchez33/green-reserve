@@ -74,7 +74,7 @@ check('the page sends no write request (only GET)', !/method:\s*'(POST|PATCH|PUT
   check('the route labels every booking with bookingRefLabel (list and profile)', (route.match(/number: bookingRefLabel\(b\)/g) ?? []).length === 2 && !/bookingNumber\(/.test(route));
   check('the route selects Booking.ref and Course.number', /id: true, ref: true/.test(route) && (route.match(/number: true/g) ?? []).length >= 2);
   check('a search by GR number goes through parseRef', /parseRef\(q\)/.test(route) && /ref: ref\.ref, course: \{ number: ref\.course \}/.test(route));
-  check('the page never prefixes a literal "#"', !/#\{(p|r)\.number\}/.test(page));
+  check('the page never prefixes a literal "#"', !/#\$?\{(p|r)\.number\}/.test(page));
 }
 
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }

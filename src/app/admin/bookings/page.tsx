@@ -91,7 +91,7 @@ function ProfilePanel({ id }: { id: string }) {
   const feeLines = FEE_LINES.flatMap(([what, label]) => { const c = p.moves.filter(m => m.what === what && !m.dispute).reduce((a, m) => a + (m.direction === 'out' ? -m.cents : m.cents), 0); return c !== 0 ? [[label, c] as const] : []; });
 
   return (
-    <section id="booking-card" className={`${g.glass} ${s.prof}`} aria-label={`Booking #${p.number}`}>
+    <section id="booking-card" className={`${g.glass} ${s.prof}`} aria-label={`Booking ${p.number}`}>
       <div className={s.ph}>
         <div className={s.pname}>
           <h2>{p.golferName}</h2>
