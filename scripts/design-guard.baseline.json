@@ -141,7 +141,7 @@
     "lucide": 3
   },
   "src/app/dashboard/shop/page.tsx": {
-    "lucide": 1
+    "lucide": 2
   },
   "src/app/dashboard/sign/page.tsx": {
     "card": 1
@@ -242,7 +242,7 @@
     "lucide": 6
   },
   "src/components/dashboard/StockTab.tsx": {
-    "lucide": 1
+    "lucide": 2
   },
   "src/components/dashboard/TabIntro.tsx": {
     "lucide": 2
