@@ -67,5 +67,15 @@ check('…and never calls Stripe or writes (charge, refund, retry, create, updat
 const page = readFileSync('src/app/admin/bookings/page.tsx', 'utf8');
 check('the page sends no write request (only GET)', !/method:\s*'(POST|PATCH|PUT|DELETE)'/.test(page));
 
+// GR booking numbers (Build #380): the route labels with booking-ref.ts and searches by parseRef; the page adds no '#'.
+{
+  const route = readFileSync('src/app/api/admin/bookings/route.ts', 'utf8');
+  const page = readFileSync('src/app/admin/bookings/page.tsx', 'utf8');
+  check('the route labels every booking with bookingRefLabel (list and profile)', (route.match(/number: bookingRefLabel\(b\)/g) ?? []).length === 2 && !/bookingNumber\(/.test(route));
+  check('the route selects Booking.ref and Course.number', /id: true, ref: true/.test(route) && (route.match(/number: true/g) ?? []).length >= 2);
+  check('a search by GR number goes through parseRef', /parseRef\(q\)/.test(route) && /ref: ref\.ref, course: \{ number: ref\.course \}/.test(route));
+  check('the page never prefixes a literal "#"', !/#\$?\{(p|r)\.number\}/.test(page));
+}
+
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }
 console.log('\nALL PASS');

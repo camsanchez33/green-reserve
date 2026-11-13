@@ -1893,7 +1893,7 @@
     },
     {
       "path": "src/app/api/admin/bookings/plan.ts",
-      "lines": 132,
+      "lines": 133,
       "purpose": "ADMIN-REDO page 4 — Bookings (Cam 2026-11-12).",
       "brain": [],
       "exports": [
@@ -2002,7 +2002,7 @@
     },
     {
       "path": "src/app/api/admin/bookings/route.ts",
-      "lines": 178,
+      "lines": 182,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2024,6 +2024,7 @@
         "@/lib/admin-day",
         "@/lib/admin-session",
         "@/lib/booking-fees",
+        "@/lib/booking-ref",
         "@/lib/money-problems",
         "@/lib/prisma",
         "@/lib/real-courses",
@@ -17350,6 +17351,7 @@
         "./prisma"
       ],
       "usedBy": [
+        "src/app/api/admin/bookings/route.ts",
         "src/app/api/admin/search/route.ts",
         "src/app/api/manage/[bookingId]/route.ts",
         "src/app/api/receipt/[bookingId]/route.ts",
