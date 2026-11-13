@@ -101,7 +101,7 @@ function AnnouncementsContent() {
       const res = await adminFetch<SendOutcome>('/api/admin/broadcasts', {
         method: 'POST', body: JSON.stringify({ title, body: text, sendEmail: draft.sendEmail }), subject: 'this announcement', action: 'send',
       });
-      if (!res.ok) { setSendErr({ msg: res.message, kind: res.kind }); return; } // shown on the composer AND the list
+      if (!res.ok) { setSendErr({ msg: res.message, kind: res.kind }); load(); return; } // shown on the composer AND the list; the list re-read so "check" shows what went out
       setOutcome(res.data); setDraft(EMPTY); load(); toList();
     } finally { busy.current = false; setSending(false); }
   }
@@ -109,7 +109,7 @@ function AnnouncementsContent() {
   // What the send is doing, for whichever page is open (the composer shows its own).
   const sendStatus = !composing && (sending || sendErr) ? (
     sending ? <p className={s.empty} role="status">Sending the announcement…</p>
-      : sendErr && <div className={s.problem} role="alert"><span className={g.down}>The announcement: {sendErr.msg}</span>
+      : sendErr && <div className={s.problem} role="alert"><span className={g.down}>{sendErr.msg}</span>
         {sendErr.kind === 'unauthorized' && <Link href="/admin/login" className={s.pill}>Sign in</Link>}
         <button type="button" className={s.pill} onClick={() => setSendErr(null)}>Dismiss</button></div>
   ) : null;
