@@ -269,3 +269,6 @@ Mockup `lanes/admin/announcements-mockup.html` (final). Same features as today (
 
 ## Rule: Light and Charcoal get the same redesign (Cam 2026-11-12)
 Every course-dashboard change ships in BOTH looks: same layout, glass cards, ribbons (dark ribbons on a light page in Light), colours with meaning. Only the palette swaps. Every page is screenshotted in both looks before review; scripts/glass-test.ts fails on a charcoal-only layout/glass rule.
+
+## Pro shop item stock box: APPROVED (Cam 2026-11-12, "looks good")
+Mockup `lanes/dashboard/stock-edit-mockup.html`. On an item: one "In stock" number (amber when below zero, with "Sold N more than you had. Fix it under Current inventory."). Two choices: "New stock" (How many −/+, Cost of one with "Optional" under it, prefilled from the last cost; "After this: N in stock"; Add to stock) and "Current inventory" (How many you have now −/+; Save the count). "Remind me when it's below" −/+ with "Reminder by email" under it. Hide from the register / Delete item as small links. The email reminder is NEW (today reorderAt only shows the low dot); not started — who gets it is still open.
