@@ -213,8 +213,9 @@ export function ItemForm({ item, rows, categories, canCost, onSaved, onCancel, o
         </div>
       </div>
 
-      {/* Stock */}
-      {!sized && (
+      {/* Stock — a new item's opening count here; an existing single item's stock lives in the Stock tab's stock box
+          (Cam 2026-11-12, "Pro shop item stock box"), so this form edits what it is, not how many. */}
+      {!sized && !(item && !item.options.length) && (
         <div className={SECTION}>
           <h3 className="text-[13.5px] font-semibold text-ink">Stock</h3>
           <div className={'mt-2 grid gap-2 ' + (canCost ? 'grid-cols-3' : 'grid-cols-2')}>

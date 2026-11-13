@@ -1,7 +1,7 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 729,
+    "files": 730,
     "routes": 311,
     "libs": 260,
     "models": 76,
@@ -12586,7 +12586,7 @@
     },
     {
       "path": "src/components/dashboard/ItemForm.tsx",
-      "lines": 318,
+      "lines": 319,
       "purpose": "POS-8 (Cam 2026-11-09:",
       "brain": [],
       "exports": [
@@ -13229,7 +13229,7 @@
     },
     {
       "path": "src/components/dashboard/StockTab.tsx",
-      "lines": 250,
+      "lines": 258,
       "purpose": "POS-6/POS-8 (Cam 2026-11-09:",
       "brain": [],
       "exports": [
@@ -13248,6 +13248,7 @@
         "@/components/dashboard/LoadError",
         "@/components/dashboard/UploadMany",
         "@/components/dashboard/shop/ShopMenu",
+        "@/components/dashboard/shop/StockBox",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/lib/booking-fees",
@@ -14398,6 +14399,31 @@
       "usedBy": [
         "src/app/receipt/shop/[id]/page.tsx",
         "src/components/dashboard/shop/SaleReceiptPanel.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/shop/StockBox.tsx",
+      "lines": 133,
+      "purpose": "Pro shop item stock box (Cam 2026-11-12, ADMIN_REDO_SPEC \"Pro shop item stock box:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "StockBox",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/lib/dashboard-fetch",
+        "@/lib/shop-tree",
+        "react"
+      ],
+      "usedBy": [
+        "src/components/dashboard/StockTab.tsx"
       ]
     },
     {
@@ -20308,7 +20334,8 @@
         "src/components/dashboard/money/SalesPanel.tsx",
         "src/components/dashboard/settings/TakesCashToggle.tsx",
         "src/components/dashboard/settings/WhoPaysWhat.tsx",
-        "src/components/dashboard/shop/SaleReceiptPanel.tsx"
+        "src/components/dashboard/shop/SaleReceiptPanel.tsx",
+        "src/components/dashboard/shop/StockBox.tsx"
       ]
     },
     {
@@ -27952,7 +27979,8 @@
       "usedBy": [
         "src/app/dashboard/shop/page.tsx",
         "src/components/dashboard/ItemForm.tsx",
-        "src/components/dashboard/StockTab.tsx"
+        "src/components/dashboard/StockTab.tsx",
+        "src/components/dashboard/shop/StockBox.tsx"
       ]
     },
     {

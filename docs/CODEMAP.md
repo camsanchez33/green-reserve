@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-729 source files · 311 routes · 260 libraries · 76 models
+730 source files · 311 routes · 260 libraries · 76 models
 
 ## Single sources of truth
 
@@ -376,7 +376,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/email.ts` | 65 | 2179 |  | `BookingEmailData`, `courseNoticeEmail`, `escapeHtml`, `firstName`, `isPlaceholderEmail`, `PLACEHOLDER_EMAIL_DOMAIN`, `sendAdminDigest`, `sendAdminPasswordChangedNotification` +74 more |
 | `src/lib/course-time.ts` | 62 | 63 | SD-3 — course-local time. | `addDaysStr`, `clockIn`, `DEFAULT_TZ`, `isPastIn`, `isValidTimezone`, `payLinkOpensOn`, `todayIn`, `US_TIMEZONES` |
 | `src/lib/rate-limit.ts` | 59 | 78 |  | `clientIp`, `evidentiaryIp`, `rateLimit`, `rateLimitCount` |
-| `src/lib/dashboard-fetch.ts` | 52 | 51 | SD-10 (from the SD review). | `dfetch`, `DFetchResult`, `REGISTER_CLOSED_EVENT` |
+| `src/lib/dashboard-fetch.ts` | 53 | 51 | SD-10 (from the SD review). | `dfetch`, `DFetchResult`, `REGISTER_CLOSED_EVENT` |
 | `src/lib/format.ts` | 50 | 78 | MP-9 (ADMIN_V4 V4-6 §3) — the one place admin pages format money and time. | `formatCents`, `formatDate`, `formatDateTime`, `formatEasternDate`, `formatEasternDay`, `formatMoney`, `formatRelative`, `formatStamp` +3 more |
 | `src/lib/admin-audit.ts` | 43 | 194 | BRAIN-1a (Cam 2026-10-22): | `ACTION_LABELS`, `auditAdmin`, `AuditEntry`, `bodyWithReason`, `changedFields`, `courseOfBooking`, `needReason`, `REASON_ACTIONS` +5 more |
 | `src/lib/stripe.ts` | 37 | 147 | Every charge, refund and SetupIntent GreenReserve makes goes through here. | `ACCESS_FEE_CENTS`, `chargeOnConnectedAccount`, `chargeOneIntent`, `MEMBERSHIP_FEE_RATE`, `membershipFeeCents`, `refundOnConnectedAccount`, `stripe` |
@@ -494,6 +494,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/setup-sheet-recap.ts` | 4 | 130 | Cam 2026-10-26 (onboarding walk): | `RecapRow`, `SHEET_NEXT_STEPS`, `sheetPricesNotBuilt`, `sheetRecap` |
 | `src/lib/shop-import.ts` | 4 | 352 | W2-7 (Cam 2026-10-20: | `barcodeChecks`, `CategoryMerge`, `categoryMerges`, `checkList`, `cleanSku`, `clearRepeatedSkus`, `HeaderClash`, `HeaderGuess` +8 more |
 | `src/lib/shop-receipt.ts` | 4 | 70 | RECEIPT-3 (Cam 2026-11-09: | `publicShopReceipt`, `receiptView`, `ShopReceipt`, `shopReceiptUrl`, `staffShopReceipt` |
+| `src/lib/shop-tree.ts` | 4 | 57 | W2-7: | `bySku`, `FlatItem`, `matches`, `shopTree`, `skuHits`, `stockOf`, `stockWords`, `TreeItem` |
 | `src/lib/unsaved-guard.ts` | 4 | 95 | SD-8b — leaving a dashboard page with unsaved edits. | `confirmLeave`, `setLeaveGuard`, `useBackGuard` |
 | `src/lib/walking.ts` | 4 | 23 | Settings rework (Cam 2026-10-19): | `walkingSummary`, `walkingWords` |
 | `src/lib/booking-fee.ts` | 3 | 126 | FEE-AT-BOOKING (Cam 2026-10-24: | `chargeBookingFee`, `feeCoveredCents`, `refundBookingFee`, `releaseUnpaidBooking` |
@@ -527,7 +528,6 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/schedule-wire.ts` | 3 | 104 |  | `scheduleMoneyForCreate`, `scheduleMoneyFromWire`, `scheduleToWire`, `teeTimeToWire` |
 | `src/lib/sent-messages.ts` | 3 | 47 | BRAIN-1b (Cam 2026-10-22): | `logSent`, `SendMeta` |
 | `src/lib/shop-stock.ts` | 3 | 98 | SHOP-4 (Cam 2026-10-30: | `isLow`, `receiveStock`, `recentReceipts`, `setCost`, `setReorder`, `StockRow`, `stockRows` |
-| `src/lib/shop-tree.ts` | 3 | 57 | W2-7: | `bySku`, `FlatItem`, `matches`, `shopTree`, `skuHits`, `stockOf`, `stockWords`, `TreeItem` |
 | `src/lib/tee-rounds.ts` | 3 | 67 | ROUNDS-1 (Cam 2026-11-06: | `periodOf`, `roundName`, `roundOf`, `RoundSlot`, `rowTag`, `runsOf`, `usualRound`, `usualRoundOnly` |
 | `src/lib/tee-time-close.ts` | 3 | 70 | TT-CLOSE (Cam 2026-11-12, ADMIN_REDO_SPEC "Course dashboard Tee sheet + time card: | `ACTIVE_BOOKING`, `bookedOnTime`, `closeFreeTime`, `CloseResult`, `deleteRefusal`, `refusal`, `setStaffOnly` |
 | `src/lib/thread-signal.ts` | 3 | 52 | MP-7a. | `compareThreads`, `SignalMessage`, `threadSignal`, `ThreadSignal`, `UNANSWERED_AFTER_DAYS` |
@@ -713,7 +713,7 @@ Sorted the same way.
 | `src/components/dashboard/GolferMessageModal.tsx` | 1 | 227 | MSG-1 (PLATFORM_ROADMAP_SPEC §5): | `default (GolferMessageModal)` |
 | `src/components/dashboard/GroupTicket.tsx` | 1 | 69 | DASH-D (Cam 2026-11-01, "make checking someone in a little more POS like"): | `default (GroupTicket)`, `TicketBooking`, `TicketLine`, `ticketLines` |
 | `src/components/dashboard/home/HomeBoard.tsx` | 1 | 305 | DASH-D Home (Cam 2026-11-01, mockup S1): | `Conditions`, `ConditionsCard`, `EventsCard`, `Goals`, `GoalsCard`, `heatStep`, `HomeEvent`, `ShiftNote` +3 more |
-| `src/components/dashboard/ItemForm.tsx` | 1 | 318 | POS-8 (Cam 2026-11-09: | `ItemForm` |
+| `src/components/dashboard/ItemForm.tsx` | 1 | 319 | POS-8 (Cam 2026-11-09: | `ItemForm` |
 | `src/components/dashboard/LastMinuteDeals.tsx` | 1 | 71 | PRICE-2 (Cam 2026-10-30: | `LastMinuteDeals` |
 | `src/components/dashboard/MemberAccount.tsx` | 1 | 134 | MEM-ACCT (Cam 2026-10-30: | `AccountFields`, `MemberAccount` |
 | `src/components/dashboard/MemberJoin.tsx` | 1 | 92 | MEM-JOIN (Cam 2026-10-30: | `AutoRenewFields`, `AutoRenewStop`, `JoinOnlineSelect`, `JoinRequests` |
@@ -735,9 +735,10 @@ Sorted the same way.
 | `src/components/dashboard/settings/TakesCashToggle.tsx` | 1 | 31 | HOME-3 (Cam 2026-11-12: | `TakesCashToggle` |
 | `src/components/dashboard/settings/WhoPaysWhat.tsx` | 1 | 99 | Settings → Prices & fees: | `WhoPaysWhat` |
 | `src/components/dashboard/shop/SaleReceiptPanel.tsx` | 1 | 65 | RECEIPT-3 (Cam 2026-11-09: | `ReceiptSendRow`, `ReceiptTarget`, `SaleReceiptPanel` |
+| `src/components/dashboard/shop/StockBox.tsx` | 1 | 133 | Pro shop item stock box (Cam 2026-11-12, ADMIN_REDO_SPEC "Pro shop item stock box: | `StockBox` |
 | `src/components/dashboard/ShopItemsForGroup.tsx` | 1 | 188 | POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): | `default (ShopItemsForGroup)`, `ShopLine` |
 | `src/components/dashboard/StaffPermissions.tsx` | 1 | 243 | SP-A (STAFF_POLICY_SPEC A6): | `StaffPermissions` |
-| `src/components/dashboard/StockTab.tsx` | 1 | 250 | POS-6/POS-8 (Cam 2026-11-09: | `StockTab` |
+| `src/components/dashboard/StockTab.tsx` | 1 | 258 | POS-6/POS-8 (Cam 2026-11-09: | `StockTab` |
 | `src/components/dashboard/TeeSheetCalendar.tsx` | 1 | 90 | VIEWS-1 (Cam 2026-11-03): | `default (TeeSheetCalendar)` |
 | `src/components/dashboard/TeeSheetList.tsx` | 1 | 74 | VIEWS-1 (Cam 2026-11-03, the glass/views canvas: | `default (TeeSheetList)` |
 | `src/components/dashboard/ThemeSwitch.tsx` | 1 | 22 | DASH-D: | `default (ThemeSwitch)` |
