@@ -27,7 +27,7 @@ async function cleanup() {
   const paid = await sale('paid_cash'), open = await sale('open');
 
   const r = await staffShopReceipt(c.id, paid.id);
-  ok('staff see a paid sale\'s receipt: lines, tax, total, cash and change', !!r && r.totalCents === 1284 && r.taxCents === 84 && r.lines[0].quantity === 2 && r.cashTenderedCents === 2000 && r.paidWith === 'Cash' && r.ref === paid.id.slice(-8).toUpperCase(), r);
+  ok('staff see a paid sale\'s receipt: lines, tax, total, cash and change', !!r && r.totalCents === 1284 && r.taxCents === 84 && r.lines[0].quantity === 2 && r.cashTenderedCents === 2000 && r.paidWith === 'Cash' && r.ref === `#${(await prisma.shopSale.findUniqueOrThrow({ where: { id: paid.id }, select: { number: true } })).number}`, r); // PRO-SHOP: the receipt reads like the Sales list
   ok('…not an unpaid sale', (await staffShopReceipt(c.id, open.id)) === null);
   ok('…not another course\'s sale', (await staffShopReceipt(other.id, paid.id)) === null);
 
