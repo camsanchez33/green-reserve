@@ -588,7 +588,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/admin-home.ts` | 1 | 131 | ADMIN-C (Cam 2026-10-22, mockup C "Clean hub"): | `homeCourseStats`, `HomeCourseStats`, `homeOverview`, `homeToday` |
 | `src/lib/agreement-pdf.tsx` | 1 | 129 | AGREEMENT_SPEC AG-2 §2 — the signed-agreement PDF. | `AgreementPdf`, `markdownBlocks`, `renderAgreementPdf`, `SignatureBlock` |
 | `src/lib/birdie/course-context.ts` | 1 | 75 | BIRDIE_AI_SPEC B1 — read-only awareness of THE OPERATOR'S OWN course. | `describeCourseContext`, `operatorCourseContext`, `OperatorCourseContext` |
-| `src/lib/birdie/knowledge-operator.ts` | 1 | 65 | BIRDIE_AI_SPEC B1 — the operator knowledge pack. | `DASHBOARD_PAGES`, `DashboardPage`, `OPERATOR_KNOWLEDGE` |
+| `src/lib/birdie/knowledge-operator.ts` | 1 | 64 | BIRDIE_AI_SPEC B1 — the operator knowledge pack. | `DASHBOARD_PAGES`, `DashboardPage`, `OPERATOR_KNOWLEDGE` |
 | `src/lib/birdie/proposals.ts` | 1 | 455 | BIRDIE_AI_SPEC B4b (Cam 2026-10-05) — propose-and-confirm CHANGES. | `isProposeTool`, `ProposalCard`, `ProposalOutcome`, `PROPOSE_TOOLS`, `runProposeTool` |
 | `src/lib/blackouts.ts` | 1 | 43 | Closing a day on the schedule (Blackout) and reopening it. | `bookedOn`, `closeDay`, `reopenDay` |
 | `src/lib/booking-residents.ts` | 1 | 72 | RES-1 (Cam 2026-10-19): | `setBookingResidents`, `SetResidentsResult` |

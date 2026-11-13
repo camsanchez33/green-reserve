@@ -178,7 +178,7 @@ export async function POST(req: NextRequest) {
       senderName: session.name,
       courseName: course.name,
       messageBody: body.trim(),
-      replyUrl: `${process.env.NEXT_PUBLIC_URL}/dashboard/support`,
+      replyUrl: `${process.env.NEXT_PUBLIC_URL}/dashboard/messages`,
     }).then(() => prisma.messageThread.update({ where: { id: thread.id }, data: { operatorLastEmailAt: new Date() } }))
       .catch(e => console.error('Message notification email failed:', e)));
   }

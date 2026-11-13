@@ -17049,7 +17049,7 @@
     },
     {
       "path": "src/lib/birdie/knowledge-operator.ts",
-      "lines": 65,
+      "lines": 64,
       "purpose": "BIRDIE_AI_SPEC B1 — the operator knowledge pack.",
       "brain": [],
       "exports": [
