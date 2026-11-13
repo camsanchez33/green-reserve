@@ -272,3 +272,8 @@ Every course-dashboard change ships in BOTH looks: same layout, glass cards, rib
 
 ## Pro shop item stock box: APPROVED (Cam 2026-11-12, "looks good")
 Mockup `lanes/dashboard/stock-edit-mockup.html`. On an item: one "In stock" number (amber when below zero, with "Sold N more than you had. Fix it under Current inventory."). Two choices: "New stock" (How many −/+, Cost of one with "Optional" under it, prefilled from the last cost; "After this: N in stock"; Add to stock) and "Current inventory" (How many you have now −/+; Save the count). "Remind me when it's below" −/+ with "Reminder by email" under it. Hide from the register / Delete item as small links. The email reminder is NEW (today reorderAt only shows the low dot); not started — who gets it is still open.
+
+## Merge notes for when Cam is back (2026-11-13)
+- Open, reviewed: #393 sale numbers (receipts show them), #394 Financial analytics UI, #395 Support chats data (2 business days; holidays not skipped; a course's "Thanks" after we close re-opens it as waiting; staff now see announcements).
+- Order: #395 → admin Course support PR (lane 4) together with or before #392 (dashboard Support). When merging #392, also change src/app/api/birdie/chat/route.ts:67, src/lib/birdie/knowledge-operator.ts:15 and :61, src/app/api/admin/messages/route.ts:181 from Messages / /dashboard/messages to Support / /dashboard/support.
+- Queued, not started: timestamp cast in finance/revenue routes, launch-date double audit + isolation case, problems PATCH removal, low-stock email (who gets it: open).
