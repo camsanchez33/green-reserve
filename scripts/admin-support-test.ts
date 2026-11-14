@@ -23,5 +23,9 @@ const nav = readFileSync('src/components/admin/AdminSidebar.tsx', 'utf8');
 check('the menu: Course support, support+, Messages area', /key: 'support', label: 'Course support', href: '\/admin\/support', minRole: SUPPORT_PLUS, area: 'messages'/.test(nav));
 check('Problems is off the rail: its list is Overview\'s Needs attention', !/key: 'problems'/.test(nav) && /<Link href="\/admin" className=\{g\.ibtn\}/.test(nav));
 
+check('the reply limit is Build\'s', MAX_REPLY === 5000 && /export const MAX_MESSAGE = 5000;/.test(readFileSync('src/lib/support-chats.ts', 'utf8')));
+check('the shapes are Build\'s own types', /import type \{ AdminThread, AdminMessage \} from '@\/lib\/support-chats'/.test(readFileSync('src/app/admin/support/logic.ts', 'utf8')));
+check('the top search opens Course support, not the retired Messages page', (() => { const sr = readFileSync('src/app/api/admin/search/route.ts', 'utf8'); return /'nav:support'/.test(sr) && !/'nav:messages'/.test(sr) && !/\/admin\/messages\?courseId/.test(sr) && /'\/admin\/support': 'messages'/.test(sr); })());
+check('a course found by search opens its chats (?q=)', /initialQ=\{params\.get\('q'\)/.test(page));
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');

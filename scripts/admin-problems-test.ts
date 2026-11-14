@@ -48,6 +48,8 @@ check('/admin/problems redirects to Overview', /redirect\('\/admin'\)/.test(old)
 check('Overview lists problems only for the Problems area', /can\('problems'\) \? listProblems\(now\) : null/.test(ov));
 check('each problem carries its course, age and detail', /problem: \{ course: p\.courseName, courseId: p\.courseId, openedAt: p\.openedAt, detail: p\.detail, goTo: p\.href \}/.test(ov));
 check('Go to it only when the login can open it, else the course, else who can', /canOpenAdminHref\(p\.goTo, role, areas\)/.test(page) && /label: 'Open course'/.test(page) && /whoCanOpen\(p\.goTo\)/.test(page));
+check('snoozed problems still show (snoozing is gone)', /\.\.\.\(problems\?\.snoozed \?\? \[\]\)/.test(ov));
+check('the course is not printed twice when the title already names it', /!text\.includes\(p\.course\)/.test(page));
 check('a problem opens in place (no page to go to)', /aria-expanded=\{open\}/.test(page) && !/href="\/admin\/problems"/.test(page));
 check('assign offers only people who can open Problems', /const CAN_WORK = \{ active: true, role: \{ in: SUPPORT_PLUS \}, OR: \[\{ role: 'owner' \}, \{ areasSetAt: null \}, \{ areas: \{ has: 'problems' \} \}\] \}/.test(route)
   && /findMany\(\{ where: CAN_WORK/.test(route) && /findFirst\(\{ where: \{ \.\.\.CAN_WORK, id: body\.adminId \}/.test(route));

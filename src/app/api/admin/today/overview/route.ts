@@ -156,7 +156,8 @@ export async function GET() {
     r.id.startsWith('fc-') ? 'money' : r.id.startsWith('msg-') ? 'messages' : r.courseId ? 'courses' : 'pipeline';
   const queueRows = queue ? queue.rows.filter(r => can(rowArea(r))) : [];
   const toAttn = (r: (typeof queueRows)[number]): Attention => ({ id: `q-${r.id}`, text: `${r.who}: ${r.why}`, tone: r.severity, href: r.href, action: r.actionLabel });
-  const problemRows: Attention[] = (problems?.open ?? []).map(p => ({
+  // Snoozing is gone (Cam 2026-11-12): a problem snoozed before then shows with the open ones, never on no screen.
+  const problemRows: Attention[] = [...(problems?.open ?? []), ...(problems?.snoozed ?? [])].map(p => ({
     id: `p-${p.id}`, text: p.title, tone: 'bad' as const, href: p.href, action: 'Open',
     problem: { course: p.courseName, courseId: p.courseId, openedAt: p.openedAt, detail: p.detail, goTo: p.href },
   }));
@@ -196,7 +197,7 @@ export async function GET() {
       total: problemRows.length + todoRows.length,
       problemsMore: can('problems') ? Math.max(0, problemRows.length - PROB_CAP) : 0,
       todosMore: Math.max(0, todoRows.length - TODO_CAP),
-      todosHref: systemRows.length > TODO_CAP ? '/admin/system' : can('pipeline') ? '/admin/inquiries' : can('courses') ? '/admin/courses' : can('money') ? '/admin/revenue' : '/admin/messages',
+      todosHref: systemRows.length > TODO_CAP ? '/admin/system' : can('pipeline') ? '/admin/inquiries' : can('courses') ? '/admin/courses' : can('money') ? '/admin/revenue' : '/admin/support',
     } : null,
   });
 }

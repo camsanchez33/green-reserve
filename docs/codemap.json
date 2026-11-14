@@ -1742,7 +1742,7 @@
     },
     {
       "path": "src/app/admin/support/logic.ts",
-      "lines": 46,
+      "lines": 47,
       "purpose": "Course support (ADMIN-REDO, Cam approved the mockup 2026-11-12):",
       "brain": [],
       "exports": [
@@ -1792,7 +1792,9 @@
       "methods": [],
       "auth": null,
       "guard": null,
-      "imports": [],
+      "imports": [
+        "@/lib/support-chats"
+      ],
       "usedBy": [
         "src/app/admin/support/page.tsx"
       ]
@@ -4351,7 +4353,7 @@
     },
     {
       "path": "src/app/api/admin/today/overview/route.ts",
-      "lines": 203,
+      "lines": 204,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -29150,6 +29152,7 @@
         "./support-ticket"
       ],
       "usedBy": [
+        "src/app/admin/support/logic.ts",
         "src/app/api/admin/support/[id]/reply/route.ts",
         "src/app/api/admin/support/[id]/route.ts",
         "src/app/api/admin/support/route.ts",

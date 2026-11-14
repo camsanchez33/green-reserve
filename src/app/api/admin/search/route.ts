@@ -128,7 +128,7 @@ export async function GET(req: NextRequest) {
     { id: 'nav:inquiries',   label: 'Pipeline',      href: '/admin/inquiries',  always: true },
     { id: 'nav:courses',     label: 'Courses',       href: '/admin/courses',    always: true },
     { id: 'nav:groups',      label: 'Course groups', href: '/admin/groups',     always: true },
-    { id: 'nav:messages',    label: 'Messages',      href: '/admin/messages',   always: true },
+    { id: 'nav:support',     label: 'Course support', href: '/admin/support',   always: true },
     { id: 'nav:revenue',     label: 'Money',         href: '/admin/revenue',    support: true },
     { id: 'nav:golfers',     label: 'Golfer lookup', href: '/admin/golfers',    support: true },
     { id: 'nav:employees',   label: 'Team',          href: '/admin/employees',  manager: true },
@@ -209,9 +209,9 @@ export async function GET(req: NextRequest) {
     ...(Array.isArray(threads) ? threads : []).map(t => ({
       type: 'thread' as const,
       id: `thread:${t.courseId}`,
-      label: `Messages with ${t.course.name}`,
+      label: `Support chats with ${t.course.name}`,
       sub: 'Mentions your search',
-      href: `/admin/messages?courseId=${t.courseId}`,
+      href: `/admin/support?q=${encodeURIComponent(t.course.name)}`,
     })),
     // ADMIN-REDO Bookings: support finds a golfer's bookings by name, email or course — the Bookings list, filtered.
     ...(hasArea(session, 'money') && q.trim().length >= 2 ? [{
@@ -230,7 +230,7 @@ export async function GET(req: NextRequest) {
   // AW-11: nothing from an area this person can't open — not even its page name.
   const NAV_AREA: Record<string, AdminArea> = {
     '/admin/problems': 'problems', '/admin/goals': 'company', '/admin/inquiries': 'pipeline', '/admin/courses': 'courses',
-    '/admin/groups': 'courses', '/admin/messages': 'messages', '/admin/revenue': 'money', '/admin/golfers': 'golfers',
+    '/admin/groups': 'courses', '/admin/messages': 'messages', '/admin/support': 'messages', '/admin/revenue': 'money', '/admin/golfers': 'golfers',
     '/admin/announcements': 'messages', '/admin/bookings': 'money', '/admin/system': 'company', '/admin/employees': 'company', '/admin/create': 'pipeline',
   };
   const TYPE_AREA: Partial<Record<ResultItem['type'], AdminArea>> = {

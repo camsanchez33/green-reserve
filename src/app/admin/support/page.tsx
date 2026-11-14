@@ -38,8 +38,8 @@ function Problem({ got, retry, busy }: { got: { msg: string; status?: number }; 
   );
 }
 
-function ChatList({ onOpen }: { onOpen: (id: string) => void }) {
-  const [q, setQ] = useState('');
+function ChatList({ onOpen, initialQ }: { onOpen: (id: string) => void; initialQ: string }) {
+  const [q, setQ] = useState(initialQ); // the top search opens a course's chats with ?q=
   const [got, setGot] = useState<Got<{ threads: ThreadRow[] }> | null>(null);
   const [busy, setBusy] = useState(true);
   const seq = useRef(0);
@@ -143,14 +143,14 @@ function Chat({ id, onBack }: { id: string; onBack: () => void }) {
             <div ref={endRef} />
           </div>
           <form className={s.cmp} onSubmit={e => { e.preventDefault(); send(); }}>
-            <textarea value={text} onChange={e => { setText(e.target.value); if (err) setErr(''); }} rows={2} aria-label="Reply" maxLength={MAX_REPLY + 100}
+            <textarea value={text} onChange={e => { setText(e.target.value); if (err) setErr(''); }} rows={2} aria-label="Reply"
               onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); send(); } }} disabled={sending} />
             <button type="submit" className={s.snd} aria-label={sending ? 'Sending' : 'Send'} aria-busy={sending} disabled={sending || !text.trim()}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M22 2 11 13" /><path d="M22 2 15 22l-4-9-9-4 20-7z" /></svg>
             </button>
           </form>
           {sending && <p className={s.note} role="status">Sending…</p>}
-          {err && <p className={`${s.note} ${g.down}`} role="alert">{err}</p>}
+          {err && <p className={`${s.note} ${g.down}`} role="alert">{err}{err === SESSION_ENDED && <> <Link href="/admin/login">Sign in</Link></>}</p>}
         </>
       )}
     </section>
@@ -166,7 +166,7 @@ function SupportContent() {
       <AdminSidebar active="support" />
       <main className={g.main}>
         <div className={g.head}><h1>Course support</h1></div>
-        {id ? <Chat key={id} id={id} onBack={() => router.push('/admin/support')} /> : <ChatList onOpen={x => router.push(`/admin/support?id=${encodeURIComponent(x)}`)} />}
+        {id ? <Chat key={id} id={id} onBack={() => router.push('/admin/support')} /> : <ChatList initialQ={params.get('q') ?? ''} onOpen={x => router.push(`/admin/support?id=${encodeURIComponent(x)}`)} />}
       </main>
     </>
   );

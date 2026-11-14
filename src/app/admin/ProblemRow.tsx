@@ -22,10 +22,10 @@ export default function ProblemRow({ text, p, role, areas }: { text: string; p: 
   const go = canOpenAdminHref(p.goTo, role, areas) ? { href: p.goTo, label: 'Go to it' }
     : p.courseId && canOpenAdminHref(`/admin/courses/${p.courseId}`, role, areas) ? { href: `/admin/courses/${p.courseId}`, label: 'Open course' } : null;
   return (
-    <div className={g.prob}>
+    <div>
       <button type="button" className={g.li} aria-expanded={open} onClick={() => setOpen(o => !o)}>
         <span className={`${g.d} ${g.dbad}`} />
-        <span className={g.lt}>{text}{p.course && <span className={g.lsub}>{p.course}</span>}</span>
+        <span className={g.lt}>{text}{p.course && !text.includes(p.course) && <span className={g.lsub}>{p.course}</span>}</span>
         <span className={g.lw} title={`Open since ${new Date(p.openedAt).toLocaleString('en-US', { timeZone: TZ, month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`}>{openFor(p.openedAt)}</span>
       </button>
       {open && (

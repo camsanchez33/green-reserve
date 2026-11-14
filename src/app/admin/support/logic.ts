@@ -1,14 +1,15 @@
 // Course support (ADMIN-REDO, Cam approved the mockup 2026-11-12): the page's pure rules. The chats are Build's
 // (GET /api/admin/support, …/[id], POST …/[id]/reply). Run: npx tsx scripts/admin-support-test.ts
 
-export interface ThreadRow {
-  id: string; courseId: string; courseName: string; isTest: boolean; subject: string;
-  answered: boolean; lastAt: string; lastFrom: 'course' | 'us'; lastText: string;
-  dueAt: string | null; overdue: boolean;
-}
-export interface Message { id: string; at: string; from: 'course' | 'us'; authorName: string | null; text: string }
+// The shapes are Build's own (type-only imports are erased, so nothing server-side reaches the browser); a change there
+// breaks tsc here instead of drifting.
+import type { AdminThread, AdminMessage } from '@/lib/support-chats';
+
+export type ThreadRow = AdminThread;
+export type Message = AdminMessage;
 export interface Thread extends Omit<ThreadRow, 'lastAt' | 'lastFrom' | 'lastText'> { messages: Message[] }
 
+/** The same limit as lib/support-chats MAX_MESSAGE (pinned by the test). */
 export const MAX_REPLY = 5000;
 
 export const isList = (v: unknown): v is { threads: ThreadRow[] } => !!v && Array.isArray((v as { threads?: unknown }).threads);

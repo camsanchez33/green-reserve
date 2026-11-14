@@ -153,7 +153,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/admin/tee-sheet` | admin | file | GET PATCH POST | `src/app/api/admin/tee-sheet/route.ts` | 128 |
 | `/api/admin/test-course` | admin | file | GET PATCH POST PUT | `src/app/api/admin/test-course/route.ts` | 77 |
 | `/api/admin/today` | admin | file | GET | `src/app/api/admin/today/route.ts` | 52 |
-| `/api/admin/today/overview` | admin | file | GET | `src/app/api/admin/today/overview/route.ts` | 203 |
+| `/api/admin/today/overview` | admin | file | GET | `src/app/api/admin/today/overview/route.ts` | 204 |
 | `/api/admin/transactions` | admin | file | GET | `src/app/api/admin/transactions/route.ts` | 143 |
 | `/api/admin/transactions/export` | admin | file | GET | `src/app/api/admin/transactions/export/route.ts` | 107 |
 | `/api/admin/two-factor` | admin | file | GET POST | `src/app/api/admin/two-factor/route.ts` | 96 |
@@ -452,6 +452,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/promo-codes.ts` | 6 | 122 | PRICE-1 (Cam 2026-10-30: | `applyPromo`, `listPromos`, `normCode`, `NOTHING_OFF`, `PROMO_USED`, `promoDiscount`, `promoFits`, `PromoRow` +4 more |
 | `src/lib/register-open.ts` | 6 | 148 | POS-7 (Cam 2026-11-09: | `Handoff`, `kindOf`, `OpenKind`, `openRegister`, `OpenRow`, `OpenView`, `registerOpenFor`, `RegisterStatus` +2 more |
 | `src/lib/starter-sheet.ts` | 6 | 58 | CART-4 (Cam 2026-11-09): | `CART_NUMBER_LABEL`, `CART_NUMBER_MODES`, `CART_TICKET_LABEL`, `CART_TICKET_MODES`, `cartNumberMode`, `CartNumberMode`, `cartTicketMode`, `CartTicketMode` +7 more |
+| `src/lib/support-chats.ts` | 6 | 328 | SUPPORT (Cam 2026-11-12, ADMIN_REDO_SPEC "Course dashboard Support" + "Admin Course support"): | `addCourseMessage`, `AdminMessage`, `adminReply`, `AdminThread`, `adminThreads`, `ANNOUNCEMENTS_CHAT_ID`, `ChatState`, `chatSummary` +12 more |
 | `src/lib/tax-categories.ts` | 6 | 21 | W2-7 part B: | `isTaxCategory`, `TAX_CATEGORIES`, `TaxCategory`, `US_STATES` |
 | `src/lib/tier-rates.ts` | 6 | 61 | The member-rate rules, shared by booking (api/bookings) and moving a group to another time (lib/move-booking.ts) so both price a member the same way. | `applyTierRates`, `isWeekend` |
 | `src/lib/birdie/ask.ts` | 5 | 33 | AN-3 (Cam 2026-10-19: | `APPLIED_EVENT`, `ASK_EVENT`, `askBirdie`, `markBirdieReady`, `useBirdieReady` |
@@ -471,7 +472,6 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/operator-home.ts` | 5 | 180 | DASH-C Home (Cam 2026-10-22, "very nice" on the course dashboard mockups): | `DeclinedCard`, `declinedCards`, `HomeGroup`, `HomeSlot`, `operatorHome` |
 | `src/lib/setup-missing.ts` | 5 | 64 | What is still missing from a course's booking page, each with the Settings section that fixes it. | `MissingItem`, `MissingKey`, `missingSetup`, `PAYMENTS_BLOCK_LIVE`, `paymentsMissing`, `settingsHref`, `SetupFacts`, `showSetupField` |
 | `src/lib/split-booking-db.ts` | 5 | 157 | SPLIT-1 (Cam 2026-11-02, "they all want to pay separately … has to be seamless"): | `hasShareToRefund`, `holdRefundCents`, `splitBooking`, `splitOffLateArrivals`, `SplitResult` |
-| `src/lib/support-chats.ts` | 5 | 328 | SUPPORT (Cam 2026-11-12, ADMIN_REDO_SPEC "Course dashboard Support" + "Admin Course support"): | `addCourseMessage`, `AdminMessage`, `adminReply`, `AdminThread`, `adminThreads`, `ANNOUNCEMENTS_CHAT_ID`, `ChatState`, `chatSummary` +12 more |
 | `src/lib/terms.ts` | 5 | 10 | Bump this whenever /terms materially changes so old bookings keep an honest record of which version the golfer actually agreed to. | `CURRENT_TERMS_VERSION` |
 | `src/lib/admin-action-queue.ts` | 4 | 128 | AW-4 (Cam 2026-10-21): | `ActionRow`, `buildActionQueue`, `QueueItem` |
 | `src/lib/admin-course-tabs.ts` | 4 | 98 | AW-7 (Cam 2026-10-21): | `bucketWeeks`, `COURSE_TABS`, `COURSE_WEEKS`, `CourseTab`, `openingTab`, `ProblemInput`, `SetupCheck`, `SetupCheckKey` +5 more |
