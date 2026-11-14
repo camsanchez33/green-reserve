@@ -24,7 +24,7 @@ it doesn't rot.
 
 This rule is not theoretical. The previous command files hardcoded `emerald-600`,
 `bg-gray-950` and `font-black` as the house style. Five weeks later all three were on
-the BANNED list in `CLAUDE.md`, and `/gr-build` was actively instructing Claude to
+the BANNED list in `docs/DECISIONS.md`, and `/gr-build` was actively instructing Claude to
 violate the project's own design system. Copies rot. Pointers don't.
 
 ## The roster
@@ -47,7 +47,7 @@ that gets checked at ship time cannot tell you which shipped work was never audi
 Builds stay in the main thread on purpose: a subagent hands back a summary and takes
 away the ability to steer mid-run. The overseer may still hand a mechanical, UI-only
 piece to `builder` (an allow-list keeps it off money, auth and config), and every diff
-goes through `final-reviewer` before it is pushed. Routing lives in CLAUDE.md's
+goes through `final-reviewer` before it is pushed. Routing lives in LANES.md and `docs/DECISIONS.md`'s
 **Overseer protocol**.
 
 ### Agents — own context window, run in parallel (read-only except `builder` and `reskin-worker`)
@@ -92,7 +92,7 @@ Only when the answer to all three is yes:
 
 These files are read by every run, so drift in them is expensive. Re-read this folder
 whenever the **BANNED** list, the **session policy** table, or the
-**no-silent-failures** rule in `CLAUDE.md` changes — those are the three sections the
+**no-silent-failures** rule in `docs/DECISIONS.md` changes — those are the three sections the
 agents lean on hardest. If an agent restates something instead of reading it, that's
 the bug.
 
@@ -139,7 +139,7 @@ four costs roughly four runs. The token savings in this layer come from elsewher
 - `tsc` and the status board run once on the merged tree, not once per item
 - one `/gr-review` over the batch instead of four
 - workers are told to read §1 + their own block, not the queue or the whole spec
-- every agent pins its model explicitly; none inherits. The main-thread (overseer) model is set in CLAUDE.md's **Overseer protocol**. `design-auditor` and `admin-ux-auditor` run on `sonnet` —
+- every agent pins its model explicitly; none inherits. The main-thread (overseer) model is set in `docs/DECISIONS.md`'s **Overseer protocol**. `design-auditor` and `admin-ux-auditor` run on `sonnet` —
   their checks are mechanical (banned classes, swallowed catches). `security-auditor`,
   `spec-conformance` and `reskin-worker` run on `opus` — judgment work. The only `haiku` agent is `scout`, and only
   because it returns lookups (`path:line`, facts) with no verdicts — the evidence

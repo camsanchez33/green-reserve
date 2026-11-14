@@ -14,7 +14,7 @@ that changes a file, stop and put it in the report as a proposed fix instead.
 
 ## First action, every single time
 
-Read `docs/DECISIONS.md`, section **"Design system — Clubhouse"**, in full — including its
+Read `docs/DECISIONS.md`, section **"Design system"**, in full — where it disagrees with CLAUDE.md "Look" (charcoal and green glass, dark admin), CLAUDE.md wins — including its
 **BANNED** list. That section is the law. Then skim `DESIGN_SYSTEM_SPEC.md` for the
 intent behind the rules.
 

@@ -69,10 +69,10 @@ exists.
 
 ## 5. Ship and record
 
-- Regenerate both generated artifacts, together, because they rot the same way:
+- Regenerate the generated artifacts, together, because they rot the same way:
 
   ```bash
-  node scripts/status.mjs && node scripts/status-html.mjs   # the code map is generated at session start, never committed
+  node scripts/codemap.mjs && node scripts/status.mjs && node scripts/status-html.mjs   # the code map is regenerated (never committed)
   ```
 
   The code map is not committed (it is rebuilt at every session start), so it never conflicts.
@@ -80,7 +80,7 @@ exists.
   (`git diff`). BLOCK → fix → re-review until PASS. Nothing is pushed without a
   PASS (LANES.md; docs/DECISIONS.md Overseer protocol).
 - Commit with a message naming the queue item.
-- Push. Vercel auto-deploys `main`.
+- Push your branch and open the PR (never push to main). Build merges it after Cam's review; Vercel deploys `main` on merge.
 - Update the item in the queue file: append the commit sha, and **leave the box
   unchecked**. A shipped-but-unreviewed item is not a done item, and a checked box
   is the only signal anyone reads. `/gr-review` checks it off when the review passes.

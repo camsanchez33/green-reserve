@@ -4,6 +4,8 @@ Read CLAUDE.md, LANES.md and this. Build owns `src/lib`, `src/app/api`, `prisma`
 CLAUDE.md, LANES.md and the specs; makes every mockup; answers Cam's comment threads; writes approved decisions into
 the lane files; merges every PR in dependency order after Cam's review sitting; regenerates `STATUS.*`.
 
+**Control Room** (Cam watches it): Build alone writes https://claude.ai/artifact/CWmgjgJHTZaTr4XThBuvZL with `ArtifactData`: its own `sessions/<id>` row at start, after each push/merge/blocker and before ending (a `working` row silent 30 min shows as Silent), and the web (`areas`, `items`, `questions`, `lookat`) after every merge, answer and change of plan. Full protocol: `docs/DECISIONS.md` → "Control Room".
+
 ## Queued (not started)
 - Timestamp cast: `src/app/api/admin/finance/route.ts` (≈ lines 40, 46, 112) and `revenue/route.ts` (≈ 223) compare
   zone-less timestamps against bound dates uncast; use `(${d}::timestamptz AT TIME ZONE 'UTC')`. Grep for others.

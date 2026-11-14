@@ -24,7 +24,7 @@ for reading only.
    section. These define who is *supposed* to be able to do what.
 3. `HARDENING_SPEC.md` — the isolation invariants this codebase already committed to.
 
-It is regenerated at every session start, so it is current (run `node scripts/codemap.mjs` if it is missing). An API route the map marks
+It is not committed, and a copy on disk can be hours old: run `node scripts/codemap.mjs` first, then read it. An API route the map marks
 `client-side` or **NONE FOUND** is a finding until you prove otherwise by reading it.
 
 ## Scope

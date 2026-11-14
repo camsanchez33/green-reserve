@@ -2,19 +2,15 @@ name: codemap
 
 # CODEMAP_SPEC CM-1 §4, changed 2026-11-14 (Cam: stop the merge churn): docs/CODEMAP.md and
 # docs/codemap.json are no longer committed. Every session regenerates them at start (the
-# SessionStart hook in .claude/settings.json), so the map is always current and PRs never
+# SessionStart hook in .claude/settings.json) and before relying on them, so PRs never
 # conflict on it. This job still runs the generator, which fails on a duplicate @brain concept.
-#
-# This is the whole reason the map is worth having. ARCHITECTURE.md was accurate
-# the day it was written and wrong within a month, because nothing failed when it
-# drifted. A map that can lie is worse than no map: it gets trusted.
 
 on:
   pull_request:
   push:
     branches: [main]
 
-# Reads the tree and diffs it; nothing needs write access or a secret.
+# Reads the tree; nothing needs write access or a secret.
 permissions:
   contents: read
 
@@ -31,7 +27,7 @@ jobs:
 
       - run: npm ci
 
-      # Exits non-zero on its own if two files claim the same @brain concept, so
-      # a duplicate source of truth fails CI before the drift check even runs.
+      # Exits non-zero on its own if two files claim the same @brain concept, so a
+      # duplicate source of truth fails CI. (The job keeps the name `drift` for required checks.)
       - name: Regenerate the code map
         run: node scripts/codemap.mjs

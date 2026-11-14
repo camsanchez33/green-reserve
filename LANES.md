@@ -9,10 +9,11 @@ how this was set up is in `docs/DECISIONS.md` (appendix "LANES.md as it stood on
 |---|---|---|---|
 | **Build** (coordinator) | CLAUDE.md, `lanes/build.md` | ALL shared code: `src/lib/**`, `src/app/api/**` (except admin read/display routes), `prisma/**`, `globals.css`, root layouts, `src/components/ui/**`, CI, config, `.claude/**`, CLAUDE.md, LANES.md, specs. Merges every PR. | — |
 | **Dashboard** | CLAUDE.md, `lanes/dashboard.md` | `src/app/dashboard/**`, `src/components/dashboard/**` | shared code |
-| **Admin** | CLAUDE.md, `lanes/admin.md` | `src/app/admin/**`, `src/components/admin/**`, admin routes that only read or display | sign-in and money routes (`src/app/cam/**`, `api/admin/{login,logout,session,forgot-password,set-password,two-factor,passkeys,owner-devices,refund,course-payouts,data-reset,disputes,transactions}`), `src/lib/**`, schema |
+| **Admin** | CLAUDE.md, `lanes/admin.md` | `src/app/admin/**`, `src/components/admin/**`, admin routes that only read or display | sign-in and money routes (`src/app/cam/**`, `src/app/api/cam/**`, `api/admin/{login,logout,session,forgot-password,set-password,two-factor,passkeys,owner-devices,refund,course-payouts,data-reset,disputes,transactions,change-password,bootstrap,employees}` and any route that charges, refunds, signs in or steps up), `src/lib/**`, schema |
 | **Homepage** | CLAUDE.md, `lanes/homepage.md` | `src/app/page.tsx`, `HomeContent.tsx`, `home.module.css`, `src/app/{teesheet,for-courses,demo,contact}/**`, `src/components/home/**`, `Nav`, `Footer`, `PlainHeader` | `legal/`, `src/lib/**` |
 | **Golfer** | CLAUDE.md, `lanes/golfer.md` | `src/app/{courses,book,g,checkin,manage,pay,receipt,statement,events,membership}/**` and their components | every price, fee and charge |
 | Testing, Security (read-only) | CLAUDE.md + the brief | `lanes/testing/`, `lanes/security/` (findings) | all code |
+| Company (no app code) | CLAUDE.md + the brief | `company/` (outreach, course lists, email and copy drafts) | all code, published `legal/` files |
 
 A change that needs another lane's files is a `send_message` to Build. A change that crosses areas (a field on the
 golfer page, the tee sheet and admin) is ONE PR from Build.

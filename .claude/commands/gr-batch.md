@@ -18,7 +18,7 @@ exception by the item text; the section it lives in decides.
 
 `git status`. Apply the **Doc-file commit rule** in `docs/DECISIONS.md` (summarised in CLAUDE.md "Commits and PRs") exactly as written. The
 tree must be clean before worktrees are created, because they branch from `HEAD`.
-`git branch --show-current` must be `main`. If either is not true, stop and say why.
+`git branch --show-current` must be your lane branch (never `main`). If either is not true, stop and say why.
 
 ## 1. Load context — minimally
 
