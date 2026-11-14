@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import { saleRef } from './sale-ref';
 import { sheetRecap, SHEET_NEXT_STEPS } from './setup-sheet-recap';
 import { serviceFeeLabel, hoursLabel, SHOP_FEE_LABEL } from '@/lib/booking-fees';
 import { afterCutoffLine, policyMoney } from '@/lib/cancel-policy';
@@ -1930,6 +1931,8 @@ const shopDiscountRow = (cents?: number, note?: string) => cents
 // sent when the customer asks for one. Money moved, so it comes from billing@.
 export async function sendShopReceiptEmail(data: {
   email: string; name: string; courseName: string; courseId?: string; saleId: string;
+  /** PRO-SHOP: the course's sale number (#18), or null for a sale from before numbers. */
+  saleNumber?: number | null;
   lines: { name: string; unitPriceCents: number; quantity: number }[];
   discountCents: number; discountNote: string; taxCents: number; totalCents: number;
   paidWith: string; paidAt: string; cashTenderedCents: number | null; refundedCents: number;
@@ -1944,7 +1947,7 @@ export async function sendShopReceiptEmail(data: {
       <tr><td style="padding:4px 0;color:#6B706A;font-size:13px;">Paid</td><td align="right" style="padding:4px 0;color:#141814;font-size:13px;">${escapeHtml(data.paidWith)} · ${escapeHtml(data.paidAt)}</td></tr>
       ${data.cashTenderedCents != null ? `<tr><td style="padding:4px 0;color:#6B706A;font-size:13px;">Cash given · change</td><td align="right" style="padding:4px 0;color:#141814;font-size:13px;">${usd(data.cashTenderedCents)} · ${usd(data.cashTenderedCents - data.totalCents)}</td></tr>` : ''}
       ${data.refundedCents ? `<tr><td style="padding:4px 0;color:#6B706A;font-size:13px;">Refunded</td><td align="right" style="padding:4px 0;color:#141814;font-size:13px;">&minus;${usd(data.refundedCents)}</td></tr>` : ''}
-      <tr><td style="padding:4px 0;color:#6B706A;font-size:13px;">Receipt</td><td align="right" style="padding:4px 0;color:#141814;font-size:13px;">${escapeHtml(data.saleId.slice(-8).toUpperCase())}</td></tr>
+      <tr><td style="padding:4px 0;color:#6B706A;font-size:13px;">Receipt</td><td align="right" style="padding:4px 0;color:#141814;font-size:13px;">${escapeHtml(saleRef(data.saleId, data.saleNumber))}</td></tr>
     </table>
   `, BILLING_EMAIL);
   await getResend().emails.send({ meta: { kind: 'shop_receipt_email', courseId: data.courseId }, from: FROM_BILLING, to: data.email, subject: `Your receipt from ${data.courseName}`, html });
