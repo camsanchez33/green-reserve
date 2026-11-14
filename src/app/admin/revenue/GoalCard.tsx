@@ -2,12 +2,12 @@
 
 import { useState } from 'react';
 import { stepUpFetch } from '@/lib/step-up-client';
-import { goalPace, elapsedShare } from '@/lib/goal-pace';
+import { goalPace, elapsedShare, EARLY_DAYS } from '@/lib/goal-pace';
 import g from '../admin-glass.module.css';
 import c from '../courses/courses.module.css';
 import s from './revenue.module.css';
 import { TERMS, SESSION_ENDED } from './terms';
-import { type RevenueGoal, parseGoalCents, fillPct } from './logic';
+import { type RevenueGoal, parseGoalCents, fillPct, onTrackCents } from './logic';
 
 // Revenue goal (ADMIN_REDO_SPEC "Goals: one pace rule everywhere"; Build 2026-11-12): owner only, This month only. The
 // bar fills with revenue so far; its colour is the ONE shared pace rule (src/lib/goal-pace.ts, kind 'reach'): green on
@@ -25,6 +25,8 @@ export default function GoalCard({ goal, onSaved }: { goal: RevenueGoal; onSaved
   const [err, setErr] = useState('');
   const monthName = new Date(goal.month + '-15T12:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC', month: 'long' });
   const target = goal.targetCents;
+  const onTrack = onTrackCents(goal.progressCents, goal.dayOfPeriod, goal.daysInPeriod, EARLY_DAYS);
+  const lastDay = new Date(goal.month + '-15T12:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short' }) + ' ' + goal.daysInPeriod;
   const pace = target ? goalPace({ progress: goal.progressCents, target, share: elapsedShare(goal.dayOfPeriod, goal.daysInPeriod), kind: 'reach', daysElapsed: goal.dayOfPeriod }) : null;
 
   async function save(clear = false) {
@@ -60,11 +62,12 @@ export default function GoalCard({ goal, onSaved }: { goal: RevenueGoal; onSaved
         <>
           <b className={s.v}>{usd(goal.progressCents)} <span className={s.of}>of {usd(target)}</span></b>
           <div className={s.gbar}><i className={pace && pace.tone !== 'early' ? s[pace.tone] : undefined} style={{ width: `${fillPct(goal.progressCents, target)}%` }} /></div>
-          {/* Words only — no month-end figure (a forecast is Cam's call, not yet approved for Revenue). */}
           {goal.progressCents >= target ? <span className={s.c}><span className={g.up}>{WORDS.done}</span></span>
             : pace && (pace.tone === 'early'
             ? <span className={s.c}>{WORDS.early}</span>
             : <span className={s.c}><span className={pace.tone === 'ok' ? g.up : pace.tone === 'warn' ? g.wa : g.down}>{WORDS[pace.tone]}</span></span>)}
+          {/* Cam 2026-11-14: the month-end line, rounded to $100 so it reads as the estimate it is; hidden while grey. */}
+          {onTrack !== null && <span className={s.c} title={TERMS.onTrack}>On track for about {usd(onTrack).replace(/\.00$/, '')} by {lastDay}</span>}
         </>
       ) : (
         <><b className={s.na}>Not set</b><span className={s.c}>{usd(goal.progressCents)} so far</span></>

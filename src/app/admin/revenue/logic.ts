@@ -92,3 +92,10 @@ export function parseGoalCents(s: string): number | null {
 
 /** The goal bar's fill: never below empty (a negative month: more given back than taken) nor past full. */
 export const fillPct = (progress: number, target: number) => Math.max(0, Math.min(100, (progress / target) * 100));
+
+/** Cam 2026-11-14 (via Build): "On track for about $X by Nov 30" — revenue so far ÷ the elapsed share, to the nearest
+ *  $100. None in the grey first days (EARLY_DAYS), none once the month is over, none with nothing (or less) to project. */
+export function onTrackCents(progressCents: number, dayOfPeriod: number, daysInPeriod: number, earlyDays: number): number | null {
+  if (!(daysInPeriod > 0) || dayOfPeriod < earlyDays || dayOfPeriod >= daysInPeriod || progressCents <= 0) return null;
+  return Math.round(progressCents / (dayOfPeriod / daysInPeriod) / 10_000) * 10_000;
+}

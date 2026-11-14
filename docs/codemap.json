@@ -1536,7 +1536,7 @@
     },
     {
       "path": "src/app/admin/revenue/GoalCard.tsx",
-      "lines": 76,
+      "lines": 79,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1566,7 +1566,7 @@
     },
     {
       "path": "src/app/admin/revenue/logic.ts",
-      "lines": 95,
+      "lines": 102,
       "purpose": "Revenue page's pure rules, kept apart so scripts/admin-revenue-test.ts can pin them:",
       "brain": [],
       "exports": [
@@ -1601,6 +1601,10 @@
         {
           "name": "KIND",
           "kind": "const"
+        },
+        {
+          "name": "onTrackCents",
+          "kind": "fn"
         },
         {
           "name": "parseGoalCents",
@@ -1675,7 +1679,7 @@
     },
     {
       "path": "src/app/admin/revenue/terms.ts",
-      "lines": 25,
+      "lines": 26,
       "purpose": "Revenue (ADMIN-REDO, Cam approved the mockup 2026-11-12):",
       "brain": [],
       "exports": [
