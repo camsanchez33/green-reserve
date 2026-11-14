@@ -43,6 +43,8 @@ export type SaleLineInput = { shopItemId?: string; name?: string; priceCents?: n
 export type DiscountInput = { percent?: unknown; amountCents?: unknown; note?: unknown } | null | undefined;
 export type RefundView = { id: string; amountCents: number; method: string; status: string; reason: string; restocked: boolean; error: string; createdBy: string; createdAt: string };
 export type SaleView = {
+  /** The course's sale number (#1047), or null for a sale from before numbers (show nothing). */
+  number: number | null;
   id: string; status: string; totalCents: number; taxCents: number; createdAt: string; paidAt: string | null;
   customerName: string; customerPhone: string; customerEmail: string; soldBy: string;
   /** id and returnedQty for a return by item (dead end 23); round = a green fee line (never returned here). */
@@ -56,6 +58,7 @@ export type SaleView = {
 };
 
 type SaleRow = {
+  number: number | null;
   id: string; status: string; totalCents: number; taxCents: number; createdAt: Date; paidAt: Date | null;
   customerName: string; customerPhone: string; customerEmail: string; soldBy: string;
   lines: { id: string; name: string; unitPriceCents: number; quantity: number; returnedQty: number; bookingId: string | null }[];
@@ -64,6 +67,7 @@ type SaleRow = {
 };
 
 export const saleView = (s: SaleRow): SaleView => ({
+  number: s.number ?? null,
   id: s.id, status: s.status, totalCents: s.totalCents, taxCents: s.taxCents, createdAt: s.createdAt.toISOString(), paidAt: s.paidAt?.toISOString() ?? null,
   customerName: s.customerName, customerPhone: s.customerPhone, customerEmail: s.customerEmail, soldBy: s.soldBy,
   lines: s.lines.map(l => ({ id: l.id, name: l.name, unitPriceCents: l.unitPriceCents, quantity: l.quantity, returnedQty: l.returnedQty, round: !!l.bookingId })),
@@ -840,9 +844,19 @@ export async function findSales(courseId: string, opts: { day?: string; q?: stri
   const q = (opts.q ?? '').trim().slice(0, 80);
   const contains = { contains: q, mode: 'insensitive' as const };
   const digits = q.replace(/\D/g, '');
+  // A typed sale number: "1047" or "#1047".
+  const asNumber = /^#?\s*(\d{1,9})$/.exec(q);
+  const saleNumber = asNumber && Number(asNumber[1]) <= 2_147_483_647 ? Number(asNumber[1]) : null;
+  // A typed number is the exact sale, looked up on its own and put first (final review): as one fuzzy match among
+  // many, a low number — an old sale — fell off the newest 100 behind lines and names that contain the digits.
+  // It ignores the 90-day window (a receipt can be older) but keeps a picked day.
+  const exact = saleNumber != null
+    ? await prisma.shopSale.findFirst({ where: { courseId, number: saleNumber, status: { not: 'open' }, ...(opts.day ? { createdAt: { gte: from, ...(to ? { lt: to } : {}) } } : {}) }, include: SALE_INCLUDE })
+    : null;
   const sales = await prisma.shopSale.findMany({
     where: {
       courseId, status: { not: 'open' }, createdAt: { gte: from, ...(to ? { lt: to } : {}) },
+      ...(exact ? { id: { not: exact.id } } : {}),
       ...(q ? { OR: [
         { customerName: contains },
         // Audit 2026-10-31: only a login that may see golfer contact details finds a sale by email or phone.
@@ -850,9 +864,10 @@ export async function findSales(courseId: string, opts: { day?: string; q?: stri
         { lines: { some: { name: contains } } },
         // The receipt shows the sale's id — its last characters are enough (POS-8: the Sales list shows #XXXXXXXX too).
         { id: { endsWith: q.replace(/^#/, '').toLowerCase() } },
+        ...(saleNumber != null ? [{ number: saleNumber }] : []),
       ] } : {}),
     },
-    orderBy: { createdAt: 'desc' }, take: 100, include: SALE_INCLUDE,
+    orderBy: { createdAt: 'desc' }, take: exact ? 99 : 100, include: SALE_INCLUDE,
   });
-  return { ok: true, value: sales.map(saleView) };
+  return { ok: true, value: (exact ? [exact, ...sales] : sales).map(saleView) };
 }

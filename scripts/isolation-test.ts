@@ -1089,6 +1089,123 @@ async function main() {
     }
   }
 
+  console.log('\n── Support chats (SUPPORT: /api/operator/support, /api/admin/support) ──');
+  {
+    const { signAdminToken } = await import('../src/lib/admin-session');
+    const mk = (name: string, role: string, areas?: string[]) => prisma.adminUser.create({ data: { name, email: `${TS}-sup-${name.replace(/\W/g, '').toLowerCase()}@test.local`, passwordHash: 'x', role, active: true, ...(areas ? { areas, areasSetAt: new Date() } : {}) } });
+    const [viewer, noMsgs, sup] = [await mk('Sup Viewer', 'viewer'), await mk('Sup NoMsgs', 'support', ['courses']), await mk('Sup Agent', 'support')];
+    const ck = async (u: { id: string; email: string; name: string; role: string }) => `admin_session=${await signAdminToken({ adminId: u.id, email: u.email, name: u.name, role: u.role as 'support', mfa: true })}`;
+    const [vc, nm, sc] = [await ck(viewer), await ck(noMsgs), await ck(sup)];
+    const threadBefore = await prisma.messageThread.findUnique({ where: { courseId: data.courseA.id }, select: { id: true } });
+    const made: string[] = [];
+    try {
+      type Chat = { id: string; subject: string; state: string; dueAt: string | null; unread: number; fromGreenReserve: boolean; last: { fromUs: boolean } | null };
+      checkStatus('A course without the session → 401', (await api('/api/operator/support')).status, 401);
+      checkStatus('An empty first message → 400', (await api('/api/operator/support', { method: 'POST', cookie: cookieA, body: { body: '   ' } })).status, 400);
+      const start = await api('/api/operator/support', { method: 'POST', cookie: cookieA, body: { body: 'Cart path question\nThe 9th is flooded — can we close it?' } });
+      const chat = (start.body as { chat?: Chat }).chat;
+      check('Course A starts a chat: the subject is the first line, waiting on us, due in 2 business days', start.status === 200 && chat?.subject === 'Cart path question' && chat.state === 'waiting' && !!chat.dueAt && chat.last?.fromUs === true, JSON.stringify(start.body));
+      if (chat) made.push(chat.id);
+      checkStatus('…and writes more in it → 200', (await api(`/api/operator/support/${chat?.id}`, { method: 'POST', cookie: cookieA, body: { body: 'Photos attached later.' } })).status, 200);
+      checkStatus('Course B cannot read course A\'s chat → 404', (await api(`/api/operator/support/${chat?.id}`, { cookie: cookieB })).status, 404);
+      checkStatus('…nor write in it → 404', (await api(`/api/operator/support/${chat?.id}`, { method: 'POST', cookie: cookieB, body: { body: 'hello' } })).status, 404);
+      const listB = (await api('/api/operator/support', { cookie: cookieB })).body as { chats?: Chat[] };
+      check('…and never sees it in its list', !!listB.chats && !listB.chats.some(c => c.id === chat?.id));
+      checkStatus('Announcements can\'t be replied to → 400', (await api('/api/operator/support/greenreserve', { method: 'POST', cookie: cookieA, body: { body: 'hi' } })).status, 400);
+
+      // A message from before chats reads as the course's one earlier-messages chat (id = the thread's id).
+      const thread = await prisma.messageThread.findUniqueOrThrow({ where: { courseId: data.courseA.id }, select: { id: true } });
+      const old = await prisma.message.create({ data: { threadId: thread.id, senderType: 'operator', senderId: 'x', senderName: 'Pat', body: 'Old question about rates\nfrom before chats', createdAt: new Date(Date.now() - 3600_000) } });
+      const listA = (await api('/api/operator/support', { cookie: cookieA })).body as { chats?: Chat[] };
+      const earlier = listA.chats?.find(c => c.id === thread.id);
+      checkStatus('Course B cannot open course A\'s earlier messages by their id → 404', (await api(`/api/operator/support/${thread.id}`, { cookie: cookieB })).status, 404);
+      checkStatus('…nor write into them → 404', (await api(`/api/operator/support/${thread.id}`, { method: 'POST', cookie: cookieB, body: { body: 'hello' } })).status, 404);
+      check('…and nothing of A\'s was marked read by trying', (await prisma.message.findUniqueOrThrow({ where: { id: old.id } })).readAt === null);
+      {
+        const { signStaffToken } = await import('../src/lib/auth');
+        const st = await prisma.courseStaff.create({ data: { courseId: data.courseA.id, email: `${TS}-sup-staff@test.local`, password: 'x', name: 'Isol No Messages', permissions: [], permissionsSetAt: new Date() } });
+        try {
+          const sk = `gr_operator=${await signStaffToken({ staffId: st.id, courseId: data.courseA.id, email: st.email })}`;
+          checkStatus('Staff without Messages cannot list support → 403', (await api('/api/operator/support', { cookie: sk })).status, 403);
+          checkStatus('…start a chat → 403', (await api('/api/operator/support', { method: 'POST', cookie: sk, body: { body: 'hi' } })).status, 403);
+          checkStatus('…open one → 403', (await api(`/api/operator/support/${chat?.id}`, { cookie: sk })).status, 403);
+          checkStatus('…or write in one → 403', (await api(`/api/operator/support/${chat?.id}`, { method: 'POST', cookie: sk, body: { body: 'hi' } })).status, 403);
+        } finally {
+          await prisma.courseStaff.delete({ where: { id: st.id } });
+        }
+      }
+      check('An old message shows as the earlier-messages chat, its subject from its first line', !!earlier && earlier.subject === 'Old question about rates' && earlier.state === 'waiting', JSON.stringify(listA.chats).slice(0, 300));
+      check('…and the new chat, newest activity first', listA.chats?.[0]?.id === chat?.id);
+
+      // GreenReserve's side.
+      checkStatus('A viewer cannot read Support → 403', (await api('/api/admin/support', { cookie: vc })).status, 403);
+      checkStatus('Support without the Messages area → 403', (await api('/api/admin/support', { cookie: nm })).status, 403);
+      type T = { id: string; courseId: string; subject: string; answered: boolean; lastFrom: string; dueAt: string | null; overdue: boolean };
+      const all = (await api('/api/admin/support', { cookie: sc })).body as { threads?: T[] };
+      const row = all.threads?.find(t => t.id === chat?.id);
+      check('Support sees the chat: unanswered, from the course, due, not overdue', !!row && row.courseId === data.courseA.id && !row.answered && row.lastFrom === 'course' && !!row.dueAt && !row.overdue, JSON.stringify(row));
+      check('…and the earlier-messages thread', !!all.threads?.some(t => t.id === thread.id));
+      const found = (await api(`/api/admin/support?q=${encodeURIComponent('flooded')}`, { cookie: sc })).body as { threads?: T[] };
+      check('Search matches a message\'s text', !!found.threads?.some(t => t.id === chat?.id) && !found.threads?.some(t => t.id === thread.id));
+      checkStatus('Opening it → 200', (await api(`/api/admin/support/${chat?.id}`, { cookie: sc })).status, 200);
+      check('…marks the course\'s messages in that chat read (not the other chat\'s)', (await prisma.message.count({ where: { chatId: chat?.id, senderType: 'operator', readAt: null } })) === 0 && (await prisma.message.findUniqueOrThrow({ where: { id: old.id } })).readAt === null);
+      checkStatus('An empty reply → 400', (await api(`/api/admin/support/${chat?.id}/reply`, { method: 'POST', cookie: sc, body: { text: ' ' } })).status, 400);
+      checkStatus('A viewer cannot reply → 403', (await api(`/api/admin/support/${chat?.id}/reply`, { method: 'POST', cookie: vc, body: { text: 'hi' } })).status, 403);
+      const rep = await api(`/api/admin/support/${chat?.id}/reply`, { method: 'POST', cookie: sc, body: { text: 'We can close it from Schedule — here is how.' } });
+      check('Support replies in that chat → 200, audited', rep.status === 200 && !!(await prisma.adminAuditLog.findFirst({ where: { adminId: sup.id, action: 'support_reply', targetId: data.courseA.id, courseId: data.courseA.id } })), JSON.stringify(rep.body));
+      const afterReply = ((await api('/api/operator/support', { cookie: cookieA })).body as { chats?: Chat[] }).chats?.find(c => c.id === chat?.id);
+      check('The course sees a new reply (1 unread), nothing due', afterReply?.state === 'reply' && afterReply.unread === 1 && afterReply.dueAt === null, JSON.stringify(afterReply));
+      const opened = (await api(`/api/operator/support/${chat?.id}`, { cookie: cookieA })).body as { messages?: { fromUs: boolean }[] };
+      check('…opens it: all three messages, ours marked as not from them', opened.messages?.length === 3 && opened.messages[2].fromUs === false);
+      const settled = ((await api('/api/operator/support', { cookie: cookieA })).body as { chats?: Chat[] }).chats?.find(c => c.id === chat?.id);
+      check('…and then it reads as answered', settled?.state === 'answered' && settled.unread === 0, JSON.stringify(settled));
+      check('The reply landed in that chat only', (await prisma.message.count({ where: { chatId: chat?.id, senderType: 'admin' } })) === 1 && (await prisma.message.count({ where: { threadId: thread.id, chatId: null, senderType: 'admin', isBroadcast: false } })) === 0);
+      await prisma.message.delete({ where: { id: old.id } });
+
+      // Final review: overdue is per chat — a reply in one chat never hides another left unanswered.
+      {
+        const { buildActionQueue } = await import('../src/lib/admin-action-queue');
+        const tenDays = new Date(Date.now() - 10 * 86_400_000);
+        const quiet = await prisma.supportChat.create({ data: { threadId: thread.id, courseId: data.courseA.id, subject: 'Isol quiet chat', lastMessageAt: tenDays } });
+        const busy = await prisma.supportChat.create({ data: { threadId: thread.id, courseId: data.courseA.id, subject: 'Isol busy chat', lastMessageAt: new Date() } });
+        made.push(quiet.id, busy.id);
+        await prisma.message.create({ data: { threadId: thread.id, chatId: quiet.id, senderType: 'operator', senderId: 'x', senderName: 'Pat Quiet', body: 'Nobody answered me', createdAt: tenDays } });
+        await prisma.message.create({ data: { threadId: thread.id, chatId: busy.id, senderType: 'operator', senderId: 'x', senderName: 'Pat Busy', body: 'Question', createdAt: new Date(Date.now() - 9 * 86_400_000) } });
+        // Newer than everything else on the thread: the course's latest message is an answer from us.
+        await prisma.message.updateMany({ where: { threadId: thread.id, senderType: 'admin' }, data: { createdAt: new Date(Date.now() - 9 * 86_400_000) } });
+        await prisma.message.create({ data: { threadId: thread.id, chatId: busy.id, senderType: 'admin', senderId: 'x', senderName: 'Cam', body: 'Answered', createdAt: new Date() } });
+        await prisma.message.updateMany({ where: { threadId: thread.id, chatId: chat?.id, senderType: 'operator' }, data: { createdAt: new Date(Date.now() - 9 * 86_400_000) } });
+        const q = await buildActionQueue();
+        const row = q.rows.find(r => r.id === `msg-${thread.id}`);
+        check('The action queue still raises the course for the quiet chat, though its latest message is our reply', !!row && row.why.includes('Pat Quiet') && row.href === `/admin/support?id=${quiet.id}`, JSON.stringify(row));
+      }
+
+      // Announcements read as a chat from GreenReserve (only for a live course, from when it went live).
+      const live = await prisma.course.findUniqueOrThrow({ where: { id: data.courseA.id }, select: { active: true, liveStatus: true, archivedAt: true } });
+      if (live.active && live.liveStatus === 'live' && !live.archivedAt) {
+        const ann = await prisma.announcement.create({ data: { title: 'Isol news', body: 'Something new.', sentById: sup.id } });
+        try {
+          const g = ((await api('/api/operator/support', { cookie: cookieA })).body as { chats?: Chat[] }).chats?.find(c => c.id === 'greenreserve');
+          check('An announcement shows as a chat from GreenReserve, unread for the owner (a new reply)', !!g && g.fromGreenReserve && g.unread >= 1 && g.state === 'reply', JSON.stringify(g));
+          const og = (await api('/api/operator/support/greenreserve', { cookie: cookieA })).body as { messages?: { body: string; senderName: string }[] };
+          check('…opening it shows the announcement from GreenReserve', !!og.messages?.some(m => m.body.startsWith('Isol news') && m.senderName === 'GreenReserve'));
+          const g2 = ((await api('/api/operator/support', { cookie: cookieA })).body as { chats?: Chat[] }).chats?.find(c => c.id === 'greenreserve');
+          check('…and marks it seen (then answered)', g2?.unread === 0 && g2.state === 'answered', JSON.stringify(g2));
+        } finally {
+          await prisma.announcement.delete({ where: { id: ann.id } }).catch(() => {});
+        }
+      } else {
+        check('fixture course A is live (announcements need a live course)', false, JSON.stringify(live));
+      }
+    } finally {
+      await prisma.message.deleteMany({ where: { chatId: { in: made } } });
+      await prisma.supportChat.deleteMany({ where: { id: { in: made } } });
+      if (!threadBefore) await prisma.messageThread.deleteMany({ where: { courseId: data.courseA.id } });
+      await prisma.adminAuditLog.deleteMany({ where: { adminId: { in: [viewer.id, noMsgs.id, sup.id] } } }).catch(() => {});
+      await prisma.adminUser.deleteMany({ where: { id: { in: [viewer.id, noMsgs.id, sup.id] } } });
+    }
+  }
+
   console.log('\n── Business analytics (ADMIN-REDO: /api/admin/business) + outreach log ──');
   {
     const { signAdminToken } = await import('../src/lib/admin-session');

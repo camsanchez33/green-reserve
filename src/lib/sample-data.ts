@@ -386,6 +386,8 @@ export async function fillTestCourse(courseId: string, now: Date = new Date()): 
   for (let i = 0; i < bookings.length; i += 500) await prisma.booking.createMany({ data: bookings.slice(i, i + 500) as unknown as Prisma.BookingCreateManyInput[] });
   for (let i = 0; i < events.length; i += 1000) await prisma.bookingEvent.createMany({ data: events.slice(i, i + 1000) as unknown as Prisma.BookingEventCreateManyInput[] });
   // Batched, so the fill fits Vercel's time limit against a remote database.
+  // Oldest first, so the sale numbers the insert trigger gives (#1, #2, …) run in time order like real sales.
+  sales.sort((a, b) => (a.sale.createdAt as Date).getTime() - (b.sale.createdAt as Date).getTime());
   const saleRows = sales.map(x => ({ ...x.sale, id: `smp${randomUUID().replace(/-/g, '').slice(0, 22)}` }));
   const lineRows = sales.flatMap((x, i) => x.lines.map(l => ({ ...l, saleId: saleRows[i].id })));
   for (let i = 0; i < saleRows.length; i += 500) await prisma.shopSale.createMany({ data: saleRows.slice(i, i + 500) as unknown as Prisma.ShopSaleCreateManyInput[] });
