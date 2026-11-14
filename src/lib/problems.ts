@@ -49,12 +49,8 @@ export async function listProblems(now = new Date()): Promise<{ open: ProblemVie
   };
 }
 
-/** Open, not snoozed — the number Today and the rail show. */
-export async function openProblemCount(now = new Date()): Promise<{ open: number; unowned: number }> {
-  const where = { kind: 'urgent', resolvedAt: null, OR: [{ snoozedUntil: null }, { snoozedUntil: { lte: now } }] };
-  const [open, unowned] = await Promise.all([
-    prisma.adminAlert.count({ where }),
-    prisma.adminAlert.count({ where: { ...where, ownerId: null } }),
-  ]);
-  return { open, unowned };
+/** Every problem not yet cleared — the rail's count, the same rows Overview's Needs attention lists
+ *  (open and snoozed: snoozing is gone, so one snoozed before then still counts). */
+export async function openProblemCount(): Promise<{ open: number }> {
+  return { open: await prisma.adminAlert.count({ where: { kind: 'urgent', resolvedAt: null } }) };
 }

@@ -19,7 +19,7 @@ export const ADMIN_AREAS: { key: AdminArea; label: string; help: string }[] = [
   { key: 'golfers', label: 'Golfers', help: 'Look a golfer up; resend, cancel and refund their bookings.' },
   { key: 'money', label: 'Money', help: 'GreenReserve’s money: fees, cards that failed, disputes, exports.' },
   { key: 'messages', label: 'Messages', help: 'Conversations with courses and announcements.' },
-  { key: 'problems', label: 'Problems', help: 'The hourly check’s work list: take, note and hand off problems.' },
+  { key: 'problems', label: 'Problems', help: 'What the hourly check finds wrong, listed in Overview’s Needs attention until it clears.' },
   { key: 'company', label: 'Company', help: 'Goals, Systems and company documents.' },
 ];
 

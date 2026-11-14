@@ -137,7 +137,9 @@ async function resolveCourseChat(courseId: string, id: string): Promise<Resolved
 const inChat = (r: Resolved) => (r.kind === 'chat' ? { chatId: r.id } : { threadId: r.threadId, chatId: null });
 
 /** One chat with its messages (oldest first); opening it marks our replies in it read (or, for the announcements
- *  chat, every announcement seen by this owner). Null when the chat isn't this course's. */
+ *  chat, every announcement seen by this owner). The chat's state is the one the list showed when it was opened
+ *  (the mockup's header repeats the list's "New reply"); unread is 0, as it now is. Null when the chat isn't this
+ *  course's. */
 export async function openCourseChat(courseId: string, id: string, operatorId: string | null): Promise<{ chat: CourseChat; messages: CourseMessage[] } | null> {
   if (id === ANNOUNCEMENTS_CHAT_ID) {
     const rows = await announcementRows(courseId, operatorId);
@@ -146,16 +148,16 @@ export async function openCourseChat(courseId: string, id: string, operatorId: s
       await prisma.announcementDismissal.createMany({ data: rows.filter(r => !r.seen).map(r => ({ announcementId: r.id, operatorId })), skipDuplicates: true });
     }
     return {
-      chat: { ...announcementsChat(rows, operatorId)!, unread: 0, state: 'answered' as const },
+      chat: { ...announcementsChat(rows, operatorId)!, unread: 0 },
       messages: rows.map(r => ({ id: r.id, body: r.body, fromUs: false, senderName: 'GreenReserve', at: r.at.toISOString() })),
     };
   }
   const r = await resolveCourseChat(courseId, id);
   if (!r) return null;
-  await prisma.message.updateMany({ where: { ...inChat(r), senderType: 'admin', readAt: null }, data: { readAt: new Date() } });
   const rows = await prisma.message.findMany({ where: { ...inChat(r), isBroadcast: false }, orderBy: { createdAt: 'asc' }, select: ROW });
   if (!rows.length) return null;
-  return { chat: courseChat(r.id, r.kind === 'chat' ? r.subject : earlierSubject(rows), rows), messages: rows.map(courseMessage) };
+  await prisma.message.updateMany({ where: { ...inChat(r), senderType: 'admin', readAt: null }, data: { readAt: new Date() } });
+  return { chat: { ...courseChat(r.id, r.kind === 'chat' ? r.subject : earlierSubject(rows), rows), unread: 0 }, messages: rows.map(courseMessage) };
 }
 
 export type Sender = { id: string; name: string };
@@ -263,6 +265,21 @@ export async function adminThreads(q: string, now: Date = new Date()): Promise<A
   for (const c of chats) { const t = adminThread(c.id, c.thread.course, c.subject, c.messages, now); if (t) out.push(t); }
   for (const t of threads) { const a = adminThread(t.id, t.course, earlierSubject(t.messages), t.messages, now); if (a) out.push(a); }
   return out.sort((x, y) => y.lastAt.localeCompare(x.lastAt));
+}
+
+/** How many chats Course support shows as not answered (the course wrote last), by adminThreads' rules: every
+ *  chat and every course's earlier-messages chat (its key is the thread id), old broadcast copies never counting,
+ *  test courses included. The admin rail's Course support badge. */
+export async function unansweredChatCount(): Promise<number> {
+  const rows = await prisma.$queryRaw<{ n: bigint }[]>`
+    SELECT COUNT(*)::bigint AS n FROM (
+      SELECT DISTINCT ON (COALESCE(m."chatId", m."threadId")) m."senderType"
+      FROM "Message" m
+      WHERE m."isBroadcast" = false
+      ORDER BY COALESCE(m."chatId", m."threadId"), m."createdAt" DESC, m."id" DESC
+    ) last
+    WHERE last."senderType" = 'operator'`;
+  return Number(rows[0]?.n ?? 0);
 }
 
 type AdminResolved = Resolved & { course: { id: string; name: string; isTest: boolean; archivedAt: Date | null; operator: { email: string; name: string } | null } };

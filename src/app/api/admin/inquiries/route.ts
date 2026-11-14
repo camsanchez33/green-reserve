@@ -1355,10 +1355,12 @@ async function deleteInquiry(req: NextRequest) {
 }
 
 // BRAIN-1a: every inquiry action is recorded once it succeeds; deleting one
-// needs a reason. Autosaved call drafts are not worth a row each.
+// needs a reason. Autosaved call drafts are not worth a row each, and
+// set_expected_launch writes its own row (with the date before and after),
+// so it is not recorded twice.
 const inquiryAudit = (body: Record<string, unknown>) => {
   const action = String(body.action || '');
-  if (!action || action === 'save_call_draft') return null;
+  if (!action || action === 'save_call_draft' || action === 'set_expected_launch') return null;
   return { action: `inquiry_${action}`, targetType: 'inquiry', targetId: String(body.id || body.inquiryId || '') };
 };
 export const PATCH = withAudit(patchInquiry, inquiryAudit);

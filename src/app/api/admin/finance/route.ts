@@ -29,6 +29,8 @@ export async function GET(req: NextRequest) {
   const now = new Date();
   const p = resolveFinancePeriod(parseFinancePeriod(req.nextUrl.searchParams.get('period')), now);
   // Monthly reads start at the month before the period (the prior window is summed by instant below).
+  // The DateTime columns are zone-less UTC: every bound instant is compared as
+  // (${d}::timestamptz AT TIME ZONE 'UTC'), never by the session's TimeZone.
   const from = p.monthBefore.start;
 
   const [moneyBySource, moneyByCourse, bookingRows, expenses, courses, liveNow] = await Promise.all([
@@ -37,18 +39,18 @@ export async function GET(req: NextRequest) {
              CASE WHEN m."what" = 'booking_fee' AND (b."noShowAt" IS NOT NULL OR b."status" = 'cancelled') THEN 'booking_fee_no_show_late' ELSE m."what" END AS what,
              SUM(CASE WHEN m."direction" = 'out' THEN -m."platformFeeCents" ELSE m."platformFeeCents" END)::bigint AS cents
       FROM "MoneyMove" m JOIN "Course" c ON c."id" = m."courseId" LEFT JOIN "Booking" b ON b."id" = m."bookingId"
-      WHERE c."isTest" = false AND m."platformFeeCents" > 0 AND m."at" >= ${from} AND m."at" < ${now}
+      WHERE c."isTest" = false AND m."platformFeeCents" > 0 AND m."at" >= (${from}::timestamptz AT TIME ZONE 'UTC') AND m."at" < (${now}::timestamptz AT TIME ZONE 'UTC')
       GROUP BY 1, 2`,
     prisma.$queryRaw<CourseMonthRow[]>`
       SELECT to_char((m."at" AT TIME ZONE 'UTC') AT TIME ZONE ${PLATFORM_TZ}, 'YYYY-MM') AS month, m."courseId",
              SUM(CASE WHEN m."direction" = 'out' THEN -m."platformFeeCents" ELSE m."platformFeeCents" END)::bigint AS cents
       FROM "MoneyMove" m JOIN "Course" c ON c."id" = m."courseId"
-      WHERE c."isTest" = false AND m."platformFeeCents" > 0 AND m."at" >= ${p.current.start} AND m."at" < ${now}
+      WHERE c."isTest" = false AND m."platformFeeCents" > 0 AND m."at" >= (${p.current.start}::timestamptz AT TIME ZONE 'UTC') AND m."at" < (${now}::timestamptz AT TIME ZONE 'UTC')
       GROUP BY 1, 2`,
     prisma.$queryRaw<BookingMonthRow[]>`
       SELECT to_char((b."createdAt" AT TIME ZONE 'UTC') AT TIME ZONE ${PLATFORM_TZ}, 'YYYY-MM') AS month, b."courseId", COUNT(*)::bigint AS n
       FROM "Booking" b JOIN "Course" c ON c."id" = b."courseId"
-      WHERE c."isTest" = false AND b."status" IN ('confirmed', 'completed') AND b."createdAt" >= ${p.current.start} AND b."createdAt" < ${now}
+      WHERE c."isTest" = false AND b."status" IN ('confirmed', 'completed') AND b."createdAt" >= (${p.current.start}::timestamptz AT TIME ZONE 'UTC') AND b."createdAt" < (${now}::timestamptz AT TIME ZONE 'UTC')
       GROUP BY 1, 2`,
     prisma.expense.findMany(),
     prisma.course.findMany({ where: REAL_COURSE, select: { id: true, name: true, firstWentLiveAt: true } }),
@@ -109,7 +111,7 @@ export async function GET(req: NextRequest) {
     prisma.$queryRaw<{ cents: bigint | null }[]>`
       SELECT SUM(CASE WHEN m."direction" = 'out' THEN -m."platformFeeCents" ELSE m."platformFeeCents" END)::bigint AS cents
       FROM "MoneyMove" m JOIN "Course" c ON c."id" = m."courseId"
-      WHERE c."isTest" = false AND m."platformFeeCents" > 0 AND m."at" >= ${p.prior.start} AND m."at" < ${p.prior.end}`,
+      WHERE c."isTest" = false AND m."platformFeeCents" > 0 AND m."at" >= (${p.prior.start}::timestamptz AT TIME ZONE 'UTC') AND m."at" < (${p.prior.end}::timestamptz AT TIME ZONE 'UTC')`,
     prisma.booking.count({ where: { status: { in: ['confirmed', 'completed'] }, createdAt: { gte: p.prior.start, lt: p.prior.end }, ...ON_REAL_COURSE } }),
   ]);
   const before = revByMonth.get(p.monthBefore.month);

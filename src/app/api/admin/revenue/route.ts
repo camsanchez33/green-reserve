@@ -216,11 +216,12 @@ export async function GET(req: NextRequest) {
 
   // GreenReserve's part per platform day, summed in the database (a year and the year
   // before is too many rows to read). TEST-2: real courses only — the same rule as OURS.
+  // m."at" is zone-less UTC, so the bounds are cast to UTC, not left to the session's TimeZone.
   const perDay = (from: Date, to: Date) => prisma.$queryRaw<{ day: string; cents: bigint }[]>`
     SELECT to_char((m."at" AT TIME ZONE 'UTC') AT TIME ZONE ${PLATFORM_TZ}, 'YYYY-MM-DD') AS day,
            SUM(CASE WHEN m."direction" = 'out' THEN -m."platformFeeCents" ELSE m."platformFeeCents" END)::bigint AS cents
     FROM "MoneyMove" m JOIN "Course" c ON c."id" = m."courseId"
-    WHERE c."isTest" = false AND m."platformFeeCents" > 0 AND m."at" >= ${from} AND m."at" < ${to}
+    WHERE c."isTest" = false AND m."platformFeeCents" > 0 AND m."at" >= (${from}::timestamptz AT TIME ZONE 'UTC') AND m."at" < (${to}::timestamptz AT TIME ZONE 'UTC')
     GROUP BY 1`;
   const [curDays, priorDays, ledgerPriorAgg, ledgerByCourseCur, ledgerByCoursePrior, ledgerRows, liveNow] = await Promise.all([
     perDay(current.start, current.end),

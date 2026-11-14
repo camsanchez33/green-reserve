@@ -1,6 +1,7 @@
 // SUPPORT (Cam 2026-11-12): the pure rules of lib/support-chats — the subject from the first message, and a chat's
 // state (waiting on us / new reply / answered) with its reply promise (2 business days, lib/support-ticket).
 //   npx tsx scripts/support-chats-test.ts
+import { readFileSync } from 'fs';
 import { subjectFrom, chatSummary, messageText, MAX_MESSAGE, type Row } from '../src/lib/support-chats';
 
 let failed = 0;
@@ -37,6 +38,17 @@ ok('we replied and it was read → answered, nothing due', ans.state === 'answer
 const bc = chatSummary([row('operator', '2026-11-10T15:00:00Z'), row('admin', '2026-11-11T15:00:00Z', { isBroadcast: true })], now);
 ok('an old announcement copy is not a reply (still waiting)', bc.state === 'waiting' && bc.last?.senderType === 'operator', bc);
 ok('no messages → answered, no last', (() => { const e = chatSummary([], now); return e.state === 'answered' && e.last === null; })());
+
+// Source pins (Build follow-ups 2026-11-14).
+const lib = readFileSync('src/lib/support-chats.ts', 'utf8');
+const open = lib.slice(lib.indexOf('export async function openCourseChat'), lib.indexOf('export type Sender'));
+ok('an opened chat keeps the state the list showed (read before marking read; the GreenReserve chat not forced to answered)',
+  open.indexOf('prisma.message.findMany') < open.indexOf('prisma.message.updateMany') && !/state: 'answered'/.test(open));
+const cr = readFileSync('src/lib/submit-change-request.ts', 'utf8');
+ok('a Settings change request starts its own chat', /startCourseChat\(courseId,/.test(cr) && !/prisma\.message\.create/.test(cr));
+const nb = readFileSync('src/app/api/admin/nav-badges/route.ts', 'utf8');
+ok('the rail counts unanswered chats, not unread messages', /unansweredChatCount\(\)/.test(nb) && !/readAt: null/.test(nb));
+ok('unanswered = the last real message in each chat is the course\'s', /DISTINCT ON \(COALESCE\(m\."chatId", m\."threadId"\)\)/.test(lib) && /m\."isBroadcast" = false/.test(lib) && /last\."senderType" = 'operator'/.test(lib));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);

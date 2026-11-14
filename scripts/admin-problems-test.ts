@@ -51,8 +51,11 @@ check('Go to it only when the login can open it, else the course, else who can',
 check('snoozed problems still show (snoozing is gone)', /\.\.\.\(problems\?\.snoozed \?\? \[\]\)/.test(ov));
 check('the course is not printed twice when the title already names it', /!text\.includes\(p\.course\)/.test(page));
 check('a problem opens in place (no page to go to)', /aria-expanded=\{open\}/.test(page) && !/href="\/admin\/problems"/.test(page));
-check('assign offers only people who can open Problems', /const CAN_WORK = \{ active: true, role: \{ in: SUPPORT_PLUS \}, OR: \[\{ role: 'owner' \}, \{ areasSetAt: null \}, \{ areas: \{ has: 'problems' \} \}\] \}/.test(route)
-  && /findMany\(\{ where: CAN_WORK/.test(route) && /findFirst\(\{ where: \{ \.\.\.CAN_WORK, id: body\.adminId \}/.test(route));
+check('the problems route is read-only (no PATCH: no take, assign, note or snooze)', !/export (async function|const) (PATCH|POST|PUT|DELETE)\b/.test(route) && /export async function GET/.test(route));
+// The rail's count is the rows Needs attention lists: every problem not yet cleared, snoozed or not.
+const lib = readFileSync('src/lib/problems.ts', 'utf8');
+const countFn = lib.slice(lib.indexOf('export async function openProblemCount'));
+check('openProblemCount counts open and snoozed alike', /kind: 'urgent', resolvedAt: null \}/.test(countFn) && !/snoozedUntil/.test(countFn));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);
