@@ -1566,7 +1566,7 @@
     },
     {
       "path": "src/app/admin/revenue/logic.ts",
-      "lines": 102,
+      "lines": 104,
       "purpose": "Revenue page's pure rules, kept apart so scripts/admin-revenue-test.ts can pin them:",
       "brain": [],
       "exports": [
