@@ -2,7 +2,7 @@
 // never estimated. Run: npx tsx scripts/admin-expenses-test.ts
 import { readFileSync } from 'fs';
 import { goalPace } from '../src/lib/goal-pace';
-import { monthCostPace } from '../src/lib/expenses';
+import { monthCostPace, endedAtForLastDay } from '../src/lib/expenses';
 import { isEnded, historyLine, cards, nextRenewal, monthEarlier, yearEarlier, pct, parseAmount, FILTERS, byCost, activeOn, type Exp } from '../src/app/admin/expenses/logic';
 
 let failed = 0;
@@ -42,15 +42,19 @@ check('ended on May 1 → not running in November', !activeOn(list[3], NOW));
 // ($349.55); monthCostPace, which the page moves to next, gives exactly $350. The one-off is never projected either way.
 {
   const at = new Date('2026-11-12T15:00:00Z');
-  const kk = cards([ex({ amountCents: 20000, startedAt: '2026-01-01T12:00:00.000Z' }), ex({ amountCents: 15000, cadence: 'one-time', startedAt: '2026-11-10T12:00:00.000Z' })], at);
-  const days = (kk.monthEnd.getTime() - kk.monthStart.getTime()) / 86_400_000;
-  const p = goalPace({ progress: kk.monthSoFar - kk.monthOneTime, fixed: kk.monthOneTime, target: 40000, share: kk.elapsedShare, kind: 'cap', daysElapsed: kk.elapsedShare * days });
-  check('a one-off is never projected: the month ends near $350, on pace to stay under', Math.abs(p.projected - 35000) < 100 && p.tone === 'ok', JSON.stringify(p));
-  const exact = monthCostPace([ex({ amountCents: 20000, startedAt: '2026-01-01T12:00:00.000Z' }), ex({ amountCents: 15000, cadence: 'one-time', startedAt: '2026-11-10T12:00:00.000Z' })], at);
-  const q = goalPace({ progress: exact.progress, fixed: exact.fixed, scheduled: exact.scheduled, share: exact.share, target: 40000, kind: 'cap', daysElapsed: exact.share * days });
-  check('…monthCostPace gives exactly $350 ($200 running + the $150 one-off as it is)', exact.projected === 35000 && q.projected === 35000 && q.tone === 'ok', JSON.stringify({ exact, q }));
+  const run = ex({ amountCents: 20000, startedAt: '2026-01-01T12:00:00.000Z' });
+  const once = ex({ amountCents: 15000, cadence: 'one-time', startedAt: '2026-11-10T12:00:00.000Z' });
+  const mp = monthCostPace([run, once], at);
+  const p = goalPace({ progress: mp.progress, fixed: mp.fixed, scheduled: mp.scheduled, target: 40000, share: mp.share, kind: 'cap', daysElapsed: mp.share * 30 });
+  check('a one-off is never projected: the month ends at $350, on pace to stay under', Math.abs(p.projected - 35000) < 100 && p.tone === 'ok', JSON.stringify(p));
+  // A cost ending Nov 20 (inclusive) is counted only to its end, never as if it ran all month.
+  const ending = ex({ amountCents: 30000, startedAt: '2026-01-01T12:00:00.000Z', endedAt: endedAtForLastDay('2026-11-20')!.toISOString() });
+  const mp2 = monthCostPace([ending], at);
+  const p2 = goalPace({ progress: mp2.progress, fixed: mp2.fixed, scheduled: mp2.scheduled, target: 30000, share: mp2.share, kind: 'cap', daysElapsed: mp2.share * 30 });
+  check('a cost ending mid-month projects only to its end ($200 of a $300 month)', Math.abs(p2.projected - 20000) < 100, JSON.stringify(p2));
 }
-check('the page passes running costs as progress and one-time costs as fixed', /progress: k\.monthSoFar - k\.monthOneTime, fixed: k\.monthOneTime/.test(readFileSync('src/app/admin/expenses/page.tsx', 'utf8')));
+check('the page passes Build\'s month helper to the shared pace rule (progress, fixed, scheduled)', /monthCostPace\(list, now\)/.test(readFileSync('src/app/admin/expenses/page.tsx', 'utf8')) && /scheduled: mp\.scheduled/.test(readFileSync('src/app/admin/expenses/page.tsx', 'utf8')));
+check('ends read inclusively (lastDayOf), never the next day', /lastDayOf\(iso\)/.test(readFileSync('src/app/admin/expenses/page.tsx', 'utf8')));
 
 // Percentages.
 check('up 50%', pct(150, 100) === 50);
@@ -67,7 +71,11 @@ check('renews today when today is the day', nextRenewal(ex({ startedAt: '2026-10
 check('one-time never renews', nextRenewal(ex({ cadence: 'one-time' }), NOW) === null);
 const future = ex({ startedAt: '2026-03-30T12:00:00.000Z', endedAt: '2026-12-15T17:00:00.000Z' });
 check('a future end is still running: not ended, still active, still counts', !isEnded(future, NOW) && activeOn(future, NOW) && FILTERS.find(f => f.key === 'active')!.test(future, NOW));
-check('…and renews before its end, but never on or after it', nextRenewal(future, NOW)?.day === '2026-11-30' && nextRenewal(future, new Date('2026-12-02T15:00:00Z')) === null);
+check('…and renews before its end, but never after its last day', nextRenewal(future, NOW)?.day === '2026-11-30' && nextRenewal(future, new Date('2026-12-02T15:00:00Z')) === null);
+const endsNov30 = ex({ startedAt: '2026-03-30T12:00:00.000Z', endedAt: endedAtForLastDay('2026-11-30')!.toISOString() });
+check('a cost whose last day is Nov 30 still renews on Nov 30', nextRenewal(endsNov30, NOW)?.day === '2026-11-30');
+// An end saved mid-day (End = now) still counts its own day: started the 15th, ending Nov 15 at noon Eastern → renews that day.
+check('an end saved mid-day still renews on its own day', nextRenewal(ex({ startedAt: '2026-03-15T12:00:00.000Z', endedAt: '2026-11-15T17:00:00.000Z' }), NOW)?.day === '2026-11-15');
 check('an ended cost never renews', nextRenewal(ex({ endedAt: '2026-10-01T12:00:00.000Z' }), NOW) === null);
 
 // Amounts typed in the form.
@@ -90,7 +98,16 @@ check('added', line({ at: '2026-06-16T00:00:00Z', by: 'Cam', kind: 'added' }) ==
 check('an amount change reads in dollars', line({ at: 'x', by: 'Cam', kind: 'changed', changes: [{ field: 'amountCents', from: 3000, to: 4500 }] }) === 'Amount changed $30.00 → $45.00 · Cam');
 check('a cadence change reads in words', line({ at: 'x', by: '', kind: 'changed', changes: [{ field: 'cadence', from: 'monthly', to: 'annual' }] }) === 'How often changed Every month → Every year');
 check('a date change reads as the day', line({ at: 'x', by: '', kind: 'changed', changes: [{ field: 'startedAt', from: '2026-03-01T12:00:00.000Z', to: '2026-03-05T12:00:00.000Z' }] }) === 'Started changed 2026-03-01 → 2026-03-05');
+check('early: a month whose known costs already pass the budget reads "Over budget" in red (Cam 2026-11-14)', (() => {
+  const pg = readFileSync('src/app/admin/expenses/page.tsx', 'utf8');
+  const early = new Date('2026-11-02T15:00:00Z');
+  const list = [ex({ amountCents: 50_000, startedAt: '2026-01-01T12:00:00.000Z' })];
+  const mp = monthCostPace(list, early);
+  const p = goalPace({ progress: mp.progress, fixed: mp.fixed, scheduled: mp.scheduled, target: 10_000, share: mp.share, kind: 'cap', daysElapsed: mp.share * 30 });
+  return p.tone === 'bad' && /const EARLY_OVER = 'Over budget'/.test(pg) && /mp\.share \* monthDays < EARLY_DAYS \? EARLY_OVER/.test(pg);
+})());
 check('ended', line({ at: 'x', by: 'Cam', kind: 'ended' }) === 'Finished · Cam');
+check('a finish date reads as its last day, not the next midnight', line({ at: 'x', by: '', kind: 'changed', changes: [{ field: 'endedAt', from: null, to: endedAtForLastDay('2026-11-21')!.toISOString() }] }) === 'Finished changed — → 2026-11-21');
 
 // The page: owner data only from the owner-only route, costs going up read red, no estimate.
 const page = readFileSync('src/app/admin/expenses/page.tsx', 'utf8');

@@ -64,7 +64,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/admin/courses/[id]` | admin | client-side | page | `src/app/admin/courses/[id]/page.tsx` | 326 |
 | `/admin/create` | admin | client-side | page | `src/app/admin/create/page.tsx` | 759 |
 | `/admin/employees` | admin | client-side | page | `src/app/admin/employees/page.tsx` | 278 |
-| `/admin/expenses` | admin | client-side | page | `src/app/admin/expenses/page.tsx` | 391 |
+| `/admin/expenses` | admin | client-side | page | `src/app/admin/expenses/page.tsx` | 396 |
 | `/admin/finance` | admin | client-side | page | `src/app/admin/finance/page.tsx` | 294 |
 | `/admin/forgot-password` | admin | client-side | page | `src/app/admin/forgot-password/page.tsx` | 67 |
 | `/admin/goals` | admin | client-side | page | `src/app/admin/goals/page.tsx` | 164 |
@@ -484,7 +484,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/course-conditions.ts` | 4 | 101 | DASH-D Home (Cam 2026-11-01, "the course conditions"): | `cleanConditions`, `CONDITION_FIELDS`, `CONDITION_LINE_CHARS`, `CONDITION_LINES_MAX`, `CONDITION_NOTE_CHARS`, `CONDITION_SUGGESTIONS`, `ConditionKey`, `conditionLabel` +6 more |
 | `src/lib/course-group.ts` | 4 | 13 | GRP-1 (Cam 2026-10-19, after golfbergencounty.com): | `groupCourseIds` |
 | `src/lib/event-signup.ts` | 4 | 232 | W2-9d (Cam 2026-10-22): | `cleanQuestions`, `HOLD_MINUTES`, `lapseHolds`, `MAX_GROUP`, `MAX_QUESTIONS`, `moveOntoList`, `questionsOf`, `sendSignupConfirmation` +7 more |
-| `src/lib/goal-pace.ts` | 4 | 75 | GOAL-PACE (Cam 2026-11-12, ADMIN_REDO_SPEC "Goals: | `EARLY_DAYS`, `elapsedDays`, `elapsedShare`, `GoalKind`, `goalPace`, `PaceTone`, `projectAtEnd` |
+| `src/lib/goal-pace.ts` | 4 | 79 | GOAL-PACE (Cam 2026-11-12, ADMIN_REDO_SPEC "Goals: | `EARLY_DAYS`, `elapsedDays`, `elapsedShare`, `GoalKind`, `goalPace`, `PaceTone`, `projectAtEnd` |
 | `src/lib/lifecycle.ts` | 4 | 416 |  | `archivePair`, `deleteInquiryOrPair`, `deletePair`, `forceDeleteOrphan`, `ForceDeleteResult`, `LifecycleResult`, `listAcknowledgedOrphans`, `ORPHAN_FLAG` +6 more |
 | `src/lib/member-account.ts` | 4 | 211 | MEM-ACCT (Cam 2026-10-30: | `accountBalance`, `accountMembers`, `accountView`, `addCharge`, `creditAccount`, `creditFeeBack`, `fitsLimit`, `MAX_CREDIT_CENTS` +2 more |
 | `src/lib/member-statements.ts` | 4 | 218 | MEM-ACCT part 2 (Cam 2026-10-30: | `AUTO_CHARGE_DAYS`, `autoChargesDue`, `autoChargeStatement`, `Charger`, `chargeStatement`, `closeStatements`, `DUE_DAYS`, `emailStatement` +9 more |
