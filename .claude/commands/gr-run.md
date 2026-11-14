@@ -6,12 +6,12 @@ argument-hint: <queue item or spec phase, e.g. "REVISE A-07" or "ONBOARDING_V2 V
 # GR Run — $ARGUMENTS
 
 This runs in the main thread so Cam can steer mid-run. The overseer owns the build;
-it may hand a mechanical, UI-only sub-part to `builder` per CLAUDE.md's **Overseer
+it may hand a mechanical, UI-only sub-part to `builder` per LANES.md and `docs/DECISIONS.md` **Overseer
 protocol**, never the whole build and never money or auth code.
 
 ## 0. Before anything else
 
-`git status`. Apply the **Doc-file commit rule** in `CLAUDE.md` exactly as written —
+`git status`. Apply the **Doc-file commit rule** in `docs/DECISIONS.md` (summarised in CLAUDE.md "Commits and PRs") exactly as written —
 it distinguishes doc files (commit, never discard) from everything else. Do this
 before reading the queue, because Cowork edits the queue between runs.
 
@@ -22,7 +22,7 @@ discarding work.
 
 Read, in this order:
 
-1. `CLAUDE.md` in full. Everything you need to know about architecture, the design
+1. `CLAUDE.md`, `LANES.md` and your lane file in full, then the sections of `docs/DECISIONS.md` your task touches. Everything you need to know about architecture, the design
    system, build validation, shipping rules and known gotchas lives there. **This
    file is the source of truth — nothing in this command restates it, because a copy
    would rot.**
@@ -38,7 +38,7 @@ Before touching code, output:
 - the files you expect to touch
 - **whether this item requires a schema change** — if it does, stop here and say so.
   Schema changes follow the migration checklist in `docs/SHIPPING.md` (the
-  never-bend rules are in the Shipping section of `CLAUDE.md`) and are run attended,
+  never-bend rules are in the Shipping section of `docs/DECISIONS.md`) and are run attended,
   never swept into a batch.
 - anything in the spec that is ambiguous or that conflicts with current code
 
@@ -49,18 +49,18 @@ exists.
 
 - Read every file fully before editing it. Never edit blind.
 - Match the patterns in adjacent code before inventing new ones.
-- Design system: obey the Clubhouse section of `CLAUDE.md`, including its BANNED
+- Design system: obey the design rules (CLAUDE.md "Look", `docs/DECISIONS.md` "Design system"), including its BANNED
   list. If the spec asks for something that section forbids, surface the conflict
   rather than silently picking one.
 - Respect the **no-silent-failures rule** on every admin/dashboard action you add.
-- Follow the **Known gotchas** section of `CLAUDE.md` for file-writing hazards —
+- Follow the **Known gotchas** section of `docs/DECISIONS.md` for file-writing hazards —
   especially the rules on `sed -i`, large-file truncation, and JSX ternaries.
 - Stay inside the spec. Anything the spec did not ask for becomes a new queue item,
   not a bonus commit.
 
 ## 4. Validate before committing
 
-- Run the `@babel/parser` SWC-parity check from `CLAUDE.md` on **every** `.tsx` you
+- Run the `@babel/parser` SWC-parity check (`node scripts/parse-check.js`) on **every** `.tsx` you
   touched. `ignoreBuildErrors: true` means type errors won't stop a broken deploy —
   parse errors are the only thing that will.
 - `npx tsc --noEmit` — CI runs this, so a red type-check is a red PR.
@@ -69,22 +69,18 @@ exists.
 
 ## 5. Ship and record
 
-- Regenerate both generated artifacts, together, because they rot the same way:
+- Regenerate the generated artifacts, together, because they rot the same way:
 
   ```bash
-  node scripts/codemap.mjs && node scripts/status.mjs && node scripts/status-html.mjs
+  node scripts/codemap.mjs && node scripts/status.mjs && node scripts/status-html.mjs   # the code map is regenerated (never committed)
   ```
 
-  The code map has a CI drift check, so a run that changed a route, an export or
-  a `@brain` tag and did not regenerate it fails the build. It also fails on the
-  spot if two files now claim the same `@brain` concept — which is the point of
-  it. The status board has no such gate, which is exactly why it belongs on the
-  same line as the one that does.
+  The code map is not committed (it is rebuilt at every session start), so it never conflicts.
 - **Final review.** Dispatch `final-reviewer` with the queue item and the diff
   (`git diff`). BLOCK → fix → re-review until PASS. Nothing is pushed without a
-  PASS (CLAUDE.md, Overseer protocol).
+  PASS (LANES.md; docs/DECISIONS.md Overseer protocol).
 - Commit with a message naming the queue item.
-- Push. Vercel auto-deploys `main`.
+- Push your branch and open the PR (never push to main). Build merges it after Cam's review; Vercel deploys `main` on merge.
 - Update the item in the queue file: append the commit sha, and **leave the box
   unchecked**. A shipped-but-unreviewed item is not a done item, and a checked box
   is the only signal anyone reads. `/gr-review` checks it off when the review passes.

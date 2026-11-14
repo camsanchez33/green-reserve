@@ -1,400 +1,44 @@
 # GreenReserve — Claude Code Context
 
+This file is loaded into EVERY session and every helper agent, so it holds only what all of them need. Keep it short (Cam 2026-11-14): a new rule goes here only if every session must know it; everything else goes in `docs/DECISIONS.md` (the full decision history, verbatim, by ID and date) or in a lane file under `lanes/`.
+
 ## What this is
-GreenReserve is an OpenTable-style golf tee sheet platform. Golf courses list for free, golfers book online. Revenue model: $1.50/player service fee charged to the golfer at booking; courses keep 100% of green fees. Membership dues paid through GreenReserve carry a 1% fee added to what the member pays (Cam 2026-10-08, `membershipFeeCents()` in `src/lib/stripe.ts`; was a flat 50¢ from the course's side).
+GreenReserve is a golf tee sheet platform: courses list for free, golfers book online. Revenue is a $1.50/player booking fee paid by the golfer; courses keep 100% of green fees; membership dues paid through us carry a 1% fee. Live at https://greenreserve.app. Launch: Thanksgiving (Nov 26 2026); outreach starts Mon Nov 30 (`LAUNCH_PLAN_SPEC.md`).
 
-**Live URL:** https://greenreserve.app  
-**Stack:** Next.js 15 (App Router), TypeScript, Prisma (PostgreSQL), Stripe Connect, Resend (email), Vercel
+**Stack:** Next.js 15 (App Router), TypeScript, Prisma on Postgres (Neon), Stripe Connect (Express, direct charges on the course's account), Resend (email), Twilio (SMS), Vercel.
 
----
-
-## Launch plan — READ `LAUNCH_PLAN_SPEC.md` FIRST (Cam 2026-11-09)
-Cam's handwritten plan to be live by Thanksgiving (Nov 26 2026): finish /dashboard page by page in his order (Pro shop + the tee sheet's carts → Messages → Money → Members → Events → Schedule → Analytics → Settings → Course alert → Sign out; then links, then UI/layout/animations), then a complete Admin redo, then the homepage, then golfer-facing pages, then the outreach rework (every text, email, receipt and confirmation: how they look and what they do), then a security pass, then run it like a real company; outreach starts Mon Nov 30. Work in that order; since Cam 2026-11-10 sections 1–4 (dashboard, admin, homepage, golfer pages) run at once in four lanes (`LANES.md`).
-
-## Key architectural decisions
-
-### Payment flow (deferred, not immediate)
-- Golfers save a card at booking via Stripe SetupIntent — **nothing is charged at booking time**
-- Charge happens at **check-in** via direct Stripe charge against the saved PaymentMethod
-- SP-B (Cam 2026-10-05, reverses FB-3's "every booking saves a card"): a card is asked for at booking ONLY when the course's policy can charge it — a late fee or a no-show fee (`cardRequired()` in `src/lib/cancel-policy.ts`). No fees → no card; the golfer gets the pay link `checkInWindowHours` before the round (paymentStatus `no_payment_method`). GreenReserve's $1.50 is collected when the golfer pays, and is charged ALONG WITH any late or no-show fee the course's policy charges. The policy (fee per booking/player, timing, no-show fee, auto no-show) is copied onto the Booking at creation; `describePolicy()` is the ONLY source of golfer-facing policy wording. CARD-1 (Cam 2026-10-05): Settings shows this as an explicit "Card at booking" choice — "No card" zeroes both fees; it is not a separate flag
-- Cancellation-window hold: the moment a booking's cancellation cutoff passes, the `hourly` cron charges the fee (the daily `cancellation-cutoff` is a safety net) to the saved card for EVERY still-confirmed booking at a fee-policy course. It is a hold, not a no-show penalty — it is refunded at check-in. No-fee courses get a check-in reminder email instead.
-- Cancelling after the window keeps that fee (non-refundable)
-- FEE-AT-BOOKING (Cam 2026-10-24, built OFF — `FEE_AT_BOOKING_ON` in `src/lib/booking-fees.ts`): GreenReserve's $1.50/player is charged when the golfer books online, on the platform account (`src/lib/booking-fee.ts`, `Booking.feePaidCents` / `feePaymentIntentId` — never `stripePaymentIntentId`, which stays the separate no-show/late fee). Every online booking then takes a card (`cardAtBooking()`); `roundChargeCents` / `roundApplicationFeeCents` subtract what was paid. Refunded on a cancel before the cutoff, when the course calls it off or waives, and for players taken off before the cutoff; kept on a late cancel or a no-show. Turning it on needs Operator Agreement v2026-11 + LQ-2 copy (the golfer wording lives in `describePolicy()`)
-- RES-1 (Cam 2026-10-19): resident rates are charged. Staff add residents (name, email, card number, expiry) in Members → Residents (`CourseResident`). A golfer signed in with a listed email books ONE player — themselves — at the tee time's `residentRateCents`; the rest of the group pays the booked rate. Staff set how many of an unpaid group are residents from the tee-sheet panel (`set_residents`, `sheet.counter_payment`, event `price_changed`). Never stacked on a member rate. `Booking.residentPlayers` / `residentRateCents` carry it; moves, party-size changes and partial check-ins keep it (`src/lib/residents.ts`, `src/lib/booking-residents.ts`)
-- PRICE-SWITCH (Cam 2026-11-01, "off stops the rates"): Settings → Members / Residents decide whether member and resident prices are charged at all — off = the public price online, at the counter, on the register, in moves and check-in. Every pricing path reads `memberPricingOn()` / `residentPricingOn()` (`src/lib/pricing-switch.ts`); a newly set member/resident price switches it on (`withPriceSwitch()` around tier and schedule writes — a rename or re-save never does); migration `20261101000000_pricing_switch_backfill` switched on every course that already had such a price. A membership itself (dues, account, booking window) is not a price and ignores the switch
-- POS-1a (Cam 2026-10-08/12): pro-shop items added to a round (tee-sheet panel, Settings → Pro shop) ride the round's charge. `Booking.totalAmount` stays the round's own price; anything that charges, refunds or shows what the card pays uses `roundChargeCents()` / `roundApplicationFeeCents()` from `src/lib/shop.ts`. Items lock once the round is paid. GreenReserve's 50¢-per-sale shop fee is built but `SHOP_FEE_ON = false` until the Operator Agreement lists it. POS-2 (Cam 2026-10-19, "everything"): walk-up sales with no round, rung up on `/dashboard/shop` — cash (recorded, no charge) or a pay link texted/emailed to the customer, paid on `/pay/shop/[id]` as a direct charge on the course's Stripe account (`lib/shop-sales.ts`: claim the sale → ask Stripe for an earlier success → charge with key sale+card; void/took-cash only from 'open'). Optional per-item stock (`ShopItem.stockCount`, null = not counted) is taken by paid walk-up sales and by items added to a round; it never blocks a sale. Card refunds for walk-up sales are made in the Stripe dashboard for now. POS-3 R3a (Cam 2026-10-24): a Stripe card reader at the register, server-driven (`src/lib/card-reader.ts`, no Terminal SDK in the browser) — owners connect readers in Settings → Pro shop; a reader sale is claimed `paying` with `ShopSale.readerId` and its one `card_present` intent, and goes back to `open` only when Stripe says the intent is unpaid; simulated readers and "Simulate a tap" only with test keys. R3b (Cam 2026-10-24): ONE group's round on the reader (`src/lib/reader-rounds.ts`) is a card payment of the booking — `performCheckIn(…, { cardPresent })`, GreenReserve's fee as the application fee; while `Booking.readerStartedAt` is set the pay link, card check-in and cash refuse the booking, and a reader payment on a round meanwhile paid or cancelled is refunded in full. DRAWER-1 (Cam 2026-11-09: "shouldn't be able to start taking charges until the register is open"): the register is a loop — open (count against what the last close-out left; a different count needs a reason) → sell → close out (count, leave a float, take out the deposit, a note for the next person) → CLOSED until reopened (`src/lib/register-open.ts`). While it isn't open, register sales (and a walk-up sale put on the reader), cash refunds of a register sale, cash on the tee sheet (Take cash, Pay separately + cash, walk-in paying cash) and rounds on the card reader are refused at the route (`requireRegisterOpen`, 409 `registerClosed: true`, which `dfetch` announces; the tee sheet and the Register show `RegisterClosedNotice` with the way to open it, other views their inline error); online payments and card/account refunds never are. Event and dues cash are not gated yet (Cam to decide). This narrows "never block cash" below to: never block cash once the register is open. R4 (Cam 2026-10-25): the end-of-day close-out on the Pro shop page (`src/lib/register-close.ts`, permission `shop.close`) — expected cash = starting cash + register cash sales + tee-sheet "paid at the counter" (not rung up at the register) − cash refunds; each count is a `RegisterClose` row, a recount adds one
-
-### Money ledger (LEDGER-1, Cam 2026-10-30: "one new money table")
-Every dollar that moves for a course is ONE `MoneyMove` row, written only through `recordMove()` in `src/lib/money-ledger.ts` at the moment it moves: card charges and refunds on the course's account or GreenReserve's, cash at the register, dues, shop and event payments; the Stripe webhook mirrors dashboard refunds and dispute money (`mirrorMove`). Append-only; `stripeId` (PaymentIntent or Refund) is unique, so retries are no-ops; `recordMove` never throws. A new path that moves money must call it — `scripts/money-ledger-test.ts` fails on a file whose Stripe charge/refund calls outnumber its ledger writes. Membership dues are claimed (`duesChargeStartedAt`) and charged outside any transaction, ledger first.
-EARNED-1 (Cam 2026-11-04, "earned vs paid out"): Money → Ledger opens with two cards for the dates picked — Earned (collected, given back, GreenReserve fees, Stripe fees, you keep) and Paid out (Stripe payouts that arrived, cash at the course, the Stripe balance now; only with `money.payouts`). Stripe's fee is read per day from the balance transactions' `fee_details` (`stripe_fee` only — GreenReserve's part is already in the ledger); when Stripe can't be read, Stripe fees and "you keep" show a dash, never an estimate. Each day's payments can be filtered by what and how paid, and a payment opens its detail. Labels and definitions live in `src/lib/earned-terms.ts`; `scripts/ledger-view-db-test.ts` pins it.
-
-### Booking status flow
-```
-confirmed → (check-in) → completed
-confirmed → (cancel before window) → cancelled (no charge)
-confirmed → (cancel after window) → cancelled (fee charged, non-refundable)
-confirmed → (tee time has gone off) → NO cancel (Cam 2026-10-27): check in, or no-show (charged at midnight); only the course calling it off or staff with sheet.waive_fee removing a booking made by mistake (no fee) — performCancellation() refuses the rest
-confirmed → (cutoff passes, hourly cron) → hold fee charged, still confirmed; refunded at check-in   [timing hold_at_cutoff only]
-confirmed → (late cancel, timing late_cancel / late_cancel_or_no_show) → cancelled, late fee + GreenReserve fee charged then
-confirmed → (no-show: staff, or auto N min after tee time) → noShowAt set, no-show fee + GreenReserve fee charged; "still coming" refunds both
-confirmed → (staff marks no-show) → noShowAt set, still confirmed (reversible: "Undo no-show" on the group's card — the still_coming action; TT-CARD Cam 2026-11-12 renamed it from "Still coming")
-confirmed → (staff "paid offline") → completed, paymentStatus paid_offline, no Stripe charge
-confirmed → (moved: staff, golfer's own swap, frost delay) → still confirmed on the new tee time; ONE lib/move-booking.ts (ACT-1). Staff keep the booked price unless they pick the new time's rate; a golfer's swap is priced at the new slot with their member tier re-applied; the booking fee keeps its per-player amount (0 stays 0); a hold already taken stays; event booking_moved
-completed → (staff moves a checked-in group, Cam 2026-10-08) → still completed on the new tee time; price always kept (it's paid), nothing charged or refunded; the golfer's own swap and frost delay still refuse checked-in groups
-```
-
-- SMS-1 (Cam 2026-11-02, Twilio A2P 10DLC — `docs/SMS_OPT_IN.md`): a text goes ONLY to a number that agreed — an unticked box on the booking form / event sign-up, or a spoken yes staff record with "They said yes to texts" after reading the script (`SmsConsentAsk`). `sendSms()` refuses anyone else (`SmsNoConsentError`); every opt-in/opt-out is an append-only `SmsConsent` row (`src/lib/sms-consent.ts`); the wording lives only in `src/lib/sms-consent-copy.ts`; STOP/START/HELP replies come in on the Twilio-signed `/api/twilio/inbound`. A new place that collects a phone we text must ask the same way.
-
-### Check-in
-- Staff check-in: tee sheet on `/dashboard` → `PATCH /api/operator/bookings` with `action: 'checkin'`
-- Golfer self check-in: `/checkin/[bookingId]?token=...` → `/api/checkin/[bookingId]` (token-gated, emailed in confirmation)
-- Both call shared `performCheckIn()` in `src/lib/checkin-booking.ts`
-- PAY-1 (Cam 2026-10-06): paying at the counter without a POS = **Text pay link** on the tee sheet row (`send_pay_link` with `via: 'sms'`, Twilio) → the golfer pays on their own phone on `/checkin/[bookingId]` with Apple Pay / Google Pay (Stripe Payment Request button) or a card; the booking fee rides with the round. Works for counter/phone bookings too (a token is minted if missing). Cash = a register cash sale of the round (CASH-1, Cam 2026-10-25: "can't just be paid at counter — it's either paid online … or they ring it up in store and take cash": the tee sheet's **Take cash** and the walk-in form's "paying cash now" call `ringUpCash` in `src/lib/register.ts`, so every cash payment has a sale, a receipt and an exact place in the close-out; a counter booking is never created paid; **Card reader** sits on the group card itself; POS-4, Cam 2026-11-08: the Pro shop register never takes rounds — "tee times … are paid on tee times"). It ends `paid_offline` and collects no GreenReserve fee — PAY-2 (Cam 2026-10-06): that is accepted on purpose ("we are just going to have to eat it"); every such online booking is counted on the admin Overview ("Fees missed") and on each course's profile via `counterFeesUncollected()` in `src/lib/access-fee.ts`. Never block or penalise cash once the register is open (DRAWER-1: a closed register takes nothing). Staff typing a card (tee sheet card modal) stays as the fallback
-- SPLIT-1 (Cam 2026-11-02: "if John Smith walks in with three people and they all want to pay separately … that has to be seamless"): **Pay separately** on the group card splits players off into their own booking on the same tee time (`splitBooking()` in `src/lib/split-booking-db.ts`, action `split` on the operator bookings route, `sheet.counter_payment`) — priced by `splitShares()` (`src/lib/split-booking.ts`, shared with the card's preview): the booker keeps the member's rate, the residents that fit, range balls and shop items; who leaves pays the group's other-player price; the two totals always add up to the one before. The new booking pays at the counter (`manual`, no card, no fees) — "Take cash" does split + register cash sale in one request; otherwise it sits on the card with its own reader / pay link / cash buttons. No money moves in a split (no ledger row). Refused once paid, on the reader, a charge started, a no-show, a pack, an event time
-- PARTIAL-1 (Cam 2026-11-04: "if only one person's checked in the other should still be open"): checking in some of a group ("Showed up", card or cash, the register's headcount) splits the rest off FIRST — `splitOffLateArrivals()` in `src/lib/split-booking-db.ts`, from `chargeBooking` and `settleAtCounter` — into a booking linked by `Booking.splitFromId`, still confirmed, shown under its group on the card. Unlike paying separately it keeps the group's contact, card and copied policy (no-show fee share, auto no-show, timing), so with a card it is charged, texted or no-showed like any booking; without one it pays in store. Priced by `splitShares()`; the totals and fee shares add up to the one booking. A hold already taken is SHARED, not refunded: the part keeps the same `cancellationFeeChargeId` and its share in `cancellationFeeTotal`; every hold refund goes through `holdRefundCents()` so each part gives back only its own share (a per-booking hold stays whole with the booker). A group that can't be split (pack, booking fee paid, the reader) falls back to the SD-5 partial charge
-- EXCEPTION: cash (`take_cash` on the same operator route, and the register) completes the booking WITHOUT `performCheckIn()` — through `settleAtCounter` — anything that must happen on every check-in has to cover that branch too
-
-### Discovery-call booking (inquiry → call)
-- The inquiry confirmation email links to `/call/[token]` (token-gated, 21 days)
-- **Cal.com is the only scheduler** (Cam 2026-09-29 — the Google Calendar path was never connected and is deleted; do not reintroduce it). The page REDIRECTS to the prefilled public Cal.com booking page (reads Cam's Outlook; an in-page embed rendered blank live — don't retry it without testing against real cal.com); a signed webhook at `/api/calcom/webhook` creates/moves/cancels the inquiry's discovery `Call`. Admins book for a course with "Book on Cal.com" on the inquiry page. Unset `CALCOM_BOOKING_URL` = the page asks the course to reply with times. Admin → System → Call booking shows what the site sees. See `src/lib/calcom.ts`
-
-### Test data (TEST-1, Cam 2026-10-22)
-"Every course and everything right now [is test] — we need a way to make everything like new again." Two owner-only tools in `src/lib/data-reset.ts`, the one deliberate exception to the archive-never-delete doctrine:
-- **Launch wipe** (Admin → Systems → "Before launch: clear test data"): one `TRUNCATE … RESTRICT` over every table in `WIPED_TABLES` — courses, logins, golfers, bookings, the pipeline, messages, announcements, problems. `KEPT_TABLES` is the company side (admin logins and owner sessions, goals, expenses, agreement versions, audit log, cron log; company documents live in blob storage). Preview counts first, step-up, a reason, the words typed. Closes for good at `WIPE_ALL_UNTIL` (midnight Dec 1 2026 Eastern — Cam 2026-10-30 moved it from Nov 1). Stripe is never touched.
-- **Test course** (`Course.isTest`, marked on the admin course page): its activity can be reset — bookings and payment records, members, residents, shop sales, events, conversations, problems — keeping its setup. Only a course marked as a test. Cam's "The GreenReserve Test Course" (for screenshots and trying things) is made after the wipe and marked as a test.
-- **TEST-2: a test course never touches the platform's numbers.** `src/lib/real-courses.ts` (`REAL_COURSE`, `ON_REAL_COURSE`, `ON_REAL_BOOKING`) is spread into every platform-wide query: admin Home, Today/Health, Money (revenue route), Goals, Problems (admin-checks), Needs you, the menu badges, `paidWindow`/`counterFeesUncollected` when called without a course, the public course list, the sitemap; its booking page is noindex. Its own dashboard and admin course page count it like any course. Kept whole on purpose (they answer to Stripe): disputes, the Stripe month match, the transactions export, course payouts. A new platform-wide query uses the same spread; `scripts/real-courses-db-test.ts` checks the list.
-- A new model must be added to `WIPED_TABLES` or `KEPT_TABLES` — `scripts/data-reset-db-test.ts` fails otherwise.
-
-### Events command center (EVENTS-1, Cam 2026-11-04)
-A live event opens with one strip: registered (of the spots offered), spots left (online sign-ups still paying hold one), collected and owed (lib/event-payments `eventMoney()`, the same figures as the event's Money card), pay links out, tasks left with overdue / next due. An event the organizer pays as one bill shows, per player, Covered or Not covered yet — "Covered count" (Cam's pick): the money kept covers whole players at the event's price, in list order, never more than the list. Pure in `src/lib/event-command.ts`; `scripts/events-command-test.ts` pins it.
-EVENTS-2 (Cam 2026-11-09, "no guidance or structure"): under the strip, "Next up" — the steps from saved to played (`eventNextSteps()`, same file; which apply follows who pays), each opening the part that does it — then the event in tabs (Overview · Players · Sign-up · Money · Checklist; every part stays mounted, the Players part prints from any tab). Setup: the kind sets a new event's starting answers, required fields go red under themselves, the organizer's one bill needs a name and an email or phone, and Review shows the tee-sheet effect, the details with Change, what's still missing and the checklist it starts with. The list reads Active, then Past. `scripts/events-2-test.ts` pins it.
-
-### Golfer groups (SEG-1, Cam 2026-11-05)
-Analytics → Golfers puts every golfer the course knows (golfer-key identity, non-cancelled bookings) in ONE group as of the last day picked — first match wins: New (first round in 30 days) · Inactive (last round 180+ days ago, nothing booked ahead) · At risk (the gone-quiet rule, played in the last 180 days) · Regular (rounds on 3+ days in the last 90) · Occasional. Each group lists its golfers linked to their record and downloads as CSV. Pure in `src/lib/golfer-segments.ts`; the definitions' words in `analytics-terms.ts`. The list stays on the Analytics route (analytics.view) — never in the assistant's tools or the monthly AI review — and its email, phone and record link (and the gone-quiet list's contact) reach only logins with `sheet.golfer_contact`; others see names. `scripts/golfer-segments-test.ts` pins it.
-
-### Operator onboarding pipeline
-Inquiry → `pending` → `in_review` → `details_requested` → `details_submitted` → `building` → `live`
-Admin page manages all stages. Operators get dashboard access when approved.
-
----
+## How work runs — READ `LANES.md`, then your lane file
+One Build session (the coordinator) plans, owns all shared code (`src/lib`, `src/app/api`, `prisma`, `globals.css`, CI, `.claude/`), and merges every PR. Page lanes (Dashboard, Admin, Homepage, Golfer) each read ONLY `lanes/<lane>.md` for their pages, look and approved decisions. Before changing behaviour in an area, grep `docs/DECISIONS.md` for that area. Questions to Cam go through Build.
 
 ## Where things are
+`docs/CODEMAP.md` (and `docs/codemap.json`) maps every route with its auth, every lib with its exports and importers, every model with its writers. It is generated, not committed: a SessionStart hook runs `node scripts/codemap.mjs`, but a copy on disk can be stale, so run it again before relying on the map after code changes (it takes ~2 s). Read the map before grepping or opening files.
 
-**Read `docs/CODEMAP.md` before grepping or reading source.** It names every
-route with its auth level and where that auth is actually enforced, every
-library and component with its exports and how many files import it, every
-schema model with the files that write to it, and the one file that owns each
-concept. Read a file only after the map tells you which one.
+## Rules that never bend
+- **Money and sign-in.** Admin never charges, retries, refunds or cancels a golfer's booking; the course is the seller. Every dollar that moves goes through `recordMove()` (`src/lib/money-ledger.ts`). Deferred payments: card saved at booking only when the course's policy can charge it; charged at check-in. Cash goes through the register (`settleAtCounter` skips `performCheckIn()`, so anything every check-in needs must cover it). Never delegate money, auth, tenant isolation, charging crons or schema to a cheaper model.
+- **Every staff route** gates with `requirePermission(session, key)`; every admin route with its role check plus `areaGate(session, '<area>')`. The client only hides. A test course never counts in platform numbers (spread `REAL_COURSE` / `ON_REAL_COURSE`). A new model goes in `WIPED_TABLES` or `KEPT_TABLES`.
+- **Every sign-in or second-factor path** writes `securityEvent()`. No sign-in reveals whether an email has an account.
+- **Schema:** real Prisma migrations only, additive (new tables, nullable or defaulted columns), tested from scratch on a local Postgres; never `db push`, `migrate reset` or direct writes on prod. A backfill needs Cam. Merging to main runs `migrate deploy` on prod; after it, `/api/health` must return `{"ok":true,"db":"up"}`.
+- **Never fire-and-forget in a route** (await it or use `after()`); send email only through `getResend()`; addresses only from `src/lib/contact.ts`; texts only to numbers that agreed (`sendSms()`). Golfer-facing policy wording only from `describePolicy()`. A new cron uses `cronRoute()` and goes in `vercel.json`.
+- **Build validation:** TypeScript errors don't fail the Vercel build, only SWC parse errors do. Before pushing: `npx tsc --noEmit` and `node scripts/parse-check.js <files>` (the edit hook covers Edit/Write, not Bash edits).
+- **Review before every push** by an agent that didn't write it: `final-reviewer` for anything touching money, sign-in, `src/lib`, `src/app/api`, `prisma`, crons, pay pages or config; `light-reviewer` for UI, copy or tests only; none for docs or generated files. BLOCK → fix → re-review.
+- **Commits and PRs:** never push to main; one PR per job; PRs are held for Cam unless he says merge. Commit doc edits (`*.md`, `lanes/`, `company/`, `.claude/`, `scripts/*.mjs`, `legal/`) as "queue/spec update", but never edit a published agreement file under `legal/` (its hash is the signature record; add a new version); never discard code you didn't write; ask.
+- **Never** paste secrets or customer data anywhere (chat, specs, Control Room). `AUDIT_MASTER.md` is gitignored and private.
 
-It is generated (`node scripts/codemap.mjs`) and CI fails when it drifts, so it
-cannot go stale the way a hand-written tree does — the tree that used to live
-here listed `src/app/account/`, which has never existed.
+## Look (every page)
+Course dashboard: charcoal glass by default with a Light look that is glass too (dark ribbons on a light page); BOTH looks get every change (LIGHT-PARITY, `scripts/glass-test.ts`). Admin: dark green glass only. Fonts: EB Garamond for headlines only, Libre Franklin for everything else. Colour only where it means something: green paid/good, amber soon/close, red problem/unpaid, blue rain. No subheadings above headings, one Filter button instead of chip rows, search bars without placeholder words, `<StatusDot>` not pills, no emojis or decorative icons, no gradients behind pages, no `rounded-xl/2xl/3xl`, `font-black`, `tracking-widest`. Pages and tokens: `lanes/<lane>.md` and `docs/DECISIONS.md` → "Design system".
 
-`docs/codemap.json` is the same data for a script to read.
-
-### Key models
-- `Course` — slug, operator, pricing, policies, facilities
-- `TeeTime` — generated slots, status (available/booked/blocked)
-- `TeeTimeSchedule` — templates that drive tee time generation
-- `Booking` — links GolferAccount + TeeTime, holds paymentMethodId + customerId
-- `CourseOperator` — operator login, Stripe accountId
-- `GolferAccount` — golfer login, email-based auth
-- `MembershipTier` / `CourseMembership` — member pricing tiers
-- `TeeSet` — tee set options per course
-- `CourseGroup` — GRP-1 (Cam 2026-10-19, after golfbergencounty.com): courses run together (a county). Made ONLY in Admin → Courses → Course groups (`/api/admin/course-groups`, manager+), never by a course. A group gets one golfer page `/g/[slug]` (every live public course's open times for a day; a time opens that course's own booking page with `?tt=` picked) and ONE resident list: `residentOn()` and `/api/operator/residents` read every course in the group through `groupCourseIds()` (`src/lib/course-group.ts`), so any course's staff in the group see and edit it. Prices, memberships, staff and payouts stay per course
-
----
-
-## Lanes — parallel sessions (Cam 2026-11-10): READ `LANES.md`
-Work runs in lanes, one per session, each a head agent with its own cheaper workers. Build lanes: **Build/Dashboard**
-(coordinator; also owns ALL shared code — `src/lib`, `src/app/api` (Admin may edit admin routes that only read or display; every sign-in and money route stays Build's), `prisma`, `globals.css` — and merges every PR),
-**Admin**, **Homepage**, **Golfer**, each in its own folders. Read-only lanes: **Testing**, **Security**; **Company**
-writes drafts under `company/`. Every question from any lane goes to Cam through Build; Cam's answers come back down.
-Ownership, the merge queue, delegation (model + effort per worker) and the local-app setup are in `LANES.md`.
-
-## Overseer protocol — who does what (Cam 2026-10-06)
-
-The main session is the **overseer** (the strongest model available — set with
-`/model`; currently Opus 5.5). It plans every task, decides what to delegate,
-and owns the final call. Agent models and effort are fixed in each
-`.claude/agents/*.md` frontmatter, so routing = choosing the agent.
-
-| Work | Who | Model · effort |
-|---|---|---|
-| Lookups: "where is X", "who writes Y" | `scout` | Haiku · low |
-| Plan, design, anything ambiguous | overseer | session model |
-| Money, auth/sessions, tenant isolation, charging crons, schema | **overseer only** — never delegated | session model |
-| Mechanical edits from an exact plan: UI pages/components, copy, admin screens, new tests | `builder` — allow-list in `.claude/agents/builder.md`: no lib/api/schema/config, no UI that writes through the API or handles cards/tokens | Sonnet · medium |
-| Zero-behavior reskin items, in a worktree (only via `/gr-batch`) | `reskin-worker` | Opus |
-| Design-system / admin no-silent-failure audits | `design-auditor`, `admin-ux-auditor` | Sonnet · low |
-| Security audits (diffs touching sign-in, money, routes) | `security-auditor` | Opus · high |
-| Spec audits | `spec-conformance` | Sonnet · medium |
-| Running checks before a review | `check-runner` | Haiku · low |
-| Review of a UI / copy / test-only diff | `light-reviewer` | Sonnet · medium |
-| **Review of any diff touching money, sign-in, `src/lib`, `src/app/api`, `prisma`, crons, pay pages or config** | `final-reviewer` | Fable · high. Docs and generated files need no review (Cam 2026-11-10: tiered review, LANES.md) |
-
-Rules:
-- **Don't delegate small work.** A sub-agent starts cold and re-reads what the
-  overseer already has. Under ~3 files, or when the overseer already holds the
-  context, the overseer does it itself.
-- **Money and auth never go to a cheaper model** — the 2026-10-05 review found
-  the S1 bugs there.
-- **Nothing ships without the right reviewer's PASS** (`final-reviewer`, or `light-reviewer` for a UI/copy/test-only diff — LANES.md) — `/gr-run` and `/gr-debug` run it before every push. BLOCK → fix → re-review. The
-  reviewer is never the agent that wrote the change. The overseer then verifies
-  (tests, CI) and decides.
-- Parallel, independent lanes (a full-site review) use a Workflow only when Cam
-  asks for one.
-
-## Build & deploy
-
-### CRITICAL: build validation
-`next.config.ts` has `typescript: { ignoreBuildErrors: true }` — TypeScript type errors do NOT fail the build. Only **SWC parse errors** do.
-
-To validate before pushing:
-- `npx tsc --noEmit` — CI runs this via `.github/workflows/typecheck.yml`
-- `node scripts/parse-check.js src` (or a file list) — SWC-parity parse check on every `.ts`/`.tsx`, mirrors what the build does. The PostToolUse hook in `.claude/settings.json` runs the same check on every file Claude edits, so a parse error surfaces the moment it is written.
-
-### Deploy
-```bash
-git add -A && git commit -m "..." && git push
-# Vercel auto-deploys from main, or:
-npx vercel --prod
-```
-
-### Shipping to production
-
-Full checklist, rollback steps and env-var list: `docs/SHIPPING.md`. The rules that never bend:
-
-- Schema changes go through real Prisma migrations: `migrate dev` → commit the migration file → `migrate deploy` on prod. `db push` is banned except on throwaway sandbox DBs.
-- Schema changes are run attended, on a feature branch, and must pass `.github/workflows/schema-check.yml`. Never `migrate reset`, `db push`, or direct `psql` writes on prod, and never test a migration on prod.
-- **No Vercel preview step (Cam 2026-09-29: "drop the preview rule").** Preview builds fail and nobody uses them. A schema change is verified LOCALLY instead: apply every migration from scratch to a local Postgres (`migrate deploy`), run the app against it and walk the feature end to end. Migrations must be additive — new tables, nullable columns or columns with a default; no drops, renames or type changes. A migration that rewrites or backfills existing rows is tested against a Neon branch of prod first (docs/SHIPPING.md) and needs Cam's approval.
-- Vercel's production build runs `scripts/migrate-prod.js` (`migrate deploy` only when `VERCEL_ENV === 'production'`), so merging to main applies the migration to prod. Rollback: Neon PITR or a compensating migration.
-- After any schema deploy: `/api/health` returns `{"ok":true,"db":"up"}` and `npx prisma migrate status` reports up to date.
-
-### Performance budgets (golfer-facing pages)
-
-Enforced by `.github/workflows/perf-audit.yml` on every PR (budgets, audited pages and the local command are in `docs/SHIPPING.md`). Rules that keep it green:
-- No heavy client-side animation libraries (framer-motion is unused but still listed in package.json — never import it; use CSS transitions)
-- `<img>` tags must have `loading="lazy"` unless above the fold
-- Stripe JS deferred until a card is actually needed (`getStripePromise()` pattern in book/page.tsx)
-- New `'use client'` components on golfer pages need a bundle-size justification
-
-### No-silent-failures rule (admin)
-Every admin action must show: pending state → then success or an explicit error explaining what to do next. Never swallow a `catch` in an admin fetch handler — always surface the error to the user. Never silently redirect away on a fetch failure — show an inline error state with a retry option. This rule applies to all new admin routes and must be audited when touching existing admin pages.
-
-### Staff permissions (SP-A, STAFF_POLICY_SPEC Part A)
-Staff logins are permissioned PER PERSON by the course owner (Settings → Staff & permissions). The catalog, presets and dependencies live in ONE file, `src/lib/staff-permissions.ts`; `resolveDashboardSession()` exposes `session.permissions` and every staff-reachable route gates with `requirePermission(session, key)`. The client (`useDashboardAccess()`) only hides — the route is the control. A new staff-reachable action needs a key in the catalog AND a `requirePermission` call. Staff rows with `permissionsSetAt` null resolve as the Legacy preset (pre-SP-A powers minus weather cancel and waiving fees). Never grantable: staff management, Stripe, the agreement, the cancellation policy (`STAFF_FORBIDDEN` stays on those).
-
-### Admin areas (AW-11, Cam 2026-10-22: "per-person access")
-Admin logins are permissioned per person by the owner on Team: the ROLE (viewer · support · manager) says how much, the AREAS say where — Pipeline, Courses, Golfers, Money, Messages, Problems, Company. ONE catalog, `src/lib/admin-areas.ts`; `resolveAdminSession()` reads `areas` from the row on every request (`AdminUser.areasSetAt` null = never set = every area, so nobody lost access when this shipped; the owner always has everything). Every area route calls `areaGate(session, '<area>')` after its role check; Home (`/api/admin/today`), the menu counts, search and Ask filter what they return by area; the menu only hides. A new admin route needs an area AND an `areaGate` call — `scripts/admin-areas-test.ts` fails on any admin route that neither checks an area nor is owner-only (or is on its short "every login" list). Changing someone's areas is owner-only, step-up confirmed, with a reason (`employee_areas`).
-
-### Session policy (per surface)
+## Session policy (per surface)
 
 | Surface | Cookie | JWT TTL | Renewal |
 |---------|--------|---------|---------|
 | Admin employees (viewer/support/manager) | `admin_session` | 12h absolute | None — re-authenticate after 12h |
-| Admin owner (AW-1, Cam 2026-10-20) | `gr_owner` → an `OwnerSession` row | 4h absolute | None — signs in ONLY at `/cam`: password → an approved device (new devices approved from an emailed link) → second factor (AW-1b: a passkey once one is added on My profile — the authenticator app is required first and stays the backup; no email codes for an owner with a passkey; `src/lib/owner-passkey.ts`); every sign-in emailed; revocable ("Sign out everywhere"). `/admin` refuses the owner and never mentions it (`src/lib/owner-session.ts`) |
+| Admin owner | `gr_owner` → an `OwnerSession` row | 4h absolute | None — signs in only at `/cam` (password → approved device → second factor); `/admin` refuses the owner |
 | Operator/staff dashboard | `gr_operator` | 7 days sliding | Reissued when >50% elapsed |
 | Golfer | `gr_golfer` | 90 days sliding | Reissued when >50% elapsed |
 | Member (per-course) | `gr_member` | 7 days absolute (R-AUTH-009, Cam 2026-10-26) | None |
 
-Sliding renewal is implemented in `src/lib/auth.ts` → `getOperatorSession()` / `getGolferSession()`.
-Do NOT run `scripts/route-inventory.ts`: ARCHITECTURE.md's route tables were deleted on purpose (Cam 2026-09-16, they drifted from the code map) and that script would regenerate them. `docs/CODEMAP.md` (`node scripts/codemap.mjs`) is the route map.
-
-### Status board — regenerate at the end of EVERY run
-
-`STATUS.md` / `STATUS.json` / `STATUS.artifact.html` are how Cam sees what has
-shipped and what is planned without reading the queue. They are generated, not
-hand-edited. Last step of every run, after the work is committed:
-
-```bash
-node scripts/status.mjs && node scripts/status-html.mjs
-```
-
-then commit the three outputs with the run. A stale board is worse than none —
-it reports work as "not started" that shipped hours ago.
-
-`AUDIT_MASTER.md` is Cam's private ideas bank. It is gitignored. Never commit it,
-and never move its contents into the queue without asking.
-
-### Control Room — every session reports itself (Cam 2026-10-06)
-
-Cam watches what every session is doing on the Control Room page,
-https://claude.ai/artifact/CWmgjgJHTZaTr4XThBuvZL. A page cannot list sessions,
-so each session writes its own row. **Only the main session (the overseer)
-writes — sub-agents never touch it** (they share the session id and would
-overwrite the row). Use the `ArtifactData` tool (load it with ToolSearch) on that
-URL, collection `sessions`, doc id = this session's id (the `session_…` part of
-the `Claude-Session:` URL in the commit attribution). If `ArtifactData` isn't
-available, skip the Control Room and say so once in the first reply.
-
-- **When:** at the start of the run (after committing dirty docs), after each
-  real step (a push, a PR opened or merged, a blocker hit), at least every ~20
-  minutes during a long step, and as the last thing before ending the turn.
-- **First write:** `get` the doc. Missing → `set` it (no `if_version`). Present
-  (a resumed or compacted session) → `update` with its `version`. Every later
-  write is `update` with `if_version` = the version the previous write returned;
-  if refused, `get` and redo it with the current version.
-- **Fields:** `title` (the session's title), `state` — `working` | `waiting`
-  (needs Cam) | `review` (PR ready for Cam) | `failed` | `done`, `doing` (one
-  plain sentence: what it is doing right now), `needs` (what Cam must do, or
-  ""), `pr` (number or null), `branch`, `model` (short id, e.g. `fable-5-1`), `sessionUrl`
-  (`https://claude.ai/code/<session id>`), `updatedAt` (`date -u
-  +%Y-%m-%dT%H:%M:%SZ` — real time, never guessed).
-- End every turn with `state` other than `working` — a `working` row that goes
-  30 minutes without a write shows as **Silent** on the page.
-- Never put secrets, customer data or env values in a row; Cam may share the page.
-
-**The web (Cam 2026-11-11, "a web with you as the hub").** The Control Room page is now Build in the middle with
-Dashboard, Admin, Golfer pages and Homepage around it. Only Build writes it, through `ArtifactData` on the same URL:
-`areas/<dashboard|admin|golfer|homepage|build>` (`mode` working · paused · reactive, `doing`, `updatedAt`),
-`items/<id>` (`area`, `state` done · working · planned, `title`, `note`, `pr`, `hold` for a PR held for Cam's review,
-`order`), `questions/<id>` (`area`, `q`, `rec`, `askedAt`, `status` open · answered: set answered the moment Cam
-answers), `lookat/<id>` (`area`, `pr`, `title`, `url`, `clicks`, `question`, `date`: one per merge, what to try live).
-Update it after every merge, answer and change of plan. Lanes never write it.
-
-### Doc-file commit rule
-After every run, `git status` — if dirty:
-- **Doc files** (`RUN_QUEUE.md`, `*_SPEC.md`, `CLAUDE.md`, `LANES.md`, everything under `.claude/`, `lanes/`, `company/`, `scripts/*.mjs`, everything under `legal/`): COMMIT with message `"queue/spec update"` — never discard; Cowork edits them between runs.
-- **Non-doc files**: never auto-discard. If they belong to the run, commit them with it; if you cannot tell whose they are, stop and ask Cam. (Changed 2026-09-29 — this used to be `git checkout -- .`, which silently destroyed any uncommitted code.)
-
-First action of every run: commit any dirty doc files BEFORE reading the queue.
-
-## Security (SEC-1, Cam 2026-10-26: "security has to be insane")
-- Headers: `next.config.ts` sends HSTS, nosniff, `X-Frame-Options: DENY`, a trimmed Referrer-Policy, a Permissions-Policy (camera/mic/location off; payment only for us + Stripe) and an ENFORCED CSP of `frame-ancestors 'none'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests` on every path; `poweredByHeader: false`. Nothing of ours may be framed — a course's "Book" button is a link, never an iframe. The full CSP runs REPORT-ONLY and reports to Sentry's security endpoint (derived from the DSN); enforce it only after its reports are clean. A new third-party script, frame or API host must be added to it. `scripts/security-headers-test.ts` pins all of this.
-- Packages: `.github/workflows/security.yml` fails a PR on any HIGH or critical flaw in production dependencies (`npm audit --omit=dev`) and runs daily; `.github/dependabot.yml` opens weekly update PRs. Next.js is pinned `^15.5.28` (past the 2026 Server Actions advisories). `overrides` in package.json force patched `zod` (only under `@anthropic-ai/sdk` and `@vercel/cli-config` — lighthouse keeps its zod 3) and `postcss` (Next pins an old one); drop an override once its parent ships the fix.
-- Sentry (SEC-2): `@sentry/nextjs` 11; `withSentryConfig` comes from `@sentry/nextjs/config`. v11 collects cookies, bodies, query strings (our links carry tokens), user info, DB data, local variables and AI prompts unless told not to — `sentry.privacy.ts` (`SENTRY_DATA_COLLECTION`) turns every one off and both inits use it; `scripts/sentry-privacy-test.ts` pins it. Never add `sendDefaultPii` or widen a field without Cam. `sentry.client.config.ts` stays (lazy-loaded for PERF-1; webpack still supports it, with a deprecation warning).
-- Admin → Security (SEC-3, Cam 2026-10-26 chose "log events" + "email + Problems"; owner only, read-only): the protections checklist (`src/lib/security-checklist.ts` — live headers, Sentry, owner passkey/app/devices, employee logins with no second factor, JWT/CRON/Stripe-webhook secrets), Sentry's open errors via a read-only `SENTRY_READ_TOKEN` + `SENTRY_ORG` + `SENTRY_PROJECT` (`src/lib/sentry-issues.ts`), and 30 days of sign-in trouble. Every failed sign-in, lockout, wrong second factor, rate limit tripped and new owner device at every door (admin, /cam, course dashboard + its 2FA, golfer code, member link, owner step-up), plus successful admin, owner and course sign-ins, is a `SecurityEvent` written ONLY through `securityEvent()` in `src/lib/security-events.ts` — awaited, never throws, never stores a password, code or token. A new sign-in or second-factor path must call it (`scripts/security-events-db-test.ts` checks every door). The hourly check (`admin-checks.ts`) makes 20 failures from one address in an hour, 100 overall, or an admin/owner lockout a Problem — emailed once, and the Problem text names no IP or email (Problems is open to employees) — and deletes events older than 90 days. No sign-in says whether an email has an account: an unknown email, a turned-off or never-activated login, and the owner's email at the employee door all take the same bcrypt time, give the same answer and lock on the same 5th failure as a real account (`src/lib/login-guard.ts`) — and the owner's own lockout can't be triggered from /admin. Events are capped at 200 rows per address an hour, and a throttled address is recorded once per 10 minutes. The read-only token is `SENTRY_READ_TOKEN`, never `SENTRY_AUTH_TOKEN` (the build's source-map upload token).
-- PHP2Shell (CVE-2026-109618/9, Oct 2026 — thehackernews.com/2026/10/php-issues-emergency-patches-for-two.html) does not apply: no PHP runs anywhere in GreenReserve.
-
-## Environment variables
-
-All required in Vercel; the full list is in `docs/SHIPPING.md`, the secrets inventory in `docs/RUNBOOK.md`. Never paste values into chat, specs or the queue.
-
----
-
-## Homepage direction — READ `HOMEPAGE_SPEC.md` §0 FIRST (Cam 2026-10-07)
-
-HOME-2 is Cam's own layout: one full-screen photo with the cream logo
-centred, "The tee sheet your course deserves.", one sentence on what it is
-ending "Free for your course." (W2-H1, Cam 2026-10-19: no fee model in the hero), and Learn more (Cam 2026-10-19: Book a demo came off the hero; it stays top right and after the demo) → what it is and
-what your course gets, in ONE list (paragraph, bullets of features that exist
-today (Cam 2026-11-11: NO fee line on the homepage, and the pro shop gets its own section), "See how it works" + "Learn more
-about the tee sheet" cards; W2-H2 merged the separate "what your course gets"
-block, which repeated it) → the working demo (tee sheet on a laptop, golfer
-phone beside it) with Book a demo → the footer, "GreenReserve LLC" (W2-H3: the
-closing logo + "Ready when your course is." is gone). The detail, FAQ (+ its JSON-LD), about and contact live on
-`/teesheet`. `src/app/HomeContent.tsx` + `home.module.css`, ONE client island
-`src/components/home/TeeSheetDemo.tsx`, whose every label must match the real
-dashboard tee sheet and booking flow. Every "Book a demo" goes to `/demo`
-(→ Cal.com, tagged source=homepage); "Ask a question" goes to `/for-courses`
-(CLUB-0); the Cal.com webhook opens a pending "Demo booking" inquiry when a
-booking matches none. The one hero photo is allowed (Cam 2026-10-07 lifted the
-photo ban for it); still rejected, never revive: Direction B
-(Figtree/white/pills), the printed-scorecard look, the scroll-driven golf-hole
-concept and an aerial course behind the whole page. Homepage copy has NO
-durations and NO contract terms; fee sentences only from
-`legal/LQ-2_FEE_COPY.md`. The spec also lists what is waiting on Cam.
-
-## Design system — ONE look for every page (FLOW-1, Cam 2026-10-01)
-
-Cam 2026-10-01: "get this ui build out through /admin and /dashboard and every other
-page so the whole site flows together." The split PUBLIC/STAFF look (UI_REVISE_SPEC §0/§1,
-Sept 2026) is RETIRED. Every page — homepage, /for-courses, legal, golfer pages, /dashboard,
-/admin — uses the homepage's palette, type (TYPE-1: EB Garamond + Libre Franklin) and corners. Clubhouse *structure* still holds
-(white cards on paper, StatusDot, no pills, no dark mode — except the course dashboard's own Light/Dark choice, DASH-D below).
-
-DASH-D (Cam 2026-11-01/02, the dashboard mockups — "go with light default and dark option"; its "no glass" is reversed by GLASS-1 below; supersedes DASH-C's white pages and Inter for `/dashboard/*` with the rail ONLY): **Geist** (loaded in `dashboard/layout.tsx`), a grey page (`bg-page` #F4F5F1) with white soft-sheet panels (`<Card>`), colour only where it means something (warnings, money state, urgency) — no green dashboard. The menu rail is a darker tint (`bg-rail` #E3E6DE, `border-rail-line`), grouped Today (Home, Tee sheet, Pro shop, Messages) · Business (Money, Members, Events, Schedule, Analytics) · Settings; the current tab is a white raised card with the course's `brandColor` dot. Light/Dark switch at the rail's foot and in the phone's More menu (`ThemeSwitch.tsx`), saved per browser in the `gr_op_theme` cookie (`src/lib/op-theme.ts`) and read by the layout into `data-theme` so the first paint is right. Dark mode is ONLY the token swap in `globals.css` (`.op-look[data-theme="dark"]`) — pages never test the theme, so a dashboard page uses tokens (`bg-white`, `bg-page`, `text-ink`, `var(--color-…)`), never a typed hex; a golfer-page preview wears `op-keep-light`. Spacing 4/8/12/16/24/32; type 26 title · 24 number · 15 section · 14 body · 12.5 label · 12 small; panels 10px, buttons/inputs 7px, seat cells 5px — applied page by page as each restyle PR lands. Home (DASH-D, Cam 2026-11-01) adds four cards from `src/lib/home-board.ts` + `components/dashboard/home/HomeBoard.tsx`: the shift note (`ShiftNote`, written and cleared by any login that sees the sheet — cleared sets `doneAt`, never deleted), course conditions (carts / range / greens / pins in `Course.conditionsDetail`, one list in `src/lib/course-conditions.ts`, set with `sheet.course_alert` beside the alert text; golfers see the set ones on the booking page as a plain "Today ·" line for 18 hours after they're set — `golferConditionLines()`), the week ahead by hour (players booked of spots), and the month against its goal (`CourseMonthGoal`, one per month; collected is `computeAnalytics()`'s, shown with `money.payments`, set with `settings.edit` + `money.payments`). Register tiles (DASH-D, Cam 2026-11-01 "photo tiles") show `ShopItem.photoUrl` (uploaded per item in Settings → Pro shop through `/api/operator/shop-items/photo`, `shop.catalog`); in a group with any photo every tile gets the same picture area, initials when an item has none. NOGLOW-1 (Cam 2026-11-06, "take away the green backdrop for the glass look, it looks terrible") removed GLASS-1's glow and frosting: dashboard pages are a plain grey page with solid white `<Card>`s and the solid rail; only the tab lift on hover stays (`scripts/glass-test.ts` pins it). FILL-1 (Cam 2026-11-06, "fully filled"): a tee-sheet group's whole cell is its money colour (`--color-paid-fill` / `-owes-fill` / `-bad-fill`), and In / M / R tags say checked in, member, resident — the homepage demo mirrors it. Was: GLASS-1 (Cam 2026-11-02, on the glass examples canvas — "a little green glow is fine", glass cards "everywhere", the tab that lifts, NOT the light that follows the cursor): on rail pages only, screen only, all in `globals.css` — a soft green glow fixed behind the page (two blurred plain circles, never a gradient), every `<Card>` frosted (panel colour at 50% + blur; Cam 2026-11-03 picked the stronger glow — two large circles across the page, softened a step on 2026-11-04 so text stays readable — after the page wrappers' solid `bg-page` was found covering it, so `.min-h-screen.bg-page` is transparent there), the rail frosted, and the tab under the pointer lifts 2px with a heavier hover shadow (the ONE exemption to the 0 1px 2px cap; off with reduced motion). Pages change nothing — cards go glass because they are `<Card>`. Pop-up windows (panels inside a `fixed inset-0` backdrop), `op-keep-light` previews and `prefers-reduced-transparency` stay solid; on rail pages light `ink-muted` #4E534D, `ink-faint` #53584F, `ok` #285A3C, `warn` #744710, `bad` #8C3A26 and dark `ink-muted` #9AA098, `ink-faint` #959B93, `bad` #F28A7A, so that text clears 4.5:1 on a frosted card AND straight on the glowing page at every width from 390 to 1920 (modelled). The two glows are .20/.18 (dark .14/.22), the second low right so they never stack; stronger glow means darker text again — re-run the sweep. `scripts/glass-test.ts` pins it.
-
-CHARCOAL-1 / GLASS-2 / HOME-3 (Cam 2026-11-12, ADMIN_REDO_SPEC "Course dashboard look" + "Course dashboard Home: APPROVED"; supersedes DASH-D's Geist and NOGLOW-1 for `/dashboard/*` with the rail): charcoal glass is the DEFAULT (`data-theme="dark"`, `readOpTheme()` falls back to it), Light is the switch ("Charcoal · Light"). The site type (EB Garamond titles, Libre Franklin), monochrome chrome (`pine` is grey/near-black on the dashboard, so buttons and links are), colour only for meaning (ok paid/ahead, warn to do soon, bad a problem, `--op-rain` blue). Blurred SVG ribbons (`.op-waves` in OperatorSidebar) behind frosted `<Card>`s and rail; reduced transparency = solid, print = light. Like the admin's glass, the dashboard's frosted cards may carry a soft lift (`0 8px 26px`, darker in charcoal) and Home's panels 14px corners — the dashboard's exemption to the BANNED shadow cap and corner sizes (Cam approved the mockup with both); fixed panels, pop-ups and golfer previews stay solid. Text contrast ≥4.5:1 on a frosted panel AND straight on the page where the ribbons cross, modelled in `scripts/glass-test.ts` — stronger ribbons mean re-running it. Home: the one search moves from the rail to Home's top; today by hour is played · playing · booked · open on `ROUND_MINUTES` (`src/lib/home-today.ts`); the next 14 days' line is the 4-week same-weekday average; events need `events.manage`; conditions are cart path / greens / pins with a detail line each (`conditionsDetail.notes`); saving from Home MERGES (`mergeHomeConditions()` — range and the course's own lines are kept). "Open the register" shows on Home only when `Course.takesCash` is on (Settings → Pro shop, `TakesCashToggle`; additive, default off, display only — it never gates cash). GOAL-PACE (Cam 2026-11-12, "one pace rule everywhere"): every goal bar fills with progress and its colour is where the period ends at today's pace (progress ÷ elapsed share) — reach: green on pace, yellow within 10% short, red on pace to miss; a cost cap (Cam via Build 2026-11-12): green projected ≤ 90% of the budget, yellow up to the budget, red over it; one-time costs ride along unprojected (`fixed`) — ONE helper, `src/lib/goal-pace.ts` (`scripts/goal-pace-test.ts`); the elapsed share counts today by the hour (`elapsedDays()`, from `monthGoals`), so a course on pace isn't red every morning; the first 3 days of a period are grey, no verdict (`EARLY_DAYS`, Cam's pick). Home uses it; the admin's Goals page still has its own rule in `lib/admin-goals.ts` until it switches. `scripts/home-today-test.ts` pins Home's goals card.
-
-| | Every page |
-|---|---|
-| Fonts | TYPE-1 (Cam 2026-10-05, "the font is all so blocky looks ai"): `font-serif` = **EB Garamond** (600 since CLUB-1 — Cam 2026-10-05 after clubup.com: headlines carry weight; lining figures) — the display face, for headlines, course names and dates ONLY; `font-sans` = **Libre Franklin** for everything else — times, buttons, tables, body. Never set times or data in the serif. Both via next/font in layout.tsx. Archivo, Newsreader and Source Sans 3 are no longer loaded |
-| Corners | Tailwind defaults: `rounded-md` 6px buttons/inputs, `rounded-lg` 8px cards; `rounded-full` avatars/dots/swatches |
-| Paper / ink / line | #FAFAF7 / #141814 / #E3E4DE |
-| Accent | `pine` (#173B2A forest) for GreenReserve; per-course `Course.brandColor` on golfer pages and the operator dashboard. CLUB-1: `fairway` (#3BAA6B) is a second, DECORATION-ONLY green — rules, the slanted stripe, link underlines, the active tab. It is 2.9:1 on paper, so never text and never the only signal |
-
-FLOW-2 (Cam 2026-10-01, "clunky"): cards are soft sheets — `<Card>` / `CARD` is `bg-white rounded-lg shadow-card` (a 6% ring + 0 1px 2px), never a ruled `border border-line` box, and never a box inside a box (inner items are rows with hairlines or a `bg-paper/70` fill). The admin sidebar is a light rail (white, `border-line`, the lockup). The operator tee sheet mirrors the homepage demo (`TeeSheetDemo.tsx`) — change one, check the other. DENSE-4 (Cam 2026-10-27, "seat rows everywhere" — reverses SHEET-2's board): the tee sheet is `TeeSheetRows.tsx` on every screen — one row per tee time: time · price a player · a cell per seat (every row has the day's biggest capacity in seat columns, so seats line up). A group spans the seats it holds; its 3px left edge is the money state (`ok` paid, `warn` booked not paid, `bad` declined card or no-show); a light green fill is checked in, beige a member or resident rate; empty seats are dashed cells. Hour labels split the day, past rows fade, a line marks now, the next time's label is pine. LATE-ADD (Cam 2026-10-27): 20 minutes after a time goes off (`LATE_ADD_MINUTES`, `src/lib/late-add.ts`) today's sheet drops it to a collapsed "Past tee times" section at the bottom (still openable for late check-ins and pay; shown in place while searching), and `claimTeeTime()` refuses any new booking on it (`PAST`) — online, counter and admin alike, except a staff walk-in recorded as late (today, `late: true` → `allowLate`; Cam 2026-10-27: "let staff add forgotten walk-ins after" — TT-CARD, Cam 2026-11-12, took the card's button off; the route path stays). Rows drop down on their own (the sheet re-reads the clock each minute). Tapping any part of a row opens the time's card (TT-CARD, Cam 2026-10-19): on a laptop a card beside the sheet with NO backdrop (staff still see who's next, tap another time, drag); on a phone a full sheet that slides up. It carries the price line and, per group (`groupRow()` in dashboard/page.tsx), what they owe, where the money stands, check in / pay at counter / pay links / move / still coming / no-show, cancel last, residents and shop items; then walk-in, block, delete. Cancel uses `lib/cancel-confirm.ts`, shared with Money → Cancellations. TT-CLOSE (Cam 2026-11-12): a time with an active (confirmed/completed) booking can't be closed, hidden online or deleted — the card offers Delete only on an empty time, and the tee-times route refuses close/hide/delete on a booked one with a 409 naming the groups (`src/lib/tee-time-close.ts`, one Serializable transaction); the seat stepper, day blackouts, events, weather and frost are separate paths; the assistant's block draft leaves booked times out. The day's five numbers are separate cards, Not paid yet red when anything is owed. Dragging a group onto another row opens the ACT-1 `MoveGroupModal`; nothing moves until its confirm. The homepage demo (`TeeSheetDemo.tsx`) mirrors the rows and the card — the seat cells, edges, fills, now line, legend, the card's status words and buttons; change one, check the other. VIEWS-1 (Cam 2026-11-03, "I like the three options for the tee sheet"): a Grid · List · Calendar switch in the sheet's bar, remembered per browser (`gr_sheet_view`, grid by default). Grid is the seat rows; List (`TeeSheetList.tsx`) is one line per group — time, booked by, players, where the money stands, the round's price only with `money.payments`; Calendar (`TeeSheetCalendar.tsx`) is the month, each day shaded and labelled by players booked of spots (`GET /api/operator/tee-times?month=YYYY-MM`, blocked times left out), and a day opens its grid. Both only read — every action stays on the time's card. `scripts/sheet-views-test.ts` pins it. TEES-1 (Cam 2026-11-04, "side by side"): every tee time carries the tee it starts from (`tee` on the tee-times route — its round's first nine: "1st tee" / "10th tee" with a front and a back nine, the nine's name with more; no round = the first nine). A day with two or more tees shows them side by side in Grid — one line per time, a column per tee, 1st tee first; a phone shows one tee with a switch. One tee = the seat rows unchanged. `scripts/tees-side-by-side-test.ts` pins it. PRICES-1 (Cam 2026-11-04, "one table"): Schedule → What it costs is one table per set of days — a column per round sold (split by price change when there are any), a row per price (green fee, cart, walking, members, residents, seniors/juniors); a phone shows one round with a switch. `scripts/schedule-rework-test.ts` pins it.
-
-AN-1 (Cam 2026-10-01): operational tabs carry NO KPI tiles, charts or intro cards — Tee Sheet keeps one header line ("Thu, Oct 1 · 8 booked · 3 checked in"); every metric lives on `/dashboard/analytics` (owner logins only), computed server-side in `src/lib/analytics.ts` (definitions at the top of that file). Never add a stat tile back to an operational tab; add the metric to Analytics. The one exception (DASH-C Home, Cam 2026-10-22 "very nice" on the mockups): `/dashboard/home` — today's players by hour against the same weekday last week, players booked, fill, paid today (in groups) and not paid yet (computeAnalytics' collected and outstanding, via `src/lib/operator-home.ts`), Needs you (declined cards at what the retry charges — `roundChargeCents`, groups past their time, unread messages), the money panel and the next tee times. Money only for logins with `money.payments`; payouts with `money.payouts`. Money's own top (Cam 2026-10-23, picked the lean overview over the mockup's tiles + paid-each-day chart, which would repeat Analytics → Money): the 7-day strip (paid, not paid yet with "See them" → Payments at `?show=unpaid`, next payout) and Needs you — the same declined-card list as Home (`declinedCards()` in operator-home.ts) with Text / Email pay link (`sheet.checkin`, the tee sheet's action). No chart on Money. Charts there are plain HTML/CSS — no chart library. AN-2 (Cam 2026-10-08, "has to … be organized and look clean and make sense"): the page reads top to bottom — four plain-English numbers against the period before, "What to look at" (sentences built only from those numbers, never estimates), the monthly AI review, then the detail behind tabs (Money · Busy times · No-shows & cancellations · Golfers). Keep labels in plain words; a new metric goes in the tab it belongs to, not as another headline number. Past tee times cannot be deleted (unfilled slots are lost-revenue history).
-
-`.staff-look` (`STAFF_LOOK_CLASS`, src/lib/staff-fonts.ts) still wraps /admin and /dashboard
-but carries no styling — it is only a hook. Never re-add a second palette, font or radius
-set there. Self-contained public pages that skip the Nav (/for-courses, setup sheet,
-/call) use `<PlainHeader>` (src/components/PlainHeader.tsx) — logo top-left like `/`.
-
-DENSE (Cam 2026-10-27, `DENSE_UI_SPEC.md`): on `/dashboard/*` and `/admin/*`, lots of data and almost no sentences — a number is label · value · comparison with its definition behind the label, warnings are one line + the button that fixes it, settings are label + control + preview, at most one sentence per page; `scripts/words-guard.mjs` ratchets prose down. DENSE-4 replaced SHEET-2's board with seat rows (above). AN-1 still holds until Cam approves each number page by page. Rolling out one page per PR.
-
-### Shared tokens (Tailwind v4, `globals.css` `@theme {}`)
-- `paper` (#FAFAF7), `card` (#FFFFFF), `ink` (#141814), `ink-soft`, `ink-muted` (#6B706A), `ink-faint`, `line` (#E3E4DE), `line-soft`, `line-strong`
-- `pine` (#173B2A) / `pine-hover` (#0F2C1F, darker); `ok` (#3D7A55), `bad` (#A3452F), `warn` (#9A5B13), `dot-neutral`
-- `font-sans` (Libre Franklin), `font-serif` (EB Garamond — display)
-
-### Staff-page type scale (§1b — sizes still apply; fonts are TYPE-1's since 2026-10-05)
-- Page title: `font-serif text-[30px] leading-none` (existing 22px titles are acceptable until their reskin run lands)
-- Section title: 15px/600 sans · body 13.5–14px · tables 13.5px
-- TYPE-2 (Cam 2026-10-05, "the small sub headings above the main heading is such an ai thing"): NO small uppercase label above a heading — the heading says it. Real form labels and table headers stay, in sentence case. Sentences are full ink; `text-ink-muted` / `text-ink-faint` only on metadata (timestamps, "updated…", counts). Swept across every page 2026-10-05 (emails and the agreement PDF excepted) — design-guard ratchets `uppercase` and `<Eyebrow>` down; never add one
-- Attention: a 3px **left** border in the semantic color on a white card — the only place borders carry color
-- Operator nav (DASH-C, Cam 2026-10-22 — "very nice" on the course dashboard mockups, retiring CLUB-3's colour bar): the ADMIN-C look for courses. On desktop a fixed white 232px rail down the left (`.op-rail` in `OperatorSidebar.tsx`, name kept): the course's logo (or initials on its `brandColor`) and name on top, the tabs (no icons), then the course switcher, Course alert, Your booking page, Sign out and "Powered by" at the foot; the active tab is tinted in the course's `brandColor`. `.op-look:has(.op-rail)` (globals.css, wrapper in dashboard/layout.tsx) makes room for the rail and sets Inter, titles included; pages without the rail (login, reset, onboarding) keep the site look. Dashboard pages are white. Below md the slim strip + bottom tab bar are unchanged. Every dashboard page wrapper is `flex flex-col` (never `md:flex-row`); a full-width fixed bar starts at `md:left-[var(--op-rail-w)]`. The tee sheet is seat rows (DENSE-4, above). Search ("Find a golfer or member", `OperatorSearch.tsx` at the top of the rail → `/api/operator/search`, `src/lib/operator-search.ts`): bookings from 60 days back by name — email and phone digits only with `sheet.golfer_contact` — and members with `members.view`; a booking opens the tee sheet at `?date=…&q=…` (the sheet reads both), a member opens Members at `?q=`. Home is the first tab (`/dashboard/home`); `/dashboard` stays the tee sheet, so links and the phone bar are unchanged. The mockups (Home, Tee sheet, Money, Analytics, Members, Settings) are on the mockup canvas; the per-page restyles land one PR each
-- ADMIN-REDO (Cam 2026-11-11, `ADMIN_REDO_SPEC.md`) supersedes ADMIN-C's look as each admin page is redone: GREEN GLASS (frosted panels over soft green shapes, light default + dark switch in the `gr_admin_theme` cookie, EB Garamond + Libre Franklin, greens + one gold); for `/admin/*` only, larger corners, heavier shadows and the dark theme are allowed. The course dashboard goes CHARCOAL after the admin Overview is approved. Was:
-- Admin shell (ADMIN-C, Cam 2026-10-22 — "the BRAIN of our operation", mockup C after Stripe's dashboard; supersedes FLOW-1/TYPE-1 and the FLOW-2 rail for `/admin/*` ONLY): white page, full width (no `max-w-*` cap except on single forms: profile, create, company documents), **Inter** (loaded in `admin/layout.tsx`; `.admin-look` maps `font-sans` and `font-serif` to it — no Garamond in the admin), page title 32px/700. `AdminSidebar.tsx` is a fixed 240px left menu — Home, Problems, Pipeline, Courses (Course groups), Golfers, Money, Messages (Announcements), then Company: Goals, Team, Audit, Systems, Company docs — plus a fixed top bar with the search palette and the systems line ("All systems running" / "A system needs attention", from nav-badges). The rail's small outline icons are inline SVG with `aria-hidden` — the one admin exception to TYPE-3. Home (`admin/page.tsx`, data `/api/admin/today` + `lib/admin-home.ts`): today's online bookings by hour vs the same weekday last week, the last 7 days vs the 7 before (counted, never estimated, no industry benchmarks), courses worst first, and a right "Needs you" panel (open Problems, course to-dos, Pipeline, Goals). Problems (`/admin/problems`) is the hourly check's work list: take it, assign, note, snooze with a reason; it clears only when the check stops seeing it. Manual build is "Build by hand" on Pipeline, not a menu item. Activity is retired (AW-12, Cam 2026-10-23): no page or feed — a course's own Timeline and Bookings tabs, and Audit for the team; `/admin/activity` redirects to Audit
-
-### Rules (every page)
-- Status indicators: `<StatusDot status="ok|bad|warn|neutral" label="..."/>` — 5px dot, no pill badges
-- Input class: `bg-paper border border-line rounded-md px-3 py-2.5 text-ink placeholder-ink-faint focus:border-pine/40 focus:ring-2 focus:ring-pine/10`
-- Primary button: `bg-pine hover:bg-pine-hover text-white font-medium rounded-md` (course accent via inline style on operator/golfer surfaces)
-- Inline notices may use a `/5` wash with a `/20` border (`bg-bad/5 border-bad/20`) — the ban below is on tinted status *pills*, not on notice banners
-- No emojis, and no decorative icons (TYPE-3, Cam 2026-10-05: "Lucide icons everywhere" is an AI tell). A lucide icon only where it does a job: icon-only buttons (with `aria-label`), `Loader2` spinners, close `X`, `Search` in a search field, `ExternalLink` on new-tab links, date-stepper and disclosure chevrons, star ratings, the operator mobile bottom nav. Never next to button text, in front of a heading or value, in an icon tile, or in an empty state (that's the golfer mark). Status is `<StatusDot>`, not a check/alert icon. design-guard ratchets each file's lucide imports down. Nav/Footer return null on `/admin/*` and `/dashboard/*`
-- Reskin runs change **zero behavior** (UI_REVISE_SPEC §3); behavior lives in §4, one run each
-- Marketing fee copy is FROZEN behind the LQ-2 placeholder — never restore it in a reskin
-- Email template (EMAIL-2, Cam 2026-10-20: the old one "doesn't look professional or clean"): ONE template for every email (`baseTemplate` in `src/lib/email.ts`) — a cream page (#F6F4EC), the lockup above one white sheet (8px corners), Georgia headlines (the closest email-safe face to EB Garamond), label/value detail rows, pine buttons (#173B2A, 6px), first-name greetings (`firstName()`), and the green golfer alone in the footer (`public/brand/email-golfer-3x.png`, 22px) with "GreenReserve · greenreserve.app" and the inbox. Only brand colours: ink #141814, body #3F453E, muted #6B706A, line #E3E4DE — no Tailwind grays. Images are PNG (email clients don't show SVG).
-- Logo (LOGO-1): the vector lockup `public/brand/logo.svg` (cream: `logo-cream.svg`) everywhere on the web, with `unoptimized` on next/image — never the old raster `logo-lockup*.png`. Homepage header (HOME-2): no nav logo — the hero's centred logo replaces it; Operator login + Book a demo top-right. Every other page keeps the logo top-left. Browser-tab icons (`src/app/icon.svg`, `icon.png`, `favicon.ico`) are JUST the golfer (Cam 2026-09-30: "it should just be this guy") — pine, and cream in dark mode via the SVG's media query; the home-screen icon (`apple-icon.png`, `public/apple-touch-icon.png`) is the pine golfer on paper, since iOS paints transparency black. The golfer mark alone is `public/brand/golfer.svg`. LOGO-2 (Cam 2026-10-20): the SHORT MARK is that golfer, cream on a pine square — `public/brand/mark.svg` / `mark-1024.png` (profile pictures; `mark-cream.*` is the pine-on-cream backup for light or pine backgrounds) — never a GR monogram. It signs the receipt (emails use the green golfer alone, EMAIL-2); the operator top bar shows the course name with "Powered by" + the full lockup under it.
-- PERS-1 (Cam 2026-10-05): every course-owned golfer page (book, confirmation, check-in, manage) wears the course's OWN uploads through `<CourseHeaderBar photoUrl logoUrl>` — the hero photo becomes a short band, the logo sits beside the name. No per-page images, no page builder. The one extra knob is `Course.confirmationNote` (Settings → Your course), shown on the confirmation screen and in the confirmation email
-- Birdie (BIRDIE_AI_SPEC B4a/B4b, Cam 2026-10-05): the dashboard assistant reads live data through `src/lib/birdie/tools.ts` and DRAFTS changes through `src/lib/birdie/proposals.ts` — a confirm card whose button calls the page's own route. Birdie never writes. A new Birdie action needs: a propose tool, its route in `PROPOSAL_ROUTES` (plus a `BODY_RULES` entry when the route does more than one thing), and a check in `scripts/birdie-isolation-test.ts`. ACT-2 (2026-10-07): Birdie also drafts tee-sheet changes — move a group, block/reopen a run of times, add a phone booking or walk-in, send a pay link; a card may carry several calls (`calls`), run in order. Money, refunds, cancelling (waits on Cam), the cancellation policy, Stripe and staff stay off it. Where it lives (W2-1, Cam 2026-10-19, reversing the md+ top-bar button): the 56px "Ask" circle in the bottom corner on EVERY screen size, with a › beside it that tucks it to an edge tab (remembered per browser) when it covers a page's buttons; no top-bar button
-- NO Birdie dog artwork anywhere (Cam 2026-09-30: "unprofessional — it should just be the little golfer logo"). 404, empty states, coming-soon pages and the assistant's avatar use the golfer mark, and copy never speaks as the character ("We couldn't find…", not "Birdie couldn't…"). NAME (Cam 2026-10-23, reversing "keeps the name Birdie"): nothing a course sees says "Birdie" — the widget is "Assistant", it introduces itself as "your course's assistant", links say "Ask the assistant". Birdie stays only as the internal code name (files, routes, `birdieEnabled`, log kinds)
-
-### BANNED
-- `font-black`, `tracking-widest` — use `font-medium`/`font-semibold`/`font-bold` and `tracking-[0.06em]`–`tracking-[0.1em]` for eyebrows
-- Dark backgrounds (`bg-gray-950`, `bg-gray-900`) on admin/dashboard; gradients; drop shadows heavier than `0 1px 2px` (except the dashboard rail tab's hover lift, GLASS-1). **Page-background gradients now have no exemption at all** (Cam 2026-09-16, H-2h): the four cream section hand-off dissolves on `/` are deleted, so `grep 'linear-gradient(.*#F6F4EC' src/app/home.module.css` must stay empty (match on the colour, not on `180deg` — two of the four deleted dissolves were `0deg`, so a `180deg` pattern would have passed with both still live). One exemption stands (Cam 2026-09-16, H-2h, reinstating H-2d-R1): the device mockups in `home.module.css` keep their poster shadows — `.laptopScreen` and `.phone` (HOME-2). Nowhere else, and never on a staff surface. The two exemptions traded places on the same day and the trade was deliberate: H-2g deleted every shadow, then Cam chose shadows over dissolves, so the history reads as a reversal because it was one. The ban was never about scrims: a gradient that darkens a photo so text sits on it (`.storyShade`, `.dHd::after`) or shapes a device mockup's own hardware (`.laptopBase`) is not a background gradient and was never in scope — an earlier wording said "the only allowed gradients" while three such rules were already live, which is the kind of false absolute that gets a real rule ignored
-- Tinted colored pill badges — use `<StatusDot>` instead
-- `emerald-600` as accent — use `pine` / `ok` tokens
-- `rounded-xl/2xl/3xl` anywhere
-- Cursor-tracking motion, bounce easing; anything that moves without `prefers-reduced-motion` respected
-
----
-
-## Cron jobs (`src/app/api/cron/`)
-Schedules are in `vercel.json`.
-- `hourly` — the time-sensitive one: free-cancel warning ~1h before the cutoff, charges the hold fee the moment the window closes, check-in email ~3h before the round (no-fee courses), agreement PDF retries, call reminders
-- `cancellation-cutoff` — daily SAFETY NET for the same charge/check-in email; `paymentStatus` is the dedup so it never double-charges
-- `send-reminders` — pre-round reminders and membership pay links
-- `generate-tee-times` — materialises slots from `TeeTimeSchedule`
-- `chase-onboarding` — nudges courses stalled in onboarding
-- `monthly-review` — BI-1 (PLATFORM_ROADMAP_SPEC §1): daily, writes each live course's AI review of its previous month once that month ends in the course's timezone (`src/lib/monthly-review.ts`). The numbers come from `computeAnalytics()`; the model only interprets them, and `validateNumbers()` rejects any draft carrying a number it wasn't given. First full live month = the baseline. Emails the owner; shown on Analytics → Monthly reviews
-
-Every cron route is wrapped in `cronRoute(job, handler)` (`src/lib/cron-log.ts`, MP-8b), which writes one `CronRunLog` row per run; Admin → System reads it and goes red on a failed, unfinished or overdue run. A new cron must use the wrapper AND be added to `vercel.json`, or System cannot see it. Stripe webhook receipts land in the same table as job `webhook:stripe`.
-
----
-
 ## Known gotchas
-1. **File write truncation** — large files written via tool sometimes truncate. Always validate line count and parse after writing. Use `printf` or heredoc for smaller files.
-2. **Null bytes from sed** — avoid using `sed -i` with shell-quoted patterns on these files. Use Python `re.sub()` instead.
-3. **JSX multi-line ternaries** — SWC/Babel chokes on `? [...]` starting a new line inside JSX. Pre-compute filtered arrays before the `return` instead.
-4. **Missing closing divs** — JSX parse errors often cascade from a missing `</div>` much earlier in the file. Binary-search with `@babel/parser` to find the true root.
-5. **Stripe webhook** — must be registered in Stripe dashboard pointing to `/api/stripe/webhook`
-6. **Never fire-and-forget in a route** — Vercel freezes the function once the response is sent, so an un-awaited promise (an email, a log write) silently dies. Await it, or wrap it in `after()` from `next/server`. This is why inquiry emails stopped for two weeks in Sept 2026.
-7. **Resend never throws** — the SDK returns `{ error }`. `getResend()` in `src/lib/email.ts` converts that into a throw; always send through it, never through a fresh `new Resend()`.
-8. **Edits made through Bash bypass the parse hook** — the PostToolUse hook only fires on the Edit/Write tools. After a Python/heredoc edit, run `node scripts/parse-check.js <files>` yourself.
+Large tool writes can truncate (check line count and parse). Use Python, not `sed -i`, for edits on these files. JSX: no multi-line `? [...]` ternaries; a parse error usually means a missing `</div>` earlier. Do NOT run `scripts/route-inventory.ts`.
 
----
-
-## Key people
-- **Beast (Cam)** — founder/operator, `camsanchez33@icloud.com`
-- Email (MAIL-1, Cam 2026-10-22: moved to Google Workspace): three aliases of one inbox, ALL read from `src/lib/contact.ts` — never type an address anywhere else (`scripts/contact-email-test.ts` fails on one). `support@greenreserve.app` golfers, homepage and public pages; `admin@greenreserve.app` courses talking to GreenReserve (enquiries, onboarding, dashboard, agreement) and the site's own alerts; `billing@greenreserve.app` whenever money actually moved — receipts, charges, refunds, a cancellation that kept a fee or refunded money, a paid event sign-up, membership, shop and event pay links (Cam 2026-10-22: "directly a payment or refund → billing; about the round → support", so round emails with a Check in & pay button stay on support@). Each email is SENT from its audience's alias, so replies need no replyTo override. Codes, sign-in links and security alerts come from `noreply@greenreserve.app`, which has no inbox (replies bounce) — those emails name support@/admin@ instead of "reply". `thegreenreserve@outlook.com` and `hello@` are gone everywhere, the agreement files included: those were changed in place to admin@ on 2026-10-24 because every signature up to then was test data (Cam: "it was all test data"), cleared by the launch wipe. From launch on, never edit a published agreement file — its hash is the signature record; add a new version instead.
-
-## Preferences
-- Concise, direct responses — no unnecessary explanation
-- Challenge ideas when needed — don't just agree
-- No bullet-point lists for conversational responses
-- No emojis unless asked
+## People and preferences
+Cam is the founder and the only one who approves. Concise, direct answers in plain words; challenge ideas instead of agreeing; no bullet lists in conversation; no emojis.

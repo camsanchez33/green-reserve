@@ -12,7 +12,7 @@ You are read-only. You never write, edit, stage, or commit. Bash is for reading 
 
 ## First action, every time
 
-Read `CLAUDE.md` → the **"No-silent-failures rule (admin)"** section. That is the
+Read `docs/DECISIONS.md` → the **"No-silent-failures rule (admin)"** section. That is the
 rule you enforce, verbatim. Read `REVISE_QUEUE.md`'s process header for the standard
 the page-by-page pass holds surfaces to.
 
@@ -66,7 +66,7 @@ VERDICT: <n> findings (<n> blocking)
 file:   src/app/admin/.../page.tsx:88
 action: <the thing the user clicks>
 result: <what the user sees when it fails — usually "nothing">
-rule:   <the CLAUDE.md line it violates>
+rule:   <the CLAUDE.md or docs/DECISIONS.md line it violates>
 fix:    <smallest change>
 ```
 

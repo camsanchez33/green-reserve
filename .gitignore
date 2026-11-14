@@ -58,3 +58,7 @@ AUDIT_MASTER.md
 
 # Cowork staging folder (safe to delete)
 _to_delete/
+
+# Generated at session start (scripts/codemap.mjs, .claude/settings.json SessionStart) — never committed (Cam 2026-11-14)
+docs/CODEMAP.md
+docs/codemap.json

@@ -14,12 +14,12 @@ that changes a file, stop and put it in the report as a proposed fix instead.
 
 ## First action, every single time
 
-Read `CLAUDE.md`, section **"Design system — Clubhouse"**, in full — including its
+Read `docs/DECISIONS.md`, section **"Design system"**, in full — where it disagrees with CLAUDE.md "Look" (charcoal and green glass, dark admin), CLAUDE.md wins — including its
 **BANNED** list. That section is the law. Then skim `DESIGN_SYSTEM_SPEC.md` for the
 intent behind the rules.
 
-You audit against what CLAUDE.md says *today*, never against anything you think you
-know about this project. If your own instincts and CLAUDE.md disagree, CLAUDE.md
+You audit against what CLAUDE.md "Look" and docs/DECISIONS.md "Design system" say *today*, never against anything you think you
+know about this project. If your own instincts and those rules disagree, the rules
 wins and you note the disagreement at the top of your report — it usually means a
 rule changed and something else in the repo is stale.
 
@@ -37,14 +37,14 @@ hits and buries the real ones.
 
 1. **Surface theme.** Establish which surface each file belongs to (`src/app/admin/*`,
    `src/app/dashboard/*`, golfer/public, email templates) and confirm it uses the
-   palette CLAUDE.md assigns that surface. A dark class on a light surface is the
+   palette docs/DECISIONS.md assigns that surface. A dark class on a light surface is the
    highest-signal drift there is.
 2. **Banned constructs.** Every entry on the BANNED list, plus the explicit ceilings
    (border-radius, font weight, tracking).
 3. **Token vs raw value.** Hardcoded hex or arbitrary Tailwind values where a named
    theme token exists. Report the token that should have been used.
 4. **Component substitution.** Places that hand-roll something the design system
-   already provides as a shared component. CLAUDE.md names these; find open-coded
+   already provides as a shared component. docs/DECISIONS.md names these; find open-coded
    equivalents.
 5. **Icon and emoji policy.** Literal emoji characters in JSX or copy, and (TYPE-3) any decorative lucide icon — next to button text, before a heading or value, in a tile, in an empty state, or a check/alert icon used as status instead of `<StatusDot>`. Functional icons (icon-only buttons with aria-label, spinners, close, search, external link, steppers, disclosure, ratings, mobile nav) are fine.
 6. **Typography roles (TYPE-1/TYPE-2, 2026-10-05).** `font-serif` (EB Garamond) only on headlines, course names and dates — never times, buttons, tables or body. NO small uppercase label above a heading (that is a finding, not a style); real labels are sentence case. Sentences in full ink; grey (`text-ink-muted`/`faint`) only on metadata. Page titles, stat numbers — confirm they use the
@@ -75,7 +75,7 @@ VERDICT: <n> findings (<n> blocking)
 ### BLOCKING | HIGH | MEDIUM | LOW — <one-line claim>
 file:  src/app/.../page.tsx:142
 saw:   <the actual offending code, one line>
-rule:  <the CLAUDE.md line it violates, quoted>
+rule:  <the CLAUDE.md or docs/DECISIONS.md line it violates, quoted>
 fix:   <the smallest change that resolves it>
 ```
 

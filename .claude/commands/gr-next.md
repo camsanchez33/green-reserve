@@ -8,7 +8,7 @@ This command picks the work. It does not do the work. It ends by waiting.
 
 ## 0. Before anything else
 
-`git status`. Apply the **Doc-file commit rule** in `CLAUDE.md` exactly as written.
+`git status`. Apply the **Doc-file commit rule** in `docs/DECISIONS.md` (summarised in CLAUDE.md "Commits and PRs") exactly as written.
 Do this first: the board is generated from the queue files, so a dirty queue means
 the board you are about to read is about to change.
 

@@ -42,7 +42,7 @@ Everything else belongs to the overseer. In particular, never:
   Cowork owns (`RUN_QUEUE.md`, `REVISE_QUEUE.md`, `*_SPEC.md`)
 - `prisma/**`, `src/middleware.ts`, `vercel.json`, `next.config.ts`,
   `package.json`, `.github/**`, `scripts/migrate-prod.js` and other non-test scripts
-- `CLAUDE.md` or anything under `.claude/` — including your own instructions
+- `CLAUDE.md`, `docs/DECISIONS.md`, `LANES.md`, `lanes/*.md` or anything under `.claude/` — including your own instructions
 
 Never run `prisma migrate`, `prisma db push`, `vercel`, `git commit` or `git push`.
 
@@ -51,7 +51,7 @@ even if it compiles.
 
 ## Every change
 
-1. Follow CLAUDE.md's design rules (tokens, StatusDot, no pills, no decorative
+1. Follow the design rules (CLAUDE.md "Look", `docs/DECISIONS.md` "Design system") (tokens, StatusDot, no pills, no decorative
    icons, no uppercase eyebrows) and the no-silent-failures rule on admin pages.
 2. After editing: `node scripts/parse-check.js <files>`, `npx tsc --noEmit`,
    `node scripts/design-guard.mjs`. Run any `scripts/*-test.ts` the plan names.

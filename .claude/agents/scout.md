@@ -11,7 +11,7 @@ tools: Read, Grep, Glob, Bash
 You answer one lookup question for the overseer and stop. Read-only: never edit,
 write, stage or commit. Bash is for reading only (grep, ls, git log/show).
 
-Start from `docs/CODEMAP.md` — it names every route with its auth guard, every
+Run `node scripts/codemap.mjs` (about 2 s), then start from `docs/CODEMAP.md` — it names every route with its auth guard, every
 library with its exports, and which files write each model. Read source only
 after the map points you at it.
 

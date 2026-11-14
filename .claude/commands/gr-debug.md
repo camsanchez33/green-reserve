@@ -11,7 +11,7 @@ will review.
 
 ## 1. Load context
 
-Read `CLAUDE.md` — specifically the **Known gotchas** section and the
+Read `CLAUDE.md` and, in `docs/DECISIONS.md`, the **Known gotchas** section and the
 **CRITICAL: build validation** section. Those two explain most of the confusing
 failures in this codebase, including why a broken deploy can pass a build. Do not
 work from memory of how this project behaves; read it.
@@ -40,7 +40,7 @@ closes the investigation.
 
 ## 4. Validate
 
-- Run the `@babel/parser` check from `CLAUDE.md` on every `.tsx` you touched.
+- Run the `@babel/parser` check (`node scripts/parse-check.js`) on every `.tsx` you touched.
 - `npx tsc --noEmit`.
 - Confirm the written file's line count is what you expect — truncation is silent.
 
