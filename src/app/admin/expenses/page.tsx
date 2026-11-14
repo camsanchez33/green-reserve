@@ -5,14 +5,14 @@ import Link from 'next/link';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { stepUpFetch } from '@/lib/step-up-client';
 import { dayKey } from '@/lib/admin-day';
-import { EXPENSE_CATEGORIES, EXPENSE_CADENCES, EXPENSE_CATEGORY_LABEL, monthlyEquivalentCents, type ExpenseCategory } from '@/lib/expenses';
+import { EXPENSE_CATEGORIES, EXPENSE_CADENCES, EXPENSE_CATEGORY_LABEL, monthlyEquivalentCents, monthCostPace, lastDayOf, type ExpenseCategory } from '@/lib/expenses';
 import g from '../admin-glass.module.css';
 import c from '../courses/courses.module.css';
 import r from '../revenue/revenue.module.css';
 import s from './expenses.module.css';
 import { TERMS, MSG, CADENCE_WORDS, SESSION_ENDED, loadFailed } from './terms';
 import { type Exp, type FilterKey, type HistoryRow, FILTERS, isEnded, cards, pct, nextRenewal, startDay, byCost, parseAmount, historyLine } from './logic';
-import { goalPace } from '@/lib/goal-pace';
+import { goalPace, EARLY_DAYS } from '@/lib/goal-pace';
 
 // ADMIN-REDO Expenses (Cam approved the mockup 2026-11-12, ADMIN_REDO_SPEC.md "Expenses: APPROVED"). Owner only:
 // GreenReserve's own costs — what it is, category, how much, how often. Three cards (Monthly costs · <Month> budget ·
@@ -25,9 +25,11 @@ import { goalPace } from '@/lib/goal-pace';
 const usd = (cents: number) => '$' + (cents / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const longDay = (day: string) => new Date(day + 'T12:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' });
 /** An end is a real instant: its day on the platform clock (ending at 9pm ET on Nov 12 is Nov 12). */
-const endDay = (iso: string) => dayKey(new Date(iso));
+const endDay = (iso: string) => lastDayOf(iso) ?? dayKey(new Date(iso));
 const catLabel = (k: string) => EXPENSE_CATEGORY_LABEL[k as ExpenseCategory] ?? k;
 const PACE_WORDS = { ok: 'On pace to stay under', warn: 'Close to the budget', bad: 'On pace to go over', early: 'Too early to tell' } as const;
+// In the first days, red only comes from a known total over the budget (Cam 2026-11-14): say so plainly.
+const EARLY_OVER = 'Over budget';
 const todayKey = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
 
 /** A change in costs: going up is the bad direction. */
@@ -103,6 +105,7 @@ export default function ExpensesPage() {
 
   const now = useMemo(() => new Date(), [list]); // eslint-disable-line react-hooks/exhaustive-deps
   const k = useMemo(() => (list ? cards(list, now) : null), [list, now]);
+  const mp = useMemo(() => (list ? monthCostPace(list, now) : null), [list, now]);
   const shown = useMemo(() => {
     const f = FILTERS.find(x => x.key === filter)!;
     return (list ?? []).filter(e => f.test(e, now)).sort(byCost);
@@ -185,7 +188,9 @@ export default function ExpensesPage() {
 
   // The budget card: spent so far this month against the budget, coloured by the shared pace rule (src/lib/goal-pace.ts).
   const monthDays = k ? (k.monthEnd.getTime() - k.monthStart.getTime()) / 86_400_000 : 0;
-  const pace = k && budget ? goalPace({ progress: k.monthSoFar - k.monthOneTime, fixed: k.monthOneTime, target: budget, share: k.elapsedShare, kind: 'cap', daysElapsed: k.elapsedShare * monthDays }) : null;
+  // Build's month helper (#389): running costs so far (progress), one-time costs so far (fixed, never projected) and the
+  // month's total already on the books (scheduled: a cost ending or starting later this month counts only its part).
+  const pace = k && mp && budget ? goalPace({ progress: mp.progress, fixed: mp.fixed, scheduled: mp.scheduled, target: budget, share: mp.share, kind: 'cap', daysElapsed: mp.share * monthDays }) : null;
   const monthLast = k ? new Date(k.monthEnd.getTime() - 3_600_000).toLocaleDateString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric' }) : '';
   const budgetCard = k && (
     <div className={`${g.glass} ${r.rkc}`}>
@@ -211,7 +216,7 @@ export default function ExpensesPage() {
           <div className={s.gbar}><i className={pace && pace.tone !== 'early' ? s[pace.tone] : undefined} style={{ width: `${Math.min(100, (k.monthSoFar / budget) * 100)}%` }} /></div>
           {pace && (pace.tone === 'early'
             ? <span className={r.c}>{PACE_WORDS.early}</span>
-            : <span className={r.c}><span className={pace.tone === 'ok' ? g.up : pace.tone === 'warn' ? g.wa : g.down}>{PACE_WORDS[pace.tone]}</span> · {usd(Math.round(pace.projected))} by {monthLast}</span>)}
+            : <span className={r.c}><span className={pace.tone === 'ok' ? g.up : pace.tone === 'warn' ? g.wa : g.down}>{pace.tone === 'bad' && mp && mp.share * monthDays < EARLY_DAYS ? EARLY_OVER : PACE_WORDS[pace.tone]}</span> · {usd(Math.round(pace.projected))} by {monthLast}</span>)}
         </>
       ) : (
         <>

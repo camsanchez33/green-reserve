@@ -8,7 +8,7 @@ import CommandPalette from '@/components/admin/CommandPalette';
 import { useAdminSession } from '@/lib/admin-session-context';
 import type { AdminArea } from '@/lib/admin-areas';
 
-export type AdminNavKey = 'overview' | 'bookings' | 'problems' | 'goals' | 'inquiries' | 'courses' | 'groups' | 'create' | 'employees' | 'announcements' | 'messages' | 'profile' | 'revenue' | 'expenses' | 'support' | 'golfers' | 'system' | 'company' | 'audit' | 'security';
+export type AdminNavKey = 'overview' | 'bookings' | 'problems' | 'goals' | 'inquiries' | 'courses' | 'groups' | 'create' | 'employees' | 'announcements' | 'messages' | 'profile' | 'revenue' | 'expenses' | 'finance' | 'support' | 'business' | 'golfers' | 'system' | 'company' | 'audit' | 'security';
 
 export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessages = 0 }: {
   active: AdminNavKey;
@@ -96,10 +96,10 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
       // Revenue (Cam 2026-11-12, approved): no badge — failed charges and golfer disputes are the course's, not this page's.
       { key: 'revenue', label: 'Revenue', href: '/admin/revenue', minRole: SUPPORT_PLUS, area: 'money' },
       { key: 'expenses', label: 'Expenses', href: '/admin/expenses', minRole: OWNER_ONLY },
-      { key: null, label: 'Financial analytics' },
+      { key: 'finance', label: 'Financial analytics', href: '/admin/finance', minRole: OWNER_ONLY },
     ] },
     { label: 'Management', items: [
-      { key: null, label: 'Business analytics' },
+      { key: 'business', label: 'Business analytics', href: '/admin/business', minRole: MANAGER_PLUS, area: 'courses' },
       // Course support (Cam 2026-11-12, ADMIN_REDO_SPEC "Admin Course support"): every course's support chats. It replaces
       // Messages; the hourly check's problems moved to Overview's Needs attention (/admin/problems redirects there).
       { key: 'support', label: 'Course support', href: '/admin/support', minRole: SUPPORT_PLUS, area: 'messages' },

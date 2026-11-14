@@ -17,7 +17,7 @@ check('the rail lists its items', items.length >= 10);
 const GATE: Record<string, string[] | null> = {
   // messages: the Messages page is off the rail (Course support replaces it, Cam 2026-11-12); its page and API keep support+.
   overview: null, inquiries: VIEWER_PLUS, courses: VIEWER_PLUS, groups: SUPPORT_PLUS, support: SUPPORT_PLUS, announcements: SUPPORT_PLUS,
-  revenue: SUPPORT_PLUS, expenses: OWNER_ONLY, goals: SUPPORT_PLUS, employees: MANAGER_PLUS, system: MANAGER_PLUS, bookings: SUPPORT_PLUS,
+  revenue: SUPPORT_PLUS, expenses: OWNER_ONLY, finance: OWNER_ONLY, business: MANAGER_PLUS, goals: SUPPORT_PLUS, employees: MANAGER_PLUS, system: MANAGER_PLUS, bookings: SUPPORT_PLUS,
   // golfers: Users & golfers is off the rail (Cam 2026-11-12); its page and API keep their own support+ gate.
   company: OWNER_ONLY, audit: OWNER_ONLY, security: OWNER_ONLY,
   // problems: off the rail (Cam 2026-11-12) — the list is Overview's Needs attention; /admin/problems redirects there.
