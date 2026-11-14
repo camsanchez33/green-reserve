@@ -20,7 +20,7 @@ for (const l of ['All on time', 'Edit group', 'Cancel booking', 'Add players', '
 check('"Closed" seat cells on the sheet and in the demo', rows.includes('>Closed</span>') && demo.includes('>Closed</span>'));
 for (const l of ['Grid', 'List', 'Calendar']) check(`the ${l} view on the sheet and in the demo`, page.includes(`'${l}'`) || page.includes(`>${l}<`) ? demo.includes(`>${l}<`) : false);
 // The rail (DASH-D): its groups and tabs, in order.
-for (const l of ['Today', 'Business', 'Home', 'Tee sheet', 'Pro shop', 'Messages', 'Money', 'Members', 'Events', 'Schedule', 'Analytics', 'Settings']) both(l, rail, `'${l}'`);
+for (const l of ['Today', 'Business', 'Home', 'Tee sheet', 'Pro shop', 'Money', 'Members', 'Events', 'Schedule', 'Analytics', 'Settings', 'Support']) both(l, rail, `'${l}'`);
 // Colours: the fills and the rail are the real tokens.
 for (const [tok, cls] of [['--color-paid-fill:   #CFE8D6', '.seatPaid { background: #CFE8D6; }'], ['--color-owes-fill:   #F7E1B5', '.kWarn { background: #F7E1B5; }'], ['--color-bad-fill:    #F4CFC6', '.kBad { background: #F4CFC6; }'], ['--color-rail:        #E3E6DE', 'background: #E3E6DE;']] as const) {
   check(`${cls} matches ${tok}`, globals.includes(tok) && css.includes(cls));
