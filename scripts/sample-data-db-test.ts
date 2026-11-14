@@ -44,6 +44,12 @@ async function cleanup() {
   const res = await fillTestCourse(course.id);
   console.log(`      filled in ${Math.round((Date.now() - t0) / 1000)}s`, res.ok ? res.made : res);
   ok('a test course is filled', res.ok && res.made.bookings > 800 && res.made.members >= 20 && res.made.shopSales > 50, res);
+  {
+    // PRO-SHOP sale numbers: the filled course's sales are numbered in time order, like real ones (final review).
+    const nums = await prisma.shopSale.findMany({ where: { courseId: course.id }, orderBy: { number: 'asc' }, select: { number: true, createdAt: true } });
+    const inOrder = nums.every((x, i) => i === 0 || x.createdAt.getTime() >= nums[i - 1].createdAt.getTime());
+    ok('…its sales are numbered 1…n in the order they were made', inOrder && nums[0]?.number === 1 && nums[nums.length - 1]?.number === nums.length, { first: nums[0], n: nums.length });
+  }
   ok('…with an outing two weeks out', res.ok && res.made.event === 'Charity Scramble' && (await prisma.courseEventPlayer.count({ where: { event: { courseId: course.id } } })) === 72, res.ok ? res.made.eventNote : res);
   ok('a second fill is refused until the course is reset', !(await fillTestCourse(course.id)).ok);
 

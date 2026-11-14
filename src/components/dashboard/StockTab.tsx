@@ -19,9 +19,10 @@ import type { StockRow } from '@/lib/shop-stock';
 import { ItemForm } from '@/components/dashboard/ItemForm';
 import { UploadMany } from '@/components/dashboard/UploadMany';
 import { ShopMenu } from '@/components/dashboard/shop/ShopMenu';
+import { StockBox } from '@/components/dashboard/shop/StockBox';
 
 type StockData = { rows: StockRow[]; receipts: { id: string; name: string; quantity: number; unitCostCents?: number | null; receivedBy: string; createdAt: string; note: string }[]; canEdit: boolean; canCost: boolean };
-type Panel = { kind: 'item'; id: string; mode: 'view' | 'edit' | 'receive' } | { kind: 'new' } | { kind: 'many' } | null;
+type Panel = { kind: 'item'; id: string; mode: 'view' | 'edit' } | { kind: 'new' } | { kind: 'many' } | null;
 type Show = 'all' | 'out' | 'low' | 'hidden' | `cat:${string}`;
 
 const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
@@ -83,7 +84,6 @@ export function StockTab({ refreshKey = 0, onChanged }: { refreshKey?: number; o
     if (i.stockCount <= 0) return { text: 'Sold out', tone: 'bad' };
     return { text: `${i.stockCount.toLocaleString()} in stock`, tone: isLow(i) ? 'warn' : '' };
   };
-  const counted = (i: TreeItem) => i.stockCount !== null || sellable(i).some(o => o.stockCount !== null);
   async function hide(i: TreeItem) {
     setHiding(true); setError(''); setNote('');
     const r = await dfetch('/api/operator/shop-items', { method: 'PATCH', body: JSON.stringify({ id: i.id, active: !i.active }) });
@@ -191,7 +191,7 @@ export function StockTab({ refreshKey = 0, onChanged }: { refreshKey?: number; o
             )}
             {(panel?.kind === 'new' || panel?.kind === 'many' || (panel?.kind === 'item' && panel.mode !== 'view' && open)) && (
               <div className="flex items-center justify-between gap-2 mb-4">
-                <h2 className="text-[15px] font-semibold text-ink truncate">{panel.kind === 'new' ? 'Add an item' : panel.kind === 'many' ? 'Add many items' : panel.mode === 'receive' ? `Receive ${open?.name}` : open?.name}</h2>
+                <h2 className="text-[15px] font-semibold text-ink truncate">{panel.kind === 'new' ? 'Add an item' : panel.kind === 'many' ? 'Add many items' : open?.name}</h2>
                 <button type="button" onClick={() => pick(panel.kind === 'item' ? { kind: 'item', id: panel.id, mode: 'view' } : null)} aria-label="Close" className="p-1 text-ink-soft hover:text-ink hidden lg:block"><X className="w-4 h-4" /></button>
               </div>
             )}
@@ -211,10 +211,19 @@ export function StockTab({ refreshKey = 0, onChanged }: { refreshKey?: number; o
             {panel?.kind === 'item' && panel.mode !== 'view' && open && (canEdit
               // keyed on what's stored, so a reload after a save (or a sale) shows the new numbers, never stale ones
               ? <ItemForm key={`${panel.mode}:${open.id}:${open.stockCount}:${open.priceCents}:${open.options.map(o => `${o.id}=${o.stockCount}`).join(',')}:${sellable(open).map(s => `${rowOf.get(s.id)?.reorderAt}/${rowOf.get(s.id)?.costCents}`).join(',')}`}
-                  item={open} rows={rowOf} categories={categories} canCost={canCost} receive={panel.mode === 'receive'} onCancel={() => pick({ kind: 'item', id: open.id, mode: 'view' })}
+                  item={open} rows={rowOf} categories={categories} canCost={canCost} onCancel={() => pick({ kind: 'item', id: open.id, mode: 'view' })}
                   onSaved={async (m, f) => { await done(m, f); setPanel({ kind: 'item', id: open.id, mode: 'view' }); }} onRemoved={async msg => { await done(msg); setPanel(null); }} />
               : <p className="text-[13px] text-ink-muted">Changing items needs “Edit the shop catalog” from the owner.</p>)}
-            {picked && (!panel || (panel.kind === 'item' && panel.mode === 'view')) && (
+            {/* Pro shop item stock box (Cam 2026-11-12): a single item's stock is one number and two choices. */}
+            {picked && canEdit && !picked.options.length && (!panel || (panel.kind === 'item' && panel.mode === 'view')) && (
+              <div>
+                <StockBox key={`${picked.id}:${picked.stockCount}:${rowOf.get(picked.id)?.reorderAt}:${picked.active}`} item={picked}
+                  reorderAt={rowOf.get(picked.id)?.reorderAt ?? null} lastCostCents={canCost ? rowOf.get(picked.id)?.costCents : undefined} canCost={canCost}
+                  onDone={async (m, f) => { await done(m, f); }} />
+                <button type="button" onClick={() => pick({ kind: 'item', id: picked.id, mode: 'edit' })} className="mt-3 w-full min-h-[38px] rounded-[10px] border border-line text-[13.5px] font-semibold text-ink hover:bg-page">Edit name, price, photo</button>
+              </div>
+            )}
+            {picked && !(canEdit && !picked.options.length) && (!panel || (panel.kind === 'item' && panel.mode === 'view')) && (
               <div>
                 {thumb(picked, true)}
                 <h2 className="text-[20px] font-semibold text-ink leading-tight">{picked.name}</h2>
@@ -232,8 +241,7 @@ export function StockTab({ refreshKey = 0, onChanged }: { refreshKey?: number; o
                 {canEdit && (
                   <>
                     <div className="grid grid-cols-2 gap-2 mt-4">
-                      <button type="button" onClick={() => pick({ kind: 'item', id: picked.id, mode: 'edit' })} className={'min-h-[40px] rounded-[10px] bg-pine hover:bg-pine-hover text-white text-[13.5px] font-semibold ' + (counted(picked) ? '' : 'col-span-2')}>Edit</button>
-                      {counted(picked) && <button type="button" onClick={() => pick({ kind: 'item', id: picked.id, mode: 'receive' })} className="min-h-[40px] rounded-[10px] border border-line text-ink text-[13.5px] font-semibold hover:bg-page">Receive stock</button>}
+                      <button type="button" onClick={() => pick({ kind: 'item', id: picked.id, mode: 'edit' })} className="col-span-2 min-h-[40px] rounded-[10px] bg-pine hover:bg-pine-hover text-white text-[13.5px] font-semibold">Edit</button>
                     </div>
                     <button type="button" onClick={() => hide(picked)} disabled={hiding} className="block mx-auto mt-3 text-[12.5px] text-ink-muted underline underline-offset-4 hover:text-ink disabled:opacity-50">{hiding ? 'Saving…' : picked.active ? 'Hide from the register' : 'Show on the register'}</button>
                   </>
