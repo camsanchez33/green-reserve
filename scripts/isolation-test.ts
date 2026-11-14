@@ -602,7 +602,14 @@ async function main() {
       await prisma.adminUser.update({ where: { id: bm.id }, data: { areas: ['money'] } });
       type L = { rows?: { id: string; number: string }[]; counts?: Record<string, number> };
       const r1 = (await api('/api/admin/bookings', { cookie: c })).body as L;
-      check('Money support → Bookings lists the booking with its number', !!r1?.rows?.some(r => r.id === data.bookingA.id && r.number === data.bookingA.id.slice(0, 8).toUpperCase()), JSON.stringify(r1).slice(0, 300));
+      // Booking.ref / Course.number (Build #380): the booking number is GR<course>-<n>.
+      const refA = await prisma.booking.findUniqueOrThrow({ where: { id: data.bookingA.id }, select: { ref: true, course: { select: { number: true } } } });
+      const labelA = `GR${refA.course.number}-${refA.ref}`;
+      check('Money support → Bookings lists the booking with its GR number', !!r1?.rows?.some(r => r.id === data.bookingA.id && r.number === labelA), JSON.stringify(r1).slice(0, 300));
+      const byRef = (await api(`/api/admin/bookings?q=${labelA}`, { cookie: c })).body as L;
+      check('…Bookings finds it by its GR number', !!byRef?.rows?.some(r => r.id === data.bookingA.id), JSON.stringify(byRef?.rows?.map(r => r.number)));
+      const srRef = (await api(`/api/admin/search?q=${labelA}`, { cookie: c })).body as { results?: { type: string; id: string; href: string }[] };
+      check('…the top search finds it by GR number for a Money-only login and opens it on Bookings', !!srRef?.results?.some(r => r.href === `/admin/bookings?id=${data.bookingA.id}`), JSON.stringify(srRef).slice(0, 300));
       type SR = { results?: { type: string; id: string; href: string }[] };
       const sr = (await api(`/api/admin/search?q=%23${data.bookingA.id.slice(0, 8).toUpperCase()}`, { cookie: c })).body as SR;
       check('…the top search finds it by "#number" for a Money-only login and opens it on Bookings', !!sr?.results?.some(r => r.type === 'booking' && r.href === `/admin/bookings?id=${data.bookingA.id}`), JSON.stringify(sr).slice(0, 300));
@@ -639,6 +646,11 @@ async function main() {
         await prisma.adminUser.update({ where: { id: bm.id }, data: { areas: ['money'] } });
         // The whole id: the 8-character number is shared by bookings made within ~36ms (Build is adding Booking.ref).
         const st = (await api(`/api/admin/search?q=${data.bookingB.id}`, { cookie: c })).body as { results?: { type: string; id: string; href: string }[] };
+        const refB = await prisma.booking.findUniqueOrThrow({ where: { id: data.bookingB.id }, select: { ref: true, course: { select: { number: true } } } });
+        const stRef = (await api(`/api/admin/search?q=GR${refB.course.number}-${refB.ref}`, { cookie: c })).body as { results?: { type: string; id: string; href: string }[] };
+        check('…nor does a search by its GR number', !!stRef?.results && !stRef.results.some(r => r.href.includes(data.bookingB.id)), JSON.stringify(stRef).slice(0, 300));
+        const byRefB = (await api(`/api/admin/bookings?q=GR${refB.course.number}-${refB.ref}`, { cookie: c })).body as L;
+        check('…nor Bookings by its GR number', !!byRefB?.rows && !byRefB.rows.some(r => r.id === data.bookingB.id), JSON.stringify(byRefB?.rows?.map(r => r.id)));
         check('…and the top search gives a Money-only login no hit for it (no guest email link)', !!st?.results && !st.results.some(r => r.id === `booking:${data.bookingB.id}` || r.href.includes('guest=')), JSON.stringify(st).slice(0, 300));
       } finally {
         await prisma.course.update({ where: { id: data.courseB.id }, data: { isTest: false } });

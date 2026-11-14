@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { canOpenAdminHref } from '@/components/admin/admin-href';
+import ProblemRow, { type ProblemInfo } from './ProblemRow';
 import { useAdminSession } from '@/lib/admin-session-context';
 import g from './admin-glass.module.css';
 
@@ -25,7 +26,7 @@ type Overview = {
   net: { cents: number | null; priorCents: number | null; stripeUnavailable: boolean } | null;
   chart: Record<Grouping, Series> | null;
   activity: { id: string; at: string; text: string; tone: 'ok' | 'neutral' | 'brand'; href: string }[] | null;
-  attention: { rows: { id: string; text: string; tone: 'bad' | 'warn'; href: string; action: string }[]; total: number; problemsMore: number; todosMore: number; todosHref: string } | null;
+  attention: { rows: { id: string; text: string; tone: 'bad' | 'warn'; href: string; action: string; problem?: ProblemInfo }[]; total: number; problemsMore: number; todosMore: number; todosHref: string } | null;
 };
 
 const TZ = 'America/New_York';
@@ -231,7 +232,7 @@ export default function AdminOverview() {
                 <section className={`${g.glass} ${g.list} ${g.attn}`} aria-label="Needs attention">
                   <h2>Needs attention <span>{d.attention.total || 'Nothing'}</span></h2>
                   {d.attention.rows.length === 0 && <p className={g.empty}>Nothing needs you right now.</p>}
-                  {d.attention.rows.map(r => (
+                  {d.attention.rows.map(r => r.problem ? <ProblemRow key={r.id} text={r.text} p={r.problem} role={role} areas={areas} /> : (
                     <Link key={r.id} href={r.href} className={g.li}>
                       <span className={`${g.d} ${r.tone === 'bad' ? g.dbad : g.dwarn}`} />
                       <span className={g.lt}>{r.text}</span>
@@ -240,7 +241,7 @@ export default function AdminOverview() {
                   ))}
                   {(d.attention.problemsMore > 0 || d.attention.todosMore > 0) && (
                     <p className={g.empty}>
-                      {d.attention.problemsMore > 0 && <Link href="/admin/problems">+{d.attention.problemsMore} problems</Link>}
+                      {d.attention.problemsMore > 0 && <span>+{d.attention.problemsMore} problems</span>}
                       {d.attention.problemsMore > 0 && d.attention.todosMore > 0 && ' · '}
                       {d.attention.todosMore > 0 && <Link href={d.attention.todosHref}>+{d.attention.todosMore} to-dos</Link>}
                     </p>

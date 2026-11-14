@@ -8,7 +8,7 @@ import CommandPalette from '@/components/admin/CommandPalette';
 import { useAdminSession } from '@/lib/admin-session-context';
 import type { AdminArea } from '@/lib/admin-areas';
 
-export type AdminNavKey = 'overview' | 'bookings' | 'problems' | 'goals' | 'inquiries' | 'courses' | 'groups' | 'create' | 'employees' | 'announcements' | 'messages' | 'profile' | 'revenue' | 'expenses' | 'golfers' | 'system' | 'company' | 'audit' | 'security';
+export type AdminNavKey = 'overview' | 'bookings' | 'problems' | 'goals' | 'inquiries' | 'courses' | 'groups' | 'create' | 'employees' | 'announcements' | 'messages' | 'profile' | 'revenue' | 'expenses' | 'finance' | 'support' | 'business' | 'golfers' | 'system' | 'company' | 'audit' | 'security';
 
 export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessages = 0 }: {
   active: AdminNavKey;
@@ -96,12 +96,13 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
       // Revenue (Cam 2026-11-12, approved): no badge — failed charges and golfer disputes are the course's, not this page's.
       { key: 'revenue', label: 'Revenue', href: '/admin/revenue', minRole: SUPPORT_PLUS, area: 'money' },
       { key: 'expenses', label: 'Expenses', href: '/admin/expenses', minRole: OWNER_ONLY },
-      { key: null, label: 'Financial analytics' },
+      { key: 'finance', label: 'Financial analytics', href: '/admin/finance', minRole: OWNER_ONLY },
     ] },
     { label: 'Management', items: [
-      { key: null, label: 'Business analytics' },
-      { key: 'problems', label: 'Support & issues', href: '/admin/problems', minRole: SUPPORT_PLUS, area: 'problems' },
-      { key: 'messages', label: 'Messages', href: '/admin/messages', minRole: SUPPORT_PLUS, sub: true, area: 'messages' },
+      { key: 'business', label: 'Business analytics', href: '/admin/business', minRole: MANAGER_PLUS, area: 'courses' },
+      // Course support (Cam 2026-11-12, ADMIN_REDO_SPEC "Admin Course support"): every course's support chats. It replaces
+      // Messages; the hourly check's problems moved to Overview's Needs attention (/admin/problems redirects there).
+      { key: 'support', label: 'Course support', href: '/admin/support', minRole: SUPPORT_PLUS, area: 'messages' },
       { key: 'announcements', label: 'Announcements', href: '/admin/announcements', minRole: SUPPORT_PLUS, sub: true, area: 'messages' },
       { key: 'system', label: 'Platform activity', href: '/admin/system', minRole: MANAGER_PLUS, area: 'company' },
       // My profile is open to every login, so it sits outside the gate tables' pattern (admin-nav-test).
@@ -125,7 +126,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
   const badges: Partial<Record<AdminNavKey, React.ReactNode>> = {
     problems: count(problems, true, `${problems} open problem${problems === 1 ? '' : 's'}`),
     inquiries: count(pending, false, `${pending} new inquir${pending === 1 ? 'y' : 'ies'}`),
-    messages: count(unread, false, `${unread} unread`),
+    support: count(unread, false, `${unread} unread`),
   };
 
   // Phone: the rail slides in from the Menu button and closes on navigation.
@@ -187,7 +188,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
       </button>
       <span className={g.status} aria-hidden="true" />
       {seesProblems && (
-        <Link href="/admin/problems" className={g.ibtn} aria-label={problems > 0 ? `Alerts: ${problems} open` : 'Alerts: none open'}>
+        <Link href="/admin" className={g.ibtn} aria-label={problems > 0 ? `Alerts: ${problems} open` : 'Alerts: none open'}>
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0" /></svg>
           {problems > 0 && <b aria-hidden="true">{problems > 99 ? '99+' : problems}</b>}
         </Link>

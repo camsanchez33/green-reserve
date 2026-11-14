@@ -1,7 +1,7 @@
 // Expenses (ADMIN-REDO, Cam approved the mockup 2026-11-12): the page's pure rules, counted from the Expense rows
 // with the ONE proration in src/lib/expenses.ts — never estimated. Months and years run on the platform clock
 // (America/New_York, src/lib/admin-day.ts). Run: npx tsx scripts/admin-expenses-test.ts
-import { sumExpensesForPeriodCents, monthlyEquivalentCents } from '@/lib/expenses';
+import { sumExpensesForPeriodCents, monthlyEquivalentCents, lastDayOf } from '@/lib/expenses';
 import { dayKey, startOfPlatformMonth, startOfPlatformMonthsAgo } from '@/lib/admin-day';
 
 export interface Exp {
@@ -89,7 +89,7 @@ export function nextRenewal(e: Exp, now: Date): { day: string; inDays: number } 
     const y = y0 + Math.floor((m0 - 1 + k) / 12), m = ((m0 - 1 + k) % 12) + 1;
     const last = new Date(Date.UTC(y, m, 0)).getUTCDate();
     const day = `${y}-${String(m).padStart(2, '0')}-${String(Math.min(d0, last)).padStart(2, '0')}`;
-    if (day >= today) return e.endedAt && day >= dayKey(new Date(e.endedAt)) ? null : { day, inDays: daysBetween(today, day) }; // no renewal on or after a set end
+    if (day >= today) return e.endedAt && day > (lastDayOf(e.endedAt) ?? day) ? null : { day, inDays: daysBetween(today, day) }; // no renewal after its last day
   }
   return null;
 }
@@ -139,7 +139,7 @@ export function historyLine(
     if (field === 'category') return cat(String(v));
     if (field === 'cadence') return cadence[String(v)] ?? String(v);
     if (field === 'startedAt') return day(String(v).slice(0, 10)); // noon UTC by construction: the date picked
-    if (field === 'endedAt') return day(dayKey(new Date(String(v)))); // a real instant: its platform day
+    if (field === 'endedAt') return day(lastDayOf(String(v)) ?? String(v).slice(0, 10)); // inclusive: the last day it ran
     return String(v);
   };
   const parts = (h.changes ?? []).map(c => `${FIELD_WORDS[c.field] ?? c.field} changed ${show(c.field, c.from)} → ${show(c.field, c.to)}`);
