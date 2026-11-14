@@ -62,7 +62,8 @@ check('a malformed goal block is refused', !isGoal({ month: 'Nov', targetCents: 
 check('goal amounts: "$4,000" → 400000, "12,50" and over $20M refused', parseGoalCents('$4,000') === 400000 && parseGoalCents('12,50') === null && parseGoalCents('20000001') === null && parseGoalCents('0') === null);
 const goalCard = readFileSync('src/app/admin/revenue/GoalCard.tsx', 'utf8');
 check('the goal bar uses the shared pace rule as a goal to reach, with its early grey days', /goalPace\(\{[^}]*share: elapsedShare\(goal\.dayOfPeriod, goal\.daysInPeriod\)[^}]*kind: 'reach'[^}]*daysElapsed: goal\.dayOfPeriod/.test(goalCard) && !/0\.9\s*\*/.test(goalCard));
-check('on track: so far ÷ elapsed share, to the nearest $100', onTrackCents(132_000, 11.5, 30, 3) === 340_000 && onTrackCents(1_00, 15, 30, 3) === 0);
+check('on track: so far ÷ elapsed share, to the nearest $100', onTrackCents(132_000, 11.5, 30, 3) === 340_000 && onTrackCents(1_00, 15, 30, 3) === null);
+check('on track: never under what is already in (rounding down on the last day)', onTrackCents(132_000, 29.98, 30, 3) === null && onTrackCents(331_000, 29.9, 30, 3) === null);
 check('on track: hidden in the grey first 3 days, once the month is over, and with nothing to project', onTrackCents(132_000, 2.9, 30, 3) === null && onTrackCents(132_000, 30, 30, 3) === null && onTrackCents(0, 10, 30, 3) === null && onTrackCents(-500, 10, 30, 3) === null);
 check('the card shows the on-track line only when there is one', /\{onTrack !== null && <span/.test(goalCard) && /On track for about/.test(goalCard));
 check('the goal prefill keeps cents (Change never rewrites the goal)', /\(target \/ 100\)\.toFixed\(2\)/.test(goalCard));
