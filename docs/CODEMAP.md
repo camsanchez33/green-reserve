@@ -79,7 +79,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/admin/revenue` | admin | client-side | page | `src/app/admin/revenue/page.tsx` | 467 |
 | `/admin/security` | admin | client-side | page | `src/app/admin/security/page.tsx` | 220 |
 | `/admin/set-password` | admin | client-side | page | `src/app/admin/set-password/page.tsx` | 159 |
-| `/admin/support` | admin | client-side | page | `src/app/admin/support/page.tsx` | 178 |
+| `/admin/support` | admin | client-side | page | `src/app/admin/support/page.tsx` | 180 |
 | `/admin/system` | admin | client-side | page | `src/app/admin/system/page.tsx` | 603 |
 | `/api/admin/agreement-versions` | admin | file | GET POST | `src/app/api/admin/agreement-versions/route.ts` | 57 |
 | `/api/admin/archive-course` | admin | file | POST | `src/app/api/admin/archive-course/route.ts` | 79 |

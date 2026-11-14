@@ -161,12 +161,14 @@ function SupportContent() {
   const params = useSearchParams();
   const router = useRouter();
   const id = params.get('id');
+  // A new ?q= (the top search picked another course, or Back/Forward) starts a fresh list with that search.
+  const initialQ = params.get('q') ?? '';
   return (
     <>
       <AdminSidebar active="support" />
       <main className={g.main}>
         <div className={g.head}><h1>Course support</h1></div>
-        {id ? <Chat key={id} id={id} onBack={() => router.push('/admin/support')} /> : <ChatList initialQ={params.get('q') ?? ''} onOpen={x => router.push(`/admin/support?id=${encodeURIComponent(x)}`)} />}
+        {id ? <Chat key={id} id={id} onBack={() => router.push('/admin/support')} /> : <ChatList key={initialQ} initialQ={initialQ} onOpen={x => router.push(`/admin/support?id=${encodeURIComponent(x)}`)} />}
       </main>
     </>
   );

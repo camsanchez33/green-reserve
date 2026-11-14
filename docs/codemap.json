@@ -1801,7 +1801,7 @@
     },
     {
       "path": "src/app/admin/support/page.tsx",
-      "lines": 178,
+      "lines": 180,
       "purpose": "",
       "brain": [],
       "exports": [
