@@ -70,3 +70,34 @@ export function chartSummary(series: { current: number[]; prior: number[] }, don
   const prior = done ? sum(series.prior) : sum(series.prior.slice(0, series.current.length));
   return { total, ahead: total - prior };
 }
+
+/** The revenue goal (Build's revenueGoal on GET ?period=month, owner only). */
+export interface RevenueGoal { month: string; targetCents: number | null; progressCents: number; dayOfPeriod: number; daysInPeriod: number }
+
+/** The route sent a usable goal block. */
+export const isGoal = (v: unknown): v is RevenueGoal => {
+  const x = v as RevenueGoal | null;
+  const fin = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n);
+  return !!x && /^\d{4}-(0[1-9]|1[0-2])$/.test(x.month) && fin(x.progressCents) && fin(x.dayOfPeriod) && fin(x.daysInPeriod) && x.daysInPeriod > 0
+    && (x.targetCents === null || (fin(x.targetCents) && x.targetCents > 0));
+};
+
+/** "$4,000" or "4000.50" → cents; commas only as thousands groups; anything that isn't above zero and up to $20M → null. */
+export function parseGoalCents(s: string): number | null {
+  const t = s.trim().replace(/^\$/, '');
+  if (!/^(\d{1,3}(,\d{3})+|\d+)(\.\d{1,2})?$/.test(t)) return null;
+  const c = Math.round(parseFloat(t.replace(/,/g, '')) * 100);
+  return c > 0 && c <= 2_000_000_000 ? c : null;
+}
+
+/** The goal bar's fill: never below empty (a negative month: more given back than taken) nor past full. */
+export const fillPct = (progress: number, target: number) => Math.max(0, Math.min(100, (progress / target) * 100));
+
+/** Cam 2026-11-14 (via Build): "On track for about $X by Nov 30" — revenue so far ÷ the elapsed share, to the nearest
+ *  $100. None in the grey first days (EARLY_DAYS), none once the month is over, none with nothing (or less) to project, and none when the rounded figure would read $0 or under what's already in. */
+export function onTrackCents(progressCents: number, dayOfPeriod: number, daysInPeriod: number, earlyDays: number): number | null {
+  if (!(daysInPeriod > 0) || dayOfPeriod < earlyDays || dayOfPeriod >= daysInPeriod || progressCents <= 0) return null;
+  const r = Math.round(progressCents / (dayOfPeriod / daysInPeriod) / 10_000) * 10_000;
+  // Never "about $0", and never below what is already in (rounding down on the last day): no line then.
+  return r > 0 && r >= progressCents ? r : null;
+}
