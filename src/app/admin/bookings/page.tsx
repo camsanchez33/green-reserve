@@ -91,7 +91,7 @@ function ProfilePanel({ id }: { id: string }) {
   const feeLines = FEE_LINES.flatMap(([what, label]) => { const c = p.moves.filter(m => m.what === what && !m.dispute).reduce((a, m) => a + (m.direction === 'out' ? -m.cents : m.cents), 0); return c !== 0 ? [[label, c] as const] : []; });
 
   return (
-    <section id="booking-card" className={`${g.glass} ${s.prof}`} aria-label={`Booking #${p.number}`}>
+    <section id="booking-card" className={`${g.glass} ${s.prof}`} aria-label={`Booking ${p.number}`}>
       <div className={s.ph}>
         <div className={s.pname}>
           <h2>{p.golferName}</h2>
@@ -115,7 +115,7 @@ function ProfilePanel({ id }: { id: string }) {
           <dt>Course</dt><dd>{p.course}</dd>
           <dt>Round</dt><dd>{p.holes} holes · {p.players} {p.players === 1 ? 'player' : 'players'} · {p.riding ? 'riding' : 'walking'}</dd>
           <dt>Booked</dt><dd>{dayTime(p.bookedAt)} · {SOURCE_WORDS[p.source] ?? p.source}</dd>
-          <dt>Booking number</dt><dd>#{p.number}{p.splitFromId && <span className={s.vs}>split off another group</span>}</dd>
+          <dt>Booking number</dt><dd>{p.number}{p.splitFromId && <span className={s.vs}>split off another group</span>}</dd>
           <dt>Golfer</dt><dd>{p.contact ? [p.contact.email, p.contact.phone].filter(Boolean).join(' · ') || 'No contact taken' : "Your login doesn't include Golfers."}</dd>
           <dt>Course policy</dt><dd>{p.policy}</dd>
           <dt>Checked in</dt><dd>{p.checkedIn ? `Yes, ${dayTime(p.checkedIn.at)}${p.checkedIn.players != null && p.checkedIn.players < p.players ? ` · ${p.checkedIn.players} of ${p.players}` : ''}`
@@ -255,7 +255,7 @@ function BookingsContent() {
                     {rows.map(r => (
                       <tr key={r.id} className={s.row} tabIndex={0} aria-selected={r.id === pick}
                         onClick={() => open(r.id)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(r.id); } }}>
-                        <td className={b.num}>#{r.number}</td>
+                        <td className={b.num}>{r.number}</td>
                         <td><span className={s.cname}>{r.golferName}</span><span className={`${s.csub} ${b.showS}`}>{r.course}</span></td>
                         <td className={s.hideS}>{r.course}</td>
                         <td className={b.nowrap}>{shortTee(r.teeDate)}<span className={s.csub}>{clock(r.teeTime)}</span></td>
