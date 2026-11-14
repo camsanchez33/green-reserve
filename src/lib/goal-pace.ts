@@ -58,9 +58,13 @@ export function goalPace(o: { progress: number; target: number; share: number; k
   const soFar = o.progress + fixed;
   if (!(o.target > 0)) return { projected, tone: 'ok' };
   // A reach goal already met is green even early; a budget already over is red even early. Otherwise no verdict yet.
+  // Cam 2026-11-14 (via Build): a cap whose period total is already KNOWN (`scheduled`: costs on the books for the
+  // whole month, plus one-offs) and over the budget is red early too — grey only when it genuinely can't tell. An
+  // extrapolated projection never counts here; only a known total.
   if (o.daysElapsed !== undefined && o.daysElapsed < EARLY_DAYS) {
     if (kind === 'reach' && atLeast(soFar, o.target)) return { projected, tone: 'ok' };
     if (kind === 'cap' && !atMost(soFar, o.target)) return { projected, tone: 'bad' };
+    if (kind === 'cap' && Number.isFinite(o.scheduled) && !atMost(projected, o.target)) return { projected, tone: 'bad' };
     return { projected, tone: 'early' };
   }
   if (kind === 'reach') {

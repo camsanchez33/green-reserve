@@ -111,7 +111,8 @@ export const FILTERS = ['all', 'problems', 'today', 'upcoming', 'noshows', 'canc
 export type BookingFilter = (typeof FILTERS)[number];
 export const isFilter = (v: string | null): v is BookingFilter => !!v && (FILTERS as readonly string[]).includes(v);
 
-/** The booking number golfers see in their emails and on Manage: "Booking #" + the id's first 8 characters. */
+/** The OLD booking number (the id's first 8 characters): what a booking from before GR refs still shows (booking-ref.ts
+ *  falls back to it), and what golfers' older emails carry, so a search by it still finds the booking. */
 export const bookingNumber = (id: string) => id.slice(0, 8).toUpperCase();
 /** What a search for a booking number matches: the id's start, any case, with or without '#'. */
 export function numberQuery(q: string): string | null {

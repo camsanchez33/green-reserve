@@ -2,7 +2,7 @@
 // period's name, a percentage is never drawn across a zero or negative prior, and only paused payouts read as a
 // course not being paid. Run: npx tsx scripts/admin-revenue-test.ts
 import { readFileSync } from 'fs';
-import { KIND, fallbackQuery, isNewAnswer, isFallbackAnswer, pct, payoutState, periodDone, chartSummary, type Per } from '../src/app/admin/revenue/logic';
+import { isGoal, parseGoalCents, fillPct, onTrackCents, KIND, fallbackQuery, isNewAnswer, isFallbackAnswer, pct, payoutState, periodDone, chartSummary, type Per } from '../src/app/admin/revenue/logic';
 
 let failed = 0;
 const check = (label: string, ok: boolean, detail = '') => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${!ok && detail ? ` — ${detail}` : ''}`); if (!ok) failed++; };
@@ -55,6 +55,24 @@ check('the page uses the period guards', /isNewAnswer\(/.test(page) && /isFallba
 check('the page has no own percentage rule', !/prior === 0 \?/.test(page));
 check('the page never says "Not paid"', !/Not paid/.test(page));
 check('nothing checked never reads as paid in full (checkedCourses 0 → "No payouts checked", before "Paid in full")', /checkedCourses === 0/.test(page) && page.indexOf('No payouts checked') > -1 && page.indexOf('No payouts checked') < page.indexOf('Paid in full'));
+
+// The revenue goal card (owner, This month): Build's block, the amount typed, and the ONE pace rule.
+check('a goal block with no target yet is usable', isGoal({ month: '2026-11', targetCents: null, progressCents: 0, dayOfPeriod: 11.5, daysInPeriod: 30 }));
+check('a malformed goal block is refused', !isGoal({ month: 'Nov', targetCents: 5, progressCents: 0, dayOfPeriod: 1, daysInPeriod: 30 }) && !isGoal(undefined));
+check('goal amounts: "$4,000" → 400000, "12,50" and over $20M refused', parseGoalCents('$4,000') === 400000 && parseGoalCents('12,50') === null && parseGoalCents('20000001') === null && parseGoalCents('0') === null);
+const goalCard = readFileSync('src/app/admin/revenue/GoalCard.tsx', 'utf8');
+check('the goal bar uses the shared pace rule as a goal to reach, with its early grey days', /goalPace\(\{[^}]*share: elapsedShare\(goal\.dayOfPeriod, goal\.daysInPeriod\)[^}]*kind: 'reach'[^}]*daysElapsed: goal\.dayOfPeriod/.test(goalCard) && !/0\.9\s*\*/.test(goalCard));
+check('on track: so far ÷ elapsed share, to the nearest $100', onTrackCents(132_000, 11.5, 30, 3) === 340_000 && onTrackCents(1_00, 15, 30, 3) === null);
+check('on track: never under what is already in (rounding down on the last day)', onTrackCents(132_000, 29.98, 30, 3) === null && onTrackCents(331_000, 29.9, 30, 3) === null);
+check('on track: hidden in the grey first 3 days, once the month is over, and with nothing to project', onTrackCents(132_000, 2.9, 30, 3) === null && onTrackCents(132_000, 30, 30, 3) === null && onTrackCents(0, 10, 30, 3) === null && onTrackCents(-500, 10, 30, 3) === null);
+check('the card shows the on-track line only when there is one', /\{onTrack !== null && <span/.test(goalCard) && /On track for about/.test(goalCard));
+check('the goal prefill keeps cents (Change never rewrites the goal)', /\(target \/ 100\)\.toFixed\(2\)/.test(goalCard));
+check('the bar never fills on a negative month nor past full', fillPct(-500, 400000) === 0 && fillPct(500000, 400000) === 100 && fillPct(100000, 400000) === 25);
+check('a met goal says so', /goal\.progressCents >= target \?/.test(goalCard));
+check('bad goal blocks refused: NaN, negative target, 0 days, month 13', !isGoal({ month: '2026-11', targetCents: NaN, progressCents: 0, dayOfPeriod: 1, daysInPeriod: 30 }) && !isGoal({ month: '2026-11', targetCents: -5, progressCents: 0, dayOfPeriod: 1, daysInPeriod: 30 }) && !isGoal({ month: '2026-11', targetCents: 5, progressCents: 0, dayOfPeriod: 1, daysInPeriod: 0 }) && !isGoal({ month: '2026-13', targetCents: 5, progressCents: 0, dayOfPeriod: 1, daysInPeriod: 30 }));
+check('stray $ or spaces inside an amount are refused', parseGoalCents('40$00') === null && parseGoalCents('400 500') === null && parseGoalCents(' $4,000.50 ') === 400050);
+check('setting the goal goes through step-up', /stepUpFetch\('\/api\/admin\/revenue-goal'/.test(goalCard));
+check('the goal card shows only for This month, only for the owner', /per === 'month' && owner && isGoal\(/.test(page));
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');
