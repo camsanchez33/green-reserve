@@ -31,7 +31,7 @@ export default function AnnouncementBanner() {
   const firstLine = announcement.body.split('\n')[0];
 
   // MP-7b: was an amber bar in font-black (both banned); now the one look —
-  // white, a hairline, pine accent. The full text lives on Messages.
+  // white, a hairline, pine accent. The full text lives on Support, in the chat from GreenReserve.
   return (
     // Cam 2026-10-19 ("doesn't look urgent, looks weird"): the attention style —
     // a 3px left border in warn on white, the one place borders carry color.
@@ -41,7 +41,7 @@ export default function AnnouncementBanner() {
         <span className="font-semibold text-[14px] whitespace-nowrap">{announcement.title}</span>
         {firstLine && <span className="text-[13px] text-ink-soft truncate">{firstLine}</span>}
       </div>
-      <a href="/dashboard/messages#announcements" className="shrink-0 text-[12.5px] font-semibold text-pine hover:underline underline-offset-4">Read</a>
+      <a href="/dashboard/support?c=greenreserve" className="shrink-0 text-[12.5px] font-semibold text-pine hover:underline underline-offset-4">Read</a>
       <button onClick={dismiss} aria-label="Dismiss" className="shrink-0 w-7 h-7 flex items-center justify-center rounded-md text-ink-muted hover:text-ink hover:bg-paper transition-colors">
         <X className="w-4 h-4"/>
       </button>

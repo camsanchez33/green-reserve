@@ -1,8 +1,8 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 750,
-    "routes": 319,
+    "files": 751,
+    "routes": 320,
     "libs": 263,
     "models": 78,
     "orphans": 11,
@@ -10714,8 +10714,8 @@
     },
     {
       "path": "src/app/dashboard/messages/page.tsx",
-      "lines": 231,
-      "purpose": "MSG-1 (Cam 2026-11-09, his notes on the Messages tab):",
+      "lines": 11,
+      "purpose": "SUPPORT-1 (Cam 2026-11-12):",
       "brain": [],
       "exports": [
         {
@@ -10729,17 +10729,7 @@
       "auth": "operator",
       "guard": "middleware",
       "imports": [
-        "@/components/OperatorSidebar",
-        "@/components/dashboard/LoadError",
-        "@/components/dashboard/Toast",
-        "@/components/ui/Card",
-        "@/lib/birdie/ask",
-        "@/lib/contact",
-        "@/lib/dashboard-fetch",
-        "@/lib/format",
-        "@/lib/support-ticket",
-        "next/navigation",
-        "react"
+        "next/navigation"
       ],
       "usedBy": []
     },
@@ -11114,6 +11104,35 @@
         "@/lib/dashboard-fetch",
         "@/lib/starter-sheet",
         "next/link",
+        "next/navigation",
+        "react"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/dashboard/support/page.tsx",
+      "lines": 214,
+      "purpose": "SUPPORT-1 (Cam 2026-11-12, ADMIN_REDO_SPEC \"Course dashboard Support:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (SupportPage)",
+          "kind": "component"
+        }
+      ],
+      "route": "/dashboard/support",
+      "kind": "page",
+      "methods": [],
+      "auth": "operator",
+      "guard": "middleware",
+      "imports": [
+        "@/components/OperatorSidebar",
+        "@/components/dashboard/LoadError",
+        "@/components/dashboard/StaffNotice",
+        "@/components/ui/Card",
+        "@/lib/dashboard-fetch",
+        "@/lib/format",
+        "@/lib/use-dashboard-access",
         "next/navigation",
         "react"
       ],
@@ -12218,7 +12237,7 @@
     },
     {
       "path": "src/components/OperatorSidebar.tsx",
-      "lines": 357,
+      "lines": 362,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -12257,12 +12276,12 @@
         "src/app/dashboard/golfers/[key]/page.tsx",
         "src/app/dashboard/home/page.tsx",
         "src/app/dashboard/members/page.tsx",
-        "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/money/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
         "src/app/dashboard/settings/page.tsx",
         "src/app/dashboard/shop/page.tsx",
+        "src/app/dashboard/support/page.tsx",
         "src/lib/dashboard-visits.ts"
       ]
     },
@@ -13384,10 +13403,10 @@
         "src/app/dashboard/golfers/[key]/page.tsx",
         "src/app/dashboard/home/page.tsx",
         "src/app/dashboard/members/page.tsx",
-        "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/money/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
+        "src/app/dashboard/support/page.tsx",
         "src/components/dashboard/DemandPricing.tsx",
         "src/components/dashboard/LastMinuteDeals.tsx",
         "src/components/dashboard/PromoCodes.tsx",
@@ -13913,7 +13932,8 @@
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
         "src/app/dashboard/settings/page.tsx",
-        "src/app/dashboard/shop/page.tsx"
+        "src/app/dashboard/shop/page.tsx",
+        "src/app/dashboard/support/page.tsx"
       ]
     },
     {
@@ -14178,7 +14198,6 @@
       "usedBy": [
         "src/app/dashboard/analytics/page.tsx",
         "src/app/dashboard/members/page.tsx",
-        "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/money/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
@@ -15319,12 +15338,12 @@
         "src/app/dashboard/golfers/[key]/page.tsx",
         "src/app/dashboard/home/page.tsx",
         "src/app/dashboard/members/page.tsx",
-        "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/money/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
         "src/app/dashboard/settings/page.tsx",
         "src/app/dashboard/shop/page.tsx",
+        "src/app/dashboard/support/page.tsx",
         "src/app/events/[id]/SignupForm.tsx",
         "src/app/events/[id]/page.tsx",
         "src/app/for-courses/ForCoursesContent.tsx",
@@ -17543,7 +17562,6 @@
       ],
       "usedBy": [
         "src/app/dashboard/analytics/page.tsx",
-        "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/settings/page.tsx",
         "src/components/birdie/BirdieWidget.tsx",
         "src/components/birdie/ConfirmCard.tsx"
@@ -19523,7 +19541,6 @@
         "src/app/contact/page.tsx",
         "src/app/courses/[slug]/CourseBookingClient.tsx",
         "src/app/dashboard/login/page.tsx",
-        "src/app/dashboard/messages/page.tsx",
         "src/app/for-courses/ForCoursesContent.tsx",
         "src/app/privacy/page.tsx",
         "src/app/receipt/[bookingId]/page.tsx",
@@ -21036,12 +21053,12 @@
         "src/app/dashboard/golfers/[key]/page.tsx",
         "src/app/dashboard/home/page.tsx",
         "src/app/dashboard/members/page.tsx",
-        "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/money/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
         "src/app/dashboard/shop/page.tsx",
         "src/app/dashboard/starter/page.tsx",
+        "src/app/dashboard/support/page.tsx",
         "src/components/AnnouncementBanner.tsx",
         "src/components/dashboard/AccountPicker.tsx",
         "src/components/dashboard/CardReaderCard.tsx",
@@ -22547,10 +22564,10 @@
         "src/app/dashboard/events/page.tsx",
         "src/app/dashboard/golfers/[key]/page.tsx",
         "src/app/dashboard/members/page.tsx",
-        "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/money/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
+        "src/app/dashboard/support/page.tsx",
         "src/app/events/[id]/page.tsx",
         "src/app/g/[slug]/page.tsx",
         "src/components/admin/AgreementVersionsCard.tsx",
@@ -29663,7 +29680,6 @@
         "./business-days"
       ],
       "usedBy": [
-        "src/app/dashboard/messages/page.tsx",
         "src/lib/support-chats.ts",
         "src/lib/thread-signal.ts"
       ]
@@ -30257,6 +30273,7 @@
         "src/app/dashboard/schedules/page.tsx",
         "src/app/dashboard/settings/page.tsx",
         "src/app/dashboard/shop/page.tsx",
+        "src/app/dashboard/support/page.tsx",
         "src/components/OperatorSidebar.tsx",
         "src/components/dashboard/OpenRegister.tsx",
         "src/components/dashboard/RegisterClose.tsx",

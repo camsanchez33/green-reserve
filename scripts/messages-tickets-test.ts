@@ -23,11 +23,19 @@ ok('countdown right after sending: 47h 59m', dueIn(t0, start + 30_000).label ===
 ok('countdown near the end: minutes only', dueIn(t0, start + (48 * 60 - 45) * 60_000).label === '45m');
 ok('past due', dueIn(t0, start + 49 * 3600_000).overdue);
 
-const page = readFileSync('src/app/dashboard/messages/page.tsx', 'utf8');
+// SUPPORT-1 (Cam 2026-11-12): Messages is Support — one chat per question; the reply time sits on the chat itself and the
+// three top cards (reply time, email, the assistant) are gone.
+const page = readFileSync('src/app/dashboard/support/page.tsx', 'utf8');
 ok('no "one business day"', !page.includes('reply within one business day'));
 ok('no Ctrl/Cmd+Enter', !page.includes('metaKey') && !page.includes('Cmd/Ctrl + Enter'));
-ok('"Your ticket has been created" after sending', page.includes('Your ticket has been created'));
-ok('email instead, and the assistant with ready questions', page.includes('Prefer email?') && page.includes('askBirdie(q)') && page.includes('Ask the assistant'));
+ok('a chat waiting on us says when we reply', page.includes("'Waiting on us · we reply within 2 business days'"));
+ok('the top cards are gone (Cam 2026-11-12)', !page.includes('Prefer email?') && !page.includes('askBirdie') && !page.includes('Reply time'));
+ok('old links land on Support with their query (?prefill= starts a new chat)', readFileSync('src/app/dashboard/messages/page.tsx', 'utf8').includes("redirect(`/dashboard/support${qs ? `?${qs}` : ''}`);") && page.includes("if (!open && params.get('prefill')) router.replace(`/dashboard/support?c=${NEW}`);"));
 
+ok('a reply email\'s ?chat=<id> link opens that chat', page.includes("const open = params.get('c') ?? params.get('chat');"));
+ok('a slow chat answer never fills a chat the user has moved on from', page.includes('if (openRef.current !== id) return;'));
+ok('the GreenReserve chat has no message box', page.includes('{(open === NEW || (chat && !chat.fromGreenReserve)) && ('));
+ok('the admin reply email links Support', readFileSync('src/app/api/admin/messages/route.ts', 'utf8').includes('replyUrl: `${process.env.NEXT_PUBLIC_URL}/dashboard/support`'));
+ok('the announcement banner opens the GreenReserve chat', readFileSync('src/components/AnnouncementBanner.tsx', 'utf8').includes('href="/dashboard/support?c=greenreserve"'));
 console.log(failed ? `${failed} FAILED` : 'ALL PASS');
 process.exit(failed ? 1 : 0);

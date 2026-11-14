@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-750 source files · 319 routes · 263 libraries · 78 models
+751 source files · 320 routes · 263 libraries · 78 models
 
 ## Single sources of truth
 
@@ -340,7 +340,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/dashboard/home` | operator | middleware | page | `src/app/dashboard/home/page.tsx` | 302 |
 | `/dashboard/login` | operator | entry | page | `src/app/dashboard/login/page.tsx` | 77 |
 | `/dashboard/members` | operator | middleware | page | `src/app/dashboard/members/page.tsx` | 870 |
-| `/dashboard/messages` | operator | middleware | page | `src/app/dashboard/messages/page.tsx` | 231 |
+| `/dashboard/messages` | operator | middleware | page | `src/app/dashboard/messages/page.tsx` | 11 |
 | `/dashboard/money` | operator | middleware | page | `src/app/dashboard/money/page.tsx` | 259 |
 | `/dashboard/onboarding` | operator | **NONE FOUND** | page | `src/app/dashboard/onboarding/page.tsx` | 241 |
 | `/dashboard/outings` | operator | middleware | page | `src/app/dashboard/outings/page.tsx` | 5 |
@@ -351,6 +351,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/dashboard/shop` | operator | middleware | page | `src/app/dashboard/shop/page.tsx` | 975 |
 | `/dashboard/sign` | operator | middleware | page | `src/app/dashboard/sign/page.tsx` | 26 |
 | `/dashboard/starter` | operator | middleware | page | `src/app/dashboard/starter/page.tsx` | 91 |
+| `/dashboard/support` | operator | middleware | page | `src/app/dashboard/support/page.tsx` | 214 |
 | `/dashboard/tournaments` | operator | middleware | page | `src/app/dashboard/tournaments/page.tsx` | 5 |
 | `/dashboard/verify` | operator | token | page | `src/app/dashboard/verify/page.tsx` | 148 |
 | `/demo` | public | public | GET | `src/app/demo/route.ts` | 18 |
@@ -391,7 +392,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/agreement-required.ts` | 33 | 124 | AGREEMENT_SPEC AG-3 — version bumps and re-acceptance. | `AGREEMENT_REQUIRED_MESSAGE`, `agreementDueByCourse`, `agreementOverdueCourses`, `agreementReacceptance`, `currentReacceptWindow`, `Reacceptance`, `ReacceptWindow`, `requireAgreementCurrent` +1 more |
 | `src/lib/auth.ts` | 31 | 212 |  | `DashboardSession`, `getGolferSession`, `getOperatorSession`, `signGolferToken`, `signMemberInviteToken`, `signPendingTwoFactorToken`, `signStaffResetToken`, `signStaffToken` +4 more |
 | `src/lib/booking-events.ts` | 29 | 85 |  | `BookingEventInput`, `EventActor`, `recordBookingEvent`, `recordBookingEventSafe`, `teeTimeInstant` |
-| `src/lib/contact.ts` | 28 | 20 | MAIL-1 (Cam 2026-10-22): | `ADMIN_EMAIL`, `BILLING_EMAIL`, `NOREPLY_EMAIL`, `SUPPORT_EMAIL` |
+| `src/lib/contact.ts` | 27 | 20 | MAIL-1 (Cam 2026-10-22): | `ADMIN_EMAIL`, `BILLING_EMAIL`, `NOREPLY_EMAIL`, `SUPPORT_EMAIL` |
 | `src/lib/money.ts` | 27 | 50 | Money conversions, in one place. | `centsToDollars`, `centsToDollarsOr0`, `dollarsToCents`, `dollarsToCentsOr0`, `fmtCents` |
 | `src/lib/cancel-policy.ts` | 22 | 262 | SP-B (STAFF_POLICY_SPEC Part B). | `afterCutoffLine`, `afterCutoffShort`, `bookingWindowHours`, `cancelNowWords`, `CancelPolicy`, `cardAtBooking`, `cardRequired`, `chargesNoShow` +15 more |
 | `src/lib/admin-day.ts` | 20 | 110 | Platform day boundaries. | `dayKey`, `PLATFORM_TZ`, `platformHour`, `startOfPlatformDay`, `startOfPlatformDaysAgo`, `startOfPlatformMonth`, `startOfPlatformMonthsAgo`, `startOfPlatformWeek` |
@@ -402,8 +403,8 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/admin-areas.ts` | 18 | 44 | AW-11 (Cam 2026-10-22: | `ADMIN_AREAS`, `AdminArea`, `ALL_AREAS`, `effectiveAreas`, `hasArea`, `isAdminArea` |
 | `src/lib/booking-fees.ts` | 18 | 66 |  | `ACCESS_FEE_CENTS`, `ACCESS_FEE_PER_PLAYER`, `EVENT_FEE_LABEL`, `EVENT_FEE_ON`, `FEE_AT_BOOKING_ON`, `feeCoveredCents`, `hoursLabel`, `roundChargeCents` +4 more |
 | `src/lib/member-rates.ts` | 18 | 109 | Cam 2026-10-29 (Revamp 3 audit, fixes 1 and 2 — "up to course"): | `LapseRule`, `liveMembershipWhere`, `memberPlayers`, `membershipLive`, `memberSpot`, `PartyBooking`, `partyFees`, `splitTotal` |
+| `src/lib/use-dashboard-access.ts` | 17 | 51 | SP-A: | `DashboardAccess`, `useDashboardAccess` |
 | `src/lib/admin-fetch.ts` | 16 | 153 | One place that decides what an admin fetch failure MEANS. | `adminErrorMessage`, `adminFetch`, `AdminFetchAction`, `AdminFetchFailure`, `AdminFetchResult`, `LOGIN_SESSION_ENDED` |
-| `src/lib/use-dashboard-access.ts` | 16 | 51 | SP-A: | `DashboardAccess`, `useDashboardAccess` |
 | `src/lib/course-timeline.ts` | 15 | 364 |  | `AGREEMENT_ACCEPTED_PREFIX`, `AgreementAcceptedPayload`, `buildCourseFeed`, `CHECKIN_CALL_PREFIX`, `CheckInCallPayload`, `CURRENT_AGREEMENT_VERSION`, `DOCUMENT_UPLOADED_PREFIX`, `DocumentUploadedPayload` +26 more |
 | `src/lib/pricing-switch.ts` | 15 | 76 | Settings → "Who gets their own price" (Cam 2026-11-01: | `memberPricingOn`, `residentPricingOn`, `switchOnWherePriced`, `withPriceSwitch` |
 | `src/lib/real-courses.ts` | 15 | 22 | TEST-2 (Cam 2026-10-22: | `ON_REAL_BOOKING`, `ON_REAL_COURSE`, `REAL_COURSE` |
@@ -458,7 +459,6 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/support-chats.ts` | 6 | 328 | SUPPORT (Cam 2026-11-12, ADMIN_REDO_SPEC "Course dashboard Support" + "Admin Course support"): | `addCourseMessage`, `AdminMessage`, `adminReply`, `AdminThread`, `adminThreads`, `ANNOUNCEMENTS_CHAT_ID`, `ChatState`, `chatSummary` +12 more |
 | `src/lib/tax-categories.ts` | 6 | 21 | W2-7 part B: | `isTaxCategory`, `TAX_CATEGORIES`, `TaxCategory`, `US_STATES` |
 | `src/lib/tier-rates.ts` | 6 | 61 | The member-rate rules, shared by booking (api/bookings) and moving a group to another time (lib/move-booking.ts) so both price a member the same way. | `applyTierRates`, `isWeekend` |
-| `src/lib/birdie/ask.ts` | 5 | 33 | AN-3 (Cam 2026-10-19: | `APPLIED_EVENT`, `ASK_EVENT`, `askBirdie`, `markBirdieReady`, `useBirdieReady` |
 | `src/lib/birdie/guardrails.ts` | 5 | 74 | BIRDIE_AI_SPEC B1 — scope, caps and the kill switch. | `BIRDIE_MODEL`, `birdieEnabled`, `BirdieTurn`, `birdieUsageToday`, `checkCaps`, `logConversation`, `MAX_HISTORY_TURNS`, `MAX_REPLY_TOKENS` +4 more |
 | `src/lib/booking-rules.ts` | 5 | 67 | W2-6 slice 3 (Cam 2026-10-20: | `groupSizeError`, `readRoundRules`, `RuleCourse`, `RuleRound`, `Rules`, `rulesFor`, `walkingAllowedAt` |
 | `src/lib/booking-window.ts` | 5 | 84 | BOOKING WINDOWS (RUN_QUEUE) — how far ahead each audience can see and book the tee sheet. | `dayOffset`, `DEFAULT_MEMBER_WINDOW_DAYS`, `DEFAULT_PUBLIC_WINDOW_DAYS`, `generationHorizonDays`, `lastBookableDate`, `MIN_GENERATION_DAYS`, `outsideWindowBody`, `utcToday` +4 more |
@@ -478,6 +478,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/admin-action-queue.ts` | 4 | 128 | AW-4 (Cam 2026-10-21): | `ActionRow`, `buildActionQueue`, `QueueItem` |
 | `src/lib/admin-course-tabs.ts` | 4 | 98 | AW-7 (Cam 2026-10-21): | `bucketWeeks`, `COURSE_TABS`, `COURSE_WEEKS`, `CourseTab`, `openingTab`, `ProblemInput`, `SetupCheck`, `SetupCheckKey` +5 more |
 | `src/lib/analytics-terms.ts` | 4 | 63 | DENSE-1 (DENSE_UI_SPEC P2): | `TermKey`, `TERMS`, `TURNED_AWAY_CSV` |
+| `src/lib/birdie/ask.ts` | 4 | 33 | AN-3 (Cam 2026-10-19: | `APPLIED_EVENT`, `ASK_EVENT`, `askBirdie`, `markBirdieReady`, `useBirdieReady` |
 | `src/lib/birdie/proposal-types.ts` | 4 | 65 | BIRDIE_AI_SPEC B4b — the confirm-card shape, shared by the server (which builds cards in proposals.ts) and the widget (which shows them and makes the call). | `cardCalls`, `isProposalCard`, `PROPOSAL_ROUTES`, `ProposalCall`, `ProposalCard` |
 | `src/lib/call-invite.ts` | 4 | 106 | CALL_SCHEDULING_SPEC SC-2 §1 — the "pick a call time" invite. | `deliverCallInvite`, `INVITE_DAYS`, `inviteAgendaLines`, `InviteSendResult`, `inviteUrl`, `issueCallInvite`, `sendCallInvite`, `sendCallReminders` |
 | `src/lib/cancel-booking.ts` | 4 | 369 |  | `CancellationOptions`, `performCancellation` |
@@ -538,7 +539,6 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/schedule-wire.ts` | 3 | 104 |  | `scheduleMoneyForCreate`, `scheduleMoneyFromWire`, `scheduleToWire`, `teeTimeToWire` |
 | `src/lib/sent-messages.ts` | 3 | 47 | BRAIN-1b (Cam 2026-10-22): | `logSent`, `SendMeta` |
 | `src/lib/shop-stock.ts` | 3 | 98 | SHOP-4 (Cam 2026-10-30: | `isLow`, `receiveStock`, `recentReceipts`, `setCost`, `setReorder`, `StockRow`, `stockRows` |
-| `src/lib/support-ticket.ts` | 3 | 35 | MSG-1 (Cam 2026-11-09): | `dueIn`, `REPLY_BUSINESS_DAYS`, `REPLY_PROMISE`, `replyDueAt`, `ticketRef`, `waitingSince` |
 | `src/lib/tee-rounds.ts` | 3 | 67 | ROUNDS-1 (Cam 2026-11-06: | `periodOf`, `roundName`, `roundOf`, `RoundSlot`, `rowTag`, `runsOf`, `usualRound`, `usualRoundOnly` |
 | `src/lib/tee-time-close.ts` | 3 | 70 | TT-CLOSE (Cam 2026-11-12, ADMIN_REDO_SPEC "Course dashboard Tee sheet + time card: | `ACTIVE_BOOKING`, `bookedOnTime`, `closeFreeTime`, `CloseResult`, `deleteRefusal`, `refusal`, `setStaffOnly` |
 | `src/lib/thread-signal.ts` | 3 | 64 | MP-7a. | `compareThreads`, `SignalMessage`, `threadSignal`, `ThreadSignal`, `UNANSWERED_AFTER_DAYS` |
@@ -585,6 +585,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/staff-fonts.ts` | 2 | 10 | U-0 (UI_REVISE_SPEC §1b) used to give /dashboard and /admin their own STAFF look here: | `STAFF_LOOK_CLASS` |
 | `src/lib/stripe-errors.ts` | 2 | 27 | Friendly-message map for Stripe decline/error strings (REVISE_QUEUE A-06 item 4: | `friendlyStripeError` |
 | `src/lib/submit-change-request.ts` | 2 | 91 |  | `cleanChangeItems`, `submitChangeRequest` |
+| `src/lib/support-ticket.ts` | 2 | 35 | MSG-1 (Cam 2026-11-09): | `dueIn`, `REPLY_BUSINESS_DAYS`, `REPLY_PROMISE`, `replyDueAt`, `ticketRef`, `waitingSince` |
 | `src/lib/tee-colour.ts` | 2 | 22 | Settings rework (Cam 2026-10-19: | `teeColour` |
 | `src/lib/admin-ask-links.ts` | 1 | 15 | AW-3b: | `ADMIN_LINK`, `safeAdminPath` |
 | `src/lib/admin-ask.ts` | 1 | 161 | AW-3b (Cam 2026-10-21: | `ASK_TOOL_NAMES`, `ASK_TOOLS`, `AskOutcome`, `runAskTool` |
@@ -653,14 +654,14 @@ Sorted the same way.
 | `src/components/ui/field.ts` | 53 | 8 | MP-9: | `INPUT`, `INPUT_COMPACT` |
 | `src/components/admin/AdminSidebar.tsx` | 24 | 200 |  | `AdminNavKey`, `default (AdminSidebar)` |
 | `src/components/dashboard/LoadError.tsx` | 22 | 16 | SD-10. | `LoadError` |
-| `src/components/dashboard/Toast.tsx` | 15 | 70 | SD-2. | `toast`, `Toaster`, `ToastKind` |
-| `src/components/OperatorSidebar.tsx` | 12 | 357 |  | `default (OperatorSidebar)`, `OperatorNavKey` |
+| `src/components/dashboard/Toast.tsx` | 14 | 70 | SD-2. | `toast`, `Toaster`, `ToastKind` |
+| `src/components/OperatorSidebar.tsx` | 12 | 362 |  | `default (OperatorSidebar)`, `OperatorNavKey` |
 | `src/components/ui/Eyebrow.tsx` | 12 | 19 |  | `Eyebrow`, `EYEBROW` |
 | `src/components/CourseHeaderBar.tsx` | 10 | 46 | White-label rule: | `CourseHeaderBar` |
 | `src/components/dashboard/SlidingTabs.tsx` | 9 | 40 | POS-7 (Cam 2026-11-09, "use it on other tab bars"): | `SlidingTabs` |
 | `src/components/ui/Modal.tsx` | 9 | 141 | MP-9 (ADMIN_V4 V4-6 §4) — the one dialog. | `Modal`, `ModalActions` |
 | `src/components/ui/ErrorState.tsx` | 7 | 96 |  | `ErrorBanner`, `LoadFailure` |
-| `src/components/dashboard/StaffNotice.tsx` | 5 | 30 | SD-11 / SP-A. | `StaffNotice` |
+| `src/components/dashboard/StaffNotice.tsx` | 6 | 30 | SD-11 / SP-A. | `StaffNotice` |
 | `src/components/AuthPhotoShell.tsx` | 4 | 23 |  | `AUTH_PHOTO_LINK`, `AUTH_PHOTO_LINKS`, `AuthPhotoShell` |
 | `src/components/dashboard/DateRangeButton.tsx` | 4 | 130 | AN-3 (Cam 2026-10-19: | `DateRange`, `default (DateRangeButton)`, `presets`, `rangeLabel` |
 | `src/components/dashboard/money/types.ts` | 4 | 22 | SD-8 — one booking shape for all three Money tabs. | `MoneyBooking`, `MoneyCourse` |
