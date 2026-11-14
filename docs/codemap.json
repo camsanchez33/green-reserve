@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 729,
+    "files": 730,
     "routes": 311,
-    "libs": 260,
-    "models": 76,
+    "libs": 261,
+    "models": 77,
     "orphans": 11,
     "ungatedRoutes": 3
   },
@@ -20358,7 +20358,7 @@
     },
     {
       "path": "src/lib/data-reset.ts",
-      "lines": 175,
+      "lines": 177,
       "purpose": "TEST-1 (Cam 2026-10-22:",
       "brain": [],
       "exports": [
@@ -20718,7 +20718,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 2179,
+      "lines": 2182,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -21057,6 +21057,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./sale-ref",
         "./setup-sheet-recap",
         "@/lib/booking-fees",
         "@/lib/booking-ref",
@@ -26452,6 +26453,28 @@
       ]
     },
     {
+      "path": "src/lib/sale-ref.ts",
+      "lines": 5,
+      "purpose": "PRO-SHOP sale numbers (Cam 2026-11-12, via Build):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "saleRef",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/lib/email.ts",
+        "src/lib/shop-receipt.ts"
+      ]
+    },
+    {
       "path": "src/lib/sales-tax.ts",
       "lines": 176,
       "purpose": "W2-7 part B (Cam 2026-10-20:",
@@ -26534,7 +26557,7 @@
     },
     {
       "path": "src/lib/sample-data.ts",
-      "lines": 501,
+      "lines": 503,
       "purpose": "Cam 2026-10-28 (\"add a shit ton of test tee times, members and shit to the test course … do a lot of fake bookings\"); Cam 2026-11-01 chose \"Busy season\":",
       "brain": [],
       "exports": [
@@ -27641,6 +27664,7 @@
       "guard": null,
       "imports": [
         "./prisma",
+        "./sale-ref",
         "crypto"
       ],
       "usedBy": [
@@ -27690,7 +27714,7 @@
     },
     {
       "path": "src/lib/shop-sales.ts",
-      "lines": 859,
+      "lines": 874,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -35275,6 +35299,10 @@
           "type": "String"
         },
         {
+          "name": "number",
+          "type": "Int?"
+        },
+        {
           "name": "course",
           "type": "Course"
         },
@@ -35423,6 +35451,23 @@
         "src/lib/shop-report.ts",
         "src/lib/shop-sales.ts"
       ]
+    },
+    {
+      "name": "ShopSaleCounter",
+      "fields": [
+        {
+          "name": "courseId",
+          "type": "String"
+        },
+        {
+          "name": "last",
+          "type": "Int"
+        }
+      ],
+      "writers": [
+        "src/lib/data-reset.ts"
+      ],
+      "readers": []
     },
     {
       "name": "ShopSaleLine",
