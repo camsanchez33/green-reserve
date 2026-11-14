@@ -13,6 +13,8 @@ export const TERMS = {
   books: 'Service fees we recorded against what Stripe reports as application fees for the same dates',
   ledger: "Every movement of GreenReserve's own money in the period: our fee taken or given back, one row each",
   transactions: "Every course's charges and refunds in the period, for the accountant (CSV)",
+  goal: "This month's revenue against the goal you set. The bar's colour says where the month ends at this pace: green on pace to hit it, yellow within 10% short, red on pace to miss",
+  onTrack: 'Revenue so far divided by the share of the month gone, to the nearest $100. An estimate, not a promise',
   coursePayments: "Only a course that wasn't paid right shows here. Golfer disputes are the course's, with its player",
 } as const;
 

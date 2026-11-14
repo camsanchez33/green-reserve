@@ -51,6 +51,10 @@ const early = (p: number, t: number, days: number, kind: 'reach' | 'cap' = 'reac
 ok('the first 3 days are early (grey), even with nothing yet', EARLY_DAYS === 3 && early(0, 3000, 0.3) === 'early' && early(0, 3000, 2.99) === 'early' && early(10, 3000, 1.5) === 'early');
 ok('after 3 full days (from day 4) the pace rule applies', early(0, 3000, 3) === 'bad' && early(300, 3000, 3) === 'ok');
 ok('early: a reach goal already met is green; a budget already over is red', early(3000, 3000, 1) === 'ok' && early(1200, 1000, 1, 'cap') === 'bad' && early(100, 1000, 1, 'cap') === 'early');
+ok('early: a budget whose KNOWN month total is already over is red (Cam 2026-11-14)', goalPace({ progress: 1000, scheduled: 50_000, target: 10_000, share: 0.05, kind: 'cap', daysElapsed: 1.5 }).tone === 'bad'
+  && goalPace({ progress: 0, scheduled: 9_000, fixed: 2_000, target: 10_000, share: 0.05, kind: 'cap', daysElapsed: 1.5 }).tone === 'bad');
+ok('early: a known total at or under the budget stays grey; an extrapolated one never turns red early', goalPace({ progress: 1000, scheduled: 10_000, target: 10_000, share: 0.05, kind: 'cap', daysElapsed: 1.5 }).tone === 'early'
+  && goalPace({ progress: 1000, target: 10_000, share: 0.05, kind: 'cap', daysElapsed: 1.5 }).tone === 'early');
 ok('no daysElapsed given: no early rule (callers opt in)', goalPace({ progress: 0, target: 10, share: 0.01 }).tone === 'bad');
 ok('Home passes the elapsed days and greys an early goal', (() => { const b = require('fs').readFileSync('src/components/dashboard/home/HomeBoard.tsx', 'utf8'); return b.includes("daysElapsed: goals.elapsed ?? dayOfMonth") && b.includes("early: 'bg-dot-neutral'"); })());
 

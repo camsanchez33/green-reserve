@@ -7,7 +7,8 @@ import { FAILED_CHARGE_WHERE, openDisputes } from '@/lib/money-problems';
 import { ON_REAL_COURSE } from '@/lib/real-courses';
 import { roundChargeCents } from '@/lib/booking-fees';
 import { dayKey } from '@/lib/admin-day';
-import { FILTERS, isFilter, type BookingFilter, numberQuery, bookingNumber, sumLedger, EMPTY_LEDGER, payState, feeState, policyLine, rowAmount, isDisputeRow, paidBeforeDispute, type BookingFacts } from './plan';
+import { bookingRefLabel, parseRef } from '@/lib/booking-ref';
+import { FILTERS, isFilter, type BookingFilter, numberQuery, sumLedger, EMPTY_LEDGER, payState, feeState, policyLine, rowAmount, isDisputeRow, paidBeforeDispute, type BookingFacts } from './plan';
 
 // ADMIN-REDO page 4 — Bookings (Cam 2026-11-12). READ-ONLY, by design: "book keeping for legality if someone ever
 // asks". Every booking on GreenReserve, newest booked first: what was owed, what was paid (the ledger), whether our
@@ -19,10 +20,10 @@ import { FILTERS, isFilter, type BookingFilter, numberQuery, bookingNumber, sumL
 
 const PAGE = 50;
 const SELECT = {
-  id: true, createdAt: true, status: true, paymentStatus: true, paidOffline: true, source: true, players: true,
+  id: true, ref: true, createdAt: true, status: true, paymentStatus: true, paidOffline: true, source: true, players: true,
   golferName: true, accessFeeTotal: true, stripePaymentMethodId: true, checkInFailReason: true, checkedInAt: true, noShowAt: true,
   roundPaymentIntentId: true, totalAmount: true, shopTotalCents: true, shopFeeCents: true, shopTaxCents: true, feePaidCents: true,
-  course: { select: { id: true, name: true } }, teeTime: { select: { date: true, time: true } },
+  course: { select: { id: true, name: true, number: true } }, teeTime: { select: { date: true, time: true } },
 } satisfies Prisma.BookingSelect;
 type Row = Prisma.BookingGetPayload<{ select: typeof SELECT }>;
 
@@ -74,6 +75,8 @@ export async function GET(req: NextRequest) {
   const f: BookingFilter = isFilter(sp.get('filter')) ? (sp.get('filter') as BookingFilter) : 'all';
   const q = (sp.get('q') ?? '').trim().slice(0, 100);
   const num = q ? numberQuery(q) : null;
+  // A booking number GR<course>-<n> (or "4-17"), or a course's GR<n>: Booking.ref / Course.number (Build #380).
+  const ref = q ? parseRef(q) : null;
   // Without Golfers, an email finds a booking only as the WHOLE address, compared in code: an insensitive equals is an
   // ILIKE in Postgres, where % and _ would let a login read addresses it can't see a letter at a time. The compare
   // below keeps only the exact address, so _ (common in emails) is safe; % and \\ are refused outright.
@@ -84,6 +87,7 @@ export async function GET(req: NextRequest) {
   }
   const search: Prisma.BookingWhereInput = !q ? {} : {
     OR: [
+      ...(ref ? [ref.ref !== null ? { ref: ref.ref, course: { number: ref.course } } : { course: { number: ref.course } }] : []),
       ...(num ? [{ id: { startsWith: num } }] : []),
       { golferName: { contains: q, mode: 'insensitive' } },
       { course: { name: { contains: q, mode: 'insensitive' } } },
@@ -111,8 +115,8 @@ export async function GET(req: NextRequest) {
       const fx = facts(b, ledger(b.id), disputed);
       const pay = payState(fx);
       return {
-        // TODO(Build): show Booking.ref as GR-<n> once Build's field lands; bookingNumber(id) is the fallback while ref is null.
-        id: b.id, number: bookingNumber(b.id), golferName: b.golferName, course: b.course.name, courseId: b.course.id,
+        // GR<course>-<n>; a booking from before refs keeps its old 8-character number (booking-ref.ts).
+        id: b.id, number: bookingRefLabel(b), golferName: b.golferName, course: b.course.name, courseId: b.course.id,
         teeDate: b.teeTime.date, teeTime: b.teeTime.time, players: b.players, bookedAt: b.createdAt.toISOString(),
         // The amount: what moved once anything moved (a dispute: what was paid before it), else what the round
         // comes to (roundChargeCents, POS-1a).
@@ -135,7 +139,7 @@ async function profile(id: string, disputed: Set<string>, seesContact: boolean, 
       rangeBallsTotal: true, noShowFeeTotal: true, cancellationFeeTotal: true, cancellationHoursAtBooking: true, cancelledAt: true,
       checkedInPlayers: true, splitFromId: true, promoDiscountCents: true,
       teeTime: { select: { date: true, time: true, holes: true } },
-      course: { select: { id: true, name: true, stripeAccountId: true } },
+      course: { select: { id: true, name: true, number: true, stripeAccountId: true } },
     },
   });
   if (!b) return NextResponse.json({ error: 'That booking is not on record here — go back to the list.' }, { status: 404 });
@@ -153,7 +157,7 @@ async function profile(id: string, disputed: Set<string>, seesContact: boolean, 
   const acct = card?.account === 'course' && b.course.stripeAccountId ? `/${b.course.stripeAccountId}` : '';
   const stripeUrl = card ? `https://dashboard.stripe.com${acct}${stripeTest() ? '/test' : ''}/payments/${card.stripeId}` : null;
   return NextResponse.json({
-    id: b.id, number: bookingNumber(b.id), golferName: b.golferName, course: b.course.name, courseId: b.course.id, seesCourses,
+    id: b.id, number: bookingRefLabel(b), golferName: b.golferName, course: b.course.name, courseId: b.course.id, seesCourses,
     teeDate: b.teeTime.date, teeTime: b.teeTime.time, holes: b.teeTime.holes, players: b.players, riding: b.cartSelected,
     bookedAt: b.createdAt.toISOString(), source: b.source, status: b.status, splitFromId: b.splitFromId,
     contact: seesContact ? { email: b.golferEmail || null, phone: b.golferPhone || null, accountId: b.golferAccountId } : null,

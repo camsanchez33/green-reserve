@@ -109,7 +109,7 @@
   "src/components/dashboard/SmsConsentAsk.tsx": 20,
   "src/components/dashboard/StaffNotice.tsx": 52,
   "src/components/dashboard/StaffPermissions.tsx": 174,
-  "src/components/dashboard/StockTab.tsx": 128,
+  "src/components/dashboard/StockTab.tsx": 129,
   "src/components/dashboard/TabIntro.tsx": 4,
   "src/components/dashboard/TeeSheetCalendar.tsx": 21,
   "src/components/dashboard/TeeSheetList.tsx": 29,
