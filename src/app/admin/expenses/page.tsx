@@ -12,7 +12,7 @@ import r from '../revenue/revenue.module.css';
 import s from './expenses.module.css';
 import { TERMS, MSG, CADENCE_WORDS, SESSION_ENDED, loadFailed } from './terms';
 import { type Exp, type FilterKey, type HistoryRow, FILTERS, isEnded, cards, pct, nextRenewal, startDay, byCost, parseAmount, historyLine } from './logic';
-import { goalPace } from '@/lib/goal-pace';
+import { goalPace, EARLY_DAYS } from '@/lib/goal-pace';
 
 // ADMIN-REDO Expenses (Cam approved the mockup 2026-11-12, ADMIN_REDO_SPEC.md "Expenses: APPROVED"). Owner only:
 // GreenReserve's own costs — what it is, category, how much, how often. Three cards (Monthly costs · <Month> budget ·
@@ -28,6 +28,8 @@ const longDay = (day: string) => new Date(day + 'T12:00:00Z').toLocaleDateString
 const endDay = (iso: string) => lastDayOf(iso) ?? dayKey(new Date(iso));
 const catLabel = (k: string) => EXPENSE_CATEGORY_LABEL[k as ExpenseCategory] ?? k;
 const PACE_WORDS = { ok: 'On pace to stay under', warn: 'Close to the budget', bad: 'On pace to go over', early: 'Too early to tell' } as const;
+// In the first days, red only comes from a known total over the budget (Cam 2026-11-14): say so plainly.
+const EARLY_OVER = 'Over budget';
 const todayKey = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
 
 /** A change in costs: going up is the bad direction. */
@@ -214,7 +216,7 @@ export default function ExpensesPage() {
           <div className={s.gbar}><i className={pace && pace.tone !== 'early' ? s[pace.tone] : undefined} style={{ width: `${Math.min(100, (k.monthSoFar / budget) * 100)}%` }} /></div>
           {pace && (pace.tone === 'early'
             ? <span className={r.c}>{PACE_WORDS.early}</span>
-            : <span className={r.c}><span className={pace.tone === 'ok' ? g.up : pace.tone === 'warn' ? g.wa : g.down}>{PACE_WORDS[pace.tone]}</span> · {usd(Math.round(pace.projected))} by {monthLast}</span>)}
+            : <span className={r.c}><span className={pace.tone === 'ok' ? g.up : pace.tone === 'warn' ? g.wa : g.down}>{pace.tone === 'bad' && mp && mp.share * monthDays < EARLY_DAYS ? EARLY_OVER : PACE_WORDS[pace.tone]}</span> · {usd(Math.round(pace.projected))} by {monthLast}</span>)}
         </>
       ) : (
         <>

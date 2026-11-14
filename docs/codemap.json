@@ -991,7 +991,7 @@
     },
     {
       "path": "src/app/admin/expenses/page.tsx",
-      "lines": 394,
+      "lines": 396,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -21869,7 +21869,7 @@
     },
     {
       "path": "src/lib/goal-pace.ts",
-      "lines": 75,
+      "lines": 79,
       "purpose": "GOAL-PACE (Cam 2026-11-12, ADMIN_REDO_SPEC \"Goals:",
       "brain": [],
       "exports": [

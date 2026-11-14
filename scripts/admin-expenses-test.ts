@@ -98,6 +98,14 @@ check('added', line({ at: '2026-06-16T00:00:00Z', by: 'Cam', kind: 'added' }) ==
 check('an amount change reads in dollars', line({ at: 'x', by: 'Cam', kind: 'changed', changes: [{ field: 'amountCents', from: 3000, to: 4500 }] }) === 'Amount changed $30.00 → $45.00 · Cam');
 check('a cadence change reads in words', line({ at: 'x', by: '', kind: 'changed', changes: [{ field: 'cadence', from: 'monthly', to: 'annual' }] }) === 'How often changed Every month → Every year');
 check('a date change reads as the day', line({ at: 'x', by: '', kind: 'changed', changes: [{ field: 'startedAt', from: '2026-03-01T12:00:00.000Z', to: '2026-03-05T12:00:00.000Z' }] }) === 'Started changed 2026-03-01 → 2026-03-05');
+check('early: a month whose known costs already pass the budget reads "Over budget" in red (Cam 2026-11-14)', (() => {
+  const pg = readFileSync('src/app/admin/expenses/page.tsx', 'utf8');
+  const early = new Date('2026-11-02T15:00:00Z');
+  const list = [ex({ amountCents: 50_000, startedAt: '2026-01-01T12:00:00.000Z' })];
+  const mp = monthCostPace(list, early);
+  const p = goalPace({ progress: mp.progress, fixed: mp.fixed, scheduled: mp.scheduled, target: 10_000, share: mp.share, kind: 'cap', daysElapsed: mp.share * 30 });
+  return p.tone === 'bad' && /const EARLY_OVER = 'Over budget'/.test(pg) && /mp\.share \* monthDays < EARLY_DAYS \? EARLY_OVER/.test(pg);
+})());
 check('ended', line({ at: 'x', by: 'Cam', kind: 'ended' }) === 'Finished · Cam');
 check('a finish date reads as its last day, not the next midnight', line({ at: 'x', by: '', kind: 'changed', changes: [{ field: 'endedAt', from: null, to: endedAtForLastDay('2026-11-21')!.toISOString() }] }) === 'Finished changed — → 2026-11-21');
 
