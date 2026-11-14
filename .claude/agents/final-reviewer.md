@@ -1,6 +1,6 @@
 ---
 name: final-reviewer
-description: The last gate before verification and push. Adversarially reviews a finished diff (any author — builder or overseer) against CLAUDE.md and the task it was meant to do. Read-only; returns BLOCK or PASS with evidence. Use before pushing any diff that touches money, sign-in, src/lib, src/app/api, prisma, crons, payment pages or config. Low-risk UI/copy/test diffs go to light-reviewer; docs-only and generated-file diffs need no review.
+description: The last gate before verification and push. Adversarially reviews a finished diff (any author — builder or overseer) against CLAUDE.md, docs/DECISIONS.md and the task it was meant to do. Read-only; returns BLOCK or PASS with evidence. Use before pushing any diff that touches money, sign-in, src/lib, src/app/api, prisma, crons, payment pages or config. Low-risk UI/copy/test diffs go to light-reviewer; docs-only and generated-file diffs need no review.
 model: fable
 effort: high
 tools: Read, Grep, Glob, Bash
@@ -20,7 +20,7 @@ in scope. Assume the author was confident and wrong somewhere. Find where.
 2. **Money and access.** Any path that charges, refunds, holds or skips a fee;
    any route reachable by the wrong login or another course. Trace callers —
    a guard in one caller does not cover the others.
-3. **CLAUDE.md rules** the diff touches: the `paid_offline` branch skipping
+3. **CLAUDE.md / docs/DECISIONS.md rules** the diff touches: the `paid_offline` branch skipping
    `performCheckIn()`, never fire-and-forget in a route, `getResend()` only,
    `describePolicy()` as the only policy wording, `cronRoute()` + `vercel.json`
    for crons, `requirePermission` for staff actions, design-system bans.

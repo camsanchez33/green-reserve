@@ -1,0 +1,507 @@
+<title>GreenReserve HQ Users</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600&family=Libre+Franklin:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a picker strip on top (direction · theme · accents), then the admin Overview inside a framed "app":
+   rail on the left, top bar with search / quick actions / alerts, six number cards, the revenue chart,
+   then Recent activity and Needs attention. Every look is a token swap on .app[data-dir][data-mode][data-acc]. */
+:root{
+  --page:#EDEEE9;--page-ink:#141814;--page-muted:#5F645E;--page-line:#D7D9D1;--chip:#FFFFFF;
+  --serif:"EB Garamond",Georgia,"Times New Roman",serif;
+  --sans:"Libre Franklin",-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--page:#121512;--page-ink:#ECEEE8;--page-muted:#9A9F97;--page-line:#2C312C;--chip:#1C211C;color-scheme:dark}}
+:root[data-theme="dark"]{--page:#121512;--page-ink:#ECEEE8;--page-muted:#9A9F97;--page-line:#2C312C;--chip:#1C211C;color-scheme:dark}
+body{background:var(--page);color:var(--page-ink);font-family:var(--sans);font-size:14px;line-height:1.45}
+.wrap{max-width:1320px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px;display:flex;flex-direction:column;gap:16px}
+.picker{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center}
+.picker h1{font-family:var(--serif);font-weight:600;font-size:24px;margin:0 auto 0 0;line-height:1.1}
+.pick{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pick > span{font-size:12.5px;color:var(--page-muted)}
+.seg{display:inline-flex;background:var(--chip);border:1px solid var(--page-line);border-radius:999px;padding:3px}
+.seg button{font:inherit;font-size:13px;font-weight:500;border:0;background:transparent;color:var(--page-ink);padding:6px 12px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--page-ink);color:var(--page)}
+.seg button:focus-visible{outline:2px solid #3BAA6B;outline-offset:2px}
+.note{font-size:12.5px;color:var(--page-muted);max-width:75ch}
+
+/* ───────── The app: tokens per direction × mode ───────── */
+.app{
+  --bg:#E6EFEA; --blob1:#9FD3B5; --blob2:#CFE7D8; --blob3:#F1E3C4;
+  --panel:rgba(255,255,255,.52); --panel-solid:#FFFFFF; --panel-edge:rgba(255,255,255,.75); --panel-blur:22px;
+  --ink:#122219; --ink-soft:#3B4A41; --muted:#5E6C63; --line:rgba(18,34,25,.10);
+  --rail:rgba(255,255,255,.38); --hover:rgba(255,255,255,.55); --active:rgba(255,255,255,.85);
+  --shadow:0 1px 0 rgba(255,255,255,.6) inset, 0 8px 30px rgba(23,59,42,.08);
+  --radius:18px; --radius-s:12px;
+  --brand:#173B2A; --brand-ink:#FFFFFF; --fair:#3BAA6B; --up:#1F7A4A; --down:#A3452F; --warn:#9A5B13;
+  --chart:#173B2A; --chart-fill:rgba(23,59,42,.16); --chart-prev:rgba(18,34,25,.28); --grid:rgba(18,34,25,.08);
+  --t1:#173B2A; --t1-ink:#F3F7F4; --t2:#C9A24A; --t2-ink:#1E1606;
+  position:relative;isolation:isolate;overflow:hidden;border-radius:24px;background:var(--bg);color:var(--ink);
+  display:grid;grid-template-columns:232px minmax(0,1fr);min-height:760px;
+  box-shadow:0 0 0 1px var(--page-line);
+}
+/* Green glass, dark */
+.app[data-dir="green"][data-mode="dark"]{
+  --bg:#0D1F19; --blob1:#1E6B4A; --blob2:#123B2E; --blob3:#3B5E3A;
+  --panel:rgba(22,52,42,.48); --panel-solid:#14302A; --panel-edge:rgba(160,230,195,.14);
+  --ink:#E8F2EC; --ink-soft:#BFD2C7; --muted:#8FA79A; --line:rgba(200,240,220,.10);
+  --rail:rgba(14,36,29,.45); --hover:rgba(60,140,100,.16); --active:rgba(120,210,160,.18);
+  --shadow:0 1px 0 rgba(200,255,225,.08) inset, 0 10px 34px rgba(0,0,0,.30);
+  --brand:#4CC183; --brand-ink:#0B1F16; --up:#6DD39A; --down:#F08C78; --warn:#E3B05C;
+  --chart:#7FE0A8; --chart-fill:rgba(127,224,168,.16); --chart-prev:rgba(232,242,236,.30); --grid:rgba(232,242,236,.07);
+  --t1:#2E8F5E; --t1-ink:#F1FBF5; --t2:#D9B45A; --t2-ink:#1E1606;
+}
+/* Light iridescent glass */
+.app[data-dir="iri"]{
+  --bg:#EEF0F5; --blob1:#C8E8D6; --blob2:#E6D5F2; --blob3:#F7E0C8;
+  --panel:rgba(255,255,255,.58); --panel-edge:rgba(255,255,255,.85);
+  --ink:#16181D; --ink-soft:#3D4250; --muted:#646A78; --line:rgba(22,24,29,.09);
+  --rail:rgba(255,255,255,.45); --hover:rgba(255,255,255,.6); --active:#FFFFFF;
+  --shadow:0 1px 0 rgba(255,255,255,.9) inset, 0 10px 34px rgba(40,40,80,.08);
+  --chart:#173B2A; --chart-fill:rgba(59,170,107,.15); --grid:rgba(22,24,29,.07); --chart-prev:rgba(22,24,29,.25);
+}
+.app[data-dir="iri"][data-mode="dark"]{
+  --bg:#14151C; --blob1:#1F5B43; --blob2:#3E2D5C; --blob3:#5A3F24;
+  --panel:rgba(32,34,46,.55); --panel-solid:#20222E; --panel-edge:rgba(255,255,255,.10);
+  --ink:#ECEEF4; --ink-soft:#C3C7D3; --muted:#9298A8; --line:rgba(255,255,255,.08);
+  --rail:rgba(24,25,34,.5); --hover:rgba(255,255,255,.06); --active:rgba(255,255,255,.12);
+  --shadow:0 1px 0 rgba(255,255,255,.06) inset, 0 10px 34px rgba(0,0,0,.35);
+  --brand:#4CC183; --brand-ink:#0B1F16; --up:#6DD39A; --down:#F08C78; --warn:#E3B05C;
+  --chart:#7FE0A8; --chart-fill:rgba(127,224,168,.14); --chart-prev:rgba(236,238,244,.28); --grid:rgba(236,238,244,.06);
+  --t1:#2E8F5E; --t1-ink:#F1FBF5; --t2:#D9B45A; --t2-ink:#1E1606;
+}
+/* Charcoal (solid, raised cards — no glass) */
+.app[data-dir="char"]{
+  --bg:#E9EAE6; --blob1:transparent; --blob2:transparent; --blob3:transparent;
+  --panel:#F7F7F4; --panel-solid:#FFFFFF; --panel-edge:rgba(255,255,255,.9); --panel-blur:0px;
+  --ink:#191B19; --ink-soft:#3E423E; --muted:#686D68; --line:rgba(0,0,0,.07);
+  --rail:#E1E2DD; --hover:rgba(255,255,255,.6); --active:#F7F7F4;
+  --shadow:0 1px 0 #fff inset, 0 6px 18px rgba(0,0,0,.07);
+}
+.app[data-dir="char"][data-mode="dark"]{
+  --bg:#1E1F1E; --panel:#292A29; --panel-solid:#292A29; --panel-edge:rgba(255,255,255,.05);
+  --ink:#EDEEEB; --ink-soft:#C6C8C3; --muted:#959893; --line:rgba(255,255,255,.07);
+  --rail:#252625; --hover:rgba(255,255,255,.05); --active:#323432;
+  --shadow:0 1px 0 rgba(255,255,255,.04) inset, 0 10px 28px rgba(0,0,0,.35);
+  --brand:#4CC183; --brand-ink:#0B1F16; --up:#6DD39A; --down:#F08C78; --warn:#E3B05C;
+  --chart:#E7B45E; --chart-fill:rgba(231,180,94,.16); --chart-prev:rgba(237,238,235,.28); --grid:rgba(237,238,235,.06);
+  --t1:#2E8F5E; --t1-ink:#F1FBF5; --t2:#D9B45A; --t2-ink:#1E1606;
+}
+/* Accent sets for the two highlighted tiles */
+.app[data-acc="green"]{--t2:#3BAA6B;--t2-ink:#06180E}
+.app[data-acc="multi"]{--t1:#E9874A;--t1-ink:#1F0E03;--t2:#4E8FE8;--t2-ink:#06142A}
+
+/* Backdrop blobs: what the glass frosts. Plain blurred shapes, not a page gradient. */
+.blob{position:absolute;border-radius:50%;filter:blur(70px);z-index:-1;pointer-events:none;opacity:.9}
+.b1{width:520px;height:520px;background:var(--blob1);left:-120px;top:-140px}
+.b2{width:560px;height:560px;background:var(--blob2);right:-160px;top:120px}
+.b3{width:420px;height:420px;background:var(--blob3);left:38%;bottom:-200px}
+
+.glass{background:var(--panel);-webkit-backdrop-filter:blur(var(--panel-blur)) saturate(1.3);backdrop-filter:blur(var(--panel-blur)) saturate(1.3);
+  border:1px solid var(--panel-edge);border-radius:var(--radius);box-shadow:var(--shadow)}
+@media (prefers-reduced-transparency:reduce){.glass{background:var(--panel-solid);-webkit-backdrop-filter:none;backdrop-filter:none}}
+
+/* Rail */
+.rail{background:var(--rail);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;gap:18px;min-width:0}
+.brand{display:flex;align-items:center;gap:10px;padding:0 6px}
+.mark{width:34px;height:34px;border-radius:10px;background:var(--brand);display:grid;place-items:center;flex:none}
+.mark svg{width:20px;height:20px}
+.brand b{font-family:var(--serif);font-size:18px;font-weight:600;line-height:1}
+.brand small{display:block;font-size:11.5px;color:var(--muted);margin-top:3px}
+.grp{display:flex;flex-direction:column;gap:2px}
+.grp > span{font-size:12.5px;font-weight:700;color:var(--ink);padding:0 10px 4px;letter-spacing:.02em}
+.nav{font:inherit;font-size:13.5px;text-align:left;border:0;background:transparent;color:var(--ink-soft);padding:8px 10px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;cursor:default}
+.nav:hover{background:var(--hover)}
+.nav.on{background:var(--active);color:var(--ink);font-weight:600;box-shadow:var(--shadow)}
+.nav i{font-style:normal;font-size:11.5px;font-weight:600;background:var(--warn);color:var(--panel-solid);border-radius:999px;padding:0 7px;line-height:18px}
+.rail .foot{margin-top:auto;display:flex;align-items:center;gap:10px;padding:8px 6px;font-size:12.5px;color:var(--muted)}
+.av{width:30px;height:30px;border-radius:50%;background:var(--t2);color:var(--t2-ink);display:grid;place-items:center;font-weight:700;font-size:12px;flex:none}
+
+/* Main */
+.main{padding:20px 24px 28px;display:flex;flex-direction:column;gap:18px;min-width:0}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.top h2{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1;margin:0 auto 0 0;letter-spacing:-.005em}
+.top h2 small{display:block;font-family:var(--sans);font-size:13px;font-weight:400;color:var(--muted);margin-top:6px}
+.search{display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:12px;min-width:min(280px,100%);color:var(--muted);font-size:13px}
+.search kbd{margin-left:auto;font:inherit;font-size:11.5px;border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+.ibtn{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;border:1px solid var(--panel-edge);color:var(--ink);position:relative}
+.ibtn .dotn{position:absolute;top:9px;right:10px;width:7px;height:7px;border-radius:50%;background:var(--down)}
+.qa{font:inherit;font-size:13px;font-weight:600;border:0;background:var(--brand);color:var(--brand-ink);padding:11px 16px;border-radius:12px;cursor:pointer;position:relative}
+.qa:focus-visible{outline:2px solid var(--fair);outline-offset:2px}
+.qmenu{position:absolute;right:0;top:calc(100% + 8px);width:220px;padding:6px;z-index:5;display:flex;flex-direction:column}
+.qmenu span{padding:9px 12px;border-radius:9px;font-size:13.5px;color:var(--ink);font-weight:500;text-align:left}
+.qmenu span:hover{background:var(--hover)}
+.qwrap{position:relative}
+.qmenu[hidden]{display:none}
+
+/* KPI cards */
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+.kpi{padding:16px 16px 14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.kpi .l{font-size:12.5px;color:var(--muted);font-weight:500}
+.kpi .v{font-size:28px;font-weight:600;letter-spacing:-.02em;line-height:1.05;font-variant-numeric:tabular-nums}
+.kpi .c{font-size:12px;font-variant-numeric:tabular-nums;color:var(--muted)}
+.kpi .c b{font-weight:600}
+.up{color:var(--up)}.down{color:var(--down)}.wa{color:var(--warn)}
+.kpi.t1{background:var(--t1);color:var(--t1-ink);border-color:transparent}
+.kpi.t2{background:var(--t2);color:var(--t2-ink);border-color:transparent}
+.kpi.t1 .l,.kpi.t1 .c,.kpi.t1 .c b,.kpi.t2 .l,.kpi.t2 .c,.kpi.t2 .c b{color:inherit;opacity:.85}
+.spark{height:26px;margin-top:2px}
+.spark path{fill:none;stroke:currentColor;stroke-width:1.6;opacity:.55}
+
+/* Chart */
+.chartcard{padding:18px 18px 10px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.chead{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 18px}
+.chead .big{font-size:30px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+.chead .sub{font-size:12.5px;color:var(--muted)}
+.chead .tabs{margin-left:auto;display:inline-flex;gap:2px;padding:3px;border-radius:11px;background:var(--hover);border:1px solid var(--line)}
+.chead .tabs button{font:inherit;font-size:12.5px;font-weight:500;border:0;background:transparent;color:var(--ink-soft);padding:5px 11px;border-radius:8px;cursor:pointer}
+.chead .tabs button[aria-pressed="true"]{background:var(--panel-solid);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.app[data-mode="dark"] .chead .tabs button[aria-pressed="true"]{background:var(--active)}
+.legend{display:flex;gap:16px;font-size:12px;color:var(--muted)}
+.legend span::before{content:"";display:inline-block;width:14px;height:2px;margin-right:6px;vertical-align:3px;background:var(--chart)}
+.legend span.prev::before{background:var(--chart-prev);height:0;border-top:2px dashed var(--chart-prev)}
+.chartbox{width:100%;overflow-x:auto}
+#chart{display:block;width:100%;min-width:520px;height:auto}
+#chart text{fill:var(--muted);font-family:var(--sans);font-size:11px}
+
+/* Two columns */
+.two{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:12px}
+.list{padding:16px 0 6px;min-width:0}
+.list h3{font-size:15px;font-weight:600;margin:0;padding:0 18px 10px;display:flex;justify-content:space-between;align-items:baseline}
+.list h3 span{font-size:12px;font-weight:500;color:var(--muted)}
+.li{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:2px 12px;padding:11px 18px;border-top:1px solid var(--line);align-items:baseline}
+.li .d{width:7px;height:7px;border-radius:50%;background:var(--muted);align-self:center}
+.li .d.ok{background:var(--up)}.li .d.bad{background:var(--down)}.li .d.warn{background:var(--warn)}.li .d.br{background:var(--brand)}
+.li .t{font-size:13.5px;overflow-wrap:anywhere}
+.li .w{font-size:12px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.li .act{grid-column:3;grid-row:1;font:inherit;font-size:12.5px;font-weight:600;border:1px solid var(--line);background:var(--hover);color:var(--ink);padding:5px 10px;border-radius:9px;cursor:default;white-space:nowrap}
+.attn .li{grid-template-columns:3px minmax(0,1fr) auto;padding-left:15px}
+.attn .li .d{width:3px;height:100%;border-radius:2px;align-self:stretch}
+.ex{font-size:11.5px;font-weight:600;letter-spacing:.04em;color:var(--warn);border:1px dashed currentColor;border-radius:999px;padding:2px 9px;white-space:nowrap}
+
+@media (max-width:1180px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:900px){
+  .app{grid-template-columns:1fr}
+  .rail{flex-direction:row;flex-wrap:wrap;align-items:center;border-right:0;border-bottom:1px solid var(--line);gap:8px 12px;padding:14px}
+  .rail .grp,.rail .foot{display:none}
+  .two{grid-template-columns:1fr}
+}
+@media (max-width:560px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.main{padding:16px 14px 22px}.kpi .v{font-size:23px}.top h2{font-size:26px}.app{border-radius:18px}}
+@media (prefers-reduced-motion:no-preference){.app,.app *{transition:background-color .25s ease,color .25s ease,border-color .25s ease}}
+</style>
+
+<style>
+/* Golf Courses page: a filter strip + the course directory (glass table), and the picked course's profile beside it. */
+.fwrap{position:relative;align-self:flex-start}
+.fbtn{font:inherit;font-size:13px;font-weight:600;color:var(--ink);display:inline-flex;align-items:center;gap:8px;padding:8px 14px;cursor:pointer}
+.fmenu{position:absolute;left:0;top:calc(100% + 6px);z-index:5;flex-direction:column;align-items:stretch!important;padding:6px;min-width:200px;background:var(--panel-solid)}
+.fmenu[hidden]{display:none!important}
+.fmenu .chip{border:0;background:transparent;border-radius:9px;text-align:left;display:flex;justify-content:space-between}
+.fmenu .chip[aria-pressed="true"]{background:var(--active);color:var(--ink)}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{font:inherit;font-size:13px;font-weight:500;border:1px solid var(--line);background:var(--hover);color:var(--ink-soft);padding:6px 12px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--brand);color:var(--brand-ink);border-color:transparent}
+.chip b{font-weight:600;margin-left:4px;opacity:.75}
+.find{margin-left:auto;display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:12px;min-width:min(240px,100%);color:var(--muted);font-size:13px}
+.split{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:14px;align-items:start}
+.dir{overflow:hidden}
+.dir table{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums}
+.dir th{font-size:12px;font-weight:500;color:var(--muted);text-align:left;padding:12px 14px;border-bottom:1px solid var(--line)}
+.dir td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+.dir tr:last-child td{border-bottom:0}
+.dir th.n,.dir td.n{text-align:right}
+.dir tbody tr{cursor:pointer}
+.dir tbody tr:hover{background:var(--hover)}
+.dir tbody tr[aria-selected="true"]{background:var(--active)}
+.cname{font-weight:600;color:var(--ink)}
+.csub{display:block;font-size:12px;color:var(--muted);font-weight:400}
+.st{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:500;white-space:nowrap}
+.st i{width:7px;height:7px;border-radius:50%;background:var(--muted)}
+.st.live i{background:var(--up)}.st.onb i{background:var(--brand)}.st.risk i{background:var(--warn)}.st.off i{background:var(--down)}
+.trend{font-size:12px}
+.prof{padding:20px;display:flex;flex-direction:column;gap:16px;position:sticky;top:12px}
+.ph{display:flex;gap:14px;align-items:center}
+.plogo{width:52px;height:52px;border-radius:14px;background:var(--t1);color:var(--t1-ink);display:grid;place-items:center;font-family:var(--serif);font-weight:600;font-size:20px;flex:none}
+.ph h3{font-family:var(--serif);font-weight:600;font-size:24px;margin:0;line-height:1.05}
+.ph p{margin:3px 0 0;font-size:12.5px;color:var(--muted)}
+.ptabs{display:flex;gap:2px;padding:3px;border-radius:11px;background:var(--hover);border:1px solid var(--line);flex-wrap:wrap}
+.ptabs button{font:inherit;font-size:12.5px;font-weight:500;border:0;background:transparent;color:var(--ink-soft);padding:5px 10px;border-radius:8px;cursor:pointer}
+.ptabs button[aria-pressed="true"]{background:var(--panel-solid);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.app[data-mode="dark"] .ptabs button[aria-pressed="true"]{background:var(--active)}
+.pnums{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);border-radius:12px;overflow:hidden}
+.pnums div{background:var(--panel-solid);padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.app[data-mode="dark"] .pnums div{background:rgba(20,48,40,.7)}
+.pnums small{font-size:12px;color:var(--muted)}
+.pnums b{font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
+.pnums em{font-style:normal;font-size:12px;color:var(--muted)}
+/* Cam 2026-11-12, "don't like how these cards look in the bottom": the bottom buttons and note boxes become plain lines and links. */
+#prof .pbtns{gap:18px;border-top:1px solid var(--line);padding-top:12px}
+#prof .pbtn{border:0;background:none;padding:0;font-weight:600;color:var(--brand);text-decoration:underline;text-decoration-color:var(--fair);text-underline-offset:3px}
+#prof .pbtn.pri{background:none;color:var(--brand)}
+#prof .psec .pbtns{border-top:0;padding-top:0}
+#prof .note{background:none;border:0;border-left:2px solid var(--line);border-radius:0;padding:2px 0 2px 10px}
+/* Cam 2026-11-12, "how could we make this look different": the two links move up beside the course name as small pills, not a row at the bottom. */
+.ph{flex-wrap:wrap}
+.plinks{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.plink{font-size:12.5px;font-weight:600;color:var(--brand);background:var(--hover);border:1px solid var(--line);border-radius:999px;padding:5px 11px;white-space:nowrap;cursor:default}
+.plink:hover{background:var(--active)}
+.psec{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);padding-top:14px}
+.psec h4{margin:0;font-size:13.5px;font-weight:600}
+.pempty{margin:0;color:var(--muted);font-size:13.5px}
+.kv{display:grid;grid-template-columns:130px minmax(0,1fr);gap:8px 12px;font-size:13.5px}
+.kv dt{color:var(--muted)}.kv dd{margin:0;overflow-wrap:anywhere}
+.steps{display:flex;flex-direction:column;gap:2px}
+.step{display:flex;gap:10px;align-items:center;font-size:13.5px;padding:6px 0;border-top:1px solid var(--line)}
+.step:first-child{border-top:0}
+.step i{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--muted);flex:none;display:grid;place-items:center}
+.step.done i{background:var(--up);border-color:var(--up)}
+.step.done i::after{content:"";width:6px;height:3px;border-left:2px solid var(--panel-solid);border-bottom:2px solid var(--panel-solid);transform:rotate(-45deg) translate(1px,-1px)}
+.step.done span{color:var(--muted)}
+.note{font-size:13.5px;padding:10px 12px;border-radius:10px;background:var(--hover);border:1px solid var(--line)}
+.note small{display:block;color:var(--muted);font-size:12px;margin-bottom:2px}
+.pbtns{display:flex;gap:8px;flex-wrap:wrap}
+.pbtn{font:inherit;font-size:13px;font-weight:600;border:1px solid var(--line);background:var(--hover);color:var(--ink);padding:8px 12px;border-radius:10px;cursor:default}
+.pbtn.pri{background:var(--brand);color:var(--brand-ink);border-color:transparent}
+/* Cam 2026-11-12, "no need for all these cards": one panel for list + profile, no boxes around search/find/alerts, numbers as rows. */
+/* Cam 2026-11-12: the list and the profile are separate things, so two separate glass cards with a gap, as on the Overview. */
+.split{gap:16px}
+.top .search{min-width:min(320px,100%);border-radius:14px}
+.top .ibtn,.filters .find{background:transparent;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;border-bottom:1px solid var(--line);border-radius:0}
+.top .ibtn{border-bottom:0}
+.pnums{display:block;background:none;border-radius:0}
+.pnums div{background:none!important;padding:9px 0;border-top:1px solid var(--line);flex-direction:row;align-items:baseline;gap:10px}
+.pnums div:first-child{border-top:0}
+.pnums small{flex:1;font-size:13.5px;color:var(--ink-soft)}
+.pnums b{font-size:16px}
+.pnums em{min-width:110px;text-align:right}
+@media (max-width:1100px){.split{grid-template-columns:1fr}}
+@media (max-width:640px){.dir .hide-s{display:none}.kv{grid-template-columns:1fr}}
+</style>
+<style>
+/* Onboarding: the pipeline strip (stages are the filter), then the courses in onboarding and the picked one's profile as two cards. */
+.pipe{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.todo{padding:16px 0 8px;min-width:0}
+.todo h3{margin:0;padding:0 18px 8px;font-size:15px;font-weight:600;display:flex;gap:8px;align-items:baseline}
+.todo h3 span{font-size:12.5px;font-weight:500;color:var(--muted)}
+.tline{font:inherit;width:100%;text-align:left;border:0;border-top:1px solid var(--line);background:transparent;color:var(--ink);padding:10px 18px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;cursor:pointer}
+.tline:hover{background:var(--hover)}
+.tline[aria-pressed="true"]{background:var(--active)}
+.tn{font-weight:600;font-size:13.5px}
+.tdo{grid-column:1;font-size:13px;color:var(--ink-soft)}
+.td{grid-column:2;grid-row:1 / 3;align-self:center;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.td.wa{color:var(--warn);font-weight:600}
+@media (max-width:900px){.pipe{grid-template-columns:1fr}}
+.stage{font:inherit;text-align:left;border:0;background:transparent;color:var(--ink);padding:12px 14px;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;gap:2px;min-width:0;position:relative}
+.stage{padding:16px;gap:10px}
+.stage .shead{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.stage .shead b{font-size:26px}
+.stage .sfirst{display:flex;flex-direction:column;gap:2px;border-top:1px solid var(--line);padding-top:10px;min-width:0}
+.stage .sname{font-size:13.5px;font-weight:600;overflow-wrap:anywhere}
+.stage .sdo{font-size:12.5px;color:var(--muted)}
+.stage .sdo .wa{color:var(--warn);font-weight:600}
+.stage.hot{box-shadow:inset 3px 0 0 var(--warn),var(--shadow)}
+.stage[aria-pressed="true"]{outline:2px solid var(--brand);outline-offset:-2px}
+.stage:hover{background:var(--hover)}
+.stage[aria-pressed="true"]{background:var(--active);box-shadow:var(--shadow)}
+.stage small{font-size:12.5px;color:var(--muted);font-weight:500}
+.stage b{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.1}
+.stage em{font-style:normal;font-size:12px;color:var(--muted)}
+.stage em.wa{color:var(--warn);font-weight:600}
+.olist table{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums}
+.olist th{font-size:12px;font-weight:500;color:var(--muted);text-align:left;padding:12px 14px;border-bottom:1px solid var(--line)}
+.olist td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+.olist tr:last-child td{border-bottom:0}
+.olist tbody tr{cursor:pointer}.olist tbody tr:hover{background:var(--hover)}.olist tbody tr[aria-selected="true"]{background:var(--active)}
+.olist .n{text-align:right}
+.days.wa{color:var(--warn);font-weight:600}
+.olist .next{display:block;font-weight:500}
+.olist .late{display:block;font-size:12px;color:var(--warn);font-weight:600;margin-top:2px}
+.need{font-size:13px;font-weight:600;white-space:nowrap}
+.need.wa{color:var(--warn)}
+.next{font-weight:500}
+.bar2{height:5px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:6px}
+.bar2 i{display:block;height:100%;background:var(--up)}
+.step i{flex:none}
+.step.now span{font-weight:600;color:var(--ink)}
+.step.now i{border-color:var(--warn);border-width:2px}
+.log{display:flex;flex-direction:column}
+.log div{display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px;padding:7px 0;border-top:1px solid var(--line);font-size:13.5px}
+.log div:first-child{border-top:0}
+.log small{color:var(--muted);font-size:12px}
+.addnote{display:flex;gap:0;position:relative}
+.addnote input{flex:1;min-width:0;font:inherit;font-size:13.5px;color:var(--ink);background:var(--hover);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+.addnote input:focus{outline:2px solid var(--fair);outline-offset:1px}
+.addnote input{padding-right:40px}
+.addnote button{position:absolute;right:4px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:var(--muted);padding:6px;border-radius:8px;cursor:pointer;display:grid;place-items:center}
+.addnote button:hover{color:var(--brand);background:var(--hover)}
+.nextbox b{display:block;font-size:15px}
+.nextbox .nb{display:block;font-size:13px;color:var(--ink-soft);margin-top:2px}
+.nextbox{border-left:3px solid var(--warn);padding:2px 0 2px 12px;font-size:14px}
+.nextbox small{display:block;color:var(--muted);font-size:12px}
+@media (max-width:1100px){.pipe{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:640px){.pipe{grid-template-columns:repeat(2,minmax(0,1fr))}.olist .hide-s{display:none}}
+</style>
+<style>
+/* Bookings: one list of every booking on GreenReserve, problems first; the picked booking's card beside it. */
+.blist table{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums}
+.blist th{font-size:12px;font-weight:500;color:var(--muted);text-align:left;padding:12px 14px;border-bottom:1px solid var(--line)}
+.blist td{padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+.blist tr:last-child td{border-bottom:0}
+.blist tbody tr{cursor:pointer}.blist tbody tr:hover{background:var(--hover)}.blist tbody tr[aria-selected="true"]{background:var(--active)}
+.blist .n{text-align:right}
+.blist .bnum{font-size:12.5px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.money{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;white-space:nowrap}
+.money i{width:7px;height:7px;border-radius:50%;background:var(--muted)}
+.money.ok i{background:var(--up)}.money.warn i{background:var(--warn)}.money.bad i{background:var(--down)}
+.money.bad{color:var(--down);font-weight:600}
+.money{flex-direction:column;align-items:flex-start;gap:1px}
+.money .mamt{font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.money .mst{display:inline-flex;align-items:center;gap:6px;font-size:12.5px}
+.money .mst i{width:7px;height:7px;border-radius:50%;background:var(--muted)}
+.money.ok .mst i{background:var(--up)}.money.warn .mst i{background:var(--warn)}.money.bad .mst i{background:var(--down)}
+.money.bad .mst{color:var(--down);font-weight:600}
+.money > i{display:none}
+.sbox{border-left:3px solid var(--muted);padding:2px 0 2px 12px}
+.sbox.ok{border-color:var(--up)}.sbox.warn{border-color:var(--warn)}.sbox.bad{border-color:var(--down)}
+.sbox small{display:block;color:var(--muted);font-size:12px}
+.sbox b{display:block;font-size:15px}
+.sbox span{display:block;font-size:13px;color:var(--ink-soft);margin-top:2px}
+.paybox b{font-size:18px}
+.paybox.bad b{color:var(--down)}.paybox.ok b{color:var(--up)}.paybox.warn b{color:var(--warn)}
+.lines{display:flex;flex-direction:column;font-size:13.5px;font-variant-numeric:tabular-nums}
+.lines div{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-top:1px solid var(--line)}
+.lines div:first-child{border-top:0}
+.lines .ours{color:var(--brand);font-weight:600}
+.lines .tot{font-weight:700}
+@media (max-width:640px){.blist .hide-s{display:none}}
+</style>
+<div class="wrap">
+  <div class="picker">
+    <h1>Admin · Users &amp; golfers mockup</h1>
+    <div class="pick"><span>Theme</span>
+      <div class="seg" id="segMode" role="group" aria-label="Theme">
+        <button type="button" data-v="light">Light</button>
+        <button type="button" data-v="dark">Dark</button>
+      </div></div>
+  </div>
+  <p style="font-size:12.5px;color:var(--page-muted);margin:0;max-width:75ch">Example people, not real ones. Everyone on GreenReserve: golfers with an account, guests who booked without one, and course staff logins. A read-only record; signing in, cards and money stay with the person and their course.</p>
+
+  <div class="app" id="app" data-dir="green" data-mode="light" data-acc="gold">
+    <span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span>
+    <aside class="rail">
+      <div class="brand">
+        <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="var(--brand-ink)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><path d="M12 8v6l-3 6M12 14l3 6M8 11l4-1 5-3"/></svg></span>
+        <div><b>GreenReserve</b><small>Headquarters</small></div>
+      </div>
+      <div class="grp"><span>Workspace</span>
+        <button class="nav" type="button">Overview</button>
+        <button class="nav" type="button">Golf courses</button>
+        <button class="nav" type="button">Onboarding <i>4</i></button>
+        <button class="nav" type="button">Bookings</button>
+        <button class="nav on" type="button">Users &amp; golfers</button>
+      </div>
+      <div class="grp"><span>Financials</span>
+        <button class="nav" type="button">Revenue &amp; payments</button>
+        <button class="nav" type="button">Expenses</button>
+        <button class="nav" type="button">Financial analytics</button>
+      </div>
+      <div class="grp"><span>Management</span>
+        <button class="nav" type="button">Business analytics</button>
+        <button class="nav" type="button">Support &amp; issues <i>3</i></button>
+        <button class="nav" type="button">Platform activity</button>
+        <button class="nav" type="button">Settings</button>
+      </div>
+      <div class="foot"><span class="av">CS</span><span>Cam · Owner</span></div>
+    </aside>
+    <main class="main">
+      <div class="top">
+        <h2>Users &amp; golfers</h2>
+        <div class="search glass" role="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" aria-label="Search" style="font:inherit;border:0;background:transparent;color:var(--ink);outline:none;width:100%"></div>
+        <span class="ibtn glass" aria-label="Alerts" role="img"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0"/></svg><span class="dotn"></span></span>
+      </div>
+      <div class="fwrap">
+        <button class="fbtn glass" type="button" id="fbtn" aria-expanded="false" aria-haspopup="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg><span id="flabel">Filter</span></button>
+        <div class="filters fmenu glass" id="filters" role="group" aria-label="Show" hidden></div>
+      </div>
+      <div class="split">
+        <section class="glass dir blist" aria-label="People">
+          <table><thead><tr><th>Name</th><th>Courses</th><th class="n hide-s">Rounds</th><th class="hide-s" style="white-space:nowrap">Last round</th><th>Standing</th></tr></thead><tbody id="rows"></tbody></table>
+        </section>
+        <section class="glass prof" id="prof" aria-label="Person"></section>
+      </div>
+    </main>
+  </div>
+</div>
+
+<style>
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 14px}
+.stats div span{display:block;font-size:12px;color:var(--muted)}
+.stats div b{font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
+.stats b.wa{color:var(--warn)}.stats b.bd{color:var(--down)}
+.typ{font-size:12.5px;color:var(--muted)}
+.blist .money,.blist .mst{white-space:normal}.blist .mst{align-items:baseline}
+.blist .sub2{display:block;font-size:12px;color:var(--muted)}
+</style>
+<script>
+(function(){
+  const app=document.getElementById("app");
+  const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+  const seg=document.getElementById("segMode"); const saved=store.get("gr-mock-mode"); if(saved) app.dataset.mode=saved;
+  const sync=()=>seg.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===app.dataset.mode)));
+  seg.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;app.dataset.mode=b.dataset.v;store.set("gr-mock-mode",b.dataset.v);sync();});sync();
+  const $=id=>document.getElementById(id);
+  const usd=n=>"$"+n.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+
+  // Example people. t: golfer (has an account), guest (booked without one), staff (a course login).
+  // st: standing — ok, warn (worth a look), bad (a problem on record).
+  const P=[
+    {id:1,n:"Mike Torres",t:"golfer",courses:["Ridgewood Country Club"],rounds:14,last:"Nov 2",joined:"Mar 2026",st:"bad",sl:"Card declined today",email:"mike@example.com",phone:"(518) 555-0111",texts:"Yes, on the booking form, Mar 4",signin:"Email code · last Nov 9",up:1,ns:0,lc:1,paid:3410,ref:0,bk:[["GR-1041","Ridgewood","Today 9:40 AM","Card declined"],["GR-1019","Ridgewood","Nov 2 8:30 AM","Paid"],["GR-0987","Ridgewood","Oct 24 7:50 AM","Paid"]],h:[["Mar 4","Made an account"],["Mar 4","Said yes to texts"],["Nov 12","Card declined at check-in"]]},
+    {id:2,n:"Sarah Klein",t:"golfer",courses:["Oak Valley Golf Course","Pine Hollow Golf Club"],rounds:9,last:"Nov 8",joined:"May 2026",st:"bad",sl:"Disputed a charge",email:"sarah@example.com",phone:"(518) 555-0142",texts:"No",signin:"Email code · last Nov 11",up:0,ns:0,lc:0,paid:1288,ref:0,bk:[["GR-1042","Oak Valley","Nov 8 2:10 PM","Disputed"],["GR-1001","Pine Hollow","Oct 30 10:00 AM","Paid"]],h:[["May 12","Made an account"],["Nov 11","Disputed a charge with her bank"]]},
+    {id:3,n:"Dan Ruiz",t:"golfer",courses:["Pine Hollow Golf Club"],rounds:5,last:"Oct 28",joined:"Aug 2026",st:"warn",sl:"2 no-shows",email:"dan@example.com",phone:"(518) 555-0170",texts:"Yes, said yes at the counter, Aug 20",signin:"Email code · last Nov 6",up:0,ns:2,lc:0,paid:612,ref:0,bk:[["GR-1043","Pine Hollow","Yesterday 4:20 PM","No-show fee"],["GR-0960","Pine Hollow","Oct 28 9:10 AM","Paid"]],h:[["Aug 20","Made an account"],["Sep 14","No-show"],["Nov 11","No-show"]]},
+    {id:4,n:"Amy Chen",t:"golfer",courses:["Pine Hollow Golf Club","Cedar Ridge Golf Links"],rounds:22,last:"Today",joined:"Feb 2026",st:"ok",sl:"Good",email:"amy@example.com",phone:"(518) 555-0188",texts:"Yes, on the booking form, Feb 9",signin:"Email code · last Nov 10",up:2,ns:0,lc:0,paid:4960,ref:45,bk:[["GR-1044","Pine Hollow","Today 8:10 AM","Paid"],["GR-1050","Cedar Ridge","Nov 19 7:40 AM","Card on file"]],h:[["Feb 9","Made an account"],["Jul 3","$45 refunded by Pine Hollow"]]},
+    {id:5,n:"J. Park",t:"guest",courses:["Cedar Ridge Golf Links"],rounds:1,last:"Today",joined:"—",st:"ok",sl:"Good",email:"—",phone:"—",texts:"No",signin:"No account · walk-in",up:0,ns:0,lc:0,paid:45,ref:0,bk:[["GR-1045","Cedar Ridge","Today 7:30 AM","Paid cash"]],h:[["Nov 12","Walk-in at Cedar Ridge"]]},
+    {id:6,n:"Lisa Ward",t:"guest",courses:["Oak Valley Golf Course"],rounds:0,last:"—",joined:"—",st:"ok",sl:"Good",email:"lisa@example.com",phone:"(518) 555-0123",texts:"Yes, on the booking form, Nov 12",signin:"No account · booked as a guest",up:1,ns:0,lc:0,paid:0,ref:0,bk:[["GR-1047","Oak Valley","Sun 1:20 PM","Pays later"]],h:[["Nov 12","Booked as a guest"]]},
+    {id:7,n:"Dana Fisher",t:"staff",courses:["Ridgewood Country Club"],rounds:null,last:null,joined:"Sep 2026",st:"ok",sl:"Good",email:"dana@ridgewood.example",phone:"—",role:"Pro shop · preset Front desk",twofa:"On",signin:"Last Nov 12 6:58 AM",h:[["Sep 3","Added by the owner"],["Sep 3","Turned on 2-step sign-in"]]},
+    {id:8,n:"Luis Ortega",t:"staff",courses:["Ridgewood Country Club"],rounds:null,last:null,joined:"Oct 2026",st:"warn",sl:"No 2-step sign-in",email:"luis@ridgewood.example",phone:"—",role:"Starter · preset Starter",twofa:"Off",signin:"Last Nov 11 4:41 PM",h:[["Oct 15","Added by the owner"]]},
+    {id:9,n:"Greg Holt",t:"staff",courses:["Oak Valley Golf Course"],rounds:null,last:null,joined:"Jun 2026",st:"ok",sl:"Owner",email:"greg@oakvalley.example",phone:"—",role:"Owner",twofa:"On",signin:"Last Nov 12 8:15 AM",h:[["Jun 2","Course went live"]]},
+  ];
+  const SS={"Card declined today":"Declined","Disputed a charge":"Disputed","No 2-step sign-in":"No 2-step"};
+  const T={golfer:"Golfer",guest:"Guest",staff:"Course staff"};
+  const F={all:["All",()=>true],golfer:["Golfers",p=>p.t==="golfer"],guest:["Guests",p=>p.t==="guest"],staff:["Course staff",p=>p.t==="staff"],problems:["Problems",p=>p.st!=="ok"]};
+  let f="all", pick=1;
+  function rows(){
+    $("filters").innerHTML=Object.entries(F).map(([k,[l,fn]])=>'<button class="chip" type="button" data-f="'+k+'" aria-pressed="'+(f===k)+'">'+l+'<b>'+P.filter(fn).length+'</b></button>').join("");
+    const q=(($("q")||{}).value||"").trim().toLowerCase();
+    const hit=p=>!q||p.n.toLowerCase().includes(q)||p.email.toLowerCase().includes(q)||p.phone.replace(/\D/g,"").includes(q.replace(/\D/g,"")||"~")||p.courses.join(" ").toLowerCase().includes(q);
+    const list=P.filter(F[f][1]).filter(hit);
+    $("rows").innerHTML=list.map(p=>'<tr tabindex="0" data-id="'+p.id+'" aria-selected="'+(p.id===pick)+'"><td><span class="cname">'+p.n+'</span><span class="sub2">'+T[p.t]+(p.email!=="—"?' · '+p.email:'')+'</span></td><td>'+p.courses.map(c=>c.split(" ")[0]).join(", ")+'</td><td class="n hide-s">'+(p.rounds==null?"—":p.rounds)+'</td><td class="hide-s" style="white-space:nowrap">'+(p.last||"—")+'</td><td><span class="money '+(p.st==="ok"?"ok":p.st==="warn"?"warn":"bad")+'"><span class="mst"><i></i>'+(SS[p.sl]||p.sl)+'</span></span></td></tr>').join("");
+    $("rows").querySelectorAll("tr").forEach(tr=>{const go=()=>{pick=+tr.dataset.id;render();};tr.addEventListener("click",go);tr.addEventListener("keydown",e=>{if(e.key==="Enter")go();});});
+  }
+  const sec=(t,h)=>'<div class="psec"><h4>'+t+'</h4>'+h+'</div>';
+  function prof(){
+    const p=P.find(x=>x.id===pick);
+    const pills=p.t==="staff"?'<span class="plink">Course →</span>':'<span class="plink">Bookings →</span>';
+    const head='<div class="ph"><div><h3>'+p.n+'</h3><p>'+T[p.t]+' · '+p.courses.join(", ")+'</p></div><div class="plinks">'+pills+'</div></div>';
+    const STAND={ok:["ok","In good standing"],warn:["warn",p.sl],bad:["bad",p.sl]};
+    const [sc,stt]=STAND[p.st];
+    const state='<div class="sbox paybox '+sc+'"><b>'+stt+'</b><span>'+(p.t==="staff"?p.role:(p.rounds+" rounds played · "+p.up+" coming up · "+usd(p.paid)+" paid all time"))+'</span></div>';
+    let out=head+state;
+    if(p.t==="staff"){
+      out+=sec('Login','<dl class="kv"><dt>Course</dt><dd>'+p.courses.join(", ")+'</dd><dt>Role</dt><dd>'+p.role+'</dd><dt>Email</dt><dd>'+p.email+'</dd><dt>2-step sign-in</dt><dd>'+p.twofa+'</dd><dt>Signed in</dt><dd>'+p.signin+'</dd><dt>Added</dt><dd>'+p.joined+'</dd></dl>');
+    } else {
+      out+=sec('Account','<dl class="kv"><dt>Email</dt><dd>'+p.email+'</dd><dt>Phone</dt><dd>'+p.phone+'</dd><dt>Texts</dt><dd>'+p.texts+'</dd><dt>Sign-in</dt><dd>'+p.signin+'</dd><dt>Joined</dt><dd>'+p.joined+'</dd><dt>Courses</dt><dd>'+p.courses.join(", ")+'</dd></dl>');
+      out+=sec('Record','<div class="stats"><div><span>Rounds</span><b>'+p.rounds+'</b></div><div><span>Coming up</span><b>'+p.up+'</b></div><div><span>No-shows</span><b class="'+(p.ns?"wa":"")+'">'+p.ns+'</b></div><div><span>Late cancels</span><b class="'+(p.lc?"wa":"")+'">'+p.lc+'</b></div><div><span>Paid all time</span><b>'+usd(p.paid)+'</b></div><div><span>Refunded</span><b>'+usd(p.ref)+'</b></div></div>');
+      out+=sec('Bookings','<div class="lines">'+p.bk.map(b=>'<div><span><b style="color:var(--muted);font-weight:600">'+b[0]+'</b> · '+b[1]+' · '+b[2]+'</span><span>'+b[3]+'</span></div>').join("")+'</div>');
+    }
+    out+=sec('History','<div class="log">'+p.h.map(s=>'<div><small>'+s[0]+'</small><span>'+s[1]+'</span></div>').join("")+'</div>');
+    $("prof").innerHTML=out;
+  }
+  const fb=$("fbtn"), fm=$("filters");
+  fb.addEventListener("click",()=>{fm.hidden=!fm.hidden;fb.setAttribute("aria-expanded",String(!fm.hidden));});
+  document.addEventListener("click",e=>{if(!e.target.closest(".fwrap")){fm.hidden=true;fb.setAttribute("aria-expanded","false");}});
+  fm.addEventListener("click",e=>{const x=e.target.closest(".chip");if(!x)return;f=x.dataset.f;$("flabel").textContent=f==="all"?"Filter":"Filter: "+x.firstChild.textContent;fm.hidden=true;fb.setAttribute("aria-expanded","false");const l=P.filter(F[f][1]);if(l.length&&!l.some(p=>p.id===pick))pick=l[0].id;render();});
+  const qi=document.querySelector('.top .search input'); if(qi){qi.id="q";qi.addEventListener("input",()=>rows());}
+  function render(){rows();prof();}
+  render();
+})();
+</script>

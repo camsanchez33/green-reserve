@@ -1,0 +1,59 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Stock edit</title>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@600&family=Libre+Franklin:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#161716;--panel:rgba(40,42,40,.78);--edge:rgba(255,255,255,.08);--ink:#EDEEEB;--soft:#C6C8C3;--muted:#9AA098;--line:rgba(255,255,255,.08);--hover:rgba(255,255,255,.06);--ok:#7FD6A1;--warn:#F2C46B;--bad:#F28A7A}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#EEF0EC;--panel:rgba(255,255,255,.8);--edge:rgba(0,0,0,.06);--ink:#191B19;--soft:#3E423E;--muted:#5E635D;--line:rgba(0,0,0,.08);--hover:rgba(0,0,0,.04);--ok:#285A3C;--warn:#744710;--bad:#8C3A26}}
+:root[data-theme="light"]{--bg:#EEF0EC;--panel:rgba(255,255,255,.8);--edge:rgba(0,0,0,.06);--ink:#191B19;--soft:#3E423E;--muted:#5E635D;--line:rgba(0,0,0,.08);--hover:rgba(0,0,0,.04);--ok:#285A3C;--warn:#744710;--bad:#8C3A26}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"Libre Franklin",system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:28px 16px}
+h1{font-family:"EB Garamond",serif;font-weight:600;font-size:26px;margin:0 0 4px}.lede{color:var(--muted);font-size:13.5px;max-width:460px;text-align:center;margin:0 0 18px}
+.seg{display:inline-flex;border:1px solid var(--edge);border-radius:999px;padding:3px;margin-bottom:18px}.seg button{font:inherit;font-size:12.5px;border:0;background:none;color:var(--muted);padding:5px 12px;border-radius:999px;cursor:pointer}.seg button.on{background:var(--ink);color:var(--bg)}
+.card{width:100%;max-width:420px;background:var(--panel);border:1px solid var(--edge);border-radius:16px;padding:20px;backdrop-filter:blur(18px)}
+.item{display:flex;gap:12px;align-items:center;margin-bottom:16px}.ph{width:48px;height:48px;border-radius:10px;background:var(--hover);display:grid;place-items:center;font-weight:700;color:var(--soft)}.item b{font-size:17px;display:block}.item span{font-size:13px;color:var(--muted)}
+.big{display:flex;align-items:baseline;justify-content:space-between;padding:14px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.big span{font-size:13.5px;color:var(--muted)}.big b{font-size:30px;font-variant-numeric:tabular-nums}.big b.neg{color:var(--warn)}
+.note{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;color:var(--warn);padding:10px 0}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--hover);border-radius:12px;padding:4px;margin:14px 0 12px}.tabs button{font:inherit;font-size:13.5px;font-weight:600;border:0;background:none;color:var(--muted);padding:9px;border-radius:9px;cursor:pointer}.tabs button.on{background:var(--panel);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;font-size:14px}.row span{color:var(--soft)}
+.stp{display:flex;align-items:center;gap:4px;background:var(--hover);border:1px solid var(--line);border-radius:10px;padding:3px}.stp button{font:inherit;font-size:18px;width:34px;height:34px;border:0;border-radius:8px;background:none;color:var(--ink);cursor:pointer}.stp b{min-width:38px;text-align:center;font-size:16px;font-variant-numeric:tabular-nums}
+.money{display:flex;align-items:center;background:var(--hover);border:1px solid var(--line);border-radius:10px;padding:0 10px;width:110px}.money i{font-style:normal;color:var(--muted)}.money input{width:100%;font:inherit;font-size:15px;color:var(--ink);background:none;border:0;outline:none;padding:9px 4px;text-align:right}
+.after{font-size:13px;color:var(--muted);padding:4px 0 2px}.after b{color:var(--ok)}
+.btn{width:100%;font:inherit;font-size:15px;font-weight:600;padding:12px;border-radius:12px;border:0;background:var(--ink);color:var(--bg);cursor:pointer;margin-top:12px}
+.sec{border-top:1px solid var(--line);margin-top:16px;padding-top:6px}
+.links{display:flex;justify-content:space-between;margin-top:16px;font-size:13px}.links button{font:inherit;border:0;background:none;color:var(--muted);cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}.links .del{color:var(--bad)}
+</style></head><body>
+<h1>Stock on an item</h1>
+<p class="lede">Today's confusing stock box, cleaned up: one number, then "New stock" or "Current inventory". Tap the switch to see both looks.</p>
+<div class="seg"><button data-t="dark" class="on">Charcoal</button><button data-t="light">Light</button></div>
+<div class="card">
+  <div class="item"><span class="ph">PS</span><div><b>Polo shirt</b><span>Apparel · $65.00</span></div></div>
+  <div class="big"><span>In stock</span><b id="cnt" class="neg">−8</b></div>
+  <div class="note" id="note">Sold 8 more than you had. Fix it under Current inventory.</div>
+  <div class="tabs"><button class="on" data-m="in">New stock</button><button data-m="count">Current inventory</button></div>
+  <div id="m-in">
+    <div class="row"><span>How many</span><div class="stp"><button data-d="-1">−</button><b id="qty">12</b><button data-d="1">+</button></div></div>
+    <div class="row"><span>Cost of one<small style="display:block;font-size:12px;color:var(--muted);margin-top:2px">Optional</small></span><label class="money"><i>$</i><input value="20.00" aria-label="Cost of one"></label></div>
+    <p class="after" id="aft"></p>
+    <button class="btn" id="add">Add to stock</button>
+  </div>
+  <div id="m-count" hidden>
+    <div class="row"><span>How many you have now</span><div class="stp"><button data-c="-1">−</button><b id="shelf">0</b><button data-c="1">+</button></div></div>
+    <p class="after" id="aft2"></p>
+    <button class="btn" id="set">Save the count</button>
+  </div>
+  <div class="sec">
+    <div class="row"><span>Remind me when it's below<small style="display:block;font-size:12px;color:var(--muted);margin-top:2px">Reminder by email</small></span><div class="stp"><button data-r="-1">−</button><b id="ro">10</b><button data-r="1">+</button></div></div>
+  </div>
+  <div class="links"><button>Hide from the register</button><button class="del">Delete item</button></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);let cnt=-8,qty=12,shelf=0,ro=10;
+function r(){$("cnt").textContent=cnt;$("cnt").className=cnt<0?'neg':'';$("note").hidden=cnt>=0;$("qty").textContent=qty;$("shelf").textContent=shelf;$("ro").textContent=ro;
+$("aft").innerHTML='After this: <b>'+(cnt+qty)+' in stock</b>';$("aft2").innerHTML='After this: <b>'+shelf+' in stock</b>';}
+document.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{qty=Math.max(1,qty+ +b.dataset.d);r();});
+document.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{shelf=Math.max(0,shelf+ +b.dataset.c);r();});
+document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{ro=Math.max(0,ro+ +b.dataset.r);r();});
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));$("m-in").hidden=b.dataset.m!=='in';$("m-count").hidden=b.dataset.m!=='count';});
+$("add").onclick=()=>{cnt+=qty;r();};$("set").onclick=()=>{cnt=shelf;r();};
+document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{document.documentElement.dataset.theme=b.dataset.t;document.querySelectorAll('.seg button').forEach(x=>x.classList.toggle('on',x===b));});
+document.documentElement.dataset.theme='dark';r();
+</script></body></html>

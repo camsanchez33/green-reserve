@@ -20,11 +20,11 @@ for reading only.
    Do not work from memory of the route tree; it changes every week.
    (ARCHITECTURE.md's route tables were deleted on purpose, Cam 2026-09-16 —
    never run `scripts/route-inventory.ts` to bring them back.)
-2. `CLAUDE.md` — the **Session policy (per surface)** table and the payment-flow
+2. `CLAUDE.md` — the **Session policy (per surface)** table — and `docs/DECISIONS.md` for the payment-flow
    section. These define who is *supposed* to be able to do what.
 3. `HARDENING_SPEC.md` — the isolation invariants this codebase already committed to.
 
-CI fails when CODEMAP drifts, so it is current. An API route the map marks
+It is regenerated at every session start, so it is current (run `node scripts/codemap.mjs` if it is missing). An API route the map marks
 `client-side` or **NONE FOUND** is a finding until you prove otherwise by reading it.
 
 ## Scope

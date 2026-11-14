@@ -16,13 +16,13 @@ exception by the item text; the section it lives in decides.
 
 ## 0. Before anything else
 
-`git status`. Apply the **Doc-file commit rule** in `CLAUDE.md` exactly as written. The
+`git status`. Apply the **Doc-file commit rule** in `docs/DECISIONS.md` (summarised in CLAUDE.md "Commits and PRs") exactly as written. The
 tree must be clean before worktrees are created, because they branch from `HEAD`.
 `git branch --show-current` must be `main`. If either is not true, stop and say why.
 
 ## 1. Load context — minimally
 
-Read `CLAUDE.md` (you need Build & deploy, the design system, Known gotchas). Read the spec
+Read `CLAUDE.md` and `docs/DECISIONS.md` (you need Build & deploy, the design system, Known gotchas). Read the spec
 section that owns the items in $ARGUMENTS, and **only** the blocks for those items plus
 the section's tokens (§1). Do not read the rest of the queue. `git log --oneline -5`.
 
@@ -112,7 +112,7 @@ Run `/gr-review batch/<date>-<slug>` with the range `main...batch/<date>-<slug>`
 command already dispatches only the auditors whose surface changed and collates. One
 review, not four.
 
-Then dispatch `final-reviewer` over the same range (CLAUDE.md, Overseer protocol —
+Then dispatch `final-reviewer` over the same range (LANES.md; docs/DECISIONS.md Overseer protocol —
 nothing ships without its PASS). BLOCK → fix on the batch branch → re-review.
 
 ## 8. Hand off — Cam ships
