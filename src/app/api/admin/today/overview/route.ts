@@ -146,14 +146,21 @@ export async function GET() {
     ...(newInquiries ?? []).map(i => ({ id: `inq-${i.id}`, at: i.createdAt.toISOString(), text: `New course enquiry: ${i.courseName}`, tone: 'neutral' as const, href: `/admin/inquiries/${i.id}` })),
   ].sort((a, b) => b.at.localeCompare(a.at)).slice(0, 8);
 
-  type Attention = { id: string; text: string; tone: 'bad' | 'warn'; href: string; action: string };
+  // A problem (the hourly check's list, Cam 2026-11-12: "it moves into Overview's Needs you") opens in place: its course,
+  // when it opened, what it says and where to fix it (the page decides Go to it / Open course / who can, as Problems did).
+  type ProblemInfo = { course: string | null; courseId: string | null; openedAt: string; detail: string; goTo: string };
+  type Attention = { id: string; text: string; tone: 'bad' | 'warn'; href: string; action: string; problem?: ProblemInfo };
   // Each queue row by the area its CONTENT belongs to (review 2026-11-11): a failed charge carries money,
   // an unanswered message carries a conversation — a Courses-only login sees neither.
   const rowArea = (r: { id: string; courseId?: string | null }): AdminArea =>
     r.id.startsWith('fc-') ? 'money' : r.id.startsWith('msg-') ? 'messages' : r.courseId ? 'courses' : 'pipeline';
   const queueRows = queue ? queue.rows.filter(r => can(rowArea(r))) : [];
   const toAttn = (r: (typeof queueRows)[number]): Attention => ({ id: `q-${r.id}`, text: `${r.who}: ${r.why}`, tone: r.severity, href: r.href, action: r.actionLabel });
-  const problemRows: Attention[] = (problems?.open ?? []).map(p => ({ id: `p-${p.id}`, text: p.title, tone: 'bad' as const, href: '/admin/problems', action: 'Open' }));
+  // Snoozing is gone (Cam 2026-11-12): a problem snoozed before then shows with the open ones, never on no screen.
+  const problemRows: Attention[] = [...(problems?.open ?? []), ...(problems?.snoozed ?? [])].map(p => ({
+    id: `p-${p.id}`, text: p.title, tone: 'bad' as const, href: p.href, action: 'Open',
+    problem: { course: p.courseName, courseId: p.courseId, openedAt: p.openedAt, detail: p.detail, goTo: p.href },
+  }));
   // Cam 2026-11-11: no systems line in the top bar — each broken system is its own row here, going to Systems.
   const systemRows: Attention[] = health === 'failed'
     ? [{ id: 'sys-unread', text: "Systems couldn't be checked", tone: 'warn', href: '/admin/system', action: 'Open' }]
@@ -165,7 +172,8 @@ export async function GET() {
   // Broken systems always lead (never pushed past the cap by course to-dos).
   const todoRows: Attention[] = [...systemRows, ...queueRows.map(toAttn).sort((a, b) => (a.tone === b.tone ? 0 : a.tone === 'bad' ? -1 : 1))];
   // Problems and to-dos are capped apart, so six open problems never hide every course to-do; each has its own door.
-  const PROB_CAP = 3, TODO_CAP = 5;
+  // Problems live here now (no Problems page): every open one is listed (the cap only guards a runaway check).
+  const PROB_CAP = 100, TODO_CAP = 5;
   const seesActivity = can('pipeline') || can('courses');
   const seesAttention = can('problems') || can('pipeline') || can('courses') || can('money') || can('messages') || seesSystems;
 
@@ -189,7 +197,7 @@ export async function GET() {
       total: problemRows.length + todoRows.length,
       problemsMore: can('problems') ? Math.max(0, problemRows.length - PROB_CAP) : 0,
       todosMore: Math.max(0, todoRows.length - TODO_CAP),
-      todosHref: systemRows.length > TODO_CAP ? '/admin/system' : can('pipeline') ? '/admin/inquiries' : can('courses') ? '/admin/courses' : can('money') ? '/admin/revenue' : '/admin/messages',
+      todosHref: systemRows.length > TODO_CAP ? '/admin/system' : can('pipeline') ? '/admin/inquiries' : can('courses') ? '/admin/courses' : can('money') ? '/admin/revenue' : '/admin/support',
     } : null,
   });
 }
