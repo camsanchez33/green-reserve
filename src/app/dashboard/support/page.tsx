@@ -57,8 +57,12 @@ function SupportContent() {
     if (r.ok) { setChats(r.data.chats); setListError(''); } else setListError(r.error);
   }, [router]);
 
+  // The chat on screen now: a slow answer for one the user has left must never fill the one they moved to (review).
+  const openRef = useRef(open);
+  openRef.current = open;
   const loadChat = useCallback(async (id: string) => {
     const r = await dfetch<{ chat: Chat; messages: ChatMessage[] }>(`/api/operator/support/${encodeURIComponent(id)}`);
+    if (openRef.current !== id) return;
     if (r.status === 401) { router.push('/dashboard/login'); return; }
     if (r.ok) { setChat(r.data.chat); setMessages(r.data.messages); setChatError(''); } else setChatError(r.error);
   }, [router]);

@@ -348,7 +348,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/dashboard/shop` | operator | middleware | page | `src/app/dashboard/shop/page.tsx` | 975 |
 | `/dashboard/sign` | operator | middleware | page | `src/app/dashboard/sign/page.tsx` | 26 |
 | `/dashboard/starter` | operator | middleware | page | `src/app/dashboard/starter/page.tsx` | 91 |
-| `/dashboard/support` | operator | middleware | page | `src/app/dashboard/support/page.tsx` | 210 |
+| `/dashboard/support` | operator | middleware | page | `src/app/dashboard/support/page.tsx` | 214 |
 | `/dashboard/tournaments` | operator | middleware | page | `src/app/dashboard/tournaments/page.tsx` | 5 |
 | `/dashboard/verify` | operator | token | page | `src/app/dashboard/verify/page.tsx` | 148 |
 | `/demo` | public | public | GET | `src/app/demo/route.ts` | 18 |

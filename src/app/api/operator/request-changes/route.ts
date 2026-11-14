@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
   const courseAllowed = await rateLimit(`operator-changes:${session.courseId}`, 10, 3600);
   const ipAllowed = await rateLimit(`operator-changes-ip:${clientIp(req)}`, 30, 3600);
   if (!courseAllowed || !ipAllowed) {
-    return NextResponse.json({ error: 'You have sent a lot of change requests in the last hour — give it a little while, or write to us on Messages.' }, { status: 429 });
+    return NextResponse.json({ error: 'You have sent a lot of change requests in the last hour — give it a little while, or write to us on Support.' }, { status: 429 });
   }
 
   const result = await submitChangeRequest(session.courseId, cleanItems);

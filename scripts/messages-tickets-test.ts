@@ -33,5 +33,9 @@ ok('the top cards are gone (Cam 2026-11-12)', !page.includes('Prefer email?') &&
 ok('old links land on Support with their query (?prefill= starts a new chat)', readFileSync('src/app/dashboard/messages/page.tsx', 'utf8').includes("redirect(`/dashboard/support${qs ? `?${qs}` : ''}`);") && page.includes("if (!open && params.get('prefill')) router.replace(`/dashboard/support?c=${NEW}`);"));
 
 ok('a reply email\'s ?chat=<id> link opens that chat', page.includes("const open = params.get('c') ?? params.get('chat');"));
+ok('a slow chat answer never fills a chat the user has moved on from', page.includes('if (openRef.current !== id) return;'));
+ok('the GreenReserve chat has no message box', page.includes('{(open === NEW || (chat && !chat.fromGreenReserve)) && ('));
+ok('the admin reply email links Support', readFileSync('src/app/api/admin/messages/route.ts', 'utf8').includes('replyUrl: `${process.env.NEXT_PUBLIC_URL}/dashboard/support`'));
+ok('the announcement banner opens the GreenReserve chat', readFileSync('src/components/AnnouncementBanner.tsx', 'utf8').includes('href="/dashboard/support?c=greenreserve"'));
 console.log(failed ? `${failed} FAILED` : 'ALL PASS');
 process.exit(failed ? 1 : 0);

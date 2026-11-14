@@ -26,5 +26,8 @@ check('pages make room for the rail only where it renders', /\.op-look:has\(\.op
 check('the dashboard layout wraps pages in .op-look', /op-look/.test(layout));
 check('the Schedule save bar starts after the rail', /fixed bottom-16 md:bottom-0 inset-x-0 md:left-\[var\(--op-rail-w\)\]/.test(schedules));
 check('below md the bottom tab bar is unchanged', /md:hidden fixed bottom-0 inset-x-0 z-30/.test(src));
+// SUPPORT-1 (Cam 2026-11-12): Messages is Support — last in the rail's Course group, off the phone bar (under More, with a dot).
+check('Support is last in the Course group and links /dashboard/support', src.includes("{ label: 'Course', keys: ['settings', 'messages'] },") && src.includes("{ key: 'messages',      label: 'Support',      href: '/dashboard/support',"));
+check('Support lives under More on a phone, with its unread dot on More', src.includes("(['teesheet', 'shop', 'money'] as OperatorNavKey[])") && src.includes('unread on Support'));
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);
