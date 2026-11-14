@@ -137,9 +137,7 @@ async function resolveCourseChat(courseId: string, id: string): Promise<Resolved
 const inChat = (r: Resolved) => (r.kind === 'chat' ? { chatId: r.id } : { threadId: r.threadId, chatId: null });
 
 /** One chat with its messages (oldest first); opening it marks our replies in it read (or, for the announcements
- *  chat, every announcement seen by this owner). The chat's state is the one the list showed when it was opened
- *  (the mockup's header repeats the list's "New reply"); unread is 0, as it now is. Null when the chat isn't this
- *  course's. */
+ *  chat, every announcement seen by this owner). Null when the chat isn't this course's. */
 export async function openCourseChat(courseId: string, id: string, operatorId: string | null): Promise<{ chat: CourseChat; messages: CourseMessage[] } | null> {
   if (id === ANNOUNCEMENTS_CHAT_ID) {
     const rows = await announcementRows(courseId, operatorId);
@@ -148,16 +146,16 @@ export async function openCourseChat(courseId: string, id: string, operatorId: s
       await prisma.announcementDismissal.createMany({ data: rows.filter(r => !r.seen).map(r => ({ announcementId: r.id, operatorId })), skipDuplicates: true });
     }
     return {
-      chat: { ...announcementsChat(rows, operatorId)!, unread: 0 },
+      chat: { ...announcementsChat(rows, operatorId)!, unread: 0, state: 'answered' as const },
       messages: rows.map(r => ({ id: r.id, body: r.body, fromUs: false, senderName: 'GreenReserve', at: r.at.toISOString() })),
     };
   }
   const r = await resolveCourseChat(courseId, id);
   if (!r) return null;
+  await prisma.message.updateMany({ where: { ...inChat(r), senderType: 'admin', readAt: null }, data: { readAt: new Date() } });
   const rows = await prisma.message.findMany({ where: { ...inChat(r), isBroadcast: false }, orderBy: { createdAt: 'asc' }, select: ROW });
   if (!rows.length) return null;
-  await prisma.message.updateMany({ where: { ...inChat(r), senderType: 'admin', readAt: null }, data: { readAt: new Date() } });
-  return { chat: { ...courseChat(r.id, r.kind === 'chat' ? r.subject : earlierSubject(rows), rows), unread: 0 }, messages: rows.map(courseMessage) };
+  return { chat: courseChat(r.id, r.kind === 'chat' ? r.subject : earlierSubject(rows), rows), messages: rows.map(courseMessage) };
 }
 
 export type Sender = { id: string; name: string };
@@ -194,6 +192,15 @@ async function notifyGreenReserve(threadId: string, chatId: string, courseName: 
 
 /** The course starts a chat with its first message. */
 export async function startCourseChat(courseId: string, sender: Sender, text: string): Promise<CourseChat | null> {
+  const made = await createCourseChat(courseId, sender, text);
+  if (!made) return null;
+  await made.notify();
+  return made.chat;
+}
+
+/** Writes a new chat and its first message; `notify` emails GreenReserve (never throws). A caller with more rows
+ *  to write (a Settings change request) writes them before calling notify, so a slow email never leaves them out. */
+export async function createCourseChat(courseId: string, sender: Sender, text: string): Promise<{ chat: CourseChat; notify: () => Promise<void> } | null> {
   const course = await prisma.course.findUnique({ where: { id: courseId }, select: { name: true } });
   if (!course) return null;
   const made = await prisma.$transaction(async tx => {
@@ -203,8 +210,10 @@ export async function startCourseChat(courseId: string, sender: Sender, text: st
     await tx.supportChat.update({ where: { id: chat.id }, data: { lastMessageAt: m.createdAt } });
     return { thread, chat, m };
   });
-  await notifyGreenReserve(made.thread.id, made.chat.id, course.name, sender, text);
-  return courseChat(made.chat.id, made.chat.subject, [made.m]);
+  return {
+    chat: courseChat(made.chat.id, made.chat.subject, [made.m]),
+    notify: () => notifyGreenReserve(made.thread.id, made.chat.id, course.name, sender, text),
+  };
 }
 
 /** The course writes in one of its chats. Null when the chat isn't this course's ('greenreserve' can't be replied to). */

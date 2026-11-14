@@ -1,6 +1,6 @@
 import { recordCoursePageDecision } from '@/lib/approval-state';
 import { prisma } from '@/lib/prisma';
-import { startCourseChat } from '@/lib/support-chats';
+import { createCourseChat } from '@/lib/support-chats';
 import { CATEGORY_LABEL, CHANGE_CATEGORIES, encodeChangesRequested, type ChangeItem } from '@/lib/change-requests';
 
 const VALID_CATEGORIES = new Set<string>(CHANGE_CATEGORIES.map(c => c.key));
@@ -36,10 +36,9 @@ export async function submitChangeRequest(courseId: string, cleanItems: ChangeIt
   ].join('\n');
 
   // SUPPORT: the request is its own chat in Support (subject "Requested changes: …"), never a message in the
-  // course's earlier-messages chat. startCourseChat reopens the thread and emails GreenReserve (awaited, at most
-  // once an hour per course, linking to that chat; it never throws).
-  const chat = await startCourseChat(courseId, { id: course.operatorId || courseId, name: senderName }, message.trim());
-  if (!chat) return { error: 'Course not found', status: 404 as const };
+  // course's earlier-messages chat (it reopens the thread). Every row is written before GreenReserve is emailed.
+  const made = await createCourseChat(courseId, { id: course.operatorId || courseId, name: senderName }, message.trim());
+  if (!made) return { error: 'Course not found', status: 404 as const };
 
   // Built without an inquiry: the decision lives on the course (lib/approval-state).
   if (!inquiry) await recordCoursePageDecision(courseId, 'changes_requested');
@@ -55,5 +54,7 @@ export async function submitChangeRequest(courseId: string, cleanItems: ChangeIt
     });
   }
 
+  // Awaited (at most once an hour per course, linking to the chat; never throws).
+  await made.notify();
   return { ok: true as const };
 }

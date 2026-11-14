@@ -41,11 +41,13 @@ ok('no messages → answered, no last', (() => { const e = chatSummary([], now);
 
 // Source pins (Build follow-ups 2026-11-14).
 const lib = readFileSync('src/lib/support-chats.ts', 'utf8');
-const open = lib.slice(lib.indexOf('export async function openCourseChat'), lib.indexOf('export type Sender'));
-ok('an opened chat keeps the state the list showed (read before marking read; the GreenReserve chat not forced to answered)',
-  open.indexOf('prisma.message.findMany') < open.indexOf('prisma.message.updateMany') && !/state: 'answered'/.test(open));
 const cr = readFileSync('src/lib/submit-change-request.ts', 'utf8');
-ok('a Settings change request starts its own chat', /startCourseChat\(courseId,/.test(cr) && !/prisma\.message\.create/.test(cr));
+ok('a Settings change request starts its own chat, emailing only after every row is written', /createCourseChat\(courseId,/.test(cr) && !/prisma\.message\.create/.test(cr)
+  && cr.indexOf('await made.notify()') > cr.indexOf('inquiryStatusEvent.create') && cr.indexOf('await made.notify()') > cr.indexOf('recordCoursePageDecision(courseId'));
+for (const f of ['src/app/api/admin/finance/route.ts', 'src/app/api/admin/revenue/route.ts', 'src/lib/session.ts']) {
+  const src = readFileSync(f, 'utf8');
+  ok(`${f}: raw timestamp bounds are cast to UTC`, /::timestamptz AT TIME ZONE 'UTC'\)/.test(src) && !/"(at|createdAt|staffLastSeenAt)" (>=|<|=) \$\{/.test(src));
+}
 const nb = readFileSync('src/app/api/admin/nav-badges/route.ts', 'utf8');
 ok('the rail counts unanswered chats, not unread messages', /unansweredChatCount\(\)/.test(nb) && !/readAt: null/.test(nb));
 ok('unanswered = the last real message in each chat is the course\'s', /DISTINCT ON \(COALESCE\(m\."chatId", m\."threadId"\)\)/.test(lib) && /m\."isBroadcast" = false/.test(lib) && /last\."senderType" = 'operator'/.test(lib));
