@@ -17,7 +17,7 @@ import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import { dfetch } from '@/lib/dashboard-fetch';
 import type { MoneyBooking, MoneyCourse } from '@/components/dashboard/money/types';
 import { StripeSquare } from '@/components/dashboard/money/revenue/ui';
-import { TodayCard, NextPayoutCard, RangeBar, RevenueChart, SoldPaid, soldRows, rangeOf, rangeText } from '@/components/dashboard/money/revenue/Top';
+import { TodayCard, NextPayoutCard, RangeBar, RevenueChart, SoldPaid, soldTotal, rangeOf, rangeText } from '@/components/dashboard/money/revenue/Top';
 import { PendingPayments } from '@/components/dashboard/money/revenue/PendingPayments';
 import { PaymentsTab } from '@/components/dashboard/money/revenue/PaymentsTab';
 import { LedgerTab } from '@/components/dashboard/money/revenue/LedgerTab';
@@ -170,7 +170,7 @@ function RevenuePageInner() {
           {!dateFilter && <RangeBar value={range} rangeKey={rangeKey} today={today} onChange={(k, r) => { setRangeKey(k); if (r) setCustom(r); }} />}
 
           {seesPayments && sales && (<>
-            <RevenueChart s={sales} range={range} total={soldRows(sales).reduce((n, r) => n + r.cents, 0)} />
+            <RevenueChart s={sales} range={range} total={soldTotal(sales)} />
             <SoldPaid s={sales} onDrawer />
           </>)}
 

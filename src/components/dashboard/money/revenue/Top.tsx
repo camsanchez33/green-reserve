@@ -23,16 +23,23 @@ function Change({ pct, tail }: { pct: number | null; tail: ReactNode }) {
 /** Today so far, running through the day; the dashed 30-day average once the route sends it. */
 export function TodayCard({ s }: { s: Sales }) {
   const H0 = 360, H1 = 1200;
-  const nowMin = Number(s.clock.slice(0, 2)) * 60 + Number(s.clock.slice(3, 5));
-  const at = new Map(s.todayByHour.map(r => [r.hour, r.collectedCents]));
-  const today: [number, number][] = [[H0, 0]];
-  let sum = 0;
-  for (const r of s.todayByHour) if (r.hour * 60 < H0) sum += r.collectedCents;
-  today[0][1] = sum;
-  for (let m = H0; m < Math.min(nowMin, H1); m += 60) { sum += at.get(m / 60) ?? 0; today.push([Math.min(m + 60, nowMin), sum]); }
-  const todayNow = s.todayCollectedCents;
-  const avg = s.avg30 ?? null;
-  const avgPts: [number, number][] = avg ? avg.byHalfHour.filter(p => p.minute >= H0 && p.minute <= H1).map(p => [p.minute, p.cumulativeCents]) : [];
+  // Build's todayVsAverage: both lines by payment time from the ledger. Without it, today alone from todayByHour.
+  const tva = s.todayVsAverage ?? null;
+  const nowMin = tva ? tva.nowMinute : Number(s.clock.slice(0, 2)) * 60 + Number(s.clock.slice(3, 5));
+  let today: [number, number][] = [];
+  if (tva) today = tva.points.filter(p => p.todayCents !== null && p.minute >= H0 && p.minute <= H1).map(p => [p.minute, p.todayCents!] as [number, number]);
+  else {
+    const at = new Map(s.todayByHour.map(r => [r.hour, r.collectedCents]));
+    let sum = 0;
+    for (const r of s.todayByHour) if (r.hour * 60 < H0) sum += r.collectedCents;
+    today = [[H0, sum]];
+    for (let m = H0; m < Math.min(nowMin, H1); m += 60) { sum += at.get(m / 60) ?? 0; today.push([Math.min(m + 60, nowMin), sum]); }
+  }
+  const todayNow = tva ? tva.todayNowCents : s.todayCollectedCents;
+  if (tva && nowMin > H0 && nowMin < H1 && (today.length === 0 || today[today.length - 1][0] < nowMin)) today.push([nowMin, todayNow]);
+  const avg = tva ? { toNowCents: tva.avgNowCents, days: tva.days } : null;
+  const avgLabel = `Average of the last ${avg && avg.days < 30 ? `${avg.days} days` : '30 days'}`;
+  const avgPts: [number, number][] = tva ? tva.points.filter(p => p.minute >= H0 && p.minute <= H1).map(p => [p.minute, p.avgCents]) : [];
   const max = Math.max(1, todayNow, ...today.map(p => p[1]), ...avgPts.map(p => p[1]));
   const st = niceStep(max, 3), top = Math.ceil(max / st) * st;
   const W = 1000, H = 160;
@@ -47,7 +54,7 @@ export function TodayCard({ s }: { s: Sales }) {
     <section className={`${CARD} !rounded-[16px] px-5 py-[18px] min-w-0`} aria-label="Today">
       <div className="flex flex-wrap items-end gap-x-9 gap-y-3 mb-3.5">
         <div><div className="text-[13px] text-ink-muted">Today so far</div><div className="text-[28px] font-semibold tabular-nums leading-tight text-ink">{usd(todayNow)}</div></div>
-        {avg && <div><div className="text-[13px] text-ink-muted">Average of the last 30 days by {clock12(nowMin)}</div><div className="text-[28px] font-semibold tabular-nums leading-tight text-ink-muted">{usd(avg.toNowCents)}</div></div>}
+        {avg && <div><div className="text-[13px] text-ink-muted">{avgLabel} by {clock12(nowMin)}</div><div className="text-[28px] font-semibold tabular-nums leading-tight text-ink-muted">{usd(avg.toNowCents)}</div></div>}
         {avg && <div className="pb-[5px]"><Change pct={pct} tail="so far" /></div>}
       </div>
       <div className="relative h-40 ml-11 max-md:ml-[38px]"
@@ -76,7 +83,7 @@ export function TodayCard({ s }: { s: Sales }) {
       </div>
       <div className="flex gap-4 mt-2 text-[12px] text-ink-soft">
         <span><i className="inline-block w-4 border-t-2 border-ink mr-1.5 align-middle" />Today</span>
-        {avg && <span><i className="inline-block w-4 border-t-2 border-dashed border-ink-muted mr-1.5 align-middle" />Average of the last 30 days</span>}
+        {avg && <span><i className="inline-block w-4 border-t-2 border-dashed border-ink-muted mr-1.5 align-middle" />{avgLabel}</span>}
       </div>
     </section>
   );
@@ -197,25 +204,33 @@ export function RevenueChart({ s, range, total }: { s: Sales; range: Range; tota
 
 /** What was sold and how it was paid, side by side. */
 export function soldRows(s: Sales): { key: string; label: string; note?: string; cents: number }[] {
+  const g = s.segments;
+  if (g) return [
+    { key: 'tee', label: 'Tee times', note: 'green fees', cents: g.teeCents },
+    { key: 'cart', label: 'Carts', cents: g.cartCents },
+    { key: 'shop', label: 'Pro shop', cents: g.shopCents },
+    { key: 'event', label: 'Events', cents: g.eventCents },
+    { key: 'fnb', label: 'Food & beverage', cents: g.fnbCents },
+  ];
   const sm = s.summary;
-  const hasFnb = sm.fnbCents !== undefined && sm.shopCents !== undefined;
   return [
     { key: 'tee', label: 'Tee times', note: 'green fees', cents: sm.greenCents + sm.lateFeesKeptCents },
     { key: 'cart', label: 'Carts', cents: sm.cartCents },
-    { key: 'shop', label: 'Pro shop', cents: hasFnb ? sm.shopCents! : sm.rangeCents + sm.shopOnRoundsCents + sm.walkUpCents },
+    { key: 'shop', label: 'Pro shop', cents: sm.rangeCents + sm.shopOnRoundsCents + sm.walkUpCents },
     { key: 'event', label: 'Events', cents: sm.eventCents ?? 0 },
-    ...(hasFnb ? [{ key: 'fnb', label: 'Food & beverage', cents: sm.fnbCents! }] : []),
   ];
 }
+/** The Total line: Build's segments.totalCents when sent. */
+export const soldTotal = (s: Sales) => s.segments ? s.segments.totalCents : soldRows(s).reduce((n, r) => n + r.cents, 0);
 export function SoldPaid({ s, onDrawer }: { s: Sales; onDrawer?: boolean }) {
-  const rows = soldRows(s), total = rows.reduce((n, r) => n + r.cents, 0);
+  const rows = soldRows(s), total = soldTotal(s);
   const p = s.paid;
-  const split = p.onlineCents !== undefined && p.readerCents !== undefined && p.cashCents !== undefined;
-  const how: { label: string; note?: string; cents: number }[] = split
-    ? [{ label: 'Card online', cents: p.onlineCents! }, { label: 'Card at the counter', note: 'card reader', cents: p.readerCents! }, { label: 'Cash', cents: p.cashCents! }]
+  // Build's howPaid is by payment day with its own total (never the same total as What was sold).
+  const hp = s.howPaid;
+  const how: { label: string; note?: string; cents: number }[] = hp
+    ? [{ label: 'Card online', cents: hp.onlineCents }, { label: 'Card at the counter', note: 'card reader', cents: hp.readerCents }, { label: 'Cash', cents: hp.cashCents }, ...(hp.otherCents ? [{ label: 'Check or other', cents: hp.otherCents }] : [])]
     : [{ label: 'Card', cents: p.cardCents }, { label: 'At the counter', cents: p.counterCents }, ...(p.accountCents ? [{ label: 'On accounts', cents: p.accountCents }] : [])];
-  if (split && p.accountCents) how.push({ label: 'On accounts', cents: p.accountCents });
-  const paidTotal = how.reduce((n, r) => n + r.cents, 0);
+  const paidTotal = hp ? hp.totalCents : how.reduce((n, r) => n + r.cents, 0);
   const pct = (v: number, t: number) => t ? `${Math.round((v / t) * 100)}%` : '—';
   const d = s.drawer;
   return (

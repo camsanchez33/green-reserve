@@ -11,7 +11,7 @@ import { dfetch } from '@/lib/dashboard-fetch';
 import { LoadError } from '@/components/dashboard/LoadError';
 import { methodLabel } from '@/lib/ledger-view';
 import { FilterMenu, SideCard, Dl, Dot, Kv, IconButton, Icon, ROW, ROW_SEL, usd2, dayLong } from './ui';
-import type { LedgerDays, RevenueLedgerDay, RevenueLedgerRow, Range } from './data';
+import type { LedgerDays, RevenueLedgerDay, RevenueLedgerRow, Range, Mismatch } from './data';
 
 const card = (d: RevenueLedgerDay) => d.cardInCents + d.otherInCents - d.platformCents;
 const net = (d: RevenueLedgerDay) => d.netCents - d.platformCents;
@@ -137,13 +137,14 @@ export function LedgerTab({ range, rangeLabel }: { range: Range; rangeLabel: str
 const HOWS = ['card', 'card_present', 'cash', 'other'] as const;
 function LedgerDay({ d, zone, onBack }: { d: RevenueLedgerDay; zone: string; onBack: () => void }) {
   const [rows, setRows] = useState<RevenueLedgerRow[] | null>(null);
+  const [mm, setMm] = useState<Mismatch | null>(null);
   const [error, setError] = useState('');
   const [how, setHow] = useState(''), [what, setWhat] = useState('');
   const [sel, setSel] = useState<string | null>(null);
   const load = useCallback(async () => {
     setError('');
-    const r = await dfetch<{ rows: RevenueLedgerRow[] }>(`/api/operator/money/ledger?day=${d.day}`);
-    if (r.ok) setRows(r.data.rows); else setError(r.error);
+    const r = await dfetch<{ rows: RevenueLedgerRow[]; mismatch?: Mismatch | null }>(`/api/operator/money/ledger?day=${d.day}`);
+    if (r.ok) { setRows(r.data.rows); setMm(r.data.mismatch ?? null); } else setError(r.error);
   }, [d.day]);
   useEffect(() => { load(); }, [load]);
   // GreenReserve's own booking fee is golfers' money on GreenReserve's account, not the course's (lane decision).
@@ -151,16 +152,19 @@ function LedgerDay({ d, zone, onBack }: { d: RevenueLedgerDay; zone: string; onB
   const kinds = [...new Map(mine.map(r => [r.what, r.label])).entries()];
   const shown = mine.filter(r => (!how || r.method === how) && (!what || r.what === what)).slice().reverse();
   const open = shown.find(r => r.id === sel) ?? null;
-  const g = diffOf(d), sd = d.stripeDiff ?? null;
+  // Build's mismatch (?day= only): Stripe's side payment by payment. diffCents = stripeCents − ourCents.
+  const g = mm ? -mm.diffCents : diffOf(d);
+  const flagged = new Map((mm?.payments ?? []).map(x => [x.stripeId, x]));
+  const flagOf = (r: RevenueLedgerRow) => (r.stripeId ? flagged.get(r.stripeId) : undefined) ?? null;
   const rowGrid = open ? 'md:grid-cols-[70px_minmax(0,1fr)_minmax(0,1.2fr)_84px_118px]' : 'md:grid-cols-[70px_minmax(0,1fr)_minmax(0,1.4fr)_88px_128px]';
   const row = (r: RevenueLedgerRow) => (
     <div key={r.id} role="button" tabIndex={0} onClick={() => setSel(sel === r.id ? null : r.id)} onKeyDown={e => { if (e.key === 'Enter') setSel(sel === r.id ? null : r.id); }}
-      className={ROW + ' grid-cols-[58px_minmax(0,1fr)_auto] ' + rowGrid + (sel === r.id ? ROW_SEL : '') + (r.stripeRefundCents ? ' shadow-[inset_3px_0_0_var(--color-bad)]' : '')}>
+      className={ROW + ' grid-cols-[58px_minmax(0,1fr)_auto] ' + rowGrid + (sel === r.id ? ROW_SEL : '') + (flagOf(r) ? ' shadow-[inset_3px_0_0_var(--color-bad)]' : '')}>
       <span className="tabular-nums text-ink-muted">{tz(r.at, zone)}</span>
       <span className="truncate font-semibold text-ink">{r.who || r.label}</span>
       <span className="truncate text-ink-soft max-md:hidden">{r.label}{r.note ? ` · ${r.note}` : ''}</span>
       <span className="text-right tabular-nums font-semibold text-ink">{r.direction === 'out' ? '−' : ''}{usd2(r.amountCents)}</span>
-      <span className="inline-flex items-center gap-[7px] truncate text-ink max-md:hidden"><Dot tone={r.stripeRefundCents ? 'bad' : r.direction === 'out' ? 'neutral' : 'ok'} />{r.stripeRefundCents ? 'Stripe differs' : r.direction === 'out' ? 'Refunded' : r.methodLabel}</span>
+      <span className="inline-flex items-center gap-[7px] truncate text-ink max-md:hidden"><Dot tone={flagOf(r) ? 'bad' : r.direction === 'out' ? 'neutral' : 'ok'} />{flagOf(r) ? 'Stripe differs' : r.direction === 'out' ? 'Refunded' : r.methodLabel}</span>
     </div>
   );
   return (
@@ -179,16 +183,18 @@ function LedgerDay({ d, zone, onBack }: { d: RevenueLedgerDay; zone: string; onB
         <section className={`${CARD} !rounded-[16px] px-5 py-4 shadow-[inset_3px_0_0_var(--color-bad)]`} aria-label="Differs from Stripe">
           <h3 className="text-[15px] font-semibold text-bad">Differs from Stripe by {usd2(Math.abs(g))}</h3>
           <div className="grid md:grid-cols-3 gap-3 mt-2.5 mb-3">
-            <div><div className="text-[13px] text-ink-muted">Our total</div><div className="text-[22px] font-semibold tabular-nums text-ink">{usd2(d.courseCardNetCents)}</div><div className="text-[12.5px] text-ink-muted">card, less refunds</div></div>
-            <div><div className="text-[13px] text-ink-muted">Stripe’s total</div><div className="text-[22px] font-semibold tabular-nums text-ink">{usd2(d.stripeNetCents ?? 0)}</div><div className="text-[12.5px] text-ink-muted">card money Stripe recorded this day</div></div>
-            <div><div className="text-[13px] text-ink-muted">Difference</div><div className="text-[22px] font-semibold tabular-nums text-bad">{g > 0 ? '−' : '+'}{usd2(Math.abs(g))}</div>{sd?.cause === 'refund_in_stripe' && <div className="text-[12.5px] text-ink-muted">a refund made in Stripe directly</div>}</div>
+            <div><div className="text-[13px] text-ink-muted">Our total</div><div className="text-[22px] font-semibold tabular-nums text-ink">{usd2(mm ? mm.ourCents : d.courseCardNetCents)}</div><div className="text-[12.5px] text-ink-muted">card, less refunds</div></div>
+            <div><div className="text-[13px] text-ink-muted">Stripe’s total</div><div className="text-[22px] font-semibold tabular-nums text-ink">{usd2(mm ? mm.stripeCents : d.stripeNetCents ?? 0)}</div><div className="text-[12.5px] text-ink-muted">card money Stripe recorded this day</div></div>
+            <div><div className="text-[13px] text-ink-muted">Difference</div><div className="text-[22px] font-semibold tabular-nums text-bad">{g > 0 ? '−' : '+'}{usd2(Math.abs(g))}</div>{mm && mm.payments.length > 0 && mm.payments.every(x => x.kind === 'refund_in_stripe') && <div className="text-[12.5px] text-ink-muted">a refund made in Stripe directly</div>}</div>
           </div>
-          {sd && sd.payments.length > 0 && (<>
+          {mm && mm.payments.length > 0 && (<>
             <div className="text-[13px] text-ink-muted mb-1">Payments involved</div>
-            <div className="flex flex-col">{sd.payments.map(x => (
-              <div key={x.moveId} className={ROW + ' cursor-default grid-cols-[58px_minmax(0,1fr)_auto] md:grid-cols-[70px_minmax(0,1fr)_minmax(0,1.4fr)_88px_128px] shadow-[inset_3px_0_0_var(--color-bad)]'}>
-                <span className="tabular-nums text-ink-muted">{tz(x.at, zone)}</span><span className="truncate font-semibold text-ink">{x.who}</span>
-                <span className="truncate text-ink-soft max-md:hidden">{x.label}</span><span className="text-right tabular-nums font-semibold text-ink">{usd2(x.amountCents)}</span>
+            <div className="flex flex-col">{mm.payments.map(x => (
+              <div key={x.stripeId + x.kind} className={ROW + ' cursor-default grid-cols-[58px_minmax(0,1fr)_auto] md:grid-cols-[70px_minmax(0,1fr)_minmax(0,1.4fr)_88px_128px] shadow-[inset_3px_0_0_var(--color-bad)]'}>
+                <span className="tabular-nums text-ink-muted">{tz(x.at, zone)}</span>
+                <span className="truncate font-semibold text-ink">{x.href ? <Link href={x.href} className="hover:underline underline-offset-[3px]">{x.who}</Link> : x.who}</span>
+                <span className="truncate text-ink-soft max-md:hidden">{x.note}</span>
+                <span className="text-right tabular-nums font-semibold text-ink">{usd2(x.ourCents ?? x.stripeCents ?? 0)}</span>
                 <span className="inline-flex items-center gap-[7px] text-ink max-md:hidden"><Dot tone="bad" />Stripe differs</span>
               </div>))}
             </div>
@@ -210,7 +216,7 @@ function LedgerDay({ d, zone, onBack }: { d: RevenueLedgerDay; zone: string; onB
               ...(open.stripeId ? [['Stripe', <span key="s" className="font-mono text-[12.5px]">{open.stripeId}</span>] as [string, ReactNode]] : []),
             ]} />
             <div className="border-t border-line mb-3"><Kv first total label={open.direction === 'out' ? 'Given back' : 'Amount'} value={usd2(open.amountCents)} /></div>
-            {open.stripeRefundCents ? <p className="text-[12.5px] text-bad mb-3">Stripe shows a {usd2(open.stripeRefundCents)} refund on this payment, made in Stripe directly. GreenReserve still has it as paid.</p> : null}
+            {flagOf(open) && <p className="text-[12.5px] text-bad mb-3">{flagOf(open)!.note}</p>}
             {open.href && <Link href={open.href} className="text-[12.5px] font-semibold text-ink underline underline-offset-[3px]">Open</Link>}
           </SideCard>
         )}
