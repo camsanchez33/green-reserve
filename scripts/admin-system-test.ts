@@ -6,6 +6,7 @@ import { readFileSync } from 'fs';
 import { services, tools, summary, worst, matches, CANT, type SystemData } from '../src/app/admin/system/services';
 
 let failed = 0;
+const page0 = () => readFileSync('src/app/admin/system/page.tsx', 'utf8');
 const check = (name: string, ok: boolean, info = '') => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${ok || !info ? '' : ` — ${info}`}`); if (!ok) failed++; };
 
 const run = (status: 'ok' | 'bad' | 'warn') => ({ status, note: status === 'bad' ? 'Last run failed: Resend rate limit reached' : '', last: { startedAt: '2026-11-14T14:00:00Z', finishedAt: null, outcome: status, detail: '', error: status === 'bad' ? 'Resend rate limit reached' : '' } });
@@ -29,7 +30,7 @@ check('summary counts only the amber or red services', summary(all).text === 'Al
 
 const broken: SystemData = { ...base,
   crons: base.crons.map(c => c.path.endsWith('chase-onboarding') ? { ...c, health: run('bad') } : c.path.endsWith('monthly-review') ? { ...c, health: null } : c),
-  ops: { twilio: { sid: true, token: false, from: true } } };
+  twilio: { accountSidSet: true, authTokenSet: false, fromNumberSet: true } };
 const b = services(broken);
 const jobs = b.find(s => s.id === 'jobs')!, tw = b.find(s => s.id === 'twilio')!;
 check('a failing job makes the jobs line red and names it', jobs.st === 'bad' && jobs.state === '1 failing: chase-onboarding', jobs.state);
@@ -39,6 +40,11 @@ check('worst first', worst(b)[0].id === 'jobs' && worst(b)[1].id === 'twilio');
 check('Twilio without the per-key split still says a key is missing', services({ ...base, platform: { ...base.platform, integrations: { ...base.platform.integrations, twilio: false } } }).find(s => s.id === 'twilio')!.state === 'A key is missing');
 check('Filter and wordless search', matches(jobs, 'bad', '') && !matches(jobs, 'ok', '') && matches(jobs, 'all', 'CHASE') && !matches(jobs, 'all', 'stripe'));
 
+const told = services({ ...base, services: { neon: { state: 'ok', note: 'Up · backup done' }, assistant: { state: 'unknown', note: '' }, stripe: { state: 'bad', note: 'Webhook failing' } } });
+check('Build’s verdict is used as-is: colour and words', told.find(s => s.id === 'neon')!.st === 'ok' && told.find(s => s.id === 'neon')!.state === 'Up · backup done' && told.find(s => s.id === 'stripe')!.st === 'bad');
+check('"unknown" from the route reads "Can’t see here" with a grey dot', told.find(s => s.id === 'anthropic')!.st === '' && told.find(s => s.id === 'anthropic')!.state === CANT);
+check('a card-charging job never gets a Re-run button (canRerun false hides it)', page0().includes("c.canRerun === false") && page0().includes('charges ? null'));
+
 const orphans = { checked: false, items: [], acknowledged: [], note: '' };
 check('a manager sees only the Data check among the owner tools', tools({ isOwner: false, orphans, versions: null, versionsErr: '', wipe: null, wipeErr: '', wiped: null }).map(t => t.id).join() === 'data');
 const own = tools({ isOwner: true, orphans, versions: null, versionsErr: 'no', wipe: { open: true, closesAt: '2026-12-01T05:00:00Z', confirmWords: 'WIPE TEST DATA', wiped: { Course: 14, Booking: 4798 }, kept: {} }, wipeErr: '', wiped: null });
@@ -46,9 +52,9 @@ check('the owner sees all three tools', own.map(t => t.id).join() === 'data,agre
 check('the wipe line says until when and how many', own[2].state === 'Open until Dec 1 · 4,812 records', own[2].state);
 
 // Every feature of the old System page is still on it, folded into its service.
-const page = readFileSync('src/app/admin/system/page.tsx', 'utf8');
+const page = page0();
 for (const [what, needle] of [
-  ['job runs', '/api/admin/system'], ['platform balance', '/api/admin/platform-stripe'], ['Sentry test error', '/api/admin/sentry-test'],
+  ['job runs', '/api/admin/system'], ['re-run', '/api/admin/system/rerun-job'], ['platform balance', '/api/admin/platform-stripe'], ['Sentry test error', '/api/admin/sentry-test'],
   ['orphan sweep', '/api/admin/orphan-sweep'], ['force delete', 'forceDeleteId'], ['agreement publishing', '/api/admin/agreement-versions'],
   ['launch wipe', '/api/admin/data-reset'], ['backups link', 'L!.backups'], ['CI link', 'L!.ci'], ['commit history', 'L!.commits'],
   ['Stripe webhooks link', 'L!.stripeWebhooks'], ['Cal.com webhook', '/api/calcom/webhook'], ['assistant spend', 'dailyCap'], ['How to fix', 'How to fix'],

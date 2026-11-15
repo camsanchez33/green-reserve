@@ -20,7 +20,7 @@ import g from '../admin-glass.module.css';
 import s from './system.module.css';
 import {
   type St, type Svc, type SystemData, type PlatformStripe, type Orphans, type OrphanSweepItem, type AcknowledgedOrphan,
-  type WipePreview, type CronHealth,
+  type WipePreview, type CronHealth, type Run,
   GROUPS, FILTERS, RANK, CANT, services, tools, summary, worst, matches, jobName, cronSt, twilioKeys, agreementSt,
 } from './services';
 
@@ -231,8 +231,8 @@ function SystemContent() {
   // ── Fix-path buttons ──
   async function rerun(path: string) {
     const k = `rerun:${path}`;
-    setNotes(n => ({ ...n, [k]: { ok: 'Queued. Running now…' } }));
-    const res = await adminFetch<{ health: CronHealth }>('/api/admin/system/rerun', {
+    setNotes(n => ({ ...n, [k]: { ok: 'Running now. This can take up to 5 minutes; keep this page open.' } }));
+    const res = await adminFetch<{ health: CronHealth }>('/api/admin/system/rerun-job', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path }), subject: `the ${jobName(path)} job`, action: 'save',
     });
     if (!res.ok) { setNotes(n => ({ ...n, [k]: { err: res.message } })); return; }
@@ -259,17 +259,16 @@ function SystemContent() {
 
   // ── Links: project-deep when the deploy knows the Vercel project; the route's own links otherwise ──
   const L = data?.links;
-  const ol = data?.ops?.links ?? {};
   const vercelSub = (p: string) => L ? (L.vercelIsDeep ? `${L.vercel}${p}` : L.vercel) : '#';
   const links = {
-    vercelLogs: ol.vercelLogs || vercelSub('/logs'),
-    vercelEnv: ol.vercelEnv || vercelSub('/settings/environment-variables'),
-    vercelCrons: ol.vercelCrons || vercelSub('/settings/cron-jobs'),
-    twilio: ol.twilioConsole || 'https://console.twilio.com',
-    resendUsage: ol.resendUsage || 'https://resend.com/settings/usage',
-    resend: 'https://resend.com/domains',
-    neon: ol.neonConsole || 'https://console.neon.tech',
-    agreementFiles: ol.agreementFiles || (L ? L.commits.replace(/\/commits\/main$/, '/tree/main/legal') : '#'),
+    vercelLogs: vercelSub('/logs'),
+    vercelEnv: L?.vercelEnv || vercelSub('/settings/environment-variables'),
+    vercelCrons: L?.vercelCrons || vercelSub('/settings/cron-jobs'),
+    twilio: L?.twilioConsole || 'https://console.twilio.com',
+    resendUsage: 'https://resend.com/settings/usage',
+    resend: L?.resendDashboard || 'https://resend.com/domains',
+    neon: L?.neonConsole || 'https://console.neon.tech',
+    agreementFiles: L ? L.commits.replace(/\/commits\/main$/, '/tree/main/legal') : '#',
   };
   const envSteps = (name: string | string[], where: ReactNode) => [
     where,
@@ -290,9 +289,13 @@ function SystemContent() {
           <p className={s.lead}>Each job’s last recorded run. Red means it failed, never finished or is overdue.</p>
           <div className={s.rows}>{d.crons.map(c => {
             const st = cronSt(c), h = c.health, k = `rerun:${c.path}`, n = notes[k] ?? {};
-            const rerunBtn = d.ops?.rerun
-              ? <button type="button" className={`${s.btn} ${s.pri}`} onClick={() => rerun(c.path)} disabled={!!n.ok}>Re-run job</button>
+            // Only jobs that never touch a saved card can be re-run here (admin never charges, Cam 2026-11-12):
+            // canRerun false hides the button; undefined means the route doesn't say yet, so the button waits.
+            const charges = c.canRerun === false;
+            const rerunBtn = charges ? null : c.canRerun
+              ? <button type="button" className={`${s.btn} ${s.pri}`} onClick={() => rerun(c.path)} disabled={!!n.ok}>{n.ok ? 'Running…' : 'Re-run job'}</button>
               : <button type="button" className={`${s.btn} ${s.pri}`} disabled title="Re-run isn’t wired in yet — Vercel → Settings → Cron Jobs → Run does the same">Re-run job</button>;
+            const rerunStep = charges ? `This job charges or retries saved cards, so it is never run by hand from here. It catches up on its next scheduled run (${c.human}).` : null;
             // The mockup's case: a Resend limit gets its own step and button.
             const resendLimit = /resend/i.test(`${h?.last?.error ?? ''} ${h?.note ?? ''}`);
             const fix = st === 'bad' ? (
@@ -300,13 +303,13 @@ function SystemContent() {
                 <>Open the function log: Vercel → Logs → filter to <Mono>{c.path}</Mono> and read the error{h?.last?.error ? <> ({h.last.error})</> : null}.</>,
                 resendLimit ? 'Check the limit: Resend → Usage shows the daily send count. Wait for it to reset at midnight UTC, or upgrade the plan.'
                   : 'Fix what the error names (a missing key, a service limit, a timeout).',
-                resendLimit ? 'Press Re-run job once the limit has reset.' : 'Press Re-run job once it is fixed.',
+                rerunStep ?? (resendLimit ? 'Press Re-run job once the limit has reset.' : 'Press Re-run job once it is fixed.'),
                 'Come back here: the last run should read today with a green dot.',
               ]}>{rerunBtn}<ExtBtn href={links.vercelLogs}>Open Vercel logs</ExtBtn>{resendLimit && <ExtBtn href={links.resendUsage}>Open Resend usage</ExtBtn>}</Fix>
             ) : (
               <Fix sev="warn" note={n.ok} err={n.err} steps={[
                 'Nothing is broken: this job has no run recorded since logging started in this release.',
-                `Press Re-run job to log one now, or wait for the next run (${c.human}).`,
+                rerunStep ?? `Press Re-run job to log one now, or wait for the next run (${c.human}).`,
                 <>If tomorrow still shows no run: Vercel → Settings → Cron Jobs and check that <Mono>{jobName(c.path)}</Mono> is listed.</>,
               ]}>{rerunBtn}<ExtBtn href={links.vercelCrons}>Open Vercel cron jobs</ExtBtn></Fix>
             );
@@ -353,7 +356,7 @@ function SystemContent() {
             <div className={s.kv}><span className={s.k}>Environment</span><span className={`${s.v} ${p.env === 'production' ? s.ok : s.warn}`}>{p.env}</span><span /></div>
             <div className={s.kv}><span className={s.k}>Service fee</span><span className={s.v}>{formatMoney(p.accessFeeCents / 100)} per player</span><span /></div>
             <div className={s.kv}><span className={s.k}>Deployed</span><span className={s.v}>
-              {p.commitSha ? <Mono>{p.commitSha}</Mono> : <span className={s.small}>local build</span>}{p.branch && <>&nbsp; {p.branch}</>}
+              {p.commitSha ? (d.vercel?.commitUrl ? <a className={s.mono} href={d.vercel.commitUrl} target="_blank" rel="noopener noreferrer">{p.commitSha}</a> : <Mono>{p.commitSha}</Mono>) : <span className={s.small}>local build</span>}{p.branch && <>&nbsp; {p.branch}</>}
               {p.commitMessage && <><br /><span className={s.small}>{p.commitMessage}</span></>}
             </span><span /></div>
             {p.publicUrl && <div className={s.kv}><span className={s.k}>Public URL</span><span className={s.v}>{p.publicUrl}</span><span /></div>}
@@ -370,21 +373,22 @@ function SystemContent() {
         </>
       );
       case 'neon': {
-        const n = d.ops?.neon;
+        const n = d.neon, bk = n?.backup ?? null;
+        const bkSt: St = !bk ? 'warn' : bk.conclusion === 'success' ? 'ok' : bk.conclusion === 'failure' ? 'bad' : '';
         return (
           <>
             <div className={s.rows}>
               {n ? <>
-                <Row st={n.up ? 'ok' : 'bad'} right={formatDateTime(n.checkedAt)}
+                <Row st={n.db === 'up' ? 'ok' : 'bad'} right={formatDateTime(n.checkedAt)}
                   fix={<Fix sev="bad" steps={['Open the Neon console and check the project is not suspended or over its limits.', 'Check Vercel → Logs for database errors.', 'Come back here and press Re-check.']}>
                     <ExtBtn href={links.neon} pri>Open Neon console</ExtBtn>{recheckBtn}</Fix>}>
-                  {n.up ? <>Database up. <Mono>/api/health</Mono> returns {'{"ok":true,"db":"up"}'}</> : 'The database did not answer.'}
+                  {n.db === 'up' ? <>Database up. <Mono>/api/health</Mono> returns {'{"ok":true,"db":"up"}'}</> : 'The database did not answer.'}
                 </Row>
-                <Row st={!n.lastBackup ? 'warn' : n.lastBackup.ok ? 'ok' : 'bad'} right={n.lastBackup ? formatDateTime(n.lastBackup.at) : ''}
+                <Row st={bkSt} right={bk ? formatDateTime(bk.at) : ''}
                   sub="Checked on the GitHub backup run."
-                  fix={<Fix sev={n.lastBackup && !n.lastBackup.ok ? 'bad' : 'warn'} steps={['Open the backup runs on GitHub and read the last run’s log.', 'Fix what it names (usually an expired database URL in the repository secrets).', 'Run the workflow again from GitHub (Run workflow).', 'Come back here: the last backup should read today.']}>
-                    <ExtBtn href={n.lastBackup?.url || L!.backups} pri>View backup runs</ExtBtn></Fix>}>
-                  {!n.lastBackup ? 'No backup run found' : n.lastBackup.ok ? 'Last backup: nightly run finished' : 'Last backup: nightly run failed'}
+                  fix={<Fix sev={bkSt === 'bad' ? 'bad' : 'warn'} steps={['Open the backup runs on GitHub and read the last run’s log.', 'Fix what it names (usually an expired database URL in the repository secrets).', 'Run the workflow again from GitHub (Run workflow).', 'Come back here: the last backup should read today.']}>
+                    <ExtBtn href={bk?.url || L!.backups} pri>View backup runs</ExtBtn></Fix>}>
+                  {!bk ? 'No backup run found' : bk.conclusion === 'success' ? 'Last backup: nightly run finished' : bk.conclusion === 'failure' ? 'Last backup: nightly run failed' : 'Nightly backup running now'}
                 </Row>
               </> : <>
                 <Row st="" right={CANT}>Database health</Row>
@@ -435,7 +439,7 @@ function SystemContent() {
         );
       }
       case 'resend': {
-        const rs = d.ops?.resend;
+        const rs = d.resend;
         return (
           <>
             <p className={s.lead}>All email goes through one sender. Course and golfer addresses come from the contact list in the code.</p>
@@ -538,16 +542,20 @@ function SystemContent() {
         );
       }
       case 'github': {
-        const gh = d.ops?.github;
-        const run = (label: string, r: { at: string; ok: boolean; url: string } | null, href: string, sev: St) => r
-          ? <Row st={r.ok ? 'ok' : sev} right={formatDateTime(r.at)}
+        const gh = d.github?.readable ? d.github : null;
+        const run = (label: string, r: Run | null, href: string, sev: St) => {
+          if (!r) return <Row st="" right={CANT}>{label}</Row>;
+          const st: St = r.conclusion === 'success' ? 'ok' : r.conclusion === 'failure' ? sev : '';
+          return (
+            <Row st={st} right={formatDateTime(r.at)}
               fix={<Fix sev={sev} steps={['Open the run on GitHub and read the failed step.', 'Fix what it names, then press Re-run jobs on GitHub.', 'Come back here: the run should read with a green dot.']}><ExtBtn href={r.url || href} pri>Open the run</ExtBtn></Fix>}>
-              {label} {r.ok ? 'passed' : 'failed'}</Row>
-          : <Row st="" right={CANT}>{label}</Row>;
+              {label} {r.conclusion === 'success' ? 'passed' : r.conclusion === 'failure' ? 'failed' : 'running now'}</Row>
+          );
+        };
         return (
           <>
             <div className={s.rows}>
-              {gh ? <>{run('Last nightly backup run', gh.backup, L!.backups, 'bad')}{run('Last CI run', gh.ci, L!.ci, 'warn')}</>
+              {gh ? <>{run('Last nightly backup run', gh.backup, L!.backups, 'bad')}{run(gh.ci ? `Last CI run (${gh.ci.name} on ${gh.ci.branch})` : 'Last CI run', gh.ci, L!.ci, 'warn')}</>
                 : <Row st="">Not tracked in the app — check the nightly backup run and the latest test run on GitHub.</Row>}
             </div>
             <div className={s.acts}><Ext href={L!.backups}>View backup runs</Ext><Ext href={L!.ci}>View CI runs</Ext></div>

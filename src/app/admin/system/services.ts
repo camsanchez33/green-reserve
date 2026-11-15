@@ -10,7 +10,8 @@ export interface CronHealth {
   status: 'ok' | 'bad' | 'warn'; note: string;
   last: { startedAt: string; finishedAt: string | null; outcome: string; detail: string; error: string } | null;
 }
-type Run = { at: string; ok: boolean; url: string };
+export type Run = { at: string; conclusion: 'success' | 'failure' | 'running'; url: string };
+export type ServiceKey = 'jobs' | 'vercel' | 'neon' | 'github' | 'stripe' | 'twilio' | 'resend' | 'calcom' | 'sentry' | 'assistant' | 'blob';
 export interface SystemData {
   lastStripeTouch: { courseName: string; updatedAt: string } | null;
   links: {
@@ -18,8 +19,10 @@ export interface SystemData {
     vercel: string; vercelIsDeep: boolean;
     sentry: string; sentryIsDeep: boolean;
     stripeWebhooks: string;
+    resendDashboard?: string; twilioConsole?: string; neonConsole?: string;
+    vercelEnv?: string; vercelEnvIsDeep?: boolean; vercelCrons?: string; vercelCronsIsDeep?: boolean;
   };
-  crons: { path: string; schedule: string; human: string; health: CronHealth | null }[];
+  crons: { path: string; schedule: string; human: string; health: CronHealth | null; canRerun?: boolean }[];
   stripeWebhook?: { at: string; outcome: string; detail: string; error: string } | null;
   calcom?: { state: 'off' } | { state: 'invalid'; raw: string; reason: string } | { state: 'on'; url: string; webhookSecretSet: boolean };
   birdie?: { enabled: boolean; keySet: boolean; flag: boolean; todayReplies: number; dailyCap: number; model: string };
@@ -27,15 +30,14 @@ export interface SystemData {
     accessFeeCents: number; env: string; commitSha: string; commitMessage: string; branch: string; publicUrl: string;
     integrations: { stripe: boolean; stripeWebhook: boolean; resend: boolean; twilio: boolean; sentry: boolean; blob: boolean; privateBlob: boolean };
   };
-  // Being added by Build (agreed over send_message). Every field optional: until it lands the row says "Can't see here".
-  ops?: {
-    neon?: { up: boolean; checkedAt: string; lastBackup: Run | null };
-    twilio?: { sid: boolean; token: boolean; from: boolean };
-    resend?: { key: boolean; domainVerified: boolean | null };
-    github?: { backup: Run | null; ci: Run | null } | null;
-    rerun?: boolean;
-    links?: Partial<Record<'vercelLogs' | 'vercelEnv' | 'vercelCrons' | 'resendUsage' | 'twilioConsole' | 'neonConsole' | 'agreementFiles', string>>;
-  };
+  // From Build (claude/platform-activity-data, agreed over send_message 2026-11-15). Every field optional: until it
+  // lands, a row says "Can't see here". When `services` is there, its colours and notes are used as-is.
+  services?: Partial<Record<ServiceKey, { state: 'ok' | 'warn' | 'bad' | 'unknown'; note: string }>>;
+  neon?: { db: 'up' | 'down'; checkedAt: string; backup: Run | null };
+  github?: { readable: boolean; backup: Run | null; ci: (Run & { branch: string; name: string }) | null };
+  resend?: { keySet: boolean; domain: string; domainVerified: boolean | null };
+  twilio?: { accountSidSet: boolean; authTokenSet: boolean; fromNumberSet: boolean };
+  vercel?: { env: string; commitSha: string; commitMessage: string; branch: string; commitUrl: string };
 }
 export interface PlatformStripe {
   balance: { available: number; pending: number; currency: string };
@@ -64,7 +66,8 @@ const pl = (n: number, one: string, many = one + 's') => `${n} ${n === 1 ? one :
 const stamp = (d: string) => new Date(d).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 
 export function twilioKeys(d: SystemData): { sid: boolean; token: boolean; from: boolean } | null {
-  return d.ops?.twilio ?? null;
+  const t = d.twilio;
+  return t ? { sid: t.accountSidSet, token: t.authTokenSet, from: t.fromNumberSet } : null;
 }
 
 export function stripeSt(d: SystemData): St {
@@ -93,17 +96,18 @@ export function services(d: SystemData): Svc[] {
   out.push({ id: 'vercel', g: 'run', t: 'Vercel', does: 'Hosting and deploys', st: prod ? 'ok' : 'warn',
     state: d.platform.commitSha ? `Commit ${d.platform.commitSha} live` + (prod ? '' : ` · ${d.platform.env}`) : `${d.platform.env} · local build` });
 
-  const neon = d.ops?.neon;
+  const neon = d.neon, bk = neon?.backup;
   out.push({ id: 'neon', g: 'run', t: 'Neon', does: 'The database',
-    st: !neon ? '' : !neon.up ? 'bad' : neon.lastBackup && !neon.lastBackup.ok ? 'bad' : !neon.lastBackup ? 'warn' : 'ok',
-    state: !neon ? CANT : !neon.up ? 'Down' : !neon.lastBackup ? 'Up · no backup found' : neon.lastBackup.ok ? `Up · backup ${stamp(neon.lastBackup.at)}` : 'Up · last backup failed' });
+    st: !neon ? '' : neon.db === 'down' || bk?.conclusion === 'failure' ? 'bad' : !bk ? 'warn' : 'ok',
+    state: !neon ? CANT : neon.db === 'down' ? 'Down' : !bk ? 'Up · no backup found' : bk.conclusion === 'failure' ? 'Up · last backup failed'
+      : bk.conclusion === 'running' ? 'Up · backup running' : `Up · backup ${stamp(bk.at)}` });
 
   const sst = stripeSt(d);
   out.push({ id: 'stripe', g: 'money', t: 'Stripe', does: 'Payments and payouts', st: sst,
     state: !i.stripe ? 'Key missing' : !i.stripeWebhook ? 'Webhook secret missing' : d.stripeWebhook
       ? (d.stripeWebhook.outcome === 'error' ? 'The last event failed' : `Last event ${stamp(d.stripeWebhook.at)}`) : 'No event received yet' });
 
-  const rs = d.ops?.resend;
+  const rs = d.resend;
   out.push({ id: 'resend', g: 'talk', t: 'Resend', does: 'Email to golfers and courses',
     st: !i.resend ? 'bad' : rs && rs.domainVerified === false ? 'warn' : 'ok',
     state: !i.resend ? 'Key missing' : rs && rs.domainVerified === false ? 'Sending domain not verified' : 'Key set' });
@@ -125,11 +129,19 @@ export function services(d: SystemData): Svc[] {
     st: !i.privateBlob ? 'bad' : !i.blob ? 'warn' : 'ok',
     state: stores === 2 ? '2 stores connected' : !i.privateBlob ? 'Contract store missing' : 'Public store missing' });
 
-  const gh = d.ops?.github;
+  const gh = d.github?.readable ? d.github : null;
+  const failed = (r: Run | null | undefined) => r?.conclusion === 'failure';
   out.push({ id: 'github', g: 'run', t: 'GitHub', does: 'CI and backup runs',
-    st: !gh ? '' : gh.backup && !gh.backup.ok ? 'bad' : gh.ci && !gh.ci.ok ? 'warn' : gh.backup || gh.ci ? 'ok' : '',
-    state: !gh ? 'Check on GitHub' : gh.backup && !gh.backup.ok ? 'Last backup run failed' : gh.ci && !gh.ci.ok ? 'Last CI run failed' : gh.backup || gh.ci ? 'Last runs passed' : 'Check on GitHub' });
+    st: !gh ? '' : failed(gh.backup) ? 'bad' : failed(gh.ci) ? 'warn' : gh.backup || gh.ci ? 'ok' : '',
+    state: !gh ? 'Check on GitHub' : failed(gh.backup) ? 'Last backup run failed' : failed(gh.ci) ? 'Last CI run failed' : gh.backup || gh.ci ? 'Last runs passed' : 'Check on GitHub' });
 
+  // Build's own verdict wins once the route sends it: the colour and the words, never re-derived here.
+  const KEY: Record<string, ServiceKey> = { anthropic: 'assistant' };
+  return out.map(x => {
+    const v = d.services?.[KEY[x.id] ?? (x.id as ServiceKey)];
+    if (!v) return x;
+    return { ...x, st: v.state === 'unknown' ? '' : v.state, state: v.state === 'unknown' ? CANT : v.note || x.state };
+  });
   return out;
 }
 
