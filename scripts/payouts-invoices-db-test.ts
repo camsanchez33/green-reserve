@@ -137,6 +137,11 @@ async function cleanup() {
     const ledgerNet = ld!.days.reduce((x, d) => x + d.netCents - d.platformCents, 0);
     ok('one total: Revenue equals the Ledger’s money in less GreenReserve’s part', one.grossCents === inLessFee, [one.grossCents, inLessFee]);
     ok('…and Revenue − Refunds equals the Ledger’s net after GreenReserve’s part', one.netCents === ledgerNet && one.refundsCents === 1000, [one.netCents, ledgerNet]);
+    const feesIn = ld!.days.reduce((x, d) => x + d.feesInCents, 0), feesBack = ld!.days.reduce((x, d) => x + d.feesBackCents, 0);
+    ok('…and the days carry both fee figures: Revenue = in − feesIn, Refunds = out − feesBack', feesIn === 150 + 300 && feesBack === 30
+      && one.grossCents === ld!.days.reduce((x, d) => x + d.cardInCents + d.cashInCents + d.otherInCents, 0) - feesIn
+      && one.refundsCents === ld!.days.reduce((x, d) => x + d.outCents, 0) - feesBack
+      && ld!.days.every(d => d.platformCents === d.feesInCents - d.feesBackCents), [feesIn, feesBack]);
   }
 
   // ── One payment's side card ──
