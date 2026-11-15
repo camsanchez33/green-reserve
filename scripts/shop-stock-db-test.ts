@@ -5,7 +5,7 @@ import { readFileSync } from 'fs';
 import { prisma } from '../src/lib/prisma';
 import { receiveStock, setReorder, setCost, stockRows, isLow, recentReceipts } from '../src/lib/shop-stock';
 import { shopReport, summarize } from '../src/lib/shop-report';
-import { createSale } from '../src/lib/shop-sales';
+import { createSale, settleOpenSale, markCardPaid } from '../src/lib/shop-sales';
 import { WIPED_TABLES } from '../src/lib/data-reset';
 import { todayIn } from '../src/lib/course-time';
 import { notifyLowStock } from '../src/lib/low-stock';
@@ -111,6 +111,28 @@ async function cleanup() {
   const both = await Promise.all([notifyLowStock(c.id, fake), notifyLowStock(c.id, fake)]);
   ok('two sales at once send one email', both[0] + both[1] === 1 && sent.length === 4, both);
 
+  // An option of a hidden (or deleted) item is not on the Low on Stock list, so it is never emailed.
+  const cap = await prisma.shopItem.create({ data: { courseId: c.id, name: 'Cap', priceCents: 2000, active: false } });
+  const capM = await prisma.shopItem.create({ data: { courseId: c.id, name: 'Cap — M', priceCents: 2000, parentId: cap.id, optionLabel: 'M', stockCount: 1, reorderAt: 3 } });
+  ok('a low size of a hidden item: no email', (await notifyLowStock(c.id, fake)) === 0 && sent.length === 4 && (await prisma.shopItem.findUniqueOrThrow({ where: { id: capM.id } })).lowNoticeAt === null);
+  await prisma.shopItem.update({ where: { id: cap.id }, data: { active: true } });
+  ok('…shown again, its low size is emailed', (await notifyLowStock(c.id, fake)) === 1 && sent[4]?.items[0].name === 'Cap — M');
+  await prisma.shopItem.update({ where: { id: capM.id }, data: { reorderAt: null } });
+
+  // A failed send gives back only its own claim, never one a later sale made.
+  await prisma.shopItem.update({ where: { id: grips.id }, data: { stockCount: 20 } });
+  await prisma.shopItem.update({ where: { id: grips.id }, data: { stockCount: 0 } });
+  let release!: () => void;
+  const slowFail = (_d: Sent) => new Promise<void>((_, rej) => { release = () => rej(new Error('late failure')); });
+  const pendingA = notifyLowStock(c.id, slowFail);
+  while (!release) await new Promise(r => setTimeout(r, 10));
+  await prisma.shopItem.update({ where: { id: grips.id }, data: { stockCount: 20 } });
+  await prisma.shopItem.update({ where: { id: grips.id }, data: { stockCount: 0 } });
+  await new Promise(r => setTimeout(r, 5)); // a new millisecond for B's claim
+  const b = await notifyLowStock(c.id, fake);
+  release(); await pendingA;
+  ok('a slow failed send does not undo a later sale\'s claim', b === 1 && (await flag()) !== null);
+
   // The real paths: a paid walk-up sale and an item added to a round each send it (to an address with no inbox here,
   // so the send is skipped and logged), after the sale has committed.
   await prisma.shopItem.update({ where: { id: grips.id }, data: { stockCount: 5 } });
@@ -124,6 +146,19 @@ async function cleanup() {
   const bk = await prisma.booking.create({ data: { teeTimeId: tt.id, courseId: c.id, golferName: 'G', golferEmail: `${TAG}@noemail.greenreserve.app`, players: 1, greenFeeTotal: 5000, cartFeeTotal: 0, accessFeeTotal: 150, totalAmount: 5150, status: 'confirmed', paymentStatus: 'no_payment_method' } });
   const added = await addItemToBooking(c.id, bk.id, grips.id, 1, 'desk');
   ok('an item added to a round that takes it to the number emails the owner', added.ok && (await lowLog()).length === before + 2, added);
+  // A pay link taken in cash at the counter.
+  await prisma.shopItem.update({ where: { id: grips.id }, data: { stockCount: 5 } });
+  const link = await createSale({ courseId: c.id, lines: [{ shopItemId: grips.id, quantity: 2 }], pay: 'link', soldBy: 'desk' });
+  ok('an open pay link takes no stock and sends nothing', link.ok && (await prisma.shopItem.findUniqueOrThrow({ where: { id: grips.id } })).stockCount === 5 && (await lowLog()).length === before + 2);
+  const settled = link.ok ? await settleOpenSale(c.id, link.value.id, 'paid_cash') : null;
+  ok('a pay link taken in cash that takes it to the number emails the owner', !!settled?.ok && (await lowLog()).length === before + 3, settled);
+  // A card payment (link or reader): markCardPaid, after its stock leaves.
+  await prisma.shopItem.update({ where: { id: grips.id }, data: { stockCount: 5 } });
+  const card = await createSale({ courseId: c.id, lines: [{ shopItemId: grips.id, quantity: 2 }], pay: 'link', soldBy: 'desk' });
+  const stamp = new Date();
+  if (card.ok) await prisma.shopSale.update({ where: { id: card.value.id }, data: { status: 'paying', chargeStartedAt: stamp } });
+  if (card.ok) await markCardPaid(card.value.id, stamp, `pi_${TAG}`);
+  ok('a sale paid by card that takes it to the number emails the owner', card.ok && (await prisma.shopItem.findUniqueOrThrow({ where: { id: grips.id } })).stockCount === 3 && (await lowLog()).length === before + 4);
 
   // Wiring.
   ok('the stock box says the reminder is by email', readFileSync('src/components/dashboard/shop/StockBox.tsx', 'utf8').includes('Reminder by email') && !readFileSync('src/components/dashboard/shop/StockBox.tsx', 'utf8').includes('Shows as Low on Stock'));

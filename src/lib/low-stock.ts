@@ -13,7 +13,7 @@ import { Prisma } from '@prisma/client';
 import { prisma } from './prisma';
 import { sendLowStockEmail } from './email';
 
-export type LowItem = { id: string; name: string; stockCount: number; reorderAt: number };
+export type LowItem = { id: string; name: string; stockCount: number; reorderAt: number; claimedAt: Date };
 
 /** Claim the low rows of a course that haven't had their email yet. */
 async function claimLow(courseId: string): Promise<LowItem[]> {
@@ -21,12 +21,14 @@ async function claimLow(courseId: string): Promise<LowItem[]> {
     UPDATE "ShopItem" SET "lowNoticeAt" = NOW()
     WHERE "courseId" = ${courseId} AND "active" = true AND "lowNoticeAt" IS NULL
       AND "stockCount" IS NOT NULL AND "reorderAt" IS NOT NULL AND "stockCount" <= "reorderAt"
-    RETURNING "id", "name", "stockCount", "reorderAt"`);
+      -- As the Low on Stock list (stockRows): an option of a hidden or deleted item is not on it.
+      AND ("parentId" IS NULL OR EXISTS (SELECT 1 FROM "ShopItem" p WHERE p."id" = "ShopItem"."parentId" AND p."active" = true))
+    RETURNING "id", "name", "stockCount", "reorderAt", "lowNoticeAt" AS "claimedAt"`);
 }
 
-/** Give claims back after a failed send (only rows still holding that claim). */
-async function unclaim(ids: string[]) {
-  if (ids.length) await prisma.shopItem.updateMany({ where: { id: { in: ids }, lowNoticeAt: { not: null } }, data: { lowNoticeAt: null } });
+/** Give claims back after a failed send — only rows still holding THIS claim, never a later sale's. */
+async function unclaim(items: LowItem[]) {
+  for (const i of items) await prisma.shopItem.updateMany({ where: { id: i.id, lowNoticeAt: i.claimedAt }, data: { lowNoticeAt: null } });
 }
 
 /** Email the course's owner about items that just went low. Never throws; returns how many items it named.
@@ -38,11 +40,12 @@ export async function notifyLowStock(courseId: string, send: typeof sendLowStock
     if (!items.length) return 0;
     const course = await prisma.course.findUnique({ where: { id: courseId }, select: { name: true, operator: { select: { name: true, email: true } } } });
     if (!course?.operator?.email) return items.length; // nobody to tell; the claim stands until the item is restocked
-    await send({ courseId, courseName: course.name, ownerName: course.operator.name, ownerEmail: course.operator.email, items: items.sort((a, b) => a.name.localeCompare(b.name)) });
+    const named = [...items].sort((a, b) => a.name.localeCompare(b.name)).map(({ name, stockCount, reorderAt }) => ({ name, stockCount, reorderAt }));
+    await send({ courseId, courseName: course.name, ownerName: course.operator.name, ownerEmail: course.operator.email, items: named });
     return items.length;
   } catch (e) {
     console.error('Low-stock email failed:', e instanceof Error ? e.message : e);
-    await unclaim(items.map(i => i.id)).catch(err => console.error('Low-stock unclaim failed:', err instanceof Error ? err.message : err));
+    await unclaim(items).catch(err => console.error('Low-stock unclaim failed:', err instanceof Error ? err.message : err));
     return 0;
   }
 }
