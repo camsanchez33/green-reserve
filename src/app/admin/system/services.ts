@@ -151,8 +151,8 @@ export function services(d: SystemData): Svc[] {
     const v = d.services?.[KEY[x.id] ?? (x.id as ServiceKey)];
     if (!v) return x;
     let st: St = v.state === 'unknown' ? '' : v.state;
-    if (x.id === 'anthropic' && d.birdie && !d.birdie.enabled) st = '';
-    if (x.id === 'jobs' && st === 'warn' && x.st !== 'warn' && x.st !== 'bad') return x;
+    if (x.id === 'anthropic' && d.birdie && !d.birdie.enabled && st === 'ok') st = '';
+    if (x.id === 'jobs' && st === 'warn' && x.st === '') return x;
     return { ...x, st, state: v.state === 'unknown' ? CANT : v.note || x.state };
   });
 }

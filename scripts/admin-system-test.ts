@@ -54,6 +54,7 @@ check('…even when the route calls them amber', services({ ...base, crons: base
 const overdue = services({ ...base, crons: base.crons.map((c, i) => i === 0 ? { ...c, health: { ...run('ok'), status: 'warn' as const, note: 'Overdue' } } : c) });
 check('an overdue job (it ran before) stays amber', overdue.find(s => s.id === 'jobs')!.st === 'warn');
 check('the assistant switched off is grey, even if the route says ok', services({ ...base, birdie: { ...base.birdie!, enabled: false }, services: { assistant: { state: 'ok', note: 'Off' } } }).find(s => s.id === 'anthropic')!.st === '');
+check('a route red on the assistant is never hidden by the "Off is grey" rule', services({ ...base, birdie: { ...base.birdie!, enabled: false }, services: { assistant: { state: 'bad', note: 'x' } } }).find(s => s.id === 'anthropic')!.st === 'bad');
 check('the two dialogs close on Escape and keep Tab inside', page0().includes("e.key === 'Escape'") && page0().includes("e.key !== 'Tab'") && (page0().match(/<Dialog labelledBy/g) ?? []).length === 2);
 
 const orphans = { checked: false, items: [], acknowledged: [], note: '' };

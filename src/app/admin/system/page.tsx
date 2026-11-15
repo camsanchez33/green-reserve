@@ -294,7 +294,7 @@ function SystemContent() {
     switch (it.id) {
       case 'jobs': return (
         <>
-          <p className={s.lead}>Each job’s last recorded run. Red means it failed, never finished or is overdue.</p>
+          <p className={s.lead}>Each job’s last recorded run. Red means it failed or never finished, amber that it is overdue, grey that it hasn’t run yet.</p>
           <div className={s.rows}>{d.crons.map(c => {
             const st = cronSt(c), h = c.health, k = `rerun:${c.path}`, n = notes[k] ?? {};
             // Only jobs that never touch a saved card can be re-run here (admin never charges, Cam 2026-11-12):
