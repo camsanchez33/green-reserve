@@ -164,6 +164,66 @@ export async function howPaid(courseId: string, tz: string, range: { from: strin
   return howPaidOf(rows);
 }
 
+// ─── Every segment, by payment day (the chart, "vs the period before", how it was paid) ───
+
+export type AllSegments = {
+  bucket: 'day' | 'week';
+  /** Each day (or Monday-start week) of the range, oldest first, empty ones included. */
+  series: { key: string; cents: number }[];
+  /** By weekday (0 = Sunday): the total and how many of that weekday the range has, today left out (it isn't over). */
+  byDow: { dow: number; cents: number; days: number }[];
+  /** By course-local hour of payment. */
+  byHour: { hour: number; cents: number }[];
+  totalCents: number;
+  /** The same length of time just before the range. */
+  beforeTotalCents: number;
+  paid: HowPaid;
+};
+
+const dowOf = (d: string) => new Date(d + 'T12:00:00Z').getUTCDay();
+const weekOf = (d: string) => addDaysStr(d, -((dowOf(d) + 6) % 7));
+
+/**
+ * Pure: the every-segment figures from ledger rows already placed on their course-local day and
+ * hour. The same counting rule as todayVsAverage and howPaid (the course's part, less money given
+ * back, dues and GreenReserve's own fee out), so every money-by-time figure on the page agrees.
+ */
+export function allOf(rows: { day: string; minute: number; method: string; direction: string; amountCents: number; platformFeeCents: number }[], range: { from: string; to: string }, today: string, beforeTotalCents: number): AllSegments {
+  const bucket: AllSegments['bucket'] = daysBetween(range.from, range.to) > 45 ? 'week' : 'day';
+  const keyOf = (d: string) => (bucket === 'week' ? weekOf(d) : d);
+  const series = new Map<string, number>();
+  for (let d = range.from; d <= range.to; d = addDaysStr(d, 1)) series.set(keyOf(d), series.get(keyOf(d)) ?? 0);
+  const dow = Array.from({ length: 7 }, (_, i) => ({ dow: i, cents: 0, days: 0 }));
+  for (let d = range.from; d <= range.to; d = addDaysStr(d, 1)) if (d !== today) dow[dowOf(d)].days++;
+  const hour = new Map<number, number>();
+  let total = 0;
+  const inRange = rows.filter(r => r.day >= range.from && r.day <= range.to);
+  for (const r of inRange) {
+    const v = valueOf(r);
+    total += v;
+    series.set(keyOf(r.day), (series.get(keyOf(r.day)) ?? 0) + v);
+    if (r.day !== today) dow[dowOf(r.day)].cents += v;
+    const h = Math.floor(r.minute / 60);
+    hour.set(h, (hour.get(h) ?? 0) + v);
+  }
+  return {
+    bucket,
+    series: [...series.entries()].map(([key, cents]) => ({ key, cents })),
+    byDow: dow,
+    byHour: [...hour.entries()].sort((a, b) => a[0] - b[0]).map(([h, cents]) => ({ hour: h, cents })),
+    totalCents: total, beforeTotalCents, paid: howPaidOf(inRange),
+  };
+}
+
+export async function allSegments(courseId: string, tz: string, range: { from: string; to: string }, before: { from: string; to: string }, now: Date = new Date()): Promise<AllSegments> {
+  const read = (r: { from: string; to: string }) => prisma.moneyMove.findMany({
+    where: { ...counted(courseId), at: { gte: dayStart(tz, r.from), lt: dayStart(tz, addDaysStr(r.to, 1)) } },
+    select: { at: true, method: true, direction: true, amountCents: true, platformFeeCents: true },
+  });
+  const [rows, prev] = await Promise.all([read(range), read(before)]);
+  return allOf(rows.map(r => ({ ...r, ...localDayMinute(tz, r.at) })), range, todayIn(tz, now), prev.reduce((s, r) => s + valueOf(r), 0));
+}
+
 // ─── Stripe mismatch, per payment ───────────────────────────────────────────
 
 export type DiffKind = 'refund_in_stripe' | 'not_in_stripe' | 'not_here' | 'amount_differs' | 'other_day' | 'stripe_adjustment';

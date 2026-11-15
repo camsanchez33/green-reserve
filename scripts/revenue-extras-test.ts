@@ -1,7 +1,7 @@
 // Revenue page (Cam 2026-11-15): the pure parts of lib/revenue-extras — today against the
 // 30-day average by time of day, Food & beverage, how it was paid, and the per-payment
 // Stripe difference. Pure. Run: npx tsx scripts/revenue-extras-test.ts
-import { lineOf, isFnb, fnbPart, howPaidOf, diffItems, segmentsOf, localDayMinute, type Side } from '../src/lib/revenue-extras';
+import { allOf, lineOf, isFnb, fnbPart, howPaidOf, diffItems, segmentsOf, localDayMinute, type Side } from '../src/lib/revenue-extras';
 
 let failed = 0;
 const ok = (l: string, c: boolean, d: unknown = '') => { console.log(`${c ? 'PASS' : 'FAIL'}  ${l}${c ? '' : ' — ' + JSON.stringify(d)}`); if (!c) failed++; };
@@ -64,6 +64,25 @@ const hp = howPaidOf([
 ok('online is card not at a reader, less GreenReserve’s fee and less what went back', hp.onlineCents === 5000);
 ok('reader, cash and other each their own', hp.readerCents === 2000 && hp.cashCents === 1000 && hp.otherCents === 500);
 ok('the total adds up', hp.totalCents === 8500);
+
+// ── Every segment by payment day ──
+{
+  const r = (day: string, minute: number, method: string, amountCents: number, direction = 'in', platformFeeCents = 0) => ({ day, minute, method, direction, amountCents, platformFeeCents });
+  const A = allOf([
+    r('2026-11-09', 8 * 60 + 5, 'card', 5150, 'in', 150), r('2026-11-09', 9 * 60, 'cash', 1000),
+    r('2026-11-10', 14 * 60, 'card_present', 2000), r('2026-11-10', 15 * 60, 'card', 500, 'out'),
+    r('2026-11-15', 7 * 60, 'cash', 700), r('2026-11-01', 7 * 60, 'cash', 99_999),
+  ], { from: '2026-11-09', to: '2026-11-15' }, '2026-11-15', 4200);
+  ok('a week: by day, every day there, oldest first', A.bucket === 'day' && A.series.length === 7 && A.series[0].key === '2026-11-09' && A.series[0].cents === 6000 && A.series[1].cents === 1500, A.series);
+  ok('total is the course’s part less money given back; outside the range left out', A.totalCents === 6000 + 1500 + 700, A.totalCents);
+  ok('by weekday leaves today out (count and money)', A.byDow[0].days === 0 && A.byDow[0].cents === 0 && A.byDow[1].days === 1 && A.byDow[1].cents === 6000, A.byDow);
+  ok('by hour of payment', JSON.stringify(A.byHour) === JSON.stringify([{ hour: 7, cents: 700 }, { hour: 8, cents: 5000 }, { hour: 9, cents: 1000 }, { hour: 14, cents: 2000 }, { hour: 15, cents: -500 }]), A.byHour);
+  ok('how paid adds up to the same total', A.paid.totalCents === A.totalCents && A.paid.onlineCents === 4500 && A.paid.readerCents === 2000 && A.paid.cashCents === 1700, A.paid);
+  ok('the period before is passed through', A.beforeTotalCents === 4200);
+  const W = allOf([], { from: '2026-08-01', to: '2026-11-15' }, '2026-11-15', 0);
+  ok('a long range is by Monday-start week', W.bucket === 'week' && W.series[0].key === '2026-07-27' && W.series.every(x => dowOf(x.key) === 1), W.series.slice(0, 2));
+}
+function dowOf(d: string) { return new Date(d + 'T12:00:00Z').getUTCDay(); }
 
 // ── Stripe difference, per payment ──
 const day = '2026-11-04';
