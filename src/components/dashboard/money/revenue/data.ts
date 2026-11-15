@@ -32,8 +32,8 @@ export type Overview = { week: { from: string; to: string }; today: string; cloc
 export type Payout = { id: string; amountCents: number; currency: string; status: string; createdAt: string; arrivalDate: string; failureMessage: string | null };
 export type PayoutsData = { connected: boolean; payouts: Payout[]; next?: Payout | null; balance: { availableCents: number; pendingCents: number } | null };
 
-/** Build (?day= only): what Stripe disagrees with that day, payment by payment. diffCents = stripeCents − ourCents. */
-export type Mismatch = { ourCents: number; stripeCents: number; diffCents: number; payments: { stripeId: string; kind: 'refund_in_stripe' | 'not_in_stripe' | 'not_here' | 'amount_differs' | 'other_day'; at: string; who: string; href: string | null; ourCents: number | null; stripeCents: number | null; note: string }[] };
+/** Build (?day=&mismatch=1, asked only on a day whose match is 'off'): what Stripe disagrees with that day, payment by payment. diffCents = stripeCents − ourCents. */
+export type Mismatch = { ourCents: number; stripeCents: number; diffCents: number; payments: { stripeId: string; paymentStripeId: string | null; kind: 'refund_in_stripe' | 'not_in_stripe' | 'not_here' | 'amount_differs' | 'other_day' | 'stripe_adjustment'; at: string; who: string; href: string | null; ourCents: number | null; stripeCents: number | null; note: string }[] };
 export type RevenueLedgerDay = LedgerDay;
 export type LedgerDays = { range: Range; today: string; days: RevenueLedgerDay[]; stripeRead: boolean; stripeConnected: boolean; tz: string; earned: Earned | null; paidOut: PaidOut | null };
 export type RevenueLedgerRow = LedgerRow;

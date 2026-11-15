@@ -138,14 +138,17 @@ const HOWS = ['card', 'card_present', 'cash', 'other'] as const;
 function LedgerDay({ d, zone, onBack }: { d: RevenueLedgerDay; zone: string; onBack: () => void }) {
   const [rows, setRows] = useState<RevenueLedgerRow[] | null>(null);
   const [mm, setMm] = useState<Mismatch | null>(null);
+  // false: Stripe couldn't be read for the detail — said so, never read as "matches".
+  const [mmRead, setMmRead] = useState(true);
   const [error, setError] = useState('');
   const [how, setHow] = useState(''), [what, setWhat] = useState('');
   const [sel, setSel] = useState<string | null>(null);
   const load = useCallback(async () => {
     setError('');
-    const r = await dfetch<{ rows: RevenueLedgerRow[]; mismatch?: Mismatch | null }>(`/api/operator/money/ledger?day=${d.day}`);
-    if (r.ok) { setRows(r.data.rows); setMm(r.data.mismatch ?? null); } else setError(r.error);
-  }, [d.day]);
+    // The detail reads Stripe, so it is asked for only on a day that differs.
+    const r = await dfetch<{ rows: RevenueLedgerRow[]; mismatch?: Mismatch | null; mismatchRead?: boolean }>(`/api/operator/money/ledger?day=${d.day}${d.match === 'off' ? '&mismatch=1' : ''}`);
+    if (r.ok) { setRows(r.data.rows); setMm(r.data.mismatch ?? null); setMmRead(r.data.mismatchRead !== false); } else setError(r.error);
+  }, [d.day, d.match]);
   useEffect(() => { load(); }, [load]);
   // GreenReserve's own booking fee is golfers' money on GreenReserve's account, not the course's (lane decision).
   const mine = (rows ?? []).filter(r => r.account !== 'platform');
@@ -154,7 +157,8 @@ function LedgerDay({ d, zone, onBack }: { d: RevenueLedgerDay; zone: string; onB
   const open = shown.find(r => r.id === sel) ?? null;
   // Build's mismatch (?day= only): Stripe's side payment by payment. diffCents = stripeCents − ourCents.
   const g = mm ? -mm.diffCents : diffOf(d);
-  const flagged = new Map((mm?.payments ?? []).map(x => [x.stripeId, x]));
+  // A line names Stripe's object and the payment it belongs to (for a refund, the original payment).
+  const flagged = new Map((mm?.payments ?? []).flatMap(x => [[x.stripeId, x], ...(x.paymentStripeId ? [[x.paymentStripeId, x]] : [])] as [string, Mismatch['payments'][number]][]));
   const flagOf = (r: RevenueLedgerRow) => (r.stripeId ? flagged.get(r.stripeId) : undefined) ?? null;
   const rowGrid = open ? 'md:grid-cols-[70px_minmax(0,1fr)_minmax(0,1.2fr)_84px_118px]' : 'md:grid-cols-[70px_minmax(0,1fr)_minmax(0,1.4fr)_88px_128px]';
   const row = (r: RevenueLedgerRow) => (
@@ -187,6 +191,7 @@ function LedgerDay({ d, zone, onBack }: { d: RevenueLedgerDay; zone: string; onB
             <div><div className="text-[13px] text-ink-muted">Stripe’s total</div><div className="text-[22px] font-semibold tabular-nums text-ink">{usd2(mm ? mm.stripeCents : d.stripeNetCents ?? 0)}</div><div className="text-[12.5px] text-ink-muted">card money Stripe recorded this day</div></div>
             <div><div className="text-[13px] text-ink-muted">Difference</div><div className="text-[22px] font-semibold tabular-nums text-bad">{g > 0 ? '−' : '+'}{usd2(Math.abs(g))}</div>{mm && mm.payments.length > 0 && mm.payments.every(x => x.kind === 'refund_in_stripe') && <div className="text-[12.5px] text-ink-muted">a refund made in Stripe directly</div>}</div>
           </div>
+          {!mmRead && <p className="text-[13px] text-ink-muted">Couldn&apos;t check with Stripe which payments differ. Try again in a minute.</p>}
           {mm && mm.payments.length > 0 && (<>
             <div className="text-[13px] text-ink-muted mb-1">Payments involved</div>
             <div className="flex flex-col">{mm.payments.map(x => (

@@ -12,7 +12,8 @@ import type { Sales, PayoutsData, Range, RangeKey } from './data';
 const Y_AXIS = 'absolute -left-11 w-[38px] text-right text-[11px] text-ink-muted tabular-nums -translate-y-1/2';
 function niceStep(max: number, n: number) {
   const raw = Math.max(1, max) / n, p = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / p;
-  return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p;
+  // Whole dollars at least, so two gridlines never read the same ("$0 $0 $0").
+  return Math.max(100, (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p);
 }
 const pctChange = (now: number, before: number) => before > 0 ? Math.round(((now - before) / before) * 100) : null;
 function Change({ pct, tail }: { pct: number | null; tail: ReactNode }) {
@@ -46,7 +47,9 @@ export function TodayCard({ s }: { s: Sales }) {
   const X = (m: number) => ((m - H0) / (H1 - H0)) * W, Y = (v: number) => H - (v / top) * H;
   const P = (a: [number, number][]) => a.map(([m, v]) => `${X(m).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
   const nowX = X(Math.min(Math.max(nowMin, H0), H1));
-  const ticks: number[] = []; for (let v = 0; v <= top + 1e-6; v += st) ticks.push(v);
+  // Nothing taken yet (every course at launch): one $0 baseline, no scale.
+  const empty = max <= 1 && avgPts.every(p => p[1] === 0);
+  const ticks: number[] = []; if (empty) ticks.push(0); else for (let v = 0; v <= top + 1e-6; v += st) ticks.push(v);
   const [hover, setHover] = useState<number | null>(null);
   const valueAt = (pts: [number, number][], m: number) => { let v = 0; for (const [pm, pv] of pts) if (pm <= m) v = pv; return v; };
   const pct = avg ? pctChange(todayNow, avg.toNowCents) : null;
@@ -71,6 +74,7 @@ export function TodayCard({ s }: { s: Sales }) {
         </svg>
         {nowMin > H0 && nowMin < H1 && <span aria-hidden="true" className="absolute w-3 h-3 -ml-1.5 -mt-1.5 rounded-full bg-ink border-2" style={{ left: `${(nowX / W) * 100}%`, top: `${(Y(todayNow) / H) * 100}%`, borderColor: 'var(--op-panel-solid)' }} />}
         {ticks.map(v => <span key={v} className={Y_AXIS} style={{ top: `${(Y(v) / H) * 100}%` }}>{usdk(v)}</span>)}
+        {empty && <p className="absolute inset-0 grid place-items-center text-[13px] text-ink-muted">No payments yet today</p>}
         {hover !== null && (
           <div className="absolute z-10 pointer-events-none -translate-x-1/2 -translate-y-full bg-ink text-page text-[12px] px-2.5 py-1.5 rounded-[8px] whitespace-nowrap tabular-nums shadow-card" style={{ left: `clamp(60px, ${(X(hover) / W) * 100}%, calc(100% - 60px))`, top: -6 }}>
             <b className="block text-[13px]">{clock12(hover)}</b>
@@ -161,7 +165,8 @@ export function RevenueChart({ s, range, total }: { s: Sales; range: Range; tota
         return Array.from({ length: hi - lo + 1 }, (_, i) => lo + i).map(h => ({ label: `${h % 12 || 12}${h < 12 ? 'a' : 'p'}`, tip: `${clock12(h * 60)} – ${clock12(h * 60 + 59)}`, v: m.get(h) ?? 0 })); })();
   const n = d.length, mx = Math.max(1, ...d.map(x => x.v)), st = niceStep(mx, 4), top = Math.ceil(mx / st) * st;
   const hi = sel !== null && sel < n ? sel : mode === 'day' ? n - 1 : d.reduce((m, x, i) => x.v > d[m].v ? i : m, 0);
-  const grid: number[] = []; for (let v = 0; v <= top + 1e-6; v += st) grid.push(v);
+  const empty = d.every(x => x.v === 0);
+  const grid: number[] = []; if (empty) grid.push(0); else for (let v = 0; v <= top + 1e-6; v += st) grid.push(v);
   const every = Math.max(1, Math.ceil(n / Math.max(3, Math.floor((plot.current?.clientWidth ?? 600) / 52))));
   const pct = pctChange(s.collectedCents, s.beforeCollectedCents);
   const len = spanDays(range.from, range.to);
@@ -171,20 +176,22 @@ export function RevenueChart({ s, range, total }: { s: Sales; range: Range; tota
         <div>
           <div className="text-[13px] text-ink-muted">Revenue</div>
           <div className="text-[28px] font-semibold tabular-nums leading-tight text-ink">{usd(total)}</div>
-          <div className="mt-0.5"><Change pct={pct} tail={`vs the period before (${dayShort(addDays(range.from, -len))} – ${dayShort(addDays(range.from, -1))})`} /></div>
+          <div className="mt-0.5"><Change pct={pct} tail={`rounds vs the period before (${dayShort(addDays(range.from, -len))} – ${dayShort(addDays(range.from, -1))})`} /></div>
         </div>
         <span className="flex-1" />
+        <span className="text-[12px] text-ink-muted self-center">Bars: rounds</span>
         <Seg small label="Chart" value={mode} onChange={k => { setMode(k); setSel(null); }} options={[['day', 'By day'], ['dow', 'Day of week'], ['hour', 'Time of day']] as const} />
       </div>
       <div ref={plot} className="relative h-[190px] ml-11 max-md:ml-[38px]">
         {grid.map(v => <div key={v} className={'absolute inset-x-0 border-t ' + (v ? 'border-ink/10' : 'border-line')} style={{ bottom: `${(v / top) * 100}%` }}><span className={Y_AXIS}>{usdk(v)}</span></div>)}
-        <div className="absolute inset-0 flex items-end gap-1" role="img" aria-label={`Revenue ${mode === 'day' ? 'by day' : mode === 'dow' ? 'by day of week' : 'by time of day'}`}
+        {empty && <p className="absolute inset-0 grid place-items-center text-[13px] text-ink-muted">No payments in these dates</p>}
+        <div className="absolute inset-0 flex items-end gap-1" role="img" aria-label={`Rounds ${mode === 'day' ? 'by day' : mode === 'dow' ? 'by day of week' : 'by time of day'}`}
           onMouseLeave={() => setTip(null)}>
           {d.map((x, i) => (
             <div key={i} className="group flex-1 h-full flex items-end justify-center cursor-pointer min-w-0 relative" onClick={() => setSel(i)}
               onMouseEnter={e => { const r = plot.current!.getBoundingClientRect(), b = e.currentTarget.getBoundingClientRect(); setTip({ i, x: b.left - r.left + b.width / 2 }); }}>
               <i className={'block w-full rounded-t-[4px] rounded-b-[1px] transition-colors ' + (n <= 16 ? 'max-w-[22px] ' : 'max-w-[12px] ') + (i === hi ? 'bg-ink' : 'bg-ink/25 group-hover:bg-ink-soft')} style={{ height: `${Math.max(0.5, (x.v / top) * 100)}%` }} />
-              {i === hi && <b className={'absolute text-[11px] font-semibold text-ink whitespace-nowrap -translate-y-1 tabular-nums pointer-events-none ' + (i >= n - 2 && n > 3 ? 'right-0' : i <= 1 && n > 3 ? 'left-0' : '')} style={{ bottom: `${(x.v / top) * 100}%` }}>{usd(x.v)}</b>}
+              {i === hi && !empty && <b className={'absolute text-[11px] font-semibold text-ink whitespace-nowrap -translate-y-1 tabular-nums pointer-events-none ' + (i >= n - 2 && n > 3 ? 'right-0' : i <= 1 && n > 3 ? 'left-0' : '')} style={{ bottom: `${(x.v / top) * 100}%` }}>{usd(x.v)}</b>}
             </div>
           ))}
         </div>
