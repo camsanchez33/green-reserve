@@ -547,7 +547,8 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
 .yib svg{width:19px;height:19px}
 .yib{position:relative}
 .yib .sdot{position:absolute;right:5px;top:5px;width:6px;height:6px;border-radius:50%;background:currentColor}
-.ystr{font:inherit;font-size:13px;font-weight:600;color:#fff;background:var(--stripe);border-radius:7px;width:26px;height:26px;display:grid;place-items:center;text-decoration:none;cursor:pointer;border:0;padding:0}
+.ystr:hover{background:#5249F0}
+.ystr{font:inherit;font-size:13px;font-weight:600;color:#fff;background:var(--stripe);border-radius:7px;width:30px;height:30px;flex:none;display:grid;place-items:center;text-decoration:none;cursor:pointer;border:0;padding:0}
 /* Lists */
 .ysplit{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}
 .ysplit.has{grid-template-columns:minmax(0,1fr) 320px}
@@ -708,7 +709,7 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
     <main class="main" id="main">
       <div class="ytop">
         <h2 class="ttl">Revenue</h2>
-        <a class="ystripe" href="#" onclick="return false" aria-label="Open your Stripe dashboard (new tab)">Stripe <span aria-hidden="true">↗</span></a>
+        <a class="ystr" href="#" onclick="return false" aria-label="Open your Stripe dashboard (new tab)" title="Open your Stripe dashboard"><svg viewBox="0 0 24 24" width="15" height="15" fill="#fff" aria-hidden="true"><path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.594-7.305h.003z"/></svg></a>
       </div>
 
       <div class="ytoday">
@@ -801,7 +802,7 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
       <!-- Payouts -->
       <div class="yview" data-view="payouts" hidden>
         <div class="yflow" id="flow"></div>
-        <div class="yhd"><h3>Every payout</h3><span class="yrtxt rmirror" style="font-weight:500;color:var(--muted);font-size:12.5px;margin-left:6px"></span><span class="ysp"></span><a class="ystr" href="#" onclick="return false" aria-label="Open payouts in Stripe" title="Open payouts in Stripe">S</a></div>
+        <div class="yhd"><h3>Every payout</h3><span class="yrtxt rmirror" style="font-weight:500;color:var(--muted);font-size:12.5px;margin-left:6px"></span><span class="ysp"></span><a class="ystr" href="#" onclick="return false" aria-label="Open payouts in Stripe" title="Open payouts in Stripe"><svg viewBox="0 0 24 24" width="15" height="15" fill="#fff" aria-hidden="true"><path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.594-7.305h.003z"/></svg></a></div>
         <div class="ysplit" id="poSplit">
           <section class="card ylist" id="poList" aria-label="Every payout"></section>
           <section class="card ydet" id="poDet" hidden></section>
