@@ -1,35 +1,29 @@
 'use client';
-// SD-8 — Payments and Cancellations were two pages querying the same endpoint,
-// and Payouts was buried in Settings. One Money page, three tabs, one load.
-// /dashboard/payments and /dashboard/cancellations redirect here, so every
-// bookmark, email link and tee-sheet deep link still lands in the right place.
-import { Card } from '@/components/ui/Card';
-import { SlidingTabs } from '@/components/dashboard/SlidingTabs';
+// REVENUE-1 (Cam 2026-11-15, approved mockup lanes/dashboard/money-mockup.html; lanes/dashboard.md "Next" 1): Money is
+// Revenue. Today against the 30-day average beside the next payout, ONE date range for the whole page, the revenue chart,
+// what was sold beside how it was paid, Pending payments, then Payments · Ledger · Payouts · Cancellations. Every row
+// opens a side card. The GreenReserve $1.50 fee is never course revenue (one muted Totals line in the Ledger); "Net
+// revenue", never "profit". Both Stripe buttons are the small Stripe logo square.
+// Kept from Money (SD-8, SP-A, MONEY-1): /dashboard/payments and /dashboard/cancellations still redirect here; each tab is
+// its own permission; ?tab, ?show=unpaid, ?date (the tee sheet's deep link), ?q (search opens Cancellations on a golfer)
+// and ?stripe (Stripe's return) all still land where they did. Every failed load says so — never shown as nothing.
 import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import { CARD } from '@/components/ui/Card';
 import OperatorSidebar from '@/components/OperatorSidebar';
+import { SlidingTabs } from '@/components/dashboard/SlidingTabs';
+import { LoadError } from '@/components/dashboard/LoadError';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import { dfetch } from '@/lib/dashboard-fetch';
-import { LoadError } from '@/components/dashboard/LoadError';
-import { PaymentsPanel } from '@/components/dashboard/money/PaymentsPanel';
-import { CancellationsPanel } from '@/components/dashboard/money/CancellationsPanel';
-import { PayoutsPanel } from '@/components/dashboard/money/PayoutsPanel';
-import { SalesPanel } from '@/components/dashboard/money/SalesPanel';
 import type { MoneyBooking, MoneyCourse } from '@/components/dashboard/money/types';
-import type { PayoutsData } from '@/components/dashboard/money/PayoutsTable';
-import { StatusDot } from '@/components/ui/StatusDot';
-import { formatTeeTime, formatTeeDate } from '@/lib/format';
-import type { DeclinedCard } from '@/lib/operator-home';
-import { DeclinedCardList } from '@/components/dashboard/DeclinedCardList';
-import { toast } from '@/components/dashboard/Toast';
-import { LedgerPanel } from '@/components/dashboard/money/LedgerPanel';
-import { StripeButton } from '@/components/dashboard/money/StripeButton';
-
-type Overview = { week: { from: string; to: string }; today: string; clock: string; paidCents: number; notPaidCents: number; notPaidGroups: number; noShowToChargeCents?: number; noShowToChargeGroups?: number; declined: DeclinedCard[]; declinedTotal: number; stripeConnected: boolean };
-const usd2 = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
-const fmtArrival = (iso: string) => new Date(iso).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
+import { StripeSquare } from '@/components/dashboard/money/revenue/ui';
+import { TodayCard, NextPayoutCard, RangeBar, RevenueChart, SoldPaid, soldRows, rangeOf, rangeText } from '@/components/dashboard/money/revenue/Top';
+import { PendingPayments } from '@/components/dashboard/money/revenue/PendingPayments';
+import { PaymentsTab } from '@/components/dashboard/money/revenue/PaymentsTab';
+import { LedgerTab } from '@/components/dashboard/money/revenue/LedgerTab';
+import { PayoutsTab } from '@/components/dashboard/money/revenue/PayoutsTab';
+import { CancellationsTab } from '@/components/dashboard/money/revenue/CancellationsTab';
+import type { Sales, Overview, PayoutsData, Range, RangeKey } from '@/components/dashboard/money/revenue/data';
 
 const TABS = [
   { key: 'payments', label: 'Payments' },
@@ -38,78 +32,94 @@ const TABS = [
   { key: 'cancellations', label: 'Cancellations' },
 ] as const;
 type TabKey = typeof TABS[number]['key'];
-
 // SP-A: each tab is a permission the course owner grants per person.
 const TAB_PERMISSION = { payments: 'money.payments', ledger: 'money.payments', cancellations: 'money.cancellations', payouts: 'money.payouts' } as const;
-
 const EMPTY_COURSE: MoneyCourse = { cancellationHours: 24, lateCancellationFee: 10, stripeAccountActive: false, liveStatus: 'draft' };
+const NOTE = `${CARD} !rounded-[16px] border-l-[3px] border-warn px-4 py-3 text-[13.5px] text-ink-soft`;
 
-function MoneyPageInner() {
+function RevenuePageInner() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const dateFilter = searchParams.get('date') || '';
-  const stripeParam = searchParams.get('stripe');
-  const tabParam = searchParams.get('tab');
-  const showParam = searchParams.get('show');
-
-  const [bookings, setBookings] = useState<MoneyBooking[]>([]);
-  const [played, setPlayed] = useState<MoneyBooking[] | null>(null);
-  const [playedError, setPlayedError] = useState('');
-  const [dated, setDated] = useState<MoneyBooking[] | null>(null);
-  const [datedError, setDatedError] = useState('');
-  const [course, setCourse] = useState<MoneyCourse>(EMPTY_COURSE);
-  const [courseLoaded, setCourseLoaded] = useState(false);
-  const [courseError, setCourseError] = useState('');
-  // SP-A (was SD-8's isStaff probe): until the login's permissions load, no tab
-  // that needs one is shown, so a slow or failed load can't flash the ledger.
+  const sp = useSearchParams();
+  const dateFilter = sp.get('date') || '';
+  const stripeParam = sp.get('stripe');
+  const tabParam = sp.get('tab');
+  const showParam = sp.get('show');
   const access = useDashboardAccess();
-  const roleUnknown = access.failed;
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState('');
-
-  const treatAsStaff = access.isStaff;
+  const seesPayments = access.can('money.payments');
+  const seesPayouts = access.can('money.payouts');
   const tabs = TABS.filter(t => access.can(TAB_PERMISSION[t.key]));
   const requested = (tabParam && TABS.some(t => t.key === tabParam) ? tabParam : (stripeParam ? 'payouts' : 'payments')) as TabKey;
   const active: TabKey = tabs.some(t => t.key === requested) ? requested : (tabs[0]?.key ?? 'cancellations');
-
   const setTab = (key: TabKey, show?: 'unpaid') => {
-    const q = new URLSearchParams(searchParams.toString());
+    const q = new URLSearchParams(sp.toString());
     q.set('tab', key);
     if (show) q.set('show', show); else q.delete('show');
     router.replace(`/dashboard/money?${q.toString()}`, { scroll: false });
   };
 
+  // One date range for the whole page (Cam's comments on the mockup).
+  const [today, setToday] = useState(() => new Date().toLocaleDateString('en-CA'));
+  const [rangeKey, setRangeKey] = useState<RangeKey>('30');
+  const [custom, setCustom] = useState<Range | undefined>(undefined);
+  const range = rangeOf(rangeKey, today, custom);
+  const rangeLabel = rangeText(range);
+
+  const [sales, setSales] = useState<Sales | null>(null);
+  const [salesError, setSalesError] = useState('');
+  const loadSales = useCallback(async () => {
+    if (!seesPayments) return;
+    setSalesError('');
+    const r = await dfetch<Sales>(`/api/operator/money/sales?from=${range.from}&to=${range.to}`);
+    if (r.ok) { setSales(r.data); if (r.data.today !== today) setToday(r.data.today); } else setSalesError(r.error);
+  }, [seesPayments, range.from, range.to, today]);
+  useEffect(() => { if (access.loaded) loadSales(); }, [access.loaded, loadSales]);
+
+  const [overview, setOverview] = useState<Overview | null>(null);
+  const [overviewError, setOverviewError] = useState('');
+  const [payouts, setPayouts] = useState<PayoutsData | null>(null);
+  const [payoutError, setPayoutError] = useState('');
+  const loadOverview = useCallback(async () => {
+    const [o, p] = await Promise.all([
+      seesPayments ? dfetch<Overview>('/api/operator/money/overview') : Promise.resolve(null),
+      seesPayouts ? dfetch<PayoutsData>('/api/operator/stripe/payouts') : Promise.resolve(null),
+    ]);
+    setOverview(o && o.ok ? o.data : null);
+    setOverviewError(o && !o.ok ? o.error : '');
+    setPayouts(p && p.ok ? p.data : null);
+    setPayoutError(p && !p.ok ? p.error : '');
+  }, [seesPayments, seesPayouts]);
+  useEffect(() => { if (access.loaded) loadOverview(); }, [access.loaded, loadOverview]);
+
+  const [cancelled, setCancelled] = useState<MoneyBooking[]>([]);
+  const [played, setPlayed] = useState<MoneyBooking[] | null>(null);
+  const [dated, setDated] = useState<MoneyBooking[] | null>(null);
+  const [loadError, setLoadError] = useState('');
+  const [playedError, setPlayedError] = useState('');
+  const [datedError, setDatedError] = useState('');
+  const [loading, setLoading] = useState(true);
   const loadBookings = useCallback(async () => {
     setLoading(true);
-    // The unfiltered list drives Cancellations and the unfiltered Payments
-    // view. A ?date= deep link from the tee sheet gets its own fetch, because
-    // the unfiltered one is capped at the newest 200 rows.
     const [all, playedRes, day] = await Promise.all([
-      // Cancellations: only cancelled bookings (dead end 13 — 1 of 87 showed in the newest 200 of everything).
       dfetch<MoneyBooking[]>('/api/operator/bookings?status=cancelled'),
-      // Payments: rounds already played, newest first (not the newest bookings made).
       dfetch<MoneyBooking[]>('/api/operator/bookings?played=1'),
       dateFilter ? dfetch<MoneyBooking[]>(`/api/operator/bookings?date=${encodeURIComponent(dateFilter)}`) : Promise.resolve(null),
     ]);
     if (all.status === 401) { router.push('/dashboard/login'); return; }
-    if (!all.ok) { setBookings([]); setLoadError(all.error); }
-    else { setBookings(Array.isArray(all.data) ? all.data : []); setLoadError(''); }
-    if (playedRes.ok && Array.isArray(playedRes.data)) { setPlayed(playedRes.data); setPlayedError(''); }
-    else { setPlayed(null); setPlayedError(playedRes.ok ? 'Unreadable reply.' : playedRes.error); }
-    // SD-8 review (BLOCKING): this used to discard a failed day fetch and fall
-    // back to the unfiltered list while the panel still announced "Showing
-    // bookings for <date>" — the wrong rows under a banner asserting they were
-    // the right ones. A failed day fetch is now its own visible error.
+    if (!all.ok) { setCancelled([]); setLoadError(all.error); } else { setCancelled(Array.isArray(all.data) ? all.data : []); setLoadError(''); }
+    if (playedRes.ok && Array.isArray(playedRes.data)) { setPlayed(playedRes.data); setPlayedError(''); } else { setPlayed(null); setPlayedError(playedRes.ok ? 'Unreadable reply.' : playedRes.error); }
+    // A failed day fetch is its own visible error, never the unfiltered list under "Showing <date>" (SD-8 review).
     if (!day) { setDated(null); setDatedError(''); }
     else if (day.ok && Array.isArray(day.data)) { setDated(day.data); setDatedError(''); }
     else { setDated(null); setDatedError(day.ok ? 'That day couldn’t be read.' : day.error); }
     setLoading(false);
   }, [router, dateFilter]);
+  useEffect(() => { loadBookings(); }, [loadBookings]);
 
+  const [course, setCourse] = useState<MoneyCourse>(EMPTY_COURSE);
+  const [courseLoaded, setCourseLoaded] = useState(false);
+  const [courseError, setCourseError] = useState('');
   const loadCourse = useCallback(async () => {
     setCourseError('');
-    // SD-10: a failed course load left the policy form on its 24h / $10
-    // defaults, and Save would have written those over the real policy.
     const r = await dfetch<Record<string, unknown>>('/api/operator/courses');
     if (!r.ok) { setCourseError(r.error); setCourseLoaded(false); return; }
     const c = r.data ?? {};
@@ -121,138 +131,88 @@ function MoneyPageInner() {
     });
     setCourseLoaded(true);
   }, []);
+  useEffect(() => { loadCourse(); }, [loadCourse]);
 
-  // Money rework (Cam 2026-10-19): one line at the top — this week's paid and
-  // not-yet-paid (same numbers as Analytics), and when the next payout lands.
-  const [overview, setOverview] = useState<Overview | null>(null);
-  const [nextPayout, setNextPayout] = useState<PayoutsData['next'] | undefined>(undefined);
-  // A failed load is said out loud — never shown as "nothing on its way".
-  const [overviewError, setOverviewError] = useState('');
-  const [payoutError, setPayoutError] = useState('');
-  // Money audit 25: what Stripe's payouts call said about the connection — a course marked active
-  // with no account id read as connected and showed "Checking Stripe…" forever.
-  const [payoutsConnected, setPayoutsConnected] = useState<boolean | null>(null);
   const [openingStripe, setOpeningStripe] = useState(false);
   const [stripeError, setStripeError] = useState('');
-  // Booleans, not the access object: it is a new object every render, and a
-  // callback keyed on it would refetch forever.
-  const seesPayments = access.can('money.payments');
-  const seesPayouts = access.can('money.payouts');
-  const loadOverview = useCallback(async () => {
-    const [o, p] = await Promise.all([
-      seesPayments ? dfetch<Overview>('/api/operator/money/overview') : Promise.resolve(null),
-      seesPayouts ? dfetch<PayoutsData>('/api/operator/stripe/payouts') : Promise.resolve(null),
-    ]);
-    setOverview(o && o.ok ? o.data : null);
-    setOverviewError(o && !o.ok ? o.error : '');
-    // Not connected is its own state (undefined → "Connect Stripe"), never "nothing on its way".
-    setNextPayout(p && p.ok ? (p.data.connected ? (p.data.next ?? null) : undefined) : undefined);
-    setPayoutError(p && !p.ok ? p.error : '');
-    setPayoutsConnected(p && p.ok ? !!p.data.connected : null);
-  }, [seesPayments, seesPayouts]);
-
-  useEffect(() => { loadBookings(); }, [loadBookings]);
-  useEffect(() => { loadCourse(); }, [loadCourse]);
-  useEffect(() => { if (access.loaded) loadOverview(); }, [access.loaded, loadOverview]);
-
-  // DASH-C Needs you: the declined-card rows are shared with Home (DeclinedCardList), pay links included.
-  const canSendLink = access.can('sheet.checkin');
-
   async function openStripe() {
     setOpeningStripe(true); setStripeError('');
     const r = await dfetch<{ url: string }>('/api/operator/stripe/dashboard-link', { method: 'POST' });
     setOpeningStripe(false);
     if (r.ok && r.data.url) window.open(r.data.url, '_blank', 'noopener'); else setStripeError(r.ok ? 'Stripe sent no link back. Try again.' : r.error);
   }
-
-  // With a date asked for but not loaded, show nothing rather than the
-  // unfiltered list — the error above says why.
-  const paymentRows = dateFilter ? (dated ?? []) : (played ?? []);
+  const canOpenStripe = !access.isStaff && courseLoaded && course.stripeAccountActive;
+  const connected = payouts ? payouts.connected : courseLoaded ? course.stripeAccountActive : null;
+  const refreshMoney = () => { loadBookings(); loadSales(); loadOverview(); };
 
   return (
     <div className="flex flex-col min-h-screen md:h-screen bg-page md:overflow-hidden">
-      <OperatorSidebar active="money"/>
+      <OperatorSidebar active="money" />
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
-        <div className="px-4 sm:px-10 py-7">
-          {/* Cam 2026-11-09 (Money notes): Stripe's own button; no reload button. The title stays (Cam 2026-10-19: "says
-              what it is"); his note says "maybe change it" — on the morning checklist. */}
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <h1 className="text-[26px] font-bold leading-none text-ink">Payments and payouts</h1>
-            {!treatAsStaff && courseLoaded && course.stripeAccountActive && <StripeButton onClick={openStripe} busy={openingStripe} />}
+        <div className="px-4 sm:px-6 py-5 flex flex-col gap-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="mr-auto mt-1 font-serif text-[30px] sm:text-[34px] font-semibold leading-none text-ink">Revenue</h1>
+            {canOpenStripe && <StripeSquare label="Open your Stripe dashboard (new tab)" onClick={openStripe} busy={openingStripe} />}
           </div>
-          {stripeError && <div className="mb-4"><LoadError message={stripeError} onRetry={openStripe} /></div>}
-          {courseError && <div className="mb-4"><LoadError message={`Couldn't load your course — ${courseError}`} onRetry={loadCourse} /></div>}
+          {stripeError && <LoadError message={stripeError} onRetry={openStripe} />}
+          {courseError && <LoadError message={`Couldn't load your course — ${courseError}`} onRetry={loadCourse} />}
+          {salesError && <LoadError message={`Couldn't load your revenue — ${salesError}`} onRetry={loadSales} />}
+          {overviewError && <LoadError message={`Couldn't load what's owed — ${overviewError}`} onRetry={loadOverview} />}
+          {payoutError && <LoadError message={`Couldn't load your payouts from Stripe — ${payoutError}`} onRetry={loadOverview} />}
 
-          {overviewError && <div className="mb-4"><LoadError message={`Couldn't load this week's totals — ${overviewError}`} onRetry={loadOverview} /></div>}
-          {payoutError && <div className="mb-4"><LoadError message={`Couldn't load your payouts from Stripe — ${payoutError}`} onRetry={loadOverview} /></div>}
-          {/* DENSE-2 (Cam 2026-10-27): Sales — today against last week, the picked dates by day,
-              weekday and hour, what it was for, how golfers paid, the cash drawer. */}
-          {seesPayments && (
-            <SalesPanel nextPayout={nextPayout} showPayout={seesPayouts && !payoutError}
-              stripeConnected={payoutsConnected ?? (courseLoaded && course.stripeAccountActive)}
-              notPaid={overview ? { cents: overview.notPaidCents, groups: overview.notPaidGroups, noShowCents: overview.noShowToChargeCents ?? 0, noShowGroups: overview.noShowToChargeGroups ?? 0 } : null}
-              onSeeUnpaid={tabs.some(t => t.key === 'payments') ? () => setTab('payments', 'unpaid') : undefined} />
-          )}
-          {!seesPayments && seesPayouts && !payoutError && (
-            <Card className="px-5 py-4 mb-6 max-w-sm">
-              <div className="text-[13px] text-ink-soft">Next payout</div>
-              {nextPayout ? <><div className="text-[24px] font-semibold tabular-nums text-ink">{usd(nextPayout.amountCents)}</div><div className="text-[12.5px] text-ink-muted">{fmtArrival(nextPayout.arrivalDate)}</div></>
-                : payoutsConnected === false || (payoutsConnected === null && courseLoaded && !course.stripeAccountActive) ? <div className="text-[13.5px] text-ink mt-1">Connect Stripe</div>
-                : <div className="text-[13.5px] text-ink-muted mt-1">{nextPayout === null ? 'None on its way' : 'Checking Stripe…'}</div>}
-            </Card>
-          )}
-
-          {overview && overview.declinedTotal > 0 && (
-            <section className="mb-6" aria-labelledby="money-needs">
-              <h2 id="money-needs" className="text-[15px] font-semibold text-ink mb-2">Action needed</h2>
-              <Card>
-                <div className="divide-y divide-line-soft">
-                  <DeclinedCardList rows={overview.declined} total={overview.declinedTotal} canSendLink={canSendLink} />
-                </div>
-              </Card>
-            </section>
-          )}
-
-          {/* POS-7 (Cam 2026-11-09): the underline slides to the tab picked. */}
-          <SlidingTabs value={active} onChange={k => setTab(k)} className="w-full mb-5" tabs={tabs.map(t => [t.key, t.label] as const)} />
-
-          {roleUnknown && (
-            <div className="bg-white border border-line border-l-[3px] border-l-warn rounded-md px-4 py-3 text-[13.5px] text-ink-soft mb-4">
-              We couldn&apos;t confirm what your login can see, so nothing is shown yet. Reload the page to try again.
+          {(seesPayments || seesPayouts) && (
+            <div className={'grid gap-4 items-stretch ' + (seesPayments && seesPayouts ? 'lg:grid-cols-[minmax(0,2fr)_minmax(260px,1fr)]' : seesPayouts ? 'max-w-sm' : '')}>
+              {seesPayments && (sales ? <TodayCard s={sales} /> : <section className={`${CARD} !rounded-[16px] px-5 py-[18px] text-[13px] text-ink-muted`} aria-label="Today">{salesError ? 'Today couldn’t be read.' : 'Loading…'}</section>)}
+              {seesPayouts && <NextPayoutCard data={payouts} connected={connected} error={payoutError} onAll={tabs.some(t => t.key === 'payouts') ? () => setTab('payouts') : undefined} />}
             </div>
           )}
-          {access.loaded && tabs.length === 0 && (
-            <div className="bg-white border border-line border-l-[3px] border-l-warn rounded-md px-4 py-3 text-[13.5px] text-ink-soft mb-4">
-              Your login doesn&apos;t include any of the Money pages — ask the course owner if you need them.
-            </div>
-          )}
-          {loadError && tabs.length > 0 && <LoadError message={loadError} onRetry={loadBookings} />}
-          {playedError && active === 'payments' && !dateFilter && <LoadError message={playedError} onRetry={loadBookings} />}
-          {datedError && active === 'payments' && (
-            <LoadError message={`Couldn't load that day's bookings — ${datedError}`} onRetry={loadBookings} />
+
+          {!dateFilter && <RangeBar value={range} rangeKey={rangeKey} today={today} onChange={(k, r) => { setRangeKey(k); if (r) setCustom(r); }} />}
+
+          {seesPayments && sales && (<>
+            <RevenueChart s={sales} range={range} total={soldRows(sales).reduce((n, r) => n + r.cents, 0)} />
+            <SoldPaid s={sales} onDrawer />
+          </>)}
+
+          {seesPayments && overview && (
+            <PendingPayments declined={overview.declined} declinedTotal={overview.declinedTotal} canSendLink={access.can('sheet.checkin')}
+              notPaid={{ cents: overview.notPaidCents, groups: overview.notPaidGroups, noShowCents: overview.noShowToChargeCents ?? 0, noShowGroups: overview.noShowToChargeGroups ?? 0 }}
+              onSeeUnpaid={tabs.some(t => t.key === 'payments') ? () => setTab('payments', 'unpaid') : undefined} onChanged={loadOverview} />
           )}
 
-          {!access.loaded || tabs.length === 0 ? null : loading ? (
-            <div className="flex items-center justify-center py-16 text-ink-muted gap-2"><Loader2 className="w-5 h-5 animate-spin"/>Loading...</div>
-          ) : active === 'payments' ? (
-            <PaymentsPanel key={showParam ?? 'all'} initialFilter={showParam === 'unpaid' ? 'unpaid' : 'all'} courseNow={overview ? { today: overview.today, clock: overview.clock } : undefined} capped={!dateFilter && (played?.length ?? 0) >= 1000} canRefund={access.can('money.refund_rounds')} onRefunded={m => { toast(m, 'ok'); loadBookings(); }} bookings={paymentRows} dateFilter={datedError ? '' : dateFilter} onClearDate={() => router.push('/dashboard/money?tab=payments')}/>
-          ) : active === 'ledger' ? (
-            <LedgerPanel/>
-          ) : active === 'cancellations' ? (
-            <CancellationsPanel key={searchParams.get('q') ?? ''} canWaive={access.can('sheet.waive_fee')} onRefunded={m => { toast(m, 'ok'); loadBookings(); }} bookings={bookings} course={course} initialQuery={active === 'cancellations' ? searchParams.get('q') ?? '' : ''}/>
-          ) : (
-            <PayoutsPanel course={course} stripeParam={stripeParam} onConnected={loadCourse} canConnect={!treatAsStaff}/>
-          )}
+          {access.failed && <div className={NOTE}>We couldn&apos;t confirm what your login can see, so nothing is shown yet. Reload the page to try again.</div>}
+          {access.loaded && tabs.length === 0 && <div className={NOTE}>Your login doesn&apos;t include the Revenue pages. Ask the course owner.</div>}
+
+          {access.loaded && tabs.length > 0 && (<>
+            <SlidingTabs value={active} onChange={k => setTab(k)} label="Revenue" className="w-full mt-1 [&>button]:text-[15px]" tabs={tabs.map(t => [t.key, t.label] as const)} />
+            {loadError && <LoadError message={loadError} onRetry={loadBookings} />}
+            {playedError && active === 'payments' && !dateFilter && <LoadError message={playedError} onRetry={loadBookings} />}
+            {datedError && active === 'payments' && <LoadError message={`Couldn't load that day's bookings — ${datedError}`} onRetry={loadBookings} />}
+            {loading && active !== 'ledger' && active !== 'payouts' ? <p className="py-12 text-center text-[13px] text-ink-muted">Loading…</p>
+              : active === 'payments' ? (
+                <PaymentsTab key={showParam ?? 'all'} bookings={dateFilter ? (dated ?? []) : (played ?? [])} range={range} rangeLabel={rangeLabel}
+                  today={overview?.today ?? today} clock={overview?.clock ?? '99:99'} dateFilter={datedError ? '' : dateFilter}
+                  onClearDate={() => router.push('/dashboard/money?tab=payments')} initialShow={showParam === 'unpaid' ? 'unpaid' : 'all'}
+                  capped={!dateFilter && (played?.length ?? 0) >= 1000} canRefund={access.can('money.refund_rounds')} onRefunded={refreshMoney} />
+              ) : active === 'ledger' ? <LedgerTab range={range} rangeLabel={rangeLabel} />
+              : active === 'payouts' ? (
+                <PayoutsTab data={payouts} error={payoutError} course={course} stripeParam={stripeParam} onConnected={() => { loadCourse(); loadOverview(); }} canConnect={!access.isStaff}
+                  range={range} rangeLabel={rangeLabel} onOpenStripe={canOpenStripe ? openStripe : undefined} openingStripe={openingStripe} />
+              ) : (
+                <CancellationsTab key={sp.get('q') ?? ''} bookings={cancelled} course={course} range={range} rangeLabel={rangeLabel} initialQuery={sp.get('q') ?? ''}
+                  canWaive={access.can('sheet.waive_fee')} onRefunded={refreshMoney} />
+              )}
+          </>)}
         </div>
       </main>
     </div>
   );
 }
 
-export default function MoneyPage() {
+export default function RevenuePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-paper"/>}>
-      <MoneyPageInner/>
+    <Suspense fallback={<div className="min-h-screen bg-paper" />}>
+      <RevenuePageInner />
     </Suspense>
   );
 }

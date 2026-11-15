@@ -140,7 +140,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     { key: 'members',       label: 'Members',      href: '/dashboard/members',       icon: <Users className="w-4 h-4"/> },
     // SD-8: Payments + Cancellations + Payouts are one page. A login that can
     // only see cancellations gets the item named for what it shows.
-    { key: 'money',         label: moneyOnlyCancellations ? 'Cancellations' : 'Money',
+    { key: 'money',         label: moneyOnlyCancellations ? 'Cancellations' : 'Revenue',
       href: moneyOnlyCancellations ? '/dashboard/money?tab=cancellations' : '/dashboard/money',
       icon: moneyOnlyCancellations ? <XCircle className="w-4 h-4"/> : <DollarSign className="w-4 h-4"/> },
     // POS-2 (Cam 2026-10-19): ring up walk-up sales — cash or a pay link.

@@ -22,12 +22,14 @@ check('future round is not a payment', st({ teeTime: { date: '2026-10-25', time:
 const page = readFileSync('src/app/dashboard/money/page.tsx', 'utf8');
 const cx = readFileSync('src/components/dashboard/money/CancellationsPanel.tsx', 'utf8');
 const pay = readFileSync('src/components/dashboard/money/PaymentsPanel.tsx', 'utf8');
-check('title says what it is, not "Money"', page.includes('>Payments and payouts</h1>') && !page.includes("'Stripe connected'"));
+// REVENUE-1 (Cam 2026-11-15): Money is Revenue.
+const top = readFileSync('src/components/dashboard/money/revenue/Top.tsx', 'utf8');
+check('title is Revenue', page.includes('>Revenue</h1>') && !page.includes("'Stripe connected'"));
 // MONEY-1 (Cam 2026-11-09): Stripe's own button.
-check('Stripe dashboard is a button for owners, not a status line', page.includes('<StripeButton onClick={openStripe}') && page.includes('!treatAsStaff') && readFileSync('src/components/dashboard/money/StripeButton.tsx', 'utf8').includes('Open your Stripe dashboard'));
+check('Stripe dashboard is the Stripe logo square, for owners only', page.includes('<StripeSquare label="Open your Stripe dashboard (new tab)" onClick={openStripe}') && page.includes('!access.isStaff && courseLoaded && course.stripeAccountActive'));
 // DENSE-2 (Cam 2026-10-27): the overview line became the Sales view — today against last week, next payout, not paid yet.
-const sales = readFileSync('src/components/dashboard/money/SalesPanel.tsx', 'utf8');
-check('overview line: today, not paid yet, next payout', ['>Today<', 'Not paid yet', 'Next payout'].every(x => sales.includes(x)) && page.includes('<SalesPanel'));
+const pending = readFileSync('src/components/dashboard/money/revenue/PendingPayments.tsx', 'utf8');
+check('top: today, next payout, and what is owed (not paid yet)', top.includes('>Today so far<') && top.includes('>Next payout<') && pending.includes('not paid yet') && page.includes('<TodayCard') && page.includes('<PendingPayments'));
 // MONEY-1 (Cam 2026-11-09: "the reload button isn't needed").
 check('no reload button', !page.includes('aria-label="Refresh"') && !page.includes('↻'));
 check('cancellation policy is not edited here — Change goes straight to it in Settings', !cx.includes('savePolicy') && cx.includes('/dashboard/settings?section=Prices+%26+fees&focus=cancellation-policy') && readFileSync('src/app/dashboard/settings/page.tsx', 'utf8').includes('data-setup="cancellation-policy"'));
@@ -38,14 +40,13 @@ check('settings opens the linked section', readFileSync('src/app/dashboard/setti
 const payouts = readFileSync('src/components/dashboard/money/PayoutsPanel.tsx', 'utf8');
 // MONEY-1 (Cam 2026-11-09: "we don't want to disclose how much we make"): the fee explainer is off the course's Money page.
 check('no GreenReserve fee explainer on Payouts', !payouts.includes('passed to GreenReserve') && !/from your payouts/.test(payouts));
-check('a failed payouts load is an error, never "nothing on its way"', page.includes('setPayoutError(p && !p.ok ? p.error') && page.includes('nextPayout === null ?'));
+check('a failed payouts load is an error, never "nothing on its way"', page.includes('setPayoutError(p && !p.ok ? p.error') && top.indexOf('error ?') !== -1 && top.indexOf('error ?') < top.indexOf('None on its way'));
 check('no money totals summed from the capped 200-row list', !pay.includes('$ paid') && !pay.includes("`${usd(paid)} paid`") && !pay.includes('{usd(paid)} paid') && !cx.includes('in fees kept') && !cx.includes('keptCents'));
-check('an unconnected course is told to connect Stripe, not that nothing is on its way', page.includes('p.data.connected ?') && sales.includes('Connect Stripe') && sales.indexOf('!stripeConnected ?') !== -1 && sales.indexOf('!stripeConnected ?') < sales.indexOf('nextPayout === null ?'));
+check('an unconnected course is told to connect Stripe, not that nothing is on its way', page.includes('payouts ? payouts.connected') && top.indexOf("connected === false ?") !== -1 && top.indexOf("connected === false ?") < top.indexOf('None on its way'));
 // DENSE-2: the Sales view's route is money.payments only, and the cash drawer count stays behind the close-out's own permission.
 const salesRoute = readFileSync('src/app/api/operator/money/sales/route.ts', 'utf8');
 check('the sales route needs money.payments', salesRoute.includes("requirePermission(session, 'money.payments')"));
 check('the drawer count is read only with shop.close', salesRoute.includes("can(session, 'shop.close') ? recentCloses(") && salesRoute.split('recentCloses(').length === 2);
-const loading = sales.slice(sales.indexOf('if (!data) return'), sales.indexOf('const s = data;'));
-check('next payout and not paid yet show even while sales load or fail', sales.includes('const side =') && loading.includes('{side}') && loading.includes('LoadError'));
+check('next payout and what is owed show even while sales load or fail', page.includes('{seesPayouts && <NextPayoutCard') && page.includes('{seesPayments && overview && (') && !page.includes('{seesPayments && sales && overview'));
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
 process.exit(failed === 0 ? 0 : 1);
