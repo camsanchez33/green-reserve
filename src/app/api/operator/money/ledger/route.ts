@@ -10,8 +10,9 @@ import { stripeDayDetail } from '@/lib/revenue-extras';
 //  ?from&to          the days, newest first, with the Stripe match (default: the last 14)
 //  ?day=YYYY-MM-DD   every movement of that day
 //  ?format=csv       every movement from..to, for the bookkeeper
-//  ?day=…            also `mismatch`: when that day's card money differs from Stripe, each payment that makes the
-//                    difference and why (Revenue page, Cam 2026-11-15; lib/revenue-extras). Null when it matches.
+//  ?day=…&mismatch=1 also `mismatch` / `mismatchRead`: when that day's card money differs from Stripe, each
+//                    payment that makes the difference and why (Revenue page, Cam 2026-11-15; lib/revenue-extras).
+//                    Only when asked — it reads Stripe; the page asks for a day whose match is 'off'.
 //  ?from&to&rows=1   every movement from..to (up to 92 days) — Revenue → Payments lists every payment type
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -34,8 +35,12 @@ async function read(req: NextRequest) {
   const day = sp.get('day');
   if (day !== null) {
     if (!DATE.test(day)) return NextResponse.json({ error: 'Pick a day.' }, { status: 400 });
-    const [rows, mismatch] = await Promise.all([ledgerRows(session.courseId, day), stripeDayDetail(session.courseId, day)]);
-    return NextResponse.json({ day, rows: rows ?? [], mismatch }, { headers: noStore });
+    if (sp.get('mismatch') !== '1') {
+      const rows = await ledgerRows(session.courseId, day);
+      return NextResponse.json({ day, rows: rows ?? [] }, { headers: noStore });
+    }
+    const [rows, detail] = await Promise.all([ledgerRows(session.courseId, day), stripeDayDetail(session.courseId, day)]);
+    return NextResponse.json({ day, rows: rows ?? [], mismatch: detail.mismatch, mismatchRead: detail.read }, { headers: noStore });
   }
 
   const today = todayIn(course.timezone);

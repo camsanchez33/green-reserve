@@ -14,7 +14,7 @@
 //    a different amount, or the same payment recorded on the next or previous day).
 import { prisma } from './prisma';
 import { stripe } from './stripe';
-import { addDaysStr, clockIn, todayIn } from './course-time';
+import { addDaysStr, todayIn } from './course-time';
 import { walkUpNet } from './analytics';
 import { dayStart, dayOf, sumDay, describeMoves, type LedgerRow } from './ledger-view';
 
@@ -26,7 +26,15 @@ export const LINE_FROM = 360, LINE_TO = 1200, LINE_STEP = 30;
 export type LinePoint = { minute: number; todayCents: number | null; avgCents: number };
 export type TodayVsAverage = { days: number; nowMinute: number; todayNowCents: number; avgNowCents: number; points: LinePoint[] };
 
-const minuteOf = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
+// One formatter per time zone (building two per ledger row cost ~1 s per 9,000 rows).
+const fmts = new Map<string, Intl.DateTimeFormat>();
+/** The course-local day and minute of an instant. */
+export function localDayMinute(tz: string, at: Date): { day: string; minute: number } {
+  let f = fmts.get(tz);
+  if (!f) { f = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }); fmts.set(tz, f); }
+  const p = Object.fromEntries(f.formatToParts(at).map(x => [x.type, x.value]));
+  return { day: `${p.year}-${p.month}-${p.day}`, minute: Number(p.hour) * 60 + Number(p.minute) };
+}
 const daysBetween = (a: string, b: string) => Math.round((Date.parse(b + 'T12:00:00Z') - Date.parse(a + 'T12:00:00Z')) / 86_400_000);
 
 /**
@@ -64,8 +72,8 @@ export async function todayVsAverage(courseId: string, tz: string, now: Date = n
     select: { at: true, direction: true, amountCents: true, platformFeeCents: true },
   });
   return lineOf(
-    rows.map(r => ({ day: dayOf(tz, r.at), minute: minuteOf(clockIn(tz, r.at)), cents: valueOf(r) })),
-    today, days, minuteOf(clockIn(tz, now)),
+    rows.map(r => ({ ...localDayMinute(tz, r.at), cents: valueOf(r) })),
+    today, days, localDayMinute(tz, now).minute,
   );
 }
 
@@ -115,6 +123,23 @@ export async function fnbCents(courseId: string, tz: string, range: { from: stri
   return Math.min(totals.walkUpCents + totals.shopOnRoundsCents, Math.min(walk, totals.walkUpCents) + onRounds);
 }
 
+export type Segments = { teeCents: number; cartCents: number; shopCents: number; eventCents: number; fnbCents: number; totalCents: number };
+/**
+ * Pure: the Revenue page's segments from Money's figures (lib/analytics) and the F&B part.
+ * Tee is rounds kept less carts plus late-cancel fees kept; the shop is walk-up and items on
+ * rounds less F&B. The total is their sum (collectedCents stays rounds only).
+ */
+export function segmentsOf(r: { collectedCents: number; cartCents: number; lateFeesKeptCents: number; walkUpCents: number; shopOnRoundsCents: number; eventCents: number }, fnb: number): Segments {
+  const seg = {
+    teeCents: r.collectedCents - r.cartCents + r.lateFeesKeptCents,
+    cartCents: r.cartCents,
+    shopCents: r.walkUpCents + r.shopOnRoundsCents - fnb,
+    eventCents: r.eventCents,
+    fnbCents: fnb,
+  };
+  return { ...seg, totalCents: seg.teeCents + seg.cartCents + seg.shopCents + seg.eventCents + seg.fnbCents };
+}
+
 export type HowPaid = { onlineCents: number; readerCents: number; cashCents: number; otherCents: number; totalCents: number };
 
 /** Pure: money taken by how it was paid (the course's part, less what went back the same way). Card not at a reader counts as online. */
@@ -141,12 +166,12 @@ export async function howPaid(courseId: string, tz: string, range: { from: strin
 
 // ─── Stripe mismatch, per payment ───────────────────────────────────────────
 
-export type DiffKind = 'refund_in_stripe' | 'not_in_stripe' | 'not_here' | 'amount_differs' | 'other_day';
-export type DiffItem = { stripeId: string; kind: DiffKind; at: string; who: string; href: string | null; ourCents: number | null; stripeCents: number | null; note: string };
+export type DiffKind = 'refund_in_stripe' | 'not_in_stripe' | 'not_here' | 'amount_differs' | 'other_day' | 'stripe_adjustment';
+export type DiffItem = { stripeId: string; kind: DiffKind; /** The payment it belongs to (a refund's charge), '' when none. */ paymentStripeId: string; at: string; who: string; href: string | null; ourCents: number | null; stripeCents: number | null; note: string };
 export type Mismatch = { ourCents: number; stripeCents: number; diffCents: number; payments: DiffItem[] };
 
 /** One side's record of one Stripe object (a payment, a refund, a dispute movement), signed. */
-export type Side = { key: string; day: string; at: string; cents: number; kind: 'charge' | 'refund' | 'dispute'; paymentIntent?: string | null };
+export type Side = { key: string; day: string; at: string; cents: number; kind: 'charge' | 'refund' | 'dispute' | 'adjustment'; paymentIntent?: string | null };
 
 /**
  * Pure: the payments that make a day differ. `ours` and `theirs` cover the day and the days
@@ -171,7 +196,8 @@ export function diffItems(day: string, ours: Side[], theirs: Side[], ourCharges:
       continue;
     }
     if (o) { out.push({ key, kind: 'not_in_stripe', ours: o, theirs: null }); continue; }
-    const kind: DiffKind = t!.kind === 'refund' && t!.paymentIntent && ourCharges.has(t!.paymentIntent) ? 'refund_in_stripe' : 'not_here';
+    const kind: DiffKind = t!.kind === 'adjustment' ? 'stripe_adjustment'
+      : t!.kind === 'refund' && t!.paymentIntent && ourCharges.has(t!.paymentIntent) ? 'refund_in_stripe' : 'not_here';
     out.push({ key, kind, ours: null, theirs: t });
   }
   return out.sort((x, y) => ((x.theirs ?? x.ours)!.at < (y.theirs ?? y.ours)!.at ? -1 : 1));
@@ -183,19 +209,25 @@ const NOTE: Record<DiffKind, string> = {
   not_here: 'In Stripe, but not recorded in GreenReserve.',
   amount_differs: 'Stripe has a different amount for this payment.',
   other_day: 'The same payment, recorded on the next or previous day. Not a real difference.',
+  stripe_adjustment: 'A Stripe balance adjustment (for example a failed refund returned to the balance). GreenReserve has no record of it.',
 };
 
 const CARD_TYPES = ['charge', 'payment', 'refund', 'payment_refund', 'adjustment', 'payment_failure_refund'];
-const MAX_TXNS = 3_000;
+// The same cap as the day list (ledger-view stripeByDay).
+const MAX_TXNS = 10_000;
+const STRIPE_TIMEOUT_MS = 10_000;
 const idOf = (v: unknown): string | null => (typeof v === 'string' ? v : v && typeof v === 'object' && 'id' in v ? String((v as { id: unknown }).id) : null);
 
 /**
- * The per-payment detail for one course-local day, or null when that day matches Stripe,
- * the course has no active Stripe account, or Stripe can't be read.
+ * The per-payment detail for one course-local day. `read` false: no active Stripe account,
+ * Stripe couldn't be read, or too many movements to itemise — never a guess. `mismatch` null
+ * with `read` true: the day matches Stripe.
  */
-export async function stripeDayDetail(courseId: string, day: string): Promise<Mismatch | null> {
+export type DayDetail = { read: boolean; mismatch: Mismatch | null };
+export async function stripeDayDetail(courseId: string, day: string): Promise<DayDetail> {
+  const unread: DayDetail = { read: false, mismatch: null };
   const course = await prisma.course.findUnique({ where: { id: courseId }, select: { timezone: true, stripeAccountId: true, stripeAccountActive: true } });
-  if (!course?.stripeAccountActive || !course.stripeAccountId) return null;
+  if (!course?.stripeAccountActive || !course.stripeAccountId) return unread;
   const tz = course.timezone;
   const from = dayStart(tz, addDaysStr(day, -1)), to = dayStart(tz, addDaysStr(day, 2));
 
@@ -204,9 +236,9 @@ export async function stripeDayDetail(courseId: string, day: string): Promise<Mi
     let n = 0;
     for await (const t of stripe.balanceTransactions.list(
       { created: { gte: Math.floor(from.getTime() / 1000), lt: Math.floor(to.getTime() / 1000) }, limit: 100, expand: ['data.source'] },
-      { stripeAccount: course.stripeAccountId },
+      { stripeAccount: course.stripeAccountId, timeout: STRIPE_TIMEOUT_MS },
     )) {
-      if (++n > MAX_TXNS) return null;
+      if (++n > MAX_TXNS) return unread;
       if (t.currency !== 'usd' || !CARD_TYPES.includes(t.type)) continue;
       const at = new Date(t.created * 1000);
       const src = t.source as unknown as Record<string, unknown> | string | null;
@@ -216,14 +248,15 @@ export async function stripeDayDetail(courseId: string, day: string): Promise<Mi
       if (t.type === 'charge' || t.type === 'payment') { key = idOf(obj.payment_intent) ?? srcId; pi = key; }
       else if (t.type === 'adjustment') {
         // Dispute money (withdrawn, reinstated): the ledger keys it "<dispute>:withdrawn|reinstated".
-        if (obj.object !== 'dispute') continue;
-        kind = 'dispute'; key = `${srcId}:${t.amount < 0 ? 'withdrawn' : 'reinstated'}`; pi = idOf(obj.payment_intent);
+        // Any other adjustment still counts (the day list counts it) and is listed on its own.
+        if (obj.object === 'dispute') { kind = 'dispute'; key = `${srcId}:${t.amount < 0 ? 'withdrawn' : 'reinstated'}`; pi = idOf(obj.payment_intent); }
+        else { kind = 'adjustment'; key = t.id; }
       } else { kind = 'refund'; pi = idOf(obj.payment_intent); }
       theirs.push({ key, day: dayOf(tz, at), at: at.toISOString(), cents: t.amount, kind, paymentIntent: pi });
     }
   } catch (err) {
     console.error(JSON.stringify({ ev: 'revenue.stripe_day_read.fail', error: err instanceof Error ? err.message : String(err) }));
-    return null;
+    return unread;
   }
 
   const rows = await prisma.moneyMove.findMany({
@@ -233,7 +266,7 @@ export async function stripeDayDetail(courseId: string, day: string): Promise<Mi
   const onDay = rows.filter(r => dayOf(tz, r.at) === day);
   const ourCents = sumDay(day, onDay).courseCardNetCents;
   const stripeCents = theirs.filter(t => t.day === day).reduce((s, t) => s + t.cents, 0);
-  if (ourCents === stripeCents) return null;
+  if (ourCents === stripeCents) return { read: true, mismatch: null };
 
   const ours: Side[] = rows.map(r => ({
     // A card row with no Stripe id can only ever be "not in Stripe".
@@ -262,11 +295,12 @@ export async function stripeDayDetail(courseId: string, day: string): Promise<Mi
     return {
       stripeId: i.key.startsWith('ledger:') ? '' : i.key,
       kind: i.kind,
+      paymentStripeId: i.theirs?.kind === 'refund' || i.theirs?.kind === 'dispute' ? i.theirs.paymentIntent ?? '' : i.theirs?.kind === 'charge' || (!i.theirs && i.ours?.kind === 'charge') ? i.key : '',
       at: (i.theirs?.day === day ? i.theirs : i.ours ?? i.theirs)!.at,
       who: d?.who ?? '', href: d?.href ?? null,
       ourCents: i.ours?.cents ?? null, stripeCents: i.theirs?.cents ?? null,
       note: NOTE[i.kind],
     };
   });
-  return { ourCents, stripeCents, diffCents: stripeCents - ourCents, payments };
+  return { read: true, mismatch: { ourCents, stripeCents, diffCents: stripeCents - ourCents, payments } };
 }

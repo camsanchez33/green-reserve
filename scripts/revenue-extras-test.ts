@@ -1,7 +1,7 @@
 // Revenue page (Cam 2026-11-15): the pure parts of lib/revenue-extras — today against the
 // 30-day average by time of day, Food & beverage, how it was paid, and the per-payment
 // Stripe difference. Pure. Run: npx tsx scripts/revenue-extras-test.ts
-import { lineOf, isFnb, fnbPart, howPaidOf, diffItems, type Side } from '../src/lib/revenue-extras';
+import { lineOf, isFnb, fnbPart, howPaidOf, diffItems, segmentsOf, localDayMinute, type Side } from '../src/lib/revenue-extras';
 
 let failed = 0;
 const ok = (l: string, c: boolean, d: unknown = '') => { console.log(`${c ? 'PASS' : 'FAIL'}  ${l}${c ? '' : ' — ' + JSON.stringify(d)}`); if (!c) failed++; };
@@ -27,6 +27,18 @@ const L3 = lineOf(moves, today, 3, 610);
 ok('a course live 3 days averages over 3, not 30', L3.days === 3 && L3.points.find(p => p.minute === 390)!.avgCents === 3000, L3.points[1]);
 const L0 = lineOf(moves, today, 0, 610);
 ok('first day: no average, today still drawn', L0.avgNowCents === 0 && L0.todayNowCents === 5000);
+
+// ── Course-local day and minute (one cached formatter) ──
+const dm = localDayMinute('America/New_York', new Date('2026-11-01T06:30:00Z'));
+ok('fall-back day: 1:30 AM EST is minute 90 of Nov 1', dm.day === '2026-11-01' && dm.minute === 90, dm);
+const dm2 = localDayMinute('America/New_York', new Date('2026-11-15T04:59:00Z'));
+ok('just before local midnight is the day before, minute 1439', dm2.day === '2026-11-14' && dm2.minute === 1439, dm2);
+
+// ── Segments ──
+const sg = segmentsOf({ collectedCents: 10000, cartCents: 2000, lateFeesKeptCents: 1000, walkUpCents: 5000, shopOnRoundsCents: 1000, eventCents: 3000 }, 2500);
+ok('tee is rounds kept less carts plus late fees', sg.teeCents === 9000);
+ok('shop is walk-up and items on rounds less F&B', sg.shopCents === 3500 && sg.fnbCents === 2500);
+ok('the total is the segments’ sum, not collectedCents', sg.totalCents === 9000 + 2000 + 3500 + 3000 + 2500);
 
 // ── Food & beverage ──
 ok('food tax category is F&B', isFnb('food', ''));
@@ -71,6 +83,8 @@ ok('a Stripe refund on a payment we never had: not here', kind('re_unknown') ===
 ok('a Stripe charge we never had: not here', kind('pi_theirs_only') === 'not_here');
 ok('something only on another day is not this day’s', !kind('pi_other_day_only'));
 ok('six lines, nothing else', items.length === 6, items.map(i => i.key));
+const adjItems = diffItems(day, [], [s('txn_1', day, -700, 'adjustment')], new Set());
+ok('a Stripe adjustment is its own kind', adjItems.length === 1 && adjItems[0].kind === 'stripe_adjustment');
 const split = diffItems(day, [s('pi_x', day, 3000)], [s('pi_x', day, 1000), s('pi_x', day, 2000)], new Set());
 ok('two Stripe movements on one payment add up before comparing', split.length === 0, split);
 
