@@ -24,7 +24,7 @@
 .kv { display: block; }
 .tag { font-size: 12px; color: var(--g-muted); }
 
-.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--g-muted); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--g-muted); }
 .ok { background: var(--g-up); } .warn { background: var(--g-warn); } .bad { background: var(--g-down); }
 
 /* Messages: one line with a dot, colour only with meaning. */
@@ -56,7 +56,7 @@
 .lnk:disabled { opacity: .5; cursor: default; }
 .lnkBad { color: var(--g-down); text-decoration-color: var(--g-down); }
 .plus { width: 30px; height: 30px; border-radius: 9px; border: 0; background: transparent; color: var(--g-ink); display: grid; place-items: center; cursor: pointer; padding: 0; flex: none; }
-:global([data-theme="dark"]) .plus { color: #FFFFFF; }
+:global([data-theme="dark"]) .plus { color: #FFFFFF; }   /* "White icon buttons with no box" (lanes/admin.md), as Announcements' .wb */
 .plus:hover { background: var(--g-active); }
 .plus:disabled { opacity: .4; cursor: not-allowed; }
 .btn { font: inherit; font-size: 13px; font-weight: 600; border: 1px solid var(--g-line); background: var(--g-hover); color: var(--g-ink); padding: 8px 14px; border-radius: 10px; cursor: pointer; white-space: nowrap; }
@@ -66,7 +66,7 @@
 .pri:hover { background: var(--g-brand); filter: brightness(1.06); }
 .dng { border-color: color-mix(in srgb, var(--g-down) 45%, transparent); color: var(--g-down); background: transparent; }
 .dng:hover { background: color-mix(in srgb, var(--g-down) 10%, transparent); }
-.solid { background: var(--g-down); color: #1A0B07; border-color: transparent; }
+.solid { background: var(--g-down); color: var(--g-panel-solid); border-color: transparent; }
 .solid:hover { background: var(--g-down); filter: brightness(1.06); }
 .sm { padding: 6px 12px; font-size: 12.5px; }
 .lnk:focus-visible, .plus:focus-visible, .btn:focus-visible, .fld:focus-visible { outline: 2px solid var(--g-focus); outline-offset: 1px; }
