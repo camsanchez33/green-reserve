@@ -1,0 +1,59 @@
+// PLATFORM ACTIVITY (Cam approved 2026-11-15, lanes/admin.md; mockup lanes/admin/system-mockup.html).
+// Pins the board's rules: one line per service, the summary line, worst first, "Can't see here" for what the route
+// doesn't return yet, the owner tools only for the owner, and every old System feature still on the page.
+// Run: npx tsx scripts/admin-system-test.ts
+import { readFileSync } from 'fs';
+import { services, tools, summary, worst, matches, CANT, type SystemData } from '../src/app/admin/system/services';
+
+let failed = 0;
+const check = (name: string, ok: boolean, info = '') => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${ok || !info ? '' : ` — ${info}`}`); if (!ok) failed++; };
+
+const run = (status: 'ok' | 'bad' | 'warn') => ({ status, note: status === 'bad' ? 'Last run failed: Resend rate limit reached' : '', last: { startedAt: '2026-11-14T14:00:00Z', finishedAt: null, outcome: status, detail: '', error: status === 'bad' ? 'Resend rate limit reached' : '' } });
+const base: SystemData = {
+  lastStripeTouch: null,
+  links: { backups: 'b', ci: 'c', commits: 'https://github.com/o/r/commits/main', vercel: 'v', vercelIsDeep: false, sentry: 's', sentryIsDeep: false, stripeWebhooks: 'w' },
+  crons: ['generate-tee-times', 'send-reminders', 'hourly', 'cancellation-cutoff', 'chase-onboarding', 'monthly-review']
+    .map(p => ({ path: `/api/cron/${p}`, schedule: '0 3 * * *', human: 'Daily at 03:00 UTC', health: run('ok') })),
+  stripeWebhook: { at: '2026-11-14T13:48:00Z', outcome: 'ok', detail: 'invoice.payment_succeeded', error: '' },
+  calcom: { state: 'on', url: 'https://cal.com/x/y', webhookSecretSet: true },
+  birdie: { enabled: true, keySet: true, flag: true, todayReplies: 142, dailyCap: 2000, model: 'm' },
+  platform: { accessFeeCents: 150, env: 'production', commitSha: '3f9c2ab', commitMessage: '', branch: 'main', publicUrl: '',
+    integrations: { stripe: true, stripeWebhook: true, resend: true, twilio: true, sentry: true, blob: true, privateBlob: true } },
+};
+
+const all = services(base);
+check('eleven services, one line each', all.length === 11 && new Set(all.map(s => s.id)).size === 11);
+check('the assistant is never called by its product name on the board', all.every(s => !/birdie/i.test(`${s.t} ${s.does} ${s.state}`)));
+check('Neon and GitHub read "Can’t see here" / "Check on GitHub" until Build adds them', all.find(s => s.id === 'neon')!.state === CANT && all.find(s => s.id === 'github')!.state === 'Check on GitHub');
+check('summary counts only the amber or red services', summary(all).text === 'All 11 services running' && summary(all).st === 'ok', summary(all).text);
+
+const broken: SystemData = { ...base,
+  crons: base.crons.map(c => c.path.endsWith('chase-onboarding') ? { ...c, health: run('bad') } : c.path.endsWith('monthly-review') ? { ...c, health: null } : c),
+  ops: { twilio: { sid: true, token: false, from: true } } };
+const b = services(broken);
+const jobs = b.find(s => s.id === 'jobs')!, tw = b.find(s => s.id === 'twilio')!;
+check('a failing job makes the jobs line red and names it', jobs.st === 'bad' && jobs.state === '1 failing: chase-onboarding', jobs.state);
+check('Twilio names how many keys are missing once the route says which', tw.st === 'warn' && tw.state === '1 key missing', tw.state);
+check('summary: "2 need a look", red when one is red', summary(b).text === '2 need a look' && summary(b).st === 'bad', JSON.stringify(summary(b)));
+check('worst first', worst(b)[0].id === 'jobs' && worst(b)[1].id === 'twilio');
+check('Twilio without the per-key split still says a key is missing', services({ ...base, platform: { ...base.platform, integrations: { ...base.platform.integrations, twilio: false } } }).find(s => s.id === 'twilio')!.state === 'A key is missing');
+check('Filter and wordless search', matches(jobs, 'bad', '') && !matches(jobs, 'ok', '') && matches(jobs, 'all', 'CHASE') && !matches(jobs, 'all', 'stripe'));
+
+const orphans = { checked: false, items: [], acknowledged: [], note: '' };
+check('a manager sees only the Data check among the owner tools', tools({ isOwner: false, orphans, versions: null, versionsErr: '', wipe: null, wipeErr: '', wiped: null }).map(t => t.id).join() === 'data');
+const own = tools({ isOwner: true, orphans, versions: null, versionsErr: 'no', wipe: { open: true, closesAt: '2026-12-01T05:00:00Z', confirmWords: 'WIPE TEST DATA', wiped: { Course: 14, Booking: 4798 }, kept: {} }, wipeErr: '', wiped: null });
+check('the owner sees all three tools', own.map(t => t.id).join() === 'data,agree,wipe');
+check('the wipe line says until when and how many', own[2].state === 'Open until Dec 1 · 4,812 records', own[2].state);
+
+// Every feature of the old System page is still on it, folded into its service.
+const page = readFileSync('src/app/admin/system/page.tsx', 'utf8');
+for (const [what, needle] of [
+  ['job runs', '/api/admin/system'], ['platform balance', '/api/admin/platform-stripe'], ['Sentry test error', '/api/admin/sentry-test'],
+  ['orphan sweep', '/api/admin/orphan-sweep'], ['force delete', 'forceDeleteId'], ['agreement publishing', '/api/admin/agreement-versions'],
+  ['launch wipe', '/api/admin/data-reset'], ['backups link', 'L!.backups'], ['CI link', 'L!.ci'], ['commit history', 'L!.commits'],
+  ['Stripe webhooks link', 'L!.stripeWebhooks'], ['Cal.com webhook', '/api/calcom/webhook'], ['assistant spend', 'dailyCap'], ['How to fix', 'How to fix'],
+] as const) check(`kept: ${what}`, page.includes(needle));
+check('no "Birdie" shown to the reader (the log key birdie.reply stays)', !/>[^<]*\bBirdie\b/.test(page));
+
+console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
+process.exit(failed ? 1 : 0);
