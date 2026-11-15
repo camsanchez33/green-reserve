@@ -117,8 +117,8 @@ export function StockBox({ item, reorderAt, lastCostCents, canCost, onDone }: {
 
       <div className="mt-4 pt-2 border-t border-line">
         <div className={ROW}>
-          <span className="text-[13.5px] text-ink">Remind me when it&apos;s below<small className="block text-[12px] text-ink-muted">Reminder by email</small></span>
-          <Stepper value={ro} onChange={setRo} label="Remind me when it's below" />
+          <span className="text-[13.5px] text-ink">Remind me when it&apos;s down to<small className="block text-[12px] text-ink-muted">Reminder by email</small></span>
+          <Stepper value={ro} onChange={setRo} label="Remind me when it's down to" />
         </div>
         {roChanged && <button type="button" onClick={saveReorder} disabled={!!busy} className="w-full min-h-[38px] rounded-[10px] border border-line text-[13.5px] font-semibold text-ink hover:bg-page disabled:opacity-50">{busy === 'ro' ? 'Saving…' : 'Save'}</button>}
       </div>

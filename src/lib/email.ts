@@ -2151,7 +2151,7 @@ export async function sendEventSignupEmail(data: {
 }
 
 // Low-stock email (Cam 2026-11-15): the course's owner, from admin@ (course-facing mail, lib/contact.ts). Sent by
-// lib/low-stock.ts once per drop to an item's "Remind me when it's below" number.
+// lib/low-stock.ts once per drop to an item's "Remind me when it's down to" number.
 export async function sendLowStockEmail(data: { courseId: string; courseName: string; ownerName: string | null; ownerEmail: string; items: { name: string; stockCount: number; reorderAt: number }[] }) {
   const one = data.items.length === 1;
   const rows = data.items.map(i => `<tr><td style="padding:8px 12px 8px 0;border-bottom:1px solid #E3E4DE;color:#141814;font-size:14px;">${escHtml(i.name)}</td><td align="right" style="padding:8px 0;border-bottom:1px solid #E3E4DE;color:#141814;font-size:14px;font-weight:600;white-space:nowrap;">${Math.max(0, i.stockCount)} left</td><td align="right" style="padding:8px 0 8px 12px;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:13px;white-space:nowrap;">reminder at ${i.reorderAt}</td></tr>`).join('');

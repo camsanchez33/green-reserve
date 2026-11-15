@@ -66,7 +66,7 @@ ok('Close out: Recent close-outs is the short list; a tap opens expected, counte
 const box = readFileSync('src/components/dashboard/shop/StockBox.tsx', 'utf8');
 ok('stock box: In stock is amber below zero with how to fix it', box.includes("(counted && count! < 0 ? 'text-warn' : 'text-ink')") && box.includes('more than you had. Fix it under Current inventory.'));
 ok('stock box: New stock receives (cost only for the owner), Current inventory sets the count, the reorder point saves', box.includes("action: 'receive', itemId: item.id, quantity: qty, ...(canCost && c !== null ? { unitCostCents: c } : {})") && box.includes("body: JSON.stringify({ id: item.id, stockCount: shelf })") && box.includes("action: 'reorder', itemId: item.id, reorderAt: ro > 0 ? ro : null"));
-ok('stock box: the reminder is by email (Cam 2026-11-15, lib/low-stock)', box.includes('Reminder by email') && !box.includes('Shows as Low on Stock'));
+ok('stock box: the reminder is by email (Cam 2026-11-15, lib/low-stock)', box.includes('Reminder by email') && !box.includes('Shows as Low on Stock') && box.includes('Remind me when it&apos;s down to'));
 ok('stock box: shown for a single item to logins with shop.catalog; ItemForm no longer edits an existing single item\'s stock', stock.includes("{picked && canEdit && !picked.options.length && (") && form.includes("{!sized && !(item && !item.options.length) && ("));
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
 process.exit(failed === 0 ? 0 : 1);

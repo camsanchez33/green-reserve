@@ -1,6 +1,6 @@
 // Low-stock email (Cam 2026-11-15, via Build: "Reminder by email", to "whoever's email is on it" — the course
 // owner's login email). When stock is taken (a paid walk-up sale, an item added to a round) and a counted item is at
-// or below its "Remind me when it's below" number (ShopItem.reorderAt, the same rule as the Low on Stock list,
+// or below its "Remind me when it's down to" number (ShopItem.reorderAt, the same rule as the Low on Stock list,
 // lib/shop-stock isLow), the owner gets one email naming every item that just went low.
 //
 //  • Once per drop: the email claims ShopItem.lowNoticeAt on each low row that has none, in one UPDATE … RETURNING,
@@ -18,7 +18,7 @@ export type LowItem = { id: string; name: string; stockCount: number; reorderAt:
 /** Claim the low rows of a course that haven't had their email yet. */
 async function claimLow(courseId: string): Promise<LowItem[]> {
   return prisma.$queryRaw<LowItem[]>(Prisma.sql`
-    UPDATE "ShopItem" SET "lowNoticeAt" = NOW()
+    UPDATE "ShopItem" SET "lowNoticeAt" = (NOW() AT TIME ZONE 'UTC')
     WHERE "courseId" = ${courseId} AND "active" = true AND "lowNoticeAt" IS NULL
       AND "stockCount" IS NOT NULL AND "reorderAt" IS NOT NULL AND "stockCount" <= "reorderAt"
       -- As the Low on Stock list (stockRows): an option of a hidden or deleted item is not on it.
