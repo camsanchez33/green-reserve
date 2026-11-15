@@ -59,7 +59,6 @@ export const FILTERS: [St | 'all', string][] = [['all', 'All'], ['bad', 'Failing
 export const CANT = 'Can’t see here';
 
 export const jobName = (path: string) => path.replace('/api/cron/', '');
-/** A job with no recorded run is amber ("not run yet"), as the page said before. */
 /** Colour only where it means something (Build, 2026-11-15): a job with no run recorded yet is grey — nothing is
  *  broken. Overdue (a warn that has a last run) is RED, like failed or never finished: an overdue hourly job means
  *  holds, no-show fees and check-in emails aren't going out. */
