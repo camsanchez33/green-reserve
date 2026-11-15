@@ -9,7 +9,7 @@ import { breakdownOf, payoutDetail } from '../src/lib/payout-detail';
 import { eventInvoices } from '../src/lib/event-invoices';
 import { allSegments } from '../src/lib/revenue-extras';
 import { paymentDetail, bookingLines } from '../src/lib/payment-detail';
-import { dayStart } from '../src/lib/ledger-view';
+import { dayStart, ledgerDays } from '../src/lib/ledger-view';
 
 const TAG = 'payinvdbtest';
 let failed = 0;
@@ -121,9 +121,23 @@ async function cleanup() {
   await recordMove({ courseId: c.id, what: 'round', direction: 'in', method: 'cash', account: 'course', amountCents: 2500, actor: 'staff', at: at('2031-05-05', 9) });
   await recordMove({ courseId: c.id, what: 'round', direction: 'in', method: 'cash', account: 'course', amountCents: 800, actor: 'staff', at: at('2031-05-11', 23) });
   const all = await allSegments(c.id, tz, { from: '2031-05-12', to: '2031-05-18' }, { from: '2031-05-05', to: '2031-05-11' }, at('2031-05-20', 12));
-  ok('every segment: the course’s part; dues, GreenReserve’s own fee and another course left out', all.totalCents === 5000 + 1000 && all.paid.totalCents === all.totalCents, all);
+  ok('Revenue: the course’s part, dues in; GreenReserve’s own fee row and another course left out', all.grossCents === 5000 + 1000 + 90000 && all.refundsCents === 0, all);
+  const sum = (o: Record<string, number>) => Object.values(o).reduce((x, y) => x + y, 0);
+  ok('…what was sold and how it was paid add up to it', sum(all.segments) === all.grossCents && sum(all.paid) === all.grossCents, [all.segments, all.paid]);
+  ok('…dues their own segment; a round with no booking is tee', all.segments.duesCents === 90000 && all.segments.teeCents === 5000, all.segments);
   ok('…by day, by local hour', all.series.find(x => x.key === '2031-05-12')?.cents === 5000 && all.byHour.some(h => h.hour === 9 && h.cents === 5000) && all.byHour.some(h => h.hour === 14 && h.cents === 1000), all.byHour);
-  ok('…the period before is its own window (11 PM the night before counts there)', all.beforeTotalCents === 2500 + 800, all.beforeTotalCents);
+  ok('…the period before is its own window (11 PM the night before counts there)', all.beforeGrossCents === 2500 + 800, all.beforeGrossCents);
+  {
+    // The one-total rule (Cam's approved mockup: the same figure four times): Revenue here equals the Ledger's money in,
+    // less GreenReserve's part, for the same days; and Revenue − Refunds equals the Ledger's net after GreenReserve's part.
+    await recordMove({ courseId: c.id, what: 'round', direction: 'out', method: 'card', account: 'course', amountCents: 1030, platformFeeCents: 30, stripeId: 're_payinv_one', actor: 'staff', at: at('2031-05-14', 10) });
+    const one = await allSegments(c.id, tz, { from: '2031-05-12', to: '2031-05-18' }, { from: '2031-05-05', to: '2031-05-11' }, at('2031-05-20', 12));
+    const ld = await ledgerDays(c.id, '2031-05-12', '2031-05-18');
+    const inLessFee = ld!.days.reduce((x, d) => x + d.cardInCents + d.cashInCents + d.otherInCents, 0) - (await prisma.moneyMove.aggregate({ where: { courseId: c.id, direction: 'in', at: { gte: dayStart(tz, '2031-05-12'), lt: dayStart(tz, '2031-05-19') } }, _sum: { platformFeeCents: true } }))._sum.platformFeeCents!;
+    const ledgerNet = ld!.days.reduce((x, d) => x + d.netCents - d.platformCents, 0);
+    ok('one total: Revenue equals the Ledger’s money in less GreenReserve’s part', one.grossCents === inLessFee, [one.grossCents, inLessFee]);
+    ok('…and Revenue − Refunds equals the Ledger’s net after GreenReserve’s part', one.netCents === ledgerNet && one.refundsCents === 1000, [one.netCents, ledgerNet]);
+  }
 
   // ── One payment's side card ──
   ok('pure: a round’s lines, GreenReserve’s fee never one of them', JSON.stringify(bookingLines({ players: 2, greenFeeTotal: 10000, cartFeeTotal: 4000, rangeBallsTotal: 0, shopTaxCents: 80, shopItems: [{ name: 'Glove', unitPriceCents: 1000, quantity: 1 }] })) === JSON.stringify([{ label: 'Green fee × 2', cents: 10000 }, { label: 'Cart', cents: 4000 }, { label: 'Glove', cents: 1000 }, { label: 'Sales tax', cents: 80 }]));
