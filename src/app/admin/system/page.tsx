@@ -21,7 +21,7 @@ import s from './system.module.css';
 import {
   type St, type Svc, type SystemData, type PlatformStripe, type Orphans, type OrphanSweepItem, type AcknowledgedOrphan,
   type WipePreview, type CronHealth, type Run,
-  GROUPS, FILTERS, RANK, CANT, services, localSt, tools, summary, worst, matches, jobName, cronSt, twilioKeys, agreementSt,
+  GROUPS, FILTERS, RANK, CANT, services, localSt, tools, overdue, summary, worst, matches, jobName, cronSt, twilioKeys, agreementSt,
 } from './services';
 
 const ICON = { fill: 'none', stroke: 'currentColor', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, 'aria-hidden': true };
@@ -294,7 +294,7 @@ function SystemContent() {
     switch (it.id) {
       case 'jobs': return (
         <>
-          <p className={s.lead}>Each job’s last recorded run. Red means it failed or never finished, amber that it is overdue, grey that it hasn’t run yet.</p>
+          <p className={s.lead}>Each job’s last recorded run. Red means it failed, never finished or is overdue; grey that it hasn’t run yet.</p>
           <div className={s.rows}>{d.crons.map(c => {
             const st = cronSt(c), h = c.health, k = `rerun:${c.path}`, n = notes[k] ?? {};
             // Only jobs that never touch a saved card can be re-run here (admin never charges, Cam 2026-11-12):
@@ -306,7 +306,7 @@ function SystemContent() {
             const rerunStep = charges ? `This job charges or retries saved cards, so it is never run by hand from here. It catches up on its next scheduled run (${c.human}).` : null;
             // The mockup's case: a Resend limit gets its own step and button.
             const resendLimit = /resend/i.test(`${h?.last?.error ?? ''} ${h?.note ?? ''}`);
-            const fix = st === 'bad' ? (
+            const fix = !overdue(c) ? (
               <Fix sev="bad" note={n.ok} err={n.err} steps={[
                 <>Open the function log: Vercel → Logs → filter to <Mono>{c.path}</Mono> and read the error{h?.last?.error ? <> ({h.last.error})</> : null}.</>,
                 resendLimit ? 'Check the limit: Resend → Usage shows the daily send count. Wait for it to reset at midnight UTC, or upgrade the plan.'
@@ -315,8 +315,8 @@ function SystemContent() {
                 'Come back here: the last run should read today with a green dot.',
               ]}>{rerunBtn}<ExtBtn href={links.vercelLogs}>Open Vercel logs</ExtBtn>{resendLimit && <ExtBtn href={links.resendUsage}>Open Resend usage</ExtBtn>}</Fix>
             ) : (
-              // Amber now only means overdue (it ran before, and not since). A job that hasn't run yet is grey, no block.
-              <Fix sev="warn" note={n.ok} err={n.err} steps={[
+              // Overdue (it ran before, and not since) is red. A job that hasn't run yet is grey and has no block.
+              <Fix sev="bad" note={n.ok} err={n.err} steps={[
                 <>Check it is still scheduled: Vercel → Settings → Cron Jobs and look for <Mono>{jobName(c.path)}</Mono>.</>,
                 'Read the function log for its last run in Vercel → Logs.',
                 rerunStep ?? `Press Re-run job, or wait for the next run (${c.human}).`,

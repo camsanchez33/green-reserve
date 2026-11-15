@@ -60,13 +60,16 @@ export const CANT = 'Can’t see here';
 
 export const jobName = (path: string) => path.replace('/api/cron/', '');
 /** A job with no recorded run is amber ("not run yet"), as the page said before. */
-/** Colour only where it means something (Build, 2026-11-15): a job with no run recorded yet is grey, not amber —
- *  nothing is broken. Amber and red stay for overdue, failed or never finished (a warn that has a last run). */
+/** Colour only where it means something (Build, 2026-11-15): a job with no run recorded yet is grey — nothing is
+ *  broken. Overdue (a warn that has a last run) is RED, like failed or never finished: an overdue hourly job means
+ *  holds, no-show fees and check-in emails aren't going out. */
 export const cronSt = (c: SystemData['crons'][number]): St => {
   const h = c.health;
   if (!h) return '';
-  return h.status === 'warn' && !h.last ? '' : h.status;
+  if (h.status === 'warn') return h.last ? 'bad' : '';
+  return h.status;
 };
+export const overdue = (c: SystemData['crons'][number]) => c.health?.status === 'warn' && !!c.health.last;
 export const notRunYet = (c: SystemData['crons'][number]) => !c.health || (c.health.status === 'warn' && !c.health.last);
 
 const pl = (n: number, one: string, many = one + 's') => `${n} ${n === 1 ? one : many}`;
@@ -88,10 +91,11 @@ export function services(d: SystemData): Svc[] {
   const i = d.platform.integrations;
   const out: Svc[] = [];
 
-  const bad = d.crons.filter(c => cronSt(c) === 'bad'), warn = d.crons.filter(c => cronSt(c) === 'warn'), fresh = d.crons.filter(notRunYet);
+  const bad = d.crons.filter(c => cronSt(c) === 'bad'), fresh = d.crons.filter(notRunYet);
+  const late = bad.filter(overdue).length, failing = bad.length - late;
   out.push({ id: 'jobs', g: 'run', t: 'Scheduled jobs', does: `The ${d.crons.length === 6 ? 'six' : d.crons.length} crons that run the platform`,
-    st: bad.length ? 'bad' : warn.length ? 'warn' : fresh.length ? '' : 'ok',
-    state: bad.length ? `${bad.length} failing: ${bad.map(c => jobName(c.path)).join(', ')}` : warn.length ? `${warn.length} overdue: ${warn.map(c => jobName(c.path)).join(', ')}`
+    st: bad.length ? 'bad' : fresh.length ? '' : 'ok',
+    state: bad.length ? `${bad.length} ${!late ? 'failing' : !failing ? 'overdue' : 'failing or overdue'}: ${bad.map(c => jobName(c.path)).join(', ')}`
       : fresh.length ? `${fresh.length} not run yet` : `All ${d.crons.length} on schedule` });
 
   const tk = twilioKeys(d);

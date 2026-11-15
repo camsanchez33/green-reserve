@@ -52,7 +52,8 @@ const fresh = services({ ...base, crons: base.crons.map(c => ({ ...c, health: nu
 check('jobs that have not run yet are grey and not counted in "need a look"', fresh.find(s => s.id === 'jobs')!.st === '' && fresh.find(s => s.id === 'jobs')!.state === '6 not run yet' && summary(fresh).st === 'ok');
 check('…even when the route calls them amber', services({ ...base, crons: base.crons.map(c => ({ ...c, health: null })), services: { jobs: { state: 'warn', note: '6 not run yet' } } }).find(s => s.id === 'jobs')!.st === '');
 const overdue = services({ ...base, crons: base.crons.map((c, i) => i === 0 ? { ...c, health: { ...run('ok'), status: 'warn' as const, note: 'Overdue' } } : c) });
-check('an overdue job (it ran before) stays amber', overdue.find(s => s.id === 'jobs')!.st === 'warn');
+check('an overdue job (it ran before, not since) is red and named', overdue.find(s => s.id === 'jobs')!.st === 'bad' && overdue.find(s => s.id === 'jobs')!.state === '1 overdue: generate-tee-times', overdue.find(s => s.id === 'jobs')!.state);
+check('the jobs lead line says overdue is red', page0().includes('Red means it failed, never finished or is overdue'));
 check('the assistant switched off is grey, even if the route says ok', services({ ...base, birdie: { ...base.birdie!, enabled: false }, services: { assistant: { state: 'ok', note: 'Off' } } }).find(s => s.id === 'anthropic')!.st === '');
 check('a route red on the assistant is never hidden by the "Off is grey" rule', services({ ...base, birdie: { ...base.birdie!, enabled: false }, services: { assistant: { state: 'bad', note: 'x' } } }).find(s => s.id === 'anthropic')!.st === 'bad');
 check('the two dialogs close on Escape and keep Tab inside', page0().includes("e.key === 'Escape'") && page0().includes("e.key !== 'Tab'") && (page0().match(/<Dialog labelledBy/g) ?? []).length === 2);
