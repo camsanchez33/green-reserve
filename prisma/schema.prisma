@@ -1617,6 +1617,9 @@ model ShopItem {
   costCents   Int?
   /// SHOP-4: show it as low stock once the count is at or below this; null = no alert.
   reorderAt   Int?
+  /// Low-stock email (Cam 2026-11-15): when the email for the current drop to reorderAt was sent; null = not since it
+  /// was last above. A database trigger clears it whenever the row stops being low (lib/low-stock.ts).
+  lowNoticeAt DateTime?
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
   sales       BookingShopItem[]

@@ -10,6 +10,7 @@
 // plus shopTotalCents plus shopFeeCents. Every charge, refund and receipt path
 // reads these two helpers instead of totalAmount / accessFeeTotal alone.
 import { prisma } from './prisma';
+import { notifyLowStock } from './low-stock';
 import type { Prisma } from '@prisma/client';
 import { SHOP_SALE_FEE_CENTS, SHOP_FEE_ON, feeCoveredCents, roundChargeCents } from './booking-fees';
 
@@ -106,7 +107,7 @@ export type ShopWriteResult =
 /** Add `quantity` of a catalog item to a booking at this course. */
 export async function addItemToBooking(courseId: string, bookingId: string, shopItemId: string, quantity: number, addedBy: string): Promise<ShopWriteResult> {
   if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_LINE_QUANTITY) return { ok: false, status: 400, error: `Quantity must be 1 to ${MAX_LINE_QUANTITY}.` };
-  return prisma.$transaction(async tx => {
+  const r = await prisma.$transaction(async tx => {
     await lockBooking(tx, bookingId);
     const b = await tx.booking.findUnique({ where: { id: bookingId }, select: LOCK_FIELDS });
     // Tenant isolation: another course's booking reads exactly like a missing one.
@@ -121,6 +122,9 @@ export async function addItemToBooking(courseId: string, bookingId: string, shop
     await takeStock(tx, item.id, quantity);
     return { ok: true, ...(await retotal(tx, bookingId)) } as const;
   }).catch(e => { if (e instanceof ShopCapError) return CAP_RESULT; throw e; });
+  // Low-stock email (Cam 2026-11-15): after the commit; never throws, so it never undoes the add.
+  if (r.ok) await notifyLowStock(courseId);
+  return r;
 }
 
 /** Remove one line from a booking at this course. */

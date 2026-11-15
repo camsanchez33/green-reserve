@@ -4,7 +4,7 @@
 // zero, with how to fix it), then two choices — "New stock" (how many, the cost of one, what it comes to) or "Current
 // inventory" (what is on the shelf now) — and the reorder point. Hide from the register and Delete item as small links.
 // Writes through the routes ItemForm already uses: shop-stock receive / reorder, shop-items PATCH stockCount / active,
-// DELETE. The reminder EMAIL is not built (Build 2026-11-12): the reorder point marks the item Low on Stock, as today.
+// DELETE. The reorder point marks the item Low on Stock and emails the owner once per drop (lib/low-stock, Cam 2026-11-15).
 import { useState } from 'react';
 import { dfetch } from '@/lib/dashboard-fetch';
 import type { TreeItem } from '@/lib/shop-tree';
@@ -55,7 +55,7 @@ export function StockBox({ item, reorderAt, lastCostCents, canCost, onDone }: {
     return run('in', () => dfetch('/api/operator/shop-stock', { method: 'POST', body: JSON.stringify({ action: 'receive', itemId: item.id, quantity: qty, ...(canCost && c !== null ? { unitCostCents: c } : {}) }) }), `${qty} added to ${item.name}.`);
   };
   const saveCount = () => run('count', () => dfetch('/api/operator/shop-items', { method: 'PATCH', body: JSON.stringify({ id: item.id, stockCount: shelf }) }), `${item.name} counted: ${shelf} in stock.`);
-  const saveReorder = () => run('ro', () => dfetch('/api/operator/shop-stock', { method: 'POST', body: JSON.stringify({ action: 'reorder', itemId: item.id, reorderAt: ro > 0 ? ro : null }) }), ro > 0 ? `${item.name} shows as low below ${ro}.` : `${item.name} no longer shows as low.`);
+  const saveReorder = () => run('ro', () => dfetch('/api/operator/shop-stock', { method: 'POST', body: JSON.stringify({ action: 'reorder', itemId: item.id, reorderAt: ro > 0 ? ro : null }) }), ro > 0 ? `We'll email you when ${item.name} is down to ${ro}.` : `No more reminders for ${item.name}.`);
   const hide = () => run('hide', () => dfetch('/api/operator/shop-items', { method: 'PATCH', body: JSON.stringify({ id: item.id, active: !item.active }) }), item.active ? `${item.name} hidden from the register.` : `${item.name} back on the register.`);
   async function del() {
     if (!confirm(`Delete ${item.name}?`)) return;
@@ -117,7 +117,7 @@ export function StockBox({ item, reorderAt, lastCostCents, canCost, onDone }: {
 
       <div className="mt-4 pt-2 border-t border-line">
         <div className={ROW}>
-          <span className="text-[13.5px] text-ink">Remind me when it&apos;s below<small className="block text-[12px] text-ink-muted">Shows as Low on Stock</small></span>
+          <span className="text-[13.5px] text-ink">Remind me when it&apos;s below<small className="block text-[12px] text-ink-muted">Reminder by email</small></span>
           <Stepper value={ro} onChange={setRo} label="Remind me when it's below" />
         </div>
         {roChanged && <button type="button" onClick={saveReorder} disabled={!!busy} className="w-full min-h-[38px] rounded-[10px] border border-line text-[13.5px] font-semibold text-ink hover:bg-page disabled:opacity-50">{busy === 'ro' ? 'Saving…' : 'Save'}</button>}
