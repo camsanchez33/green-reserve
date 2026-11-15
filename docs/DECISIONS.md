@@ -206,6 +206,9 @@ Staff logins are permissioned PER PERSON by the course owner (Settings → Staff
 ### Admin areas (AW-11, Cam 2026-10-22: "per-person access")
 Admin logins are permissioned per person by the owner on Team: the ROLE (viewer · support · manager) says how much, the AREAS say where — Pipeline, Courses, Golfers, Money, Messages, Problems, Company. ONE catalog, `src/lib/admin-areas.ts`; `resolveAdminSession()` reads `areas` from the row on every request (`AdminUser.areasSetAt` null = never set = every area, so nobody lost access when this shipped; the owner always has everything). Every area route calls `areaGate(session, '<area>')` after its role check; Home (`/api/admin/today`), the menu counts, search and Ask filter what they return by area; the menu only hides. A new admin route needs an area AND an `areaGate` call — `scripts/admin-areas-test.ts` fails on any admin route that neither checks an area nor is owner-only (or is on its short "every login" list). Changing someone's areas is owner-only, step-up confirmed, with a reason (`employee_areas`).
 
+### Password date (My profile, Cam 2026-11-15)
+`AdminUser.passwordChangedAt` is when the admin's or owner's password in force was set. EVERY write of `passwordHash` also writes it: today bootstrap, employee create (the temp password), the owner's reset of an employee, set-password (first set and forgot-password) and change-password. Null = set before the column existed (no backfill); `/admin/profile` hides the "Changed" row then. It reaches pages only on `AdminSessionView` (filled in `src/app/admin/layout.tsx`, own row, that one field); no route returns it. `scripts/password-changed-at-test.ts` fails any new password write without it. No existing record could serve instead: set-password and bootstrap write no audit row and no `securityEvent`.
+
 ### Session policy (per surface)
 
 | Surface | Cookie | JWT TTL | Renewal |
