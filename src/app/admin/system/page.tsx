@@ -21,7 +21,7 @@ import s from './system.module.css';
 import {
   type St, type Svc, type SystemData, type PlatformStripe, type Orphans, type OrphanSweepItem, type AcknowledgedOrphan,
   type WipePreview, type CronHealth, type Run,
-  GROUPS, FILTERS, RANK, CANT, services, tools, summary, worst, matches, jobName, cronSt, twilioKeys, agreementSt,
+  GROUPS, FILTERS, RANK, CANT, services, localSt, tools, summary, worst, matches, jobName, cronSt, twilioKeys, agreementSt,
 } from './services';
 
 const ICON = { fill: 'none', stroke: 'currentColor', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, 'aria-hidden': true };
@@ -177,9 +177,10 @@ function SystemContent() {
   async function runOrphanSweep() {
     setOrphanRunning(true); setOrphanResult(null);
     const res = await adminFetch<{ items: OrphanSweepItem[] }>('/api/admin/orphan-sweep', { method: 'POST', headers: { 'Content-Type': 'application/json' }, subject: 'the clean-up', action: 'save' });
-    setOrphanRunning(false);
-    if (!res.ok) { setOrphanResult({ text: `Clean-up failed: ${res.message}`, failed: true }); return; }
+    if (!res.ok) { setOrphanRunning(false); setOrphanResult({ text: `Clean-up failed: ${res.message}`, failed: true }); return; }
     const it = res.data.items ?? [];
+    setOrphans(o => ({ ...o, items: [] }));
+    setOrphanRunning(false);
     setOrphanResult({ text: `Cleaned up ${it.length} item${it.length === 1 ? '' : 's'}: ` + it.map(i => `"${i.name}" ${i.action}`).join('; '), failed: false });
     checkOrphans();
   }
@@ -246,9 +247,16 @@ function SystemContent() {
   }
   async function sendTestError() {
     setSentry({ kind: 'pending' });
-    const res = await adminFetch('/api/admin/sentry-test', { method: 'POST', subject: 'the test error', action: 'send' });
-    // The route says exactly what is wrong (no DSN, not redeployed, no answer) — show its words.
-    setSentry(res.ok ? { kind: 'ok', text: 'Sent — it should appear in Sentry → Issues within a minute as “Test error from Admin → Health”.' } : { kind: 'error', text: res.message });
+    // Raw fetch on purpose: the route's useful answers are a 503 and a 504 ("SENTRY_DSN is missing…", "didn't
+    // confirm in 3 seconds"), and adminFetch replaces 5xx words with a generic line. Show the route's own words.
+    try {
+      const r = await fetch('/api/admin/sentry-test', { method: 'POST' });
+      const d = await r.json().catch(() => ({})) as { error?: string };
+      setSentry(r.ok ? { kind: 'ok', text: 'Sent — it should appear in Sentry → Issues within a minute as “Test error from Admin → Health”.' }
+        : { kind: 'error', text: d.error || `The test didn’t go through (${r.status}) — try again.` });
+    } catch {
+      setSentry({ kind: 'error', text: 'Network error — the test was not sent. Check your connection and try again.' });
+    }
   }
 
   const svc = useMemo(() => data ? services(data) : [], [data]);
@@ -434,7 +442,7 @@ function SystemContent() {
                   <span className={s.r}>Owner</span></div>
               )}
             </div>
-            {st !== 'bad' && <div className={s.acts}><Ext href={L!.stripeWebhooks}>Open Stripe webhooks</Ext></div>}
+            <div className={s.acts}><Ext href={L!.stripeWebhooks}>Open Stripe webhooks</Ext></div>
           </>
         );
       }
@@ -622,7 +630,8 @@ function SystemContent() {
                   {v.published ? (v.published.hashMatches ? `Published ${formatDate(v.published.effectiveAt)}` : 'The file changed after it was published. Versions cannot be edited — add a new version instead.') : v.blocked ? 'Cannot be published yet' : 'Not published'}
                   {v.published?.reacceptBy && <><br />Courses re-sign by {formatDate(v.published.reacceptBy)}. {v.published.noticeSentAt ? `Email sent ${formatDateTime(v.published.noticeSentAt)}.` : 'Email goes out with the next hourly run.'}</>}
                   {v.reacceptRequired && !v.published && <><br />Publishing asks every course on an older version to re-sign within 30 days.</>}
-                  {v.reacceptRequired && v.counselReviewed && <><br />Reviewed by counsel {v.counselReviewed}.</>}
+                  {v.reacceptRequired && (v.counselReviewed ? <><br />Reviewed by counsel {v.counselReviewed}.</> : v.counselWaived ? <><br />Counsel review waived: {v.counselWaived}</> : null)}
+                  {!v.published && v.blocked && <><br /><span className={s.bad}>{v.blocked}</span></>}
                 </>}>
                 <b>{v.title} {v.version}</b>{v.current && <span className={s.small}> · current</span>}
               </Row>
@@ -653,7 +662,7 @@ function SystemContent() {
                   <label className={s.lab}>Reason (kept in the audit record)<input className={s.fld} value={wipeReason} onChange={e => setWipeReason(e.target.value)} autoComplete="off" /></label>
                   {wipeRunErr && <p className={s.err} role="alert">{wipeRunErr}</p>}
                   <div className={s.acts}>
-                    <button type="button" className={`${s.btn} ${s.dng} ${s.solid}`} onClick={runWipe} disabled={wipeBusy || wipeTyped !== w.confirmWords || !wipeReason.trim()}>{wipeBusy ? 'Clearing…' : 'Clear all test data'}</button>
+                    <button type="button" className={`${s.btn} ${s.dng} ${s.solid}`} onClick={runWipe} disabled={wipeBusy || wipeTyped !== w.confirmWords || wipeReason.trim().length < 4}>{wipeBusy ? 'Clearing…' : 'Clear all test data'}</button>
                     <button type="button" className={s.btn} onClick={() => { setWiping(false); setWipeTyped(''); setWipeReason(''); setWipeRunErr(''); }} disabled={wipeBusy}>Cancel</button>
                   </div>
                 </div>
@@ -687,6 +696,13 @@ function SystemContent() {
         <button type="button" className={s.back} onClick={() => go(null)}>‹ back</button>
         <h2>{open.t}</h2>
         <div className={s.dst}><Dot st={open.st} /><span className={`${s.stt} ${TONE[open.st]}`}>{open.state}</span><span className={s.dsc}>{open.does}</span></div>
+        {data && (open.st === 'bad' || open.st === 'warn') && localSt(data, open.id) !== open.st && (
+          <Fix sev={open.st} note={notes.recheck?.ok} err={notes.recheck?.err} steps={[
+            `The server’s check says: ${open.state}.`,
+            'The lines below are this page’s own reads and may not show it yet. Open the service itself to see the detail.',
+            'Fix what it names, then come back and press Re-check.',
+          ]}>{recheckBtn}</Fix>
+        )}
         {detail(open)}
       </section>
     );
@@ -711,13 +727,14 @@ function SystemContent() {
         </div>
         {loadErr && (
           <p className={s.empty} role="alert"><span className={s.bad}>{loadErr.msg}</span>{' '}
-            {loadErr.kind !== 'forbidden' && <button type="button" className={s.ol} onClick={() => loadSystem()}>Try again</button>}</p>
+            {loadErr.kind === 'unauthorized' ? <a className={s.ol} href="/admin/login">Sign in</a>
+              : loadErr.kind !== 'forbidden' && <button type="button" className={s.ol} onClick={() => loadSystem()}>Try again</button>}</p>
         )}
         {!data && !loadErr && <p className={s.empty}>Loading…</p>}
         {data && <div className={s.sumline}><Dot st={sm.st} /><b>{sm.text}</b></div>}
         {data && !groups.length && !ownShown.length && <p className={s.empty}>Nothing matches</p>}
         {groups.map(x => <div key={x.k} className={s.sgrp}><h3 className={s.sgh}>{x.label}</h3>{x.items.map(line)}</div>)}
-        {data && ownShown.length > 0 && <div className={s.sgrp}><h3 className={s.sgh}>Owner tools</h3>{ownShown.map(line)}</div>}
+        {(data || loadErr) && ownShown.length > 0 && <div className={s.sgrp}><h3 className={s.sgh}>Owner tools</h3>{ownShown.map(line)}</div>}
       </section>
     );
   }

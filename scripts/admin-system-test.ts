@@ -59,6 +59,11 @@ for (const [what, needle] of [
   ['launch wipe', '/api/admin/data-reset'], ['backups link', 'L!.backups'], ['CI link', 'L!.ci'], ['commit history', 'L!.commits'],
   ['Stripe webhooks link', 'L!.stripeWebhooks'], ['Cal.com webhook', '/api/calcom/webhook'], ['assistant spend', 'dailyCap'], ['How to fix', 'How to fix'],
 ] as const) check(`kept: ${what}`, page.includes(needle));
+const css = readFileSync('src/app/admin/system/system.module.css', 'utf8');
+const ovZ = Number(/\.ov \{[^}]*z-index: (\d+)/.exec(css)?.[1]);
+check('this page’s dialogs sit under the shared Modal (z-50), so "Confirm it’s you" opens on top of Publish', ovZ > 30 && ovZ < 50, String(ovZ));
+check('the Sentry test shows the route’s own 503/504 words (raw fetch, d.error)', /fetch\('\/api\/admin\/sentry-test'/.test(page) && page.includes('d.error ||'));
+check('the wipe asks for a reason of 4+ characters, as the route does', page.includes('wipeReason.trim().length < 4'));
 check('no "Birdie" shown to the reader (the log key birdie.reply stays)', !/>[^<]*\bBirdie\b/.test(page));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');

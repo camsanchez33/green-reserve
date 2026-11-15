@@ -100,7 +100,8 @@
 @media (max-width: 640px) { .kv { grid-template-columns: 1fr; gap: 2px; } }
 
 /* Dialogs */
-.ov { position: fixed; inset: 0; background: rgba(4, 12, 9, .6); display: grid; place-items: center; z-index: 60; padding: 20px; }
+/* Below the shared Modal (z-50) so the layout's "Confirm it's you" and reason boxes open on top of these. */
+.ov { position: fixed; inset: 0; background: rgba(4, 12, 9, .6); display: grid; place-items: center; z-index: 40; padding: 20px; }
 .modal { width: min(480px, 100%); padding: 20px; background: var(--g-panel-solid); border: 1px solid var(--g-edge); border-radius: var(--g-radius); box-shadow: var(--g-shadow); display: flex; flex-direction: column; gap: 12px; }
 .modal h3 { margin: 0; font-size: 17px; font-weight: 600; }
 .modal p { margin: 0; font-size: 13.5px; color: var(--g-ink-soft); }

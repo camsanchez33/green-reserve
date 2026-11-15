@@ -142,8 +142,10 @@ export function services(d: SystemData): Svc[] {
     if (!v) return x;
     return { ...x, st: v.state === 'unknown' ? '' : v.state, state: v.state === 'unknown' ? CANT : v.note || x.state };
   });
-  return out;
 }
+
+/** What this page's own checks say, without the route's verdict — to tell when the two disagree. */
+export const localSt = (d: SystemData, id: string): St => services({ ...d, services: undefined }).find(x => x.id === id)?.st ?? '';
 
 export function agreementSt(v: VersionRow): St {
   return v.published ? (v.published.hashMatches ? 'ok' : 'bad') : 'warn';
