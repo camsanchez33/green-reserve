@@ -8,6 +8,7 @@ import { recordMove } from '../src/lib/money-ledger';
 import { breakdownOf, payoutDetail } from '../src/lib/payout-detail';
 import { eventInvoices } from '../src/lib/event-invoices';
 import { allSegments } from '../src/lib/revenue-extras';
+import { paymentDetail, bookingLines } from '../src/lib/payment-detail';
 import { dayStart } from '../src/lib/ledger-view';
 
 const TAG = 'payinvdbtest';
@@ -17,6 +18,11 @@ const ok = (l: string, c: boolean, d: unknown = '') => { console.log(`${c ? 'PAS
 async function cleanup() {
   const ids = (await prisma.course.findMany({ where: { slug: { startsWith: TAG } }, select: { id: true } })).map(c => c.id);
   await prisma.moneyMove.deleteMany({ where: { courseId: { in: ids } } });
+  await prisma.shopSaleLine.deleteMany({ where: { sale: { courseId: { in: ids } } } });
+  await prisma.shopSale.deleteMany({ where: { courseId: { in: ids } } });
+  await prisma.bookingShopItem.deleteMany({ where: { booking: { courseId: { in: ids } } } });
+  await prisma.booking.deleteMany({ where: { courseId: { in: ids } } });
+  await prisma.teeTime.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.courseEventPayment.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.courseEventPlayer.deleteMany({ where: { event: { courseId: { in: ids } } } });
   await prisma.courseEvent.deleteMany({ where: { courseId: { in: ids } } });
@@ -118,6 +124,30 @@ async function cleanup() {
   ok('every segment: the course’s part; dues, GreenReserve’s own fee and another course left out', all.totalCents === 5000 + 1000 && all.paid.totalCents === all.totalCents, all);
   ok('…by day, by local hour', all.series.find(x => x.key === '2031-05-12')?.cents === 5000 && all.byHour.some(h => h.hour === 9 && h.cents === 5000) && all.byHour.some(h => h.hour === 14 && h.cents === 1000), all.byHour);
   ok('…the period before is its own window (11 PM the night before counts there)', all.beforeTotalCents === 2500 + 800, all.beforeTotalCents);
+
+  // ── One payment's side card ──
+  ok('pure: a round’s lines, GreenReserve’s fee never one of them', JSON.stringify(bookingLines({ players: 2, greenFeeTotal: 10000, cartFeeTotal: 4000, rangeBallsTotal: 0, shopTaxCents: 80, shopItems: [{ name: 'Glove', unitPriceCents: 1000, quantity: 1 }] })) === JSON.stringify([{ label: 'Green fee × 2', cents: 10000 }, { label: 'Cart', cents: 4000 }, { label: 'Glove', cents: 1000 }, { label: 'Sales tax', cents: 80 }]));
+  const tt = await prisma.teeTime.create({ data: { courseId: c.id, date: '2031-05-12', time: '08:00', holes: 18, greenFeeCents: 5000, cartFeeCents: 2000, playersAvailable: 4 } });
+  const bk = await prisma.booking.create({ data: { teeTimeId: tt.id, courseId: c.id, golferName: 'Pat Side', golferEmail: `${TAG}@noemail.greenreserve.app`, players: 2, greenFeeTotal: 10000, cartFeeTotal: 4000, accessFeeTotal: 300, totalAmount: 14300, status: 'completed', paymentStatus: 'paid' } });
+  await recordMove({ courseId: c.id, what: 'round', direction: 'in', method: 'card', account: 'course', amountCents: 14300, platformFeeCents: 300, stripeId: 'pi_payinv_side', bookingId: bk.id, actor: 'golfer', at: at('2031-05-12', 9) });
+  await recordMove({ courseId: c.id, what: 'round', direction: 'out', method: 'card', account: 'course', amountCents: 4000, stripeId: 're_payinv_side', bookingId: bk.id, actor: 'staff', note: 'Cart broke down', at: at('2031-05-12', 13) });
+  await recordMove({ courseId: c.id, what: 'hold', direction: 'out', method: 'card', account: 'course', amountCents: 2000, stripeId: 're_payinv_hold', bookingId: bk.id, actor: 'system', note: 'hold given back at check-in', at: at('2031-05-12', 8) });
+  const roundMove = await prisma.moneyMove.findFirstOrThrow({ where: { courseId: c.id, stripeId: 'pi_payinv_side' } });
+  const pi = stripe.paymentIntents as unknown as { retrieve: unknown };
+  let piAsked: unknown[] = [];
+  pi.retrieve = async (...a: unknown[]) => { piAsked = a; return { id: a[0], latest_charge: { payment_method_details: { card: { brand: 'visa', last4: '4242', fingerprint: 'fpx', exp_month: 1 } } } }; };
+  const pd = await paymentDetail(c.id, roundMove.id);
+  ok('side card: who, what for, how paid', pd?.who === 'Pat Side' && pd.lines.length === 2 && pd.lines[0].label === 'Green fee × 2' && pd.methodLabel === 'Card', pd);
+  ok('…the card’s brand and last four only, read on this course’s account', JSON.stringify(pd?.card) === '{"brand":"visa","last4":"4242","present":false}' && JSON.stringify(piAsked).includes('acct_a') && !JSON.stringify(pd).includes('fpx'), [pd?.card, piAsked]);
+  ok('…the refund on the round with its reason; the hold given back is not one', pd?.refunds.length === 1 && pd.refunds[0].reason === 'Cart broke down' && pd.refunds[0].amountCents === 4000, pd?.refunds);
+  ok('…the round’s receipt and its booking id for the existing actions', pd?.receipt?.kind === 'booking' && pd.bookingId === bk.id);
+  ok('another course’s payment is not found', (await paymentDetail(other.id, roundMove.id)) === null);
+  const sale2 = await prisma.shopSale.create({ data: { courseId: c.id, status: 'paid_cash', totalCents: 1080, taxCents: 80, paidAt: at('2031-05-12', 10), lines: { create: [{ name: 'Hot dog', unitPriceCents: 500, quantity: 2 }] } } });
+  await recordMove({ courseId: c.id, what: 'shop', direction: 'in', method: 'cash', account: 'course', amountCents: 1080, saleId: sale2.id, actor: 'staff', at: at('2031-05-12', 10) });
+  const saleMove = await prisma.moneyMove.findFirstOrThrow({ where: { courseId: c.id, saleId: sale2.id } });
+  const sd = await paymentDetail(c.id, saleMove.id);
+  ok('a cash sale: its lines and tax, no card, the shop receipt', sd?.lines.map(l => l.label).join() === 'Hot dog × 2,Sales tax' && sd.card === null && sd.receipt?.kind === 'shop', sd);
+  ok('the payment route needs money.payments', readFileSync('src/app/api/operator/money/payment/route.ts', 'utf8').includes("requirePermission(session, 'money.payments')"));
 
   // ── The routes ──
   const pr = readFileSync('src/app/api/operator/stripe/payouts/[id]/route.ts', 'utf8');
