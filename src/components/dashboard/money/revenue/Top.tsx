@@ -152,39 +152,46 @@ export function RevenueChart({ s, range, total }: { s: Sales; range: Range; tota
   const [sel, setSel] = useState<number | null>(null);
   const [tip, setTip] = useState<{ i: number; x: number } | null>(null);
   const plot = useRef<HTMLDivElement>(null);
+  // Build's `all` (every segment, by payment day) when sent; else computeAnalytics' rounds-only series.
+  const A = s.all ?? null;
+  const WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const hourBars = (rows: { hour: number; v: number }[]) => { const hs = rows.map(h => h.hour); const lo = Math.min(6, ...hs), hi = Math.max(19, ...hs); const m = new Map(rows.map(h => [h.hour, h.v]));
+    return Array.from({ length: hi - lo + 1 }, (_, i) => lo + i).map(h => ({ label: `${h % 12 || 12}${h < 12 ? 'a' : 'p'}`, tip: `${clock12(h * 60)} – ${clock12(h * 60 + 59)}`, v: m.get(h) ?? 0 })); };
+  const bucket = A ? A.bucket : s.bucket;
   const d: Bar[] = mode === 'day'
-    ? s.series.map(x => ({ label: dayShort(x.key), tip: s.bucket === 'week' ? `Week of ${dayLong(x.key)}` : dayLong(x.key) + (x.key === s.today ? ' · so far' : ''), v: x.collectedCents }))
+    ? (A ? A.series.map(x => ({ key: x.key, v: x.cents })) : s.series.map(x => ({ key: x.key, v: x.collectedCents })))
+      .map(x => ({ label: dayShort(x.key), tip: bucket === 'week' ? `Week of ${dayLong(x.key)}` : dayLong(x.key) + (x.key === s.today ? ' · so far' : ''), v: x.v }))
     : mode === 'dow'
       ? [1, 2, 3, 4, 5, 6, 0].map(w => {
         // An average: the weekday's total over how many of that weekday the dates hold (today, half done, left out).
-        let n = 0; for (let x = range.from; x <= range.to; x = addDays(x, 1)) if (dowOf(x) === w && x !== s.today) n++;
-        const tot = s.byDow[w]?.collectedCents ?? 0;
-        return { label: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][w], tip: `Average ${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][w]}`, v: n ? tot / n : 0 };
+        let v = 0;
+        if (A) { const r = A.byDow.find(x => x.dow === w); v = r && r.days ? r.cents / r.days : 0; }
+        else { let n = 0; for (let x = range.from; x <= range.to; x = addDays(x, 1)) if (dowOf(x) === w && x !== s.today) n++; v = n ? (s.byDow[w]?.collectedCents ?? 0) / n : 0; }
+        return { label: WEEK[w].slice(0, 3), tip: `Average ${WEEK[w]}`, v };
       })
-      : (() => { const hs = s.byHour.map(h => h.hour); const lo = Math.min(6, ...hs), hi = Math.max(19, ...hs); const m = new Map(s.byHour.map(h => [h.hour, h.collectedCents]));
-        return Array.from({ length: hi - lo + 1 }, (_, i) => lo + i).map(h => ({ label: `${h % 12 || 12}${h < 12 ? 'a' : 'p'}`, tip: `${clock12(h * 60)} – ${clock12(h * 60 + 59)}`, v: m.get(h) ?? 0 })); })();
+      : hourBars(A ? A.byHour.map(h => ({ hour: h.hour, v: h.cents })) : s.byHour.map(h => ({ hour: h.hour, v: h.collectedCents })));
   const n = d.length, mx = Math.max(1, ...d.map(x => x.v)), st = niceStep(mx, 4), top = Math.ceil(mx / st) * st;
   const hi = sel !== null && sel < n ? sel : mode === 'day' ? n - 1 : d.reduce((m, x, i) => x.v > d[m].v ? i : m, 0);
   const empty = d.every(x => x.v === 0);
   const grid: number[] = []; if (empty) grid.push(0); else for (let v = 0; v <= top + 1e-6; v += st) grid.push(v);
   const every = Math.max(1, Math.ceil(n / Math.max(3, Math.floor((plot.current?.clientWidth ?? 600) / 52))));
-  const pct = pctChange(s.collectedCents, s.beforeCollectedCents);
+  const pct = A ? pctChange(A.totalCents, A.beforeTotalCents) : pctChange(s.collectedCents, s.beforeCollectedCents);
   const len = spanDays(range.from, range.to);
   return (
     <section className={`${CARD} !rounded-[16px] px-5 py-[18px]`} aria-label="Revenue chart">
       <div className="flex flex-wrap items-start gap-x-5 gap-y-3 mb-4">
         <div>
           <div className="text-[13px] text-ink-muted">Revenue</div>
-          <div className="text-[28px] font-semibold tabular-nums leading-tight text-ink">{usd(total)}</div>
-          <div className="mt-0.5"><Change pct={pct} tail={`rounds vs the period before (${dayShort(addDays(range.from, -len))} – ${dayShort(addDays(range.from, -1))})`} /></div>
+          <div className="text-[28px] font-semibold tabular-nums leading-tight text-ink">{usd(A ? A.totalCents : total)}</div>
+          <div className="mt-0.5"><Change pct={pct} tail={`${A ? '' : 'rounds '}vs the period before (${dayShort(addDays(range.from, -len))} – ${dayShort(addDays(range.from, -1))})`} /></div>
         </div>
         <span className="flex-1" />
         <Seg small label="Chart" value={mode} onChange={k => { setMode(k); setSel(null); }} options={[['day', 'By day'], ['dow', 'Day of week'], ['hour', 'Time of day']] as const} />
       </div>
       <div ref={plot} className="relative h-[190px] ml-11 max-md:ml-[38px]">
         {grid.map(v => <div key={v} className={'absolute inset-x-0 border-t ' + (v ? 'border-ink/10' : 'border-line')} style={{ bottom: `${(v / top) * 100}%` }}><span className={Y_AXIS}>{usdk(v)}</span></div>)}
-        {empty && <p className="absolute inset-0 grid place-items-center text-[13px] text-ink-muted">No rounds in these dates</p>}
-        <div className="absolute inset-0 flex items-end gap-1" role="img" aria-label={`Rounds ${mode === 'day' ? 'by day' : mode === 'dow' ? 'by day of week' : 'by time of day'}`}
+        {empty && <p className="absolute inset-0 grid place-items-center text-[13px] text-ink-muted">{A ? 'No payments in these dates' : 'No rounds in these dates'}</p>}
+        <div className="absolute inset-0 flex items-end gap-1" role="img" aria-label={`${A ? 'Revenue' : 'Rounds'} ${mode === 'day' ? 'by day' : mode === 'dow' ? 'by day of week' : 'by time of day'}`}
           onMouseLeave={() => setTip(null)}>
           {d.map((x, i) => (
             <div key={i} className="group flex-1 h-full flex items-end justify-center cursor-pointer min-w-0 relative" onClick={() => setSel(i)}

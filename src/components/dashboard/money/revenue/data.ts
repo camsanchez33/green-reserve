@@ -23,6 +23,8 @@ export type Sales = {
   todayByHour: { hour: number; collectedCents: number }[]; lastWeekByHour: { hour: number; collectedCents: number }[];
   todayCollectedCents: number; lastWeekCollectedCents: number;
   drawer: CloseView | null;
+  /** Build: every segment by payment day (the course's part, less money given back; fee and dues out). all.paid.totalCents === all.totalCents. */
+  all?: { bucket: 'day' | 'week'; series: { key: string; cents: number }[]; byDow: { dow: number; cents: number; days: number }[]; byHour: { hour: number; cents: number }[]; totalCents: number; beforeTotalCents: number; paid: { onlineCents: number; readerCents: number; cashCents: number; otherCents: number; totalCents: number } };
   /** Build: money taken so far today against the average of the last `days` days (≤ 30), by payment time. */
   todayVsAverage?: { days: number; nowMinute: number; todayNowCents: number; avgNowCents: number; points: { minute: number; todayCents: number | null; avgCents: number }[] };
 };
