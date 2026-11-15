@@ -453,170 +453,231 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
 .empty{font-size:13.5px;color:var(--muted);padding:14px 10px}
 </style>
 <style>
-/* Money — Payments and payouts, exactly as it works today (SD-8 one page, DENSE-2 sales, EARNED-1 ledger, MONEY-1
-   payouts). Only the skin is the charcoal glass. Classes prefixed y- so nothing collides with the shared shell. */
+/* Revenue (was "Payments and payouts"), revised to Cam's 34 comments (2026-11-15). Classes prefixed y- so nothing
+   collides with the shared shell. Every colour is a token, so Charcoal and Light both get every change. */
+.app{--segtrack:rgba(255,255,255,.06);--segon:rgba(255,255,255,.15);--segon-sh:0 1px 0 rgba(255,255,255,.08) inset,0 2px 8px rgba(0,0,0,.28);
+  --barbase:rgba(237,238,235,.30);--barhi:#F4F5F2;--grid:rgba(255,255,255,.07);--tip:#121312;--tip-ink:#F2F3EF;--solid:#262726;--stripe:#635BFF}
+.app[data-mode="light"]{--segtrack:rgba(0,0,0,.05);--segon:#FFFFFF;--segon-sh:0 1px 2px rgba(0,0,0,.10),0 0 0 1px rgba(0,0,0,.04);
+  --barbase:rgba(25,27,25,.22);--barhi:#1E201E;--grid:rgba(0,0,0,.07);--tip:#1E201E;--tip-ink:#FFFFFF;--solid:#FBFBF9}
 .ytop{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .ytop .ttl{margin:4px auto 0 0}
-.ystripe{font:inherit;font-size:16px;font-weight:700;letter-spacing:-.02em;color:#fff;background:none;border:0;cursor:pointer;padding:6px 4px;display:inline-flex;align-items:baseline;gap:5px}
-.app[data-mode="light"] .ystripe{color:var(--ink)}
-.ystripe small{font-size:12px;font-weight:500;opacity:.8}
+.ystripe{font:inherit;font-size:13.5px;font-weight:600;color:#fff;background:var(--stripe);border:0;border-radius:10px;padding:8px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+.ystripe:hover{background:#5249F0}
 .ylbl{font-size:13px;color:var(--muted)}
-.ybig{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.2}
+.ybig{font-size:28px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.15}
 .ymid{font-size:22px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.25}
 .yfaint{color:var(--muted)}
 .ysm{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
-.ysales{display:grid;grid-template-columns:minmax(0,1fr) 260px;overflow:hidden}
-.ysales .yl{padding:18px 20px;min-width:0}
-.ysales .yr{border-left:1px solid var(--line);display:flex;flex-direction:column}
-.ysales .yr>div{padding:16px 18px}
-.ysales .yr>div+div{border-top:1px solid var(--line)}
-.ynums{display:flex;gap:12px 40px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px}
-.ychg{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;padding-bottom:4px}
+.ychg{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
 .ychg span{font-weight:400;color:var(--muted)}
-.ylc{position:relative;height:150px;border-bottom:1px solid var(--line)}
+/* Today + payout */
+.ytoday{display:grid;grid-template-columns:minmax(0,2fr) minmax(260px,1fr);gap:16px;align-items:stretch}
+.ytoday>.card{padding:18px 20px;min-width:0}
+.ynums{display:flex;gap:12px 36px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px}
+.ylc{position:relative;height:160px;margin-left:44px}
 .ylc svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
-.yticks{position:relative;height:16px;margin-top:4px;font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
-.yticks span{position:absolute;transform:translateX(-50%)}
+.yax{position:absolute;left:-44px;width:38px;text-align:right;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;transform:translateY(-50%)}
+.yticks{position:relative;height:16px;margin:6px 0 0 44px;font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.yticks span{position:absolute;transform:translateX(-50%);white-space:nowrap}
 .yleg{display:flex;gap:16px;margin-top:8px;font-size:12px;color:var(--ink-soft)}
-.yleg i{display:inline-block;width:16px;border-top:3px solid var(--bar);margin-right:6px;vertical-align:middle;border-radius:2px}
+.yleg i{display:inline-block;width:16px;border-top:2px solid var(--barhi);margin-right:6px;vertical-align:middle}
 .yleg i.d{border-top:2px dashed var(--muted)}
+.ypay{display:flex;flex-direction:column;gap:4px}
+.ypay .yrule{border-top:1px solid var(--line);margin:12px 0 8px}
+.ypay .ykv{border:0;padding:4px 0}
 .ylink{font:inherit;font-size:12.5px;font-weight:600;color:var(--ink);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--muted)}
 .ylink:hover{text-decoration-color:var(--ink)}
-.yrng{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap}
-.ydr{display:inline-flex;gap:3px;padding:3px;border-radius:10px;background:var(--panel);border:1px solid var(--edge);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
-.ydr button{font:inherit;font-size:13px;border:0;background:transparent;color:var(--ink-soft);padding:6px 11px;border-radius:8px;cursor:pointer;white-space:nowrap}
-.ydr button:hover{background:var(--hover)}
-.ydr button.on{background:var(--ink);color:var(--bg);font-weight:600}
-.ydr button small{font-size:10px;opacity:.7}
-.yrtxt{font-size:13px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
-.ycoll{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
-.ycoll b{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
-.ybars{display:flex;align-items:flex-end;gap:3px;height:120px;border-bottom:1px solid var(--line)}
-.ybars div{flex:1;border-radius:3px 3px 0 0;background:var(--bar-prev);min-width:0}
-.ybars div.last{background:var(--bar)}
-.ybl{display:flex;gap:3px;margin-top:4px}
+.ylink.bad{color:var(--bad);text-decoration-color:var(--bad)}
+/* Segmented controls (range + chart view) */
+.yseg{display:inline-flex;gap:2px;padding:3px;border-radius:11px;background:var(--segtrack);border:1px solid var(--line)}
+.yseg button{font:inherit;font-size:13px;font-weight:500;border:0;background:transparent;color:var(--ink-soft);padding:6px 14px;border-radius:8px;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s}
+.yseg button:hover{color:var(--ink)}
+.yseg button[aria-pressed="true"]{background:var(--segon);color:var(--ink);font-weight:600;box-shadow:var(--segon-sh)}
+.yseg.sm button{font-size:12.5px;padding:5px 12px}
+.yrng{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;position:relative}
+.yrtxt{font-size:13.5px;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.yrng .ychg{margin-left:4px}
+.ycal{position:absolute;left:0;top:calc(100% + 8px);z-index:6;padding:14px;border-radius:14px;background:var(--solid);border:1px solid var(--edge);box-shadow:0 14px 34px rgba(0,0,0,.35);display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.ycal[hidden]{display:none}
+.ycal label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+.ycal input{font:inherit;font-size:13.5px;color:var(--ink);background:var(--hover);border:1px solid var(--line);border-radius:9px;padding:7px 9px;color-scheme:dark}
+.app[data-mode="light"] .ycal input{color-scheme:light}
+/* Bars */
+.ychart{padding:18px 20px}
+.ychead{display:flex;align-items:flex-start;gap:12px 20px;flex-wrap:wrap;margin-bottom:16px}
+.ychead .ysp{flex:1}
+.yplot{position:relative;height:190px;margin-left:44px}
+.ygl{position:absolute;left:0;right:0;border-top:1px solid var(--grid)}
+.ygl.z{border-top-color:var(--line)}
+.ygl span{position:absolute;left:-44px;width:38px;text-align:right;font-size:11px;color:var(--muted);transform:translateY(-50%);font-variant-numeric:tabular-nums}
+.ybars{position:absolute;inset:0;display:flex;align-items:flex-end;gap:4px}
+.ybars .yb{flex:1;height:100%;display:flex;align-items:flex-end;justify-content:center;cursor:pointer;min-width:0;position:relative}
+.ybars .yb i{display:block;width:100%;max-width:12px;border-radius:4px 4px 1px 1px;background:var(--barbase);transition:background .12s}
+.ybars.wide .yb i{max-width:22px}
+.ybars .yb:hover i{background:var(--ink-soft)}
+.ybars .yb.hi i{background:var(--barhi)}
+.ybars .yb b{position:absolute;font-size:11px;font-weight:600;color:var(--ink);white-space:nowrap;transform:translateY(-4px);font-variant-numeric:tabular-nums;pointer-events:none}
+.ybl{display:flex;gap:4px;margin:6px 0 0 44px}
 .ybl span{flex:1;min-width:0;text-align:center;font-size:11px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums;overflow:visible}
+.ytip{position:absolute;z-index:4;pointer-events:none;background:var(--tip);color:var(--tip-ink);font-size:12px;padding:6px 9px;border-radius:8px;white-space:nowrap;transform:translate(-50%,-100%);box-shadow:0 6px 18px rgba(0,0,0,.3);font-variant-numeric:tabular-nums}
+.ytip[hidden]{display:none}
+.ytip b{display:block;font-size:13px}
+/* Sold / paid */
 .ytwo{display:grid;grid-template-columns:1fr 1fr}
 .ytwo>div{padding:16px 20px;min-width:0}
 .ytwo>div+div{border-left:1px solid var(--line)}
 .yh{font-size:15px;font-weight:600;margin:0 0 6px}
-.ykv{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid var(--line);font-size:13.5px;font-variant-numeric:tabular-nums}
-.ykv:first-of-type{border-top:0}
+.ykv{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:8px 0;border-top:1px solid var(--line);font-size:13.5px;font-variant-numeric:tabular-nums}
+.yh+.ykv,.yhb+.ykv{border-top:0}
 .ykv span{color:var(--ink-soft)}
+.ykv span small{color:var(--muted);font-size:12px;margin-left:6px}
 .ykv.tot{font-weight:600;border-top:1px solid var(--ink-soft)}
 .ykv.tot span{color:var(--ink)}
-.yhb{display:flex;height:10px;border-radius:3px;overflow:hidden;gap:2px;margin:4px 0 8px}
-.yhb span:first-child{background:var(--bar)} .yhb span:last-child{background:var(--bar-prev)}
-.ynote{margin:10px 0 0;font-size:13px;color:var(--ink-soft)}
-.ysec{font-size:15px;font-weight:600;margin:0 0 -6px}
-.ysplit{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}
-.ysplit.has{grid-template-columns:minmax(0,1fr) 340px}
-.ylist{padding:6px}
-.yrow{display:grid;align-items:center;gap:12px;padding:10px 12px;border-top:1px solid var(--line);cursor:pointer;border-radius:10px;font-size:13.5px;min-width:0}
-.ylist .yrow:first-child,.ydayh+.yrow{border-top:0}
-.yrow:hover{background:var(--hover)}
-.yrow.sel{background:var(--active);box-shadow:var(--shadow)}
-.yrow .yn{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.yrow .yn b{font-weight:600}
-.yrow .yn span{color:var(--muted)}
-.yrow .yt{font-variant-numeric:tabular-nums;color:var(--ink-soft)}
-.yrow .ya{font-variant-numeric:tabular-nums;font-weight:600;text-align:right}
-.ypr{grid-template-columns:72px minmax(0,1fr) 96px 250px}
-.ydc{grid-template-columns:8px minmax(0,1fr) auto auto}
-.ycx{grid-template-columns:minmax(0,1.2fr) minmax(0,1.1fr) minmax(0,1fr)}
-.ypo{grid-template-columns:minmax(0,1fr) 130px 200px;cursor:default}
-.ypo:hover{background:transparent}
-.ymv{grid-template-columns:64px minmax(0,1fr) 110px minmax(0,1fr) 96px}
-.ydayh{display:flex;justify-content:space-between;align-items:baseline;padding:12px 12px 6px;font-size:13.5px;font-weight:600;border-top:1px solid var(--line)}
-.ylist .ydayh:first-child{border-top:0;padding-top:6px}
-.ydayh span{font-weight:400;color:var(--muted);font-size:12.5px}
-.ysx{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-.dot.nt{background:var(--muted)}
-.yib{width:34px;height:34px;border:0;background:none;color:#fff;display:grid;place-items:center;cursor:pointer;padding:0;border-radius:8px;flex:none}
+.ykv.ind span{padding-left:14px;color:var(--muted)} .ykv.ind b{font-weight:500;color:var(--ink-soft)}
+.ykv .pct{color:var(--muted);font-weight:400;margin-right:12px;font-size:12.5px}
+.yhb{display:flex;height:8px;border-radius:4px;overflow:hidden;gap:2px;margin:6px 0 10px}
+.yhb span{background:var(--barbase)} .yhb span:first-child{background:var(--barhi)}
+/* Section heads with a white icon on the right */
+.yhd{display:flex;align-items:center;gap:8px;margin:2px 0 -6px}
+.yhd h3{font-size:15px;font-weight:600;margin:0}
+.yhd .ysp{flex:1}
+.yib{width:34px;height:34px;border:0;background:none;color:#fff;display:grid;place-items:center;cursor:pointer;padding:0;border-radius:8px;flex:none;text-decoration:none}
 .app[data-mode="light"] .yib{color:var(--ink)}
 .yib:hover{background:var(--hover)}
 .yib svg{width:19px;height:19px}
-.yib:disabled{opacity:.4;cursor:default}
-.yacts{display:flex;align-items:center;gap:2px}
-.yres{grid-column:2/-1;font-size:12.5px;margin-top:-4px}
-.yres.ok{color:var(--ok)} .yres.bad{color:var(--bad)}
+.yib{position:relative}
+.yib .sdot{position:absolute;right:5px;top:5px;width:6px;height:6px;border-radius:50%;background:currentColor}
+.ystr:hover{background:#5249F0}
+.ystr{font:inherit;font-size:13px;font-weight:600;color:#fff;background:var(--stripe);border-radius:7px;width:30px;height:30px;flex:none;display:grid;place-items:center;text-decoration:none;cursor:pointer;border:0;padding:0}
+/* Lists */
+.ysplit{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}
+.ysplit.has{grid-template-columns:minmax(0,1fr) 320px}
+.ylist{padding:6px}
+.yrow{display:grid;align-items:center;gap:12px;padding:10px 12px;border-top:1px solid var(--line);cursor:pointer;border-radius:10px;font-size:13.5px;min-width:0}
+.ylist .yrow:first-child,.ydayh+.yrow,.ylist>.yrow:first-of-type{border-top:0}
+.yrow:hover{background:var(--hover)}
+.yrow.sel{background:var(--active);box-shadow:var(--shadow)}
+.yrow.flag{box-shadow:inset 3px 0 0 var(--bad)}
+.yrow>span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.yrow .yn{font-weight:600}
+.yrow .yw{color:var(--ink-soft)}
+.yrow .yt{font-variant-numeric:tabular-nums;color:var(--muted)}
+.yrow .ya{font-variant-numeric:tabular-nums;font-weight:600;text-align:right}
+.yrow .ya.x{color:var(--muted);text-decoration:line-through;font-weight:500}
+.ypr{grid-template-columns:70px minmax(0,1fr) minmax(0,1.4fr) 88px 128px}
+.yrow.ypr.short{grid-template-columns:70px minmax(0,1fr) minmax(0,1.2fr) 84px 118px}
+.ypp{grid-template-columns:8px minmax(0,1fr) minmax(0,1.5fr) 150px 96px}
+.ycx{grid-template-columns:minmax(0,1fr) 64px 118px 176px 122px}
+.ypo{grid-template-columns:minmax(0,1fr) 110px 130px minmax(0,1fr)}
+.ydayh{display:flex;justify-content:space-between;align-items:baseline;padding:12px 12px 6px;font-size:13px;font-weight:600;border-top:1px solid var(--line)}
+.ylist .ydayh:first-child{border-top:0;padding-top:6px}
+.ydayh span{font-weight:400;color:var(--muted);font-size:12.5px;font-variant-numeric:tabular-nums}
+.ysx{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.dot.nt{background:var(--muted)}
+.ymore{font:inherit;font-size:12.5px;font-weight:600;color:var(--ink-soft);background:none;border:0;border-top:1px solid var(--line);width:100%;text-align:left;padding:11px 12px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+/* Detail */
 .ydet{padding:16px 18px;position:sticky;top:16px}
 .ydet .yx{position:absolute;right:8px;top:8px}
 .ydet h3{margin:0 34px 2px 0;font-size:17px;font-weight:600}
 .ydet .dsub{font-size:12.5px;color:var(--muted);margin:0 0 12px;font-variant-numeric:tabular-nums}
-.ydl{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font-size:13.5px;margin:0 0 14px}
+.ydl{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font-size:13.5px;margin:0 0 12px}
 .ydl dt{color:var(--muted)} .ydl dd{margin:0;font-variant-numeric:tabular-nums;min-width:0;overflow-wrap:anywhere}
-.ydl dd.mono{font-family:ui-monospace,Menlo,monospace;font-size:12.5px}
+.yitems{border-top:1px solid var(--line);margin:0 0 12px}
+.yitems .ykv{font-size:13px;padding:7px 0}
+.yitems .ykv:first-child{border-top:0}
+.yitems .ykv.tot{font-size:13.5px}
+.ybtns{display:flex;gap:8px;flex-wrap:wrap;align-items:center;position:relative}
 .ybtn{font:inherit;font-size:13px;font-weight:600;border:0;border-radius:10px;padding:9px 14px;background:var(--ink);color:var(--bg);cursor:pointer}
 .ybtn:disabled{opacity:.4;cursor:default}
 .ybtn.ghost{background:transparent;color:var(--ink-soft);border:1px solid var(--line)}
 .ybtn.ghost:hover{color:var(--ink);background:var(--hover)}
-.yform{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.ybtn.bad{background:transparent;color:var(--bad);border:1px solid var(--line)}
+.yform{display:flex;flex-direction:column;gap:8px;margin-top:10px}
 .yform input{font:inherit;font-size:13.5px;color:var(--ink);background:var(--hover);border:1px solid var(--line);border-radius:10px;padding:9px 11px;outline:none;width:100%;box-sizing:border-box}
 .yform input:focus{border-color:var(--ink-soft)}
 .yform .yfr{display:flex;gap:8px;align-items:center}
 .yfoot{font-size:12.5px;color:var(--muted);margin:2px 4px 0}
 .ybar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .ybar .ysp{flex:1}
-.ybar .ssrch{flex:0 1 220px;height:38px;box-sizing:border-box}
-.ybar .fbtn2{height:38px;box-sizing:border-box;padding:0 14px}
-.fwrap .fmenu{min-width:200px}
+.ybar .ssrch{flex:0 1 240px;height:38px;box-sizing:border-box}
+.fwrap .fmenu{min-width:210px}
+.fmenu{background:var(--solid)!important}
 .fmenu .fh{font-size:12px;color:var(--muted);padding:8px 10px 2px}
-.fmenu .fh+button{margin-top:0}
 .fmenu hr{border:0;border-top:1px solid var(--line);margin:4px 2px}
 .fmenu button span{float:right;color:var(--muted);font-variant-numeric:tabular-nums;margin-left:16px}
 .fmenu button.on::after{content:""}
-.fmenu button.on{background:var(--hover)}
-.ytiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-.ytiles>div{padding:16px 18px}
-.yearn{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.yearn .card{padding:16px 20px}
-.yearn .ykv span[title]{cursor:help;text-decoration:underline dotted;text-decoration-color:var(--line);text-underline-offset:3px}
-.yerr{font-size:13px;color:var(--bad);margin:0}
+.fmenu button.on{background:var(--hover);font-weight:600}
+.yrmenu{position:absolute;left:0;top:calc(100% + 6px);bottom:auto}
+/* Payouts flow */
+.yflow{display:grid;grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr) 28px minmax(0,1fr);align-items:stretch}
+.yflow>.card{padding:16px 18px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.yflow .yarr{display:grid;place-items:center;color:var(--muted)}
+.yflow .yarr svg{width:18px;height:18px}
+.ystep{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--ink)}
+.ystep i{font-style:normal;width:20px;height:20px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;font-size:11px;color:var(--muted);font-weight:600}
+/* Ledger */
+.ytot{padding:16px 20px;display:grid;grid-template-columns:1fr 1fr;gap:0 40px}
+.ytot>div{min-width:0}
+.ytot .yh{margin-bottom:4px}
+.ytot .ymatch{display:flex;align-items:center;gap:8px;justify-content:flex-end;font-size:13px;font-weight:600;padding:8px 0 0}
+.ytot .ymatch.ok{color:var(--ok)}
+.ytot .ymatch.bad{color:var(--bad)}
+.ytot .yfootn{grid-column:1/-1;border-top:1px solid var(--line);margin-top:12px;padding-top:10px;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
 .ytbl{color:var(--ink);width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums}
 .ytbl th{font-weight:500;font-size:12.5px;color:var(--muted);text-align:right;padding:10px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
 .ytbl th:first-child,.ytbl th:last-child{text-align:left}
-.ytbl td{padding:10px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
-.ytbl td:first-child{text-align:left;padding-left:14px}
-.ytbl td:last-child{text-align:left}
-.ytbl th:first-child{padding-left:14px}
+.ytbl td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+.ytbl td:first-child,.ytbl td:last-child{text-align:left}
+.ytbl td:first-child,.ytbl th:first-child{padding-left:14px}
 .ytbl tbody tr{cursor:pointer}
 .ytbl tbody tr:hover td{background:var(--hover)}
 .ytbl td.n{font-weight:600}
 .ytbl td.f{color:var(--muted)}
 .ytbl tfoot td{font-weight:600;border-bottom:0;border-top:1px solid var(--ink-soft);cursor:default}
 .ytblw{overflow-x:auto;padding:4px 6px}
-.ypol{padding:14px 18px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;font-size:14px}
-.ypol span{color:var(--muted);font-size:13px}
+.ymm{font:inherit;font-size:13px;font-weight:600;border:0;background:none;padding:0;cursor:pointer;color:var(--bad);display:inline-flex;align-items:center;gap:7px;text-decoration:underline;text-underline-offset:3px}
+.ymm .dot{background:var(--bad)}
+.yok{color:var(--ok);display:inline-flex;align-items:center;gap:7px;font-weight:500}
+.yokline{font-size:13px;margin:0}
+.ydiff{padding:16px 20px;box-shadow:var(--shadow),inset 3px 0 0 var(--bad)}
+.ydiff .ygrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:10px 0 12px}
+.ypol{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin:0}
+.ypol svg{width:15px;height:15px;flex:none}
+.ypol .ylink{font-size:12.5px;color:var(--ink-soft)}
 .yback{font:inherit;font-size:13.5px;font-weight:600;border:0;background:none;color:var(--muted);cursor:pointer;padding:0;align-self:flex-start}
 .yback:hover{color:var(--ink)}
 .yview[hidden]{display:none}
 .yview{display:flex;flex-direction:column;gap:14px}
 .ytoast{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);background:var(--ink);color:var(--bg);font-size:13.5px;font-weight:500;padding:10px 16px;border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,.35);z-index:20;max-width:80%}
 .ytoast[hidden]{display:none}
-.ycsv{font:inherit;font-size:13px;font-weight:600;color:var(--ink);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--muted);margin-left:auto}
 .stabs.ymain{font-size:15px;gap:24px;border-bottom:1px solid var(--line);padding:0 2px}
 .stabs.ymain b{padding-bottom:9px}
-.stabs.ysmall{font-size:13.5px;margin-bottom:14px}
+/* Receipt */
+.yrback{position:fixed;inset:0;background:rgba(0,0,0,.45);display:grid;place-items:center;z-index:30}
+.yrback[hidden]{display:none}
+.yrcpt{width:380px;max-width:calc(100vw - 32px);padding:22px;background:var(--solid);border-radius:16px;border:1px solid var(--edge);box-shadow:0 20px 50px rgba(0,0,0,.4);color:var(--ink);position:relative}
+.yrcpt h4{font-family:var(--serif);font-size:22px;font-weight:600;margin:0}
+.yrcpt .dsub{font-size:12.5px;color:var(--muted);margin:2px 0 14px}
 @media (max-width:1180px){.ysplit.has{grid-template-columns:minmax(0,1fr)}.ydet{position:static}}
-@media (max-width:980px){.ysales,.ytwo,.yearn{grid-template-columns:minmax(0,1fr)}.ysales .yr{border-left:0;border-top:1px solid var(--line)}.ytwo>div+div{border-left:0;border-top:1px solid var(--line)}}
+@media (max-width:980px){.ytoday,.ytwo,.ytot{grid-template-columns:minmax(0,1fr)}.ytwo>div+div{border-left:0;border-top:1px solid var(--line)}.yflow{grid-template-columns:minmax(0,1fr)}.yflow .yarr{transform:rotate(90deg);height:24px}}
 @media (max-width:760px){
-  .ypr{grid-template-columns:60px minmax(0,1fr) auto}.ypr .ysx{grid-column:2/-1}
-  .ycx{grid-template-columns:minmax(0,1fr)}
-  .ymv{grid-template-columns:56px minmax(0,1fr) auto}.ymv .yhide{display:none}
-  .ypo{grid-template-columns:minmax(0,1fr) auto}.ypo .ysx{grid-column:1/-1}
-  .ytiles{grid-template-columns:minmax(0,1fr)}
-  .ybar .ssrch{flex:1 1 100%}
-  .ydc{grid-template-columns:8px minmax(0,1fr) auto}.ydc .yt{grid-column:2/-1;grid-row:2}
+  .ypr,.yrow.ypr.short{grid-template-columns:58px minmax(0,1fr) auto}.ypr .yw,.ypr .ysx{grid-column:2/-1}
+  .ycx{grid-template-columns:minmax(0,1fr) auto}.ycx .yhide{display:none}
+  .ypp{grid-template-columns:8px minmax(0,1fr) auto}.ypp .yhide{display:none}
+  .ypo{grid-template-columns:minmax(0,1fr) auto}.ypo .yhide{display:none}
+  .ybar .ssrch{flex:1 1 auto}
+  .ylc,.yplot{margin-left:38px}.ybl,.yticks{margin-left:38px}
+  .ydiff .ygrid{grid-template-columns:minmax(0,1fr)}
+  .stabs.ymain{gap:16px;font-size:14px;overflow-x:auto;scrollbar-width:none}.stabs.ymain b{white-space:nowrap}
 }
 </style>
 <div class="wrap">
   <div class="picker">
-    <h1>Course dashboard · Money (as it is now)</h1>
+    <h1>Course dashboard · Revenue (revised)</h1>
     <div class="pick"><span>Look</span><div class="seg" role="group" aria-label="Look">
       <button type="button" data-m="dark" aria-pressed="true">Charcoal</button><button type="button" data-m="light" aria-pressed="false">Light</button></div></div>
   </div>
-  <p class="note">Money exactly as it works today: today against the same day last week, next payout and not paid yet, collected for the dates picked with three charts, what was sold and how it was paid, declined cards, then Payments · Ledger · Payouts · Cancellations. Example numbers for Pine Hollow. Only the skin changes; tap any line to open it, and every tab works.</p>
+  <p class="note">Money renamed Revenue and reworked to Cam's 34 comments: today against the 30-day average, payouts in their own card, one date range for the whole page, revenue by segment and by how it was paid, pending payments, then Payments · Ledger · Payouts · Cancellations. Example numbers for Pine Hollow; every card adds up. Tap any line to open it.</p>
 
   <div class="app" id="app" data-mode="dark">
     <svg class="waves" viewBox="0 0 1400 1100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -638,7 +699,7 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
       <div class="grp"><b>Today</b>
         <div class="nav">Home</div><div class="nav">Tee sheet</div><div class="nav">Pro shop</div></div>
       <div class="grp"><b>Business</b>
-        <div class="nav on"><span>Money</span></div><div class="nav">Members</div><div class="nav">Events</div><div class="nav">Schedule</div><div class="nav">Analytics</div></div>
+        <div class="nav on"><span>Revenue</span></div><div class="nav">Members</div><div class="nav">Events</div><div class="nav">Schedule</div><div class="nav">Analytics</div></div>
       <div class="grp"><div class="nav">Settings</div><div class="nav">Support</div></div>
       <div class="foot"><span>Course alert</span><span>Your booking page ↗</span><span>Sign out</span>
         <div class="seg3"><button type="button" data-m="light">Light</button><button type="button" data-m="dark" class="on">Dark</button></div>
@@ -647,71 +708,63 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
 
     <main class="main" id="main">
       <div class="ytop">
-        <h2 class="ttl">Payments and payouts</h2>
-        <button class="ystripe" type="button" aria-label="Open your Stripe dashboard (new tab)" title="Open your Stripe dashboard">stripe <small aria-hidden="true">↗</small></button>
+        <h2 class="ttl">Revenue</h2>
+        <a class="ystr" href="#" onclick="return false" aria-label="Open your Stripe dashboard (new tab)" title="Open your Stripe dashboard"><svg viewBox="0 0 24 24" width="15" height="15" fill="#fff" aria-hidden="true"><path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.594-7.305h.003z"/></svg></a>
       </div>
 
-      <!-- SalesPanel: today against the same day last week, with the side column -->
-      <section class="card ysales" aria-label="Today">
-        <div class="yl">
+      <div class="ytoday">
+        <section class="card" aria-label="Today">
           <div class="ynums">
-            <div><div class="ylbl">Today</div><div class="ybig">$4,186</div></div>
-            <div><div class="ylbl">Same day last week</div><div class="ybig yfaint">$3,742</div></div>
-            <div class="ychg"><b class="up">↑ 12%</b> <span>so far</span></div>
+            <div><div class="ylbl">Today so far</div><div class="ybig" id="tNow"></div></div>
+            <div><div class="ylbl" id="tAvgL">Average of the last 30 days</div><div class="ybig yfaint" id="tAvg"></div></div>
+            <div class="ychg" id="tChg" style="padding-bottom:5px"></div>
           </div>
-          <div class="ylc"><svg id="todayline" viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="Paid so far today $4,186, against $3,742 all day last week"></svg></div>
+          <div class="ylc" id="tChart"></div>
           <div class="yticks" id="ticks"></div>
-          <div class="yleg"><span><i></i>Today</span><span><i class="d"></i>Same day last week</span></div>
-        </div>
-        <div class="yr">
-          <div><div class="ylbl">Next payout</div><div class="ymid">$3,918</div><div class="ysm">Fri, Nov 13</div></div>
-          <div><div class="ylbl">Not paid yet · 7 days</div><div class="ymid">$1,298</div>
-            <button class="ylink wn" type="button" id="seeUnpaid">6 groups</button>
-            <div class="ysm" style="margin-top:4px">No-shows · 1 · $40</div></div>
-        </div>
-      </section>
+          <div class="yleg"><span><i></i>Today</span><span><i class="d"></i>Average of the last 30 days</span></div>
+        </section>
+        <section class="card ypay" aria-label="Next payout">
+          <div class="ylbl">Next payout</div>
+          <div class="ybig" id="npAmt"></div>
+          <div class="ysm" id="npWhen"></div>
+          <div class="yrule"></div>
+          <div class="ykv"><span>Ready to pay out</span><b id="npReady"></b></div>
+          <div class="ykv"><span id="npLastL">Last payout</span><b id="npLast"></b></div>
+          <div style="margin-top:auto;padding-top:8px"><button class="ylink" type="button" id="goPayouts">All payouts</button></div>
+        </section>
+      </div>
 
       <div class="yrng">
-        <div class="ydr" role="group" aria-label="Dates" data-dr="sales"><button type="button">7 days</button><button type="button">30 days</button><button type="button">This month</button><button type="button" class="on">Dates <small>▾</small></button></div>
-        <span class="yrtxt">Oct 16 – Nov 12</span>
-        <span class="ycoll"><span class="ylbl">Collected</span><b>$59,328</b><b class="up" style="font-size:13px">↑ 9%</b><span class="ysm">vs the period before</span></span>
+        <div class="yseg" role="group" aria-label="Dates" id="rseg"><button type="button" data-r="7" aria-pressed="false">7 days</button><button type="button" data-r="30" aria-pressed="true">30 days</button><button type="button" data-r="month" aria-pressed="false">This month</button></div>
+        <button class="yib" type="button" id="calBtn" aria-label="Pick dates" title="Pick dates" aria-expanded="false"></button>
+        <span class="yrtxt" id="rTxt"></span>
+        <div class="ycal" id="cal" hidden>
+          <label>From<input type="date" id="calFrom" min="2026-09-01" max="2026-11-12"></label>
+          <label>To<input type="date" id="calTo" min="2026-09-01" max="2026-11-12"></label>
+          <button class="ybtn" type="button" id="calGo">Show</button>
+        </div>
       </div>
 
-      <section class="card pad2" aria-label="Sales chart">
-        <div class="stabs ysmall" role="tablist" id="ctabs"><b class="on" data-c="series">By day</b><b data-c="dow">Day of week</b><b data-c="hour">Time of day</b></div>
-        <div class="ybars" id="bars" role="img" aria-label="Sales by day"></div>
+      <section class="card ychart" aria-label="Revenue chart">
+        <div class="ychead">
+          <div><div class="ylbl">Revenue</div><div class="ybig" id="rTot"></div><div class="ychg" id="rChg" style="margin-top:2px"></div></div>
+          <span class="ysp"></span>
+          <div class="yseg sm" role="group" aria-label="Chart" id="cseg"><button type="button" data-c="day" aria-pressed="true">By day</button><button type="button" data-c="dow" aria-pressed="false">Day of week</button><button type="button" data-c="hour" aria-pressed="false">Time of day</button></div>
+        </div>
+        <div class="yplot" id="plot"></div>
         <div class="ybl" id="barl"></div>
       </section>
 
       <section class="card ytwo" aria-label="What was sold and how it was paid">
-        <div>
-          <h3 class="yh">What was sold</h3>
-          <div class="ykv"><span>Green fees</span><b>$44,120.00</b></div>
-          <div class="ykv"><span>Carts</span><b>$14,236.00</b></div>
-          <div class="ykv"><span>Range balls</span><b>$1,384.00</b></div>
-          <div class="ykv"><span>Refunded</span><b>−$412.00</b></div>
-          <div class="ykv tot"><span>Rounds</span><b>$59,328.00</b></div>
-          <div class="ykv"><span>Late-cancel fees kept</span><b>$120.00</b></div>
-          <div class="ykv"><span>Shop on rounds</span><b>$2,146.00</b></div>
-          <div class="ykv"><span>Register sales · 318</span><b>$9,842.50</b></div>
-          <div class="ykv"><span>Event payments · 24</span><b>$2,880.00</b></div>
-        </div>
-        <div>
-          <h3 class="yh">How it was paid</h3>
-          <div class="yhb" role="img" aria-label="By card $47,904, at the counter $10,612"><span style="width:81.9%"></span><span style="width:18.1%"></span></div>
-          <div class="ykv"><span>By card</span><b>$47,904.00</b></div>
-          <div class="ykv"><span>At the counter</span><b>$10,612.00</b></div>
-          <div class="ykv"><span>On accounts</span><b>$812.00</b></div>
-          <div class="ykv"><span>Not paid yet · 6</span><b>$1,298.00</b></div>
-          <p class="ynote">Last close-out Nov 11 · <b class="up" style="font-weight:600">even</b> · <a class="ylink" href="#" onclick="return false">Pro shop</a></p>
-        </div>
+        <div id="sold"></div>
+        <div id="paid"></div>
       </section>
 
-      <!-- Action needed: declined cards (DeclinedCardList, shared with Home) -->
-      <h2 class="ysec" id="decH">Action needed</h2>
-      <div class="ysplit" id="decSplit">
-        <section class="card ylist" aria-labelledby="decH" id="decList"></section>
-        <section class="card ydet" id="decDet" hidden></section>
+      <div class="yhd"><h3 id="ppH">Pending payments</h3><span class="ysp"></span>
+        <div class="fwrap"><button class="yib" type="button" id="ppfb" aria-label="Filter" title="Filter" aria-haspopup="true" aria-expanded="false"></button><div class="fmenu" id="ppfm" hidden></div></div></div>
+      <div class="ysplit" id="ppSplit">
+        <section class="card ylist" aria-labelledby="ppH" id="ppList"></section>
+        <section class="card ydet" id="ppDet" hidden></section>
       </div>
 
       <div class="stabs ymain" role="tablist" id="mtabs"><b class="on" data-v="payments">Payments</b><b data-v="ledger">Ledger</b><b data-v="payouts">Payouts</b><b data-v="cancellations">Cancellations</b></div>
@@ -719,17 +772,13 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
       <!-- Payments -->
       <div class="yview" data-view="payments">
         <div class="ybar">
-          <div class="ydr" role="group" aria-label="Dates"><button type="button">7 days</button><button type="button" class="on">30 days</button><button type="button">This month</button><button type="button">Dates <small>▾</small></button></div>
-          <span class="yrtxt">Oct 14 – Nov 12</span>
+          <span class="yrtxt rmirror"></span><span class="ysm" id="pCount"></span>
           <span class="ysp"></span>
-          <label class="ssrch"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="pq" aria-label="Find a golfer"></label>
-          <div class="fwrap"><button class="fbtn2" type="button" id="pfb" aria-haspopup="true" aria-expanded="false">Filter</button><div class="fmenu" id="pfm" hidden></div></div>
+          <label class="ssrch"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="pq" aria-label="Find a payment by name"></label>
+          <div class="fwrap"><button class="yib" type="button" id="pfb" aria-label="Filter" title="Filter" aria-haspopup="true" aria-expanded="false"></button><div class="fmenu" id="pfm" hidden></div></div>
         </div>
         <div class="ysplit" id="pSplit">
-          <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
-            <section class="card ylist" id="pList" aria-label="Payments"></section>
-            <p class="yfoot" id="pFoot">Your share, less the booking fee</p>
-          </div>
+          <section class="card ylist" id="pList" aria-label="Payments"></section>
           <section class="card ydet" id="pDet" hidden></section>
         </div>
       </div>
@@ -738,12 +787,13 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
       <div class="yview" data-view="ledger" hidden>
         <div id="lMain" class="yview">
           <div class="ybar">
-            <div class="ydr" role="group" aria-label="Dates"><button type="button">7 days</button><button type="button">30 days</button><button type="button">This month</button><button type="button" class="on">Dates <small>▾</small></button></div>
-            <span class="yrtxt">Oct 30 – Nov 12</span>
-            <a class="ycsv" href="#" onclick="return false">Download CSV</a>
+            <span class="yrtxt rmirror"></span>
+            <span class="ysp"></span>
+            <button class="yib" type="button" id="lRef" aria-label="Check against Stripe again" title="Check against Stripe again"></button>
+            <button class="yib" type="button" id="lCsv" aria-label="Download CSV" title="Download CSV"></button>
           </div>
-          <div class="yearn" id="earn"></div>
-          <p class="yerr" id="offline"></p>
+          <section class="card ytot" id="tots" aria-label="Totals"></section>
+          <p class="yokline" id="lMatch"></p>
           <section class="card ytblw" aria-label="Days"><table class="ytbl" id="ltbl"></table></section>
         </div>
         <div id="lDay" class="yview" hidden></div>
@@ -751,22 +801,22 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
 
       <!-- Payouts -->
       <div class="yview" data-view="payouts" hidden>
-        <div class="ytiles">
-          <div class="card"><div class="ylbl">Next payout</div><div class="ymid">$3,918.40</div><div class="ysm">lands Fri, Nov 13</div></div>
-          <div class="card"><div class="ylbl">Settling at Stripe</div><div class="ymid">$5,206.75</div><div class="ysm">card payments still clearing</div></div>
-          <div class="card"><div class="ylbl">Ready to pay out</div><div class="ymid">$1,284.10</div><div class="ysm">goes in the next payout</div></div>
+        <div class="yflow" id="flow"></div>
+        <div class="yhd"><h3>Every payout</h3><span class="yrtxt rmirror" style="font-weight:500;color:var(--muted);font-size:12.5px;margin-left:6px"></span><span class="ysp"></span><a class="ystr" href="#" onclick="return false" aria-label="Open payouts in Stripe" title="Open payouts in Stripe"><svg viewBox="0 0 24 24" width="15" height="15" fill="#fff" aria-hidden="true"><path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.594-7.305h.003z"/></svg></a></div>
+        <div class="ysplit" id="poSplit">
+          <section class="card ylist" id="poList" aria-label="Every payout"></section>
+          <section class="card ydet" id="poDet" hidden></section>
         </div>
-        <h3 class="yh" style="margin:4px 0 -6px">Every payout</h3>
-        <section class="card ylist" id="poList" aria-label="Every payout"></section>
       </div>
 
       <!-- Cancellations -->
       <div class="yview" data-view="cancellations" hidden>
-        <section class="card ypol" aria-label="Your cancellation policy"><span>Your cancellation policy</span>Free until 24 hours before, then a $10.00 fee. <a class="ylink" href="#" onclick="return false" style="font-size:13.5px">Change</a></section>
+        <p class="ypol"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></svg><span id="polTxt"></span><a class="ylink" href="#" onclick="return false">Change</a></p>
         <div class="ybar">
+          <span class="yrtxt rmirror"></span>
           <span class="ysp"></span>
           <label class="ssrch"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="cq" aria-label="Find a golfer"></label>
-          <div class="fwrap"><button class="fbtn2" type="button" id="cfb" aria-haspopup="true" aria-expanded="false">Filter</button><div class="fmenu" id="cfm" hidden></div></div>
+          <div class="fwrap"><button class="yib" type="button" id="cfb" aria-label="Filter" title="Filter" aria-haspopup="true" aria-expanded="false"></button><div class="fmenu" id="cfm" hidden></div></div>
         </div>
         <div class="ysplit" id="cSplit">
           <section class="card ylist" id="cList" aria-label="Cancellations"></section>
@@ -775,6 +825,7 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
       </div>
     </main>
     <div class="ytoast" id="toast" role="status" hidden></div>
+    <div class="yrback" id="rcpt" hidden></div>
   </div>
 </div>
 
@@ -782,244 +833,393 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
 (function(){
   const $=id=>document.getElementById(id);
   const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
+  const r2=v=>Math.round(v*100)/100;
   const usd2=c=>(c<0?'−':'')+'$'+Math.abs(c).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-  const usd=c=>(c<0?'−':'')+'$'+Math.abs(c).toLocaleString('en-US',{maximumFractionDigits:0});
-  const X='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
-  const MAIL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/></svg>';
-  const TRASH='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>';
+  const usd=c=>(c<0?'−':'')+'$'+Math.abs(Math.round(c)).toLocaleString('en-US');
+  const usdk=c=>c>=1000?'$'+(c/1000).toLocaleString('en-US',{maximumFractionDigits:1})+'k':'$'+Math.round(c);
+  const ic=(d,w)=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="'+(w||1.9)+'" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>';
+  const X=ic('<path d="M6 6l12 12M18 6 6 18"/>',2), FILTER=ic('<path d="M4 5h16l-6.2 7.6V18l-3.6 2v-7.4z"/>'),
+        DL=ic('<path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/>'), CAL=ic('<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>'),
+        REF=ic('<path d="M20 12a8 8 0 1 1-2.4-5.7M20 4v4.5h-4.5"/>'), CHEV=ic('<path d="m9 6 6 6-6 6"/>'), CHECK=ic('<path d="m5 12.5 4.5 4.5L19 7.5"/>',2.2);
   let tt;function toast(m){const t=$("toast");t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,3600);}
+  $("calBtn").innerHTML=CAL;$("lCsv").innerHTML=DL;$("lRef").innerHTML=REF;
+  ['ppfb','pfb','cfb'].forEach(id=>$(id).innerHTML=FILTER);
 
   // Look switch (shared shell)
   document.querySelectorAll('[data-m]').forEach(b=>b.addEventListener('click',()=>{$("app").dataset.mode=b.dataset.m;
     document.querySelectorAll('.seg [data-m]').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.m===b.dataset.m)));
     document.querySelectorAll('.seg3 [data-m]').forEach(x=>x.classList.toggle('on',x.dataset.m===b.dataset.m));}));
-  // Date pickers: the three one-tap ranges, then Dates (visual only in the mockup)
-  document.querySelectorAll('.ydr').forEach(g=>g.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;g.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));}));
 
-  // ── Today against the same day last week (running total by hour) ──
-  const today=[[7,412],[8,836],[9,744],[10,690],[11,610],[12,520],[13,374]];
-  const lastw=[[7,380],[8,702],[9,640],[10,560],[11,430],[12,350],[13,290],[14,180],[15,120],[16,70],[17,20]];
-  const first=6,last=20,nowH=14.25;
-  const run=(rows,until)=>{const at=new Map(rows);const pts=[[first,0]];let s=0;for(let h=first;h<last&&h<until;h++){s+=at.get(h)||0;pts.push([Math.min(h+1,until),s]);}return pts;};
-  const tp=run(today,nowH),bp=run(lastw,last);
-  const max=Math.max(...tp.map(p=>p[1]),...bp.map(p=>p[1]))*1.08;
-  const xy=pts=>pts.map(([h,v])=>((h-first)/(last-first)*100).toFixed(2)+','+(100-v/max*100).toFixed(2)).join(' ');
-  const nowX=(nowH-first)/(last-first)*100;
-  const area=xy([[tp[0][0],0],...tp,[tp[tp.length-1][0],0]]);
-  $("todayline").innerHTML=[25,50,75].map(y=>'<line x1="0" x2="100" y1="'+y+'" y2="'+y+'" stroke="var(--line)" stroke-width="1" vector-effect="non-scaling-stroke"/>').join('')+
-    '<polygon points="'+area+'" fill="var(--bar)" fill-opacity="0.10"/>'+
-    '<polyline points="'+xy(bp)+'" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/>'+
-    '<polyline points="'+xy(tp)+'" fill="none" stroke="var(--bar)" stroke-width="2.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>'+
-    '<line x1="'+nowX+'" y1="0" x2="'+nowX+'" y2="100" stroke="var(--bar)" stroke-width="1" stroke-dasharray="2 3" vector-effect="non-scaling-stroke"/>';
-  const hl=h=>(h%12||12)+(h<12?'a':'p');
-  $("ticks").innerHTML=[6,9,12,15,18,20].map(h=>'<span style="left:'+((h-first)/(last-first)*100)+'%">'+hl(h)+'</span>').join('');
-
-  // ── Sales chart: By day · Day of week · Time of day ──
-  const MON=['Oct','Nov'];const days=[];for(let i=0;i<28;i++){const d=16+i;days.push(d<=31?'Oct '+d:'Nov '+(d-31));}
-  // Oct 16 2026 is a Friday
-  const dowW=[1.35,1.45,1.25,0.7,0.62,0.66,0.78]; // Fri, Sat, Sun, Mon, Tue, Wed, Thu
-  let raw=days.map((_,i)=>dowW[i%7]*(1-i*0.006)*(1+((i*37)%11-5)/60));
-  const sum=raw.reduce((a,b)=>a+b,0);const series=raw.map(v=>Math.round(v/sum*59328));
-  series[27]=4186; // today so far
-  const DOW=[['Mon',6120],['Tue',5540],['Wed',5890],['Thu',7350],['Fri',10840],['Sat',12930],['Sun',10658]];
-  const HRS=[['6a',420],['7a',5260],['8a',8940],['9a',8410],['10a',7880],['11a',7120],['12p',6340],['1p',5480],['2p',4310],['3p',2860],['4p',1610],['5p',698]];
-  function drawBars(k){
-    let v,l,hi=false,aria;
-    if(k==='series'){v=series;l=days.map((d,i)=>(i%7===0||i===days.length-1)?d:'');hi=true;aria='Sales by day';}
-    else if(k==='dow'){v=DOW.map(x=>x[1]);l=DOW.map(x=>x[0]);aria='Sales by day of week';}
-    else {v=HRS.map(x=>x[1]);l=HRS.map(x=>x[0]);aria='Sales by tee time hour';}
-    const m=Math.max(...v);
-    $("bars").setAttribute('aria-label',aria);
-    $("bars").innerHTML=v.map((x,i)=>'<div title="'+(k==='series'?days[i]:l[i])+': '+usd(x)+'" class="'+(hi&&i===v.length-1?'last':'')+'" style="height:'+Math.max(2,x/m*100)+'%"></div>').join('');
-    $("barl").innerHTML=l.map(x=>'<span>'+x+'</span>').join('');
+  // ───────── Example data: every payment Pine Hollow took, Aug 1 – today (Thu, Nov 12, 2:15 PM). Every card is summed from it. ─────────
+  const WD=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const DAYS=[];for(let d=new Date(2026,7,1);d<=new Date(2026,10,12);d=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1))DAYS.push(d);
+  const N=DAYS.length,TI=N-1,NOW=14*60+15;
+  const fD=i=>WD[DAYS[i].getDay()]+', '+MO[DAYS[i].getMonth()]+' '+DAYS[i].getDate();
+  const fS=i=>MO[DAYS[i].getMonth()]+' '+DAYS[i].getDate();
+  const dayAt=i=>{if(i<N)return fD(i);const d=new Date(2026,10,12+(i-TI));return WD[d.getDay()]+', '+MO[d.getMonth()]+' '+d.getDate();};
+  const iso=i=>{const d=DAYS[i];return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+  const idxOfIso=s=>DAYS.findIndex((_,i)=>iso(i)===s);
+  const idxOf=(m,d)=>DAYS.findIndex(x=>x.getMonth()===m&&x.getDate()===d);
+  const fT=t=>{const h=Math.floor(t/60),m=t%60;return (h%12||12)+':'+String(m).padStart(2,'0')+' '+(h<12?'AM':'PM');};
+  function mul(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+  const R=mul(20261112),pick=a=>a[Math.floor(R()*a.length)],rint=(a,b)=>a+Math.floor(R()*(b-a+1));
+  const FIRST=['Priya','Lena','Sarah','Ben','Chris','Will','Kyle','Ed','Rita','Omar','Jill','Tony','Mia','Pete','Marcus','Tom','Grant','Jim','Dave','Hector','Megan','Anita','Paul','Joan','Sam','Frank','Nora','Luke','Gwen','Raj','Owen','Carla','Dan','Hank','Ivy','Jon','Kara','Leo','Maya','Nate'];
+  const LAST=['Shah','Ortiz','Kim','Okafor','Dunn','Tanaka','Brennan','Lawson','Gomez','Haddad','Carver','Russo','Chen','Novak','Bell','Albrecht','Hollis','Kowalski','Romero','Ruiz','Price','Desai','Greco','Mercer','Whitaker','Ellison','Park','Byrne','Foster','Iyer','Walsh','Reyes','Murphy','Stone','Clark','Webb','Lund','Avery','Doyle','Patel'];
+  const nm=()=>pick(FIRST)+' '+pick(LAST);
+  const card=()=>{const r=R();return {brand:r<.5?'Visa':r<.8?'Mastercard':r<.92?'Amex':'Discover',l4:String(rint(1000,9999))};};
+  const SHOP=[['Titleist Pro V1 · dozen',54],['Golf glove',22],['Pine Hollow cap',28],['Tees · pack of 50',4],['Ball marker',6],['Range balls · large bucket',12],['Range balls · small bucket',8],['Rain gloves · pair',32],['Divot tool',9]];
+  const FNB=[['Hot dog',5],['Turkey club',9],['Breakfast burrito',8],['Coffee',3],['Gatorade',3.5],['Draft beer',6],['Bottled water',2],['Pretzel',4]];
+  const SEGS=[['tee','Tee times'],['cart','Carts'],['shop','Pro shop'],['event','Events'],['fnb','Food & beverage']];
+  const SEGN=Object.fromEntries(SEGS);
+  const HOW={online:'Card online',reader:'Card at the counter',cash:'Cash'};
+  const HOWS={online:'Card online',reader:'Card reader',cash:'Cash'};
+  const items=[],byDay=DAYS.map(()=>[]);let seq=0;
+  function add(i,o){o.id='i'+(seq++);o.di=i;o.amt=r2(o.lines.reduce((s,l)=>s+l[1],0));o.refund=o.refund||0;
+    if(o.method!=='cash'&&!o.card)o.card=card();
+    o.fee=o.method==='online'?r2(o.amt*0.029+0.30):o.method==='reader'?r2(o.amt*0.027+0.05):0;
+    items.push(o);byDay[i].push(o);return o;}
+  for(let i=0;i<N;i++){
+    const dow=DAYS[i].getDay(),season=1.3-0.5*(i/(N-1)),wk=[1.6,0.8,0.75,0.8,0.9,1.2,1.75][dow],we=dow===0||dow===6;
+    const nb=Math.round(10*season*wk*(0.85+R()*0.3));
+    for(let b=0;b<nb;b++){
+      const pr=R(),pl=pr<.08?1:pr<.38?2:pr<.55?3:4;
+      const tee=6*60+40+rint(0,54)*10,tw=tee>=14*60,gf=tw?32:we?56:44,cart=R()<.7?18:0;
+      const mr=R(),method=mr<.72?'online':mr<.9?'reader':'cash';
+      const t=method==='online'?6*60+rint(0,87)*10+rint(0,9):Math.max(6*60+20,tee-rint(8,25));
+      const lines=[['Green fee × '+pl+(tw?' · twilight':''),gf*pl,'tee']];if(cart)lines.push(['Cart × '+pl,cart*pl,'cart']);
+      const o=add(i,{t,name:nm(),what:'Tee time '+fT(tee)+' · '+pl+' player'+(pl>1?'s':''),lines,method,players:method==='online'?pl:0,seg:'tee'});
+      const rr=R();if(method==='online'&&rr<.02){o.refund=o.amt;o.why='Rained out after 9 holes';}else if(method==='online'&&cart&&rr<.03){o.refund=cart*pl;o.why='Cart broke down on the 4th';}
+    }
+    const ns=Math.round(nb*0.75*(0.8+R()*0.4));
+    for(let s=0;s<ns;s++){const k=R()<.7?1:2,lines=[];for(let j=0;j<k;j++){const p=pick(SHOP);lines.push([p[0],p[1],'shop']);}
+      const method=R()<.62?'reader':'cash';add(i,{t:6*60+30+rint(0,660),name:method==='cash'?'Walk-up customer':nm(),what:'Pro shop · '+lines.map(l=>l[0].split(' · ')[0]).join(', '),lines,method,seg:'shop'});}
+    const nf=Math.round(nb*0.7*(0.8+R()*0.4));
+    for(let s=0;s<nf;s++){const k=rint(1,3),lines=[];for(let j=0;j<k;j++){const p=pick(FNB);lines.push([p[0],p[1],'fnb']);}
+      const method=R()<.55?'reader':'cash';add(i,{t:7*60+rint(0,600),name:method==='cash'?'Walk-up customer':nm(),what:'Food & drink · '+lines.map(l=>l[0]).join(', '),lines,method,seg:'fnb'});}
+    if(R()<.22){const tt2=DAYS[i]>=new Date(2026,9,20);
+      add(i,{t:8*60+rint(0,720),name:nm(),what:tt2?'Event · Turkey Trot scramble, team of 4':'Event · Fall member-guest, pair',lines:tt2?[['Turkey Trot entry × 4',340,'event']]:[['Member-guest entry × 2',240,'event']],method:'online',seg:'event'});}
   }
-  drawBars('series');
-  $("ctabs").addEventListener('click',e=>{const b=e.target.closest('b');if(!b)return;$("ctabs").querySelectorAll('b').forEach(x=>x.classList.toggle('on',x===b));drawBars(b.dataset.c);});
+  // Late-cancellation fees, charged to the saved card when the golfer cancelled (policy: free until 24 hours before, then $10)
+  const CX=[
+    {name:'Erin Walsh',players:2,tee:[10,14,9*60+20],at:[10,12,11*60+5],fee:'none',why:'Cancelled 2 days before'},
+    {name:'Ray Castillo',players:3,tee:[10,11,13*60],at:[10,11,7*60+42],fee:'charged'},
+    {name:'Noah Fischer',players:2,tee:[10,11,10*60],at:[10,10,18*60+30],fee:'charged'},
+    {name:'Luis Moreno',players:4,tee:[10,10,7*60+50],at:[10,10,6*60+15],fee:'declined'},
+    {name:'Kate Rowe',players:3,tee:[10,8,11*60+10],at:[10,8,6*60+2],fee:'none',why:'Course closed for frost'},
+    {name:'Matt Ingram',players:2,tee:[10,7,8*60+40],at:[10,6,13*60+15],fee:'refunded'},
+    {name:'Dee Hart',players:4,tee:[10,6,10*60+30],at:[10,6,8*60+50],fee:'charged'},
+    {name:'Ann Liu',players:2,tee:[10,5,12*60+20],at:[10,3,9*60],fee:'none',why:'Cancelled 2 days before'},
+  ].map((c,k)=>{c.id='c'+k;c.ti=idxOf(c.tee[0],c.tee[1]);c.ai=idxOf(c.at[0],c.at[1]);
+    const td=new Date(2026,c.tee[0],c.tee[1]),teeD=WD[td.getDay()]+', '+MO[td.getMonth()]+' '+td.getDate();c.teeTxt=teeD+' · '+fT(c.tee[2]);
+    const hrs=Math.round(((new Date(2026,c.tee[0],c.tee[1])-new Date(2026,c.at[0],c.at[1]))/60000+c.tee[2]-c.at[2])/60);c.ahead=hrs>=48?Math.round(hrs/24)+' days before':hrs+' hours before';
+    c.atTxt=fS(c.ai)+' · '+fT(c.at[2]);c.teeShort=MO[td.getMonth()]+' '+td.getDate()+' · '+fT(c.tee[2]);
+    if(c.fee==='charged'||c.fee==='refunded'){c.item=add(c.ai,{t:c.at[2],name:c.name,what:'Cancellation fee · '+c.teeTxt,lines:[['Late cancellation · '+c.teeTxt,10,'tee']],method:'online',seg:'tee',refund:c.fee==='refunded'?10:0,why:c.fee==='refunded'?'Fee waived, golfer rebooked':''});}
+    return c;});
+  // Today only up to now
+  byDay[TI]=byDay[TI].filter(o=>o.t<=NOW);{const keep=new Set(byDay[TI]);for(let k=items.length-1;k>=0;k--)if(items[k].di===TI&&!keep.has(items[k]))items.splice(k,1);}
+  byDay.forEach(a=>a.sort((x,y)=>y.t-x.t));
+  // Wed, Nov 4: a pro shop sale was refunded straight in Stripe, so Stripe pays out less than GreenReserve recorded
+  const MMI=idxOf(10,4);const mmItem=byDay[MMI].filter(o=>o.method==='reader'&&o.seg==='shop').sort((a,b)=>b.amt-a.amt)[0];
+  mmItem.stripeRefund=mmItem.amt;
+  // Per-day totals
+  const AG=byDay.map((a,i)=>{const g={card:0,cash:0,refunds:0,fees:0,gr:0,diff:0,seg:{tee:0,cart:0,shop:0,event:0,fnb:0},how:{online:0,reader:0,cash:0},n:a.length};
+    a.forEach(o=>{if(o.method==='cash')g.cash+=o.amt;else g.card+=o.amt;g.refunds+=o.refund;g.fees+=o.fee;g.gr+=(o.players||0)*1.5;g.diff+=o.stripeRefund||0;
+      g.how[o.method]+=o.amt;o.lines.forEach(l=>g.seg[l[2]]+=l[1]);});
+    for(const k of ['card','cash','refunds','fees','gr','diff'])g[k]=r2(g[k]);
+    g.rev=r2(g.card+g.cash);g.net=r2(g.rev-g.refunds);g.after=r2(g.net-g.fees);
+    g.ours=r2(g.card-g.refunds-g.fees);g.stripe=r2(g.ours-g.diff);return g;});
+  const sumAG=(a,b)=>{const t={card:0,cash:0,refunds:0,fees:0,gr:0,diff:0,rev:0,net:0,after:0,stripe:0,seg:{tee:0,cart:0,shop:0,event:0,fnb:0},how:{online:0,reader:0,cash:0},n:0};
+    for(let i=Math.max(0,a);i<=b;i++){const g=AG[i];for(const k of ['card','cash','refunds','fees','gr','diff','rev','net','after','stripe','n'])t[k]+=g[k];for(const k in g.seg)t.seg[k]+=g.seg[k];for(const k in g.how)t.how[k]+=g.how[k];}
+    for(const k of ['card','cash','refunds','fees','gr','diff','rev','net','after','stripe'])t[k]=r2(t[k]);return t;};
+  // Payouts: daily, two days behind. Money from day i is sent on i+2 and lands on i+3.
+  const poStatus=i=>i<=TI-3?'bank':i===TI-2?'way':'ready';
 
-  // ── Action needed: declined cards ──
-  const DEC=[
-    {id:'d1',name:'Kevin Marsh',date:'Thu, Nov 12',time:'8:10 AM',amt:230,players:4,reason:'Your card has insufficient funds.',email:'kevin.marsh@example.com'},
-    {id:'d2',name:'Alicia Grant',date:'Wed, Nov 11',time:'3:20 PM',amt:115,players:2,reason:'Your card was declined.',email:null},
+  // ───────── Today against the average of the last 30 days, same time of day ─────────
+  const H0=6,H1=20;
+  const cumAt=(i,t)=>byDay[i].reduce((s,o)=>s+(o.t<=t?o.amt:0),0);
+  const todayNow=AG[TI].rev;
+  const avgAt=t=>{let s=0;for(let i=TI-30;i<TI;i++)s+=cumAt(i,t);return s/30;};
+  const avgNow=avgAt(NOW);
+  $("tNow").textContent=usd(todayNow);$("tAvg").textContent=usd(avgNow);$("tAvgL").textContent='Average of the last 30 days by '+fT(NOW);
+  const tc=(todayNow-avgNow)/avgNow*100;
+  $("tChg").innerHTML='<b class="'+(tc>=0?'up':'dn')+'">'+(tc>=0?'Up ':'Down ')+Math.abs(Math.round(tc))+'%</b> <span>so far</span>';
+  const tPts=[],aPts=[];for(let t=H0*60;t<=H1*60;t+=30){aPts.push([t,avgAt(t)]);if(t<=NOW)tPts.push([t,cumAt(TI,t)]);}tPts.push([NOW,todayNow]);
+  function niceStep(max,n){const raw=max/n,p=Math.pow(10,Math.floor(Math.log10(raw))),f=raw/p;return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p;}
+  function drawToday(){
+    const el=$("tChart"),W=el.clientWidth,Hh=el.clientHeight;if(!W)return;
+    const mx=Math.max(...aPts.map(p=>p[1]),todayNow),st=niceStep(mx,3),top=Math.ceil(mx/st)*st;
+    const X=t=>(t-H0*60)/((H1-H0)*60)*W,Y=v=>Hh-v/top*Hh,P=a=>a.map(p=>X(p[0]).toFixed(1)+','+Y(p[1]).toFixed(1)).join(' ');
+    let s='<svg viewBox="0 0 '+W+' '+Hh+'" role="img" aria-label="Revenue so far today '+usd(todayNow)+' against an average of '+usd(avgNow)+' by this time">';
+    let ax='';for(let v=0;v<=top+1e-6;v+=st){s+='<line x1="0" x2="'+W+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="var('+(v?'--grid':'--line')+')" stroke-width="1"/>';ax+='<span class="yax" style="top:'+Y(v)+'px">'+usdk(v)+'</span>';}
+    s+='<polygon points="'+X(tPts[0][0])+','+Hh+' '+P(tPts)+' '+X(NOW)+','+Hh+'" fill="var(--barhi)" fill-opacity="0.08"/>';
+    s+='<polyline points="'+P(aPts)+'" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 4"/>';
+    s+='<polyline points="'+P(tPts)+'" fill="none" stroke="var(--barhi)" stroke-width="2" stroke-linejoin="round"/>';
+    s+='<line x1="'+X(NOW)+'" x2="'+X(NOW)+'" y1="0" y2="'+Hh+'" stroke="var(--muted)" stroke-width="1" stroke-dasharray="2 3"/><circle cx="'+X(NOW)+'" cy="'+Y(todayNow)+'" r="4" fill="var(--barhi)" stroke="var(--solid)" stroke-width="2"/>';
+    s+='<line id="tX" x1="0" x2="0" y1="0" y2="'+Hh+'" stroke="var(--ink-soft)" stroke-width="1" visibility="hidden"/></svg>';
+    el.innerHTML=s+ax+'<div class="ytip" id="tTip" hidden></div>';
+    $("ticks").innerHTML=[6,8,10,12,14,16,18,20].map(h=>'<span style="left:'+X(h*60)+'px">'+(h%12||12)+(h<12?'a':'p')+'</span>').join('');
+    el.onmousemove=e=>{const r=el.getBoundingClientRect(),x=Math.max(0,Math.min(W,e.clientX-r.left));let t=Math.round((H0*60+x/W*(H1-H0)*60)/30)*30;t=Math.max(H0*60,Math.min(H1*60,t));
+      const tip=$("tTip"),cx=X(t);$("tX").setAttribute('x1',cx);$("tX").setAttribute('x2',cx);$("tX").setAttribute('visibility','visible');
+      tip.hidden=false;tip.style.left=Math.max(60,Math.min(W-60,cx))+'px';tip.style.top='-6px';
+      tip.innerHTML='<b>'+fT(t)+'</b>'+(t<=NOW?'Today '+usd(cumAt(TI,t))+' · ':'')+'Average '+usd(avgAt(t));};
+    el.onmouseleave=()=>{$("tTip").hidden=true;$("tX").setAttribute('visibility','hidden');};
+  }
+
+  // ───────── Next payout card ─────────
+  $("npAmt").textContent=usd2(AG[TI-2].stripe);$("npWhen").textContent='On its way · arrives '+dayAt(TI+1)+' · Chase •••• 6789';
+  $("npReady").textContent=usd2(r2(AG[TI-1].stripe+AG[TI].stripe));
+  $("npLastL").textContent='Last payout · arrived '+fD(TI);$("npLast").textContent=usd2(AG[TI-3].stripe);
+
+  // ───────── One date range for the whole page ─────────
+  let RG={a:TI-29,b:TI,k:'30'};
+  const rangeTxt=()=>fS(RG.a)+' – '+fS(RG.b)+', 2026';
+  function setRange(k,a,b){
+    if(k==='7')RG={a:TI-6,b:TI,k};else if(k==='30')RG={a:TI-29,b:TI,k};else if(k==='month')RG={a:idxOf(10,1),b:TI,k};else RG={a,b,k:'custom'};
+    $("rseg").querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.r===RG.k)));
+    $("calBtn").classList.toggle('on',RG.k==='custom');
+    renderAll();
+  }
+  $("rseg").addEventListener('click',e=>{const b=e.target.closest('button');if(b)setRange(b.dataset.r);});
+  $("calBtn").addEventListener('click',e=>{e.stopPropagation();const c=$("cal");c.hidden=!c.hidden;$("calBtn").setAttribute('aria-expanded',String(!c.hidden));$("calFrom").value=iso(RG.a);$("calTo").value=iso(RG.b);});
+  $("cal").addEventListener('click',e=>e.stopPropagation());
+  $("calGo").addEventListener('click',()=>{let a=idxOfIso($("calFrom").value),b=idxOfIso($("calTo").value);if(a<0||b<0)return;if(a>b)[a,b]=[b,a];$("cal").hidden=true;setRange('custom',a,b);});
+
+  // ───────── Chart: By day · Day of week · Time of day ─────────
+  let cMode='day',cSel=null;
+  $("cseg").addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;cMode=b.dataset.c;cSel=null;$("cseg").querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));drawBars();});
+  function chartData(){
+    if(cMode==='day'){const v=[];for(let i=RG.a;i<=RG.b;i++)v.push({l:fS(i),t:fD(i)+(i===TI?' · so far':''),v:AG[i].rev});return v;}
+    if(cMode==='dow'){const order=[1,2,3,4,5,6,0];return order.map(d=>{let s=0,n=0;for(let i=RG.a;i<=RG.b;i++)if(DAYS[i].getDay()===d&&i!==TI){s+=AG[i].rev;n++;}return {l:WD[d],t:'Average '+['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d],v:n?s/n:0};});}
+    const hv=[];for(let h=6;h<=19;h++){let s=0;for(let i=RG.a;i<=RG.b;i++)byDay[i].forEach(o=>{if(Math.floor(o.t/60)===h)s+=o.amt;});hv.push({l:(h%12||12)+(h<12?'a':'p'),t:fT(h*60)+' – '+fT(h*60+59),v:s});}return hv;
+  }
+  function drawBars(){
+    const d=chartData(),n=d.length,mx=Math.max(...d.map(x=>x.v),1),st=niceStep(mx,4),top=Math.ceil(mx/st)*st;
+    const hi=cSel!=null&&cSel<n?cSel:(cMode==='day'?n-1:d.reduce((m,x,i)=>x.v>d[m].v?i:m,0));
+    let g='';for(let v=0;v<=top+1e-6;v+=st)g+='<div class="ygl'+(v?'':' z')+'" style="bottom:'+(v/top*100)+'%"><span>'+usdk(v)+'</span></div>';
+    $("plot").innerHTML=g+'<div class="ybars'+(n<=16?' wide':'')+'" id="bars" role="img" aria-label="Revenue '+(cMode==='day'?'by day':cMode==='dow'?'by day of week':'by time of day')+'">'+d.map((x,i)=>'<div class="yb'+(i===hi?' hi':'')+'" data-i="'+i+'"><i style="height:'+Math.max(1,x.v/top*100)+'%"></i>'+(i===hi?'<b style="bottom:'+(x.v/top*100)+'%;'+(i>=n-2&&n>3?'right:0':i<=1&&n>3?'left:0':'')+'">'+usd(x.v)+'</b>':'')+'</div>').join('')+'</div><div class="ytip" id="bTip" hidden></div>';
+    const fit=Math.max(3,Math.floor(($("plot").clientWidth||600)/52)),every=Math.max(1,Math.ceil(n/fit));
+    $("barl").innerHTML=d.map((x,i)=>'<span>'+((n-1-i)%every===0?x.l:'')+'</span>').join('');
+    const bars=$("bars"),tip=$("bTip");
+    bars.onmousemove=e=>{const b=e.target.closest('.yb');if(!b){tip.hidden=true;return;}const x=d[+b.dataset.i],r=$("plot").getBoundingClientRect(),br=b.getBoundingClientRect();
+      tip.hidden=false;tip.innerHTML='<b>'+usd(x.v)+'</b>'+esc(x.t);tip.style.left=Math.max(70,Math.min(r.width-70,br.left-r.left+br.width/2))+'px';tip.style.top=Math.max(0,(1-x.v/top)*r.height-10)+'px';};
+    bars.onmouseleave=()=>tip.hidden=true;
+    bars.onclick=e=>{const b=e.target.closest('.yb');if(!b)return;cSel=+b.dataset.i;drawBars();};
+  }
+
+  // ───────── What was sold · How it was paid ─────────
+  function renderSold(T,P){
+    const pct=v=>T.rev?Math.round(v/T.rev*100)+'%':'—';
+    $("rTot").textContent=usd(T.rev);
+    const ch=P.rev?(T.rev-P.rev)/P.rev*100:0;
+    $("rChg").innerHTML='<b class="'+(ch>=0?'up':'dn')+'">'+(ch>=0?'Up ':'Down ')+Math.abs(Math.round(ch))+'%</b> <span>vs the period before ('+fS(Math.max(0,RG.a-(RG.b-RG.a+1)))+' – '+fS(RG.a-1)+')</span>';
+    $("sold").innerHTML='<h3 class="yh">What was sold</h3>'+SEGS.map(([k,l])=>'<div class="ykv"><span>'+l+(k==='tee'?'<small>green fees</small>':'')+'</span><b><span class="pct">'+pct(T.seg[k])+'</span>'+usd2(T.seg[k])+'</b></div>').join('')+
+      '<div class="ykv tot"><span>Total</span><b>'+usd2(T.rev)+'</b></div>';
+    const h=T.how;
+    $("paid").innerHTML='<h3 class="yh">How it was paid</h3><div class="yhb" role="img" aria-label="Card online '+usd(h.online)+', card at the counter '+usd(h.reader)+', cash '+usd(h.cash)+'">'+['online','reader','cash'].map((k,j)=>'<span style="width:'+(h[k]/T.rev*100)+'%;'+(j===1?'opacity:.75':'')+'"></span>').join('')+'</div>'+
+      ['online','reader','cash'].map(k=>'<div class="ykv"><span>'+HOW[k]+(k==='reader'?'<small>card reader</small>':'')+'</span><b><span class="pct">'+pct(h[k])+'</span>'+usd2(h[k])+'</b></div>').join('')+
+      '<div class="ykv tot"><span>Total</span><b>'+usd2(T.rev)+'</b></div>';
+  }
+
+  // ───────── Pending payments: unpaid event invoices and declined cards ─────────
+  const PP=[
+    {id:'pp1',kind:'invoice',name:'Hollis family outing',what:'Event invoice · Saturday shotgun, 12 players',when:'Overdue since Nov 9',amt:888,st:'bd',lines:[['Green fee × 12',672],['Cart × 12',216]],sent:'Sent Oct 26 to grant.hollis@gmail.com'},
+    {id:'pp2',kind:'invoice',name:'Lakeside Rotary Club',what:'Event invoice · Turkey Trot scramble, 16 players',when:'Due Fri, Nov 20',amt:1360,st:'wn',lines:[['Turkey Trot entry × 16',1360]],sent:'Sent Nov 3 to events@lakesiderotary.org'},
+    {id:'pp3',kind:'declined',name:'Kevin Marsh',what:'Card declined at check-in · Tee time 8:10 AM, 4 players',when:'Today, 8:04 AM',amt:248,st:'bd',lines:[['Green fee × 4',176],['Cart × 4',72]],card:'Visa •••• 0341',reason:'Insufficient funds'},
+    {id:'pp4',kind:'declined',name:'Luis Moreno',what:'Card declined · late cancellation fee',when:'Tue, Nov 10, 6:15 AM',amt:10,st:'bd',lines:[['Late cancellation · Tue, Nov 10 · 7:50 AM',10]],card:'Mastercard •••• 7720',reason:'Card expired'},
   ];
-  let decSel=null;const decRes={};const decGone=new Set();
-  function renderDec(){
-    const rows=DEC.filter(d=>!decGone.has(d.id));
-    $("decList").innerHTML=rows.length?rows.map(d=>'<div class="yrow ydc'+(decSel===d.id?' sel':'')+'" data-id="'+d.id+'"><span class="dot bd"></span><span class="yn">Card declined — <b>'+esc(d.name)+'</b></span><span class="yt">'+d.date+' '+d.time+' · '+usd2(d.amt)+'</span><span class="yacts">'+
-      (d.email?'<button class="yib" type="button" data-a="mail" aria-label="Email pay link" title="Email pay link">'+MAIL+'</button>':'<span class="ysm" style="margin-right:6px">No email on file</span>')+
-      '<button class="yib" type="button" data-a="rm" aria-label="Remove" title="Remove">'+TRASH+'</button></span>'+
-      (decRes[d.id]?'<span class="yres '+decRes[d.id][0]+'">'+esc(decRes[d.id][1])+'</span>':'')+'</div>').join(''):'<p class="empty">None.</p>';
-    const d=DEC.find(x=>x.id===decSel&&!decGone.has(x.id));
-    $("decSplit").classList.toggle('has',!!d);$("decDet").hidden=!d;
-    if(d)$("decDet").innerHTML='<button class="yib yx" type="button" data-a="close" aria-label="Close" title="Close">'+X+'</button><h3>Card declined — '+esc(d.name)+'</h3><p class="dsub">'+d.date+' '+d.time+' · '+usd2(d.amt)+'</p>'+
-      '<dl class="ydl"><dt>Players</dt><dd>'+d.players+'</dd><dt>Owes</dt><dd>'+usd2(d.amt)+'</dd><dt>Reason</dt><dd>'+esc(d.reason)+'</dd>'+(d.email?'':'<dt>Pay link</dt><dd>No email</dd>')+'</dl>'+
-      '<div class="yform"><div class="yfr">'+(d.email?'<button class="ybtn" type="button" data-a="mail">Email pay link</button>':'')+'<button class="ybtn ghost" type="button" data-a="rm">Remove</button><span class="ysp" style="flex:1"></span><a class="ylink" href="#" onclick="return false" style="font-size:13px">Tee sheet</a></div></div>';
+  let ppf='all',ppSel=null;const ppDone={};
+  function renderPP(){
+    const rows=PP.filter(p=>ppf==='all'||p.kind===ppf);
+    $("ppfb").innerHTML=FILTER+(ppf!=='all'?'<span class="sdot"></span>':'');
+    $("ppfm").innerHTML=[['all','All'],['invoice','Event invoices'],['declined','Declined cards']].map(([k,l])=>'<button type="button" data-f="'+k+'" class="'+(k===ppf?'on':'')+'">'+l+'<span>'+(k==='all'?PP.length:PP.filter(p=>p.kind===k).length)+'</span></button>').join('');
+    $("ppList").innerHTML=rows.map(p=>'<div class="yrow ypp'+(ppSel===p.id?' sel':'')+'" data-id="'+p.id+'"><span class="dot '+p.st+'"></span><span class="yn">'+esc(p.name)+'</span><span class="yw yhide">'+esc(p.what)+'</span><span class="yt yhide'+(p.st==='bd'&&p.kind==='invoice'?' dn':'')+'">'+p.when+'</span><span class="ya">'+usd2(p.amt)+'</span></div>').join('')||'<p class="empty">Nothing owed.</p>';
+    const p=PP.find(x=>x.id===ppSel);$("ppSplit").classList.toggle('has',!!p);$("ppDet").hidden=!p;
+    if(p)$("ppDet").innerHTML='<button class="yib yx" type="button" data-a="close" aria-label="Close" title="Close">'+X+'</button><h3>'+esc(p.name)+'</h3><p class="dsub">'+esc(p.what)+'</p>'+
+      '<dl class="ydl">'+(p.kind==='invoice'?'<dt>Due</dt><dd class="'+(p.st==='bd'?'dn':'wn')+'">'+p.when+'</dd><dt>Invoice</dt><dd>'+esc(p.sent)+'</dd>':'<dt>Declined</dt><dd>'+p.when+'</dd><dt>Card</dt><dd>'+p.card+'</dd><dt>Reason</dt><dd class="dn">'+p.reason+'</dd>')+'</dl>'+
+      '<div class="yitems">'+p.lines.map(l=>'<div class="ykv"><span>'+esc(l[0])+'</span><b>'+usd2(l[1])+'</b></div>').join('')+'<div class="ykv tot"><span>Owed</span><b>'+usd2(p.amt)+'</b></div></div>'+
+      '<div class="ybtns"><button class="ybtn" type="button" data-a="send">'+(p.kind==='invoice'?'Resend invoice':'Email pay link')+'</button>'+(p.kind==='declined'?'<a class="ylink" href="#" onclick="return false" style="margin-left:4px">Open in tee sheet</a>':'<a class="ylink" href="#" onclick="return false" style="margin-left:4px">Open event</a>')+'</div>'+
+      (ppDone[p.id]?'<p class="ysm okv" style="margin:10px 0 0">'+esc(ppDone[p.id])+'</p>':'');
   }
-  function decAct(a,id){
-    const d=DEC.find(x=>x.id===id);
-    if(a==='mail'){decRes[id]=['ok','Sent to '+d.email+'.'];}
-    else if(a==='rm'){decGone.add(id);if(decSel===id)decSel=null;toast(d.name+' removed. Still owed under Payments → Not paid yet.');}
-    renderDec();
+  $("ppList").addEventListener('click',e=>{const r=e.target.closest('.yrow');if(!r)return;ppSel=ppSel===r.dataset.id?null:r.dataset.id;renderPP();});
+  $("ppDet").addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;if(b.dataset.a==='close')ppSel=null;else{const p=PP.find(x=>x.id===ppSel);ppDone[p.id]=p.kind==='invoice'?'Invoice sent again.':'Pay link sent to '+p.name.split(' ')[0].toLowerCase()+'.'+p.name.split(' ')[1].toLowerCase()+'@gmail.com.';}renderPP();});
+
+  // ───────── Shared payment line + detail (Payments tab and a Ledger day) ─────────
+  const cardTxt=o=>o.card?o.card.brand+' •••• '+o.card.l4:'';
+  function status(o){
+    if(o.stripeRefund)return ['bd','Stripe differs'];
+    if(o.refund&&o.refund>=o.amt)return ['nt','Refunded'];
+    if(o.refund)return ['nt','Part refunded'];
+    return ['ok','Paid'];
   }
-  $("decList").addEventListener('click',e=>{const r=e.target.closest('.yrow');if(!r)return;const b=e.target.closest('[data-a]');if(b){decAct(b.dataset.a,r.dataset.id);return;}decSel=decSel===r.dataset.id?null:r.dataset.id;renderDec();});
-  $("decDet").addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;if(b.dataset.a==='close'){decSel=null;renderDec();return;}decAct(b.dataset.a,decSel);});
-  renderDec();
+  const rowHTML=(o,sel,short)=>{const s=status(o);return '<div class="yrow ypr'+(short?' short':'')+(sel?' sel':'')+(o.stripeRefund?' flag':'')+'" data-id="'+o.id+'"><span class="yt">'+fT(o.t)+'</span><span class="yn">'+esc(o.name)+'</span><span class="yw">'+esc(o.what)+'</span><span class="ya'+(o.refund>=o.amt?' x':'')+'">'+usd2(o.amt)+'</span><span class="ysx"><span class="dot '+s[0]+'"></span>'+s[1]+'</span></div>';};
+  const byId=Object.fromEntries(items.map(o=>[o.id,o]));
+  function detailHTML(o,ctx){
+    const s=status(o);
+    return '<button class="yib yx" type="button" data-a="close" aria-label="Close" title="Close">'+X+'</button><h3>'+esc(o.name)+'</h3><p class="dsub">'+fD(o.di)+' · '+fT(o.t)+'</p>'+
+      '<dl class="ydl"><dt>For</dt><dd>'+esc(o.what)+'</dd><dt>How paid</dt><dd>'+HOWS[o.method]+'</dd>'+(o.card?'<dt>Card</dt><dd>'+cardTxt(o)+'</dd>':'')+'<dt>Status</dt><dd><span class="ysx"><span class="dot '+s[0]+'"></span>'+s[1]+'</span></dd></dl>'+
+      '<div class="yitems">'+o.lines.map(l=>'<div class="ykv"><span>'+esc(l[0])+'</span><b>'+usd2(l[1])+'</b></div>').join('')+'<div class="ykv tot"><span>Total</span><b>'+usd2(o.amt)+'</b></div>'+
+      (o.refund?'<div class="ykv"><span>Refunded'+(o.why?'<small>'+esc(o.why)+'</small>':'')+'</span><b>−'+usd2(o.refund)+'</b></div>':'')+'</div>'+
+      (o.stripeRefund?'<p class="ysm dn" style="margin:0 0 12px">Stripe shows a '+usd2(o.stripeRefund)+' refund on this payment, made in Stripe directly. GreenReserve still has it as paid.</p>':'')+
+      '<div class="ybtns"><div class="fwrap"><button class="ybtn ghost" type="button" data-a="rmenu">Receipt</button><div class="fmenu yrmenu"'+(ctx.rmenu?'':' hidden')+'><button type="button" data-a="rview">View receipt</button><button type="button" data-a="remail">Email receipt</button></div></div>'+
+      (o.method!=='cash'&&o.refund<o.amt&&!ctx.refundOpen?'<button class="ybtn ghost" type="button" data-a="refund">Refund</button>':'')+'</div>'+
+      (ctx.refundOpen?'<div class="yform"><input id="ramt" inputmode="decimal" aria-label="Amount to refund, blank for all of it"><input id="rwhy" maxlength="300" aria-label="Reason the golfer will see"><div class="yfr"><button class="ybtn" type="button" data-a="dorefund">Refund '+usd2(r2(o.amt-o.refund))+'</button><button class="ybtn ghost" type="button" data-a="cancelrefund">Cancel</button></div></div>':'');
+  }
+  function showReceipt(o){
+    $("rcpt").innerHTML='<div class="yrcpt" role="dialog" aria-label="Receipt"><button class="yib yx" style="position:absolute;right:10px;top:10px" type="button" data-a="rclose" aria-label="Close" title="Close">'+X+'</button><h4>Pine Hollow Golf Club</h4><p class="dsub">Receipt · '+fD(o.di)+', 2026 · '+fT(o.t)+'<br>'+esc(o.name)+'</p>'+
+      '<div class="yitems">'+o.lines.map(l=>'<div class="ykv"><span>'+esc(l[0])+'</span><b>'+usd2(l[1])+'</b></div>').join('')+'<div class="ykv tot"><span>Total</span><b>'+usd2(o.amt)+'</b></div>'+(o.refund?'<div class="ykv"><span>Refunded</span><b>−'+usd2(o.refund)+'</b></div>':'')+'</div>'+
+      '<p class="ysm" style="margin:0 0 14px">'+(o.method==='cash'?'Paid in cash':(o.method==='reader'?'Card reader · ':'Paid online · ')+cardTxt(o))+'</p><div class="ybtns"><button class="ybtn" type="button" data-a="remail2">Email receipt</button><button class="ybtn ghost" type="button" data-a="rclose">Close</button></div></div>';
+    $("rcpt").hidden=false;$("rcpt").dataset.id=o.id;
+  }
+  $("rcpt").addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(e.target===$("rcpt")||(b&&b.dataset.a==='rclose')){$("rcpt").hidden=true;return;}if(b&&b.dataset.a==='remail2'){$("rcpt").hidden=true;toast('Receipt emailed.');}});
+  function detailClick(e,ctx,rerender){
+    const b=e.target.closest('[data-a]');if(!b)return;e.stopPropagation();const a=b.dataset.a,o=byId[ctx.sel];
+    if(a==='close'){ctx.sel=null;ctx.refundOpen=false;ctx.rmenu=false;}
+    else if(a==='rmenu')ctx.rmenu=!ctx.rmenu;
+    else if(a==='rview'){ctx.rmenu=false;showReceipt(o);}
+    else if(a==='remail'){ctx.rmenu=false;toast('Receipt emailed to '+o.name+'.');}
+    else if(a==='refund'){ctx.refundOpen=true;ctx.rmenu=false;}
+    else if(a==='cancelrefund')ctx.refundOpen=false;
+    else if(a==='dorefund'){const v=$("ramt").value.trim(),left=r2(o.amt-o.refund),n=v?Math.min(left,Number(v.replace(/[$,\s]/g,''))):left;if(!Number.isFinite(n)||n<=0)return;
+      ctx.refundOpen=false;toast('Refunded '+usd2(n)+'. The golfer was emailed. Totals update when it settles.');}
+    rerender();
+  }
 
-  // ── Main tabs ──
-  function setTab(v){$("mtabs").querySelectorAll('b').forEach(x=>x.classList.toggle('on',x.dataset.v===v));document.querySelectorAll('.main > .yview').forEach(x=>x.hidden=x.dataset.view!==v);}
-  $("mtabs").addEventListener('click',e=>{const b=e.target.closest('b');if(b)setTab(b.dataset.v);});
-
-  // ── Payments ──
-  const ST={
-    card:['Paid by card','ok','paid'],counter:['Paid at the counter','ok','paid'],account:['On account','ok','paid'],refunded:['Refunded','nt','refunded'],
-    unpaid:['Not paid yet','wn','unpaid'],hold:['Not paid yet · $10.00 hold taken','wn','unpaid'],noshow:['No-show','bd','noshow'],noshowhold:['No-show · $10.00 hold kept','bd','noshow'],
-    cxfee:['Cancelled · $10.00 fee kept','wn','cancelled'],cxno:['Cancelled, no fee','nt','cancelled']};
-  const DOT={ok:'ok',wn:'wn',bd:'bd',nt:'nt'};
-  const P=[
-    ['Today','1:50 PM','Marcus Bell',4,296,'unpaid'],['Today','1:40 PM','Priya Shah',2,148,'card'],['Today','1:20 PM','Tom Albrecht',3,168,'counter'],
-    ['Today','12:50 PM','Lena Ortiz',4,296,'card'],['Today','12:10 PM','Grant Hollis',2,148,'noshow'],['Today','11:30 AM','Jim Kowalski',4,232,'account'],
-    ['Today','10:40 AM','Sarah Kim',2,112,'card'],['Today','9:50 AM','Dave Romero',4,296,'hold'],['Today','8:20 AM','Ben Okafor',4,316,'card'],
-    ['Today','8:10 AM','Kevin Marsh',4,224,'unpaid'],['Today','7:40 AM','Hector Ruiz',1,56,'counter'],
-    ['Wed, Nov 11','3:30 PM','Chris Dunn',2,148,'card'],['Wed, Nov 11','3:20 PM','Alicia Grant',2,112,'unpaid'],['Wed, Nov 11','2:10 PM','Megan Price',4,296,'refunded'],
-    ['Wed, Nov 11','1:00 PM','Ray Castillo',3,222,'cxfee'],['Wed, Nov 11','11:20 AM','Will Tanaka',4,296,'card'],['Wed, Nov 11','10:00 AM','Noah Fischer',2,112,'cxno'],
-    ['Wed, Nov 11','9:10 AM','Anita Desai',4,296,'unpaid'],['Wed, Nov 11','8:00 AM','Paul Greco',4,232,'noshowhold'],
-    ['Tue, Nov 10','2:40 PM','Kyle Brennan',2,148,'card'],['Tue, Nov 10','12:30 PM','Joan Mercer',3,222,'counter'],['Tue, Nov 10','10:50 AM','Ed Lawson',4,296,'card'],
-    ['Tue, Nov 10','9:30 AM','Sam Whitaker',1,74,'unpaid'],['Tue, Nov 10','8:10 AM','Rita Gomez',4,296,'card'],
-  ].map((r,i)=>({id:'p'+i,day:r[0],time:r[1],name:r[2],players:r[3],amt:r[4],st:r[5],email:r[2].toLowerCase().replace(/ /g,'.')+'@gmail.com'}));
-  const PF=[['all','All'],['paid','Paid'],['unpaid','Not paid yet'],['noshow','No-shows'],['cancelled','Cancelled']];
-  let pf='all',pSel=null,refundOpen=false;
-  function pRows(){const q=$("pq").value.trim().toLowerCase();return P.filter(b=>!q||b.name.toLowerCase().includes(q)||b.email.includes(q));}
+  // ───────── Payments tab ─────────
+  const pctx={sel:null,refundOpen:false,rmenu:false};let pHow='',pSeg='',pShow=25;
   function renderP(){
-    const rows=pRows();const cnt=k=>k==='all'?rows.length:rows.filter(r=>ST[r.st][2]===k).length;
-    const shown=pf==='all'?rows:rows.filter(r=>ST[r.st][2]===pf);
-    $("pfb").textContent=pf==='all'?'Filter':'Filter · '+PF.find(x=>x[0]===pf)[1];
-    $("pfm").innerHTML=PF.map(([k,l])=>'<button type="button" data-f="'+k+'" class="'+(k===pf?'on':'')+'">'+l+'<span>'+cnt(k)+'</span></button>').join('');
-    if(!shown.length){$("pList").innerHTML='<p class="empty">Nothing matches that.</p>';$("pFoot").hidden=true;}
-    else{$("pFoot").hidden=false;let h='';[...new Set(shown.map(r=>r.day))].forEach(day=>{const dr=shown.filter(r=>r.day===day);
-      h+='<div class="ydayh">'+day+'<span>'+dr.length+' group'+(dr.length===1?'':'s')+'</span></div>';
-      h+=dr.map(b=>{const s=ST[b.st];return '<div class="yrow ypr'+(pSel===b.id?' sel':'')+'" data-id="'+b.id+'"><span class="yt">'+b.time+'</span><span class="yn"><b>'+esc(b.name)+'</b><span> · '+b.players+' player'+(b.players!==1?'s':'')+'</span></span><span class="ya">'+usd2(b.amt)+'</span><span class="ysx"><span class="dot '+DOT[s[1]]+'"></span>'+s[0]+'</span></div>';}).join('');});
-      $("pList").innerHTML=h;}
-    const b=P.find(x=>x.id===pSel);$("pSplit").classList.toggle('has',!!b);$("pDet").hidden=!b;
-    if(b){const s=ST[b.st];
-      $("pDet").innerHTML='<button class="yib yx" type="button" data-a="close" aria-label="Close" title="Close">'+X+'</button><h3>'+esc(b.name)+'</h3><p class="dsub">'+(b.day==='Today'?'Today':b.day)+' · '+b.time+'</p>'+
-        '<dl class="ydl"><dt>Players</dt><dd>'+b.players+'</dd><dt>Your share</dt><dd>'+usd2(b.amt)+'</dd><dt>Status</dt><dd><span class="ysx"><span class="dot '+DOT[s[1]]+'"></span>'+s[0]+'</span></dd></dl>'+
-        (b.st==='card'?(refundOpen?'<div class="yform"><input id="ramt" inputmode="decimal" placeholder="All" aria-label="Amount to refund (blank for all)"><input id="rwhy" maxlength="300" placeholder="Reason (the golfer sees it)" aria-label="Reason"><div class="yfr"><button class="ybtn" type="button" data-a="dorefund" id="rgo" disabled>Refund</button><button class="ybtn ghost" type="button" data-a="cancelrefund">Cancel</button></div></div>':'<button class="ybtn ghost" type="button" data-a="refund">Refund</button>'):'');
-      const w=$("rwhy");if(w)w.addEventListener('input',()=>{$("rgo").disabled=!w.value.trim();});}
+    const q=$("pq").value.trim().toLowerCase();const all=[];for(let i=RG.b;i>=RG.a;i--)byDay[i].forEach(o=>all.push(o));
+    const shown=all.filter(o=>(!q||o.name.toLowerCase().includes(q)||o.what.toLowerCase().includes(q))&&(!pHow||o.method===pHow)&&(!pSeg||o.lines.some(l=>l[2]===pSeg)));
+    $("pfb").innerHTML=FILTER+(pHow||pSeg?'<span class="sdot"></span>':'');
+    $("pfm").innerHTML='<div class="fh">How paid</div><button type="button" data-h="" class="'+(!pHow?'on':'')+'">Any way</button>'+['online','reader','cash'].map(k=>'<button type="button" data-h="'+k+'" class="'+(pHow===k?'on':'')+'">'+HOW[k]+'</button>').join('')+
+      '<hr><div class="fh">What for</div><button type="button" data-s="" class="'+(!pSeg?'on':'')+'">Everything</button>'+SEGS.map(([k,l])=>'<button type="button" data-s="'+k+'" class="'+(pSeg===k?'on':'')+'">'+l+'</button>').join('');
+    $("pCount").textContent=shown.length.toLocaleString('en-US')+' payments';
+    let h='',last=-1;shown.slice(0,pShow).forEach(o=>{if(o.di!==last){last=o.di;const dd=shown.filter(x=>x.di===o.di);h+='<div class="ydayh">'+fD(o.di)+(o.di===TI?' · today':'')+'<span>'+dd.length+' payments · '+usd2(r2(dd.reduce((s,x)=>s+x.amt,0)))+'</span></div>';}h+=rowHTML(o,pctx.sel===o.id,!!pctx.sel);});
+    if(shown.length>pShow)h+='<button class="ymore" type="button" id="pMore">Show '+Math.min(25,shown.length-pShow)+' more of '+(shown.length-pShow).toLocaleString('en-US')+'</button>';
+    $("pList").innerHTML=h||'<p class="empty">Nothing matches that.</p>';
+    const o=byId[pctx.sel];$("pSplit").classList.toggle('has',!!o);$("pDet").hidden=!o;if(o)$("pDet").innerHTML=detailHTML(o,pctx);
   }
-  $("pq").addEventListener('input',renderP);
-  $("pList").addEventListener('click',e=>{const r=e.target.closest('.yrow');if(!r)return;pSel=pSel===r.dataset.id?null:r.dataset.id;refundOpen=false;renderP();});
-  $("pDet").addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a;
-    if(a==='close'){pSel=null;refundOpen=false;}
-    else if(a==='refund')refundOpen=true; else if(a==='cancelrefund')refundOpen=false;
-    else if(a==='dorefund'){const p=P.find(x=>x.id===pSel);const v=$("ramt").value.trim();const n=v?Number(v.replace(/[$,\s]/g,'')):p.amt;
-      if(!Number.isFinite(n)||n<=0){return;}p.st='refunded';refundOpen=false;toast('Refunded '+usd2(Math.min(n,p.amt))+' — the golfer was emailed.');}
-    renderP();});
+  $("pq").addEventListener('input',()=>{pShow=25;renderP();});
+  $("pList").addEventListener('click',e=>{if(e.target.id==='pMore'){pShow+=25;renderP();return;}const r=e.target.closest('.yrow');if(!r)return;pctx.sel=pctx.sel===r.dataset.id?null:r.dataset.id;pctx.refundOpen=false;pctx.rmenu=false;renderP();});
+  $("pDet").addEventListener('click',e=>detailClick(e,pctx,renderP));
   function menu(btn,m,onPick){btn.addEventListener('click',e=>{e.stopPropagation();const o=m.hidden;document.querySelectorAll('.fmenu').forEach(x=>x.hidden=true);m.hidden=!o;btn.setAttribute('aria-expanded',String(o));});
     m.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;e.stopPropagation();onPick(b);m.hidden=true;});}
-  document.addEventListener('click',()=>document.querySelectorAll('.fmenu').forEach(x=>x.hidden=true));
-  menu($("pfb"),$("pfm"),b=>{pf=b.dataset.f;renderP();});
-  $("seeUnpaid").addEventListener('click',()=>{setTab('payments');pf='unpaid';pSel=null;renderP();document.querySelector('[data-view="payments"]').scrollIntoView({behavior:'smooth',block:'start'});});
-  renderP();
+  document.addEventListener('click',()=>{document.querySelectorAll('.fmenu:not(.yrmenu)').forEach(x=>x.hidden=true);$("cal").hidden=true;});
+  menu($("pfb"),$("pfm"),b=>{if('h' in b.dataset)pHow=b.dataset.h;if('s' in b.dataset)pSeg=b.dataset.s;pShow=25;renderP();});
+  menu($("ppfb"),$("ppfm"),b=>{ppf=b.dataset.f;renderPP();});
 
-  // ── Ledger (EARNED-1) ──
-  // [day, card, cash, other, given back, GreenReserve, Stripe fees, match, Stripe net if off]
-  const LD=[
-    ['Thu, Nov 12',2846.00,512.00,0,0,51.00,89.12,'ok'],['Wed, Nov 11',2412.50,438.00,0,296.00,43.50,76.41,'ok'],
-    ['Tue, Nov 10',2205.00,390.50,120.00,0,39.00,69.85,'ok'],['Mon, Nov 9',1876.00,302.00,0,10.00,33.00,59.70,'ok'],
-    ['Sun, Nov 8',3984.00,712.00,0,148.00,72.00,124.84,'ok'],['Sat, Nov 7',4312.50,806.50,0,0,79.50,135.66,'ok'],
-    ['Fri, Nov 6',3120.00,544.00,0,56.00,57.00,98.28,'ok'],['Thu, Nov 5',2398.00,466.00,0,0,42.00,75.34,'ok'],
-    ['Wed, Nov 4',1904.00,352.00,0,0,34.50,60.42,'off',1842.10],['Tue, Nov 3',1688.00,288.00,0,0,30.00,53.85,'ok'],
-    ['Mon, Nov 2',1422.00,240.00,0,112.00,25.50,45.54,'ok'],['Sun, Nov 1',3610.00,690.50,0,0,66.00,113.69,'ok'],
-    ['Sat, Oct 31',3796.00,744.00,0,10.00,69.00,119.78,'ok'],['Fri, Oct 30',2650.00,498.00,250.00,0,48.00,83.15,'ok'],
-  ];
-  const MATCH={ok:['ok','Matches Stripe'],off:['bd','Differs from Stripe'],none:['nt','No card money'],unknown:['nt','Stripe not checked']};
-  const T=LD.reduce((a,d)=>({card:a.card+d[1],cash:a.cash+d[2],other:a.other+d[3],out:a.out+d[4],gr:a.gr+d[5],fee:a.fee+d[6]}),{card:0,cash:0,other:0,out:0,gr:0,fee:0});
-  const dash=v=>v?usd2(v):'—';
-  const takenIn=T.card+T.cash+T.other, keep=takenIn-T.out-T.gr-T.fee;
-  const EARN=[['Taken in',takenIn,'Card, cash and other money that came in on these days — the day the money moved, not the day of the round'],['Given back',-T.out,'Refunds and holds returned'],['GreenReserve fees',-T.gr,'Booking fees taken, less any given back'],['Stripe fees',-T.fee,'Stripe’s card processing fees, as Stripe recorded them']];
-  const toBank=Math.round((T.card-2846-2412.5-T.gr-T.fee-T.out*0.8)*100)/100, cashNet=T.cash-112;
-  $("earn").innerHTML='<section class="card"><h3 class="yh">Money in</h3>'+EARN.map(([l,v,d])=>'<div class="ykv"><span title="'+esc(d)+'">'+l+'</span><b>'+usd2(v)+'</b></div>').join('')+'<div class="ykv tot"><span title="Collected, less what was given back and both fees">You keep</span><b>'+usd2(keep)+'</b></div></section>'+
-    '<section class="card"><h3 class="yh">Paid out</h3><div class="ykv"><span title="Stripe payouts that arrived in these days">To your bank <span class="yfaint" style="text-decoration:none">· 10 payouts</span></span><b>'+usd2(toBank)+'</b></div><div class="ykv"><span title="Cash taken less cash given back">Cash at the course</span><b>'+usd2(cashNet)+'</b></div><div class="ykv"><span title="Your Stripe balance, available and on its way">In Stripe now</span><b>'+usd2(6490.85)+'</b></div></section>';
-  $("offline").textContent='1 day differs from Stripe.';
-  $("ltbl").innerHTML='<thead><tr><th>Day</th><th>Card</th><th>Cash</th><th>Check or other</th><th>Given back</th><th>Net</th><th title="GreenReserve’s fees taken, less any given back">GreenReserve</th><th title="Stripe’s card processing fees">Stripe fees</th><th>Stripe</th></tr></thead><tbody>'+
-    LD.map((d,i)=>{const m=MATCH[d[7]];const net=d[1]+d[2]+d[3]-d[4];return '<tr data-i="'+i+'"><td>'+d[0]+'</td><td>'+dash(d[1])+'</td><td>'+dash(d[2])+'</td><td>'+dash(d[3])+'</td><td>'+(d[4]?'−'+usd2(d[4]):'—')+'</td><td class="n">'+usd2(net)+'</td><td class="f">'+dash(d[5])+'</td><td class="f">'+dash(d[6])+'</td><td><span class="ysx"><span class="dot '+m[0]+'"></span>'+(d[7]==='off'?'Stripe '+usd2(d[8]):m[1])+'</span></td></tr>';}).join('')+
-    '</tbody><tfoot><tr><td>Total</td><td>'+usd2(T.card)+'</td><td>'+usd2(T.cash)+'</td><td>'+usd2(T.other)+'</td><td>−'+usd2(T.out)+'</td><td>'+usd2(takenIn-T.out)+'</td><td class="f">'+usd2(T.gr)+'</td><td class="f">'+usd2(T.fee)+'</td><td></td></tr></tfoot>';
-  const NAMES=['Priya Shah','Lena Ortiz','Sarah Kim','Ben Okafor','Chris Dunn','Will Tanaka','Kyle Brennan','Ed Lawson','Rita Gomez','Omar Haddad','Jill Carver','Tony Russo','Mia Chen','Pete Novak'];
-  function moves(i){
-    const d=LD[i];const out=[];let t=7*60+5,k=0;
-    const push=(what,method,who,amt,gr,dir,note)=>{t+=9+(k*13+i*7)%26;k++;const h=Math.floor(t/60),mm=t%60;
-      out.push({id:i+'-'+k,time:(h%12||12)+':'+String(mm).padStart(2,'0')+' '+(h<12?'AM':'PM'),what,method,who,amt,gr,dir,note:note||'',
-        acct:'Your course',by:method==='Cash'||method==='Check or other'?(k%2?'Dana Whitfield':'Tyler Brooks'):(method==='Card reader'?'Tyler Brooks':'Golfer (online)'),
-        sid:method==='Cash'||method==='Check or other'?'':(dir==='out'?'re_':'pi_')+'3Q'+((i*7919+k*104729)%1e8).toString(36).toUpperCase()+'Lm'+((k*31+i)%97)+'Hx'});};
-    const A=[[230,6],[115,3],[172.5,4.5],[299,6],[58.5,1.5],[86.25,0]];let rem=d[1],j=0;
-    while(rem>330){const a=A[(j+i)%A.length];const shop=a[1]===0;push(shop?'Pro shop':'Round',j%4===2?'Card reader':'Card',shop?'Walk-up sale':NAMES[(j+i)%NAMES.length],a[0],a[1],'in');rem-=a[0];j++;}
-    push('Event','Card','Turkey Trot scramble',Math.round(rem*100)/100,0,'in');
-    const C=[56,112,24.5,168,38];let cr=d[2];j=0;while(cr>180){const a=C[(j+i)%C.length];push(a===24.5||a===38?'Pro shop':'Round','Cash',a===24.5||a===38?'Walk-up sale':NAMES[(j+i+5)%NAMES.length],a,0,'in');cr-=a;j++;}
-    push('Pro shop','Cash','Walk-up sale',Math.round(cr*100)/100,0,'in');
-    if(d[3])push('Membership dues','Check or other','Frank Ellison',d[3],0,'in','Check #1042');
-    if(d[4])push(d[4]===10?'Cancellation hold':'Round','Card',NAMES[(i+3)%NAMES.length],d[4],0,'out',d[4]===10?'Hold refunded at check-in':'Rained out on the back nine');
-    return out.sort((a,b)=>{const p=s=>{const[hm,ap]=s.split(' ');let[h,m]=hm.split(':').map(Number);if(ap==='PM'&&h!==12)h+=12;return h*60+m;};return p(a.time)-p(b.time);});
+  // ───────── Ledger ─────────
+  function renderLedger(T){
+    let arrived=0,pend=0;for(let i=RG.a;i<=RG.b;i++){if(poStatus(i)==='bank')arrived+=AG[i].stripe;else pend+=AG[i].stripe;}
+    arrived=r2(arrived);pend=r2(pend);const paidOut=r2(arrived+pend+T.cash),gap=r2(paidOut-T.after);
+    const mmIn=MMI>=RG.a&&MMI<=RG.b;
+    $("tots").innerHTML='<div><h3 class="yh">Totals</h3>'+
+      '<div class="ykv"><span>Revenue</span><b>'+usd2(T.rev)+'</b></div>'+
+      '<div class="ykv ind"><span>Card</span><b>'+usd2(T.card)+'</b></div><div class="ykv ind"><span>Cash</span><b>'+usd2(T.cash)+'</b></div>'+
+      '<div class="ykv"><span>Refunds</span><b>−'+usd2(T.refunds)+'</b></div>'+
+      '<div class="ykv tot"><span>Net revenue</span><b>'+usd2(T.net)+'</b></div>'+
+      '<div class="ykv"><span>Stripe fees</span><b>−'+usd2(T.fees)+'</b></div>'+
+      '<div class="ykv tot"><span>Net revenue after fees</span><b>'+usd2(T.after)+'</b></div></div>'+
+      '<div><h3 class="yh">Paid out</h3>'+
+      '<div class="ykv"><span>Stripe payouts that arrived</span><b>'+usd2(arrived)+'</b></div>'+
+      '<div class="ykv"><span>Pending Stripe payouts<small>on its way and ready to pay out</small></span><b>'+usd2(pend)+'</b></div>'+
+      '<div class="ykv"><span>Cash from the register</span><b>'+usd2(T.cash)+'</b></div>'+
+      '<div class="ykv tot"><span>Paid out</span><b>'+usd2(paidOut)+'</b></div>'+
+      (gap===0?'<div class="ymatch ok">'+'<span style="width:16px;height:16px;display:inline-grid">'+CHECK+'</span>Matches net revenue after fees</div>':
+        '<div class="ymatch bad"><button class="ymm" type="button" data-mm="1"><span class="dot"></span>'+usd2(Math.abs(gap))+(gap<0?' less':' more')+' than net revenue after fees</button></div>')+'</div>'+
+      '<p class="yfootn">GreenReserve processing fee (paid by golfers, not from your revenue): '+usd2(T.gr)+'</p>';
+    $("lMatch").innerHTML=mmIn?'<button class="ymm" type="button" data-mm="1"><span class="dot"></span>1 day differs from Stripe: '+fD(MMI)+'</button>':'<span class="yok"><span class="dot ok"></span>Every day matches Stripe</span>';
+    let rows='';for(let i=RG.b;i>=RG.a;i--){const g=AG[i];rows+='<tr data-i="'+i+'"><td>'+fD(i)+(i===TI?' · today':'')+'</td><td>'+usd2(g.card)+'</td><td>'+usd2(g.cash)+'</td><td>'+(g.refunds?'−'+usd2(g.refunds):'—')+'</td><td class="n">'+usd2(g.net)+'</td><td class="f">'+usd2(g.fees)+'</td><td>'+
+      (g.diff?'<button class="ymm" type="button" data-mm="1"><span class="dot"></span>Stripe '+usd2(g.diff)+' less</button>':'<span class="yok"><span class="dot ok"></span>Matches Stripe</span>')+'</td></tr>';}
+    $("ltbl").innerHTML='<thead><tr><th>Day</th><th>Card</th><th>Cash</th><th>Refunds</th><th>Net revenue</th><th>Stripe fees</th><th>Stripe match</th></tr></thead><tbody>'+rows+
+      '</tbody><tfoot><tr><td>Total</td><td>'+usd2(T.card)+'</td><td>'+usd2(T.cash)+'</td><td>−'+usd2(T.refunds)+'</td><td>'+usd2(T.net)+'</td><td class="f">'+usd2(T.fees)+'</td><td></td></tr></tfoot>';
   }
-  let lIdx=null,lMoves=[],lf={what:'',how:''},mSel=null;
+  let lIdx=null,lHow='',lSeg='';const lctx={sel:null,refundOpen:false,rmenu:false};
+  function openDay(i){lIdx=i;lHow='';lSeg='';lctx.sel=null;lctx.refundOpen=false;$("lMain").hidden=true;$("lDay").hidden=false;renderDay();}
   function renderDay(){
-    const d=LD[lIdx];const kinds=[...new Set(lMoves.map(m=>m.what))],hows=[...new Set(lMoves.map(m=>m.method))];
-    const shown=lMoves.filter(m=>(!lf.what||m.what===lf.what)&&(!lf.how||m.method===lf.how));
-    const fl=[lf.what,lf.how].filter(Boolean).join(' · ');
-    const mv=lMoves.find(m=>m.id===mSel);
+    const i=lIdx,g=AG[i],all=byDay[i];const shown=all.filter(o=>(!lHow||o.method===lHow)&&(!lSeg||o.lines.some(l=>l[2]===lSeg)));
+    const inv=all.filter(o=>o.stripeRefund);const o=byId[lctx.sel];
     $("lDay").innerHTML='<button class="yback" type="button" data-a="back">‹ Ledger</button>'+
-      '<div class="ybar"><h3 class="yh" style="margin:0;font-size:17px">'+d[0]+'</h3><span class="ysm">Card '+dash(d[1])+' · Cash '+dash(d[2])+' · Net '+usd2(d[1]+d[2]+d[3]-d[4])+'</span><span class="ysp"></span>'+
-      '<div class="fwrap"><button class="fbtn2" type="button" id="lfb">'+(fl?'Filter · '+esc(fl):'Filter')+'</button><div class="fmenu" id="lfm" hidden><div class="fh">What</div><button type="button" data-w="" class="'+(!lf.what?'on':'')+'">Everything</button>'+kinds.map(x=>'<button type="button" data-w="'+esc(x)+'" class="'+(lf.what===x?'on':'')+'">'+esc(x)+'</button>').join('')+
-      '<hr><div class="fh">How paid</div><button type="button" data-h="" class="'+(!lf.how?'on':'')+'">Any way</button>'+hows.map(x=>'<button type="button" data-h="'+esc(x)+'" class="'+(lf.how===x?'on':'')+'">'+esc(x)+'</button>').join('')+'</div></div></div>'+
-      '<div class="ysplit'+(mv?' has':'')+'"><section class="card ylist" id="mvList">'+(shown.length?shown.map(m=>'<div class="yrow ymv'+(mSel===m.id?' sel':'')+'" data-id="'+m.id+'"><span class="yt">'+m.time+'</span><span class="yn">'+esc(m.what)+(m.dir==='out'?' · given back':'')+'</span><span class="yhide yfaint">'+m.method+'</span><span class="yn yhide">'+esc(m.who)+(m.note?'<span> · '+esc(m.note)+'</span>':'')+'</span><span class="ya'+(m.dir==='out'?' dn':'')+'">'+(m.dir==='out'?'−':'')+usd2(m.amt)+'</span></div>').join(''):'<p class="empty">None.</p>')+'</section>'+
-      (mv?'<section class="card ydet"><button class="yib yx" type="button" data-a="mclose" aria-label="Close" title="Close">'+X+'</button><h3>'+esc(mv.what)+(mv.dir==='out'?' · given back':'')+'</h3><p class="dsub">'+d[0]+' · '+mv.time+' · '+(mv.dir==='out'?'−':'')+usd2(mv.amt)+'</p><dl class="ydl"><dt>Who</dt><dd>'+(mv.who.includes(' ')&&mv.who!=='Walk-up sale'&&mv.who!=='Turkey Trot scramble'?'<a class="ylink" href="#" onclick="return false" style="font-size:13.5px">'+esc(mv.who)+'</a>':esc(mv.who))+'</dd><dt>How paid</dt><dd>'+mv.method+'</dd><dt>Account</dt><dd>'+mv.acct+'</dd><dt>GreenReserve part</dt><dd>'+usd2(mv.gr)+'</dd><dt>By</dt><dd>'+esc(mv.by)+'</dd>'+(mv.sid?'<dt>Stripe</dt><dd class="mono">'+mv.sid+'</dd>':'')+'</dl></section>':'')+'</div>';
+      '<div class="ybar"><h3 class="yh" style="margin:0;font-size:17px">'+fD(i)+'</h3><span class="ysm">Card '+usd2(g.card)+' · Cash '+usd2(g.cash)+' · Refunds '+(g.refunds?'−'+usd2(g.refunds):'—')+' · Net revenue '+usd2(g.net)+'</span><span class="ysp"></span>'+
+      '<div class="fwrap"><button class="yib" type="button" id="lfb" aria-label="Filter" title="Filter">'+FILTER+(lHow||lSeg?'<span class="sdot"></span>':'')+'</button><div class="fmenu" id="lfm" hidden><div class="fh">How paid</div><button type="button" data-h="" class="'+(!lHow?'on':'')+'">Any way</button>'+['online','reader','cash'].map(k=>'<button type="button" data-h="'+k+'" class="'+(lHow===k?'on':'')+'">'+HOW[k]+'</button>').join('')+
+      '<hr><div class="fh">What for</div><button type="button" data-s="" class="'+(!lSeg?'on':'')+'">Everything</button>'+SEGS.map(([k,l])=>'<button type="button" data-s="'+k+'" class="'+(lSeg===k?'on':'')+'">'+l+'</button>').join('')+'</div></div></div>'+
+      (g.diff?'<section class="card ydiff" id="diffCard"><h3 class="yh dn">Differs from Stripe by '+usd2(g.diff)+'</h3><div class="ygrid"><div><div class="ylbl">Our total</div><div class="ymid">'+usd2(g.ours)+'</div><div class="ysm">card, less refunds and Stripe fees</div></div><div><div class="ylbl">Stripe’s total</div><div class="ymid">'+usd2(g.stripe)+'</div><div class="ysm">what Stripe paid out for this day</div></div><div><div class="ylbl">Difference</div><div class="ymid dn">−'+usd2(g.diff)+'</div><div class="ysm">a refund made in Stripe directly</div></div></div>'+
+        '<div class="ylbl" style="margin-bottom:4px">Payments involved</div><div class="ylist" style="padding:0">'+inv.map(x=>rowHTML(x,lctx.sel===x.id,!!o)).join('')+'</div></section>':'')+
+      '<div class="ysplit'+(o?' has':'')+'"><section class="card ylist" id="mvList">'+(shown.length?shown.map(x=>rowHTML(x,lctx.sel===x.id,!!o)).join(''):'<p class="empty">None.</p>')+'</section>'+
+      (o?'<section class="card ydet" id="mvDet">'+detailHTML(o,lctx)+'</section>':'')+'</div>';
     const fb=$("lfb"),fm=$("lfm");
     fb.addEventListener('click',e=>{e.stopPropagation();fm.hidden=!fm.hidden;});
-    fm.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;e.stopPropagation();if('w' in b.dataset)lf.what=b.dataset.w;if('h' in b.dataset)lf.how=b.dataset.h;mSel=null;renderDay();});
+    fm.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;e.stopPropagation();if('h' in b.dataset)lHow=b.dataset.h;if('s' in b.dataset)lSeg=b.dataset.s;lctx.sel=null;renderDay();});
+    const det=$("mvDet");if(det)det.addEventListener('click',e=>detailClick(e,lctx,renderDay));
   }
-  $("ltbl").addEventListener('click',e=>{const r=e.target.closest('tbody tr');if(!r)return;lIdx=+r.dataset.i;lMoves=moves(lIdx);lf={what:'',how:''};mSel=null;$("lMain").hidden=true;$("lDay").hidden=false;renderDay();});
-  $("lDay").addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(b){if(b.dataset.a==='back'){$("lDay").hidden=true;$("lMain").hidden=false;}else if(b.dataset.a==='mclose'){mSel=null;renderDay();}return;}
-    const r=e.target.closest('.yrow');if(r){mSel=mSel===r.dataset.id?null:r.dataset.id;renderDay();}});
+  $("lDay").addEventListener('click',e=>{if(e.target.closest('#mvDet'))return;const b=e.target.closest('[data-a="back"]');if(b){$("lDay").hidden=true;$("lMain").hidden=false;return;}
+    const r=e.target.closest('.yrow');if(r){lctx.sel=lctx.sel===r.dataset.id?null:r.dataset.id;lctx.refundOpen=false;lctx.rmenu=false;renderDay();}});
+  $("lMain").addEventListener('click',e=>{if(e.target.closest('[data-mm]')){openDay(MMI);return;}const r=e.target.closest('#ltbl tbody tr');if(r)openDay(+r.dataset.i);});
+  $("lCsv").addEventListener('click',()=>toast('Downloading ledger-'+iso(RG.a)+'-to-'+iso(RG.b)+'.csv'));
+  $("lRef").addEventListener('click',()=>toast('Checked against Stripe just now.'));
 
-  // ── Payouts (MONEY-1) ──
-  const PO=[['Fri, Nov 13',3918.40,'way'],['Thu, Nov 12',2604.18,'paid'],['Wed, Nov 11',1987.52,'paid'],['Tue, Nov 10',3212.90,'paid'],['Mon, Nov 9',6872.44,'paid'],
-    ['Fri, Nov 6',2140.33,'failed','The bank account couldn’t accept the payout. Check your bank details in Stripe.'],['Thu, Nov 5',2209.71,'paid'],['Wed, Nov 4',1781.68,'paid'],['Tue, Nov 3',1567.43,'paid'],['Mon, Nov 2',5913.20,'paid']];
-  const POS={paid:['ok','In your bank'],way:['nt','On its way'],failed:['bd','Failed'],canceled:['wn','Cancelled']};
-  $("poList").innerHTML=PO.map(p=>'<div class="yrow ypo"><span class="yt" style="color:var(--ink)">'+p[0]+'</span><span class="ya">'+usd2(p[1])+'</span><span class="ysx" style="white-space:normal;flex-wrap:wrap"><span class="dot '+POS[p[2]][0]+'"></span>'+POS[p[2]][1]+(p[3]?'<span class="ysm" style="color:var(--bad);flex-basis:100%;padding-left:13px">'+esc(p[3])+'</span>':'')+'</span></div>').join('');
+  // ───────── Payouts ─────────
+  const poctx={sel:null};
+  function renderPayouts(){
+    const ready=r2(AG[TI-1].stripe+AG[TI].stripe),way=AG[TI-2].stripe;let bank=0,nb=0;for(let i=RG.a;i<=Math.min(RG.b,TI-3);i++){bank+=AG[i].stripe;nb++;}
+    const arr='<div class="yarr" aria-hidden="true">'+CHEV+'</div>';
+    $("flow").innerHTML='<div class="card"><div class="ystep"><i>1</i>Ready to pay out</div><div class="ymid">'+usd2(ready)+'</div><div class="ysm">From '+fS(TI-1)+' and today · goes out '+dayAt(TI+1)+' and '+dayAt(TI+2)+'</div></div>'+arr+
+      '<div class="card"><div class="ystep"><i>2</i>On its way</div><div class="ymid">'+usd2(way)+'</div><div class="ysm">Sent '+fD(TI)+' · arrives '+dayAt(TI+1)+'</div></div>'+arr+
+      '<div class="card"><div class="ystep"><i>3</i>In your bank</div><div class="ymid">'+usd2(r2(bank))+'</div><div class="ysm">'+(nb?nb+' payouts · latest arrived '+fD(TI):'None in these dates')+'</div></div>';
+    const rows=[];for(let i=Math.min(RG.b,TI-2);i>=RG.a;i--)rows.push(i);
+    $("poList").innerHTML=rows.map(i=>{const st=poStatus(i);return '<div class="yrow ypo'+(poctx.sel===i?' sel':'')+'" data-i="'+i+'"><span class="yn">'+(st==='way'?'Arrives ':'')+dayAt(i+3)+'</span><span class="ya">'+usd2(AG[i].stripe)+'</span><span class="ysx"><span class="dot '+(st==='bank'?'ok':'nt')+'"></span>'+(st==='bank'?'In your bank':'On its way')+'</span><span class="yt yhide">'+(AG[i].diff?'<b class="dn" style="font-weight:600">Stripe differs</b> · ':'')+'For '+fS(i)+' payments</span></div>';}).join('')||'<p class="empty">No payouts for these dates yet.</p>';
+    const i=poctx.sel;$("poSplit").classList.toggle('has',i!=null);$("poDet").hidden=i==null;
+    if(i!=null){const g=AG[i],st=poStatus(i);$("poDet").innerHTML='<button class="yib yx" type="button" data-a="close" aria-label="Close" title="Close">'+X+'</button><h3>'+usd2(g.stripe)+'</h3><p class="dsub">'+(st==='bank'?'In your bank · arrived ':'On its way · arrives ')+dayAt(i+3)+'</p>'+
+      '<dl class="ydl"><dt>For payments on</dt><dd>'+fD(i)+'</dd><dt>Sent</dt><dd>'+dayAt(i+2)+'</dd><dt>To</dt><dd>Chase •••• 6789</dd></dl>'+
+      '<div class="yitems"><div class="ykv"><span>Card payments</span><b>'+usd2(g.card)+'</b></div><div class="ykv"><span>Refunds</span><b>'+(g.refunds?'−'+usd2(g.refunds):'—')+'</b></div><div class="ykv"><span>Stripe fees</span><b>−'+usd2(g.fees)+'</b></div>'+
+      (g.diff?'<div class="ykv"><span class="dn">Refund made in Stripe</span><b class="dn">−'+usd2(g.diff)+'</b></div>':'')+'<div class="ykv tot"><span>Payout</span><b>'+usd2(g.stripe)+'</b></div></div>'+
+      '<div class="ybtns"><a class="ystripe" href="#" onclick="return false">Open in Stripe <span aria-hidden="true">↗</span></a>'+(g.diff?'<button class="ylink bad" type="button" data-a="mm">See what differs</button>':'')+'</div>';}
+  }
+  $("poList").addEventListener('click',e=>{const r=e.target.closest('.yrow');if(!r)return;const i=+r.dataset.i;poctx.sel=poctx.sel===i?null:i;renderPayouts();});
+  $("poDet").addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;if(b.dataset.a==='close'){poctx.sel=null;renderPayouts();}else if(b.dataset.a==='mm'){setTab('ledger');openDay(MMI);}});
 
-  // ── Cancellations ──
-  const CX=[
-    ['Ray Castillo',3,'Wed, Nov 11','1:00 PM','Nov 11, 7:42 AM','5 hours before','fee',10],
-    ['Erin Walsh',2,'Sat, Nov 14','9:20 AM','Nov 12, 11:05 AM','2 days before','Cancelled in time'],
-    ['Luis Moreno',4,'Tue, Nov 10','7:50 AM','Nov 10, 6:15 AM','2 hours before','Fee charge failed'],
-    ['Noah Fischer',2,'Wed, Nov 11','10:00 AM','Nov 10, 6:30 PM','16 hours before','No card on file'],
-    ['Greg Pham',1,'Mon, Nov 9','2:30 PM','','', 'noshow',20],
-    ['Kate Rowe',3,'Sun, Nov 8','11:10 AM','Nov 8, 6:02 AM','5 hours before','Course called it off'],
-    ['Matt Ingram',2,'Sat, Nov 7','8:40 AM','Nov 7, 1:15 AM','7 hours before','Fee refunded'],
-    ['Dee Hart',4,'Fri, Nov 6','10:30 AM','Nov 6, 8:50 AM','2 hours before','Counter booking, no fee'],
-    ['Ann Liu',2,'Thu, Nov 5','12:20 PM','Nov 5, 9:00 AM','3 hours before','Fee waived'],
-  ].map((r,i)=>({id:'c'+i,name:r[0],players:r[1],date:r[2],time:r[3],at:r[4],ahead:r[5],st:r[6],fee:r[7]||0}));
-  const cState=c=>c.st==='fee'?[usd2(c.fee)+' fee kept','wn']:c.st==='noshow'?[usd2(c.fee)+' no-show fee kept','wn']:[c.st,c.st==='Fee charge failed'?'bd':'nt'];
-  const feeKept=c=>c.st==='fee'||c.st==='noshow';
-  let cf='all',cSel=null,giveOpen=false;
+  // ───────── Cancellations ─────────
+  $("polTxt").textContent='Your policy: free until 24 hours before the tee time, then a $10.00 fee.';
+  const FEE={charged:['wn','$10 fee charged'],none:['','No fee'],declined:['bd','Fee declined'],refunded:['nt','Fee refunded']};
+  let cf='all';const cctx={sel:null,giveOpen:false,rmenu:false};
   function renderC(){
-    const q=$("cq").value.trim().toLowerCase();const all=CX.filter(c=>!q||c.name.toLowerCase().includes(q));const fee=all.filter(feeKept);
-    const rows=cf==='fee'?fee:all;
-    $("cfb").textContent=cf==='fee'?'Filter · Fee kept':'Filter';
-    $("cfm").innerHTML='<button type="button" data-f="all" class="'+(cf==='all'?'on':'')+'">All<span>'+all.length+'</span></button><button type="button" data-f="fee" class="'+(cf==='fee'?'on':'')+'">Fee kept<span>'+fee.length+'</span></button>';
-    $("cList").innerHTML=rows.length?rows.map(c=>{const s=cState(c);return '<div class="yrow ycx'+(cSel===c.id?' sel':'')+'" data-id="'+c.id+'"><span class="yn"><b>'+esc(c.name)+'</b><span> · '+c.players+' player'+(c.players!==1?'s':'')+'</span></span><span class="yn yt">'+c.date+' '+c.time+(c.at?'<span> · cancelled '+c.at+'</span>':'')+'</span><span class="ysx" style="justify-content:flex-end"><span class="dot '+s[1]+'"></span>'+s[0]+'</span></div>';}).join(''):'<p class="empty">'+(q?'Nobody matches “'+esc($("cq").value.trim())+'”.':cf==='fee'?'No fees kept.':'No cancellations yet.')+'</p>';
-    const c=CX.find(x=>x.id===cSel);$("cSplit").classList.toggle('has',!!c);$("cDet").hidden=!c;
-    if(c){const s=cState(c);
-      $("cDet").innerHTML='<button class="yib yx" type="button" data-a="close" aria-label="Close" title="Close">'+X+'</button><h3>'+esc(c.name)+'</h3><p class="dsub">'+c.date+' '+c.time+'</p>'+
-        '<dl class="ydl"><dt>Players</dt><dd>'+c.players+'</dd>'+(c.at?'<dt>Cancelled</dt><dd>'+c.at+' · '+c.ahead+'</dd>':'')+'<dt>Fee</dt><dd><span class="ysx"><span class="dot '+s[1]+'"></span>'+s[0]+'</span></dd></dl>'+
-        (c.st==='fee'?(giveOpen?'<div class="yform"><input id="gwhy" maxlength="300" placeholder="Reason (the golfer sees it)" aria-label="Reason"><div class="yfr"><button class="ybtn" type="button" data-a="dogive" id="ggo" disabled>Refund</button><button class="ybtn ghost" type="button" data-a="cancelgive">Cancel</button></div></div>':'<button class="ybtn ghost" type="button" data-a="give">Give the fee back</button>'):'');
-      const w=$("gwhy");if(w)w.addEventListener('input',()=>{$("ggo").disabled=!w.value.trim();});}
+    const q=$("cq").value.trim().toLowerCase();
+    const inR=CX.filter(c=>c.ai>=RG.a&&c.ai<=RG.b&&(!q||c.name.toLowerCase().includes(q))).sort((a,b)=>(b.ai*1440+b.at[2])-(a.ai*1440+a.at[2]));
+    const rows=cf==='all'?inR:inR.filter(c=>cf==='fee'?c.fee==='charged':c.fee!=='charged');
+    $("cfb").innerHTML=FILTER+(cf!=='all'?'<span class="sdot"></span>':'');
+    $("cfm").innerHTML=[['all','All'],['fee','Fee charged'],['nofee','No fee charged']].map(([k,l])=>'<button type="button" data-f="'+k+'" class="'+(cf===k?'on':'')+'">'+l+'<span>'+(k==='all'?inR.length:inR.filter(c=>k==='fee'?c.fee==='charged':c.fee!=='charged').length)+'</span></button>').join('');
+    $("cList").innerHTML=rows.map(c=>{const f=FEE[c.fee];return '<div class="yrow ycx'+(cctx.sel===c.id?' sel':'')+'" data-id="'+c.id+'"><span class="yn">'+esc(c.name)+'</span><span class="yt yhide">'+c.players+' players</span><span class="yw yhide">'+c.teeShort+'</span><span class="yt yhide">Cancelled '+c.atTxt+'</span><span class="ysx"'+(f[0]?'':' style="color:var(--muted)"')+'>'+(f[0]?'<span class="dot '+f[0]+'"></span>':'')+f[1]+'</span></div>';}).join('')||'<p class="empty">'+(q?'Nobody matches that.':'No cancellations in these dates.')+'</p>';
+    const c=CX.find(x=>x.id===cctx.sel);$("cSplit").classList.toggle('has',!!c);$("cDet").hidden=!c;
+    if(c){const f=FEE[c.fee],o=c.item;
+      $("cDet").innerHTML='<button class="yib yx" type="button" data-a="close" aria-label="Close" title="Close">'+X+'</button><h3>'+esc(c.name)+'</h3><p class="dsub">'+c.teeTxt+'</p>'+
+        '<dl class="ydl"><dt>Players</dt><dd>'+c.players+'</dd><dt>Cancelled</dt><dd>'+c.atTxt+' · '+c.ahead+'</dd><dt>Fee</dt><dd><span class="ysx">'+(f[0]?'<span class="dot '+f[0]+'"></span>':'')+f[1]+'</span></dd>'+
+        (o?'<dt>Card</dt><dd>'+cardTxt(o)+'</dd>':'')+(c.why?'<dt>Why no fee</dt><dd>'+c.why+'</dd>':'')+(c.fee==='refunded'?'<dt>Refunded</dt><dd>'+esc(o.why)+'</dd>':'')+(c.fee==='declined'?'<dt>Card</dt><dd>Mastercard •••• 7720 · expired</dd>':'')+'</dl>'+
+        (o?'<div class="ybtns"><div class="fwrap"><button class="ybtn ghost" type="button" data-a="rmenu">Receipt</button><div class="fmenu yrmenu"'+(cctx.rmenu?'':' hidden')+'><button type="button" data-a="rview">View receipt</button><button type="button" data-a="remail">Email receipt</button></div></div>'+(c.fee==='charged'&&!cctx.giveOpen?'<button class="ybtn ghost" type="button" data-a="give">Refund fee</button>':'')+'</div>':'')+
+        (c.fee==='declined'?'<p class="ysm" style="margin:0">Still owed. It is in Pending payments.</p>':'')+
+        (cctx.giveOpen?'<div class="yform"><input id="gwhy" maxlength="300" aria-label="Reason the golfer will see"><div class="yfr"><button class="ybtn" type="button" data-a="dogive">Refund $10.00</button><button class="ybtn ghost" type="button" data-a="cancelgive">Cancel</button></div></div>':'');}
   }
   $("cq").addEventListener('input',renderC);
   menu($("cfb"),$("cfm"),b=>{cf=b.dataset.f;renderC();});
-  $("cList").addEventListener('click',e=>{const r=e.target.closest('.yrow');if(!r)return;cSel=cSel===r.dataset.id?null:r.dataset.id;giveOpen=false;renderC();});
-  $("cDet").addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a;
-    if(a==='close'){cSel=null;giveOpen=false;}else if(a==='give')giveOpen=true;else if(a==='cancelgive')giveOpen=false;
-    else if(a==='dogive'){const c=CX.find(x=>x.id===cSel);toast('Refunded '+usd2(c.fee)+' — the golfer was emailed.');c.st='Fee refunded';giveOpen=false;}
+  $("cList").addEventListener('click',e=>{const r=e.target.closest('.yrow');if(!r)return;cctx.sel=cctx.sel===r.dataset.id?null:r.dataset.id;cctx.giveOpen=false;cctx.rmenu=false;renderC();});
+  $("cDet").addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;e.stopPropagation();const a=b.dataset.a,c=CX.find(x=>x.id===cctx.sel);
+    if(a==='close'){cctx.sel=null;cctx.giveOpen=false;cctx.rmenu=false;}else if(a==='give')cctx.giveOpen=true;else if(a==='cancelgive')cctx.giveOpen=false;
+    else if(a==='rmenu')cctx.rmenu=!cctx.rmenu;else if(a==='rview'){cctx.rmenu=false;showReceipt(c.item);}else if(a==='remail'){cctx.rmenu=false;toast('Receipt emailed to '+c.name+'.');}
+    else if(a==='dogive'){c.fee='refunded';c.item.refund=10;c.item.why=$("gwhy").value.trim()||'Fee refunded';cctx.giveOpen=false;toast('Refunded $10.00. '+c.name+' was emailed.');}
     renderC();});
-  renderC();
+
+  // ───────── Tabs + render ─────────
+  function setTab(v){$("mtabs").querySelectorAll('b').forEach(x=>x.classList.toggle('on',x.dataset.v===v));document.querySelectorAll('.main > .yview').forEach(x=>x.hidden=x.dataset.view!==v);if(v==='ledger'){$("lDay").hidden=true;$("lMain").hidden=false;}}
+  $("mtabs").addEventListener('click',e=>{const b=e.target.closest('b');if(b)setTab(b.dataset.v);});
+  $("goPayouts").addEventListener('click',()=>{setTab('payouts');$("mtabs").scrollIntoView({behavior:'smooth',block:'start'});});
+  function renderAll(){
+    const T=sumAG(RG.a,RG.b),len=RG.b-RG.a+1,P=sumAG(RG.a-len,RG.a-1);
+    $("rTxt").textContent=rangeTxt();document.querySelectorAll('.rmirror').forEach(x=>x.textContent=rangeTxt());
+    renderSold(T,P);drawBars();renderP();renderLedger(T);
+    if(!$("lDay").hidden&&(lIdx<RG.a||lIdx>RG.b)){$("lDay").hidden=true;$("lMain").hidden=false;}else if(!$("lDay").hidden)renderDay();
+    renderPayouts();renderC();
+  }
+  // Light switch re-draws the line chart so its stroke picks up the look's colours (they are CSS vars, so this is only for safety)
+  window.addEventListener('resize',()=>{drawToday();drawBars();});
+  drawToday();renderPP();setRange('30');
+  window.__money={AG,sumAG,RG:()=>RG,items,TI,MMI,poStatus};
 })();
 </script>
