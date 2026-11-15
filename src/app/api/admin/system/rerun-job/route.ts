@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, areaGate } from '@/lib/admin-session';
 import { auditAdmin } from '@/lib/admin-audit';
 import { cronHealth } from '@/lib/cron-log';
-import { canRerun } from '@/lib/platform-status';
+import { canRerun, CHARGING_JOBS } from '@/lib/platform-status';
 import { GET as generateTeeTimes } from '../../../cron/generate-tee-times/route';
 import { GET as chaseOnboarding } from '../../../cron/chase-onboarding/route';
 import { GET as monthlyReview } from '../../../cron/monthly-review/route';
@@ -53,7 +53,10 @@ export async function POST(req: NextRequest) {
   if (!cron) return NextResponse.json({ ok: false, error: 'That isn’t one of the scheduled jobs.' }, { status: 404 });
   const handler = HANDLERS[cron.path];
   if (!canRerun(cron.path.replace('/api/cron/', '')) || !handler) {
-    return NextResponse.json({ ok: false, error: 'This job charges saved cards, so it only runs on its schedule. Fix the cause and it catches up on its next run.' }, { status: 403 });
+    const charges = CHARGING_JOBS.has(cron.path.replace('/api/cron/', ''));
+    return NextResponse.json({ ok: false, error: charges
+      ? 'This job charges saved cards, so it only runs on its schedule. Fix the cause and it catches up on its next run.'
+      : 'This job can’t be re-run from here. It runs on its schedule.' }, { status: 403 });
   }
 
   const secret = process.env.CRON_SECRET;
