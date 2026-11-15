@@ -67,6 +67,7 @@ async function cleanup() {
   ok('…and links to the booking', !!k('re_dash')?.href?.includes('/dashboard?date=2031-05-13'), k('re_dash'));
   ok('…and names the payment it refunds', k('re_dash')?.paymentStripeId === 'pi_old', k('re_dash'));
   ok('a charge only we have', k('pi_ours_only')?.kind === 'not_in_stripe' && k('pi_ours_only')?.ourCents === 1500);
+  ok('…and it is its own payment', k('pi_ours_only')?.paymentStripeId === 'pi_ours_only');
   ok('across midnight is the other day, not missing', k('pi_late')?.kind === 'other_day');
   ok('the matching charge, cash and the payout are not listed', !k('pi_same') && m?.payments.length === 3, m?.payments.map(p => p.stripeId));
   ok('nothing from another course', !JSON.stringify(m).includes('pi_other_course'));
@@ -76,6 +77,14 @@ async function cleanup() {
     { currency: 'usd', type: 'charge', amount: 1500, created: sec(at(day, '11:00')), source: { id: 'ch_o', object: 'charge', payment_intent: 'pi_ours_only' } },
     { currency: 'usd', type: 'charge', amount: 2000, created: sec(at(day, '23:59')), source: { id: 'ch_late', object: 'charge', payment_intent: 'pi_late' } },
   ];
+  {
+    // A card row with no Stripe id (an event payment can be one): listed, never with an internal key.
+    await recordMove({ courseId: c.id, what: 'event', direction: 'in', method: 'card', account: 'course', amountCents: 400, actor: 'staff', at: at(day, '13:00') });
+    const d2 = (await stripeDayDetail(c.id, day)).mismatch;
+    const line = d2?.payments.find(p => p.ourCents === 400);
+    ok('a card row with no Stripe id: not in Stripe, no ids leak', line?.kind === 'not_in_stripe' && line.stripeId === '' && line.paymentStripeId === '', line);
+    await prisma.moneyMove.deleteMany({ where: { courseId: c.id, amountCents: 400, stripeId: null } });
+  }
   const same = await stripeDayDetail(c.id, day);
   ok('a day that matches: read, no detail', same.read && same.mismatch === null, same);
   // Final review: a non-dispute adjustment counts in the day list, so it must count here and be listed.

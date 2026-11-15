@@ -295,7 +295,7 @@ export async function stripeDayDetail(courseId: string, day: string): Promise<Da
     return {
       stripeId: i.key.startsWith('ledger:') ? '' : i.key,
       kind: i.kind,
-      paymentStripeId: i.theirs?.kind === 'refund' || i.theirs?.kind === 'dispute' ? i.theirs.paymentIntent ?? '' : i.theirs?.kind === 'charge' || (!i.theirs && i.ours?.kind === 'charge') ? i.key : '',
+      paymentStripeId: i.theirs?.kind === 'refund' || i.theirs?.kind === 'dispute' ? i.theirs.paymentIntent ?? '' : (i.theirs?.kind === 'charge' || (!i.theirs && i.ours?.kind === 'charge')) && !i.key.startsWith('ledger:') ? i.key : '',
       at: (i.theirs?.day === day ? i.theirs : i.ours ?? i.theirs)!.at,
       who: d?.who ?? '', href: d?.href ?? null,
       ourCents: i.ours?.cents ?? null, stripeCents: i.theirs?.cents ?? null,
