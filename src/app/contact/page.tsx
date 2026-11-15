@@ -45,7 +45,7 @@ export default function ContactPage() {
           <Card className="p-6">
             <h2 className="font-serif font-semibold text-ink text-[22px]">Your course is already on GreenReserve</h2>
             <p className="text-[14.5px] text-ink-soft leading-relaxed mt-2">
-              Call or text us, or email. If you&apos;re signed in, you can also message us from <span className="text-ink">Messages</span> in your dashboard.
+              Call or text us, or email. If you&apos;re signed in, you can also message us from <span className="text-ink">Support</span> in your dashboard.
             </p>
             <dl className="mt-4 grid gap-3 sm:grid-cols-2 text-[14.5px]">
               <div>

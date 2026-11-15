@@ -85,11 +85,11 @@ const ACCENTS = [
   { c: '#23395B', label: 'Navy' },
   { c: '#8A5A1C', label: 'Bronze' },
 ];
-/** The dashboard rail (OperatorSidebar.tsx, DASH-D): Today · Business · Settings. */
+/** The dashboard rail (OperatorSidebar.tsx, DASH-D): Today · Business · Settings · Support. */
 const RAIL: { group?: string; tabs: string[] }[] = [
-  { group: 'Today', tabs: ['Home', 'Tee sheet', 'Pro shop', 'Messages'] },
+  { group: 'Today', tabs: ['Home', 'Tee sheet', 'Pro shop'] },
   { group: 'Business', tabs: ['Money', 'Members', 'Events', 'Schedule', 'Analytics'] },
-  { tabs: ['Settings'] },
+  { tabs: ['Settings', 'Support'] },
 ];
 /** $1,234 — the strip's money, as dollars. */
 const dollars = (v: number) => '$' + Math.round(v).toLocaleString('en-US');
