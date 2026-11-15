@@ -2150,6 +2150,21 @@ export async function sendEventSignupEmail(data: {
   });
 }
 
+// Low-stock email (Cam 2026-11-15): the course's owner, from admin@ (course-facing mail, lib/contact.ts). Sent by
+// lib/low-stock.ts once per drop to an item's "Remind me when it's down to" number.
+export async function sendLowStockEmail(data: { courseId: string; courseName: string; ownerName: string | null; ownerEmail: string; items: { name: string; stockCount: number; reorderAt: number }[] }) {
+  const one = data.items.length === 1;
+  const rows = data.items.map(i => `<tr><td style="padding:8px 12px 8px 0;border-bottom:1px solid #E3E4DE;color:#141814;font-size:14px;">${escHtml(i.name)}</td><td align="right" style="padding:8px 0;border-bottom:1px solid #E3E4DE;color:#141814;font-size:14px;font-weight:600;white-space:nowrap;">${Math.max(0, i.stockCount)} left</td><td align="right" style="padding:8px 0 8px 12px;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:13px;white-space:nowrap;">reminder at ${i.reorderAt}</td></tr>`).join('');
+  const site = process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:24px;line-height:1.25;font-weight:600;">${one ? 'An item is running low' : `${data.items.length} items are running low`}</h1>
+    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;">Hi ${escHtml(firstName(data.ownerName))} — ${one ? 'this item' : 'these items'} in the <strong>${escHtml(data.courseName)}</strong> pro shop reached the number you set to be reminded at. We won't email about ${one ? 'it' : 'them'} again until ${one ? 'it is' : 'each is'} restocked above that number.</p>
+    <table width="100%" cellpadding="0" cellspacing="0">${rows}</table>
+    ${manageButton(`${site}/dashboard/shop`, 'Open the pro shop')}
+  `, ADMIN_EMAIL);
+  await getResend().emails.send({ meta: { kind: 'shop_low_stock', courseId: data.courseId }, from: FROM_ADMIN, to: data.ownerEmail, subject: one ? `Low stock: ${data.items[0].name}` : `Low stock: ${data.items.length} items at ${data.courseName}`, html });
+}
+
 // MEM-ACCT part 2: member account statements (billing@ — money is owed or moved).
 const monthName = (period: string) => { const [y, m] = period.split('-').map(Number); return new Date(Date.UTC(y, m - 1, 15)).toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' }); };
 

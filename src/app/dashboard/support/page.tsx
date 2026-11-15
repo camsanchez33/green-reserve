@@ -62,6 +62,9 @@ function SupportContent() {
   openRef.current = open;
   const loadChat = useCallback(async (id: string) => {
     const r = await dfetch<{ chat: Chat; messages: ChatMessage[] }>(`/api/operator/support/${encodeURIComponent(id)}`);
+    // Opening marks it read (Cam 2026-11-15): the list's copy takes the opened state at once — even if the user has
+    // already gone back — so a read chat never shows "New reply" while the list reloads or if that reload fails.
+    if (r.ok) setChats(cs => cs && cs.map(x => (x.id === id ? { ...x, state: r.data.chat.state, unread: 0 } : x)));
     if (openRef.current !== id) return;
     if (r.status === 401) { router.push('/dashboard/login'); return; }
     if (r.ok) { setChat(r.data.chat); setMessages(r.data.messages); setChatError(''); } else setChatError(r.error);

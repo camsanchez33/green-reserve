@@ -50,11 +50,11 @@ console.log('threadSignal');
 }
 
 {
-  // SUPPORT (Cam 2026-11-12): 2 business days, weekends skipped. Friday 10am Eastern → due Tuesday 10am.
-  const fri = new Date('2026-09-04T14:00:00Z');
-  const mon = new Date('2026-09-07T16:00:00Z'), tue = new Date('2026-09-08T14:30:00Z');
+  // SUPPORT (Cam 2026-11-12): 2 business days, weekends skipped. Friday 10am Eastern → due Tuesday 10am (a week with no federal holiday; Labor Day weeks shift, see the holiday tests).
+  const fri = new Date('2026-09-11T14:00:00Z');
+  const mon = new Date('2026-09-14T16:00:00Z'), tue = new Date('2026-09-15T14:30:00Z');
   const s1 = threadSignal([{ senderType: 'operator', createdAt: fri }], mon);
-  check('a Friday message is 3 days old on Monday but not overdue (the weekend doesn\'t count)', s1.waitingOnUs && !s1.overdue && s1.ageDays === 3 && s1.dueAt?.toISOString() === '2026-09-08T14:00:00.000Z', s1);
+  check('a Friday message is 3 days old on Monday but not overdue (the weekend doesn\'t count)', s1.waitingOnUs && !s1.overdue && s1.ageDays === 3 && s1.dueAt?.toISOString() === '2026-09-15T14:00:00.000Z', s1);
   check('…and overdue on Tuesday after 10am', threadSignal([{ senderType: 'operator', createdAt: fri }], tue).overdue);
   const s2 = threadSignal([{ senderType: 'operator', createdAt: daysAgo(0.1) }, { senderType: 'operator', createdAt: daysAgo(3) }], now);
   check('the promise runs from the FIRST unanswered message, not the latest', s2.overdue, s2);

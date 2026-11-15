@@ -25,6 +25,7 @@ import { prisma } from './prisma';
 import Stripe from 'stripe';
 import { stripe } from './stripe';
 import { MAX_ITEM_PRICE_CENTS, MAX_LINE_QUANTITY, takeStock, shopFeeFor } from './shop';
+import { notifyLowStock } from './low-stock';
 import { quoteShopTax, reuseShopTaxQuote, recordShopSaleTax, type TaxLine } from './sales-tax';
 import { todayIn, addDaysStr } from './course-time';
 import { teeTimeInstant } from './booking-events';
@@ -325,6 +326,8 @@ export async function createSale(opts: {
     await recordMove({ courseId: opts.courseId, what: 'shop', direction: 'in', method: 'cash', account: 'course', amountCents: totalCents - roundsCents, saleId: sale.id, actor: 'staff', note: opts.soldBy });
     await recordShopSaleTax(sale.id); // never throws; the hourly cron retries
   }
+  // Low-stock email (Cam 2026-11-15): stock left the shelf; after the commit, never throws.
+  if (settledNow) await notifyLowStock(opts.courseId);
   return { ok: true, value: { ...saleView(sale), payToken } };
 }
 
@@ -364,6 +367,7 @@ export async function settleOpenSale(courseId: string, saleId: string, to: 'void
   if (r.ok && to === 'paid_cash') {
     await recordMove({ courseId, what: 'shop', direction: 'in', method: 'cash', account: 'course', amountCents: r.value.totalCents, saleId, actor: 'staff', note: 'pay link taken in cash' });
     await recordShopSaleTax(saleId);
+    await notifyLowStock(courseId); // Low-stock email: never throws
   }
   return r;
 }
@@ -551,6 +555,7 @@ export async function markCardPaid(saleId: string, stamp: Date, paymentIntentId:
   const paid = await prisma.shopSale.findUnique({ where: { id: saleId }, select: { courseId: true, totalCents: true, readerId: true } });
   if (paid) await recordMove({ courseId: paid.courseId, what: 'shop', direction: 'in', method: paid.readerId ? 'card_present' : 'card', account: 'course', amountCents: paid.totalCents, stripeId: paymentIntentId, saleId, actor: paid.readerId ? 'staff' : 'golfer' });
   await recordShopSaleTax(saleId); // never throws; the hourly cron retries
+  if (paid) await notifyLowStock(paid.courseId); // Low-stock email: never throws
 }
 
 // ── POS-3: refunds ──────────────────────────────────────────────────────────

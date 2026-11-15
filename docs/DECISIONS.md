@@ -74,6 +74,22 @@ EVENTS-2 (Cam 2026-11-09, "no guidance or structure"): under the strip, "Next up
 ### Golfer groups (SEG-1, Cam 2026-11-05)
 Analytics → Golfers puts every golfer the course knows (golfer-key identity, non-cancelled bookings) in ONE group as of the last day picked — first match wins: New (first round in 30 days) · Inactive (last round 180+ days ago, nothing booked ahead) · At risk (the gone-quiet rule, played in the last 180 days) · Regular (rounds on 3+ days in the last 90) · Occasional. Each group lists its golfers linked to their record and downloads as CSV. Pure in `src/lib/golfer-segments.ts`; the definitions' words in `analytics-terms.ts`. The list stays on the Analytics route (analytics.view) — never in the assistant's tools or the monthly AI review — and its email, phone and record link (and the gone-quiet list's contact) reach only logins with `sheet.golfer_contact`; others see names. `scripts/golfer-segments-test.ts` pins it.
 
+### Pro shop low stock and Support replies (Cam 2026-11-15, via Build, #407)
+- LOW-STOCK EMAIL: when a sale takes a counted item to its "Remind me when it's down to" number (`ShopItem.reorderAt`,
+  at or below it, the same rule as the Low on Stock list; Cam: keep "at the number"), the course owner's login email
+  (`Course.operator.email`, "whoever's email is on it") gets one email from admin@ naming every item that just went
+  low. Sales that take stock: cash/on-account walk-up, a pay link taken in cash, a card payment, an item added to a
+  round. Once per drop: `ShopItem.lowNoticeAt` holds the claim and a database trigger clears it whenever the row stops
+  being low, so it emails again only after a restock above the number. Sent after the sale commits, never blocks it
+  (`src/lib/low-stock.ts`). Items already low on the day it shipped were marked as reminded (one-time backfill, Cam
+  approved), so old lows don't all email at once. Sizes of a hidden item are skipped, as on the Low list.
+- HOLIDAYS: the 2-business-day support reply promise skips the observed US federal holidays (the eleven of
+  5 U.S.C. 6103; Saturday → Friday before, Sunday → Monday after) as well as weekends, Eastern
+  (`src/lib/business-days.ts`).
+- READ CHATS: a chat whose last message is ours and which the course has opened shows "Answered", never "New reply",
+  in the course's Support list — the GreenReserve announcements chat included. Opening a chat marks our replies read
+  and the list takes that state at once.
+
 ### Operator onboarding pipeline
 Inquiry → `pending` → `in_review` → `details_requested` → `details_submitted` → `building` → `live`
 Admin page manages all stages. Operators get dashboard access when approved.

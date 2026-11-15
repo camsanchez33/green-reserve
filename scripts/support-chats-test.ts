@@ -31,7 +31,7 @@ const now = new Date('2026-11-12T20:00:00Z'); // Thu 3pm Eastern
 const w = chatSummary([row('operator', '2026-11-13T15:00:00Z')], now);
 ok('the course wrote last → waiting on us, due 2 business days later (Fri 10am → Tue 10am)', w.state === 'waiting' && w.unanswered && w.dueAt?.toISOString() === '2026-11-17T15:00:00.000Z' && !w.overdue, w);
 const two = chatSummary([row('admin', '2026-11-09T15:00:00Z', { readAt: new Date() }), row('operator', '2026-11-09T16:00:00Z'), row('operator', '2026-11-12T19:00:00Z')], now);
-ok('the promise runs from the first unanswered message (Mon 11am → Wed 11am: overdue on Thursday)', two.state === 'waiting' && two.dueAt?.toISOString() === '2026-11-11T16:00:00.000Z' && two.overdue, two);
+ok('the promise runs from the first unanswered message (Mon 11am → Thu 11am, Veterans Day Wed skipped: overdue Thu 3pm)', two.state === 'waiting' && two.dueAt?.toISOString() === '2026-11-12T16:00:00.000Z' && two.overdue, two);
 ok('we replied, not yet read → new reply', chatSummary([row('operator', '2026-11-10T15:00:00Z'), row('admin', '2026-11-11T15:00:00Z')], now).state === 'reply');
 const ans = chatSummary([row('operator', '2026-11-10T15:00:00Z'), row('admin', '2026-11-11T15:00:00Z', { readAt: new Date() })], now);
 ok('we replied and it was read → answered, nothing due', ans.state === 'answered' && ans.dueAt === null && !ans.unanswered, ans);

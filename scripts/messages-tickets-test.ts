@@ -9,7 +9,7 @@ const m = (id: string, senderType: string, createdAt: string, isBroadcast = fals
 
 // SUPPORT (Cam 2026-11-12): 2 business days, Eastern, weekends skipped (was 48 hours).
 ok('2 business days to reply', REPLY_BUSINESS_DAYS === 2 && REPLY_PROMISE === '2 business days');
-const t0 = '2026-11-09T10:00:00Z'; // a Monday: 2 business days is 48 hours
+const t0 = '2026-11-16T10:00:00Z'; // a Monday with no holiday before Wednesday: 2 business days is 48 hours (Nov 9 now spans Veterans Day)
 ok('a Friday message is due Tuesday at the same time (the weekend skipped)', replyDueAt('2026-11-13T15:00:00Z').toISOString() === '2026-11-17T15:00:00.000Z');
 ok('a Saturday message is due Wednesday 00:00 Eastern', replyDueAt('2026-11-14T15:00:00Z').toISOString() === '2026-11-18T05:00:00.000Z');
 ok('a Friday countdown runs through the weekend: 95h 59m right after sending', dueIn('2026-11-13T15:00:00Z', Date.parse('2026-11-13T15:00:30Z')).label === '95h 59m');
