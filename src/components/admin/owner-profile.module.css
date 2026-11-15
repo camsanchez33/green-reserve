@@ -1,0 +1,85 @@
+/* Settings → My profile (Cam approved the mockup 2026-11-15, lanes/admin/profile-mockup.html). Every card has the same
+   build: a head (title, one plain line, at most one action top right as a plain underlined link or a bare plus icon),
+   rows of equal height (a dot only where it means something), and a foot only where the actions need one.
+   Green-glass tokens (--g-*) from src/app/admin/admin-glass.module.css. */
+
+.col { display: flex; flex-direction: column; gap: 16px; max-width: 1080px; width: 100%; }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: stretch; }
+@media (max-width: 900px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+
+.card { display: flex; flex-direction: column; padding: 0; min-width: 0; }
+.wide { grid-column: 1 / -1; }
+.ch { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 16px 18px 12px; border-bottom: 1px solid var(--g-line); }
+.ch h3 { margin: 0; font-size: 16px; font-weight: 600; color: var(--g-ink); }
+.ch p { margin: 3px 0 0; font-size: 13px; color: var(--g-muted); }
+.cb { padding: 4px 18px 12px; display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.cf { display: flex; gap: 8px; flex-wrap: wrap; padding: 12px 18px; border-top: 1px solid var(--g-line); }
+
+.row { display: grid; grid-template-columns: 8px minmax(0, 1fr) auto; gap: 12px; align-items: center; min-height: 52px; border-top: 1px solid var(--g-line); font-size: 13.5px; color: var(--g-ink); }
+.row:first-child { border-top: 0; }
+.nod { grid-template-columns: minmax(0, 1fr) auto; }
+.main { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+.main small { font-size: 12.5px; color: var(--g-muted); margin-top: 2px; }
+.k { display: inline-block; width: 84px; color: var(--g-muted); flex: none; }
+.kv { display: block; }
+.tag { font-size: 12px; color: var(--g-muted); }
+
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--g-muted); }
+.ok { background: var(--g-up); } .warn { background: var(--g-warn); } .bad { background: var(--g-down); }
+
+/* Messages: one line with a dot, colour only with meaning. */
+.msg { margin: 10px 0 0; font-size: 13px; display: flex; gap: 8px; align-items: center; }
+.msg .dot { flex: none; }
+.msgOk { color: var(--g-up); } .msgBad { color: var(--g-down); }
+.clr { margin: 10px 0 0; font-size: 13px; color: var(--g-muted); }
+.clr button { font: inherit; color: var(--g-ink); background: none; border: 0; padding: 0; text-decoration: underline; cursor: pointer; }
+
+/* A flow that opens inside a card (add a passkey, set up the app, new codes). */
+.sec { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--g-line); padding-top: 14px; margin-top: 8px; }
+.sec label, .lab { font-size: 13px; color: var(--g-ink-soft); }
+.line { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.grow { flex: 1; min-width: 170px; }
+.fld { font: inherit; font-size: 13.5px; color: var(--g-ink); background: var(--g-hover); border: 1px solid var(--g-line); border-radius: 10px; padding: 8px 12px; min-width: 0; box-sizing: border-box; }
+.code { width: 110px; font-variant-numeric: tabular-nums; }
+.pw { display: flex; flex-direction: column; gap: 10px; padding-top: 10px; }
+.pw label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--g-ink-soft); }
+.inl { display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; }
+.qr { width: 132px; height: 132px; flex: none; border-radius: 10px; background: #FFFFFF; padding: 6px; box-sizing: border-box; }
+.qr svg { display: block; width: 100%; height: 100%; }
+.mono { font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; color: var(--g-ink); overflow-wrap: anywhere; user-select: all; }
+.codes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; font-family: ui-monospace, Menlo, monospace; font-size: 13px; user-select: all; }
+.codes span { border: 1px solid var(--g-line); border-radius: 8px; padding: 6px 8px; text-align: center; color: var(--g-ink); }
+.flowTitle { font-size: 13.5px; font-weight: 600; color: var(--g-ink); }
+
+/* Buttons: a plain underlined link and a bare plus in the head; boxed buttons only inside a flow or a foot. */
+.lnk { font: inherit; font-size: 13px; font-weight: 600; background: none; border: 0; padding: 4px 0; color: var(--g-ink); cursor: pointer; text-decoration: underline; text-decoration-color: var(--g-focus); text-underline-offset: 3px; white-space: nowrap; }
+.lnk:disabled { opacity: .5; cursor: default; }
+.lnkBad { color: var(--g-down); text-decoration-color: var(--g-down); }
+.plus { width: 30px; height: 30px; border-radius: 9px; border: 0; background: transparent; color: var(--g-ink); display: grid; place-items: center; cursor: pointer; padding: 0; flex: none; }
+:global([data-theme="dark"]) .plus { color: #FFFFFF; }
+.plus:hover { background: var(--g-active); }
+.plus:disabled { opacity: .4; cursor: not-allowed; }
+.btn { font: inherit; font-size: 13px; font-weight: 600; border: 1px solid var(--g-line); background: var(--g-hover); color: var(--g-ink); padding: 8px 14px; border-radius: 10px; cursor: pointer; white-space: nowrap; }
+.btn:hover { background: var(--g-active); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.pri { background: var(--g-brand); color: var(--g-brand-ink); border-color: transparent; }
+.pri:hover { background: var(--g-brand); filter: brightness(1.06); }
+.dng { border-color: color-mix(in srgb, var(--g-down) 45%, transparent); color: var(--g-down); background: transparent; }
+.dng:hover { background: color-mix(in srgb, var(--g-down) 10%, transparent); }
+.solid { background: var(--g-down); color: #1A0B07; border-color: transparent; }
+.solid:hover { background: var(--g-down); filter: brightness(1.06); }
+.sm { padding: 6px 12px; font-size: 12.5px; }
+.lnk:focus-visible, .plus:focus-visible, .btn:focus-visible, .fld:focus-visible { outline: 2px solid var(--g-focus); outline-offset: 1px; }
+
+/* Owner security heading and the sign-out sentence (not a card). */
+.ownh { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
+.ownh h2 { margin: 0; font-family: var(--font-serif); font-size: 24px; font-weight: 600; color: var(--g-ink); }
+.ownh p { margin: 0; font-size: 13.5px; color: var(--g-ink-soft); }
+.soe { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 4px 4px 0; font-size: 13.5px; color: var(--g-ink-soft); }
+.soe p { margin: 0; max-width: 620px; }
+
+/* Confirm (replaces the browser's confirm box; same question, same outcome). */
+.ov { position: fixed; inset: 0; background: rgba(4, 12, 9, .6); display: grid; place-items: center; z-index: 60; padding: 20px; }
+.modal { width: min(480px, 100%); padding: 20px; background: var(--g-panel-solid); display: flex; flex-direction: column; gap: 12px; }
+.modal h4 { margin: 0; font-size: 17px; font-weight: 600; color: var(--g-ink); overflow-wrap: anywhere; }
+.modal p { margin: 0; font-size: 13.5px; color: var(--g-ink-soft); }
