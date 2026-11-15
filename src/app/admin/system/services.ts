@@ -60,7 +60,14 @@ export const CANT = 'Can’t see here';
 
 export const jobName = (path: string) => path.replace('/api/cron/', '');
 /** A job with no recorded run is amber ("not run yet"), as the page said before. */
-export const cronSt = (c: SystemData['crons'][number]): St => c.health?.status ?? 'warn';
+/** Colour only where it means something (Build, 2026-11-15): a job with no run recorded yet is grey, not amber —
+ *  nothing is broken. Amber and red stay for overdue, failed or never finished (a warn that has a last run). */
+export const cronSt = (c: SystemData['crons'][number]): St => {
+  const h = c.health;
+  if (!h) return '';
+  return h.status === 'warn' && !h.last ? '' : h.status;
+};
+export const notRunYet = (c: SystemData['crons'][number]) => !c.health || (c.health.status === 'warn' && !c.health.last);
 
 const pl = (n: number, one: string, many = one + 's') => `${n} ${n === 1 ? one : many}`;
 const stamp = (d: string) => new Date(d).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
@@ -81,10 +88,11 @@ export function services(d: SystemData): Svc[] {
   const i = d.platform.integrations;
   const out: Svc[] = [];
 
-  const bad = d.crons.filter(c => cronSt(c) === 'bad'), warn = d.crons.filter(c => cronSt(c) === 'warn');
+  const bad = d.crons.filter(c => cronSt(c) === 'bad'), warn = d.crons.filter(c => cronSt(c) === 'warn'), fresh = d.crons.filter(notRunYet);
   out.push({ id: 'jobs', g: 'run', t: 'Scheduled jobs', does: `The ${d.crons.length === 6 ? 'six' : d.crons.length} crons that run the platform`,
-    st: bad.length ? 'bad' : warn.length ? 'warn' : 'ok',
-    state: bad.length ? `${bad.length} failing: ${bad.map(c => jobName(c.path)).join(', ')}` : warn.length ? `${warn.length} not run yet` : `All ${d.crons.length} on schedule` });
+    st: bad.length ? 'bad' : warn.length ? 'warn' : fresh.length ? '' : 'ok',
+    state: bad.length ? `${bad.length} failing: ${bad.map(c => jobName(c.path)).join(', ')}` : warn.length ? `${warn.length} overdue: ${warn.map(c => jobName(c.path)).join(', ')}`
+      : fresh.length ? `${fresh.length} not run yet` : `All ${d.crons.length} on schedule` });
 
   const tk = twilioKeys(d);
   const twMissing = tk ? [tk.sid, tk.token, tk.from].filter(x => !x).length : (i.twilio ? 0 : -1);
@@ -137,10 +145,15 @@ export function services(d: SystemData): Svc[] {
 
   // Build's own verdict wins once the route sends it: the colour and the words, never re-derived here.
   const KEY: Record<string, ServiceKey> = { anthropic: 'assistant' };
+  // Two exceptions, so colour always means something (Build, 2026-11-15): the assistant switched off is grey, never
+  // green; and jobs that only haven't run yet stay grey even if the route calls them amber.
   return out.map(x => {
     const v = d.services?.[KEY[x.id] ?? (x.id as ServiceKey)];
     if (!v) return x;
-    return { ...x, st: v.state === 'unknown' ? '' : v.state, state: v.state === 'unknown' ? CANT : v.note || x.state };
+    let st: St = v.state === 'unknown' ? '' : v.state;
+    if (x.id === 'anthropic' && d.birdie && !d.birdie.enabled) st = '';
+    if (x.id === 'jobs' && st === 'warn' && x.st !== 'warn' && x.st !== 'bad') return x;
+    return { ...x, st, state: v.state === 'unknown' ? CANT : v.note || x.state };
   });
 }
 

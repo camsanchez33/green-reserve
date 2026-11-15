@@ -315,10 +315,12 @@ function SystemContent() {
                 'Come back here: the last run should read today with a green dot.',
               ]}>{rerunBtn}<ExtBtn href={links.vercelLogs}>Open Vercel logs</ExtBtn>{resendLimit && <ExtBtn href={links.resendUsage}>Open Resend usage</ExtBtn>}</Fix>
             ) : (
+              // Amber now only means overdue (it ran before, and not since). A job that hasn't run yet is grey, no block.
               <Fix sev="warn" note={n.ok} err={n.err} steps={[
-                'Nothing is broken: this job has no run recorded since logging started in this release.',
-                rerunStep ?? `Press Re-run job to log one now, or wait for the next run (${c.human}).`,
-                <>If tomorrow still shows no run: Vercel → Settings → Cron Jobs and check that <Mono>{jobName(c.path)}</Mono> is listed.</>,
+                <>Check it is still scheduled: Vercel → Settings → Cron Jobs and look for <Mono>{jobName(c.path)}</Mono>.</>,
+                'Read the function log for its last run in Vercel → Logs.',
+                rerunStep ?? `Press Re-run job, or wait for the next run (${c.human}).`,
+                'Come back here: the last run should read today with a green dot.',
               ]}>{rerunBtn}<ExtBtn href={links.vercelCrons}>Open Vercel cron jobs</ExtBtn></Fix>
             );
             return (
@@ -749,7 +751,7 @@ function SystemContent() {
 
       {forceTarget && (
         <div className={s.ov} onMouseDown={e => { if (e.target === e.currentTarget && !forceBusy) setForceTarget(null); }}>
-          <div className={s.modal} role="dialog" aria-modal="true" aria-labelledby="fd-h">
+          <Dialog labelledBy="fd-h" onClose={() => setForceTarget(null)} busy={forceBusy}>
             <h3 id="fd-h">Delete “{forceTarget.name}” permanently?</h3>
             <p>This hard-deletes the course and everything attached to it — bookings, paid memberships, staff rows and the operator login. It cannot be undone.</p>
             {forceErr && <p className={s.err} role="alert">{forceErr}</p>}
@@ -759,13 +761,13 @@ function SystemContent() {
               <button type="button" className={`${s.btn} ${s.dng} ${s.solid}`} onClick={runForceDelete}
                 disabled={forceBusy || forceTyped.trim().toLowerCase() !== forceTarget.name.trim().toLowerCase()}>{forceBusy ? 'Deleting…' : 'Delete permanently'}</button>
             </div>
-          </div>
+          </Dialog>
         </div>
       )}
 
       {pubTarget && (
         <div className={s.ov} onMouseDown={e => { if (e.target === e.currentTarget && !pubBusy) setPubTarget(null); }}>
-          <div className={s.modal} role="dialog" aria-modal="true" aria-labelledby="pub-h">
+          <Dialog labelledBy="pub-h" onClose={() => setPubTarget(null)} busy={pubBusy}>
             <h3 id="pub-h">Publish {pubTarget.title} {pubTarget.version}?</h3>
             {pubTarget.reacceptRequired ? <>
               <p>Every live course still on an older version gets an email with the next hourly run and has 30 days to re-sign.</p>
@@ -779,11 +781,34 @@ function SystemContent() {
               <button type="button" className={s.btn} onClick={() => setPubTarget(null)} disabled={pubBusy}>Cancel</button>
               <button type="button" className={`${s.btn} ${s.pri}`} onClick={() => publish(pubTarget)} disabled={pubBusy}>{pubBusy ? 'Publishing…' : `Publish ${pubTarget.version}`}</button>
             </div>
-          </div>
+          </Dialog>
         </div>
       )}
     </>
   );
+}
+
+/** The page's two confirm dialogs (drawn in the mockup): Escape closes unless it is working, Tab stays inside, and focus
+ *  goes back where it was. While a request waits (busy) Escape does nothing, so the layout's "Confirm it's you" box,
+ *  which opens on top, keeps its own Escape. */
+function Dialog({ labelledBy, onClose, busy, children }: { labelledBy: string; onClose: () => void; busy: boolean; children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const back = document.activeElement as HTMLElement | null;
+    const el = ref.current;
+    if (el && !el.contains(document.activeElement)) (el.querySelector<HTMLElement>('input, button:not(:disabled)') ?? el).focus();
+    return () => { back?.focus?.(); };
+  }, []);
+  function onKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Escape') { e.stopPropagation(); if (!busy) onClose(); return; }
+    if (e.key !== 'Tab' || !ref.current) return;
+    const f = Array.from(ref.current.querySelectorAll<HTMLElement>('a[href], button:not(:disabled), input:not(:disabled), textarea, select, [tabindex]:not([tabindex="-1"])'));
+    if (!f.length) { e.preventDefault(); return; }
+    const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+  return <div ref={ref} className={s.modal} role="dialog" aria-modal="true" aria-labelledby={labelledBy} tabIndex={-1} onKeyDown={onKeyDown}>{children}</div>;
 }
 
 function Hint() {

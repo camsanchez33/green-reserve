@@ -48,6 +48,14 @@ check('no "server says" block on the owner tools or without a server verdict', [
 check('…but there is one when the server says red and the page’s own reads say green', localSt({ ...base, services: { stripe: { state: 'bad', note: 'x' } } }, 'stripe') === 'ok');
 check('a card-charging job never gets a Re-run button (canRerun false hides it)', page0().includes("c.canRerun === false") && page0().includes('charges ? null'));
 
+const fresh = services({ ...base, crons: base.crons.map(c => ({ ...c, health: null })) });
+check('jobs that have not run yet are grey and not counted in "need a look"', fresh.find(s => s.id === 'jobs')!.st === '' && fresh.find(s => s.id === 'jobs')!.state === '6 not run yet' && summary(fresh).st === 'ok');
+check('…even when the route calls them amber', services({ ...base, crons: base.crons.map(c => ({ ...c, health: null })), services: { jobs: { state: 'warn', note: '6 not run yet' } } }).find(s => s.id === 'jobs')!.st === '');
+const overdue = services({ ...base, crons: base.crons.map((c, i) => i === 0 ? { ...c, health: { ...run('ok'), status: 'warn' as const, note: 'Overdue' } } : c) });
+check('an overdue job (it ran before) stays amber', overdue.find(s => s.id === 'jobs')!.st === 'warn');
+check('the assistant switched off is grey, even if the route says ok', services({ ...base, birdie: { ...base.birdie!, enabled: false }, services: { assistant: { state: 'ok', note: 'Off' } } }).find(s => s.id === 'anthropic')!.st === '');
+check('the two dialogs close on Escape and keep Tab inside', page0().includes("e.key === 'Escape'") && page0().includes("e.key !== 'Tab'") && (page0().match(/<Dialog labelledBy/g) ?? []).length === 2);
+
 const orphans = { checked: false, items: [], acknowledged: [], note: '' };
 check('a manager sees only the Data check among the owner tools', tools({ isOwner: false, orphans, versions: null, versionsErr: '', wipe: null, wipeErr: '', wiped: null }).map(t => t.id).join() === 'data');
 const own = tools({ isOwner: true, orphans, versions: null, versionsErr: 'no', wipe: { open: true, closesAt: '2026-12-01T05:00:00Z', confirmWords: 'WIPE TEST DATA', wiped: { Course: 14, Booking: 4798 }, kept: {} }, wipeErr: '', wiped: null });
