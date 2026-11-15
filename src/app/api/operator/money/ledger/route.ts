@@ -2,13 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, requirePermission, can } from '@/lib/session';
 import { todayIn, addDaysStr } from '@/lib/course-time';
-import { ledgerDays, ledgerRows, ledgerCsv, LEDGER_MAX_DAYS, TooManyRows } from '@/lib/ledger-view';
+import { ledgerDays, ledgerRows, ledgerRowsRange, ledgerCsv, LEDGER_MAX_DAYS, LEDGER_ROWS_MAX_DAYS, TooManyRows } from '@/lib/ledger-view';
+import { stripeDayDetail } from '@/lib/revenue-extras';
 
 // LEDGER-2 (Cam 2026-10-30): the course's money ledger, read-only, its own course only,
 // money.payments (as Money → Payments).
 //  ?from&to          the days, newest first, with the Stripe match (default: the last 14)
 //  ?day=YYYY-MM-DD   every movement of that day
 //  ?format=csv       every movement from..to, for the bookkeeper
+//  ?day=…            also `mismatch`: when that day's card money differs from Stripe, each payment that makes the
+//                    difference and why (Revenue page, Cam 2026-11-15; lib/revenue-extras). Null when it matches.
+//  ?from&to&rows=1   every movement from..to (up to 92 days) — Revenue → Payments lists every payment type
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 export async function GET(req: NextRequest) {
@@ -30,8 +34,8 @@ async function read(req: NextRequest) {
   const day = sp.get('day');
   if (day !== null) {
     if (!DATE.test(day)) return NextResponse.json({ error: 'Pick a day.' }, { status: 400 });
-    const rows = await ledgerRows(session.courseId, day);
-    return NextResponse.json({ day, rows: rows ?? [] }, { headers: noStore });
+    const [rows, mismatch] = await Promise.all([ledgerRows(session.courseId, day), stripeDayDetail(session.courseId, day)]);
+    return NextResponse.json({ day, rows: rows ?? [], mismatch }, { headers: noStore });
   }
 
   const today = todayIn(course.timezone);
@@ -42,6 +46,11 @@ async function read(req: NextRequest) {
   const max = sp.get('format') === 'csv' ? 400 : LEDGER_MAX_DAYS;
   if (!Number.isFinite(span) || span > max) return NextResponse.json({ error: `Pick a range of ${max} days or fewer.` }, { status: 400 });
 
+  if (sp.get('rows') === '1') {
+    if (span > LEDGER_ROWS_MAX_DAYS) return NextResponse.json({ error: `Pick a range of ${LEDGER_ROWS_MAX_DAYS} days or fewer.` }, { status: 400 });
+    const rows = await ledgerRowsRange(session.courseId, range.from, range.to);
+    return NextResponse.json({ range, rows: rows ?? [] }, { headers: noStore });
+  }
   if (sp.get('format') === 'csv') {
     const csv = await ledgerCsv(session.courseId, range.from, range.to);
     return new NextResponse(csv ?? '', { headers: { ...noStore, 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': `attachment; filename="${course.slug}-ledger-${range.from}-to-${range.to}.csv"` } });
