@@ -20,6 +20,7 @@ async function cleanup() {
   await prisma.moneyMove.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.shopSaleLine.deleteMany({ where: { sale: { courseId: { in: ids } } } });
   await prisma.shopSale.deleteMany({ where: { courseId: { in: ids } } });
+  await prisma.shopItem.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.bookingShopItem.deleteMany({ where: { booking: { courseId: { in: ids } } } });
   await prisma.booking.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.teeTime.deleteMany({ where: { courseId: { in: ids } } });
@@ -158,7 +159,7 @@ async function cleanup() {
   const pd = await paymentDetail(c.id, roundMove.id);
   ok('side card: who, what for, how paid', pd?.who === 'Pat Side' && pd.lines.length === 2 && pd.lines[0].label === 'Green fee × 2' && pd.methodLabel === 'Card', pd);
   ok('…the card’s brand and last four only, read on this course’s account', JSON.stringify(pd?.card) === '{"brand":"visa","last4":"4242","present":false}' && JSON.stringify(piAsked).includes('acct_a') && !JSON.stringify(pd).includes('fpx'), [pd?.card, piAsked]);
-  ok('…the refund on the round with its reason; the hold given back is not one', pd?.refunds.length === 1 && pd.refunds[0].reason === 'Cart broke down' && pd.refunds[0].amountCents === 4000, pd?.refunds);
+  ok('…the refund on the round with its reason; the hold given back is not one', pd?.refunds.length === 1 && pd.refunds[0].reason === 'Cart broke down' && pd.refunds[0].amountCents === -4000 && pd.refunds[0].kind === 'refund' && !pd.refunds[0].inStripeDirectly, pd?.refunds);
   ok('…the round’s receipt and its booking id for the existing actions', pd?.receipt?.kind === 'booking' && pd.bookingId === bk.id);
   ok('another course’s payment is not found', (await paymentDetail(other.id, roundMove.id)) === null);
   const sale2 = await prisma.shopSale.create({ data: { courseId: c.id, status: 'paid_cash', totalCents: 1080, taxCents: 80, paidAt: at('2031-05-12', 10), lines: { create: [{ name: 'Hot dog', unitPriceCents: 500, quantity: 2 }] } } });
@@ -166,6 +167,37 @@ async function cleanup() {
   const saleMove = await prisma.moneyMove.findFirstOrThrow({ where: { courseId: c.id, saleId: sale2.id } });
   const sd = await paymentDetail(c.id, saleMove.id);
   ok('a cash sale: its lines and tax, no card, the shop receipt', sd?.lines.map(l => l.label).join() === 'Hot dog × 2,Sales tax' && sd.card === null && sd.receipt?.kind === 'shop', sd);
+  {
+    // A dispute: the webhook writes the money taken back as an out row "<dispute>:withdrawn", and a won dispute as money back in.
+    await recordMove({ courseId: c.id, what: 'round', direction: 'out', method: 'card', account: 'course', amountCents: 14300, stripeId: 'du_payinv:withdrawn', bookingId: bk.id, actor: 'stripe', note: 'disputed: fraudulent', at: at('2031-05-15', 9) });
+    await recordMove({ courseId: c.id, what: 'round', direction: 'in', method: 'card', account: 'course', amountCents: 14300, stripeId: 'du_payinv:reinstated', bookingId: bk.id, actor: 'stripe', note: 'dispute won — money back', at: at('2031-05-25', 9) });
+    const dd = await paymentDetail(c.id, roundMove.id);
+    const kinds = dd?.refunds.map(r => r.kind).join();
+    ok('a chargeback is a dispute, not a refund made in Stripe; the win shows as money back', kinds === 'refund,dispute,dispute_won' && dd!.refunds.every(r => !r.inStripeDirectly) && dd!.refunds[2].amountCents === 14300, dd?.refunds);
+  }
+  {
+    // A round paid at the register with a hot dog on the same sale: two rows, two cards.
+    const tt3 = await prisma.teeTime.create({ data: { courseId: c.id, date: '2031-05-13', time: '08:00', holes: 18, greenFeeCents: 5000, cartFeeCents: 0, playersAvailable: 4 } });
+    const bk3 = await prisma.booking.create({ data: { teeTimeId: tt3.id, courseId: c.id, golferName: 'Reg Round', golferEmail: `${TAG}3@noemail.greenreserve.app`, players: 1, greenFeeTotal: 5000, cartFeeTotal: 0, accessFeeTotal: 0, totalAmount: 5000, status: 'completed', paymentStatus: 'paid_offline' } });
+    const dogItem = await prisma.shopItem.create({ data: { courseId: c.id, name: 'Hot dog', category: 'Grill', taxCategory: 'food', priceCents: 500 } });
+    const rs = await prisma.shopSale.create({ data: { courseId: c.id, status: 'paid_cash', totalCents: 5533, taxCents: 33, roundsCents: 5000, paidAt: at('2031-05-13', 9), lines: { create: [{ name: 'Round', unitPriceCents: 5000, quantity: 1, bookingId: bk3.id }, { name: 'Hot dog', unitPriceCents: 500, quantity: 1, shopItemId: dogItem.id }] } } });
+    await recordMove({ courseId: c.id, what: 'round', direction: 'in', method: 'cash', account: 'course', amountCents: 5000, bookingId: bk3.id, saleId: rs.id, actor: 'staff', at: at('2031-05-13', 9) });
+    await recordMove({ courseId: c.id, what: 'shop', direction: 'in', method: 'cash', account: 'course', amountCents: 533, saleId: rs.id, actor: 'staff', at: at('2031-05-13', 9) });
+    await recordMove({ courseId: c.id, what: 'shop', direction: 'out', method: 'cash', account: 'course', amountCents: 533, saleId: rs.id, actor: 'staff', note: 'Cold hot dog', at: at('2031-05-13', 10) });
+    const rRow = await prisma.moneyMove.findFirstOrThrow({ where: { courseId: c.id, saleId: rs.id, what: 'round' } });
+    const sRow = await prisma.moneyMove.findFirstOrThrow({ where: { courseId: c.id, saleId: rs.id, what: 'shop', direction: 'in' } });
+    const rd = await paymentDetail(c.id, rRow.id), sd2 = await paymentDetail(c.id, sRow.id);
+    ok('register round: the round’s lines, not the sale’s; the hot dog refund not on it', rd?.lines.map(l => l.label).join() === 'Green fee × 1' && rd.refunds.length === 0 && rd.receipt?.kind === 'booking', rd);
+    ok('…the items row: the hot dog and its tax, its own refund', sd2?.lines.map(l => `${l.label}:${l.cents}`).join() === 'Hot dog:500,Sales tax:33' && sd2.refunds.length === 1 && sd2.refunds[0].reason === 'Cold hot dog', sd2);
+    const seg = await allSegments(c.id, tz, { from: '2031-05-13', to: '2031-05-13' }, { from: '2031-05-12', to: '2031-05-12' }, at('2031-05-20', 12));
+    ok('…and every segment: the round tee, the hot dog F&B', seg.segments.teeCents === 5000 && seg.segments.fnbCents === 533 && seg.segments.shopCents === 1000 /* the earlier $10 sale that day */, seg.segments);
+    // A discounted sale: the lines add up to the payment.
+    const ds = await prisma.shopSale.create({ data: { courseId: c.id, status: 'paid_cash', totalCents: 5331, taxCents: 331, discountCents: 1000, discountNote: 'Member', paidAt: at('2031-05-13', 11), lines: { create: [{ name: 'Shirt', unitPriceCents: 6000, quantity: 1 }] } } });
+    await recordMove({ courseId: c.id, what: 'shop', direction: 'in', method: 'cash', account: 'course', amountCents: 5331, saleId: ds.id, actor: 'staff', at: at('2031-05-13', 11) });
+    const dRow = await prisma.moneyMove.findFirstOrThrow({ where: { courseId: c.id, saleId: ds.id } });
+    const dd2 = await paymentDetail(c.id, dRow.id);
+    ok('a discounted sale: a Discount line, and the lines add up to the payment', !!dd2?.lines.some(l => l.label === 'Discount · Member' && l.cents === -1000) && dd2.lines.reduce((x, l) => x + l.cents, 0) === 5331, dd2?.lines);
+  }
   ok('the payment route needs money.payments', readFileSync('src/app/api/operator/money/payment/route.ts', 'utf8').includes("requirePermission(session, 'money.payments')"));
 
   // ── The routes ──

@@ -96,8 +96,17 @@ ok('the total adds up', hp.totalCents === 8500);
     { unitPriceCents: 1000, quantity: 1, returnedQty: 0, bookingId: null, shopItem: { category: 'Food', taxCategory: 'food' } },
     { unitPriceCents: 2000, quantity: 1, returnedQty: 0, bookingId: null, shopItem: { category: 'Balls', taxCategory: 'general' } }] });
   ok('a register sale splits by its lines, tax with them', sl.fnbCents === 1080 && sl.shopCents === 2160, sl);
-  const reg = splitOf({ what: 'shop', direction: 'in', amountCents: 5000, platformFeeCents: 0, bookingId: null, saleId: 's' }, undefined, { taxCents: 0, lines: [{ unitPriceCents: 5000, quantity: 1, returnedQty: 0, bookingId: 'b', shopItem: null }] });
-  ok('a round paid at the register is tee', reg.teeCents === 5000, reg);
+  // The real register shape (final review): a $50 round and a $5 hot dog on one sale are two ledger rows — the round
+  // (split by its booking) and the items only ($5.33 with tax). The shop row never carries the round's money.
+  const regSale = { taxCents: 33, lines: [{ unitPriceCents: 5000, quantity: 1, returnedQty: 0, bookingId: 'b', shopItem: null }, { unitPriceCents: 500, quantity: 1, returnedQty: 0, bookingId: null, shopItem: { category: 'Grill', taxCategory: 'food' } }] };
+  const regShop = splitOf({ what: 'shop', direction: 'in', amountCents: 533, platformFeeCents: 0, bookingId: null, saleId: 's' }, undefined, regSale);
+  ok('a register sale with a round: the items row is all F&B, no tee', regShop.fnbCents === 533 && !regShop.teeCents, regShop);
+  const regRound = splitOf({ what: 'round', direction: 'in', amountCents: 5000, platformFeeCents: 0, bookingId: 'b', saleId: 's' }, { greenFeeTotal: 5000, cartFeeTotal: 0, rangeBallsTotal: 0, shopTaxCents: 0, shopItems: [] }, undefined);
+  ok('…and the round row is tee', regRound.teeCents === 5000, regRound);
+  const ret = splitOf({ what: 'shop', direction: 'in', amountCents: 5500, platformFeeCents: 0, bookingId: null, saleId: 's' }, undefined, { taxCents: 0, lines: [
+    { unitPriceCents: 5000, quantity: 1, returnedQty: 1, bookingId: null, shopItem: { category: 'Apparel', taxCategory: 'clothing' } },
+    { unitPriceCents: 500, quantity: 1, returnedQty: 0, bookingId: null, shopItem: { category: 'Grill', taxCategory: 'food' } }] });
+  ok('a returned line still counts in the original payment (the return is its own row out)', ret.shopCents === 5000 && ret.fnbCents === 500, ret);
   ok('late-cancel fee is tee; dues, events their own; money out splits nothing', splitOf({ what: 'late_fee', direction: 'in', amountCents: 1000, platformFeeCents: 0, bookingId: null, saleId: null }, undefined, undefined).teeCents === 1000
     && splitOf({ what: 'dues', direction: 'in', amountCents: 9000, platformFeeCents: 90, bookingId: null, saleId: null }, undefined, undefined).duesCents === 8910
     && splitOf({ what: 'event', direction: 'in', amountCents: 9000, platformFeeCents: 0, bookingId: null, saleId: null }, undefined, undefined).eventCents === 9000

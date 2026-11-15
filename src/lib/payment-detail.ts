@@ -14,8 +14,12 @@ export type PaymentDetail = {
   who: string; href: string | null;
   card: { brand: string; last4: string; present: boolean } | null;
   lines: PaymentLine[];
-  /** Money given back on the same booking, sale or event payment (ledger rows out), with the reason given. */
-  refunds: { id: string; at: string; amountCents: number; reason: string; by: string; inStripeDirectly: boolean }[];
+  /**
+   * Money given back on the same booking (same kind), sale (its items) or event payment, with the reason: a refund,
+   * a dispute taking money back, or a dispute won returning it (amount positive). A booking with several payments
+   * lists the same refunds on each — never add them up across cards.
+   */
+  refunds: { id: string; at: string; amountCents: number; reason: string; by: string; kind: 'refund' | 'dispute' | 'dispute_won'; inStripeDirectly: boolean }[];
   bookingId: string | null; saleId: string | null; eventPaymentId: string | null; membershipId: string | null;
   /** Which existing receipt applies: a shop sale's (shop-sales ?receipt=) or a round's (bookings send_receipt). */
   receipt: { kind: 'shop'; saleId: string } | { kind: 'booking'; bookingId: string } | null;
@@ -36,7 +40,8 @@ export function bookingLines(b: { players: number; greenFeeTotal: number; cartFe
 
 async function cardOf(stripeAccount: string, pi: string): Promise<PaymentDetail['card']> {
   try {
-    const intent = await stripe.paymentIntents.retrieve(pi, { expand: ['latest_charge'] }, { stripeAccount, timeout: 8_000 });
+    // Optional detail: one quick try, no retry, so a slow Stripe never holds the card up.
+    const intent = await stripe.paymentIntents.retrieve(pi, { expand: ['latest_charge'] }, { stripeAccount, timeout: 8_000, maxNetworkRetries: 0 });
     const ch = intent.latest_charge && typeof intent.latest_charge === 'object' ? intent.latest_charge : null;
     const d = ch?.payment_method_details;
     if (d?.card) return { brand: d.card.brand ?? '', last4: d.card.last4 ?? '', present: false };
@@ -57,18 +62,21 @@ export async function paymentDetail(courseId: string, moveId: string): Promise<P
   // What it was for.
   let lines: PaymentLine[] = [];
   let receipt: PaymentDetail['receipt'] = null;
-  if (m.saleId) {
-    const s = await prisma.shopSale.findFirst({ where: { id: m.saleId, courseId }, select: { status: true, taxCents: true, lines: { select: { name: true, unitPriceCents: true, quantity: true } } } });
+  // A round paid at the register has both ids: it is the round (the sale's items are their own 'shop' row).
+  const isRound = m.what === 'round' && !!m.bookingId;
+  if (m.saleId && !isRound) {
+    const s = await prisma.shopSale.findFirst({ where: { id: m.saleId, courseId }, select: { status: true, taxCents: true, discountCents: true, discountNote: true, lines: { select: { name: true, unitPriceCents: true, quantity: true, bookingId: true } } } });
     if (s) {
-      lines = s.lines.map(l => ({ label: l.quantity > 1 ? `${l.name} × ${l.quantity}` : l.name, cents: l.unitPriceCents * l.quantity }));
+      lines = s.lines.filter(l => !l.bookingId).map(l => ({ label: l.quantity > 1 ? `${l.name} × ${l.quantity}` : l.name, cents: l.unitPriceCents * l.quantity }));
+      if (s.discountCents) lines.push({ label: s.discountNote ? `Discount · ${s.discountNote}` : 'Discount', cents: -s.discountCents });
       if (s.taxCents) lines.push({ label: 'Sales tax', cents: s.taxCents });
       if (['paid_cash', 'paid_card', 'paid_account'].includes(s.status)) receipt = { kind: 'shop', saleId: m.saleId };
     }
-  } else if (m.bookingId && m.what === 'round') {
-    const b = await prisma.booking.findFirst({ where: { id: m.bookingId, courseId }, select: { players: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, shopTaxCents: true, paymentStatus: true, shopItems: { select: { name: true, unitPriceCents: true, quantity: true } } } });
+  } else if (isRound) {
+    const b = await prisma.booking.findFirst({ where: { id: m.bookingId!, courseId }, select: { players: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, shopTaxCents: true, paymentStatus: true, shopItems: { select: { name: true, unitPriceCents: true, quantity: true } } } });
     if (b) {
       lines = bookingLines(b);
-      if (['paid', 'paid_offline', 'on_account'].includes(b.paymentStatus)) receipt = { kind: 'booking', bookingId: m.bookingId };
+      if (['paid', 'paid_offline', 'on_account'].includes(b.paymentStatus)) receipt = { kind: 'booking', bookingId: m.bookingId! };
     }
   } else if (m.eventPaymentId) {
     const e = await prisma.courseEventPayment.findFirst({ where: { id: m.eventPaymentId, courseId }, select: { label: true, amountCents: true } });
@@ -78,19 +86,25 @@ export async function paymentDetail(courseId: string, moveId: string): Promise<P
 
   // Money given back on the same thing.
   // A booking carries several kinds of money (a hold given back at check-in is not a refund of the round): same kind only.
-  const link = m.saleId ? { saleId: m.saleId } : m.eventPaymentId ? { eventPaymentId: m.eventPaymentId } : m.bookingId ? { bookingId: m.bookingId, what: m.what } : null;
-  const outs = m.direction === 'in' && link
-    ? await prisma.moneyMove.findMany({ where: { courseId, direction: 'out', ...link }, orderBy: { at: 'asc' }, select: { id: true, at: true, amountCents: true, note: true, actor: true } })
+  const link = isRound ? { bookingId: m.bookingId!, what: m.what } : m.saleId ? { saleId: m.saleId, what: m.what } : m.eventPaymentId ? { eventPaymentId: m.eventPaymentId } : m.bookingId ? { bookingId: m.bookingId, what: m.what } : null;
+  // Money out on it, plus a dispute won (the webhook writes it as money back in, "<dispute>:reinstated").
+  const back = m.direction === 'in' && link
+    ? await prisma.moneyMove.findMany({ where: { courseId, ...link, OR: [{ direction: 'out' }, { direction: 'in', stripeId: { endsWith: ':reinstated' } }], NOT: { id: m.id } }, orderBy: { at: 'asc' }, select: { id: true, at: true, direction: true, amountCents: true, note: true, actor: true, stripeId: true } })
     : [];
 
-  const card = m.direction === 'in' && (m.method === 'card' || m.method === 'card_present') && m.stripeId?.startsWith('pi_') && course?.stripeAccountActive && course.stripeAccountId
+  // Only a course-account card payment is on the course's Stripe account (GreenReserve's own fee row is not).
+  const card = m.direction === 'in' && m.account === 'course' && (m.method === 'card' || m.method === 'card_present') && m.stripeId?.startsWith('pi_') && course?.stripeAccountActive && course.stripeAccountId
     ? await cardOf(course.stripeAccountId, m.stripeId) : null;
 
   return {
     id: m.id, at: m.at.toISOString(), what: m.what, label: moveLabel(m.what), direction: m.direction,
     amountCents: m.amountCents, greenReserveCents: m.platformFeeCents, method: m.method, methodLabel: methodLabel(m.method),
     who: d?.who ?? '', href: d?.href ?? null, card, lines,
-    refunds: outs.map(o => ({ id: o.id, at: o.at.toISOString(), amountCents: o.amountCents, reason: o.note, by: o.actor, inStripeDirectly: o.actor === 'stripe' })),
+    refunds: back.map(o => {
+      const dispute = !!o.stripeId?.includes(':');
+      const kind = o.direction === 'in' ? 'dispute_won' as const : dispute ? 'dispute' as const : 'refund' as const;
+      return { id: o.id, at: o.at.toISOString(), amountCents: o.direction === 'in' ? o.amountCents : -o.amountCents, reason: o.note, by: o.actor, kind, inStripeDirectly: kind === 'refund' && o.actor === 'stripe' };
+    }),
     bookingId: m.bookingId, saleId: m.saleId, eventPaymentId: m.eventPaymentId, membershipId: m.membershipId,
     receipt,
   };

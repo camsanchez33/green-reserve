@@ -264,15 +264,19 @@ export function splitOf(m: Move, booking: BookingParts | undefined, sale: SalePa
     return p.teeCents + p.cartCents + p.fnbCents + p.shopCents === v ? p : { teeCents: v };
   }
   if (m.what === 'shop' && sale) {
-    const w = { teeCents: 0, fnbCents: 0, shopCents: 0 };
+    // The shop row is the items only: a round settled on the same sale is its own 'round' row
+    // (shop-sales createSale). The row is the original payment, so weight by what was sold, not
+    // what is left after returns (a return is its own row out).
+    const w = { fnbCents: 0, shopCents: 0 };
     for (const l of sale.lines) {
-      const c = l.unitPriceCents * Math.max(0, l.quantity - l.returnedQty);
-      if (l.bookingId) w.teeCents += c; else if (isFnb(l.shopItem?.taxCategory, l.shopItem?.category)) w.fnbCents += c; else w.shopCents += c;
+      if (l.bookingId) continue;
+      const c = l.unitPriceCents * l.quantity;
+      if (isFnb(l.shopItem?.taxCategory, l.shopItem?.category)) w.fnbCents += c; else w.shopCents += c;
     }
     const items = w.fnbCents + w.shopCents;
     if (items > 0 && sale.taxCents) { const tf = Math.round(sale.taxCents * w.fnbCents / items); w.fnbCents += tf; w.shopCents += sale.taxCents - tf; }
     const p = splitBy(v, w);
-    return p.teeCents + p.fnbCents + p.shopCents === v ? p : { shopCents: v };
+    return p.fnbCents + p.shopCents === v ? p : { shopCents: v };
   }
   if (m.what === 'round' || m.what === 'late_fee' || m.what === 'no_show_fee' || m.what === 'hold') return { teeCents: v };
   if (m.what === 'shop') return { shopCents: v };
