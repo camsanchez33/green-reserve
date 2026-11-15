@@ -113,7 +113,7 @@
   background: var(--g-rail); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); border-bottom: 1px solid var(--g-line);
 }
 .search {
-  font: inherit; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--g-radius-s);
+  font: inherit; display: flex; align-items: center; gap: 8px;
   width: min(280px, 100%); height: 34px; box-sizing: border-box; padding: 0 12px; border-radius: 10px; color: var(--g-muted); font-size: 13px; cursor: pointer; text-align: left;
 }
 .search:hover { background: var(--g-hover); }
