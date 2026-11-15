@@ -30,11 +30,11 @@ async function cleanup() {
   const b = breakdownOf([
     { type: 'charge', cents: 10000, stripeFeeCents: 320, greenReserveFeeCents: 150, refundId: null },
     { type: 'payment', cents: 2000, stripeFeeCents: 60, greenReserveFeeCents: 0, refundId: null },
-    { type: 'refund', cents: -3000, stripeFeeCents: 0, greenReserveFeeCents: 0, refundId: 're_ours' },
+    { type: 'refund', cents: -3000, stripeFeeCents: 0, greenReserveFeeCents: 0, refundId: 're_payinv_ours' },
     { type: 'refund', cents: -1000, stripeFeeCents: 0, greenReserveFeeCents: 0, refundId: 're_dash' },
     { type: 'adjustment', cents: -500, stripeFeeCents: 1500, greenReserveFeeCents: 0, refundId: null },
     { type: 'stripe_fee', cents: -200, stripeFeeCents: 0, greenReserveFeeCents: 0, refundId: null },
-  ], new Set(['re_ours']), 10000 + 2000 - 3000 - 1000 - 500 - 320 - 150 - 60 - 1500 - 200);
+  ], new Set(['re_payinv_ours']), 10000 + 2000 - 3000 - 1000 - 500 - 320 - 150 - 60 - 1500 - 200);
   ok('card payments, our refunds, refunds made in Stripe, fees and the rest', b.cardCents === 12000 && b.refundsCents === -3000 && b.stripeDirectRefundsCents === -1000 && b.stripeFeesCents === -2080 && b.greenReserveFeesCents === -150 && b.otherCents === -500, b);
   ok('…and they add up to the payout', b.addsUp);
   ok('a payout that doesn’t add up says so', !breakdownOf([{ type: 'charge', cents: 100, stripeFeeCents: 0, greenReserveFeeCents: 0, refundId: null }], new Set(), 99).addsUp);
@@ -42,9 +42,9 @@ async function cleanup() {
   const op = await prisma.courseOperator.create({ data: { name: 'x', email: `${TAG}@t.local`, password: 'x' } });
   const mk = (n: string, active = true) => prisma.course.create({ data: { name: `Pay ${n}`, slug: `${TAG}-${n}`, operatorId: op.id, address: '1', city: 'X', state: 'NJ', zipCode: '9', holes: 18, timezone: 'America/New_York', stripeAccountId: `acct_${n}`, stripeAccountActive: active } });
   const c = await mk('a'), other = await mk('b'), off = await mk('c', false);
-  await recordMove({ courseId: c.id, what: 'round', direction: 'out', method: 'card', account: 'course', amountCents: 3000, stripeId: 're_ours', actor: 'staff' });
-  await recordMove({ courseId: c.id, what: 'round', direction: 'out', method: 'card', account: 'course', amountCents: 1000, stripeId: 're_mirror', actor: 'stripe', note: 'refunded in Stripe' });
-  await recordMove({ courseId: other.id, what: 'round', direction: 'out', method: 'card', account: 'course', amountCents: 999, stripeId: 're_other', actor: 'staff' });
+  await recordMove({ courseId: c.id, what: 'round', direction: 'out', method: 'card', account: 'course', amountCents: 3000, stripeId: 're_payinv_ours', actor: 'staff' });
+  await recordMove({ courseId: c.id, what: 'round', direction: 'out', method: 'card', account: 'course', amountCents: 1000, stripeId: 're_payinv_mirror', actor: 'stripe', note: 'refunded in Stripe' });
+  await recordMove({ courseId: other.id, what: 'round', direction: 'out', method: 'card', account: 'course', amountCents: 999, stripeId: 're_payinv_other', actor: 'staff' });
 
   // ── Stripe stubbed ──
   const po = stripe.payouts as unknown as { retrieve: unknown };
@@ -54,9 +54,9 @@ async function cleanup() {
     return { id: a[0], status: 'paid', amount: 10000 - 3000 - 1000 - 999 - 290, automatic: true, arrival_date: 1_900_000_000, created: 1_899_900_000, destination: { object: 'bank_account', bank_name: 'CHASE', last4: '6789', routing_number: '110000000', fingerprint: 'fp' } }; };
   bt.list = () => ({ async *[Symbol.asyncIterator]() {
     yield { type: 'charge', currency: 'usd', amount: 10000, fee_details: [{ type: 'stripe_fee', amount: 290 }], source: 'ch_1', created: 1_899_000_000 };
-    yield { type: 'refund', currency: 'usd', amount: -3000, fee_details: [], source: 're_ours' };
-    yield { type: 'refund', currency: 'usd', amount: -1000, fee_details: [], source: 're_mirror' };
-    yield { type: 'refund', currency: 'usd', amount: -999, fee_details: [], source: 're_other' };
+    yield { type: 'refund', currency: 'usd', amount: -3000, fee_details: [], source: 're_payinv_ours' };
+    yield { type: 'refund', currency: 'usd', amount: -1000, fee_details: [], source: 're_payinv_mirror' };
+    yield { type: 'refund', currency: 'usd', amount: -999, fee_details: [], source: 're_payinv_other' };
     yield { type: 'payout', currency: 'usd', amount: -4711, fee_details: [], source: 'po_abc12345' };
   } });
   const d = await payoutDetail(c.id, 'po_abc12345');
@@ -107,11 +107,11 @@ async function cleanup() {
   const tz = 'America/New_York';
   const at = (d: string, h: number) => new Date(dayStart(tz, d).getTime() + h * 3_600_000);
   await prisma.moneyMove.deleteMany({ where: { courseId: { in: [c.id, other.id] } } });
-  await recordMove({ courseId: c.id, what: 'round', direction: 'in', method: 'card', account: 'course', amountCents: 5150, platformFeeCents: 150, stripeId: 'pi_s1', actor: 'golfer', at: at('2031-05-12', 9) });
+  await recordMove({ courseId: c.id, what: 'round', direction: 'in', method: 'card', account: 'course', amountCents: 5150, platformFeeCents: 150, stripeId: 'pi_payinv_s1', actor: 'golfer', at: at('2031-05-12', 9) });
   await recordMove({ courseId: c.id, what: 'shop', direction: 'in', method: 'cash', account: 'course', amountCents: 1000, actor: 'staff', at: at('2031-05-13', 14) });
-  await recordMove({ courseId: c.id, what: 'dues', direction: 'in', method: 'card', account: 'course', amountCents: 90000, stripeId: 'pi_dues', actor: 'golfer', at: at('2031-05-13', 10) });
-  await recordMove({ courseId: c.id, what: 'booking_fee', direction: 'in', method: 'card', account: 'platform', amountCents: 300, platformFeeCents: 300, stripeId: 'pi_fee', actor: 'golfer', at: at('2031-05-13', 10) });
-  await recordMove({ courseId: other.id, what: 'round', direction: 'in', method: 'card', account: 'course', amountCents: 77777, stripeId: 'pi_x', actor: 'golfer', at: at('2031-05-13', 10) });
+  await recordMove({ courseId: c.id, what: 'dues', direction: 'in', method: 'card', account: 'course', amountCents: 90000, stripeId: 'pi_payinv_dues', actor: 'golfer', at: at('2031-05-13', 10) });
+  await recordMove({ courseId: c.id, what: 'booking_fee', direction: 'in', method: 'card', account: 'platform', amountCents: 300, platformFeeCents: 300, stripeId: 'pi_payinv_fee', actor: 'golfer', at: at('2031-05-13', 10) });
+  await recordMove({ courseId: other.id, what: 'round', direction: 'in', method: 'card', account: 'course', amountCents: 77777, stripeId: 'pi_payinv_x', actor: 'golfer', at: at('2031-05-13', 10) });
   await recordMove({ courseId: c.id, what: 'round', direction: 'in', method: 'cash', account: 'course', amountCents: 2500, actor: 'staff', at: at('2031-05-05', 9) });
   await recordMove({ courseId: c.id, what: 'round', direction: 'in', method: 'cash', account: 'course', amountCents: 800, actor: 'staff', at: at('2031-05-11', 23) });
   const all = await allSegments(c.id, tz, { from: '2031-05-12', to: '2031-05-18' }, { from: '2031-05-05', to: '2031-05-11' }, at('2031-05-20', 12));
