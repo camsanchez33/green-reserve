@@ -21,6 +21,7 @@ export async function POST(req: NextRequest) {
       email: String(email).trim().toLowerCase(),
       name: String(name).trim(),
       passwordHash,
+      passwordChangedAt: new Date(),
       role: 'owner',
       active: true,
     },

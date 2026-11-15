@@ -70,6 +70,7 @@ export async function POST(req: NextRequest) {
       email,
       name: String(name).trim(),
       passwordHash,
+      passwordChangedAt: new Date(),
       role: safeRole(role),
       active: true,
       mustChangePassword: true,
@@ -113,7 +114,7 @@ export async function PATCH(req: NextRequest) {
       // MP-2b: MP-2 cleared the lockout on the forgot-password path and left
       // this one — an owner resetting a locked-out employee still handed them a
       // password that answered "Too many attempts". Same bug, other door.
-      data: { passwordHash, mustChangePassword: true, failedLoginAttempts: 0, lockoutUntil: null },
+      data: { passwordHash, passwordChangedAt: new Date(), mustChangePassword: true, failedLoginAttempts: 0, lockoutUntil: null },
     });
     await auditAdmin(session, { action: auditAction, targetType: 'admin', targetId: id, reason: reasonOf(body) });
     return NextResponse.json({ success: true, tempPassword });

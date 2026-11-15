@@ -21,7 +21,7 @@ async function changePassword(req: NextRequest) {
   if (!valid) return NextResponse.json({ error: 'Current password is incorrect' }, { status: 401 });
 
   const passwordHash = await bcrypt.hash(String(newPassword), 12);
-  await prisma.adminUser.update({ where: { id: admin.id }, data: { passwordHash } });
+  await prisma.adminUser.update({ where: { id: admin.id }, data: { passwordHash, passwordChangedAt: new Date() } });
 
   return NextResponse.json({ success: true });
 }

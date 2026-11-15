@@ -45,6 +45,7 @@ export async function POST(req: NextRequest) {
     where: { id: admin.id },
     data: {
       passwordHash,
+      passwordChangedAt: now,
       setPasswordToken: null,
       setPasswordTokenExpiry: null,
       mustChangePassword: false,
