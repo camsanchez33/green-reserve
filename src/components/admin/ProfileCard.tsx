@@ -44,13 +44,23 @@ type Ask = { title: string; body: string; ok: string; resolve: (yes: boolean) =>
 export function useConfirm(): [ReactNode, (title: string, body: string, ok: string) => Promise<boolean>] {
   const [q, setQ] = useState<Ask | null>(null);
   const okRef = useRef<HTMLButtonElement>(null);
+  const cancelRef = useRef<HTMLButtonElement>(null);
   const ask = useCallback((title: string, body: string, ok: string) => new Promise<boolean>(resolve => setQ({ title, body, ok, resolve })), []);
   const done = useCallback((yes: boolean) => { setQ(cur => { cur?.resolve(yes); return null; }); }, []);
   useEffect(() => {
     if (!q) return;
     const prev = document.activeElement as HTMLElement | null;
-    okRef.current?.focus();
-    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.preventDefault(); done(false); } };
+    // Focus starts on Cancel: the red button is irreversible, so a held or repeated Enter must never land on it.
+    cancelRef.current?.focus();
+    const key = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { e.preventDefault(); done(false); return; }
+      // aria-modal: Tab and Shift+Tab stay on the two buttons, so nothing behind can open a second question.
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const next = document.activeElement === cancelRef.current ? okRef.current : cancelRef.current;
+        next?.focus();
+      }
+    };
     document.addEventListener('keydown', key);
     return () => { document.removeEventListener('keydown', key); prev?.focus?.(); };
   }, [q, done]);
@@ -64,7 +74,7 @@ export function useConfirm(): [ReactNode, (title: string, body: string, ok: stri
         <p id="pf-confirm-b">{q.body}</p>
         <div className={s.line}>
           <button ref={okRef} type="button" className={`${s.btn} ${s.dng} ${s.solid}`} onClick={() => done(true)}>{q.ok}</button>
-          <button type="button" className={s.btn} onClick={() => done(false)}>Cancel</button>
+          <button ref={cancelRef} type="button" className={s.btn} onClick={() => done(false)}>Cancel</button>
         </div>
       </div>
     </div>, host,

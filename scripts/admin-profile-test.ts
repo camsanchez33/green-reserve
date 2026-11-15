@@ -45,5 +45,11 @@ check('two-factor: links read as approved', /'Move to a new phone'/.test(tf) && 
 check('sign out everywhere: same call', /'\/api\/admin\/logout'/.test(soe) && /everywhere: true/.test(soe) && /assign\('\/cam'\)/.test(soe));
 check('no browser confirm() left', ![keys, devs, soe].some(f => /[^.\w]confirm\(/.test(f)));
 
+const conf = read('src/components/admin/ProfileCard.tsx');
+check('confirm dialog: focus starts on Cancel, Tab stays inside', /cancelRef\.current\?\.focus\(\)/.test(conf) && !/okRef\.current\?\.focus\(\);\n/.test(conf.split('const key')[0]) && /e\.key === 'Tab'/.test(conf));
+check('Enter can fire a code or passkey call only once (no repeat, not while busy)',
+  (tf.match(/e\.key === 'Enter' && !e\.repeat && !busy/g) || []).length === 2 && /e\.key === 'Enter' && !e\.repeat && busy === ''/.test(keys));
+check('passkeys stay hidden until the authenticator app is set up (as before)', /\{appSetUp && keys && keys\.map/.test(keys));
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');

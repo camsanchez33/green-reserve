@@ -105,7 +105,7 @@ export default function OwnerTwoFactorCard({ mfaSession }: { mfaSession: boolean
               <label htmlFor="tf-code">The 6-digit code it shows</label>
               <div className={s.line}>
                 <input id="tf-code" value={code} onChange={e => setCode(digits(e.target.value))} inputMode="numeric" autoComplete="one-time-code" maxLength={6} autoFocus
-                  className={`${s.fld} ${s.code}`} onKeyDown={e => { if (e.key === 'Enter' && code.length === 6) confirmCode(); }} />
+                  className={`${s.fld} ${s.code}`} onKeyDown={e => { if (e.key === 'Enter' && !e.repeat && !busy && code.length === 6) confirmCode(); }} />
                 <button type="button" onClick={confirmCode} disabled={busy || code.length < 6} className={`${s.btn} ${s.pri}`}>{busy ? 'Checking…' : 'Confirm'}</button>
                 <button type="button" onClick={() => { setSetup(null); setCode(''); setError(''); }} disabled={busy} className={s.btn}>Cancel</button>
               </div>
@@ -121,7 +121,7 @@ export default function OwnerTwoFactorCard({ mfaSession }: { mfaSession: boolean
           <label htmlFor="tf-regen">Current app code</label>
           <div className={s.line}>
             <input id="tf-regen" value={code} onChange={e => setCode(digits(e.target.value))} inputMode="numeric" autoComplete="one-time-code" maxLength={6} autoFocus
-              className={`${s.fld} ${s.code}`} onKeyDown={e => { if (e.key === 'Enter' && code.length === 6) regenerate(); }} />
+              className={`${s.fld} ${s.code}`} onKeyDown={e => { if (e.key === 'Enter' && !e.repeat && !busy && code.length === 6) regenerate(); }} />
             <button type="button" onClick={regenerate} disabled={busy || code.length < 6} className={`${s.btn} ${s.pri}`}>{busy ? 'Working…' : 'Replace all ten'}</button>
             <button type="button" onClick={() => { setRegenOpen(false); setCode(''); setError(''); }} disabled={busy} className={s.btn}>Cancel</button>
           </div>

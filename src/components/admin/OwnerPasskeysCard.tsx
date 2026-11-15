@@ -70,19 +70,19 @@ export default function OwnerPasskeysCard() {
   return (
     <ProfileCard title="Passkeys" labelId="pf-passkeys" lead="Face ID, Touch ID or a security key. The app stays the backup." top={plus}>
       {keys === null && !error && <p className={s.clr}>Loading…</p>}
-      {keys && keys.map(k => (
+      {appSetUp && keys && keys.map(k => (
         <ProfileRow key={k.id} dot="ok" sub={passkeyLine(k.createdAt, k.lastUsedAt)}
           right={<button type="button" onClick={() => remove(k)} disabled={busy !== ''} className={`${s.btn} ${s.dng} ${s.sm}`}>{busy === k.id ? 'Removing…' : 'Remove'}</button>}>
           {k.name}
         </ProfileRow>
       ))}
-      {keys && keys.length === 0 && <p className={s.clr}>No passkeys yet — you sign in with the authenticator app.</p>}
+      {appSetUp && keys && keys.length === 0 && <p className={s.clr}>No passkeys yet — you sign in with the authenticator app.</p>}
       {adding && busy !== 'add' && (
         <div className={s.sec}>
           <label htmlFor="pk-name">Name it</label>
           <div className={s.line}>
             <input id="pk-name" value={name} onChange={e => setName(e.target.value)} maxLength={60} autoFocus className={`${s.fld} ${s.grow}`}
-              onKeyDown={e => { if (e.key === 'Enter') add(); }} />
+              onKeyDown={e => { if (e.key === 'Enter' && !e.repeat && busy === '') add(); }} />
             <button type="button" onClick={add} disabled={busy !== ''} className={`${s.btn} ${s.pri}`}>Add</button>
             <button type="button" onClick={() => { setAdding(false); setName(''); setError(''); }} className={s.btn}>Cancel</button>
           </div>
