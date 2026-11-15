@@ -74,7 +74,7 @@ export function TodayCard({ s }: { s: Sales }) {
         </svg>
         {nowMin > H0 && nowMin < H1 && <span aria-hidden="true" className="absolute w-3 h-3 -ml-1.5 -mt-1.5 rounded-full bg-ink border-2" style={{ left: `${(nowX / W) * 100}%`, top: `${(Y(todayNow) / H) * 100}%`, borderColor: 'var(--op-panel-solid)' }} />}
         {ticks.map(v => <span key={v} className={Y_AXIS} style={{ top: `${(Y(v) / H) * 100}%` }}>{usdk(v)}</span>)}
-        {empty && <p className="absolute inset-0 grid place-items-center text-[13px] text-ink-muted">No payments yet today</p>}
+        {empty && <p className="absolute inset-0 grid place-items-center text-[13px] text-ink-muted">No payments yet</p>}
         {hover !== null && (
           <div className="absolute z-10 pointer-events-none -translate-x-1/2 -translate-y-full bg-ink text-page text-[12px] px-2.5 py-1.5 rounded-[8px] whitespace-nowrap tabular-nums shadow-card" style={{ left: `clamp(60px, ${(X(hover) / W) * 100}%, calc(100% - 60px))`, top: -6 }}>
             <b className="block text-[13px]">{clock12(hover)}</b>
@@ -101,7 +101,7 @@ export function NextPayoutCard({ data, connected, error, onAll }: { data: Payout
     <section className={`${CARD} !rounded-[16px] px-5 py-[18px] min-w-0 flex flex-col gap-1`} aria-label="Next payout">
       <div className="text-[13px] text-ink-muted">Next payout</div>
       {error ? <p className="text-[13.5px] text-bad mt-1">Couldn&apos;t read your payouts from Stripe.</p>
-        : connected === false ? <><div className="text-[15px] font-semibold text-ink mt-1">Connect Stripe</div><p className="text-[12.5px] text-ink-muted">Card payments reach your bank once Stripe is connected.</p></>
+        : connected === false ? <div className="text-[15px] font-semibold text-ink mt-1">Connect Stripe</div>
         : !data ? <p className="text-[13.5px] text-ink-muted mt-1">Checking Stripe…</p>
         : <>
           <div className="text-[28px] font-semibold tabular-nums leading-tight text-ink">{next ? usd2(next.amountCents) : '—'}</div>
@@ -179,12 +179,11 @@ export function RevenueChart({ s, range, total }: { s: Sales; range: Range; tota
           <div className="mt-0.5"><Change pct={pct} tail={`rounds vs the period before (${dayShort(addDays(range.from, -len))} – ${dayShort(addDays(range.from, -1))})`} /></div>
         </div>
         <span className="flex-1" />
-        <span className="text-[12px] text-ink-muted self-center">Bars: rounds</span>
         <Seg small label="Chart" value={mode} onChange={k => { setMode(k); setSel(null); }} options={[['day', 'By day'], ['dow', 'Day of week'], ['hour', 'Time of day']] as const} />
       </div>
       <div ref={plot} className="relative h-[190px] ml-11 max-md:ml-[38px]">
         {grid.map(v => <div key={v} className={'absolute inset-x-0 border-t ' + (v ? 'border-ink/10' : 'border-line')} style={{ bottom: `${(v / top) * 100}%` }}><span className={Y_AXIS}>{usdk(v)}</span></div>)}
-        {empty && <p className="absolute inset-0 grid place-items-center text-[13px] text-ink-muted">No payments in these dates</p>}
+        {empty && <p className="absolute inset-0 grid place-items-center text-[13px] text-ink-muted">No rounds in these dates</p>}
         <div className="absolute inset-0 flex items-end gap-1" role="img" aria-label={`Rounds ${mode === 'day' ? 'by day' : mode === 'dow' ? 'by day of week' : 'by time of day'}`}
           onMouseLeave={() => setTip(null)}>
           {d.map((x, i) => (
