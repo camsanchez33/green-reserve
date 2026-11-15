@@ -13,8 +13,7 @@ import { methodLabel } from '@/lib/ledger-view';
 import { FilterMenu, SideCard, Dl, Dot, Kv, IconButton, Icon, ROW, ROW_SEL, usd2, dayLong } from './ui';
 import type { LedgerDays, RevenueLedgerDay, RevenueLedgerRow, Range, Mismatch } from './data';
 
-const card = (d: RevenueLedgerDay) => d.cardInCents + d.otherInCents - d.platformCents;
-const net = (d: RevenueLedgerDay) => d.netCents - d.platformCents;
+import { ledgerTotals, dayCard as card, dayRefunds as refundsOf, dayNet as net } from './totals';
 const diffOf = (d: RevenueLedgerDay) => d.stripeNetCents === null ? 0 : d.courseCardNetCents - d.stripeNetCents;
 const tz = (iso: string, zone: string) => new Date(iso).toLocaleTimeString('en-US', { timeZone: zone, hour: 'numeric', minute: '2-digit' });
 
@@ -50,10 +49,9 @@ export function LedgerTab({ range, rangeLabel }: { range: Range; rangeLabel: str
   if (d0) return <LedgerDay d={d0} zone={data.tz} onBack={() => setDay(null)} />;
 
   const days = data.days;
-  const sum = (f: (d: RevenueLedgerDay) => number) => days.reduce((n, d) => n + f(d), 0);
-  const T = { card: sum(card), cash: sum(d => d.cashInCents), refunds: sum(d => d.outCents), net: sum(net), gr: sum(d => d.platformCents) };
-  const revenue = T.card + T.cash;
-  const fees = days.some(d => d.stripeFeeCents === null) ? null : sum(d => d.stripeFeeCents ?? 0);
+  const T = ledgerTotals(days);
+  const revenue = T.revenue;
+  const fees = days.some(d => d.stripeFeeCents === null) ? null : days.reduce((n, d) => n + (d.stripeFeeCents ?? 0), 0);
   const after = fees === null ? null : T.net - fees;
   const p = data.paidOut;
   const paidOut = p && p.payoutsCents !== null && p.inStripeCents !== null ? p.payoutsCents + p.inStripeCents + p.cashCents : null;
@@ -112,7 +110,7 @@ export function LedgerTab({ range, rangeLabel }: { range: Range; rangeLabel: str
                 <td className="text-left pl-3.5 px-2.5 py-[9px] border-b border-line whitespace-nowrap">{dayLong(d.day)}{d.day === data.today ? ' · today' : ''}</td>
                 <td className="text-right px-2.5 py-[9px] border-b border-line">{usd2(card(d))}</td>
                 <td className="text-right px-2.5 py-[9px] border-b border-line">{usd2(d.cashInCents)}</td>
-                <td className="text-right px-2.5 py-[9px] border-b border-line">{d.outCents ? `−${usd2(d.outCents)}` : '—'}</td>
+                <td className="text-right px-2.5 py-[9px] border-b border-line">{refundsOf(d) ? `−${usd2(refundsOf(d))}` : '—'}</td>
                 <td className="text-right px-2.5 py-[9px] border-b border-line font-semibold">{usd2(net(d))}</td>
                 <td className="text-right px-2.5 py-[9px] border-b border-line text-ink-muted">{d.stripeFeeCents === null ? '—' : usd2(d.stripeFeeCents)}</td>
                 <td className="text-left px-2.5 py-[9px] border-b border-line whitespace-nowrap"><MatchCell d={d} onOpen={() => setDay(d.day)} /></td>
@@ -176,7 +174,7 @@ function LedgerDay({ d, zone, onBack }: { d: RevenueLedgerDay; zone: string; onB
       <button type="button" onClick={onBack} className="self-start text-[13.5px] font-semibold text-ink-muted hover:text-ink">‹ Ledger</button>
       <div className="flex flex-wrap items-center gap-2.5">
         <h3 className="text-[17px] font-semibold text-ink">{dayLong(d.day)}</h3>
-        <span className="text-[12.5px] text-ink-muted tabular-nums">Card {usd2(card(d))} · Cash {usd2(d.cashInCents)} · Refunds {d.outCents ? `−${usd2(d.outCents)}` : '—'} · Net revenue {usd2(net(d))}</span>
+        <span className="text-[12.5px] text-ink-muted tabular-nums">Card {usd2(card(d))} · Cash {usd2(d.cashInCents)} · Refunds {refundsOf(d) ? `−${usd2(refundsOf(d))}` : '—'} · Net revenue {usd2(net(d))}</span>
         <span className="flex-1" />
         <FilterMenu active={!!how || !!what} onPick={k => { const [gk, v] = k.split(':'); if (gk === 'h') setHow(v); else setWhat(v); setSel(null); }} items={[
           { heading: 'How paid' }, { key: 'h:', label: 'Any way', on: !how }, ...HOWS.map(m => ({ key: `h:${m}`, label: methodLabel(m), on: how === m })),

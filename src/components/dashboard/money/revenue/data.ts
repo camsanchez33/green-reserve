@@ -23,8 +23,12 @@ export type Sales = {
   todayByHour: { hour: number; collectedCents: number }[]; lastWeekByHour: { hour: number; collectedCents: number }[];
   todayCollectedCents: number; lastWeekCollectedCents: number;
   drawer: CloseView | null;
-  /** Build: every segment by payment day (the course's part, less money given back; fee and dues out). all.paid.totalCents === all.totalCents. */
-  all?: { bucket: 'day' | 'week'; series: { key: string; cents: number }[]; byDow: { dow: number; cents: number; days: number }[]; byHour: { hour: number; cents: number }[]; totalCents: number; beforeTotalCents: number; paid: { onlineCents: number; readerCents: number; cashCents: number; otherCents: number; totalCents: number } };
+  /** Build: ONE basis for the whole page — the ledger by payment day, the course's part (GreenReserve's fee out), dues in.
+   *  grossCents = sum(segments) = sum(paid) = the Ledger's Revenue; series/byDow/byHour are money in (gross). */
+  all?: { bucket: 'day' | 'week'; grossCents: number; refundsCents: number; netCents: number; beforeGrossCents: number;
+    segments: { teeCents: number; cartCents: number; shopCents: number; fnbCents: number; eventCents: number; duesCents: number; otherCents: number };
+    paid: { onlineCents: number; readerCents: number; cashCents: number; otherCents: number };
+    series: { key: string; cents: number }[]; byDow: { dow: number; cents: number; days: number }[]; byHour: { hour: number; cents: number }[] };
   /** Build: money taken so far today against the average of the last `days` days (≤ 30), by payment time. */
   todayVsAverage?: { days: number; nowMinute: number; todayNowCents: number; avgNowCents: number; points: { minute: number; todayCents: number | null; avgCents: number }[] };
 };
@@ -36,7 +40,8 @@ export type PayoutsData = { connected: boolean; payouts: Payout[]; next?: Payout
 
 /** Build (?day=&mismatch=1, asked only on a day whose match is 'off'): what Stripe disagrees with that day, payment by payment. diffCents = stripeCents − ourCents. */
 export type Mismatch = { ourCents: number; stripeCents: number; diffCents: number; payments: { stripeId: string; paymentStripeId: string | null; kind: 'refund_in_stripe' | 'not_in_stripe' | 'not_here' | 'amount_differs' | 'other_day' | 'stripe_adjustment'; at: string; who: string; href: string | null; ourCents: number | null; stripeCents: number | null; note: string }[] };
-export type RevenueLedgerDay = LedgerDay;
+/** Build: GreenReserve's fees on money in, and fees given back with refunds (platformCents = in − back). */
+export type RevenueLedgerDay = LedgerDay & { feesInCents?: number; feesBackCents?: number };
 export type LedgerDays = { range: Range; today: string; days: RevenueLedgerDay[]; stripeRead: boolean; stripeConnected: boolean; tz: string; earned: Earned | null; paidOut: PaidOut | null };
 export type RevenueLedgerRow = LedgerRow;
 

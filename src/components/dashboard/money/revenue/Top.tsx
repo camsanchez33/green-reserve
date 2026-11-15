@@ -8,6 +8,8 @@ import { useCallback, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { Kv, Seg, IconButton, Icon, BTN, LINK, useOutside, usd, usd2, usdk, dayLong, dayShort, clock12, dowOf, addDays, spanDays } from './ui';
 import type { Sales, PayoutsData, Range, RangeKey } from './data';
+import { soldRows, soldTotal, paidRows } from './totals';
+export { soldTotal };
 
 const Y_AXIS = 'absolute -left-11 w-[38px] text-right text-[11px] text-ink-muted tabular-nums -translate-y-1/2';
 function niceStep(max: number, n: number) {
@@ -175,14 +177,14 @@ export function RevenueChart({ s, range, total }: { s: Sales; range: Range; tota
   const empty = d.every(x => x.v === 0);
   const grid: number[] = []; if (empty) grid.push(0); else for (let v = 0; v <= top + 1e-6; v += st) grid.push(v);
   const every = Math.max(1, Math.ceil(n / Math.max(3, Math.floor((plot.current?.clientWidth ?? 600) / 52))));
-  const pct = A ? pctChange(A.totalCents, A.beforeTotalCents) : pctChange(s.collectedCents, s.beforeCollectedCents);
+  const pct = A ? pctChange(A.grossCents, A.beforeGrossCents) : pctChange(s.collectedCents, s.beforeCollectedCents);
   const len = spanDays(range.from, range.to);
   return (
     <section className={`${CARD} !rounded-[16px] px-5 py-[18px]`} aria-label="Revenue chart">
       <div className="flex flex-wrap items-start gap-x-5 gap-y-3 mb-4">
         <div>
           <div className="text-[13px] text-ink-muted">Revenue</div>
-          <div className="text-[28px] font-semibold tabular-nums leading-tight text-ink">{usd(A ? A.totalCents : total)}</div>
+          <div className="text-[28px] font-semibold tabular-nums leading-tight text-ink">{usd(A ? A.grossCents : total)}</div>
           <div className="mt-0.5"><Change pct={pct} tail={`${A ? '' : 'rounds '}vs the period before (${dayShort(addDays(range.from, -len))} – ${dayShort(addDays(range.from, -1))})`} /></div>
         </div>
         <span className="flex-1" />
@@ -216,34 +218,9 @@ export function RevenueChart({ s, range, total }: { s: Sales; range: Range; tota
 }
 
 /** What was sold and how it was paid, side by side. */
-export function soldRows(s: Sales): { key: string; label: string; note?: string; cents: number }[] {
-  const g = s.segments;
-  if (g) return [
-    { key: 'tee', label: 'Tee times', note: 'green fees', cents: g.teeCents },
-    { key: 'cart', label: 'Carts', cents: g.cartCents },
-    { key: 'shop', label: 'Pro shop', cents: g.shopCents },
-    { key: 'event', label: 'Events', cents: g.eventCents },
-    { key: 'fnb', label: 'Food & beverage', cents: g.fnbCents },
-  ];
-  const sm = s.summary;
-  return [
-    { key: 'tee', label: 'Tee times', note: 'green fees', cents: sm.greenCents + sm.lateFeesKeptCents },
-    { key: 'cart', label: 'Carts', cents: sm.cartCents },
-    { key: 'shop', label: 'Pro shop', cents: sm.rangeCents + sm.shopOnRoundsCents + sm.walkUpCents },
-    { key: 'event', label: 'Events', cents: sm.eventCents ?? 0 },
-  ];
-}
-/** The Total line: Build's segments.totalCents when sent. */
-export const soldTotal = (s: Sales) => s.segments ? s.segments.totalCents : soldRows(s).reduce((n, r) => n + r.cents, 0);
 export function SoldPaid({ s, onDrawer }: { s: Sales; onDrawer?: boolean }) {
   const rows = soldRows(s), total = soldTotal(s);
-  const p = s.paid;
-  // Build's howPaid is by payment day with its own total (never the same total as What was sold).
-  const hp = s.howPaid;
-  const how: { label: string; note?: string; cents: number }[] = hp
-    ? [{ label: 'Card online', cents: hp.onlineCents }, { label: 'Card at the counter', note: 'card reader', cents: hp.readerCents }, { label: 'Cash', cents: hp.cashCents }, ...(hp.otherCents ? [{ label: 'Check or other', cents: hp.otherCents }] : [])]
-    : [{ label: 'Card', cents: p.cardCents }, { label: 'At the counter', cents: p.counterCents }, ...(p.accountCents ? [{ label: 'On accounts', cents: p.accountCents }] : [])];
-  const paidTotal = hp ? hp.totalCents : how.reduce((n, r) => n + r.cents, 0);
+  const { rows: how, total: paidTotal } = paidRows(s);
   const pct = (v: number, t: number) => t ? `${Math.round((v / t) * 100)}%` : '—';
   const d = s.drawer;
   return (
