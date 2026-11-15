@@ -75,10 +75,10 @@ async function main() {
     const filters = (biz.match(/c\."isTest" = false/g) ?? []).length;
     check(`business analytics: every Course join is filtered (${filters} of ${joins})`, joins > 0 && filters === joins);
   }
-  // The menu's unread count and the Messages page's count are the same rule (both include a test course's messages).
-  const unread = /senderType: 'operator', readAt: null, isBroadcast: false \}/;
-  check('the menu badge and Messages count unread messages the same way',
-    unread.test(readFileSync('src/app/api/admin/nav-badges/route.ts', 'utf8')) && unread.test(readFileSync('src/app/api/admin/messages/route.ts', 'utf8')));
+  // The menu's Course support badge counts chats not answered, by Course support's own rules (lib/support-chats:
+  // test courses included); the old Messages page still counts unread messages its own way.
+  check('the menu badge counts unanswered chats as Course support does', /unansweredChatCount\(\)/.test(readFileSync('src/app/api/admin/nav-badges/route.ts', 'utf8')));
+  check('Messages counts unread messages (a test course\'s too)', /senderType: 'operator', readAt: null, isBroadcast: false \}/.test(readFileSync('src/app/api/admin/messages/route.ts', 'utf8')));
 
   const before = { paid: await paidWindow(FROM, TO), counter: await counterFeesUncollected({ gte: FROM, lt: TO }) };
   const real = await seed('real', false);

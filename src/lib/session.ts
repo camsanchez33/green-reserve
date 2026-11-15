@@ -48,8 +48,9 @@ export async function touchStaffSeen(courseId: string, now = new Date()) {
   try {
     // Raw SQL on purpose: Prisma's update would also bump Course.updatedAt,
     // which the sitemap and Admin → System read as "the course changed".
-    await prisma.$executeRaw`UPDATE "Course" SET "staffLastSeenAt" = ${now}
-      WHERE "id" = ${courseId} AND ("staffLastSeenAt" IS NULL OR "staffLastSeenAt" < ${new Date(now.getTime() - SEEN_EVERY_MS)})`;
+    // The column is zone-less UTC, so the instants are written and compared in UTC.
+    await prisma.$executeRaw`UPDATE "Course" SET "staffLastSeenAt" = (${now}::timestamptz AT TIME ZONE 'UTC')
+      WHERE "id" = ${courseId} AND ("staffLastSeenAt" IS NULL OR "staffLastSeenAt" < (${new Date(now.getTime() - SEEN_EVERY_MS)}::timestamptz AT TIME ZONE 'UTC'))`;
   } catch (e) {
     console.error('[session] staffLastSeenAt write failed', e);
   }

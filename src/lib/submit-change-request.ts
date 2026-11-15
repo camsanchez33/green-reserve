@@ -1,15 +1,11 @@
-import { after } from 'next/server';
 import { recordCoursePageDecision } from '@/lib/approval-state';
 import { prisma } from '@/lib/prisma';
-import { sendMessageNotificationEmail } from '@/lib/email';
+import { createCourseChat } from '@/lib/support-chats';
 import { CATEGORY_LABEL, CHANGE_CATEGORIES, encodeChangesRequested, type ChangeItem } from '@/lib/change-requests';
-import { ADMIN_EMAIL } from '@/lib/contact';
 
 const VALID_CATEGORIES = new Set<string>(CHANGE_CATEGORIES.map(c => c.key));
 const MAX_ITEMS = 6;
 const MAX_DETAIL = 2000;
-
-const ONE_HOUR_MS = 60 * 60 * 1000;
 
 export function cleanChangeItems(items: unknown): ChangeItem[] {
   // SD-8 review: `category` used to be accepted as arbitrary free text and
@@ -25,7 +21,7 @@ export function cleanChangeItems(items: unknown): ChangeItem[] {
 
 // Shared by both request-changes entry points (token-gated preview page AND
 // the logged-in operator dashboard) so they can never drift: same message
-// mirror format, same structured event encoding, same fire-and-forget email.
+// format, same structured event encoding, same chat in Support and email.
 export async function submitChangeRequest(courseId: string, cleanItems: ChangeItem[]) {
   const course = await prisma.course.findUnique({ where: { id: courseId }, select: { name: true, operatorId: true } });
   if (!course) return { error: 'Course not found', status: 404 as const };
@@ -39,21 +35,10 @@ export async function submitChangeRequest(courseId: string, cleanItems: ChangeIt
     ...cleanItems.filter(it => it.detail).map(it => `${CATEGORY_LABEL[it.category] || it.category}: ${it.detail}`),
   ].join('\n');
 
-  const thread = await prisma.messageThread.upsert({
-    where: { courseId },
-    create: { courseId },
-    update: {},
-  });
-
-  await prisma.message.create({
-    data: {
-      threadId: thread.id,
-      senderType: 'operator',
-      senderId: course.operatorId || courseId,
-      senderName,
-      body: message.trim(),
-    },
-  });
+  // SUPPORT: the request is its own chat in Support (subject "Requested changes: …"), never a message in the
+  // course's earlier-messages chat (it reopens the thread). Every row is written before GreenReserve is emailed.
+  const made = await createCourseChat(courseId, { id: course.operatorId || courseId, name: senderName }, message.trim());
+  if (!made) return { error: 'Course not found', status: 404 as const };
 
   // Built without an inquiry: the decision lives on the course (lib/approval-state).
   if (!inquiry) await recordCoursePageDecision(courseId, 'changes_requested');
@@ -69,22 +54,7 @@ export async function submitChangeRequest(courseId: string, cleanItems: ChangeIt
     });
   }
 
-  const freshThread = await prisma.messageThread.findUnique({ where: { id: thread.id } });
-  const shouldEmail = !freshThread?.adminLastEmailAt || Date.now() - freshThread.adminLastEmailAt.getTime() > ONE_HOUR_MS;
-  if (shouldEmail) {
-    // Fire-and-forget (A6 item 2 pattern) — message + activity event are
-    // already durably recorded above; don't block the response on Resend.
-    after(sendMessageNotificationEmail({
-      recipientEmail: ADMIN_EMAIL,
-      recipientName: 'there', // to the GreenReserve inbox: "Hi there," (greetings use first names)
-      senderName,
-      courseName: course.name,
-      messageBody: message.trim(),
-      replyUrl: `${process.env.NEXT_PUBLIC_URL}/admin/messages?courseId=${courseId}`,
-    })
-      .then(() => prisma.messageThread.update({ where: { id: thread.id }, data: { adminLastEmailAt: new Date() } }))
-      .catch(e => console.error('Message notification email failed:', e)));
-  }
-
+  // Awaited (at most once an hour per course, linking to the chat; never throws).
+  await made.notify();
   return { ok: true as const };
 }

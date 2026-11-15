@@ -37,8 +37,8 @@ branch plus a report; the main thread decides whether the branch merges.
    differently (e.g. rendering an existing `cancellationHours` as a real date) is allowed
    only where the item block says so.
 3. **Facts come from files, not memory.** The design tokens and the two-look audience rule
-   live in the spec's §1 and in the "Design system" section of `docs/DECISIONS.md` (read it;
-   context), including its BANNED list. Read §1 and your item's block. Do **not** read the
+   live in the spec's §1 and in the "Design system" section of `docs/DECISIONS.md` (read it),
+   including its BANNED list. Read §1 and your item's block. Do **not** read the
    rest of the spec, `RUN_QUEUE.md`, or other items — they cost tokens and can only tempt
    you outside your list.
 4. **Read every file fully before editing it.** Follow the file-writing hazards in the

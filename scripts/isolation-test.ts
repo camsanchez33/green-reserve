@@ -671,8 +671,6 @@ async function main() {
     checkStatus('Viewer cannot read the monthly Stripe match → 403', sm.status, 403);
     const pr = await api('/api/admin/problems', { cookie: viewerCookie });
     checkStatus('Viewer cannot read Problems → 403', pr.status, 403);
-    const pw = await api('/api/admin/problems', { method: 'PATCH', cookie: viewerCookie, body: { id: 'x', action: 'claim' } });
-    checkStatus('Viewer cannot take a problem → 403', pw.status, 403);
   }
   {
     // AW-4b: Goals — support+ reads, only the owner writes.
@@ -688,22 +686,17 @@ async function main() {
     checkStatus('A token claiming manager (a viewer in the database) cannot add a goal → 403', m.status, 403);
   }
   {
-    // BRAIN-2a: on Problems, support may take and note; assigning, snoozing and
-    // waking need manager — the route checks, not the page.
+    // Problems are read-only now (Needs attention): support reads them; there is no PATCH to take, assign or snooze.
     const sup = await prisma.adminUser.create({ data: { name: 'Isol Support', email: `${TS}-support@test.local`, passwordHash: 'x', role: 'support', active: true } });
     const alert = await prisma.adminAlert.create({ data: { key: `isol-problem-${TS}`, kind: 'urgent', title: 'Isolation problem' } });
     try {
       const { signAdminToken } = await import('../src/lib/admin-session');
       const supCookie = `admin_session=${await signAdminToken({ adminId: sup.id, email: sup.email, name: sup.name, role: 'support', mfa: true })}`;
-      const patch = (body: Record<string, unknown>) => api('/api/admin/problems', { method: 'PATCH', cookie: supCookie, body: { id: alert.id, ...body } });
-      checkStatus('Support cannot assign a problem → 403', (await patch({ action: 'assign', adminId: null })).status, 403);
-      checkStatus('Support cannot snooze a problem → 403', (await patch({ action: 'snooze', days: 1, reason: 'later please' })).status, 403);
-      checkStatus('Support cannot wake a problem → 403', (await patch({ action: 'unsnooze' })).status, 403);
-      checkStatus('Support can take an unowned problem → 200', (await patch({ action: 'claim' })).status, 200);
-      await prisma.adminAlert.update({ where: { id: alert.id }, data: { ownerId: data.adminOwner.id, ownerName: 'Isol Owner' } });
-      checkStatus('Support cannot take one someone else has → 403', (await patch({ action: 'claim' })).status, 403);
-      await prisma.adminAlert.update({ where: { id: alert.id }, data: { resolvedAt: new Date() } });
-      checkStatus('Nobody notes a cleared problem → 409', (await patch({ action: 'note', text: 'done' })).status, 409);
+      const read = await api('/api/admin/problems', { cookie: supCookie });
+      check('Support reads Problems, the open one listed', read.status === 200 && ((read.body as { open?: { id: string }[] })?.open ?? []).some(p => p.id === alert.id), JSON.stringify(read.body).slice(0, 200));
+      const gone = await api('/api/admin/problems', { method: 'PATCH', cookie: supCookie, body: { id: alert.id, action: 'claim' } });
+      checkStatus('There is no PATCH on Problems any more → 405', gone.status, 405);
+      check('…and the problem is untouched', !(await prisma.adminAlert.findUnique({ where: { id: alert.id }, select: { ownerId: true } }))?.ownerId);
       // A support login (not manager) still can't take the evidence pack or owner money.
       checkStatus('Support cannot download a dispute evidence pack → 403', (await api(`/api/admin/disputes/${data.bookingA.id}/evidence`, { cookie: supCookie })).status, 403);
       checkStatus('Support cannot read courses’ payouts → 403', (await api('/api/admin/course-payouts', { cookie: supCookie })).status, 403);
@@ -835,10 +828,19 @@ async function main() {
       checkStatus('A manager sets it → 200', (await api('/api/admin/inquiries', { method: 'PATCH', cookie: mc, body })).status, 200);
       const row = await prisma.courseInquiry.findUnique({ where: { id: inq.id }, select: { expectedLaunchAt: true } });
       check('…stored as that day', row?.expectedLaunchAt?.toISOString().slice(0, 10) === '2026-12-15', JSON.stringify(row));
-      const audit = await prisma.adminAuditLog.findFirst({ where: { adminId: mgr.id, action: 'inquiry_expected_launch', targetId: inq.id } });
-      check('…and audited', !!audit);
+      const audits = await prisma.adminAuditLog.findMany({ where: { adminId: mgr.id, targetId: inq.id }, select: { action: true, before: true, after: true } });
+      check('…and audited once, with the date before and after', audits.length === 1 && audits[0].action === 'inquiry_expected_launch'
+        && (audits[0].after as { expectedLaunchAt?: string } | null)?.expectedLaunchAt === '2026-12-15', JSON.stringify(audits));
       checkStatus('Clearing it → 200', (await api('/api/admin/inquiries', { method: 'PATCH', cookie: mc, body: { ...body, expectedLaunchAt: null } })).status, 200);
       check('…cleared', (await prisma.courseInquiry.findUnique({ where: { id: inq.id }, select: { expectedLaunchAt: true } }))?.expectedLaunchAt === null);
+      // A course built from an inquiry closes it; Onboarding still shows and sets that closed inquiry's launch date.
+      await prisma.courseInquiry.update({ where: { id: inq.id }, data: { status: 'live' } });
+      checkStatus('Closed inquiry: support still cannot set the launch → 403', (await api('/api/admin/inquiries', { method: 'PATCH', cookie: sc, body })).status, 403);
+      checkStatus('Closed inquiry: a viewer cannot either → 403', (await api('/api/admin/inquiries', { method: 'PATCH', cookie: vc, body })).status, 403);
+      checkStatus('Closed inquiry: a manager sets it → 200', (await api('/api/admin/inquiries', { method: 'PATCH', cookie: mc, body: { ...body, expectedLaunchAt: '2027-01-10' } })).status, 200);
+      const closed = await prisma.courseInquiry.findUnique({ where: { id: inq.id }, select: { expectedLaunchAt: true, status: true } });
+      check('…stored, and the inquiry stays closed', closed?.expectedLaunchAt?.toISOString().slice(0, 10) === '2027-01-10' && closed?.status === 'live', JSON.stringify(closed));
+      check('…one audit row per save (three saves → three rows)', (await prisma.adminAuditLog.count({ where: { adminId: mgr.id, targetId: inq.id } })) === 3);
     } finally {
       await prisma.inquiryStatusEvent.deleteMany({ where: { inquiryId: inq.id } }).catch(() => {});
       await prisma.courseInquiry.delete({ where: { id: inq.id } }).catch(() => {});

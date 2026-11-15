@@ -192,6 +192,15 @@ async function notifyGreenReserve(threadId: string, chatId: string, courseName: 
 
 /** The course starts a chat with its first message. */
 export async function startCourseChat(courseId: string, sender: Sender, text: string): Promise<CourseChat | null> {
+  const made = await createCourseChat(courseId, sender, text);
+  if (!made) return null;
+  await made.notify();
+  return made.chat;
+}
+
+/** Writes a new chat and its first message; `notify` emails GreenReserve (never throws). A caller with more rows
+ *  to write (a Settings change request) writes them before calling notify, so a slow email never leaves them out. */
+export async function createCourseChat(courseId: string, sender: Sender, text: string): Promise<{ chat: CourseChat; notify: () => Promise<void> } | null> {
   const course = await prisma.course.findUnique({ where: { id: courseId }, select: { name: true } });
   if (!course) return null;
   const made = await prisma.$transaction(async tx => {
@@ -201,8 +210,10 @@ export async function startCourseChat(courseId: string, sender: Sender, text: st
     await tx.supportChat.update({ where: { id: chat.id }, data: { lastMessageAt: m.createdAt } });
     return { thread, chat, m };
   });
-  await notifyGreenReserve(made.thread.id, made.chat.id, course.name, sender, text);
-  return courseChat(made.chat.id, made.chat.subject, [made.m]);
+  return {
+    chat: courseChat(made.chat.id, made.chat.subject, [made.m]),
+    notify: () => notifyGreenReserve(made.thread.id, made.chat.id, course.name, sender, text),
+  };
 }
 
 /** The course writes in one of its chats. Null when the chat isn't this course's ('greenreserve' can't be replied to). */
@@ -263,6 +274,21 @@ export async function adminThreads(q: string, now: Date = new Date()): Promise<A
   for (const c of chats) { const t = adminThread(c.id, c.thread.course, c.subject, c.messages, now); if (t) out.push(t); }
   for (const t of threads) { const a = adminThread(t.id, t.course, earlierSubject(t.messages), t.messages, now); if (a) out.push(a); }
   return out.sort((x, y) => y.lastAt.localeCompare(x.lastAt));
+}
+
+/** How many chats Course support shows as not answered (the course wrote last), by adminThreads' rules: every
+ *  chat and every course's earlier-messages chat (its key is the thread id), old broadcast copies never counting,
+ *  test courses included. The admin rail's Course support badge. */
+export async function unansweredChatCount(): Promise<number> {
+  const rows = await prisma.$queryRaw<{ n: bigint }[]>`
+    SELECT COUNT(*)::bigint AS n FROM (
+      SELECT DISTINCT ON (COALESCE(m."chatId", m."threadId")) m."senderType"
+      FROM "Message" m
+      WHERE m."isBroadcast" = false
+      ORDER BY COALESCE(m."chatId", m."threadId"), m."createdAt" DESC, m."id" DESC
+    ) last
+    WHERE last."senderType" = 'operator'`;
+  return Number(rows[0]?.n ?? 0);
 }
 
 type AdminResolved = Resolved & { course: { id: string; name: string; isTest: boolean; archivedAt: Date | null; operator: { email: string; name: string } | null } };

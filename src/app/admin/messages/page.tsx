@@ -172,7 +172,6 @@ function MessagesContent() {
   const waitingOnYou = openThreads.filter(t => t.signal.waitingOnUs);
   const waitingOnThem = openThreads.filter(t => !t.signal.waitingOnUs);
   const closedThreads = matched.filter(t => t.closedAt);
-  const totalUnread = threads.reduce((s, t) => s + t.unreadCount, 0);
   const waitingCount = threads.filter(t => t.signal.waitingOnUs).length;
 
   const denied = threadError?.kind === 'forbidden' || threadError?.kind === 'unauthorized';
@@ -232,7 +231,7 @@ function MessagesContent() {
 
   return (
     <div className="h-screen bg-paper flex overflow-hidden">
-      <AdminSidebar active="messages" unreadMessages={totalUnread} />
+      <AdminSidebar active="messages" />
       <div className="admin-content flex-1 flex overflow-hidden">
 
         {/* Thread list */}

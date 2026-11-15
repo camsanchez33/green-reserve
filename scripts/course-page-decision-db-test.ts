@@ -37,6 +37,8 @@ async function cleanup() {
   await submitChangeRequest(course.id, [{ category: 'pricing', detail: 'Weekend rate is $55' }]).catch(() => null);
   ok('asking for changes records changes_requested on the course', (await getApprovalState(course.id)).status === 'changes_requested');
   ok('…and the request still reaches GreenReserve as a message', (await prisma.message.count({ where: { thread: { courseId: course.id }, body: { contains: 'Weekend rate is $55' } } })) === 1);
+  const asked = await prisma.message.findFirst({ where: { thread: { courseId: course.id }, body: { contains: 'Weekend rate is $55' } }, select: { chatId: true, chat: { select: { subject: true, courseId: true } } } });
+  ok('…in its own Support chat, not the earlier-messages one', !!asked?.chatId && asked.chat?.courseId === course.id && (asked.chat?.subject ?? '').startsWith('Requested changes: '), JSON.stringify(asked));
   ok('anything else on the column reads as no decision', coursePageDecision('maybe') === 'none' && coursePageDecision(null) === 'none');
 
   const src = (f: string) => readFileSync(f, 'utf8');

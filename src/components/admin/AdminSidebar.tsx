@@ -10,12 +10,13 @@ import type { AdminArea } from '@/lib/admin-areas';
 
 export type AdminNavKey = 'overview' | 'bookings' | 'problems' | 'goals' | 'inquiries' | 'courses' | 'groups' | 'create' | 'employees' | 'announcements' | 'messages' | 'profile' | 'revenue' | 'expenses' | 'finance' | 'support' | 'business' | 'golfers' | 'system' | 'company' | 'audit' | 'security';
 
-export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessages = 0 }: {
+export default function AdminSidebar({ active, pendingInquiries = 0 }: {
   active: AdminNavKey;
   pendingInquiries?: number;
-  unreadMessages?: number;
 }) {
-  const [unread, setUnread] = useState(unreadMessages);
+  // Course support: chats not answered (the course wrote last), not unread messages — a chat read but not answered
+  // is still owed a reply.
+  const [unanswered, setUnanswered] = useState(0);
   // ADMIN-C: open problems (BRAIN-2a) for the alerts bell.
   const [problems, setProblems] = useState(0);
   // MP-8a: the inquiries badge self-fetches. It used to render only when the
@@ -29,11 +30,10 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
   const { role, name, areas } = useAdminSession();
   const [signingOut, setSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState(false);
-  useEffect(() => { setUnread(unreadMessages); }, [unreadMessages]);
 
   // MP-8a: ONE fetch for all three badges (was two, and none for inquiries).
-  // A page that passes a live prop (Messages passes unread; Overview passes
-  // pending) keeps its fresher number — the fetch only fills what was 0.
+  // A page that passes a live prop (Overview passes pending) keeps its
+  // fresher number — the fetch only fills what was 0.
   useEffect(() => {
     if (!SUPPORT_PLUS.includes(role)) return; // would be zeros anyway
     let cancelled = false;
@@ -42,13 +42,13 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
       .then(d => {
         if (cancelled || !d) return;
         if (pendingInquiries === 0) setPending(Number(d.pendingInquiries) || 0);
-        if (unreadMessages === 0) setUnread(Number(d.unreadMessages) || 0);
+        setUnanswered(Number(d.unansweredChats) || 0);
         setProblems(Number(d.openProblems) || 0);
       })
       // The badges are hints, not the work: a failed fetch leaves them at 0 and every page still loads its own data.
       .catch(() => {});
     return () => { cancelled = true; };
-  }, [role, pendingInquiries, unreadMessages]);
+  }, [role, pendingInquiries]);
 
   const openPalette = useCallback(() => window.dispatchEvent(new CustomEvent('open-cmd-palette')), []);
 
@@ -126,7 +126,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
   const badges: Partial<Record<AdminNavKey, React.ReactNode>> = {
     problems: count(problems, true, `${problems} open problem${problems === 1 ? '' : 's'}`),
     inquiries: count(pending, false, `${pending} new inquir${pending === 1 ? 'y' : 'ies'}`),
-    support: count(unread, false, `${unread} unread`),
+    support: count(unanswered, false, `${unanswered} not answered`),
   };
 
   // Phone: the rail slides in from the Menu button and closes on navigation.
