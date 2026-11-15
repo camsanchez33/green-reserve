@@ -45,6 +45,21 @@ for (const f of ['src/app/api/admin/bootstrap/route.ts', 'src/app/api/admin/empl
 }
 check('every password write also writes passwordChangedAt', missing.length === 0, missing);
 
+// Second net, over all of src/ (final-reviewer 2026-11-15): the block scan misses upserts, a data object
+// built in a variable, ternaries and createMany. Per file, every passwordHash written as a key (not read as
+// admin.passwordHash) needs a passwordChangedAt written as a key; comments are stripped first.
+const allSrc: string[] = [];
+const walkAll = (d: string) => { for (const f of readdirSync(d)) { const p = join(d, f); if (statSync(p).isDirectory()) walkAll(p); else if (/\.tsx?$/.test(f)) allSrc.push(p); } };
+walkAll('src');
+const uncounted: string[] = [];
+for (const f of allSrc) {
+  const code = readFileSync(f, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
+  const writes = (code.match(/(?<![.\w])passwordHash\s*[,:}]/g) ?? []).length;
+  const dates = (code.match(/(?<![.\w])passwordChangedAt\s*[,:}]/g) ?? []).length - (code.match(/select:\s*\{\s*passwordChangedAt/g) ?? []).length;
+  if (writes > dates) uncounted.push(`${f} (${writes} password writes, ${dates} date writes)`);
+}
+check('no file in src/ writes more passwords than dates', uncounted.length === 0, uncounted);
+
 const layout = readFileSync('src/app/admin/layout.tsx', 'utf8');
 check('the admin layout passes passwordChangedAt to the session view', /passwordChangedAt:\s*row\?\.passwordChangedAt\?\.toISOString\(\)\s*\?\?\s*null/.test(layout));
 check('the layout reads only the signed-in admin\'s own row', /findUnique\(\{\s*where:\s*\{\s*id:\s*s\.adminId\s*\}/.test(layout));
