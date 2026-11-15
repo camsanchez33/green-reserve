@@ -10,7 +10,7 @@ const now = new Date('2026-11-15T12:00:00Z');
 const run = (at: string, conclusion: 'success' | 'failure' | 'running') => ({ at, conclusion, url: 'https://github.com/x/y/actions/runs/1' });
 const base: ServiceInput = {
   now,
-  crons: [{ job: 'hourly', status: 'ok' }, { job: 'monthly-review', status: 'ok' }],
+  crons: [{ job: 'hourly', status: 'ok', ran: true }, { job: 'monthly-review', status: 'ok', ran: true }],
   commitSha: '3f9c2ab',
   neon: { db: 'up', checkedAt: now.toISOString(), backup: run('2026-11-15T08:01:00Z', 'success') },
   github: { readable: true, backup: run('2026-11-15T08:01:00Z', 'success'), ci: { ...run('2026-11-15T10:00:00Z', 'success'), branch: 'main', name: 'Tests' } },
@@ -30,8 +30,9 @@ ok('eleven services', Object.keys(all).length === 11, Object.keys(all));
 ok('vercel names the live commit', all.vercel.note === 'Commit 3f9c2ab live', all.vercel);
 ok('no commit reported → unknown', S({ commitSha: '' }).vercel.state === 'unknown');
 
-ok('a failing job turns jobs red and names it', S({ crons: [{ job: 'chase-onboarding', status: 'bad' }, { job: 'hourly', status: 'warn' }] }).jobs.note === '1 failing: chase-onboarding');
-ok('a job not run yet is amber', S({ crons: [{ job: 'monthly-review', status: 'warn' }] }).jobs.state === 'warn');
+ok('a failing job turns jobs red and names it', S({ crons: [{ job: 'chase-onboarding', status: 'bad', ran: true }, { job: 'hourly', status: 'warn', ran: false }] }).jobs.note === '1 failing: chase-onboarding');
+ok('a job with no run recorded yet is unknown, not amber', S({ crons: [{ job: 'hourly', status: 'ok', ran: true }, { job: 'monthly-review', status: 'warn', ran: false }] }).jobs.state === 'unknown');
+ok('…and says how many', S({ crons: [{ job: 'monthly-review', status: 'warn', ran: false }] }).jobs.note === '1 not run yet');
 
 ok('database down is red', S({ neon: { ...base.neon, db: 'down' } }).neon.state === 'bad');
 ok('backup failed is red', S({ neon: { ...base.neon, backup: run('2026-11-15T08:01:00Z', 'failure') } }).neon.state === 'bad');

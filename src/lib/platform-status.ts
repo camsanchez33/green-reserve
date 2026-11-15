@@ -131,7 +131,8 @@ export type ServiceState = { state: 'ok' | 'warn' | 'bad' | 'unknown'; note: str
 
 export type ServiceInput = {
   now: Date;
-  crons: { job: string; status: 'ok' | 'bad' | 'warn' }[];
+  /** `ran` false = no run recorded yet (cronHealth says 'warn' for it). */
+  crons: { job: string; status: 'ok' | 'bad' | 'warn'; ran: boolean }[];
   commitSha: string;
   neon: NeonStatus;
   github: GithubStatus;
@@ -148,9 +149,11 @@ const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : 's'}`;
 
 /** Pure: each service's dot and its one-line state — the board's only rule. */
 export function serviceStates(i: ServiceInput): Record<ServiceId, ServiceState> {
-  const bad = i.crons.filter(c => c.status === 'bad'), warn = i.crons.filter(c => c.status === 'warn');
+  // Failed, never finished or overdue is red (cronHealth); a job with no run recorded yet is "can't see here", not a fault.
+  const bad = i.crons.filter(c => c.status === 'bad'), unseen = i.crons.filter(c => !c.ran), warn = i.crons.filter(c => c.status === 'warn' && c.ran);
   const jobs: ServiceState = bad.length ? { state: 'bad', note: `${bad.length} failing: ${bad.map(c => c.job).join(', ')}` }
-    : warn.length ? { state: 'warn', note: `${warn.length} not run yet` }
+    : warn.length ? { state: 'warn', note: `${warn.length} need${warn.length === 1 ? 's' : ''} a look` }
+    : unseen.length ? { state: 'unknown', note: `${unseen.length} not run yet` }
     : { state: 'ok', note: `All ${i.crons.length} on schedule` };
 
   const b = i.neon.backup;

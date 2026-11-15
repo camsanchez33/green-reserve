@@ -73,7 +73,7 @@ export async function GET(req: NextRequest) {
   const commitSha = (env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 7);
   const services = serviceStates({
     now: new Date(),
-    crons: cronRuns.map(c => ({ job: c.job, status: c.status })),
+    crons: cronRuns.map(c => ({ job: c.job, status: c.status, ran: !!c.last })),
     commitSha, neon, github: gh, resend, twilio,
     stripe: { keySet: !!env.STRIPE_SECRET_KEY, webhookSecretSet: !!env.STRIPE_WEBHOOK_SECRET, lastWebhook: stripeWebhook ? { at: stripeWebhook.at, outcome: stripeWebhook.outcome } : null },
     calcom: calcom.state === 'on' ? { state: 'on', webhookSecretSet: calcom.webhookSecretSet } : { state: calcom.state },
