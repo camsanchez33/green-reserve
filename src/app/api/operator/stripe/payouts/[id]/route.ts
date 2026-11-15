@@ -4,6 +4,9 @@ import { payoutDetail } from '@/lib/payout-detail';
 
 // Revenue page (Cam 2026-11-15): one payout taken apart (lib/payout-detail) and the bank's last
 // four. Read-only, the session's course's own Stripe account, the Payouts permission like the list.
+// The read stops itself at 15 s (lib/payout-detail BUDGET_MS); this leaves room for the rest.
+export const maxDuration = 30;
+
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

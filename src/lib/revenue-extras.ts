@@ -170,7 +170,7 @@ export type AllSegments = {
   bucket: 'day' | 'week';
   /** Each day (or Monday-start week) of the range, oldest first, empty ones included. */
   series: { key: string; cents: number }[];
-  /** By weekday (0 = Sunday): the total and how many of that weekday the range has, today left out (it isn't over). */
+  /** By weekday (0 = Sunday): the total and how many of that weekday the range has, today and later left out (not over). */
   byDow: { dow: number; cents: number; days: number }[];
   /** By course-local hour of payment. */
   byHour: { hour: number; cents: number }[];
@@ -194,7 +194,7 @@ export function allOf(rows: { day: string; minute: number; method: string; direc
   const series = new Map<string, number>();
   for (let d = range.from; d <= range.to; d = addDaysStr(d, 1)) series.set(keyOf(d), series.get(keyOf(d)) ?? 0);
   const dow = Array.from({ length: 7 }, (_, i) => ({ dow: i, cents: 0, days: 0 }));
-  for (let d = range.from; d <= range.to; d = addDaysStr(d, 1)) if (d !== today) dow[dowOf(d)].days++;
+  for (let d = range.from; d <= range.to; d = addDaysStr(d, 1)) if (d < today) dow[dowOf(d)].days++;
   const hour = new Map<number, number>();
   let total = 0;
   const inRange = rows.filter(r => r.day >= range.from && r.day <= range.to);
@@ -202,7 +202,7 @@ export function allOf(rows: { day: string; minute: number; method: string; direc
     const v = valueOf(r);
     total += v;
     series.set(keyOf(r.day), (series.get(keyOf(r.day)) ?? 0) + v);
-    if (r.day !== today) dow[dowOf(r.day)].cents += v;
+    if (r.day < today) dow[dowOf(r.day)].cents += v;
     const h = Math.floor(r.minute / 60);
     hour.set(h, (hour.get(h) ?? 0) + v);
   }

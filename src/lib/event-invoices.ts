@@ -24,13 +24,17 @@ export async function eventInvoices(courseId: string, tz: string, range: { from:
   const rows = await prisma.courseEventPayment.findMany({
     where: { courseId, OR: [{ status: { in: ['open', 'paying'] } }, { status: 'paid', paidAt: { gte: from, lt: to } }] },
     orderBy: { createdAt: 'desc' }, take: MAX + 1,
-    select: { id: true, eventId: true, label: true, kind: true, method: true, status: true, amountCents: true, feeCents: true, refundedCents: true, payerName: true, payerEmail: true, payerPhone: true, createdAt: true, paidAt: true, event: { select: { name: true, date: true } } },
+    select: { id: true, eventId: true, label: true, kind: true, method: true, status: true, amountCents: true, feeCents: true, refundedCents: true, payerName: true, payerEmail: true, payerPhone: true, createdAt: true, paidAt: true, groupKey: true, player: { select: { status: true } }, event: { select: { name: true, date: true, status: true } } },
   });
-  const out = rows.slice(0, MAX).map((r): EventInvoice => {
+  // A sign-up page checkout (groupKey) is a card checkout behind a 30-minute hold, not an invoice: while held it
+  // is mid-checkout, and once the hold runs out it is dead (voided only when the event's page next loads). It is
+  // pending only if its players were put on the list without paying (status 'in').
+  const live = rows.slice(0, MAX).filter(r => r.status === 'paid' || !r.groupKey || r.player?.status === 'in');
+  const out = live.map((r): EventInvoice => {
     const via: ('email' | 'sms')[] = [];
     if (r.payerEmail && !isPlaceholderEmail(r.payerEmail)) via.push('email');
     if (r.payerPhone.replace(/\D/g, '').length >= 10) via.push('sms');
-    const resendable = opts.mayResend && r.status === 'open' && r.method === 'link' && via.length > 0;
+    const resendable = opts.mayResend && r.status === 'open' && r.method === 'link' && r.event.status === 'planned' && via.length > 0;
     return {
       id: r.id, eventId: r.eventId, eventName: r.event.name, eventDate: r.event.date,
       label: r.label, kind: r.kind, method: r.method, status: r.status,

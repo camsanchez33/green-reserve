@@ -34,6 +34,8 @@ export function breakdownOf(lines: PayoutLine[], known: Set<string>, payoutCents
   const b = { cardCents: 0, refundsCents: 0, stripeDirectRefundsCents: 0, stripeFeesCents: 0, greenReserveFeesCents: 0, otherCents: 0 };
   for (const l of lines) {
     if (l.type === 'charge' || l.type === 'payment') b.cardCents += l.cents;
+    // Stripe's own fee transactions (billing, tax on fees) are Stripe's fees, not "other".
+    else if (l.type === 'stripe_fee' || l.type === 'tax_fee') b.stripeFeesCents += l.cents;
     else if (l.type === 'refund' || l.type === 'payment_refund') {
       if (l.refundId && known.has(l.refundId)) b.refundsCents += l.cents; else b.stripeDirectRefundsCents += l.cents;
     } else b.otherCents += l.cents;
@@ -48,10 +50,14 @@ export type PayoutDetail = {
   id: string; status: string; amountCents: number; arrivalDate: string; createdAt: string;
   bank: { name: string; last4: string } | null;
   breakdown: PayoutBreakdown | null;
+  /** The first and last payment in it ("For payments on …"), ISO; null without a breakdown. */
+  paymentsFrom: string | null; paymentsTo: string | null;
 };
 
 const PAYOUT_ID = /^po_[A-Za-z0-9]{6,64}$/;
-const MAX_LINES = 5_000;
+const MAX_LINES = 3_000;
+/** Stop reading and show the payout without its split rather than time the page out. */
+const BUDGET_MS = 15_000;
 
 /** null = not found on this course's account (or no account). Throws when Stripe can't be read. */
 export async function payoutDetail(courseId: string, payoutId: string): Promise<PayoutDetail | null> {
@@ -69,12 +75,15 @@ export async function payoutDetail(courseId: string, payoutId: string): Promise<
 
   // Only an automatic payout lists its transactions; a manual one has no breakdown.
   let breakdown: PayoutBreakdown | null = null;
+  let first = Infinity, last = -Infinity;
   if (p.automatic) {
     const lines: PayoutLine[] = [];
     let n = 0, tooMany = false;
+    const started = Date.now();
     for await (const t of stripe.balanceTransactions.list({ payout: p.id, limit: 100 }, opts)) {
-      if (++n > MAX_LINES) { tooMany = true; break; }
+      if (++n > MAX_LINES || Date.now() - started > BUDGET_MS) { tooMany = true; break; }
       if (t.type === 'payout' || t.currency !== 'usd') continue;
+      if (t.type === 'charge' || t.type === 'payment') { first = Math.min(first, t.created); last = Math.max(last, t.created); }
       let sf = 0, gf = 0;
       for (const f of t.fee_details ?? []) { if (f.type === 'application_fee') gf += f.amount; else sf += f.amount; }
       const src = typeof t.source === 'string' ? t.source : (t.source as { id?: string } | null)?.id ?? null;
@@ -91,5 +100,7 @@ export async function payoutDetail(courseId: string, payoutId: string): Promise<
     id: p.id, status: p.status, amountCents: p.amount,
     arrivalDate: new Date(p.arrival_date * 1000).toISOString(), createdAt: new Date(p.created * 1000).toISOString(),
     bank, breakdown,
+    paymentsFrom: breakdown && Number.isFinite(first) ? new Date(first * 1000).toISOString() : null,
+    paymentsTo: breakdown && Number.isFinite(last) ? new Date(last * 1000).toISOString() : null,
   };
 }

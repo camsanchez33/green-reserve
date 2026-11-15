@@ -7,6 +7,7 @@ import { stripe } from '../src/lib/stripe';
 import { recordMove } from '../src/lib/money-ledger';
 import { breakdownOf, payoutDetail } from '../src/lib/payout-detail';
 import { eventInvoices } from '../src/lib/event-invoices';
+import { allSegments } from '../src/lib/revenue-extras';
 import { dayStart } from '../src/lib/ledger-view';
 
 const TAG = 'payinvdbtest';
@@ -17,6 +18,7 @@ async function cleanup() {
   const ids = (await prisma.course.findMany({ where: { slug: { startsWith: TAG } }, select: { id: true } })).map(c => c.id);
   await prisma.moneyMove.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.courseEventPayment.deleteMany({ where: { courseId: { in: ids } } });
+  await prisma.courseEventPlayer.deleteMany({ where: { event: { courseId: { in: ids } } } });
   await prisma.courseEvent.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.course.deleteMany({ where: { id: { in: ids } } });
   await prisma.courseOperator.deleteMany({ where: { email: { startsWith: TAG } } });
@@ -31,8 +33,9 @@ async function cleanup() {
     { type: 'refund', cents: -3000, stripeFeeCents: 0, greenReserveFeeCents: 0, refundId: 're_ours' },
     { type: 'refund', cents: -1000, stripeFeeCents: 0, greenReserveFeeCents: 0, refundId: 're_dash' },
     { type: 'adjustment', cents: -500, stripeFeeCents: 1500, greenReserveFeeCents: 0, refundId: null },
-  ], new Set(['re_ours']), 10000 + 2000 - 3000 - 1000 - 500 - 320 - 150 - 60 - 1500);
-  ok('card payments, our refunds, refunds made in Stripe, fees and the rest', b.cardCents === 12000 && b.refundsCents === -3000 && b.stripeDirectRefundsCents === -1000 && b.stripeFeesCents === -1880 && b.greenReserveFeesCents === -150 && b.otherCents === -500, b);
+    { type: 'stripe_fee', cents: -200, stripeFeeCents: 0, greenReserveFeeCents: 0, refundId: null },
+  ], new Set(['re_ours']), 10000 + 2000 - 3000 - 1000 - 500 - 320 - 150 - 60 - 1500 - 200);
+  ok('card payments, our refunds, refunds made in Stripe, fees and the rest', b.cardCents === 12000 && b.refundsCents === -3000 && b.stripeDirectRefundsCents === -1000 && b.stripeFeesCents === -2080 && b.greenReserveFeesCents === -150 && b.otherCents === -500, b);
   ok('…and they add up to the payout', b.addsUp);
   ok('a payout that doesn’t add up says so', !breakdownOf([{ type: 'charge', cents: 100, stripeFeeCents: 0, greenReserveFeeCents: 0, refundId: null }], new Set(), 99).addsUp);
 
@@ -50,7 +53,7 @@ async function cleanup() {
   po.retrieve = async (...a: unknown[]) => { asked = a; if (a[0] === 'po_missing00') { const e = new Error('No such payout') as Error & { statusCode: number }; e.statusCode = 404; throw e; }
     return { id: a[0], status: 'paid', amount: 10000 - 3000 - 1000 - 999 - 290, automatic: true, arrival_date: 1_900_000_000, created: 1_899_900_000, destination: { object: 'bank_account', bank_name: 'CHASE', last4: '6789', routing_number: '110000000', fingerprint: 'fp' } }; };
   bt.list = () => ({ async *[Symbol.asyncIterator]() {
-    yield { type: 'charge', currency: 'usd', amount: 10000, fee_details: [{ type: 'stripe_fee', amount: 290 }], source: 'ch_1' };
+    yield { type: 'charge', currency: 'usd', amount: 10000, fee_details: [{ type: 'stripe_fee', amount: 290 }], source: 'ch_1', created: 1_899_000_000 };
     yield { type: 'refund', currency: 'usd', amount: -3000, fee_details: [], source: 're_ours' };
     yield { type: 'refund', currency: 'usd', amount: -1000, fee_details: [], source: 're_mirror' };
     yield { type: 'refund', currency: 'usd', amount: -999, fee_details: [], source: 're_other' };
@@ -62,6 +65,7 @@ async function cleanup() {
   ok('nothing else of the bank account is returned', !JSON.stringify(d).includes('110000000') && !JSON.stringify(d).includes('fp'));
   ok('our refund is ours; a mirrored one and another course’s count as made in Stripe', d?.breakdown?.refundsCents === -3000 && d.breakdown.stripeDirectRefundsCents === -1999, d?.breakdown);
   ok('Stripe’s fee, and it adds up', d?.breakdown?.stripeFeesCents === -290 && d.breakdown.addsUp, d?.breakdown);
+  ok('the payments it covers', d?.paymentsFrom === new Date(1_899_000_000_000).toISOString() && d.paymentsTo === d.paymentsFrom, d);
   ok('a payout not on this account: not found', (await payoutDetail(c.id, 'po_missing00')) === null);
   ok('a malformed id never reaches Stripe', (await payoutDetail(c.id, '../acct_b')) === null);
   ok('no active Stripe account: not found', (await payoutDetail(off.id, 'po_abc12345')) === null);
@@ -76,18 +80,50 @@ async function cleanup() {
   await pay(c.id, ev.id, { status: 'paid', paidAt: new Date(dayStart('America/New_York', '2031-01-10').getTime()), method: 'cash' });
   await pay(c.id, ev.id, { status: 'void', voidedAt: new Date() });
   await pay(other.id, evB.id, { payerEmail: 'x@example.com' });
+  // Sign-up page checkouts: a dead one (hold ran out, nobody opened the event since) and one mid-checkout are not
+  // invoices; a group put on the list without paying is.
+  const signup = async (status: string, holdUntil: Date | null, key: string) => {
+    const pl = await prisma.courseEventPlayer.create({ data: { eventId: ev.id, name: `Lead ${key}`, status, holdUntil, source: 'signup', groupKey: key } as never });
+    await pay(c.id, ev.id, { kind: 'player', label: `Entry ${key}`, groupKey: key, playerId: pl.id, payerName: `Lead ${key}`, payerEmail: `${key}@example.com` });
+  };
+  await signup('held', new Date(Date.now() - 3_600_000), 'dead');
+  await signup('held', new Date(Date.now() + 600_000), 'mid');
+  await signup('in', null, 'listed');
   const inv = await eventInvoices(c.id, 'America/New_York', { from: '2031-05-01', to: '2031-05-31' }, { mayResend: true });
-  ok('pending: every open one, this course only', inv.open.length === 2 && inv.open.every(x => x.eventName === 'Charity Scramble'), inv.open);
+  ok('pending: every open one, this course only', inv.open.length === 3 && inv.open.every(x => x.eventName === 'Charity Scramble'), inv.open.map(x => x.label));
+  ok('a sign-up checkout whose hold ran out, or still mid-checkout, is not pending', !inv.open.some(x => x.label === 'Entry dead' || x.label === 'Entry mid'));
+  ok('a sign-up group put on the list without paying is', inv.open.some(x => x.label === 'Entry listed'));
   ok('paid: only those paid in the range; void left out', inv.paid.length === 1, inv.paid);
-  ok('resend offered only where there’s somewhere to send it', inv.open.filter(x => x.canResend).length === 1 && inv.open.find(x => x.canResend)?.resendVia.join() === 'email');
+  ok('resend offered only where there’s somewhere to send it', inv.open.filter(x => x.canResend).length === 2 && inv.open.find(x => x.canResend)?.resendVia.join() === 'email');
   ok('the pay link’s token is never returned', !JSON.stringify(inv).includes('secret-token') && !JSON.stringify(inv).includes('payerEmail'));
   const noResend = await eventInvoices(c.id, 'America/New_York', { from: '2031-05-01', to: '2031-05-31' }, { mayResend: false });
   ok('without "Run events" no resend is offered', noResend.open.every(x => !x.canResend));
+
+  await prisma.courseEvent.update({ where: { id: ev.id }, data: { status: 'cancelled' } });
+  const cancelled = await eventInvoices(c.id, 'America/New_York', { from: '2031-05-01', to: '2031-05-31' }, { mayResend: true });
+  ok('a cancelled event’s link is never offered for resend', cancelled.open.every(x => !x.canResend));
+
+  // ── Every segment, by payment day, from the database ──
+  const tz = 'America/New_York';
+  const at = (d: string, h: number) => new Date(dayStart(tz, d).getTime() + h * 3_600_000);
+  await prisma.moneyMove.deleteMany({ where: { courseId: { in: [c.id, other.id] } } });
+  await recordMove({ courseId: c.id, what: 'round', direction: 'in', method: 'card', account: 'course', amountCents: 5150, platformFeeCents: 150, stripeId: 'pi_s1', actor: 'golfer', at: at('2031-05-12', 9) });
+  await recordMove({ courseId: c.id, what: 'shop', direction: 'in', method: 'cash', account: 'course', amountCents: 1000, actor: 'staff', at: at('2031-05-13', 14) });
+  await recordMove({ courseId: c.id, what: 'dues', direction: 'in', method: 'card', account: 'course', amountCents: 90000, stripeId: 'pi_dues', actor: 'golfer', at: at('2031-05-13', 10) });
+  await recordMove({ courseId: c.id, what: 'booking_fee', direction: 'in', method: 'card', account: 'platform', amountCents: 300, platformFeeCents: 300, stripeId: 'pi_fee', actor: 'golfer', at: at('2031-05-13', 10) });
+  await recordMove({ courseId: other.id, what: 'round', direction: 'in', method: 'card', account: 'course', amountCents: 77777, stripeId: 'pi_x', actor: 'golfer', at: at('2031-05-13', 10) });
+  await recordMove({ courseId: c.id, what: 'round', direction: 'in', method: 'cash', account: 'course', amountCents: 2500, actor: 'staff', at: at('2031-05-05', 9) });
+  await recordMove({ courseId: c.id, what: 'round', direction: 'in', method: 'cash', account: 'course', amountCents: 800, actor: 'staff', at: at('2031-05-11', 23) });
+  const all = await allSegments(c.id, tz, { from: '2031-05-12', to: '2031-05-18' }, { from: '2031-05-05', to: '2031-05-11' }, at('2031-05-20', 12));
+  ok('every segment: the course’s part; dues, GreenReserve’s own fee and another course left out', all.totalCents === 5000 + 1000 && all.paid.totalCents === all.totalCents, all);
+  ok('…by day, by local hour', all.series.find(x => x.key === '2031-05-12')?.cents === 5000 && all.byHour.some(h => h.hour === 9 && h.cents === 5000) && all.byHour.some(h => h.hour === 14 && h.cents === 1000), all.byHour);
+  ok('…the period before is its own window (11 PM the night before counts there)', all.beforeTotalCents === 2500 + 800, all.beforeTotalCents);
 
   // ── The routes ──
   const pr = readFileSync('src/app/api/operator/stripe/payouts/[id]/route.ts', 'utf8');
   const ir = readFileSync('src/app/api/operator/money/event-invoices/route.ts', 'utf8');
   ok('payout detail needs the Payouts permission, like the payout list', pr.includes("requirePermission(session, 'money.payouts')"));
+  ok('the sales route returns every segment', /\ball,\n/.test(readFileSync('src/app/api/operator/money/sales/route.ts', 'utf8')) && readFileSync('src/app/api/operator/money/sales/route.ts', 'utf8').includes('allSegments(session.courseId, tz, a.range, previousRange(a.range))'));
   ok('event invoices need money.payments; resend only with events.manage', ir.includes("requirePermission(session, 'money.payments')") && ir.includes("can(session, 'events.manage')"));
 
   await cleanup();

@@ -79,6 +79,8 @@ ok('the total adds up', hp.totalCents === 8500);
   ok('by hour of payment', JSON.stringify(A.byHour) === JSON.stringify([{ hour: 7, cents: 700 }, { hour: 8, cents: 5000 }, { hour: 9, cents: 1000 }, { hour: 14, cents: 2000 }, { hour: 15, cents: -500 }]), A.byHour);
   ok('how paid adds up to the same total', A.paid.totalCents === A.totalCents && A.paid.onlineCents === 4500 && A.paid.readerCents === 2000 && A.paid.cashCents === 1700, A.paid);
   ok('the period before is passed through', A.beforeTotalCents === 4200);
+  const F = allOf([r('2026-11-16', 600, 'cash', 100)], { from: '2026-11-09', to: '2026-11-22' }, '2026-11-15', 0);
+  ok('days still to come never dilute a weekday average', F.byDow.every(x => x.days <= 1) && F.byDow[1].days === 1 && F.byDow[1].cents === 0, F.byDow);
   const W = allOf([], { from: '2026-08-01', to: '2026-11-15' }, '2026-11-15', 0);
   ok('a long range is by Monday-start week', W.bucket === 'week' && W.series[0].key === '2026-07-27' && W.series.every(x => dowOf(x.key) === 1), W.series.slice(0, 2));
 }
