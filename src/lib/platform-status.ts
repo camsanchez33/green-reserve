@@ -24,7 +24,9 @@ const BACKUP_LATE_MS = 30 * 3_600_000;
  * pins that the re-run route cannot reach them.
  */
 export const CHARGING_JOBS = new Set(['hourly', 'cancellation-cutoff', 'send-reminders']);
-export const canRerun = (job: string) => !CHARGING_JOBS.has(job);
+/** The only jobs "Re-run job" runs (an allowlist: a new cron is not re-runnable until it is added here and in the route). */
+export const RERUN_JOBS = new Set(['generate-tee-times', 'chase-onboarding', 'monthly-review']);
+export const canRerun = (job: string) => RERUN_JOBS.has(job) && !CHARGING_JOBS.has(job);
 
 const cache = new Map<string, { at: number; value: unknown }>();
 async function cached<T>(key: string, fresh: boolean, read: () => Promise<T>): Promise<T> {
@@ -163,6 +165,10 @@ export function serviceStates(i: ServiceInput): Record<ServiceId, ServiceState> 
   const github: ServiceState = !g.readable ? { state: 'unknown', note: 'Check on GitHub' }
     : g.backup?.conclusion === 'failure' ? { state: 'bad', note: 'Last backup run failed' }
     : g.ci?.conclusion === 'failure' ? { state: 'warn', note: 'Latest test run on main failed' }
+    // One read failed (a timeout, a rate limit) or there's no run yet: say so, never a green guess.
+    : !g.backup ? { state: 'unknown', note: 'Backup run can’t be seen here' }
+    : !g.ci ? { state: 'unknown', note: 'Test run can’t be seen here' }
+    : g.backup.conclusion === 'running' || g.ci.conclusion === 'running' ? { state: 'ok', note: 'Running now' }
     : { state: 'ok', note: 'Backup and tests passing' };
 
   const st = i.stripe;

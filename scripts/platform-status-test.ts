@@ -40,6 +40,10 @@ ok('backup running is not late', S({ neon: { ...base.neon, backup: run('2026-11-
 ok('backup unseen: database still up, says so', S({ neon: { ...base.neon, backup: null } }).neon.note === 'Up · backup can’t be seen here');
 
 ok('GitHub unreadable → unknown ("Can’t see here")', S({ github: { readable: false, backup: null, ci: null } }).github.state === 'unknown');
+ok('backup run not read while tests were → unknown, never green', S({ github: { ...base.github, backup: null } }).github.state === 'unknown');
+ok('test run not read → unknown', S({ github: { ...base.github, ci: null } }).github.state === 'unknown');
+ok('no runs at all yet → unknown', S({ github: { readable: true, backup: null, ci: null } }).github.state === 'unknown');
+ok('a run still going reads running, not passing', S({ github: { ...base.github, ci: { ...base.github.ci!, conclusion: 'running' } } }).github.note === 'Running now');
 ok('tests failing on main → amber', S({ github: { ...base.github, ci: { ...base.github.ci!, conclusion: 'failure' } } }).github.state === 'warn');
 ok('backup failing → red on GitHub too', S({ github: { ...base.github, backup: run('2026-11-15T08:01:00Z', 'failure') } }).github.state === 'bad');
 
@@ -70,6 +74,7 @@ ok('no run → null', runOf(undefined) === null);
 
 ok('charging jobs cannot be re-run', ['hourly', 'cancellation-cutoff', 'send-reminders'].every(j => !canRerun(j)) && CHARGING_JOBS.size === 3);
 ok('the other jobs can', ['generate-tee-times', 'chase-onboarding', 'monthly-review'].every(canRerun));
+ok('a job not on the allowlist cannot', !canRerun('some-new-job'));
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');

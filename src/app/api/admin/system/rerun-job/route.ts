@@ -31,6 +31,7 @@ export const maxDuration = 300;
 type Cron = { path: string; schedule: string };
 const CRONS: Cron[] = ((vercelConfig as { crons?: Cron[] }).crons ?? []);
 
+// Keep in step with RERUN_JOBS (lib/platform-status); admin-never-charges-test pins both.
 const HANDLERS: Record<string, (req: NextRequest) => Promise<NextResponse>> = {
   '/api/cron/generate-tee-times': generateTeeTimes,
   '/api/cron/chase-onboarding': chaseOnboarding,
