@@ -3,7 +3,7 @@
 // doesn't return yet, the owner tools only for the owner, and every old System feature still on the page.
 // Run: npx tsx scripts/admin-system-test.ts
 import { readFileSync } from 'fs';
-import { services, tools, summary, worst, matches, CANT, type SystemData } from '../src/app/admin/system/services';
+import { services, localSt, tools, summary, worst, matches, CANT, type SystemData } from '../src/app/admin/system/services';
 
 let failed = 0;
 const page0 = () => readFileSync('src/app/admin/system/page.tsx', 'utf8');
@@ -43,6 +43,9 @@ check('Filter and wordless search', matches(jobs, 'bad', '') && !matches(jobs, '
 const told = services({ ...base, services: { neon: { state: 'ok', note: 'Up · backup done' }, assistant: { state: 'unknown', note: '' }, stripe: { state: 'bad', note: 'Webhook failing' } } });
 check('Build’s verdict is used as-is: colour and words', told.find(s => s.id === 'neon')!.st === 'ok' && told.find(s => s.id === 'neon')!.state === 'Up · backup done' && told.find(s => s.id === 'stripe')!.st === 'bad');
 check('"unknown" from the route reads "Can’t see here" with a grey dot', told.find(s => s.id === 'anthropic')!.st === '' && told.find(s => s.id === 'anthropic')!.state === CANT);
+check('no "server says" block on the owner tools or without a server verdict', ['data', 'agree', 'wipe', 'jobs'].every(id => localSt(base, id) === null)
+  && localSt({ ...base, services: { stripe: { state: 'bad', note: 'x' } } }, 'agree') === null);
+check('…but there is one when the server says red and the page’s own reads say green', localSt({ ...base, services: { stripe: { state: 'bad', note: 'x' } } }, 'stripe') === 'ok');
 check('a card-charging job never gets a Re-run button (canRerun false hides it)', page0().includes("c.canRerun === false") && page0().includes('charges ? null'));
 
 const orphans = { checked: false, items: [], acknowledged: [], note: '' };

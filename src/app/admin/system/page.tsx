@@ -13,7 +13,7 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type React
 import { useRouter, useSearchParams } from 'next/navigation';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { useAdminSession } from '@/lib/admin-session-context';
-import { adminFetch, type AdminFetchFailure } from '@/lib/admin-fetch';
+import { adminFetch, LOGIN_SESSION_ENDED, type AdminFetchFailure } from '@/lib/admin-fetch';
 import { formatDate, formatDateTime, formatMoney } from '@/lib/format';
 import type { VersionRow } from '@/lib/agreement-publish';
 import g from '../admin-glass.module.css';
@@ -696,7 +696,7 @@ function SystemContent() {
         <button type="button" className={s.back} onClick={() => go(null)}>‹ back</button>
         <h2>{open.t}</h2>
         <div className={s.dst}><Dot st={open.st} /><span className={`${s.stt} ${TONE[open.st]}`}>{open.state}</span><span className={s.dsc}>{open.does}</span></div>
-        {data && (open.st === 'bad' || open.st === 'warn') && localSt(data, open.id) !== open.st && (
+        {data && (open.st === 'bad' || open.st === 'warn') && (() => { const l = localSt(data, open.id); return l !== null && l !== open.st; })() && (
           <Fix sev={open.st} note={notes.recheck?.ok} err={notes.recheck?.err} steps={[
             `The server’s check says: ${open.state}.`,
             'The lines below are this page’s own reads and may not show it yet. Open the service itself to see the detail.',
@@ -727,7 +727,7 @@ function SystemContent() {
         </div>
         {loadErr && (
           <p className={s.empty} role="alert"><span className={s.bad}>{loadErr.msg}</span>{' '}
-            {loadErr.kind === 'unauthorized' ? <a className={s.ol} href="/admin/login">Sign in</a>
+            {loadErr.kind === 'unauthorized' ? <a className={s.ol} href={LOGIN_SESSION_ENDED}>Sign in</a>
               : loadErr.kind !== 'forbidden' && <button type="button" className={s.ol} onClick={() => loadSystem()}>Try again</button>}</p>
         )}
         {!data && !loadErr && <p className={s.empty}>Loading…</p>}

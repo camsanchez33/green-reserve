@@ -144,8 +144,13 @@ export function services(d: SystemData): Svc[] {
   });
 }
 
-/** What this page's own checks say, without the route's verdict — to tell when the two disagree. */
-export const localSt = (d: SystemData, id: string): St => services({ ...d, services: undefined }).find(x => x.id === id)?.st ?? '';
+/** What this page's own checks say, without the route's verdict — to tell when the two disagree. null for anything
+ *  the route gives no verdict on (the owner tools), so no "server says" block is ever drawn there. */
+export function localSt(d: SystemData, id: string): St | null {
+  if (!d.services?.[(id === 'anthropic' ? 'assistant' : id) as ServiceKey]) return null;
+  const x = services({ ...d, services: undefined }).find(s => s.id === id);
+  return x ? x.st : null;
+}
 
 export function agreementSt(v: VersionRow): St {
   return v.published ? (v.published.hashMatches ? 'ok' : 'bad') : 'warn';
