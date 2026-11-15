@@ -4,7 +4,7 @@ import { CARD } from '@/components/ui/Card';
 // then one line a day; a day opens its movements with a Filter and a side card. From /api/operator/money/ledger
 // (LEDGER-2, EARNED-1), read-only. "Net revenue", never "profit". The GreenReserve booking fee is golfers' money, never
 // course revenue: it is taken out of Card and shown once, muted, under Totals (lane decision, Cam 2026-11-15).
-// Which payments a Stripe difference comes from is Build's (stripeDiff); until it is sent the day shows the two totals.
+// Which payments a Stripe difference comes from is Build's (?day= mismatch); until it is sent the day shows the two totals.
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { dfetch } from '@/lib/dashboard-fetch';
