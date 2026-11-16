@@ -1,0 +1,110 @@
+/* Settings → Team (Cam approved the mockup 2026-11-16, lanes/admin/team-mockup.html). Built like My profile's cards
+   (lanes/admin/profile-mockup.html): a head (title, one plain line, at most a bare plus top right), rows, and a foot only
+   where the actions need one. My profile's card pieces (PR #416) were not on main when this was built, so these match
+   them by eye; fold them into ProfileCard once both are merged. Green-glass tokens (--g-*) from ../admin-glass.module.css. */
+
+.grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; max-width: 1080px; width: 100%; }
+.has { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+@media (max-width: 900px) { .has { grid-template-columns: minmax(0, 1fr); } }
+
+/* The card build (as My profile). */
+.card { display: flex; flex-direction: column; padding: 0 0 6px; min-width: 0; }
+.ch { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 16px 18px 12px; border-bottom: 1px solid var(--g-line); }
+.ch h2 { margin: 0; font-size: 16px; font-weight: 600; color: var(--g-ink); }
+.ch p { margin: 3px 0 0; font-size: 13px; color: var(--g-muted); }
+.plus { width: 30px; height: 30px; border-radius: 9px; border: 0; background: transparent; color: var(--g-ink); display: grid; place-items: center; cursor: pointer; padding: 0; flex: none; }
+:global([data-theme="dark"]) .plus { color: #FFFFFF; }   /* "White icon buttons with no box" (lanes/admin.md) */
+.plus:hover { background: var(--g-active); }
+
+/* One line per person. */
+.row { font: inherit; color: var(--g-ink); width: 100%; text-align: left; background: none; border: 0; border-top: 1px solid var(--g-line); display: grid; grid-template-columns: 36px minmax(0, 1fr) 90px minmax(0, 190px); gap: 14px; align-items: center; padding: 12px 18px; cursor: pointer; }
+.ch + .row { border-top: 0; }
+.row:hover { background: var(--g-hover); }
+.sel { background: var(--g-active); }
+.sel:hover { background: var(--g-active); }
+.has .row { grid-template-columns: 36px minmax(0, 1fr) 80px; }
+.has .rst { display: none; }
+@media (max-width: 900px) { .row { grid-template-columns: 36px minmax(0, 1fr) auto; } .rst { display: none; } }
+.av { width: 36px; height: 36px; border-radius: 50%; background: var(--g-t1); color: var(--g-t1-ink); display: grid; place-items: center; font-size: 12.5px; font-weight: 600; flex: none; }
+.avOff { background: var(--g-line); color: var(--g-muted); }
+.avBig { width: 52px; height: 52px; font-size: 17px; }
+.nm { min-width: 0; }
+.nm b { display: block; font-weight: 600; font-size: 14px; overflow-wrap: anywhere; }
+.nm small { display: block; font-size: 12.5px; color: var(--g-muted); overflow-wrap: anywhere; }
+.nm b small { display: inline; margin-left: 4px; font-size: 12px; font-weight: 600; }
+.role { font-size: 13px; color: var(--g-ink-soft); }
+.rst { font-size: 12.5px; color: var(--g-muted); display: flex; align-items: center; gap: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.empty { margin: 0; padding: 14px 18px; font-size: 13.5px; color: var(--g-muted); }
+
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--g-muted); flex: none; display: inline-block; }
+.ok { background: var(--g-up); } .warn { background: var(--g-warn); } .bad { background: var(--g-down); }
+
+/* The person, beside the list. */
+.det { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; position: relative; min-width: 0; }
+.x { position: absolute; right: 12px; top: 10px; width: 30px; height: 30px; display: grid; place-items: center; background: none; border: 0; border-radius: 9px; color: var(--g-muted); cursor: pointer; padding: 0; }
+.x:hover { background: var(--g-hover); color: var(--g-ink); }
+.dh { display: flex; gap: 14px; align-items: center; padding-right: 30px; min-width: 0; }
+.dh h3 { margin: 0; font-size: 17px; font-weight: 600; color: var(--g-ink); overflow-wrap: anywhere; }
+.dh p { margin: 0; font-size: 13px; color: var(--g-muted); overflow-wrap: anywhere; }
+.kv { display: flex; justify-content: space-between; gap: 12px; font-size: 13.5px; border-top: 1px solid var(--g-line); padding-top: 12px; }
+.kv > span { color: var(--g-muted); }
+.kv b { font-weight: 500; text-align: right; display: inline-flex; align-items: center; gap: 8px; color: var(--g-ink); }
+.sec { border-top: 1px solid var(--g-line); padding-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.sech { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.lab { font-size: 12.5px; color: var(--g-muted); }
+.val { margin: 0; font-size: 13.5px; color: var(--g-ink); }
+
+/* Role tiles (a radio) and area check tiles. */
+.tiles { display: flex; flex-direction: column; gap: 6px; }
+.tile { font: inherit; color: var(--g-ink); text-align: left; display: flex; gap: 12px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--g-line); border-radius: 12px; background: var(--g-hover); cursor: pointer; }
+.tile:disabled { opacity: .6; cursor: default; }
+.tile i { flex: none; width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--g-muted); margin-top: 2px; box-sizing: content-box; }  /* the mockup's ring: 5px border round a 16px box when chosen */
+.tile[aria-checked="true"] { border-color: var(--g-ink); }
+.tile[aria-checked="true"] i { border: 5px solid var(--g-ink); margin: -1.5px -3.5px 0 -3.5px; }
+.tile b, .ck b { display: block; font-weight: 600; font-size: 13.5px; }
+.tile small, .ck small { display: block; font-size: 12px; color: var(--g-muted); margin-top: 2px; }
+.areas { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+@media (max-width: 900px) { .areas { grid-template-columns: minmax(0, 1fr); } }
+.ck { display: flex; gap: 10px; align-items: flex-start; padding: 9px 10px; border: 1px solid var(--g-line); border-radius: 10px; cursor: pointer; color: var(--g-ink); }
+.ck input { margin-top: 3px; accent-color: var(--g-brand); flex: none; }
+
+/* The one-time password, shown once. */
+.pw { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--g-warn) 35%, transparent); background: color-mix(in srgb, var(--g-warn) 8%, transparent); border-radius: 12px; font-size: 13px; color: var(--g-ink); }
+.pw code { font-family: ui-monospace, Menlo, monospace; font-size: 15px; color: var(--g-ink); user-select: all; overflow-wrap: anywhere; }
+.pw small { color: var(--g-muted); }
+
+.acts { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; border-top: 1px solid var(--g-line); padding-top: 12px; }
+.spring { flex: 1; }
+.line { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+.msg { margin: 0; font-size: 13px; display: flex; gap: 8px; align-items: center; }
+.msgOk { color: var(--g-up); } .msgBad { color: var(--g-down); }
+.problem { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 12px 14px; font-size: 13.5px; color: var(--g-down); max-width: 1080px; }
+
+/* Links and buttons (as My profile). */
+.lnk { font: inherit; font-size: 13px; font-weight: 600; background: none; border: 0; padding: 4px 0; color: var(--g-ink); cursor: pointer; text-decoration: underline; text-decoration-color: var(--g-focus); text-underline-offset: 3px; white-space: nowrap; }
+.lnk:disabled { opacity: .5; cursor: default; }
+.lnkBad { color: var(--g-down); text-decoration-color: var(--g-down); }
+.btn { font: inherit; font-size: 13px; font-weight: 600; border: 1px solid var(--g-line); background: var(--g-hover); color: var(--g-ink); padding: 8px 14px; border-radius: 10px; cursor: pointer; white-space: nowrap; text-decoration: none; }
+.btn:hover { background: var(--g-active); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.pri { background: var(--g-brand); color: var(--g-brand-ink); border-color: transparent; }
+.pri:hover { background: var(--g-brand); filter: brightness(1.06); }
+.solid { background: var(--g-down); color: var(--g-panel-solid); border-color: transparent; }
+.solid:hover { background: var(--g-down); filter: brightness(1.06); }
+.fld { font: inherit; font-size: 13.5px; color: var(--g-ink); background: color-mix(in srgb, var(--g-bg) 55%, transparent); border: 1px solid var(--g-line); border-radius: 10px; padding: 8px 12px; min-width: 0; box-sizing: border-box; width: 100%; }
+.lnk:focus-visible, .plus:focus-visible, .btn:focus-visible, .fld:focus-visible, .row:focus-visible, .tile:focus-visible, .x:focus-visible, .ck:focus-within { outline: 2px solid var(--g-focus); outline-offset: 1px; }
+
+/* Add someone and the confirm, in the glass (portalled to the admin shell). */
+.ov { position: fixed; inset: 0; background: rgba(4, 12, 9, .6); display: grid; place-items: center; z-index: 40; padding: 20px; }
+/* 40: under the step-up and reason boxes (z-50), which can open while Add someone is waiting. */
+.modal { width: min(480px, 100%); padding: 20px; background: var(--g-panel-solid); display: flex; flex-direction: column; gap: 12px; color: var(--g-ink); }
+.wideModal { width: min(620px, 100%); max-height: calc(100vh - 40px); overflow: auto; box-sizing: border-box; }
+.modalForm { display: flex; flex-direction: column; gap: 12px; }
+.modal h4 { margin: 0; font-size: 17px; font-weight: 600; overflow-wrap: anywhere; }
+.modal p { margin: 0; font-size: 13.5px; color: var(--g-ink-soft); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.two label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--g-ink-soft); }
+@media (max-width: 900px) { .two { grid-template-columns: minmax(0, 1fr); } }
+
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--g-panel-solid); border: 1px solid var(--g-edge); box-shadow: var(--g-shadow); padding: 10px 16px; border-radius: 12px; font-size: 13.5px; color: var(--g-ink); z-index: 45; }
