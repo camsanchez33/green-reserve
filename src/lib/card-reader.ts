@@ -22,7 +22,7 @@ import Stripe from 'stripe';
 import { createHash } from 'crypto';
 import { prisma } from './prisma';
 import { stripe } from './stripe';
-import { saleIntent, markCardPaid, whyNotOpen, packSaleOff } from './shop-sales';
+import { saleIntent, saleCardCents, markCardPaid, whyNotOpen, packSaleOff } from './shop-sales';
 
 type Result<T> = { ok: true; value: T } | { ok: false; status: number; error: string };
 const fail = (status: number, error: string) => ({ ok: false as const, status, error });
@@ -140,7 +140,7 @@ const releaseToOpen = (saleId: string, stamp: Date) =>
 export async function startReaderPayment(courseId: string, saleId: string, readerId: string): Promise<Result<{ status: 'waiting'; message?: string }>> {
   const c = await courseStripe(courseId);
   if (!c.ok) return c;
-  const sale = await prisma.shopSale.findFirst({ where: { id: saleId, courseId }, select: { status: true, payToken: true, totalCents: true, paymentIntentId: true } });
+  const sale = await prisma.shopSale.findFirst({ where: { id: saleId, courseId }, select: { status: true, payToken: true, totalCents: true, serviceFeeCents: true, paymentIntentId: true } });
   if (!sale) return fail(404, 'Sale not found.');
   if (sale.payToken) return fail(409, 'This sale was sent as a pay link — take cash for it or void it, and ring it up again on the reader.');
   { const off = await packSaleOff(saleId); if (off) return fail(410, off); }
@@ -153,7 +153,8 @@ export async function startReaderPayment(courseId: string, saleId: string, reade
   if (!claimed.count) return fail(409, 'This sale changed at the same moment — refresh and try again.');
   let pi: Stripe.PaymentIntent;
   try {
-    pi = await saleIntent(saleId, sale.paymentIntentId, sale.totalCents, c.value.name, c.value.account, 'card_present');
+    // SHOP-FEE-1: the reader takes the course's total plus GreenReserve's service fee.
+    pi = await saleIntent(saleId, sale.paymentIntentId, saleCardCents(sale), sale.serviceFeeCents, c.value.name, c.value.account, 'card_present');
   } catch (err) {
     await releaseToOpen(saleId, stamp); // no intent → nothing can be charged
     return fail(502, stripeMessage(err, 'Card payments are not working right now — take cash, or try again.'));

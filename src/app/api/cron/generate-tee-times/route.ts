@@ -16,7 +16,7 @@ export const GET = cronRoute('generate-tee-times', async (req: NextRequest) => {
   // PRICE-5: each demand-priced course's weekly suggestions (applied when the course chose automatic).
   const demand: Record<string, string> = {};
   for (const c of await demandDue()) {
-    try { demand[c.id] = await refreshDemand(c.id); }
+    try { demand[c.id] = await refreshDemand(c.id, new Date(), { claim: true }); }
     catch (err) { demand[c.id] = 'failed'; errors.push({ courseId: c.id, date: '', error: `demand pricing: ${err instanceof Error ? err.message : String(err)}` }); }
   }
   return NextResponse.json({ ok: true, errorCount: errors.length, errors, demand });

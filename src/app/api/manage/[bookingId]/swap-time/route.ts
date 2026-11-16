@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { residentPricingOn } from '@/lib/pricing-switch';
 import { prisma } from '@/lib/prisma';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
-import { CURRENT_TERMS_VERSION } from '@/lib/terms';
+import { termsVersionNow } from '@/lib/terms';
 import { getGolferSession } from '@/lib/auth';
 import { canManageBooking } from '@/lib/manage-access';
 import { moveBooking } from '@/lib/move-booking';
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
   try {
     const r = await moveBooking({
       bookingId, newTeeTimeId, courseId: booking.courseId, pricing: 'new_slot', residentPlayers,
-      actor: { type: 'golfer', id: golferSession?.golferId ?? null }, terms: { version: CURRENT_TERMS_VERSION },
+      actor: { type: 'golfer', id: golferSession?.golferId ?? null }, terms: { version: await termsVersionNow() },
     });
     if (!r.ok) return NextResponse.json({ error: COPY[r.code] ?? r.message }, { status: STATUS[r.code] ?? 409 });
     return NextResponse.json({
