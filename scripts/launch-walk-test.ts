@@ -14,8 +14,8 @@ const read = (p: string) => readFileSync(p, 'utf8');
 // 1. "Do holders pay a green fee per round?" No → a $0 member green fee, not the public price.
 const build = read('src/app/api/admin/inquiries/route.ts');
 check('a membership whose holders pay no green fee is built at $0 a round', build.includes("const noGreenFee = str(p.perRound) === 'no';") && build.includes(": noGreenFee ? 0 : null;") && build.includes("'No green fee per round'"));
-const tt = { greenFeeCents: 4200, cartFeeCents: 2000, memberRateCents: null, date: '2026-11-04' };
-const free = applyTierRates(tt, { greenFeeWeekdayCents: 0, greenFeeWeekendCents: 0, cartFeeWeekdayCents: null, cartFeeWeekendCents: null, discountPct: null });
+const tt = { greenFeeCents: 4200, cartFeeCents: 2000, memberRateCents: null, date: '2026-11-04', productId: null };
+const free = applyTierRates(tt, { greenFeeWeekdayCents: 0, greenFeeWeekendCents: 0, cartFeeWeekdayCents: null, cartFeeWeekendCents: null, discountPct: null, lineRates: null });
 check('…and a $0 tier rate prices the round at $0 (cart at the course\'s price)', free.greenFeeCents === 0 && free.cartFeeCents === 2000);
 
 // 3. The manage page's other times: the route sends dollars, the page shows cents.

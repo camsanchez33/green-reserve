@@ -77,7 +77,7 @@ async function cleanup() {
   ok('the database filter agrees with the rule', liveRows.length === 1 && liveRows[0].inviteEmail === `${TAG}+live@t.local`, liveRows);
 
   // A cart added at check-in: a weekday booking of 4, public cart $20, member cart $10.
-  const b = (email: string) => ({ golferAccountId: null, golferEmail: email, courseId: course.id, players: 4, cartSelected: false, cartFeeTotal: 0, paymentStatus: 'card_on_file', roundPaymentIntentId: '', teeTime: { date: '2026-11-04', cartFeeCents: 2000 } });
+  const b = (email: string) => ({ golferAccountId: null, golferEmail: email, courseId: course.id, players: 4, cartSelected: false, cartFeeTotal: 0, paymentStatus: 'card_on_file', roundPaymentIntentId: '', teeTime: { date: '2026-11-04', cartFeeCents: 2000, productId: null } });
   ok('check-in cart: the member at the member price, guests at the public price', (await cartAddOnCentsFor(b(`${TAG}+live@t.local`))) === 1000 + 3 * 2000);
   ok('…a lapsed member pays the public price for all', (await cartAddOnCentsFor(b(`${TAG}+lapsed@t.local`))) === 4 * 2000);
   await prisma.membershipTier.update({ where: { id: tier.id }, data: { guestsPayMemberRate: true } });

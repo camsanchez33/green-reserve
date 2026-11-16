@@ -47,11 +47,13 @@ export function lastBookableDate(windowDays: number, now: Date = new Date(), tz?
 }
 
 export type WindowCourse = { publicAdvanceDays?: number | null; memberAdvanceDays?: number | null };
-export type WindowTier = { advanceBookingDays?: number | null } | null | undefined;
+/** windowPublic (Memberships item 3): the membership books as far ahead as the public, no further. */
+export type WindowTier = { advanceBookingDays?: number | null; windowPublic?: boolean | null } | null | undefined;
 
 /** The window for a viewer: a member's tier, a tierless member's course default, or the public window. */
 export function windowFor(course: WindowCourse, member: { tier?: WindowTier } | null): { days: number; scope: 'public' | 'member' } {
   if (member) {
+    if (member.tier?.windowPublic) return { days: course.publicAdvanceDays ?? DEFAULT_PUBLIC_WINDOW_DAYS, scope: 'member' };
     const tierDays = member.tier?.advanceBookingDays;
     return { days: tierDays ?? course.memberAdvanceDays ?? DEFAULT_MEMBER_WINDOW_DAYS, scope: 'member' };
   }
@@ -59,11 +61,12 @@ export function windowFor(course: WindowCourse, member: { tier?: WindowTier } | 
 }
 
 /** How many days of tee times a course needs generated: its widest window, plus one. Never below the old 8. */
-export function generationHorizonDays(course: WindowCourse, tiers: { advanceBookingDays?: number | null }[] = []): number {
+export function generationHorizonDays(course: WindowCourse, tiers: { advanceBookingDays?: number | null; windowPublic?: boolean | null }[] = []): number {
   const widest = Math.max(
     course.publicAdvanceDays ?? DEFAULT_PUBLIC_WINDOW_DAYS,
     course.memberAdvanceDays ?? DEFAULT_MEMBER_WINDOW_DAYS,
-    ...tiers.map(t => t.advanceBookingDays ?? 0),
+    // A membership on the public window books no further than the public (its advanceBookingDays is unused).
+    ...tiers.map(t => (t.windowPublic ? 0 : t.advanceBookingDays ?? 0)),
   );
   // Hard cap so no future writer can turn one course's window into a runaway cron loop.
   return Math.min(366, Math.max(MIN_GENERATION_DAYS, widest + 1));

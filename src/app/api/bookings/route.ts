@@ -129,7 +129,7 @@ export async function POST(req: NextRequest) {
   let resolvedCartFeeOverride: number | null = null;
   // BOOKING WINDOWS: the recognized membership (tier or tierless) decides how
   // far ahead this booking may reach; null = the public window.
-  let viewerMembership: { tier: { advanceBookingDays: number } | null } | null = null;
+  let viewerMembership: { tier: { advanceBookingDays: number; windowPublic: boolean } | null } | null = null;
   if (golferSession) {
     // G5b: matches by direct golferId link OR the golfer's OTP-verified email
     // against an invite-only membership — same recognition as the course page.

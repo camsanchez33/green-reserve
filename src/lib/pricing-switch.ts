@@ -9,6 +9,7 @@
 // A course that sets a member or resident price is switched on for it (tiers route,
 // schedules save), and migration 20261101_pricing_switch_backfill switched on every
 // course that already had one, so turning this on was never something to forget.
+import { readLineRates } from './tier-rates';
 import { prisma } from './prisma';
 
 export const memberPricingOn = (c: { hasMemberPricing?: boolean | null } | null | undefined) => !!c?.hasMemberPricing;
@@ -26,7 +27,7 @@ async function priceSnapshot(courseId: string): Promise<Snap> {
   const [tiers, schedules] = await Promise.all([
     // Every row, active or not: resuming a paused schedule or membership adds no NEW value, so it never
     // flips back a switch the owner turned off (final review 2026-11-01). Only a typed price does.
-    prisma.membershipTier.findMany({ where: { courseId }, select: { greenFeeWeekdayCents: true, greenFeeWeekendCents: true, cartFeeWeekdayCents: true, cartFeeWeekendCents: true, discountPct: true } }),
+    prisma.membershipTier.findMany({ where: { courseId }, select: { greenFeeWeekdayCents: true, greenFeeWeekendCents: true, cartFeeWeekdayCents: true, cartFeeWeekendCents: true, discountPct: true, lineRates: true } }),
     prisma.teeTimeSchedule.findMany({ where: { courseId }, select: { memberRateWeekdayCents: true, memberRateWeekendCents: true, residentRateWeekdayCents: true, residentRateWeekendCents: true } }),
   ]);
   const member = new Set<string>(), resident = new Set<string>();
@@ -34,6 +35,8 @@ async function priceSnapshot(courseId: string): Promise<Snap> {
   for (const t of tiers) {
     add(member, 'tgd', t.greenFeeWeekdayCents); add(member, 'tge', t.greenFeeWeekendCents);
     add(member, 'tcd', t.cartFeeWeekdayCents); add(member, 'tce', t.cartFeeWeekendCents); add(member, 'tpct', t.discountPct);
+    // Memberships item 3: a price-list line set on a membership is a member price too.
+    for (const [k, v] of Object.entries(readLineRates(t.lineRates) ?? {})) member.add(`tl:${k}:${JSON.stringify(v)}`);
   }
   for (const s of schedules) {
     add(member, 'sd', s.memberRateWeekdayCents); add(member, 'se', s.memberRateWeekendCents);
