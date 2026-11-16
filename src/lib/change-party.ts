@@ -26,6 +26,8 @@ import { giveBack } from './round-packs';
 export type PartyWho = { by: 'golfer'; golferId?: string | null; token?: string } | { by: 'staff'; courseId: string; actor: EventActor };
 
 export async function changePartySize(bookingId: string, newPlayers: number, who: PartyWho) {
+  // SHOP-FEE-1: read before the transaction (it may query), never inside it.
+  const termsVersion = who.by === 'golfer' ? await termsVersionNow() : '';
   const result = await prisma.$transaction(async (tx) => {
       const booking = await tx.booking.findUnique({
         where: { id: bookingId },
@@ -116,7 +118,7 @@ export async function changePartySize(bookingId: string, newPlayers: number, who
         data: {
           players: newPlayers, greenFeeTotal, cartFeeTotal, ...(cartResized ? { cartRiders: cartResized.cartRiders } : ridersAfter != null ? { cartRiders: ridersAfter } : {}), ...(packBack > 0 ? { packRounds: booking.packRounds - packBack } : {}),
           ...(res ? { residentPlayers: res.residentPlayers, residentRateCents: res.residentRateCents } : {}), accessFeeTotal, totalAmount, cancellationFeeTotal, noShowFeeTotal,
-          ...(who.by === 'golfer' ? { termsAcceptedAt: new Date(), termsVersion: await termsVersionNow() } : {}),
+          ...(who.by === 'golfer' ? { termsAcceptedAt: new Date(), termsVersion } : {}),
         },
       });
       if (who.by === 'staff') await recordBookingEvent(tx, {

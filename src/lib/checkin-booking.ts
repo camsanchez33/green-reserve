@@ -28,7 +28,7 @@ import { cartCharge, cartRuleOf } from './cart-pricing';
  *   performCheckIn()  — take the money AND record the arrival + receipt.
  *
  * Charges the full round total (green + cart + range balls + the GreenReserve
- * access fee, plus any pro-shop items added to the round and their 50¢ fee —
+ * access fee, plus any pro-shop items added to the round and their 1% service fee (SHOP-FEE-1) —
  * POS-1a, lib/shop.ts roundChargeCents) as a direct charge on the course's
  * connected Stripe account, with the access fee (and shop fee) taken as the
  * application fee on that same charge. If the

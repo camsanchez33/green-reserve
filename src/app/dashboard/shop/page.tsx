@@ -780,7 +780,7 @@ export default function ShopPage() {
                         <>
                           {justPaid ? (
                             <div className="text-center pt-2">
-                              <p className="text-[30px] font-bold tabular-nums text-ink">{usd(justPaid.totalCents)}</p>
+                              <p className="text-[30px] font-bold tabular-nums text-ink">{usd(justPaid.totalCents + (justPaid.serviceFeeCents ?? 0))}</p>
                               <p className="text-[13.5px] text-ok font-medium mt-1">
                                 {justPaid.status === 'paid_card' ? 'Paid by card' : justPaid.status === 'paid_account' ? 'On their account' : 'Paid in cash'}
                                 {justPaid.cashTenderedCents != null && justPaid.cashTenderedCents > justPaid.totalCents && <> · change <span className="tabular-nums">{usd(justPaid.cashTenderedCents - justPaid.totalCents)}</span></>}
@@ -875,7 +875,7 @@ export default function ShopPage() {
                             <b className="block truncate text-[14px] font-semibold text-ink">{x.lines.map(l => `${l.name}${l.quantity > 1 ? ` ×${l.quantity}` : ''}`).join(', ') || 'Sale'}</b>
                             <span className="block truncate text-[12.5px] text-ink-muted">{st.tone === 'neutral' ? st.label : <StatusDot status={st.tone} label={st.label} />}{x.customerName ? ` · ${x.customerName}` : ''}</span>
                           </span>
-                          <span className={'text-right text-[15px] tabular-nums ' + (x.status === 'void' ? 'text-ink-muted line-through font-medium' : 'text-ink font-semibold')}>{usd(x.totalCents)}</span>
+                          <span className={'text-right text-[15px] tabular-nums ' + (x.status === 'void' ? 'text-ink-muted line-through font-medium' : 'text-ink font-semibold')}>{usd(x.totalCents + (x.serviceFeeCents ?? 0))}</span>
                         </button>
                       </li>
                     );
@@ -901,7 +901,8 @@ export default function ShopPage() {
                 ))}
                 {s.discountCents > 0 && <div className="flex justify-between gap-3 py-2 border-t border-line"><dt className="text-ink-soft">Discount{s.discountNote ? ` (${s.discountNote})` : ''}</dt><dd className="font-semibold tabular-nums">−{usd(s.discountCents)}</dd></div>}
                 {(s.taxCents > 0 || sub !== s.totalCents) && <div className="flex justify-between gap-3 py-2 border-t border-line"><dt className="text-ink-soft">Tax</dt><dd className="font-semibold tabular-nums">{usd(s.taxCents)}</dd></div>}
-                <div className="flex justify-between gap-3 py-2 border-t border-line"><dt className="font-semibold text-ink">Total</dt><dd className="font-semibold tabular-nums">{usd(s.totalCents)}</dd></div>
+                {(s.serviceFeeCents ?? 0) > 0 && <div className="flex justify-between gap-3 py-2 border-t border-line"><dt className="text-ink-soft">{SHOP_FEE_LABEL}</dt><dd className="font-semibold tabular-nums">{usd(s.serviceFeeCents ?? 0)}</dd></div>}
+                <div className="flex justify-between gap-3 py-2 border-t border-line"><dt className="font-semibold text-ink">Total</dt><dd className="font-semibold tabular-nums">{usd(s.totalCents + (s.serviceFeeCents ?? 0))}</dd></div>
                 {s.refundedCents > 0 && <div className="flex justify-between gap-3 py-2 border-t border-line"><dt className="text-ink-soft">Refunded</dt><dd className="font-semibold tabular-nums">−{usd(s.refundedCents)}</dd></div>}
               </dl>
               {pending.map(r => (

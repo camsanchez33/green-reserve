@@ -1,7 +1,7 @@
 'use client';
 // POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): pro-shop items on one
 // group's booking, in the tee-sheet panel. Items are charged with the round at
-// check-in or on the golfer's pay link, plus GreenReserve's $0.50 per sale
+// check-in or on the golfer's pay link, plus GreenReserve's 1% service fee when paid by card (SHOP-FEE-1)
 // (paid by the golfer). Once the round is paid they lock — a later sale is a
 // separate counter sale.
 import { useState } from 'react';

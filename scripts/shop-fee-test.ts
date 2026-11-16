@@ -10,7 +10,10 @@ import { stripe } from '../src/lib/stripe';
 import { shopServiceFeeCents, SHOP_FEE_FIRST_VERSION, SHOP_FEE_LABEL } from '../src/lib/booking-fees';
 import { shopFeeOn, namesShopFee } from '../src/lib/shop-fee';
 import { addItemToBooking, roundApplicationFeeCents, roundChargeCents } from '../src/lib/shop';
-import { createSale, chargeSale, settleOpenSale, refundSale, quoteSale, shopFeeBaseCents, serviceFeeBackCents, saleCardCents } from '../src/lib/shop-sales';
+import { createSale, chargeSale, settleOpenSale, refundSale, quoteSale, shopFeeBaseCents, serviceFeeBackCents, serviceFeeShareOfRefund, saleCardCents, saleIntent } from '../src/lib/shop-sales';
+import { refundRound } from '../src/lib/staff-refund';
+import { staffShopReceipt } from '../src/lib/shop-receipt';
+import { termsVersionNow, SHOP_FEE_TERMS_VERSION } from '../src/lib/terms';
 import { performCheckIn } from '../src/lib/checkin-booking';
 import { settleAtCounter } from '../src/lib/counter-pay';
 import { refundBooking } from '../src/lib/refund-booking';
@@ -77,6 +80,15 @@ async function main() {
   check('a round pack (prepaid rounds) is never in the base', shopFeeBaseCents([{ unitPriceCents: 5000, quantity: 1 }, { unitPriceCents: 20000, quantity: 1, pack: {} }]) === 5000);
   check('a refund gives back its share of the fee: half the items → half the fee', serviceFeeBackCents(3300, { totalCents: 6600, serviceFeeCents: 66 }) === 33);
   check('…and the whole fee on a whole refund, never more', serviceFeeBackCents(6600, { totalCents: 6600, serviceFeeCents: 66 }) === 66 && serviceFeeBackCents(9999, { totalCents: 6600, serviceFeeCents: 66 }) === 66);
+  {
+    const sale = { totalCents: 1000, serviceFeeCents: 10 };
+    const parts = [333, 333, 334];
+    let prior = 0, back = 0;
+    for (const p of parts) { back += serviceFeeShareOfRefund(prior, p, sale); prior += p; }
+    check('part refunds add up to exactly the fee ($10 sale, 10¢, refunded 3.33 + 3.33 + 3.34)', back === 10, back);
+    const two = serviceFeeShareOfRefund(0, 1650, { totalCents: 6600, serviceFeeCents: 66 }) + serviceFeeShareOfRefund(1650, 1650, { totalCents: 6600, serviceFeeCents: 66 });
+    check('…and a receipt\'s refunded total matches what went back (two $16.50 refunds of the $66 sale)', two === serviceFeeBackCents(3300, { totalCents: 6600, serviceFeeCents: 66 }), two);
+  }
   check('a cash sale has no fee to give back', serviceFeeBackCents(3300, { totalCents: 6600, serviceFeeCents: 0 }) === 0);
   check('the card pays the course\'s total plus the fee', saleCardCents({ totalCents: 6600, serviceFeeCents: 66 }) === 6666);
   check('the round\'s charge adds the items\' fee once, the $1.50 per player apart', roundChargeCents({ totalAmount: 5300, shopTotalCents: 6600, shopFeeCents: 66, shopTaxCents: 0 }) === 5300 + 6600 + 66 && roundApplicationFeeCents({ accessFeeTotal: 300, shopFeeCents: 66 }) === 366);
@@ -145,6 +157,15 @@ async function main() {
   const rest = await refundSale(newCourse.id, link.value.id, { reason: 'all back' }, 't');
   const r2 = refunds.at(-1);
   check('the rest back: the whole fee has come back to the golfer', rest.ok && r2?.amount === 3333 && (r1?.amount ?? 0) + (r2?.amount ?? 0) === 6666, { rest, r2 });
+  const rcpt = await staffShopReceipt(newCourse.id, link.value.id);
+  check('the receipt shows the fee as its own line, the card total, and all of it refunded', rcpt?.serviceFeeCents === 66 && rcpt?.totalCents === 6666 && rcpt?.refundedCents === 6666, rcpt);
+
+  // The card reader takes the same fee.
+  const onReader = await createSale({ courseId: newCourse.id, lines: cart, pay: 'reader', soldBy: 't' });
+  if (!onReader.ok) throw new Error(onReader.error);
+  const rpi = await saleIntent(onReader.value.id, '', saleCardCents(onReader.value), onReader.value.serviceFeeCents, 'Fee new', 'acct_test', 'card_present');
+  check('a reader sale: the card_present intent takes $66.66 with 66¢ as the application fee', onReader.value.serviceFeeCents === 66 && rpi.amount === 6666 && rpi.application_fee_amount === 66, rpi);
+  check('once the version naming the fee is in effect, golfers agree to the /terms version that names it', (await termsVersionNow()) === SHOP_FEE_TERMS_VERSION);
 
   // Cash never carries it.
   const cash = await createSale({ courseId: newCourse.id, lines: cart, pay: 'cash', soldBy: 't' });
@@ -187,6 +208,15 @@ async function main() {
   check('a part refund of the round gives GreenReserve\'s fee back pro rata (as the booking fee does)', ref.ok && rr?.refund_application_fee === true && rr?.amount === 5983, { ref, rr });
   const rMove = await prisma.moneyMove.findFirst({ where: { bookingId: b.id, direction: 'out' } });
   check('recordMove: that refund carries its share of the $3.66', rMove?.platformFeeCents === feeBackCents(5983, 11966, 366), rMove);
+
+  // A part refund staff make from the tee sheet keeps GreenReserve's fees on the round, the $1.50 and the 1%
+  // alike (as before SHOP-FEE-1); the agreement and /terms say so.
+  const staffB = await booking(newCourse.id, tt.id);
+  await addItemToBooking(newCourse.id, staffB.id, shirt.id, 1, 'staff');
+  await performCheckIn(staffB.id, { type: 'staff', id: op.id });
+  const shirtBack = await refundRound(newCourse.id, staffB.id, { amountCents: 5000, reason: 'shirt back', actorName: 't', actor: { type: 'staff', id: op.id } });
+  const sr = refunds.at(-1);
+  check('a staff part refund (the shirt) gives back $50 and keeps GreenReserve\'s 50¢ and $3', shirtBack.ok && sr?.amount === 5000 && sr?.refund_application_fee === false, { shirtBack, sr });
 
   const counter = await booking(newCourse.id, tt.id);
   await addItemToBooking(newCourse.id, counter.id, shirt.id, 1, 'staff');

@@ -34,7 +34,7 @@ export default async function TermsOfServicePage() {
                 <a href="/operator-agreement" className={navIdle}>Operator Agreement</a>
               </nav>
               <p className="mt-6 pl-3 text-xs text-ink-soft leading-relaxed">
-                Version v2026-11-05<br />Last updated November 5, 2026
+                {shopFee ? <>Version v2026-11-16<br />Last updated November 16, 2026</> : <>Version v2026-11-05<br />Last updated November 5, 2026</>}
               </p>
             </div>
           </aside>
@@ -97,7 +97,7 @@ export default async function TermsOfServicePage() {
                 <p>
                   Items the course&apos;s staff add to your round from its pro shop are priced by the course and are added to the
                   same payment as your round. Where a course collects membership dues through GreenReserve, a <strong className="text-ink">GreenReserve fee of 1% of the dues and any initiation fee</strong>
-                  is added to what the member pays.{shopFee && <> When you pay for pro-shop items by card (on a pay link, on the course&apos;s card reader, or with your round), a <strong className="text-ink">GreenReserve service fee of 1% of the items</strong>, before sales tax, is added and shown before you pay. It is never charged on the round itself, and items paid in cash, at the counter or on a member&apos;s account carry no GreenReserve fee. If the items are refunded, the fee is refunded in the same proportion.</>} GreenReserve charges courses no listing, subscription or commission fees. Card
+                  is added to what the member pays.{shopFee && <> When you pay for pro-shop items by card (on a pay link, on the course&apos;s card reader, or with your round), a <strong className="text-ink">GreenReserve service fee of 1% of the items</strong>, before sales tax, is added and shown before you pay. It is never charged on the round itself, and items paid in cash, at the counter or on a member&apos;s account carry no GreenReserve fee. If a walk-up card payment for items is refunded, or the whole payment for your round is refunded, the fee is refunded in the same proportion.</>} GreenReserve charges courses no listing, subscription or commission fees. Card
                   processing fees apply under the course&apos;s own Stripe account.
                 </p>
               </section>
@@ -202,14 +202,14 @@ export default async function TermsOfServicePage() {
 
               <section className="pt-6 border-t border-line">
                 <h3 className="font-semibold text-sm text-ink mb-2">Changes to these terms</h3>
-                <p className="text-sm mb-2">
-                  <strong className="text-ink">v2026-11-05 (current):</strong> the text-message section is headed SMS Terms and says we
-                  don’t sell or share text-message opt-in data or personal information for marketing (Twilio carrier registration).
-                </p>
                 {shopFee && <p className="text-sm mb-2">
-                  <strong className="text-ink">v2026-11-16:</strong> a GreenReserve service fee of 1% on pro-shop items paid by card;
+                  <strong className="text-ink">v2026-11-16 (current):</strong> a GreenReserve service fee of 1% on pro-shop items paid by card;
                   none on cash, at the counter or on a member&apos;s account.
                 </p>}
+                <p className="text-sm mb-2">
+                  <strong className="text-ink">v2026-11-05{shopFee ? '' : ' (current)'}:</strong> the text-message section is headed SMS Terms and says we
+                  don’t sell or share text-message opt-in data or personal information for marketing (Twilio carrier registration).
+                </p>
                 <p className="text-sm mb-2">
                   <strong className="text-ink">v2026-11-02:</strong> texts are sent only to numbers that agreed — an unticked box
                   when you book or sign up, or a spoken yes to course staff — at up to 4 messages per booking.

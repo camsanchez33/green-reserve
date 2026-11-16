@@ -719,13 +719,20 @@ async function giveBackRefund(refundId: string, saleId: string, amountCents: num
 }
 
 /**
- * SHOP-FEE-1: the share of a card sale's service fee a refund of `courseCents` (of the course's
- * totalCents) gives back to the golfer — pro rata, half up; the whole fee on a whole refund. Pure.
+ * SHOP-FEE-1: the share of a card sale's service fee that `courseCents` refunded so far (of the course's
+ * totalCents) has given back to the golfer — pro rata, half up; the whole fee once all of it is back. Pure.
+ * One refund's share is the difference of this before and after it (serviceFeeShareOfRefund), so part
+ * refunds add up to exactly the fee and a receipt's "refunded" matches what went back.
  */
 export function serviceFeeBackCents(courseCents: number, sale: { totalCents: number; serviceFeeCents?: number | null }): number {
   const fee = sale.serviceFeeCents ?? 0;
   if (fee <= 0 || sale.totalCents <= 0 || courseCents <= 0) return 0;
   return Math.min(fee, Math.round((fee * Math.min(courseCents, sale.totalCents)) / sale.totalCents));
+}
+
+/** SHOP-FEE-1: one refund's share of the fee, given what was refunded before it. Pure. */
+export function serviceFeeShareOfRefund(priorCents: number, courseCents: number, sale: { totalCents: number; serviceFeeCents?: number | null }): number {
+  return Math.max(0, serviceFeeBackCents(priorCents + courseCents, sale) - serviceFeeBackCents(priorCents, sale));
 }
 
 /**
@@ -750,7 +757,9 @@ export async function sendShopRefund(courseId: string, refundId: string): Promis
     // GreenReserve gives its application fee back pro rata (refund_application_fee), as a round's refund does.
     const charged = saleCardCents(r.sale);
     const stillOnCard = charged - earlier.data.filter(x => x.status !== 'failed' && x.status !== 'canceled').reduce((n, x) => n + x.amount, 0);
-    const amount = Math.min(r.amountCents + serviceFeeBackCents(r.amountCents, r.sale), Math.max(r.amountCents, stillOnCard));
+    // What this sale had refunded before this one (refunds that didn't fail, oldest first), so the shares add up.
+    const prior = (await prisma.shopSaleRefund.findMany({ where: { saleId: r.saleId, status: { not: 'failed' }, createdAt: { lt: r.createdAt } }, select: { amountCents: true } })).reduce((n, x) => n + x.amountCents, 0);
+    const amount = Math.min(r.amountCents + serviceFeeShareOfRefund(prior, r.amountCents, r.sale), Math.max(r.amountCents, stillOnCard));
     const sr = found ?? await stripe.refunds.create(
       { payment_intent: r.sale.paymentIntentId, amount, ...(r.sale.serviceFeeCents > 0 ? { refund_application_fee: true } : {}), metadata: { shopRefundId: r.id, shopSaleId: r.saleId } },
       { stripeAccount: account, idempotencyKey: `shop-refund-${r.id}` },

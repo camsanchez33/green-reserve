@@ -12,6 +12,8 @@ async function main() {
   let inserted = 0, unchanged = 0;
   for (const document of Object.keys(DOCUMENT_DIR) as AgreementDocument[]) {
     for (const version of listVersions(document)) {
+      // A draft (e.g. a version waiting on counsel) is never published; skip it rather than stop the seed.
+      if (loadDocument(document, version).draft) { console.log(`skipped ${document} ${version}: draft`); continue; }
       // AG-3 §1: a bump that requires re-acceptance is a legal event — it
       // refuses to seed until counsel has reviewed it (`counselReviewed: <date>`)
       // or Cam has recorded a waiver (`counselWaived: <date> by <who>` — never a
