@@ -26,7 +26,9 @@ export type Sales = {
   /** Build: ONE basis for the whole page — the ledger by payment day, the course's part (GreenReserve's fee out), dues in.
    *  grossCents = sum(segments) = sum(paid) = the Ledger's Revenue; series/byDow/byHour are money in (gross). */
   all?: { bucket: 'day' | 'week'; grossCents: number; refundsCents: number; netCents: number; beforeGrossCents: number;
-    segments: { teeCents: number; cartCents: number; shopCents: number; fnbCents: number; eventCents: number; duesCents: number; otherCents: number };
+    segments: { teeCents: number; cartCents: number; shopCents: number; fnbCents: number; eventCents: number; duesCents: number; otherCents: number;
+      /** Build (Revenue by source, Cam 2026-11-16): season passes, in grossCents like every segment. */
+      passesCents?: number };
     paid: { onlineCents: number; readerCents: number; cashCents: number; otherCents: number };
     series: { key: string; cents: number }[]; byDow: { dow: number; cents: number; days: number }[]; byHour: { hour: number; cents: number }[] };
   /** Build: money taken so far today against the average of the last `days` days (≤ 30), by payment time. */

@@ -6,14 +6,15 @@ import type { Sales, RevenueLedgerDay } from './data';
 
 export type Row = { key: string; label: string; note?: string; cents: number };
 
-const segRows = (g: { teeCents: number; cartCents: number; shopCents: number; eventCents: number; fnbCents?: number; duesCents?: number; otherCents?: number }): Row[] => [
+const segRows = (g: { teeCents: number; cartCents: number; shopCents: number; eventCents: number; fnbCents?: number; duesCents?: number; passesCents?: number; otherCents?: number }): Row[] => [
   { key: 'tee', label: 'Tee times', note: 'green fees', cents: g.teeCents },
   { key: 'cart', label: 'Carts', cents: g.cartCents },
   { key: 'shop', label: 'Pro shop', cents: g.shopCents },
   { key: 'event', label: 'Events', cents: g.eventCents },
   ...(g.fnbCents !== undefined ? [{ key: 'fnb', label: 'Food & beverage', cents: g.fnbCents }] : []),
   // Only when there are some: the mockup draws neither row.
-  ...(g.duesCents ? [{ key: 'dues', label: 'Membership dues', cents: g.duesCents }] : []),
+  ...(g.duesCents ? [{ key: 'dues', label: 'Memberships', cents: g.duesCents }] : []),
+  ...(g.passesCents ? [{ key: 'passes', label: 'Season passes', cents: g.passesCents }] : []),
   ...(g.otherCents ? [{ key: 'other', label: 'Other', cents: g.otherCents }] : []),
 ];
 

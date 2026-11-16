@@ -36,7 +36,8 @@ ok('the Ledger\'s Revenue is the same number', L.revenue === gross, `${L.revenue
 ok('the Ledger\'s Refunds match all.refundsCents (the fee given back is not a course refund)', L.refunds === sales.all!.refundsCents, `${L.refunds}`);
 ok('the Ledger\'s Net revenue = Revenue − Refunds = all.netCents', L.net === L.revenue - L.refunds && L.net === sales.all!.netCents, `${L.net}`);
 ok('the chart\'s series is the same money in', sum(sales.all!.series) === gross);
-ok('membership dues show as a row only when there are some', !sold.some(r => r.key === 'dues') && soldRows({ ...sales, all: { ...sales.all!, segments: { ...sales.all!.segments, duesCents: 500 } } }).some(r => r.key === 'dues'));
+ok('season passes count in the total and show only when there are some', (() => { const s2 = { ...sales, all: { ...sales.all!, grossCents: gross + 700, segments: { ...sales.all!.segments, passesCents: 700 } } }; return soldRows(s2).some(r => r.key === 'passes' && r.label === 'Season passes') && soldRows(s2).reduce((n, r) => n + r.cents, 0) === soldTotal(s2) && !soldRows(sales).some(r => r.key === 'passes'); })());
+ok('memberships show as a row only when there are some', !sold.some(r => r.key === 'dues') && soldRows({ ...sales, all: { ...sales.all!, segments: { ...sales.all!.segments, duesCents: 500 } } }).some(r => r.key === 'dues'));
 // Before Build's fee split arrives, the Ledger falls back to platformCents (right whenever no fee was given back).
 const old = ledgerTotals([day({ day: '2026-11-01', cardInCents: 10_300, cashInCents: 5_000, netCents: 15_300, platformCents: 300 })]);
 ok('without the fee split, Revenue takes out platformCents', old.revenue === 15_000, `${old.revenue}`);
