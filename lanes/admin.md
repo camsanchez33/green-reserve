@@ -43,8 +43,20 @@ Mockup `lanes/admin/team-mockup.html` (https://claude.ai/artifact/VJUXa2N27e8NDs
 - A manager sees the list and a person's details read-only. The owner can't change themselves; an owner has no areas.
 - Keep every existing behaviour and API call, step-up included.
 
+## Approved, to build: Settings → Goals (Cam 2026-11-16, "approved, build the goals page")
+Mockup `lanes/admin/goals-mockup.html` (https://claude.ai/artifact/62wRP5X7nS5kMe26X8j7ir) is the spec. `/admin/goals`, the shared top bar and the My profile card style.
+- One "Goals" card for goals still running, plus a "Finished" card for reached or missed ones. The owner gets a bare plus to add a goal: tiles for Live courses, Online bookings and GreenReserve fees, then a target and a date. The owner also gets a red Remove link, which confirms and steps up.
+- Each goal shows:
+  - the measure as its title, with "10 by Dec 31, 2026" under it and a big percent on the right;
+  - a progress bar with a thin mark where it should be by today;
+  - one line with the pace word, "4 of 10", "Should be at 5 by today (1 behind)" and the days left;
+  - four boxes: Started, Still to go, Needed each week, and At today's rate it ends at.
+- Pace colour (Cam): green when ahead of where it should be by today, amber when within 10% under it, red when further behind. Finished goals show "Reached" in green or "Missed" in red.
+- Work the pace out on the page from what /api/admin/goals already returns (start, due, current, target). Don't change the API. Show "Reached on <date>" only if the date is already returned, otherwise just "Reached".
+- Support and up can see goals; only the owner adds or removes.
+
 ## Next (menu order)
-Goals → Audit → Security → Company docs, one page at a time,
+Audit → Security → Company docs, one page at a time,
 mockup first ("as it works today"), nothing built until Cam approves.
 
 ## Small follow-ups
