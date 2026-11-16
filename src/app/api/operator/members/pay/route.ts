@@ -8,8 +8,7 @@ import { paidUntilRenewal } from '@/lib/membership-renewal';
 import { payDuesByCard } from '@/lib/dues-payment';
 import { startDuesOnReader, duesReaderStatus, cancelDuesOnReader } from '@/lib/dues-reader';
 import { simulateReaderTap } from '@/lib/card-reader';
-import { sendMembershipReceiptEmail } from '@/lib/email';
-import { sendWelcome, COUNTER_ADDED } from '@/lib/member-welcome';
+import { afterDuesPaid } from '@/lib/member-welcome';
 
 // Memberships item 1 (Cam 2026-11-16): staff take a membership's dues at the course — "Card reader, Cash or Type a
 // card (Stripe's own fields)". Cash stays the members route's mark_paid (register open, counted in the close-out).
@@ -25,14 +24,6 @@ async function gate() {
   const denied = requirePermission(session, 'members.edit');
   if (denied) return { res: denied };
   return { session, actor: session.email ?? '' };
-}
-
-/** A member added at the counter hears from the course once they've paid (lib/member-welcome). */
-async function afterPaid(membershipId: string, wasFirst: boolean) {
-  const m = await prisma.courseMembership.findUnique({ where: { id: membershipId }, select: { addedBy: true, inviteName: true, inviteEmail: true, expiresAt: true, membershipType: true, tier: { select: { name: true } }, course: { select: { name: true } }, golfer: { select: { email: true } } } });
-  if (!m) return;
-  if (wasFirst && m.addedBy === COUNTER_ADDED) after(sendWelcome(membershipId).catch(err => console.error('Member welcome email error:', err)));
-  return m;
 }
 
 export async function GET(req: NextRequest) {
@@ -68,11 +59,7 @@ export async function POST(req: NextRequest) {
   if (body.how === 'card') {
     const r = await payDuesByCard({ membershipId: id, courseId: g.session.courseId, paymentMethodId: body.paymentMethodId, expectedTotalCents: body.expectedTotalCents, by: 'staff' });
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
-    const m = await afterPaid(id, r.firstPayment);
-    const to = m?.golfer?.email || m?.inviteEmail;
-    if (m && to) {
-      after(sendMembershipReceiptEmail({ name: m.inviteName, email: to, courseName: m.course.name, tierName: m.tier?.name ?? m.membershipType, amountPaid: r.chargedCents / 100, serviceFee: r.feeCents / 100, expiresAt: r.expiresAt }).catch(console.error));
-    }
+    after(afterDuesPaid(id, { amountCents: r.chargedCents, feeCents: r.feeCents, firstPayment: r.firstPayment }).catch(err => console.error('Dues receipt email error:', err)));
     return NextResponse.json({ status: 'paid', amountPaidCents: r.chargedCents, expiresAt: r.expiresAt });
   }
   if (body.how === 'reader') {
@@ -105,11 +92,7 @@ export async function PATCH(req: NextRequest) {
   if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
   // This look recorded the payment (only one look does): the receipt, and the welcome for a member added at the counter.
   const rec = r.value.recorded;
-  if (rec) {
-    const m = await afterPaid(id, rec.firstPayment);
-    const to = m?.golfer?.email || m?.inviteEmail;
-    if (m && to) after(sendMembershipReceiptEmail({ name: m.inviteName, email: to, courseName: m.course.name, tierName: m.tier?.name ?? m.membershipType, amountPaid: rec.amountCents / 100, serviceFee: rec.feeCents / 100, expiresAt: m.expiresAt }).catch(console.error));
-  }
+  if (rec) after(afterDuesPaid(id, rec).catch(err => console.error('Dues receipt email error:', err)));
   const { recorded: _recorded, ...out } = r.value;
   return NextResponse.json(out);
 }

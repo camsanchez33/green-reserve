@@ -5,7 +5,9 @@
 import Stripe from 'stripe';
 import { prisma } from '../src/lib/prisma';
 import { stripe } from '../src/lib/stripe';
-import { startDuesOnReader, duesReaderStatus, cancelDuesOnReader, DUES_READER_STALE_MS } from '../src/lib/dues-reader';
+import { readFileSync } from 'fs';
+import { startDuesOnReader, duesReaderStatus, cancelDuesOnReader, settleStaleDuesReaders, DUES_READER_STALE_MS } from '../src/lib/dues-reader';
+import { declineJoin } from '../src/lib/membership-join';
 import { payDuesByCard } from '../src/lib/dues-payment';
 import { markDuesPaidAtCourse } from '../src/lib/membership-dues';
 import { duesThisYear } from '../src/lib/dues-year';
@@ -150,9 +152,54 @@ async function cleanup() {
   const sum = await daySummary(c.id, today);
   ok('the close-out counts the dues cash in the expected cash', sum.ok && sum.value.otherCash.cents === 120_000, sum.ok ? sum.value.otherCash : sum);
 
+  // ── Review fixes ──
+  // A card payment that went through but was never recorded, found when staff start the reader: recorded once, and
+  // the membership is NOT left locked to the reader.
+  const g = await member();
+  const cardPi: PI = { id: 'pi_card_lost', amount: 121_200, status: 'succeeded', account: 'acct_a', payment_method_types: ['card'], application_fee_amount: 1_200, key: 'lost', metadata: {} };
+  intents.set(cardPi.id, cardPi);
+  await prisma.courseMembership.update({ where: { id: g.id }, data: { duesIntentId: cardPi.id } });
+  const found = await startDuesOnReader(c.id, g.id, 'tmr_a', 'staff');
+  const gAfter = await get(g.id);
+  ok('a lost card payment found at reader start: recorded once, active, and the reader claim fully released', !found.ok && /just paid by card/.test(found.error) && gAfter.status === 'active' && !gAfter.duesReaderId && !gAfter.duesChargeStartedAt && (await moves(g.id)).length === 1 && readers.get('tmr_a')!.action === null, { found, gAfter });
+  ok('…so the next payment isn’t refused as "on the card reader"', !/card reader/.test(JSON.stringify(await markDuesPaidAtCourse(c.id, g.id, { method: 'cash' }))));
+
+  // A tap nobody was watching (the page closed): the hourly cron records it.
+  const h = await member();
+  await startDuesOnReader(c.id, h.id, 'tmr_a', 'staff');
+  tap('tmr_a');
+  await prisma.courseMembership.update({ where: { id: h.id }, data: { duesChargeStartedAt: new Date(Date.now() - DUES_READER_STALE_MS - 60_000) } });
+  const settled = await settleStaleDuesReaders();
+  const hAfter = await get(h.id);
+  ok('the hourly sweep records an unwatched tap: one ledger row, active, released', settled >= 1 && hAfter.status === 'active' && !hAfter.duesReaderId && (await moves(h.id)).length === 1, hAfter);
+  readers.get('tmr_a')!.action = null;
+  // A reader mark left with no claim is cleared on the next look.
+  await prisma.courseMembership.update({ where: { id: h.id }, data: { duesReaderId: 'tmr_a', duesChargeStartedAt: null } });
+  await duesReaderStatus(c.id, h.id, 'staff');
+  ok('a reader mark with no claim behind it is cleared', !(await get(h.id)).duesReaderId);
+
+  // Remove / decline waits while the dues are on the reader.
+  const k = await member();
+  await startDuesOnReader(c.id, k.id, 'tmr_a', 'staff');
+  const declined2 = await declineJoin(c.id, k.id);
+  ok('removing an unpaid member waits while their dues are on the reader', !declined2.ok && /being paid/.test(declined2.error) && (await get(k.id)).status === 'awaiting_payment', declined2);
+  await cancelDuesOnReader(c.id, k.id, 'staff');
+  ok('…and goes through once the reader is cancelled', (await declineJoin(c.id, k.id)).ok);
+
+  // The register gate and the pay-first add (route code, pinned: these routes need a signed-in session).
+  const route = readFileSync('src/app/api/operator/members/route.ts', 'utf8');
+  const pay = readFileSync('src/app/api/operator/members/pay/route.ts', 'utf8');
+  const markAt = route.indexOf("if (action === 'mark_paid')");
+  ok('cash dues need the register open (a check doesn’t), before anything is recorded', markAt > 0 && route.indexOf("if (body.method !== 'check') { const closed = await requireRegisterOpen(session.courseId); if (closed) return NextResponse.json({ error: closed, registerClosed: true }, { status: 409 }); }", markAt) > markAt && route.indexOf('requireRegisterOpen', markAt) < route.indexOf('markDuesPaidAtCourse(session.courseId', markAt));
+  const readerAt = pay.indexOf("if (body.how === 'reader')");
+  ok('dues go on the reader only while the register is open', readerAt > 0 && pay.indexOf('requireRegisterOpen(g.session.courseId)', readerAt) > readerAt && pay.indexOf('requireRegisterOpen', readerAt) < pay.indexOf('startDuesOnReader(', readerAt));
+  ok('the pay route is members.edit on every verb, and card payments need a current agreement', pay.includes("requirePermission(session, 'members.edit')") && (pay.match(/const g = await gate\(\);/g) ?? []).length === 3 && pay.indexOf('requireAgreementCurrent') < pay.indexOf("body.how === 'card'"));
+  ok('pay-first: awaiting_payment while dues are owed, no email until paid, an unpaid add picked up again', route.includes("const startStatus = waiting ? 'awaiting_payment' : 'active';") && route.includes("if (!waiting) after(sendWelcome(") && route.includes("if (!payFirst) after(maybeSendPayLink(") && route.includes("status: { in: ['awaiting_payment', 'cancelled'] }, lastPaidAt: null"));
+  ok('the hourly cron settles dues left on a reader', readFileSync('src/app/api/cron/hourly/route.ts', 'utf8').includes('await settleStaleDuesReaders()'));
+
   // ── Dues this year ──
   const year = await duesThisYear(c.id, 'UTC');
-  ok('dues this year: what the course kept (cards less the 1%, plus cash), by membership', year.totalCents === 120_000 * 4 && year.byTier.length === 1 && year.byTier[0].tierId === tier.id && year.byTier[0].cents === 480_000, year);
+  ok('dues this year: what the course kept (cards less the 1%, plus cash), by membership', year.totalCents === 120_000 * 6 + 100_000 && year.byTier.length === 1 && year.byTier[0].tierId === tier.id && year.byTier[0].cents === 820_000, year);
   ok('another course sees none of it', (await duesThisYear(other.id, 'UTC')).totalCents === 0);
 
   await cleanup(); await prisma.$disconnect();

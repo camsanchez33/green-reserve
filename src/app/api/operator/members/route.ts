@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
   // than refused as a duplicate: same person, the tier and details as now entered.
   if (payFirst) {
     const unpaid = await prisma.courseMembership.findFirst({
-      where: { courseId: session.courseId, addedBy: COUNTER_ADDED, status: 'awaiting_payment', lastPaidAt: null, duesChargeStartedAt: null, duesReaderId: '', OR: [{ inviteEmail: lowerEmail }, ...(golfer ? [{ golferId: golfer.id }] : [])] },
+      where: { courseId: session.courseId, addedBy: COUNTER_ADDED, status: { in: ['awaiting_payment', 'cancelled'] }, lastPaidAt: null, duesChargeStartedAt: null, duesReaderId: '', OR: [{ inviteEmail: lowerEmail }, ...(golfer ? [{ golferId: golfer.id }] : [])] },
       select: { id: true, golferId: true },
     });
     if (unpaid) {
@@ -265,6 +265,11 @@ export async function PATCH(req: NextRequest) {
       contact.inviteEmail = e;
     }
     if (body.phone !== undefined) contact.invitePhone = String(body.phone ?? '').trim().slice(0, 30);
+  }
+
+  // Memberships item 1: a status change waits while the dues are being paid (a card going through, the card reader).
+  if (status !== undefined && status !== membership.status && (membership.duesReaderId || (membership.duesChargeStartedAt && Date.now() - membership.duesChargeStartedAt.getTime() < 10 * 60_000))) {
+    return NextResponse.json({ error: 'These dues are being paid right now — finish or cancel the payment first.' }, { status: 409 });
   }
 
   if (tierId) {

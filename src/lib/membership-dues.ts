@@ -49,6 +49,8 @@ export async function recordPaidTerm(
       renewalRemindedAt: null,
       duesChargeStartedAt: null,
       duesIntentId: '',
+      // Memberships item 1: a recorded term ends every claim, the card reader's too.
+      duesReaderId: '',
       ...extra,
     },
   });
@@ -107,7 +109,7 @@ export async function markDuesPaidAtCourse(courseId: string, membershipId: strin
   const marked = await prisma.courseMembership.updateMany({
     where: { id: membershipId, duesChargeStartedAt: now },
     data: {
-      duesChargeStartedAt: null, duesIntentId: '',
+      duesChargeStartedAt: null, duesIntentId: '', duesReaderId: '',
       paymentStatus: 'paid_offline',
       status: 'active',
       startedAt: membership.startedAt ?? now,

@@ -3,7 +3,7 @@
 // added at the counter (addedBy COUNTER_ADDED) pays first, so this goes out once the dues are paid, not when added.
 import { prisma } from './prisma';
 import { signMemberInviteToken } from './auth';
-import { sendMemberInviteEmail, sendMemberLinkedNotification } from './email';
+import { sendMemberInviteEmail, sendMemberLinkedNotification, sendMembershipReceiptEmail } from './email';
 
 /** addedBy for a member added on the Memberships page, who pays before they are a member. */
 export const COUNTER_ADDED = 'counter';
@@ -34,4 +34,23 @@ export async function sendWelcome(membershipId: string): Promise<void> {
     tierName,
     setupLink: `${process.env.NEXT_PUBLIC_URL}/courses/${m.course.slug}/account/accept-invite?token=${token}`,
   });
+}
+
+/**
+ * After staff (or the cron's reader settle) record a dues payment: the receipt to the member, and — the first time a
+ * member added at the counter pays — the welcome. The pay link sends its own receipt; it calls welcomeIfFirst only.
+ */
+export async function afterDuesPaid(membershipId: string, paid: { amountCents: number; feeCents: number; firstPayment: boolean }): Promise<void> {
+  const m = await prisma.courseMembership.findUnique({ where: { id: membershipId }, select: { inviteName: true, inviteEmail: true, expiresAt: true, membershipType: true, tier: { select: { name: true } }, course: { select: { name: true } }, golfer: { select: { email: true } } } });
+  if (!m) return;
+  const to = m.golfer?.email || m.inviteEmail;
+  if (to) await sendMembershipReceiptEmail({ name: m.inviteName, email: to, courseName: m.course.name, tierName: m.tier?.name ?? m.membershipType, amountPaid: paid.amountCents / 100, serviceFee: paid.feeCents / 100, expiresAt: m.expiresAt });
+  await welcomeIfFirst(membershipId, paid.firstPayment);
+}
+
+/** The welcome for a member added at the counter, sent once: on their first payment, however it was paid. */
+export async function welcomeIfFirst(membershipId: string, firstPayment: boolean): Promise<void> {
+  if (!firstPayment) return;
+  const m = await prisma.courseMembership.findUnique({ where: { id: membershipId }, select: { addedBy: true } });
+  if (m?.addedBy === COUNTER_ADDED) await sendWelcome(membershipId);
 }

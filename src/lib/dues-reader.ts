@@ -19,6 +19,7 @@ import { courseStripe, ownReader, stripeMessage } from './card-reader';
 import { amountsDue, recordPaidTerm } from './membership-dues';
 import { paidUntilRenewal } from './membership-renewal';
 import { recordMove } from './money-ledger';
+import { afterDuesPaid } from './member-welcome';
 
 type Result<T> = { ok: true; value: T } | { ok: false; status: number; error: string };
 const fail = (status: number, error: string) => ({ ok: false as const, status, error });
@@ -40,7 +41,7 @@ async function finalize(membershipId: string, pi: Stripe.PaymentIntent, stamp: D
   await recordMove({ courseId: m.courseId, what: 'dues', direction: 'in', method: 'card_present', account: 'course', amountCents: pi.amount, platformFeeCents: pi.application_fee_amount ?? 0, stripeId: pi.id, membershipId, actor: 'staff', note: `${m.tier?.name ?? m.membershipType} on the card reader${actor ? ` (${actor.slice(0, 80)})` : ''}` });
   let recorded: DuesReaderStatus['recorded'];
   if (m.lastPaymentIntentId !== pi.id) {
-    const ok = await recordPaidTerm({ id: membershipId, startedAt: m.startedAt, termMonths: m.tier?.termMonths ?? 12 }, { lastPaidAt: m.lastPaidAt, expiresAt: m.expiresAt }, pi.id, { duesReaderId: '', autoRenewFailedAt: null, autoRenewRetryAt: null });
+    const ok = await recordPaidTerm({ id: membershipId, startedAt: m.startedAt, termMonths: m.tier?.termMonths ?? 12 }, { lastPaidAt: m.lastPaidAt, expiresAt: m.expiresAt }, pi.id, { autoRenewFailedAt: null, autoRenewRetryAt: null });
     if (ok) recorded = { amountCents: pi.amount, feeCents: pi.application_fee_amount ?? 0, firstPayment: !m.lastPaidAt };
     else console.error(JSON.stringify({ ev: 'dues_reader.term_changed', membershipId, paymentIntentId: pi.id }));
   }
@@ -149,6 +150,8 @@ async function evaluate(courseId: string, membershipId: string, actor: string, s
   const m = await prisma.courseMembership.findFirst({ where: { id: membershipId, courseId }, select: { duesChargeStartedAt: true, duesReaderId: true, duesIntentId: true, paymentStatus: true, lastPaidAt: true, course: { select: { stripeAccountId: true } } } });
   if (!m) return fail(404, 'That member isn’t on your list.');
   const stamp = m.duesChargeStartedAt;
+  // A reader mark with no claim behind it (the claim ended some other way): nothing is on the reader — clear it.
+  if (m.duesReaderId && !stamp) await prisma.courseMembership.updateMany({ where: { id: membershipId, duesReaderId: m.duesReaderId, duesChargeStartedAt: null }, data: { duesReaderId: '' } });
   if (!m.duesReaderId || !stamp) return { ok: true, value: { status: m.paymentStatus === 'paid' && m.lastPaidAt && Date.now() - m.lastPaidAt.getTime() < 15 * 60_000 ? 'paid' : 'open' } };
   const account = m.course.stripeAccountId;
   if (!account) return fail(409, 'Stripe isn’t connected.');
@@ -210,7 +213,22 @@ export const cancelDuesOnReader = (courseId: string, membershipId: string, actor
 /** A reader claim left 10 minutes: stop the reader and settle it (called before anything else takes the dues). */
 export async function settleDuesReader(courseId: string, membershipId: string, actor = 'system'): Promise<void> {
   const r = await evaluate(courseId, membershipId, actor, true);
-  if (!r.ok) console.error(JSON.stringify({ ev: 'dues_reader.settle.fail', membershipId, error: r.error }));
+  if (!r.ok) { console.error(JSON.stringify({ ev: 'dues_reader.settle.fail', membershipId, error: r.error })); return; }
+  // A tap nobody was watching: the receipt (and a counter add's welcome) still go out.
+  if (r.value.recorded) await afterDuesPaid(membershipId, r.value.recorded).catch(err => console.error(JSON.stringify({ ev: 'dues_reader.settle.email_fail', membershipId, error: err instanceof Error ? err.message : String(err) })));
+}
+
+/**
+ * The hourly cron: every reader claim left 10 minutes, whatever the membership's status, is settled from Stripe —
+ * so a tap made after the page was closed is on the ledger and recorded within the hour, never left unrecorded.
+ */
+export async function settleStaleDuesReaders(now = new Date()): Promise<number> {
+  const stale = await prisma.courseMembership.findMany({
+    where: { duesReaderId: { not: '' }, OR: [{ duesChargeStartedAt: null }, { duesChargeStartedAt: { lt: new Date(now.getTime() - DUES_READER_STALE_MS) } }] },
+    select: { id: true, courseId: true }, take: 200,
+  });
+  for (const m of stale) await settleDuesReader(m.courseId, m.id);
+  return stale.length;
 }
 /** Settle a stale reader claim on this membership, if there is one. Fresh claims are left alone (the reader is in use). */
 export async function settleStaleDuesReader(m: { id: string; courseId: string; duesReaderId: string; duesChargeStartedAt: Date | null }): Promise<void> {

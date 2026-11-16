@@ -91,6 +91,9 @@ export async function approveJoin(courseId: string, membershipId: string): Promi
 
 /** Staff: decline a request (or drop an unpaid online join). Never touches a paid member. */
 export async function declineJoin(courseId: string, membershipId: string): Promise<{ ok: true } | Fail> {
-  const done = await prisma.courseMembership.updateMany({ where: { id: membershipId, courseId, status: { in: UNFINISHED } }, data: { status: 'cancelled' } });
-  return done.count ? { ok: true } : fail(409, 'That request was already answered — refresh.');
+  // Memberships item 1: never while the dues are being paid (a card going through, the card reader) — the payment would land on a cancelled membership.
+  const done = await prisma.courseMembership.updateMany({ where: { id: membershipId, courseId, status: { in: UNFINISHED }, duesChargeStartedAt: null, duesReaderId: '' }, data: { status: 'cancelled' } });
+  if (done.count) return { ok: true };
+  const now = await prisma.courseMembership.findFirst({ where: { id: membershipId, courseId }, select: { duesChargeStartedAt: true, duesReaderId: true } });
+  return fail(409, now && (now.duesChargeStartedAt || now.duesReaderId) ? 'These dues are being paid right now — finish or cancel the payment first.' : 'That request was already answered — refresh.');
 }

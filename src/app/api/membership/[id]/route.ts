@@ -5,6 +5,7 @@ import { rateLimit } from '@/lib/rate-limit';
 import { paidUntilRenewal } from '@/lib/membership-renewal';
 import { amountsDue } from '@/lib/membership-dues';
 import { payDuesByCard } from '@/lib/dues-payment';
+import { welcomeIfFirst } from '@/lib/member-welcome';
 import { autoRenewTermsText, renewalCents } from '@/lib/membership-autorenew';
 import { sendAutoRenewOnEmail } from '@/lib/email';
 
@@ -85,6 +86,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     serviceFee: due.feeCents / 100,
     expiresAt: updated.expiresAt,
   }).catch(console.error));
+
+  // Memberships item 1: a member added at the counter who pays their first dues by this link gets the welcome now.
+  after(welcomeIfFirst(m.id, r.firstPayment).catch(console.error));
 
   // MEM-RENEW: the terms they agreed to, in writing, with how to turn it off.
   if (m.tier?.autoRenew && recorded) {
