@@ -30,8 +30,21 @@ Mockup `lanes/admin/profile-mockup.html` (https://claude.ai/artifact/2uRAQpAe1k1
 - Employees never see the owner items in the menu (Audit, Security, Company docs).
 Keep every existing behaviour of OwnerPasskeysCard, OwnerDevicesCard, OwnerTwoFactorCard and OwnerSignOutEverywhere (re-skin; their API calls and step-up stay as they are).
 
+## Approved, to build: Settings → Team (Cam 2026-11-16, "approved, build the team page")
+Mockup `lanes/admin/team-mockup.html` (https://claude.ai/artifact/VJUXa2N27e8NDs8sNtpo8j) is the spec. `/admin/employees`, title "Team", the shared top bar, built like My profile's cards. No numbers on top (Cam removed them).
+- One "Team" card listing everyone with an admin login: initials, name, "· you" on your own row, email, role, and status (green when signed in recently, amber "Never signed in", grey "Turned off"). Owners get a bare plus top right to add someone.
+- Clicking a person opens them beside the list:
+  - status, plus "Hasn't set their own password yet" when that applies;
+  - Role as three tiles (Manager / Support / Viewer, each with what it can do), changed by tapping one;
+  - "Can open" areas as check tiles behind a "Change" link, with Save and Cancel;
+  - links "What they did" (the audit trail), "Reset password", and a red "Turn off" (or "Turn back on"), each confirming first;
+  - a reset shows the one-time password once, with Copy and Dismiss.
+- Add someone (owner only): name, email, role tiles, area check tiles (at least one), then a screen with their one-time password to give them.
+- A manager sees the list and a person's details read-only. The owner can't change themselves; an owner has no areas.
+- Keep every existing behaviour and API call, step-up included.
+
 ## Next (menu order)
-Team → Goals → Audit → Security → Company docs, one page at a time,
+Goals → Audit → Security → Company docs, one page at a time,
 mockup first ("as it works today"), nothing built until Cam approves.
 
 ## Small follow-ups
