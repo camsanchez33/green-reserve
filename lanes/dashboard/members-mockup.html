@@ -1,4 +1,4 @@
-<title>Members</title>
+<title>Memberships</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600&family=Libre+Franklin:wght@400;500;600;700&display=swap">
@@ -725,15 +725,114 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
 .mf .mfh{font-size:12px;color:var(--muted);padding:8px 10px 2px}
 .mf hr{border:0;border-top:1px solid var(--line);margin:4px 0}
 @media (max-width:900px){.mstrip{grid-template-columns:1fr 1fr}.mcols{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)}.mcols .hx,.mcols .hm{display:none}.mtr{grid-template-columns:minmax(0,1fr) auto}.mtr .d,.mtr .c{display:none}.mrr{grid-template-columns:minmax(0,1fr) auto}.mrr .hm{display:none}.mjr{grid-template-columns:minmax(0,1fr) auto}.mjr .hm{display:none}.mpop .g2{grid-template-columns:1fr}}
+.mst.prop{box-shadow:inset 0 0 0 1px var(--line),var(--shadow);border-style:dashed}
+.mtiers2{padding:6px 6px 0}
+.mstrip.m3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.mth{display:flex;align-items:center;justify-content:space-between;padding:10px 12px 6px}
+.mth h3{margin:0;font-size:15px;font-weight:600}
+.mplus{width:30px;height:30px;border:0;background:transparent;color:var(--ink);border-radius:9px;display:grid;place-items:center;cursor:pointer}
+.mplus:hover{background:var(--hover)}
+.mtr2{display:grid;grid-template-columns:10px minmax(0,1.6fr) minmax(0,1fr) 90px;gap:16px;align-items:center;padding:14px 12px;border-top:1px solid var(--line);cursor:pointer;border-radius:10px}
+.mtr2:hover{background:var(--hover)}
+.mtr2 .tdot{margin:0;width:10px;height:10px}
+.mtr2 b{font-weight:600;font-size:14px;display:block}
+.mtr2 span{display:block;font-size:13px;color:var(--ink-soft);margin-top:2px}
+.mtr2 small{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+.mtr2 .mtp,.mtr2 .mtc{text-align:right}
+.mtr2 .mtc b{font-size:20px;font-variant-numeric:tabular-nums}
+@media (max-width:900px){.mtr2{grid-template-columns:10px minmax(0,1fr) 70px}.mtr2 .mtp{display:none}}
+#v2{display:flex;flex-direction:column;gap:16px;min-width:0}
+#v2 .mstrip.m3{gap:16px}
+.vgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start}
+.vgrid>.vcol,.vgrid>.vmem{grid-column:span 2}
+.vcol{display:flex;flex-direction:column;gap:16px;min-width:0}
+.vcard,.vmem{padding:6px 6px 8px}
+.vrow{font:inherit;color:var(--ink);width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);display:grid;grid-template-columns:10px minmax(0,1fr) auto 110px 16px;gap:14px;align-items:center;padding:13px 12px;border-radius:10px;cursor:pointer}
+.vrow:hover{background:var(--hover)}.vrow b{font-weight:600;font-size:14px}
+.vrow .tdot{width:10px;height:10px;margin:0}
+.vrow .vc{font-size:13px;color:var(--ink-soft);white-space:nowrap}
+.vrow .vn{font-size:12.5px;color:var(--muted);text-align:right;white-space:nowrap}.vrow .vn b{font-size:15px;color:var(--ink);font-variant-numeric:tabular-nums}
+.vrow .chev{color:var(--muted)}
+.vdues{padding:16px 18px}.vdues .ykv span .tdot{margin-right:8px}
+.vsub{font-size:12px;font-weight:600;color:var(--muted);margin:12px 0 2px;letter-spacing:.01em}
+.vback{font:inherit;font-size:13px;color:var(--ink-soft);background:none;border:0;padding:0;cursor:pointer;align-self:flex-start}
+.vback:hover{color:var(--ink)}
+.tdot.big{width:12px;height:12px;margin-right:12px;vertical-align:4px}
+.lnk2{font:inherit;font-size:13px;font-weight:600;background:none;border:0;padding:4px 0;color:var(--ink);cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--muted)}
+.vmh,.vm{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) 120px 70px;gap:12px;align-items:center;padding:9px 12px}
+.vmh{font-size:12.5px;color:var(--muted)}.vm{border-top:1px solid var(--line);font-size:13.5px}
+.vm b{display:block;font-weight:600}.vm small{display:block;font-size:12px;color:var(--muted)}
+.vm .r,.vmh .r{text-align:right;font-variant-numeric:tabular-nums}
+.vpop{width:560px}
+.vsteps{display:flex;gap:18px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:10px}
+.vsteps span.on{color:var(--ink);font-weight:600}.vsteps span.dn{color:var(--ink-soft)}
+.vlab{font-size:12.5px;color:var(--muted);margin-top:4px}
+.vcolors{display:flex;gap:10px;flex-wrap:wrap}
+.vcolors button{width:28px;height:28px;border-radius:50%;border:0;cursor:pointer;padding:0;box-shadow:0 0 0 2px transparent;outline:none}
+.vcolors button.on{box-shadow:0 0 0 2px var(--solid),0 0 0 4px var(--ink)}
+.vseg{align-self:flex-start;flex-wrap:wrap}
+.vrow2{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.vmoney{display:flex;align-items:center;gap:6px;background:var(--hover);border:1px solid var(--line);border-radius:10px;padding:0 10px;min-width:120px;flex:0 1 160px}
+.vmoney span{color:var(--muted)}.mpop .vmoney input{border:0;background:transparent;padding:8px 0;width:100%}
+.vmoney.sm{min-width:0;flex:none;width:100px}
+.mpop .vnum{width:80px}.mpop .vdate{width:auto;flex:1}
+.vrates{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;padding:4px 12px}
+.vrh,.vr{display:grid;grid-template-columns:minmax(0,1fr) 70px 100px;gap:10px;align-items:center;padding:7px 0}
+.vrh{font-size:12px;color:var(--muted)}.vr{border-top:1px solid var(--line);font-size:13px}
+.vfoot{display:flex;align-items:center;gap:10px;border-top:1px solid var(--line);padding-top:12px;margin-top:4px}
+@media (max-width:900px){.vgrid{grid-template-columns:minmax(0,1fr)}.vgrid>.vcol,.vgrid>.vmem{grid-column:auto}.vrow{grid-template-columns:10px minmax(0,1fr) auto 16px}.vrow .vc{display:none}.vmh,.vm{grid-template-columns:minmax(0,1fr) auto}.vmh span:nth-child(n+3),.vm span:nth-child(n+3){display:none}}
+.vwho{display:flex;gap:16px;align-items:flex-start}
+.vphoto{flex:none;width:76px;height:76px;border-radius:50%;border:1.5px dashed var(--line);background:var(--hover);color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;font:inherit}
+.vphoto small{font-size:11.5px}.vphoto:hover{color:var(--ink);border-color:var(--ink-soft)}
+.vphoto.has{border-style:solid;background:#4F7FB8;color:#fff;font-weight:600;font-size:20px}
+.vfields{flex:1;display:flex;flex-direction:column;gap:10px;min-width:0}
+.vid{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;align-items:baseline;padding:10px 14px;border:1px solid var(--line);border-radius:12px}
+.vid span{font-size:12.5px;color:var(--muted)}.vid b{font-family:ui-monospace,Menlo,monospace;font-size:14px;letter-spacing:.02em}.vid small{grid-column:2;font-size:12px;color:var(--muted)}
+.vpay{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.vpay button{font:inherit;text-align:left;color:var(--ink);background:var(--hover);border:1px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;display:flex;flex-direction:column;gap:3px}
+.vpay button b{font-weight:600;font-size:13.5px}.vpay button small{font-size:12px;color:var(--muted)}
+.vpay button:hover{border-color:var(--ink-soft)}
+.vpay button[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.vcard{display:flex;flex-direction:column;gap:10px}.mpop .g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:600px){.vpay{grid-template-columns:1fr}.vwho{flex-direction:column}}
+.vblock{display:flex;flex-direction:column;gap:8px;padding:4px 0}
+.vbig{display:flex;align-items:center;gap:6px;max-width:160px;border:1px solid var(--line);background:var(--hover);border-radius:10px;padding:0 10px}
+.vbig span{font-size:13.5px;color:var(--muted)}.mpop .vbig input{border:0;background:transparent;font-size:13.5px;padding:8px 0;font-variant-numeric:tabular-nums}
+.vchecks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.vchk{font:inherit;color:var(--ink);text-align:left;display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--hover);cursor:pointer}
+.vchk i{flex:none;width:18px;height:18px;border-radius:5px;border:1.5px solid var(--muted);margin-top:1px;display:grid;place-items:center}
+.vchk[aria-pressed="true"]{border-color:var(--ink)}
+.vchk[aria-pressed="true"] i{background:var(--ink);border-color:var(--ink)}
+.vchk[aria-pressed="true"] i::after{content:"";width:8px;height:4px;border-left:2px solid var(--bg);border-bottom:2px solid var(--bg);transform:rotate(-45deg) translate(1px,-1px)}
+.vchk b{display:block;font-weight:600;font-size:13.5px}.vchk small{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+.mpop.vpop{gap:16px;padding:24px 26px}
+.mpop.vpop h3{font-size:19px}
+.vprog{display:flex;flex-direction:column;gap:8px;margin-top:-6px}
+.vpt{display:flex;gap:10px;align-items:baseline;font-size:12.5px;color:var(--muted)}.vpt b{color:var(--ink);font-weight:600;font-size:13.5px}
+.vbar{display:flex;gap:6px}.vbar i{flex:1;height:3px;border-radius:2px;background:var(--line)}.vbar i.on{background:var(--ink)}
+.vtiles{display:grid;gap:8px;grid-template-columns:repeat(3,minmax(0,1fr))}
+.vchk.rad{min-height:46px;box-sizing:border-box}.vchk.rad b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.vchk.rad span{min-width:0}
+.vchk.rad{padding:11px 12px;align-items:center}.vchk.rad i{border-radius:50%}
+.vchk.rad[aria-pressed="true"] i{background:transparent;border:5px solid var(--ink)}
+.vchk.rad[aria-pressed="true"] i::after{display:none}
+
+.vblock+.vblock{border-top:1px solid var(--line);padding-top:14px}
+@media (max-width:600px){.vtiles,.vchecks{grid-template-columns:1fr}}
+button.vm{font:inherit;color:var(--ink);width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);cursor:pointer;border-radius:8px}
+button.vm:hover{background:var(--hover)}
+.vmc{display:flex;gap:14px;align-items:center}.vav{width:56px;height:56px;border-radius:50%;background:#4F7FB8;color:#fff;display:grid;place-items:center;font-weight:600;font-size:18px;flex:none}
+.vmc h3{margin:0}.mono{font-family:ui-monospace,Menlo,monospace}
+.vacts{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.lnk2.bad{color:var(--bad);text-decoration-color:var(--bad)}
 </style>
 
 <div class="wrap">
   <div class="picker">
-    <h1>Course dashboard · Members</h1>
+    <h1>Course dashboard · Memberships (step 3)</h1>
     <div class="pick"><span>Look</span><div class="seg" role="group" aria-label="Look">
       <button type="button" data-m="dark" aria-pressed="true">Charcoal</button><button type="button" data-m="light" aria-pressed="false">Light</button></div></div>
   </div>
-  <p class="note">Members as it works today, in the approved charcoal glass and Light. Nothing new: the counts, joining online, the member list with each member's dues, the memberships you offer (the three-step setup), residents, add, import and remind. The member list's checkboxes became one Filter button and its search lost its words, the agreed page rules. Example data only.</p>
+  <p class="note">Memberships, reworked to Cam's comments (Nov 16): memberships and season passes as simple rows (colour, name, price, how many), most members first, each opening its own page with every member and its details; a Dues this year box broken down by each one (it feeds Revenue); a new membership setup in the order name, joining, payment, booking and rates (rates come from the course's own price list); and a separate season-pass setup. Example data only.</p>
 
   <div class="app" id="app" data-mode="dark">
     <svg class="waves" viewBox="0 0 1400 1100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -755,7 +854,7 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
       <div class="grp"><b>Today</b>
         <div class="nav">Home</div><div class="nav">Tee sheet</div><div class="nav">Pro shop</div></div>
       <div class="grp"><b>Business</b>
-        <div class="nav">Revenue</div><div class="nav on"><span>Members</span></div><div class="nav">Events</div><div class="nav">Schedule</div><div class="nav">Analytics</div></div>
+        <div class="nav">Revenue</div><div class="nav on"><span>Memberships</span></div><div class="nav">Events</div><div class="nav">Schedule</div><div class="nav">Analytics</div></div>
       <div class="grp"><div class="nav">Settings</div><div class="nav">Support</div></div>
       <div class="foot"><span>Course alert</span><span>Your booking page ↗</span><span>Sign out</span>
         <div class="seg3"><button type="button" data-m="light">Light</button><button type="button" data-m="dark" class="on">Dark</button></div>
@@ -763,6 +862,8 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
     </aside>
 
     <main class="main" id="main">
+      <div id="v2"></div>
+      <div hidden id="later"><span id="sOff"></span><span id="sSea"></span><button id="addTier"></button><button id="addSeason"></button><div id="tiers"></div><div id="seasons"></div>
       <div class="ytop">
         <h2 class="ttl">Members</h2>
         <button class="ybtn ghost" type="button" id="remind"></button>
@@ -788,14 +889,15 @@ body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--san
         <section class="card ydet" id="det" hidden></section>
       </div>
 
-      <div class="yhd"><h3>Memberships you offer</h3><span class="ysp"></span><button class="ylink" type="button" id="addTier">Add a membership</button></div>
-      <section class="card mtiers" id="tiers"></section>
+
+      
 
       <div class="yhd"><h3>Residents</h3><span class="ysp"></span><button class="ylink" type="button" id="addRes">Add a resident</button></div>
       <section class="card mres">
         <div class="ybar" style="padding:8px 8px 0"><span class="ysp"></span><label class="ssrch"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="rq" aria-label="Find a resident" style="font:inherit;border:0;background:transparent;outline:none;color:var(--ink);width:100%;height:36px"></label></div>
         <div id="res" class="ylist"></div>
       </section>
+      </div>
     </main>
     <div class="ytoast" id="toast" role="status" hidden></div>
     <div class="yrback" id="pop" hidden></div>
@@ -822,6 +924,10 @@ let TIERS=[
  {id:'t2',name:'Senior',color:'#C9A24A',annual:950,init:0,term:12,mode:'pct',pct:15,days:10,passes:2,guests:false,join:'pay',auto:true,account:false},
  {id:'t3',name:'Junior',color:'#4F7FB8',annual:350,init:0,term:12,mode:'flat',gwd:12,gwe:18,cwd:null,cwe:null,pct:null,days:7,passes:0,guests:false,join:'off',auto:false,account:false},
  {id:'t4',name:'Weekday',color:'#B85C4F',annual:780,init:0,term:12,mode:'flat',gwd:0,gwe:null,cwd:8,cwe:null,pct:null,days:7,passes:0,guests:true,join:'pay',auto:false,account:false}];
+TIERS.push({id:'t5',name:'Resident card',color:'#8A8F87',annual:100,init:0,term:12,mode:'pct',pct:30,days:7,passes:0,guests:false,join:'pay',auto:true,account:false,resident:true,group:'Bergen County'});
+const SEAS=[{id:'s1',name:'Summer season pass',color:'#2E8F5E',price:1200,from:'Apr 1',to:'Oct 31',rate:'Unlimited rounds, cart extra',perks:'Books 7 days ahead',join:'Join online',n:18},
+ {id:'s2',name:'Junior summer pass',color:'#4F7FB8',price:250,from:'Jun 1',to:'Aug 31',rate:'Rounds $5 any day',perks:'Ages 17 and under · books 3 days ahead',join:'Join online',n:9},
+ {id:'s3',name:'Senior weekday pass',color:'#C9A24A',price:650,from:'Apr 1',to:'Nov 30',rate:'Unlimited weekday rounds',perks:'Ages 62 and over · books 7 days ahead',join:'Staff add members',n:14}];
 let M=[
  {id:'m1',name:'Dana Whitfield',email:'dana.w@example.com',phone:'(201) 555-0142',t:'t1',dues:'paid',renews:'2027-04-01',since:'2019-04-01',rounds:46,spend:3180,last:'2026-11-14',linked:true,lastPaid:'Apr 1, 2026',auto:true,acct:true},
  {id:'m2',name:'Marcus Bell',email:'mbell@example.com',phone:'',t:'t1',dues:'unpaid',owe:1950,renews:'2027-11-01',since:'2026-11-01',rounds:1,spend:120,last:'2026-11-08',linked:false},
@@ -893,11 +999,22 @@ function renderJoin(){$("join").hidden=!JOIN.length;
 function tierLine(t){return [t.annual>0?usd(t.annual)+' a '+(t.term===12?'year':t.term+' months'):'No dues',t.init>0?usd(t.init)+' to join':null,
   t.mode==='pct'?t.pct+'% off public rates':(t.gwd!=null?'rounds '+usd(t.gwd)+' weekdays'+(t.gwe!=null?', '+usd(t.gwe)+' weekends':''):null),
   'books '+t.days+' days ahead',t.passes>0?t.passes+' guest pass'+(t.passes===1?'':'es')+' a year':null,t.guests?'guests too':null].filter(Boolean).join(' · ');}
-function renderTiers(){$("tiers").innerHTML=TIERS.map(t=>'<div class="mtr"><span><i class="tdot" style="background:'+t.color+'"></i><b style="font-weight:600">'+esc(t.name)+'</b></span><span class="d">'+tierLine(t)+'</span><span class="c">'+M.filter(m=>m.t===t.id&&m.status==='active').length+' active</span><span class="ybtns"><button class="ylink" type="button" data-t="edit" data-id="'+t.id+'">Edit</button><button class="ylink bad" type="button" data-t="del" data-id="'+t.id+'">Delete</button></span></div>').join('')+
+function renderTiersOld(){$("tiers").innerHTML=TIERS.map(t=>'<div class="mtr"><span><i class="tdot" style="background:'+t.color+'"></i><b style="font-weight:600">'+esc(t.name)+'</b></span><span class="d">'+tierLine(t)+'</span><span class="c">'+M.filter(m=>m.t===t.id&&m.status==='active').length+' active</span><span class="ybtns"><button class="ylink" type="button" data-t="edit" data-id="'+t.id+'">Edit</button><button class="ylink bad" type="button" data-t="del" data-id="'+t.id+'">Delete</button></span></div>').join('')+
   '<p class="mfee">When members pay dues through GreenReserve, a 1% fee is added to what they pay.</p>';}
 function renderRes(){const q=$("rq").value.trim().toLowerCase();const r=RES.filter(x=>!q||(x.name+' '+x.email+' '+x.card).toLowerCase().includes(q));
   $("res").innerHTML=r.map(x=>'<div class="mrr"><span><b style="font-weight:600">'+esc(x.name)+'</b>'+(x.card?' <span class="ysm">· '+esc(x.card)+'</span>':'')+'</span><span class="hm ysm">'+(x.email?esc(x.email):'No email — counter only')+'</span><span class="ysx hm"><span class="dot '+(x.st==='exp'?'bd':x.st==='ok'?'ok':'nt')+'"></span>'+(x.st==='exp'?'Card expired '+x.until:x.st==='ok'?'Good until '+x.until:'No end date')+'</span><span class="ybtns"><button class="ylink" type="button" data-r="edit" data-id="'+x.id+'">Edit</button><button class="ylink bad" type="button" data-r="rm" data-id="'+x.id+'">Remove</button></span></div>').join('')||'<p class="empty">'+(RES.length?'Nobody matches that.':'No residents yet.')+'</p>';}
-function renderAll(){counts();renderList();renderDet();renderJoin();renderTiers();renderRes();}
+function renderTiers(){const act=M.filter(m=>m.status==='active');
+  $("sOff").textContent=TIERS.length;$("sSea").textContent=SEAS.length;
+  if(!TIERS.some(t=>t.id==='t5'))0;const resN=42;
+  $("tiers").innerHTML=TIERS.map(t=>{const n=t.resident?42:act.filter(m=>m.t===t.id).length;const price=t.annual>0?usd(t.annual)+(t.term===12?' a year':' / '+t.term+' months'):'No dues';
+   const rate=t.mode==='pct'?t.pct+'% off public rates':(t.gwd!=null?'Rounds '+usd(t.gwd)+' weekdays'+(t.gwe!=null?', '+usd(t.gwe)+' weekends':''):'Public rates');
+   const perks=['Books '+t.days+' days ahead',t.passes>0?t.passes+' guest pass'+(t.passes===1?'':'es')+' a year':null,t.guests?'Guests pay member rate':null,t.init>0?usd(t.init)+' to join':null].filter(Boolean).join(' · ');
+   const join=({off:'Staff add members',pay:'Join online',request:'Request to join'}[t.join]||'')+(t.resident?' · proof of residency checked':'');
+   const perks2=t.resident?'Good at every '+t.group+' course · '+perks:perks;
+   return '<div class="mtr2" data-t="edit" data-id="'+t.id+'" role="button" tabindex="0"><i class="tdot" style="background:'+t.color+'"></i><div class="mtn"><b>'+esc(t.name)+'</b><span>'+rate+'</span><small>'+perks2+'</small></div><div class="mtp"><b>'+price+'</b><small>'+join+(t.auto?' · renews itself':'')+'</small></div><div class="mtc"><b>'+n+'</b><small>member'+(n===1?'':'s')+'</small></div></div>';}).join('')+
+   '<p class="mfee">When members pay dues through GreenReserve, a 1% fee is added to what they pay.</p>';}
+function renderSeasons(){$("seasons").innerHTML=SEAS.map(x=>'<div class="mtr2" role="button" tabindex="0"><i class="tdot" style="background:'+x.color+'"></i><div class="mtn"><b>'+esc(x.name)+'</b><span>'+x.rate+'</span><small>'+x.from+' – '+x.to+' · '+x.perks+'</small></div><div class="mtp"><b>'+usd(x.price)+' a season</b><small>'+x.join+'</small></div><div class="mtc"><b>'+x.n+'</b><small>pass holders</small></div></div>').join('')+'<p class="mfee">Every pass ends on its last date, whenever it was bought.</p>';}
+function renderAll(){counts();renderSeasons();renderList();renderDet();renderJoin();renderTiers();renderRes();}
 
 // ── Pop-ups ──
 function pop(h){$("pop").innerHTML='<div class="mpop" role="dialog" aria-modal="true">'+h+'</div>';$("pop").hidden=false;}
@@ -925,7 +1042,7 @@ function wizard(t){const f=t?Object.assign({},t):{name:'',color:COLORS[0],annual
     if($("wb"))$("wb").onclick=()=>{step--;draw();};if($("wx"))$("wx").onclick=closePop;if($("wc"))$("wc").onclick=()=>{step++;draw();};
     if($("ws"))$("ws").onclick=()=>{if(t)Object.assign(t,f);else{f.id='t'+Date.now();TIERS.push(f);}closePop();renderAll();toast(t?'Saved.':f.name+' is live. Anyone you add to it gets member rates at checkout.');};}
   draw();}
-$("addTier").onclick=()=>wizard(null);
+$("addTier").onclick=()=>wizard(null);$("addSeason").onclick=()=>wizard(null);
 function resPop(r){pop('<h3>'+(r?'Edit resident':'Add a resident')+'</h3><label>Full name<input value="'+esc(r?r.name:'')+'"></label><label>Email (so online bookings get the rate)<input type="email" value="'+esc(r?r.email:'')+'"></label><div class="g2"><label>Resident card number (optional)<input value="'+esc(r?r.card:'')+'"></label><label>Card good until (blank = no end date)<input type="date"></label></div><label>Notes for your staff (optional)<input></label><div class="yfr"><button class="ybtn" type="button" id="rok">'+(r?'Save':'Add resident')+'</button><button class="ybtn ghost" type="button" id="rx">Cancel</button></div>');
   $("rx").onclick=closePop;$("rok").onclick=()=>{closePop();toast('Resident saved.');};}
 $("addRes").onclick=()=>resPop(null);
@@ -962,10 +1079,149 @@ $("det").addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b
   renderAll();});
 $("join").addEventListener('click',e=>{const b=e.target.closest('[data-j]');if(!b)return;const j=JOIN.find(x=>x.id===b.dataset.id);
   if(b.dataset.j==='ok'){j.st='notpaid';toast('Approved — the pay link is on its way.');}else{JOIN=JOIN.filter(x=>x!==j);toast(b.dataset.j==='no'?'Declined.':'Removed.');}renderJoin();});
-$("tiers").addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(!b)return;const t=TIERS.find(x=>x.id===b.dataset.id);
+$("tiers").addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(!b||e.target.closest('.mfee'))return;const t=TIERS.find(x=>x.id===b.dataset.id);
   if(b.dataset.t==='edit')wizard(t);else confirmPop('Delete the '+esc(t.name)+' membership?','Members on it keep their record but lose these rates.','Delete',()=>{TIERS=TIERS.filter(x=>x!==t);});});
 $("res").addEventListener('click',e=>{const b=e.target.closest('[data-r]');if(!b)return;const r=RES.find(x=>x.id===b.dataset.id);
   if(b.dataset.r==='edit')resPop(r);else confirmPop('Remove '+esc(r.name)+'?','Remove '+esc(r.name)+' from your residents? Their future online bookings will be at the public rate.','Remove',()=>{RES=RES.filter(x=>x!==r);});});
 renderAll();
 })();
 </script>
+<script>
+/* Memberships v3 (Cam 2026-11-16 comments): simple rows sorted by members, click into a membership, a dues breakdown box,
+   season passes with their own setup, a reorganised membership setup with rates from the course's own price list. */
+(function(){
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
+const usd=c=>'$'+Math.round(c).toLocaleString('en-US');
+const PLUS='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+const COLORS=['#2E8F5E','#C9A24A','#4F7FB8','#B85C4F','#7A6BB8','#8A8F87','#3F9C9C','#B87A3F'];
+// The course's own price list (Schedule → What it costs). Member prices are set against these, never typed from scratch.
+const RATES=[{k:'18wd',n:'18 holes · weekday',p:62},{k:'18we',n:'18 holes · weekend',p:78},{k:'9wd',n:'9 holes · weekday',p:36},{k:'9we',n:'9 holes · weekend',p:44},{k:'tw',n:'Twilight · after 3 PM',p:40},{k:'cart18',n:'Cart · 18 holes',p:22},{k:'cart9',n:'Cart · 9 holes',p:14}];
+const PUBLIC_DAYS=7;
+const MEMB=[
+ {id:'m1',name:'Full member',color:'#2E8F5E',fee:1450,bill:'year',init:500,len:'12 months from joining',join:'Request to join',auto:true,days:14,rates:{'18wd':0,'18we':15,'9wd':0,'9we':8,'tw':0,'cart18':12,'cart9':7},members:46,dues:58200},
+ {id:'m2',name:'Resident card',color:'#8A8F87',fee:100,bill:'year',init:0,len:'12 months from joining',join:'Join online · proof of residency checked',auto:true,days:null,pct:30,members:212,dues:19800,resident:'Good at every Bergen County course'},
+ {id:'m3',name:'Senior',color:'#C9A24A',fee:950,bill:'year',init:0,len:'12 months from joining',join:'Join online',auto:true,days:10,pct:15,members:31,dues:26600},
+ {id:'m4',name:'Weekday',color:'#B85C4F',fee:780,bill:'year',init:0,len:'12 months from joining',join:'Join online',auto:false,days:null,rates:{'18wd':0,'9wd':0},members:18,dues:12480},
+ {id:'m5',name:'Junior',color:'#4F7FB8',fee:350,bill:'year',init:0,len:'12 months from joining',join:'Staff add members',auto:false,days:null,rates:{'18wd':12,'18we':18,'9wd':8,'9we':10},members:12,dues:3850}];
+const SEAS=[
+ {id:'s1',name:'Summer season pass',color:'#2E8F5E',price:1200,from:'Apr 1',to:'Oct 31',gives:'Free rounds all season',cart:'Cart extra',holders:18,dues:21600},
+ {id:'s2',name:'Senior weekday pass',color:'#C9A24A',price:650,from:'Apr 1',to:'Nov 30',gives:'Free weekday rounds',cart:'Cart included',holders:14,dues:9100},
+ {id:'s3',name:'Junior summer pass',color:'#4F7FB8',price:250,from:'Jun 1',to:'Aug 31',gives:'Rounds $5 any day',cart:'Walking only',holders:9,dues:2250}];
+const FIRST=['Dana','Marcus','Elaine','Frank','Priya','Tom','Grace','Owen','Rosa','Henry','Lena','Victor','Sam','Beth','Nora','Will'],LAST=['Whitfield','Bell','Ortiz','Delgado','Nair','Kessler','Lindqvist','Park','Jimenez','Abbott','Fischer','Huang','Okafor','Morrow','Dunn','Reyes'];
+const people=(n,seed,fee)=>Array.from({length:Math.min(n,14)},(_,i)=>{const a=FIRST[(i*3+seed)%16],b=LAST[(i*5+seed*2)%16];const k=(i+seed)%9;
+  return {name:a+' '+b,email:(a[0]+b).toLowerCase()+'@example.com',st:k===0?['bd','Expired Oct 31 · not renewed']:k===1?['wn','Renews Dec 1']:['ok','Paid to '+['Apr','May','Jun','Aug','Sep','Mar','Feb'][k%7]+' 2027'],since:2015+((i+seed)%11),rounds:(i*7+seed*3)%60};});
+let view={k:'list'};
+let tt;function toast(m){const t=$("toast");t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,3200);}
+const row=(c,name,cost,n,unit,attr)=>'<button type="button" class="vrow" '+attr+'><i class="tdot" style="background:'+c+'"></i><b>'+esc(name)+'</b><span class="vc">'+cost+'</span><span class="vn"><b>'+n+'</b> '+unit+'</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>';
+const costM=m=>usd(m.fee)+(m.bill==='year'?' a year':' once')+(m.init?' · '+usd(m.init)+' to join':'');
+function list(){
+  const ms=[...MEMB].sort((a,b)=>b.members-a.members),ss=[...SEAS].sort((a,b)=>b.holders-a.holders);
+  const tm=MEMB.reduce((t,m)=>t+m.dues,0),ts=SEAS.reduce((t,s)=>t+s.dues,0);
+  let h='<div class="ytop"><h2 class="ttl">Memberships</h2></div>'+
+  '<div class="mstrip m3"><section class="card mst"><div class="ylbl">Memberships offered</div><div class="ymid">'+MEMB.length+'</div></section><section class="card mst"><div class="ylbl">Season passes offered</div><div class="ymid">'+SEAS.length+'</div></section><section class="card mst"><div class="ylbl">Dues collected this year</div><div class="ymid">'+usd(tm+ts)+'</div></section></div>'+
+  '<div class="vgrid"><div class="vcol">'+
+  '<section class="card vcard"><div class="mth"><h3>Your memberships</h3><button class="mplus" type="button" data-a="addM" aria-label="Add a membership" title="Add a membership">'+PLUS+'</button></div>'+ms.map(m=>row(m.color,m.name,costM(m),m.members,'members','data-m="'+m.id+'"')).join('')+'</section>'+
+  '<section class="card vcard"><div class="mth"><h3>Season passes</h3><button class="mplus" type="button" data-a="addS" aria-label="Add a season pass" title="Add a season pass">'+PLUS+'</button></div>'+ss.map(s=>row(s.color,s.name,usd(s.price)+' a season · '+s.from+' – '+s.to,s.holders,'pass holders','data-s="'+s.id+'"')).join('')+'</section>'+
+  '</div><section class="card vdues"><h3 class="yh">Dues this year</h3>'+
+  '<div class="vsub">Memberships</div>'+ms.map(m=>'<div class="ykv"><span><i class="tdot" style="background:'+m.color+'"></i>'+esc(m.name)+'</span><b>'+usd(m.dues)+'</b></div>').join('')+
+  '<div class="vsub">Season passes</div>'+ss.map(s=>'<div class="ykv"><span><i class="tdot" style="background:'+s.color+'"></i>'+esc(s.name)+'</span><b>'+usd(s.dues)+'</b></div>').join('')+
+  '<div class="ykv tot"><span>Total</span><b>'+usd(tm+ts)+'</b></div><p class="ysm" style="margin:10px 0 0">Shows in Revenue as Membership dues. Paid through GreenReserve, members pay a 1% fee on top.</p></section></div>';
+  return h;}
+function rateLines(m){if(m.pct!=null)return '<div class="ykv"><span>Every round and cart</span><b>'+m.pct+'% off</b></div>';
+  return RATES.map(r=>{const v=m.rates&&m.rates[r.k];return '<div class="ykv"><span>'+r.n+'</span><b>'+(v==null?'<span class="yfaint" style="font-weight:400">'+usd(r.p)+' public</span>':(v===0?'Free':usd(v)))+'</b></div>';}).join('');}
+function detailM(m){const ppl=people(m.members,m.id.charCodeAt(1),m.fee+m.init);
+  return '<button class="vback" type="button" data-a="back">‹ Memberships</button><div class="ytop"><h2 class="ttl"><i class="tdot big" style="background:'+m.color+'"></i>'+esc(m.name)+'</h2><button class="lnk2" type="button" data-a="editM" data-id="'+m.id+'">Edit</button></div>'+
+  '<div class="mstrip m3"><section class="card mst"><div class="ylbl">Members</div><div class="ymid">'+m.members+'</div></section><section class="card mst"><div class="ylbl">Dues this year</div><div class="ymid">'+usd(m.dues)+'</div></section><section class="card mst"><div class="ylbl">Overdue renewals</div><div class="ymid">'+Math.ceil(m.members/9)+'</div></section></div>'+
+  '<div class="vgrid"><section class="card vmem"><div class="mth"><h3>Members</h3><button class="mplus" type="button" data-a="addMem" data-id="'+m.id+'" aria-label="Add a member" title="Add a member">'+PLUS+'</button></div>'+
+  '<div class="vmh"><span>Member</span><span>Dues</span><span class="r">Rounds this year</span><span class="r">Since</span></div>'+
+  ppl.map((p,i)=>'<button type="button" class="vm" data-p="'+i+'" data-of="'+m.id+'"><span><b>'+p.name+'</b><small>'+p.email+'</small></span><span class="ysx"><span class="dot '+p.st[0]+'"></span>'+p.st[1]+'</span><span class="r">'+p.rounds+'</span><span class="r">'+p.since+'</span></button>').join('')+
+  (m.members>14?'<button class="lnk2" style="margin:10px 12px" type="button">Show all '+m.members+'</button>':'')+'</section>'+
+  '<section class="card vdues"><h3 class="yh">Details</h3><div class="ykv"><span>Price</span><b>'+costM(m)+'</b></div><div class="ykv"><span>Lasts</span><b>'+m.len+'</b></div><div class="ykv"><span>Joining</span><b>'+m.join+'</b></div><div class="ykv"><span>Renews itself</span><b>'+(m.auto?'Yes':'No')+'</b></div><div class="ykv"><span>Books online</span><b>'+(m.days?m.days+' days ahead':'Same as the public ('+PUBLIC_DAYS+' days)')+'</b></div>'+(m.resident?'<div class="ykv"><span>Residents</span><b>'+m.resident+'</b></div>':'')+
+  '<div class="vsub">What members pay</div>'+rateLines(m)+'</section></div>';}
+function detailS(s){const ppl=people(s.holders,s.id.charCodeAt(1)+3,s.price);
+  return '<button class="vback" type="button" data-a="back">‹ Memberships</button><div class="ytop"><h2 class="ttl"><i class="tdot big" style="background:'+s.color+'"></i>'+esc(s.name)+'</h2><button class="lnk2" type="button" data-a="addS">Edit</button></div>'+
+  '<div class="mstrip m3"><section class="card mst"><div class="ylbl">Pass holders</div><div class="ymid">'+s.holders+'</div></section><section class="card mst"><div class="ylbl">Sold this season</div><div class="ymid">'+usd(s.dues)+'</div></section><section class="card mst"><div class="ylbl">Ends</div><div class="ymid">'+s.to+'</div></section></div>'+
+  '<div class="vgrid"><section class="card vmem"><div class="mth"><h3>Pass holders</h3><button class="mplus" type="button" data-a="addMem" data-id="'+s.id+'" aria-label="Add a pass holder" title="Add a pass holder">'+PLUS+'</button></div><div class="vmh"><span>Pass holder</span><span>Paid</span><span class="r">Rounds this season</span><span class="r">Since</span></div>'+
+  ppl.map((p,i)=>'<button type="button" class="vm" data-p="'+i+'" data-of="'+s.id+'"><span><b>'+p.name+'</b><small>'+p.email+'</small></span><span class="ysx"><span class="dot ok"></span>Paid</span><span class="r">'+p.rounds+'</span><span class="r">'+p.since+'</span></button>').join('')+'</section>'+
+  '<section class="card vdues"><h3 class="yh">Details</h3><div class="ykv"><span>Price</span><b>'+usd(s.price)+' a season</b></div><div class="ykv"><span>Season</span><b>'+s.from+' – '+s.to+'</b></div><div class="ykv"><span>Gives them</span><b>'+s.gives+'</b></div><div class="ykv"><span>Cart</span><b>'+s.cart+'</b></div><p class="ysm" style="margin:10px 0 0">Every pass ends '+s.to+', whenever it was bought.</p></section></div>';}
+function render(){const m=$("v2");m.innerHTML=view.k==='m'?detailM(MEMB.find(x=>x.id===view.id)):view.k==='s'?detailS(SEAS.find(x=>x.id===view.id)):list();}
+// ── Pop-up setups ──
+function pop(h){$("pop").innerHTML='<div class="mpop vpop" role="dialog" aria-modal="true">'+h+'</div>';$("pop").hidden=false;}
+const close=()=>{$("pop").hidden=true;};
+function steps(labels,at){return '<div class="vprog"><div class="vpt"><span>Step '+(at+1)+' of '+labels.length+'</span><b>'+labels[at]+'</b></div><div class="vbar">'+labels.map((l,i)=>'<i class="'+(i<=at?'on':'')+'"></i>').join('')+'</div></div>';}
+function foot(at,last,doneTxt){return '<div class="vfoot">'+(at===0?'<button class="lnk2" type="button" data-w="x">Cancel</button>':'<button class="lnk2" type="button" data-w="back">Back</button>')+'<span style="flex:1"></span><button class="ybtn" type="button" data-w="'+(at===last?'done':'next')+'">'+(at===last?doneTxt:'Continue')+'</button></div>';}
+function colours(sel){return '<div class="vcolors">'+COLORS.map(c=>'<button type="button" data-c="'+c+'" class="'+(c===sel?'on':'')+'" style="background:'+c+'" aria-label="Colour"></button>').join('')+'</div>';}
+function seg(name,opts,val){return '<div class="vtiles n'+opts.length+'" role="radiogroup">'+opts.map(o=>'<button type="button" class="vchk rad" role="radio" data-g="'+name+'" data-v="'+o[0]+'" aria-pressed="'+(o[0]===val)+'" aria-checked="'+(o[0]===val)+'"><i></i><span><b>'+o[1]+'</b></span></button>').join('')+'</div>';}
+function memberWizard(m){const f=m?JSON.parse(JSON.stringify(m)):{name:'',color:COLORS[0],join:'pay',auto:true,bill:'year',fee:'',init:'',hasInit:false,len:'12',days:'public',daysN:14,mode:'each',pct:15,rates:{}};
+  if(m){f.join={'Request to join':'request','Staff add members':'off'}[m.join]||'pay';f.hasInit=!!m.init;f.len='12';f.days=m.days?'more':'public';f.daysN=m.days||14;f.mode=m.pct!=null?'pct':'each';}
+  const L=['Name','Joining','Payment','Booking and rates'];let at=0;
+  function draw(){let h='<h3>'+(m?'Edit membership':'New membership')+'</h3>'+steps(L,at);
+    if(at===0)h+='<div class="vblock"><div class="vlab">Name</div><input class="vname" id="wn" value="'+esc(f.name)+'" aria-label="Name"></div><div class="vblock"><div class="vlab">Colour on the tee sheet</div>'+colours(f.color)+'</div>';
+    if(at===1)h+='<div class="vlab">How golfers join</div>'+seg('join',[['off','Staff add them'],['pay','Join online'],['request','Ask to join']],f.join)+
+      '<p class="hint">'+({off:'Only your staff can add members.',pay:'Golfers pay online and are members as soon as it’s paid.',request:'Golfers ask, you approve, then they pay.'}[f.join])+'</p>'+
+      '<label class="ck"><input type="checkbox" '+(f.auto?'checked':'')+' data-k="auto">Renews itself. Golfers agree when they pay and can turn it off</label>'+
+      '<label class="ck"><input type="checkbox" '+(f.proof?'checked':'')+' data-k="proof">Needs proof of residency. Staff check before it starts</label>';
+    if(at===2)h+='<div class="vlab">Fee</div><div class="vrow2"><div class="vmoney"><span>$</span><input id="wf" inputmode="decimal" value="'+esc(f.fee)+'"></div>'+seg('bill',[['year','Every year'],['once','One time']],f.bill)+'</div>'+
+      '<label class="ck"><input type="checkbox" '+(f.hasInit?'checked':'')+' data-k="hasInit">Initiation fee when they first join</label>'+(f.hasInit?'<div class="vmoney" style="max-width:180px"><span>$</span><input inputmode="decimal" value="'+esc(f.init)+'"></div>':'')+
+      '<div class="vlab">How long it lasts</div>'+seg('len',[['12','12 months'],['6','6 months'],['life','No end']],f.len)+'<p class="hint">From the day they join. For fixed dates, add a season pass instead.</p>'+
+      '<p class="hint">When paid through GreenReserve, members pay a 1% fee on top.</p>';
+    if(at===3){h+='<div class="vlab">Booking online</div>'+seg('days',[['public','Public window'],['more','Further ahead']],f.days)+(f.days==='more'?'<div class="vrow2"><input class="vnum" value="'+f.daysN+'" inputmode="numeric"><span class="hint" style="margin:0">days ahead</span></div>':'')+
+      '<div class="vlab">What members pay</div>'+seg('mode',[['each','Set each price'],['pct','% off everything']],f.mode);
+      if(f.mode==='pct')h+='<div class="vrow2"><input class="vnum" value="'+f.pct+'" inputmode="numeric"><span class="hint" style="margin:0">% off every round and cart</span></div>';
+      else h+='<p class="hint">Your prices from Schedule. Leave one blank and members pay the public price; 0 is free.</p><div class="vrates"><div class="vrh"><span>Round</span><span>Public</span><span>Members</span></div>'+RATES.map(r=>{const v=f.rates[r.k];return '<div class="vr"><span>'+r.n+'</span><span class="yfaint">'+usd(r.p)+'</span><div class="vmoney sm"><span>$</span><input inputmode="decimal" value="'+(v==null?'':v)+'"></div></div>';}).join('')+'</div>';}
+    h+=foot(at,3,m?'Save':'Add membership');pop(h);}
+  draw();
+  $("pop").onclick=e=>{if(e.target.id==='pop'){close();return;}const c=e.target.closest('[data-c]');if(c){f.color=c.dataset.c;draw();return;}
+    const g=e.target.closest('[data-g]');if(g){f[g.dataset.g]=g.dataset.v;draw();return;}
+    const k=e.target.closest('[data-k]');if(k){f[k.dataset.k]=k.checked;if(k.dataset.k==='hasInit')draw();return;}
+    const w=e.target.closest('[data-w]');if(!w)return;if($("wn"))f.name=$("wn").value;if($("wf"))f.fee=$("wf").value;
+    if(w.dataset.w==='x')close();else if(w.dataset.w==='back'){at--;draw();}else if(w.dataset.w==='next'){if(at===0&&!f.name.trim()){$("wn").focus();return;}at++;draw();}
+    else{close();toast(m?'Saved.':(f.name||'Membership')+' added.');}};}
+function seasonWizard(){const f={name:'',color:COLORS[0],price:'',from:'2027-04-01',to:'2027-10-31',online:true,course:true,rates:{'18wd':0,'18we':0,'9wd':0,'9we':0,'tw':0}};const L=['Name','Price and dates','What it gives'];let at=0;
+  function draw(){let h='<h3>New season pass</h3>'+steps(L,at);
+    if(at===0)h+='<div class="vblock"><div class="vlab">Name</div><input class="vname" id="wn" value="'+esc(f.name)+'" aria-label="Name"></div><div class="vblock"><div class="vlab">Colour on the tee sheet</div>'+colours(f.color)+'</div>';
+    if(at===1)h+='<div class="vblock"><div class="vlab">Price for the season</div><div class="vbig"><span>$</span><input id="wf" inputmode="decimal" value="'+esc(f.price)+'" aria-label="Price for the season"></div><p class="hint">Golfers pay a 1% fee on top when they pay through GreenReserve.</p></div>'+
+      '<div class="vblock"><div class="vlab">Season</div><div class="g2"><label>Starts<input type="date" value="'+f.from+'"></label><label>Ends<input type="date" value="'+f.to+'"></label></div><p class="hint">Every pass ends on the last day, whenever it was bought.</p></div>'+
+      '<div class="vblock"><div class="vlab">Where golfers can buy it</div><div class="vchecks">'+
+      '<button type="button" class="vchk" data-t="online" aria-pressed="'+!!f.online+'"><i></i><span><b>Online</b><small>On your booking page</small></span></button>'+
+      '<button type="button" class="vchk" data-t="course" aria-pressed="'+!!f.course+'"><i></i><span><b>At the course</b><small>Staff sell it at the counter</small></span></button></div></div>';
+    if(at===2){h+='<div class="vblock"><div class="vlab">What pass holders pay</div><p class="hint" style="margin:0">Your prices from Schedule. Name a price for each, 0 for free, or leave it blank for the public price.</p><div class="vrates"><div class="vrh"><span>Round</span><span>Public</span><span>Pass holders</span></div>'+RATES.map(r=>'<div class="vr"><span>'+r.n+'</span><span class="yfaint">'+usd(r.p)+'</span><div class="vmoney sm"><span>$</span><input inputmode="decimal" value="'+(f.rates[r.k]==null?'':f.rates[r.k])+'"></div></div>').join('')+'</div></div>'+
+      '<div class="vblock"><div class="vlab">Booking online</div>'+seg('days',[['public','Public window'],['more','Further ahead']],f.days||'public')+(f.days==='more'?'<div class="vrow2"><input class="vnum" value="14" inputmode="numeric" aria-label="Days ahead"><span class="hint" style="margin:0">days ahead</span></div>':'')+'</div>';}
+    h+=foot(at,2,'Add season pass');pop(h);}
+  draw();
+  $("pop").onclick=e=>{if(e.target.id==='pop'){close();return;}const c=e.target.closest('[data-c]');if(c){f.color=c.dataset.c;draw();return;}
+    const t=e.target.closest('[data-t]');if(t){f[t.dataset.t]=!f[t.dataset.t];if($("wf"))f.price=$("wf").value;draw();return;}const g=e.target.closest('[data-g]');if(g){f[g.dataset.g]=g.dataset.v;draw();return;}
+    const w=e.target.closest('[data-w]');if(!w)return;if($("wn"))f.name=$("wn").value;if($("wf"))f.price=$("wf").value;
+    if(w.dataset.w==='x')close();else if(w.dataset.w==='back'){at--;draw();}else if(w.dataset.w==='next'){if(at===0&&!f.name.trim()){$("wn").focus();return;}at++;draw();}else{close();toast((f.name||'Season pass')+' added.');}};}
+function memberCard(x,i){const isS=!!x.price,seed=isS?x.id.charCodeAt(1)+3:x.id.charCodeAt(1);const p=people(isS?x.holders:x.members,seed,isS?x.price:x.fee+(x.init||0))[i];
+  const pre={m1:'FM',m2:'RC',m3:'SR',m4:'WD',m5:'JR',s1:'SP',s2:'SW',s3:'JS'}[x.id]||'MB';const num='PH-'+pre+'-'+String(i*7+11).padStart(4,'0');
+  const ini=p.name.split(' ').map(w=>w[0]).join('');const amt=isS?x.price:x.fee;const exp=p.st[0]==='bd';
+  pop('<div class="vmc"><span class="vav">'+ini+'</span><div><h3>'+p.name+'</h3><p class="hint" style="margin:2px 0 0">'+p.email+' · (201) 555-01'+String(20+i).slice(-2)+'</p></div></div>'+
+   '<div class="yitems" style="margin:0"><div class="ykv"><span>'+(x.resident?'Resident card number':isS?'Pass number':'Member number')+'</span><b class="mono">'+num+'</b></div><div class="ykv"><span>'+(isS?'Pass':'Membership')+'</span><b><i class="tdot" style="background:'+x.color+'"></i>'+esc(x.name)+'</b></div>'+
+   '<div class="ykv"><span>'+(isS?'Paid':'Dues')+'</span><b class="ysx"><span class="dot '+p.st[0]+'"></span>'+p.st[1]+'</b></div><div class="ykv"><span>Member since</span><b>'+p.since+'</b></div><div class="ykv"><span>Rounds '+(isS?'this season':'this year')+'</span><b>'+p.rounds+'</b></div>'+(isS||!x.auto?'':'<div class="ykv"><span>Renews itself</span><b>Yes · Visa •••• 4242</b></div>')+'</div>'+
+   '<div class="vlab">Payments</div><div class="yitems" style="margin:0">'+(exp?'':'<div class="ykv"><span>'+(isS?'Apr 2, 2026 · card reader':'Apr 1, 2026 · renewed online')+'</span><b>'+usd(amt)+'</b></div>')+'<div class="ykv"><span>'+(isS?'Apr 3, 2025 · cash':'Apr 1, 2025 · cash at the register')+'</span><b>'+usd(amt)+'</b></div></div>'+
+   '<div class="vacts">'+(exp?'<button class="ybtn" type="button" data-w="renew">Renew · '+usd(amt)+'</button>':'')+'<button class="lnk2" type="button" data-w="chg">Change '+(isS?'pass':'membership')+'</button><button class="lnk2" type="button" data-w="edit">Edit details</button>'+(isS||!x.auto?'':'<button class="lnk2" type="button" data-w="auto">Turn off auto-renew</button>')+'<span style="flex:1"></span><button class="lnk2 bad" type="button" data-w="end">End '+(isS?'pass':'membership')+'</button></div>'+
+   '<div class="vfoot"><span style="flex:1"></span><button class="lnk2" type="button" data-w="x">Close</button></div>');
+  $("pop").onclick=e=>{if(e.target.id==='pop'){close();return;}const w=e.target.closest('[data-w]');if(!w)return;const a=w.dataset.w;
+   if(a==='x'){close();return;}if(a==='renew'){close();addMember(x);return;}close();toast({chg:'Pick the new one, the price difference is charged or credited.',edit:'Edit name, email, phone and photo.',auto:'Auto-renew turned off.',end:'Ends now. Asks first whether to refund the unused part.'}[a]);};}
+function addMember(x){const isS=!!x.price,amt=isS?x.price:x.fee+(x.init||0);let how='reader',photo=false;
+  const pre={m1:'FM',m2:'RC',m3:'SR',m4:'WD',m5:'JR',s1:'SP',s2:'SW',s3:'JS'}[x.id]||'MB';const nextN=(isS?x.holders:x.members)+1;
+  const mid='PH-'+pre+'-'+String(nextN).padStart(4,'0');
+  const opts=[['reader','Card reader','Tap or insert at the counter'],['cash','Cash','Paid at the register'],['type','Type a card','Enter the card number']];
+  function draw(){pop('<h3>'+(isS?'Add a pass holder':'Add a member')+'</h3><p class="hint" style="margin:-4px 0 0">'+esc(x.name)+' · '+usd(amt)+(isS?' for the season':(x.init?' (includes '+usd(x.init)+' to join)':' a year'))+'</p>'+
+   '<div class="vwho"><button type="button" class="vphoto'+(photo?' has':'')+'" data-w="photo" aria-label="Add a photo">'+(photo?'<span>JS</span>':'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><small>Photo</small>')+'</button>'+
+   '<div class="vfields"><label>Full name<input></label><div class="g2"><label>Email<input type="email"></label><label>Phone (optional)<input type="tel"></label></div></div></div>'+
+   '<div class="vid"><span>'+(x.resident?'Resident card number':(isS?'Pass number':'Member number'))+'</span><b>'+mid+'</b><small>Made for them automatically</small></div>'+
+   '<div class="vlab">Payment · '+usd(amt)+'</div><div class="vpay">'+opts.map(o=>'<button type="button" data-g="how" data-v="'+o[0]+'" aria-pressed="'+(how===o[0])+'"><b>'+o[1]+'</b><small>'+o[2]+'</small></button>').join('')+'</div>'+
+   (how==='type'?'<div class="vcard"><label>Card number<input inputmode="numeric" placeholder=""></label><div class="g3"><label>Expires<input></label><label>CVC<input inputmode="numeric"></label><label>ZIP<input inputmode="numeric"></label></div></div>':'')+
+   '<div class="vfoot"><button class="lnk2" type="button" data-w="x">Cancel</button><span style="flex:1"></span><button class="ybtn" type="button" data-w="done">'+({reader:'Send '+usd(amt)+' to the reader',cash:'Took '+usd(amt)+' cash',type:'Charge '+usd(amt)}[how])+'</button></div>'+
+   '<p class="hint" style="margin:0">They’re added the moment it’s paid.</p>');}
+  draw();$("pop").onclick=e=>{if(e.target.id==='pop'){close();return;}const g=e.target.closest('[data-g]');if(g){how=g.dataset.v;draw();return;}const w=e.target.closest('[data-w]');if(!w)return;if(w.dataset.w==='photo'){photo=!photo;draw();return;}close();if(w.dataset.w==='done')toast('Paid. '+mid+' added to '+x.name+'.');};}
+$("v2").addEventListener('click',e=>{const b=e.target.closest('[data-m],[data-s],[data-a],[data-p]');if(!b)return;
+  if(b.dataset.m){view={k:'m',id:b.dataset.m};render();window.scrollTo(0,0);}else if(b.dataset.s){view={k:'s',id:b.dataset.s};render();}
+  else if(b.dataset.a==='back'){view={k:'list'};render();}else if(b.dataset.a==='addM')memberWizard(null);else if(b.dataset.a==='editM')memberWizard(MEMB.find(x=>x.id===b.dataset.id));else if(b.dataset.a==='addS')seasonWizard();else if(b.dataset.p!=null)memberCard(MEMB.find(x=>x.id===b.dataset.of)||SEAS.find(x=>x.id===b.dataset.of),+b.dataset.p);else if(b.dataset.a==='addMem')addMember(MEMB.find(x=>x.id===b.dataset.id)||SEAS.find(x=>x.id===b.dataset.id));});
+render();
+})();
+</script>
+
