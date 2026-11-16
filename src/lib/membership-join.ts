@@ -12,6 +12,7 @@
 //    (lib/member-rates membershipLive), so nobody gets them before paying.
 //  • One membership per golfer per course: joining again while a join is unfinished gives
 //    back where it stands; a cancelled one is reused; one the course paused (inactive) is refused.
+import { assignMemberNumber } from './member-number';
 import { randomUUID } from 'crypto';
 import { prisma } from './prisma';
 import { maybeSendPayLink, NOT_SENT } from './membership-pay-link';
@@ -70,12 +71,15 @@ export async function joinTier(courseId: string, golfer: { id: string; email: st
   const row = old
     ? await prisma.courseMembership.update({ where: { id: old.id }, data, select: { id: true, payToken: true } })
     : await prisma.courseMembership.create({ data: { ...data, golferId: golfer.id, courseId }, select: { id: true, payToken: true } });
+  // Memberships item 2: a number once they can pay (a request waits for staff to approve it).
+  if (status === 'awaiting_payment') await assignMemberNumber(row.id);
   return { ok: true, status, membershipId: row.id, payToken: row.payToken };
 }
 
 /** Staff: approve a request — it becomes payable and the pay link is emailed. */
 export async function approveJoin(courseId: string, membershipId: string): Promise<{ ok: true; sent: boolean; note: string } | Fail> {
   const done = await prisma.courseMembership.updateMany({ where: { id: membershipId, courseId, status: 'requested' }, data: { status: 'awaiting_payment' } });
+  if (done.count) await assignMemberNumber(membershipId);
   if (!done.count) return fail(409, 'That request was already answered — refresh.');
   const m = await prisma.courseMembership.findUniqueOrThrow({ where: { id: membershipId }, select: { payToken: true } });
   if (!m.payToken) await prisma.courseMembership.update({ where: { id: membershipId }, data: { payToken: randomUUID() } });
@@ -91,6 +95,9 @@ export async function approveJoin(courseId: string, membershipId: string): Promi
 
 /** Staff: decline a request (or drop an unpaid online join). Never touches a paid member. */
 export async function declineJoin(courseId: string, membershipId: string): Promise<{ ok: true } | Fail> {
-  const done = await prisma.courseMembership.updateMany({ where: { id: membershipId, courseId, status: { in: UNFINISHED } }, data: { status: 'cancelled' } });
-  return done.count ? { ok: true } : fail(409, 'That request was already answered — refresh.');
+  // Memberships item 1: never while the dues are being paid (a card going through, the card reader) — the payment would land on a cancelled membership.
+  const done = await prisma.courseMembership.updateMany({ where: { id: membershipId, courseId, status: { in: UNFINISHED }, duesReaderId: '', OR: [{ duesChargeStartedAt: null }, { duesChargeStartedAt: { lt: new Date(Date.now() - 10 * 60_000) } }] }, data: { status: 'cancelled' } });
+  if (done.count) return { ok: true };
+  const now = await prisma.courseMembership.findFirst({ where: { id: membershipId, courseId }, select: { duesChargeStartedAt: true, duesReaderId: true } });
+  return fail(409, now && (now.duesReaderId || (now.duesChargeStartedAt && Date.now() - now.duesChargeStartedAt.getTime() < 10 * 60_000)) ? 'These dues are being paid right now — finish or cancel the payment first.' : 'That request was already answered — refresh.');
 }

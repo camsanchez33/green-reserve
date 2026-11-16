@@ -4,6 +4,7 @@ import { verifyAdminSetPasswordToken } from '@/lib/admin-session';
 import { validatePasswordStrength } from '@/lib/password';
 import { sendAdminPasswordChangedNotification } from '@/lib/email';
 import bcrypt from 'bcryptjs';
+import { passwordChanged } from '@/lib/admin-password';
 
 export async function POST(req: NextRequest) {
   const { token, password } = await req.json();
@@ -45,6 +46,7 @@ export async function POST(req: NextRequest) {
     where: { id: admin.id },
     data: {
       passwordHash,
+      passwordChangedAt: now,
       setPasswordToken: null,
       setPasswordTokenExpiry: null,
       mustChangePassword: false,
@@ -61,7 +63,9 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  if (isReset) {
+  await passwordChanged(req, admin, isReset ? 'reset with Forgot password' : 'set in place of a temporary password');
+  // The owner's change is emailed by passwordChanged() (with device and place), so not twice.
+  if (isReset && admin.role !== 'owner') {
     after(sendAdminPasswordChangedNotification({ adminName: admin.name, adminEmail: admin.email })
       .catch(err => console.error('Admin password-changed notification failed:', err)));
   }

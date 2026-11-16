@@ -24,8 +24,10 @@ export const LEDGER_MAX_ROWS = 20_000;
 export type LedgerDay = {
   day: string;
   cardInCents: number; cashInCents: number; otherInCents: number; outCents: number; netCents: number;
-  /** GreenReserve's part of the day: fees it took less fees it gave back. */
+  /** GreenReserve's part of the day: fees it took less fees it gave back (= feesInCents − feesBackCents). */
   platformCents: number;
+  /** Revenue page's one total: GreenReserve's fees on money in, and the fees given back with refunds. */
+  feesInCents: number; feesBackCents: number;
   /** Card money on the course's Stripe account, by the ledger — compared with Stripe's. */
   courseCardNetCents: number;
   stripeNetCents: number | null;
@@ -66,7 +68,7 @@ async function movesIn(courseId: string, from: Date, to: Date): Promise<Row[]> {
 
 /** Pure: a day's totals from its rows. */
 export function sumDay(day: string, rows: Pick<Row, 'direction' | 'method' | 'account' | 'amountCents' | 'platformFeeCents'>[]): Omit<LedgerDay, 'stripeNetCents' | 'stripeFeeCents' | 'match'> {
-  let cardIn = 0, cashIn = 0, otherIn = 0, out = 0, platform = 0, courseCard = 0;
+  let cardIn = 0, cashIn = 0, otherIn = 0, out = 0, platform = 0, courseCard = 0, feesIn = 0, feesBack = 0;
   for (const r of rows) {
     const sign = r.direction === 'out' ? -1 : 1;
     if (r.direction === 'out') out += r.amountCents;
@@ -74,9 +76,10 @@ export function sumDay(day: string, rows: Pick<Row, 'direction' | 'method' | 'ac
     else if (r.method === 'other') otherIn += r.amountCents;
     else cardIn += r.amountCents;
     platform += sign * r.platformFeeCents;
+    if (r.direction === 'out') feesBack += r.platformFeeCents; else feesIn += r.platformFeeCents;
     if (r.account === 'course' && (r.method === 'card' || r.method === 'card_present')) courseCard += sign * r.amountCents;
   }
-  return { day, cardInCents: cardIn, cashInCents: cashIn, otherInCents: otherIn, outCents: out, netCents: cardIn + cashIn + otherIn - out, platformCents: platform, courseCardNetCents: courseCard, moves: rows.length };
+  return { day, cardInCents: cardIn, cashInCents: cashIn, otherInCents: otherIn, outCents: out, netCents: cardIn + cashIn + otherIn - out, platformCents: platform, feesInCents: feesIn, feesBackCents: feesBack, courseCardNetCents: courseCard, moves: rows.length };
 }
 
 /** Pure: whether the ledger's card money for a day agrees with Stripe's. */
@@ -198,6 +201,18 @@ export async function ledgerRows(courseId: string, day: string): Promise<LedgerR
   const rows = await movesIn(courseId, dayStart(course.timezone, day), dayStart(course.timezone, addDaysStr(day, 1)));
   return describe(courseId, rows);
 }
+
+/** Every movement of a range (Revenue → Payments lists every payment type), up to LEDGER_ROWS_MAX_DAYS. */
+export const LEDGER_ROWS_MAX_DAYS = 92;
+export async function ledgerRowsRange(courseId: string, from: string, to: string): Promise<LedgerRow[] | null> {
+  const course = await prisma.course.findUnique({ where: { id: courseId }, select: { timezone: true } });
+  if (!course) return null;
+  const rows = await movesIn(courseId, dayStart(course.timezone, from), dayStart(course.timezone, addDaysStr(to, 1)));
+  return describe(courseId, rows);
+}
+
+/** Names and links for ledger rows of this course (Revenue's Stripe-mismatch detail reuses it). */
+export const describeMoves = (courseId: string, rows: Row[]) => describe(courseId, rows);
 
 async function describe(courseId: string, rows: Row[]): Promise<LedgerRow[]> {
   const ids = (k: 'bookingId' | 'saleId' | 'membershipId' | 'eventPaymentId') => [...new Set(rows.map(r => r[k]).filter((x): x is string => !!x))];

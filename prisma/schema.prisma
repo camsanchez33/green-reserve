@@ -468,8 +468,16 @@ model MembershipTier {
   accountLimitCents    Int?
   accountSettle        String             @default("link")
   active               Boolean            @default(true)
+  /// Memberships item 2 (Cam 2026-11-16, "an automatic per-membership prefix and sequence, never reused"): the
+  /// prefix of this membership's member numbers (course initials + membership initials, e.g. "PH-FM"), fixed the
+  /// first time a number is given so a rename never changes it, and the last number given. Numbers only go up.
+  numberPrefix         String?
+  numberLast           Int                @default(0)
   createdAt            DateTime           @default(now())
   memberships          CourseMembership[]
+
+  /// Memberships item 2: a prefix belongs to one membership per course, so two never share numbers.
+  @@unique([courseId, numberPrefix])
 }
 
 /// GRP-1: several courses run together (e.g. Bergen County's six). See Course.groupId.
@@ -538,6 +546,10 @@ model CourseMembership {
   /// MEM-ACCT hardening (Cam 2026-10-31): the ONE PaymentIntent for the term being paid — the pay link and
   /// the automatic renewal confirm the same one (lib/stripe chargeOneIntent). Cleared when the term is recorded.
   duesIntentId           String          @default("")
+  /// Memberships item 1 (Cam 2026-11-16): the card reader the dues are on while staff take them at the course
+  /// ("" = not on a reader). Set with the claim (duesChargeStartedAt); duesIntentId then holds the reader's
+  /// card_present intent. Every other dues payment refuses while it is set (lib/dues-reader).
+  duesReaderId           String          @default("")
   renewalRemindedAt      DateTime?
   /// MEM-RENEW: renew automatically on the saved card (lib/membership-autorenew). Only ever turned on
   /// by the golfer ticking the box when they pay; turned off by them or by staff.
@@ -560,6 +572,12 @@ model CourseMembership {
   /// course's own list has already joined, so no dues payment adds the tier's
   /// one-time initiation fee and their history shows none.
   initiationWaived       Boolean         @default(false)
+  /// Memberships item 2: the member's number, e.g. "PH-FM-0012" (lib/member-number). Given once, when the member is
+  /// added; never reused (the tier's numberLast only goes up). Null on members added before it (no backfill).
+  memberNumber           String?
+  /// Memberships item 2: the member's photo, in the PRIVATE blob store (lib/private-blob) — only ever served
+  /// through /api/operator/members/photo to the course's own staff. "" = none.
+  photoUrl               String          @default("")
   notes                  String          @default("")
   createdAt              DateTime        @default(now())
 
@@ -573,6 +591,7 @@ model CourseMembership {
   accountCardTerms       String            @default("")
 
   @@unique([golferId, courseId])
+  @@unique([courseId, memberNumber])
   // MP-10 schema half: the overdue-dues surfaces filter by course + last payment.
   @@index([courseId, lastPaidAt])
 }
@@ -1042,6 +1061,10 @@ model AdminUser {
   active                 Boolean         @default(true)
   mustChangePassword     Boolean         @default(false)
   lastLoginAt            DateTime?
+  /// My profile (Cam 2026-11-15): when the password in force was set. Written by every
+  /// route that sets one (bootstrap, employee create, owner reset, set-password,
+  /// change-password). Null = set before this column existed; the page hides the row.
+  passwordChangedAt      DateTime?
   createdAt              DateTime        @default(now())
   setPasswordToken       String?         @unique
   setPasswordTokenExpiry DateTime?
@@ -2074,7 +2097,7 @@ model RegisterOpen {
 /// or token — only the email typed, the IP and the browser.
 model SecurityEvent {
   id        String   @id @default(cuid())
-  /// 'signin_failed' | 'signin_ok' | 'locked_out' | 'second_factor_failed' | 'step_up_failed' | 'rate_limited' | 'new_device'
+  /// 'signin_failed' | 'signin_ok' | 'locked_out' | 'second_factor_failed' | 'step_up_failed' | 'rate_limited' | 'new_device' | 'password_changed'
   kind      String
   /// Which door: 'admin' (employees) | 'owner' (/cam) | 'course' (dashboard) | 'golfer' | 'member'
   surface   String

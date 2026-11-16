@@ -72,7 +72,7 @@ async function cleanup() {
   ok('a paused member can\'t rejoin online — the course turns them back on', !paused.ok && /paused by the course/.test(paused.error), paused);
 
   // Wiring.
-  const pay = readFileSync('src/app/api/membership/[id]/route.ts', 'utf8');
+  const pay = readFileSync('src/app/api/membership/[id]/route.ts', 'utf8') + readFileSync('src/lib/dues-payment.ts', 'utf8'); // Memberships item 1: the charge is lib/dues-payment
   ok('the dues pay link takes an online join and makes it active', pay.includes("status: { in: ['active', 'awaiting_payment'] }") && /paymentStatus: 'paid',\n\s+status: 'active',/.test(readFileSync('src/lib/membership-dues.ts', 'utf8')) && pay.includes('recordPaidTerm('));
   const tiers = readFileSync('src/app/api/operator/tiers/route.ts', 'utf8');
   ok('a tier joined online needs dues (create and edit)', (tiers.match(/JOIN_NEEDS_DUES/g) ?? []).length >= 3);

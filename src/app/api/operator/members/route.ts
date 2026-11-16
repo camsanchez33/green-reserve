@@ -6,17 +6,37 @@ import { resolveDashboardSession, requirePermission, can } from '@/lib/session';
 import { todayIn } from '@/lib/course-time';
 import { memberRoundStats } from '@/lib/member-stats';
 import { randomUUID } from 'crypto';
-import { signMemberInviteToken } from '@/lib/auth';
-import { markDuesPaidAtCourse } from '@/lib/membership-dues';
-import { sendMemberInviteEmail, sendMemberLinkedNotification, sendAutoRenewOffEmail } from '@/lib/email';
+import { markDuesPaidAtCourse, amountsDue } from '@/lib/membership-dues';
+import { requireRegisterOpen } from '@/lib/register-open';
+import { duesThisYear } from '@/lib/dues-year';
+import { assignMemberNumber, nextMemberNumber } from '@/lib/member-number';
+import { del } from '@vercel/blob';
+import { privateBlobToken, isBlobStoreUrl } from '@/lib/private-blob';
+import { settleStaleDuesReader } from '@/lib/dues-reader';
+import { sendWelcome, COUNTER_ADDED } from '@/lib/member-welcome';
+import { sendAutoRenewOffEmail } from '@/lib/email';
 import { maybeSendPayLink, NOT_SENT } from '@/lib/membership-pay-link';
 import { approveJoin, declineJoin } from '@/lib/membership-join';
 import { stopAutoRenew, STOP_DATA, memberContact } from '@/lib/membership-autorenew';
 
-export async function GET() {
+/** Memberships item 2: a whole membership row as a response — never where the photo is stored, only whether there is one. */
+function safeRow<T extends { photoUrl?: string }>(row: T): Omit<T, 'photoUrl'> & { hasPhoto: boolean } {
+  const { photoUrl, ...rest } = row;
+  return { ...rest, hasPhoto: !!photoUrl };
+}
+
+export async function GET(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   { const denied = requirePermission(session, 'members.view'); if (denied) return denied; } // SP-A
+
+  // Memberships item 2: the add form's "Made for them automatically" — the number the next member on this tier gets.
+  const nextFor = req.nextUrl.searchParams.get('nextNumber');
+  if (nextFor) {
+    const next = await nextMemberNumber(session.courseId, nextFor);
+    if (!next) return NextResponse.json({ error: 'Invalid tier' }, { status: 404 });
+    return NextResponse.json({ nextNumber: next });
+  }
 
   const memberships = await prisma.courseMembership.findMany({
     where: { courseId: session.courseId },
@@ -58,11 +78,17 @@ export async function GET() {
     lastRound:      st?.lastRound ?? null,
     initiationWaived: m.initiationWaived,
     autoRenew:      m.autoRenew,
+    // Memberships item 2: the member number, and whether there is a photo (served by /api/operator/members/photo — never its address).
+    memberNumber:   m.memberNumber,
+    hasPhoto:       !!m.photoUrl,
     roundsThisYear: st?.roundsThisYear ?? 0,
     spendThisYearCents: st?.spendThisYearCents ?? null,
   }; });
 
-  return NextResponse.json({ members: normalized, roundsThisYear: stats.roundsThisYear });
+  // Memberships page: dues collected this year by membership (money — shown only with money.payments, as spend is).
+  const dues = can(session, 'money.payments') ? await duesThisYear(session.courseId, course?.timezone) : null;
+
+  return NextResponse.json({ members: normalized, roundsThisYear: stats.roundsThisYear, duesThisYear: dues });
 }
 
 export async function POST(req: NextRequest) {
@@ -73,17 +99,43 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
   const { email, name, phone, tierId, notes, expiresAt } = body;
+  // Memberships item 1 (Cam 2026-11-16, "they are a member only once paid"): the add-a-member flow takes the payment
+  // first. The membership waits as 'awaiting_payment' (no member rates, lib/member-rates) and no email goes out until
+  // the dues are paid on /api/operator/members/pay — or at once when the tier has nothing to pay.
+  const payFirst = body.payFirst === true;
 
   if (!email?.trim()) return NextResponse.json({ error: 'Email is required' }, { status: 400 });
   if (!tierId)        return NextResponse.json({ error: 'Tier is required' }, { status: 400 });
 
   const tier = await prisma.membershipTier.findUnique({ where: { id: tierId } });
-  if (!tier || tier.courseId !== session.courseId) {
+  if (!tier || tier.courseId !== session.courseId || !tier.active) {
     return NextResponse.json({ error: 'Invalid tier' }, { status: 400 });
   }
 
   const lowerEmail = email.trim().toLowerCase();
   const golfer = await prisma.golferAccount.findUnique({ where: { email: lowerEmail } });
+  const owes = amountsDue({ lastPaidAt: null, initiationWaived: false, tier }).duesCents > 0;
+  const waiting = payFirst && owes;
+  const startStatus = waiting ? 'awaiting_payment' : 'active';
+  const addedBy = payFirst ? COUNTER_ADDED : 'operator';
+
+  // An add at the counter that was never paid (the customer walked away, the card failed) is picked up again rather
+  // than refused as a duplicate: same person, the tier and details as now entered.
+  if (payFirst) {
+    const unpaid = await prisma.courseMembership.findFirst({
+      where: { courseId: session.courseId, addedBy: COUNTER_ADDED, status: { in: ['awaiting_payment', 'cancelled'] }, lastPaidAt: null, duesChargeStartedAt: null, duesReaderId: '', OR: [{ inviteEmail: lowerEmail }, ...(golfer ? [{ golferId: golfer.id }] : [])] },
+      select: { id: true, golferId: true },
+    });
+    if (unpaid) {
+      const again = await prisma.courseMembership.update({
+        where: { id: unpaid.id },
+        data: { tierId, membershipType: tier.name, notes: notes || '', ...(unpaid.golferId ? {} : { inviteName: String(name ?? '').trim().slice(0, 120) || undefined, invitePhone: String(phone ?? '').trim().slice(0, 30) }), status: owes ? 'awaiting_payment' : 'active' },
+        include: { tier: { select: { id: true, name: true, color: true } } },
+      });
+      if (!owes) after(sendWelcome(again.id).catch(err => console.error('Member welcome email error:', err)));
+      return NextResponse.json({ ...safeRow(again), memberNumber: await assignMemberNumber(again.id), linked: !!again.golferId, awaitingPayment: owes }, { status: 200 });
+    }
+  }
 
   if (golfer) {
     const existing = await prisma.courseMembership.findUnique({
@@ -98,8 +150,8 @@ export async function POST(req: NextRequest) {
         golferId:       golfer.id,
         tierId,
         membershipType: tier.name,
-        status:         'active',
-        addedBy:        'operator',
+        status:         startStatus,
+        addedBy,
         notes:          notes || '',
         expiresAt:      expiresAt ? new Date(expiresAt) : null,
         inviteEmail:    lowerEmail,
@@ -114,18 +166,11 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Existing golfer account — just let them know, no password setup needed.
-    const course = await prisma.course.findUnique({ where: { id: session.courseId }, select: { name: true, slug: true } });
-    after(sendMemberLinkedNotification({
-      name: membership.golfer ? `${membership.golfer.firstName} ${membership.golfer.lastName}`.trim() : (name || ''),
-      email: lowerEmail,
-      courseName: course?.name || 'your course',
-      courseSlug: course?.slug,
-      tierName: tier.name,
-    }).catch(err => console.error('Member linked email error:', err)));
-    after(maybeSendPayLink(membership.id).catch(err => console.error('Pay link email error:', err)));
+    // Existing golfer account — just let them know, no password setup needed (after paying, when paying first).
+    if (!waiting) after(sendWelcome(membership.id).catch(err => console.error('Member linked email error:', err)));
+    if (!payFirst) after(maybeSendPayLink(membership.id).catch(err => console.error('Pay link email error:', err)));
 
-    return NextResponse.json({ ...membership, linked: true }, { status: 201 });
+    return NextResponse.json({ ...safeRow(membership), memberNumber: await assignMemberNumber(membership.id), linked: true, awaitingPayment: waiting }, { status: 201 });
   } else {
     if (!name?.trim()) {
       return NextResponse.json({ error: 'Name is required for members without an existing account' }, { status: 400 });
@@ -142,8 +187,8 @@ export async function POST(req: NextRequest) {
         golferId:       null,
         tierId,
         membershipType: tier.name,
-        status:         'active',
-        addedBy:        'operator',
+        status:         startStatus,
+        addedBy,
         notes:          notes || '',
         expiresAt:      expiresAt ? new Date(expiresAt) : null,
         inviteEmail:    lowerEmail,
@@ -155,19 +200,11 @@ export async function POST(req: NextRequest) {
       include: { tier: { select: { id: true, name: true, color: true } } },
     });
 
-    // No GolferAccount yet — send a set-password invite link.
-    const course = await prisma.course.findUnique({ where: { id: session.courseId }, select: { name: true, slug: true } });
-    const token = await signMemberInviteToken({ membershipId: membership.id, email: lowerEmail });
-    after(sendMemberInviteEmail({
-      name: name.trim(),
-      email: lowerEmail,
-      courseName: course?.name || 'your course',
-      tierName: tier.name,
-      setupLink: `${process.env.NEXT_PUBLIC_URL}/courses/${course?.slug}/account/accept-invite?token=${token}`,
-    }).catch(err => console.error('Member invite email error:', err)));
-    after(maybeSendPayLink(membership.id).catch(err => console.error('Pay link email error:', err)));
+    // No GolferAccount yet — send a set-password invite link (after paying, when paying first).
+    if (!waiting) after(sendWelcome(membership.id).catch(err => console.error('Member invite email error:', err)));
+    if (!payFirst) after(maybeSendPayLink(membership.id).catch(err => console.error('Pay link email error:', err)));
 
-    return NextResponse.json({ ...membership, linked: false }, { status: 201 });
+    return NextResponse.json({ ...safeRow(membership), memberNumber: await assignMemberNumber(membership.id), linked: false, awaitingPayment: waiting }, { status: 201 });
   }
 }
 
@@ -190,8 +227,13 @@ export async function PATCH(req: NextRequest) {
   // Staff actions
   if (action === 'mark_paid') {
     // Cash/check at the pro shop — record it, no charge made (lib/membership-dues markDuesPaidAtCourse).
+    // Memberships item 1 / DRAWER-1 (Cam 2026-11-16): dues cash goes in the drawer, so only while the register is open;
+    // it is counted in the close-out's expected cash (lib/register-close, other cash). A check is not drawer cash.
+    if (body.method !== 'check') { const closed = await requireRegisterOpen(session.courseId); if (closed) return NextResponse.json({ error: closed, registerClosed: true }, { status: 409 }); }
+    await settleStaleDuesReader(membership);
     const r = await markDuesPaidAtCourse(session.courseId, id, { amountCents: body.amountCents, method: body.method });
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+    if (!membership.lastPaidAt && membership.addedBy === COUNTER_ADDED) after(sendWelcome(id).catch(err => console.error('Member welcome email error:', err)));
     const updated = await prisma.courseMembership.findUniqueOrThrow({
       where: { id },
       include: {
@@ -199,7 +241,7 @@ export async function PATCH(req: NextRequest) {
         tier:   { select: { id: true, name: true, color: true } },
       },
     });
-    return NextResponse.json(updated);
+    return NextResponse.json(safeRow(updated));
   }
   // MEM-JOIN: answer a golfer's request to join online — approve (the pay link goes out) or decline.
   if (action === 'approve_join') {
@@ -245,9 +287,14 @@ export async function PATCH(req: NextRequest) {
     if (body.phone !== undefined) contact.invitePhone = String(body.phone ?? '').trim().slice(0, 30);
   }
 
+  // Memberships item 1: a status change waits while the dues are being paid (a card going through, the card reader).
+  if (status !== undefined && status !== membership.status && (membership.duesReaderId || (membership.duesChargeStartedAt && Date.now() - membership.duesChargeStartedAt.getTime() < 10 * 60_000))) {
+    return NextResponse.json({ error: 'These dues are being paid right now — finish or cancel the payment first.' }, { status: 409 });
+  }
+
   if (tierId) {
     const tier = await prisma.membershipTier.findUnique({ where: { id: tierId } });
-    if (!tier || tier.courseId !== session.courseId) {
+    if (!tier || tier.courseId !== session.courseId || !tier.active) {
       return NextResponse.json({ error: 'Invalid tier' }, { status: 400 });
     }
   }
@@ -281,7 +328,10 @@ export async function PATCH(req: NextRequest) {
       tier:   { select: { id: true, name: true, color: true } },
     },
   });
-  return NextResponse.json(updated);
+  // Memberships item 2: a request put on its first membership gets its number now (a member keeps theirs on a change;
+  // members from before numbers are not given one by an edit — no backfill; a request waits for approval).
+  const memberNumber = updated.memberNumber ?? (!membership.tierId && updated.tierId && updated.status !== 'requested' ? await assignMemberNumber(updated.id) : null);
+  return NextResponse.json(safeRow({ ...updated, memberNumber }));
 }
 
 export async function DELETE(req: NextRequest) {
@@ -312,5 +362,8 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: 'This member has dues or account history, so they can’t be removed — set them to Not active instead. That keeps the history.' }, { status: 409 });
   }
   await prisma.courseMembership.delete({ where: { id } });
+  // Memberships item 2: their photo goes with them (the private store; best effort, never blocks the removal).
+  const token = privateBlobToken();
+  if (membership.photoUrl && token && isBlobStoreUrl(membership.photoUrl)) { try { await del(membership.photoUrl, { token }); } catch { /* best effort */ } }
   return NextResponse.json({ success: true });
 }

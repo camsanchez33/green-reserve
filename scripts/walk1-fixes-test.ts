@@ -20,9 +20,9 @@ check('paid at the counter never charges the booking fee', paidOffline.length > 
 check('…and gives back a booking fee already taken separately, saying so if that fails', paidOffline.includes('refundSeparateAccessFee') && paidOffline.includes('refundNote'));
 check('the counter confirm no longer says the fee goes on their card', !src('src/app/dashboard/page.tsx').includes('booking fee is charged to their saved card'));
 
-const dues = code('src/app/api/membership/[id]/route.ts');
+const dues = code('src/app/api/membership/[id]/route.ts') + code('src/lib/dues-payment.ts'); // Memberships item 1: the charge moved to lib/dues-payment
 // LEDGER-1 replaced the row lock (held across the Stripe charge) with a claim: one payment at a time.
-check('dues pay claims the membership first, one payment at a time', /where: \{ id: m\.id, status: \{ in: \['active', 'awaiting_payment'\] \}, OR: \[\{ duesChargeStartedAt: null \}/.test(dues));
+check('dues pay claims the membership first, one payment at a time', /where: \{ id: m\.id, status: \{ in: \['active', 'awaiting_payment'\] \}, duesReaderId: '', OR: \[\{ duesChargeStartedAt: null \}/.test(dues));
 check('dues paid at the shop count as paid', code('src/lib/membership-renewal.ts').includes("p.paymentStatus !== 'paid_offline'") && dues.includes('paidUntilRenewal(now,'));
 check('a deactivated membership is not revived by paying', dues.includes("where: { id: m.id, status: { in: ['active', 'awaiting_payment'] }") && !dues.includes("'inactive'"));
 

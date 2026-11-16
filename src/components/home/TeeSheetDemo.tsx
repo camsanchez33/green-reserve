@@ -88,7 +88,7 @@ const ACCENTS = [
 /** The dashboard rail (OperatorSidebar.tsx, DASH-D): Today · Business · Settings · Support. */
 const RAIL: { group?: string; tabs: string[] }[] = [
   { group: 'Today', tabs: ['Home', 'Tee sheet', 'Pro shop'] },
-  { group: 'Business', tabs: ['Money', 'Members', 'Events', 'Schedule', 'Analytics'] },
+  { group: 'Business', tabs: ['Revenue', 'Members', 'Events', 'Schedule', 'Analytics'] },
   { tabs: ['Settings', 'Support'] },
 ];
 /** $1,234 — the strip's money, as dollars. */
