@@ -13,7 +13,7 @@ import { adminFetch } from '@/lib/admin-fetch';
 import type { Check } from '@/lib/security-checklist';
 import type { SentryIssuesResult } from '@/lib/sentry-issues';
 
-type Kind = 'signin_failed' | 'signin_ok' | 'locked_out' | 'second_factor_failed' | 'step_up_failed' | 'rate_limited' | 'new_device';
+type Kind = 'signin_failed' | 'signin_ok' | 'locked_out' | 'second_factor_failed' | 'step_up_failed' | 'rate_limited' | 'new_device' | 'password_changed';
 interface Data {
   checklist: Check[];
   sentry: SentryIssuesResult;
@@ -33,6 +33,7 @@ const KIND: Record<Kind, { label: string; tone: 'ok' | 'warn' | 'bad' | 'neutral
   step_up_failed: { label: 'Confirm-it’s-you failed', tone: 'bad' },
   rate_limited: { label: 'Too many tries', tone: 'warn' },
   new_device: { label: 'New owner device', tone: 'warn' },
+  password_changed: { label: 'Password changed', tone: 'neutral' },
 };
 const DOOR: Record<string, string> = { admin: 'Admin', owner: 'Owner (/cam)', course: 'Course dashboard', golfer: 'Golfer', member: 'Member' };
 const when = (iso: string) => iso ? new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' }) : '—';

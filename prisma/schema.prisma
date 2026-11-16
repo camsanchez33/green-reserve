@@ -1042,6 +1042,10 @@ model AdminUser {
   active                 Boolean         @default(true)
   mustChangePassword     Boolean         @default(false)
   lastLoginAt            DateTime?
+  /// My profile (Cam 2026-11-15): when the password in force was set. Written by every
+  /// route that sets one (bootstrap, employee create, owner reset, set-password,
+  /// change-password). Null = set before this column existed; the page hides the row.
+  passwordChangedAt      DateTime?
   createdAt              DateTime        @default(now())
   setPasswordToken       String?         @unique
   setPasswordTokenExpiry DateTime?
@@ -2074,7 +2078,7 @@ model RegisterOpen {
 /// or token — only the email typed, the IP and the browser.
 model SecurityEvent {
   id        String   @id @default(cuid())
-  /// 'signin_failed' | 'signin_ok' | 'locked_out' | 'second_factor_failed' | 'step_up_failed' | 'rate_limited' | 'new_device'
+  /// 'signin_failed' | 'signin_ok' | 'locked_out' | 'second_factor_failed' | 'step_up_failed' | 'rate_limited' | 'new_device' | 'password_changed'
   kind      String
   /// Which door: 'admin' (employees) | 'owner' (/cam) | 'course' (dashboard) | 'golfer' | 'member'
   surface   String

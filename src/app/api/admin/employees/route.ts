@@ -5,6 +5,7 @@ import { randomBytes } from 'crypto';
 import bcrypt from 'bcryptjs';
 import { needReason, reasonOf, auditAdmin, changedFields } from '@/lib/admin-audit';
 import { isAdminArea, ALL_AREAS } from '@/lib/admin-areas';
+import { passwordChanged } from '@/lib/admin-password';
 
 const VALID_ROLES = ['owner', 'manager', 'support', 'viewer'];
 
@@ -70,6 +71,7 @@ export async function POST(req: NextRequest) {
       email,
       name: String(name).trim(),
       passwordHash,
+      passwordChangedAt: new Date(),
       role: safeRole(role),
       active: true,
       mustChangePassword: true,
@@ -78,6 +80,7 @@ export async function POST(req: NextRequest) {
     },
   });
 
+  await passwordChanged(req, created, 'temporary password, new account');
   await auditAdmin(session, { action: 'employee_create', targetType: 'admin', targetId: created.id, after: { email: created.email, name: created.name, role: created.role, areas: areas ?? 'all' }, reason: reasonOf(body) });
   return NextResponse.json({ success: true, tempPassword });
 }
@@ -102,8 +105,9 @@ export async function PATCH(req: NextRequest) {
 
   // Owner resets someone else's password — cannot reset another owner's password
   if (action === 'reset_password') {
-    const target = await prisma.adminUser.findUnique({ where: { id }, select: { role: true } });
-    if (target?.role === 'owner') {
+    const target = await prisma.adminUser.findUnique({ where: { id }, select: { id: true, email: true, name: true, role: true } });
+    if (!target) return NextResponse.json({ error: 'That employee no longer exists — refresh the page.' }, { status: 404 });
+    if (target.role === 'owner') {
       return NextResponse.json({ error: 'Owner passwords cannot be reset by other owners. The owner must change their own password via the Change password form or use Forgot password.' }, { status: 403 });
     }
     const tempPassword = genTempPassword();
@@ -113,8 +117,9 @@ export async function PATCH(req: NextRequest) {
       // MP-2b: MP-2 cleared the lockout on the forgot-password path and left
       // this one — an owner resetting a locked-out employee still handed them a
       // password that answered "Too many attempts". Same bug, other door.
-      data: { passwordHash, mustChangePassword: true, failedLoginAttempts: 0, lockoutUntil: null },
+      data: { passwordHash, passwordChangedAt: new Date(), mustChangePassword: true, failedLoginAttempts: 0, lockoutUntil: null },
     });
+    await passwordChanged(req, target, 'temporary password, reset by the owner');
     await auditAdmin(session, { action: auditAction, targetType: 'admin', targetId: id, reason: reasonOf(body) });
     return NextResponse.json({ success: true, tempPassword });
   }

@@ -12,7 +12,7 @@
 import { prisma } from './prisma';
 import { evidentiaryIp, rateLimit } from './rate-limit';
 
-export type SecurityKind = 'signin_failed' | 'signin_ok' | 'locked_out' | 'second_factor_failed' | 'step_up_failed' | 'rate_limited' | 'new_device';
+export type SecurityKind = 'signin_failed' | 'signin_ok' | 'locked_out' | 'second_factor_failed' | 'step_up_failed' | 'rate_limited' | 'new_device' | 'password_changed';
 export type SecuritySurface = 'admin' | 'owner' | 'course' | 'golfer' | 'member';
 
 export const SECURITY_KEEP_DAYS = 90;
@@ -32,7 +32,9 @@ export async function securityEvent(req: Request | null, e: { kind: SecurityKind
     // not on every refused request; and no address adds more than
     // MAX_EVENTS_PER_IP_HOUR rows an hour (the attack is already on record).
     if (e.kind === 'rate_limited' && !(await rateLimit(`secev:rl:${e.surface}:${ip}`, 1, 600))) return;
-    if (ip && !(await rateLimit(`secev:ip:${ip}`, MAX_EVENTS_PER_IP_HOUR, 3600))) return;
+    // A password change is never capped (Cam 2026-11-16): every caller is already behind a session and the
+    // current password, owner step-up, a single-use link or ADMIN_SECRET, and it may be the only record.
+    if (ip && e.kind !== 'password_changed' && !(await rateLimit(`secev:ip:${ip}`, MAX_EVENTS_PER_IP_HOUR, 3600))) return;
     await prisma.securityEvent.create({
       data: {
         kind: e.kind,
@@ -93,14 +95,17 @@ export async function securityOverview(now = new Date()) {
   const since30 = new Date(now.getTime() - 30 * 24 * HOUR);
   const since24 = new Date(now.getTime() - 24 * HOUR);
   const failed30 = { kind: { in: FAILED_KINDS }, createdAt: { gte: since30 } };
-  const [byKind24, byKind30, topIps, topEmails, recent, lockedNow] = await Promise.all([
+  const [byKind24, byKind30, topIps, topEmails, recentAll, passwordChanges, lockedNow] = await Promise.all([
     prisma.securityEvent.groupBy({ by: ['kind'], where: { createdAt: { gte: since24 } }, _count: { _all: true } }),
     prisma.securityEvent.groupBy({ by: ['kind'], where: { createdAt: { gte: since30 } }, _count: { _all: true } }),
     prisma.securityEvent.groupBy({ by: ['ip'], where: failed30, _count: { _all: true }, orderBy: { _count: { ip: 'desc' } }, take: 10 }),
     prisma.securityEvent.groupBy({ by: ['email'], where: { ...failed30, email: { not: '' } }, _count: { _all: true }, orderBy: { _count: { email: 'desc' } }, take: 10 }),
-    prisma.securityEvent.findMany({ where: { createdAt: { gte: since30 }, kind: { not: 'signin_ok' } }, orderBy: { createdAt: 'desc' }, take: 100 }),
+    prisma.securityEvent.findMany({ where: { createdAt: { gte: since30 }, kind: { notIn: ['signin_ok', 'password_changed'] } }, orderBy: { createdAt: 'desc' }, take: 100 }),
+    // Password changes are read on their own, so 100 newer failures can never push one off the page.
+    prisma.securityEvent.findMany({ where: { createdAt: { gte: since30 }, kind: 'password_changed' }, orderBy: { createdAt: 'desc' }, take: 100 }),
     lockedAccountsNow(now),
   ]);
+  const recent = [...recentAll, ...passwordChanges].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   const count = (rows: { kind: string; _count: { _all: number } }[]) => Object.fromEntries(rows.map(r => [r.kind, r._count._all])) as Partial<Record<SecurityKind, number>>;
   return {
     last24h: count(byKind24),
