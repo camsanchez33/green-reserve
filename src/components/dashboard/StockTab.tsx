@@ -13,7 +13,6 @@ import { StatusDot } from '@/components/ui/StatusDot';
 import { LoadError } from '@/components/dashboard/LoadError';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
-import { SHOP_SALE_FEE_CENTS, SHOP_FEE_ON } from '@/lib/booking-fees';
 import { shopTree, matches, stockOf, type FlatItem, type TreeItem } from '@/lib/shop-tree';
 import type { StockRow } from '@/lib/shop-stock';
 import { ItemForm } from '@/components/dashboard/ItemForm';
@@ -118,7 +117,6 @@ export function StockTab({ refreshKey = 0, onChanged }: { refreshKey?: number; o
             { key: 'many', label: 'Many at once', sub: 'Paste or upload a list' },
           ]]} />}
         </div>
-        {SHOP_FEE_ON && <p className="mt-2 text-[12.5px] text-ink-muted">GreenReserve adds {usd(SHOP_SALE_FEE_CENTS)} a sale, paid by the golfer.</p>}
         {loadError && <div className="mt-3"><LoadError message={`Couldn't load your items — ${loadError}`} onRetry={load} /></div>}
         {(error || note) && !panel && (
           <div className="mt-3" aria-live="polite">

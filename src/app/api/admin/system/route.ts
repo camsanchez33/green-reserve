@@ -1,10 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { birdieEnabled, birdieUsageToday, PLATFORM_PER_DAY, BIRDIE_MODEL } from '@/lib/birdie/guardrails';
 import { prisma } from '@/lib/prisma';
 import { calcomStatus } from '@/lib/calcom';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, areaGate } from '@/lib/admin-session';
 import { ACCESS_FEE_CENTS } from '@/lib/booking-fees';
 import { cronHealth, lastStripeWebhook } from '@/lib/cron-log';
+import { githubStatus, neonStatus, resendStatus, twilioStatus, serviceStates, repoOf, canRerun } from '@/lib/platform-status';
 import vercelConfig from '../../../../../vercel.json';
 
 // MP-8a: System used to be five cards with hardcoded neutral dots and two
@@ -32,7 +33,7 @@ function describeSchedule(s: string): string {
   return `Daily at ${h.toString().padStart(2, '0')}:${min.padStart(2, '0')} UTC`;
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const noArea = areaGate(session, 'company');
@@ -42,7 +43,9 @@ export async function GET() {
 
   // MP-8b: real receipts now (lib/cron-log.ts). The course-updatedAt proxy
   // stays only as context for deploys that predate the log.
-  const [lastStripeTouch, stripeWebhook, cronRuns] = await Promise.all([
+  // Platform activity: Re-check is this same read with ?fresh=1 (skips the GitHub/Resend cache).
+  const fresh = req.nextUrl.searchParams.get('fresh') === '1';
+  const [lastStripeTouch, stripeWebhook, cronRuns, gh, resend] = await Promise.all([
     prisma.course.findFirst({
       where: { stripeAccountId: { not: '' } },
       orderBy: { updatedAt: 'desc' },
@@ -50,12 +53,13 @@ export async function GET() {
     }),
     lastStripeWebhook(),
     cronHealth(CRONS),
+    githubStatus(fresh),
+    resendStatus(fresh),
   ]);
+  const neon = await neonStatus(gh);
 
   const env = process.env;
-  const repoOwner = env.VERCEL_GIT_REPO_OWNER || 'camsanchez33';
-  const repoSlug = env.VERCEL_GIT_REPO_SLUG || 'green-reserve';
-  const github = `https://github.com/${repoOwner}/${repoSlug}`;
+  const github = repoOf(env).url;
   const sentryOrg = env.SENTRY_ORG || '';
   const sentryProject = env.SENTRY_PROJECT || '';
   // Vercel does not expose the team slug to the runtime, so a project-deep
@@ -63,12 +67,40 @@ export async function GET() {
   // pretending the generic dashboard is a deep link.
   const vercelProjectUrl = env.ADMIN_VERCEL_PROJECT_URL || '';
 
+  const birdie = { enabled: birdieEnabled(), keySet: !!process.env.ANTHROPIC_API_KEY, flag: process.env.BIRDIE_ENABLED === 'true', todayReplies: await birdieUsageToday(), dailyCap: PLATFORM_PER_DAY, model: BIRDIE_MODEL };
+  const calcom = calcomStatus();
+  const twilio = twilioStatus(env);
+  const commitSha = (env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 7);
+  const services = serviceStates({
+    now: new Date(),
+    crons: cronRuns.map(c => ({ job: c.job, status: c.status, ran: !!c.last })),
+    commitSha, neon, github: gh, resend, twilio,
+    stripe: { keySet: !!env.STRIPE_SECRET_KEY, webhookSecretSet: !!env.STRIPE_WEBHOOK_SECRET, lastWebhook: stripeWebhook ? { at: stripeWebhook.at, outcome: stripeWebhook.outcome } : null },
+    calcom: calcom.state === 'on' ? { state: 'on', webhookSecretSet: calcom.webhookSecretSet } : { state: calcom.state },
+    sentry: !!(env.SENTRY_DSN || env.NEXT_PUBLIC_SENTRY_DSN),
+    assistant: { enabled: birdie.enabled, flag: birdie.flag, keySet: birdie.keySet },
+    blob: { publicSet: !!env.BLOB_READ_WRITE_TOKEN, privateSet: !!env.BLOB_PRIVATE_READ_WRITE_TOKEN },
+  });
+
   return NextResponse.json({
+    // Platform activity (Cam 2026-11-15): one dot per service, from lib/platform-status (the page never re-derives it).
+    services,
+    neon,
+    github: gh,
+    resend,
+    twilio,
+    vercel: {
+      env: env.VERCEL_ENV || (env.NODE_ENV === 'production' ? 'production' : 'development'),
+      commitSha,
+      commitMessage: (env.VERCEL_GIT_COMMIT_MESSAGE || '').split('\n')[0].slice(0, 90),
+      branch: env.VERCEL_GIT_COMMIT_REF || '',
+      commitUrl: env.VERCEL_GIT_COMMIT_SHA ? `${github}/commit/${env.VERCEL_GIT_COMMIT_SHA}` : '',
+    },
     // CAL-2: what the booking page will do. The booking URL is public (it is
     // the link courses open); the webhook secret is reported only as set/unset.
-    calcom: calcomStatus(),
+    calcom,
     // BIRDIE_AI_SPEC B1: the kill switch and today's platform-wide reply count (the daily cap reads the same counter).
-    birdie: { enabled: birdieEnabled(), keySet: !!process.env.ANTHROPIC_API_KEY, flag: process.env.BIRDIE_ENABLED === 'true', todayReplies: await birdieUsageToday(), dailyCap: PLATFORM_PER_DAY, model: BIRDIE_MODEL },
+    birdie,
     lastStripeTouch: lastStripeTouch
       ? { courseName: lastStripeTouch.name, updatedAt: lastStripeTouch.updatedAt.toISOString() }
       : null,
@@ -83,13 +115,20 @@ export async function GET() {
         : 'https://sentry.io',
       sentryIsDeep: !!sentryOrg,
       stripeWebhooks: 'https://dashboard.stripe.com/webhooks',
+      resendDashboard: 'https://resend.com/domains',
+      twilioConsole: 'https://console.twilio.com/',
+      neonConsole: 'https://console.neon.tech/',
+      vercelEnv: vercelProjectUrl ? `${vercelProjectUrl.replace(/\/$/, '')}/settings/environment-variables` : 'https://vercel.com/dashboard',
+      vercelEnvIsDeep: !!vercelProjectUrl,
+      vercelCrons: vercelProjectUrl ? `${vercelProjectUrl.replace(/\/$/, '')}/settings/cron-jobs` : 'https://vercel.com/dashboard',
+      vercelCronsIsDeep: !!vercelProjectUrl,
     },
-    crons: CRONS.map(c => ({ path: c.path, schedule: c.schedule, human: describeSchedule(c.schedule), health: cronRuns.find(r => r.path === c.path) ?? null })),
+    crons: CRONS.map(c => ({ path: c.path, schedule: c.schedule, human: describeSchedule(c.schedule), health: cronRuns.find(r => r.path === c.path) ?? null, canRerun: canRerun(c.path.replace('/api/cron/', '')) })),
     stripeWebhook,
     platform: {
       accessFeeCents: ACCESS_FEE_CENTS,
       env: env.VERCEL_ENV || (env.NODE_ENV === 'production' ? 'production' : 'development'),
-      commitSha: (env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 7),
+      commitSha,
       commitMessage: (env.VERCEL_GIT_COMMIT_MESSAGE || '').split('\n')[0].slice(0, 90),
       branch: env.VERCEL_GIT_COMMIT_REF || '',
       publicUrl: env.NEXT_PUBLIC_URL || '',

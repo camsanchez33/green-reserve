@@ -25,8 +25,8 @@ check('a stuck sale is settled from Stripe', lib.includes('export async function
 check('void and took-cash stop the card intent first', staff.indexOf('cancelSaleIntent(') > 0 && staff.indexOf('cancelSaleIntent(') < staff.indexOf('settleOpenSale('));
 check('pay attempts are limited per sale as well as per IP', pub.includes('shop-sale-pay:sale:'));
 check('pay-link texts are capped and US/Canada only', staff.includes('shop-link:course:') && staff.includes("to.startsWith('+1')"));
-check('the customer must confirm the total they saw', lib.includes('Number(expectedTotalCents) !== sale.totalCents'));
-check('GreenReserve fee follows the shop-fee switch', lib.includes('const fee = shopFeeFor(amountCents);'));
+check('the customer must confirm the total they saw (the card total, fee included)', lib.includes('Number(expectedTotalCents) !== saleCardCents(sale)'));
+check('SHOP-FEE-1: the intent takes the sale\'s fixed service fee as GreenReserve\'s application fee', lib.includes('const fee = Math.max(0, Math.min(Math.round(feeCents), amountCents));') && lib.includes('application_fee_amount: fee > 0 ? fee : undefined'));
 check('the pay page needs the sale token', lib.includes('sale.payToken !== token') && pub.includes('saleForPayPage(id, token)'));
 check('the pay route is rate limited', pub.includes('rateLimit(`shop-sale-pay:'));
 // POS-3 R3: starting a card-reader payment needs the agreement too (card payments: link, resend, reader).

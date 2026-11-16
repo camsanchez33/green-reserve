@@ -30,8 +30,33 @@ Mockup `lanes/admin/profile-mockup.html` (https://claude.ai/artifact/2uRAQpAe1k1
 - Employees never see the owner items in the menu (Audit, Security, Company docs).
 Keep every existing behaviour of OwnerPasskeysCard, OwnerDevicesCard, OwnerTwoFactorCard and OwnerSignOutEverywhere (re-skin; their API calls and step-up stay as they are).
 
+## Approved, to build: Settings → Team (Cam 2026-11-16, "approved, build the team page")
+Mockup `lanes/admin/team-mockup.html` (https://claude.ai/artifact/VJUXa2N27e8NDs8sNtpo8j) is the spec. `/admin/employees`, title "Team", the shared top bar, built like My profile's cards. No numbers on top (Cam removed them).
+- One "Team" card listing everyone with an admin login: initials, name, "· you" on your own row, email, role, and status (green when signed in recently, amber "Never signed in", grey "Turned off"). Owners get a bare plus top right to add someone.
+- Clicking a person opens them beside the list:
+  - status, plus "Hasn't set their own password yet" when that applies;
+  - Role as three tiles (Manager / Support / Viewer, each with what it can do), changed by tapping one;
+  - "Can open" areas as check tiles behind a "Change" link, with Save and Cancel;
+  - links "What they did" (the audit trail), "Reset password", and a red "Turn off" (or "Turn back on"), each confirming first;
+  - a reset shows the one-time password once, with Copy and Dismiss.
+- Add someone (owner only): name, email, role tiles, area check tiles (at least one), then a screen with their one-time password to give them.
+- A manager sees the list and a person's details read-only. The owner can't change themselves; an owner has no areas.
+- Keep every existing behaviour and API call, step-up included.
+
+## Approved, to build: Settings → Goals (Cam 2026-11-16, "approved, build the goals page")
+Mockup `lanes/admin/goals-mockup.html` (https://claude.ai/artifact/62wRP5X7nS5kMe26X8j7ir) is the spec. `/admin/goals`, the shared top bar and the My profile card style.
+- One "Goals" card for goals still running, plus a "Finished" card for reached or missed ones. The owner gets a bare plus to add a goal: tiles for Live courses, Online bookings and GreenReserve fees, then a target and a date. The owner also gets a red Remove link, which confirms and steps up.
+- Each goal shows:
+  - the measure as its title, with "10 by Dec 31, 2026" under it and a big percent on the right;
+  - a progress bar with a thin mark where it should be by today;
+  - one line with the pace word, "4 of 10", "Should be at 5 by today (1 behind)" and the days left;
+  - four boxes: Started, Still to go, Needed each week, and At today's rate it ends at.
+- Pace colour (Cam): green when ahead of where it should be by today, amber when within 10% under it, red when further behind. Finished goals show "Reached" in green or "Missed" in red.
+- Work the pace out on the page from what /api/admin/goals already returns (start, due, current, target). Don't change the API. Show "Reached on <date>" only if the date is already returned, otherwise just "Reached".
+- Support and up can see goals; only the owner adds or removes.
+
 ## Next (menu order)
-Team → Goals → Audit → Security → Company docs, one page at a time,
+Audit → Security → Company docs, one page at a time,
 mockup first ("as it works today"), nothing built until Cam approves.
 
 ## Small follow-ups

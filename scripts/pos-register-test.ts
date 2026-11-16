@@ -30,7 +30,7 @@ ok('"taken" is shop sales only (paid less refunds; voided and waiting left out) 
 ok('cash never waits on the tax quote, whatever the last sale used', page.includes('const quoteDown = !itemsEmpty && !priced && !!quoteError;') && page.includes('disabled={empty || (!priced && !(quoteDown && canCash)) || payChoices.length === 0}') && page.includes("{payChoices.filter(k => k !== 'cash').map(k => {\n                              const off = quoteDown || (k !== 'account' && noTax);"));
 ok('review: a sale on the card reader holds the take step (the ticket empties when it is rung up)', page.includes("if ((step === 'pay' || step === 'take') && empty && !onReader) setStep(null);"));
 ok('review: Sales and Close out show what a refund, void, resend or receipt did', page.includes("{(view !== 'register' || !saleOpen) && (error || note) && ("));
-ok('review: while a sale is on the reader the header shows that sale\'s amount, not the (emptied) ticket', page.includes("onReader ? `Charge ${usd(onReader.sale.totalCents)}` : chargeLabel"));
+ok('review: while a sale is on the reader the header shows that sale\'s amount, not the (emptied) ticket', page.includes("onReader ? `Charge ${usd(onReader.sale.totalCents + (onReader.sale.serviceFeeCents ?? 0))}` : chargeLabel"));
 ok('review: "Card reader" on an unpaid reader sale in Sales opens it on the register', page.includes("setPay('reader'); setStep('take'); setView('register');"));
 
 const close = readFileSync('src/components/dashboard/RegisterClose.tsx', 'utf8');

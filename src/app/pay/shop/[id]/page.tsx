@@ -10,12 +10,13 @@ import { Elements, CardElement, PaymentRequestButtonElement, useStripe, useEleme
 import type { PaymentRequest } from '@stripe/stripe-js';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
 import { Card } from '@/components/ui/Card';
+import { SHOP_FEE_LABEL } from '@/lib/booking-fees';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
 const cardStyle = { style: { base: { fontSize: '15px', color: '#141814', '::placeholder': { color: '#979B94' } }, invalid: { color: '#A3452F' } } };
 const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
 
-type Sale = { status: 'open' | 'paid_cash' | 'paid_card' | 'void'; totalCents: number; taxCents?: number; discountCents?: number; discountNote?: string; courseName: string; brandColor: string; logoUrl: string; lines: { name: string; unitPriceCents: number; quantity: number }[]; terms?: string; voidNote?: string };
+type Sale = { status: 'open' | 'paid_cash' | 'paid_card' | 'void'; totalCents: number; serviceFeeCents?: number; taxCents?: number; discountCents?: number; discountNote?: string; courseName: string; brandColor: string; logoUrl: string; lines: { name: string; unitPriceCents: number; quantity: number }[]; terms?: string; voidNote?: string };
 
 function PayForm({ saleId, token, sale, onPaid, onError }: { saleId: string; token: string; sale: Sale; onPaid: () => void; onError: (m: string) => void }) {
   const stripe = useStripe();
@@ -133,6 +134,7 @@ function PayShopInner() {
             ))}
             {!!sale.discountCents && <li className="flex justify-between gap-3 py-2 text-ink-soft"><span>Discount{sale.discountNote ? ` (${sale.discountNote})` : ''}</span><span className="tabular-nums">−{usd(sale.discountCents)}</span></li>}
             {!!sale.taxCents && <li className="flex justify-between gap-3 py-2 text-ink-soft"><span>Sales tax</span><span className="tabular-nums">{usd(sale.taxCents)}</span></li>}
+            {!!sale.serviceFeeCents && <li className="flex justify-between gap-3 py-2 text-ink-soft"><span>{SHOP_FEE_LABEL}</span><span className="tabular-nums">{usd(sale.serviceFeeCents)}</span></li>}
             <li className="flex justify-between gap-3 py-2.5 font-semibold"><span className="text-ink">Total</span><span className="tabular-nums text-ink">{usd(sale.totalCents)}</span></li>
           </ul>
           {done && <p className="text-sm text-ink-soft mt-3">{sale.status === 'paid_cash' ? 'Paid at the pro shop.' : 'Your card has been charged. You can close this page.'}</p>}

@@ -58,6 +58,7 @@ export const ACTION_LABELS: Record<string, string> = {
   problem_claim: 'Take a problem', problem_assign: 'Assign a problem', problem_note: 'Note on a problem',
   problem_snooze: 'Snooze a problem', problem_unsnooze: 'Unsnooze a problem',
   dispute_evidence: 'Download a dispute evidence pack',
+  cron_rerun: 'Re-run a scheduled job',
 };
 
 export const REASON_MIN = 4;

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, requirePermission, can } from '@/lib/session';
-import { todayIn, clockIn, addDaysStr } from '@/lib/course-time';
+import { todayIn, clockIn, addDaysStr, DEFAULT_TZ, isValidTimezone } from '@/lib/course-time';
 import { computeAnalytics, previousRange, type Range } from '@/lib/analytics';
 import { recentCloses } from '@/lib/register-close';
+import { todayVsAverage, fnbCents, howPaid, segmentsOf } from '@/lib/revenue-extras';
 
 // DENSE-2 (Cam 2026-10-27, after Toast's Sales Summary and Stripe's Today): Money's
 // Sales view. Every figure is computeAnalytics' (lib/analytics.ts) — the same
@@ -39,7 +40,20 @@ export async function GET(req: NextRequest) {
     can(session, 'shop.close') ? recentCloses(session.courseId, 1) : Promise.resolve([]),
   ]);
   const r = a.revenue;
+  // Revenue page (Cam 2026-11-15): today against the 30-day average by time of day, the segments with
+  // Food & beverage split out of the pro shop, and the ledger's money in by how it was paid (lib/revenue-extras).
+  const tz = course?.timezone && isValidTimezone(course.timezone) ? course.timezone : DEFAULT_TZ;
+  const [line, fnb, paidBy] = await Promise.all([
+    todayVsAverage(session.courseId, tz),
+    fnbCents(session.courseId, tz, a.range, { walkUpCents: r.beyond.walkUpCents, shopOnRoundsCents: r.beyond.shopOnRoundsCents }),
+    howPaid(session.courseId, tz, a.range),
+  ]);
   return NextResponse.json({
+    todayVsAverage: line,
+    // totalCents is the page's Total; collectedCents stays rounds only (shop money is never round revenue).
+    segments: segmentsOf({ collectedCents: r.collectedCents, cartCents: r.cartCents, lateFeesKeptCents: r.lateFeesKeptCents, walkUpCents: r.beyond.walkUpCents, shopOnRoundsCents: r.beyond.shopOnRoundsCents, eventCents: r.beyond.eventCents }, fnb),
+    // Money taken by payment day — its own total; it does not add up to the segments (tee day).
+    howPaid: paidBy,
     range: a.range, today, lastWeek, clock: clockIn(course?.timezone),
     bucket: r.bucket,
     series: r.series.map(x => ({ key: x.key, collectedCents: x.collectedCents, gapCents: Math.max(0, x.gapCents) })),

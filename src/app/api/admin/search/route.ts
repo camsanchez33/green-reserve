@@ -133,7 +133,7 @@ export async function GET(req: NextRequest) {
     { id: 'nav:golfers',     label: 'Golfer lookup', href: '/admin/golfers',    support: true },
     { id: 'nav:employees',   label: 'Team',          href: '/admin/employees',  manager: true },
     { id: 'nav:broadcasts',  label: 'Announcements', href: '/admin/announcements', support: true },
-    { id: 'nav:system',      label: 'Systems',       href: '/admin/system',     manager: true },
+    { id: 'nav:system',      label: 'Platform activity', href: '/admin/system',     manager: true },
     { id: 'nav:profile',     label: 'My profile',    href: '/admin/profile',    always: true },
     { id: 'nav:create',      label: 'Build by hand', href: '/admin/create',     manager: true },
   ].filter(n => {

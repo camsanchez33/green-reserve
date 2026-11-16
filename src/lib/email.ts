@@ -1906,9 +1906,12 @@ export async function sendShopSalePayLinkEmail(data: {
   email: string; name: string; courseName: string; totalCents: number; taxCents?: number; courseId?: string;
   lines: { name: string; unitPriceCents: number; quantity: number }[]; payUrl: string;
   discountCents?: number; discountNote?: string;
+  /** SHOP-FEE-1: GreenReserve's service fee, already in totalCents (what the card pays); its own line. */
+  serviceFeeCents?: number;
 }) {
   // W2-7 part B: sales tax, when the course collects it, as its own line. POS-3: and a discount.
-  const taxRow = shopDiscountRow(data.discountCents, data.discountNote) + (data.taxCents ? `<tr><td style="padding:6px 0;border-bottom:1px solid #E3E4DE;color:#3F453E;font-size:14px;">Sales tax</td><td style="padding:6px 0;border-bottom:1px solid #E3E4DE;color:#3F453E;font-size:14px;text-align:right;">$${(data.taxCents / 100).toFixed(2)}</td></tr>` : '');
+  const taxRow = shopDiscountRow(data.discountCents, data.discountNote) + (data.taxCents ? `<tr><td style="padding:6px 0;border-bottom:1px solid #E3E4DE;color:#3F453E;font-size:14px;">Sales tax</td><td style="padding:6px 0;border-bottom:1px solid #E3E4DE;color:#3F453E;font-size:14px;text-align:right;">$${(data.taxCents / 100).toFixed(2)}</td></tr>` : '')
+    + shopServiceFeeRow(data.serviceFeeCents);
   const rows = shopLineRows(data.lines);
   const html = baseTemplate(`
     <h1 style="margin:16px 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Your pro shop total</h1>
@@ -1924,6 +1927,9 @@ export async function sendShopSalePayLinkEmail(data: {
 
 const shopLineRows = (lines: { name: string; unitPriceCents: number; quantity: number }[]) =>
   lines.map(l => `<tr><td style="padding:6px 0;border-bottom:1px solid #E3E4DE;color:#141814;font-size:14px;">${escapeHtml(l.name)}${l.quantity > 1 ? ` &times; ${l.quantity}` : ''}</td><td style="padding:6px 0;border-bottom:1px solid #E3E4DE;color:#141814;font-size:14px;text-align:right;">$${((l.unitPriceCents * l.quantity) / 100).toFixed(2)}</td></tr>`).join('');
+/** SHOP-FEE-1: GreenReserve's service fee on card pro-shop items, as its own line. */
+const shopServiceFeeRow = (cents?: number) => cents
+  ? `<tr><td style="padding:6px 0;border-bottom:1px solid #E3E4DE;color:#3F453E;font-size:14px;">${escapeHtml(SHOP_FEE_LABEL)}</td><td style="padding:6px 0;border-bottom:1px solid #E3E4DE;color:#3F453E;font-size:14px;text-align:right;">$${(cents / 100).toFixed(2)}</td></tr>` : '';
 const shopDiscountRow = (cents?: number, note?: string) => cents
   ? `<tr><td style="padding:6px 0;border-bottom:1px solid #E3E4DE;color:#3F453E;font-size:14px;">Discount${note ? ` (${escapeHtml(note)})` : ''}</td><td style="padding:6px 0;border-bottom:1px solid #E3E4DE;color:#3F453E;font-size:14px;text-align:right;">&minus;$${(cents / 100).toFixed(2)}</td></tr>` : '';
 
@@ -1936,13 +1942,15 @@ export async function sendShopReceiptEmail(data: {
   lines: { name: string; unitPriceCents: number; quantity: number }[];
   discountCents: number; discountNote: string; taxCents: number; totalCents: number;
   paidWith: string; paidAt: string; cashTenderedCents: number | null; refundedCents: number;
+  /** SHOP-FEE-1: GreenReserve's service fee, already in totalCents (what was paid); its own line. */
+  serviceFeeCents?: number;
 }) {
   const row = (label: string, value: string, strong = false) => `<tr><td style="padding:${strong ? '10px 0 0' : '6px 0'};color:${strong ? '#141814' : '#3F453E'};font-size:${strong ? 15 : 14}px;${strong ? 'font-weight:700;' : 'border-bottom:1px solid #E3E4DE;'}">${label}</td><td style="padding:${strong ? '10px 0 0' : '6px 0'};color:${strong ? '#141814' : '#3F453E'};font-size:${strong ? 15 : 14}px;text-align:right;${strong ? 'font-weight:700;' : 'border-bottom:1px solid #E3E4DE;'}">${value}</td></tr>`;
   const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
   const html = baseTemplate(`
     <h1 style="margin:16px 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Your receipt</h1>
     <p style="margin:0 0 20px;color:#3F453E;font-size:15px;">${data.name ? `Hi ${escapeHtml(firstName(data.name))}, thanks` : 'Thanks'} for shopping at ${escapeHtml(data.courseName)}.</p>
-    <table style="width:100%;border-collapse:collapse;margin-bottom:12px;">${shopLineRows(data.lines)}${shopDiscountRow(data.discountCents, data.discountNote)}${data.taxCents ? row('Sales tax', usd(data.taxCents)) : ''}${row('Total', usd(data.totalCents), true)}</table>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:12px;">${shopLineRows(data.lines)}${shopDiscountRow(data.discountCents, data.discountNote)}${data.taxCents ? row('Sales tax', usd(data.taxCents)) : ''}${data.serviceFeeCents ? row(escapeHtml(SHOP_FEE_LABEL), usd(data.serviceFeeCents)) : ''}${row('Total', usd(data.totalCents), true)}</table>
     <table width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 16px;">
       <tr><td style="padding:4px 0;color:#6B706A;font-size:13px;">Paid</td><td align="right" style="padding:4px 0;color:#141814;font-size:13px;">${escapeHtml(data.paidWith)} · ${escapeHtml(data.paidAt)}</td></tr>
       ${data.cashTenderedCents != null ? `<tr><td style="padding:4px 0;color:#6B706A;font-size:13px;">Cash given · change</td><td align="right" style="padding:4px 0;color:#141814;font-size:13px;">${usd(data.cashTenderedCents)} · ${usd(data.cashTenderedCents - data.totalCents)}</td></tr>` : ''}

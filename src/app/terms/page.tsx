@@ -1,6 +1,11 @@
 import type { Metadata } from 'next';
 import { previewFor } from '@/lib/seo';
 import { SUPPORT_EMAIL } from '@/lib/contact';
+import { shopFeeVersionLive } from '@/lib/shop-fee';
+
+// SHOP-FEE-1: the 1% shop fee is named here only once the Operator Agreement version naming it is in
+// effect (published by Cam); the page re-reads that every few minutes.
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: 'Terms of Service',
@@ -13,7 +18,8 @@ const navLink = 'border-l-2 pl-3 py-1.5 text-sm transition-colors';
 const navActive = `${navLink} border-pine text-pine font-medium`;
 const navIdle = `${navLink} border-transparent text-ink-soft hover:text-ink hover:border-line-strong`;
 
-export default function TermsOfServicePage() {
+export default async function TermsOfServicePage() {
+  const shopFee = await shopFeeVersionLive();
   return (
     <div className="bg-paper min-h-screen">
       <div className="max-w-5xl mx-auto px-6 py-16">
@@ -28,14 +34,14 @@ export default function TermsOfServicePage() {
                 <a href="/operator-agreement" className={navIdle}>Operator Agreement</a>
               </nav>
               <p className="mt-6 pl-3 text-xs text-ink-soft leading-relaxed">
-                Version v2026-11-05<br />Last updated November 5, 2026
+                {shopFee ? <>Version v2026-11-16<br />Last updated November 16, 2026</> : <>Version v2026-11-05<br />Last updated November 5, 2026</>}
               </p>
             </div>
           </aside>
 
           <div>
             <h1 className="text-3xl sm:text-4xl font-serif font-semibold tracking-tight text-ink mb-3">Terms of Service</h1>
-            <p className="text-ink-soft text-sm mb-10">Version v2026-11-05 — last updated November 5, 2026</p>
+            <p className="text-ink-soft text-sm mb-10">{shopFee ? 'Version v2026-11-16 — last updated November 16, 2026' : 'Version v2026-11-05 — last updated November 5, 2026'}</p>
 
             {/* Plain-English summary */}
             <div className="bg-white rounded-lg shadow-card p-6 mb-12">
@@ -44,6 +50,7 @@ export default function TermsOfServicePage() {
                 {[
                   'GreenReserve is a booking platform run by GreenReserve LLC, not a golf course. Each course sets its own prices, policies and rules (section 1).',
                   'Online bookings carry a $1.50 per-player GreenReserve booking fee, charged when you pay for your round. Nothing is charged when you book (section 2).',
+                  ...(shopFee ? ['Pro-shop items paid by card carry a GreenReserve service fee of 1% of the items; cash carries none (section 2).'] : []),
                   'A card is saved only when the course has a late-cancellation or no-show fee. Saving it authorizes the charges in section 3.',
                   'A no-show is charged after the end of the day unless you check in first, and refunded if marked in error (section 4).',
                   'You can reply STOP to any text from us (section 6).',
@@ -90,7 +97,7 @@ export default function TermsOfServicePage() {
                 <p>
                   Items the course&apos;s staff add to your round from its pro shop are priced by the course and are added to the
                   same payment as your round. Where a course collects membership dues through GreenReserve, a <strong className="text-ink">GreenReserve fee of 1% of the dues and any initiation fee</strong>
-                  is added to what the member pays. GreenReserve charges courses no listing, subscription or commission fees. Card
+                  is added to what the member pays.{shopFee && <> When you pay for pro-shop items by card (on a pay link, on the course&apos;s card reader, or with your round), a <strong className="text-ink">GreenReserve service fee of 1% of the items</strong>, before sales tax, is added and shown before you pay. It is never charged on the round itself, and items paid in cash, at the counter or on a member&apos;s account carry no GreenReserve fee. If a walk-up card payment for items is refunded, or the whole payment for your round is refunded, the fee is refunded in the same proportion.</>} GreenReserve charges courses no listing, subscription or commission fees. Card
                   processing fees apply under the course&apos;s own Stripe account.
                 </p>
               </section>
@@ -195,8 +202,12 @@ export default function TermsOfServicePage() {
 
               <section className="pt-6 border-t border-line">
                 <h3 className="font-semibold text-sm text-ink mb-2">Changes to these terms</h3>
+                {shopFee && <p className="text-sm mb-2">
+                  <strong className="text-ink">v2026-11-16 (current):</strong> a GreenReserve service fee of 1% on pro-shop items paid by card;
+                  none on cash, at the counter or on a member&apos;s account.
+                </p>}
                 <p className="text-sm mb-2">
-                  <strong className="text-ink">v2026-11-05 (current):</strong> the text-message section is headed SMS Terms and says we
+                  <strong className="text-ink">v2026-11-05{shopFee ? '' : ' (current)'}:</strong> the text-message section is headed SMS Terms and says we
                   don’t sell or share text-message opt-in data or personal information for marketing (Twilio carrier registration).
                 </p>
                 <p className="text-sm mb-2">
