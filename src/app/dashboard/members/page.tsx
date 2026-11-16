@@ -265,7 +265,7 @@ function MembershipsPageInner() {
             <SubHead>Memberships</SubHead>
             {ms.map(t => <KV key={t.id} k={<span className="inline-flex items-center gap-2"><Dot color={t.color} />{t.name}</span>} v={usd0(duesOfTier(t))} />)}
             <KV total k="Total" v={usd0(duesTotal)} />
-            <p className="text-[12.5px] text-ink-muted mt-2.5">Shows in Revenue as Membership dues. Paid through GreenReserve, members pay a 1% fee on top.</p>
+            <p className="text-[12.5px] text-ink-soft mt-2.5">Shows in Revenue as Membership dues. Paid through GreenReserve, members pay a 1% fee on top.</p>
           </Card>
         )}
       </div>
