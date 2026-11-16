@@ -28,7 +28,8 @@ Support (chats) · Light parity. Specs: ADMIN_REDO_SPEC "Course dashboard Home",
    - Joining-online requests, import and reminders move to each membership's page.
    - Wire only what Build's data supports; hide the rest, never fake it.
 3. **Events**: mockup `lanes/dashboard/events-mockup.html` (https://claude.ai/artifact/BVqXkiviwzu8ktCdyNNR9H), waiting for Cam's comments. Build nothing until approved.
-4. Then Events → Schedule → Analytics → Settings → Course alert, one page at a time, mockup first.
+4. **Schedule**: mockup `lanes/dashboard/schedule-mockup.html` (https://claude.ai/artifact/ANSdTS9cjrJwxsQ1TLFynU), waiting for Cam's comments.
+5. Then Events → Schedule → Analytics → Settings → Course alert, one page at a time, mockup first.
 
 ## Small follow-ups (do with the next PR that touches the file)
 - `StockTab` side card goes solid at lg after a tap: use `max-lg:fixed max-lg:inset-0`.
