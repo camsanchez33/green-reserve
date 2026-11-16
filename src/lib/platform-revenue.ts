@@ -6,7 +6,8 @@
 // A round paid by card carries the 1% on the shop items added to it inside its application fee
 // (lib/shop roundApplicationFeeCents) — every card charge of the round carries the whole of it (a re-collect after a
 // refund, a duplicate reader tap). Its shop part (shopCents) is the row's fee in proportion to the booking's shop fee
-// over the fee of the charge it belongs to — itself for a charge, the latest charge at or before it for a refund —
+// over the fee of the charge it belongs to — itself for a charge, the latest fee-bearing charge at or before it for a
+// refund (a won dispute's 'in' carries no fee and is never "the charge") —
 // finance-period roundShopShareCents, in SQL; it moves from the round's source to shopFees. A booking fee on a no-show
 // or cancelled booking is noShowLateFees. Booking.shopFeeCents is read as it is now: a booking later paid at the
 // counter after a full refund (counter-pay sets it 0) moves its charge month's 30¢ back to booking fees and its
@@ -32,8 +33,8 @@ export async function feesBySourceByMonth(from: Date, to: Date): Promise<Map<str
                       ELSE 0 END)::bigint AS "shopCents"
       FROM "MoneyMove" m JOIN "Course" c ON c."id" = m."courseId" LEFT JOIN "Booking" b ON b."id" = m."bookingId"
       LEFT JOIN LATERAL (SELECT x."platformFeeCents" AS "chargeCents" FROM "MoneyMove" x
-                         WHERE x."bookingId" = m."bookingId" AND x."what" = 'round' AND x."direction" = 'in' AND x."at" <= m."at"
-                         ORDER BY x."at" DESC LIMIT 1) ch ON m."what" = 'round'
+                         WHERE x."bookingId" = m."bookingId" AND x."what" = 'round' AND x."direction" = 'in' AND x."platformFeeCents" > 0 AND x."at" <= m."at"
+                         ORDER BY x."at" DESC, x."id" DESC LIMIT 1) ch ON m."what" = 'round'
       WHERE c."isTest" = false AND m."platformFeeCents" > 0 AND m."at" >= (${from}::timestamptz AT TIME ZONE 'UTC') AND m."at" < (${to}::timestamptz AT TIME ZONE 'UTC')
       GROUP BY 1, 2`;
   const byMonth = new Map<string, Record<RevenueSource, number>>();

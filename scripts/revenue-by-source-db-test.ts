@@ -44,7 +44,12 @@ async function cleanup() {
   await mv(c.id, 'round', 'out', 'card', 10315, 315, 12, { bookingId: b.id, stripeId: `${TAG}-re-1` }); // half refunded, half the fee back
   // Every card charge carries the whole shop fee: a full refund then a re-collect, and a duplicate reader tap refunded.
   const mkB = async (time: string) => prisma.booking.create({ data: { teeTimeId: (await prisma.teeTime.create({ data: { courseId: c.id, date: '2001-03-10', time, holes: 18, greenFeeCents: 5000, cartFeeCents: 0, playersAvailable: 4, playersBooked: 4, status: 'available' } })).id, courseId: c.id, golferName: 'Pat', golferEmail: `${TAG}@t.local`, players: 4, greenFeeTotal: 20000, cartFeeTotal: 0, accessFeeTotal: 600, totalAmount: 20600, shopTotalCents: 3000, shopFeeCents: 30, status: 'completed', paymentStatus: 'paid' } });
-  const again = await mkB('10:00'), dup = await mkB('11:00');
+  const again = await mkB('10:00'), dup = await mkB('11:00'), won = await mkB('12:00');
+  // A dispute won (the webhook's mirrored 'in', no fee) then a staff refund: the refund belongs to the charge, not the dispute.
+  await mv(c.id, 'round', 'in', 'card', 23630, 630, 19, { bookingId: won.id, stripeId: `${TAG}-pi-5` });
+  await mv(c.id, 'round', 'out', 'card', 23630, 0, 20, { bookingId: won.id, stripeId: `${TAG}-dp-5` });
+  await mv(c.id, 'round', 'in', 'card', 23630, 0, 21, { bookingId: won.id, stripeId: `${TAG}-dw-5` });
+  await mv(c.id, 'round', 'out', 'card', 23630, 630, 22, { bookingId: won.id, stripeId: `${TAG}-re-5` });
   await mv(c.id, 'round', 'in', 'card', 23630, 630, 15, { bookingId: again.id, stripeId: `${TAG}-pi-2` });
   await mv(c.id, 'round', 'out', 'card', 23630, 630, 16, { bookingId: again.id, stripeId: `${TAG}-re-2` });
   await mv(c.id, 'round', 'in', 'card', 23630, 630, 17, { bookingId: again.id, stripeId: `${TAG}-pi-3` });
