@@ -151,7 +151,7 @@ export async function moveBooking(opts: {
 
       const slot = await tx.teeTime.findUnique({
         where: { id: opts.newTeeTimeId },
-        select: { id: true, courseId: true, date: true, time: true, holes: true, status: true, playersBooked: true, playersAvailable: true, greenFeeCents: true, cartFeeCents: true, memberRateCents: true, residentRateCents: true, walkingAllowed: true, staffOnly: true },
+        select: { id: true, courseId: true, date: true, time: true, holes: true, productId: true, status: true, playersBooked: true, playersAvailable: true, greenFeeCents: true, cartFeeCents: true, memberRateCents: true, residentRateCents: true, walkingAllowed: true, staffOnly: true },
       });
       if (!slot) throw new MoveError('SLOT_GONE');
       if (slot.courseId !== b.courseId) throw new MoveError('WRONG_COURSE');

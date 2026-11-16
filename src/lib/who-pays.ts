@@ -15,6 +15,8 @@ export type WireSchedule = {
   memberRateWeekday: number | null; memberRateWeekend: number | null;
   residentRateWeekday: number | null; residentRateWeekend: number | null;
   productLabel?: string | null;
+  /** Memberships item 3: the round this schedule sells (null on a course with no named rounds). */
+  productId?: string | null;
 };
 /** A membership as /api/operator/tiers returns it (dollars). */
 export type WireTier = {
@@ -22,6 +24,8 @@ export type WireTier = {
   greenFeeWeekday: number | null; greenFeeWeekend: number | null;
   cartFeeWeekday: number | null; cartFeeWeekend: number | null;
   discountPct: number | null;
+  /** Memberships item 3: rates against the price list (lib/tier-rates); null/absent = the flat rates above. */
+  lineRates?: unknown;
 };
 
 export type Period = { id: string; label: string };
@@ -71,11 +75,12 @@ export function whoPays(schedules: WireSchedule[], tiers: WireTier[], switches: 
     const weekend = date === WEEKEND;
     const teeTime = {
       date, greenFeeCents: c(weekend ? s.greenFeeWeekend : s.greenFeeWeekday) ?? 0, cartFeeCents: c(s.cartFee) ?? 0,
-      memberRateCents: c(weekend ? s.memberRateWeekend : s.memberRateWeekday),
+      memberRateCents: c(weekend ? s.memberRateWeekend : s.memberRateWeekday), productId: s.productId ?? null,
     };
     const tier = {
       greenFeeWeekdayCents: c(t.greenFeeWeekday), greenFeeWeekendCents: c(t.greenFeeWeekend),
       cartFeeWeekdayCents: c(t.cartFeeWeekday), cartFeeWeekendCents: c(t.cartFeeWeekend), discountPct: t.discountPct,
+      lineRates: t.lineRates ?? null,
     };
     const cents = applyTierRates(teeTime, tier).greenFeeCents;
     return cents === teeTime.greenFeeCents ? null : d(cents);

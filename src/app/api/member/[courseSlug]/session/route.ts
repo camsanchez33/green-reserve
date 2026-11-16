@@ -1,3 +1,4 @@
+import { windowFor } from '@/lib/booking-window';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { centsToDollars, centsToDollarsOr0 } from '@/lib/money';
@@ -47,7 +48,8 @@ export async function GET(
   return NextResponse.json({
     source,
     // BOOKING WINDOWS: how far ahead this member can book (tier, else course default).
-    windowDays: membership.tier?.advanceBookingDays ?? course.memberAdvanceDays,
+    // Memberships item 3: a membership on "the public window" books as far ahead as the public (lib/booking-window).
+    windowDays: windowFor(course, { tier: membership.tier }).days,
     email: fallbackEmail ?? membership.golfer?.email ?? membership.inviteEmail,
     name: membership.golfer
       ? `${membership.golfer.firstName} ${membership.golfer.lastName}`

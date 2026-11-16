@@ -471,6 +471,12 @@ model MembershipTier {
   /// Memberships item 2 (Cam 2026-11-16, "an automatic per-membership prefix and sequence, never reused"): the
   /// prefix of this membership's member numbers (course initials + membership initials, e.g. "PH-FM"), fixed the
   /// first time a number is given so a rename never changes it, and the last number given. Numbers only go up.
+  /// Memberships item 3 (Cam 2026-11-16): member rates set against the course's own price list — per round, weekday
+  /// and weekend, green fee and cart: { "green:<round>:wd": { cents } | { pct }, … } (lib/tier-rates). A missing
+  /// line is the public price; 0 is free. Null = a tier made before it, priced by the flat fields above.
+  lineRates            Json?
+  /// Memberships item 3: true = members book as far ahead as the public ("The public window"); false = advanceBookingDays.
+  windowPublic         Boolean            @default(false)
   numberPrefix         String?
   numberLast           Int                @default(0)
   createdAt            DateTime           @default(now())

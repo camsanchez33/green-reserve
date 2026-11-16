@@ -47,11 +47,13 @@ export function lastBookableDate(windowDays: number, now: Date = new Date(), tz?
 }
 
 export type WindowCourse = { publicAdvanceDays?: number | null; memberAdvanceDays?: number | null };
-export type WindowTier = { advanceBookingDays?: number | null } | null | undefined;
+/** windowPublic (Memberships item 3): the membership books as far ahead as the public, no further. */
+export type WindowTier = { advanceBookingDays?: number | null; windowPublic?: boolean | null } | null | undefined;
 
 /** The window for a viewer: a member's tier, a tierless member's course default, or the public window. */
 export function windowFor(course: WindowCourse, member: { tier?: WindowTier } | null): { days: number; scope: 'public' | 'member' } {
   if (member) {
+    if (member.tier?.windowPublic) return { days: course.publicAdvanceDays ?? DEFAULT_PUBLIC_WINDOW_DAYS, scope: 'member' };
     const tierDays = member.tier?.advanceBookingDays;
     return { days: tierDays ?? course.memberAdvanceDays ?? DEFAULT_MEMBER_WINDOW_DAYS, scope: 'member' };
   }
