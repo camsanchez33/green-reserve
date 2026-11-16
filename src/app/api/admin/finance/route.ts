@@ -4,20 +4,23 @@ import { resolveAdminSession, requireOwner, ownerGateError } from '@/lib/admin-s
 import { prorateExpenseCents, isExpenseCategory, type ExpenseCategory } from '@/lib/expenses';
 import { REAL_COURSE, ON_REAL_COURSE } from '@/lib/real-courses';
 import { PLATFORM_TZ } from '@/lib/admin-day';
-import { parseFinancePeriod, resolveFinancePeriod, revenueSource, type RevenueSource } from '@/lib/finance-period';
+import { parseFinancePeriod, resolveFinancePeriod, type RevenueSource } from '@/lib/finance-period';
+import { feesBySourceByMonth, emptySources, sourcesTotal } from '@/lib/platform-revenue';
 
 // ADMIN-REDO Financial analytics (Cam 2026-11-12). OWNER only, like /api/admin/expenses (the
 // company's private books), so no area gate. Read-only; every figure is counted, none estimated.
 //
 //   revenue   GreenReserve's side of the money ledger (MoneyMove.platformFeeCents, taken minus given
 //             back), by month and by source (lib/finance-period revenueSource): a booking fee on a
-//             no-show or cancelled booking is noShowLateFees. TEST-2: real courses only.
+//             no-show or cancelled booking is noShowLateFees. TEST-2: real courses only. Revenue by source
+//             (Cam 2026-11-16): the 1% on shop items added to a round, inside the round's fee, is shopFees
+//             (shopCents below, the same rule as finance-period roundShopShareCents), so serviceFees is the
+//             $1.50 booking fee alone.
 //   bookings  Revenue's definition: confirmed or completed bookings made in the month, real courses.
 //   expenses  prorateExpenseCents per month (one-time costs in their month); the running month to now.
 //   liveCourses  only for the running month (nothing records when a course was switched off and on);
 //             newLiveCourses = real courses whose first go-live fell in the month.
 
-type MonthRow = { month: string; what: string; cents: bigint };
 type CourseMonthRow = { month: string; courseId: string; cents: bigint };
 type BookingMonthRow = { month: string; courseId: string; n: bigint };
 
@@ -33,14 +36,8 @@ export async function GET(req: NextRequest) {
   // (${d}::timestamptz AT TIME ZONE 'UTC'), never by the session's TimeZone.
   const from = p.monthBefore.start;
 
-  const [moneyBySource, moneyByCourse, bookingRows, expenses, courses, liveNow] = await Promise.all([
-    prisma.$queryRaw<MonthRow[]>`
-      SELECT to_char((m."at" AT TIME ZONE 'UTC') AT TIME ZONE ${PLATFORM_TZ}, 'YYYY-MM') AS month,
-             CASE WHEN m."what" = 'booking_fee' AND (b."noShowAt" IS NOT NULL OR b."status" = 'cancelled') THEN 'booking_fee_no_show_late' ELSE m."what" END AS what,
-             SUM(CASE WHEN m."direction" = 'out' THEN -m."platformFeeCents" ELSE m."platformFeeCents" END)::bigint AS cents
-      FROM "MoneyMove" m JOIN "Course" c ON c."id" = m."courseId" LEFT JOIN "Booking" b ON b."id" = m."bookingId"
-      WHERE c."isTest" = false AND m."platformFeeCents" > 0 AND m."at" >= (${from}::timestamptz AT TIME ZONE 'UTC') AND m."at" < (${now}::timestamptz AT TIME ZONE 'UTC')
-      GROUP BY 1, 2`,
+  const [revByMonth, moneyByCourse, bookingRows, expenses, courses, liveNow] = await Promise.all([
+    feesBySourceByMonth(from, now),
     prisma.$queryRaw<CourseMonthRow[]>`
       SELECT to_char((m."at" AT TIME ZONE 'UTC') AT TIME ZONE ${PLATFORM_TZ}, 'YYYY-MM') AS month, m."courseId",
              SUM(CASE WHEN m."direction" = 'out' THEN -m."platformFeeCents" ELSE m."platformFeeCents" END)::bigint AS cents
@@ -57,13 +54,6 @@ export async function GET(req: NextRequest) {
     prisma.course.count({ where: { active: true, archivedAt: null, ...REAL_COURSE } }),
   ]);
 
-  const emptySources = (): Record<RevenueSource, number> => ({ serviceFees: 0, noShowLateFees: 0, membershipDues: 0, other: 0 });
-  const revByMonth = new Map<string, Record<RevenueSource, number>>();
-  for (const r of moneyBySource) {
-    const s = revByMonth.get(r.month) ?? emptySources();
-    s[revenueSource(r.what)] += Number(r.cents);
-    revByMonth.set(r.month, s);
-  }
   const bookingsByMonth = new Map<string, number>();
   const bookingsByCourseMonth = new Map<string, number>();
   for (const r of bookingRows) {
@@ -83,7 +73,7 @@ export async function GET(req: NextRequest) {
     }
     return { cents: Object.values(byCategory).reduce((a, b) => a + b, 0), byCategory };
   };
-  const total = (s: Record<RevenueSource, number> | undefined) => (s ? s.serviceFees + s.noShowLateFees + s.membershipDues + s.other : 0);
+  const total = (s: Record<RevenueSource, number> | undefined) => (s ? sourcesTotal(s) : 0);
 
   const months = p.months.map(m => {
     const src = revByMonth.get(m.month) ?? emptySources();

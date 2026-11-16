@@ -10,7 +10,8 @@ export const PERIODS: { v: Per; label: string; vs: string }[] = [
   { v: 'ytd', label: 'This year', vs: 'last year by today' },
 ];
 
-export const SOURCES = ['serviceFees', 'noShowLateFees', 'membershipDues', 'other'] as const; // other = pro shop and event fees
+// Revenue by source (Cam 2026-11-16): the $1.50 booking fee, the 1% shop service fee, the 1% on dues and passes. other = event fees.
+export const SOURCES = ['serviceFees', 'noShowLateFees', 'shopFees', 'membershipDues', 'other'] as const;
 export type Source = typeof SOURCES[number];
 export const CATEGORIES = ['infra', 'tools', 'legal', 'other'] as const; // Expenses' four (src/lib/expenses.ts)
 export type Category = typeof CATEGORIES[number];
@@ -76,7 +77,7 @@ export function ticks(maxCents: number): number[] {
   return [1, 2, 3, 4].map(i => i * step).filter(v => v <= maxCents * 1.15);
 }
 
-const SOURCE_WORDS: Record<Source, string> = { serviceFees: 'Booking service fees', noShowLateFees: 'No-show & late-cancel fees', membershipDues: 'Membership dues fees', other: 'Pro shop & event fees' };
+const SOURCE_WORDS: Record<Source, string> = { serviceFees: 'Booking fees ($1.50)', noShowLateFees: 'No-show & late-cancel fees', shopFees: 'Pro shop service fees (1%)', membershipDues: 'Dues & season pass fees (1%)', other: 'Event fees' };
 /** Cents from a month's total, whether the route sends the object or the plain number. */
 export const centsOf = (v: { cents: number } | number | undefined | null) => (typeof v === 'number' ? v : v?.cents ?? 0);
 export const sourceLabel = (k: Source) => SOURCE_WORDS[k];

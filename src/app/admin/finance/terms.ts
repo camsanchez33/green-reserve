@@ -14,10 +14,11 @@ export const TERMS = {
 
 /** What each revenue source is (behind its label). GreenReserve takes no cut of a course's own no-show or late fee. */
 export const SOURCE_TERMS: Record<string, string> = {
-  serviceFees: "GreenReserve's service fee on rounds that were played and paid, member house-account payments included",
+  serviceFees: "GreenReserve's $1.50 booking fee on rounds that were played and paid, member house-account payments included (the 1% on shop items added to a round is Pro shop service fees)",
   noShowLateFees: "GreenReserve's service fee on bookings charged as a no-show or a late cancel (not the course's own fee)",
-  membershipDues: 'The 1% fee on membership dues paid through GreenReserve',
-  other: 'Fees on pro shop sales and event payments',
+  shopFees: 'The 1% service fee on pro shop items paid by card — at the register, by pay link, on the reader, or added to a round',
+  membershipDues: 'The 1% fee on membership dues and season passes paid by card through GreenReserve',
+  other: 'Fees on event payments',
 } as const;
 
 export const SESSION_ENDED = 'Your session ended — sign in again.';
