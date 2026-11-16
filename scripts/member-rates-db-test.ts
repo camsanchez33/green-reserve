@@ -55,6 +55,12 @@ async function cleanup() {
   ok('…and only for a round on a day of its season', membershipLive(pass, R0, at('2026-10-20'), '2026-10-31') && !membershipLive(pass, R0, at('2026-10-20'), '2026-11-02'));
   ok('…bought before opening day, a round in its season is at the pass rate; one before it opens is not', membershipLive(pass, R0, at('2026-03-20'), '2026-04-05') && !membershipLive(pass, R0, at('2026-03-20'), '2026-03-25') && !membershipLive(pass, R0, at('2026-11-02'), '2026-10-31'));
   ok('…in the course\'s timezone (its last evening is still a pass day)', membershipLive(pass, R0, new Date('2026-11-01T03:30:00Z')) && !membershipLive(pass, R0, new Date('2026-11-01T04:30:00Z')));
+  // Cam 2026-11-16: "if the pass is june-august and they buy in may then it starts in june" — keyed on the round's play
+  // date, whenever it was booked.
+  const summer = { status: 'active', passStartsOn: '2026-06-01', expiresAt: new Date('2026-08-31T00:00:00Z') };
+  const may = at('2026-05-15');
+  ok('Cam\'s example: a June–August pass bought in May — a May round is public, Jun 1 to Aug 31 at the pass rate, Sep 1 public', !membershipLive(summer, R0, may, '2026-05-20') && membershipLive(summer, R0, may, '2026-06-01') && membershipLive(summer, R0, may, '2026-07-04') && membershipLive(summer, R0, may, '2026-08-31') && !membershipLive(summer, R0, may, '2026-09-01'));
+  ok('…the same booked mid-season, and nothing in May itself without a round\'s date', membershipLive(summer, R0, at('2026-07-10'), '2026-08-31') && !membershipLive(summer, R0, at('2026-07-10'), '2026-09-01') && !membershipLive(summer, R0, may));
   ok('an unpaid pass (awaiting payment) gives nothing', !membershipLive({ ...pass, status: 'awaiting_payment' }, R0, at('2026-05-01')));
 
   // 3. A member's group keeps the split when its size changes or part of it shows.
@@ -94,6 +100,10 @@ async function cleanup() {
   const passRows = await prisma.courseMembership.findMany({ where: { courseId: course.id, passStartsOn: { not: null }, ...liveMembershipWhere(R7, now) }, select: { inviteEmail: true, status: true, expiresAt: true, passStartsOn: true } });
   ok('…a pass on its last day is live; one ended yesterday is not even with grace days, nor one not started', passRows.length === 1 && passRows[0].inviteEmail === `${TAG}+pass-on@t.local` && passRows.every(r => membershipLive(r, R7, now)), passRows);
   const aheadRows = await prisma.courseMembership.findMany({ where: { courseId: course.id, passStartsOn: { not: null }, ...liveMembershipWhere(R7, now, '2026-11-05') }, select: { inviteEmail: true, status: true, expiresAt: true, passStartsOn: true } });
+  const mayNow = new Date('2026-10-29T15:00:00Z');
+  const onToday = await prisma.courseMembership.findMany({ where: { courseId: course.id, passStartsOn: { not: null }, ...liveMembershipWhere(R7, mayNow, '2026-10-29') }, select: { inviteEmail: true } });
+  const gap = await prisma.courseMembership.findMany({ where: { courseId: course.id, passStartsOn: { not: null }, ...liveMembershipWhere(R7, mayNow, '2026-10-31') }, select: { inviteEmail: true } });
+  ok('…by play date: today finds the pass running today; a day between that pass\'s end and the next one\'s start finds none', onToday.length === 1 && onToday[0].inviteEmail === `${TAG}+pass-on@t.local` && gap.length === 0, { onToday, gap });
   ok('…for a round on a day ahead, the not-yet-started pass covering it (and only it)', aheadRows.length === 1 && aheadRows[0].inviteEmail === `${TAG}+pass-soon@t.local` && aheadRows.every(r => membershipLive(r, R7, now, '2026-11-05')), aheadRows);
 
   // A cart added at check-in: a weekday booking of 4, public cart $20, member cart $10.

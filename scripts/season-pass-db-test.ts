@@ -84,6 +84,7 @@ async function cleanup() {
   ok('dues this year and the member\'s payments read passes too', /MEMBERSHIP_WHATS/.test(src('src/lib/dues-year.ts')) && /MEMBERSHIP_WHATS/.test(src('src/app/api/member/[courseSlug]/payments/route.ts')));
   ok('an ended pass is never reminded as overdue', /passStartsOn: null,/.test(src('src/app/api/operator/members/remind-overdue/route.ts')));
   ok('the routes use the tested rules, and the join list hides an ended pass', /passMemberChange\(\{/.test(src('src/app/api/operator/members/route.ts')) && /passSeasonMoveError\(tier, d\.startsOn, sold\)/.test(src('src/app/api/operator/tiers/route.ts')) && /!passEnded\(found, todayIn\(course\.timezone\)\)/.test(src('src/app/api/courses/[slug]/join/route.ts')));
+  ok('the counter\'s member search offers a pass for the tee time\'s day', /liveMembershipWhere\(course, new Date\(\), onDay\)/.test(src('src/app/api/operator/counter-members/route.ts')) && /membershipLive\(m, teeTime\.course, new Date\(\), teeTime\.date\)/.test(src('src/lib/counter-pay.ts')));
   ok('resident-rate prices the golfer\'s pass on the tee time\'s day, as booking does', /getGolferMembership\(tt\.courseId, grace, tt\.date\)/.test(src('src/app/api/bookings/resident-rate/route.ts')) && /membershipLive\(m, grace, new Date\(\), tt\.date\) \? m\.tier/.test(src('src/app/api/bookings/resident-rate/route.ts')));
 
   // ── 3. Against the database ──
