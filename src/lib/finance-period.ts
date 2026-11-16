@@ -110,11 +110,11 @@ export function revenueSource(what: string): RevenueSource {
 
 /**
  * Pure: the shop-fee part of one round row's GreenReserve fee — the row's fee in proportion to the booking's shop fee
- * over every round fee the booking paid in (so the charge carries its whole shop fee, and a refund gives it back pro
- * rata, as Stripe gives the fee back). Never more than the row's fee; nothing without a fee paid in. The route's SQL
- * computes the same.
+ * over the fee of the card charge the row belongs to (itself for a charge; for a refund, the latest charge before it).
+ * Every charge carries the whole shop fee, so each charge gives all of it and a refund gives it back pro rata, as Stripe
+ * gives the fee back. Never more than the row's fee; nothing without a charge. lib/platform-revenue's SQL is the same.
  */
-export function roundShopShareCents(rowFeeCents: number, bookingShopFeeCents: number, bookingInFeeCents: number): number {
-  if (rowFeeCents <= 0 || bookingShopFeeCents <= 0 || bookingInFeeCents <= 0) return 0;
-  return Math.min(rowFeeCents, Math.round(rowFeeCents * bookingShopFeeCents / bookingInFeeCents));
+export function roundShopShareCents(rowFeeCents: number, bookingShopFeeCents: number, chargeFeeCents: number): number {
+  if (rowFeeCents <= 0 || bookingShopFeeCents <= 0 || chargeFeeCents <= 0) return 0;
+  return Math.min(rowFeeCents, Math.round(rowFeeCents * bookingShopFeeCents / chargeFeeCents));
 }

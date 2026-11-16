@@ -25,7 +25,7 @@ async function cleanup() {
 
 (async () => {
   // ── Pure ──
-  ok('the shop part of a round fee: all of it on the charge, pro rata on a refund, never more than the row', roundShopShareCents(630, 30, 630) === 30 && roundShopShareCents(315, 30, 630) === 15 && roundShopShareCents(10, 30, 20) === 10 && roundShopShareCents(630, 0, 630) === 0 && roundShopShareCents(315, 30, 0) === 0);
+  ok('the shop part of a round fee: all of it on each charge, pro rata on a refund of that charge, never more than the row', roundShopShareCents(630, 30, 630) === 30 && roundShopShareCents(315, 30, 630) === 15 && roundShopShareCents(10, 30, 20) === 10 && roundShopShareCents(630, 0, 630) === 0 && roundShopShareCents(315, 30, 0) === 0);
   ok('each fee has its own source', revenueSource('booking_fee') === 'serviceFees' && revenueSource('shop') === 'shopFees' && revenueSource('dues') === 'membershipDues' && revenueSource('pass') === 'membershipDues' && revenueSource('event') === 'other');
   ok('the admin page lists every source the route sends', REVENUE_SOURCES.every(s => (SOURCES as readonly string[]).includes(s)) && SOURCES.length === REVENUE_SOURCES.length);
 
@@ -42,6 +42,15 @@ async function cleanup() {
     prisma.moneyMove.create({ data: { courseId, what, direction, method, account: 'course', amountCents, platformFeeCents, at: at(day), ...extra } });
   await mv(c.id, 'round', 'in', 'card', 20000 + 600 + 3000 + 30, 630, 10, { bookingId: b.id, stripeId: `${TAG}-pi-1` });
   await mv(c.id, 'round', 'out', 'card', 10315, 315, 12, { bookingId: b.id, stripeId: `${TAG}-re-1` }); // half refunded, half the fee back
+  // Every card charge carries the whole shop fee: a full refund then a re-collect, and a duplicate reader tap refunded.
+  const mkB = async (time: string) => prisma.booking.create({ data: { teeTimeId: (await prisma.teeTime.create({ data: { courseId: c.id, date: '2001-03-10', time, holes: 18, greenFeeCents: 5000, cartFeeCents: 0, playersAvailable: 4, playersBooked: 4, status: 'available' } })).id, courseId: c.id, golferName: 'Pat', golferEmail: `${TAG}@t.local`, players: 4, greenFeeTotal: 20000, cartFeeTotal: 0, accessFeeTotal: 600, totalAmount: 20600, shopTotalCents: 3000, shopFeeCents: 30, status: 'completed', paymentStatus: 'paid' } });
+  const again = await mkB('10:00'), dup = await mkB('11:00');
+  await mv(c.id, 'round', 'in', 'card', 23630, 630, 15, { bookingId: again.id, stripeId: `${TAG}-pi-2` });
+  await mv(c.id, 'round', 'out', 'card', 23630, 630, 16, { bookingId: again.id, stripeId: `${TAG}-re-2` });
+  await mv(c.id, 'round', 'in', 'card', 23630, 630, 17, { bookingId: again.id, stripeId: `${TAG}-pi-3` });
+  await prisma.moneyMove.create({ data: { courseId: c.id, what: 'round', direction: 'in', method: 'card', account: 'course', amountCents: 23630, platformFeeCents: 630, at: at(18, 14), bookingId: dup.id, stripeId: `${TAG}-pi-4` } });
+  await prisma.moneyMove.create({ data: { courseId: c.id, what: 'round', direction: 'in', method: 'card_present', account: 'course', amountCents: 23630, platformFeeCents: 630, at: at(18, 15), bookingId: dup.id, stripeId: `${TAG}-tap-4` } });
+  await prisma.moneyMove.create({ data: { courseId: c.id, what: 'round', direction: 'out', method: 'card_present', account: 'course', amountCents: 23630, platformFeeCents: 630, at: at(18, 16), bookingId: dup.id, stripeId: `${TAG}-tapre-4` } });
   await prisma.moneyMove.create({ data: { courseId: c.id, what: 'booking_fee', direction: 'in', method: 'card', account: 'platform', amountCents: 150, platformFeeCents: 150, at: at(11), stripeId: `${TAG}-bf-1` } });
   await mv(c.id, 'shop', 'in', 'card_present', 5050, 50, 11, { stripeId: `${TAG}-shop-1` });
   await mv(c.id, 'shop', 'in', 'cash', 2000, 0, 11);
@@ -56,7 +65,7 @@ async function cleanup() {
   // ── GreenReserve side ──
   const fees = (await feesBySourceByMonth(new Date(Date.UTC(2001, 2, 1)), new Date(Date.UTC(2001, 3, 1)))).get('2001-03');
   ok('our fees by source: $1.50 booking fees alone, the 1% shop fee (with the shop on a round), the 1% on dues and passes', !!fees
-    && fees.serviceFees === (630 - 30) - (315 - 15) + 150 && fees.shopFees === 30 - 15 + 50 && fees.membershipDues === 1200 + 600 && fees.noShowLateFees === 0 && fees.other === 0, fees);
+    && fees.serviceFees === (630 - 30) - (315 - 15) + 150 + 600 + 600 && fees.shopFees === 30 - 15 + 50 + 30 + 30 && fees.membershipDues === 1200 + 600 && fees.noShowLateFees === 0 && fees.other === 0, fees);
   const allFees = await prisma.moneyMove.findMany({ where: { courseId: c.id }, select: { direction: true, platformFeeCents: true } });
   ok('…and they add up to every fee on the ledger (nothing double-counted or dropped), test course out', !!fees && sourcesTotal(fees) === allFees.reduce((n, m) => n + (m.direction === 'out' ? -1 : 1) * m.platformFeeCents, 0), fees);
 
@@ -69,7 +78,7 @@ async function cleanup() {
   ok('…the lines add up to the total (money in, GreenReserve\'s fees out)', segSum === all.grossCents, { segSum, gross: all.grossCents });
   const sales = { all } as unknown as Sales;
   const rows = soldRows(sales);
-  ok('the page shows Memberships, Season passes and Pro shop rows, and its total is the same number', rows.some(r => r.key === 'dues' && r.cents === 170000) && rows.some(r => r.key === 'passes' && r.cents === 100000) && rows.some(r => r.key === 'shop') && soldTotal(sales) === all.grossCents && rows.reduce((n, r) => n + r.cents, 0) === all.grossCents);
+  ok('the page shows Memberships, Season passes and Pro shop rows, and its total is the same number', rows.some(r => r.key === 'dues' && r.cents === 170000) && rows.some(r => r.key === 'passes' && r.cents === 100000) && rows.some(r => r.key === 'shop' && r.cents === s.shopCents && r.cents > 0) && soldTotal(sales) === all.grossCents && rows.reduce((n, r) => n + r.cents, 0) === all.grossCents);
   ok('How it was paid is the same total', paidRows(sales).total === all.grossCents && paidRows(sales).rows.reduce((n, r) => n + r.cents, 0) === all.grossCents);
   const led = await ledgerDays(c.id, range.from, range.to);
   ok('the Ledger reads the range', !!led);
