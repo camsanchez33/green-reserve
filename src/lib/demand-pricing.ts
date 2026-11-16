@@ -85,12 +85,19 @@ export function historyState(daysOfData: number, today: string): DemandHistory {
 /** The course's own history so far: every past date it had tee times on. */
 export async function demandHistory(courseId: string, timezone: string, now = new Date()): Promise<DemandHistory> {
   const today = todayIn(timezone, now);
-  const dates = await prisma.teeTime.findMany({
-    where: { courseId, date: { lt: today }, status: { not: 'blocked' } },
-    distinct: ['date'], select: { date: true },
+  // groupBy, not findMany+distinct: Prisma would load every tee-time row and dedupe in memory.
+  const dates = await prisma.teeTime.groupBy({
+    by: ['date'], where: { courseId, date: { lt: today }, status: { not: 'blocked' } },
   });
   return historyState(dates.length, today);
 }
+
+/**
+ * Pure: whether a mode change is refused while locked. Turning it on, or moving to automatic,
+ * is; stepping down to suggest, turning it off, or staying where it is never is.
+ */
+export const demandChangeLocked = (nowMode: string, nextMode: DemandMode, unlocked: boolean) =>
+  !unlocked && nextMode !== nowMode && (nextMode === 'auto' || (nowMode === 'off' && nextMode !== 'off'));
 
 export type Cell = { dow: number; hour: number; sale: number; booked: number; dates: number };
 

@@ -4,7 +4,7 @@
 // Needs a database. Run: npx tsx scripts/demand-pricing-db-test.ts
 import { readFileSync } from 'fs';
 import { prisma } from '../src/lib/prisma';
-import { suggestPcts, historyState, MIN_DAYS_OF_DATA, demandPctAt, demandSeat, onlinePublicSeat, dealWins, demandSettingsError, refreshDemand, loadDemand, demandDue, dowOfDate } from '../src/lib/demand-pricing';
+import { suggestPcts, historyState, demandHistory, demandChangeLocked, MIN_DAYS_OF_DATA, demandPctAt, demandSeat, onlinePublicSeat, dealWins, demandSettingsError, refreshDemand, loadDemand, demandDue, dowOfDate } from '../src/lib/demand-pricing';
 import { normalizeDbTeeTime } from '../src/lib/public-tee-times';
 import { createCounterBooking } from '../src/lib/counter-pay';
 import { moveBooking } from '../src/lib/move-booking';
@@ -50,6 +50,9 @@ async function cleanup() {
   ok('it unlocks at 90 days, not 28 or 56', MIN_DAYS_OF_DATA === 90 && suggestPcts(cells, new Map(), 80, 125, 56) === null && suggestPcts(cells, new Map(), 80, 125, 89) === null && suggestPcts(cells, new Map(), 80, 125, 90) !== null);
   const h = historyState(30, '2026-11-16');
   ok('the page\'s progress: 30 of 90 days, unlocks 60 days on', h.daysOfData === 30 && h.daysNeeded === 90 && !h.unlocked && h.unlocksOn === '2027-01-15', h);
+  ok('locked: off→suggest, off→auto and suggest→auto refused', demandChangeLocked('off', 'suggest', false) && demandChangeLocked('off', 'auto', false) && demandChangeLocked('suggest', 'auto', false));
+  ok('locked: auto→suggest, →off and staying put allowed', !demandChangeLocked('auto', 'suggest', false) && !demandChangeLocked('auto', 'off', false) && !demandChangeLocked('suggest', 'off', false) && !demandChangeLocked('auto', 'auto', false) && !demandChangeLocked('suggest', 'suggest', false));
+  ok('unlocked: every change allowed', !demandChangeLocked('off', 'auto', true) && !demandChangeLocked('suggest', 'auto', true));
   ok('…and unlocked once there: no date', historyState(90, '2026-11-16').unlocked && historyState(120, '2026-11-16').unlocksOn === null);
   ok('settings are checked', !!demandSettingsError({ demandFloorPct: 40 }, { demandFloorPct: 80, demandCeilingPct: 125 }) && !!demandSettingsError({ demandCeilingPct: 90 }, { demandFloorPct: 80, demandCeilingPct: 125 }) && demandSettingsError({ demandFloorPct: 90, demandCeilingPct: 110 }, { demandFloorPct: 80, demandCeilingPct: 125 }) === null);
   ok('$50 +20% is $60, −10% is $45', demandSeat(20, 5000) === 6000 && demandSeat(-10, 5000) === 4500);
@@ -64,6 +67,19 @@ async function cleanup() {
   const op = await prisma.courseOperator.create({ data: { name: 'x', email: `${TAG}@t.local`, password: 'x' } });
   const c = await prisma.course.create({ data: { hasMemberPricing: true, hasResidentPricing: true, name: 'Demand', slug: `${TAG}-a`, operatorId: op.id, address: '1', city: 'X', state: 'NJ', zipCode: '9', holes: 18, timezone: 'UTC', demandMode: 'suggest' } });
   const today = todayIn('UTC');
+  // The day count: past dates only, blocked-only dates and other courses left out.
+  const other = await prisma.course.create({ data: { name: 'Other', slug: `${TAG}-b`, operatorId: op.id, address: '1', city: 'X', state: 'NJ', zipCode: '9', holes: 18, timezone: 'UTC' } });
+  const row = (courseId: string, date: string, status?: string) => ({ courseId, date, time: '09:00', holes: 18, greenFeeCents: 5000, cartFeeCents: 0, playersAvailable: 4, ...(status ? { status } : {}) });
+  await prisma.teeTime.createMany({ data: [
+    ...Array.from({ length: 89 }, (_, i) => row(other.id, addDaysStr(today, -(i + 1)))),
+    { ...row(other.id, addDaysStr(today, -1)), time: '10:00' }, // a second time on the same date
+    row(other.id, addDaysStr(today, -200), 'blocked'), // a blocked-only date
+    row(other.id, today), row(other.id, addDaysStr(today, 5)), // today and the future
+    row(c.id, addDaysStr(today, -300)),               // another course's day
+  ] });
+  const oh = await demandHistory(other.id, 'UTC');
+  ok('89 past days (blocked, today, future, other courses left out): locked, unlocks tomorrow', oh.daysOfData === 89 && !oh.unlocked && oh.unlocksOn === addDaysStr(today, 1), oh);
+  await prisma.teeTime.deleteMany({ where: { courseId: c.id } });
   // 56 days first: the 8 weeks the suggestions look at, but not yet 3 months.
   const seed = async (fromDay: number, toDay: number) => {
     const rows = [];
@@ -140,7 +156,7 @@ async function cleanup() {
   ok('the daily cron works out the weekly suggestions', readFileSync('src/app/api/cron/generate-tee-times/route.ts', 'utf8').includes('refreshDemand(c.id, new Date(), { claim: true })'));
   const api = readFileSync('src/app/api/operator/demand-pricing/route.ts', 'utf8');
   ok('the settings: schedule.view to read, schedule.edit to change', api.includes("gate('schedule.view')") && (api.match(/gate\('schedule\.edit'\)/g) ?? []).length === 2);
-  ok('the page gets the days so far and the unlock date; locked, it can\'t be turned on or applied', api.includes('return { settings, history,') && (api.match(/await lockedError\(courseId\)/g) ?? []).length === 2);
+  ok('the page gets the days so far and the unlock date; the lock uses the lib\'s rule, and apply is refused locked', api.includes('return { settings, history,') && api.includes('demandChangeLocked(now.demandMode') && api.includes('if (!h.unlocked) return lockedRes(h);'));
 
   await cleanup(); await prisma.$disconnect();
   if (failed) { console.error(`${failed} failed`); process.exit(1); }

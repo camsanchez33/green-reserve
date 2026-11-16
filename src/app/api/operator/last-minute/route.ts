@@ -21,7 +21,8 @@ export async function GET() {
   if ('res' in g) return g.res;
   const deal = await prisma.course.findUnique({ where: { id: g.session.courseId }, select: FIELDS });
   if (!deal) return NextResponse.json({ error: 'Course not found.' }, { status: 404 });
-  return NextResponse.json({ deal }, { headers: { 'Cache-Control': 'no-store' } });
+  // Retired: shown as off whatever the stored column says, so no page shows a deal that no longer applies.
+  return NextResponse.json({ deal: { ...deal, lastMinuteOn: false }, retired: true }, { headers: { 'Cache-Control': 'no-store' } });
 }
 
 export async function PATCH() {

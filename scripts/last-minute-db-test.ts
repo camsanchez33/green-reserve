@@ -74,6 +74,7 @@ const at = (ms: number) => { const d = new Date(Date.now() + ms); return { date:
   for (const f of ['src/app/api/bookings/route.ts', 'src/app/api/bookings/resident-rate/route.ts', 'src/app/api/member/[courseSlug]/tee-times/route.ts', 'src/app/api/manage/[bookingId]/available-times/route.ts', 'src/lib/public-tee-times.ts', 'src/lib/move-booking.ts', 'src/lib/counter-pay.ts'])
     ok(`${f} prices deals only through dealPct`, readFileSync(f, 'utf8').includes('dealPct('));
   const route = readFileSync('src/app/api/operator/last-minute/route.ts', 'utf8');
+  ok('read back as off, whatever the column says, so no page shows a dead deal', route.includes('lastMinuteOn: false }, retired: true'));
   ok('the setting can no longer be changed: schedule.edit, then 410', route.includes("gate('schedule.edit')") && route.includes('status: 410') && !route.includes('prisma.course.update'));
 
   await cleanup(); await prisma.$disconnect();

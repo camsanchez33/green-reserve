@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
-import { readDemandMode, demandSettingsError, refreshDemand, demandHistory } from '@/lib/demand-pricing';
+import { readDemandMode, demandSettingsError, refreshDemand, demandHistory, demandChangeLocked, type DemandHistory } from '@/lib/demand-pricing';
 
 // PRICE-5 (Cam 2026-10-30): demand pricing on the Schedule page, beside the last-minute deal.
 // Reading needs schedule.view; changing the settings or applying suggestions schedule.edit,
@@ -31,12 +31,14 @@ async function state(courseId: string) {
   return { settings, history, hours: hours.map(h => ({ ...h, pct: clamp(h.pct), suggestedPct: clamp(h.suggestedPct) })) };
 }
 
-/** 409 while the course has less than 3 months of its own tee times; null once unlocked. */
-async function lockedError(courseId: string) {
+async function courseHistory(courseId: string): Promise<DemandHistory> {
   const c = await prisma.course.findUnique({ where: { id: courseId }, select: { timezone: true } });
-  const h = await demandHistory(courseId, c?.timezone ?? 'America/New_York');
-  return h.unlocked ? null : NextResponse.json({ error: `Demand pricing unlocks after ${h.daysNeeded} days of your own tee times. You have ${h.daysOfData}.`, history: h }, { status: 409 });
+  return demandHistory(courseId, c?.timezone ?? 'America/New_York');
 }
+
+/** 409 while the course has less than 3 months of its own tee times. */
+const lockedRes = (h: DemandHistory) =>
+  NextResponse.json({ error: `Demand pricing unlocks after ${h.daysNeeded} days of your own tee times. You have ${h.daysOfData}.`, history: h }, { status: 409 });
 
 export async function GET() {
   const g = await gate('schedule.view');
@@ -65,10 +67,10 @@ export async function PATCH(req: NextRequest) {
   if (b.demandFloorPct !== undefined) data.demandFloorPct = Number(b.demandFloorPct);
   if (b.demandCeilingPct !== undefined) data.demandCeilingPct = Number(b.demandCeilingPct);
   if (!Object.keys(data).length) return NextResponse.json({ error: 'Nothing to change.' }, { status: 400 });
-  // Locked: never turned on or moved to automatic (staying where it is, or off, is fine).
-  if (data.demandMode && data.demandMode !== 'off' && data.demandMode !== now.demandMode) {
-    const locked = await lockedError(courseId);
-    if (locked) return locked;
+  // Locked: never turned on or moved to automatic (down to suggest, off, or staying is fine).
+  if (data.demandMode && data.demandMode !== now.demandMode) {
+    const h = await courseHistory(courseId);
+    if (demandChangeLocked(now.demandMode, data.demandMode as 'off' | 'suggest' | 'auto', h.unlocked)) return lockedRes(h);
   }
   await prisma.course.update({ where: { id: courseId }, data });
   let result: string | null = null;
@@ -91,8 +93,8 @@ export async function POST(req: NextRequest) {
   if (!c) return NextResponse.json({ error: 'Course not found.' }, { status: 404 });
   if (b.action === 'apply') {
     if (c.demandMode === 'off') return NextResponse.json({ error: 'Turn demand pricing on first.' }, { status: 409 });
-    const locked = await lockedError(courseId);
-    if (locked) return locked;
+    const h = await courseHistory(courseId);
+    if (!h.unlocked) return lockedRes(h);
     const rows = await prisma.demandPrice.findMany({ where: { courseId }, select: { id: true, suggestedPct: true } });
     await prisma.$transaction(rows.map(r => prisma.demandPrice.update({ where: { id: r.id }, data: { pct: r.suggestedPct } })));
   } else if (b.action === 'reset') {
