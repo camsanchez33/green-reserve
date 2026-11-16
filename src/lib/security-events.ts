@@ -12,7 +12,7 @@
 import { prisma } from './prisma';
 import { evidentiaryIp, rateLimit } from './rate-limit';
 
-export type SecurityKind = 'signin_failed' | 'signin_ok' | 'locked_out' | 'second_factor_failed' | 'step_up_failed' | 'rate_limited' | 'new_device';
+export type SecurityKind = 'signin_failed' | 'signin_ok' | 'locked_out' | 'second_factor_failed' | 'step_up_failed' | 'rate_limited' | 'new_device' | 'password_changed';
 export type SecuritySurface = 'admin' | 'owner' | 'course' | 'golfer' | 'member';
 
 export const SECURITY_KEEP_DAYS = 90;

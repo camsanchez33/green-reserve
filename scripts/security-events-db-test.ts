@@ -3,9 +3,12 @@
 // is a Problem (19 isn't) and the Problem names no address or email; an
 // admin/owner lockout is a Problem, a course one isn't; 90 days is kept; the
 // overview and "locked out now" read right; Sentry's answers become plain
-// sentences; the live-header check; and every sign-in door records.
+// sentences; the live-header check; and every sign-in door records; and every
+// admin or owner password write records a password_changed event (Cam 2026-11-16).
 // Needs a database. Run: npx tsx scripts/security-events-db-test.ts
-import { readFileSync } from 'fs';
+import { readFileSync, readdirSync, statSync } from 'fs';
+import { join } from 'path';
+import { passwordChanged } from '../src/lib/admin-password';
 import { prisma } from '../src/lib/prisma';
 import { securityEvent, securityFindings, purgeOldSecurityEvents, securityOverview, lockedAccountsNow, BURST_PER_IP } from '../src/lib/security-events';
 import { openSentryIssues, sentryApiBase } from '../src/lib/sentry-issues';
@@ -137,6 +140,37 @@ async function main() {
     const missing = res.filter(r => !r.test(src));
     check(`${file} records its outcomes`, missing.length === 0, missing.map(String));
   }
+  // Password changes (Cam 2026-11-16): recorded, shown in the history, never a failure, never the password.
+  const emp = await prisma.adminUser.create({ data: { email: `${TAG}-pw@x.test`, name: 'Pw Test', passwordHash: 'x', role: 'support' } });
+  await passwordChanged(req('203.0.113.70', `${TAG}-pw`), emp, 'changed on My profile');
+  const pw = await prisma.securityEvent.findFirst({ where: { userAgent: `${TAG}-pw` } });
+  check('a password change is a password_changed event for that account, on the admin door, with how', pw?.kind === 'password_changed' && pw?.surface === 'admin' && pw?.accountId === emp.id && pw?.email === `${TAG}-pw@x.test` && pw?.detail === 'changed on My profile', pw);
+  const own = await prisma.adminUser.create({ data: { email: `${TAG}-own@x.test`, name: 'Own Test', passwordHash: 'x', role: 'owner' } });
+  await passwordChanged(req('203.0.113.71', `${TAG}-own`), own, 'reset with Forgot password');
+  const opw = await prisma.securityEvent.findFirst({ where: { userAgent: `${TAG}-own` } });
+  check('…the owner’s is on the owner door, and recorded even when the alert email cannot be sent', opw?.kind === 'password_changed' && opw?.surface === 'owner' && opw?.accountId === own.id, opw);
+  const ov = await securityOverview();
+  check('…it shows in Admin → Security’s history', ov.recent.some(r => r.kind === 'password_changed' && r.browser === `${TAG}-pw`));
+  check('…and never counts as a failed attempt', !(await securityFindings(new Date())).some(x => /password/i.test(JSON.stringify(x))));
+  const helper = readFileSync('src/lib/admin-password.ts', 'utf8');
+  check('the helper records before it emails, emails only the owner, and never passes the password', helper.indexOf("kind: 'password_changed'") > -1 && helper.indexOf("kind: 'password_changed'") < helper.indexOf('sendOwnerPasswordChanged({') && /if \(!owner\) return;/.test(helper) && /sendOwnerPasswordChanged\(\{ email: admin\.email, name: admin\.name, how, device: deviceLabel\(ctx\.userAgent\), place: ctx\.place, when: alertTime\(\) \}\)/.test(helper) && !/passwordHash|password:/.test(helper.replace(/^\s*\/\/.*$/gm, '')) && /await securityEvent\(/.test(helper) && /await sendOwnerPasswordChanged\(/.test(helper));
+  // Every file in src/ that writes AdminUser.passwordHash calls passwordChanged() at least once per write.
+  const srcFiles: string[] = [];
+  const walk = (d: string) => { for (const f of readdirSync(d)) { const p = join(d, f); if (statSync(p).isDirectory()) walk(p); else if (/\.tsx?$/.test(f)) srcFiles.push(p); } };
+  walk('src');
+  const unlogged: string[] = [];
+  let pwWriters = 0;
+  for (const f of srcFiles) {
+    const code = readFileSync(f, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|\s)\/\/.*$/gm, '$1');
+    const writes = (code.match(/(?<![.\w])passwordHash\s*[,:}]/g) ?? []).length;
+    if (!writes) continue;
+    pwWriters += writes;
+    const logged = (code.match(/await passwordChanged\(/g) ?? []).length;
+    if (logged < writes) unlogged.push(`${f} (${writes} password writes, ${logged} passwordChanged calls)`);
+  }
+  check('the scan finds the five password writes', pwWriters >= 5, pwWriters);
+  check('every password write records a password_changed event', unlogged.length === 0, unlogged);
+
   const twofa = readFileSync('src/app/api/auth/2fa/verify/route.ts', 'utf8');
   check('a wrong code is logged after the attempt counter moves, never before', twofa.indexOf("kind: 'second_factor_failed'") > twofa.indexOf('twoFactorAttempts: clearCode ? 0 : attempts'));
   const adminLogin = readFileSync('src/app/api/admin/login/route.ts', 'utf8');
