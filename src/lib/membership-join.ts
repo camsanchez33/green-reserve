@@ -49,8 +49,13 @@ export async function myMembership(courseId: string, golferId: string, email: st
   return prisma.courseMembership.findFirst({
     where: { courseId, OR: [{ golferId }, { golferId: null, inviteEmail: { equals: email.trim(), mode: 'insensitive' } }], status: { in: ['active', ...UNFINISHED] } },
     orderBy: { createdAt: 'desc' },
-    select: { id: true, status: true, payToken: true, passStartsOn: true, expiresAt: true, tier: { select: { name: true } } },
+    select: { id: true, status: true, payToken: true, golferId: true, passStartsOn: true, expiresAt: true, tier: { select: { name: true } } },
   });
+}
+
+/** Memberships item 4: a season pass that has ended stays 'active' on its row, but it is over — not "a member here". */
+export function passEnded(m: { status: string; passStartsOn: string | null; expiresAt: Date | null }, today: string): boolean {
+  return m.status === 'active' && m.passStartsOn !== null && !!m.expiresAt && m.expiresAt.toISOString().slice(0, 10) < today;
 }
 
 export type JoinResult = { ok: true; status: 'awaiting_payment' | 'requested'; membershipId: string; payToken: string } | Fail;
@@ -65,26 +70,34 @@ export async function joinTier(courseId: string, golfer: { id: string; email: st
   if (!passOnSale(termOf(tier), today)) return fail(409, PASS_OVER);
   const email = golfer.email.trim().toLowerCase();
   const mine = await myMembership(courseId, golfer.id, email);
-  // A season pass that has ended stays 'active' on its row, but it is over: buying the next one reuses that row.
-  const endedPass = !!mine && mine.status === 'active' && mine.passStartsOn !== null && !!mine.expiresAt && mine.expiresAt.toISOString().slice(0, 10) < today;
+  // A season pass that has ended is over: buying the next one (or a membership) reuses that row.
+  const endedPass = !!mine && passEnded(mine, today);
   if (mine?.status === 'active' && !endedPass) return fail(409, `You’re already a member here${mine.tier ? ` (${mine.tier.name})` : ''}.`);
   if (mine && UNFINISHED.includes(mine.status)) return { ok: true, status: mine.status as 'awaiting_payment' | 'requested', membershipId: mine.id, payToken: mine.payToken };
 
   const status = tier.joinOnline === 'instant' ? 'awaiting_payment' : 'requested';
-  // Unpaid until paid: an old pass's dates come off (paying records the new term's — lib/membership-dues recordPaidTerm).
-  const data = { tierId: tier.id, status, addedBy: 'online', inviteEmail: email, inviteName: golfer.name.slice(0, 120), invitePhone: golfer.phone.slice(0, 30), inviteAccepted: true, payToken: randomUUID(), paymentStatus: 'unpaid', passStartsOn: null, ...(endedPass ? { expiresAt: null } : {}) };
   // One membership per golfer per course (the schema's unique key): an old cancelled or pending one
   // is reused — its payment history stays, so a returning member owes no initiation again. One the
   // course made not active is theirs to turn back on, never the golfer's by paying.
-  const old = await prisma.courseMembership.findUnique({ where: { golferId_courseId: { golferId: golfer.id, courseId } }, select: { id: true, status: true } });
+  const old = await prisma.courseMembership.findUnique({ where: { golferId_courseId: { golferId: golfer.id, courseId } }, select: { id: true, status: true, passStartsOn: true } });
+  // Memberships item 4: an ended pass staff added by email (no account linked yet) is the same person's row — reused and
+  // linked, never a second membership.
+  const reuse = old ?? (endedPass && mine ? { id: mine.id, status: mine.status, passStartsOn: mine.passStartsOn } : null);
+  // Unpaid until paid: an old pass's dates come off (paying records the new term's — lib/membership-dues recordPaidTerm).
+  // A pass's payment is not a membership's first dues: moving from a pass to a membership, the initiation fee is owed
+  // unless membership dues were ever paid on this row (lastPaidAt cleared — the ledger keeps the pass's payment).
+  const wasPass = !!reuse && reuse.passStartsOn !== null;
+  const paidDuesBefore = !!reuse && !!(await prisma.moneyMove.findFirst({ where: { membershipId: reuse.id, courseId, what: 'dues', direction: 'in' }, select: { id: true } }));
+  const data = { tierId: tier.id, status, addedBy: 'online', inviteEmail: email, inviteName: golfer.name.slice(0, 120), invitePhone: golfer.phone.slice(0, 30), inviteAccepted: true, payToken: randomUUID(), paymentStatus: 'unpaid', passStartsOn: null,
+    ...(wasPass ? { expiresAt: null } : {}), ...(wasPass && tier.kind !== 'pass' && !paidDuesBefore ? { lastPaidAt: null, startedAt: null } : {}) };
   if (old?.status === 'inactive') return fail(409, 'Your membership here was paused by the course — contact them to turn it back on.');
   // Audit 2026-10-31: a membership staff added by email and paused before the golfer ever linked it
   // has no golferId — it is found by its email, and refused the same way.
   if (await prisma.courseMembership.findFirst({ where: { courseId, golferId: null, status: 'inactive', inviteEmail: { equals: email, mode: 'insensitive' } }, select: { id: true } })) {
     return fail(409, 'Your membership here was paused by the course — contact them to turn it back on.');
   }
-  const row = old
-    ? await prisma.courseMembership.update({ where: { id: old.id }, data, select: { id: true, payToken: true } })
+  const row = reuse
+    ? await prisma.courseMembership.update({ where: { id: reuse.id }, data: { ...data, golferId: golfer.id }, select: { id: true, payToken: true } })
     : await prisma.courseMembership.create({ data: { ...data, golferId: golfer.id, courseId }, select: { id: true, payToken: true } });
   // Memberships item 2: a number once they can pay (a request waits for staff to approve it).
   if (status === 'awaiting_payment') await assignMemberNumber(row.id);

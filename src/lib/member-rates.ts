@@ -36,28 +36,35 @@ function lapseCutoff(rule: LapseRule, now: Date): Date {
 }
 
 /**
- * Prisma filter for a membership whose member rates apply right now.
- * Memberships item 4: a paid season pass (passStartsOn set) applies from its first day to its end date — no grace days.
+ * Prisma filter for a membership whose member rates apply right now — or, given `onDay` (a tee time's date), for a
+ * round that day. Memberships item 4: a paid season pass (passStartsOn set) covers the days of its season, no grace
+ * days; booked ahead, a round in its season counts before the season opens (it was paid for), never once it has ended.
+ * The same rule as membershipLive.
  */
-export function liveMembershipWhere(rule: LapseRule, now: Date = new Date()): Prisma.CourseMembershipWhereInput {
+export function liveMembershipWhere(rule: LapseRule, now: Date = new Date(), onDay?: string): Prisma.CourseMembershipWhereInput {
   const today = todayIn(rule.timezone, now);
+  const day = onDay ?? today;
+  const last = day > today ? day : today;
   return { status: 'active', OR: [
     { passStartsOn: null, OR: [{ expiresAt: null }, { expiresAt: { gte: lapseCutoff(rule, now) } }] },
-    { passStartsOn: { lte: today }, expiresAt: { gte: new Date(`${today}T00:00:00Z`) } },
+    { passStartsOn: { lte: day }, expiresAt: { gte: new Date(`${last}T00:00:00Z`) } },
   ] };
 }
 
 /**
  * The same rule on a row already loaded. passStartsOn is required, so every caller loads it and no path can give a
- * season pass grace days. A pass is live while today is in its season and — given `onDay`, the tee time's date
- * (YYYY-MM-DD) — only for a day in its season: never a round after its end date at the pass rate. A membership is
+ * season pass grace days. Without `onDay` a pass is live while today is in its season. Given `onDay` (the tee time's
+ * date, YYYY-MM-DD) it covers a round on a day of its season while the pass hasn't ended — so a pass bought before
+ * opening day books its season's rounds at the pass rate, and never a round after its end date. A membership is
  * judged on today, as before.
  */
 export function membershipLive(m: { status: string; expiresAt: Date | null; passStartsOn: string | null }, rule: LapseRule, now: Date = new Date(), onDay?: string): boolean {
   if (m.status !== 'active') return false;
   if (m.passStartsOn !== null) {
     const pass = { passStartsOn: m.passStartsOn, expiresAt: m.expiresAt };
-    return passCovers(pass, todayIn(rule.timezone, now)) && (onDay === undefined || passCovers(pass, onDay));
+    const today = todayIn(rule.timezone, now);
+    if (onDay === undefined) return passCovers(pass, today);
+    return passCovers(pass, onDay) && !!m.expiresAt && today <= m.expiresAt.toISOString().slice(0, 10);
   }
   return !m.expiresAt || m.expiresAt.getTime() >= lapseCutoff(rule, now).getTime();
 }

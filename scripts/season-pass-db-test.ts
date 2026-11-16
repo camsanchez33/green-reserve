@@ -4,13 +4,13 @@
 // Run: npx tsx scripts/season-pass-db-test.ts
 import { readFileSync } from 'fs';
 import { prisma } from '../src/lib/prisma';
-import { termOf, paidTermDates, passOnSale, readPassDates, ledgerWhat, passStart, termRunning, isDay } from '../src/lib/season-pass';
+import { termOf, paidTermDates, passOnSale, readPassDates, ledgerWhat, passStart, termRunning, isDay, passMemberChange, passSeasonMoveError } from '../src/lib/season-pass';
 import { amountsDue, markDuesPaidAtCourse, recordPaidTerm } from '../src/lib/membership-dues';
 import { paidUntilRenewal } from '../src/lib/membership-renewal';
 import { duesThisYear } from '../src/lib/dues-year';
 import { splitOf } from '../src/lib/revenue-extras';
 import { revenueSource } from '../src/lib/finance-period';
-import { joinTier, joinableTiers } from '../src/lib/membership-join';
+import { joinTier, joinableTiers, passEnded } from '../src/lib/membership-join';
 import { todayIn, addDaysStr } from '../src/lib/course-time';
 const TAG = 'spass4';
 let failed = 0;
@@ -49,6 +49,28 @@ async function cleanup() {
   ok('Revenue: a pass payment is the Season passes line', splitOf({ what: 'pass', direction: 'in', amountCents: 60600, platformFeeCents: 600 } as Parameters<typeof splitOf>[0], undefined, undefined).passesCents === 60000);
   ok('GreenReserve\'s side: the 1% on a pass is the membership fee', revenueSource('pass') === 'membershipDues' && revenueSource('dues') === 'membershipDues');
 
+  // Staff edits (members PATCH, tiers PATCH): the pass rules.
+  const run = { status: 'active', paymentStatus: 'paid', expiresAt: new Date('2026-10-31T00:00:00Z'), passStartsOn: '2026-04-01', onPassTier: true, paying: false, paidDuesBefore: false };
+  const membershipTier = { kind: 'membership', termMonths: 12, passStartsOn: null, passEndsOn: null, sellAtCourse: true };
+  const pass27 = { kind: 'pass', termMonths: 12, passStartsOn: '2027-04-01', passEndsOn: '2027-10-31', sellAtCourse: true };
+  const base = { expiresAt: undefined, status: undefined, move: null, stay: { isPass: true, owes: true }, today: '2026-06-01' };
+  const r = (o: Partial<Parameters<typeof passMemberChange>[0]>) => passMemberChange({ ...base, membership: run, ...o });
+  const typed = r({ expiresAt: new Date('2026-12-31T00:00:00Z') });
+  ok('staff can\'t type a pass\'s end date (sending the same one is fine)', !typed.ok && typed.status === 409 && r({ expiresAt: new Date('2026-10-31T00:00:00Z') }).ok);
+  const unpaid = { ...run, status: 'awaiting_payment', paymentStatus: 'unpaid', passStartsOn: null, expiresAt: null };
+  ok('…nor switch an unpaid pass on by hand; a free one may be', !r({ membership: unpaid, status: 'active' }).ok && r({ membership: unpaid, status: 'active', stay: { isPass: true, owes: false } }).ok);
+  ok('…nor move a running pass, or a running membership onto a pass', !r({ move: { tier: membershipTier, owes: true } }).ok && !r({ membership: { ...run, onPassTier: false, passStartsOn: null }, move: { tier: pass27, owes: true }, today: '2026-06-01' }).ok);
+  const ended = { ...run, expiresAt: new Date('2026-10-31T00:00:00Z') };
+  const toPass = r({ membership: ended, move: { tier: pass27, owes: true }, today: '2026-11-05' });
+  ok('an ended pass moves onto next season\'s pass, unpaid and waiting', toPass.ok && toPass.data.status === 'awaiting_payment' && toPass.data.paymentStatus === 'unpaid' && toPass.data.passStartsOn === null);
+  const toMember = r({ membership: ended, move: { tier: membershipTier, owes: true }, today: '2026-11-05' });
+  ok('…or onto a membership, whose initiation is then owed (the pass wasn\'t membership dues)', toMember.ok && toMember.data.lastPaidAt === null && toMember.data.status === 'awaiting_payment');
+  const backHome = r({ membership: { ...ended, paidDuesBefore: true }, move: { tier: membershipTier, owes: true }, today: '2026-11-05' });
+  ok('…but a member who paid membership dues before keeps their waived initiation', backHome.ok && !('lastPaidAt' in backHome.data));
+  ok('…and never while a payment is going through', !r({ membership: { ...ended, paying: true }, move: { tier: pass27, owes: true }, today: '2026-11-05' }).ok);
+  ok('a sold pass\'s season can be adjusted, not replaced by next season', passSeasonMoveError({ passEndsOn: '2026-10-31' }, '2026-04-15', true) === null && !!passSeasonMoveError({ passEndsOn: '2026-10-31' }, '2027-04-01', true) && passSeasonMoveError({ passEndsOn: '2026-10-31' }, '2027-04-01', false) === null);
+  ok('an ended pass isn\'t "a member here"', passEnded({ status: 'active', passStartsOn: '2026-04-01', expiresAt: new Date('2026-10-31T00:00:00Z') }, '2026-11-01') && !passEnded({ status: 'active', passStartsOn: '2026-04-01', expiresAt: new Date('2026-10-31T00:00:00Z') }, '2026-10-31') && !passEnded({ status: 'active', passStartsOn: null, expiresAt: new Date('2020-01-01') }, '2026-11-01'));
+
   // ── 2. Source pins: every path that takes membership money knows passes ──
   const reader = src('src/lib/dues-reader.ts'), card = src('src/lib/dues-payment.ts'), course = src('src/lib/membership-dues.ts');
   ok('card reader, typed card and cash record the tier\'s ledger kind', /what: ledgerWhat\(m\.tier\)/.test(reader) && /what: ledgerWhat\(m\.tier\)/.test(card) && /const what = ledgerWhat\(membership\.tier\)/.test(course));
@@ -57,6 +79,8 @@ async function cleanup() {
   ok('the close-out counts pass cash in the drawer', /what: \{ in: \['dues', 'pass', 'event', 'account'\] \}/.test(src('src/lib/register-close.ts')));
   ok('dues this year and the member\'s payments read passes too', /MEMBERSHIP_WHATS/.test(src('src/lib/dues-year.ts')) && /MEMBERSHIP_WHATS/.test(src('src/app/api/member/[courseSlug]/payments/route.ts')));
   ok('an ended pass is never reminded as overdue', /passStartsOn: null,/.test(src('src/app/api/operator/members/remind-overdue/route.ts')));
+  ok('the routes use the tested rules, and the join list hides an ended pass', /passMemberChange\(\{/.test(src('src/app/api/operator/members/route.ts')) && /passSeasonMoveError\(tier, d\.startsOn, sold\)/.test(src('src/app/api/operator/tiers/route.ts')) && /!passEnded\(found, todayIn\(course\.timezone\)\)/.test(src('src/app/api/courses/[slug]/join/route.ts')));
+  ok('resident-rate prices the golfer\'s pass on the tee time\'s day, as booking does', /getGolferMembership\(tt\.courseId, grace, tt\.date\)/.test(src('src/app/api/bookings/resident-rate/route.ts')) && /membershipLive\(m, grace, new Date\(\), tt\.date\) \? m\.tier/.test(src('src/app/api/bookings/resident-rate/route.ts')));
 
   // ── 3. Against the database ──
   await cleanup();
@@ -111,6 +135,16 @@ async function cleanup() {
   ok('…an ended pass doesn\'t block buying the next season online; it waits for payment with no old dates', j.ok && j.status === 'awaiting_payment' && row.tierId === pass.id && row.paymentStatus === 'unpaid' && row.passStartsOn === null && row.expiresAt === null, { j, row: { t: row.tierId, p: row.paymentStatus, s: row.passStartsOn, e: row.expiresAt } });
   const jOver = await joinTier(c.id, { id: g.id, email: g.email, name: 'G P', phone: '' }, over.id);
   ok('…and an ended pass can\'t be bought online', !jOver.ok && jOver.status === 409);
+
+  // An ended pass staff added by email (no account linked): buying online reuses that row, never a second membership;
+  // moving on to a membership, its initiation is owed.
+  const fullInit = await prisma.membershipTier.create({ data: { courseId: c.id, name: 'Full Init', annualFeeCents: 120000, initiationFeeCents: 200000, joinOnline: 'instant' } });
+  const h = await prisma.golferAccount.create({ data: { email: `${TAG}+h@t.local`, password: 'x', firstName: 'H', lastName: 'P' } });
+  const invite = await prisma.courseMembership.create({ data: { courseId: c.id, golferId: null, tierId: over.id, inviteEmail: h.email, status: 'active', paymentStatus: 'paid_offline', passStartsOn: over.passStartsOn, expiresAt: new Date(`${over.passEndsOn}T00:00:00Z`), lastPaidAt: new Date() } });
+  const jh = await joinTier(c.id, { id: h.id, email: h.email, name: 'H P', phone: '' }, fullInit.id);
+  const rows = await prisma.courseMembership.findMany({ where: { courseId: c.id, OR: [{ golferId: h.id }, { inviteEmail: h.email }] }, include: { tier: true } });
+  ok('…an ended invite-row pass is reused and linked (one membership)', jh.ok && rows.length === 1 && rows[0].id === invite.id && rows[0].golferId === h.id, rows.map(x => x.id));
+  ok('…and the membership\'s initiation is owed after a pass', !!rows[0] && amountsDue(rows[0]).initiationCents === 200000, rows[0] && amountsDue(rows[0]));
 
   await cleanup(); await prisma.$disconnect();
   console.log(failed ? `season-pass: ${failed} failed` : 'season-pass: all passed');

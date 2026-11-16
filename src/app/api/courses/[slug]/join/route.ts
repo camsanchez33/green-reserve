@@ -2,14 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getGolferSession } from '@/lib/auth';
 import { rateLimit } from '@/lib/rate-limit';
-import { joinableTiers, myMembership, joinTier } from '@/lib/membership-join';
+import { joinableTiers, myMembership, joinTier, passEnded } from '@/lib/membership-join';
+import { todayIn } from '@/lib/course-time';
 
 // MEM-JOIN (Cam 2026-10-30: "Join online", "Course decides per tier"): a live course's tiers
 // that can be joined online, and where the signed-in golfer stands. Joining needs a signed-in
 // golfer (their account is the member). 'instant' returns the dues pay link; 'request' waits
 // for staff. Dues are paid on the existing /membership/[id] page, on the course's Stripe account.
 async function liveCourse(slug: string) {
-  return prisma.course.findFirst({ where: { slug, active: true, liveStatus: 'live', archivedAt: null }, select: { id: true, stripeAccountId: true, stripeAccountActive: true } });
+  return prisma.course.findFirst({ where: { slug, active: true, liveStatus: 'live', archivedAt: null }, select: { id: true, stripeAccountId: true, stripeAccountActive: true, timezone: true } });
 }
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
@@ -18,10 +19,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ slu
   if (!course) return NextResponse.json({ error: 'Course not found' }, { status: 404 });
   const golfer = await getGolferSession();
   const payable = course.stripeAccountActive && !!course.stripeAccountId;
-  const [tiers, mine] = await Promise.all([
+  const [tiers, found] = await Promise.all([
     payable ? joinableTiers(course.id) : Promise.resolve([]),
     golfer?.email ? myMembership(course.id, golfer.golferId, golfer.email) : Promise.resolve(null),
   ]);
+  // Memberships item 4: a season pass that has ended is over — the golfer sees what they can buy next, not "a member".
+  const mine = found && !passEnded(found, todayIn(course.timezone)) ? found : null;
   return NextResponse.json({
     tiers,
     signedIn: !!golfer,

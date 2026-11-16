@@ -18,7 +18,7 @@ import { sendAutoRenewOffEmail } from '@/lib/email';
 import { maybeSendPayLink, NOT_SENT } from '@/lib/membership-pay-link';
 import { approveJoin, declineJoin } from '@/lib/membership-join';
 import { stopAutoRenew, STOP_DATA, memberContact } from '@/lib/membership-autorenew';
-import { isPassTier, passOnSale, passStart, termOf, termRunning, PASS_OVER } from '@/lib/season-pass';
+import { isPassTier, passOnSale, passStart, passMemberChange, termOf, PASS_OVER } from '@/lib/season-pass';
 
 /** Memberships item 2: a whole membership row as a response — never where the photo is stored, only whether there is one. */
 function safeRow<T extends { photoUrl?: string }>(row: T): Omit<T, 'photoUrl'> & { hasPhoto: boolean } {
@@ -182,7 +182,7 @@ export async function POST(req: NextRequest) {
     if (!waiting) after(sendWelcome(membership.id).catch(err => console.error('Member linked email error:', err)));
     if (!payFirst) after(maybeSendPayLink(membership.id).catch(err => console.error('Pay link email error:', err)));
 
-    return NextResponse.json({ ...safeRow(membership), memberNumber: await assignMemberNumber(membership.id), linked: true, awaitingPayment: waiting }, { status: 201 });
+    return NextResponse.json({ ...safeRow(membership), memberNumber: await assignMemberNumber(membership.id), linked: true, awaitingPayment: startStatus === 'awaiting_payment' }, { status: 201 });
   } else {
     if (!name?.trim()) {
       return NextResponse.json({ error: 'Name is required for members without an existing account' }, { status: 400 });
@@ -216,7 +216,7 @@ export async function POST(req: NextRequest) {
     if (!waiting) after(sendWelcome(membership.id).catch(err => console.error('Member invite email error:', err)));
     if (!payFirst) after(maybeSendPayLink(membership.id).catch(err => console.error('Pay link email error:', err)));
 
-    return NextResponse.json({ ...safeRow(membership), memberNumber: await assignMemberNumber(membership.id), linked: false, awaitingPayment: waiting }, { status: 201 });
+    return NextResponse.json({ ...safeRow(membership), memberNumber: await assignMemberNumber(membership.id), linked: false, awaitingPayment: startStatus === 'awaiting_payment' }, { status: 201 });
   }
 }
 
@@ -312,33 +312,20 @@ export async function PATCH(req: NextRequest) {
     }
   }
 
-  // Memberships item 4: season passes. A pass ends on its end date (Cam), so its end date isn't typed; it is a member
-  // only once paid, so an unpaid one isn't switched on by hand; and a move onto or off a pass is a new purchase — only
-  // once nothing paid is running, and it then waits for its payment (lib/season-pass passStart).
-  const onPass = isPassTier(membership.tier) || membership.passStartsOn !== null;
-  if (onPass && expiresAt !== undefined && (expiresAt ? new Date(expiresAt).getTime() : null) !== (membership.expiresAt?.getTime() ?? null)) {
-    return NextResponse.json({ error: 'A season pass ends on its end date — change the pass’s dates instead.' }, { status: 409 });
-  }
+  // Memberships item 4: the season-pass rules for this change (lib/season-pass passMemberChange).
   const moving = !!newTier && tierId !== membership.tierId;
-  let passMove: Record<string, unknown> = {};
-  if (moving && newTier && (onPass || isPassTier(newTier))) {
-    const c = await prisma.course.findUnique({ where: { id: session.courseId }, select: { timezone: true } });
-    const today = todayIn(c?.timezone);
-    if (termRunning(membership, today)) return NextResponse.json({ error: `This ${onPass ? 'season pass' : 'membership'} is paid and still running — it has to end before they move ${isPassTier(newTier) ? 'onto a season pass' : 'off the season pass'}.` }, { status: 409 });
-    if (membership.duesReaderId || (membership.duesChargeStartedAt && Date.now() - membership.duesChargeStartedAt.getTime() < 10 * 60_000)) return NextResponse.json({ error: 'These dues are being paid right now — finish or cancel the payment first.' }, { status: 409 });
-    const owes = amountsDue({ lastPaidAt: null, initiationWaived: membership.initiationWaived, tier: newTier }).duesCents > 0;
-    if (isPassTier(newTier)) {
-      if (!newTier.sellAtCourse) return NextResponse.json({ error: 'This season pass is sold online only.' }, { status: 409 });
-      if (!passOnSale(termOf(newTier), today)) return NextResponse.json({ error: PASS_OVER }, { status: 409 });
-      passMove = passStart(newTier, owes);
-    } else {
-      passMove = { status: owes ? 'awaiting_payment' : 'active', paymentStatus: 'unpaid', passStartsOn: null, expiresAt: null };
-    }
-  }
-  const tierAfter = moving ? newTier : membership.tier;
-  if (!moving && status === 'active' && membership.status !== 'active' && isPassTier(tierAfter) && membership.passStartsOn === null && tierAfter && amountsDue({ ...membership, tier: tierAfter }).duesCents > 0) {
-    return NextResponse.json({ error: 'Take the payment for the season pass first — it starts once it’s paid.' }, { status: 409 });
-  }
+  const stayTier = membership.tier;
+  const c = await prisma.course.findUnique({ where: { id: session.courseId }, select: { timezone: true } });
+  const passRule = passMemberChange({
+    membership: { ...membership, onPassTier: isPassTier(membership.tier), paidDuesBefore: !!(await prisma.moneyMove.findFirst({ where: { membershipId: id, courseId: session.courseId, what: 'dues', direction: 'in' }, select: { id: true } })), paying: !!membership.duesReaderId || (!!membership.duesChargeStartedAt && Date.now() - membership.duesChargeStartedAt.getTime() < 10 * 60_000) },
+    expiresAt: expiresAt === undefined ? undefined : expiresAt ? new Date(expiresAt) : null,
+    status,
+    move: moving && newTier ? { tier: newTier, owes: amountsDue({ lastPaidAt: null, initiationWaived: membership.initiationWaived, tier: newTier }).duesCents > 0 } : null,
+    stay: { isPass: isPassTier(stayTier), owes: !!stayTier && amountsDue({ ...membership, tier: stayTier }).duesCents > 0 },
+    today: todayIn(c?.timezone),
+  });
+  if (!passRule.ok) return NextResponse.json({ error: passRule.error }, { status: passRule.status });
+  const passMove = passRule.data;
   // MEM-RENEW: the golfer agreed to renew THIS tier at its price. On another tier automatic renewal
   // stops (they're told); they agree again if they pay on a tier that renews automatically.
   if (tierId && tierId !== membership.tierId && membership.autoRenew) {

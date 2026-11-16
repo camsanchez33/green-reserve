@@ -80,7 +80,6 @@ export async function markDuesPaidAtCourse(courseId: string, membershipId: strin
   const term = termOf(membership.tier);
   // Memberships item 4: a season pass is sold until its last day, and only while nothing of it is paid.
   if (!passOnSale(term, todayIn(membership.course.timezone, now))) return fail(409, PASS_OVER);
-  if (term.kind === 'pass' && paidUntilRenewal(membership, term, now.getTime())) return fail(409, 'This season pass is already paid.');
   // A first payment starts today; only a renewal extends from the end date (Cam 2026-10-29). A pass ends on its end date.
   const base = membership.lastPaidAt && membership.expiresAt && membership.expiresAt.getTime() > now.getTime() ? new Date(membership.expiresAt) : new Date(now);
   const { expiresAt: newExpiry, passStartsOn } = paidTermDates(term, base);
@@ -94,7 +93,9 @@ export async function markDuesPaidAtCourse(courseId: string, membershipId: strin
   const claimed = await prisma.courseMembership.updateMany({ where: { id: membershipId, courseId, duesReaderId: '', OR: [{ duesChargeStartedAt: null }, { duesChargeStartedAt: { lt: new Date(now.getTime() - STALE_MS) } }] }, data: { duesChargeStartedAt: now } });
   if (!claimed.count) return fail(409, membership.duesReaderId ? 'These dues are on the card reader — finish or cancel it first.' : 'A card payment for these dues is going through — wait a few minutes.');
   const release = () => prisma.courseMembership.updateMany({ where: { id: membershipId, duesChargeStartedAt: now }, data: { duesChargeStartedAt: null } });
-  const fresh = await prisma.courseMembership.findUniqueOrThrow({ where: { id: membershipId }, select: { duesIntentId: true } });
+  const fresh = await prisma.courseMembership.findUniqueOrThrow({ where: { id: membershipId }, select: { duesIntentId: true, paymentStatus: true, expiresAt: true, lastPaidAt: true } });
+  // Memberships item 4: a season pass is paid once — read under the claim, so two payments at once can't both record it.
+  if (term.kind === 'pass' && paidUntilRenewal(fresh, term, now.getTime())) { await release(); return fail(409, 'This season pass is already paid.'); }
   if (fresh.duesIntentId && membership.course.stripeAccountId) {
     const acct = { stripeAccount: membership.course.stripeAccountId };
     let pi;

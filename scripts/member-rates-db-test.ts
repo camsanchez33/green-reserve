@@ -52,7 +52,8 @@ async function cleanup() {
   const at = (day: string) => new Date(`${day}T15:00:00Z`);
   ok('a season pass gives rates from its first day to its last', membershipLive(pass, R0, at('2026-04-01')) && membershipLive(pass, R0, at('2026-10-31')) && !membershipLive(pass, R0, at('2026-03-31')));
   ok('…with no grace days after it ends, whatever the course keeps for members', !membershipLive(pass, R7, at('2026-11-01')) && membershipLive({ ...pass, passStartsOn: null }, R7, at('2026-11-01')));
-  ok('…and only for a round on a day of its season', membershipLive(pass, R0, at('2026-10-20'), '2026-10-31') && !membershipLive(pass, R0, at('2026-10-20'), '2026-11-02') && !membershipLive(pass, R0, at('2026-03-20'), '2026-04-05'));
+  ok('…and only for a round on a day of its season', membershipLive(pass, R0, at('2026-10-20'), '2026-10-31') && !membershipLive(pass, R0, at('2026-10-20'), '2026-11-02'));
+  ok('…bought before opening day, a round in its season is at the pass rate; one before it opens is not', membershipLive(pass, R0, at('2026-03-20'), '2026-04-05') && !membershipLive(pass, R0, at('2026-03-20'), '2026-03-25') && !membershipLive(pass, R0, at('2026-11-02'), '2026-10-31'));
   ok('…in the course\'s timezone (its last evening is still a pass day)', membershipLive(pass, R0, new Date('2026-11-01T03:30:00Z')) && !membershipLive(pass, R0, new Date('2026-11-01T04:30:00Z')));
   ok('an unpaid pass (awaiting payment) gives nothing', !membershipLive({ ...pass, status: 'awaiting_payment' }, R0, at('2026-05-01')));
 
@@ -92,6 +93,8 @@ async function cleanup() {
   await mkPass(`${TAG}+pass-soon@t.local`, '2026-11-01', '2027-03-31');
   const passRows = await prisma.courseMembership.findMany({ where: { courseId: course.id, passStartsOn: { not: null }, ...liveMembershipWhere(R7, now) }, select: { inviteEmail: true, status: true, expiresAt: true, passStartsOn: true } });
   ok('…a pass on its last day is live; one ended yesterday is not even with grace days, nor one not started', passRows.length === 1 && passRows[0].inviteEmail === `${TAG}+pass-on@t.local` && passRows.every(r => membershipLive(r, R7, now)), passRows);
+  const aheadRows = await prisma.courseMembership.findMany({ where: { courseId: course.id, passStartsOn: { not: null }, ...liveMembershipWhere(R7, now, '2026-11-05') }, select: { inviteEmail: true, status: true, expiresAt: true, passStartsOn: true } });
+  ok('…for a round on a day ahead, the not-yet-started pass covering it (and only it)', aheadRows.length === 1 && aheadRows[0].inviteEmail === `${TAG}+pass-soon@t.local` && aheadRows.every(r => membershipLive(r, R7, now, '2026-11-05')), aheadRows);
 
   // A cart added at check-in: a weekday booking of 4, public cart $20, member cart $10.
   const b = (email: string) => ({ golferAccountId: null, golferEmail: email, courseId: course.id, players: 4, cartSelected: false, cartFeeTotal: 0, paymentStatus: 'card_on_file', roundPaymentIntentId: '', teeTime: { date: '2026-11-04', cartFeeCents: 2000, productId: null } });
@@ -104,7 +107,7 @@ async function cleanup() {
   ok('party size, partial check-in and cash use partyFees', ['src/lib/change-party.ts', 'src/lib/checkin-booking.ts', 'src/lib/counter-pay.ts', 'src/app/manage/[bookingId]/page.tsx', 'src/app/dashboard/page.tsx'].every(f => readFileSync(f, 'utf8').includes('partyFees(')));
   ok('booking and moves store the member spot', readFileSync('src/app/api/bookings/route.ts', 'utf8').includes(': memberSpot(appliedTier, { greenFeeCents: seat(ownSeat)') && readFileSync('src/lib/move-booking.ts', 'utf8').includes('data.memberRateCents = spot.memberRateCents'));
   const src = (f: string) => readFileSync(f, 'utf8');
-  ok('booking charges the split and checks the end date', src('src/app/api/bookings/route.ts').includes('splitTotal(players, memberN, ownSeat, pubSeat)') && src('src/app/api/bookings/route.ts').includes('membershipLive(membership, teeTimeFull.course, new Date(), teeTimeFull.date)') && src('src/app/api/bookings/route.ts').includes('membershipLive(found, teeTimeFull.course, new Date(), teeTimeFull.date)') && src('src/app/api/bookings/route.ts').includes('getGolferMembership(teeTimeFull.courseId, teeTimeFull.course)'));
+  ok('booking charges the split and checks the end date', src('src/app/api/bookings/route.ts').includes('splitTotal(players, memberN, ownSeat, pubSeat)') && src('src/app/api/bookings/route.ts').includes('membershipLive(membership, teeTimeFull.course, new Date(), teeTimeFull.date)') && src('src/app/api/bookings/route.ts').includes('membershipLive(found, teeTimeFull.course, new Date(), teeTimeFull.date)') && src('src/app/api/bookings/route.ts').includes('getGolferMembership(teeTimeFull.courseId, teeTimeFull.course, teeTimeFull.date)'));
   ok('the member portal shows the same split and window', src('src/app/api/member/[courseSlug]/tee-times/route.ts').includes('membershipLive(membership, course, new Date(), date)') && src('src/app/courses/[slug]/member/page.tsx').includes('splitTotal(players, t.guests_member_rate ? players : Math.min(1, players)'));
   ok('the booking page shows a signed-in member their own rate', src('src/app/api/bookings/resident-rate/route.ts').includes('guestsMemberRate: tier.guestsPayMemberRate') && src('src/app/book/BookClient.tsx').includes('splitTotal(players, memberN, c(memberRate.greenFee), c(teeTime.green_fee))'));
   ok("a golfer's own swap reprices the same way", src('src/lib/move-booking.ts').includes('memberPlayers(b.players, tier)'));

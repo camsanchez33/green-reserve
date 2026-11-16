@@ -133,7 +133,7 @@ export async function POST(req: NextRequest) {
   if (golferSession) {
     // G5b: matches by direct golferId link OR the golfer's OTP-verified email
     // against an invite-only membership — same recognition as the course page.
-    const golferMembership = await getGolferMembership(teeTimeFull.courseId, teeTimeFull.course);
+    const golferMembership = await getGolferMembership(teeTimeFull.courseId, teeTimeFull.course, teeTimeFull.date);
     const found = golferMembership
       ? await prisma.courseMembership.findUnique({ where: { id: golferMembership.membershipId }, include: { tier: true } })
       : null;

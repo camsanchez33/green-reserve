@@ -10,7 +10,7 @@ import { tierPriceList } from '@/lib/tier-price-list';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { readJoinMode, JOIN_NEEDS_DUES } from '@/lib/membership-join';
 import { readAccountSettings } from '@/lib/member-account';
-import { readPassDates } from '@/lib/season-pass';
+import { readPassDates, passSeasonMoveError } from '@/lib/season-pass';
 
 /** MEM-ACCT: the account limit from the form (dollars): blank = no limit; anything unreadable is refused (NaN), never "no limit". */
 const limitCents = (v: unknown) => v === undefined ? undefined : v === '' || v === null ? null : (dollarsToCents(v as string) ?? Number.NaN);
@@ -156,6 +156,11 @@ export async function PATCH(req: NextRequest) {
     const d = readPassDates(updates.passStartsOn ?? tier.passStartsOn, updates.passEndsOn ?? tier.passEndsOn);
     if (!d.ok) return NextResponse.json({ error: d.error }, { status: 400 });
     passDates = { passStartsOn: d.startsOn, passEndsOn: d.endsOn };
+    // Sold passes move with the dates (below), so a sold pass's season can be adjusted, never replaced: a new season
+    // that starts after this one ends would hand every holder next season for nothing. That is a new pass.
+    const sold = !!(await prisma.courseMembership.findFirst({ where: { tierId: id, courseId: session.courseId, passStartsOn: { not: null } }, select: { id: true } }));
+    const seasonError = passSeasonMoveError(tier, d.startsOn, sold);
+    if (seasonError) return NextResponse.json({ error: seasonError }, { status: 409 });
   }
   if (updates.sellAtCourse !== undefined && typeof updates.sellAtCourse !== 'boolean') return NextResponse.json({ error: 'Say whether it’s sold at the course.' }, { status: 400 });
 
