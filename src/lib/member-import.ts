@@ -14,7 +14,7 @@ export type ImportResult = { added: number; skipped: { line: number; email: stri
 
 /** Create the memberships. Existing members are skipped, never changed. */
 export async function importMembers(courseId: string, rows: ImportRow[], opts: ImportOptions): Promise<ImportResult | { error: string }> {
-  const tiers = await prisma.membershipTier.findMany({ where: { courseId, active: true }, select: { id: true, name: true, termMonths: true } });
+  const tiers = await prisma.membershipTier.findMany({ where: { courseId, active: true }, select: { id: true, name: true, termMonths: true, kind: true, passStartsOn: true, passEndsOn: true } });
   const fallback = tiers.find(t => t.id === opts.defaultTierId);
   if (!fallback) return { error: 'Pick the membership these members go on.' };
   const byName = new Map(tiers.map(t => [t.name.trim().toLowerCase(), t]));
@@ -40,6 +40,11 @@ export async function importMembers(courseId: string, rows: ImportRow[], opts: I
     const now = new Date();
     let expiresAt: Date | null = r.expires ? new Date(`${r.expires}T23:59:59Z`) : null;
     if (!expiresAt && paid) { expiresAt = new Date(now); expiresAt.setMonth(expiresAt.getMonth() + (tier.termMonths || 12)); }
+    // Memberships item 4: a season pass ends on its end date (never a typed one); paid, it runs its season; unpaid, it
+    // waits for its payment like a pass added at the course (lib/season-pass).
+    const pass = tier.kind === 'pass'
+      ? (paid ? { status: 'active', passStartsOn: tier.passStartsOn, expiresAt: tier.passEndsOn ? new Date(`${tier.passEndsOn}T00:00:00Z`) : null } : { status: 'awaiting_payment', passStartsOn: null, expiresAt: null })
+      : null;
     try {
       await prisma.courseMembership.create({
         data: {
@@ -50,6 +55,7 @@ export async function importMembers(courseId: string, rows: ImportRow[], opts: I
           // Already a member of the course: no one-time initiation fee on their dues.
           initiationWaived: true,
           ...(paid ? { paymentStatus: 'paid_offline', lastPaidAt: now, startedAt: now } : {}),
+          ...(pass ?? {}),
         },
         select: { id: true },
       }).then(made => assignMemberNumber(made.id)); // Memberships item 2: imported members get a number too

@@ -182,10 +182,10 @@ export async function moveBooking(opts: {
           ? await tx.courseMembership.findMany({ where: { courseId: b.courseId, tierId: named.id, OR: [
               ...(b.golferAccountId ? [{ golferId: b.golferAccountId }] : []),
               ...(b.golferEmail ? [{ inviteEmail: { equals: b.golferEmail, mode: 'insensitive' as const } }] : []),
-            ] }, select: { status: true, expiresAt: true } })
+            ] }, select: { status: true, expiresAt: true, passStartsOn: true } })
           : [];
         // Members switched off in Settings (lib/pricing-switch): a repriced move pays the public price.
-        const lapsed = (theirs.length > 0 && !theirs.some(m => membershipLive(m, b.course))) || (opts.pricing !== 'keep' && !memberPricingOn(b.course));
+        const lapsed = (theirs.length > 0 && !theirs.some(m => membershipLive(m, b.course, now, slot.date))) || (opts.pricing !== 'keep' && !memberPricingOn(b.course));
         const tier = lapsed ? null : named;
         rate = lapsed ? rate : tier
           ? applyTierRates(slot, tier)

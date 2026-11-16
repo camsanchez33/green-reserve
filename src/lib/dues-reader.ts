@@ -17,6 +17,8 @@ import { prisma } from './prisma';
 import { stripe } from './stripe';
 import { courseStripe, ownReader, stripeMessage } from './card-reader';
 import { amountsDue, recordPaidTerm } from './membership-dues';
+import { termOf, ledgerWhat, passOnSale, isPassTier, PASS_OVER, TERM_SELECT } from './season-pass';
+import { todayIn } from './course-time';
 import { paidUntilRenewal } from './membership-renewal';
 import { recordMove } from './money-ledger';
 import { afterDuesPaid } from './member-welcome';
@@ -37,11 +39,11 @@ async function release(membershipId: string, stamp: Date) {
 
 /** The tap went through: the money on the ledger first, then the term (the same write as every dues payment). */
 async function finalize(membershipId: string, pi: Stripe.PaymentIntent, stamp: Date, actor: string): Promise<DuesReaderStatus> {
-  const m = await prisma.courseMembership.findUniqueOrThrow({ where: { id: membershipId }, select: { courseId: true, startedAt: true, lastPaidAt: true, expiresAt: true, lastPaymentIntentId: true, membershipType: true, tier: { select: { name: true, termMonths: true } } } });
-  await recordMove({ courseId: m.courseId, what: 'dues', direction: 'in', method: 'card_present', account: 'course', amountCents: pi.amount, platformFeeCents: pi.application_fee_amount ?? 0, stripeId: pi.id, membershipId, actor: 'staff', note: `${m.tier?.name ?? m.membershipType} on the card reader${actor ? ` (${actor.slice(0, 80)})` : ''}` });
+  const m = await prisma.courseMembership.findUniqueOrThrow({ where: { id: membershipId }, select: { courseId: true, startedAt: true, lastPaidAt: true, expiresAt: true, lastPaymentIntentId: true, membershipType: true, tier: { select: { name: true, ...TERM_SELECT } } } });
+  await recordMove({ courseId: m.courseId, what: ledgerWhat(m.tier), direction: 'in', method: 'card_present', account: 'course', amountCents: pi.amount, platformFeeCents: pi.application_fee_amount ?? 0, stripeId: pi.id, membershipId, actor: 'staff', note: `${m.tier?.name ?? m.membershipType} on the card reader${actor ? ` (${actor.slice(0, 80)})` : ''}` });
   let recorded: DuesReaderStatus['recorded'];
   if (m.lastPaymentIntentId !== pi.id) {
-    const ok = await recordPaidTerm({ id: membershipId, startedAt: m.startedAt, termMonths: m.tier?.termMonths ?? 12 }, { lastPaidAt: m.lastPaidAt, expiresAt: m.expiresAt }, pi.id, { autoRenewFailedAt: null, autoRenewRetryAt: null });
+    const ok = await recordPaidTerm({ id: membershipId, startedAt: m.startedAt, term: termOf(m.tier) }, { lastPaidAt: m.lastPaidAt, expiresAt: m.expiresAt }, pi.id, { autoRenewFailedAt: null, autoRenewRetryAt: null });
     if (ok) recorded = { amountCents: pi.amount, feeCents: pi.application_fee_amount ?? 0, firstPayment: !m.lastPaidAt };
     else console.error(JSON.stringify({ ev: 'dues_reader.term_changed', membershipId, paymentIntentId: pi.id }));
   }
@@ -76,9 +78,11 @@ export async function startDuesOnReader(courseId: string, membershipId: string, 
     data: { duesChargeStartedAt: stamp, duesReaderId: readerId },
   });
   if (!claimed.count) return fail(409, 'A payment for these dues is going through — wait a few minutes.');
-  const full = await prisma.courseMembership.findUniqueOrThrow({ where: { id: membershipId }, include: { tier: true } });
-  const termMonths = full.tier?.termMonths ?? 12;
-  if (paidUntilRenewal(full, termMonths)) { await release(membershipId, stamp); return fail(409, 'These dues are already paid — nothing due until renewal.'); }
+  const full = await prisma.courseMembership.findUniqueOrThrow({ where: { id: membershipId }, include: { tier: true, course: { select: { timezone: true } } } });
+  const term = termOf(full.tier);
+  // Memberships item 4: a season pass is sold until its last day.
+  if (!passOnSale(term, todayIn(full.course.timezone))) { await release(membershipId, stamp); return fail(409, PASS_OVER); }
+  if (paidUntilRenewal(full, term)) { await release(membershipId, stamp); return fail(409, 'These dues are already paid — nothing due until renewal.'); }
   const due = amountsDue(full);
   if (due.duesCents <= 0) { await release(membershipId, stamp); return fail(409, 'Nothing is due on this membership.'); }
   if (due.totalCents < 50) { await release(membershipId, stamp); return fail(400, 'Card payments start at $0.50 — take this one as cash.'); }
@@ -106,7 +110,7 @@ export async function startDuesOnReader(courseId: string, membershipId: string, 
     pi = await stripe.paymentIntents.create({
       amount: due.totalCents, currency: 'usd', payment_method_types: ['card_present'],
       application_fee_amount: due.feeCents > 0 ? due.feeCents : undefined,
-      description: `Membership dues - ${full.tier?.name ?? full.membershipType} - ${c.value.name}`,
+      description: `${isPassTier(full.tier) ? 'Season pass' : 'Membership dues'} - ${full.tier?.name ?? full.membershipType} - ${c.value.name}`,
       metadata: { membershipId, source: 'card_reader' },
     }, { ...acct, idempotencyKey: `reader-dues-${membershipId}-${stamp.getTime()}` });
   } catch (err) {
@@ -137,9 +141,9 @@ export async function startDuesOnReader(courseId: string, membershipId: string, 
 
 /** A card intent from the pay link found paid while starting the reader: record it as the card payment it was. */
 async function finalizeCard(membershipId: string, pi: Stripe.PaymentIntent) {
-  const m = await prisma.courseMembership.findUniqueOrThrow({ where: { id: membershipId }, select: { courseId: true, startedAt: true, lastPaidAt: true, expiresAt: true, lastPaymentIntentId: true, tier: { select: { termMonths: true } } } });
-  await recordMove({ courseId: m.courseId, what: 'dues', direction: 'in', method: 'card', account: 'course', amountCents: pi.amount, platformFeeCents: pi.application_fee_amount ?? 0, stripeId: pi.id, membershipId, actor: 'system', note: 'paid by card (found when starting the reader)' });
-  if (m.lastPaymentIntentId !== pi.id) await recordPaidTerm({ id: membershipId, startedAt: m.startedAt, termMonths: m.tier?.termMonths ?? 12 }, { lastPaidAt: m.lastPaidAt, expiresAt: m.expiresAt }, pi.id, { autoRenewFailedAt: null, autoRenewRetryAt: null });
+  const m = await prisma.courseMembership.findUniqueOrThrow({ where: { id: membershipId }, select: { courseId: true, startedAt: true, lastPaidAt: true, expiresAt: true, lastPaymentIntentId: true, tier: { select: TERM_SELECT } } });
+  await recordMove({ courseId: m.courseId, what: ledgerWhat(m.tier), direction: 'in', method: 'card', account: 'course', amountCents: pi.amount, platformFeeCents: pi.application_fee_amount ?? 0, stripeId: pi.id, membershipId, actor: 'system', note: 'paid by card (found when starting the reader)' });
+  if (m.lastPaymentIntentId !== pi.id) await recordPaidTerm({ id: membershipId, startedAt: m.startedAt, term: termOf(m.tier) }, { lastPaidAt: m.lastPaidAt, expiresAt: m.expiresAt }, pi.id, { autoRenewFailedAt: null, autoRenewRetryAt: null });
 }
 
 /**

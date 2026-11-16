@@ -10,6 +10,7 @@ import { tierPriceList } from '@/lib/tier-price-list';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { readJoinMode, JOIN_NEEDS_DUES } from '@/lib/membership-join';
 import { readAccountSettings } from '@/lib/member-account';
+import { readPassDates } from '@/lib/season-pass';
 
 /** MEM-ACCT: the account limit from the form (dollars): blank = no limit; anything unreadable is refused (NaN), never "no limit". */
 const limitCents = (v: unknown) => v === undefined ? undefined : v === '' || v === null ? null : (dollarsToCents(v as string) ?? Number.NaN);
@@ -48,6 +49,20 @@ export async function POST(req: NextRequest) {
   if (!termOk(termMonths)) return NextResponse.json({ error: TERM_BAD }, { status: 400 });
 
   if (!name?.trim()) return NextResponse.json({ error: 'Tier name is required' }, { status: 400 });
+
+  // Memberships item 4: a season pass — fixed when made (its payments are 'pass' on the ledger), with the season's
+  // dates; no initiation fee and no automatic renewal (it ends on its end date). Sold online (joinOnline) and/or at the
+  // course (sellAtCourse).
+  if (body.kind !== undefined && body.kind !== 'membership' && body.kind !== 'pass') return NextResponse.json({ error: 'Pick a membership or a season pass.' }, { status: 400 });
+  const isPass = body.kind === 'pass';
+  let passDates: { passStartsOn: string; passEndsOn: string } | null = null;
+  if (isPass) {
+    const d = readPassDates(body.passStartsOn, body.passEndsOn);
+    if (!d.ok) return NextResponse.json({ error: d.error }, { status: 400 });
+    passDates = { passStartsOn: d.startsOn, passEndsOn: d.endsOn };
+    if (body.sellAtCourse === false && (joinOnline ?? 'off') === 'off') return NextResponse.json({ error: 'Sell the pass online, at the course, or both.' }, { status: 400 });
+  }
+  if (body.sellAtCourse !== undefined && typeof body.sellAtCourse !== 'boolean') return NextResponse.json({ error: 'Say whether it’s sold at the course.' }, { status: 400 });
   // ACT-1 review: a booking records its tier by NAME, so two live tiers with one
   // name would make repricing a moved member ambiguous.
   if (await prisma.membershipTier.findFirst({ where: { courseId: session.courseId, name: name.trim(), active: true }, select: { id: true } })) {
@@ -83,8 +98,11 @@ export async function POST(req: NextRequest) {
     data: {
       ...acct.data,
       joinOnline: join,
-      // MEM-RENEW: golfers on this tier agree to automatic renewal when they pay (lib/membership-autorenew).
-      autoRenew: autoRenew === true && dollarsToCentsOr0(annualFee) > 0,
+      kind: isPass ? 'pass' : 'membership',
+      ...(passDates ?? {}),
+      sellAtCourse: body.sellAtCourse !== false,
+      // MEM-RENEW: golfers on this tier agree to automatic renewal when they pay (lib/membership-autorenew). Never a pass.
+      autoRenew: !isPass && autoRenew === true && dollarsToCentsOr0(annualFee) > 0,
       autoRenewRetry: autoRenewRetry !== false,
       courseId: session.courseId,
       name: name.trim(),
@@ -102,7 +120,7 @@ export async function POST(req: NextRequest) {
       // Cam 2026-10-29: off = only the member gets the member rate (lib/member-rates).
       guestsPayMemberRate: guestsPayMemberRate === true,
       annualFeeCents:     dollarsToCentsOr0(annualFee),
-      initiationFeeCents: dollarsToCentsOr0(initiationFee),
+      initiationFeeCents: isPass ? 0 : dollarsToCentsOr0(initiationFee),
       termMonths:         termMonths         != null ? Number(termMonths)         : 12,
       notes: notes || '',
       ...(lineRates ? { lineRates } : {}),
@@ -130,8 +148,20 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: `You already have a tier called “${updates.name.trim()}”. Pick a different name.` }, { status: 409 });
   }
 
+  // Memberships item 4: the kind is fixed when made — a pass's payments are 'pass' on the ledger, a membership's 'dues'.
+  if (updates.kind !== undefined && updates.kind !== tier.kind) return NextResponse.json({ error: tier.kind === 'pass' ? 'A season pass stays a season pass — make a membership instead.' : 'A membership stays a membership — make a season pass instead.' }, { status: 400 });
+  const isPass = tier.kind === 'pass';
+  let passDates: { passStartsOn: string; passEndsOn: string } | null = null;
+  if (isPass && (updates.passStartsOn !== undefined || updates.passEndsOn !== undefined)) {
+    const d = readPassDates(updates.passStartsOn ?? tier.passStartsOn, updates.passEndsOn ?? tier.passEndsOn);
+    if (!d.ok) return NextResponse.json({ error: d.error }, { status: 400 });
+    passDates = { passStartsOn: d.startsOn, passEndsOn: d.endsOn };
+  }
+  if (updates.sellAtCourse !== undefined && typeof updates.sellAtCourse !== 'boolean') return NextResponse.json({ error: 'Say whether it’s sold at the course.' }, { status: 400 });
+
   const join = updates.joinOnline === undefined ? tier.joinOnline : readJoinMode(updates.joinOnline);
   if (!join) return NextResponse.json({ error: 'Pick how golfers join online.' }, { status: 400 });
+  if (isPass && join === 'off' && (typeof updates.sellAtCourse === 'boolean' ? updates.sellAtCourse : tier.sellAtCourse) === false) return NextResponse.json({ error: 'Sell the pass online, at the course, or both.' }, { status: 400 });
   const duesAfter = updates.annualFee != null ? dollarsToCentsOr0(updates.annualFee) : tier.annualFeeCents;
   if (join !== 'off' && duesAfter <= 0) return NextResponse.json({ error: JOIN_NEEDS_DUES }, { status: 400 });
 
@@ -149,13 +179,16 @@ export async function PATCH(req: NextRequest) {
   }
   if (updates.windowPublic !== undefined && typeof updates.windowPublic !== 'boolean') return NextResponse.json({ error: 'Pick the public window or a number of days.' }, { status: 400 });
 
-  const updated = await withPriceSwitch(session.courseId, () => prisma.membershipTier.update({
+  const write = () => prisma.membershipTier.update({
     where: { id },
     data: {
       ...acct.data,
       joinOnline: join,
+      ...(passDates ?? {}),
+      sellAtCourse: typeof updates.sellAtCourse === 'boolean' ? updates.sellAtCourse : tier.sellAtCourse,
       // MEM-RENEW: turning it on changes what the next payer agrees to; turning it off stops it for everyone on it (below).
-      autoRenew: (typeof updates.autoRenew === 'boolean' ? updates.autoRenew : tier.autoRenew) && duesAfter > 0,
+      // Never on a season pass.
+      autoRenew: !isPass && (typeof updates.autoRenew === 'boolean' ? updates.autoRenew : tier.autoRenew) && duesAfter > 0,
       autoRenewRetry: typeof updates.autoRenewRetry === 'boolean' ? updates.autoRenewRetry : tier.autoRenewRetry,
       name:               updates.name               ?? tier.name,
       color:              updates.color              ?? tier.color,
@@ -168,14 +201,24 @@ export async function PATCH(req: NextRequest) {
       guestPassesPerYear: updates.guestPassesPerYear != null ? Number(updates.guestPassesPerYear) : tier.guestPassesPerYear,
       guestsPayMemberRate: typeof updates.guestsPayMemberRate === 'boolean' ? updates.guestsPayMemberRate : tier.guestsPayMemberRate,
       annualFeeCents:     updates.annualFee     != null ? dollarsToCentsOr0(updates.annualFee)     : tier.annualFeeCents,
-      initiationFeeCents: updates.initiationFee != null ? dollarsToCentsOr0(updates.initiationFee) : tier.initiationFeeCents,
+      initiationFeeCents: isPass ? 0 : updates.initiationFee != null ? dollarsToCentsOr0(updates.initiationFee) : tier.initiationFeeCents,
       termMonths:         updates.termMonths         != null ? Number(updates.termMonths)         : tier.termMonths,
       notes:              updates.notes              ?? tier.notes,
       active:             updates.active             !== undefined ? updates.active : tier.active,
       ...lineRatesData,
       windowPublic:       typeof updates.windowPublic === 'boolean' ? updates.windowPublic : tier.windowPublic,
     },
-  }));
+  });
+  // Memberships item 4 (Cam: "every pass ends on the end date"): new season dates move every pass already paid on
+  // this tier with them, in the same transaction — a sold pass never ends on a different day from the pass.
+  const updated = await withPriceSwitch(session.courseId, async () => {
+    if (!passDates) return write();
+    const [t] = await prisma.$transaction([
+      write(),
+      prisma.courseMembership.updateMany({ where: { tierId: id, courseId: session.courseId, passStartsOn: { not: null } }, data: { passStartsOn: passDates.passStartsOn, expiresAt: new Date(`${passDates.passEndsOn}T00:00:00Z`) } }),
+    ]);
+    return t;
+  });
   // MEM-RENEW: the course stopped automatic renewal on this tier — its members go back to pay-link renewals, and are told.
   // Audit 2026-10-31: a new term length is a schedule nobody agreed to (yearly → monthly would charge the yearly
   // amount every month), so it stops automatic renewal the same way; members agree again when they next pay.

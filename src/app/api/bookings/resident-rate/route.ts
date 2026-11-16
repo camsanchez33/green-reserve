@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
     const memberSession = await getMemberSession();
     if (memberSession && memberSession.courseId === tt.courseId) {
       const m = await prisma.courseMembership.findUnique({ where: { id: memberSession.membershipId }, include: { tier: true } });
-      if (m && m.courseId === tt.courseId && membershipLive(m, grace)) tier = m.tier;
+      if (m && m.courseId === tt.courseId && membershipLive(m, grace, new Date(), tt.date)) tier = m.tier;
     }
   }
   // Switched off in Settings (lib/pricing-switch): no member or resident rate is shown, as none is charged.

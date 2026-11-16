@@ -96,6 +96,7 @@ export type RevenueSource = 'serviceFees' | 'noShowLateFees' | 'membershipDues' 
 export function revenueSource(what: string): RevenueSource {
   if (what === 'booking_fee_no_show_late' || what === 'no_show_fee' || what === 'late_fee') return 'noShowLateFees';
   if (what === 'round' || what === 'booking_fee' || what === 'hold' || what === 'account') return 'serviceFees';
-  if (what === 'dues') return 'membershipDues';
+  // Memberships item 4: GreenReserve's 1% on a season pass is the same fee as on dues.
+  if (what === 'dues' || what === 'pass') return 'membershipDues';
   return 'other'; // shop, event
 }

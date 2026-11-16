@@ -17,6 +17,8 @@ import { assignMemberNumber } from './member-number';
 import { randomUUID } from 'crypto';
 import { prisma } from './prisma';
 import { maybeSendPayLink, NOT_SENT } from './membership-pay-link';
+import { termOf, passOnSale, PASS_OVER } from './season-pass';
+import { todayIn } from './course-time';
 
 export type JoinMode = 'off' | 'instant' | 'request';
 export const readJoinMode = (v: unknown): JoinMode | null => (v === 'off' || v === 'instant' || v === 'request' ? v : null);
@@ -28,10 +30,13 @@ const UNFINISHED = ['requested', 'awaiting_payment'];
 
 /** The tiers a course offers online, with what a member pays (for the golfer's page). */
 export async function joinableTiers(courseId: string) {
+  const course = await prisma.course.findUnique({ where: { id: courseId }, select: { timezone: true } });
+  const today = todayIn(course?.timezone);
   const tiers = await prisma.membershipTier.findMany({
-    where: { courseId, active: true, joinOnline: { in: ['instant', 'request'] }, annualFeeCents: { gt: 0 } },
+    // Memberships item 4: a season pass is offered online until its last day.
+    where: { courseId, active: true, joinOnline: { in: ['instant', 'request'] }, annualFeeCents: { gt: 0 }, OR: [{ kind: 'membership' }, { kind: 'pass', passEndsOn: { gte: today } }] },
     orderBy: { annualFeeCents: 'asc' },
-    select: { id: true, name: true, joinOnline: true, annualFeeCents: true, initiationFeeCents: true, termMonths: true, greenFeeWeekdayCents: true, greenFeeWeekendCents: true, cartFeeWeekdayCents: true, cartFeeWeekendCents: true, discountPct: true, guestsPayMemberRate: true, advanceBookingDays: true, lineRates: true },
+    select: { id: true, name: true, joinOnline: true, kind: true, passStartsOn: true, passEndsOn: true, annualFeeCents: true, initiationFeeCents: true, termMonths: true, greenFeeWeekdayCents: true, greenFeeWeekendCents: true, cartFeeWeekdayCents: true, cartFeeWeekendCents: true, discountPct: true, guestsPayMemberRate: true, advanceBookingDays: true, lineRates: true },
   });
   // Memberships item 3: a membership priced by the price list never advertises the older flat rates it no longer charges.
   return tiers.map(({ lineRates, ...t }) => readLineRates(lineRates)
@@ -44,7 +49,7 @@ export async function myMembership(courseId: string, golferId: string, email: st
   return prisma.courseMembership.findFirst({
     where: { courseId, OR: [{ golferId }, { golferId: null, inviteEmail: { equals: email.trim(), mode: 'insensitive' } }], status: { in: ['active', ...UNFINISHED] } },
     orderBy: { createdAt: 'desc' },
-    select: { id: true, status: true, payToken: true, tier: { select: { name: true } } },
+    select: { id: true, status: true, payToken: true, passStartsOn: true, expiresAt: true, tier: { select: { name: true } } },
   });
 }
 
@@ -52,16 +57,22 @@ export type JoinResult = { ok: true; status: 'awaiting_payment' | 'requested'; m
 
 /** Join (or ask to join) a tier as the signed-in golfer. */
 export async function joinTier(courseId: string, golfer: { id: string; email: string; name: string; phone: string }, tierId: string): Promise<JoinResult> {
-  const tier = await prisma.membershipTier.findFirst({ where: { id: tierId, courseId, active: true }, select: { id: true, joinOnline: true, annualFeeCents: true } });
+  const tier = await prisma.membershipTier.findFirst({ where: { id: tierId, courseId, active: true }, select: { id: true, joinOnline: true, annualFeeCents: true, kind: true, termMonths: true, passStartsOn: true, passEndsOn: true, course: { select: { timezone: true } } } });
   if (!tier || (tier.joinOnline !== 'instant' && tier.joinOnline !== 'request')) return fail(404, 'That membership can’t be joined online.');
   if (tier.annualFeeCents <= 0) return fail(409, 'That membership can’t be joined online.');
+  // Memberships item 4: a season pass is bought online until its last day.
+  const today = todayIn(tier.course.timezone);
+  if (!passOnSale(termOf(tier), today)) return fail(409, PASS_OVER);
   const email = golfer.email.trim().toLowerCase();
   const mine = await myMembership(courseId, golfer.id, email);
-  if (mine?.status === 'active') return fail(409, `You’re already a member here${mine.tier ? ` (${mine.tier.name})` : ''}.`);
+  // A season pass that has ended stays 'active' on its row, but it is over: buying the next one reuses that row.
+  const endedPass = !!mine && mine.status === 'active' && mine.passStartsOn !== null && !!mine.expiresAt && mine.expiresAt.toISOString().slice(0, 10) < today;
+  if (mine?.status === 'active' && !endedPass) return fail(409, `You’re already a member here${mine.tier ? ` (${mine.tier.name})` : ''}.`);
   if (mine && UNFINISHED.includes(mine.status)) return { ok: true, status: mine.status as 'awaiting_payment' | 'requested', membershipId: mine.id, payToken: mine.payToken };
 
   const status = tier.joinOnline === 'instant' ? 'awaiting_payment' : 'requested';
-  const data = { tierId: tier.id, status, addedBy: 'online', inviteEmail: email, inviteName: golfer.name.slice(0, 120), invitePhone: golfer.phone.slice(0, 30), inviteAccepted: true, payToken: randomUUID(), paymentStatus: 'unpaid' };
+  // Unpaid until paid: an old pass's dates come off (paying records the new term's — lib/membership-dues recordPaidTerm).
+  const data = { tierId: tier.id, status, addedBy: 'online', inviteEmail: email, inviteName: golfer.name.slice(0, 120), invitePhone: golfer.phone.slice(0, 30), inviteAccepted: true, payToken: randomUUID(), paymentStatus: 'unpaid', passStartsOn: null, ...(endedPass ? { expiresAt: null } : {}) };
   // One membership per golfer per course (the schema's unique key): an old cancelled or pending one
   // is reused — its payment history stays, so a returning member owes no initiation again. One the
   // course made not active is theirs to turn back on, never the golfer's by paying.

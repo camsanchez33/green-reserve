@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { MEMBERSHIP_WHATS } from '@/lib/season-pass';
 import { centsToDollarsOr0 } from '@/lib/money';
 import { getMemberSession } from '@/lib/member-session';
 
@@ -34,7 +35,7 @@ export async function GET(
   }[] = [];
 
   // LEDGER-1: what was actually paid, payment by payment — from the ledger, once it has any.
-  const paidRows = await prisma.moneyMove.findMany({ where: { courseId: course.id, membershipId: membership.id, what: 'dues' }, orderBy: { at: 'desc' }, take: 50, select: { direction: true, method: true, amountCents: true, at: true } });
+  const paidRows = await prisma.moneyMove.findMany({ where: { courseId: course.id, membershipId: membership.id, what: { in: MEMBERSHIP_WHATS } }, orderBy: { at: 'desc' }, take: 50, select: { direction: true, method: true, amountCents: true, at: true } });
   for (const r of paidRows) records.push({
     type: r.direction === 'out' ? 'refund' : 'dues', amount: r.amountCents / 100, date: r.at,
     status: r.direction === 'out' ? 'refunded' : r.method === 'card' ? 'paid' : 'paid_offline',

@@ -43,7 +43,7 @@ export async function GET(
   // member sees a member rate and is charged the public one.
   // Lapsed (past its end date + the course's grace days, lib/member-rates): public rates and window, as booking charges.
   const tier = membership && membership.courseId === course.id ? membership.tier : null;
-  const live = !!membership && membership.courseId === course.id && membershipLive(membership, course);
+  const live = !!membership && membership.courseId === course.id && membershipLive(membership, course, new Date(), date);
   // Members switched off in Settings (lib/pricing-switch): the window stays, the rate doesn't.
   const pricingTier = live && memberPricingOn(course) ? tier : null;
 

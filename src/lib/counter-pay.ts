@@ -260,7 +260,7 @@ export async function createCounterBooking(courseId: string, input: CounterBooki
       // Cam: "they should show their membership when they get there" — the member's own, and only while it's live.
       const m = await prisma.courseMembership.findFirst({ where: { id: rate.slice(7), courseId }, include: { tier: true } });
       if (!m || !m.tier) return { ok: false, status: 400, error: 'That member isn’t on your course.' };
-      if (!membershipLive(m, teeTime.course)) return { ok: false, status: 409, error: 'That membership has ended — book them at the standard rate, or renew it on Members.' };
+      if (!membershipLive(m, teeTime.course, new Date(), teeTime.date)) return { ok: false, status: 409, error: 'That membership has ended — book them at the standard rate, or renew it on Members.' };
       tier = m.tier;
     } else {
       if (teeTime.course.counterMemberRate !== 'any') return { ok: false, status: 409, error: 'Pick the member — your course gives member rates at the counter only to members.' };

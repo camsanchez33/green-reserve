@@ -178,7 +178,7 @@ export function centsPerDay(rows: { at: Date; cents: number }[], fromDay: string
 
 const NOUN: Record<string, string> = {
   round: 'Service fee', hold: 'Service fee', late_fee: 'Service fee', no_show_fee: 'Service fee',
-  booking_fee: 'Booking fee', dues: 'Membership fee', shop: 'Shop fee', event: 'Event fee', account: 'Member account fee',
+  booking_fee: 'Booking fee', dues: 'Membership fee', pass: 'Season pass fee', shop: 'Shop fee', event: 'Event fee', account: 'Member account fee',
 };
 const ON: Record<string, string> = { hold: ' (cancellation hold)', late_fee: ' (late cancel)', no_show_fee: ' (no-show)' };
 

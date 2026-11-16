@@ -37,7 +37,7 @@ const every = (m: number) => (m === 12 ? 'every year' : m === 1 ? 'every month' 
 
 /** What each renewal charges: the dues (no initiation) and GreenReserve's 1%. */
 export function renewalCents(tier: { annualFeeCents: number }) {
-  const d = amountsDue({ lastPaidAt: new Date(0), initiationWaived: true, tier: { annualFeeCents: tier.annualFeeCents, initiationFeeCents: 0 } });
+  const d = amountsDue({ lastPaidAt: new Date(0), initiationWaived: true, tier: { annualFeeCents: tier.annualFeeCents, initiationFeeCents: 0, kind: 'membership' } });
   return { duesCents: d.duesCents, feeCents: d.feeCents, totalCents: d.totalCents };
 }
 
@@ -66,7 +66,7 @@ export async function stopAutoRenew(membershipId: string, courseId?: string): Pr
 
 const DUE_SELECT = {
   id: true, courseId: true, startedAt: true, expiresAt: true, lastPaidAt: true, savedCustomerId: true, savedPaymentMethodId: true, autoRenewRemindedFor: true, autoRenewRetryAt: true, renewalRemindedAt: true, autoRenewRemindedCents: true,
-  tier: { select: { name: true, annualFeeCents: true, termMonths: true, autoRenewRetry: true, autoRenew: true, active: true } },
+  tier: { select: { name: true, annualFeeCents: true, termMonths: true, autoRenewRetry: true, autoRenew: true, active: true, kind: true } },
   course: { select: { name: true, stripeAccountId: true, stripeAccountActive: true } },
   inviteName: true, inviteEmail: true, payToken: true, golfer: { select: { email: true, firstName: true, lastName: true } },
 } as const;
@@ -75,7 +75,7 @@ const DUE_SELECT = {
 export async function remindersDue(now = new Date()) {
   const rows = await prisma.courseMembership.findMany({
     // Only on a tier that still renews automatically (a member moved off it, or a tier switched off, is never charged).
-    where: { autoRenew: true, status: 'active', tier: { autoRenew: true, active: true }, expiresAt: { gt: now, lte: new Date(now.getTime() + 30 * DAY) } },
+    where: { autoRenew: true, status: 'active', tier: { autoRenew: true, active: true, kind: 'membership' }, expiresAt: { gt: now, lte: new Date(now.getTime() + 30 * DAY) } },
     select: DUE_SELECT, take: 500,
   });
   // Due again when the amount changed since the last reminder (the course changed its dues): the golfer is told first.
@@ -89,7 +89,7 @@ export const markReminded = (id: string, expiresAt: Date, totalCents: number, no
 /** Members to charge now: their renewal date has come and its reminder went out at least the lead time ago — or a retry is due. */
 export async function chargesDue(now = new Date()) {
   const rows = await prisma.courseMembership.findMany({
-    where: { autoRenew: true, status: 'active', tier: { autoRenew: true, active: true }, OR: [{ expiresAt: { lte: now }, autoRenewRetryAt: null, autoRenewFailedAt: null }, { autoRenewRetryAt: { lte: now } }] },
+    where: { autoRenew: true, status: 'active', tier: { autoRenew: true, active: true, kind: 'membership' }, OR: [{ expiresAt: { lte: now }, autoRenewRetryAt: null, autoRenewFailedAt: null }, { autoRenewRetryAt: { lte: now } }] },
     select: DUE_SELECT, take: 200,
   });
   // The reminder went out for this term, and its full notice has run (a late reminder pushes the charge back; 12h slack for the daily run).
@@ -106,7 +106,8 @@ export type RenewResult = { status: 'paid'; amountCents: number; expiresAt: Date
  */
 export async function chargeRenewal(membershipId: string, charge: Charger, now = new Date()): Promise<RenewResult> {
   const m = await prisma.courseMembership.findUnique({ where: { id: membershipId }, select: { ...DUE_SELECT, status: true, autoRenew: true, autoRenewFailedAt: true, initiationWaived: true, duesReaderId: true, duesChargeStartedAt: true } });
-  if (!m || !m.tier || !m.autoRenew || m.status !== 'active' || !m.tier.autoRenew || !m.tier.active) return { status: 'skipped', why: 'not on auto-renew' };
+  // Memberships item 4: a season pass never renews (it ends on its end date).
+  if (!m || !m.tier || !m.autoRenew || m.status !== 'active' || !m.tier.autoRenew || !m.tier.active || m.tier.kind !== 'membership') return { status: 'skipped', why: 'not on auto-renew' };
   // Charged only the amount the golfer was reminded of; a changed price waits for a new reminder.
   if (m.autoRenewRemindedCents !== renewalCents(m.tier).totalCents) return { status: 'skipped', why: 'amount changed since the reminder' };
   if (!m.course.stripeAccountActive || !m.course.stripeAccountId) return { status: 'skipped', why: 'course not taking payments' };
@@ -145,7 +146,7 @@ export async function chargeRenewal(membershipId: string, charge: Charger, now =
     return { status: 'declined', error: `The card needs the member (${pi.status}).`, retry };
   }
   await recordMove({ courseId: m.courseId, what: 'dues', direction: 'in', method: 'card', account: 'course', amountCents: pi.amount, platformFeeCents: pi.application_fee_amount ?? r.feeCents, stripeId: pi.id, membershipId: m.id, actor: 'system', note: `${m.tier.name} renewed automatically` });
-  const ok = await recordPaidTerm({ id: m.id, startedAt: m.startedAt, termMonths: m.tier.termMonths }, cur, pi.id, { autoRenewFailedAt: null, autoRenewRetryAt: null });
+  const ok = await recordPaidTerm({ id: m.id, startedAt: m.startedAt, term: { kind: 'months', months: m.tier.termMonths } }, cur, pi.id, { autoRenewFailedAt: null, autoRenewRetryAt: null });
   if (!ok) { await release(); console.error(JSON.stringify({ ev: 'membership.renew.term_changed', membershipId: m.id, paymentIntentId: pi.id })); }
   const after = await prisma.courseMembership.findUniqueOrThrow({ where: { id: m.id }, select: { expiresAt: true } });
   return { status: 'paid', amountCents: pi.amount, expiresAt: after.expiresAt };

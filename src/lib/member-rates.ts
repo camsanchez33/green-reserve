@@ -19,6 +19,7 @@
 import type { Prisma } from '@prisma/client';
 import { todayIn, addDaysStr } from './course-time';
 import { groupGreenFee, otherPerPlayerCents } from './residents';
+import { passCovers } from './season-pass';
 
 /** What decides when a course's member rates lapse — a Course row carries both. */
 export type LapseRule = { memberGraceDays: number; timezone?: string | null };
@@ -34,14 +35,31 @@ function lapseCutoff(rule: LapseRule, now: Date): Date {
   return new Date(`${addDaysStr(todayIn(rule.timezone, now), -grace)}T00:00:00Z`);
 }
 
-/** Prisma filter for a membership whose member rates apply right now. */
+/**
+ * Prisma filter for a membership whose member rates apply right now.
+ * Memberships item 4: a paid season pass (passStartsOn set) applies from its first day to its end date — no grace days.
+ */
 export function liveMembershipWhere(rule: LapseRule, now: Date = new Date()): Prisma.CourseMembershipWhereInput {
-  return { status: 'active', OR: [{ expiresAt: null }, { expiresAt: { gte: lapseCutoff(rule, now) } }] };
+  const today = todayIn(rule.timezone, now);
+  return { status: 'active', OR: [
+    { passStartsOn: null, OR: [{ expiresAt: null }, { expiresAt: { gte: lapseCutoff(rule, now) } }] },
+    { passStartsOn: { lte: today }, expiresAt: { gte: new Date(`${today}T00:00:00Z`) } },
+  ] };
 }
 
-/** The same rule on a row already loaded. */
-export function membershipLive(m: { status: string; expiresAt: Date | null }, rule: LapseRule, now: Date = new Date()): boolean {
-  return m.status === 'active' && (!m.expiresAt || m.expiresAt.getTime() >= lapseCutoff(rule, now).getTime());
+/**
+ * The same rule on a row already loaded. passStartsOn is required, so every caller loads it and no path can give a
+ * season pass grace days. A pass is live while today is in its season and — given `onDay`, the tee time's date
+ * (YYYY-MM-DD) — only for a day in its season: never a round after its end date at the pass rate. A membership is
+ * judged on today, as before.
+ */
+export function membershipLive(m: { status: string; expiresAt: Date | null; passStartsOn: string | null }, rule: LapseRule, now: Date = new Date(), onDay?: string): boolean {
+  if (m.status !== 'active') return false;
+  if (m.passStartsOn !== null) {
+    const pass = { passStartsOn: m.passStartsOn, expiresAt: m.expiresAt };
+    return passCovers(pass, todayIn(rule.timezone, now)) && (onDay === undefined || passCovers(pass, onDay));
+  }
+  return !m.expiresAt || m.expiresAt.getTime() >= lapseCutoff(rule, now).getTime();
 }
 
 /** How many of a group's players pay the member rate. */
