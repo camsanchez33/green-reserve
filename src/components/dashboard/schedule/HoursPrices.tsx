@@ -94,7 +94,8 @@ export function HoursPrices({ plan, edit, rounds, canEdit, perCart, showMember, 
   function saveColumn(c: ColDraft) {
     const name = c.name.trim() || null;
     if (c.col === null) {
-      const ok = c.label === 'early' ? addColumn(c.i, c.at, null, 'Early bird')
+      // Early bird names the first column only if the course hasn't named it already.
+      const ok = c.label === 'early' ? addColumn(c.i, c.at, null, dayAt(plan, c.i).firstName ?? 'Early bird')
         : addColumn(c.i, c.at, c.label === 'twilight' ? (autoName(c.at, false) === 'Twilight' ? null : 'Twilight') : name);
       if (ok) setColDraft(null);
       return;
