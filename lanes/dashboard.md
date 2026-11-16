@@ -28,8 +28,19 @@ Support (chats) · Light parity. Specs: ADMIN_REDO_SPEC "Course dashboard Home",
    - Joining-online requests, import and reminders move to each membership's page.
    - Wire only what Build's data supports; hide the rest, never fake it.
 3. **Events**: mockup `lanes/dashboard/events-mockup.html` (https://claude.ai/artifact/BVqXkiviwzu8ktCdyNNR9H), waiting for Cam's comments. Build nothing until approved.
-4. **Schedule**: mockup `lanes/dashboard/schedule-mockup.html` (https://claude.ai/artifact/ANSdTS9cjrJwxsQ1TLFynU), waiting for Cam's comments.
-5. Then Events → Schedule → Analytics → Settings → Course alert, one page at a time, mockup first.
+4. **Schedule — APPROVED, build it** (Cam 2026-11-16, "that real nice just fix the one comment i made and then ur good"). Mockup `lanes/dashboard/schedule-mockup.html` (https://claude.ai/artifact/ANSdTS9cjrJwxsQ1TLFynU) is the spec, in both looks. Page `/dashboard/schedules`; the tabs slide and come in this order:
+   - **Bookable rounds** comes first. It lists the rounds the course sells, each with its holes (1–18, 1–9, 10–18) and a time bar showing when it can be booked. A pencil opens an edit popup, which also holds "Stop selling this round", and a bare plus adds a round. Rounds that aren't sold are not listed, and there's no hour scale under the bars.
+   - **Hours and prices** has Weekdays and Weekends only, never an Every-day set that overlaps them. Each set's line says what it does: days, first and last tee, gap, twilight start. The round picker matches Bookable rounds. Price columns are named by time of day ("Twilight / After 3:00 PM"), with a Weekday or Weekend tag. Walking allowed is a switch per column. "Add a time-of-day price" opens a popup to name it and pick its start. The plus holds Senior and junior prices and Holidays. Unsaved changes show as a slim pill (Undo, Review and save), and saving shows what changes and that booked rounds keep their price.
+   - **Promotions** (was Deals) lists live codes with the columns Code, Promo, Duration, Used and a pencil. Ended codes sit under a small "Past promos" toggle, each with "Use again". New and Edit open popups. Last-minute deals are removed from this page.
+   - **Demand pricing** has an explainer bubble at the top. Until the course has 3 months of tee times it shows only the locked state: progress and the date it unlocks. Unlocked, it shows why it suggests the prices, the week of prices, floor and ceiling, and a terms checkbox. Demand prices show wherever the price does; members and residents keep their own rates.
+   - **Closed days** is a month calendar. Green means golfers can book that day now, red means closed, and a closed day shows the reason. Tapping a day opens a popup to close it, with a warning if golfers are booked (they stay booked), or to open it again. There's no side list.
+   - **Booking rules** is removed from Schedule, because it lives in Settings. Anything on it that Settings lacks moves to Settings, not lost.
+   - **Build first, before the page wires it:**
+     - The demand engine (`src/lib/demand-pricing.ts`) unlocks at 28 days of data, but Cam wants 3 months.
+     - The demand terms need a new agreement version and counsel. Until then the page shows the locked state only.
+     - Removing last-minute deals from the UI needs Build to decide what happens to deals already running. Never leave a live deal no one can see.
+     - Wire only what the data supports; hide the rest, never fake it.
+5. Then Events → Analytics → Settings → Course alert, one page at a time, mockup first.
 
 ## Small follow-ups (do with the next PR that touches the file)
 - `StockTab` side card goes solid at lg after a tap: use `max-lg:fixed max-lg:inset-0`.
