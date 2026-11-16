@@ -4,7 +4,7 @@
 // Run: npx tsx scripts/season-pass-db-test.ts
 import { readFileSync } from 'fs';
 import { prisma } from '../src/lib/prisma';
-import { termOf, paidTermDates, passOnSale, readPassDates, ledgerWhat, passStart, termRunning, isDay, passMemberChange, passSeasonMoveError } from '../src/lib/season-pass';
+import { termOf, paidTermDates, passOnSale, readPassDates, ledgerWhat, passStart, termRunning, isDay, passMemberChange, passSeasonMoveError, tierCoversDay } from '../src/lib/season-pass';
 import { amountsDue, markDuesPaidAtCourse, recordPaidTerm, paidOnlyPasses } from '../src/lib/membership-dues';
 import { importMembers } from '../src/lib/member-import';
 import { paidUntilRenewal } from '../src/lib/membership-renewal';
@@ -84,6 +84,13 @@ async function cleanup() {
   ok('dues this year and the member\'s payments read passes too', /MEMBERSHIP_WHATS/.test(src('src/lib/dues-year.ts')) && /MEMBERSHIP_WHATS/.test(src('src/app/api/member/[courseSlug]/payments/route.ts')));
   ok('an ended pass is never reminded as overdue', /passStartsOn: null,/.test(src('src/app/api/operator/members/remind-overdue/route.ts')));
   ok('the routes use the tested rules, and the join list hides an ended pass', /passMemberChange\(\{/.test(src('src/app/api/operator/members/route.ts')) && /passSeasonMoveError\(tier, d\.startsOn, sold\)/.test(src('src/app/api/operator/tiers/route.ts')) && /!passEnded\(found, todayIn\(course\.timezone\)\)/.test(src('src/app/api/courses/[slug]/join/route.ts')));
+  const summerTier = { kind: 'pass', passStartsOn: '2026-06-01', passEndsOn: '2026-08-31' };
+  ok('a pass tier covers its own season only (Cam\'s June–August example); a membership tier always', !tierCoversDay(summerTier, '2026-05-20') && tierCoversDay(summerTier, '2026-06-01') && tierCoversDay(summerTier, '2026-08-31') && !tierCoversDay(summerTier, '2026-09-01') && tierCoversDay({ kind: 'membership', passStartsOn: null, passEndsOn: null }, '2026-09-01') && !tierCoversDay({ ...summerTier, passEndsOn: null }, '2026-07-01'));
+  ok('every path that prices by the tier checks the play date: a staff move, a tier picked at the counter, the counter\'s tier list, the check-in cart',
+    /!tierCoversDay\(named, slot\.date\)/.test(src('src/lib/move-booking.ts')) && /if \(!tierCoversDay\(tier, teeTime\.date\)\) return/.test(src('src/lib/counter-pay.ts'))
+    && /tiers\.filter\(t => tierCoversDay\(t, playDay\)\)/.test(src('src/app/api/operator/counter-members/route.ts')) && /liveMembershipWhere\(grace, new Date\(\), booking\.teeTime\.date\)/.test(src('src/lib/checkin-booking.ts')));
+  ok('the walk-in form sends the tee time\'s date to the member search and the tier list', (src('src/app/dashboard/page.tsx').match(/\/api\/operator\/counter-members\?[^`]*date=\$\{slot\.date\}/g) ?? []).length === 2);
+  ok('the member portal refuses a date that isn\'t a day', /if \(!isDay\(date\)\) return NextResponse\.json/.test(src('src/app/api/member/[courseSlug]/tee-times/route.ts')));
   ok('the counter\'s member search offers a pass for the tee time\'s day', /liveMembershipWhere\(course, new Date\(\), onDay\)/.test(src('src/app/api/operator/counter-members/route.ts')) && /membershipLive\(m, teeTime\.course, new Date\(\), teeTime\.date\)/.test(src('src/lib/counter-pay.ts')));
   ok('resident-rate prices the golfer\'s pass on the tee time\'s day, as booking does', /getGolferMembership\(tt\.courseId, grace, tt\.date\)/.test(src('src/app/api/bookings/resident-rate/route.ts')) && /membershipLive\(m, grace, new Date\(\), tt\.date\) \? m\.tier/.test(src('src/app/api/bookings/resident-rate/route.ts')));
 

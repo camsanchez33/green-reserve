@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isDay } from '@/lib/season-pass';
 import { memberPricingOn, residentPricingOn } from '@/lib/pricing-switch';
 import { dealPct, dealRateSeat } from '@/lib/last-minute';
 import { demandPctAt, onlinePublicSeat, dealWins, loadDemand } from '@/lib/demand-pricing';
@@ -19,6 +20,7 @@ export async function GET(
 
   const date = req.nextUrl.searchParams.get('date');
   if (!date) return NextResponse.json({ error: 'date param required' }, { status: 400 });
+  if (!isDay(date)) return NextResponse.json({ error: 'date must be YYYY-MM-DD' }, { status: 400 });
 
   const course = await prisma.course.findUnique({ where: { slug: courseSlug } });
   if (!course) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

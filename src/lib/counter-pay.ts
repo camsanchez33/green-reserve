@@ -8,6 +8,7 @@
 // the shop items' sales tax, refunding a hold fee taken after the cutoff, and
 // refunding a booking fee already taken on its own.
 import { memberPricingOn, residentPricingOn } from './pricing-switch';
+import { tierCoversDay } from './season-pass';
 import { prisma } from './prisma';
 import { ensureShopTax, recordRoundShopTax } from './round-shop-tax';
 import { recordBookingEvent, recordBookingEventSafe, teeTimeInstant, type EventActor } from './booking-events';
@@ -267,6 +268,8 @@ export async function createCounterBooking(courseId: string, input: CounterBooki
       tier = await prisma.membershipTier.findFirst({ where: { id: rate.slice(5), courseId, active: true } });
     }
     if (!tier) return { ok: false, status: 400, error: 'That membership isn’t on your course.' };
+    // Memberships item 4: a season pass picked as a tier gives its rate only for a round in its season.
+    if (!tierCoversDay(tier, teeTime.date)) return { ok: false, status: 409, error: `${tier.name} doesn’t cover ${teeTime.date} — book them at the standard rate.` };
     const r = applyTierRates(teeTime, tier);
     const n = memberPlayers(players, tier);
     ratedGreen = splitTotal(players, n, rated(r.greenFeeCents), pub);

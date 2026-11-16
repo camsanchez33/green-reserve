@@ -153,3 +153,13 @@ export function passSeasonMoveError(current: { passEndsOn: string | null }, next
     ? 'This pass has been sold for its season — make a new season pass for the next season instead of moving this one.'
     : null;
 }
+
+/**
+ * A tier's own season covers a round's play date (Cam 2026-11-16: "if the pass is june-august and they buy in may then
+ * it starts in june"). A membership tier always does; a pass only from its first day to its last. For the paths that
+ * price by the tier itself (a staff move, a tier picked at the counter): the membership paths use membershipLive.
+ */
+export function tierCoversDay(tier: { kind: string; passStartsOn: string | null; passEndsOn: string | null }, day: string): boolean {
+  if (tier.kind !== 'pass') return true;
+  return !!tier.passStartsOn && !!tier.passEndsOn && day >= tier.passStartsOn && day <= tier.passEndsOn;
+}

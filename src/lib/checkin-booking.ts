@@ -110,7 +110,8 @@ export async function cartAddOnCentsFor(booking: {
     where: {
       courseId: booking.courseId,
       // Lapsed members (past the end date + grace days) pay the public cart fee (lib/member-rates).
-      ...liveMembershipWhere(grace),
+      // Memberships item 4: keyed on the round's play date, not the day it is checked in.
+      ...liveMembershipWhere(grace, new Date(), booking.teeTime.date),
       AND: [{ OR: [
         ...(booking.golferAccountId ? [{ golferId: booking.golferAccountId }] : []),
         ...(booking.golferEmail ? [{ inviteEmail: { equals: booking.golferEmail, mode: 'insensitive' as const } }] : []),
