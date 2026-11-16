@@ -46,6 +46,23 @@ attempted. `⚖️` cannot be closed by a Claude session.
       sends the day-0 notice at its next run.
       → Findings L-4 · Register PM-4
 
+- [ ] **LQ-19 — Counsel: a card-only fee may be a card surcharge under NJ and card-network rules (disclosure, caps, debit). Read before turning it on for any course.** ⚖️
+      SHOP-FEE-1 (Cam 2026-11-16): GreenReserve's 1% "GreenReserve service fee" on
+      pro-shop items, charged only when the golfer pays by card (cash, counter,
+      check and member accounts carry none). Charging card payers only is what
+      the card networks and several states treat as a surcharge. Questions for
+      counsel: does it count as one when GreenReserve (not the merchant of record,
+      the course) is the one taking it as a Stripe application fee; Visa and
+      Mastercard surcharge rules (notice to the acquirer, a cap, disclosure at the
+      point of entry and on the receipt, and no surcharge on debit or prepaid
+      cards, which today it does not tell apart); New Jersey's surcharge
+      disclosure law and any cap; and whether "service fee" naming holds up when it
+      is card-only. The fee is built and gated per course on Operator Agreement
+      v2026-12 (`legal/documents/operator-agreement/2026-12.md`, `draft: true` until
+      this is read). Turning it on: counsel's answer here, then the publish steps
+      in DECISIONS SHOP-FEE-1.
+      → Register PM-4
+
 - [ ] **LQ-5 — Form the entity.** ⚖️ optional but cheap
       See `ENTITY_BRIEF.md`. NJ LLC, registered agent, EIN, bank account,
       operating agreement, Stripe account transfer. Nothing else in this queue

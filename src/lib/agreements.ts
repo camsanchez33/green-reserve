@@ -81,11 +81,23 @@ export function listVersions(document: AgreementDocument): string[] {
   return fs.readdirSync(dir).filter(f => f.endsWith('.md')).map(f => f.replace(/\.md$/, '')).sort().reverse();
 }
 
-/** The current version of a document = the newest file on disk. */
+/** AG-2's draft test on a file's raw text: front matter `draft: true`, or the COUNSEL "not reviewed" marker. */
+function rawIsDraft(raw: string): boolean {
+  const { meta, body } = parseFrontMatter(raw);
+  return meta.draft === true || /<!--[^>]*COUNSEL:[^>]*not reviewed/i.test(body);
+}
+
+/**
+ * The current version of a document = the newest file on disk that is not a draft.
+ * SHOP-FEE-1 (2026-11-16): a version waiting on counsel can sit on disk as a draft
+ * without becoming what courses sign — before, a draft newest file took the
+ * document out of signing altogether (signableDocuments drops drafts). If every
+ * file is a draft, the newest is returned (and signableDocuments still drops it).
+ */
 export function currentVersion(document: AgreementDocument): string {
-  const v = listVersions(document)[0];
-  if (!v) throw new Error(`No versions on disk for ${document}`);
-  return v;
+  const versions = listVersions(document);
+  if (!versions.length) throw new Error(`No versions on disk for ${document}`);
+  return versions.find(v => !rawIsDraft(fs.readFileSync(filePath(document, v), 'utf8'))) ?? versions[0];
 }
 
 export function loadDocument(document: AgreementDocument, version: string = currentVersion(document)): LoadedDocument {

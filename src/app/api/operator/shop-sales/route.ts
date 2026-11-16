@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, requirePermission, can } from '@/lib/session';
-import { createSale, findSales, voidCashSale, settleOpenSale, saleView, reconcileStuckSale, cancelSaleIntent, whyNotOpen, refundSale, sendShopRefund, reverseShopRefundTax, hasDiscount, SALE_INCLUDE, type SaleView } from '@/lib/shop-sales';
+import { createSale, findSales, voidCashSale, settleOpenSale, saleView, reconcileStuckSale, cancelSaleIntent, whyNotOpen, refundSale, sendShopRefund, reverseShopRefundTax, hasDiscount, SALE_INCLUDE, saleCardCents, serviceFeeBackCents, type SaleView } from '@/lib/shop-sales';
 import { rateLimit } from '@/lib/rate-limit';
 import { todayIn, DEFAULT_TZ, isValidTimezone } from '@/lib/course-time';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
@@ -91,10 +91,11 @@ async function sendLink(courseId: string, sale: SaleView, payToken: string, via:
       if ((sale.customerPhone || '').replace(/\D/g, '').length < 10) return 'Add a mobile number to text the link.';
       const to = normalizePhone(sale.customerPhone);
       if (!to.startsWith('+1')) return 'Pay links can only be texted to US and Canadian numbers — email it instead.';
-      await sendSms(to, `GreenReserve: pay $${(sale.totalCents / 100).toFixed(2)} for your ${courseName} pro shop items here (Apple Pay, Google Pay or card): ${payUrl} Reply STOP to opt out.`, { kind: 'shop_pay_link_text', courseId });
+      // SHOP-FEE-1: the link pays by card, so its amount includes GreenReserve's service fee.
+      await sendSms(to, `GreenReserve: pay $${(saleCardCents(sale) / 100).toFixed(2)} for your ${courseName} pro shop items here (Apple Pay, Google Pay or card): ${payUrl} Reply STOP to opt out.`, { kind: 'shop_pay_link_text', courseId });
     } else {
       if (!sale.customerEmail || isPlaceholderEmail(sale.customerEmail) || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(sale.customerEmail)) return 'Add an email address to send the link.';
-      await sendShopSalePayLinkEmail({ courseId, email: sale.customerEmail, name: sale.customerName, courseName, totalCents: sale.totalCents, taxCents: sale.taxCents, lines: sale.lines, payUrl, discountCents: sale.discountCents, discountNote: sale.discountNote });
+      await sendShopSalePayLinkEmail({ courseId, email: sale.customerEmail, name: sale.customerName, courseName, totalCents: saleCardCents(sale), serviceFeeCents: sale.serviceFeeCents, taxCents: sale.taxCents, lines: sale.lines, payUrl, discountCents: sale.discountCents, discountNote: sale.discountNote });
     }
     return null;
   } catch (err) {
@@ -295,11 +296,11 @@ export async function PATCH(req: NextRequest) {
         // RECEIPT-3 (Cam 2026-11-09: "this is the receipt text, not even a link"): the text is the link; the page is the receipt.
         const url = await shopReceiptUrl(g.session.courseId, s.id);
         if (!url) return NextResponse.json({ error: 'The receipt link couldn’t be made — try again.' }, { status: 500 });
-        await sendSms(phone, `GreenReserve: your receipt from ${s.course.name} ($${(s.totalCents / 100).toFixed(2)}): ${url} Reply STOP to opt out.`, { kind: 'shop_receipt_text', courseId: g.session.courseId });
+        await sendSms(phone, `GreenReserve: your receipt from ${s.course.name} ($${(saleCardCents(s) / 100).toFixed(2)}): ${url} Reply STOP to opt out.`, { kind: 'shop_receipt_text', courseId: g.session.courseId });
       } else {
         if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to) || isPlaceholderEmail(to)) return NextResponse.json({ error: 'Enter an email address for the receipt.' }, { status: 400 });
         await sendShopReceiptEmail({ email: to.toLowerCase(), name: s.customerName, courseName: s.course.name, courseId: g.session.courseId, saleId: s.id, saleNumber: s.number, lines: v.lines,
-          discountCents: s.discountCents, discountNote: s.discountNote, taxCents: s.taxCents, totalCents: s.totalCents, paidWith, paidAt, cashTenderedCents: s.cashTenderedCents, refundedCents: s.refundedCents });
+          discountCents: s.discountCents, discountNote: s.discountNote, taxCents: s.taxCents, totalCents: saleCardCents(s), serviceFeeCents: s.serviceFeeCents, paidWith, paidAt, cashTenderedCents: s.cashTenderedCents, refundedCents: s.refundedCents + serviceFeeBackCents(s.refundedCents, s) });
       }
     } catch (err) {
       // SMS-1: a receipt can't ask for consent at this point — email it instead.

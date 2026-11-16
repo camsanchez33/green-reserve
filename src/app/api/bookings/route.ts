@@ -27,7 +27,7 @@ import { claimTeeTime, TeeTimeClaimError, findDoubleTap, type ClaimResult } from
 import { windowFor, withinWindow } from '@/lib/booking-window';
 import { rulesFor, groupSizeError, walkingAllowedAt } from '@/lib/booking-rules';
 import { DEMO_COURSE_SLUGS } from '@/lib/demo-courses';
-import { CURRENT_TERMS_VERSION } from '@/lib/terms';
+import { termsVersionNow } from '@/lib/terms';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
@@ -378,7 +378,7 @@ export async function POST(req: NextRequest) {
       noShowFeeTotal,
       autoNoShowMinutesAtBooking: policy.autoNoShowMinutes,
       termsAcceptedAt:  new Date(),
-      termsVersion:     CURRENT_TERMS_VERSION,
+      termsVersion:     await termsVersionNow(),
     }, { type: 'golfer', id: golferSession?.golferId ?? null }, { online: true }); // ADDTIME-1: never a time kept for staff
   } catch (err) {
     if (promo) await releaseUse(promo.id);

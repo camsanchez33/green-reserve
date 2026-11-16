@@ -16,6 +16,7 @@
 // take it → receipt. Tee times are paid on the tee sheet only (Cam: "tee times shouldnt be paid for in pro shop
 // they are paid on tee times"), so the register no longer lists rounds or walk-ins; the server routes are unchanged.
 import SmsConsentAsk from '@/components/dashboard/SmsConsentAsk';
+import { SHOP_FEE_LABEL } from '@/lib/booking-fees';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { StaffNotice } from '@/components/dashboard/StaffNotice';
@@ -40,6 +41,8 @@ type Item = FlatItem;
 type Refund = { id: string; amountCents: number; method: string; status: string; reason: string; restocked: boolean; error: string; createdAt: string };
 type Sale = {
   id: string; status: string; totalCents: number; taxCents: number; createdAt: string; paidAt: string | null; customerName: string; customerPhone: string; customerEmail: string; soldBy: string;
+  /** SHOP-FEE-1: GreenReserve's service fee the card pays on top of totalCents. */
+  serviceFeeCents?: number;
   lines: { id: string; name: string; unitPriceCents: number; quantity: number; returnedQty: number; round: boolean }[];
   discountCents: number; discountNote: string; cashTenderedCents: number | null; refundedCents: number; receiptSentAt: string | null; refunds: Refund[];
   /** POS-3 R2: green fees in this sale — refunded from the booking, not here. */
@@ -74,8 +77,10 @@ const SALES_STATE: [SalesShow, string][] = [['paid', 'Paid'], ['waiting', 'Waiti
 /** A sale's number as staff see it: the running number, or the receipt # printed on older receipts. */
 const saleNo = (s: Pick<Sale, 'id' | 'number'>) => (s.number != null ? `#${s.number}` : `#${s.id.slice(-8).toUpperCase()}`);
 type Discount = { mode: 'percent' | 'amount'; value: string; note: string };
-type Quote = { key: string; subtotalCents: number; discountCents: number; taxCents: number; totalCents: number; taxCalculationId: string; taxUnavailable?: boolean };
+type Quote = { key: string; subtotalCents: number; discountCents: number; taxCents: number; totalCents: number; taxCalculationId: string; taxUnavailable?: boolean; cardFeeCents?: number };
 
+// SHOP-FEE-1: the fee's share a sale's refunds gave back (lib/shop-sales serviceFeeBackCents, pro rata, half up).
+const feeBackOf = (s: { totalCents: number; refundedCents: number; serviceFeeCents?: number }) => { const f = s.serviceFeeCents ?? 0; return f > 0 && s.totalCents > 0 ? Math.min(f, Math.round(f * Math.min(s.refundedCents, s.totalCents) / s.totalCents)) : 0; };
 const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
 const initials = (name: string) => name.split(/\s+/).filter(w => /^[A-Za-z0-9]/.test(w)).slice(0, 2).map(w => w[0]).join('').toUpperCase();
 const toCents = (v: string) => { const n = Number(v.replace(/[$,\s]/g, '')); return Number.isFinite(n) && n > 0 ? Math.round(n * 100) : 0; };
@@ -459,7 +464,9 @@ export default function ShopPage() {
   const takenOf = (list: Sale[], today: boolean) => { const paid = list.filter(s => isPaid(s) && (!today || paidToday(s.paidAt)) && s.totalCents - (s.roundsCents ?? 0) > 0); return { count: paid.length, cents: paid.reduce((t, s) => t + s.totalCents - (s.roundsCents ?? 0) - s.refundedCents, 0) }; };
   // A sale that changed under the steps (emptied, or the total is being worked out again) goes back to building.
   useEffect(() => { if ((step === 'pay' || step === 'take') && empty && !onReader) setStep(null); }, [step, empty, onReader]);
-  const chargeLabel = cashNoQuote ? 'Charge' : `Charge ${usd(due)}`;
+  // SHOP-FEE-1: a card (reader or pay link) pays GreenReserve's service fee on top; cash and on account don't.
+  const cardFee = pay === 'reader' || pay === 'sms' || pay === 'email' ? priced?.cardFeeCents ?? 0 : 0;
+  const chargeLabel = cashNoQuote ? 'Charge' : `Charge ${usd(due + cardFee)}`;
   const takeDisabled = !payChoices.some(k => k === pay) || busy === 'sale' || needContact || !ready || (pay === 'cash' && !cashNoQuote && tenderedCents > 0 && tenderedCents < due) || (pay === 'account' && !accountMember) || (pay === 'reader' && (!readerId || onReader?.state === 'waiting'));
   // Quick cash amounts: the exact total, then the next notes up.
   const quickCash = [due, ...[2000, 5000, 10000].filter(n => n > due)].filter((n, i, a) => n > 0 && a.indexOf(n) === i).slice(0, 4);
@@ -650,6 +657,7 @@ export default function ShopPage() {
                           {priced && priced.discountCents > 0 && <div className="flex justify-between text-ink-soft"><dt>Discount{discount?.note.trim() ? ` (${discount.note.trim()})` : ''}</dt><dd className="tabular-nums">−{usd(priced.discountCents)}</dd></div>}
                           {priced && priced.taxCents > 0 && <div className="flex justify-between text-ink-soft"><dt>Sales tax</dt><dd className="tabular-nums">{usd(priced.taxCents)}</dd></div>}
                           <div className="flex items-baseline justify-between pt-2 text-ink"><dt className="text-[16px] font-semibold">Total</dt><dd className="text-[24px] font-bold tabular-nums">{cashNoQuote ? <span className="text-ink-muted font-normal text-base">—</span> : priced ? usd(due) : <span className="text-ink-muted font-normal text-sm">Working it out…</span>}</dd></div>
+                          {priced && (priced.cardFeeCents ?? 0) > 0 && <div className="flex justify-between text-ink-soft"><dt>{SHOP_FEE_LABEL}</dt><dd className="tabular-nums">+{usd(priced.cardFeeCents ?? 0)}</dd></div>}
                         </dl>
                       )}
                       {noTax && <p className="text-[13px] text-warn mb-2" role="status">No sales tax right now — cash or on account only. <button type="button" onClick={() => setQuoteTry(n => n + 1)} className="underline font-medium">Try again</button></p>}
@@ -663,7 +671,7 @@ export default function ShopPage() {
                 ) : (
                   <>
                     <div className="flex items-center justify-between gap-2 px-5 py-4 border-b border-line">
-                      <h2 className="text-[15px] font-semibold text-ink tabular-nums">{step === 'done' ? (linkSent ? 'Sent' : 'Paid') : onReader ? `Charge ${usd(onReader.sale.totalCents)}` : chargeLabel}</h2>
+                      <h2 className="text-[15px] font-semibold text-ink tabular-nums">{step === 'done' ? (linkSent ? 'Sent' : 'Paid') : onReader ? `Charge ${usd(onReader.sale.totalCents + (onReader.sale.serviceFeeCents ?? 0))}` : chargeLabel}</h2>
                       {step !== 'done' && onReader?.state !== 'waiting' && <button type="button" onClick={() => { setStep(null); setOnReader(null); }} className={LINK}>Back to sale</button>}
                     </div>
                     <div className="px-5 py-4 space-y-3 flex-1">
@@ -737,8 +745,8 @@ export default function ShopPage() {
                             <div className={'border-l-[3px] pl-3 space-y-2 ' + (onReader.state === 'waiting' ? 'border-warn' : 'border-bad')} role="status" aria-live="polite">
                               <p className="text-[14px] text-ink">
                                 {onReader.state === 'waiting'
-                                  ? <><span className="font-semibold tabular-nums">{usd(onReader.sale.totalCents)}</span> on {readerName(onReader.readerId)} — waiting for the card.</>
-                                  : <><span className="font-semibold tabular-nums">{usd(onReader.sale.totalCents)}</span> not paid. {onReader.message}</>}
+                                  ? <><span className="font-semibold tabular-nums">{usd(onReader.sale.totalCents + (onReader.sale.serviceFeeCents ?? 0))}</span> on {readerName(onReader.readerId)} — waiting for the card.</>
+                                  : <><span className="font-semibold tabular-nums">{usd(onReader.sale.totalCents + (onReader.sale.serviceFeeCents ?? 0))}</span> not paid. {onReader.message}</>}
                               </p>
                               {onReader.state === 'waiting' && onReader.message && <p className="text-[12.5px] text-ink-muted">{onReader.message}</p>}
                               <div className="flex flex-wrap gap-x-4 gap-y-1.5">
@@ -774,7 +782,7 @@ export default function ShopPage() {
                         <>
                           {justPaid ? (
                             <div className="text-center pt-2">
-                              <p className="text-[30px] font-bold tabular-nums text-ink">{usd(justPaid.totalCents)}</p>
+                              <p className="text-[30px] font-bold tabular-nums text-ink">{usd(justPaid.totalCents + (justPaid.serviceFeeCents ?? 0))}</p>
                               <p className="text-[13.5px] text-ok font-medium mt-1">
                                 {justPaid.status === 'paid_card' ? 'Paid by card' : justPaid.status === 'paid_account' ? 'On their account' : 'Paid in cash'}
                                 {justPaid.cashTenderedCents != null && justPaid.cashTenderedCents > justPaid.totalCents && <> · change <span className="tabular-nums">{usd(justPaid.cashTenderedCents - justPaid.totalCents)}</span></>}
@@ -869,7 +877,7 @@ export default function ShopPage() {
                             <b className="block truncate text-[14px] font-semibold text-ink">{x.lines.map(l => `${l.name}${l.quantity > 1 ? ` ×${l.quantity}` : ''}`).join(', ') || 'Sale'}</b>
                             <span className="block truncate text-[12.5px] text-ink-muted">{st.tone === 'neutral' ? st.label : <StatusDot status={st.tone} label={st.label} />}{x.customerName ? ` · ${x.customerName}` : ''}</span>
                           </span>
-                          <span className={'text-right text-[15px] tabular-nums ' + (x.status === 'void' ? 'text-ink-muted line-through font-medium' : 'text-ink font-semibold')}>{usd(x.totalCents)}</span>
+                          <span className={'text-right text-[15px] tabular-nums ' + (x.status === 'void' ? 'text-ink-muted line-through font-medium' : 'text-ink font-semibold')}>{usd(x.totalCents + (x.serviceFeeCents ?? 0))}</span>
                         </button>
                       </li>
                     );
@@ -895,8 +903,9 @@ export default function ShopPage() {
                 ))}
                 {s.discountCents > 0 && <div className="flex justify-between gap-3 py-2 border-t border-line"><dt className="text-ink-soft">Discount{s.discountNote ? ` (${s.discountNote})` : ''}</dt><dd className="font-semibold tabular-nums">−{usd(s.discountCents)}</dd></div>}
                 {(s.taxCents > 0 || sub !== s.totalCents) && <div className="flex justify-between gap-3 py-2 border-t border-line"><dt className="text-ink-soft">Tax</dt><dd className="font-semibold tabular-nums">{usd(s.taxCents)}</dd></div>}
-                <div className="flex justify-between gap-3 py-2 border-t border-line"><dt className="font-semibold text-ink">Total</dt><dd className="font-semibold tabular-nums">{usd(s.totalCents)}</dd></div>
-                {s.refundedCents > 0 && <div className="flex justify-between gap-3 py-2 border-t border-line"><dt className="text-ink-soft">Refunded</dt><dd className="font-semibold tabular-nums">−{usd(s.refundedCents)}</dd></div>}
+                {(s.serviceFeeCents ?? 0) > 0 && <div className="flex justify-between gap-3 py-2 border-t border-line"><dt className="text-ink-soft">{SHOP_FEE_LABEL}</dt><dd className="font-semibold tabular-nums">{usd(s.serviceFeeCents ?? 0)}</dd></div>}
+                <div className="flex justify-between gap-3 py-2 border-t border-line"><dt className="font-semibold text-ink">Total</dt><dd className="font-semibold tabular-nums">{usd(s.totalCents + (s.serviceFeeCents ?? 0))}</dd></div>
+                {s.refundedCents > 0 && <div className="flex justify-between gap-3 py-2 border-t border-line"><dt className="text-ink-soft">Refunded</dt><dd className="font-semibold tabular-nums">−{usd(s.refundedCents + feeBackOf(s))}</dd></div>}
               </dl>
               {pending.map(r => (
                 <div key={r.id} className="flex flex-wrap items-center gap-3 mt-2 text-[12.5px]">

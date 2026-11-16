@@ -1,6 +1,7 @@
 // RECEIPT-3: a pro shop sale's receipt — the same body for staff (Pro shop → Sales) and the customer (/receipt/shop/[id]).
 // Pure: no hooks, no client code, so the customer's page ships no JavaScript for it.
 import type { ShopReceipt } from '@/lib/shop-receipt';
+import { SHOP_FEE_LABEL } from '@/lib/booking-fees';
 
 const usd = (c: number) => `${c < 0 ? '−' : ''}$${(Math.abs(c) / 100).toFixed(2)}`;
 
@@ -25,9 +26,10 @@ export function ShopReceiptBody({ r }: { r: ShopReceipt }) {
         ))}
       </ul>
       <dl className="mt-2 grid grid-cols-[1fr_auto] gap-y-1 text-[13.5px]">
-        {(r.discountCents > 0 || r.taxCents > 0) && <><dt className="text-ink-muted">Subtotal</dt><dd className="text-right tabular-nums">{usd(subtotal)}</dd></>}
+        {(r.discountCents > 0 || r.taxCents > 0 || r.serviceFeeCents > 0) && <><dt className="text-ink-muted">Subtotal</dt><dd className="text-right tabular-nums">{usd(subtotal)}</dd></>}
         {r.discountCents > 0 && <><dt className="text-ink-muted">Discount{r.discountNote ? ` (${r.discountNote})` : ''}</dt><dd className="text-right tabular-nums">{usd(-r.discountCents)}</dd></>}
         {r.taxCents > 0 && <><dt className="text-ink-muted">Sales tax</dt><dd className="text-right tabular-nums">{usd(r.taxCents)}</dd></>}
+        {r.serviceFeeCents > 0 && <><dt className="text-ink-muted">{SHOP_FEE_LABEL}</dt><dd className="text-right tabular-nums">{usd(r.serviceFeeCents)}</dd></>}
         <dt className="pt-1 font-semibold">Total</dt><dd className="pt-1 text-right text-[18px] font-semibold tabular-nums">{usd(r.totalCents)}</dd>
         {r.cashTenderedCents != null && <><dt className="text-ink-muted">Cash given</dt><dd className="text-right tabular-nums">{usd(r.cashTenderedCents)}</dd></>}
         {change != null && <><dt className="text-ink-muted">Change</dt><dd className="text-right tabular-nums">{usd(change)}</dd></>}

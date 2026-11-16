@@ -12,22 +12,29 @@ export type ShopReceipt = {
   ref: string; courseName: string; brandColor: string; logoUrl: string; location: string;
   paidAt: string; paidWith: string; soldBy: string; customerName: string;
   lines: { name: string; unitPriceCents: number; quantity: number }[];
-  discountCents: number; discountNote: string; taxCents: number; totalCents: number;
-  cashTenderedCents: number | null; refundedCents: number;
+  discountCents: number; discountNote: string; taxCents: number;
+  /** What was paid: the course's total plus (SHOP-FEE-1) GreenReserve's service fee on a card sale. */
+  totalCents: number;
+  /** SHOP-FEE-1: GreenReserve's service fee on a card sale (0 for cash and on account), its own line. */
+  serviceFeeCents: number;
+  cashTenderedCents: number | null;
+  /** Given back so far, the fee's share included. */
+  refundedCents: number;
 };
 
 const PAID = ['paid_cash', 'paid_card', 'paid_account'];
 import { saleRef } from './sale-ref';
+import { saleCardCents, serviceFeeBackCents } from './shop-sales';
 const paidWithOf = (status: string) => (status === 'paid_card' ? 'Card' : status === 'paid_account' ? 'On account' : 'Cash');
 
 type Row = {
-  id: string; number: number | null; status: string; totalCents: number; taxCents: number; discountCents: number; discountNote: string; cashTenderedCents: number | null;
+  id: string; number: number | null; status: string; totalCents: number; serviceFeeCents: number; taxCents: number; discountCents: number; discountNote: string; cashTenderedCents: number | null;
   refundedCents: number; paidAt: Date | null; createdAt: Date; soldBy: string; customerName: string;
   lines: { name: string; unitPriceCents: number; quantity: number }[];
   course: { name: string; brandColor: string | null; logoUrl: string | null; city: string; state: string; timezone: string | null };
 };
 const SELECT = {
-  id: true, number: true, status: true, totalCents: true, taxCents: true, discountCents: true, discountNote: true, cashTenderedCents: true, refundedCents: true,
+  id: true, number: true, status: true, totalCents: true, serviceFeeCents: true, taxCents: true, discountCents: true, discountNote: true, cashTenderedCents: true, refundedCents: true,
   paidAt: true, createdAt: true, soldBy: true, customerName: true, receiptToken: true,
   lines: { orderBy: { id: 'asc' as const }, select: { name: true, unitPriceCents: true, quantity: true } },
   course: { select: { name: true, brandColor: true, logoUrl: true, city: true, state: true, timezone: true } },
@@ -39,8 +46,9 @@ export function receiptView(s: Row): ShopReceipt {
     location: [s.course.city, s.course.state].filter(Boolean).join(', '),
     paidAt: (s.paidAt ?? s.createdAt).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: s.course.timezone || 'America/New_York' }),
     paidWith: paidWithOf(s.status), soldBy: s.soldBy, customerName: s.customerName,
-    lines: s.lines, discountCents: s.discountCents ?? 0, discountNote: s.discountNote ?? '', taxCents: s.taxCents, totalCents: s.totalCents,
-    cashTenderedCents: s.status === 'paid_cash' ? s.cashTenderedCents : null, refundedCents: s.refundedCents ?? 0,
+    lines: s.lines, discountCents: s.discountCents ?? 0, discountNote: s.discountNote ?? '', taxCents: s.taxCents,
+    totalCents: saleCardCents(s), serviceFeeCents: s.serviceFeeCents ?? 0,
+    cashTenderedCents: s.status === 'paid_cash' ? s.cashTenderedCents : null, refundedCents: (s.refundedCents ?? 0) + serviceFeeBackCents(s.refundedCents ?? 0, s),
   };
 }
 
