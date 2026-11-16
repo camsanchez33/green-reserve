@@ -22,7 +22,7 @@ const sales: Sales = { ...base,
     segments: { teeCents: 10_000, cartCents: 0, shopCents: 5_000, fnbCents: 4_000, eventCents: 0, duesCents: 0, otherCents: 0 },
     paid: { onlineCents: 14_000, readerCents: 0, cashCents: 5_000, otherCents: 0 },
     series: [{ key: '2026-11-01', cents: 15_000 }, { key: '2026-11-02', cents: 4_000 }], byDow: [], byHour: [] } };
-const day = (d: Partial<RevenueLedgerDay> & { day: string }): RevenueLedgerDay => ({ cardInCents: 0, cashInCents: 0, otherInCents: 0, outCents: 0, netCents: 0, platformCents: 0, courseCardNetCents: 0, stripeNetCents: null, stripeFeeCents: null, match: 'unknown', moves: 0, ...d });
+const day = (d: Partial<RevenueLedgerDay> & { day: string }): RevenueLedgerDay => ({ cardInCents: 0, cashInCents: 0, otherInCents: 0, outCents: 0, netCents: 0, platformCents: 0, courseCardNetCents: 0, stripeNetCents: null, stripeFeeCents: null, match: 'unknown', moves: 0, ...d }) as RevenueLedgerDay; // a day without the fee split (older data) is still tested below
 const days = [
   day({ day: '2026-11-02', cardInCents: 4_000, outCents: 2_100, netCents: 1_900, platformCents: -100, feesInCents: 0, feesBackCents: 100 }),
   day({ day: '2026-11-01', cardInCents: 10_300, cashInCents: 5_000, netCents: 15_300, platformCents: 300, feesInCents: 300, feesBackCents: 0 }),
