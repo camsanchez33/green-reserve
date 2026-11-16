@@ -1710,6 +1710,11 @@ model ShopSale {
   roundsCents       Int              @default(0)
   /// POS-3 R3: the card reader the sale is being paid on ("" = not a reader sale yet).
   readerId          String           @default("")
+  /// SHOP-FEE-1 (Cam 2026-11-16): GreenReserve's service fee for paying this sale by card (pay link or
+  /// reader) — 1% of the items before tax, fixed when rung up, 0 for a course not on an agreement version
+  /// that names it. NOT in totalCents (the course's money): the card pays totalCents + serviceFeeCents and
+  /// the fee is the charge's application fee. Set back to 0 when a link sale is taken in cash.
+  serviceFeeCents   Int              @default(0)
   refunds           ShopSaleRefund[]
   lines             ShopSaleLine[]
 

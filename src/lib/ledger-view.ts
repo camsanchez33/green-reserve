@@ -199,6 +199,18 @@ export async function ledgerRows(courseId: string, day: string): Promise<LedgerR
   return describe(courseId, rows);
 }
 
+/** Every movement of a range (Revenue → Payments lists every payment type), up to LEDGER_ROWS_MAX_DAYS. */
+export const LEDGER_ROWS_MAX_DAYS = 92;
+export async function ledgerRowsRange(courseId: string, from: string, to: string): Promise<LedgerRow[] | null> {
+  const course = await prisma.course.findUnique({ where: { id: courseId }, select: { timezone: true } });
+  if (!course) return null;
+  const rows = await movesIn(courseId, dayStart(course.timezone, from), dayStart(course.timezone, addDaysStr(to, 1)));
+  return describe(courseId, rows);
+}
+
+/** Names and links for ledger rows of this course (Revenue's Stripe-mismatch detail reuses it). */
+export const describeMoves = (courseId: string, rows: Row[]) => describe(courseId, rows);
+
 async function describe(courseId: string, rows: Row[]): Promise<LedgerRow[]> {
   const ids = (k: 'bookingId' | 'saleId' | 'membershipId' | 'eventPaymentId') => [...new Set(rows.map(r => r[k]).filter((x): x is string => !!x))];
   // Names only from this course's own rows.

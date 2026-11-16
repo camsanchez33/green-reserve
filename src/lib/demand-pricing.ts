@@ -105,9 +105,27 @@ export function demandSettingsError(b: { demandFloorPct?: unknown; demandCeiling
  * Weekly: work out this course's suggestions from its last 8 weeks and store them; with
  * 'auto' they become the applied percents. Returns what it did, for the cron log.
  */
-export async function refreshDemand(courseId: string, now = new Date()): Promise<'off' | 'too_little_history' | 'suggested' | 'applied'> {
-  const c = await prisma.course.findUnique({ where: { id: courseId }, select: { demandMode: true, demandFloorPct: true, demandCeilingPct: true, timezone: true } });
+export async function refreshDemand(courseId: string, now = new Date(), opts: { claim?: boolean } = {}): Promise<'off' | 'too_little_history' | 'suggested' | 'applied' | 'not_due'> {
+  const c = await prisma.course.findUnique({ where: { id: courseId }, select: { demandMode: true, demandFloorPct: true, demandCeilingPct: true, timezone: true, demandSuggestedAt: true } });
   if (!c || c.demandMode === 'off') return 'off';
+  // The weekly cron claims the week first (compare-and-set on demandSuggestedAt): a second run that
+  // overlaps it — a duplicate invocation, or "Re-run job" on Platform activity — finds it taken and
+  // does nothing, so an automatic course never steps twice in one week (MAX_WEEKLY_STEP). A run that
+  // fails gives the claim back so tomorrow's run tries again.
+  if (opts.claim) {
+    const weekAgo = new Date(now.getTime() - 7 * 86_400_000);
+    if (c.demandSuggestedAt && c.demandSuggestedAt >= weekAgo) return 'not_due';
+    const took = await prisma.course.updateMany({ where: { id: courseId, demandSuggestedAt: c.demandSuggestedAt }, data: { demandSuggestedAt: now } });
+    if (took.count === 0) return 'not_due';
+    try { return await refreshDemandNow(courseId, c, now); } catch (err) {
+      await prisma.course.updateMany({ where: { id: courseId, demandSuggestedAt: now }, data: { demandSuggestedAt: c.demandSuggestedAt } });
+      throw err;
+    }
+  }
+  return refreshDemandNow(courseId, c, now);
+}
+
+async function refreshDemandNow(courseId: string, c: { demandMode: string; demandFloorPct: number; demandCeilingPct: number; timezone: string }, now: Date): Promise<'too_little_history' | 'suggested' | 'applied'> {
   const today = todayIn(c.timezone, now);
   const from = addDaysStr(today, -7 * WEEKS_LOOKED_AT);
   const times = await prisma.teeTime.findMany({

@@ -9,18 +9,28 @@ export function hoursLabel(n: number): string {
   return `${n} hour${n === 1 ? '' : 's'}`;
 }
 
-/** POS-1a (Cam 2026-10-08): GreenReserve's fee on pro-shop items added to a
- *  round — $0.50 per sale, paid by the golfer. Client-safe; lib/shop.ts owns the rules. */
-export const SHOP_SALE_FEE_CENTS = 50;
 /**
- * OFF until the Operator Agreement names it. v2026-10 lists GreenReserve's fees
- * as the $1.50 booking fee and 1% of dues, and /for-courses calls those "our
- * only revenue" — charging a shop fee before a version that includes it would
- * contradict the contract courses are signing. Turning it on = this line, an
- * agreement version listing the fee (re-accept), /terms and LQ-2 copy.
+ * SHOP-FEE-1 (Cam 2026-11-16, replacing POS-1a's 50¢ per sale): GreenReserve's
+ * service fee on pro-shop items paid BY CARD — 1% of the items before tax,
+ * rounded half up to the cent, added on top of what the golfer pays and taken
+ * as GreenReserve's application fee on the course's direct charge. Never on
+ * the round (green fee, cart, the $1.50 per player), never on cash, "paid at
+ * the counter", a member's account or a check.
+ *
+ * No global switch: it charges a course only once that course has accepted an
+ * Operator Agreement version that names it, and that version is published
+ * (lib/shop-fee.ts shopFeeOn). Client-safe.
  */
-export const SHOP_FEE_ON = false;
-export const SHOP_FEE_LABEL = 'GreenReserve service fee (shop items)';
+export const SHOP_FEE_PERCENT = 1;
+/** The first Operator Agreement version that names the 1% shop fee. Versions sort as text (YYYY-MM). */
+export const SHOP_FEE_FIRST_VERSION = '2026-12';
+export const SHOP_FEE_LABEL = 'GreenReserve service fee (1% of shop items)';
+
+/** 1% of `itemsCents` (shop items before tax), rounded half up to the cent: $66.00 → 66¢, $0.50 → 1¢, $0.49 → 0¢. */
+export function shopServiceFeeCents(itemsCents: number): number {
+  const c = Math.round(Number(itemsCents) || 0);
+  return c > 0 ? Math.floor((c * SHOP_FEE_PERCENT + 50) / 100) : 0;
+}
 
 /**
  * W2-9b (Cam 2026-10-21/22): GreenReserve's $1.50 per player on event payments

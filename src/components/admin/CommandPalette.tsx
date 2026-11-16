@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
 import { ADMIN_LINK, safeAdminPath } from '@/lib/admin-ask-links';
+import p from './CommandPalette.module.css';
 
 interface SearchResult {
   type: 'course' | 'inquiry' | 'golfer' | 'guest' | 'employee' | 'group' | 'thread' | 'booking' | 'nav' | 'ask';
@@ -38,6 +39,21 @@ const TYPE_LABEL: Record<SearchResult['type'], string> = {
   nav:      'Go to',
   ask:      'Ask',
 };
+
+// The palette's group headings (Platform activity mockup, Cam 2026-11-15).
+const GROUP: Record<SearchResult['type'], string> = {
+  course: 'Courses', booking: 'Bookings', nav: 'Pages', inquiry: 'Inquiries', golfer: 'Golfers', guest: 'Golfers',
+  employee: 'Team', group: 'Course groups', thread: 'Conversations', ask: 'Ask',
+};
+const GROUP_ORDER = ['Ask', 'Courses', 'Bookings', 'Pages', 'Golfers', 'Inquiries', 'Course groups', 'Conversations', 'Team'];
+const ico = (d: React.ReactNode) => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{d}</svg>;
+const ICONS: Record<string, React.ReactNode> = {
+  Recent: ico(<><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>),
+  Courses: ico(<path d="M6 21V4M6 4l11 4-11 5" />),
+  Bookings: ico(<><rect x="4" y="5" width="16" height="15" rx="2" /><path d="M4 10h16M9 3v4M15 3v4" /></>),
+  Pages: ico(<><path d="M7 3h7l4 4v14H7z" /><path d="M14 3v4h4" /></>),
+};
+const OTHER_ICON = ico(<><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></>);
 
 // AW-3b: a question goes to Ask (read-only AI answers) first; anything else
 // searches first and offers Ask as the last row.
@@ -88,9 +104,11 @@ export default function CommandPalette() {
 
   const q = query.trim();
   const askItem: SearchResult | null = q.length >= 3 ? { type: 'ask', id: 'ask', label: `“${q}”`, sub: 'an answer from live data — it can’t change anything', href: '' } : null;
+  // Platform activity mockup (Cam 2026-11-15): results in groups — Courses, Bookings, Pages, then the rest.
+  const grouped = [...results].sort((a, b) => GROUP_ORDER.indexOf(GROUP[a.type]) - GROUP_ORDER.indexOf(GROUP[b.type]));
   const displayed = !hasQuery ? recents
-    : askItem && QUESTION.test(q) ? [askItem, ...results]
-    : askItem ? [...results, askItem] : results;
+    : askItem && QUESTION.test(q) ? [askItem, ...grouped]
+    : askItem ? [...grouped, askItem] : grouped;
 
   const ask = useCallback(async (question: string) => {
     askAbortRef.current?.abort();
@@ -249,91 +267,64 @@ export default function CommandPalette() {
 
   if (!open) return null;
 
+  let lastGroup = '';
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh]"
-      onClick={e => { if (e.target === e.currentTarget) setOpen(false); }}
-    >
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-ink/30"/>
-
-      {/* Palette */}
-      <div className="relative w-full max-w-xl mx-4 bg-card rounded-lg shadow-card overflow-hidden">
-        {/* Search input — uncontrolled to prevent keystroke drops */}
-        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-line">
-          <Search className="w-4 h-4 text-ink-faint shrink-0"/>
-          <input
-            ref={inputRef}
-            onChange={handleInput}
-            onKeyDown={handleKeyDown}
-            placeholder="Course, inquiry, golfer, email, phone, booking id, page…"
-            className="flex-1 bg-transparent text-sm text-ink placeholder-ink-faint outline-none"
-          />
-          {loading && <span className="text-[11px] text-ink-muted shrink-0">Searching…</span>}
-          <kbd className="shrink-0 text-[10px] text-ink-faint border border-line rounded px-1.5 py-0.5">Esc</kbd>
+    <div className={p.ov} onMouseDown={e => { if (e.target === e.currentTarget) setOpen(false); }}>
+      <div className={p.pal} role="dialog" aria-modal="true" aria-label="Search">
+        {/* Uncontrolled to prevent keystroke drops. No placeholder words (design rule); the label says what it finds. */}
+        <div className={p.pin}>
+          <Search className="w-4 h-4 shrink-0" aria-hidden="true" />
+          <input ref={inputRef} onChange={handleInput} onKeyDown={handleKeyDown} autoComplete="off"
+            aria-label="Search courses, bookings, golfers, inquiries and pages, or ask a question" />
+          {loading && <span className={p.m}>Searching…</span>}
+          <kbd>Esc</kbd>
         </div>
 
         {/* AW-3b: the answer to an Ask */}
         {asked !== null && (
-          <div className="max-h-[60vh] overflow-y-auto px-4 py-3 text-[13.5px] text-ink leading-relaxed" aria-live="polite">
-            <div className="flex items-baseline justify-between gap-3 mb-2">
-              <span className="text-[12px] text-ink-muted truncate">Asked: {asked}</span>
-              <button type="button" onClick={() => { askAbortRef.current?.abort(); setAsked(null); setAnswering(false); inputRef.current?.focus(); }} className="text-[12px] text-ink-soft hover:text-ink shrink-0">Back to results</button>
+          <div className={p.answer} aria-live="polite">
+            <div className={p.askedRow}>
+              <span className={p.m}>Asked: {asked}</span>
+              <button type="button" className={p.link} onClick={() => { askAbortRef.current?.abort(); setAsked(null); setAnswering(false); inputRef.current?.focus(); }}>Back to results</button>
             </div>
             {answer && <AnswerText text={answer} go={href => { const path = safeAdminPath(href, window.location.origin); if (!path) return; setOpen(false); router.push(path); }} />}
-            {answering && answerStatus && <p className="text-ink-muted mt-1">{answerStatus}</p>}
+            {answering && answerStatus && <p className={p.m}>{answerStatus}</p>}
             {answerError && (
-              <p role="alert" className="text-bad">{answerError} <button type="button" onClick={() => ask(asked)} className="underline">Ask again</button></p>
+              <p role="alert" className={p.bad}>{answerError} <button type="button" className={p.link} onClick={() => ask(asked)}>Ask again</button></p>
             )}
-            {!answering && !answerError && !answer && <p className="text-ink-muted">No answer came back — ask again.</p>}
-            {!answering && answer && <p className="mt-3 text-[11px] text-ink-faint">Read from live data. Ask can’t change anything.</p>}
+            {!answering && !answerError && !answer && <p className={p.m}>No answer came back — ask again.</p>}
+            {!answering && answer && <p className={p.m}>Read from live data. Ask can’t change anything.</p>}
           </div>
         )}
 
-        {/* Results */}
         {asked === null && (
-        <div className="max-h-80 overflow-y-auto">
-          {displayed.length === 0 && (
-            <div className={'py-10 text-center text-sm ' + (searchError ? 'text-bad' : 'text-ink-muted')}>
-              {searchError
-                ? searchError
-                : hasQuery && !loading ? `No results for "${inputRef.current?.value ?? ''}"` : 'Start typing to search…'}
-            </div>
-          )}
-          {displayed.length > 0 && (
-            <>
-              {!hasQuery && recents.length > 0 && (
-                <div className="px-4 pt-2.5 pb-1">
-                  <span className="text-[13px] font-semibold text-ink">Recent</span>
+          <div className={p.body} role="listbox" aria-label="Results">
+            {displayed.length === 0 && (
+              <div className={`${p.empty} ${searchError ? p.bad : ''}`}>
+                {searchError ? searchError : hasQuery && !loading ? `Nothing matches "${inputRef.current?.value ?? ''}"` : 'Nothing opened yet'}
+              </div>
+            )}
+            {displayed.map((item, idx) => {
+              const grp = hasQuery ? GROUP[item.type] : 'Recent';
+              const heading = grp !== lastGroup ? <div className={p.pg}>{grp}</div> : null;
+              lastGroup = grp;
+              return (
+                <div key={item.type + item.id}>
+                  {heading}
+                  <button type="button" role="option" aria-selected={idx === selectedIdx}
+                    className={`${p.pi} ${idx === selectedIdx ? p.on : ''}`}
+                    onClick={() => navigate(item)} onMouseEnter={() => setSelectedIdx(idx)}>
+                    {ICONS[grp] ?? OTHER_ICON}
+                    <span className={p.t}>{item.label}</span>
+                    <span className={p.m}>{hasQuery ? item.sub : `${TYPE_LABEL[item.type]} · ${item.sub}`}</span>
+                  </button>
                 </div>
-              )}
-              {displayed.map((item, idx) => (
-                <button
-                  key={item.id}
-                  onClick={() => navigate(item)}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
-                    idx === selectedIdx ? 'bg-paper' : 'hover:bg-paper/60'
-                  }`}
-                  onMouseEnter={() => setSelectedIdx(idx)}
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-ink truncate">{item.label}</div>
-                    <div className="text-[11px] text-ink-muted truncate">{TYPE_LABEL[item.type]} · {item.sub}</div>
-                  </div>
-                </button>
-              ))}
-            </>
-          )}
-        </div>
+              );
+            })}
+          </div>
         )}
 
-        {/* Footer hint */}
-        <div className="px-4 py-2 border-t border-line flex items-center gap-3 text-[10px] text-ink-faint">
-          <span><kbd className="border border-line rounded px-1 py-0.5">↑↓</kbd> navigate</span>
-          <span><kbd className="border border-line rounded px-1 py-0.5">↵</kbd> open</span>
-          <span><kbd className="border border-line rounded px-1 py-0.5">Esc</kbd> close</span>
-          <span className="ml-auto">Ctrl+K</span>
-        </div>
+        <div className={p.foot}>Up and down to move, Enter to open</div>
       </div>
     </div>
   );

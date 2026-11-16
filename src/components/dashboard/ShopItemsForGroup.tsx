@@ -1,12 +1,12 @@
 'use client';
 // POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): pro-shop items on one
 // group's booking, in the tee-sheet panel. Items are charged with the round at
-// check-in or on the golfer's pay link, plus GreenReserve's $0.50 per sale
+// check-in or on the golfer's pay link, plus GreenReserve's 1% service fee when paid by card (SHOP-FEE-1)
 // (paid by the golfer). Once the round is paid they lock — a later sale is a
 // separate counter sale.
 import { useState } from 'react';
 import { dfetch } from '@/lib/dashboard-fetch';
-import { SHOP_FEE_LABEL, SHOP_SALE_FEE_CENTS, SHOP_FEE_ON } from '@/lib/booking-fees';
+import { SHOP_FEE_LABEL } from '@/lib/booking-fees';
 import { groupLines, type ShopLineGroup } from '@/lib/shop-lines';
 
 export type ShopLine = { id: string; name: string; unitPriceCents: number; quantity: number };
@@ -118,7 +118,7 @@ export default function ShopItemsForGroup({ bookingId, lines, shopFeeCents, shop
           })}
           {showMoney && shopFeeCents > 0 && (
             <li className="flex items-center justify-between gap-2 text-ink-muted">
-              <span>{SHOP_FEE_LABEL}</span><span className="tabular-nums">{usd(shopFeeCents)}</span>
+              <span>{SHOP_FEE_LABEL}, card only</span><span className="tabular-nums">{usd(shopFeeCents)}</span>
             </li>
           )}
           {showMoney && shopTaxCents > 0 && (
@@ -175,7 +175,7 @@ export default function ShopItemsForGroup({ bookingId, lines, shopFeeCents, shop
               {shown.length === 0 && <p className="col-span-3 py-3 text-center text-[12.5px] text-ink-muted">No match</p>}
             </div>
             {lines.length === 0 && (
-              <p className="text-[12px] text-ink-muted">Charged with the round{SHOP_FEE_ON ? `, plus GreenReserve’s ${usd(SHOP_SALE_FEE_CENTS)} per sale, paid by the golfer` : ''}.</p>
+              <p className="text-[12px] text-ink-muted">Charged with the round.</p>
             )}
           </>)}
         </div>
