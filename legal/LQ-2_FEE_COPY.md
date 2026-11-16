@@ -35,6 +35,32 @@ each membership-dues payment (`MEMBERSHIP_FEE_CENTS`) stays and is DISCLOSED in 
 same pass. If Cam would rather delete that fee, delete the sentence and the
 constant together — never one without the other.
 
+**Added 2026-11-16 (SHOP-FEE-1, Cam: a 1% "GreenReserve service fee" on pro-shop items, card only):**
+once Operator Agreement v2026-12 is in effect, GreenReserve's fees are exactly three, and every surface that
+lists fees lists all three:
+- $1.50 per player on each online booking, added to the course's price;
+- 1% of membership dues (and any initiation fee) collected through GreenReserve, added to what the member pays;
+- 1% of each card payment for pro-shop items, on the items before sales tax, added to what the golfer pays.
+  Never on the round; never on cash, "paid at the counter", a member's account or a check.
+
+Allowed, true sentences for it (use these, or ones that say strictly less):
+- "Pro-shop items paid by card carry a GreenReserve service fee of 1% of the items; cash carries none."
+- "When you pay for pro-shop items by card, a GreenReserve service fee of 1% of the items, before sales tax,
+  is added and shown before you pay."
+- Golfer-facing name, everywhere (pay pages, receipts, the register): "GreenReserve service fee" — the line
+  reads "GreenReserve service fee (1% of shop items)" (`SHOP_FEE_LABEL`). Never "processing fee", "card fee",
+  "convenience fee" or "surcharge" (LQ-19: counsel reads whether a card-only fee is a surcharge first).
+
+Until v2026-12 is in effect, no surface names the shop fee (the /terms sentence is shown only then; the
+"no commission on your green fees" line on /for-courses and in `faq.ts` is true either way and stays). Any
+sentence calling the booking fee and dues fee GreenReserve's "only" fees is banned from that day too.
+
+/terms §2, the sentence added after the membership-fee sentence (shown once v2026-12 is in effect):
+> When you pay for pro-shop items by card (on a pay link, on the course's card reader, or with your round), a
+> **GreenReserve service fee of 1% of the items**, before sales tax, is added and shown before you pay. It is
+> never charged on the round itself, and items paid in cash, at the counter or on a member's account carry no
+> GreenReserve fee. If the items are refunded, the fee is refunded in the same proportion.
+
 ---
 
 ## The copy, surface by surface
