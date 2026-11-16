@@ -10,7 +10,18 @@
 //  • Priced seat by seat, like promo codes (lib/promo-codes) — a promo code then comes
 //    off the deal price — so the per-seat rates kept on the booking add up to its total.
 //  • The percent applied is kept on the booking (lastMinutePct).
+//
+// RETIRED (Cam 2026-11-16, Schedule approved: last-minute deals removed from the page, "doesnt
+// make any sense"). No new price takes a deal: dealPct is 0 for every tee time, so the golfer
+// list, online booking, member portal, resident-rate check, a golfer's swap, a repriced move
+// and the counter all charge the normal price. The course's lastMinute* columns are left as
+// they are (no schema change, no backfill) and /api/operator/last-minute refuses changes.
+// A booking already made at a deal price keeps it: its lastMinutePct and per-seat rates are
+// stored, and dealSeat/dealRateSeat below still price it (setting residents, moves that keep
+// the price, party changes). A move repriced onto a new time takes that time's normal price.
 import { teeTimeInstant } from './booking-events';
+
+export const DEALS_RETIRED = true;
 
 export type DealCourse = {
   lastMinuteOn: boolean; lastMinuteHours: number; lastMinutePct: number;
@@ -19,6 +30,7 @@ export type DealCourse = {
 
 /** Pure: the percent off this tee time gets right now (0 = no deal). */
 export function dealPct(c: Partial<DealCourse> | null | undefined, slot: { date: string; time: string }, via: 'online' | 'counter', now: Date = new Date()): number {
+  if (DEALS_RETIRED) return 0;
   if (!c?.lastMinuteOn || !c.lastMinutePct || !c.lastMinuteHours || !c.timezone) return 0;
   if (via === 'counter' && !c.lastMinuteCounter) return 0;
   const at = teeTimeInstant(c.timezone, slot.date, slot.time.slice(0, 5));

@@ -16,6 +16,11 @@
 //    Counter bookings are never demand priced.
 //  • The percent applied is kept on the booking (demandPct); the per-seat rates on the booking
 //    carry it through party changes and partial check-ins, like a deal.
+//  • SCHED-1 (Cam 2026-11-16, Schedule approved): it unlocks only once the course has 3 months
+//    (MIN_DAYS_OF_DATA) of its own tee times, counted over ALL its history, not just the 8 weeks
+//    the suggestions look at (that window can never reach 90 days). Until then no new
+//    suggestion is worked out and the course can't turn it on or apply one (demandHistory).
+//    Last-minute deals are retired (lib/last-minute), so dealPct is 0 on every new price.
 import { prisma } from './prisma';
 import { dealSeat } from './last-minute';
 import { todayIn, addDaysStr } from './course-time';
@@ -27,7 +32,7 @@ export type DemandMap = Map<string, number> | null;
 
 export const WEEKS_LOOKED_AT = 8;
 export const MAX_WEEKLY_STEP = 10;
-const MIN_DAYS_OF_DATA = 28;
+export const MIN_DAYS_OF_DATA = 90;
 const MIN_DATES_IN_HOUR = 4;
 
 export const readDemandMode = (v: unknown): DemandMode | null => (v === 'off' || v === 'suggest' || v === 'auto' ? v : null);
@@ -64,6 +69,35 @@ export async function demandPctFor(c: DemandCourse & { id: string }, slot: { dat
   if (c.demandMode === 'off') return 0;
   return demandPctAt(c, await loadDemand(c), slot);
 }
+
+export type DemandHistory = { daysOfData: number; daysNeeded: number; unlocked: boolean; unlocksOn: string | null };
+
+/**
+ * Pure: how far a course is to unlocking. daysOfData = the past dates it had tee times on
+ * (blocked ones aside). unlocksOn = the earliest date it can unlock, assuming tee times every
+ * day from today (a closed day pushes it later); null once unlocked.
+ */
+export function historyState(daysOfData: number, today: string): DemandHistory {
+  const unlocked = daysOfData >= MIN_DAYS_OF_DATA;
+  return { daysOfData, daysNeeded: MIN_DAYS_OF_DATA, unlocked, unlocksOn: unlocked ? null : addDaysStr(today, MIN_DAYS_OF_DATA - daysOfData) };
+}
+
+/** The course's own history so far: every past date it had tee times on. */
+export async function demandHistory(courseId: string, timezone: string, now = new Date()): Promise<DemandHistory> {
+  const today = todayIn(timezone, now);
+  // groupBy, not findMany+distinct: Prisma would load every tee-time row and dedupe in memory.
+  const dates = await prisma.teeTime.groupBy({
+    by: ['date'], where: { courseId, date: { lt: today }, status: { not: 'blocked' } },
+  });
+  return historyState(dates.length, today);
+}
+
+/**
+ * Pure: whether a mode change is refused while locked. Turning it on, or moving to automatic,
+ * is; stepping down to suggest, turning it off, or staying where it is never is.
+ */
+export const demandChangeLocked = (nowMode: string, nextMode: DemandMode, unlocked: boolean) =>
+  !unlocked && nextMode !== nowMode && (nextMode === 'auto' || (nowMode === 'off' && nextMode !== 'off'));
 
 export type Cell = { dow: number; hour: number; sale: number; booked: number; dates: number };
 
@@ -133,18 +167,19 @@ async function refreshDemandNow(courseId: string, c: { demandMode: string; deman
     select: { date: true, time: true, playersAvailable: true, playersBooked: true },
   });
   const cells = new Map<string, Cell & { dateSet: Set<string> }>();
-  const allDates = new Set<string>();
   for (const t of times) {
     const dow = dowOfDate(t.date), hour = Number(t.time.slice(0, 2));
     const k = key(dow, hour);
     const cell = cells.get(k) ?? { dow, hour, sale: 0, booked: 0, dates: 0, dateSet: new Set<string>() };
     cell.sale += t.playersAvailable; cell.booked += Math.min(t.playersBooked, t.playersAvailable); cell.dateSet.add(t.date);
-    cells.set(k, cell); allDates.add(t.date);
+    cells.set(k, cell);
   }
   const list = [...cells.values()].map(c2 => ({ ...c2, dates: c2.dateSet.size }));
   const existing = await prisma.demandPrice.findMany({ where: { courseId }, select: { dow: true, hour: true, pct: true } });
   const current = new Map(existing.map(r => [key(r.dow, r.hour), r.pct]));
-  const s = suggestPcts(list, current, c.demandFloorPct, c.demandCeilingPct, allDates.size);
+  // The unlock counts all the course's history; the 8 weeks above only set the fill rates.
+  const { daysOfData } = await demandHistory(courseId, c.timezone, now);
+  const s = suggestPcts(list, current, c.demandFloorPct, c.demandCeilingPct, daysOfData);
   if (!s) { await prisma.course.update({ where: { id: courseId }, data: { demandSuggestedAt: now } }); return 'too_little_history'; }
   const auto = c.demandMode === 'auto';
   await prisma.$transaction([
