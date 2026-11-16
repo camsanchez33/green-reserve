@@ -4,7 +4,7 @@ import { resolveAdminSession, requireRole, MANAGER_PLUS, SUPPORT_PLUS, areaGate 
 import { stripe } from '@/lib/stripe';
 import { getApprovalState } from '@/lib/approval-state';
 import { getCourseTimeline, latestAgreementAcceptance, logNoteAdded, CURRENT_AGREEMENT_VERSION } from '@/lib/course-timeline';
-import { CURRENT_TERMS_VERSION } from '@/lib/terms';
+import { termsVersionNow } from '@/lib/terms';
 import { agreementStatus } from '@/lib/agreement-gate';
 import { listVersions, loadDocument, type AgreementDocument } from '@/lib/agreements';
 import { auditAdmin } from '@/lib/admin-audit';
@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
     // Real version stamped on golfer bookings (src/lib/terms.ts), not a
     // second parallel constant — no drift between what this shows and what
     // golfers actually agreed to.
-    bookingTermsVersion: CURRENT_TERMS_VERSION,
+    bookingTermsVersion: await termsVersionNow(),
     agreementVersion: CURRENT_AGREEMENT_VERSION,
     agreement: latestAgreementAcceptance(events),
     agreements,

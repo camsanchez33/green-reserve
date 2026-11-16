@@ -6,7 +6,7 @@
 // separate counter sale.
 import { useState } from 'react';
 import { dfetch } from '@/lib/dashboard-fetch';
-import { SHOP_FEE_LABEL, SHOP_SALE_FEE_CENTS, SHOP_FEE_ON } from '@/lib/booking-fees';
+import { SHOP_FEE_LABEL } from '@/lib/booking-fees';
 import { groupLines, type ShopLineGroup } from '@/lib/shop-lines';
 
 export type ShopLine = { id: string; name: string; unitPriceCents: number; quantity: number };
@@ -118,7 +118,7 @@ export default function ShopItemsForGroup({ bookingId, lines, shopFeeCents, shop
           })}
           {showMoney && shopFeeCents > 0 && (
             <li className="flex items-center justify-between gap-2 text-ink-muted">
-              <span>{SHOP_FEE_LABEL}</span><span className="tabular-nums">{usd(shopFeeCents)}</span>
+              <span>{SHOP_FEE_LABEL}, card only</span><span className="tabular-nums">{usd(shopFeeCents)}</span>
             </li>
           )}
           {showMoney && shopTaxCents > 0 && (
@@ -175,7 +175,7 @@ export default function ShopItemsForGroup({ bookingId, lines, shopFeeCents, shop
               {shown.length === 0 && <p className="col-span-3 py-3 text-center text-[12.5px] text-ink-muted">No match</p>}
             </div>
             {lines.length === 0 && (
-              <p className="text-[12px] text-ink-muted">Charged with the round{SHOP_FEE_ON ? `, plus GreenReserve’s ${usd(SHOP_SALE_FEE_CENTS)} per sale, paid by the golfer` : ''}.</p>
+              <p className="text-[12px] text-ink-muted">Charged with the round.</p>
             )}
           </>)}
         </div>

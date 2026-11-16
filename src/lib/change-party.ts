@@ -11,7 +11,7 @@
 //
 // Throws { code } errors the routes turn into words (PARTY_ERRORS).
 import { prisma } from './prisma';
-import { CURRENT_TERMS_VERSION } from './terms';
+import { termsVersionNow } from './terms';
 import { canManageBooking } from './manage-access';
 import { bookingWindowHours, rescalePartyFees } from './cancel-policy';
 import { recordBookingEvent, teeTimeInstant, type EventActor } from './booking-events';
@@ -116,7 +116,7 @@ export async function changePartySize(bookingId: string, newPlayers: number, who
         data: {
           players: newPlayers, greenFeeTotal, cartFeeTotal, ...(cartResized ? { cartRiders: cartResized.cartRiders } : ridersAfter != null ? { cartRiders: ridersAfter } : {}), ...(packBack > 0 ? { packRounds: booking.packRounds - packBack } : {}),
           ...(res ? { residentPlayers: res.residentPlayers, residentRateCents: res.residentRateCents } : {}), accessFeeTotal, totalAmount, cancellationFeeTotal, noShowFeeTotal,
-          ...(who.by === 'golfer' ? { termsAcceptedAt: new Date(), termsVersion: CURRENT_TERMS_VERSION } : {}),
+          ...(who.by === 'golfer' ? { termsAcceptedAt: new Date(), termsVersion: await termsVersionNow() } : {}),
         },
       });
       if (who.by === 'staff') await recordBookingEvent(tx, {

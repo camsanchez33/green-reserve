@@ -2,7 +2,12 @@
 // sold at the counter with no round attached. Paid in cash (recorded, no
 // charge) or by a pay link the customer opens on their phone, which is a
 // direct charge on the course's own Stripe account, exactly like a round.
-// GreenReserve takes nothing on a sale while SHOP_FEE_ON is false.
+// SHOP-FEE-1 (Cam 2026-11-16): a sale paid by card (pay link or reader) carries
+// GreenReserve's service fee — 1% of the items before tax (shopFeeBaseCents),
+// fixed on the sale as serviceFeeCents when it is rung up, 0 for a course not on
+// an agreement version that names it (lib/shop-fee.ts). It is NOT in totalCents
+// (the course's money): the card pays saleCardCents() and the fee is the
+// charge's application fee. Cash and on-account sales never carry it.
 //
 // POS-3 (Cam 2026-10-24: "look at how Shopify runs their POS or … Square"):
 // custom-amount lines, a discount on the whole sale (shop.discount), cash
@@ -24,12 +29,13 @@ import { ROUND_PACKS_ON, PACKS_OFF } from './round-packs-switch';
 import { prisma } from './prisma';
 import Stripe from 'stripe';
 import { stripe } from './stripe';
-import { MAX_ITEM_PRICE_CENTS, MAX_LINE_QUANTITY, takeStock, shopFeeFor } from './shop';
+import { MAX_ITEM_PRICE_CENTS, MAX_LINE_QUANTITY, takeStock } from './shop';
+import { shopFeeForCourse } from './shop-fee';
 import { notifyLowStock } from './low-stock';
 import { quoteShopTax, reuseShopTaxQuote, recordShopSaleTax, type TaxLine } from './sales-tax';
 import { todayIn, addDaysStr } from './course-time';
 import { teeTimeInstant } from './booking-events';
-import { recordMove } from './money-ledger';
+import { recordMove, feeBackCents } from './money-ledger';
 import { addCharge } from './member-account';
 
 export const MAX_SALE_CENTS = 1_000_000; // $10,000 — a typo guard
@@ -56,6 +62,8 @@ export type SaleView = {
   roundsCents: number;
   /** POS-3 R3: sent as a pay link (else rung up at the counter — cash or the card reader). */
   link: boolean;
+  /** SHOP-FEE-1: GreenReserve's service fee the card pays on top of totalCents (0 for cash and on account). */
+  serviceFeeCents: number;
 };
 
 type SaleRow = {
@@ -63,7 +71,7 @@ type SaleRow = {
   id: string; status: string; totalCents: number; taxCents: number; createdAt: Date; paidAt: Date | null;
   customerName: string; customerPhone: string; customerEmail: string; soldBy: string;
   lines: { id: string; name: string; unitPriceCents: number; quantity: number; returnedQty: number; bookingId: string | null }[];
-  discountCents?: number; discountNote?: string; cashTenderedCents?: number | null; refundedCents?: number; receiptSentAt?: Date | null; roundsCents?: number; payToken?: string;
+  discountCents?: number; discountNote?: string; cashTenderedCents?: number | null; refundedCents?: number; receiptSentAt?: Date | null; roundsCents?: number; payToken?: string; serviceFeeCents?: number;
   refunds?: { id: string; amountCents: number; method: string; status: string; reason: string; restocked: boolean; error: string; createdBy: string; createdAt: Date }[];
 };
 
@@ -76,7 +84,11 @@ export const saleView = (s: SaleRow): SaleView => ({
   refundedCents: s.refundedCents ?? 0, receiptSentAt: s.receiptSentAt?.toISOString() ?? null, roundsCents: s.roundsCents ?? 0,
   refunds: (s.refunds ?? []).map(r => ({ ...r, createdAt: r.createdAt.toISOString() })),
   link: !!s.payToken,
+  serviceFeeCents: s.serviceFeeCents ?? 0,
 });
+
+/** SHOP-FEE-1: what the card pays for a sale — the course's total plus GreenReserve's service fee. */
+export const saleCardCents = (s: { totalCents: number; serviceFeeCents?: number | null }) => s.totalCents + (s.serviceFeeCents ?? 0);
 
 /** What every sale read includes, so saleView has the whole sale. */
 export const SALE_INCLUDE = {
@@ -186,6 +198,14 @@ const taxLines = (lines: PricedLine[], discountCents = 0): TaxLine[] => {
     // A line discounted to nothing has no tax to work out (Stripe wants a positive amount).
     .filter(l => l.amountCents > 0);
 };
+/**
+ * SHOP-FEE-1: what GreenReserve's 1% is taken on — the shop items after the sale's discount, before tax.
+ * Never a round pack (prepaid rounds are green fees: "never the round") nor a green fee rung up here.
+ */
+export function shopFeeBaseCents(lines: { unitPriceCents: number; quantity: number; pack?: unknown }[], discountCents = 0): number {
+  const after = spreadDiscount(lines.map(l => l.unitPriceCents * l.quantity), discountCents);
+  return lines.reduce((n, l, i) => n + (l.pack ? 0 : after[i]), 0);
+}
 const TAX_DOWN = 'We couldn’t work out the sales tax just now — try again in a moment.';
 export const TOTAL_CHANGED = 'The sales tax changed since the total was shown — look at the new total.';
 
@@ -199,7 +219,7 @@ async function taxFor(courseId: string, lines: TaxLine[], reuseId?: string) {
 // Cam 2026-10-29 ("no tax on cash"): when Stripe Tax can't be reached the quote
 // says so (taxUnavailable) instead of failing, so the counter can still take
 // cash — with no tax, marked on the sale. A pay link or the card reader still waits.
-export async function quoteSale(courseId: string, raw: unknown, discount?: DiscountInput): Promise<Result<{ subtotalCents: number; discountCents: number; taxCents: number; totalCents: number; taxCalculationId: string; taxUnavailable: boolean }>> {
+export async function quoteSale(courseId: string, raw: unknown, discount?: DiscountInput): Promise<Result<{ subtotalCents: number; discountCents: number; taxCents: number; totalCents: number; taxCalculationId: string; taxUnavailable: boolean; cardFeeCents: number }>> {
   const p = await priceLines(courseId, raw);
   if (!p.ok) return p;
   if (p.value.lines.some(l => l.pack) && hasDiscount(discount)) return fail(400, PACK_NO_DISCOUNT);
@@ -212,8 +232,10 @@ export async function quoteSale(courseId: string, raw: unknown, discount?: Disco
     q = null;
   }
   const net = p.value.subtotalCents - d.value.discountCents;
-  if (!q) return { ok: true, value: { subtotalCents: p.value.subtotalCents, discountCents: d.value.discountCents, taxCents: 0, totalCents: net, taxCalculationId: '', taxUnavailable: true } };
-  return { ok: true, value: { subtotalCents: p.value.subtotalCents, discountCents: d.value.discountCents, taxCents: q.taxCents, totalCents: net + q.taxCents, taxCalculationId: q.calculationId, taxUnavailable: false } };
+  // SHOP-FEE-1: what a card (pay link or reader) adds on top; cash and on account add nothing.
+  const cardFeeCents = await shopFeeForCourse(courseId, shopFeeBaseCents(p.value.lines, d.value.discountCents));
+  if (!q) return { ok: true, value: { subtotalCents: p.value.subtotalCents, discountCents: d.value.discountCents, taxCents: 0, totalCents: net, taxCalculationId: '', taxUnavailable: true, cardFeeCents } };
+  return { ok: true, value: { subtotalCents: p.value.subtotalCents, discountCents: d.value.discountCents, taxCents: q.taxCents, totalCents: net + q.taxCents, taxCalculationId: q.calculationId, taxUnavailable: false, cardFeeCents } };
 }
 
 /** Ring up a sale. Cash is paid on the spot; a link sale waits for the customer. */
@@ -281,7 +303,8 @@ export async function createSale(opts: {
   if ((opts.pay === 'cash' || opts.pay === 'account') && opts.expectedItemsCents != null && opts.expectedItemsCents !== '' && Number(opts.expectedItemsCents) !== totalCents - roundsCents) return fail(409, TOTAL_CHANGED);
   if (opts.pay !== 'cash' && totalCents <= 0) return fail(400, 'This sale comes to nothing — take it as cash instead.');
   if (opts.pay === 'reader' && totalCents < 50) return fail(400, 'Card payments start at $0.50 — take this one as cash.');
-  if (opts.pay !== 'cash' && shopFeeFor(totalCents) > 0) return fail(400, 'Walk-up card payments are not set up for the shop fee yet.');
+  // SHOP-FEE-1: a card sale's GreenReserve service fee, fixed now (rounds are cash only, so never in it).
+  const serviceFeeCents = opts.pay === 'link' || opts.pay === 'reader' ? await shopFeeForCourse(opts.courseId, shopFeeBaseCents(p.value.lines, d.value.discountCents)) : 0;
   let cashTenderedCents: number | null = null;
   if (opts.pay === 'cash' && opts.cashTenderedCents != null && opts.cashTenderedCents !== '') {
     const t = Number(opts.cashTenderedCents);
@@ -299,7 +322,7 @@ export async function createSale(opts: {
       data: {
         courseId: opts.courseId, totalCents, taxCents: tax.taxCents, taxCalculationId: tax.calculationId, taxUnavailable, soldBy: opts.soldBy, customerName: name, customerPhone: phone, customerEmail: email, payToken,
         status: opts.pay === 'cash' ? 'paid_cash' : opts.pay === 'account' ? 'paid_account' : 'open', paidAt: settledNow ? new Date() : null,
-        discountCents: d.value.discountCents, discountNote: d.value.note, cashTenderedCents, roundsCents,
+        discountCents: d.value.discountCents, discountNote: d.value.note, cashTenderedCents, roundsCents, serviceFeeCents,
         lines: { create: lines },
       },
       include: SALE_INCLUDE,
@@ -356,7 +379,8 @@ export async function settleOpenSale(courseId: string, saleId: string, to: 'void
     const done = await tx.shopSale.updateMany({
       where: { id: saleId, courseId, status: 'open', ...(to === 'paid_cash' ? { soldBy: { not: 'online' } } : {}) },
       // The token stays: the customer's page then says the sale was paid or cancelled.
-      data: to === 'void' ? { status: 'void', voidedAt: new Date(), voidNote: voidNote.slice(0, 200) } : { status: 'paid_cash', paidAt: new Date() },
+      // SHOP-FEE-1: taken in cash, the card's service fee is not owed.
+      data: to === 'void' ? { status: 'void', voidedAt: new Date(), voidNote: voidNote.slice(0, 200) } : { status: 'paid_cash', paidAt: new Date(), serviceFeeCents: 0 },
     });
     const sale = await tx.shopSale.findFirst({ where: { id: saleId, courseId }, include: { ...SALE_INCLUDE, lines: { select: { id: true, name: true, unitPriceCents: true, quantity: true, returnedQty: true, bookingId: true, shopItemId: true }, orderBy: { id: 'asc' } } } });
     if (!sale) return fail(404, 'Sale not found.');
@@ -404,7 +428,7 @@ export async function chargeSale(saleId: string, token: string, paymentMethodId:
   // PRICE-4: a round pack is paid only after the golfer ticks its terms (the route builds them: lib/round-packs saleTerms).
   if (terms.text && !terms.agreed) return fail(400, 'Tick the box to agree to the round pack’s terms first.');
   if (!sale.course.stripeAccountId || !sale.course.stripeAccountActive) return fail(409, 'This course can’t take card payments yet — please pay at the pro shop.');
-  if (Number(expectedTotalCents) !== sale.totalCents) return fail(409, 'The total changed since this page loaded — refresh to see it.');
+  if (Number(expectedTotalCents) !== saleCardCents(sale)) return fail(409, 'The total changed since this page loaded — refresh to see it.');
   if (typeof paymentMethodId !== 'string' || !paymentMethodId.startsWith('pm_')) return fail(400, 'Card details are missing — try again.');
   const account = sale.course.stripeAccountId;
 
@@ -422,7 +446,7 @@ export async function chargeSale(saleId: string, token: string, paymentMethodId:
   // The sale's one PaymentIntent.
   let pi;
   try {
-    pi = await saleIntent(saleId, sale.paymentIntentId, sale.totalCents, sale.course.name, account);
+    pi = await saleIntent(saleId, sale.paymentIntentId, saleCardCents(sale), sale.serviceFeeCents, sale.course.name, account);
   } catch (err) {
     console.error(JSON.stringify({ ev: 'shop_sale.intent.fail', saleId, error: err instanceof Error ? err.message : String(err) }));
     await release(); // nothing can have been charged without an intent
@@ -445,7 +469,7 @@ export async function chargeSale(saleId: string, token: string, paymentMethodId:
   }
 
   try {
-    console.log(JSON.stringify({ ev: 'shop_sale.charge.attempt', saleId, paymentIntentId: pi.id, amountCents: sale.totalCents }));
+    console.log(JSON.stringify({ ev: 'shop_sale.charge.attempt', saleId, paymentIntentId: pi.id, amountCents: saleCardCents(sale), serviceFeeCents: sale.serviceFeeCents }));
     const done = await stripe.paymentIntents.confirm(pi.id, { payment_method: clonedId, off_session: true }, { stripeAccount: account, idempotencyKey: `${pi.id}-${paymentMethodId}-confirm` });
     if (done.status === 'succeeded') { await markCardPaid(saleId, now, done.id); return { ok: true, value: { status: 'paid_card' } }; }
     if (done.status === 'requires_payment_method' || done.status === 'canceled') { await release(); return fail(402, 'The card was declined — try another card, or pay at the pro shop.'); }
@@ -471,9 +495,10 @@ export async function chargeSale(saleId: string, token: string, paymentMethodId:
  * reused. A pay-link sale's takes a card typed on the customer's phone; a
  * reader sale's (POS-3 R3) takes a card presented to the course's reader.
  */
-export async function saleIntent(saleId: string, existingId: string, amountCents: number, courseName: string, account: string, method: 'card' | 'card_present' = 'card') {
+export async function saleIntent(saleId: string, existingId: string, amountCents: number, feeCents: number, courseName: string, account: string, method: 'card' | 'card_present' = 'card') {
   if (existingId) return stripe.paymentIntents.retrieve(existingId, {}, { stripeAccount: account });
-  const fee = shopFeeFor(amountCents);
+  // SHOP-FEE-1: amountCents is saleCardCents (the course's total plus the fee); the fee is GreenReserve's application fee.
+  const fee = Math.max(0, Math.min(Math.round(feeCents), amountCents));
   const pi = await stripe.paymentIntents.create({
     amount: amountCents, currency: 'usd', payment_method_types: [method],
     application_fee_amount: fee > 0 ? fee : undefined,
@@ -552,8 +577,9 @@ export async function markCardPaid(saleId: string, stamp: Date, paymentIntentId:
     for (const l of lines) if (l.shopItemId) await takeStock(tx, l.shopItemId, l.quantity);
   });
   // LEDGER-1: the card took it (link or reader); the PaymentIntent id makes a second call a no-op.
-  const paid = await prisma.shopSale.findUnique({ where: { id: saleId }, select: { courseId: true, totalCents: true, readerId: true } });
-  if (paid) await recordMove({ courseId: paid.courseId, what: 'shop', direction: 'in', method: paid.readerId ? 'card_present' : 'card', account: 'course', amountCents: paid.totalCents, stripeId: paymentIntentId, saleId, actor: paid.readerId ? 'staff' : 'golfer' });
+  const paid = await prisma.shopSale.findUnique({ where: { id: saleId }, select: { courseId: true, totalCents: true, serviceFeeCents: true, readerId: true } });
+  // SHOP-FEE-1: the card took the course's total plus GreenReserve's service fee (its application fee).
+  if (paid) await recordMove({ courseId: paid.courseId, what: 'shop', direction: 'in', method: paid.readerId ? 'card_present' : 'card', account: 'course', amountCents: saleCardCents(paid), platformFeeCents: paid.serviceFeeCents, stripeId: paymentIntentId, saleId, actor: paid.readerId ? 'staff' : 'golfer' });
   await recordShopSaleTax(saleId); // never throws; the hourly cron retries
   if (paid) await notifyLowStock(paid.courseId); // Low-stock email: never throws
 }
@@ -693,12 +719,22 @@ async function giveBackRefund(refundId: string, saleId: string, amountCents: num
 }
 
 /**
+ * SHOP-FEE-1: the share of a card sale's service fee a refund of `courseCents` (of the course's
+ * totalCents) gives back to the golfer — pro rata, half up; the whole fee on a whole refund. Pure.
+ */
+export function serviceFeeBackCents(courseCents: number, sale: { totalCents: number; serviceFeeCents?: number | null }): number {
+  const fee = sale.serviceFeeCents ?? 0;
+  if (fee <= 0 || sale.totalCents <= 0 || courseCents <= 0) return 0;
+  return Math.min(fee, Math.round((fee * Math.min(courseCents, sale.totalCents)) / sale.totalCents));
+}
+
+/**
  * Ask Stripe for a card refund (first time, or again after an unsure answer).
  * Stripe forgets an idempotency key after 24 hours, so it is asked first
  * whether this refund already exists (each carries its row id in metadata).
  */
 export async function sendShopRefund(courseId: string, refundId: string): Promise<Result<{ status: 'done' | 'pending' }>> {
-  const r = await prisma.shopSaleRefund.findFirst({ where: { id: refundId, courseId }, include: { sale: { select: { id: true, paymentIntentId: true, course: { select: { stripeAccountId: true } } } } } });
+  const r = await prisma.shopSaleRefund.findFirst({ where: { id: refundId, courseId }, include: { sale: { select: { id: true, paymentIntentId: true, totalCents: true, serviceFeeCents: true, course: { select: { stripeAccountId: true } } } } } });
   if (!r) return fail(404, 'Refund not found.');
   if (r.status === 'done') return { ok: true, value: { status: 'done' } };
   if (r.status === 'failed') return fail(409, 'This refund didn’t go through — start a new one.');
@@ -710,12 +746,17 @@ export async function sendShopRefund(courseId: string, refundId: string): Promis
   try {
     const earlier = await stripe.refunds.list({ payment_intent: r.sale.paymentIntentId, limit: 100 }, { stripeAccount: account });
     const found = earlier.data.find(x => x.metadata?.shopRefundId === r.id && x.status !== 'failed' && x.status !== 'canceled');
+    // SHOP-FEE-1: the golfer also gets back this refund's share of GreenReserve's service fee, and
+    // GreenReserve gives its application fee back pro rata (refund_application_fee), as a round's refund does.
+    const charged = saleCardCents(r.sale);
+    const stillOnCard = charged - earlier.data.filter(x => x.status !== 'failed' && x.status !== 'canceled').reduce((n, x) => n + x.amount, 0);
+    const amount = Math.min(r.amountCents + serviceFeeBackCents(r.amountCents, r.sale), Math.max(r.amountCents, stillOnCard));
     const sr = found ?? await stripe.refunds.create(
-      { payment_intent: r.sale.paymentIntentId, amount: r.amountCents, metadata: { shopRefundId: r.id, shopSaleId: r.saleId } },
+      { payment_intent: r.sale.paymentIntentId, amount, ...(r.sale.serviceFeeCents > 0 ? { refund_application_fee: true } : {}), metadata: { shopRefundId: r.id, shopSaleId: r.saleId } },
       { stripeAccount: account, idempotencyKey: `shop-refund-${r.id}` },
     );
     await prisma.shopSaleRefund.update({ where: { id: r.id }, data: { status: 'done', stripeRefundId: sr.id, error: '' } });
-    await recordMove({ courseId, what: 'shop', direction: 'out', method: 'card', account: 'course', amountCents: sr.amount, stripeId: sr.id, saleId: r.saleId, actor: 'staff', note: r.reason });
+    await recordMove({ courseId, what: 'shop', direction: 'out', method: 'card', account: 'course', amountCents: sr.amount, platformFeeCents: feeBackCents(sr.amount, charged, r.sale.serviceFeeCents), stripeId: sr.id, saleId: r.saleId, actor: 'staff', note: r.reason });
     return { ok: true, value: { status: 'done' } };
   } catch (err) {
     if (err instanceof Stripe.errors.StripeInvalidRequestError || err instanceof Stripe.errors.StripeCardError) {

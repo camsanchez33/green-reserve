@@ -9,11 +9,12 @@ import { refundBooking } from '../src/lib/refund-booking';
 import { receiptCharges } from '../src/lib/receipt-charges';
 import {
   addItemToBooking, removeLineFromBooking, shopFeeFor, roundChargeCents, roundApplicationFeeCents,
-  shopLockedReason, validItemInput, SHOP_SALE_FEE_CENTS, SHOP_FEE_ON, MAX_BOOKING_SHOP_CENTS,
+  shopLockedReason, validItemInput, MAX_BOOKING_SHOP_CENTS,
 } from '../src/lib/shop';
 
-// The fee the database flow below expects: 50¢ once SHOP_FEE_ON is turned on, 0 until then.
-const FEE = SHOP_FEE_ON ? 50 : 0;
+// SHOP-FEE-1: the course below has signed no Operator Agreement version that names the 1% shop fee,
+// so its items carry none. scripts/shop-fee-test.ts runs the fee itself (a course on that version).
+const FEE = 0;
 
 const TAG = 'posshoptest';
 let failed = 0;
@@ -56,11 +57,9 @@ async function cleanup() {
 
 async function main() {
   // ── Pure rules ─────────────────────────────────────────────────────────────
-  check('the shop fee is 50¢', SHOP_SALE_FEE_CENTS === 50);
-  check('when on: one fee per sale, not per item', shopFeeFor(1, true) === 50 && shopFeeFor(99_99, true) === 50);
+  check('SHOP-FEE-1 when on: 1% of the items', shopFeeFor(2400, true) === 24 && shopFeeFor(6600, true) === 66);
   check('when on: no items, no fee', shopFeeFor(0, true) === 0);
-  check('off (until the agreement names it): never a fee', shopFeeFor(1200, false) === 0);
-  check('the switch is off until the Operator Agreement lists the fee', SHOP_FEE_ON === false);
+  check('off (the course has not accepted a version naming it): never a fee', shopFeeFor(1200, false) === 0);
   check('the charge is round + items + fee', roundChargeCents({ totalAmount: 5300, shopTotalCents: 2400, shopFeeCents: 50, shopTaxCents: 0 }) === 7750);
   check('W2-7 B2: the sales tax on the items rides the same charge', roundChargeCents({ totalAmount: 5300, shopTotalCents: 2400, shopFeeCents: 50, shopTaxCents: 159 }) === 7909);
   check('a booking without items charges the round only', roundChargeCents({ totalAmount: 5300, shopTaxCents: 0 }) === 5300);

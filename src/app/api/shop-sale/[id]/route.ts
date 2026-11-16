@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { saleForPayPage, chargeSale } from '@/lib/shop-sales';
+import { saleForPayPage, chargeSale, saleCardCents } from '@/lib/shop-sales';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { saleTerms, stalePackLinkBlock } from '@/lib/round-packs';
 
@@ -12,7 +12,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const sale = await saleForPayPage(id, token);
   if (!sale) return NextResponse.json({ error: 'This pay link is not valid any more. Ask the pro shop for a new one.' }, { status: 404 });
   return NextResponse.json({
-    status: sale.status === 'paying' ? 'open' : sale.status, totalCents: sale.totalCents, taxCents: sale.taxCents, discountCents: sale.discountCents, discountNote: sale.discountNote,
+    status: sale.status === 'paying' ? 'open' : sale.status,
+    // SHOP-FEE-1: the total is what the card pays — the course's total plus GreenReserve's service fee (shown as its own line).
+    totalCents: saleCardCents(sale), serviceFeeCents: sale.serviceFeeCents, taxCents: sale.taxCents, discountCents: sale.discountCents, discountNote: sale.discountNote,
     courseName: sale.course.name, brandColor: sale.course.brandColor, logoUrl: sale.course.logoUrl,
     lines: sale.lines.map(l => ({ name: l.name, unitPriceCents: l.unitPriceCents, quantity: l.quantity })),
     // PRICE-4: a round pack's terms — the page asks the golfer to agree before paying.
