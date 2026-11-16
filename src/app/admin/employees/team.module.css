@@ -40,7 +40,8 @@
 .ok { background: var(--g-up); } .warn { background: var(--g-warn); } .bad { background: var(--g-down); }
 
 /* The person, beside the list. */
-.det { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; position: relative; min-width: 0; }
+.det { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; position: sticky; top: calc(var(--admin-topbar-h) + 12px); min-width: 0; }
+@media (max-width: 900px) { .det { position: relative; top: auto; } }
 .x { position: absolute; right: 12px; top: 10px; width: 30px; height: 30px; display: grid; place-items: center; background: none; border: 0; border-radius: 9px; color: var(--g-muted); cursor: pointer; padding: 0; }
 .x:hover { background: var(--g-hover); color: var(--g-ink); }
 .dh { display: flex; gap: 14px; align-items: center; padding-right: 30px; min-width: 0; }
@@ -99,7 +100,7 @@
 .ov { position: fixed; inset: 0; background: rgba(4, 12, 9, .6); display: grid; place-items: center; z-index: 40; padding: 20px; }
 /* 40: under the step-up and reason boxes (z-50), which can open while Add someone is waiting. */
 .modal { width: min(480px, 100%); padding: 20px; background: var(--g-panel-solid); display: flex; flex-direction: column; gap: 12px; color: var(--g-ink); }
-.wideModal { width: min(620px, 100%); max-height: calc(100vh - 40px); overflow: auto; box-sizing: border-box; }
+.wideModal { width: min(620px, 100%); max-height: calc(100dvh - 40px); overflow: auto; box-sizing: border-box; }
 .modalForm { display: flex; flex-direction: column; gap: 12px; }
 .modal h4 { margin: 0; font-size: 17px; font-weight: 600; overflow-wrap: anywhere; }
 .modal p { margin: 0; font-size: 13.5px; color: var(--g-ink-soft); }
