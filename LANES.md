@@ -24,6 +24,11 @@ golfer page, the tee sheet and admin) is ONE PR from Build.
 2. **Approve.** Cam says "approved". Build writes the decisions into the lane file (and data needs into
    `lanes/build.md`), then sends the lane one short brief that points at them.
 3. **Build it.** Data first (Build), then the page (lane), each its own PR, each reviewed (see CLAUDE.md "Review").
+   **Design and accessibility tools (Cam 2026-11-16).** When a session has them, it uses them as a second check, never instead of the mockup or `docs/DECISIONS.md` → "Design system":
+   - **Mockups:** before a mockup goes to Cam, run Design's `design-critique` and `accessibility-review` (WCAG 2.1 AA contrast in BOTH looks, tap targets, labels), and fix what fails.
+   - **Built pages:** before the PR is held for Cam, run UI Design Review's `ui-review` on the rendered page at phone and desktop width, plus `accessibility-review`. Put the results in the PR.
+   - **Build sessions:** sessions touching money, sign-in or `src/lib` may run Security Guidance. Page lanes don't, because it runs an AI review every turn and costs too much there.
+   - **Community plugins:** never install or use plugins that run commands, such as securitymaxxing, Backend Design or Pi Security. That is a supply-chain risk on a money app.
 4. **Hold for Cam.** PRs wait for Cam's review sitting; Build merges what he OKs, in dependency order.
 
 ## Limits that keep cost down (Cam 2026-11-14)
