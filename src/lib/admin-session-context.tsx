@@ -24,6 +24,9 @@ export interface AdminSessionView {
   mfa: boolean;
   /** AW-11: the areas this person can open (lib/admin-areas.ts). The menu hides the rest; the routes refuse them. */
   areas: AdminArea[];
+  /** My profile (Cam 2026-11-15): when this person's password in force was set, ISO 8601; null = unknown
+   *  (set before AdminUser.passwordChangedAt existed, or the read failed). The page hides the row then. */
+  passwordChangedAt: string | null;
 }
 
 /** Pages that must render with NO session — they are how you get one. */

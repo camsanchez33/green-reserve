@@ -17,6 +17,7 @@ import { recordPendingShopTax } from '@/lib/sales-tax';
 import { reversePendingShopRefundTax } from '@/lib/shop-sales';
 import { recordPendingRoundShopTax } from '@/lib/round-shop-tax';
 import { runAdminChecks } from '@/lib/admin-checks';
+import { settleStaleDuesReaders } from '@/lib/dues-reader';
 
 /**
  * Runs every hour (Vercel Pro). Handles all time-sensitive booking actions:
@@ -199,9 +200,12 @@ export const GET = cronRoute('hourly', async (req: NextRequest) => {
   // W2-7 B2: and for paid rounds whose shop items carried sales tax.
   let roundShopTaxRecorded = 0;
   try { roundShopTaxRecorded = await recordPendingRoundShopTax(); } catch (err) { console.error('Round shop-item sales tax recording failed:', err); }
+  // Memberships item 1: dues left on a card reader 10 minutes are settled from Stripe (a tap nobody watched is recorded).
+  let duesReadersSettled = 0;
+  try { duesReadersSettled = await settleStaleDuesReaders(); } catch (err) { console.error('Dues reader settle failed:', err); }
 
   // ─── 8: AW-5 — the admin's urgent alerts and the morning digest (last: it only reads, and never blocks the steps above) ──
   const adminChecks = await runAdminChecks(now);
 
-  return NextResponse.json({ success: true, ...results, agreementPdfs, agreementNotices, callReminders, shopTaxRecorded, shopTaxReversed, roundShopTaxRecorded, adminChecks });
+  return NextResponse.json({ success: true, ...results, agreementPdfs, agreementNotices, callReminders, shopTaxRecorded, shopTaxReversed, roundShopTaxRecorded, duesReadersSettled, adminChecks });
 });

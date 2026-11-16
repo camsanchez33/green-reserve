@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { resolveAdminSession } from '@/lib/admin-session';
 import bcrypt from 'bcryptjs';
 import { withAudit } from '@/lib/admin-audit';
+import { passwordChanged } from '@/lib/admin-password';
 
 async function changePassword(req: NextRequest) {
   const session = await resolveAdminSession();
@@ -21,7 +22,8 @@ async function changePassword(req: NextRequest) {
   if (!valid) return NextResponse.json({ error: 'Current password is incorrect' }, { status: 401 });
 
   const passwordHash = await bcrypt.hash(String(newPassword), 12);
-  await prisma.adminUser.update({ where: { id: admin.id }, data: { passwordHash } });
+  await prisma.adminUser.update({ where: { id: admin.id }, data: { passwordHash, passwordChangedAt: new Date() } });
+  await passwordChanged(req, admin, 'changed on My profile');
 
   return NextResponse.json({ success: true });
 }

@@ -79,8 +79,9 @@ async function cleanup() {
     ok('4. today\'s sales start at the course\'s midnight, not 36 hours back', !shopRoute.includes('36 * 60 * 60 * 1000') && shopRoute.includes("teeToUtcMs(todayIn(tz), '00:00', tz)") && shopRoute.includes('dayStart: since.toISOString()') && shopRoute.includes('{ paidAt: { gte: since } }'));
     ok('4. the header total and Void use the course\'s day', shop.includes('isPaid(s) && (!today || paidToday(s.paidAt))') && shop.includes('paidToday(s.paidAt) && <button') && !shop.includes('new Date(s.paidAt).toDateString()'));
 
+    // Revenue page (was Money, Cam 2026-11-15): the payout card reads Stripe's own answer, the course flag only until it loads.
     const money = read('src/app/dashboard/money/page.tsx');
-    ok('5. the payout tile uses Stripe\'s connected answer', money.includes('setPayoutsConnected(p && p.ok ? !!p.data.connected : null)') && money.includes('stripeConnected={payoutsConnected ?? (courseLoaded && course.stripeAccountActive)}'));
+    ok('5. the payout tile uses Stripe\'s connected answer', money.includes('const connected = payouts ? payouts.connected : courseLoaded ? course.stripeAccountActive : null;') && money.includes('<NextPayoutCard data={payouts} connected={connected}'));
   } finally {
     await cleanup();
     await prisma.$disconnect();

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { passwordChanged } from '@/lib/admin-password';
 
 export async function POST(req: NextRequest) {
   const secret = req.headers.get('x-admin-key');
@@ -21,10 +22,12 @@ export async function POST(req: NextRequest) {
       email: String(email).trim().toLowerCase(),
       name: String(name).trim(),
       passwordHash,
+      passwordChangedAt: new Date(),
       role: 'owner',
       active: true,
     },
   });
 
+  await passwordChanged(req, admin, 'first owner account created');
   return NextResponse.json({ success: true, adminId: admin.id, email: admin.email });
 }

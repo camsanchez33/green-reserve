@@ -137,10 +137,10 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     // W2-9 (Cam 2026-10-22): the Tournaments and Outings placeholders became one Events tab.
     { key: 'events',        label: 'Events',       href: '/dashboard/events',        icon: <Flag className="w-4 h-4"/> },
     { key: 'schedule',      label: 'Schedule',     href: '/dashboard/schedules',     icon: <Clock className="w-4 h-4"/> },
-    { key: 'members',       label: 'Members',      href: '/dashboard/members',       icon: <Users className="w-4 h-4"/> },
+    { key: 'members',       label: 'Memberships',  href: '/dashboard/members',       icon: <Users className="w-4 h-4"/> },
     // SD-8: Payments + Cancellations + Payouts are one page. A login that can
     // only see cancellations gets the item named for what it shows.
-    { key: 'money',         label: moneyOnlyCancellations ? 'Cancellations' : 'Money',
+    { key: 'money',         label: moneyOnlyCancellations ? 'Cancellations' : 'Revenue',
       href: moneyOnlyCancellations ? '/dashboard/money?tab=cancellations' : '/dashboard/money',
       icon: moneyOnlyCancellations ? <XCircle className="w-4 h-4"/> : <DollarSign className="w-4 h-4"/> },
     // POS-2 (Cam 2026-10-19): ring up walk-up sales — cash or a pay link.

@@ -1996,6 +1996,22 @@ export async function sendOwnerSignInAlert(data: { email: string; name: string; 
   await getResend().emails.send({ meta: { kind: 'owner_sign_in_alert' }, from: FROM_NOREPLY, to: data.email, subject: 'GreenReserve owner sign-in', html });
 }
 
+// Cam 2026-11-16: the owner's password was changed or set, on any path. Sent at once, awaited by
+// passwordChanged() (lib/admin-password.ts); no link in it, like the other owner alerts.
+export async function sendOwnerPasswordChanged(data: { email: string; name: string; how: string; device: string; place: string; when: string }) {
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Your password was changed</h1>
+    <p style="margin:0 0 20px;color:#3F453E;font-size:15px;">Hi ${firstName(data.name)} — the password on the GreenReserve owner account was just changed (${escapeHtml(data.how)}).</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+      <tr><td style="padding:6px 0;color:#6B706A;font-size:14px;">Device</td><td align="right" style="padding:6px 0;color:#141814;font-size:14px;font-weight:600;">${escapeHtml(data.device)}</td></tr>
+      <tr><td style="padding:6px 0;color:#6B706A;font-size:14px;">Where</td><td align="right" style="padding:6px 0;color:#141814;font-size:14px;font-weight:600;">${escapeHtml(data.place || 'Unknown')}</td></tr>
+      <tr><td style="padding:6px 0;color:#6B706A;font-size:14px;">When</td><td align="right" style="padding:6px 0;color:#141814;font-size:14px;font-weight:600;">${escapeHtml(data.when)}</td></tr>
+    </table>
+    <p style="margin:0;color:#6B706A;font-size:13px;">Not you? Use “Forgot password” on the admin sign-in page to set a new one right away, then sign in, go to My profile and choose “Sign out everywhere”.</p>
+  `, ADMIN_EMAIL);
+  await getResend().emails.send({ meta: { kind: 'owner_password_changed' }, from: FROM_NOREPLY, to: data.email, subject: 'Your GreenReserve owner password was changed', html });
+}
+
 // AW-1c: a passkey was added to or removed from the owner account — the one
 // change that alters how the account signs in, so it is always announced.
 export async function sendOwnerPasskeyChanged(data: { email: string; name: string; change: 'added' | 'removed'; passkey: string; device: string; when: string }) {
