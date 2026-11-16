@@ -3,6 +3,9 @@
 // course"): the Schedule page's last-minute deal. Off by default; when on, every open
 // tee time within N hours of going off is N% cheaper online (and at the counter if the
 // course says so). Data: /api/operator/last-minute (lib/last-minute.ts).
+// SCHEDULE-3 (Cam 2026-11-16): last-minute deals are leaving the Schedule page, but Build hasn't decided what happens
+// to deals already running. Until it does, Promotions shows this card only while the course's deal is on
+// (`onlyIfOn`), so a live deal is never one no one can see — and it can still be turned off.
 import { useCallback, useEffect, useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -14,7 +17,7 @@ type Deal = { lastMinuteOn: boolean; lastMinuteHours: number; lastMinutePct: num
 type Draft = Omit<Deal, 'lastMinuteHours' | 'lastMinutePct'> & { lastMinuteHours: string; lastMinutePct: string };
 const toDraft = (d: Deal): Draft => ({ ...d, lastMinuteHours: String(d.lastMinuteHours), lastMinutePct: String(d.lastMinutePct) });
 
-export function LastMinuteDeals({ canEdit }: { canEdit: boolean }) {
+export function LastMinuteDeals({ canEdit, onlyIfOn = false }: { canEdit: boolean; onlyIfOn?: boolean }) {
   const [deal, setDeal] = useState<Deal | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [error, setError] = useState('');
@@ -30,6 +33,7 @@ export function LastMinuteDeals({ canEdit }: { canEdit: boolean }) {
 
   if (error && !deal) return <LoadError message={`Couldn't load last-minute deals — ${error}`} onRetry={load} />;
   if (!deal || !draft) return null;
+  if (onlyIfOn && !deal.lastMinuteOn && !saved) return null;
   const dirty = JSON.stringify(toDraft(deal)) !== JSON.stringify(draft);
 
   async function save() {

@@ -24,7 +24,8 @@ check('the rail keeps the course switcher, Course alert, the booking page and si
 check('no decorative icons on the desktop menu (TYPE-3)', !/className="w-4 h-4"/.test(rail) && !/item\.icon/.test(rail));
 check('pages make room for the rail only where it renders', /\.op-look:has\(\.op-rail\)\s*\{\s*padding-left:\s*var\(--op-rail-w\)/.test(css) && /min-width:\s*768px/.test(css));
 check('the dashboard layout wraps pages in .op-look', /op-look/.test(layout));
-check('the Schedule save bar starts after the rail', /fixed bottom-16 md:bottom-0 inset-x-0 md:left-\[var\(--op-rail-w\)\]/.test(schedules));
+// SCHEDULE-3: the save bar is a slim pill inside the page (sticky, never fixed), above the phone tab bar.
+check('the Schedule save pill sits in the page, after the rail, above the phone tab bar', /sticky bottom-20 md:bottom-3\.5/.test(schedules) && !/fixed bottom-16/.test(schedules));
 check('below md the bottom tab bar is unchanged', /md:hidden fixed bottom-0 inset-x-0 z-30/.test(src));
 // SUPPORT-1 (Cam 2026-11-12): Messages is Support — last in the rail's Course group, off the phone bar (under More, with a dot).
 check('Support is last in the Course group and links /dashboard/support', src.includes("{ label: 'Course', keys: ['settings', 'messages'] },") && src.includes("{ key: 'messages',      label: 'Support',      href: '/dashboard/support',"));

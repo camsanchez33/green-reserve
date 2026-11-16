@@ -1,42 +1,33 @@
 'use client';
-// W2-6 Schedule simplification (Cam 2026-10-21: "keep what it can do, make it
-// more efficient and simple"; OPERATOR_REWORK_SPEC "W2-6 Schedule
-// simplification — decisions"). The course thinks in three things, not
-// schedules, and the page reads that way:
-//   1. When you're open — first tee, last tee, minutes apart; "Different hours
-//      on some days" gives any days their own hours and prices, or closes them.
-//   2. What golfers can book — each round on or off, all day or between times.
-//   3. What it costs — ONE price table per set of days: a column per round
-//      (PRICES-1, Cam 2026-11-04: side by side, a row per price; one round at a
-//      time on a phone), split by price change ("+ Add a price change" asks only the time);
-//      names are automatic (Morning / Midday / Afternoon / Twilight) and can be
-//      renamed. Member and resident prices only when the course has them.
-// The page edits a CoursePlan (lib/course-plan.ts); saving writes it as the
-// course's TeeTimeSchedule rows in one go (PUT /api/operator/schedule with
-// coursePlan), after a preview of what it changes on the tee sheet. Closed
-// days, per-round booking rules and booking windows are unchanged.
-import React, { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
+// SCHEDULE-3 (Cam 2026-11-16, "that real nice just fix the one comment i made and then ur good"; lanes/dashboard.md
+// item 4, mockup lanes/dashboard/schedule-mockup.html): the Schedule page in sliding tabs, in the order a course sets
+// up — Bookable rounds, Hours and prices, Promotions, Demand pricing, Closed days.
+// Before it: W2-6 (Cam 2026-10-21, "keep what it can do, make it more efficient and simple") made the page edit one
+// CoursePlan (lib/course-plan.ts) that saving writes as the course's TeeTimeSchedule rows in one go
+// (PUT /api/operator/schedule with coursePlan), after a preview of what it changes on the tee sheet. That stays:
+// Bookable rounds (when each round is sold) and Hours and prices both edit the plan, and one slim pill (Undo, Review
+// and save) saves it. Booked rounds keep their price.
+// Hours and prices are Weekdays and Weekends only: a plan stored as one every-day set is shown split into the two
+// (same hours and prices, so nothing changes on the tee sheet until the course edits one).
+// Booking rules: no tab. The course's own rules are in Settings; a round's own rules (fewest and most players, days
+// ahead) are in that round's edit pop-up on Bookable rounds (Cam 2026-11-16, "when editing it it all is together").
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
-import RoundRulesCard, { type RoundRules, type CourseRules } from '@/components/dashboard/RoundRulesCard';
 import { StaffNotice } from '@/components/dashboard/StaffNotice';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { LoadError } from '@/components/dashboard/LoadError';
 import { toast } from '@/components/dashboard/Toast';
 import { Card } from '@/components/ui/Card';
-import { formatTeeTime as fmtTime } from '@/lib/format';
-import { PromoCodes } from '@/components/dashboard/PromoCodes';
-import { LastMinuteDeals } from '@/components/dashboard/LastMinuteDeals';
-import { DemandPricing } from '@/components/dashboard/DemandPricing';
 import { SlidingTabs } from '@/components/dashboard/SlidingTabs';
-import { readPlan, checkPlan, columnNames, daysOf, snap, emptyCell, isTime, setRoundSale, type CoursePlan, type DayPlan, type PlanRound, type PriceCell } from '@/lib/course-plan';
-
-const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const WEEK = [1, 2, 3, 4, 5, 6, 0]; // Monday first, the way a course reads its week
-const iCls = 'bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors w-full disabled:opacity-60';
-const lCls = 'text-[13px] font-semibold text-ink block mb-1.5';
-const cellIn = 'w-[4.5rem] bg-paper border border-line rounded-md pl-5 pr-1.5 py-1.5 text-[13.5px] text-ink tabular-nums outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 disabled:opacity-60';
+import { LastMinuteDeals } from '@/components/dashboard/LastMinuteDeals';
+import { BookableRounds, type NineRow, type PageRound, type Rules, type CourseRules } from '@/components/dashboard/schedule/BookableRounds';
+import { HoursPrices, isWeekendSet } from '@/components/dashboard/schedule/HoursPrices';
+import { Promotions } from '@/components/dashboard/schedule/Promotions';
+import { DemandLocked } from '@/components/dashboard/schedule/DemandLocked';
+import { ClosedDays, type Blackout } from '@/components/dashboard/schedule/ClosedDays';
+import { Popup, PopupFoot, LINK, PRIMARY } from '@/components/dashboard/schedule/ui';
+import { readPlan, checkPlan, daysOf, emptyCell, setRoundSale, type CoursePlan, type PriceCell, type RoundSale } from '@/lib/course-plan';
 
 type Row = {
   id: string; tierName: string; daysOfWeek: number[]; startTime: string; endTime: string; productId: string | null;
@@ -46,7 +37,7 @@ type Row = {
   seniorRateWeekday?: number | null; juniorRateWeekday?: number | null;
   cartFee: number; walkingAllowed: boolean; active: boolean;
 };
-type ProductOpt = { id: string; label: string; holes: number; active: boolean } & RoundRules;
+type ProductOpt = { id: string; label: string; holes: number; nineIds: string[]; active: boolean } & Rules;
 type Preview = { days: number; added: number; removed: number; repriced: number; bookedKept: number; refusal?: string | null; warnings?: string[] };
 type Pending = { preview: Preview | null; error: string };
 
@@ -54,26 +45,30 @@ type Pending = { preview: Preview | null; error: string };
 function previewLines(p: Preview): string[] {
   const out: string[] = [];
   if (p.added) out.push(`Adds ${p.added} tee time${p.added === 1 ? '' : 's'} golfers can book.`);
-  if (p.repriced) out.push(`New price on ${p.repriced} tee time${p.repriced === 1 ? '' : 's'}; bookings keep theirs.`);
+  if (p.repriced) out.push(`New price on ${p.repriced} open tee time${p.repriced === 1 ? '' : 's'}.`);
   if (p.removed) out.push(`Takes ${p.removed} open tee time${p.removed === 1 ? '' : 's'} off the sheet.`);
   if (p.bookedKept) out.push(`Keeps ${p.bookedKept} booked or blocked time${p.bookedKept === 1 ? '' : 's'} the schedule no longer has.`);
   if (out.length === 0) out.push('No change soon; later days follow.');
   return out;
 }
 
-const dayList = (days: number[]) => {
-  const s = [...days].sort((a, b) => WEEK.indexOf(a) - WEEK.indexOf(b));
-  if (s.length === 7) return 'Every day';
-  if (s.join() === '1,2,3,4,5') return 'Weekdays';
-  if (s.join() === '6,0') return 'Weekends';
-  return s.map(d => DAYS[d]).join(', ');
-};
-const num = (v: string) => v === '' ? 0 : Math.max(0, Number(v));
-const optNum = (v: string) => v === '' ? null : Math.max(0, Number(v));
+/** Weekdays and Weekends, never an every-day set over them: a plan with no weekend set gets one, copied from the usual
+ *  week (the same hours and prices, so the tee sheet doesn't change). A plan where another set already holds a
+ *  weekend day is left as it is stored, so nothing the course sells is hidden. */
+function splitWeek(p: CoursePlan): CoursePlan {
+  if (p.different.some(isWeekendSet)) return p;
+  const taken = new Set(p.different.flatMap(d => d.days));
+  if (taken.has(0) || taken.has(6)) return p;
+  return { ...p, different: [...p.different, { ...JSON.parse(JSON.stringify(p.usual)), days: [6, 0] }] };
+}
+
+type Tab = 'rounds' | 'hours' | 'promos' | 'demand' | 'closed';
 
 export default function SchedulesPage() {
   const pageAccess = useDashboardAccess();
   const canEdit = pageAccess.can('schedule.edit');
+  // The rounds themselves (name, holes) are the course's; the route refuses staff.
+  const canEditRounds = canEdit && !pageAccess.isStaff;
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -89,23 +84,15 @@ export default function SchedulesPage() {
   const [products, setProducts] = useState<ProductOpt[]>([]);
   const [productsError, setProductsError] = useState('');
   const [productsLoaded, setProductsLoaded] = useState(false);
-  const [rulesView, setRulesView] = useState('');
-  const [adding, setAdding] = useState<{ d: number; at: string } | null>(null);
-  const [renaming, setRenaming] = useState<{ d: number; col: number; name: string; key?: string } | null>(null);
-  const [blackouts, setBlackouts] = useState<{ id: string; date: string; reason: string }[]>([]);
+  const [nines, setNines] = useState<NineRow[]>([]);
+  const [blackouts, setBlackouts] = useState<Blackout[]>([]);
   const [blackoutError, setBlackoutError] = useState('');
-  const [closing, setClosing] = useState<{ date: string; reason: string } | null>(null);
-  // Revamp 3 fix 11: who is booked on the day being closed (null while loading, or when it couldn't be read).
-  const [closingBooked, setClosingBooked] = useState<{ groups: number; players: number } | 'error' | null>(null);
-  async function startClosing(date: string) {
-    setClosing({ date, reason: '' }); setClosingBooked(null);
-    const r = await dfetch<{ groups: number; players: number }>(`/api/operator/blackouts?date=${date}`);
-    setClosingBooked(r.ok ? r.data : 'error');
-  }
-  const [month, setMonth] = useState(() => new Date().toLocaleDateString('en-CA').slice(0, 8) + '01');
-  const [windows, setWindows] = useState<{ publicAdvanceDays: number | null; memberAdvanceDays: number | null }>({ publicAdvanceDays: null, memberAdvanceDays: null });
-  const [windowsError, setWindowsError] = useState('');
+  const [publicAdvanceDays, setPublicAdvanceDays] = useState<number | null>(null);
+  const [settingsError, setSettingsError] = useState('');
   const [courseRules, setCourseRules] = useState<CourseRules | null>(null);
+  const [tab, setTab] = useState<Tab>('rounds');
+  // Home's demand-pricing link (#demand-pricing) opens its tab.
+  useEffect(() => { if (window.location.hash === '#demand-pricing') setTab('demand'); }, []);
 
   const loadSchedules = useCallback(async () => {
     setLoading(true);
@@ -114,40 +101,53 @@ export default function SchedulesPage() {
     else { setRows([]); setLoadError(r.error); }
     setLoading(false);
   }, []);
-  const loadWindows = useCallback(async () => {
-    const r = await dfetch<{ holes?: number; hasMemberPricing?: boolean; hasResidentPricing?: boolean; publicAdvanceDays?: number; memberAdvanceDays?: number; minPlayers?: number; maxPlayers?: number; cartPricing?: string }>('/api/operator/settings');
-    if (!r.ok || !r.data) { setWindowsError(r.ok ? 'Settings came back empty — refresh.' : r.error); return; }
+  const loadSettings = useCallback(async () => {
+    const r = await dfetch<{ holes?: number; hasMemberPricing?: boolean; hasResidentPricing?: boolean; publicAdvanceDays?: number; minPlayers?: number; maxPlayers?: number; cartPricing?: string }>('/api/operator/settings');
+    if (!r.ok || !r.data) { setSettingsError(r.ok ? 'Settings came back empty — refresh.' : r.error); return; }
     const c = r.data;
     setHasMember(!!c.hasMemberPricing); setHasResident(!!c.hasResidentPricing); setPerCart(c.cartPricing === 'per_cart');
     if (typeof c.holes === 'number') setCourseHoles(c.holes);
-    setWindows({ publicAdvanceDays: typeof c.publicAdvanceDays === 'number' ? c.publicAdvanceDays : null, memberAdvanceDays: typeof c.memberAdvanceDays === 'number' ? c.memberAdvanceDays : null });
+    setPublicAdvanceDays(typeof c.publicAdvanceDays === 'number' ? c.publicAdvanceDays : null);
     setCourseRules({ minPlayers: c.minPlayers ?? 1, maxPlayers: c.maxPlayers ?? 4, publicAdvanceDays: c.publicAdvanceDays ?? 7 });
-    setWindowsError('');
+    setSettingsError('');
   }, []);
   const loadProducts = useCallback(async () => {
-    const r = await dfetch<ProductOpt[]>('/api/operator/course-products');
+    const [r, n] = await Promise.all([dfetch<ProductOpt[]>('/api/operator/course-products'), dfetch<NineRow[]>('/api/operator/nines')]);
     if (r.ok && Array.isArray(r.data)) { setProducts(r.data); setProductsError(''); }
     else if (!r.ok) setProductsError(r.error);
+    // Without the nines the holes show as a count ("9 holes"), never a guessed 1–9 or 10–18.
+    if (n.ok && Array.isArray(n.data)) setNines([...n.data].sort((a, b) => a.sortOrder - b.sortOrder));
     setProductsLoaded(true);
   }, []);
   const loadBlackouts = useCallback(async () => {
-    const r = await dfetch<{ id: string; date: string; reason: string }[]>('/api/operator/blackouts');
-    if (r.ok && Array.isArray(r.data)) { setBlackouts(r.data.slice().sort((a, b) => a.date.localeCompare(b.date))); setBlackoutError(''); }
+    const r = await dfetch<Blackout[]>('/api/operator/blackouts');
+    if (r.ok && Array.isArray(r.data)) { setBlackouts(r.data); setBlackoutError(''); }
     else if (!r.ok) setBlackoutError(r.error);
   }, []);
-  useEffect(() => { loadSchedules(); loadProducts(); loadWindows(); loadBlackouts(); }, [loadProducts, loadSchedules, loadBlackouts, loadWindows]);
+  useEffect(() => { loadSchedules(); loadProducts(); loadSettings(); loadBlackouts(); }, [loadProducts, loadSchedules, loadBlackouts, loadSettings]);
 
   const activeProducts = products.filter(p => p.active);
   // What golfers can book: the course's live rounds, or the course as a whole when it has none (the server's planRounds).
-  const rounds: PlanRound[] = activeProducts.length ? activeProducts.map(p => ({ key: p.id, label: p.label, holes: p.holes })) : [{ key: '', label: 'Tee times', holes: courseHoles }];
+  const rounds: PageRound[] = activeProducts.length
+    ? activeProducts.map(p => ({ key: p.id, label: p.label, holes: p.holes, nineIds: p.nineIds ?? [], minPlayers: p.minPlayers ?? null, maxPlayers: p.maxPlayers ?? null, publicAdvanceDays: p.publicAdvanceDays ?? null }))
+    : [{ key: '', label: 'Tee times', holes: courseHoles, nineIds: [], minPlayers: null, maxPlayers: null, publicAdvanceDays: null }];
+  const defaultCell = (key: string): PriceCell => {
+    const holes = rounds.find(r => r.key === key)?.holes ?? 18;
+    return { ...emptyCell(), weekday: holes <= 9 ? 30 : 55, weekend: holes <= 9 ? 35 : 65, cart: holes <= 9 ? 12 : 20, cartWeekend: holes <= 9 ? 12 : 20 };
+  };
 
+  // A round just added on Bookable rounds: switched on once the plan is read again with it.
+  const turnOn = useRef<{ key: string; from: string | null; to: string | null } | null>(null);
   // Read the stored rows into a plan once rows and rounds are both in.
   const roundsKey = rounds.map(r => r.key).join(',');
   useEffect(() => {
     if (loading || !productsLoaded || loadError) return;
-    const p = readPlan(rows, rounds);
-    // Nothing saved yet: the suggested plan counts as unsaved, so the save bar shows.
-    setPlan(p); setSaved(rows.length ? JSON.stringify(p) : '');
+    const p = splitWeek(readPlan(rows, rounds));
+    // Nothing saved yet: the suggested plan counts as unsaved, so the save pill shows.
+    setSaved(rows.length ? JSON.stringify(p) : '');
+    const on = turnOn.current;
+    turnOn.current = null;
+    setPlan(on && rounds.some(r => r.key === on.key) ? setRoundSale(p, on.key, { on: true, from: on.from, to: on.to }, defaultCell) : p);
   }, [rows, loading, productsLoaded, loadError, roundsKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const dirty = !!plan && JSON.stringify(plan) !== saved;
@@ -156,82 +156,34 @@ export default function SchedulesPage() {
   // Revamp 3 dead end 20: senior and junior prices (picked at the counter) once the course adds them.
   const [addAges, setAddAges] = useState(false);
   const showAges = addAges || rows.some(s => s.seniorRateWeekday != null || s.juniorRateWeekday != null);
-  // PRICES-1: on a phone the price table shows one round at a time.
-  const [priceRound, setPriceRound] = useState('');
-  // SCHED-2 (Cam 2026-11-09: "the whole tab is just kind of jumbled"): the page in tabs, every part kept mounted
-  // (only hidden) so unsaved prices survive a tab change. Home's demand-pricing link (#demand-pricing) opens its tab.
-  type Tab = 'hours' | 'deals' | 'demand' | 'closed' | 'rules';
-  const [tab, setTab] = useState<Tab>('hours');
-  useEffect(() => { if (window.location.hash === '#demand-pricing') setTab('demand'); }, []);
-  const shownTab = (t: Tab) => tab === t ? '' : 'hidden';
-  // The set of days open for editing (0 = the usual week); one at a time, like a membership.
-  const [openSet, setOpenSet] = useState<number | null>(null);
 
-  // ── Editing the plan ───────────────────────────────────────────────────────
-  const edit = (f: (p: CoursePlan) => CoursePlan) => setPlan(p => p ? f(p) : p);
-  const dayAt = (p: CoursePlan, i: number) => i === 0 ? p.usual : p.different[i - 1];
-  const setDay = (i: number, patch: Partial<DayPlan>) => edit(p => i === 0 ? { ...p, usual: { ...p.usual, ...patch } } : { ...p, different: p.different.map((d, j) => j === i - 1 ? { ...d, ...patch } : d) });
-  const defaultCell = (key: string): PriceCell => {
-    const holes = rounds.find(r => r.key === key)?.holes ?? 18;
-    return { ...emptyCell(), weekday: holes <= 9 ? 30 : 55, weekend: holes <= 9 ? 35 : 65, cart: holes <= 9 ? 12 : 20, cartWeekend: holes <= 9 ? 12 : 20 };
-  };
-  function addDifferentDays() {
-    edit(p => {
-      const taken = new Set(p.different.flatMap(d => d.days));
-      const free = WEEK.find(d => !taken.has(d));
-      if (free === undefined) { toast('Every day already has its own hours.', 'warn'); return p; }
-      const copy: DayPlan = JSON.parse(JSON.stringify(p.usual));
-      return { ...p, different: [...p.different, { ...copy, days: [free] }] };
-    });
-  }
-  function toggleDiffDay(i: number, day: number) {
-    edit(p => {
-      const d = p.different[i - 1];
-      if (!d.days.includes(day) && p.different.some((x, j) => j !== i - 1 && x.days.includes(day))) { toast(`${DAYS[day]} is already in another set of days.`, 'warn'); return p; }
-      const days = d.days.includes(day) ? d.days.filter(x => x !== day) : [...d.days, day];
-      return { ...p, different: p.different.map((x, j) => j === i - 1 ? { ...x, days } : x) };
-    });
-  }
-  function addChange(i: number, at: string) {
-    edit(p => {
-      const d = dayAt(p, i);
-      const t = snap(d, at);
-      if (!isTime(at) || t <= d.first || t > d.last) { toast(`Pick a time after ${fmtTime(d.first)} and no later than ${fmtTime(d.last)}.`, 'warn'); return p; }
-      if (d.changes.some(c => c.at === t)) { toast(`There is already a price change at ${fmtTime(t)}.`, 'warn'); return p; }
-      const changes = [...d.changes, { at: t, name: null }].sort((a, b) => a.at.localeCompare(b.at));
-      const col = changes.findIndex(c => c.at === t) + 1;
-      // The new column starts with the prices of the one it splits.
-      const prices = Object.fromEntries(Object.entries(d.prices).map(([k, cells]) => [k, [...cells.slice(0, col), { ...cells[col - 1] }, ...cells.slice(col)]]));
-      const next = { ...d, changes, prices };
-      return i === 0 ? { ...p, usual: next } : { ...p, different: p.different.map((x, j) => j === i - 1 ? next : x) };
-    });
-    setAdding(null);
-  }
-  function removeChange(i: number, col: number) {
-    edit(p => {
-      const d = dayAt(p, i);
-      const next = { ...d, changes: d.changes.filter((_, j) => j !== col - 1), prices: Object.fromEntries(Object.entries(d.prices).map(([k, cells]) => [k, cells.filter((_, j) => j !== col)])) };
-      return i === 0 ? { ...p, usual: next } : { ...p, different: p.different.map((x, j) => j === i - 1 ? next : x) };
-    });
-  }
-  function rename(i: number, col: number, name: string) {
-    edit(p => {
-      const d = dayAt(p, i);
-      const next = col === 0 ? { ...d, firstName: name.trim() || null } : { ...d, changes: d.changes.map((c, j) => j === col - 1 ? { ...c, name: name.trim() || null } : c) };
-      return i === 0 ? { ...p, usual: next } : { ...p, different: p.different.map((x, j) => j === i - 1 ? next : x) };
-    });
-    setRenaming(null);
-  }
-  function setCell(i: number, key: string, col: number, patch: Partial<PriceCell>) {
-    edit(p => {
-      const d = dayAt(p, i);
-      const cells = (d.prices[key] ?? []).map((c, j) => j === col ? { ...c, ...patch } : c);
-      const next = { ...d, prices: { ...d.prices, [key]: cells } };
-      return i === 0 ? { ...p, usual: next } : { ...p, different: p.different.map((x, j) => j === i - 1 ? next : x) };
-    });
-  }
-  const setRound = (key: string, patch: Partial<CoursePlan['rounds'][number]>) => edit(p => setRoundSale(p, key, patch, defaultCell));
+  const edit = (f: (p: CoursePlan) => CoursePlan) => setPlan(p => (p ? f(p) : p));
+  const setRound = (key: string, patch: Partial<RoundSale>) => edit(p => setRoundSale(p, key, patch, defaultCell));
 
+  async function saveRound(key: string, patch: { label?: string; holes?: number; nineIds?: string[] }): Promise<string | null> {
+    const r = await dfetch<ProductOpt>('/api/operator/course-products', { method: 'PATCH', body: JSON.stringify({ id: key, ...patch }) });
+    if (!r.ok) return r.error;
+    setProducts(ps => ps.map(p => (p.id === key ? { ...p, ...r.data } : p)));
+    return null;
+  }
+  /** A round's own booking rules (blank = the course's). Owner only, saved straight away (lib/booking-rules checks them). */
+  async function saveRules(key: string, r: { minPlayers: string; maxPlayers: string; publicAdvanceDays: string }): Promise<string | null> {
+    const res = await dfetch<Rules>('/api/operator/round-rules', { method: 'PUT', body: JSON.stringify({ productId: key, ...r }) });
+    if (!res.ok) return res.error;
+    setProducts(ps => ps.map(p => (p.id === key ? { ...p, minPlayers: res.data.minPlayers ?? null, maxPlayers: res.data.maxPlayers ?? null, publicAdvanceDays: res.data.publicAdvanceDays ?? null } : p)));
+    return null;
+  }
+  async function addRound(a: { label: string; holes: number; nineIds: string[]; from: string | null; to: string | null; existing: string | null }): Promise<string | null> {
+    if (a.existing) { setRound(a.existing, { on: true, from: a.from, to: a.to }); return null; }
+    // A new round reads the plan again (its rows don't exist yet), which would drop unsaved edits.
+    if (dirty) return 'Review and save (or undo) your changes first, then add the round.';
+    const r = await dfetch<ProductOpt>('/api/operator/course-products', { method: 'POST', body: JSON.stringify({ label: a.label, holes: a.holes, nineIds: a.nineIds }) });
+    if (!r.ok) return r.error;
+    turnOn.current = { key: r.data.id, from: a.from, to: a.to };
+    setProducts(ps => [...ps, r.data]);
+    toast('Round added. Set its prices, then review and save.', 'ok');
+    return null;
+  }
 
   // ── Saving ─────────────────────────────────────────────────────────────────
   async function review() {
@@ -254,28 +206,6 @@ export default function SchedulesPage() {
     } finally { setBusy(false); }
   }
 
-  async function closeDay() {
-    if (!closing) return;
-    setBusy(true);
-    const r = await dfetch<{ booked: { groups: number } }>('/api/operator/blackouts', { method: 'POST', body: JSON.stringify(closing) });
-    setBusy(false);
-    if (!r.ok) { toast(r.error); return; }
-    setClosing(null);
-    await loadBlackouts();
-    toast(r.data.booked.groups ? `Closed. ${r.data.booked.groups} booked group${r.data.booked.groups === 1 ? '' : 's'} kept.` : 'Closed.', 'ok');
-  }
-  async function reopenDay(id: string) {
-    // One misclick used to put a closed day back on sale (fix 11).
-    const b = blackouts.find(x => x.id === id);
-    if (b && !confirm(`Reopen ${new Date(b.date + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })}? Its tee times go back on sale.`)) return;
-    setBusy(true);
-    const r = await dfetch<{ created?: number }>('/api/operator/blackouts', { method: 'DELETE', body: JSON.stringify({ id }) });
-    setBusy(false);
-    if (!r.ok) { toast(r.error); return; }
-    setBlackouts(prev => prev.filter(b => b.id !== id));
-    toast('Reopened.', 'ok');
-  }
-
   if (pageAccess.loaded && !pageAccess.can('schedule.view')) return (
     <div className="flex flex-col min-h-screen md:h-screen bg-page md:overflow-hidden">
       <OperatorSidebar active="schedule" />
@@ -283,435 +213,89 @@ export default function SchedulesPage() {
     </div>
   );
 
-  // ── Closed days calendar ───────────────────────────────────────────────────
-  const today = new Date().toLocaleDateString('en-CA');
-  const monthStart = month;
-  const monthDate = new Date(monthStart + 'T12:00:00Z');
-  const daysInMonth = new Date(Date.UTC(monthDate.getUTCFullYear(), monthDate.getUTCMonth() + 1, 0)).getUTCDate();
-  const lead = (monthDate.getUTCDay() + 6) % 7; // Monday-first grid
-  const shiftMonth = (n: number) => { const d = new Date(Date.UTC(monthDate.getUTCFullYear(), monthDate.getUTCMonth() + n, 1)); setMonth(d.toISOString().slice(0, 10)); };
-  const closedByDate = new Map(blackouts.map(b => [b.date, b]));
-
-  const dayPlans = plan ? [plan.usual, ...plan.different] : [];
-  const sold = plan ? plan.rounds.filter(r => r.on && rounds.some(x => x.key === r.key)) : [];
-  const labelOf = (key: string) => rounds.find(r => r.key === key)?.label ?? 'Round';
-  const dollars = (n: number) => '$' + (Number.isInteger(n) ? n : n.toFixed(2));
-  /** One set of days in a line: its hours, then each round's first price (weekday/weekend when they differ). */
-  const setSummary = (d: DayPlan) => {
-    if (d.closed) return 'Closed';
-    const days = plan ? daysOf(plan, d) : [];
-    const wd = days.some(x => x >= 1 && x <= 5), we = days.some(x => x === 0 || x === 6);
-    const prices = sold.map(r => {
-      const c = d.prices[r.key]?.[0];
-      if (!c) return null;
-      const p = wd && we && c.weekday !== c.weekend ? `${dollars(c.weekday)}/${dollars(c.weekend)}` : dollars(wd ? c.weekday : c.weekend);
-      return sold.length > 1 ? `${labelOf(r.key)} ${p}` : p;
-    }).filter(Boolean);
-    return [`${fmtTime(d.first)}–${fmtTime(d.last)}, every ${d.interval} min`, ...prices, d.changes.length ? `${d.changes.length + 1} prices a day` : ''].filter(Boolean).join(' · ');
-  };
-
-  /** One set of days' hours: first tee, last tee, minutes apart. */
-  const hoursFields = (i: number, d: DayPlan) => (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-md">
-      <div><label className={lCls} htmlFor={`first-${i}`}>First tee</label><input id={`first-${i}`} type="time" value={d.first} disabled={!canEdit} onChange={e => setDay(i, { first: e.target.value })} className={iCls} /></div>
-      <div><label className={lCls} htmlFor={`last-${i}`}>Last tee</label><input id={`last-${i}`} type="time" value={d.last} disabled={!canEdit} onChange={e => setDay(i, { last: e.target.value })} className={iCls} /></div>
-      <div><label className={lCls} htmlFor={`gap-${i}`}>Minutes apart</label><input id={`gap-${i}`} type="number" min={1} max={60} value={d.interval || ''} disabled={!canEdit} onChange={e => setDay(i, { interval: Number(e.target.value) })} className={iCls} /></div>
-    </div>
-  );
-
-  /** The price table for one set of days: a column per round sold (and per price change), a row per price. */
-  const priceTable = (i: number, d: DayPlan) => {
-    const names = columnNames(d);
-    const starts = [d.first, ...d.changes.map(c => c.at)];
-    const days = plan ? daysOf(plan, d) : [];
-    const wd = days.some(x => x >= 1 && x <= 5), we = days.some(x => x === 0 || x === 6);
-    const soldIn = (key: string, col: number) => {
-      const r = plan?.rounds.find(x => x.key === key);
-      const from = r?.from ?? d.first, to = r?.to ?? d.last;
-      const end = starts[col + 1];
-      return end ? from < end && to >= starts[col] : from <= d.last && to >= starts[col];
-    };
-    const money = (label: string, v: number | null, set: (s: string) => void, req: boolean) => (
-      <label className="relative inline-block">
-        <span className="sr-only">{label}</span>
-        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[13px] text-ink-muted pointer-events-none">$</span>
-        <input type="number" min={0} step="0.01" value={v ?? ''} placeholder={req ? '0' : '—'} disabled={!canEdit} onChange={e => set(e.target.value)} className={cellIn} />
-      </label>
-    );
-    // CART-1: walking per cell, weekday and weekend — off means a cart is required (and charged).
-    const walkPair = (key: string, col: number) => {
-      const c = d.prices[key]?.[col];
-      if (!c) return null;
-      const box = (k: 'walk' | 'walkWeekend', other: 'walk' | 'walkWeekend', show: boolean, when: string) => show && (
-        <label className="inline-flex items-center gap-1.5 w-[5.5rem] text-[13px] text-ink">
-          <input type="checkbox" checked={(c[k] ?? c.walk) !== false} disabled={!canEdit} aria-label={`${labelOf(key)} ${names[col]} walking ${when}`}
-            onChange={e => setCell(i, key, col, { [k]: e.target.checked, ...(!(wd && we) ? { [other]: e.target.checked } : {}) })} className="w-4 h-4 accent-pine" />
-          {(c[k] ?? c.walk) !== false ? 'Yes' : 'Cart only'}
-        </label>
-      );
-      return <div className="flex gap-1.5">{box('walk', 'walkWeekend', wd, 'weekday')}{box('walkWeekend', 'walk', we, 'weekend')}</div>;
-    };
-    const pair = (key: string, col: number, kind: 'green' | 'cart' | 'member' | 'resident' | 'senior' | 'junior') => {
-      const c = d.prices[key]?.[col];
-      if (!c) return null;
-      const [a, b] = kind === 'green' ? ['weekday', 'weekend'] as const : kind === 'cart' ? ['cart', 'cartWeekend'] as const : kind === 'member' ? ['memberWeekday', 'memberWeekend'] as const
-        : kind === 'senior' ? ['seniorWeekday', 'seniorWeekend'] as const : kind === 'junior' ? ['juniorWeekday', 'juniorWeekend'] as const : ['residentWeekday', 'residentWeekend'] as const;
-      const req = kind === 'green' || kind === 'cart';
-      const parse = req ? num : optNum;
-      return (
-        <div className="flex gap-1.5">
-          {wd && money(`${labelOf(key)} ${names[col]} ${kind} weekday`, c[a] as number | null, s => setCell(i, key, col, { [a]: parse(s), ...(!we ? { [b]: parse(s) } : {}) }), req)}
-          {we && money(`${labelOf(key)} ${names[col]} ${kind} weekend`, (c[b] ?? (kind === 'cart' ? c.cart : null)) as number | null, s => setCell(i, key, col, { [b]: parse(s), ...(!wd ? { [a]: parse(s) } : {}) }), req)}
-        </div>
-      );
-    };
-    const subRows: { kind: 'green' | 'cart' | 'walk' | 'member' | 'resident' | 'senior' | 'junior'; label: string }[] = [
-      { kind: 'green', label: 'Green fee' }, { kind: 'cart', label: perCart ? 'Cart, per cart (2 riders)' : 'Cart, per rider' }, { kind: 'walk', label: 'Can walk' },
-      ...(showMember ? [{ kind: 'member' as const, label: 'Members' }] : []),
-      ...(showResident ? [{ kind: 'resident' as const, label: 'Residents' }] : []),
-      ...(showAges ? [{ kind: 'senior' as const, label: 'Seniors' }, { kind: 'junior' as const, label: 'Juniors' }] : []),
-    ];
-    // PRICES-1 (Cam 2026-11-04, "one table"): every round side by side — a column (or, with price changes,
-    // a column per price) for each round sold, a row per price. The difference between rounds reads across.
-    const cols = sold.flatMap(r => names.map((_, col) => ({ key: r.key, col })).filter(c => soldIn(c.key, c.col)));
-    const groupsOf = sold.map(r => ({ r, n: cols.filter(c => c.key === r.key).length })).filter(g => g.n > 0);
-    const shown = groupsOf.some(g => g.r.key === priceRound) ? priceRound : groupsOf[0]?.r.key;
-    // A phone shows one round; md and up show them all.
-    const onPhone = (key: string) => key === shown ? '' : 'hidden md:table-cell ';
-    const hours = (key: string) => {
-      const r = plan?.rounds.find(x => x.key === key);
-      return r?.from || r?.to ? `${fmtTime(r.from ?? d.first)} – ${fmtTime(r.to ?? d.last)}` : 'All day';
-    };
-    // A period's name (tap to rename), when it starts, and remove. One input at a time: renaming is keyed by round too.
-    const periodHead = (key: string, col: number, extra: string, unsold = false) => (
-      <th key={`${key}-${col}`} className={extra + 'text-left font-normal pr-4 pb-2 align-bottom'}>
-        {renaming && renaming.d === i && renaming.col === col && (renaming.key ?? '') === key ? (
-          <input autoFocus value={renaming.name} onChange={e => setRenaming({ ...renaming, name: e.target.value })}
-            onBlur={() => rename(i, col, renaming.name)} onKeyDown={e => { if (e.key === 'Enter') rename(i, col, renaming.name); if (e.key === 'Escape') setRenaming(null); }}
-            aria-label="Price name" className="w-32 bg-paper border border-line rounded-md px-2 py-1 text-[13.5px] text-ink" />
-        ) : (
-          <button type="button" disabled={!canEdit} onClick={() => setRenaming({ d: i, col, name: names[col], key })} title={canEdit ? 'Tap to rename' : undefined}
-            className="font-medium text-ink hover:text-pine text-left disabled:hover:text-ink">{names[col]}</button>
-        )}
-        <div className="text-[12px] text-ink-muted flex items-center gap-2">
-          {`from ${fmtTime(starts[col])}${unsold ? ' · not sold' : ''}`}
-          {col > 0 && canEdit && <button type="button" onClick={() => removeChange(i, col)} className="text-ink-muted hover:text-bad underline underline-offset-2">remove</button>}
-        </div>
-      </th>
-    );
-    if (!groupsOf.length) return <p className="text-[13.5px] text-ink-muted">Not sold.</p>;
-    return (
-      <div className="overflow-x-auto -mx-5 px-5">
-        {groupsOf.length > 1 && (
-          <div role="group" className="md:hidden mb-3 flex gap-1 p-1 rounded-[7px] bg-paper">
-            {groupsOf.map(({ r }) => (
-              <button key={r.key} type="button" aria-pressed={r.key === shown} onClick={() => setPriceRound(r.key)}
-                className={'flex-1 min-h-[36px] rounded-[5px] text-[13px] ' + (r.key === shown ? 'bg-white text-ink font-semibold shadow-card' : 'text-ink-muted')}>{labelOf(r.key)}</button>
-            ))}
-          </div>
-        )}
-        <table className="text-[13.5px] border-separate border-spacing-0">
-          <thead>
-            <tr>
-              <th className="text-left font-normal pr-4 pb-1 align-bottom min-w-[8rem]">{wd && we ? <span className="text-[12px] text-ink-muted">Weekday · weekend</span> : null}</th>
-              {groupsOf.map(({ r, n }) => (
-                <th key={r.key} colSpan={n} className={onPhone(r.key) + 'text-left font-semibold text-ink pr-6 pb-1 align-bottom'}>
-                  {labelOf(r.key)}<span className="block text-[12px] font-normal text-ink-muted">{hours(r.key)}</span>
-                </th>
-              ))}
-            </tr>
-            <tr>
-              <th />
-              {cols.map(({ key, col }) => periodHead(key, col, onPhone(key)))}
-              {/* A price change no sold round reaches still shows, so it can be renamed or removed. */}
-              {names.map((_, col) => cols.some(c => c.col === col) ? null : periodHead('', col, 'hidden md:table-cell ', true))}
-            </tr>
-          </thead>
-          <tbody>
-            {subRows.map((sr, k) => (
-              <tr key={sr.kind}>
-                <td className="pr-4 py-1.5 align-middle border-t border-line-soft whitespace-nowrap">
-                  <span className={k === 0 ? 'font-semibold text-ink' : 'text-ink-soft'}>{sr.label}</span>
-                </td>
-                {cols.map(({ key, col }) => (
-                  <td key={`${key}-${col}`} className={onPhone(key) + 'pr-4 py-1.5 align-middle border-t border-line-soft'}>
-                    {sr.kind === 'walk' ? walkPair(key, col) : pair(key, col, sr.kind)}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {canEdit && (
-          adding && adding.d === i ? (
-            <div className="mt-3 flex flex-wrap items-end gap-2">
-              <div><label className={lCls} htmlFor={`chg-${i}`}>From what time?</label><input id={`chg-${i}`} type="time" autoFocus value={adding.at} onChange={e => setAdding({ ...adding, at: e.target.value })} className={iCls} /></div>
-              <button type="button" onClick={() => setAdding(null)} className="px-3 py-2 rounded-md text-[13px] text-ink-soft hover:text-ink">Cancel</button>
-              <button type="button" onClick={() => addChange(i, adding.at)} className="px-4 py-2 rounded-md bg-pine hover:bg-pine-hover text-white text-[13px] font-medium">Add</button>
-            </div>
-          ) : (
-            <button type="button" onClick={() => setAdding({ d: i, at: d.changes.length === 0 && d.first < '15:00' && d.last > '15:00' ? '15:00' : '' })} className="mt-3 text-[13px] font-medium text-pine hover:underline">+ Add a price change</button>
-          )
-        )}
-      </div>
-    );
-  };
+  // The days of the week the SAVED schedule sells (Closed days shows those inside the booking window as bookable):
+  // unsaved edits never make a day look bookable before golfers can really book it.
+  const savedPlan: CoursePlan | null = saved ? JSON.parse(saved) : null;
+  const openDows = savedPlan ? [savedPlan.usual, ...savedPlan.different].filter(d => !d.closed).flatMap(d => daysOf(savedPlan, d)) : [];
+  const planTab = tab === 'rounds' || tab === 'hours';
 
   return (
     <div className="flex flex-col min-h-screen md:h-screen bg-page md:overflow-hidden">
       <OperatorSidebar active="schedule" />
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <StaffNotice what="the schedule" view="schedule.view" edit="schedule.edit" />
-        <div className="px-4 sm:px-10 py-7 space-y-6">
-          <div className="min-w-0 max-w-[46em]">
-            <h1 className="font-serif text-[32px] leading-none text-ink">Schedule</h1>
-          </div>
-          <SlidingTabs<Tab> value={tab} onChange={setTab} label="Schedule"
-            tabs={[['hours', 'Hours and prices'], ['deals', 'Deals'], ['demand', 'Demand pricing'], ['closed', 'Closed days'], ['rules', 'Booking rules']]} />
+        <div className="px-4 sm:px-10 py-7 flex flex-col gap-4 min-w-0">
+          <h1 className="font-serif text-[34px] leading-none text-ink">Schedule</h1>
+          <SlidingTabs<Tab> value={tab} onChange={setTab} label="Schedule" look="pill" className="self-start"
+            tabs={[['rounds', 'Bookable rounds'], ['hours', 'Hours and prices'], ['promos', 'Promotions'], ['demand', 'Demand pricing'], ['closed', 'Closed days']]} />
 
-          {loadError && <LoadError message={loadError} onRetry={loadSchedules} />}
-          {productsError && <LoadError message={`Couldn't load your rounds — ${productsError}`} onRetry={loadProducts} />}
-          {!plan && !loadError && <Card className="p-5 text-[14px] text-ink-muted">Loading your schedule…</Card>}
-          {plan && !loading && rows.length === 0 && !loadError && (
-            <p className={'bg-warn/5 border border-warn/20 rounded-md px-4 py-3 text-[13.5px] text-ink ' + shownTab('hours')}>No tee times yet.</p>
+          {planTab && loadError && <LoadError message={loadError} onRetry={loadSchedules} />}
+          {planTab && productsError && <LoadError message={`Couldn't load your rounds — ${productsError}`} onRetry={loadProducts} />}
+          {planTab && settingsError && <LoadError message={`Couldn't load your settings — ${settingsError}`} onRetry={loadSettings} />}
+          {planTab && !plan && !loadError && <Card className="p-5 text-[14px] text-ink-muted">Loading your schedule…</Card>}
+          {planTab && plan && !loading && rows.length === 0 && !loadError && (
+            <p className="bg-warn/5 border border-warn/20 rounded-md px-4 py-3 text-[13.5px] text-ink">No tee times yet. Review and save to put these on your tee sheet.</p>
           )}
 
-          {plan && (
-            <div className={'space-y-6 ' + shownTab('hours')}>
-              {/* What golfers can book */}
-              <Card className="p-5">
-                <div className="flex flex-wrap items-baseline justify-between gap-3">
-                  <h2 className="text-[17px] font-semibold text-ink">What golfers can book</h2>
-                  <Link href="/dashboard/settings?section=Your+course" className="text-[13px] font-medium text-pine hover:underline">Edit rounds</Link>
-                </div>
-                <div className="mt-2 divide-y divide-line-soft">
-                  {plan.rounds.filter(r => rounds.some(x => x.key === r.key)).map(r => (
-                    <div key={r.key} className="py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-                      <label className="flex items-center gap-2 min-w-[10rem]">
-                        <input type="checkbox" checked={r.on} disabled={!canEdit || rounds.length === 1} onChange={e => setRound(r.key, { on: e.target.checked })} className="w-4 h-4 accent-pine" />
-                        <span className="text-[14px] font-semibold text-ink">{labelOf(r.key)}</span>
-                      </label>
-                      {r.on && (
-                        <div className="flex flex-wrap items-center gap-2 text-[13.5px] text-ink">
-                          <select value={r.from || r.to ? 'between' : 'all'} disabled={!canEdit}
-                            onChange={e => setRound(r.key, e.target.value === 'all' ? { from: null, to: null } : { from: plan.usual.first, to: plan.usual.last })}
-                            aria-label={`When ${labelOf(r.key)} is sold`} className="bg-paper border border-line rounded-md px-2 py-1.5 text-[13.5px]">
-                            <option value="all">All day</option>
-                            <option value="between">Between</option>
-                          </select>
-                          {(r.from || r.to) && <>
-                            <input type="time" aria-label="Sold from" value={r.from ?? plan.usual.first} disabled={!canEdit} onChange={e => setRound(r.key, { from: e.target.value })} className="bg-paper border border-line rounded-md px-2 py-1.5" />
-                            <span className="text-ink-soft">and</span>
-                            <input type="time" aria-label="Sold until" value={r.to ?? plan.usual.last} disabled={!canEdit} onChange={e => setRound(r.key, { to: e.target.value })} className="bg-paper border border-line rounded-md px-2 py-1.5" />
-                          </>}
-                        </div>
-                      )}
-                      {!r.on && <span className="text-[13px] text-ink-muted">Not sold</span>}
-                    </div>
-                  ))}
-                </div>
-              </Card>
-
-              {/* SCHED-2 (Cam 2026-11-09: "the process of adding and adjusting easier — think how we adjust the
-                  membership"): one row per set of days — its hours and prices in a line, Edit opens that set's hours and
-                  price table in place (one at a time), "Add different days" adds a set and opens it. */}
-              <Card className="p-5">
-                <div className="flex flex-wrap items-baseline justify-between gap-3">
-                  <h2 className="text-[17px] font-semibold text-ink">Hours and prices</h2>
-                  <div className="flex flex-wrap gap-4">
-                    {!showAges && canEdit && <button type="button" onClick={() => setAddAges(true)} className="text-[13px] font-medium text-pine hover:underline">Add senior/junior prices</button>}
-                    {canEdit && <button type="button" onClick={() => { addDifferentDays(); setOpenSet(plan.different.length + 1); }} className="text-[13px] font-medium text-pine hover:underline">Add different days</button>}
-                  </div>
-                </div>
-                <ul className="mt-2 divide-y divide-line-soft">
-                  {dayPlans.map((d, i) => {
-                    const isOpen = openSet === i;
-                    const name = i === 0 ? (plan.different.length ? dayList(daysOf(plan, d)) || 'No days left' : 'Every day') : dayList(d.days) || 'Pick the days';
-                    return (
-                      <li key={i} className="py-3">
-                        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                          <span className="text-[14px] font-semibold text-ink min-w-[9rem]">{name}</span>
-                          <span className="text-[13px] text-ink-soft flex-1 min-w-0 tabular-nums">{setSummary(d)}</span>
-                          <span className="flex gap-3">
-                            <button type="button" onClick={() => setOpenSet(isOpen ? null : i)} aria-expanded={isOpen} className="text-[13px] font-medium text-pine hover:underline">{isOpen ? 'Done' : canEdit ? 'Edit' : 'Open'}</button>
-                            {i > 0 && canEdit && <button type="button" onClick={() => { edit(p => ({ ...p, different: p.different.filter((_, k) => k !== i - 1) })); setOpenSet(null); }} className="text-[13px] font-medium text-bad hover:underline">Remove</button>}
-                          </span>
-                        </div>
-                        {isOpen && (
-                          <div className="mt-3 pt-4 border-t border-line-soft space-y-5">
-                            {i > 0 && (
-                              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                                <div className="flex flex-wrap gap-1.5" role="group" aria-label="Days">
-                                  {WEEK.map(day => (
-                                    <button key={day} type="button" disabled={!canEdit} onClick={() => toggleDiffDay(i, day)} aria-pressed={d.days.includes(day)}
-                                      className={'px-2.5 py-1 rounded-md text-[13px] border ' + (d.days.includes(day) ? 'bg-pine text-white border-pine' : 'bg-white text-ink-soft border-line hover:text-ink')}>{DAYS[day]}</button>
-                                  ))}
-                                </div>
-                                <label className="flex items-center gap-2 text-[13.5px] text-ink">
-                                  <input type="checkbox" checked={d.closed} disabled={!canEdit} onChange={e => setDay(i, { closed: e.target.checked })} className="w-4 h-4 accent-pine" />
-                                  Closed these days
-                                </label>
-                              </div>
-                            )}
-                            {!d.closed && <>
-                              <section>
-                                <h3 className="text-[14px] font-semibold text-ink mb-2">Hours</h3>
-                                {hoursFields(i, d)}
-                              </section>
-                              <section>
-                                <h3 className="text-[14px] font-semibold text-ink mb-2">Prices</h3>
-                                {sold.length === 0 ? <p className="text-[13.5px] text-ink-muted">Turn on a round to price it.</p> : priceTable(i, d)}
-                              </section>
-                            </>}
-                          </div>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
-              </Card>
+          {tab === 'rounds' && plan && (
+            <BookableRounds plan={plan} rounds={rounds} nines={nines} canEdit={canEdit} canEditRounds={canEditRounds}
+              setRound={setRound} saveRound={saveRound} addRound={addRound} course={courseRules} saveRules={saveRules} />
+          )}
+          {tab === 'hours' && plan && (
+            <HoursPrices plan={plan} edit={edit} rounds={rounds} canEdit={canEdit} perCart={perCart}
+              showMember={showMember} showResident={showResident} showAges={showAges} onAddAges={() => setAddAges(true)} />
+          )}
+          {tab === 'promos' && <>
+            <Promotions canEdit={canEdit} />
+            <LastMinuteDeals canEdit={canEdit} onlyIfOn />
+          </>}
+          {tab === 'demand' && <DemandLocked canEdit={canEdit} />}
+          {tab === 'closed' && (
+            <ClosedDays blackouts={blackouts} error={blackoutError} reload={loadBlackouts} canEdit={canEdit}
+              publicAdvanceDays={publicAdvanceDays} openDows={openDows} />
+          )}
+          {/* Unsaved changes: a slim pill, one save for the whole plan, with a preview first. */}
+          {dirty && canEdit && planTab && (
+            <div className="sticky bottom-20 md:bottom-3.5 z-30 self-center w-full max-w-[520px] flex items-center gap-3.5 pl-4 pr-2 py-2 rounded-full bg-white shadow-card border border-line text-[13.5px] text-ink">
+              <span className="w-1.5 h-1.5 rounded-full bg-warn shrink-0" aria-hidden="true" />
+              <span>You have unsaved changes</span>
+              <span className="flex-1" />
+              <button type="button" onClick={() => setPlan(saved ? JSON.parse(saved) : plan)} disabled={!saved} className={LINK}>Undo</button>
+              <button type="button" onClick={review} className={PRIMARY + ' rounded-full'}>Review and save</button>
             </div>
           )}
-
-          <div className={'space-y-6 ' + shownTab('deals')}>
-            {/* PRICE-1: promo codes; PRICE-2: last-minute deals. */}
-            <PromoCodes canEdit={canEdit} />
-            <LastMinuteDeals canEdit={canEdit} />
-          </div>
-          <div className={shownTab('demand')}>
-            <DemandPricing canEdit={canEdit} />
-          </div>
-
-          {/* Closed days · booking rules + booking windows */}
-          <div>
-            <Card className={'p-5 max-w-2xl ' + shownTab('closed')}>
-              <div className="flex items-baseline justify-between gap-3">
-                <h2 className="text-[17px] font-semibold text-ink">Closed days</h2>
-                <div className="flex items-center gap-1">
-                  <button onClick={() => shiftMonth(-1)} aria-label="Previous month" className="w-8 h-8 rounded-md hover:bg-paper text-ink-soft text-[18px] leading-none">‹</button>
-                  <span className="text-[14px] font-semibold text-ink w-36 text-center">{monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })}</span>
-                  <button onClick={() => shiftMonth(1)} aria-label="Next month" className="w-8 h-8 rounded-md hover:bg-paper text-ink-soft text-[18px] leading-none">›</button>
-                </div>
-              </div>
-              <p className="text-[13px] text-ink-soft mt-1 mb-3">Outings, maintenance, holidays.</p>
-              {blackoutError && <LoadError message={blackoutError} onRetry={loadBlackouts} />}
-              <div className="grid grid-cols-7 text-center text-[12px] text-ink-muted mb-1">{WEEK.map(d => <span key={d}>{DAYS[d]}</span>)}</div>
-              <div className="grid grid-cols-7 gap-1">
-                {Array.from({ length: lead }, (_, i) => <span key={`b${i}`} />)}
-                {Array.from({ length: daysInMonth }, (_, i) => {
-                  const date = monthStart.slice(0, 8) + String(i + 1).padStart(2, '0');
-                  const closed = closedByDate.get(date);
-                  const past = date < today;
-                  return (
-                    <button key={date} disabled={!canEdit || past || busy}
-                      onClick={() => closed ? reopenDay(closed.id) : startClosing(date)}
-                      title={closed ? `Closed${closed.reason ? `: ${closed.reason}` : ''} — click to reopen` : past ? '' : 'Click to close this day'}
-                      className={'h-10 rounded-md text-[13px] tabular-nums ' + (closed ? 'bg-bad/[0.08] text-bad font-semibold border border-bad/20' : past ? 'text-ink-faint' : 'text-ink hover:bg-paper border border-transparent')}>
-                      {i + 1}
-                    </button>
-                  );
-                })}
-              </div>
-              {closing && (
-                <div className="mt-4 flex flex-wrap items-end gap-2 bg-paper/70 rounded-md p-3">
-                  <div className="min-w-0 flex-1">
-                    <label className={lCls} htmlFor="close-reason">Close {new Date(closing.date + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC' })}</label>
-                    <input id="close-reason" value={closing.reason} onChange={e => setClosing({ ...closing, reason: e.target.value })} placeholder="Why (member outing, aeration…)" className={iCls} />
-                  </div>
-                  {closingBooked && closingBooked !== 'error' && closingBooked.groups > 0 && (
-                    <p className="basis-full text-[13px] text-warn">{closingBooked.groups} group{closingBooked.groups === 1 ? '' : 's'} · {closingBooked.players} players booked — they stay booked. <Link href={`/dashboard?date=${closing.date}`} className="underline font-medium">Cancel and tell them</Link></p>
-                  )}
-                  {closingBooked === 'error' && <p className="basis-full text-[13px] text-bad">Couldn’t check who’s booked. <button type="button" onClick={() => startClosing(closing.date)} className="underline font-medium">Retry</button></p>}
-                  <button onClick={() => setClosing(null)} className="px-3 py-2 rounded-md text-[13px] text-ink-soft hover:text-ink">Cancel</button>
-                  <button onClick={closeDay} disabled={busy} className="px-4 py-2 rounded-md bg-pine hover:bg-pine-hover text-white text-[13px] font-medium disabled:opacity-50">{busy ? 'Closing…' : 'Close this day'}</button>
-                </div>
-              )}
-              {blackouts.filter(b => b.date >= today).length > 0 && (
-                <ul className="mt-4 divide-y divide-line-soft">
-                  {blackouts.filter(b => b.date >= today).map(b => (
-                    <li key={b.id} className="flex items-baseline justify-between gap-3 py-2 text-[13.5px]">
-                      <span className="text-ink">{new Date(b.date + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })}<span className="text-ink-soft">{b.reason ? ` · ${b.reason}` : ''}</span></span>
-                      {canEdit && <button onClick={() => reopenDay(b.id)} disabled={busy} className="text-[13px] font-medium text-pine hover:underline disabled:opacity-50">Reopen</button>}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Card>
-
-            <div className={'space-y-6 max-w-xl ' + shownTab('rules')}>
-              {/* W2-6 slice 3: per-round booking rules (group size, how far ahead). */}
-              {activeProducts.length > 0 && (() => {
-                const round = activeProducts.find(p => p.id === rulesView) ?? activeProducts[0];
-                return (
-                  <div>
-                    {activeProducts.length > 1 && (
-                      <select value={round.id} onChange={e => setRulesView(e.target.value)} aria-label="Booking rules for" className="mb-2 bg-white border border-line rounded-md px-2 py-1.5 text-[13.5px] text-ink">
-                        {activeProducts.map(p => <option key={p.id} value={p.id}>Booking rules · {p.label}</option>)}
-                      </select>
-                    )}
-                    <RoundRulesCard key={round.id} productId={round.id} label={round.label} course={courseRules} canEdit={!pageAccess.isStaff}
-                      rules={{ minPlayers: round.minPlayers ?? null, maxPlayers: round.maxPlayers ?? null, publicAdvanceDays: round.publicAdvanceDays ?? null }}
-                      onSaved={r => setProducts(ps => ps.map(p => p.id === round.id ? { ...p, ...r } : p))} />
-                  </div>
-                );
-              })()}
-
-              <Card className="p-5">
-                <h2 className="text-[15px] font-semibold text-ink">How far ahead golfers can book</h2>
-                {windowsError ? <div className="mt-2"><LoadError message={windowsError} onRetry={loadWindows} /></div> : (
-                  <div className="mt-2 divide-y divide-line-soft text-[13.5px]">
-                    <div className="flex justify-between py-2"><span className="text-ink">Public</span><span className="tabular-nums text-ink">{windows.publicAdvanceDays ?? '—'} days</span></div>
-                    <div className="flex justify-between py-2"><span className="text-ink">Members</span><span className="tabular-nums text-ink">{windows.memberAdvanceDays ?? '—'} days</span></div>
-                  </div>
-                )}
-                <Link href="/dashboard/settings?section=Booking+rules" className="inline-block mt-2 text-[13px] font-medium text-pine hover:underline">Change in Settings</Link>
-              </Card>
-            </div>
-          </div>
         </div>
       </main>
 
-      {/* Unsaved changes: one save for the whole page, with a preview first. */}
-      {dirty && canEdit && (
-        <div className="fixed bottom-16 md:bottom-0 inset-x-0 md:left-[var(--op-rail-w)] z-40 bg-white border-t border-line">
-          <div className="px-4 sm:px-10 py-3 flex items-center justify-between gap-3">
-            <span className="text-[13.5px] text-ink">Unsaved changes.</span>
-            <div className="flex items-center gap-2">
-              <button type="button" onClick={() => setPlan(JSON.parse(saved))} className="px-3 py-2 rounded-md text-[13px] text-ink-soft hover:text-ink">Undo changes</button>
-              <button type="button" onClick={review} className="px-4 py-2 rounded-md bg-pine hover:bg-pine-hover text-white text-[13px] font-medium">Review and save</button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* What a save will do — shown before anything is written */}
       {pending && (
-        <div className="fixed inset-0 z-[60] bg-black/30 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Save your schedule?">
-          <Card className="w-full max-w-md p-6">
-            <h3 className="font-serif font-semibold text-ink text-[20px]">Save your schedule?</h3>
-            {pending.error ? <p className="text-[13.5px] text-bad mt-3" role="alert">This can&apos;t be saved yet: {pending.error}</p>
-              : !pending.preview ? <p className="text-[13.5px] text-ink-muted mt-3">Checking what this changes on your tee sheet…</p>
-              : (<>
-                {!pending.preview.refusal && <>
-                  <p className="text-[13.5px] text-ink-soft mt-2">On your tee sheet over the next {pending.preview.days} days, this:</p>
-                  <ul className="mt-2 space-y-1.5">{previewLines(pending.preview).map(l => <li key={l} className="text-[14px] text-ink leading-snug pl-4 relative before:content-[''] before:absolute before:left-0 before:top-[9px] before:w-2 before:h-0.5 before:bg-fairway">{l}</li>)}</ul>
-                </>}
-                {pending.preview.refusal && (
-                  <p className="mt-4 bg-bad/5 border border-bad/20 rounded-md px-3 py-2.5 text-[13.5px] text-ink leading-snug" role="alert">This can&apos;t be saved: {pending.preview.refusal}</p>
-                )}
-                {!pending.preview.refusal && !!pending.preview.warnings?.length && (
-                  <div className="mt-4 bg-warn/5 border border-warn/20 rounded-md px-3 py-2.5 space-y-1.5">
-                    <p className="text-[13.5px] font-semibold text-ink">Worth a look before you save</p>
-                    {pending.preview.warnings.map(w => <p key={w} className="text-[13.5px] text-ink leading-snug">{w}</p>)}
-                  </div>
-                )}
-              </>)}
-            <div className="flex justify-end gap-2 mt-6">
-              <button onClick={() => setPending(null)} disabled={busy} className="px-4 py-2 rounded-md text-[13px] text-ink-soft hover:text-ink">Go back</button>
-              <button onClick={save} disabled={busy || !pending.preview || !!pending.preview.refusal} className="px-4 py-2 rounded-md bg-pine hover:bg-pine-hover text-white text-[13px] font-medium disabled:opacity-50">{busy ? 'Saving…' : 'Save'}</button>
-            </div>
-          </Card>
-        </div>
+        <Popup title="Save your schedule?" onClose={() => !busy && setPending(null)}>
+          {pending.error ? <p className="text-[13.5px] text-bad" role="alert">This can&apos;t be saved yet: {pending.error}</p>
+            : !pending.preview ? <p className="text-[13.5px] text-ink-muted">Checking what this changes on your tee sheet…</p>
+            : (<>
+              {!pending.preview.refusal && (
+                <div className="border border-line rounded-[12px] px-3.5 py-3 text-[13px]">
+                  <b className="block mb-1 font-semibold text-ink">What changes on your tee sheet over the next {pending.preview.days} days</b>
+                  <ul className="list-disc pl-[18px] flex flex-col gap-1 text-ink-soft">
+                    {previewLines(pending.preview).map(l => <li key={l}>{l}</li>)}
+                    <li>Booked rounds keep their price.</li>
+                  </ul>
+                </div>
+              )}
+              {pending.preview.refusal && (
+                <p className="bg-bad/5 border border-bad/20 rounded-[12px] px-3 py-2.5 text-[13.5px] text-ink" role="alert">This can&apos;t be saved: {pending.preview.refusal}</p>
+              )}
+              {!pending.preview.refusal && !!pending.preview.warnings?.length && (
+                <div className="bg-warn/10 border border-warn/45 rounded-[12px] px-3 py-2.5 flex flex-col gap-1.5">
+                  <p className="text-[13.5px] font-semibold text-ink">Worth a look before you save</p>
+                  {pending.preview.warnings.map(w => <p key={w} className="text-[13.5px] text-ink">{w}</p>)}
+                </div>
+              )}
+            </>)}
+          <PopupFoot onCancel={() => setPending(null)} cancel="Go back">
+            <button type="button" onClick={save} disabled={busy || !pending.preview || !!pending.preview.refusal} className={PRIMARY}>{busy ? 'Saving…' : 'Save'}</button>
+          </PopupFoot>
+        </Popup>
       )}
     </div>
   );
