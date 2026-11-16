@@ -16,6 +16,8 @@ import { paidUntilRenewal } from './membership-renewal';
 import { amountsDue, recordPaidTerm } from './membership-dues';
 import { autoRenewTermsText, duesIntentKey } from './membership-autorenew';
 import { settleStaleDuesReader } from './dues-reader';
+import { termOf, passOnSale, ledgerWhat, isPassTier, PASS_OVER } from './season-pass';
+import { todayIn } from './course-time';
 
 /** A dues claim older than this is from a request that died; a new payment may take over. */
 const DUES_CLAIM_STALE_MS = 10 * 60_000;
@@ -37,7 +39,7 @@ export async function payDuesByCard(opts: {
 }): Promise<CardPaid | Fail> {
   const m = await prisma.courseMembership.findFirst({
     where: { id: opts.membershipId, ...(opts.courseId ? { courseId: opts.courseId } : {}) },
-    include: { tier: true, course: { select: { name: true, stripeAccountId: true, stripeAccountActive: true } } },
+    include: { tier: true, course: { select: { name: true, stripeAccountId: true, stripeAccountActive: true, timezone: true } } },
   });
   if (!m) return fail(404, 'Not found');
   const paymentMethodId = typeof opts.paymentMethodId === 'string' ? opts.paymentMethodId : '';
@@ -46,8 +48,12 @@ export async function payDuesByCard(opts: {
     return fail(422, opts.by === 'golfer' ? 'This course is not set up for online payments yet — please pay at the pro shop.' : 'Connect Stripe on Revenue → Payouts before taking cards.');
   }
   if (amountsDue(m).duesCents <= 0) return fail(409, 'Nothing due on this membership.');
-  // MEM-RENEW: a tier that renews automatically is paid by the golfer only with their agreement to its terms (the required box).
-  const renews = opts.by === 'golfer' && !!m.tier?.autoRenew;
+  // Memberships item 4: a season pass is sold until its last day, and ends on it whenever it is paid.
+  const term = termOf(m.tier);
+  if (!passOnSale(term, todayIn(m.course.timezone))) return fail(409, PASS_OVER);
+  // MEM-RENEW: a tier that renews automatically is paid by the golfer only with their agreement to its terms (the
+  // required box). A season pass never renews.
+  const renews = opts.by === 'golfer' && !!m.tier?.autoRenew && !isPassTier(m.tier);
   const autoTerms = renews && m.tier ? autoRenewTermsText({ courseName: m.course.name, tierName: m.tier.name, termMonths: m.tier.termMonths, annualFeeCents: m.tier.annualFeeCents }) : '';
   if (renews && opts.autoRenewConsent !== true) return fail(400, 'This membership renews automatically — tick the box to agree to the renewal terms.');
 
@@ -67,7 +73,7 @@ export async function payDuesByCard(opts: {
   const release = () => prisma.courseMembership.updateMany({ where: { id: m.id, duesChargeStartedAt: startedAt }, data: { duesChargeStartedAt: null } });
   const now = await prisma.courseMembership.findUniqueOrThrow({ where: { id: m.id }, select: { paymentStatus: true, expiresAt: true, lastPaidAt: true, duesIntentId: true } });
   // A paid membership can only be paid again within its renewal window (30 days of expiry) — no double-pays from old emails.
-  if (paidUntilRenewal(now, m.tier?.termMonths ?? 12)) {
+  if (paidUntilRenewal(now, term)) {
     await release();
     return fail(409, 'These dues are already paid — nothing due until renewal.');
   }
@@ -99,7 +105,7 @@ export async function payDuesByCard(opts: {
       connectedAccountId: m.course.stripeAccountId,
       amountCents: due.totalCents,
       applicationFeeCents: due.feeCents,
-      description: `Membership dues - ${m.tier?.name ?? m.membershipType} - ${m.course.name}`,
+      description: `${isPassTier(m.tier) ? 'Season pass' : 'Membership dues'} - ${m.tier?.name ?? m.membershipType} - ${m.course.name}`,
       metadata: { membershipId: m.id },
     });
     if (pi.status === 'processing') {
@@ -117,13 +123,13 @@ export async function payDuesByCard(opts: {
     return fail(402, `Payment failed: ${message}`);
   }
   // The money moved: on the ledger first, so nothing after this can lose it.
-  await recordMove({ courseId: m.courseId, what: 'dues', direction: 'in', method: 'card', account: 'course', amountCents: chargedCents, platformFeeCents: chargedFeeCents, stripeId: paymentIntentId, membershipId: m.id, actor: opts.by, note: `${m.tier?.name ?? m.membershipType}${due.initiationCents ? ' + initiation' : ''}${opts.by === 'staff' ? ' (card typed at the course)' : ''}` });
+  await recordMove({ courseId: m.courseId, what: ledgerWhat(m.tier), direction: 'in', method: 'card', account: 'course', amountCents: chargedCents, platformFeeCents: chargedFeeCents, stripeId: paymentIntentId, membershipId: m.id, actor: opts.by, note: `${m.tier?.name ?? m.membershipType}${due.initiationCents ? ' + initiation' : ''}${opts.by === 'staff' ? ' (card typed at the course)' : ''}` });
 
   // MEM-RENEW: with the golfer's agreement, keep the card and the exact terms; any earlier declined renewal is settled.
   const autoRenewData = renews
     ? { autoRenew: true, autoRenewConsentAt: new Date(), autoRenewTerms: autoTerms, savedCustomerId: customerId, savedPaymentMethodId: paymentMethodId, autoRenewCancelledAt: null, autoRenewFailedAt: null, autoRenewRetryAt: null }
     : { autoRenewFailedAt: null, autoRenewRetryAt: null };
-  const recorded = await recordPaidTerm({ id: m.id, startedAt: m.startedAt, termMonths: m.tier?.termMonths ?? 12 }, now, paymentIntentId, autoRenewData);
+  const recorded = await recordPaidTerm({ id: m.id, startedAt: m.startedAt, term }, now, paymentIntentId, autoRenewData);
   if (!recorded) {
     await release();
     console.error(JSON.stringify({ ev: 'membership.pay.term_changed', membershipId: m.id, paymentIntentId }));

@@ -47,7 +47,7 @@ export const dayOf = (tz: string, at: Date) => todayIn(tz, at);
 
 const LABEL: Record<string, string> = {
   round: 'Round', hold: 'Cancellation hold', late_fee: 'Late-cancel fee', no_show_fee: 'No-show fee',
-  booking_fee: 'GreenReserve booking fee', shop: 'Pro shop', dues: 'Membership dues', event: 'Event', account: 'Member account',
+  booking_fee: 'GreenReserve booking fee', shop: 'Pro shop', dues: 'Membership dues', pass: 'Season pass', event: 'Event', account: 'Member account',
 };
 const METHOD: Record<string, string> = { card: 'Card', card_present: 'Card reader', cash: 'Cash', other: 'Check or other' };
 export const moveLabel = (what: string) => LABEL[what] ?? what;

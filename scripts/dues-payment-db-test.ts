@@ -194,7 +194,7 @@ async function cleanup() {
   const readerAt = pay.indexOf("if (body.how === 'reader')");
   ok('dues go on the reader only while the register is open', readerAt > 0 && pay.indexOf('requireRegisterOpen(g.session.courseId)', readerAt) > readerAt && pay.indexOf('requireRegisterOpen', readerAt) < pay.indexOf('startDuesOnReader(', readerAt));
   ok('the pay route is members.edit on every verb, and card payments need a current agreement', pay.includes("requirePermission(session, 'members.edit')") && (pay.match(/const g = await gate\(\);/g) ?? []).length === 3 && pay.indexOf('requireAgreementCurrent') < pay.indexOf("body.how === 'card'"));
-  ok('pay-first: awaiting_payment while dues are owed, no email until paid, an unpaid add picked up again', route.includes("const startStatus = waiting ? 'awaiting_payment' : 'active';") && route.includes("if (!waiting) after(sendWelcome(") && route.includes("if (!payFirst) after(maybeSendPayLink(") && route.includes("status: { in: ['awaiting_payment', 'cancelled'] }, lastPaidAt: null"));
+  ok('pay-first: awaiting_payment while dues are owed, no email until paid, an unpaid add picked up again', route.includes("const startStatus = pass ? pass.status : waiting ? 'awaiting_payment' : 'active';") && route.includes("if (!waiting) after(sendWelcome(") && route.includes("if (!payFirst) after(maybeSendPayLink(") && route.includes("status: { in: ['awaiting_payment', 'cancelled'] }, lastPaidAt: null"));
   ok('the hourly cron settles dues left on a reader', readFileSync('src/app/api/cron/hourly/route.ts', 'utf8').includes('await settleStaleDuesReaders()'));
 
   // ── Dues this year ──

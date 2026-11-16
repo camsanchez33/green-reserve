@@ -3,6 +3,7 @@ import { cronAuthFailure } from '@/lib/cron-auth';
 import { cronRoute } from '@/lib/cron-log';
 import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
+import { termOf } from '@/lib/season-pass';
 import { paidUntilRenewal } from '@/lib/membership-renewal';
 import { sendReminderEmail, sendMembershipPaymentLinkEmail, sendMembershipReceiptEmail, sendAutoRenewReminderEmail, sendAutoRenewDeclinedEmail, sendStatementDeclinedEmail } from '@/lib/email';
 import { remindersDue, markReminded, chargesDue, chargeRenewal, renewalCents, memberContact, RETRY_DAYS } from '@/lib/membership-autorenew';
@@ -69,7 +70,8 @@ export const GET = cronRoute('send-reminders', async (req: NextRequest) => {
   for (const m of expiring) {
     if (!m.tier || m.tier.annualFeeCents <= 0 || !m.course.stripeAccountActive) continue;
     // Not yet payable (a monthly tier opens 10 days out): left unstamped, so it goes out the day the link works.
-    if (paidUntilRenewal(m, m.tier.termMonths)) continue;
+    // Memberships item 4: a season pass is paid once — never a renewal reminder.
+    if (paidUntilRenewal(m, termOf(m.tier))) continue;
     // The account's email wins over the invite address (a self-joined member has no invite address).
     const to = m.golfer?.email || m.inviteEmail;
     if (!to) continue;

@@ -48,20 +48,26 @@ for (const f of ['src/lib/member-statements.ts', 'src/lib/membership-autorenew.t
   const calls = (src.match(/await charge\(/g) ?? []).length;
   ok(`${f}: each of its ${calls} charge(s) through the charger passed in writes the ledger`, calls >= 1 && (src.match(LEDGER) ?? []).length >= calls, { calls });
 }
-ok('dues taken at the course write the ledger', /what: 'dues', direction: 'in', method: method === 'cash' \? 'cash' : 'other'/.test(code('src/lib/membership-dues.ts')) && code('src/app/api/operator/members/route.ts').includes('markDuesPaidAtCourse('));
+// Memberships item 4: as 'dues' or 'pass' by the tier's kind (const what = ledgerWhat(membership.tier)).
+ok('dues and season passes taken at the course write the ledger', /const what = ledgerWhat\(membership\.tier\)/.test(code('src/lib/membership-dues.ts')) && /what, direction: 'in', method: method === 'cash' \? 'cash' : 'other'/.test(code('src/lib/membership-dues.ts')) && code('src/app/api/operator/members/route.ts').includes('markDuesPaidAtCourse('));
 ok('the webhook mirrors Stripe-dashboard refunds and dispute money', /charge\.dispute\.funds_withdrawn/.test(code('src/app/api/stripe/webhook/route.ts')) && /mirrorMove\(/.test(code('src/app/api/stripe/webhook/route.ts')));
 ok('the ledger is cleared by the launch wipe and the test-course reset', WIPED_TABLES.includes('MoneyMove') && /moneyMove\.deleteMany/.test(code('src/lib/data-reset.ts')));
 // Memberships item 1: the pay link's charge moved to lib/dues-payment (shared with staff typing a card).
 const dues = code('src/app/api/membership/[id]/route.ts') + code('src/lib/dues-payment.ts');
 ok('dues are no longer charged inside a database transaction', !/\$transaction/.test(dues) && /duesChargeStartedAt/.test(dues));
 { const lib = code('src/lib/dues-payment.ts'), reader = code('src/lib/dues-reader.ts');
-ok('…the ledger is written before the term is recorded (typed card and card reader)', lib.indexOf("what: 'dues'") > 0 && lib.indexOf("what: 'dues'") < lib.indexOf('recordPaidTerm(') && reader.indexOf("what: 'dues'") > 0 && reader.indexOf("what: 'dues'") < reader.indexOf('recordPaidTerm(') && /lastPaymentIntentId: paymentIntentId/.test(code('src/lib/membership-dues.ts'))); }
+// Memberships item 4: dues and season passes are recorded as ledgerWhat(tier) — 'dues' or 'pass'.
+const W = 'what: ledgerWhat(';
+ok('…the ledger is written before the term is recorded (typed card and card reader)', lib.indexOf(W) > 0 && lib.indexOf(W) < lib.indexOf('recordPaidTerm(') && reader.indexOf(W) > 0 && reader.indexOf(W) < reader.indexOf('recordPaidTerm(') && /lastPaymentIntentId: paymentIntentId/.test(code('src/lib/membership-dues.ts'))); }
 
 {
   const day = 86_400_000, t = Date.now(), paidLong = new Date(t - 5 * day);
   const at = (left: number) => ({ paymentStatus: 'paid', expiresAt: new Date(t + left * day), lastPaidAt: paidLong });
-  ok('a monthly membership can be renewed from 10 days out, a yearly one from 30', !paidUntilRenewal(at(9), 1, t) && paidUntilRenewal(at(20), 1, t) && !paidUntilRenewal(at(29), 12, t) && paidUntilRenewal(at(31), 12, t));
-  ok('the renewal reminder waits for the same window (and is not stamped before it)', /if \(paidUntilRenewal\(m, m\.tier\.termMonths\)\) continue;/.test(code('src/app/api/cron/send-reminders/route.ts')));
+  const mo = (months: number) => ({ kind: 'months' as const, months });
+  ok('a monthly membership can be renewed from 10 days out, a yearly one from 30', !paidUntilRenewal(at(9), mo(1), t) && paidUntilRenewal(at(20), mo(1), t) && !paidUntilRenewal(at(29), mo(12), t) && paidUntilRenewal(at(31), mo(12), t));
+  const pass = { kind: 'pass' as const, startsOn: '2026-04-01', endsOn: '2026-10-31' };
+  ok('…a paid season pass is never payable again, an unpaid one is', paidUntilRenewal(at(1), pass, t) && paidUntilRenewal(at(-5), pass, t) && !paidUntilRenewal({ ...at(1), paymentStatus: 'unpaid' }, pass, t));
+  ok('the renewal reminder waits for the same window (and is not stamped before it)', /if \(paidUntilRenewal\(m, termOf\(m\.tier\)\)\) continue;/.test(code('src/app/api/cron/send-reminders/route.ts')));
 }
 ok('GreenReserve\'s fee back on a part refund is pro rata', feeBackCents(5000, 10000, 600) === 300 && feeBackCents(20000, 10000, 600) === 600 && feeBackCents(100, 0, 600) === 0);
 

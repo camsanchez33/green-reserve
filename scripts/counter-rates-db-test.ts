@@ -78,7 +78,7 @@ async function cleanup() {
   // Online: senior and junior never apply — no golfer route reads them.
   const book = readFileSync('src/app/api/bookings/route.ts', 'utf8');
   const lookup = readFileSync('src/app/api/operator/counter-members/route.ts', 'utf8');
-  ok('the counter\'s member lookup is gated like adding a walk-in, and lists only live memberships', lookup.includes("requirePermission(session, 'sheet.walkin')") && lookup.includes('liveMembershipWhere(course)') && !/email|phone/i.test(lookup.slice(lookup.indexOf('select:'))));
+  ok('the counter\'s member lookup is gated like adding a walk-in, and lists only live memberships', lookup.includes("requirePermission(session, 'sheet.walkin')") && lookup.includes('liveMembershipWhere(course, new Date(), onDay)') && !/email|phone/i.test(lookup.slice(lookup.indexOf('select:'))));
   const settings = readFileSync('src/app/api/operator/settings/route.ts', 'utf8');
   ok('only the owner can change who gets a member rate at the counter', settings.includes("if (session.isStaff && 'counterMemberRate' in body)"));
   ok('online booking never reads senior or junior prices (memberships only)', !/seniorRate|juniorRate/.test(book));

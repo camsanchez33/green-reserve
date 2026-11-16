@@ -8,10 +8,15 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Card } from '@/components/ui/Card';
 
-type Tier = { id: string; name: string; joinOnline: string; annualFeeCents: number; initiationFeeCents: number; termMonths: number; greenFeeWeekdayCents: number | null; greenFeeWeekendCents: number | null; cartFeeWeekdayCents: number | null; discountPct: number | null; guestsPayMemberRate: boolean };
+type Tier = { id: string; name: string; joinOnline: string; kind?: string; passStartsOn?: string | null; passEndsOn?: string | null; annualFeeCents: number; initiationFeeCents: number; termMonths: number; greenFeeWeekdayCents: number | null; greenFeeWeekendCents: number | null; cartFeeWeekdayCents: number | null; discountPct: number | null; guestsPayMemberRate: boolean };
 type Mine = { status: string; tierName: string; payUrl: string | null } | null;
 const usd = (c: number) => `$${(c / 100).toFixed(c % 100 ? 2 : 0)}`;
 const term = (m: number) => (m === 12 ? 'a year' : m === 1 ? 'a month' : `every ${m} months`);
+// Memberships item 4: a season pass is its price for its season, e.g. "$600 for Apr 1 – Oct 31, 2026".
+const day = (d: string, year: boolean) => new Date(`${d}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', ...(year ? { year: 'numeric' } : {}), timeZone: 'UTC' });
+const priceWords = (t: Tier) => t.kind === 'pass' && t.passStartsOn && t.passEndsOn
+  ? `for ${day(t.passStartsOn, t.passStartsOn.slice(0, 4) !== t.passEndsOn.slice(0, 4))} – ${day(t.passEndsOn, true)}`
+  : term(t.termMonths);
 function perks(t: Tier) {
   const green = t.discountPct != null ? `${t.discountPct}% off green fees`
     : t.greenFeeWeekdayCents === 0 && (t.greenFeeWeekendCents ?? 0) === 0 ? 'green fees included'
@@ -53,7 +58,7 @@ export function CourseJoin({ slug, accent, className = '' }: { slug: string; acc
           {data.tiers.map(t => (
             <li key={t.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
               <span className="min-w-0">
-                <span className="font-medium text-ink">{t.name}</span> <span className="text-ink-soft">{usd(t.annualFeeCents)} {term(t.termMonths)}</span>
+                <span className="font-medium text-ink">{t.name}</span> <span className="text-ink-soft">{usd(t.annualFeeCents)} {priceWords(t)}</span>
                 {perks(t) && <span className="block text-ink-muted">{perks(t)}</span>}
               </span>
               <button onClick={() => join(t.id)} disabled={!!busy} className="shrink-0 px-3 py-2 rounded-md text-white font-medium disabled:opacity-50" style={{ backgroundColor: accent }}>

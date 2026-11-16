@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse, after } from 'next/server';
+import { termOf, passOnSale } from '@/lib/season-pass';
+import { todayIn } from '@/lib/course-time';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
@@ -30,16 +32,20 @@ export async function GET(req: NextRequest) {
   const g = await gate();
   if ('res' in g) return g.res;
   const id = req.nextUrl.searchParams.get('id') ?? '';
-  const m = await prisma.courseMembership.findFirst({ where: { id, courseId: g.session.courseId }, include: { tier: true, course: { select: { stripeAccountId: true, stripeAccountActive: true } } } });
+  const m = await prisma.courseMembership.findFirst({ where: { id, courseId: g.session.courseId }, include: { tier: true, course: { select: { stripeAccountId: true, stripeAccountActive: true, timezone: true } } } });
   if (!m) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   const due = amountsDue(m);
+  const term = termOf(m.tier);
   return NextResponse.json({
     status: m.status,
-    paid: paidUntilRenewal(m, m.tier?.termMonths ?? 12),
+    paid: paidUntilRenewal(m, term),
     duesCents: due.duesCents, annualCents: due.annualCents, initiationCents: due.initiationCents,
     /** Cash pays the dues alone; a card (typed or on the reader) pays dues + GreenReserve's 1%. */
     cashCents: due.duesCents, feeCents: due.feeCents, cardTotalCents: due.totalCents,
     termMonths: m.tier?.termMonths ?? 12,
+    // Memberships item 4: a season pass's dates (it ends on the last), and whether it can still be bought.
+    pass: term.kind === 'pass' ? { startsOn: term.startsOn, endsOn: term.endsOn } : null,
+    onSale: passOnSale(term, todayIn(m.course.timezone)),
     cardsReady: !!(m.course.stripeAccountActive && m.course.stripeAccountId),
     onReader: !!m.duesReaderId,
   });

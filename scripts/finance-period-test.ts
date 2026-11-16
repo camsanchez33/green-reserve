@@ -50,9 +50,11 @@ check('unknown period → y12', parseFinancePeriod('week') === 'y12' && parseFin
 check('sources: round, booking fee, hold and member-account payments → service fees', ['round', 'booking_fee', 'hold', 'account'].every(w => revenueSource(w) === 'serviceFees'));
 check('sources: a booking fee on a no-show or late cancel → no-show & late fees', revenueSource('booking_fee_no_show_late') === 'noShowLateFees' && revenueSource('no_show_fee') === 'noShowLateFees' && revenueSource('late_fee') === 'noShowLateFees');
 check('sources: only dues → membership dues', revenueSource('dues') === 'membershipDues');
-check('sources: shop and event → other (so the parts add up to the total)', revenueSource('shop') === 'other' && revenueSource('event') === 'other');
+// Revenue by source (Cam 2026-11-16): the 1% shop fee is its own line; dues and passes one; events the rest.
+check('sources: shop → shopFees, dues and passes → membershipDues, event → other', revenueSource('shop') === 'shopFees' && revenueSource('dues') === 'membershipDues' && revenueSource('pass') === 'membershipDues' && revenueSource('event') === 'other');
 
-const route = readFileSync('src/app/api/admin/finance/route.ts', 'utf8');
+// The fees-by-source query lives in lib/platform-revenue (scripts/revenue-by-source-db-test runs it); the route uses it.
+const route = readFileSync('src/app/api/admin/finance/route.ts', 'utf8') + readFileSync('src/lib/platform-revenue.ts', 'utf8');
 check('route: owner only', /if \(!requireOwner\(session\)\) return/.test(route));
 check('route: every money and booking query leaves test courses out', (route.match(/c\."isTest" = false/g) ?? []).length === 4 && /\.\.\.ON_REAL_COURSE \}/.test(route));
 check('route: a booking fee on a no-show or cancelled booking is classed by the booking', /WHEN m\."what" = 'booking_fee' AND \(b\."noShowAt" IS NOT NULL OR b\."status" = 'cancelled'\) THEN 'booking_fee_no_show_late'/.test(route));

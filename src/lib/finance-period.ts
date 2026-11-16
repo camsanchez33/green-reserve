@@ -91,11 +91,30 @@ export function resolveFinancePeriod(kind: FinancePeriodKind, now: Date, tz: str
  * therefore labels a booking_fee row on a no-show or cancelled booking 'booking_fee_no_show_late'
  * (by the booking's state, so a refund of it lands in the same bucket). A member's house-account
  * payment ('account') carries the booking fees of the rounds on it — service fees, not dues.
+ *
+ * Revenue by source (Cam 2026-11-16): the $1.50 booking fee, the 1% shop service fee (SHOP-FEE-1) and the 1% on
+ * dues and season passes are each their own line. A round paid by card carries the 1% on the shop items added to it
+ * inside its application fee (lib/shop roundApplicationFeeCents); the route moves that part to shopFees
+ * (roundShopShareCents), so serviceFees is the booking fee alone.
  */
-export type RevenueSource = 'serviceFees' | 'noShowLateFees' | 'membershipDues' | 'other';
+export type RevenueSource = 'serviceFees' | 'noShowLateFees' | 'shopFees' | 'membershipDues' | 'other';
+export const REVENUE_SOURCES: RevenueSource[] = ['serviceFees', 'noShowLateFees', 'shopFees', 'membershipDues', 'other'];
 export function revenueSource(what: string): RevenueSource {
   if (what === 'booking_fee_no_show_late' || what === 'no_show_fee' || what === 'late_fee') return 'noShowLateFees';
   if (what === 'round' || what === 'booking_fee' || what === 'hold' || what === 'account') return 'serviceFees';
-  if (what === 'dues') return 'membershipDues';
-  return 'other'; // shop, event
+  if (what === 'shop') return 'shopFees';
+  // Memberships item 4: GreenReserve's 1% on a season pass is the same fee as on dues.
+  if (what === 'dues' || what === 'pass') return 'membershipDues';
+  return 'other'; // events
+}
+
+/**
+ * Pure: the shop-fee part of one round row's GreenReserve fee — the row's fee in proportion to the booking's shop fee
+ * over the fee of the card charge the row belongs to (itself for a charge; for a refund, the latest charge before it).
+ * Every charge carries the whole shop fee, so each charge gives all of it and a refund gives it back pro rata, as Stripe
+ * gives the fee back. Never more than the row's fee; nothing without a charge. lib/platform-revenue's SQL is the same.
+ */
+export function roundShopShareCents(rowFeeCents: number, bookingShopFeeCents: number, chargeFeeCents: number): number {
+  if (rowFeeCents <= 0 || bookingShopFeeCents <= 0 || chargeFeeCents <= 0) return 0;
+  return Math.min(rowFeeCents, Math.round(rowFeeCents * bookingShopFeeCents / chargeFeeCents));
 }

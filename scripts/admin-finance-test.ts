@@ -7,7 +7,7 @@ let failed = 0;
 const check = (label: string, ok: boolean, detail = '') => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${!ok && detail ? ` — ${detail}` : ''}`); if (!ok) failed++; };
 const mo = (month: string, rev: number, exp: number, bookings = 0, partial = false): Month => ({
   month, partial, bookings,
-  revenue: { cents: rev, bySource: { serviceFees: rev, noShowLateFees: 0, membershipDues: 0, other: 0 } },
+  revenue: { cents: rev, bySource: { serviceFees: rev, noShowLateFees: 0, shopFees: 0, membershipDues: 0, other: 0 } },
   expenses: { cents: exp, byCategory: { infra: exp, tools: 0, legal: 0, other: 0 } },
   liveCourses: 2, newLiveCourses: 0, byCourse: [],
 });

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isDay } from '@/lib/season-pass';
 import { memberPricingOn, residentPricingOn } from '@/lib/pricing-switch';
 import { dealPct, dealRateSeat } from '@/lib/last-minute';
 import { demandPctAt, onlinePublicSeat, dealWins, loadDemand } from '@/lib/demand-pricing';
@@ -19,6 +20,7 @@ export async function GET(
 
   const date = req.nextUrl.searchParams.get('date');
   if (!date) return NextResponse.json({ error: 'date param required' }, { status: 400 });
+  if (!isDay(date)) return NextResponse.json({ error: 'date must be YYYY-MM-DD' }, { status: 400 });
 
   const course = await prisma.course.findUnique({ where: { slug: courseSlug } });
   if (!course) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -29,7 +31,7 @@ export async function GET(
     if (course.id !== session.courseId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     membershipId = session.membershipId;
   } else {
-    const golferMembership = await getGolferMembership(course.id, course);
+    const golferMembership = await (await getGolferMembership(course.id, course, date)) ?? (await getGolferMembership(course.id, course));
     if (!golferMembership) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     membershipId = golferMembership.membershipId;
   }
@@ -43,7 +45,7 @@ export async function GET(
   // member sees a member rate and is charged the public one.
   // Lapsed (past its end date + the course's grace days, lib/member-rates): public rates and window, as booking charges.
   const tier = membership && membership.courseId === course.id ? membership.tier : null;
-  const live = !!membership && membership.courseId === course.id && membershipLive(membership, course);
+  const live = !!membership && membership.courseId === course.id && membershipLive(membership, course, new Date(), date);
   // Members switched off in Settings (lib/pricing-switch): the window stays, the rate doesn't.
   const pricingTier = live && memberPricingOn(course) ? tier : null;
 

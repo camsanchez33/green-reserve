@@ -123,7 +123,7 @@ export async function golferRecord(courseId: string, key: string, opts: { money:
   const [membership, resident, sales, notes, block, recent] = await Promise.all([
     email || accountId ? prisma.courseMembership.findFirst({
       where: { courseId, OR: [...(accountId ? [{ golferId: accountId }] : []), ...(email ? [{ inviteEmail: { equals: email, mode: 'insensitive' as const } }] : [])] },
-      orderBy: { createdAt: 'desc' }, select: { id: true, status: true, expiresAt: true, paymentStatus: true, tier: { select: { name: true } } },
+      orderBy: { createdAt: 'desc' }, select: { id: true, status: true, expiresAt: true, passStartsOn: true, paymentStatus: true, tier: { select: { name: true } } },
     }) : null,
     // Residents are one list across a course group (GRP-1).
     email ? groupCourseIds(courseId).then(ids => prisma.courseResident.findFirst({ where: { courseId: { in: ids }, email: { equals: email, mode: 'insensitive' } }, select: { name: true, cardNumber: true, expiresOn: true } })) : null,

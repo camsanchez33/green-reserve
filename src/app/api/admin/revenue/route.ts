@@ -18,6 +18,7 @@ import { feesByDay } from '@/lib/fees-by-day';
 import { stripe } from '@/lib/stripe';
 import { terminalTestMode } from '@/lib/card-reader';
 import { csvCell } from '@/lib/ledger-view';
+import { feesBySource } from '@/lib/platform-revenue';
 import { dayKey, PLATFORM_TZ } from '@/lib/admin-day';
 import {
   REVENUE_PERIODS, resolveRevenuePeriod, daysBetween, platformMoveLabel, platformSigned,
@@ -245,6 +246,9 @@ export async function GET(req: NextRequest) {
     prior: daySeries(priorDays.map(d => ({ day: d.day, cents: Number(d.cents) })), rp.priorFrom, rp.priorDays),
   };
   const revenueCents = curDays.reduce((t, d) => t + Number(d.cents), 0);
+  // Revenue by source (Cam 2026-11-16): the same split as /admin/finance, from the same ledger function; it adds up to
+  // revenueCents (the same rows: real courses, a fee, this window).
+  const revenueBySource = await feesBySource(current.start, current.end);
   const revenuePriorCents = signedSum(ledgerPriorAgg);
   const byCourseLedger = (rows: { courseId: string; direction: string; _sum: { platformFeeCents: number | null } }[]) => {
     const m = new Map<string, number>();
@@ -373,7 +377,7 @@ export async function GET(req: NextRequest) {
 
   const base = {
     period: { kind, label, from: shownFrom, to: shownTo, priorLabel: rp.priorLabel, elapsedDays: rp.elapsedDays, totalDays: rp.totalDays },
-    revenue: { cents: revenueCents, priorCents: revenuePriorCents },
+    revenue: { cents: revenueCents, priorCents: revenuePriorCents, bySource: revenueBySource },
     revenueSeries,
     liveCourses,
     ledger,

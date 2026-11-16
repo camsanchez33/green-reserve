@@ -36,17 +36,18 @@ export async function GET(req: NextRequest) {
   const packs = ROUND_PACKS_ON && golfer?.email ? (await holdingsFor(tt.courseId, golfer.email)).map(h => ({ lineId: h.lineId, name: h.name, left: h.left, coversCart: h.coversCart, guests: h.guests, expiresAt: h.expiresAt })) : [];
 
   let tier: { name: string; guestsPayMemberRate: boolean; greenFeeWeekdayCents: number | null; greenFeeWeekendCents: number | null; cartFeeWeekdayCents: number | null; cartFeeWeekendCents: number | null; discountPct: number | null; lineRates: unknown } | null = null;
-  const golferMembership = await getGolferMembership(tt.courseId, grace);
+  const golferMembership = await getGolferMembership(tt.courseId, grace, tt.date);
   if (golferMembership) {
     const m = await prisma.courseMembership.findUnique({ where: { id: golferMembership.membershipId }, include: { tier: true } });
-    tier = m?.tier ?? null;
+    // Memberships item 4: a season pass covers only the days of its season — as booking prices it (api/bookings).
+    tier = m && membershipLive(m, grace, new Date(), tt.date) ? m.tier : null;
   }
   if (!tier) {
     // The member sign-in cookie applies when the golfer session found no member rate (POST /api/bookings).
     const memberSession = await getMemberSession();
     if (memberSession && memberSession.courseId === tt.courseId) {
       const m = await prisma.courseMembership.findUnique({ where: { id: memberSession.membershipId }, include: { tier: true } });
-      if (m && m.courseId === tt.courseId && membershipLive(m, grace)) tier = m.tier;
+      if (m && m.courseId === tt.courseId && membershipLive(m, grace, new Date(), tt.date)) tier = m.tier;
     }
   }
   // Switched off in Settings (lib/pricing-switch): no member or resident rate is shown, as none is charged.

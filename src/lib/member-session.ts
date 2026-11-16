@@ -67,9 +67,9 @@ export async function getMemberSession() {
 // a membership at the ONE course being asked about, never leaks across courses.
 /**
  * `rule` given (the course's grace days and timezone): only a membership whose member rates
- * still apply (lib/member-rates). Leave it out where a lapsed member must still be recognised (their portal, paying dues).
+ * still apply (lib/member-rates) — for a round on `onDay` when given (a season pass booked ahead). Leave it out where a lapsed member must still be recognised (their portal, paying dues).
  */
-export async function getGolferMembership(courseId: string, rule?: LapseRule): Promise<{ membershipId: string; tierName: string } | null> {
+export async function getGolferMembership(courseId: string, rule?: LapseRule, onDay?: string): Promise<{ membershipId: string; tierName: string } | null> {
   const golferSession = await getGolferSession();
   if (!golferSession) return null;
 
@@ -83,7 +83,7 @@ export async function getGolferMembership(courseId: string, rule?: LapseRule): P
     where: {
       courseId,
       status: 'active',
-      ...(rule ? { AND: [liveMembershipWhere(rule)] } : {}),
+      ...(rule ? { AND: [liveMembershipWhere(rule, new Date(), onDay)] } : {}),
       OR: [
         { golferId: golferSession.golferId },
         { inviteEmail: { equals: golfer.email, mode: 'insensitive' } },

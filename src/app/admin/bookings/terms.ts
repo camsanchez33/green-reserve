@@ -17,7 +17,7 @@ export const EVENT_WORDS: Record<string, string> = {
 export const BY_WORDS: Record<string, string> = { golfer: 'by the golfer', staff: 'by the course', admin: 'by GreenReserve', cron: 'automatically', system: 'automatically' };
 export const WHAT_WORDS: Record<string, string> = {
   round: 'Round', hold: 'Cancellation hold', late_fee: 'Late cancellation fee', no_show_fee: 'No-show fee', booking_fee: 'Booking fee',
-  shop: 'Shop items', dues: 'Dues', event: 'Event',
+  shop: 'Shop items', dues: 'Dues', pass: 'Season pass', event: 'Event',
 };
 export const DISPUTE_OUT = 'Taken back by the bank (dispute)';
 export const DISPUTE_BACK = 'Returned to the course (dispute won)';

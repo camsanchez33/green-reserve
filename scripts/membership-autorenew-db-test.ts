@@ -111,7 +111,7 @@ const declining = async () => { throw new Error('Your card was declined.'); };
   // Wiring.
   // Memberships item 1: the pay link's charge is lib/dues-payment (by 'golfer'); staff paying never turn renewal on.
   const pay = readFileSync('src/app/api/membership/[id]/route.ts', 'utf8') + readFileSync('src/lib/dues-payment.ts', 'utf8');
-  ok('the dues link takes the required box on an auto-renew tier, and keeps the exact terms and the card', pay.includes("by: 'golfer', autoRenewConsent, autoRenewTerms") && pay.includes("const renews = opts.by === 'golfer' && !!m.tier?.autoRenew;") && pay.includes("if (renews && opts.autoRenewConsent !== true)") && pay.includes('autoRenewTerms: autoTerms') && pay.includes('savedPaymentMethodId: paymentMethodId'));
+  ok('the dues link takes the required box on an auto-renew tier, and keeps the exact terms and the card', pay.includes("by: 'golfer', autoRenewConsent, autoRenewTerms") && pay.includes("const renews = opts.by === 'golfer' && !!m.tier?.autoRenew && !isPassTier(m.tier);") && pay.includes("if (renews && opts.autoRenewConsent !== true)") && pay.includes('autoRenewTerms: autoTerms') && pay.includes('savedPaymentMethodId: paymentMethodId'));
   const cron = readFileSync('src/app/api/cron/send-reminders/route.ts', 'utf8');
   ok('auto-renew members get their reminder, not a pay link; charges and declines run daily', cron.includes('autoRenew: false,') && cron.includes('chargeRenewal(m.id, chargeOneIntent, now)') && cron.includes('sendAutoRenewDeclinedEmail'));
   const off = readFileSync('src/app/api/membership/[id]/auto-renew/route.ts', 'utf8');

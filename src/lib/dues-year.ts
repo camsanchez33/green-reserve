@@ -1,8 +1,9 @@
 // Memberships page (Cam 2026-11-16): "Dues collected this year", broken down by each membership. Read from the
-// ledger (MoneyMove what 'dues' — every dues payment and refund is one row there, LEDGER-1), money in less money
+// ledger (MoneyMove what 'dues' or 'pass' — every dues and season-pass payment and refund is one row there, LEDGER-1), money in less money
 // back, since January 1 of the course's own year. What the course keeps: the 1% GreenReserve fee a card pays on top
 // is not dues (platformFeeCents comes off). One membership's dues count under the tier it is on now.
 import { prisma } from './prisma';
+import { MEMBERSHIP_WHATS } from './season-pass';
 import { todayIn, DEFAULT_TZ } from './course-time';
 import { teeToUtcMs } from './tee-time-utils';
 
@@ -16,7 +17,7 @@ export function yearStartUtc(tz: string | null | undefined, now = new Date()): {
 export async function duesThisYear(courseId: string, tz: string | null | undefined, now = new Date()): Promise<DuesYear> {
   const { year, from } = yearStartUtc(tz, now);
   const moves = await prisma.moneyMove.findMany({
-    where: { courseId, what: 'dues', at: { gte: from, lte: now } },
+    where: { courseId, what: { in: MEMBERSHIP_WHATS }, at: { gte: from, lte: now } },
     select: { direction: true, amountCents: true, platformFeeCents: true, membershipId: true },
   });
   const ids = [...new Set(moves.map(m => m.membershipId).filter((x): x is string => !!x))];

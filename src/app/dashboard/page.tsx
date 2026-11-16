@@ -2031,12 +2031,12 @@ function WalkInForm({ slot, late, courseName, onSave, onCancel }: { slot: TeeTim
   const [pack, setPack] = useState<Holding | null>(null);
   // Member / resident prices switched off in Settings aren't offered (the server refuses them too).
   const [switches, setSwitches] = useState<{ membersOn: boolean; residentsOn: boolean }>({ membersOn: true, residentsOn: true });
-  useEffect(() => { dfetch<{ tiers: { id: string; name: string }[]; membersOn?: boolean; residentsOn?: boolean }>('/api/operator/counter-members').then(r => { if (r.ok) { setTiers(r.data.tiers); setSwitches({ membersOn: r.data.membersOn !== false, residentsOn: r.data.residentsOn !== false }); } }); }, []);
+  useEffect(() => { dfetch<{ tiers: { id: string; name: string }[]; membersOn?: boolean; residentsOn?: boolean }>(`/api/operator/counter-members?date=${slot.date}`).then(r => { if (r.ok) { setTiers(r.data.tiers); setSwitches({ membersOn: r.data.membersOn !== false, residentsOn: r.data.residentsOn !== false }); } }); }, []);
   useEffect(() => {
     if (rate !== 'member' || memberQ.trim().length < 2) { setMemberHits([]); return; }
-    const t = setTimeout(() => { dfetch<{ members: { id: string; name: string; tier: string }[] }>(`/api/operator/counter-members?q=${encodeURIComponent(memberQ.trim())}`).then(r => { if (r.ok) setMemberHits(r.data.members); }); }, 250);
+    const t = setTimeout(() => { dfetch<{ members: { id: string; name: string; tier: string }[] }>(`/api/operator/counter-members?q=${encodeURIComponent(memberQ.trim())}&date=${slot.date}`).then(r => { if (r.ok) setMemberHits(r.data.members); }); }, 250);
     return () => clearTimeout(t);
-  }, [rate, memberQ]);
+  }, [rate, memberQ, slot.date]);
   const perCents: Record<string, number | null | undefined> = { resident: switches.residentsOn ? slot.residentRateCents : null, senior: slot.seniorRateCents, junior: slot.juniorRateCents };
   const rates = [['standard', `Standard $${slot.greenFee}`], ...(['resident', 'senior', 'junior'] as const).filter(k => perCents[k] != null).map(k => [k, `${k[0].toUpperCase()}${k.slice(1)} $${((perCents[k] as number) / 100).toFixed(0)}`]), ...(switches.membersOn ? [['member', 'Member']] : []), ...(ROUND_PACKS_ON ? [PACK_RATE] : []), ...tiers.map(t => [`tier:${t.id}`, t.name])];
   const sentRate = rate === 'member' ? (member ? `member:${member.id}` : 'standard') : rate === 'pack' ? (pack ? `pack:${pack.lineId}` : 'standard') : rate;

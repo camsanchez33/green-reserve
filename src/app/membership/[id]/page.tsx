@@ -8,12 +8,17 @@ import { Loader2 } from 'lucide-react';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
 
+/** A season pass's day, e.g. "Apr 1, 2026" (the date itself, never shifted by the viewer's timezone). */
+const passDay = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+
 type DuesInfo = {
   name: string;
   courseName: string;
   courseLogo: string;
   tierName: string;
   termMonths: number;
+  /** Memberships item 4: a season pass's dates (YYYY-MM-DD); it ends on the last whenever it's paid. */
+  pass?: { startsOn: string; endsOn: string } | null;
   annual: number;
   initiation: number;
   /** GreenReserve's 1% of the dues, added on top. */
@@ -187,8 +192,8 @@ function MembershipPayInner({ params }: { params: Promise<{ id: string }> }) {
 
           <div className="p-6">
             <p className="text-sm text-ink-soft mb-5">
-              Hi {info.name} — complete your <span className="font-medium text-ink">{info.tierName}</span> membership below.
-              Your membership runs {info.termMonths} months from payment.
+              Hi {info.name} — complete your <span className="font-medium text-ink">{info.tierName}</span> {info.pass ? 'season pass' : 'membership'} below.
+              {info.pass ? ` Your season pass runs from ${passDay(info.pass.startsOn)} to ${passDay(info.pass.endsOn)}.` : ` Your membership runs ${info.termMonths} months from payment.`}
             </p>
 
             <div className="bg-paper rounded-md p-4 space-y-1.5 text-sm mb-5 border border-line">
@@ -199,12 +204,12 @@ function MembershipPayInner({ params }: { params: Promise<{ id: string }> }) {
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-ink-soft">{info.tierName} dues</span>
+                <span className="text-ink-soft">{info.tierName}{info.pass ? '' : ' dues'}</span>
                 <span className="font-medium text-ink">${info.annual.toFixed(2)}</span>
               </div>
               {info.serviceFee > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-ink-soft">GreenReserve service fee (1% of dues)</span>
+                  <span className="text-ink-soft">GreenReserve service fee (1% of {info.pass ? 'the pass' : 'dues'})</span>
                   <span className="font-medium text-ink">${info.serviceFee.toFixed(2)}</span>
                 </div>
               )}
