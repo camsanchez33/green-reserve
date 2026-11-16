@@ -31,6 +31,7 @@
 // could move weeks out and cancel free (lateness is judged on the tee time the
 // booking holds at cancel), or step past the advance-booking window.
 import { memberPricingOn, residentPricingOn } from './pricing-switch';
+import { tierCoversDay } from './season-pass';
 import type { Prisma } from '@prisma/client';
 import { prisma } from './prisma';
 import { applyTierRates } from './tier-rates';
@@ -182,10 +183,13 @@ export async function moveBooking(opts: {
           ? await tx.courseMembership.findMany({ where: { courseId: b.courseId, tierId: named.id, OR: [
               ...(b.golferAccountId ? [{ golferId: b.golferAccountId }] : []),
               ...(b.golferEmail ? [{ inviteEmail: { equals: b.golferEmail, mode: 'insensitive' as const } }] : []),
-            ] }, select: { status: true, expiresAt: true } })
+            ] }, select: { status: true, expiresAt: true, passStartsOn: true } })
           : [];
         // Members switched off in Settings (lib/pricing-switch): a repriced move pays the public price.
-        const lapsed = (theirs.length > 0 && !theirs.some(m => membershipLive(m, b.course))) || (opts.pricing !== 'keep' && !memberPricingOn(b.course));
+        // Memberships item 4 (Cam: the pass rate is keyed on the round's play date): a pass's own season must cover the
+        // new day, even when the booking can't be tied to the membership (a counter booking with no email).
+        const lapsed = (theirs.length > 0 && !theirs.some(m => membershipLive(m, b.course, now, slot.date))) || (opts.pricing !== 'keep' && !memberPricingOn(b.course))
+          || (opts.pricing !== 'keep' && !!named && !tierCoversDay(named, slot.date));
         const tier = lapsed ? null : named;
         rate = lapsed ? rate : tier
           ? applyTierRates(slot, tier)

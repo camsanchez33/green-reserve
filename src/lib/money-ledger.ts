@@ -14,7 +14,8 @@
 import * as Sentry from '@sentry/nextjs';
 import { prisma } from './prisma';
 
-export type MoveWhat = 'round' | 'hold' | 'late_fee' | 'no_show_fee' | 'booking_fee' | 'shop' | 'dues' | 'event' | 'account';
+export type MoveWhat = 'round' | 'hold' | 'late_fee' | 'no_show_fee' | 'booking_fee' | 'shop' | 'dues' | 'pass' | 'event' | 'account';
+// 'pass' (Memberships item 4): a season pass's price and its 1% — membership money like 'dues', its own line in Revenue.
 export type MoveMethod = 'card' | 'card_present' | 'cash' | 'other';
 
 export type Move = {

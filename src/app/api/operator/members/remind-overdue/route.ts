@@ -38,6 +38,9 @@ export async function POST() {
       // to send (the reminder cron filters the same way).
       OR: [{ paymentStatus: 'unpaid' }, { AND: [{ expiresAt: { lt: now } }, { paymentStatus: { not: 'comped' } }] }],
       payToken: { not: '' },
+      // Memberships item 4: a season pass that has ended isn't overdue — it's over (it never renews; next season is a
+      // new pass). An unpaid one is 'awaiting_payment', not here.
+      passStartsOn: null,
     },
     include: { tier: true, golfer: { select: { email: true } } },
   });

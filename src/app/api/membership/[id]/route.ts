@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse, after } from 'next/server';
+import { termOf, passOnSale, isPassTier } from '@/lib/season-pass';
+import { todayIn } from '@/lib/course-time';
 import { prisma } from '@/lib/prisma';
 import { sendMembershipReceiptEmail } from '@/lib/email';
 import { rateLimit } from '@/lib/rate-limit';
@@ -19,7 +21,7 @@ async function authorize(id: string, token: string | null) {
     where: { id },
     include: {
       tier: true,
-      course: { select: { name: true, city: true, state: true, stripeAccountId: true, stripeAccountActive: true, logoUrl: true } },
+      course: { select: { name: true, city: true, state: true, stripeAccountId: true, stripeAccountActive: true, logoUrl: true, timezone: true } },
     },
   });
   if (!m || !m.payToken || m.payToken !== token) return null;
@@ -32,6 +34,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   if (!m) return NextResponse.json({ error: 'Invalid or expired payment link.' }, { status: 404 });
 
   const { annualCents, initiationCents, feeCents, totalCents } = amountsDue(m);
+  const term = termOf(m.tier);
+  // Memberships item 4: a season pass never renews automatically.
+  const renewsTier = !!m.tier?.autoRenew && !isPassTier(m.tier);
   return NextResponse.json({
     memberName: m.golferId ? undefined : m.inviteName,
     name: m.inviteName,
@@ -39,6 +44,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     courseLogo: m.course.logoUrl || '',
     tierName: m.tier?.name ?? m.membershipType,
     termMonths: m.tier?.termMonths ?? 12,
+    // Memberships item 4: a season pass's dates (every pass ends on the last day), and whether it can still be bought.
+    pass: term.kind === 'pass' ? { startsOn: term.startsOn, endsOn: term.endsOn } : null,
+    onSale: passOnSale(term, todayIn(m.course.timezone)),
     annual: annualCents / 100,
     initiation: initiationCents / 100,
     serviceFee: feeCents / 100,
@@ -48,12 +56,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     paymentStatus: m.paymentStatus,
     // Paid, and not yet inside the 30-day renewal window the POST allows —
     // else the renewal link the reminder cron sends could never be paid.
-    alreadyPaid: paidUntilRenewal(m, m.tier?.termMonths ?? 12),
+    alreadyPaid: paidUntilRenewal(m, term),
     expiresAt: m.expiresAt,
     stripeReady: !!(m.course.stripeAccountActive && m.course.stripeAccountId),
     // MEM-RENEW: the box and its terms (tier renews automatically), and whether this member has it on.
-    autoRenewTier: !!m.tier?.autoRenew,
-    autoRenewTerms: m.tier?.autoRenew ? autoRenewTermsText({ courseName: m.course.name, tierName: m.tier.name, termMonths: m.tier.termMonths, annualFeeCents: m.tier.annualFeeCents }) : '',
+    autoRenewTier: renewsTier,
+    autoRenewTerms: renewsTier && m.tier ? autoRenewTermsText({ courseName: m.course.name, tierName: m.tier.name, termMonths: m.tier.termMonths, annualFeeCents: m.tier.annualFeeCents }) : '',
     autoRenewOn: m.autoRenew,
   });
 }
@@ -74,7 +82,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const chargedCents = r.chargedCents;
   const recorded = r.recorded;
   const updated = { expiresAt: r.expiresAt };
-  const autoTerms = m.tier?.autoRenew ? autoRenewTermsText({ courseName: m.course.name, tierName: m.tier.name, termMonths: m.tier.termMonths, annualFeeCents: m.tier.annualFeeCents }) : '';
+  const renewsTier = !!m.tier?.autoRenew && !isPassTier(m.tier);
+  const autoTerms = renewsTier && m.tier ? autoRenewTermsText({ courseName: m.course.name, tierName: m.tier.name, termMonths: m.tier.termMonths, annualFeeCents: m.tier.annualFeeCents }) : '';
   const due = { feeCents: r.feeCents };
 
   after(sendMembershipReceiptEmail({
@@ -91,7 +100,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   after(welcomeIfFirst(m.id, r.firstPayment).catch(console.error));
 
   // MEM-RENEW: the terms they agreed to, in writing, with how to turn it off.
-  if (m.tier?.autoRenew && recorded) {
+  if (renewsTier && m.tier && recorded) {
     after(sendAutoRenewOnEmail({
       name: m.inviteName, email: m.inviteEmail, courseName: m.course.name, tierName: m.tier.name, terms: autoTerms,
       renewsOn: updated.expiresAt, totalCents: renewalCents(m.tier).totalCents,
@@ -99,5 +108,5 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }).catch(console.error));
   }
 
-  return NextResponse.json({ success: true, amountPaid: chargedCents / 100, expiresAt: updated.expiresAt, autoRenew: !!m.tier?.autoRenew });
+  return NextResponse.json({ success: true, amountPaid: chargedCents / 100, expiresAt: updated.expiresAt, autoRenew: renewsTier });
 }

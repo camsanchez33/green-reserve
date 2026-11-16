@@ -48,7 +48,7 @@ export async function accountMembers(courseId: string, q = '') {
       courseId, status: 'active', tier: { accountOn: true },
       ...(term ? { OR: [{ inviteName: { contains: term, mode: 'insensitive' } }, { inviteEmail: { contains: term, mode: 'insensitive' } }, { golfer: { OR: [{ firstName: { contains: term, mode: 'insensitive' } }, { lastName: { contains: term, mode: 'insensitive' } }] } }] } : {}),
     },
-    select: { id: true, inviteName: true, expiresAt: true, status: true, golfer: { select: { firstName: true, lastName: true } }, tier: { select: { name: true, accountLimitCents: true } } },
+    select: { id: true, inviteName: true, expiresAt: true, passStartsOn: true, status: true, golfer: { select: { firstName: true, lastName: true } }, tier: { select: { name: true, accountLimitCents: true } } },
     orderBy: { inviteName: 'asc' },
     take: 40,
   });
@@ -80,7 +80,7 @@ export async function addCharge(tx: Tx, line: { courseId: string; membershipId: 
   await tx.$queryRaw`SELECT id FROM "CourseMembership" WHERE id = ${line.membershipId} FOR UPDATE`;
   const m = await tx.courseMembership.findFirst({
     where: { id: line.membershipId, courseId: line.courseId },
-    select: { status: true, expiresAt: true, course: { select: { memberGraceDays: true, timezone: true } }, tier: { select: { accountOn: true, accountLimitCents: true } } },
+    select: { status: true, expiresAt: true, passStartsOn: true, course: { select: { memberGraceDays: true, timezone: true } }, tier: { select: { accountOn: true, accountLimitCents: true } } },
   });
   if (!m) return fail(404, 'That member isn’t on this course.');
   if (line.kind !== 'credit') {

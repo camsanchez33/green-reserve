@@ -13,6 +13,7 @@
 //    makes the difference and why (a refund made in Stripe directly, one side missing it,
 //    a different amount, or the same payment recorded on the next or previous day).
 import { prisma } from './prisma';
+import { MEMBERSHIP_WHATS } from './season-pass';
 import { stripe } from './stripe';
 import { addDaysStr, todayIn } from './course-time';
 import { walkUpNet } from './analytics';
@@ -56,8 +57,8 @@ export function lineOf(moves: { day: string; minute: number; cents: number }[], 
   return { days, nowMinute, todayNowCents: todayBy[nowMinute], avgNowCents: avg(nowMinute), points };
 }
 
-/** The ledger rows the Revenue page counts: the course's own money, dues aside. */
-const counted = (courseId: string) => ({ courseId, account: 'course', what: { not: 'dues' } });
+/** The ledger rows the Revenue page counts: the course's own money, dues and season passes aside. */
+const counted = (courseId: string) => ({ courseId, account: 'course', what: { notIn: MEMBERSHIP_WHATS } });
 /** Pure: a row's signed value, the course's part. */
 export const valueOf = (r: { direction: string; amountCents: number; platformFeeCents: number }) => (r.direction === 'out' ? -1 : 1) * (r.amountCents - r.platformFeeCents);
 
@@ -166,7 +167,7 @@ export async function howPaid(courseId: string, tz: string, range: { from: strin
 
 // ─── Every segment, by payment day (the chart, "vs the period before", how it was paid) ───
 
-export type SegmentSplit = { teeCents: number; cartCents: number; shopCents: number; fnbCents: number; eventCents: number; duesCents: number; otherCents: number };
+export type SegmentSplit = { teeCents: number; cartCents: number; shopCents: number; fnbCents: number; eventCents: number; duesCents: number; passesCents: number; otherCents: number };
 
 export type AllSegments = {
   bucket: 'day' | 'week';
@@ -220,7 +221,7 @@ export function allOf(rows: AllRow[], range: { from: string; to: string }, today
   const dow = Array.from({ length: 7 }, (_, i) => ({ dow: i, cents: 0, days: 0 }));
   for (let d = range.from; d <= range.to; d = addDaysStr(d, 1)) if (d < today) dow[dowOf(d)].days++;
   const hour = new Map<number, number>();
-  const seg: SegmentSplit = { teeCents: 0, cartCents: 0, shopCents: 0, fnbCents: 0, eventCents: 0, duesCents: 0, otherCents: 0 };
+  const seg: SegmentSplit = { teeCents: 0, cartCents: 0, shopCents: 0, fnbCents: 0, eventCents: 0, duesCents: 0, passesCents: 0, otherCents: 0 };
   const paid = { onlineCents: 0, readerCents: 0, cashCents: 0, otherCents: 0 };
   let gross = 0, refunds = 0;
   for (const r of rows) {
@@ -282,6 +283,8 @@ export function splitOf(m: Move, booking: BookingParts | undefined, sale: SalePa
   if (m.what === 'shop') return { shopCents: v };
   if (m.what === 'event') return { eventCents: v };
   if (m.what === 'dues') return { duesCents: v };
+  // Memberships item 4: season passes are their own line (the page's "Season passes").
+  if (m.what === 'pass') return { passesCents: v };
   return { otherCents: v };
 }
 

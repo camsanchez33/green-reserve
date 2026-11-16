@@ -8,6 +8,7 @@
 // the shop items' sales tax, refunding a hold fee taken after the cutoff, and
 // refunding a booking fee already taken on its own.
 import { memberPricingOn, residentPricingOn } from './pricing-switch';
+import { tierCoversDay } from './season-pass';
 import { prisma } from './prisma';
 import { ensureShopTax, recordRoundShopTax } from './round-shop-tax';
 import { recordBookingEvent, recordBookingEventSafe, teeTimeInstant, type EventActor } from './booking-events';
@@ -260,13 +261,15 @@ export async function createCounterBooking(courseId: string, input: CounterBooki
       // Cam: "they should show their membership when they get there" — the member's own, and only while it's live.
       const m = await prisma.courseMembership.findFirst({ where: { id: rate.slice(7), courseId }, include: { tier: true } });
       if (!m || !m.tier) return { ok: false, status: 400, error: 'That member isn’t on your course.' };
-      if (!membershipLive(m, teeTime.course)) return { ok: false, status: 409, error: 'That membership has ended — book them at the standard rate, or renew it on Members.' };
+      if (!membershipLive(m, teeTime.course, new Date(), teeTime.date)) return { ok: false, status: 409, error: 'That membership has ended — book them at the standard rate, or renew it on Members.' };
       tier = m.tier;
     } else {
       if (teeTime.course.counterMemberRate !== 'any') return { ok: false, status: 409, error: 'Pick the member — your course gives member rates at the counter only to members.' };
       tier = await prisma.membershipTier.findFirst({ where: { id: rate.slice(5), courseId, active: true } });
     }
     if (!tier) return { ok: false, status: 400, error: 'That membership isn’t on your course.' };
+    // Memberships item 4: a season pass picked as a tier gives its rate only for a round in its season.
+    if (!tierCoversDay(tier, teeTime.date)) return { ok: false, status: 409, error: `${tier.name} doesn’t cover ${teeTime.date} — book them at the standard rate.` };
     const r = applyTierRates(teeTime, tier);
     const n = memberPlayers(players, tier);
     ratedGreen = splitTotal(players, n, rated(r.greenFeeCents), pub);

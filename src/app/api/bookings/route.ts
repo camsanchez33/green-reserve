@@ -133,10 +133,12 @@ export async function POST(req: NextRequest) {
   if (golferSession) {
     // G5b: matches by direct golferId link OR the golfer's OTP-verified email
     // against an invite-only membership — same recognition as the course page.
-    const golferMembership = await getGolferMembership(teeTimeFull.courseId, teeTimeFull.course);
-    const membership = golferMembership
+    const golferMembership = await getGolferMembership(teeTimeFull.courseId, teeTimeFull.course, teeTimeFull.date);
+    const found = golferMembership
       ? await prisma.courseMembership.findUnique({ where: { id: golferMembership.membershipId }, include: { tier: true } })
       : null;
+    // Memberships item 4: a season pass covers only the days of its season — a round after its end date is public.
+    const membership = found && membershipLive(found, teeTimeFull.course, new Date(), teeTimeFull.date) ? found : null;
     if (membership) viewerMembership = { tier: membership.tier };
     // Members switched off in Settings: the membership still counts (its window), its rate doesn't.
     if (membership?.tier && memberPricingOn(teeTimeFull.course)) {
@@ -157,7 +159,7 @@ export async function POST(req: NextRequest) {
         include: { tier: true },
       });
       // A lapsed membership (past its end date + the course's grace days) gets public rates and the public window.
-      const live = !!membership && membership.courseId === teeTimeFull.courseId && membershipLive(membership, teeTimeFull.course);
+      const live = !!membership && membership.courseId === teeTimeFull.courseId && membershipLive(membership, teeTimeFull.course, new Date(), teeTimeFull.date);
       if (live && !viewerMembership) viewerMembership = { tier: membership!.tier };
       if (live && membership!.tier && memberPricingOn(teeTimeFull.course)) {
         const rates = applyTierRates(teeTimeFull, membership!.tier);

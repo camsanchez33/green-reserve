@@ -474,6 +474,15 @@ model MembershipTier {
   lineRates            Json?
   /// Memberships item 3: true = members book as far ahead as the public ("The public window"); false = advanceBookingDays.
   windowPublic         Boolean            @default(false)
+  /// Memberships item 4 (Cam 2026-11-16, season passes): 'membership' | 'pass'. Fixed when made — a pass's payments
+  /// go on the ledger as 'pass', a membership's as 'dues', so the kind never changes under its history.
+  kind                 String             @default("membership")
+  /// A pass's season, the course's own dates (YYYY-MM-DD). Every pass ends on passEndsOn, whenever it was bought, with
+  /// no grace days; it gives member rates from passStartsOn. Its price is annualFeeCents; no initiation, no renewal.
+  passStartsOn         String?
+  passEndsOn           String?
+  /// Whether staff can sell it at the course (Add a member). Online is joinOnline ('instant' for a pass).
+  sellAtCourse         Boolean            @default(true)
   /// Memberships item 2 (Cam 2026-11-16, "an automatic per-membership prefix and sequence, never reused"): the
   /// prefix of this membership's member numbers (course initials + membership initials, e.g. "PH-FM"), fixed the
   /// first time a number is given so a rename never changes it, and the last number given. Numbers only go up.
@@ -556,6 +565,10 @@ model CourseMembership {
   /// ("" = not on a reader). Set with the claim (duesChargeStartedAt); duesIntentId then holds the reader's
   /// card_present intent. Every other dues payment refuses while it is set (lib/dues-reader).
   duesReaderId           String          @default("")
+  /// Memberships item 4: set when a season pass is paid — the pass's first day (YYYY-MM-DD); expiresAt is its last.
+  /// Non-null = this membership's paid term is a pass: member rates only from this day to expiresAt, no grace days.
+  /// Cleared when a membership term is paid on it.
+  passStartsOn           String?
   renewalRemindedAt      DateTime?
   /// MEM-RENEW: renew automatically on the saved card (lib/membership-autorenew). Only ever turned on
   /// by the golfer ticking the box when they pay; turned off by them or by staff.
