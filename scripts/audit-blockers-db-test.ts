@@ -27,11 +27,13 @@ async function cleanup() {
 (async () => {
   // 1. Dues pay link
   const pay = read('src/app/api/membership/[id]/route.ts');
+  const lib = read('src/lib/dues-payment.ts'); // Memberships item 1: the charge moved to lib/dues-payment
   const page = read('src/app/membership/[id]/page.tsx');
   ok('1. the GET gives the exact total in cents', pay.includes('    totalCents,\n'));
   ok('1. the POST refuses (and releases the claim) when the total or the auto-renew terms differ from what was shown',
-    pay.includes('if (Number(expectedTotalCents) !== due.totalCents || (m.tier?.autoRenew && autoRenewTerms !== autoTerms)) {\n    await release();')
-    && pay.indexOf('Number(expectedTotalCents) !== due.totalCents') < pay.indexOf('chargeOneIntent({'));
+    lib.includes('if (Number(opts.expectedTotalCents) !== due.totalCents || (renews && opts.autoRenewTerms !== autoTerms)) {\n    await release();')
+    && lib.indexOf('Number(opts.expectedTotalCents) !== due.totalCents') < lib.indexOf('chargeOneIntent({')
+    && pay.includes('expectedTotalCents, by: \'golfer\', autoRenewConsent, autoRenewTerms'));
   ok('1. the page sends back the total and the terms it showed', page.includes('expectedTotalCents: info.totalCents') && page.includes('autoRenewTerms: info.autoRenewTerms'));
 
   // 2. Tier term

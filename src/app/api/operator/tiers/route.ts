@@ -23,7 +23,8 @@ export async function GET() {
   { const denied = requirePermission(session, 'members.view'); if (denied) return denied; } // SP-A
 
   const tiers = await prisma.membershipTier.findMany({
-    where: { courseId: session.courseId },
+    // Memberships item 2: a deleted tier that gave numbers is kept inactive (DELETE below) — it is gone from the list.
+    where: { courseId: session.courseId, active: true },
     include: { _count: { select: { memberships: { where: { status: 'active' } } } } },
     orderBy: { createdAt: 'asc' },
   });
@@ -183,6 +184,17 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: `This tier has ${count} active member${count === 1 ? '' : 's'}. Reassign or remove them first.` }, { status: 409 });
   }
 
+  // Memberships item 2: a tier that has given member numbers is kept (inactive), so its prefix and count are never
+  // given again by a new tier — numbers are never reused.
+  if (tier.numberLast > 0) {
+    // …and its memberships come off it exactly as a delete took them off (the foreign key's ON DELETE SET NULL), so
+    // nothing is due on it, no member rate applies and no pay link can charge for a membership the course deleted.
+    await prisma.$transaction([
+      prisma.courseMembership.updateMany({ where: { tierId: id, courseId: session.courseId }, data: { tierId: null } }),
+      prisma.membershipTier.update({ where: { id }, data: { active: false } }),
+    ]);
+    return NextResponse.json({ success: true, archived: true });
+  }
   await prisma.membershipTier.delete({ where: { id } });
   return NextResponse.json({ success: true });
 }

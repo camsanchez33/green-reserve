@@ -21,6 +21,7 @@
 // LEGAL: the wording below was drafted to the common US automatic-renewal rules (clear terms before
 // the first charge, affirmative consent, a reminder before each renewal, online cancellation). It
 // has not been reviewed by a lawyer — Cam to have it read before a course turns auto-renew on.
+import { settleStaleDuesReader } from './dues-reader';
 import { prisma } from './prisma';
 import { amountsDue, recordPaidTerm } from './membership-dues';
 import { recordMove } from './money-ledger';
@@ -104,13 +105,15 @@ export type RenewResult = { status: 'paid'; amountCents: number; expiresAt: Date
  * saved card once per term, puts the money on the ledger, then records the term.
  */
 export async function chargeRenewal(membershipId: string, charge: Charger, now = new Date()): Promise<RenewResult> {
-  const m = await prisma.courseMembership.findUnique({ where: { id: membershipId }, select: { ...DUE_SELECT, status: true, autoRenew: true, autoRenewFailedAt: true, initiationWaived: true } });
+  const m = await prisma.courseMembership.findUnique({ where: { id: membershipId }, select: { ...DUE_SELECT, status: true, autoRenew: true, autoRenewFailedAt: true, initiationWaived: true, duesReaderId: true, duesChargeStartedAt: true } });
   if (!m || !m.tier || !m.autoRenew || m.status !== 'active' || !m.tier.autoRenew || !m.tier.active) return { status: 'skipped', why: 'not on auto-renew' };
   // Charged only the amount the golfer was reminded of; a changed price waits for a new reminder.
   if (m.autoRenewRemindedCents !== renewalCents(m.tier).totalCents) return { status: 'skipped', why: 'amount changed since the reminder' };
   if (!m.course.stripeAccountActive || !m.course.stripeAccountId) return { status: 'skipped', why: 'course not taking payments' };
   if (!m.savedCustomerId || !m.savedPaymentMethodId) return { status: 'skipped', why: 'no saved card' };
-  const claimed = await prisma.courseMembership.updateMany({ where: { id: m.id, status: 'active', autoRenew: true, OR: [{ duesChargeStartedAt: null }, { duesChargeStartedAt: { lt: new Date(now.getTime() - 10 * 60_000) } }] }, data: { duesChargeStartedAt: now } });
+  // Dues left on the card reader 10 minutes are settled first; dues on the reader now are never charged meanwhile.
+  await settleStaleDuesReader(m);
+  const claimed = await prisma.courseMembership.updateMany({ where: { id: m.id, status: 'active', autoRenew: true, duesReaderId: '', OR: [{ duesChargeStartedAt: null }, { duesChargeStartedAt: { lt: new Date(now.getTime() - 10 * 60_000) } }] }, data: { duesChargeStartedAt: now } });
   if (!claimed.count) return { status: 'skipped', why: 'being paid now' };
   const release = () => prisma.courseMembership.updateMany({ where: { id: m.id, duesChargeStartedAt: now }, data: { duesChargeStartedAt: null } });
   // Paid since (the pay link, or cash at the shop): nothing to charge.
