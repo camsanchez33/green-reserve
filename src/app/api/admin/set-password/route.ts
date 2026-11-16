@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  await passwordChanged(req, admin, isReset ? 'reset with Forgot password' : 'first set, from the set-password link');
+  await passwordChanged(req, admin, isReset ? 'reset with Forgot password' : 'set in place of a temporary password');
   // The owner's change is emailed by passwordChanged() (with device and place), so not twice.
   if (isReset && admin.role !== 'owner') {
     after(sendAdminPasswordChangedNotification({ adminName: admin.name, adminEmail: admin.email })

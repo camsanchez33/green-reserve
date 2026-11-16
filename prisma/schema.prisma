@@ -2073,7 +2073,7 @@ model RegisterOpen {
 /// or token — only the email typed, the IP and the browser.
 model SecurityEvent {
   id        String   @id @default(cuid())
-  /// 'signin_failed' | 'signin_ok' | 'locked_out' | 'second_factor_failed' | 'step_up_failed' | 'rate_limited' | 'new_device'
+  /// 'signin_failed' | 'signin_ok' | 'locked_out' | 'second_factor_failed' | 'step_up_failed' | 'rate_limited' | 'new_device' | 'password_changed'
   kind      String
   /// Which door: 'admin' (employees) | 'owner' (/cam) | 'course' (dashboard) | 'golfer' | 'member'
   surface   String

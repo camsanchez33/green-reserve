@@ -149,8 +149,16 @@ async function main() {
   await passwordChanged(req('203.0.113.71', `${TAG}-own`), own, 'reset with Forgot password');
   const opw = await prisma.securityEvent.findFirst({ where: { userAgent: `${TAG}-own` } });
   check('…the owner’s is on the owner door, and recorded even when the alert email cannot be sent', opw?.kind === 'password_changed' && opw?.surface === 'owner' && opw?.accountId === own.id, opw);
+  // Never dropped by the per-address cap (an attacker's failures from the same address can't hide it)…
+  await prisma.rateLimit.upsert({ where: { key: 'secev:ip:203.0.113.72' }, create: { key: 'secev:ip:203.0.113.72', count: 200, windowStart: new Date() }, update: { count: 200, windowStart: new Date() } });
+  await passwordChanged(req('203.0.113.72', `${TAG}-pwcap`), emp, 'changed on My profile');
+  check('…an address past its hourly cap still records a password change', (await prisma.securityEvent.count({ where: { userAgent: `${TAG}-pwcap` } })) === 1);
+  // …and never pushed out of the history by 100 newer failures.
+  const later = new Date(Date.now() + 60_000);
+  await prisma.securityEvent.createMany({ data: Array.from({ length: 100 }, (_, i) => ({ kind: 'signin_failed', surface: 'golfer', ip: '203.0.113.73', email: `${TAG}@x.test`, userAgent: TAG, createdAt: new Date(later.getTime() + i * 1000) })) });
   const ov = await securityOverview();
-  check('…it shows in Admin → Security’s history', ov.recent.some(r => r.kind === 'password_changed' && r.browser === `${TAG}-pw`));
+  check('…100 newer failures do not push it out of the history', ov.recent.some(r => r.kind === 'password_changed' && r.browser === `${TAG}-pw`) && ov.recent.filter(r => r.kind !== 'password_changed').length === 100);
+  check('…and the history stays newest first', ov.recent.every((r, i, a) => i === 0 || a[i - 1].at >= r.at));
   check('…and never counts as a failed attempt', !(await securityFindings(new Date())).some(x => /password/i.test(JSON.stringify(x))));
   const helper = readFileSync('src/lib/admin-password.ts', 'utf8');
   check('the helper records before it emails, emails only the owner, and never passes the password', helper.indexOf("kind: 'password_changed'") > -1 && helper.indexOf("kind: 'password_changed'") < helper.indexOf('sendOwnerPasswordChanged({') && /if \(!owner\) return;/.test(helper) && /sendOwnerPasswordChanged\(\{ email: admin\.email, name: admin\.name, how, device: deviceLabel\(ctx\.userAgent\), place: ctx\.place, when: alertTime\(\) \}\)/.test(helper) && !/passwordHash|password:/.test(helper.replace(/^\s*\/\/.*$/gm, '')) && /await securityEvent\(/.test(helper) && /await sendOwnerPasswordChanged\(/.test(helper));
@@ -170,6 +178,12 @@ async function main() {
   }
   check('the scan finds the five password writes', pwWriters >= 5, pwWriters);
   check('every password write records a password_changed event', unlogged.length === 0, unlogged);
+  const emps = readFileSync('src/app/api/admin/employees/route.ts', 'utf8');
+  const resetPart = emps.slice(emps.indexOf("if (action === 'reset_password')"), emps.indexOf("if (action === 'areas')"));
+  check('the owner’s reset of an employee records the change itself', /await passwordChanged\(req, target, 'temporary password, reset by the owner'\)/.test(resetPart) && resetPart.indexOf('passwordHash, passwordChangedAt') < resetPart.indexOf('await passwordChanged('));
+  check('…and a reset of an account that no longer exists is a plain 404, not a crash', /if \(!target\) return NextResponse\.json\(\{ error: 'That employee no longer exists — refresh the page\.' \}, \{ status: 404 \}\);/.test(resetPart));
+  const setpw = readFileSync('src/app/api/admin/set-password/route.ts', 'utf8');
+  check('the owner’s forgot-password reset is emailed once (the owner alert), not also the generic one', /if \(isReset && admin\.role !== 'owner'\)/.test(setpw) && setpw.indexOf('await passwordChanged(') < setpw.indexOf('sendAdminPasswordChangedNotification({'));
 
   const twofa = readFileSync('src/app/api/auth/2fa/verify/route.ts', 'utf8');
   check('a wrong code is logged after the attempt counter moves, never before', twofa.indexOf("kind: 'second_factor_failed'") > twofa.indexOf('twoFactorAttempts: clearCode ? 0 : attempts'));

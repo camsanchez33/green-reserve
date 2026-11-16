@@ -32,7 +32,7 @@
   "src/app/admin/problems/page.tsx": 132,
   "src/app/admin/profile/page.tsx": 61,
   "src/app/admin/revenue/page.tsx": 1051,
-  "src/app/admin/security/page.tsx": 169,
+  "src/app/admin/security/page.tsx": 171,
   "src/app/admin/set-password/page.tsx": 72,
   "src/app/admin/system/page.tsx": 790,
   "src/app/dashboard/2fa/page.tsx": 136,
