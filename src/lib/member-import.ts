@@ -4,6 +4,7 @@
 // Nobody is emailed: a member gets member rates as soon as they sign in with the
 // listed email (getGolferMembership matches it), and a pay link can be sent from
 // their row. The parsing and checks are pure; importMembers writes.
+import { assignMemberNumber } from './member-number';
 import { randomUUID } from 'crypto';
 import { prisma } from './prisma';
 import type { ImportRow } from './member-csv';
@@ -50,7 +51,8 @@ export async function importMembers(courseId: string, rows: ImportRow[], opts: I
           initiationWaived: true,
           ...(paid ? { paymentStatus: 'paid_offline', lastPaidAt: now, startedAt: now } : {}),
         },
-      });
+        select: { id: true },
+      }).then(made => assignMemberNumber(made.id)); // Memberships item 2: imported members get a number too
       taken.add(r.email);
       added++;
     } catch (err) {

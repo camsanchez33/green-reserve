@@ -9,6 +9,9 @@ import { randomUUID } from 'crypto';
 import { markDuesPaidAtCourse, amountsDue } from '@/lib/membership-dues';
 import { requireRegisterOpen } from '@/lib/register-open';
 import { duesThisYear } from '@/lib/dues-year';
+import { assignMemberNumber, nextMemberNumber } from '@/lib/member-number';
+import { del } from '@vercel/blob';
+import { privateBlobToken, isBlobStoreUrl } from '@/lib/private-blob';
 import { settleStaleDuesReader } from '@/lib/dues-reader';
 import { sendWelcome, COUNTER_ADDED } from '@/lib/member-welcome';
 import { sendAutoRenewOffEmail } from '@/lib/email';
@@ -16,10 +19,18 @@ import { maybeSendPayLink, NOT_SENT } from '@/lib/membership-pay-link';
 import { approveJoin, declineJoin } from '@/lib/membership-join';
 import { stopAutoRenew, STOP_DATA, memberContact } from '@/lib/membership-autorenew';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   { const denied = requirePermission(session, 'members.view'); if (denied) return denied; } // SP-A
+
+  // Memberships item 2: the add form's "Made for them automatically" — the number the next member on this tier gets.
+  const nextFor = req.nextUrl.searchParams.get('nextNumber');
+  if (nextFor) {
+    const next = await nextMemberNumber(session.courseId, nextFor);
+    if (!next) return NextResponse.json({ error: 'Invalid tier' }, { status: 404 });
+    return NextResponse.json({ nextNumber: next });
+  }
 
   const memberships = await prisma.courseMembership.findMany({
     where: { courseId: session.courseId },
@@ -61,6 +72,9 @@ export async function GET() {
     lastRound:      st?.lastRound ?? null,
     initiationWaived: m.initiationWaived,
     autoRenew:      m.autoRenew,
+    // Memberships item 2: the member number, and whether there is a photo (served by /api/operator/members/photo — never its address).
+    memberNumber:   m.memberNumber,
+    hasPhoto:       !!m.photoUrl,
     roundsThisYear: st?.roundsThisYear ?? 0,
     spendThisYearCents: st?.spendThisYearCents ?? null,
   }; });
@@ -113,7 +127,7 @@ export async function POST(req: NextRequest) {
         include: { tier: { select: { id: true, name: true, color: true } } },
       });
       if (!owes) after(sendWelcome(again.id).catch(err => console.error('Member welcome email error:', err)));
-      return NextResponse.json({ ...again, linked: !!again.golferId, awaitingPayment: owes }, { status: 200 });
+      return NextResponse.json({ ...again, memberNumber: await assignMemberNumber(again.id), linked: !!again.golferId, awaitingPayment: owes }, { status: 200 });
     }
   }
 
@@ -150,7 +164,7 @@ export async function POST(req: NextRequest) {
     if (!waiting) after(sendWelcome(membership.id).catch(err => console.error('Member linked email error:', err)));
     if (!payFirst) after(maybeSendPayLink(membership.id).catch(err => console.error('Pay link email error:', err)));
 
-    return NextResponse.json({ ...membership, linked: true, awaitingPayment: waiting }, { status: 201 });
+    return NextResponse.json({ ...membership, memberNumber: await assignMemberNumber(membership.id), linked: true, awaitingPayment: waiting }, { status: 201 });
   } else {
     if (!name?.trim()) {
       return NextResponse.json({ error: 'Name is required for members without an existing account' }, { status: 400 });
@@ -184,7 +198,7 @@ export async function POST(req: NextRequest) {
     if (!waiting) after(sendWelcome(membership.id).catch(err => console.error('Member invite email error:', err)));
     if (!payFirst) after(maybeSendPayLink(membership.id).catch(err => console.error('Pay link email error:', err)));
 
-    return NextResponse.json({ ...membership, linked: false, awaitingPayment: waiting }, { status: 201 });
+    return NextResponse.json({ ...membership, memberNumber: await assignMemberNumber(membership.id), linked: false, awaitingPayment: waiting }, { status: 201 });
   }
 }
 
@@ -308,6 +322,8 @@ export async function PATCH(req: NextRequest) {
       tier:   { select: { id: true, name: true, color: true } },
     },
   });
+  // Memberships item 2: a request put on a membership gets its number now (a member keeps theirs on a change).
+  if (updated.tierId && !updated.memberNumber) await assignMemberNumber(updated.id);
   return NextResponse.json(updated);
 }
 
@@ -339,5 +355,8 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: 'This member has dues or account history, so they can’t be removed — set them to Not active instead. That keeps the history.' }, { status: 409 });
   }
   await prisma.courseMembership.delete({ where: { id } });
+  // Memberships item 2: their photo goes with them (the private store; best effort, never blocks the removal).
+  const token = privateBlobToken();
+  if (membership.photoUrl && token && isBlobStoreUrl(membership.photoUrl)) { try { await del(membership.photoUrl, { token }); } catch { /* best effort */ } }
   return NextResponse.json({ success: true });
 }
