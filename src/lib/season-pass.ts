@@ -137,7 +137,10 @@ export function passMemberChange(o: {
   }
   // A move between memberships from a row that only ever paid for passes (its pass tier archived, an unpaid pass): the
   // initiation is still owed.
-  if (o.move && m.onlyPassesPaid && !isPassTier(o.move.tier)) return { ok: true, data: fresh };
+  if (o.move && m.onlyPassesPaid && !isPassTier(o.move.tier)) {
+    if (m.paying) return no(409, 'These dues are being paid right now — finish or cancel the payment first.');
+    return { ok: true, data: fresh };
+  }
   if (!o.move && o.status === 'active' && m.status !== 'active' && o.stay.isPass && m.passStartsOn === null && o.stay.owes) {
     return no(409, 'Take the payment for the season pass first — it starts once it’s paid.');
   }
