@@ -148,6 +148,8 @@ export async function resetTestCourse(courseId: string): Promise<{ ok: true; cle
     prisma.teeTimeAlert.deleteMany({ where: { courseId } }),
     prisma.booking.deleteMany({ where: { courseId } }),
     prisma.courseMembership.deleteMany({ where: { courseId } }),
+    // Memberships item 2: member numbers like new too (the members are gone, so nothing can clash).
+    prisma.membershipTier.updateMany({ where: { courseId }, data: { numberLast: 0 } }),
     prisma.courseResident.deleteMany({ where: { courseId } }),
     prisma.shopSale.deleteMany({ where: { courseId } }),
     // PRO-SHOP sale numbers: like new — its next sale is #1 again. In the transaction, so a failed reset keeps the count.

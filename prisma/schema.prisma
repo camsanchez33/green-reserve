@@ -468,8 +468,16 @@ model MembershipTier {
   accountLimitCents    Int?
   accountSettle        String             @default("link")
   active               Boolean            @default(true)
+  /// Memberships item 2 (Cam 2026-11-16, "an automatic per-membership prefix and sequence, never reused"): the
+  /// prefix of this membership's member numbers (course initials + membership initials, e.g. "PH-FM"), fixed the
+  /// first time a number is given so a rename never changes it, and the last number given. Numbers only go up.
+  numberPrefix         String?
+  numberLast           Int                @default(0)
   createdAt            DateTime           @default(now())
   memberships          CourseMembership[]
+
+  /// Memberships item 2: a prefix belongs to one membership per course, so two never share numbers.
+  @@unique([courseId, numberPrefix])
 }
 
 /// GRP-1: several courses run together (e.g. Bergen County's six). See Course.groupId.
@@ -564,6 +572,12 @@ model CourseMembership {
   /// course's own list has already joined, so no dues payment adds the tier's
   /// one-time initiation fee and their history shows none.
   initiationWaived       Boolean         @default(false)
+  /// Memberships item 2: the member's number, e.g. "PH-FM-0012" (lib/member-number). Given once, when the member is
+  /// added; never reused (the tier's numberLast only goes up). Null on members added before it (no backfill).
+  memberNumber           String?
+  /// Memberships item 2: the member's photo, in the PRIVATE blob store (lib/private-blob) — only ever served
+  /// through /api/operator/members/photo to the course's own staff. "" = none.
+  photoUrl               String          @default("")
   notes                  String          @default("")
   createdAt              DateTime        @default(now())
 
@@ -577,6 +591,7 @@ model CourseMembership {
   accountCardTerms       String            @default("")
 
   @@unique([golferId, courseId])
+  @@unique([courseId, memberNumber])
   // MP-10 schema half: the overdue-dues surfaces filter by course + last payment.
   @@index([courseId, lastPaidAt])
 }
