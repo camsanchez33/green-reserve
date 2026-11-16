@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
   if (!tierId)        return NextResponse.json({ error: 'Tier is required' }, { status: 400 });
 
   const tier = await prisma.membershipTier.findUnique({ where: { id: tierId } });
-  if (!tier || tier.courseId !== session.courseId) {
+  if (!tier || tier.courseId !== session.courseId || !tier.active) {
     return NextResponse.json({ error: 'Invalid tier' }, { status: 400 });
   }
 
@@ -294,7 +294,7 @@ export async function PATCH(req: NextRequest) {
 
   if (tierId) {
     const tier = await prisma.membershipTier.findUnique({ where: { id: tierId } });
-    if (!tier || tier.courseId !== session.courseId) {
+    if (!tier || tier.courseId !== session.courseId || !tier.active) {
       return NextResponse.json({ error: 'Invalid tier' }, { status: 400 });
     }
   }
