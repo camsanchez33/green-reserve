@@ -95,6 +95,15 @@ Analytics → Golfers puts every golfer the course knows (golfer-key identity, n
 Inquiry → `pending` → `in_review` → `details_requested` → `details_submitted` → `building` → `live`
 Admin page manages all stages. Operators get dashboard access when approved.
 
+### Schedule pricing (SCHED-1, Cam 2026-11-16, Schedule approved)
+- Demand pricing unlocks only after 3 months of the course's own tee times: `MIN_DAYS_OF_DATA = 90`, counted over
+  all past non-blocked tee-time dates (`demandHistory`), not the 8-week suggestion window. Locked, a course can't
+  turn it on, move to automatic or apply suggestions; off, stepping down to suggest, reset and floor/ceiling always
+  work. A course already on while locked keeps its applied prices (not switched off silently).
+- Last-minute deals are retired ("doesnt make any sense"): `dealPct` returns 0, so no new price anywhere takes a deal;
+  bookings already made at a deal price keep it (stored `lastMinutePct` and seat rates). The `lastMinute*` columns
+  stay; `/api/operator/last-minute` reads back off and refuses changes (410).
+
 ---
 
 ## Where things are
