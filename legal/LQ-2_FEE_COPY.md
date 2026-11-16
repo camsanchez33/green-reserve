@@ -59,7 +59,8 @@ sentence calling the booking fee and dues fee GreenReserve's "only" fees is bann
 > When you pay for pro-shop items by card (on a pay link, on the course's card reader, or with your round), a
 > **GreenReserve service fee of 1% of the items**, before sales tax, is added and shown before you pay. It is
 > never charged on the round itself, and items paid in cash, at the counter or on a member's account carry no
-> GreenReserve fee. If the items are refunded, the fee is refunded in the same proportion.
+> GreenReserve fee. If a walk-up card payment for items is refunded, or the whole payment for your round is
+> refunded, the fee is refunded in the same proportion.
 
 ---
 
