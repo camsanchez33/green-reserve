@@ -5,15 +5,16 @@
 // The same step is Admin → System → Agreement versions → Publish (owner only),
 // which needs no local database access; both go through publishAgreementVersion().
 import { prisma } from '../src/lib/prisma';
-import { DOCUMENT_DIR, listVersions, loadDocument, type AgreementDocument } from '../src/lib/agreements';
+import { DOCUMENT_DIR, listVersions, loadDocument, seedGateError, type AgreementDocument } from '../src/lib/agreements';
 import { publishAgreementVersion } from '../src/lib/agreement-publish';
 
 async function main() {
   let inserted = 0, unchanged = 0;
   for (const document of Object.keys(DOCUMENT_DIR) as AgreementDocument[]) {
     for (const version of listVersions(document)) {
-      // A draft (e.g. a version waiting on counsel) is never published; skip it rather than stop the seed.
-      if (loadDocument(document, version).draft) { console.log(`skipped ${document} ${version}: draft`); continue; }
+      // A re-acceptance draft waiting on counsel (e.g. operator agreement 2026-12) can't be published yet; skip it
+      // rather than stop the seed. Other drafts (the 2026-09 COUNSEL-marked texts) are still seeded, as before.
+      { const d = loadDocument(document, version); if (d.draft && seedGateError(d)) { console.log(`skipped ${document} ${version}: draft waiting on counsel`); continue; } }
       // AG-3 §1: a bump that requires re-acceptance is a legal event — it
       // refuses to seed until counsel has reviewed it (`counselReviewed: <date>`)
       // or Cam has recorded a waiver (`counselWaived: <date> by <who>` — never a

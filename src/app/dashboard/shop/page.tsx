@@ -79,6 +79,8 @@ const saleNo = (s: Pick<Sale, 'id' | 'number'>) => (s.number != null ? `#${s.num
 type Discount = { mode: 'percent' | 'amount'; value: string; note: string };
 type Quote = { key: string; subtotalCents: number; discountCents: number; taxCents: number; totalCents: number; taxCalculationId: string; taxUnavailable?: boolean; cardFeeCents?: number };
 
+// SHOP-FEE-1: the fee's share a sale's refunds gave back (lib/shop-sales serviceFeeBackCents, pro rata, half up).
+const feeBackOf = (s: { totalCents: number; refundedCents: number; serviceFeeCents?: number }) => { const f = s.serviceFeeCents ?? 0; return f > 0 && s.totalCents > 0 ? Math.min(f, Math.round(f * Math.min(s.refundedCents, s.totalCents) / s.totalCents)) : 0; };
 const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
 const initials = (name: string) => name.split(/\s+/).filter(w => /^[A-Za-z0-9]/.test(w)).slice(0, 2).map(w => w[0]).join('').toUpperCase();
 const toCents = (v: string) => { const n = Number(v.replace(/[$,\s]/g, '')); return Number.isFinite(n) && n > 0 ? Math.round(n * 100) : 0; };
@@ -903,7 +905,7 @@ export default function ShopPage() {
                 {(s.taxCents > 0 || sub !== s.totalCents) && <div className="flex justify-between gap-3 py-2 border-t border-line"><dt className="text-ink-soft">Tax</dt><dd className="font-semibold tabular-nums">{usd(s.taxCents)}</dd></div>}
                 {(s.serviceFeeCents ?? 0) > 0 && <div className="flex justify-between gap-3 py-2 border-t border-line"><dt className="text-ink-soft">{SHOP_FEE_LABEL}</dt><dd className="font-semibold tabular-nums">{usd(s.serviceFeeCents ?? 0)}</dd></div>}
                 <div className="flex justify-between gap-3 py-2 border-t border-line"><dt className="font-semibold text-ink">Total</dt><dd className="font-semibold tabular-nums">{usd(s.totalCents + (s.serviceFeeCents ?? 0))}</dd></div>
-                {s.refundedCents > 0 && <div className="flex justify-between gap-3 py-2 border-t border-line"><dt className="text-ink-soft">Refunded</dt><dd className="font-semibold tabular-nums">−{usd(s.refundedCents)}</dd></div>}
+                {s.refundedCents > 0 && <div className="flex justify-between gap-3 py-2 border-t border-line"><dt className="text-ink-soft">Refunded</dt><dd className="font-semibold tabular-nums">−{usd(s.refundedCents + feeBackOf(s))}</dd></div>}
               </dl>
               {pending.map(r => (
                 <div key={r.id} className="flex flex-wrap items-center gap-3 mt-2 text-[12.5px]">
