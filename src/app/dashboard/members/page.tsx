@@ -22,7 +22,7 @@ import { MembershipSetup } from '@/components/dashboard/members/MembershipSetup'
 import { MemberCard } from '@/components/dashboard/members/MemberCard';
 import { AddMember } from '@/components/dashboard/members/AddMember';
 import {
-  type Tier, type Member, type Dues, CardHead, Tile, KV, SubHead, ChevronIcon, Dot, LINK,
+  type Tier, type Member, type Dues, type DuesThisYear, CardHead, Tile, KV, SubHead, ChevronIcon, Dot, LINK,
   priceLine, JOIN_LABEL, isJoining, monthYear, shortDate, sinceYear, usd0, dollars, DuesText,
 } from '@/components/dashboard/members/shared';
 
@@ -68,6 +68,7 @@ function MembershipsPageInner() {
   const openId = searchParams.get('m');
   const [tiers, setTiers] = useState<Tier[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
+  const [dues, setDues] = useState<DuesThisYear>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [setup, setSetup] = useState<{ tier: Tier | null } | null>(null);
@@ -82,10 +83,12 @@ function MembershipsPageInner() {
   const canEdit = access.can('members.edit');
 
   const loadAll = useCallback(async () => {
-    const [tr, mb] = await Promise.all([dfetch<Tier[]>('/api/operator/tiers'), dfetch<{ members: Member[] }>('/api/operator/members')]);
+    const [tr, mb] = await Promise.all([dfetch<Tier[]>('/api/operator/tiers'), dfetch<{ members: Member[]; duesThisYear?: DuesThisYear }>('/api/operator/members')]);
     // SD-10: a 403/500 here used to render "No membership tiers yet".
     setTiers(tr.ok && Array.isArray(tr.data) ? tr.data : []);
     setMembers(mb.ok && Array.isArray(mb.data?.members) ? mb.data.members : []);
+    // Dues this year shows only once the response carries it (Build's data PR) and this login sees money.
+    setDues(mb.ok && mb.data?.duesThisYear && Array.isArray(mb.data.duesThisYear.byTier) ? mb.data.duesThisYear : null);
     setLoadError(!tr.ok ? tr.error : !mb.ok ? mb.error : '');
     setLoading(false);
   }, []);
@@ -139,8 +142,9 @@ function MembershipsPageInner() {
   const live = tiers.filter(t => t.active);
   const count = (t: Tier) => t._count?.memberships ?? 0;
   const asking = (t: Tier) => members.filter(m => isJoining(m) && m.tierId === t.id).length;
-  const hasDues = tiers.length > 0 && tiers.every(t => typeof t.duesThisYearCents === 'number');
-  const duesTotal = hasDues ? tiers.reduce((s, t) => s + (t.duesThisYearCents ?? 0), 0) : 0;
+  const hasDues = !!dues && tiers.length > 0;
+  const duesTotal = dues?.totalCents ?? 0;
+  const duesOfTier = (t: Tier) => dues?.byTier.find(x => x.tierId === t.id)?.cents ?? 0;
   const cardMember = card ? members.find(m => m.id === card) : undefined;
   const pops = <>
     {setup && <MembershipSetup tier={setup.tier} colors={COLORS} onClose={() => setSetup(null)} onDelete={setup.tier ? () => deleteTier(setup.tier!) : undefined}
@@ -173,7 +177,7 @@ function MembershipsPageInner() {
         {loadError && <LoadError message={loadError} onRetry={loadAll} />}
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
           <Tile label="Members" value={String(ppl.filter(m => m.status === 'active').length)} />
-          {typeof open.duesThisYearCents === 'number' && <Tile label="Dues this year" value={usd0(open.duesThisYearCents)} />}
+          {hasDues && <Tile label="Dues this year" value={usd0(duesOfTier(open))} />}
           <Tile label="Overdue renewals" value={String(late)} title="Active members who haven't paid, or whose membership ran out and wasn't renewed" />
         </div>
         {importOpen && <ImportMembers tiers={[open, ...tiers.filter(t => t.id !== open.id)]} onClose={() => setImportOpen(false)} onImported={loadAll} />}
@@ -259,7 +263,7 @@ function MembershipsPageInner() {
           <Card className="px-[18px] py-4 min-w-0">
             <h2 className="text-[15px] font-semibold text-ink mb-1.5">Dues this year</h2>
             <SubHead>Memberships</SubHead>
-            {ms.map(t => <KV key={t.id} k={<span className="inline-flex items-center gap-2"><Dot color={t.color} />{t.name}</span>} v={usd0(t.duesThisYearCents ?? 0)} />)}
+            {ms.map(t => <KV key={t.id} k={<span className="inline-flex items-center gap-2"><Dot color={t.color} />{t.name}</span>} v={usd0(duesOfTier(t))} />)}
             <KV total k="Total" v={usd0(duesTotal)} />
             <p className="text-[12.5px] text-ink-muted mt-2.5">Shows in Revenue as Membership dues. Paid through GreenReserve, members pay a 1% fee on top.</p>
           </Card>

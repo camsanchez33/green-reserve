@@ -16,8 +16,6 @@ export interface Tier {
   annualFee: number; initiationFee: number; termMonths: number;
   notes: string; active: boolean;
   _count?: { memberships: number };
-  /** Build (Memberships data 1): dues paid this calendar year, the number Revenue shows as Membership dues. */
-  duesThisYearCents?: number | null;
 }
 export interface Member {
   id: string; name: string; email: string; phone: string;
@@ -39,6 +37,10 @@ export interface Member {
   memberNumber?: string | null;
   photoUrl?: string | null;
 }
+
+/** Build (Memberships data 1, agreed 2026-11-16): GET /api/operator/members → duesThisYear — what the course kept
+ *  from dues since Jan 1 course time (cards less the 1%, less refunds), by membership; null without money.payments. */
+export type DuesThisYear = { year: number; totalCents: number; byTier: { tierId: string; cents: number }[] } | null;
 
 export type DuesKind = 'comped' | 'unpaid' | 'expired' | 'renewing' | 'paid' | 'inactive';
 export type Dues = { kind: DuesKind; label: string; tone: 'ok' | 'warn' | 'bad' | 'neutral' };
