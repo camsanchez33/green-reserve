@@ -1,4 +1,4 @@
-// @brain pro-shop
+// @brain shop-service-fee
 // SHOP-FEE-1 (Cam 2026-11-16): whether GreenReserve's 1% service fee on card
 // pro-shop items applies to a course. Server only.
 //
