@@ -44,7 +44,8 @@ export async function afterDuesPaid(membershipId: string, paid: { amountCents: n
   const m = await prisma.courseMembership.findUnique({ where: { id: membershipId }, select: { inviteName: true, inviteEmail: true, expiresAt: true, membershipType: true, tier: { select: { name: true } }, course: { select: { name: true } }, golfer: { select: { email: true } } } });
   if (!m) return;
   const to = m.golfer?.email || m.inviteEmail;
-  if (to) await sendMembershipReceiptEmail({ name: m.inviteName, email: to, courseName: m.course.name, tierName: m.tier?.name ?? m.membershipType, amountPaid: paid.amountCents / 100, serviceFee: paid.feeCents / 100, expiresAt: m.expiresAt });
+  // The receipt failing never costs the welcome (it is sent once).
+  if (to) await sendMembershipReceiptEmail({ name: m.inviteName, email: to, courseName: m.course.name, tierName: m.tier?.name ?? m.membershipType, amountPaid: paid.amountCents / 100, serviceFee: paid.feeCents / 100, expiresAt: m.expiresAt }).catch(err => console.error(JSON.stringify({ ev: 'membership.receipt_email_fail', membershipId, error: err instanceof Error ? err.message : String(err) })));
   await welcomeIfFirst(membershipId, paid.firstPayment);
 }
 
