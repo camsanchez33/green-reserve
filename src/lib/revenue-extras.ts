@@ -164,6 +164,147 @@ export async function howPaid(courseId: string, tz: string, range: { from: strin
   return howPaidOf(rows);
 }
 
+// ─── Every segment, by payment day (the chart, "vs the period before", how it was paid) ───
+
+export type SegmentSplit = { teeCents: number; cartCents: number; shopCents: number; fnbCents: number; eventCents: number; duesCents: number; otherCents: number };
+
+export type AllSegments = {
+  bucket: 'day' | 'week';
+  /** Money in (the course's part: amount less GreenReserve's fee). The page's one Revenue figure for these dates. */
+  grossCents: number;
+  /** Money given back (the course's part). */
+  refundsCents: number;
+  /** grossCents − refundsCents. */
+  netCents: number;
+  /** What the money in was for; sums to grossCents. */
+  segments: SegmentSplit;
+  /** How the money in was paid; sums to grossCents. */
+  paid: { onlineCents: number; readerCents: number; cashCents: number; otherCents: number };
+  /** Money in over the same length of time just before. */
+  beforeGrossCents: number;
+  /** Money in each day (or Monday-start week), oldest first, empty ones included. */
+  series: { key: string; cents: number }[];
+  /** Money in by weekday (0 = Sunday), with how many of that weekday are over (today and later left out). */
+  byDow: { dow: number; cents: number; days: number }[];
+  /** Money in by course-local hour of payment. */
+  byHour: { hour: number; cents: number }[];
+};
+
+const dowOf = (d: string) => new Date(d + 'T12:00:00Z').getUTCDay();
+const weekOf = (d: string) => addDaysStr(d, -((dowOf(d) + 6) % 7));
+
+/** Pure: split an amount by weights; the remainder (rounding) goes to the largest share. */
+export function splitBy<K extends string>(cents: number, weights: Record<K, number>): Record<K, number> {
+  const keys = Object.keys(weights) as K[];
+  const total = keys.reduce((s, k) => s + Math.max(0, weights[k]), 0);
+  const out = Object.fromEntries(keys.map(k => [k, 0])) as Record<K, number>;
+  if (total <= 0 || !keys.length) return out;
+  let given = 0, big = keys[0];
+  for (const k of keys) { out[k] = Math.floor(cents * Math.max(0, weights[k]) / total); given += out[k]; if (weights[k] > weights[big]) big = k; }
+  out[big] += cents - given;
+  return out;
+}
+
+/** One ledger row as allOf reads it: where it falls, how it was paid, and what it was for (already split). */
+export type AllRow = { day: string; minute: number; method: string; direction: string; amountCents: number; platformFeeCents: number; split: Partial<SegmentSplit> };
+
+/**
+ * Pure: every figure on one basis — the ledger by payment day, the course's part (GreenReserve's fee
+ * out), sales tax in as the ledger has it, dues in. Money in is the Revenue; money out is Refunds.
+ */
+export function allOf(rows: AllRow[], range: { from: string; to: string }, today: string, beforeGrossCents: number): AllSegments {
+  const bucket: AllSegments['bucket'] = daysBetween(range.from, range.to) > 45 ? 'week' : 'day';
+  const keyOf = (d: string) => (bucket === 'week' ? weekOf(d) : d);
+  const series = new Map<string, number>();
+  for (let d = range.from; d <= range.to; d = addDaysStr(d, 1)) series.set(keyOf(d), series.get(keyOf(d)) ?? 0);
+  const dow = Array.from({ length: 7 }, (_, i) => ({ dow: i, cents: 0, days: 0 }));
+  for (let d = range.from; d <= range.to; d = addDaysStr(d, 1)) if (d < today) dow[dowOf(d)].days++;
+  const hour = new Map<number, number>();
+  const seg: SegmentSplit = { teeCents: 0, cartCents: 0, shopCents: 0, fnbCents: 0, eventCents: 0, duesCents: 0, otherCents: 0 };
+  const paid = { onlineCents: 0, readerCents: 0, cashCents: 0, otherCents: 0 };
+  let gross = 0, refunds = 0;
+  for (const r of rows) {
+    if (r.day < range.from || r.day > range.to) continue;
+    const v = r.amountCents - r.platformFeeCents;
+    if (r.direction === 'out') { refunds += v; continue; }
+    gross += v;
+    for (const [k, c] of Object.entries(r.split) as [keyof SegmentSplit, number][]) seg[k] += c;
+    if (r.method === 'card') paid.onlineCents += v; else if (r.method === 'card_present') paid.readerCents += v; else if (r.method === 'cash') paid.cashCents += v; else paid.otherCents += v;
+    series.set(keyOf(r.day), (series.get(keyOf(r.day)) ?? 0) + v);
+    if (r.day < today) dow[dowOf(r.day)].cents += v;
+    const h = Math.floor(r.minute / 60);
+    hour.set(h, (hour.get(h) ?? 0) + v);
+  }
+  return {
+    bucket, grossCents: gross, refundsCents: refunds, netCents: gross - refunds, segments: seg, paid, beforeGrossCents,
+    series: [...series.entries()].map(([key, cents]) => ({ key, cents })),
+    byDow: dow,
+    byHour: [...hour.entries()].sort((a, b) => a[0] - b[0]).map(([h, cents]) => ({ hour: h, cents })),
+  };
+}
+
+type Move = { what: string; direction: string; amountCents: number; platformFeeCents: number; bookingId: string | null; saleId: string | null };
+type BookingParts = { greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number; shopTaxCents: number | null; shopItems: { unitPriceCents: number; quantity: number; taxCategory: string; shopItem: { category: string } | null }[] };
+type SaleParts = { taxCents: number; lines: { unitPriceCents: number; quantity: number; returnedQty: number; bookingId: string | null; shopItem: { category: string; taxCategory: string } | null }[] };
+
+/**
+ * Pure: what one ledger row's money in was for. A round is split by its booking's green fee (with range
+ * balls), cart and items on it (F&B apart, tax with the items); a register sale by its lines (a round paid
+ * at the register is tee); late-cancel, no-show and hold money is tee; events and dues their own; else other.
+ */
+export function splitOf(m: Move, booking: BookingParts | undefined, sale: SaleParts | undefined): Partial<SegmentSplit> {
+  const v = m.amountCents - m.platformFeeCents;
+  if (m.direction !== 'in') return {};
+  if (m.what === 'round' && booking) {
+    const fnb = booking.shopItems.filter(i => isFnb(i.taxCategory, i.shopItem?.category)).reduce((s, i) => s + i.unitPriceCents * i.quantity, 0);
+    const items = booking.shopItems.reduce((s, i) => s + i.unitPriceCents * i.quantity, 0);
+    const tax = booking.shopTaxCents ?? 0;
+    const taxF = items > 0 ? Math.round(tax * fnb / items) : 0;
+    const p = splitBy(v, { teeCents: booking.greenFeeTotal + booking.rangeBallsTotal, cartCents: booking.cartFeeTotal, fnbCents: fnb + taxF, shopCents: items - fnb + (tax - taxF) });
+    return p.teeCents + p.cartCents + p.fnbCents + p.shopCents === v ? p : { teeCents: v };
+  }
+  if (m.what === 'shop' && sale) {
+    // The shop row is the items only: a round settled on the same sale is its own 'round' row
+    // (shop-sales createSale). The row is the original payment, so weight by what was sold, not
+    // what is left after returns (a return is its own row out).
+    const w = { fnbCents: 0, shopCents: 0 };
+    for (const l of sale.lines) {
+      if (l.bookingId) continue;
+      const c = l.unitPriceCents * l.quantity;
+      if (isFnb(l.shopItem?.taxCategory, l.shopItem?.category)) w.fnbCents += c; else w.shopCents += c;
+    }
+    const items = w.fnbCents + w.shopCents;
+    if (items > 0 && sale.taxCents) { const tf = Math.round(sale.taxCents * w.fnbCents / items); w.fnbCents += tf; w.shopCents += sale.taxCents - tf; }
+    const p = splitBy(v, w);
+    return p.fnbCents + p.shopCents === v ? p : { shopCents: v };
+  }
+  if (m.what === 'round' || m.what === 'late_fee' || m.what === 'no_show_fee' || m.what === 'hold') return { teeCents: v };
+  if (m.what === 'shop') return { shopCents: v };
+  if (m.what === 'event') return { eventCents: v };
+  if (m.what === 'dues') return { duesCents: v };
+  return { otherCents: v };
+}
+
+export async function allSegments(courseId: string, tz: string, range: { from: string; to: string }, before: { from: string; to: string }, now: Date = new Date()): Promise<AllSegments> {
+  // Dues are in here (the Ledger's Revenue has them); only the course's own account.
+  const where = (r: { from: string; to: string }) => ({ courseId, account: 'course', at: { gte: dayStart(tz, r.from), lt: dayStart(tz, addDaysStr(r.to, 1)) } });
+  const [rows, prevIn] = await Promise.all([
+    prisma.moneyMove.findMany({ where: where(range), select: { at: true, what: true, method: true, direction: true, amountCents: true, platformFeeCents: true, bookingId: true, saleId: true } }),
+    prisma.moneyMove.findMany({ where: { ...where(before), direction: 'in' }, select: { amountCents: true, platformFeeCents: true } }),
+  ]);
+  const bookingIds = [...new Set(rows.filter(r => r.direction === 'in' && r.what === 'round' && r.bookingId).map(r => r.bookingId!))];
+  const saleIds = [...new Set(rows.filter(r => r.direction === 'in' && r.what === 'shop' && r.saleId).map(r => r.saleId!))];
+  const [bookings, sales] = await Promise.all([
+    bookingIds.length ? prisma.booking.findMany({ where: { courseId, id: { in: bookingIds } }, select: { id: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, shopTaxCents: true, shopItems: { select: { unitPriceCents: true, quantity: true, taxCategory: true, shopItem: { select: { category: true } } } } } }) : [],
+    saleIds.length ? prisma.shopSale.findMany({ where: { courseId, id: { in: saleIds } }, select: { id: true, taxCents: true, lines: { select: { unitPriceCents: true, quantity: true, returnedQty: true, bookingId: true, shopItem: { select: { category: true, taxCategory: true } } } } } }) : [],
+  ]);
+  const B = new Map(bookings.map(b => [b.id, b])), S = new Map(sales.map(x => [x.id, x]));
+  return allOf(
+    rows.map(r => ({ ...r, ...localDayMinute(tz, r.at), split: splitOf(r, r.bookingId ? B.get(r.bookingId) : undefined, r.saleId ? S.get(r.saleId) : undefined) })),
+    range, todayIn(tz, now), prevIn.reduce((s, r) => s + r.amountCents - r.platformFeeCents, 0),
+  );
+}
+
 // ─── Stripe mismatch, per payment ───────────────────────────────────────────
 
 export type DiffKind = 'refund_in_stripe' | 'not_in_stripe' | 'not_here' | 'amount_differs' | 'other_day' | 'stripe_adjustment';

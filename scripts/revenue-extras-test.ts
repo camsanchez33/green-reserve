@@ -1,7 +1,7 @@
 // Revenue page (Cam 2026-11-15): the pure parts of lib/revenue-extras — today against the
 // 30-day average by time of day, Food & beverage, how it was paid, and the per-payment
 // Stripe difference. Pure. Run: npx tsx scripts/revenue-extras-test.ts
-import { lineOf, isFnb, fnbPart, howPaidOf, diffItems, segmentsOf, localDayMinute, type Side } from '../src/lib/revenue-extras';
+import { allOf, splitOf, splitBy, lineOf, isFnb, fnbPart, howPaidOf, diffItems, segmentsOf, localDayMinute, type Side } from '../src/lib/revenue-extras';
 
 let failed = 0;
 const ok = (l: string, c: boolean, d: unknown = '') => { console.log(`${c ? 'PASS' : 'FAIL'}  ${l}${c ? '' : ' — ' + JSON.stringify(d)}`); if (!c) failed++; };
@@ -64,6 +64,56 @@ const hp = howPaidOf([
 ok('online is card not at a reader, less GreenReserve’s fee and less what went back', hp.onlineCents === 5000);
 ok('reader, cash and other each their own', hp.readerCents === 2000 && hp.cashCents === 1000 && hp.otherCents === 500);
 ok('the total adds up', hp.totalCents === 8500);
+
+// ── Every segment by payment day ──
+{
+  const r = (day: string, minute: number, method: string, amountCents: number, direction = 'in', platformFeeCents = 0, split: Record<string, number> = { teeCents: amountCents - platformFeeCents }) => ({ day, minute, method, direction, amountCents, platformFeeCents, split });
+  const A = allOf([
+    r('2026-11-09', 8 * 60 + 5, 'card', 5150, 'in', 150, { teeCents: 4000, cartCents: 1000 }), r('2026-11-09', 9 * 60, 'cash', 1000, 'in', 0, { fnbCents: 1000 }),
+    r('2026-11-10', 14 * 60, 'card_present', 2000, 'in', 0, { shopCents: 2000 }), r('2026-11-10', 15 * 60, 'card', 500, 'out', 0, {}),
+    r('2026-11-15', 7 * 60, 'cash', 700, 'in', 0, { duesCents: 700 }), r('2026-11-01', 7 * 60, 'cash', 99_999),
+  ], { from: '2026-11-09', to: '2026-11-15' }, '2026-11-15', 4200);
+  ok('Revenue is money in, the course’s part; refunds their own line; net after', A.grossCents === 5000 + 1000 + 2000 + 700 && A.refundsCents === 500 && A.netCents === A.grossCents - 500, A);
+  const segSum = Object.values(A.segments).reduce((x, y) => x + y, 0), paidSum = Object.values(A.paid).reduce((x, y) => x + y, 0);
+  ok('what was sold and how it was paid both add up to Revenue', segSum === A.grossCents && paidSum === A.grossCents, [A.segments, A.paid]);
+  ok('…by segment, dues included', A.segments.teeCents === 4000 && A.segments.cartCents === 1000 && A.segments.fnbCents === 1000 && A.segments.shopCents === 2000 && A.segments.duesCents === 700);
+  ok('a week by day, money in, oldest first', A.bucket === 'day' && A.series.length === 7 && A.series[0].cents === 6000 && A.series[1].cents === 2000, A.series);
+  ok('by weekday leaves today out', A.byDow[0].days === 0 && A.byDow[0].cents === 0 && A.byDow[1].days === 1 && A.byDow[1].cents === 6000, A.byDow);
+  ok('by hour of payment, money in', JSON.stringify(A.byHour) === JSON.stringify([{ hour: 7, cents: 700 }, { hour: 8, cents: 5000 }, { hour: 9, cents: 1000 }, { hour: 14, cents: 2000 }]), A.byHour);
+  ok('the period before is passed through', A.beforeGrossCents === 4200);
+  const F = allOf([r('2026-11-16', 600, 'cash', 100)], { from: '2026-11-09', to: '2026-11-22' }, '2026-11-15', 0);
+  ok('days still to come never dilute a weekday average', F.byDow.every(x => x.days <= 1) && F.byDow[1].days === 1 && F.byDow[1].cents === 0, F.byDow);
+  const W = allOf([], { from: '2026-08-01', to: '2026-11-15' }, '2026-11-15', 0);
+  ok('a long range is by Monday-start week', W.bucket === 'week' && W.series[0].key === '2026-07-27' && W.series.every(x => dowOf(x.key) === 1), W.series.slice(0, 2));
+
+  // What one row was for.
+  const bk = { greenFeeTotal: 8000, cartFeeTotal: 2000, rangeBallsTotal: 0, shopTaxCents: 60, shopItems: [{ unitPriceCents: 500, quantity: 2, taxCategory: 'general', shopItem: { category: 'Drinks' } }, { unitPriceCents: 1000, quantity: 1, taxCategory: 'general', shopItem: { category: 'Balls' } }] };
+  const sp = splitOf({ what: 'round', direction: 'in', amountCents: 12360, platformFeeCents: 300, bookingId: 'b', saleId: null }, bk, undefined);
+  ok('a round splits by its booking: tee, cart, F&B and shop with their tax', sp.teeCents === 8000 && sp.cartCents === 2000 && sp.fnbCents === 1030 && sp.shopCents === 1030, sp);
+  const part = splitOf({ what: 'round', direction: 'in', amountCents: 5000, platformFeeCents: 0, bookingId: 'b', saleId: null }, bk, undefined);
+  ok('a part payment splits in proportion and adds up exactly', Object.values(part).reduce((x, y) => x + (y ?? 0), 0) === 5000, part);
+  const sl = splitOf({ what: 'shop', direction: 'in', amountCents: 3240, platformFeeCents: 0, bookingId: null, saleId: 's' }, undefined, { taxCents: 240, lines: [
+    { unitPriceCents: 1000, quantity: 1, returnedQty: 0, bookingId: null, shopItem: { category: 'Food', taxCategory: 'food' } },
+    { unitPriceCents: 2000, quantity: 1, returnedQty: 0, bookingId: null, shopItem: { category: 'Balls', taxCategory: 'general' } }] });
+  ok('a register sale splits by its lines, tax with them', sl.fnbCents === 1080 && sl.shopCents === 2160, sl);
+  // The real register shape (final review): a $50 round and a $5 hot dog on one sale are two ledger rows — the round
+  // (split by its booking) and the items only ($5.33 with tax). The shop row never carries the round's money.
+  const regSale = { taxCents: 33, lines: [{ unitPriceCents: 5000, quantity: 1, returnedQty: 0, bookingId: 'b', shopItem: null }, { unitPriceCents: 500, quantity: 1, returnedQty: 0, bookingId: null, shopItem: { category: 'Grill', taxCategory: 'food' } }] };
+  const regShop = splitOf({ what: 'shop', direction: 'in', amountCents: 533, platformFeeCents: 0, bookingId: null, saleId: 's' }, undefined, regSale);
+  ok('a register sale with a round: the items row is all F&B, no tee', regShop.fnbCents === 533 && !regShop.teeCents, regShop);
+  const regRound = splitOf({ what: 'round', direction: 'in', amountCents: 5000, platformFeeCents: 0, bookingId: 'b', saleId: 's' }, { greenFeeTotal: 5000, cartFeeTotal: 0, rangeBallsTotal: 0, shopTaxCents: 0, shopItems: [] }, undefined);
+  ok('…and the round row is tee', regRound.teeCents === 5000, regRound);
+  const ret = splitOf({ what: 'shop', direction: 'in', amountCents: 5500, platformFeeCents: 0, bookingId: null, saleId: 's' }, undefined, { taxCents: 0, lines: [
+    { unitPriceCents: 5000, quantity: 1, returnedQty: 1, bookingId: null, shopItem: { category: 'Apparel', taxCategory: 'clothing' } },
+    { unitPriceCents: 500, quantity: 1, returnedQty: 0, bookingId: null, shopItem: { category: 'Grill', taxCategory: 'food' } }] });
+  ok('a returned line still counts in the original payment (the return is its own row out)', ret.shopCents === 5000 && ret.fnbCents === 500, ret);
+  ok('late-cancel fee is tee; dues, events their own; money out splits nothing', splitOf({ what: 'late_fee', direction: 'in', amountCents: 1000, platformFeeCents: 0, bookingId: null, saleId: null }, undefined, undefined).teeCents === 1000
+    && splitOf({ what: 'dues', direction: 'in', amountCents: 9000, platformFeeCents: 90, bookingId: null, saleId: null }, undefined, undefined).duesCents === 8910
+    && splitOf({ what: 'event', direction: 'in', amountCents: 9000, platformFeeCents: 0, bookingId: null, saleId: null }, undefined, undefined).eventCents === 9000
+    && Object.keys(splitOf({ what: 'round', direction: 'out', amountCents: 9000, platformFeeCents: 0, bookingId: null, saleId: null }, undefined, undefined)).length === 0);
+  ok('splitBy hands the rounding remainder to the largest share', JSON.stringify(splitBy(100, { a: 1, b: 1, c: 1 })) === JSON.stringify({ a: 34, b: 33, c: 33 }));
+}
+function dowOf(d: string) { return new Date(d + 'T12:00:00Z').getUTCDay(); }
 
 // ── Stripe difference, per payment ──
 const day = '2026-11-04';
