@@ -42,7 +42,10 @@ async function cleanup() {
   const list = read('src/components/dashboard/DeclinedCardList.tsx');
   ok('no Text pay link; Email pay link, Open in place, Remove', !list.includes("via: 'sms'") && list.includes("via: 'email'") && list.includes("aria-expanded={isOpen}") && list.includes('/api/operator/declined'));
   const page = read('src/app/dashboard/money/page.tsx'), sales = read('src/components/dashboard/money/SalesPanel.tsx');
-  ok('Stripe\'s own button; no reload', page.includes('<StripeButton') && !page.includes('aria-label="Refresh"'));
+  // Revenue page (Cam 2026-11-15): Stripe's button is the logo square on Payouts; still no reload button anywhere on the page.
+  const payoutsTab = read('src/components/dashboard/money/revenue/PayoutsTab.tsx');
+  const revenueFiles = ['Top.tsx', 'PayoutsTab.tsx', 'PaymentsTab.tsx', 'LedgerTab.tsx', 'CancellationsTab.tsx', 'PendingPayments.tsx'].map(f => read(`src/components/dashboard/money/revenue/${f}`));
+  ok('Stripe\'s own button; no reload', payoutsTab.includes('<StripeSquare') && ![page, ...revenueFiles].some(s => s.includes('aria-label="Refresh"')));
   ok('the dates\' total is labelled "Collected"; charts are tabs', sales.includes('>Collected</span>') && sales.includes("['dow', 'Day of week']") && sales.includes("['hour', 'Time of day']"));
   ok('one card: what was sold and how it was paid; the drawer is one line', sales.includes('What was sold') && sales.includes('How it was paid') && sales.includes('Last close-out'));
   ok('GreenReserve\'s own fees are not listed on the course\'s Money page', !sales.includes('GreenReserve booking fees') && !read('src/components/dashboard/money/PayoutsPanel.tsx').includes('passed to GreenReserve'));

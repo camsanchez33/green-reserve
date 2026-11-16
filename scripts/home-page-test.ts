@@ -50,7 +50,8 @@ const cond = read('src/lib/course-conditions.ts');
 ok('conditions (HOME-3): cart path, greens, pins, each with a detail line golfers see too', cond.includes('...(c.lines ?? [])') && cond.includes('c.notes?.[f.key]') && board.includes('HOME_CONDITIONS.map') && board.includes('Detail (optional)'));
 
 // Cam 2026-11-06: "Action needed" on Home and Money; the conditions editor lines up and its suggestions read as shortcuts.
-ok('"Action needed", not "Needs you", on Home and Money', home.includes('>Action needed</h2>') && read('src/app/dashboard/money/page.tsx').includes('>Action needed</h2>') && !home.includes('>Needs you</h2>'));
+// REVENUE-1 (Cam 2026-11-15, approved mockup): on Revenue the same money owed is "Pending payments".
+ok('"Action needed", not "Needs you", on Home; "Pending payments" on Revenue', home.includes('>Action needed</h2>') && read('src/app/dashboard/money/page.tsx').includes('<PendingPayments') && read('src/components/dashboard/money/revenue/PendingPayments.tsx').includes('>Pending payments</h3>') && !home.includes('>Needs you</h2>'));
 ok('conditions editor: label above, equal options', board.includes('repeat(${options(f.key).length}, minmax(0, 1fr))'));
 
 // SHEET-3 (Cam 2026-11-06, the tee sheet notes): quiet actions, one shape for every day number (groups moved up),

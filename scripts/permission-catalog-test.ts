@@ -24,7 +24,7 @@ ok('…as does a requested set naming it', !(normalizePermissions(['money.charge
 
 const panel = readFileSync('src/components/dashboard/money/PayoutsPanel.tsx', 'utf8');
 const money = readFileSync('src/app/dashboard/money/page.tsx', 'utf8');
-ok('staff never get a Connect with Stripe button (that route refuses them)', panel.includes('{canConnect ? (') && money.includes('canConnect={!treatAsStaff}'));
+ok('staff never get a Connect with Stripe button (that route refuses them)', panel.includes('{canConnect ? (') && money.includes('canConnect={!access.isStaff}'));
 
 if (failed) { console.error(`${failed} failed`); process.exit(1); }
 console.log('permission-catalog: all passed');
