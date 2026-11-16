@@ -15,6 +15,7 @@ import { stepUpFetch } from '@/lib/step-up-client';
 import { useConfirm } from '../employees/TeamDialogs';
 import g from '../admin-glass.module.css';
 import gs from './goals.module.css';
+import { GOALS_LEAD, LOAD_NETWORK, REMOVE_TITLE, REMOVE_BODY, REMOVE_NETWORK, ADD_EMPTY, ADD_NETWORK, MARK_TITLE } from './terms';
 import { type Goal, type Metric, type Tone, METRICS, metricLabel, fmt, dueDay, goalView } from './logic';
 
 const ICON = { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round' as const, 'aria-hidden': true };
@@ -47,13 +48,13 @@ export default function AdminGoalsPage() {
       const res = await adminFetch<{ goals: Goal[]; canEdit: boolean }>('/api/admin/goals', { subject: 'goals' });
       if (!res.ok) { setLoadError({ msg: res.message, kind: res.kind }); return; }
       setGoals(res.data.goals); setCanEdit(!!res.data.canEdit); setNow(Date.now()); setLoadError(null);
-    } catch { setLoadError({ msg: 'Network error — couldn’t load goals. Check your connection and try again.', kind: 'network' }); }
+    } catch { setLoadError({ msg: LOAD_NETWORK, kind: 'network' }); }
     finally { setLoading(false); }
   }, []);
   useEffect(() => { load(); }, [load]);
 
   async function remove(goal: Goal) {
-    const yes = await ask('Remove this goal?', 'It’s gone for good. Asks you to confirm it’s you first.', 'Remove');
+    const yes = await ask(REMOVE_TITLE, REMOVE_BODY, 'Remove');
     if (!yes) return;
     setRemoving(goal.id); setRemoveError(e => ({ ...e, [goal.id]: '' }));
     try {
@@ -62,7 +63,7 @@ export default function AdminGoalsPage() {
       if (!r.ok) setRemoveError(e => ({ ...e, [goal.id]: d.error || `Couldn’t remove it (${r.status}).` }));
       else { say('Goal removed.'); await load(); }
     } catch {
-      setRemoveError(e => ({ ...e, [goal.id]: 'Network error — nothing was removed.' }));
+      setRemoveError(e => ({ ...e, [goal.id]: REMOVE_NETWORK }));
     }
     setRemoving(null);
   }
@@ -77,7 +78,7 @@ export default function AdminGoalsPage() {
         </div>
         <div className={gs.bar} role="img" aria-label={`${v.progress}${v.markPct !== undefined ? `; should be at ${v.markPct}% by today` : ''}`}>
           <i className={`${gs.fill} ${v.tone === 'early' ? '' : gs[v.tone]}`} style={{ width: `${v.pct}%` }} />
-          {v.markPct !== undefined && <em className={gs.mark} style={{ left: `${v.markPct}%` }} title="Where it should be by today" />}
+          {v.markPct !== undefined && <em className={gs.mark} style={{ left: `${v.markPct}%` }} title={MARK_TITLE} />}
         </div>
         <div className={gs.meta}>
           <span className={gs.word}><span className={`${s.dot} ${toneClass(v.tone)}`} aria-hidden="true" />{v.word}</span>
@@ -119,7 +120,7 @@ export default function AdminGoalsPage() {
         )}
         {!loadError && (
           <div className={s.col}>
-            <ProfileCard title="Goals" labelId="gl-goals" lead="What GreenReserve is aiming for, and whether it’s on pace."
+            <ProfileCard title="Goals" labelId="gl-goals" lead={GOALS_LEAD}
               top={canEdit ? <button type="button" className={s.plus} onClick={() => setAdding(true)} aria-label="Add a goal" title="Add a goal"><svg {...ICON}><path d="M12 5v14M5 12h14" /></svg></button> : undefined}>
               {!goals && loading && <p className={gs.empty}>Loading…</p>}
               {goals && running.length === 0 && <p className={gs.empty}>No goals yet.</p>}
@@ -160,7 +161,7 @@ function AddGoal({ onClose, onAdded }: { onClose: () => void; onAdded: () => voi
 
   async function add(e: React.FormEvent) {
     e.preventDefault();
-    if (!target.trim() || !dueDate) { setError('Add a target and a date.'); return; }
+    if (!target.trim() || !dueDate) { setError(ADD_EMPTY); return; }
     setBusy(true); setError('');
     try {
       const r = await fetch('/api/admin/goals', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ metric, target, dueDate }) });
@@ -169,7 +170,7 @@ function AddGoal({ onClose, onAdded }: { onClose: () => void; onAdded: () => voi
       setBusy(false);
       await onAdded();
     } catch {
-      setError('Network error — the goal wasn’t saved. Try again.');
+      setError(ADD_NETWORK);
       setBusy(false);
     }
   }

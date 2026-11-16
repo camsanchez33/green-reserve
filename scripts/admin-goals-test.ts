@@ -53,7 +53,7 @@ check('fmt counts', fmt('count', 2000) === '2,000');
 const page = readFileSync('src/app/admin/goals/page.tsx', 'utf8');
 check('same GET', /adminFetch<[^>]+>\('\/api\/admin\/goals'/.test(page));
 check('same POST and body', /fetch\('\/api\/admin\/goals', \{ method: 'POST'/.test(page) && /JSON\.stringify\(\{ metric, target, dueDate \}\)/.test(page));
-check('remove: confirm first, then the step-up DELETE', /await ask\('Remove this goal\?'/.test(page) && /stepUpFetch\(`\/api\/admin\/goals\?id=\$\{encodeURIComponent\(goal\.id\)\}`, \{ method: 'DELETE' \}\)/.test(page));
+check('remove: confirm first, then the step-up DELETE', /await ask\(REMOVE_TITLE/.test(page) && /stepUpFetch\(`\/api\/admin\/goals\?id=\$\{encodeURIComponent\(goal\.id\)\}`, \{ method: 'DELETE' \}\)/.test(page));
 check('add and remove only when the API says canEdit', /top=\{canEdit \?/.test(page) && /\{canEdit && <button[^\n]*remove\(goal\)/.test(page));
 check('reached / missed go to Finished', /title="Finished"/.test(page) && /x\.status === 'met' \|\| x\.status === 'missed'/.test(page));
 check('My profile’s card build', /<ProfileCard title="Goals"/.test(page));

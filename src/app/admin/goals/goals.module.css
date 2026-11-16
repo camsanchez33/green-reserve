@@ -16,7 +16,7 @@
 
 .meta { display: flex; gap: 14px; font-size: 12.5px; color: var(--g-muted); flex-wrap: wrap; }
 .word { display: inline-flex; align-items: center; gap: 6px; color: var(--g-ink-soft); }
-.word .dot { flex: none; }
+.word > span:first-child { flex: none; }
 
 .boxes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 4px; }
 .boxes > div { border: 1px solid var(--g-line); border-radius: 10px; padding: 8px 10px; min-width: 0; }
@@ -25,7 +25,7 @@
 @media (max-width: 900px) { .boxes { grid-template-columns: 1fr 1fr; } }
 
 .acts { display: flex; justify-content: flex-end; align-items: center; gap: 12px; }
-.acts .msg { margin: 0 auto 0 0; }
+.acts > p { margin: 0 auto 0 0; }   /* ProfileCard's Msg */
 
 .empty { margin: 10px 0 0; font-size: 13px; color: var(--g-muted); }
 .problem { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 12px 14px; font-size: 13.5px; color: var(--g-down); max-width: 1080px; }
