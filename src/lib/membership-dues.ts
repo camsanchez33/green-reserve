@@ -135,3 +135,13 @@ export async function markDuesPaidAtCourse(courseId: string, membershipId: strin
   await recordMove({ courseId, what, direction: 'in', method: method === 'cash' ? 'cash' : 'other', account: 'course', amountCents: takenCents, membershipId, actor: 'staff', note: method === 'check' ? 'check at the course' : 'cash at the course' });
   return { ok: true };
 }
+
+/**
+ * Memberships item 4: whether this membership's payments so far were season passes only (a 'pass' in on the ledger, no
+ * 'dues' in). A pass's payment is not a membership's first dues — on a membership the initiation is still owed, so
+ * every path that puts such a row on a membership clears lastPaidAt (the ledger keeps the payments).
+ */
+export async function paidOnlyPasses(membershipId: string, courseId: string): Promise<boolean> {
+  const rows = await prisma.moneyMove.findMany({ where: { membershipId, courseId, direction: 'in', what: { in: ['dues', 'pass'] } }, select: { what: true }, distinct: ['what'] });
+  return rows.some(r => r.what === 'pass') && !rows.some(r => r.what === 'dues');
+}

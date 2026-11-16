@@ -6,7 +6,7 @@ import { resolveDashboardSession, requirePermission, can } from '@/lib/session';
 import { todayIn } from '@/lib/course-time';
 import { memberRoundStats } from '@/lib/member-stats';
 import { randomUUID } from 'crypto';
-import { markDuesPaidAtCourse, amountsDue } from '@/lib/membership-dues';
+import { markDuesPaidAtCourse, amountsDue, paidOnlyPasses } from '@/lib/membership-dues';
 import { requireRegisterOpen } from '@/lib/register-open';
 import { duesThisYear } from '@/lib/dues-year';
 import { assignMemberNumber, nextMemberNumber } from '@/lib/member-number';
@@ -317,7 +317,7 @@ export async function PATCH(req: NextRequest) {
   const stayTier = membership.tier;
   const c = await prisma.course.findUnique({ where: { id: session.courseId }, select: { timezone: true } });
   const passRule = passMemberChange({
-    membership: { ...membership, onPassTier: isPassTier(membership.tier), paidDuesBefore: !!(await prisma.moneyMove.findFirst({ where: { membershipId: id, courseId: session.courseId, what: 'dues', direction: 'in' }, select: { id: true } })), paying: !!membership.duesReaderId || (!!membership.duesChargeStartedAt && Date.now() - membership.duesChargeStartedAt.getTime() < 10 * 60_000) },
+    membership: { ...membership, onPassTier: isPassTier(membership.tier), onlyPassesPaid: await paidOnlyPasses(id, session.courseId), paying: !!membership.duesReaderId || (!!membership.duesChargeStartedAt && Date.now() - membership.duesChargeStartedAt.getTime() < 10 * 60_000) },
     expiresAt: expiresAt === undefined ? undefined : expiresAt ? new Date(expiresAt) : null,
     status,
     move: moving && newTier ? { tier: newTier, owes: amountsDue({ lastPaidAt: null, initiationWaived: membership.initiationWaived, tier: newTier }).duesCents > 0 } : null,

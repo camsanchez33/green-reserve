@@ -18,6 +18,7 @@ import { randomUUID } from 'crypto';
 import { prisma } from './prisma';
 import { maybeSendPayLink, NOT_SENT } from './membership-pay-link';
 import { termOf, passOnSale, PASS_OVER } from './season-pass';
+import { paidOnlyPasses } from './membership-dues';
 import { todayIn } from './course-time';
 
 export type JoinMode = 'off' | 'instant' | 'request';
@@ -85,11 +86,11 @@ export async function joinTier(courseId: string, golfer: { id: string; email: st
   const reuse = old ?? (endedPass && mine ? { id: mine.id, status: mine.status, passStartsOn: mine.passStartsOn } : null);
   // Unpaid until paid: an old pass's dates come off (paying records the new term's — lib/membership-dues recordPaidTerm).
   // A pass's payment is not a membership's first dues: moving from a pass to a membership, the initiation fee is owed
-  // unless membership dues were ever paid on this row (lastPaidAt cleared — the ledger keeps the pass's payment).
+  // when the row has only ever paid for passes (the ledger: lib/membership-dues paidOnlyPasses; lastPaidAt cleared).
   const wasPass = !!reuse && reuse.passStartsOn !== null;
-  const paidDuesBefore = !!reuse && !!(await prisma.moneyMove.findFirst({ where: { membershipId: reuse.id, courseId, what: 'dues', direction: 'in' }, select: { id: true } }));
+  const onlyPassesPaid = !!reuse && await paidOnlyPasses(reuse.id, courseId);
   const data = { tierId: tier.id, status, addedBy: 'online', inviteEmail: email, inviteName: golfer.name.slice(0, 120), invitePhone: golfer.phone.slice(0, 30), inviteAccepted: true, payToken: randomUUID(), paymentStatus: 'unpaid', passStartsOn: null,
-    ...(wasPass ? { expiresAt: null } : {}), ...(wasPass && tier.kind !== 'pass' && !paidDuesBefore ? { lastPaidAt: null, startedAt: null } : {}) };
+    ...(wasPass ? { expiresAt: null } : {}), ...(tier.kind !== 'pass' && onlyPassesPaid ? { lastPaidAt: null, startedAt: null } : {}) };
   if (old?.status === 'inactive') return fail(409, 'Your membership here was paused by the course — contact them to turn it back on.');
   // Audit 2026-10-31: a membership staff added by email and paused before the golfer ever linked it
   // has no golferId — it is found by its email, and refused the same way.

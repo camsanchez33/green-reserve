@@ -102,12 +102,12 @@ const no = (status: number, error: string): Fail => ({ ok: false, status, error 
  * Staff editing one membership (members PATCH): the season-pass rules, pure so they are tested
  * (scripts/season-pass-db-test.ts). A pass ends on its end date (Cam), so its end date isn't typed; it is a member only
  * once paid, so an unpaid one isn't switched on by hand; a move onto or off a pass is a new purchase — only once nothing
- * paid is running, and it then waits for its payment. Moving from a pass to a membership, the initiation is owed unless
- * membership dues were ever paid on it (lastPaidAt cleared — the ledger keeps the pass's payment). `owes…` come from
- * amountsDue in the route; `paidDuesBefore` from the ledger (a 'dues' payment in on this membership).
+ * paid is running, and it then waits for its payment. Onto a membership, the initiation is owed when the row has only
+ * ever paid for passes (lastPaidAt cleared — the ledger keeps the payments), whatever tier it is on now. `owes…` come
+ * from amountsDue in the route; `onlyPassesPaid` from the ledger (lib/membership-dues paidOnlyPasses).
  */
 export function passMemberChange(o: {
-  membership: { status: string; paymentStatus: string; expiresAt: Date | null; passStartsOn: string | null; onPassTier: boolean; paying: boolean; paidDuesBefore: boolean };
+  membership: { status: string; paymentStatus: string; expiresAt: Date | null; passStartsOn: string | null; onPassTier: boolean; paying: boolean; onlyPassesPaid: boolean };
   /** The end date sent (undefined = not sent, null = cleared). */
   expiresAt: Date | null | undefined;
   /** The status sent, if any. */
@@ -123,6 +123,7 @@ export function passMemberChange(o: {
   if (onPass && o.expiresAt !== undefined && (o.expiresAt?.getTime() ?? null) !== (m.expiresAt?.getTime() ?? null)) {
     return no(409, 'A season pass ends on its end date — change the pass’s dates instead.');
   }
+  const fresh = { lastPaidAt: null, startedAt: null };
   if (o.move && (onPass || isPassTier(o.move.tier))) {
     const toPass = isPassTier(o.move.tier);
     if (termRunning(m, o.today)) return no(409, `This ${onPass ? 'season pass' : 'membership'} is paid and still running — it has to end before they move ${toPass ? 'onto a season pass' : 'off the season pass'}.`);
@@ -132,8 +133,11 @@ export function passMemberChange(o: {
       if (!passOnSale(termOf(o.move.tier), o.today)) return no(409, PASS_OVER);
       return { ok: true, data: passStart(o.move.tier, o.move.owes) };
     }
-    return { ok: true, data: { status: o.move.owes ? 'awaiting_payment' : 'active', paymentStatus: 'unpaid', passStartsOn: null, expiresAt: null, ...(m.paidDuesBefore ? {} : { lastPaidAt: null, startedAt: null }) } };
+    return { ok: true, data: { status: o.move.owes ? 'awaiting_payment' : 'active', paymentStatus: 'unpaid', passStartsOn: null, expiresAt: null, ...(m.onlyPassesPaid ? fresh : {}) } };
   }
+  // A move between memberships from a row that only ever paid for passes (its pass tier archived, an unpaid pass): the
+  // initiation is still owed.
+  if (o.move && m.onlyPassesPaid && !isPassTier(o.move.tier)) return { ok: true, data: fresh };
   if (!o.move && o.status === 'active' && m.status !== 'active' && o.stay.isPass && m.passStartsOn === null && o.stay.owes) {
     return no(409, 'Take the payment for the season pass first — it starts once it’s paid.');
   }

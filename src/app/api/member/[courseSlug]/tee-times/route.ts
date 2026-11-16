@@ -29,7 +29,7 @@ export async function GET(
     if (course.id !== session.courseId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     membershipId = session.membershipId;
   } else {
-    const golferMembership = await getGolferMembership(course.id, course, date);
+    const golferMembership = await (await getGolferMembership(course.id, course, date)) ?? (await getGolferMembership(course.id, course));
     if (!golferMembership) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     membershipId = golferMembership.membershipId;
   }
