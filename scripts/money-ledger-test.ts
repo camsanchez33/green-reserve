@@ -51,9 +51,11 @@ for (const f of ['src/lib/member-statements.ts', 'src/lib/membership-autorenew.t
 ok('dues taken at the course write the ledger', /what: 'dues', direction: 'in', method: method === 'cash' \? 'cash' : 'other'/.test(code('src/lib/membership-dues.ts')) && code('src/app/api/operator/members/route.ts').includes('markDuesPaidAtCourse('));
 ok('the webhook mirrors Stripe-dashboard refunds and dispute money', /charge\.dispute\.funds_withdrawn/.test(code('src/app/api/stripe/webhook/route.ts')) && /mirrorMove\(/.test(code('src/app/api/stripe/webhook/route.ts')));
 ok('the ledger is cleared by the launch wipe and the test-course reset', WIPED_TABLES.includes('MoneyMove') && /moneyMove\.deleteMany/.test(code('src/lib/data-reset.ts')));
-const dues = code('src/app/api/membership/[id]/route.ts');
+// Memberships item 1: the pay link's charge moved to lib/dues-payment (shared with staff typing a card).
+const dues = code('src/app/api/membership/[id]/route.ts') + code('src/lib/dues-payment.ts');
 ok('dues are no longer charged inside a database transaction', !/\$transaction/.test(dues) && /duesChargeStartedAt/.test(dues));
-ok('…the ledger is written before the term is recorded', dues.indexOf("what: 'dues'") > 0 && dues.indexOf("what: 'dues'") < dues.indexOf('recordPaidTerm(') && /lastPaymentIntentId: paymentIntentId/.test(code('src/lib/membership-dues.ts')));
+{ const lib = code('src/lib/dues-payment.ts'), reader = code('src/lib/dues-reader.ts');
+ok('…the ledger is written before the term is recorded (typed card and card reader)', lib.indexOf("what: 'dues'") > 0 && lib.indexOf("what: 'dues'") < lib.indexOf('recordPaidTerm(') && reader.indexOf("what: 'dues'") > 0 && reader.indexOf("what: 'dues'") < reader.indexOf('recordPaidTerm(') && /lastPaymentIntentId: paymentIntentId/.test(code('src/lib/membership-dues.ts'))); }
 
 {
   const day = 86_400_000, t = Date.now(), paidLong = new Date(t - 5 * day);

@@ -538,6 +538,10 @@ model CourseMembership {
   /// MEM-ACCT hardening (Cam 2026-10-31): the ONE PaymentIntent for the term being paid — the pay link and
   /// the automatic renewal confirm the same one (lib/stripe chargeOneIntent). Cleared when the term is recorded.
   duesIntentId           String          @default("")
+  /// Memberships item 1 (Cam 2026-11-16): the card reader the dues are on while staff take them at the course
+  /// ("" = not on a reader). Set with the claim (duesChargeStartedAt); duesIntentId then holds the reader's
+  /// card_present intent. Every other dues payment refuses while it is set (lib/dues-reader).
+  duesReaderId           String          @default("")
   renewalRemindedAt      DateTime?
   /// MEM-RENEW: renew automatically on the saved card (lib/membership-autorenew). Only ever turned on
   /// by the golfer ticking the box when they pay; turned off by them or by staff.

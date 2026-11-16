@@ -81,8 +81,8 @@ export async function markDuesPaidAtCourse(courseId: string, membershipId: strin
   const method = input.method === 'check' ? 'check' : input.method === 'cash' || input.method === undefined ? 'cash' : null;
   if (!method) return fail(400, 'Say whether it was cash or a check.');
 
-  const claimed = await prisma.courseMembership.updateMany({ where: { id: membershipId, courseId, OR: [{ duesChargeStartedAt: null }, { duesChargeStartedAt: { lt: new Date(now.getTime() - STALE_MS) } }] }, data: { duesChargeStartedAt: now } });
-  if (!claimed.count) return fail(409, 'A card payment for these dues is going through — wait a few minutes.');
+  const claimed = await prisma.courseMembership.updateMany({ where: { id: membershipId, courseId, duesReaderId: '', OR: [{ duesChargeStartedAt: null }, { duesChargeStartedAt: { lt: new Date(now.getTime() - STALE_MS) } }] }, data: { duesChargeStartedAt: now } });
+  if (!claimed.count) return fail(409, membership.duesReaderId ? 'These dues are on the card reader — finish or cancel it first.' : 'A card payment for these dues is going through — wait a few minutes.');
   const release = () => prisma.courseMembership.updateMany({ where: { id: membershipId, duesChargeStartedAt: now }, data: { duesChargeStartedAt: null } });
   const fresh = await prisma.courseMembership.findUniqueOrThrow({ where: { id: membershipId }, select: { duesIntentId: true } });
   if (fresh.duesIntentId && membership.course.stripeAccountId) {
