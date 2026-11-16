@@ -42,14 +42,15 @@ export async function agreementVersionsOverview(): Promise<VersionRow[]> {
   const rows = await prisma.agreementVersion.findMany();
   const out: VersionRow[] = [];
   for (const document of Object.keys(DOCUMENT_DIR) as AgreementDocument[]) {
-    listVersions(document).forEach((version, i) => {
+    const current = currentVersion(document);
+    listVersions(document).forEach(version => {
       const doc = loadDocument(document, version);
       const row = rows.find(r => r.document === document && r.version === version);
       out.push({
-        document, version, title: doc.title, current: i === 0,
+        document, version, title: doc.title, current: version === current,
         reacceptRequired: doc.reacceptRequired, counselReviewed: doc.counselReviewed, counselWaived: doc.counselWaived,
         changeSummary: doc.changeSummary,
-        blocked: seedGateError(doc) ?? reacceptPublishError(document, version, doc.reacceptRequired, listVersions(document)[0]) ?? '',
+        blocked: seedGateError(doc) ?? reacceptPublishError(document, version, doc.reacceptRequired, current) ?? '',
         published: row ? {
           effectiveAt: row.effectiveAt.toISOString(), reacceptBy: row.reacceptBy?.toISOString() ?? null,
           noticeSentAt: row.noticeSentAt?.toISOString() ?? null, hashMatches: row.textHash === doc.hash,

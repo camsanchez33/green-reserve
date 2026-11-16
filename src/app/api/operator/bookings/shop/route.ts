@@ -5,7 +5,7 @@ import { ensureShopTax } from '@/lib/round-shop-tax';
 
 // POS-1a: add pro-shop items to a group's booking from the tee sheet panel, or
 // take one off. They are charged with the round (check-in or the pay link) with
-// GreenReserve's $0.50 per sale. Like check-in, this is a counter action, not
+// GreenReserve's 1% service fee when paid by card (SHOP-FEE-1). Like check-in, this is a counter action, not
 // course configuration, so it keeps working past an agreement deadline.
 
 async function gate() {

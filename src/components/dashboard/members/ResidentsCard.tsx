@@ -23,7 +23,7 @@ function todayYmd() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-export function ResidentsCard({ canEdit }: { canEdit: boolean }) {
+export function ResidentsCard({ canEdit, initialSearch = '' }: { canEdit: boolean; initialSearch?: string }) {
   const [rows, setRows] = useState<Resident[] | null>(null);
   const [hasRate, setHasRate] = useState(true);
   // GRP-1: one list for every course in the group.
@@ -33,7 +33,8 @@ export function ResidentsCard({ canEdit }: { canEdit: boolean }) {
   const [form, setForm] = useState<Form>(EMPTY);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [search, setSearch] = useState('');
+  // A resident found with the dashboard search opens Memberships at ?q= with this list narrowed to them.
+  const [search, setSearch] = useState(initialSearch);
 
   const load = useCallback(async () => {
     setLoadError('');
@@ -130,7 +131,7 @@ export function ResidentsCard({ canEdit }: { canEdit: boolean }) {
       {formView}
       {rows && rows.length > 0 && (
         <div className="flex items-center gap-3 px-4 py-2.5 border-y border-line-soft">
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Find a resident" aria-label="Find a resident" className={INPUT_COMPACT + ' !w-56'} />
+          <input value={search} onChange={e => setSearch(e.target.value)} aria-label="Find a resident" className={INPUT_COMPACT + ' !w-56'} />
           <span className="ml-auto text-[12.5px] text-ink-muted">{shown.length} of {rows.length}</span>
         </div>
       )}

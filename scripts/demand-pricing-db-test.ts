@@ -72,6 +72,16 @@ async function cleanup() {
   await prisma.course.update({ where: { id: c.id }, data: { demandMode: 'auto' } });
   ok('automatic: the suggestions become the prices — 10 points this week', (await refreshDemand(c.id)) === 'applied' && (await prisma.demandPrice.count({ where: { courseId: c.id, hour: 8, pct: 10 } })) === 7 && (await prisma.demandPrice.count({ where: { courseId: c.id, hour: 15, pct: -10 } })) === 7);
   ok('…and 10 more the next', (await refreshDemand(c.id)) === 'applied' && (await prisma.demandPrice.count({ where: { courseId: c.id, hour: 8, pct: 20 } })) === 7 && (await prisma.demandPrice.count({ where: { courseId: c.id, hour: 15, pct: -20 } })) === 7);
+  // Platform activity review: the cron claims the week, so an overlapping second run never steps twice.
+  await prisma.course.update({ where: { id: c.id }, data: { demandSuggestedAt: null } });
+  await prisma.demandPrice.updateMany({ where: { courseId: c.id }, data: { pct: 0 } });
+  const [r1, r2] = await Promise.all([refreshDemand(c.id, new Date(), { claim: true }), refreshDemand(c.id, new Date(), { claim: true })]);
+  ok('two overlapping cron runs: one applies, the other finds the week taken', [r1, r2].sort().join() === 'applied,not_due' && (await prisma.demandPrice.count({ where: { courseId: c.id, hour: 8, pct: 10 } })) === 7, [r1, r2]);
+  ok('…and a run inside the week is not due', (await refreshDemand(c.id, new Date(), { claim: true })) === 'not_due' && (await prisma.demandPrice.count({ where: { courseId: c.id, hour: 8, pct: 10 } })) === 7);
+  await prisma.course.update({ where: { id: c.id }, data: { demandSuggestedAt: new Date(Date.now() - 8 * 86_400_000), demandMode: 'suggest' } });
+  await prisma.demandPrice.updateMany({ where: { courseId: c.id, hour: 8 }, data: { pct: 20 } });
+  await prisma.demandPrice.updateMany({ where: { courseId: c.id, hour: 15 }, data: { pct: -20 } });
+  await prisma.course.update({ where: { id: c.id }, data: { demandMode: 'auto' } });
 
   // Online prices.
   const course = await prisma.course.findUniqueOrThrow({ where: { id: c.id } });
@@ -115,7 +125,7 @@ async function cleanup() {
   ok('the resident-rate check too', readFileSync('src/app/api/bookings/resident-rate/route.ts', 'utf8').includes('Math.min(pub, dealRateSeat('));
   const counter = readFileSync('src/lib/counter-pay.ts', 'utf8');
   ok('counter pricing never reads demand', !/demand/i.test(counter));
-  ok('the daily cron works out the weekly suggestions', readFileSync('src/app/api/cron/generate-tee-times/route.ts', 'utf8').includes('refreshDemand(c.id)'));
+  ok('the daily cron works out the weekly suggestions', readFileSync('src/app/api/cron/generate-tee-times/route.ts', 'utf8').includes('refreshDemand(c.id, new Date(), { claim: true })'));
   const api = readFileSync('src/app/api/operator/demand-pricing/route.ts', 'utf8');
   ok('the settings: schedule.view to read, schedule.edit to change', api.includes("gate('schedule.view')") && (api.match(/gate\('schedule\.edit'\)/g) ?? []).length === 2);
 

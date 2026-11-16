@@ -19,7 +19,8 @@ ok('17: the sheet re-reads every 30s while in front, never mid-action', sheet.in
 ok('17: a background read never wipes the sheet on a failure', sheet.includes('if (!r.ok) { if (quiet) return;'));
 
 // 21. Members: dues and editing.
-const members = src('src/app/dashboard/members/page.tsx');
+// Memberships (Cam 2026-11-16): these moved from the Members row to the member's card.
+const members = src('src/components/dashboard/members/MemberCard.tsx');
 const route = src('src/app/api/operator/members/route.ts');
 ok('21: Paid at the shop and Email dues link on members who owe', members.includes("action: 'mark_paid'") && members.includes("action: 'send_pay_link'") && members.includes('Paid at the shop'));
 ok('21: a member can be edited after adding — an invite\'s contact, never a linked account\'s', members.includes('Edit details') && route.includes('if (membership.golferId) return NextResponse.json({ error: \'This member signs in with their own account'));

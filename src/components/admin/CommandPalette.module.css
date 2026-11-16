@@ -1,0 +1,21 @@
+/* The search palette (Platform activity mockup, Cam 2026-11-15): green glass on the admin tokens (--g-*), groups with
+   a small icon each, no placeholder words, one footer line. Opens from the top bar search or Ctrl K. */
+.ov { position: fixed; inset: 0; z-index: 70; background: rgba(4, 12, 9, .6); display: flex; justify-content: center; align-items: flex-start; padding: 84px 20px 20px; }
+.pal { width: min(620px, 100%); max-height: 480px; display: flex; flex-direction: column; overflow: hidden; color: var(--g-ink);
+  background: var(--g-panel-solid); border: 1px solid var(--g-edge); border-radius: var(--g-radius); box-shadow: var(--g-shadow); }
+.pin { display: flex; align-items: center; gap: 10px; padding: 0 16px; height: 46px; border-bottom: 1px solid var(--g-line); color: var(--g-muted); flex: none; }
+.pin input { flex: 1; min-width: 0; font: inherit; font-size: 14.5px; color: var(--g-ink); background: transparent; border: 0; outline: none; }
+.pin kbd { font: inherit; font-size: 11.5px; border: 1px solid var(--g-line); border-radius: 6px; padding: 1px 6px; color: var(--g-muted); }
+.body { overflow-y: auto; padding: 6px; }
+.pg { font-size: 12px; font-weight: 600; color: var(--g-muted); padding: 10px 10px 4px; }
+.pi { width: 100%; font: inherit; text-align: left; background: none; border: 0; display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 9px 10px; border-radius: 9px; cursor: pointer; font-size: 13.5px; color: var(--g-ink); }
+.pi.on { background: var(--g-hover); }
+.pi:focus-visible { outline: 2px solid var(--g-focus); outline-offset: -2px; }
+.t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
+.m { font-size: 12.5px; color: var(--g-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px; }
+.empty { padding: 28px 12px; text-align: center; font-size: 13.5px; color: var(--g-muted); }
+.bad { color: var(--g-down); }
+.answer { max-height: 60vh; overflow-y: auto; padding: 12px 16px; font-size: 13.5px; line-height: 1.55; display: flex; flex-direction: column; gap: 8px; }
+.askedRow { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+.link { font: inherit; font-size: 12.5px; background: none; border: 0; padding: 0; color: var(--g-ink); text-decoration: underline; text-decoration-color: var(--g-focus); text-underline-offset: 3px; cursor: pointer; }
+.foot { flex: none; border-top: 1px solid var(--g-line); padding: 8px 16px; font-size: 12px; color: var(--g-muted); }

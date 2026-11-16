@@ -1,0 +1,51 @@
+/* Settings → Goals (Cam approved the mockup 2026-11-16, lanes/admin/goals-mockup.html). The cards are My profile's
+   (ProfileCard, owner-profile.module.css); this holds only what a goal row and the Add a goal box add.
+   Green-glass tokens (--g-*) from ../admin-glass.module.css. */
+
+.goal { padding: 14px 0; border-top: 1px solid var(--g-line); display: flex; flex-direction: column; gap: 8px; color: var(--g-ink); }
+.goal:first-child { border-top: 0; }
+.gh { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+.gh b { display: block; font-weight: 600; font-size: 14.5px; }
+.gh small { display: block; font-size: 12.5px; color: var(--g-muted); margin-top: 2px; }
+.pct { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.bar { position: relative; height: 8px; border-radius: 4px; background: var(--g-line); }
+.fill { display: block; height: 100%; border-radius: 4px; background: var(--g-muted); }
+.fill.ok { background: var(--g-up); } .fill.warn { background: var(--g-warn); } .fill.bad { background: var(--g-down); }
+.mark { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; background: var(--g-ink); border-radius: 1px; opacity: .7; }
+
+.meta { display: flex; gap: 14px; font-size: 12.5px; color: var(--g-muted); flex-wrap: wrap; }
+.word { display: inline-flex; align-items: center; gap: 6px; color: var(--g-ink-soft); }
+.word > span:first-child { flex: none; }
+
+.boxes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 4px; }
+.boxes > div { border: 1px solid var(--g-line); border-radius: 10px; padding: 8px 10px; min-width: 0; }
+.boxes small { display: block; font-size: 11.5px; color: var(--g-muted); }
+.boxes b { display: block; font-weight: 600; font-size: 14px; margin-top: 2px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+@media (max-width: 900px) { .boxes { grid-template-columns: 1fr 1fr; } }
+
+.acts { display: flex; justify-content: flex-end; align-items: center; gap: 12px; }
+.acts > p { margin: 0 auto 0 0; }   /* ProfileCard's Msg */
+
+.empty { margin: 10px 0 0; font-size: 13px; color: var(--g-muted); }
+.problem { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 12px 14px; font-size: 13.5px; color: var(--g-down); max-width: 1080px; }
+
+/* Add a goal: three tiles in a row (a radio), then target and date. */
+.wideModal { width: min(640px, 100%); max-height: calc(100dvh - 40px); overflow: auto; box-sizing: border-box; color: var(--g-ink); }
+.lab { font-size: 12.5px; color: var(--g-muted); }
+.tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+@media (max-width: 900px) { .tiles { grid-template-columns: minmax(0, 1fr); } }
+.tile { font: inherit; color: var(--g-ink); text-align: left; display: flex; gap: 12px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--g-line); border-radius: 12px; background: var(--g-hover); cursor: pointer; }
+.tile i { flex: none; width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--g-muted); margin-top: 2px; box-sizing: content-box; }
+.tile[aria-checked="true"] { border-color: var(--g-ink); }
+.tile[aria-checked="true"] i { border: 5px solid var(--g-ink); margin: -1.5px -3.5px 0 -3.5px; }
+.tile b { display: block; font-weight: 600; font-size: 13.5px; }
+.tile small { display: block; font-size: 12px; color: var(--g-muted); margin-top: 2px; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.two label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--g-ink-soft); }
+.two input { width: 100%; background: color-mix(in srgb, var(--g-bg) 55%, transparent); color-scheme: dark; }   /* the mockup's darker field, as Team's */
+@media (max-width: 900px) { .two { grid-template-columns: minmax(0, 1fr); } }
+.spring { flex: 1; }
+.tile:focus-visible { outline: 2px solid var(--g-focus); outline-offset: 1px; }
+
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--g-panel-solid); border: 1px solid var(--g-edge); box-shadow: var(--g-shadow); padding: 10px 16px; border-radius: 12px; font-size: 13.5px; color: var(--g-ink); z-index: 45; }

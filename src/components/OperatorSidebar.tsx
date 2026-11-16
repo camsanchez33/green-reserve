@@ -137,7 +137,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     // W2-9 (Cam 2026-10-22): the Tournaments and Outings placeholders became one Events tab.
     { key: 'events',        label: 'Events',       href: '/dashboard/events',        icon: <Flag className="w-4 h-4"/> },
     { key: 'schedule',      label: 'Schedule',     href: '/dashboard/schedules',     icon: <Clock className="w-4 h-4"/> },
-    { key: 'members',       label: 'Members',      href: '/dashboard/members',       icon: <Users className="w-4 h-4"/> },
+    { key: 'members',       label: 'Memberships',  href: '/dashboard/members',       icon: <Users className="w-4 h-4"/> },
     // SD-8: Payments + Cancellations + Payouts are one page. A login that can
     // only see cancellations gets the item named for what it shows.
     { key: 'money',         label: moneyOnlyCancellations ? 'Cancellations' : 'Money',

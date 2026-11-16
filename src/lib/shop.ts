@@ -1,9 +1,12 @@
 // @brain pro-shop
 // POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): the pro-shop catalog and
 // items added to a round. Items are charged WITH the round — at check-in or on
-// the golfer's pay link — plus GreenReserve's fee: $0.50 per sale ("per sale
-// not item"), paid by the golfer ("our whole thing is free for course"), taken
-// as part of the same charge's application fee.
+// the golfer's pay link — plus GreenReserve's fee, paid by the golfer ("our
+// whole thing is free for course"), taken as part of the same charge's
+// application fee. SHOP-FEE-1 (Cam 2026-11-16): the fee is 1% of the items
+// before tax (it was $0.50 per sale), only on a card payment, only for a course
+// on an Operator Agreement version that names it (lib/shop-fee.ts). Paid at the
+// counter or on a member's account, settleAtCounter sets it to 0.
 //
 // Booking.totalAmount stays the ROUND's own price everywhere (revenue, partial
 // party, moves). The card charge for a round is roundChargeCents(): the round
@@ -12,17 +15,21 @@
 import { prisma } from './prisma';
 import { notifyLowStock } from './low-stock';
 import type { Prisma } from '@prisma/client';
-import { SHOP_SALE_FEE_CENTS, SHOP_FEE_ON, feeCoveredCents, roundChargeCents } from './booking-fees';
+import { feeCoveredCents, roundChargeCents, shopServiceFeeCents } from './booking-fees';
+import { shopFeeOn } from './shop-fee';
 
-export { SHOP_SALE_FEE_CENTS, SHOP_FEE_ON };
 export const MAX_ITEM_PRICE_CENTS = 1_000_000; // $10,000 — a typo guard, not a business rule
 export const MAX_LINE_QUANTITY = 99;
 /** Most shop items one booking can carry ($10,000) — a typo / abuse guard. */
 export const MAX_BOOKING_SHOP_CENTS = 1_000_000;
 
-/** GreenReserve's fee on a round's shop items: one sale per booking — 0 while SHOP_FEE_ON is off. */
-export function shopFeeFor(shopTotalCents: number, on: boolean = SHOP_FEE_ON): number {
-  return on && shopTotalCents > 0 ? SHOP_SALE_FEE_CENTS : 0;
+/**
+ * SHOP-FEE-1: GreenReserve's fee on a round's shop items when the round is paid
+ * by card — 1% of the items (before tax; never of the round) when the course is
+ * on (lib/shop-fee.ts), else 0. The $1.50 per player is accessFeeTotal, apart.
+ */
+export function shopFeeFor(shopTotalCents: number, on: boolean): number {
+  return on ? shopServiceFeeCents(shopTotalCents) : 0;
 }
 
 // roundChargeCents moved to ./booking-fees (no Prisma) so the tee sheet's List can show the same figure (LIST-2).
@@ -77,11 +84,12 @@ export async function takeStock(tx: Prisma.TransactionClient, shopItemId: string
 }
 
 /** Re-total a booking's shop lines onto the booking. Call inside the write's transaction. */
-async function retotal(tx: Prisma.TransactionClient, bookingId: string) {
+async function retotal(tx: Prisma.TransactionClient, courseId: string, bookingId: string) {
   const lines = await tx.bookingShopItem.findMany({ where: { bookingId }, select: { unitPriceCents: true, quantity: true } });
   const shopTotalCents = lines.reduce((s, l) => s + l.unitPriceCents * l.quantity, 0);
   if (shopTotalCents > MAX_BOOKING_SHOP_CENTS) throw new ShopCapError();
-  const shopFeeCents = shopFeeFor(shopTotalCents);
+  // SHOP-FEE-1: the card price of the items. Paid at the counter, settleAtCounter zeroes it.
+  const shopFeeCents = shopFeeFor(shopTotalCents, shopTotalCents > 0 && await shopFeeOn(courseId, tx));
   await tx.booking.update({ where: { id: bookingId }, data: { shopTotalCents, shopFeeCents } });
   return { shopTotalCents, shopFeeCents };
 }
@@ -120,7 +128,7 @@ export async function addItemToBooking(courseId: string, bookingId: string, shop
     if (item._count.options > 0) return { ok: false, status: 400, error: 'Pick a size or color for that item.' } as const;
     await tx.bookingShopItem.create({ data: { bookingId, shopItemId: item.id, name: item.name, unitPriceCents: item.priceCents, quantity, addedBy, taxCategory: item.taxCategory } });
     await takeStock(tx, item.id, quantity);
-    return { ok: true, ...(await retotal(tx, bookingId)) } as const;
+    return { ok: true, ...(await retotal(tx, courseId, bookingId)) } as const;
   }).catch(e => { if (e instanceof ShopCapError) return CAP_RESULT; throw e; });
   // Low-stock email (Cam 2026-11-15): after the commit; never throws, so it never undoes the add.
   if (r.ok) await notifyLowStock(courseId);
@@ -139,7 +147,7 @@ export async function removeLineFromBooking(courseId: string, bookingId: string,
     if (!line) return { ok: false, status: 404, error: 'That item is not on this booking.' } as const;
     await tx.bookingShopItem.delete({ where: { id: lineId } });
     if (line.shopItemId) await takeStock(tx, line.shopItemId, -line.quantity);
-    return { ok: true, ...(await retotal(tx, bookingId)) } as const;
+    return { ok: true, ...(await retotal(tx, courseId, bookingId)) } as const;
   });
 }
 
