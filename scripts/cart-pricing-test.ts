@@ -60,7 +60,7 @@ ok('the golfer page is told the rule', read('src/lib/normalize-course.ts').inclu
 const settings = read('src/app/api/operator/settings/route.ts');
 ok('Settings: owner only, and only the two values', settings.includes("if (session.isStaff && 'cartPricing' in body)") && read('src/lib/settings-validation.ts').includes("cartPricing: ['per_player', 'per_cart'],"));
 ok('Settings page: the choice, read-only for staff', read('src/app/dashboard/settings/page.tsx').includes('<option value="per_cart">Per cart (2 riders)</option>') && read('src/app/dashboard/settings/page.tsx').includes("'counterMemberRate', 'cartPricing', 'timezone', 'type'];"));
-ok('the schedule names its cart cell by the rule', read('src/app/dashboard/schedules/page.tsx').includes("perCart ? 'Cart, per cart (2 riders)' : 'Cart, per rider'"));
+ok('the schedule names its cart cell by the rule', read('src/components/dashboard/schedule/HoursPrices.tsx').includes("perCart ? 'Cart, per cart (2 riders)' : 'Cart, per rider'"));
 ok('the migration only adds', /ADD COLUMN "cartPricing" TEXT NOT NULL DEFAULT 'per_player'/.test(read('prisma/migrations/20261106010000_cart_pricing/migration.sql')) && !/DROP|ALTER COLUMN|UPDATE/.test(read('prisma/migrations/20261106010000_cart_pricing/migration.sql')));
 
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);

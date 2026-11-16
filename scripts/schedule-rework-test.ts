@@ -38,17 +38,20 @@ check('a booked or blocked time the schedule dropped is kept', p.bookedKept === 
 check('an unchanged open time is not counted', diffDay([row('07:00', 5500)], desiredSlots(mon, [{ ...base, endTime: '07:00' }], [])).added === 0);
 
 const page = readFileSync('src/app/dashboard/schedules/page.tsx', 'utf8');
+const rounds = readFileSync('src/components/dashboard/schedule/BookableRounds.tsx', 'utf8');
+const hp = readFileSync('src/components/dashboard/schedule/HoursPrices.tsx', 'utf8');
+const closedDays = readFileSync('src/components/dashboard/schedule/ClosedDays.tsx', 'utf8');
 check('no Apply-to-tee-sheet button', !page.includes('Apply to tee sheet') && !page.includes('regenerate-tee-times'));
 // W2-6 simplification: one save for the whole page, and only after the preview has answered.
 check('every save shows the preview first', page.includes("JSON.stringify({ op: 'course', plan })") && page.includes('/api/operator/schedule/preview') && page.includes("disabled={busy || !pending.preview || !!pending.preview.refusal}"));
-check('open hours, what golfers can book, what it costs, closed days', ['>Hours and prices</h2>', '>What golfers can book</h2>', '>Closed days</h2>'].every(h => page.includes(h)));
+check('bookable rounds, hours and prices, closed days', [rounds, hp, closedDays].every((f, i) => f.includes(['title="Bookable rounds"', 'title="Hours and prices"', 'title="Closed days"'][i])));
 // SCHED-2 (Cam 2026-11-09): tabs, and a set of days is adjusted like a membership — a summary row, Edit opens it.
-check('the page is in tabs, every part kept mounted', page.includes("['hours', 'Hours and prices'], ['deals', 'Deals'], ['demand', 'Demand pricing'], ['closed', 'Closed days'], ['rules', 'Booking rules']") && page.includes("const shownTab = (t: Tab) => tab === t ? '' : 'hidden';"));
+check('the page is in tabs (SCHEDULE-3 order); the plan lives on the page, so unsaved prices survive a tab change', page.includes("[['rounds', 'Bookable rounds'], ['hours', 'Hours and prices'], ['promos', 'Promotions'], ['demand', 'Demand pricing'], ['closed', 'Closed days']") && page.includes('const [plan, setPlan] = useState<CoursePlan | null>(null);'));
 check('Home\'s demand-pricing link opens its tab', page.includes("if (window.location.hash === '#demand-pricing') setTab('demand');"));
-check('one row per set of days with its hours and prices; Edit opens it in place, one at a time', page.includes('{setSummary(d)}') && page.includes('setOpenSet(isOpen ? null : i)') && page.includes('{hoursFields(i, d)}') && page.includes(': priceTable(i, d)}'));
+check('one row per set of days with its line; tapping it opens it in place, one at a time', hp.includes('{setLine(plan, d)}') && hp.includes('setOpen(isOpen ? null : i)') && hp.includes('{isOpen && body(i, d)}') && hp.includes('{priceTable(i, d)}'));
 const demand = readFileSync('src/components/dashboard/DemandPricing.tsx', 'utf8');
 check('demand pricing explains itself from the lib\'s own rules, the modes as choices, a key for the grid', demand.includes('`Looks at the last ${WEEKS_LOOKED_AT} weeks') && demand.includes('at most ${MAX_WEEKLY_STEP} points a week') && demand.includes('role="radiogroup" aria-label="Mode"') && demand.includes('→ suggested'));
-check('price names are automatic and the course can rename them', page.includes('Tap to rename') && page.includes('columnNames(d)'));
+check('price names are automatic and the course can rename them', hp.includes('aria-label={`Edit ${n}`}') && hp.includes('columnNames(d)'));
 const engine = readFileSync('src/lib/tee-sheet-engine.ts', 'utf8');
 check('the generator uses the same desiredSlots as the preview', engine.includes('const desired = desiredSlots(dateStr, schedules, products);'));
 const bo = readFileSync('src/app/api/operator/blackouts/route.ts', 'utf8') + readFileSync('src/lib/blackouts.ts', 'utf8');
@@ -56,13 +59,13 @@ check('reopening a closed day rebuilds it', bo.includes('await generateTeeTimes(
 const prev = readFileSync('src/app/api/operator/schedule/preview/route.ts', 'utf8');
 check('the preview needs the edit permission and writes nothing', prev.includes("requirePermission(session, 'schedule.edit')") && !/prisma\.\w+\.(create|update|delete)/.test(readFileSync('src/lib/schedule-preview.ts', 'utf8')));
 check('rounds are switched on through setRoundSale (prices every column; tested in course-plan-test)', page.includes('setRoundSale(p, key, patch, defaultCell)'));
-check('walking is set per price cell, weekday and weekend (CART-1)', page.includes("label: 'Can walk'") && page.includes('walkPair(key, col)') && !page.includes('Golfers can walk'));
+check('walking is set per price cell, weekday and weekend (CART-1), as a switch', hp.includes('Walking allowed') && hp.includes("sw('walk', 'walkWeekend', we, 'weekday')") && hp.includes("sw('walkWeekend', 'walk', wd, 'weekend')") && !hp.includes('Golfers can walk'));
 // PRICES-1 (Cam 2026-11-04, "one table"): rounds side by side as columns, a row per price; one round at a time on a phone.
-check('prices are one table: a column per round sold (and per price change), a row per price', page.includes('const cols = sold.flatMap(r => names.map((_, col) => ({ key: r.key, col })).filter(c => soldIn(c.key, c.col)));')
-  && page.includes('{subRows.map((sr, k) => (') && page.includes('colSpan={n}'));
-check('…renaming opens one field (keyed by round and price), every price change keeps a header (also one no round reaches), a lone price can be renamed', page.includes("(renaming.key ?? '') === key") && page.includes("periodHead('', col, 'hidden md:table-cell ', true)") && !page.includes('{names.length > 1 && ('));
-check('…a set of days no round is sold on says so', page.includes('if (!groupsOf.length) return'));
-check('…a phone shows one round with a switch', page.includes("const onPhone = (key: string) => key === shown ? '' : 'hidden md:table-cell ';") && page.includes('setPriceRound(r.key)'));
+// SCHEDULE-3 (Cam 2026-11-16): one round at a time, picked like Bookable rounds; a column per time-of-day price, a row per price.
+check('prices: the round picker matches Bookable rounds; a column per time-of-day price, a row per price', hp.includes('const round = sold.find(r => r.key === pick) ?? sold[0];') && hp.includes('{rows.map(r => (') && hp.includes('{names.map((n, col) => ('));
+check('…each price column opens its own pop-up (rename, move its start, remove; the first can be renamed)', hp.includes('setColDraft({ i, col, label: \'own\'') && hp.includes('Remove this price') && hp.includes('setDay(c.i, { firstName: name })'));
+check('…with no round on sale it says so', hp.includes('if (!round) return'));
+check('…a phone scrolls a wide price table sideways', hp.includes('overflow-x-auto border border-line'));
 check('the editor stacks on phones', !page.includes('<div className="grid grid-cols-3 gap-3">'));
 check('closing a day never tries to delete a row with cancelled bookings', bo.includes('bookings: { none: {} }'));
 check('reopening a past day does not regenerate it', bo.includes('if (blackout.date < todayIn(course?.timezone))'));

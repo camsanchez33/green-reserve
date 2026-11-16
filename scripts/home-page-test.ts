@@ -66,7 +66,7 @@ ok('tee sheet: past tee times come first', sheetRows.indexOf('{PAST} · {gone.le
 ok('the homepage demo mirrors the filled cells and the key', read('src/components/home/TeeSheetDemo.tsx').includes('<span><b>In</b>checked in</span>') && read('src/app/home.module.css').includes('.seatPaid { background: #CFE8D6; }'));
 ok('conditions choices wrap on a phone, never cut off', board.includes('whitespace-normal break-words') && !board.includes("text-[13px] truncate ' + (draft"));
 
-ok('the week-ahead link offers demand pricing and lands on it', board.includes('href="/dashboard/schedules#demand-pricing"') && read('src/components/dashboard/DemandPricing.tsx').includes('id="demand-pricing"'));
+ok('the week-ahead link offers demand pricing and lands on it', board.includes('href="/dashboard/schedules#demand-pricing"') && read('src/components/dashboard/schedule/DemandLocked.tsx').includes('id="demand-pricing"'));
 
 {
   const { onCourse } = require('../src/lib/on-course') as typeof import('../src/lib/on-course');

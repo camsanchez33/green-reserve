@@ -43,8 +43,9 @@ async function cleanup() {
   ok('reopening puts the booked time back on sale', !!re && re.reopened === 1 && back.find(t => t.id === booked.id)?.status === 'available', re);
   ok('…but a time staff blocked by hand before the closure stays blocked', back.find(t => t.id === byHand.id)?.status === 'blocked');
 
-  const page = readFileSync('src/app/dashboard/schedules/page.tsx', 'utf8');
-  ok('the schedule page asks before reopening a day', /async function reopenDay[\s\S]{0,300}confirm\(/.test(page));
+  // SCHEDULE-3: Closed days asks in a pop-up ("Open … again?") before reopening, and shows who is booked before closing.
+  const page = readFileSync('src/components/dashboard/schedule/ClosedDays.tsx', 'utf8');
+  ok('the schedule page asks before reopening a day', page.includes('again?`}') && /async function reopen\(\)/.test(page));
   ok('…and shows who is booked before closing one', page.includes('/api/operator/blackouts?date=') && page.includes('Cancel and tell them'));
 
   await cleanup(); await prisma.$disconnect();
