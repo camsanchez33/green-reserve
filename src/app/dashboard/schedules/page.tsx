@@ -9,12 +9,11 @@
 // and save) saves it. Booked rounds keep their price.
 // Hours and prices are Weekdays and Weekends only: a plan stored as one every-day set is shown split into the two
 // (same hours and prices, so nothing changes on the tee sheet until the course edits one).
-// Booking rules: the lane file moves it to Settings, but Settings has no per-round rules yet, so the tab stays,
-// holding only those (the booking windows already live in Settings) — listed in the PR for Build.
+// Booking rules: no tab. The course's own rules are in Settings; a round's own rules (fewest and most players, days
+// ahead) are in that round's edit pop-up on Bookable rounds (Cam 2026-11-16, "when editing it it all is together").
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
-import RoundRulesCard, { type RoundRules, type CourseRules } from '@/components/dashboard/RoundRulesCard';
 import { StaffNotice } from '@/components/dashboard/StaffNotice';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { LoadError } from '@/components/dashboard/LoadError';
@@ -22,7 +21,7 @@ import { toast } from '@/components/dashboard/Toast';
 import { Card } from '@/components/ui/Card';
 import { SlidingTabs } from '@/components/dashboard/SlidingTabs';
 import { LastMinuteDeals } from '@/components/dashboard/LastMinuteDeals';
-import { BookableRounds, type NineRow, type PageRound } from '@/components/dashboard/schedule/BookableRounds';
+import { BookableRounds, type NineRow, type PageRound, type Rules, type CourseRules } from '@/components/dashboard/schedule/BookableRounds';
 import { HoursPrices, isWeekendSet } from '@/components/dashboard/schedule/HoursPrices';
 import { Promotions } from '@/components/dashboard/schedule/Promotions';
 import { DemandLocked } from '@/components/dashboard/schedule/DemandLocked';
@@ -38,7 +37,7 @@ type Row = {
   seniorRateWeekday?: number | null; juniorRateWeekday?: number | null;
   cartFee: number; walkingAllowed: boolean; active: boolean;
 };
-type ProductOpt = { id: string; label: string; holes: number; nineIds: string[]; active: boolean } & RoundRules;
+type ProductOpt = { id: string; label: string; holes: number; nineIds: string[]; active: boolean } & Rules;
 type Preview = { days: number; added: number; removed: number; repriced: number; bookedKept: number; refusal?: string | null; warnings?: string[] };
 type Pending = { preview: Preview | null; error: string };
 
@@ -63,7 +62,7 @@ function splitWeek(p: CoursePlan): CoursePlan {
   return { ...p, different: [...p.different, { ...JSON.parse(JSON.stringify(p.usual)), days: [6, 0] }] };
 }
 
-type Tab = 'rounds' | 'hours' | 'promos' | 'demand' | 'closed' | 'rules';
+type Tab = 'rounds' | 'hours' | 'promos' | 'demand' | 'closed';
 
 export default function SchedulesPage() {
   const pageAccess = useDashboardAccess();
@@ -86,7 +85,6 @@ export default function SchedulesPage() {
   const [productsError, setProductsError] = useState('');
   const [productsLoaded, setProductsLoaded] = useState(false);
   const [nines, setNines] = useState<NineRow[]>([]);
-  const [rulesView, setRulesView] = useState('');
   const [blackouts, setBlackouts] = useState<Blackout[]>([]);
   const [blackoutError, setBlackoutError] = useState('');
   const [publicAdvanceDays, setPublicAdvanceDays] = useState<number | null>(null);
@@ -131,8 +129,8 @@ export default function SchedulesPage() {
   const activeProducts = products.filter(p => p.active);
   // What golfers can book: the course's live rounds, or the course as a whole when it has none (the server's planRounds).
   const rounds: PageRound[] = activeProducts.length
-    ? activeProducts.map(p => ({ key: p.id, label: p.label, holes: p.holes, nineIds: p.nineIds ?? [] }))
-    : [{ key: '', label: 'Tee times', holes: courseHoles, nineIds: [] }];
+    ? activeProducts.map(p => ({ key: p.id, label: p.label, holes: p.holes, nineIds: p.nineIds ?? [], minPlayers: p.minPlayers ?? null, maxPlayers: p.maxPlayers ?? null, publicAdvanceDays: p.publicAdvanceDays ?? null }))
+    : [{ key: '', label: 'Tee times', holes: courseHoles, nineIds: [], minPlayers: null, maxPlayers: null, publicAdvanceDays: null }];
   const defaultCell = (key: string): PriceCell => {
     const holes = rounds.find(r => r.key === key)?.holes ?? 18;
     return { ...emptyCell(), weekday: holes <= 9 ? 30 : 55, weekend: holes <= 9 ? 35 : 65, cart: holes <= 9 ? 12 : 20, cartWeekend: holes <= 9 ? 12 : 20 };
@@ -166,6 +164,13 @@ export default function SchedulesPage() {
     const r = await dfetch<ProductOpt>('/api/operator/course-products', { method: 'PATCH', body: JSON.stringify({ id: key, ...patch }) });
     if (!r.ok) return r.error;
     setProducts(ps => ps.map(p => (p.id === key ? { ...p, ...r.data } : p)));
+    return null;
+  }
+  /** A round's own booking rules (blank = the course's). Owner only, saved straight away (lib/booking-rules checks them). */
+  async function saveRules(key: string, r: { minPlayers: string; maxPlayers: string; publicAdvanceDays: string }): Promise<string | null> {
+    const res = await dfetch<Rules>('/api/operator/round-rules', { method: 'PUT', body: JSON.stringify({ productId: key, ...r }) });
+    if (!res.ok) return res.error;
+    setProducts(ps => ps.map(p => (p.id === key ? { ...p, minPlayers: res.data.minPlayers ?? null, maxPlayers: res.data.maxPlayers ?? null, publicAdvanceDays: res.data.publicAdvanceDays ?? null } : p)));
     return null;
   }
   async function addRound(a: { label: string; holes: number; nineIds: string[]; from: string | null; to: string | null; existing: string | null }): Promise<string | null> {
@@ -208,8 +213,10 @@ export default function SchedulesPage() {
     </div>
   );
 
-  // The days of the week the schedule sells (Closed days shows those inside the booking window as bookable).
-  const openDows = plan ? [plan.usual, ...plan.different].filter(d => !d.closed).flatMap(d => daysOf(plan, d)) : [];
+  // The days of the week the SAVED schedule sells (Closed days shows those inside the booking window as bookable):
+  // unsaved edits never make a day look bookable before golfers can really book it.
+  const savedPlan: CoursePlan | null = saved ? JSON.parse(saved) : null;
+  const openDows = savedPlan ? [savedPlan.usual, ...savedPlan.different].filter(d => !d.closed).flatMap(d => daysOf(savedPlan, d)) : [];
   const planTab = tab === 'rounds' || tab === 'hours';
 
   return (
@@ -220,7 +227,7 @@ export default function SchedulesPage() {
         <div className="px-4 sm:px-10 py-7 flex flex-col gap-4 min-w-0">
           <h1 className="font-serif text-[34px] leading-none text-ink">Schedule</h1>
           <SlidingTabs<Tab> value={tab} onChange={setTab} label="Schedule" look="pill" className="self-start"
-            tabs={[['rounds', 'Bookable rounds'], ['hours', 'Hours and prices'], ['promos', 'Promotions'], ['demand', 'Demand pricing'], ['closed', 'Closed days'], ['rules', 'Booking rules']]} />
+            tabs={[['rounds', 'Bookable rounds'], ['hours', 'Hours and prices'], ['promos', 'Promotions'], ['demand', 'Demand pricing'], ['closed', 'Closed days']]} />
 
           {planTab && loadError && <LoadError message={loadError} onRetry={loadSchedules} />}
           {planTab && productsError && <LoadError message={`Couldn't load your rounds — ${productsError}`} onRetry={loadProducts} />}
@@ -232,7 +239,7 @@ export default function SchedulesPage() {
 
           {tab === 'rounds' && plan && (
             <BookableRounds plan={plan} rounds={rounds} nines={nines} canEdit={canEdit} canEditRounds={canEditRounds}
-              setRound={setRound} saveRound={saveRound} addRound={addRound} />
+              setRound={setRound} saveRound={saveRound} addRound={addRound} course={courseRules} saveRules={saveRules} />
           )}
           {tab === 'hours' && plan && (
             <HoursPrices plan={plan} edit={edit} rounds={rounds} canEdit={canEdit} perCart={perCart}
@@ -247,30 +254,8 @@ export default function SchedulesPage() {
             <ClosedDays blackouts={blackouts} error={blackoutError} reload={loadBlackouts} canEdit={canEdit}
               publicAdvanceDays={publicAdvanceDays} openDows={openDows} />
           )}
-          {tab === 'rules' && (
-            <div className="max-w-xl flex flex-col gap-4">
-              {/* W2-6 slice 3: per-round booking rules (group size, how far ahead). Settings has the course's own. */}
-              {activeProducts.length === 0 && <Card className="p-5 text-[13.5px] text-ink-muted">Your course’s booking rules are in Settings.</Card>}
-              {activeProducts.length > 0 && (() => {
-                const round = activeProducts.find(p => p.id === rulesView) ?? activeProducts[0];
-                return (
-                  <div>
-                    {activeProducts.length > 1 && (
-                      <select value={round.id} onChange={e => setRulesView(e.target.value)} aria-label="Booking rules for" className="mb-2 bg-paper border border-line rounded-md px-2 py-1.5 text-[13.5px] text-ink">
-                        {activeProducts.map(p => <option key={p.id} value={p.id}>Booking rules · {p.label}</option>)}
-                      </select>
-                    )}
-                    <RoundRulesCard key={round.id} productId={round.id} label={round.label} course={courseRules} canEdit={!pageAccess.isStaff}
-                      rules={{ minPlayers: round.minPlayers ?? null, maxPlayers: round.maxPlayers ?? null, publicAdvanceDays: round.publicAdvanceDays ?? null }}
-                      onSaved={r => setProducts(ps => ps.map(p => (p.id === round.id ? { ...p, ...r } : p)))} />
-                  </div>
-                );
-              })()}
-            </div>
-          )}
-
           {/* Unsaved changes: a slim pill, one save for the whole plan, with a preview first. */}
-          {dirty && canEdit && (
+          {dirty && canEdit && planTab && (
             <div className="sticky bottom-20 md:bottom-3.5 z-30 self-center w-full max-w-[520px] flex items-center gap-3.5 pl-4 pr-2 py-2 rounded-full bg-white shadow-card border border-line text-[13.5px] text-ink">
               <span className="w-1.5 h-1.5 rounded-full bg-warn shrink-0" aria-hidden="true" />
               <span>You have unsaved changes</span>

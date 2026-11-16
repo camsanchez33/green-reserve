@@ -4,6 +4,9 @@
 // plus adds one. Rounds not sold aren't listed, and there's no hour scale under the bars.
 // The name and holes are the round itself (/api/operator/course-products, saved straight away, owner only); when it
 // can be booked is part of the schedule plan, saved with the page's Review and save.
+// Its own booking rules (fewest and most players, how far ahead the public can book) sit in the same pop-up (Cam
+// 2026-11-16, "when editing it it all is together"; /api/operator/round-rules, owner only, saved straight away).
+// Blank = the course's rule from Settings.
 import { useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { formatTeeTime as fmtTime } from '@/lib/format';
@@ -13,7 +16,9 @@ import { CardHead, PlusButton, PenButton, Popup, PopupFoot, Block, Tiles, FIELD,
 export type Product = { id: string; label: string; holes: number; nineIds: string[]; active: boolean };
 export type NineRow = { id: string; name: string; sortOrder: number };
 /** A round on the page: a CourseProduct, or (key '') the course as a whole when it has none. */
-export type PageRound = { key: string; label: string; holes: number; nineIds: string[] };
+export type PageRound = { key: string; label: string; holes: number; nineIds: string[] } & Rules;
+export type Rules = { minPlayers: number | null; maxPlayers: number | null; publicAdvanceDays: number | null };
+export type CourseRules = { minPlayers: number; maxPlayers: number; publicAdvanceDays: number };
 
 type Holes = 'all' | 'front' | 'back' | '18' | '9';
 /** The hole choices this course can offer: front and back nine on a two-nine course; else 18 or 9. */
@@ -50,10 +55,12 @@ export function whenSold(s: RoundSale): string {
   return 'All day';
 }
 
-type Draft = { key: string | null; label: string; holes: Holes | null; from: string; to: string };
+type Draft = { key: string | null; label: string; holes: Holes | null; from: string; to: string; min: string; max: string; days: string };
+const str = (n: number | null | undefined) => (n == null ? '' : String(n));
 
-export function BookableRounds({ plan, rounds, nines, canEdit, canEditRounds, setRound, saveRound, addRound }: {
+export function BookableRounds({ plan, rounds, nines, canEdit, canEditRounds, setRound, saveRound, addRound, course, saveRules }: {
   plan: CoursePlan; rounds: PageRound[]; nines: NineRow[]; canEdit: boolean; canEditRounds: boolean;
+  course: CourseRules | null; saveRules: (key: string, r: { minPlayers: string; maxPlayers: string; publicAdvanceDays: string }) => Promise<string | null>;
   setRound: (key: string, patch: Partial<RoundSale>) => void;
   saveRound: (key: string, patch: { label?: string; holes?: number; nineIds?: string[] }) => Promise<string | null>;
   addRound: (r: { label: string; holes: number; nineIds: string[]; from: string | null; to: string | null; existing: string | null }) => Promise<string | null>;
@@ -72,7 +79,8 @@ export function BookableRounds({ plan, rounds, nines, canEdit, canEditRounds, se
     setErr('');
     const r = key === null ? null : rounds.find(x => x.key === key)!;
     const s = key === null ? null : plan.rounds.find(x => x.key === key)!;
-    setDraft({ key, label: r?.label ?? '', holes: r ? holesOf(r, nines) : (opts[0]?.key ?? null), from: s?.from ?? day.first, to: s?.to ?? day.last });
+    setDraft({ key, label: r?.label ?? '', holes: r ? holesOf(r, nines) : (opts[0]?.key ?? null), from: s?.from ?? day.first, to: s?.to ?? day.last,
+      min: str(r?.minPlayers), max: str(r?.maxPlayers), days: str(r?.publicAdvanceDays) });
   }
   // A window that covers the whole weekday is "all day" (null), the way the plan stores it.
   const windowOf = (d: Draft) => ({ from: d.from && d.from > day.first ? d.from : null, to: d.to && d.to < day.last ? d.to : null });
@@ -97,6 +105,10 @@ export function BookableRounds({ plan, rounds, nines, canEdit, canEditRounds, se
         if (draft.key && o && (o.holes !== r.holes || o.nineIds.join() !== r.nineIds.join())) { patch.holes = o.holes; patch.nineIds = o.nineIds; }
         if (Object.keys(patch).length) {
           const why = await saveRound(draft.key, patch);
+          if (why) { setErr(why); return; }
+        }
+        if (draft.key && canEditRounds && (draft.min !== str(r.minPlayers) || draft.max !== str(r.maxPlayers) || draft.days !== str(r.publicAdvanceDays))) {
+          const why = await saveRules(draft.key, { minPlayers: draft.min, maxPlayers: draft.max, publicAdvanceDays: draft.days });
           if (why) { setErr(why); return; }
         }
         setRound(draft.key, w);
@@ -148,6 +160,16 @@ export function BookableRounds({ plan, rounds, nines, canEdit, canEditRounds, se
               <label className={LABEL}>Until<input type="time" value={draft.to} onChange={e => setDraft({ ...draft, to: e.target.value })} className={FIELD} /></label>
             </div>
           </Block>
+          {draft.key && (
+            <Block label="Booking rules">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <label className={LABEL}>Fewest players<input type="number" inputMode="numeric" min={1} max={8} value={draft.min} disabled={!canEditRounds} onChange={e => setDraft({ ...draft, min: e.target.value })} className={FIELD} /></label>
+                <label className={LABEL}>Most players<input type="number" inputMode="numeric" min={1} max={8} value={draft.max} disabled={!canEditRounds} onChange={e => setDraft({ ...draft, max: e.target.value })} className={FIELD} /></label>
+                <label className={LABEL}>Public can book, days ahead<input type="number" inputMode="numeric" min={1} max={course?.publicAdvanceDays ?? 365} value={draft.days} disabled={!canEditRounds} onChange={e => setDraft({ ...draft, days: e.target.value })} className={FIELD} /></label>
+              </div>
+              {course && <p className="text-[12.5px] text-ink-muted">Blank uses your course’s rule from Settings: {course.minPlayers}–{course.maxPlayers} players, up to {course.publicAdvanceDays} days ahead.</p>}
+            </Block>
+          )}
           {draft.key !== null && (
             <button type="button" disabled={sold.length < 2} title={sold.length < 2 ? 'Golfers need at least one round to book.' : undefined}
               onClick={() => { setRound(draft.key!, { on: false }); setDraft(null); }} className={LINK_BAD}>Stop selling this round</button>

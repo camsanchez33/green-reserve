@@ -82,6 +82,7 @@ export function Promotions({ canEdit }: { canEdit: boolean }) {
         {canEdit && <PlusButton label="New promo code" onClick={() => { setFormError(''); setDraft(blank()); }} />}
       </CardHead>
       {error && <div className="px-3 pb-2"><LoadError message={error} onRetry={load} /></div>}
+      {!codes && !error && <p className="px-3 py-3 text-[13.5px] text-ink-muted">Loading your codes…</p>}
       {codes && (<>
         <div className={COLS + ' pb-1 text-[12.5px] text-ink-muted'}>
           <span>Code</span><span className="hidden md:block">Promo</span><span className="hidden md:block">Duration</span><span>Used</span><span />

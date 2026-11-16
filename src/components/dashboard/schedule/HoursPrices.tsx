@@ -162,7 +162,7 @@ export function HoursPrices({ plan, edit, rounds, canEdit, perCart, showMember, 
                   {canEdit && <button type="button" aria-label={`Edit ${n}`} title="Edit" onClick={() => setColDraft({ i, col, label: 'own', name: col === 0 ? d.firstName ?? '' : d.changes[col - 1].name ?? '', at: starts[col] })}
                     className="w-6 h-6 grid place-items-center rounded-md text-ink-muted hover:text-ink hover:bg-paper"><PenIcon /></button>}
                 </span>
-                <small className="block text-[12px] text-ink-muted tabular-nums">{sub(col)}{soldIn(col) ? '' : ' · not sold'}</small>
+                {(sub(col) !== n || !soldIn(col)) && <small className="block text-[12px] text-ink-muted tabular-nums">{sub(col) !== n ? sub(col) : ''}{soldIn(col) ? '' : `${sub(col) !== n ? ' · ' : ''}not sold`}</small>}
                 <em className="inline-block mt-1.5 not-italic text-[11.5px] text-ink-soft border border-line rounded-full px-2 py-px">{tag}</em>
               </span>
             ))}

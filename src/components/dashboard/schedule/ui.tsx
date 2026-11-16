@@ -8,7 +8,7 @@ import { Modal } from '@/components/ui/Modal';
 
 export const FIELD = 'w-full bg-paper border border-line rounded-[10px] px-2.5 py-2 text-[13.5px] text-ink outline-none focus:border-ink-soft disabled:opacity-60';
 export const LABEL = 'flex flex-col gap-1.5 text-[12.5px] text-ink-muted';
-export const LINK = 'text-[13px] font-semibold text-ink underline underline-offset-[3px] decoration-ink-muted hover:decoration-ink disabled:opacity-50';
+export const LINK = 'text-[13px] font-semibold text-ink underline underline-offset-[3px] decoration-ink-muted hover:decoration-ink disabled:text-ink-muted disabled:no-underline disabled:cursor-not-allowed';
 /** A link that ends or removes something. */
 export const LINK_BAD = 'self-start text-[13px] font-semibold text-bad underline underline-offset-[3px] decoration-bad disabled:opacity-50';
 export const PRIMARY = 'text-[13px] font-semibold rounded-[10px] px-3.5 py-2 bg-pine hover:bg-pine-hover text-white disabled:opacity-50';

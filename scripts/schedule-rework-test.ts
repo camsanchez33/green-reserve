@@ -66,6 +66,11 @@ check('prices: the round picker matches Bookable rounds; a column per time-of-da
 check('…each price column opens its own pop-up (rename, move its start, remove; the first can be renamed)', hp.includes('setColDraft({ i, col, label: \'own\'') && hp.includes('Remove this price') && hp.includes('setDay(c.i, { firstName: name })'));
 check('…with no round on sale it says so', hp.includes('if (!round) return'));
 check('…a phone scrolls a wide price table sideways', hp.includes('overflow-x-auto border border-line'));
+// Build review of #431 (Cam 2026-11-16, "when editing it it all is together"): a round's own booking rules live in its
+// edit pop-up (no Booking rules tab), and Closed days calls a day bookable from the SAVED schedule only.
+check('a round\'s own booking rules are in its edit pop-up, saved through round-rules; no Booking rules tab', rounds.includes('<Block label="Booking rules">') && page.includes("'/api/operator/round-rules'") && !page.includes("'Booking rules']"));
+check('Closed days reads the saved schedule, never unsaved edits', page.includes('const savedPlan: CoursePlan | null = saved ? JSON.parse(saved) : null;') && page.includes('daysOf(savedPlan, d)'));
+check('the unsaved pill shows only on the tabs it saves', page.includes('{dirty && canEdit && planTab && ('));
 check('the editor stacks on phones', !page.includes('<div className="grid grid-cols-3 gap-3">'));
 check('closing a day never tries to delete a row with cancelled bookings', bo.includes('bookings: { none: {} }'));
 check('reopening a past day does not regenerate it', bo.includes('if (blackout.date < todayIn(course?.timezone))'));
