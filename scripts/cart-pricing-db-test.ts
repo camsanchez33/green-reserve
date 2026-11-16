@@ -67,7 +67,7 @@ async function cleanup() {
   // ── "Add a cart today?" at self check-in: a walking group of 3 on a per-cart course = 2 carts ──
   const walk = await createCounterBooking(per.id, { teeTimeId: b2.id, golferName: 'Walkers', players: 1, cartSelected: false }, STAFF);
   if (walk.ok) {
-    const w = await prisma.booking.update({ where: { id: walk.id }, data: { players: 3 }, include: { teeTime: { select: { date: true, cartFeeCents: true } } } });
+    const w = await prisma.booking.update({ where: { id: walk.id }, data: { players: 3 }, include: { teeTime: { select: { date: true, cartFeeCents: true, productId: true } } } });
     ok('the check-in cart add-on counts carts per two riders', (await cartAddOnCentsFor(w)) === 7200, await cartAddOnCentsFor(w));
   } else ok('walking booking made', false, walk);
 
