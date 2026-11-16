@@ -61,11 +61,12 @@ export function windowFor(course: WindowCourse, member: { tier?: WindowTier } | 
 }
 
 /** How many days of tee times a course needs generated: its widest window, plus one. Never below the old 8. */
-export function generationHorizonDays(course: WindowCourse, tiers: { advanceBookingDays?: number | null }[] = []): number {
+export function generationHorizonDays(course: WindowCourse, tiers: { advanceBookingDays?: number | null; windowPublic?: boolean | null }[] = []): number {
   const widest = Math.max(
     course.publicAdvanceDays ?? DEFAULT_PUBLIC_WINDOW_DAYS,
     course.memberAdvanceDays ?? DEFAULT_MEMBER_WINDOW_DAYS,
-    ...tiers.map(t => t.advanceBookingDays ?? 0),
+    // A membership on the public window books no further than the public (its advanceBookingDays is unused).
+    ...tiers.map(t => (t.windowPublic ? 0 : t.advanceBookingDays ?? 0)),
   );
   // Hard cap so no future writer can turn one course's window into a runaway cron loop.
   return Math.min(366, Math.max(MIN_GENERATION_DAYS, widest + 1));

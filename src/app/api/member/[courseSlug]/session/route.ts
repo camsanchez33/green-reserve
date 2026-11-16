@@ -12,7 +12,7 @@ export async function GET(
 
   const course = await prisma.course.findUnique({
     where: { slug: courseSlug },
-    select: { id: true, memberAdvanceDays: true },
+    select: { id: true, memberAdvanceDays: true, publicAdvanceDays: true },
   });
   if (!course) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 

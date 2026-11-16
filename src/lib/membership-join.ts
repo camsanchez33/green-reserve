@@ -12,6 +12,7 @@
 //    (lib/member-rates membershipLive), so nobody gets them before paying.
 //  • One membership per golfer per course: joining again while a join is unfinished gives
 //    back where it stands; a cancelled one is reused; one the course paused (inactive) is refused.
+import { readLineRates } from './tier-rates';
 import { assignMemberNumber } from './member-number';
 import { randomUUID } from 'crypto';
 import { prisma } from './prisma';
@@ -30,9 +31,12 @@ export async function joinableTiers(courseId: string) {
   const tiers = await prisma.membershipTier.findMany({
     where: { courseId, active: true, joinOnline: { in: ['instant', 'request'] }, annualFeeCents: { gt: 0 } },
     orderBy: { annualFeeCents: 'asc' },
-    select: { id: true, name: true, joinOnline: true, annualFeeCents: true, initiationFeeCents: true, termMonths: true, greenFeeWeekdayCents: true, greenFeeWeekendCents: true, cartFeeWeekdayCents: true, cartFeeWeekendCents: true, discountPct: true, guestsPayMemberRate: true, advanceBookingDays: true },
+    select: { id: true, name: true, joinOnline: true, annualFeeCents: true, initiationFeeCents: true, termMonths: true, greenFeeWeekdayCents: true, greenFeeWeekendCents: true, cartFeeWeekdayCents: true, cartFeeWeekendCents: true, discountPct: true, guestsPayMemberRate: true, advanceBookingDays: true, lineRates: true },
   });
-  return tiers;
+  // Memberships item 3: a membership priced by the price list never advertises the older flat rates it no longer charges.
+  return tiers.map(({ lineRates, ...t }) => readLineRates(lineRates)
+    ? { ...t, greenFeeWeekdayCents: null, greenFeeWeekendCents: null, cartFeeWeekdayCents: null, cartFeeWeekendCents: null, discountPct: null }
+    : t);
 }
 
 /** The signed-in golfer's membership here, if any (for the page to say where they stand). */

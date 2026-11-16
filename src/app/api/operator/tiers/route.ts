@@ -74,7 +74,8 @@ export async function POST(req: NextRequest) {
   // Memberships item 3: rates against the price list (cents per line: { cents } | { pct } | null = public) and the window.
   let lineRates: LineRates | undefined;
   if (body.lineRates !== undefined && body.lineRates !== null) {
-    const r = parseLineRates(body.lineRates, (await tierPriceList(session.courseId)).roundIds);
+    const pl = await tierPriceList(session.courseId);
+    const r = parseLineRates(body.lineRates, pl.roundIds, { perCart: pl.perCart });
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: 400 });
     lineRates = r.value;
   }
@@ -141,7 +142,8 @@ export async function PATCH(req: NextRequest) {
   let lineRatesData: { lineRates?: LineRates | typeof Prisma.DbNull } = {};
   if (updates.lineRates === null) lineRatesData = { lineRates: Prisma.DbNull };
   else if (updates.lineRates !== undefined) {
-    const r = parseLineRates(updates.lineRates, (await tierPriceList(session.courseId)).roundIds);
+    const pl = await tierPriceList(session.courseId);
+    const r = parseLineRates(updates.lineRates, pl.roundIds, { perCart: pl.perCart });
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: 400 });
     lineRatesData = { lineRates: r.value };
   }

@@ -112,12 +112,13 @@ export function readLineRates(v: unknown): LineRates | null {
  * Check what the membership setup sends: { "<key>": { cents } | { pct } | null }. Only keys of rounds the course has
  * (roundIds, plus "-") are accepted. null or a missing key = the public price. Returns the value to store or why not.
  */
-export function parseLineRates(input: unknown, roundIds: string[]): { ok: true; value: LineRates } | { ok: false; error: string } {
+export function parseLineRates(input: unknown, roundIds: string[], opts: { perCart?: boolean } = {}): { ok: true; value: LineRates } | { ok: false; error: string } {
   if (!input || typeof input !== 'object' || Array.isArray(input)) return { ok: false, error: 'Rates must be a list of price-list lines.' };
   const rounds = new Set([NO_ROUND, ...roundIds]);
   const out: LineRates = {};
   for (const [k, raw] of Object.entries(input as Record<string, unknown>)) {
     if (!KEY.test(k) || !rounds.has(k.split(':')[1])) return { ok: false, error: 'One of those rates isn’t on your price list — refresh and try again.' };
+    if (opts.perCart && k.startsWith('cart:') && raw !== null && raw !== undefined && raw !== '') return { ok: false, error: 'Your course charges carts per cart, the same for members — there is no member cart price.' };
     if (raw === null || raw === undefined || raw === '') continue;
     const r = raw as Record<string, unknown>;
     if (typeof r !== 'object') return { ok: false, error: 'Each rate is a price or a % off.' };

@@ -8,7 +8,7 @@ import { centsToDollarsOr0 } from '@/lib/money';
 import { getMemberSession, getGolferMembership, golferResident } from '@/lib/member-session';
 import { windowFor, withinWindow, outsideWindowBody } from '@/lib/booking-window';
 import { rulesFor, walkingAllowedAt } from '@/lib/booking-rules';
-import { applyTierRates } from '@/lib/tier-rates';
+import { applyTierRates, readLineRates, lineKey, isWeekend } from '@/lib/tier-rates';
 import { membershipLive } from '@/lib/member-rates';
 
 export async function GET(
@@ -67,7 +67,8 @@ export async function GET(
     ? teeTimes.filter(t => t.time > nowLocal)
     : teeTimes)
     // W2-6 slice 3: a round's shorter public window holds for a non-member here too.
-    .filter(t => win.scope === 'member' || withinWindow(date, rulesFor(course, t.product).publicAdvanceDays, new Date(), course.timezone));
+    // Memberships item 3: a member on "the public window" sees what the public sees, each round's shorter window too.
+    .filter(t => (win.scope === 'member' && !tier?.windowPublic) || withinWindow(date, rulesFor(course, t.product).publicAdvanceDays, new Date(), course.timezone));
 
   // A member pays exactly what applyTierRates says — the one function booking
   // (api/bookings), moves and check-in pricing use. This list used to carry its
@@ -80,7 +81,9 @@ export async function GET(
   // here, so the list can show it; the page adds it up the same way.
   const resident = !pricingTier && residentPricingOn(course) ? await golferResident(course.id, date) : null;
 
-  const hasTierPrice = !!pricingTier && (pricingTier.greenFeeWeekdayCents != null || pricingTier.greenFeeWeekendCents != null || pricingTier.discountPct != null);
+  // Memberships item 3: a membership priced by the price list has a member price wherever one of its green lines is set.
+  const lines = pricingTier ? readLineRates(pricingTier.lineRates) : null;
+  const hasTierPrice = !!pricingTier && (lines ? false : (pricingTier.greenFeeWeekdayCents != null || pricingTier.greenFeeWeekendCents != null || pricingTier.discountPct != null));
 
   const demand = await loadDemand(course);
   return NextResponse.json(
@@ -92,7 +95,8 @@ export async function GET(
       const slotStatus =
         open <= 1 ? 'almost_full' : open <= 2 ? 'limited' : 'available';
       const rates = pricingTier ? applyTierRates(t, pricingTier) : null;
-      const hasMemberRate = !!pricingTier && (hasTierPrice || t.memberRateCents != null);
+      // On line rates: a member price exactly where this time's green line is set (blank = public, as booking charges).
+      const hasMemberRate = !!pricingTier && (lines ? !!lines[lineKey('green', t.productId ?? '', isWeekend(t.date) ? 'we' : 'wd')] : (hasTierPrice || t.memberRateCents != null));
       // PRICE-2: inside a last-minute window, priced as POST /api/bookings prices it (lib/last-minute).
       // PRICE-5: the public seat is the lower of the deal and the demand price; a member never pays above it.
       const pct = dealPct(course, t, 'online');

@@ -6,6 +6,7 @@
 // and Members (memberships) — and computed with the same rules the booking uses
 // (applyTierRates, the resident rate per player), so the table can't disagree
 // with what golfers are charged. Pure: no database, no session.
+import { readLineRates } from './tier-rates';
 import { applyTierRates } from './tier-rates';
 
 /** A schedule as /api/operator/schedule returns it (dollars). */
@@ -87,7 +88,8 @@ export function whoPays(schedules: WireSchedule[], tiers: WireTier[], switches: 
   };
 
   for (const t of switches.membersOn === false ? [] : tiers.filter(t => t.active)) {
-    const how = t.greenFeeWeekday != null || t.greenFeeWeekend != null ? 'their own flat price'
+    const how = readLineRates(t.lineRates) ? 'their own prices from your price list'
+      : t.greenFeeWeekday != null || t.greenFeeWeekend != null ? 'their own flat price'
       : t.discountPct != null ? `${t.discountPct}% off the public rate`
       : 'the member rate on your schedule';
     const weekday = cells(s => memberPrice(s, t, WEEKDAY), false);

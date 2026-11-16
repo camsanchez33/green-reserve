@@ -5,7 +5,8 @@
 import { readFileSync } from 'fs';
 import { prisma } from '../src/lib/prisma';
 import { applyTierRates, parseLineRates, readLineRates, tierCartCents, lineKey } from '../src/lib/tier-rates';
-import { windowFor } from '../src/lib/booking-window';
+import { windowFor, generationHorizonDays } from '../src/lib/booking-window';
+import { joinableTiers } from '../src/lib/membership-join';
 import { tierPriceList } from '../src/lib/tier-price-list';
 const TAG = 'tierlines3';
 let failed = 0;
@@ -36,11 +37,13 @@ const tt = (date: string, productId: string | null, green = 6200, cart = 2200) =
   const okParse = parseLineRates({ 'green:p18:wd': { cents: 0 }, 'cart:p18:we': { pct: 12.5 }, 'green:p18:we': null }, ['p18']);
   ok('the setup: a price, a % off, a blank', okParse.ok && JSON.stringify(okParse.value) === JSON.stringify({ 'green:p18:wd': { cents: 0 }, 'cart:p18:we': { pct: 12.5 } }), okParse);
   ok('another course’s round is refused', !parseLineRates({ 'green:pOther:wd': { cents: 0 } }, ['p18']).ok);
+  ok('a per-cart course: a member cart price is refused (CART-2 charges every cart the same)', !parseLineRates({ 'cart:p18:wd': { cents: 0 } }, ['p18'], { perCart: true }).ok && parseLineRates({ 'cart:p18:wd': null, 'green:p18:wd': { cents: 0 } }, ['p18'], { perCart: true }).ok);
   ok('a negative price, a 0% or 150% off is refused', !parseLineRates({ 'green:p18:wd': { cents: -1 } }, ['p18']).ok && !parseLineRates({ 'green:p18:wd': { pct: 0 } }, ['p18']).ok && !parseLineRates({ 'green:p18:wd': { pct: 150 } }, ['p18']).ok);
 
   // ── Booking window ──
   const course = { publicAdvanceDays: 7, memberAdvanceDays: 14 };
   ok('"the public window": members book as far ahead as the public', windowFor(course, { tier: { advanceBookingDays: 30, windowPublic: true } }).days === 7);
+  ok('tee times are generated no further for a public-window membership', generationHorizonDays(course, [{ advanceBookingDays: 365, windowPublic: true }]) === 15 && generationHorizonDays(course, [{ advanceBookingDays: 30 }]) === 31);
   ok('N days: their own window, as before', windowFor(course, { tier: { advanceBookingDays: 30, windowPublic: false } }).days === 30 && windowFor(course, { tier: { advanceBookingDays: 30 } }).days === 30);
 
   // ── Every caller passes the round and the lines (pins) ──
@@ -65,6 +68,15 @@ const tt = (date: string, productId: string | null, green = 6200, cart = 2200) =
   const by = Object.fromEntries(list.lines.map(l => [l.key, l.publicCents]));
   ok('the price list: each round, weekday and weekend, green and cart, at the first price of the day', list.lines.length === 8 && by[`green:${p18.id}:wd`] === 6200 && by[`green:${p18.id}:we`] === 7800 && by[`cart:${p9.id}:wd`] === 1400 && by[`green:${p9.id}:we`] === 4400, list.lines);
   ok('…and only this course’s rounds may be priced', list.roundIds.length === 2 && list.roundIds.includes(p18.id));
+  await prisma.course.update({ where: { id: c.id }, data: { cartPricing: 'per_cart' } });
+  const pc = await tierPriceList(c.id);
+  ok('a per-cart course has no member cart lines', pc.perCart && pc.lines.length === 4 && pc.lines.every(l => l.what === 'green'));
+  // The join offer never advertises flat rates a price-list membership no longer charges.
+  await prisma.membershipTier.create({ data: { courseId: c.id, name: 'Lines Club', annualFeeCents: 1000, joinOnline: 'instant', discountPct: 30, lineRates: { [`green:${p18.id}:wd`]: { cents: 0 } } } });
+  await prisma.membershipTier.create({ data: { courseId: c.id, name: 'Old Club', annualFeeCents: 1000, joinOnline: 'instant', discountPct: 30 } });
+  const offer = await joinableTiers(c.id);
+  ok('the join offer: a price-list membership shows no old "30% off"; an older one still does', offer.find(t => t.name === 'Lines Club')?.discountPct === null && offer.find(t => t.name === 'Old Club')?.discountPct === 30, offer);
+  await prisma.membershipTier.deleteMany({ where: { courseId: c.id } });
   await prisma.teeTimeSchedule.deleteMany({ where: { courseId: c.id } });
   await prisma.courseProduct.deleteMany({ where: { courseId: c.id } });
   await prisma.course.delete({ where: { id: c.id } });
