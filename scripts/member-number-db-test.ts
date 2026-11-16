@@ -5,6 +5,7 @@ import { readFileSync } from 'fs';
 import { prisma } from '../src/lib/prisma';
 import { assignMemberNumber, nextMemberNumber, initials, formatMemberNumber } from '../src/lib/member-number';
 import { joinTier, approveJoin } from '../src/lib/membership-join';
+import { amountsDue } from '../src/lib/membership-dues';
 const TAG = 'memnum2';
 let failed = 0;
 const ok = (l: string, c: boolean, i: unknown = '') => { console.log(`${c ? 'PASS' : 'FAIL'}  ${l}${c || !i ? '' : ' — ' + (typeof i === 'string' ? i : JSON.stringify(i))}`); if (!c) failed++; };
@@ -73,7 +74,12 @@ async function cleanup() {
   const j2 = await add(c.id, junior2.id);
   { const jn2 = await assignMemberNumber(j2.id); ok('a "Junior" made again never gives -JU-0001 again', /-JU2-0001$/.test(jn2 ?? ''), jn2); }
   const tiersRoute = readFileSync('src/app/api/operator/tiers/route.ts', 'utf8');
-  ok('the tiers DELETE keeps a tier that has given numbers', tiersRoute.includes("if (tier.numberLast > 0) {\n    await prisma.membershipTier.update({ where: { id }, data: { active: false } });"));
+  ok('the tiers DELETE keeps a tier that has given numbers, takes its memberships off it, and the list hides it', tiersRoute.includes("if (tier.numberLast > 0) {") && tiersRoute.includes("prisma.courseMembership.updateMany({ where: { tierId: id, courseId: session.courseId }, data: { tierId: null } }),\n      prisma.membershipTier.update({ where: { id }, data: { active: false } }),") && tiersRoute.includes("where: { courseId: session.courseId, active: true },"));
+  // What that leaves: an unpaid member of the archived tier owes nothing and can't be charged.
+  const left = await prisma.courseMembership.create({ data: { courseId: c.id, tierId: junior2.id, status: 'awaiting_payment', inviteEmail: `${TAG}+left@t.local`, inviteName: 'L' } });
+  await prisma.$transaction([prisma.courseMembership.updateMany({ where: { tierId: junior2.id, courseId: c.id }, data: { tierId: null } }), prisma.membershipTier.update({ where: { id: junior2.id }, data: { active: false } })]);
+  const leftNow = await prisma.courseMembership.findUniqueOrThrow({ where: { id: left.id }, include: { tier: true } });
+  ok('…an unpaid member of the archived tier is off it, with nothing due', leftNow.tierId === null && amountsDue(leftNow).duesCents === 0);
 
   // Numbers are given where members are made (online join, approval, import).
   const golfer = await prisma.golferAccount.create({ data: { email: `${TAG}+g@t.local`, firstName: 'G', lastName: 'O', password: 'x' } });
