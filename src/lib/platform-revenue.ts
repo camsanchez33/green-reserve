@@ -1,7 +1,8 @@
 // GreenReserve's own revenue by source, from the money ledger (MoneyMove.platformFeeCents: taken, less given back), by
 // month in the platform's timezone. Revenue by source (Cam 2026-11-16): the $1.50 booking fee, the 1% shop service fee
 // (SHOP-FEE-1) and the 1% on dues and season passes are each their own line (lib/finance-period revenueSource). TEST-2:
-// real courses only. Used by /api/admin/finance; scripts/revenue-by-source-db-test.ts runs it against a database.
+// real courses only. Used by /api/admin/finance (by month) and /api/admin/revenue (its window, feesBySource) — one
+// function, so the two pages can't disagree (Cam 2026-11-16); scripts/revenue-by-source-db-test.ts runs it.
 //
 // A round paid by card carries the 1% on the shop items added to it inside its application fee
 // (lib/shop roundApplicationFeeCents) — every card charge of the round carries the whole of it (a re-collect after a
@@ -46,4 +47,11 @@ export async function feesBySourceByMonth(from: Date, to: Date): Promise<Map<str
     byMonth.set(r.month, s);
   }
   return byMonth;
+}
+
+/** GreenReserve's fees by source for money that moved in [from, to) — any window (the sum of its months). */
+export async function feesBySource(from: Date, to: Date): Promise<Record<RevenueSource, number>> {
+  const out = emptySources();
+  for (const m of (await feesBySourceByMonth(from, to)).values()) for (const k of REVENUE_SOURCES) out[k] += m[k];
+  return out;
 }

@@ -3,7 +3,8 @@
 // the 1% shop service fee, the 1% on dues and passes. Every total comes from the ledger (MoneyMove), so every number
 // agrees. Against a real database. Run: npx tsx scripts/revenue-by-source-db-test.ts
 import { prisma } from '../src/lib/prisma';
-import { feesBySourceByMonth, sourcesTotal } from '../src/lib/platform-revenue';
+import { feesBySourceByMonth, feesBySource, sourcesTotal } from '../src/lib/platform-revenue';
+import { readFileSync } from 'fs';
 import { roundShopShareCents, revenueSource, REVENUE_SOURCES } from '../src/lib/finance-period';
 import { allSegments } from '../src/lib/revenue-extras';
 import { ledgerDays } from '../src/lib/ledger-view';
@@ -73,6 +74,17 @@ async function cleanup() {
     && fees.serviceFees === (630 - 30) - (315 - 15) + 150 + 600 + 600 && fees.shopFees === 30 - 15 + 50 + 30 + 30 && fees.membershipDues === 1200 + 600 && fees.noShowLateFees === 0 && fees.other === 0, fees);
   const allFees = await prisma.moneyMove.findMany({ where: { courseId: c.id }, select: { direction: true, platformFeeCents: true } });
   ok('…and they add up to every fee on the ledger (nothing double-counted or dropped), test course out', !!fees && sourcesTotal(fees) === allFees.reduce((n, m) => n + (m.direction === 'out' ? -1 : 1) * m.platformFeeCents, 0), fees);
+
+  // /admin/revenue (Cam 2026-11-16: "the same by-source split as /finance, from the same ledger function"): any window,
+  // a part of a month too, adds up to the ledger's fees in it.
+  const win = { from: at(11, 0), to: at(15, 0) };
+  const part = await feesBySource(win.from, win.to);
+  const partRows = await prisma.moneyMove.findMany({ where: { courseId: c.id, at: { gte: win.from, lt: win.to } }, select: { direction: true, platformFeeCents: true } });
+  ok('/admin/revenue\'s window: the same split, adding up to every fee in the window', sourcesTotal(part) === partRows.reduce((n, m) => n + (m.direction === 'out' ? -1 : 1) * m.platformFeeCents, 0) && part.membershipDues === 1800 && part.shopFees === 50 - 15 && part.serviceFees === 150 - (315 - 15), part); // the half refund on the 12th gives back 15¢ of shop fee
+  const whole = await feesBySource(new Date(Date.UTC(2001, 2, 1)), new Date(Date.UTC(2001, 3, 1)));
+  ok('…and the whole month equals Finance\'s month', !!fees && Object.keys(fees).every(k => whole[k as keyof typeof whole] === fees[k as keyof typeof fees]));
+  const route = readFileSync('src/app/api/admin/revenue/route.ts', 'utf8');
+  ok('/admin/revenue sends it from the same function, for its own window', route.includes('const revenueBySource = await feesBySource(current.start, current.end);') && route.includes('bySource: revenueBySource'));
 
   // ── Course side ──
   const range = { from: '2001-03-01', to: '2001-03-31' };

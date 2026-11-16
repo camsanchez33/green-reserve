@@ -10,6 +10,8 @@ import { TERMS, NOT_YET, OWNER_ONLY, SESSION_ENDED, loadFailed } from './terms';
 import { useAdminSession } from '@/lib/admin-session-context';
 import { MANAGER_PLUS } from '@/lib/admin-roles';
 import GoalCard from './GoalCard';
+import { SOURCES, sourceLabel } from '../finance/logic';
+import { SOURCE_TERMS } from '../finance/terms';
 import { type Per, type RevenueGoal, isGoal, KIND, fallbackQuery, isNewAnswer, isFallbackAnswer, pct, payoutState, periodDone, chartSummary } from './logic';
 
 // ADMIN-REDO Revenue (Cam approved the mockup 2026-11-12, ADMIN_REDO_SPEC.md "Revenue: APPROVED"): what
@@ -38,7 +40,8 @@ interface LedgerRow { id: string; at: string; bookingId: string | null; bookingR
 interface PayoutProblem { courseId: string; name: string; kind: 'failed' | 'reversed' | 'canceled'; amountCents: number; at: string; reason: string; stripeUrl: string | null }
 interface RevenueData {
   period: { kind: string; label: string; from: string; to: string; priorLabel?: string; elapsedDays?: number; totalDays?: number };
-  revenue?: { cents: number; priorCents: number };
+  /** bySource (Cam 2026-11-16): GreenReserve's fees by source, as /admin/finance shows them; adds up to cents. */
+  revenue?: { cents: number; priorCents: number; bySource?: Record<string, number> };
   revenueSeries?: { current: number[]; prior: number[] };
   // count is null for a finished period (last_month) and priorCount always null: nothing records when a course was
   // switched off and on, so those are a dash, never a guess.
@@ -301,6 +304,17 @@ export default function RevenuePage() {
               </div>
               {goal && <GoalCard goal={goal} onSaved={t => setD(x => (x && x.revenueGoal ? { ...x, revenueGoal: { ...x.revenueGoal, targetCents: t } } : x))} />}
             </div>
+
+            {d?.revenue?.bySource && (
+              <section className={`${g.glass} ${s.pad}`} aria-label="Revenue by source">
+                <div className={s.rh}><h2>Revenue by source</h2></div>
+                <dl className={s.src}>
+                  {SOURCES.filter(k => k !== 'other' || (d.revenue!.bySource![k] ?? 0) !== 0).map(k => (
+                    <div key={k}><dt title={SOURCE_TERMS[k]}>{sourceLabel(k)}</dt><dd>{usd((d.revenue!.bySource![k] ?? 0) / 100)}</dd></div>
+                  ))}
+                </dl>
+              </section>
+            )}
 
             <section className={`${g.glass} ${s.pad}`} aria-label="Revenue over the period">
               <div className={s.rh}>
