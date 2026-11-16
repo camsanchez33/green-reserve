@@ -5,6 +5,8 @@
 //  • The prefix is fixed on the tier the first time it gives a number (MembershipTier.numberPrefix), so renaming
 //    the membership or the course never changes numbers already given or to come. Two memberships whose initials
 //    match get a digit ("PH-FM", "PH-FM2"), so a number is never ambiguous within a course.
+//  • A tier that has given numbers is never deleted, only made inactive (api/operator/tiers DELETE), so its prefix
+//    and count stay taken.
 //  • The sequence is the tier's numberLast, taken with one atomic increment: two members added at once get two
 //    numbers, and a number is never given again — not after the member ends, is removed, or an add is abandoned.
 //  • A member keeps their number when they move to another membership.
@@ -26,24 +28,43 @@ export function initials(name: string, fallback: string): string {
 
 export const formatMemberNumber = (prefix: string, n: number) => `${prefix}-${String(n).padStart(4, '0')}`;
 
-/** The tier's prefix: the one it has, or a new one (course + membership initials), made unique within the course. */
-async function prefixFor(tierId: string): Promise<string> {
-  const tier = await prisma.membershipTier.findUniqueOrThrow({ where: { id: tierId }, select: { numberPrefix: true, name: true, courseId: true, course: { select: { name: true } } } });
-  if (tier.numberPrefix) return tier.numberPrefix;
+/** The prefix a tier would get now: course + membership initials, the first one no other tier of the course holds. */
+async function proposePrefix(tier: { id: string; name: string; courseId: string; course: { name: string } }): Promise<string> {
   const base = `${initials(tier.course.name, 'GC')}-${initials(tier.name, 'MB')}`;
-  const taken = new Set((await prisma.membershipTier.findMany({ where: { courseId: tier.courseId, id: { not: tierId }, numberPrefix: { startsWith: base } }, select: { numberPrefix: true } })).map(t => t.numberPrefix));
+  const taken = new Set((await prisma.membershipTier.findMany({ where: { courseId: tier.courseId, id: { not: tier.id }, numberPrefix: { startsWith: base } }, select: { numberPrefix: true } })).map(t => t.numberPrefix));
   let prefix = base;
   for (let i = 2; taken.has(prefix); i++) prefix = `${base}${i}`;
-  // Only if still unset: two first numbers at once agree on whichever prefix was written first.
-  await prisma.membershipTier.updateMany({ where: { id: tierId, numberPrefix: '' }, data: { numberPrefix: prefix } });
-  return (await prisma.membershipTier.findUniqueOrThrow({ where: { id: tierId }, select: { numberPrefix: true } })).numberPrefix;
+  return prefix;
 }
 
-/** What the next member on this tier will get (the add form's "Made for them automatically"). A preview only. */
+const TIER_FOR_PREFIX = { id: true, numberPrefix: true, name: true, courseId: true, course: { select: { name: true } } } as const;
+
+/**
+ * The tier's prefix: the one it has, or — the first time it gives a number — a new one, written once. A prefix is unique
+ * per course in the database (@@unique([courseId, numberPrefix])): two tiers fixing the same one at once, one wins and
+ * the other takes the next free one.
+ */
+async function prefixFor(tierId: string): Promise<string> {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const tier = await prisma.membershipTier.findUniqueOrThrow({ where: { id: tierId }, select: TIER_FOR_PREFIX });
+    if (tier.numberPrefix) return tier.numberPrefix;
+    try {
+      await prisma.membershipTier.updateMany({ where: { id: tierId, numberPrefix: null }, data: { numberPrefix: await proposePrefix(tier) } });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') continue; // another tier just took it
+      throw e;
+    }
+  }
+  const t = await prisma.membershipTier.findUniqueOrThrow({ where: { id: tierId }, select: { numberPrefix: true } });
+  if (!t.numberPrefix) throw new Error('member number prefix could not be fixed');
+  return t.numberPrefix;
+}
+
+/** What the next member on this tier will get (the add form's "Made for them automatically"). A preview: writes nothing. */
 export async function nextMemberNumber(courseId: string, tierId: string): Promise<string | null> {
-  const t = await prisma.membershipTier.findFirst({ where: { id: tierId, courseId }, select: { id: true, numberLast: true } });
+  const t = await prisma.membershipTier.findFirst({ where: { id: tierId, courseId }, select: { ...TIER_FOR_PREFIX, numberLast: true } });
   if (!t) return null;
-  return formatMemberNumber(await prefixFor(t.id), t.numberLast + 1);
+  return formatMemberNumber(t.numberPrefix ?? await proposePrefix(t), t.numberLast + 1);
 }
 
 /**

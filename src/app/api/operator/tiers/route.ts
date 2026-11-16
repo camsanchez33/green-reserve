@@ -183,6 +183,12 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: `This tier has ${count} active member${count === 1 ? '' : 's'}. Reassign or remove them first.` }, { status: 409 });
   }
 
+  // Memberships item 2: a tier that has given member numbers is kept (inactive), so its prefix and count are never
+  // given again by a new tier — numbers are never reused.
+  if (tier.numberLast > 0) {
+    await prisma.membershipTier.update({ where: { id }, data: { active: false } });
+    return NextResponse.json({ success: true, archived: true });
+  }
   await prisma.membershipTier.delete({ where: { id } });
   return NextResponse.json({ success: true });
 }

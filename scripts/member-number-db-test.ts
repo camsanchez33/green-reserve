@@ -4,6 +4,7 @@
 import { readFileSync } from 'fs';
 import { prisma } from '../src/lib/prisma';
 import { assignMemberNumber, nextMemberNumber, initials, formatMemberNumber } from '../src/lib/member-number';
+import { joinTier, approveJoin } from '../src/lib/membership-join';
 const TAG = 'memnum2';
 let failed = 0;
 const ok = (l: string, c: boolean, i: unknown = '') => { console.log(`${c ? 'PASS' : 'FAIL'}  ${l}${c || !i ? '' : ' — ' + (typeof i === 'string' ? i : JSON.stringify(i))}`); if (!c) failed++; };
@@ -11,6 +12,7 @@ const ok = (l: string, c: boolean, i: unknown = '') => { console.log(`${c ? 'PAS
 async function cleanup() {
   const ids = (await prisma.course.findMany({ where: { slug: { startsWith: TAG } }, select: { id: true } })).map(c => c.id);
   await prisma.courseMembership.deleteMany({ where: { courseId: { in: ids } } });
+  await prisma.golferAccount.deleteMany({ where: { email: { startsWith: TAG } } });
   await prisma.membershipTier.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.course.deleteMany({ where: { id: { in: ids } } });
   await prisma.courseOperator.deleteMany({ where: { email: { startsWith: TAG } } });
@@ -30,6 +32,7 @@ async function cleanup() {
   const add = (courseId: string, tierId: string | null) => prisma.courseMembership.create({ data: { courseId, tierId, inviteEmail: `${TAG}+${n++}@t.local`, inviteName: 'M' } });
 
   ok('the add form previews the first number', (await nextMemberNumber(c.id, full.id)) === 'PH-FM-0001');
+  ok('…and the preview writes nothing (the prefix is fixed by the first real number)', (await prisma.membershipTier.findUniqueOrThrow({ where: { id: full.id } })).numberPrefix === null);
   ok('another course can’t preview this course’s membership', (await nextMemberNumber(other.id, full.id)) === null);
   const a = await add(c.id, full.id);
   ok('the first member gets 0001', (await assignMemberNumber(a.id)) === 'PH-FM-0001');
@@ -54,12 +57,46 @@ async function cleanup() {
   const o = await add(other.id, otherTier.id);
   ok('each course numbers its own members', (await assignMemberNumber(o.id)) === 'OT-FM-0001');
 
+  // Two tiers with the same initials fixing their prefix at the same moment never share it.
+  const t1 = await prisma.membershipTier.create({ data: { courseId: c.id, name: 'Senior Rate' } });
+  const t2 = await prisma.membershipTier.create({ data: { courseId: c.id, name: 'Summer Rate' } });
+  const [m1, m2] = await Promise.all([add(c.id, t1.id), add(c.id, t2.id)]);
+  const [n1, n2] = await Promise.all([assignMemberNumber(m1.id), assignMemberNumber(m2.id)]);
+  ok('two tiers with the same initials, at once: two prefixes', !!n1 && !!n2 && n1.slice(0, -5) !== n2.slice(0, -5), [n1, n2]);
+  // A tier that gave numbers is kept (inactive), so a new tier with its initials gets a new prefix — never 0001 again.
+  const junior = await prisma.membershipTier.create({ data: { courseId: c.id, name: 'Junior' } });
+  const j1 = await add(c.id, junior.id);
+  { const jn = await assignMemberNumber(j1.id); ok('Junior’s first member', /-JU-0001$/.test(jn ?? ''), jn); }
+  await prisma.courseMembership.delete({ where: { id: j1.id } });
+  await prisma.membershipTier.update({ where: { id: junior.id }, data: { active: false } }); // what the tiers DELETE now does
+  const junior2 = await prisma.membershipTier.create({ data: { courseId: c.id, name: 'Junior' } });
+  const j2 = await add(c.id, junior2.id);
+  { const jn2 = await assignMemberNumber(j2.id); ok('a "Junior" made again never gives -JU-0001 again', /-JU2-0001$/.test(jn2 ?? ''), jn2); }
+  const tiersRoute = readFileSync('src/app/api/operator/tiers/route.ts', 'utf8');
+  ok('the tiers DELETE keeps a tier that has given numbers', tiersRoute.includes("if (tier.numberLast > 0) {\n    await prisma.membershipTier.update({ where: { id }, data: { active: false } });"));
+
+  // Numbers are given where members are made (online join, approval, import).
+  const golfer = await prisma.golferAccount.create({ data: { email: `${TAG}+g@t.local`, firstName: 'G', lastName: 'O', password: 'x' } });
+  const online = await prisma.membershipTier.create({ data: { courseId: c.id, name: 'Online Club', annualFeeCents: 1000, joinOnline: 'instant' } });
+  await prisma.course.update({ where: { id: c.id }, data: { liveStatus: 'live', stripeAccountId: 'acct_x', stripeAccountActive: true } });
+  const jr = await joinTier(c.id, { id: golfer.id, email: golfer.email, name: 'G O', phone: '' }, online.id);
+  ok('an instant online join gets a number', jr.ok && !!(await prisma.courseMembership.findUniqueOrThrow({ where: { id: jr.ok ? jr.membershipId : '' } })).memberNumber, jr);
+  const req = await prisma.courseMembership.create({ data: { courseId: c.id, tierId: online.id, status: 'requested', inviteEmail: `${TAG}+r@t.local`, inviteName: 'R' } });
+  ok('a request has none until approved', !(await prisma.courseMembership.findUniqueOrThrow({ where: { id: req.id } })).memberNumber);
+  await approveJoin(c.id, req.id).catch(() => null);
+  ok('…approval gives it one', !!(await prisma.courseMembership.findUniqueOrThrow({ where: { id: req.id } })).memberNumber);
+  const imp = readFileSync('src/lib/member-import.ts', 'utf8');
+  ok('imported members get a number', imp.includes('.then(made => assignMemberNumber(made.id))'));
+  ok('a test-course reset starts numbers again (its members are gone)', readFileSync('src/lib/data-reset.ts', 'utf8').includes("prisma.membershipTier.updateMany({ where: { courseId }, data: { numberLast: 0 } })"));
+
   // The photo is private: stored in the private store and only streamed to the course's staff.
   const photo = readFileSync('src/app/api/operator/members/photo/route.ts', 'utf8');
   ok('the photo goes in the private store, and is streamed, never handed out as a URL', photo.includes("access: 'private', token") && photo.includes('new NextResponse(r.stream') && !/json\(\{[^}]*photoUrl/.test(photo));
   ok('seeing it is members.view, changing it members.edit, the member always the session’s course', photo.includes("gate('members.view')") && (photo.match(/gate\('members\.edit'\)/g) ?? []).length === 2 && photo.includes('where: { id, courseId }'));
   const members = readFileSync('src/app/api/operator/members/route.ts', 'utf8');
   ok('the members list says whether there is a photo, never where it is', members.includes('hasPhoto:       !!m.photoUrl') && !members.includes('photoUrl:'));
+  ok('every whole-row response goes through safeRow (no photoUrl)', !/NextResponse\.json\((updated|membership|again)\b/.test(members) && !/json\(\{ \.\.\.(updated|membership|again),/.test(members) && (members.match(/safeRow\(/g) ?? []).length >= 5);
+  ok('a notes edit doesn’t number a member from before (no backfill), nor a request', members.includes("!membership.tierId && updated.tierId && updated.status !== 'requested'"));
 
   await cleanup(); await prisma.$disconnect();
   console.log(failed ? `\n${failed} FAILED` : '\nmember-number-db: all passed');

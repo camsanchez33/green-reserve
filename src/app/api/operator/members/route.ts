@@ -19,6 +19,12 @@ import { maybeSendPayLink, NOT_SENT } from '@/lib/membership-pay-link';
 import { approveJoin, declineJoin } from '@/lib/membership-join';
 import { stopAutoRenew, STOP_DATA, memberContact } from '@/lib/membership-autorenew';
 
+/** Memberships item 2: a whole membership row as a response — never where the photo is stored, only whether there is one. */
+function safeRow<T extends { photoUrl?: string }>(row: T): Omit<T, 'photoUrl'> & { hasPhoto: boolean } {
+  const { photoUrl, ...rest } = row;
+  return { ...rest, hasPhoto: !!photoUrl };
+}
+
 export async function GET(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -127,7 +133,7 @@ export async function POST(req: NextRequest) {
         include: { tier: { select: { id: true, name: true, color: true } } },
       });
       if (!owes) after(sendWelcome(again.id).catch(err => console.error('Member welcome email error:', err)));
-      return NextResponse.json({ ...again, memberNumber: await assignMemberNumber(again.id), linked: !!again.golferId, awaitingPayment: owes }, { status: 200 });
+      return NextResponse.json({ ...safeRow(again), memberNumber: await assignMemberNumber(again.id), linked: !!again.golferId, awaitingPayment: owes }, { status: 200 });
     }
   }
 
@@ -164,7 +170,7 @@ export async function POST(req: NextRequest) {
     if (!waiting) after(sendWelcome(membership.id).catch(err => console.error('Member linked email error:', err)));
     if (!payFirst) after(maybeSendPayLink(membership.id).catch(err => console.error('Pay link email error:', err)));
 
-    return NextResponse.json({ ...membership, memberNumber: await assignMemberNumber(membership.id), linked: true, awaitingPayment: waiting }, { status: 201 });
+    return NextResponse.json({ ...safeRow(membership), memberNumber: await assignMemberNumber(membership.id), linked: true, awaitingPayment: waiting }, { status: 201 });
   } else {
     if (!name?.trim()) {
       return NextResponse.json({ error: 'Name is required for members without an existing account' }, { status: 400 });
@@ -198,7 +204,7 @@ export async function POST(req: NextRequest) {
     if (!waiting) after(sendWelcome(membership.id).catch(err => console.error('Member invite email error:', err)));
     if (!payFirst) after(maybeSendPayLink(membership.id).catch(err => console.error('Pay link email error:', err)));
 
-    return NextResponse.json({ ...membership, memberNumber: await assignMemberNumber(membership.id), linked: false, awaitingPayment: waiting }, { status: 201 });
+    return NextResponse.json({ ...safeRow(membership), memberNumber: await assignMemberNumber(membership.id), linked: false, awaitingPayment: waiting }, { status: 201 });
   }
 }
 
@@ -235,7 +241,7 @@ export async function PATCH(req: NextRequest) {
         tier:   { select: { id: true, name: true, color: true } },
       },
     });
-    return NextResponse.json(updated);
+    return NextResponse.json(safeRow(updated));
   }
   // MEM-JOIN: answer a golfer's request to join online — approve (the pay link goes out) or decline.
   if (action === 'approve_join') {
@@ -322,9 +328,10 @@ export async function PATCH(req: NextRequest) {
       tier:   { select: { id: true, name: true, color: true } },
     },
   });
-  // Memberships item 2: a request put on a membership gets its number now (a member keeps theirs on a change).
-  if (updated.tierId && !updated.memberNumber) await assignMemberNumber(updated.id);
-  return NextResponse.json(updated);
+  // Memberships item 2: a request put on its first membership gets its number now (a member keeps theirs on a change;
+  // members from before numbers are not given one by an edit — no backfill; a request waits for approval).
+  const memberNumber = updated.memberNumber ?? (!membership.tierId && updated.tierId && updated.status !== 'requested' ? await assignMemberNumber(updated.id) : null);
+  return NextResponse.json(safeRow({ ...updated, memberNumber }));
 }
 
 export async function DELETE(req: NextRequest) {

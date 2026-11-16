@@ -10,7 +10,8 @@ import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { privateBlobToken, isBlobStoreUrl } from '@/lib/private-blob';
 import { ADMIN_EMAIL } from '@/lib/contact';
 
-const MAX_BYTES = 8 * 1024 * 1024;
+// Under Vercel's request-body limit (a photo comes through the function).
+const MAX_BYTES = 4 * 1024 * 1024;
 const TYPES: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
 const NOT_SET_UP = `Private photo storage is not set up yet. Contact ${ADMIN_EMAIL}.`;
 
@@ -54,8 +55,10 @@ export async function POST(req: NextRequest) {
   if (!(file instanceof File)) return NextResponse.json({ error: 'Choose a photo first.' }, { status: 400 });
   const ext = TYPES[file.type];
   if (!ext) return NextResponse.json({ error: 'Only JPEG, PNG or WebP photos.' }, { status: 400 });
-  if (file.size > MAX_BYTES) return NextResponse.json({ error: 'The photo must be under 8MB.' }, { status: 400 });
-  const blob = await put(`members/${g.session.courseId}/${m.id}-${Date.now()}.${ext}`, file, { access: 'private', token, contentType: file.type, addRandomSuffix: true });
+  if (file.size > MAX_BYTES) return NextResponse.json({ error: 'The photo must be under 4MB.' }, { status: 400 });
+  let blob;
+  try { blob = await put(`members/${g.session.courseId}/${m.id}-${Date.now()}.${ext}`, file, { access: 'private', token, contentType: file.type, addRandomSuffix: true }); }
+  catch (err) { console.error(JSON.stringify({ ev: 'member_photo.upload_failed', membershipId: m.id, error: err instanceof Error ? err.message : String(err) })); return NextResponse.json({ error: 'The photo couldn’t be saved — try again.' }, { status: 502 }); }
   await prisma.courseMembership.update({ where: { id: m.id }, data: { photoUrl: blob.url } });
   if (m.photoUrl && isBlobStoreUrl(m.photoUrl)) { try { await del(m.photoUrl, { token }); } catch { /* best effort — never blocks the upload */ } }
   return NextResponse.json({ hasPhoto: true });

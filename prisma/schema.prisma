@@ -471,10 +471,13 @@ model MembershipTier {
   /// Memberships item 2 (Cam 2026-11-16, "an automatic per-membership prefix and sequence, never reused"): the
   /// prefix of this membership's member numbers (course initials + membership initials, e.g. "PH-FM"), fixed the
   /// first time a number is given so a rename never changes it, and the last number given. Numbers only go up.
-  numberPrefix         String             @default("")
+  numberPrefix         String?
   numberLast           Int                @default(0)
   createdAt            DateTime           @default(now())
   memberships          CourseMembership[]
+
+  /// Memberships item 2: a prefix belongs to one membership per course, so two never share numbers.
+  @@unique([courseId, numberPrefix])
 }
 
 /// GRP-1: several courses run together (e.g. Bergen County's six). See Course.groupId.
