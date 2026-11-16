@@ -168,6 +168,7 @@ export function BookableRounds({ plan, rounds, nines, canEdit, canEditRounds, se
                 <label className={LABEL}>Public can book, days ahead<input type="number" inputMode="numeric" min={1} max={course?.publicAdvanceDays ?? 365} value={draft.days} disabled={!canEditRounds} onChange={e => setDraft({ ...draft, days: e.target.value })} className={FIELD} /></label>
               </div>
               {course && <p className="text-[12.5px] text-ink-muted">Blank uses your course’s rule from Settings: {course.minPlayers}–{course.maxPlayers} players, up to {course.publicAdvanceDays} days ahead.</p>}
+              {course && editing && <p className="text-[12.5px] text-ink-soft">Golfers booking {editing.label} now: {editing.minPlayers ?? course.minPlayers}–{editing.maxPlayers ?? course.maxPlayers} players, {editing.publicAdvanceDays ?? course.publicAdvanceDays} days ahead.</p>}
             </Block>
           )}
           {draft.key !== null && (
