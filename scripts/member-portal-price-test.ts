@@ -30,6 +30,7 @@ async function cleanup() {
   await prisma.golferAccount.deleteMany({ where: { email: { endsWith: `@${TAG}.test` } } });
   await prisma.membershipTier.deleteMany({ where: { courseId } });
   await prisma.teeTime.deleteMany({ where: { courseId } });
+  await prisma.courseProduct.deleteMany({ where: { courseId } });
   await prisma.course.deleteMany({ where: { slug: { startsWith: TAG } } });
   await prisma.courseOperator.deleteMany({ where: { email: `${TAG}@test.local` } });
 }
@@ -37,7 +38,7 @@ async function cleanup() {
 async function main() {
   await cleanup();
   const op = await prisma.courseOperator.create({ data: { name: 'Price Test', email: `${TAG}@test.local`, password: 'x' } });
-  const course = await prisma.course.create({ data: { hasMemberPricing: true, hasResidentPricing: true, name: 'Price Test', slug: `${TAG}-c`, operatorId: op.id, address: '1 Test Dr', city: 'T', state: 'NY', zipCode: '10001', holes: 18, liveStatus: 'live', active: true, timezone: 'UTC', cancellationHours: 24 } });
+  const course = await prisma.course.create({ data: { hasMemberPricing: true, hasResidentPricing: true, publicAdvanceDays: 10, name: 'Price Test', slug: `${TAG}-c`, operatorId: op.id, address: '1 Test Dr', city: 'T', state: 'NY', zipCode: '10001', holes: 18, liveStatus: 'live', active: true, timezone: 'UTC', cancellationHours: 24 } });
   // The next Saturday inside the members' default window — weekend rules are the ones that differed.
   let date = addDaysStr(todayIn('UTC'), 1);
   while (new Date(date + 'T12:00:00').getDay() !== 6) date = addDaysStr(date, 1);
@@ -48,6 +49,9 @@ async function main() {
     'a flat weekday price only, on a Saturday': { greenFeeWeekdayCents: 4000 },
     'flat weekend green and cart prices': { greenFeeWeekdayCents: 4000, greenFeeWeekendCents: 5000, cartFeeWeekendCents: 500 },
     'no price of its own (the schedule\'s member rate)': {},
+    // Memberships item 3: priced by the price list — the weekend green line free, so the schedule's member rate is not used.
+    'price-list lines: weekend green free, cart 50% off': { lineRates: { 'green:-:we': { cents: 0 }, 'cart:-:we': { pct: 50 } } },
+    'price-list lines: only a weekday line (Saturday is public)': { lineRates: { 'green:-:wd': { cents: 0 } } },
   };
   let n = 0;
   for (const [label, data] of Object.entries(tiers)) {
@@ -62,6 +66,8 @@ async function main() {
       const shown = row ? { greenFeeCents: Math.round(row.member_green_fee * 100), cartFeeCents: Math.round(row.cart_fee * 100) } : { status: r.status, body };
       check(`${status} membership, ${label}: shows what booking charges`, !!row && shown.greenFeeCents === want.greenFeeCents && shown.cartFeeCents === want.cartFeeCents, { shown, charged: want });
       if (row && status === 'expired') check(`…and a lapsed membership isn't flagged as a member rate`, row.has_member_rate === false, row);
+      // The course page shows the member price only when has_member_rate is true — it must match what booking charges.
+      if (row && status === 'active' && 'lineRates' in data) check(`…${label}: flagged as a member rate exactly when the line is set`, row.has_member_rate === (want.greenFeeCents !== tt.greenFeeCents), row);
     }
   }
 
@@ -98,6 +104,24 @@ async function main() {
   await prisma.courseResident.create({ data: { courseId: course.id, name: 'Tier', email: tierEmail, expiresOn: '' } });
   const tierRow = await portal(await golferCookie(tierEmail));
   check('…and never on top of a membership price', !!tierRow && tierRow.resident_green_fee == null && Math.round(tierRow.member_green_fee * 100) === 8000, tierRow);
+
+  // Memberships item 3: a membership on "the public window" books as far ahead as the public — the course's, and a
+  // round's own shorter one.
+  const winTier = await prisma.membershipTier.create({ data: { courseId: course.id, name: 'PublicWin', windowPublic: true, advanceBookingDays: 60 } });
+  const wm = await prisma.courseMembership.create({ data: { courseId: course.id, tierId: winTier.id, membershipType: 'PublicWin', status: 'active', inviteEmail: `win@${TAG}.test`, inviteName: 'Win', payToken: `${TAG}-win` } });
+  const wtoken = await signMemberSessionToken({ membershipId: wm.id, courseId: course.id, email: wm.inviteEmail });
+  const sess = await (await fetch(`${BASE_URL}/api/member/${course.slug}/session`, { headers: { cookie: `gr_member=${wtoken}` } })).json();
+  check('a member on the public window gets the course\'s public window in the portal', sess.windowDays === 10, sess);
+  const far = addDaysStr(todayIn('UTC'), 12);
+  const farRes = await fetch(`${BASE_URL}/api/member/${course.slug}/tee-times?date=${far}`, { headers: { cookie: `gr_member=${wtoken}` } });
+  check('…and no further (refused past it, as booking refuses)', farRes.status === 403, farRes.status);
+  const short = await prisma.courseProduct.create({ data: { courseId: course.id, label: 'Twilight', holes: 9, publicAdvanceDays: 1 } });
+  const later = addDaysStr(todayIn('UTC'), 4);
+  const tw = await prisma.teeTime.create({ data: { courseId: course.id, productId: short.id, date: later, time: '17:00', holes: 9, greenFeeCents: 4000, cartFeeCents: 1000, playersAvailable: 4, playersBooked: 0 } });
+  const lateList = await (await fetch(`${BASE_URL}/api/member/${course.slug}/tee-times?date=${later}`, { headers: { cookie: `gr_member=${wtoken}` } })).json();
+  check('…and a round\'s own shorter public window holds for them too', Array.isArray(lateList) && !lateList.some((x: { id: string }) => x.id === tw.id), lateList);
+  await prisma.teeTime.deleteMany({ where: { productId: short.id } });
+  await prisma.courseProduct.delete({ where: { id: short.id } });
 
   await cleanup();
   console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');

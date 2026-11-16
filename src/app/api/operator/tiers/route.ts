@@ -4,6 +4,9 @@ import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { prisma } from '@/lib/prisma';
 import { dollarsToCents, dollarsToCentsOr0 } from '@/lib/money';
 import { tierToWire } from '@/lib/tier-wire';
+import { Prisma } from '@prisma/client';
+import { parseLineRates, type LineRates } from '@/lib/tier-rates';
+import { tierPriceList } from '@/lib/tier-price-list';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { readJoinMode, JOIN_NEEDS_DUES } from '@/lib/membership-join';
 import { readAccountSettings } from '@/lib/member-account';
@@ -17,10 +20,12 @@ import { sendAutoRenewOffEmail } from '@/lib/email';
 const termOk = (v: unknown) => v == null || (Number.isInteger(Number(v)) && Number(v) >= 1 && Number(v) <= 36);
 const TERM_BAD = 'The term is a whole number of months, from 1 to 36.';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   { const denied = requirePermission(session, 'members.view'); if (denied) return denied; } // SP-A
+  // Memberships item 3: the price-list lines the setup's "Booking and rates" step sets member rates against.
+  if (req.nextUrl.searchParams.get('priceList')) return NextResponse.json({ lines: (await tierPriceList(session.courseId)).lines });
 
   const tiers = await prisma.membershipTier.findMany({
     // Memberships item 2: a deleted tier that gave numbers is kept inactive (DELETE below) — it is gone from the list.
@@ -66,6 +71,14 @@ export async function POST(req: NextRequest) {
   if (!acct.ok) return NextResponse.json({ error: acct.error }, { status: 400 });
 
   // A newly set member price switches member prices on (lib/pricing-switch).
+  // Memberships item 3: rates against the price list (cents per line: { cents } | { pct } | null = public) and the window.
+  let lineRates: LineRates | undefined;
+  if (body.lineRates !== undefined && body.lineRates !== null) {
+    const pl = await tierPriceList(session.courseId);
+    const r = parseLineRates(body.lineRates, pl.roundIds, { perCart: pl.perCart });
+    if (!r.ok) return NextResponse.json({ error: r.error }, { status: 400 });
+    lineRates = r.value;
+  }
   const tier = await withPriceSwitch(session.courseId, () => prisma.membershipTier.create({
     data: {
       ...acct.data,
@@ -92,6 +105,8 @@ export async function POST(req: NextRequest) {
       initiationFeeCents: dollarsToCentsOr0(initiationFee),
       termMonths:         termMonths         != null ? Number(termMonths)         : 12,
       notes: notes || '',
+      ...(lineRates ? { lineRates } : {}),
+      windowPublic: body.windowPublic === true,
     },
   }));
   return NextResponse.json(tierToWire(tier), { status: 201 });
@@ -123,6 +138,17 @@ export async function PATCH(req: NextRequest) {
   const acct = readAccountSettings({ accountOn: updates.accountOn, accountLimitCents: limitCents(updates.accountLimit), accountSettle: updates.accountSettle });
   if (!acct.ok) return NextResponse.json({ error: acct.error }, { status: 400 });
 
+    // Memberships item 3: null clears the line rates (back to the flat rates); an object replaces them.
+  let lineRatesData: { lineRates?: LineRates | typeof Prisma.DbNull } = {};
+  if (updates.lineRates === null) lineRatesData = { lineRates: Prisma.DbNull };
+  else if (updates.lineRates !== undefined) {
+    const pl = await tierPriceList(session.courseId);
+    const r = parseLineRates(updates.lineRates, pl.roundIds, { perCart: pl.perCart });
+    if (!r.ok) return NextResponse.json({ error: r.error }, { status: 400 });
+    lineRatesData = { lineRates: r.value };
+  }
+  if (updates.windowPublic !== undefined && typeof updates.windowPublic !== 'boolean') return NextResponse.json({ error: 'Pick the public window or a number of days.' }, { status: 400 });
+
   const updated = await withPriceSwitch(session.courseId, () => prisma.membershipTier.update({
     where: { id },
     data: {
@@ -146,6 +172,8 @@ export async function PATCH(req: NextRequest) {
       termMonths:         updates.termMonths         != null ? Number(updates.termMonths)         : tier.termMonths,
       notes:              updates.notes              ?? tier.notes,
       active:             updates.active             !== undefined ? updates.active : tier.active,
+      ...lineRatesData,
+      windowPublic:       typeof updates.windowPublic === 'boolean' ? updates.windowPublic : tier.windowPublic,
     },
   }));
   // MEM-RENEW: the course stopped automatic renewal on this tier — its members go back to pay-link renewals, and are told.

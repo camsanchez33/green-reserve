@@ -1,3 +1,4 @@
+import { tierCartCents } from './tier-rates';
 import { prisma } from './prisma';
 import { memberPricingOn } from './pricing-switch';
 import { liveMembershipWhere, memberPlayers, splitTotal, partyFees } from './member-rates';
@@ -93,7 +94,7 @@ export const notBeingCharged = (now = Date.now()) => ({ OR: [{ shopLockedAt: nul
 export async function cartAddOnCentsFor(booking: {
   golferAccountId: string | null; golferEmail: string; courseId: string; players: number;
   cartSelected: boolean; cartFeeTotal: number; paymentStatus: string; roundPaymentIntentId: string;
-  teeTime: { date: string; cartFeeCents: number };
+  teeTime: { date: string; cartFeeCents: number; productId: string | null };
 }): Promise<number> {
   if (booking.cartSelected || booking.cartFeeTotal > 0) return 0;
   if (booking.paymentStatus === 'paid' && booking.roundPaymentIntentId) return 0;
@@ -115,22 +116,13 @@ export async function cartAddOnCentsFor(booking: {
         ...(booking.golferEmail ? [{ inviteEmail: { equals: booking.golferEmail, mode: 'insensitive' as const } }] : []),
       ] }],
     },
-    include: { tier: { select: { greenFeeWeekdayCents: true, greenFeeWeekendCents: true, cartFeeWeekdayCents: true, cartFeeWeekendCents: true, discountPct: true, guestsPayMemberRate: true } } },
+    include: { tier: { select: { greenFeeWeekdayCents: true, greenFeeWeekendCents: true, cartFeeWeekdayCents: true, cartFeeWeekendCents: true, discountPct: true, guestsPayMemberRate: true, lineRates: true } } },
   });
   // Members switched off in Settings (lib/pricing-switch): the cart added at check-in is the public price.
   if (m?.tier && memberPricingOn(grace)) {
-    const t = m.tier;
-    const d = new Date(booking.teeTime.date + 'T12:00:00');
-    const weekend = d.getDay() === 0 || d.getDay() === 6;
-    // Same order of precedence as applyTierRates in the booking route: flat
-    // overrides first, else a percentage off standard, else standard.
-    if (t.greenFeeWeekdayCents != null || t.greenFeeWeekendCents != null) {
-      perPlayer = weekend
-        ? (t.cartFeeWeekendCents ?? t.cartFeeWeekdayCents ?? perPlayer)
-        : (t.cartFeeWeekdayCents ?? perPlayer);
-    } else if (t.discountPct != null) {
-      perPlayer = Math.round(perPlayer * (1 - t.discountPct / 100));
-    }
+    // Memberships item 3: the same function the booking route prices the cart with (lib/tier-rates) — the price-list
+    // line for this round when the membership has one, else the older flat rate or % off, else the public price.
+    perPlayer = tierCartCents(booking.teeTime, m.tier);
   }
   // Cam 2026-10-29: the member's own cart at their rate; guests at the public rate unless the tier includes them.
   const total = m?.tier ? splitTotal(booking.players, memberPlayers(booking.players, m.tier), perPlayer, standard) : perPlayer * booking.players;
@@ -147,7 +139,7 @@ async function chargeBooking(
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: {
-      teeTime: { select: { date: true, time: true, greenFeeCents: true, cartFeeCents: true } },
+      teeTime: { select: { date: true, time: true, greenFeeCents: true, cartFeeCents: true, productId: true } },
       course: { select: { name: true, slug: true, address: true, city: true, state: true, stripeAccountId: true, stripeAccountActive: true, timezone: true, cartPricing: true } },
     },
   });
