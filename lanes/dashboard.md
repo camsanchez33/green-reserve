@@ -34,6 +34,7 @@ Support (chats) · Light parity. Specs: ADMIN_REDO_SPEC "Course dashboard Home",
    - **Promotions** (was Deals) lists live codes with the columns Code, Promo, Duration, Used and a pencil. Ended codes sit under a small "Past promos" toggle, each with "Use again". New and Edit open popups. Last-minute deals are removed from this page.
    - **Demand pricing** has an explainer bubble at the top. Until the course has 3 months of tee times it shows only the locked state: progress and the date it unlocks. Unlocked, it shows why it suggests the prices, the week of prices, floor and ceiling, and a terms checkbox. Demand prices show wherever the price does; members and residents keep their own rates.
    - **Closed days** is a month calendar. Green means golfers can book that day now, red means closed, and a closed day shows the reason. Tapping a day opens a popup to close it, with a warning if golfers are booked (they stay booked), or to open it again. There's no side list.
+   - **Per-round rules** (Cam 2026-11-16: "when editing it it all is together"): fewest players, most players and public days ahead for each round go in that round's edit popup on Bookable rounds, next to its holes and booking window. Then the Booking rules tab goes.
    - **Booking rules** is removed from Schedule, because it lives in Settings. Anything on it that Settings lacks moves to Settings, not lost.
    - **Build first, before the page wires it:**
      - The demand engine (`src/lib/demand-pricing.ts`) unlocks at 28 days of data, but Cam wants 3 months.

@@ -9,7 +9,7 @@ the lane files; merges every PR in dependency order after Cam's review sitting; 
 **Control Room** (Cam watches it): Build alone writes https://claude.ai/artifact/CWmgjgJHTZaTr4XThBuvZL with `ArtifactData`: its own `sessions/<id>` row at start, after each push/merge/blocker and before ending (a `working` row silent 30 min shows as Silent), and the web (`areas`, `items`, `questions`, `lookat`) after every merge, answer and change of plan. Full protocol: `docs/DECISIONS.md` → "Control Room".
 
 ## Queued (not started)
-- Outreach (Cam 2026-11-16): see `lanes/outreach.md`. Emails start Dec 1. Decisions for Cam first: the sending mailbox (not Resend, not greenreserve.app), and the scope by Dec 1.
+- Outreach (Cam 2026-11-16): see `lanes/outreach.md`. Emails start Dec 1. Prep starts Nov 23, sending from admin@greenreserve.app through Google Workspace Gmail (decided).
 - Memberships data (Cam 2026-11-16 approved the page; money and schema, Opus, final-reviewer, one PR each, in this order):
   1. Every dues and season-pass payment recorded once via recordMove, so it shows in Revenue as Membership dues. Cash for dues and passes goes through the register: requireRegisterOpen, counted in the close-out's expected cash, shown on the register. Adding a member takes payment first (reader, cash, or a typed card through Stripe Elements) and they are a member only once paid.
   2. Member numbers: an automatic per-membership prefix and sequence, never reused. A member photo upload (private blob, the same pattern as shop item photos).
