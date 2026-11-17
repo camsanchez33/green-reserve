@@ -1,7 +1,7 @@
 // MP-7a — assertions on lib/thread-signal, the one derivation behind the
 // Overview's "unanswered" rows and the Messages inbox order.
 //   npx tsx scripts/thread-signal-test.ts
-import { threadSignal, compareThreads, UNANSWERED_AFTER_DAYS } from '../src/lib/thread-signal';
+import { threadSignal, compareThreads, longestWaiting, UNANSWERED_AFTER_DAYS } from '../src/lib/thread-signal';
 
 let failed = 0;
 function check(name: string, cond: boolean, got?: unknown) {
@@ -72,6 +72,25 @@ console.log('compareThreads');
   const order = [answeredRecent, waiting1, answeredOld, broadcastOnTop, waiting9].sort(compareThreads).map(t => t.id);
   check('waiting first, longest wait on top, then by activity',
     JSON.stringify(order) === JSON.stringify(['waiting-9d', 'bcast-on-top', 'waiting-1d', 'answered-recent', 'answered-old']), order);
+}
+
+// The action queue's pick among a course's overdue chats, on fixed dates (not the day the test runs).
+{
+  const now = new Date('2026-11-17T14:00:00Z'); // a Tuesday
+  const op = (iso: string) => ({ senderType: 'operator', createdAt: new Date(iso) });
+  const sat = { id: 'sat', signal: threadSignal([op('2026-11-07T14:00:00Z')], now) };
+  const sun = { id: 'sun', signal: threadSignal([op('2026-11-08T14:00:00Z')], now) };
+  check('a Saturday and a Sunday message are due at the same time (the tie)', sat.signal.dueAt?.getTime() === sun.signal.dueAt?.getTime(), [sat.signal.dueAt, sun.signal.dueAt]);
+  check('on that tie, the chat waiting since Saturday wins, in either order', longestWaiting([sun, sat])?.id === 'sat' && longestWaiting([sat, sun])?.id === 'sat');
+  // Saturday, then a follow-up Monday: still waiting since Saturday, so it beats a single Sunday message.
+  const followed = { id: 'followed', signal: threadSignal([op('2026-11-09T20:00:00Z'), op('2026-11-07T14:00:00Z')], now) };
+  check('a follow-up never makes a chat look newer', followed.signal.waitingSince?.toISOString() === '2026-11-07T14:00:00.000Z' && longestWaiting([sun, followed])?.id === 'followed');
+  const answered = { id: 'answered', signal: threadSignal([{ senderType: 'admin', createdAt: new Date('2026-11-06T14:00:00Z') }], now) };
+  const fresh = { id: 'fresh', signal: threadSignal([op('2026-11-17T13:00:00Z')], now) };
+  check('nothing overdue → null; a chat not yet overdue is never picked', longestWaiting([answered, fresh]) === null && longestWaiting([fresh, sun, answered])?.id === 'sun');
+  // Two overdue chats with different due times: Wed Nov 11 (due later) against Sunday (due Nov 12).
+  const wed = { id: 'wed', signal: threadSignal([op('2026-11-11T14:00:00Z')], now) };
+  check('of two overdue chats, the earlier due time wins', wed.signal.overdue && (wed.signal.dueAt?.getTime() ?? 0) > (sun.signal.dueAt?.getTime() ?? 0) && longestWaiting([wed, sun])?.id === 'sun' && longestWaiting([sun, wed])?.id === 'sun', [wed.signal, sun.signal]);
 }
 
 console.log(failed === 0 ? '\nALL PASSED' : `\n${failed} FAILED`);
