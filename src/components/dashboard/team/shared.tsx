@@ -5,7 +5,7 @@
 // pieces (switch, status line, icons). Tokens only, so Charcoal and Light both follow.
 // Areas (Cam 2026-11-17, mockup thread 8f2ccf3a, "a lot more consolidated ... less buttons"): access is shown as about six
 // areas, each No access / View / Full, with the single switches under Advanced. The areas are only a view and an editor
-// over the stored keys (lib/team-access): a set that matches no level shows as Custom and opens Advanced, and a change
+// over the stored keys (lib/team-access): a set that matches no level reads "Some · n of m" (Build 2026-11-17: preset roles are partial on purpose), and a change
 // that would add a key that moves money lists those keys and waits for a yes. Nothing is granted silently.
 import { Fragment, useEffect, useState, type ReactNode } from 'react';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -161,7 +161,7 @@ export function areaSummary(value: readonly PermissionKey[], owner?: boolean): s
     const l = lv[a.key];
     if (l === 'none') return null;
     if (l === 'view' && !a.levels.none) return null; // the tee sheet at View is every login's floor
-    return `${a.label.split(' &')[0]}: ${l === 'custom' ? 'Custom' : LEVEL[l]}`;
+    return `${a.label.split(' &')[0]}: ${l === 'custom' ? 'Some' : LEVEL[l]}`;
   }).filter(Boolean).join(' · ') || 'Sees the tee sheet only';
 }
 
@@ -176,7 +176,6 @@ export function AccessEditor({ value, onChange, readOnly }: { value: readonly Pe
   const valueKey = value.join(',');
   useEffect(() => { setAsk(null); }, [valueKey]);
   const levels = areaLevels(value);
-  const anyCustom = !readOnly && AREAS.some(a => levels[a.key] === 'custom');
 
   /** Apply a change, or first list the keys that move money it would add and wait for Allow. */
   function propose(next: PermissionKey[], what: string, at: string) {
@@ -221,7 +220,7 @@ export function AccessEditor({ value, onChange, readOnly }: { value: readonly Pe
                       className={SEG + ' ' + (lv === l ? 'bg-white text-ink font-semibold shadow-card' : 'text-ink-soft hover:text-ink')}>{LEVEL[l]}</button>
                   ))}
                 </span>
-                {lv === 'custom' && <span className="text-[12.5px] text-ink-muted">Custom · {keys.filter(k => value.includes(k)).length} of {keys.length}, see Advanced</span>}
+                {lv === 'custom' && <span className="text-[12.5px] text-ink-muted">Some · {keys.filter(k => value.includes(k)).length} of {keys.length}</span>}
               </span>
             </div>
             {ask?.at === a.key && confirmBox}
@@ -229,7 +228,7 @@ export function AccessEditor({ value, onChange, readOnly }: { value: readonly Pe
         );
       })}
       {!readOnly && (
-        <details open={anyCustom || advOpen} onToggle={e => setAdvOpen((e.target as HTMLDetailsElement).open)} className="group/adv border-t border-line mt-1">
+        <details open={advOpen} onToggle={e => setAdvOpen((e.target as HTMLDetailsElement).open)} className="group/adv border-t border-line mt-1">
           <summary className="list-none [&::-webkit-details-marker]:hidden flex items-center gap-1.5 py-2.5 min-h-[44px] text-[12.5px] text-ink-muted cursor-pointer hover:text-ink">
             <ChevronIcon className="transition-transform motion-reduce:transition-none group-open/adv:rotate-90" />Advanced: switch single things on or off
           </summary>
