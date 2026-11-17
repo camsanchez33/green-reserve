@@ -40,6 +40,13 @@ async function cleanup() {
 (async () => {
   // Static: the switch is the owner's.
   const settings = readFileSync('src/app/api/operator/settings/route.ts', 'utf8');
+  // Routes that change state before reaching the lib refuse cash FIRST (review 2026-11-17).
+  const bk = readFileSync('src/app/api/operator/bookings/route.ts', 'utf8'), sales = readFileSync('src/app/api/operator/shop-sales/route.ts', 'utf8');
+  const split = bk.slice(bk.indexOf("if (action === 'split')"));
+  ok('Pay separately + cash is refused before the group is split', split.indexOf('cashRefused(session.courseId)') > -1 && split.indexOf('cashRefused(session.courseId)') < split.indexOf('splitBooking('));
+  ok('a walk-in paying cash now is refused before the booking is made', bk.indexOf('if (checkInNow) { const off = await cashRefused(') > -1 && bk.indexOf('if (checkInNow) { const off = await cashRefused(') < bk.indexOf('createCounterBooking('));
+  const pc = sales.slice(sales.indexOf("if (body.action === 'paid_cash') {"));
+  ok('Take cash on an open sale is refused before its card payment is stopped', pc.indexOf('cashRefused(g.session.courseId)') > -1 && pc.indexOf('cashRefused(g.session.courseId)') < pc.indexOf('cancelSaleIntent(') && pc.indexOf('cashRefused(g.session.courseId)') < pc.indexOf('reconcileStuckSale('));
   ok('staff cannot change Takes cash', /session\.isStaff && 'takesCash' in body\) return NextResponse\.json\([^)]*\{ status: 403 \}/.test(settings));
 
   await cleanup();
@@ -93,6 +100,7 @@ async function cleanup() {
   ok('off: refunding an event cash payment in cash refuses', refusedOff(await refundPayment(c.id, cashPaid.id, { amount: 10 }, 'staff')));
 
   ok('off: the register needn’t be open for a card', (await requireRegisterOpen(c.id)) === null);
+  ok('a course that doesn’t exist is never let through', (await requireRegisterOpen('no-such-course')) !== null);
   const salesAfter = JSON.stringify(await prisma.shopSale.findMany({ where: { courseId: c.id, id: { not: open.id } }, orderBy: { id: 'asc' }, select: { id: true, status: true, totalCents: true, refundedCents: true } }));
   ok('turning it off changed no sale that had already moved money', salesAfter === JSON.stringify(JSON.parse(salesBefore).filter((s: { id: string }) => s.id !== open.id)));
   const cashMovesAfter = await prisma.moneyMove.count({ where: { courseId: c.id, method: 'cash' } });

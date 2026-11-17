@@ -1,5 +1,6 @@
 import { SMS_NO_CONSENT_STAFF } from '@/lib/sms-consent-copy';
 import { requireRegisterOpen } from '@/lib/register-open';
+import { cashRefused } from '@/lib/takes-cash';
 import { shopReceiptUrl, staffShopReceipt } from '@/lib/shop-receipt';
 import { optInAndConfirm } from '@/lib/sms-consent';
 import { NextRequest, NextResponse } from 'next/server';
@@ -189,6 +190,8 @@ export async function PATCH(req: NextRequest) {
   if (!id) return NextResponse.json({ error: 'Missing sale.' }, { status: 400 });
   if (body.action === 'void' || body.action === 'paid_cash') {
     if (body.action === 'paid_cash') {
+      // Takes cash off: refused first — before the sale's card payment is stopped, which would leave it unpayable.
+      { const off = await cashRefused(g.session.courseId); if (off) return NextResponse.json({ error: off, cashOff: true }, { status: 409 }); }
       // DRAWER-1: cash for an open sale goes in the drawer — only while the register is open.
       { const closed = await requireRegisterOpen(g.session.courseId); if (closed) return NextResponse.json({ error: closed, registerClosed: true }, { status: 409 }); }
       const denied = requirePermission(g.session, 'sheet.counter_payment');

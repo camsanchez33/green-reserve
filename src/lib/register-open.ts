@@ -22,7 +22,7 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from './prisma';
 import { todayIn } from './course-time';
-import { cashRefused } from './takes-cash';
+import { cashRefused, CASH_OFF } from './takes-cash';
 
 type Result<T> = { ok: true; value: T } | { ok: false; status: number; error: string };
 const fail = (status: number, error: string) => ({ ok: false as const, status, error });
@@ -100,7 +100,7 @@ export async function requireRegisterOpen(courseId: string): Promise<string | nu
   // Takes cash off (Cam 2026-11-17, approved; the Settings copy: "no cash buttons anywhere; card and pay
   // links only"): no drawer to open, so a card at the counter isn't held up by one. Every cash path
   // refuses on its own (lib/takes-cash).
-  if (await cashRefused(courseId)) return null;
+  if ((await cashRefused(courseId)) === CASH_OFF) return null; // only a real "off" lifts it; a missing course falls through to the error below
   const v = await registerOpenFor(courseId);
   if (!v.ok) return v.error;
   if (v.value.status === 'open') return null;

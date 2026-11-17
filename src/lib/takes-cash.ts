@@ -12,7 +12,7 @@
 
 import { prisma } from './prisma';
 
-export const CASH_OFF = 'This course doesn’t take cash (Settings → Payments → Register). Take a card or send a pay link, or ask the owner to turn cash on.';
+export const CASH_OFF = 'This course doesn’t take cash — take a card or send a pay link. The owner can turn cash on in Settings.';
 
 /** null when the course takes cash; otherwise the plain error every cash path answers with. */
 export async function cashRefused(courseId: string): Promise<string | null> {

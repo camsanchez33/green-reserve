@@ -1,5 +1,6 @@
 import { SMS_NO_CONSENT_STAFF } from '@/lib/sms-consent-copy';
 import { requireRegisterOpen } from '@/lib/register-open';
+import { cashRefused } from '@/lib/takes-cash';
 import { optInAndConfirm } from '@/lib/sms-consent';
 import { setCheckoutExtras } from '@/lib/checkout-extras';
 import { roundChargeCents } from '@/lib/shop';
@@ -166,6 +167,8 @@ export async function PATCH(req: NextRequest) {
   // request — the same register cash sale as Take cash.
   if (action === 'split') {
     // DRAWER-1: split + cash needs the register open — refuse before splitting anything.
+    // Takes cash off: refused before splitting — a split can refund a hold share by card, so it must not run for cash that will be refused.
+    if (thenCash === true) { const off = await cashRefused(session.courseId); if (off) return NextResponse.json({ error: off, cashOff: true }, { status: 409 }); }
     if (thenCash === true) { const closed = await requireRegisterOpen(session.courseId); if (closed) return NextResponse.json({ error: closed, registerClosed: true }, { status: 409 }); }
     const r = await splitBooking(session.courseId, id, Number(splitPlayers), { name: typeof splitName === 'string' ? splitName : '', phone: typeof splitPhone === 'string' ? splitPhone : '', actor: staff });
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
@@ -411,6 +414,8 @@ export async function POST(req: NextRequest) {
   const golferEmail = String(body.golferEmail ?? '').trim().toLowerCase().slice(0, 200);
   const players = Number(body.players);
   // DRAWER-1: "paying cash now" needs the register open — refuse before the booking is made.
+  // Takes cash off: likewise refused before the booking is made.
+  if (checkInNow) { const off = await cashRefused(session.courseId); if (off) return NextResponse.json({ error: off, cashOff: true }, { status: 409 }); }
   if (checkInNow) { const closed = await requireRegisterOpen(session.courseId); if (closed) return NextResponse.json({ error: closed, registerClosed: true }, { status: 409 }); }
   // One place for a counter booking (lib/counter-pay) — the register calls it too.
   const made = await createCounterBooking(session.courseId, {

@@ -263,7 +263,9 @@ export async function createSale(opts: {
   /** POS-3 R2: rounds already paid at the counter (settleAtCounter) — lines on the receipt, no tax, no discount, no stock. Cash only. */
   rounds?: { bookingId: string; name: string; amountCents: number }[];
 }): Promise<Result<SaleView & { payToken: string }>> {
-  if (opts.pay === 'cash') { const off = await cashRefused(opts.courseId); if (off) return fail(409, off); } // Takes cash off
+  // Takes cash off. A sale carrying rounds comes only from ringUpCash, which checked before settling them;
+  // checking again here could strand rounds already settled if the owner flipped it mid-sale.
+  if (opts.pay === 'cash' && !(opts.rounds ?? []).length) { const off = await cashRefused(opts.courseId); if (off) return fail(409, off); }
   const rounds = opts.pay === 'cash' ? opts.rounds ?? [] : [];
   const roundsCents = rounds.reduce((n, r) => n + r.amountCents, 0);
   const noItems = rounds.length > 0 && Array.isArray(opts.lines) && opts.lines.length === 0;
