@@ -25,7 +25,7 @@ const T0 = Date.parse('2031-06-10T12:00:00Z');
 const at = (h: number) => new Date(T0 + h * H);
 const bk = (o: Partial<NsBooking> & { id: string }): NsBooking => ({
   teeTimeId: 'tt1', teeAt: T0, status: 'confirmed', players: 2, source: 'online', checkedInAt: null, createdAt: at(-500), cancelledAt: null,
-  splitFromId: null, cardSaved: true, feeOnNoShow: true, valueCents: 10000, calledOff: false, ...o,
+  splitFromId: null, cardSaved: true, feeOnNoShow: true, valueCents: 10000, calledOff: false, paid: false, windowHours: 24, ...o,
 });
 {
   const cA = bk({ id: 'cA', status: 'cancelled', players: 2, cancelledAt: at(-200) });   // 7d+ out
@@ -70,8 +70,11 @@ const bk = (o: Partial<NsBooking> & { id: string }): NsBooking => ({
   ok('the late cancel: 2 spots, 1 filled again; the called-off round is not counted', u24.cancelledSpots === 2 && u24.refilledSpots === 1 && u24.pct === 50, r.refill);
   ok('late cancels: value lost, refill money (the refill booking\'s round, 1 of 1 player), fee', r.lateCancels.spots === 2 && r.lateCancels.lostValueCents === 6000 && r.lateCancels.refilledCents === 3000 && r.lateCancels.feesCents === 1000 && r.lateCancels.netCents === -2000, r.lateCancels);
   ok('net = recovered − lost + late-cancel net', r.totals.netCents === 2500 - 14000 - 2000, r.totals);
-  const r48 = noShowOf({ from: '2031-06-10', to: '2031-06-10' }, all, now, 48, fees, rounds);
-  ok('the late-cancel line follows the course\'s cutoff', r48.lateCancelHours === 48 && r48.lateCancels.spots === 2, r48.lateCancels);
+  // The window is the one each booking was made under (R-PAY-003), not today's setting.
+  const early = noShowOf({ from: '2031-06-10', to: '2031-06-10' }, all.map(b => (b.id === 'late' ? { ...b, windowHours: 4 } : b)), now, 24, fees, rounds);
+  ok('a cancel outside its own window is not late, and its fee is not counted as a late fee', early.lateCancels.spots === 0 && early.lateCancels.feesCents === 0, early.lateCancels);
+  const paidRound = noShowOf({ from: '2031-06-10', to: '2031-06-10' }, all.map(b => (b.id === 'ns2' ? { ...b, paid: true } : b)), now, 24, fees, rounds);
+  ok('a round already paid but never checked in stays in the rate, but lost nothing', paidRound.totals.noShows === 2 && paidRound.totals.lostValueCents === 9000, paidRound.totals);
 }
 
 // ── Stock ──

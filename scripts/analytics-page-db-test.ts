@@ -7,6 +7,7 @@ import { recordMove } from '../src/lib/money-ledger';
 import { dayStart } from '../src/lib/ledger-view';
 import { allSegments } from '../src/lib/revenue-extras';
 import { computeAnalytics, previousRange } from '../src/lib/analytics';
+import { shopReport } from '../src/lib/shop-report';
 import { ledgerHeadline, noShowReport, stockValue, shopLedgerCents, projections } from '../src/lib/analytics-page';
 
 const TAG = 'anpagedbtest';
@@ -56,6 +57,12 @@ async function cleanup() {
   await recordMove({ courseId: c.id, what: 'dues', direction: 'in', method: 'card', account: 'course', amountCents: 50000, stripeId: `pi_${TAG}_dues`, at: at('2031-05-05', '12:00') });
   const item = await prisma.shopItem.create({ data: { courseId: c.id, name: 'Rain jacket', category: 'Apparel', priceCents: 8000, costCents: 4000, stockCount: 3, createdAt: new Date('2031-01-01T00:00:00Z') } });
   const balls = await prisma.shopItem.create({ data: { courseId: c.id, name: 'Balls', category: 'Balls', priceCents: 500, stockCount: 10, createdAt: new Date('2031-01-01T00:00:00Z') } });
+  // Hidden (deleted after a sale), a dropped option, an option under a hidden parent: none is on the shelf.
+  await prisma.shopItem.create({ data: { courseId: c.id, name: 'Deleted polo', priceCents: 6000, stockCount: 10, active: false } });
+  const parent = await prisma.shopItem.create({ data: { courseId: c.id, name: 'Hat', priceCents: 3000 } });
+  await prisma.shopItem.create({ data: { courseId: c.id, name: 'Hat — Red', parentId: parent.id, optionLabel: 'Red', priceCents: 3000, stockCount: 4, active: false } });
+  const hidden = await prisma.shopItem.create({ data: { courseId: c.id, name: 'Old cap', priceCents: 2000, active: false } });
+  await prisma.shopItem.create({ data: { courseId: c.id, name: 'Old cap — Blue', parentId: hidden.id, optionLabel: 'Blue', priceCents: 2000, stockCount: 7 } });
   const sale = await prisma.shopSale.create({ data: { courseId: c.id, status: 'paid_card', totalCents: 1000, paidAt: at('2031-05-20', '11:00'), lines: { create: [{ shopItemId: balls.id, name: 'Balls', unitPriceCents: 500, quantity: 2 }] } } });
   const oldSale = await prisma.shopSale.create({ data: { courseId: c.id, status: 'paid_card', totalCents: 8000, paidAt: new Date('2031-02-01T15:00:00Z'), lines: { create: [{ shopItemId: item.id, name: 'Rain jacket', unitPriceCents: 8000, quantity: 1 }] } } });
   void oldSale;
@@ -67,6 +74,14 @@ async function cleanup() {
   const t15 = await tt(c.id, '2031-05-15');
   const ns1 = await bk(c.id, t15.id, { stripePaymentMethodId: 'pm_x', stripeCustomerId: 'cus_x', noShowFeeTotal: 2500 });
   await recordMove({ courseId: c.id, what: 'no_show_fee', direction: 'in', method: 'card', account: 'course', amountCents: 2500, stripeId: `pi_${TAG}_ns`, bookingId: ns1.id, at: at('2031-05-16', '00:05') });
+  // A hold-policy booking as bookings/route.ts and cutoff-hold.ts leave it: late fee stamped, no no-show fee, the hold
+  // charged at the cutoff and kept (cancellationFeeApplies stays false on a live booking).
+  const t14 = await tt(c.id, '2031-05-14');
+  const hold = await bk(c.id, t14.id, { stripePaymentMethodId: 'pm_h', stripeCustomerId: 'cus_h', lateFeeTimingAtBooking: 'hold_at_cutoff', cancellationFeeTotal: 2000, noShowFeeTotal: 0 });
+  await recordMove({ courseId: c.id, what: 'hold', direction: 'in', method: 'card', account: 'course', amountCents: 2000, stripeId: `pi_${TAG}_hold`, bookingId: hold.id, at: at('2031-05-13', '08:00') });
+  // A twilight time, a Gold member's round on it (2 of 4 spots sold), played May 21.
+  const tw = await prisma.teeTime.create({ data: { courseId: c.id, date: '2031-05-21', time: '17:00', holes: 18, greenFeeCents: 3000, cartFeeCents: 0, playersAvailable: 4, tierName: 'Twilight' } });
+  await prisma.booking.create({ data: { teeTimeId: tw.id, courseId: c.id, golferName: 'Gold G', golferEmail: `${TAG}+gold@test.local`, players: 2, greenFeeTotal: 4000, cartFeeTotal: 0, accessFeeTotal: 0, totalAmount: 4000, status: 'completed', paymentStatus: 'paid_offline', checkedInAt: at('2031-05-21', '17:00'), appliedRate: 'Gold' } });
   const t16 = await tt(c.id, '2031-05-16');
   await bk(c.id, t16.id, { source: 'phone', greenFeeTotal: 6000 });
   // A late cancel (10 h out) with a late fee, filled again by a 1-player booking that paid $50.
@@ -90,7 +105,7 @@ async function cleanup() {
   // ── Analytics money = Revenue's money ──
   const head = await ledgerHeadline(c.id, range, now);
   const revenueAll = await allSegments(c.id, tz, range, previousRange(range), now); // exactly as /api/operator/money/sales builds `all`
-  const handGross = 10000 + 50000 + 1000 + 2500 + 1000 + 5000; // course part of every course-account row in, May 1–30
+  const handGross = 10000 + 50000 + 1000 + 2000 + 2500 + 1000 + 5000; // course part of every course-account row in, May 1–30
   ok('Analytics Revenue equals the Revenue page\'s for the same dates', !!head && head.grossCents === revenueAll.grossCents && head.netCents === revenueAll.netCents && head.refundsCents === revenueAll.refundsCents, { head, revenueAll: { g: revenueAll.grossCents, n: revenueAll.netCents } });
   ok('…and its chart is the Revenue chart', !!head && JSON.stringify(head.series) === JSON.stringify(revenueAll.series));
   ok('…and it is the ledger: course money in by payment day, GreenReserve\'s fee and platform rows out, the other course out', head?.grossCents === handGross && head?.refundsCents === 2000, head);
@@ -98,19 +113,42 @@ async function cleanup() {
   ok('…and not lib/analytics.ts (tee-date money differs here: the May 10 round was paid in April)', tee.revenue.collectedCents !== head?.grossCents, { tee: tee.revenue.collectedCents, ledger: head?.grossCents });
   ok('the period before is Revenue\'s "before" figure', head?.before.grossCents === revenueAll.beforeGrossCents && head?.before.grossCents === 10000, head?.before);
 
+  // ── Fields the Dashboard lane asked for (lib/analytics.ts, shop-report) ──
+  ok('bookings per chart bucket add up to the bookings made', tee.revenue.series.reduce((n, x) => n + x.bookings, 0) === tee.behavior.bookings, tee.revenue.series.map(x => x.bookings));
+  ok('twilight spots sold: 2 of 4', tee.behavior.spotsSold.twilightPct === 50 && tee.behavior.spotsSold.standardPct != null, tee.behavior.spotsSold);
+  const gold = tee.customers.byMembership.find(m => m.name === 'Gold'), pub = tee.customers.byMembership.find(m => m.kind === 'public');
+  ok('by membership: Gold 1 golfer 2 rounds, then Public last', gold?.kind === 'membership' && gold.golfers === 1 && gold.rounds === 2 && tee.customers.byMembership[tee.customers.byMembership.length - 1] === pub, tee.customers.byMembership);
+  ok('shares add up to about 100', Math.abs(tee.customers.byMembership.reduce((n, m) => n + (m.sharePct ?? 0), 0) - 100) < 1, tee.customers.byMembership);
+  const goldTop = tee.customers.topByRounds.find(r => r.name === 'Gold G');
+  ok('top golfers carry membership and last played', goldTop?.membership === 'Gold' && goldTop.lastPlayed === '2031-05-21', tee.customers.topByRounds);
+
   // ── No-shows ──
   const r = (await noShowReport(c.id, range, now))!;
-  ok('two no-shows (the online card+fee one and the phone one)', r.totals.noShows === 2, r.totals);
+  ok('three no-shows (the no-show fee one, the hold one, the phone one)', r.totals.noShows === 3, r.totals);
   ok('the no-show rate is the same number Analytics shows', r.totals.ratePct === tee.noShows.ratePct, { ours: r.totals.ratePct, analytics: tee.noShows.ratePct });
-  ok('recovered = this course\'s ledger no-show fee only (the other course\'s row on the same booking id is not ours)', r.totals.recoveredCents === 2500, r.totals);
-  ok('lost value = the bookings\' price', r.totals.lostValueCents === 10000 + 6000, r.totals);
+  ok('recovered = this course\'s ledger fees: the no-show fee and the kept hold (the other course\'s row on the same booking id is not ours)', r.totals.recoveredCents === 2500 + 2000, r.totals);
+  ok('lost value = the bookings\' price', r.totals.lostValueCents === 10000 + 10000 + 6000, r.totals);
   const how = (k: string) => r.byHow.find(x => x.key === k);
-  ok('by how they booked', how('online_card_fee')?.noShows === 1 && how('counter_no_card')?.noShows === 1 && how('counter_no_card')?.recoveredCents === 0, r.byHow);
+  ok('a hold-policy booking is in the card + fee row, with its hold', how('online_card_fee')?.noShows === 2 && how('online_card_fee')?.recoveredCents === 4500 && !how('online_card_no_fee'), r.byHow);
+  ok('by how they booked', how('online_card_fee')?.noShows === 2 && how('counter_no_card')?.noShows === 1 && how('counter_no_card')?.recoveredCents === 0, r.byHow);
   const u24 = r.refill.buckets.find(b => b.key === 'under_24h')!, d7 = r.refill.buckets.find(b => b.key === '7d_plus')!;
   ok('refill: the late cancel\'s 2 spots, 1 filled again; the 10-day cancel, 0 of 2', u24.cancelledSpots === 2 && u24.refilledSpots === 1 && d7.cancelledSpots === 2 && d7.refilledSpots === 0, r.refill);
   ok('late cancels: the fee and the refill round are ledger money (course part)', r.lateCancels.feesCents === 1000 && r.lateCancels.refilledCents === 5000 && r.lateCancels.lostValueCents === 10000 && r.lateCancels.netCents === -4000, r.lateCancels);
 
+  // ── Volume: more bookings than Postgres takes bound values in one statement ──
+  const big = await tt(c.id, '2031-05-29', '12:00');
+  const N = 33_000;
+  for (let i = 0; i < N; i += 5000) {
+    await prisma.booking.createMany({ data: Array.from({ length: Math.min(5000, N - i) }, () => ({ teeTimeId: big.id, courseId: c.id, golferName: 'V', golferEmail: `${TAG}@noemail.greenreserve.app`, players: 1, greenFeeTotal: 100, accessFeeTotal: 0, totalAmount: 100, status: 'cancelled', cancelledAt: at('2031-05-20', '08:00') })) });
+  }
+  let vol: Awaited<ReturnType<typeof noShowReport>> = null, volErr = '';
+  try { vol = await noShowReport(c.id, range, now); } catch (e) { volErr = String(e); }
+  ok(`a busy course over a long range (${N} bookings) still answers`, !!vol && vol.refill.buckets.find(b => b.key === '7d_plus')!.cancelledSpots === 2 + N, volErr.slice(0, 200));
+  await prisma.booking.deleteMany({ where: { teeTimeId: big.id } });
+
   // ── Shop ──
+  const sr = await shopReport(c.id, range, { cost: false });
+  ok('shop transactions: the paid register sale in the range (February\'s is not)', sr?.totals.transactions === 1, sr?.totals);
   const s = await stockValue(c.id, { cost: true }, now);
   ok('stock value: this course\'s shelf only', s.retailValueCents === 3 * 8000 + 10 * 500 && s.units === 13, s);
   ok('cost where known', s.costValueCents === 3 * 4000 && s.costUnknownItems === 1, s);
