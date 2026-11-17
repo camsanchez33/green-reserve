@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveDashboardSession, requirePermission } from '@/lib/session';
+import { resolveDashboardSession, requirePermission, can } from '@/lib/session';
 import { todayIn, addDaysStr } from '@/lib/course-time';
-import { noShowReport } from '@/lib/analytics-page';
+import { noShowReport, noShowWithoutMoney } from '@/lib/analytics-page';
 
 // Analytics → No-shows (Cam 2026-11-17, lanes/dashboard.md item 5): no-shows by how they booked, spots filled
 // again by how far ahead the golfer cancelled, and late cancels (lib/analytics-page). ?from&to course-local,
@@ -24,5 +24,6 @@ export async function GET(req: NextRequest) {
   if (!Number.isFinite(span) || span > MAX_DAYS) return NextResponse.json({ error: `Pick a range of ${MAX_DAYS} days or fewer.` }, { status: 400 });
   const r = await noShowReport(session.courseId, range);
   if (!r) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  return NextResponse.json(r, { headers: { 'Cache-Control': 'no-store' } });
+  // Money (value lost, fees, refills, net) only with money.payments, the Revenue page's gate; counts and rates for everyone.
+  return NextResponse.json(can(session, 'money.payments') ? r : noShowWithoutMoney(r), { headers: { 'Cache-Control': 'no-store' } });
 }

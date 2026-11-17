@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveDashboardSession, requirePermission } from '@/lib/session';
+import { resolveDashboardSession, requirePermission, can } from '@/lib/session';
 import { monthLabel, previousMonth, type ReviewBody, type AreaRow } from '@/lib/monthly-review';
 import { renderMonthlyReportPdf } from '@/lib/monthly-report-pdf';
 
@@ -22,7 +22,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ mon
   if (!row?.body) return NextResponse.json({ error: 'No report for that month.' }, { status: 404 });
   let review: ReviewBody;
   try { review = JSON.parse(row.body) as ReviewBody; } catch { return NextResponse.json({ error: 'No report for that month.' }, { status: 404 }); }
-  const byArea = (row.metrics as { byArea?: AreaRow[] } | null)?.byArea ?? null;
+  // By area's money rows only with money.payments, as the list (blank otherwise).
+  const stored = (row.metrics as { byArea?: AreaRow[] } | null)?.byArea ?? null;
+  const byArea = stored && !can(session, 'money.payments') ? stored.map(a => (a.unit === 'cents' ? { ...a, thisMonth: null, lastMonth: null } : a)) : stored;
   const pdf = await renderMonthlyReportPdf({
     courseName: row.course.name, monthLabel: monthLabel(month), lastMonthLabel: monthLabel(previousMonth(`${month}-01`)), review, byArea,
   });

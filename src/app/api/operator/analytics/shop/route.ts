@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveDashboardSession, requirePermission } from '@/lib/session';
+import { resolveDashboardSession, requirePermission, can } from '@/lib/session';
 import { todayIn, addDaysStr } from '@/lib/course-time';
 import { shopReport } from '@/lib/shop-report';
 import { previousRange } from '@/lib/analytics';
@@ -35,5 +35,6 @@ export async function GET(req: NextRequest) {
   // "On the month before": each category's sales over the same length of time just before.
   const was = new Map((before?.categories ?? []).map(c => [c.category, c.salesCents]));
   const categories = r.categories.map(c => ({ ...c, beforeSalesCents: was.get(c.category) ?? 0 }));
-  return NextResponse.json({ ...r, categories, stock, ledgerSalesCents }, { headers: { 'Cache-Control': 'no-store' } });
+  // The ledger's shop money only with money.payments (the Revenue page's gate); the line-based report stays as it was.
+  return NextResponse.json({ ...r, categories, stock, ...(can(session, 'money.payments') ? { ledgerSalesCents } : {}) }, { headers: { 'Cache-Control': 'no-store' } });
 }

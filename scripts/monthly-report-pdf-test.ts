@@ -55,6 +55,7 @@ console.log(JSON.stringify(out));`);
   ok('PDF route: a month, nothing else', route.includes('/^\\d{4}-(0[1-9]|1[0-2])$/'));
   ok('PDF route: never cached by a shared cache', route.includes("'Cache-Control': 'private, no-store'"));
   const list = readFileSync('src/app/api/operator/monthly-reviews/route.ts', 'utf8');
+  ok('By area money rows only with money.payments, in the list and the PDF', [list, route].every(t => t.includes("can(session, 'money.payments')") && t.includes("a.unit === 'cents' ? { ...a, thisMonth: null, lastMonth: null } : a")));
   ok('the list gives By area and the PDF link', list.includes('byArea') && list.includes('/pdf'));
   const mr = readFileSync('src/lib/monthly-review.ts', 'utf8');
   ok('the review\'s money comes from the ledger', mr.includes('ledgerMonth(courseId, tz, month, now)') && readFileSync('src/lib/analytics-page.ts', 'utf8').includes('allSegments(courseId, tz, r, previousRange(r), now)') && !mr.includes('collectedDollars') && !mr.includes('outstandingCents') && !mr.includes('impactCents'));

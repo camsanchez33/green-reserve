@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, requirePermission, can } from '@/lib/session';
 import { todayIn, addDaysStr } from '@/lib/course-time';
 import { computeAnalytics, headline, previousRange, type Range } from '@/lib/analytics';
-import { ledgerHeadline } from '@/lib/analytics-page';
+import { ledgerHeadline, unfilledWithoutMoney } from '@/lib/analytics-page';
 
 // AN-1: the operator Analytics tab. GET ?from=YYYY-MM-DD&to=YYYY-MM-DD
 // (course-local, inclusive; default the last 30 days) &compare=1 for the
@@ -42,5 +42,11 @@ export async function GET(req: NextRequest) {
     goneQuiet: current.customers.goneQuiet.map(r => ({ ...r, email: '', phone: '' })),
     segments: { ...current.customers.segments, rows: current.customers.segments.rows.map(r => ({ ...r, key: '', email: '', phone: '' })) },
   };
-  return NextResponse.json({ ...current, customers, headline: headline(current), compare, ledger }, { headers: { 'Cache-Control': 'no-store' } });
+  // Analytics page (Cam 2026-11-17, through Build): money only with money.payments (the Revenue page's gate) — the
+  // ledger block and the value of unsold spots are left out for a login without it. The page hides; this is the control.
+  const money = can(session, 'money.payments');
+  const head = headline(current);
+  const out = money ? { ...current, customers, headline: head, compare, ledger }
+    : { ...current, customers, unfilled: unfilledWithoutMoney(current.unfilled), headline: (({ lostCents: _l, ...h }) => h)(head), compare };
+  return NextResponse.json(out, { headers: { 'Cache-Control': 'no-store' } });
 }

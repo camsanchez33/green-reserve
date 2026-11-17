@@ -53,6 +53,8 @@ async function ledgerByBooking(courseId: string, bookingIds: string[], what: rea
 
 export type LedgerHeadline = {
   range: Range; grossCents: number; refundsCents: number; netCents: number; series: AllSegments['series'];
+  /** How the money in was paid (Revenue's all.paid). */
+  paid: AllSegments['paid'];
   before: { range: Range; grossCents: number; series: AllSegments['series'] };
 };
 
@@ -66,7 +68,7 @@ export async function ledgerHeadline(courseId: string, range: Range, now: Date =
     allSegments(courseId, c.tz, prev, previousRange(prev), now),
   ]);
   return {
-    range, grossCents: cur.grossCents, refundsCents: cur.refundsCents, netCents: cur.netCents, series: cur.series,
+    range, grossCents: cur.grossCents, refundsCents: cur.refundsCents, netCents: cur.netCents, series: cur.series, paid: cur.paid,
     before: { range: prev, grossCents: before.grossCents, series: before.series },
   };
 }
@@ -81,6 +83,26 @@ export async function ledgerMonth(courseId: string, tz: string, month: string, n
     grossCents: a.grossCents, refundsCents: a.refundsCents, teeCartCents: a.segments.teeCents + a.segments.cartCents,
     proShopCents: a.segments.shopCents + a.segments.fnbCents, eventCents: a.segments.eventCents, duesCents: a.segments.duesCents,
   };
+}
+
+// ─── Money only for logins with money.payments (the Revenue page's own gate) ───
+
+/** Pure: the No-shows report for a login without money.payments — counts and rates only, every cents field out. */
+export function noShowWithoutMoney(r: NoShowReport) {
+  const { lostValueCents: _a, recoveredCents: _b, lateCancelNetCents: _c, netCents: _d, ...totals } = r.totals;
+  return {
+    range: r.range, lateCancelHours: r.lateCancelHours, totals,
+    byHow: r.byHow.map(({ lostValueCents: _l, recoveredCents: _r, netCents: _n, ...x }) => x),
+    refill: r.refill,
+    lateCancels: { spots: r.lateCancels.spots, refilledSpots: r.lateCancels.refilledSpots },
+  };
+}
+
+/** Pure: Analytics' unsold spots for a login without money.payments — open spots, never their value. */
+export function unfilledWithoutMoney<U extends { rows: { lostCents: number }[]; worstHours: { lostCents: number }[]; worstDays: { lostCents: number }[]; lostCents: number }>(u: U) {
+  const drop = <T extends { lostCents: number }>(x: T) => { const { lostCents: _x, ...rest } = x; return rest; };
+  const { lostCents: _l, ...rest } = u;
+  return { ...rest, rows: u.rows.map(drop), worstHours: u.worstHours.map(drop), worstDays: u.worstDays.map(drop) };
 }
 
 // ─── No-shows, refills, late cancels ────────────────────────────────────────
@@ -410,6 +432,14 @@ export function projectionsOf(slots: Slot[], closed: Set<string>, today: string,
     week: days.slice(0, 7),
     weeksOfHistory: weeksSeen,
   };
+}
+
+/** Pure: projections for a login without money.payments — players and fill only, the revenue estimate out. */
+export function projectionsWithoutMoney(p: Projections) {
+  const { teeRevenueCents: _a, ...last } = p.last;
+  const { teeRevenueCents: _b, ...next } = p.next;
+  const { teeRevenuePct: _c, ...change } = p.change;
+  return { ...p, last, next, change };
 }
 
 export async function projections(courseId: string, now: Date = new Date()): Promise<Projections | null> {
