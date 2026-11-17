@@ -83,9 +83,10 @@ export async function shopReport(courseId: string, range: { from: string; to: st
   const ids = [...new Set(lines.map(l => l.shopItemId).filter((x): x is string => !!x))];
   const items = ids.length ? await prisma.shopItem.findMany({ where: { courseId, id: { in: ids } }, select: { id: true, category: true, costCents: true, parent: { select: { category: true } } } }) : [];
   const meta = new Map(items.map(i => [i.id, { category: i.category || i.parent?.category || '', costCents: i.costCents }]));
-  // Analytics page (Cam 2026-11-17): transactions = paid register sales, plus paid rounds with shop items on them.
+  // Analytics page (Cam 2026-11-17): transactions = paid register sales that sold something from the shop (a sale
+  // that only settled a round's green fee is not one), plus paid rounds with shop items on them.
   const [walkUps, onRounds] = await Promise.all([
-    prisma.shopSale.count({ where: { courseId, status: { in: ['paid_cash', 'paid_card', 'paid_account'] }, paidAt: inRange } }),
+    prisma.shopSale.count({ where: { courseId, status: { in: ['paid_cash', 'paid_card', 'paid_account'] }, paidAt: inRange, lines: { some: { bookingId: null } } } }),
     prisma.booking.count({ where: { courseId, paymentStatus: { in: ['paid', 'paid_offline', 'on_account'] }, paidAt: inRange, shopItems: { some: {} } } }),
   ]);
   const sum = summarize(lines, meta, { cost: opts.cost, discountsCents: sales.reduce((n, s) => n + s.discountCents, 0) });

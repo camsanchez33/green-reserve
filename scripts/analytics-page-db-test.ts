@@ -144,9 +144,20 @@ async function cleanup() {
   let vol: Awaited<ReturnType<typeof noShowReport>> = null, volErr = '';
   try { vol = await noShowReport(c.id, range, now); } catch (e) { volErr = String(e); }
   ok(`a busy course over a long range (${N} bookings) still answers`, !!vol && vol.refill.buckets.find(b => b.key === '7d_plus')!.cancelledSpots === 2 + N, volErr.slice(0, 200));
+  // …and the ledger figures too (allSegments): 33,000 round payments in the range.
+  const vb = await prisma.booking.findMany({ where: { teeTimeId: big.id }, select: { id: true } });
+  for (let i = 0; i < vb.length; i += 5000) {
+    await prisma.moneyMove.createMany({ data: vb.slice(i, i + 5000).map((b, j) => ({ courseId: c.id, what: 'round', direction: 'in', method: 'cash', account: 'course', amountCents: 100, platformFeeCents: 0, bookingId: b.id, actor: 'test', note: '', at: at('2031-05-29', '12:00'), stripeId: `vol_${TAG}_${i + j}` })) });
+  }
+  let volGross: number | null = null, volShop: number | null = null, volLedgerErr = '';
+  try { volGross = (await ledgerHeadline(c.id, range, now))!.grossCents; volShop = await shopLedgerCents(c.id, range, now); } catch (e) { volLedgerErr = String(e); }
+  ok('the ledger figures still answer with 33,000 round payments in the range', volGross === handGross + N * 100 && volShop === 1000, volLedgerErr.slice(0, 200) || { volGross, volShop });
+  await prisma.moneyMove.deleteMany({ where: { courseId: c.id, stripeId: { startsWith: `vol_${TAG}_` } } });
   await prisma.booking.deleteMany({ where: { teeTimeId: big.id } });
 
   // ── Shop ──
+  // A register sale that only settled a round's green fee (ringUpCash with no items) is not a shop transaction.
+  await prisma.shopSale.create({ data: { courseId: c.id, status: 'paid_cash', totalCents: 10000, paidAt: at('2031-05-12', '08:05'), lines: { create: [{ name: 'Green fee', unitPriceCents: 10000, quantity: 1, bookingId: counter.id }] } } });
   const sr = await shopReport(c.id, range, { cost: false });
   ok('shop transactions: the paid register sale in the range (February\'s is not)', sr?.totals.transactions === 1, sr?.totals);
   const s = await stockValue(c.id, { cost: true }, now);
