@@ -161,6 +161,8 @@ export type EventInput = {
   shareCourse?: unknown; holdNineIds?: unknown; keepOpen?: unknown;
   organizerName?: unknown; organizerEmail?: unknown; organizerPhone?: unknown;
   pricePerPlayer?: unknown; includes?: unknown; terms?: unknown; notes?: unknown;
+  /** Events lists (Cam 2026-11-17): the course's own name for the kind of event (kind 'other'). */
+  kindLabel?: unknown;
   /** Cam 2026-10-24: organizer | players. */
   payer?: unknown;
   /** Organizer events: the guaranteed headcount is due this many days before ('' = no deadline). */
@@ -177,6 +179,8 @@ export async function eventFields(courseId: string, input: EventInput, opts: { a
   const name = str(input.name, 120);
   if (!name) throw new EventError('Give the event a name.');
   const kind = (EVENT_KINDS as readonly string[]).includes(String(input.kind)) ? String(input.kind) as EventKind : 'outing';
+  // The course's own kind of event is an 'other' event with the course's name for it.
+  const kindLabel = kind === 'other' ? str(input.kindLabel, 60) : '';
   if (!isDate(input.date)) throw new EventError('Pick the date.');
   const course = await prisma.course.findUnique({ where: { id: courseId }, select: { timezone: true, holes: true } });
   if (!opts.allowPast && input.date < todayIn(course?.timezone)) throw new EventError('That date has already gone.');
@@ -234,7 +238,7 @@ export async function eventFields(courseId: string, input: EventInput, opts: { a
   }
   return {
     data: {
-      name, kind, date: input.date, format, startTime: input.startTime, holdFrom: window.from, holdTo: window.to, holdToCustom,
+      name, kind, kindLabel, date: input.date, format, startTime: input.startTime, holdFrom: window.from, holdTo: window.to, holdToCustom,
       productId, holes, groups, players, shareCourse, holdNineIds, keepOpen,
       organizerName: str(input.organizerName, 120), organizerEmail: email, organizerPhone: str(input.organizerPhone, 40),
       pricePerPlayerCents: Math.round(price * 100), includes, payer, guaranteeDaysBefore,
@@ -281,15 +285,22 @@ export async function createEvent(courseId: string, input: EventInput, actor: st
   // An event set up at short notice: an item that would already be past due is due today instead.
   const course = await prisma.course.findUnique({ where: { id: courseId }, select: { timezone: true } });
   const today = todayIn(course?.timezone);
+  // Events lists (Cam 2026-11-17): the course's own checklist steps follow the built-in ones.
+  const own = await prisma.courseEventListItem.findMany({ where: { courseId, list: 'task' }, orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }], select: { label: true, detail: true, data: true } });
+  const ownDays = (d: unknown) => { const n = (d && typeof d === 'object' ? (d as { daysBefore?: unknown }).daysBefore : null); return typeof n === 'number' && Number.isInteger(n) ? n : null; };
   const event = await prisma.courseEvent.create({
     data: {
       ...data, courseId, createdBy: actor,
-      tasks: { create: DEFAULT_TASKS.map((t, i) => {
+      tasks: { create: [...DEFAULT_TASKS.map((t, i) => {
         // The headcount item is due when the organizer's guarantee is.
         const days = t.label === HEADCOUNT_TASK && data.guaranteeDaysBefore != null ? data.guaranteeDaysBefore : t.daysBefore;
         const due = dueFor(data.date, days);
         return { label: t.label, dueDate: due < today ? today : due, sortOrder: i };
-      }) },
+      }), ...own.map((t, i) => {
+        const days = ownDays(t.data);
+        const due = days == null ? null : dueFor(data.date, days);
+        return { label: t.label, detail: t.detail, dueDate: due == null ? null : due < today ? today : due, sortOrder: DEFAULT_TASKS.length + i };
+      })] },
     },
   });
   const hold = await applyHold(event);
@@ -302,6 +313,12 @@ export async function updateEvent(courseId: string, id: string, input: EventInpu
   if (!existing) return null;
   if (existing.status !== 'planned') throw new EventError('This event was cancelled.');
   const { data, teeTimesFound } = await eventFields(courseId, input, { allowPast: input.date === existing.date });
+  // Events lists (Cam 2026-11-17): what's included is edited one line at a time and the
+  // own kind name may not be on the form, so a field the save leaves out keeps what is stored.
+  if (input.includes === undefined) data.includes = existing.includes;
+  if (input.kindLabel === undefined && data.kind === 'other') data.kindLabel = existing.kindLabel;
+  if (input.notes === undefined) data.notes = existing.notes;
+  if (input.terms === undefined) data.terms = existing.terms;
   const moved = data.date !== existing.date || data.holdFrom !== existing.holdFrom || data.holdTo !== existing.holdTo
     || data.format !== existing.format || data.productId !== existing.productId
     || data.shareCourse !== existing.shareCourse || data.holdNineIds.join() !== existing.holdNineIds.join() || data.keepOpen.join() !== existing.keepOpen.join();

@@ -233,6 +233,7 @@ model Course {
   photos                     CoursePhoto[]
   teeTimeAlerts              TeeTimeAlert[]
   events                     CourseEvent[]
+  eventListItems             CourseEventListItem[]
   nines                      Nine[]
   /// IC-1 / CS-1: when we next call the course; null = never scheduled.
   nextCheckInAt              DateTime?
@@ -1885,6 +1886,10 @@ model CourseEvent {
   signupMaxGroup      Int                  @default(4)
   /// The course's own questions, asked of every player: [{ id, label, required }].
   signupQuestions     Json                 @default("[]")
+  /// Events lists (Cam 2026-11-17): the course's own name for a kind of event ('' = the built-in kind's name). Used with kind 'other'.
+  kindLabel           String               @default("")
+  /// Events lists (Cam 2026-11-17): notes for staff, each its own line: [{ id, topic, note }]. lib/event-lists.ts.
+  staffNotes          Json                 @default("[]")
 
   @@index([courseId, date])
 }
@@ -1900,8 +1905,33 @@ model CourseEventTask {
   doneAt    DateTime?
   doneBy    String      @default("")
   sortOrder Int         @default(0)
+  /// Events lists (Cam 2026-11-17): how to do it, in the course's words ('' = none).
+  detail    String      @default("")
 
   @@index([eventId])
+}
+
+/// Events lists (Cam 2026-11-17: "they should be able to add or edit there own
+/// things"): the course's own items added to a built-in list on the Events page —
+/// what's included, checklist steps, common sign-up questions and kinds of event.
+/// Built-in items live in code (lib/event-lists.ts) and are never edited; these
+/// rows are the course's own, added, edited and removed by the course.
+model CourseEventListItem {
+  id        String   @id @default(cuid())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  /// include | task | question | kind
+  list      String
+  label     String
+  /// Checklist step: how to do it. Included item: an optional detail.
+  detail    String   @default("")
+  /// Question: { type, choices }. Checklist step: { daysBefore } (null = no due date).
+  data      Json     @default("{}")
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([courseId, list])
 }
 
 /// W2-9: a player in an event, with their group and starting hole (pairings).
