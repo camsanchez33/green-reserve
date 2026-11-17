@@ -12,11 +12,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyCalcomSignature, calcomCreatedBy } from '@/lib/calcom';
 import { defaultAgenda, parseJson } from '@/lib/inquiry-call';
-import { ALIVE_STATUSES } from '@/lib/inquiry-status';
+import { ALIVE_STATUSES, CALL_STATUSES } from '@/lib/inquiry-status';
 
 type Attendee = { name?: string; email?: string; phoneNumber?: string | null };
 type Payload = {
   uid?: string;
+  location?: string;
+  videoCallData?: { url?: string } | null;
   startTime?: string;
   endTime?: string;
   attendees?: Attendee[];
@@ -42,6 +44,23 @@ function answerOf(p: Payload, keys: string[]): string {
     if (s.trim()) return s.trim().slice(0, 200);
   }
   return '';
+}
+
+/** Inquiries data: who booked, for the Calls tab. Business contact the course gave Cal.com. */
+function attendeeOf(p: Payload): { attendeeName: string | null; attendeeEmail: string | null } {
+  const a = p.attendees?.[0] ?? {};
+  const email = (a.email || '').trim().toLowerCase().slice(0, 200);
+  return { attendeeName: (a.name || '').trim().slice(0, 120) || null, attendeeEmail: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : null };
+}
+
+/** The meeting link Cal.com made (video call or an https location). Only https; anything else is dropped. */
+function meetingUrlOf(p: Payload): string | null {
+  const meta = p.metadata?.videoCallUrl;
+  for (const v of [p.videoCallData?.url, typeof meta === 'string' ? meta : '', p.location]) {
+    if (typeof v !== 'string' || !v.trim()) continue;
+    try { const u = new URL(v.trim()); if (u.protocol === 'https:') return u.toString().slice(0, 500); } catch { /* not a link */ }
+  }
+  return null;
 }
 
 function phoneOf(p: Payload, fallback: string): string {
@@ -108,14 +127,18 @@ export async function POST(req: NextRequest) {
   // only when that picks out exactly ONE live inquiry submitted in the last 30
   // days — anything ambiguous is left for Cam to attach by hand, as before.
   // Not for reschedules: those carry the original booking's metadata.
+  // Inquiries data (Cam 2026-11-17): a course in OUTREACH (a lead, any age) is matched too — by its own
+  // email or any of its contacts' — so a course we emailed that books on the plain link lands on its own
+  // page instead of opening a second, pending inquiry. Still exactly one match or none.
   if (!inq && !token && !p.rescheduleUid) {
     const email = (p.attendees?.[0]?.email || '').trim().toLowerCase();
     if (email) {
       const matches = await prisma.courseInquiry.findMany({
         where: {
-          email: { equals: email, mode: 'insensitive' },
-          status: { in: [...ALIVE_STATUSES] },
-          createdAt: { gte: new Date(Date.now() - 30 * 86_400_000) },
+          OR: [
+            { email: { equals: email, mode: 'insensitive' }, status: { in: [...ALIVE_STATUSES] }, createdAt: { gte: new Date(Date.now() - 30 * 86_400_000) } },
+            { status: 'lead', OR: [{ email: { equals: email, mode: 'insensitive' } }, { contacts: { some: { email: { equals: email, mode: 'insensitive' } } } }] },
+          ],
         },
         select: INQ_SELECT,
         take: 2,
@@ -127,7 +150,7 @@ export async function POST(req: NextRequest) {
   // CAL-2 (review): a closed inquiry does not get a Call row from a stale link.
   // Cal.com has already put the booking in Cam's calendar, so say so on the
   // timeline rather than dropping it silently.
-  if (inq && !(ALIVE_STATUSES as readonly string[]).includes(inq.status)) {
+  if (inq && !(CALL_STATUSES as readonly string[]).includes(inq.status)) {
     await timeline(inq.id, inq.status, `Course booked ${fmtWhen(start)} on Cal.com, but this inquiry is ${inq.status} — not added as a call. Cancel it in Cal.com if it should not happen.`);
     return NextResponse.json({ ignored: `inquiry ${inq.status}` });
   }
@@ -182,7 +205,7 @@ export async function POST(req: NextRequest) {
         select: { id: true, status: true },
       });
       const call = await tx.call.create({
-        data: { kind: 'discovery', inquiryId: inquiry.id, scheduledAt: start, durationMin, direction: 'we_call', phone, bookedByCourse: true, createdBy: calcomCreatedBy(uid) },
+        data: { kind: 'discovery', inquiryId: inquiry.id, scheduledAt: start, durationMin, direction: 'we_call', phone, bookedByCourse: true, createdBy: calcomCreatedBy(uid), ...attendeeOf(p), meetingUrl: meetingUrlOf(p) },
         select: { id: true },
       });
       await tx.inquiryStatusEvent.create({
@@ -199,7 +222,8 @@ export async function POST(req: NextRequest) {
   if (previous) {
     await prisma.call.update({
       where: { id: previous.id },
-      data: { scheduledAt: start, durationMin, phone, createdBy: calcomCreatedBy(uid) },
+      // A move keeps who booked unless Cal.com names someone; the meeting link is the new booking's.
+      data: { scheduledAt: start, durationMin, phone, createdBy: calcomCreatedBy(uid), ...(p.attendees?.[0]?.email || p.attendees?.[0]?.name ? attendeeOf(p) : {}), meetingUrl: meetingUrlOf(p) },
     });
     await timeline(inquiryId, status, `Course moved the call to ${fmtWhen(start)} (Cal.com)`);
     return NextResponse.json({ ok: true, moved: previous.id });
@@ -210,6 +234,7 @@ export async function POST(req: NextRequest) {
     data: {
       kind: 'discovery', inquiryId, scheduledAt: start, durationMin, direction: 'we_call', phone,
       agendaJson: JSON.stringify(agendaKeys), bookedByCourse: true, createdBy: calcomCreatedBy(uid),
+      ...attendeeOf(p), meetingUrl: meetingUrlOf(p),
     },
     select: { id: true },
   });
