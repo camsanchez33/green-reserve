@@ -22,15 +22,16 @@ export function RolePopup({ role, suggested, areas, onClose, onChanged }: {
   // How many people this edit actually changes (their own changes can mask it): the server's dry run, else everyone in it.
   const [affected, setAffected] = useState<number | null>(null);
   const keysKey = keys.join(',');
+  const roleId = role && !role.owner && role.people ? role.id : '';
   useEffect(() => {
-    if (!role || role.owner || !role.people) return;
+    if (!roleId) return;
     let live = true;
     const t = window.setTimeout(() => {
-      dfetch<{ affected?: number }>('/api/operator/team/roles', { method: 'PATCH', body: JSON.stringify({ id: role.id, permissions: keysKey ? keysKey.split(',') : [], dryRun: true }) })
+      dfetch<{ affected?: number }>('/api/operator/team/roles', { method: 'PATCH', body: JSON.stringify({ id: roleId, permissions: keysKey ? keysKey.split(',') : [], dryRun: true }) })
         .then(r => { if (live) setAffected(r.ok && typeof r.data?.affected === 'number' ? r.data.affected : null); });
     }, 250);
     return () => { live = false; window.clearTimeout(t); };
-  }, [role, keysKey]);
+  }, [roleId, keysKey]);
   const affects = affected ?? role?.people ?? 0;
   if (role?.owner) {
     return (
