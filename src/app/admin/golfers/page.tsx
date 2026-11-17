@@ -1,414 +1,334 @@
 'use client';
-import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
+// Golfers (Cam approved the mockup 2026-11-17, lanes/admin/golfers-mockup.html; lanes/admin.md "Golfers — APPROVED").
+// Every golfer who has used GreenReserve, one line each (name, home course, rounds, last played, a status dot), with a
+// wordless search and one filter icon. A golfer opens to their numbers, contact, where they've played and every
+// booking with its history, with Resend confirmation and Resend receipt ONLY: admin never charges, retries, refunds or
+// cancels a golfer's booking; the course is the seller (CLAUDE.md). The API is /api/admin/golfers (list, record, the
+// two resends). Shown only when the data exists: texts consent, the saved card's brand, the last sign-in, emails
+// sent and the Stripe link aren't on the record yet, so they stay off the page.
+import Link from 'next/link';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Search, ExternalLink, X } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
-import { useAdminSession } from '@/lib/admin-session-context';
-import { MANAGER_PLUS } from '@/lib/admin-roles';
-import { StatusDot } from '@/components/ui/StatusDot';
-import { EmptyState } from '@/components/EmptyState';
-import { adminFetch } from '@/lib/admin-fetch';
-import { formatMoney as fmtMoney, formatDate as fmtDate, formatStamp as fmtStamp } from '@/lib/format';
-import { Modal } from '@/components/ui/Modal';
-import { INPUT } from '@/components/ui/field';
+import { Msg, profileStyles as s } from '@/components/admin/ProfileCard';
+import { adminFetch, type AdminFetchFailure } from '@/lib/admin-fetch';
+import { formatMoney, formatTeeDate, formatTeeTime } from '@/lib/format';
+import { Dialog } from '../security/Dialog';
+import g from '../admin-glass.module.css';
+import gs from './golfers.module.css';
 
-// MP-6d: the Golfers RECORD page. Before this it could look but barely touch:
-// resend confirmation (and "Sent" was a guess), nothing else. A real support
-// call needs: who is this person and can I trust them (rounds, no-shows, late
-// cancels, failed charges, lifetime collected), what happened to their money
-// (the PaymentEvent ledger MP-6b started writing), and the actions — resend
-// confirmation, resend receipt, refund. (No cancel: Cam 2026-11-12.)
+type Tone = 'ok' | 'warn' | 'bad' | 'neutral';
+type Filter = 'all' | 'account' | 'guest' | 'noshow' | 'failed';
+const FILTERS: [Filter, string][] = [['all', 'Everyone'], ['account', 'Golfers with an account'], ['guest', 'Guests, no account'], ['noshow', 'No-shows or late cancels'], ['failed', 'Failed charges']];
+type Line = { key: string; id: string | null; guestEmail: string | null; name: string; homeCourse: string | null; rounds: number; lastPlayed: string | null; tone: Tone };
+type List = { filter: Filter; q: string; total: number; nextOffset: number | null; golfers: Line[] };
 
-const BASE_URL = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_URL ?? '');
-const iCls = INPUT;
-
-interface GolferSummary { id: string; email: string; name: string; phone: string; bookingCount: number; createdAt: string }
-interface GuestBooking {
-  id: string; golferName: string; golferEmail: string; golferPhone: string;
-  players: number; totalAmount: number; status: string; createdAt: string;
-  courseName: string; courseId: string; teeDate: string; teeTime: string;
-}
 interface PaymentEvent { id: string; kind: string; amount: number; actor: string; actorName: string | null; detail: string; at: string }
-interface BookingDetail {
-  id: string; status: string; paymentStatus: string;
-  players: number; totalAmount: number; accessFeeTotal: number; greenFeeTotal: number; cartFeeTotal: number;
-  cancellationFeeTotal: number; refundedTotal: number;
-  checkedInAt: string | null; cancelledAt: string | null; cancellationFeeChargedAt: string | null;
-  checkInFailReason: string; hasCard: boolean; isGuest: boolean; noShow: boolean;
-  createdAt: string; courseId: string; courseName: string; courseSlug: string;
-  teeDate: string; teeTime: string; holes: number;
-  events: PaymentEvent[];
+interface Booking {
+  id: string; status: string; paymentStatus: string; players: number; totalAmount: number; accessFeeTotal: number;
+  refundedTotal: number; checkedInAt: string | null; cancelledAt: string | null; cancellationFeeChargedAt: string | null;
+  checkInFailReason: string; hasCard: boolean; isGuest: boolean; noShow: boolean; createdAt: string; number: string;
+  termsAcceptedAt: string | null; termsVersion: string | null;
+  courseId: string; courseName: string; teeDate: string; teeTime: string; holes: number; events: PaymentEvent[];
 }
 interface Trust { rounds: number; noShows: number; lateCancels: number; failedCharges: number; upcoming: number; lifetimeCollected: number; refunded: number }
-interface GolferDetail {
-  id: string | null; email: string; firstName: string; lastName: string; phone: string; createdAt: string | null; isGuest: boolean;
-  bookings: BookingDetail[]; trust: Trust;
+interface Golfer { id: string | null; email: string; firstName: string; lastName: string; phone: string; createdAt: string | null; isGuest: boolean; bookings: Booking[]; trust: Trust }
+
+const TZ = 'America/New_York';
+const stamp = (iso: string) => new Date(iso).toLocaleString('en-US', { timeZone: TZ, month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+const dayE = (iso: string) => new Date(iso).toLocaleDateString('en-US', { timeZone: TZ, month: 'short', day: 'numeric', year: 'numeric' });
+const monthYear = (iso: string) => new Date(iso).toLocaleDateString('en-US', { timeZone: TZ, month: 'short', year: 'numeric' });
+const plural = (n: number, one: string, many = one + 's') => `${n} ${n === 1 ? one : many}`;
+const dotClass = (t: Tone) => `${gs.dot} ${t === 'neutral' ? '' : gs[t]}`;
+
+const ICON = { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, 'aria-hidden': true };
+const SearchIcon = () => <svg {...ICON} width={14} height={14}><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>;
+const FilterIcon = () => <svg {...ICON}><path d="M4 5h16l-6 7.5V19l-4-2v-4.5z" /></svg>;
+const Chevron = () => <svg {...ICON} width={14} height={14} className={gs.ch}><path d="m9 6 6 6-6 6" /></svg>;
+
+function statusOf(b: Booking): { tone: Tone; label: string } {
+  if (b.status === 'cancelled') return b.cancellationFeeChargedAt ? { tone: 'warn', label: 'Cancelled late, fee kept' } : { tone: 'neutral', label: 'Cancelled, no charge' };
+  if (b.paymentStatus === 'refunded') return { tone: 'neutral', label: 'Refunded by the course' };
+  if (b.status === 'completed') return { tone: 'ok', label: b.refundedTotal > 0 ? 'Checked in · part refunded' : 'Checked in and paid' };
+  if (b.checkInFailReason) return { tone: 'bad', label: 'Card declined at check-in' };
+  if (b.noShow) return { tone: 'warn', label: 'No-show' };
+  if (b.paymentStatus === 'cancellation_fee_charged') return { tone: 'warn', label: 'Late fee charged · not checked in' };
+  if (b.paymentStatus === 'paid') return { tone: 'ok', label: 'Paid · not checked in yet' };
+  return { tone: 'neutral', label: b.hasCard ? 'Confirmed · card on file' : 'Confirmed · no card' };
 }
 
-function statusOf(b: BookingDetail): { dot: 'ok' | 'bad' | 'warn' | 'neutral'; label: string } {
-  if (b.status === 'cancelled') return b.cancellationFeeChargedAt ? { dot: 'bad', label: 'Cancelled — late fee kept' } : { dot: 'neutral', label: 'Cancelled — no charge' };
-  if (b.paymentStatus === 'refunded') return { dot: 'neutral', label: 'Refunded' };
-  if (b.status === 'completed') return { dot: 'ok', label: b.refundedTotal > 0 ? 'Checked in · part refunded' : 'Checked in & paid' };
-  if (b.checkInFailReason) return { dot: 'bad', label: 'Card declined at check-in' };
-  if (b.noShow) return { dot: 'warn', label: 'No-show — never checked in' };
-  if (b.paymentStatus === 'cancellation_fee_charged') return { dot: 'warn', label: 'Late fee charged · not yet checked in' };
-  if (b.paymentStatus === 'paid') return { dot: 'ok', label: 'Paid · not yet checked in' };
-  return { dot: 'neutral', label: b.hasCard ? 'Confirmed · card on file' : 'Confirmed · no card' };
-}
-const EVENT_LABEL: Record<string, string> = {
-  refund: 'Refund issued', refund_failed: 'Refund failed', dispute_opened: 'Chargeback opened', dispute_closed: 'Chargeback closed', charge_failed: 'Charge failed',
+const EVENT_WORDS: Record<string, string> = {
+  refund: 'Refunded by the course', refund_failed: 'Refund failed', charge_failed: 'Charge failed',
+  dispute_opened: 'Chargeback opened', dispute_closed: 'Chargeback closed',
 };
+
+/** What happened to a booking, oldest first, from what the record holds. */
+function history(b: Booking): [string, string][] {
+  const rows: [string, string][] = [[b.createdAt, `Booked · ${plural(b.players, 'player')} · ${b.hasCard ? 'card saved' : 'no card saved'}`]];
+  if (b.checkedInAt) rows.push([b.checkedInAt, 'Checked in']);
+  if (b.cancelledAt) rows.push([b.cancelledAt, 'Cancelled']);
+  if (b.cancellationFeeChargedAt) rows.push([b.cancellationFeeChargedAt, 'Late-cancel fee charged by the course']);
+  for (const e of b.events) rows.push([e.at, [EVENT_WORDS[e.kind] ?? e.kind.replace(/_/g, ' '), e.amount ? formatMoney(e.amount) : '', e.detail].filter(Boolean).join(' · ')]);
+  return rows.sort((a, z) => a[0].localeCompare(z[0]));
+}
 
 function GolfersInner() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const selectedId = searchParams.get('id') ?? '';
-  const guestEmail = searchParams.get('guest') ?? '';
-  const { role } = useAdminSession();
-  const canMoveMoney = MANAGER_PLUS.includes(role);
-
-  const [query, setQuery] = useState(searchParams.get('q') ?? '');
-  const [searching, setSearching] = useState(false);
-  const [golfers, setGolfers] = useState<GolferSummary[]>([]);
-  const [guestBookings, setGuestBookings] = useState<GuestBooking[]>([]);
-  const [searchError, setSearchError] = useState('');
-  const [searched, setSearched] = useState(false);
-
-  const [detail, setDetail] = useState<GolferDetail | null>(null);
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [detailError, setDetailError] = useState('');
-
-  // One action at a time per booking, and the outcome stays on screen.
-  const [busy, setBusy] = useState<string | null>(null);
-  const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null);
-  const [refundTarget, setRefundTarget] = useState<BookingDetail | null>(null);
-  const [refundAmount, setRefundAmount] = useState('');
-  const [refundReason, setRefundReason] = useState('');
-  const [modalError, setModalError] = useState('');
-
-  const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const search = useCallback(async (q: string) => {
-    if (q.length < 2) { setGolfers([]); setGuestBookings([]); setSearched(false); return; }
-    setSearching(true); setSearchError('');
-    const res = await adminFetch<{ golfers: GolferSummary[]; guestBookings: GuestBooking[] }>(`/api/admin/golfers?q=${encodeURIComponent(q)}`, { subject: 'golfers' });
-    if (!res.ok) { setSearchError(res.message); setSearching(false); return; }
-    setGolfers(res.data.golfers ?? []); setGuestBookings(res.data.guestBookings ?? []); setSearched(true);
-    setSearching(false);
-  }, []);
-
-  function handleQueryChange(v: string) {
-    setQuery(v);
-    if (searchTimeout.current) clearTimeout(searchTimeout.current);
-    searchTimeout.current = setTimeout(() => search(v), 350);
-  }
-  useEffect(() => { const q0 = searchParams.get('q'); if (q0 && !selectedId && !guestEmail) search(q0); }, [searchParams, selectedId, guestEmail, search]);
-
-  const loadDetail = useCallback(async () => {
-    const url = selectedId ? `/api/admin/golfers?id=${encodeURIComponent(selectedId)}` : `/api/admin/golfers?guest=${encodeURIComponent(guestEmail)}`;
-    setDetailLoading(true); setDetailError('');
-    const res = await adminFetch<{ golfer: GolferDetail }>(url, { subject: 'this golfer' });
-    if (!res.ok) { setDetail(null); setDetailError(res.message); }
-    else setDetail(res.data.golfer);
-    setDetailLoading(false);
-  }, [selectedId, guestEmail]);
-
-  useEffect(() => {
-    if (selectedId || guestEmail) loadDetail(); else setDetail(null);
-  }, [selectedId, guestEmail, loadDetail]);
-
-  function go(params: Record<string, string | null>) {
-    const p = new URLSearchParams(searchParams.toString());
-    for (const [k, v] of Object.entries(params)) { if (v === null) p.delete(k); else p.set(k, v); }
-    router.push(`/admin/golfers?${p}`);
-  }
-
-  async function act(b: BookingDetail, action: 'resend_confirmation' | 'resend_receipt') {
-    setBusy(b.id); setNote(null);
-    const res = await adminFetch<{ ok: boolean; sentTo: string }>('/api/admin/golfers', { method: 'POST', body: JSON.stringify({ bookingId: b.id, action }), subject: 'this email', action: 'send' });
-    setBusy(null);
-    if (!res.ok) { setNote({ ok: false, text: res.message }); return; }
-    setNote({ ok: true, text: `${action === 'resend_receipt' ? 'Receipt' : 'Confirmation'} sent to ${res.data.sentTo}.` });
-  }
-
-  async function submitRefund() {
-    if (!refundTarget) return;
-    const dollars = refundAmount.trim() === '' ? null : Number(refundAmount);
-    if (dollars !== null && (!Number.isFinite(dollars) || dollars <= 0)) { setModalError('Enter an amount in dollars, or leave it blank for a full refund.'); return; }
-    if (!refundReason.trim()) { setModalError('A reason is required — the golfer reads it.'); return; }
-    setBusy(refundTarget.id); setModalError('');
-    const res = await adminFetch<{ amountCents: number; full: boolean; emailSent: boolean }>('/api/admin/refund', {
-      method: 'POST', body: JSON.stringify({ bookingId: refundTarget.id, amountCents: dollars === null ? undefined : Math.round(dollars * 100), reason: refundReason.trim() }),
-      subject: 'this refund', action: 'send',
-    });
-    setBusy(null);
-    if (!res.ok) { setModalError(res.message); return; }
-    setNote({ ok: true, text: `Refunded ${fmtMoney(res.data.amountCents / 100)}${res.data.full ? '' : ' (partial)'}${res.data.emailSent ? ' — they have been emailed.' : ' — the email did NOT send; tell them yourself.'}` });
-    setRefundTarget(null); setRefundAmount(''); setRefundReason('');
-    loadDetail();
-  }
-
-  // Item 8: group guest bookings that share an email with a registered account
-  const golferEmailSet = new Set(golfers.map(g => g.email.toLowerCase()));
-  const guestByEmail = new Map<string, GuestBooking[]>();
-  for (const b of guestBookings) {
-    const key = b.golferEmail.toLowerCase();
-    if (golferEmailSet.has(key)) continue;
-    if (!guestByEmail.has(key)) guestByEmail.set(key, []);
-    guestByEmail.get(key)!.push(b);
-  }
-  const guestPeople = [...guestByEmail.entries()].map(([email, list]) => ({ email, name: list[0].golferName, phone: list[0].golferPhone, count: list.length, latest: list[0] }));
-
-  const inRecord = !!(selectedId || guestEmail);
-  const t = detail?.trust;
-  const remaining = refundTarget ? Math.max(0, refundTarget.totalAmount - refundTarget.refundedTotal) : 0;
-
+  const params = useSearchParams();
+  const id = params.get('id') ?? '';
+  const guest = params.get('guest') ?? '';
+  const open = (l: Line) => router.push(l.id ? `/admin/golfers?id=${encodeURIComponent(l.id)}` : `/admin/golfers?guest=${encodeURIComponent(l.guestEmail ?? '')}`);
   return (
-    <div className="min-h-screen bg-white flex">
-      <AdminSidebar active="golfers"/>
-      <div className="admin-content flex-1 min-h-screen">
-        <div className="px-10 pt-6 pb-10">
-          {/* ADMIN-C / AW-10 (Cam 2026-10-22, "lookup only"): no list of every golfer — search, then one record. */}
-          <div className="mb-6">
-            <h1 className="m-0 text-[32px] font-bold tracking-[-0.02em] text-ink leading-none">{inRecord ? 'Golfer' : 'Golfers'}</h1>
-            {!inRecord && <p className="mt-2 text-[14px] text-ink-soft">Look one golfer up by name, email or phone to see their bookings and fix one — resend, cancel or refund.</p>}
+    <>
+      <AdminSidebar active="golfers" />
+      <main className={g.main}>
+        <div className={g.head}><h1>Golfers</h1></div>
+        <div className={gs.col}>
+          {id || guest ? <Record key={id + '|' + guest} id={id} guest={guest} onBack={() => router.push('/admin/golfers')} /> : <Everyone onOpen={open} />}
+        </div>
+      </main>
+    </>
+  );
+}
+
+function LoadError({ msg, kind, retry, busy }: { msg: string; kind: AdminFetchFailure; retry: () => void; busy: boolean }) {
+  return (
+    <div className={`${g.glass} ${g.note}`} role="alert">
+      <span className={g.down}>{msg}</span>
+      {kind === 'unauthorized' ? <Link href="/admin/login">Sign in</Link>
+        : kind === 'forbidden' ? null : <button type="button" onClick={retry} disabled={busy}>{busy ? 'Trying…' : 'Try again'}</button>}
+    </div>
+  );
+}
+
+function Everyone({ onOpen }: { onOpen: (l: Line) => void }) {
+  const [q, setQ] = useState('');
+  const [filter, setFilter] = useState<Filter>('all');
+  const [d, setD] = useState<List | null>(null);
+  const [err, setErr] = useState<{ msg: string; kind: AdminFetchFailure } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [more, setMore] = useState<{ busy: boolean; error: string }>({ busy: false, error: '' });
+  const [filterOpen, setFilterOpen] = useState(false);
+  const seq = useRef(0);
+
+  const url = (query: string, f: Filter, offset = 0) => '/api/admin/golfers?' + new URLSearchParams({ list: '1', filter: f, ...(query.trim() ? { q: query.trim() } : {}), ...(offset ? { offset: String(offset) } : {}) });
+  const load = useCallback(async (query: string, f: Filter) => {
+    const mine = ++seq.current;
+    setLoading(true); setErr(null);
+    const r = await adminFetch<List>(url(query, f), { subject: 'golfers' });
+    if (mine !== seq.current) return;
+    if (r.ok) setD(r.data); else setErr({ msg: r.message, kind: r.kind });
+    setLoading(false);
+  }, []);
+  // Typing searches after a short pause; a new filter loads straight away.
+  useEffect(() => { const t = setTimeout(() => load(q, filter), q ? 300 : 0); return () => clearTimeout(t); }, [q, filter, load]);
+
+  async function loadMore() {
+    if (!d || d.nextOffset === null) return;
+    const mine = seq.current;
+    setMore({ busy: true, error: '' });
+    const r = await adminFetch<List>(url(q, filter, d.nextOffset), { subject: 'more golfers' });
+    if (mine !== seq.current) { setMore({ busy: false, error: '' }); return; } // the search or filter changed meanwhile
+    if (r.ok) { setD(cur => (cur ? { ...cur, golfers: [...cur.golfers, ...r.data.golfers], nextOffset: r.data.nextOffset } : r.data)); setMore({ busy: false, error: '' }); }
+    else setMore({ busy: false, error: r.message });
+  }
+
+  const shown = d?.golfers ?? [];
+  return (
+    <>
+      {err && <LoadError msg={err.msg} kind={err.kind} retry={() => load(q, filter)} busy={loading} />}
+      <section className={`${g.glass} ${s.card}`} aria-labelledby="gf-t">
+        <div className={`${s.ch} ${gs.head}`}>
+          <div>
+            <h3 id="gf-t">Every golfer who has used GreenReserve{d && <span className={gs.cnt}>{d.total.toLocaleString('en-US')}</span>}</h3>
+            <p>Sorted by last played. Open someone to see where they’ve played, every booking, payment and receipt. Their course handles refunds and cancellations.</p>
           </div>
-
-          {inRecord ? (
-            <div>
-              <button type="button" onClick={() => go({ id: null, guest: null })} className="text-[14px] text-pine hover:underline mb-5">
-                Back to search
-              </button>
-
-              {detailLoading && <div className="py-16 text-center text-ink-muted text-sm">Loading…</div>}
-              {detailError && (
-                <div className="bg-bad/5 border border-bad/20 rounded-lg px-4 py-3 text-sm text-bad flex items-center gap-2">
-                  <StatusDot status="warn" />{detailError}
-                  <button onClick={loadDetail} className="ml-auto underline">Retry</button>
+          <div className={gs.tools}>
+            <label className={gs.sr}><SearchIcon /><input value={q} onChange={e => setQ(e.target.value)} aria-label="Search golfers by name, email or phone" type="search" autoComplete="off" /></label>
+            <button type="button" className={`${gs.ibtn} ${filter !== 'all' ? gs.fon : ''}`} onClick={() => setFilterOpen(true)} aria-label={filter === 'all' ? 'Filter' : `Filter: ${FILTERS.find(f => f[0] === filter)?.[1]}`} title="Filter">
+              <FilterIcon />{filter !== 'all' && <i className={gs.fdot} />}
+            </button>
+          </div>
+        </div>
+        <div className={s.cb}>
+          {!d && !err && <div className={gs.skel} aria-busy="true" aria-label="Loading golfers" />}
+          {d && (
+            <>
+              <div className={gs.hd} aria-hidden="true"><span /><span>Name</span><span>Home course</span><span>Rounds</span><span>Last played</span><span /></div>
+              {shown.length === 0 && <p className={gs.empty}>{q || filter !== 'all' ? 'No golfer matches that.' : 'No golfer has booked yet.'}</p>}
+              {shown.map(l => (
+                <button key={l.key} type="button" className={gs.row} onClick={() => onOpen(l)}>
+                  <i className={dotClass(l.tone)} aria-hidden="true" />
+                  <span className={gs.n}>{l.name}{!l.id && <em>Guest</em>}</span>
+                  <span className={`${gs.soft} ${gs.hideS}`}>{l.homeCourse ?? '—'}</span>
+                  <span className={`${gs.num} ${gs.hideS}`}>{l.rounds}</span>
+                  <span className={`${gs.soft} ${gs.hideS}`}>{l.lastPlayed ? formatTeeDate(l.lastPlayed) : 'Not yet'}</span>
+                  <Chevron />
+                </button>
+              ))}
+              {d.nextOffset !== null && (
+                <div className={gs.more}>
+                  <button type="button" className={s.lnk} onClick={loadMore} disabled={more.busy} aria-busy={more.busy}>{more.busy ? 'Loading…' : 'Show 50 more'}</button>
+                  {more.error && <span className={g.down} role="alert">{more.error}</span>}
                 </div>
               )}
-
-              {detail && t && (
-                <div className="space-y-5">
-                  {/* Identity */}
-                  <div className="border-b border-line pb-5">
-                    <div className="flex items-start gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[20px] font-bold text-ink">{detail.firstName} {detail.lastName} {detail.isGuest && <span className="text-xs font-normal text-ink-muted">· guest, no account</span>}</div>
-                        <a href={'mailto:' + detail.email} className="text-sm text-ink-soft hover:text-pine">{detail.email}</a>
-                        {detail.phone && <div className="text-sm text-ink-muted mt-0.5">{detail.phone}</div>}
-                      </div>
-                      <div className="text-right text-xs text-ink-muted">
-                        <div>{detail.isGuest ? 'First booked' : 'Account created'}</div>
-                        <div className="font-medium text-ink-soft mt-0.5">{detail.createdAt ? fmtDate(detail.createdAt) : detail.bookings.length ? fmtDate(detail.bookings[detail.bookings.length - 1].createdAt) : '—'}</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Trust strip — whether to waive a fee gladly or spot a pattern */}
-                  <div className="grid grid-cols-3 md:grid-cols-6 gap-px bg-line border border-line rounded-lg overflow-hidden">
-                    {[
-                      { label: 'Rounds played', value: String(t.rounds), tone: 'text-ink' },
-                      { label: 'Upcoming', value: String(t.upcoming), tone: 'text-ink' },
-                      { label: 'No-shows', value: String(t.noShows), tone: t.noShows > 0 ? 'text-warn' : 'text-ink' },
-                      { label: 'Late cancels', value: String(t.lateCancels), tone: t.lateCancels > 0 ? 'text-warn' : 'text-ink' },
-                      { label: 'Failed charges', value: String(t.failedCharges), tone: t.failedCharges > 0 ? 'text-bad' : 'text-ink' },
-                      { label: 'Lifetime paid', value: fmtMoney(t.lifetimeCollected), tone: 'text-ok', sub: t.refunded > 0 ? `${fmtMoney(t.refunded)} refunded` : undefined },
-                    ].map(c => (
-                      <div key={c.label} className="bg-white p-4">
-                        <div className="text-[13px] text-ink-soft mb-1">{c.label}</div>
-                        <div className={'text-[22px] font-medium leading-none tabular-nums ' + c.tone}>{c.value}</div>
-                        {c.sub && <div className="text-[12px] text-ink-muted mt-1">{c.sub}</div>}
-                      </div>
-                    ))}
-                  </div>
-
-                  {note && (
-                    <div className={'rounded-md px-4 py-2.5 text-sm flex items-center justify-between gap-3 border ' + (note.ok ? 'bg-ok/5 border-ok/20 text-ok' : 'bg-bad/5 border-bad/20 text-bad')} role={note.ok ? 'status' : 'alert'}>
-                      <span>{note.text}</span>
-                      <button onClick={() => setNote(null)} className="text-ink-muted hover:text-ink"><X className="w-3.5 h-3.5"/></button>
-                    </div>
-                  )}
-
-                  {/* Bookings + money, one timeline per booking */}
-                  <h2 className="text-[20px] font-bold text-ink">Bookings <span className="font-normal text-ink-muted">{detail.bookings.length}</span></h2>
-                  {detail.bookings.length === 0 ? (
-                    <p className="py-6 text-ink-soft text-[14px]">No bookings.</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {detail.bookings.map(b => {
-                        const st = statusOf(b);
-                        const isBusy = busy === b.id;
-                        const canCancel = b.status === 'confirmed';
-                        const canRefund = (b.paymentStatus === 'paid' || b.paymentStatus === 'refunded') && b.totalAmount - b.refundedTotal > 0.005;
-                        const canReceipt = b.paymentStatus === 'paid' || b.paymentStatus === 'refunded';
-                        return (
-                          <div key={b.id} className="border border-line rounded-lg px-5 py-4">
-                            <div className="flex items-start gap-3">
-                              <div className="pt-0.5"><StatusDot status={st.dot} label={st.label}/></div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <a href={`/admin/courses/${b.courseId}`} className="font-medium text-sm text-ink hover:text-pine">{b.courseName}</a>
-                                  <span className="text-ink-faint text-[11px]">·</span>
-                                  <span className="text-xs text-ink-muted">{b.teeDate} at {b.teeTime}</span>
-                                  <span className="text-ink-faint text-[11px]">·</span>
-                                  <span className="text-xs text-ink-muted">{b.players}p · {b.holes}h</span>
-                                  {b.isGuest && !detail.isGuest && <span className="text-[10px] text-ink-faint">guest booking</span>}
-                                </div>
-                                <div className="text-[11px] text-ink-muted mt-1">
-                                  Booked {fmtDate(b.createdAt)} · {b.paymentStatus.replace(/_/g, ' ')}{b.hasCard ? '' : ' · no card'}
-                                </div>
-                                {b.checkInFailReason && <div className="text-[11px] text-bad mt-0.5">{b.checkInFailReason}</div>}
-                                {b.events.length > 0 && (
-                                  <ul className="mt-2 space-y-0.5 border-l-2 border-line-soft pl-3">
-                                    {b.events.map(e => (
-                                      <li key={e.id} className="text-[11px] text-ink-soft">
-                                        <span className={'font-medium ' + (e.kind === 'refund' ? 'text-ok' : e.kind === 'dispute_closed' ? 'text-ink' : 'text-bad')}>{EVENT_LABEL[e.kind] ?? e.kind}</span>
-                                        {' '}{fmtMoney(e.amount)} · {fmtStamp(e.at)}{e.actorName ? ` · ${e.actorName}` : e.actor === 'stripe' ? ' · Stripe' : ''}
-                                        {e.detail && <span className="text-ink-muted"> — {e.detail}</span>}
-                                      </li>
-                                    ))}
-                                  </ul>
-                                )}
-                              </div>
-                              <div className="text-right shrink-0">
-                                <div className="text-sm font-medium text-ink tabular-nums">{fmtMoney(b.totalAmount)}</div>
-                                {b.refundedTotal > 0 && <div className="text-[11px] text-ink-muted tabular-nums">−{fmtMoney(b.refundedTotal)} refunded</div>}
-                                <div className="text-[11px] text-ink-faint tabular-nums">GR {fmtMoney(b.accessFeeTotal)}</div>
-                              </div>
-                            </div>
-                            {/* Action row */}
-                            <div className="flex items-center gap-2 flex-wrap justify-end mt-3 pt-3 border-t border-line-soft">
-                              <a href={`${BASE_URL}/receipt/${b.id}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-[11px] text-ink-muted hover:text-ink underline mr-auto">Receipt page<ExternalLink className="w-3 h-3"/></a>
-                              {canCancel && (
-                                <button onClick={() => act(b, 'resend_confirmation')} disabled={isBusy}
-                                  className="flex items-center gap-1.5 text-[11px] font-medium px-3 py-1.5 rounded-md border border-line hover:border-line-strong text-ink-muted hover:text-ink transition-colors disabled:opacity-50">
-                                  {isBusy ? 'Working…' : 'Resend confirmation'}
-                                </button>
-                              )}
-                              {canReceipt && (
-                                <button onClick={() => act(b, 'resend_receipt')} disabled={isBusy}
-                                  className="flex items-center gap-1.5 text-[11px] font-medium px-3 py-1.5 rounded-md border border-line hover:border-line-strong text-ink-muted hover:text-ink transition-colors disabled:opacity-50">
-                                  {isBusy ? 'Working…' : 'Resend receipt'}
-                                </button>
-                              )}
-                              {canRefund && canMoveMoney && (
-                                <button onClick={() => { setRefundTarget(b); setRefundAmount(''); setRefundReason(''); setModalError(''); }} disabled={isBusy}
-                                  className="text-[11px] font-medium px-3 py-1.5 rounded-md border border-bad/30 text-bad hover:bg-bad/5 transition-colors disabled:opacity-50">
-                                  Refund
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                  {!canMoveMoney && <p className="text-[11px] text-ink-soft">Refunding on a golfer&apos;s behalf needs manager access.</p>}
-                </div>
-              )}
-            </div>
-          ) : (
-            <div>
-              <div className="relative mb-6 max-w-lg">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-faint pointer-events-none"/>
-                <input value={query} onChange={e => handleQueryChange(e.target.value)} placeholder="Search by email, name, or phone…" className={iCls + ' pl-10 w-full'} autoFocus/>
-                {searching && <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-ink-muted">Searching…</div>}
-              </div>
-
-              {searchError && (
-                <div className="bg-bad/5 border border-bad/20 rounded-lg px-4 py-3 text-sm text-bad mb-4 flex items-center gap-2">
-                  <StatusDot status="warn" />{searchError}
-                </div>
-              )}
-
-              {searched && !searching && (
-                golfers.length === 0 && guestPeople.length === 0 ? (
-                  <EmptyState message={`No golfers found for "${query}"`} />
-                ) : (
-                  <div className="space-y-5">
-                    {golfers.length > 0 && (
-                      <div>
-                        <h2 className="text-[16px] font-semibold text-ink mb-2">Golfer accounts <span className="font-normal text-ink-muted">{golfers.length}</span></h2>
-                        <div className="border border-line rounded-lg divide-y divide-line-soft overflow-hidden">
-                          {golfers.map(g => (
-                            <button key={g.id} onClick={() => go({ id: g.id, guest: null, q: query })} className="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-paper/60 transition-colors text-left">
-                              <div className="flex-1 min-w-0">
-                                <div className="font-medium text-sm text-ink">{g.name}</div>
-                                <div className="text-xs text-ink-muted mt-0.5">{g.email}{g.phone ? ` · ${g.phone}` : ''}</div>
-                              </div>
-                              <div className="text-right shrink-0">
-                                <div className="text-xs text-ink-muted">{g.bookingCount} booking{g.bookingCount !== 1 ? 's' : ''}</div>
-                                <div className="text-xs text-ink-faint mt-0.5">Since {fmtDate(g.createdAt)}</div>
-                              </div>
-                              
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {guestPeople.length > 0 && (
-                      <div>
-                        <h2 className="text-[16px] font-semibold text-ink mb-2">Guests, no account <span className="font-normal text-ink-muted">{guestPeople.length}</span></h2>
-                        <div className="border border-line rounded-lg divide-y divide-line-soft overflow-hidden">
-                          {guestPeople.map(p => (
-                            <button key={p.email} onClick={() => go({ guest: p.email, id: null, q: query })} className="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-paper/60 transition-colors text-left">
-                              <div className="flex-1 min-w-0">
-                                <div className="font-medium text-sm text-ink">{p.name}</div>
-                                <div className="text-xs text-ink-muted mt-0.5">{p.email}{p.phone ? ` · ${p.phone}` : ''}</div>
-                              </div>
-                              <div className="text-right shrink-0">
-                                <div className="text-xs text-ink-muted">{p.count} booking{p.count !== 1 ? 's' : ''}</div>
-                                <div className="text-xs text-ink-faint mt-0.5">Last: {p.latest.courseName} · {p.latest.teeDate}</div>
-                              </div>
-                              
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )
-              )}
-
-              {!searched && !searching && (
-                <p className="py-10 text-[14px] text-ink-soft">Type at least two letters of a name, an email or a phone number.</p>
-              )}
-            </div>
+              <p className={gs.priv}>Golfers’ details are shown here only to help them.</p>
+            </>
           )}
         </div>
+      </section>
+      {filterOpen && <FilterDialog value={filter} onClose={() => setFilterOpen(false)} onApply={f => { setFilterOpen(false); if (f !== filter) { setD(null); setFilter(f); } }} />}
+    </>
+  );
+}
+
+function FilterDialog({ value, onClose, onApply }: { value: Filter; onClose: () => void; onApply: (f: Filter) => void }) {
+  const [f, setF] = useState(value);
+  return (
+    <Dialog labelId="gf-filter-t" onClose={onClose}>
+      <h4 id="gf-filter-t">Filter</h4>
+      <label className={gs.flab}>Show
+        <select className={s.fld} value={f} onChange={e => setF(e.target.value as Filter)}>
+          {FILTERS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+        </select>
+      </label>
+      <div className={s.line}>
+        <button type="button" className={s.lnk} onClick={() => onApply('all')}>Clear</button>
+        <span style={{ flex: 1 }} />
+        <button type="button" className={`${s.btn} ${s.pri}`} onClick={() => onApply(f)}>Show</button>
+      </div>
+    </Dialog>
+  );
+}
+
+function Record({ id, guest, onBack }: { id: string; guest: string; onBack: () => void }) {
+  const [p, setP] = useState<Golfer | null>(null);
+  const [err, setErr] = useState<{ msg: string; kind: AdminFetchFailure } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const load = useCallback(async () => {
+    setLoading(true); setErr(null);
+    const r = await adminFetch<{ golfer: Golfer }>(id ? `/api/admin/golfers?id=${encodeURIComponent(id)}` : `/api/admin/golfers?guest=${encodeURIComponent(guest)}`, { subject: 'this golfer' });
+    if (r.ok) setP(r.data.golfer); else setErr({ msg: r.message, kind: r.kind });
+    setLoading(false);
+  }, [id, guest]);
+  useEffect(() => { load(); }, [load]);
+
+  const back = <button type="button" className={`${s.lnk} ${gs.back}`} onClick={onBack}>‹ Golfers</button>;
+  if (err) return <>{back}<LoadError msg={err.msg} kind={err.kind} retry={load} busy={loading} /></>;
+  if (!p) return <>{back}<div className={`${g.glass} ${gs.skel}`} aria-busy="true" aria-label="Loading the golfer" /></>;
+
+  const t = p.trust;
+  const name = `${p.firstName} ${p.lastName}`.trim() || p.email;
+  // Where they've played: completed rounds by course, most first.
+  const per = new Map<string, { n: number; last: string }>();
+  for (const b of p.bookings) if (b.status === 'completed') { const c = per.get(b.courseName) ?? { n: 0, last: '' }; c.n++; if (b.teeDate > c.last) c.last = b.teeDate; per.set(b.courseName, c); }
+  const played = [...per.entries()].sort((a, z) => z[1].n - a[1].n || z[1].last.localeCompare(a[1].last));
+  const home = played[0]?.[0] ?? p.bookings[0]?.courseName ?? null;
+  const tone: Tone = t.failedCharges ? 'bad' : t.noShows || t.lateCancels ? 'warn' : p.isGuest ? 'neutral' : 'ok';
+  // The newest problem, in one sentence (bookings come newest tee time first).
+  const failed = p.bookings.find(b => b.checkInFailReason && !b.checkedInAt);
+  const noShow = p.bookings.find(b => b.noShow);
+  const problem = failed ? `Card declined at check-in on ${formatTeeDate(failed.teeDate)} at ${failed.courseName}.${t.failedCharges > 1 ? ` ${t.failedCharges} failed charges in all.` : ''}`
+    : noShow ? `${t.noShows > 1 ? `${t.noShows} no-shows, the last` : 'One no-show'} on ${formatTeeDate(noShow.teeDate)} at ${noShow.courseName}.` : null;
+  const terms = p.bookings.filter(b => b.termsAcceptedAt && b.termsVersion).sort((a, z) => (z.termsAcceptedAt ?? '').localeCompare(a.termsAcceptedAt ?? ''))[0];
+  const stat = (k: string, v: string | number, cls = '') => <div className={gs.t}><span>{k}</span><b className={cls}>{v}</b></div>;
+  const kv = (k: string, v: string) => <div className={gs.kv}><span>{k}</span><span>{v}</span></div>;
+
+  return (
+    <>
+      {back}
+      {problem && <div className={`${g.glass} ${gs.prob}`}><i className={dotClass(failed ? 'bad' : 'warn')} aria-hidden="true" /><span>{problem}</span></div>}
+      <section className={`${g.glass} ${s.card}`} aria-labelledby="gr-name">
+        <div className={s.ch}>
+          <div><h3 id="gr-name">{name}</h3><p>{p.isGuest ? 'Guest, no account' : p.createdAt ? `Account since ${monthYear(p.createdAt)}` : 'Account'}{home ? ` · home course ${home}` : ''}</p></div>
+          <i className={dotClass(tone)} aria-hidden="true" />
+        </div>
+        <div className={s.cb}>
+          <div className={gs.ts}>
+            {stat('Rounds played', t.rounds)}
+            {stat('Upcoming', t.upcoming)}
+            {stat('No-shows', t.noShows, t.noShows ? gs.tw : '')}
+            {stat('Late cancels', t.lateCancels, t.lateCancels ? gs.tw : '')}
+            {stat('Failed charges', t.failedCharges, t.failedCharges ? gs.tb : '')}
+            {stat('Paid in total', formatMoney(t.lifetimeCollected))}
+          </div>
+        </div>
+      </section>
+
+      <div className={gs.two}>
+        <section className={`${g.glass} ${s.card}`} aria-labelledby="gr-contact">
+          <div className={s.ch}><div><h3 id="gr-contact">Contact and account</h3></div></div>
+          <div className={s.cb}>
+            {kv('Email', p.email)}
+            {kv('Phone', p.phone || 'Not given')}
+            {terms && kv('Terms accepted', `Version ${terms.termsVersion} · ${dayE(terms.termsAcceptedAt ?? '')}`)}
+          </div>
+        </section>
+        <section className={`${g.glass} ${s.card}`} aria-labelledby="gr-played">
+          <div className={s.ch}><div><h3 id="gr-played">Where they’ve played</h3></div></div>
+          <div className={s.cb}>
+            {played.length === 0 ? <p className={gs.empty}>No rounds played yet.</p>
+              : played.map(([course, c]) => <div key={course} className={`${gs.kv} ${gs.played}`}><span>{course}</span><span>{plural(c.n, 'round')} · last {formatTeeDate(c.last)}</span></div>)}
+          </div>
+        </section>
       </div>
 
-      {/* Refund */}
-      {refundTarget && (
-        <Modal size="sm" pad="p-6" dismissable={!busy} onClose={() => setRefundTarget(null)}
-          title={`Refund ${detail?.firstName ?? 'this golfer'}`}
-          titleNode={<h3 className="text-[18px] font-bold text-ink mb-1">Refund {detail?.firstName}</h3>}>
-            <p className="text-sm text-ink-soft mb-4">
-              {fmtMoney(refundTarget.totalAmount)} was charged for {refundTarget.courseName}, {refundTarget.teeDate}{refundTarget.refundedTotal > 0 ? ` · ${fmtMoney(refundTarget.refundedTotal)} already refunded` : ''}. It goes back to the card they paid with; the course&apos;s payout and GreenReserve&apos;s fee are both reduced.
-            </p>
-            <label className="block"><span className="block mb-1.5 text-[13px] text-ink-soft">Amount (blank = {fmtMoney(remaining)}, the rest)</span>
-            <div className="relative mb-3">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
-              <input type="number" step="0.01" min="0.01" max={remaining} value={refundAmount} onChange={e => setRefundAmount(e.target.value)} placeholder={remaining.toFixed(2)} className={iCls + ' w-full pl-7'} />
-            </div></label>
-            <label className="block"><span className="block mb-1.5 text-[13px] text-ink-soft">Reason — the golfer reads this</span>
-            <textarea value={refundReason} onChange={e => setRefundReason(e.target.value)} rows={3} placeholder="Charged twice by mistake — refunding the duplicate." className={iCls + ' w-full resize-none mb-3'} /></label>
-            {modalError && <p className="text-xs text-bad mb-3">{modalError}</p>}
-            <div className="flex gap-3">
-              <button onClick={() => setRefundTarget(null)} disabled={!!busy} className="flex-1 border border-line text-ink-soft py-2.5 rounded-md text-[12.5px] font-medium hover:border-line-strong transition-colors disabled:opacity-50">Cancel</button>
-              <button onClick={submitRefund} disabled={!!busy} className="flex-1 bg-bad hover:bg-bad/90 text-white py-2.5 rounded-md text-[12.5px] font-medium disabled:opacity-50 transition-colors">{busy ? 'Refunding…' : refundAmount.trim() ? `Refund $${Number(refundAmount || 0).toFixed(2)}` : `Refund ${fmtMoney(remaining)}`}</button>
-            </div>
-        </Modal>
-      )}
-    </div>
+      <section className={`${g.glass} ${s.card}`} aria-labelledby="gr-bk">
+        <div className={s.ch}><div><h3 id="gr-bk">Bookings, payments and receipts</h3><p>Newest first. Open one for its history, refunds and receipt.</p></div></div>
+        <div className={s.cb}>
+          {p.bookings.length === 0 && <p className={gs.empty}>No bookings.</p>}
+          {p.bookings.map((b, i) => <BookingRow key={b.id} b={b} open={i === 0} />)}
+          <p className={gs.note}>Refunds and cancellations are done by the course. Point the golfer to them, or message the course from Course support.</p>
+        </div>
+      </section>
+    </>
+  );
+}
+
+function BookingRow({ b, open }: { b: Booking; open: boolean }) {
+  const [busy, setBusy] = useState<'' | 'confirmation' | 'receipt'>('');
+  const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null);
+  const st = statusOf(b);
+  const canConfirm = b.status === 'confirmed';
+  const canReceipt = b.paymentStatus === 'paid' || b.paymentStatus === 'refunded';
+
+  async function resend(what: 'confirmation' | 'receipt') {
+    setBusy(what); setNote(null);
+    const r = await adminFetch<{ ok: boolean; sentTo: string }>('/api/admin/golfers', {
+      method: 'POST', body: JSON.stringify({ bookingId: b.id, action: what === 'receipt' ? 'resend_receipt' : 'resend_confirmation' }), subject: 'this email', action: 'send',
+    });
+    setBusy('');
+    setNote(r.ok ? { ok: true, text: `${what === 'receipt' ? 'Receipt' : 'Confirmation'} sent again to ${r.data.sentTo}.` } : { ok: false, text: r.message });
+  }
+
+  return (
+    <details className={gs.bk} open={open}>
+      <summary>
+        <i className={dotClass(st.tone)} aria-hidden="true" />
+        <span className={gs.n}>{formatTeeDate(b.teeDate)} · {formatTeeTime(b.teeTime)}</span>
+        <span className={`${gs.soft} ${gs.hideS}`}>{b.courseName}</span>
+        <span className={`${gs.soft} ${gs.hideS}`}>{st.label}</span>
+        <Chevron />
+      </summary>
+      <div className={gs.bd}>
+        <div>{b.courseName} · {plural(b.players, 'player')} · {b.holes} holes · {formatMoney(b.totalAmount)}{b.refundedTotal > 0 ? ` (${formatMoney(b.refundedTotal)} refunded)` : ''} · ref {b.number}</div>
+        {b.checkInFailReason && <div className={gs.fail}>{b.checkInFailReason}</div>}
+        <ol className={gs.tl}>{history(b).map(([at, what], i) => <li key={i}><span>{stamp(at)}</span><span>{what}</span></li>)}</ol>
+        <div className={gs.acts}>
+          {canConfirm && <button type="button" className={s.lnk} onClick={() => resend('confirmation')} disabled={!!busy}>{busy === 'confirmation' ? 'Sending…' : 'Resend confirmation'}</button>}
+          {canReceipt && <button type="button" className={s.lnk} onClick={() => resend('receipt')} disabled={!!busy}>{busy === 'receipt' ? 'Sending…' : 'Resend receipt'}</button>}
+          <a className={s.lnk} href={`/receipt/${b.id}`} target="_blank" rel="noreferrer">Receipt page</a>
+        </div>
+        {note && <Msg ok={note.ok}>{note.text}</Msg>}
+      </div>
+    </details>
   );
 }
 
 export default function GolfersPage() {
   return (
-    <Suspense>
-      <GolfersInner/>
+    <Suspense fallback={null}>
+      <GolfersInner />
     </Suspense>
   );
 }
