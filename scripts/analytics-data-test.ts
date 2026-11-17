@@ -71,6 +71,12 @@ const bk = (o: Partial<NsBooking> & { id: string }): NsBooking => ({
   ok('the late cancel: 2 spots, 1 filled again; the called-off round is not counted', u24.cancelledSpots === 2 && u24.refilledSpots === 1 && u24.pct === 50, r.refill);
   ok('late cancels: value lost, refill money (the refill booking\'s round, 1 of 1 player), fee', r.lateCancels.spots === 2 && r.lateCancels.lostValueCents === 6000 && r.lateCancels.refilledCents === 3000 && r.lateCancels.feesCents === 1000 && r.lateCancels.netCents === -2000, r.lateCancels);
   ok('net = recovered − lost + late-cancel net', r.totals.netCents === 2500 - 14000 - 2000, r.totals);
+  ok('the totals carry the late-cancel figures the page reads (agreed shape)', r.totals.lateCancelLostValueCents === 6000 && r.totals.lateCancelRecoveredCents === 3000 + 1000 && r.totals.lateCancelNetCents === -2000, r.totals);
+  // Every no-shows field the merged page's type expects is in the reply (src/components/dashboard/analytics/data.ts).
+  { const page = readFileSync('src/components/dashboard/analytics/data.ts', 'utf8');
+    const want = (page.match(/totals: \{([^}]*)\}/)?.[1] ?? '').split(';').map(x => x.trim().split(':')[0]).filter(Boolean);
+    const missing = want.filter(k => !(k in r.totals));
+    ok('the page\'s NoShowReport totals fields all exist in the API', want.length > 5 && missing.length === 0, { want, missing }); }
   // The window is the one each booking was made under (R-PAY-003), not today's setting.
   const early = noShowOf({ from: '2031-06-10', to: '2031-06-10' }, all.map(b => (b.id === 'late' ? { ...b, windowHours: 4 } : b)), now, 24, fees, rounds);
   ok('a cancel outside its own window is not late, and its fee is not counted as a late fee', early.lateCancels.spots === 0 && early.lateCancels.feesCents === 0, early.lateCancels);
