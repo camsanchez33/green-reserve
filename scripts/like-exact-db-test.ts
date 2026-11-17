@@ -44,9 +44,10 @@ async function cleanup() {
   ok('setup-intent refuses them too', /LIKE_UNSAFE_EMAIL\.test\(email\)/.test(readFileSync('src/app/api/bookings/setup-intent/route.ts', 'utf8')));
 
   // ── no raw insensitive equals / contains left in shared code ──
-  const raw = execSync(`grep -rnE "(equals|contains): [^,}]+, mode: ('insensitive'|ci\\b|Prisma\\.QueryMode)" src/lib src/app/api --include=*.ts --include=*.tsx || true`, { encoding: 'utf8' })
-    .split('\n').filter(l => l && !l.startsWith('src/lib/like-exact.ts'));
-  ok('every insensitive equals / contains in src/lib and src/app/api goes through lib/like-exact', raw.length === 0, raw);
+  // Anywhere in src: 'insensitive' or QueryMode only inside lib/like-exact, plus member-stats' `in` (LOWER() IN, exact).
+  const raw = execSync(`grep -rnE "'insensitive'|QueryMode" src --include=*.ts --include=*.tsx || true`, { encoding: 'utf8' })
+    .split('\n').filter(l => l && !l.startsWith('src/lib/like-exact.ts:') && !/^src\/lib\/member-stats\.ts:\d+:.*\{ golferEmail: \{ in: all, mode: 'insensitive' \} \}/.test(l));
+  ok('every insensitive match in src goes through lib/like-exact (only an `in` list may use the mode directly)', raw.length === 0, raw);
 
   // ── the database ──
   await cleanup();

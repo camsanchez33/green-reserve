@@ -33,7 +33,7 @@ export function parseGolferKey(raw: string): string | null {
 }
 
 /** The bookings a key matches, as a Prisma OR (email case-insensitive, phone by its digits' tail, account by id). */
-export function keyMatch(key: string): { golferEmail?: { equals: string; mode: 'insensitive' }; golferAccountId?: string; golferPhone?: { endsWith: string } } {
+export function keyMatch(key: string): { golferEmail?: ReturnType<typeof ciEquals>; golferAccountId?: string; golferPhone?: { endsWith: string } } {
   if (key.startsWith('e:')) return { golferEmail: ciEquals(key.slice(2)) };
   if (key.startsWith('a:')) return { golferAccountId: key.slice(2) };
   return { golferPhone: { endsWith: key.slice(-4) } };
