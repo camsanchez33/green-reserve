@@ -9,6 +9,7 @@ the lane files; merges every PR in dependency order after Cam's review sitting; 
 **Control Room** (Cam watches it): Build alone writes https://claude.ai/artifact/CWmgjgJHTZaTr4XThBuvZL with `ArtifactData`: its own `sessions/<id>` row at start, after each push/merge/blocker and before ending (a `working` row silent 30 min shows as Silent), and the web (`areas`, `items`, `questions`, `lookat`) after every merge, answer and change of plan. Full protocol: `docs/DECISIONS.md` → "Control Room".
 
 ## Queued (not started)
+- Analytics data (Cam 2026-11-17 approved the page, `lanes/dashboard.md` item 5): projections for the next 30 days against the last 30, no-shows by how they booked, spots filled again by cancel lead time, pro shop stock value, and the written monthly reports with a PDF download. Every money number comes from the ledger views. Agree the shape with the Dashboard lane first.
 - Cam 2026-11-16 answers: admin change-password hardening (5 tries then 15 min lockout, 12-character minimum, securityEvent) and a blank member price line = a PUBLIC booking (promo and resident rate can apply, best price wins, never stacked) are in PRs from session_014ceBnwhjCVc1RW659Fcart. One-time-fee memberships and memberships with no end date wait until AFTER launch.
 - Outreach (Cam 2026-11-16): see `lanes/outreach.md`. Emails start Dec 1. Prep starts Nov 23, sending from admin@greenreserve.app through Google Workspace Gmail (decided).
 - Memberships data (Cam 2026-11-16 approved the page; money and schema, Opus, final-reviewer, one PR each, in this order):

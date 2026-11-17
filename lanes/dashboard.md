@@ -41,7 +41,20 @@ Support (chats) · Light parity. Specs: ADMIN_REDO_SPEC "Course dashboard Home",
      - The demand terms need a new agreement version and counsel. Until then the page shows the locked state only.
      - Removing last-minute deals from the UI needs Build to decide what happens to deals already running. Never leave a live deal no one can see.
      - Wire only what the data supports; hide the rest, never fake it.
-5. Then Events → Analytics → Settings → Course alert, one page at a time, mockup first.
+5. **Analytics — APPROVED, build it** (Cam 2026-11-17, "analytics is good to go"). Mockup `lanes/dashboard/analytics-mockup.html` (https://claude.ai/artifact/Af1CzqBo6W2DcXke7u3C9V) is the spec, in both looks.
+   - **The page.** A snapshot of the last month, worded in the past tense, with the period beside the title. The header icons (date, filter, download) are bare, with no boxes. The tabs, which slide, are Tee sheet, Bookings, Golfers, No-shows, Pro shop and Reviews. Each number appears in exactly one place, and money lives on Revenue (a quiet link there).
+   - **Figures.** Every figure row has one-line labels and its numbers on the same line. Money lost shows red with a minus, recovered shows green with a plus, and there's a Net figure; colour is used nowhere else.
+   - **Removed by Cam.** "First-timers who came back" (unfair at the end of a month) and "Missed more than once" are gone. The Golfers row has three numbers.
+   - **No-shows tab.** "When they cancelled" shows the spots filled again by how far ahead the golfer cancelled (7+ days, 2–7 days, 24–48 hours, under 24 hours), with the line tying it to the course's late-cancel cutoff.
+   - **Where the numbers come from.** Every money number comes from the ledger (`src/lib/money-ledger.ts` views), the same as Revenue, never from `lib/analytics.ts` money sums, so the two pages can't disagree.
+   - **Data Build must add first:**
+     - projections for the next 30 days against the last 30
+     - no-shows by how they booked
+     - spots filled again by cancel lead time: a spot counts as refilled when the same tee time gets a new booking after the cancel
+     - pro shop stock value
+     - the written monthly reports, with a PDF download
+     Wire only what Build's data supports, hide the rest, and never fake a number.
+6. Then Course alert, one page at a time, mockup first. Events, Settings and Security (admin) mockups are with Cam.
 
 ## Small follow-ups (do with the next PR that touches the file)
 - `StockTab` side card goes solid at lg after a tap: use `max-lg:fixed max-lg:inset-0`.
