@@ -14,6 +14,7 @@
 import { prisma } from './prisma';
 import { DEFAULT_TZ, isValidTimezone } from './course-time';
 import { teeToUtcMs } from './tee-time-utils';
+import { holdsAtCutoff, bookingWindowHours } from './cancel-policy';
 import { NO_SHOW_GRACE_MIN, previousRange, type Range } from './analytics';
 import { allSegments, type AllSegments } from './revenue-extras';
 import { Prisma, type BookingEventType } from '@prisma/client';
@@ -29,14 +30,17 @@ async function courseTz(courseId: string) {
   return { tz: c.timezone && isValidTimezone(c.timezone) ? c.timezone : DEFAULT_TZ, cancellationHours: c.cancellationHours };
 }
 
+/** Id lists in pieces: Postgres takes at most 32,767 bound values per statement (a busy course over a long range). */
+export const chunks = <T>(xs: T[], n = 10_000): T[][] => Array.from({ length: Math.ceil(xs.length / n) }, (_, i) => xs.slice(i * n, i * n + n));
+
 /** The course's part of ledger money for these bookings and kinds, in less out, per booking. */
 async function ledgerByBooking(courseId: string, bookingIds: string[], what: readonly string[]): Promise<Map<string, number>> {
   const out = new Map<string, number>();
   if (!bookingIds.length) return out;
-  const rows = await prisma.moneyMove.findMany({
-    where: { courseId, account: 'course', what: { in: [...what] }, bookingId: { in: bookingIds } },
+  const rows = (await Promise.all(chunks(bookingIds).map(ids => prisma.moneyMove.findMany({
+    where: { courseId, account: 'course', what: { in: [...what] }, bookingId: { in: ids } },
     select: { bookingId: true, direction: true, amountCents: true, platformFeeCents: true },
-  });
+  })))).flat();
   for (const r of rows) {
     const v = (r.amountCents - r.platformFeeCents) * (r.direction === 'out' ? -1 : 1);
     out.set(r.bookingId!, (out.get(r.bookingId!) ?? 0) + v);
@@ -87,6 +91,10 @@ export type NsBooking = {
   id: string; teeTimeId: string; teeAt: number; status: string; players: number; source: string;
   checkedInAt: Date | null; createdAt: Date; cancelledAt: Date | null; splitFromId: string | null;
   cardSaved: boolean; feeOnNoShow: boolean; valueCents: number; calledOff: boolean;
+  /** The round is paid (card, counter or account): never money lost, even if no one checked in. */
+  paid: boolean;
+  /** The late-cancel window this booking was made under (R-PAY-003). */
+  windowHours: number;
 };
 
 /** Pure: how a booking was made, for the No-shows table. Counter = phone or walk-in. */
@@ -139,12 +147,14 @@ export function noShowOf(range: Range, all: NsBooking[], nowMs: number, lateCanc
   const live = all.filter(b => b.status !== 'cancelled');
   const pastLive = live.filter(b => b.teeAt + NO_SHOW_GRACE_MIN * 60000 < nowMs);
   const isNoShow = (b: NsBooking) => !b.checkedInAt && b.status !== 'completed';
+  // In the rate as lib/analytics.ts counts it, but a round already paid ("Collect payment") lost nothing.
+  const lostOf = (b: NsBooking) => (b.paid ? 0 : b.valueCents);
   const rows = new Map<HowKey, HowRow>();
   for (const b of pastLive) {
     const k = howOf(b);
     const r = rows.get(k) ?? { key: k, bookings: 0, noShows: 0, ratePct: null, lostValueCents: 0, recoveredCents: 0, netCents: 0 };
     r.bookings++;
-    if (isNoShow(b)) { r.noShows++; r.lostValueCents += b.valueCents; r.recoveredCents += fees.get(b.id) ?? 0; }
+    if (isNoShow(b)) { r.noShows++; r.lostValueCents += lostOf(b); r.recoveredCents += fees.get(b.id) ?? 0; }
     rows.set(k, r);
   }
   const byHow = HOW_KEYS.filter(k => rows.has(k)).map(k => { const r = rows.get(k)!; return { ...r, ratePct: pct(r.noShows, r.bookings), netCents: r.recoveredCents - r.lostValueCents }; });
@@ -164,15 +174,15 @@ export function noShowOf(range: Range, all: NsBooking[], nowMs: number, lateCanc
   let unknownLead = 0, under48 = 0, under48Filled = 0, lateRefill = 0;
   const late = { spots: 0, lostValueCents: 0, refilledSpots: 0, refilledCents: 0, feesCents: 0, netCents: 0 };
   for (const c of cancelled) {
-    // Fee money on any golfer cancel (in practice only a late one carries a fee).
-    late.feesCents += fees.get(c.id) ?? 0;
     if (!c.cancelledAt) { unknownLead++; continue; }
     const hrs = (c.teeAt - c.cancelledAt.getTime()) / 3600000;
     const bk = buckets.get(leadOf(hrs))!;
     const got = filled.get(c.id) ?? 0;
     bk.cancelledSpots += c.players; bk.refilledSpots += got;
     if (hrs < 48) { under48 += c.players; under48Filled += got; }
-    if (hrs < lateCancelHours) {
+    // Late = inside the window this booking was made under (the fee was charged on it), not today's setting.
+    if (hrs < c.windowHours) {
+      late.feesCents += fees.get(c.id) ?? 0;
       late.spots += c.players; late.lostValueCents += c.valueCents; late.refilledSpots += got;
       lateRefill += refillMoney.get(c.id) ?? 0;
     }
@@ -182,7 +192,7 @@ export function noShowOf(range: Range, all: NsBooking[], nowMs: number, lateCanc
   for (const b of buckets.values()) b.pct = pct(b.refilledSpots, b.cancelledSpots);
 
   const noShows = pastLive.filter(isNoShow);
-  const lost = noShows.reduce((s, b) => s + b.valueCents, 0);
+  const lost = noShows.reduce((s, b) => s + lostOf(b), 0);
   const recovered = noShows.reduce((s, b) => s + (fees.get(b.id) ?? 0), 0);
   return {
     range, lateCancelHours,
@@ -203,15 +213,15 @@ export async function noShowReport(courseId: string, range: Range, now: Date = n
       bookings: { select: {
         id: true, status: true, players: true, source: true, checkedInAt: true, createdAt: true, cancelledAt: true, splitFromId: true,
         greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, stripePaymentMethodId: true, stripeCustomerId: true,
-        noShowFeeTotal: true, cancellationFeeApplies: true, lateFeeTimingAtBooking: true,
+        noShowFeeTotal: true, cancellationFeeTotal: true, lateFeeTimingAtBooking: true, cancellationHoursAtBooking: true, paymentStatus: true,
       } },
     },
   });
   const cancelledIds = teeTimes.flatMap(t => t.bookings.filter(b => b.status === 'cancelled').map(b => b.id));
-  const events = cancelledIds.length ? await prisma.bookingEvent.findMany({
-    where: { courseId, type: 'booking_cancelled' satisfies BookingEventType, bookingId: { in: cancelledIds } },
+  const events = (await Promise.all(chunks(cancelledIds).map(ids => prisma.bookingEvent.findMany({
+    where: { courseId, type: 'booking_cancelled' satisfies BookingEventType, bookingId: { in: ids } },
     select: { bookingId: true, metadata: true },
-  }) : [];
+  })))).flat();
   const calledOff = new Set(events.filter(e => { const m = e.metadata as { courseCalledOff?: unknown } | null; return m?.courseCalledOff === 'weather' || m?.courseCalledOff === 'closure'; }).map(e => e.bookingId));
   const all: NsBooking[] = teeTimes.flatMap(t => {
     const teeAt = teeToUtcMs(t.date, t.time, c.tz);
@@ -219,13 +229,19 @@ export async function noShowReport(courseId: string, range: Range, now: Date = n
       id: b.id, teeTimeId: t.id, teeAt, status: b.status, players: b.players, source: b.source,
       checkedInAt: b.checkedInAt, createdAt: b.createdAt, cancelledAt: b.cancelledAt, splitFromId: b.splitFromId,
       cardSaved: !!b.stripePaymentMethodId && !!b.stripeCustomerId,
-      // A fee the course can keep when they don't come: a no-show fee, or a hold / late fee whose policy reaches a no-show.
-      feeOnNoShow: b.noShowFeeTotal > 0 || (b.cancellationFeeApplies && (b.lateFeeTimingAtBooking ?? 'hold_at_cutoff') !== 'late_cancel'),
+      // A fee the course can keep when they don't come: a no-show fee, or a late fee stamped at booking whose
+      // policy reaches a no-show (a hold taken at the cutoff and kept; "late cancel or no-show"). A plain
+      // "late cancel" fee never reaches a no-show. cancellationFeeTotal stays on a live booking (cleared only on a free cancel).
+      feeOnNoShow: b.noShowFeeTotal > 0 || (b.cancellationFeeTotal > 0 && (holdsAtCutoff(b) || b.lateFeeTimingAtBooking === 'late_cancel_or_no_show')),
       valueCents: share(b), calledOff: calledOff.has(b.id),
+      paid: b.paymentStatus === 'paid' || b.paymentStatus === 'paid_offline' || b.paymentStatus === 'on_account',
+      windowHours: bookingWindowHours(b, c),
     }));
   });
-  const ids = all.map(b => b.id);
-  const [fees, rounds] = await Promise.all([ledgerByBooking(courseId, ids, FEE_WHATS), ledgerByBooking(courseId, ids, ['round'])]);
+  // Ask the ledger only for what the report reads: fees on possible no-shows and on cancels, round money on refills.
+  const feeIds = all.filter(b => b.status === 'cancelled' ? !b.calledOff : !b.checkedInAt && b.status !== 'completed').map(b => b.id);
+  const refillIds = [...new Set(refillsOf(all, all.filter(b => b.status === 'cancelled' && !b.calledOff)).map(p => p.newId))];
+  const [fees, rounds] = await Promise.all([ledgerByBooking(courseId, feeIds, FEE_WHATS), ledgerByBooking(courseId, refillIds, ['round'])]);
   return noShowOf(range, all, now.getTime(), c.cancellationHours, fees, rounds);
 }
 
@@ -269,7 +285,9 @@ export function stockOf(rows: StockRow[], lastSold: Map<string, Date>, now: Date
 
 export async function stockValue(courseId: string, opts: { cost: boolean }, now: Date = new Date()): Promise<StockValue> {
   const items = await prisma.shopItem.findMany({
-    where: { courseId },
+    // The Stock screen's own rows (lib/shop-stock stockRows): active, sellable, under an active parent. A deleted
+    // item that once sold is hidden with its count kept, and must not count as on the shelf.
+    where: { courseId, active: true, options: { none: {} }, OR: [{ parentId: null }, { parent: { active: true } }] },
     select: { id: true, name: true, stockCount: true, priceCents: true, costCents: true, createdAt: true, _count: { select: { options: true } } },
     take: 5000,
   });
