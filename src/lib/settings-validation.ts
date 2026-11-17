@@ -40,7 +40,7 @@ const STRING_MAX: Record<string, number> = {
   address: 200, city: 100, state: 40, zipCode: 20,
   description: 5000, walkingNote: 500, rainCheckPolicy: 1000, confirmationNote: 400,
   // Settings data (Cam 2026-11-17): the confirmation email parts (lib/confirmation-parts CONFIRMATION_PART_MAX).
-  confirmationArrival: 300, confirmationParking: 300, confirmationContact: 300,
+  confirmationArrival: 400, confirmationParking: 400, confirmationContact: 400,
   residentCounty: 100, residentState: 40, drivingRangeType: 60, restaurantType: 60,
   tournamentFrequency: 60, caddieType: 60, caddieNote: 500,
 };

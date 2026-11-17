@@ -70,11 +70,10 @@ export async function setUpTax(courseId: string, states: string[]): Promise<{ ok
   const course = await prisma.course.findUnique({ where: { id: courseId }, select: { stripeAccountId: true, stripeAccountActive: true, address: true, city: true, state: true, zipCode: true } });
   if (!course?.stripeAccountId) return { ok: false, error: 'Connect your Stripe account first (Money → Getting paid).' };
   if (!course.address || !course.city || !course.state || !course.zipCode) return { ok: false, error: 'Your course address is incomplete — message us to fix it, then try again.' };
-  // Settings data (Cam 2026-11-17): no states given = the state of the course's address
-  // (the default the Settings row shows); giving states overrides it.
-  const given = states.length ? states : [course.state];
-  const want = [...new Set(given.map(s => String(s).trim().toUpperCase()))].filter(s => (US_STATES as readonly string[]).includes(s));
-  if (!want.length) return { ok: false, error: states.length ? 'Pick the state your sales-tax permit is from.' : 'Your course address has no US state we recognise — pick the state your sales-tax permit is from.' };
+  // Settings data (Cam 2026-11-17): the address's state is the DEFAULT the page preselects
+  // (taxStatus().addressState) — never filled in here, so a malformed request can't register a state.
+  const want = [...new Set(states.map(s => String(s).trim().toUpperCase()))].filter(s => (US_STATES as readonly string[]).includes(s));
+  if (!want.length) return { ok: false, error: 'Pick the state your sales-tax permit is from.' };
   const opts = { stripeAccount: course.stripeAccountId };
   try {
     await stripe.tax.settings.update({ head_office: { address: addressOf(course) }, defaults: { tax_code: TAX_CATEGORIES.general.code, tax_behavior: 'exclusive' } }, opts);

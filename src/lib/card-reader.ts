@@ -301,6 +301,14 @@ export async function testReader(courseId: string, readerId: string): Promise<Re
     return { ok: true, value: { passed: false, online: false, message: 'Offline: check it’s turned on and connected to Wi-Fi. It can’t take payments until it reconnects.' } };
   }
   if (r.value.action?.status === 'in_progress') return fail(409, 'The reader is busy with a payment — try the test when it’s done.');
+  // A payment claims the reader in our database BEFORE it is sent to Stripe (a shop sale paying on it, a round,
+  // a member's dues), so this closes the gap the action check above can't see.
+  const claimed = await Promise.all([
+    prisma.shopSale.findFirst({ where: { courseId, readerId, status: 'paying' }, select: { id: true } }),
+    prisma.booking.findFirst({ where: { courseId, readerId, readerStartedAt: { not: null } }, select: { id: true } }),
+    prisma.courseMembership.findFirst({ where: { courseId, duesReaderId: readerId }, select: { id: true } }),
+  ]);
+  if (claimed.some(Boolean)) return fail(409, 'The reader is busy with a payment — try the test when it’s done.');
   try {
     await stripe.terminal.readers.setReaderDisplay(readerId, {
       type: 'cart',
@@ -315,7 +323,14 @@ export async function testReader(courseId: string, readerId: string): Promise<Re
   try {
     const now = await stripe.terminal.readers.retrieve(readerId, {}, opts);
     const action = 'deleted' in now ? null : (now as Stripe.Terminal.Reader).action;
-    if (action?.type === 'set_reader_display') await stripe.terminal.readers.cancelAction(readerId, {}, opts);
+    if (action?.type === 'set_reader_display' && action.status === 'failed') {
+      return { ok: true, value: { passed: false, online: true, message: action.failure_message || 'The reader didn’t show the test — check it’s on and connected, then test again.' } };
+    }
+    // Cleared only while the screen is still ours and no payment has claimed the reader since.
+    const claimedSince = await prisma.shopSale.findFirst({ where: { courseId, readerId, status: 'paying' }, select: { id: true } })
+      ?? await prisma.booking.findFirst({ where: { courseId, readerId, readerStartedAt: { not: null } }, select: { id: true } })
+      ?? await prisma.courseMembership.findFirst({ where: { courseId, duesReaderId: readerId }, select: { id: true } });
+    if (action?.type === 'set_reader_display' && !claimedSince) await stripe.terminal.readers.cancelAction(readerId, {}, opts);
   } catch (err) {
     // The test already passed; the cart picture is replaced by the next payment anyway.
     console.error(JSON.stringify({ ev: 'card_reader.test.clear_fail', courseId, readerId, error: err instanceof Error ? err.message : String(err) }));

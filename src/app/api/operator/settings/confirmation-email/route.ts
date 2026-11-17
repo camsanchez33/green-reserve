@@ -5,6 +5,7 @@ import { policyFrom, describePolicy, cardAtBooking, lateFeeTotalCents } from '@/
 import { confirmationPartsOf, confirmationLines, CONFIRMATION_PART_SELECT } from '@/lib/confirmation-parts';
 import { sendBookingConfirmation } from '@/lib/email';
 import { rateLimit } from '@/lib/rate-limit';
+import { FEE_AT_BOOKING_ON } from '@/lib/booking-fees';
 
 // Settings data (Cam 2026-11-17, Settings → Booking → Confirmation email).
 //   GET   what the live preview needs: the course's own parts, the lines the
@@ -70,11 +71,12 @@ export async function POST() {
       golferName: me.name || 'Golfer', golferEmail: me.email,
       courseName: course.name, courseSlug: course.slug,
       courseAddress: [course.address, course.city, course.state].filter(Boolean).join(', '),
-      date: sampleDate(), time: '8:40 AM', players, holes: 18,
+      date: sampleDate(), time: '08:40', players, holes: 18, // written the way the tee sheet stores times, as real emails print them
       greenFeeTotal: green, cartFeeTotal: cart, accessFeeTotal: fee, totalAmount: green + cart + fee,
       bookingId: 'test', appliedRate: 'standard',
       cancellationFeeTotal: lateFeeTotalCents(policy, players), cancellationHours: policy.cancellationHours,
       noCard: !cardAtBooking(policy),
+      feePaidAtBooking: FEE_AT_BOOKING_ON && fee > 0,
       policyLines: describePolicy(policy).lines,
       parts: confirmationPartsOf(course),
       testSend: true,

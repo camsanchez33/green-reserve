@@ -19,11 +19,12 @@ type Rdr = { id: string; location: string; status: string; device_type: string; 
 const readers = new Map<string, Rdr>();
 const calls: string[] = [];
 let startPaymentDuringTest = false;
+let failDisplay = false;
 const terminal = stripe.terminal as unknown as Record<string, Record<string, unknown>>;
 terminal.readers.retrieve = async (id: string) => { const r = readers.get(id); if (!r) throw new Error('no such reader'); return { ...r, action: r.action && { ...r.action } }; };
 terminal.readers.setReaderDisplay = async (id: string, p: { cart: { total: number } }) => {
   calls.push(`display:${id}:${p.cart.total}`);
-  const r = readers.get(id)!; r.action = { type: 'set_reader_display', status: 'succeeded' };
+  const r = readers.get(id)!; r.action = failDisplay ? { type: 'set_reader_display', status: 'failed', failure_message: 'Screen error' } as never : { type: 'set_reader_display', status: 'succeeded' };
   if (startPaymentDuringTest) r.action = { type: 'process_payment_intent', status: 'in_progress' };
   return { ...r };
 };
@@ -36,6 +37,7 @@ tax.registrations.list = async (_p: unknown, o: { stripeAccount: string }) => ({
 tax.registrations.create = async (p: { country_options: { us: { state: string } } }, o: { stripeAccount: string }) => { regs.push({ state: p.country_options.us.state, account: o.stripeAccount }); return {}; };
 
 async function cleanup() {
+  await prisma.shopSale.deleteMany({ where: { course: { slug: { startsWith: TAG } } } });
   await prisma.course.deleteMany({ where: { slug: { startsWith: TAG } } });
   await prisma.courseOperator.deleteMany({ where: { email: `${TAG}@t.local` } });
 }
@@ -43,13 +45,13 @@ async function cleanup() {
 (async () => {
   // Parts and the lines the email shows.
   const blank = confirmationPartsOf({});
-  ok('a course that wrote nothing gets today’s arrival line only', JSON.stringify(confirmationLines(blank)) === JSON.stringify([{ label: 'Arrival', text: DEFAULT_ARRIVAL }]));
+  ok('a course that wrote nothing gets today’s arrival line only, unlabelled', JSON.stringify(confirmationLines(blank)) === JSON.stringify([{ label: '', text: DEFAULT_ARRIVAL }]));
   ok('a course that only wrote a note keeps today’s email (the note, no default line)', JSON.stringify(confirmationLines(confirmationPartsOf({ confirmationNote: 'Carts path-only' }))) === JSON.stringify([{ label: '', text: 'Carts path-only' }]));
   const full = confirmationPartsOf({ confirmationArrival: ' Check in 15 min early ', dresscode: ['Collared shirts', '', 'No denim'], confirmationParking: 'Lot behind', confirmationNote: 'Path only', confirmationContact: 'Call us' });
-  ok('every part shows in order with its label', confirmationLines(full).map(l => `${l.label}|${l.text}`).join(';') === 'Arrival|Check in 15 min early;Dress code|Collared shirts, No denim;Parking|Lot behind;|Path only;|Call us');
+  ok('every part shows in order with its label', confirmationLines(full).map(l => `${l.label}|${l.text}`).join(';') === 'Arrival|Check in 15 min early;Dress code|Collared shirts\nNo denim;Parking|Lot behind;|Path only;|Call us');
   ok('the policy is never a course-written part', !Object.keys(full).some(k => /polic|cancel|fee/i.test(k)));
-  const v = validateSettingsPatch({ confirmationArrival: 'x'.repeat(301) }, ['confirmationArrival']);
-  ok('a part over 300 characters is refused', !v.ok);
+  const v = validateSettingsPatch({ confirmationArrival: 'x'.repeat(401) }, ['confirmationArrival']);
+  ok('a part over 400 characters is refused', !v.ok);
   ok('a part within bounds is accepted', validateSettingsPatch({ confirmationParking: 'Lot behind the clubhouse' }, ['confirmationParking']).ok);
 
   // Static: the routes' gates.
@@ -71,13 +73,18 @@ async function cleanup() {
   const ny = await mk('ny', 'NY', 'acct_ny');
   ok('status names the address’s state', (await taxStatus(ny.id)).addressState === 'NY');
   const r1 = await setUpTax(ny.id, []);
-  ok('set-up with no states registers the address’s state', r1.ok && regs.filter(r => r.account === 'acct_ny').map(r => r.state).join() === 'NY', r1);
+  ok('set-up with no states registers nothing (the page preselects the address’s state)', !r1.ok && regs.filter(r => r.account === 'acct_ny').length === 0, r1);
+  for (const bad of [[''], ['Pennsylvania'], [null as unknown as string]]) {
+    const r = await setUpTax(ny.id, bad);
+    ok(`a malformed state (${JSON.stringify(bad)}) registers nothing and leaves tax off`, !r.ok && regs.filter(x => x.account === 'acct_ny').length === 0 && !(await prisma.course.findUniqueOrThrow({ where: { id: ny.id } })).shopTaxOn);
+  }
+  const r1b = await setUpTax(ny.id, ['NY']);
+  ok('the address’s state, sent by the page, registers', r1b.ok && regs.filter(r => r.account === 'acct_ny').map(r => r.state).join() === 'NY', r1b);
   const pa = await mk('pa', 'NJ', 'acct_pa');
   const r2 = await setUpTax(pa.id, ['PA']);
   ok('given states override the default', r2.ok && regs.filter(r => r.account === 'acct_pa').map(r => r.state).join() === 'PA', r2);
   const bad = await mk('bad', 'Nowhere', 'acct_bad');
-  const r3 = await setUpTax(bad.id, []);
-  ok('no usable address state and none given: asks for one', !r3.ok);
+  ok('no usable address state: the default is blank', (await taxStatus(bad.id)).addressState === '');
 
   // Test reader.
   const shop = await mk('shop', 'NJ', 'acct_shop', 'tml_shop');
@@ -98,6 +105,32 @@ async function cleanup() {
   startPaymentDuringTest = true;
   const t5 = await testReader(shop.id, 'tmr_on');
   ok('a payment started during the test is never cancelled by it', t5.ok && t5.value.passed && !calls.some(c => c.startsWith('cancel')) && readers.get('tmr_on')!.action?.type === 'process_payment_intent', calls);
+
+  // The email as sent: capture what goes to Resend.
+  process.env.RESEND_API_KEY = 're_test_fake';
+  const sent: string[] = [];
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = (async (_u: unknown, init?: { body?: unknown }) => { sent.push(String(init?.body ?? '')); return new Response(JSON.stringify({ id: 'em_1' }), { status: 200, headers: { 'content-type': 'application/json' } }); }) as typeof fetch;
+  const { sendBookingConfirmation } = await import('../src/lib/email');
+  const base = { golferName: 'G', golferEmail: 'g@example.test', courseName: 'C', courseAddress: 'A', date: '2026-11-21', time: '08:40', players: 1, holes: 18, greenFeeTotal: 1, cartFeeTotal: 0, accessFeeTotal: 150, totalAmount: 151, bookingId: 'test', appliedRate: 'standard', noCard: true, testSend: true };
+  await sendBookingConfirmation({ ...base, parts: confirmationPartsOf({}) });
+  const html0 = JSON.parse(sent[0]).html as string;
+  ok('a course that wrote nothing gets today’s line, byte for byte', html0.includes('<p style="margin:8px 0 0;color:#141814;font-size:12px;">Arrive 15 minutes early and check in at the pro shop.</p>') && !html0.includes('Arrival.'));
+  await sendBookingConfirmation({ ...base, parts: confirmationPartsOf({ confirmationArrival: 'Check in <early>', dresscode: ['Collared shirts required.', 'No denim.'] }) });
+  const html1 = JSON.parse(sent[1]).html as string;
+  ok('written parts show labelled, escaped, one dress rule per line', html1.includes('<strong>Arrival.</strong> Check in &lt;early&gt;') && html1.includes('<strong>Dress code.</strong> Collared shirts required.\nNo denim.'));
+  globalThis.fetch = realFetch;
+
+  // Test reader: a payment claimed in our database makes the reader busy, even before Stripe shows it.
+  calls.length = 0; startPaymentDuringTest = false; readers.get('tmr_on')!.action = null;
+  const claim = await prisma.shopSale.create({ data: { courseId: shop.id, status: 'paying', totalCents: 1000, soldBy: 'staff', readerId: 'tmr_on', chargeStartedAt: new Date() } as never });
+  const t6 = await testReader(shop.id, 'tmr_on');
+  ok('a reader a sale has claimed is refused, untouched', !t6.ok && t6.status === 409 && calls.length === 0, t6);
+  await prisma.shopSale.delete({ where: { id: claim.id } });
+  failDisplay = true;
+  const t7 = await testReader(shop.id, 'tmr_on');
+  ok('a display Stripe reports failed is not a pass', t7.ok && !t7.value.passed, t7);
+  failDisplay = false;
 
   await cleanup(); await prisma.$disconnect();
   if (failed) { console.error(`${failed} failed`); process.exit(1); }

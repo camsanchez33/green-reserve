@@ -8,6 +8,8 @@ import { rateLimit } from '@/lib/rate-limit';
 // moves (lib/card-reader testReader). Owner only, like connecting a reader:
 // a reader is Stripe hardware and staff never change anything Stripe.
 
+export const maxDuration = 30; // a 3-second display plus three Stripe calls
+
 export async function POST(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -18,5 +20,5 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({})) as { id?: unknown };
   const r = await testReader(session.courseId, typeof body.id === 'string' ? body.id : '');
   if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
-  return NextResponse.json(r.value);
+  return NextResponse.json({ ok: r.value.passed, ...r.value });
 }

@@ -15,14 +15,15 @@ export const CONFIRMATION_PART_SELECT = {
 export const DEFAULT_ARRIVAL = 'Arrive 15 minutes early and check in at the pro shop.';
 
 /** Longest each part may be, enforced by the settings API. */
-export const CONFIRMATION_PART_MAX = { confirmationArrival: 300, confirmationParking: 300, confirmationContact: 300 } as const;
+export const CONFIRMATION_PART_MAX = { confirmationArrival: 400, confirmationParking: 400, confirmationContact: 400 } as const;
 
 type PartColumns = { confirmationArrival?: string | null; confirmationParking?: string | null; confirmationContact?: string | null; confirmationNote?: string | null; dresscode?: string[] | null };
 
 export function confirmationPartsOf(c: PartColumns): ConfirmationParts {
   return {
     arrival: (c.confirmationArrival ?? '').trim(),
-    dressCode: (c.dresscode ?? []).map(s => s.trim()).filter(Boolean).join(', '),
+    // One rule per line, as the course typed them (the email keeps line breaks).
+    dressCode: (c.dresscode ?? []).map(s => s.trim()).filter(Boolean).join('\n'),
     parking: (c.confirmationParking ?? '').trim(),
     note: (c.confirmationNote ?? '').trim(),
     contact: (c.confirmationContact ?? '').trim(),
@@ -35,9 +36,10 @@ export function confirmationPartsOf(c: PartColumns): ConfirmationParts {
  * stands in place of the default arrival line.
  */
 export function confirmationLines(p: ConfirmationParts): { label: string; text: string }[] {
-  const arrival = p.arrival || (p.note ? '' : DEFAULT_ARRIVAL);
+  // Nothing written: today's default line exactly, with no label.
+  const arrival = p.arrival ? { label: 'Arrival', text: p.arrival } : { label: '', text: p.note ? '' : DEFAULT_ARRIVAL };
   return [
-    { label: 'Arrival', text: arrival },
+    arrival,
     { label: 'Dress code', text: p.dressCode },
     { label: 'Parking', text: p.parking },
     { label: '', text: p.note },

@@ -7,7 +7,7 @@ import { membershipFeeCents } from '@/lib/stripe';
 import { logSent, type SendMeta } from '@/lib/sent-messages';
 import { SUPPORT_EMAIL, ADMIN_EMAIL, BILLING_EMAIL, NOREPLY_EMAIL } from '@/lib/contact';
 import { bookingRefFor } from '@/lib/booking-ref';
-import { confirmationLines, confirmationPartsOf, type ConfirmationParts } from './confirmation-parts';
+import { confirmationLines, confirmationPartsOf, DEFAULT_ARRIVAL, type ConfirmationParts } from './confirmation-parts';
 
 let _resend: Resend | null = null;
 /** Resend's options plus our own `meta` (BRAIN-1b), which never reaches Resend. */
@@ -228,7 +228,7 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
     ${policyBox}
     <div style="background:#F6F4EC;border:1px solid #E3E4DE;border-radius:6px;padding:16px;margin-bottom:24px;">
       <p style="margin:0;color:#141814;font-size:13px;font-weight:600;">${data.courseAddress}</p>
-      ${confirmationLines(data.parts ?? confirmationPartsOf({ confirmationNote: data.confirmationNote })).map(l => `<p style="margin:8px 0 0;color:#141814;font-size:12px;white-space:pre-line;">${l.label ? `<strong>${escapeHtml(l.label)}.</strong> ` : ''}${escapeHtml(l.text)}</p>`).join('')}
+      ${confirmationLines(data.parts ?? confirmationPartsOf({ confirmationNote: data.confirmationNote })).map(l => `<p style="margin:8px 0 0;color:#141814;font-size:12px;${l.text === DEFAULT_ARRIVAL && !l.label ? '' : 'white-space:pre-line;'}">${l.label ? `<strong>${escapeHtml(l.label)}.</strong> ` : ''}${escapeHtml(l.text)}</p>`).join('')}
     </div>
     ${ctaButtons}
     ${data.checkInToken ? `<p style="margin:0 0 8px;text-align:center;"><a href="${process.env.NEXT_PUBLIC_URL}/receipt/${data.bookingId}?token=${data.checkInToken}" style="color:#6B706A;font-size:12px;text-decoration:underline;">View booking confirmation</a></p>` : ''}
