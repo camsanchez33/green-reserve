@@ -9,6 +9,10 @@ the lane files; merges every PR in dependency order after Cam's review sitting; 
 **Control Room** (Cam watches it): Build alone writes https://claude.ai/artifact/CWmgjgJHTZaTr4XThBuvZL with `ArtifactData`: its own `sessions/<id>` row at start, after each push/merge/blocker and before ending (a `working` row silent 30 min shows as Silent), and the web (`areas`, `items`, `questions`, `lookat`) after every merge, answer and change of plan. Full protocol: `docs/DECISIONS.md` → "Control Room".
 
 ## Queued (not started)
+- Small Build text fixes: the admin-areas.ts help for 'golfers' still says "resend, cancel and refund"; the search route nav label still says "Golfer lookup".
+- LIKE wildcard escape on email matching: in progress (session_014ceBnuw4aR9nRiD5mdt9bL).
+- The admin course page refund button (useCourseDetail.tsx) goes with the /api/admin/refund removal.
+- Golfers: "Paid in total" leaves out cash rounds; the list needs a SQL rollup past tens of thousands of bookings; audit-on-open waits for Cam.
 - After #458 (Takes cash): the Dashboard lane updates TakesCashToggle wording and owner-only access, and hides cash buttons when `Course.takesCash` is false. Cash routes answer 409 { error, cashOff: true }. Build rewords the "take cash instead" server messages (shop-sales pay-link limits, card-reader minimum) by takesCash.
 - Golfer lane: the golfer confirmation page shows the new confirmation-email parts (arrival, parking, contact, dress code) from #457.
 - #457 Test reader: one Stripe test-mode run of the $0.00 reader display, before courses rely on it.
