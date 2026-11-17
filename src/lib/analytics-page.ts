@@ -92,6 +92,17 @@ export function unfilledWithoutMoney<U extends { rows: { lostCents: number }[]; 
   return { ...rest, rows: u.rows.map(drop), worstHours: u.worstHours.map(drop), worstDays: u.worstDays.map(drop) };
 }
 
+/**
+ * Pure: the /analytics body for a login without money.payments. No ledger block, and the value of unsold spots
+ * out everywhere it appears: unfilled, headline, and the compare period's headline (or the range one length on,
+ * asked as "compare", would hand it back).
+ */
+export function analyticsWithoutMoney<A extends { unfilled: Parameters<typeof unfilledWithoutMoney>[0] }, H extends { lostCents: number }, C extends { headline: H } | null>(body: A & { headline: H; compare: C; ledger?: unknown }) {
+  const { ledger: _l, ...rest } = body;
+  const dropLost = ({ lostCents: _x, ...h }: H) => h;
+  return { ...rest, unfilled: unfilledWithoutMoney(body.unfilled), headline: dropLost(body.headline), compare: body.compare && { ...body.compare, headline: dropLost(body.compare.headline) } };
+}
+
 // ─── No-shows, refills, late cancels ────────────────────────────────────────
 
 /** Five rows (agreed with the Dashboard lane, 2026-11-17): online splits by card and fee; the counter by card only. */

@@ -2,7 +2,7 @@
 // cancel lead buckets, refill pairing, how a booking was made, the no-show report, stock value —
 // and that the routes are gated and read the ledger. No database. Run: npx tsx scripts/analytics-page-test.ts
 import { readFileSync } from 'fs';
-import { leadOf, howOf, refillsOf, noShowOf, stockOf, noShowWithoutMoney, unfilledWithoutMoney, type NsBooking } from '../src/lib/analytics-page';
+import { leadOf, howOf, refillsOf, noShowOf, stockOf, noShowWithoutMoney, unfilledWithoutMoney, analyticsWithoutMoney, type NsBooking } from '../src/lib/analytics-page';
 import { can } from '../src/lib/session';
 
 let failed = 0;
@@ -114,6 +114,13 @@ const bk = (o: Partial<NsBooking> & { id: string }): NsBooking => ({
   const u = { slots: 1, openSpots: 2, lostCents: 9000, rows: [{ date: 'd', time: 't', open: 2, lostCents: 9000 }], worstHours: [{ hour: 8, slots: 1, open: 2, lostCents: 9000 }], worstDays: [{ dow: 'Mon', slots: 1, open: 2, lostCents: 9000 }] };
   const ub = unfilledWithoutMoney(u);
   ok('unsold spots without money: open spots, never their value', cents(ub).length === 0 && ub.openSpots === 2 && ub.rows[0].open === 2 && ub.worstHours[0].open === 2, ub);
+  // The /analytics body as the route shapes it, with the compare period the page always asks for.
+  const head = { collectedCents: 1, lostCents: 152000, fillPct: 50 };
+  const body = { range: {}, unfilled: u, headline: head, compare: { range: {}, headline: { ...head, lostCents: 99000 }, series: [] }, ledger: { grossCents: 5 } };
+  const lost = (o: unknown): string[] => !o || typeof o !== 'object' ? [] : Object.entries(o as Record<string, unknown>).flatMap(([k, v]) => [...(k === 'lostCents' || k === 'ledger' ? [k] : []), ...lost(v)]);
+  const nb = analyticsWithoutMoney(body);
+  ok('/analytics without money: no ledger, and no unsold value anywhere, compare included', lost(nb).length === 0 && lost(body).length > 0 && nb.compare?.headline.fillPct === 50, lost(nb));
+  ok('…and no compare stays no compare', analyticsWithoutMoney({ ...body, compare: null }).compare === null);
 }
 
 // ── Routes: gated, this course, ledger money ──
@@ -123,9 +130,7 @@ for (const f of ['src/app/api/operator/analytics/no-shows/route.ts', 'src/app/ap
   ok(`${f}: signed in, analytics.view, the session's course`, s.includes('resolveDashboardSession()') && s.includes("requirePermission(session, 'analytics.view')") && s.includes('session.courseId'));
 }
 const main = read('src/app/api/operator/analytics/route.ts'), lib = read('src/lib/analytics-page.ts'), sales = read('src/app/api/operator/money/sales/route.ts');
-ok('Analytics returns the ledger headline only with money.payments, and strips the unsold value without it', main.includes('ledgerHeadline(session.courseId, range)') && main.includes("const money = can(session, 'money.payments');") && /money \? \{ \.\.\.current, customers, headline: head, compare, ledger \}/.test(main) && main.includes('unfilled: unfilledWithoutMoney(current.unfilled)'));
-{ const noMoney = main.split(': { ...current, customers, unfilled: unfilledWithoutMoney')[1]?.split('\n')[0] ?? 'ledger';
-  ok('…and the branch without money.payments carries no ledger block', !noMoney.includes('ledger'), noMoney); }
+ok('Analytics: the ledger headline, and without money.payments the whole body goes through analyticsWithoutMoney', main.includes('ledgerHeadline(session.courseId, range)') && main.includes("const money = can(session, 'money.payments');") && main.includes('const body = { ...current, customers, headline: head, compare, ledger };') && main.includes('const out = money ? body : analyticsWithoutMoney(body);') && main.includes('return NextResponse.json(out'));
 ok('No-shows money only with money.payments', read('src/app/api/operator/analytics/no-shows/route.ts').includes("can(session, 'money.payments') ? r : noShowWithoutMoney(r)"));
 ok('shop ledger money only with money.payments', read('src/app/api/operator/analytics/shop/route.ts').includes("...(can(session, 'money.payments') ? { ledgerSalesCents } : {})"));
 ok('the ledger headline is the Revenue page\'s own function, called the same way', /allSegments\(courseId, c\.tz, range, prev, now\)/.test(lib) && /allSegments\(session\.courseId, tz, a\.range, previousRange\(a\.range\)\)/.test(sales));
