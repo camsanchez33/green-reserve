@@ -1,164 +1,148 @@
 'use client';
-// CO-DOCS (Cam 2026-10-01): the company's own paperwork — LLC filing, EIN
-// letter, bank and insurance documents — in the PRIVATE Blob store. Owner with
-// 2FA only (the routes enforce it; the sidebar only offers the link to owners).
+// CO-DOCS (Cam 2026-10-01): the company's own paperwork — LLC filing, EIN letter, bank and insurance documents — in
+// the PRIVATE Blob store. Owner with 2FA only (the routes enforce it; the sidebar only offers the link to owners).
 // The repo is public, so these documents live here and never in git.
 //
-// No-silent-failures rule: every action shows pending, then success or an
-// error that says what to do next; a failed load shows a retry, never "empty".
+// Settings → Company docs (Cam approved the mockup 2026-11-17, lanes/admin/company-docs-mockup.html; lanes/admin.md
+// "Company docs"): one "GreenReserve LLC’s paperwork" card in My profile's card build. Every label shows, filed or
+// not, so a missing insurance policy is as visible as a filed one (ADMIN-C). One line per document; clicking it opens
+// its details. A bare plus adds, a bare icon filters. Course agreements are not here; a quiet line points to them.
+// Labels, versions and history appear only once Build's data arrives (./logic). Nothing is faked meanwhile.
+//
+// No-silent-failures rule: every action shows pending, then success or an error that says what to do next; a failed
+// load shows a retry, never "empty".
+import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Download, Trash2, Upload } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
-import { StatusDot } from '@/components/ui/StatusDot';
+import { ProfileCard, profileStyles as s } from '@/components/admin/ProfileCard';
 import { adminFetch, type AdminFetchFailure } from '@/lib/admin-fetch';
-import { LoadFailure, ErrorBanner } from '@/components/ui/ErrorState';
-import { Btn } from '@/components/ui/Btn';
-import { INPUT_COMPACT } from '@/components/ui/field';
-import { formatDateTime } from '@/lib/format';
-import { COMPANY_DOC_CATEGORIES, COMPANY_DOC_MAX_BYTES, COMPANY_DOC_TYPES, type CompanyDocCategory } from '@/lib/company-documents';
+import g from '../admin-glass.module.css';
+import c from './company.module.css';
+import { type Doc, type Label, type Listing, labelsOf, hasLabels, groupDocs, day, emptyLine } from './logic';
+import { AddBox, UploadBox, DocBox, LabelBox, FilterBox, LOCK } from './Dialogs';
 
-type Doc = { url: string; pathname: string; size: number; uploadedAt: string; category: CompanyDocCategory | 'other'; name: string };
+const ICON = { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.9, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, 'aria-hidden': true };
 
-const fmtSize = (b: number) => b >= 1024 * 1024 ? `${(b / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`;
-const downloadHref = (url: string) => `/api/admin/company-documents/download?url=${encodeURIComponent(url)}`;
+type Open =
+  | { kind: 'add' } | { kind: 'upload'; replacing: Doc | null } | { kind: 'doc'; doc: Doc }
+  | { kind: 'label'; label: Label | null } | { kind: 'filter' } | null;
 
 export default function CompanyDocumentsPage() {
-  const [docs, setDocs] = useState<Doc[] | null>(null);
+  const [data, setData] = useState<Listing | null>(null);
+  const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<{ msg: string; kind: AdminFetchFailure } | null>(null);
-  const [category, setCategory] = useState<CompanyDocCategory>('formation');
-  const [uploading, setUploading] = useState(false);
-  const [notice, setNotice] = useState('');
-  const [actionError, setActionError] = useState('');
-  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState<string | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [open, setOpen] = useState<Open>(null);
+  const [only, setOnly] = useState('');
+  const [toast, setToast] = useState('');
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const say = useCallback((m: string) => {
+    setToast(m);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(''), 3000);
+  }, []);
+  useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
 
   const load = useCallback(async () => {
-    setLoadError(null);
-    const res = await adminFetch<{ documents: Doc[] }>('/api/admin/company-documents', { subject: 'company documents' });
-    if (!res.ok) { setLoadError({ msg: res.message, kind: res.kind }); setDocs(null); return; }
-    setDocs(res.data.documents);
+    setLoading(true);
+    const res = await adminFetch<Listing>('/api/admin/company-documents', { subject: 'company documents' });
+    if (!res.ok) setLoadError({ msg: res.message, kind: res.kind });
+    else { setData(res.data); setLoadError(null); }
+    setLoading(false);
   }, []);
   useEffect(() => { load(); }, [load]);
 
-  async function upload(file: File) {
-    setUploading(true); setActionError(''); setNotice('');
-    try {
-      if (!(COMPANY_DOC_TYPES as readonly string[]).includes(file.type)) { setActionError('Only PDF, PNG or JPEG files can be stored here.'); return; }
-      if (file.size > COMPANY_DOC_MAX_BYTES) { setActionError('That file is over 25 MB. Compress it and try again.'); return; }
-      const { upload: put } = await import('@vercel/blob/client');
-      const safe = file.name.replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^-+/, '').slice(0, 120) || 'document';
-      let blob: { url: string };
-      try {
-        blob = await put(`company/${category}/${safe}`, file, {
-          access: 'private',
-          handleUploadUrl: '/api/admin/company-documents/upload',
-          contentType: file.type,
-        });
-      } catch (e) {
-        setActionError(`Upload failed: ${e instanceof Error ? e.message : 'storage did not accept the file'}. Nothing was saved.`);
-        return;
-      }
-      const rec = await adminFetch('/api/admin/company-documents', { method: 'POST', body: JSON.stringify({ url: blob.url }), subject: 'the document', action: 'save' });
-      if (!rec.ok) { setActionError(`${rec.message} The file may be stored; reload to check before uploading again.`); }
-      else setNotice(`Saved “${file.name}”.`);
-      await load();
-    } finally {
-      setUploading(false);
-      if (fileRef.current) fileRef.current.value = '';
-    }
-  }
+  /** After a change: close the box, say what happened, show the new state. */
+  const done = useCallback(async (msg: string) => { setOpen(null); say(msg); await load(); }, [load, say]);
 
-  async function remove(doc: Doc) {
-    setDeleting(doc.url); setActionError(''); setNotice('');
-    const res = await adminFetch(`/api/admin/company-documents?url=${encodeURIComponent(doc.url)}`, { method: 'DELETE', subject: 'the document', action: 'save' });
-    setDeleting(null); setConfirmDelete(null);
-    if (!res.ok) { setActionError(`${res.message} “${doc.name}” was not deleted.`); return; }
-    setNotice(`Deleted “${doc.name}”.`);
-    await load();
-  }
+  const labels = labelsOf(data);
+  const ownLabels = hasLabels(data);
+  const groups = groupDocs(data?.documents ?? [], labels);
+  // A filter on a label that has since gone shows everything again.
+  const filtered = labels.some(l => l.key === only) ? only : '';
+  const shown = labels.filter(l => !filtered || l.key === filtered);
+  const onlyName = labels.find(l => l.key === filtered)?.name;
 
-  // ADMIN-C (AW-15, "important, needs to be organized"): every category shows,
-  // filed or not, so a missing insurance policy is as visible as a filed one.
-  const groups = COMPANY_DOC_CATEGORIES
-    .map(c => ({ ...c, docs: (docs ?? []).filter(d => d.category === c.key) }));
+  const top = (
+    <span className={c.icons}>
+      <button type="button" className={`${s.plus} ${c.fico} ${filtered ? c.fon : ''}`} onClick={() => setOpen({ kind: 'filter' })} aria-label="Filter" title="Filter" disabled={!data}>
+        <svg {...ICON}><path d="M4 5h16l-6 7.5V19l-4-2v-4.5z" /></svg>{filtered && <i className={c.fdot} aria-hidden="true" />}
+      </button>
+      <button type="button" className={s.plus} onClick={() => setOpen(ownLabels ? { kind: 'add' } : { kind: 'upload', replacing: null })} aria-label="Add" title="Add" disabled={!data}>
+        <svg {...ICON} strokeWidth={2}><path d="M12 5v14M5 12h14" /></svg>
+      </button>
+    </span>
+  );
 
   return (
-    <div className="min-h-screen bg-white flex">
+    <>
       <AdminSidebar active="company" />
-      <div className="admin-content flex-1 min-h-screen">
-        <div className="px-10 pt-6 pb-10 max-w-4xl">
-          <div className="mb-7">
-            <h1 className="m-0 text-[32px] font-bold tracking-[-0.02em] text-ink leading-none">Company docs</h1>
-            <p className="text-[14px] text-ink-soft mt-2">GreenReserve LLC&apos;s own paperwork: formation, tax, banking, insurance and contracts. Stored privately and visible only to the owner. Never put these in the code repository; it is public.</p>
+      <main className={g.main}>
+        <div className={g.head}><h1>Company docs</h1></div>
+        {loadError && (
+          <div className={`${g.glass} ${c.problem}`} role="alert">
+            <span>{loadError.msg}</span>
+            {loadError.kind === 'unauthorized' ? <Link href="/admin/login" className={s.btn}>Sign in</Link>
+              : loadError.kind === 'forbidden' ? null : <button type="button" className={s.btn} onClick={() => load()} disabled={loading}>{loading ? 'Trying…' : 'Try again'}</button>}
           </div>
-
-          <section className="bg-paper rounded-lg p-5 mb-6">
-            <h2 className="text-[16px] font-semibold text-ink">Add a document</h2>
-            <div className="flex flex-wrap items-end gap-3 mt-3">
-              <label className="text-[13px] text-ink-soft">
-                <span className="block mb-1">Category</span>
-                <select value={category} onChange={e => setCategory(e.target.value as CompanyDocCategory)} disabled={uploading}
-                  className={INPUT_COMPACT}>
-                  {COMPANY_DOC_CATEGORIES.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
-                </select>
-              </label>
-              <input ref={fileRef} type="file" accept="application/pdf,image/png,image/jpeg" className="hidden"
-                onChange={e => { const f = e.target.files?.[0]; if (f) upload(f); }} />
-              <Btn onClick={() => fileRef.current?.click()} disabled={uploading}>
-                <span className="inline-flex items-center gap-2">{uploading ? 'Uploading…' : 'Choose file'}</span>
-              </Btn>
-              <span className="text-[13px] text-ink-muted">PDF, PNG or JPEG, up to 25 MB.</span>
-            </div>
-          </section>
-
-          {actionError && <ErrorBanner message={actionError} onDismiss={() => setActionError('')} />}
-          {notice && <p className="mb-4 text-[13px] text-ok">{notice}</p>}
-
-          {loadError ? (
-            <LoadFailure message={loadError.msg} kind={loadError.kind} onRetry={load} compact />
-          ) : docs === null ? (
-            <p className="text-sm text-ink-soft">Loading documents…</p>
-          ) : (
-            <div className="space-y-7">
-              {docs.length === 0 && <p className="text-[14px] text-ink-soft">No company documents yet. Add the LLC filing first: choose Formation, then the PDF.</p>}
-              {groups.map(g => (
-                <section key={g.key}>
-                  <h2 className="text-[16px] font-semibold text-ink flex items-center gap-2">
-                    {g.label} <span className="font-normal text-ink-muted text-[14px]">{g.docs.length || ''}</span>
-                  </h2>
-                  {g.docs.length === 0 ? (
-                    <p className="mt-1.5 text-[13.5px] text-ink-muted flex items-center gap-2"><StatusDot status="neutral" />Nothing filed yet.</p>
-                  ) : (
-                  <ul className="mt-2 border border-line rounded-lg divide-y divide-line-soft">
-                    {g.docs.map(d => (
-                      <li key={d.url} className="flex items-center gap-3 px-4 py-3">
-                        <div className="min-w-0 flex-1">
-                          <a href={downloadHref(d.url)} target="_blank" rel="noopener" className="text-sm font-medium text-ink hover:underline break-all">{d.name}</a>
-                          <div className="text-xs text-ink-muted">{fmtSize(d.size)} · added {formatDateTime(d.uploadedAt)}</div>
-                        </div>
-                        {confirmDelete === d.url ? (
-                          <div className="flex items-center gap-2 shrink-0">
-                            <span className="text-xs text-bad">Delete for good?</span>
-                            <Btn variant="secondary" onClick={() => setConfirmDelete(null)} disabled={deleting === d.url}>Keep</Btn>
-                            <Btn onClick={() => remove(d)} disabled={deleting === d.url}>{deleting === d.url ? 'Deleting…' : 'Delete'}</Btn>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1 shrink-0">
-                            <a href={downloadHref(d.url)} target="_blank" rel="noopener" aria-label={`Open ${d.name}`} className="p-2 text-ink-muted hover:text-ink"><Download className="w-4 h-4" /></a>
-                            <button type="button" onClick={() => setConfirmDelete(d.url)} aria-label={`Delete ${d.name}`} className="p-2 text-ink-muted hover:text-bad"><Trash2 className="w-4 h-4" /></button>
-                          </div>
-                        )}
-                      </li>
+        )}
+        {!loadError && (
+          <div className={s.col}>
+            <ProfileCard title="GreenReserve LLC’s paperwork" labelId="cd-card" top={top}
+              lead={<span className={c.secl}>{LOCK}<span>Only you can see this page. Files are stored privately and open only through your owner session.</span></span>}>
+              {onlyName && (
+                <div className={c.aon}>Showing {onlyName}<button type="button" className={s.lnk} onClick={() => setOnly('')}>Clear</button></div>
+              )}
+              {!data && loading && <p className={c.muted}>Loading documents…</p>}
+              {data && shown.map(l => {
+                const docs = groups.get(l.key) ?? [];
+                return (
+                  <section key={l.key} aria-label={l.name}>
+                    <div className={c.gh}>
+                      <span>{l.name}{docs.length > 0 && <span className={c.cn}>{docs.length}</span>}</span>
+                      {ownLabels && !l.builtIn && (
+                        <button type="button" className={`${s.plus} ${c.pen}`} onClick={() => setOpen({ kind: 'label', label: l })} aria-label={`Rename or remove ${l.name}`} title="Rename or remove">
+                          <svg {...ICON} width={14} height={14}><path d="M4 20h4L19 9l-4-4L4 16z" /></svg>
+                        </button>
+                      )}
+                    </div>
+                    {docs.length === 0 ? (
+                      <div className={c.empty}><span className={c.dot0} aria-hidden="true" />{emptyLine(l)}</div>
+                    ) : docs.map(d => (
+                      <button key={d.url} type="button" className={c.row} onClick={() => setOpen({ kind: 'doc', doc: d })}>
+                        <span className={c.name}>{d.name}</span>
+                        <span className={c.ver}>{d.version && d.version > 1 ? `Version ${d.version}` : ''}</span>
+                        <span className={c.date}>{day(d.uploadedAt)}</span>
+                        <svg className={c.chev} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
+                      </button>
                     ))}
-                  </ul>
-                  )}
-                </section>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+                  </section>
+                );
+              })}
+              {data && <p className={c.agl}>Course agreements courses sign are under <Link href="/admin/system" className={c.qlink}>Platform activity → Agreement versions</Link>.</p>}
+            </ProfileCard>
+          </div>
+        )}
+      </main>
+
+      {open?.kind === 'add' && (
+        <AddBox onClose={() => setOpen(null)} onUpload={() => setOpen({ kind: 'upload', replacing: null })} onLabel={() => setOpen({ kind: 'label', label: null })} />
+      )}
+      {open?.kind === 'upload' && (
+        <UploadBox labels={labels} replacing={open.replacing} sendLabel={ownLabels} onClose={() => setOpen(null)} onDone={done} />
+      )}
+      {open?.kind === 'doc' && (
+        <DocBox doc={open.doc} labels={labels} canRelabel={ownLabels} onClose={() => setOpen(null)}
+          onReplace={() => setOpen({ kind: 'upload', replacing: open.doc })} onChanged={done} />
+      )}
+      {open?.kind === 'label' && (
+        <LabelBox label={open.label} labels={labels} count={open.label ? (groups.get(open.label.key)?.length ?? 0) : 0}
+          onClose={() => setOpen(null)} onDone={done} />
+      )}
+      {open?.kind === 'filter' && (
+        <FilterBox labels={labels} value={filtered} onClose={() => setOpen(null)} onPick={k => { setOnly(k); setOpen(null); }} />
+      )}
+      {toast && <div className={c.toast} role="status">{toast}</div>}
+    </>
   );
 }
