@@ -59,20 +59,28 @@ const diff = (a: number | null, b: number | null) => (a == null || b == null ? n
 
 type Headline = ReturnType<typeof headline>;
 
-const ledgerFacts = (l: LedgerMonth) => ({
+/**
+ * The ledger (MoneyMove) began on 2026-10-30 (migration 20261030020000_money_ledger) with no backfill: a month
+ * before November 2026 isn't in it in full, so its money is unknown — never read as $0. Such a month gets no
+ * ledger facts, no revenue change, and blank money rows in By area.
+ */
+export const LEDGER_FIRST_FULL_MONTH = '2026-11';
+export const ledgerCovers = (month: string) => month >= LEDGER_FIRST_FULL_MONTH;
+
+const ledgerFacts = (l: LedgerMonth | null) => !l ? {} : ({
   revenueDollars: dollars(l.grossCents), refundsDollars: dollars(l.refundsCents), teeAndCartDollars: dollars(l.teeCartCents),
   proShopDollars: dollars(l.proShopCents), eventDollars: dollars(l.eventCents), duesDollars: dollars(l.duesCents),
 });
 
 /** "By area" in the written report: this month against the month before, stored with the review. */
 export type AreaRow = { key: 'rounds' | 'fill' | 'revenue' | 'no_show_rate' | 'pro_shop'; label: string; unit: 'count' | 'pct' | 'cents'; thisMonth: number | null; lastMonth: number | null };
-export function byAreaOf(cur: { h: Headline; l: LedgerMonth }, prev: { h: Headline; l: LedgerMonth } | null): AreaRow[] {
+export function byAreaOf(cur: { h: Headline; l: LedgerMonth | null }, prev: { h: Headline; l: LedgerMonth | null } | null): AreaRow[] {
   return [
     { key: 'rounds', label: 'Rounds played', unit: 'count', thisMonth: cur.h.roundsPlayed, lastMonth: prev?.h.roundsPlayed ?? null },
     { key: 'fill', label: 'Tee sheet filled', unit: 'pct', thisMonth: cur.h.fillPct, lastMonth: prev?.h.fillPct ?? null },
-    { key: 'revenue', label: 'Revenue', unit: 'cents', thisMonth: cur.l.grossCents, lastMonth: prev?.l.grossCents ?? null },
+    { key: 'revenue', label: 'Revenue', unit: 'cents', thisMonth: cur.l?.grossCents ?? null, lastMonth: prev?.l?.grossCents ?? null },
     { key: 'no_show_rate', label: 'No-show rate', unit: 'pct', thisMonth: cur.h.noShowPct, lastMonth: prev?.h.noShowPct ?? null },
-    { key: 'pro_shop', label: 'Pro shop sales', unit: 'cents', thisMonth: cur.l.proShopCents, lastMonth: prev?.l.proShopCents ?? null },
+    { key: 'pro_shop', label: 'Pro shop sales', unit: 'cents', thisMonth: cur.l?.proShopCents ?? null, lastMonth: prev?.l?.proShopCents ?? null },
   ];
 }
 
@@ -83,9 +91,10 @@ function money(h: Headline) {
     customers: h.customers, returningCustomerPct: h.returningPct, avgDaysBookedAhead: h.avgLeadDays,
   };
 }
-function changes(cur: Headline, then: Headline, curL: LedgerMonth, thenL: LedgerMonth) {
+function changes(cur: Headline, then: Headline, curL: LedgerMonth | null, thenL: LedgerMonth | null) {
   return {
-    revenueDollars: dollars(curL.grossCents - thenL.grossCents),
+    // Only when the ledger covers both months; otherwise the change is unknown and left out.
+    ...(curL && thenL ? { revenueDollars: dollars(curL.grossCents - thenL.grossCents) } : {}),
     fillPctPoints: diff(cur.fillPct, then.fillPct),
     noShowPctPoints: diff(cur.noShowPct, then.noShowPct),
     cancelPctPoints: diff(cur.cancelPct, then.cancelPct),
@@ -98,9 +107,9 @@ export type ReviewFacts = ReturnType<typeof buildFacts>;
 
 export function buildFacts(
   month: string, a: Analytics,
-  prev: { month: string; a: Analytics; ledger: LedgerMonth } | null,
-  baseline: { month: string; headline: Headline; ledger: LedgerMonth } | null,
-  ledger: LedgerMonth, ns: Pick<NoShowReport, 'totals' | 'lateCancels'>,
+  prev: { month: string; a: Analytics; ledger: LedgerMonth | null } | null,
+  baseline: { month: string; headline: Headline; ledger: LedgerMonth | null } | null,
+  ledger: LedgerMonth | null, ns: Pick<NoShowReport, 'totals' | 'lateCancels'>,
 ) {
   const cur = headline(a);
   return {
@@ -229,10 +238,12 @@ export async function runMonthlyReview(courseId: string, now: Date = new Date(),
   });
   const a = await computeAnalytics(courseId, monthRange(month), now);
   const prevMonth = previousMonth(`${month}-01`);
-  const prev = isFullMonth(course.firstWentLiveAt, prevMonth, tz) ? { month: prevMonth, a: await computeAnalytics(courseId, monthRange(prevMonth), now), ledger: await ledgerMonth(courseId, tz, prevMonth, now) } : null;
-  // The ledger is append-only, so a past month's money read now is what it was (the baseline's included).
-  const baseline = baselineRow ? { month: baselineRow.month, headline: (baselineRow.metrics as { headline: Headline }).headline, ledger: await ledgerMonth(courseId, tz, baselineRow.month, now) } : null;
-  const [ledger, ns] = await Promise.all([ledgerMonth(courseId, tz, month, now), noShowReport(courseId, monthRange(month), now)]);
+  // The ledger is append-only, so a past month's money read now is what it was (the baseline's included) — for a
+  // month it covers in full. A month before it is unknown money, never $0 (LEDGER_FIRST_FULL_MONTH).
+  const ledgerOf = (m: string) => (ledgerCovers(m) ? ledgerMonth(courseId, tz, m, now) : Promise.resolve(null));
+  const prev = isFullMonth(course.firstWentLiveAt, prevMonth, tz) ? { month: prevMonth, a: await computeAnalytics(courseId, monthRange(prevMonth), now), ledger: await ledgerOf(prevMonth) } : null;
+  const baseline = baselineRow ? { month: baselineRow.month, headline: (baselineRow.metrics as { headline: Headline }).headline, ledger: await ledgerOf(baselineRow.month) } : null;
+  const [ledger, ns] = await Promise.all([ledgerOf(month), noShowReport(courseId, monthRange(month), now)]);
   const nsFacts = ns ?? { totals: { bookings: 0, noShows: 0, ratePct: null, lostValueCents: 0, recoveredCents: 0, lateCancelLostValueCents: 0, lateCancelRecoveredCents: 0, lateCancelNetCents: 0, netCents: 0 }, lateCancels: { spots: 0, lostValueCents: 0, refilledSpots: 0, refilledCents: 0, feesCents: 0, netCents: 0 } };
   const facts = buildFacts(month, a, prev, baseline, ledger, nsFacts);
   const byArea = byAreaOf({ h: headline(a), l: ledger }, prev ? { h: headline(prev.a), l: prev.ledger } : null);

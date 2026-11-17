@@ -367,7 +367,7 @@ export type ProjDay = { date: string; offered: number; booked: number; usualByNo
 export type Projections = {
   today: string;
   last: { from: string; to: string; players: number; offered: number; fillPct: number | null; revenueCents: number };
-  next: { from: string; to: string; players: number; offered: number; fillPct: number | null; revenueCents: number };
+  next: { from: string; to: string; players: number; offered: number; fillPct: number | null; revenueCents: number | null };
   change: { playersPct: number | null; fillPts: number | null; revenuePct: number | null };
   week: ProjDay[];
   weeksOfHistory: number;
@@ -401,7 +401,8 @@ export function projectionsOf(slots: Slot[], closed: Set<string>, today: string,
     const date = addDaysStr(today, i);
     const offered = offeredOn(date), booked = bookedAsOf(date, nowMs);
     const byNow: number[] = [], added: number[] = [], finals: number[] = [], offeredBefore: number[] = [];
-    for (let k = 1; k <= 4; k++) {
+    // The last four same weekdays that are over and had tee times (up to 8 weeks back: a day 29 out needs 5–8).
+    for (let k = 1; k <= 8 && byNow.length < 4; k++) {
       const then = addDaysStr(date, -7 * k);
       if (then >= today) continue; // not over yet: no final count to learn from
       const o = offeredOn(then);
@@ -432,15 +433,15 @@ export function projectionsOf(slots: Slot[], closed: Set<string>, today: string,
   let lastPlayers = 0, lastOffered = 0;
   for (let d = lastFrom; d <= lastTo; d = addDaysStr(d, 1)) { lastPlayers += finalOn(d); lastOffered += offeredOn(d); }
   const nextPlayers = days.reduce((n, d) => n + d.expected, 0), nextOffered = days.reduce((n, d) => n + d.offered, 0);
-  const perPlayer = lastPlayers > 0 ? lastTeeRevenueCents / lastPlayers : 0;
-  const nextRevenue = Math.round(nextPlayers * perPlayer);
+  // No players in the last 30 days: nothing to base money per player on — unknown, not $0.
+  const nextRevenue = lastPlayers > 0 ? Math.round(nextPlayers * (lastTeeRevenueCents / lastPlayers)) : null;
   const lastFill = pct(lastPlayers, lastOffered), nextFill = pct(nextPlayers, nextOffered);
   const change = (a: number, b: number) => (b > 0 ? Math.round(((a - b) / b) * 1000) / 10 : null);
   return {
     today,
     last: { from: lastFrom, to: lastTo, players: lastPlayers, offered: lastOffered, fillPct: lastFill, revenueCents: lastTeeRevenueCents },
     next: { from: today, to: addDaysStr(today, PROJECT_DAYS - 1), players: nextPlayers, offered: nextOffered, fillPct: nextFill, revenueCents: nextRevenue },
-    change: { playersPct: change(nextPlayers, lastPlayers), fillPts: lastFill != null && nextFill != null ? Math.round((nextFill - lastFill) * 10) / 10 : null, revenuePct: change(nextRevenue, lastTeeRevenueCents) },
+    change: { playersPct: change(nextPlayers, lastPlayers), fillPts: lastFill != null && nextFill != null ? Math.round((nextFill - lastFill) * 10) / 10 : null, revenuePct: nextRevenue == null ? null : change(nextRevenue, lastTeeRevenueCents) },
     week: days.slice(0, 7),
     weeksOfHistory: weeksSeen,
   };

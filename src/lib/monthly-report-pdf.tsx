@@ -5,7 +5,7 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, renderToBuffer } from '@react-pdf/renderer';
 import type { ReviewBody, AreaRow } from './monthly-review';
-import { areaValue, areaChange } from './report-figures';
+import { areaValue, areaChange, pdfText } from './report-figures';
 
 const styles = StyleSheet.create({
   page: { paddingTop: 56, paddingBottom: 64, paddingHorizontal: 56, fontSize: 10.5, fontFamily: 'Helvetica', color: '#1C1C18', lineHeight: 1.45 },
@@ -38,7 +38,9 @@ function List({ items }: { items: string[] }) {
   );
 }
 
-function ReportPdf({ r }: { r: ReportPdfInput }) {
+function ReportPdf({ r: raw }: { r: ReportPdfInput }) {
+  // Every string the page prints, the model's own words included, through pdfText (Helvetica's glyphs).
+  const r = { ...raw, courseName: pdfText(raw.courseName), review: { verdict: pdfText(raw.review.verdict), wentWell: raw.review.wentWell.map(pdfText), fellShort: raw.review.fellShort.map(pdfText), recommendations: raw.review.recommendations.map(pdfText) } };
   const sections: [string, string[]][] = [
     ['Where it beat expectations', r.review.wentWell],
     ['Where it fell short', r.review.fellShort],
@@ -70,9 +72,9 @@ function ReportPdf({ r }: { r: ReportPdfInput }) {
             {area.map(a => (
               <View key={a.key} style={styles.tr}>
                 <Text style={styles.c1}>{a.label}</Text>
-                <Text style={styles.c}>{areaValue(a.unit, a.thisMonth)}</Text>
-                <Text style={styles.c}>{areaValue(a.unit, a.lastMonth)}</Text>
-                <Text style={styles.c}>{areaChange(a)}</Text>
+                <Text style={styles.c}>{pdfText(areaValue(a.unit, a.thisMonth))}</Text>
+                <Text style={styles.c}>{pdfText(areaValue(a.unit, a.lastMonth))}</Text>
+                <Text style={styles.c}>{pdfText(areaChange(a))}</Text>
               </View>
             ))}
           </View>

@@ -19,3 +19,11 @@ export function areaChange(r: AreaRow): string {
   const p = Math.round(((r.thisMonth - r.lastMonth) / r.lastMonth) * 100);
   return `${sign(p)}${Math.abs(p)}%`;
 }
+
+/**
+ * Pure: text the PDF's built-in Helvetica can draw. It has no glyph for the true minus (U+2212) and other
+ * signs outside its Latin set, and drops them silently, so "−10%" printed as "10%" (a fall read as nothing).
+ */
+export function pdfText(s: string): string {
+  return s.replace(/[\u2212\u2012\u2010\u2011]/g, '-').replace(/[\u2009\u202f\u00a0]/g, ' ').replace(/[\u2264]/g, '<=').replace(/[\u2265]/g, '>=');
+}

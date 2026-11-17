@@ -136,6 +136,15 @@ const bk = (o: Partial<NsBooking> & { id: string }): NsBooking => ({
   ok('revenue next = expected players × ledger tee money per player (an estimate)', p.next.revenueCents === Math.round(p.next.players * 2000), { next: p.next });
   ok('Jun 24, Jul 1 and Jul 8 (no tee times yet) come from the usual final count, 20 each', p.next.players === 4 + 18 + 20 * 3, p.next);
   ok('the change line', p.change.playersPct === Math.round(((p.next.players - 80) / 80) * 1000) / 10, p.change);
+  // A perfectly steady course: 20 of 40 played every day for 58 days, tee times 14 days out. Next 30 = last 30
+  // (days 28 and 29 out need weeks 5–8 back to find four finished same weekdays).
+  { const steady = [] as ReturnType<typeof slot>[];
+    for (let i = -58; i < 14; i++) steady.push(slot(addD(today, i), i < 0 ? [{ n: 20, madeDaysBefore: 3 }] : [{ n: Math.max(0, 20 - Math.max(0, i - 3) * 2), madeDaysBefore: 3 }]));
+    const q = projectionsOf(steady, new Set(), today, nowMs, 60000);
+    ok('a steady course projects level: rounds and revenue unchanged on the last 30 days', q.last.players === 600 && q.next.players === 600 && q.change.playersPct === 0 && q.change.revenuePct === 0, { last: q.last, next: q.next, change: q.change }); }
+  { const none = projectionsOf([slot(addD(today, 3), [{ n: 4, madeDaysBefore: 10 }])], new Set(), today, nowMs, 50000);
+    ok('no players in the last 30 days: the revenue estimate is unknown, not $0', none.next.revenueCents === null && none.change.revenuePct === null, none); }
+  ok('a closed day reads "closed" in the week (the page must label it)', p.week.some(w => w.status === 'closed'));
   // Every projections field the merged page's type expects is in the reply (src/components/dashboard/analytics/data.ts).
   { const page = readFileSync('src/components/dashboard/analytics/data.ts', 'utf8');
     const block = page.slice(page.indexOf('export type Projections'), page.indexOf('\n};', page.indexOf('export type Projections')));
