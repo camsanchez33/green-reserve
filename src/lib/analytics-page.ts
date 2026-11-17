@@ -89,7 +89,7 @@ export async function ledgerMonth(courseId: string, tz: string, month: string, n
 
 /** Pure: the No-shows report for a login without money.payments — counts and rates only, every cents field out. */
 export function noShowWithoutMoney(r: NoShowReport) {
-  const { lostValueCents: _a, recoveredCents: _b, lateCancelNetCents: _c, netCents: _d, ...totals } = r.totals;
+  const { lostValueCents: _a, recoveredCents: _b, lateCancelLostValueCents: _e, lateCancelRecoveredCents: _f, lateCancelNetCents: _c, netCents: _d, ...totals } = r.totals;
   return {
     range: r.range, lateCancelHours: r.lateCancelHours, totals,
     byHow: r.byHow.map(({ lostValueCents: _l, recoveredCents: _r, netCents: _n, ...x }) => x),
@@ -179,7 +179,7 @@ export function refillsOf(bookings: Pick<NsBooking, 'id' | 'teeTimeId' | 'status
 export type HowRow = { key: HowKey; bookings: number; noShows: number; ratePct: number | null; lostValueCents: number; recoveredCents: number; netCents: number };
 export type NoShowReport = {
   range: Range; lateCancelHours: number;
-  totals: { bookings: number; noShows: number; ratePct: number | null; lostValueCents: number; recoveredCents: number; lateCancelNetCents: number; netCents: number };
+  totals: { bookings: number; noShows: number; ratePct: number | null; lostValueCents: number; recoveredCents: number; lateCancelLostValueCents: number; lateCancelRecoveredCents: number; lateCancelNetCents: number; netCents: number };
   byHow: HowRow[];
   refill: { buckets: { key: LeadKey; cancelledSpots: number; refilledSpots: number; pct: number | null }[]; under48hPct: number | null; unknownLead: number };
   lateCancels: { spots: number; lostValueCents: number; refilledSpots: number; refilledCents: number; feesCents: number; netCents: number };
@@ -242,7 +242,7 @@ export function noShowOf(range: Range, all: NsBooking[], nowMs: number, lateCanc
   const recovered = noShows.reduce((s, b) => s + (fees.get(b.id) ?? 0), 0);
   return {
     range, lateCancelHours,
-    totals: { bookings: pastLive.length, noShows: noShows.length, ratePct: pct(noShows.length, pastLive.length), lostValueCents: lost, recoveredCents: recovered, lateCancelNetCents: late.netCents, netCents: recovered - lost + late.netCents },
+    totals: { bookings: pastLive.length, noShows: noShows.length, ratePct: pct(noShows.length, pastLive.length), lostValueCents: lost, recoveredCents: recovered, lateCancelLostValueCents: late.lostValueCents, lateCancelRecoveredCents: late.refilledCents + late.feesCents, lateCancelNetCents: late.netCents, netCents: recovered - lost + late.netCents },
     byHow,
     refill: { buckets: [...buckets.values()], under48hPct: pct(under48Filled, under48), unknownLead },
     lateCancels: late,
