@@ -40,7 +40,7 @@ ok('the golfer-page preview stays light', read('src/components/dashboard/CourseP
 // 4. typed hex on dashboard surfaces — a ratchet: lower these numbers, never raise them.
 const BASE: Record<string, number> = {
   'src/app/dashboard/page.tsx': 3,              // Stripe card frame style (an iframe — can't read CSS vars; its box is op-keep-light)
-  'src/app/dashboard/settings/page.tsx': 4,     // the brand colour picker's default
+  'src/components/dashboard/settings/CourseArea.tsx': 1, // the brand colour picker's default (SETTINGS-6; was 4 in settings/page.tsx)
   'src/app/dashboard/members/page.tsx': 8,      // membership swatch palette (reads on both)
   'src/app/dashboard/onboarding/page.tsx': 2,   // Stripe's own button colours (no rail: site look)
   'src/components/dashboard/money/SalesPanel.tsx': 3, // chart fills

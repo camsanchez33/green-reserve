@@ -26,8 +26,11 @@ ok('the sheet and the rail only offer it to logins that have it', sheet.includes
 // Time zone and course type
 const settings = read('src/app/api/operator/settings/route.ts');
 ok('staff are refused the time zone and the course type', /session\.isStaff && \('timezone' in body \|\| 'type' in body\)\)/.test(settings) && settings.indexOf("'timezone' in body") < settings.indexOf('validateSettingsPatch(body'));
-const page = read('src/app/dashboard/settings/page.tsx');
-ok('the Settings screen never sends them for a staff login, and shows them read-only', /const POLICY_FIELDS = \[[^\]]*'timezone', 'type'\]/.test(page) && (page.match(/disabled=\{isStaffLogin\}/g) ?? []).length >= 2);
+const page = [
+  'src/app/dashboard/settings/page.tsx',
+  ...['ui', 'CourseArea', 'BookingArea', 'PaymentsArea', 'AccountArea'].map(f => `src/components/dashboard/settings/${f}.tsx`),
+].map(f => read(f)).join('\n'); // SETTINGS-6: the page and its areas
+ok('the Settings screen never sends them for a staff login, and shows them read-only', page.includes('const owner = access.loaded && !access.isStaff;') && ["ownerEdit('tz')", "ownerEdit('type')", "ownerEdit('card')", "ownerEdit('late')", "ownerEdit('noshow')", "ownerEdit('cartcharge')", "ownerEdit('mcounter')"].every(k => page.includes(k)));
 
 // Member session
 const member = read('src/lib/member-session.ts');

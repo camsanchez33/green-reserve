@@ -19,7 +19,10 @@ const n = normalizeDbCourse({ amenities: ['Simulator bay'], hasPuttingGreen: tru
 check('amenities stay a list (a joined string crashed the booking page)', Array.isArray(n.amenities));
 check('golfer data carries facilities', JSON.stringify(n.facilities) === '["Putting green","Simulator bay"]');
 
-const page = readFileSync('src/app/dashboard/settings/page.tsx', 'utf8');
+const page = [
+  'src/app/dashboard/settings/page.tsx',
+  ...['ui', 'CourseArea', 'BookingArea', 'PaymentsArea', 'AccountArea'].map(f => `src/components/dashboard/settings/${f}.tsx`),
+].map(f => readFileSync(f, 'utf8')).join('\n'); // SETTINGS-6: the page and its areas
 const booking = readFileSync('src/app/courses/[slug]/CourseBookingClient.tsx', 'utf8');
 check('settings preview uses the same lines', page.includes('facilityLines({'));
 check('no toggle switches left in Facilities', !page.includes('label="Driving Range"'));

@@ -72,7 +72,7 @@ ok('6. both course loaders select the period name and start', read('src/lib/publ
 ok('7. the Walking / Riding switch says when a cart is on', golfer.includes("['Walking', false], ['Riding', true]") && golfer.includes('aria-pressed={withCart === riding}'));
 
 // 8
-const settings = read('src/app/dashboard/settings/page.tsx');
+const settings = read('src/components/dashboard/settings/BookingArea.tsx'); // SETTINGS-6: Booking → Members and residents
 ok('8. the toggles say off means the public price (lib/pricing-switch makes it so)', settings.includes('Off: members pay the public price, online and at the counter.') && settings.includes('Off: residents pay the public price, online and at the counter.'));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
