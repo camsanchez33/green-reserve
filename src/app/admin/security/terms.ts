@@ -3,11 +3,18 @@ export const NETWORK = 'Couldn’t reach the server. Check your connection and t
 export const CHECKER_NETWORK = 'Couldn’t reach the security checker. Check your connection and try again.';
 export const TOAST = {
   undo: 'Undone. The checker will keep watching.',
-  approveFix: 'Approved. It goes to review and ships with the next merge.',
-  approve: 'Approved.',
-  dismiss: 'Dismissed. It will raise it again if it repeats.',
+  approve: 'Approved. Recorded for a person to do; nothing changes on its own.',
+  dismiss: 'Not now. Recorded; nothing changes on its own.',
 };
 export const AI_UNAVAILABLE = 'AI summary unavailable.';
+export const NO_CHECK_YET = 'No check yet';
+/** What set off an early check (lastTrigger 'spike:<kind>'), in plain words. */
+export const SPIKE: Record<string, string> = {
+  signins: 'a burst of failed sign-ins',
+  owner_device: 'a new owner device',
+  errors: 'a jump in site errors',
+};
+export const SPIKE_OTHER = 'something spiked';
 export const NEXT_RUN = ', or right away if something spikes';
 export const INCIDENTS_LEAD = 'Everything the checker noticed, newest first, and whether it’s fixed. Tap one for the full story. Kept a year.';
 export const RULES_LEAD = 'Only things that are safe and can be undone.';

@@ -11,7 +11,7 @@ import { stepUpFetch } from '@/lib/step-up-client';
 import g from '../admin-glass.module.css';
 import { Dialog } from './Dialog';
 import ss from './security.module.css';
-import { NETWORK, CHECKER_NETWORK, TOAST, NEXT_RUN, AI_UNAVAILABLE, INCIDENTS_LEAD, RULES_LEAD, RULES } from './terms';
+import { NETWORK, CHECKER_NETWORK, TOAST, NEXT_RUN, AI_UNAVAILABLE, NO_CHECK_YET, SPIKE, SPIKE_OTHER, INCIDENTS_LEAD, RULES_LEAD, RULES } from './terms';
 import { type CheckerData, type CheckerCourse, type CheckerIncidentRow, type CheckerIncident, INCIDENT_STATUS, FIXED_HOW, when, plural } from './logic';
 
 const API = '/api/admin/security';
@@ -76,7 +76,7 @@ export async function runAct(a: Act): Promise<string> {
   if (!r.ok) throw new Error(d.error || `Couldn’t do that (${r.status}).`);
   if (a.kind === 'undo') return TOAST.undo;
   if (a.kind === 'decline') return TOAST.dismiss;
-  return a.button === 'Approve fix' ? TOAST.approveFix : TOAST.approve;
+  return TOAST.approve;
 }
 
 const AI_ICON = (
@@ -84,6 +84,14 @@ const AI_ICON = (
     <path d="M12 3l1.8 4.6L18 9.5l-4.2 1.9L12 16l-1.8-4.6L6 9.5l4.2-1.9z" /><path d="M18.5 15.5l.8 1.9 1.7.8-1.7.8-.8 1.9-.8-1.9-1.7-.8 1.7-.8z" />
   </svg>
 );
+
+const clock = (iso: string) => when(iso).replace(/^Today /, '').replace(/^Yesterday/, 'yesterday');
+
+/** "Last 12 hours · checked 7:00 AM" for a scheduled run; "Checked 2:14 PM after a burst of failed sign-ins" for a spike. */
+function runLabel(lastRunAt: string, trigger: string | null | undefined): string {
+  if (trigger && trigger.startsWith('spike:')) return `Checked ${clock(lastRunAt)} after ${SPIKE[trigger.slice(6)] ?? SPIKE_OTHER}`;
+  return `Last 12 hours · checked ${clock(lastRunAt)}`;
+}
 
 /** The status box at the top: plain-English status, when it ran and runs next, Ask, what it did and what needs an OK. */
 export function CheckerBox({ data, busy, errors, onAsk, onAct }: {
@@ -105,9 +113,10 @@ export function CheckerBox({ data, busy, errors, onAsk, onAct }: {
         </div>
         <button type="button" className={`${s.btn} ${s.sm}`} onClick={onAsk}>Ask</button>
       </div>
-      {(!data.aiAvailable || data.summary) && (
-        <div className={ss.aisum}><p>{data.aiAvailable ? data.summary : AI_UNAVAILABLE}</p></div>
-      )}
+      <div className={ss.aisum}>
+        {!data.lastRunAt && !data.summary ? <p>{NO_CHECK_YET}</p>
+          : <p>{data.lastRunAt && <b>{runLabel(data.lastRunAt, data.lastTrigger)}:</b>} {data.aiAvailable ? (data.summary || NO_CHECK_YET) : AI_UNAVAILABLE}</p>}
+      </div>
       {(data.done.length > 0 || n > 0) && (
         <div className={ss.aiacts}>
           {data.done.map(d => {

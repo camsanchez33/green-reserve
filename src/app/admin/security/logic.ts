@@ -4,7 +4,8 @@
 import type { Check } from '@/lib/security-checklist';
 import type { SentryIssuesResult } from '@/lib/sentry-issues';
 
-export type Kind = 'signin_failed' | 'signin_ok' | 'locked_out' | 'second_factor_failed' | 'step_up_failed' | 'rate_limited' | 'new_device' | 'password_changed';
+export type Kind = 'signin_failed' | 'signin_ok' | 'locked_out' | 'second_factor_failed' | 'step_up_failed' | 'rate_limited' | 'new_device' | 'password_changed'
+  | 'checker_action' | 'checker_undo' | 'checker_decision';
 export type Tone = 'ok' | 'warn' | 'bad' | 'neutral';
 
 export interface SecurityEventRow { at: string; kind: Kind; surface: string; ip: string; email: string; detail: string; browser: string }
@@ -24,8 +25,8 @@ export type IncidentStatus = 'fixed' | 'watching' | 'needs_you';
 export type FixedHow = 'auto' | 'open' | 'none' | 'you';
 export interface CheckerData {
   state: 'all_clear' | 'needs_you';
-  summary: string | null; aiAvailable: boolean;
-  lastRunAt: string | null; nextRunAt: string | null;
+  summary: string; aiAvailable: boolean;
+  lastRunAt: string | null; nextRunAt: string | null; lastTrigger?: string | null;
   done: { id: string; at: string; text: string; undoable: boolean }[];
   proposals: { incidentId: string; text: string; button: string }[];
 }
@@ -48,6 +49,9 @@ export const KIND: Record<Kind, [string, Tone, string]> = {
   rate_limited: ['Too many tries', 'warn', 'One address hammered a sign-in page and was slowed down automatically.'],
   new_device: ['New owner device', 'warn', 'A new phone or computer was approved to sign in as you.'],
   password_changed: ['Password changed', 'neutral', 'A person changed their own password.'],
+  checker_action: ['Checker acted', 'warn', 'The security checker took a safe step on its own, such as blocking an address.'],
+  checker_undo: ['Checker undone', 'neutral', 'You undid something the security checker did.'],
+  checker_decision: ['Fix decided', 'neutral', 'You approved a fix or said not now. It is recorded for a person to do.'],
 };
 export const kindOf = (k: string): [string, Tone, string] => KIND[k as Kind] ?? [k, 'neutral', ''];
 
