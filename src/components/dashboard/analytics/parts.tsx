@@ -2,7 +2,8 @@
 // ANALYTICS-5 (Cam 2026-11-17, approved mockup lanes/dashboard/analytics-mockup.html): the pieces every Analytics tab
 // shares. Tokens only, so Charcoal and Light both follow. Figure rows keep one-line labels with every number on the
 // same line (Cam: "every figure row on one plane"); colour only on money lost (red, minus) and recovered (green, plus).
-import type { ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { dfetch } from '@/lib/dashboard-fetch';
 
 export type Tone = 'lost' | 'gained' | 'up' | 'dn' | undefined;
 const TONE: Record<string, string> = { lost: 'text-bad', gained: 'text-ok', up: 'text-ok', dn: 'text-bad' };
@@ -148,3 +149,24 @@ export function Heatmap({ hours, rows, label }: { hours: number[]; rows: { dow: 
   );
 }
 const hourLong = (h: number) => `${h % 12 || 12} ${h < 12 ? 'AM' : 'PM'}`;
+
+/**
+ * A load from a route Build may not have shipped yet: a 404 means "not there yet" and the part stays hidden;
+ * any other failure is shown with Retry (never a blank). Only the newest request writes.
+ */
+export function useOptional<T>(url: string | null) {
+  const [state, setState] = useState<{ data: T | null; missing: boolean; error: string; loading: boolean }>({ data: null, missing: false, error: '', loading: !!url });
+  const seq = useRef(0);
+  const load = useCallback(async () => {
+    if (!url) { setState({ data: null, missing: true, error: '', loading: false }); return; }
+    const mine = ++seq.current;
+    setState({ data: null, missing: false, error: '', loading: true });
+    const res = await dfetch<T>(url);
+    if (mine !== seq.current) return;
+    if (res.ok && res.data) setState({ data: res.data, missing: false, error: '', loading: false });
+    else if (res.status === 404 || (res.ok && !res.data)) setState({ data: null, missing: true, error: '', loading: false });
+    else setState({ data: null, missing: false, error: res.ok ? '' : res.error, loading: false });
+  }, [url]);
+  useEffect(() => { load(); }, [load]);
+  return { ...state, reload: load };
+}

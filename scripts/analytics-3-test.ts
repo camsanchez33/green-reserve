@@ -50,7 +50,7 @@ check('sign-in is a full page load, so no cached course survives', readFileSync(
 check('“kept from before” says booked, not played', terms.includes('from the period before who booked with you again') && !tabs.includes('retentionPct'));
 // DENSE-1 review: the dashed "period before" only in day mode (weekly buckets don't line up),
 // and the no-show-fee action only for the owner (the cancellation policy is owner-only).
-check('the period before is compared day by day only', head.includes("const day = d.revenue.bucket === 'day';") && head.includes('const before = day && d.compare?.series') && head.includes("ledger.beforeSeries && ledger.bucket === 'day'"));
+check('the period before is compared day by day only', head.includes("const day = d.revenue.bucket === 'day';") && head.includes('const before = day && d.compare?.series') && head.includes('ledger.beforeSeries.length === ledger.series.length && ledger.series.every(x => /^\\d{4}-\\d{2}-\\d{2}$/.test(x.key))'));
 // ANALYTICS-5: "What to look at" is gone, so no settings action sits on the page for a staff login to misuse.
 check('no no-show-fee action on the page', !page.includes('settings?section') && !tabs.includes('settings?section') && !head.includes('settings?section'));
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);

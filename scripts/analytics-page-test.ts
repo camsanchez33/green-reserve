@@ -29,25 +29,26 @@ ok('points for a share', change(64, 60, 'pts')?.text === '+4 pts' && change(59, 
 ok('no change from nothing (never "+Infinity%")', change(5, 0, 'pct') === null && change(5, null, 'pct') === null && change(null, 5, 'pts') === null);
 
 // Money: the ledger's only, and only for logins that see money.
-ok('the ledger is read from the Revenue page’s own route, money.payments only', page.includes("const seesMoney = access.can('money.payments');") && page.includes('if (access.loaded && seesMoney) loadLedger(range); else setLedger(null);') && page.includes('`/api/operator/money/sales?from=${r.from}&to=${r.to}`') && page.includes('setLedger(res.data.all ?? null)'));
+ok('the ledger is Build’s block on the analytics reply; money/sales only stands in until it carries `paid`', page.includes('const built = !!data?.ledger?.paid;') && page.includes('if (access.loaded && seesMoney && data && !built) loadLedger(data.range); else setLedger(null);') && page.includes('`/api/operator/money/sales?from=${r.from}&to=${r.to}`'));
+ok('no ledger at all without money.payments', page.includes("const seesMoney = access.can('money.payments');") && page.includes('const ledger: Ledger | null = !seesMoney ? null : data?.ledger ?'));
 ok('the Revenue tile exists only with the ledger', parts['Head.tsx'].includes("if (ledger) {") && parts['Head.tsx'].includes("tiles.push({ key: 'rev', label: 'Revenue', value: usd(ledger.grossCents)"));
 ok('no computeAnalytics money sum anywhere on the page', !/collectedCents|expectedCents|impactCents|spendCents|cancellations\.lostCents|outstandingCents|greenCents|perRoundCents/.test(code));
 ok('…the one value that is not money moved (unsold spots at posted prices) is on the Tee sheet tab only, for money logins', (code.match(/unfilled\.lostCents/g) || []).length === 1 && parts['Tabs.tsx'].includes("money && { label: 'Value of unsold spots'"));
-ok('Build’s no-show and projected money only for money logins, whatever the route sends', parts['Tabs.tsx'].includes('m = money ? n.money : undefined') && parts['Tabs.tsx'].includes('late = money ? c.late : undefined') && parts['Tabs.tsx'].includes('const ch = money ? n.byChannel : undefined;') && parts['Tabs.tsx'].includes('const showRev = money && P.revenueCents != null;') && page.includes('<TeeSheetTab d={d} money={seesMoney} />') && page.includes('<NoShowsTab d={d} money={seesMoney} />'));
-ok('a new range never shows the last range’s money', page.includes('setLedger(null); setLedgerError(\'\');'));
-ok('shop revenue is the ledger’s Shop and Food & beverage', parts['ShopTab.tsx'].includes('const shopCents = ledger ? ledger.segments.shopCents + ledger.segments.fnbCents : null;'));
-ok('Where they paid and Card or cash only with the ledger', parts['Tabs.tsx'].includes('{P && <Block title="Where they paid">') && parts['Tabs.tsx'].includes('{P && <Block title="Card or cash">'));
-ok('lost is red with a minus, recovered green with a plus', parts['data.ts'].includes('export const lost = (c: number) => `−$') && parts['data.ts'].includes('export const gained = (c: number) => `+$') && parts['parts.tsx'].includes("lost: 'text-bad', gained: 'text-ok'"));
+ok('shop revenue is the report’s ledger figure, money logins only', parts['ShopTab.tsx'].includes('const shopCents = money && r.ledgerSalesCents != null ? r.ledgerSalesCents : null;'));
+ok('Where they paid and Card or cash only with the ledger’s paid split', parts['Tabs.tsx'].includes('{P && <Block title="Where they paid">') && parts['Tabs.tsx'].includes('{P && <Block title="Card or cash">'));
+ok('lost is red with a minus, recovered green with a plus; no-show money is "value lost", never revenue', parts['data.ts'].includes('export const lost = (c: number) => `−$') && parts['data.ts'].includes('export const gained = (c: number) => `+$') && parts['parts.tsx'].includes("lost: 'text-bad', gained: 'text-ok'") && parts['Tabs.tsx'].includes("label: 'Value lost to no-shows'"));
 
-// Build's data: hidden until sent, never filled in.
+// Build's routes: hidden until they answer (a 404 is "not there yet"; any other failure shows Retry).
 const T = parts['Tabs.tsx'];
-ok('projections only when sent; else the next 7 days against usual', T.includes('const P = d.projection;\n  if (P) {') && T.includes('<Block title="Projections · next 30 days">') && T.includes('<Block title="Next 7 days">'));
-ok('no-shows by how they booked only when sent', T.includes('{ch && ch.length > 0 && (') && T.includes('m && { label: \'Lost to no-shows\''));
-ok('spots filled again and late cancels only when sent', T.includes('{(R || late) && (') && T.includes('{R && (') && T.includes('{late && ('));
+ok('an optional route: 404 hides, other failures say so', parts['parts.tsx'].includes('else if (res.status === 404 || (res.ok && !res.data)) setState({ data: null, missing: true') && parts['parts.tsx'].includes("else setState({ data: null, missing: false, error: res.ok ? '' : res.error"));
+ok('projections from their route; else the next 7 days against usual', T.includes('useOptional<Projections>(`/api/operator/analytics/projections?from=${range.from}&to=${range.to}`)') && T.includes('<Block title="Projections · next 30 days">') && T.includes('<Block title="Next 7 days">'));
+ok('projected revenue reads "about", money logins only', T.includes('const showRev = money && p.next.revenueCents != null;') && T.includes('value: `about ${usd(p.next.revenueCents!)}`'));
+ok('no-shows from their route; every dollar there for money logins only', T.includes('useOptional<NoShowReport>(`/api/operator/analytics/no-shows?from=${range.from}&to=${range.to}`)') && T.includes("money && t && { label: 'Value lost to no-shows'") && T.includes("...(money ? ['Value lost', 'Recovered', 'Net'] : [])") && T.includes('{money && r.lateCancels.spots > 0 && ('));
+ok('every way of booking in plain words', ['online_card_fee', 'online_card_no_fee', 'online_no_card', 'counter_card', 'counter_no_card'].every(k => T.includes(`${k}: '`)));
 ok('twilight and standard spots sold only when sent', T.includes("b.spotsSold && { label: 'Twilight spots sold'"));
 ok('members by membership only when sent', T.includes('{M && M.length > 0 && ('));
-ok('the written report and its PDF only when sent', T.includes('if (r.report) return (') && T.includes('{r.pdfUrl && <a href={r.pdfUrl}'));
-ok('stock value and transactions only when sent', parts['ShopTab.tsx'].includes('{S && (') && parts['ShopTab.tsx'].includes('t.transactions != null && {'));
+ok('reports: no Forecast, recommendations as "What to try", By area only when stored, PDF only once its route answers', !code.includes('Forecast') && T.includes('<List title="What to try" items={r.review.recommendations} />') && T.includes('{A && A.length > 0 && (') && T.includes("method: 'HEAD'") && T.includes('{pdf && <a href={pdfUrl(r.month)}'));
+ok('stock and transactions only when sent', parts['ShopTab.tsx'].includes('{S && (') && parts['ShopTab.tsx'].includes('t.transactions != null && {'));
 ok('no Filter button until the route can filter', !/label="Filter"|Icon\.filter/.test(all));
 ok('removed by Cam: first-timers who came back, missed more than once', !/came back|Missed more than once|noShows\.repeat/.test(code));
 

@@ -21,7 +21,7 @@ import { Icon, IconButton, useOutside } from '@/components/dashboard/money/reven
 import { Head, type Metric } from '@/components/dashboard/analytics/Head';
 import { TeeSheetTab, BookingsTab, GolfersTab, NoShowsTab, ReviewsTab, teeSheetCsv, bookingsCsv, golfersCsv, noShowsCsv } from '@/components/dashboard/analytics/Tabs';
 import { ShopTab, shopCsv } from '@/components/dashboard/analytics/ShopTab';
-import { type Data, type Ledger, type Range, type SalesReply, type Shop, downloadCsv, lastMonth, pastMonths, periodText } from '@/components/dashboard/analytics/data';
+import { type Data, type Ledger, type Range, type SalesReply, type Shop, downloadCsv, lastMonth, ledgerOf, ledgerOfSales, pastMonths, periodText } from '@/components/dashboard/analytics/data';
 
 type Tab = 'sheet' | 'book' | 'golfers' | 'noshow' | 'shop' | 'review';
 const TABS: [Tab, string][] = [['sheet', 'Tee sheet'], ['book', 'Bookings'], ['golfers', 'Golfers'], ['noshow', 'No-shows'], ['shop', 'Pro shop'], ['review', 'Reviews']];
@@ -92,8 +92,10 @@ function AnalyticsInner() {
     if (!picked) setRange(lastMonth(data.today));
   }, [data, today, picked]);
 
-  // The ledger's money for the same dates (the Revenue page's own figures), for logins that see money.
-  const [ledger, setLedger] = useState<Ledger | null>(null);
+  // The ledger's money for the same dates, for logins that see money: Build's `ledger` block on the analytics reply.
+  // Until a reply carries it (with `paid`), the Revenue page's own money/sales `all` stands in; once it does, that
+  // heavier call is not made.
+  const [salesLedger, setLedger] = useState<Ledger | null>(null);
   const [ledgerError, setLedgerError] = useState('');
   const lseq = useRef(0);
   const loadLedger = useCallback(async (r: Range) => {
@@ -101,9 +103,11 @@ function AnalyticsInner() {
     setLedger(null); setLedgerError(''); // never last range's money beside this range's numbers
     const res = await dfetch<SalesReply>(`/api/operator/money/sales?from=${r.from}&to=${r.to}`);
     if (mine !== lseq.current) return;
-    if (res.ok) setLedger(res.data.all ?? null); else { setLedger(null); setLedgerError(res.error); }
+    if (res.ok) setLedger(res.data.all ? ledgerOfSales(res.data.all) : null); else { setLedger(null); setLedgerError(res.error); }
   }, []);
-  useEffect(() => { if (access.loaded && seesMoney) loadLedger(range); else setLedger(null); }, [access.loaded, seesMoney, range, loadLedger]);
+  const built = !!data?.ledger?.paid;
+  useEffect(() => { if (access.loaded && seesMoney && data && !built) loadLedger(data.range); else setLedger(null); }, [access.loaded, seesMoney, data, built, loadLedger]);
+  const ledger: Ledger | null = !seesMoney ? null : data?.ledger ? { ...ledgerOf(data.ledger), paid: data.ledger.paid ?? salesLedger?.paid ?? null } : salesLedger;
 
   const shop = useRef<Shop | null>(null);
   const onShop = useCallback((r: Shop | null) => { shop.current = r; }, []);
@@ -150,7 +154,7 @@ function AnalyticsInner() {
           </div>
 
           {error && <LoadError message={d ? `${error} Still showing ${periodText(d.range)}.` : error} onRetry={() => load(range)} />}
-          {ledgerError && <LoadError message={`Couldn’t load your revenue — ${ledgerError}`} onRetry={() => loadLedger(range)} />}
+          {ledgerError && d && <LoadError message={`Couldn’t load your revenue — ${ledgerError}`} onRetry={() => loadLedger(d.range)} />}
           {loading && !d && <p className="py-24 text-center text-[13px] text-ink-muted">Loading…</p>}
 
           {d && (
@@ -161,8 +165,8 @@ function AnalyticsInner() {
                 {tab === 'sheet' && <TeeSheetTab d={d} money={seesMoney} />}
                 {tab === 'book' && <BookingsTab d={d} ledger={ledger} />}
                 {tab === 'golfers' && <GolfersTab d={d} />}
-                {tab === 'noshow' && <NoShowsTab d={d} money={seesMoney} />}
-                {tab === 'shop' && <ShopTab range={d.range} ledger={ledger} onLoad={onShop} />}
+                {tab === 'noshow' && <NoShowsTab d={d} money={seesMoney} range={d.range} />}
+                {tab === 'shop' && <ShopTab range={d.range} money={seesMoney} onLoad={onShop} />}
                 {tab === 'review' && <ReviewsTab />}
               </div>
             </div>

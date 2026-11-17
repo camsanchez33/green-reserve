@@ -1,17 +1,17 @@
 'use client';
 // ANALYTICS-5 (Cam 2026-11-17, approved mockup): Analytics → Pro shop. Transactions and items kept apart; shop revenue
-// is the ledger's (the Revenue page's Shop and Food & beverage, money.payments only); what sold by category and item
+// is the ledger's (the report's ledgerSalesCents, Build; money.payments only); what sold by category and item
 // comes from the shop report (SHOP-4, lib/shop-report.ts), with cost and margin for the owner only. Transactions, the
 // month before and stock value are Build's: each part stays hidden until the report sends it.
 import { useCallback, useEffect, useState } from 'react';
 import { LoadError } from '@/components/dashboard/LoadError';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { Block, Figures, Note, Pair, Table } from './parts';
-import { type Ledger, type Range, type Shop, change, dayShort, num, pct, usd } from './data';
+import { type Range, type Shop, change, dayShort, num, pct, usd } from './data';
 
 const marginPct = (m: number | null | undefined, sales: number) => (m == null || !sales ? null : (m / sales) * 100);
 
-export function ShopTab({ range, ledger, onLoad }: { range: Range; ledger: Ledger | null; onLoad?: (r: Shop | null) => void }) {
+export function ShopTab({ range, money, onLoad }: { range: Range; money: boolean; onLoad?: (r: Shop | null) => void }) {
   const [r, setR] = useState<Shop | null>(null);
   const [error, setError] = useState('');
   const load = useCallback(async () => {
@@ -24,7 +24,7 @@ export function ShopTab({ range, ledger, onLoad }: { range: Range; ledger: Ledge
   if (!r) return <Note>Loading…</Note>;
 
   const t = r.totals;
-  const shopCents = ledger ? ledger.segments.shopCents + ledger.segments.fnbCents : null;
+  const shopCents = money && r.ledgerSalesCents != null ? r.ledgerSalesCents : null;
   const all = r.categories.reduce((s, c) => s + c.salesCents, 0);
   const hasBefore = r.categories.some(c => c.beforeSalesCents != null);
   const S = r.stock;
@@ -52,9 +52,9 @@ export function ShopTab({ range, ledger, onLoad }: { range: Range; ledger: Ledge
       </Block>
       {S && (
         <Block title="Not selling">
-          <Table label="Items that haven't sold in over 60 days" empty="Everything in stock sold in the last 60 days." head={['Item', 'In stock', 'Stock value', 'Last sold']}
-            rows={S.stale.map(x => [x.name, num(x.inStock), usd(x.valueCents), x.lastSold ? dayShort(x.lastSold) : 'Never'])} />
-          {S.staleValueCents > 0 && <Note>{usd(S.staleValueCents)} of stock has not sold in over 60 days.</Note>}
+          <Table label={`Items that haven't sold in over ${S.staleDays} days`} empty={`Everything in stock sold in the last ${S.staleDays} days.`} head={['Item', 'In stock', 'Stock value', 'Last sold']}
+            rows={S.notSelling.map(x => [x.name, num(x.inStock), usd(x.retailValueCents), x.lastSoldAt ? dayShort(x.lastSoldAt) : 'Never'])} />
+          {S.notSellingRetailCents > 0 && <Note>{usd(S.notSellingRetailCents)} of stock, at shelf price, has not sold in over {S.staleDays} days.</Note>}
         </Block>
       )}
     </Pair>

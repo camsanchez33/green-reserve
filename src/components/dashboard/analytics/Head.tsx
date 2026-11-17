@@ -2,7 +2,7 @@
 // ANALYTICS-5 (Cam 2026-11-17, approved mockup): the four headline numbers on the page (Cam 2026-11-16 "take out of
 // card"), each against the 30 days before. The one picked is drawn below: a line over its area, the period before
 // dashed, weekends shaded, the average dotted, best and slowest day named, a crosshair with both days on hover.
-// Revenue is the ledger's (the Revenue page's own figure, money.payments only) — never computeAnalytics' money.
+// Revenue is the ledger's (Build's `ledger` block, the Revenue page's basis; money.payments only) — never computeAnalytics' money.
 import Link from 'next/link';
 import { useRef, useState } from 'react';
 import { type Data, type Ledger, change, dayShort, dayWeek, isWeekend, num, pct, usd } from './data';
@@ -20,7 +20,8 @@ export function tilesOf(d: Data, ledger: Ledger | null): Tile[] {
   const s = d.revenue.series;
   const tiles: Tile[] = [];
   if (ledger) {
-    const b = ledger.beforeSeries && ledger.bucket === 'day' && ledger.beforeSeries.length === ledger.series.length ? ledger.beforeSeries : null;
+    // The dashed line only day by day, and only when the period before lines up point for point.
+    const b = ledger.beforeSeries && ledger.beforeSeries.length === ledger.series.length && ledger.series.every(x => /^\d{4}-\d{2}-\d{2}$/.test(x.key)) && ledger.series.length <= 62 ? ledger.beforeSeries : null;
     tiles.push({ key: 'rev', label: 'Revenue', value: usd(ledger.grossCents), delta: change(ledger.grossCents, ledger.beforeGrossCents, 'pct'),
       now: ledger.series.map(x => ({ key: x.key, v: x.cents })), before: b ? b.map(x => ({ key: x.key, v: x.cents })) : null, fmt: usd });
   }

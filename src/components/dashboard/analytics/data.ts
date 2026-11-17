@@ -14,17 +14,26 @@ export type Headline = {
 /** Build: bookings per bucket, the same definition as behavior.bookings. */
 type SeriesRow = Analytics['revenue']['series'][number] & { bookings?: number };
 
-/** Build: the next 30 days against the last 30, and the next 7 day by day. */
-export type Projection = {
-  rounds: number; roundsLast30: number; fillPct: number | null; fillPctLast30: number | null;
-  /** Ledger basis, money.payments only. */
-  revenueCents?: number; revenueLast30Cents?: number;
-  days: { date: string; booked: number; expected: number; usual: number | null; closesAt?: string | null }[];
+/** Build: GET /api/operator/analytics/projections — the next 30 days against the last 30, and the week ahead. */
+export type Projections = {
+  today: string;
+  last: { from: string; to: string; players: number; fillPct: number | null; revenueCents?: number | null };
+  next: { from: string; to: string; players: number; fillPct: number | null; revenueCents?: number | null };
+  change: { playersPct: number | null; fillPts: number | null; revenuePct?: number | null };
+  week: { date: string; offered: number; booked: number; usualByNow: number | null; expected: number; status: 'on_pace' | 'behind' | 'short_day' | 'no_history' }[];
 };
-export type ChannelRow = { label: string; bookings: number; noShows: number; ratePct: number | null; lostCents: number; recoveredCents: number | null; netCents: number };
-export type RefillLead = '7d+' | '2-7d' | '24-48h' | 'under24h';
 
-export type Data = Omit<Analytics, 'revenue' | 'noShows' | 'cancellations' | 'customers' | 'behavior'> & {
+/** Build: GET /api/operator/analytics/no-shows. lostValueCents is value lost at posted prices, not revenue. */
+export type RefillKey = '7d_plus' | '2_7d' | '24_48h' | 'under_24h';
+export type NoShowReport = {
+  range: Range; lateCancelHours: number;
+  totals: { bookings: number; noShows: number; ratePct: number | null; lostValueCents: number; recoveredCents: number; lateCancelLostValueCents: number; lateCancelRecoveredCents: number; netCents: number };
+  byHow: { key: string; bookings: number; noShows: number; ratePct: number | null; lostValueCents: number; recoveredCents: number; netCents: number }[];
+  refill: { buckets: { key: RefillKey; cancelledSpots: number; refilledSpots: number; pct: number | null }[]; under48hPct: number | null };
+  lateCancels: { spots: number; lostValueCents: number; refilledSpots: number; refilledCents: number; feesCents: number; netCents: number };
+};
+
+export type Data = Omit<Analytics, 'revenue' | 'customers' | 'behavior'> & {
   revenue: Omit<Analytics['revenue'], 'series'> & { series: SeriesRow[] };
   behavior: Analytics['behavior'] & {
     /** Build: share of twilight and standard player spots sold. */
@@ -35,46 +44,46 @@ export type Data = Omit<Analytics, 'revenue' | 'noShows' | 'cancellations' | 'cu
     /** Build: golfers and rounds by membership, season pass and public. */
     byMembership?: { name: string; kind: 'membership' | 'pass' | 'public'; golfers: number; rounds: number; sharePct: number | null }[];
   };
-  noShows: Analytics['noShows'] & {
-    /** Build, ledger basis. */
-    money?: { lostCents: number; feesRecoveredCents: number; lateCancelLostCents: number; netCents: number };
-    byChannel?: ChannelRow[]; byChannelAll?: ChannelRow; couldRecoverCents?: number;
+  /** Build: the ledger's money for these dates and the same length before (money.payments logins). */
+  ledger?: {
+    range: Range; grossCents: number; refundsCents: number; netCents: number; series: { key: string; cents: number }[];
+    before: { range: Range; grossCents: number; series: { key: string; cents: number }[] };
+    /** Asked of Build: how the money in was paid, as the Revenue page's. */
+    paid?: { onlineCents: number; readerCents: number; cashCents: number; otherCents: number };
   };
-  cancellations: Analytics['cancellations'] & {
-    /** Build: a spot counts as refilled when the same tee time gets a new booking after the cancel. */
-    refill?: { cutoffHours: number; rows: { lead: RefillLead; cancelled: number; filled: number; filledPct: number | null }[] };
-    late?: { spots: number; lostCents: number; refilledSpots: number; refilledCents: number; feesCents: number; netCents: number };
-  };
-  /** Build. */
-  projection?: Projection;
   headline: Headline;
   compare: { range: Range; headline: Headline; series?: SeriesRow[] } | null;
 };
 
-/** The ledger's money for these dates (the Revenue page's `all`), read from /api/operator/money/sales. */
+/** The page's one view of the ledger: Build's `ledger` block, or the Revenue page's money/sales `all` until it exists. */
 export type Ledger = {
-  bucket: 'day' | 'week'; grossCents: number; beforeGrossCents: number;
-  segments: { shopCents: number; fnbCents: number };
-  paid: { onlineCents: number; readerCents: number; cashCents: number; otherCents: number };
+  grossCents: number; beforeGrossCents: number;
   series: { key: string; cents: number }[];
-  /** Build: the same length of time just before, same keys count and bucket. */
-  beforeSeries?: { key: string; cents: number }[];
+  beforeSeries: { key: string; cents: number }[] | null;
+  paid: { onlineCents: number; readerCents: number; cashCents: number; otherCents: number } | null;
 };
-export type SalesReply = { today: string; all?: Ledger };
+type SalesAll = { bucket: 'day' | 'week'; grossCents: number; beforeGrossCents: number; paid: Ledger['paid']; series: { key: string; cents: number }[] };
+export type SalesReply = { today: string; all?: SalesAll };
+export const ledgerOf = (L: NonNullable<Data['ledger']>): Ledger => ({
+  grossCents: L.grossCents, beforeGrossCents: L.before.grossCents, series: L.series,
+  beforeSeries: L.before.series.length === L.series.length ? L.before.series : null, paid: L.paid ?? null,
+});
+export const ledgerOfSales = (a: SalesAll): Ledger => ({ grossCents: a.grossCents, beforeGrossCents: a.beforeGrossCents, series: a.series, beforeSeries: null, paid: a.paid });
 
 export type Shop = Omit<ShopReport, 'totals' | 'categories'> & {
   totals: ShopReport['totals'] & { transactions?: number };
   categories: (ShopReport['categories'][number] & { beforeSalesCents?: number })[];
-  /** Build: stock on hand, and what hasn't sold in 60+ days. */
-  stock?: { valueCents: number; staleValueCents: number; stale: { name: string; inStock: number; valueCents: number; lastSold: string | null }[] };
+  /** Build: the ledger's shop money for these dates — the "Shop revenue" figure. */
+  ledgerSalesCents?: number;
+  /** Build: stock on hand, and what hasn't sold in `staleDays`. */
+  stock?: { units: number; retailValueCents: number; costValueCents?: number; uncountedItems: number; staleDays: number; notSellingRetailCents: number; notSellingCostCents?: number;
+    notSelling: { id: string; name: string; inStock: number; retailValueCents: number; costValueCents?: number; lastSoldAt: string | null }[] };
 };
 
-/** BI-1's monthly review; `report` and `pdfUrl` are Build's written report. */
+/** BI-1's monthly review (GET /api/operator/monthly-reviews); `byArea` only when the stored review has it. */
 export type Review = {
   month: string; label: string; isBaseline: boolean; thin: boolean; writtenAt: string;
-  review: { verdict: string; wentWell: string[]; fellShort: string[]; recommendations: string[] };
-  report?: { sections: { heading: string; paragraphs: { lead?: string; text: string }[] }[]; byArea?: { area: string; thisMonth: string; lastMonth: string; change: string; good: boolean }[]; forecast?: string };
-  pdfUrl?: string;
+  review: { verdict: string; wentWell: string[]; fellShort: string[]; recommendations: string[]; byArea?: { area: string; thisMonth: string; lastMonth: string; change: string }[] };
 };
 
 // ── Formatting ────────────────────────────────────────────────────────────────
