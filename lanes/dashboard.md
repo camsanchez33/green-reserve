@@ -27,7 +27,17 @@ Support (chats) · Light parity. Specs: ADMIN_REDO_SPEC "Course dashboard Home",
    - Tiles, step bar, normal-size fields, Cancel and Back as plain links.
    - Joining-online requests, import and reminders move to each membership's page.
    - Wire only what Build's data supports; hide the rest, never fake it.
-3. **Events**: mockup `lanes/dashboard/events-mockup.html` (https://claude.ai/artifact/BVqXkiviwzu8ktCdyNNR9H), waiting for Cam's comments. Build nothing until approved.
+3. **Events — APPROVED, build it** (Cam 2026-11-17, "events is good"). Mockup `lanes/dashboard/events-mockup.html` (https://claude.ai/artifact/BVqXkiviwzu8ktCdyNNR9H) is the spec, in both looks. All of Cam's comment threads on that artifact are part of the spec.
+   - **Lists the course edits.** Every built-in list on the page can be extended by the course (plus) and edited or removed (pencil, popup).
+   - **Who builds the roster.** In outing setup it's one choice: the organizer gives the list OR players add themselves (radio, never both).
+   - **Terms step.** One dropdown per case (deposit, balance, group cancels, course cancels, rain), with real presets. The chosen preset is what refunds and Cancel event actually DO, and golfer wording comes from describePolicy(). "Write your own" adds the course's own note beside it, labelled as theirs; it never replaces the rule.
+   - **Sign-up questions** are an "Add question" builder: text, answer type, required. Name, email and phone are always asked.
+   - **Option tiles** span the card width.
+   - **Build first:**
+     - Event terms need the same legal review as the agreements before golfers accept them.
+     - Automatic reminder texts go only to golfers who agreed to texts (`sendSms()`).
+     - The event-day timeline, food count and rain plan need new fields.
+     Wire only what the data supports, hide the rest, never fake it.
 4. **Schedule — APPROVED, build it** (Cam 2026-11-16, "that real nice just fix the one comment i made and then ur good"). Mockup `lanes/dashboard/schedule-mockup.html` (https://claude.ai/artifact/ANSdTS9cjrJwxsQ1TLFynU) is the spec, in both looks. Page `/dashboard/schedules`; the tabs slide and come in this order:
    - **Bookable rounds** comes first. It lists the rounds the course sells, each with its holes (1–18, 1–9, 10–18) and a time bar showing when it can be booked. A pencil opens an edit popup, which also holds "Stop selling this round", and a bare plus adds a round. Rounds that aren't sold are not listed, and there's no hour scale under the bars.
    - **Hours and prices** has Weekdays and Weekends only, never an Every-day set that overlaps them. Each set's line says what it does: days, first and last tee, gap, twilight start. The round picker matches Bookable rounds. Price columns are named by time of day ("Twilight / After 3:00 PM"), with a Weekday or Weekend tag. Walking allowed is a switch per column. "Add a time-of-day price" opens a popup to name it and pick its start. The plus holds Senior and junior prices and Holidays. Unsaved changes show as a slim pill (Undo, Review and save), and saving shows what changes and that booked rounds keep their price.
@@ -54,7 +64,18 @@ Support (chats) · Light parity. Specs: ADMIN_REDO_SPEC "Course dashboard Home",
      - pro shop stock value
      - the written monthly reports, with a PDF download
      Wire only what Build's data supports, hide the rest, and never fake a number.
-6. Then Course alert, one page at a time, mockup first. Events, Settings and Security (admin) mockups are with Cam.
+6. **Settings — APPROVED, build it** (Cam 2026-11-17, "fix settings messages and then good to go"). Mockup `lanes/dashboard/settings-mockup.html` (https://claude.ai/artifact/SMcWgq9LQ18y8rWLr6sGBR) and all its comment threads are the spec, in both looks.
+   - **The home** lists four areas as cards with no icons inside: Your course, Booking, Payments, Your account. Search sits in the header as a small icon. Each area has a one-line intro under its title, and a section sidebar down the side on desktop (a horizontal bar on a phone).
+   - **Groups** have short, direct names: Name and location, Booking Page, Facilities, Booking rules, Carts, and so on.
+   - **Editing.** Every editable row opens its own small popup; read-only rows don't look clickable.
+   - **Confirmation email** (was "What golfers are told") shows a live preview of the email. The course edits only its own parts (arrival, dress code, parking, a note, contact). The policy wording comes from describePolicy() ("From your cancellation policy · Change"). There is a "Send me a test" link.
+   - **Sales tax** shows "set from your address in <state>", with Change.
+   - **At the counter.** Takes cash, and card readers with an online/offline StatusDot, last seen, Test reader and what to do when offline. Readers are tested for real in the build.
+   - **Moved out of Settings.**
+     - **Staff** move to a new Team page under Business; its mockup is coming. Until Team is built, keep the existing staff screen reachable, never lose it.
+     - **Per-round rules** are on Schedule.
+     - **Member and resident price switches** are not on this page (Memberships owns rates). Removing the switches themselves is a separate Build decision; ask Cam.
+7. **Next mockups with Cam:** Team (dashboard), Course alert.
 
 ## Small follow-ups (do with the next PR that touches the file)
 - `StockTab` side card goes solid at lg after a tap: use `max-lg:fixed max-lg:inset-0`.
