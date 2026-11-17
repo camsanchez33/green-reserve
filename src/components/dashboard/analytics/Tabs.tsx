@@ -156,7 +156,7 @@ export function GolfersTab({ d }: { d: Data }) {
       <Block title="First-timers and returning golfers"><Split label="First-timers and returning golfers" parts={[['Returning', g.returning], ['First-timers', g.newCustomers]]} /></Block>
       {M && M.length > 0 && (
         <Block title="Members and public">
-          <Split label="Members and public" parts={[['Public', M.filter(r => r.kind === 'public').reduce((s, r) => s + r.rounds, 0)], ['Members', M.filter(r => r.kind === 'membership').reduce((s, r) => s + r.rounds, 0)], ['Season pass', M.filter(r => r.kind === 'pass').reduce((s, r) => s + r.rounds, 0)]]} />
+          <Split label="Members and public" parts={([['Public', M.filter(r => r.kind === 'public').reduce((s, r) => s + r.rounds, 0)], ['Members', M.filter(r => r.kind === 'membership').reduce((s, r) => s + r.rounds, 0)], ['Season pass', M.filter(r => r.kind === 'pass').reduce((s, r) => s + r.rounds, 0)]] as [string, number][]).filter(x => x[1] > 0)} />
           <Table tight label="Golfers and rounds by membership" head={['Membership', 'Golfers', 'Rounds', 'Share of rounds']} empty="" rows={M.map(r => [r.name, num(r.golfers), num(r.rounds), pct(r.sharePct)])} />
         </Block>
       )}
