@@ -9,6 +9,11 @@ the lane files; merges every PR in dependency order after Cam's review sitting; 
 **Control Room** (Cam watches it): Build alone writes https://claude.ai/artifact/CWmgjgJHTZaTr4XThBuvZL with `ArtifactData`: its own `sessions/<id>` row at start, after each push/merge/blocker and before ending (a `working` row silent 30 min shows as Silent), and the web (`areas`, `items`, `questions`, `lookat`) after every merge, answer and change of plan. Full protocol: `docs/DECISIONS.md` → "Control Room".
 
 ## Queued (not started)
+- After #458 (Takes cash): the Dashboard lane updates TakesCashToggle wording and owner-only access, and hides cash buttons when `Course.takesCash` is false. Cash routes answer 409 { error, cashOff: true }. Build rewords the "take cash instead" server messages (shop-sales pay-link limits, card-reader minimum) by takesCash.
+- Golfer lane: the golfer confirmation page shows the new confirmation-email parts (arrival, parking, contact, dress code) from #457.
+- #457 Test reader: one Stripe test-mode run of the $0.00 reader display, before courses rely on it.
+- After launch, if Cam wants them: alert channels and quiet hours in Settings.
+- Action queue: two chats due at the same moment are ordered by a tiebreak (#454); keep the isolation test data unambiguous (#455).
 - Inquiries data (Cam approved 2026-11-17, `lanes/admin.md`): course contacts (role, decision maker, best time), course facts, outreach stages from Target to Said yes with the Onboarding handoff, Cal.com call list and detail from the existing webhook data, agenda notes and outcome per call, an add-course search over public data with duplicate check, and CSV import. Additive migration.
 - Golfers: counsel item. A privacy and golfer-terms version that says staff can view booking and payment history for support (never edit a published agreement; add a version).
 - Team data (Cam approved 2026-11-17, `lanes/dashboard.md` item 8): editable roles with the course starting at Owner only, suggested roles, invite by email with an optional phone, a full welcome email via getResend, reset password by link, last active, and per-person overrides. Permission changes are written to the audit log. Opus and final-reviewer (access control).
