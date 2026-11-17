@@ -1179,11 +1179,12 @@ async function main() {
       // Final review: overdue is per chat — a reply in one chat never hides another left unanswered.
       {
         const { buildActionQueue } = await import('../src/lib/admin-action-queue');
-        const tenDays = new Date(Date.now() - 10 * 86_400_000);
-        const quiet = await prisma.supportChat.create({ data: { threadId: thread.id, courseId: data.courseA.id, subject: 'Isol quiet chat', lastMessageAt: tenDays } });
+        // 20 days, not 10: 10 and 9 days back can both fall on a weekend and get the same reply-due time, a tie.
+        const quietAt = new Date(Date.now() - 20 * 86_400_000);
+        const quiet = await prisma.supportChat.create({ data: { threadId: thread.id, courseId: data.courseA.id, subject: 'Isol quiet chat', lastMessageAt: quietAt } });
         const busy = await prisma.supportChat.create({ data: { threadId: thread.id, courseId: data.courseA.id, subject: 'Isol busy chat', lastMessageAt: new Date() } });
         made.push(quiet.id, busy.id);
-        await prisma.message.create({ data: { threadId: thread.id, chatId: quiet.id, senderType: 'operator', senderId: 'x', senderName: 'Pat Quiet', body: 'Nobody answered me', createdAt: tenDays } });
+        await prisma.message.create({ data: { threadId: thread.id, chatId: quiet.id, senderType: 'operator', senderId: 'x', senderName: 'Pat Quiet', body: 'Nobody answered me', createdAt: quietAt } });
         await prisma.message.create({ data: { threadId: thread.id, chatId: busy.id, senderType: 'operator', senderId: 'x', senderName: 'Pat Busy', body: 'Question', createdAt: new Date(Date.now() - 9 * 86_400_000) } });
         // Newer than everything else on the thread: the course's latest message is an answer from us.
         await prisma.message.updateMany({ where: { threadId: thread.id, senderType: 'admin' }, data: { createdAt: new Date(Date.now() - 9 * 86_400_000) } });
