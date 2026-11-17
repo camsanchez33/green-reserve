@@ -65,7 +65,7 @@ function Ahead({ d, money, range }: { d: Data; money: boolean; range: Range }) {
           showRev && { label: 'Revenue', value: `about ${usd(p.next.revenueCents!)}`, delta: on(p.change.revenuePct, '%') },
           { label: 'Tee sheet filled', value: pct(p.next.fillPct), delta: on(p.change.fillPts, ' pts') },
         ]} />
-        <PaceTable expected days={p.week.slice(0, 7).map(w => ({ date: w.date, booked: w.booked, of: w.expected, usual: w.usualByNow, status: w.status }))} />
+        <PaceTable expected days={p.week.slice(0, 7).map(w => ({ date: w.date, booked: w.booked, of: w.expected, usual: w.status === 'closed' ? null : w.usualByNow, status: w.status }))} />
       </Block>
     );
   }
@@ -81,7 +81,8 @@ function Ahead({ d, money, range }: { d: Data; money: boolean; range: Range }) {
 type PaceRow = { date: string; booked: number; of: number; usual: number | null; status: Projections['week'][number]['status'] };
 function PaceTable({ days, expected }: { days: PaceRow[]; expected?: boolean }) {
   const status = (r: PaceRow) => r.status === 'on_pace' ? <StatusDot status="ok" label="On pace" /> : r.status === 'behind' ? <StatusDot status="warn" label="Behind" />
-    : r.status === 'short_day' ? <StatusDot status="neutral" label="Short day" /> : null;
+    : r.status === 'short_day' ? <StatusDot status="neutral" label="Short day" />
+    : r.status === 'closed' ? <StatusDot status="neutral" label="Closed" /> : null; // a blackout day (Build)
   const grid = 'grid grid-cols-[84px_44px_minmax(40px,1fr)_58px] sm:grid-cols-[110px_150px_minmax(80px,1fr)_100px_130px] gap-2 sm:gap-3 items-center';
   return (
     <div className="flex flex-col" role="table" aria-label="The next 7 days">
@@ -91,7 +92,7 @@ function PaceTable({ days, expected }: { days: PaceRow[]; expected?: boolean }) 
       </div>
       {days.map(r => (
         <div key={r.date} role="row" className={grid + ' py-[9px] border-t border-line text-[13px] tabular-nums text-ink'}>
-          <span role="cell">{dayWeek(r.date)}</span><span role="cell">{num(r.booked)}</span>
+          <span role="cell" className="flex flex-col gap-0.5">{dayWeek(r.date)}{status(r) && <span className="sm:hidden">{status(r)}</span>}</span><span role="cell">{num(r.booked)}</span>
           <span role="cell"><PaceBar value={r.booked} of={r.of} usual={r.usual} /></span>
           <span role="cell">{num(r.of)}</span><span role="cell" className="max-sm:hidden">{status(r)}</span>
         </div>
