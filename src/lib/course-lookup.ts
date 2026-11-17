@@ -56,8 +56,8 @@ export async function lookupCourses(query: string, near: string, adminId: string
   const q = query.replace(/\s+/g, ' ').trim().slice(0, 120);
   const n = near.replace(/\s+/g, ' ').trim().slice(0, 80);
   if (q.length < 3) return { ok: false, status: 400, error: 'Type at least three letters of the course name.' };
-  if (!(await rateLimit(`osm-lookup:admin:${adminId}`, 30, 600))) return { ok: false, status: 429, error: 'That is a lot of searches — wait a few minutes, or add the course by hand.' };
   if (!(await rateLimit('osm-lookup:global', 1, 1))) return { ok: false, status: 429, error: 'Searching too fast — try again in a second.' };
+  if (!(await rateLimit(`osm-lookup:admin:${adminId}`, 30, 600))) return { ok: false, status: 429, error: 'That is a lot of searches — wait a few minutes, or add the course by hand.' };
   const text = [q, n].filter(Boolean).join(', ');
   const url = `${ENDPOINT}?${new URLSearchParams({ q: /golf|links|club/i.test(text) ? text : `${text} golf`, format: 'jsonv2', addressdetails: '1', extratags: '1', limit: '10', countrycodes: 'us' })}`;
   let hits: NominatimHit[];

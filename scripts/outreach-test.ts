@@ -6,6 +6,7 @@ import {
   parseCsv, importRows, endOfEasternDay, OUTREACH_START, type DupPoolRow,
 } from '../src/lib/outreach';
 import { toResult } from '../src/lib/course-lookup';
+import { LEAD_ACTIONS, CALL_STATUSES } from '../src/lib/inquiry-status';
 
 let failed = 0;
 const check = (label: string, ok: boolean, detail?: unknown) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${!ok && detail !== undefined ? ' — ' + JSON.stringify(detail) : ''}`); if (!ok) failed++; };
@@ -106,6 +107,9 @@ const pool: DupPoolRow[] = [
 ];
 check('dup: same name, other spelling, same town', findDuplicates({ courseName: 'Maple Run GC', city: 'riverton', state: 'NY' }, pool)[0]?.id === 'i1');
 check('dup: same name, other state → not a duplicate', findDuplicates({ courseName: 'Maple Run', city: 'Riverton', state: 'PA' }, pool).length === 0);
+check('dup: a shared host with different pages is not a duplicate', findDuplicates({ courseName: 'Pine Ridge', city: 'Pinefield', website: 'facebook.com/pineridgegc' }, [{ id: 'f', kind: 'inquiry', courseName: 'Oak Hollow', city: 'Oakton', website: 'https://www.facebook.com/oakhollowgolf' }]).length === 0);
+check('dup: the same page on a shared host is', findDuplicates({ courseName: 'X', city: 'Y', website: 'facebook.com/oakhollowgolf/' }, [{ id: 'f', kind: 'inquiry', courseName: 'Oak Hollow', city: 'Oakton', website: 'facebook.com/oakhollowgolf' }]).length === 1);
+check('lead actions include calcom_link (Send Cal.com link on a course in outreach)', (LEAD_ACTIONS as readonly string[]).includes('calcom_link') && (CALL_STATUSES as readonly string[]).includes('lead'));
 check('dup: same website', findDuplicates({ courseName: 'Something Else', city: 'X', website: 'https://www.birchhollow.example.com/tee-times' }, pool)[0]?.why === 'same website');
 check('dup: same phone, any format', findDuplicates({ courseName: 'Other', city: 'Y', coursePhone: '555.010.3302' }, pool)[0]?.kind === 'course');
 check('dup: same map listing', findDuplicates({ courseName: 'Renamed', city: 'Z', osmRef: 'osm:way/42' }, pool)[0]?.why === 'same map listing');

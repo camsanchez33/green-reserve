@@ -72,12 +72,18 @@ export async function syncPrimaryContact(inquiryId: string): Promise<void> {
 }
 
 export async function addContact(inquiryId: string, input: Record<string, unknown>) {
-  const inq = await prisma.courseInquiry.findUnique({ where: { id: inquiryId }, select: { id: true, _count: { select: { contacts: true } } } });
+  const inq = await prisma.courseInquiry.findUnique({ where: { id: inquiryId }, select: { id: true, contactName: true, contactTitle: true, email: true, phone: true, _count: { select: { contacts: true } } } });
   if (!inq) return fail(404, 'That course is not on the list any more.');
   if (inq._count.contacts >= 20) return fail(400, 'A course can have at most 20 contacts.');
   const v = validateContact(input);
   if ('error' in v) return fail(400, v.error);
-  const contact = await prisma.courseContact.create({ data: { inquiryId, ...(v.contact as ContactInput), sortOrder: inq._count.contacts } });
+  // A course added before contacts existed (or by "Add a lead") has its one contact only on the inquiry row.
+  // Keep it as the first contact, in the same transaction, so the mirror never erases it.
+  const seed = inq._count.contacts === 0 && (inq.contactName.trim() || inq.email.trim() || inq.phone.trim());
+  const contact = await prisma.$transaction(async tx => {
+    if (seed) await tx.courseContact.create({ data: { inquiryId, name: inq.contactName.trim() || inq.email.trim() || inq.phone.trim(), role: inq.contactTitle, email: inq.email, phone: inq.phone, sortOrder: 0 } });
+    return tx.courseContact.create({ data: { inquiryId, ...(v.contact as ContactInput), sortOrder: inq._count.contacts + (seed ? 1 : 0) } });
+  });
   await syncPrimaryContact(inquiryId);
   return { ok: true as const, contact };
 }
@@ -220,12 +226,22 @@ export async function saidYes(inquiryId: string, adminName: string, givenEmail?:
   if (inq.status !== LEAD_STATUS) return fail(409, 'This course is already past outreach — it is on Onboarding.');
   const given = String(givenEmail ?? '').trim().toLowerCase();
   if (given && !EMAIL_RE.test(given)) return fail(400, 'That email doesn’t look right.');
-  const dm = await prisma.courseContact.findFirst({ where: { inquiryId, email: { not: '' } }, orderBy: CONTACT_ORDER, select: { email: true } });
-  const email = given || inq.email || dm?.email || '';
+  const withEmail = await prisma.courseContact.findFirst({ where: { inquiryId, email: { not: '' } }, orderBy: CONTACT_ORDER, select: { name: true, role: true, email: true, phone: true } });
+  const email = given || inq.email || withEmail?.email || '';
   if (!email) return fail(400, 'Add their email first — Onboarding emails them the setup sheet.', { code: 'email_needed' });
-  const moved = await prisma.courseInquiry.updateMany({ where: { id: inquiryId, status: LEAD_STATUS }, data: { status: 'in_review', email, snoozeUntil: null } });
+  // When the email comes from a contact other than the mirrored one, Onboarding gets that person whole —
+  // never one person's name with another's address.
+  const person = !given && !inq.email && withEmail ? (() => {
+    const [firstName = '', ...rest] = withEmail.name.split(/\s+/).filter(Boolean);
+    return { contactName: withEmail.name, firstName, lastName: rest.join(' '), contactTitle: withEmail.role, phone: withEmail.phone };
+  })() : {};
+  // The move and its event are one write: Restore and "said yes this month" both read the event.
+  const moved = await prisma.$transaction(async tx => {
+    const m = await tx.courseInquiry.updateMany({ where: { id: inquiryId, status: LEAD_STATUS }, data: { status: 'in_review', email, snoozeUntil: null, ...person } });
+    if (m.count) await tx.inquiryStatusEvent.create({ data: { inquiryId, fromStatus: LEAD_STATUS, toStatus: 'in_review', trigger: 'admin', actorName: `Said yes → Onboarding — by ${adminName}` } });
+    return m;
+  });
   if (!moved.count) return fail(409, 'It was already moved — refresh.');
-  await logEvent(inquiryId, LEAD_STATUS, 'in_review', `Said yes → Onboarding — by ${adminName}`);
   return { ok: true as const, status: 'in_review' };
 }
 
@@ -243,13 +259,17 @@ export async function notNow(inquiryId: string, adminName: string, recheckRaw?: 
   }
   const note = String(noteRaw ?? '').trim().slice(0, LIMITS.note);
   const notes = note ? (inq.adminNotes?.trim() ? `${inq.adminNotes.trim()}\n\n[${stamp()}]\n${note}` : `[${stamp()}]\n${note}`) : inq.adminNotes;
-  const moved = await prisma.courseInquiry.updateMany({
-    where: { id: inquiryId, status: inq.status },
-    data: { status: 'rejected', closedReason: NOT_NOW_REASON, snoozeUntil: null, nextFollowUpAt: recheck, adminNotes: notes },
+  // One write with its event: Restore reads the event to know it was a lead.
+  const moved = await prisma.$transaction(async tx => {
+    const m = await tx.courseInquiry.updateMany({
+      where: { id: inquiryId, status: inq.status },
+      data: { status: 'rejected', closedReason: NOT_NOW_REASON, snoozeUntil: null, nextFollowUpAt: recheck, adminNotes: notes },
+    });
+    // Same "<admin> — <reason>" shape as Reject, so the Closed tab reads it the same way.
+    if (m.count) await tx.inquiryStatusEvent.create({ data: { inquiryId, fromStatus: inq.status, toStatus: 'rejected', trigger: 'admin', actorName: `${adminName} — ${NOT_NOW_REASON}${recheck ? ` (recheck ${fmtDate(recheck)})` : ''}` } });
+    return m;
   });
   if (!moved.count) return fail(409, 'It changed while you were looking — refresh.');
-  // Same "<admin> — <reason>" shape as Reject, so the Closed tab reads it the same way.
-  await logEvent(inquiryId, inq.status, 'rejected', `${adminName} — ${NOT_NOW_REASON}${recheck ? ` (recheck ${fmtDate(recheck)})` : ''}`);
   return { ok: true as const, status: 'rejected', recheckAt: recheck?.toISOString() ?? null };
 }
 
@@ -342,7 +362,7 @@ export async function outreachCourse(inquiryId: string, viewer: Viewer, now: Dat
     contacts,
     // Notes can hold names and numbers: support+ only, as on Onboarding.
     touches: touches.map(x => ({ id: x.id, at: x.at, channel: x.channel, direction: x.direction, note: viewer.canSeeContactDetails ? x.note : null, adminName: x.adminName })),
-    calls: calls.map(c => ({ ...c, resultLabel: c.result ? CALL_RESULT_LABEL[c.result as CallResult] ?? c.result : null })),
+    calls: calls.map(c => ({ ...c, nextStep: viewer.canSeeContactDetails ? c.nextStep : null, resultLabel: c.result ? CALL_RESULT_LABEL[c.result as CallResult] ?? c.result : null })),
     events,
     notes: viewer.canSeeContactDetails ? adminNotes : null,
   };
@@ -404,7 +424,7 @@ export async function listCalls(viewer: Viewer, now: Date = new Date()) {
       outcome: c.outcome,
       result: c.result,
       resultLabel: c.result ? CALL_RESULT_LABEL[c.result as CallResult] ?? c.result : c.outcome === 'cancelled' ? 'Cancelled' : c.outcome === 'no_answer' ? 'No answer' : c.outcome === 'talked' ? 'Talked' : c.outcome === 'not_a_fit' ? 'Not a fit' : null,
-      nextStep: c.nextStep, followUpAt: c.followUpAt?.toISOString() ?? null,
+      nextStep: viewer.canSeeContactDetails ? c.nextStep : null, followUpAt: c.followUpAt?.toISOString() ?? null,
     };
   });
   const upcoming = rows.filter(r => r.outcome === 'scheduled').sort((a, b) => a.scheduledAt.localeCompare(b.scheduledAt));
@@ -429,15 +449,18 @@ export async function callDetail(callId: string, viewer: Viewer, now: Date = new
   const links = uid ? calcomManageLinks(uid) : null;
   const who = whoOf(call, inq);
   const scrub = <T extends { email: string; phone: string }>(x: T) => viewer.canSeeContactDetails ? x : { ...x, email: '', phone: '' };
+  // Viewers read the prep card only: no notes (they can hold names and numbers) and no Join or
+  // reschedule/cancel links (those act on the booking).
+  const full = viewer.canSeeContactDetails;
   const lastTouch = lastTouchLabel({ touches: inq.touches, calls: inq.calls });
   return {
     id: call.id, inquiryId: inq.id, courseName: inq.courseName, town: townLabel(inq.city, inq.state), kind: courseKind(inq.ownerType, inq.holes),
     scheduledAt: call.scheduledAt.toISOString(), durationMin: call.durationMin, direction: call.direction, phone: viewer.canSeeContactDetails ? call.phone : '',
     outcome: call.outcome, result: call.result, resultLabel: call.result ? CALL_RESULT_LABEL[call.result as CallResult] ?? call.result : null,
-    nextStep: call.nextStep, followUpAt: call.followUpAt?.toISOString() ?? null, notes: call.notes,
+    nextStep: full ? call.nextStep : null, followUpAt: call.followUpAt?.toISOString() ?? null, notes: full ? call.notes : null,
     upcoming: call.outcome === 'scheduled', notLogged: call.outcome === 'scheduled' && call.scheduledAt.getTime() < now.getTime() - HALF_DAY,
     stage: stageOf(inq, inq.calls, now), inquiryStatus: inq.status,
-    bookedByCourse: call.bookedByCourse, joinUrl: call.meetingUrl, calcom: links,
+    bookedByCourse: call.bookedByCourse, joinUrl: full ? call.meetingUrl : null, calcom: full ? links : null,
     who: scrub(who),
     contacts: inq.contacts.map(scrub),
     facts: { kind: courseKind(inq.ownerType, inq.holes), booksToday: inq.currentBookingMethod, town: townLabel(inq.city, inq.state), lastTouch },
@@ -445,10 +468,10 @@ export async function callDetail(callId: string, viewer: Viewer, now: Date = new
       key: a.key, label: a.label, short: a.short,
       onAgenda: onAgenda.has(a.key),
       known: a.answered(inq, sheet, needs),
-      captured: summarize(a.key, answers.items[a.key]) || null,
-      note: answers.items[a.key]?.note ?? '',
+      captured: full ? (summarize(a.key, answers.items[a.key]) || null) : null,
+      note: full ? (answers.items[a.key]?.note ?? '') : '',
     })),
-    agendaExtra: call.agendaExtra,
+    agendaExtra: full ? call.agendaExtra : '',
   };
 }
 
@@ -511,7 +534,8 @@ export async function logOutreachCall(callId: string, body: Record<string, unkno
   if (result === 'said_yes' && status === LEAD_STATUS) {
     // Checked before the call is logged, so a missing email does not leave a half-done log.
     const inq = await prisma.courseInquiry.findUnique({ where: { id: call.inquiryId }, select: { email: true } });
-    const given = String(body.email ?? '').trim();
+    const given = String(body.email ?? '').trim().toLowerCase();
+    if (given && !EMAIL_RE.test(given)) return fail(400, 'That email doesn’t look right.');
     const dm = await prisma.courseContact.findFirst({ where: { inquiryId: call.inquiryId, email: { not: '' } }, select: { id: true } });
     if (!given && !inq?.email && !dm) return fail(400, 'Add their email first — Onboarding emails them the setup sheet.', { code: 'email_needed' });
   }

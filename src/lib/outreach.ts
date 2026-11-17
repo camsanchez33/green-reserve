@@ -341,7 +341,11 @@ export function nameKey(name: string): string {
   return (core.length ? core : words).join(' ');
 }
 const townKey = (s: string | null | undefined) => (s ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-const domainKey = (w: string | null | undefined) => cleanWebsite(w).split('/')[0];
+/** Host and path ("facebook.com/oakhollowgolf"). Two sites are the same course when the hosts match and either
+ * has no path, or both paths match — a shared host (Facebook, a town or group site) is not enough on its own. */
+const siteKey = (w: string | null | undefined) => { const s = cleanWebsite(w); const i = s.indexOf('/'); return i < 0 ? { host: s, path: '' } : { host: s.slice(0, i), path: s.slice(i) }; };
+const sameSite = (a: { host: string; path: string }, b: { host: string; path: string }) =>
+  !!a.host && a.host === b.host && (!a.path || !b.path || a.path === b.path);
 const phoneKey = (p: string | null | undefined) => { const d = (p ?? '').replace(/\D/g, ''); return d.length >= 10 ? d.slice(-10) : ''; };
 
 export type DupCandidate = { courseName: string; city?: string | null; state?: string | null; website?: string | null; coursePhone?: string | null; osmRef?: string | null };
@@ -353,13 +357,13 @@ export function findDuplicates(c: DupCandidate, pool: DupPoolRow[]): DupMatch[] 
   const nk = nameKey(c.courseName);
   const tk = townKey(c.city);
   const sk = townKey(c.state);
-  const dk = domainKey(c.website);
+  const dk = siteKey(c.website);
   const pk = phoneKey(c.coursePhone);
   const out: DupMatch[] = [];
   for (const p of pool) {
     let why = '';
     if (c.osmRef && p.osmRef && c.osmRef === p.osmRef) why = 'same map listing';
-    else if (dk && dk === domainKey(p.website)) why = 'same website';
+    else if (sameSite(dk, siteKey(p.website))) why = 'same website';
     else if (pk && pk === phoneKey(p.coursePhone)) why = 'same phone';
     else if (nk && nk === nameKey(p.courseName)) {
       const ptk = townKey(p.city), psk = townKey(p.state);

@@ -17,7 +17,6 @@ import { ALIVE_STATUSES, CALL_STATUSES } from '@/lib/inquiry-status';
 type Attendee = { name?: string; email?: string; phoneNumber?: string | null };
 type Payload = {
   uid?: string;
-  location?: string;
   videoCallData?: { url?: string } | null;
   startTime?: string;
   endTime?: string;
@@ -53,10 +52,13 @@ function attendeeOf(p: Payload): { attendeeName: string | null; attendeeEmail: s
   return { attendeeName: (a.name || '').trim().slice(0, 120) || null, attendeeEmail: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : null };
 }
 
-/** The meeting link Cal.com made (video call or an https location). Only https; anything else is dropped. */
+/**
+ * The meeting link Cal.com made for the video call. Only https; anything else is dropped. Never
+ * payload.location: an event type can let the attendee type that, and the Join button must not be theirs.
+ */
 function meetingUrlOf(p: Payload): string | null {
   const meta = p.metadata?.videoCallUrl;
-  for (const v of [p.videoCallData?.url, typeof meta === 'string' ? meta : '', p.location]) {
+  for (const v of [p.videoCallData?.url, typeof meta === 'string' ? meta : '']) {
     if (typeof v !== 'string' || !v.trim()) continue;
     try { const u = new URL(v.trim()); if (u.protocol === 'https:') return u.toString().slice(0, 500); } catch { /* not a link */ }
   }
@@ -129,21 +131,30 @@ export async function POST(req: NextRequest) {
   // Not for reschedules: those carry the original booking's metadata.
   // Inquiries data (Cam 2026-11-17): a course in OUTREACH (a lead, any age) is matched too — by its own
   // email or any of its contacts' — so a course we emailed that books on the plain link lands on its own
-  // page instead of opening a second, pending inquiry. Still exactly one match or none.
+  // page instead of opening a second, pending inquiry. The open-inquiry match runs first and wins as
+  // before (a course that also filled in the form books against that inquiry); only when it finds nothing
+  // are leads looked at. Each step: exactly one match or none.
   if (!inq && !token && !p.rescheduleUid) {
     const email = (p.attendees?.[0]?.email || '').trim().toLowerCase();
     if (email) {
       const matches = await prisma.courseInquiry.findMany({
         where: {
-          OR: [
-            { email: { equals: email, mode: 'insensitive' }, status: { in: [...ALIVE_STATUSES] }, createdAt: { gte: new Date(Date.now() - 30 * 86_400_000) } },
-            { status: 'lead', OR: [{ email: { equals: email, mode: 'insensitive' } }, { contacts: { some: { email: { equals: email, mode: 'insensitive' } } } }] },
-          ],
+          email: { equals: email, mode: 'insensitive' },
+          status: { in: [...ALIVE_STATUSES] },
+          createdAt: { gte: new Date(Date.now() - 30 * 86_400_000) },
         },
         select: INQ_SELECT,
         take: 2,
       });
       if (matches.length === 1) inq = matches[0];
+      if (matches.length === 0) {
+        const leads = await prisma.courseInquiry.findMany({
+          where: { status: 'lead', OR: [{ email: { equals: email, mode: 'insensitive' } }, { contacts: { some: { email: { equals: email, mode: 'insensitive' } } } }] },
+          select: INQ_SELECT,
+          take: 2,
+        });
+        if (leads.length === 1) inq = leads[0];
+      }
     }
   }
 

@@ -719,6 +719,15 @@ async function handleAction(
         state: p.state?.trim() || inquiry.state,
       },
     });
+    // Inquiries data: on a lead the CourseContact rows are the truth and these columns mirror the first one,
+    // so the same edit goes to that contact, or the next contact change would undo it.
+    if (inquiry.status === LEAD_STATUS) {
+      const first = await prisma.courseContact.findFirst({ where: { inquiryId }, orderBy: [{ decisionMaker: 'desc' }, { sortOrder: 'asc' }, { createdAt: 'asc' }], select: { id: true } });
+      if (first) {
+        const now = await prisma.courseInquiry.findUnique({ where: { id: inquiryId }, select: { contactName: true, email: true, phone: true } });
+        if (now) await prisma.courseContact.update({ where: { id: first.id }, data: { name: now.contactName || 'Contact', email: now.email, phone: now.phone } });
+      }
+    }
     await logEvent(inquiryId, 'contact_updated', 'contact_updated', 'admin', adminName);
     return NextResponse.json({ success: true });
   }
