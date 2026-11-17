@@ -106,6 +106,8 @@ async function main() {
   const ff = seen as { thisMonth?: Record<string, unknown>; lastMonth?: { change?: Record<string, unknown> }; revenueStillOwedDollars?: unknown } | null;
   // September 2026 is before the ledger (it began Oct 30, no backfill): its money is unknown, never $0.
   check('a month before the ledger: no ledger money, no revenue change (even with rows in it)', ff?.thisMonth?.revenueDollars === undefined && ff?.lastMonth?.change?.revenueDollars === undefined, JSON.stringify(ff));
+  const fs = seen as { noShows?: Record<string, unknown>; cancellations?: Record<string, unknown> } | null;
+  check('…nor ledger fees (unknown, never $0)', !!fs?.noShows && !('feesRecoveredDollars' in fs.noShows) && !!fs.cancellations && !('lateFeesKeptDollars' in fs.cancellations), JSON.stringify(fs));
   check('no tee-date money in the facts', ff?.thisMonth?.collectedDollars === undefined && ff?.thisMonth?.expectedDollars === undefined && ff?.revenueStillOwedDollars === undefined);
   const area = (sepRow?.metrics as { byArea?: { key: string; thisMonth: number | null; lastMonth: number | null }[] } | null)?.byArea ?? [];
   const rev = area.find(a => a.key === 'revenue');
@@ -122,6 +124,8 @@ async function main() {
   let decFacts: unknown = null;
   await runMonthlyReview(led, new Date('2027-01-02T12:00:00Z'), async (fx) => { decFacts = fx; return GOOD; });
   const df = decFacts as { thisMonth?: Record<string, unknown>; lastMonth?: { change?: Record<string, unknown> }; baseline?: { revenueDollars?: number; changeFromBaseline?: Record<string, unknown> } } | null;
+  const dfs = decFacts as { noShows?: Record<string, unknown>; cancellations?: Record<string, unknown> } | null;
+  check('a covered month carries the ledger fees', dfs?.noShows?.feesRecoveredDollars === 0 && dfs?.cancellations?.lateFeesKeptDollars === 0, JSON.stringify(dfs));
   check('December revenue is the ledger: $100 round + $250 dues', df?.thisMonth?.revenueDollars === 350 && df?.thisMonth?.duesDollars === 250 && df?.thisMonth?.teeAndCartDollars === 100, JSON.stringify(df?.thisMonth));
   check('the change on November is ledger money: $350 − $80', df?.lastMonth?.change?.revenueDollars === 270 && df?.baseline?.revenueDollars === 80 && df?.baseline?.changeFromBaseline?.revenueDollars === 270, JSON.stringify(df));
   const decRow = await prisma.monthlyReview.findUnique({ where: { courseId_month: { courseId: led, month: '2026-12' } } });

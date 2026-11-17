@@ -127,7 +127,7 @@ async function main() {
     const best = [...f.fillByDayOfWeek].sort((a, b) => (b.fillPct ?? 0) - (a.fillPct ?? 0))[0];
     const worst = f.worstUnsoldHours[0];
     return {
-      verdict: `${f.month} brought in $${(f.thisMonth.revenueDollars ?? 0).toLocaleString('en-US')} from ${f.thisMonth.bookings} bookings, with ${f.thisMonth.fillPct}% of tee times filled.`,
+      verdict: `${f.month} had ${f.thisMonth.bookings} bookings${f.thisMonth.revenueDollars != null ? ` and brought in $${f.thisMonth.revenueDollars.toLocaleString('en-US')}` : ''}, with ${f.thisMonth.fillPct}% of tee times filled.`,
       wentWell: [`${DAY[best.day] ?? best.day} was your strongest day, at ${best.fillPct}% full.`, `Online bookings made up ${f.bookingsBy.online} of the month's bookings, so the counter phone rang less.`],
       fellShort: worst ? [`The ${worst.hour} hour had the most unsold spots (${worst.openSpots}).`] : [],
       recommendations: worst ? [`Try a lower rate or a twilight price around ${worst.hour} on weekdays.`] : ['Keep your prices where they are.'],

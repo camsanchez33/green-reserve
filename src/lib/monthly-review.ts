@@ -123,8 +123,9 @@ export function buildFacts(
     worstUnsoldHours: a.unfilled.worstHours.map(h => ({ hour: hourLabel(h.hour), openSpots: h.open })),
     worstUnsoldDays: a.unfilled.worstDays.slice(0, 3).map(d => ({ day: d.dow, openSpots: d.open })),
     // Booked value = what the missed rounds were priced at (money that never moved); fees are ledger money.
-    noShows: { count: a.noShows.count, bookedValueDollars: dollars(ns.totals.lostValueCents), feesRecoveredDollars: dollars(ns.totals.recoveredCents), golfersWhoNoShowedMoreThanOnce: a.noShows.repeat.length },
-    cancellations: { count: a.cancellations.count, lateFeesKeptDollars: dollars(ns.lateCancels.feesCents), rebookedPct: a.cancellations.rebookedPct },
+    // Fees are ledger money: only for a month the ledger covers (never $0 for one it doesn't).
+    noShows: { count: a.noShows.count, bookedValueDollars: dollars(ns.totals.lostValueCents), ...(ledger ? { feesRecoveredDollars: dollars(ns.totals.recoveredCents) } : {}), golfersWhoNoShowedMoreThanOnce: a.noShows.repeat.length },
+    cancellations: { count: a.cancellations.count, ...(ledger ? { lateFeesKeptDollars: dollars(ns.lateCancels.feesCents) } : {}), rebookedPct: a.cancellations.rebookedPct },
     bookingsBy: { online: a.behavior.channel.online ?? 0, phone: a.behavior.channel.phone ?? 0, walkIn: a.behavior.channel.walk_in ?? 0 },
     // Word keys: digits in a key would count as numbers the text may use.
     bookedAhead: { sameDay: a.behavior.lead.sameDay, oneOrTwoDays: a.behavior.lead.d1to2, threeToSevenDays: a.behavior.lead.d3to7, oneToTwoWeeks: a.behavior.lead.d8to14, overTwoWeeks: a.behavior.lead.d15plus },
