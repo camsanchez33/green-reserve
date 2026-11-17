@@ -81,7 +81,8 @@ function Ahead({ d, money, range }: { d: Data; money: boolean; range: Range }) {
 type PaceRow = { date: string; booked: number; of: number; usual: number | null; status: Projections['week'][number]['status'] };
 function PaceTable({ days, expected }: { days: PaceRow[]; expected?: boolean }) {
   const status = (r: PaceRow) => r.status === 'on_pace' ? <StatusDot status="ok" label="On pace" /> : r.status === 'behind' ? <StatusDot status="warn" label="Behind" />
-    : r.status === 'short_day' ? <StatusDot status="neutral" label="Short day" /> : null;
+    : r.status === 'short_day' ? <StatusDot status="neutral" label="Short day" />
+    : r.status === 'closed' ? <StatusDot status="neutral" label="Closed" /> : null; // a blackout day (Build)
   const grid = 'grid grid-cols-[84px_44px_minmax(40px,1fr)_58px] sm:grid-cols-[110px_150px_minmax(80px,1fr)_100px_130px] gap-2 sm:gap-3 items-center';
   return (
     <div className="flex flex-col" role="table" aria-label="The next 7 days">
