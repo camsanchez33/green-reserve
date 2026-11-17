@@ -5,11 +5,19 @@ import { auditAdmin } from '@/lib/admin-audit';
 import { sendBookingConfirmation, sendCheckInReceiptEmail } from '@/lib/email';
 import { roundChargedTotal, roundApplicationFeeCents } from '@/lib/shop';
 import { confirmationPartsOf, CONFIRMATION_PART_SELECT } from '@/lib/confirmation-parts';
+import { ON_REAL_COURSE } from '@/lib/real-courses';
+import { bookingRefLabel } from '@/lib/booking-ref';
+import { golferLines, isListFilter, matchesFilter, matchesQuery, likeExact, canResendReceipt } from './list';
 
 // MP-6d: the Golfers record page. Search finds accounts AND guest bookings by
 // name / email / phone; the record is identity + a trust strip (rounds,
 // no-shows, late cancels, failed charges, lifetime collected) + every booking
 // with its money events + the support actions a real call needs.
+// Golfers page (Cam approved the mockup 2026-11-17): ?list=1 is every golfer on one line (./list), 50 at a time,
+// with search and one filter. Read only, like the record; the only actions stay the two resends below.
+
+const LIST_PAGE = 50;
+
 
 const BOOKING_SELECT = {
   id: true, status: true, paymentStatus: true,
@@ -19,8 +27,8 @@ const BOOKING_SELECT = {
   checkedInAt: true, cancelledAt: true, checkInFailReason: true, cancellationFeeChargedAt: true,
   roundPaymentIntentId: true, stripePaymentMethodId: true, golferAccountId: true,
   golferName: true, golferEmail: true, golferPhone: true,
-  createdAt: true,
-  course: { select: { id: true, name: true, slug: true } },
+  createdAt: true, ref: true, termsAcceptedAt: true, termsVersion: true,
+  course: { select: { id: true, name: true, slug: true, number: true } },
   teeTime: { select: { date: true, time: true, holes: true } },
   paymentEvents: {
     orderBy: { createdAt: 'asc' as const },
@@ -34,7 +42,8 @@ type BookingRow = {
   checkedInAt: Date | null; cancelledAt: Date | null; checkInFailReason: string; cancellationFeeChargedAt: Date | null;
   roundPaymentIntentId: string; stripePaymentMethodId: string; golferAccountId: string | null;
   golferName: string; golferEmail: string; golferPhone: string; createdAt: Date;
-  course: { id: string; name: string; slug: string }; teeTime: { date: string; time: string; holes: number };
+  ref: number | null; termsAcceptedAt: Date | null; termsVersion: string | null;
+  course: { id: string; name: string; slug: string; number: number | null }; teeTime: { date: string; time: string; holes: number };
   paymentEvents: { id: string; kind: string; amountCents: number; actor: string; actorName: string | null; detail: string; stripeId: string; createdAt: Date }[];
 };
 
@@ -61,6 +70,8 @@ function shapeBooking(b: BookingRow, today: string) {
     isGuest: !b.golferAccountId,
     noShow,
     createdAt: b.createdAt.toISOString(),
+    number: bookingRefLabel(b),
+    termsAcceptedAt: b.termsAcceptedAt?.toISOString() ?? null, termsVersion: b.termsVersion,
     courseId: b.course.id, courseName: b.course.name, courseSlug: b.course.slug,
     teeDate: b.teeTime.date, teeTime: b.teeTime.time, holes: b.teeTime.holes,
     events: b.paymentEvents.map(e => ({
@@ -94,11 +105,11 @@ export async function GET(req: NextRequest) {
       });
       if (!golfer) return NextResponse.json({ error: 'Golfer not found' }, { status: 404 });
       // Guest bookings made with the same email before (or without) signing up belong on the same record.
-      const guests = await prisma.booking.findMany({ where: { golferAccountId: null, golferEmail: { equals: golfer.email, mode: 'insensitive' } }, orderBy: { createdAt: 'desc' }, select: BOOKING_SELECT });
+      const guests = await prisma.booking.findMany({ where: { golferAccountId: null, golferEmail: { equals: likeExact(golfer.email), mode: 'insensitive' } }, orderBy: { createdAt: 'desc' }, select: BOOKING_SELECT });
       identity = { id: golfer.id, email: golfer.email, firstName: golfer.firstName, lastName: golfer.lastName, phone: golfer.phone ?? '', createdAt: golfer.createdAt.toISOString(), isGuest: false };
       rows = [...golfer.bookings, ...guests] as unknown as BookingRow[];
     } else {
-      const guests = await prisma.booking.findMany({ where: { golferAccountId: null, golferEmail: { equals: guestEmail, mode: 'insensitive' } }, orderBy: { createdAt: 'desc' }, select: BOOKING_SELECT });
+      const guests = await prisma.booking.findMany({ where: { golferAccountId: null, golferEmail: { equals: likeExact(guestEmail), mode: 'insensitive' } }, orderBy: { createdAt: 'desc' }, select: BOOKING_SELECT });
       if (guests.length === 0) return NextResponse.json({ error: 'No guest bookings for that email' }, { status: 404 });
       const g = guests[0];
       const [first, ...rest] = g.golferName.split(' ');
@@ -112,7 +123,8 @@ export async function GET(req: NextRequest) {
     const trust = {
       rounds: bookings.filter(b => b.status === 'completed').length,
       noShows: bookings.filter(b => b.noShow).length,
-      lateCancels: bookings.filter(b => b.status === 'cancelled' && b.cancellationFeeChargedAt).length,
+      // A late cancel KEPT its fee: a waived fee leaves the timestamp but the booking reads 'refunded' (analytics.ts's rule).
+      lateCancels: bookings.filter(b => b.status === 'cancelled' && b.cancellationFeeChargedAt && b.paymentStatus === 'cancellation_fee_charged').length,
       failedCharges: bookings.filter(b => b.checkInFailReason && !b.checkedInAt).length,
       upcoming: bookings.filter(b => b.status === 'confirmed' && b.teeDate >= today).length,
       lifetimeCollected: bookings.filter(b => b.paymentStatus === 'paid' || b.paymentStatus === 'refunded').reduce((s, b) => s + b.totalAmount - b.refundedTotal, 0),
@@ -120,6 +132,41 @@ export async function GET(req: NextRequest) {
     };
 
     return NextResponse.json({ golfer: { ...identity, bookings, trust } });
+  }
+
+  // The record above keeps test-course bookings on purpose (search sends them here), so for a tester with both kinds
+  // the list's numbers and the record's can differ. Real golfers only book on real courses.
+  // List mode: every golfer, one line each. Test courses stay out (TEST-2); an account shows if it has booked on a
+  // real course, or never booked at all.
+  if (searchParams.get('list')) {
+    const f = searchParams.get('filter') ?? 'all';
+    const filter = isListFilter(f) ? f : 'all';
+    const offset = Math.max(0, Math.min(1_000_000, Number.parseInt(searchParams.get('offset') ?? '0', 10) || 0));
+    const lq = q.slice(0, 100);
+    const [accounts, rows] = await Promise.all([
+      prisma.golferAccount.findMany({
+        where: { OR: [{ bookings: { none: {} } }, { bookings: { some: ON_REAL_COURSE } }] },
+        select: { id: true, email: true, firstName: true, lastName: true, phone: true, createdAt: true },
+      }),
+      prisma.booking.findMany({
+        where: ON_REAL_COURSE,
+        select: {
+          golferAccountId: true, golferEmail: true, golferName: true, golferPhone: true, status: true, paymentStatus: true,
+          checkedInAt: true, checkInFailReason: true, cancellationFeeChargedAt: true, createdAt: true,
+          course: { select: { id: true, name: true } }, teeTime: { select: { date: true } },
+        },
+      }),
+    ]);
+    const lines = golferLines(accounts, rows.map(r => ({ ...r, courseId: r.course.id, courseName: r.course.name, teeDate: r.teeTime.date })), today)
+      .filter(l => matchesFilter(l, filter) && matchesQuery(l, lq));
+    const page = lines.slice(offset, offset + LIST_PAGE);
+    return NextResponse.json({
+      filter, q: lq, total: lines.length,
+      nextOffset: offset + LIST_PAGE < lines.length ? offset + LIST_PAGE : null,
+      golfers: page.map(l => ({
+        key: l.key, id: l.id, guestEmail: l.guestEmail, name: l.name, homeCourse: l.homeCourse, rounds: l.rounds, lastPlayed: l.lastPlayed, tone: l.tone,
+      })),
+    });
   }
 
   // Search mode
@@ -225,7 +272,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (action === 'resend_receipt') {
-    if (booking.paymentStatus !== 'paid' && booking.paymentStatus !== 'refunded') {
+    if (!canResendReceipt(booking)) {
       return NextResponse.json({ error: 'This round has not been charged, so there is no receipt yet.' }, { status: 409 });
     }
     try {
