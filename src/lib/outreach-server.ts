@@ -1,4 +1,4 @@
-// @brain outreach
+// @brain outreach-data
 // Inquiries data (Cam 2026-11-17): the database side of the outreach pipeline (lib/outreach.ts has the
 // rules). Read by /api/admin/outreach/**; every function here is admin-only through those routes.
 //
