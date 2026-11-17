@@ -151,6 +151,15 @@ export async function ownerSessionFromCookie() {
 /** AW-1c: how recently a second factor must have been proved for a risky action. */
 export const STEP_UP_MINUTES = 5;
 
+/** Company docs delete: how recent an explicit "confirm it's you" must be, and it is used up (freshStepUpRequired). */
+export const FRESH_STEP_UP_MINUTES = 2;
+
+/** Use up this exact confirm: true only for the one request that clears it. */
+export async function consumeStepUp(sessionId: string, at: Date): Promise<boolean> {
+  const n = await prisma.ownerSession.updateMany({ where: { id: sessionId, stepUpAt: at, revokedAt: null }, data: { stepUpAt: null } });
+  return n.count === 1;
+}
+
 export async function markStepUp(sessionId: string) {
   await prisma.ownerSession.update({ where: { id: sessionId }, data: { stepUpAt: new Date() } });
 }

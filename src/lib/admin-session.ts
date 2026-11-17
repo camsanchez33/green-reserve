@@ -2,7 +2,7 @@ import { ADMIN_AREAS, hasArea, type AdminArea } from './admin-areas';
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import { prisma } from './prisma';
-import { ownerSessionFromCookie, STEP_UP_MINUTES } from './owner-session';
+import { ownerSessionFromCookie, consumeStepUp, STEP_UP_MINUTES, FRESH_STEP_UP_MINUTES } from './owner-session';
 import { NextResponse } from 'next/server';
 
 const rawSecret =
@@ -29,6 +29,8 @@ export interface AdminSession {
   ownerSessionId?: string;
   ownerDeviceId?: string | null;
   stepUpAt?: Date | null;
+  /** When the owner session began (its sign-in), so a "fresh" check can tell a confirm from the sign-in itself. */
+  ownerSessionCreatedAt?: Date | null;
   /**
    * AW-11: the areas this employee can open (lib/admin-areas.ts). null = every
    * area (the owner, or an employee whose areas were never set). Read from the
@@ -104,6 +106,27 @@ export function stepUpRequired(session: AdminSession): NextResponse | null {
   return NextResponse.json({ error: 'Confirm it’s you to do this.', code: 'step_up' }, { status: 403 });
 }
 
+/**
+ * Company docs (Cam 2026-11-17, "delete needs a fresh second-factor check"):
+ * stricter than stepUpRequired, for a delete that can't be undone. The owner
+ * must have confirmed it's them AFTER signing in (the sign-in itself doesn't
+ * count) within the last FRESH_STEP_UP_MINUTES, and the confirm is used up by
+ * the action, so each delete asks again. Only an owner session can pass; the
+ * answer is the same 403 code 'step_up', so stepUpFetch and StepUpDialog
+ * handle it unchanged. Call it last, after every other check, right before the
+ * action: a refused action must not spend the confirm.
+ */
+export async function freshStepUpRequired(session: AdminSession): Promise<NextResponse | null> {
+  const ask = NextResponse.json({ error: 'Confirm it’s you to do this.', code: 'step_up' }, { status: 403 });
+  if (session.role !== 'owner' || !session.mfa || !session.ownerSessionId || !session.stepUpAt) return ask;
+  const at = new Date(session.stepUpAt).getTime();
+  const signedIn = session.ownerSessionCreatedAt ? new Date(session.ownerSessionCreatedAt).getTime() : Infinity;
+  if (!(at > signedIn + 1000) || Date.now() - at >= FRESH_STEP_UP_MINUTES * 60_000) return ask;
+  // Atomic: two requests carrying the same confirm can't both use it.
+  if (!(await consumeStepUp(session.ownerSessionId, new Date(at)))) return ask;
+  return null;
+}
+
 export async function signAdminToken(payload: AdminSession) {
   return new SignJWT({ ...payload, type: 'admin_session' })
     .setProtectedHeader({ alg: 'HS256' })
@@ -135,7 +158,7 @@ export async function resolveAdminSession(): Promise<AdminSession | null> {
     console.error(JSON.stringify({ ev: 'owner_session.db_unavailable', error: err instanceof Error ? err.message : String(err) }));
     throw new AdminSessionUnavailable();
   }
-  if (owner) return { adminId: owner.admin.id, email: owner.admin.email, name: owner.admin.name, role: 'owner', mfa: true, ownerSessionId: owner.id, ownerDeviceId: owner.deviceId, stepUpAt: owner.stepUpAt };
+  if (owner) return { adminId: owner.admin.id, email: owner.admin.email, name: owner.admin.name, role: 'owner', mfa: true, ownerSessionId: owner.id, ownerDeviceId: owner.deviceId, stepUpAt: owner.stepUpAt, ownerSessionCreatedAt: owner.createdAt };
 
   const cookieStore = await cookies();
   const token = cookieStore.get('admin_session')?.value;

@@ -3,6 +3,8 @@ import { get } from '@vercel/blob';
 import { resolveAdminSession, requireRole, OWNER_ONLY, ownerGateError, areaGate } from '@/lib/admin-session';
 import { privateBlobToken, PRIVATE_STORAGE_MISSING } from '@/lib/private-blob';
 import { describeCompanyPath, companyDocPathOf } from '@/lib/company-documents';
+import { prisma } from '@/lib/prisma';
+import { auditAdmin } from '@/lib/admin-audit';
 
 // CO-DOCS: company documents are private blobs, so they are only ever served
 // through here — owner session with 2FA, then a stream. The path is checked,
@@ -25,6 +27,9 @@ export async function GET(req: NextRequest) {
   if (!result || result.statusCode !== 200 || !result.stream) {
     return NextResponse.json({ error: 'Document not found in storage' }, { status: 404 });
   }
+  // Company docs data (Cam 2026-11-17): every open is in the document's history.
+  const v = await prisma.companyDocumentVersion.findUnique({ where: { pathname }, select: { documentId: true, version: true } });
+  await auditAdmin(session, { action: 'company_document_open', targetType: 'company_document', targetId: v ? v.documentId : pathname, detail: v ? `version ${v.version}` : pathname });
   const { name } = describeCompanyPath(pathname);
   return new NextResponse(result.stream, {
     headers: {
