@@ -7,14 +7,16 @@ import { prisma } from '../src/lib/prisma';
 import { freshStepUpRequired, type AdminSession } from '../src/lib/admin-session';
 import { allLabels, labelExists, adoptLegacy, documentHistory, cleanName, legacyId, legacyPathOf, defaultDocName } from '../src/lib/company-documents-data';
 import { auditAdmin } from '../src/lib/admin-audit';
+import { recordUpload, deleteDocument, updateDocument, removeLabel, listDocuments, auditOpen, documentDetails, type DocStore } from '../src/lib/company-documents-ops';
 
 let failed = 0;
-const ok = (l: string, c: boolean, i = '') => { console.log(`${c ? 'PASS' : 'FAIL'}  ${l}${c || !i ? '' : ' — ' + i}`); if (!c) failed++; };
+const ok = (l: string, c: boolean, i: unknown = '') => { console.log(`${c ? 'PASS' : 'FAIL'}  ${l}${c || !i ? '' : ' — ' + (typeof i === 'string' ? i : JSON.stringify(i))}`); if (!c) failed++; };
 const EMAIL = 'codocs-test@t.local';
 async function cleanup() {
-  const v = await prisma.companyDocumentVersion.findMany({ where: { pathname: { startsWith: 'company/tax/codocs-test' } }, select: { documentId: true } });
+  const v = await prisma.companyDocumentVersion.findMany({ where: { pathname: { contains: 'codocs-test' } }, select: { documentId: true } });
   await prisma.companyDocument.deleteMany({ where: { id: { in: v.map(x => x.documentId) } } });
   await prisma.companyDocLabel.deleteMany({ where: { name: { startsWith: 'Codocs test' } } });
+  await prisma.adminAuditLog.deleteMany({ where: { admin: { email: EMAIL } } });
   await prisma.adminUser.deleteMany({ where: { email: EMAIL } });
 }
 
@@ -26,9 +28,8 @@ async function cleanup() {
     ok(`${f} is owner-only`, src.includes('companyDocsGate()') || (src.includes('OWNER_ONLY') && src.includes("areaGate(session, 'company')")));
   }
   const main = readFileSync('src/app/api/admin/company-documents/route.ts', 'utf8');
-  const del = main.slice(main.indexOf('export async function DELETE'));
-  ok('delete asks for a reason and a fresh second factor', del.includes("needReason('company_document_delete'") && del.includes('freshStepUpRequired('));
-  ok('…and checks the second factor after everything else, right before deleting', del.indexOf('freshStepUpRequired(') < del.indexOf('await del(') && del.indexOf('not found') < del.indexOf('freshStepUpRequired('));
+  const delRoute = main.slice(main.indexOf('export async function DELETE'));
+  ok('the delete route asks for a reason and passes the fresh second-factor check', delRoute.includes("needReason('company_document_delete'") && delRoute.includes('freshStepUpRequired('));
 
   await cleanup();
   const owner = await prisma.adminUser.create({ data: { email: EMAIL, name: 'Codocs Owner', role: 'owner', passwordHash: 'x' } });
@@ -41,7 +42,9 @@ async function cleanup() {
   await prisma.ownerSession.update({ where: { id: s.id }, data: { stepUpAt: confirmed } });
   ok('an employee never passes', (await freshStepUpRequired(sess(confirmed, { role: 'manager' })))?.status === 403);
   ok('a confirm made just now passes', (await freshStepUpRequired(sess(confirmed))) === null);
-  ok('…and is used up', (await prisma.ownerSession.findUniqueOrThrow({ where: { id: s.id } })).stepUpAt === null);
+  const spent = (await prisma.ownerSession.findUniqueOrThrow({ where: { id: s.id } })).stepUpAt;
+  ok('…and is used up, while the ordinary 5-minute window keeps its time', !!spent && spent.getTime() < confirmed.getTime() && Date.now() - spent.getTime() < 5 * 60_000);
+  ok('…so the spent stamp cannot pass a fresh check', (await freshStepUpRequired(sess(spent))) !== null);
   ok('…so the same confirm cannot pass twice', (await freshStepUpRequired(sess(confirmed))) !== null);
   const stale = new Date(Date.now() - 3 * 60_000);
   await prisma.ownerSession.update({ where: { id: s.id }, data: { stepUpAt: stale } });
@@ -78,6 +81,83 @@ async function cleanup() {
   await auditAdmin({ adminId: owner.id, name: 'Codocs Owner' }, { action: 'note_add', targetType: 'company_document', targetId: id1 });
   const h = await documentHistory(id1, [path]);
   ok('history has the upload and the open, newest first, and nothing else', h.length === 2 && h[0].what === 'Opened' && h[1].what === 'Uploaded' && h[0].who === 'Codocs Owner', JSON.stringify(h));
+
+
+  // ── What the routes do, against a fake store ─────────────────────────────
+  const HOST = 'https://abc.private.blob.vercel-storage.com/';
+  const store = new Map<string, { url: string; pathname: string; size: number; uploadedAt: Date }>();
+  const put = (pathname: string, at = new Date()) => { const f = { url: HOST + pathname, pathname, size: 100, uploadedAt: at }; store.set(pathname, f); return f; };
+  let delFails = false;
+  const fake: DocStore = {
+    async list(prefix) { return { blobs: [...store.values()].filter(b => b.pathname.startsWith(prefix)) }; },
+    async head(url) { const f = [...store.values()].find(b => b.url === url); return f ? { ...f, contentType: 'application/pdf' } : null; },
+    async del(urls) { if (delFails) throw new Error('down'); for (const u of urls) for (const [k, b] of store) if (b.url === u) store.delete(k); },
+  };
+  const actor = { adminId: owner.id, name: 'Codocs Owner' };
+  const yes = async () => true, no = async () => false;
+
+  const a1 = put('company/contracts/codocs-test-lease-AbCdEfGhIjKlMnOpQrStUv.pdf');
+  ok('an upload outside the store’s host is refused', (await recordUpload(fake, actor, { url: 'https://evil.example/' + a1.pathname })).status === 400);
+  const up = await recordUpload(fake, actor, { url: a1.url, label: mine.id, name: 'Office lease' });
+  ok('an upload becomes a document in the chosen label, version 1', up.status === 200 && up.body.version === 1, up.body);
+  const docId = String(up.body.id);
+  ok('the same file cannot be saved twice', (await recordUpload(fake, actor, { url: a1.url, label: 'tax' })).status === 409);
+  ok('an unknown label is refused', (await recordUpload(fake, actor, { url: put('company/other/codocs-test-x-AbCdEfGhIjKlMnOpQrStUv.pdf').url, label: 'made-up' })).status === 400);
+  const a2 = put('company/contracts/codocs-test-lease2-AbCdEfGhIjKlMnOpQrStUv.pdf');
+  const rep = await recordUpload(fake, actor, { url: a2.url, documentId: docId });
+  ok('Replace makes version 2 and keeps version 1', rep.status === 200 && rep.body.version === 2 && (await prisma.companyDocumentVersion.count({ where: { documentId: docId } })) === 2);
+  ok('Replace of a document that isn’t there is 404', (await recordUpload(fake, actor, { url: put('company/tax/codocs-test-y-AbCdEfGhIjKlMnOpQrStUv.pdf').url, documentId: 'nope' })).status === 404);
+  const r3 = put('company/contracts/codocs-test-l3-AbCdEfGhIjKlMnOpQrStUv.pdf'), r4 = put('company/contracts/codocs-test-l4-AbCdEfGhIjKlMnOpQrStUv.pdf');
+  const race = await Promise.all([recordUpload(fake, actor, { url: r3.url, documentId: docId }), recordUpload(fake, actor, { url: r4.url, documentId: docId })]);
+  const vs = (await prisma.companyDocumentVersion.findMany({ where: { documentId: docId }, select: { version: true } })).map(v => v.version).sort();
+  ok('two Replaces at once never share a version number', vs.length === new Set(vs).size && race.every(r => r.status === 200 || r.status === 409), { vs, race: race.map(r => r.status) });
+
+  // Legacy file: listed as before, replace adopts it.
+  const old = put('company/insurance/codocs-test-policy-AbCdEfGhIjKlMnOpQrStUv.pdf', new Date('2026-09-01T00:00:00Z'));
+  const listed = await listDocuments(fake);
+  const lg = listed.documents.find(d => d.pathname === old.pathname);
+  ok('a file with no row is listed as a legacy document in its folder’s label', !!lg && lg.legacy && lg.label === 'insurance' && lg.id === legacyId(old.pathname));
+  ok('label counts include legacy files', (listed.labels.find(l => l.key === 'insurance')?.count ?? 0) >= 1);
+  const noop = await updateDocument(fake, actor, legacyId(old.pathname), { label: 'insurance' });
+  ok('a change that changes nothing makes no row', noop.status === 200 && !(await prisma.companyDocumentVersion.findUnique({ where: { pathname: old.pathname } })));
+  const relabel = await updateDocument(fake, actor, legacyId(old.pathname), { label: mine.id });
+  const adopted = String((relabel.body.document as { id: string }).id);
+  ok('relabelling a legacy file gives it a row in the new label', relabel.status === 200 && (await prisma.companyDocument.findUniqueOrThrow({ where: { id: adopted } })).label === mine.id);
+  const det = await documentDetails(fake, adopted, documentHistory);
+  ok('its history shows the label change', det.status === 200 && (det.body.history as { what: string }[]).some(h => h.what === 'Label changed'));
+  ok('the old legacy id now answers 409, never a second row', (await documentDetails(fake, legacyId(old.pathname), documentHistory)).status === 409);
+
+  // Opening is in the history.
+  await auditOpen(actor, a2.pathname);
+  const det2 = await documentDetails(fake, docId, documentHistory);
+  ok('an open of any version is in the document’s history', (det2.body.history as { what: string; detail: string }[]).some(h => h.what === 'Opened' && h.detail === 'version 2'));
+
+  // Labels: removing one that holds documents needs where to move them.
+  const held = await removeLabel(actor, mine.id, '');
+  ok('removing a label that holds documents asks where to move them', held.status === 409 && held.body.code === 'move_required' && !!(await prisma.companyDocLabel.findUnique({ where: { id: mine.id } })));
+  ok('…not to itself, nor to a label that doesn’t exist', (await removeLabel(actor, mine.id, mine.id)).status === 400 && (await removeLabel(actor, mine.id, 'nope')).status === 400);
+  ok('a built-in label cannot be removed', (await removeLabel(actor, 'tax', 'other')).status === 404);
+  const moved = await removeLabel(actor, mine.id, 'contracts');
+  ok('with somewhere to go, its documents move and the label goes', moved.status === 200 && (await prisma.companyDocument.count({ where: { label: mine.id } })) === 0 && (await prisma.companyDocument.findUniqueOrThrow({ where: { id: docId } })).label === 'contracts');
+
+  // Delete.
+  const sizeBefore = store.size;
+  const refused = await deleteDocument(fake, actor, { id: docId }, 'filed twice', no);
+  ok('without a fresh confirm nothing is deleted (403 step_up)', refused.status === 403 && refused.body.code === 'step_up' && store.size === sizeBefore && !!(await prisma.companyDocument.findUnique({ where: { id: docId } })));
+  let asked = false;
+  ok('a document that isn’t there is 404 before the confirm is spent', (await deleteDocument(fake, actor, { id: 'nope' }, 'x', async () => { asked = true; return true; })).status === 404 && !asked);
+  delFails = true;
+  ok('storage refusing the delete leaves the row', (await deleteDocument(fake, actor, { id: docId }, 'filed twice', yes)).status === 502 && !!(await prisma.companyDocument.findUnique({ where: { id: docId } })));
+  delFails = false;
+  const versionPaths = (await prisma.companyDocumentVersion.findMany({ where: { documentId: docId }, select: { pathname: true } })).map(v => v.pathname);
+  const gone = await deleteDocument(fake, actor, { url: a1.url }, 'filed twice', yes);
+  ok('?url= of an old version deletes the whole document and every version’s file', gone.status === 200 && versionPaths.length >= 3 && !(await prisma.companyDocument.findUnique({ where: { id: docId } })) && !versionPaths.some(p => store.has(p)), versionPaths);
+  const delRow = await prisma.adminAuditLog.findFirst({ where: { action: 'company_document_delete', targetId: docId } });
+  ok('the delete is audited with its reason', delRow?.reason === 'filed twice');
+  const loose = put('company/banking/codocs-test-stmt-AbCdEfGhIjKlMnOpQrStUv.pdf');
+  const lgDel = await deleteDocument(fake, actor, { id: legacyId(loose.pathname) }, 'old statement', yes);
+  ok('a legacy file deletes with no row made', lgDel.status === 200 && !store.has(loose.pathname) && !(await prisma.companyDocumentVersion.findUnique({ where: { pathname: loose.pathname } })));
+  ok('a crafted legacy id outside company/<label>/ is refused', (await deleteDocument(fake, actor, { id: 'legacy:../secret.pdf' }, 'x', yes)).status === 404);
 
   await cleanup(); await prisma.$disconnect();
   if (failed) { console.error(`${failed} failed`); process.exit(1); }

@@ -1,10 +1,11 @@
 // Server only: the database half of Company docs (company-documents.ts stays client-safe).
 // ── Company docs data (Cam 2026-11-17) ─────────────────────────────────────
-// Labels: the six built-ins above (fixed) plus Cam's own (CompanyDocLabel).
+// Labels: the six built-ins in company-documents.ts (fixed) plus Cam's own (CompanyDocLabel).
 // Documents: a CompanyDocument row with its versions (Replace keeps the old
 // file). A file already in storage with no row is a "legacy" document, shown
 // as before (label from its folder) under the id `legacy:<pathname>`; it gets
-// a row the first time it is relabelled, replaced or deleted. No backfill.
+// a row the first time it is relabelled, renamed or replaced. No backfill.
+// What the routes do is in company-documents-ops.ts.
 // History comes from the audit log (targetType 'company_document').
 
 import { prisma } from '@/lib/prisma';

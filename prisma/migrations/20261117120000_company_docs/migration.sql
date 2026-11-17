@@ -1,6 +1,6 @@
 -- Company docs (Cam 2026-11-17): Cam's own labels, a row per document, and its versions (Replace keeps
 -- the old file). Additive: new tables only. Files already in storage stay as they are and get a row the
--- first time they are relabelled, replaced or deleted; no backfill.
+-- first time they are relabelled, renamed or replaced; no backfill.
 CREATE TABLE "CompanyDocLabel" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,

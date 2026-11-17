@@ -154,9 +154,16 @@ export const STEP_UP_MINUTES = 5;
 /** Company docs delete: how recent an explicit "confirm it's you" must be, and it is used up (freshStepUpRequired). */
 export const FRESH_STEP_UP_MINUTES = 2;
 
-/** Use up this exact confirm: true only for the one request that clears it. */
+/**
+ * Use up this exact confirm: true only for the one request that moves it. The
+ * stamp is moved back just past the fresh window rather than cleared, so it can
+ * never pass a fresh check again while the ordinary 5-minute window for other
+ * risky actions keeps the time it had left ("you won't be asked again for five
+ * minutes" stays true).
+ */
 export async function consumeStepUp(sessionId: string, at: Date): Promise<boolean> {
-  const n = await prisma.ownerSession.updateMany({ where: { id: sessionId, stepUpAt: at, revokedAt: null }, data: { stepUpAt: null } });
+  const spent = new Date(at.getTime() - FRESH_STEP_UP_MINUTES * 60_000 - 1000);
+  const n = await prisma.ownerSession.updateMany({ where: { id: sessionId, stepUpAt: at, revokedAt: null }, data: { stepUpAt: spent } });
   return n.count === 1;
 }
 

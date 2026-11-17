@@ -58,4 +58,3 @@ export function companyDocPathOf(url: string): string | null {
   try { pathname = decodeURIComponent(u.pathname).replace(/^\/+/, ''); } catch { return null; }
   return isAllowedCompanyPath(pathname) ? pathname : null;
 }
-

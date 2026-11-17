@@ -2443,7 +2443,7 @@ model CompanyDocLabel {
 
 /// Company docs: one company document. Its file is its newest version. A file
 /// already in storage with no row shows as before until it is first relabelled,
-/// replaced or deleted (no backfill).
+/// renamed or replaced (no backfill).
 model CompanyDocument {
   id        String                   @id @default(cuid())
   name      String

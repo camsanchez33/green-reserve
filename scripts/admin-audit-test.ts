@@ -7,7 +7,7 @@
 import { readFileSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
 import { needReason, redact, changedFields, REASON_ACTIONS, REASON_MIN, ACTION_LABELS } from '../src/lib/admin-audit';
-import { withReason } from '../src/lib/step-up-client';
+import { withReason, stepUpFetch, registerStepUpHandler, registerReasonHandler } from '../src/lib/step-up-client';
 
 let failed = 0;
 const check = (label: string, ok: boolean, detail?: string) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${detail && !ok ? ' — ' + detail : ''}`); if (!ok) failed++; };
@@ -22,6 +22,7 @@ const SKIP: Record<string, string> = {
   'src/app/api/admin/ask/route.ts': 'read-only AI answers',
   'src/app/api/admin/course-documents/upload/route.ts': 'upload permit only; ../record audits',
   'src/app/api/admin/company-documents/upload/route.ts': 'upload permit only; ../route POST audits',
+  'src/app/api/admin/company-documents/[id]/route.ts': 'relabel and rename are audited in lib/company-documents-ops.ts (updateDocument)',
   'src/app/api/cam/login/route.ts': 'owner sign-in: OwnerSession rows are the record',
   'src/app/api/cam/device/route.ts': 'owner device approval: OwnerDevice rows are the record',
   'src/app/api/cam/step-up/route.ts': 'owner re-confirmation: OwnerSession.stepUpAt is the record',
@@ -65,5 +66,31 @@ const [u2] = withReason('/api/admin/goals?id=g1', { method: 'DELETE' }, 'set by 
 check('retry adds ?reason= when there is no body', u2 === '/api/admin/goals?id=g1&reason=set+by+mistake', u2);
 for (const a of REASON_ACTIONS) check(`${a} has a plain-words label`, !!ACTION_LABELS[a]);
 
-console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
-process.exit(failed ? 1 : 0);
+// The client flow, both orders a route can ask in: reason then second factor
+// (Company docs delete spends its fresh check last), and second factor then reason.
+async function flow(order: 'reason_first' | 'step_up_first') {
+  let confirmed = false; const calls: string[] = []; let asked = { reason: 0, stepUp: 0 };
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = (async (input: string) => {
+    const hasReason = String(input).includes('reason=');
+    const need = order === 'reason_first'
+      ? (!hasReason ? 'reason' : !confirmed ? 'step_up' : 'ok')
+      : (!confirmed ? 'step_up' : !hasReason ? 'reason' : 'ok');
+    calls.push(need);
+    if (need === 'reason') return new Response(JSON.stringify({ code: 'reason_required', label: 'Delete' }), { status: 400 });
+    if (need === 'step_up') return new Response(JSON.stringify({ code: 'step_up' }), { status: 403 });
+    return new Response('{}', { status: 200 });
+  }) as typeof fetch;
+  registerStepUpHandler(async () => { asked.stepUp++; confirmed = true; return true; });
+  registerReasonHandler(async () => { asked.reason++; return 'filed twice'; });
+  try { return { status: (await stepUpFetch('/api/admin/company-documents?id=d1', { method: 'DELETE' })).status, calls, asked }; }
+  finally { globalThis.fetch = realFetch; registerStepUpHandler(null); registerReasonHandler(null); }
+}
+(async () => {
+  const a = await flow('reason_first');
+  check('reason first, then confirm: both asked once and the delete goes through', a.status === 200 && a.asked.reason === 1 && a.asked.stepUp === 1, JSON.stringify(a));
+  const b = await flow('step_up_first');
+  check('confirm first, then reason: both asked once and it goes through', b.status === 200 && b.asked.reason === 1 && b.asked.stepUp === 1, JSON.stringify(b));
+  console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
+  process.exit(failed ? 1 : 0);
+})();
