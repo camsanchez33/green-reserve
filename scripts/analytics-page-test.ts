@@ -48,6 +48,7 @@ ok('every way of booking in plain words', ['online_card_fee', 'online_card_no_fe
 ok('twilight and standard spots sold only when sent', T.includes("b.spotsSold && { label: 'Twilight spots sold'"));
 ok('members by membership only when sent', T.includes('{M && M.length > 0 && ('));
 ok('reports: no Forecast, recommendations as "What to try", By area only when stored, PDF only once its route answers', !code.includes('Forecast') && T.includes('<List title="What to try" items={r.review.recommendations} />') && T.includes('{A && A.length > 0 && (') && T.includes("method: 'HEAD'") && T.includes('{pdf && <a href={pdfUrl(r.month)}'));
+ok('stock value in dollars only for money logins', parts['ShopTab.tsx'].includes("...(money ? ['Stock value'] : [])") && parts['ShopTab.tsx'].includes('{money && S.notSellingRetailCents > 0 && <Note>'));
 ok('stock and transactions only when sent', parts['ShopTab.tsx'].includes('{S && (') && parts['ShopTab.tsx'].includes('t.transactions != null && {'));
 ok('no Filter button until the route can filter', !/label="Filter"|Icon\.filter/.test(all));
 ok('removed by Cam: first-timers who came back, missed more than once', !/came back|Missed more than once|noShows\.repeat/.test(code));

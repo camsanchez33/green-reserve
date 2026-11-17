@@ -154,7 +154,7 @@ function AnalyticsInner() {
           </div>
 
           {error && <LoadError message={d ? `${error} Still showing ${periodText(d.range)}.` : error} onRetry={() => load(range)} />}
-          {ledgerError && d && <LoadError message={`Couldn’t load your revenue — ${ledgerError}`} onRetry={() => loadLedger(d.range)} />}
+          {ledgerError && d && <LoadError message={`Couldn’t load ${d.ledger ? 'how golfers paid' : 'your revenue'} — ${ledgerError}`} onRetry={() => loadLedger(d.range)} />}
           {loading && !d && <p className="py-24 text-center text-[13px] text-ink-muted">Loading…</p>}
 
           {d && (

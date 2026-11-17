@@ -52,9 +52,9 @@ export function ShopTab({ range, money, onLoad }: { range: Range; money: boolean
       </Block>
       {S && (
         <Block title="Not selling">
-          <Table label={`Items that haven't sold in over ${S.staleDays} days`} empty={`Everything in stock sold in the last ${S.staleDays} days.`} head={['Item', 'In stock', 'Stock value', 'Last sold']}
-            rows={S.notSelling.map(x => [x.name, num(x.inStock), usd(x.retailValueCents), x.lastSoldAt ? dayShort(x.lastSoldAt) : 'Never'])} />
-          {S.notSellingRetailCents > 0 && <Note>{usd(S.notSellingRetailCents)} of stock, at shelf price, has not sold in over {S.staleDays} days.</Note>}
+          <Table label={`Items that haven't sold in over ${S.staleDays} days`} empty={`Everything in stock sold in the last ${S.staleDays} days.`} head={['Item', 'In stock', ...(money ? ['Stock value'] : []), 'Last sold']}
+            rows={S.notSelling.map(x => [x.name, num(x.inStock), ...(money ? [usd(x.retailValueCents)] : []), x.lastSoldAt ? dayShort(x.lastSoldAt) : 'Never'])} />
+          {money && S.notSellingRetailCents > 0 && <Note>{usd(S.notSellingRetailCents)} of stock, at shelf price, has not sold in over {S.staleDays} days.</Note>}
         </Block>
       )}
     </Pair>
