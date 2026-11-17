@@ -30,8 +30,8 @@ export type Person = {
 export type Owner = { name: string; email: string; lastActiveAt: string | null };
 export type Team = { roles: Role[]; suggested: Suggested[]; owner: Owner; people: Person[] };
 
-export const LINK = 'text-[13px] font-semibold text-ink underline underline-offset-[3px] decoration-ink-muted hover:decoration-ink disabled:opacity-50';
-export const LINK_BAD = 'text-[13px] font-semibold text-bad underline underline-offset-[3px] decoration-bad/50 hover:decoration-bad disabled:opacity-50';
+export const LINK = 'inline-flex items-center min-h-[40px] text-[13px] font-semibold text-ink underline underline-offset-[3px] decoration-ink-muted hover:decoration-ink disabled:opacity-50';
+export const LINK_BAD = 'inline-flex items-center min-h-[40px] text-[13px] font-semibold text-bad underline underline-offset-[3px] decoration-bad/50 hover:decoration-bad disabled:opacity-50';
 export const PRIMARY = 'bg-pine hover:bg-pine-hover text-white rounded-[10px] text-[13px] font-semibold px-3.5 py-[9px] min-h-[40px] disabled:opacity-40';
 
 export const PlusIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>;
