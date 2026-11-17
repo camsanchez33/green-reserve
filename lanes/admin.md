@@ -60,7 +60,14 @@ Mockup `lanes/admin/goals-mockup.html` (https://claude.ai/artifact/62wRP5X7nS5kM
    - **Top of the page.** The AI security checker: a plain-English status (All clear / Needs you), when it last ran and runs next, and Ask. Then a "Your courses" status list, one row per course: OK, or what's wrong, linked to its incidents.
    - **Tabs.** Sign-ins, Protections, Errors, Incidents. Each incident opens a timeline (detected → what the checker did → result), with who was affected and whether it's fixed. The filter is a bare icon, and there's no row of headline numbers.
    - **Checker (Build job: cron, model call, action allowlist, audit log).** It runs at 7 AM and 7 PM and immediately on spikes: failed sign-ins, a new owner device, the error rate. On its own it takes only SAFE, REVERSIBLE actions, each with Undo: lock an account or address under attack, force sign-out of a suspicious session, open a bug report. Anything that changes code, money, settings or access permanently is an "Approve fix" item Cam taps; nothing ships by itself.
-Then Audit (mockup with Cam, https://claude.ai/artifact/QgQyTepsYAkcqfpcWYS2Qp) → Company docs (mockup with Cam, https://claude.ai/artifact/XApEk2DEDCNb12qTb65DyR), one page at a time,
+**Company docs — APPROVED, build after Security's PR is up** (Cam 2026-11-17, "company docs is good after message is fixed"). Mockup `lanes/admin/company-docs-mockup.html` (https://claude.ai/artifact/XApEk2DEDCNb12qTb65DyR) and its threads are the spec.
+   - **Access and storage.** Owner only. Files are stored privately and opened through short-lived links, as today.
+   - **Labels.** The six built-in labels, plus labels Cam creates, renames and removes. Removing a label that holds documents asks where to move them first.
+   - **Documents.** One line each. Clicking a line opens its details with Replace (keeps the old file as a version), Delete and full history: who uploaded, replaced or opened it, and when, taken from the audit log.
+   - **Delete** needs confirmation and a fresh second-factor check.
+   - **Agreements.** Course agreements are NOT here; a quiet line points to Platform activity → Agreement versions.
+   - **Build** adds the labels table, document versions and the open/upload/replace/delete audit entries (additive migration), plus the step-up on delete.
+Then Audit (mockup with Cam, https://claude.ai/artifact/QgQyTepsYAkcqfpcWYS2Qp), one page at a time,
 mockup first ("as it works today"), nothing built until Cam approves.
 
 ## Small follow-ups

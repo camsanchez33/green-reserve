@@ -1,7 +1,7 @@
 // Analytics page data (Cam 2026-11-17) against a real database: Analytics' money is the Revenue page's money
 // for the same dates (the ledger, lib/revenue-extras allSegments — never lib/analytics.ts sums); no-show and
 // late-cancel fees are ledger money for those bookings only; stock value; nothing crosses
-// courses. Needs a database. Run: npx tsx scripts/analytics-page-db-test.ts
+// courses. Needs a database. Run: npx tsx scripts/analytics-data-db-test.ts
 import { prisma } from '../src/lib/prisma';
 import { recordMove } from '../src/lib/money-ledger';
 import { dayStart } from '../src/lib/ledger-view';

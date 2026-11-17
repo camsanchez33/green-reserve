@@ -32,19 +32,22 @@ ok('everything done: nothing next', next({ ...base, keptCents: 100, guaranteedAt
 
 // 3. The page wiring.
 const detail = read('src/components/dashboard/events/EventDetail.tsx');
-ok('the page shows "Next up" from eventNextSteps on a live event', detail.includes('const steps = eventNextSteps({') && detail.includes('>Next up</h2>'));
-ok('the event is in tabs: Overview · Players · Sign-up · Money · Checklist', detail.includes("['overview', 'Overview']") && detail.includes("['signup', 'Sign-up'], ['money', 'Money']") && detail.includes("['checklist', `Checklist"));
-ok('parts stay mounted (hidden), and the Players part still prints from any tab', detail.includes("tab === k ? '' : 'hidden'") && detail.includes("(tab === 'players' ? '' : 'hidden print:block')"));
+// EVENTS-3 (Cam 2026-11-17, the approved mockup): the steps are the Checklist beside the tabs, each opening to say
+// what it is and how, then the course's own steps (its tasks).
+ok('the Checklist shows the steps from eventNextSteps, then the course\'s own steps', detail.includes('const steps = eventNextSteps({') && detail.includes('Checklist · {stepsDone} of {stepsAll}') && detail.includes('{e.tasks.map(t => {'));
+ok('the event is in tabs: Overview · Players · Sign-up · Payments', detail.includes("tabs={[['overview', 'Overview'], ['players', 'Players'], ['signup', 'Sign-up'], ['money', 'Payments']]}"));
+ok('parts stay mounted (hidden), and the Players part still prints from any tab', detail.includes("(tab === 'overview' ? '' : 'hidden')") && detail.includes("(tab === 'money' ? '' : 'hidden')") && detail.includes("<div className={tab === 'players' ? '' : 'hidden print:block'}>"));
 ok('"Everyone paid" counts a player with a link out as not paid (only paid is paid)', detail.includes("unpaid: onList.filter(p => stateOf(p) !== 'paid').length,"));
 ok('Review\'s checklist dates never fall before today (the server clamps them too); editing loads the hold at once', read('src/components/dashboard/events/EventSetup.tsx').includes('due: due && due < today ? today : due') && read('src/components/dashboard/events/EventSetup.tsx').includes('useEffect(() => { if (eventId) loadPreview(); }, []);'));
-ok('"Take payment" on the day view opens the Players tab first', detail.includes("setTab('players'); setTimeout(() => document.getElementById(`player-${p.id}`)"));
+ok('"Take payment" on the day view opens the Players tab first', detail.includes("setTab('players'); setOpenPlayer(p.id); setPayFor(p.id);"));
 
 const setup = read('src/components/dashboard/events/EventSetup.tsx');
 ok('each kind carries its own starting answers; a new event takes them', setup.includes("defaults: { format: 'shotgun', payer: 'organizer', guaranteeDaysBefore: '7' }") && setup.includes("defaults: { format: 'tee_times', payer: 'players'") && setup.includes('if (!eventId && k?.defaults)'));
 ok('required fields go red under themselves (no line at the bottom for them)', setup.includes("const IN = (k: Field) => err[k] ? INPUT.replace('border-line', 'border-bad') : INPUT;") && setup.includes('<Msg k="name" />') && setup.includes('<Msg k="payer" />') && !setup.includes('setError(e); setStep(s)'));
 ok('the organizer\'s one bill needs a name and a way to reach them', setup.includes("e.organizerName = 'Who is the bill for?'") && setup.includes('e.organizerContact ='));
 ok('Review: the tee sheet first, details with Change, what is still missing, the checklist with dates', setup.includes('What saving does to the tee sheet') && setup.includes('<ChangeLink to={s} />') && setup.includes('Still to add') && setup.includes('The checklist it starts with'));
-ok('the list reads Active, then Past', read('src/app/dashboard/events/page.tsx').includes('>Active</h2>') && read('src/app/dashboard/events/page.tsx').includes('>Past</h2>'));
+const list = read('src/components/dashboard/events/EventsList.tsx');
+ok('the list reads Coming up (This week, then Later), then Past events folded', list.includes('>Coming up</h2>') && list.includes('>This week</div>') && list.includes('>Later</div>') && list.includes('Past events · {past.length}'));
 
 if (failed) { console.error(`${failed} failed`); process.exit(1); }
 console.log('events-2: all passed');

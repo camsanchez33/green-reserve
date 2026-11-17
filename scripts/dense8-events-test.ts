@@ -19,10 +19,12 @@ const m = eventMoney({ pricePerPlayerCents: 9500, finalHeadcount: null, players:
   [{ status: 'paid', amountCents: 19000, refundedCents: 9500 }, { status: 'open', amountCents: 9500, refundedCents: 0 }]);
 check('owed = price × headcount − (paid − refunded); an unpaid link is not paid', m.owedCents === 28500, m);
 
-const page = read('src/app/dashboard/events/page.tsx');
-check('the list is a table: Event · Date · Players · Owed · To do', page.includes('<span>Event</span><span>Date</span><span>Players</span><span className="text-right">Owed</span><span>To do</span>'));
-check('Owed is blank for a cancelled event or one with no price, "Paid" when nothing is owed', page.includes("e.status === 'cancelled' || !e.pricePerPlayerCents ? '' : e.owedCents ? <>{usd(e.owedCents)}<span className=\"sm:hidden\"> owed</span></> : 'Paid'"));
-check('open and overdue tasks keep their dot', page.includes('label={`${e.tasksOverdue} overdue`}') && page.includes('label={`${e.tasksOpen} to do`}'));
+// EVENTS-3 (Cam 2026-11-17, the approved mockup): the table is Date · Event · Players · Money · Status in EventsList.
+const page = read('src/components/dashboard/events/EventsList.tsx');
+check('the list is a table: Date · Event · Players · Money · Status', page.includes('<span>Date</span><span>Event</span><span>Players</span><span>Money</span><span>Status</span>'));
+check('Money is a dash for a cancelled event or one with no price, what\'s owed, or "Paid" when nothing is owed',
+  page.includes("if (e.status === 'cancelled') return") && page.includes("if (!e.pricePerPlayerCents) return") && page.includes('{usd(e.owedCents)}</b><small className="block text-[12px] text-ink-muted">owed</small>') && page.includes('>Paid</b>'));
+check('open and overdue checklist steps reach To do, overdue in red', page.includes("if (e.tasksOverdue) return `${plural(e.tasksOverdue, 'checklist step')} overdue`;") && page.includes("if (e.tasksOpen) return `${plural(e.tasksOpen, 'checklist step')} left`;") && page.includes("status={e.tasksOverdue ? 'bad' : 'warn'}"));
 
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }
 console.log('\nALL PASS');

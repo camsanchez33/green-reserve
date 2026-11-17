@@ -1,48 +1,25 @@
 'use client';
-// W2-9 Events (Cam 2026-10-21/22): outings, tournaments and league nights. The
-// list of the course's events, the guided setup, and one event's page
-// (?id=…). Needs "Run events"; the routes refuse everyone else.
+// W2-9 Events (Cam 2026-10-21/22): outings, tournaments and league nights. The list of the course's events, the guided
+// setup, and one event's page (?id=…). Needs "Run events"; the routes refuse everyone else.
+// EVENTS-3 (Cam 2026-11-17, "events is good"; lanes/dashboard.md item 3, mockup lanes/dashboard/events-mockup.html):
+// the approved page in Charcoal and Light. The list (EventsList), an event's page (EventDetail) and the setup, which
+// opens in the dashboard pop-up both to set up an event and for Change details (EventSetup). Wired to what the routes
+// return today; what needs Build's new fields stays hidden (see the PR for the agreed shape).
 import { Suspense, useCallback, useEffect, useState } from 'react';
-import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { StaffNotice } from '@/components/dashboard/StaffNotice';
-import { Card } from '@/components/ui/Card';
-import { StatusDot } from '@/components/ui/StatusDot';
-import EventSetup, { blankForm, KINDS, type EventForm, type Product, type NineOpt } from '@/components/dashboard/events/EventSetup';
+import { LoadError } from '@/components/dashboard/LoadError';
+import EventSetup, { blankForm, toForm, type Product, type NineOpt } from '@/components/dashboard/events/EventSetup';
 import EventDetail, { type EventData } from '@/components/dashboard/events/EventDetail';
+import EventsList, { type ListRow } from '@/components/dashboard/events/EventsList';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
-import { formatTeeDay, formatTeeTime } from '@/lib/format';
 
-type Row = {
-  id: string; name: string; kind: string; date: string; format: string; startTime: string; holes: number; status: string;
-  players: number; entrantCount: number; heldCount: number; tasksOpen: number; tasksOverdue: number;
-  /** DENSE-8: what the event still owes (0 when it has no price), as on its own page. */
-  owedCents?: number; pricePerPlayerCents?: number;
-};
-const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-// DENSE-8 (Cam 2026-11-01): the list is a table — event · date · players · owed · to do.
-const COLS = 'sm:grid sm:grid-cols-[minmax(0,1fr)_9rem_8rem_7rem_8.5rem] sm:items-center gap-x-4';
-type List = { today: string; courseHoles: number; products: Product[]; nines: NineOpt[]; events: Row[] };
+type List = { today: string; courseHoles: number; products: Product[]; nines: NineOpt[]; events: ListRow[] };
 
 // Printing the pairings prints only the sheet: the bar, tabs and assistant stay off paper.
 const PRINT_CSS = '@media print { header, nav, [data-print-hide] { display: none !important; } body { background: #fff; } }';
-
-function toForm(d: EventData): EventForm {
-  const e = d.event;
-  return {
-    name: e.name, kind: e.kind, date: e.date, format: e.format === 'tee_times' ? 'tee_times' : 'shotgun', startTime: e.startTime, holes: e.holes,
-    groups: e.groups ? String(e.groups) : '', players: e.players ? String(e.players) : '', productId: e.productId ?? '',
-    // Keep a hold end the course set by hand; an automatic one is worked out again.
-    holdTo: e.holdToCustom ? e.holdTo : '',
-    shareCourse: e.shareCourse, holdNineIds: e.holdNineIds, keepOpen: e.keepOpen,
-    organizerName: e.organizerName, organizerEmail: e.organizerEmail, organizerPhone: e.organizerPhone,
-    pricePerPlayer: e.pricePerPlayerCents ? (e.pricePerPlayerCents / 100).toFixed(2) : '', includes: e.includes, terms: e.terms, notes: e.notes,
-    payer: e.payer === 'organizer' || e.payer === 'players' ? e.payer : '',
-    guaranteeDaysBefore: e.guaranteeDaysBefore != null ? String(e.guaranteeDaysBefore) : '',
-  };
-}
 
 function EventsInner() {
   const access = useDashboardAccess();
@@ -71,7 +48,7 @@ function EventsInner() {
   const refreshDetail = useCallback(async () => {
     if (!id) return;
     const r = await dfetch<EventData>(`/api/operator/events/${id}`);
-    if (!r.ok) { setNote(`Saved, but the page couldn\u2019t refresh: ${r.error}`); return; }
+    if (!r.ok) { setNote(`Saved, but the page couldn’t refresh: ${r.error}`); return; }
     setDetail(r.data); loadList();
   }, [id, loadList]);
 
@@ -79,39 +56,13 @@ function EventsInner() {
   useEffect(() => { if (id) loadDetail(id); else setDetail(null); }, [id, loadDetail]);
 
   const canRun = !access.loaded || access.can('events.manage');
-  const upcoming = (list?.events ?? []).filter(e => e.status === 'planned' && e.date >= list!.today);
-  const past = (list?.events ?? []).filter(e => !(e.status === 'planned' && e.date >= list!.today)).reverse();
 
   function saved(eventId: string, held: number, booked: number) {
     setMode('view');
-    setNote(`Saved. ${held ? `${held} tee time${held === 1 ? '' : 's'} held.` : ''}${booked ? ` ${booked} booked time${booked === 1 ? ' is' : 's are'} in the way — see below.` : ''}`.trim());
+    setNote(`Saved. ${held ? `${held} tee time${held === 1 ? '' : 's'} held.` : ''}${booked ? ` ${booked} booked time${booked === 1 ? ' is' : 's are'} in the way: see On your tee sheet.` : ''}`.trim());
     loadList();
     if (eventId === id) loadDetail(eventId); else router.push(`/dashboard/events?id=${eventId}`);
   }
-
-  const head = (
-    <div className={COLS + ' hidden px-5 py-2 text-[12.5px] text-ink-muted border-b border-line-soft'}>
-      <span>Event</span><span>Date</span><span>Players</span><span className="text-right">Owed</span><span>To do</span>
-    </div>
-  );
-  const row = (e: Row) => (
-    <button key={e.id} onClick={() => { setNote(''); router.push(`/dashboard/events?id=${e.id}`); }}
-      className={COLS + ' w-full text-left flex flex-wrap items-center gap-y-1 px-5 py-3 hover:bg-paper/70 transition-colors'}>
-      <div className="min-w-0 basis-full sm:basis-auto">
-        <div className="text-[14px] font-medium text-ink truncate">{e.name}</div>
-        <div className="text-[12.5px] text-ink-muted">{KINDS.find(k => k.key === e.kind)?.label ?? 'Event'} · {e.format === 'shotgun' ? `shotgun ${formatTeeTime(e.startTime)}` : `from ${formatTeeTime(e.startTime)}`}</div>
-      </div>
-      <div className="text-[13px] text-ink">{formatTeeDay(e.date)}</div>
-      <div className="text-[13px] text-ink tabular-nums">{e.entrantCount && e.players ? `${e.entrantCount} of ${e.players}` : e.entrantCount || e.players || ''}</div>
-      <div className={'text-[13px] tabular-nums sm:text-right ' + (e.owedCents ? 'text-ink' : 'text-ink-muted')}>{e.status === 'cancelled' || !e.pricePerPlayerCents ? '' : e.owedCents ? <>{usd(e.owedCents)}<span className="sm:hidden"> owed</span></> : 'Paid'}</div>
-      <div>
-        {e.status === 'cancelled' ? <StatusDot status="neutral" label="Cancelled" />
-          : e.tasksOverdue ? <StatusDot status="bad" label={`${e.tasksOverdue} overdue`} />
-          : e.tasksOpen ? <StatusDot status="warn" label={`${e.tasksOpen} to do`} />
-          : <StatusDot status="ok" label="Ready" />}
-      </div>
-    </button>
-  );
 
   return (
     <div className="flex flex-col min-h-screen md:h-screen bg-page md:overflow-hidden print:h-auto print:overflow-visible">
@@ -119,13 +70,8 @@ function EventsInner() {
       <OperatorSidebar active="events" />
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-8 print:overflow-visible">
         {!canRun ? <StaffNotice what="events" view="events.manage" /> : (
-          <div className="px-4 sm:px-10 py-7 space-y-5">
-            {loadError && (
-              <div role="alert" className="bg-bad/5 border border-bad/20 rounded-md px-4 py-3 text-[13.5px] text-ink flex items-center justify-between gap-3" data-print-hide>
-                <span>{loadError}</span>
-                <button onClick={() => (id ? loadDetail(id) : loadList())} className="text-[13px] font-medium underline">Try again</button>
-              </div>
-            )}
+          <div className="px-4 sm:px-6 lg:px-8 py-6 max-w-[1320px] flex flex-col gap-4">
+            {loadError && <div data-print-hide><LoadError message={loadError} onRetry={() => (id ? loadDetail(id) : loadList())} /></div>}
             {note && <p role="status" className="text-[13.5px] text-ink" data-print-hide>{note}</p>}
 
             {mode !== 'view' && list && (
@@ -137,42 +83,17 @@ function EventsInner() {
                 onSaved={saved} onCancel={() => setMode('view')} />
             )}
 
-            {mode === 'view' && id && detail && (
+            {id && detail && (
               <EventDetail data={detail} onChange={d => { setDetail(d); loadList(); }} onEdit={() => { setNote(''); setMode('edit'); }}
                 onBack={() => { setNote(''); router.push('/dashboard/events'); }}
                 canRefund={!access.loaded || access.can('money.refund')} reload={refreshDetail} />
             )}
-            {mode === 'view' && id && !detail && !loadError && <p className="text-sm text-ink-muted">Loading the event…</p>}
+            {id && !detail && !loadError && <p className="text-sm text-ink-muted">Loading the event…</p>}
 
-            {mode === 'view' && !id && (
-              <>
-                <div className="flex flex-wrap items-end justify-between gap-3">
-                  <h1 className="font-serif text-[32px] leading-none text-ink">Events</h1>
-                  <button onClick={() => { setNote(''); setMode('new'); }} disabled={!list}
-                    className="px-4 py-2.5 rounded-md text-[13.5px] font-medium bg-pine hover:bg-pine-hover text-white disabled:opacity-50">Set up an event</button>
-                </div>
-                {!list && !loadError && <p className="text-sm text-ink-muted">Loading your events…</p>}
-                {list && list.events.length === 0 && (
-                  <Card className="px-6 py-10 text-center">
-                    <Image src="/brand/golfer.svg" unoptimized alt="" width={40} height={49} className="mx-auto mb-3" />
-                    <p className="text-[14px] text-ink">No events yet.</p>
-                    <p className="text-[13.5px] text-ink-soft mt-1 max-w-md mx-auto">Outings, tournaments and league nights.</p>
-                  </Card>
-                )}
-                {upcoming.length > 0 && (
-                  <section>
-                    <h2 className="text-[15px] font-semibold text-ink mb-2">Active</h2>
-                    <Card className="divide-y divide-line-soft overflow-hidden">{head}{upcoming.map(row)}</Card>
-                  </section>
-                )}
-                {past.length > 0 && (
-                  <section>
-                    <h2 className="text-[15px] font-semibold text-ink mb-2">Past</h2>
-                    <Card className="divide-y divide-line-soft overflow-hidden">{head}{past.map(row)}</Card>
-                  </section>
-                )}
-              </>
-            )}
+            {!id && (list
+              ? <EventsList events={list.events} today={list.today} canNew onNew={() => { setNote(''); setMode('new'); }}
+                  onOpen={eventId => { setNote(''); router.push(`/dashboard/events?id=${eventId}`); }} />
+              : !loadError && <p className="text-sm text-ink-muted">Loading your events…</p>)}
           </div>
         )}
       </main>

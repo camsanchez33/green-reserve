@@ -74,7 +74,7 @@ export async function signupPage(eventId: string) {
   const organizerPays = e.payer === 'organizer';
   const payNow = !organizerPays && e.signupPay === 'now' && e.pricePerPlayerCents > 0 && !!e.course.stripeAccountId && e.course.stripeAccountActive;
   return {
-    id: e.id, name: e.name, kind: e.kind, date: e.date, format: e.format, startTime: e.startTime, holes: e.holes,
+    id: e.id, name: e.name, kind: e.kind, kindLabel: e.kindLabel, date: e.date, format: e.format, startTime: e.startTime, holes: e.holes,
     pricePerPlayerCents: organizerPays ? 0 : e.pricePerPlayerCents, includes: e.includes, terms: organizerPays ? '' : e.terms,
     payNow, feePerPlayerCents: payNow ? eventFeeFor('player', null) : 0,
     maxGroup: Math.min(MAX_GROUP, Math.max(1, e.signupMaxGroup)), questions: questionsOf(e.signupQuestions),

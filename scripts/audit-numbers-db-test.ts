@@ -65,12 +65,14 @@ async function cleanup() {
 
     const sales = read('src/app/api/operator/money/sales/route.ts');
     const panel = read('src/components/dashboard/money/SalesPanel.tsx');
-    const an = read('src/app/dashboard/analytics/page.tsx');
+    const an = ['src/app/dashboard/analytics/page.tsx', 'src/components/dashboard/analytics/Head.tsx', 'src/components/dashboard/analytics/Tabs.tsx', 'src/components/dashboard/analytics/ShopTab.tsx'].map(read).join('\n');
     ok('1/2. Money sends and shows the refunds and event lines', sales.includes('refundedCents: r.roundRefundsCents') && sales.includes('eventCents: r.beyond.eventCents') && panel.includes('label="Refunded"') && panel.includes('Event payments ·'));
-    ok('1/2. Analytics shows them and keeps range balls from going wrong', an.includes('d.revenue.collectedCents + refunds - d.revenue.greenCents') && an.includes('label="Event payments"'));
+    // ANALYTICS-5 (Cam 2026-11-17): money lives on Revenue; Analytics shows no round-money breakdown of its own.
+    ok('1/2. Analytics leaves the money breakdown to Revenue', !an.includes('collectedCents') && !an.includes('Event payments'));
 
     const evRoute = read('src/app/api/operator/events/[id]/route.ts');
-    const evUi = read('src/components/dashboard/events/EventDetail.tsx');
+    // EVENTS-3: the players (Swap, Remove) live in EventPlayers.
+    const evUi = read('src/components/dashboard/events/EventDetail.tsx') + read('src/components/dashboard/events/EventPlayers.tsx');
     ok('3. player_edit changes name and contact in place (never delete + add)', evRoute.includes("case 'player_edit':") && /player_edit[\s\S]{0,900}courseEventPlayer\.updateMany\(\{ where: \{ id: String\(body\.playerId \?\? ''\), eventId: id \}, data: \{ name, email, phone \} \}\)/.test(evRoute));
     ok('3. the list has Swap, and Remove on a paid player says the money stays on the event', evUi.includes(">Swap</button>") && evUi.includes("action: 'player_edit'") && evUi.includes('has paid; the money stays on the event'));
 

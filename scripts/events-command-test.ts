@@ -31,12 +31,16 @@ const locked = eventMoney({ pricePerPlayerCents: 8000, finalHeadcount: 40, playe
 ok('confirmed headcount 40, 60 on the list: owed $0 for the bill, 40 covered, 20 named as past it', locked.owedCents === 0 && coveredCount(locked.keptCents, 8000, 60) === 40 && pastHeadcount(locked, 60) === 20, locked);
 ok('…nothing past it before a headcount is confirmed', pastHeadcount(money, 60) === 0);
 
+// EVENTS-3 (Cam 2026-11-17, the approved mockup): the numbers are Registered · Collected · Event day · Set up, from the
+// same eventMoney figures the Payments tab shows; the players live in EventPlayers.
 const page = readFileSync('src/components/dashboard/events/EventDetail.tsx', 'utf8');
-ok('the strip sits on a live event, from the same money as the Money card', page.includes('{live && (() => {') && page.includes('money: data.money, tasks: e.tasks, today })'));
+const players = readFileSync('src/components/dashboard/events/EventPlayers.tsx', 'utf8');
+ok('the numbers come from the same money as the Payments tab', page.includes('const { event: e, today, held, toMove, money } = data;')
+  && page.includes('value={`${usd(money.keptCents)} of ${usd(money.keptCents + money.owedCents)}`}') && page.includes('money={money} payments={e.payments}'));
 ok('organizer events: Covered / Not covered yet per player, in list order', page.includes("const orgPays = e.payer === 'organizer';")
-  && page.includes('coveredCount(data.money.keptCents, e.pricePerPlayerCents, onList.length)')
-  && page.includes('listOrder.slice(0, covered)') && page.includes('<StatusDot status="ok" label={T.covered.label} />'));
-ok('players-pay events keep their own Paid column', page.includes('{playersPay && <th className="py-2 pr-3 font-medium">Paid</th>}'));
+  && page.includes('coveredCount(money.keptCents, e.pricePerPlayerCents, onList.length)')
+  && page.includes('listOrder.slice(0, covered)') && players.includes('<StatusDot status="ok" label={T.covered.label} />'));
+ok('players-pay events keep each player\'s paid state', players.includes("if (!playersPay) return null;") && players.includes('<StatusDot status="ok" label="Paid" />') && players.includes('<StatusDot status="warn" label="Not paid" />'));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);
