@@ -13,10 +13,12 @@ const other = route.slice(route.indexOf("case 'void': case 'paid_other': {"), ro
 
 check('recording a payment checks sheet.counter_payment before it records', rec.includes("requirePermission(session, 'sheet.counter_payment')"));
 check('"paid another way" checks it too (cancelling a link does not)', other.includes("if (body.action === 'paid_other') { const denied = requirePermission(session, 'sheet.counter_payment')"));
-check('the buttons hide for a login without it', ui.includes("const canRecord = useDashboardAccess().can('sheet.counter_payment');") && ui.includes('{canRecord && <button onClick={() => { setMode(mode') && ui.includes('{canRecord && <button onClick={() => setPaidOther('));
+check('the buttons hide for a login without it', ui.includes("const canRecord = useDashboardAccess().can('sheet.counter_payment');") && ui.includes('{live && canRecord && <PlusButton label="Record a payment"') && ui.includes("{canRecord && <button type=\"button\" onClick={() => setPaidOther({ id: p.id, method: 'cash' })}"));
 
 const detail = readFileSync('src/components/dashboard/events/EventDetail.tsx', 'utf8');
-check('the player list and day-of view hide "Paid at the course" / "Take payment" too', detail.includes("const canRecord = useDashboardAccess().can('sheet.counter_payment');") && detail.includes('{canRecord && <button disabled={!!busy} onClick={() => setPaidHere(') && detail.includes('onTakePayment={canRecord ? p =>'));
+const players = readFileSync('src/components/dashboard/events/EventPlayers.tsx', 'utf8');
+check('the player pop-up and day-of view hide "Paid at the course" / "Take payment" too', detail.includes("const canRecord = useDashboardAccess().can('sheet.counter_payment');") && detail.includes('canRecord={canRecord}')
+  && players.includes("{canRecord && <button type=\"button\" className={LINK} onClick={() => setPaidHere({ amount: price, method: 'cash' })}>Paid at the course</button>}") && detail.includes('onTakePayment={canRecord ? p =>'));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);

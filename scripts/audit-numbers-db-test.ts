@@ -70,7 +70,8 @@ async function cleanup() {
     ok('1/2. Analytics shows them and keeps range balls from going wrong', an.includes('d.revenue.collectedCents + refunds - d.revenue.greenCents') && an.includes('label="Event payments"'));
 
     const evRoute = read('src/app/api/operator/events/[id]/route.ts');
-    const evUi = read('src/components/dashboard/events/EventDetail.tsx');
+    // EVENTS-3: the players (Swap, Remove) live in EventPlayers.
+    const evUi = read('src/components/dashboard/events/EventDetail.tsx') + read('src/components/dashboard/events/EventPlayers.tsx');
     ok('3. player_edit changes name and contact in place (never delete + add)', evRoute.includes("case 'player_edit':") && /player_edit[\s\S]{0,900}courseEventPlayer\.updateMany\(\{ where: \{ id: String\(body\.playerId \?\? ''\), eventId: id \}, data: \{ name, email, phone \} \}\)/.test(evRoute));
     ok('3. the list has Swap, and Remove on a paid player says the money stays on the event', evUi.includes(">Swap</button>") && evUi.includes("action: 'player_edit'") && evUi.includes('has paid; the money stays on the event'));
 
