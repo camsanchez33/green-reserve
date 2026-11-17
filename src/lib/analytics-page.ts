@@ -413,7 +413,8 @@ export function projectionsOf(slots: Slot[], closed: Set<string>, today: string,
     weeksSeen = Math.max(weeksSeen, byNow.length);
     const usualByNow = byNow.length ? Math.round(avg(byNow)!) : null;
     if (closed.has(date) || (offered === 0 && byDate.has(date))) {
-      days.push({ date, offered: 0, booked, usualByNow, expected: booked, lastTee: null, basis: 'closed', status: 'closed' });
+      // A closed day has no pace to compare against (the Dashboard lane, 2026-11-17).
+      days.push({ date, offered: 0, booked, usualByNow: null, expected: booked, lastTee: null, basis: 'closed', status: 'closed' });
       continue;
     }
     if (offered === 0) {

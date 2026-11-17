@@ -131,7 +131,7 @@ const bk = (o: Partial<NsBooking> & { id: string }): NsBooking => ({
   const day = (d: string) => p.week.find(x => x.date === d) ?? null;
   ok('the next 7 days', p.week.length === 7 && p.week[0].date === today, p.week.map(d => d.date));
   ok('six days out: booked 6, usual by now 8 → behind, expected 6 + the usual 12 still to come', day('2031-06-17')?.booked === 6 && day('2031-06-17')?.usualByNow === 8 && day('2031-06-17')?.expected === 18 && day('2031-06-17')?.status === 'behind', day('2031-06-17'));
-  ok('a closed day (blackout) is closed with no spots', day('2031-06-13')?.status === 'closed' && day('2031-06-13')?.offered === 0, day('2031-06-13'));
+  ok('a closed day (blackout) is closed with no spots and no usual pace', day('2031-06-13')?.status === 'closed' && day('2031-06-13')?.offered === 0 && day('2031-06-13')?.usualByNow === null, day('2031-06-13'));
   ok('last 30 days: the four past Tuesdays, 20 players each', p.last.players === 80 && p.last.offered === 160, p.last);
   ok('revenue next = expected players × ledger tee money per player (an estimate)', p.next.revenueCents === Math.round(p.next.players * 2000), { next: p.next });
   ok('Jun 24, Jul 1 and Jul 8 (no tee times yet) come from the usual final count, 20 each', p.next.players === 4 + 18 + 20 * 3, p.next);
