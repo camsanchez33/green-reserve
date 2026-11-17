@@ -29,35 +29,37 @@ function extremes(d: Data) {
   return { busiest: s[0], quietest: s[s.length - 1] };
 }
 
-export function TeeSheetTab({ d }: { d: Data }) {
+/** `money`: the login sees money (money.payments); dollar figures only then. */
+export function TeeSheetTab({ d, money }: { d: Data; money: boolean }) {
   const u = d.utilization, h = u.heatmap, x = extremes(d);
   const rows = MON_FIRST.map(w => { const r = h.rows.find(y => y.dow === w); return { dow: w, cells: r?.cells ?? h.hours.map(() => null), all: u.byDow.find(y => y.dow === w)?.fillPct ?? null }; });
   return (<>
     <Figures items={[
       { label: 'Unsold player spots', value: num(d.unfilled.openSpots) },
-      { label: 'Value of unsold spots', value: usd(d.unfilled.lostCents) },
+      money && { label: 'Value of unsold spots', value: usd(d.unfilled.lostCents) },
       x && { label: `Busiest, ${pct(x.busiest.v)} full`, value: `${DAY_NAME[x.busiest.dow]} ${hourLong(x.busiest.hour)}` },
       x && { label: `Quietest, ${pct(x.quietest.v)} full`, value: `${DAY_NAME[x.quietest.dow]} ${hourLong(x.quietest.hour)}` },
     ]} />
     <Block title="Busiest and quietest hours">
       {h.hours.length ? <Heatmap hours={h.hours} rows={rows} label="How full each hour was, Monday to Sunday, in this period" /> : <Note>No tee times in these dates.</Note>}
     </Block>
-    <Ahead d={d} />
+    <Ahead d={d} money={money} />
   </>);
 }
 
 /** Projections (Build) when sent; until then the next 7 days against where they usually stand by now. */
-function Ahead({ d }: { d: Data }) {
+function Ahead({ d, money }: { d: Data; money: boolean }) {
   const P = d.projection;
   if (P) {
     const rc = change(P.rounds, P.roundsLast30, 'pct'), fc = change(P.fillPct, P.fillPctLast30, 'pts');
-    const rv = P.revenueCents != null && P.revenueLast30Cents != null ? change(P.revenueCents, P.revenueLast30Cents, 'pct') : null;
+    const showRev = money && P.revenueCents != null;
+    const rv = showRev && P.revenueLast30Cents != null ? change(P.revenueCents, P.revenueLast30Cents, 'pct') : null;
     const on = (t: string | undefined) => (t ? `${t} on the last 30 days` : undefined);
     return (
       <Block title="Projections · next 30 days">
-        <Figures three={P.revenueCents == null} items={[
+        <Figures three={!showRev} items={[
           { label: 'Rounds', value: num(P.rounds), delta: rc ? { text: on(rc.text)! } : undefined },
-          P.revenueCents != null && { label: 'Revenue', value: usd(P.revenueCents), delta: rv ? { text: on(rv.text)! } : undefined },
+          showRev && { label: 'Revenue', value: usd(P.revenueCents!), delta: rv ? { text: on(rv.text)! } : undefined },
           { label: 'Tee sheet filled', value: pct(P.fillPct), delta: fc ? { text: on(fc.text)! } : undefined },
         ]} />
         <PaceTable days={P.days.slice(0, 7).map(x => ({ date: x.date, booked: x.booked, of: x.expected, usual: x.usual, closesAt: x.closesAt ?? null }))} expected />
@@ -218,9 +220,10 @@ const Lost = ({ c }: { c: number }) => <span className="text-bad">{lost(c)}</spa
 const Got = ({ c }: { c: number }) => <span className="text-ok">{gained(c)}</span>;
 const Net = ({ c }: { c: number }) => <span className={c < 0 ? 'text-bad' : 'text-ok'}>{signed(c)}</span>;
 
-export function NoShowsTab({ d }: { d: Data }) {
-  const n = d.noShows, m = n.money, c = d.cancellations, R = c.refill, late = c.late;
-  const ch = n.byChannel;
+export function NoShowsTab({ d, money }: { d: Data; money: boolean }) {
+  // Money only for logins that see money (money.payments), whatever the route sends.
+  const n = d.noShows, m = money ? n.money : undefined, c = d.cancellations, R = c.refill, late = money ? c.late : undefined;
+  const ch = money ? n.byChannel : undefined;
   // The line under "When they cancelled": how often a spot given up inside 48 hours was filled again.
   const short = R?.rows.filter(r => r.lead === '24-48h' || r.lead === 'under24h') ?? [];
   const shortCancelled = short.reduce((s, r) => s + r.cancelled, 0), shortFilled = short.reduce((s, r) => s + r.filled, 0);

@@ -98,7 +98,7 @@ function AnalyticsInner() {
   const lseq = useRef(0);
   const loadLedger = useCallback(async (r: Range) => {
     const mine = ++lseq.current;
-    setLedgerError('');
+    setLedger(null); setLedgerError(''); // never last range's money beside this range's numbers
     const res = await dfetch<SalesReply>(`/api/operator/money/sales?from=${r.from}&to=${r.to}`);
     if (mine !== lseq.current) return;
     if (res.ok) setLedger(res.data.all ?? null); else { setLedger(null); setLedgerError(res.error); }
@@ -158,10 +158,10 @@ function AnalyticsInner() {
               <Head d={d} ledger={ledger} metric={metric} setMetric={setMetric} />
               <SlidingTabs value={tab} onChange={setTab} label="Analytics" className="w-full mt-2 [&>button]:min-h-[44px] [&>button]:text-[14px]" tabs={TABS} />
               <div className="flex flex-col gap-7 pt-1">
-                {tab === 'sheet' && <TeeSheetTab d={d} />}
+                {tab === 'sheet' && <TeeSheetTab d={d} money={seesMoney} />}
                 {tab === 'book' && <BookingsTab d={d} ledger={ledger} />}
                 {tab === 'golfers' && <GolfersTab d={d} />}
-                {tab === 'noshow' && <NoShowsTab d={d} />}
+                {tab === 'noshow' && <NoShowsTab d={d} money={seesMoney} />}
                 {tab === 'shop' && <ShopTab range={d.range} ledger={ledger} onLoad={onShop} />}
                 {tab === 'review' && <ReviewsTab />}
               </div>

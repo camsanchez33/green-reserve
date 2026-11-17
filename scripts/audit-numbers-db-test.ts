@@ -65,7 +65,7 @@ async function cleanup() {
 
     const sales = read('src/app/api/operator/money/sales/route.ts');
     const panel = read('src/components/dashboard/money/SalesPanel.tsx');
-    const an = read('src/app/dashboard/analytics/page.tsx');
+    const an = ['src/app/dashboard/analytics/page.tsx', 'src/components/dashboard/analytics/Head.tsx', 'src/components/dashboard/analytics/Tabs.tsx', 'src/components/dashboard/analytics/ShopTab.tsx'].map(read).join('\n');
     ok('1/2. Money sends and shows the refunds and event lines', sales.includes('refundedCents: r.roundRefundsCents') && sales.includes('eventCents: r.beyond.eventCents') && panel.includes('label="Refunded"') && panel.includes('Event payments ·'));
     // ANALYTICS-5 (Cam 2026-11-17): money lives on Revenue; Analytics shows no round-money breakdown of its own.
     ok('1/2. Analytics leaves the money breakdown to Revenue', !an.includes('collectedCents') && !an.includes('Event payments'));
