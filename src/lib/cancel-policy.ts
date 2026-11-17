@@ -106,6 +106,15 @@ export function rescalePartyFees(
 export const holdsAtCutoff = (b: { lateFeeTimingAtBooking?: string | null }) =>
   (b.lateFeeTimingAtBooking ?? 'hold_at_cutoff') === 'hold_at_cutoff';
 
+/**
+ * Can the course keep a fee when this booking doesn't show? A no-show fee, or a late fee stamped at booking whose
+ * policy reaches a no-show: a hold taken at the cutoff and kept, or "late cancel or no-show". A plain "late cancel"
+ * fee never does. cancellationFeeTotal stays on a live booking (cleared only on a free cancel); cancellationFeeApplies
+ * does not (it is set only by a late cancel), so it can't say this.
+ */
+export const feeOnNoShow = (b: { noShowFeeTotal: number; cancellationFeeTotal: number; lateFeeTimingAtBooking?: string | null }) =>
+  b.noShowFeeTotal > 0 || (b.cancellationFeeTotal > 0 && (holdsAtCutoff(b) || b.lateFeeTimingAtBooking === 'late_cancel_or_no_show'));
+
 /** SP-B: is a late cancellation charged at the moment of cancelling? */
 /**
  * R-PAY-003: the cancellation window THIS booking was made under — copied onto

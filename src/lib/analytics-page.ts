@@ -15,7 +15,7 @@
 import { prisma } from './prisma';
 import { addDaysStr, todayIn, DEFAULT_TZ, isValidTimezone } from './course-time';
 import { teeToUtcMs } from './tee-time-utils';
-import { holdsAtCutoff, bookingWindowHours } from './cancel-policy';
+import { feeOnNoShow, bookingWindowHours } from './cancel-policy';
 import { NO_SHOW_GRACE_MIN, previousRange, type Range } from './analytics';
 import { allSegments, type AllSegments } from './revenue-extras';
 import { Prisma, type BookingEventType } from '@prisma/client';
@@ -242,10 +242,7 @@ export async function noShowReport(courseId: string, range: Range, now: Date = n
       id: b.id, teeTimeId: t.id, teeAt, status: b.status, players: b.players, source: b.source,
       checkedInAt: b.checkedInAt, createdAt: b.createdAt, cancelledAt: b.cancelledAt, splitFromId: b.splitFromId,
       cardSaved: !!b.stripePaymentMethodId && !!b.stripeCustomerId,
-      // A fee the course can keep when they don't come: a no-show fee, or a late fee stamped at booking whose
-      // policy reaches a no-show (a hold taken at the cutoff and kept; "late cancel or no-show"). A plain
-      // "late cancel" fee never reaches a no-show. cancellationFeeTotal stays on a live booking (cleared only on a free cancel).
-      feeOnNoShow: b.noShowFeeTotal > 0 || (b.cancellationFeeTotal > 0 && (holdsAtCutoff(b) || b.lateFeeTimingAtBooking === 'late_cancel_or_no_show')),
+      feeOnNoShow: feeOnNoShow(b),
       valueCents: share(b), calledOff: calledOff.has(b.id),
       paid: b.paymentStatus === 'paid' || b.paymentStatus === 'paid_offline' || b.paymentStatus === 'on_account',
       windowHours: bookingWindowHours(b, c),

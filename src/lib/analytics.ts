@@ -64,6 +64,7 @@ import { teeToUtcMs } from './tee-time-utils';
 import { PLACEHOLDER_EMAIL_DOMAIN } from './email';
 import { golferKey } from './golfer-key';
 import { golferSegments } from './golfer-segments';
+import { feeOnNoShow } from './cancel-policy';
 
 /** EV-1's event log went live on this day; metrics that need it start here. */
 export const EVENT_LOG_START = '2026-10-01';
@@ -115,7 +116,7 @@ async function load(courseId: string, range: Range) {
           greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, accessFeeTotal: true, cancellationFeeTotal: true,
           cancelledAt: true, createdAt: true, source: true, splitFromId: true, golferName: true, golferEmail: true, golferPhone: true, golferAccountId: true,
           // W2-8: residents (RES-1) and whether the booking carried a fee policy.
-          residentPlayers: true, residentRateCents: true, cancellationFeeApplies: true, appliedRate: true,
+          residentPlayers: true, residentRateCents: true, cancellationFeeApplies: true, lateFeeTimingAtBooking: true, appliedRate: true,
           // W2-8 (4): pro-shop items added to the round (POS-1a), before tax.
           shopTotalCents: true, shopTaxCents: true,
           // STRESS-1110 #15: a no-show is owed only when there's a card and a no-show fee to charge.
@@ -300,10 +301,12 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
   }
 
   // ── 5. Cancellations ─────────────────────────────────────────────────────
-  const cancelEvents = await prisma.bookingEvent.findMany({
-    where: { courseId, type: 'booking_cancelled' satisfies BookingEventType, bookingId: { in: cancelled.map(b => b.id) } },
+  // In chunks: Postgres takes at most 32,767 bound values per statement (a busy course over a long range).
+  const cancelIds = cancelled.map(b => b.id);
+  const cancelEvents = (await Promise.all(Array.from({ length: Math.ceil(cancelIds.length / 10_000) }, (_, i) => prisma.bookingEvent.findMany({
+    where: { courseId, type: 'booking_cancelled' satisfies BookingEventType, bookingId: { in: cancelIds.slice(i * 10_000, i * 10_000 + 10_000) } },
     select: { bookingId: true, actorType: true, metadata: true },
-  });
+  })))).flat();
   const cancelActor = new Map(cancelEvents.map(e => [e.bookingId, e.actorType]));
   // W2-8 (8): rounds the COURSE called off (weather, a closure) are not golfers
   // cancelling — counted on their own and left out of the cancellation rate.
@@ -330,8 +333,11 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
   const checkedIn = pastLive.filter(b => b.checkedInAt);
   const shortShows = checkedIn.filter(b => b.checkedInPlayers != null && b.checkedInPlayers < b.players);
   const policy = (fee: boolean) => {
-    const set = pastLive.filter(b => b.cancellationFeeApplies === fee);
-    const ns = noShows.filter(b => b.cancellationFeeApplies === fee).length;
+    // "With a card and a fee": a saved card and a fee that reaches a no-show (lib/cancel-policy feeOnNoShow). It read
+    // cancellationFeeApplies, which a live booking never has, so the "with a fee" side was always empty.
+    const withFee = (b: B) => !!b.stripePaymentMethodId && !!b.stripeCustomerId && feeOnNoShow(b);
+    const set = pastLive.filter(b => withFee(b) === fee);
+    const ns = noShows.filter(b => withFee(b) === fee).length;
     const players = set.reduce((n, b) => n + b.players, 0);
     // Booked players who didn't play: the whole group for a no-show, the gap for a short-show.
     const missing = set.reduce((n, b) => n + (!b.checkedInAt ? b.players : Math.max(0, b.players - (b.checkedInPlayers ?? b.players))), 0);

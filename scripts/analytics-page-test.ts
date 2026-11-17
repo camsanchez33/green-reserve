@@ -2,6 +2,7 @@
 // cancel lead buckets, refill pairing, how a booking was made, the no-show report, stock value —
 // and that the routes are gated and read the ledger. No database. Run: npx tsx scripts/analytics-page-test.ts
 import { readFileSync } from 'fs';
+import { feeOnNoShow } from '../src/lib/cancel-policy';
 import { leadOf, howOf, refillsOf, noShowOf, stockOf, projectionsOf, type NsBooking } from '../src/lib/analytics-page';
 
 let failed = 0;
@@ -19,6 +20,12 @@ ok('online, card, fee', howOf({ source: 'online', cardSaved: true, feeOnNoShow: 
 ok('online, card, no fee', howOf({ source: 'online', cardSaved: true, feeOnNoShow: false }) === 'online_card_no_fee');
 ok('online, no card (a course with no fee saves none)', howOf({ source: 'online', cardSaved: false, feeOnNoShow: true }) === 'online_no_card');
 ok('phone and walk-in are the counter', howOf({ source: 'phone', cardSaved: false, feeOnNoShow: false }) === 'counter_no_card' && howOf({ source: 'walk_in', cardSaved: true, feeOnNoShow: true }) === 'counter_card' && howOf({ source: 'phone', cardSaved: true, feeOnNoShow: false }) === 'counter_card');
+
+// ── A fee that reaches a no-show (lib/cancel-policy feeOnNoShow, shared with lib/analytics.ts) ──
+ok('a no-show fee reaches a no-show', feeOnNoShow({ noShowFeeTotal: 500, cancellationFeeTotal: 0, lateFeeTimingAtBooking: 'late_cancel' }));
+ok('a hold kept at the cutoff does (and old bookings with no timing hold)', feeOnNoShow({ noShowFeeTotal: 0, cancellationFeeTotal: 2000, lateFeeTimingAtBooking: 'hold_at_cutoff' }) && feeOnNoShow({ noShowFeeTotal: 0, cancellationFeeTotal: 2000, lateFeeTimingAtBooking: null }));
+ok('"late cancel or no-show" does', feeOnNoShow({ noShowFeeTotal: 0, cancellationFeeTotal: 2000, lateFeeTimingAtBooking: 'late_cancel_or_no_show' }));
+ok('a plain late-cancel fee, or no fee, does not', !feeOnNoShow({ noShowFeeTotal: 0, cancellationFeeTotal: 2000, lateFeeTimingAtBooking: 'late_cancel' }) && !feeOnNoShow({ noShowFeeTotal: 0, cancellationFeeTotal: 0, lateFeeTimingAtBooking: 'hold_at_cutoff' }));
 
 // ── Refill pairing ──
 const T0 = Date.parse('2031-06-10T12:00:00Z');
