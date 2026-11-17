@@ -98,7 +98,9 @@ export async function buildActionQueue(now = new Date()): Promise<{ rows: Action
     const worst = [...byChat.entries()]
       .map(([chatId, ms]) => ({ chatId, signal: threadSignal(ms, now), last: ms.find(m => !m.isBroadcast) }))
       .filter(x => x.signal.overdue && x.last)
-      .sort((a, b) => (a.signal.dueAt?.getTime() ?? 0) - (b.signal.dueAt?.getTime() ?? 0))[0];
+      // Earliest due first; on the same due time (a Saturday and a Sunday message are both due on the same business
+      // day) the one whose last message is older has waited longest.
+      .sort((a, b) => (a.signal.dueAt?.getTime() ?? 0) - (b.signal.dueAt?.getTime() ?? 0) || (a.signal.lastHumanAt?.getTime() ?? 0) - (b.signal.lastHumanAt?.getTime() ?? 0))[0];
     if (!worst) return [];
     return [{
       id: `msg-${t.id}`, courseId: t.courseId, who: t.course.name, severity: 'warn' as const,
