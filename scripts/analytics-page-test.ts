@@ -2,7 +2,8 @@
 // cancel lead buckets, refill pairing, how a booking was made, the no-show report, stock value —
 // and that the routes are gated and read the ledger. No database. Run: npx tsx scripts/analytics-page-test.ts
 import { readFileSync } from 'fs';
-import { leadOf, howOf, refillsOf, noShowOf, stockOf, type NsBooking } from '../src/lib/analytics-page';
+import { leadOf, howOf, refillsOf, noShowOf, stockOf, noShowWithoutMoney, unfilledWithoutMoney, type NsBooking } from '../src/lib/analytics-page';
+import { can } from '../src/lib/session';
 
 let failed = 0;
 const ok = (l: string, c: boolean, d: unknown = '') => { console.log(`${c ? 'PASS' : 'FAIL'}  ${l}${c ? '' : ' — ' + JSON.stringify(d)}`); if (!c) failed++; };
@@ -99,6 +100,22 @@ const bk = (o: Partial<NsBooking> & { id: string }): NsBooking => ({
   ok('staff never get cost', staff.costValueCents === undefined && staff.notSelling.every(i => !('costValueCents' in i)) && staff.notSellingCostCents === undefined, staff);
 }
 
+// ── Money only with money.payments (Build 2026-11-17): a staff login with Analytics but not Payments ──
+{
+  const staff = { isStaff: true, permissions: ['analytics.view'] } as Parameters<typeof can>[0];
+  const owner = { isStaff: false, permissions: [] } as Parameters<typeof can>[0];
+  ok('a staff login with analytics.view alone can\'t see money; the owner can', !can(staff, 'money.payments') && can(owner, 'money.payments'));
+  const cents = (o: unknown): string[] => !o || typeof o !== 'object' ? [] : Object.entries(o as Record<string, unknown>).flatMap(([k, v]) => [...(/Cents$/.test(k) ? [k] : []), ...cents(v)]);
+  const now = T0 + 48 * H;
+  const full = noShowOf({ from: '2031-06-10', to: '2031-06-10' }, [bk({ id: 'x' }), bk({ id: 'y', status: 'cancelled', cancelledAt: at(-3) })], now, 24, new Map([['x', 500]]), new Map());
+  const bare = noShowWithoutMoney(full);
+  ok('No-shows without money: no cents field anywhere', cents(bare).length === 0 && cents(full).length > 0, cents(bare));
+  ok('…the counts and rates stay', bare.totals.noShows === 1 && bare.totals.ratePct === 100 && bare.refill.buckets.length === 4 && bare.lateCancels.spots === 2, bare);
+  const u = { slots: 1, openSpots: 2, lostCents: 9000, rows: [{ date: 'd', time: 't', open: 2, lostCents: 9000 }], worstHours: [{ hour: 8, slots: 1, open: 2, lostCents: 9000 }], worstDays: [{ dow: 'Mon', slots: 1, open: 2, lostCents: 9000 }] };
+  const ub = unfilledWithoutMoney(u);
+  ok('unsold spots without money: open spots, never their value', cents(ub).length === 0 && ub.openSpots === 2 && ub.rows[0].open === 2 && ub.worstHours[0].open === 2, ub);
+}
+
 // ── Routes: gated, this course, ledger money ──
 const read = (f: string) => readFileSync(f, 'utf8');
 for (const f of ['src/app/api/operator/analytics/no-shows/route.ts', 'src/app/api/operator/analytics/shop/route.ts', 'src/app/api/operator/analytics/route.ts']) {
@@ -106,7 +123,11 @@ for (const f of ['src/app/api/operator/analytics/no-shows/route.ts', 'src/app/ap
   ok(`${f}: signed in, analytics.view, the session's course`, s.includes('resolveDashboardSession()') && s.includes("requirePermission(session, 'analytics.view')") && s.includes('session.courseId'));
 }
 const main = read('src/app/api/operator/analytics/route.ts'), lib = read('src/lib/analytics-page.ts'), sales = read('src/app/api/operator/money/sales/route.ts');
-ok('Analytics returns the ledger headline', main.includes('ledgerHeadline(session.courseId, range)') && /compare, ledger \}/.test(main));
+ok('Analytics returns the ledger headline only with money.payments, and strips the unsold value without it', main.includes('ledgerHeadline(session.courseId, range)') && main.includes("const money = can(session, 'money.payments');") && /money \? \{ \.\.\.current, customers, headline: head, compare, ledger \}/.test(main) && main.includes('unfilled: unfilledWithoutMoney(current.unfilled)'));
+{ const noMoney = main.split(': { ...current, customers, unfilled: unfilledWithoutMoney')[1]?.split('\n')[0] ?? 'ledger';
+  ok('…and the branch without money.payments carries no ledger block', !noMoney.includes('ledger'), noMoney); }
+ok('No-shows money only with money.payments', read('src/app/api/operator/analytics/no-shows/route.ts').includes("can(session, 'money.payments') ? r : noShowWithoutMoney(r)"));
+ok('shop ledger money only with money.payments', read('src/app/api/operator/analytics/shop/route.ts').includes("...(can(session, 'money.payments') ? { ledgerSalesCents } : {})"));
 ok('the ledger headline is the Revenue page\'s own function, called the same way', /allSegments\(courseId, c\.tz, range, prev, now\)/.test(lib) && /allSegments\(session\.courseId, tz, a\.range, previousRange\(a\.range\)\)/.test(sales));
 ok('lib/analytics-page never sums money from lib/analytics.ts', !/computeAnalytics/.test(lib));
 ok('shop stock cost only for the owner', /stockValue\(session\.courseId, \{ cost: !session\.isStaff \}\)/.test(read('src/app/api/operator/analytics/shop/route.ts')));

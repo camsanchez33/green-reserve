@@ -108,6 +108,7 @@ async function cleanup() {
   const handGross = 10000 + 50000 + 1000 + 2000 + 2500 + 1000 + 5000; // course part of every course-account row in, May 1–30
   ok('Analytics Revenue equals the Revenue page\'s for the same dates', !!head && head.grossCents === revenueAll.grossCents && head.netCents === revenueAll.netCents && head.refundsCents === revenueAll.refundsCents, { head, revenueAll: { g: revenueAll.grossCents, n: revenueAll.netCents } });
   ok('…and its chart is the Revenue chart', !!head && JSON.stringify(head.series) === JSON.stringify(revenueAll.series));
+  ok('…and how it was paid is Revenue\'s all.paid', JSON.stringify(head?.paid) === JSON.stringify(revenueAll.paid) && head!.paid.cashCents === 10000, head?.paid);
   ok('…and it is the ledger: course money in by payment day, GreenReserve\'s fee and platform rows out, the other course out', head?.grossCents === handGross && head?.refundsCents === 2000, head);
   const tee = await computeAnalytics(c.id, range, now);
   ok('…and not lib/analytics.ts (tee-date money differs here: the May 10 round was paid in April)', tee.revenue.collectedCents !== head?.grossCents, { tee: tee.revenue.collectedCents, ledger: head?.grossCents });
