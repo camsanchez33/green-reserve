@@ -17,6 +17,7 @@ import { heldBy, ninesByProduct } from '@/lib/event-hold';
 import { eventMoney, reconcileStuckPayments, voidOpenLinks, settleOpenPayment, METHOD_LABEL, STALE_CHARGE_MS } from '@/lib/event-payments';
 import { EVENT_FEE_ON } from '@/lib/booking-fees';
 import { lapseHolds, signupSettings, moveOntoList, questionsOf } from '@/lib/event-signup';
+import { staffNotesOf, changeNotes, changeIncludes } from '@/lib/event-lists';
 
 // W2-9 Events: one event — its details, the tee times it holds, its checklist
 // and its players. Needs "Run events"; every write also needs the current
@@ -76,7 +77,7 @@ async function load(courseId: string, id: string) {
   const asPlanned = { ...event, status: 'planned' };
   const inScope = inWindow.filter(s => heldBy([asPlanned], s.productId ?? null, s.time, ninesOf(s.productId ?? null)));
   return {
-    event: { ...event, payments: event.payments.map(({ payToken, chargeStartedAt, ...p }) => ({ ...p, methodLabel: METHOD_LABEL[p.method] ?? p.method,
+    event: { ...event, staffNotes: staffNotesOf(event.staffNotes), payments: event.payments.map(({ payToken, chargeStartedAt, ...p }) => ({ ...p, methodLabel: METHOD_LABEL[p.method] ?? p.method,
       stuck: p.status === 'paying' && !!chargeStartedAt && Date.now() - chargeStartedAt.getTime() > STALE_CHARGE_MS,
       payUrl: p.status === 'open' && payToken ? `${process.env.NEXT_PUBLIC_URL}/pay/event/${p.id}?token=${payToken}` : null })) },
     // Only players on the list count toward the money (not the waiting list, or a sign-up still paying).
@@ -111,6 +112,8 @@ type Body = EventInput & {
   taskId?: string; label?: string; dueDate?: string | null; done?: boolean;
   playerId?: string; playerIds?: unknown; on?: boolean; text?: string; groupNo?: number | null; startHole?: number | null; size?: number;
   email?: unknown; phone?: unknown;
+  /** Events lists: a checklist step's how-to; a staff note; an included item by its place in the list. */
+  detail?: unknown; noteId?: unknown; topic?: unknown; note?: unknown; index?: unknown;
 };
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -159,7 +162,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         if (!label) return bad('Say what needs doing.');
         if (body.dueDate && !isDate(body.dueDate)) return bad('Pick a real due date.');
         const last = await prisma.courseEventTask.findFirst({ where: { eventId: id }, orderBy: { sortOrder: 'desc' }, select: { sortOrder: true } });
-        await prisma.courseEventTask.create({ data: { eventId: id, label, dueDate: body.dueDate || null, sortOrder: (last?.sortOrder ?? -1) + 1 } });
+        await prisma.courseEventTask.create({ data: { eventId: id, label, detail: String(body.detail ?? '').trim().slice(0, 1000), dueDate: body.dueDate || null, sortOrder: (last?.sortOrder ?? -1) + 1 } });
         break;
       }
       case 'task_edit': case 'task_toggle': case 'task_remove': {
@@ -172,8 +175,29 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           const label = String(body.label ?? '').trim().slice(0, 200);
           if (!label) return bad('Say what needs doing.');
           if (body.dueDate && !isDate(body.dueDate)) return bad('Pick a real due date.');
-          await prisma.courseEventTask.update({ where: { id: task.id }, data: { label, dueDate: body.dueDate || null } });
+          await prisma.courseEventTask.update({ where: { id: task.id }, data: { label, dueDate: body.dueDate || null, ...(body.detail !== undefined ? { detail: String(body.detail ?? '').trim().slice(0, 1000) } : {}) } });
         }
+        break;
+      }
+
+      // Events lists (Cam 2026-11-17): the event's notes for staff and what's included, each line added, changed or removed.
+      case 'note_add': case 'note_edit': case 'note_remove':
+      case 'include_add': case 'include_edit': case 'include_remove': {
+        const how = body.action.endsWith('_add') ? 'add' as const : body.action.endsWith('_edit') ? 'edit' as const : 'remove' as const;
+        // Read and write under a lock on the event, so two people editing at once can't lose a line.
+        const r = await prisma.$transaction(async tx => {
+          await tx.$queryRaw`SELECT id FROM "CourseEvent" WHERE id = ${id} AND "courseId" = ${courseId} FOR UPDATE`;
+          const cur = await tx.courseEvent.findUniqueOrThrow({ where: { id }, select: { staffNotes: true, includes: true } });
+          if (body.action!.startsWith('note_')) {
+            const n = changeNotes(staffNotesOf(cur.staffNotes), how, body);
+            if (n.ok) await tx.courseEvent.update({ where: { id }, data: { staffNotes: n.value } });
+            return n;
+          }
+          const n = changeIncludes(cur.includes, how, body);
+          if (n.ok) await tx.courseEvent.update({ where: { id }, data: { includes: n.value } });
+          return n;
+        });
+        if (!r.ok) return bad(r.error, r.status);
         break;
       }
 
