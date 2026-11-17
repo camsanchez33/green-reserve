@@ -231,7 +231,7 @@ export function IncidentDialog({ id, onClose, onAct, busy, errors, version }: {
     );
   }
   const [label, cls] = statusOf(inc.status);
-  const proposal = inc.status === 'needs_you' ? inc.proposal : null;
+  const proposal = inc.proposal ?? null;
   return (
     <Dialog labelId={titleId} onClose={onClose} busy={anyBusy}>
       <h4 id={titleId}>{inc.title}</h4>
@@ -261,6 +261,7 @@ export function IncidentDialog({ id, onClose, onAct, busy, errors, version }: {
       <div className={ss.iblk}><b>Who was affected</b><p>{inc.affected}</p></div>
       <div className={ss.iblk}><b>Fixed?</b><p>{FIXED_HOW[inc.fixed] ?? ''}</p></div>
       {proposal && <div className={ss.iblk}><b>Waiting for your OK</b><p>{proposal.text}</p></div>}
+      {loadErr && <Msg ok={false}>{loadErr}</Msg>}
       {errors[approveKey] && <Msg ok={false}>{errors[approveKey]}</Msg>}
       <div className={s.line}>
         {proposal && <button type="button" className={s.lnk} disabled={anyBusy} onClick={async () => { if (await onAct({ kind: 'decline', incidentId: id })) onClose(); }}>Not now</button>}
