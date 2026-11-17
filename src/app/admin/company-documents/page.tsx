@@ -129,7 +129,7 @@ export default function CompanyDocumentsPage() {
         <AddBox onClose={() => setOpen(null)} onUpload={() => setOpen({ kind: 'upload', replacing: null })} onLabel={() => setOpen({ kind: 'label', label: null })} />
       )}
       {open?.kind === 'upload' && (
-        <UploadBox labels={labels} replacing={open.replacing} sendLabel={ownLabels} onClose={() => setOpen(null)} onDone={done} />
+        <UploadBox labels={labels} replacing={open.replacing} sendLabel={ownLabels} onClose={() => setOpen(null)} onDone={done} onStored={load} />
       )}
       {open?.kind === 'doc' && (
         <DocBox doc={open.doc} labels={labels} canRelabel={ownLabels} onClose={() => setOpen(null)}
@@ -142,7 +142,8 @@ export default function CompanyDocumentsPage() {
       {open?.kind === 'filter' && (
         <FilterBox labels={labels} value={filtered} onClose={() => setOpen(null)} onPick={k => { setOnly(k); setOpen(null); }} />
       )}
-      {toast && <div className={c.toast} role="status">{toast}</div>}
+      {/* Always mounted, so screen readers hear the text change. */}
+      <div className={`${c.toast} ${toast ? '' : c.hide}`} role="status">{toast}</div>
     </>
   );
 }

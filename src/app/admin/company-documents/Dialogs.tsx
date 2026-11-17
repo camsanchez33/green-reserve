@@ -29,7 +29,7 @@ function Box({ label, onClose, busy, children, wide }: { label: string; onClose:
   const host = typeof document !== 'undefined' ? (document.querySelector('[data-admin-shell]') ?? document.body) : null;
   if (!host) return null;
   return createPortal(
-    <div className={s.ov} onClick={e => { if (e.target === e.currentTarget && !busy) onClose(); }}>
+    <div className={c.ov} onClick={e => { if (e.target === e.currentTarget && !busy) onClose(); }}>
       <div ref={ref} className={`${g.glass} ${s.modal} ${c.box} ${wide ? c.wide : ''}`} role="dialog" aria-modal="true" aria-label={label}>
         {children}
       </div>
@@ -73,8 +73,9 @@ export function AddBox({ onClose, onUpload, onLabel }: { onClose: () => void; on
  * Same path as before: the browser sends the file straight to private storage with a one-time permit, then the
  * route records it. A replace or a label rides along in that record call.
  */
-export function UploadBox({ labels, replacing, sendLabel, onClose, onDone }: {
+export function UploadBox({ labels, replacing, sendLabel, onClose, onDone, onStored }: {
   labels: Label[]; replacing: Doc | null; sendLabel: boolean; onClose: () => void; onDone: (msg: string) => void | Promise<void>;
+  onStored: () => void | Promise<void>;
 }) {
   const [label, setLabel] = useState(replacing ? labelOf(replacing) : labels[0]?.key ?? 'formation');
   const [file, setFile] = useState<File | null>(null);
@@ -109,7 +110,7 @@ export function UploadBox({ labels, replacing, sendLabel, onClose, onDone }: {
     if (replacing?.id) body.replaces = replacing.id;
     const rec = await adminFetch('/api/admin/company-documents', { method: 'POST', body: JSON.stringify(body), subject: 'the document', action: 'save' });
     setBusy(false);
-    if (!rec.ok) { setError(`${rec.message} The file may be stored; reload to check before uploading again.`); return; }
+    if (!rec.ok) { setError(`${rec.message} The file may be stored; the list has been reloaded, so check it before uploading again.`); await onStored(); return; }
     await onDone(replacing
       ? (replacing.version ? `Replaced. The old file is kept as version ${replacing.version}.` : 'Replaced.')
       : `Saved “${file.name}”.`);
@@ -183,7 +184,7 @@ export function DocBox({ doc, labels, canRelabel, onClose, onReplace, onChanged 
 
   if (view === 'delete') {
     return (
-      <Box label={`Delete ${doc.name}`} onClose={() => setView('info')} busy={busy}>
+      <Box key={view} label={`Delete ${doc.name}`} onClose={() => setView('info')} busy={busy}>
         <h4>Delete “{doc.name}” for good?</h4>
         <p>It can’t be recovered{doc.version && doc.version > 1 ? ', and its earlier versions go with it' : ''}.</p>
         {error && <Msg ok={false}>{error}</Msg>}
@@ -198,7 +199,7 @@ export function DocBox({ doc, labels, canRelabel, onClose, onReplace, onChanged 
 
   if (view === 'move') {
     return (
-      <Box label="Change label" onClose={() => setView('info')} busy={busy} wide>
+      <Box key={view} label="Change label" onClose={() => setView('info')} busy={busy} wide>
         <h4 id="cd-mv-t">Change label</h4>
         <LabelTiles labels={labels} value={moveTo} onPick={setMoveTo} disabled={busy} labelledBy="cd-mv-t" />
         {error && <Msg ok={false}>{error}</Msg>}
@@ -212,7 +213,7 @@ export function DocBox({ doc, labels, canRelabel, onClose, onReplace, onChanged 
   }
 
   return (
-    <Box label={doc.name} onClose={onClose}>
+    <Box key={view} label={doc.name} onClose={onClose}>
       <h4>{doc.name}</h4>
       <dl className={c.dl}>
         <div><dt>Label</dt><dd>{labelName}</dd></div>

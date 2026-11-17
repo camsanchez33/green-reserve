@@ -39,7 +39,8 @@
 .muted { margin: 10px 0 0; font-size: 13px; color: var(--g-muted); }
 .problem { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 12px 14px; font-size: 13.5px; color: var(--g-down); max-width: 1080px; }
 
-/* Boxes */
+/* Boxes. Below the layout's reason and step-up dialogs (z 50), as Team's is: a delete asks for a reason. */
+.ov { position: fixed; inset: 0; background: rgba(4, 12, 9, .6); display: grid; place-items: center; z-index: 40; padding: 20px; }
 .box { color: var(--g-ink); max-height: calc(100dvh - 40px); overflow: auto; box-sizing: border-box; }
 .wide { width: min(560px, 100%); }
 .form { display: flex; flex-direction: column; gap: 12px; }
