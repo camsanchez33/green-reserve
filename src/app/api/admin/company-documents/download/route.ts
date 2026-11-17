@@ -3,6 +3,7 @@ import { get } from '@vercel/blob';
 import { resolveAdminSession, requireRole, OWNER_ONLY, ownerGateError, areaGate } from '@/lib/admin-session';
 import { privateBlobToken, PRIVATE_STORAGE_MISSING } from '@/lib/private-blob';
 import { describeCompanyPath, companyDocPathOf } from '@/lib/company-documents';
+import { auditOpen } from '@/lib/company-documents-ops';
 
 // CO-DOCS: company documents are private blobs, so they are only ever served
 // through here — owner session with 2FA, then a stream. The path is checked,
@@ -25,6 +26,8 @@ export async function GET(req: NextRequest) {
   if (!result || result.statusCode !== 200 || !result.stream) {
     return NextResponse.json({ error: 'Document not found in storage' }, { status: 404 });
   }
+  // Company docs data (Cam 2026-11-17): every open is in the document's history.
+  await auditOpen(session, pathname);
   const { name } = describeCompanyPath(pathname);
   return new NextResponse(result.stream, {
     headers: {

@@ -81,7 +81,14 @@ Support (chats) · Light parity. Specs: ADMIN_REDO_SPEC "Course dashboard Home",
    - **Bad weather.** "Delayed start" (was Frost delay) asks why: frost, fog, wet course or other. "Close for weather" is a four-step walkthrough that previews every group's new time, or what each group gets back under the cancellation policy, before anything moves. Close needs a checkbox before the final button.
    - **Past alerts** sit in a dropdown.
    - **Build first.** Delayed start and Close for weather MUST run through the tee sheet's existing server code (frost-delay, weather-cancel), not a second copy. Conditions (add/delete, extra fields) and past alerts need data.
-8. **Next mockup with Cam:** Team (dashboard), https://claude.ai/artifact/L2SZ76WpfdZMx4krCiubf1.
+8. **Team — APPROVED** (Cam 2026-11-17, "we are all good"). Mockup `lanes/dashboard/team-mockup.html` (https://claude.ai/artifact/L2SZ76WpfdZMx4krCiubf1) and its threads are the spec. Team is a new rail item under Business.
+   - **One view:** roles in rank order, each with its people listed under it as compact rows.
+   - **A new course starts with only Owner,** plus Suggested roles the owner can add (never pre-created).
+   - **A Roles tab** sets what each role can access. A person's own page adjusts their access too.
+   - **Invite** asks for name, email and an optional phone, and sends a full welcome email.
+   - **Reset password** emails a link (no temporary password).
+   - **Build adds:** editable roles, invite by email, reset links, last active.
+   - **Challenge noted for review:** a role edit changes everyone in it, so the role editor must say how many people it affects before saving.
 
 ## Small follow-ups (do with the next PR that touches the file)
 - `StockTab` side card goes solid at lg after a tap: use `max-lg:fixed max-lg:inset-0`.

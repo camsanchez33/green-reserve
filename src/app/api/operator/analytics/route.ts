@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, requirePermission, can } from '@/lib/session';
 import { todayIn, addDaysStr } from '@/lib/course-time';
 import { computeAnalytics, headline, previousRange, type Range } from '@/lib/analytics';
+import { ledgerHeadline, analyticsWithoutMoney } from '@/lib/analytics-page';
 
 // AN-1: the operator Analytics tab. GET ?from=YYYY-MM-DD&to=YYYY-MM-DD
 // (course-local, inclusive; default the last 30 days) &compare=1 for the
@@ -28,7 +29,9 @@ export async function GET(req: NextRequest) {
   const span = (Date.parse(range.to) - Date.parse(range.from)) / 86400000 + 1;
   if (!Number.isFinite(span) || span > MAX_DAYS) return NextResponse.json({ error: `Pick a range of ${MAX_DAYS} days or fewer.` }, { status: 400 });
 
-  const current = await computeAnalytics(session.courseId, range);
+  // Analytics page (Cam 2026-11-17): the Revenue tile and chart read `ledger` — the Revenue page's own figure
+  // (lib/revenue-extras allSegments), so the two pages can't disagree. revenue.* (tee-date) stays for older readers.
+  const [current, ledger] = await Promise.all([computeAnalytics(session.courseId, range), ledgerHeadline(session.courseId, range)]);
   // DENSE-1: the previous period's series too, for the dashed line under the chart.
   const before = sp.get('compare') === '1' ? await computeAnalytics(session.courseId, previousRange(range)) : null;
   const compare = before ? { range: before.range, headline: headline(before), series: before.revenue.series } : null;
@@ -39,5 +42,11 @@ export async function GET(req: NextRequest) {
     goneQuiet: current.customers.goneQuiet.map(r => ({ ...r, email: '', phone: '' })),
     segments: { ...current.customers.segments, rows: current.customers.segments.rows.map(r => ({ ...r, key: '', email: '', phone: '' })) },
   };
-  return NextResponse.json({ ...current, customers, headline: headline(current), compare }, { headers: { 'Cache-Control': 'no-store' } });
+  // Analytics page (Cam 2026-11-17, through Build): money only with money.payments (the Revenue page's gate) — the
+  // ledger block and the value of unsold spots are left out for a login without it. The page hides; this is the control.
+  const money = can(session, 'money.payments');
+  const head = headline(current);
+  const body = { ...current, customers, headline: head, compare, ledger };
+  const out = money ? body : analyticsWithoutMoney(body);
+  return NextResponse.json(out, { headers: { 'Cache-Control': 'no-store' } });
 }

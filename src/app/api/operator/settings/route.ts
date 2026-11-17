@@ -81,6 +81,9 @@ export async function PATCH(req: NextRequest) {
     'brandColor','establishedYear','giftCardUrl',
     // PERS-1: the golfer-facing note on the confirmation page and email.
     'confirmationNote',
+    // Settings data (Cam 2026-11-17): the course's own parts of the confirmation email
+    // (dress code is 'dresscode' above). The policy wording is never editable here.
+    'confirmationArrival','confirmationParking','confirmationContact',
   ];
   // SD-1: this used to copy every allow-listed key straight into the row —
   // negative hole counts, a 40KB description, a javascript: gift-card URL that

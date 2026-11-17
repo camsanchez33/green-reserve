@@ -55,9 +55,10 @@ async function main() {
   }
   // 9:00 — booked 4, turned up 3 (short-show), fee policy on, paid at the counter.
   const t9 = await tt('09:00', 4);
-  await bk(t9.id, { status: 'completed', paymentStatus: 'paid_offline', checkedInAt: new Date('2030-11-06T09:00:00Z'), checkedInPlayers: 3, cancellationFeeApplies: true, greenFeeTotal: 15000, totalAmount: 15000 });
+  await bk(t9.id, { status: 'completed', paymentStatus: 'paid_offline', checkedInAt: new Date('2030-11-06T09:00:00Z'), checkedInPlayers: 3, stripePaymentMethodId: 'pm_w', stripeCustomerId: 'cus_w', cancellationFeeTotal: 1000, lateFeeTimingAtBooking: 'hold_at_cutoff', greenFeeTotal: 15000, totalAmount: 15000 });
   // 10:00 — a no-show WITH a fee policy; 11:00 — a no-show without one.
-  const t10 = await tt('10:00', 4); await bk(t10.id, { cancellationFeeApplies: true });
+  // As a live hold-policy booking really is: a card, a late fee stamped, cancellationFeeApplies false.
+  const t10 = await tt('10:00', 4); await bk(t10.id, { stripePaymentMethodId: 'pm_w', stripeCustomerId: 'cus_w', cancellationFeeTotal: 1000, lateFeeTimingAtBooking: 'hold_at_cutoff' });
   const t11 = await tt('11:00', 4); await bk(t11.id, {});
   // 12:00 — called off for weather; 13:00 — the golfer cancelled.
   const t12 = await tt('12:00', 0);

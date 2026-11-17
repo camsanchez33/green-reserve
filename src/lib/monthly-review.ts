@@ -3,8 +3,10 @@
 // metrics … the AI doesn't make up numbers but it can interpret them").
 //
 // One review per course per month, of the month before, in the course's own
-// timezone. Every number comes from computeAnalytics() (lib/analytics.ts) and
-// is computed HERE — including every difference the text may quote (vs last
+// timezone. Every number comes from computeAnalytics() (lib/analytics.ts) — except
+// money, which is the ledger's (Analytics page, Cam 2026-11-17): Revenue is the Revenue page's own figure
+// (lib/revenue-extras allSegments) and fees are ledger rows (lib/analytics-page noShowReport), never
+// analytics.ts money sums. Reports written before 2026-11-17 keep their text. Every number is computed HERE — including every difference the text may quote (vs last
 // month, vs the baseline). The model only writes words around them, through a
 // forced tool call, and validateNumbers() rejects any text that carries a
 // number it was not given. A rejected draft is retried once with the offending
@@ -18,6 +20,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { prisma } from './prisma';
 import { computeAnalytics, headline, type Analytics, type Range } from './analytics';
+import { noShowReport, ledgerMonth, type NoShowReport, type LedgerMonth } from './analytics-page';
 import { todayIn, isValidTimezone, DEFAULT_TZ } from './course-time';
 import { sendMonthlyReviewEmail } from './email';
 
@@ -55,17 +58,43 @@ const hourLabel = (h: number) => `${h % 12 || 12}${h < 12 ? 'am' : 'pm'}`;
 const diff = (a: number | null, b: number | null) => (a == null || b == null ? null : Math.round((a - b) * 10) / 10);
 
 type Headline = ReturnType<typeof headline>;
+
+/**
+ * The ledger (MoneyMove) began on 2026-10-30 (migration 20261030020000_money_ledger) with no backfill: a month
+ * before November 2026 isn't in it in full, so its money is unknown — never read as $0. Such a month gets no
+ * ledger facts, no revenue change, and blank money rows in By area.
+ */
+export const LEDGER_FIRST_FULL_MONTH = '2026-11';
+export const ledgerCovers = (month: string) => month >= LEDGER_FIRST_FULL_MONTH;
+
+const ledgerFacts = (l: LedgerMonth | null) => !l ? {} : ({
+  revenueDollars: dollars(l.grossCents), refundsDollars: dollars(l.refundsCents), teeAndCartDollars: dollars(l.teeCartCents),
+  proShopDollars: dollars(l.proShopCents), eventDollars: dollars(l.eventCents), duesDollars: dollars(l.duesCents),
+});
+
+/** "By area" in the written report: this month against the month before, stored with the review. */
+export type AreaRow = { key: 'rounds' | 'fill' | 'revenue' | 'no_show_rate' | 'pro_shop'; label: string; unit: 'count' | 'pct' | 'cents'; thisMonth: number | null; lastMonth: number | null };
+export function byAreaOf(cur: { h: Headline; l: LedgerMonth | null }, prev: { h: Headline; l: LedgerMonth | null } | null): AreaRow[] {
+  return [
+    { key: 'rounds', label: 'Rounds played', unit: 'count', thisMonth: cur.h.roundsPlayed, lastMonth: prev?.h.roundsPlayed ?? null },
+    { key: 'fill', label: 'Tee sheet filled', unit: 'pct', thisMonth: cur.h.fillPct, lastMonth: prev?.h.fillPct ?? null },
+    { key: 'revenue', label: 'Revenue', unit: 'cents', thisMonth: cur.l?.grossCents ?? null, lastMonth: prev?.l?.grossCents ?? null },
+    { key: 'no_show_rate', label: 'No-show rate', unit: 'pct', thisMonth: cur.h.noShowPct, lastMonth: prev?.h.noShowPct ?? null },
+    { key: 'pro_shop', label: 'Pro shop sales', unit: 'cents', thisMonth: cur.l?.proShopCents ?? null, lastMonth: prev?.l?.proShopCents ?? null },
+  ];
+}
+
 function money(h: Headline) {
   return {
-    collectedDollars: dollars(h.collectedCents), expectedDollars: dollars(h.expectedCents),
     fillPct: h.fillPct,
     noShowPct: h.noShowPct, cancelPct: h.cancelPct, bookings: h.bookings,
     customers: h.customers, returningCustomerPct: h.returningPct, avgDaysBookedAhead: h.avgLeadDays,
   };
 }
-function changes(cur: Headline, then: Headline) {
+function changes(cur: Headline, then: Headline, curL: LedgerMonth | null, thenL: LedgerMonth | null) {
   return {
-    collectedDollars: dollars(cur.collectedCents - then.collectedCents),
+    // Only when the ledger covers both months; otherwise the change is unknown and left out.
+    ...(curL && thenL ? { revenueDollars: dollars(curL.grossCents - thenL.grossCents) } : {}),
     fillPctPoints: diff(cur.fillPct, then.fillPct),
     noShowPctPoints: diff(cur.noShowPct, then.noShowPct),
     cancelPctPoints: diff(cur.cancelPct, then.cancelPct),
@@ -78,30 +107,31 @@ export type ReviewFacts = ReturnType<typeof buildFacts>;
 
 export function buildFacts(
   month: string, a: Analytics,
-  prev: { month: string; a: Analytics } | null,
-  baseline: { month: string; headline: Headline } | null,
+  prev: { month: string; a: Analytics; ledger: LedgerMonth | null } | null,
+  baseline: { month: string; headline: Headline; ledger: LedgerMonth | null } | null,
+  ledger: LedgerMonth | null, ns: Pick<NoShowReport, 'totals' | 'lateCancels'>,
 ) {
   const cur = headline(a);
   return {
     month: monthLabel(month),
     isBaseline: !baseline,
     thinSample: a.behavior.bookings < THIN_BOOKINGS,
-    thisMonth: money(cur),
-    // Owed = played and not paid (lib/analytics outstanding); no-shows are counted apart.
-    revenueStillOwedDollars: dollars(a.revenue.outstandingCents),
-    noShowsNotPaidDollars: dollars(a.revenue.noShowUnpaidCents),
+    // Money is the ledger's: what was paid this month (the course's part), as the Revenue page shows it.
+    thisMonth: { ...money(cur), ...ledgerFacts(ledger) },
     fillByDayOfWeek: a.utilization.byDow.filter(d => d.sale > 0).map(d => ({ day: d.dow, fillPct: d.fillPct })),
     fillByHour: a.utilization.byHour.filter(h => h.sale > 0).map(h => ({ hour: hourLabel(h.hour), fillPct: h.fillPct })),
     worstUnsoldHours: a.unfilled.worstHours.map(h => ({ hour: hourLabel(h.hour), openSpots: h.open })),
     worstUnsoldDays: a.unfilled.worstDays.slice(0, 3).map(d => ({ day: d.dow, openSpots: d.open })),
-    noShows: { count: a.noShows.count, lostDollars: dollars(a.noShows.impactCents), golfersWhoNoShowedMoreThanOnce: a.noShows.repeat.length },
-    cancellations: { count: a.cancellations.count, lateFeesKeptDollars: dollars(a.cancellations.lateFeesKeptCents), rebookedPct: a.cancellations.rebookedPct },
+    // Booked value = what the missed rounds were priced at (money that never moved); fees are ledger money.
+    // Fees are ledger money: only for a month the ledger covers (never $0 for one it doesn't).
+    noShows: { count: a.noShows.count, bookedValueDollars: dollars(ns.totals.lostValueCents), ...(ledger ? { feesRecoveredDollars: dollars(ns.totals.recoveredCents) } : {}), golfersWhoNoShowedMoreThanOnce: a.noShows.repeat.length },
+    cancellations: { count: a.cancellations.count, ...(ledger ? { lateFeesKeptDollars: dollars(ns.lateCancels.feesCents) } : {}), rebookedPct: a.cancellations.rebookedPct },
     bookingsBy: { online: a.behavior.channel.online ?? 0, phone: a.behavior.channel.phone ?? 0, walkIn: a.behavior.channel.walk_in ?? 0 },
     // Word keys: digits in a key would count as numbers the text may use.
     bookedAhead: { sameDay: a.behavior.lead.sameDay, oneOrTwoDays: a.behavior.lead.d1to2, threeToSevenDays: a.behavior.lead.d3to7, oneToTwoWeeks: a.behavior.lead.d8to14, overTwoWeeks: a.behavior.lead.d15plus },
     activeMembers: a.customers.members.active,
-    lastMonth: prev ? { month: monthLabel(prev.month), ...money(headline(prev.a)), change: changes(cur, headline(prev.a)) } : null,
-    baseline: baseline ? { month: monthLabel(baseline.month), ...money(baseline.headline), changeFromBaseline: changes(cur, baseline.headline) } : null,
+    lastMonth: prev ? { month: monthLabel(prev.month), ...money(headline(prev.a)), ...ledgerFacts(prev.ledger), change: changes(cur, headline(prev.a), ledger, prev.ledger) } : null,
+    baseline: baseline ? { month: monthLabel(baseline.month), ...money(baseline.headline), ...ledgerFacts(baseline.ledger), changeFromBaseline: changes(cur, baseline.headline, ledger, baseline.ledger) } : null,
   };
 }
 
@@ -209,9 +239,15 @@ export async function runMonthlyReview(courseId: string, now: Date = new Date(),
   });
   const a = await computeAnalytics(courseId, monthRange(month), now);
   const prevMonth = previousMonth(`${month}-01`);
-  const prev = isFullMonth(course.firstWentLiveAt, prevMonth, tz) ? { month: prevMonth, a: await computeAnalytics(courseId, monthRange(prevMonth), now) } : null;
-  const baseline = baselineRow ? { month: baselineRow.month, headline: (baselineRow.metrics as { headline: Headline }).headline } : null;
-  const facts = buildFacts(month, a, prev, baseline);
+  // The ledger is append-only, so a past month's money read now is what it was (the baseline's included) — for a
+  // month it covers in full. A month before it is unknown money, never $0 (LEDGER_FIRST_FULL_MONTH).
+  const ledgerOf = (m: string) => (ledgerCovers(m) ? ledgerMonth(courseId, tz, m, now) : Promise.resolve(null));
+  const prev = isFullMonth(course.firstWentLiveAt, prevMonth, tz) ? { month: prevMonth, a: await computeAnalytics(courseId, monthRange(prevMonth), now), ledger: await ledgerOf(prevMonth) } : null;
+  const baseline = baselineRow ? { month: baselineRow.month, headline: (baselineRow.metrics as { headline: Headline }).headline, ledger: await ledgerOf(baselineRow.month) } : null;
+  const [ledger, ns] = await Promise.all([ledgerOf(month), noShowReport(courseId, monthRange(month), now)]);
+  const nsFacts = ns ?? { totals: { bookings: 0, noShows: 0, ratePct: null, lostValueCents: 0, recoveredCents: 0, lateCancelLostValueCents: 0, lateCancelRecoveredCents: 0, lateCancelNetCents: 0, netCents: 0 }, lateCancels: { spots: 0, lostValueCents: 0, refilledSpots: 0, refilledCents: 0, feesCents: 0, netCents: 0 } };
+  const facts = buildFacts(month, a, prev, baseline, ledger, nsFacts);
+  const byArea = byAreaOf({ h: headline(a), l: ledger }, prev ? { h: headline(prev.a), l: prev.ledger } : null);
 
   let body: ReviewBody | null = null;
   let error = '';
@@ -231,7 +267,7 @@ export async function runMonthlyReview(courseId: string, now: Date = new Date(),
   const status = body ? (facts.thinSample ? 'thin' : 'written') : 'failed';
   const data = {
     isBaseline: !baseline, status, model: REVIEW_MODEL, error: error || null,
-    metrics: { headline: headline(a), facts } as object,
+    metrics: { headline: headline(a), ledger, byArea, facts } as object,
     body: body ? JSON.stringify(body) : null,
   };
   await prisma.monthlyReview.upsert({ where: { courseId_month: { courseId, month } }, create: { courseId, month, ...data }, update: data });

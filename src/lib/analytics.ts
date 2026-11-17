@@ -64,6 +64,7 @@ import { teeToUtcMs } from './tee-time-utils';
 import { PLACEHOLDER_EMAIL_DOMAIN } from './email';
 import { golferKey } from './golfer-key';
 import { golferSegments } from './golfer-segments';
+import { feeOnNoShow } from './cancel-policy';
 
 /** EV-1's event log went live on this day; metrics that need it start here. */
 export const EVENT_LOG_START = '2026-10-01';
@@ -72,6 +73,9 @@ export const NO_SHOW_GRACE_MIN = 30;
 export const RES_START = '2026-10-19';
 
 const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+/** A member tier's rate on a booking (appliedRate holds the tier's name); every other rate is public. */
+const PUBLIC_RATES = new Set(['standard', 'resident', 'senior', 'junior', 'pack']);
+const memberRate = (r: string) => !!r && !PUBLIC_RATES.has(r);
 
 export type Range = { from: string; to: string };
 
@@ -105,14 +109,14 @@ async function load(courseId: string, range: Range) {
   const teeTimes = await prisma.teeTime.findMany({
     where: { courseId, date: { gte: range.from, lte: range.to } },
     select: {
-      id: true, date: true, time: true, status: true, playersAvailable: true, playersBooked: true, greenFeeCents: true, cartFeeCents: true,
+      id: true, date: true, time: true, status: true, playersAvailable: true, playersBooked: true, greenFeeCents: true, cartFeeCents: true, tierName: true,
       bookings: {
         select: {
           id: true, status: true, paymentStatus: true, players: true, checkedInPlayers: true, checkedInAt: true, noShowAt: true,
           greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, accessFeeTotal: true, cancellationFeeTotal: true,
           cancelledAt: true, createdAt: true, source: true, splitFromId: true, golferName: true, golferEmail: true, golferPhone: true, golferAccountId: true,
           // W2-8: residents (RES-1) and whether the booking carried a fee policy.
-          residentPlayers: true, residentRateCents: true, cancellationFeeApplies: true, appliedRate: true,
+          residentPlayers: true, residentRateCents: true, cancellationFeeApplies: true, lateFeeTimingAtBooking: true, appliedRate: true,
           // W2-8 (4): pro-shop items added to the round (POS-1a), before tax.
           shopTotalCents: true, shopTaxCents: true,
           // STRESS-1110 #15: a no-show is owed only when there's a card and a no-show fee to charge.
@@ -217,10 +221,13 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
   const byWeek = daysBetween(range.from, range.to) > 45;
   const bucketOf = (date: string) => (byWeek ? weekOf(date) : date);
   // DENSE-1: rounds and spots per bucket too, so the chart can plot all four headline numbers.
-  const series = new Map<string, { expected: number; collected: number; rounds: number; sale: number; booked: number }>();
+  const series = new Map<string, { expected: number; collected: number; rounds: number; sale: number; booked: number; bookings: number }>();
   for (let d = range.from; d <= range.to && d <= today; d = addDaysStr(d, 1)) {
-    const k = bucketOf(d); if (!series.has(k)) series.set(k, { expected: 0, collected: 0, rounds: 0, sale: 0, booked: 0 });
+    const k = bucketOf(d); if (!series.has(k)) series.set(k, { expected: 0, collected: 0, rounds: 0, sale: 0, booked: 0, bookings: 0 });
   }
+  // Analytics page (Cam 2026-11-17): bookings made per bucket by tee date, for the Bookings chart. The series stops at
+  // today, so for a range reaching past today it sums to less than behavior.bookings.
+  for (const b of made) { const r = series.get(bucketOf(b.date)); if (r) r.bookings++; }
   for (const b of pastMoney) { const r = series.get(bucketOf(b.date)); if (r) r.expected += share(b); }
   for (const b of collectedB) { const r = series.get(bucketOf(b.date)); if (r) { r.collected += kept(b); if (b.status === 'completed') r.rounds += b.checkedInPlayers ?? b.players; } }
   // DENSE-2: the same collected course share, by the tee time's weekday and hour (Money's sales charts).
@@ -245,6 +252,9 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
   const collectedByTeeTime = new Map<string, number>();
   for (const b of collectedB) collectedByTeeTime.set(b.teeTimeId, (collectedByTeeTime.get(b.teeTimeId) ?? 0) + kept(b));
   let sale = 0, bookedSpots = 0;
+  // Analytics page (Cam 2026-11-17): spots sold at twilight against the rest — a twilight time is one whose
+  // price tier is named twilight (the schedule's own name, as lib/normalize-course reads it).
+  const tw = { sale: 0, booked: 0 }, std = { sale: 0, booked: 0 };
   // ACC-1: players booked of spots by ONE rule (lib/day-fill) — the tee sheet's strip, Home and the Calendar use it
   // too. Live players from the bookings (not the playersBooked counter); a blocked time with a group on it counts as
   // exactly that group; a time is never more than full.
@@ -254,6 +264,7 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
     const spots = timeSpots(t, booked);
     const h = Number(t.time.slice(0, 2)), w = dowOf(t.date);
     sale += spots; bookedSpots += booked;
+    { const g = /twilight/i.test(t.tierName) ? tw : std; g.sale += spots; g.booked += booked; }
     for (const [m, k] of [[byDay, t.date], [byHour, h], [heat, `${w}-${h}`]] as const) {
       const map = m as Map<string | number, ReturnType<typeof agg>>;
       if (!map.has(k)) map.set(k, agg());
@@ -291,10 +302,12 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
   }
 
   // ── 5. Cancellations ─────────────────────────────────────────────────────
-  const cancelEvents = await prisma.bookingEvent.findMany({
-    where: { courseId, type: 'booking_cancelled' satisfies BookingEventType, bookingId: { in: cancelled.map(b => b.id) } },
+  // In chunks: Postgres takes at most 32,767 bound values per statement (a busy course over a long range).
+  const cancelIds = cancelled.map(b => b.id);
+  const cancelEvents = (await Promise.all(Array.from({ length: Math.ceil(cancelIds.length / 10_000) }, (_, i) => prisma.bookingEvent.findMany({
+    where: { courseId, type: 'booking_cancelled' satisfies BookingEventType, bookingId: { in: cancelIds.slice(i * 10_000, i * 10_000 + 10_000) } },
     select: { bookingId: true, actorType: true, metadata: true },
-  });
+  })))).flat();
   const cancelActor = new Map(cancelEvents.map(e => [e.bookingId, e.actorType]));
   // W2-8 (8): rounds the COURSE called off (weather, a closure) are not golfers
   // cancelling — counted on their own and left out of the cancellation rate.
@@ -321,8 +334,11 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
   const checkedIn = pastLive.filter(b => b.checkedInAt);
   const shortShows = checkedIn.filter(b => b.checkedInPlayers != null && b.checkedInPlayers < b.players);
   const policy = (fee: boolean) => {
-    const set = pastLive.filter(b => b.cancellationFeeApplies === fee);
-    const ns = noShows.filter(b => b.cancellationFeeApplies === fee).length;
+    // "With a card and a fee": a saved card and a fee that reaches a no-show (lib/cancel-policy feeOnNoShow). It read
+    // cancellationFeeApplies, which a live booking never has, so the "with a fee" side was always empty.
+    const withFee = (b: B) => !!b.stripePaymentMethodId && !!b.stripeCustomerId && feeOnNoShow(b);
+    const set = pastLive.filter(b => withFee(b) === fee);
+    const ns = noShows.filter(b => withFee(b) === fee).length;
     const players = set.reduce((n, b) => n + b.players, 0);
     // Booked players who didn't play: the whole group for a no-show, the gap for a short-show.
     const missing = set.reduce((n, b) => n + (!b.checkedInAt ? b.players : Math.max(0, b.players - (b.checkedInPlayers ?? b.players))), 0);
@@ -413,15 +429,32 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
     const k = customerKey(h); if (!k) continue;
     const r = visits.get(k) ?? { name: h.golferName, dates: [] }; r.dates.push(h.teeTime.date); visits.set(k, r);
   }
-  const inRange = new Map<string, { name: string; rounds: number; players: number; spendCents: number }>();
+  const inRange = new Map<string, { name: string; rounds: number; players: number; spendCents: number; lastPlayed: string | null; rates: Map<string, number> }>();
   let unidentified = 0, unidentifiedPlayers = 0;
   for (const b of live) {
     const k = customerKey(b);
     if (!k) { unidentified++; unidentifiedPlayers += b.players; continue; }
-    const r = inRange.get(k) ?? { name: b.golferName, rounds: 0, players: 0, spendCents: 0 };
+    const r = inRange.get(k) ?? { name: b.golferName, rounds: 0, players: 0, spendCents: 0, lastPlayed: null as string | null, rates: new Map<string, number>() };
     r.rounds++; r.players += b.players; if (collectedSet.has(b)) r.spendCents += kept(b);
+    if (b.date <= today && (!r.lastPlayed || b.date > r.lastPlayed)) r.lastPlayed = b.date;
+    if (memberRate(b.appliedRate)) r.rates.set(b.appliedRate, (r.rates.get(b.appliedRate) ?? 0) + 1);
     inRange.set(k, r);
   }
+  // Analytics page (Cam 2026-11-17): golfers and rounds by membership. A member rate is a tier's name on the booking
+  // (appliedRate, as "rate vs posted" reads it); every other rate is public. It is the RATE used, not membership held.
+  // "rounds" here are booked players on live bookings in the range (guests on a member's booking included; future
+  // rounds and no-shows too) — not Rounds played, which is checked-in players on completed rounds.
+  const byMem = new Map<string, { golfers: Set<string>; rounds: number }>();
+  for (const b of live) {
+    const name = memberRate(b.appliedRate) ? b.appliedRate : '';
+    const g = byMem.get(name) ?? { golfers: new Set<string>(), rounds: 0 };
+    const k = customerKey(b); if (k) g.golfers.add(k);
+    g.rounds += b.players; byMem.set(name, g);
+  }
+  const memRounds = [...byMem.values()].reduce((n, g) => n + g.rounds, 0);
+  const byMembership = [...byMem.entries()]
+    .map(([name, g]) => ({ name: name || 'Public', kind: (name ? 'membership' : 'public') as 'membership' | 'pass' | 'public', golfers: g.golfers.size, rounds: g.rounds, sharePct: pct(g.rounds, memRounds) }))
+    .sort((a, b) => (a.kind === 'public' ? 1 : 0) - (b.kind === 'public' ? 1 : 0) || b.rounds - a.rounds);
   let newC = 0, returningC = 0;
   for (const k of inRange.keys()) {
     const dates = (visits.get(k)?.dates ?? []).sort();
@@ -473,7 +506,8 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
   const prevKeys = new Set<string>(), thisKeys = new Set(inRange.keys());
   for (const h of history) { const k = customerKey(h); if (k && h.teeTime.date >= prev.from && h.teeTime.date <= prev.to) prevKeys.add(k); }
   const retained = [...prevKeys].filter(k => thisKeys.has(k)).length;
-  const top = [...inRange.values()];
+  // Their most-used membership in the range (null = public), and the last day they played.
+  const top = [...inRange.values()].map(({ rates, ...r }) => ({ ...r, membership: [...rates.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null }));
 
   // Members (moved off the Members tab's header, AN-1): current counts, not
   // range-bound — a membership is a standing state, not a dated event.
@@ -526,7 +560,7 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
       roundsPlayed, perRoundCents: roundsPlayed ? Math.round(collected / roundsPlayed) : null,
       perAvailableTeeTimeCents: pastSlotsForSale ? Math.round(collected / pastSlotsForSale) : null,
       bucket: byWeek ? 'week' as const : 'day' as const,
-      series: [...series.entries()].map(([key, v]) => ({ key, expectedCents: v.expected, collectedCents: v.collected, gapCents: v.expected - v.collected, gapPct: pct(v.expected - v.collected, v.expected), rounds: v.rounds, perRoundCents: v.rounds ? Math.round(v.collected / v.rounds) : null, fillPct: pct(v.booked, v.sale) })),
+      series: [...series.entries()].map(([key, v]) => ({ key, expectedCents: v.expected, collectedCents: v.collected, gapCents: v.expected - v.collected, gapPct: pct(v.expected - v.collected, v.expected), rounds: v.rounds, perRoundCents: v.rounds ? Math.round(v.collected / v.rounds) : null, fillPct: pct(v.booked, v.sale), bookings: v.bookings })),
     },
     utilization: {
       spotsForSale: sale, spotsBooked: bookedSpots, fillPct: pct(bookedSpots, sale),
@@ -582,6 +616,7 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
       goneQuiet: goneQuiet.slice(0, 50),
       segments,
       residents: { since: RES_START, rows: [...resRows.entries()].sort().map(([date, r]) => ({ date, ...r })) },
+      byMembership,
       topByRounds: [...top].sort((a, b) => b.rounds - a.rounds || b.spendCents - a.spendCents).slice(0, 10),
       topBySpend: [...top].sort((a, b) => b.spendCents - a.spendCents || b.rounds - a.rounds).slice(0, 10),
     },
@@ -590,6 +625,7 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
       avgGroupSize: made.length ? Math.round((playersLive / made.length) * 10) / 10 : null,
       avgLeadDays: leadDays.length ? Math.round((leadDays.reduce((s, d) => s + d, 0) / leadDays.length) * 10) / 10 : null,
       lead: leadHist, channel,
+      spotsSold: { twilightPct: pct(tw.booked, tw.sale), standardPct: pct(std.booked, std.sale) },
     },
   };
 }

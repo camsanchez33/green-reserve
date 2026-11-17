@@ -18,6 +18,7 @@ import { toast } from '@/components/dashboard/Toast';
 import { Card } from '@/components/ui/Card';
 import { ImportMembers } from '@/components/dashboard/members/ImportMembers';
 import { ResidentsCard } from '@/components/dashboard/members/ResidentsCard';
+import { PricingCard } from '@/components/dashboard/members/PricingCard';
 import { MembershipSetup } from '@/components/dashboard/members/MembershipSetup';
 import { MemberCard } from '@/components/dashboard/members/MemberCard';
 import { AddMember } from '@/components/dashboard/members/AddMember';
@@ -271,6 +272,7 @@ function MembershipsPageInner() {
       </div>
       {!hasDues && tiers.length > 0 && <p className="text-[12.5px] text-ink-muted -mt-1">When members pay dues through GreenReserve, a 1% fee is added to what they pay.</p>}
       <ResidentsCard canEdit={canEdit} initialSearch={search} />
+      <PricingCard />
       {pops}
     </Shell>
   );

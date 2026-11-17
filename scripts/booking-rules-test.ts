@@ -20,10 +20,13 @@ const n = normalizeDbCourse({ schedules: [{ walkingAllowed: false, walkingWeeken
 check('golfer data sums walking up from the schedule, not the old course word', n.walking_policy === 'never' && n.cart_required === true && n.walking_note === 'Carts are free.');
 check('golfer data carries a clean dress code', JSON.stringify(n.dress_code) === '["Collared shirts","No denim"]');
 
-const page = readFileSync('src/app/dashboard/settings/page.tsx', 'utf8');
+const page = [
+  'src/app/dashboard/settings/page.tsx',
+  ...['ui', 'CourseArea', 'BookingArea', 'PaymentsArea', 'AccountArea'].map(f => `src/components/dashboard/settings/${f}.tsx`),
+].map(f => readFileSync(f, 'utf8')).join('\n'); // SETTINGS-6: the page and its areas
 const booking = readFileSync('src/app/courses/[slug]/CourseBookingClient.tsx', 'utf8');
 check('no dress-code toggle chips left', !page.includes("'Collared shirt required'"));
-check('settings points walking at the Schedule price table', page.includes('Schedule → What it costs') && !page.includes('WALKING_CHOICES') && readFileSync('src/app/courses/[slug]/info/page.tsx', 'utf8').includes('walkingWords(course.walking_policy)'));
+check('settings points walking at the Schedule price table', page.includes('When golfers can walk, and what a cart costs, is set for each round on') && !page.includes('WALKING_CHOICES') && readFileSync('src/app/courses/[slug]/info/page.tsx', 'utf8').includes('walkingWords(course.walking_policy)'));
 check('booking page no longer says "Allowed" for a carts-only course', !booking.includes("course.walking_allowed ? 'Allowed' : 'Cart only'"));
 check('booking page shows the dress code', readFileSync('src/app/courses/[slug]/info/page.tsx', 'utf8').includes('Dress code'));
 

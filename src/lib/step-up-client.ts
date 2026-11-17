@@ -65,5 +65,14 @@ export async function stepUpFetch(input: string, init?: RequestInit): Promise<Re
   const reason = await reasonPending;
   if (!reason) return res;
   const [i2, init2] = withReason(input, init, reason);
-  return fetch(i2, init2);
+  res = await fetch(i2, init2);
+  // A route that asks for the reason first and the second factor after it
+  // (Company docs delete: the fresh check is spent last) answers the reason-
+  // carrying request with step_up. Confirm, then send that same request again.
+  if (handler && (await needsStepUp(res))) {
+    pending ??= handler().finally(() => { pending = null; });
+    if (!(await pending)) return res;
+    res = await fetch(i2, init2);
+  }
+  return res;
 }

@@ -1,1198 +1,282 @@
 'use client';
-import { useState, useEffect, useRef, Suspense } from 'react';
-import { INPUT } from '@/components/ui/field';
-import { TakesCashToggle } from '@/components/dashboard/settings/TakesCashToggle';
-import { US_TIMEZONES } from '@/lib/course-time';
+// SETTINGS-6 (Cam 2026-11-17, "fix settings messages and then good to go"; approved mockup
+// lanes/dashboard/settings-mockup.html and all its comment threads; lanes/dashboard.md "Next" 6).
+// The home lists four areas as cards with no icons: Your course, Booking, Payments, Your account. Search sits in the
+// header as a small icon. Each area has a one-line intro, and its sections run down the side on a wide screen (a bar
+// across the top on a phone). Every editable row opens its own small popup; read-only rows don't look clickable.
+// Staff move to a Team page that isn't built yet, so the existing staff screen stays here (?area=staff), linked from
+// the home. Per-round rules are on Schedule. What needs Build's new data (the confirmation email's own parts and test
+// send, sales tax from the address, reader test and last seen, Alerts) is hidden until it exists, never faked.
+// Kept from before: the Stripe return redirect, old ?section=…&focus=… links (Money, Home, Finish setting up), the
+// assistant's description card, saves that send only that row's fields, and owner-only rows.
+import { useCallback, useEffect, useMemo, useRef, useState, Suspense, type RefObject } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Save, Loader2, X } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { StaffNotice } from '@/components/dashboard/StaffNotice';
 import { StaffPermissions } from '@/components/dashboard/StaffPermissions';
-import { CardReaderCard } from '@/components/dashboard/CardReaderCard';
-import { SalesTaxCard } from '@/components/dashboard/SalesTaxCard';
-import { useDashboardAccess } from '@/lib/use-dashboard-access';
-import { describePolicy, policyFrom, LATE_FEE_TIMINGS } from '@/lib/cancel-policy';
-import { toast } from '@/components/dashboard/Toast';
-import CourseLayoutTab from '@/components/dashboard/CourseLayoutTab';
-import CoursePreview from '@/components/dashboard/CoursePreview';
-import { validatePasswordStrength, PASSWORD_REQUIREMENTS_HINT } from '@/lib/password';
-import { setLeaveGuard, useBackGuard } from '@/lib/unsaved-guard';
-import { downscaleImage } from '@/lib/image-resize';
-import { StatusDot } from '@/components/ui/StatusDot';
-import { askBirdie, useBirdieReady, APPLIED_EVENT } from '@/lib/birdie/ask';
-import { facilityLines, RANGE_TYPES, FOOD_TYPES, TOURNAMENT_FREQ, type FacilityFields } from '@/lib/facilities';
-import Link from 'next/link';
+import { LoadError } from '@/components/dashboard/LoadError';
 import { Card } from '@/components/ui/Card';
-import { FinishSetup, type SetupItem } from '@/components/dashboard/settings/FinishSetup';
+import { dfetch } from '@/lib/dashboard-fetch';
+import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import { showSetupField } from '@/lib/setup-missing';
-import { missingSetup } from '@/lib/setup-missing';
-import { ImageUpload } from '@/components/dashboard/ImageUpload';
-import { WhoPaysWhat } from '@/components/dashboard/settings/WhoPaysWhat';
-import { CART_NUMBER_MODES, CART_NUMBER_LABEL, STARTER_COLUMNS, starterColumns } from '@/lib/starter-sheet';
+import { APPLIED_EVENT } from '@/lib/birdie/ask';
+import { type Ctx, type Course, Chevron, saveSettings } from '@/components/dashboard/settings/ui';
+import { CourseArea } from '@/components/dashboard/settings/CourseArea';
+import { BookingArea } from '@/components/dashboard/settings/BookingArea';
+import { PaymentsArea } from '@/components/dashboard/settings/PaymentsArea';
+import { AccountArea } from '@/components/dashboard/settings/AccountArea';
 
-type Course = Record<string, unknown>;
-// U-O (UI_REVISE_SPEC §3, "Settings: sub-nav on the left naming the existing
-// sections in this order"). The sections are the same forms and the same
-// fields as before — only their names, grouping and the nav's axis change.
-// Facilities and Account are not in the spec's list but still exist, so they
-// keep their places rather than disappearing.
-// SD-8: twelve sub-tabs became five. Nothing was deleted — the same forms are
-// grouped by the question an operator is actually asking. Payouts left
-// entirely: getting paid is money, and it lives on /dashboard/money now.
-// Settings rework (Cam 2026-10-19): the sections in the order a course sets
-// itself up. Staff (people and what each may do) and Your account (this
-// login's email, password, two-step) were one muddled section; now two.
-const SECTIONS = [
-  'Your course',
-  'Course layout',
-  'Booking rules',
-  'Prices & fees',
-  'Facilities',
-  'Pro shop',
-  'Staff',
-  'Your account',
-] as const;
-type Section = typeof SECTIONS[number];
-// Old ?section= names still land somewhere sensible.
-const SECTION_ALIASES: Record<string, Section> = {
-  'Pricing & cancellation': 'Prices & fees',
-  'Staff & account': 'Staff',
-};
-// Sections whose contents save themselves (layout, shop, staff, password,
-// 2FA) — the header Save button is hidden on these.
-const NO_SAVE_BUTTON: Section[] = ['Course layout', 'Pro shop', 'Staff', 'Your account'];
-// SP-A: the cancellation policy is the owner's alone — a staff login with
-// "Edit course settings" never sends these (the API refuses them too).
-// Cam 2026-10-26: the time zone (every clock on the sheet) and the course type
-// (private turns off online booking) are the owner's too.
-const POLICY_FIELDS = ['cancellationHours', 'lateCancellationFee', 'checkInWindowHours', 'rainCheckPolicy', 'lateFeeBasis', 'lateFeeTiming', 'noShowFee', 'noShowFeeBasis', 'autoNoShowMinutes', 'onlineBlockNoShows', 'onlineBlockLateCancels', 'onlineBlockMonths', 'counterMemberRate', 'cartPricing', 'timezone', 'type'];
-
-// SD-8: Save used to PATCH the WHOLE form, so saving a dress-code chip also
-// re-sent every facility toggle and every price — two people editing different
-// sections overwrote each other, and one stale field travelled with every save.
-// Each section now sends only its own fields.
-const SECTION_FIELDS: Record<Section, string[]> = {
-  'Your course': [
-    'brandColor', 'phone', 'website', 'type', 'establishedYear', 'description', 'giftCardUrl', 'confirmationNote',
-  ],
-  'Course layout': [],
-  'Booking rules': [
-    'timezone', 'publicAdvanceDays', 'memberAdvanceDays', 'memberGraceDays', 'counterMemberRate', 'minPlayers', 'maxPlayers', 'dresscode',
-    'walkingAllowed', 'walkingNote', 'cartRequired', 'cartPricing', 'cartNumbers', 'starterColumns',
-  ],
-  'Prices & fees': [
-    'hasMemberPricing', 'hasResidentPricing', 'residentCounty', 'residentState', 'residentProofRequired',
-    'cancellationHours', 'lateCancellationFee', 'checkInWindowHours', 'rainCheckPolicy',
-    'lateFeeBasis', 'lateFeeTiming', 'noShowFee', 'noShowFeeBasis', 'autoNoShowMinutes', 'onlineBlockNoShows', 'onlineBlockLateCancels', 'onlineBlockMonths',
-  ],
-  'Facilities': [
-    'hasDrivingRange', 'drivingRangeType', 'rangeBallsFree', 'hasPuttingGreen', 'hasShortGameArea',
-    'hasProShop', 'proShopPhone', 'hasLessons', 'hasClubRental', 'clubRentalRate',
-    'hasPushCartRental', 'pushCartRate', 'hasBagStorage', 'hasLockerRoom', 'hasGpsCarts',
-    'hasTournaments', 'tournamentFrequency', 'restaurantType', 'hasCartGirl',
-    'hasCaddies', 'caddieType', 'caddieLooperRate', 'caddieForeRate', 'caddieNote', 'amenities',
-  ],
-  'Pro shop': [],
-  'Staff': [],
-  'Your account': [],
-};
-
-// SD-8: the course's identity is what GreenReserve listed and what golfers
-// searched for. It is read-only here and changed by asking us — the row shows
-// the value and opens a prefilled message.
-const IDENTITY_ROWS: { key: string; label: string }[] = [
-  { key: 'name', label: 'Course name' },
-  { key: 'address', label: 'Address' },
-  { key: 'city', label: 'City' },
-  { key: 'state', label: 'State' },
-  { key: 'zipCode', label: 'ZIP' },
+type Area = 'course' | 'booking' | 'payments' | 'account';
+type View = 'home' | Area | 'staff';
+const AREAS: { key: Area; title: string; sub: string; intro: string; sections: [string, string][] }[] = [
+  { key: 'course', title: 'Your course', sub: 'Name and location, your booking page, facilities',
+    intro: 'Who you are and what golfers see about your course. Changes show on your booking page, receipts and emails right away.',
+    sections: [['identity', 'Name and location'], ['page', 'Booking Page'], ['facilities', 'Facilities']] },
+  { key: 'booking', title: 'Booking', sub: 'Booking rules, carts, the confirmation email',
+    intro: 'How far ahead golfers can book, group sizes, carts, and the email they get after booking. Changes apply right away.',
+    sections: [['rules', 'Booking rules'], ['carts', 'Carts'], ['email', 'Confirmation email']] },
+  { key: 'payments', title: 'Payments', sub: 'Cancellations, sales tax, the register and card readers',
+    intro: 'What golfers are charged when plans change, and how you take payment at the counter. New policies apply to new bookings only.',
+    sections: [['cancel', 'Cancellations'], ['tax', 'Sales tax'], ['register', 'Register']] },
+  { key: 'account', title: 'Your account', sub: 'Your sign-in and two-step sign-in',
+    intro: 'Only you see this. How you sign in to this dashboard.',
+    sections: [['signin', 'Your sign-in']] },
 ];
-// Facilities checklist, in the order golfers think about them. Food and drink
-// (one choice) and "Anything else" sit below the groups.
-const FACILITY_GROUPS: { title: string; items: { key: string; label: string }[] }[] = [
-  { title: 'Practice', items: [
-    { key: 'hasDrivingRange', label: 'Driving range' },
-    { key: 'hasPuttingGreen', label: 'Putting green' },
-    { key: 'hasShortGameArea', label: 'Chipping and short-game area' },
-  ] },
-  { title: 'Shop, rentals and help', items: [
-    { key: 'hasProShop', label: 'Pro shop' },
-    { key: 'hasLessons', label: 'Lessons' },
-    { key: 'hasClubRental', label: 'Club rental' },
-    { key: 'hasPushCartRental', label: 'Push carts' },
-    { key: 'hasCaddies', label: 'Caddies' },
-  ] },
-  { title: 'Clubhouse and carts', items: [
-    { key: 'hasGpsCarts', label: 'GPS in the carts' },
-    { key: 'hasBagStorage', label: 'Bag storage' },
-    { key: 'hasLockerRoom', label: 'Locker room' },
-    { key: 'hasTournaments', label: 'Tournaments' },
-  ] },
+// Old ?section= names (Money's Change link, Home's reader link, Finish setting up) land in the area that holds them.
+const SECTION_TO_AREA: Record<string, { area: View; target?: string }> = {
+  'Your course': { area: 'course' }, 'Course layout': { area: 'course', target: 'g-facilities' }, 'Facilities': { area: 'course', target: 'g-facilities' },
+  'Booking rules': { area: 'booking' }, 'Prices & fees': { area: 'payments' }, 'Pricing & cancellation': { area: 'payments' },
+  'Pro shop': { area: 'payments', target: 'g-register' }, 'Staff': { area: 'staff' }, 'Staff & account': { area: 'staff' }, 'Your account': { area: 'account' },
+};
+// Every setting, for search: [its name, the area, the row or group it opens at, other words people might type].
+const INDEX: [string, Area | 'staff', string, string?][] = [
+  ['Name', 'course', 'r-identity-name'], ['Address', 'course', 'r-identity-address', 'location'], ['Status', 'course', 'r-identity-status', 'live'],
+  ['Time zone', 'course', 'r-identity-tz', 'clock'], ['Phone', 'course', 'r-identity-phone'], ['Logo and colour', 'course', 'r-page-look', 'color brand'],
+  ['Banner photo', 'course', 'r-page-hero', 'hero image'], ['Photos', 'course', 'r-page-photos', 'gallery pictures'], ['Description', 'course', 'r-page-desc'],
+  ['Course type', 'course', 'r-page-type', 'public private'], ['Year opened', 'course', 'r-page-year', 'established'], ['Website', 'course', 'r-page-web'],
+  ['Gift cards', 'course', 'r-page-gift'], ['Dress code', 'course', 'r-page-dress'], ['Holes and nines', 'course', 'r-fac-nines', 'par layout'],
+  ['Tees', 'course', 'r-fac-tees', 'yardage rating slope'], ['Amenities', 'course', 'r-fac-amen', 'range food caddies rentals facilities'],
+  ['How far ahead', 'booking', 'r-rules-ahead', 'days advance'], ['Group size', 'booking', 'r-rules-size', 'players'],
+  ['Walking and carts note', 'booking', 'r-carts-walk'], ['How carts are charged', 'booking', 'r-carts-charge', 'per cart rider'], ['Cart numbers', 'booking', 'r-carts-num'],
+  ['Starter’s sheet', 'booking', 'r-carts-starter', 'starter columns'], ['Confirmation email', 'booking', 'g-email', 'note arrival'],
+  ['Card at booking', 'payments', 'r-cancel-card'], ['Free cancellation', 'payments', 'g-cancel', 'cancel policy'], ['Late cancellation', 'payments', 'g-cancel', 'fee'],
+  ['No-show', 'payments', 'g-cancel', 'fee'], ['Mark no-shows automatically', 'payments', 'r-cancel-auto'], ['Repeat no-shows', 'payments', 'r-cancel-repeat', 'phone only block'],
+  ['Check-in reminder', 'payments', 'r-cancel-checkin', 'pay link'], ['Rain checks', 'payments', 'r-cancel-rain', 'weather'], ['Sales tax', 'payments', 'g-tax'],
+  ['Takes cash', 'payments', 'r-register-cash', 'register drawer'], ['Card readers', 'payments', 'r-register-readers', 'terminal'],
+  ['Email', 'account', 'r-signin-email'], ['Password', 'account', 'r-signin-pw'], ['Two-step sign-in', 'account', 'r-signin-2fa', 'code 2fa'],
+  ['Staff, roles and permissions', 'staff', '', 'team logins'],
 ];
-const iCls = 'w-full bg-paper border border-line rounded-[7px] px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
+const AREA_NAME: Record<Area | 'staff', string> = { course: 'Your course', booking: 'Booking', payments: 'Payments', account: 'Your account', staff: 'Staff' };
 
-function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
+const SearchIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m20 20-4-4" /></svg>;
+const BackIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m15 6-6 6 6 6" /></svg>;
+
+/** The title with the small search icon; the field opens beside it and searches every setting in every area. */
+function Head({ title, onGo, owner, wide }: { title: string; onGo: (area: Area | 'staff', target: string) => void; owner: boolean; wide?: boolean }) {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState('');
+  const hits = useMemo(() => {
+    const t = q.trim().toLowerCase();
+    // A staff login has no sales tax, readers, password or two-step rows to land on.
+    const hidden = owner ? [] : ['g-tax', 'r-register-readers', 'r-signin-pw', 'r-signin-2fa'];
+    return t ? INDEX.filter(h => !hidden.includes(h[2]) && `${h[0]} ${h[3] ?? ''}`.toLowerCase().includes(t)).slice(0, 8) : [];
+  }, [q, owner]);
+  const shut = () => { setOpen(false); setQ(''); };
   return (
-    <div className="bg-white rounded-lg shadow-card p-5">
-      <div className="text-[15px] font-semibold text-ink mb-4">{title}</div>
-      <div className="space-y-4">{children}</div>
+    <div className={'relative w-full flex items-center justify-between gap-3 ' + (wide ? 'max-w-[998px]' : 'max-w-[780px]')}>
+      <h1 className="font-serif text-[30px] sm:text-[34px] font-semibold leading-none text-ink">{title}</h1>
+      <div className="relative flex items-center gap-1">
+        {open && <input value={q} onChange={e => setQ(e.target.value)} onKeyDown={e => { if (e.key === 'Escape') shut(); }} aria-label="Search settings" autoFocus
+          className="text-[14px] text-ink bg-ink/5 border border-line rounded-[10px] px-3 py-2 w-[min(260px,52vw)] outline-none focus:border-ink-soft" />}
+        <button type="button" onClick={() => (open ? shut() : setOpen(true))} aria-label="Search settings" title="Search" aria-expanded={open}
+          className="w-10 h-10 grid place-items-center rounded-[8px] text-ink-soft hover:text-ink hover:bg-ink/5"><SearchIcon /></button>
+        {open && q.trim() && (
+          <div className="absolute right-0 top-[calc(100%+6px)] z-20 w-[min(360px,86vw)] p-1 rounded-[12px] border border-line shadow-card flex flex-col" style={{ backgroundColor: 'var(--op-panel-solid)' }}>
+            {hits.length ? hits.map(h => (
+              <button key={h[0]} type="button" onClick={() => { shut(); onGo(h[1], h[2]); }}
+                className="flex justify-between items-center gap-3 px-3 py-2.5 min-h-[40px] rounded-[8px] text-left text-[13.5px] text-ink hover:bg-ink/5">
+                <span>{h[0]}</span><small className="text-[12px] text-ink-soft flex-none">{AREA_NAME[h[1]]}</small>
+              </button>
+            )) : <p className="px-3 py-2.5 text-[13px] text-ink-soft">Nothing matches.</p>}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
-function Field({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) {
+
+/** The area's sections: down the side on a wide screen, a sticky bar across the top on a phone; the one you're reading
+ *  is marked. */
+function Sections({ items, main }: { items: [string, string][]; main: RefObject<HTMLElement | null> }) {
+  const [cur, setCur] = useState(items[0]?.[0] ?? '');
+  const hold = useRef<string | null>(null);
+  const bar = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const spy = () => {
+      if (hold.current) { setCur(hold.current); return; }
+      let c = items[0]?.[0] ?? '';
+      for (const [id] of items) { const el = document.getElementById('g-' + id); if (el && el.getBoundingClientRect().top < 160) c = id; }
+      const m = main.current;
+      const atEnd = m && m.scrollHeight > m.clientHeight + 4 ? m.scrollTop + m.clientHeight >= m.scrollHeight - 4 : window.scrollY > 0 && window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
+      if (atEnd && items.length) c = items[items.length - 1][0];
+      setCur(c);
+    };
+    spy();
+    document.addEventListener('scroll', spy, { capture: true, passive: true });
+    return () => document.removeEventListener('scroll', spy, { capture: true });
+  }, [items, main]);
+  useEffect(() => {
+    const b = bar.current, a = b?.querySelector<HTMLElement>(`[data-sec="${cur}"]`);
+    if (b && a && b.scrollWidth > b.clientWidth) b.scrollLeft = Math.max(0, a.offsetLeft - 24);
+  }, [cur]);
+  const go = (id: string) => {
+    hold.current = id; setCur(id);
+    window.setTimeout(() => { hold.current = null; }, 900);
+    document.getElementById('g-' + id)?.scrollIntoView({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  };
   return (
-    <div>
-      <label className="block text-[13px] font-semibold text-ink mb-1.5">{label}</label>
-      {children}
-      {hint && <p className="text-[12.5px] text-ink-soft mt-1">{hint}</p>}
-    </div>
-  );
-}
-function FInput({ value, onChange, type='text', placeholder='', maxLength, step }: { value: string|number; onChange:(v:string)=>void; type?:string; placeholder?:string; maxLength?:number; step?:string }) {
-  return <input type={type} value={value??''} onChange={e=>onChange(e.target.value)} placeholder={placeholder} maxLength={maxLength} step={step} className={iCls}/>;
-}
-function Toggle({ label, checked, onChange }: { label:string; checked:boolean; onChange:()=>void }) {
-  return (
-    <div className="flex items-center justify-between py-1">
-      <span className="text-sm text-ink">{label}</span>
-      <button onClick={onChange} className={'relative w-11 h-6 rounded-sm transition-colors ' + (checked ? 'bg-pine' : 'bg-line-strong')}>
-        <span className={'absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-sm shadow-sm transition-transform ' + (checked ? 'translate-x-5' : '')}/>
-      </button>
-    </div>
+    <nav ref={bar} aria-label="Sections"
+      className="sticky top-0 md:top-4 z-[5] flex md:flex-col gap-1 md:gap-0.5 overflow-x-auto md:overflow-visible [scrollbar-width:none] p-1 md:p-0 rounded-[12px] md:rounded-none border md:border-0 border-line max-md:bg-[var(--op-panel-solid)]">
+      {items.map(([id, label]) => (
+        <a key={id} href={'#g-' + id} data-sec={id} aria-current={cur === id ? 'true' : undefined} onClick={e => { e.preventDefault(); go(id); }}
+          className={'flex-none inline-flex items-center min-h-[36px] md:min-h-[40px] px-3 py-2 text-[13px] rounded-[9px] md:rounded-l-none md:border-l-2 whitespace-nowrap '
+            + (cur === id ? 'text-ink font-semibold bg-ink/5 md:border-ink' : 'text-ink-soft hover:text-ink md:border-transparent')}>{label}</a>
+      ))}
+    </nav>
   );
 }
 
-
-function SettingsPageInner() {
-  const searchParams = useSearchParams();
+function SettingsInner() {
   const router = useRouter();
-  // SD-8: Stripe's return URL used to land here. Send it where Stripe lives now.
-  const stripeParam = searchParams.get('stripe');
-  useEffect(() => {
-    if (stripeParam) router.replace(`/dashboard/money?tab=payouts&stripe=${encodeURIComponent(stripeParam)}`);
-  }, [stripeParam, router]);
-
-  // Money rework (Cam 2026-10-19): other pages link straight to a section, e.g. ?section=Pricing+%26+cancellation.
-  const sectionParam = searchParams.get('section') ?? '';
-  const [active, setActive] = useState<Section>(() => (SECTIONS as readonly string[]).includes(sectionParam) ? sectionParam as Section : SECTION_ALIASES[sectionParam] ?? 'Your course');
-  const [teeSetCount, setTeeSetCount] = useState<number | null>(null);
-  const [form, setForm] = useState<Record<string,unknown>>({});
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  // SD-8: true from the first edit until a successful save. The focus-refetch
-  // below used to replace the whole form with the server copy on every
-  // window focus — switching to a calendar tab and back wiped an in-progress
-  // edit. While dirty, nothing overwrites the form.
-  // SD-8: now that Save is per-section, ONE dirty flag would let saving
-  // Facilities clear the "unsaved" state on an edit still sitting in Booking
-  // rules. Track which FIELDS changed; the section's button reads its own.
-  const [dirtyFields, setDirtyFields] = useState<Set<string>>(new Set());
-  const [saveError, setSaveError] = useState('');
-  // SD-8 review: blank fields and a failed load used to look identical.
-  const [formLoaded, setFormLoaded] = useState(false);
-  const [formError, setFormError] = useState('');
+  const params = useSearchParams();
   const access = useDashboardAccess();
-  const isStaffLogin = access.isStaff;
-  // SP-B: the policy as currently on screen, in golfers' words.
-  const cents = (v: unknown) => Math.round(Number(v || 0) * 100);
-  const formTerms = describePolicy(policyFrom({
-    cancellationHours: Number(form.cancellationHours ?? 24), lateCancellationFeeCents: cents(form.lateCancellationFee),
-    lateFeeBasis: form.lateFeeBasis, lateFeeTiming: form.lateFeeTiming,
-    noShowFeeCents: cents(form.noShowFee), noShowFeeBasis: form.noShowFeeBasis,
-    autoNoShowMinutes: form.autoNoShowMinutes ? Number(form.autoNoShowMinutes) : null,
-    checkInWindowHours: Number(form.checkInWindowHours ?? 3),
-  }));
-  const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
-  const [pwSaving, setPwSaving] = useState(false);
-  const [pwMsg, setPwMsg] = useState('');
-  const [pwError, setPwError] = useState('');
-  const [pwOpen, setPwOpen] = useState(false);
-  const [operatorEmail, setOperatorEmail] = useState('');
-  const [emailingReset, setEmailingReset] = useState(false);
-  const [resetEmailSent, setResetEmailSent] = useState(false);
-  const [saving2FA, setSaving2FA] = useState(false);
-  const [saved2FA, setSaved2FA] = useState(false);
-  const [error2FA, setError2FA] = useState('');
-  const [changeOpen, setChangeOpen] = useState(false);
-  const [changeText, setChangeText] = useState('');
-  const [changeSending, setChangeSending] = useState(false);
-  const [changeSent, setChangeSent] = useState(false);
-  const [photos, setPhotos] = useState<{ id: string; url: string; sortOrder: number }[]>([]);
-  // "Finish setting up" must not call a course photo-less before the list has loaded.
-  const [photosLoaded, setPhotosLoaded] = useState(false);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [photoErr, setPhotoErr] = useState('');
+  const mainRef = useRef<HTMLElement>(null);
 
-  const anyDirty = dirtyFields.size > 0;
-  const dirty = SECTION_FIELDS[active].some(k => dirtyFields.has(k));
-  const dirtyRef = useRef(false);
-  useEffect(() => { dirtyRef.current = anyDirty; }, [anyDirty]);
-  const refreshForm = () => fetch('/api/operator/settings')
-    .then(r => r.ok ? r.json() : Promise.reject(new Error(`Could not load your settings (${r.status}).`)))
-    .then(d => { if (d && !dirtyRef.current) setForm(d); setFormLoaded(true); setFormError(''); })
-    .catch((e: Error) => { setFormError(e.message || 'Network error loading your settings.'); });
+  // SD-8: Stripe's return URL used to land here. Send it where Stripe lives now.
+  const stripeParam = params.get('stripe');
+  useEffect(() => { if (stripeParam) router.replace(`/dashboard/money?tab=payouts&stripe=${encodeURIComponent(stripeParam)}`); }, [stripeParam, router]);
 
-  // SD-10: `{error}` into setPhotos crashed the Photos tab on `.map`.
-  const refreshPhotos = () => fetch('/api/operator/photos').then(r => r.ok ? r.json() : null).then(d => { if (Array.isArray(d)) { setPhotos(d); setPhotosLoaded(true); } else setPhotoErr('Could not load your photos — reload to try again.'); }).catch(() => setPhotoErr('Network error loading photos.'));
+  const legacy = SECTION_TO_AREA[params.get('section') ?? ''];
+  const areaParam = params.get('area') ?? '';
+  const view: View = (['course', 'booking', 'payments', 'account', 'staff'] as string[]).includes(areaParam) ? areaParam as View : legacy?.area ?? 'home';
+  const [target, setTarget] = useState(() => params.get('focus') ? `focus:${params.get('focus')}` : legacy?.target ?? '');
 
-  useEffect(() => {
-    refreshForm();
-    fetch('/api/operator/profile').then(r => r.ok ? r.json() : null).then(p => { if (p?.email) setOperatorEmail(p.email); }).catch(() => {});
-    refreshPhotos();
-    // Admin can flip live/draft status or Stripe connection state while this
-    // tab sits open in the background — refresh on refocus instead of
-    // showing whatever was true when the page first loaded.
-    window.addEventListener('focus', refreshForm);
-    return () => window.removeEventListener('focus', refreshForm);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const [form, setForm] = useState<Course>({});
+  const [loaded, setLoaded] = useState(false);
+  const [loadError, setLoadError] = useState('');
+  const [email, setEmail] = useState('');
+  const load = useCallback(async () => {
+    const r = await dfetch<Course>('/api/operator/settings');
+    if (r.ok && r.data) { setForm(r.data); setLoaded(true); setLoadError(''); } else if (!r.ok) setLoadError(r.error);
   }, []);
-
-  // "Finish setting up" asks whether any tee exists; re-read on every section
-  // change so adding one under Course layout clears the item. Null (unknown or
-  // failed) never shows the item.
   useEffect(() => {
-    fetch('/api/operator/tee-sets').then(r => r.ok ? r.json() : null)
-      .then(d => { if (Array.isArray(d)) setTeeSetCount(d.length); }).catch(() => {});
-  }, [active]);
-
-  async function uploadGalleryPhoto(file: File | null) {
-    if (!file) return;
-    setUploadingPhoto(true); setPhotoErr('');
-    const fd = new FormData();
-    fd.append('file', await downscaleImage(file));
-    try {
-      const res = await fetch('/api/operator/photos', { method: 'POST', body: fd });
-      const data = await res.json();
-      if (res.ok) setPhotos(ps => [...ps, data]);
-      else setPhotoErr(data.error || 'Upload failed');
-    } catch { setPhotoErr('Upload failed — try again.'); }
-    setUploadingPhoto(false);
-  }
-
-  async function deleteGalleryPhoto(id: string) {
-    setPhotoErr('');
-    try {
-      const res = await fetch(`/api/operator/photos/${id}`, { method: 'DELETE' });
-      if (res.ok) setPhotos(ps => ps.filter(p => p.id !== id));
-      else setPhotoErr('Could not remove that photo — try again.');
-    } catch { setPhotoErr('Could not remove that photo — try again.'); }
-  }
-
-  async function emailResetLinkInstead() {
-    if (!operatorEmail) return;
-    setEmailingReset(true);
-    try {
-      const r = await fetch('/api/auth/forgot-password', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email: operatorEmail }) });
-      if (!r.ok) { toast('Could not send the reset link — try again.'); return; }
-      setResetEmailSent(true);
-    } catch { toast('Network error — the reset link was not sent.'); }
-    finally { setEmailingReset(false); }
-  }
-
-  // SD-8: the identity rows go through the change-request channel that
-  // already exists (V13b) - it mirrors to the course's message thread, records
-  // a structured event on the admin activity ledger, and emails us, all
-  // rate-limited. A raw message would have done only the first of those.
-  async function requestChange() {
-    const note = changeText.trim();
-    if (!note) return;
-    setChangeSending(true);
-    try {
-      const res = await fetch('/api/operator/request-changes', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: [{ category: 'course_details', detail: note }] }),
-      });
-      if (!res.ok) { const d = await res.json().catch(() => ({})); toast(d.error || 'Could not send that request — try again.'); return; }
-      setChangeSent(true); setChangeText(''); setChangeOpen(false);
-    } catch {
-      toast('Network error — your change request was not sent. Check your connection and try again.');
-    } finally {
-      setChangeSending(false);
-    }
-  }
-
-  const markDirty = (k: string) => setDirtyFields(s => { const next = new Set(s); next.add(k); return next; });
-  const set = (k:string, v:unknown) => { markDirty(k); setForm(f=>({...f,[k]:v})); };
-  const tog = (k:string) => { markDirty(k); setForm(f=>({...f,[k]:!f[k]})); };
-
-  // Leaving with unsaved edits asks first — the browser's own prompt. This
-  // only covers a real document unload (tab close, refresh, cross-origin nav).
-  useEffect(() => {
-    if (!anyDirty) return;
-    const guard = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ''; };
-    window.addEventListener('beforeunload', guard);
-    return () => window.removeEventListener('beforeunload', guard);
-  }, [anyDirty]);
-
-  // SD-8b: the sidebar navigates with router.push, which fires no unload event
-  // — the most common way anyone leaves this page was also the one way the
-  // guard above never saw. Name the sections so the prompt is worth reading.
-  useEffect(() => {
-    if (!anyDirty) { setLeaveGuard(null); return; }
-    setLeaveGuard(() => {
-      const pending = SECTIONS.filter(s => SECTION_FIELDS[s].some(k => dirtyFields.has(k)));
-      const which = pending.length ? pending.join(' and ') : 'this page';
-      return confirm(`You have unsaved changes in ${which}. Leave without saving?`);
-    });
-    return () => setLeaveGuard(null);
-  }, [anyDirty, dirtyFields]);
-
-  // SD-8d: browser Back is an App Router popstate — neither of the guards
-  // above sees it. This routes it through the same named prompt.
-  useBackGuard(anyDirty);
-
-  async function save() {
-    setSaving(true); setSaveError('');
-    // Only this section's fields travel. A key the operator never saw on
-    // screen cannot be re-sent by a save they did not mean to make.
-    const patch: Record<string, unknown> = {};
-    for (const k of SECTION_FIELDS[active]) if (k in form && !(isStaffLogin && POLICY_FIELDS.includes(k))) patch[k] = form[k];
-    try {
-      const res = await fetch('/api/operator/settings',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(patch)});
-      if (!res.ok) {
-        // SD-8: this never checked res.ok, so "Saved" showed on a 400 (the
-        // validation SD-1 added) and on a 500 alike. Say what was refused.
-        const d = await res.json().catch(() => ({}));
-        setSaveError(d.error || `Could not save (${res.status}). Nothing was changed.`);
-        toast(d.error || 'Settings were not saved.');
-        return;
-      }
-      // Only this section stops being dirty. An edit waiting in another
-      // section still guards the tab and still lights its own button.
-      setDirtyFields(s => { const next = new Set(s); for (const k of SECTION_FIELDS[active]) next.delete(k); return next; });
-      setSaved(true); setTimeout(()=>setSaved(false),2000);
-      refreshForm();
-    } catch {
-      setSaveError('Network error — nothing was saved. Check your connection and try again.');
-      toast('Network error — settings were not saved.');
-    } finally {
-      setSaving(false);
-    }
-  }
-
-
-  async function save2FA() {
-    const method = (form.twoFactorMethod as string) || 'email';
-    const phone = (form.twoFactorPhone as string) || '';
-    if (method === 'sms' && !phone.trim()) { setError2FA('Enter a phone number to receive SMS codes.'); return; }
-    setError2FA(''); setSaving2FA(true);
-    try {
-      const res = await fetch('/api/operator/settings', {
-        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ twoFactorMethod: method, twoFactorPhone: phone }),
-      });
-      if (res.ok) { setSaved2FA(true); setDirtyFields(s => { const next = new Set(s); next.delete('twoFactorMethod'); next.delete('twoFactorPhone'); return next; }); setTimeout(() => setSaved2FA(false), 2000); }
-      else { const d = await res.json().catch(() => ({})); setError2FA(d.error || 'Could not save. Try again.'); }
-    } catch {
-      setError2FA('Network error — nothing was saved. Check your connection and try again.');
-    } finally {
-      setSaving2FA(false);
-    }
-  }
-
-  async function changePassword() {
-    setPwMsg(''); setPwError('');
-    if (!pwForm.currentPassword || !pwForm.newPassword) { setPwError('Fill in both password fields.'); return; }
-    const strengthError = validatePasswordStrength(pwForm.newPassword);
-    if (strengthError) { setPwError(strengthError); return; }
-    if (pwForm.newPassword !== pwForm.confirmPassword) { setPwError('New passwords do not match.'); return; }
-    setPwSaving(true);
-    try {
-      const res = await fetch('/api/operator/change-password', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok) { setPwMsg('Password updated.'); setPwOpen(false); setPwForm({ currentPassword: '', newPassword: '', confirmPassword: '' }); }
-      else setPwError(data.error || 'Something went wrong.');
-    } catch {
-      setPwError('Network error — your password was not changed. Check your connection and try again.');
-    } finally {
-      setPwSaving(false);
-    }
-  }
-
-  const dresscodes = (form.dresscode as string[])||[];
-
-  // Settings rework (Cam 2026-10-19: "AI should help write" the description).
-  // Birdie gets the course's own facts in the question, drafts, and shows a
-  // confirm card; nothing is saved until the owner confirms it there.
-  const birdieOn = useBirdieReady();
-  function askForDescription() {
-    const facts = [
-      `${String(form.name ?? '')}${form.city ? `, ${form.city}, ${form.state}` : ''}`,
-      `${form.type === 'private' ? 'Private' : 'Public'} course${form.holes ? `, ${form.holes} holes` : ''}${form.par ? `, par ${form.par}` : ''}${form.establishedYear ? `, opened ${form.establishedYear}` : ''}`,
-      facilityPreview.length ? `Facilities: ${facilityPreview.join('; ')}` : '',
-    ].filter(Boolean).join('\n');
-    // Birdie's box takes 1500 characters; the current text gets what the facts leave.
-    const intro = 'Draft the description for our booking page — 3 to 5 sentences, friendly and plain. Use only these facts, and ask me for anything else you want to say:\n';
-    const current = String(form.description ?? '').trim();
-    const room = 1500 - intro.length - facts.length - 25;
-    const currentLine = current && room > 80 ? `\nCurrent description: ${current.length > room ? current.slice(0, room - 1) + '…' : current}` : '';
-    askBirdie(`${intro}${facts}${currentLine}`.slice(0, 1500));
-  }
+    load();
+    dfetch<{ email?: string }>('/api/operator/profile').then(r => { if (r.ok && r.data?.email) setEmail(r.data.email); });
+    // Admin can flip live status or Stripe while this tab sits in the background: re-read on refocus. Nothing is
+    // edited in place any more (every change is a popup that keeps its own draft), so a refresh can't wipe an edit.
+    const onFocus = () => { load(); };
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [load]);
+  // The assistant's confirmed description card saves through the settings route; show what it saved.
   useEffect(() => {
     const onApplied = (e: Event) => {
       const paths = (e as CustomEvent<{ paths?: string[] }>).detail?.paths ?? [];
-      if (!paths.includes('/api/operator/settings')) return;
-      fetch('/api/operator/settings').then(r => r.ok ? r.json() : Promise.reject(new Error(String(r.status))))
-        .then(d => {
-          if (!d || typeof d.description !== 'string') return;
-          // The confirmed card is the newest intent for the description: take it,
-          // and stop treating an older unsaved draft of it as a pending edit.
-          setForm(f => ({ ...f, description: d.description }));
-          setDirtyFields(s => { if (!s.has('description')) return s; const next = new Set(s); next.delete('description'); return next; });
-        })
-        .catch(() => toast('The assistant saved the description. Reload to see it here.'));
+      if (paths.includes('/api/operator/settings')) load();
     };
     window.addEventListener(APPLIED_EVENT, onApplied);
     return () => window.removeEventListener(APPLIED_EVENT, onApplied);
-  }, []);
-  const dresscodeLines = dresscodes.map(l => l.trim()).filter(Boolean);
-  // The preview reads the same lines the booking page does; the form holds dollars, the lib wants cents.
-  const cents$ = (v: unknown) => Math.round(Number(v || 0) * 100);
-  const facilityPreview = facilityLines({
-    ...(form as FacilityFields),
-    clubRentalRateCents: cents$(form.clubRentalRate), pushCartRateCents: cents$(form.pushCartRate),
-    caddieLooperRateCents: cents$(form.caddieLooperRate), caddieForeRateCents: cents$(form.caddieForeRate),
-  });
+  }, [load]);
 
-  const goTo = (sec: Section) => { setActive(sec); document.querySelector('main')?.scrollTo({ top: 0 }); window.scrollTo({ top: 0 }); };
-  // Cam 2026-11-05: a Finish-setting-up button lands on the field itself, outlined, not just the tab.
-  const [focusKey, setFocusKey] = useState(() => searchParams.get('focus') ?? '');
+  const merge = useCallback((p: Course) => setForm(f => ({ ...f, ...p })), []);
+  const save = useCallback(async (p: Course) => {
+    const e = await saveSettings(p);
+    if (!e) { merge(p); load(); }
+    return e;
+  }, [merge, load]);
+
+  const goArea = useCallback((to: string, t?: string) => {
+    setTarget(t ?? '');
+    router.push(to === 'home' ? '/dashboard/settings' : `/dashboard/settings?area=${to}`);
+    if (!t) { mainRef.current?.scrollTo({ top: 0 }); window.scrollTo({ top: 0 }); }
+  }, [router]);
+
+  // Once the area is drawn, take a search pick or an old link to its setting and mark it for a moment.
   useEffect(() => {
-    if (!focusKey || !formLoaded) return;
-    const t = window.setTimeout(() => { showSetupField(focusKey); setFocusKey(''); }, 60);
-    return () => window.clearTimeout(t);
-  }, [focusKey, formLoaded, active]);
-  const setupItems: SetupItem[] = missingSetup({
-    ...form, galleryCount: photosLoaded ? photos.length : null, teeSetCount,
-  }).map(i => ({ ...i, onClick: () => { if (active === i.section) showSetupField(i.key); else { setActive(i.section as Section); setFocusKey(i.key); } } }));
+    if (!target || !loaded || view === 'home') return;
+    const id = window.setTimeout(() => {
+      if (target.startsWith('focus:')) showSetupField(target.slice(6));
+      else {
+        const el = document.getElementById(target);
+        if (el) {
+          el.scrollIntoView({ block: target.startsWith('g-') ? 'start' : 'center' });
+          el.classList.add('setup-flash');
+          window.setTimeout(() => el.classList.remove('setup-flash'), 2600);
+        }
+      }
+      setTarget('');
+    }, 80);
+    return () => window.clearTimeout(id);
+  }, [target, loaded, view]);
+
+  const owner = access.loaded && !access.isStaff;
+  const ctx: Ctx = { form, merge, save, canEdit: access.can('settings.edit'), owner, accessLoaded: access.loaded, email, goArea };
+  const area = AREAS.find(a => a.key === view);
+  // Sales tax is the owner's: a staff login has no section for it.
+  const sections = useMemo(() => (area ? area.sections.filter(([id]) => owner || id !== 'tax') : []), [area, owner]);
 
   return (
     <div className="flex flex-col min-h-screen md:h-screen bg-page md:overflow-hidden">
-      <OperatorSidebar active="settings"/>
-      <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
+      <OperatorSidebar active="settings" />
+      <main ref={mainRef} className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <StaffNotice what="these settings" edit="settings.edit" />
-        {/* Settings rework: the serif title alone — what is missing is the Finish setting up list below. */}
-        <div className="bg-white border-b border-line px-4 sm:px-10 py-5 flex flex-wrap items-start justify-between gap-3 sticky top-0 z-10">
-          <div className="min-w-0">
-            <h1 className="font-serif text-[26px] leading-none text-ink">Settings</h1>
-          </div>
-          {!NO_SAVE_BUTTON.includes(active) && (
-            <button onClick={save} disabled={saving || !formLoaded || (!dirty && !saved)}
-              className="shrink-0 flex items-center gap-2 bg-pine hover:bg-pine-hover text-white px-4 py-2 min-h-[36px] rounded-[7px] font-medium text-[13px] disabled:opacity-50 transition-colors">
-               {saved ? 'Saved' : saving ? 'Saving...' : dirty ? `Save ${active}` : 'No changes'}
-            </button>
+        <div className="px-4 sm:px-6 py-5 flex flex-col gap-4 min-w-0">
+          {view !== 'home' && (
+            <button type="button" onClick={() => goArea('home')} className="self-start inline-flex items-center gap-1 min-h-[40px] -mb-2 text-[13.5px] text-ink-soft hover:text-ink"><BackIcon />Settings</button>
           )}
-        </div>
-        {formError && (
-          <div className="mx-6 mt-4 bg-bad/5 border border-bad/20 rounded-lg px-4 py-3 text-sm text-bad flex items-center justify-between gap-3" role="alert">
-            <span>{formError} Nothing below is your course&apos;s real settings until this loads — don&apos;t save over it.</span>
-            <button onClick={() => { setFormError(''); refreshForm(); }} className="text-xs font-medium underline shrink-0">Retry</button>
-          </div>
-        )}
-        {saveError && (
-          <div className="mx-6 mt-4 bg-bad/5 border border-bad/20 rounded-lg px-4 py-3 text-sm text-bad flex items-center justify-between gap-3" role="alert">
-            <span>{saveError}</span>
-            <button onClick={() => setSaveError('')} className="text-xs text-ink-muted hover:text-ink">Dismiss</button>
-          </div>
-        )}
+          <Head title={view === 'home' ? 'Settings' : view === 'staff' ? 'Staff and permissions' : area!.title} wide={!!area} owner={owner} onGo={(a, t) => goArea(a, t || undefined)} />
+          {loadError && <div className="max-w-[780px]"><LoadError message={`${loadError} Nothing here is your course’s real settings until this loads.`} onRetry={load} /></div>}
 
-        <div className="px-4 sm:px-10 py-7">
-          {formLoaded && <FinishSetup items={setupItems} />}
-
-          <div className="flex flex-col md:flex-row gap-6">
-            {/* U-O: the sub-nav moves to the left rail and names the sections
-                in plain English, in the spec's order. Active item = a white raised
-                tab, like the dashboard menu (DASH-D). */}
-            <nav aria-label="Settings sections" className="md:w-52 shrink-0 flex md:flex-col gap-1 overflow-x-auto md:overflow-visible p-0.5 -m-0.5">
-              {SECTIONS.map(s => (
-                <button key={s} onClick={() => setActive(s)}
-                  aria-current={active===s ? 'page' : undefined}
-                  className={'text-left whitespace-nowrap px-3 py-2 text-[13.5px] rounded-[7px] transition-colors ' + (active===s ? 'bg-white shadow-card text-ink font-semibold' : 'font-medium text-ink-soft hover:text-ink hover:bg-white/60')}>
-                  {s}
-                </button>
-              ))}
-            </nav>
-
-            <div className="flex-1 min-w-0">
-
-          {/* ── How you look ── */}
-          {active==='Your course' && (
-            <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_400px] xl:items-start">
-              <SectionCard title="How you look">
-                <div data-setup="logo"><ImageUpload label="Your logo" kind="logo" value={(form.logoUrl as string)||''} onUploaded={url=>setForm(f=>({...f,logoUrl:url}))} hint="Square; a transparent PNG is best. Max 8MB. Saves on upload."/></div>
-                <Field label="Your colour" hint="Tints your dashboard and booking page buttons.">
-                  <div className="flex items-center gap-2">
-                    <input type="color" value={(form.brandColor as string) || '#173B2A'} onChange={e => set('brandColor', e.target.value)}
-                      className="w-10 h-10 rounded-full border border-line cursor-pointer p-0.5 bg-paper"/>
-                    <input type="text" value={(form.brandColor as string) || '#173B2A'} onChange={e => set('brandColor', e.target.value)}
-                      placeholder="#173B2A" maxLength={7}
-                      className="bg-paper border border-line rounded-md px-3 py-2.5 text-sm font-mono text-ink outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors w-32"/>
-                  </div>
-                </Field>
-                <div data-setup="hero"><ImageUpload label="Your course photo" kind="hero" value={(form.heroImageUrl as string)||''} onUploaded={url=>setForm(f=>({...f,heroImageUrl:url}))} hint="Wide landscape, behind your course name. Max 8MB. Saves on upload."/></div>
-                {/* PERS-1: the golfer's checkout, confirmation, check-in and manage pages wear the photo,
-                    logo and colour above automatically. This note is the one thing they add. */}
-                <Field label="A note for golfers after they book" hint="Shown after booking and in the confirmation email. 400 characters.">
-                  <textarea value={(form.confirmationNote as string) || ''} onChange={e => set('confirmationNote', e.target.value)} rows={3} maxLength={400}
-                    placeholder="Check in at the pro shop 15 minutes before your tee time. Carts are behind the clubhouse."
-                    className={INPUT + ' w-full'}/>
-                </Field>
-              </SectionCard>
-              {/* B-6: the live preview — the form state, drawn as the golfer's page.
-                  Read-only; it saves nothing. Sticky beside the fields on wide
-                  screens, below them otherwise. */}
-              <div className="xl:sticky xl:top-6">
-                <div className="text-[13px] font-semibold text-ink mb-2">What golfers see</div>
-                <CoursePreview
-                  name={(form.name as string) || ''}
-                  type={(form.type as string) || 'public'}
-                  city={(form.city as string) || ''}
-                  state={(form.state as string) || ''}
-                  holes={typeof form.holes === 'number' ? form.holes : null}
-                  par={typeof form.par === 'number' ? form.par : null}
-                  establishedYear={typeof form.establishedYear === 'number' ? form.establishedYear : null}
-                  accent={(form.brandColor as string) || '#173B2A'}
-                  logoUrl={(form.logoUrl as string) || ''}
-                  heroImageUrl={(form.heroImageUrl as string) || ''}
-                />
-                <p className="text-[12px] text-ink-soft mt-2">Sample times and prices; your real page shows yours.</p>
-              </div>
-            </div>
-          )}
-
-          {/* ── Basic information ── */}
-          {active==='Your course' && (
-            <div className="space-y-5">
-              <SectionCard title="Course identity">
-                <p className="text-sm text-ink-soft -mt-1">Name and address changes go through us.</p>
-                <dl className="divide-y divide-line-soft border border-line rounded-md">
-                  {IDENTITY_ROWS.map(r => (
-                    <div key={r.key} className="flex items-baseline gap-3 px-3 py-2.5">
-                      <dt className="w-28 shrink-0 text-[13px] font-semibold text-ink">{r.label}</dt>
-                      <dd className="text-sm text-ink min-w-0 break-words">{(form[r.key] as string) || <span className="text-ink-faint">Not set</span>}</dd>
-                    </div>
-                  ))}
-                  <div className="flex items-baseline gap-3 px-3 py-2.5">
-                    <dt className="w-28 shrink-0 text-[13px] font-semibold text-ink">Status</dt>
-                    <dd className="text-sm text-ink capitalize">{(form.liveStatus as string) === 'live' ? 'Live to golfers' : `${(form.liveStatus as string) || 'draft'} — not live yet`}</dd>
-                  </div>
-                </dl>
-                {changeSent ? (
-                  <div className="flex items-center gap-2 bg-ok/5 border border-ok/20 text-ok rounded-md px-3 py-2.5 text-[13.5px]">
-                    <StatusDot status="ok" />
-                    Sent. We&apos;ll reply on <a href="/dashboard/support" className="underline font-medium">Support</a>.
-                  </div>
-                ) : changeOpen ? (
-                  <div className="space-y-2">
-                    <textarea value={changeText} onChange={e => setChangeText(e.target.value)} rows={3} maxLength={2000}
-                      placeholder="e.g. We rebranded to Hollow Creek Golf Club — please update the name and our new address."
-                      className={iCls + ' resize-none'} aria-label="What should we change?"/>
-                    <div className="flex items-center gap-2">
-                      <button onClick={requestChange} disabled={changeSending || !changeText.trim()}
-                        className="bg-pine hover:bg-pine-hover text-white text-[12.5px] font-medium px-4 py-2 rounded-md disabled:opacity-50 transition-colors">
-                        {changeSending ? 'Sending…' : 'Send request'}
-                      </button>
-                      <button onClick={() => { setChangeOpen(false); setChangeText(''); }} className="text-[12.5px] text-ink-muted hover:text-ink px-2 py-2">Cancel</button>
-                    </div>
-                  </div>
-                ) : (
-                  <button onClick={() => setChangeOpen(true)}
-                    className="text-[12.5px] font-medium text-pine border border-pine/30 hover:bg-pine/5 rounded-md px-3 py-1.5 transition-colors w-fit">
-                    Request a change
+          {view === 'home' && (
+            <>
+              <Card className="max-w-[780px] w-full py-1">
+                {AREAS.map((a, i) => (
+                  <button key={a.key} type="button" onClick={() => goArea(a.key)}
+                    className={'w-full grid grid-cols-[minmax(0,1fr)_20px] gap-3.5 items-center text-left px-4 py-4 min-h-[72px] hover:bg-ink/5 ' + (i ? 'border-t border-line' : '')}>
+                    <span><b className="block text-[15px] font-semibold text-ink">{a.title}</b><small className="block mt-[3px] text-[13px] leading-snug text-ink-soft">{a.sub}</small></span>
+                    <Chevron />
                   </button>
-                )}
-              </SectionCard>
-
-              <SectionCard title="Contact">
-                <div data-setup="phone"><Field label="Phone"><FInput value={form.phone as string} onChange={v=>set('phone',v)} type="tel"/></Field></div>
-                <Field label="Website"><FInput value={form.website as string} onChange={v=>set('website',v)} placeholder="https://"/></Field>
-                <Field label="Course Type" hint={isStaffLogin ? 'Only the course owner can change this.' : undefined}>
-                  <select value={form.type as string} onChange={e=>set('type',e.target.value)} disabled={isStaffLogin} className={iCls}>
-                    {/* A-04b: new selections are Public/Private only — a legacy
-                        value (semi-private/resort/municipal) stays visible/
-                        selected here rather than silently blanking out. */}
-                    {(typeof form.type === 'string' && form.type && !['public','private'].includes(form.type) ? ['public','private', form.type] : ['public','private']).map(t=><option key={t} value={t}>{t.charAt(0).toUpperCase()+t.slice(1)}</option>)}
-                  </select>
-                </Field>
-                <Field label="Established Year" hint="Optional — shown in your sidebar identity.">
-                  <input type="number" value={(form.establishedYear as number) || ''} onChange={e => set('establishedYear', e.target.value ? Number(e.target.value) : null)}
-                    placeholder="e.g. 1927" min={1850} max={new Date().getFullYear()} className={iCls}/>
-                </Field>
-                <div data-setup="description"><Field label="Description">
-                  {birdieOn && access.can('settings.edit') && (
-                    <button type="button" onClick={askForDescription} className="mb-1.5 text-[12.5px] font-medium text-pine hover:underline underline-offset-4">
-                      {String(form.description ?? '').trim() ? 'Ask the assistant to improve it' : 'Ask the assistant to write it'}
-                    </button>
-                  )}
-                  <textarea value={(form.description as string)||''} onChange={e=>set('description',e.target.value)} rows={4} className={iCls + ' resize-none'} placeholder="History, signature holes, views"/>
-                </Field></div>
-                <Field label="Gift Card URL" hint="Adds a gift card button to your course page.">
-                  <FInput value={(form.giftCardUrl as string)||''} onChange={v=>set('giftCardUrl',v)} placeholder="https://"/>
-                </Field>
-              </SectionCard>
-            </div>
-          )}
-
-          {/* ── Course layout ── guided steps; each saves itself (CourseLayoutTab). */}
-          {active==='Course layout' && (
-            <div data-setup="teesets holes"><CourseLayoutTab
-              holes={typeof form.holes === 'number' ? form.holes : null}
-              par={typeof form.par === 'number' ? form.par : null}
-              readOnly={isStaffLogin}
-              onCourseSaved={patch => setForm(f => ({ ...f, ...patch }))}
-            /></div>
-          )}
-
-          {/* ── Photos ── */}
-          {active==='Your course' && (
-            <div className="space-y-5">
-              <div data-setup="gallery"><SectionCard title="Gallery Photos">
-                <p className="text-sm text-ink-soft -mt-1">Up to 8 photos. Each saves on upload.</p>
-                {photoErr && (
-                  <div className="flex items-center gap-2 bg-bad/5 border border-bad/20 text-bad rounded-md px-4 py-3 text-sm">
-                    <StatusDot status="bad" />{photoErr}
-                  </div>
-                )}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {photos.map(p => (
-                    <div key={p.id} className="relative group aspect-video rounded-md overflow-hidden border border-line">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={p.url} alt="" className="w-full h-full object-cover"/>
-                      <button
-                        onClick={() => deleteGalleryPhoto(p.id)}
-                        className="absolute top-1.5 right-1.5 p-1 rounded-md bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-bad"
-                        title="Remove photo"
-                      >
-                        <X className="w-3.5 h-3.5"/>
-                      </button>
-                    </div>
-                  ))}
-                  {photos.length < 8 && (
-                    <label className={`aspect-video rounded-md border-2 border-dashed border-line flex flex-col items-center justify-center cursor-pointer hover:border-pine/40 transition-colors ${uploadingPhoto ? 'opacity-50 pointer-events-none' : ''}`}>
-                      {uploadingPhoto ? (
-                        <Loader2 className="w-5 h-5 text-ink-faint animate-spin"/>
-                      ) : (
-                        <>
-                          
-                          <span className="text-xs text-ink-faint">Add photo</span>
-                        </>
-                      )}
-                      <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" disabled={uploadingPhoto} onChange={e => uploadGalleryPhoto(e.target.files?.[0] ?? null)}/>
-                    </label>
-                  )}
-                </div>
-                <p className="text-xs text-ink-faint">{photos.length}/8 photos · JPEG, PNG, or WebP · Max 8MB each (large photos are auto-resized)</p>
-              </SectionCard></div>
-            </div>
-          )}
-
-
-
-          {/* ── Member & resident pricing ── */}
-          {active==='Prices & fees' && (
-            <div className="space-y-5">
-              {/* W2-5 (Cam 2026-10-19: "the whole pricing and fees … makes no sense").
-                  Read top to bottom: 1. who pays what (the answer, read from where
-                  prices are set), 2. which kinds of golfer get their own price and
-                  where each is set, 3. the fees golfers can be charged. The pricing
-                  rules underneath are unchanged. */}
-              <WhoPaysWhat accessLoaded={access.loaded} accessFailed={!!access.failed} canSeeSchedule={access.can('schedule.view')} canSeeMembers={access.can('members.view')} membersOn={!!form.hasMemberPricing} residentsOn={!!form.hasResidentPricing} />
-              <SectionCard title="Who gets their own price">
-                <p className="text-sm text-ink-soft -mt-2">Public prices and periods like twilight are set in <Link href="/dashboard/schedules" className="text-pine font-medium hover:underline">Schedule</Link>.</p>
-                <div className="border-t border-line-soft pt-4">
-                  <Toggle label="Members" checked={!!form.hasMemberPricing} onChange={()=>tog('hasMemberPricing')}/>
-                  <p className="text-[12.5px] text-ink-muted mt-1 pl-0.5">{form.hasMemberPricing
-                    ? <>Each membership&apos;s price is set on the membership in <Link href="/dashboard/members" className="text-pine hover:underline">Members</Link>. A membership without its own price pays the member price in Schedule, or the public price.</>
-                    : 'Off: members pay the public price, online and at the counter.'}</p>
-                </div>
-                <div className="border-t border-line-soft pt-4">
-                  <Toggle label="Residents" checked={!!form.hasResidentPricing} onChange={()=>tog('hasResidentPricing')}/>
-                  <p className="text-[12.5px] text-ink-muted mt-1 pl-0.5">{form.hasResidentPricing
-                    ? <>The resident price is set in <Link href="/dashboard/schedules" className="text-pine hover:underline">Schedule</Link>, and your list of residents is in <Link href="/dashboard/members" className="text-pine hover:underline">Members</Link>. A resident books one player at the resident price: themselves.</>
-                    : 'Off: residents pay the public price, online and at the counter.'}</p>
-                  {!!form.hasResidentPricing && (
-                    <div className="mt-3 space-y-3">
-                      <div className="grid grid-cols-2 gap-3">
-                        <Field label="Who counts as a resident: county"><FInput value={form.residentCounty as string} onChange={v=>set('residentCounty',v)} placeholder="e.g. Bergen"/></Field>
-                        <Field label="State"><FInput value={form.residentState as string} onChange={v=>set('residentState',v)} maxLength={2} placeholder="NJ"/></Field>
-                      </div>
-                      <Toggle label="Residents show proof of residency at check-in" checked={!!form.residentProofRequired} onChange={()=>tog('residentProofRequired')}/>
-                    </div>
-                  )}
-                </div>
-              </SectionCard>
-            </div>
-          )}
-
-          {/* ── Booking rules ── Settings rework (Cam 2026-10-19: "reword and organise";
-              the dress-code and walking selection buttons were bad). Plain questions,
-              and the two things golfers read get a text box with a live preview. */}
-          {active==='Booking rules' && (
-            <div className="space-y-5">
-              <SectionCard title="When golfers can book">
-                {/* SD-3: the course's clock — every "today" on the sheet and in the crons reads it. */}
-                <Field label="Your time zone" hint={isStaffLogin ? 'Only the course owner can change this.' : "Your tee sheet's today, and the check-in and cancellation clocks, all run on this."}>
-                  <select value={String(form.timezone ?? 'America/New_York')} onChange={e=>set('timezone',e.target.value)} disabled={isStaffLogin} className={iCls}>
-                    {US_TIMEZONES.map(z => <option key={z.id} value={z.id}>{z.label} — {z.id}</option>)}
-                  </select>
-                </Field>
-                <div className="grid sm:grid-cols-2 gap-3">
-                  <Field label="Days ahead anyone can book" hint={`Golfers see today plus the next ${Number(form.publicAdvanceDays) || 0} days.`}>
-                    <FInput value={form.publicAdvanceDays as number} onChange={v=>set('publicAdvanceDays',Number(v))} type="number"/>
-                  </Field>
-                  {!!form.hasMemberPricing && (
-                    <Field label="Days ahead members can book" hint="Each membership can set its own on Members.">
-                      <FInput value={form.memberAdvanceDays as number} onChange={v=>set('memberAdvanceDays',Number(v))} type="number"/>
-                    </Field>
-                  )}
-                  {!!form.hasMemberPricing && (
-                    <Field label="Days member rates last after it ends">
-                      <FInput value={(form.memberGraceDays as number) ?? 0} onChange={v=>set('memberGraceDays',Number(v))} type="number"/>
-                    </Field>
-                  )}
-                  {/* Cam 2026-10-29: who gets a member rate at the counter — the owner's call. */}
-                  {!!form.hasMemberPricing && (
-                    <Field label="Member rate at the counter">
-                      <select value={(form.counterMemberRate as string) || 'member'} onChange={e=>set('counterMemberRate',e.target.value)} disabled={isStaffLogin} className={iCls}>
-                        <option value="member">The member shows their membership</option>
-                        <option value="any">Any membership, staff&apos;s call</option>
-                      </select>
-                    </Field>
-                  )}
-                </div>
-              </SectionCard>
-              <SectionCard title="Group size">
-                <div className="grid grid-cols-2 gap-3">
-                  <Field label="Fewest players in a booking"><FInput value={form.minPlayers as number} onChange={v=>set('minPlayers',Number(v))} type="number"/></Field>
-                  <Field label="Most players in a booking"><FInput value={form.maxPlayers as number} onChange={v=>set('maxPlayers',Number(v))} type="number"/></Field>
-                </div>
-              </SectionCard>
-              {/* CART-4 (Cam 2026-11-09: "up to the course … then needs to flow into the tee sheet"): cart numbers and the
-                  starter's day sheet (CART-5: no separate cart ticket — the receipt shows the cart was paid). Not prices — anyone who can edit settings. */}
-              <SectionCard title="Carts at the starter">
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <Field label="Cart numbers">
-                    <select value={(form.cartNumbers as string) || 'off'} onChange={e=>set('cartNumbers',e.target.value)} className={iCls}>
-                      {CART_NUMBER_MODES.map(m => <option key={m} value={m}>{CART_NUMBER_LABEL[m]}</option>)}
-                    </select>
-                  </Field>
-                </div>
-                <Field label="Starter’s sheet">
-                  <div className="flex flex-wrap gap-x-4 gap-y-2">
-                    {STARTER_COLUMNS.map(c => {
-                      const on = starterColumns(form.starterColumns as string[]).includes(c.key);
-                      return (
-                        <label key={c.key} className="flex items-center gap-2 text-[14px] text-ink">
-                          {/* The sheet needs at least one column: the last one can't be unticked (it used to do nothing). */}
-                          <input type="checkbox" checked={on} disabled={on && starterColumns(form.starterColumns as string[]).length === 1} title={on && starterColumns(form.starterColumns as string[]).length === 1 ? 'At least one column' : undefined} onChange={() => {
-                            const cur = starterColumns(form.starterColumns as string[]);
-                            const next = on ? cur.filter(k => k !== c.key) : [...cur, c.key];
-                            set('starterColumns', next.length ? next : cur);
-                          }} />
-                          {c.label}
-                        </label>
-                      );
-                    })}
-                  </div>
-                </Field>
-                <Link href="/dashboard/starter" className="text-[13px] font-medium text-pine hover:underline">Open today’s starter’s sheet</Link>
-              </SectionCard>
-              <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-                <SectionCard title="What golfers should know">
-                  <Field label="Dress code" hint="One rule per line. Leave it empty if you don't have one.">
-                    <textarea value={dresscodes.join('\n')} onChange={e => set('dresscode', e.target.value.split('\n'))} rows={4}
-                      placeholder={'Collared shirts\nNo denim\nSoft spikes only'} className={iCls + ' resize-none'}/>
-                  </Field>
-                  {/* CART-1 (Cam 2026-10-24): when golfers can walk is set per round and time, beside the cart price. */}
-                  <p className="text-sm text-ink">When golfers can walk, and what a cart costs, is set for each round and time on{' '}
-                    <Link href="/dashboard/schedules" className="text-pine underline underline-offset-2">Schedule → What it costs</Link>.</p>
-                  {/* CART-2 (Cam 2026-11-06): per player, or per cart of two riders (3 riders = 2 carts). The owner's call — it changes prices. */}
-                  <Field label="How carts are charged" hint={form.cartPricing === 'per_cart' ? '2 riders a cart, rounded up. Members too.' : 'Each rider pays.'}>
-                    <select value={(form.cartPricing as string) || 'per_player'} onChange={e=>set('cartPricing',e.target.value)} disabled={isStaffLogin} className={iCls}>
-                      <option value="per_player">Per player</option>
-                      <option value="per_cart">Per cart (2 riders)</option>
-                    </select>
-                  </Field>
-                  <Field label="Anything else about walking or carts" hint="Optional, one sentence. Shown on your booking page.">
-                    <FInput value={form.walkingNote as string} onChange={v=>set('walkingNote',v)} placeholder="e.g. Push carts are free at the pro shop." maxLength={500}/>
-                  </Field>
-                </SectionCard>
-                <div className="xl:sticky xl:top-6">
-                  <div className="text-[13px] font-semibold text-ink mb-2">On your booking page</div>
-                  <Card className="p-4 space-y-3 text-sm">
-                    {String(form.walkingNote ?? '').trim() && (
-                      <div>
-                        <div className="text-[13px] font-semibold text-ink">Walking</div>
-                        <div className="text-ink">{String(form.walkingNote).trim()}</div>
-                      </div>
-                    )}
-                    {dresscodeLines.length > 0 && (
-                      <div>
-                        <div className="text-[13px] font-semibold text-ink">Dress code</div>
-                        <ul className="text-ink list-disc pl-5">{dresscodeLines.map((l, i) => <li key={i}>{l}</li>)}</ul>
-                      </div>
-                    )}
-                  </Card>
-                </div>
-              </div>
-            </div>
-          )}
-
-
-          {/* ── Cancellation ── */}
-          {active==='Prices & fees' && (
-            <div className="space-y-5">
-              {/* SP-B: the course's cancellation & card policy. The preview is
-                  describePolicy() — word for word what golfers are shown. */}
-              {/* MONEY-1: Money → Cancellations links straight here (?focus=cancellation-policy). */}
-              <div data-setup="cancellation-policy">
-              {isStaffLogin ? (
-                <SectionCard title="Fees golfers can be charged">
-                  <ul className="space-y-1 text-sm text-ink-soft">{formTerms.lines.map((l, i) => <li key={i}>{l}</li>)}</ul>
-                  <p className="text-xs text-ink-soft">Only the course owner&apos;s login can change the cancellation policy.</p>
-                </SectionCard>
-              ) : (<SectionCard title="Fees golfers can be charged">
-                <p className="text-sm text-ink-soft -mt-2">Your late-cancellation and no-show fees, and when golfers get their check-in link. Golfers pay $1.50 per player on each online booking, added to your price.</p>
-                {/* CARD-1 (Cam 2026-10-05: "a way for the course to not require a card"): the
-                    choice made explicit. Nothing new is stored — "no card" IS both fees at $0
-                    (cardRequired() in lib/cancel-policy), so picking it clears the fees and the
-                    pay-link hours below become the whole policy. */}
-                <Field label="Card at booking">
-                  <div className="space-y-2">
-                    {([
-                      { key: 'card', label: 'Ask for a card at booking', help: 'Lets you charge a late-cancellation or no-show fee. Nothing is charged at booking.' },
-                      { key: 'none', label: 'No card at booking', help: 'Golfers book with their name and email only, then get a link to check in and pay before their round. No late or no-show fees — there would be no card to charge.' },
-                    ] as const).map(o => {
-                      const sel = (o.key === 'card') === formTerms.cardNeeded;
-                      return (
-                        <label key={o.key} className={'flex items-start gap-2.5 px-3 py-2.5 rounded-[7px] border cursor-pointer ' + (sel ? 'border-pine/50 bg-pine/[0.05]' : 'border-line bg-white')}>
-                          <input type="radio" name="card-at-booking" checked={sel} className="mt-0.5 accent-pine"
-                            onChange={() => {
-                              if (o.key === 'none') { set('lateCancellationFee', 0); set('noShowFee', 0); }
-                              else if (!formTerms.cardNeeded) set('lateCancellationFee', 10);
-                            }}/>
-                          <span><span className="block text-sm font-medium text-ink">{o.label}</span><span className="block text-xs text-ink-muted">{o.help}</span></span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </Field>
-                {formTerms.cardNeeded && <Toggle label="Late-cancellation fee" checked={!!form.lateCancellationFee} onChange={() => set('lateCancellationFee', form.lateCancellationFee ? 0 : 10)}/>}
-                {formTerms.cardNeeded && !!form.lateCancellationFee && (
-                  <>
-                    <div className="grid sm:grid-cols-2 gap-3">
-                      <Field label="Fee ($)">
-                        <FInput value={form.lateCancellationFee as number} onChange={v=>set('lateCancellationFee',Number(v))} type="number" step="0.01"/>
-                      </Field>
-                      <Field label="Charged">
-                        <select value={(form.lateFeeBasis as string) || 'booking'} onChange={e=>set('lateFeeBasis',e.target.value)} className={iCls}>
-                          <option value="booking">Per booking</option>
-                          <option value="player">Per player</option>
-                        </select>
-                      </Field>
-                    </div>
-                    <Field label="Free cancellation until (hours before the tee time)">
-                      <FInput value={form.cancellationHours as number} onChange={v=>set('cancellationHours',Number(v))} type="number"/>
-                    </Field>
-                    <Field label="When the fee is taken">
-                      <div className="space-y-2">
-                        {LATE_FEE_TIMINGS.map(t => (
-                          <label key={t.key} className={'flex items-start gap-2.5 px-3 py-2.5 rounded-[7px] border cursor-pointer ' + (((form.lateFeeTiming as string) || 'hold_at_cutoff') === t.key ? 'border-pine/50 bg-pine/[0.05]' : 'border-line bg-white')}>
-                            <input type="radio" name="late-fee-timing" checked={((form.lateFeeTiming as string) || 'hold_at_cutoff') === t.key} onChange={() => set('lateFeeTiming', t.key)} className="mt-0.5 accent-pine"/>
-                            <span><span className="block text-sm font-medium text-ink">{t.label}</span><span className="block text-xs text-ink-muted">{t.help}</span></span>
-                          </label>
-                        ))}
-                      </div>
-                    </Field>
-                  </>
-                )}
-                {formTerms.cardNeeded && <Toggle label="No-show fee" checked={!!form.noShowFee} onChange={() => set('noShowFee', form.noShowFee ? 0 : 20)}/>}
-                {formTerms.cardNeeded && !!form.noShowFee && (
-                  <div className="grid sm:grid-cols-2 gap-3">
-                    <Field label="No-show fee ($)" hint="Charged at midnight when a group marked a no-show never checked in. Under “cancel late or don’t show” this replaces the late fee for a no-show.">
-                      <FInput value={form.noShowFee as number} onChange={v=>set('noShowFee',Number(v))} type="number" step="0.01"/>
-                    </Field>
-                    <Field label="Charged">
-                      <select value={(form.noShowFeeBasis as string) || 'booking'} onChange={e=>set('noShowFeeBasis',e.target.value)} className={iCls}>
-                        <option value="booking">Per booking</option>
-                        <option value="player">Per player</option>
-                      </select>
-                    </Field>
-                  </div>
-                )}
-                <Toggle label="Mark no-shows automatically" checked={!!form.autoNoShowMinutes} onChange={() => set('autoNoShowMinutes', form.autoNoShowMinutes ? null : 30)}/>
-                {!!form.autoNoShowMinutes && (
-                  <Field label="Minutes after the tee time with nobody checked in" hint="Checked hourly. Nothing is charged until midnight; “Undo no-show” or a check-in clears it.">
-                    <FInput value={form.autoNoShowMinutes as number} onChange={v=>set('autoNoShowMinutes',Number(v))} type="number"/>
-                  </Field>
-                )}
-                {/* Golfer record (Cam 2026-10-29): after too many missed rounds, booking is by phone. */}
-                <Toggle label="Repeat no-shows book by phone" checked={!!(form.onlineBlockNoShows || form.onlineBlockLateCancels)}
-                  onChange={() => { const on = !!(form.onlineBlockNoShows || form.onlineBlockLateCancels); set('onlineBlockNoShows', on ? null : 3); if (on) set('onlineBlockLateCancels', null); }}/>
-                {!!(form.onlineBlockNoShows || form.onlineBlockLateCancels) && (
-                  <div className="grid grid-cols-3 gap-3">
-                    <Field label="No-shows"><FInput value={(form.onlineBlockNoShows ?? '') as number} onChange={v=>set('onlineBlockNoShows', v === '' ? null : Number(v))} type="number"/></Field>
-                    <Field label="Late cancels"><FInput value={(form.onlineBlockLateCancels ?? '') as number} onChange={v=>set('onlineBlockLateCancels', v === '' ? null : Number(v))} type="number"/></Field>
-                    <Field label="Months"><FInput value={(form.onlineBlockMonths ?? 12) as number} onChange={v=>set('onlineBlockMonths',Number(v))} type="number"/></Field>
-                  </div>
-                )}
-                <Field label={formTerms.cardNeeded ? 'Check-in reminder (hours before the round)' : 'Pay link (hours before the round)'} hint={formTerms.cardNeeded ? 'Golfers get their check-in link this many hours before their tee time.' : 'Golfers get a link this many hours before their tee time to check in and pay.'}>
-                  <FInput value={(form.checkInWindowHours ?? 3) as number} onChange={v=>set('checkInWindowHours',Number(v))} type="number"/>
-                </Field>
-                <Field label="Rain check policy"><FInput value={form.rainCheckPolicy as string} onChange={v=>set('rainCheckPolicy',v)} placeholder="e.g. Rain checks issued for 9+ holes of rain"/></Field>
-                <div className="bg-paper/70 rounded-md p-4">
-                  <div className="text-[13px] font-semibold text-ink mb-2">What golfers will see</div>
-                  <ul className="space-y-1 text-sm text-ink">{formTerms.lines.map((l, i) => <li key={i}>{l}</li>)}</ul>
-                  <p className="text-xs text-ink-soft mt-2">{formTerms.cardNeeded ? 'A card is saved at booking because a fee above can be charged.' : 'No card is asked for at booking — there is nothing to charge it for.'} Weather and course-closed cancellations are always free.</p>
-                </div>
-              </SectionCard>)}
-              </div>
-            </div>
-          )}
-
-          {/* ── Facilities ── Settings rework (Cam 2026-10-19: "the worst thing I have
-              ever seen"). One checklist of what the course has; ticking a line opens
-              its one or two details. Beside it, the list exactly as golfers read it. */}
-          {active==='Facilities' && (
-            <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-              <Card className="p-5">
-                <h2 className="text-[15px] font-semibold text-ink">What your course has</h2>
-                {FACILITY_GROUPS.map(g => (
-                  <div key={g.title} className="border-t border-line-soft pt-3 mt-3 first-of-type:border-0">
-                    <h3 className="text-[13px] font-semibold text-ink mb-1">{g.title}</h3>
-                    <ul>
-                      {g.items.map(it => (
-                        <li key={it.key} className="py-1.5">
-                          <label className="flex items-center gap-2.5 text-sm text-ink cursor-pointer">
-                            <input type="checkbox" checked={!!form[it.key]} onChange={() => tog(it.key)} className="accent-pine w-4 h-4"/>
-                            {it.label}
-                          </label>
-                          {!!form[it.key] && it.key === 'hasDrivingRange' && (
-                            <div className="pl-[26px] mt-2 flex flex-wrap items-center gap-3">
-                              <select value={String(form.drivingRangeType ?? '')} onChange={e=>set('drivingRangeType',e.target.value)} className={iCls + ' !w-auto'} aria-label="Range type">
-                                <option value="">Type of range…</option>
-                                {Object.entries(RANGE_TYPES).map(([k, v]) => <option key={k} value={k}>{v.charAt(0).toUpperCase() + v.slice(1)}</option>)}
-                              </select>
-                              <label className="flex items-center gap-2 text-[13px] text-ink-soft"><input type="checkbox" checked={form.rangeBallsFree !== false} onChange={() => set('rangeBallsFree', form.rangeBallsFree === false)} className="accent-pine"/>Balls included with a round</label>
-                            </div>
-                          )}
-                          {!!form[it.key] && it.key === 'hasProShop' && (
-                            <div className="pl-[26px] mt-2 max-w-xs"><FInput value={form.proShopPhone as string} onChange={v=>set('proShopPhone',v)} placeholder="Pro shop phone (optional)" type="tel"/></div>
-                          )}
-                          {!!form[it.key] && it.key === 'hasClubRental' && (
-                            <label className="pl-[26px] mt-2 flex items-center gap-2 text-[13px] text-ink-soft">Price $<span className="w-28"><FInput value={(form.clubRentalRate as number) || ''} onChange={v=>set('clubRentalRate',Number(v))} placeholder="optional" type="number"/></span></label>
-                          )}
-                          {!!form[it.key] && it.key === 'hasPushCartRental' && (
-                            <label className="pl-[26px] mt-2 flex items-center gap-2 text-[13px] text-ink-soft">Price $<span className="w-28"><FInput value={(form.pushCartRate as number) || ''} onChange={v=>set('pushCartRate',Number(v))} placeholder="optional" type="number"/></span></label>
-                          )}
-                          {!!form[it.key] && it.key === 'hasCaddies' && (
-                            <div className="pl-[26px] mt-2 grid sm:grid-cols-3 gap-2">
-                              <select value={String(form.caddieType || 'looper')} onChange={e=>set('caddieType',e.target.value)} className={iCls} aria-label="Caddie type">
-                                <option value="looper">Caddies carry the bag</option>
-                                <option value="fore_caddie">Fore caddies</option>
-                                <option value="both">Both</option>
-                              </select>
-                              {form.caddieType !== 'fore_caddie' && <label className="flex items-center gap-2 text-[13px] text-ink-soft whitespace-nowrap">Per bag $<FInput value={(form.caddieLooperRate as number) || ''} onChange={v=>set('caddieLooperRate',Number(v))} placeholder="optional" type="number"/></label>}
-                              {(form.caddieType === 'fore_caddie' || form.caddieType === 'both') && <label className="flex items-center gap-2 text-[13px] text-ink-soft whitespace-nowrap">Fore caddie $<FInput value={(form.caddieForeRate as number) || ''} onChange={v=>set('caddieForeRate',Number(v))} placeholder="optional" type="number"/></label>}
-                              <div className="sm:col-span-3"><FInput value={form.caddieNote as string} onChange={v=>set('caddieNote',v)} placeholder="e.g. Book 48 hours ahead (optional)"/></div>
-                            </div>
-                          )}
-                          {!!form[it.key] && it.key === 'hasTournaments' && (
-                            <div className="pl-[26px] mt-2 max-w-xs">
-                              <select value={String(form.tournamentFrequency ?? '')} onChange={e=>set('tournamentFrequency',e.target.value)} className={iCls} aria-label="How often">
-                                <option value="">How often? (optional)</option>
-                                {Object.entries(TOURNAMENT_FREQ).map(([k, v]) => <option key={k} value={k}>{v.charAt(0).toUpperCase() + v.slice(1)}</option>)}
-                              </select>
-                            </div>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
                 ))}
-                <div className="border-t border-line-soft pt-3 mt-3">
-                  <h3 className="text-[13px] font-semibold text-ink mb-1">Food and drink</h3>
-                  <div className="grid sm:grid-cols-2 gap-1.5">
-                    {Object.entries(FOOD_TYPES).map(([k, v]) => (
-                      <label key={k} className="flex items-center gap-2.5 text-sm text-ink cursor-pointer py-1">
-                        <input type="radio" name="food" checked={(form.restaurantType || 'none') === k} onChange={() => set('restaurantType', k)} className="accent-pine"/>{v}
-                      </label>
-                    ))}
-                  </div>
-                  {['snack_bar','bar','full'].includes(form.restaurantType as string) && (
-                    <label className="flex items-center gap-2.5 text-sm text-ink cursor-pointer py-1 mt-1">
-                      <input type="checkbox" checked={!!form.hasCartGirl} onChange={() => tog('hasCartGirl')} className="accent-pine w-4 h-4"/>A beverage cart on the course as well
-                    </label>
-                  )}
-                </div>
-                <div className="border-t border-line-soft pt-3 mt-3">
-                  <Field label="Anything else" hint="One per line — e.g. Dog-friendly, Simulator bay. Each shows as its own line.">
-                    <textarea value={((form.amenities as string[]) || []).join('\n')} onChange={e => set('amenities', e.target.value.split('\n'))} rows={3} className={iCls + ' resize-none'}/>
-                  </Field>
-                </div>
               </Card>
-              <div className="xl:sticky xl:top-6">
-                <div className="text-[13px] font-semibold text-ink mb-2">On your booking page</div>
-                <Card className="p-4 text-sm">
-                  {facilityPreview.length ? (
-                    <ul className="list-disc pl-5 space-y-0.5 text-ink">{facilityPreview.map((l, i) => <li key={i}>{l}</li>)}</ul>
-                  ) : <p className="text-ink-soft">Nothing ticked yet, so golfers see no Facilities section.</p>}
-                </Card>
-                <p className="text-[12px] text-ink-soft mt-2">Facility prices are shown, never charged.</p>
-              </div>
-            </div>
+              {/* Staff move to Team once it's built (its mockup is with Cam). Until then the existing screen stays here. */}
+              <button type="button" onClick={() => goArea('staff')} className="self-start text-[13.5px] text-ink-soft hover:text-ink underline underline-offset-[3px] decoration-line py-2">Staff and permissions →</button>
+            </>
           )}
 
-          {/* ── Pro shop (POS-1a) ── items save themselves. */}
-          {active==='Pro shop' && (
-            <div className="space-y-5">
-              {/* POS-6 (Cam 2026-11-09): items are added and changed on Pro shop → Stock; round packs are turned off. */}
-              <Link href="/dashboard/shop" className="inline-block text-sm text-pine font-medium underline underline-offset-4">Shop items</Link>
-              {/* HOME-3 (Cam 2026-11-12): Home asks to open the register only when this is on. */}
-              <TakesCashToggle key={String(form.takesCash === true)} initial={form.takesCash === true} canEdit={access.can('settings.edit')} />
-              {/* W2-7 part B: owner only — staff can't change anything Stripe. */}
-              {access.loaded && !isStaffLogin && (
-                <SectionCard title="Sales tax">
-                  <SalesTaxCard homeState={String(form.state ?? '')} />
-                </SectionCard>
-              )}
-              {/* POS-3 R3: owner only — a reader is Stripe hardware. */}
-              {access.loaded && !isStaffLogin && (
-                <SectionCard title="Card reader">
-                  <CardReaderCard />
-                </SectionCard>
-              )}
-            </div>
+          {view === 'staff' && (
+            <Card className="max-w-[780px] w-full p-5">
+              {!access.loaded ? <p className="text-[13px] text-ink-muted">Loading…</p>
+                : access.isStaff ? <p className="text-[13.5px] text-ink-soft">Staff and their access are managed from the owner’s login.</p>
+                : <StaffPermissions />}
+            </Card>
           )}
 
-          {/* ── Staff ── */}
-          {active==='Staff' && (
-            <div className="space-y-5">
-              {/* SP-A: who works here and what each person may do — the owner's alone. */}
-              <SectionCard title="Staff & permissions">
-                {isStaffLogin
-                  ? <p className="text-sm text-ink-soft">Staff and their access are managed from the owner&apos;s login.</p>
-                  : <StaffPermissions />}
-              </SectionCard>
-            </div>
-          )}
-
-          {/* ── Your account ── this login's email, password and two-step, top to bottom. */}
-          {active==='Your account' && (
-            <div className="space-y-5">
-              {/* W2-2 (Cam 2026-10-19): say plainly whose login this is — the owner is the admin of their own course. */}
-              {access.loaded && (
-                <Card className="p-5">
-                  <div className="text-[15px] font-semibold text-ink">{isStaffLogin ? 'Staff login' : 'Owner account'}</div>
-                  <p className="mt-1 text-sm text-ink-soft">
-                    {isStaffLogin
-                      ? <>You are signed in as staff at {String(form.name || 'this course')}. The course owner decides what you can see and change.</>
-                      : <>Owner login for {String(form.name || 'your course')}. What each staff login can do is set in <button type="button" onClick={() => goTo('Staff')} className="text-pine underline">Staff</button>.</>}
-                  </p>
-                </Card>
-              )}
-              <SectionCard title="Signing in">
-                <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <div className="min-w-0">
-                    <div className="text-[13px] font-semibold text-ink">Email</div>
-                    <div className="text-sm text-ink break-all">{operatorEmail || '…'}</div>
+          {area && (
+            <>
+              <p className="-mt-1.5 max-w-[640px] text-[13.5px] leading-normal text-ink-soft">{area.intro}</p>
+              {!loaded ? (!loadError && <p className="py-16 text-center text-[13px] text-ink-muted">Loading…</p>) : (
+                <div className="grid gap-4 md:gap-7 md:grid-cols-[190px_minmax(0,780px)] items-start">
+                  <Sections key={view} items={sections} main={mainRef} />
+                  <div className="flex flex-col gap-4 min-w-0">
+                    {view === 'course' && <CourseArea ctx={ctx} />}
+                    {view === 'booking' && <BookingArea ctx={ctx} />}
+                    {view === 'payments' && <PaymentsArea ctx={ctx} />}
+                    {view === 'account' && <AccountArea ctx={ctx} />}
                   </div>
-                  <p className="text-[12.5px] text-ink-muted">{isStaffLogin ? 'To change it, ask the course owner.' : <>To change it, message us on <a href="/dashboard/support" className="text-pine underline">Support</a>.</>}</p>
                 </div>
-                {/* Staff logins are a separate account: the password and two-step
-                    routes here are the owner's only (both refuse staff). */}
-                {isStaffLogin && <p className="border-t border-line-soft pt-4 text-sm text-ink-soft">The course owner sets your password and sign-in codes.</p>}
-                {!isStaffLogin && <div className="border-t border-line-soft pt-4">
-                  <div className="flex flex-wrap items-baseline justify-between gap-2">
-                    <div>
-                      <div className="text-[13px] font-semibold text-ink">Password</div>
-                      <p className="text-[12.5px] text-ink-muted">For your own login only. Staff keep their own passwords.</p>
-                    </div>
-                    {!pwOpen && (
-                      <button onClick={() => { setPwOpen(true); setPwMsg(''); }}
-                        className="text-[12.5px] font-medium text-pine border border-pine/30 hover:bg-pine/5 rounded-md px-3 py-1.5 transition-colors">
-                        Change password
-                      </button>
-                    )}
-                  </div>
-                  {pwMsg && (
-                    <div className="mt-3 bg-ok/5 border border-ok/20 text-ok rounded-md px-4 py-3 text-sm flex items-center gap-2">
-                      <StatusDot status="ok" />{pwMsg}
-                    </div>
-                  )}
-                  {pwOpen && (
-                    <div className="mt-3 space-y-3">
-                      {pwError && (
-                        <div className="bg-bad/5 border border-bad/20 text-bad rounded-md px-4 py-3 text-sm flex items-center gap-2">
-                          <StatusDot status="bad" />{pwError}
-                        </div>
-                      )}
-                      <Field label="Current password"><FInput type="password" value={pwForm.currentPassword} onChange={v=>setPwForm(f=>({...f,currentPassword:v}))}/></Field>
-                      <Field label="New password" hint={PASSWORD_REQUIREMENTS_HINT}>
-                        <FInput type="password" value={pwForm.newPassword} onChange={v=>setPwForm(f=>({...f,newPassword:v}))}/>
-                      </Field>
-                      <Field label="New password again"><FInput type="password" value={pwForm.confirmPassword} onChange={v=>setPwForm(f=>({...f,confirmPassword:v}))}/></Field>
-                      <div className="flex flex-wrap items-center gap-3">
-                        <button onClick={changePassword} disabled={pwSaving}
-                          className="bg-pine hover:bg-pine-hover text-white px-4 py-2 rounded-md text-[12.5px] font-medium disabled:opacity-50 transition-colors">
-                          {pwSaving ? 'Updating…' : 'Update password'}
-                        </button>
-                        <button onClick={() => { setPwOpen(false); setPwError(''); setPwForm({ currentPassword: '', newPassword: '', confirmPassword: '' }); }} className="text-[12.5px] text-ink-muted hover:text-ink">Cancel</button>
-                      </div>
-                      <div className="text-[12.5px] text-ink-soft">
-                        {resetEmailSent ? (
-                          <span className="flex items-center gap-2 text-ok"><StatusDot status="ok" />Check {operatorEmail} for a reset link.</span>
-                        ) : (
-                          <>Don&apos;t remember your current password?{' '}
-                            <button onClick={emailResetLinkInstead} disabled={emailingReset||!operatorEmail} className="font-medium text-pine hover:underline disabled:opacity-50">
-                              {emailingReset ? 'Sending…' : 'Email me a reset link'}
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>}
-              </SectionCard>
-              {!isStaffLogin && <SectionCard title="Two-step sign-in">
-                <p className="text-sm text-ink-soft -mt-1">Every sign-in asks for a 6-digit code as well as your password. Choose where it&apos;s sent.</p>
-                {error2FA && (
-                  <div className="bg-bad/5 border border-bad/20 text-bad rounded-md px-4 py-3 text-sm flex items-center gap-2">
-                    <StatusDot status="bad" />{error2FA}
-                  </div>
-                )}
-                <div className="space-y-2">
-                  {([
-                    { key: 'email', label: 'Email', help: operatorEmail ? `Sent to ${operatorEmail}.` : 'Sent to your sign-in email.' },
-                    { key: 'sms', label: 'Text message', help: 'Sent to a mobile number you add below.' },
-                  ] as const).map(o => {
-                    const sel = ((form.twoFactorMethod as string) === 'sms' ? 'sms' : 'email') === o.key;
-                    return (
-                      <label key={o.key} className={'flex items-start gap-2.5 px-3 py-2.5 rounded-[7px] border cursor-pointer ' + (sel ? 'border-pine/50 bg-pine/[0.05]' : 'border-line bg-white')}>
-                        <input type="radio" name="two-step" checked={sel} onChange={() => set('twoFactorMethod', o.key)} className="mt-0.5 accent-pine"/>
-                        <span><span className="block text-sm font-medium text-ink">{o.label}</span><span className="block text-xs text-ink-muted">{o.help}</span></span>
-                      </label>
-                    );
-                  })}
-                </div>
-                {(form.twoFactorMethod as string) === 'sms' && (
-                  <Field label="Mobile number for codes">
-                    <FInput value={form.twoFactorPhone as string} onChange={v=>set('twoFactorPhone',v)} type="tel" placeholder="+1 (201) 555-0100"/>
-                  </Field>
-                )}
-                <button onClick={save2FA} disabled={saving2FA || (!dirtyFields.has('twoFactorMethod') && !dirtyFields.has('twoFactorPhone') && !saved2FA)}
-                  className="w-fit bg-pine hover:bg-pine-hover text-white px-4 py-2 rounded-md text-[12.5px] font-medium disabled:opacity-50 transition-colors">
-                  {saving2FA ? 'Saving…' : saved2FA ? 'Saved' : 'Save'}
-                </button>
-              </SectionCard>}
-            </div>
+              )}
+            </>
           )}
-
-            </div>
-          </div>
         </div>
       </main>
     </div>
@@ -1200,5 +284,5 @@ function SettingsPageInner() {
 }
 
 export default function SettingsPage() {
-  return <Suspense><SettingsPageInner/></Suspense>;
+  return <Suspense fallback={<div className="min-h-screen bg-page" />}><SettingsInner /></Suspense>;
 }

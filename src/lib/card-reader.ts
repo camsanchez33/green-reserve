@@ -277,3 +277,73 @@ export async function simulateTap(courseId: string, saleId: string, card: 'ok' |
     return fail(502, stripeMessage(err, 'The simulated reader didn’t take the tap.'));
   }
 }
+
+/**
+ * How long a payment's claim on a reader counts as live: the same 10 minutes the payment flows use
+ * before they treat their own claim as stale (shop-sales STALE_CHARGE_MS, checkin-booking READER_STALE_MS,
+ * dues-reader DUES_READER_STALE_MS; a test pins them equal). Kept here because dues-reader imports this file.
+ */
+export const READER_CLAIM_FRESH_MS = 10 * 60 * 1000;
+
+/** A shop sale, round or member's dues has claimed this reader in the last READER_CLAIM_FRESH_MS. */
+export async function readerClaimed(courseId: string, readerId: string): Promise<boolean> {
+  const since = new Date(Date.now() - READER_CLAIM_FRESH_MS);
+  const found = await Promise.all([
+    prisma.shopSale.findFirst({ where: { courseId, readerId, status: 'paying', chargeStartedAt: { gte: since } }, select: { id: true } }),
+    prisma.booking.findFirst({ where: { courseId, readerId, readerStartedAt: { gte: since } }, select: { id: true } }),
+    prisma.courseMembership.findFirst({ where: { courseId, duesReaderId: readerId, duesChargeStartedAt: { gte: since } }, select: { id: true } }),
+  ]);
+  return found.some(Boolean);
+}
+
+export type ReaderTest = { passed: boolean; online: boolean; message: string };
+
+/**
+ * Settings data (Cam 2026-11-17, "readers are tested for real"): Test reader.
+ * Puts "Test from GreenReserve · $0.00" on the reader's own screen through
+ * Stripe and clears it again, which proves the whole path (Stripe → the
+ * course's location → the reader) without moving money: a reader display is a
+ * picture, not a payment. Owner only (the route checks).
+ *
+ * It never touches a reader that is busy: refused while an action is in
+ * progress, and the screen is cleared only when the reader's current action is
+ * still our display, so a payment started meanwhile is never cancelled by it.
+ */
+export async function testReader(courseId: string, readerId: string): Promise<Result<ReaderTest>> {
+  const c = await courseStripe(courseId);
+  if (!c.ok) return c;
+  const r = await ownReader(c.value.account, c.value.terminalLocationId, readerId);
+  if (!r.ok) return r;
+  const opts = { stripeAccount: c.value.account };
+  if (r.value.status !== 'online') {
+    return { ok: true, value: { passed: false, online: false, message: 'Offline: check it’s turned on and connected to Wi-Fi. It can’t take payments until it reconnects.' } };
+  }
+  if (r.value.action?.status === 'in_progress') return fail(409, 'The reader is busy with a payment — try the test when it’s done.');
+  // A payment claims the reader in our database BEFORE it is sent to Stripe, so this closes the gap the
+  // action check above can't see. Only a fresh claim counts: an abandoned one never blocks the test.
+  if (await readerClaimed(courseId, readerId)) return fail(409, 'The reader is busy with a payment — try the test when it’s done.');
+  try {
+    await stripe.terminal.readers.setReaderDisplay(readerId, {
+      type: 'cart',
+      cart: { currency: 'usd', line_items: [{ description: 'Test from GreenReserve', amount: 0, quantity: 1 }], total: 0 },
+    }, opts);
+  } catch (err) {
+    console.error(JSON.stringify({ ev: 'card_reader.test.fail', courseId, readerId, error: err instanceof Error ? err.message : String(err) }));
+    return { ok: true, value: { passed: false, online: true, message: stripeMessage(err, 'The reader didn’t answer — check it’s on and connected, then test again.') } };
+  }
+  // Leave it up long enough for whoever is at the counter to see it.
+  await new Promise(res => setTimeout(res, 3000));
+  try {
+    const now = await stripe.terminal.readers.retrieve(readerId, {}, opts);
+    const action = 'deleted' in now ? null : (now as Stripe.Terminal.Reader).action;
+    if (action?.type === 'set_reader_display' && action.status === 'failed') {
+      return { ok: true, value: { passed: false, online: true, message: action.failure_message || 'The reader didn’t show the test — check it’s on and connected, then test again.' } };
+    }
+    // Cleared only while the screen is still ours and no payment has claimed the reader since.
+    if (action?.type === 'set_reader_display' && !(await readerClaimed(courseId, readerId))) await stripe.terminal.readers.cancelAction(readerId, {}, opts);
+  } catch (err) {
+    // The test already passed; the cart picture is replaced by the next payment anyway.
+    console.error(JSON.stringify({ ev: 'card_reader.test.clear_fail', courseId, readerId, error: err instanceof Error ? err.message : String(err) }));
+  }
+  return { ok: true, value: { passed: true, online: true, message: 'The reader showed the test and is ready to take payments.' } };
+}
