@@ -75,7 +75,13 @@ Support (chats) · Light parity. Specs: ADMIN_REDO_SPEC "Course dashboard Home",
      - **Staff** move to a new Team page under Business; its mockup is coming. Until Team is built, keep the existing staff screen reachable, never lose it.
      - **Per-round rules** are on Schedule.
      - **Member and resident price switches** are not on this page (Memberships owns rates). Removing the switches themselves is a separate Build decision; ask Cam.
-7. **Next mockups with Cam:** Team (dashboard), Course alert.
+7. **Course alert — APPROVED, build after the Dashboard lane's open PRs** (Cam 2026-11-17, "course alert is good when those comments are fixed"). Mockup `lanes/dashboard/alert-mockup.html` (https://claude.ai/artifact/Agm6uJR2Z7ARcqRUkFyr6y) and its threads are the spec. Course alert becomes a page.
+   - **Left column.** The live alert, with a preview of what golfers see. Editing opens a popup without quick starts. It can tell golfers booked today: email to everyone, and text only to golfers who agreed (sendSms).
+   - **Right column: course conditions, in depth.** Course status, carts, greens, pins, range, wetness, temporary rules. Each shows who updated it and when, and the course can add its own conditions and delete any.
+   - **Bad weather.** "Delayed start" (was Frost delay) asks why: frost, fog, wet course or other. "Close for weather" is a four-step walkthrough that previews every group's new time, or what each group gets back under the cancellation policy, before anything moves. Close needs a checkbox before the final button.
+   - **Past alerts** sit in a dropdown.
+   - **Build first.** Delayed start and Close for weather MUST run through the tee sheet's existing server code (frost-delay, weather-cancel), not a second copy. Conditions (add/delete, extra fields) and past alerts need data.
+8. **Next mockup with Cam:** Team (dashboard), https://claude.ai/artifact/L2SZ76WpfdZMx4krCiubf1.
 
 ## Small follow-ups (do with the next PR that touches the file)
 - `StockTab` side card goes solid at lg after a tap: use `max-lg:fixed max-lg:inset-0`.
