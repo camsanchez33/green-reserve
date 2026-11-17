@@ -3,8 +3,8 @@ export const NETWORK = 'Couldn’t reach the server. Check your connection and t
 export const CHECKER_NETWORK = 'Couldn’t reach the security checker. Check your connection and try again.';
 export const TOAST = {
   undo: 'Undone. The checker will keep watching.',
-  approve: 'Approved. Recorded for a person to do; nothing changes on its own.',
-  dismiss: 'Not now. Recorded; nothing changes on its own.',
+  approve: 'Approved. Sent to Build to do; nothing changes on its own.',
+  dismiss: 'Not now. Recorded.',
 };
 export const AI_UNAVAILABLE = 'AI summary unavailable.';
 export const NO_CHECK_YET = 'No check yet';
