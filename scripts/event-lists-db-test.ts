@@ -6,7 +6,7 @@
 import { PrismaClient } from '@prisma/client';
 import { courseLists, addOwnItem, editOwnItem, removeOwnItem, changeNotes, changeIncludes, staffNotesOf, cleanOwnItem } from '../src/lib/event-lists';
 import { cleanQuestionShape } from '../src/lib/event-questions';
-import { createEvent } from '../src/lib/course-events';
+import { createEvent, updateEvent } from '../src/lib/course-events';
 
 const prisma = new PrismaClient();
 const TAG = 'evlisttest';
@@ -95,11 +95,33 @@ async function main() {
   const i1 = changeIncludes(['Cart'], 'add', { label: 'Lunch' });
   check('an included item is added', i1.ok && i1.value.join() === 'Cart,Lunch');
   check('…but not twice', !changeIncludes(['Cart'], 'add', { label: 'cart' }).ok);
-  const i2 = changeIncludes(['Cart', 'Lunch'], 'edit', { index: 1, label: 'Lunch and a drink' });
+  const i2 = changeIncludes(['Cart', 'Lunch'], 'edit', { index: 1, was: 'Lunch', label: 'Lunch and a drink' });
   check('an included item is changed', i2.ok && i2.value[1] === 'Lunch and a drink');
-  const i3 = changeIncludes(['Cart', 'Lunch'], 'remove', { index: 0 });
-  check('an included item is removed', i3.ok && i3.value.join() === 'Lunch');
-  check('an index that isn’t there is refused', !changeIncludes(['Cart'], 'remove', { index: 3 }).ok);
+  const i3 = changeIncludes(['Cart', 'Lunch', 'Prizes'], 'remove', { index: 0, was: 'Cart' });
+  check('an included item is removed', i3.ok && i3.value.join() === 'Lunch,Prizes');
+  check('a double tap of remove is refused the second time (the line there is a different one)', i3.ok && !changeIncludes(i3.value, 'remove', { index: 0, was: 'Cart' }).ok);
+  check('an edit from a stale page is refused rather than landing on another line', i3.ok && !changeIncludes(i3.value, 'edit', { index: 1, was: 'Lunch', label: 'x' }).ok);
+  check('an index that isn’t there is refused', !changeIncludes(['Cart'], 'remove', { index: 3, was: 'Cart' }).ok);
+
+  // Two people at once, and labels with _ or % in them.
+  const twice = await Promise.all([1, 2].map(() => addOwnItem(b.id, { list: 'include', label: 'Hot dog' })));
+  check('two people adding the same item at once make one row', twice.filter(r => r.ok).length === 1 && (await prisma.courseEventListItem.count({ where: { courseId: b.id, list: 'include', label: 'Hot dog' } })) === 1);
+  const many = await Promise.all(Array.from({ length: 60 }, (_, i) => addOwnItem(b.id, { list: 'kind', label: `Kind ${i}` })));
+  check('sixty at once stop at the cap of fifty', many.filter(r => r.ok).length === 50 && (await prisma.courseEventListItem.count({ where: { courseId: b.id, list: 'kind' } })) === 50);
+  check('“Print banners” and “Print_banners” are different items', (await addOwnItem(b.id, { list: 'task', label: 'Print banners' })).ok && (await addOwnItem(b.id, { list: 'task', label: 'Print_banners' })).ok);
+  check('“%” is just a label, not a wildcard', (await addOwnItem(b.id, { list: 'task', label: '%' })).ok);
+  check('a blank or true “days before” isn’t a day', cleanOwnItem('task', { label: 'x', daysBefore: ' ' }).ok && (cleanOwnItem('task', { label: 'x', daysBefore: ' ' }) as unknown as { value: { data: { daysBefore: unknown } } }).value.data.daysBefore === null && !cleanOwnItem('task', { label: 'x', daysBefore: true }).ok && !cleanOwnItem('task', { label: 'x', daysBefore: [3] }).ok);
+  const st = await addOwnItem(b.id, { list: 'task', label: 'Call the caterer', detail: 'Ask for Sam', daysBefore: 4 });
+  if (st.ok) {
+    const e = await editOwnItem(b.id, st.value.id, { label: 'Call the caterer again' });
+    check('a label-only edit keeps the step’s how-to and due day', e.ok && e.value.detail === 'Ask for Sam' && e.value.daysBefore === 4, JSON.stringify(e));
+  }
+
+  // Saving the event without the fields the page now edits elsewhere keeps them.
+  await prisma.courseEvent.update({ where: { id: event.id }, data: { includes: ['Cart', 'Lunch'], notes: 'Old note' } });
+  await updateEvent(a.id, event.id, { name: 'Member night', kind: 'other', date: '2031-06-10', format: 'shotgun', startTime: '17:00', holes: 9, payer: 'players' });
+  const kept = await prisma.courseEvent.findUniqueOrThrow({ where: { id: event.id } });
+  check('a save that leaves out the own kind, included items and notes keeps them', kept.kindLabel === 'Member night' && kept.includes.join() === 'Cart,Lunch' && kept.notes === 'Old note', JSON.stringify(kept));
 
   await cleanup();
   await prisma.$disconnect();

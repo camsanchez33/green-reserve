@@ -313,6 +313,12 @@ export async function updateEvent(courseId: string, id: string, input: EventInpu
   if (!existing) return null;
   if (existing.status !== 'planned') throw new EventError('This event was cancelled.');
   const { data, teeTimesFound } = await eventFields(courseId, input, { allowPast: input.date === existing.date });
+  // Events lists (Cam 2026-11-17): what's included is edited one line at a time and the
+  // own kind name may not be on the form, so a field the save leaves out keeps what is stored.
+  if (input.includes === undefined) data.includes = existing.includes;
+  if (input.kindLabel === undefined && data.kind === 'other') data.kindLabel = existing.kindLabel;
+  if (input.notes === undefined) data.notes = existing.notes;
+  if (input.terms === undefined) data.terms = existing.terms;
   const moved = data.date !== existing.date || data.holdFrom !== existing.holdFrom || data.holdTo !== existing.holdTo
     || data.format !== existing.format || data.productId !== existing.productId
     || data.shareCourse !== existing.shareCourse || data.holdNineIds.join() !== existing.holdNineIds.join() || data.keepOpen.join() !== existing.keepOpen.join();

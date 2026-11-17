@@ -113,7 +113,7 @@ type Body = EventInput & {
   playerId?: string; playerIds?: unknown; on?: boolean; text?: string; groupNo?: number | null; startHole?: number | null; size?: number;
   email?: unknown; phone?: unknown;
   /** Events lists: a checklist step's how-to; a staff note; an included item by its place in the list. */
-  detail?: unknown; noteId?: unknown; topic?: unknown; note?: unknown; index?: unknown;
+  detail?: unknown; noteId?: unknown; topic?: unknown; note?: unknown; index?: unknown; was?: unknown;
 };
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -184,7 +184,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       case 'note_add': case 'note_edit': case 'note_remove':
       case 'include_add': case 'include_edit': case 'include_remove': {
         const how = body.action.endsWith('_add') ? 'add' as const : body.action.endsWith('_edit') ? 'edit' as const : 'remove' as const;
-        // Read and write under a lock on the event, so two people editing at once can't lose a line.
+        // Read and write under a lock on the event, so two people editing at once can't lose a line;
+        // an included item is named by its place and its current text, so a stale request is refused.
         const r = await prisma.$transaction(async tx => {
           await tx.$queryRaw`SELECT id FROM "CourseEvent" WHERE id = ${id} AND "courseId" = ${courseId} FOR UPDATE`;
           const cur = await tx.courseEvent.findUniqueOrThrow({ where: { id }, select: { staffNotes: true, includes: true } });

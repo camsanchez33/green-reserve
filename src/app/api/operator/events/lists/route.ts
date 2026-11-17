@@ -30,7 +30,8 @@ export async function POST(req: NextRequest) {
   if ('res' in g) return g.res;
   const courseId = g.session.courseId;
   const agreementBlock = await requireAgreementCurrent(courseId); if (agreementBlock) return agreementBlock;
-  const body = await req.json().catch(() => ({})) as Record<string, unknown>;
+  const raw = await req.json().catch(() => null);
+  const body = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
   const r = await addOwnItem(courseId, body);
   if (!r.ok) return bad(r.error, r.status);
   return NextResponse.json({ item: r.value, ...(await courseLists(courseId)) });
@@ -41,7 +42,8 @@ export async function PATCH(req: NextRequest) {
   if ('res' in g) return g.res;
   const courseId = g.session.courseId;
   const agreementBlock = await requireAgreementCurrent(courseId); if (agreementBlock) return agreementBlock;
-  const body = await req.json().catch(() => ({})) as Record<string, unknown>;
+  const raw = await req.json().catch(() => null);
+  const body = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
   const r = await editOwnItem(courseId, String(body.id ?? ''), body);
   if (!r.ok) return bad(r.error, r.status);
   return NextResponse.json({ item: r.value, ...(await courseLists(courseId)) });
