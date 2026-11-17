@@ -43,7 +43,6 @@ const BASE: Record<string, number> = {
   'src/app/dashboard/settings/page.tsx': 4,     // the brand colour picker's default
   'src/app/dashboard/members/page.tsx': 8,      // membership swatch palette (reads on both)
   'src/app/dashboard/onboarding/page.tsx': 2,   // Stripe's own button colours (no rail: site look)
-  'src/app/dashboard/analytics/page.tsx': 2,    // chart comparison greys
   'src/components/dashboard/money/SalesPanel.tsx': 3, // chart fills
   'src/components/dashboard/CoursePreview.tsx': 1,    // golfer preview (op-keep-light)
   'src/components/OperatorSidebar.tsx': 2,      // default course colour before the course loads
