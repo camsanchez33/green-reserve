@@ -1,4 +1,4 @@
-// @brain outreach
+// @brain course-lookup
 // Inquiries data (Cam 2026-11-17): "Add a course" search over PUBLIC listings — OpenStreetMap's Nominatim.
 // Only public facts about the course as a business (name, address, town, website, its public phone,
 // location). No people, no personal data.
