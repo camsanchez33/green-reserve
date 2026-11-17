@@ -85,20 +85,32 @@ export async function addContact(inquiryId: string, input: Record<string, unknow
   //    transaction, so the mirror never erases it.
   const replaces = input.replacesInquiryContact === true;
   const c = v.contact as ContactInput;
-  const contact = await prisma.$transaction(async tx => {
-    // Counted inside the transaction, so two first saves at once cannot both seed.
-    await tx.$queryRaw`SELECT id FROM "CourseInquiry" WHERE id = ${inquiryId} FOR UPDATE`;
+  const r = await prisma.$transaction(async tx => {
+    // The row is read under the lock (status and contact columns too), and contacts are counted under it,
+    // so two first saves at once cannot both seed and an Onboarding edit cannot slip in between.
+    const rows = await tx.$queryRaw<{ status: string; contactName: string; contactTitle: string; email: string; phone: string }[]>`
+      SELECT status, "contactName", "contactTitle", email, phone FROM "CourseInquiry" WHERE id = ${inquiryId} FOR UPDATE`;
+    const row = rows[0];
+    if (!row) return fail(404, 'That course is not on the list any more.');
     const count = await tx.courseContact.count({ where: { inquiryId } });
-    const seed = !replaces && count === 0 && (inq.contactName.trim() || inq.email.trim() || inq.phone.trim());
-    if (seed) await tx.courseContact.create({ data: { inquiryId, name: inq.contactName.trim() || inq.email.trim() || inq.phone.trim(), role: inq.contactTitle, email: inq.email, phone: inq.phone, sortOrder: 0 } });
-    if (replaces && count === 0) {
+    if (replaces) {
+      // Only on a course still in outreach (after Said yes, Onboarding's Edit contact owns these columns), and
+      // only while the inquiry-row contact is still the only one — otherwise the page is out of date.
+      if (row.status !== LEAD_STATUS) return fail(409, 'This course is on Onboarding now — change its contact there.');
+      if (count > 0) return fail(409, 'This contact was already saved — reload the course.');
       const [firstName = '', ...rest] = c.name.split(/\s+/).filter(Boolean);
       await tx.courseInquiry.update({ where: { id: inquiryId }, data: { contactName: c.name, firstName, lastName: rest.join(' '), contactTitle: c.role, email: c.email, phone: c.phone } });
+      await tx.inquiryStatusEvent.create({ data: { inquiryId, fromStatus: row.status, toStatus: row.status, trigger: 'admin', actorName: 'Contact corrected on the outreach page' } });
+      return { contact: await tx.courseContact.create({ data: { inquiryId, ...c, sortOrder: 0 } }), replaced: true };
     }
-    return tx.courseContact.create({ data: { inquiryId, ...c, sortOrder: count + (seed ? 1 : 0) } });
+    const seedName = row.contactName.trim() || row.email.trim() || row.phone.trim();
+    const seed = count === 0 && !!seedName;
+    if (seed) await tx.courseContact.create({ data: { inquiryId, name: seedName, role: row.contactTitle, email: row.email, phone: row.phone, sortOrder: 0 } });
+    return { contact: await tx.courseContact.create({ data: { inquiryId, ...c, sortOrder: count + (seed ? 1 : 0) } }), replaced: false };
   });
+  if ('ok' in r) return r;
   await syncPrimaryContact(inquiryId);
-  return { ok: true as const, contact };
+  return { ok: true as const, contact: r.contact, replaced: r.replaced };
 }
 
 export async function updateContact(inquiryId: string, contactId: string, input: Record<string, unknown>) {
@@ -288,13 +300,17 @@ export async function notNow(inquiryId: string, adminName: string, recheckRaw?: 
 
 /** Undo a mis-logged touch ("Email 1 sent" by mistake). Only a touch on this course. */
 export async function deleteTouch(inquiryId: string, touchId: string, adminName: string) {
-  const touch = await prisma.outreachTouch.findFirst({ where: { id: touchId, inquiryId }, select: { id: true, at: true, channel: true, direction: true, inquiry: { select: { status: true } } } });
+  const touch = await prisma.outreachTouch.findFirst({ where: { id: touchId, inquiryId }, select: { id: true, at: true, channel: true, direction: true, note: true, adminName: true, inquiry: { select: { status: true } } } });
   if (!touch) return fail(404, 'That contact is not logged on this course.');
-  await prisma.$transaction([
-    prisma.outreachTouch.delete({ where: { id: touch.id } }),
-    prisma.inquiryStatusEvent.create({ data: { inquiryId, fromStatus: touch.inquiry.status, toStatus: touch.inquiry.status, trigger: 'admin', actorName: `Removed a logged ${touch.channel.replace('_', ' ')} (${touch.direction === 'in' ? 'from them' : 'from us'}, ${fmtDate(touch.at)}) — by ${adminName}` } }),
-  ]);
-  return { ok: true as const, before: { at: touch.at.toISOString(), channel: touch.channel, direction: touch.direction } };
+  const gone = await prisma.$transaction(async tx => {
+    // deleteMany + count: a second delete of the same touch at once gets a 404, not a 500, and writes no event.
+    const d = await tx.outreachTouch.deleteMany({ where: { id: touch.id, inquiryId } });
+    if (d.count) await tx.inquiryStatusEvent.create({ data: { inquiryId, fromStatus: touch.inquiry.status, toStatus: touch.inquiry.status, trigger: 'admin', actorName: `Removed a logged ${touch.channel.replace('_', ' ')} (${touch.direction === 'in' ? 'from them' : 'from us'}, ${fmtDate(touch.at)}) — by ${adminName}` } });
+    return d.count;
+  });
+  if (!gone) return fail(404, 'That contact is not logged on this course.');
+  // Everything the row held goes to the audit log, since the row itself is gone.
+  return { ok: true as const, before: { at: touch.at.toISOString(), channel: touch.channel, direction: touch.direction, note: touch.note, loggedBy: touch.adminName } };
 }
 
 // ─── The Outreach tab ────────────────────────────────────────────────────────

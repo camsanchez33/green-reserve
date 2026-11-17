@@ -94,6 +94,11 @@ async function main() {
   const editedRows = await prisma.courseContact.findMany({ where: { inquiryId: edited.id } });
   const editedInq = await prisma.courseInquiry.findUniqueOrThrow({ where: { id: edited.id } });
   check('contact: replacesInquiryContact replaces the inquiry-row contact and its email', rep.ok && editedRows.length === 1 && editedInq.email === 'new.email@example.com' && editedInq.contactName === 'New Name', { editedRows, editedInq });
+  const repAgain = await addContact(edited.id, { name: 'Stale Page', email: 'stale@example.com', replacesInquiryContact: true });
+  check('contact: a replace once contacts exist → 409, nothing added', !repAgain.ok && repAgain.status === 409 && (await prisma.courseContact.count({ where: { inquiryId: edited.id } })) === 1);
+  const pastOutreach = await prisma.courseInquiry.create({ data: { status: 'in_review', courseName: `${TAG} Past Outreach`, contactName: 'Onb Person', contactTitle: '', email: 'onboarding@example.com', phone: '555-0102', address: '', city: 'Onbtown', state: 'NY', zipCode: '', courseType: '', lookingFor: [] } });
+  const repPast = await addContact(pastOutreach.id, { name: 'Someone Else', email: 'elsewhere@example.com', replacesInquiryContact: true });
+  check('contact: a replace on a course past outreach → 409, its email untouched', !repPast.ok && repPast.status === 409 && (await prisma.courseInquiry.findUniqueOrThrow({ where: { id: pastOutreach.id } })).email === 'onboarding@example.com');
   // Two first saves at once on an older lead seed it once.
   const racy = await prisma.courseInquiry.create({ data: { status: 'lead', courseName: `${TAG} Racy Lead`, contactName: 'Pat Race', contactTitle: '', email: 'race@example.com', phone: '', address: '', city: 'Racetown', state: 'NY', zipCode: '', courseType: '', lookingFor: [] } });
   await Promise.all([addContact(racy.id, { name: 'A One' }), addContact(racy.id, { name: 'B Two' })]);
@@ -178,14 +183,23 @@ async function main() {
   const fuAt = new Date(now.getTime() + 10 * 86_400_000).toISOString();
   const fu = await logOutreachCall(fuCall.id, { result: 'follow_up', followUpAt: fuAt, nextStep: 'Send town board one-pager' }, ADMIN);
   check('log: follow up sets the course\'s follow-up date', fu.ok && (await prisma.courseInquiry.findUniqueOrThrow({ where: { id: replied } })).nextFollowUpAt?.toISOString() === fuAt);
+  // An autosave and the log at the same moment: the autosaved note survives the log.
+  const raceCall = await prisma.call.create({ data: { kind: 'discovery', inquiryId: replied, scheduledAt: new Date(now.getTime() - 1800_000) } });
+  await Promise.all([
+    saveCallNotes(raceCall.id, { agendaNotes: { cancellation: '24 hours.' } }),
+    logOutreachCall(raceCall.id, { result: 'no_answer', agendaNotes: { people: 'Asked for the GM.' } }, ADMIN),
+  ]);
+  const raced = await prisma.call.findUniqueOrThrow({ where: { id: raceCall.id } });
+  check('log: an autosave at the same moment as the log keeps both notes', raced.outcome === 'no_answer' && raced.answersJson.includes('24 hours.') && raced.answersJson.includes('Asked for the GM.'), raced.answersJson);
   const fuEvent = await prisma.inquiryStatusEvent.findFirst({ where: { inquiryId: replied, actorName: { startsWith: 'Call logged' } }, orderBy: { createdAt: 'desc' } });
   check('log: the timeline says how it went, not the next step (viewers read it)', !!fuEvent && !fuEvent.actorName!.includes('one-pager'), fuEvent);
   // Undo a mis-logged touch.
   const oops = await prisma.outreachTouch.create({ data: { inquiryId: replied, at: new Date(now.getTime() - 60_000), channel: 'email', direction: 'out' } });
   const wrongCourse = await deleteTouch(id, oops.id, ADMIN);
   check('touch: removing it through another course → 404', !wrongCourse.ok && wrongCourse.status === 404);
-  const undo = await deleteTouch(replied, oops.id, ADMIN);
-  check('touch: removed, and the timeline says so', undo.ok && !(await prisma.outreachTouch.findUnique({ where: { id: oops.id } })) && (await prisma.inquiryStatusEvent.count({ where: { inquiryId: replied, actorName: { startsWith: 'Removed a logged email' } } })) === 1);
+  const [undo, undo2] = await Promise.all([deleteTouch(replied, oops.id, ADMIN), deleteTouch(replied, oops.id, ADMIN)]);
+  check('touch: two removes at once → one ok, one 404', [undo, undo2].filter(x => x.ok).length === 1 && [undo, undo2].some(x => !x.ok && x.status === 404));
+  check('touch: removed, and the timeline says so once', (undo.ok || undo2.ok) && !(await prisma.outreachTouch.findUnique({ where: { id: oops.id } })) && (await prisma.inquiryStatusEvent.count({ where: { inquiryId: replied, actorName: { startsWith: 'Removed a logged email' } } })) === 1);
   const nnCall = await prisma.call.create({ data: { kind: 'discovery', inquiryId: contacted, scheduledAt: new Date(now.getTime() - 3600_000) } });
   const badRecheck = await logOutreachCall(nnCall.id, { result: 'not_now', recheckAt: '2020-01-01' }, ADMIN);
   check('log: not now with a past recheck → 400 and the call is not logged', !badRecheck.ok && (await prisma.call.findUniqueOrThrow({ where: { id: nnCall.id } })).outcome === 'scheduled');

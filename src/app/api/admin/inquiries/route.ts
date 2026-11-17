@@ -480,8 +480,9 @@ async function handleAction(
   }
 
   // ADMIN-REDO Business analytics (Cam via Build 2026-11-12): log one contact with a course — an
-  // email, call or text we sent ('out') or a reply ('in'). Append-only; allowed on a lead (that is
-  // where outreach happens). Manager+ in Pipeline (the PATCH/POST gates); withAudit records it.
+  // email, call or text we sent ('out') or a reply ('in'). Allowed on a lead (that is where outreach
+  // happens). A mis-logged one can be removed (Inquiries data: POST /api/admin/outreach/[id] delete_touch,
+  // manager+, audited with what it held). Manager+ in Pipeline (the PATCH/POST gates); withAudit records it.
   if (action === 'add_touch') {
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const channel = String(payload?.channel ?? '');

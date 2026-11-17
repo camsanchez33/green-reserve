@@ -5,6 +5,7 @@ import {
   outreachStage, outreachNext, lastTouchLabel, emailRows, courseKind, validateFacts, validateContact, nameKey, findDuplicates,
   parseCsv, importRows, endOfEasternDay, OUTREACH_START, type DupPoolRow,
 } from '../src/lib/outreach';
+import { readFileSync } from 'fs';
 import { toResult } from '../src/lib/course-lookup';
 import { LEAD_ACTIONS, CALL_STATUSES } from '../src/lib/inquiry-status';
 
@@ -148,6 +149,17 @@ const hit = toResult({
 check('listing: facts from a Nominatim hit', !!hit && hit.courseName === 'Indian Island Golf Course' && hit.city === 'Riverhead' && hit.state === 'NY' && hit.address === 'Cross River Drive' && hit.osmRef === 'osm:way/385713776' && hit.website === 'example.com/golf' && hit.coursePhone === '+1 631-555-0100' && hit.latitude === 40.92, hit);
 check('listing: no name → skipped', toResult({ osm_type: 'way', osm_id: 1 }) === null);
 check('listing: a bad osm type → skipped', toResult({ osm_type: 'area', osm_id: 1, name: 'X Golf' }) === null);
+
+// ── Every palette page link is area-filtered (the Pipeline entry moved to /admin/inquiries/all) ──
+{
+  const src = readFileSync('src/app/api/admin/search/route.ts', 'utf8');
+  const navHrefs = [...src.matchAll(/id: 'nav:[^']+',\s*label: '[^']*',\s*href: '([^']+)'/g)].map(m => m[1]);
+  const areaBlock = src.slice(src.indexOf('const NAV_AREA'), src.indexOf('const TYPE_AREA'));
+  const OPEN = ['/admin', '/admin/profile'];
+  const missing = navHrefs.filter(h => !OPEN.includes(h) && !areaBlock.includes(`'${h}':`));
+  check(`palette: every page link has an area (${navHrefs.length} links)`, navHrefs.length > 5 && missing.length === 0, missing);
+  check('palette: Pipeline opens the full board', navHrefs.includes('/admin/inquiries/all'));
+}
 
 console.log(failed ? `\n${failed} FAILED` : '\nAll passed');
 process.exit(failed ? 1 : 0);
