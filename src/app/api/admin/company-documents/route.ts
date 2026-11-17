@@ -1,70 +1,52 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { list, head, del } from '@vercel/blob';
-import { prisma } from '@/lib/prisma';
-import { resolveAdminSession, requireRole, OWNER_ONLY, ownerGateError, areaGate } from '@/lib/admin-session';
-import { privateBlobToken, PRIVATE_STORAGE_MISSING } from '@/lib/private-blob';
-import { COMPANY_DOC_PREFIX, describeCompanyPath, isAllowedCompanyPath, companyDocPathOf } from '@/lib/company-documents';
-import { needReason, reasonOf, auditAdmin, bodyWithReason } from '@/lib/admin-audit';
+import { freshStepUpRequired } from '@/lib/admin-session';
+import { companyDocsGate } from '@/lib/company-documents-data';
+import { blobStore, listDocuments, recordUpload, deleteDocument, updateDocument } from '@/lib/company-documents-ops';
+import { needReason, reasonOf, bodyWithReason } from '@/lib/admin-audit';
 
-// CO-DOCS: the company's own paperwork in the private Blob store. GET lists
-// company/ (the folder IS the record), POST records an upload the browser just
-// finished (audit log), DELETE removes one file. Owner with 2FA only.
-
-async function gate() {
-  const session = await resolveAdminSession();
-  if (!session) return { res: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
-  const noArea = areaGate(session, 'company');
-  if (noArea) return { res: noArea };
-  if (!requireRole(session, OWNER_ONLY)) return { res: NextResponse.json({ error: ownerGateError(session) }, { status: 403 }) };
-  const token = privateBlobToken();
-  if (!token) return { res: NextResponse.json({ error: PRIVATE_STORAGE_MISSING }, { status: 503 }) };
-  return { session, token };
-}
-
+// CO-DOCS: the company's own paperwork in the private Blob store, owner with
+// 2FA only (companyDocsGate: the 'company' area, owner with mfa). Company docs
+// data (Cam 2026-11-17), the work itself in lib/company-documents-ops.ts:
+//   GET    labels (with counts) and documents
+//   POST   record an upload the browser just finished: { url, label?, name? } a
+//          new document, or with replaces (or documentId) a Replace (the old file is kept)
+//   PATCH  { id, label?, name? } move a document to another label, or rename it
+//   DELETE ?id= (or ?url=, the page from before) a document and every version's
+//          file. A reason, then a FRESH second-factor check, checked last.
 
 export async function GET() {
-  const g = await gate();
+  const g = await companyDocsGate();
   if ('res' in g) return g.res;
-  const blobs: { url: string; pathname: string; size: number; uploadedAt: Date }[] = [];
-  let cursor: string | undefined;
-  do {
-    const page = await list({ prefix: COMPANY_DOC_PREFIX, token: g.token, limit: 1000, cursor });
-    blobs.push(...page.blobs);
-    cursor = page.hasMore ? page.cursor : undefined;
-  } while (cursor);
-  const documents = blobs
-    .map(b => ({ url: b.url, pathname: b.pathname, size: b.size, uploadedAt: b.uploadedAt.toISOString(), ...describeCompanyPath(b.pathname) }))
-    .sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt));
-  return NextResponse.json({ documents });
+  return NextResponse.json(await listDocuments(blobStore(g.token)));
 }
 
-/** Called after a browser upload finishes: verify it landed where it may, then log it. */
 export async function POST(req: NextRequest) {
-  const g = await gate();
+  const g = await companyDocsGate();
   if ('res' in g) return g.res;
-  const body = await req.json().catch(() => null) as { url?: unknown } | null;
-  const url = typeof body?.url === 'string' ? body.url : '';
-  if (!url) return NextResponse.json({ error: 'Missing url' }, { status: 400 });
-  const meta = await head(url, { token: g.token }).catch(() => null);
-  if (!meta) return NextResponse.json({ error: 'The uploaded file was not found in storage. Try the upload again.' }, { status: 400 });
-  if (!isAllowedCompanyPath(meta.pathname)) return NextResponse.json({ error: 'That file is not a company document' }, { status: 403 });
-  await auditAdmin(g.session, { action: 'company_document_add', targetType: 'company_document', targetId: meta.pathname });
-  return NextResponse.json({ success: true });
+  const body = await req.json().catch(() => null);
+  const r = await recordUpload(blobStore(g.token), g.session, body && typeof body === 'object' ? body : null);
+  return NextResponse.json(r.body, { status: r.status });
+}
+
+export async function PATCH(req: NextRequest) {
+  const g = await companyDocsGate();
+  if ('res' in g) return g.res;
+  const body = await req.json().catch(() => null) as { id?: unknown; label?: unknown; name?: unknown } | null;
+  const id = typeof body?.id === 'string' ? body.id : '';
+  if (!id) return NextResponse.json({ error: 'Which document?' }, { status: 400 });
+  const r = await updateDocument(blobStore(g.token), g.session, id, { label: body?.label, name: body?.name });
+  return NextResponse.json(r.body, { status: r.status });
 }
 
 export async function DELETE(req: NextRequest) {
-  const g = await gate();
+  const g = await companyDocsGate();
   if ('res' in g) return g.res;
-  const url = req.nextUrl.searchParams.get('url') || '';
-  const pathname = companyDocPathOf(url);
-  if (!pathname) return NextResponse.json({ error: 'That is not a company document' }, { status: 400 });
   const body = await bodyWithReason(req);
   const nr = needReason('company_document_delete', body); if (nr) return nr;
-  try {
-    await del(url, { token: g.token });
-  } catch {
-    return NextResponse.json({ error: 'Storage would not delete that file. Try again.' }, { status: 502 });
-  }
-  await auditAdmin(g.session, { action: 'company_document_delete', targetType: 'company_document', targetId: pathname, reason: reasonOf(body) });
-  return NextResponse.json({ success: true });
+  const session = g.session;
+  const r = await deleteDocument(blobStore(g.token), session,
+    { id: req.nextUrl.searchParams.get('id') || undefined, url: req.nextUrl.searchParams.get('url') || undefined },
+    reasonOf(body),
+    async () => (await freshStepUpRequired(session)) === null);
+  return NextResponse.json(r.body, { status: r.status });
 }

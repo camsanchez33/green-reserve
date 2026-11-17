@@ -1149,6 +1149,9 @@ model OwnerSession {
   /// AW-1c: when this session last proved a second factor (sign-in, or a
   /// "confirm it's you"). Risky actions need it within the last 5 minutes.
   stepUpAt   DateTime?
+  /// Company docs (Cam 2026-11-17): true only after an explicit "confirm it's you" (never the sign-in),
+  /// until one action that needs a FRESH check uses it up (freshStepUpRequired). stepUpAt is left alone.
+  stepUpFresh Boolean   @default(false)
 
   @@index([adminId])
 }
@@ -2430,4 +2433,45 @@ model CourseGoal {
   updatedAt DateTime @updatedAt
 
   @@unique([courseId, month, metric])
+}
+
+/// Company docs (Cam 2026-11-17): Cam's own labels besides the six built-in ones
+/// (COMPANY_DOC_CATEGORIES in lib/company-documents.ts, which stay in code).
+model CompanyDocLabel {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// Company docs: one company document. Its file is its newest version. A file
+/// already in storage with no row shows as before until it is first relabelled,
+/// renamed or replaced (no backfill).
+model CompanyDocument {
+  id        String                   @id @default(cuid())
+  name      String
+  /// A built-in label key ('formation', 'tax', ...) or a CompanyDocLabel id.
+  label     String
+  createdAt DateTime                 @default(now())
+  updatedAt DateTime                 @updatedAt
+  versions  CompanyDocumentVersion[]
+
+  @@index([label])
+}
+
+/// Company docs: each file a document has had. Replace adds one and keeps the old file.
+model CompanyDocumentVersion {
+  id             String          @id @default(cuid())
+  documentId     String
+  document       CompanyDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  version        Int
+  url            String
+  pathname       String          @unique
+  size           Int             @default(0)
+  contentType    String          @default("")
+  uploadedById   String          @default("")
+  uploadedByName String          @default("")
+  createdAt      DateTime        @default(now())
+
+  @@unique([documentId, version])
 }

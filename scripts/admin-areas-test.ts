@@ -32,8 +32,15 @@ const missing = routes.filter(p => {
   if (OPEN_TO_EVERY_LOGIN.has(top)) return false;
   const src = readFileSync(p, 'utf8');
   const ownerOnly = /requireOwner\(session\)|requireRole\(session, OWNER_ONLY\)/.test(src) && !/SUPPORT_PLUS|MANAGER_PLUS|VIEWER_PLUS/.test(src);
+  // Company docs routes gate through one helper; it is checked below.
+  if (src.includes('companyDocsGate()') && !/SUPPORT_PLUS|MANAGER_PLUS|VIEWER_PLUS/.test(src)) return false;
   return !src.includes('areaGate(') && !ownerOnly;
 });
+{
+  const gate = readFileSync('src/lib/company-documents-data.ts', 'utf8');
+  const fn = gate.slice(gate.indexOf('export async function companyDocsGate'));
+  check('companyDocsGate checks the company area and is owner-only', fn.includes("areaGate(session, 'company')") && fn.includes('requireRole(session, OWNER_ONLY)'));
+}
 check(`every admin route checks its area or is owner-only (${routes.length} routes)`, missing.length === 0, missing);
 check('the course preview email checks Pipeline', readFileSync('src/app/api/preview/send/route.ts', 'utf8').includes("areaGate(session, 'pipeline')"));
 
