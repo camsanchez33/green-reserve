@@ -7,6 +7,7 @@ import { membershipFeeCents } from '@/lib/stripe';
 import { logSent, type SendMeta } from '@/lib/sent-messages';
 import { SUPPORT_EMAIL, ADMIN_EMAIL, BILLING_EMAIL, NOREPLY_EMAIL } from '@/lib/contact';
 import { bookingRefFor } from '@/lib/booking-ref';
+import { confirmationLines, confirmationPartsOf, type ConfirmationParts } from './confirmation-parts';
 
 let _resend: Resend | null = null;
 /** Resend's options plus our own `meta` (BRAIN-1b), which never reaches Resend. */
@@ -128,6 +129,10 @@ export interface BookingEmailData {
   policyLines?: string[];
   /** PERS-1: the course's optional note to golfers (Settings → Your course). */
   confirmationNote?: string | null;
+  /** Settings data (Cam 2026-11-17): the course's own parts (arrival, dress code, parking, note, contact). When given, they replace confirmationNote. */
+  parts?: ConfirmationParts;
+  /** "Send me a test" from Settings: sample booking, subject marked Test, no booking reference. */
+  testSend?: boolean;
 }
 
 // SD-5: a walk-in entered without an email gets a placeholder address so the
@@ -223,13 +228,18 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
     ${policyBox}
     <div style="background:#F6F4EC;border:1px solid #E3E4DE;border-radius:6px;padding:16px;margin-bottom:24px;">
       <p style="margin:0;color:#141814;font-size:13px;font-weight:600;">${data.courseAddress}</p>
-      <p style="margin:8px 0 0;color:#141814;font-size:12px;${data.confirmationNote ? 'white-space:pre-line;' : ''}">${data.confirmationNote ? escapeHtml(data.confirmationNote) : 'Arrive 15 minutes early and check in at the pro shop.'}</p>
+      ${confirmationLines(data.parts ?? confirmationPartsOf({ confirmationNote: data.confirmationNote })).map(l => `<p style="margin:8px 0 0;color:#141814;font-size:12px;white-space:pre-line;">${l.label ? `<strong>${escapeHtml(l.label)}.</strong> ` : ''}${escapeHtml(l.text)}</p>`).join('')}
     </div>
     ${ctaButtons}
     ${data.checkInToken ? `<p style="margin:0 0 8px;text-align:center;"><a href="${process.env.NEXT_PUBLIC_URL}/receipt/${data.bookingId}?token=${data.checkInToken}" style="color:#6B706A;font-size:12px;text-decoration:underline;">View booking confirmation</a></p>` : ''}
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking ${await bookingRefFor(data.bookingId)}</p>
+    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">${data.testSend ? 'Test email: this is what golfers get. Nothing was booked.' : `Booking ${await bookingRefFor(data.bookingId)}`}</p>
   `);
-  await getResend().emails.send({ meta: { kind: 'booking_confirmation', bookingId: data.bookingId, courseSlug: data.courseSlug }, from: FROM_SUPPORT, to: data.golferEmail, subject: `Confirmed: ${data.courseName} — ${data.date} at ${data.time}`, html });
+  const subject = `Confirmed: ${data.courseName} — ${data.date} at ${data.time}`;
+  if (data.testSend) {
+    await getResend().emails.send({ meta: { kind: 'booking_confirmation_test', courseSlug: data.courseSlug }, from: FROM_SUPPORT, to: data.golferEmail, subject: `Test: ${subject}`, html });
+    return;
+  }
+  await getResend().emails.send({ meta: { kind: 'booking_confirmation', bookingId: data.bookingId, courseSlug: data.courseSlug }, from: FROM_SUPPORT, to: data.golferEmail, subject, html });
 }
 
 export async function sendOperatorBookingNotification(data: BookingEmailData & { operatorEmail: string }) {

@@ -4,6 +4,7 @@ import { resolveAdminSession, requireRole, SUPPORT_PLUS, areaGate } from '@/lib/
 import { auditAdmin } from '@/lib/admin-audit';
 import { sendBookingConfirmation, sendCheckInReceiptEmail } from '@/lib/email';
 import { roundChargedTotal, roundApplicationFeeCents } from '@/lib/shop';
+import { confirmationPartsOf, CONFIRMATION_PART_SELECT } from '@/lib/confirmation-parts';
 
 // MP-6d: the Golfers record page. Search finds accounts AND guest bookings by
 // name / email / phone; the record is identity + a trust strip (rounds,
@@ -196,7 +197,7 @@ export async function POST(req: NextRequest) {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: {
-      course: { select: { name: true, slug: true, address: true, cancellationHours: true, confirmationNote: true } },
+      course: { select: { name: true, slug: true, address: true, cancellationHours: true, ...CONFIRMATION_PART_SELECT } },
       teeTime: { select: { date: true, time: true, holes: true } },
     },
   });
@@ -213,7 +214,7 @@ export async function POST(req: NextRequest) {
         date: booking.teeTime.date, time: booking.teeTime.time, players: booking.players, holes: booking.teeTime.holes,
         greenFeeTotal: booking.greenFeeTotal, cartFeeTotal: booking.cartFeeTotal, accessFeeTotal: booking.accessFeeTotal, totalAmount: booking.totalAmount,
         bookingId: booking.id, appliedRate: booking.appliedRate, rangeBallsTotal: booking.rangeBallsTotal,
-        cancellationFeeTotal: booking.cancellationFeeTotal, cancellationHours: booking.cancellationHoursAtBooking ?? booking.course.cancellationHours ?? 24, confirmationNote: booking.course.confirmationNote,
+        cancellationFeeTotal: booking.cancellationFeeTotal, cancellationHours: booking.cancellationHoursAtBooking ?? booking.course.cancellationHours ?? 24, confirmationNote: booking.course.confirmationNote, parts: confirmationPartsOf(booking.course),
         checkInToken: booking.checkInToken ?? undefined, noCard: !booking.stripePaymentMethodId,
       });
     } catch (err) {

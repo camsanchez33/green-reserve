@@ -191,6 +191,11 @@ model Course {
   /// PERS-1: optional short note from the course, shown on the golfer's
   /// confirmation page and in the confirmation email ("Check in at the pro shop").
   confirmationNote           String?
+  /// Settings data (Cam 2026-11-17): the course's own parts of the confirmation email (lib/confirmation-parts.ts).
+  /// The policy wording is never one of them (describePolicy()). null = not written.
+  confirmationArrival        String?
+  confirmationParking        String?
+  confirmationContact        String?
   featured                   Boolean               @default(false)
   active                     Boolean               @default(false)
   liveStatus                 String                @default("draft")

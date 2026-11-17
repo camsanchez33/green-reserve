@@ -27,6 +27,7 @@ import { addCharge } from './member-account';
 import { holdingById, packSeats, packPrice, takeRounds, giveBack, PackError, PACK_NO_CODE, ROUND_PACKS_ON, PACKS_OFF } from './round-packs';
 import { memberPlayers, splitTotal, memberSpot, partyFees, membershipLive, type PartyBooking } from './member-rates';
 import { cartCharge, cartRuleOf } from './cart-pricing';
+import { confirmationPartsOf, type ConfirmationParts } from '@/lib/confirmation-parts';
 
 export type CounterResult =
   | { ok: true; amountCents: number; note: string | null }
@@ -207,7 +208,7 @@ export type CounterBookingInput = {
   rate?: string;
 };
 export async function createCounterBooking(courseId: string, input: CounterBookingInput, actor: EventActor):
-  Promise<{ ok: true; id: string; checkInToken: string | null; appliedRate: string; greenFeeTotal: number; cartFeeTotal: number; totalAmount: number; teeTime: { date: string; time: string; holes: number }; course: { name: string; address: string | null; city: string | null; state: string | null; slug: string; cancellationHours: number; confirmationNote: string | null } }
+  Promise<{ ok: true; id: string; checkInToken: string | null; appliedRate: string; greenFeeTotal: number; cartFeeTotal: number; totalAmount: number; teeTime: { date: string; time: string; holes: number }; course: { name: string; address: string | null; city: string | null; state: string | null; slug: string; cancellationHours: number; confirmationNote: string | null; confirmationParts: ConfirmationParts } }
   | { ok: false; status: number; error: string }> {
   const golferName = String(input.golferName ?? '').trim().slice(0, 120);
   const golferEmail = String(input.golferEmail ?? '').trim().toLowerCase().slice(0, 200);
@@ -321,7 +322,7 @@ export async function createCounterBooking(courseId: string, input: CounterBooki
     const c = teeTime.course;
     return { ok: true, id: claimed.id, checkInToken: claimed.checkInToken, appliedRate, greenFeeTotal, cartFeeTotal, totalAmount,
       teeTime: { date: teeTime.date, time: teeTime.time, holes: teeTime.holes },
-      course: { name: c.name, address: c.address, city: c.city, state: c.state, slug: c.slug, cancellationHours: c.cancellationHours, confirmationNote: c.confirmationNote } };
+      course: { name: c.name, address: c.address, city: c.city, state: c.state, slug: c.slug, cancellationHours: c.cancellationHours, confirmationNote: c.confirmationNote, confirmationParts: confirmationPartsOf(c) } };
   } catch (err) {
     if (promo) await releaseUse(promo.id);
     if (packUse) await giveBack(prisma, packUse.lineId, packUse.rounds);

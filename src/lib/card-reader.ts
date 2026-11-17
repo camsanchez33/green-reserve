@@ -277,3 +277,48 @@ export async function simulateTap(courseId: string, saleId: string, card: 'ok' |
     return fail(502, stripeMessage(err, 'The simulated reader didn’t take the tap.'));
   }
 }
+
+export type ReaderTest = { passed: boolean; online: boolean; message: string };
+
+/**
+ * Settings data (Cam 2026-11-17, "readers are tested for real"): Test reader.
+ * Puts "Test from GreenReserve · $0.00" on the reader's own screen through
+ * Stripe and clears it again, which proves the whole path (Stripe → the
+ * course's location → the reader) without moving money: a reader display is a
+ * picture, not a payment. Owner only (the route checks).
+ *
+ * It never touches a reader that is busy: refused while an action is in
+ * progress, and the screen is cleared only when the reader's current action is
+ * still our display, so a payment started meanwhile is never cancelled by it.
+ */
+export async function testReader(courseId: string, readerId: string): Promise<Result<ReaderTest>> {
+  const c = await courseStripe(courseId);
+  if (!c.ok) return c;
+  const r = await ownReader(c.value.account, c.value.terminalLocationId, readerId);
+  if (!r.ok) return r;
+  const opts = { stripeAccount: c.value.account };
+  if (r.value.status !== 'online') {
+    return { ok: true, value: { passed: false, online: false, message: 'Offline: check it’s turned on and connected to Wi-Fi. It can’t take payments until it reconnects.' } };
+  }
+  if (r.value.action?.status === 'in_progress') return fail(409, 'The reader is busy with a payment — try the test when it’s done.');
+  try {
+    await stripe.terminal.readers.setReaderDisplay(readerId, {
+      type: 'cart',
+      cart: { currency: 'usd', line_items: [{ description: 'Test from GreenReserve', amount: 0, quantity: 1 }], total: 0 },
+    }, opts);
+  } catch (err) {
+    console.error(JSON.stringify({ ev: 'card_reader.test.fail', courseId, readerId, error: err instanceof Error ? err.message : String(err) }));
+    return { ok: true, value: { passed: false, online: true, message: stripeMessage(err, 'The reader didn’t answer — check it’s on and connected, then test again.') } };
+  }
+  // Leave it up long enough for whoever is at the counter to see it.
+  await new Promise(res => setTimeout(res, 3000));
+  try {
+    const now = await stripe.terminal.readers.retrieve(readerId, {}, opts);
+    const action = 'deleted' in now ? null : (now as Stripe.Terminal.Reader).action;
+    if (action?.type === 'set_reader_display') await stripe.terminal.readers.cancelAction(readerId, {}, opts);
+  } catch (err) {
+    // The test already passed; the cart picture is replaced by the next payment anyway.
+    console.error(JSON.stringify({ ev: 'card_reader.test.clear_fail', courseId, readerId, error: err instanceof Error ? err.message : String(err) }));
+  }
+  return { ok: true, value: { passed: true, online: true, message: 'The reader showed the test and is ready to take payments.' } };
+}
