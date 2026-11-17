@@ -6,7 +6,10 @@ import { prisma } from '../src/lib/prisma';
 import { stripe } from '../src/lib/stripe';
 import { confirmationPartsOf, confirmationLines, DEFAULT_ARRIVAL } from '../src/lib/confirmation-parts';
 import { setUpTax, taxStatus, stateCode } from '../src/lib/sales-tax';
-import { testReader } from '../src/lib/card-reader';
+import { testReader, READER_CLAIM_FRESH_MS } from '../src/lib/card-reader';
+import { STALE_CHARGE_MS } from '../src/lib/shop-sales';
+import { READER_STALE_MS } from '../src/lib/checkin-booking';
+import { DUES_READER_STALE_MS } from '../src/lib/dues-reader';
 import { validateSettingsPatch } from '../src/lib/settings-validation';
 
 const TAG = 'settingsdata';
@@ -38,6 +41,8 @@ tax.registrations.create = async (p: { country_options: { us: { state: string } 
 
 async function cleanup() {
   await prisma.shopSale.deleteMany({ where: { course: { slug: { startsWith: TAG } } } });
+  await prisma.booking.deleteMany({ where: { course: { slug: { startsWith: TAG } } } });
+  await prisma.teeTime.deleteMany({ where: { course: { slug: { startsWith: TAG } } } });
   await prisma.course.deleteMany({ where: { slug: { startsWith: TAG } } });
   await prisma.courseOperator.deleteMany({ where: { email: `${TAG}@t.local` } });
 }
@@ -127,6 +132,12 @@ async function cleanup() {
   const t6 = await testReader(shop.id, 'tmr_on');
   ok('a reader a sale has claimed is refused, untouched', !t6.ok && t6.status === 409 && calls.length === 0, t6);
   await prisma.shopSale.delete({ where: { id: claim.id } });
+  const oldClaim = await prisma.booking.create({ data: { courseId: shop.id, teeTimeId: (await prisma.teeTime.create({ data: { courseId: shop.id, date: '2026-11-01', time: '08:00', holes: 18, greenFeeCents: 1000, cartFeeCents: 0, playersAvailable: 4 } })).id, golferName: 'Gone', golferEmail: 'gone@example.test', players: 1, greenFeeTotal: 1000, accessFeeTotal: 150, totalAmount: 1150, readerId: 'tmr_on', readerStartedAt: new Date(Date.now() - 8 * 24 * 3600_000) } as never });
+  calls.length = 0;
+  const t6b = await testReader(shop.id, 'tmr_on');
+  ok('an abandoned claim from days ago doesn’t make the reader look busy', t6b.ok && t6b.value.passed && calls[0] === 'display:tmr_on:0', { t6b, calls });
+  await prisma.booking.delete({ where: { id: oldClaim.id } });
+  ok('the claim window matches the payment flows’ own', READER_CLAIM_FRESH_MS === STALE_CHARGE_MS && READER_CLAIM_FRESH_MS === READER_STALE_MS && READER_CLAIM_FRESH_MS === DUES_READER_STALE_MS);
   failDisplay = true;
   const t7 = await testReader(shop.id, 'tmr_on');
   ok('a display Stripe reports failed is not a pass', t7.ok && !t7.value.passed, t7);

@@ -278,6 +278,24 @@ export async function simulateTap(courseId: string, saleId: string, card: 'ok' |
   }
 }
 
+/**
+ * How long a payment's claim on a reader counts as live: the same 10 minutes the payment flows use
+ * before they treat their own claim as stale (shop-sales STALE_CHARGE_MS, checkin-booking READER_STALE_MS,
+ * dues-reader DUES_READER_STALE_MS; a test pins them equal). Kept here because dues-reader imports this file.
+ */
+export const READER_CLAIM_FRESH_MS = 10 * 60 * 1000;
+
+/** A shop sale, round or member's dues has claimed this reader in the last READER_CLAIM_FRESH_MS. */
+export async function readerClaimed(courseId: string, readerId: string): Promise<boolean> {
+  const since = new Date(Date.now() - READER_CLAIM_FRESH_MS);
+  const found = await Promise.all([
+    prisma.shopSale.findFirst({ where: { courseId, readerId, status: 'paying', chargeStartedAt: { gte: since } }, select: { id: true } }),
+    prisma.booking.findFirst({ where: { courseId, readerId, readerStartedAt: { gte: since } }, select: { id: true } }),
+    prisma.courseMembership.findFirst({ where: { courseId, duesReaderId: readerId, duesChargeStartedAt: { gte: since } }, select: { id: true } }),
+  ]);
+  return found.some(Boolean);
+}
+
 export type ReaderTest = { passed: boolean; online: boolean; message: string };
 
 /**
@@ -301,14 +319,9 @@ export async function testReader(courseId: string, readerId: string): Promise<Re
     return { ok: true, value: { passed: false, online: false, message: 'Offline: check it’s turned on and connected to Wi-Fi. It can’t take payments until it reconnects.' } };
   }
   if (r.value.action?.status === 'in_progress') return fail(409, 'The reader is busy with a payment — try the test when it’s done.');
-  // A payment claims the reader in our database BEFORE it is sent to Stripe (a shop sale paying on it, a round,
-  // a member's dues), so this closes the gap the action check above can't see.
-  const claimed = await Promise.all([
-    prisma.shopSale.findFirst({ where: { courseId, readerId, status: 'paying' }, select: { id: true } }),
-    prisma.booking.findFirst({ where: { courseId, readerId, readerStartedAt: { not: null } }, select: { id: true } }),
-    prisma.courseMembership.findFirst({ where: { courseId, duesReaderId: readerId }, select: { id: true } }),
-  ]);
-  if (claimed.some(Boolean)) return fail(409, 'The reader is busy with a payment — try the test when it’s done.');
+  // A payment claims the reader in our database BEFORE it is sent to Stripe, so this closes the gap the
+  // action check above can't see. Only a fresh claim counts: an abandoned one never blocks the test.
+  if (await readerClaimed(courseId, readerId)) return fail(409, 'The reader is busy with a payment — try the test when it’s done.');
   try {
     await stripe.terminal.readers.setReaderDisplay(readerId, {
       type: 'cart',
@@ -327,10 +340,7 @@ export async function testReader(courseId: string, readerId: string): Promise<Re
       return { ok: true, value: { passed: false, online: true, message: action.failure_message || 'The reader didn’t show the test — check it’s on and connected, then test again.' } };
     }
     // Cleared only while the screen is still ours and no payment has claimed the reader since.
-    const claimedSince = await prisma.shopSale.findFirst({ where: { courseId, readerId, status: 'paying' }, select: { id: true } })
-      ?? await prisma.booking.findFirst({ where: { courseId, readerId, readerStartedAt: { not: null } }, select: { id: true } })
-      ?? await prisma.courseMembership.findFirst({ where: { courseId, duesReaderId: readerId }, select: { id: true } });
-    if (action?.type === 'set_reader_display' && !claimedSince) await stripe.terminal.readers.cancelAction(readerId, {}, opts);
+    if (action?.type === 'set_reader_display' && !(await readerClaimed(courseId, readerId))) await stripe.terminal.readers.cancelAction(readerId, {}, opts);
   } catch (err) {
     // The test already passed; the cart picture is replaced by the next payment anyway.
     console.error(JSON.stringify({ ev: 'card_reader.test.clear_fail', courseId, readerId, error: err instanceof Error ? err.message : String(err) }));
