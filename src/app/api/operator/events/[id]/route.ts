@@ -17,7 +17,7 @@ import { heldBy, ninesByProduct } from '@/lib/event-hold';
 import { eventMoney, reconcileStuckPayments, voidOpenLinks, settleOpenPayment, METHOD_LABEL, STALE_CHARGE_MS } from '@/lib/event-payments';
 import { EVENT_FEE_ON } from '@/lib/booking-fees';
 import { lapseHolds, signupSettings, moveOntoList, questionsOf } from '@/lib/event-signup';
-import { staffNotesOf, changeNotes, changeIncludes } from '@/lib/event-lists';
+import { staffNotesOf, changeEventLines } from '@/lib/event-lists';
 
 // W2-9 Events: one event — its details, the tee times it holds, its checklist
 // and its players. Needs "Run events"; every write also needs the current
@@ -113,7 +113,7 @@ type Body = EventInput & {
   playerId?: string; playerIds?: unknown; on?: boolean; text?: string; groupNo?: number | null; startHole?: number | null; size?: number;
   email?: unknown; phone?: unknown;
   /** Events lists: a checklist step's how-to; a staff note; an included item by its place in the list. */
-  detail?: unknown; noteId?: unknown; topic?: unknown; note?: unknown; index?: unknown; was?: unknown;
+  detail?: unknown; noteId?: unknown; topic?: unknown; note?: unknown; index?: unknown; was?: unknown; includes?: unknown;
 };
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -181,23 +181,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       }
 
       // Events lists (Cam 2026-11-17): the event's notes for staff and what's included, each line added, changed or removed.
+      // Events lists (Cam 2026-11-17): the event's notes for staff and what's included, a line at a time
+      // (or the whole included list), under a lock on the event (lib/event-lists.ts changeEventLines).
       case 'note_add': case 'note_edit': case 'note_remove':
-      case 'include_add': case 'include_edit': case 'include_remove': {
-        const how = body.action.endsWith('_add') ? 'add' as const : body.action.endsWith('_edit') ? 'edit' as const : 'remove' as const;
-        // Read and write under a lock on the event, so two people editing at once can't lose a line;
-        // an included item is named by its place and its current text, so a stale request is refused.
-        const r = await prisma.$transaction(async tx => {
-          await tx.$queryRaw`SELECT id FROM "CourseEvent" WHERE id = ${id} AND "courseId" = ${courseId} FOR UPDATE`;
-          const cur = await tx.courseEvent.findUniqueOrThrow({ where: { id }, select: { staffNotes: true, includes: true } });
-          if (body.action!.startsWith('note_')) {
-            const n = changeNotes(staffNotesOf(cur.staffNotes), how, body);
-            if (n.ok) await tx.courseEvent.update({ where: { id }, data: { staffNotes: n.value } });
-            return n;
-          }
-          const n = changeIncludes(cur.includes, how, body);
-          if (n.ok) await tx.courseEvent.update({ where: { id }, data: { includes: n.value } });
-          return n;
-        });
+      case 'include_add': case 'include_edit': case 'include_remove': case 'includes_set': {
+        const r = await changeEventLines(courseId, id, body.action, body as Record<string, unknown>);
         if (!r.ok) return bad(r.error, r.status);
         break;
       }

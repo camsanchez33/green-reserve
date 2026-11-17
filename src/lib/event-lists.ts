@@ -122,33 +122,41 @@ export async function addOwnItem(courseId: string, input: Record<string, unknown
  * keeps what is stored, so a label-only edit keeps a step's how-to and due day.
  */
 export async function editOwnItem(courseId: string, id: string, input: Record<string, unknown>): Promise<Result<OwnItem>> {
-  const row = await prisma.courseEventListItem.findFirst({ where: { id, courseId } });
-  if (!row || !isCourseList(row.list)) return fail(404, 'That item is gone — refresh the page.');
-  const list = row.list;
-  const stored = toOwn(row);
-  const merged: Record<string, unknown> = {
-    label: input.label !== undefined ? input.label : stored.label,
-    detail: input.detail !== undefined ? input.detail : stored.detail,
-    type: input.type !== undefined ? input.type : stored.type,
-    choices: input.choices !== undefined ? input.choices : stored.choices,
-    daysBefore: input.daysBefore !== undefined ? input.daysBefore : stored.daysBefore,
-  };
-  const c = cleanOwnItem(list, merged);
-  if (!c.ok) return c;
+  const first = await prisma.courseEventListItem.findFirst({ where: { id, courseId }, select: { list: true } });
+  if (!first || !isCourseList(first.list)) return fail(404, 'That item is gone — refresh the page.');
+  const list = first.list;
   return prisma.$transaction(async tx => {
     const rows = await lockedList(tx, courseId, list);
-    if (!rows.some(r => r.id === id)) return fail(404, 'That item is gone — refresh the page.');
+    // Read the item inside the lock, so two partial edits at once can't put back a stale field.
+    const row = await tx.courseEventListItem.findFirst({ where: { id, courseId, list } });
+    if (!row) return fail(404, 'That item is gone — refresh the page.');
+    const stored = toOwn(row);
+    const merged: Record<string, unknown> = {
+      label: input.label !== undefined ? input.label : stored.label,
+      detail: input.detail !== undefined ? input.detail : stored.detail,
+      type: input.type !== undefined ? input.type : stored.type,
+      choices: input.choices !== undefined ? input.choices : stored.choices,
+      daysBefore: input.daysBefore !== undefined ? input.daysBefore : stored.daysBefore,
+    };
+    const c = cleanOwnItem(list, merged);
+    if (!c.ok) return c;
     if (isBuiltIn(list, c.value.label) || rows.some(r => r.id !== id && sameLabel(r.label, c.value.label))) return fail(409, `“${c.value.label}” is already on this list.`);
     const r = await tx.courseEventListItem.update({ where: { id }, data: { ...c.value, data: c.value.data as object } });
     return { ok: true as const, value: toOwn(r) };
   });
 }
 
-/** Remove one of the course's own items. Events that already use it keep their copy. */
+/** Remove one of the course's own items, under the same lock as edits. Events that already use it keep their copy. */
 export async function removeOwnItem(courseId: string, id: string): Promise<Result<null>> {
-  const r = await prisma.courseEventListItem.deleteMany({ where: { id, courseId } });
-  if (!r.count) return fail(404, 'That item is gone — refresh the page.');
-  return { ok: true, value: null };
+  const first = await prisma.courseEventListItem.findFirst({ where: { id, courseId }, select: { list: true } });
+  if (!first || !isCourseList(first.list)) return fail(404, 'That item is gone — refresh the page.');
+  const list = first.list;
+  return prisma.$transaction(async tx => {
+    await lockedList(tx, courseId, list);
+    const r = await tx.courseEventListItem.deleteMany({ where: { id, courseId } });
+    if (!r.count) return fail(404, 'That item is gone — refresh the page.');
+    return { ok: true as const, value: null };
+  });
 }
 
 // ── One event's notes for staff ────────────────────────────────────────────
@@ -205,4 +213,44 @@ export function changeIncludes(current: string[], action: 'add' | 'edit' | 'remo
   if (!label) return fail(400, 'Say what’s included.');
   if (current.some((x, j) => j !== i && x.toLowerCase() === label.toLowerCase())) return fail(409, `“${label}” is already included.`);
   return { ok: true, value: current.map((x, j) => (j === i ? label : x)) };
+}
+
+/** Pure: one event's whole included list, replaced (the same limits as eventFields). */
+export function setIncludes(input: unknown): Result<string[]> {
+  if (!Array.isArray(input)) return fail(400, 'Send the list of included items.');
+  const out: string[] = [];
+  for (const x of input) {
+    const label = str(x, 60);
+    if (label && !out.some(o => o.toLowerCase() === label.toLowerCase())) out.push(label);
+  }
+  if (out.length > 20) return fail(400, 'An event can list up to 20 included items.');
+  return { ok: true, value: out };
+}
+
+export type EventLineAction = 'note_add' | 'note_edit' | 'note_remove' | 'include_add' | 'include_edit' | 'include_remove' | 'includes_set';
+export const EVENT_LINE_ACTIONS: readonly EventLineAction[] = ['note_add', 'note_edit', 'note_remove', 'include_add', 'include_edit', 'include_remove', 'includes_set'];
+
+/**
+ * One event's notes for staff or included items, changed under a lock on the
+ * event row, so two people editing at once can't lose a line (an included item is
+ * also named by its current text, so a stale request is refused). Always through
+ * the course: another course's event is not found.
+ */
+export async function changeEventLines(courseId: string, eventId: string, action: EventLineAction, input: Record<string, unknown>): Promise<Result<null>> {
+  return prisma.$transaction(async tx => {
+    const locked = await tx.$queryRaw<{ id: string }[]>`SELECT id FROM "CourseEvent" WHERE id = ${eventId} AND "courseId" = ${courseId} FOR UPDATE`;
+    if (!locked.length) return fail(404, 'Event not found');
+    const cur = await tx.courseEvent.findUniqueOrThrow({ where: { id: eventId }, select: { staffNotes: true, includes: true } });
+    if (action.startsWith('note_')) {
+      const n = changeNotes(staffNotesOf(cur.staffNotes), action === 'note_add' ? 'add' : action === 'note_edit' ? 'edit' : 'remove', input);
+      if (!n.ok) return n;
+      await tx.courseEvent.update({ where: { id: eventId }, data: { staffNotes: n.value } });
+      return { ok: true as const, value: null };
+    }
+    const n = action === 'includes_set' ? setIncludes(input.includes)
+      : changeIncludes(cur.includes, action === 'include_add' ? 'add' : action === 'include_edit' ? 'edit' : 'remove', input);
+    if (!n.ok) return n;
+    await tx.courseEvent.update({ where: { id: eventId }, data: { includes: n.value } });
+    return { ok: true as const, value: null };
+  });
 }

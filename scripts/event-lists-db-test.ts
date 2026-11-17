@@ -4,7 +4,7 @@
 // own kind of event is kept, and an event's staff notes and included items
 // change one line at a time. Needs a database. Run: npx tsx scripts/event-lists-db-test.ts
 import { PrismaClient } from '@prisma/client';
-import { courseLists, addOwnItem, editOwnItem, removeOwnItem, changeNotes, changeIncludes, staffNotesOf, cleanOwnItem } from '../src/lib/event-lists';
+import { courseLists, addOwnItem, editOwnItem, removeOwnItem, changeNotes, changeIncludes, staffNotesOf, cleanOwnItem, changeEventLines, setIncludes } from '../src/lib/event-lists';
 import { cleanQuestionShape } from '../src/lib/event-questions';
 import { createEvent, updateEvent } from '../src/lib/course-events';
 
@@ -116,6 +116,17 @@ async function main() {
     const e = await editOwnItem(b.id, st.value.id, { label: 'Call the caterer again' });
     check('a label-only edit keeps the step’s how-to and due day', e.ok && e.value.detail === 'Ask for Sam' && e.value.daysBefore === 4, JSON.stringify(e));
   }
+
+  // The route's locked changes, through the course.
+  await prisma.courseEvent.update({ where: { id: event.id }, data: { includes: ['Cart', 'Lunch', 'Prizes'], staffNotes: [] } });
+  const dbl = await Promise.all([1, 2].map(() => changeEventLines(a.id, event.id, 'include_remove', { index: 0, was: 'Cart' })));
+  check('a double tap of remove on the event removes one line', dbl.filter(r => r.ok).length === 1 && (await prisma.courseEvent.findUniqueOrThrow({ where: { id: event.id } })).includes.join() === 'Lunch,Prizes');
+  const tenNotes = await Promise.all(Array.from({ length: 10 }, (_, i) => changeEventLines(a.id, event.id, 'note_add', { topic: `T${i}`, note: 'n' })));
+  check('ten notes added at once are all kept', tenNotes.every(r => r.ok) && staffNotesOf((await prisma.courseEvent.findUniqueOrThrow({ where: { id: event.id } })).staffNotes).length === 10);
+  check('another course can’t change the event’s lines', !(await changeEventLines(b.id, event.id, 'includes_set', { includes: ['Hijack'] })).ok);
+  const set = await changeEventLines(a.id, event.id, 'includes_set', { includes: [' Cart ', 'cart', '', 'Beverage cart'] });
+  check('the whole included list can be set, cleaned and de-duplicated', set.ok && (await prisma.courseEvent.findUniqueOrThrow({ where: { id: event.id } })).includes.join() === 'Cart,Beverage cart');
+  check('…but not to more than 20 or to something that isn’t a list', !setIncludes(Array.from({ length: 21 }, (_, i) => `I${i}`)).ok && !setIncludes('Cart').ok);
 
   // Saving the event without the fields the page now edits elsewhere keeps them.
   await prisma.courseEvent.update({ where: { id: event.id }, data: { includes: ['Cart', 'Lunch'], notes: 'Old note' } });
