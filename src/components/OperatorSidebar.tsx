@@ -18,7 +18,7 @@ import ThemeSwitch from '@/components/dashboard/ThemeSwitch';
 
 export type OperatorNavKey =
   | 'home' | 'teesheet' | 'analytics' | 'money' | 'events'
-  | 'schedule' | 'members' | 'settings' | 'messages' | 'shop';
+  | 'schedule' | 'members' | 'settings' | 'messages' | 'shop' | 'team';
 
 interface CourseIdentity {
   id?: string; name: string; type: string; brandColor: string; establishedYear?: number | null;
@@ -145,6 +145,8 @@ export default function OperatorSidebar({ active, onAlertClick }: {
       icon: moneyOnlyCancellations ? <XCircle className="w-4 h-4"/> : <DollarSign className="w-4 h-4"/> },
     // POS-2 (Cam 2026-10-19): ring up walk-up sales — cash or a pay link.
     { key: 'shop',          label: 'Pro shop',     href: '/dashboard/shop',          icon: <ShoppingBag className="w-4 h-4"/> },
+    // TEAM-1 (Cam 2026-11-17): staff and roles, the owner's alone — moved out of Settings.
+    { key: 'team',          label: 'Team',         href: '/dashboard/team',          icon: null }, // not on the phone bar, so no icon
     { key: 'settings',      label: 'Settings',     href: '/dashboard/settings',      icon: <Settings className="w-4 h-4"/> },
     // SUPPORT-1 (Cam 2026-11-12): Messages is Support — at the bottom of the rail, after Settings; on a phone, last under More.
     { key: 'messages',      label: 'Support',      href: '/dashboard/support',       icon: <MessageSquare className="w-4 h-4"/> },
@@ -163,6 +165,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     messages: access.can('messages.use'),
     shop: access.can('shop.sell'),
     settings: access.can('settings.edit'),
+    team: false, // who works here is never a staff decision
   } as Record<string, boolean>)[k] !== false;
 
   // SD-2: what fits in a thumb row. Revamp 3 dead end 26 (Cam 2026-10-29): everything
@@ -175,7 +178,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
   // DASH-D (Cam 2026-11-01, "grouped"): the day's work first, then the business, then Settings.
   const railGroups: { label: string; keys: OperatorNavKey[] }[] = [
     { label: 'Today', keys: ['home', 'teesheet', 'shop'] },
-    { label: 'Business', keys: ['money', 'members', 'events', 'schedule', 'analytics'] },
+    { label: 'Business', keys: ['money', 'members', 'events', 'schedule', 'analytics', 'team'] },
     { label: 'Course', keys: ['settings', 'messages'] },
   ];
   // A tab no group names still shows (in Business) — a new tab is never dropped from the rail.

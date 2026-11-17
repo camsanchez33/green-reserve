@@ -18,7 +18,7 @@ export function StaffNotice({ what = 'these settings', view, edit }: {
   const missing = view && !access.can(view) ? view : edit && !access.can(edit) ? edit : null;
   if (!missing) return null;
   const text = missing === view
-    ? <>Your login doesn&apos;t include {what}. Ask the course owner to turn on &ldquo;{labelFor(missing)}&rdquo; for you in Settings &rarr; Staff &amp; permissions.</>
+    ? <>Your login doesn&apos;t include {what}. Ask the course owner to turn on &ldquo;{labelFor(missing)}&rdquo; for you on Team.</>
     : <>You can look at {what}, but changing it isn&apos;t part of your login &mdash; any save here will be refused. The course owner can turn on &ldquo;{labelFor(missing)}&rdquo; for you.</>;
   return (
     <div role="status" className="mx-6 mt-6 bg-paper border border-line rounded-lg px-4 py-3 text-sm text-ink-soft flex items-start gap-2.5">

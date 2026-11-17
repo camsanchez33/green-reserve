@@ -67,7 +67,7 @@ export function AccountArea({ ctx }: { ctx: Ctx }) {
     <>
       <Group id="signin" title="Your sign-in" note="Only you.">
         {ctx.accessLoaded && <Row id="signin-who" label={ctx.owner ? 'Owner login' : 'Staff login'}
-          note={ctx.owner ? 'The admin of your own course. What each staff login can do is set in Staff and permissions.' : 'The course owner decides what you can see and change.'} value={course} />}
+          note={ctx.owner ? 'The admin of your own course. What each staff login can do is set on Team.' : 'The course owner decides what you can see and change.'} value={course} />}
         <Row id="signin-email" label="Email" note={ctx.owner ? 'Where your codes go. To change it, message us on Support.' : 'To change it, ask the course owner.'} value={ctx.email || '…'} />
         {ctx.owner && <Row id="signin-pw" label="Password" value={<Muted>Change</Muted>} onOpen={() => setPop('pw')} />}
         {ctx.owner && <Row id="signin-2fa" label="Two-step sign-in" note="A code each time you sign in." value={sms ? `Text to ${s(f.twoFactorPhone) || 'your phone'}` : `Email${ctx.email ? ` to ${ctx.email}` : ''}`} onOpen={() => setPop('2fa')} />}
