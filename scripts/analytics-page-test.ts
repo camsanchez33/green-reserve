@@ -52,6 +52,7 @@ ok('stock value in dollars only for money logins', parts['ShopTab.tsx'].includes
 ok('stock and transactions only when sent', parts['ShopTab.tsx'].includes('{S && (') && parts['ShopTab.tsx'].includes('t.transactions != null && {'));
 ok('no "Busiest, 0% full" or same-day Best/Slowest when nothing differs', parts['Tabs.tsx'].includes('if (s[0].v <= s[s.length - 1].v) return null;') && parts['Head.tsx'].includes('const spread = n > 1 && v[best] > v[worst];') && (parts['Head.tsx'].match(/\{spread && <span>/g) || []).length === 2);
 ok('a closed (blackout) day in the week ahead reads "Closed" with a grey dot', parts['data.ts'].includes("'short_day' | 'closed' | 'no_history'") && T.includes("r.status === 'closed' ? <StatusDot status=\"neutral\" label=\"Closed\" />"));
+ok('a closed day has no "usually by now" tick; on a phone every status sits under the date', T.includes("usual: w.status === 'closed' ? null : w.usualByNow") && T.includes('{status(r) && <span className="sm:hidden">{status(r)}</span>}'));
 ok('no Filter button until the route can filter', !/label="Filter"|Icon\.filter/.test(all));
 ok('removed by Cam: first-timers who came back, missed more than once', !/came back|Missed more than once|noShows\.repeat/.test(code));
 

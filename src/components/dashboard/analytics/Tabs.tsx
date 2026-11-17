@@ -65,7 +65,7 @@ function Ahead({ d, money, range }: { d: Data; money: boolean; range: Range }) {
           showRev && { label: 'Revenue', value: `about ${usd(p.next.revenueCents!)}`, delta: on(p.change.revenuePct, '%') },
           { label: 'Tee sheet filled', value: pct(p.next.fillPct), delta: on(p.change.fillPts, ' pts') },
         ]} />
-        <PaceTable expected days={p.week.slice(0, 7).map(w => ({ date: w.date, booked: w.booked, of: w.expected, usual: w.usualByNow, status: w.status }))} />
+        <PaceTable expected days={p.week.slice(0, 7).map(w => ({ date: w.date, booked: w.booked, of: w.expected, usual: w.status === 'closed' ? null : w.usualByNow, status: w.status }))} />
       </Block>
     );
   }
@@ -92,7 +92,7 @@ function PaceTable({ days, expected }: { days: PaceRow[]; expected?: boolean }) 
       </div>
       {days.map(r => (
         <div key={r.date} role="row" className={grid + ' py-[9px] border-t border-line text-[13px] tabular-nums text-ink'}>
-          <span role="cell">{dayWeek(r.date)}</span><span role="cell">{num(r.booked)}</span>
+          <span role="cell" className="flex flex-col gap-0.5">{dayWeek(r.date)}{status(r) && <span className="sm:hidden">{status(r)}</span>}</span><span role="cell">{num(r.booked)}</span>
           <span role="cell"><PaceBar value={r.booked} of={r.of} usual={r.usual} /></span>
           <span role="cell">{num(r.of)}</span><span role="cell" className="max-sm:hidden">{status(r)}</span>
         </div>
