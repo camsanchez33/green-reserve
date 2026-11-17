@@ -1,7 +1,8 @@
 // Golfers list (Cam approved the mockup 2026-11-17): one line per golfer, an account joined with the guest bookings
 // made with its email, the record's own counting rules, sorted by last played. Pure; no database.
 // Run: npx tsx scripts/admin-golfers-list-test.ts
-import { golferLines, matchesFilter, matchesQuery } from '../src/app/api/admin/golfers/list';
+import { readFileSync } from 'fs';
+import { golferLines, matchesFilter, matchesQuery, likeExact, canResendReceipt } from '../src/app/api/admin/golfers/list';
 
 let failed = 0;
 const ok = (l: string, c: boolean, d: unknown = '') => { console.log(`${c ? 'PASS' : 'FAIL'}  ${l}${c ? '' : ' — ' + JSON.stringify(d)}`); if (!c) failed++; };
@@ -50,6 +51,15 @@ ok('filter: guests', lines.filter(l => matchesFilter(l, 'guest')).length === 4);
 ok('filter: no-shows or late cancels', lines.filter(l => matchesFilter(l, 'noshow')).map(l => l.guestEmail).sort().join() === 'guest@t.local,late@t.local');
 ok('filter: failed charges', lines.filter(l => matchesFilter(l, 'failed')).map(l => l.guestEmail).join() === 'fail@t.local');
 ok('search by name, email or 4+ phone digits', !!alex && matchesQuery(alex, 'rivera') && matchesQuery(alex, 'ALEX@') && matchesQuery(alex, '555-0101') && !matchesQuery(alex, '55') && !matchesQuery(alex, 'casey'));
+
+// The guest lookup is an exact address, never a pattern (?guest=% once opened every guest's bookings).
+ok('likeExact escapes %, _ and backslash', likeExact('%') === '\\%' && likeExact('a_b@x.com') === 'a\\_b@x.com' && likeExact('a\\b') === 'a\\\\b', [likeExact('%'), likeExact('a_b@x.com'), likeExact('a\\b')]);
+const route = readFileSync('src/app/api/admin/golfers/route.ts', 'utf8');
+ok('both guest-email lookups in the route use likeExact', (route.match(/golferEmail: \{ equals: likeExact\(/g) ?? []).length === 2 && !/golferEmail: \{ equals: (?!likeExact)/.test(route));
+ok('a paid round has a receipt', canResendReceipt({ status: 'completed', paymentStatus: 'paid' }));
+ok('…a cancelled booking whose fee was given back does not', !canResendReceipt({ status: 'cancelled', paymentStatus: 'refunded' }));
+ok('…nor a card only saved', !canResendReceipt({ status: 'confirmed', paymentStatus: 'card_on_file' }));
+ok('the route and the page both use canResendReceipt', /!canResendReceipt\(booking\)/.test(route) && /canResendReceipt\(b\)/.test(readFileSync('src/app/admin/golfers/page.tsx', 'utf8')));
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');

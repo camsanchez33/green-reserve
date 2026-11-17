@@ -7,7 +7,7 @@ import { roundChargedTotal, roundApplicationFeeCents } from '@/lib/shop';
 import { confirmationPartsOf, CONFIRMATION_PART_SELECT } from '@/lib/confirmation-parts';
 import { ON_REAL_COURSE } from '@/lib/real-courses';
 import { bookingRefLabel } from '@/lib/booking-ref';
-import { golferLines, isListFilter, matchesFilter, matchesQuery } from './list';
+import { golferLines, isListFilter, matchesFilter, matchesQuery, likeExact, canResendReceipt } from './list';
 
 // MP-6d: the Golfers record page. Search finds accounts AND guest bookings by
 // name / email / phone; the record is identity + a trust strip (rounds,
@@ -18,9 +18,6 @@ import { golferLines, isListFilter, matchesFilter, matchesQuery } from './list';
 
 const LIST_PAGE = 50;
 
-// An insensitive `equals` is an ILIKE in Postgres, so % and _ in an email were wildcards: ?guest=% opened every guest's
-// bookings as one record. Escaped, it matches the one address only.
-const likeExact = (s: string) => s.replace(/[\\%_]/g, m => '\\' + m);
 
 const BOOKING_SELECT = {
   id: true, status: true, paymentStatus: true,
@@ -275,8 +272,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (action === 'resend_receipt') {
-    // A cancelled booking reads 'refunded' when its late fee or hold was given back: no round was charged, so no receipt.
-    if ((booking.paymentStatus !== 'paid' && booking.paymentStatus !== 'refunded') || booking.status === 'cancelled') {
+    if (!canResendReceipt(booking)) {
       return NextResponse.json({ error: 'This round has not been charged, so there is no receipt yet.' }, { status: 409 });
     }
     try {

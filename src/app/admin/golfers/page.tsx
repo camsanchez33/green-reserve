@@ -14,6 +14,7 @@ import { Msg, profileStyles as s } from '@/components/admin/ProfileCard';
 import { adminFetch, type AdminFetchFailure } from '@/lib/admin-fetch';
 import { formatMoney, formatTeeDate, formatTeeTime } from '@/lib/format';
 import { Dialog } from '../security/Dialog';
+import { canResendReceipt } from '@/app/api/admin/golfers/list';
 import g from '../admin-glass.module.css';
 import gs from './golfers.module.css';
 
@@ -57,7 +58,7 @@ function statusOf(b: Booking): { tone: Tone; label: string } {
   return { tone: 'neutral', label: b.hasCard ? 'Confirmed · card on file' : 'Confirmed · no card' };
 }
 
-const BY: Record<string, string> = { operator: 'by the course', admin: 'by GreenReserve', system: 'automatically', cron: 'automatically', stripe: 'by Stripe' };
+const BY: Record<string, string> = { operator: 'by the course', admin: 'by GreenReserve', system: 'automatically', cron: 'automatically', stripe: 'recorded from Stripe' };
 const EVENT_WORDS: Record<string, string> = {
   refund: 'Refunded', refund_failed: 'Refund failed', charge_failed: 'Charge failed',
   dispute_opened: 'Chargeback opened', dispute_closed: 'Chargeback closed',
@@ -70,6 +71,7 @@ function history(b: Booking): [string, string][] {
   if (b.cancelledAt) rows.push([b.cancelledAt, 'Cancelled']);
   // The same column holds a cutoff hold on a booking still on (given back at check-in), so it's a late-cancel fee only
   // on a cancelled booking that kept it.
+  if (b.cancellationFeeChargedAt && b.status !== 'cancelled') rows.push([b.cancellationFeeChargedAt, 'Cancellation hold taken at the cutoff']);
   if (b.cancellationFeeChargedAt && b.status === 'cancelled') rows.push([b.cancellationFeeChargedAt, b.paymentStatus === 'cancellation_fee_charged' ? 'Late-cancel fee charged' : 'Late-cancel fee charged, later given back']);
   // Who did it, as the record has it: the course's staff, GreenReserve, the system or Stripe.
   for (const e of b.events) rows.push([e.at, [EVENT_WORDS[e.kind] ?? e.kind.replace(/_/g, ' '), e.amount ? formatMoney(e.amount) : '', BY[e.actor] ?? '', e.actorName ?? '', e.detail].filter(Boolean).join(' · ')]);
@@ -294,7 +296,7 @@ function BookingRow({ b, open }: { b: Booking; open: boolean }) {
   const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null);
   const st = statusOf(b);
   const canConfirm = b.status === 'confirmed';
-  const canReceipt = b.status !== 'cancelled' && (b.paymentStatus === 'paid' || b.paymentStatus === 'refunded');
+  const canReceipt = canResendReceipt(b);
 
   async function resend(what: 'confirmation' | 'receipt') {
     setBusy(what); setNote(null);
