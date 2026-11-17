@@ -450,6 +450,7 @@ export async function POST(req: NextRequest) {
         bookingId: claimed.id, appliedRate: made.appliedRate, // the rate staff picked (resident, senior, a tier, a pack)
         cancellationHours: teeTime.course.cancellationHours,
         confirmationNote: teeTime.course.confirmationNote,
+        parts: teeTime.course.confirmationParts,
         checkInToken: claimed.checkInToken ?? undefined,
         noCard: true,
       });

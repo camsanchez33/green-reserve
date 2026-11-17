@@ -20,6 +20,12 @@ import { TAX_CATEGORIES, isTaxCategory, US_STATES } from './tax-categories';
 export { TAX_CATEGORIES, isTaxCategory, US_STATES };
 export type { TaxCategory } from './tax-categories';
 
+/** A course's state as a two-letter code, or '' when it isn't one. */
+export function stateCode(v: string | null | undefined): string {
+  const s = String(v ?? '').trim().toUpperCase();
+  return (US_STATES as readonly string[]).includes(s) ? s : '';
+}
+
 type CourseAddress = { address: string; city: string; state: string; zipCode: string };
 const addressOf = (c: CourseAddress) => ({ line1: c.address, city: c.city, state: c.state, postal_code: c.zipCode, country: 'US' });
 
@@ -29,12 +35,15 @@ export type TaxStatus = {
   missing: string[];           // what Stripe still needs, when not active
   states: string[];            // states with an active sales-tax registration
   on: boolean;                 // Course.shopTaxOn
+  /** Settings data: the state of the course's address, the default for set-up ("" = none on file). */
+  addressState: string;
 };
 
 /** The course's tax set-up as Stripe has it. */
 export async function taxStatus(courseId: string): Promise<TaxStatus> {
-  const course = await prisma.course.findUnique({ where: { id: courseId }, select: { stripeAccountId: true, shopTaxOn: true } });
-  if (!course?.stripeAccountId) return { connected: false, active: false, missing: [], states: [], on: false };
+  const course = await prisma.course.findUnique({ where: { id: courseId }, select: { stripeAccountId: true, shopTaxOn: true, state: true } });
+  const addressState = stateCode(course?.state);
+  if (!course?.stripeAccountId) return { connected: false, active: false, missing: [], states: [], on: false, addressState };
   const opts = { stripeAccount: course.stripeAccountId };
   const [settings, regs] = await Promise.all([
     stripe.tax.settings.retrieve({}, opts),
@@ -47,6 +56,7 @@ export async function taxStatus(courseId: string): Promise<TaxStatus> {
     missing: settings.status_details.pending?.missing_fields ?? [],
     states,
     on: course.shopTaxOn,
+    addressState,
   };
 }
 
@@ -60,7 +70,9 @@ export async function setUpTax(courseId: string, states: string[]): Promise<{ ok
   const course = await prisma.course.findUnique({ where: { id: courseId }, select: { stripeAccountId: true, stripeAccountActive: true, address: true, city: true, state: true, zipCode: true } });
   if (!course?.stripeAccountId) return { ok: false, error: 'Connect your Stripe account first (Money → Getting paid).' };
   if (!course.address || !course.city || !course.state || !course.zipCode) return { ok: false, error: 'Your course address is incomplete — message us to fix it, then try again.' };
-  const want = [...new Set(states.map(s => String(s).toUpperCase()))].filter(s => (US_STATES as readonly string[]).includes(s));
+  // Settings data (Cam 2026-11-17): the address's state is the DEFAULT the page preselects
+  // (taxStatus().addressState) — never filled in here, so a malformed request can't register a state.
+  const want = [...new Set(states.map(s => String(s).trim().toUpperCase()))].filter(s => (US_STATES as readonly string[]).includes(s));
   if (!want.length) return { ok: false, error: 'Pick the state your sales-tax permit is from.' };
   const opts = { stripeAccount: course.stripeAccountId };
   try {

@@ -29,6 +29,7 @@ import { rulesFor, groupSizeError, walkingAllowedAt } from '@/lib/booking-rules'
 import { DEMO_COURSE_SLUGS } from '@/lib/demo-courses';
 import { termsVersionNow } from '@/lib/terms';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
+import { confirmationPartsOf } from '@/lib/confirmation-parts';
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -456,6 +457,7 @@ export async function POST(req: NextRequest) {
       feePaidAtBooking: FEE_AT_BOOKING_ON && accessFeeTotal > 0,
       policyLines: describePolicy(policy).lines,
       confirmationNote: teeTimeFull.course.confirmationNote,
+      parts: confirmationPartsOf(teeTimeFull.course),
     };
     await sendBookingConfirmation(emailData);
     if (teeTimeFull.course.operator?.email) {
