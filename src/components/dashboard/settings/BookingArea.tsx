@@ -85,7 +85,8 @@ function ResidentWhoPopup({ ctx, onClose }: { ctx: Ctx; onClose: () => void }) {
 function EmailPreview({ f }: { f: Course }) {
   const t = termsOf(f);
   const lateFee = cents(f.lateCancellationFee) > 0;
-  const address = [s(f.address), s(f.city), [s(f.state), s(f.zipCode)].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+  // The booking routes send courseAddress as "address, city, state" (no ZIP).
+  const address = [s(f.address), s(f.city), s(f.state)].filter(Boolean).join(', ');
   const note = s(f.confirmationNote).trim();
   return (
     <div className="op-keep-light rounded-[10px] bg-white text-ink p-4 text-[13px] leading-normal" aria-label="Preview of the confirmation email">

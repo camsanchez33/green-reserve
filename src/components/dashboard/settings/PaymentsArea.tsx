@@ -90,7 +90,7 @@ function CardPopup({ ctx, cardNeeded, onClose }: { ctx: Ctx; cardNeeded: boolean
   const [v, setV] = useState<'card' | 'none'>(cardNeeded ? 'card' : 'none');
   return (
     <EditPopup title="Card at booking" onClose={onClose}
-      onSave={() => ctx.save(v === 'none' ? { lateCancellationFee: 0, noShowFee: 0 } : cardNeeded ? {} : { lateCancellationFee: 10 })}>
+      onSave={async () => (v === 'none' ? (cardNeeded ? ctx.save({ lateCancellationFee: 0, noShowFee: 0 }) : null) : cardNeeded ? null : ctx.save({ lateCancellationFee: 10 }))}>
       <Choices name="Card at booking" value={v} onChange={setV} options={[
         { key: 'card', label: 'Ask for a card at booking', help: 'Lets you charge a late-cancellation or no-show fee. Nothing is charged at booking.' },
         { key: 'none', label: 'No card at booking', help: 'Golfers book with their name and email, then get a link to check in and pay before their round. No late or no-show fees: there would be no card to charge.' },
