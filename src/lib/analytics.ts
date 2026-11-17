@@ -224,7 +224,8 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
   for (let d = range.from; d <= range.to && d <= today; d = addDaysStr(d, 1)) {
     const k = bucketOf(d); if (!series.has(k)) series.set(k, { expected: 0, collected: 0, rounds: 0, sale: 0, booked: 0, bookings: 0 });
   }
-  // Analytics page (Cam 2026-11-17): bookings made per bucket by tee date, for the Bookings chart (as behavior.bookings).
+  // Analytics page (Cam 2026-11-17): bookings made per bucket by tee date, for the Bookings chart. The series stops at
+  // today, so for a range reaching past today it sums to less than behavior.bookings.
   for (const b of made) { const r = series.get(bucketOf(b.date)); if (r) r.bookings++; }
   for (const b of pastMoney) { const r = series.get(bucketOf(b.date)); if (r) r.expected += share(b); }
   for (const b of collectedB) { const r = series.get(bucketOf(b.date)); if (r) { r.collected += kept(b); if (b.status === 'completed') r.rounds += b.checkedInPlayers ?? b.players; } }
@@ -434,7 +435,9 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
     inRange.set(k, r);
   }
   // Analytics page (Cam 2026-11-17): golfers and rounds by membership. A member rate is a tier's name on the booking
-  // (appliedRate, as "rate vs posted" reads it); every other rate is public. Rounds are players, as Rounds played.
+  // (appliedRate, as "rate vs posted" reads it); every other rate is public. It is the RATE used, not membership held.
+  // "rounds" here are booked players on live bookings in the range (guests on a member's booking included; future
+  // rounds and no-shows too) — not Rounds played, which is checked-in players on completed rounds.
   const byMem = new Map<string, { golfers: Set<string>; rounds: number }>();
   for (const b of live) {
     const name = memberRate(b.appliedRate) ? b.appliedRate : '';
