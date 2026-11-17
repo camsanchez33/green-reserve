@@ -31,6 +31,8 @@ export interface ThreadSignal {
   /** When that reply is due; null when not waiting on us. */
   dueAt: Date | null;
   lastHumanAt: Date | null;
+  /** When the course started waiting: its first message after our last real reply; null when not waiting on us. */
+  waitingSince: Date | null;
 }
 
 /** `messages` newest-first — the order every list query already uses.
@@ -38,18 +40,29 @@ export interface ThreadSignal {
  *  saying it's finished; a new message from either side reopens it. */
 export function threadSignal(messages: SignalMessage[], now: Date = new Date(), closedAt?: Date | string | null): ThreadSignal {
   const last = messages.find(m => !m.isBroadcast) ?? null;
-  if (closedAt) return { waitingOnUs: false, ageDays: 0, overdue: false, dueAt: null, lastHumanAt: last ? new Date(last.createdAt) : null };
-  if (!last) return { waitingOnUs: false, ageDays: 0, overdue: false, dueAt: null, lastHumanAt: null };
+  if (closedAt) return { waitingOnUs: false, ageDays: 0, overdue: false, dueAt: null, lastHumanAt: last ? new Date(last.createdAt) : null, waitingSince: null };
+  if (!last) return { waitingOnUs: false, ageDays: 0, overdue: false, dueAt: null, lastHumanAt: null, waitingSince: null };
   const at = new Date(last.createdAt);
   const ageDays = Math.max(0, Math.floor((now.getTime() - at.getTime()) / 86400000));
   const waitingOnUs = last.senderType === 'operator';
-  if (!waitingOnUs) return { waitingOnUs, ageDays, overdue: false, dueAt: null, lastHumanAt: at };
+  if (!waitingOnUs) return { waitingOnUs, ageDays, overdue: false, dueAt: null, lastHumanAt: at, waitingSince: null };
   // The first course message after our last real reply (messages are newest-first).
   const lastReply = messages.findIndex(m => !m.isBroadcast && m.senderType === 'admin');
   const waiting = (lastReply === -1 ? messages : messages.slice(0, lastReply)).filter(m => !m.isBroadcast && m.senderType === 'operator');
   const first = waiting[waiting.length - 1] ?? last;
   const dueAt = replyDueAt(first.createdAt);
-  return { waitingOnUs, ageDays, overdue: now.getTime() >= dueAt.getTime(), dueAt, lastHumanAt: at };
+  return { waitingOnUs, ageDays, overdue: now.getTime() >= dueAt.getTime(), dueAt, lastHumanAt: at, waitingSince: new Date(first.createdAt) };
+}
+
+/**
+ * Of a course's chats, the overdue one that has waited longest: the earliest reply due; on the same due time (a
+ * Saturday and a Sunday message are both due on the same business day) the one the course started waiting on first.
+ * A follow-up never makes a chat look newer. Null when none is overdue.
+ */
+export function longestWaiting<T extends { signal: ThreadSignal }>(chats: T[]): T | null {
+  const t = (d: Date | null) => d?.getTime() ?? 0;
+  return chats.filter(c => c.signal.overdue)
+    .sort((a, b) => t(a.signal.dueAt) - t(b.signal.dueAt) || t(a.signal.waitingSince) - t(b.signal.waitingSince) || t(a.signal.lastHumanAt) - t(b.signal.lastHumanAt))[0] ?? null;
 }
 
 /**
