@@ -77,12 +77,25 @@ export async function addContact(inquiryId: string, input: Record<string, unknow
   if (inq._count.contacts >= 20) return fail(400, 'A course can have at most 20 contacts.');
   const v = validateContact(input);
   if ('error' in v) return fail(400, v.error);
-  // A course added before contacts existed (or by "Add a lead") has its one contact only on the inquiry row.
-  // Keep it as the first contact, in the same transaction, so the mirror never erases it.
-  const seed = inq._count.contacts === 0 && (inq.contactName.trim() || inq.email.trim() || inq.phone.trim());
+  // A course added before contacts existed (or by "Add a lead") has its one contact only on the inquiry row
+  // (shown on the course page with fromInquiry: true). Two cases:
+  //  - replacesInquiryContact: the page is EDITING that contact. The new row replaces it, and the inquiry's own
+  //    columns take the new values, so Said yes and Onboarding use the corrected email.
+  //  - otherwise: it is a second person. The inquiry-row contact is kept as the first contact, in the same
+  //    transaction, so the mirror never erases it.
+  const replaces = input.replacesInquiryContact === true;
+  const c = v.contact as ContactInput;
   const contact = await prisma.$transaction(async tx => {
+    // Counted inside the transaction, so two first saves at once cannot both seed.
+    await tx.$queryRaw`SELECT id FROM "CourseInquiry" WHERE id = ${inquiryId} FOR UPDATE`;
+    const count = await tx.courseContact.count({ where: { inquiryId } });
+    const seed = !replaces && count === 0 && (inq.contactName.trim() || inq.email.trim() || inq.phone.trim());
     if (seed) await tx.courseContact.create({ data: { inquiryId, name: inq.contactName.trim() || inq.email.trim() || inq.phone.trim(), role: inq.contactTitle, email: inq.email, phone: inq.phone, sortOrder: 0 } });
-    return tx.courseContact.create({ data: { inquiryId, ...(v.contact as ContactInput), sortOrder: inq._count.contacts + (seed ? 1 : 0) } });
+    if (replaces && count === 0) {
+      const [firstName = '', ...rest] = c.name.split(/\s+/).filter(Boolean);
+      await tx.courseInquiry.update({ where: { id: inquiryId }, data: { contactName: c.name, firstName, lastName: rest.join(' '), contactTitle: c.role, email: c.email, phone: c.phone } });
+    }
+    return tx.courseContact.create({ data: { inquiryId, ...c, sortOrder: count + (seed ? 1 : 0) } });
   });
   await syncPrimaryContact(inquiryId);
   return { ok: true as const, contact };
@@ -271,6 +284,17 @@ export async function notNow(inquiryId: string, adminName: string, recheckRaw?: 
   });
   if (!moved.count) return fail(409, 'It changed while you were looking — refresh.');
   return { ok: true as const, status: 'rejected', recheckAt: recheck?.toISOString() ?? null };
+}
+
+/** Undo a mis-logged touch ("Email 1 sent" by mistake). Only a touch on this course. */
+export async function deleteTouch(inquiryId: string, touchId: string, adminName: string) {
+  const touch = await prisma.outreachTouch.findFirst({ where: { id: touchId, inquiryId }, select: { id: true, at: true, channel: true, direction: true, inquiry: { select: { status: true } } } });
+  if (!touch) return fail(404, 'That contact is not logged on this course.');
+  await prisma.$transaction([
+    prisma.outreachTouch.delete({ where: { id: touch.id } }),
+    prisma.inquiryStatusEvent.create({ data: { inquiryId, fromStatus: touch.inquiry.status, toStatus: touch.inquiry.status, trigger: 'admin', actorName: `Removed a logged ${touch.channel.replace('_', ' ')} (${touch.direction === 'in' ? 'from them' : 'from us'}, ${fmtDate(touch.at)}) — by ${adminName}` } }),
+  ]);
+  return { ok: true as const, before: { at: touch.at.toISOString(), channel: touch.channel, direction: touch.direction } };
 }
 
 // ─── The Outreach tab ────────────────────────────────────────────────────────
@@ -491,13 +515,20 @@ function mergeNotes(existing: CallAnswers, agendaNotes: unknown): CallAnswers | 
 }
 
 export async function saveCallNotes(callId: string, body: Record<string, unknown>) {
-  const call = await prisma.call.findUnique({ where: { id: callId }, select: { id: true, kind: true, inquiryId: true, outcome: true, answersJson: true } });
-  if (!call || call.kind !== 'discovery' || !call.inquiryId) return fail(404, 'That call is not on the list.');
-  const merged = mergeNotes(parseCallAnswers(call.answersJson), body.agendaNotes);
-  if (typeof merged === 'string') return fail(400, merged);
   const notes = typeof body.notes === 'string' ? body.notes.slice(0, 8000) : undefined;
-  // Notes can be added after the call is logged too (what was said is written up afterwards).
-  await prisma.call.update({ where: { id: call.id }, data: { answersJson: JSON.stringify(merged), ...(notes !== undefined ? { notes } : {}) } });
+  // Read, merge and write under a row lock: two autosaves (or an autosave and the log) each keep the other's
+  // notes. Notes can be added after the call is logged too (what was said is written up afterwards).
+  const r = await prisma.$transaction(async tx => {
+    const rows = await tx.$queryRaw<{ id: string; kind: string; inquiryId: string | null; answersJson: string }[]>`
+      SELECT id, kind, "inquiryId", "answersJson" FROM "Call" WHERE id = ${callId} FOR UPDATE`;
+    const call = rows[0];
+    if (!call || call.kind !== 'discovery' || !call.inquiryId) return fail(404, 'That call is not on the list.');
+    const merged = mergeNotes(parseCallAnswers(call.answersJson), body.agendaNotes);
+    if (typeof merged === 'string') return fail(400, merged);
+    await tx.call.update({ where: { id: call.id }, data: { answersJson: JSON.stringify(merged), ...(notes !== undefined ? { notes } : {}) } });
+    return null;
+  });
+  if (r) return r;
   return { ok: true as const, savedAt: new Date().toISOString() };
 }
 
@@ -539,16 +570,24 @@ export async function logOutreachCall(callId: string, body: Record<string, unkno
     const dm = await prisma.courseContact.findFirst({ where: { inquiryId: call.inquiryId, email: { not: '' } }, select: { id: true } });
     if (!given && !inq?.email && !dm) return fail(400, 'Add their email first — Onboarding emails them the setup sheet.', { code: 'email_needed' });
   }
-  const { count } = await prisma.call.updateMany({
-    where: { id: call.id, outcome: 'scheduled' },
-    data: {
-      outcome: result === 'no_answer' ? 'no_answer' : 'talked', result, nextStep: nextStep || null, followUpAt,
-      completedAt: new Date(), answersJson: JSON.stringify(merged),
-      ...(typeof body.notes === 'string' ? { notes: body.notes.slice(0, 8000) } : {}),
-    },
+  // Under the same row lock as saveCallNotes, re-reading the answers, so a note autosaved a moment ago is kept.
+  const count = await prisma.$transaction(async tx => {
+    const rows = await tx.$queryRaw<{ answersJson: string }[]>`SELECT "answersJson" FROM "Call" WHERE id = ${call.id} FOR UPDATE`;
+    const fresh = mergeNotes(parseCallAnswers(rows[0]?.answersJson), body.agendaNotes);
+    const answers = typeof fresh === 'string' ? merged : fresh;
+    const u = await tx.call.updateMany({
+      where: { id: call.id, outcome: 'scheduled' },
+      data: {
+        outcome: result === 'no_answer' ? 'no_answer' : 'talked', result, nextStep: nextStep || null, followUpAt,
+        completedAt: new Date(), answersJson: JSON.stringify(answers),
+        ...(typeof body.notes === 'string' ? { notes: body.notes.slice(0, 8000) } : {}),
+      },
+    });
+    return u.count;
   });
   if (!count) return fail(409, 'This call was logged while you were typing — reload to see it.');
-  await logEvent(call.inquiryId, status, status, `Call logged — ${CALL_RESULT_LABEL[result]}${nextStep ? ` — next: ${nextStep}` : ''} — by ${adminName}`);
+  // The next step stays on the call row (support+); the timeline, which viewers read, only says how it went.
+  await logEvent(call.inquiryId, status, status, `Call logged — ${CALL_RESULT_LABEL[result]} — by ${adminName}`);
   let handoff: { ok: boolean; error?: string } | null = null;
   if (result === 'said_yes' && status === LEAD_STATUS) {
     const r = await saidYes(call.inquiryId, adminName, body.email);

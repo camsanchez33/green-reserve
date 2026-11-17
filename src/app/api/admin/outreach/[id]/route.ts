@@ -3,12 +3,13 @@
 //   PATCH  { facts } — edit the course facts (only the keys sent change).
 //   POST   { action: 'said_yes', email? }            hand it to Onboarding (lead → in_review)
 //          { action: 'not_now', recheckAt?, note? }  close it as Not now, with a recheck date
+//          { action: 'delete_touch', touchId }       undo a mis-logged touch (audited with what it was)
 // Snooze, notes, logging a touch and the Cal.com link stay on PATCH /api/admin/inquiries (snooze, add_note,
 // add_touch, calcom_link), which all work on a course in outreach.
 // Pipeline area; GET viewer+ (emails and phones support+), writes manager+, each audited.
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveAdminSession, areaGate } from '@/lib/admin-session';
-import { outreachCourse, updateFacts, saidYes, notNow } from '@/lib/outreach-server';
+import { outreachCourse, updateFacts, saidYes, notNow, deleteTouch } from '@/lib/outreach-server';
 import { auditAdmin } from '@/lib/admin-audit';
 import { signedOut, outreachRole, viewerOf, failRes, readJson } from '../gate';
 
@@ -67,6 +68,14 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     if (!r.ok) return failRes(r);
     await auditAdmin(g.session, { action: 'outreach_not_now', targetType: 'inquiry', targetId: id, after: { status: r.status, recheckAt: r.recheckAt } });
     return NextResponse.json({ success: true, status: r.status, recheckAt: r.recheckAt });
+  }
+  if (action === 'delete_touch') {
+    const touchId = String(body?.touchId ?? '');
+    if (!touchId) return NextResponse.json({ error: 'Which logged contact?' }, { status: 400 });
+    const r = await deleteTouch(id, touchId, session.name || 'Admin');
+    if (!r.ok) return failRes(r);
+    await auditAdmin(session, { action: 'outreach_touch_delete', targetType: 'inquiry', targetId: id, before: { touchId, ...r.before } });
+    return NextResponse.json({ success: true });
   }
   return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
 }
