@@ -171,7 +171,7 @@ async function cleanup() {
   const p = (await projections(c.id, now))!;
   const lastRange = { from: p.last.from, to: p.last.to };
   const lastAll = await allSegments(c.id, tz, lastRange, previousRange(lastRange), now);
-  ok('projections: the last 30 days\' revenue is the ledger\'s tee + cart', p.last.teeRevenueCents === lastAll.segments.teeCents + lastAll.segments.cartCents && p.last.teeRevenueCents > 0, { p: p.last, l: lastAll.segments });
+  ok('projections: the last 30 days\' revenue is the ledger\'s tee + cart', p.last.revenueCents === lastAll.segments.teeCents + lastAll.segments.cartCents && p.last.revenueCents > 0, { p: p.last, l: lastAll.segments });
   ok('projections: from the course\'s today, 7 days listed', p.today === '2031-05-31' && p.week.length === 7, p);
 
   await cleanup();

@@ -127,9 +127,15 @@ const bk = (o: Partial<NsBooking> & { id: string }): NsBooking => ({
   ok('six days out: booked 6, usual by now 8 → behind, expected 6 + the usual 12 still to come', day('2031-06-17')?.booked === 6 && day('2031-06-17')?.usualByNow === 8 && day('2031-06-17')?.expected === 18 && day('2031-06-17')?.status === 'behind', day('2031-06-17'));
   ok('a closed day (blackout) is closed with no spots', day('2031-06-13')?.status === 'closed' && day('2031-06-13')?.offered === 0, day('2031-06-13'));
   ok('last 30 days: the four past Tuesdays, 20 players each', p.last.players === 80 && p.last.offered === 160, p.last);
-  ok('revenue next = expected players × ledger tee money per player (an estimate)', p.next.teeRevenueCents === Math.round(p.next.players * 2000), { next: p.next });
+  ok('revenue next = expected players × ledger tee money per player (an estimate)', p.next.revenueCents === Math.round(p.next.players * 2000), { next: p.next });
   ok('Jun 24, Jul 1 and Jul 8 (no tee times yet) come from the usual final count, 20 each', p.next.players === 4 + 18 + 20 * 3, p.next);
   ok('the change line', p.change.playersPct === Math.round(((p.next.players - 80) / 80) * 1000) / 10, p.change);
+  // Every projections field the merged page's type expects is in the reply (src/components/dashboard/analytics/data.ts).
+  { const page = readFileSync('src/components/dashboard/analytics/data.ts', 'utf8');
+    const block = page.slice(page.indexOf('export type Projections'), page.indexOf('\n};', page.indexOf('export type Projections')));
+    const keys = (part: string) => (block.match(new RegExp(`${part}: \\{([^}]*)\\}`))?.[1] ?? '').split(';').map(x => x.trim().split(/\??:/)[0]).filter(Boolean);
+    const missing = (['last', 'next', 'change'] as const).flatMap(k => keys(k).filter(f => !(f in p[k])).map(f => `${k}.${f}`));
+    ok('the page\'s Projections fields all exist in the API', keys('next').includes('revenueCents') && keys('change').includes('revenuePct') && missing.length === 0, missing); }
 }
 
 // ── Money only with money.payments (Build 2026-11-17): a staff login with Analytics but not Payments ──
@@ -155,7 +161,7 @@ const bk = (o: Partial<NsBooking> & { id: string }): NsBooking => ({
   ok('…and no compare stays no compare', analyticsWithoutMoney({ ...body, compare: null }).compare === null);
   const proj = projectionsOf([], new Set(), '2031-06-11', Date.parse('2031-06-11T12:00:00Z'), 5000);
   const pb = projectionsWithoutMoney(proj);
-  ok('projections without money: no revenue estimate', cents(pb).length === 0 && !('teeRevenuePct' in pb.change) && cents(proj).length > 0, pb);
+  ok('projections without money: no revenue estimate', cents(pb).length === 0 && !('revenuePct' in pb.change) && cents(proj).length > 0, pb);
 }
 
 // ── Routes: gated, this course, ledger money ──

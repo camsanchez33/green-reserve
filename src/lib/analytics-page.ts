@@ -363,11 +363,12 @@ export async function shopLedgerCents(courseId: string, range: Range, now: Date 
 
 export const PROJECT_DAYS = 30;
 export type ProjDay = { date: string; offered: number; booked: number; usualByNow: number | null; expected: number; lastTee: string | null; basis: 'booked' | 'history' | 'closed'; status: 'on_pace' | 'behind' | 'short_day' | 'closed' | 'no_history' };
+/** revenueCents (last and next) is tee + cart money: the ledger's for the last 30 days, an estimate for the next 30. */
 export type Projections = {
   today: string;
-  last: { from: string; to: string; players: number; offered: number; fillPct: number | null; teeRevenueCents: number };
-  next: { from: string; to: string; players: number; offered: number; fillPct: number | null; teeRevenueCents: number };
-  change: { playersPct: number | null; fillPts: number | null; teeRevenuePct: number | null };
+  last: { from: string; to: string; players: number; offered: number; fillPct: number | null; revenueCents: number };
+  next: { from: string; to: string; players: number; offered: number; fillPct: number | null; revenueCents: number };
+  change: { playersPct: number | null; fillPts: number | null; revenuePct: number | null };
   week: ProjDay[];
   weeksOfHistory: number;
 };
@@ -437,9 +438,9 @@ export function projectionsOf(slots: Slot[], closed: Set<string>, today: string,
   const change = (a: number, b: number) => (b > 0 ? Math.round(((a - b) / b) * 1000) / 10 : null);
   return {
     today,
-    last: { from: lastFrom, to: lastTo, players: lastPlayers, offered: lastOffered, fillPct: lastFill, teeRevenueCents: lastTeeRevenueCents },
-    next: { from: today, to: addDaysStr(today, PROJECT_DAYS - 1), players: nextPlayers, offered: nextOffered, fillPct: nextFill, teeRevenueCents: nextRevenue },
-    change: { playersPct: change(nextPlayers, lastPlayers), fillPts: lastFill != null && nextFill != null ? Math.round((nextFill - lastFill) * 10) / 10 : null, teeRevenuePct: change(nextRevenue, lastTeeRevenueCents) },
+    last: { from: lastFrom, to: lastTo, players: lastPlayers, offered: lastOffered, fillPct: lastFill, revenueCents: lastTeeRevenueCents },
+    next: { from: today, to: addDaysStr(today, PROJECT_DAYS - 1), players: nextPlayers, offered: nextOffered, fillPct: nextFill, revenueCents: nextRevenue },
+    change: { playersPct: change(nextPlayers, lastPlayers), fillPts: lastFill != null && nextFill != null ? Math.round((nextFill - lastFill) * 10) / 10 : null, revenuePct: change(nextRevenue, lastTeeRevenueCents) },
     week: days.slice(0, 7),
     weeksOfHistory: weeksSeen,
   };
@@ -447,9 +448,9 @@ export function projectionsOf(slots: Slot[], closed: Set<string>, today: string,
 
 /** Pure: projections for a login without money.payments — players and fill only, the revenue estimate out. */
 export function projectionsWithoutMoney(p: Projections) {
-  const { teeRevenueCents: _a, ...last } = p.last;
-  const { teeRevenueCents: _b, ...next } = p.next;
-  const { teeRevenuePct: _c, ...change } = p.change;
+  const { revenueCents: _a, ...last } = p.last;
+  const { revenueCents: _b, ...next } = p.next;
+  const { revenuePct: _c, ...change } = p.change;
   return { ...p, last, next, change };
 }
 
