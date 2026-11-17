@@ -132,7 +132,8 @@ function CallPage({ k, reload }: { k: Call; reload: () => void }) {
       },
     });
     setLogBusy(false);
-    if (res.ok) { setLogged(res.data); dirty.current = { agenda: {} }; return; }
+    // The log carried every note, so nothing is waiting any more (and no stale "not saved" line stays up).
+    if (res.ok) { setLogged(res.data); dirty.current = { agenda: {} }; setSave({ state: 'idle' }); return; }
     if (res.body.code === 'email_needed') { setNeedEmail(true); setLogErr(res.error); return; }
     setLogErr(res.error);
   }
