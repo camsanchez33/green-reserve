@@ -5,7 +5,7 @@
 import { prisma } from './prisma';
 import { REAL_COURSE, ON_REAL_COURSE } from './real-courses';
 import { ACTIVE_STATUSES } from './inquiry-status';
-import { threadSignal } from './thread-signal';
+import { threadSignal, longestWaiting } from './thread-signal';
 import { buildInquiryQueueRows } from './inquiry-action-queue';
 import { buildCourseCheckInRows } from './course-action-queue';
 import { agreementOverdueCourses } from './agreement-required';
@@ -95,12 +95,10 @@ export async function buildActionQueue(now = new Date()): Promise<{ rows: Action
   const threadRows: ActionRow[] = threads.flatMap(t => {
     const byChat = new Map<string | null, typeof t.messages>();
     for (const m of t.messages) { const k = m.chatId ?? null; (byChat.get(k) ?? byChat.set(k, []).get(k)!).push(m); }
-    const worst = [...byChat.entries()]
+    // The overdue chat that has waited longest (lib/thread-signal longestWaiting: due time, then waiting since).
+    const worst = longestWaiting([...byChat.entries()]
       .map(([chatId, ms]) => ({ chatId, signal: threadSignal(ms, now), last: ms.find(m => !m.isBroadcast) }))
-      .filter(x => x.signal.overdue && x.last)
-      // Earliest due first; on the same due time (a Saturday and a Sunday message are both due on the same business
-      // day) the one whose last message is older has waited longest.
-      .sort((a, b) => (a.signal.dueAt?.getTime() ?? 0) - (b.signal.dueAt?.getTime() ?? 0) || (a.signal.lastHumanAt?.getTime() ?? 0) - (b.signal.lastHumanAt?.getTime() ?? 0))[0];
+      .filter(x => x.last));
     if (!worst) return [];
     return [{
       id: `msg-${t.id}`, courseId: t.courseId, who: t.course.name, severity: 'warn' as const,
