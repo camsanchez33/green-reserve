@@ -12,7 +12,9 @@
 import { prisma } from './prisma';
 import { evidentiaryIp, rateLimit } from './rate-limit';
 
-export type SecurityKind = 'signin_failed' | 'signin_ok' | 'locked_out' | 'second_factor_failed' | 'step_up_failed' | 'rate_limited' | 'new_device' | 'password_changed';
+export type SecurityKind = 'signin_failed' | 'signin_ok' | 'locked_out' | 'second_factor_failed' | 'step_up_failed' | 'rate_limited' | 'new_device' | 'password_changed'
+  // Team (Cam 2026-11-17): a course owner invited, disabled, re-enabled or removed a staff login, or sent it a reset link.
+  | 'access_changed';
 export type SecuritySurface = 'admin' | 'owner' | 'course' | 'golfer' | 'member';
 
 export const SECURITY_KEEP_DAYS = 90;
@@ -34,7 +36,8 @@ export async function securityEvent(req: Request | null, e: { kind: SecurityKind
     if (e.kind === 'rate_limited' && !(await rateLimit(`secev:rl:${e.surface}:${ip}`, 1, 600))) return;
     // A password change is never capped (Cam 2026-11-16): every caller is already behind a session and the
     // current password, owner step-up, a single-use link or ADMIN_SECRET, and it may be the only record.
-    if (ip && e.kind !== 'password_changed' && !(await rateLimit(`secev:ip:${ip}`, MAX_EVENTS_PER_IP_HOUR, 3600))) return;
+    // The same for access_changed: only a signed-in course owner causes one.
+    if (ip && e.kind !== 'password_changed' && e.kind !== 'access_changed' && !(await rateLimit(`secev:ip:${ip}`, MAX_EVENTS_PER_IP_HOUR, 3600))) return;
     await prisma.securityEvent.create({
       data: {
         kind: e.kind,

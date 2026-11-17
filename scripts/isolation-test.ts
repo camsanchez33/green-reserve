@@ -1479,6 +1479,59 @@ async function main() {
     checkStatus('Member A cookie → Course B payments → 401', rPayments.status, 401);
   }
 
+  // ── Team (Cam 2026-11-17): owner only, and never across courses ──────────
+  console.log('\n── Team ──');
+  {
+    const { signStaffToken } = await import('../src/lib/auth');
+    // A Manager-level staff login (every key but refund rounds) still can't touch Team.
+    const st = await prisma.courseStaff.create({ data: { courseId: courseA.id, email: `${TS}-team-staff@test.local`, password: 'x', name: 'Isol Team Staff', permissions: ['settings.edit', 'money.refund', 'analytics.view'], permissionsSetAt: new Date() } });
+    try {
+      const sk = `gr_operator=${await signStaffToken({ staffId: st.id, courseId: courseA.id, email: st.email })}`;
+      checkStatus('Before Team, their own keys give them Analytics → 200', (await api('/api/operator/analytics', { cookie: sk })).status, 200);
+      checkStatus('Staff cannot read Team → 403', (await api('/api/operator/team', { cookie: sk })).status, 403);
+      checkStatus('…add a role → 403', (await api('/api/operator/team/roles', { method: 'POST', cookie: sk, body: { suggestedKey: 'manager' } })).status, 403);
+      checkStatus('…invite → 403', (await api('/api/operator/team/people', { method: 'POST', cookie: sk, body: { name: 'X', email: `${TS}-team-x@test.local` } })).status, 403);
+      checkStatus('…or change their own access → 403', (await api(`/api/operator/team/people/${st.id}`, { method: 'PATCH', cookie: sk, body: { permissions: ['money.refund_rounds'] } })).status, 403);
+      checkStatus('…or read the history → 403', (await api('/api/operator/team/history', { cookie: sk })).status, 403);
+      checkStatus('Logged out → 401', (await api('/api/operator/team')).status, 401);
+
+      const made = await api('/api/operator/team/roles', { method: 'POST', cookie: cookieA, body: { suggestedKey: 'starter' } });
+      const roleA = (made.body as { role?: { id: string } }).role?.id ?? '';
+      check('Owner A adds a Suggested role', made.status === 200 && !!roleA, made.text.slice(0, 200));
+      checkStatus('Owner A puts the staff login in it', (await api(`/api/operator/team/people/${st.id}`, { method: 'PATCH', cookie: cookieA, body: { roleId: roleA } })).status, 200);
+      const teamA = (await api('/api/operator/team', { cookie: cookieA })).body as { people?: { id: string }[]; roles?: { id: string }[] };
+      check('Owner A sees them on Team', !!teamA.people?.some(p => p.id === st.id) && !!teamA.roles?.some(r => r.id === roleA));
+      const teamB = (await api('/api/operator/team', { cookie: cookieB })).body as { people?: { id: string }[]; roles?: { id: string }[] };
+      check('Owner B sees none of A\'s people or roles', !!teamB.people && !teamB.people.some(p => p.id === st.id) && !teamB.roles?.some(r => r.id === roleA));
+      checkStatus('Owner B cannot change A\'s role → 404', (await api(`/api/operator/team/roles/${roleA}`, { method: 'PATCH', cookie: cookieB, body: { permissions: ['money.refund'] } })).status, 404);
+      checkStatus('…delete it → 404', (await api(`/api/operator/team/roles/${roleA}`, { method: 'DELETE', cookie: cookieB })).status, 404);
+      checkStatus('…invite into it → 400', (await api('/api/operator/team/people', { method: 'POST', cookie: cookieB, body: { name: 'X', email: `${TS}-team-y@test.local`, roleId: roleA } })).status, 400);
+      checkStatus('…change A\'s person → 404', (await api(`/api/operator/team/people/${st.id}`, { method: 'PATCH', cookie: cookieB, body: { permissions: ['money.refund'] } })).status, 404);
+      checkStatus('…disable them → 404', (await api(`/api/operator/team/people/${st.id}`, { method: 'PATCH', cookie: cookieB, body: { active: false } })).status, 404);
+      checkStatus('…send them a reset link → 404', (await api(`/api/operator/team/people/${st.id}/reset`, { method: 'POST', cookie: cookieB })).status, 404);
+      checkStatus('…remove them → 404', (await api(`/api/operator/team/people/${st.id}`, { method: 'DELETE', cookie: cookieB })).status, 404);
+      const histB = (await api(`/api/operator/team/history?target=${st.id}`, { cookie: cookieB })).body as { changes?: unknown[] };
+      check('…and reads none of their history', Array.isArray(histB.changes) && histB.changes.length === 0);
+      const after = await prisma.courseStaff.findUniqueOrThrow({ where: { id: st.id } });
+      check('A\'s person is untouched by B', after.active && !after.removedAt && after.roleId === roleA);
+      // The role now gates the staff login: Starter has no Settings, so a settings write is refused.
+      checkStatus('In the Starter role they keep the tee sheet (weather read → 200)', (await api('/api/operator/weather', { cookie: sk })).status, 200);
+      checkStatus('…and lose Analytics on their next request (not in Starter) → 403', (await api('/api/operator/analytics', { cookie: sk })).status, 403);
+      checkStatus('Owner A disables them', (await api(`/api/operator/team/people/${st.id}`, { method: 'PATCH', cookie: cookieA, body: { active: false } })).status, 200);
+      checkStatus('…and their session stops at once → 401', (await api('/api/operator/weather', { cookie: sk })).status, 401);
+      checkStatus('Owner A turns them back on', (await api(`/api/operator/team/people/${st.id}`, { method: 'PATCH', cookie: cookieA, body: { active: true } })).status, 200);
+      checkStatus('…and the old cookie stays dead (they sign in again) → 401', (await api('/api/operator/weather', { cookie: sk })).status, 401);
+      const fresh = await prisma.courseStaff.findUniqueOrThrow({ where: { id: st.id }, select: { sessionVersion: true } });
+      const sk2 = `gr_operator=${await signStaffToken({ staffId: st.id, courseId: courseA.id, email: st.email, sv: fresh.sessionVersion })}`;
+      checkStatus('…while a new sign-in works → 200', (await api('/api/operator/weather', { cookie: sk2 })).status, 200);
+    } finally {
+      await prisma.courseStaff.delete({ where: { id: st.id } });
+      await prisma.courseRole.deleteMany({ where: { courseId: { in: [courseA.id, courseB.id] } } });
+      await prisma.teamChange.deleteMany({ where: { courseId: { in: [courseA.id, courseB.id] } } });
+      await prisma.staffPermissionChange.deleteMany({ where: { courseId: { in: [courseA.id, courseB.id] } } });
+    }
+  }
+
   // ── Summary ────────────────────────────────────────────────────────────────
 
   await cleanup(data);

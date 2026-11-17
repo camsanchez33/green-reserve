@@ -47,18 +47,24 @@ export async function POST(req: NextRequest) {
     if (!staff) return NextResponse.json({ error: 'This reset link is invalid or has expired.' }, { status: 400 });
     // The new hash changes the fingerprint, which kills this link. Clearing the
     // lockout lets a staff member who locked themselves out back in at once.
-    // NOT done, and cannot be without a schema change: signing out their other
-    // sessions — CourseStaff has no sessionVersion (operators do).
+    // Team (Cam 2026-11-17): CourseStaff.sessionVersion now exists, so a reset
+    // signs out every other session, like an operator's.
     // RV-2: conditional on the hash the link was issued against, so two
     // simultaneous submits of one link cannot both land — the loser matches
     // zero rows and is told the link is spent.
+    // Team (Cam 2026-11-17): the first password set ends "Invited" (passwordSetAt).
     const { count } = await prisma.courseStaff.updateMany({
       where: { id: staff.id, password: staff.password },
-      data: { password: await bcrypt.hash(password, 12), failedLoginAttempts: 0, lockoutUntil: null },
+      data: { password: await bcrypt.hash(password, 12), failedLoginAttempts: 0, lockoutUntil: null, passwordSetAt: new Date(), sessionVersion: { increment: 1 } },
     });
     if (count === 0) return NextResponse.json({ error: 'This reset link is invalid or has expired.' }, { status: 400 });
-    after(sendPasswordChangedNotification({ operatorName: staff.name, operatorEmail: staff.email })
-      .catch(err => console.error('Password-changed notification failed:', err)));
+    const firstPassword = !!staff.invitedAt && !staff.passwordSetAt;
+    await securityEvent(req, { kind: 'password_changed', surface: 'course', email: staff.email, accountId: staff.id, detail: firstPassword ? 'staff, first password from the invite link' : 'staff, reset link' });
+    // Choosing a first password is not a "your password was changed" moment.
+    if (!firstPassword) {
+      after(sendPasswordChangedNotification({ operatorName: staff.name, operatorEmail: staff.email })
+        .catch(err => console.error('Password-changed notification failed:', err)));
+    }
     return NextResponse.json({ success: true });
   }
 

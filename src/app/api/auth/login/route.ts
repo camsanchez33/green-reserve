@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
     await prisma.courseStaff.update({ where: { id: staff.id }, data: { failedLoginAttempts: 0, lockoutUntil: null } });
     await securityEvent(req, { kind: 'signin_ok', surface: 'course', email, accountId: staff.id, detail: 'staff' });
 
-    const token = await signStaffToken({ staffId: staff.id, courseId: staff.courseId, email: staff.email });
+    const token = await signStaffToken({ staffId: staff.id, courseId: staff.courseId, email: staff.email, sv: staff.sessionVersion });
     const res = NextResponse.json({ success: true, redirect: '/dashboard' });
     res.cookies.set('gr_operator', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 60 * 60 * 24 * 7, path: '/' });
     return res;
