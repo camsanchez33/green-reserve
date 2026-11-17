@@ -67,6 +67,18 @@ Mockup `lanes/admin/goals-mockup.html` (https://claude.ai/artifact/62wRP5X7nS5kM
    - **Delete** needs confirmation and a fresh second-factor check.
    - **Agreements.** Course agreements are NOT here; a quiet line points to Platform activity → Agreement versions.
    - **Build** adds the labels table, document versions and the open/upload/replace/delete audit entries (additive migration), plus the step-up on delete.
+**Inquiries — APPROVED** (Cam 2026-11-17, "after those comments we are good on inquiries"). Mockup `lanes/admin/inquiries-mockup.html` (https://claude.ai/artifact/Biv8fFs6We2PESryNFuiBS) and its threads are the spec.
+   - **Scope.** Inquiries is INTERNAL outreach only: courses we contact, from Target to Said yes. "Said yes" hands the course to Onboarding, which owns setup; Golf courses owns live courses.
+   - **Two sliding tabs, Outreach and Calls.**
+     - **Outreach:** courses grouped by stage, one line each.
+     - **Calls:** Cal.com bookings, with past calls collapsed. A call page shows a prep card (time and countdown, Join and Reschedule, who's on the call, key facts, the agenda checklist from `inquiry-call.ts`), notes per agenda item, the outcome and the next step.
+   - **Course page.** One Next button plus a ⋯ menu (Snooze, Not now, Said yes). It shows contacts first (decision maker marked), editable course facts, why-it's-a-fit tags, the outreach history (emails 1–3, calls, touches) and notes.
+   - **Add a course.** Search fills public facts and warns on duplicates; only name and town are required; a CSV import is available.
+   - **Build adds:** contacts, course facts, outreach stages, Cal.com call reads, and the call-agenda notes. Sending emails waits for the Outreach lane (`lanes/outreach.md`, Gmail via admin@greenreserve.app).
+**Golfers — APPROVED** (Cam 2026-11-17, "after fixing golfer comments we are all good"). Mockup `lanes/admin/golfers-mockup.html` (https://claude.ai/artifact/48TdFrDJinkhWUZnW4kCRY) and its threads are the spec.
+   - One line per golfer, with search and a filter icon.
+   - A golfer opens to their numbers and bookings, with Resend confirmation and Resend receipt only. There's NO refund or cancel (CLAUDE.md).
+   - **Counsel item (queued in `lanes/build.md`):** a privacy/golfer-terms version that says staff can view a golfer's booking and payment history for support.
 Then Audit (mockup with Cam, https://claude.ai/artifact/QgQyTepsYAkcqfpcWYS2Qp), one page at a time,
 mockup first ("as it works today"), nothing built until Cam approves.
 
