@@ -14,8 +14,8 @@ import g from '../admin-glass.module.css';
 import ss from './security.module.css';
 import { Dialog } from './Dialog';
 import { NETWORK, SIGNINS_LEAD, SIGNINS_FOOT, ERRORS_LEAD } from './terms';
-import { useChecker, actOn, CheckerBox, CoursesCard, IncidentsTab, IncidentDialog, AskDialog } from './Checker';
-import { type SecurityData, type Kind, type Tone, type CheckerAction, KIND, kindOf, DOOR, dayAndTime, when, failedOf, plural, protectionsLead } from './logic';
+import { useChecker, runAct, actKey, type Act, CheckerBox, CoursesCard, IncidentsTab, IncidentDialog, AskDialog } from './Checker';
+import { type SecurityData, type Kind, type Tone, KIND, kindOf, DOOR, dayAndTime, when, failedOf, plural, protectionsLead } from './logic';
 
 type Tab = 'signins' | 'protect' | 'errors' | 'log';
 const PAGE = 25;
@@ -35,6 +35,7 @@ export default function AdminSecurityPage() {
   const [openInc, setOpenInc] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [actErr, setActErr] = useState<Record<string, string>>({});
+  const [version, setVersion] = useState(0);
   const [toast, setToast] = useState('');
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const checker = useChecker();
@@ -60,31 +61,33 @@ export default function AdminSecurityPage() {
   }, [loadChecker]);
   useEffect(() => { load(); }, [load]);
 
-  const ck = checker.state.phase === 'ready' ? checker.state.data : null;
+  const ready = checker.state.phase === 'ready' ? checker.state : null;
+  const ck = ready?.data ?? null;
+  const incidents = ready?.incidents ?? null;
   // The Incidents tab exists only with the checker; if it goes away, fall back to Sign-ins.
-  useEffect(() => { if (!ck && tab === 'log') setTab('signins'); }, [ck, tab]);
+  useEffect(() => { if (!incidents && tab === 'log') setTab('signins'); }, [incidents, tab]);
 
-  async function act(id: string, verb: 'undo' | 'approve' | 'dismiss', label: string | null) {
-    setBusy(id); setActErr(e => ({ ...e, [id]: '' }));
+  async function act(a: Act): Promise<boolean> {
+    const k = actKey(a);
+    setBusy(k); setActErr(e => ({ ...e, [k]: '' }));
     try {
-      say(await actOn(id, verb, label));
+      say(await runAct(a));
       await loadChecker();
+      setVersion(v => v + 1);
       return true;
     } catch (e) {
-      setActErr(x => ({ ...x, [id]: e instanceof Error ? e.message : 'Couldn’t do that.' }));
+      setActErr(x => ({ ...x, [k]: e instanceof Error ? e.message : 'Couldn’t do that.' }));
       return false;
     } finally { setBusy(null); }
   }
-  const onBoxAct = (a: CheckerAction, verb: 'undo' | 'approve' | 'dismiss') => { act(a.id, verb, a.approveLabel); };
 
   const o = data?.overview;
   const events = o ? o.recent.filter(e => (!door || e.surface === door) && (!kind || e.kind === kind)) : [];
   const filters = (door ? 1 : 0) + (kind ? 1 : 0);
   const protectCount = data ? data.checklist.filter(c => c.status === 'warn' || c.status === 'bad').length : 0;
-  const needCount = ck ? ck.incidents.filter(i => i.status === 'needs_you').length : 0;
+  const needCount = incidents ? incidents.filter(i => i.status === 'needs_you').length : 0;
   const tabs: [Tab, string, number][] = [['signins', 'Sign-ins', 0], ['protect', 'Protections', protectCount], ['errors', 'Errors', 0]];
-  if (ck) tabs.push(['log', 'Incidents', needCount]);
-  const inc = ck && openInc ? ck.incidents.find(i => i.id === openInc) ?? null : null;
+  if (incidents) tabs.push(['log', 'Incidents', needCount]);
 
   return (
     <>
@@ -108,8 +111,14 @@ export default function AdminSecurityPage() {
 
         {data && o && (
           <div className={s.col}>
-            {ck && <CheckerBox data={ck} busy={busy} errors={actErr} onAsk={() => setAsking(true)} onAct={onBoxAct} />}
-            {ck && <CoursesCard data={ck} onOpen={setOpenInc} />}
+            {ck && <CheckerBox data={ck} busy={busy} errors={actErr} onAsk={() => setAsking(true)} onAct={a => { act(a); }} />}
+            {ready?.courses && <CoursesCard courses={ready.courses} onOpen={setOpenInc} />}
+            {ready?.partError && (
+              <div className={`${g.glass} ${ss.problem}`} role="alert">
+                <span>{ready.partError}</span>
+                <button type="button" className={s.btn} onClick={() => loadChecker()}>Try again</button>
+              </div>
+            )}
             {checker.state.phase === 'error' && (
               <div className={`${g.glass} ${ss.problem}`} role="alert">
                 <span>{checker.state.message}</span>
@@ -230,7 +239,7 @@ export default function AdminSecurityPage() {
                 </ProfileCard>
               )}
 
-              {tab === 'log' && ck && <IncidentsTab data={ck} onOpen={setOpenInc} />}
+              {tab === 'log' && incidents && <IncidentsTab incidents={incidents} onOpen={setOpenInc} />}
             </div>
           </div>
         )}
@@ -238,11 +247,7 @@ export default function AdminSecurityPage() {
 
       {filterOpen && <FilterDialog door={door} kind={kind} onClose={() => setFilterOpen(false)} onApply={(d, k) => { setDoor(d); setKind(k); setShown(PAGE); setFilterOpen(false); }} />}
       {asking && <AskDialog onClose={() => setAsking(false)} />}
-      {inc && (
-        <IncidentDialog incident={inc} busy={busy === inc.actionId} error={inc.actionId ? actErr[inc.actionId] ?? '' : ''}
-          onClose={() => setOpenInc(null)}
-          onAct={async verb => { if (inc.actionId && await act(inc.actionId, verb, inc.approveLabel)) setOpenInc(null); }} />
-      )}
+      {ck && openInc && <IncidentDialog id={openInc} busy={busy} errors={actErr} version={version} onClose={() => setOpenInc(null)} onAct={act} />}
       {toast && <div className={ss.toast} role="status">{toast}</div>}
     </>
   );

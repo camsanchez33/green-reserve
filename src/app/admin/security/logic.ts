@@ -19,22 +19,23 @@ export interface SecurityData {
   };
 }
 
-/** The checker (Build's job). The shape the page reads; sent to Build 2026-11-17 and written in the PR. */
-export type ApproveLabel = 'Approve fix' | 'Approve';
-export interface CheckerAction { id: string; at: string; kind: 'done' | 'proposed' | 'note'; text: string; canUndo: boolean; approveLabel: ApproveLabel | null }
-export interface CheckerIncident {
-  id: string; title: string; courseName: string | null; at: string;
-  status: 'fixed' | 'watching' | 'needs_you'; fixedHow: 'auto' | 'open' | 'none' | 'you';
-  affected: string; timeline: { at: string; step: string; text: string }[];
-  actionId: string | null; canUndo: boolean; approveLabel: ApproveLabel | null;
-}
+/** The checker (Build's job): the shape Build's routes return (Build, 2026-11-17). */
+export type IncidentStatus = 'fixed' | 'watching' | 'needs_you';
+export type FixedHow = 'auto' | 'open' | 'none' | 'you';
 export interface CheckerData {
-  status: 'clear' | 'needs_you';
+  state: 'all_clear' | 'needs_you';
+  summary: string | null; aiAvailable: boolean;
   lastRunAt: string | null; nextRunAt: string | null;
-  summary: { happened: string; didOnItsOwn: string | null; needsYou: string | null };
-  actions: CheckerAction[];
-  courses: { courseId: string; name: string; state: 'ok' | 'warn' | 'bad'; text: string; incidentId: string | null }[];
-  incidents: CheckerIncident[];
+  done: { id: string; at: string; text: string; undoable: boolean }[];
+  proposals: { incidentId: string; text: string; button: string }[];
+}
+export interface CheckerCourse { courseId: string; name: string; state: 'ok' | 'warn' | 'bad'; note: string; incidentId: string | null }
+export interface CheckerIncidentRow { id: string; title: string; course: string | null; at: string; status: IncidentStatus }
+export interface CheckerIncident {
+  title: string; status: IncidentStatus; course: string | null; at: string; affected: string; fixed: FixedHow;
+  timeline: { at: string; step: string; text: string }[];
+  actions: { id: string; type: string; text: string; undoable: boolean; undoneAt: string | null }[];
+  proposal: { text: string; button: string } | null;
 }
 
 /** [label, tone, what it means in plain words] — the mockup's wording. */
@@ -52,8 +53,8 @@ export const kindOf = (k: string): [string, Tone, string] => KIND[k as Kind] ?? 
 
 export const DOOR: Record<string, string> = { admin: 'Admin', owner: 'Owner (/cam)', course: 'Course dashboard', golfer: 'Golfer', member: 'Member' };
 
-export const INCIDENT_STATUS: Record<CheckerIncident['status'], [string, Tone]> = { fixed: ['Fixed', 'ok'], watching: ['Watching', 'warn'], needs_you: ['Needs you', 'bad'] };
-export const FIXED_HOW: Record<CheckerIncident['fixedHow'], string> = {
+export const INCIDENT_STATUS: Record<IncidentStatus, [string, Tone]> = { fixed: ['Fixed', 'ok'], watching: ['Watching', 'warn'], needs_you: ['Needs you', 'bad'] };
+export const FIXED_HOW: Record<FixedHow, string> = {
   auto: 'Fixed by the checker on its own.', open: 'Not fixed yet.', none: 'Nothing needed fixing.', you: 'Fixed with your approval.',
 };
 

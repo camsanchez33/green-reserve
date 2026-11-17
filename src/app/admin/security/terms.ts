@@ -7,14 +7,15 @@ export const TOAST = {
   approve: 'Approved.',
   dismiss: 'Dismissed. It will raise it again if it repeats.',
 };
+export const AI_UNAVAILABLE = 'AI summary unavailable.';
 export const NEXT_RUN = ', or right away if something spikes';
 export const INCIDENTS_LEAD = 'Everything the checker noticed, newest first, and whether it’s fixed. Tap one for the full story. Kept a year.';
 export const RULES_LEAD = 'Only things that are safe and can be undone.';
 /** What the checker may do on its own: the approved policy (lanes/admin.md), not data. */
-export const RULES: ['ok' | 'bad', string, string][] = [
+export const RULES: ['ok' | 'warn' | 'bad', string, string][] = [
   ['ok', 'Block an address that is guessing passwords', 'For up to 24 hours. Undo any time.'],
-  ['ok', 'Lock an account under attack', 'Same 15-minute lock a person gets after wrong tries.'],
-  ['ok', 'Sign out a suspicious session', 'The person just signs in again.'],
+  ['ok', 'Lock an account under attack', 'Same 15-minute lock a person gets after wrong tries. Never your own account.'],
+  ['warn', 'Sign out a suspicious session', 'Asks you first, because it can’t be undone.'],
   ['ok', 'Open a bug report', 'With the error and who it hit.'],
   ['bad', 'Never on its own', 'Change code, money, refunds, settings, or anyone’s access for good. It drafts those as a fix you approve, and a person still reviews the code before it ships.'],
 ];

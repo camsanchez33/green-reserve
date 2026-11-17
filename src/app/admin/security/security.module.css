@@ -97,6 +97,7 @@
 .itl small { color: var(--g-muted); font-size: 12px; }
 .itl b, .iblk b { display: block; font-size: 13px; }
 .itl p, .iblk p { margin: 2px 0 0; font-size: 13px; color: var(--g-ink-soft); line-height: 1.45; }
+.iact { display: flex; gap: 12px; align-items: baseline; justify-content: space-between; flex-wrap: wrap; }
 .qa { border: 1px solid var(--g-line); border-radius: 12px; padding: 10px 12px; font-size: 13px; display: flex; flex-direction: column; gap: 6px; }
 .qa p { margin: 0; } .qa .q { font-weight: 600; } .qa .a { color: var(--g-ink-soft); line-height: 1.5; white-space: pre-wrap; }
 
