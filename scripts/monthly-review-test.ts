@@ -18,6 +18,7 @@ async function cleanup() {
   const courses = await prisma.course.findMany({ where: { slug: { startsWith: TAG } }, select: { id: true } });
   const courseId = { in: courses.map(c => c.id) };
   await prisma.monthlyReview.deleteMany({ where: { courseId } });
+  await prisma.moneyMove.deleteMany({ where: { courseId } });
   await prisma.booking.deleteMany({ where: { courseId } });
   await prisma.teeTime.deleteMany({ where: { courseId } });
   await prisma.course.deleteMany({ where: { slug: { startsWith: TAG } } });
@@ -25,7 +26,7 @@ async function cleanup() {
 }
 
 let n = 0;
-async function seedCourse(firstWentLiveAt: Date) {
+async function seedCourse(firstWentLiveAt: Date, [m1, m2] = ['2026-08', '2026-09']) {
   const operator = await prisma.courseOperator.upsert({
     where: { email: `${TAG}@test.local` },
     create: { name: 'Review Test', email: `${TAG}@test.local`, password: 'not-a-real-hash' },
@@ -38,7 +39,7 @@ async function seedCourse(firstWentLiveAt: Date) {
     },
   });
   // A little play in August and September.
-  for (const date of ['2026-08-08', '2026-08-15', '2026-09-12']) {
+  for (const date of [`${m1}-08`, `${m1}-15`, `${m2}-12`]) {
     const t = await prisma.teeTime.create({ data: { courseId: course.id, date, time: '09:00', holes: 18, greenFeeCents: 5000, cartFeeCents: 0, playersAvailable: 4, playersBooked: 2, status: 'available' } });
     await prisma.booking.create({ data: {
       teeTimeId: t.id, courseId: course.id, golferName: 'Test Golfer', golferEmail: `${TAG}@test.local`,
@@ -46,6 +47,12 @@ async function seedCourse(firstWentLiveAt: Date) {
       status: 'completed', paymentStatus: 'paid', checkedInAt: new Date(`${date}T09:00:00Z`),
     } });
   }
+  // The ledger (Analytics page, Cam 2026-11-17): September's money as paid — a round paid on Sep 12 and
+  // dues on Sep 3 (the course's part: GreenReserve's fee out). August has none: its rounds are tee-date only.
+  await prisma.moneyMove.createMany({ data: [
+    { courseId: course.id, what: 'round', direction: 'in', method: 'card', account: 'course', amountCents: 10300, platformFeeCents: 300, at: new Date(`${m2}-12T10:00:00Z`) },
+    { courseId: course.id, what: 'dues', direction: 'in', method: 'card', account: 'course', amountCents: 25000, platformFeeCents: 0, at: new Date(`${m2}-03T10:00:00Z`) },
+  ] });
   return course.id;
 }
 
@@ -95,6 +102,35 @@ async function main() {
   check('September is not a baseline', sepRow?.isBaseline === false);
   check('September is given the August baseline', f?.baseline?.month === 'August 2026');
   check('September is given last month', f?.lastMonth?.month === 'August 2026');
+  // Money is the ledger's (the Revenue page's figure), never lib/analytics.ts sums.
+  const ff = seen as { thisMonth?: Record<string, unknown>; lastMonth?: { change?: Record<string, unknown> }; revenueStillOwedDollars?: unknown } | null;
+  // September 2026 is before the ledger (it began Oct 30, no backfill): its money is unknown, never $0.
+  check('a month before the ledger: no ledger money, no revenue change (even with rows in it)', ff?.thisMonth?.revenueDollars === undefined && ff?.lastMonth?.change?.revenueDollars === undefined, JSON.stringify(ff));
+  const fs = seen as { noShows?: Record<string, unknown>; cancellations?: Record<string, unknown> } | null;
+  check('…nor ledger fees (unknown, never $0)', !!fs?.noShows && !('feesRecoveredDollars' in fs.noShows) && !!fs.cancellations && !('lateFeesKeptDollars' in fs.cancellations), JSON.stringify(fs));
+  check('no tee-date money in the facts', ff?.thisMonth?.collectedDollars === undefined && ff?.thisMonth?.expectedDollars === undefined && ff?.revenueStillOwedDollars === undefined);
+  const area = (sepRow?.metrics as { byArea?: { key: string; thisMonth: number | null; lastMonth: number | null }[] } | null)?.byArea ?? [];
+  const rev = area.find(a => a.key === 'revenue');
+  check('By area is stored with the report; its money rows are blank for a month before the ledger', area.length === 5 && rev?.thisMonth === null && rev?.lastMonth === null && area.find(a => a.key === 'rounds')?.thisMonth != null, JSON.stringify(area));
+
+  // 4b. Months the ledger covers: November is the baseline, December measures against it. A row on Oct 31 is
+  // in the ledger, but October isn't covered in full, so it's never read as a month.
+  const led = await seedCourse(new Date('2026-10-15T12:00:00Z'), ['2026-11', '2026-12']);
+  await prisma.moneyMove.createMany({ data: [
+    { courseId: led, what: 'round', direction: 'in', method: 'cash', account: 'course', amountCents: 8000, platformFeeCents: 0, at: new Date('2026-11-20T10:00:00Z') },
+    { courseId: led, what: 'round', direction: 'in', method: 'cash', account: 'course', amountCents: 99900, platformFeeCents: 0, at: new Date('2026-10-31T10:00:00Z') },
+  ] });
+  await runMonthlyReview(led, new Date('2026-12-02T12:00:00Z'), good);
+  let decFacts: unknown = null;
+  await runMonthlyReview(led, new Date('2027-01-02T12:00:00Z'), async (fx) => { decFacts = fx; return GOOD; });
+  const df = decFacts as { thisMonth?: Record<string, unknown>; lastMonth?: { change?: Record<string, unknown> }; baseline?: { revenueDollars?: number; changeFromBaseline?: Record<string, unknown> } } | null;
+  const dfs = decFacts as { noShows?: Record<string, unknown>; cancellations?: Record<string, unknown> } | null;
+  check('a covered month carries the ledger fees', dfs?.noShows?.feesRecoveredDollars === 0 && dfs?.cancellations?.lateFeesKeptDollars === 0, JSON.stringify(dfs));
+  check('December revenue is the ledger: $100 round + $250 dues', df?.thisMonth?.revenueDollars === 350 && df?.thisMonth?.duesDollars === 250 && df?.thisMonth?.teeAndCartDollars === 100, JSON.stringify(df?.thisMonth));
+  check('the change on November is ledger money: $350 − $80', df?.lastMonth?.change?.revenueDollars === 270 && df?.baseline?.revenueDollars === 80 && df?.baseline?.changeFromBaseline?.revenueDollars === 270, JSON.stringify(df));
+  const decRow = await prisma.monthlyReview.findUnique({ where: { courseId_month: { courseId: led, month: '2026-12' } } });
+  const decRev = ((decRow?.metrics as { byArea?: { key: string; thisMonth: number | null; lastMonth: number | null }[] } | null)?.byArea ?? []).find(a => a.key === 'revenue');
+  check('By area: revenue from the ledger, this month and last', decRev?.thisMonth === 35000 && decRev?.lastMonth === 8000, JSON.stringify(decRev));
 
   // 5. Invented numbers never reach the stored review.
   const course2 = await seedCourse(new Date('2026-07-15T12:00:00Z'));

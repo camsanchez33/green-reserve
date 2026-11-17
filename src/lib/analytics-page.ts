@@ -8,13 +8,14 @@
 //    and late cancels. "Value" figures (lostValueCents) are what the booking was priced at: money that never
 //    moved, so it can't come from the ledger and is never called revenue. Fees and refills ARE ledger money.
 //  • stockValue — what's on the shelf (inventory at price, and at cost for the owner), and what isn't selling.
+//  • projections — the next 30 days against the last 30, and the next 7 days' pace.
 //
 // Sets match lib/analytics.ts (tee-date basis, NO_SHOW_GRACE_MIN, called-off rounds kept out of cancellations),
 // so the No-shows tab's rate is the same number as Analytics' own.
 import { prisma } from './prisma';
-import { DEFAULT_TZ, isValidTimezone } from './course-time';
+import { addDaysStr, todayIn, DEFAULT_TZ, isValidTimezone } from './course-time';
 import { teeToUtcMs } from './tee-time-utils';
-import { holdsAtCutoff, bookingWindowHours } from './cancel-policy';
+import { feeOnNoShow, bookingWindowHours } from './cancel-policy';
 import { NO_SHOW_GRACE_MIN, previousRange, type Range } from './analytics';
 import { allSegments, type AllSegments } from './revenue-extras';
 import { Prisma, type BookingEventType } from '@prisma/client';
@@ -69,6 +70,18 @@ export async function ledgerHeadline(courseId: string, range: Range, now: Date =
   return {
     range, grossCents: cur.grossCents, refundsCents: cur.refundsCents, netCents: cur.netCents, series: cur.series, paid: cur.paid,
     before: { range: prev, grossCents: before.grossCents, series: before.series },
+  };
+}
+
+/** A month's money from the ledger, the Revenue page's own figures (course part, by payment day). */
+export type LedgerMonth = { grossCents: number; refundsCents: number; teeCartCents: number; proShopCents: number; eventCents: number; duesCents: number };
+export async function ledgerMonth(courseId: string, tz: string, month: string, now: Date = new Date()): Promise<LedgerMonth> {
+  const y = Number(month.slice(0, 4)), m = Number(month.slice(5, 7));
+  const r = { from: `${month}-01`, to: `${month}-${String(new Date(Date.UTC(y, m, 0)).getUTCDate()).padStart(2, '0')}` };
+  const a = await allSegments(courseId, tz, r, previousRange(r), now);
+  return {
+    grossCents: a.grossCents, refundsCents: a.refundsCents, teeCartCents: a.segments.teeCents + a.segments.cartCents,
+    proShopCents: a.segments.shopCents + a.segments.fnbCents, eventCents: a.segments.eventCents, duesCents: a.segments.duesCents,
   };
 }
 
@@ -262,10 +275,7 @@ export async function noShowReport(courseId: string, range: Range, now: Date = n
       id: b.id, teeTimeId: t.id, teeAt, status: b.status, players: b.players, source: b.source,
       checkedInAt: b.checkedInAt, createdAt: b.createdAt, cancelledAt: b.cancelledAt, splitFromId: b.splitFromId,
       cardSaved: !!b.stripePaymentMethodId && !!b.stripeCustomerId,
-      // A fee the course can keep when they don't come: a no-show fee, or a late fee stamped at booking whose
-      // policy reaches a no-show (a hold taken at the cutoff and kept; "late cancel or no-show"). A plain
-      // "late cancel" fee never reaches a no-show. cancellationFeeTotal stays on a live booking (cleared only on a free cancel).
-      feeOnNoShow: b.noShowFeeTotal > 0 || (b.cancellationFeeTotal > 0 && (holdsAtCutoff(b) || b.lateFeeTimingAtBooking === 'late_cancel_or_no_show')),
+      feeOnNoShow: feeOnNoShow(b),
       valueCents: share(b), calledOff: calledOff.has(b.id),
       paid: b.paymentStatus === 'paid' || b.paymentStatus === 'paid_offline' || b.paymentStatus === 'on_account',
       windowHours: bookingWindowHours(b, c),
@@ -347,4 +357,118 @@ export async function shopLedgerCents(courseId: string, range: Range, now: Date 
   if (!c) return null;
   const a = await allSegments(courseId, c.tz, range, previousRange(range), now);
   return a.segments.shopCents + a.segments.fnbCents;
+}
+
+// ─── Projections ────────────────────────────────────────────────────────────
+
+export const PROJECT_DAYS = 30;
+export type ProjDay = { date: string; offered: number; booked: number; usualByNow: number | null; expected: number; lastTee: string | null; basis: 'booked' | 'history' | 'closed'; status: 'on_pace' | 'behind' | 'short_day' | 'closed' | 'no_history' };
+/** revenueCents (last and next) is tee + cart money: the ledger's for the last 30 days, an estimate for the next 30. */
+export type Projections = {
+  today: string;
+  last: { from: string; to: string; players: number; offered: number; fillPct: number | null; revenueCents: number };
+  next: { from: string; to: string; players: number; offered: number; fillPct: number | null; revenueCents: number | null };
+  change: { playersPct: number | null; fillPts: number | null; revenuePct: number | null };
+  week: ProjDay[];
+  weeksOfHistory: number;
+};
+
+type Slot = { date: string; time: string; status: string; playersAvailable: number; bookings: { players: number; status: string; createdAt: Date; cancelledAt: Date | null }[] };
+
+/**
+ * Pure. For each of the next 30 days: players booked so far, plus what the last four same weekdays added from this
+ * many days out to the day itself (bookings made by then and not cancelled by then; a group at its size today).
+ * A day with no tee times yet (past the booking horizon) is projected from those weeks' final count; a closed day
+ * (blackout) is 0. Revenue = expected players × the last 30 days' ledger tee + cart money per player booked.
+ */
+export function projectionsOf(slots: Slot[], closed: Set<string>, today: string, nowMs: number, lastTeeRevenueCents: number): Projections {
+  const byDate = new Map<string, Slot[]>();
+  for (const s of slots) byDate.set(s.date, [...(byDate.get(s.date) ?? []), s]);
+  const bookedAsOf = (date: string, at: number) => (byDate.get(date) ?? []).reduce((n, t) => n + t.bookings.reduce((m, b) => {
+    if (b.createdAt.getTime() > at) return m;
+    if (b.status === 'cancelled' && (!b.cancelledAt || b.cancelledAt.getTime() <= at)) return m;
+    return m + b.players;
+  }, 0), 0);
+  const finalOn = (date: string) => (byDate.get(date) ?? []).reduce((n, t) => n + t.bookings.reduce((m, b) => m + (b.status === 'cancelled' ? 0 : b.players), 0), 0);
+  const open = (date: string) => (byDate.get(date) ?? []).filter(t => t.status !== 'blocked');
+  const offeredOn = (date: string) => open(date).reduce((n, t) => n + t.playersAvailable, 0);
+  const lastTeeOn = (date: string) => open(date).map(t => t.time).sort().pop() ?? null;
+  const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
+
+  const days: ProjDay[] = [];
+  let weeksSeen = 0;
+  for (let i = 0; i < PROJECT_DAYS; i++) {
+    const date = addDaysStr(today, i);
+    const offered = offeredOn(date), booked = bookedAsOf(date, nowMs);
+    const byNow: number[] = [], added: number[] = [], finals: number[] = [], offeredBefore: number[] = [];
+    // The last four same weekdays that are over and had tee times (up to 8 weeks back: a day 29 out needs 5–8).
+    for (let k = 1; k <= 8 && byNow.length < 4; k++) {
+      const then = addDaysStr(date, -7 * k);
+      if (then >= today) continue; // not over yet: no final count to learn from
+      const o = offeredOn(then);
+      if (!o) continue; // closed, or no tee times that day
+      const asOf = bookedAsOf(then, nowMs - 7 * k * 86400000), fin = finalOn(then);
+      byNow.push(asOf); added.push(Math.max(0, fin - asOf)); finals.push(fin); offeredBefore.push(o);
+    }
+    weeksSeen = Math.max(weeksSeen, byNow.length);
+    const usualByNow = byNow.length ? Math.round(avg(byNow)!) : null;
+    if (closed.has(date) || (offered === 0 && byDate.has(date))) {
+      // A closed day has no pace to compare against (the Dashboard lane, 2026-11-17).
+      days.push({ date, offered: 0, booked, usualByNow: null, expected: booked, lastTee: null, basis: 'closed', status: 'closed' });
+      continue;
+    }
+    if (offered === 0) {
+      // Past the booking horizon: no tee times yet. The usual final count and size of that weekday.
+      const exp = finals.length ? Math.round(avg(finals)!) : 0;
+      days.push({ date, offered: offeredBefore.length ? Math.round(avg(offeredBefore)!) : 0, booked, usualByNow, expected: exp, lastTee: null, basis: 'history', status: finals.length ? 'on_pace' : 'no_history' });
+      continue;
+    }
+    const expected = Math.min(offered, booked + Math.round(avg(added) ?? 0));
+    const usualOffered = avg(offeredBefore);
+    const status: ProjDay['status'] = usualOffered != null && offered < usualOffered * 0.75 ? 'short_day'
+      : usualByNow == null ? 'no_history' : booked >= usualByNow * 0.95 ? 'on_pace' : 'behind';
+    days.push({ date, offered, booked, usualByNow, expected, lastTee: lastTeeOn(date), basis: 'booked', status });
+  }
+
+  const lastFrom = addDaysStr(today, -PROJECT_DAYS), lastTo = addDaysStr(today, -1);
+  let lastPlayers = 0, lastOffered = 0;
+  for (let d = lastFrom; d <= lastTo; d = addDaysStr(d, 1)) { lastPlayers += finalOn(d); lastOffered += offeredOn(d); }
+  const nextPlayers = days.reduce((n, d) => n + d.expected, 0), nextOffered = days.reduce((n, d) => n + d.offered, 0);
+  // No players in the last 30 days: nothing to base money per player on — unknown, not $0.
+  const nextRevenue = lastPlayers > 0 ? Math.round(nextPlayers * (lastTeeRevenueCents / lastPlayers)) : null;
+  const lastFill = pct(lastPlayers, lastOffered), nextFill = pct(nextPlayers, nextOffered);
+  const change = (a: number, b: number) => (b > 0 ? Math.round(((a - b) / b) * 1000) / 10 : null);
+  return {
+    today,
+    last: { from: lastFrom, to: lastTo, players: lastPlayers, offered: lastOffered, fillPct: lastFill, revenueCents: lastTeeRevenueCents },
+    next: { from: today, to: addDaysStr(today, PROJECT_DAYS - 1), players: nextPlayers, offered: nextOffered, fillPct: nextFill, revenueCents: nextRevenue },
+    change: { playersPct: change(nextPlayers, lastPlayers), fillPts: lastFill != null && nextFill != null ? Math.round((nextFill - lastFill) * 10) / 10 : null, revenuePct: nextRevenue == null ? null : change(nextRevenue, lastTeeRevenueCents) },
+    week: days.slice(0, 7),
+    weeksOfHistory: weeksSeen,
+  };
+}
+
+/** Pure: projections for a login without money.payments — players and fill only, the revenue estimate out. */
+export function projectionsWithoutMoney(p: Projections) {
+  const { revenueCents: _a, ...last } = p.last;
+  const { revenueCents: _b, ...next } = p.next;
+  const { revenuePct: _c, ...change } = p.change;
+  return { ...p, last, next, change };
+}
+
+export async function projections(courseId: string, now: Date = new Date()): Promise<Projections | null> {
+  const c = await courseTz(courseId);
+  if (!c) return null;
+  const today = todayIn(c.tz, now);
+  const from = addDaysStr(today, -PROJECT_DAYS - 28), to = addDaysStr(today, PROJECT_DAYS - 1);
+  const lastRange = { from: addDaysStr(today, -PROJECT_DAYS), to: addDaysStr(today, -1) };
+  const [slots, blackouts, ledger] = await Promise.all([
+    prisma.teeTime.findMany({
+      where: { courseId, date: { gte: from, lte: to } },
+      select: { date: true, time: true, status: true, playersAvailable: true, bookings: { select: { players: true, status: true, createdAt: true, cancelledAt: true } } },
+    }),
+    prisma.blackout.findMany({ where: { courseId, date: { gte: today, lte: to } }, select: { date: true } }),
+    allSegments(courseId, c.tz, lastRange, previousRange(lastRange), now),
+  ]);
+  return projectionsOf(slots, new Set(blackouts.map(b => b.date)), today, now.getTime(), ledger.segments.teeCents + ledger.segments.cartCents);
 }

@@ -2,7 +2,8 @@
 // cancel lead buckets, refill pairing, how a booking was made, the no-show report, stock value —
 // and that the routes are gated and read the ledger. No database. Run: npx tsx scripts/analytics-data-test.ts
 import { readFileSync } from 'fs';
-import { leadOf, howOf, refillsOf, noShowOf, stockOf, noShowWithoutMoney, unfilledWithoutMoney, analyticsWithoutMoney, type NsBooking } from '../src/lib/analytics-page';
+import { feeOnNoShow } from '../src/lib/cancel-policy';
+import { leadOf, howOf, refillsOf, noShowOf, stockOf, projectionsOf, noShowWithoutMoney, unfilledWithoutMoney, projectionsWithoutMoney, analyticsWithoutMoney, type NsBooking } from '../src/lib/analytics-page';
 import { can } from '../src/lib/session';
 
 let failed = 0;
@@ -20,6 +21,12 @@ ok('online, card, fee', howOf({ source: 'online', cardSaved: true, feeOnNoShow: 
 ok('online, card, no fee', howOf({ source: 'online', cardSaved: true, feeOnNoShow: false }) === 'online_card_no_fee');
 ok('online, no card (a course with no fee saves none)', howOf({ source: 'online', cardSaved: false, feeOnNoShow: true }) === 'online_no_card');
 ok('phone and walk-in are the counter', howOf({ source: 'phone', cardSaved: false, feeOnNoShow: false }) === 'counter_no_card' && howOf({ source: 'walk_in', cardSaved: true, feeOnNoShow: true }) === 'counter_card' && howOf({ source: 'phone', cardSaved: true, feeOnNoShow: false }) === 'counter_card');
+
+// ── A fee that reaches a no-show (lib/cancel-policy feeOnNoShow, shared with lib/analytics.ts) ──
+ok('a no-show fee reaches a no-show', feeOnNoShow({ noShowFeeTotal: 500, cancellationFeeTotal: 0, lateFeeTimingAtBooking: 'late_cancel' }));
+ok('a hold kept at the cutoff does (and old bookings with no timing hold)', feeOnNoShow({ noShowFeeTotal: 0, cancellationFeeTotal: 2000, lateFeeTimingAtBooking: 'hold_at_cutoff' }) && feeOnNoShow({ noShowFeeTotal: 0, cancellationFeeTotal: 2000, lateFeeTimingAtBooking: null }));
+ok('"late cancel or no-show" does', feeOnNoShow({ noShowFeeTotal: 0, cancellationFeeTotal: 2000, lateFeeTimingAtBooking: 'late_cancel_or_no_show' }));
+ok('a plain late-cancel fee, or no fee, does not', !feeOnNoShow({ noShowFeeTotal: 0, cancellationFeeTotal: 2000, lateFeeTimingAtBooking: 'late_cancel' }) && !feeOnNoShow({ noShowFeeTotal: 0, cancellationFeeTotal: 0, lateFeeTimingAtBooking: 'hold_at_cutoff' }));
 
 // ── Refill pairing ──
 const T0 = Date.parse('2031-06-10T12:00:00Z');
@@ -106,6 +113,46 @@ const bk = (o: Partial<NsBooking> & { id: string }): NsBooking => ({
   ok('staff never get cost', staff.costValueCents === undefined && staff.notSelling.every(i => !('costValueCents' in i)) && staff.notSellingCostCents === undefined, staff);
 }
 
+// ── Projections ──
+{
+  // Today Wed 2031-06-11. The same Tuesday the last four weeks: 8 booked by 7 days out, 20 by the day.
+  const today = '2031-06-11';
+  const nowMs = Date.parse('2031-06-11T12:00:00Z');
+  const slot = (date: string, players: { n: number; madeDaysBefore: number; cancelled?: boolean }[], o: { status?: string; offered?: number; time?: string } = {}) => ({
+    date, time: o.time ?? '08:00', status: o.status ?? 'available', playersAvailable: o.offered ?? 40,
+    bookings: players.map(p => ({ players: p.n, status: p.cancelled ? 'cancelled' : 'confirmed', createdAt: new Date(Date.parse(date + 'T08:00:00Z') - p.madeDaysBefore * 86400000), cancelledAt: p.cancelled ? new Date(Date.parse(date + 'T08:00:00Z') - 86400000) : null })),
+  });
+  const addD = (d: string, n: number) => new Date(Date.parse(d + 'T12:00:00Z') + n * 86400000).toISOString().slice(0, 10);
+  const slots = [] as ReturnType<typeof slot>[];
+  for (let k = 1; k <= 4; k++) slots.push(slot(addD('2031-06-17', -7 * k), [{ n: 8, madeDaysBefore: 10 }, { n: 12, madeDaysBefore: 2 }]));
+  slots.push(slot('2031-06-17', [{ n: 6, madeDaysBefore: 10 }]));            // six days out: 6 booked, usual by now 8
+  slots.push(slot('2031-06-12', [{ n: 4, madeDaysBefore: 10 }], { offered: 10, time: '13:00' })); // a short day
+  const p = projectionsOf(slots, new Set(['2031-06-13']), today, nowMs, 160000);
+  const day = (d: string) => p.week.find(x => x.date === d) ?? null;
+  ok('the next 7 days', p.week.length === 7 && p.week[0].date === today, p.week.map(d => d.date));
+  ok('six days out: booked 6, usual by now 8 → behind, expected 6 + the usual 12 still to come', day('2031-06-17')?.booked === 6 && day('2031-06-17')?.usualByNow === 8 && day('2031-06-17')?.expected === 18 && day('2031-06-17')?.status === 'behind', day('2031-06-17'));
+  ok('a closed day (blackout) is closed with no spots and no usual pace', day('2031-06-13')?.status === 'closed' && day('2031-06-13')?.offered === 0 && day('2031-06-13')?.usualByNow === null, day('2031-06-13'));
+  ok('last 30 days: the four past Tuesdays, 20 players each', p.last.players === 80 && p.last.offered === 160, p.last);
+  ok('revenue next = expected players × ledger tee money per player (an estimate)', p.next.revenueCents === Math.round(p.next.players * 2000), { next: p.next });
+  ok('Jun 24, Jul 1 and Jul 8 (no tee times yet) come from the usual final count, 20 each', p.next.players === 4 + 18 + 20 * 3, p.next);
+  ok('the change line', p.change.playersPct === Math.round(((p.next.players - 80) / 80) * 1000) / 10, p.change);
+  // A perfectly steady course: 20 of 40 played every day for 58 days, tee times 14 days out. Next 30 = last 30
+  // (days 28 and 29 out need weeks 5–8 back to find four finished same weekdays).
+  { const steady = [] as ReturnType<typeof slot>[];
+    for (let i = -58; i < 14; i++) steady.push(slot(addD(today, i), i < 0 ? [{ n: 20, madeDaysBefore: 3 }] : [{ n: Math.max(0, 20 - Math.max(0, i - 3) * 2), madeDaysBefore: 3 }]));
+    const q = projectionsOf(steady, new Set(), today, nowMs, 60000);
+    ok('a steady course projects level: rounds and revenue unchanged on the last 30 days', q.last.players === 600 && q.next.players === 600 && q.change.playersPct === 0 && q.change.revenuePct === 0, { last: q.last, next: q.next, change: q.change }); }
+  { const none = projectionsOf([slot(addD(today, 3), [{ n: 4, madeDaysBefore: 10 }])], new Set(), today, nowMs, 50000);
+    ok('no players in the last 30 days: the revenue estimate is unknown, not $0', none.next.revenueCents === null && none.change.revenuePct === null, none); }
+  ok('a closed day reads "closed" in the week (the page must label it)', p.week.some(w => w.status === 'closed'));
+  // Every projections field the merged page's type expects is in the reply (src/components/dashboard/analytics/data.ts).
+  { const page = readFileSync('src/components/dashboard/analytics/data.ts', 'utf8');
+    const block = page.slice(page.indexOf('export type Projections'), page.indexOf('\n};', page.indexOf('export type Projections')));
+    const keys = (part: string) => (block.match(new RegExp(`${part}: \\{([^}]*)\\}`))?.[1] ?? '').split(';').map(x => x.trim().split(/\??:/)[0]).filter(Boolean);
+    const missing = (['last', 'next', 'change'] as const).flatMap(k => keys(k).filter(f => !(f in p[k])).map(f => `${k}.${f}`));
+    ok('the page\'s Projections fields all exist in the API', keys('next').includes('revenueCents') && keys('change').includes('revenuePct') && missing.length === 0, missing); }
+}
+
 // ── Money only with money.payments (Build 2026-11-17): a staff login with Analytics but not Payments ──
 {
   const staff = { isStaff: true, permissions: ['analytics.view'] } as Parameters<typeof can>[0];
@@ -127,17 +174,21 @@ const bk = (o: Partial<NsBooking> & { id: string }): NsBooking => ({
   const nb = analyticsWithoutMoney(body);
   ok('/analytics without money: no ledger, and no unsold value anywhere, compare included', lost(nb).length === 0 && lost(body).length > 0 && nb.compare?.headline.fillPct === 50, lost(nb));
   ok('…and no compare stays no compare', analyticsWithoutMoney({ ...body, compare: null }).compare === null);
+  const proj = projectionsOf([], new Set(), '2031-06-11', Date.parse('2031-06-11T12:00:00Z'), 5000);
+  const pb = projectionsWithoutMoney(proj);
+  ok('projections without money: no revenue estimate', cents(pb).length === 0 && !('revenuePct' in pb.change) && cents(proj).length > 0, pb);
 }
 
 // ── Routes: gated, this course, ledger money ──
 const read = (f: string) => readFileSync(f, 'utf8');
-for (const f of ['src/app/api/operator/analytics/no-shows/route.ts', 'src/app/api/operator/analytics/shop/route.ts', 'src/app/api/operator/analytics/route.ts']) {
+for (const f of ['src/app/api/operator/analytics/no-shows/route.ts', 'src/app/api/operator/analytics/projections/route.ts', 'src/app/api/operator/analytics/shop/route.ts', 'src/app/api/operator/analytics/route.ts']) {
   const s = read(f);
   ok(`${f}: signed in, analytics.view, the session's course`, s.includes('resolveDashboardSession()') && s.includes("requirePermission(session, 'analytics.view')") && s.includes('session.courseId'));
 }
 const main = read('src/app/api/operator/analytics/route.ts'), lib = read('src/lib/analytics-page.ts'), sales = read('src/app/api/operator/money/sales/route.ts');
 ok('Analytics: the ledger headline, and without money.payments the whole body goes through analyticsWithoutMoney', main.includes('ledgerHeadline(session.courseId, range)') && main.includes("const money = can(session, 'money.payments');") && main.includes('const body = { ...current, customers, headline: head, compare, ledger };') && main.includes('const out = money ? body : analyticsWithoutMoney(body);') && main.includes('return NextResponse.json(out'));
 ok('No-shows money only with money.payments', read('src/app/api/operator/analytics/no-shows/route.ts').includes("can(session, 'money.payments') ? r : noShowWithoutMoney(r)"));
+ok('projections revenue only with money.payments', read('src/app/api/operator/analytics/projections/route.ts').includes("can(session, 'money.payments') ? r : projectionsWithoutMoney(r)"));
 ok('shop ledger money only with money.payments', read('src/app/api/operator/analytics/shop/route.ts').includes("...(can(session, 'money.payments') ? { ledgerSalesCents } : {})"));
 ok('the ledger headline is the Revenue page\'s own function, called the same way', /allSegments\(courseId, c\.tz, range, prev, now\)/.test(lib) && /allSegments\(session\.courseId, tz, a\.range, previousRange\(a\.range\)\)/.test(sales));
 ok('lib/analytics-page never sums money from lib/analytics.ts', !/computeAnalytics/.test(lib));
