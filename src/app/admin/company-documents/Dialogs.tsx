@@ -12,6 +12,9 @@ import c from './company.module.css';
 import {
   type Doc, type Label, type HistoryItem, labelOf, folderFor, safeFileName, fileProblem, fmtSize, kindOf, openHref, day, when,
 } from './logic';
+import {
+  RECORD_FAILED, UPLOAD_HINT, LABEL_HINT, FILE_RULE, STORAGE_REFUSED, replacedMsg, keepsVersion, goneForGood, moveFirst, LABEL_REMOVED_MOVED,
+} from './terms';
 
 /** The overlay every box here uses: into the admin shell (it carries the --g-* tokens), Escape and a click outside
  *  close it unless something is saving, focus starts inside and goes back where it was. */
@@ -60,8 +63,8 @@ export function AddBox({ onClose, onUpload, onLabel }: { onClose: () => void; on
     <Box label="Add" onClose={onClose}>
       <h4>Add</h4>
       <div className={`${c.tiles} ${c.one}`}>
-        <button type="button" className={c.tile} onClick={onUpload} data-first><span><b>Upload a document</b><small>A PDF, PNG or JPEG into one of your labels</small></span></button>
-        <button type="button" className={c.tile} onClick={onLabel}><span><b>New label</b><small>Your own group, like Trademark or Payroll</small></span></button>
+        <button type="button" className={c.tile} onClick={onUpload} data-first><span><b>Upload a document</b><small>{UPLOAD_HINT}</small></span></button>
+        <button type="button" className={c.tile} onClick={onLabel}><span><b>New label</b><small>{LABEL_HINT}</small></span></button>
       </div>
       <div className={s.line}><span className={c.spring} /><button type="button" className={s.lnk} onClick={onClose}>Close</button></div>
     </Box>
@@ -102,7 +105,7 @@ export function UploadBox({ labels, replacing, sendLabel, onClose, onDone, onSto
       });
       url = blob.url;
     } catch (e) {
-      setError(`Upload failed: ${e instanceof Error ? e.message : 'storage did not accept the file'}. Nothing was saved.`);
+      setError(`Upload failed: ${e instanceof Error ? e.message : STORAGE_REFUSED}. Nothing was saved.`);
       setBusy(false); return;
     }
     const body: Record<string, string> = { url };
@@ -110,9 +113,9 @@ export function UploadBox({ labels, replacing, sendLabel, onClose, onDone, onSto
     if (replacing?.id) body.replaces = replacing.id;
     const rec = await adminFetch('/api/admin/company-documents', { method: 'POST', body: JSON.stringify(body), subject: 'the document', action: 'save' });
     setBusy(false);
-    if (!rec.ok) { setError(`${rec.message} The file may be stored; the list has been reloaded, so check it before uploading again.`); await onStored(); return; }
+    if (!rec.ok) { setError(`${rec.message} ${RECORD_FAILED}`); await onStored(); return; }
     await onDone(replacing
-      ? (replacing.version ? `Replaced. The old file is kept as version ${replacing.version}.` : 'Replaced.')
+      ? replacedMsg(replacing.version)
       : `Saved “${file.name}”.`);
   }
 
@@ -121,13 +124,13 @@ export function UploadBox({ labels, replacing, sendLabel, onClose, onDone, onSto
     <Box label={title} onClose={onClose} busy={busy} wide>
       <h4>{title}</h4>
       {replacing
-        ? replacing.version ? <p>The current file stays as version {replacing.version} in its history.</p> : null
+        ? replacing.version ? <p>{keepsVersion(replacing.version)}</p> : null
         : <><div className={c.lab} id="cd-up-l">Label</div><LabelTiles labels={labels} value={label} onPick={setLabel} disabled={busy} labelledBy="cd-up-l" /></>}
       <label className={c.drop}>
         <input ref={input} type="file" accept="application/pdf,image/png,image/jpeg" className={c.hide} disabled={busy}
           onChange={e => pick(e.target.files?.[0])} />
         <b>{file ? file.name : 'Choose a file'}</b>
-        <small>{file ? fmtSize(file.size) : 'PDF, PNG or JPEG, up to 25 MB'}</small>
+        <small>{file ? fmtSize(file.size) : FILE_RULE}</small>
       </label>
       {error && <Msg ok={false}>{error}</Msg>}
       <div className={s.line}>
@@ -186,7 +189,7 @@ export function DocBox({ doc, labels, canRelabel, onClose, onReplace, onChanged 
     return (
       <Box key={view} label={`Delete ${doc.name}`} onClose={() => setView('info')} busy={busy}>
         <h4>Delete “{doc.name}” for good?</h4>
-        <p>It can’t be recovered{doc.version && doc.version > 1 ? ', and its earlier versions go with it' : ''}.</p>
+        <p>{goneForGood(!!doc.version && doc.version > 1)}</p>
         {error && <Msg ok={false}>{error}</Msg>}
         <div className={s.line}>
           <button type="button" className={s.lnk} onClick={() => { setError(''); setView('info'); }} disabled={busy} data-first>Keep it</button>
@@ -279,7 +282,7 @@ export function LabelBox({ label, labels, count, onClose, onDone }: {
     const r = await adminFetch(`/api/admin/company-documents/labels?${q}`, { method: 'DELETE', subject: 'the label', action: 'save' });
     setBusy(false);
     if (!r.ok) { setError(r.message); return; }
-    await onDone(count ? 'Label removed; its documents moved.' : 'Label removed.');
+    await onDone(count ? LABEL_REMOVED_MOVED : 'Label removed.');
   }
 
   return (
@@ -288,7 +291,7 @@ export function LabelBox({ label, labels, count, onClose, onDone }: {
         <h4>{label ? 'Edit label' : 'New label'}</h4>
         <label className={c.flab}>Name<input className={`${s.fld} ${c.fld}`} value={name} onChange={e => setName(e.target.value)} maxLength={40} disabled={busy} /></label>
         {label && count > 0 && (
-          <label className={c.flab}>To remove it, move its {count} document{count > 1 ? 's' : ''} to
+          <label className={c.flab}>{moveFirst(count)}
             <select className={`${s.fld} ${c.fld}`} value={moveTo} onChange={e => setMoveTo(e.target.value)} disabled={busy}>
               {others.map(l => <option key={l.key} value={l.key}>{l.name}</option>)}
             </select>
