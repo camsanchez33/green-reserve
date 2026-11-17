@@ -41,6 +41,8 @@ export async function PATCH(req: NextRequest) {
   const OWNER_ONLY_FIELDS = ['cancellationHours', 'checkInWindowHours', 'rainCheckPolicy', 'lateCancellationFee', 'lateFeeBasis', 'lateFeeTiming', 'noShowFee', 'noShowFeeBasis', 'autoNoShowMinutes', 'onlineBlockNoShows', 'onlineBlockLateCancels', 'onlineBlockMonths', 'twoFactorMethod', 'twoFactorPhone'];
   // Who gets a member rate at the counter is the owner's call, like the policy.
   if (session.isStaff && 'counterMemberRate' in body) return NextResponse.json({ error: 'Only the course owner can change who gets a member rate at the counter.' }, { status: 403 });
+  // Takes cash (Cam 2026-11-17): off means no cash anywhere (lib/takes-cash) — a money switch, the owner's call.
+  if (session.isStaff && 'takesCash' in body) return NextResponse.json({ error: 'Only the course owner can change whether the course takes cash.' }, { status: 403 });
   // CART-2: how carts are charged changes every price with a cart — the owner's call.
   if (session.isStaff && 'cartPricing' in body) return NextResponse.json({ error: 'Only the course owner can change how carts are charged.' }, { status: 403 });
   if (session.isStaff && OWNER_ONLY_FIELDS.some(k => k in body)) {
@@ -71,7 +73,7 @@ export async function PATCH(req: NextRequest) {
     'dresscode','minPlayers','maxPlayers',
     'hasDrivingRange','drivingRangeType','rangeBallsFree','hasPuttingGreen','hasShortGameArea',
     'hasProShop','proShopPhone',
-    // HOME-3 (Cam 2026-11-12): "We take cash" — display only (Home's Open the register bar); never gates cash.
+    // HOME-3 (Cam 2026-11-12) / Takes cash (Cam 2026-11-17): off refuses every cash path (lib/takes-cash). Owner only (above).
     'takesCash','restaurantType','hasCartGirl','hasLessons','hasClubRental',
     'hasPushCartRental','hasBagStorage','hasLockerRoom','hasGpsCarts',
     'hasTournaments','tournamentFrequency','hasCaddies','caddieType','caddieNote',

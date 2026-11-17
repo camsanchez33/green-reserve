@@ -13,6 +13,7 @@ import { roundChargeCents } from './shop';
 import { createSale, quoteSale, type DiscountInput, type SaleView, TOTAL_CHANGED } from './shop-sales';
 import { recordMove } from './money-ledger';
 import type { EventActor } from './booking-events';
+import { cashRefused } from './takes-cash';
 
 export const MAX_REGISTER_ROUNDS = 8;
 
@@ -61,6 +62,8 @@ export async function ringUpCash(courseId: string, opts: {
   headcounts?: Record<string, number>;
   soldBy: string; actor: EventActor; customerName?: string; customerPhone?: string; customerEmail?: string;
 }): Promise<Result<{ sale: SaleView; skipped: string[]; notes: string[] }> | { ok: false; status: number; error: string; settled: string[] }> {
+  // Takes cash off: no cash sale at all — refused before anything is settled.
+  { const off = await cashRefused(courseId); if (off) return { ok: false, status: 409, error: off }; }
   const bookingIds = [...new Set(opts.bookingIds.filter(x => typeof x === 'string' && x))];
   const walkIns = opts.walkIns ?? [];
   if (bookingIds.length + walkIns.length > MAX_REGISTER_ROUNDS) return { ok: false, status: 400, error: `Up to ${MAX_REGISTER_ROUNDS} rounds in one sale.` };

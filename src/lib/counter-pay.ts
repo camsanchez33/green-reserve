@@ -27,6 +27,7 @@ import { addCharge } from './member-account';
 import { holdingById, packSeats, packPrice, takeRounds, giveBack, PackError, PACK_NO_CODE, ROUND_PACKS_ON, PACKS_OFF } from './round-packs';
 import { memberPlayers, splitTotal, memberSpot, partyFees, membershipLive, type PartyBooking } from './member-rates';
 import { cartCharge, cartRuleOf } from './cart-pricing';
+import { cashRefused } from '@/lib/takes-cash';
 
 export type CounterResult =
   | { ok: true; amountCents: number; note: string | null }
@@ -80,6 +81,8 @@ export async function settleAtCounter(courseId: string, bookingId: string, opts:
       cancellationFeeChargeId: true, cancellationFeeTotal: true, teeTime: { select: { date: true, time: true } }, course: { select: { timezone: true, stripeAccountId: true } } },
   });
   if (!booking) return { ok: false, status: 404, error: 'Not found' };
+  // Takes cash off: only the on-account path settles here (cash comes through ringUpCash, refused there too).
+  if (!opts.onAccount) { const off = await cashRefused(courseId); if (off) return { ok: false, status: 409, error: off }; }
   // POS-3 R3b: on the card reader right now — cash would be a second payment. A claim
   // left 10 minutes is settled from Stripe first; it may turn out paid.
   if (booking.readerStartedAt) {
