@@ -65,6 +65,10 @@ async function cleanup() {
   ok('on: a cash sale at the register', paidSale.ok && paidSale.value.status === 'paid_cash', paidSale);
   const refundable = await createSale({ courseId: c.id, lines: [{ shopItemId: item.id, quantity: 1 }], pay: 'cash', soldBy: 'staff' });
   ok('on: the register must be open for a card at the counter', (await requireRegisterOpen(c.id)) !== null);
+  // A register sale whose round was settled in cash just before the owner turned cash off (ringUpCash settles first).
+  const b3 = await createCounterBooking(c.id, { teeTimeId: tt.id, golferName: 'Mid Sale', players: 1 }, STAFF);
+  const s3 = b3.ok ? await settleAtCounter(c.id, b3.id, { actor: STAFF, actorName: 'staff' }) : null;
+  ok('on: a round settles at the counter in cash', !!s3?.ok, s3);
 
   // OFF.
   await prisma.course.update({ where: { id: c.id }, data: { takesCash: false } });
@@ -107,6 +111,14 @@ async function cleanup() {
   const cashMovesBefore = movesBefore; // every move before OFF was cash
   ok('no cash moved while it was off', cashMovesAfter === cashMovesBefore, { cashMovesAfter, cashMovesBefore });
 
+  // Checked after the "nothing moved" checks: this round's cash was taken while cash was on.
+  // ringUpCash checked before settling; createSale must not strand a round already settled.
+  const midSale = b3.ok && s3?.ok ? await createSale({ courseId: c.id, lines: [], pay: 'cash', soldBy: 'staff', rounds: [{ bookingId: b3.id, name: 'round', amountCents: s3.amountCents }] }) : null;
+  ok('off mid-sale: the sale for a round already settled in cash is still recorded', !!midSale?.ok && midSale.value.status === 'paid_cash', midSale);
+  ok('off: items with an empty rounds list are refused', refusedOff(await createSale({ courseId: c.id, lines: [{ shopItemId: item.id, quantity: 1 }], pay: 'cash', soldBy: 'staff', rounds: [] })));
+  const salesRoute = readFileSync('src/app/api/operator/shop-sales/route.ts', 'utf8');
+  const routeCall = salesRoute.slice(salesRoute.indexOf('await createSale({'), salesRoute.indexOf('});', salesRoute.indexOf('await createSale({')));
+  ok('only ringUpCash passes rounds to createSale (the register route never does)', routeCall.length > 0 && !/\brounds\b/.test(routeCall) && (readFileSync('src/lib/register.ts', 'utf8').match(/rounds/g) ?? []).length > 0);
   // ON again.
   await prisma.course.update({ where: { id: c.id }, data: { takesCash: true } });
   const back = await ringUpCash(c.id, { lines: [], bookingIds: [b2.ok ? b2.id : ''], walkIns: [], soldBy: 'staff', actor: STAFF });
