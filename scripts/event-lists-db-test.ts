@@ -127,6 +127,10 @@ async function main() {
   const set = await changeEventLines(a.id, event.id, 'includes_set', { includes: [' Cart ', 'cart', '', 'Beverage cart'] });
   check('the whole included list can be set, cleaned and de-duplicated', set.ok && (await prisma.courseEvent.findUniqueOrThrow({ where: { id: event.id } })).includes.join() === 'Cart,Beverage cart');
   check('…but not to more than 20 or to something that isn’t a list', !setIncludes(Array.from({ length: 21 }, (_, i) => `I${i}`)).ok && !setIncludes('Cart').ok);
+  const t0 = Date.now();
+  const huge = setIncludes(Array.from({ length: 50_000 }, (_, i) => `Item ${i}`));
+  check('a list of 50,000 is refused at once, not after checking them all', !huge.ok && Date.now() - t0 < 200, String(Date.now() - t0));
+  check('an item that isn’t words is refused', !setIncludes([{ a: 1 }, 'Cart']).ok && !setIncludes([5]).ok);
 
   // Saving the event without the fields the page now edits elsewhere keeps them.
   await prisma.courseEvent.update({ where: { id: event.id }, data: { includes: ['Cart', 'Lunch'], notes: 'Old note' } });

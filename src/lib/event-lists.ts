@@ -219,11 +219,15 @@ export function changeIncludes(current: string[], action: 'add' | 'edit' | 'remo
 export function setIncludes(input: unknown): Result<string[]> {
   if (!Array.isArray(input)) return fail(400, 'Send the list of included items.');
   const out: string[] = [];
+  const seen = new Set<string>();
   for (const x of input) {
+    if (typeof x !== 'string') return fail(400, 'Each included item has to be words.');
     const label = str(x, 60);
-    if (label && !out.some(o => o.toLowerCase() === label.toLowerCase())) out.push(label);
+    if (!label || seen.has(label.toLowerCase())) continue;
+    seen.add(label.toLowerCase()); out.push(label);
+    // Stop as soon as it's too long, so a huge list costs nothing.
+    if (out.length > 20) return fail(400, 'An event can list up to 20 included items.');
   }
-  if (out.length > 20) return fail(400, 'An event can list up to 20 included items.');
   return { ok: true, value: out };
 }
 
@@ -237,6 +241,9 @@ export const EVENT_LINE_ACTIONS: readonly EventLineAction[] = ['note_add', 'note
  * the course: another course's event is not found.
  */
 export async function changeEventLines(courseId: string, eventId: string, action: EventLineAction, input: Record<string, unknown>): Promise<Result<null>> {
+  // The whole list is checked before the lock, so nothing slow runs while the event is held.
+  const whole = action === 'includes_set' ? setIncludes(input.includes) : null;
+  if (whole && !whole.ok) return whole;
   return prisma.$transaction(async tx => {
     const locked = await tx.$queryRaw<{ id: string }[]>`SELECT id FROM "CourseEvent" WHERE id = ${eventId} AND "courseId" = ${courseId} FOR UPDATE`;
     if (!locked.length) return fail(404, 'Event not found');
@@ -247,7 +254,7 @@ export async function changeEventLines(courseId: string, eventId: string, action
       await tx.courseEvent.update({ where: { id: eventId }, data: { staffNotes: n.value } });
       return { ok: true as const, value: null };
     }
-    const n = action === 'includes_set' ? setIncludes(input.includes)
+    const n = whole ? whole
       : changeIncludes(cur.includes, action === 'include_add' ? 'add' : action === 'include_edit' ? 'edit' : 'remove', input);
     if (!n.ok) return n;
     await tx.courseEvent.update({ where: { id: eventId }, data: { includes: n.value } });

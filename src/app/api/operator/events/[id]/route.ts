@@ -180,7 +180,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         break;
       }
 
-      // Events lists (Cam 2026-11-17): the event's notes for staff and what's included, each line added, changed or removed.
       // Events lists (Cam 2026-11-17): the event's notes for staff and what's included, a line at a time
       // (or the whole included list), under a lock on the event (lib/event-lists.ts changeEventLines).
       case 'note_add': case 'note_edit': case 'note_remove':
