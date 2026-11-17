@@ -1,220 +1,277 @@
 'use client';
-// SEC-3 (Cam 2026-10-26: "security has to be insane … see what Sentry is doing
-// and what it comes back with"): one page for the site's security. The
-// checklist first (a red line is a protection that's off), then what Sentry is
-// reporting, then the last 30 days of sign-in trouble — who is locked out, the
-// addresses and emails behind the failures, and every event. Owner only (the
-// route enforces it); read-only.
-import { useCallback, useEffect, useState } from 'react';
+// SEC-3 (Cam 2026-10-26: "security has to be insane … see what Sentry is doing and what it comes back with"), reworked
+// to the approved mockup (Cam 2026-11-17, lanes/admin/security-mockup.html; lanes/admin.md "Security — APPROVED"):
+// Settings → Security in dark green glass. On top, the security checker's status and Your courses (Build's checker;
+// hidden until its route exists, ./Checker). Then tabs: Sign-ins, Protections, Errors, and Incidents (checker only).
+// No row of headline numbers; the filter is a bare icon. Owner only: GET /api/admin/security enforces it (the sidebar
+// only hides the link). Read-only apart from the checker's own Undo / Approve / Not now, which Build's routes gate.
+import Link from 'next/link';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
-import { Card } from '@/components/ui/Card';
-import { StatusDot } from '@/components/ui/StatusDot';
-import { adminFetch } from '@/lib/admin-fetch';
-import type { Check } from '@/lib/security-checklist';
-import type { SentryIssuesResult } from '@/lib/sentry-issues';
+import { ProfileCard, profileStyles as s } from '@/components/admin/ProfileCard';
+import { adminFetch, type AdminFetchFailure } from '@/lib/admin-fetch';
+import g from '../admin-glass.module.css';
+import ss from './security.module.css';
+import { Dialog } from './Dialog';
+import { NETWORK, SIGNINS_LEAD, SIGNINS_FOOT, ERRORS_LEAD } from './terms';
+import { useChecker, actOn, CheckerBox, CoursesCard, IncidentsTab, IncidentDialog, AskDialog } from './Checker';
+import { type SecurityData, type Kind, type Tone, type CheckerAction, KIND, kindOf, DOOR, dayAndTime, when, failedOf, plural, protectionsLead } from './logic';
 
-type Kind = 'signin_failed' | 'signin_ok' | 'locked_out' | 'second_factor_failed' | 'step_up_failed' | 'rate_limited' | 'new_device' | 'password_changed';
-interface Data {
-  checklist: Check[];
-  sentry: SentryIssuesResult;
-  overview: {
-    last24h: Partial<Record<Kind, number>>; last30d: Partial<Record<Kind, number>>;
-    topIps: { ip: string; failed: number }[]; topEmails: { email: string; failed: number }[];
-    recent: { at: string; kind: Kind; surface: string; ip: string; email: string; detail: string; browser: string }[];
-    lockedNow: { who: string; email: string; until: string }[];
-  };
-}
-
-const KIND: Record<Kind, { label: string; tone: 'ok' | 'warn' | 'bad' | 'neutral' }> = {
-  signin_failed: { label: 'Sign-in failed', tone: 'warn' },
-  signin_ok: { label: 'Signed in', tone: 'ok' },
-  locked_out: { label: 'Locked out', tone: 'bad' },
-  second_factor_failed: { label: 'Wrong second factor', tone: 'bad' },
-  step_up_failed: { label: 'Confirm-it’s-you failed', tone: 'bad' },
-  rate_limited: { label: 'Too many tries', tone: 'warn' },
-  new_device: { label: 'New owner device', tone: 'warn' },
-  password_changed: { label: 'Password changed', tone: 'neutral' },
-};
-const DOOR: Record<string, string> = { admin: 'Admin', owner: 'Owner (/cam)', course: 'Course dashboard', golfer: 'Golfer', member: 'Member' };
-const when = (iso: string) => iso ? new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' }) : '—';
-const failedOf = (c: Partial<Record<Kind, number>>) => (c.signin_failed ?? 0) + (c.locked_out ?? 0) + (c.second_factor_failed ?? 0) + (c.step_up_failed ?? 0);
+type Tab = 'signins' | 'protect' | 'errors' | 'log';
+const PAGE = 25;
+const dotClass = (t: Tone) => `${ss.sdt} ${t === 'neutral' ? '' : ss[t]}`;
+const ICON = { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, 'aria-hidden': true };
 
 export default function AdminSecurityPage() {
-  const [data, setData] = useState<Data | null>(null);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [showAll, setShowAll] = useState(false);
+  const [data, setData] = useState<SecurityData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<{ msg: string; kind: AdminFetchFailure } | null>(null);
+  const [tab, setTab] = useState<Tab>('signins');
+  const [door, setDoor] = useState('');
+  const [kind, setKind] = useState('');
+  const [shown, setShown] = useState(PAGE);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [asking, setAsking] = useState(false);
+  const [openInc, setOpenInc] = useState<string | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [actErr, setActErr] = useState<Record<string, string>>({});
+  const [toast, setToast] = useState('');
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const checker = useChecker();
+  const loadChecker = checker.load;
+
+  const say = useCallback((m: string) => {
+    setToast(m);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(''), 3000);
+  }, []);
+  useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
 
   const load = useCallback(async () => {
-    setLoading(true); setError('');
-    const res = await adminFetch<Data>('/api/admin/security', { subject: 'the security page' });
-    setLoading(false);
-    if (!res.ok) { setError(res.message); return; }
-    setData(res.data);
-  }, []);
+    setLoading(true);
+    try {
+      const res = await adminFetch<SecurityData>('/api/admin/security', { subject: 'the security page' });
+      if (!res.ok) { setLoadError({ msg: res.message, kind: res.kind }); return; }
+      setData(res.data); setLoadError(null);
+    } catch {
+      setLoadError({ msg: NETWORK, kind: 'network' });
+    } finally { setLoading(false); }
+    await loadChecker();
+  }, [loadChecker]);
   useEffect(() => { load(); }, [load]);
 
+  const ck = checker.state.phase === 'ready' ? checker.state.data : null;
+  // The Incidents tab exists only with the checker; if it goes away, fall back to Sign-ins.
+  useEffect(() => { if (!ck && tab === 'log') setTab('signins'); }, [ck, tab]);
+
+  async function act(id: string, verb: 'undo' | 'approve' | 'dismiss', label: string | null) {
+    setBusy(id); setActErr(e => ({ ...e, [id]: '' }));
+    try {
+      say(await actOn(id, verb, label));
+      await loadChecker();
+      return true;
+    } catch (e) {
+      setActErr(x => ({ ...x, [id]: e instanceof Error ? e.message : 'Couldn’t do that.' }));
+      return false;
+    } finally { setBusy(null); }
+  }
+  const onBoxAct = (a: CheckerAction, verb: 'undo' | 'approve' | 'dismiss') => { act(a.id, verb, a.approveLabel); };
+
   const o = data?.overview;
-  const bad = data?.checklist.filter(c => c.status === 'bad').length ?? 0;
-  const warn = data?.checklist.filter(c => c.status === 'warn').length ?? 0;
-  const events = o ? (showAll ? o.recent : o.recent.slice(0, 25)) : [];
+  const events = o ? o.recent.filter(e => (!door || e.surface === door) && (!kind || e.kind === kind)) : [];
+  const filters = (door ? 1 : 0) + (kind ? 1 : 0);
+  const protectCount = data ? data.checklist.filter(c => c.status === 'warn' || c.status === 'bad').length : 0;
+  const needCount = ck ? ck.incidents.filter(i => i.status === 'needs_you').length : 0;
+  const tabs: [Tab, string, number][] = [['signins', 'Sign-ins', 0], ['protect', 'Protections', protectCount], ['errors', 'Errors', 0]];
+  if (ck) tabs.push(['log', 'Incidents', needCount]);
+  const inc = ck && openInc ? ck.incidents.find(i => i.id === openInc) ?? null : null;
 
   return (
-    <div className="min-h-screen bg-paper flex">
+    <>
       <AdminSidebar active="security" />
-      <div className="admin-content flex-1 min-h-screen">
-        <div className="px-10 py-8">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h1 className="text-[30px] leading-none font-serif font-semibold text-ink">Security</h1>
-              <p className="text-[13.5px] text-ink-soft mt-2">
-                {!data ? 'What protects the site, what Sentry is reporting, and who has been trying to sign in.'
-                  : bad ? `${bad} protection${bad === 1 ? ' is' : 's are'} off — fix ${bad === 1 ? 'it' : 'them'} first.`
-                  : warn ? `Everything essential is on; ${warn} thing${warn === 1 ? '' : 's'} could be stronger.`
-                  : 'Every protection is on.'}
-              </p>
-            </div>
-            <button type="button" onClick={load} disabled={loading} className="text-[13px] font-medium text-ink px-3.5 py-2 rounded-md bg-white border border-line hover:border-line-strong disabled:opacity-50">
-              {loading ? 'Checking…' : 'Check again'}
-            </button>
-          </div>
-
-          {error && (
-            <div role="alert" className="mt-5 rounded-md border border-bad/20 bg-bad/5 px-4 py-2.5 flex items-start justify-between gap-3">
-              <p className="text-xs text-bad">{error}</p>
-              <button type="button" onClick={load} className="text-xs font-medium text-ink-soft hover:text-ink shrink-0">Try again</button>
-            </div>
-          )}
-          {!data && loading && <p className="text-ink-muted text-center py-16 text-sm">Checking…</p>}
-
-          {data && o && (
-            <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-              <section aria-labelledby="sec-checks">
-                <h2 id="sec-checks" className="text-[15px] font-semibold text-ink mb-2">Protections</h2>
-                <Card>
-                  <ul className="divide-y divide-line-soft">
-                    {data.checklist.map(c => (
-                      <li key={c.key} className={'flex items-start gap-3 px-4 py-3 ' + (c.status === 'bad' ? 'border-l-[3px] border-l-bad' : '')}>
-                        <span className="pt-1.5"><StatusDot status={c.status} label="" /></span>
-                        <div className="min-w-0">
-                          <div className="text-[14px] text-ink">{c.label}</div>
-                          <div className="text-[13px] text-ink-soft">{c.text}</div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </Card>
-              </section>
-
-              <section aria-labelledby="sec-sentry">
-                <h2 id="sec-sentry" className="text-[15px] font-semibold text-ink mb-2">Errors Sentry is reporting</h2>
-                <Card>
-                  {!data.sentry.ok ? (
-                    <div className={'px-4 py-4 text-[13.5px] ' + (data.sentry.reason === 'failed' ? 'border-l-[3px] border-l-warn' : '')}>
-                      <p className="text-ink">{data.sentry.reason === 'not_set_up' ? 'Not connected yet.' : 'Couldn’t load Sentry.'}</p>
-                      <p className="text-ink-soft mt-0.5">{data.sentry.message}</p>
-                    </div>
-                  ) : data.sentry.issues.length === 0 ? (
-                    <p className="px-4 py-4 text-[13.5px] text-ink-soft">No open errors in the last 14 days.</p>
-                  ) : (
-                    <ul className="divide-y divide-line-soft">
-                      {data.sentry.issues.map(i => (
-                        <li key={i.id} className="px-4 py-3">
-                          <div className="flex items-baseline justify-between gap-3">
-                            <span className="text-[14px] text-ink min-w-0 break-words">
-                              {i.link ? <a href={i.link} target="_blank" rel="noopener noreferrer" className="hover:underline">{i.title}</a> : i.title}
-                            </span>
-                            <span className="text-[12.5px] text-ink-muted tabular-nums shrink-0">{when(i.lastSeen)}</span>
-                          </div>
-                          <div className="text-[12.5px] text-ink-soft mt-0.5">
-                            {i.where && <>{i.where} · </>}{i.events} time{i.events === 1 ? '' : 's'}{i.users ? ` · ${i.users} visitor${i.users === 1 ? '' : 's'}` : ''} · first {when(i.firstSeen)}
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </Card>
-              </section>
-
-              <section aria-labelledby="sec-signins" className="xl:col-span-2">
-                <h2 id="sec-signins" className="text-[15px] font-semibold text-ink mb-2">Sign-ins</h2>
-                <p className="text-[13.5px] text-ink-soft mb-3">
-                  Last 24 hours: {failedOf(o.last24h)} failed, {o.last24h.signin_ok ?? 0} signed in, {o.last24h.rate_limited ?? 0} slowed down for too many tries.
-                  {' '}Last 30 days: {failedOf(o.last30d)} failed, {o.last30d.locked_out ?? 0} lockout{(o.last30d.locked_out ?? 0) === 1 ? '' : 's'}.
-                </p>
-
-                <div className="grid gap-4 lg:grid-cols-3">
-                  <Card>
-                    <h3 className="px-4 pt-3 pb-2 text-[14px] font-semibold text-ink border-b border-line-soft">Locked out right now</h3>
-                    {o.lockedNow.length === 0 ? <p className="px-4 py-3 text-[13.5px] text-ink-soft">Nobody.</p> : (
-                      <ul className="divide-y divide-line-soft">
-                        {o.lockedNow.map((l, n) => (
-                          <li key={n} className="px-4 py-2.5 text-[13.5px]">
-                            <div className="text-ink break-all">{l.email}</div>
-                            <div className="text-[12.5px] text-ink-muted">{l.who} · until {when(l.until)}</div>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </Card>
-                  <Card>
-                    <h3 className="px-4 pt-3 pb-2 text-[14px] font-semibold text-ink border-b border-line-soft">Most failures by address</h3>
-                    {o.topIps.length === 0 ? <p className="px-4 py-3 text-[13.5px] text-ink-soft">No failed sign-ins in 30 days.</p> : (
-                      <ul className="divide-y divide-line-soft">
-                        {o.topIps.map(r => (
-                          <li key={r.ip} className="flex justify-between gap-3 px-4 py-2.5 text-[13.5px]"><span className="text-ink font-mono text-[13px] break-all">{r.ip || 'unknown'}</span><span className="tabular-nums text-ink-soft shrink-0">{r.failed}</span></li>
-                        ))}
-                      </ul>
-                    )}
-                  </Card>
-                  <Card>
-                    <h3 className="px-4 pt-3 pb-2 text-[14px] font-semibold text-ink border-b border-line-soft">Most failures by email typed</h3>
-                    {o.topEmails.length === 0 ? <p className="px-4 py-3 text-[13.5px] text-ink-soft">No failed sign-ins in 30 days.</p> : (
-                      <ul className="divide-y divide-line-soft">
-                        {o.topEmails.map(r => (
-                          <li key={r.email} className="flex justify-between gap-3 px-4 py-2.5 text-[13.5px]"><span className="text-ink break-all">{r.email}</span><span className="tabular-nums text-ink-soft shrink-0">{r.failed}</span></li>
-                        ))}
-                      </ul>
-                    )}
-                  </Card>
-                </div>
-
-                <Card className="mt-4">
-                  <h3 className="px-4 pt-3 pb-2 text-[14px] font-semibold text-ink border-b border-line-soft">Everything that went wrong, newest first</h3>
-                  {events.length === 0 ? <p className="px-4 py-3 text-[13.5px] text-ink-soft">Nothing in the last 30 days.</p> : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-[13.5px]">
-                        <thead><tr className="text-left border-b border-line">
-                          <th className="px-4 py-2 text-[12.5px] font-semibold text-ink">When</th>
-                          <th className="px-4 py-2 text-[12.5px] font-semibold text-ink">What</th>
-                          <th className="px-4 py-2 text-[12.5px] font-semibold text-ink">Where</th>
-                          <th className="px-4 py-2 text-[12.5px] font-semibold text-ink">Email typed</th>
-                          <th className="px-4 py-2 text-[12.5px] font-semibold text-ink">Address</th>
-                        </tr></thead>
-                        <tbody className="divide-y divide-line-soft">
-                          {events.map((e, n) => (
-                            <tr key={n} title={e.browser}>
-                              <td className="px-4 py-2 tabular-nums text-ink-soft whitespace-nowrap">{when(e.at)}</td>
-                              <td className="px-4 py-2 text-ink"><span className="inline-flex items-center gap-1.5"><StatusDot status={KIND[e.kind]?.tone ?? 'neutral'} label="" />{KIND[e.kind]?.label ?? e.kind}</span>{e.detail && <span className="block text-[12.5px] text-ink-muted">{e.detail}</span>}</td>
-                              <td className="px-4 py-2 text-ink-soft">{DOOR[e.surface] ?? e.surface}</td>
-                              <td className="px-4 py-2 text-ink-soft break-all">{e.email || '—'}</td>
-                              <td className="px-4 py-2 text-ink-soft font-mono text-[12.5px]">{e.ip || '—'}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                  {!showAll && o.recent.length > events.length && (
-                    <button type="button" onClick={() => setShowAll(true)} className="m-3 text-[13px] text-ink-soft hover:text-ink">Show all {o.recent.length}</button>
-                  )}
-                </Card>
-                <p className="mt-2 text-[12.5px] text-ink-muted">Kept 90 days. 20 failures from one address in an hour, or an admin lockout, becomes a Problem and an email. Remove an owner device you don’t recognise on My profile.</p>
-              </section>
-            </div>
-          )}
+      <main className={g.main}>
+        <div className={g.head}>
+          <h1>Security</h1>
+          <button type="button" className={ss.ibtn2} style={{ marginLeft: 'auto' }} onClick={() => load()} disabled={loading} aria-label={loading ? 'Checking…' : 'Check again'} title="Check again">
+            <svg {...ICON}><path d="M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6" /></svg>
+          </button>
         </div>
+
+        {loadError && (
+          <div className={`${g.glass} ${ss.problem}`} role="alert">
+            <span>{loadError.msg}</span>
+            {loadError.kind === 'unauthorized' ? <Link href="/admin/login" className={s.btn}>Sign in</Link>
+              : loadError.kind === 'forbidden' ? null : <button type="button" className={s.btn} onClick={() => load()} disabled={loading}>{loading ? 'Trying…' : 'Try again'}</button>}
+          </div>
+        )}
+        {!data && loading && !loadError && <p className={ss.empty}>Checking…</p>}
+
+        {data && o && (
+          <div className={s.col}>
+            {ck && <CheckerBox data={ck} busy={busy} errors={actErr} onAsk={() => setAsking(true)} onAct={onBoxAct} />}
+            {ck && <CoursesCard data={ck} onOpen={setOpenInc} />}
+            {checker.state.phase === 'error' && (
+              <div className={`${g.glass} ${ss.problem}`} role="alert">
+                <span>{checker.state.message}</span>
+                <button type="button" className={s.btn} onClick={() => loadChecker()}>Try again</button>
+              </div>
+            )}
+
+            <div className={ss.ptabs} role="tablist" aria-label="Security">
+              {tabs.map(([k, label, n]) => (
+                <button key={k} type="button" role="tab" id={`sc-tab-${k}`} aria-selected={tab === k} aria-controls="sc-panel" onClick={() => setTab(k)}>
+                  {label}{n > 0 && <span className={ss.tcount}>{n}</span>}
+                </button>
+              ))}
+            </div>
+
+            <div id="sc-panel" role="tabpanel" aria-labelledby={`sc-tab-${tab}`} style={{ display: 'contents' }}>
+              {tab === 'signins' && (
+                <>
+                  <ProfileCard title="Sign-in trouble" labelId="sc-si"
+                    lead={`${SIGNINS_LEAD} Last 24 hours: ${failedOf(o.last24h)} failed, ${o.last24h.signin_ok ?? 0} signed in, ${o.last24h.rate_limited ?? 0} slowed down. Last 30 days: ${failedOf(o.last30d)} failed, ${plural(o.last30d.locked_out ?? 0, 'lockout')}.`}
+                    top={
+                      <button type="button" className={ss.ibtn2} onClick={() => setFilterOpen(true)} aria-label={filters ? `Filter (${filters} on)` : 'Filter'} title="Filter">
+                        <svg {...ICON}><path d="M4 5h16l-6 7.5V19l-4-2v-4.5z" /></svg>{filters > 0 && <i className={ss.fdot} />}
+                      </button>
+                    }>
+                    {filters > 0 && (
+                      <div className={ss.aon}>
+                        Showing {[door && (DOOR[door] ?? door), kind && kindOf(kind)[0]].filter(Boolean).join(' · ')}
+                        <button type="button" className={s.lnk} onClick={() => { setDoor(''); setKind(''); }}>Clear</button>
+                      </div>
+                    )}
+                    {events.length === 0 ? <p className={ss.empty}>{filters ? 'Nothing matches.' : 'Nothing in the last 30 days.'}</p> : (
+                      <>
+                        <div className={`${ss.sgr} ${ss.agh}`}><span>What happened</span><span>When</span><span>Who and where</span></div>
+                        {events.slice(0, shown).map((e, n) => {
+                          const [label, tone, meaning] = kindOf(e.kind);
+                          const w = dayAndTime(e.at);
+                          return (
+                            <div key={n} className={ss.sgr} title={e.browser || undefined}>
+                              <div className={ss.awhat}>
+                                <b><span className={dotClass(tone)} aria-hidden="true" />{label} · {DOOR[e.surface] ?? e.surface}</b>
+                                {meaning && <p>{meaning}</p>}
+                                {e.detail && <p>{e.detail}</p>}
+                              </div>
+                              <div className={ss.awhen}>{w.day}<small>{w.time}</small></div>
+                              <div className={ss.swho}>
+                                {e.email ? <span>{e.email}</span> : <span className={ss.anone}>No email typed</span>}
+                                <small className={ss.mono}>{e.ip || 'unknown address'}</small>
+                              </div>
+                            </div>
+                          );
+                        })}
+                        {events.length > shown && <button type="button" className={`${s.lnk} ${ss.more}`} onClick={() => setShown(x => x + PAGE)}>Show older</button>}
+                      </>
+                    )}
+                  </ProfileCard>
+
+                  <div className={ss.pair}>
+                    <ProfileCard title="Locked out right now" labelId="sc-locked">
+                      {o.lockedNow.length === 0 ? <p className={ss.empty}>Nobody.</p> : o.lockedNow.map((l, n) => (
+                        <div key={n} className={ss.prow}>
+                          <span className={dotClass('bad')} aria-hidden="true" />
+                          <span className={ss.pm2}>{l.email}<small>{l.who} · until {when(l.until)}</small></span>
+                        </div>
+                      ))}
+                    </ProfileCard>
+                    <ProfileCard title="Most failures by address" labelId="sc-ips" lead="Last 30 days.">
+                      {o.topIps.length === 0 ? <p className={ss.empty}>No failed sign-ins in 30 days.</p> : o.topIps.map(r => (
+                        <div key={r.ip} className={ss.cnt}><span className={ss.mono}>{r.ip || 'unknown'}</span><b>{r.failed}</b></div>
+                      ))}
+                    </ProfileCard>
+                    <ProfileCard title="Most failures by email typed" labelId="sc-emails" lead="Last 30 days.">
+                      {o.topEmails.length === 0 ? <p className={ss.empty}>No failed sign-ins in 30 days.</p> : o.topEmails.map(r => (
+                        <div key={r.email} className={ss.cnt}><span>{r.email}</span><b>{r.failed}</b></div>
+                      ))}
+                    </ProfileCard>
+                  </div>
+                  <p className={ss.empty}>{SIGNINS_FOOT}</p>
+                </>
+              )}
+
+              {tab === 'protect' && (
+                <ProfileCard title="What protects the site" labelId="sc-prot" lead={protectionsLead(data.checklist)}>
+                  {data.checklist.map(c => (
+                    <div key={c.key} className={`${ss.prow} ${c.status === 'bad' ? ss.prowBad : ''}`}>
+                      <span className={dotClass(c.status)} aria-hidden="true" />
+                      <span className={ss.pm2}>{c.label}<small>{c.text}</small></span>
+                    </div>
+                  ))}
+                </ProfileCard>
+              )}
+
+              {tab === 'errors' && (
+                <ProfileCard title="Site errors" labelId="sc-err" lead={ERRORS_LEAD}>
+                  {!data.sentry.ok ? (
+                    <div className={`${ss.prow} ${data.sentry.reason === 'failed' ? ss.prowBad : ''}`}>
+                      <span className={dotClass(data.sentry.reason === 'failed' ? 'warn' : 'neutral')} aria-hidden="true" />
+                      <span className={ss.pm2}>{data.sentry.reason === 'not_set_up' ? 'Not connected yet.' : 'Couldn’t load Sentry.'}<small>{data.sentry.message}</small></span>
+                    </div>
+                  ) : data.sentry.issues.length === 0 ? <p className={ss.empty}>No open errors in the last 14 days.</p> : (
+                    <>
+                      <div className={`${ss.sgr} ${ss.agh}`}><span>What broke</span><span>Last seen</span><span>How often</span></div>
+                      {data.sentry.issues.map(i => {
+                        const w = dayAndTime(i.lastSeen);
+                        return (
+                          <div key={i.id} className={ss.sgr}>
+                            <div className={ss.awhat}>
+                              <b><span className={dotClass('bad')} aria-hidden="true" />{i.link ? <a href={i.link} target="_blank" rel="noopener noreferrer">{i.title}</a> : i.title}</b>
+                              <p className={ss.mono}>{[i.where, `first seen ${when(i.firstSeen)}`].filter(Boolean).join(' · ')}</p>
+                            </div>
+                            <div className={ss.awhen}>{w.day}<small>{w.time}</small></div>
+                            <div className={ss.swho}><span>{plural(i.events, 'time')}</span>{i.users > 0 && <small>{plural(i.users, 'visitor')}</small>}</div>
+                          </div>
+                        );
+                      })}
+                    </>
+                  )}
+                </ProfileCard>
+              )}
+
+              {tab === 'log' && ck && <IncidentsTab data={ck} onOpen={setOpenInc} />}
+            </div>
+          </div>
+        )}
+      </main>
+
+      {filterOpen && <FilterDialog door={door} kind={kind} onClose={() => setFilterOpen(false)} onApply={(d, k) => { setDoor(d); setKind(k); setShown(PAGE); setFilterOpen(false); }} />}
+      {asking && <AskDialog onClose={() => setAsking(false)} />}
+      {inc && (
+        <IncidentDialog incident={inc} busy={busy === inc.actionId} error={inc.actionId ? actErr[inc.actionId] ?? '' : ''}
+          onClose={() => setOpenInc(null)}
+          onAct={async verb => { if (inc.actionId && await act(inc.actionId, verb, inc.approveLabel)) setOpenInc(null); }} />
+      )}
+      {toast && <div className={ss.toast} role="status">{toast}</div>}
+    </>
+  );
+}
+
+/** One Filter: which door, and what happened. */
+function FilterDialog({ door, kind, onClose, onApply }: { door: string; kind: string; onClose: () => void; onApply: (door: string, kind: string) => void }) {
+  const [d, setD] = useState(door);
+  const [k, setK] = useState(kind);
+  return (
+    <Dialog labelId="sc-filter-t" onClose={onClose}>
+      <h4 id="sc-filter-t">Filter</h4>
+      <label className={ss.flab}>Door
+        <select className={s.fld} value={d} onChange={e => setD(e.target.value)}>
+          <option value="">Every door</option>
+          {Object.entries(DOOR).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+        </select>
+      </label>
+      <label className={ss.flab}>What happened
+        <select className={s.fld} value={k} onChange={e => setK(e.target.value)}>
+          <option value="">Anything</option>
+          {(Object.keys(KIND) as Kind[]).filter(x => x !== 'signin_ok').map(x => <option key={x} value={x}>{KIND[x][0]}</option>)}
+        </select>
+      </label>
+      <div className={s.line}>
+        <button type="button" className={s.lnk} onClick={() => onApply('', '')}>Clear</button>
+        <span className={ss.spring} />
+        <button type="button" className={`${s.btn} ${s.pri}`} onClick={() => onApply(d, k)}>Show</button>
       </div>
-    </div>
+    </Dialog>
   );
 }
