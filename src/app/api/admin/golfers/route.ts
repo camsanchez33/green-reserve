@@ -18,6 +18,10 @@ import { golferLines, isListFilter, matchesFilter, matchesQuery } from './list';
 
 const LIST_PAGE = 50;
 
+// An insensitive `equals` is an ILIKE in Postgres, so % and _ in an email were wildcards: ?guest=% opened every guest's
+// bookings as one record. Escaped, it matches the one address only.
+const likeExact = (s: string) => s.replace(/[\\%_]/g, m => '\\' + m);
+
 const BOOKING_SELECT = {
   id: true, status: true, paymentStatus: true,
   players: true, totalAmount: true, accessFeeTotal: true,
@@ -104,11 +108,11 @@ export async function GET(req: NextRequest) {
       });
       if (!golfer) return NextResponse.json({ error: 'Golfer not found' }, { status: 404 });
       // Guest bookings made with the same email before (or without) signing up belong on the same record.
-      const guests = await prisma.booking.findMany({ where: { golferAccountId: null, golferEmail: { equals: golfer.email, mode: 'insensitive' } }, orderBy: { createdAt: 'desc' }, select: BOOKING_SELECT });
+      const guests = await prisma.booking.findMany({ where: { golferAccountId: null, golferEmail: { equals: likeExact(golfer.email), mode: 'insensitive' } }, orderBy: { createdAt: 'desc' }, select: BOOKING_SELECT });
       identity = { id: golfer.id, email: golfer.email, firstName: golfer.firstName, lastName: golfer.lastName, phone: golfer.phone ?? '', createdAt: golfer.createdAt.toISOString(), isGuest: false };
       rows = [...golfer.bookings, ...guests] as unknown as BookingRow[];
     } else {
-      const guests = await prisma.booking.findMany({ where: { golferAccountId: null, golferEmail: { equals: guestEmail, mode: 'insensitive' } }, orderBy: { createdAt: 'desc' }, select: BOOKING_SELECT });
+      const guests = await prisma.booking.findMany({ where: { golferAccountId: null, golferEmail: { equals: likeExact(guestEmail), mode: 'insensitive' } }, orderBy: { createdAt: 'desc' }, select: BOOKING_SELECT });
       if (guests.length === 0) return NextResponse.json({ error: 'No guest bookings for that email' }, { status: 404 });
       const g = guests[0];
       const [first, ...rest] = g.golferName.split(' ');
@@ -122,7 +126,8 @@ export async function GET(req: NextRequest) {
     const trust = {
       rounds: bookings.filter(b => b.status === 'completed').length,
       noShows: bookings.filter(b => b.noShow).length,
-      lateCancels: bookings.filter(b => b.status === 'cancelled' && b.cancellationFeeChargedAt).length,
+      // A late cancel KEPT its fee: a waived fee leaves the timestamp but the booking reads 'refunded' (analytics.ts's rule).
+      lateCancels: bookings.filter(b => b.status === 'cancelled' && b.cancellationFeeChargedAt && b.paymentStatus === 'cancellation_fee_charged').length,
       failedCharges: bookings.filter(b => b.checkInFailReason && !b.checkedInAt).length,
       upcoming: bookings.filter(b => b.status === 'confirmed' && b.teeDate >= today).length,
       lifetimeCollected: bookings.filter(b => b.paymentStatus === 'paid' || b.paymentStatus === 'refunded').reduce((s, b) => s + b.totalAmount - b.refundedTotal, 0),
@@ -132,6 +137,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ golfer: { ...identity, bookings, trust } });
   }
 
+  // The record above keeps test-course bookings on purpose (search sends them here), so for a tester with both kinds
+  // the list's numbers and the record's can differ. Real golfers only book on real courses.
   // List mode: every golfer, one line each. Test courses stay out (TEST-2); an account shows if it has booked on a
   // real course, or never booked at all.
   if (searchParams.get('list')) {
@@ -268,7 +275,8 @@ export async function POST(req: NextRequest) {
   }
 
   if (action === 'resend_receipt') {
-    if (booking.paymentStatus !== 'paid' && booking.paymentStatus !== 'refunded') {
+    // A cancelled booking reads 'refunded' when its late fee or hold was given back: no round was charged, so no receipt.
+    if ((booking.paymentStatus !== 'paid' && booking.paymentStatus !== 'refunded') || booking.status === 'cancelled') {
       return NextResponse.json({ error: 'This round has not been charged, so there is no receipt yet.' }, { status: 409 });
     }
     try {

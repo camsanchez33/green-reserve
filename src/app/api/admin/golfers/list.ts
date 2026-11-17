@@ -3,7 +3,7 @@
 // Pure, so scripts/admin-golfers-list-test.ts pins it. One golfer is an account, plus the guest bookings made with
 // the same email (as the record view joins them); a guest is everyone else, by email.
 // The counts use the record's own rules (route.ts "trust"): rounds are completed bookings, a no-show is a confirmed
-// past booking never checked in or paid with no decline, a late cancel kept its fee, a failed charge is a decline
+// past booking never checked in or paid with no decline, a late cancel kept its fee (a waived one reads 'refunded'), a failed charge is a decline
 // that never checked in.
 
 export type ListBooking = {
@@ -42,7 +42,7 @@ export function golferLines(accounts: ListAccount[], bookings: ListBooking[], to
   for (const [key, { account, rows }] of groups) {
     const played = rows.filter(r => r.status === 'completed');
     const noShows = rows.filter(r => r.status === 'confirmed' && r.teeDate < today && !r.checkedInAt && r.paymentStatus !== 'paid' && !r.checkInFailReason).length;
-    const lateCancels = rows.filter(r => r.status === 'cancelled' && r.cancellationFeeChargedAt).length;
+    const lateCancels = rows.filter(r => r.status === 'cancelled' && r.cancellationFeeChargedAt && r.paymentStatus === 'cancellation_fee_charged').length;
     const failedCharges = rows.filter(r => r.checkInFailReason && !r.checkedInAt).length;
     // Home course: where they've played most; a tie goes to the more recent. No rounds yet: their latest booking's.
     const per = new Map<string, { n: number; last: string }>();

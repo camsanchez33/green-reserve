@@ -23,6 +23,8 @@ const lines = golferLines(accounts, [
   bk({ golferEmail: 'guest@t.local', golferName: 'Casey Guest', status: 'confirmed', paymentStatus: 'card_on_file', checkedInAt: null, teeDate: '2026-11-12' }), // a no-show
   bk({ golferEmail: 'fail@t.local', golferName: 'Jamie Fail', status: 'confirmed', paymentStatus: 'card_on_file', checkedInAt: null, checkInFailReason: 'Card declined', teeDate: '2026-11-14' }),
   bk({ golferEmail: '', golferName: 'Nobody' }),
+  bk({ golferEmail: 'late@t.local', golferName: 'Kept Fee', status: 'cancelled', paymentStatus: 'cancellation_fee_charged', checkedInAt: null, cancellationFeeChargedAt: at }),
+  bk({ golferEmail: 'waived@t.local', golferName: 'Waived Fee', status: 'cancelled', paymentStatus: 'refunded', checkedInAt: null, cancellationFeeChargedAt: at }),
 ], T);
 
 const alex = lines.find(l => l.id === 'a1');
@@ -34,6 +36,9 @@ const casey = lines.find(l => l.guestEmail === 'guest@t.local');
 ok('a past confirmed booking never checked in is a no-show (amber), guest kept', casey?.tone === 'warn' && casey.noShows === 1 && casey.id === null, casey);
 const jamie = lines.find(l => l.guestEmail === 'fail@t.local');
 ok('a decline that never checked in is a failed charge (red), not a no-show', jamie?.tone === 'bad' && jamie.failedCharges === 1 && jamie.noShows === 0, jamie);
+const kept = lines.find(l => l.guestEmail === 'late@t.local'), waived = lines.find(l => l.guestEmail === 'waived@t.local');
+ok('a late cancel that kept its fee is amber', kept?.lateCancels === 1 && kept.tone === 'warn', kept);
+ok('…one whose fee was waived (refunded) is not a late cancel', waived?.lateCancels === 0 && waived.tone === 'neutral', waived);
 ok('a booking with no account and no email is nobody to open', !lines.some(l => l.name === 'Nobody'));
 const never = lines.find(l => l.id === 'a2');
 ok('an account that never booked is listed, with no rounds', never?.rounds === 0 && never.lastPlayed === null && never.homeCourse === null, never);
@@ -41,8 +46,8 @@ ok('sorted by last played, never-played last', lines[0].id === 'a1' && lines[lin
 ok('a guest is named from the booking', casey?.name === 'Casey Guest');
 
 ok('filter: accounts', lines.filter(l => matchesFilter(l, 'account')).every(l => l.id !== null));
-ok('filter: guests', lines.filter(l => matchesFilter(l, 'guest')).length === 2);
-ok('filter: no-shows or late cancels', lines.filter(l => matchesFilter(l, 'noshow')).map(l => l.guestEmail).join() === 'guest@t.local');
+ok('filter: guests', lines.filter(l => matchesFilter(l, 'guest')).length === 4);
+ok('filter: no-shows or late cancels', lines.filter(l => matchesFilter(l, 'noshow')).map(l => l.guestEmail).sort().join() === 'guest@t.local,late@t.local');
 ok('filter: failed charges', lines.filter(l => matchesFilter(l, 'failed')).map(l => l.guestEmail).join() === 'fail@t.local');
 ok('search by name, email or 4+ phone digits', !!alex && matchesQuery(alex, 'rivera') && matchesQuery(alex, 'ALEX@') && matchesQuery(alex, '555-0101') && !matchesQuery(alex, '55') && !matchesQuery(alex, 'casey'));
 

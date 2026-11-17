@@ -47,8 +47,8 @@ const FilterIcon = () => <svg {...ICON}><path d="M4 5h16l-6 7.5V19l-4-2v-4.5z" /
 const Chevron = () => <svg {...ICON} width={14} height={14} className={gs.ch}><path d="m9 6 6 6-6 6" /></svg>;
 
 function statusOf(b: Booking): { tone: Tone; label: string } {
-  if (b.status === 'cancelled') return b.cancellationFeeChargedAt ? { tone: 'warn', label: 'Cancelled late, fee kept' } : { tone: 'neutral', label: 'Cancelled, no charge' };
-  if (b.paymentStatus === 'refunded') return { tone: 'neutral', label: 'Refunded by the course' };
+  if (b.status === 'cancelled') return b.paymentStatus === 'cancellation_fee_charged' ? { tone: 'warn', label: 'Cancelled late, fee kept' } : { tone: 'neutral', label: 'Cancelled, no fee kept' };
+  if (b.paymentStatus === 'refunded') return { tone: 'neutral', label: 'Refunded' };
   if (b.status === 'completed') return { tone: 'ok', label: b.refundedTotal > 0 ? 'Checked in · part refunded' : 'Checked in and paid' };
   if (b.checkInFailReason) return { tone: 'bad', label: 'Card declined at check-in' };
   if (b.noShow) return { tone: 'warn', label: 'No-show' };
@@ -57,18 +57,22 @@ function statusOf(b: Booking): { tone: Tone; label: string } {
   return { tone: 'neutral', label: b.hasCard ? 'Confirmed · card on file' : 'Confirmed · no card' };
 }
 
+const BY: Record<string, string> = { operator: 'by the course', admin: 'by GreenReserve', system: 'automatically', cron: 'automatically', stripe: 'by Stripe' };
 const EVENT_WORDS: Record<string, string> = {
-  refund: 'Refunded by the course', refund_failed: 'Refund failed', charge_failed: 'Charge failed',
+  refund: 'Refunded', refund_failed: 'Refund failed', charge_failed: 'Charge failed',
   dispute_opened: 'Chargeback opened', dispute_closed: 'Chargeback closed',
 };
 
 /** What happened to a booking, oldest first, from what the record holds. */
 function history(b: Booking): [string, string][] {
-  const rows: [string, string][] = [[b.createdAt, `Booked · ${plural(b.players, 'player')} · ${b.hasCard ? 'card saved' : 'no card saved'}`]];
+  const rows: [string, string][] = [[b.createdAt, `Booked · ${b.hasCard ? 'card saved' : 'no card saved'}`]];
   if (b.checkedInAt) rows.push([b.checkedInAt, 'Checked in']);
   if (b.cancelledAt) rows.push([b.cancelledAt, 'Cancelled']);
-  if (b.cancellationFeeChargedAt) rows.push([b.cancellationFeeChargedAt, 'Late-cancel fee charged by the course']);
-  for (const e of b.events) rows.push([e.at, [EVENT_WORDS[e.kind] ?? e.kind.replace(/_/g, ' '), e.amount ? formatMoney(e.amount) : '', e.detail].filter(Boolean).join(' · ')]);
+  // The same column holds a cutoff hold on a booking still on (given back at check-in), so it's a late-cancel fee only
+  // on a cancelled booking that kept it.
+  if (b.cancellationFeeChargedAt && b.status === 'cancelled') rows.push([b.cancellationFeeChargedAt, b.paymentStatus === 'cancellation_fee_charged' ? 'Late-cancel fee charged' : 'Late-cancel fee charged, later given back']);
+  // Who did it, as the record has it: the course's staff, GreenReserve, the system or Stripe.
+  for (const e of b.events) rows.push([e.at, [EVENT_WORDS[e.kind] ?? e.kind.replace(/_/g, ' '), e.amount ? formatMoney(e.amount) : '', BY[e.actor] ?? '', e.actorName ?? '', e.detail].filter(Boolean).join(' · ')]);
   return rows.sort((a, z) => a[0].localeCompare(z[0]));
 }
 
@@ -290,7 +294,7 @@ function BookingRow({ b, open }: { b: Booking; open: boolean }) {
   const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null);
   const st = statusOf(b);
   const canConfirm = b.status === 'confirmed';
-  const canReceipt = b.paymentStatus === 'paid' || b.paymentStatus === 'refunded';
+  const canReceipt = b.status !== 'cancelled' && (b.paymentStatus === 'paid' || b.paymentStatus === 'refunded');
 
   async function resend(what: 'confirmation' | 'receipt') {
     setBusy(what); setNote(null);
