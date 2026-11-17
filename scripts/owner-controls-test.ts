@@ -29,6 +29,7 @@ ok('staff are refused the time zone and the course type', /session\.isStaff && \
 const page = [
   'src/app/dashboard/settings/page.tsx',
   ...['ui', 'CourseArea', 'BookingArea', 'PaymentsArea', 'AccountArea'].map(f => `src/components/dashboard/settings/${f}.tsx`),
+  'src/components/dashboard/members/PricingCard.tsx',
 ].map(f => read(f)).join('\n'); // SETTINGS-6: the page and its areas
 ok('the Settings screen never sends them for a staff login, and shows them read-only', page.includes('const owner = access.loaded && !access.isStaff;') && ["ownerEdit('tz')", "ownerEdit('type')", "ownerEdit('card')", "ownerEdit('late')", "ownerEdit('noshow')", "ownerEdit('cartcharge')", "ownerEdit('mcounter')"].every(k => page.includes(k)));
 

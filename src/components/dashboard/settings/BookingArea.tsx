@@ -1,11 +1,11 @@
 'use client';
-// SETTINGS-6: Booking — Booking rules, Carts, Confirmation email (and, until Cam decides where they live, the member
-// and resident price switches; see the PR). Each round's own limits are on Schedule.
+// SETTINGS-6: Booking — Booking rules, Carts, Confirmation email. Each round's own limits are on Schedule; the member
+// and resident price switches are on Memberships (Cam 2026-11-17, components/dashboard/members/PricingCard.tsx).
 import { useState } from 'react';
 import Link from 'next/link';
 import { describePolicy, policyFrom } from '@/lib/cancel-policy';
 import { CART_NUMBER_MODES, CART_NUMBER_LABEL, STARTER_COLUMNS, starterColumns, type CartNumberMode } from '@/lib/starter-sheet';
-import { type Ctx, type Course, Group, Row, Muted, EditPopup, Field, FIELD, TextEdit, Choices, SwitchLine, LINK, plural, num } from './ui';
+import { type Ctx, type Course, Group, Row, Muted, EditPopup, Field, FIELD, TextEdit, Choices, LINK, plural, num } from './ui';
 
 const s = (v: unknown) => (v == null ? '' : String(v));
 const cents = (v: unknown) => Math.round(Number(v || 0) * 100);
@@ -21,7 +21,7 @@ export function termsOf(f: Course) {
   }));
 }
 
-type Pop = '' | 'ahead' | 'size' | 'walk' | 'cartcharge' | 'cartnum' | 'starter' | 'note' | 'member' | 'mahead' | 'mgrace' | 'mcounter' | 'resident' | 'rwho' | 'rproof';
+type Pop = '' | 'ahead' | 'size' | 'walk' | 'cartcharge' | 'cartnum' | 'starter' | 'note';
 
 function GroupSizePopup({ ctx, onClose }: { ctx: Ctx; onClose: () => void }) {
   const [min, setMin] = useState(s(ctx.form.minPlayers || 1));
@@ -53,28 +53,6 @@ function StarterPopup({ ctx, onClose }: { ctx: Ctx; onClose: () => void }) {
         })}
       </div>
       <Link href="/dashboard/starter" className={LINK + ' self-start'}>Open today’s starter’s sheet</Link>
-    </EditPopup>
-  );
-}
-
-function OnOffPopup({ ctx, field, title, help, on: onText, off: offText, onClose }: { ctx: Ctx; field: string; title: string; help?: string; on: string; off: string; onClose: () => void }) {
-  const [on, setOn] = useState(!!ctx.form[field]);
-  return (
-    <EditPopup title={title} hint={help} onClose={onClose} onSave={() => ctx.save({ [field]: on })}>
-      <SwitchLine label={title} help={on ? onText : offText} on={on} onChange={setOn} />
-    </EditPopup>
-  );
-}
-
-function ResidentWhoPopup({ ctx, onClose }: { ctx: Ctx; onClose: () => void }) {
-  const [county, setCounty] = useState(s(ctx.form.residentCounty));
-  const [state, setState] = useState(s(ctx.form.residentState));
-  return (
-    <EditPopup title="Who counts as a resident" onClose={onClose} onSave={() => ctx.save({ residentCounty: county, residentState: state.toUpperCase() })}>
-      <div className="grid grid-cols-[minmax(0,1fr)_96px] gap-3">
-        <Field label="County"><input value={county} onChange={e => setCounty(e.target.value)} className={FIELD} autoFocus /></Field>
-        <Field label="State"><input value={state} onChange={e => setState(e.target.value)} maxLength={2} className={FIELD} /></Field>
-      </div>
     </EditPopup>
   );
 }
@@ -117,7 +95,6 @@ export function BookingArea({ ctx }: { ctx: Ctx }) {
   const ownerNote = (n: string) => (ctx.owner ? n : `${n} Only the course owner can change this.`);
   const ahead = Number(f.publicAdvanceDays) || 0;
   const cols = starterColumns(f.starterColumns as string[]);
-  const members = !!f.hasMemberPricing, residents = !!f.hasResidentPricing;
 
   return (
     <>
@@ -148,19 +125,6 @@ export function BookingArea({ ctx }: { ctx: Ctx }) {
         </div>
       </Group>
 
-      {/* Not on the approved mockup (Memberships owns rates), but no other page has these switches yet and Schedule
-          reads them. "Never lose a setting": they stay here until Cam decides where they live (asked via Build). */}
-      <Group id="members" title="Members and residents" note={<>Each membership’s rates and booking window are on <Link href="/dashboard/members" className={LINK}>Memberships</Link>; the member and resident prices are on <Link href="/dashboard/schedules" className={LINK}>Schedule</Link>.</>}>
-        <Row id="members-on" label="Member prices" note={members ? 'Members pay their membership’s price, or the member price on Schedule.' : 'Off: members pay the public price, online and at the counter.'} value={members ? 'On' : 'Off'} onOpen={edit('member')} />
-        {members && <Row id="members-ahead" label="Days ahead members can book" note="Each membership can set its own on Memberships." value={plural(Number(f.memberAdvanceDays) || 0, 'day')} onOpen={edit('mahead')} />}
-        {members && <Row id="members-grace" label="Member rates after it ends" note="Days a lapsed member keeps the member price." value={plural(Number(f.memberGraceDays) || 0, 'day')} onOpen={edit('mgrace')} />}
-        {members && <Row id="members-counter" label="Member rate at the counter" note={ownerNote('Who gets a member rate when staff ring them up.')} value={f.counterMemberRate === 'any' ? 'Any membership, staff’s call' : 'The member shows their membership'} onOpen={ownerEdit('mcounter')} />}
-        <Row id="residents-on" label="Resident prices" note={residents ? 'A resident books one player at the resident price: themselves.' : 'Off: residents pay the public price, online and at the counter.'} value={residents ? 'On' : 'Off'} onOpen={edit('resident')} />
-        {residents && <Row id="residents-who" label="Who counts as a resident" value={[s(f.residentCounty) && `${s(f.residentCounty)} County`, s(f.residentState)].filter(Boolean).join(', ') || <Muted>Not set</Muted>} onOpen={edit('rwho')} />}
-        {residents && <Row id="residents-proof" label="Proof at check-in" note="Residents show proof of residency when they check in." value={f.residentProofRequired ? 'Asked for' : 'Not asked for'}
-          onOpen={edit('rproof')} />}
-      </Group>
-
       <p className="text-[13px] text-ink-soft">Each round’s own hours and limits are on <Link href="/dashboard/schedules" className={LINK}>Schedule</Link>. Member booking windows and member rates are on <Link href="/dashboard/members" className={LINK}>Memberships</Link>.</p>
 
       {pop === 'ahead' && <TextEdit ctx={ctx} field="publicAdvanceDays" title="How far ahead" type="number" hint="Days ahead anyone can book. Golfers see today plus this many days." onClose={close} />}
@@ -170,18 +134,11 @@ export function BookingArea({ ctx }: { ctx: Ctx }) {
       {pop === 'cartnum' && <ChoicePopup ctx={ctx} field="cartNumbers" title="Cart numbers" options={CART_NUMBER_MODES.map(m => ({ key: m, label: CART_NUMBER_LABEL[m] }))} onClose={close} />}
       {pop === 'starter' && <StarterPopup ctx={ctx} onClose={close} />}
       {pop === 'note' && <TextEdit ctx={ctx} field="confirmationNote" title="Your note" lines={4} maxLength={400} hint="Shown after booking and in the confirmation email, e.g. Check in at the pro shop 15 minutes before your time." onClose={close} />}
-      {pop === 'member' && <OnOffPopup ctx={ctx} field="hasMemberPricing" title="Member prices" on="Members pay their membership’s price, or the member price on Schedule." off="Members pay the public price, online and at the counter." onClose={close} />}
-      {pop === 'mahead' && <TextEdit ctx={ctx} field="memberAdvanceDays" title="Days ahead members can book" type="number" onClose={close} />}
-      {pop === 'mgrace' && <TextEdit ctx={ctx} field="memberGraceDays" title="Member rates after it ends" type="number" hint="Days a lapsed member keeps the member price." toValue={v => num(v) ?? 0} onClose={close} />}
-      {pop === 'mcounter' && <ChoicePopup ctx={ctx} field="counterMemberRate" title="Member rate at the counter" options={[{ key: 'member', label: 'The member shows their membership' }, { key: 'any', label: 'Any membership, staff’s call' }]} onClose={close} />}
-      {pop === 'resident' && <OnOffPopup ctx={ctx} field="hasResidentPricing" title="Resident prices" on="The resident price is set on Schedule. A resident books one player at it: themselves." off="Residents pay the public price, online and at the counter." onClose={close} />}
-      {pop === 'rwho' && <ResidentWhoPopup ctx={ctx} onClose={close} />}
-      {pop === 'rproof' && <OnOffPopup ctx={ctx} field="residentProofRequired" title="Proof at check-in" on="Residents show proof of residency when they check in." off="Residents aren’t asked for proof." onClose={close} />}
     </>
   );
 }
 
-function ChoicePopup({ ctx, field, title, options, onClose }: { ctx: Ctx; field: string; title: string; options: { key: string; label: string; help?: string }[]; onClose: () => void }) {
+export function ChoicePopup({ ctx, field, title, options, onClose }: { ctx: Ctx; field: string; title: string; options: { key: string; label: string; help?: string }[]; onClose: () => void }) {
   const [v, setV] = useState(s(ctx.form[field]) || options[0].key);
   return (
     <EditPopup title={title} onClose={onClose} onSave={() => ctx.save({ [field]: v })}>

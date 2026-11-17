@@ -190,7 +190,7 @@ export function PaymentsArea({ ctx }: { ctx: Ctx }) {
   }
 
   const taxValue = !tax ? '…' : !tax.connected ? <Muted>Connect payments first</Muted>
-    : tax.on ? `Collecting on shop items${tax.states.length ? ` · registered in ${tax.states.join(', ')}` : ''}`
+    : tax.on ? (tax.states.length ? `Set from your address in ${tax.states.join(', ')}` : 'Set from your address')
     : tax.active && tax.states.length ? 'Set up, turned off' : <Muted>Not set up</Muted>;
 
   return (
@@ -216,7 +216,7 @@ export function PaymentsArea({ ctx }: { ctx: Ctx }) {
 
       {ctx.owner && (
         <Group id="tax" title="Sales tax" note="Owner only. Stripe adds sales tax to pro-shop items from your address and the item type. You still file and pay it.">
-          <Row id="tax-rate" label="Sales tax" note="Green fees, carts and the booking fee aren’t taxed here." value={taxValue} onOpen={() => setPop('tax')} />
+          <Row id="tax-rate" label="Sales tax" note="Charged on pro-shop items. Green fees, carts and the booking fee aren’t taxed." value={taxValue} onOpen={() => setPop('tax')} />
         </Group>
       )}
 
