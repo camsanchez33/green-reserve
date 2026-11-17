@@ -21,12 +21,13 @@ import { securityEvent } from './security-events';
 import { sendStaffResetLinkEmail, sendStaffWelcomeEmail } from './email';
 import { rateLimit } from './rate-limit';
 import { EMAIL_RE, normalizePhone } from './golfer-otp';
-import { normalizePermissions, presetFor, type PermissionKey } from './staff-permissions';
+import { ALL_KEYS, normalizePermissions, presetFor, type PermissionKey } from './staff-permissions';
 import {
   AREAS, applyAreaLevel, areaLevels, isAreaKey, isAreaLevel, overridesFor, personStatus, resolveMemberPermissions,
   suggestedRole, SUGGESTED_ROLES, type AreaKey, type AreaLevel, type PersonStatus,
 } from './team-access';
-import { INVITE_LINK_TTL } from './team-welcome';
+import { canSentence, INVITE_LINK_TTL, welcomeParts } from './team-welcome';
+import { staffWelcomeHtml } from './email';
 
 export interface TeamCtx {
   courseId: string;
@@ -131,12 +132,15 @@ export interface TeamPerson {
   permissions: PermissionKey[];
   areas: Record<AreaKey, AreaLevel | 'custom'>;
   /** Keys this person has beyond their role, and role keys they don't have. */
-  extra: PermissionKey[]; fewer: PermissionKey[];
+  added: PermissionKey[]; removed: PermissionKey[];
+  /** No role: their keys are the ones set on them before Team (or Legacy). Put them in a role to manage them by role. */
+  legacy: boolean;
   lastChange: { at: string; by: string; action: string } | null;
 }
 
 export interface TeamRole {
-  id: string; name: string; description: string; suggestedKey: string; rank: number;
+  /** 'owner' for the Owner role (not a row: every key, never edited or deleted, nobody invited into it). */
+  id: string; name: string; suggestedKey: string; rank: number; owner: boolean;
   permissions: PermissionKey[];
   areas: Record<AreaKey, AreaLevel | 'custom'>;
   people: number;
@@ -144,11 +148,12 @@ export interface TeamRole {
 }
 
 export interface TeamData {
-  /** lastSignInAt: the owner's last sign-in (staff have lastActiveAt, every request). */
-  owner: { name: string; email: string; lastSignInAt: string | null; isYou: boolean };
+  /** lastActiveAt for the owner is their last SIGN-IN (owners have no per-request stamp); staff's is their last request. */
+  owner: { name: string; email: string; lastActiveAt: string | null; isYou: boolean };
+  /** Owner first, then the course's roles in rank order. */
   roles: TeamRole[];
   people: TeamPerson[];
-  suggested: { key: string; name: string; description: string; permissions: PermissionKey[]; areas: Record<AreaKey, AreaLevel | 'custom'> }[];
+  suggested: { key: string; name: string; permissions: PermissionKey[]; areas: Record<AreaKey, AreaLevel | 'custom'> }[];
   areas: { key: AreaKey; label: string; help: string; levels: AreaLevel[] }[];
 }
 
@@ -181,18 +186,21 @@ export async function loadTeam(courseId: string, viewerOperatorId: string | null
   return {
     owner: {
       name: course.operator?.name ?? '', email: course.operator?.email ?? '',
-      lastSignInAt: course.operator?.lastLoginAt?.toISOString() ?? null,
+      lastActiveAt: course.operator?.lastLoginAt?.toISOString() ?? null,
       isYou: !!viewerOperatorId && course.operator?.id === viewerOperatorId,
     },
-    roles: roles.map(r => {
-      const keys = normalizePermissions(r.permissions);
-      const last = lastOf(r.id);
-      return {
-        id: r.id, name: r.name, description: r.description, suggestedKey: r.suggestedKey, rank: r.rank,
-        permissions: keys, areas: areaLevels(keys), people: staff.filter(s => s.roleId === r.id).length,
-        lastChange: last ? { at: last.at, by: last.by } : null,
-      };
-    }),
+    roles: [
+      { id: 'owner', name: 'Owner', suggestedKey: '', rank: 0, owner: true, permissions: [...ALL_KEYS], areas: areaLevels(ALL_KEYS), people: course.operator ? 1 : 0, lastChange: null },
+      ...roles.map(r => {
+        const keys = normalizePermissions(r.permissions);
+        const last = lastOf(r.id);
+        return {
+          id: r.id, name: r.name, suggestedKey: r.suggestedKey, rank: r.rank, owner: false,
+          permissions: keys, areas: areaLevels(keys), people: staff.filter(s => s.roleId === r.id).length,
+          lastChange: last ? { at: last.at, by: last.by } : null,
+        };
+      }),
+    ],
     people: staff.map(s => {
       const keys = resolveMemberPermissions(s);
       const roleKeys = s.roleId && s.courseRole ? normalizePermissions(s.courseRole.permissions) : null;
@@ -205,13 +213,14 @@ export async function loadTeam(courseId: string, viewerOperatorId: string | null
         disabledAt: s.disabledAt?.toISOString() ?? null,
         createdAt: s.createdAt.toISOString(),
         permissions: keys, areas: areaLevels(keys),
-        extra: roleKeys ? keys.filter(k => !roleKeys.includes(k)) : [],
-        fewer: roleKeys ? roleKeys.filter(k => !keys.includes(k)) : [],
+        added: roleKeys ? keys.filter(k => !roleKeys.includes(k)) : [],
+        removed: roleKeys ? roleKeys.filter(k => !keys.includes(k)) : [],
+        legacy: !s.roleId,
         lastChange: lastOf(s.id),
       };
     }),
     suggested: SUGGESTED_ROLES.filter(sr => !haveKeys.has(sr.key) && !haveNames.has(sr.name.toLowerCase()))
-      .map(sr => ({ key: sr.key, name: sr.name, description: sr.description, permissions: sr.keys, areas: areaLevels(sr.keys) })),
+      .map(sr => ({ key: sr.key, name: sr.name, permissions: sr.keys, areas: areaLevels(sr.keys) })),
     areas: AREAS.map(a => ({ key: a.key, label: a.label, help: a.help, levels: (['none', 'view', 'full'] as AreaLevel[]).filter(l => a.levels[l]) })),
   };
 }
@@ -236,10 +245,11 @@ async function nameTaken(courseId: string, name: string, exceptId?: string) {
   return !!hit || name.toLowerCase() === 'owner';
 }
 
-/** Body: { suggestedKey } to add a Suggested role as is, or { name, description?, permissions? | areas? } (either may override the suggestion). */
+/** Body: { suggestedKey | fromSuggested } to add a Suggested role, and/or { name, permissions? | areas? } (which override the suggestion). Cam dropped the role description from the page; it stays optional here. */
 export async function createRole(ctx: TeamCtx, body: Record<string, unknown>): Promise<TeamResult<{ role: { id: string } }>> {
-  const sugg = body.suggestedKey !== undefined ? suggestedRole(body.suggestedKey) : null;
-  if (body.suggestedKey !== undefined && !sugg) return fail(400, 'That suggested role doesn’t exist.');
+  const from = body.suggestedKey ?? body.fromSuggested;
+  const sugg = from !== undefined ? suggestedRole(from) : null;
+  if (from !== undefined && !sugg) return fail(400, 'That suggested role doesn’t exist.');
   const name = cleanName(body.name, ROLE_NAME_MAX) || sugg?.name || '';
   if (!name) return fail(400, 'Give the role a name.');
   const description = body.description !== undefined ? cleanName(body.description, ROLE_DESCRIPTION_MAX) : (sugg?.description ?? '');
@@ -361,7 +371,7 @@ export async function reorderRoles(ctx: TeamCtx, order: unknown): Promise<TeamRe
 
 // ── People ────────────────────────────────────────────────────────────────────
 
-async function sendWelcome(ctx: TeamCtx, p: { id: string; email: string; name: string; password: string }, role: { name: string; description: string }) {
+async function sendWelcome(ctx: TeamCtx, p: { id: string; email: string; name: string; password: string }, role: { name: string; permissions: string[] }) {
   const [course, owner] = await Promise.all([
     prisma.course.findUnique({ where: { id: ctx.courseId }, select: { name: true } }),
     actorName(ctx.operatorId),
@@ -369,7 +379,7 @@ async function sendWelcome(ctx: TeamCtx, p: { id: string; email: string; name: s
   const token = await signStaffResetToken({ id: p.id, password: p.password }, INVITE_LINK_TTL);
   await sendStaffWelcomeEmail({
     to: p.email, courseId: ctx.courseId, personName: p.name, ownerName: owner, courseName: course?.name ?? 'your course',
-    roleName: role.name, roleDescription: role.description,
+    roleName: role.name, roleCan: canSentence(role.permissions),
     setupLink: `${baseUrl()}/dashboard/reset-password?token=${encodeURIComponent(token)}&welcome=1`,
   });
 }
@@ -424,7 +434,7 @@ export async function invitePerson(ctx: TeamCtx, body: Record<string, unknown>):
   }
   await signInEvent(ctx, { id, email }, `staff login invited as ${role.name}`);
   try {
-    await sendWelcome(ctx, { id, email, name, password }, role);
+    await sendWelcome(ctx, { id, email, name, password }, { name: role.name, permissions: role.permissions });
   } catch (err) {
     console.error('[team] welcome email failed', err instanceof Error ? err.message : err);
     return { ok: true, id, emailSent: false };
@@ -440,7 +450,7 @@ export async function resendInvite(ctx: TeamCtx, id: unknown): Promise<TeamResul
   if (!(await rateLimit(`team:invite:${p.id}`, 5, 3600))) return fail(429, 'That invite was sent several times this hour. Try again later.');
   const row = await prisma.courseStaff.findUniqueOrThrow({ where: { id: p.id }, select: { password: true } });
   try {
-    await sendWelcome(ctx, { id: p.id, email: p.email, name: p.name, password: row.password }, { name: p.courseRole?.name ?? 'Staff', description: p.courseRole?.description ?? '' });
+    await sendWelcome(ctx, { id: p.id, email: p.email, name: p.name, password: row.password }, { name: p.courseRole?.name ?? 'Staff', permissions: resolveMemberPermissions(p) });
   } catch (err) {
     console.error('[team] welcome email resend failed', err instanceof Error ? err.message : err);
     return fail(502, 'The invite email did not send. Check the address and try again.');
@@ -571,4 +581,16 @@ export async function updateDetails(ctx: TeamCtx, id: unknown, body: Record<stri
     await audit(tx, ctx, who, { action: 'details', targetType: 'person', targetId: p.id, targetName: name, detail: `changed ${what}` });
   });
   return { ok: true };
+}
+
+/** The Invite popup's preview: the real welcome email for a role, with no working link. */
+export async function invitePreview(ctx: TeamCtx, roleId: unknown, personName: unknown): Promise<TeamResult<{ subject: string; html: string }>> {
+  const role = await roleOf(ctx.courseId, roleId);
+  if (!role) return fail(404, 'Not found');
+  const [course, owner] = await Promise.all([
+    prisma.course.findUnique({ where: { id: ctx.courseId }, select: { name: true } }),
+    actorName(ctx.operatorId),
+  ]);
+  const w = { personName: cleanName(personName, PERSON_NAME_MAX) || 'there', ownerName: owner, courseName: course?.name ?? 'your course', roleName: role.name, roleCan: canSentence(role.permissions) };
+  return { ok: true, subject: welcomeParts(w).subject, html: staffWelcomeHtml(w, '#') };
 }

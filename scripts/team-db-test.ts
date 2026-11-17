@@ -56,7 +56,7 @@ async function course(n: string) {
 
   // A new course: Owner only, every Suggested role offered, nothing pre-created.
   const t0 = (await loadTeam(A.c.id, A.op.id))!;
-  ok('a new course has no roles and no people — only the Owner', t0.roles.length === 0 && t0.people.length === 0 && t0.owner.name === 'Jordan A Pike' && t0.owner.isYou && 'lastSignInAt' in t0.owner);
+  ok('a new course has only the Owner role and no people', t0.roles.length === 1 && t0.roles[0].owner && t0.roles[0].id === 'owner' && t0.people.length === 0 && t0.owner.name === 'Jordan A Pike' && t0.owner.isYou && 'lastActiveAt' in t0.owner);
   ok('…and every Suggested role is offered', t0.suggested.length === SUGGESTED_ROLES.length);
   ok('…with the six areas and their offered levels', t0.areas.length === 6 && eq(t0.areas.find(a => a.key === 'sheet')!.levels, ['view', 'full']));
 
@@ -65,7 +65,7 @@ async function course(n: string) {
   const own = await prisma.courseStaff.create({ data: { courseId: A.c.id, email: `${TAG}-own@t.local`, password: 'x', name: 'Own Keys', permissions: ['sheet.checkin', 'money.refund'], permissionsSetAt: new Date(), preset: 'custom' } });
   const t1 = (await loadTeam(A.c.id, A.op.id))!;
   const pl = t1.people.find(p => p.id === legacy.id)!, po = t1.people.find(p => p.id === own.id)!;
-  ok('pre-SP-A staff keep the Legacy keys, shown as source legacy, no role', eq(pl.permissions, normalizePermissions(LEGACY_KEYS)) && pl.source === 'legacy' && pl.roleId === null && pl.status === 'active');
+  ok('pre-SP-A staff keep the Legacy keys, shown as legacy, no role', eq(pl.permissions, normalizePermissions(LEGACY_KEYS)) && pl.source === 'legacy' && pl.legacy && pl.roleId === null && pl.status === 'active');
   ok('staff with their own keys keep exactly those', eq(po.permissions, normalizePermissions(['sheet.checkin', 'money.refund'])) && po.source === 'own');
 
   // Roles.
@@ -79,9 +79,9 @@ async function course(n: string) {
   const customRow = await prisma.courseRole.findUniqueOrThrow({ where: { id: custom.ok ? custom.role.id : '' } });
   ok('a role made from areas gets those keys (and the tee sheet)', custom.ok && customRow.permissions.includes('shop.discount') && customRow.permissions.includes('analytics.view') && customRow.permissions.includes('sheet.view') && !customRow.permissions.includes('shop.catalog'));
   const fdId = fd.ok ? fd.role.id : '', mgrId = mgr.ok ? mgr.role.id : '';
-  ok('roles come back in the order they were added', eq((await loadTeam(A.c.id, A.op.id))!.roles.map(r => r.name), ['Manager', 'Front desk', 'Range crew']));
+  ok('roles come back in the order they were added', eq((await loadTeam(A.c.id, A.op.id))!.roles.map(r => r.name), ['Owner', 'Manager', 'Front desk', 'Range crew']));
   ok('reorder needs every role once', !(await reorderRoles(A.ctx, [fdId])).ok);
-  ok('reorder', (await reorderRoles(A.ctx, [fdId, mgrId, customRow.id])).ok && eq((await loadTeam(A.c.id, A.op.id))!.roles.map(r => r.name), ['Front desk', 'Manager', 'Range crew']));
+  ok('reorder', (await reorderRoles(A.ctx, [fdId, mgrId, customRow.id])).ok && eq((await loadTeam(A.c.id, A.op.id))!.roles.map(r => r.name), ['Owner', 'Front desk', 'Manager', 'Range crew']));
   ok('Suggested no longer offers the roles already added', !(await loadTeam(A.c.id, A.op.id))!.suggested.some(s => s.key === 'manager' || s.key === 'front_desk'));
 
   // Invite.
@@ -126,7 +126,7 @@ async function course(n: string) {
   ok('giving one person Reports stores it as a grant on their role', extra.ok && eq(alex2.grantKeys, ['analytics.view']) && alex2.revokeKeys.length === 0 && alex2.roleId === fdId);
   ok('…and a StaffPermissionChange row', (await prisma.staffPermissionChange.count({ where: { staffId: alexId } })) === 2);
   const tA = (await loadTeam(A.c.id, A.op.id))!.people.find(p => p.id === alexId)!;
-  ok('Team shows the extra key', eq(tA.extra, ['analytics.view']) && tA.areas.reports === 'view');
+  ok('Team shows the extra key as added', eq(tA.added, ['analytics.view']) && tA.areas.reports === 'view');
 
   // A role change changes everyone in it; their overrides stay. dryRun says how many first.
   const dry = await updateRole(A.ctx, fdId, { areas: { payments: 'view' }, dryRun: true });
@@ -171,8 +171,14 @@ async function course(n: string) {
   const back = await invitePerson(A.ctx, { name: 'Sam Back', email: `${TAG}-sam@t.local`, roleId: fdId });
   ok('inviting a removed person again brings back the same row as Invited', back.ok && back.id === samId && !(await prisma.courseStaff.findUniqueOrThrow({ where: { id: samId } })).removedAt);
 
+  const { invitePreview } = await import('../src/lib/team');
+  const pv = await invitePreview(A.ctx, fdId, 'Kelly Brandt');
+  ok('the invite preview is the real email for that role, with a dead link', pv.ok && pv.subject === 'Jordan added you to Pine Hollow a on GreenReserve' && pv.html.includes('Hi Kelly,') && pv.html.includes('Your role: Front desk.') && pv.html.includes('href="#"'), pv);
+  ok('…and says what the role can do from its areas', pv.ok && /You can: use some of tee sheet &amp; bookings, see payments &amp; refunds and use some of pro shop &amp; register\./.test(pv.html), pv.ok ? pv.html.match(/You can:[^<]*/)?.[0] : pv);
+  ok('B can’t preview with A’s role', (await invitePreview(B.ctx, fdId, 'x') as { status?: number }).status === 404);
+
   // ── Isolation: course B reaches nothing of A's ─────────────────────────────
-  ok('B’s team shows none of A’s roles or people', (await loadTeam(B.c.id, B.op.id))!.roles.length === 0 && (await loadTeam(B.c.id, B.op.id))!.people.length === 0);
+  ok('B’s team shows none of A’s roles or people', (await loadTeam(B.c.id, B.op.id))!.roles.length === 1 && (await loadTeam(B.c.id, B.op.id))!.people.length === 0);
   ok('B can’t change A’s role', (await updateRole(B.ctx, fdId, { name: 'Pwned' }) as { status?: number }).status === 404);
   ok('…or delete it', (await deleteRole(B.ctx, fdId) as { status?: number }).status === 404);
   ok('…or invite into it', (await invitePerson(B.ctx, { name: 'X', email: `${TAG}-x@t.local`, roleId: fdId }) as { status?: number }).status === 400);
@@ -190,10 +196,12 @@ async function course(n: string) {
 
   // The routes: every method is owner-only; the session reads the role.
   const route = (p: string) => readFileSync(p, 'utf8');
-  const routes = ['src/app/api/operator/team/route.ts', 'src/app/api/operator/team/history/route.ts', 'src/app/api/operator/team/roles/route.ts', 'src/app/api/operator/team/roles/[id]/route.ts',
-    'src/app/api/operator/team/people/route.ts', 'src/app/api/operator/team/people/[id]/route.ts', 'src/app/api/operator/team/people/[id]/reset/route.ts', 'src/app/api/operator/team/people/[id]/invite/route.ts'];
+  const routes = ['src/app/api/operator/team/route.ts', 'src/app/api/operator/team/history/route.ts', 'src/app/api/operator/team/roles/route.ts',
+    'src/app/api/operator/staff/route.ts', 'src/app/api/operator/staff/invite/route.ts', 'src/app/api/operator/staff/invite/resend/route.ts',
+    'src/app/api/operator/staff/invite/preview/route.ts', 'src/app/api/operator/staff/reset-link/route.ts'];
   const handlers = routes.flatMap(p => [...route(p).matchAll(/export async function (GET|POST|PATCH|DELETE)\([^)]*\) \{\n  const g = await teamOwner\(req, \{ write: (true|false) \}\); if \('error' in g\) return g\.error;/g)].map(m => `${p}:${m[1]}:${m[2]}`));
-  const all = routes.flatMap(p => [...route(p).matchAll(/export async function (GET|POST|PATCH|DELETE)/g)].map(m => `${p}:${m[1]}`));
+  const all = routes.flatMap(p => [...route(p).matchAll(/export async function (GET|POST|PATCH|DELETE)\((?!\))/g)].map(m => `${p}:${m[1]}`));
+  ok('the old add-staff POST is gone (no temporary passwords)', /export async function POST\(req: NextRequest\) \{\n  const g = await teamOwner\(req, \{ write: true \}\); if \('error' in g\) return g\.error;\n  return NextResponse\.json\(\{ error: [^}]+\}, \{ status: 410 \}\);/.test(route('src/app/api/operator/staff/route.ts')) && !route('src/app/api/operator/staff/route.ts').includes('tempPassword'));
   ok('every Team route handler starts with the owner gate', handlers.length === all.length, { handlers: handlers.length, all });
   ok('…and every write also needs the current agreement', handlers.every(h => h.includes(':GET:') ? h.endsWith(':false') : h.endsWith(':true')));
   const gate = route('src/lib/team-route.ts');

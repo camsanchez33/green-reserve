@@ -2,6 +2,7 @@
 // popup's preview and the email itself can never say different things. The
 // mockup's wording ("We'll go over this wording before launch"). Client-safe.
 import { ADMIN_EMAIL } from './contact';
+import { AREAS, areaLevels } from './team-access';
 
 /** How long an invite's set-your-password link works. */
 export const INVITE_LINK_HOURS = 48;
@@ -12,7 +13,8 @@ export interface WelcomeInput {
   ownerName: string;
   courseName: string;
   roleName: string;
-  roleDescription: string;
+  /** What the role can do, in words (canSentence). */
+  roleCan: string;
 }
 
 export interface WelcomeParts {
@@ -31,7 +33,7 @@ export function welcomeParts(w: WelcomeInput): WelcomeParts {
   const hasOwner = !!w.ownerName.trim();
   const owner = hasOwner ? w.ownerName.trim() : 'The course owner';
   const ownerFirst = hasOwner ? first(w.ownerName) : 'the course owner';
-  const can = w.roleDescription.trim().replace(/\.$/, '');
+  const can = w.roleCan.trim().replace(/\.$/, '');
   return {
     subject: `${hasOwner ? ownerFirst : 'The course owner'} added you to ${w.courseName} on GreenReserve`,
     greeting: `Hi ${first(w.personName)},`,
@@ -45,4 +47,19 @@ export function welcomeParts(w: WelcomeInput): WelcomeParts {
     button: 'Set my password',
     footer: `Questions about your shifts or the course? Ask ${ownerFirst}. Trouble signing in? Reply to this email or write to ${ADMIN_EMAIL}.`,
   };
+}
+
+/** "see the tee sheet; use Payments & refunds fully; view Reports" — from the role's area levels (Cam removed role descriptions). */
+export function canSentence(keys: readonly string[]): string {
+  const lv = areaLevels(keys);
+  const parts = AREAS.map(a => {
+    const l = lv[a.key];
+    if (l === 'none') return '';
+    const name = a.label.toLowerCase();
+    if (l === 'full') return `use ${name}`;
+    if (l === 'view') return `see ${name}`;
+    return `use some of ${name}`;
+  }).filter(Boolean);
+  if (!parts.length) return '';
+  return parts.length === 1 ? parts[0] : `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`;
 }

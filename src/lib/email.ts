@@ -613,26 +613,29 @@ export async function sendOperatorPasswordResetEmail(data: {
 
 // Team (Cam 2026-11-17): the welcome email a course owner's invite sends. Its
 // words come from lib/team-welcome.ts, the same source as the Invite preview.
-// From admin@ (a real inbox) because the footer says "reply to this email".
-export async function sendStaffWelcomeEmail(data: WelcomeInput & { to: string; setupLink: string; courseId: string }) {
+// From admin@ (a real inbox): the footer invites them to answer it.
+export function staffWelcomeHtml(data: WelcomeInput, setupLink: string): string {
   const w = welcomeParts(data);
-  const html = baseTemplate(`
+  return baseTemplate(`
     <h1 style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Welcome to ${escapeHtml(data.courseName)}</h1>
     <p style="margin:0 0 12px;color:#3F453E;font-size:15px;">${escapeHtml(w.greeting)}</p>
     <p style="margin:0 0 12px;color:#3F453E;font-size:15px;">${escapeHtml(w.intro)}</p>
     <p style="margin:0 0 20px;color:#3F453E;font-size:15px;">${escapeHtml(w.role)}</p>
     <p style="margin:0 0 6px;color:#141814;font-size:15px;font-weight:600;">Getting started</p>
     ${w.steps.map((t, i) => `<p style="margin:0 0 6px;color:#3F453E;font-size:15px;">${i + 1}. ${escapeHtml(t)}</p>`).join('')}
-    <a href="${data.setupLink}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:6px;font-weight:800;font-size:16px;margin:20px 0 16px;">
+    <a href="${setupLink}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:6px;font-weight:800;font-size:16px;margin:20px 0 16px;">
       ${escapeHtml(w.button)} &rarr;
     </a>
     <p style="margin:0;color:#6B706A;font-size:13px;">${escapeHtml(w.footer)}</p>
   `, ADMIN_EMAIL);
+}
+
+export async function sendStaffWelcomeEmail(data: WelcomeInput & { to: string; setupLink: string; courseId: string }) {
   await getResend().emails.send({ meta: { kind: 'staff_welcome_email', courseId: data.courseId },
     from: FROM_ADMIN,
     to: data.to,
-    subject: w.subject,
-    html,
+    subject: welcomeParts(data).subject,
+    html: staffWelcomeHtml(data, data.setupLink),
   });
 }
 
