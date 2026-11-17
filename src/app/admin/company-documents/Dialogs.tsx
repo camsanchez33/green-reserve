@@ -109,8 +109,9 @@ export function UploadBox({ labels, replacing, sendLabel, onClose, onDone, onSto
       setBusy(false); return;
     }
     const body: Record<string, string> = { url };
-    if (sendLabel) body.label = label;
+    // A replace keeps the document's label, so only a new upload names one.
     if (replacing?.id) body.replaces = replacing.id;
+    else if (sendLabel) body.label = label;
     const rec = await adminFetch('/api/admin/company-documents', { method: 'POST', body: JSON.stringify(body), subject: 'the document', action: 'save' });
     setBusy(false);
     if (!rec.ok) { setError(`${rec.message} ${RECORD_FAILED}`); await onStored(); return; }
@@ -170,7 +171,9 @@ export function DocBox({ doc, labels, canRelabel, onClose, onReplace, onChanged 
   async function remove() {
     setBusy(true); setError('');
     // A reason (and, once Build adds it, a fresh second-factor check) is asked by the admin layout's dialogs.
-    const r = await adminFetch(`/api/admin/company-documents?url=${encodeURIComponent(doc.url)}`, { method: 'DELETE', subject: 'the document', action: 'save' });
+    // Documents carry an id once Build's data lands (the route then deletes by id); until then, by URL as today.
+    const which = doc.id ? `id=${encodeURIComponent(doc.id)}` : `url=${encodeURIComponent(doc.url)}`;
+    const r = await adminFetch(`/api/admin/company-documents?${which}`, { method: 'DELETE', subject: 'the document', action: 'save' });
     setBusy(false);
     if (!r.ok) { setError(`${r.message} “${doc.name}” was not deleted.`); return; }
     await onChanged('Deleted. It’s recorded in Audit.');
