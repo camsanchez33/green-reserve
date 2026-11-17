@@ -1,0 +1,2379 @@
+'use client';
+import { emailFailedNotice } from '@/lib/email-failed-notice';
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { ArrowLeft, ArrowUpRight, Copy, Archive, Save, RefreshCw, MoreHorizontal, Check, Phone } from 'lucide-react';
+import AdminSidebar from '@/components/admin/AdminSidebar';
+import { StatusDot } from '@/components/ui/StatusDot';
+import {
+  STATUS_DOT_MAP, STATUS_LABEL, ACTIVE_STATUSES, stageEnteredAt, daysSince,
+  INQUIRY_SOURCES, CLOSED_REASONS, RESUBMIT_ACTOR,
+  unreviewedResubmit, diffResubmit, decodeResubmit, queueSignal, REPLY_EVENT_PREFIX,
+} from '@/lib/inquiry-status';
+import { nextStep } from '@/lib/inquiry-board';
+import { adminFetch, type AdminFetchFailure } from '@/lib/admin-fetch';
+import { LoadFailure } from '@/components/ui/ErrorState';
+import {
+  CATEGORY_LABEL, latestPageDecision, computeOpenChanges,
+  hasRequestedChangesThisRound, describeChangeEvent, decodeChangeAddressed,
+} from '@/lib/change-requests';
+// IC-2: the discovery call — cards, header chip, build gate, history.
+import InquiryCallCards, { describeCall, type CallRow, type CallFocus } from '@/components/admin/InquiryCallCards';
+import { flatSummaries } from '@/lib/call-answers';
+import { AGENDA, callGate, fmtCallTime, nextCall, overdueCall, latestCall, parseJson } from '@/lib/inquiry-call';
+import { formatDate as fmtDate } from '@/lib/format';
+import { Modal as ModalShell, ModalActions } from '@/components/ui/Modal';
+import { Eyebrow } from '@/components/ui/Eyebrow';
+import { Card } from '@/components/ui/Card';
+import { ADMIN_EMAIL } from '@/lib/contact';
+import { INPUT } from '@/components/ui/field';
+import { MoveToTalkingDialog } from '@/components/admin/LeadDialogs';
+import { stepUpFetch } from '@/lib/step-up-client';
+
+interface InquiryStatusEvent {
+  id: string; fromStatus: string; toStatus: string;
+  trigger: 'system' | 'admin' | 'course'; actorName: string | null; createdAt: string;
+}
+interface Inquiry {
+  id: string; contactName: string; contactTitle: string; email: string; phone: string;
+  courseName: string; address: string; city: string; state: string; zipCode: string;
+  website: string; courseType: string; currentBookingMethod: string; teeTimesPerDay: number | null;
+  greenFeeRange: string; hasResidentPricing: boolean; hasMemberPricing: boolean;
+  hasCaddies: boolean; pricingNotes: string; lookingFor: string[]; additionalNotes: string;
+  status: string; adminNotes: string; builtCourseId: string | null; createdAt: string;
+  updatedAt?: string;
+  // MP-3 growth columns, put to work in MP-4c.
+  source?: string | null; closedReason?: string | null;
+  snoozeUntil?: string | null; nextFollowUpAt?: string | null;
+  detailsToken?: string | null; detailsJson?: string; needsJson?: string;
+  // IC-1: the discovery call(s) and the explicit skip.
+  callSkippedReason?: string | null;
+  calls?: CallRow[];
+  events: InquiryStatusEvent[];
+}
+interface ApproveResult {
+  detailsLink?: string; sentTo?: string; alreadySetUp?: boolean;
+  emailSent?: boolean; emailError?: string;
+}
+
+// STATUS_DOT_MAP / STATUS_LABEL come from @/lib/inquiry-status (A-02c single
+// source of truth — never redefine these locally).
+const TERMINAL_STATUSES = new Set(['live', 'rejected', 'archived']);
+
+function daysAgo(d: string) {
+  return Math.max(0, Math.floor((Date.now() - new Date(d).getTime()) / (1000 * 60 * 60 * 24)));
+}
+
+function whyArchived(inq: Inquiry): { reason: string; date: string } {
+  if (inq.status === 'live') return { reason: 'Went live', date: stageEnteredAt(inq.status, inq.createdAt, inq.events).toISOString() };
+  if (inq.status === 'rejected') {
+    return {
+      reason: inq.closedReason ? `Rejected · ${inq.closedReason}` : 'Rejected',
+      date: stageEnteredAt(inq.status, inq.createdAt, inq.events).toISOString(),
+    };
+  }
+  const lastEvent = inq.events.length > 0 ? inq.events[inq.events.length - 1] : null;
+  const actorName = lastEvent?.actorName || '';
+  if (actorName.toLowerCase().includes('permanently deleted')) return { reason: 'Course deleted', date: lastEvent?.createdAt || inq.updatedAt || inq.createdAt };
+  if (actorName.toLowerCase().includes('archived')) return { reason: 'Course archived', date: lastEvent?.createdAt || inq.updatedAt || inq.createdAt };
+  return { reason: 'Archived', date: inq.updatedAt || inq.createdAt };
+}
+
+type CheckpointState = 'done' | 'current' | 'pending' | 'skipped';
+interface Checkpoint { key: string; label: string; state: CheckpointState; date?: string; sub?: string; }
+
+// AW-6b (Cam 2026-10-21): the board's stages — Talking → Setting up → Live —
+// with where it is inside a stage said under the current one. AW-6c: Lead
+// leads them, for an inquiry that started as one.
+function getCheckpoints(inq: Inquiry, hasSheet: boolean): Checkpoint[] {
+  const setupEvent = inq.events.find(e => ['details_requested', 'details_submitted', 'building'].includes(e.toStatus));
+  const liveEvent = [...inq.events].reverse().find(e => e.toStatus === 'live');
+  const talking = inq.status === 'pending' || inq.status === 'in_review';
+  const setup = ['details_requested', 'details_submitted', 'building'].includes(inq.status);
+  const live = inq.status === 'live';
+  const lead = inq.status === 'lead';
+  const leadEvent = inq.events.find(e => e.fromStatus === 'lead' && e.toStatus !== 'lead');
+  const setupSub = inq.status === 'details_requested' ? 'Sheet out'
+    : inq.status === 'details_submitted' ? 'Sheet in'
+    : inq.status === 'building' ? (hasSheet ? 'Building' : 'Building, no sheet') : undefined;
+  return [
+    ...(lead || leadEvent ? [{ key: 'lead', label: 'Lead', state: (lead ? 'current' : 'done') as CheckpointState, date: lead ? undefined : inq.createdAt, sub: lead ? 'Not in touch yet' : undefined }] : []),
+    { key: 'talking', label: 'Talking', state: lead ? 'pending' : talking ? 'current' : 'done', date: lead || talking ? undefined : (leadEvent?.createdAt ?? inq.createdAt), sub: talking ? (inq.status === 'pending' ? 'New' : 'In review') : undefined },
+    { key: 'setup', label: 'Setting up', state: setup ? 'current' : live ? 'done' : 'pending', date: live ? setupEvent?.createdAt : undefined, sub: setupSub },
+    { key: 'live', label: 'Live', state: live ? 'done' : 'pending', date: liveEvent?.createdAt },
+  ];
+}
+
+function CheckpointStepper({ checkpoints }: { checkpoints: Checkpoint[] }) {
+  return (
+    <div className="flex items-center gap-1.5 mt-4">
+      {checkpoints.map((c, i) => (
+        <div key={c.key} className="flex items-center gap-1.5 flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 shrink-0">
+            <div className={
+              'w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[10px] font-medium ' + (
+                c.state === 'done' ? 'bg-ok text-white'
+                : c.state === 'current' ? 'bg-pine text-white'
+                : c.state === 'skipped' ? 'bg-line text-ink-faint'
+                : 'bg-line-soft text-ink-faint border border-line'
+              )
+            }>
+              {c.state === 'done' ? <Check className="w-3 h-3"/> : i + 1}
+            </div>
+            <div className="min-w-0">
+              <div className={
+                'text-xs font-medium ' + (
+                  c.state === 'current' ? 'text-pine' : c.state === 'skipped' ? 'text-ink-faint line-through' : 'text-ink'
+                )
+              }>
+                {c.label}
+              </div>
+              {c.state === 'current' && c.sub && <div className="text-[11px] text-ink-muted">{c.sub}</div>}
+              {c.state === 'done' && c.date && <div className="text-[10px] text-ink-faint">{fmtDate(c.date)}</div>}
+              {c.state === 'skipped' && <div className="text-[10px] text-ink-faint">skipped</div>}
+            </div>
+          </div>
+          {i < checkpoints.length - 1 && <div className={'h-px flex-1 ' + (c.state === 'done' ? 'bg-ok/40' : 'bg-line')} />}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MoreMenu({ open, onToggle, onClose, children }: { open: boolean; onToggle: () => void; onClose: () => void; children: React.ReactNode }) {
+  return (
+    <div className="relative">
+      <button onClick={onToggle} aria-label="More actions" aria-expanded={open} aria-haspopup="menu"
+        className="w-8 h-8 flex items-center justify-center rounded-md text-ink-muted hover:text-ink hover:bg-paper border border-line transition-colors">
+        <MoreHorizontal className="w-4 h-4"/>
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={onClose}/>
+          <div className="absolute right-0 top-full mt-1 w-60 bg-white border border-line rounded-md shadow-sm z-20 py-1.5 px-1.5">
+            {children}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function fmtMoney(v: unknown): string {
+  if (v === null || v === undefined || v === '') return '';
+  const s = String(v).trim();
+  if (s.startsWith('$')) return s;
+  const n = parseFloat(s);
+  if (isNaN(n) || n === 0) return '';
+  return '$' + (n % 1 === 0 ? n.toFixed(0) : n.toFixed(2));
+}
+
+const WALKING_LABELS: Record<string, string> = {
+  yes: 'Always allowed', weekdays: 'Weekdays only', no: 'Cart required',
+};
+const NINE_WHICH_LABELS: Record<string, string> = {
+  front: 'Front nine only', back: 'Back nine only', both: 'Either nine',
+};
+const LAYOUT27_LABELS: Record<string, string> = {
+  three_9s: 'Three separate 9s', '18_plus_9': 'One 18 + one separate 9',
+};
+const LAYOUT36_LABELS: Record<string, string> = {
+  two_18s: 'Two 18-hole courses', other: 'Other / non-standard',
+};
+const PASS_TYPE_LABEL: Record<string, string> = {
+  membership: 'Membership', season_pass: 'Season pass', resident_card: 'Resident card',
+  resident_rate: 'Resident rate (no card)', punch_card: 'Punch card',
+};
+const BOOL_LABELS: Record<string, string> = { yes: 'Yes', no: 'No', true: 'Yes', false: 'No' };
+const DAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+function SField({ label, value, amber, span2 }: {
+  label: string; value: string | null | undefined; amber?: boolean; span2?: boolean;
+}) {
+  const empty = !value || value.trim() === '';
+  if (empty && !amber) return null;
+  return (
+    <div className={'bg-white rounded-lg shadow-card px-4 py-3' + (span2 ? ' col-span-2' : '')}>
+      <div className="text-[13px] font-semibold text-ink mb-0.5">{label}</div>
+      {empty
+        ? <div className="text-[13px] text-warn font-medium">Not provided</div>
+        : <div className="text-ink text-sm whitespace-pre-wrap">{value}</div>
+      }
+    </div>
+  );
+}
+
+function SSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <Eyebrow className="mb-2">{title}</Eyebrow>
+      <div className="grid grid-cols-2 gap-3">{children}</div>
+    </div>
+  );
+}
+
+function renderFacilities(fv2: Record<string, unknown>): { label: string; detail?: string }[] {
+  const items: { label: string; detail?: string }[] = [];
+  if (fv2.range) {
+    let detail = fv2.rangeTeeType === 'grass' ? 'Grass tees' : 'Mats';
+    if (Array.isArray(fv2.rangeBuckets)) {
+      const buckets = (fv2.rangeBuckets as Array<{ label: string; price: string; balls: string }>)
+        .filter(b => b.price || b.balls)
+        .map(b => (b.label || '?') + ': $' + b.price + '/' + b.balls + ' balls')
+        .join(', ');
+      if (buckets) detail += ' · ' + buckets;
+    }
+    items.push({ label: 'Driving range', detail });
+  }
+  if (fv2.puttingGreen) items.push({ label: 'Putting green' });
+  if (fv2.chippingArea) items.push({ label: 'Chipping / short-game area' });
+  if (fv2.proShop) items.push({ label: 'Pro shop' });
+  if (fv2.lessons) {
+    const d = [fv2.lessonsProName, fv2.lessonsProPhone].filter(Boolean).join(' · ');
+    items.push({ label: 'Lessons', detail: d || undefined });
+  }
+  if (fv2.clubRental) {
+    const d = String(fv2.clubRentalContact || '');
+    items.push({ label: 'Club rental', detail: d || undefined });
+  }
+  if (fv2.cartRental) {
+    items.push({ label: 'Cart rental', detail: fv2.cartRentalCost ? '$' + String(fv2.cartRentalCost) : undefined });
+  }
+  if (fv2.bagStorage) items.push({ label: 'Bag storage' });
+  if (fv2.gpsCarts) items.push({ label: 'GPS carts' });
+  if (fv2.eventSpace) {
+    const d = String(fv2.eventSpaceContact || '');
+    items.push({ label: 'Event / banquet space', detail: d || undefined });
+  }
+  if (fv2.lockerRooms) items.push({ label: 'Locker rooms' });
+  if (fv2.tournaments) {
+    items.push({ label: 'Hosts tournaments & outings', detail: String(fv2.tournamentsFrequency || '') || undefined });
+  }
+  // Must match the <option value=...> set in for-courses/details exactly —
+  // this map previously used different keys (restaurant/bev_cart/multiple)
+  // than the real form values, so raw enum strings like "beverage_cart"
+  // leaked straight into the admin UI instead of a readable label.
+  const rtMap: Record<string, string> = {
+    full: 'Full restaurant', bar: 'Bar only', snack_bar: 'Snack bar', beverage_cart: 'Beverage cart only',
+  };
+  const rt = String(fv2.restaurantType || '');
+  if (rt && rt !== 'none') items.push({ label: rtMap[rt] || rt });
+  return items;
+}
+
+// MP-4c: four tabs, trimmed from four that split the same story badly.
+// Contact and Answers were one thing (who this lead is) shown as two; Notes —
+// the founder's working memory — was buried under Activity next to a
+// machine-written ledger it has nothing to do with.
+type TabKey = 'lead' | 'sheet' | 'notes' | 'activity';
+const TAB_LABEL: Record<TabKey, string> = { lead: 'Lead', sheet: 'Sheet', notes: 'Notes', activity: 'Activity' };
+
+// Which tab you actually want on arrival depends on where the inquiry is: an
+// unreviewed lead means read the lead, a returned sheet means read the sheet,
+// and a finished one means read what happened.
+function defaultTabFor(status: string): TabKey {
+  if (status === 'details_submitted' || status === 'building') return 'sheet';
+  if (status === 'live' || status === 'rejected' || status === 'archived') return 'activity';
+  return 'lead';
+}
+
+const iCls = `${INPUT} w-full`;
+
+const NEEDS_LABELS: Record<string, string> = {
+  residentRates: 'Resident rates', hasMemberships: 'Memberships / season passes',
+  roundsPerMonth: 'Rounds per month', publicTeeTimes: 'Non-member tee times',
+  memberCount: 'Member count', outsideOutings: 'Outside outings',
+  memberBookingToday: 'Current booking method', chargesMembersPerRound: 'Charges per round',
+  // IF-1: the only key the form writes now. The eight above survive on old records.
+  callPreference: 'Good times for the call',
+};
+// IF-1 §4c: needsJson.callPreference is an object ({ times, days }); everything
+// older is a string. Render both without ever printing [object Object].
+function fmtNeedValue(v: unknown, values: Record<string, string>): string {
+  if (v && typeof v === 'object') {
+    const o = v as { times?: unknown; days?: unknown };
+    const parts = [...(Array.isArray(o.times) ? o.times : []), ...(Array.isArray(o.days) ? o.days : [])].map(String);
+    return parts.length ? parts.join(', ') : '—';
+  }
+  return values[String(v)] || String(v);
+}
+const NEEDS_VALUES: Record<string, string> = {
+  yes: 'Yes', no: 'No', yes_regularly: 'Yes, regularly', limited: 'Limited windows',
+  no_members_only: 'No, members only', under_100: 'Under 100', '100_300': '100–300',
+  '300_plus': '300+', under_500: 'Under 500', '500_1500': '500–1,500',
+  '1500_3000': '1,500–3,000', '3000_plus': '3,000+',
+  pro_shop_phone: 'Pro shop / phone', signup_sheet: 'Sign-up sheet',
+  booking_software: 'Booking software', other: 'Other',
+};
+
+function InquiryDetailInner() {
+  const params = useParams() as { id: string };
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // MP-4b: the list dropped its per-tab sort memory when it became a ranked
+  // queue, so there is no `sort` to carry back — only which stage filter and
+  // search the founder was looking at.
+  const backTab = searchParams.get('tab') || '';
+  const backSearch = searchParams.get('q') || '';
+  const backUrl = '/admin/inquiries' + (backTab || backSearch
+    ? '?' + new URLSearchParams(
+        Object.fromEntries([
+          backTab && ['tab', backTab],
+          backSearch && ['q', backSearch],
+        ].filter(Boolean) as [string, string][])
+      ).toString()
+    : '');
+
+  // MP-11a: the layout resolved the session; a page never re-checks it.
+  const adminReady = true;
+  const [inq, setInq] = useState<Inquiry | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<{ msg: string; kind: AdminFetchFailure } | null>(null);
+  const [processing, setProcessing] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabKey>('lead');
+  const [editContact, setEditContact] = useState(false);
+  const [contactEdits, setContactEdits] = useState<Record<string, string>>({});
+  const [stageOverride, setStageOverride] = useState('');
+  const [noteText, setNoteText] = useState('');
+  // Cam 2026-10-26: reply to the course from here (sent from admin@ by the route's 'reply').
+  const [replyText, setReplyText] = useState('');
+  // Cam 2026-10-27: once the question is answered the box folds away; the conversation goes on in the course's Messages.
+  const [replyOpen, setReplyOpen] = useState(false);
+  const [replySending, setReplySending] = useState(false);
+  const [replyResult, setReplyResult] = useState<{ ok: boolean; text: string } | null>(null);
+  const replyRef = useRef<HTMLTextAreaElement>(null);
+  const [approveResult, setApproveResult] = useState<ApproveResult | null>(null);
+  const [actionError, setActionError] = useState('');
+  const [sendingPreview, setSendingPreview] = useState(false);
+  const [previewMsg, setPreviewMsg] = useState('');
+  const [nameConflict, setNameConflict] = useState<{ existingCourseId: string; existingCourseName: string; message: string } | null>(null);
+  const [moreOpen, setMoreOpen] = useState(false);
+  // AW-6c: "Move to Talking" on a lead.
+  const [moveOpen, setMoveOpen] = useState(false);
+  const [changesExpanded, setChangesExpanded] = useState(false);
+  const [addressingCategory, setAddressingCategory] = useState<string | null>(null);
+  const [requestingReReview, setRequestingReReview] = useState(false);
+  const [pendingAction, setPendingAction] = useState<
+    'delete' | 'send_sheet' | 'resend_sheet' | 'create_draft' | 'reject' | 'build_without_sheet' | 'dashboard_access' | 'send_preview' | 'go_live' | 'snooze'
+    | 'archive_course' | 'delete_course' | 'restore_archived' | null
+  >(null);
+  const [courseSlug, setCourseSlug] = useState('');
+  // null = could not be loaded; never shown as 0.
+  const [courseBookings30d, setCourseBookings30d] = useState<number | null>(null);
+  const [deleteCourseConfirm, setDeleteCourseConfirm] = useState('');
+  const [linkCopied, setLinkCopied] = useState(false);
+  // Review: when the course link cannot be loaded, the menu says so instead of quietly missing items.
+  const [courseExtrasFailed, setCourseExtrasFailed] = useState(false);
+  const [goLiveChecks, setGoLiveChecks] = useState<{ key: string; label: string; ok: boolean; absolute: boolean }[] | null>(null);
+  const [goLiveOverride, setGoLiveOverride] = useState('');
+  const [reminderSending, setReminderSending] = useState<string | null>(null);
+  const [reminderSent, setReminderSent] = useState<Set<string>>(new Set());
+  const [buildConfirmText, setBuildConfirmText] = useState('');
+  const [snoozeDate, setSnoozeDate] = useState('');
+  const [rejectReason, setRejectReason] = useState('');
+  const [rejectNotify, setRejectNotify] = useState(true);
+  // IC-2 §4: the build gate is never a dead end — the notice points at the
+  // card, and `callFocus` opens the right part of it.
+  const [callGateNotice, setCallGateNotice] = useState(false);
+  const [callFocus, setCallFocus] = useState<CallFocus>(null);
+  // AW-6b: the call setup/log card lives in a dialog, not across the top of
+  // the page. Anything that asks for it (the next step, the build gate, ?call=1)
+  // sets callFocus, which opens the dialog on the right part.
+  const [callOpen, setCallOpen] = useState(false);
+  useEffect(() => { if (callFocus) setCallOpen(true); }, [callFocus]);
+  // null means "everything in the diff" — the founder has not narrowed it yet.
+  const [resubPicked, setResubPicked] = useState<Set<string> | null>(null);
+  // The stage-aware default lands ONCE, on first load. Re-applying it after
+  // every action would yank the founder off whatever tab he opened.
+  const tabInitialised = useRef(false);
+  const pickTab = (t: TabKey) => { tabInitialised.current = true; setActiveTab(t); };
+  useEffect(() => {
+    if (inq && searchParams.get('reply') === '1') replyRef.current?.focus();
+  }, [inq?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const H = useCallback(() => ({ 'Content-Type': 'application/json' }), []);
+
+  // MP-2c: was un-wrapped, so a rejected fetch left loading=true forever and the
+  // `if (!adminReady || loading) return null` guard held — a permanent white
+  // screen, and Retry made it worse by converting a visible error card into one.
+  const loadInquiry = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await adminFetch<Inquiry>(`/api/admin/inquiries?id=${params.id}`, { subject: 'this inquiry' });
+      if (!res.ok) { setInq(null); setLoadError({ msg: res.message, kind: res.kind }); return; }
+      setInq(res.data);
+      setStageOverride(res.data.status);
+      if (!tabInitialised.current) {
+        tabInitialised.current = true;
+        setActiveTab(searchParams.get('reply') === '1' ? 'lead' : defaultTabFor(res.data.status));
+      }
+      setLoadError(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [params.id]);
+
+  useEffect(() => {
+    if (adminReady) loadInquiry();
+  }, [adminReady, loadInquiry]);
+
+  // IC-3 §2: the sheet's "Set up call" button lands here with ?call=1 — open
+  // the right card (log if something is on the books, set-up otherwise).
+  const wantCall = searchParams.get('call') === '1';
+  useEffect(() => {
+    if (!wantCall || !inq) return;
+    const cs = inq.calls ?? [];
+    setCallFocus({ what: (nextCall(cs) || overdueCall(cs)) ? 'log' : 'setup', n: Date.now() });
+  }, [wantCall, inq?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Course slug + recent-activity count for the live/archived ⋯ menu
+  // (Copy booking link, View public page, the archive recent-activity
+  // warning) — same course-detail endpoint the courses tab already uses.
+  useEffect(() => {
+    if (!inq?.builtCourseId) return;
+    fetch('/api/admin/course-detail?courseId=' + inq.builtCourseId, { headers: H() })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d?.course?.slug) setCourseSlug(d.course.slug);
+        setCourseBookings30d(typeof d?.bookings30d === 'number' ? d.bookings30d : null);
+      })
+      .catch(() => { setCourseBookings30d(null); setCourseExtrasFailed(true); });
+  }, [inq?.builtCourseId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (pendingAction !== 'go_live' || !inq?.builtCourseId) return;
+    setGoLiveChecks(null);
+    const hasSheetForCheck = !!inq.detailsJson && inq.detailsJson !== '{}';
+    const approved = latestPageDecision(inq.events) === 'approved';
+    // Same shared brains the server enforces with (go-live-preflight.ts,
+    // course-timeline.ts, approval-state.ts) — the modal can never promise
+    // something the server then refuses.
+    // STRIPE RULE FINAL + AGREEMENT = GO-LIVE GATE (RUN_QUEUE) — exactly two
+    // ABSOLUTE checks (no override, ever); everything else stays advisory
+    // (typed-confirm override still applies to those).
+    fetch('/api/admin/courses?statusOf=' + inq.builtCourseId, { headers: H() })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        setGoLiveChecks([
+          { key: 'agreement', label: 'Operator accepted the Operator Agreement', ok: !!d?.agreementAccepted, absolute: true },
+          { key: 'stripe', label: 'Stripe connected', ok: d?.stripeOk ?? !!d?.stripeAccountActive, absolute: true },
+          { key: 'sheet', label: 'Setup sheet submitted', ok: hasSheetForCheck, absolute: false },
+          { key: 'approved', label: 'Course approved their preview', ok: approved, absolute: false },
+          { key: 'email', label: 'Operator email verified', ok: !!d?.operatorEmailVerified, absolute: false },
+        ]);
+      })
+      .catch(() => setGoLiveChecks([
+        { key: 'agreement', label: 'Operator accepted the Operator Agreement', ok: false, absolute: true },
+        { key: 'stripe', label: 'Stripe connected', ok: false, absolute: true },
+        { key: 'sheet', label: 'Setup sheet submitted', ok: hasSheetForCheck, absolute: false },
+        { key: 'approved', label: 'Course approved their preview', ok: approved, absolute: false },
+        { key: 'email', label: 'Operator email verified', ok: false, absolute: false },
+      ]));
+  }, [pendingAction, inq?.builtCourseId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function action(act: string, extra: Record<string, unknown> = {}) {
+    setProcessing(true);
+    setActionError('');
+    try {
+      const r = await fetch('/api/admin/inquiries', {
+        method: 'PATCH', headers: H(),
+        body: JSON.stringify({ id: params.id, action: act, ...extra }),
+      });
+      const text = await r.text();
+      let d: Record<string, unknown> = {};
+      try { d = JSON.parse(text); } catch { /* ignore */ }
+      if (r.ok) {
+        if (['build_course', 'resend_welcome', 'send_dashboard_access', 'request_details', 'resend_details'].includes(act)) {
+          setApproveResult(d as ApproveResult);
+        }
+        if (act === 'add_note') setNoteText('');
+        // Launch walk (Cam 2026-10-31): the sheet / go-live email is awaited server-side — say when it didn't go.
+        // (The setup sheet's own result banner already says when its email failed.)
+        if (act === 'mark_live' && d.emailSent === false) {
+          setActionError(emailFailedNotice(d, inq?.email || ''));
+        }
+        // The decline email is awaited server-side, so a bounce is knowable
+        // here. Saying nothing would leave the founder believing a course was
+        // told when it was not.
+        if (act === 'reject' && d.emailSent === false) {
+          setActionError('Rejected, but the decline email did not send'
+            + (d.emailError ? ': ' + String(d.emailError) : '')
+            + '. The inquiry is closed — email ' + (inq?.email || 'the contact') + ' yourself if they should hear it.');
+        }
+        await loadInquiry();
+      } else if (r.status === 409 && d.error === 'call_required') {
+        setPendingAction(null);
+        setCallGateNotice(true);
+      } else {
+        setActionError('Failed (' + r.status + '): ' + ((d.error as string) || text.slice(0, 200)));
+      }
+    } catch (e) { setActionError('Error: ' + e); }
+    setProcessing(false);
+  }
+
+  async function sendReply() {
+    setReplySending(true); setReplyResult(null);
+    try {
+      const r = await fetch('/api/admin/inquiries', { method: 'PATCH', headers: H(), body: JSON.stringify({ id: params.id, action: 'reply', body: replyText }) });
+      const d = await r.json().catch(() => ({} as Record<string, unknown>));
+      if (r.ok) {
+        setReplyText('');
+        setReplyOpen(false);
+        setReplyResult({ ok: true, text: 'Sent to ' + String(d.sentTo || inq?.email || 'them') + '. Their answer comes to ' + ADMIN_EMAIL + '.' });
+        await loadInquiry();
+      } else {
+        setReplyResult({ ok: false, text: String(d.error || 'The reply didn’t send (' + r.status + '). Try again.') });
+      }
+    } catch {
+      setReplyResult({ ok: false, text: 'Couldn’t reach the server — check your connection and send again. Your reply is still here.' });
+    }
+    setReplySending(false);
+  }
+
+  async function addressChange(category: string) {
+    setAddressingCategory(category);
+    await action('address_change', { category });
+    setAddressingCategory(null);
+  }
+
+  async function createDraftCourse(force = false) {
+    setProcessing(true);
+    setActionError('');
+    if (!force) setNameConflict(null);
+    try {
+      const r = await fetch('/api/admin/inquiries', {
+        method: 'PATCH', headers: H(),
+        body: JSON.stringify({ id: params.id, action: 'create_draft_course', force }),
+      });
+      const d = await r.json();
+      if (!r.ok) {
+        if (d.error === 'name_conflict') {
+          setNameConflict({ existingCourseId: d.existingCourseId, existingCourseName: d.existingCourseName, message: d.message });
+          setProcessing(false);
+          return;
+        }
+        if (r.status === 409 && d.error === 'call_required') {
+          setPendingAction(null); setCallGateNotice(true); setProcessing(false); return;
+        }
+        setActionError((d.error as string) || 'Failed to create draft'); setProcessing(false); return;
+      }
+      if (d.courseId) router.push('/admin/courses/' + d.courseId);
+    } catch (e) { setActionError('Error: ' + e); }
+    setProcessing(false);
+  }
+
+  // Cam 2026-10-26: see the built page before the course does (view-only look link).
+  const [lookError, setLookError] = useState('');
+  const [looking, setLooking] = useState(false);
+  async function lookAtPage() {
+    if (!inq?.builtCourseId || looking) return;
+    setLookError(''); setLooking(true);
+    const tab = window.open('', '_blank'); // opened now, inside the click, so a pop-up blocker allows it
+    try {
+      const r = await fetch('/api/admin/course-look?courseId=' + encodeURIComponent(inq.builtCourseId));
+      const d = await r.json().catch(() => ({} as Record<string, unknown>));
+      if (r.ok && typeof d.url === 'string') { if (tab) tab.location.href = d.url; else window.location.href = d.url; setLooking(false); return; }
+      tab?.close();
+      setLookError(String(d.error || 'Couldn’t open the page (' + r.status + '). Try again.'));
+    } catch {
+      tab?.close();
+      setLookError('Couldn’t reach the server — check your connection and try again.');
+    }
+    setLooking(false);
+  }
+
+  async function sendPreview() {
+    if (!inq?.builtCourseId) return;
+    setSendingPreview(true);
+    setPreviewMsg('');
+    try {
+      const r = await fetch('/api/preview/send', {
+        method: 'POST', headers: H(), body: JSON.stringify({ inquiryId: inq.id }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (r.ok) {
+        setPreviewMsg('Preview email sent to ' + inq.email);
+        await loadInquiry();
+      } else {
+        setPreviewMsg('Error: ' + (d.error || `Failed to send (${r.status}) — try again.`));
+      }
+    } catch { setPreviewMsg('Error: network failure'); }
+    setSendingPreview(false);
+  }
+
+  // AGREEMENT = GO-LIVE GATE / STRIPE RULE FINAL — one-click reminder nudge
+  // for whichever absolute is missing. No override exists for these, so a
+  // nudge is the only lever the admin has besides waiting.
+  async function sendGoLiveReminder(missing: 'agreement' | 'stripe') {
+    if (!inq?.builtCourseId) return;
+    setReminderSending(missing);
+    try {
+      const r = await fetch('/api/admin/send-golive-reminder', {
+        method: 'POST', headers: H(), body: JSON.stringify({ courseId: inq.builtCourseId, missing }),
+      });
+      if (r.ok) setReminderSent(prev => new Set(prev).add(missing));
+      else { const d = await r.json().catch(() => ({})); setActionError('Reminder failed: ' + (d.error || 'unknown')); }
+    } catch {
+      setActionError('Reminder failed: network error — nothing was sent. Check your connection and try again.');
+    } finally {
+      setReminderSending(null);
+    }
+  }
+
+  async function requestReReview() {
+    if (!inq?.builtCourseId) return;
+    setRequestingReReview(true); setPreviewMsg('');
+    try {
+      const r = await fetch('/api/admin/request-re-review', {
+        method: 'POST', headers: H(), body: JSON.stringify({ courseId: inq.builtCourseId }),
+      });
+      const d = await r.json();
+      setPreviewMsg(r.ok ? 'Re-review requested — Send Preview is available again.' : 'Error: ' + (d.error || 'Failed'));
+      if (r.ok) await loadInquiry();
+    } catch { setPreviewMsg('Error: network failure'); }
+    setRequestingReReview(false);
+  }
+
+  // ── Live/archived ⋯ menu actions (RUN_QUEUE "inquiry ⋯ menu renders
+  // EMPTY for live/archived") — reuse the SAME guarded course flows the
+  // courses tab uses (src/app/api/admin/archive-course), not new ones.
+  async function archiveLiveCourse() {
+    if (!inq?.builtCourseId) return;
+    setProcessing(true); setActionError('');
+    // Review: the same hang restoreArchivedInquiry below was fixed for —
+    // `processing` gates the whole action rail, so a dropped connection here
+    // froze the page until reload.
+    try {
+      const r = await stepUpFetch('/api/admin/archive-course', {
+        method: 'POST', headers: H(), body: JSON.stringify({ courseId: inq.builtCourseId, action: 'archive' }),
+      });
+      if (r.ok) await loadInquiry();
+      else { const d = await r.json().catch(() => ({})); setActionError('Archive failed: ' + (d.error || 'unknown')); }
+    } catch {
+      setActionError('Archive failed: network error — nothing was changed. Check your connection and try again.');
+    } finally {
+      setProcessing(false);
+    }
+  }
+
+  // MP-1b B3: the built-course branch had no catch, so a rejection left
+  // processing=true forever — which disables the whole action rail and every ⋯
+  // item, with no error and no spinner. Only a reload recovered.
+  async function restoreArchivedInquiry() {
+    setProcessing(true); setActionError('');
+    if (inq?.builtCourseId) {
+      try {
+        const r = await stepUpFetch('/api/admin/archive-course', {
+          method: 'POST', headers: H(), body: JSON.stringify({ courseId: inq.builtCourseId, action: 'restore' }),
+        });
+        if (r.ok) { await loadInquiry(); return; }
+        const d = await r.json().catch(() => ({}));
+        setActionError('Restore failed: ' + (d.error || 'unknown'));
+      } catch {
+        setActionError('Restore failed: network error — nothing was changed. Check your connection and try again.');
+      } finally {
+        setProcessing(false);
+      }
+      return;
+    }
+    // No linked course (e.g. rejected before ever building, or a manual
+    // stage override) — reopen the inquiry itself. MP-1 fix-now #2: this used
+    // to call set_status, which refuses any inquiry whose CURRENT status isn't
+    // a pipeline stage, so it 400'd on every closed inquiry — exactly the ones
+    // this button exists for. The 'restore' action resolves the target stage
+    // server-side from the event ledger.
+    await action('restore');
+  }
+
+  async function copyBookingLink() {
+    if (!courseSlug) return;
+    const url = `${window.location.origin}/courses/${courseSlug}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch { setActionError('Could not copy — clipboard access was blocked.'); }
+  }
+
+  // DELETION DOCTRINE (RUN_QUEUE): only reachable for UNBUILT inquiries —
+  // anything with a builtCourseId is archive-only, enforced server-side in
+  // lifecycle.ts regardless of what this client sends. Typed confirm now
+  // required here too (item 3's fix applies to every remaining permanent
+  // delete), case-insensitive/trimmed, validated again server-side.
+  async function deleteInquiry() {
+    if (!inq) return;
+    setActionError(''); setProcessing(true);
+    try {
+      const r = await stepUpFetch('/api/admin/inquiries?id=' + inq.id + '&confirmName=' + encodeURIComponent(deleteCourseConfirm), { method: 'DELETE', headers: H() });
+      if (r.ok) { router.push(backUrl); return; }
+      // No-silent-failures: a failed delete (name mismatch, or this inquiry
+      // turned out to have a built course after all) must show why, not just
+      // look like nothing happened while the record is still fully there.
+      const d = await r.json().catch(() => ({}));
+      setActionError('Delete failed: ' + (d.error || 'unknown'));
+      await loadInquiry();
+    } catch {
+      setActionError('Delete failed: network error — the inquiry is still here. Check your connection and try again.');
+    } finally {
+      setProcessing(false);
+    }
+  }
+
+  async function saveContact() {
+    setProcessing(true);
+    setActionError('');
+    try {
+      const r = await fetch('/api/admin/inquiries', {
+        method: 'PATCH', headers: H(),
+        body: JSON.stringify({ id: params.id, action: 'update_contact', ...contactEdits }),
+      });
+      if (r.ok) { setEditContact(false); await loadInquiry(); }
+      else { setActionError('Could not save — please try again'); }
+    } catch (e) { setActionError('Error: ' + e); }
+    setProcessing(false);
+  }
+
+  if (!adminReady || loading) return null;
+  if (!inq) {
+    return (
+      <div className="min-h-screen bg-paper flex">
+        <AdminSidebar active="inquiries" />
+        <div className="admin-content flex-1 flex items-center justify-center p-8">
+          <div className="max-w-md w-full">
+            <LoadFailure
+              message={loadError?.msg ?? 'Could not load this inquiry.'}
+              kind={loadError?.kind}
+              onRetry={() => loadInquiry()}
+              secondaryLabel="Back to inquiries"
+              onSecondary={() => router.push('/admin/inquiries')}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const isArchived = TERMINAL_STATUSES.has(inq.status);
+  const isLead = inq.status === 'lead';
+  const dot = (STATUS_DOT_MAP[inq.status] || 'neutral') as 'ok' | 'bad' | 'warn' | 'neutral';
+  // MP-4a: days in the CURRENT stage from the event ledger, not updatedAt —
+  // identical derivation to the list page so the two can't disagree.
+  const days = daysSince(stageEnteredAt(inq.status, inq.createdAt, inq.events));
+
+  const sheetSentEvent = [...inq.events].reverse().find(e => e.toStatus === 'details_requested');
+  const liveEvent = [...inq.events].reverse().find(e => e.toStatus === 'live');
+  const previewSentEvent = [...inq.events].reverse().find(e => e.actorName?.startsWith('Preview sent'));
+  // Once live, approval is history, not a pending state — but it shouldn't
+  // be INVISIBLE history. Quiet note only, no "current status" implication.
+  const approvedEvent = [...inq.events].reverse().find(e => e.actorName === 'Course approved their page');
+  // Single brain: latestPageDecision/computeOpenChanges/etc. all scope to
+  // "since the last Preview sent" internally (scopeToCurrentRound) — pass
+  // full history, never pre-filter here, so every reader of this state
+  // (this page, the courses tab, the Send Preview gate, go-live preflight)
+  // can only ever agree.
+  // MP-4e: the most recent re-submission the founder has not dealt with, and
+  // what it would change. Only fields the course actually filled in count —
+  // a blank on the new form is silence, not a request to erase what is here.
+  const resubmit = unreviewedResubmit(inq.events);
+  const resubDiff = resubmit?.payload
+    ? diffResubmit(inq as unknown as Record<string, unknown>, resubmit.payload)
+    : [];
+  const resubPickedSet = resubPicked ?? new Set(resubDiff.map(d => d.field));
+
+  // MP-4c: one read of the snooze, shared by the banner, the menu and the
+  // modal — three places asking the date separately is three chances to
+  // disagree about whether this inquiry is parked.
+  const isSnoozed = !!inq.snoozeUntil && new Date(inq.snoozeUntil).getTime() > Date.now();
+
+  const latestDecision = latestPageDecision(inq.events);
+  const pageApproved = inq.status === 'building' && latestDecision === 'approved';
+  const pageChangesRequested = inq.status === 'building' && latestDecision === 'changes_requested';
+  const openChanges = computeOpenChanges(inq.events);
+  const hadChangesThisRound = hasRequestedChangesThisRound(inq.events);
+  const allChangesAddressed = inq.status === 'building' && hadChangesThisRound && openChanges.length === 0;
+
+  let sd: Record<string, unknown> = {};
+  if (inq.detailsJson) { try { sd = JSON.parse(inq.detailsJson); } catch { /* ignore */ } }
+  const shHoles = parseInt(String(sd.holes || '18'), 10);
+  const shLayout27 = String(sd.layout27 || '');
+  const shLayout36 = String(sd.layout36 || '');
+  const shPasses = Array.isArray(sd.passes) ? sd.passes as Record<string, unknown>[] : [];
+  const shTeeSets = Array.isArray(sd.teeSets) ? sd.teeSets as Record<string, unknown>[] : [];
+  const shFv2 = (sd.facilitiesV2 || {}) as Record<string, unknown>;
+  // FB-1 review: the sheet's PATCH stores whatever it is sent, so a course (or
+  // anyone with its sheet link) could plant an outside URL that this page then
+  // loads — handing over the admin's IP and a trusted-looking link. Only
+  // images our own upload route produced are shown.
+  const fromOurUploads = (u: unknown): u is string => {
+    if (typeof u !== 'string') return false;
+    try {
+      const url = new URL(u);
+      return url.protocol === 'https:' && url.hostname.endsWith('.public.blob.vercel-storage.com') && url.pathname.startsWith('/inquiries/');
+    } catch { return false; }
+  };
+  const shPhotos = Array.isArray(sd.photos) ? (sd.photos as unknown[]).filter(fromOurUploads) : [];
+  // SD-9b: the sheet asks for a scorecard photo instead of the tee-set grid —
+  // read the tees, yardages, par and ratings off it when building.
+  const shScorecards = Array.isArray(sd.scorecardPhotos) ? (sd.scorecardPhotos as unknown[]).filter(fromOurUploads) : [];
+  const shDaysOpen = Array.isArray(sd.daysOpen) ? sd.daysOpen as number[] : [];
+  const shDaysStr = shDaysOpen.length > 0 ? shDaysOpen.map(n => DAYS_SHORT[n]).join(', ') : 'Every day';
+  const shNine27Names = Array.isArray(sd.nine27Names) ? sd.nine27Names as string[] : [];
+  const shCourse36Names = Array.isArray(sd.course36Names) ? sd.course36Names as string[] : [];
+  const facilityItems = Object.keys(shFv2).length > 0 ? renderFacilities(shFv2) : [];
+  const hasCancelPolicy = String(sd.cancellationPolicy || '') === 'yes';
+  const noCancel = String(sd.cancellationPolicy || '') === 'no';
+  const hasSheet = !!inq.detailsJson && Object.keys(sd).length > 0;
+  const hasAnswers = !!(
+    inq.currentBookingMethod || inq.teeTimesPerDay || inq.greenFeeRange ||
+    inq.hasMemberPricing || inq.hasResidentPricing || inq.hasCaddies ||
+    (inq.lookingFor && inq.lookingFor.length > 0) || inq.additionalNotes || inq.pricingNotes ||
+    (inq.needsJson && inq.needsJson !== '{}' && inq.needsJson !== '')
+  );
+
+  const wizardParams = new URLSearchParams({
+    name: inq.courseName || '', city: inq.city || '', state: inq.state || '',
+    zip: inq.zipCode || '', address: inq.address || '', website: inq.website || '',
+    type: inq.courseType || 'public', contactName: inq.contactName || '',
+    contactEmail: inq.email || '', inquiryId: inq.id,
+  });
+
+  // IC-2: the call, read once for the header chip, the gate and the tabs.
+  const calls = inq.calls ?? [];
+  const upcomingCall = nextCall(calls);
+  const missedCall = overdueCall(calls);
+  const talkedCall = latestCall(calls.filter(c => c.outcome === 'talked'));
+  // IC-5: answers are structured; the block shows one line per item.
+  const callAnswers = talkedCall ? flatSummaries(talkedCall.answersJson) : {};
+  const callAnswerRows = AGENDA.filter(a => callAnswers[a.key]).map(a => [a.short, callAnswers[a.key]] as [string, string]);
+  const gate = callGate(inq, calls);
+  // Build buttons stay enabled; the click opens the notice instead of the
+  // modal when the gate is not met. The API enforces it regardless.
+  const guardBuild = (next: 'create_draft' | 'build_without_sheet') => {
+    setMoreOpen(false);
+    if (gate.ok) { setPendingAction(next); return; }
+    setCallGateNotice(true);
+  };
+
+  // AW-6b: the one next step, and what its button does on this page.
+  const step = nextStep(inq, queueSignal(inq));
+  const runStep = () => {
+    if (!step) return;
+    switch (step.key) {
+      case 'prep_call': setCallOpen(true); return;
+      case 'book_call': case 'call_today': case 'log_call':
+        setCallFocus({ what: step.key === 'book_call' ? 'setup' : 'log', n: Date.now() }); return;
+      case 'send_sheet': setPendingAction('send_sheet'); return;
+      case 'resend_sheet': setPendingAction('resend_sheet'); return;
+      case 'build': guardBuild('create_draft'); return;
+      case 'send_preview': case 'send_updated_preview': case 'resend_preview': setPendingAction('send_preview'); return;
+      case 'make_changes': setChangesExpanded(true); document.getElementById('next-step-detail')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); return;
+      case 'go_live': setPendingAction('go_live'); return;
+      case 'review_resubmit': document.getElementById('resubmit')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); return;
+      case 'start_talking': setMoveOpen(true); return;
+      case 'reply': pickTab('lead'); setTimeout(() => { replyRef.current?.focus(); document.getElementById('reply')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 0); return;
+    }
+  };
+
+  const leadRow = (label: string, value: React.ReactNode) => (
+    <div key={label} className="grid grid-cols-[150px_1fr] gap-3 px-4 py-2.5 items-baseline">
+      <div className="text-[13px] text-ink-muted">{label}</div>
+      <div className="text-[14px] text-ink whitespace-pre-wrap break-words">{value}</div>
+    </div>
+  );
+
+  const btnP = 'bg-pine hover:bg-pine-hover disabled:opacity-50 text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors';
+  const btnO = 'bg-paper hover:bg-line border border-line text-ink px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors';
+  const btnD = 'bg-bad/5 hover:bg-bad/10 text-bad border border-bad/20 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors';
+
+  return (
+    <div className="min-h-screen bg-paper flex">
+      <AdminSidebar active="inquiries" />
+      <div className="admin-content flex-1 flex flex-col min-h-screen">
+
+        {/* ── Page header ──────────────────────────────────────────── */}
+        <div className="px-8 py-6 border-b border-line bg-white shrink-0">
+          <button
+            onClick={() => router.push(backUrl)}
+            className="flex items-center gap-1.5 text-xs text-ink-muted hover:text-ink mb-4 transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" /> Back to inquiries
+          </button>
+
+          <div className="flex items-start gap-4">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-[30px] font-serif font-semibold text-ink leading-snug">{inq.courseName}</h1>
+              <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                <StatusDot status={dot} label={STATUS_LABEL[inq.status] || inq.status} />
+                {(inq.city || inq.state) && <span className="text-sm text-ink-muted">{[inq.city, inq.state].filter(Boolean).join(', ')}</span>}
+                {!isArchived && <span className="text-sm text-ink-faint">{days}d in stage</span>}
+                {!isArchived && upcomingCall && (
+                  <span className="flex items-center gap-1.5 text-xs text-pine font-medium">
+                    Call {fmtCallTime(upcomingCall.scheduledAt)}
+                  </span>
+                )}
+                {!isArchived && !upcomingCall && missedCall && (
+                  <span className="flex items-center gap-1.5 text-xs text-warn font-medium">
+                    Log the call ({fmtCallTime(missedCall.scheduledAt)})
+                  </span>
+                )}
+                {isArchived && inq.status !== 'live' && inq.status !== 'rejected' && (() => {
+                  const { reason, date } = whyArchived(inq);
+                  return (
+                    <span className="flex items-center gap-1.5 text-xs text-ink-muted">
+                      {reason} · {fmtDate(date)}
+                    </span>
+                  );
+                })()}
+              </div>
+            </div>
+
+            {/* Primary action + everything else in "More" */}
+            <div className="flex items-center gap-2 flex-wrap justify-end shrink-0">
+              <button onClick={loadInquiry} disabled={loading}
+                className="w-8 h-8 flex items-center justify-center rounded-md text-ink-muted hover:text-ink hover:bg-paper border border-line transition-colors">
+                <RefreshCw className="w-3.5 h-3.5" />
+              </button>
+
+              {/* AW-6b (Cam 2026-10-21: "next step first"): ONE button — the
+                  same next step the board card shows (lib/inquiry-board).
+                  Everything else is in the ⋯ menu. */}
+              {step && step.key !== 'snoozed' && step.key !== 'open' && (
+                <button onClick={runStep} disabled={processing || sendingPreview} className={btnP + ' !text-[13px] !px-3.5 !py-2'}>
+                  {sendingPreview ? 'Sending…' : step.label}
+                </button>
+              )}
+              {inq.builtCourseId && inq.status === 'building' && (
+                <button onClick={lookAtPage} disabled={looking}
+                  className="flex items-center gap-1.5 text-xs font-medium text-ink hover:text-pine bg-white border border-line hover:border-pine/30 px-3 py-2 rounded-md transition-colors disabled:opacity-50">
+                  {looking ? 'Opening…' : 'See the page'} <ArrowUpRight className="w-3.5 h-3.5" aria-hidden />
+                </button>
+              )}
+              {inq.status === 'live' && inq.builtCourseId && (
+                <button onClick={() => router.push('/admin/courses/' + inq.builtCourseId)}
+                  className="flex items-center gap-1.5 text-xs font-medium text-pine hover:text-pine-hover bg-pine/5 hover:bg-pine/10 border border-pine/20 px-3 py-2 rounded-md transition-colors">
+                  Manage course <ArrowUpRight className="w-3.5 h-3.5" />
+                </button>
+              )}
+              {/* DELETION DOCTRINE — permanent delete only for inquiries that
+                  never became a course. Built ones are archive-only. */}
+              {(inq.status === 'archived' || inq.status === 'rejected') && !inq.builtCourseId && (
+                <button onClick={() => { setPendingAction('delete'); setDeleteCourseConfirm(''); }}
+                  className="flex items-center gap-1.5 text-xs text-ink-muted hover:text-bad hover:bg-bad/5 px-3 py-1.5 rounded-md border border-line hover:border-bad/20 transition-colors">
+                  Delete permanently
+                </button>
+              )}
+
+              <MoreMenu open={moreOpen} onToggle={() => setMoreOpen(v => !v)} onClose={() => setMoreOpen(false)}>
+                {!isArchived && !isLead && (
+                  <div className="px-2 py-1.5">
+                    <div className="text-[13px] font-semibold text-ink mb-1">Override stage</div>
+                    <select
+                      value={stageOverride}
+                      onChange={e => {
+                        const ns = e.target.value;
+                        setStageOverride(ns);
+                        setMoreOpen(false);
+                        if (ns !== inq.status) action('set_status', { newStatus: ns });
+                      }}
+                      className="w-full bg-paper border border-line rounded-md px-2 py-1.5 text-xs text-ink outline-none cursor-pointer"
+                    >
+                      {ACTIVE_STATUSES.map(s => <option key={s} value={s}>{STATUS_LABEL[s] || s}</option>)}
+                    </select>
+                  </div>
+                )}
+                {/* AW-6b: the stage moves the single next-step button doesn't cover. */}
+                {inq.status === 'pending' && (
+                  <button onClick={() => { setMoreOpen(false); action('mark_in_review'); }} disabled={processing}
+                    className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                    Mark in review
+                  </button>
+                )}
+                {(inq.status === 'pending' || inq.status === 'in_review') && step?.key !== 'send_sheet' && (
+                  <button onClick={() => { setMoreOpen(false); setPendingAction('send_sheet'); }} disabled={processing}
+                    className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                    Send the setup sheet now
+                  </button>
+                )}
+                {!isArchived && !isLead && inq.status !== 'live' && (
+                  <button onClick={() => { setMoreOpen(false); setCallFocus({ what: (upcomingCall || missedCall) ? 'log' : 'setup', n: Date.now() }); }}
+                    className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                    {(upcomingCall || missedCall) ? 'The call…' : 'Set up a call…'}
+                  </button>
+                )}
+                {inq.status === 'details_requested' && step?.key !== 'resend_sheet' && (
+                  <button onClick={() => { setMoreOpen(false); setPendingAction('resend_sheet'); }} disabled={processing}
+                    className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                    Resend the setup sheet
+                  </button>
+                )}
+                {inq.status === 'details_submitted' && step?.key !== 'build' && (
+                  <button onClick={() => guardBuild('create_draft')} disabled={processing}
+                    className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                    Build the course
+                  </button>
+                )}
+                {inq.status === 'building' && !pageChangesRequested && step?.key !== 'go_live' && (
+                  <button onClick={() => { setMoreOpen(false); setPendingAction('go_live'); }} disabled={processing}
+                    className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                    Go live now
+                  </button>
+                )}
+                {!isArchived && inq.status !== 'live' && !isSnoozed && (
+                  <button onClick={() => { setMoreOpen(false); setSnoozeDate(''); setPendingAction('snooze'); }} disabled={processing}
+                    className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                    Snooze&hellip;
+                  </button>
+                )}
+                {!isArchived && inq.status !== 'live' && isSnoozed && (
+                  <button onClick={() => { setMoreOpen(false); action('unsnooze'); }} disabled={processing}
+                    className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                    Clear snooze
+                  </button>
+                )}
+                {!inq.builtCourseId && !isArchived && !isLead && inq.status !== 'building' && (
+                  <button onClick={() => { setMoreOpen(false); router.push('/admin/create?' + wizardParams.toString()); }}
+                    className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                    Manual build (in person)
+                  </button>
+                )}
+                {(isLead || inq.status === 'pending' || inq.status === 'in_review' || inq.status === 'details_requested' || inq.status === 'details_submitted') && (
+                  <button onClick={() => { setMoreOpen(false); if (isLead) setRejectNotify(false); setPendingAction('reject'); }} disabled={processing}
+                    className="w-full flex items-center gap-2 px-2 py-2 text-xs text-bad hover:bg-bad/5 rounded-md transition-colors">
+                    <StatusDot status="bad" />{isLead ? 'Close this lead' : 'Reject'}
+                  </button>
+                )}
+                {inq.status === 'in_review' && (
+                  <button onClick={() => guardBuild('build_without_sheet')} disabled={processing}
+                    className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                    Build without sheet
+                  </button>
+                )}
+                {inq.status === 'building' && (
+                  <>
+                    {inq.builtCourseId && (
+                      <button onClick={() => { setMoreOpen(false); router.push('/admin/courses/' + inq.builtCourseId); }}
+                        className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                        Manage Course
+                      </button>
+                    )}
+                    <button onClick={() => { setMoreOpen(false); setPendingAction('dashboard_access'); }} disabled={processing}
+                      className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                      Send dashboard access (resend)
+                    </button>
+                    {inq.builtCourseId && !pageApproved && (
+                      <button onClick={() => { setMoreOpen(false); setPendingAction('send_preview'); }} disabled={sendingPreview}
+                        className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                        {sendingPreview ? 'Sending…' : (previewSentEvent ? 'Send updated preview' : 'Send preview')}
+                      </button>
+                    )}
+                    {inq.builtCourseId && pageApproved && (
+                      <div className="px-2 py-1.5">
+                        <div className="flex items-center gap-1.5 text-xs text-ok font-medium px-0 py-1">
+                          <StatusDot status="ok" />Approved{approvedEvent ? ' · ' + fmtDate(approvedEvent.createdAt) : ''}
+                        </div>
+                        <button onClick={() => { setMoreOpen(false); requestReReview(); }} disabled={requestingReReview}
+                          className="w-full flex items-center gap-2 px-2 py-1.5 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                          {requestingReReview ? 'Requesting…' : 'Request re-review'}
+                        </button>
+                      </div>
+                    )}
+                    {pageChangesRequested && (
+                      <button onClick={() => { setMoreOpen(false); setPendingAction('go_live'); }} disabled={processing}
+                        className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                        Go Live anyway
+                      </button>
+                    )}
+                    {/* A-02d availability recap: Archive is available from
+                        any alive stage that has a linked course — a lighter,
+                        reversible alternative to Delete. */}
+                    {inq.builtCourseId && (
+                      <button onClick={() => { setMoreOpen(false); setPendingAction('archive_course'); }} disabled={processing}
+                        className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                        Archive
+                      </button>
+                    )}
+                    {/* DELETION DOCTRINE — only unbuilt inquiries can be
+                        permanently deleted; 'building' stage practically
+                        always has a course by now, but the gate is explicit
+                        rather than assumed. */}
+                    {!inq.builtCourseId && (
+                      <button onClick={() => { setMoreOpen(false); setPendingAction('delete'); setDeleteCourseConfirm(''); }}
+                        className="w-full flex items-center gap-2 px-2 py-2 text-xs text-bad hover:bg-bad/5 rounded-md transition-colors">
+                        Delete
+                      </button>
+                    )}
+                  </>
+                )}
+                {/* LIVE — menu must never render empty (RUN_QUEUE "inquiry
+                    ⋯ menu renders EMPTY for live/archived"). No delete here —
+                    a live inquiry always has a course, and courses are
+                    archive-only (DELETION DOCTRINE). */}
+                {inq.status === 'live' && (
+                  <>
+                    {inq.builtCourseId && (
+                      <button onClick={() => { setMoreOpen(false); router.push('/admin/courses/' + inq.builtCourseId); }}
+                        className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                        Manage Course
+                      </button>
+                    )}
+                    {!courseSlug && courseExtrasFailed && (
+                      <p className="px-2 py-2 text-[11px] text-bad leading-relaxed">Could not load the public link — refresh the page.</p>
+                    )}
+                    {courseSlug && (
+                      <a href={'/courses/' + courseSlug} target="_blank" rel="noopener noreferrer" onClick={() => setMoreOpen(false)}
+                        className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                        View public page
+                      </a>
+                    )}
+                    {courseSlug && (
+                      <button onClick={() => { copyBookingLink(); }}
+                        className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                        {linkCopied ? 'Copied!' : 'Copy booking link'}
+                      </button>
+                    )}
+                    {inq.builtCourseId && (
+                      <button onClick={() => { setMoreOpen(false); setPendingAction('archive_course'); }} disabled={processing}
+                        className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                        Archive
+                      </button>
+                    )}
+                  </>
+                )}
+                {/* ARCHIVED / REJECTED — same never-empty rule. Delete only
+                    for inquiries that never became a course. */}
+                {(inq.status === 'archived' || inq.status === 'rejected') && (
+                  <>
+                    {inq.builtCourseId && (
+                      <button onClick={() => { setMoreOpen(false); router.push('/admin/courses/' + inq.builtCourseId); }}
+                        className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                        View course
+                      </button>
+                    )}
+                    <button onClick={() => { setMoreOpen(false); setPendingAction('restore_archived'); }} disabled={processing}
+                      className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                      Restore to previous stage
+                    </button>
+                    {inq.builtCourseId ? (
+                      <p className="px-2 py-2 text-[11px] text-ink-soft leading-relaxed">
+                        Courses are archived, never deleted — booking and payment history is retained.
+                      </p>
+                    ) : (
+                      <button onClick={() => { setMoreOpen(false); setPendingAction('delete'); setDeleteCourseConfirm(''); }}
+                        className="w-full flex items-center gap-2 px-2 py-2 text-xs text-bad hover:bg-bad/5 rounded-md transition-colors">
+                        Permanently delete
+                      </button>
+                    )}
+                  </>
+                )}
+              </MoreMenu>
+            </div>
+          </div>
+
+          {isSnoozed && (
+            <div className="mt-3 flex items-center gap-2 bg-warn/5 border border-warn/20 rounded-lg px-4 py-2.5 text-xs text-warn max-w-3xl">
+              
+              <span>
+                Snoozed until {fmtDate(inq.snoozeUntil as string)} — it stays out of the work queue until then,
+                unless the course gets in touch first.
+              </span>
+              <button onClick={() => action('unsnooze')} disabled={processing}
+                className="ml-auto shrink-0 font-medium underline hover:no-underline disabled:opacity-50">
+                Clear
+              </button>
+            </div>
+          )}
+
+          {/* MP-4e: the duplicate guard kept this submission out of the
+              pipeline, which is right — but what they sent is not nothing.
+              Shown as a diff, applied only where ticked, never silently. */}
+          {resubmit && (
+            <div id="resubmit" className="mt-3 max-w-3xl bg-warn/5 border border-warn/20 rounded-lg px-4 py-3">
+              <div className="flex items-center gap-2 mb-1.5">
+                
+                <span className="text-xs font-medium text-warn">
+                  They submitted the interest form again on {fmtDate(resubmit.at.toISOString())}
+                </span>
+              </div>
+              {!resubmit.payload && (
+                <p className="text-xs text-ink-soft">
+                  This one predates us storing what was sent, so there is nothing to compare.
+                </p>
+              )}
+              {resubmit.payload && resubmit.payload.verified === false && (
+                <p className="text-xs text-warn mb-2">
+                  Sent from the public form under a different email than the one on file, so it may not be the course.
+                  No new email or phone was recorded; treat the rest as unverified before applying anything.
+                </p>
+              )}
+              {resubmit.payload && resubDiff.length === 0 && (
+                <p className="text-xs text-ink-soft">
+                  Nothing they sent differs from what is on file — most likely an impatient second submit.
+                </p>
+              )}
+              {resubDiff.length > 0 && (
+                <>
+                  <p className="text-xs text-ink-soft mb-2">
+                    Nothing was overwritten. Tick what is worth keeping.
+                  </p>
+                  <div className="bg-white border border-line rounded-md divide-y divide-line mb-2">
+                    {resubDiff.map(d => (
+                      <label key={d.field} className="flex items-start gap-2.5 px-3 py-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={resubPickedSet.has(d.field)}
+                          onChange={() => setResubPicked(() => {
+                            const next = new Set(resubPickedSet);
+                            if (next.has(d.field)) next.delete(d.field); else next.add(d.field);
+                            return next;
+                          })}
+                          className="mt-1 shrink-0"
+                        />
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-[13px] font-semibold text-ink">{d.label}</span>
+                          <span className="block text-xs text-ink-faint line-through truncate">{d.from || 'blank'}</span>
+                          <span className="block text-xs text-ink font-medium truncate">{d.to}</span>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </>
+              )}
+              <div className="flex items-center gap-2">
+                {resubDiff.length > 0 && (
+                  <button
+                    onClick={async () => { await action('apply_resubmit', { fields: Array.from(resubPickedSet) }); setResubPicked(null); }}
+                    disabled={processing || resubPickedSet.size === 0}
+                    className="text-xs font-medium bg-pine hover:bg-pine-hover disabled:opacity-40 text-white px-2.5 py-1 rounded-md transition-colors"
+                  >
+                    {processing ? 'Applying…' : `Apply ${resubPickedSet.size} change${resubPickedSet.size === 1 ? '' : 's'}`}
+                  </button>
+                )}
+                <button
+                  onClick={async () => { await action('dismiss_resubmit'); setResubPicked(null); }}
+                  disabled={processing}
+                  className="text-xs text-ink-muted hover:text-ink disabled:opacity-40 transition-colors"
+                >
+                  {resubDiff.length > 0 ? 'Keep what we have' : 'Got it'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Stage checkpoints — the flight plan */}
+          {!isArchived && inq.status !== 'rejected' && (
+            <CheckpointStepper checkpoints={getCheckpoints(inq, hasSheet)} />
+          )}
+
+          {/* Next-step guidance — merged from the old Next Steps card */}
+          {!isArchived && inq.status !== 'rejected' && (
+            <div id="next-step-detail" className="mt-3 text-sm text-ink max-w-3xl">
+              {/* AW-6b: says the same thing as the next-step button. */}
+              {isLead && (
+                step?.key === 'snoozed'
+                  ? <>Snoozed — see the note above.</>
+                  : <>A lead — not in touch yet. Once you’ve talked to them, move it to Talking to book the call and send the setup sheet.</>
+              )}
+              {(inq.status === 'pending' || inq.status === 'in_review') && (
+                step?.key === 'book_call'
+                  ? <>Book a discovery call — it’s needed before the course is built. The setup sheet can go out before or after (⋯ menu).</>
+                  : step?.key === 'prep_call' || step?.key === 'call_today'
+                  ? <>Call booked for {upcomingCall ? fmtCallTime(upcomingCall.scheduledAt) : 'soon'} ET — the agenda is in the call card.</>
+                  : step?.key === 'log_call'
+                  ? <>The call time has passed — log how it went.</>
+                  : step?.key === 'snoozed'
+                  ? <>Snoozed — see the note above. The ⋯ menu still has every step.</>
+                  : step?.key === 'review_resubmit'
+                  ? <>They filled in the interest form again — review what they sent above.</>
+                  : <>{talkedCall
+                      ? 'Call done'
+                      : inq.callSkippedReason?.trim()
+                      ? `Call skipped — ${inq.callSkippedReason.trim()}`
+                      : 'No call yet'}
+                    {hasAnswers
+                      ? <> — check the <button onClick={() => pickTab('lead')} className="font-medium text-pine hover:underline">Lead tab</button>, then send the course their setup sheet.</>
+                      : <> — send the course their setup sheet.</>}</>
+              )}
+              {inq.status === 'details_requested' && (
+                <>Waiting on {inq.courseName}
+                  {sheetSentEvent
+                    ? ' — sheet sent ' + daysAgo(sheetSentEvent.createdAt) + ' day' + (daysAgo(sheetSentEvent.createdAt) !== 1 ? 's' : '') + ' ago.'
+                    : ' — sheet sent recently.'}
+                </>
+              )}
+              {inq.status === 'details_submitted' && (
+                <>Sheet received. Review the <button onClick={() => pickTab('sheet')} className="font-medium text-pine hover:underline">Sheet tab</button>, then create the draft course.</>
+              )}
+              {inq.status === 'building' && (
+                allChangesAddressed
+                  ? <>All requested changes are marked addressed — send {inq.courseName} an updated preview.</>
+                  : pageApproved
+                  ? <>{inq.courseName} approved their page — ready to go live.</>
+                  : pageChangesRequested
+                  ? (
+                    <div>
+                      <button onClick={() => setChangesExpanded(v => !v)} className="font-medium text-warn hover:underline">
+                        Changes requested: {openChanges.map(it => CATEGORY_LABEL[it.category] || it.category).join(', ')}
+                        {changesExpanded ? ' (hide)' : ' (view)'}
+                      </button>
+                      {changesExpanded && (
+                        <div className="mt-2 space-y-2 max-w-2xl">
+                          {openChanges.map(it => (
+                            <div key={it.category} className="flex items-start gap-3 bg-white border border-line rounded-md px-3 py-2.5">
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm font-medium text-ink">{CATEGORY_LABEL[it.category] || it.category}</div>
+                                {it.detail && <div className="text-xs text-ink-soft mt-0.5">{it.detail}</div>}
+                              </div>
+                              <button
+                                onClick={() => addressChange(it.category)}
+                                disabled={addressingCategory === it.category}
+                                className="shrink-0 flex items-center gap-1.5 text-xs font-medium text-ink-soft bg-paper border border-line hover:border-line-strong hover:text-ink px-2.5 py-1.5 rounded-md disabled:opacity-50 transition-colors"
+                              >
+                                {addressingCategory === it.category ? 'Saving…' : 'Addressed'}
+                              </button>
+                            </div>
+                          ))}
+                          <p className="text-xs text-ink-soft">Once every item is addressed, the primary action becomes &ldquo;Send Updated Preview.&rdquo;</p>
+                        </div>
+                      )}
+                    </div>
+                  )
+                  : previewSentEvent
+                  ? <>Waiting on course review — sent {daysAgo(previewSentEvent.createdAt)} day{daysAgo(previewSentEvent.createdAt) !== 1 ? 's' : ''} ago.</>
+                  : <>Course is built. Review it, then set it live when ready.</>
+              )}
+              {inq.status === 'live' && (
+                <>
+                  Live since {liveEvent ? fmtDate(liveEvent.createdAt) : fmtDate(inq.updatedAt || inq.createdAt)}.
+                  {approvedEvent && (
+                    <span className="text-ink-faint"> · Page approved by course · {fmtDate(approvedEvent.createdAt)}</span>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
+          {/* IC-2: the discovery call — set it up, or log it. */}
+          {/* AW-6b: in a dialog, opened by the next step, the ⋯ menu, the
+              build gate or ?call=1 — the page leads with the next step, not a form. */}
+          {!isArchived && !isLead && inq.status !== 'rejected' && callOpen && (
+            <ModalShell title={(upcomingCall || missedCall) ? 'The call' : 'Set up the call'} titleNode={<span className="sr-only">{(upcomingCall || missedCall) ? 'The call' : 'Set up the call'}</span>} size="lg" onClose={() => { setCallOpen(false); setCallFocus(null); }}>
+              <InquiryCallCards
+                inDialog
+                inquiry={inq}
+                processing={processing}
+                focus={callFocus}
+                onRefresh={loadInquiry}
+                onRequestSheet={async () => { setCallOpen(false); setCallFocus(null); await action('request_details'); }}
+                onNotAFit={() => { setCallOpen(false); setCallFocus(null); setRejectReason('Not a fit'); setRejectNotify(true); setPendingAction('reject'); }}
+              />
+            </ModalShell>
+          )}
+          {isLead && moveOpen && (
+            <MoveToTalkingDialog lead={inq} onClose={() => setMoveOpen(false)} onMoved={() => { setMoveOpen(false); loadInquiry(); }} />
+          )}
+          {callGateNotice && (
+            <div className="mt-3 max-w-3xl bg-warn/5 border border-warn/20 rounded-md px-4 py-3">
+              <p className="text-warn text-xs leading-relaxed mb-2">
+                No call logged yet. Log the call, or skip it with a reason — then build.
+              </p>
+              <div className="flex items-center gap-4">
+                <button onClick={() => { setCallGateNotice(false); setCallFocus({ what: (upcomingCall || missedCall) ? 'log' : 'setup', n: Date.now() }); }}
+                  className="text-xs font-medium text-pine hover:underline">
+                  {(upcomingCall || missedCall) ? 'Log the call' : 'Set up the call'}
+                </button>
+                <button onClick={() => { setCallGateNotice(false); setCallFocus({ what: 'skip', n: Date.now() }); }}
+                  className="text-xs font-medium text-pine hover:underline">
+                  Skip it with a reason
+                </button>
+                <button onClick={() => setCallGateNotice(false)} className="text-xs text-ink-faint hover:text-ink ml-auto">Dismiss</button>
+              </div>
+            </div>
+          )}
+
+          {/* Approve result */}
+          {approveResult && (() => {
+            const isDetails = !!approveResult.detailsLink;
+            // Cam 2026-10-27: a course owner's sign-in is never shown or copied here — it is
+            // only ever a "set your password" link in their email (lib/operator-setup).
+            const rows: [string, string][] = isDetails ? [['Setup sheet link', approveResult.detailsLink as string]] : [];
+            const failed = approveResult.emailSent === false;
+            const to = approveResult.sentTo ? ' to ' + approveResult.sentTo : '';
+            return (
+              <div className={'mt-4 rounded-md px-4 py-3 ' + (failed ? 'bg-bad/5 border border-bad/20' : 'bg-ok/5 border border-ok/20')}>
+                <div className={'text-xs font-medium mb-2 ' + (failed ? 'text-bad' : 'text-ok')}>
+                  {failed
+                    ? (isDetails ? 'Email failed (' + (approveResult.emailError || 'unknown') + '). Share manually:' : 'The set-your-password email didn\u2019t send (' + (approveResult.emailError || 'unknown') + '). Use Send dashboard access to try again.')
+                    : (isDetails ? 'Setup sheet sent.' : approveResult.alreadySetUp ? 'They already sign in — emailed them that their page is ready in their dashboard' + to + '.' : 'Set-your-password email sent' + to + '.')}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {rows.filter(([, v]) => v).map(([label, val]) => (
+                    <div key={label} className="flex items-center gap-2 bg-white rounded-md px-3 py-2 border border-line">
+                      <span className="text-xs text-ink-muted shrink-0">{label}:</span>
+                      <span className="text-xs text-ink font-mono">{val}</span>
+                      <button onClick={() => navigator.clipboard.writeText(val)} className="text-ink-muted hover:text-pine transition-colors ml-1">
+                        <Copy className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Inline action error */}
+          {lookError && (
+            <div role="alert" className="mt-3 bg-bad/5 border border-bad/20 rounded-md px-4 py-2.5 flex items-center justify-between gap-3">
+              <p className="text-bad text-xs leading-relaxed">{lookError}</p>
+              <button onClick={lookAtPage} className="text-xs font-medium text-bad underline shrink-0">Try again</button>
+            </div>
+          )}
+          {actionError && (
+            <div className="mt-3 bg-bad/5 border border-bad/20 rounded-md px-4 py-2.5 flex items-center justify-between gap-3">
+              <p className="text-bad text-xs leading-relaxed">{actionError}</p>
+              <button onClick={() => setActionError('')} className="text-bad/60 hover:text-bad shrink-0 transition-colors">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 14 14"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              </button>
+            </div>
+          )}
+          {/* Draft-build name conflict — never a dead-end */}
+          {nameConflict && (
+            <div className="mt-3 bg-warn/5 border border-warn/20 rounded-md px-4 py-3">
+              <p className="text-warn text-xs leading-relaxed mb-2.5">{nameConflict.message}</p>
+              <div className="flex items-center gap-2">
+                <button onClick={() => router.push('/admin/courses/' + nameConflict.existingCourseId)} className={btnO}>
+                  View existing course
+                </button>
+                <button onClick={() => createDraftCourse(true)} disabled={processing} className={btnO}>
+                  <StatusDot status="ok" />Create anyway
+                </button>
+                <button onClick={() => setNameConflict(null)} className="text-xs text-ink-faint hover:text-ink transition-colors ml-1">Dismiss</button>
+              </div>
+            </div>
+          )}
+          {/* Preview send feedback */}
+          {previewMsg && (
+            <div className={'mt-3 rounded-md px-4 py-2.5 flex items-center justify-between gap-3 ' + (previewMsg.startsWith('Error') ? 'bg-bad/5 border border-bad/20' : 'bg-ok/5 border border-ok/20')}>
+              <p className={'text-xs leading-relaxed ' + (previewMsg.startsWith('Error') ? 'text-bad' : 'text-ok')}>{previewMsg}</p>
+              <button onClick={() => setPreviewMsg('')} className="text-ink-muted hover:text-ink shrink-0 transition-colors">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 14 14"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* ── Tab nav ──────────────────────────────────────────────── */}
+        <div className="border-b border-line bg-white shrink-0 px-8">
+          <div className="flex gap-0">
+            {(['lead', 'sheet', 'notes', 'activity'] as const).map(t => (
+              <button key={t} onClick={() => pickTab(t)}
+                className={'px-4 py-3 text-sm font-medium border-b-2 transition-colors ' + (
+                  activeTab === t ? 'border-pine text-pine' : 'border-transparent text-ink-muted hover:text-ink'
+                )}>
+                {TAB_LABEL[t]}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Tab content ──────────────────────────────────────────── */}
+        <div className="flex-1 px-10 py-8">
+
+          {/* Lead tab — who they are, then what they told us. */}
+          {activeTab === 'lead' && inq.email && !['lead', 'rejected', 'archived', 'live'].includes(inq.status) && (() => {
+            const lastReply = (inq.events || []).filter(e => e.actorName?.startsWith(REPLY_EVENT_PREFIX)).sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+            const repliedLine = lastReply ? `Answered ${new Date(lastReply.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}${lastReply.actorName?.includes(' by ') ? ' by ' + lastReply.actorName.split(' by ').pop() : ''}.` : '';
+            if (lastReply && !replyOpen) return (
+              <div id="reply" className="max-w-3xl mb-8">
+                <Card className="p-4">
+                  {inq.additionalNotes && <p className="text-[14px] text-ink whitespace-pre-wrap pb-3 mb-3 border-b border-line-soft">{inq.additionalNotes}</p>}
+                  {replyResult
+                    ? <StatusDot status={replyResult.ok ? 'ok' : 'bad'} label={replyResult.text} />
+                    : <p className="text-[13px] text-ink-muted">{repliedLine}</p>}
+                  <p className="mt-2 text-[13px] text-ink">
+                    {inq.builtCourseId
+                      ? <a href={`/admin/courses/${inq.builtCourseId}?tab=contact`} className="text-pine font-medium hover:underline">Keep talking in Messages on the course page</a>
+                      : <button onClick={() => { setReplyOpen(true); setReplyResult(null); }} className="text-pine font-medium hover:underline">Write again</button>}
+                  </p>
+                </Card>
+              </div>
+            );
+            return (
+              <div id="reply" className="max-w-3xl mb-8">
+                <h2 className="text-[15px] font-semibold text-ink mb-3">Reply</h2>
+                <Card className="p-4">
+                  {inq.additionalNotes && (
+                    <p className="text-[14px] text-ink whitespace-pre-wrap pb-3 mb-3 border-b border-line-soft">{inq.additionalNotes}</p>
+                  )}
+                  <textarea
+                    ref={replyRef}
+                    value={replyText}
+                    onChange={e => { setReplyText(e.target.value); if (replyResult?.ok) setReplyResult(null); }}
+                    placeholder={'Write to ' + ((inq.contactName || '').trim().split(/\s+/)[0] || 'them') + '…'}
+                    rows={6}
+                    maxLength={8000}
+                    aria-label="Reply"
+                    className={`${INPUT} w-full resize-y`}
+                  />
+                  <div className="mt-3 flex flex-wrap items-center gap-3">
+                    <button
+                      onClick={sendReply}
+                      disabled={!replyText.trim() || replySending}
+                      className="px-4 py-2 bg-pine hover:bg-pine-hover disabled:opacity-40 text-white text-[13px] font-medium rounded-md transition-colors"
+                    >
+                      {replySending ? 'Sending…' : 'Send reply'}
+                    </button>
+                    <span className="text-[13px] text-ink-muted">To {inq.email}, from {ADMIN_EMAIL}</span>
+                  </div>
+                  {replyResult && (
+                    <div className="mt-3"><StatusDot status={replyResult.ok ? 'ok' : 'bad'} label={replyResult.text} /></div>
+                  )}
+                  {lastReply && !replyResult && (
+                    <p className="mt-3 text-[13px] text-ink-muted">Last replied {new Date(lastReply.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}{lastReply.actorName?.includes(' by ') ? ' by ' + lastReply.actorName.split(' by ').pop() : ''}.</p>
+                  )}
+                </Card>
+              </div>
+            );
+          })()}
+
+          {activeTab === 'lead' && (
+            <div className="max-w-3xl">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-[15px] font-semibold text-ink">Contact</h2>
+                {!editContact ? (
+                  <button onClick={() => {
+                    setContactEdits({
+                      contactName: inq.contactName || '', email: inq.email || '',
+                      phone: inq.phone || '', courseName: inq.courseName || '',
+                      city: inq.city || '', state: inq.state || '',
+                    });
+                    setEditContact(true);
+                  }} className="flex items-center gap-1 text-xs text-ink-muted hover:text-pine transition-colors">
+                     Edit
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => setEditContact(false)} className="text-xs text-ink-muted hover:text-ink transition-colors">Cancel</button>
+                    <button onClick={saveContact} disabled={processing}
+                      className="flex items-center gap-1 text-xs bg-pine text-white px-2.5 py-1 rounded-md hover:bg-pine-hover disabled:opacity-50 transition-colors">
+                       Save
+                    </button>
+                  </div>
+                )}
+              </div>
+              {editContact ? (
+                <div className="grid grid-cols-2 gap-3">
+                  {([
+                    ['contactName', 'Contact name'], ['email', 'Email'], ['phone', 'Phone'],
+                    ['courseName', 'Course name'], ['city', 'City'], ['state', 'State'],
+                  ] as [string, string][]).map(([field, label]) => (
+                    <div key={field}>
+                      <label className="block"><span className="block text-[13px] font-semibold text-ink mb-1">{label}</span>
+                      <input value={contactEdits[field] ?? ''} onChange={e => setContactEdits(p => ({ ...p, [field]: e.target.value }))} className={iCls} /></label>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                // AW-6b (Cam: "detail page too long", "too cluttered"): one card of
+                // label/value rows instead of a box per field.
+                <Card className="divide-y divide-line-soft">
+                  {leadRow('Contact', <>{inq.contactName}{inq.contactTitle ? ' · ' + inq.contactTitle : ''}</>)}
+                  {leadRow('Email', <a href={'mailto:' + inq.email} className="text-pine hover:underline">{inq.email}</a>)}
+                  {inq.phone && leadRow('Phone', <a href={'tel:' + inq.phone.replace(/[^\d+]/g, '')} className="text-pine hover:underline">{inq.phone}</a>)}
+                  {leadRow('Course', <span className="capitalize">{[inq.courseType, [inq.city, inq.state].filter(Boolean).join(', ')].filter(Boolean).join(' · ')}</span>)}
+                  {inq.address && leadRow('Address', <>{inq.address}{inq.zipCode ? ', ' + inq.zipCode : ''}</>)}
+                  {inq.website && leadRow('Website', <a href={inq.website} target="_blank" rel="noreferrer" className="text-pine hover:underline">{inq.website}</a>)}
+                  {/* MP-4c: which channel this lead came from. "Not recorded"
+                      stays a real, visible state, never folded into a category. */}
+                  {leadRow('Source', (
+                    <select
+                      value={inq.source || ''}
+                      disabled={processing}
+                      onChange={e => action('set_source', { source: e.target.value })}
+                      aria-label="Source"
+                      className="bg-paper border border-line rounded-md px-2 py-1 text-sm text-ink outline-none focus:border-pine/40 cursor-pointer disabled:opacity-50"
+                    >
+                      <option value="">Not recorded</option>
+                      {INQUIRY_SOURCES.map(src => <option key={src} value={src}>{src}</option>)}
+                    </select>
+                  ))}
+                  {leadRow(isLead || inq.events.some(e => e.fromStatus === 'lead') ? 'Added' : 'Submitted', fmtDate(inq.createdAt))}
+                </Card>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'lead' && (() => {
+            let needs: [string, unknown][] = [];
+            try { needs = Object.entries(JSON.parse(inq.needsJson || '{}') as Record<string, unknown>).filter(([, v]) => v !== '' && v !== null && v !== undefined); } catch { /* not JSON — nothing to show */ }
+            const pricing = [inq.hasMemberPricing && 'members', inq.hasResidentPricing && 'residents', inq.hasCaddies && 'caddies'].filter(Boolean).join(', ');
+            const rows: [string, React.ReactNode][] = [];
+            if (inq.currentBookingMethod) rows.push(['Books today by', inq.currentBookingMethod]);
+            if (inq.teeTimesPerDay) rows.push(['Tee times a day', String(inq.teeTimesPerDay)]);
+            if (inq.greenFeeRange) rows.push(['Green fees', inq.greenFeeRange]);
+            if (pricing) rows.push(['Has', pricing.charAt(0).toUpperCase() + pricing.slice(1)]);
+            if (inq.lookingFor?.length) rows.push(['Looking for', inq.lookingFor.join(', ')]);
+            if (inq.pricingNotes) rows.push(['Pricing notes', inq.pricingNotes]);
+            if (inq.additionalNotes) rows.push(['Their question', inq.additionalNotes]);
+            for (const [k, v] of needs) rows.push([NEEDS_LABELS[k] || k, fmtNeedValue(v, NEEDS_VALUES)]);
+            return (
+              <div className="max-w-3xl mt-7">
+                <h2 className="text-[15px] font-semibold text-ink mb-3">What they told us</h2>
+                {rows.length === 0
+                  ? <p className="text-sm text-ink-soft py-4">No inquiry answers on record.</p>
+                  : <Card className="divide-y divide-line-soft">{rows.map(([label, val]) => leadRow(label, val))}</Card>}
+              </div>
+            );
+          })()}
+
+          {/* IC-2 §3: what the latest talked call gave us. */}
+          {activeTab === 'lead' && talkedCall && callAnswerRows.length > 0 && (
+            <div className="max-w-3xl space-y-3 mt-8">
+              <Eyebrow>
+                From the call · {fmtCallTime(talkedCall.scheduledAt)}
+              </Eyebrow>
+              <Card className="divide-y divide-line">
+                {callAnswerRows.map(([label, val]) => (
+                  <div key={label} className="grid grid-cols-[180px_1fr] gap-3 px-4 py-2.5">
+                    <div className="text-xs text-ink-muted pt-0.5">{label}</div>
+                    <div className="text-sm text-ink whitespace-pre-wrap">{val}</div>
+                  </div>
+                ))}
+                {talkedCall.notes && (
+                  <div className="grid grid-cols-[180px_1fr] gap-3 px-4 py-2.5">
+                    <div className="text-xs text-ink-muted pt-0.5">Notes</div>
+                    <div className="text-sm text-ink whitespace-pre-wrap">{talkedCall.notes}</div>
+                  </div>
+                )}
+              </Card>
+            </div>
+          )}
+
+          {/* Sheet tab */}
+          {activeTab === 'sheet' && (
+            <div className="max-w-3xl space-y-7">
+              {!inq.detailsJson && (
+                <p className="text-sm text-ink-soft text-center py-10">No sheet submitted yet.</p>
+              )}
+              {inq.detailsJson && !hasSheet && (
+                <p className="text-sm text-ink-soft text-center py-10">Sheet submitted but appears empty.</p>
+              )}
+
+              {hasSheet && (
+                <>
+                  {/* COURSE_LAYOUT L3: once built, the sheet's layout answers
+                      have a configured counterpart on the course. Link them. */}
+                  {inq.builtCourseId && (
+                    <div className="bg-paper border border-line rounded-lg px-4 py-3 text-sm text-ink-soft flex items-center justify-between gap-3">
+                      <span>These answers were built into a course. The configured layout (nines, products, tee sets) lives on the course&apos;s Setup tab.</span>
+                      <button onClick={() => router.push('/admin/courses/' + inq.builtCourseId)} className="shrink-0 text-xs font-medium text-pine hover:text-pine-hover">Open course →</button>
+                    </div>
+                  )}
+                  {/* Course Basics */}
+                  <SSection title="Course Basics">
+                    <SField label="Holes" value={sd.holes ? String(sd.holes) + '-hole course' : null} amber />
+                    <SField label="Par" value={sd.par ? 'Par ' + String(sd.par) : null} />
+                    <SField label="Season opens" value={sd.seasonOpen ? String(sd.seasonOpen) : null} />
+                    <SField label="Season closes" value={sd.seasonClose ? String(sd.seasonClose) : null} />
+                  </SSection>
+
+                  {/* Playability — 9 holes */}
+                  {shHoles === 9 && (
+                    <SSection title="Playability">
+                      <SField label="Replay for 18?" value={BOOL_LABELS[String(sd.nineReplay || '')] || null} amber />
+                      <SField label="18-hole replay rate" value={fmtMoney(sd.nineReplayFee) || null} />
+                    </SSection>
+                  )}
+
+                  {/* Playability — 18 holes */}
+                  {shHoles === 18 && (
+                    <SSection title="Playability">
+                      <SField label="Can golfers book 9 holes?" value={BOOL_LABELS[String(sd.nineHoleSupport || '')] || null} amber />
+                      {String(sd.nineHoleSupport) === 'yes' && (
+                        <>
+                          <SField label="Which nines can be booked" value={NINE_WHICH_LABELS[String(sd.nineHoleWhich || '')] || null} amber />
+                          <SField label="9-hole green fee" value={fmtMoney(sd.nineHoleFee) || null} />
+                          <SField label="9-hole par" value={sd.nineHolePar ? String(sd.nineHolePar) : null} />
+                        </>
+                      )}
+                    </SSection>
+                  )}
+
+                  {/* Playability — 27 holes */}
+                  {shHoles === 27 && (
+                    <SSection title="Playability">
+                      <SField label="27-hole layout" value={LAYOUT27_LABELS[shLayout27] || null} amber />
+                      {shLayout27 === 'three_9s' && (
+                        <>
+                          <Card className="col-span-2 px-4 py-3">
+                            <div className="text-[13px] font-semibold text-ink mb-1">Nine names</div>
+                            {shNine27Names.every(n => !n.trim())
+                              ? <div className="text-[13px] text-warn font-medium">Not provided</div>
+                              : <div className="flex gap-2 flex-wrap">
+                                  {shNine27Names.map((n, i) => (
+                                    <span key={i} className="bg-paper border border-line px-2.5 py-1 rounded-md text-sm text-ink">{n || 'Nine ' + (i + 1)}</span>
+                                  ))}
+                                </div>
+                            }
+                          </Card>
+                          {/* V7: structured combos */}
+                          {Array.isArray(sd.nine27CombosEnabled) && (sd.nine27CombosEnabled as string[]).length > 0 ? (
+                            <Card className="col-span-2 px-4 py-3">
+                              <div className="text-[13px] font-semibold text-ink mb-1.5">18-hole combos offered</div>
+                              <div className="flex gap-2 flex-wrap">
+                                {(sd.nine27CombosEnabled as string[]).map(k => (
+                                  <span key={k} className="bg-paper border border-line px-2.5 py-1 rounded-md text-sm text-ink">
+                                    {k.replace('+', ' + ')}
+                                    {(sd.nine27ComboNotes as Record<string, string> | undefined)?.[k]
+                                      ? <span className="text-ink-muted text-xs ml-1">— {(sd.nine27ComboNotes as Record<string, string>)[k]}</span>
+                                      : null}
+                                  </span>
+                                ))}
+                              </div>
+                            </Card>
+                          ) : sd.nine27Combos ? (
+                            <SField label="18-hole combos" value={String(sd.nine27Combos)} />
+                          ) : null}
+                          {/* V7: par per nine */}
+                          {sd.nine27ParsPerNine && Object.keys(sd.nine27ParsPerNine as object).length > 0 && (
+                            <Card className="col-span-2 px-4 py-3">
+                              <div className="text-[13px] font-semibold text-ink mb-1.5">Par per nine</div>
+                              <div className="flex gap-3 flex-wrap">
+                                {Object.entries(sd.nine27ParsPerNine as Record<string, string>).map(([name, par]) => (
+                                  <span key={name} className="text-sm text-ink"><span className="text-ink-muted">{name}:</span> {par}</span>
+                                ))}
+                              </div>
+                            </Card>
+                          )}
+                          <SField label="Each nine bookable alone?" value={BOOL_LABELS[String(sd.nine27BookableAlone || '')] || null} />
+                        </>
+                      )}
+                      {shLayout27 === '18_plus_9' && (
+                        <>
+                          <SField label="Can golfers book 9 on the 18?" value={BOOL_LABELS[String(sd.nineHoleSupport || '')] || null} />
+                          {String(sd.nineHoleSupport) === 'yes' && (
+                            <SField label="Which nines" value={NINE_WHICH_LABELS[String(sd.nineHoleWhich || '')] || null} />
+                          )}
+                          <SField label="Separate 9 — name" value={sd.separate9Name ? String(sd.separate9Name) : null} amber />
+                          <SField label="Separate 9 — par" value={sd.separate9Par ? String(sd.separate9Par) : null} />
+                          <SField label="Separate 9 bookable alone?" value={BOOL_LABELS[String(sd.separate9Bookable || '')] || null} />
+                          <SField label="Separate 9 green fee" value={fmtMoney(sd.separate9Fee) || null} />
+                        </>
+                      )}
+                    </SSection>
+                  )}
+
+                  {/* Playability — 36 holes */}
+                  {shHoles === 36 && (
+                    <SSection title="Playability">
+                      <SField label="36-hole layout" value={LAYOUT36_LABELS[shLayout36] || null} amber />
+                      {shCourse36Names.length > 0 && (
+                        <Card className="col-span-2 px-4 py-3">
+                          <div className="text-[13px] font-semibold text-ink mb-1">Course names</div>
+                          {shCourse36Names.every(n => !n.trim())
+                            ? <div className="text-[13px] text-warn font-medium">Not provided</div>
+                            : <div className="flex gap-2 flex-wrap">
+                                {shCourse36Names.map((n, i) => (
+                                  <span key={i} className="bg-paper border border-line px-2.5 py-1 rounded-md text-sm text-ink">{n || 'Course ' + (i + 1)}</span>
+                                ))}
+                              </div>
+                          }
+                        </Card>
+                      )}
+                      <SField label="Layout notes" value={sd.course36LayoutDesc ? String(sd.course36LayoutDesc) : null} />
+                    </SSection>
+                  )}
+
+                  {shScorecards.length > 0 && (
+                    <div>
+                      <Eyebrow className="mb-2">Scorecard ({shScorecards.length})</Eyebrow>
+                      <p className="text-xs text-ink-soft mb-2">Enter the tee sets from this when building — the course sent the card instead of typing them.</p>
+                      <div className="flex gap-2 flex-wrap">
+                        {shScorecards.map((url, i) => (
+                          <a key={url} href={url} target="_blank" rel="noreferrer">
+                            <img src={url} alt={'Scorecard ' + (i + 1)} loading="lazy" className="w-40 h-28 object-cover rounded-md border border-line hover:border-pine/40 transition-colors" />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tee Sets */}
+                  {shTeeSets.length > 0 && shTeeSets.some(ts => ts.name) && (
+                    <div>
+                      <Eyebrow className="mb-2">Tee sets</Eyebrow>
+                      <Card className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b border-line bg-paper">
+                              {['Name', 'Color', 'Designation', 'Yardage', 'Par', 'Rating / Slope'].map(h => (
+                                <th key={h} className="px-4 py-2.5 text-left text-[13px] font-semibold text-ink font-medium">{h}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {shTeeSets.filter(ts => ts.name).map((ts, i) => (
+                              <tr key={i} className={'border-b border-line last:border-b-0 ' + (i % 2 === 0 ? '' : 'bg-paper/40')}>
+                                <td className="px-4 py-2.5 font-medium text-ink">{String(ts.name || '—')}</td>
+                                <td className="px-4 py-2.5 text-ink-muted">{String(ts.color || '—')}</td>
+                                <td className="px-4 py-2.5 text-ink-muted capitalize">{String(ts.designation || '—')}</td>
+                                <td className="px-4 py-2.5 text-ink-muted">{String(ts.yardage || '—')}</td>
+                                <td className="px-4 py-2.5 text-ink-muted">{String(ts.par || '—')}</td>
+                                <td className="px-4 py-2.5 text-ink-muted">
+                                  {ts.rating && ts.slope
+                                    ? String(ts.rating) + ' / ' + String(ts.slope)
+                                    : ts.rating ? String(ts.rating) : ts.slope ? String(ts.slope) : '—'}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </Card>
+                    </div>
+                  )}
+
+                  {/* Tee Sheet Schedule */}
+                  <SSection title="Tee Sheet Schedule">
+                    <SField label="First tee time" value={sd.firstTeeTime ? String(sd.firstTeeTime) : null} amber />
+                    <SField label="Last tee time" value={sd.lastTeeTime ? String(sd.lastTeeTime) : null} amber />
+                    <SField label="Interval" value={sd.intervalMinutes ? String(sd.intervalMinutes) + ' min' : null} />
+                    <SField label="Days open" value={shDaysStr} />
+                    <SField label="Walking policy" value={WALKING_LABELS[String(sd.walkingAllowed || '')] || null} amber />
+                  </SSection>
+
+                  {/* Green Fees */}
+                  <SSection title="Green Fees">
+                    <SField label="Weekday green fee" value={fmtMoney(sd.greenFeeWeekday) || null} amber />
+                    <SField label="Weekend green fee" value={fmtMoney(sd.greenFeeWeekend) || null} amber />
+                    <SField label="Twilight rate" value={fmtMoney(sd.twilightFee) || null} />
+                    <SField label="Cart fee" value={fmtMoney(sd.cartFee) || null} />
+                    {shHoles === 9 && String(sd.nineReplay) === 'yes' && (
+                      <SField label="18-hole replay rate" value={fmtMoney(sd.nineReplayFee) || null} />
+                    )}
+                    {shHoles === 18 && String(sd.nineHoleSupport) === 'yes' && (
+                      <SField label="9-hole green fee" value={fmtMoney(sd.nineHoleFee) || null} />
+                    )}
+                  </SSection>
+
+                  {/* Private: member / public access */}
+                  {inq.courseType === 'private' && (sd.memberAdvanceDays || sd.publicGreenFee || sd.memberRate || sd.outingsVolume) && (
+                    <SSection title="Member &amp; Public Access">
+                      <SField label="Member advance booking" value={sd.memberAdvanceDays ? String(sd.memberAdvanceDays) + ' days' : null} />
+                      <SField label="Protected tee times" value={sd.protectedTimes ? String(sd.protectedTimes) : null} />
+                      <SField label="Non-member green fee" value={fmtMoney(sd.publicGreenFee) || null} />
+                      <SField label="Public booking window" value={sd.publicWindow ? String(sd.publicWindow) : null} />
+                      <SField label="Member rate" value={fmtMoney(sd.memberRate) || null} />
+                      <SField label="Outings frequency" value={sd.outingsVolume ? String(sd.outingsVolume) : null} />
+                    </SSection>
+                  )}
+
+                  {/* Memberships & Passes */}
+                  {shPasses.length > 0 && shPasses.some(p => p.name || p.type) && (
+                    <div>
+                      <Eyebrow className="mb-2">Memberships &amp; passes</Eyebrow>
+                      <div className="space-y-3">
+                        {shPasses.filter(p => p.name || p.type).map((p, i) => {
+                          const isResident = p.type === 'resident_card' || p.type === 'resident_rate';
+                          return (
+                            <Card key={i} className="px-4 py-3">
+                              <div className="text-[13px] font-semibold text-ink mb-1">
+                                {PASS_TYPE_LABEL[String(p.type || '')] || String(p.type || 'Pass')}
+                              </div>
+                              <div className="text-sm font-medium text-ink mb-2">{String(p.name || 'Unnamed')}</div>
+                              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-ink-soft">
+                                {!!p.fee && <span>Fee: {fmtMoney(p.fee)}{p.feePeriod ? ' / ' + String(p.feePeriod) : ''}</span>}
+                                {!!p.includes && <span>Includes: {String(p.includes)}</span>}
+                                {p.perRound === 'yes' && !!p.perRoundFee && <span>Per-round: {fmtMoney(p.perRoundFee)}</span>}
+                                {isResident && !!p.residentWho && <span>Who qualifies: {String(p.residentWho)}</span>}
+                                {isResident && !!p.residentVerifType && <span>Verification: {String(p.residentVerifType)}</span>}
+                                {isResident && !!p.residentCardCost && <span>Card cost: {fmtMoney(p.residentCardCost)}</span>}
+                                {p.type === 'resident_rate' && !!p.residentWeekday && <span>WD rate: {fmtMoney(p.residentWeekday)}</span>}
+                                {p.type === 'resident_rate' && !!p.residentWeekend && <span>WE rate: {fmtMoney(p.residentWeekend)}</span>}
+                                {p.type === 'resident_rate' && !!p.residentTwilight && <span>Twilight: {fmtMoney(p.residentTwilight)}</span>}
+                              </div>
+                            </Card>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Cancellation */}
+                  <SSection title="Cancellation Policy">
+                    <SField label="Charges for late cancel / no-show?" value={BOOL_LABELS[String(sd.cancellationPolicy || '')] || null} amber />
+                    {hasCancelPolicy && (
+                      <>
+                        <SField label="Cancellation window" value={sd.cancellationHours ? String(sd.cancellationHours) + ' hours' : null} amber />
+                        <SField label="Late cancel fee" value={fmtMoney(sd.lateFee) || null} amber />
+                      </>
+                    )}
+                    {noCancel && (
+                      <Card className="col-span-2 px-4 py-3">
+                        <div className="text-[13px] font-semibold text-ink mb-0.5">Note</div>
+                        <div className="text-sm text-ink-soft">No cancellation policy — golfers pay at the course (no card required at booking).</div>
+                      </Card>
+                    )}
+                  </SSection>
+
+                  {/* Facilities */}
+                  {facilityItems.length > 0 && (
+                    <div>
+                      <Eyebrow className="mb-2">Facilities</Eyebrow>
+                      <Card className="divide-y divide-line">
+                        {facilityItems.map((item, i) => (
+                          <div key={i} className="px-4 py-2.5 flex items-start gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-ok/60 mt-1.5 shrink-0" />
+                            <div>
+                              <span className="text-sm font-medium text-ink">{item.label}</span>
+                              {item.detail && <span className="text-sm text-ink-muted ml-2">{item.detail}</span>}
+                            </div>
+                          </div>
+                        ))}
+                      </Card>
+                    </div>
+                  )}
+                  {Object.keys(shFv2).length > 0 && facilityItems.length === 0 && (
+                    <div>
+                      <Eyebrow className="mb-2">Facilities</Eyebrow>
+                      <Card className="px-4 py-3 text-sm text-ink-soft">None selected.</Card>
+                    </div>
+                  )}
+
+                  {/* About */}
+                  <SSection title="About">
+                    <SField label="Course description" value={sd.description ? String(sd.description) : null} amber span2 />
+                    <SField label="Website" value={sd.website ? String(sd.website) : null} />
+                    <SField label="Additional notes" value={sd.additionalNotes ? String(sd.additionalNotes) : null} />
+                    {shPhotos.length > 0 && (
+                      <div className="col-span-2">
+                        <div className="text-[13px] font-semibold text-ink mb-1.5">Photos ({shPhotos.length})</div>
+                        <div className="flex gap-2 flex-wrap">
+                          {shPhotos.map((url, i) => (
+                            <a key={i} href={url} target="_blank" rel="noreferrer">
+                              <img src={url} alt={'Photo ' + (i + 1)} className="w-28 h-20 object-cover rounded-md border border-line hover:border-pine/40 transition-colors" />
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </SSection>
+
+                  {/* Ready-to-build checklist — three states, not just present/missing:
+                      "thin" flags suspicious-but-technically-present content (a
+                      1-character description passes a truthy check but isn't
+                      actually usable) so it doesn't get silently waved through. */}
+                  {(() => {
+                    type CheckState = 'present' | 'thin' | 'missing';
+                    const descLen = String(sd.description || '').trim().length;
+                    const checks: { label: string; state: CheckState }[] = [
+                      { label: 'Weekday green fee', state: fmtMoney(sd.greenFeeWeekday) ? 'present' : 'missing' },
+                      { label: 'Weekend green fee', state: fmtMoney(sd.greenFeeWeekend) ? 'present' : 'missing' },
+                      { label: 'First tee time', state: sd.firstTeeTime ? 'present' : 'missing' },
+                      { label: 'Last tee time', state: sd.lastTeeTime ? 'present' : 'missing' },
+                      { label: 'Cancellation policy', state: sd.cancellationPolicy ? 'present' : 'missing' },
+                      { label: 'Course description', state: descLen === 0 ? 'missing' : descLen < 20 ? 'thin' : 'present' },
+                    ];
+                    const allGood = checks.every(c => c.state === 'present');
+                    const STATE_META: Record<CheckState, { dot: 'ok' | 'warn' | 'bad'; label: string; text: string }> = {
+                      present: { dot: 'ok', label: '', text: 'text-ink' },
+                      thin: { dot: 'warn', label: 'thin — verify before building', text: 'text-warn' },
+                      missing: { dot: 'bad', label: 'missing', text: 'text-bad' },
+                    };
+                    return (
+                      <Card className="p-4">
+                        <div className={'text-[12.5px] font-semibold mb-3 ' + (allGood ? 'text-ok' : 'text-warn')}>
+                          {allGood ? 'Ready to build' : 'Build checklist'}
+                        </div>
+                        <div className="space-y-2">
+                          {checks.map(c => {
+                            const meta = STATE_META[c.state];
+                            return (
+                              <div key={c.label} className="flex items-center gap-2 text-sm">
+                                <StatusDot status={meta.dot}/>
+                                <span className={meta.text}>{c.label}</span>
+                                {meta.label && <span className="text-ink-faint text-xs">{meta.label}</span>}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </Card>
+                    );
+                  })()}
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Activity tab */}
+          {activeTab === 'activity' && (
+            <div className="max-w-3xl space-y-6">
+              {calls.length > 0 && (
+                <div>
+                  <Eyebrow className="mb-3">Calls</Eyebrow>
+                  <Card className="divide-y divide-line">
+                    {calls.map(c => (
+                      <div key={c.id} className="px-4 py-3 flex items-start gap-3">
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm text-ink">{describeCall(c)}</div>
+                          <div className="text-xs text-ink-faint mt-0.5">
+                            {c.direction === 'they_call' ? 'They call us' : 'We call them'}{c.phone ? ' · ' + c.phone : ''}
+                            {c.followUpAt ? ' · follow up ' + fmtDate(c.followUpAt) : ''}
+                          </div>
+                          {c.notes && <div className="text-xs text-ink-soft mt-1 whitespace-pre-wrap">{c.notes}</div>}
+                        </div>
+                      </div>
+                    ))}
+                  </Card>
+                </div>
+              )}
+              {inq.events && inq.events.length > 0 && (
+                <div>
+                  <Eyebrow className="mb-3">History</Eyebrow>
+                  <Card className="divide-y divide-line">
+                    {inq.events.map(ev => {
+                      // Honest attribution: "by Cam" only for admin clicks,
+                      // "Course" for course-originated actions (sheet
+                      // submitted, page approved/changes requested), "System"
+                      // for automatic transitions — never a vague "auto".
+                      const isTransition = ev.fromStatus !== ev.toStatus;
+                      const contactUpdate = ev.fromStatus === 'contact_updated';
+                      const changeDesc = describeChangeEvent(ev.actorName);
+                      // MP-4e encodes the re-submitted payload after the
+                      // marker; without this the ledger would print raw JSON.
+                      const resubPayload = decodeResubmit(ev.actorName);
+                      const isResub = !!ev.actorName?.startsWith(RESUBMIT_ACTOR);
+                      const resubText = !isResub ? null
+                        : resubPayload?.courseName
+                          ? `${RESUBMIT_ACTOR} — “${resubPayload.courseName}”, ${resubPayload.city || ''} ${resubPayload.state || ''}`.trim()
+                          : RESUBMIT_ACTOR;
+                      const changeAddr = decodeChangeAddressed(ev.actorName);
+                      const OVERRIDE_PREFIX = 'Stage overridden by ';
+                      const isOverride = !!ev.actorName?.startsWith(OVERRIDE_PREFIX);
+                      const overrideBy = isOverride ? ev.actorName!.slice(OVERRIDE_PREFIX.length) : null;
+                      const attribution = ev.trigger === 'admin'
+                        ? (changeAddr ? `by ${changeAddr.by}` : overrideBy ? `by ${overrideBy}` : ev.actorName ? `by ${ev.actorName}` : 'by admin')
+                        : ev.trigger === 'course' ? 'Course'
+                        : 'System';
+                      return (
+                        <div key={ev.id} className="px-4 py-3 flex items-start gap-3">
+                          <div className={'w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ' + (
+                            ev.trigger === 'system' ? 'bg-ink-faint' : ev.trigger === 'course' ? 'bg-ok/60' : 'bg-pine/60'
+                          )} />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm text-ink">
+                              {contactUpdate
+                                ? 'Contact info updated'
+                                : isTransition ? (
+                                  <>
+                                    <span>{STATUS_LABEL[ev.fromStatus] || ev.fromStatus}</span>
+                                    <span className="text-ink-muted mx-1.5">→</span>
+                                    <span className="font-medium">{STATUS_LABEL[ev.toStatus] || ev.toStatus}</span>
+                                    {isOverride && <span className="ml-2 text-[12.5px] font-semibold text-warn">Manual override</span>}
+                                  </>
+                                ) : (resubText || changeDesc || ev.actorName || 'Update')}
+                            </div>
+                            <div className="text-xs text-ink-faint mt-0.5">
+                              {(contactUpdate || isTransition) ? attribution + ' · ' : ''}{fmtDate(ev.createdAt)}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </Card>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Notes tab — the founder's working memory. It used to sit under
+              Activity, below a machine-written ledger it has nothing to do
+              with, which is a strange place to keep the one thing on this
+              page a human writes. */}
+          {activeTab === 'notes' && (
+            <div className="max-w-3xl">
+              <Eyebrow className="mb-3">Internal notes</Eyebrow>
+              {inq.adminNotes && (
+                <pre className="text-sm text-ink-soft bg-white rounded-lg shadow-card px-4 py-3 mb-3 whitespace-pre-wrap font-sans">
+                  {inq.adminNotes}
+                </pre>
+              )}
+              {!inq.adminNotes && (
+                <p className="text-sm text-ink-soft mb-3">Nothing written down yet.</p>
+              )}
+              <div className="flex gap-2">
+                <textarea
+                  value={noteText}
+                  onChange={e => setNoteText(e.target.value)}
+                  placeholder="Add a note..."
+                  rows={3}
+                  className="flex-1 bg-white border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 resize-none"
+                />
+                <button
+                  onClick={() => action('add_note', { note: noteText })}
+                  disabled={!noteText.trim() || processing}
+                  className="px-4 py-2 bg-pine hover:bg-pine-hover disabled:opacity-40 text-white text-xs font-medium rounded-md transition-colors self-start"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          )}
+
+        </div>
+      </div>
+
+      {/* Every risky/email-sending action goes through one of these instead of
+          a bare browser confirm() — each states exactly what happens and who
+          gets emailed before firing. */}
+      {pendingAction && (() => {
+        const close = () => { setPendingAction(null); setGoLiveOverride(''); setBuildConfirmText(''); setGoLiveChecks(null); setDeleteCourseConfirm(''); setReminderSent(new Set()); setSnoozeDate(''); setRejectReason(''); setRejectNotify(true); };
+        // Review (no-silent-failures): the modal used to close before the
+        // action resolved, so "Working…" never showed. Await it, then close.
+        const fire = async (fn: () => void | Promise<void>) => { await fn(); close(); };
+        const working = processing || sendingPreview;
+
+        if (pendingAction === 'delete') {
+          // DELETION DOCTRINE (RUN_QUEUE): only reachable for UNBUILT
+          // inquiries now — the trigger buttons are gated on !builtCourseId,
+          // and the server refuses regardless (lifecycle.ts). Typed confirm
+          // is required here too (item 3's fix applies everywhere), shown as
+          // the EXACT copyable string, compared trimmed + case-insensitive —
+          // both here and server-side, so this can never disagree with the
+          // API about what "matches."
+          const expected = inq.courseName;
+          const matches = deleteCourseConfirm.trim().toLowerCase() === expected.trim().toLowerCase();
+          return (
+            <ModalShell title={`Permanently delete "${expected}"?`} danger onClose={close}>
+              <p className="text-sm text-ink-soft mb-3">
+                This cannot be undone — the inquiry and its history are gone for good.
+              </p>
+              <label className="block"><span className="block text-[13px] font-semibold text-bad mb-1">Type &quot;{expected}&quot; to confirm</span>
+              <input value={deleteCourseConfirm} onChange={e => setDeleteCourseConfirm(e.target.value)}
+                className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50 mb-1"/></label>
+              <ModalActions working={working} onCancel={close} onConfirm={() => fire(deleteInquiry)} confirmLabel="Delete permanently" danger
+                disabled={!matches}/>
+            </ModalShell>
+          );
+        }
+        if (pendingAction === 'archive_course') {
+          const activityWarn = courseBookings30d === null
+            ? ' Recent booking activity could not be checked — look at the course page before archiving.'
+            : courseBookings30d > 0
+              ? ` This course has ${courseBookings30d} booking${courseBookings30d !== 1 ? 's' : ''} in the last 30 days — existing bookings and their data are preserved.`
+              : '';
+          return (
+            <ModalShell title={`Archive "${inq.courseName}"?`} onClose={close}>
+              <p className="text-sm text-ink-soft">The course disappears from the public site but data is retained. You can restore it later.{activityWarn}</p>
+              <ModalActions working={working} onCancel={close} onConfirm={() => fire(archiveLiveCourse)} confirmLabel="Archive" disabled={processing}/>
+            </ModalShell>
+          );
+        }
+        if (pendingAction === 'restore_archived') {
+          return (
+            <ModalShell title={`Restore "${inq.courseName}"?`} onClose={close}>
+              <p className="text-sm text-ink-soft">
+                {inq.builtCourseId
+                  ? 'Un-archives the course and returns this inquiry to live.'
+                  : 'Returns this inquiry to its stage before it was archived/rejected.'}
+              </p>
+              <ModalActions working={working} onCancel={close} onConfirm={() => fire(restoreArchivedInquiry)} confirmLabel="Restore" disabled={processing}/>
+            </ModalShell>
+          );
+        }
+        if (pendingAction === 'reject') {
+          return (
+            <ModalShell title={isLead ? 'Close this lead?' : 'Reject this inquiry?'} danger onClose={close}>
+              <p className="text-sm text-ink-soft mb-3">Moves it to Closed.</p>
+              <label className="block"><span className="block text-[13px] font-semibold text-ink mb-1">Why are we losing this one?</span>
+              <select value={rejectReason} onChange={e => { setRejectReason(e.target.value); setRejectNotify(e.target.value !== 'Duplicate'); }} className={iCls}>
+                <option value="">Pick a reason&hellip;</option>
+                {CLOSED_REASONS.map(r => <option key={r} value={r}>{r}</option>)}
+              </select></label>
+              <p className="text-[11px] text-ink-soft mt-1.5">
+                Stored on the inquiry and named in the timeline — this is the only place &quot;why do we lose leads&quot; ever gets answered.
+              </p>
+              {!isLead && <label className="flex items-start gap-2 mt-4 cursor-pointer">
+                <input type="checkbox" checked={rejectNotify} onChange={e => setRejectNotify(e.target.checked)} className="mt-0.5" />
+                <span className="text-xs text-ink-soft">
+                  Email {inq.contactName} that we are not moving forward
+                  <span className="block text-[11px] text-ink-faint mt-0.5">
+                    A short, polite note. It never names the reason above — that stays internal.
+                  </span>
+                </span>
+              </label>}
+              {!isLead && rejectReason === 'Duplicate' && rejectNotify && (
+                <p className="mt-2 text-[11px] text-bad">
+                  This course is already in the pipeline under another inquiry — a decline email would tell them
+                  they have been turned down while we are still onboarding them.
+                </p>
+              )}
+              <ModalActions working={working} onCancel={close} onConfirm={() => fire(() => action('reject', { closedReason: rejectReason, sendEmail: rejectNotify && !isLead }))}
+                confirmLabel={isLead ? 'Close' : 'Reject'} danger disabled={!rejectReason || processing}/>
+            </ModalShell>
+          );
+        }
+        if (pendingAction === 'snooze') {
+          const plus = (d: number) => new Date(Date.now() + d * 86400000).toISOString().slice(0, 10);
+          const chosen = snoozeDate ? new Date(snoozeDate + 'T12:00:00') : null;
+          const valid = !!chosen && !isNaN(chosen.getTime()) && chosen.getTime() > Date.now();
+          return (
+            <ModalShell title="Snooze this inquiry?" onClose={close}>
+              <p className="text-sm text-ink-soft mb-3">
+                It drops out of the work queue until this date, then comes back as an overdue follow-up.
+                If the course fills the interest form again in the meantime, the snooze breaks and it returns straight away.
+              </p>
+              <label className="block"><span className="block text-[13px] font-semibold text-ink mb-1">Come back on</span>
+              <input type="date" value={snoozeDate} min={plus(1)} onChange={e => setSnoozeDate(e.target.value)} className={iCls} /></label>
+              <div className="flex items-center gap-2 mt-2">
+                {[7, 14, 30, 90].map(d => (
+                  <button key={d} onClick={() => setSnoozeDate(plus(d))}
+                    className="text-[11px] text-ink-muted hover:text-ink border border-line rounded-md px-2 py-1 transition-colors">
+                    +{d}d
+                  </button>
+                ))}
+              </div>
+              <ModalActions working={working} onCancel={close}
+                onConfirm={() => fire(() => action('snooze', { until: (chosen as Date).toISOString() }))}
+                confirmLabel="Snooze" disabled={!valid || processing}/>
+            </ModalShell>
+          );
+        }
+        if (pendingAction === 'create_draft') {
+          return (
+            <ModalShell title="Create draft course?" onClose={close}>
+              <p className="text-sm text-ink-soft">Builds a draft course for <strong>{inq.courseName}</strong> from their submitted sheet. No email is sent — you'll review it before anything goes live.</p>
+              <ModalActions working={working} onCancel={close} onConfirm={() => fire(() => createDraftCourse())} confirmLabel="Create Draft Course" disabled={processing}/>
+            </ModalShell>
+          );
+        }
+        if (pendingAction === 'send_sheet' || pendingAction === 'resend_sheet') {
+          const isResend = pendingAction === 'resend_sheet';
+          return (
+            <ModalShell title={isResend ? 'Resend the setup sheet?' : 'Send the setup sheet?'} onClose={close}>
+              <p className="text-sm text-ink-soft">
+                Sends the setup-sheet link to <strong>{inq.contactName}</strong> at <strong>{inq.email}</strong>. They'll fill in course details, pricing, and policies for us to build from.
+              </p>
+              <ModalActions working={working} onCancel={close} onConfirm={() => fire(() => action(isResend ? 'resend_details' : 'request_details'))} confirmLabel={isResend ? 'Resend sheet' : 'Send sheet'} disabled={processing}/>
+            </ModalShell>
+          );
+        }
+        if (pendingAction === 'dashboard_access') {
+          return (
+            <ModalShell title="Send dashboard access?" onClose={close}>
+              <p className="text-sm text-ink-soft">
+                Emails <strong>{inq.contactName}</strong> at <strong>{inq.email}</strong> a single-use “Set your password” link (good for 7 days) to their operator dashboard. If they already sign in, they get a note that their page is in the dashboard and their sign-in is not touched.
+              </p>
+              <ModalActions working={working} onCancel={close} onConfirm={() => fire(() => action('send_dashboard_access'))} confirmLabel="Send Access" disabled={processing}/>
+            </ModalShell>
+          );
+        }
+        if (pendingAction === 'send_preview') {
+          return (
+            <ModalShell title={previewSentEvent ? 'Send updated preview?' : 'Send preview + dashboard access?'} onClose={close}>
+              <p className="text-sm text-ink-soft mb-2">
+                Sends ONE email to <strong>{inq.contactName}</strong> at <strong>{inq.email}</strong> containing:
+              </p>
+              <ul className="text-sm text-ink-soft list-disc pl-5 mb-3 space-y-1">
+                <li>A link to preview their built course page, so they can approve it or request changes before going live</li>
+                <li>A “Set your password” link if they haven’t signed in yet; otherwise nothing about their sign-in changes</li>
+              </ul>
+              <ModalActions working={working} onCancel={close} onConfirm={() => fire(sendPreview)} confirmLabel="Send Preview" disabled={sendingPreview}/>
+            </ModalShell>
+          );
+        }
+        if (pendingAction === 'build_without_sheet') {
+          const canConfirm = buildConfirmText.trim().toUpperCase() === 'BUILD';
+          return (
+            <ModalShell title="Build without sheet?" danger onClose={close}>
+              <p className="text-sm text-ink-soft mb-3">
+                No setup sheet was submitted — this builds a draft course for <strong>{inq.courseName}</strong> from the inquiry answers alone. It immediately:
+              </p>
+              <ul className="text-sm text-ink-soft list-disc pl-5 mb-3 space-y-1">
+                <li>Emails a “Set your password” link to <strong>{inq.email}</strong></li>
+                <li>Attempts to create a Stripe Connect account for the course</li>
+              </ul>
+              <label className="block"><span className="block text-[13px] font-semibold text-bad mb-1">Type BUILD to confirm</span>
+              <input value={buildConfirmText} onChange={e => setBuildConfirmText(e.target.value)}
+                className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50" placeholder="BUILD"/></label>
+              <ModalActions working={working} onCancel={close} onConfirm={() => fire(() => action('build_course'))} confirmLabel="Build & Email" danger disabled={!canConfirm || processing}/>
+            </ModalShell>
+          );
+        }
+        if (pendingAction === 'go_live') {
+          // STRIPE RULE FINAL + AGREEMENT = GO-LIVE GATE (RUN_QUEUE) — exactly
+          // two absolutes, no override, ever. Everything else stays advisory
+          // (typed-confirm override still applies to those, unchanged).
+          const absoluteFailing = goLiveChecks?.filter(c => c.absolute && !c.ok) ?? [];
+          const advisoryFailing = goLiveChecks?.filter(c => !c.absolute && !c.ok) ?? [];
+          const blocked = !!goLiveChecks && absoluteFailing.length > 0;
+          const allOk = !!goLiveChecks && absoluteFailing.length === 0 && advisoryFailing.length === 0;
+          // item 3's fix — trimmed + case-insensitive, same as every other
+          // typed-confirm in the app. Only ever reachable for advisory checks.
+          const canConfirm = !!goLiveChecks && !blocked && (allOk || goLiveOverride.trim().toLowerCase() === inq.courseName.trim().toLowerCase());
+          return (
+            <ModalShell title={`Go live: ${inq.courseName}?`} danger={!!goLiveChecks && !allOk} onClose={close}>
+              <p className="text-xs text-ink-soft mb-3">Makes the course bookable by golfers immediately.</p>
+              {!goLiveChecks ? (
+                <p className="text-xs text-ink-soft">Checking readiness…</p>
+              ) : (
+                <div className="space-y-1.5 mb-1">
+                  {goLiveChecks.map(c => (
+                    <div key={c.key} className="flex items-center gap-2 text-sm">
+                      <StatusDot status={c.ok ? 'ok' : 'bad'}/>
+                      <span className={c.ok ? 'text-ink' : 'text-bad'}>{c.label}{c.absolute && !c.ok ? ' — required, no exceptions' : ''}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {blocked && (
+                <div className="mt-3 space-y-2">
+                  {absoluteFailing.map(c => (
+                    <div key={c.key} className="flex items-center justify-between gap-2 bg-bad/5 border border-bad/20 rounded-md px-3 py-2">
+                      <span className="text-xs text-bad">
+                        {c.key === 'agreement' ? 'Operator must accept the agreement — send them a reminder' : 'Connect Stripe to go live — send them a reminder'}
+                      </span>
+                      <button
+                        onClick={() => sendGoLiveReminder(c.key as 'agreement' | 'stripe')}
+                        disabled={reminderSending === c.key || reminderSent.has(c.key)}
+                        className="shrink-0 text-xs font-medium px-2.5 py-1 rounded-md bg-white border border-bad/30 text-bad hover:bg-bad/5 transition-colors disabled:opacity-50"
+                      >
+                        {reminderSending === c.key ? 'Sending…' : reminderSent.has(c.key) ? 'Sent' : 'Send reminder'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {!blocked && goLiveChecks && advisoryFailing.length > 0 && (
+                <div className="mt-3">
+                  <label className="block"><span className="block text-[13px] font-semibold text-bad mb-1">
+                    Type &quot;{inq.courseName}&quot; to override and go live anyway
+                  </span>
+                  <input value={goLiveOverride} onChange={e => setGoLiveOverride(e.target.value)}
+                    className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50"/></label>
+                </div>
+              )}
+              <ModalActions
+                working={working}
+                onCancel={close}
+                onConfirm={() => fire(() => action('mark_live'))}
+                confirmLabel={blocked ? 'Blocked' : allOk ? 'Go live' : 'Override & go live'}
+                danger={!allOk}
+                disabled={!goLiveChecks || blocked || !canConfirm || processing}
+              />
+            </ModalShell>
+          );
+        }
+        return null;
+      })()}
+    </div>
+  );
+}
+
+export default function InquiryDetailPage() {
+  return (
+    <Suspense fallback={null}>
+      <InquiryDetailInner />
+    </Suspense>
+  );
+}
