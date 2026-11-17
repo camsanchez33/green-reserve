@@ -7,7 +7,7 @@ import { recordMove } from '../src/lib/money-ledger';
 import { dayStart } from '../src/lib/ledger-view';
 import { allSegments } from '../src/lib/revenue-extras';
 import { computeAnalytics, previousRange } from '../src/lib/analytics';
-import { ledgerHeadline, noShowReport, stockValue, shopLedgerCents } from '../src/lib/analytics-page';
+import { ledgerHeadline, noShowReport, stockValue, shopLedgerCents, projections } from '../src/lib/analytics-page';
 
 const TAG = 'anpagedbtest';
 let failed = 0;
@@ -116,6 +116,13 @@ async function cleanup() {
   ok('cost where known', s.costValueCents === 3 * 4000 && s.costUnknownItems === 1, s);
   ok('not selling: the jacket last sold in February; balls sold in May', s.notSelling.length === 1 && s.notSelling[0].name === 'Rain jacket' && s.notSelling[0].lastSoldAt === new Date('2031-02-01T15:00:00Z').toISOString(), s.notSelling);
   ok('shop revenue is the ledger\'s shop + food & beverage (Revenue\'s split)', (await shopLedgerCents(c.id, range, now)) === revenueAll.segments.shopCents + revenueAll.segments.fnbCents && revenueAll.segments.shopCents + revenueAll.segments.fnbCents === 1000);
+
+  // ── Projections ──
+  const p = (await projections(c.id, now))!;
+  const lastRange = { from: p.last.from, to: p.last.to };
+  const lastAll = await allSegments(c.id, tz, lastRange, previousRange(lastRange), now);
+  ok('projections: the last 30 days\' revenue is the ledger\'s tee + cart', p.last.teeRevenueCents === lastAll.segments.teeCents + lastAll.segments.cartCents && p.last.teeRevenueCents > 0, { p: p.last, l: lastAll.segments });
+  ok('projections: from the course\'s today, 7 days listed', p.today === '2031-05-31' && p.week.length === 7, p);
 
   await cleanup();
   await prisma.$disconnect();

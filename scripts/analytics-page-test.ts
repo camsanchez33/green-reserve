@@ -2,7 +2,7 @@
 // cancel lead buckets, refill pairing, how a booking was made, the no-show report, stock value —
 // and that the routes are gated and read the ledger. No database. Run: npx tsx scripts/analytics-page-test.ts
 import { readFileSync } from 'fs';
-import { leadOf, howOf, refillsOf, noShowOf, stockOf, type NsBooking } from '../src/lib/analytics-page';
+import { leadOf, howOf, refillsOf, noShowOf, stockOf, projectionsOf, type NsBooking } from '../src/lib/analytics-page';
 
 let failed = 0;
 const ok = (l: string, c: boolean, d: unknown = '') => { console.log(`${c ? 'PASS' : 'FAIL'}  ${l}${c ? '' : ' — ' + JSON.stringify(d)}`); if (!c) failed++; };
@@ -96,9 +96,34 @@ const bk = (o: Partial<NsBooking> & { id: string }): NsBooking => ({
   ok('staff never get cost', staff.costValueCents === undefined && staff.notSelling.every(i => !('costValueCents' in i)) && staff.notSellingCostCents === undefined, staff);
 }
 
+// ── Projections ──
+{
+  // Today Wed 2031-06-11. The same Tuesday the last four weeks: 8 booked by 7 days out, 20 by the day.
+  const today = '2031-06-11';
+  const nowMs = Date.parse('2031-06-11T12:00:00Z');
+  const slot = (date: string, players: { n: number; madeDaysBefore: number; cancelled?: boolean }[], o: { status?: string; offered?: number; time?: string } = {}) => ({
+    date, time: o.time ?? '08:00', status: o.status ?? 'available', playersAvailable: o.offered ?? 40,
+    bookings: players.map(p => ({ players: p.n, status: p.cancelled ? 'cancelled' : 'confirmed', createdAt: new Date(Date.parse(date + 'T08:00:00Z') - p.madeDaysBefore * 86400000), cancelledAt: p.cancelled ? new Date(Date.parse(date + 'T08:00:00Z') - 86400000) : null })),
+  });
+  const addD = (d: string, n: number) => new Date(Date.parse(d + 'T12:00:00Z') + n * 86400000).toISOString().slice(0, 10);
+  const slots = [] as ReturnType<typeof slot>[];
+  for (let k = 1; k <= 4; k++) slots.push(slot(addD('2031-06-17', -7 * k), [{ n: 8, madeDaysBefore: 10 }, { n: 12, madeDaysBefore: 2 }]));
+  slots.push(slot('2031-06-17', [{ n: 6, madeDaysBefore: 10 }]));            // six days out: 6 booked, usual by now 8
+  slots.push(slot('2031-06-12', [{ n: 4, madeDaysBefore: 10 }], { offered: 10, time: '13:00' })); // a short day
+  const p = projectionsOf(slots, new Set(['2031-06-13']), today, nowMs, 160000);
+  const day = (d: string) => p.week.find(x => x.date === d) ?? null;
+  ok('the next 7 days', p.week.length === 7 && p.week[0].date === today, p.week.map(d => d.date));
+  ok('six days out: booked 6, usual by now 8 → behind, expected 6 + the usual 12 still to come', day('2031-06-17')?.booked === 6 && day('2031-06-17')?.usualByNow === 8 && day('2031-06-17')?.expected === 18 && day('2031-06-17')?.status === 'behind', day('2031-06-17'));
+  ok('a closed day (blackout) is closed with no spots', day('2031-06-13')?.status === 'closed' && day('2031-06-13')?.offered === 0, day('2031-06-13'));
+  ok('last 30 days: the four past Tuesdays, 20 players each', p.last.players === 80 && p.last.offered === 160, p.last);
+  ok('revenue next = expected players × ledger tee money per player (an estimate)', p.next.teeRevenueCents === Math.round(p.next.players * 2000), { next: p.next });
+  ok('Jun 24, Jul 1 and Jul 8 (no tee times yet) come from the usual final count, 20 each', p.next.players === 4 + 18 + 20 * 3, p.next);
+  ok('the change line', p.change.playersPct === Math.round(((p.next.players - 80) / 80) * 1000) / 10, p.change);
+}
+
 // ── Routes: gated, this course, ledger money ──
 const read = (f: string) => readFileSync(f, 'utf8');
-for (const f of ['src/app/api/operator/analytics/no-shows/route.ts', 'src/app/api/operator/analytics/shop/route.ts', 'src/app/api/operator/analytics/route.ts']) {
+for (const f of ['src/app/api/operator/analytics/no-shows/route.ts', 'src/app/api/operator/analytics/projections/route.ts', 'src/app/api/operator/analytics/shop/route.ts', 'src/app/api/operator/analytics/route.ts']) {
   const s = read(f);
   ok(`${f}: signed in, analytics.view, the session's course`, s.includes('resolveDashboardSession()') && s.includes("requirePermission(session, 'analytics.view')") && s.includes('session.courseId'));
 }

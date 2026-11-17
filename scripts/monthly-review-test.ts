@@ -18,6 +18,7 @@ async function cleanup() {
   const courses = await prisma.course.findMany({ where: { slug: { startsWith: TAG } }, select: { id: true } });
   const courseId = { in: courses.map(c => c.id) };
   await prisma.monthlyReview.deleteMany({ where: { courseId } });
+  await prisma.moneyMove.deleteMany({ where: { courseId } });
   await prisma.booking.deleteMany({ where: { courseId } });
   await prisma.teeTime.deleteMany({ where: { courseId } });
   await prisma.course.deleteMany({ where: { slug: { startsWith: TAG } } });
@@ -46,6 +47,12 @@ async function seedCourse(firstWentLiveAt: Date) {
       status: 'completed', paymentStatus: 'paid', checkedInAt: new Date(`${date}T09:00:00Z`),
     } });
   }
+  // The ledger (Analytics page, Cam 2026-11-17): September's money as paid — a round paid on Sep 12 and
+  // dues on Sep 3 (the course's part: GreenReserve's fee out). August has none: its rounds are tee-date only.
+  await prisma.moneyMove.createMany({ data: [
+    { courseId: course.id, what: 'round', direction: 'in', method: 'card', account: 'course', amountCents: 10300, platformFeeCents: 300, at: new Date('2026-09-12T10:00:00Z') },
+    { courseId: course.id, what: 'dues', direction: 'in', method: 'card', account: 'course', amountCents: 25000, platformFeeCents: 0, at: new Date('2026-09-03T10:00:00Z') },
+  ] });
   return course.id;
 }
 
@@ -95,6 +102,14 @@ async function main() {
   check('September is not a baseline', sepRow?.isBaseline === false);
   check('September is given the August baseline', f?.baseline?.month === 'August 2026');
   check('September is given last month', f?.lastMonth?.month === 'August 2026');
+  // Money is the ledger's (the Revenue page's figure), never lib/analytics.ts sums.
+  const ff = seen as { thisMonth?: Record<string, unknown>; lastMonth?: { change?: Record<string, unknown> }; revenueStillOwedDollars?: unknown } | null;
+  check('September revenue is the ledger: $100 round + $250 dues', ff?.thisMonth?.revenueDollars === 350 && ff?.thisMonth?.duesDollars === 250 && ff?.thisMonth?.teeAndCartDollars === 100, JSON.stringify(ff?.thisMonth));
+  check('no tee-date money in the facts', ff?.thisMonth?.collectedDollars === undefined && ff?.thisMonth?.expectedDollars === undefined && ff?.revenueStillOwedDollars === undefined);
+  check('the change on last month is ledger money (August had none)', ff?.lastMonth?.change?.revenueDollars === 350, JSON.stringify(ff?.lastMonth?.change));
+  const area = (sepRow?.metrics as { byArea?: { key: string; thisMonth: number | null; lastMonth: number | null }[] } | null)?.byArea ?? [];
+  const rev = area.find(a => a.key === 'revenue');
+  check('By area is stored with the report, revenue from the ledger', area.length === 5 && rev?.thisMonth === 35000 && rev?.lastMonth === 0, JSON.stringify(area));
 
   // 5. Invented numbers never reach the stored review.
   const course2 = await seedCourse(new Date('2026-07-15T12:00:00Z'));
