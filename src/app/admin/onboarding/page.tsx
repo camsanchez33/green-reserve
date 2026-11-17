@@ -333,7 +333,7 @@ function OnboardingContent() {
         )}
 
         <div className={s.foot}>
-          <Link href="/admin/inquiries">{FOOT_PIPELINE}</Link>
+          <Link href="/admin/inquiries/all">{FOOT_PIPELINE}</Link>
           {d?.support && <a href="/api/admin/inquiries?format=csv">{FOOT_CSV}</a>}
         </div>
       </main>

@@ -316,7 +316,8 @@ function InquiryDetailInner() {
   // search the founder was looking at.
   const backTab = searchParams.get('tab') || '';
   const backSearch = searchParams.get('q') || '';
-  const backUrl = '/admin/inquiries' + (backTab || backSearch
+  // A tab or search means it came from the old board (/admin/inquiries/all since Inquiries became outreach only).
+  const backUrl = (backTab || backSearch ? '/admin/inquiries/all' : '/admin/inquiries') + (backTab || backSearch
     ? '?' + new URLSearchParams(
         Object.fromEntries([
           backTab && ['tab', backTab],

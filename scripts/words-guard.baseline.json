@@ -25,7 +25,7 @@
   "src/app/admin/groups/page.tsx": 159,
   "src/app/admin/inquiries/AddCourse.tsx": 179,
   "src/app/admin/inquiries/[id]/InquiryRecord.tsx": 1662,
-  "src/app/admin/inquiries/[id]/OutreachCourse.tsx": 352,
+  "src/app/admin/inquiries/[id]/OutreachCourse.tsx": 355,
   "src/app/admin/inquiries/all/page.tsx": 475,
   "src/app/admin/layout.tsx": 0,
   "src/app/admin/login/page.tsx": 51,

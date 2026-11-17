@@ -269,7 +269,7 @@ function InquiriesListInner() {
     if (nextTab) p.set('tab', nextTab);
     if (search) p.set('q', search);
     const qs = p.toString();
-    window.history.replaceState(null, '', '/admin/inquiries' + (qs ? '?' + qs : ''));
+    window.history.replaceState(null, '', '/admin/inquiries/all' + (qs ? '?' + qs : ''));
   }
 
   // One signal per inquiry per render pass, from one `now` — two rows must

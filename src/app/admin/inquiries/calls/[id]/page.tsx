@@ -64,18 +64,43 @@ function CallPage({ k, reload }: { k: Call; reload: () => void }) {
   // A note box shows for the items picked for the agenda (or already noted); the rest open on "Add a note".
   const [shown, setShown] = useState<Set<string>>(() => new Set(k.agenda.filter(a => a.onAgenda || a.note.trim()).map(a => a.key)));
   const [save, setSave] = useState<{ state: 'idle' | 'saving' | 'saved' | 'error'; msg?: string }>({ state: 'idle' });
+  // What's typed but not yet sent. One save runs at a time (the route rewrites the whole notes blob), and a save that
+  // finds more waiting when it returns runs again; "Saved" shows only when nothing is waiting. Leaving the page (a link,
+  // Back, closing the tab) sends what's waiting with keepalive, so a note is never dropped.
   const dirty = useRef<{ agenda: Record<string, string>; notes?: string }>({ agenda: {} });
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const running = useRef(false);
+  const url = `/api/admin/outreach/calls/${encodeURIComponent(k.id)}`;
+  const pending = () => Object.keys(dirty.current.agenda).length > 0 || dirty.current.notes !== undefined;
+  const body = (d: { agenda: Record<string, string>; notes?: string }) => ({ action: 'save_notes', agendaNotes: d.agenda, ...(d.notes !== undefined ? { notes: d.notes } : {}) });
   const flush = useCallback(async () => {
+    if (running.current || !pending()) return;
+    running.current = true;
     const d = dirty.current; dirty.current = { agenda: {} };
-    if (!Object.keys(d.agenda).length && d.notes === undefined) return;
     setSave({ state: 'saving' });
-    const res = await api(`/api/admin/outreach/calls/${encodeURIComponent(k.id)}`, { method: 'POST', body: { action: 'save_notes', agendaNotes: d.agenda, ...(d.notes !== undefined ? { notes: d.notes } : {}) } });
-    if (res.ok) setSave({ state: 'saved' });
-    else { dirty.current = { agenda: { ...d.agenda, ...dirty.current.agenda }, notes: dirty.current.notes ?? d.notes }; setSave({ state: 'error', msg: res.error }); }
-  }, [k.id]);
-  const queue = () => { if (timer.current) clearTimeout(timer.current); timer.current = setTimeout(flush, 1000); };
-  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+    const res = await api(url, { method: 'POST', body: body(d) });
+    running.current = false;
+    if (!res.ok) {
+      dirty.current = { agenda: { ...d.agenda, ...dirty.current.agenda }, notes: dirty.current.notes ?? d.notes };
+      setSave({ state: 'error', msg: res.error });
+      return;
+    }
+    if (pending()) { flush(); return; }
+    setSave({ state: 'saved' });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [url]);
+  const queue = () => { if (timer.current) clearTimeout(timer.current); setSave(v => (v.state === 'saved' ? { state: 'idle' } : v)); timer.current = setTimeout(flush, 1000); };
+  useEffect(() => {
+    const leave = () => {
+      if (timer.current) { clearTimeout(timer.current); timer.current = null; }
+      if (!pending()) return;
+      const d = dirty.current; dirty.current = { agenda: {} };
+      try { fetch(url, { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body(d)) }); } catch { /* the tab is closing */ }
+    };
+    window.addEventListener('pagehide', leave);
+    return () => { window.removeEventListener('pagehide', leave); leave(); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [url]);
   const editNote = (key: string, v: string) => { setNotes(n => ({ ...n, [key]: v })); dirty.current.agenda[key] = v; queue(); };
   const editGeneral = (v: string) => { setGeneral(v); dirty.current.notes = v; queue(); };
 
@@ -83,6 +108,7 @@ function CallPage({ k, reload }: { k: Call; reload: () => void }) {
   const [result, setResult] = useState<Result | null>(null);
   const [nextStep, setNextStep] = useState('');
   const [when, setWhen] = useState(todayInput(7));
+  const pickResult = (v: Result) => { setResult(v); setLogErr(''); setWhen(todayInput(v === 'not_now' ? 120 : 7)); };
   const [email, setEmail] = useState('');
   const [needEmail, setNeedEmail] = useState(false);
   const [logBusy, setLogBusy] = useState(false);
@@ -124,7 +150,7 @@ function CallPage({ k, reload }: { k: Call; reload: () => void }) {
             <div className={iq.st}><b>Agenda</b>
               {open && <span className={iq.right} role="status">{save.state === 'saving' ? 'Saving…' : save.state === 'saved' ? 'Saved' : ''}</span>}
             </div>
-            {save.state === 'error' && <div style={{ padding: '0 12px' }}><Msg ok={false}>Notes not saved: {save.msg}</Msg></div>}
+            {save.state === 'error' && <div style={{ padding: '0 12px' }}><Msg ok={false}>Notes not saved: {save.msg} <button type="button" className={s.lnk} onClick={flush}>Try again</button></Msg></div>}
             {k.agenda.map(a => (
               <div key={a.key} className={iq.ag}>
                 <div><b>{a.label}</b>{a.onAgenda && <span className={iq.on}>On the agenda</span>}
@@ -160,7 +186,7 @@ function CallPage({ k, reload }: { k: Call; reload: () => void }) {
             ) : open ? (
               <>
                 <div className={iq.out} role="group" aria-label="Outcome">
-                  {RESULTS.map(([v, l]) => <button key={v} type="button" aria-pressed={result === v} onClick={() => { setResult(v); setLogErr(''); }}>{l}</button>)}
+                  {RESULTS.map(([v, l]) => <button key={v} type="button" aria-pressed={result === v} onClick={() => pickResult(v)}>{l}</button>)}
                 </div>
                 <div className={iq.g2}>
                   <label className={iq.f}>Next step<input value={nextStep} maxLength={300} onChange={e => setNextStep(e.target.value)} /></label>

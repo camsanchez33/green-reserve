@@ -163,7 +163,7 @@ export default function AdminOverview() {
                 </Link>
               )}
               {d.onboarding && (
-                <Link href="/admin/inquiries" className={`${g.glass} ${g.kpi}`}>
+                <Link href="/admin/onboarding" className={`${g.glass} ${g.kpi}`}>
                   <span className={g.kpiL}>Waiting to onboard</span>
                   <span className={g.kpiV}>{whole(d.onboarding.waiting)}</span>
                   <span className={g.kpiC}>{d.onboarding.stuck > 0

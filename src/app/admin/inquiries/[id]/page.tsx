@@ -21,7 +21,7 @@ function Pick() {
     setR(await api<Course>(`/api/admin/outreach/${encodeURIComponent(id)}`));
     setBusy(false);
   }, [id]);
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { setR(null); load(); }, [load]);
 
   // Not in outreach (or not found here): the record page decides, with its own loading and errors.
   if (r && ((r.ok && !r.data.inOutreach) || (!r.ok && r.status === 404))) return <InquiryRecord />;

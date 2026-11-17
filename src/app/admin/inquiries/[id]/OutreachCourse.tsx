@@ -75,12 +75,14 @@ export function OutreachCourse({ course: c, reload }: { course: Course; reload: 
     : n.key === 'close_no_reply' ? { label: 'Not now', run: () => setPop('notnow') }
     : { label: 'Log a call or visit', run: () => logTouch('call', 'out') };
 
+  const firstThree = new Set(c.touches.filter(t => t.channel === 'email' && t.direction === 'out').sort((a, z) => a.at.localeCompare(z.at)).slice(0, 3).map(t => t.id));
   const history = [
     ...c.calls.map(k => ({ at: k.scheduledAt, el: (
       <Link key={'c' + k.id} href={`/admin/inquiries/calls/${k.id}`} className={iq.h}><b>Call</b>
         <span>{whenLabel(k.scheduledAt)} · {k.outcome === 'scheduled' ? 'upcoming' : k.resultLabel ?? k.outcome.replace(/_/g, ' ')}{k.nextStep ? ` · ${k.nextStep}` : ''}</span><em>Open</em></Link>
     ) })),
-    ...c.touches.filter(t => t.channel !== 'email' || t.direction === 'in').map(t => ({ at: t.at, el: (
+    // Emails 1–3 have their own rows; any other email we sent, or one logged with a note, shows here too.
+    ...c.touches.filter(t => t.channel !== 'email' || t.direction === 'in' || t.note || !firstThree.has(t.id)).map(t => ({ at: t.at, el: (
       <div key={'t' + t.id} className={iq.h}><b>{TOUCH_LABEL[t.channel] ?? t.channel}</b>
         <span>{dateLabel(t.at)} · {t.direction === 'in' ? 'they reached us' : 'we reached out'}{t.note ? ` · ${t.note}` : ''}</span><em>{t.adminName ?? ''}</em></div>
     ) })),
@@ -139,7 +141,7 @@ export function OutreachCourse({ course: c, reload }: { course: Course; reload: 
             {c.contacts.map((p, i) => (
               <div key={p.id ?? `inq-${i}`} className={iq.pc}>
                 <div className={iq.pch}><b>{p.name || 'No name'}</b>{p.decisionMaker && <span className={iq.dm}>Decides</span>}
-                  {canWrite && <span className={iq.right}><button type="button" className={s.lnk} onClick={() => setPop({ contact: p })}>Edit</button></span>}</div>
+                  {canWrite && p.id && <span className={iq.right}><button type="button" className={s.lnk} onClick={() => setPop({ contact: p })}>Edit</button></span>}</div>
                 {p.role && <small>{p.role}</small>}
                 {(p.email || p.phone) && <div className={iq.pcl}>{p.email && <a href={`mailto:${p.email}`}>{p.email}</a>}{p.phone && <span>{p.phone}</span>}</div>}
                 {(p.preferredChannel || p.bestTime) && <small>{['Best by ' + (p.preferredChannel || 'any way'), p.bestTime].filter(Boolean).join(', ')}</small>}
@@ -166,7 +168,7 @@ export function OutreachCourse({ course: c, reload }: { course: Course; reload: 
       </div>
 
       {pop === 'snooze' && <Snooze id={c.id} onClose={() => setPop(null)} onDone={done} />}
-      {pop === 'touch' && <LogTouch id={c.id} preset={touchPreset} onClose={() => setPop(null)} onDone={done} />}
+      {pop === 'touch' && <LogTouch id={c.id} preset={touchPreset} title={touchPreset.channel === 'email' ? 'Log your reply' : 'Log a call or visit'} onClose={() => setPop(null)} onDone={done} />}
       {pop === 'notnow' && <NotNow id={c.id} onClose={() => setPop(null)} onDone={() => { setPop(null); router.push('/admin/inquiries'); }} />}
       {pop === 'saidyes' && <SaidYes id={c.id} name={c.courseName} onClose={() => setPop(null)} onDone={href => { setPop(null); router.push(href); }} />}
       {pop === 'note' && <AddNote id={c.id} onClose={() => setPop(null)} onDone={done} />}
@@ -222,7 +224,7 @@ function Snooze({ id, onClose, onDone }: { id: string; onClose: () => void; onDo
   );
 }
 
-function LogTouch({ id, preset, onClose, onDone }: { id: string; preset: { channel: string; direction: string }; onClose: () => void; onDone: (m: string) => void }) {
+function LogTouch({ id, preset, title, onClose, onDone }: { id: string; preset: { channel: string; direction: string }; title: string; onClose: () => void; onDone: (m: string) => void }) {
   const [channel, setChannel] = useState(preset.channel);
   const [direction, setDirection] = useState(preset.direction);
   const [d, setD] = useState(todayInput());
@@ -230,7 +232,7 @@ function LogTouch({ id, preset, onClose, onDone }: { id: string; preset: { chann
   const p = usePost();
   return (
     <Dialog labelId="iq-t-t" onClose={onClose} busy={p.busy}>
-      <h4 id="iq-t-t">Log a call or visit</h4>
+      <h4 id="iq-t-t">{title}</h4>
       <div className={iq.g2} style={{ padding: 0 }}>
         <label className={iq.f}>How<select value={channel} onChange={e => setChannel(e.target.value)}>{Object.entries(TOUCH_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></label>
         <label className={iq.f}>Who reached out<select value={direction} onChange={e => setDirection(e.target.value)}><option value="out">We did</option><option value="in">They did</option></select></label>
@@ -367,13 +369,23 @@ function EditFacts({ c, onClose, onDone }: { c: Course; onClose: () => void; onD
       </div>
       <Foot {...p} onClose={onClose} label="Save" ok={async () => {
         if (!f.courseName.trim() || !f.city.trim()) { p.setErr('Course name and town are needed.'); return; }
-        const facts = {
+        // Numbers go as typed, so the server's own message shows for "eighteen"; only what changed is sent, so the
+        // course's history records just those fields.
+        const next: Record<string, unknown> = {
           courseName: f.courseName.trim(), city: f.city.trim(), state: f.state.trim(), address: f.address.trim(), website: f.website.trim(), coursePhone: f.coursePhone.trim(),
-          holes: f.holes.trim() ? Number(f.holes) : null, ownerType: f.ownerType || null, currentBookingMethod: f.currentBookingMethod,
+          holes: f.holes.trim() || null, ownerType: f.ownerType || null, currentBookingMethod: f.currentBookingMethod,
           currentSoftware: f.currentSoftware.trim(), softwareContractEnds: f.softwareContractEnds.trim(), greenFeeRange: f.greenFeeRange.trim(),
-          roundsPerYear: f.roundsPerYear.trim() ? Number(f.roundsPerYear.replace(/[^0-9]/g, '')) : null,
+          roundsPerYear: f.roundsPerYear.trim() || null,
           hasResidentPricing: f.hasResidentPricing === 'yes', hasProShop: tri(f.hasProShop), hasRange: tri(f.hasRange), season: f.season.trim(), fitTags: tags,
         };
+        const was: Record<string, unknown> = {
+          courseName: c.courseName, city: c.city, state: c.state, address: c.address, website: c.website, coursePhone: c.coursePhone ?? '',
+          holes: c.holes ? String(c.holes) : null, ownerType: c.ownerType, currentBookingMethod: c.currentBookingMethod, currentSoftware: c.currentSoftware ?? '',
+          softwareContractEnds: c.softwareContractEnds ?? '', greenFeeRange: c.greenFeeRange, roundsPerYear: c.roundsPerYear ? String(c.roundsPerYear) : null,
+          hasResidentPricing: c.hasResidentPricing, hasProShop: c.hasProShop, hasRange: c.hasRange, season: c.season ?? '', fitTags: c.fitTags,
+        };
+        const facts = Object.fromEntries(Object.entries(next).filter(([key, v]) => JSON.stringify(v) !== JSON.stringify(was[key])));
+        if (!Object.keys(facts).length) { onClose(); return; }
         const r = await p.run(`/api/admin/outreach/${encodeURIComponent(c.id)}`, 'PATCH', { facts });
         if (r.ok) onDone('Saved.');
       }} />
