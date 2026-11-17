@@ -3,7 +3,11 @@
 // lanes/dashboard.md "Next" 8). What the Team page's parts share: the data shape Build's /api/operator/team returns,
 // the permission list (the one catalog in lib/staff-permissions, grouped the way the mockup groups it), and the small
 // pieces (switch, status line, icons). Tokens only, so Charcoal and Light both follow.
-import type { ReactNode } from 'react';
+// Areas (Cam 2026-11-17, mockup thread 8f2ccf3a, "a lot more consolidated ... less buttons"): access is shown as about six
+// areas, each No access / View / Full, with the single switches under Advanced. The areas are only a view and an editor
+// over the stored keys (Build): a set that is neither shows as Custom and opens Advanced, and a change that would add a
+// key that moves money lists those keys and waits for a yes. Nothing is granted silently.
+import { Fragment, useEffect, useState, type ReactNode } from 'react';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { PERMISSIONS, normalizePermissions, withoutPermission, type PermissionDef, type PermissionKey } from '@/lib/staff-permissions';
 
@@ -28,7 +32,9 @@ export type Person = {
   legacy: boolean;
 };
 export type Owner = { name: string; email: string; lastActiveAt: string | null };
-export type Team = { roles: Role[]; suggested: Suggested[]; owner: Owner; people: Person[] };
+/** One access area from Build: `view` and `full` are key sets (full includes view; view may be empty). */
+export type Area = { key: string; label: string; help: string; movesMoney: boolean; view: PermissionKey[]; full: PermissionKey[] };
+export type Team = { roles: Role[]; suggested: Suggested[]; owner: Owner; people: Person[]; areas?: Area[] };
 
 export const LINK = 'inline-flex items-center min-h-[40px] text-[13px] font-semibold text-ink underline underline-offset-[3px] decoration-ink-muted hover:decoration-ink disabled:opacity-50';
 export const LINK_BAD = 'inline-flex items-center min-h-[40px] text-[13px] font-semibold text-bad underline underline-offset-[3px] decoration-bad/50 hover:decoration-bad disabled:opacity-50';
@@ -136,4 +142,124 @@ export const plural = (n: number, one: string, many = one + 's') => `${n} ${n ==
 /** A label over its field, the popups' size. */
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return <label className="flex flex-col gap-1.5 text-[12.5px] text-ink-muted">{label}{children}</label>;
+}
+
+// ── Areas ─────────────────────────────────────────────────────────────────────
+type Level = 'none' | 'view' | 'full' | 'custom';
+const LOCKED = new Set(PERMISSIONS.filter(p => p.locked).map(p => p.key));
+const DEF = new Map(PERMISSIONS.map(p => [p.key, p]));
+const keysOf = (ks: readonly PermissionKey[]) => ks.filter(k => !LOCKED.has(k));
+
+/** Where a set of keys stands in one area. */
+export function levelOf(area: Area, value: readonly PermissionKey[]): Level {
+  const full = keysOf(area.full), on = new Set(value);
+  const have = full.filter(k => on.has(k));
+  if (!have.length) return 'none';
+  if (have.length === full.length) return 'full';
+  const view = keysOf(area.view);
+  if (view.length && have.length === view.length && view.every(k => on.has(k))) return 'view';
+  return 'custom';
+}
+const countIn = (area: Area, value: readonly PermissionKey[]) => {
+  const full = keysOf(area.full);
+  return `${full.filter(k => value.includes(k)).length} of ${full.length}`;
+};
+
+/** The keys after setting one area to a level: the area's other keys come off (with whatever needs them), the
+ *  level's keys go on (with whatever they need). */
+function withLevel(area: Area, value: readonly PermissionKey[], level: 'none' | 'view' | 'full'): PermissionKey[] {
+  const want = new Set<PermissionKey>(level === 'full' ? area.full : level === 'view' ? area.view : []);
+  let next = normalizePermissions(value);
+  for (const k of keysOf(area.full)) if (!want.has(k) && next.includes(k)) next = withoutPermission(next, k);
+  return normalizePermissions([...next, ...want]);
+}
+
+/** "Tee sheet: Full · Payments: View" — what a role can use, for the Roles list. */
+export function areaSummary(areas: Area[] | undefined, value: readonly PermissionKey[], owner?: boolean): string {
+  if (owner) return 'Full access to everything';
+  if (!areas?.length) return `${value.length} of ${TOTAL}`;
+  const word = { none: '', view: 'View', full: 'Full', custom: 'Custom' } as const;
+  return areas.map(a => { const l = levelOf(a, value); return l === 'none' ? null : `${a.label.split(' &')[0]}: ${word[l]}`; })
+    .filter(Boolean).join(' · ') || 'No access yet';
+}
+
+const SEG = 'px-3 min-h-[32px] rounded-[8px] text-[12.5px] whitespace-nowrap disabled:cursor-default';
+
+/** Access as areas (No access / View / Full) with every switch under Advanced. Without areas from the server it is
+ *  the plain grouped switch list. `readOnly` for the Owner role. */
+export function AccessEditor({ areas, value, onChange, readOnly }: {
+  areas?: Area[]; value: readonly PermissionKey[]; onChange?: (next: PermissionKey[]) => void; readOnly?: boolean;
+}) {
+  const [ask, setAsk] = useState<{ next: PermissionKey[]; keys: PermissionKey[]; what: string; at: string } | null>(null);
+  const [advOpen, setAdvOpen] = useState(false);
+  // A confirm is for the keys as they stood when it opened: any other change (a new role, another area) drops it, so
+  // Allow can never put back keys nobody saw listed.
+  const valueKey = value.join(',');
+  useEffect(() => { setAsk(null); }, [valueKey]);
+  if (!areas?.length) return <PermList value={value} onChange={onChange} readOnly={readOnly} />;
+  const anyCustom = !readOnly && areas.some(a => levelOf(a, value) === 'custom');
+
+  function pick(area: Area, level: 'none' | 'view' | 'full') {
+    if (!onChange) return;
+    const next = withLevel(area, value, level);
+    const money = next.filter(k => !value.includes(k) && DEF.get(k)?.movesMoney);
+    if (money.length) { setAsk({ next, keys: money, what: `${level === 'full' ? 'Full' : 'View'} on ${area.label}`, at: area.key }); return; }
+    onChange(next);
+  }
+  // Any change made under Advanced that adds a key that moves money asks too.
+  function fromSwitches(next: PermissionKey[]) {
+    const money = next.filter(k => !value.includes(k) && DEF.get(k)?.movesMoney);
+    if (money.length) { setAsk({ next, keys: money, what: 'This change', at: 'advanced' }); return; }
+    onChange?.(next);
+  }
+
+  const confirmBox = ask && (
+      <div role="alertdialog" aria-label="Allow money actions" className="mt-1 mb-2 border border-warn/40 rounded-[12px] p-3 flex flex-col gap-2">
+        <p className="text-[13px] text-ink">{ask.what} also lets them move money:</p>
+        <ul className="text-[13px] text-ink list-disc pl-5">{ask.keys.map(k => <li key={k}>{DEF.get(k)?.label}</li>)}</ul>
+        <div className="flex items-center gap-3">
+          <button type="button" className={LINK} autoFocus onClick={() => setAsk(null)}>Cancel</button>
+          <button type="button" className={PRIMARY} onClick={() => { onChange?.(ask.next); setAsk(null); }}>Allow</button>
+        </div>
+      </div>
+  );
+
+  return (
+    <div>
+      {areas.map(a => {
+        const lv = readOnly ? 'full' : levelOf(a, value);
+        const opts: ['none' | 'view' | 'full', string][] = [['none', 'No access'], ...(keysOf(a.view).length ? [['view', 'View'] as ['view', string]] : []), ['full', 'Full']];
+        return (
+          <Fragment key={a.key}>
+          <div className="flex flex-col gap-2 py-2.5 border-t border-line">
+            <span className="min-w-0">
+              <b className="block text-[13.5px] font-semibold text-ink">{a.label}
+                {a.movesMoney && <em className="not-italic font-medium text-[11px] text-warn border border-current rounded-full px-1.5 ml-1.5 align-[1px]">Moves money</em>}</b>
+              <small className="block text-[12px] text-ink-muted">{a.help}</small>
+            </span>
+            <span className="flex flex-wrap items-center gap-2">
+              <span role="radiogroup" aria-label={a.label} className="inline-flex gap-0.5 p-[3px] rounded-[11px] bg-ink/5 border border-line">
+                {opts.map(([k, l]) => (
+                  <button key={k} type="button" role="radio" aria-checked={lv === k} disabled={readOnly || !onChange} onClick={() => lv !== k && pick(a, k)}
+                    className={SEG + ' ' + (lv === k ? 'bg-white text-ink font-semibold shadow-card' : 'text-ink-soft hover:text-ink')}>{l}</button>
+                ))}
+              </span>
+              {lv === 'custom' && <span className="text-[12.5px] text-ink-muted">Custom · {countIn(a, value)}, see Advanced</span>}
+            </span>
+          </div>
+          {ask?.at === a.key && confirmBox}
+          </Fragment>
+        );
+      })}
+      {!readOnly && (
+        <details open={anyCustom || advOpen} onToggle={e => setAdvOpen((e.target as HTMLDetailsElement).open)} className="group/adv border-t border-line mt-1">
+          <summary className="list-none [&::-webkit-details-marker]:hidden flex items-center gap-1.5 py-2.5 min-h-[44px] text-[12.5px] text-ink-muted cursor-pointer hover:text-ink">
+            <ChevronIcon className="transition-transform motion-reduce:transition-none group-open/adv:rotate-90" />Advanced: switch single things on or off
+          </summary>
+          {ask?.at === 'advanced' && confirmBox}
+          <PermList value={value} onChange={onChange ? fromSwitches : undefined} />
+        </details>
+      )}
+    </div>
+  );
 }

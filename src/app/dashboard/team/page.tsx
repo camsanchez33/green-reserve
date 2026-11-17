@@ -1,7 +1,8 @@
 'use client';
 // TEAM-1 (Cam 2026-11-17, "we are all good"; approved mockup lanes/dashboard/team-mockup.html and its threads;
 // lanes/dashboard.md "Next" 8). Team, under Business on the rail, the owner's alone (who works here and what they may do
-// is never a staff decision). Two sliding tabs:
+// is never a staff decision). Spec is the live mockup (claude.ai/artifact/L2SZ76WpfdZMx4krCiubf1 and its copy
+// Umx49hzDobDidymMDKuk9v, with Cam's later threads); the repo copy predates them. Two tabs:
 //  - Team: one view, every role in rank order with its people under it as compact rows (a role shows even when nobody
 //    holds it). A new course has only Owner, plus Suggested roles to add (never made for it). A person opens their own
 //    page: role, their access starting from the role, reset link or resend invite, disable, remove.
@@ -19,7 +20,7 @@ import { LoadError } from '@/components/dashboard/LoadError';
 import { Card } from '@/components/ui/Card';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
-import { type Team, type Role, type Person, type Suggested, PlusButton, PlusIcon, ChevronIcon, StatusMark, personLine, plural, TOTAL } from '@/components/dashboard/team/shared';
+import { type Team, type Role, type Person, type Suggested, PlusButton, PlusIcon, ChevronIcon, StatusMark, personLine, plural, areaSummary } from '@/components/dashboard/team/shared';
 import { PersonPopup, OwnerPopup } from '@/components/dashboard/team/PersonPopup';
 import { RolePopup } from '@/components/dashboard/team/RolePopup';
 import { InvitePopup } from '@/components/dashboard/team/InvitePopup';
@@ -88,6 +89,7 @@ function TeamInner() {
   const [legacy, setLegacy] = useState(false);
   const [error, setError] = useState('');
   const [open, setOpen] = useState<Open>(null);
+  const [showDisabled, setShowDisabled] = useState(false);
 
   const load = useCallback(async () => {
     const r = await dfetch<Team>('/api/operator/team');
@@ -101,6 +103,7 @@ function TeamInner() {
 
   const setTab = (t: Tab) => router.replace(t === 'roles' ? '/dashboard/team?tab=roles' : '/dashboard/team', { scroll: false });
 
+  if (!access.loaded && access.failed) return <Shell><h1 className="font-serif text-[30px] sm:text-[34px] leading-none text-ink mt-1">Team</h1><LoadError message="Couldn’t check what your login can do. Refresh the page to try again." onRetry={() => window.location.reload()} /></Shell>;
   if (!access.loaded) return <Shell><h1 className="font-serif text-[30px] sm:text-[34px] leading-none text-ink mt-1">Team</h1><p className="text-[13px] text-ink-muted">Loading…</p></Shell>;
   if (!owner) {
     return (
@@ -122,19 +125,27 @@ function TeamInner() {
 
   const roles = team ? [...team.roles].sort((a, b) => a.rank - b.rank) : [];
   const people = team?.people ?? [];
-  const noRole = people.filter(p => !p.roleId || !roles.some(r => r.id === p.roleId));
+  // Disabled people sit under their own small toggle at the foot (mockup thread a0203f82); the groups show the rest.
+  const current = people.filter(p => p.status !== 'disabled');
+  const disabled = people.filter(p => p.status === 'disabled');
+  const noRole = current.filter(p => !p.roleId || !roles.some(r => r.id === p.roleId));
+  const areas = team?.areas;
   const person = open?.kind === 'person' ? people.find(p => p.id === open.id) : undefined;
   const role = open?.kind === 'role' ? roles.find(r => r.id === open.id) : undefined;
   const close = () => setOpen(null);
 
   return (
     <Shell>
-      <div className="flex items-center gap-3 mt-1">
-        <h1 className="font-serif text-[30px] sm:text-[34px] leading-none text-ink">Team</h1>
+      <h1 className="font-serif text-[30px] sm:text-[34px] leading-none text-ink mt-1">Team</h1>
+      {/* Mockup threads c676100f/af919b5e: plain Team and Roles tabs with a sliding underline, Invite on the same row. */}
+      <div className="flex items-center gap-3">
+        <SlidingTabs look="line" label="Team" className="min-w-0" tabClassName="text-[14.5px]" value={tab} onChange={setTab} tabs={[['team', 'Team'], ['roles', 'Roles']] as const} />
         <span className="flex-1" />
-        {team && <PlusButton big label="Invite someone" onClick={() => setOpen({ kind: 'invite' })} />}
+        {team && (
+          <button type="button" onClick={() => setOpen({ kind: 'invite' })}
+            className="inline-flex items-center gap-1.5 min-h-[40px] px-3.5 rounded-full border border-line bg-ink/5 text-[13.5px] font-semibold text-ink hover:border-ink-soft"><PlusIcon />Invite</button>
+        )}
       </div>
-      <SlidingTabs look="pill" label="Team" className="self-start" value={tab} onChange={setTab} tabs={[['team', 'Team'], ['roles', 'Roles']] as const} />
 
       {error && <LoadError message={`${error} Nothing here is your team until this loads.`} onRetry={load} />}
       {!team && !error && <p className="py-16 text-center text-[13px] text-ink-muted">Loading…</p>}
@@ -142,7 +153,7 @@ function TeamInner() {
       {team && tab === 'team' && (
         <>
           {roles.map(r => (
-            <RoleGroup key={r.id} role={r} people={people.filter(p => p.roleId === r.id)} onPerson={id => setOpen({ kind: 'person', id })}
+            <RoleGroup key={r.id} role={r} people={current.filter(p => p.roleId === r.id)} onPerson={id => setOpen({ kind: 'person', id })}
               onInvite={r.owner ? undefined : () => setOpen({ kind: 'invite', roleId: r.id })}
               ownerRow={r.owner ? { name: team.owner.name, line: 'Now', onOpen: () => setOpen({ kind: 'owner' }) } : undefined} />
           ))}
@@ -166,6 +177,26 @@ function TeamInner() {
               </div>
             </section>
           )}
+          {disabled.length > 0 && (
+            <section className="flex flex-col gap-2">
+              <button type="button" aria-expanded={showDisabled} onClick={() => setShowDisabled(v => !v)}
+                className="self-start inline-flex items-center gap-1.5 min-h-[36px] px-0.5 text-[12.5px] text-ink-muted hover:text-ink">
+                <ChevronIcon className={'transition-transform motion-reduce:transition-none ' + (showDisabled ? 'rotate-90' : '')} />Disabled · {disabled.length}
+              </button>
+              {showDisabled && (
+                <Card className="pt-0 pb-1.5">
+                  {disabled.map((p, i) => (
+                    <button key={p.id} type="button" onClick={() => setOpen({ kind: 'person', id: p.id })} className={ROW + ' opacity-60 grid-cols-[10px_minmax(0,1fr)_auto_20px] ' + (i ? '' : 'border-t-0')}>
+                      <StatusMark status="disabled" />
+                      <span className="min-w-0 truncate">{p.name}<em className="not-italic text-[12px] text-ink-muted ml-1">{roles.find(r => r.id === p.roleId)?.name ?? ''}</em></span>
+                      <span className="hidden sm:block text-[12.5px] text-ink-muted">{personLine(p)}</span>
+                      <ChevronIcon className="text-ink-muted" />
+                    </button>
+                  ))}
+                </Card>
+              )}
+            </section>
+          )}
         </>
       )}
 
@@ -178,8 +209,8 @@ function TeamInner() {
           </div>
           {roles.map(r => (
             <button key={r.id} type="button" onClick={() => setOpen({ kind: 'role', id: r.id })} className={ROW + ' grid-cols-[minmax(0,1fr)_auto_20px]'}>
-              <b className="min-w-0 font-semibold">{r.name}</b>
-              <span className="text-[12.5px] text-ink-muted tabular-nums">{r.owner ? 'Everything' : `${r.permissions.length} of ${TOTAL}`}</span>
+              <span className="min-w-0"><b className="block font-semibold">{r.name}</b><small className="block text-[12px] text-ink-muted">{areaSummary(areas, r.permissions, r.owner)}</small></span>
+              <span />
               <ChevronIcon className="text-ink-muted" />
             </button>
           ))}
@@ -188,9 +219,9 @@ function TeamInner() {
       )}
 
       {open?.kind === 'owner' && team && <OwnerPopup owner={team.owner} onClose={close} />}
-      {person && <PersonPopup key={person.id} person={person} roles={roles} onClose={close} onChanged={load} />}
-      {open?.kind === 'role' && role && <RolePopup key={role.id} role={role} onClose={close} onChanged={load} />}
-      {open?.kind === 'newRole' && <RolePopup suggested={open.suggested} onClose={close} onChanged={load} />}
+      {person && <PersonPopup key={person.id} person={person} roles={roles} areas={areas} onClose={close} onChanged={load} />}
+      {open?.kind === 'role' && role && <RolePopup key={role.id} role={role} areas={areas} onClose={close} onChanged={load} />}
+      {open?.kind === 'newRole' && <RolePopup suggested={open.suggested} areas={areas} onClose={close} onChanged={load} />}
       {open?.kind === 'invite' && <InvitePopup roles={roles} roleId={open.roleId} onClose={close} onChanged={load} />}
     </Shell>
   );

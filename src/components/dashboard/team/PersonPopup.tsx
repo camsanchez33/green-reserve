@@ -9,7 +9,7 @@ import { toast } from '@/components/dashboard/Toast';
 import { Popup, FIELD } from '@/components/dashboard/settings/ui';
 import { formatDateTime } from '@/lib/format';
 import type { PermissionKey } from '@/lib/staff-permissions';
-import { type Person, type Role, type Owner, PermList, StatusMark, statusWord, personLine, sameKeys, Field, LINK, LINK_BAD, PRIMARY } from './shared';
+import { type Person, type Role, type Owner, type Area, AccessEditor, StatusMark, statusWord, personLine, sameKeys, Field, LINK, LINK_BAD, PRIMARY } from './shared';
 
 export function OwnerPopup({ owner, onClose }: { owner: Owner; onClose: () => void }) {
   return (
@@ -24,14 +24,15 @@ export function OwnerPopup({ owner, onClose }: { owner: Owner; onClose: () => vo
   );
 }
 
-export function PersonPopup({ person, roles, onClose, onChanged }: {
-  person: Person; roles: Role[]; onClose: () => void; onChanged: () => Promise<void> | void;
+export function PersonPopup({ person, roles, areas, onClose, onChanged }: {
+  person: Person; roles: Role[]; areas?: Area[]; onClose: () => void; onChanged: () => Promise<void> | void;
 }) {
   const p = person;
   const [roleId, setRoleId] = useState(p.roleId ?? '');
   const [draft, setDraft] = useState<PermissionKey[]>(p.permissions);
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState('');
+  const [removing, setRemoving] = useState(false);
   const role = roles.find(r => r.id === roleId) ?? null;
   const first = p.name.split(' ')[0] || p.name;
   const roleChanged = roleId !== (p.roleId ?? '');
@@ -63,7 +64,6 @@ export function PersonPopup({ person, roles, onClose, onChanged }: {
   const setActive = (active: boolean) => act('active', () => dfetch('/api/operator/staff', { method: 'PATCH', body: JSON.stringify({ id: p.id, active }) }),
     active ? `${p.name} can sign in again.` : `${p.name} is disabled. Their sign-in stops now.`, true);
   const remove = () => {
-    if (!confirm(`Remove ${p.name}? Their sign-in stops now and this can’t be undone. To pause them instead, use Disable.`)) return;
     act('remove', () => dfetch('/api/operator/staff', { method: 'DELETE', body: JSON.stringify({ id: p.id }) }), `${p.name} is removed.`, true);
   };
   const resend = () => act('resend', () => dfetch('/api/operator/staff/invite/resend', { method: 'POST', body: JSON.stringify({ id: p.id }) }), `Invite sent again to ${p.email}.`);
@@ -98,14 +98,25 @@ export function PersonPopup({ person, roles, onClose, onChanged }: {
       <div>
         <p className="text-[12.5px] text-ink-muted mt-1">What {first} can do</p>
         <p className="text-[13px] text-ink-soft mt-0.5 mb-1">
-          {role ? `Starts from ${role.name}. Switch anything on or off for just this person.` : 'Switch anything on or off for this person.'}
+          {role ? `Starts from ${role.name}. Change any area for just this person.` : 'Change any area for this person.'}
           {!roleChanged && extraNote}
           {roleChanged && role && ` Their own changes are cleared, so they get exactly what ${role.name} gets.`}
           {p.legacy && !roleChanged && ' Added before per-person access: keeps what staff could always do, without weather cancel or waiving fees.'}
         </p>
-        <PermList value={draft} onChange={setDraft} />
+        <AccessEditor areas={areas} value={draft} onChange={setDraft} />
       </div>
 
+      {removing ? (
+        <div role="alertdialog" aria-label={`Remove ${p.name}?`} className="border-t border-line pt-3 flex flex-col gap-2">
+          <b className="text-[14px] font-semibold text-ink">Remove {p.name}?</b>
+          <p className="text-[13px] text-ink-soft">This can’t be undone. To pause them instead, use Disable.</p>
+          <div className="flex items-center gap-3">
+            <button type="button" className={LINK} autoFocus onClick={() => setRemoving(false)}>Cancel</button>
+            <span className="flex-1" />
+            <button type="button" disabled={!!busy} onClick={remove} className="bg-bad text-white rounded-[10px] text-[13px] font-semibold px-3.5 py-[9px] min-h-[40px] disabled:opacity-40">{busy === 'remove' ? 'Removing…' : 'Remove'}</button>
+          </div>
+        </div>
+      ) : (
       <div className="flex flex-wrap gap-x-5 gap-y-1.5 border-t border-line pt-3">
         {p.status === 'invited'
           ? <button type="button" className={LINK} disabled={!!busy} onClick={resend}>{busy === 'resend' ? 'Sending…' : 'Resend invite'}</button>
@@ -113,8 +124,9 @@ export function PersonPopup({ person, roles, onClose, onChanged }: {
         {p.status === 'disabled'
           ? <button type="button" className={LINK} disabled={!!busy} onClick={() => setActive(true)}>Turn sign-in back on</button>
           : <button type="button" className={LINK_BAD} disabled={!!busy} onClick={() => setActive(false)}>Disable</button>}
-        <button type="button" className={LINK_BAD} disabled={!!busy} onClick={remove}>Remove</button>
+        <button type="button" className={LINK_BAD} disabled={!!busy} onClick={() => setRemoving(true)}>Remove</button>
       </div>
+      )}
 
       {err && <p role="alert" className="text-[13px] text-bad">{err}</p>}
       <div className="flex flex-wrap items-center gap-3 border-t border-line pt-3">
