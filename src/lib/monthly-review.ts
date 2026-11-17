@@ -233,7 +233,7 @@ export async function runMonthlyReview(courseId: string, now: Date = new Date(),
   // The ledger is append-only, so a past month's money read now is what it was (the baseline's included).
   const baseline = baselineRow ? { month: baselineRow.month, headline: (baselineRow.metrics as { headline: Headline }).headline, ledger: await ledgerMonth(courseId, tz, baselineRow.month, now) } : null;
   const [ledger, ns] = await Promise.all([ledgerMonth(courseId, tz, month, now), noShowReport(courseId, monthRange(month), now)]);
-  const nsFacts = ns ?? { totals: { bookings: 0, noShows: 0, ratePct: null, lostValueCents: 0, recoveredCents: 0, lateCancelNetCents: 0, netCents: 0 }, lateCancels: { spots: 0, lostValueCents: 0, refilledSpots: 0, refilledCents: 0, feesCents: 0, netCents: 0 } };
+  const nsFacts = ns ?? { totals: { bookings: 0, noShows: 0, ratePct: null, lostValueCents: 0, recoveredCents: 0, lateCancelLostValueCents: 0, lateCancelRecoveredCents: 0, lateCancelNetCents: 0, netCents: 0 }, lateCancels: { spots: 0, lostValueCents: 0, refilledSpots: 0, refilledCents: 0, feesCents: 0, netCents: 0 } };
   const facts = buildFacts(month, a, prev, baseline, ledger, nsFacts);
   const byArea = byAreaOf({ h: headline(a), l: ledger }, prev ? { h: headline(prev.a), l: prev.ledger } : null);
 
