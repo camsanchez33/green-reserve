@@ -9,7 +9,7 @@ import { toast } from '@/components/dashboard/Toast';
 import { Popup, FIELD } from '@/components/dashboard/settings/ui';
 import { formatDateTime } from '@/lib/format';
 import type { PermissionKey } from '@/lib/staff-permissions';
-import { type Person, type Role, type Owner, type Area, AccessEditor, StatusMark, statusWord, personLine, sameKeys, Field, LINK, LINK_BAD, PRIMARY } from './shared';
+import { type Person, type Role, type Owner, AccessEditor, StatusMark, statusWord, personLine, sameKeys, Field, LINK, LINK_BAD, PRIMARY } from './shared';
 
 export function OwnerPopup({ owner, onClose }: { owner: Owner; onClose: () => void }) {
   return (
@@ -24,8 +24,8 @@ export function OwnerPopup({ owner, onClose }: { owner: Owner; onClose: () => vo
   );
 }
 
-export function PersonPopup({ person, roles, areas, onClose, onChanged }: {
-  person: Person; roles: Role[]; areas?: Area[]; onClose: () => void; onChanged: () => Promise<void> | void;
+export function PersonPopup({ person, roles, onClose, onChanged }: {
+  person: Person; roles: Role[]; onClose: () => void; onChanged: () => Promise<void> | void;
 }) {
   const p = person;
   const [roleId, setRoleId] = useState(p.roleId ?? '');
@@ -103,17 +103,17 @@ export function PersonPopup({ person, roles, areas, onClose, onChanged }: {
           {roleChanged && role && ` Their own changes are cleared, so they get exactly what ${role.name} gets.`}
           {p.legacy && !roleChanged && ' Added before per-person access: keeps what staff could always do, without weather cancel or waiving fees.'}
         </p>
-        <AccessEditor areas={areas} value={draft} onChange={setDraft} />
+        <AccessEditor value={draft} onChange={setDraft} />
       </div>
 
       {removing ? (
         <div role="alertdialog" aria-label={`Remove ${p.name}?`} className="border-t border-line pt-3 flex flex-col gap-2">
           <b className="text-[14px] font-semibold text-ink">Remove {p.name}?</b>
-          <p className="text-[13px] text-ink-soft">This can’t be undone. To pause them instead, use Disable.</p>
+          <p className="text-[13px] text-ink-soft">They can’t sign in. Past bookings and sales keep their name. To pause them instead, use Disable.</p>
           <div className="flex items-center gap-3">
             <button type="button" className={LINK} autoFocus onClick={() => setRemoving(false)}>Cancel</button>
             <span className="flex-1" />
-            <button type="button" disabled={!!busy} onClick={remove} className="bg-bad text-white rounded-[10px] text-[13px] font-semibold px-3.5 py-[9px] min-h-[40px] disabled:opacity-40">{busy === 'remove' ? 'Removing…' : 'Remove'}</button>
+            <button type="button" disabled={!!busy} onClick={remove} className={LINK_BAD}>{busy === 'remove' ? 'Removing…' : 'Remove'}</button>
           </div>
         </div>
       ) : (

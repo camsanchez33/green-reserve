@@ -7,11 +7,11 @@ import { dfetch } from '@/lib/dashboard-fetch';
 import { toast } from '@/components/dashboard/Toast';
 import { Popup, FIELD } from '@/components/dashboard/settings/ui';
 import { ALL_KEYS, normalizePermissions, type PermissionKey } from '@/lib/staff-permissions';
-import { type Role, type Suggested, type Area, AccessEditor, sameKeys, plural, Field, LINK, LINK_BAD, PRIMARY } from './shared';
+import { type Role, type Suggested, AccessEditor, sameKeys, plural, Field, LINK, LINK_BAD, PRIMARY } from './shared';
 
-export function RolePopup({ role, suggested, areas, onClose, onChanged }: {
+export function RolePopup({ role, suggested, onClose, onChanged }: {
   /** An existing role; leave out for a new one. */
-  role?: Role; suggested?: Suggested; areas?: Area[]; onClose: () => void; onChanged: () => Promise<void> | void;
+  role?: Role; suggested?: Suggested; onClose: () => void; onChanged: () => Promise<void> | void;
 }) {
   const [name, setName] = useState(role?.name ?? suggested?.name ?? '');
   const [keys, setKeys] = useState<PermissionKey[]>(normalizePermissions(role?.permissions ?? suggested?.permissions ?? []));
@@ -40,7 +40,7 @@ export function RolePopup({ role, suggested, areas, onClose, onChanged }: {
           <div><h3 className="text-[18px] font-semibold text-ink">{role.name}</h3><p className="mt-0.5 text-[13px] text-ink-soft">Can do everything, including staff, Stripe and the cancellation policy. This role can’t be changed or deleted.</p></div>
           <button type="button" className={LINK} onClick={onClose}>Close</button>
         </div>
-        <AccessEditor areas={areas} value={ALL_KEYS} readOnly />
+        <AccessEditor value={ALL_KEYS} readOnly />
       </Popup>
     );
   }
@@ -90,7 +90,7 @@ export function RolePopup({ role, suggested, areas, onClose, onChanged }: {
         </div>
         <div>
           <p className="text-[12.5px] text-ink-muted mt-1 mb-1">What this role can do</p>
-          <AccessEditor areas={areas} value={keys} onChange={setKeys} />
+          <AccessEditor value={keys} onChange={setKeys} />
         </div>
         {err && <p role="alert" className="text-[13px] text-bad">{err}</p>}
         <div className="flex flex-wrap items-center gap-3 border-t border-line pt-3">

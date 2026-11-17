@@ -9,13 +9,11 @@
 //  - Roles: what each role can do; a role edit says how many people it changes before saving.
 // Invite asks name, email, an optional phone and a role, and the server sends the welcome email.
 // This replaces Settings → Staff and permissions: every switch, disable, enable, remove and "last changed by" moved
-// here. Data: /api/operator/team (Build). Until that route is on the server the old staff screen shows here instead,
-// so the course never loses its staff controls.
+// here. Data: /api/operator/team and lib/team-access (Build, PR #464, which merges first).
 import { useCallback, useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { SlidingTabs } from '@/components/dashboard/SlidingTabs';
-import { StaffPermissions } from '@/components/dashboard/StaffPermissions';
 import { LoadError } from '@/components/dashboard/LoadError';
 import { Card } from '@/components/ui/Card';
 import { dfetch } from '@/lib/dashboard-fetch';
@@ -86,16 +84,13 @@ function TeamInner() {
   const access = useDashboardAccess();
   const tab: Tab = params.get('tab') === 'roles' ? 'roles' : 'team';
   const [team, setTeam] = useState<Team | null>(null);
-  const [legacy, setLegacy] = useState(false);
   const [error, setError] = useState('');
   const [open, setOpen] = useState<Open>(null);
   const [showDisabled, setShowDisabled] = useState(false);
 
   const load = useCallback(async () => {
     const r = await dfetch<Team>('/api/operator/team');
-    if (r.ok && r.data && Array.isArray(r.data.roles)) { setTeam(r.data); setLegacy(false); setError(''); return; }
-    // Build's Team data isn't on this server yet: keep the staff screen that's there today.
-    if (!r.ok && r.status === 404) { setLegacy(true); setError(''); return; }
+    if (r.ok && r.data && Array.isArray(r.data.roles)) { setTeam(r.data); setError(''); return; }
     setError(r.ok ? 'The team list came back empty. Nothing was changed — try again.' : r.error);
   }, []);
   const owner = access.loaded && !access.isStaff;
@@ -114,22 +109,12 @@ function TeamInner() {
     );
   }
 
-  if (legacy) {
-    return (
-      <Shell>
-        <h1 className="font-serif text-[30px] sm:text-[34px] leading-none text-ink mt-1">Team</h1>
-        <Card className="p-5"><StaffPermissions /></Card>
-      </Shell>
-    );
-  }
-
   const roles = team ? [...team.roles].sort((a, b) => a.rank - b.rank) : [];
   const people = team?.people ?? [];
   // Disabled people sit under their own small toggle at the foot (mockup thread a0203f82); the groups show the rest.
   const current = people.filter(p => p.status !== 'disabled');
   const disabled = people.filter(p => p.status === 'disabled');
   const noRole = current.filter(p => !p.roleId || !roles.some(r => r.id === p.roleId));
-  const areas = team?.areas;
   const person = open?.kind === 'person' ? people.find(p => p.id === open.id) : undefined;
   const role = open?.kind === 'role' ? roles.find(r => r.id === open.id) : undefined;
   const close = () => setOpen(null);
@@ -209,7 +194,7 @@ function TeamInner() {
           </div>
           {roles.map(r => (
             <button key={r.id} type="button" onClick={() => setOpen({ kind: 'role', id: r.id })} className={ROW + ' grid-cols-[minmax(0,1fr)_auto_20px]'}>
-              <span className="min-w-0"><b className="block font-semibold">{r.name}</b><small className="block text-[12px] text-ink-muted">{areaSummary(areas, r.permissions, r.owner)}</small></span>
+              <span className="min-w-0"><b className="block font-semibold">{r.name}</b><small className="block text-[12px] text-ink-muted">{areaSummary(r.permissions, r.owner)}</small></span>
               <span />
               <ChevronIcon className="text-ink-muted" />
             </button>
@@ -219,9 +204,9 @@ function TeamInner() {
       )}
 
       {open?.kind === 'owner' && team && <OwnerPopup owner={team.owner} onClose={close} />}
-      {person && <PersonPopup key={person.id} person={person} roles={roles} areas={areas} onClose={close} onChanged={load} />}
-      {open?.kind === 'role' && role && <RolePopup key={role.id} role={role} areas={areas} onClose={close} onChanged={load} />}
-      {open?.kind === 'newRole' && <RolePopup suggested={open.suggested} areas={areas} onClose={close} onChanged={load} />}
+      {person && <PersonPopup key={person.id} person={person} roles={roles} onClose={close} onChanged={load} />}
+      {open?.kind === 'role' && role && <RolePopup key={role.id} role={role} onClose={close} onChanged={load} />}
+      {open?.kind === 'newRole' && <RolePopup suggested={open.suggested} onClose={close} onChanged={load} />}
       {open?.kind === 'invite' && <InvitePopup roles={roles} roleId={open.roleId} onClose={close} onChanged={load} />}
     </Shell>
   );

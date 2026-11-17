@@ -54,7 +54,7 @@ export function InvitePopup({ roles, roleId, onClose, onChanged }: {
     setBusy(false);
     // 502: they were added (as Invited) but the email didn't go out. Say so, and where to send it again.
     if (!r.ok && r.status === 502) {
-      toast(`${f.name.trim()} is added as Invited, but the email didn’t send: ${r.error} Open them on Team and use Resend invite.`);
+      toast(r.error);
       await onChanged();
       onClose();
       return;
