@@ -23,7 +23,8 @@ function getSecret() {
 
 export type OtpIdentifierType = 'email' | 'phone';
 
-export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// % and \ are refused (lib/like-exact: LIKE wildcards no deliverable address needs); _ is legal and stays allowed.
+export const EMAIL_RE = /^[^\s@%\\]+@[^\s@%\\]+\.[^\s@%\\]+$/;
 
 export function normalizePhone(raw: string): string {
   const digits = raw.replace(/\D/g, '');
@@ -37,6 +38,8 @@ export function classifyIdentifier(raw: string): { identifier: string; type: Otp
   const trimmed = raw.trim();
   if (!trimmed) return null;
   if (EMAIL_RE.test(trimmed)) return { identifier: trimmed.toLowerCase(), type: 'email' };
+  // An address refused above is refused, never read as a phone number from its digits.
+  if (trimmed.includes('@')) return null;
   const digits = trimmed.replace(/\D/g, '');
   if (digits.length >= 10 && digits.length <= 15) return { identifier: normalizePhone(trimmed), type: 'phone' };
   return null;

@@ -44,6 +44,7 @@ import { dealPct, dealRateSeat } from './last-minute';
 import { demandPctFor, onlinePublicSeat, dealWins } from './demand-pricing';
 import { packPrice } from './round-packs';
 import { recordBookingEvent, teeTimeInstant, type EventActor } from './booking-events';
+import { ciEquals } from '@/lib/like-exact';
 
 export type MovePricing = 'keep' | 'new_slot';
 
@@ -181,7 +182,7 @@ export async function moveBooking(opts: {
         const theirs = named && opts.pricing !== 'keep' && (b.golferAccountId || b.golferEmail)
           ? await tx.courseMembership.findMany({ where: { courseId: b.courseId, tierId: named.id, OR: [
               ...(b.golferAccountId ? [{ golferId: b.golferAccountId }] : []),
-              ...(b.golferEmail ? [{ inviteEmail: { equals: b.golferEmail, mode: 'insensitive' as const } }] : []),
+              ...(b.golferEmail ? [{ inviteEmail: ciEquals(b.golferEmail) }] : []),
             ] }, select: { status: true, expiresAt: true } })
           : [];
         // Members switched off in Settings (lib/pricing-switch): a repriced move pays the public price.

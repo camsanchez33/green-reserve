@@ -15,6 +15,7 @@ import { replyDueAt, waitingSince } from './support-ticket';
 import { sendMessageNotificationEmail } from './email';
 import { ADMIN_EMAIL } from './contact';
 import { announcementsSince } from './announcement-audience';
+import { ciContains } from '@/lib/like-exact';
 
 export const ANNOUNCEMENTS_CHAT_ID = 'greenreserve';
 export const MAX_MESSAGE = 5000;
@@ -254,7 +255,7 @@ function adminThread(id: string, course: { id: string; name: string; isTest: boo
  *  courses are included (a test course's chat is still a chat to answer) and flagged. */
 export async function adminThreads(q: string, now: Date = new Date()): Promise<AdminThread[]> {
   const term = q.trim().slice(0, 100);
-  const has = { contains: term, mode: 'insensitive' as const };
+  const has = ciContains(term);
   const COURSE = { select: { id: true, name: true, isTest: true } } as const;
   const [chats, threads] = await Promise.all([
     prisma.supportChat.findMany({
