@@ -20,7 +20,7 @@ export type Projections = {
   last: { from: string; to: string; players: number; fillPct: number | null; revenueCents?: number | null };
   next: { from: string; to: string; players: number; fillPct: number | null; revenueCents?: number | null };
   change: { playersPct: number | null; fillPts: number | null; revenuePct?: number | null };
-  week: { date: string; offered: number; booked: number; usualByNow: number | null; expected: number; status: 'on_pace' | 'behind' | 'short_day' | 'no_history' }[];
+  week: { date: string; offered: number; booked: number; usualByNow: number | null; expected: number; status: 'on_pace' | 'behind' | 'short_day' | 'closed' | 'no_history' }[];
 };
 
 /** Build: GET /api/operator/analytics/no-shows. lostValueCents is value lost at posted prices, not revenue. */

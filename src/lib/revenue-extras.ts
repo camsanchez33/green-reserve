@@ -294,9 +294,11 @@ export async function allSegments(courseId: string, tz: string, range: { from: s
   ]);
   const bookingIds = [...new Set(rows.filter(r => r.direction === 'in' && r.what === 'round' && r.bookingId).map(r => r.bookingId!))];
   const saleIds = [...new Set(rows.filter(r => r.direction === 'in' && r.what === 'shop' && r.saleId).map(r => r.saleId!))];
+  // In chunks: Postgres takes at most 32,767 bound values per statement (a busy course over a long range).
+  const pieces = <T,>(xs: T[]) => Array.from({ length: Math.ceil(xs.length / 10_000) }, (_, i) => xs.slice(i * 10_000, i * 10_000 + 10_000));
   const [bookings, sales] = await Promise.all([
-    bookingIds.length ? prisma.booking.findMany({ where: { courseId, id: { in: bookingIds } }, select: { id: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, shopTaxCents: true, shopItems: { select: { unitPriceCents: true, quantity: true, taxCategory: true, shopItem: { select: { category: true } } } } } }) : [],
-    saleIds.length ? prisma.shopSale.findMany({ where: { courseId, id: { in: saleIds } }, select: { id: true, taxCents: true, lines: { select: { unitPriceCents: true, quantity: true, returnedQty: true, bookingId: true, shopItem: { select: { category: true, taxCategory: true } } } } } }) : [],
+    Promise.all(pieces(bookingIds).map(ids => prisma.booking.findMany({ where: { courseId, id: { in: ids } }, select: { id: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, shopTaxCents: true, shopItems: { select: { unitPriceCents: true, quantity: true, taxCategory: true, shopItem: { select: { category: true } } } } } }))).then(x => x.flat()),
+    Promise.all(pieces(saleIds).map(ids => prisma.shopSale.findMany({ where: { courseId, id: { in: ids } }, select: { id: true, taxCents: true, lines: { select: { unitPriceCents: true, quantity: true, returnedQty: true, bookingId: true, shopItem: { select: { category: true, taxCategory: true } } } } } }))).then(x => x.flat()),
   ]);
   const B = new Map(bookings.map(b => [b.id, b])), S = new Map(sales.map(x => [x.id, x]));
   return allOf(
