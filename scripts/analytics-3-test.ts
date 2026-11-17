@@ -17,15 +17,22 @@ check('last month across a year end', JSON.stringify(presets('2027-01-05').find(
 check('range label', rangeLabel({ from: '2026-10-12', to: '2026-10-18' }, '2026-10-19') === 'Oct 12 – Oct 18' && rangeLabel({ from: '2025-12-01', to: '2026-01-02' }, '2026-10-19').includes('2025'));
 
 const page = readFileSync('src/app/dashboard/analytics/page.tsx', 'utf8');
+// ANALYTICS-5 (Cam 2026-11-17, approved mockup): the page's parts moved to components/dashboard/analytics.
+const head = readFileSync('src/components/dashboard/analytics/Head.tsx', 'utf8');
+const tabs = readFileSync('src/components/dashboard/analytics/Tabs.tsx', 'utf8');
+const adata = readFileSync('src/components/dashboard/analytics/data.ts', 'utf8');
 check('the title is Analytics', page.includes('leading-none text-ink">Analytics</h1>') && !page.includes('How your course is doing'));
-check('one date button, no preset strip', page.includes('<DateRangeButton') && !page.includes("'Pick dates'"));
-check('opens on the last 7 days', page.includes("{ days: '7' }"));
+check('one date button, no preset strip', page.includes('<Dates value={range}') && !page.includes("'Pick dates'") && !page.includes('<Seg '));
+// ANALYTICS-5 supersedes AN-3's 7 days: a snapshot of the last month, the last 30 whole days ending yesterday.
+check('opens on the last 30 whole days', page.includes('lastMonth(new Date()') && adata.includes('export const lastMonth = (today: string): Range => ({ from: addDays(today, -30), to: addDays(today, -1) });'));
 // DENSE-1: the four now sit in METRICS (label: '…') and pick what the chart plots.
-check('the golf-standard four', ["label: 'Revenue'", "label: 'Tee sheet filled'", "label: 'Rounds played'", "label: 'Average per round'"].every(s => page.includes(s)) && !page.includes('Money collected') && !page.includes("'Empty spots'"));
-check('no dollar total for unsold spots on the page', !page.includes('d.unfilled.lostCents'));
-check('Ask Birdie offered, only when Birdie is on', page.includes('useBirdieReady()') && page.includes('askBirdie(q)'));
-check('five tabs', page.includes("['booking', 'How they book']") && page.includes("['revenue', 'Revenue']"));
-check('golfers tab says where the data comes from', page.includes('From bookings at your course') && page.includes('href="/privacy"'));
+// ANALYTICS-5 (Cam 2026-11-17): Revenue, Bookings, Rounds played, Tee sheet filled.
+check('the four headline numbers', ["label: 'Revenue'", "label: 'Bookings'", "label: 'Rounds played'", "label: 'Tee sheet filled'"].every(s => head.includes(s)) && !head.includes('Money collected') && !head.includes("'Empty spots'"));
+// ANALYTICS-5 reverses AN-3 here: the approved mockup shows "Value of unsold spots" on the Tee sheet tab (Build asked, see the PR).
+check('the value of unsold spots is on the Tee sheet tab only', tabs.includes("{ label: 'Value of unsold spots', value: usd(d.unfilled.lostCents) }") && !page.includes('lostCents') && !head.includes('lostCents'));
+check('Ask Birdie offered, only when Birdie is on', tabs.includes('const birdie = useBirdieReady();') && tabs.includes('{birdie && (') && tabs.includes('askBirdie(q.trim())'));
+check('six tabs, money left to Revenue', page.includes("[['sheet', 'Tee sheet'], ['book', 'Bookings'], ['golfers', 'Golfers'], ['noshow', 'No-shows'], ['shop', 'Pro shop'], ['review', 'Reviews']]") && !page.includes("['revenue', 'Revenue']"));
+check('golfers tab says where the data comes from', tabs.includes('From bookings at your course') && tabs.includes('href="/privacy"'));
 const route = readFileSync('src/app/api/operator/analytics/route.ts', 'utf8');
 check('the route takes days=N', route.includes("sp.get('days')"));
 const bar = readFileSync('src/components/OperatorSidebar.tsx', 'utf8');
@@ -39,10 +46,12 @@ check('a new sign-in forgets the last course’s top bar', readFileSync('src/app
 const terms = readFileSync('src/lib/analytics-terms.ts', 'utf8');
 check('tile wording matches the numbers', terms.includes('of bookings whose tee time has passed') && terms.includes('in these dates or any time before'));
 check('sign-in is a full page load, so no cached course survives', readFileSync('src/app/dashboard/login/page.tsx', 'utf8').includes("window.location.assign(data.redirect || '/dashboard')"));
-check('“kept from before” says booked, not played', terms.includes('from the period before who booked with you again') && page.includes('term="keptFromBefore"'));
+// ANALYTICS-5: the Golfers row has three numbers; "kept from before" is off the page, its definition stays for the assistant.
+check('“kept from before” says booked, not played', terms.includes('from the period before who booked with you again') && !tabs.includes('retentionPct'));
 // DENSE-1 review: the dashed "period before" only in day mode (weekly buckets don't line up),
 // and the no-show-fee action only for the owner (the cancellation policy is owner-only).
-check('the period before is compared day by day only', page.includes("d.revenue.bucket === 'day' ? (d.compare?.series ?? []) : []"));
-check('no-show fee action is the owner’s only', page.includes("go: isOwner ? { label: 'No-show fee'") && page.includes('access.loaded && !access.isStaff'));
+check('the period before is compared day by day only', head.includes("const day = d.revenue.bucket === 'day';") && head.includes('const before = day && d.compare?.series') && head.includes("ledger.beforeSeries && ledger.bucket === 'day'"));
+// ANALYTICS-5: "What to look at" is gone, so no settings action sits on the page for a staff login to misuse.
+check('no no-show-fee action on the page', !page.includes('settings?section') && !tabs.includes('settings?section') && !head.includes('settings?section'));
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
 process.exit(failed === 0 ? 0 : 1);
