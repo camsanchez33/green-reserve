@@ -2,7 +2,7 @@
 // TEAM-1: a role (the mockup's role popup), new, from Suggested roles, or an existing one. Its name and what the role
 // can do. A role edit changes everyone in it, so before Save the popup says how many people that is
 // (Cam's review note). Roles have a name only, no description (Cam, via Build 2026-11-17: "get rid of this"). Owner is shown read only. A role with people in it can't be deleted until they have another.
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { toast } from '@/components/dashboard/Toast';
 import { Popup, FIELD } from '@/components/dashboard/settings/ui';
@@ -18,6 +18,20 @@ export function RolePopup({ role, suggested, areas, onClose, onChanged }: {
   const [busy, setBusy] = useState<'save' | 'delete' | null>(null);
   const [err, setErr] = useState('');
 
+  const dirty = !role || name.trim() !== role.name || !sameKeys(keys, role.permissions);
+  // How many people this edit actually changes (their own changes can mask it): the server's dry run, else everyone in it.
+  const [affected, setAffected] = useState<number | null>(null);
+  const keysKey = keys.join(',');
+  useEffect(() => {
+    if (!role || role.owner || !role.people) return;
+    let live = true;
+    const t = window.setTimeout(() => {
+      dfetch<{ affected?: number }>('/api/operator/team/roles', { method: 'PATCH', body: JSON.stringify({ id: role.id, permissions: keysKey ? keysKey.split(',') : [], dryRun: true }) })
+        .then(r => { if (live) setAffected(r.ok && typeof r.data?.affected === 'number' ? r.data.affected : null); });
+    }, 250);
+    return () => { live = false; window.clearTimeout(t); };
+  }, [role, keysKey]);
+  const affects = affected ?? role?.people ?? 0;
   if (role?.owner) {
     return (
       <Popup label="Owner" onClose={onClose} size="lg">
@@ -30,8 +44,6 @@ export function RolePopup({ role, suggested, areas, onClose, onChanged }: {
     );
   }
 
-  const dirty = !role || name.trim() !== role.name || !sameKeys(keys, role.permissions);
-  const affects = role?.people ?? 0;
   function close() {
     if (role && dirty && !confirm(`Discard the unsaved changes to ${role.name}?`)) return;
     if (!role && name.trim() && !confirm('Discard this new role?')) return;
