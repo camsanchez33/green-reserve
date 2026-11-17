@@ -87,7 +87,10 @@ console.log('compareThreads');
   check('a follow-up never makes a chat look newer', followed.signal.waitingSince?.toISOString() === '2026-11-07T14:00:00.000Z' && longestWaiting([sun, followed])?.id === 'followed');
   const answered = { id: 'answered', signal: threadSignal([{ senderType: 'admin', createdAt: new Date('2026-11-06T14:00:00Z') }], now) };
   const fresh = { id: 'fresh', signal: threadSignal([op('2026-11-17T13:00:00Z')], now) };
-  check('nothing overdue → null; an earlier due time beats a later one', longestWaiting([answered, fresh]) === null && longestWaiting([fresh, sun, answered])?.id === 'sun');
+  check('nothing overdue → null; a chat not yet overdue is never picked', longestWaiting([answered, fresh]) === null && longestWaiting([fresh, sun, answered])?.id === 'sun');
+  // Two overdue chats with different due times: Wed Nov 11 (due later) against Sunday (due Nov 12).
+  const wed = { id: 'wed', signal: threadSignal([op('2026-11-11T14:00:00Z')], now) };
+  check('of two overdue chats, the earlier due time wins', wed.signal.overdue && (wed.signal.dueAt?.getTime() ?? 0) > (sun.signal.dueAt?.getTime() ?? 0) && longestWaiting([wed, sun])?.id === 'sun' && longestWaiting([sun, wed])?.id === 'sun', [wed.signal, sun.signal]);
 }
 
 console.log(failed === 0 ? '\nALL PASSED' : `\n${failed} FAILED`);
