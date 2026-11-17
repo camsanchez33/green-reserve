@@ -19,9 +19,8 @@
 // not live for in full gets no review.
 import Anthropic from '@anthropic-ai/sdk';
 import { prisma } from './prisma';
-import { computeAnalytics, headline, previousRange, type Analytics, type Range } from './analytics';
-import { allSegments } from './revenue-extras';
-import { noShowReport, type NoShowReport } from './analytics-page';
+import { computeAnalytics, headline, type Analytics, type Range } from './analytics';
+import { noShowReport, ledgerMonth, type NoShowReport, type LedgerMonth } from './analytics-page';
 import { todayIn, isValidTimezone, DEFAULT_TZ } from './course-time';
 import { sendMonthlyReviewEmail } from './email';
 
@@ -60,16 +59,6 @@ const diff = (a: number | null, b: number | null) => (a == null || b == null ? n
 
 type Headline = ReturnType<typeof headline>;
 
-/** A month's money from the ledger, the Revenue page's own figures (course part, by payment day). */
-export type LedgerMonth = { grossCents: number; refundsCents: number; teeCartCents: number; proShopCents: number; eventCents: number; duesCents: number };
-export async function ledgerMonth(courseId: string, tz: string, month: string, now: Date = new Date()): Promise<LedgerMonth> {
-  const r = monthRange(month);
-  const a = await allSegments(courseId, tz, r, previousRange(r), now);
-  return {
-    grossCents: a.grossCents, refundsCents: a.refundsCents, teeCartCents: a.segments.teeCents + a.segments.cartCents,
-    proShopCents: a.segments.shopCents + a.segments.fnbCents, eventCents: a.segments.eventCents, duesCents: a.segments.duesCents,
-  };
-}
 const ledgerFacts = (l: LedgerMonth) => ({
   revenueDollars: dollars(l.grossCents), refundsDollars: dollars(l.refundsCents), teeAndCartDollars: dollars(l.teeCartCents),
   proShopDollars: dollars(l.proShopCents), eventDollars: dollars(l.eventCents), duesDollars: dollars(l.duesCents),

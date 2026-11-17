@@ -57,7 +57,7 @@ console.log(JSON.stringify(out));`);
   const list = readFileSync('src/app/api/operator/monthly-reviews/route.ts', 'utf8');
   ok('the list gives By area and the PDF link', list.includes('byArea') && list.includes('/pdf'));
   const mr = readFileSync('src/lib/monthly-review.ts', 'utf8');
-  ok('the review\'s money comes from the ledger', mr.includes('allSegments(courseId, tz, r, previousRange(r), now)') && !mr.includes('collectedDollars') && !mr.includes('outstandingCents') && !mr.includes('impactCents'));
+  ok('the review\'s money comes from the ledger', mr.includes('ledgerMonth(courseId, tz, month, now)') && readFileSync('src/lib/analytics-page.ts', 'utf8').includes('allSegments(courseId, tz, r, previousRange(r), now)') && !mr.includes('collectedDollars') && !mr.includes('outstandingCents') && !mr.includes('impactCents'));
 
   if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
   console.log('\nall passed');

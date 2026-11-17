@@ -67,6 +67,18 @@ export async function ledgerHeadline(courseId: string, range: Range, now: Date =
   };
 }
 
+/** A month's money from the ledger, the Revenue page's own figures (course part, by payment day). */
+export type LedgerMonth = { grossCents: number; refundsCents: number; teeCartCents: number; proShopCents: number; eventCents: number; duesCents: number };
+export async function ledgerMonth(courseId: string, tz: string, month: string, now: Date = new Date()): Promise<LedgerMonth> {
+  const y = Number(month.slice(0, 4)), m = Number(month.slice(5, 7));
+  const r = { from: `${month}-01`, to: `${month}-${String(new Date(Date.UTC(y, m, 0)).getUTCDate()).padStart(2, '0')}` };
+  const a = await allSegments(courseId, tz, r, previousRange(r), now);
+  return {
+    grossCents: a.grossCents, refundsCents: a.refundsCents, teeCartCents: a.segments.teeCents + a.segments.cartCents,
+    proShopCents: a.segments.shopCents + a.segments.fnbCents, eventCents: a.segments.eventCents, duesCents: a.segments.duesCents,
+  };
+}
+
 // ─── No-shows, refills, late cancels ────────────────────────────────────────
 
 /** Five rows (agreed with the Dashboard lane, 2026-11-17): online splits by card and fee; the counter by card only. */
