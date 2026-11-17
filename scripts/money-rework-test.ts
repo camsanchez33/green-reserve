@@ -32,11 +32,11 @@ const pending = readFileSync('src/components/dashboard/money/revenue/PendingPaym
 check('top: today, next payout, and what is owed (not paid yet)', top.includes('>Today so far<') && top.includes('>Next payout<') && pending.includes('not paid yet') && page.includes('<TodayCard') && page.includes('<PendingPayments'));
 // MONEY-1 (Cam 2026-11-09: "the reload button isn't needed").
 check('no reload button', !page.includes('aria-label="Refresh"') && !page.includes('↻'));
-check('cancellation policy is not edited here — Change goes straight to it in Settings', !cx.includes('savePolicy') && cx.includes('/dashboard/settings?section=Prices+%26+fees&focus=cancellation-policy') && readFileSync('src/app/dashboard/settings/page.tsx', 'utf8').includes('data-setup="cancellation-policy"'));
+check('cancellation policy is not edited here — Change goes straight to it in Settings', !cx.includes('savePolicy') && cx.includes('/dashboard/settings?section=Prices+%26+fees&focus=cancellation-policy') && readFileSync('src/components/dashboard/settings/PaymentsArea.tsx', 'utf8').includes('setup="cancellation-policy"'));
 check('no upcoming-bookings list on Money', !cx.includes('Upcoming bookings'));
 check('payments grouped by day, future rounds left to the tee sheet', pay.includes("s.group === 'upcoming') return false"));
 check('payouts come from Stripe, read-only, behind the payouts permission', readFileSync('src/app/api/operator/stripe/payouts/route.ts', 'utf8').includes("requirePermission(session, 'money.payouts')"));
-check('settings opens the linked section', readFileSync('src/app/dashboard/settings/page.tsx', 'utf8').includes("searchParams.get('section')"));
+check('settings opens the linked section', readFileSync('src/app/dashboard/settings/page.tsx', 'utf8').includes("params.get('section')") && readFileSync('src/app/dashboard/settings/page.tsx', 'utf8').includes("'Prices & fees': { area: 'payments' }"));
 const payouts = readFileSync('src/components/dashboard/money/PayoutsPanel.tsx', 'utf8');
 // MONEY-1 (Cam 2026-11-09: "we don't want to disclose how much we make"): the fee explainer is off the course's Money page.
 check('no GreenReserve fee explainer on Payouts', !payouts.includes('passed to GreenReserve') && !/from your payouts/.test(payouts));

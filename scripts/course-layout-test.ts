@@ -14,17 +14,20 @@ check('36 holes: six pairs', candidateRounds([1, 2, 3, 4].map(i => ({ id: String
 check('same nines in any order', sameNines(['a', 'b'], ['b', 'a']) && !sameNines(['a'], ['a', 'b']));
 check('tee colour from the name', teeColour('Blue') === '#1F4FA3' && teeColour('Black tips') === '#1A1A1A' && teeColour('Championship') === null);
 
-const page = readFileSync('src/app/dashboard/settings/page.tsx', 'utf8');
+const page = [
+  'src/app/dashboard/settings/page.tsx',
+  ...['ui', 'CourseArea', 'BookingArea', 'PaymentsArea', 'AccountArea'].map(f => `src/components/dashboard/settings/${f}.tsx`),
+].map(f => readFileSync(f, 'utf8')).join('\n'); // SETTINGS-6: the page and its areas
 const tab = readFileSync('src/components/dashboard/CourseLayoutTab.tsx', 'utf8');
 const pub = readFileSync('src/lib/public-course.ts', 'utf8');
 const booking = readFileSync('src/app/courses/[slug]/CourseBookingClient.tsx', 'utf8');
-check('Course layout saves itself (no header Save)', /NO_SAVE_BUTTON: Section\[\] = \['Course layout'/.test(page));
+check('Course layout saves itself (no header Save)', page.includes('title="Holes, nines and tees"') && page.includes('Each step saves itself.'));
 check('no loose holes/par/yardage fields left on the page', !page.includes("set('yardage'") && !page.includes("set('courseRating'"));
-check('staff see the layout read-only', page.includes('readOnly={isStaffLogin}') && tab.includes('readOnly'));
+check('staff see the layout read-only', page.includes('readOnly={!ctx.owner}') && tab.includes('readOnly'));
 check('unticking a round deactivates, never deletes', !tab.includes("'/api/operator/course-products', 'DELETE'"));
 check('golfer page loads tees and nines', pub.includes('teeSets:') && pub.includes('nines:'));
 check('golfer page shows The tees', readFileSync('src/app/courses/[slug]/info/page.tsx', 'utf8').includes('The tees'));
-check('tee item waits for the count', page.includes('photos.length : null, teeSetCount,') && readFileSync('src/lib/setup-missing.ts', 'utf8').includes('if (f.teeSetCount === 0)'));
+check('tee item waits for the count', page.includes("tees === null ? '…'") && readFileSync('src/lib/setup-missing.ts', 'utf8').includes('if (f.teeSetCount === 0)'));
 
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }
 console.log('\nALL PASS');

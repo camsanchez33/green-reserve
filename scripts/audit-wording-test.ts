@@ -72,7 +72,7 @@ ok('6. both course loaders select the period name and start', read('src/lib/publ
 ok('7. the Walking / Riding switch says when a cart is on', golfer.includes("['Walking', false], ['Riding', true]") && golfer.includes('aria-pressed={withCart === riding}'));
 
 // 8
-const settings = read('src/app/dashboard/settings/page.tsx');
+const settings = read('src/components/dashboard/members/PricingCard.tsx'); // Cam 2026-11-17: the switches live on Memberships
 ok('8. the toggles say off means the public price (lib/pricing-switch makes it so)', settings.includes('Off: members pay the public price, online and at the counter.') && settings.includes('Off: residents pay the public price, online and at the counter.'));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');

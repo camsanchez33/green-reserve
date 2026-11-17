@@ -33,7 +33,8 @@ ok('each links to its Settings section', settingsHref(m[0].section) === '/dashbo
 const home = readFileSync('src/app/dashboard/home/page.tsx', 'utf8');
 ok('Home shows Finish setting up, linking into Settings', home.includes('<FinishSetup compact items={home.setupMissing.map(') && home.includes('router.push(i.href ?? settingsHref(i.section, i.key))'));
 ok('…only for logins that can edit settings', readFileSync('src/app/api/operator/home/route.ts', 'utf8').includes("setup: can(session, 'settings.edit')"));
-ok('Settings reads the same list', readFileSync('src/app/dashboard/settings/page.tsx', 'utf8').includes('missingSetup({'));
+// SETTINGS-6 (Cam 2026-11-17): Settings no longer repeats the list; Home shows it, and its buttons land on the field in Settings.
+ok('Settings has a field for every item on the list', ['logo', 'hero', 'description', 'phone', 'gallery', 'teesets', 'holes'].every(k => readFileSync('src/components/dashboard/settings/CourseArea.tsx', 'utf8').includes(`setup="${k}"`)));
 
 // The dashboard banner says what is true after a decision.
 const dash = readFileSync('src/app/dashboard/page.tsx', 'utf8');
