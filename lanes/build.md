@@ -9,6 +9,7 @@ the lane files; merges every PR in dependency order after Cam's review sitting; 
 **Control Room** (Cam watches it): Build alone writes https://claude.ai/artifact/CWmgjgJHTZaTr4XThBuvZL with `ArtifactData`: its own `sessions/<id>` row at start, after each push/merge/blocker and before ending (a `working` row silent 30 min shows as Silent), and the web (`areas`, `items`, `questions`, `lookat`) after every merge, answer and change of plan. Full protocol: `docs/DECISIONS.md` → "Control Room".
 
 ## Queued (not started)
+- Company docs data (Cam approved 2026-11-17, `lanes/admin.md`): custom labels, document versions on Replace, open/upload/replace/delete history in the audit log, and a step-up (second factor) on delete; additive migration, owner only.
 - Events data (Cam approved 2026-11-17, `lanes/dashboard.md` item 3): course-editable lists, sign-up question builder, terms presets driving refunds and Cancel event through describePolicy, event-day timeline, food count, rain plan; reminders only through sendSms(); event terms to counsel with the agreements.
 - Settings data (item 6): confirmation email parts + test send, sales tax default from the course address, reader test, plus the per-setting save routes the popups need.
 - Admin Security AI checker (`lanes/admin.md`): cron (cronRoute, vercel.json) at 7 AM / 7 PM plus spike triggers, model call, allowlisted reversible actions with Undo, Approve-fix queue, every action audited; Opus and final-reviewer.
