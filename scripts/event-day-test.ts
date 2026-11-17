@@ -21,8 +21,11 @@ check('check-in that matched nobody says so', ci.includes('if (!r.count) return 
 const detail = read('src/components/dashboard/events/EventDetail.tsx');
 check('the day view shows only on the event\'s date, for a planned event', detail.includes('{live && e.date === today && onList.length > 0 && ('));
 check('it checks in through the event route', detail.includes("act(key, { action: 'checkin', playerIds: ids, on })"));
-check('"Take payment" opens that player\'s payment in the list', detail.includes('setPaidHere({ id: p.id, amount: price, method: \'cash\' })') && detail.includes('id={`player-${p.id}`}'));
-check('printing cart signs hides the pairings sheet', detail.includes("printWhat === 'signs' ? '' : 'print:block'") && detail.includes('<CartSigns'));
+// EVENTS-3: the players live in EventPlayers; "Take payment" opens that player on the Players tab at "Paid at the course".
+const players = read('src/components/dashboard/events/EventPlayers.tsx');
+check('"Take payment" opens that player\'s payment on the Players tab', detail.includes("onTakePayment={canRecord ? p => { setTab('players'); setOpenPlayer(p.id); setPayFor(p.id); } : undefined}")
+  && players.includes("setSwap(null); setPaidHere({ amount: price, method: 'cash' }); clearPayFor();") && players.includes('id={`player-${p.id}`}'));
+check('printing cart signs hides the pairings sheet', players.includes("printWhat === 'signs' ? '' : 'print:block'") && players.includes('<CartSigns'));
 const day = read('src/components/dashboard/events/EventDay.tsx');
 check('one cart sign per group per page', day.includes('break-after-page') && day.includes('groups.map(([g, ps]) =>'));
 

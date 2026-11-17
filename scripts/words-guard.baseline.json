@@ -119,10 +119,10 @@
   "src/components/dashboard/UploadMany.tsx": 164,
   "src/components/dashboard/analytics/ShopTab.tsx": 25,
   "src/components/dashboard/events/EventDay.tsx": 19,
-  "src/components/dashboard/events/EventDetail.tsx": 468,
-  "src/components/dashboard/events/EventMoney.tsx": 365,
-  "src/components/dashboard/events/EventSetup.tsx": 562,
-  "src/components/dashboard/events/EventSignup.tsx": 285,
+  "src/components/dashboard/events/EventDetail.tsx": 615,
+  "src/components/dashboard/events/EventMoney.tsx": 436,
+  "src/components/dashboard/events/EventSetup.tsx": 645,
+  "src/components/dashboard/events/EventSignup.tsx": 422,
   "src/components/dashboard/home/HomeBoard.tsx": 130,
   "src/components/dashboard/members/ImportMembers.tsx": 181,
   "src/components/dashboard/members/MembershipSetup.tsx": 173,
@@ -142,5 +142,6 @@
   "src/components/dashboard/settings/FinishSetup.tsx": 18,
   "src/components/dashboard/settings/WhoPaysWhat.tsx": 116,
   "src/components/dashboard/shop/SaleReceiptPanel.tsx": 30,
-  "src/components/dashboard/shop/ShopReceiptBody.tsx": 14
+  "src/components/dashboard/shop/ShopReceiptBody.tsx": 14,
+  "src/components/dashboard/events/EventPlayers.tsx": 355
 }

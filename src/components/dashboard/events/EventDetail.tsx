@@ -1,26 +1,31 @@
 'use client';
-// W2-9 Events: one event — what it holds on the tee sheet, its prep checklist,
-// and its players with their groups. Every write shows its pending state and
-// then the result or the server's reason (dfetch never throws).
-// EVENTS-2 (Cam 2026-11-09: "the whole thing … gives no guidance or structure. Redo"): the strip, then "Next up" —
-// the steps from saved to played, done or not from the event's own state (eventNextSteps), each opening the part
-// that does it — then the event in tabs: Overview (tee sheet + details) · Players · Sign-up · Money · Checklist.
-// Every part stays mounted (only hidden), so a half-typed list or payment survives a tab change; the Players
-// part still prints from any tab.
+// W2-9 Events: one event. EVENTS-3 (Cam 2026-11-17, "events is good"; lanes/dashboard.md item 3, mockup
+// lanes/dashboard/events-mockup.html) lays it out as the approved page: the name with a pencil (Change details) and
+// Cancel event, four numbers (Registered, Collected, Event day, Set up), then tabs — Overview · Players · Sign-up ·
+// Payments — with the Checklist beside them (above them on a phone).
+// The checklist is the steps from saved to played, done or not from the event's own state (eventNextSteps, never a
+// guess), each opening to say what it is and how, then the course's own steps (its tasks), which it adds, edits,
+// ticks and removes.
+// Wired to today's data only. Hidden until Build returns the field (agreed shape in the PR): the event-day timeline,
+// the food count, staff notes as a list, terms presets, reminders. Every write shows its pending state and then the
+// result or the server's reason (dfetch never throws). Every tab stays mounted (only hidden), so a half-typed pop-up
+// or the pairings print survive a tab change.
+import React, { useEffect, useState } from 'react';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
-import { useEffect, useState } from 'react';
 import { shotgunLabels, groupStartTime } from '@/lib/course-events';
-import { Card } from '@/components/ui/Card';
 import { StatusDot } from '@/components/ui/StatusDot';
-import { INPUT_COMPACT as INPUT } from '@/components/ui/field';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { formatTeeDay, formatTeeTime } from '@/lib/format';
-import { KINDS } from './EventSetup';
+import { eventNextSteps, coveredCount, type EventStep, type EventStepKey } from '@/lib/event-command';
+import { SlidingTabs } from '@/components/dashboard/SlidingTabs';
+import { Popup, PopupFoot, PenButton, PenIcon, ChevIcon, PlusButton, LINK, PRIMARY, DANGER, FIELD, LABEL } from '@/components/dashboard/schedule/ui';
+import { formBody, toForm } from './EventSetup';
 import EventMoney, { type EventPayment, type Money } from './EventMoney';
 import EventSignup, { type SignupQuestion } from './EventSignup';
-import { EventDay, CartSigns } from './EventDay';
-import { eventStrip, coveredCount, pastHeadcount, eventNextSteps, STRIP_TERMS as T, type EventTab } from '@/lib/event-command';
-import { SlidingTabs } from '@/components/dashboard/SlidingTabs';
+import EventPlayers from './EventPlayers';
+import { EventDay } from './EventDay';
+import { kindLabel, formatLine, longDay } from './EventsList';
+import { Stats, Stat, StatNote, Bar, Section, KV, Fold, CheckIcon, MailIcon, PhoneIcon, ICON_BTN, usd, plural, daysUntil, inDays, RED_LINK } from './ui';
 
 export type EventTask = { id: string; label: string; dueDate: string | null; doneAt: string | null; doneBy: string };
 export type EventPlayer = {
@@ -49,10 +54,24 @@ export type EventData = {
   held: { id: string; time: string; round: string | null }[];
   toMove: { time: string; golfers: string }[]; blockedOther: number; unheld: string[];
 };
+type Tab = 'overview' | 'players' | 'signup' | 'money';
 
-const BTN = 'px-3 py-2 rounded-md text-[13px] font-medium transition-colors disabled:opacity-50';
-const PRIMARY = BTN + ' bg-pine hover:bg-pine-hover text-white';
-const SECONDARY = BTN + ' bg-white border border-line text-ink hover:bg-paper';
+/** What each checklist step is and how it's done (the steps themselves come from eventNextSteps). */
+const STEP_HELP: Record<Exclude<EventStepKey, 'checklist'>, [string, string]> = {
+  hold: ['Blocks the event’s hours on your tee sheet so golfers can’t book them online.', 'Overview › On your tee sheet. If a group was already booked in the hours, move it on the tee sheet, then hold the open times.'],
+  price: ['What each player’s spot costs: the round and whatever is included.', 'Change details › Who and what. It shows on the sign-up page and on the bill.'],
+  deposit: ['The organizer’s first payment toward the bill.', 'Payments › Send a pay link for the deposit, or the plus to record one taken at the course.'],
+  headcount: ['The final number of players from the organizer. It sets the balance.', 'Payments › Guaranteed headcount › Record it.'],
+  list: ['The players’ names, so pairings and cart signs are ready.', 'Players › the plus. One per line: name, email, phone.'],
+  signup: ['Players sign up (and pay, if they pay when they sign up) on a page with its own link.', 'Sign-up › the pencil. Open it, then copy the link and send it to the organizer or post it.'],
+  paid: ['Every player on the list has paid.', 'Players › open a player to send their pay link, or mark them paid at the course.'],
+  pairings: ['Every player on the list is in a group with a starting hole or tee time.', 'Players › Pair in list order keeps sign-ups that came together. The pencil on a group moves anyone.'],
+};
+const GO: Record<EventStep['tab'], string> = { overview: 'Go to Overview', players: 'Go to Players', signup: 'Go to Sign-up', money: 'Go to Payments', checklist: 'Go to Overview', edit: 'Open Change details' };
+
+type TextEdit = { field: 'notes' | 'terms'; title: string; label: string; value: string };
+type IncEdit = { i: number | null; value: string };
+type TaskEdit = { id: string | null; label: string; dueDate: string };
 
 export default function EventDetail({ data, onChange, onEdit, onBack, canRefund, reload }: {
   data: EventData; onChange: (d: EventData) => void; onEdit: () => void; onBack: () => void;
@@ -60,75 +79,42 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
 }) {
   // Events audit 23: taking event money needs "Mark paid at the counter" (the payments route checks it too).
   const canRecord = useDashboardAccess().can('sheet.counter_payment');
-  const { event: e, today, held, toMove } = data;
+  const { event: e, today, held, toMove, money } = data;
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const [note, setNote] = useState('');
-  const [newTask, setNewTask] = useState({ label: '', dueDate: '' });
-  const [paste, setPaste] = useState('');
-  const [size, setSize] = useState(4);
-  const [confirmCancel, setConfirmCancel] = useState(false);
-  const [tab, setTab] = useState<Exclude<EventTab, 'edit'>>('overview');
-  const shown = (k: Exclude<EventTab, 'edit'>) => tab === k ? '' : 'hidden';
+  const [tab, setTab] = useState<Tab>('overview');
+  const [showList, setShowList] = useState(true);
+  const [openStep, setOpenStep] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState(false);
+  const [text, setText] = useState<TextEdit | null>(null);
+  const [inc, setInc] = useState<IncEdit | null>(null);
+  const [task, setTask] = useState<TaskEdit | null>(null);
+  // Event day "Take payment" opens that player on the Players tab.
+  const [openPlayer, setOpenPlayer] = useState<string | null>(null);
+  // …straight to "Paid at the course" for that player.
+  const [payFor, setPayFor] = useState<string | null>(null);
   // Event day: what the next print shows — the pairings sheet or a cart sign per group.
   const [printWhat, setPrintWhat] = useState<'pairings' | 'signs'>('pairings');
   const printNow = (what: 'pairings' | 'signs') => { setPrintWhat(what); setTimeout(() => window.print(), 50); };
   useEffect(() => { const back = () => setPrintWhat('pairings'); window.addEventListener('afterprint', back); return () => window.removeEventListener('afterprint', back); }, []);
+
   const live = e.status === 'planned';
-  // W2-9c: players' own payments.
-  const price = e.pricePerPlayerCents ? (e.pricePerPlayerCents / 100).toFixed(2) : '';
-  // Cam 2026-10-24: the organizer pays the course → no per-player payments here.
   const playersPay = e.payer !== 'organizer';
-  const [linkCopied, setLinkCopied] = useState(false);
-  // team: a captain paying for their whole sign-up (Revamp 3 fix 10).
-  const [paidHere, setPaidHere] = useState<{ id: string; amount: string; method: string; team?: boolean } | null>(null);
-  // A substitute: change the name and contact on the spot, so its payment stays with it.
-  const [swap, setSwap] = useState<{ id: string; name: string; email: string; phone: string } | null>(null);
-  const [copied, setCopied] = useState('');
+  const orgPays = e.payer === 'organizer';
   // W2-9d: only players on the list are paired, counted and asked to pay; a sign-up group's one payment covers each of them.
   const onList = e.entrants.filter(p => p.status === 'in');
   const notYet = e.entrants.filter(p => p.status !== 'in');
+  const holding = e.entrants.filter(p => p.status === 'held' && p.holdUntil && new Date(p.holdUntil) > new Date()).length;
+  const waiting = e.entrants.filter(p => p.status === 'waitlist').length;
   const theirs = (p: EventPlayer) => e.payments.filter(x => x.playerId === p.id || (!!p.groupKey && x.groupKey === p.groupKey));
   const stateOf = (p: EventPlayer): 'paid' | 'paying' | 'sent' | 'none' => {
     const ps = theirs(p);
     if (ps.some(x => x.status === 'paid' && x.amountCents > x.refundedCents)) return 'paid';
     if (ps.some(x => x.status === 'paying')) return 'paying';
-    if (ps.some(x => x.status === 'open' || x.status === 'paying')) return 'sent';
+    if (ps.some(x => x.status === 'open')) return 'sent';
     return 'none';
   };
-  const unpaid = onList.filter(p => stateOf(p) === 'none').length;
-  const questions = data.signup.questions;
-  const answersOf = (p: EventPlayer) => questions.filter(q => p.answers?.[q.id]).map(q => `${q.label}: ${p.answers[q.id]}`).join(' · ');
-  // EVENTS-1: the organizer's bill covers this many on the list, a full price each, in list order.
-  const orgPays = e.payer === 'organizer';
-  const listOrder = [...onList].sort((a, b) => (a.groupNo ?? 1e9) - (b.groupNo ?? 1e9));
-  const covered = orgPays ? coveredCount(data.money.keptCents, e.pricePerPlayerCents, onList.length) : 0;
-  const coveredIds = new Set(listOrder.slice(0, covered).map(p => p.id));
-  const spotsLeft = e.players > 0 ? Math.max(0, e.players - onList.length - e.entrants.filter(p => p.status === 'held' && p.holdUntil && new Date(p.holdUntil) > new Date()).length) : null;
-
-  /** A payment action (the payments route), then refresh the event in place. */
-  async function payAct(key: string, body: Record<string, unknown>, done?: (r: Record<string, unknown>) => string) {
-    setBusy(key); setError(''); setNote('');
-    const r = await dfetch<Record<string, unknown>>(`/api/operator/events/${e.id}/payments`, { method: 'POST', body: JSON.stringify(body) });
-    if (!r.ok) { setBusy(''); setError(r.error); return false; }
-    await reload();
-    setBusy('');
-    if (done) setNote(done(r.data ?? {}));
-    return true;
-  }
-
-  async function act(key: string, body: Record<string, unknown>, done?: (r: EventData & Record<string, unknown>) => string) {
-    setBusy(key); setError(''); setNote('');
-    const r = await dfetch<EventData & Record<string, unknown>>(`/api/operator/events/${e.id}`, { method: 'PATCH', body: JSON.stringify(body) });
-    setBusy('');
-    if (!r.ok) { setError(r.error); return false; }
-    onChange(r.data);
-    if (done) setNote(done(r.data));
-    return true;
-  }
-
-  const open = e.tasks.filter(t => !t.doneAt);
-  const overdue = open.filter(t => t.dueDate && t.dueDate < today);
   const groups = new Map<number, EventPlayer[]>();
   for (const p of onList) if (p.groupNo != null) groups.set(p.groupNo, [...(groups.get(p.groupNo) ?? []), p]);
   const sortedGroups = [...groups.entries()].sort((a, b) => a[0] - b[0]);
@@ -141,374 +127,327 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
     const t = groupStartTime(g, heldTimes);
     return t ? formatTeeTime(t) : 'No tee time held';
   };
-  const kind = KINDS.find(k => k.key === e.kind)?.label ?? 'Event';
-  const maxHole = Math.min(e.holes, data.courseHoles);
+  // EVENTS-1: the organizer's bill covers this many on the list, a full price each, in list order.
+  const listOrder = [...onList].sort((a, b) => (a.groupNo ?? 1e9) - (b.groupNo ?? 1e9));
+  const covered = orgPays ? coveredCount(money.keptCents, e.pricePerPlayerCents, onList.length) : 0;
+  const coveredIds = new Set(listOrder.slice(0, covered).map(p => p.id));
+
+  const open = e.tasks.filter(t => !t.doneAt);
+  const overdue = open.filter(t => t.dueDate && t.dueDate < today);
+  const steps = eventNextSteps({
+    payer: e.payer, priceCents: e.pricePerPlayerCents, heldCount: held.length, toMove: toMove.length, unheld: data.unheld.length,
+    onList: onList.length, ungrouped: ungrouped.length, unpaid: onList.filter(p => stateOf(p) !== 'paid').length, signupOpen: e.signupOpen, keptCents: money.keptCents,
+    guaranteeDue: data.guaranteeDue ? formatTeeDay(data.guaranteeDue) : null, guaranteedAt: e.guaranteedAt,
+    tasksOpen: open.length, tasksOverdue: overdue.length,
+  }).filter(s => s.key !== 'checklist');
+  const stepsDone = steps.filter(s => s.done).length + (e.tasks.length - open.length);
+  const stepsAll = steps.length + e.tasks.length;
+  const until = daysUntil(today, e.date);
+
+  /** A write to the event (PATCH), then the page shows the new state. */
+  async function act(key: string, body: Record<string, unknown>, done?: (r: EventData & Record<string, unknown>) => string) {
+    setBusy(key); setError(''); setNote('');
+    const r = await dfetch<EventData & Record<string, unknown>>(`/api/operator/events/${e.id}`, { method: 'PATCH', body: JSON.stringify(body) });
+    setBusy('');
+    if (!r.ok) { setError(r.error); return false; }
+    onChange(r.data);
+    if (done) setNote(done(r.data));
+    return true;
+  }
+  /** A payment action (the payments route), then refresh the event in place. */
+  async function payAct(key: string, body: Record<string, unknown>, done?: (r: Record<string, unknown>) => string) {
+    setBusy(key); setError(''); setNote('');
+    const r = await dfetch<Record<string, unknown>>(`/api/operator/events/${e.id}/payments`, { method: 'POST', body: JSON.stringify(body) });
+    if (!r.ok) { setBusy(''); setError(r.error); return false; }
+    await reload();
+    setBusy('');
+    if (done) setNote(done(r.data ?? {}));
+    return true;
+  }
+  /** A detail of the event changed in place: the same save as Change details, with everything else as it is. */
+  const update = (key: string, patch: Record<string, unknown>, done: string) => act(key, { ...formBody(toForm(data)), ...patch, action: 'update' }, () => done);
+
+  const goTo = (t: EventStep['tab']) => { if (t === 'edit') onEdit(); else setTab(t === 'checklist' ? 'overview' : t); };
+  const message = (error || note) && <p role={error ? 'alert' : 'status'} className={'print:hidden text-[13.5px] ' + (error ? 'text-bad' : 'text-ink')}>{error || note}</p>;
 
   return (
-    <div className="space-y-5">
+    <div className="flex flex-col gap-4">
       <div className="print:hidden">
-        <button onClick={onBack} className="text-[13px] text-ink-soft hover:text-ink">← All events</button>
-        <div className="flex flex-wrap items-end justify-between gap-3 mt-2">
-          <div>
+        <button type="button" onClick={onBack} className="text-[13px] font-semibold text-ink-soft hover:text-ink">‹ Events</button>
+        <div className="flex flex-wrap items-center gap-3 mt-2">
+          <div className="mr-auto min-w-0">
             <h1 className="font-serif text-[30px] font-semibold leading-none text-ink">{e.name}</h1>
-            <p className="text-[14px] text-ink mt-2">
-              {kind} · {formatTeeDay(e.date)} · {e.format === 'shotgun' ? `${e.holes}-hole shotgun at ${formatTeeTime(e.startTime)}` : `tee times from ${formatTeeTime(e.startTime)}`}
-            </p>
-            {!live && <div className="mt-2"><StatusDot status="neutral" label="Cancelled — its tee times went back on sale" /></div>}
+            <p className="text-[12.5px] text-ink-muted mt-1.5">{kindLabel(e.kind)} · {longDay(e.date)} · {formatLine(e)}</p>
+            {!live && <div className="mt-2"><StatusDot status="neutral" label="Cancelled. Its tee times went back on sale." /></div>}
           </div>
-          {live && (
-            <div className="flex gap-2">
-              <button onClick={onEdit} className={SECONDARY}>Change details</button>
-              {!confirmCancel
-                ? <button onClick={() => setConfirmCancel(true)} className={SECONDARY + ' text-bad'}>Cancel event</button>
-                : <span className="flex items-center gap-2">
-                    <button disabled={!!busy} onClick={async () => { if (await act('cancel', { action: 'cancel' }, r => { const errs = (r.linkErrors as string[] | undefined) ?? []; const v = Number(r.linksVoided ?? 0); return `Cancelled. ${Number(r.released ?? 0)} tee time${r.released === 1 ? '' : 's'} went back on sale.${v ? ` ${v} unpaid pay link${v === 1 ? ' was' : 's were'} cancelled.` : ''}${errs.length ? ` ${errs.length === 1 ? 'A pay link' : `${errs.length} pay links`} couldn\u2019t be cancelled — cancel ${errs.length === 1 ? 'it' : 'them'} under Money: ${errs.join('; ')}` : ''}`; })) setConfirmCancel(false); }}
-                      className={BTN + ' bg-bad text-white'}>{busy === 'cancel' ? 'Cancelling…' : 'Yes, cancel it'}</button>
-                    <button onClick={() => setConfirmCancel(false)} className={SECONDARY}>Keep it</button>
-                  </span>}
-            </div>
-          )}
+          {live && <>
+            <button type="button" onClick={onEdit} aria-label="Change details" title="Change details" className={ICON_BTN}><PenIcon /></button>
+            <button type="button" onClick={() => setCancelling(true)} className={RED_LINK}>Cancel event</button>
+          </>}
         </div>
       </div>
 
-      {/* EVENTS-1 (Cam 2026-11-04, "events command center"): where the event stands, at a glance. */}
-      {live && (() => {
-        // Players added after a balance confirmed the headcount: not in Owed (it bills the confirmed number), so said here.
-        const extra = pastHeadcount(data.money, onList.length);
-        const st = eventStrip({ capacity: e.players, onList: onList.length, holding: e.entrants.filter(p => p.status === 'held' && p.holdUntil && new Date(p.holdUntil) > new Date()).length, money: data.money, tasks: e.tasks, today });
-        const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
-        const cell = (label: string, def: string, value: string, sub?: string, bad?: boolean) => (
-          <div className="px-4 py-3 min-w-[8.5rem]">
-            <div className="text-[12.5px] text-ink-soft" title={def}>{label}</div>
-            <div className={'text-[22px] font-semibold tabular-nums ' + (bad ? 'text-bad' : 'text-ink')}>{value}</div>
-            {sub && <div className={'text-[12px] ' + (bad ? 'text-bad' : 'text-ink-muted')}>{sub}</div>}
-          </div>
-        );
-        return (
-          <Card className="print:hidden flex flex-wrap divide-x divide-line-soft">
-            {cell(T.registered.label, T.registered.def, st.capacity ? `${st.registered} / ${st.capacity}` : String(st.registered), orgPays && e.pricePerPlayerCents > 0 ? `${T.covered.label} ${covered}` : undefined)}
-            {st.spotsLeft !== null && cell(T.spotsLeft.label, T.spotsLeft.def, String(st.spotsLeft))}
-            {e.pricePerPlayerCents > 0 && cell(T.collected.label, T.collected.def, usd(st.collectedCents), st.sentCents ? `${usd(st.sentCents)} ${T.sent.label}` : undefined)}
-            {e.pricePerPlayerCents > 0 && cell(T.owed.label, T.owed.def, usd(st.owedCents), extra ? `+${extra} ${T.past.label}` : undefined, (st.owedCents > 0 && e.date <= today) || extra > 0)}
-            {cell(T.tasks.label, T.tasks.def, String(st.tasksLeft), st.overdue ? `${st.overdue} ${T.overdue.label}` : st.nextDue ? `${T.next.label} ${formatTeeDay(st.nextDue)}` : undefined, st.overdue > 0)}
-          </Card>
-        );
-      })()}
+      <div className="print:hidden">
+        <Stats>
+          <Stat label="Registered" value={e.players ? `${onList.length} of ${e.players}` : String(onList.length)}>
+            {e.players > 0 && <Bar value={onList.length} of={e.players} />}
+            <StatNote>{[e.players > 0 && `${Math.max(0, e.players - onList.length - holding)} spots left`, waiting > 0 && `${waiting} waiting`, !e.players && 'no player limit'].filter(Boolean).join(' · ')}</StatNote>
+          </Stat>
+          {e.pricePerPlayerCents > 0
+            ? <Stat label="Collected" value={`${usd(money.keptCents)} of ${usd(money.keptCents + money.owedCents)}`}>
+                <Bar value={money.keptCents} of={money.keptCents + money.owedCents} ok />
+                <StatNote>{money.owedCents ? <span className={until <= 0 ? 'text-bad' : ''}>{usd(money.owedCents)} owed</span> : 'All paid'}</StatNote>
+              </Stat>
+            : <Stat label="Collected" value="—"><StatNote>No price yet</StatNote></Stat>}
+          <Stat label="Event day" value={inDays(until)}><StatNote>{longDay(e.date)} · {formatTeeTime(e.startTime)}</StatNote></Stat>
+          <Stat label="Set up" value={`${stepsDone} of ${stepsAll} steps`}>
+            <Bar value={stepsDone} of={stepsAll} ok={stepsDone === stepsAll} />
+            <StatNote>{overdue.length ? <span className="text-bad">{overdue.length} overdue</span> : 'none overdue'}</StatNote>
+          </Stat>
+        </Stats>
+      </div>
 
-      {(error || note) && (
-        <p role={error ? 'alert' : 'status'} className={'print:hidden text-[13.5px] ' + (error ? 'text-bad' : 'text-ink')}>{error || note}</p>
-      )}
+      {message}
 
       {/* Event day (Cam 2026-10-31): on the event's date, who's here and who still owes, first. */}
       {live && e.date === today && onList.length > 0 && (
         <EventDay groups={sortedGroups} ungrouped={ungrouped} startOf={startOf} onList={onList} busy={busy}
           owes={p => playersPay && stateOf(p) !== 'paid' && stateOf(p) !== 'paying'}
           onCheck={(ids, on, key) => { act(key, { action: 'checkin', playerIds: ids, on }); }}
-          onTakePayment={canRecord ? p => { setPaidHere({ id: p.id, amount: price, method: 'cash' }); setTab('players'); setTimeout(() => document.getElementById(`player-${p.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 0); } : undefined}
+          onTakePayment={canRecord ? p => { setTab('players'); setOpenPlayer(p.id); setPayFor(p.id); } : undefined}
           onPrintSigns={() => printNow('signs')} />
       )}
 
-      {live && (() => {
-        const steps = eventNextSteps({
-          payer: e.payer, priceCents: e.pricePerPlayerCents, heldCount: held.length, toMove: toMove.length, unheld: data.unheld.length,
-          onList: onList.length, ungrouped: ungrouped.length, unpaid: onList.filter(p => stateOf(p) !== 'paid').length, signupOpen: e.signupOpen, keptCents: data.money.keptCents,
-          guaranteeDue: data.guaranteeDue ? formatTeeDay(data.guaranteeDue) : null, guaranteedAt: e.guaranteedAt,
-          tasksOpen: open.length, tasksOverdue: overdue.length,
-        });
-        const next = steps.find(s => !s.done);
-        const goTo = (t: EventTab) => { if (t === 'edit') onEdit(); else setTab(t); };
-        return (
-          <Card className="print:hidden p-5">
-            <div className="flex flex-wrap items-baseline justify-between gap-2 mb-3">
-              <h2 className="text-[15px] font-semibold text-ink">Next up</h2>
-              <span className="text-[12.5px] text-ink-muted tabular-nums">{steps.filter(s => s.done).length} of {steps.length} done</span>
-            </div>
-            {next && (
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-md bg-paper/70 px-3.5 py-3 mb-3">
-                <div><div className="text-[14px] font-medium text-ink">{next.label}</div><div className="text-[12.5px] text-ink-muted">{next.detail}</div></div>
-                <button onClick={() => goTo(next.tab)} className={PRIMARY}>{next.tab === 'edit' ? 'Change details' : 'Do it'}</button>
-              </div>
-            )}
-            <ol className="grid sm:grid-cols-2 lg:grid-cols-4 gap-x-5">
-              {steps.map(s => (
-                <li key={s.key} className="flex items-center gap-2 py-1.5 text-[13px] border-b border-line-soft">
-                  <StatusDot status={s.done ? 'ok' : s === next ? 'warn' : 'neutral'} label="" />
-                  <button onClick={() => goTo(s.tab)} className={'flex-1 min-w-0 text-left truncate ' + (s.done ? 'text-ink-muted' : 'text-ink hover:underline underline-offset-4')}>{s.label}</button>
-                  <span className="text-[12px] text-ink-muted truncate max-w-[45%]">{s.detail}</span>
-                </li>
-              ))}
-            </ol>
-          </Card>
-        );
-      })()}
+      <div className="grid lg:grid-cols-[minmax(0,1fr)_280px] gap-[22px] items-start mt-1">
+        <section className="min-w-0 flex flex-col">
+          <div className="print:hidden">
+            <SlidingTabs<Tab> value={tab} onChange={setTab} label="Event"
+              tabs={[['overview', 'Overview'], ['players', 'Players'], ['signup', 'Sign-up'], ['money', 'Payments']]} />
+          </div>
 
-      <div className="print:hidden">
-        <SlidingTabs<Exclude<EventTab, 'edit'>> value={tab} onChange={setTab} label="Event"
-          tabs={[['overview', 'Overview'], ['players', `Players ${onList.length}`], ['signup', 'Sign-up'], ['money', 'Money'], ['checklist', `Checklist ${e.tasks.length - open.length}/${e.tasks.length}`]]} />
-      </div>
-
-      <div className={'grid lg:grid-cols-[1fr_1fr] gap-5 print:hidden ' + shown('overview')}>
-        <Card className="p-5">
-          <h2 className="text-[15px] font-semibold text-ink mb-2">On the tee sheet</h2>
-          {held.length === 0 && live
-            ? <p className="text-[13.5px] text-ink">No tee times held yet{toMove.length ? '' : ' — the day’s tee times will be held as they are made'}.</p>
-            : <p className="text-[13.5px] text-ink">{live ? 'Holding' : 'Held'} {formatTeeTime(e.holdFrom)} to {formatTeeTime(e.holdTo)}{held.length ? ` — ${held.length} tee time${held.length === 1 ? '' : 's'}` : ''}.</p>}
-          {e.shareCourse && (
-            <p className="text-[13px] text-ink-soft mt-1">
-              Shares the course{e.holdNineIds.length ? ' — only the holes chosen for it are held' : ''}.
-              {e.keepOpen.length > 0 && ` Kept open for golfers: ${e.keepOpen.map(formatTeeTime).join(', ')}.`}
-            </p>
-          )}
-          {(toMove.length > 0 || data.unheld.length > 0) && (
-            <div className="border-l-[3px] border-warn pl-3 mt-3 text-[13.5px] text-ink">
-              {toMove.length > 0 && <>
-                <p>{toMove.length} booked time{toMove.length === 1 ? '' : 's'} in the window {toMove.length === 1 ? 'isn’t' : 'aren’t'} held. Move these groups from the tee sheet, then hold the open times:</p>
-                <ul className="mt-1 text-ink-soft">{toMove.map(b => <li key={b.time}>{formatTeeTime(b.time)} — {b.golfers}</li>)}</ul>
-              </>}
-              {data.unheld.length > 0 && (
-                <p className={toMove.length ? 'mt-2' : ''}>{data.unheld.length === 1 ? `${formatTeeTime(data.unheld[0])} is` : `${data.unheld.map(formatTeeTime).join(', ')} are`} open in the window and golfers can book {data.unheld.length === 1 ? 'it' : 'them'}. Hold {data.unheld.length === 1 ? 'it' : 'them'} for the event:</p>
+          <div className={'print:hidden ' + (tab === 'overview' ? '' : 'hidden')}>
+            <Section title="On your tee sheet">
+              <KV k="Held">
+                {held.length === 0 && live
+                  ? `No tee times held yet${toMove.length ? '' : '. They’re held as the day’s tee times are made'}`
+                  : `${formatTeeTime(e.holdFrom)} to ${formatTeeTime(e.holdTo)}${held.length ? ` · ${plural(held.length, 'tee time')}` : ''}`}
+              </KV>
+              <KV k="Golfers">{e.shareCourse
+                ? `Shares the course${e.holdNineIds.length ? ': only the holes chosen for it are held' : ''}.${e.keepOpen.length ? ` Kept open: ${e.keepOpen.map(formatTeeTime).join(', ')}.` : ''}`
+                : 'Can’t book these times online. They go back on sale if the event is cancelled.'}</KV>
+              {(toMove.length > 0 || data.unheld.length > 0) && live && (
+                <div className="mx-1 my-2 border-l-[3px] border-warn pl-3 text-[13.5px] text-ink">
+                  {toMove.length > 0 && <>
+                    <p>{plural(toMove.length, 'booked time')} in the hours {toMove.length === 1 ? 'isn’t' : 'aren’t'} held. Move these groups on the tee sheet, then hold the open times:</p>
+                    <ul className="mt-1 text-ink-soft">{toMove.map(b => <li key={b.time}>{formatTeeTime(b.time)}: {b.golfers}</li>)}</ul>
+                  </>}
+                  {data.unheld.length > 0 && <p className={toMove.length ? 'mt-2' : ''}>{data.unheld.map(formatTeeTime).join(', ')} {data.unheld.length === 1 ? 'is' : 'are'} open in the hours and golfers can book {data.unheld.length === 1 ? 'it' : 'them'}.</p>}
+                  <button type="button" disabled={!!busy} className={LINK + ' mt-2'} onClick={() => act('rehold', { action: 'rehold' }, r => {
+                    const h = (r.hold as { held: number } | undefined)?.held ?? 0;
+                    return h ? `Held ${plural(h, 'more tee time')}.` : 'Nothing new to hold. Those times are still booked.';
+                  })}>{busy === 'rehold' ? 'Holding…' : 'Hold the open times'}</button>
+                </div>
               )}
-              <button disabled={!!busy} onClick={() => act('rehold', { action: 'rehold' }, r => {
-                const h = (r.hold as { held: number } | undefined)?.held ?? 0;
-                return h ? `Held ${h} more tee time${h === 1 ? '' : 's'}.` : 'Nothing new to hold — those times are still booked.';
-              })} className={SECONDARY + ' mt-2'}>{busy === 'rehold' ? 'Holding…' : 'Hold the open times'}</button>
-            </div>
-          )}
-          {data.blockedOther > 0 && <p className="text-[13px] text-ink-soft mt-2">{data.blockedOther} time{data.blockedOther === 1 ? ' is' : 's are'} held by another event.</p>}
-        </Card>
+              {data.blockedOther > 0 && <KV k="Another event">{plural(data.blockedOther, 'time')} in these hours {data.blockedOther === 1 ? 'is' : 'are'} held by another event.</KV>}
+            </Section>
 
-        <Card className="p-5">
-          <div className="flex items-baseline justify-between gap-2 mb-1">
-            <h2 className="text-[15px] font-semibold text-ink">Details</h2>
-            {live && <button onClick={onEdit} className="text-[13px] font-medium text-pine hover:underline underline-offset-4">Change</button>}
-          </div>
-          <div className="divide-y divide-line-soft text-[13.5px]">
-            {[
-              ['Players', [e.players && `${e.players} expected`, e.groups && `${e.groups} groups`, onList.length && `${onList.length} on the list`, notYet.length && `${notYet.length} signed up, not on it yet`].filter(Boolean).join(', ') || 'Not set yet'],
-              ['Organizer', [e.organizerName, e.organizerEmail, e.organizerPhone].filter(Boolean).join(' · ') || 'Not set yet'],
-              ['Price', e.pricePerPlayerCents ? `$${(e.pricePerPlayerCents / 100).toFixed(2)} per player` : 'Not set yet'],
-              ['Who pays', e.payer === 'organizer' ? 'The organizer — one bill' : e.payer === 'players' ? 'Each player, on the sign-up page' : 'Not chosen yet — Change details'],
-              ['Included', e.includes.join(', ') || 'Nothing listed'],
-              ...(e.terms ? [['Terms', e.terms]] : []),
-              ...(e.notes ? [['Notes', e.notes]] : []),
-            ].map(([k, v]) => (
-              <div key={k} className="grid grid-cols-[90px_1fr] gap-3 py-2"><span className="text-ink-muted">{k}</span><span className="text-ink whitespace-pre-line">{v}</span></div>
-            ))}
-          </div>
-        </Card>
-      </div>
+            <Section title="Organizer">
+              <KV k="Contact">{e.organizerName || 'Not set yet'}</KV>
+              {(e.organizerEmail || e.organizerPhone) && (
+                <KV k="Reach them">
+                  <span className="flex flex-wrap items-center gap-2">
+                    {e.organizerEmail && <a className={ICON_BTN} href={`mailto:${e.organizerEmail}`} aria-label={`Email ${e.organizerEmail}`} title={e.organizerEmail}><MailIcon /></a>}
+                    {e.organizerPhone && <a className={ICON_BTN} href={`tel:${e.organizerPhone.replace(/[^\d+]/g, '')}`} aria-label={`Call ${e.organizerPhone}`} title={e.organizerPhone}><PhoneIcon /></a>}
+                    <span className="text-[12.5px] text-ink-soft font-normal break-all">{[e.organizerEmail, e.organizerPhone].filter(Boolean).join(' · ')}</span>
+                  </span>
+                </KV>
+              )}
+            </Section>
 
-      <div className={'print:hidden max-w-2xl ' + shown('checklist')}>
-        <Card className="p-5">
-          <div className="flex items-baseline justify-between mb-2">
-            <h2 className="text-[15px] font-semibold text-ink">Checklist</h2>
-            <span className="text-[12.5px] text-ink-muted">{e.tasks.length - open.length} of {e.tasks.length} done</span>
+            <Section title="What they bought">
+              <KV k="Price">{e.pricePerPlayerCents ? `${usd(e.pricePerPlayerCents)} per player` : 'Not set yet'}</KV>
+              <KV k="Who pays">{orgPays ? 'The organizer, one bill (deposit, then the balance)' : e.payer === 'players' ? 'Each player, on the sign-up page' : 'Not chosen yet'}</KV>
+              {orgPays && data.guaranteeDue && <KV k="Final headcount">{e.guaranteedPlayers != null ? `${e.guaranteedPlayers} players, confirmed` : `Due ${formatTeeDay(data.guaranteeDue)}`}</KV>}
+            </Section>
+
+            <Section title="Included" plus={live ? { label: 'Add an included item', onClick: () => setInc({ i: null, value: '' }) } : undefined}>
+              {e.includes.length === 0 ? <p className="px-1 py-1 text-[13.5px] text-ink-muted">Nothing yet.</p>
+                : e.includes.map((x, i) => <KV key={x + i} onEdit={live ? () => setInc({ i, value: x }) : undefined} editLabel={`Edit ${x}`}>{x}</KV>)}
+            </Section>
+
+            <Section title="Notes for staff" plus={live && !e.notes ? { label: 'Add a note', onClick: () => setText({ field: 'notes', title: 'Notes for staff', label: 'Note', value: '' }) } : undefined}>
+              {e.notes
+                ? <KV onEdit={live ? () => setText({ field: 'notes', title: 'Notes for staff', label: 'Note', value: e.notes }) : undefined} editLabel="Edit the note"><span className="whitespace-pre-line font-normal">{e.notes}</span></KV>
+                : <p className="px-1 py-1 text-[13.5px] text-ink-muted">None. Staff see what you add here on this page.</p>}
+            </Section>
           </div>
-          {overdue.length > 0 && <div className="mb-2"><StatusDot status="bad" label={`${overdue.length} overdue`} /></div>}
-          <ul className="divide-y divide-line-soft">
+
+          <div className={'print:hidden ' + (tab === 'signup' ? '' : 'hidden')}>
+            <EventSignup live={live} payer={e.payer} url={data.signup.url} priceSet={e.pricePerPlayerCents > 0} capacity={e.players}
+              spotsLeft={e.players > 0 ? Math.max(0, e.players - onList.length - holding) : null} waiting={notYet} busy={busy} includes={e.includes} priceCents={e.pricePerPlayerCents}
+              settings={{ signupOpen: e.signupOpen, signupPay: e.signupPay, signupMaxGroup: e.signupMaxGroup, signupQuestions: data.signup.questions }}
+              terms={e.terms} error={error} onEditTerms={live ? () => setText({ field: 'terms', title: 'Event terms', label: orgPays ? 'Deposit and refund terms' : 'Refund terms', value: e.terms }) : undefined}
+              act={(key, body, done) => act(key, body, done ? r => done(r) : undefined)} />
+          </div>
+
+          <div className={'print:hidden ' + (tab === 'money' ? '' : 'hidden')}>
+            <EventMoney eventId={e.id} live={live} pricePerPlayerCents={e.pricePerPlayerCents} money={money} payments={e.payments} canRefund={canRefund} reload={reload}
+              guarantee={e.payer === 'players' ? null : { due: data.guaranteeDue, players: e.guaranteedPlayers, at: e.guaranteedAt, today, onList: onList.length }}
+              organizer={{ name: e.organizerName, email: e.organizerEmail, phone: e.organizerPhone }} />
+          </div>
+
+          {/* Printing (pairings or cart signs) prints this part from any tab. */}
+          <div className={tab === 'players' ? '' : 'hidden print:block'}>
+            <EventPlayers data={data} live={live} busy={busy} act={act} payAct={payAct} canRecord={canRecord} setError={setError}
+              onList={onList} sortedGroups={sortedGroups} ungrouped={ungrouped} startOf={startOf} stateOf={stateOf} theirs={theirs}
+              coveredIds={orgPays && e.pricePerPlayerCents > 0 ? coveredIds : null} printWhat={printWhat} printNow={printNow}
+              openPlayer={openPlayer} setOpenPlayer={setOpenPlayer} payFor={payFor} clearPayFor={() => setPayFor(null)} />
+          </div>
+        </section>
+
+        <aside className="print:hidden max-lg:order-first border border-line rounded-[14px] px-1.5 pt-1 pb-2 lg:sticky lg:top-4">
+          <div className="flex items-center gap-1">
+            <Fold top open={showList} onToggle={() => setShowList(v => !v)}>Checklist · {stepsDone} of {stepsAll}</Fold>
+            {live && <PlusButton label="Add a checklist step" onClick={() => setTask({ id: null, label: '', dueDate: '' })} />}
+          </div>
+          {showList && <>
+            {steps.map(s => {
+              const isOpen = openStep === s.key;
+              const help = STEP_HELP[s.key as Exclude<EventStepKey, 'checklist'>];
+              return (
+                <div key={s.key} className="border-t border-line">
+                  <button type="button" onClick={() => setOpenStep(isOpen ? null : s.key)} aria-expanded={isOpen}
+                    className="w-full flex items-center gap-2.5 text-left px-2 py-2.5 min-h-[44px]">
+                    <Box done={s.done} />
+                    <span className="flex-1 min-w-0">
+                      <b className={'block text-[13px] font-medium ' + (s.done ? 'text-ink-muted' : 'text-ink')}>{s.label}</b>
+                      <small className="block text-[12px] text-ink-muted truncate">{s.detail}</small>
+                    </span>
+                    <ChevIcon open={isOpen} />
+                  </button>
+                  {isOpen && help && (
+                    <div className="pl-9 pr-2 pb-3 flex flex-col gap-1.5 text-[12.5px] text-ink-soft">
+                      <p>{help[0]}</p>
+                      <p><b className="font-semibold text-ink">How:</b> {help[1]}</p>
+                      {!s.done && live && <button type="button" onClick={() => goTo(s.tab)} className={LINK + ' self-start'}>{GO[s.tab]} ›</button>}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
             {e.tasks.map(t => {
               const late = !t.doneAt && t.dueDate && t.dueDate < today;
               return (
-                <li key={t.id} className="flex items-start gap-3 py-2">
-                  <input type="checkbox" className="mt-1 accent-pine" checked={!!t.doneAt} disabled={!live || !!busy}
-                    aria-label={t.label} onChange={ev => act('task:' + t.id, { action: 'task_toggle', taskId: t.id, done: ev.target.checked })} />
-                  <div className="flex-1 min-w-0">
-                    <div className={'text-[13.5px] ' + (t.doneAt ? 'text-ink-muted line-through' : 'text-ink')}>{t.label}</div>
-                    <div className={'text-[12px] ' + (late ? 'text-bad' : 'text-ink-muted')}>
+                <div key={t.id} className="border-t border-line flex items-center gap-2.5 px-2 py-2 min-h-[44px]">
+                  <button type="button" role="checkbox" aria-checked={!!t.doneAt} aria-label={t.label} disabled={!live || !!busy}
+                    onClick={() => act('task:' + t.id, { action: 'task_toggle', taskId: t.id, done: !t.doneAt })} className="disabled:opacity-60">
+                    <Box done={!!t.doneAt} />
+                  </button>
+                  <span className="flex-1 min-w-0">
+                    <b className={'block text-[13px] font-medium ' + (t.doneAt ? 'text-ink-muted' : 'text-ink')}>{t.label}</b>
+                    <small className={'block text-[12px] ' + (late ? 'text-bad' : 'text-ink-muted')}>
                       {t.doneAt ? `Done${t.doneBy ? ` by ${t.doneBy}` : ''}` : t.dueDate ? `${late ? 'Was due' : 'Due'} ${formatTeeDay(t.dueDate)}` : 'No due date'}
-                    </div>
-                  </div>
-                  {live && <button disabled={!!busy} onClick={() => act('taskdel:' + t.id, { action: 'task_remove', taskId: t.id })} aria-label={`Remove ${t.label}`} className="text-[12.5px] text-ink-soft hover:text-bad">Remove</button>}
-                </li>
+                    </small>
+                  </span>
+                  {live && <PenButton label={`Edit ${t.label}`} onClick={() => setTask({ id: t.id, label: t.label, dueDate: t.dueDate ?? '' })} />}
+                </div>
               );
             })}
-          </ul>
-          {live && (
-            <form className="flex flex-wrap gap-2 mt-3" onSubmit={async ev => { ev.preventDefault(); if (await act('task_add', { action: 'task_add', ...newTask, dueDate: newTask.dueDate || null })) setNewTask({ label: '', dueDate: '' }); }}>
-              <input className={INPUT + ' flex-1 min-w-[160px]'} placeholder="Add an item" value={newTask.label} maxLength={200} onChange={ev => setNewTask(t => ({ ...t, label: ev.target.value }))} />
-              <input type="date" aria-label="Due date" className={INPUT + ' w-40'} value={newTask.dueDate} onChange={ev => setNewTask(t => ({ ...t, dueDate: ev.target.value }))} />
-              <button type="submit" disabled={!!busy || !newTask.label.trim()} className={SECONDARY}>{busy === 'task_add' ? 'Adding…' : 'Add'}</button>
-            </form>
-          )}
-        </Card>
+          </>}
+        </aside>
       </div>
 
-      <div className={'print:hidden ' + shown('signup')}>
-        <EventSignup live={live} payer={e.payer} url={data.signup.url} priceSet={e.pricePerPlayerCents > 0} spotsLeft={spotsLeft} waiting={notYet} busy={busy}
-          settings={{ signupOpen: e.signupOpen, signupPay: e.signupPay, signupMaxGroup: e.signupMaxGroup, signupQuestions: questions }}
-          act={(key, body, done) => act(key, body, done ? r => done(r) : undefined)} />
-      </div>
-
-      <div className={'print:hidden ' + shown('money')}>
-        <EventMoney eventId={e.id} live={live} pricePerPlayerCents={e.pricePerPlayerCents} money={data.money} payments={e.payments} canRefund={canRefund} reload={reload}
-          guarantee={e.payer === 'players' ? null : { due: data.guaranteeDue, players: e.guaranteedPlayers, at: e.guaranteedAt, today, onList: e.entrants.filter(p => p.status === 'in').length }}
-          organizer={{ name: e.organizerName, email: e.organizerEmail, phone: e.organizerPhone }} />
-      </div>
-
-      {/* Printing (pairings or cart signs) prints this part from any tab. */}
-      <Card className={'p-5 print:shadow-none print:p-0 ' + (tab === 'players' ? '' : 'hidden print:block')}>
-        <div className="flex flex-wrap items-baseline justify-between gap-2 mb-3 print:hidden">
-          <h2 className="text-[15px] font-semibold text-ink">Players and pairings</h2>
-          <span className="text-[12.5px] text-ink-muted">{onList.length} player{onList.length === 1 ? '' : 's'}{sortedGroups.length ? ` in ${sortedGroups.length} group${sortedGroups.length === 1 ? '' : 's'}` : ''}</span>
-        </div>
-
-        {live && (
-          <div className="print:hidden mb-4">
-            <label className="block text-[13px] font-medium text-ink mb-1.5" htmlFor="paste-players">Add players — one per line: name, email, phone.</label>
-            <textarea id="paste-players" rows={3} className={INPUT + ' w-full font-sans'} value={paste} onChange={ev => setPaste(ev.target.value)} placeholder={'Jane Smith, jane@example.com, 555-201-3344\nTom Lee'} />
-            <button disabled={!!busy || !paste.trim()} onClick={async () => { if (await act('players_add', { action: 'players_add', text: paste })) setPaste(''); }} className={SECONDARY + ' mt-2'}>
-              {busy === 'players_add' ? 'Adding…' : 'Add players'}
-            </button>
+      {cancelling && (
+        <Popup title={`Cancel ${e.name}?`} onClose={() => setCancelling(false)}>
+          {money.keptCents > 0
+            ? <p className="border-l-[3px] border-warn pl-3 text-[13.5px] text-ink">{usd(money.keptCents)} has been paid for this event. Cancelling doesn’t refund it: the money stays on the event, and you refund it under Payments.</p>
+            : <p className="text-[13.5px] text-ink-soft">No one has paid for this event, so it can be cancelled now.</p>}
+          <div>
+            <KV k="Players on the list">{onList.length ? `${onList.length}. They aren’t told automatically, so let them know.` : 'None'}</KV>
+            <KV k="Tee times">{held.length ? `${plural(held.length, 'held tee time')} go back on sale` : 'None held'}</KV>
+            {money.openCents > 0 && <KV k="Pay links">Unpaid pay links stop working</KV>}
           </div>
-        )}
+          <PopupFoot onCancel={() => setCancelling(false)} cancel="Keep the event">
+            <button type="button" disabled={!!busy} className={DANGER} onClick={async () => {
+              const ok = await act('cancel', { action: 'cancel' }, r => {
+                const errs = (r.linkErrors as string[] | undefined) ?? []; const v = Number(r.linksVoided ?? 0); const rel = Number(r.released ?? 0);
+                return `Cancelled. ${plural(rel, 'tee time')} went back on sale.${v ? ` ${plural(v, 'unpaid pay link')} cancelled.` : ''}${errs.length ? ` ${errs.length === 1 ? 'A pay link' : `${errs.length} pay links`} couldn’t be cancelled. Cancel ${errs.length === 1 ? 'it' : 'them'} under Payments: ${errs.join('; ')}` : ''}`;
+              });
+              if (ok) setCancelling(false);
+            }}>{busy === 'cancel' ? 'Cancelling…' : 'Cancel the event'}</button>
+          </PopupFoot>
+        </Popup>
+      )}
 
-        {onList.length > 0 && live && (
-          <div className="flex flex-wrap items-center gap-2 mb-4 print:hidden">
-            <label className="text-[13px] text-ink-soft flex items-center gap-2">Groups of
-              <select className={INPUT} value={size} onChange={ev => setSize(Number(ev.target.value))}>{[2, 3, 4, 5].map(n => <option key={n}>{n}</option>)}</select>
-            </label>
-            <button disabled={!!busy} onClick={() => act('auto', { action: 'pairings_auto', size }, () => 'Grouped in list order; sign-ups stay together.')} className={SECONDARY}>
-              {busy === 'auto' ? 'Pairing…' : 'Pair in list order'}
-            </button>
-            {sortedGroups.length > 0 && <>
-              <button disabled={!!busy} onClick={() => act('clear', { action: 'pairings_clear' })} className={SECONDARY}>Clear groups</button>
-              <button onClick={() => printNow('pairings')} className={SECONDARY}>Print pairings</button>
-              <button disabled={!!busy} onClick={() => act('send', { action: 'pairings_send' }, r => {
-                const sent = Number(r.sent ?? 0); const failed = (r.failed as string[] | undefined) ?? []; const none = Number(r.noEmail ?? 0); const notSent = (r.notSent as string[] | undefined) ?? [];
-                return [`Emailed ${sent} player${sent === 1 ? '' : 's'} their group.`, notSent.length ? `Ran out of time before emailing ${notSent.join(', ')} — press it again for them, or print theirs.` : '', failed.length ? `Couldn’t reach ${failed.join(', ')} — try again or print theirs.` : '', none ? `${none} without an email — give them a printed copy.` : ''].filter(Boolean).join(' ');
-              })} className={PRIMARY}>{busy === 'send' ? 'Emailing…' : 'Email pairings to players'}</button>
-            </>}
-          </div>
-        )}
+      {text && (
+        <Popup title={text.title} onClose={() => setText(null)}>
+          <label className={LABEL}>{text.label}
+            <textarea rows={4} maxLength={4000} className={FIELD} value={text.value} onChange={ev => setText({ ...text, value: ev.target.value })} />
+          </label>
+          {text.field === 'terms' && <p className="text-[12.5px] text-ink-muted">The course’s own words, shown with the pay link.</p>}
+          {error && <p role="alert" className="text-[13px] text-bad">{error}</p>}
+          <EditFoot onCancel={() => setText(null)} busy={!!busy}
+            onRemove={(text.field === 'notes' ? e.notes : e.terms) ? async () => { if (await update('text', { [text.field]: '' }, 'Removed.')) setText(null); } : undefined}>
+            <button type="button" disabled={!!busy} className={PRIMARY}
+              onClick={async () => { if (await update('text', { [text.field]: text.value }, 'Saved.')) setText(null); }}>{busy === 'text' ? 'Saving…' : 'Save'}</button>
+          </EditFoot>
+        </Popup>
+      )}
 
-        {/* Cam 2026-10-24 (replacing "ask every player to pay"): players pay on the event's page, whose
-            link the organizer passes on — one link, not a text to every golfer. */}
-        {live && e.payer === 'players' && (
-          <div className="flex flex-wrap items-center justify-between gap-2 mb-4 print:hidden bg-paper/70 rounded-md px-3 py-3 text-[13.5px] text-ink">
-            <p className="max-w-[46em]">
-              {e.signupOpen
-                ? `Players ${e.signupPay === 'now' ? 'sign up and pay' : 'sign up'} on the event’s page — send its link to the organizer to pass on.`
-                : 'Players sign up on the event’s page — send its link to the organizer.'}
-              {unpaid > 0 && ` ${unpaid} player${unpaid === 1 ? '' : 's'} on the list ${unpaid === 1 ? 'hasn’t' : 'haven’t'} paid: send ${unpaid === 1 ? 'them their' : 'each their'} own link below, or take it at the course.`}
-            </p>
-            {e.signupOpen && <button onClick={async () => { try { await navigator.clipboard.writeText(data.signup.url); setLinkCopied(true); setTimeout(() => setLinkCopied(false), 2000); } catch { setError('Couldn’t copy — see the Sign-up tab.'); } }}
-              className={SECONDARY}>{linkCopied ? 'Copied' : 'Copy the link'}</button>}
-          </div>
-        )}
+      {inc && (
+        <Popup title={inc.i == null ? 'Add an included item' : 'Edit an included item'} onClose={() => setInc(null)}>
+          <label className={LABEL}>Item
+            <input className={FIELD} maxLength={60} value={inc.value} onChange={ev => setInc({ ...inc, value: ev.target.value })} />
+          </label>
+          <p className="text-[12.5px] text-ink-muted">Shows on the sign-up page and tells your staff what to prepare.</p>
+          {error && <p role="alert" className="text-[13px] text-bad">{error}</p>}
+          <EditFoot onCancel={() => setInc(null)} busy={!!busy}
+            onRemove={inc.i != null ? async () => { if (await update('inc', { includes: e.includes.filter((_, j) => j !== inc.i) }, 'Removed.')) setInc(null); } : undefined}>
+            <button type="button" disabled={!!busy || !inc.value.trim()} className={PRIMARY} onClick={async () => {
+              const v = inc.value.trim();
+              const next = inc.i == null ? [...e.includes, v] : e.includes.map((x, j) => j === inc.i ? v : x);
+              if (await update('inc', { includes: next }, inc.i == null ? 'Added.' : 'Saved.')) setInc(null);
+            }}>{busy === 'inc' ? 'Saving…' : inc.i == null ? 'Add' : 'Save'}</button>
+          </EditFoot>
+        </Popup>
+      )}
 
-        {/* What prints: the pairings sheet alone, or (event day) a cart sign per group. */}
-        {printWhat === 'signs' && <CartSigns eventName={e.name} groups={sortedGroups} startOf={startOf} />}
-        <div className={'hidden mb-4 ' + (printWhat === 'signs' ? '' : 'print:block')}>
-          <h1 className="font-serif text-[26px] font-semibold text-ink">{e.name}</h1>
-          <p className="text-[14px] text-ink">{formatTeeDay(e.date)} · {e.format === 'shotgun' ? `Shotgun at ${formatTeeTime(e.startTime)}` : `Tee times from ${formatTeeTime(e.startTime)}`}</p>
-        </div>
-        {sortedGroups.length > 0 && (
-          <div className={'grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-4 print:grid-cols-3' + (printWhat === 'signs' ? ' print:hidden' : '')}>
-            {sortedGroups.map(([g, ps]) => (
-              <div key={g} className="bg-paper/70 rounded-md px-3.5 py-3 break-inside-avoid">
-                <div className="text-[13.5px] font-semibold text-ink">Group {g} <span className="font-normal text-ink-soft">· {startOf(g, ps[0]?.startHole ?? null)}</span></div>
-                <ul className="mt-1 text-[13.5px] text-ink">{ps.map(p => <li key={p.id}>{p.name}</li>)}</ul>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {onList.length > 0 && (
-          <div className="overflow-x-auto print:hidden">
-            <table className="w-full text-[13.5px]">
-              <thead><tr className="text-left text-ink-muted border-b border-line">
-                <th className="py-2 pr-3 font-medium">Player</th><th className="py-2 pr-3 font-medium">Contact</th>
-                <th className="py-2 pr-3 font-medium">Group</th>{e.format === 'shotgun' && <th className="py-2 pr-3 font-medium">Hole</th>}{playersPay && <th className="py-2 pr-3 font-medium">Paid</th>}{orgPays && e.pricePerPlayerCents > 0 && <th className="py-2 pr-3 font-medium" title={T.coverage.def}>{T.coverage.label}</th>}<th />
-              </tr></thead>
-              <tbody className="divide-y divide-line-soft">
-                {[...sortedGroups.flatMap(([, ps]) => ps), ...ungrouped].map(p => (
-                  <tr key={p.id} id={`player-${p.id}`}>
-                    {swap?.id === p.id ? (
-                      <td colSpan={2} className="py-2 pr-3">
-                        <span className="flex flex-wrap items-center gap-1.5">
-                          <input aria-label="Name" className={INPUT + ' w-40'} value={swap.name} onChange={ev => setSwap({ ...swap, name: ev.target.value })} />
-                          <input aria-label="Email" type="email" placeholder="Email" className={INPUT + ' w-48'} value={swap.email} onChange={ev => setSwap({ ...swap, email: ev.target.value })} />
-                          <input aria-label="Phone" type="tel" placeholder="Phone" className={INPUT + ' w-32'} value={swap.phone} onChange={ev => setSwap({ ...swap, phone: ev.target.value })} />
-                          <button disabled={!!busy || !swap.name.trim()} onClick={async () => { if (await act('swap' + p.id, { action: 'player_edit', playerId: p.id, name: swap.name, email: swap.email, phone: swap.phone }, () => `${swap.name.trim()} has the spot.`)) setSwap(null); }}
-                            className={SECONDARY}>{busy === 'swap' + p.id ? 'Saving…' : 'Save'}</button>
-                          <button onClick={() => setSwap(null)} className="text-[12.5px] text-ink-soft hover:text-ink">Close</button>
-                        </span>
-                      </td>
-                    ) : (<>
-                    <td className="py-2 pr-3 text-ink">{p.name}{answersOf(p) && <div className="text-[12px] text-ink-muted">{answersOf(p)}</div>}</td>
-                    <td className="py-2 pr-3 text-ink-soft">{[p.email, p.phone].filter(Boolean).join(' · ') || '—'}</td>
-                    </>)}
-                    <td className="py-2 pr-3">
-                      <input type="number" min={1} max={250} aria-label={`Group for ${p.name}`} disabled={!live || !!busy} defaultValue={p.groupNo ?? ''} key={`g${p.id}${p.groupNo}`}
-                        className={INPUT + ' w-20'} onBlur={ev => { const v = ev.target.value === '' ? null : Number(ev.target.value); if (v !== p.groupNo) act('set:' + p.id, { action: 'player_set', playerId: p.id, groupNo: v, startHole: p.startHole }); }} />
-                    </td>
-                    {e.format === 'shotgun' && (
-                      <td className="py-2 pr-3">
-                        <input type="number" min={1} max={maxHole} aria-label={`Starting hole for ${p.name}`} disabled={!live || !!busy} defaultValue={p.startHole ?? ''} key={`h${p.id}${p.startHole}`}
-                          className={INPUT + ' w-20'} onBlur={ev => { const v = ev.target.value === '' ? null : Number(ev.target.value); if (v !== p.startHole) act('set:' + p.id, { action: 'player_set', playerId: p.id, groupNo: p.groupNo, startHole: v }); }} />
-                      </td>
-                    )}
-                    {orgPays && e.pricePerPlayerCents > 0 && <td className="py-2 pr-3">
-                      {coveredIds.has(p.id) ? <StatusDot status="ok" label={T.covered.label} /> : <StatusDot status="warn" label={T.notCovered.label} />}
-                    </td>}
-                    {playersPay && <td className="py-2 pr-3">
-                      {(() => {
-                        const st = stateOf(p);
-                        const link = theirs(p).find(x => x.status === 'open')?.payUrl ?? null;
-                        if (st === 'paid') return <StatusDot status="ok" label="Paid" />;
-                        // Their card is going through: nothing to do until it lands.
-                        if (st === 'paying') return <StatusDot status="warn" label="Paying now" />;
-                        const openLink = theirs(p).find(x => x.status === 'open');
-                        // Their sign-up's other players with nothing paid or sent: a captain can pay for all of them.
-                        const team = p.groupKey ? onList.filter(o => o.groupKey === p.groupKey && stateOf(o) === 'none') : [];
-                        if (paidHere?.id === p.id) return (
-                          <span className="flex flex-wrap items-center gap-1.5">
-                            {!openLink && team.length > 1 && <label className="flex items-center gap-1 text-[12.5px] text-ink-soft"><input type="checkbox" checked={!!paidHere.team} onChange={ev => setPaidHere({ ...paidHere, team: ev.target.checked, amount: price ? (Number(price) * (ev.target.checked ? team.length : 1)).toFixed(2) : paidHere.amount })} />All {team.length}</label>}
-                            {/* With a link out, it's that link that gets paid — its amount, not a new one. */}
-                            {openLink
-                              ? <span className="text-[12.5px] text-ink-soft">Closes their {`$${(openLink.amountCents / 100).toFixed(2)}`} link</span>
-                              : <input inputMode="decimal" aria-label={`Amount ${p.name} paid`} className={INPUT + ' w-24'} value={paidHere.amount} onChange={ev => setPaidHere({ ...paidHere, amount: ev.target.value })} />}
-                            <select aria-label="How they paid" className={INPUT} value={paidHere.method} onChange={ev => setPaidHere({ ...paidHere, method: ev.target.value })}>
-                              <option value="cash">Cash</option><option value="check">Check</option><option value="card_counter">Card at the course</option><option value="other">Other</option>
-                            </select>
-                            <button disabled={!!busy || (!openLink && !paidHere.amount)} onClick={async () => {
-                              // A link they were sent is closed first, so they can't pay twice.
-                              const ok = openLink
-                                ? await payAct('here' + p.id, { action: 'paid_other', paymentId: openLink.id, method: paidHere.method }, () => `${p.name} marked paid; their link was closed.`)
-                                : await payAct('here' + p.id, { action: 'record', playerId: p.id, amount: paidHere.amount, method: paidHere.method, forGroup: !!paidHere.team }, () => paidHere.team ? `${p.name} paid for ${team.length}.` : `${p.name} marked paid.`);
-                              if (ok) setPaidHere(null);
-                            }} className={SECONDARY}>{busy === 'here' + p.id ? 'Saving…' : 'Save'}</button>
-                            <button onClick={() => setPaidHere(null)} className="text-[12.5px] text-ink-soft hover:text-ink">Close</button>
-                          </span>
-                        );
-                        return (
-                          <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                            {st === 'sent' ? <StatusDot status="warn" label="Link sent" /> : <span className="text-ink-muted">—</span>}
-                            {live && st === 'sent' && link && <button onClick={async () => { try { await navigator.clipboard.writeText(link); setCopied(p.id); setTimeout(() => setCopied(''), 2000); } catch { setError('Couldn\u2019t copy — open Money to see the link.'); } }} className="text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2">{copied === p.id ? 'Copied' : 'Copy link'}</button>}
-                            {live && st === 'none' && ((p.email && !p.email.endsWith('@noemail.greenreserve.app')) || p.phone.replace(/\D/g, '').length >= 10) && <button disabled={!!busy || !price} title={price ? undefined : 'Set a price per player first'}
-                              onClick={() => payAct('link' + p.id, { action: 'link', playerId: p.id, amount: price, via: p.email && !p.email.endsWith('@noemail.greenreserve.app') ? 'email' : 'sms' }, r => r.sent ? `Pay link sent to ${p.name}.` : `Link made for ${p.name}, but it didn\u2019t send${r.sendError ? `: ${String(r.sendError)}` : ''} — copy it here.`)}
-                              className="text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2 disabled:opacity-50">{busy === 'link' + p.id ? 'Sending…' : 'Send link'}</button>}
-                            {canRecord && <button disabled={!!busy} onClick={() => setPaidHere({ id: p.id, amount: price, method: 'cash' })} className="text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2">Paid at the course</button>}
-                          </span>
-                        );
-                      })()}
-                    </td>}
-                    <td className="py-2 text-right whitespace-nowrap">{live && <>
-                      <button disabled={!!busy} onClick={() => setSwap({ id: p.id, name: p.name, email: p.email, phone: p.phone })} className="text-[12.5px] text-ink-soft hover:text-ink mr-3">Swap</button>
-                      <button disabled={!!busy} onClick={() => {
-                        // What they paid stays on the event either way; say so before the spot goes.
-                        if (playersPay && stateOf(p) === 'paid' && !confirm(`${p.name} has paid; the money stays on the event. For a substitute, use Swap. Remove anyway?`)) return;
-                        act('del:' + p.id, { action: 'player_remove', playerId: p.id });
-                      }} className="text-[12.5px] text-ink-soft hover:text-bad">Remove</button>
-                    </>}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-        {onList.length === 0 && <p className="text-[13.5px] text-ink-muted print:hidden">No players on the list yet.</p>}
-      </Card>
+      {task && (
+        <Popup title={task.id ? 'Edit a checklist step' : 'Add a checklist step'} onClose={() => setTask(null)}>
+          <label className={LABEL}>Step
+            <input className={FIELD} maxLength={200} value={task.label} onChange={ev => setTask({ ...task, label: ev.target.value })} />
+          </label>
+          <label className={LABEL + ' max-w-[200px]'}>Due
+            <input type="date" className={FIELD} value={task.dueDate} onChange={ev => setTask({ ...task, dueDate: ev.target.value })} />
+          </label>
+          {error && <p role="alert" className="text-[13px] text-bad">{error}</p>}
+          <EditFoot onCancel={() => setTask(null)} busy={!!busy}
+            onRemove={task.id ? async () => { if (await act('task_remove', { action: 'task_remove', taskId: task.id }, () => 'Removed.')) setTask(null); } : undefined}>
+            <button type="button" disabled={!!busy || !task.label.trim()} className={PRIMARY} onClick={async () => {
+              const ok = task.id
+                ? await act('task_edit', { action: 'task_edit', taskId: task.id, label: task.label, dueDate: task.dueDate || null }, () => 'Saved.')
+                : await act('task_add', { action: 'task_add', label: task.label, dueDate: task.dueDate || null }, () => 'Added.');
+              if (ok) setTask(null);
+            }}>{busy === 'task_add' || busy === 'task_edit' ? 'Saving…' : task.id ? 'Save' : 'Add'}</button>
+          </EditFoot>
+        </Popup>
+      )}
     </div>
   );
+}
+
+/** A pop-up's foot when editing a row: Remove (in red) where Cancel would be — the backdrop and Escape still close it. */
+function EditFoot({ onCancel, onRemove, busy, children }: { onCancel: () => void; onRemove?: () => void; busy: boolean; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-3 pt-1">
+      {onRemove ? <button type="button" disabled={busy} onClick={onRemove} className={RED_LINK}>Remove</button> : <button type="button" onClick={onCancel} className={LINK}>Cancel</button>}
+      <span className="flex-1" />
+      {children}
+    </div>
+  );
+}
+
+/** The checklist's box: ticked in green when done. */
+function Box({ done }: { done: boolean }) {
+  return <span aria-hidden="true" className={'w-[18px] h-[18px] shrink-0 rounded-[5px] grid place-items-center border-[1.5px] ' + (done ? 'bg-ok border-ok text-white' : 'border-ink-soft')}>{done && <CheckIcon />}</span>;
 }
