@@ -33,23 +33,25 @@ export interface AreaDef {
 export const AREAS: AreaDef[] = [
   {
     key: 'sheet', label: 'Tee sheet & bookings',
-    help: 'Every login sees the tee sheet. Full adds check-in, walk-ins, moves, cancels, blocking, weather and messaging golfers.',
+    help: 'Every login sees the tee sheet. Full adds check-in, walk-ins, moves, cancels (and waiving the late fee), blocking, weather and messaging golfers.',
     // sheet.view is locked on for every staff login, so "No access" is not offered.
     levels: {
       view: ['sheet.view'],
       full: ['sheet.view', 'sheet.checkin', 'sheet.counter_payment', 'sheet.walkin', 'sheet.move', 'sheet.no_show', 'sheet.cancel',
-        'sheet.block', 'sheet.edit_times', 'sheet.delay_start', 'sheet.weather_cancel', 'sheet.golfer_contact',
+        'sheet.waive_fee', 'sheet.block', 'sheet.edit_times', 'sheet.delay_start', 'sheet.weather_cancel', 'sheet.golfer_contact',
         'sheet.message_golfers', 'sheet.course_alert'],
     },
   },
   {
     key: 'payments', label: 'Payments & refunds',
-    help: 'View shows payments, cancellations and payouts. Full adds refunds and waiving the late fee. Refunding rounds is given person by person under Advanced.',
+    help: 'View shows payments, cancellations and payouts. Full adds refunds. Refunding rounds is given person by person under Advanced.',
     levels: {
       none: [],
       view: ['money.cancellations', 'money.payments', 'money.payouts'],
       // Cam 2026-10-29: "Refund rounds" is in no preset — so in no area level either.
-      full: ['money.cancellations', 'money.payments', 'money.payouts', 'money.refund', 'sheet.waive_fee'],
+      // Waiving the late fee (it needs sheet.cancel) is under the tee sheet, so no level reaches into another area:
+      // the result never depends on the order areas are applied (final review, 2026-11-17).
+      full: ['money.cancellations', 'money.payments', 'money.payouts', 'money.refund'],
     },
   },
   {

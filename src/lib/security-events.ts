@@ -103,9 +103,10 @@ export async function securityOverview(now = new Date()) {
     prisma.securityEvent.groupBy({ by: ['kind'], where: { createdAt: { gte: since30 } }, _count: { _all: true } }),
     prisma.securityEvent.groupBy({ by: ['ip'], where: failed30, _count: { _all: true }, orderBy: { _count: { ip: 'desc' } }, take: 10 }),
     prisma.securityEvent.groupBy({ by: ['email'], where: { ...failed30, email: { not: '' } }, _count: { _all: true }, orderBy: { _count: { email: 'desc' } }, take: 10 }),
-    prisma.securityEvent.findMany({ where: { createdAt: { gte: since30 }, kind: { notIn: ['signin_ok', 'password_changed'] } }, orderBy: { createdAt: 'desc' }, take: 100 }),
-    // Password changes are read on their own, so 100 newer failures can never push one off the page.
-    prisma.securityEvent.findMany({ where: { createdAt: { gte: since30 }, kind: 'password_changed' }, orderBy: { createdAt: 'desc' }, take: 100 }),
+    prisma.securityEvent.findMany({ where: { createdAt: { gte: since30 }, kind: { notIn: ['signin_ok', 'password_changed', 'access_changed'] } }, orderBy: { createdAt: 'desc' }, take: 100 }),
+    // Password and access changes are read on their own, so 100 newer failures can never push one off the page,
+    // and a burst of owner changes can never push a failure off it.
+    prisma.securityEvent.findMany({ where: { createdAt: { gte: since30 }, kind: { in: ['password_changed', 'access_changed'] } }, orderBy: { createdAt: 'desc' }, take: 100 }),
     lockedAccountsNow(now),
   ]);
   const recent = [...recentAll, ...passwordChanges].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());

@@ -15,7 +15,7 @@ async function staffFromToken(token: string) {
     (await prisma.courseStaff.findUnique({ where: { id }, select: { password: true } }))?.password ?? null);
   if (!staffId) return null;
   const staff = await prisma.courseStaff.findUnique({ where: { id: staffId } });
-  return staff?.active ? staff : null;
+  return staff?.active && !staff.removedAt ? staff : null;
 }
 
 export async function GET(req: NextRequest) {

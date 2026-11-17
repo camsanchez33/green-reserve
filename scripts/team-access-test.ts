@@ -16,6 +16,18 @@ for (const a of AREAS) for (const k of areaKeys(a.key)) seen.set(k, [...(seen.ge
 for (const k of ADVANCED_ONLY) seen.set(k, [...(seen.get(k) ?? []), 'advanced']);
 ok('every permission key is in exactly one area, or Advanced only', ALL_KEYS.every(k => seen.get(k)?.length === 1), ALL_KEYS.filter(k => seen.get(k)?.length !== 1).map(k => [k, seen.get(k)]));
 ok('there are six areas', AREAS.length === 6);
+const lockedKeys = new Set(['sheet.view']);
+ok('every level is closed in its own area (what a level needs is in that area, or the locked tee sheet key)',
+  AREAS.every(a => Object.values(a.levels).every(ks => normalizePermissions(ks ?? []).every(k => areaKeys(a.key).includes(k) || lockedKeys.has(k)))));
+let orderBad = 0;
+for (const a of AREAS) for (const b of AREAS) if (a.key !== b.key) for (const la of Object.keys(a.levels) as ('none' | 'view' | 'full')[]) for (const lb of Object.keys(b.levels) as ('none' | 'view' | 'full')[]) {
+  for (const base of [[], ALL_KEYS] as PermissionKey[][]) {
+    const ab = applyAreaLevel(applyAreaLevel(base, a.key, la)!, b.key, lb)!;
+    const ba = applyAreaLevel(applyAreaLevel(base, b.key, lb)!, a.key, la)!;
+    if (!eq(ab, ba) || areaLevels(ab)[a.key] !== la || areaLevels(ab)[b.key] !== lb) orderBad++;
+  }
+}
+ok('setting two areas gives the same keys in either order, and each reads back as asked', orderBad === 0, orderBad);
 ok('Refund rounds is in no area level (Cam 2026-10-29: given person by person)', !AREAS.some(a => Object.values(a.levels).some(ks => ks?.includes('money.refund_rounds'))));
 ok('the tee sheet offers no "No access" (every login sees it)', !AREAS.find(a => a.key === 'sheet')!.levels.none);
 

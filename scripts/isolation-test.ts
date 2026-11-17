@@ -1526,6 +1526,14 @@ async function main() {
       const fresh = await prisma.courseStaff.findUniqueOrThrow({ where: { id: st.id }, select: { sessionVersion: true } });
       const sk2 = `gr_operator=${await signStaffToken({ staffId: st.id, courseId: courseA.id, email: st.email, sv: fresh.sessionVersion })}`;
       checkStatus('…while a new sign-in works → 200', (await api('/api/operator/weather', { cookie: sk2 })).status, 200);
+      const oldList = await api('/api/operator/staff', { cookie: cookieA });
+      check('Owner A still lists staff on the old Settings screen → 200', oldList.status === 200 && Array.isArray(oldList.body) && (oldList.body as { id: string }[]).some(p => p.id === st.id), oldList.text.slice(0, 200));
+      checkStatus('…Owner B\'s list never shows A\'s person', ((await api('/api/operator/staff', { cookie: cookieB })).body as { id: string }[]).some(p => p.id === st.id) ? 1 : 0, 0);
+      checkStatus('…staff can\'t list it → 403', (await api('/api/operator/staff', { cookie: sk2 })).status, 403);
+      checkStatus('Owner A removes them', (await api('/api/operator/staff', { method: 'DELETE', cookie: cookieA, body: { id: st.id } })).status, 200);
+      checkStatus('…and their session dies → 401', (await api('/api/operator/weather', { cookie: sk2 })).status, 401);
+      const gone = await prisma.courseStaff.findUniqueOrThrow({ where: { id: st.id } });
+      check('…the row stays for history, its address freed', !!gone.removedAt && gone.email.endsWith(`#removed:${st.id}`));
     } finally {
       await prisma.courseStaff.delete({ where: { id: st.id } });
       await prisma.courseRole.deleteMany({ where: { courseId: { in: [courseA.id, courseB.id] } } });

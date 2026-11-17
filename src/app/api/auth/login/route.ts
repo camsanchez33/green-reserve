@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
   // Try staff account
   const staff = await prisma.courseStaff.findUnique({ where: { email } });
   if (staff) {
-    if (!staff.active) return unknownLogin(req, email, password, staff.id, 'staff login turned off');
+    if (!staff.active || staff.removedAt) return unknownLogin(req, email, password, staff.id, 'staff login turned off');
     if (staff.lockoutUntil && staff.lockoutUntil > new Date()) {
       await securityEvent(req, { kind: 'signin_failed', surface: 'course', email, accountId: staff.id, detail: 'staff login, while locked out' });
       return lockoutResponse(staff.lockoutUntil);

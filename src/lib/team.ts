@@ -47,6 +47,15 @@ export const PERSON_NAME_MAX = 120;
 
 const baseUrl = () => process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
 
+/**
+ * Remove frees the address: CourseStaff.email is unique across every course, so
+ * a removed row keeps its email as `<email>#removed:<id>` (never a real address,
+ * so no sign-in, reset or invite matches it). Another course can then invite the
+ * person, and this course re-inviting them revives the same row (final review 2026-11-17).
+ */
+export const removedEmail = (email: string, id: string) => `${email}#removed:${id}`;
+const REMOVED_MARK = '#removed:';
+
 const staffSelect = {
   id: true, courseId: true, name: true, email: true, phone: true, active: true, createdAt: true,
   permissions: true, preset: true, permissionsSetAt: true, roleId: true, grantKeys: true, revokeKeys: true,
@@ -402,12 +411,14 @@ export async function invitePerson(ctx: TeamCtx, body: Record<string, unknown>):
   // Each invite emails an address the owner typed: cap it so a course login can't be used to send mail at volume.
   if (!(await rateLimit(`team:invites:${ctx.courseId}`, 30, 3600))) return fail(429, 'That’s a lot of invites in one hour. Try again later.');
 
-  const [existing, operator] = await Promise.all([
-    prisma.courseStaff.findUnique({ where: { email }, select: { id: true, courseId: true, removedAt: true } }),
+  const [existing, operator, removed] = await Promise.all([
+    prisma.courseStaff.findUnique({ where: { email }, select: { id: true } }),
     prisma.courseOperator.findUnique({ where: { email }, select: { id: true } }),
+    // This course removed them before: bring back the same row, so their history stays one person.
+    prisma.courseStaff.findFirst({ where: { courseId: ctx.courseId, removedAt: { not: null }, email: { startsWith: `${email}${REMOVED_MARK}` } }, orderBy: { removedAt: 'desc' }, select: { id: true } }),
   ]);
-  const revive = existing && existing.courseId === ctx.courseId && existing.removedAt ? existing : null;
-  if (operator || (existing && !revive)) return fail(409, 'Email already in use');
+  if (operator || existing) return fail(409, 'Email already in use');
+  const revive = removed;
 
   const password = await bcrypt.hash(randomBytes(32).toString('hex'), 12);
   const keys = normalizePermissions(role.permissions);
@@ -422,7 +433,7 @@ export async function invitePerson(ctx: TeamCtx, body: Record<string, unknown>):
   try {
     id = await prisma.$transaction(async tx => {
       const row = revive
-        ? await tx.courseStaff.update({ where: { id: revive.id }, data })
+        ? await tx.courseStaff.update({ where: { id: revive.id }, data: { ...data, email } })
         : await tx.courseStaff.create({ data: { ...data, courseId: ctx.courseId, email, role: 'staff' } });
       await tx.staffPermissionChange.create({ data: { courseId: ctx.courseId, staffId: row.id, changedBy: ctx.operatorId, before: [], after: keys } });
       await audit(tx, ctx, who, { action: 'invite', targetType: 'person', targetId: row.id, targetName: name, detail: `as ${role.name}${revive ? ' (was removed before)' : ''}`, after: keys, affected: 1 });
@@ -543,6 +554,7 @@ export async function setActive(ctx: TeamCtx, id: unknown, active: boolean): Pro
   const p = await personOf(ctx.courseId, id);
   if (!p) return fail(404, 'Not found');
   if (p.active === active) return { ok: true };
+  if (!(await rateLimit(`team:active:${p.id}`, 20, 3600))) return fail(429, `${p.name} was turned off and on many times this hour. Try again later.`);
   const who = await actorName(ctx.operatorId);
   await prisma.$transaction(async tx => {
     await tx.courseStaff.update({ where: { id: p.id }, data: { active, disabledAt: active ? null : new Date(), ...(active ? { failedLoginAttempts: 0, lockoutUntil: null } : { sessionVersion: { increment: 1 } }) } });
@@ -558,7 +570,7 @@ export async function removePerson(ctx: TeamCtx, id: unknown): Promise<TeamResul
   if (!p) return fail(404, 'Not found');
   const who = await actorName(ctx.operatorId);
   await prisma.$transaction(async tx => {
-    await tx.courseStaff.update({ where: { id: p.id }, data: { removedAt: new Date(), active: false, disabledAt: p.disabledAt ?? new Date(), sessionVersion: { increment: 1 } } });
+    await tx.courseStaff.update({ where: { id: p.id }, data: { email: removedEmail(p.email, p.id), removedAt: new Date(), active: false, disabledAt: p.disabledAt ?? new Date(), sessionVersion: { increment: 1 } } });
     await audit(tx, ctx, who, { action: 'remove', targetType: 'person', targetId: p.id, targetName: p.name, before: resolveMemberPermissions(p) });
   });
   await signInEvent(ctx, p, 'staff login removed');

@@ -167,9 +167,14 @@ async function course(n: string) {
   const sam = await prisma.courseStaff.findUnique({ where: { id: samId } });
   ok('…the row stays (history keeps their name) but is off and off the list', !!sam && !sam.active && !!sam.removedAt && !(await loadTeam(A.c.id, A.op.id))!.people.some(p => p.id === samId));
   ok('…and their sessions die for good, so a later re-invite can’t revive an old cookie', sam?.sessionVersion === 1);
+  ok('…and their address is freed (kept as a removed marker)', sam?.email === `${TAG}-sam@t.local#removed:${samId}` && !(await prisma.courseStaff.findUnique({ where: { email: `${TAG}-sam@t.local` } })));
   ok('…and no Team action reaches them any more', !(await setActive(A.ctx, samId, true)).ok && !(await sendResetLink(A.ctx, samId)).ok);
   const back = await invitePerson(A.ctx, { name: 'Sam Back', email: `${TAG}-sam@t.local`, roleId: fdId });
-  ok('inviting a removed person again brings back the same row as Invited', back.ok && back.id === samId && !(await prisma.courseStaff.findUniqueOrThrow({ where: { id: samId } })).removedAt);
+  ok('inviting a removed person again brings back the same row as Invited, with their real address', back.ok && back.id === samId && !(await prisma.courseStaff.findUniqueOrThrow({ where: { id: samId } })).removedAt && (await prisma.courseStaff.findUniqueOrThrow({ where: { id: samId } })).email === `${TAG}-sam@t.local`);
+  ok('remove them again', (await removePerson(A.ctx, samId)).ok);
+  const elsewhere = await invitePerson(B.ctx, { name: 'Sam New Job', email: `${TAG}-sam@t.local`, roleId: (await createRole(B.ctx, { fromSuggested: 'bookkeeper' }) as { role?: { id: string } }).role?.id });
+  ok('another course can invite an address this course removed (a new row; A’s history row stays A’s)', elsewhere.ok && elsewhere.id !== samId && (await prisma.courseStaff.findUniqueOrThrow({ where: { id: samId } })).courseId === A.c.id);
+  ok('…and A re-inviting it now is refused (it is B’s login)', (await invitePerson(A.ctx, { name: 'Sam', email: `${TAG}-sam@t.local`, roleId: fdId }) as { status?: number }).status === 409);
 
   const { invitePreview } = await import('../src/lib/team');
   const pv = await invitePreview(A.ctx, fdId, 'Kelly Brandt');
@@ -178,7 +183,8 @@ async function course(n: string) {
   ok('B can’t preview with A’s role', (await invitePreview(B.ctx, fdId, 'x') as { status?: number }).status === 404);
 
   // ── Isolation: course B reaches nothing of A's ─────────────────────────────
-  ok('B’s team shows none of A’s roles or people', (await loadTeam(B.c.id, B.op.id))!.roles.length === 1 && (await loadTeam(B.c.id, B.op.id))!.people.length === 0);
+  { const tb = (await loadTeam(B.c.id, B.op.id))!;
+    ok('B’s team shows none of A’s roles or people', !tb.roles.some(r => r.id === fdId || r.id === mgrId) && !tb.people.some(p => p.id === alexId || p.id === samId) && tb.people.length === 1); }
   ok('B can’t change A’s role', (await updateRole(B.ctx, fdId, { name: 'Pwned' }) as { status?: number }).status === 404);
   ok('…or delete it', (await deleteRole(B.ctx, fdId) as { status?: number }).status === 404);
   ok('…or invite into it', (await invitePerson(B.ctx, { name: 'X', email: `${TAG}-x@t.local`, roleId: fdId }) as { status?: number }).status === 400);
@@ -201,7 +207,9 @@ async function course(n: string) {
     'src/app/api/operator/staff/invite/preview/route.ts', 'src/app/api/operator/staff/reset-link/route.ts'];
   const handlers = routes.flatMap(p => [...route(p).matchAll(/export async function (GET|POST|PATCH|DELETE)\([^)]*\) \{\n  const g = await teamOwner\(req, \{ write: (true|false) \}\); if \('error' in g\) return g\.error;/g)].map(m => `${p}:${m[1]}:${m[2]}`));
   const all = routes.flatMap(p => [...route(p).matchAll(/export async function (GET|POST|PATCH|DELETE)\((?!\))/g)].map(m => `${p}:${m[1]}`));
-  ok('the old add-staff POST is gone (no temporary passwords)', /export async function POST\(req: NextRequest\) \{\n  const g = await teamOwner\(req, \{ write: true \}\); if \('error' in g\) return g\.error;\n  return NextResponse\.json\(\{ error: [^}]+\}, \{ status: 410 \}\);/.test(route('src/app/api/operator/staff/route.ts')) && !route('src/app/api/operator/staff/route.ts').includes('tempPassword'));
+  const oldAdd = route('src/app/api/operator/staff/route.ts');
+  ok('the old Settings add (kept until #460) is owner-gated and audited', oldAdd.includes("tx.teamChange.create({ data: { courseId: ctx.courseId, actorId: ctx.operatorId") && oldAdd.includes("kind: 'access_changed', surface: 'course', email, accountId: staffId"));
+  ok('…and Team’s invite never makes a temporary password', !route('src/app/api/operator/staff/invite/route.ts').includes('tempPassword') && !route('src/lib/team.ts').includes('tempPassword'));
   ok('every Team route handler starts with the owner gate', handlers.length === all.length, { handlers: handlers.length, all });
   ok('…and every write also needs the current agreement', handlers.every(h => h.includes(':GET:') ? h.endsWith(':false') : h.endsWith(':true')));
   const gate = route('src/lib/team-route.ts');
