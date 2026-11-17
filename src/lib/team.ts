@@ -415,10 +415,11 @@ export async function invitePerson(ctx: TeamCtx, body: Record<string, unknown>):
     prisma.courseStaff.findUnique({ where: { email }, select: { id: true } }),
     prisma.courseOperator.findUnique({ where: { email }, select: { id: true } }),
     // This course removed them before: bring back the same row, so their history stays one person.
-    prisma.courseStaff.findFirst({ where: { courseId: ctx.courseId, removedAt: { not: null }, email: { startsWith: `${email}${REMOVED_MARK}` } }, orderBy: { removedAt: 'desc' }, select: { id: true } }),
+    prisma.courseStaff.findMany({ where: { courseId: ctx.courseId, removedAt: { not: null }, email: { startsWith: `${email}${REMOVED_MARK}` } }, orderBy: { removedAt: 'desc' }, select: { id: true, email: true } }),
   ]);
   if (operator || existing) return fail(409, 'Email already in use');
-  const revive = removed;
+  // Exact match only: LIKE treats _ and % as wildcards, so a_b@x.com must never revive a removed a.b@x.com.
+  const revive = removed.find(r => r.email === removedEmail(email, r.id)) ?? null;
 
   const password = await bcrypt.hash(randomBytes(32).toString('hex'), 12);
   const keys = normalizePermissions(role.permissions);
@@ -554,7 +555,8 @@ export async function setActive(ctx: TeamCtx, id: unknown, active: boolean): Pro
   const p = await personOf(ctx.courseId, id);
   if (!p) return fail(404, 'Not found');
   if (p.active === active) return { ok: true };
-  if (!(await rateLimit(`team:active:${p.id}`, 20, 3600))) return fail(429, `${p.name} was turned off and on many times this hour. Try again later.`);
+  // Only turning someone back ON is capped, so a Disable is never refused (each disable needs an enable first).
+  if (active && !(await rateLimit(`team:active:${p.id}`, 20, 3600))) return fail(429, `${p.name} was turned off and on many times this hour. Try again later.`);
   const who = await actorName(ctx.operatorId);
   await prisma.$transaction(async tx => {
     await tx.courseStaff.update({ where: { id: p.id }, data: { active, disabledAt: active ? null : new Date(), ...(active ? { failedLoginAttempts: 0, lockoutUntil: null } : { sessionVersion: { increment: 1 } }) } });

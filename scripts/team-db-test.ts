@@ -172,6 +172,9 @@ async function course(n: string) {
   const back = await invitePerson(A.ctx, { name: 'Sam Back', email: `${TAG}-sam@t.local`, roleId: fdId });
   ok('inviting a removed person again brings back the same row as Invited, with their real address', back.ok && back.id === samId && !(await prisma.courseStaff.findUniqueOrThrow({ where: { id: samId } })).removedAt && (await prisma.courseStaff.findUniqueOrThrow({ where: { id: samId } })).email === `${TAG}-sam@t.local`);
   ok('remove them again', (await removePerson(A.ctx, samId)).ok);
+  { const lookalike = await invitePerson(A.ctx, { name: 'Not Sam', email: `${TAG}_sam@t.local`, roleId: fdId });
+    ok('a look-alike address (_ is a LIKE wildcard) never revives a removed person', lookalike.ok && lookalike.id !== samId && !!(await prisma.courseStaff.findUniqueOrThrow({ where: { id: samId } })).removedAt);
+    if (lookalike.ok) await removePerson(A.ctx, lookalike.id); }
   const elsewhere = await invitePerson(B.ctx, { name: 'Sam New Job', email: `${TAG}-sam@t.local`, roleId: (await createRole(B.ctx, { fromSuggested: 'bookkeeper' }) as { role?: { id: string } }).role?.id });
   ok('another course can invite an address this course removed (a new row; A’s history row stays A’s)', elsewhere.ok && elsewhere.id !== samId && (await prisma.courseStaff.findUniqueOrThrow({ where: { id: samId } })).courseId === A.c.id);
   ok('…and A re-inviting it now is refused (it is B’s login)', (await invitePerson(A.ctx, { name: 'Sam', email: `${TAG}-sam@t.local`, roleId: fdId }) as { status?: number }).status === 409);
