@@ -56,7 +56,11 @@ Mockup `lanes/admin/goals-mockup.html` (https://claude.ai/artifact/62wRP5X7nS5kM
 - Support and up can see goals; only the owner adds or removes.
 
 ## Next (menu order)
-Audit → Security → Company docs, one page at a time,
+**Security — APPROVED, build it** (Cam 2026-11-17, "same with the admin security"). Mockup `lanes/admin/security-mockup.html` (https://claude.ai/artifact/YFircGUXKf1PB7xvRZ1y8E) and all its comment threads are the spec.
+   - **Top of the page.** The AI security checker: a plain-English status (All clear / Needs you), when it last ran and runs next, and Ask. Then a "Your courses" status list, one row per course: OK, or what's wrong, linked to its incidents.
+   - **Tabs.** Sign-ins, Protections, Errors, Incidents. Each incident opens a timeline (detected → what the checker did → result), with who was affected and whether it's fixed. The filter is a bare icon, and there's no row of headline numbers.
+   - **Checker (Build job: cron, model call, action allowlist, audit log).** It runs at 7 AM and 7 PM and immediately on spikes: failed sign-ins, a new owner device, the error rate. On its own it takes only SAFE, REVERSIBLE actions, each with Undo: lock an account or address under attack, force sign-out of a suspicious session, open a bug report. Anything that changes code, money, settings or access permanently is an "Approve fix" item Cam taps; nothing ships by itself.
+Then Audit (mockup with Cam, https://claude.ai/artifact/QgQyTepsYAkcqfpcWYS2Qp) → Company docs (mockup with Cam, https://claude.ai/artifact/XApEk2DEDCNb12qTb65DyR), one page at a time,
 mockup first ("as it works today"), nothing built until Cam approves.
 
 ## Small follow-ups
