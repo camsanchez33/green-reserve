@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, requirePermission, can } from '@/lib/session';
 import { todayIn, addDaysStr } from '@/lib/course-time';
 import { computeAnalytics, headline, previousRange, type Range } from '@/lib/analytics';
-import { ledgerHeadline, unfilledWithoutMoney } from '@/lib/analytics-page';
+import { ledgerHeadline, analyticsWithoutMoney } from '@/lib/analytics-page';
 
 // AN-1: the operator Analytics tab. GET ?from=YYYY-MM-DD&to=YYYY-MM-DD
 // (course-local, inclusive; default the last 30 days) &compare=1 for the
@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
   // ledger block and the value of unsold spots are left out for a login without it. The page hides; this is the control.
   const money = can(session, 'money.payments');
   const head = headline(current);
-  const out = money ? { ...current, customers, headline: head, compare, ledger }
-    : { ...current, customers, unfilled: unfilledWithoutMoney(current.unfilled), headline: (({ lostCents: _l, ...h }) => h)(head), compare };
+  const body = { ...current, customers, headline: head, compare, ledger };
+  const out = money ? body : analyticsWithoutMoney(body);
   return NextResponse.json(out, { headers: { 'Cache-Control': 'no-store' } });
 }

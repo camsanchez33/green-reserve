@@ -9,9 +9,16 @@
 //  4. Review — what saving does to the tee sheet first, then the details with a Change on each, what is still
 //     missing (fine to add later), and the checklist saving builds with its dates.
 // A required field left empty turns red under itself, never only a line at the bottom. The server checks again.
+// EVENTS-3 (Cam 2026-11-17; mockup lanes/dashboard/events-mockup.html): the setup opens in the dashboard pop-up with
+// "Step N of 4" and the bar, a line under it saying why the step matters, option tiles that span the card, Back and
+// Cancel as plain links and the action on the right. The kind-specific steps in the mockup (a tournament's format and
+// flights, a league's season and fees, an outing's deposit and player list) wait for Build's fields; until then every
+// kind shares these four steps, which save what the event route takes today.
 import { useEffect, useState } from 'react';
-import { Card } from '@/components/ui/Card';
 import { INPUT } from '@/components/ui/field';
+import { Popup, Tiles, LINK, PRIMARY } from '@/components/dashboard/schedule/ui';
+import { StepBar } from '@/components/dashboard/members/shared';
+import type { EventData } from './EventDetail';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { formatTeeDay, formatTeeTime } from '@/lib/format';
 import { addDaysStr } from '@/lib/course-time';
@@ -40,7 +47,7 @@ export const KINDS: { key: string; label: string; hint: string; name: string; de
     defaults: { format: 'shotgun', payer: 'organizer', guaranteeDaysBefore: '7' }, sets: 'a shotgun start, the organizer pays, headcount due a week before' },
   { key: 'tournament', label: 'Tournament', hint: 'Players enter and play for a result.', name: 'Club Championship',
     defaults: { format: 'shotgun', payer: 'players', guaranteeDaysBefore: '' }, sets: 'a shotgun start, each player pays when they sign up' },
-  { key: 'league', label: 'League night', hint: 'A regular group taking a block of times.', name: 'Tuesday Men’s League',
+  { key: 'league', label: 'League', hint: 'A regular group taking a block of times.', name: 'Tuesday Men’s League',
     defaults: { format: 'tee_times', payer: 'players', guaranteeDaysBefore: '' }, sets: 'tee times one after another, each player pays' },
   { key: 'other', label: 'Other', hint: 'Anything else that needs the course held.', name: 'Junior clinic',
     defaults: null, sets: '' },
@@ -54,6 +61,35 @@ export const PAYERS: { key: 'organizer' | 'players'; label: string; hint: string
 ];
 const INCLUDES = ['Cart', 'Range balls', 'Food', 'Drinks', 'Prizes', 'Gift bag'];
 const STEPS = ['What it is', 'When', 'Who and what', 'Review'];
+/** Why each step matters, under the step bar. */
+const WHY = [
+  'Pick the kind of event. Each starts with the answers that kind usually has; change any of them.',
+  'How much of your tee sheet it takes. These times are held so golfers can’t book them online.',
+  'Who pays and what the price covers. It shows on the sign-up page and on the bill.',
+  'What saving does to your tee sheet, then the details. Anything still missing can be added later.',
+];
+
+/** An event as the form edits it (Change details, and the page's in-place edits). */
+export function toForm(d: EventData): EventForm {
+  const e = d.event;
+  return {
+    name: e.name, kind: e.kind, date: e.date, format: e.format === 'tee_times' ? 'tee_times' : 'shotgun', startTime: e.startTime, holes: e.holes,
+    groups: e.groups ? String(e.groups) : '', players: e.players ? String(e.players) : '', productId: e.productId ?? '',
+    // Keep a hold end the course set by hand; an automatic one is worked out again.
+    holdTo: e.holdToCustom ? e.holdTo : '',
+    shareCourse: e.shareCourse, holdNineIds: e.holdNineIds, keepOpen: e.keepOpen,
+    organizerName: e.organizerName, organizerEmail: e.organizerEmail, organizerPhone: e.organizerPhone,
+    pricePerPlayer: e.pricePerPlayerCents ? (e.pricePerPlayerCents / 100).toFixed(2) : '', includes: e.includes, terms: e.terms, notes: e.notes,
+    payer: e.payer === 'organizer' || e.payer === 'players' ? e.payer : '',
+    guaranteeDaysBefore: e.guaranteeDaysBefore != null ? String(e.guaranteeDaysBefore) : '',
+  };
+}
+/** The form as the event route takes it. */
+export const formBody = (f: EventForm) => ({
+  ...f,
+  groups: f.groups === '' ? 0 : Number(f.groups), players: f.players === '' ? 0 : Number(f.players),
+  productId: f.format === 'tee_times' ? f.productId || null : null,
+});
 
 export const blankForm = (date: string): EventForm => ({
   name: '', kind: 'outing', date, format: 'shotgun', startTime: '08:00', holes: 18, groups: '', players: '', productId: '', holdTo: '', shareCourse: false, holdNineIds: [], keepOpen: [],
@@ -84,9 +120,9 @@ export function fieldErrors(f: EventForm, s: number): Partial<Record<Field, stri
 
 const LABEL = 'block text-[13px] font-medium text-ink mb-1.5';
 const BTN = 'px-4 py-2.5 rounded-md text-[13.5px] font-medium transition-colors disabled:opacity-50';
-const PRIMARY = BTN + ' bg-pine hover:bg-pine-hover text-white';
-const SECONDARY = BTN + ' bg-white border border-line text-ink hover:bg-paper';
-const CHOICE = (on: boolean, bad = false) => 'text-left rounded-md border px-3.5 py-3 transition-colors ' + (on ? 'border-pine bg-pine/[0.05]' : (bad ? 'border-bad' : 'border-line') + ' bg-white hover:bg-paper');
+const SECONDARY = BTN + ' bg-paper border border-line text-ink hover:border-ink-soft';
+/** A chip that's on or off (what's included, holes it uses, times kept open). */
+const CHIP = (on: boolean) => 'px-3 py-1.5 min-h-[34px] rounded-[10px] border text-[13px] ' + (on ? 'border-ink text-ink font-semibold shadow-[inset_0_0_0_1px_var(--color-ink)]' : 'border-line bg-paper text-ink-soft hover:border-ink-soft');
 /** A step's section: a short heading, its fields, a hairline above all but the first. */
 const SECTION = 'space-y-3 pt-5 border-t border-line-soft first:pt-0 first:border-0';
 const H3 = 'text-[15px] font-semibold text-ink';
@@ -118,11 +154,7 @@ export default function EventSetup({ initial, eventId, products, nines, courseHo
   const IN = (k: Field) => err[k] ? INPUT.replace('border-line', 'border-bad') : INPUT;
   const Msg = ({ k }: { k: Field }) => err[k] ? <p className="text-[12.5px] text-bad mt-1">{err[k]}</p> : null;
 
-  const body = () => ({
-    ...f,
-    groups: f.groups === '' ? 0 : Number(f.groups), players: f.players === '' ? 0 : Number(f.players),
-    productId: f.format === 'tee_times' ? f.productId || null : null,
-  });
+  const body = () => formBody(f);
 
   async function loadPreview() {
     setBusy(true); setError(''); setPreviewError('');
@@ -190,42 +222,22 @@ export default function EventSetup({ initial, eventId, products, nines, courseHo
     return { label: t.label, due: due && due < today ? today : due };
   });
 
-  const ChangeLink = ({ to }: { to: number }) => <button type="button" onClick={() => setStep(to)} className="text-[13px] font-medium text-pine hover:underline underline-offset-4">Change</button>;
+  const ChangeLink = ({ to }: { to: number }) => <button type="button" onClick={() => setStep(to)} className={LINK}>Change</button>;
 
   return (
-    <Card className="p-5 sm:p-6" data-event-setup>
-      <div className="flex items-baseline justify-between gap-3 mb-5">
-        <h2 className="font-serif text-[22px] font-semibold leading-tight text-ink">{eventId ? 'Change the event' : 'Set up an event'}</h2>
-        <button onClick={onCancel} className="text-[13px] text-ink-soft hover:text-ink">Close</button>
-      </div>
+    <Popup title={eventId ? 'Change details' : 'Set up an event'} onClose={onCancel}>
+     <div data-event-setup className="flex flex-col gap-4">
 
-      <ol className="grid grid-cols-4 gap-2 mb-6" aria-label="Steps">
-        {STEPS.map((s, i) => {
-          const done = i < step;
-          return (
-            <li key={s}>
-              <button onClick={() => go(i)} aria-current={step === i ? 'step' : undefined} className="w-full text-left">
-                <span className={'block h-1 rounded-full ' + (step === i ? 'bg-pine' : done ? 'bg-fairway' : 'bg-line')} />
-                <span className={'block mt-1.5 text-[12.5px] ' + (step === i ? 'font-semibold text-ink' : 'text-ink-soft hover:text-ink')}>
-                  <span className="tabular-nums">{i + 1}.</span> {s}
-                </span>
-              </button>
-            </li>
-          );
-        })}
-      </ol>
+      <StepBar labels={STEPS} at={step} />
+      <p className="-mt-1 text-[13px] text-ink-soft border-l-2 border-line pl-2.5">{WHY[step]}</p>
 
       {step === 0 && (
-        <div className="space-y-5 max-w-xl">
+        <div className="space-y-5">
           <section className={SECTION}>
             <h3 className={H3}>What kind of event?</h3>
-            <div className="grid sm:grid-cols-2 gap-2">
-              {KINDS.map(k => (
-                <button key={k.key} onClick={() => pickKind(k.key)} aria-pressed={f.kind === k.key} className={CHOICE(f.kind === k.key)}>
-                  <div className="text-[14px] font-medium text-ink">{k.label}</div>
-                  <div className="text-[12.5px] text-ink-soft mt-0.5">{k.hint}</div>
-                </button>
-              ))}
+            <div className="[&_[role=radiogroup]]:sm:grid-cols-1">
+              <Tiles label="What kind of event" value={f.kind} onChange={pickKind}
+                options={KINDS.map(k => ({ key: k.key, title: k.key === 'other' ? 'Your own' : k.label, line: k.hint }))} />
             </div>
             {!eventId && kind?.sets && <p className="text-[12.5px] text-ink-muted">Starts as {kind.sets}. Change any later.</p>}
           </section>
@@ -240,18 +252,11 @@ export default function EventSetup({ initial, eventId, products, nines, courseHo
       )}
 
       {step === 1 && (
-        <div className="space-y-5 max-w-xl">
+        <div className="space-y-5">
           <section className={SECTION}>
             <h3 className={H3}>How it starts</h3>
-            <div className="grid sm:grid-cols-2 gap-2">
-              {([['shotgun', 'Shotgun start', 'Every group starts at once, each on its own hole.'],
-                 ['tee_times', 'Tee times', 'Groups go off one after another from a first time.']] as const).map(([k, l, h]) => (
-                <button key={k} onClick={() => set('format', k)} aria-pressed={f.format === k} className={CHOICE(f.format === k)}>
-                  <div className="text-[14px] font-medium text-ink">{l}</div>
-                  <div className="text-[12.5px] text-ink-soft mt-0.5">{h}</div>
-                </button>
-              ))}
-            </div>
+            <Tiles label="How it starts" value={f.format} onChange={k => set('format', k)}
+              options={[{ key: 'shotgun', title: 'Shotgun start', line: 'Every group starts at once, each on its own hole.' }, { key: 'tee_times', title: 'Tee times', line: 'Groups go off one after another from a first time.' }]} />
           </section>
 
           <section className={SECTION}>
@@ -286,15 +291,9 @@ export default function EventSetup({ initial, eventId, products, nines, courseHo
 
           <section className={SECTION}>
             <h3 className={H3}>How much of the course</h3>
-            <div className="grid sm:grid-cols-2 gap-2">
-              {([[false, f.format === 'tee_times' && f.productId ? 'All of that round' : 'The whole course', f.format === 'tee_times' && f.productId ? 'None of that round’s times in the event’s hours can be booked.' : 'Nothing in the event’s hours can be booked. Most events.'],
-                 [true, 'Part of it', 'Choose the holes it uses and which times golfers can still book.']] as const).map(([v, l, h]) => (
-                <button key={l} onClick={() => { set('shareCourse', v); if (!v) { set('holdNineIds', []); set('keepOpen', []); } }} aria-pressed={f.shareCourse === v} className={CHOICE(f.shareCourse === v)}>
-                  <div className="text-[14px] font-medium text-ink">{l}</div>
-                  <div className="text-[12.5px] text-ink-soft mt-0.5">{h}</div>
-                </button>
-              ))}
-            </div>
+            <Tiles label="How much of the course" value={f.shareCourse ? 'part' : 'whole'} onChange={k => { const v = k === 'part'; set('shareCourse', v); if (!v) { set('holdNineIds', []); set('keepOpen', []); } }}
+              options={[{ key: 'whole', title: f.format === 'tee_times' && f.productId ? 'All of that round' : 'The whole course', line: f.format === 'tee_times' && f.productId ? 'None of that round’s times in the event’s hours can be booked.' : 'Nothing in the event’s hours can be booked. Most events.' },
+                { key: 'part', title: 'Part of it', line: 'Choose the holes it uses and which times golfers can still book.' }]} />
             {f.shareCourse && f.format === 'shotgun' && nines.length > 1 && (
               <fieldset>
                 <legend className={LABEL}>Holes it uses</legend>
@@ -303,7 +302,7 @@ export default function EventSetup({ initial, eventId, products, nines, courseHo
                     const on = f.holdNineIds.length === 0 || f.holdNineIds.includes(n.id);
                     const next = on ? (f.holdNineIds.length === 0 ? nines.map(x => x.id) : f.holdNineIds).filter(id => id !== n.id) : [...f.holdNineIds, n.id];
                     return (
-                      <label key={n.id} className="flex items-center gap-2 rounded-md border border-line bg-white px-3 py-2 text-[13.5px] text-ink">
+                      <label key={n.id} className="flex items-center gap-2 rounded-[10px] border border-line bg-paper px-3 py-2 text-[13.5px] text-ink">
                         <input type="checkbox" className="accent-pine" checked={on} disabled={on && next.length === 0}
                           onChange={() => set('holdNineIds', next.length === nines.length ? [] : next)} />
                         {n.name}
@@ -320,7 +319,7 @@ export default function EventSetup({ initial, eventId, products, nines, courseHo
       )}
 
       {step === 2 && (
-        <div className="space-y-5 max-w-xl">
+        <div className="space-y-5">
           <section className={SECTION}>
             <h3 className={H3}>Players</h3>
             <div className="grid sm:grid-cols-2 gap-4">
@@ -335,13 +334,8 @@ export default function EventSetup({ initial, eventId, products, nines, courseHo
 
           <section className={SECTION}>
             <h3 className={H3}>Who pays the course</h3>
-            <div className="grid sm:grid-cols-2 gap-2" role="radiogroup" aria-label="Who pays the course" aria-invalid={!!err.payer}>
-              {PAYERS.map(p => (
-                <button key={p.key} type="button" role="radio" aria-checked={f.payer === p.key} onClick={() => set('payer', p.key)} className={CHOICE(f.payer === p.key, !!err.payer)}>
-                  <div className="text-[14px] font-medium text-ink">{p.label}</div>
-                  <div className="text-[12.5px] text-ink-soft mt-0.5">{p.hint}</div>
-                </button>
-              ))}
+            <div className={err.payer ? '[&_[role=radio]]:border-bad' : ''}>
+              <Tiles label="Who pays the course" value={f.payer} onChange={k => set('payer', k)} options={PAYERS.map(p => ({ key: p.key, title: p.label, line: p.hint }))} />
             </div>
             <Msg k="payer" />
             <div className="grid sm:grid-cols-2 gap-4">
@@ -381,15 +375,14 @@ export default function EventSetup({ initial, eventId, products, nines, courseHo
             <h3 className={H3}>What&apos;s included</h3>
             <div className="flex flex-wrap gap-2">
               {[...INCLUDES, ...f.includes.filter(i => !INCLUDES.includes(i))].map(x => (
-                <button key={x} onClick={() => toggleInclude(x)} aria-pressed={f.includes.includes(x)}
-                  className={'px-3 py-1.5 rounded-md border text-[13px] transition-colors ' + (f.includes.includes(x) ? 'border-pine bg-pine/[0.06] text-ink font-medium' : 'border-line bg-white text-ink-soft hover:bg-paper')}>
+                <button key={x} type="button" onClick={() => toggleInclude(x)} aria-pressed={f.includes.includes(x)} className={CHIP(f.includes.includes(x))}>
                   {x}
                 </button>
               ))}
             </div>
             <form className="flex gap-2" onSubmit={e => { e.preventDefault(); const v = custom.trim(); if (v && !f.includes.includes(v)) set('includes', [...f.includes, v]); setCustom(''); }}>
-              <input className={INPUT + ' flex-1'} value={custom} maxLength={60} onChange={e => setCustom(e.target.value)} placeholder="Something else" aria-label="Something else included" />
-              <button type="submit" className={SECONDARY}>Add</button>
+              <input className={INPUT + ' flex-1'} value={custom} maxLength={60} onChange={e => setCustom(e.target.value)} aria-label="Add your own included item" />
+              <button type="submit" className={SECONDARY}>Add your own</button>
             </form>
           </section>
 
@@ -404,10 +397,10 @@ export default function EventSetup({ initial, eventId, products, nines, courseHo
       )}
 
       {step === 3 && (
-        <div className="space-y-5 max-w-xl">
+        <div className="space-y-5">
           <section className={SECTION}>
             <h3 className={H3}>What saving does to the tee sheet</h3>
-            <div className="bg-paper/70 rounded-md px-4 py-3">
+            <div className="bg-paper rounded-[12px] border border-line px-4 py-3">
               {busy && !preview ? <p className="text-[13.5px] text-ink-muted">Working out which tee times it holds…</p>
                 : !preview ? (previewError
                   ? <p role="alert" className="text-[13.5px] text-bad">Couldn&apos;t work out the hold: {previewError} <button type="button" onClick={loadPreview} className="underline font-medium">Try again</button></p>
@@ -437,7 +430,7 @@ export default function EventSetup({ initial, eventId, products, nines, courseHo
                           const open = f.keepOpen.includes(t);
                           return (
                             <button key={t} type="button" aria-pressed={open} onClick={() => set('keepOpen', open ? f.keepOpen.filter(x => x !== t) : [...f.keepOpen, t].sort())}
-                              className={'px-2.5 py-1.5 rounded-md border text-[12.5px] tabular-nums ' + (open ? 'border-pine bg-pine/[0.06] text-ink font-medium' : 'border-line bg-white text-ink-soft')}>
+                              className={CHIP(open) + ' tabular-nums'}>
                               {formatTeeTime(t)}{open ? ' · open' : ''}
                             </button>
                           );
@@ -474,7 +467,7 @@ export default function EventSetup({ initial, eventId, products, nines, courseHo
               <ul className="divide-y divide-line-soft text-[13.5px]">
                 {missing.map(([label, s]) => (
                   <li key={label} className="flex items-center justify-between gap-3 py-2"><span className="text-ink">{label}</span>
-                    <button type="button" onClick={() => setStep(s)} className="text-[13px] font-medium text-pine hover:underline underline-offset-4">Add</button></li>
+                    <button type="button" onClick={() => setStep(s)} className={LINK}>Add</button></li>
                 ))}
               </ul>
             </section>
@@ -495,17 +488,19 @@ export default function EventSetup({ initial, eventId, products, nines, courseHo
         </div>
       )}
 
-      {error && <p role="alert" className="mt-4 text-[13.5px] text-bad">{error}</p>}
+      {error && <p role="alert" className="text-[13.5px] text-bad">{error}</p>}
 
-      <div className="flex flex-wrap gap-2 mt-6 pt-5 border-t border-line-soft">
-        {step > 0 && <button onClick={() => go(step - 1)} className={SECONDARY} disabled={busy}>Back</button>}
-        {step < 3 && <button onClick={() => go(step + 1)} className={PRIMARY} disabled={busy}>Next: {STEPS[step + 1]}</button>}
+      <div className="flex items-center gap-3 pt-1">
+        {step > 0 ? <button type="button" onClick={() => go(step - 1)} className={LINK} disabled={busy}>Back</button> : <button type="button" onClick={onCancel} className={LINK}>Cancel</button>}
+        <span className="flex-1" />
+        {step < 3 && <button type="button" onClick={() => go(step + 1)} className={PRIMARY} disabled={busy}>Continue</button>}
         {step === 3 && (
-          <button onClick={save} className={PRIMARY} disabled={busy || !preview || stale}>
+          <button type="button" onClick={save} className={PRIMARY} disabled={busy || !preview || stale}>
             {saving ? 'Saving…' : eventId ? 'Save changes' : 'Save and hold the tee times'}
           </button>
         )}
       </div>
-    </Card>
+     </div>
+    </Popup>
   );
 }

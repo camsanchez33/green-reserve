@@ -1,95 +1,67 @@
 'use client';
-// SHOP-4 (Cam 2026-10-30: "Shop sales report"): Analytics → Pro shop. What sold for
-// the dates picked, by item and category, best sellers first; cost and margin for the
-// owner only. Its own load: /api/operator/analytics/shop (lib/shop-report.ts).
+// ANALYTICS-5 (Cam 2026-11-17, approved mockup): Analytics → Pro shop. Transactions and items kept apart; shop revenue
+// is the ledger's (the report's ledgerSalesCents, Build; money.payments only); what sold by category and item
+// comes from the shop report (SHOP-4, lib/shop-report.ts), with cost and margin for the owner only. Transactions, the
+// month before and stock value are Build's: each part stays hidden until the report sends it.
 import { useCallback, useEffect, useState } from 'react';
 import { LoadError } from '@/components/dashboard/LoadError';
 import { dfetch } from '@/lib/dashboard-fetch';
-import { TERMS } from '@/lib/analytics-terms';
-import type { ShopReport } from '@/lib/shop-report';
+import { Block, Figures, Note, Pair, Table } from './parts';
+import { type Range, type Shop, change, dayShort, num, pct, usd } from './data';
 
-const usd = (c: number | null | undefined) => (c == null ? '—' : `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
-const pct = (m: number | null | undefined, s: number) => (m == null || !s ? '' : ` · ${Math.round((m / s) * 100)}%`);
+const marginPct = (m: number | null | undefined, sales: number) => (m == null || !sales ? null : (m / sales) * 100);
 
-function csv(name: string, rows: (string | number | null)[][]) {
-  const esc = (v: string | number | null) => { const t = v == null ? '' : String(v); const safe = /^[=+\-@]/.test(t) && typeof v === 'string' ? `'${t}` : t; return /[",\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe; };
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([rows.map(r => r.map(esc).join(',')).join('\n')], { type: 'text/csv' }));
-  a.download = `${name}.csv`; a.click(); URL.revokeObjectURL(a.href);
-}
-
-function Fig({ label, value, sub, def }: { label: string; value: string; sub?: string; def?: string }) {
-  return (
-    <div>
-      <div className={'text-[13px] font-semibold text-ink ' + (def ? 'underline decoration-dotted decoration-line-strong underline-offset-4 cursor-help' : '')} title={def}>{label}</div>
-      <div className="text-[24px] font-semibold tabular-nums mt-1 text-ink">{value}</div>
-      {sub && <div className="text-[12.5px] text-ink-muted mt-1 tabular-nums">{sub}</div>}
-    </div>
-  );
-}
-
-export function ShopTab({ range }: { range: { from: string; to: string } }) {
-  const [r, setR] = useState<ShopReport | null>(null);
+export function ShopTab({ range, money, onLoad }: { range: Range; money: boolean; onLoad?: (r: Shop | null) => void }) {
+  const [r, setR] = useState<Shop | null>(null);
   const [error, setError] = useState('');
   const load = useCallback(async () => {
     setError('');
-    const res = await dfetch<ShopReport>(`/api/operator/analytics/shop?from=${range.from}&to=${range.to}`);
-    if (res.ok) setR(res.data); else setError(res.error);
-  }, [range.from, range.to]);
+    const res = await dfetch<Shop>(`/api/operator/analytics/shop?from=${range.from}&to=${range.to}`);
+    if (res.ok) { setR(res.data); onLoad?.(res.data); } else { setError(res.error); onLoad?.(null); }
+  }, [range.from, range.to, onLoad]);
   useEffect(() => { setR(null); load(); }, [load]);
-  if (error) return <LoadError message={error} onRetry={load} />;
-  if (!r) return <p className="text-[13px] text-ink-muted py-6">Loading…</p>;
+  if (error) return <LoadError message={`Couldn’t load the pro shop — ${error}`} onRetry={load} />;
+  if (!r) return <Note>Loading…</Note>;
+
   const t = r.totals;
-  const top = Math.max(1, r.categories[0]?.salesCents ?? 1);
-  return (
-    <div className="space-y-8">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-        <Fig label="Sold" def={TERMS.shopSold} value={usd(t.salesCents)} sub={`${t.qty.toLocaleString()} items`} />
-        <Fig label="Walk-up" value={usd(t.walkUpCents)} />
-        <Fig label="On rounds" value={usd(t.onRoundsCents)} />
-        {r.cost ? <Fig label="Margin" def={TERMS.shopMargin} value={usd(t.marginCents)} sub={t.costedSalesCents ? `${usd(t.costedSalesCents)} costed${pct(t.marginCents, t.costedSalesCents)}` : 'no costs'} />
-          : <Fig label="Discounts" value={usd(t.discountsCents)} />}
-      </div>
-      <section>
-        <div className="flex items-baseline justify-between mb-3">
-          <h3 className="text-[15px] font-semibold text-ink">By item</h3>
-          {r.items.length > 0 && <button onClick={() => csv(`shop-items-${r.range.from}-${r.range.to}`, [['Item', 'Category', 'Sold', 'Sales', ...(r.cost ? ['Cost', 'Margin'] : [])], ...r.items.map(i => [i.name, i.category, i.qty, i.salesCents / 100, ...(r.cost ? [i.costCents == null ? null : i.costCents / 100, i.marginCents == null ? null : i.marginCents / 100] : [])])])}
-            className="text-[12.5px] font-medium text-ink-soft hover:text-ink underline underline-offset-4 decoration-line-strong">CSV</button>}
-        </div>
-        {r.items.length === 0 ? <p className="text-[13px] text-ink-muted">Nothing sold.</p> : (
-          <div className="overflow-x-auto max-h-[420px] overflow-y-auto">
-            <table className="w-full text-[13px] tabular-nums">
-              <thead className="sticky top-0 bg-white"><tr className="text-left text-[12.5px] font-semibold text-ink border-b border-line">
-                <th className="py-2 pr-4">Item</th><th className="py-2 pr-4 text-right">Sold</th><th className="py-2 pr-4 text-right">Sales</th>{r.cost && <th className="py-2 text-right">Margin</th>}
-              </tr></thead>
-              <tbody className="divide-y divide-line-soft">
-                {r.items.map(i => (
-                  <tr key={i.key}>
-                    <td className="py-2 pr-4 text-ink">{i.name}<span className="ml-2 text-ink-muted">{i.category}</span></td>
-                    <td className="py-2 pr-4 text-right">{i.qty}</td>
-                    <td className="py-2 pr-4 text-right">{usd(i.salesCents)}</td>
-                    {r.cost && <td className="py-2 text-right">{i.marginCents == null ? '—' : `${usd(i.marginCents)}${pct(i.marginCents, i.salesCents)}`}</td>}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-      {r.categories.length > 0 && (
-        <section>
-          <h3 className="text-[15px] font-semibold text-ink mb-3">By category</h3>
-          <div className="space-y-2">
-            {r.categories.map(c => (
-              <div key={c.category} className="flex items-center gap-3 text-[13px]">
-                <span className="w-36 shrink-0 text-ink truncate">{c.category}</span>
-                <div className="flex-1 h-2.5 bg-line-soft rounded-full overflow-hidden"><div className="h-full rounded-full bg-pine" style={{ width: `${(c.salesCents / top) * 100}%` }} /></div>
-                <span className="w-24 shrink-0 text-right tabular-nums font-semibold text-ink">{usd(c.salesCents)}</span>
-              </div>
-            ))}
-          </div>
-        </section>
+  const shopCents = money && r.ledgerSalesCents != null ? r.ledgerSalesCents : null;
+  const all = r.categories.reduce((s, c) => s + c.salesCents, 0);
+  const hasBefore = r.categories.some(c => c.beforeSalesCents != null);
+  const S = r.stock;
+  return (<>
+    <Figures items={[
+      t.transactions != null && { label: 'Transactions', value: num(t.transactions) },
+      { label: 'Items sold', value: num(t.qty) },
+      shopCents != null && { label: 'Shop revenue', value: usd(shopCents) },
+      r.cost && t.costedSalesCents ? { label: 'Margin', value: pct(marginPct(t.marginCents, t.costedSalesCents)) } : null,
+      shopCents != null && t.transactions ? { label: 'Average transaction', value: `$${(shopCents / t.transactions / 100).toFixed(2)}` } : null,
+    ]} />
+    <Block title="By category">
+      <Table label="Pro shop sales by category" empty="Nothing sold in these dates."
+        head={['Category', 'Items sold', 'Sales', 'Share of sales', ...(r.cost ? ['Margin'] : []), ...(hasBefore ? ['On the period before'] : [])]}
+        rows={r.categories.map(c => {
+          const ch = c.beforeSalesCents != null ? change(c.salesCents, c.beforeSalesCents, 'pct') : null;
+          return [c.category, `${num(c.qty)} item${c.qty === 1 ? '' : 's'}`, usd(c.salesCents), pct(all ? (c.salesCents / all) * 100 : null),
+            ...(r.cost ? [pct(marginPct(c.marginCents, c.salesCents))] : []), ...(hasBefore ? [ch ? ch.text : '—'] : [])];
+        })} />
+    </Block>
+    <Pair>
+      <Block title="Best sellers">
+        <Table label="Best-selling items" empty="Nothing sold in these dates." head={['Item', 'Sold', 'Sales', ...(r.cost ? ['Margin'] : [])]}
+          rows={r.items.slice(0, 5).map(i => [i.name, num(i.qty), usd(i.salesCents), ...(r.cost ? [pct(marginPct(i.marginCents, i.salesCents))] : [])])} />
+      </Block>
+      {S && (
+        <Block title="Not selling">
+          <Table label={`Items that haven't sold in over ${S.staleDays} days`} empty={`Everything in stock sold in the last ${S.staleDays} days.`} head={['Item', 'In stock', ...(money ? ['Stock value'] : []), 'Last sold']}
+            rows={S.notSelling.map(x => [x.name, num(x.inStock), ...(money ? [usd(x.retailValueCents)] : []), x.lastSoldAt ? dayShort(x.lastSoldAt) : 'Never'])} />
+          {money && S.notSellingRetailCents > 0 && <Note>{usd(S.notSellingRetailCents)} of stock, at shelf price, has not sold in over {S.staleDays} days.</Note>}
+        </Block>
       )}
-    </div>
-  );
+    </Pair>
+  </>);
+}
+
+export function shopCsv(r: Shop): (string | number | null)[][] {
+  return [['Item', 'Category', 'Sold', 'Sales', ...(r.cost ? ['Cost', 'Margin'] : [])],
+    ...r.items.map(i => [i.name, i.category, i.qty, i.salesCents / 100, ...(r.cost ? [i.costCents == null ? null : i.costCents / 100, i.marginCents == null ? null : i.marginCents / 100] : [])])];
 }
