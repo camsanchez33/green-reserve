@@ -26,6 +26,8 @@ function extremes(d: Data) {
   for (const r of d.utilization.heatmap.rows) r.cells.forEach((c, i) => { if (c != null) cells.push({ dow: r.dow, hour: d.utilization.heatmap.hours[i], v: c }); });
   if (cells.length < 2) return null;
   const s = [...cells].sort((a, b) => b.v - a.v);
+  // Nothing to tell apart (nothing booked, or every hour the same): say nothing rather than "Busiest, 0% full".
+  if (s[0].v <= s[s.length - 1].v) return null;
   return { busiest: s[0], quietest: s[s.length - 1] };
 }
 

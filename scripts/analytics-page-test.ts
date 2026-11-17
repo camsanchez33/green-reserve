@@ -50,6 +50,7 @@ ok('members by membership only when sent', T.includes('{M && M.length > 0 && (')
 ok('reports: no Forecast, recommendations as "What to try", By area only when stored, PDF only once its route answers', !code.includes('Forecast') && T.includes('<List title="What to try" items={r.review.recommendations} />') && T.includes('{A && A.length > 0 && (') && T.includes("method: 'HEAD'") && T.includes('{pdf && <a href={pdfUrl(r.month)}'));
 ok('stock value in dollars only for money logins', parts['ShopTab.tsx'].includes("...(money ? ['Stock value'] : [])") && parts['ShopTab.tsx'].includes('{money && S.notSellingRetailCents > 0 && <Note>'));
 ok('stock and transactions only when sent', parts['ShopTab.tsx'].includes('{S && (') && parts['ShopTab.tsx'].includes('t.transactions != null && {'));
+ok('no "Busiest, 0% full" or same-day Best/Slowest when nothing differs', parts['Tabs.tsx'].includes('if (s[0].v <= s[s.length - 1].v) return null;') && parts['Head.tsx'].includes('const spread = n > 1 && v[best] > v[worst];') && (parts['Head.tsx'].match(/\{spread && <span>/g) || []).length === 2);
 ok('no Filter button until the route can filter', !/label="Filter"|Icon\.filter/.test(all));
 ok('removed by Cam: first-timers who came back, missed more than once', !/came back|Missed more than once|noShows\.repeat/.test(code));
 

@@ -74,6 +74,8 @@ function Chart({ t, showLink }: { t: Tile; showLink: boolean }) {
   const sx = (i: number) => (n > 1 ? i * (W / (n - 1)) : 0), sy = (x: number) => H - (x / mx) * H;
   const avg = v.reduce((a, b) => a + b, 0) / Math.max(1, n);
   const best = v.indexOf(Math.max(...v)), worst = v.indexOf(Math.min(...v));
+  // Best and Slowest only when one day actually beat another.
+  const spread = n > 1 && v[best] > v[worst];
   const daily = t.now.every(x => /^\d{4}-\d{2}-\d{2}$/.test(x.key)) && n <= 62;
   const ticks = [0, Math.round((n - 1) / 4), Math.round((n - 1) / 2), Math.round(((n - 1) * 3) / 4), n - 1].filter((x, i, a) => a.indexOf(x) === i);
   const move = (clientX: number) => { const r = box.current?.getBoundingClientRect(); if (!r) return; setHover(Math.max(0, Math.min(n - 1, Math.round(((clientX - r.left) / r.width) * (n - 1))))); };
@@ -107,8 +109,8 @@ function Chart({ t, showLink }: { t: Tile; showLink: boolean }) {
         {daily && <span className="inline-flex items-center gap-1.5"><i className="inline-block w-2.5 h-2.5 rounded-[2px] bg-ink opacity-[.12]" />Weekends</span>}
         <span className="inline-flex items-center gap-1.5"><i className="inline-block w-3.5 border-t-[1.5px] border-dotted border-ink-muted" />Average {t.fmt(avg)}</span>
         <span className="flex-1 max-md:hidden" />
-        {n > 1 && <span>Best <b className="text-ink font-semibold">{label(t.now[best].key)}</b> {t.fmt(v[best])}</span>}
-        {n > 1 && <span>Slowest <b className="text-ink font-semibold">{label(t.now[worst].key)}</b> {t.fmt(v[worst])}</span>}
+        {spread && <span>Best <b className="text-ink font-semibold">{label(t.now[best].key)}</b> {t.fmt(v[best])}</span>}
+        {spread && <span>Slowest <b className="text-ink font-semibold">{label(t.now[worst].key)}</b> {t.fmt(v[worst])}</span>}
         {showLink && <Link href="/dashboard/money" className="text-ink-soft underline underline-offset-[3px] decoration-line hover:text-ink">Revenue</Link>}
       </div>
     </div>
