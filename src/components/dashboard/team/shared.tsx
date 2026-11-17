@@ -8,14 +8,14 @@ import { StatusDot } from '@/components/ui/StatusDot';
 import { PERMISSIONS, normalizePermissions, withoutPermission, type PermissionDef, type PermissionKey } from '@/lib/staff-permissions';
 
 export type Role = {
-  id: string; name: string; description: string; rank: number;
+  id: string; name: string; rank: number;
   permissions: PermissionKey[];
   /** The Owner role: everything, never edited, never deleted, nobody invited into it. */
   owner: boolean;
   /** How many people hold it, so a role edit can say who it changes before saving. */
   people: number;
 };
-export type Suggested = { key: string; name: string; description: string; permissions: PermissionKey[] };
+export type Suggested = { key: string; name: string; permissions: PermissionKey[] };
 export type Person = {
   id: string; name: string; email: string; phone: string | null; roleId: string | null;
   status: 'active' | 'invited' | 'disabled';

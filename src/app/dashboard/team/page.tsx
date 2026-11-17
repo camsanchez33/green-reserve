@@ -147,7 +147,7 @@ function TeamInner() {
               ownerRow={r.owner ? { name: team.owner.name, line: 'Now', onOpen: () => setOpen({ kind: 'owner' }) } : undefined} />
           ))}
           {noRole.length > 0 && (
-            <RoleGroup role={{ id: '', name: 'No role yet', description: '', rank: 999, permissions: [], owner: false, people: noRole.length }}
+            <RoleGroup role={{ id: '', name: 'No role yet', rank: 999, permissions: [], owner: false, people: noRole.length }}
               people={noRole} onPerson={id => setOpen({ kind: 'person', id })} />
           )}
           {team.suggested.length > 0 && (
@@ -158,7 +158,7 @@ function TeamInner() {
               </div>
               <div className="flex flex-wrap gap-2">
                 {team.suggested.map(s => (
-                  <button key={s.key} type="button" title={s.description} onClick={() => setOpen({ kind: 'newRole', suggested: s })}
+                  <button key={s.key} type="button" onClick={() => setOpen({ kind: 'newRole', suggested: s })}
                     className="inline-flex items-center gap-1.5 min-h-[36px] px-3 py-1.5 rounded-full border border-line bg-ink/5 text-[13px] text-ink hover:border-ink-soft"><PlusIcon />{s.name}</button>
                 ))}
                 <button type="button" onClick={() => setOpen({ kind: 'newRole' })}
@@ -178,7 +178,7 @@ function TeamInner() {
           </div>
           {roles.map(r => (
             <button key={r.id} type="button" onClick={() => setOpen({ kind: 'role', id: r.id })} className={ROW + ' grid-cols-[minmax(0,1fr)_auto_20px]'}>
-              <span className="min-w-0"><b className="block font-semibold">{r.name}</b>{r.description && <small className="block text-[12px] text-ink-muted">{r.description}</small>}</span>
+              <b className="min-w-0 font-semibold">{r.name}</b>
               <span className="text-[12.5px] text-ink-muted tabular-nums">{r.owner ? 'Everything' : `${r.permissions.length} of ${TOTAL}`}</span>
               <ChevronIcon className="text-ink-muted" />
             </button>

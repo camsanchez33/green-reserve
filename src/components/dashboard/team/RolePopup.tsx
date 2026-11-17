@@ -1,7 +1,7 @@
 'use client';
-// TEAM-1: a role (the mockup's role popup), new, from Suggested roles, or an existing one. Name, a short description
-// and what the role can do. A role edit changes everyone in it, so before Save the popup says how many people that is
-// (Cam's review note). Owner is shown read only. A role with people in it can't be deleted until they have another.
+// TEAM-1: a role (the mockup's role popup), new, from Suggested roles, or an existing one. Its name and what the role
+// can do. A role edit changes everyone in it, so before Save the popup says how many people that is
+// (Cam's review note). Roles have a name only, no description (Cam, via Build 2026-11-17: "get rid of this"). Owner is shown read only. A role with people in it can't be deleted until they have another.
 import { useState } from 'react';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { toast } from '@/components/dashboard/Toast';
@@ -14,7 +14,6 @@ export function RolePopup({ role, suggested, onClose, onChanged }: {
   role?: Role; suggested?: Suggested; onClose: () => void; onChanged: () => Promise<void> | void;
 }) {
   const [name, setName] = useState(role?.name ?? suggested?.name ?? '');
-  const [desc, setDesc] = useState(role?.description ?? suggested?.description ?? '');
   const [keys, setKeys] = useState<PermissionKey[]>(normalizePermissions(role?.permissions ?? suggested?.permissions ?? []));
   const [busy, setBusy] = useState<'save' | 'delete' | null>(null);
   const [err, setErr] = useState('');
@@ -31,7 +30,7 @@ export function RolePopup({ role, suggested, onClose, onChanged }: {
     );
   }
 
-  const dirty = !role || name.trim() !== role.name || desc.trim() !== role.description || !sameKeys(keys, role.permissions);
+  const dirty = !role || name.trim() !== role.name || !sameKeys(keys, role.permissions);
   const affects = role?.people ?? 0;
   function close() {
     if (role && dirty && !confirm(`Discard the unsaved changes to ${role.name}?`)) return;
@@ -42,7 +41,7 @@ export function RolePopup({ role, suggested, onClose, onChanged }: {
   async function save() {
     if (!name.trim()) { setErr('Give the role a name.'); return; }
     setBusy('save'); setErr('');
-    const body = { name: name.trim(), description: desc.trim(), permissions: keys };
+    const body = { name: name.trim(), permissions: keys };
     const r = role
       ? await dfetch('/api/operator/team/roles', { method: 'PATCH', body: JSON.stringify({ id: role.id, ...body }) })
       : await dfetch('/api/operator/team/roles', { method: 'POST', body: JSON.stringify({ ...body, ...(suggested ? { fromSuggested: suggested.key } : {}) }) });
@@ -73,9 +72,8 @@ export function RolePopup({ role, suggested, onClose, onChanged }: {
           </div>
           <button type="button" className={LINK} onClick={close}>Close</button>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="sm:max-w-[50%]">
           <Field label="Name"><input value={name} onChange={e => setName(e.target.value)} maxLength={40} className={FIELD} autoFocus={!role} /></Field>
-          <Field label="Short description"><input value={desc} onChange={e => setDesc(e.target.value)} maxLength={120} className={FIELD} /></Field>
         </div>
         <div>
           <p className="text-[12.5px] text-ink-muted mt-1 mb-1">What this role can do</p>
