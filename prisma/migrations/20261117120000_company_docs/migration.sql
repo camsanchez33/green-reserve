@@ -35,6 +35,9 @@ CREATE TABLE "CompanyDocumentVersion" (
     CONSTRAINT "CompanyDocumentVersion_pkey" PRIMARY KEY ("id")
 );
 
+-- The fresh second-factor check on delete: set by an explicit confirm, used up by the delete. Defaulted column.
+ALTER TABLE "OwnerSession" ADD COLUMN "stepUpFresh" BOOLEAN NOT NULL DEFAULT false;
+
 CREATE INDEX "CompanyDocument_label_idx" ON "CompanyDocument"("label");
 CREATE UNIQUE INDEX "CompanyDocumentVersion_pathname_key" ON "CompanyDocumentVersion"("pathname");
 CREATE UNIQUE INDEX "CompanyDocumentVersion_documentId_version_key" ON "CompanyDocumentVersion"("documentId", "version");

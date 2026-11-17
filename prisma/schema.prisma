@@ -1149,6 +1149,9 @@ model OwnerSession {
   /// AW-1c: when this session last proved a second factor (sign-in, or a
   /// "confirm it's you"). Risky actions need it within the last 5 minutes.
   stepUpAt   DateTime?
+  /// Company docs (Cam 2026-11-17): true only after an explicit "confirm it's you" (never the sign-in),
+  /// until one action that needs a FRESH check uses it up (freshStepUpRequired). stepUpAt is left alone.
+  stepUpFresh Boolean   @default(false)
 
   @@index([adminId])
 }

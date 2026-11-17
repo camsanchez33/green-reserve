@@ -8,8 +8,8 @@ import { auditAdmin } from '@/lib/admin-audit';
 // labels are fixed (no rename, no remove). Owner with 2FA only.
 //   GET                       every label (counts come with the documents, GET ..)
 //   POST   { name }           add one
-//   PATCH  { id, name }       rename one of Cam's
-//   DELETE ?id=&moveTo=       remove one of Cam's; one holding documents needs
+//   PATCH  { key, name }      rename one of Cam's (id accepted too)
+//   DELETE ?key=&moveTo=       remove one of Cam's; one holding documents needs
 //                             moveTo (another label) and moves them there first.
 // Files from before this change sit in built-in folders, so a label of Cam's
 // only ever holds documents with rows.
@@ -34,14 +34,14 @@ export async function POST(req: NextRequest) {
   if (await nameTaken(name)) return NextResponse.json({ error: 'There’s already a label with that name.' }, { status: 409 });
   const label = await prisma.companyDocLabel.create({ data: { name }, select: { id: true, name: true } });
   await auditAdmin(g.session, { action: 'company_doc_label_add', targetType: 'company_doc_label', targetId: label.id, after: { name } });
-  return NextResponse.json({ label: { key: label.id, name: label.name, builtIn: false, count: 0 } });
+  return NextResponse.json({ label: { key: label.id, name: label.name, builtIn: false } });
 }
 
 export async function PATCH(req: NextRequest) {
   const g = await companyDocsGate();
   if ('res' in g) return g.res;
-  const body = await req.json().catch(() => null) as { id?: unknown; name?: unknown } | null;
-  const id = typeof body?.id === 'string' ? body.id : '';
+  const body = await req.json().catch(() => null) as { key?: unknown; id?: unknown; name?: unknown } | null;
+  const id = typeof body?.key === 'string' ? body.key : typeof body?.id === 'string' ? body.id : '';
   const name = cleanName(body?.name, LABEL_NAME_MAX);
   if (!name) return NextResponse.json({ error: `Name the label (up to ${LABEL_NAME_MAX} characters).` }, { status: 400 });
   const before = id ? await prisma.companyDocLabel.findUnique({ where: { id }, select: { name: true } }) : null;
@@ -55,6 +55,7 @@ export async function PATCH(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const g = await companyDocsGate();
   if ('res' in g) return g.res;
-  const r = await removeLabel(g.session, req.nextUrl.searchParams.get('id') || '', req.nextUrl.searchParams.get('moveTo') || '');
+  const q = req.nextUrl.searchParams;
+  const r = await removeLabel(g.session, q.get('key') || q.get('id') || '', q.get('moveTo') || '');
   return NextResponse.json(r.body, { status: r.status });
 }

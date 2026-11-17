@@ -5,6 +5,7 @@ import { readFileSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
 import { prisma } from '../src/lib/prisma';
 import { freshStepUpRequired, type AdminSession } from '../src/lib/admin-session';
+import { markStepUp } from '../src/lib/owner-session';
 import { allLabels, labelExists, adoptLegacy, documentHistory, cleanName, legacyId, legacyPathOf, defaultDocName } from '../src/lib/company-documents-data';
 import { auditAdmin } from '../src/lib/admin-audit';
 import { recordUpload, deleteDocument, updateDocument, removeLabel, listDocuments, auditOpen, documentDetails, type DocStore } from '../src/lib/company-documents-ops';
@@ -34,28 +35,37 @@ async function cleanup() {
   await cleanup();
   const owner = await prisma.adminUser.create({ data: { email: EMAIL, name: 'Codocs Owner', role: 'owner', passwordHash: 'x' } });
   const signedIn = new Date(Date.now() - 60_000);
+  // A sign-in stamps stepUpAt (createOwnerSession) but never stepUpFresh.
   const s = await prisma.ownerSession.create({ data: { adminId: owner.id, method: 'totp', createdAt: signedIn, stepUpAt: signedIn, expiresAt: new Date(Date.now() + 3600_000) } });
-  const sess = (stepUpAt: Date | null, extra: Partial<AdminSession> = {}): AdminSession => ({ adminId: owner.id, email: EMAIL, name: 'Codocs Owner', role: 'owner', mfa: true, ownerSessionId: s.id, stepUpAt, ownerSessionCreatedAt: signedIn, ...extra });
+  /** The session as resolveAdminSession builds it from the row, right now. */
+  const live = async (extra: Partial<AdminSession> = {}): Promise<AdminSession> => {
+    const r = await prisma.ownerSession.findUniqueOrThrow({ where: { id: s.id } });
+    return { adminId: owner.id, email: EMAIL, name: 'Codocs Owner', role: 'owner', mfa: true, ownerSessionId: s.id, stepUpAt: r.stepUpAt, stepUpFresh: r.stepUpFresh, ...extra };
+  };
 
-  ok('signing in alone is not a fresh check', (await freshStepUpRequired(sess(signedIn)))?.status === 403);
-  const confirmed = new Date();
-  await prisma.ownerSession.update({ where: { id: s.id }, data: { stepUpAt: confirmed } });
-  ok('an employee never passes', (await freshStepUpRequired(sess(confirmed, { role: 'manager' })))?.status === 403);
-  ok('a confirm made just now passes', (await freshStepUpRequired(sess(confirmed))) === null);
-  const spent = (await prisma.ownerSession.findUniqueOrThrow({ where: { id: s.id } })).stepUpAt;
-  ok('…and is used up, while the ordinary 5-minute window keeps its time', !!spent && spent.getTime() < confirmed.getTime() && Date.now() - spent.getTime() < 5 * 60_000);
-  ok('…so the spent stamp cannot pass a fresh check', (await freshStepUpRequired(sess(spent))) !== null);
-  ok('…so the same confirm cannot pass twice', (await freshStepUpRequired(sess(confirmed))) !== null);
-  const stale = new Date(Date.now() - 3 * 60_000);
-  await prisma.ownerSession.update({ where: { id: s.id }, data: { stepUpAt: stale } });
-  ok('a confirm older than two minutes does not pass', (await freshStepUpRequired(sess(stale))) !== null);
-  const twin = new Date();
-  await prisma.ownerSession.update({ where: { id: s.id }, data: { stepUpAt: twin } });
-  const both = await Promise.all([freshStepUpRequired(sess(twin)), freshStepUpRequired(sess(twin))]);
+  ok('signing in alone is not a fresh check', (await freshStepUpRequired(await live()))?.status === 403);
+  await markStepUp(s.id);
+  ok('an employee never passes', (await freshStepUpRequired(await live({ role: 'manager' })))?.status === 403);
+  const confirmed = await live();
+  ok('a confirm made just now passes', (await freshStepUpRequired(confirmed)) === null);
+  const after = await prisma.ownerSession.findUniqueOrThrow({ where: { id: s.id } });
+  ok('…and is used up, while the ordinary 5-minute window keeps its full time', !after.stepUpFresh && after.stepUpAt?.getTime() === confirmed.stepUpAt?.getTime());
+  ok('…so the same confirm cannot pass twice, even replayed as it was', (await freshStepUpRequired(confirmed)) !== null && (await freshStepUpRequired(await live())) !== null);
+  // A confirm stamped by a server whose clock runs ahead: single use must not depend on clocks.
+  const ahead = new Date(Date.now() + 1500);
+  await prisma.ownerSession.update({ where: { id: s.id }, data: { stepUpAt: ahead, stepUpFresh: true } });
+  const aheadSess = await live();
+  ok('a confirm stamped by a clock 1.5 s ahead passes once…', (await freshStepUpRequired(aheadSess)) === null);
+  ok('…and only once', (await freshStepUpRequired(aheadSess)) !== null);
+  await prisma.ownerSession.update({ where: { id: s.id }, data: { stepUpAt: new Date(Date.now() - 3 * 60_000), stepUpFresh: true } });
+  ok('a confirm older than two minutes does not pass', (await freshStepUpRequired(await live())) !== null);
+  await markStepUp(s.id);
+  const twin = await live();
+  const both = await Promise.all([freshStepUpRequired(twin), freshStepUpRequired(twin)]);
   ok('two deletes racing on one confirm: only one passes', both.filter(x => x === null).length === 1);
-  await prisma.ownerSession.update({ where: { id: s.id }, data: { stepUpAt: new Date(), revokedAt: new Date() } });
-  const revoked = await prisma.ownerSession.findUniqueOrThrow({ where: { id: s.id } });
-  ok('a signed-out session does not pass', (await freshStepUpRequired(sess(revoked.stepUpAt))) !== null);
+  await markStepUp(s.id);
+  await prisma.ownerSession.update({ where: { id: s.id }, data: { revokedAt: new Date() } });
+  ok('a signed-out session does not pass', (await freshStepUpRequired(await live())) !== null);
 
   // Labels.
   const before = await allLabels();
@@ -104,7 +114,7 @@ async function cleanup() {
   ok('the same file cannot be saved twice', (await recordUpload(fake, actor, { url: a1.url, label: 'tax' })).status === 409);
   ok('an unknown label is refused', (await recordUpload(fake, actor, { url: put('company/other/codocs-test-x-AbCdEfGhIjKlMnOpQrStUv.pdf').url, label: 'made-up' })).status === 400);
   const a2 = put('company/contracts/codocs-test-lease2-AbCdEfGhIjKlMnOpQrStUv.pdf');
-  const rep = await recordUpload(fake, actor, { url: a2.url, documentId: docId });
+  const rep = await recordUpload(fake, actor, { url: a2.url, replaces: docId });
   ok('Replace makes version 2 and keeps version 1', rep.status === 200 && rep.body.version === 2 && (await prisma.companyDocumentVersion.count({ where: { documentId: docId } })) === 2);
   ok('Replace of a document that isn’t there is 404', (await recordUpload(fake, actor, { url: put('company/tax/codocs-test-y-AbCdEfGhIjKlMnOpQrStUv.pdf').url, documentId: 'nope' })).status === 404);
   const r3 = put('company/contracts/codocs-test-l3-AbCdEfGhIjKlMnOpQrStUv.pdf'), r4 = put('company/contracts/codocs-test-l4-AbCdEfGhIjKlMnOpQrStUv.pdf');
@@ -124,9 +134,14 @@ async function cleanup() {
   const adopted = String((relabel.body.document as { id: string }).id);
   ok('relabelling a legacy file gives it a row in the new label', relabel.status === 200 && (await prisma.companyDocument.findUniqueOrThrow({ where: { id: adopted } })).label === mine.id);
   const det = await documentDetails(fake, adopted, documentHistory);
-  ok('its history shows the label change', det.status === 200 && (det.body.history as { what: string }[]).some(h => h.what === 'Label changed'));
+  ok('its history says where it moved, in plain words', det.status === 200 && (det.body.history as { what: string }[]).some(h => h.what === 'Moved to Codocs test Trademark'), det.body.history);
+  const ren = await updateDocument(fake, actor, adopted, { name: 'Insurance policy 2026' });
+  const det3 = await documentDetails(fake, adopted, documentHistory);
+  ok('a rename is saved and in the history', ren.status === 200 && (det3.body.history as { what: string }[]).some(h => h.what === 'Renamed'));
   ok('the old legacy id now answers 409, never a second row', (await documentDetails(fake, legacyId(old.pathname), documentHistory)).status === 409);
 
+  const repHist = await documentDetails(fake, docId, documentHistory);
+  ok('a Replace reads "Replaced (version 1 kept)"', (repHist.body.history as { what: string }[]).some(h => h.what === 'Replaced (version 1 kept)'), repHist.body.history);
   // Opening is in the history.
   await auditOpen(actor, a2.pathname);
   const det2 = await documentDetails(fake, docId, documentHistory);

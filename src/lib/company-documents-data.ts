@@ -98,9 +98,17 @@ export async function documentHistory(documentId: string, pathnames: string[]) {
     where: { targetType: 'company_document', targetId: { in: [documentId, ...pathnames] }, action: { in: Object.keys(HISTORY_WORDS) } },
     orderBy: { createdAt: 'desc' },
     take: 200,
-    select: { action: true, actorName: true, detail: true, createdAt: true, admin: { select: { name: true } } },
+    select: { action: true, actorName: true, detail: true, after: true, createdAt: true, admin: { select: { name: true } } },
   });
-  return rows.map(r => ({ action: r.action, what: HISTORY_WORDS[r.action] ?? r.action, who: r.actorName || r.admin.name, detail: r.detail, at: r.createdAt.toISOString() }));
+  const labelName = new Map((await allLabels()).map(l => [l.key, l.name]));
+  const words = (r: (typeof rows)[number]): string => {
+    const after = (r.after ?? {}) as { version?: unknown; label?: unknown };
+    // "Replaced (version 1 kept)": the version the replace pushed back.
+    if (r.action === 'company_document_replace' && typeof after.version === 'number') return `Replaced (version ${after.version - 1} kept)`;
+    if (r.action === 'company_document_relabel' && typeof after.label === 'string') return `Moved to ${labelName.get(after.label) ?? 'a removed label'}`;
+    return HISTORY_WORDS[r.action] ?? r.action;
+  };
+  return rows.map(r => ({ action: r.action, what: words(r), who: r.actorName || r.admin.name, detail: r.detail, at: r.createdAt.toISOString() }));
 }
 
 /** The gate every Company docs route uses: owner with 2FA, the 'company' area, and private storage. */

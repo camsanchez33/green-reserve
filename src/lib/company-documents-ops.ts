@@ -84,14 +84,15 @@ export async function listDocuments(store: DocStore) {
 }
 
 /** After a browser upload: a new document, or with documentId a Replace (the next version; earlier files stay). */
-export async function recordUpload(store: DocStore, actor: Actor, body: { url?: unknown; label?: unknown; name?: unknown; documentId?: unknown } | null): Promise<OpResult> {
+export async function recordUpload(store: DocStore, actor: Actor, body: { url?: unknown; label?: unknown; name?: unknown; documentId?: unknown; replaces?: unknown } | null): Promise<OpResult> {
   const url = typeof body?.url === 'string' ? body.url : '';
   if (!url || !companyDocPathOf(url)) return answer(400, { error: 'Missing or wrong file address' });
   const meta = await store.head(url);
   if (!meta) return answer(400, { error: 'The uploaded file was not found in storage. Try the upload again.' });
   if (!isAllowedCompanyPath(meta.pathname)) return answer(403, { error: 'That file is not a company document' });
   const version = { url: meta.url, pathname: meta.pathname, size: meta.size, contentType: meta.contentType ?? '', uploadedById: actor.adminId, uploadedByName: actor.name };
-  const documentId = typeof body?.documentId === 'string' ? body.documentId : '';
+  // `replaces` is the Admin lane's name for it; documentId the first one.
+  const documentId = typeof body?.replaces === 'string' ? body.replaces : typeof body?.documentId === 'string' ? body.documentId : '';
   try {
     if (documentId) {
       const legacyPath = legacyPathOf(documentId);
@@ -221,15 +222,18 @@ export async function deleteDocument(store: DocStore, actor: Actor, ref: { id?: 
   } catch {
     return answer(502, { error: 'Storage would not delete that file. Try again.' });
   }
+  // The files are gone: record that before anything else can fail.
+  let rowError: unknown = null;
   if (doc) {
     try { await prisma.companyDocument.delete({ where: { id: doc.id } }); }
-    catch (e) { if (!isP(e, 'P2025')) throw e; } // already gone: the same delete twice
+    catch (e) { if (!isP(e, 'P2025')) rowError = e; } // P2025: already gone, the same delete twice
   }
   await auditAdmin(actor, {
     action: 'company_document_delete', targetType: 'company_document', targetId: doc ? doc.id : legacyPath!,
     reason, detail: files.map(f => f.pathname).join(', ').slice(0, 1000),
     before: doc ? { name: doc.name, label: doc.label, versions: files.length } : { pathname: legacyPath },
   });
+  if (rowError) throw rowError;
   return answer(200, { success: true });
 }
 
