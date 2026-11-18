@@ -47,7 +47,7 @@ async function cleanup() {
   await prisma.membershipTier.deleteMany({ where: { courseId } });
   await prisma.teeTime.deleteMany({ where: { courseId } });
   await prisma.course.deleteMany({ where: { slug: { startsWith: TAG } } });
-  await prisma.golferAccount.deleteMany({ where: { email: { endsWith: `@${TAG}.test` } } });
+  await prisma.golferAccount.deleteMany({ where: { OR: [{ email: { endsWith: `@${TAG}.test` } }, { email: { startsWith: `${TAG}-` } }] } });
   await prisma.courseOperator.deleteMany({ where: { email: `${TAG}@test.local` } });
   await prisma.courseGroup.deleteMany({ where: { slug: `${TAG}-g` } });
   await prisma.securityEvent.deleteMany({ where: { email: { endsWith: `@${TAG}.test` } } });
@@ -203,6 +203,8 @@ async function main() {
   check('adding a member with an email another membership logs in with is refused', (await post(`edited@${TAG}.test`)) === 409 && (await post(acct2.email)) === 409);
 
   // The invite and the dues link go to the member's own email (placeholder addresses: logged, never sent).
+  // The Resend client needs a key to be made; placeholder addresses are logged and never handed to it.
+  process.env.RESEND_API_KEY ||= 're_test_placeholder_only';
   const PH = '@noemail.greenreserve.app';
   const ownAddr = `${TAG}-own${PH}`, acctAddr = `${TAG}-acct${PH}`;
   const phAcct = await prisma.golferAccount.create({ data: { email: acctAddr, firstName: 'Ph', lastName: 'Acct', password: 'x' } });
