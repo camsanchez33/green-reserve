@@ -2,7 +2,8 @@
 // made with its email, the record's own counting rules, sorted by last played. Pure; no database.
 // Run: npx tsx scripts/admin-golfers-list-test.ts
 import { readFileSync } from 'fs';
-import { golferLines, matchesFilter, matchesQuery, likeExact, canResendReceipt } from '../src/app/api/admin/golfers/list';
+import { golferLines, matchesFilter, matchesQuery, canResendReceipt } from '../src/app/api/admin/golfers/list';
+import { likeExact } from '../src/lib/like-exact';
 
 let failed = 0;
 const ok = (l: string, c: boolean, d: unknown = '') => { console.log(`${c ? 'PASS' : 'FAIL'}  ${l}${c ? '' : ' — ' + JSON.stringify(d)}`); if (!c) failed++; };
@@ -55,7 +56,7 @@ ok('search by name, email or 4+ phone digits', !!alex && matchesQuery(alex, 'riv
 // The guest lookup is an exact address, never a pattern (?guest=% once opened every guest's bookings).
 ok('likeExact escapes %, _ and backslash', likeExact('%') === '\\%' && likeExact('a_b@x.com') === 'a\\_b@x.com' && likeExact('a\\b') === 'a\\\\b', [likeExact('%'), likeExact('a_b@x.com'), likeExact('a\\b')]);
 const route = readFileSync('src/app/api/admin/golfers/route.ts', 'utf8');
-ok('both guest-email lookups in the route use likeExact', (route.match(/golferEmail: \{ equals: likeExact\(/g) ?? []).length === 2 && !/golferEmail: \{ equals: (?!likeExact)/.test(route));
+ok('both guest-email lookups in the route are exact (ciEquals from lib/like-exact)', (route.match(/golferEmail: ciEquals\(/g) ?? []).length === 2 && !/golferEmail: \{ equals:/.test(route));
 ok('a paid round has a receipt', canResendReceipt({ status: 'completed', paymentStatus: 'paid' }));
 ok('…a cancelled booking whose fee was given back does not', !canResendReceipt({ status: 'cancelled', paymentStatus: 'refunded' }));
 ok('…nor a card only saved', !canResendReceipt({ status: 'confirmed', paymentStatus: 'card_on_file' }));

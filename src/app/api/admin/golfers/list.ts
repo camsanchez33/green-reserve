@@ -6,10 +6,6 @@
 // past booking never checked in or paid with no decline, a late cancel kept its fee (a waived one reads 'refunded'), a failed charge is a decline
 // that never checked in.
 
-// An insensitive Prisma `equals` is an ILIKE in Postgres, so % and _ in an email are wildcards: unescaped, ?guest=%
-// opened every guest's bookings as one record. Backslash is Postgres's default LIKE escape.
-export const likeExact = (s: string) => s.replace(/[\\%_]/g, m => '\\' + m);
-
 /** A receipt exists only for a round that was charged. A cancelled booking reads 'refunded' when its late fee or hold
  *  was given back, and there was no round, so no receipt. One rule for the page's button and the route's POST. */
 export const canResendReceipt = (b: { status: string; paymentStatus: string }) =>
