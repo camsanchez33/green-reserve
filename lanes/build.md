@@ -27,9 +27,18 @@ the lane files; merges every PR in dependency order after Cam's review sitting; 
   players, an optional phone with its own alert-text consent, the logged-in one-tap path (no email confirm), the
   course switch "Let golfers set tee time alerts", and a stop link in every email. Keep the queued expiry rule (an
   alert ends after the day's last tee time unless the course sets a later end). Additive migration.
-- Range balls on online bookings (`lanes/golfer.md` item 5): the course switch "Sell range balls with tee times";
-  buckets from the Range settings priced on the booking as their own line and paid with the round (`describePolicy()`
-  wording, `recordMove()` when charged).
+- Range balls on online bookings (`lanes/golfer.md` item 5): the data side is in the RANGE-1 PR (switch
+  `Course.sellRangeOnline`, `range_buckets` on the public course, `rangeBuckets: [{ id, qty }]` on POST /api/bookings,
+  inside the round's price, settled wherever the round is). Left for the Golfer lane: the −/+ section in the new Book
+  page design (BookClient has a plain working version).
+- RANGE-1 after launch (Cam 2026-11-17, "after launch, not now"): range-only online sales (buckets bought with no tee
+  time) and prepaid range cards. Both sell from the same bucket list (`lib/range-buckets`).
+- RANGE-1 backfill, needs Cam: copy each course's old small/medium/large prices (Course.rangeBalls*PriceCents, no
+  longer read) into its bucket list as "Small", "Medium", "Large" with a ball count the course confirms. No course
+  should be given buckets without its count, so this is per course, never a blind script.
+- RANGE-1 for Cam: online buckets ride the round (no sales tax, no 1% shop fee, as before); the same bucket at the
+  register carries both where the course has them on. Same list price; the add-ons differ by channel. Decide
+  whether that stays.
 - #458 Build follow-ups: the server messages that still suggest "take cash instead" (pay-link limits, reader minimums,
   a $0 sale) follow `takesCash`; add a test that charge to account still settles with cash off; the #458 migration's
   timestamp sorts before `20261117193347_team_roles` (applied fine; note only).
