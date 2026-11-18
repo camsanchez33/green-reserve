@@ -4,6 +4,7 @@ import { resolveAdminSession, requireRole, SUPPORT_PLUS, MANAGER_PLUS, OWNER_ONL
 import { hasArea, type AdminArea } from '@/lib/admin-areas';
 import { bookingRefLabel, courseRefLabel, parseRef } from '@/lib/booking-ref';
 import { ciContains } from '@/lib/like-exact';
+import { PALETTE_PAGES, pageMatches } from '@/lib/admin-palette-pages';
 
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
@@ -118,37 +119,14 @@ export async function GET(req: NextRequest) {
       : Promise.resolve([]),
   ]);
 
-  // Static nav items filtered by role
-  const staticNav = [
-    { id: 'nav:overview',    label: 'Home',          href: '/admin',            always: true },
-    { id: 'nav:goals',       label: 'Goals',         href: '/admin/goals',      support: true },
-    // Inquiries (the outreach page, in the menu since 2026-11-17); Pipeline stays the full old board.
-    { id: 'nav:outreach',    label: 'Inquiries',     href: '/admin/inquiries',  always: true },
-    { id: 'nav:inquiries',   label: 'Pipeline',      href: '/admin/inquiries/all',  always: true },
-    { id: 'nav:onboarding',  label: 'Onboarding',    href: '/admin/onboarding', always: true },
-    { id: 'nav:courses',     label: 'Courses',       href: '/admin/courses',    always: true },
-    { id: 'nav:bookings',    label: 'Bookings',      href: '/admin/bookings',   support: true },
-    { id: 'nav:business',    label: 'Business analytics', href: '/admin/business', manager: true },
-    // Owner-only pages: the names alone stay out of anyone else's palette, as the menu hides them.
-    { id: 'nav:expenses',    label: 'Expenses',      href: '/admin/expenses',   owner: true },
-    { id: 'nav:finance',     label: 'Financial analytics', href: '/admin/finance', owner: true },
-    { id: 'nav:audit',       label: 'Audit',         href: '/admin/audit',      owner: true },
-    { id: 'nav:security',    label: 'Security',      href: '/admin/security',   owner: true },
-    { id: 'nav:company',     label: 'Company docs',  href: '/admin/company-documents', owner: true },
-    { id: 'nav:support',     label: 'Course support', href: '/admin/support',   always: true },
-    { id: 'nav:revenue',     label: 'Money',         href: '/admin/revenue',    support: true },
-    { id: 'nav:golfers',     label: 'Golfers',       href: '/admin/golfers',    support: true },
-    { id: 'nav:employees',   label: 'Team',          href: '/admin/employees',  manager: true },
-    { id: 'nav:broadcasts',  label: 'Announcements', href: '/admin/announcements', support: true },
-    { id: 'nav:system',      label: 'Platform activity', href: '/admin/system',     manager: true },
-    { id: 'nav:profile',     label: 'My profile',    href: '/admin/profile',    always: true },
-  ].filter(n => {
+  // Page rows (lib/admin-palette-pages): the menu's pages under its labels, filtered by role tier here and by area below.
+  const staticNav = PALETTE_PAGES.filter(n => {
     if (n.always) return true;
     if (n.support && isSupportPlus) return true;
     if (n.manager && isManagerPlus) return true;
     if (n.owner && isOwner) return true;
     return false;
-  }).filter(n => n.label.toLowerCase().includes(lq));
+  }).filter(n => pageMatches(n, lq));
 
   type ResultItem =
     | { type: 'course'; id: string; label: string; sub: string; href: string }
