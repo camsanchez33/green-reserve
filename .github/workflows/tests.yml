@@ -41,6 +41,8 @@ jobs:
       DIRECT_URL: postgresql://postgres:postgres@localhost:5432/greenreserve
       JWT_SECRET: ci-only-not-a-real-secret-0123456789abcdef
       NEXT_PUBLIC_BASE_URL: http://localhost:3000
+      # Links and redirects in emails and sign-in routes are built from this (as in production, .env.example).
+      NEXT_PUBLIC_URL: http://localhost:3000
       TEST_URL: http://localhost:3000
       SERVER_TESTS: "isolation-test.ts concurrency-test.ts load-test.ts member-portal-price-test.ts member-login-db-test.ts"
 
