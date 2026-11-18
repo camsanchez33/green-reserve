@@ -23,10 +23,13 @@ function hashCode(courseId: string, email: string, code: string): string {
 export async function issueLoginCode(courseId: string, email: string, now = new Date()): Promise<string> {
   const code = randomInt(0, 1_000_000).toString().padStart(6, '0');
   const e = norm(email);
-  await prisma.$transaction([
-    prisma.memberLoginCode.updateMany({ where: { courseId, email: e, usedAt: null }, data: { usedAt: now } }),
-    prisma.memberLoginCode.create({ data: { courseId, email: e, codeHash: hashCode(courseId, e, code), expiresAt: new Date(now.getTime() + CODE_TTL_MS) } }),
-  ]);
+  // One send at a time per course and email (a transaction-scoped advisory lock), so sends at the same instant can't
+  // each end nothing, or leave the newest row one another send already ended.
+  await prisma.$transaction(async tx => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`member-login-code:${courseId}:${e}`}))`;
+    await tx.memberLoginCode.updateMany({ where: { courseId, email: e, usedAt: null }, data: { usedAt: now } });
+    await tx.memberLoginCode.create({ data: { courseId, email: e, codeHash: hashCode(courseId, e, code), expiresAt: new Date(now.getTime() + CODE_TTL_MS) } });
+  });
   return code;
 }
 
@@ -36,7 +39,7 @@ export type CheckResult = { ok: true; codeId: string } | { ok: false };
  * Whether `code` is this course's live code for this email. Only the NEWEST code counts (final-reviewer 2026-11-18:
  * two sends at the same instant could each leave a live row; an older one never works once a newer one exists). A
  * try is claimed BEFORE the guess is compared, in one conditional update, so parallel guesses can never compare more
- * than MAX_TRIES times; the try that reaches the cap ends the code unless it was right. A right code is NOT used up
+ * than MAX_TRIES times; the try that reaches the cap ends the code unless it was right (a right one is given back). A right code is NOT used up
  * here: the caller uses it (useLoginCode) once the terms question is settled.
  */
 export async function checkLoginCode(courseId: string, email: string, codeRaw: string, now = new Date()): Promise<CheckResult> {
@@ -48,7 +51,12 @@ export async function checkLoginCode(courseId: string, email: string, codeRaw: s
   if (claimed.count !== 1) return { ok: false };
   const want = Buffer.from(row.codeHash, 'hex');
   const got = Buffer.from(hashCode(courseId, e, code), 'hex');
-  if (code.length === 6 && want.length === got.length && timingSafeEqual(want, got)) return { ok: true, codeId: row.id };
+  if (code.length === 6 && want.length === got.length && timingSafeEqual(want, got)) {
+    // A right code gives its try back, so the terms question (409, then the same code again) never runs it out.
+    // Wrong guesses keep theirs: at most MAX_TRIES wrong comparisons per code.
+    await prisma.memberLoginCode.updateMany({ where: { id: row.id, attempts: { gt: 0 } }, data: { attempts: { decrement: 1 } } });
+    return { ok: true, codeId: row.id };
+  }
   await prisma.memberLoginCode.updateMany({ where: { id: row.id, usedAt: null, attempts: { gte: MAX_TRIES } }, data: { usedAt: now } });
   return { ok: false };
 }

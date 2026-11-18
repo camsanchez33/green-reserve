@@ -18,7 +18,7 @@
 import { PrismaClient } from '@prisma/client';
 import { SignJWT } from 'jose';
 import { signMemberSessionToken, signMemberMagicToken, canLogIn, loginGroups } from '../src/lib/member-session';
-import { issueLoginCode, MAX_TRIES } from '../src/lib/member-login-code';
+import { issueLoginCode, MAX_TRIES, purgeOldLoginCodes } from '../src/lib/member-login-code';
 import { termsVersionNow } from '../src/lib/terms';
 import { todayIn, addDaysStr } from '../src/lib/course-time';
 import { groupGreenFee } from '../src/lib/residents';
@@ -257,8 +257,9 @@ async function main() {
   const burst = await Promise.all([1, 2, 3, 4].map(() => issueLoginCode(a.id, e1)));
   const newest = await prisma.memberLoginCode.findFirst({ where: { email: e1 }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }] });
   let worked = 0;
-  for (const c of burst) { const r = await vc(e1, c, true); if (r.status === 200) worked++; await clearLimits(); }
-  check('four codes sent at once: at most one ever works (only the newest counts)', worked <= 1 && !!newest, { worked });
+  for (let pass = 0; pass < 2; pass++) for (const c of burst) { const r = await vc(e1, c, true); if (r.status === 200) worked++; await clearLimits(); }
+  check('four codes sent at once: exactly one ever works (only the newest counts)', worked === 1 && !!newest, { worked });
+  check('…and exactly one was left live', (await prisma.memberLoginCode.count({ where: { email: e1, usedAt: { not: null } } })) === 4);
 
   // Five tries — held against parallel guesses too.
   e1 = await fresh();
@@ -267,6 +268,14 @@ async function main() {
   const deadRow = await prisma.memberLoginCode.findFirst({ where: { email: e1 } });
   check(`${MAX_TRIES} wrong tries end the code`, deadRow?.attempts === MAX_TRIES && !!deadRow?.usedAt, deadRow);
   check('…and the right code no longer works', (await vc(e1, tried, true)).status === 400);
+  // A right code on the last try still gets through the terms question.
+  e1 = await fresh();
+  const lastTry = await issueLoginCode(a.id, e1);
+  for (let i = 0; i < MAX_TRIES - 1; i++) await vc(e1, other(lastTry));
+  const lt409 = await vc(e1, lastTry);
+  const lt200 = await vc(e1, lastTry, true);
+  check('4 wrong, then the right code: the terms question, then log in with the same code', lt409.status === 409 && lt200.status === 200, { lt409, lt200 });
+  check('…and the 409 itself is not recorded as a failed sign-in', !(await prisma.securityEvent.findFirst({ where: { email: e1, kind: 'signin_failed', detail: { contains: 'terms' } } })));
   e1 = await fresh();
   const par = await issueLoginCode(a.id, e1);
   const flood = await Promise.all([...Array(8).fill(other(par)), par].map(c => vc(e1, c, true)));
@@ -291,6 +300,12 @@ async function main() {
   const lateR = await vc(e1, late, true);
   check('an email no longer in a group gets the same answer as a wrong code', lateR.status === 400 && lateR.body?.code === 'bad_code' && !lateR.cookie.includes('gr_member='), lateR);
   check('…recorded as not in a group', !!(await prisma.securityEvent.findFirst({ where: { email: e1, kind: 'signin_failed', detail: 'not in a group at this course' } })));
+
+  // Housekeeping: codes older than a day go.
+  const oldRow = await prisma.memberLoginCode.create({ data: { courseId: a.id, email: `purge@${TAG}.test`, codeHash: 'x', expiresAt: new Date(Date.now() - 2 * 86400000), createdAt: new Date(Date.now() - 2 * 86400000) } });
+  const freshRow = await prisma.memberLoginCode.create({ data: { courseId: a.id, email: `purge@${TAG}.test`, codeHash: 'y', expiresAt: new Date(Date.now() + 60000) } });
+  await purgeOldLoginCodes();
+  check('codes older than a day are purged, newer ones kept', !(await prisma.memberLoginCode.findUnique({ where: { id: oldRow.id } })) && !!(await prisma.memberLoginCode.findUnique({ where: { id: freshRow.id } })));
 
   // ── The course's Log in switch ──
   check('loginGroups: members and residents', JSON.stringify(await loginGroups({ ...a, memberLoginOn: true })) === '["members","residents"]');

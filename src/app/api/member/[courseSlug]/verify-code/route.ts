@@ -52,8 +52,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ cou
 
   const version = await termsVersionNow();
   if (!(await hasAgreed(course.id, email, version))) {
+    // No security event here: every ordinary first log-in passes this way, and the resubmit records the outcome
+    // (a signin_failed here would make a course's launch day look like an attack to the hourly check).
     if (body.agreeTerms !== true) {
-      await securityEvent(req, { kind: 'signin_failed', surface: 'member', email, detail: 'log-in code right, terms not yet agreed' });
       return NextResponse.json({ error: 'Tick the box to agree before you log in.', code: 'terms_required', termsVersion: version }, { status: 409 });
     }
   }
