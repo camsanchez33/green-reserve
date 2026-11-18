@@ -1,15 +1,14 @@
 'use client';
 // KEEP-OUTREACH (Cam 2026-11-18): the launch wipe keeps the outreach pipeline, so the test inquiries
-// made before outreach starts are cleared once here. Owner only; the route asks for the second step,
-// a reason and the words typed exactly (src/app/api/admin/data-reset/inquiries/route.ts).
-import { useCallback, useRef, useState } from 'react';
+// made before outreach prep starts (Nov 23) are cleared once here. Owner only; the route asks for the
+// second step, a reason and the words typed exactly (src/app/api/admin/data-reset/inquiries/route.ts).
+import { useCallback, useEffect, useState } from 'react';
 import { adminFetch } from '@/lib/admin-fetch';
 import s from './system.module.css';
 
 type Preview = { open: boolean; confirmWords: string; before: string; inquiries: number; calls: number; touches: number; keptBuilt: number; keptAfter: number };
 
 export function InquiryClear({ onCleared }: { onCleared: () => void }) {
-  const [day, setDay] = useState('');
   const [p, setP] = useState<Preview | null>(null);
   const [err, setErr] = useState('');
   const [typed, setTyped] = useState('');
@@ -17,47 +16,42 @@ export function InquiryClear({ onCleared }: { onCleared: () => void }) {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState('');
 
-  // Only the latest day's answer counts: typing a date sends one request per change.
-  const latest = useRef('');
-  const load = useCallback(async (d: string) => {
-    latest.current = d;
-    setP(null); setErr('');
-    if (!d) return;
-    const res = await adminFetch<Preview>(`/api/admin/data-reset/inquiries?before=${encodeURIComponent(d)}`, { subject: 'the inquiry counts' });
-    if (latest.current !== d) return;
+  const load = useCallback(async () => {
+    setErr('');
+    const res = await adminFetch<Preview>('/api/admin/data-reset/inquiries', { subject: 'the inquiry counts' });
     if (!res.ok) { setErr(res.message); return; }
     setP(res.data);
   }, []);
+  useEffect(() => { load(); }, [load]);
 
   async function run() {
     if (!p) return;
     setBusy(true); setErr('');
     const res = await adminFetch<{ cleared: { inquiries: number } }>('/api/admin/data-reset/inquiries', {
-      method: 'POST', body: JSON.stringify({ before: day, confirm: typed, reason: reason.trim() }), action: 'save', subject: 'the clear',
+      method: 'POST', body: JSON.stringify({ confirm: typed, reason: reason.trim() }), action: 'save', subject: 'the clear',
     });
     setBusy(false);
     if (!res.ok) { setErr(res.message); return; }
     setDone(`Cleared ${res.data.cleared.inquiries.toLocaleString()} test inquiries.`);
     setTyped(''); setReason('');
-    load(day); onCleared();
+    load(); onCleared();
   }
 
   const row = (label: string, n: number) => <div className={s.cnt}><span>{label}</span><b>{n.toLocaleString()}</b></div>;
   return (
     <div className={`${s.box} ${s.bbad}`}>
-      <p className={`${s.clr} ${s.ink}`}>Test inquiries: clear once before outreach starts. Deletes inquiries added before the day picked (midnight Eastern) with their calls and touches.</p>
-      <label className={s.lab}>Added before<input className={s.fld} type="date" value={day} onChange={e => { setDay(e.target.value); setDone(''); setTyped(''); load(e.target.value); }} disabled={busy} /></label>
+      <p className={`${s.clr} ${s.ink}`}>Test inquiries: clear once before outreach starts. Deletes inquiries added before Nov 23 with their calls and touches. The wipe deletes any left.</p>
       {done && <p className={s.toast} role="status">{done}</p>}
-      {err && <p className={s.err} role="alert">{err}</p>}
-      {day && !p && !err && <p className={s.clr}>Counting…</p>}
+      {err && <p className={s.err} role="alert">{err} <button type="button" className={s.ol} onClick={load}>Try again</button></p>}
+      {!p && !err && <p className={s.clr}>Counting…</p>}
       {p && (
         <>
           <div>
             {row('inquiries deleted', p.inquiries)}
             {row('calls', p.calls)}
             {row('touches', p.touches)}
-            {row('kept: became a course', p.keptBuilt)}
-            {row('kept: added that day or later', p.keptAfter)}
+            {row('kept until the wipe: became a course', p.keptBuilt)}
+            {row('kept: added from Nov 23', p.keptAfter)}
           </div>
           {p.inquiries > 0 && (
             <>

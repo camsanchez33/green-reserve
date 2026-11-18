@@ -18,12 +18,15 @@
 // does for one course. The test inquiries made before then go with clearTestInquiries().
 import type { Prisma } from '@prisma/client';
 import { prisma } from './prisma';
+import { PIPELINE_STATUSES } from './lifecycle';
 
 type Db = Prisma.TransactionClient | typeof prisma;
 
 /** The launch wipe refuses from this moment: midnight Dec 1, 2026, Eastern (EST, UTC−5).
  *  Cam 2026-10-30 moved it from Nov 1: "push the deadline back" — Dec 1. */
 export const WIPE_ALL_UNTIL = new Date('2026-12-01T05:00:00Z');
+/** KEEP-OUTREACH: outreach prep starts Nov 23, 2026 (midnight Eastern). An inquiry made before it is test data. */
+export const OUTREACH_START = new Date('2026-11-23T05:00:00Z');
 /** Typed exactly to confirm the launch wipe. */
 export const WIPE_CONFIRM_WORDS = 'WIPE TEST DATA';
 
@@ -73,17 +76,15 @@ export function wipeAllOpen(now = new Date()): boolean {
 }
 
 /** What the launch wipe would clear, table by table. Reads only. */
-export async function previewWipeAll(): Promise<{ wiped: TableCounts; kept: TableCounts; inquiriesUnlinked: number; courseCalls: number }> {
-  const [wiped, kept, inquiriesUnlinked, courseCalls] = await Promise.all([
+export async function previewWipeAll(): Promise<{ wiped: TableCounts; kept: TableCounts; testInquiries: number; inquiriesUnlinked: number; courseCalls: number }> {
+  const [wiped, kept, testInquiries, inquiriesUnlinked, courseCalls] = await Promise.all([
     countTables(WIPED_TABLES), countTables(KEPT_TABLES),
-    prisma.courseInquiry.count({ where: { builtCourseId: { not: null } } }),
+    prisma.courseInquiry.count({ where: { createdAt: { lt: OUTREACH_START } } }),
+    prisma.courseInquiry.count({ where: { createdAt: { gte: OUTREACH_START }, builtCourseId: { not: null } } }),
     prisma.call.count({ where: { courseId: { not: null } } }),
   ]);
-  return { wiped, kept, inquiriesUnlinked, courseCalls };
+  return { wiped, kept, testInquiries, inquiriesUnlinked, courseCalls };
 }
-
-/** Statuses that mean "on its way to, or on, a course" — the same list archivePair() moves to archived. */
-const LINKED_STATUSES = ['pending', 'in_review', 'details_requested', 'details_submitted', 'building', 'live'];
 
 export type WipeResult = { ok: true; cleared: TableCounts; inquiriesUnlinked: number; courseCalls: number } | { ok: false; error: string };
 
@@ -92,11 +93,17 @@ export type WipeResult = { ok: true; cleared: TableCounts; inquiriesUnlinked: nu
  * together or not at all. RESTRICT: if a kept table ever points at a wiped
  * one, Postgres refuses the whole statement instead of reaching into it.
  *
- * KEEP-OUTREACH: the outreach pipeline is kept, and two links from it into the
- * wiped side are handled first, in the same transaction:
+ * KEEP-OUTREACH: the outreach pipeline is kept. First, in the same transaction:
+ *  - Call and CourseInquiry are locked, so no call booked or course built while
+ *    the wipe runs can slip between the copy below and the TRUNCATE.
+ *  - Every inquiry made before OUTREACH_START is test data and is deleted, with
+ *    its calls, touches, events and contacts (cascade) — built or not, since its
+ *    course is wiped too. The launch wipe is the one exception to the deletion
+ *    doctrine (TEST-1).
  *  - CourseInquiry.builtCourseId (a plain column, no foreign key) would point at
- *    a course that is gone. Each linked inquiry is unlinked, and archived with a
- *    status event when it was on its way to a course, as deletePair() does.
+ *    a course that is gone. Each linked inquiry made from OUTREACH_START on is
+ *    unlinked, and archived with a status event when it was on its way to a
+ *    course (the statuses archivePair() archives).
  *  - Call.courseId is a foreign key to Course, so Postgres will not TRUNCATE
  *    Course while Call is kept. A course check-in call is course activity and
  *    goes; inquiry calls are copied aside, Call is truncated with the rest, and
@@ -106,9 +113,12 @@ export type WipeResult = { ok: true; cleared: TableCounts; inquiriesUnlinked: nu
 export async function wipeAll(now = new Date(), db?: Prisma.TransactionClient): Promise<WipeResult> {
   if (!wipeAllOpen(now)) return { ok: false, error: 'The launch wipe closed on Dec 1 — real courses are on the site now. Reset a single test course instead.' };
   if (!db) return prisma.$transaction(tx => wipeAll(now, tx), { timeout: 120_000, maxWait: 10_000 });
+  // First statement: nothing writes a call or an inquiry until the wipe commits or rolls back.
+  await db.$executeRawUnsafe(`LOCK TABLE "Call", "CourseInquiry" IN ACCESS EXCLUSIVE MODE`);
   const cleared = await countTables(WIPED_TABLES, db);
+  cleared['CourseInquiry (made before outreach)'] = (await db.courseInquiry.deleteMany({ where: { createdAt: { lt: OUTREACH_START } } })).count;
   const linked = await db.courseInquiry.findMany({ where: { builtCourseId: { not: null } }, select: { id: true, status: true } });
-  const toArchive = linked.filter(i => LINKED_STATUSES.includes(i.status));
+  const toArchive = linked.filter(i => PIPELINE_STATUSES.includes(i.status));
   if (toArchive.length) {
     await db.inquiryStatusEvent.createMany({ data: toArchive.map(i => ({
       inquiryId: i.id, fromStatus: i.status, toStatus: 'archived', trigger: 'system', actorName: 'Course removed by the launch wipe',
@@ -140,25 +150,12 @@ export async function wipeAll(now = new Date(), db?: Prisma.TransactionClient): 
 /** Typed exactly to confirm clearing the test inquiries. */
 export const CLEAR_INQUIRIES_CONFIRM_WORDS = 'CLEAR TEST INQUIRIES';
 
-/** Midnight Eastern at the start of a YYYY-MM-DD day; null when it isn't a real date. */
-export function easternDayStart(day: string): Date | null {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return null;
-  for (const offset of [5, 4]) { // EST, then EDT
-    const d = new Date(`${day}T0${offset}:00:00Z`);
-    if (Number.isNaN(d.getTime())) return null;
-    const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23' }).formatToParts(d);
-    const get = (t: string) => parts.find(p => p.type === t)?.value;
-    if (`${get('year')}-${get('month')}-${get('day')}` === day && get('hour') === '00') return d;
-  }
-  return null;
-}
-
 /** Inquiries the outreach clear would delete: made before `before` and never built into a course. */
 function clearableInquiries(before: Date): Prisma.CourseInquiryWhereInput {
   return { createdAt: { lt: before }, builtCourseId: null };
 }
 
-export async function previewClearTestInquiries(before: Date) {
+export async function previewClearTestInquiries(before: Date = OUTREACH_START) {
   const where = clearableInquiries(before);
   const [inquiries, calls, touches, keptBuilt, keptAfter] = await Promise.all([
     prisma.courseInquiry.count({ where }),
@@ -171,14 +168,16 @@ export async function previewClearTestInquiries(before: Date) {
 }
 
 /**
- * KEEP-OUTREACH: the one-time clear of the test inquiries made before outreach starts (Nov 23).
- * Deletes every inquiry created before `before` that never became a course; its calls, touches,
- * status events, change requests and contacts go with it (foreign-key cascade). An inquiry that
- * became a course is left alone (DELETION DOCTRINE); the launch wipe unlinks and archives it with
- * its course. Closes with the launch wipe: after Dec 1 inquiries are real leads.
+ * KEEP-OUTREACH: the one-time clear of the test inquiries, so the board is clean when outreach prep
+ * starts. Deletes every inquiry created before OUTREACH_START that never became a course; its calls,
+ * touches, status events, change requests and contacts go with it (foreign-key cascade). An inquiry
+ * that became a course stays linked to its test course until the launch wipe deletes both. It can
+ * never reach an inquiry made from OUTREACH_START on (`before` is capped there; tests pass an
+ * earlier one). Closes with the launch wipe.
  */
-export async function clearTestInquiries(before: Date, now = new Date()): Promise<{ ok: true; cleared: Awaited<ReturnType<typeof previewClearTestInquiries>> } | { ok: false; error: string }> {
+export async function clearTestInquiries(now = new Date(), before: Date = OUTREACH_START): Promise<{ ok: true; cleared: Awaited<ReturnType<typeof previewClearTestInquiries>> } | { ok: false; error: string }> {
   if (!wipeAllOpen(now)) return { ok: false, error: 'Clearing test inquiries closed on Dec 1 — every inquiry now is a real lead.' };
+  if (before.getTime() > OUTREACH_START.getTime()) return { ok: false, error: 'Only inquiries made before outreach starts (Nov 23) can be cleared.' };
   const cleared = await previewClearTestInquiries(before);
   const r = await prisma.courseInquiry.deleteMany({ where: clearableInquiries(before) });
   return { ok: true, cleared: { ...cleared, inquiries: r.count } };

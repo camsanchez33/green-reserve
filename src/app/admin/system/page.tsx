@@ -650,7 +650,7 @@ function SystemContent() {
         const closes = new Date(w.closesAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/New_York' });
         return (
           <>
-            <p className={s.lead}>Every course, golfer, booking, conversation and announcement on the site is test data until launch. This clears all of it in one go, so the site starts clean. Kept: admin logins, goals, expenses, company documents, agreement versions, the audit record and outreach (inquiries, contacts, calls). Stripe is not touched — refund any real test charge there. Available until {closes}, then it switches off for good.</p>
+            <p className={s.lead}>Every course, golfer, booking, conversation and announcement on the site is test data until launch. This clears all of it in one go, so the site starts clean. Kept: admin logins, goals, expenses, company documents, agreement versions, the audit record and outreach from Nov 23 (inquiries, calls). Stripe is not touched — refund any real test charge there. Available until {closes}, then it switches off for good.</p>
             {wiped !== null && <p className={s.toast} role="status">Cleared {wiped.toLocaleString()} records.</p>}
             <div>
               {WIPE_SUMMARY.map(([t, label]) => <div key={t} className={s.cnt}><span>{label}</span><b>{(w.wiped[t] ?? 0).toLocaleString()}</b></div>)}
