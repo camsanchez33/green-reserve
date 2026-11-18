@@ -2,7 +2,8 @@
 // one line of benefits) and the upcoming bookings, each opening its manage page. No statements, no dues.
 // Run: npx tsx scripts/golfer-your-course-test.ts
 import { readFileSync } from 'fs';
-import { datedStatus, membershipLine, residentLine, upcomingWhen, manageHref, longDay } from '../src/app/courses/[slug]/member/your-course-helpers';
+import { datedStatus, membershipLine, residentLine, upcomingWhen, manageHref, longDay, isDay } from '../src/app/courses/[slug]/member/your-course-helpers';
+import { golferLookVars, DARK_STATUS } from '../src/components/golfer/look';
 
 let failed = 0;
 const check = (label: string, ok: boolean, detail?: unknown) => {
@@ -16,6 +17,8 @@ check('green while it runs', JSON.stringify(datedStatus('2027-03-31T00:00:00.000
 check('amber in its last 30 days', datedStatus('2026-12-18', today).dot === 'warn' && datedStatus('2026-12-19', today).dot === 'ok' && datedStatus(today, today).dot === 'warn');
 check('red once the date has passed, and says it ended', JSON.stringify(datedStatus('2026-11-17', today)) === JSON.stringify({ dot: 'bad', when: 'ended Nov 17, 2026' }));
 check('a renewing membership is green and says renews, even in its last month', JSON.stringify(datedStatus('2026-12-01', today, true)) === JSON.stringify({ dot: 'ok', when: 'renews Dec 1, 2026' }));
+check('an impossible date is no date', !isDay('2026-13-45') && !isDay('2026-02-30') && isDay('2028-02-29') && isDay('2027-03-31T00:00:00.000Z') && datedStatus('2026-13-45', today).when === null);
+check('an unreadable renewsOn falls back to expiresAt (an ended membership never reads green)', JSON.stringify(membershipLine({ name: 'D', membershipType: 'full', status: 'active', expiresAt: '2026-10-01', renewsOn: 'soon', groups: [{ kind: 'member', name: 'Member', color: null }] }, today)) === JSON.stringify({ group: 'Member', dot: 'bad', when: 'ended Oct 1, 2026' }));
 check('no date (or a bad one): green, nothing said', JSON.stringify(datedStatus(null, today)) === JSON.stringify({ dot: 'ok', when: null }) && datedStatus('soon', today).when === null);
 
 const base = { name: 'Dana', membershipType: 'full', status: 'active', expiresAt: '2027-03-31T00:00:00.000Z' };
@@ -35,9 +38,14 @@ check('no statements, no dues, no payments, no booking (item 6)', !/statement|du
 check('an unknown course is a real 404, in the course look', page.includes('if (!course) notFound();') && client.includes('style={golferLookVars(course)}') && client.includes('<CourseFooter course={course}'));
 check('the two sections, under "Your <Course>"', client.includes('>Your {course.name}</h2>') && client.includes('>Your membership</h3>') && client.includes('>Upcoming bookings</h3>'));
 check('a StatusDot on each group, the benefits line only when the server writes one', (client.match(/<StatusDot status=/g) ?? []).length === 2 && client.includes('{s.benefits ? <p'));
-check('each upcoming booking opens its manage page (the link checked first)', client.includes('const href = manageHref(b.manageUrl);') && client.includes('href={href ?? undefined}') && client.includes('{href && <span className={g.lnk} aria-hidden="true">Manage ›</span>}'));
+check('each upcoming booking opens its manage page (the link checked first); a refused link is a plain row, not a dead link', client.includes('const href = manageHref(b.manageUrl);') && client.includes('<a className={`${g.yrow} ${g.ylink}`} href={href}>{row}<span className={g.lnk} aria-hidden="true">Manage ›</span></a>') && client.includes('<div className={g.yrow}>{row}</div>') && !client.includes('href={href ?? '));
 check('the upcoming list shows only once the payload carries it; empty says so', client.includes('{Array.isArray(s.upcoming) && (') && client.includes('No upcoming bookings.'));
 check('the site footer stays off the course\'s own pages (Log in, Your <Course>), which carry the course footer', /\(\\\/info\|\\\/login\|\\\/member\)/.test(readFileSync('src/components/Footer.tsx', 'utf8')));
+check('on Dark the status dots use the dark colours (red the look\'s own); Light leaves the site\'s', (golferLookVars({ booking_look: { look: 'dark', accent: 'green' } }) as Record<string, string>)['--color-bad'] === '#EE9480' && (golferLookVars({ booking_look: { look: 'dark', accent: 'green' } }) as Record<string, string>)['--color-ok'] === DARK_STATUS['--color-ok'] && !('--color-ok' in golferLookVars({ booking_look: { look: 'light', accent: 'green' } })));
+check('a private club: no "tee times" to go back to and no "Book a tee time"', client.includes("const booksOnline = course.type !== 'private' && course.type !== 'member';") && client.includes("{booksOnline ? 'Back to tee times' : `Back to ${course.name}`}") && client.includes('{booksOnline && <> <Link href={home}>Book a tee time</Link></>}'));
+check('focus starts at the heading', client.includes('<h2 ref={headRef} tabIndex={-1}>Your {course.name}</h2>') && client.includes("if (load.state === 'in') headRef.current?.focus();"));
+const coursePage = readFileSync('src/app/courses/[slug]/CourseBookingClient.tsx', 'utf8');
+check('the private-club panel no longer promises availability or booking online', !coursePage.includes('view availability and book') && coursePage.includes("This is a private club. Members book through the pro shop{course.phone ? ` at ${course.phone}` : ''}."));
 check('the header: who is logged in, and Log out (its failure said)', client.includes('Logged in · {s.name}') && client.includes('>Log out</button>') && client.includes('Couldn&rsquo;t log out. Try again.'));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');

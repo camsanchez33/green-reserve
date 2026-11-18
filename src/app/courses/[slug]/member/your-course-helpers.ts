@@ -36,6 +36,14 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const ISO_DAY = /^\d{4}-\d{2}-\d{2}/;
 
+/** A YYYY-MM-DD (or an ISO timestamp) that is a real calendar day: 2026-13-45 is not. */
+export function isDay(s: unknown): s is string {
+  if (typeof s !== 'string' || !ISO_DAY.test(s)) return false;
+  const [y, m, d] = s.slice(0, 10).split('-').map(Number);
+  const t = new Date(Date.UTC(y, m - 1, d));
+  return t.getUTCFullYear() === y && t.getUTCMonth() === m - 1 && t.getUTCDate() === d;
+}
+
 export function localToday(now: Date = new Date()): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 }
@@ -61,7 +69,7 @@ function daysBetween(a: string, b: string): number {
  * No date: green, and nothing said.
  */
 export function datedStatus(endsOn: string | null | undefined, today: string, renews = false): { dot: Dot; when: string | null } {
-  if (!endsOn || !ISO_DAY.test(endsOn)) return { dot: 'ok', when: null };
+  if (!isDay(endsOn)) return { dot: 'ok', when: null };
   const day = endsOn.slice(0, 10);
   const label = longDay(day);
   if (day < today) return { dot: 'bad', when: `ended ${label}` };
@@ -74,8 +82,9 @@ export function membershipLine(s: YourSession, today: string = localToday()): { 
   const m = s.groups?.find(gr => gr.kind === 'member');
   if (!m && (s.groups?.length || s.membershipType === 'Resident')) return null;
   const group = m?.name ?? s.tier?.name ?? s.membershipType;
-  // 2b says when a membership renews; until then only the end date is known, so it reads "expires".
-  const st = s.renewsOn ? datedStatus(s.renewsOn, today, true) : datedStatus(s.expiresAt, today);
+  // 2b says when a membership renews; until then (or if the date is unreadable) only the end date is known, so it
+  // reads "expires".
+  const st = isDay(s.renewsOn) ? datedStatus(s.renewsOn, today, true) : datedStatus(s.expiresAt, today);
   return { group, ...st };
 }
 
@@ -89,7 +98,7 @@ export function residentLine(s: YourSession, today: string = localToday()): { do
 export function upcomingWhen(date: string, time: string): { time: string; day: string } {
   const [h, min] = time.split(':').map(Number);
   const t = Number.isFinite(h) && Number.isFinite(min) ? `${h % 12 || 12}:${String(min).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}` : time;
-  if (!ISO_DAY.test(date)) return { time: t, day: date };
+  if (!isDay(date)) return { time: t, day: date };
   const p = parts(date);
   return { time: t, day: `${DAYS[p.dow]} ${MONTHS[p.m - 1]} ${p.d}` };
 }

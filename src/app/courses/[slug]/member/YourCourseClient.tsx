@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { golferLookVars } from '@/components/golfer/look';
@@ -17,6 +17,9 @@ export default function YourCourseClient({ course, linkFailed }: { course: Login
   const home = `/courses/${slug}`;
   const [load, setLoad] = useState<Load>({ state: 'loading' });
   const [logoutError, setLogoutError] = useState(false);
+  const headRef = useRef<HTMLHeadingElement>(null);
+  // A private club's tee times aren't booked online (api/bookings refuses them): no "tee times" to go back to.
+  const booksOnline = course.type !== 'private' && course.type !== 'member';
 
   const fetchSession = useCallback(async () => {
     setLoad({ state: 'loading' });
@@ -31,6 +34,8 @@ export default function YourCourseClient({ course, linkFailed }: { course: Login
   }, [slug]);
 
   useEffect(() => { fetchSession(); }, [fetchSession]);
+  // Arriving here, focus starts at the page's heading (as on Log in).
+  useEffect(() => { if (load.state === 'in') headRef.current?.focus(); }, [load.state]);
 
   // One log-in (Build 2026-11-18): logged out, this page sends the golfer to the course's code log-in, which comes
   // back here. A failed emailed link says so there, in one line that names no reason.
@@ -69,7 +74,7 @@ export default function YourCourseClient({ course, linkFailed }: { course: Login
         {/* The site layout's main element is the page's one main landmark; this is its content. */}
         <div className={g.wrap}>
           <div className={g.bk} style={{ maxWidth: 640 }}>
-            <Link href={home} className={`${g.lnk} ${g.back}`}>‹ Back to tee times</Link>
+            <Link href={home} className={`${g.lnk} ${g.back}`}>‹ {booksOnline ? 'Back to tee times' : `Back to ${course.name}`}</Link>
             {load.state === 'error' ? (
               <div className={g.empty} role="alert">
                 <h2>Couldn&rsquo;t load your {course.name} page</h2>
@@ -79,7 +84,7 @@ export default function YourCourseClient({ course, linkFailed }: { course: Login
             ) : !s ? (
               <p className={g.pol} role="status">{load.state === 'out' ? 'Opening Log in…' : 'Loading…'}</p>
             ) : (<>
-              <h2>Your {course.name}</h2>
+              <h2 ref={headRef} tabIndex={-1}>Your {course.name}</h2>
 
               <section aria-labelledby="ym">
                 <h3 id="ym" className={g.yh3}>Your membership</h3>
@@ -104,23 +109,27 @@ export default function YourCourseClient({ course, linkFailed }: { course: Login
                 <section aria-labelledby="yu" className={g.ysec}>
                   <h3 id="yu" className={g.yh3}>Upcoming bookings</h3>
                   {s.upcoming.length === 0 ? (
-                    <p className={g.pol}>No upcoming bookings. <Link href={home}>Book a tee time</Link></p>
+                    <p className={g.pol}>No upcoming bookings.{booksOnline && <> <Link href={home}>Book a tee time</Link></>}</p>
                   ) : (
                     <ul className={g.ylist}>
                       {s.upcoming.map(b => {
                         const w = upcomingWhen(b.date, b.time);
                         const href = manageHref(b.manageUrl);
+                        const row = (<>
+                          <span className={g.ywhen}><b>{w.time}</b><span>{w.day}</span></span>
+                          <span className={g.ywhat}>
+                            <b>{b.players} {b.players === 1 ? 'player' : 'players'} &middot; {b.holes} holes</b>
+                            <span>{b.membersOnlyDay ? <>Members-only day{b.dueLine ? <> &middot; </> : null}</> : null}{b.dueLine}</span>
+                          </span>
+                        </>);
                         return (
                           <li key={b.bookingId}>
-                            {/* A link that isn't this site's manage page is shown without one (manageHref). */}
-                            <a className={g.yrow} href={href ?? undefined}>
-                              <span className={g.ywhen}><b>{w.time}</b><span>{w.day}</span></span>
-                              <span className={g.ywhat}>
-                                <b>{b.players} {b.players === 1 ? 'player' : 'players'} &middot; {b.holes} holes</b>
-                                <span>{b.membersOnlyDay ? <>Members-only day{b.dueLine ? <> &middot; </> : null}</> : null}{b.dueLine}</span>
-                              </span>
-                              {href && <span className={g.lnk} aria-hidden="true">Manage ›</span>}
-                            </a>
+                            {/* A link that isn't this site's manage page is shown as a plain row, never a dead link (manageHref). */}
+                            {href ? (
+                              <a className={`${g.yrow} ${g.ylink}`} href={href}>{row}<span className={g.lnk} aria-hidden="true">Manage ›</span></a>
+                            ) : (
+                              <div className={g.yrow}>{row}</div>
+                            )}
                           </li>
                         );
                       })}
