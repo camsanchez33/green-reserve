@@ -75,7 +75,7 @@ function LookPopup({ ctx, onClose }: { ctx: Ctx; onClose: () => void }) {
   const [color, setColor] = useState(s(f.brandColor) || DEFAULT_COLOUR);
   return (
     <EditPopup title="Logo and colour" size="lg" onClose={onClose} onSave={() => ctx.save({ brandColor: color })}
-      hint="Top of your booking page, receipts and emails; buttons use the colour.">
+      hint="Receipts, emails and your dashboard.">
       <div data-setup="logo"><ImageUpload label="Your logo" kind="logo" value={s(f.logoUrl)} onUploaded={url => ctx.merge({ logoUrl: url })} hint="Square; a transparent PNG is best. Max 8MB. Saves on upload." /></div>
       <Field label="Your colour">
         <span className="flex items-center gap-2">
@@ -304,7 +304,7 @@ export function CourseArea({ ctx }: { ctx: Ctx }) {
       </Group>
 
       <Group id="page" title="Booking Page">
-        <Row id="page-look" setup="logo" label="Logo and colour" note="Top of your booking page, receipts and emails; buttons use the colour."
+        <Row id="page-look" setup="logo" label="Logo and colour" note="Receipts, emails and your dashboard."
           value={<span className="inline-flex items-center gap-2">
             {f.logoUrl ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={s(f.logoUrl)} alt="" className="w-6 h-6 rounded-[7px] object-cover" /> : <Muted>No logo</Muted>}
             <i aria-hidden="true" className="w-4 h-4 rounded-full border border-line" style={{ background: s(f.brandColor) || DEFAULT_COLOUR }} />
