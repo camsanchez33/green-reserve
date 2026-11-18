@@ -50,7 +50,7 @@ const tt = (date: string, productId: string | null, green = 6200, cart = 2200) =
   const src = (p: string) => readFileSync(p, 'utf8');
   ok('check-in prices the cart through tier-rates (no copy of the rules)', src('src/lib/checkin-booking.ts').includes('perPlayer = tierCartCents(booking.teeTime, m.tier);') && src('src/lib/checkin-booking.ts').includes('lineRates: true'));
   ok('a price-list line on a membership switches member pricing on', src('src/lib/pricing-switch.ts').includes('readLineRates(t.lineRates)'));
-  ok('the member portal window follows the membership', src('src/app/api/member/[courseSlug]/session/route.ts').includes('windowFor(course, { tier: membership.tier }).days'));
+  ok('the member portal window follows the membership', src('src/app/api/member/[courseSlug]/session/route.ts').includes('windowFor(course, live ? { tier: membership.tier } : null).days'));
 
   // ── The price list, from the course's schedule ──
   const ids = (await prisma.course.findMany({ where: { slug: { startsWith: TAG } }, select: { id: true } })).map(c => c.id);
