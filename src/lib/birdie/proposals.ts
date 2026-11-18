@@ -180,7 +180,7 @@ function shown(card: ProposalCard): ProposalOutcome {
 }
 
 async function scheduleChange(input: Record<string, unknown>, ctx: ToolContext): Promise<ProposalOutcome> {
-  if (!ctx.can('schedule.edit')) return err("This login can't change the schedule — the course owner decides that under Settings → Staff & permissions.");
+  if (!ctx.can('schedule.edit')) return err("This login can't change the schedule — the course owner decides that on Team.");
   if (typeof input.scheduleId !== 'string') return err('Call get_schedules first and pass the schedule id.');
   const schedules = await listSchedules(ctx.courseId);   // scoped to the session's course
   const s = (schedules as Record<string, unknown>[]).find(x => x.id === input.scheduleId);
@@ -236,7 +236,7 @@ async function scheduleChange(input: Record<string, unknown>, ctx: ToolContext):
 }
 
 async function blockDay(input: Record<string, unknown>, ctx: ToolContext): Promise<ProposalOutcome> {
-  if (!ctx.can('schedule.edit')) return err("This login can't block days — the course owner decides that under Settings → Staff & permissions.");
+  if (!ctx.can('schedule.edit')) return err("This login can't block days — the course owner decides that on Team.");
   const date = typeof input.date === 'string' ? input.date : '';
   if (!DATE.test(date)) return err('The date must be YYYY-MM-DD.');
   if (date < todayIn(ctx.timezone)) return err("That day has already gone by.");
@@ -258,7 +258,7 @@ async function blockDay(input: Record<string, unknown>, ctx: ToolContext): Promi
 }
 
 async function unblockDay(input: Record<string, unknown>, ctx: ToolContext): Promise<ProposalOutcome> {
-  if (!ctx.can('schedule.edit')) return err("This login can't reopen days — the course owner decides that under Settings → Staff & permissions.");
+  if (!ctx.can('schedule.edit')) return err("This login can't reopen days — the course owner decides that on Team.");
   const date = typeof input.date === 'string' ? input.date : '';
   if (!DATE.test(date)) return err('The date must be YYYY-MM-DD.');
   const blackout = await prisma.blackout.findFirst({ where: { courseId: ctx.courseId, date }, select: { id: true, reason: true } });
@@ -298,7 +298,7 @@ async function findGroup(ctx: ToolContext, date: unknown, time: unknown, golfer:
 }
 
 async function moveGroup(input: Record<string, unknown>, ctx: ToolContext): Promise<ProposalOutcome> {
-  if (!ctx.can('sheet.move')) return err("This login can't move groups — the course owner decides that under Settings → Staff & permissions.");
+  if (!ctx.can('sheet.move')) return err("This login can't move groups — the course owner decides that on Team.");
   const found = await findGroup(ctx, input.date, input.time, input.golfer, { checkedIn: true });
   if ('error' in found) return err(found.error as string);
   const toDate = input.toDate === undefined ? String(input.date) : input.toDate;
@@ -327,7 +327,7 @@ async function moveGroup(input: Record<string, unknown>, ctx: ToolContext): Prom
 }
 
 async function blockTimes(input: Record<string, unknown>, ctx: ToolContext): Promise<ProposalOutcome> {
-  if (!ctx.can('sheet.block')) return err("This login can't block tee times — the course owner decides that under Settings → Staff & permissions.");
+  if (!ctx.can('sheet.block')) return err("This login can't block tee times — the course owner decides that on Team.");
   const date = typeof input.date === 'string' ? input.date : '';
   if (!DATE.test(date)) return err('The day must be YYYY-MM-DD.');
   if (date < todayIn(ctx.timezone)) return err('That day has already gone by.');
@@ -367,7 +367,7 @@ async function blockTimes(input: Record<string, unknown>, ctx: ToolContext): Pro
 }
 
 async function addBooking(input: Record<string, unknown>, ctx: ToolContext): Promise<ProposalOutcome> {
-  if (!ctx.can('sheet.walkin')) return err("This login can't add bookings — the course owner decides that under Settings → Staff & permissions.");
+  if (!ctx.can('sheet.walkin')) return err("This login can't add bookings — the course owner decides that on Team.");
   const date = typeof input.date === 'string' ? input.date : '';
   if (!DATE.test(date)) return err('The day must be YYYY-MM-DD.');
   if (date < todayIn(ctx.timezone)) return err('That day has already gone by.');
@@ -399,7 +399,7 @@ async function addBooking(input: Record<string, unknown>, ctx: ToolContext): Pro
 }
 
 async function sendPayLink(input: Record<string, unknown>, ctx: ToolContext): Promise<ProposalOutcome> {
-  if (!ctx.can('sheet.checkin')) return err("This login can't send pay links — the course owner decides that under Settings → Staff & permissions.");
+  if (!ctx.can('sheet.checkin')) return err("This login can't send pay links — the course owner decides that on Team.");
   const via = input.via === 'sms' ? 'sms' : input.via === 'email' ? 'email' : null;
   if (!via) return err('via must be sms or email.');
   const found = await findGroup(ctx, input.date, input.time, input.golfer);
@@ -420,7 +420,7 @@ async function sendPayLink(input: Record<string, unknown>, ctx: ToolContext): Pr
 
 // ── Settings: the course description ─────────────────────────────────────
 async function courseDescription(input: Record<string, unknown>, ctx: ToolContext): Promise<ProposalOutcome> {
-  if (!ctx.can('settings.edit')) return err("This login can't change the course description — the course owner decides that under Settings → Staff & permissions.");
+  if (!ctx.can('settings.edit')) return err("This login can't change the course description — the course owner decides that on Team.");
   const text = typeof input.description === 'string' ? input.description.trim() : '';
   if (text.length < 40 || text.length > 1500) return err('The description must be 40 to 1500 characters.');
   const course = await prisma.course.findUnique({ where: { id: ctx.courseId }, select: { description: true } });

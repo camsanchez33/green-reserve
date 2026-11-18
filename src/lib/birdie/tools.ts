@@ -73,7 +73,7 @@ function asObject(input: unknown): Record<string, unknown> {
 }
 
 async function getAnalytics(input: Record<string, unknown>, ctx: ToolContext): Promise<ToolOutcome> {
-  if (!ctx.can('analytics.view')) return err("This login can't see Analytics — the course owner decides that under Settings → Staff & permissions.");
+  if (!ctx.can('analytics.view')) return err("This login can't see Analytics — the course owner decides that on Team.");
   const today = todayIn(ctx.timezone);
   const from = typeof input.from === 'string' ? input.from : '';
   const to = typeof input.to === 'string' ? input.to : '';
@@ -112,7 +112,7 @@ async function getAnalytics(input: Record<string, unknown>, ctx: ToolContext): P
 }
 
 async function getSchedules(ctx: ToolContext): Promise<ToolOutcome> {
-  if (!ctx.can('schedule.view')) return err("This login can't see the schedule — the course owner decides that under Settings → Staff & permissions.");
+  if (!ctx.can('schedule.view')) return err("This login can't see the schedule — the course owner decides that on Team.");
   const today = todayIn(ctx.timezone);
   const [schedules, blackouts] = await Promise.all([
     listSchedules(ctx.courseId),

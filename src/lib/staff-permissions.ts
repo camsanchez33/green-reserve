@@ -1,5 +1,5 @@
 // SP-A (STAFF_POLICY_SPEC Part A). What a staff login may do, decided per person
-// by the course owner in Settings → Staff & permissions. ONE catalog: the
+// by the course owner on Team. ONE catalog: the
 // server gates (requirePermission), the Settings screen and the staff UI all
 // read it, so a label can never describe a different rule than the one enforced.
 //
@@ -151,5 +151,5 @@ export function labelFor(key: PermissionKey): string {
 
 /** The 403 message a staff login sees when a permission is missing. */
 export function deniedMessage(key: PermissionKey): string {
-  return `Your login can’t do this — ask the course owner to turn on “${labelFor(key)}” for you in Settings → Staff & permissions.`;
+  return `Your login can’t do this — ask the course owner to turn on “${labelFor(key)}” for you on Team.`;
 }
