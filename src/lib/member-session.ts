@@ -84,9 +84,9 @@ export async function loggedInAt(courseId: string): Promise<{ email: string } | 
  * Build 2026-11-18 — not "has an active tier", which disagreed with canLogIn), 'residents' when residents get their rate here and this course
  * or its group lists a card someone could log in with now: one with an email (a counter-only card has none) that is
  * good today on the course's clock, the same rule canLogIn uses. Empty when the course turned Log in off. Says
- * nothing about any email.
+ * nothing about any email. `timezone` is required: a card's "good today" is on the course's clock, as canLogIn has it.
  */
-export async function loginGroups(course: { id: string; memberLoginOn?: boolean | null; hasResidentPricing?: boolean | null; timezone?: string | null }): Promise<('members' | 'residents')[]> {
+export async function loginGroups(course: { id: string; memberLoginOn?: boolean | null; hasResidentPricing?: boolean | null; timezone: string | null }): Promise<('members' | 'residents')[]> {
   if (course.memberLoginOn === false) return [];
   const today = todayIn(course.timezone);
   const [members, cards] = await Promise.all([
