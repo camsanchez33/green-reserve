@@ -88,6 +88,10 @@ async function main() {
   check('the clear is owner only, with a fresh second step, a reason and the words typed, all before it deletes',
     before('requireOwner(session)') && before('stepUpRequired(session)') && before("needReason('inquiries_clear'") && before('CONFIRM_WORDS')
     && /requireOwner\(session\)/.test(iqRoute.slice(0, iqRoute.indexOf('export async function POST'))));
+  const sys = readFileSync('src/app/admin/system/page.tsx', 'utf8');
+  check('the wipe card counts the inquiries made before Nov 23 in what it deletes', /w\.testInquiries \?\? 0\)\.toLocaleString/.test(sys) && /reduce\(\(a, n\) => a \+ n, 0\) \+ \(w\.testInquiries \?\? 0\)/.test(sys));
+  check('the wipe runs in its own transaction when the route calls it', /if \(!db\) return prisma\.\$transaction\(tx => wipeAll\(now, tx\)/.test(body)
+    && /await wipeAll\(\)/.test(readFileSync('src/app/api/admin/data-reset/route.ts', 'utf8')));
   check('…and it is audited, and takes no date from the request', /auditAdmin\(session, \{ action: 'inquiries_clear'/.test(post) && !/body\??\.before/.test(post) && /clearTestInquiries\(\)/.test(post));
 
   // The launch wipe closes on Dec 1 (moved from Nov 1, Cam 2026-10-30).
@@ -140,6 +144,7 @@ async function main() {
   const built = await seedInquiry('built', { status: 'live', builtCourseId: t.course.id, createdAt: during });
   const preBuilt = await seedInquiry('prebuilt', { status: 'live', builtCourseId: r.course.id, createdAt: new Date('2026-11-10T15:00:00Z') });
   await prisma.outreachTouch.create({ data: { inquiryId: preBuilt.id, at: new Date('2026-11-10T16:00:00Z'), channel: 'call', direction: 'out' } });
+  const preLead = await seedInquiry('prelead', { status: 'lead', createdAt: new Date('2026-11-22T15:00:00Z') });
   const checkin = await prisma.call.create({ data: { kind: 'checkin', courseId: t.course.id, scheduledAt: new Date('2030-01-02T15:00:00Z') } });
   const bothCall = await prisma.call.create({ data: { kind: 'discovery', inquiryId: built.id, courseId: t.course.id, scheduledAt: new Date('2030-01-03T15:00:00Z') } });
 
@@ -147,7 +152,7 @@ async function main() {
   await prisma.adminGoal.create({ data: { metric: 'courses_live', target: 1, dueAt: new Date('2030-01-01T00:00:00Z'), createdBy: TAG } });
   const keptBefore = await prisma.adminGoal.count();
   const ROLLBACK = new Error('rollback');
-  type Outreach = { preBuilt: boolean; preTouches: number; lead: string | undefined; touches: number; discovery: boolean; checkin: boolean; both: string | null | undefined; built: { status: string; builtCourseId: string | null } | null; builtEvent: string | undefined; unlinked: number };
+  type Outreach = { preLead: boolean; preBuilt: boolean; preTouches: number; lead: string | undefined; touches: number; discovery: boolean; checkin: boolean; both: string | null | undefined; built: { status: string; builtCourseId: string | null } | null; builtEvent: string | undefined; unlinked: number };
   let inside: { wipedLeft: number; keptLeft: number; ok: boolean; nextCourse: number; refSeqsLeft: number; outreach: Outreach } | null = null;
   try {
     await prisma.$transaction(async tx => {
@@ -157,6 +162,7 @@ async function main() {
       const keptLeft = await tx.adminGoal.count();
       const ev = await tx.inquiryStatusEvent.findFirst({ where: { inquiryId: built.id }, orderBy: { createdAt: 'desc' } });
       const outreach: Outreach = {
+        preLead: !!(await tx.courseInquiry.findUnique({ where: { id: preLead.id } })),
         preBuilt: !!(await tx.courseInquiry.findUnique({ where: { id: preBuilt.id } })),
         preTouches: await tx.outreachTouch.count({ where: { inquiryId: preBuilt.id } }),
         lead: (await tx.courseInquiry.findUnique({ where: { id: lead.id } }))?.status,
@@ -183,7 +189,7 @@ async function main() {
   check('…and every course\'s booking-number sequence went with it', !!got && got.refSeqsLeft === 0, got);
   const o = got?.outreach;
   check('…and keeps a lead, its touches and its discovery call', !!o && o.lead === 'lead' && o.touches === 1 && o.discovery, o);
-  check('…and deletes an inquiry made before outreach, built or not, with its touches', !!o && !o.preBuilt && o.preTouches === 0, o);
+  check('…and deletes an inquiry made before outreach, built or not, with its touches', !!o && !o.preBuilt && !o.preLead && o.preTouches === 0, o);
   check('…and a course check-in call goes with its course', !!o && !o.checkin, o);
   check('…and an inquiry call that also named the course stays, with no course on it', !!o && o.both === null, o);
   check('…and an inquiry built into a wiped course stays, unlinked and archived with a status event', !!o && o.built?.status === 'archived' && o.built?.builtCourseId === null && o.builtEvent === 'live->archived' && o.unlinked >= 1, o);

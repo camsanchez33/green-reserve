@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-// The wipe runs in one transaction of up to 120 s (lib/data-reset wipeAll).
-export const maxDuration = 150;
 import { resolveAdminSession, requireOwner, ownerGateError, stepUpRequired } from '@/lib/admin-session';
 import { needReason, reasonOf, auditAdmin } from '@/lib/admin-audit';
 import { previewWipeAll, wipeAll, wipeAllOpen, WIPE_ALL_UNTIL, WIPE_CONFIRM_WORDS as CONFIRM_WORDS } from '@/lib/data-reset';
+
+// The wipe runs in one transaction of up to 120 s (lib/data-reset wipeAll).
+export const maxDuration = 150;
 
 // TEST-1: the launch wipe (src/lib/data-reset.ts). GET counts what it would
 // clear and keep; POST clears it. Owner only, a fresh second step, a reason,

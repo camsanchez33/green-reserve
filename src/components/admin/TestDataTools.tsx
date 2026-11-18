@@ -57,7 +57,7 @@ export function LaunchWipeCard() {
     <div className="flex flex-col gap-3 text-[14px]">
       <p className="text-ink-soft">
         Every course, golfer, booking, conversation and announcement on the site is test data until launch. This clears all of it in one go, so the site starts clean.
-        Kept: admin logins, goals, expenses, company documents, agreement versions, audit record and outreach. Stripe is not touched — refund any real test charge there.
+        Kept: admin logins, goals, expenses, company documents, agreement versions, audit record and outreach from Nov 23. Stripe is not touched — refund any real test charge there.
         Available until {closes}, then it switches off for good.
       </p>
       {done !== null && <p role="status" className="text-ok"><StatusDot status="ok" label="" /> Cleared {done.toLocaleString()} records.</p>}
