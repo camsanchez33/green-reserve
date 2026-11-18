@@ -48,7 +48,8 @@ check('card form no longer says "you pay at the course" on every course', !/you 
 check('booked past the cutoff on a hold course, Today no longer says $0.00', /holdTodayLine\(/.test(bookClient));
 check('confirmation branches on cutoffPassed', /confirmedData\.cutoffPassed/.test(bookClient));
 const coursePage = readFileSync('src/app/courses/[slug]/CourseBookingClient.tsx', 'utf8');
-check('course trust line checks the slot against the cutoff', /slotPastCutoff/.test(coursePage) && /insideWindowLine\(/.test(coursePage));
+// Option A: the policy moved from the course page's trust line to the Book page, still checked against the cutoff.
+check('the Book page checks the time against the cutoff', /pastCutoff/.test(bookClient) && /insideWindowLine\(policy\.lateFeeTiming, lateFeeWords\)/.test(bookClient) && !/Cancel free until/.test(coursePage));
 check('booking API returns cutoffPassed and the timing', /cutoffPassed,/.test(bookSrc) && /lateFeeTiming: +policy\.lateFeeTiming,/.test(bookSrc));
 
 // 5. Manage page (R-GOLF-008): the cancel sentences match what performCancellation charges.
