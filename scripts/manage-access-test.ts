@@ -1,25 +1,21 @@
-// R-AUTH-003 / R-GOLF-003 (G13) — a signed-in golfer must still be able to use
-// a booking's emailed token. Pure: checks canManageBooking() and that every
-// golfer-side manage/cancel route goes through it instead of the old
-// "session ? owner : token" either/or. Run: npx tsx scripts/manage-access-test.ts
+// R-AUTH-003 / R-GOLF-003 (G13) — a booking is managed from the golfer side only with its emailed token
+// (Cam 2026-11-18: no golfer accounts, so no signed-in-owner path). Pure: checks canManageBooking() and that
+// every golfer-side manage/cancel route goes through it and reads no golfer session.
+// Run: npx tsx scripts/manage-access-test.ts
 import { readFileSync } from 'fs';
 import { canManageBooking } from '../src/lib/manage-access';
 
 let failed = 0;
 const check = (label: string, ok: boolean, detail?: string) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${detail ? ' — ' + detail : ''}`); if (!ok) failed++; };
 
-const guest = { golferAccountId: null, checkInToken: 'tok-guest' };
-const owned = { golferAccountId: 'g1', checkInToken: 'tok-owned' };
+const guest = { checkInToken: 'tok-guest' };
 
-check('signed out + right token → allowed', canManageBooking(guest, null, 'tok-guest'));
-check('signed out + wrong token → refused', !canManageBooking(guest, null, 'nope'));
-check('signed out + no token → refused', !canManageBooking(guest, null, ''));
-check('signed in as someone else + right token → allowed (the G13 bug)', canManageBooking(guest, 'g2', 'tok-guest'));
-check('signed in as someone else + no token → refused', !canManageBooking(owned, 'g2', ''));
-check('signed in as someone else + wrong token → refused', !canManageBooking(owned, 'g2', 'tok-guest'));
-check('signed in as the owner, no token → allowed', canManageBooking(owned, 'g1', undefined));
-check('a booking with no token never matches an empty token', !canManageBooking({ golferAccountId: null, checkInToken: null }, null, ''));
-check('a booking with an empty-string token never matches', !canManageBooking({ golferAccountId: null, checkInToken: '' }, null, ''));
+check('right token → allowed', canManageBooking(guest, 'tok-guest'));
+check('wrong token → refused', !canManageBooking(guest, 'nope'));
+check('no token → refused', !canManageBooking(guest, ''));
+check('undefined token → refused', !canManageBooking(guest, undefined));
+check('a booking with no token never matches an empty token', !canManageBooking({ checkInToken: null }, ''));
+check('a booking with an empty-string token never matches', !canManageBooking({ checkInToken: '' }, ''));
 
 const routes = [
   'src/app/api/manage/[bookingId]/route.ts',
@@ -33,7 +29,7 @@ const routes = [
 for (const r of routes) {
   const src = readFileSync(r, 'utf8');
   check(`${r} uses canManageBooking`, src.includes('canManageBooking('));
-  check(`${r} has no session-replaces-token ternary`, !/golferSession\s*\?\s*booking\.golferAccountId/.test(src));
+  check(`${r} reads no golfer session`, !/getGolferSession|golferSession/.test(src));
 }
 
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);

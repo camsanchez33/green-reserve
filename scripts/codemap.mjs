@@ -146,9 +146,8 @@ const SESSION_HELPERS = [
   [/\bcronAuthFailure\s*\(/, 'cron'],
   [/\b(resolveDashboardSession|getOperatorSession)\s*\(/, 'operator'],
   [/\bgetMemberSession\s*\(/, 'member'],
-  [/\bgetGolferSession\s*\(/, 'golfer'],
 ]
-const HELPER_NAMES = /\b(resolveAdminSession|requireRole|requireOwner|cronAuthFailure|resolveDashboardSession|getOperatorSession|getMemberSession|getGolferSession)\b/
+const HELPER_NAMES = /\b(resolveAdminSession|requireRole|requireOwner|cronAuthFailure|resolveDashboardSession|getOperatorSession|getMemberSession)\b/
 
 // Longest prefix wins, so /api/admin beats /api.
 const PREFIX_LEVEL = [
@@ -226,10 +225,10 @@ function ancestorLayouts(relPath) {
 //
 //   /api/bookings              — POST creates every booking, claims tee-time
 //                                capacity and attaches a saved card. It calls
-//                                getGolferSession() and getMemberSession() for
-//                                MEMBER PRICING only; nothing is ever refused.
-//   /api/bookings/setup-intent — calls getGolferSession(), never negates it,
-//                                and mints a live Stripe SetupIntent for anyone.
+//                                getMemberSession() for MEMBER PRICING only;
+//                                nothing is ever refused.
+//   /api/bookings/setup-intent — no session at all (golfer sign-in retired
+//                                2026-11-18); mints a live Stripe SetupIntent for anyone.
 //
 // Both are public by design. The defect was the map saying otherwise, on the one
 // column an auditor would filter by to decide what not to read. So the test is
@@ -662,7 +661,7 @@ L.push('')
 L.push('**auth** is who the route is for. **guard** is where that is enforced:')
 L.push('')
 L.push('- `file` — the route calls a session helper AND refuses on a falsy result.')
-L.push('  Presence is not enough: `/api/bookings` calls two session helpers purely for')
+L.push('  Presence is not enough: `/api/bookings` calls a session helper purely for')
 L.push('  member pricing and refuses nobody, and it used to carry this label.')
 L.push('- `X for POST` — split route. The named verbs are NOT covered; the rest are.')
 L.push('- `layout` — an ancestor layout resolves a session AND `redirect()`s on failure.')

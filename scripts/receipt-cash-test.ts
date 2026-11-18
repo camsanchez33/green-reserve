@@ -1,7 +1,7 @@
 // RECEIPT-2 (Cam 2026-11-08, "fix it and need to have a smooth receipt for the card readers and printers"):
 // a cash round's receipt shows what cash took (no GreenReserve fee — PAY-2), how it was paid and when, the cash
 // handed over and the change when the register recorded it, the card that paid a card round; the course once;
-// "View my bookings" only for a golfer with an account; and it prints as one plain narrow column (80 mm rolls).
+// no "View my bookings" (Cam 2026-11-18: no golfer accounts); and it prints as one plain narrow column (80 mm rolls).
 // Run: npx tsx scripts/receipt-cash-test.ts
 import { readFileSync } from 'fs';
 import { counterPaidCents } from '../src/lib/counter-pay';
@@ -23,7 +23,7 @@ ok('a refunded round is not shown as paid', api.includes("const played = booking
 ok('the total says Paid (On account for a member account) with what was taken', page.includes("{payment ? (payment.method === 'account' ? 'On account' : 'Paid') : totalLabel}") && page.includes('{dollars(payment ? payment.amountCents : data.totalAmount)}'));
 ok('when, in the course\'s clock', page.includes('function paidWhen(iso: string, tz?: string): string') && api.includes('timezone: booking.course.timezone,'));
 ok('the course is named once (on the bar)', !page.includes('<h1 className="text-[22px] font-serif font-semibold tracking-tight text-ink mt-3 mb-1">{data.courseName}</h1>'));
-ok('"View my bookings" only with an account', api.includes('hasAccount: !!booking.golferAccountId,') && page.includes('showBookings={!!data.hasAccount}'));
+ok('no "View my bookings" portal link (golfer accounts retired)', !api.includes('hasAccount') && !page.includes('showBookings') && !readFileSync('src/components/GolferExitLinks.tsx', 'utf8').includes('/account'));
 ok('prints as one narrow plain column: no buttons, links or site footer', page.includes('.receipt-wrap { max-width: 72mm !important;') && page.includes('.no-print, footer, nextjs-portal { display: none !important; }') && page.includes('.receipt-card * { color: #000 !important;'));
 
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);

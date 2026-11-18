@@ -2,7 +2,7 @@ import { windowFor } from '@/lib/booking-window';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { centsToDollars, centsToDollarsOr0 } from '@/lib/money';
-import { getMemberSession, getGolferMembership } from '@/lib/member-session';
+import { getMemberSession } from '@/lib/member-session';
 
 export async function GET(
   _req: NextRequest,
@@ -16,23 +16,11 @@ export async function GET(
   });
   if (!course) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+  // Cam 2026-11-18: only this course's member sign-in (gr_member) recognises a member; there are no golfer accounts.
   const session = await getMemberSession();
-  let membershipId: string;
-  let fallbackEmail: string | null = null;
-  let source: 'member' | 'golfer' = 'member';
-
-  if (session) {
-    if (course.id !== session.courseId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    membershipId = session.membershipId;
-    fallbackEmail = session.email;
-  } else {
-    // G5b: no gr_member session — recognize an active membership via the
-    // gr_golfer session instead (same possession proof as the magic link).
-    const golferMembership = await getGolferMembership(course.id);
-    if (!golferMembership) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    membershipId = golferMembership.membershipId;
-    source = 'golfer';
-  }
+  if (!session || course.id !== session.courseId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const membershipId = session.membershipId;
+  const fallbackEmail: string | null = session.email;
 
   const membership = await prisma.courseMembership.findUnique({
     where: { id: membershipId },
@@ -46,7 +34,7 @@ export async function GET(
   }
 
   return NextResponse.json({
-    source,
+    source: 'member',
     // BOOKING WINDOWS: how far ahead this member can book (tier, else course default).
     // Memberships item 3: a membership on "the public window" books as far ahead as the public (lib/booking-window).
     windowDays: windowFor(course, { tier: membership.tier }).days,

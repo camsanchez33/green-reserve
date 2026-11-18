@@ -5,7 +5,7 @@ import { demandPctAt, onlinePublicSeat, dealWins, loadDemand } from '@/lib/deman
 import { todayIn, clockIn } from '@/lib/course-time';
 import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
-import { getMemberSession, getGolferMembership, golferResident } from '@/lib/member-session';
+import { getMemberSession, signedInResident } from '@/lib/member-session';
 import { windowFor, withinWindow, outsideWindowBody } from '@/lib/booking-window';
 import { rulesFor, walkingAllowedAt } from '@/lib/booking-rules';
 import { applyTierRates, readLineRates, lineKey, isWeekend } from '@/lib/tier-rates';
@@ -23,16 +23,10 @@ export async function GET(
   const course = await prisma.course.findUnique({ where: { slug: courseSlug } });
   if (!course) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+  // Cam 2026-11-18: only this course's member sign-in (gr_member); there are no golfer accounts.
   const session = await getMemberSession();
-  let membershipId: string;
-  if (session) {
-    if (course.id !== session.courseId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    membershipId = session.membershipId;
-  } else {
-    const golferMembership = await getGolferMembership(course.id, course);
-    if (!golferMembership) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    membershipId = golferMembership.membershipId;
-  }
+  if (!session || course.id !== session.courseId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const membershipId = session.membershipId;
 
   const membership = await prisma.courseMembership.findUnique({
     where: { id: membershipId },
@@ -77,9 +71,9 @@ export async function GET(
   // charge another.
   // RES-1: booking charges ONE player — the signed-in golfer — the tee time's
   // resident rate when no membership price applied and their resident card is
-  // good on the date (api/bookings: golferResident, groupGreenFee). Same lookup
+  // good on the date (api/bookings: signedInResident, groupGreenFee). Same lookup
   // here, so the list can show it; the page adds it up the same way.
-  const resident = !pricingTier && residentPricingOn(course) ? await golferResident(course.id, date) : null;
+  const resident = !pricingTier && residentPricingOn(course) ? await signedInResident(course.id, date) : null;
 
   // Memberships item 3: a membership priced by the price list has a member price wherever one of its green lines is set.
   const lines = pricingTier ? readLineRates(pricingTier.lineRates) : null;

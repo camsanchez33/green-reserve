@@ -154,9 +154,9 @@ function ManagePageInner() {
 
   useEffect(() => {
     if (!bookingId) { setErrorMsg('This link is missing required details.'); setLoading(false); return; }
-    // No token in the URL just means "arrived signed in from the portal" —
-    // the API falls back to the gr_golfer session cookie.
-    const url = token ? `/api/manage/${bookingId}?token=${encodeURIComponent(token)}` : `/api/manage/${bookingId}`;
+    // The emailed link's token is the only way in (Cam 2026-11-18: no golfer accounts).
+    if (!token) { setErrorMsg('This link is missing required details.'); setLoading(false); return; }
+    const url = `/api/manage/${bookingId}?token=${encodeURIComponent(token)}`;
     fetch(url)
       .then(async r => {
         if (r.status === 410) { setExpired(true); return null; }

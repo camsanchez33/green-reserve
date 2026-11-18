@@ -1,8 +1,6 @@
 import { SignJWT, jwtVerify } from 'jose';
-import { liveMembershipWhere, type LapseRule } from './member-rates';
 import { cookies } from 'next/headers';
 import { prisma } from './prisma';
-import { getGolferSession } from './auth';
 import { cardValidOn } from './residents';
 import { groupCourseIds } from './course-group';
 import { ciEquals } from '@/lib/like-exact';
@@ -61,56 +59,27 @@ export async function getMemberSession() {
   } catch { return null; }
 }
 
-// GOLFER_SPEC G5b — member pricing recognition via the golfer session, no
-// separate member sign-in required. Safe because gr_golfer only exists after
-// OTP possession-proof (email or phone) — the exact same proof the member
-// magic link already relies on. Strictly courseId-scoped: only ever resolves
-// a membership at the ONE course being asked about, never leaks across courses.
+// Cam 2026-11-18: a member is recognised only by this course's gr_member session. The G5b path (an active
+// membership found through the GreenReserve-wide gr_golfer session) is retired with golfer accounts.
+
 /**
- * `rule` given (the course's grace days and timezone): only a membership whose member rates
- * still apply (lib/member-rates). Leave it out where a lapsed member must still be recognised (their portal, paying dues).
+ * RES-1 online: the resident card of whoever is signed in to THIS course (gr_member, its email proven by the
+ * member link), if it is good on `dateYmd`. Only this course's list (or its group's, GRP-1), never another
+ * course's. Cam 2026-11-18: there is no other online sign-in, so a resident who is not a member here gets the
+ * resident rate at the counter until resident cards become a group under gr_member.
  */
-export async function getGolferMembership(courseId: string, rule?: LapseRule): Promise<{ membershipId: string; tierName: string } | null> {
-  const golferSession = await getGolferSession();
-  if (!golferSession) return null;
-
-  const golfer = await prisma.golferAccount.findUnique({
-    where: { id: golferSession.golferId },
-    select: { email: true },
-  });
-  if (!golfer) return null;
-
-  const membership = await prisma.courseMembership.findFirst({
-    where: {
-      courseId,
-      status: 'active',
-      ...(rule ? { AND: [liveMembershipWhere(rule)] } : {}),
-      OR: [
-        { golferId: golferSession.golferId },
-        { inviteEmail: ciEquals(golfer.email) },
-      ],
-    },
-    include: { tier: { select: { name: true } } },
-  });
-  if (!membership) return null;
-
-  return { membershipId: membership.id, tierName: membership.tier?.name ?? membership.membershipType };
-}
-
-/** The signed-in golfer's resident card at this course, if it is good on `dateYmd`. */
-export async function golferResident(courseId: string, dateYmd: string) {
-  const session = await getGolferSession();
-  if (!session) return null;
-  // The account's email from the database (as getGolferMembership does), not the token's copy.
-  const golfer = await prisma.golferAccount.findUnique({ where: { id: session.golferId }, select: { email: true } });
-  return golfer?.email ? residentOn(courseId, golfer.email, dateYmd) : null;
+export async function signedInResident(courseId: string, dateYmd: string) {
+  const session = await getMemberSession();
+  if (!session || session.courseId !== courseId || !session.email) return null;
+  return residentOn(courseId, session.email, dateYmd);
 }
 
 /** The resident card listed under this email at this course — or, for a course
  *  in a group (GRP-1), at any course in the group — if it is good on `dateYmd`. */
 export async function residentOn(courseId: string, emailRaw: string, dateYmd: string) {
-  const email = emailRaw.trim().toLowerCase();
+  const email = emailRaw.trim();
   if (!email) return null;
-  const cards = await prisma.courseResident.findMany({ where: { courseId: { in: await groupCourseIds(courseId) }, email } });
+  // Case-insensitive and exact (lib/like-exact): a list typed "Jo@X.com" still matches, and _ or % never act as wildcards.
+  const cards = await prisma.courseResident.findMany({ where: { courseId: { in: await groupCourseIds(courseId) }, email: ciEquals(email) } });
   return cards.find(r => cardValidOn(r.expiresOn, dateYmd)) ?? null;
 }

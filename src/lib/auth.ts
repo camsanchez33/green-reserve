@@ -13,8 +13,6 @@ const secret = new TextEncoder().encode(rawSecret);
 
 const OPERATOR_TTL = '7d';
 const OPERATOR_MAX_AGE = 60 * 60 * 24 * 7;
-const GOLFER_TTL = '90d';
-const GOLFER_MAX_AGE = 60 * 60 * 24 * 90;
 
 // ── Operator auth ─────────────────────────────────────────────────────────────
 export async function signToken(payload: { operatorId: string; email: string; sv?: number }) {
@@ -114,70 +112,11 @@ async function maybeRefreshStaffToken(
   } catch { /* silently skip in server-component page context */ }
 }
 
-// ── Golfer auth ───────────────────────────────────────────────────────────────
-export async function signGolferToken(payload: { golferId: string; email: string }) {
-  return new SignJWT({ ...payload, type: 'golfer' })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setIssuedAt()
-    .setExpirationTime(GOLFER_TTL)
-    .sign(secret);
-}
-
-export async function getGolferSession() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('gr_golfer')?.value;
-  if (!token) return null;
-  try {
-    const { payload } = await jwtVerify(token, secret);
-    const p = payload as { golferId: string; email: string; type: string; iat?: number; exp?: number };
-    if (p.type !== 'golfer') return null;
-    // Cam 2026-11-04 (a booking failed: "golferAccount.update … Record to update not found"): a valid
-    // token can outlive its account — the test-data reset, a removed golfer. Such a session is no
-    // session: the cookie is cleared and the golfer carries on as a guest instead of hitting a crash
-    // (or a booking pointing at a missing account). One indexed lookup per golfer request.
-    const { prisma } = await import('./prisma');
-    const account = await prisma.golferAccount.findUnique({ where: { id: p.golferId }, select: { id: true } }).catch(() => undefined);
-    if (account === null) {
-      try { cookieStore.delete('gr_golfer'); } catch { /* read-only in a server component */ }
-      return null;
-    }
-    // Sliding renewal: reissue when >50% of 90-day TTL has elapsed
-    if (p.iat && p.exp) {
-      const elapsed = Date.now() / 1000 - p.iat;
-      const total = p.exp - p.iat;
-      if (elapsed / total > 0.5) {
-        try {
-          const newToken = await signGolferToken({ golferId: p.golferId, email: p.email });
-          cookieStore.set('gr_golfer', newToken, {
-            httpOnly: true, secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax', maxAge: GOLFER_MAX_AGE, path: '/',
-          });
-        } catch { /* silently skip in server-component page context */ }
-      }
-    }
-    return p;
-  } catch { return null; }
-}
-
-// ── Member invite (set-password) tokens ─────────────────────────────────────────
-// Lets an operator-added member who has no GolferAccount yet land on a link and
-// set a password, without needing a golferId (which doesn't exist until they do).
-export async function signMemberInviteToken(payload: { membershipId: string; email: string }) {
-  return new SignJWT({ ...payload, type: 'member_invite' })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setIssuedAt()
-    .setExpirationTime('14d')
-    .sign(secret);
-}
-
-export async function verifyMemberInviteToken(token: string) {
-  try {
-    const { payload } = await jwtVerify(token, secret);
-    const p = payload as { membershipId: string; email: string; type: string };
-    if (p.type !== 'member_invite') return null;
-    return p;
-  } catch { return null; }
-}
+// ── Golfer auth: retired (Cam 2026-11-18) ──────────────────────────────────────
+// No GreenReserve-wide golfer accounts yet: the gr_golfer session, its OTP sign-in and the member set-password
+// invite are gone. Sign-in is per course (gr_member, lib/member-session); everyone else books as a guest and
+// manages a booking with its emailed link. GolferAccount stays as the internal record behind older bookings
+// and memberships; nothing creates one now.
 
 // ── Staff password reset (SD-9c) ───────────────────────────────────────────────
 // CourseStaff has no resetToken columns, and a schema change is blocked while

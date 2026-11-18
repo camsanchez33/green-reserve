@@ -23,7 +23,7 @@ import { rulesFor, groupSizeError } from './booking-rules';
 import { refundBookingFee } from './booking-fee';
 import { giveBack } from './round-packs';
 
-export type PartyWho = { by: 'golfer'; golferId?: string | null; token?: string } | { by: 'staff'; courseId: string; actor: EventActor };
+export type PartyWho = { by: 'golfer'; token?: string } | { by: 'staff'; courseId: string; actor: EventActor };
 
 export async function changePartySize(bookingId: string, newPlayers: number, who: PartyWho) {
   // SHOP-FEE-1: read before the transaction (it may query), never inside it.
@@ -43,7 +43,7 @@ export async function changePartySize(bookingId: string, newPlayers: number, who
       });
 
       if (!booking) throw Object.assign(new Error(), { code: 'INVALID' });
-      const authorized = who.by === 'staff' ? booking.courseId === who.courseId : canManageBooking(booking, who.golferId ?? undefined, who.token);
+      const authorized = who.by === 'staff' ? booking.courseId === who.courseId : canManageBooking(booking, who.token);
       if (!authorized) throw Object.assign(new Error(), { code: 'INVALID' });
       if (booking.status !== 'confirmed') throw Object.assign(new Error(), { code: 'NOT_CONFIRMED' });
       // G9 (review ledger): a group marked a no-show, or one whose time has

@@ -77,11 +77,6 @@
     "input": 3,
     "lucide": 4
   },
-  "src/app/courses/[slug]/account/AccountPortalClient.tsx": {
-    "card": 2,
-    "input": 1,
-    "lucide": 3
-  },
   "src/app/courses/[slug]/account/accept-invite/page.tsx": {
     "input": 1,
     "lucide": 1

@@ -131,7 +131,6 @@ async function main() {
     ['src/app/api/auth/2fa/verify/route.ts', [/kind: 'second_factor_failed', surface: 'course'/, /kind: 'signin_ok', surface: 'course'/]],
     ['src/app/api/auth/reset-password/route.ts', [/kind: 'signin_ok', surface: 'course'.*set-your-password/]],
     ['src/app/api/cam/step-up/route.ts', [/kind: 'step_up_failed'/]],
-    ['src/app/api/golfer/auth/otp/verify/route.ts', [/kind: 'signin_failed', surface: 'golfer'/]],
     ['src/app/api/member/[courseSlug]/verify/route.ts', [/kind: 'signin_failed', surface: 'member'/, /rateLimit\(`member-verify-ip:/]],
     ['src/app/api/cam/login/route.ts', [/failUnknownLogin\('owner'/]],
   ];

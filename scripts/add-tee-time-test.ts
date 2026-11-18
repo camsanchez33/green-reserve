@@ -20,7 +20,7 @@ for (const f of ['src/lib/public-tee-times.ts', 'src/app/api/member/[courseSlug]
 const claim = read('src/lib/claim-tee-time.ts');
 ok('the online claim refuses it', claim.includes('online?: boolean') && claim.includes("if (opts.online && teeTime.staffOnly) throw new TeeTimeClaimError('BLOCKED')") && claim.includes('staffOnly: true'));
 const bookings = read('src/app/api/bookings/route.ts');
-ok('the golfer booking route claims as online', bookings.includes("{ type: 'golfer', id: golferSession?.golferId ?? null }, { online: true })"));
+ok('the golfer booking route claims as online', bookings.includes("{ type: 'golfer', id: null }, { online: true })"));
 ok('the counter and admin claims do not', !read('src/lib/counter-pay.ts').includes('online: true') && !read('src/app/api/admin/tee-sheet/route.ts').includes('online: true'));
 const move = read('src/lib/move-booking.ts');
 ok("a golfer's own swap refuses it", move.includes("if (golferMove && slot.staffOnly) throw new MoveError('BLOCKED')"));

@@ -34,7 +34,7 @@ Course dashboard: charcoal glass by default with a Light look that is glass too 
 | Admin employees (viewer/support/manager) | `admin_session` | 12h absolute | None — re-authenticate after 12h |
 | Admin owner | `gr_owner` → an `OwnerSession` row | 4h absolute | None — signs in only at `/cam` (password → approved device → second factor); `/admin` refuses the owner |
 | Operator/staff dashboard | `gr_operator` | 7 days sliding | Reissued when >50% elapsed |
-| Golfer | `gr_golfer` | 90 days sliding | Reissued when >50% elapsed |
+| Golfer | none (retired Cam 2026-11-18) | — | No GreenReserve golfer sign-in; guests manage a booking by its emailed link |
 | Member (per-course) | `gr_member` | 7 days absolute (R-AUTH-009, Cam 2026-10-26) | None |
 
 ## Known gotchas

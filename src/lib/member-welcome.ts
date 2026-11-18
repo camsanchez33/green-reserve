@@ -1,8 +1,8 @@
-// The email a member gets when the course adds them: a golfer with an account is told they're linked; anyone else
-// gets a set-password invite. Memberships item 1 (Cam 2026-11-16, "they are a member only once paid"): a member
-// added at the counter (addedBy COUNTER_ADDED) pays first, so this goes out once the dues are paid, not when added.
+// The email a member gets when the course adds them: a golfer with an older account is told they're linked; anyone
+// else gets the welcome. Both point at the course's member sign-in (the emailed member link, gr_member); the
+// set-password invite and golfer accounts are retired (Cam 2026-11-18).
+// Memberships item 1 (Cam 2026-11-16, "they are a member only once paid"): a member added at the counter (addedBy COUNTER_ADDED) pays first, so this goes out once the dues are paid, not when added.
 import { prisma } from './prisma';
-import { signMemberInviteToken } from './auth';
 import { sendMemberInviteEmail, sendMemberLinkedNotification, sendMembershipReceiptEmail } from './email';
 
 /** addedBy for a member added on the Memberships page, who pays before they are a member. */
@@ -26,13 +26,12 @@ export async function sendWelcome(membershipId: string): Promise<void> {
     return;
   }
   if (m.inviteAccepted || !m.inviteEmail) return;
-  const token = await signMemberInviteToken({ membershipId: m.id, email: m.inviteEmail });
   await sendMemberInviteEmail({
     name: m.inviteName,
     email: m.inviteEmail,
     courseName: m.course.name || 'your course',
     tierName,
-    setupLink: `${process.env.NEXT_PUBLIC_URL}/courses/${m.course.slug}/account/accept-invite?token=${token}`,
+    setupLink: `${process.env.NEXT_PUBLIC_URL}/courses/${m.course.slug}/member`,
   });
 }
 

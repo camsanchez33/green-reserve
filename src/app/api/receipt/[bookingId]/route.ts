@@ -113,8 +113,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     chargedNowCents: chargedNowCents(charges),
     payment,
     timezone: booking.course.timezone,
-    // "View my bookings" only for a golfer with an account (a walk-in paying cash usually has none).
-    hasAccount: !!booking.golferAccountId,
     createdAt: booking.createdAt,
   });
 }

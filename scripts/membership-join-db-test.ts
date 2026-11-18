@@ -1,7 +1,7 @@
 // MEM-JOIN (Cam 2026-10-30: "Join online", "Course decides per tier"): a golfer joins a tier
 // online — instantly once the dues are paid, or by request that staff approve — and gets member
 // rates only once paid. Needs a database. Run: npx tsx scripts/membership-join-db-test.ts
-import { readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { prisma } from '../src/lib/prisma';
 import { joinTier, approveJoin, declineJoin, joinableTiers, myMembership, readJoinMode } from '../src/lib/membership-join';
 import { membershipLive } from '../src/lib/member-rates';
@@ -76,8 +76,8 @@ async function cleanup() {
   ok('the dues pay link takes an online join and makes it active', pay.includes("status: { in: ['active', 'awaiting_payment'] }") && /paymentStatus: 'paid',\n\s+status: 'active',/.test(readFileSync('src/lib/membership-dues.ts', 'utf8')) && pay.includes('recordPaidTerm('));
   const tiers = readFileSync('src/app/api/operator/tiers/route.ts', 'utf8');
   ok('a tier joined online needs dues (create and edit)', (tiers.match(/JOIN_NEEDS_DUES/g) ?? []).length >= 3);
-  const route = readFileSync('src/app/api/courses/[slug]/join/route.ts', 'utf8');
-  ok('joining online: signed in, rate limited, a live course with Stripe', route.includes("if (!golfer?.email) return NextResponse.json({ error: 'Sign in to join") && route.includes('rateLimit(`join:') && route.includes("liveStatus: 'live', archivedAt: null") && route.includes('stripeAccountActive'));
+  // Cam 2026-11-18: joining online is gone for good — golfers buy memberships from the course, which adds them.
+  ok('no join-online route or course-page offer is left', !existsSync('src/app/api/courses/[slug]/join/route.ts') && !existsSync('src/components/CourseJoin.tsx') && !readFileSync('src/lib/public-course.ts', 'utf8').includes('joins_online'));
   const members = readFileSync('src/app/api/operator/members/route.ts', 'utf8');
   ok('approve and decline are staff actions behind members.edit', members.includes("action === 'approve_join'") && members.includes("requirePermission(session, 'members.edit')"));
 

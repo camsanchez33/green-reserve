@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getGolferSession } from '@/lib/auth';
 import { stripe } from '@/lib/stripe';
 import { rateLimit, evidentiaryIp } from '@/lib/rate-limit';
 import { LIKE_UNSAFE_EMAIL } from '@/lib/like-exact';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-// Creates (or reuses) a Stripe Customer and a SetupIntent so the booking page
+// Creates a Stripe Customer and a SetupIntent so the booking page
 // can save a card WITHOUT charging it. The resulting PaymentMethod gets reused
 // later — by the cancellation-fee cron at the policy cutoff, and eventually by
 // the check-in/pay-for-round flow — both off-session, which is why we ask
@@ -41,22 +39,10 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const golferSession = await getGolferSession();
-    let customerId: string | null = null;
-
-    if (golferSession) {
-      const golfer = await prisma.golferAccount.findUnique({ where: { id: golferSession.golferId } });
-      customerId = golfer?.stripeCustomerId || null;
-    }
-
-    if (!customerId) {
-      const customer = await stripe.customers.create({ email, name: name || undefined });
-      customerId = customer.id;
-      if (golferSession) {
-        // updateMany: never throws if the account went away mid-request (2026-11-04).
-        await prisma.golferAccount.updateMany({ where: { id: golferSession.golferId }, data: { stripeCustomerId: customerId } });
-      }
-    }
+    // Cam 2026-11-18: every golfer books as a guest, so each card form gets its own Stripe customer
+    // (a GreenReserve golfer account used to reuse a saved one).
+    const customer = await stripe.customers.create({ email, name: name || undefined });
+    const customerId = customer.id;
 
     const setupIntent = await stripe.setupIntents.create({
       customer: customerId,
