@@ -259,7 +259,7 @@ async function main() {
   let worked = 0;
   for (let pass = 0; pass < 2; pass++) for (const c of burst) { const r = await vc(e1, c, true); if (r.status === 200) worked++; await clearLimits(); }
   check('four codes sent at once: exactly one ever works (only the newest counts)', worked === 1 && !!newest, { worked });
-  check('…and exactly one was left live', (await prisma.memberLoginCode.count({ where: { email: e1, usedAt: { not: null } } })) === 4);
+  check('…and all four are ended once that one logs in', (await prisma.memberLoginCode.count({ where: { email: e1, usedAt: { not: null } } })) === 4);
 
   // Five tries — held against parallel guesses too.
   e1 = await fresh();
