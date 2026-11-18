@@ -126,7 +126,7 @@ async function main() {
   const doors: [string, RegExp[]][] = [
     ['src/app/api/admin/login/route.ts', [/kind: 'rate_limited', surface: 'admin'/, /'unknown account'/, /kind: lockoutUntil \? 'locked_out' : 'signin_failed', surface: 'admin'/, /kind: 'signin_ok', surface: 'admin'/, /if \(!admin \|\| !admin\.active \|\| !admin\.passwordHash \|\| admin\.role === 'owner'\) \{[\s\S]*?failUnknownLogin\('admin'/]],
     ['src/app/api/cam/login/route.ts', [/kind: 'rate_limited', surface: 'owner'/, /kind: 'second_factor_failed', surface: 'owner'.*'passkey'/, /kind: 'new_device'/, /kind: 'signin_ok', surface: 'owner'/, /kind: lockoutUntil \? 'locked_out' : 'signin_failed', surface: 'owner'/]],
-    ['src/app/api/auth/login/route.ts', [/kind: 'rate_limited', surface: 'course'/, /'staff login, wrong password'/, /'owner login, wrong password'/, /if \(!staff\.active\) return unknownLogin\(/, /return unknownLogin\(req, email, password, undefined, 'unknown account'\)/, /failUnknownLogin\('course'/]],
+    ['src/app/api/auth/login/route.ts', [/kind: 'rate_limited', surface: 'course'/, /'staff login, wrong password'/, /'owner login, wrong password'/, /if \(!staff\.active \|\| staff\.removedAt\) return unknownLogin\(/, /return unknownLogin\(req, email, password, undefined, 'unknown account'\)/, /failUnknownLogin\('course'/]],
     ['src/app/api/auth/2fa/resend/route.ts', [/kind: 'rate_limited', surface: 'course'.*'resend sign-in code'/]],
     ['src/app/api/auth/2fa/verify/route.ts', [/kind: 'second_factor_failed', surface: 'course'/, /kind: 'signin_ok', surface: 'course'/]],
     ['src/app/api/auth/reset-password/route.ts', [/kind: 'signin_ok', surface: 'course'.*set-your-password/]],

@@ -5,6 +5,7 @@ import { prisma } from './prisma';
 import { getGolferSession } from './auth';
 import { cardValidOn } from './residents';
 import { groupCourseIds } from './course-group';
+import { ciEquals } from '@/lib/like-exact';
 
 const rawSecret =
   process.env.JWT_SECRET ||
@@ -86,7 +87,7 @@ export async function getGolferMembership(courseId: string, rule?: LapseRule): P
       ...(rule ? { AND: [liveMembershipWhere(rule)] } : {}),
       OR: [
         { golferId: golferSession.golferId },
-        { inviteEmail: { equals: golfer.email, mode: 'insensitive' } },
+        { inviteEmail: ciEquals(golfer.email) },
       ],
     },
     include: { tier: { select: { name: true } } },

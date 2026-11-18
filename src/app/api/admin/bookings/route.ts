@@ -9,6 +9,7 @@ import { roundChargeCents } from '@/lib/booking-fees';
 import { dayKey } from '@/lib/admin-day';
 import { bookingRefLabel, parseRef } from '@/lib/booking-ref';
 import { FILTERS, isFilter, type BookingFilter, numberQuery, sumLedger, EMPTY_LEDGER, payState, feeState, policyLine, rowAmount, isDisputeRow, paidBeforeDispute, type BookingFacts } from './plan';
+import { ciContains, ciEquals } from '@/lib/like-exact';
 
 // ADMIN-REDO page 4 — Bookings (Cam 2026-11-12). READ-ONLY, by design: "book keeping for legality if someone ever
 // asks". Every booking on GreenReserve, newest booked first: what was owed, what was paid (the ledger), whether our
@@ -77,23 +78,23 @@ export async function GET(req: NextRequest) {
   const num = q ? numberQuery(q) : null;
   // A booking number GR<course>-<n> (or "4-17"), or a course's GR<n>: Booking.ref / Course.number (Build #380).
   const ref = q ? parseRef(q) : null;
-  // Without Golfers, an email finds a booking only as the WHOLE address, compared in code: an insensitive equals is an
-  // ILIKE in Postgres, where % and _ would let a login read addresses it can't see a letter at a time. The compare
-  // below keeps only the exact address, so _ (common in emails) is safe; % and \\ are refused outright.
+  // Without Golfers, an email finds a booking only as the WHOLE address: an insensitive equals is an ILIKE in Postgres,
+  // where % and _ would let a login read addresses it can't see a letter at a time. ciEquals escapes them (lib/like-exact),
+  // and the compare in code below keeps only the exact address as a second check; % and \\ are refused outright.
   let exactEmailIds: string[] = [];
   if (q && !seesContact && q.includes('@') && !/[%\\]/.test(q)) {
-    const hits = await prisma.booking.findMany({ where: { golferEmail: { equals: q, mode: 'insensitive' }, ...ON_REAL_COURSE }, select: { id: true, golferEmail: true }, take: 500 });
+    const hits = await prisma.booking.findMany({ where: { golferEmail: ciEquals(q), ...ON_REAL_COURSE }, select: { id: true, golferEmail: true }, take: 500 });
     exactEmailIds = hits.filter(h => h.golferEmail.toLowerCase() === q.toLowerCase()).map(h => h.id);
   }
   const search: Prisma.BookingWhereInput = !q ? {} : {
     OR: [
       ...(ref ? [ref.ref !== null ? { ref: ref.ref, course: { number: ref.course } } : { course: { number: ref.course } }] : []),
       ...(num ? [{ id: { startsWith: num } }] : []),
-      { golferName: { contains: q, mode: 'insensitive' } },
-      { course: { name: { contains: q, mode: 'insensitive' } } },
+      { golferName: ciContains(q) },
+      { course: { name: ciContains(q) } },
       // Cam 2026-11-12 (Users & golfers dropped): support finds a golfer here, by email too. Without Golfers only the
       // whole address matches (support has it from the caller) — a part would let a login read emails it can't see.
-      ...(seesContact ? [{ golferEmail: { contains: q, mode: 'insensitive' } }] : exactEmailIds.length ? [{ id: { in: exactEmailIds } }] : []),
+      ...(seesContact ? [{ golferEmail: ciContains(q) }] : exactEmailIds.length ? [{ id: { in: exactEmailIds } }] : []),
     ],
   } as Prisma.BookingWhereInput;
   const base: Prisma.BookingWhereInput = { ...ON_REAL_COURSE, ...search };
