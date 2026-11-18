@@ -11,6 +11,11 @@
 // and KEPT_TABLES; scripts/data-reset-db-test.ts fails when a new model is in
 // neither, so a table added later is never silently left behind or wiped.
 // Stripe is not touched: money already charged stays in Stripe.
+//
+// KEEP-OUTREACH (Cam 2026-11-18, "Keep outreach data"): the outreach pipeline (inquiries and
+// everything hung off them) survives the launch wipe, so a target list entered from Nov 23 is still
+// there on Dec 1. An inquiry whose course is wiped is unlinked and archived, the way deletePair()
+// does for one course. The test inquiries made before then go with clearTestInquiries().
 import type { Prisma } from '@prisma/client';
 import { prisma } from './prisma';
 
@@ -27,6 +32,9 @@ export const KEPT_TABLES = [
   'AdminUser', 'OwnerPasskey', 'OwnerSession', 'OwnerDevice',
   'AdminGoal', 'AdminMonthGoal', 'Expense', 'ExpenseBudget', 'AgreementVersion', 'AdminAuditLog', 'CronRunLog',
   'CompanyDocLabel', 'CompanyDocument', 'CompanyDocumentVersion',
+  // KEEP-OUTREACH: the outreach pipeline. Every table that points at CourseInquiry belongs here
+  // (scripts/data-reset-db-test.ts checks it). A course check-in call goes with its course (wipeAll).
+  'CourseInquiry', 'Call', 'InquiryStatusEvent', 'OutreachTouch', 'ChangeRequest',
 ] as const;
 
 /** Everything courses, golfers and the pipeline made — cleared by the launch wipe. */
@@ -40,8 +48,6 @@ export const WIPED_TABLES = [
   'BookingEvent', 'BookingShopItem', 'SentMessage', 'SmsConsent', 'ShopSale', 'ShopSaleCounter', 'ShopSaleLine', 'ShopSaleRefund', 'RegisterClose', 'RegisterOpen', 'MoneyMove', 'ShopStockReceipt', 'PromoCode', 'RoundPack', 'DemandPrice', 'MemberCharge', 'MemberStatement', 'MonthlyReview',
   'GolferNote', 'GolferBlock', 'ShiftNote', 'CourseMonthGoal', 'CourseGoal',
   'CourseEvent', 'CourseEventTask', 'CourseEventPlayer', 'CourseEventPayment', 'CourseEventRefund', 'CourseEventListItem',
-  // the pipeline
-  'CourseInquiry', 'Call', 'InquiryStatusEvent', 'OutreachTouch', 'ChangeRequest',
   // messages, announcements, problems
   'MessageThread', 'Message', 'SupportChat', 'CourseMessage', 'Announcement', 'AnnouncementDismissal', 'AdminAlert', 'AdminAlertEvent',
   // sign-in throttles
@@ -67,30 +73,115 @@ export function wipeAllOpen(now = new Date()): boolean {
 }
 
 /** What the launch wipe would clear, table by table. Reads only. */
-export async function previewWipeAll(): Promise<{ wiped: TableCounts; kept: TableCounts }> {
-  const [wiped, kept] = await Promise.all([countTables(WIPED_TABLES), countTables(KEPT_TABLES)]);
-  return { wiped, kept };
+export async function previewWipeAll(): Promise<{ wiped: TableCounts; kept: TableCounts; inquiriesUnlinked: number; courseCalls: number }> {
+  const [wiped, kept, inquiriesUnlinked, courseCalls] = await Promise.all([
+    countTables(WIPED_TABLES), countTables(KEPT_TABLES),
+    prisma.courseInquiry.count({ where: { builtCourseId: { not: null } } }),
+    prisma.call.count({ where: { courseId: { not: null } } }),
+  ]);
+  return { wiped, kept, inquiriesUnlinked, courseCalls };
 }
+
+/** Statuses that mean "on its way to, or on, a course" — the same list archivePair() moves to archived. */
+const LINKED_STATUSES = ['pending', 'in_review', 'details_requested', 'details_submitted', 'building', 'live'];
+
+export type WipeResult = { ok: true; cleared: TableCounts; inquiriesUnlinked: number; courseCalls: number } | { ok: false; error: string };
 
 /**
  * The launch wipe. One TRUNCATE over every wiped table, so the rows go
  * together or not at all. RESTRICT: if a kept table ever points at a wiped
  * one, Postgres refuses the whole statement instead of reaching into it.
+ *
+ * KEEP-OUTREACH: the outreach pipeline is kept, and two links from it into the
+ * wiped side are handled first, in the same transaction:
+ *  - CourseInquiry.builtCourseId (a plain column, no foreign key) would point at
+ *    a course that is gone. Each linked inquiry is unlinked, and archived with a
+ *    status event when it was on its way to a course, as deletePair() does.
+ *  - Call.courseId is a foreign key to Course, so Postgres will not TRUNCATE
+ *    Course while Call is kept. A course check-in call is course activity and
+ *    goes; inquiry calls are copied aside, Call is truncated with the rest, and
+ *    they are put back with no course on them.
+ * Runs in its own transaction unless the caller passes one.
  */
-export async function wipeAll(now = new Date(), db: Db = prisma): Promise<{ ok: true; cleared: TableCounts } | { ok: false; error: string }> {
+export async function wipeAll(now = new Date(), db?: Prisma.TransactionClient): Promise<WipeResult> {
   if (!wipeAllOpen(now)) return { ok: false, error: 'The launch wipe closed on Dec 1 — real courses are on the site now. Reset a single test course instead.' };
+  if (!db) return prisma.$transaction(tx => wipeAll(now, tx), { timeout: 120_000, maxWait: 10_000 });
   const cleared = await countTables(WIPED_TABLES, db);
+  const linked = await db.courseInquiry.findMany({ where: { builtCourseId: { not: null } }, select: { id: true, status: true } });
+  const toArchive = linked.filter(i => LINKED_STATUSES.includes(i.status));
+  if (toArchive.length) {
+    await db.inquiryStatusEvent.createMany({ data: toArchive.map(i => ({
+      inquiryId: i.id, fromStatus: i.status, toStatus: 'archived', trigger: 'system', actorName: 'Course removed by the launch wipe',
+    })) });
+    await db.courseInquiry.updateMany({ where: { id: { in: toArchive.map(i => i.id) } }, data: { status: 'archived' } });
+  }
+  await db.courseInquiry.updateMany({ where: { builtCourseId: { not: null } }, data: { builtCourseId: null } });
+  const courseCalls = await db.call.count({ where: { courseId: { not: null } } });
+  cleared['Call (course check-ins)'] = await db.call.count({ where: { courseId: { not: null }, inquiryId: null } });
+  // A temp table lives only in this transaction; nothing else can see it.
+  await db.$executeRawUnsafe(`DROP TABLE IF EXISTS "_wipe_kept_call"`);
+  await db.$executeRawUnsafe(`CREATE TEMP TABLE "_wipe_kept_call" ON COMMIT DROP AS SELECT * FROM "Call" WHERE "inquiryId" IS NOT NULL`);
+  await db.$executeRawUnsafe(`UPDATE "_wipe_kept_call" SET "courseId" = NULL`);
   // BOOKING-REF (Cam 2026-11-12): the course-number counter is wiped with the courses, so the next
   // course is GR1 again.
-  await db.$executeRawUnsafe(`TRUNCATE TABLE ${WIPED_TABLES.map(t => `"${t}"`).join(', ')} RESTRICT`);
+  await db.$executeRawUnsafe(`TRUNCATE TABLE ${[...WIPED_TABLES, 'Call'].map(t => `"${t}"`).join(', ')} RESTRICT`);
+  await db.$executeRawUnsafe(`INSERT INTO "Call" SELECT * FROM "_wipe_kept_call"`);
+  await db.$executeRawUnsafe(`DROP TABLE "_wipe_kept_call"`);
   // Each course's booking-number sequence ("bookref_<id>") goes with its course. TRUNCATE fires no
-  // delete trigger, so drop them here — in the same transaction when the caller passes one.
+  // delete trigger, so drop them here, in the same transaction.
   await db.$executeRawUnsafe(`DO $$ DECLARE r RECORD; BEGIN
     FOR r IN SELECT c.relname FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
              WHERE c.relkind = 'S' AND n.nspname = current_schema() AND c.relname LIKE 'bookref\\_%' LOOP
       EXECUTE 'DROP SEQUENCE ' || quote_ident(r.relname);
     END LOOP; END $$`);
-  return { ok: true, cleared };
+  return { ok: true, cleared, inquiriesUnlinked: linked.length, courseCalls };
+}
+
+/** Typed exactly to confirm clearing the test inquiries. */
+export const CLEAR_INQUIRIES_CONFIRM_WORDS = 'CLEAR TEST INQUIRIES';
+
+/** Midnight Eastern at the start of a YYYY-MM-DD day; null when it isn't a real date. */
+export function easternDayStart(day: string): Date | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return null;
+  for (const offset of [5, 4]) { // EST, then EDT
+    const d = new Date(`${day}T0${offset}:00:00Z`);
+    if (Number.isNaN(d.getTime())) return null;
+    const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23' }).formatToParts(d);
+    const get = (t: string) => parts.find(p => p.type === t)?.value;
+    if (`${get('year')}-${get('month')}-${get('day')}` === day && get('hour') === '00') return d;
+  }
+  return null;
+}
+
+/** Inquiries the outreach clear would delete: made before `before` and never built into a course. */
+function clearableInquiries(before: Date): Prisma.CourseInquiryWhereInput {
+  return { createdAt: { lt: before }, builtCourseId: null };
+}
+
+export async function previewClearTestInquiries(before: Date) {
+  const where = clearableInquiries(before);
+  const [inquiries, calls, touches, keptBuilt, keptAfter] = await Promise.all([
+    prisma.courseInquiry.count({ where }),
+    prisma.call.count({ where: { inquiry: where } }),
+    prisma.outreachTouch.count({ where: { inquiry: where } }),
+    prisma.courseInquiry.count({ where: { createdAt: { lt: before }, builtCourseId: { not: null } } }),
+    prisma.courseInquiry.count({ where: { createdAt: { gte: before } } }),
+  ]);
+  return { inquiries, calls, touches, keptBuilt, keptAfter };
+}
+
+/**
+ * KEEP-OUTREACH: the one-time clear of the test inquiries made before outreach starts (Nov 23).
+ * Deletes every inquiry created before `before` that never became a course; its calls, touches,
+ * status events, change requests and contacts go with it (foreign-key cascade). An inquiry that
+ * became a course is left alone (DELETION DOCTRINE); the launch wipe unlinks and archives it with
+ * its course. Closes with the launch wipe: after Dec 1 inquiries are real leads.
+ */
+export async function clearTestInquiries(before: Date, now = new Date()): Promise<{ ok: true; cleared: Awaited<ReturnType<typeof previewClearTestInquiries>> } | { ok: false; error: string }> {
+  if (!wipeAllOpen(now)) return { ok: false, error: 'Clearing test inquiries closed on Dec 1 — every inquiry now is a real lead.' };
+  const cleared = await previewClearTestInquiries(before);
+  const r = await prisma.courseInquiry.deleteMany({ where: clearableInquiries(before) });
+  return { ok: true, cleared: { ...cleared, inquiries: r.count } };
 }
 
 /** A test course's activity, by kind — what a reset clears. Setup is kept. */

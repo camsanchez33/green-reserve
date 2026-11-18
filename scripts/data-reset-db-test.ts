@@ -8,7 +8,7 @@
 import { readFileSync } from 'fs';
 import { prisma } from '../src/lib/prisma';
 import { applyHold } from '../src/lib/course-events';
-import { WIPED_TABLES, KEPT_TABLES, WIPE_ALL_UNTIL, wipeAll, wipeAllOpen, resetTestCourse, previewCourseReset } from '../src/lib/data-reset';
+import { WIPED_TABLES, KEPT_TABLES, WIPE_ALL_UNTIL, wipeAll, wipeAllOpen, resetTestCourse, previewCourseReset, easternDayStart, clearTestInquiries, previewClearTestInquiries } from '../src/lib/data-reset';
 
 const TAG = 'resetdbtest';
 let failed = 0;
@@ -41,6 +41,13 @@ async function seedCourse(n: string, isTest: boolean) {
   return { course, tt, blocked, tier, item, evTime };
 }
 
+async function seedInquiry(n: string, extra: Record<string, unknown> = {}) {
+  return prisma.courseInquiry.create({ data: {
+    contactName: 'C', contactTitle: 'GM', email: `${TAG}-${n}@test.local`, phone: '5550000000', courseName: `${TAG} ${n}`,
+    address: '1', city: 'T', state: 'CA', zipCode: '90210', courseType: 'public', lookingFor: [], ...extra,
+  } });
+}
+
 async function main() {
   // Every model is decided.
   const models = [...readFileSync('prisma/schema.prisma', 'utf8').matchAll(/^model (\w+) \{/gm)].map(m => m[1]);
@@ -52,6 +59,24 @@ async function main() {
   check('no table is in both lists', both.length === 0, both);
   check('the lists name only real tables', unknown.length === 0, unknown);
   check('the company side is kept', ['AdminUser', 'OwnerSession', 'AdminAuditLog', 'Expense', 'AdminGoal', 'AgreementVersion'].every(t => kept.has(t)));
+  // KEEP-OUTREACH (Cam 2026-11-18): the outreach pipeline is kept, and so is every table that hangs off an inquiry
+  // (CourseContact from #462 included, whichever PR lands first).
+  const schema = readFileSync('prisma/schema.prisma', 'utf8');
+  const onInquiry = [...schema.matchAll(/^model (\w+) \{([\s\S]*?)^\}/gm)].filter(m => /\bCourseInquiry\??\s+@relation/.test(m[2])).map(m => m[1]);
+  check('the outreach pipeline is kept', ['CourseInquiry', 'Call', 'InquiryStatusEvent', 'OutreachTouch'].every(t => kept.has(t)));
+  check('every table that points at an inquiry is kept', onInquiry.length >= 4 && onInquiry.every(t => kept.has(t)), onInquiry.filter(t => !kept.has(t)));
+  // TRUNCATE ... RESTRICT refuses when a kept table has a foreign key into a wiped one. wipeAll() handles Call → Course
+  // itself; any other such key is a new link that needs the same thought.
+  const fks = await prisma.$queryRawUnsafe<{ src: string; dst: string }[]>(
+    `SELECT c.conrelid::regclass::text AS src, c.confrelid::regclass::text AS dst FROM pg_constraint c WHERE c.contype = 'f'`);
+  const unq = (x: string) => x.replace(/"/g, '');
+  const crossing = fks.filter(f => kept.has(unq(f.src)) && wiped.has(unq(f.dst))).map(f => `${unq(f.src)} -> ${unq(f.dst)}`);
+  check('no kept table points into a wiped one, except Call -> Course (handled by wipeAll)', crossing.every(x => x === 'Call -> Course'), crossing);
+
+  // The day picker for clearing test inquiries: midnight Eastern, standard or daylight time.
+  check('midnight Eastern on Nov 23 is 05:00 UTC', easternDayStart('2026-11-23')?.toISOString() === '2026-11-23T05:00:00.000Z');
+  check('midnight Eastern in July is 04:00 UTC', easternDayStart('2026-07-01')?.toISOString() === '2026-07-01T04:00:00.000Z');
+  check('a day that does not exist, or not a day, is refused', easternDayStart('2026-02-31') === null && easternDayStart('Nov 23') === null && easternDayStart('') === null);
 
   // The launch wipe closes on Dec 1 (moved from Nov 1, Cam 2026-10-30).
   check('the launch wipe is open before Dec 1', wipeAllOpen(new Date('2026-10-31T23:00:00Z')));
@@ -93,34 +118,82 @@ async function main() {
   check('the other course is untouched',
     (await prisma.booking.count({ where: { courseId: r.course.id } })) === 1 && (await prisma.courseMembership.count({ where: { courseId: r.course.id } })) === 1 && (await prisma.shopSale.count({ where: { courseId: r.course.id } })) === 1);
 
+  // The outreach pipeline the launch wipe keeps: a lead with a touch and a discovery call, an inquiry built into
+  // the test course, and the course's own check-in call.
+  const lead = await seedInquiry('lead', { status: 'lead' });
+  await prisma.outreachTouch.create({ data: { inquiryId: lead.id, at: new Date(), channel: 'email', direction: 'out' } });
+  const discovery = await prisma.call.create({ data: { kind: 'discovery', inquiryId: lead.id, scheduledAt: new Date('2030-01-01T15:00:00Z') } });
+  const built = await seedInquiry('built', { status: 'live', builtCourseId: t.course.id });
+  const checkin = await prisma.call.create({ data: { kind: 'checkin', courseId: t.course.id, scheduledAt: new Date('2030-01-02T15:00:00Z') } });
+  const bothCall = await prisma.call.create({ data: { kind: 'discovery', inquiryId: built.id, courseId: t.course.id, scheduledAt: new Date('2030-01-03T15:00:00Z') } });
+
   // The launch wipe itself, rolled back so the rest of the test run keeps its data.
   await prisma.adminGoal.create({ data: { metric: 'courses_live', target: 1, dueAt: new Date('2030-01-01T00:00:00Z'), createdBy: TAG } });
   const keptBefore = await prisma.adminGoal.count();
   const ROLLBACK = new Error('rollback');
-  let inside: { wipedLeft: number; keptLeft: number; ok: boolean; nextCourse: number; refSeqsLeft: number } | null = null;
+  type Outreach = { lead: string | undefined; touches: number; discovery: boolean; checkin: boolean; both: string | null | undefined; built: { status: string; builtCourseId: string | null } | null; builtEvent: string | undefined; unlinked: number };
+  let inside: { wipedLeft: number; keptLeft: number; ok: boolean; nextCourse: number; refSeqsLeft: number; outreach: Outreach } | null = null;
   try {
     await prisma.$transaction(async tx => {
       const w = await wipeAll(new Date('2026-10-30T00:00:00Z'), tx);
       const left = await tx.$queryRawUnsafe<{ n: bigint }[]>(`SELECT (${WIPED_TABLES.map(x => `(SELECT COUNT(*) FROM "${x}")`).join(' + ')})::bigint AS n`);
       const refSeqs = await tx.$queryRawUnsafe<{ n: bigint }[]>(`SELECT count(*)::bigint AS n FROM pg_class WHERE relkind = 'S' AND relname LIKE 'bookref\\_%'`);
       const keptLeft = await tx.adminGoal.count();
+      const ev = await tx.inquiryStatusEvent.findFirst({ where: { inquiryId: built.id }, orderBy: { createdAt: 'desc' } });
+      const outreach: Outreach = {
+        lead: (await tx.courseInquiry.findUnique({ where: { id: lead.id } }))?.status,
+        touches: await tx.outreachTouch.count({ where: { inquiryId: lead.id } }),
+        discovery: !!(await tx.call.findUnique({ where: { id: discovery.id } })),
+        checkin: !!(await tx.call.findUnique({ where: { id: checkin.id } })),
+        both: (await tx.call.findUnique({ where: { id: bothCall.id } }))?.courseId,
+        built: await tx.courseInquiry.findUnique({ where: { id: built.id }, select: { status: true, builtCourseId: true } }),
+        builtEvent: ev ? `${ev.fromStatus}->${ev.toStatus}` : undefined,
+        unlinked: w.ok ? w.inquiriesUnlinked : -1,
+      };
       // The first course after the wipe (counted above, before it brings its own booking sequence).
       const op = await tx.courseOperator.create({ data: { name: 'After wipe', email: `${TAG}-afterwipe@test.local`, password: 'x' } });
       const first = await tx.course.create({ data: { name: 'After wipe', slug: `${TAG}-afterwipe`, operatorId: op.id, address: '1', city: 'T', state: 'CA', zipCode: '90210', holes: 18 }, select: { number: true } });
       const seq = [{ n: BigInt(first.number ?? -1) }];
-      inside = { ok: w.ok, wipedLeft: Number(left[0].n), keptLeft, nextCourse: Number(seq[0].n), refSeqsLeft: Number(refSeqs[0].n) };
+      inside = { ok: w.ok, wipedLeft: Number(left[0].n), keptLeft, nextCourse: Number(seq[0].n), refSeqsLeft: Number(refSeqs[0].n), outreach };
       throw ROLLBACK;
     }, { timeout: 60_000 });
   } catch (e) { if (e !== ROLLBACK) throw e; }
-  const got = inside as { wipedLeft: number; keptLeft: number; ok: boolean; nextCourse: number; refSeqsLeft: number } | null;
+  const got = inside as { wipedLeft: number; keptLeft: number; ok: boolean; nextCourse: number; refSeqsLeft: number; outreach: Outreach } | null;
   check('the launch wipe empties every wiped table', !!got && got.ok && got.wipedLeft === 0, got);
   check('…and keeps the company side', !!got && got.keptLeft === keptBefore, got);
   check('…and the next course is GR1 again (BOOKING-REF)', !!got && got.nextCourse === 1, got);
   check('…and every course\'s booking-number sequence went with it', !!got && got.refSeqsLeft === 0, got);
+  const o = got?.outreach;
+  check('…and keeps a lead, its touches and its discovery call', !!o && o.lead === 'lead' && o.touches === 1 && o.discovery, o);
+  check('…and a course check-in call goes with its course', !!o && !o.checkin, o);
+  check('…and an inquiry call that also named the course stays, with no course on it', !!o && o.both === null, o);
+  check('…and an inquiry built into a wiped course stays, unlinked and archived with a status event', !!o && o.built?.status === 'archived' && o.built?.builtCourseId === null && o.builtEvent === 'live->archived' && o.unlinked >= 1, o);
   check('(rolled back here: the test courses are still there)', (await prisma.course.count({ where: { slug: { startsWith: TAG } } })) === 2);
+  check('(…and the built inquiry is still linked)', (await prisma.courseInquiry.findUnique({ where: { id: built.id } }))?.builtCourseId === t.course.id);
+
+  // Clearing the test inquiries once before outreach: dated far back so nothing else in this database is in range.
+  const cutoff = new Date('2001-06-01T04:00:00Z');
+  const oldTest = await seedInquiry('old', { createdAt: new Date('2001-01-01T12:00:00Z') });
+  await prisma.outreachTouch.create({ data: { inquiryId: oldTest.id, at: new Date('2001-01-02T12:00:00Z'), channel: 'call', direction: 'out' } });
+  const oldCall = await prisma.call.create({ data: { kind: 'discovery', inquiryId: oldTest.id, scheduledAt: new Date('2001-01-03T12:00:00Z') } });
+  await prisma.inquiryStatusEvent.create({ data: { inquiryId: oldTest.id, fromStatus: 'pending', toStatus: 'in_review', trigger: 'admin' } });
+  const oldBuilt = await seedInquiry('oldbuilt', { createdAt: new Date('2001-01-01T12:00:00Z'), status: 'live', builtCourseId: r.course.id });
+  const fresh2 = await seedInquiry('new', { createdAt: new Date('2001-06-01T04:00:00Z') });
+  const late2 = await clearTestInquiries(cutoff, new Date(WIPE_ALL_UNTIL.getTime() + 1));
+  check('clearing test inquiries closes with the launch wipe', !late2.ok && !!(await prisma.courseInquiry.findUnique({ where: { id: oldTest.id } })));
+  const pv = await previewClearTestInquiries(cutoff);
+  check('the clear preview counts what it deletes and what it keeps', pv.inquiries === 1 && pv.calls === 1 && pv.touches === 1 && pv.keptBuilt === 1, pv);
+  const cl = await clearTestInquiries(cutoff, new Date('2026-11-20T12:00:00Z'));
+  check('the clear deletes an inquiry added before the day', cl.ok && cl.cleared.inquiries === 1 && !(await prisma.courseInquiry.findUnique({ where: { id: oldTest.id } })), cl);
+  check('…with its calls, touches and status events', !(await prisma.call.findUnique({ where: { id: oldCall.id } }))
+    && (await prisma.outreachTouch.count({ where: { inquiryId: oldTest.id } })) === 0 && (await prisma.inquiryStatusEvent.count({ where: { inquiryId: oldTest.id } })) === 0);
+  check('…and keeps one that became a course, and one added from midnight that day',
+    !!(await prisma.courseInquiry.findUnique({ where: { id: oldBuilt.id } })) && !!(await prisma.courseInquiry.findUnique({ where: { id: fresh2.id } })));
 }
 
 async function cleanup() {
+  await prisma.courseInquiry.deleteMany({ where: { courseName: { startsWith: TAG } } });
+  await prisma.call.deleteMany({ where: { course: { slug: { startsWith: TAG } } } });
   const courses = await prisma.course.findMany({ where: { slug: { startsWith: TAG } }, select: { id: true } });
   const ids = courses.map(x => x.id);
   await prisma.booking.deleteMany({ where: { courseId: { in: ids } } });

@@ -26,6 +26,6 @@ export async function POST(req: NextRequest) {
   if (body?.confirm !== CONFIRM_WORDS) return NextResponse.json({ error: `Type ${CONFIRM_WORDS} exactly to confirm.` }, { status: 400 });
   const result = await wipeAll();
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: 409 });
-  await auditAdmin(session, { action: 'data_wipe', targetType: 'system', targetId: '', after: result.cleared, reason: reasonOf(body) });
-  return NextResponse.json({ success: true, cleared: result.cleared });
+  await auditAdmin(session, { action: 'data_wipe', targetType: 'system', targetId: '', after: { ...result.cleared, inquiriesUnlinked: result.inquiriesUnlinked }, reason: reasonOf(body) });
+  return NextResponse.json({ success: true, cleared: result.cleared, inquiriesUnlinked: result.inquiriesUnlinked });
 }

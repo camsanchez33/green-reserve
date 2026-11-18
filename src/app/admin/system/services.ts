@@ -46,7 +46,7 @@ export interface PlatformStripe {
 export interface OrphanSweepItem { kind: 'course' | 'inquiry'; id: string; name: string; action: string; reason: string }
 export interface AcknowledgedOrphan { id: string; name: string; archivedAt: string }
 export interface Orphans { checked: boolean; items: OrphanSweepItem[]; acknowledged: AcknowledgedOrphan[]; note: string }
-export type WipePreview = { open: boolean; closesAt: string; confirmWords: string; wiped: Record<string, number>; kept: Record<string, number> };
+export type WipePreview = { open: boolean; closesAt: string; confirmWords: string; wiped: Record<string, number>; kept: Record<string, number>; inquiriesUnlinked?: number; courseCalls?: number };
 
 export type Group = 'run' | 'talk' | 'money' | 'watch' | 'owner';
 export interface Svc { id: string; g: Group; t: string; does: string; st: St; state: string }

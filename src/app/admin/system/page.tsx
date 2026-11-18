@@ -23,6 +23,7 @@ import {
   type WipePreview, type CronHealth, type Run,
   GROUPS, FILTERS, RANK, CANT, services, localSt, tools, overdue, summary, worst, matches, jobName, cronSt, twilioKeys, agreementSt,
 } from './services';
+import { InquiryClear } from './InquiryClear';
 
 const ICON = { fill: 'none', stroke: 'currentColor', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, 'aria-hidden': true };
 const SearchIco = () => <svg width="15" height="15" viewBox="0 0 24 24" strokeWidth={1.8} {...ICON}><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>;
@@ -77,7 +78,7 @@ const NO_ORPHANS: Orphans = { checked: false, items: [], acknowledged: [], note:
 
 const WIPE_SUMMARY: [string, string][] = [
   ['Course', 'courses'], ['CourseOperator', 'course logins'], ['GolferAccount', 'golfer accounts'], ['Booking', 'bookings'],
-  ['CourseInquiry', 'inquiries'], ['Call', 'calls'], ['MessageThread', 'conversations'], ['Announcement', 'announcements'],
+  ['MessageThread', 'conversations'], ['Announcement', 'announcements'],
 ];
 
 function SystemContent() {
@@ -649,7 +650,7 @@ function SystemContent() {
         const closes = new Date(w.closesAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/New_York' });
         return (
           <>
-            <p className={s.lead}>Every course, golfer, booking, inquiry, conversation and announcement on the site is test data until launch. This clears all of it in one go, so the site starts clean. Kept: admin logins, goals, expenses, company documents, agreement versions and the audit record. Stripe is not touched — refund any real test charge there. Available until {closes}, then it switches off for good.</p>
+            <p className={s.lead}>Every course, golfer, booking, conversation and announcement on the site is test data until launch. This clears all of it in one go, so the site starts clean. Kept: admin logins, goals, expenses, company documents, agreement versions, the audit record and outreach (inquiries, contacts, calls). Stripe is not touched — refund any real test charge there. Available until {closes}, then it switches off for good.</p>
             {wiped !== null && <p className={s.toast} role="status">Cleared {wiped.toLocaleString()} records.</p>}
             <div>
               {WIPE_SUMMARY.map(([t, label]) => <div key={t} className={s.cnt}><span>{label}</span><b>{(w.wiped[t] ?? 0).toLocaleString()}</b></div>)}
@@ -669,6 +670,7 @@ function SystemContent() {
                   </div>
                 </div>
               )}
+            {w.open && <InquiryClear onCleared={loadWipe} />}
           </>
         );
       }
