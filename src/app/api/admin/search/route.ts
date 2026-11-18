@@ -120,7 +120,7 @@ export async function GET(req: NextRequest) {
   const staticNav = [
     { id: 'nav:overview',    label: 'Home',          href: '/admin',            always: true },
     { id: 'nav:goals',       label: 'Goals',         href: '/admin/goals',      support: true },
-    { id: 'nav:inquiries',   label: 'Inquiries',     href: '/admin/inquiries',  always: true },
+    { id: 'nav:inquiries',   label: 'Pipeline',      href: '/admin/inquiries',  always: true },
     { id: 'nav:courses',     label: 'Courses',       href: '/admin/courses',    always: true },
     { id: 'nav:support',     label: 'Course support', href: '/admin/support',   always: true },
     { id: 'nav:revenue',     label: 'Money',         href: '/admin/revenue',    support: true },
@@ -142,7 +142,6 @@ export async function GET(req: NextRequest) {
     | { type: 'golfer'; id: string; label: string; sub: string; href: string }
     | { type: 'guest'; id: string; label: string; sub: string; href: string }
     | { type: 'employee'; id: string; label: string; sub: string; href: string }
-    | { type: 'group'; id: string; label: string; sub: string; href: string }
     | { type: 'thread'; id: string; label: string; sub: string; href: string }
     | { type: 'booking'; id: string; label: string; sub: string; href: string }
     | { type: 'nav'; id: string; label: string; sub: string; href: string };
@@ -220,7 +219,7 @@ export async function GET(req: NextRequest) {
     '/admin/announcements': 'messages', '/admin/bookings': 'money', '/admin/system': 'company', '/admin/employees': 'company',
   };
   const TYPE_AREA: Partial<Record<ResultItem['type'], AdminArea>> = {
-    course: 'courses', group: 'courses', inquiry: 'pipeline', employee: 'company', golfer: 'golfers', guest: 'golfers', booking: 'golfers', thread: 'messages',
+    course: 'courses', inquiry: 'pipeline', employee: 'company', golfer: 'golfers', guest: 'golfers', booking: 'golfers', thread: 'messages',
   };
   const testBookings = new Set(bookings.filter(b => b.course.isTest).map(b => `booking:${b.id}`));
   const allowed = results.filter(r => {

@@ -8,7 +8,7 @@ import g from '../admin-glass.module.css';
 import r from '../revenue/revenue.module.css';
 import s from './support.module.css';
 import { TERMS, SESSION_ENDED, NOT_YET, loadFailed, sendFailed, TOO_LONG } from './terms';
-import { type ThreadRow, type Thread, MAX_REPLY, isList, isThread, ago, stamp, replyText, preview } from './logic';
+import { type ThreadRow, type Thread, MAX_REPLY, isList, isThread, ago, stamp, replyText, preview, autoOpenChat } from './logic';
 
 // ADMIN-REDO Course support (Cam approved the mockup 2026-11-12, ADMIN_REDO_SPEC.md "Admin Course support"). The admin
 // side of the course dashboard's Support chats, like iMessage: ONE card — a wordless search, then every course chat
@@ -43,6 +43,8 @@ function Problem({ got, retry, busy }: { got: { msg: string; status?: number }; 
 function ChatList({ onOpen, initialQ, courseId, onAll }: { onOpen: (id: string, replace?: boolean) => void; initialQ: string; courseId: string; onAll: () => void }) {
   const [q, setQ] = useState(initialQ); // the top search opens a course's chats with ?q=
   const [got, setGot] = useState<Got<{ threads: ThreadRow[] }> | null>(null);
+  const [loadedQ, setLoadedQ] = useState<string | null>(null); // the query the shown result was fetched with
+  const opened = useRef(false);
   const [busy, setBusy] = useState(true);
   const seq = useRef(0);
   const load = useCallback(async (query: string) => {
@@ -50,14 +52,14 @@ function ChatList({ onOpen, initialQ, courseId, onAll }: { onOpen: (id: string, 
     setBusy(true);
     const res = await getJson(`/api/admin/support${query.trim() ? `?q=${encodeURIComponent(query.trim())}` : ''}`, isList, 'The chats');
     if (mine !== seq.current) return; // a later search won
-    setGot(res); setBusy(false);
+    setGot(res); setLoadedQ(query); setBusy(false);
   }, []);
   useEffect(() => { const t = setTimeout(() => load(q), q ? 250 : 0); return () => clearTimeout(t); }, [q, load]);
   const now = new Date();
   const all = got?.ok ? got.data.threads : [];
   const rows = courseId ? all.filter(t => t.courseId === courseId) : all;
-  const only = courseId && got?.ok && !q.trim() && rows.length === 1 ? rows[0].id : null;
-  useEffect(() => { if (only) onOpen(only, true); }, [only, onOpen]);
+  const only = got?.ok ? autoOpenChat(courseId, loadedQ, all, opened.current) : null;
+  useEffect(() => { if (only) { opened.current = true; onOpen(only, true); } }, [only, onOpen]);
   return (
     <section className={`${g.glass} ${s.card}`} aria-label="Course chats">
       <label className={s.search}>
@@ -66,7 +68,7 @@ function ChatList({ onOpen, initialQ, courseId, onAll }: { onOpen: (id: string, 
       </label>
       {got && !got.ok && <Problem got={got} retry={() => load(q)} busy={busy} />}
       {!got && <div className={r.skel} aria-busy="true" aria-label="Loading chats" />}
-      {courseId && got?.ok && <p className={s.note}>{rows[0] ? `Only ${rows[0].courseName}'s chats.` : 'No chats with this course yet.'} <button type="button" className={s.allBtn} onClick={onAll}>Show every chat</button></p>}
+      {courseId && got?.ok && <p className={s.note}>{rows[0] ? `Only ${rows[0].courseName}'s chats.` : q.trim() ? 'No chat matches.' : 'No chats with this course yet.'} <button type="button" className={s.allBtn} onClick={onAll}>Show every chat</button></p>}
       {got?.ok && rows.length === 0 && !courseId && <p className={s.empty}>{q.trim() ? 'No chat matches.' : 'No chats yet.'}</p>}
       {got?.ok && (
         <ul className={`${s.list} ${busy ? s.stale : ''}`}>

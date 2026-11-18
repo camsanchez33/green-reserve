@@ -8,7 +8,7 @@ import CommandPalette from '@/components/admin/CommandPalette';
 import { useAdminSession } from '@/lib/admin-session-context';
 import type { AdminArea } from '@/lib/admin-areas';
 
-export type AdminNavKey = 'overview' | 'bookings' | 'problems' | 'goals' | 'inquiries' | 'courses' | 'groups' | 'create' | 'employees' | 'announcements' | 'messages' | 'profile' | 'revenue' | 'expenses' | 'finance' | 'support' | 'business' | 'golfers' | 'system' | 'company' | 'audit' | 'security';
+export type AdminNavKey = 'overview' | 'bookings' | 'problems' | 'goals' | 'inquiries' | 'courses' | 'groups' | 'employees' | 'announcements' | 'messages' | 'profile' | 'revenue' | 'expenses' | 'finance' | 'support' | 'business' | 'golfers' | 'system' | 'company' | 'audit' | 'security';
 
 export default function AdminSidebar({ active, pendingInquiries = 0 }: {
   active: AdminNavKey;

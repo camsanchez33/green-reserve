@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
         senderName,
         courseName: course.name,
         messageBody: body.trim(),
-        replyUrl: `${process.env.NEXT_PUBLIC_URL}/admin/support?courseId=${session.courseId}`,
+        replyUrl: `${process.env.NEXT_PUBLIC_URL}/admin/support?id=${thread.id}`, // the course's earlier messages on Course support
       });
       await prisma.messageThread.update({
         where: { id: thread.id },
