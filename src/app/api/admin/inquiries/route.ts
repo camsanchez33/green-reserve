@@ -874,9 +874,10 @@ async function handleAction(
       const drivingRangeType = str(fv2.rangeTeeType, '');
       const rangeBuckets = Array.isArray(fv2.rangeBuckets) ? (fv2.rangeBuckets as Record<string, unknown>[]) : [];
       const rangeBallsFree = rangeBuckets.length === 0;
-      const rangeBallsSmallPrice = rangeBuckets[0] ? flt(rangeBuckets[0].price, 0) : 0;
-      const rangeBallsMediumPrice = rangeBuckets[1] ? flt(rangeBuckets[1].price, 0) : 0;
-      const rangeBallsLargePrice = rangeBuckets[2] ? flt(rangeBuckets[2].price, 0) : 0;
+      // RANGE-1: the course's buckets become its bucket list (Range shop items with a ball count), not the old
+      // three size prices. A row without a name, a whole number of balls and a price above $0 is left for the course.
+      const bucketSpecs = rangeBuckets.map(b => ({ name: str(b.label, '').trim().slice(0, 80), balls: Number(b.balls), priceCents: dollarsToCentsOr0(flt(b.price, 0)) }))
+        .filter(b => b.name && Number.isInteger(b.balls) && b.balls >= 1 && b.balls <= 2000 && b.priceCents > 0 && b.priceCents <= 1_000_000).slice(0, 30);
       const hasPuttingGreen = !!(fv2.puttingGreen ?? d.hasPuttingGreen);
       const hasShortGameArea = !!(fv2.chippingArea ?? d.hasShortGameArea);
       const hasProShop = !!(fv2.proShop ?? d.hasProShop);
@@ -1020,9 +1021,6 @@ async function handleAction(
         // operator's sheet.
         caddieType: '', caddieLooperRateCents: 0, caddieForeRateCents: 0, caddieNote: '',
         hasDrivingRange, drivingRangeType, rangeBallsFree,
-        rangeBallsSmallPriceCents: dollarsToCentsOr0(rangeBallsSmallPrice),
-        rangeBallsMediumPriceCents: dollarsToCentsOr0(rangeBallsMediumPrice),
-        rangeBallsLargePriceCents: dollarsToCentsOr0(rangeBallsLargePrice),
         hasPuttingGreen, hasShortGameArea, hasProShop, proShopPhone,
         restaurantType, hasCartGirl: false, hasLessons, hasClubRental,
         hasPushCartRental, pushCartRateCents: dollarsToCentsOr0(pushCartRate), hasBagStorage, hasLockerRoom,
@@ -1088,6 +1086,10 @@ async function handleAction(
         data: { status: 'building', builtCourseId },
       });
       await logEvent(inquiryId, from, 'building', 'admin', adminName);
+      if (builtCourseId && bucketSpecs.length) {
+        const courseId = builtCourseId;
+        await prisma.shopItem.createMany({ data: bucketSpecs.map((b, i) => ({ courseId, name: b.name, category: 'Range', priceCents: b.priceCents, rangeBalls: b.balls, sortOrder: i })) });
+      }
 
       const nineNameToId = new Map<string, string>();
       const comboKeyToProductId = new Map<string, string>();

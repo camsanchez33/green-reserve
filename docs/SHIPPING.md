@@ -35,10 +35,13 @@ rule and still allowed `prisma db push` — that advice is gone on purpose.**
 7. Push the branch; `.github/workflows/schema-check.yml` must pass.
 8. Merge PR to main → Vercel build command is:
    `prisma generate && node scripts/migrate-prod.js && next build`
-   `scripts/migrate-prod.js` runs `prisma migrate deploy` **only when
-   `VERCEL_ENV === 'production'`** and exits non-zero (fails the build) if
-   it errors. Preview builds skip it entirely — safe even if they share
-   `DATABASE_URL` with prod.
+   `scripts/migrate-prod.js` runs `prisma migrate deploy` when
+   `VERCEL_ENV === 'production'` and exits non-zero (fails the build) if
+   it errors. Previews skip it, except the `staging` branch's preview when it
+   is set up for its own database (docs/RELEASES.md §2; it refuses any
+   database holding a real course). Skipping migrations does NOT make a
+   preview safe on prod's `DATABASE_URL`: the preview's code still reads and
+   writes production data. Previews must not use prod's database.
 9. Post-deploy: confirm `/api/health` returns 200 (DB query succeeds)
 10. Run `npx prisma migrate status` — must show "Database schema is up to date"
 
@@ -60,11 +63,12 @@ in `.env.local` only.
 - Schema: Neon PITR (see docs/RESTORE.md) — point-in-time recovery in the console;
   or write a compensating migration (`migrate dev --name revert-x`)
 
-**Vercel preview env status:** Vercel auto-creates preview deployments for every branch.
-Preview deployments share the production `DATABASE_URL` by default. This is safe
-because `scripts/migrate-prod.js` only runs migrations when `VERCEL_ENV === 'production'`
-— previews skip it automatically. No manual override needed just to prevent accidental
-migration; still override if you need the preview to point at a branch DB for testing.
+**Vercel preview env status (updated 2026-11-18):** Vercel auto-creates preview deployments for every branch.
+Until now every preview failed to build (no `JWT_SECRET` in the Preview scope), so nothing ever ran against the
+database. Once previews build, a preview that inherits the production `DATABASE_URL` runs unreleased code against
+customer data: migrations are skipped, but every read and write is real. So no Preview-scoped variable may point
+at the production database. Previews get no database or the schema-only `preview` Neon branch; `staging` gets its
+own schema-only branch (docs/RELEASES.md §2, §12).
 
 ---
 

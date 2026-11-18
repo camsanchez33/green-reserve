@@ -165,7 +165,7 @@ async function cleanup() {
   ok('stock value: this course\'s shelf only', s.retailValueCents === 3 * 8000 + 10 * 500 && s.units === 13, s);
   ok('cost where known', s.costValueCents === 3 * 4000 && s.costUnknownItems === 1, s);
   ok('not selling: the jacket last sold in February; balls sold in May', s.notSelling.length === 1 && s.notSelling[0].name === 'Rain jacket' && s.notSelling[0].lastSoldAt === new Date('2031-02-01T15:00:00Z').toISOString(), s.notSelling);
-  ok('shop revenue is the ledger\'s shop + food & beverage (Revenue\'s split)', (await shopLedgerCents(c.id, range, now)) === revenueAll.segments.shopCents + revenueAll.segments.fnbCents && revenueAll.segments.shopCents + revenueAll.segments.fnbCents === 1000);
+  ok('shop revenue is the ledger\'s shop + food & beverage (Revenue\'s split)', (await shopLedgerCents(c.id, range, now)) === revenueAll.segments.shopCents + revenueAll.segments.fnbCents + revenueAll.segments.rangeCents - revenueAll.rangeOnRoundsCents && revenueAll.segments.shopCents + revenueAll.segments.fnbCents === 1000);
 
   // ── Projections ──
   const p = (await projections(c.id, now))!;

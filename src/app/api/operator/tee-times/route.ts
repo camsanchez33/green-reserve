@@ -89,7 +89,7 @@ export async function GET(req: NextRequest) {
         // Part of a group checking in is priced on the sheet as the server charges it (lib/member-rates partyFees).
         greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, residentRateCents: true, memberRateCents: true, memberCartCents: true,
         // CART-3: who rides and the range-ball buckets, for checkout's Riding and Range balls rows.
-        cartSelected: true, cartRiders: true, cartUnitCents: true, rangeBallsSize: true,
+        cartSelected: true, cartRiders: true, cartUnitCents: true, rangeBallsSize: true, rangeBuckets: true,
         // CART-4: the cart numbers the group took (the row, the card, the ticket and the starter's sheet).
         cartNumbers: true,
         // POS-1a: pro-shop items added to the round, for the panel.

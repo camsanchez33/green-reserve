@@ -9,31 +9,36 @@
 //    rode). The count is kept in Booking.cartRiders; lib/member-rates partyFees gives the booker's side the riders
 //    first, so a partial check-in, Pay separately or a party-size change charge the riders, never the walkers.
 //  • A time that can't be walked keeps every player riding.
-//  • Range balls: each size at the course's price (Settings → range; free = $0); the counts are kept on the booking as
-//    "small:2,large:1" in rangeBallsSize (a single size word from an online booking reads as one bucket).
+//  • Range balls (RANGE-1, replaces CART-3's three sizes): the course's own buckets (lib/range-buckets — its one list,
+//    the register's too). A bucket already on the booking keeps its booked price; a new one is at the list price now
+//    ($0 while balls come with a round). Kept as booked in Booking.rangeBuckets; rangeBallsTotal is their sum. A booking
+//    from before the list keeps its buckets whole ("as booked") or has them taken off whole.
 //  • Refused once the round is paid, being paid, checked in, a no-show, on a round pack, or an event time — the same
 //    gates as residents (lib/booking-residents). Conditional update on what was read; one price_changed event.
 import { prisma } from './prisma';
 import { recordBookingEvent, teeTimeInstant, type EventActor } from './booking-events';
 import { cartsFor, cartRuleOf } from './cart-pricing';
-import { BALL_SIZES, MAX_BUCKETS, ballCounts, ballField, type BallCounts, type BallSize } from './range-balls';
+import { Prisma } from '@prisma/client';
+import { applyChange, courseBuckets, linesOf, snapshotOf } from './range-buckets';
 
 export type ExtrasResult =
   | { ok: true; cartRiders: number; cartFeeTotal: number; rangeBallsTotal: number; totalAmount: number }
   | { ok: false; status: number; error: string };
 const fail = (status: number, error: string): ExtrasResult => ({ ok: false, status, error });
 
-export async function setCheckoutExtras(courseId: string, bookingId: string, input: { riders?: unknown; balls?: unknown }, actor: EventActor): Promise<ExtrasResult> {
+export async function setCheckoutExtras(courseId: string, bookingId: string, input: { riders?: unknown; balls?: unknown; buckets?: unknown }, actor: EventActor): Promise<ExtrasResult> {
   return prisma.$transaction(async tx => {
+    // RANGE-1: two taps on the bucket rows can't each write lines without the other's (the shop's row lock, lib/shop).
+    await tx.$queryRaw`SELECT id FROM "Booking" WHERE id = ${bookingId} FOR UPDATE`;
     const b = await tx.booking.findUnique({
       where: { id: bookingId },
       select: {
         id: true, courseId: true, status: true, players: true, appliedRate: true, paymentStatus: true, paidOffline: true,
         checkedInAt: true, noShowAt: true, roundPaymentIntentId: true, shopLockedAt: true, readerStartedAt: true,
         cartSelected: true, cartFeeTotal: true, cartUnitCents: true, cartRiders: true, memberRateCents: true, memberCartCents: true,
-        rangeBallsSize: true, rangeBallsTotal: true, totalAmount: true,
+        rangeBallsSize: true, rangeBallsTotal: true, rangeBuckets: true, totalAmount: true,
         teeTime: { select: { date: true, time: true, cartFeeCents: true, walkingAllowed: true, eventId: true } },
-        course: { select: { timezone: true, cartPricing: true, rangeBallsFree: true, rangeBallsSmallPriceCents: true, rangeBallsMediumPriceCents: true, rangeBallsLargePriceCents: true } },
+        course: { select: { timezone: true, cartPricing: true, hasDrivingRange: true, rangeBallsFree: true } },
       },
     });
     if (!b || b.courseId !== courseId) return fail(404, 'Booking not found.');
@@ -69,27 +74,23 @@ export async function setCheckoutExtras(courseId: string, bookingId: string, inp
     }
 
     // ── range balls ──
-    let counts = ballCounts(b.rangeBallsSize, b.rangeBallsTotal);
+    // CART-3's { small, medium, large } came from a page from before the bucket list: refused, never re-priced.
+    if (input.balls !== undefined) return fail(409, 'This page is out of date — refresh it to see your range buckets.');
+    const before = linesOf(b);
+    let lines = before;
     let rangeBallsTotal = b.rangeBallsTotal;
-    if (input.balls !== undefined) {
-      const raw = (input.balls && typeof input.balls === 'object' ? input.balls : {}) as Record<string, unknown>;
-      const next: BallCounts = { small: 0, medium: 0, large: 0 };
-      for (const k of BALL_SIZES) {
-        const n = raw[k] === undefined ? 0 : Number(raw[k]);
-        if (!Number.isInteger(n) || n < 0 || n > MAX_BUCKETS) return fail(400, `Buckets are 0 to ${MAX_BUCKETS} of each size.`);
-        next[k] = n;
-      }
-      const price: BallCounts = b.course.rangeBallsFree ? { small: 0, medium: 0, large: 0 }
-        : { small: b.course.rangeBallsSmallPriceCents, medium: b.course.rangeBallsMediumPriceCents, large: b.course.rangeBallsLargePriceCents };
-      const offered = (k: BallSize) => b.course.rangeBallsFree || price[k] > 0;
-      for (const k of BALL_SIZES) if (next[k] > 0 && !offered(k)) return fail(409, `This course has no ${k} bucket price — set one in Settings.`);
-      counts = next;
-      rangeBallsTotal = BALL_SIZES.reduce((s, k) => s + counts[k] * price[k], 0);
+    if (input.buckets !== undefined) {
+      const r = applyChange(before, input.buckets, b.course.hasDrivingRange ? await courseBuckets(tx, b.courseId) : [], b.course.rangeBallsFree);
+      if (!r.ok) return fail(r.status, b.course.hasDrivingRange ? r.error : 'Turn on the driving range in Settings to sell buckets.');
+      // Range turned off: buckets already on the booking can still come off (never charged for balls it can't have).
+      lines = r.lines;
+      rangeBallsTotal = r.total;
     }
+    const bucketsSame = JSON.stringify(lines) === JSON.stringify(before);
 
     const totalAmount = b.totalAmount + (cartFeeTotal - b.cartFeeTotal) + (rangeBallsTotal - b.rangeBallsTotal);
     if (totalAmount < 0) return fail(409, 'That would make the total negative — refresh and try again.');
-    if (riders === nowRiders && cartFeeTotal === b.cartFeeTotal && rangeBallsTotal === b.rangeBallsTotal && ballField(counts) === ballField(ballCounts(b.rangeBallsSize, b.rangeBallsTotal))) {
+    if (riders === nowRiders && cartFeeTotal === b.cartFeeTotal && rangeBallsTotal === b.rangeBallsTotal && bucketsSame) {
       return { ok: true, cartRiders: riders, cartFeeTotal, rangeBallsTotal, totalAmount: b.totalAmount };
     }
     // Conditional on what was just read: a charge that started in between leaves this undone, never half-applied.
@@ -97,7 +98,9 @@ export async function setCheckoutExtras(courseId: string, bookingId: string, inp
       where: { id: b.id, status: 'confirmed', totalAmount: b.totalAmount, cartFeeTotal: b.cartFeeTotal, rangeBallsTotal: b.rangeBallsTotal, roundPaymentIntentId: '', shopLockedAt: null, readerStartedAt: null, checkedInAt: null },
       data: {
         cartSelected: riders > 0, cartFeeTotal, cartRiders: riders > 0 && !(riders === b.players && cartUnitCents == null) ? riders : null, cartUnitCents: riders > 0 ? cartUnitCents : b.cartUnitCents, memberCartCents: riders > 0 ? memberCartCents : b.memberCartCents,
-        rangeBallsSize: ballField(counts), rangeBallsTotal, totalAmount,
+        // RANGE-1: the lines are the record; a pre-list size word goes once its buckets are written as lines.
+        ...(bucketsSame ? {} : { rangeBallsSize: '', rangeBuckets: snapshotOf(lines) ?? Prisma.DbNull }),
+        rangeBallsTotal, totalAmount,
       },
     });
     if (done.count === 0) return fail(409, 'This booking just changed — refresh and try again.');
@@ -105,7 +108,7 @@ export async function setCheckoutExtras(courseId: string, bookingId: string, inp
       bookingId: b.id, courseId: b.courseId, type: 'price_changed', actor,
       amountCents: totalAmount, playerCount: b.players,
       teeTimeAt: teeTimeInstant(b.course.timezone, b.teeTime.date, b.teeTime.time),
-      metadata: { reason: 'checkout_extras', ridersBefore: nowRiders, ridersAfter: riders, cartBefore: b.cartFeeTotal, cartAfter: cartFeeTotal, ballsBefore: b.rangeBallsTotal, ballsAfter: rangeBallsTotal, buckets: ballField(counts) },
+      metadata: { reason: 'checkout_extras', ridersBefore: nowRiders, ridersAfter: riders, cartBefore: b.cartFeeTotal, cartAfter: cartFeeTotal, ballsBefore: b.rangeBallsTotal, ballsAfter: rangeBallsTotal, buckets: lines.map(l => `${l.qty}x${l.itemId ?? 'booked'}@${l.unitCents}`).join(',') },
     });
     return { ok: true, cartRiders: riders, cartFeeTotal, rangeBallsTotal, totalAmount };
   });

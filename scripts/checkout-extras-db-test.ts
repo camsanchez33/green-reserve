@@ -4,8 +4,10 @@
 // stays after a party-size change pays for the riders it holds (the booker's side first) — never for walkers.
 // Needs a database. Run: npx tsx scripts/checkout-extras-db-test.ts
 import { prisma } from '../src/lib/prisma';
-import { setCheckoutExtras } from '../src/lib/checkout-extras';
 import { ballCounts, ballField, ballWords } from '../src/lib/range-balls';
+import { setCheckoutExtras } from '../src/lib/checkout-extras';
+import { addItemToBooking } from '../src/lib/shop';
+import { updateItem, deleteItem } from '../src/lib/shop-catalog';
 import { partyFees } from '../src/lib/member-rates';
 import { splitShares } from '../src/lib/split-booking';
 import { splitBooking } from '../src/lib/split-booking-db';
@@ -38,7 +40,7 @@ async function cleanup() {
   ok('paying separately: the 2 who leave walk (the booker keeps the riders); totals add up', !!sh && sh.leave.cartFeeTotal === 0 && sh.keep.cartFeeTotal === 4000 && sh.keep.totalAmount + sh.leave.totalAmount === 24000, sh);
 
   const op = await prisma.courseOperator.create({ data: { name: 'x', email: `${TAG}@test.local`, password: 'x' } });
-  const mk = (n: string, o: Record<string, unknown> = {}) => prisma.course.create({ data: { name: n, slug: `${TAG}-${n}`, operatorId: op.id, address: '1', city: 'T', state: 'CA', zipCode: '9', holes: 18, timezone: 'UTC', cancellationHours: 24, hasDrivingRange: true, rangeBallsFree: false, rangeBallsSmallPriceCents: 800, rangeBallsLargePriceCents: 1400, ...o } });
+  const mk = (n: string, o: Record<string, unknown> = {}) => prisma.course.create({ data: { name: n, slug: `${TAG}-${n}`, operatorId: op.id, address: '1', city: 'T', state: 'CA', zipCode: '9', holes: 18, timezone: 'UTC', cancellationHours: 24, hasDrivingRange: true, rangeBallsFree: false, ...o } });
   const c = await mk('a'), cart = await mk('b', { cartPricing: 'per_cart' }), other = await mk('c');
   const date = addDaysStr(todayIn('UTC'), 3);
   const tt = await prisma.teeTime.create({ data: { courseId: c.id, date, time: '09:00', holes: 18, greenFeeCents: 5000, cartFeeCents: 2000, playersAvailable: 8, playersBooked: 4, status: 'available' } });
@@ -56,10 +58,49 @@ async function cleanup() {
   ok('…0 riding: no cart at all', g0.cartFeeTotal === 0 && !g0.cartSelected && g0.cartRiders === null && g0.totalAmount === 20600);
   await setCheckoutExtras(c.id, g.id, { riders: 3 }, actor);
   ok('…taking a cart from walking: 3 riders at the tee time\'s $20', (await bk(g.id)).cartFeeTotal === 6000);
-  const balls = await setCheckoutExtras(c.id, g.id, { balls: { small: 2, large: 1 } }, actor);
+  // RANGE-1: the course's own bucket list (Range shop items), the booked price kept.
+  const small = await prisma.shopItem.create({ data: { courseId: c.id, name: 'Small', category: 'Range', priceCents: 800, rangeBalls: 35 } });
+  const jumbo = await prisma.shopItem.create({ data: { courseId: c.id, name: 'Jumbo', category: 'Range', priceCents: 1400, rangeBalls: 120 } });
+  const theirs = await prisma.shopItem.create({ data: { courseId: other.id, name: 'Theirs', category: 'Range', priceCents: 100, rangeBalls: 10 } });
+  const balls = await setCheckoutExtras(c.id, g.id, { buckets: { [small.id]: 2, [jumbo.id]: 1 } }, actor);
   const gb = await bk(g.id);
-  ok('range balls: 2 small ($8) + 1 large ($14) = $30, added to the total', balls.ok && gb.rangeBallsTotal === 3000 && gb.rangeBallsSize === 'small:2,large:1' && gb.totalAmount === 20600 + 6000 + 3000, { balls, gb });
-  ok('…a size with no price is refused', !(await setCheckoutExtras(c.id, g.id, { balls: { medium: 1 } }, actor)).ok);
+  const lines = gb.rangeBuckets as { itemId: string; unitCents: number; qty: number }[];
+  ok('range balls: 2 Small ($8) + 1 Jumbo ($14) = $30, added to the total, kept as booked', balls.ok && gb.rangeBallsTotal === 3000 && gb.totalAmount === 20600 + 6000 + 3000 && lines.length === 2 && lines.some(l => l.itemId === small.id && l.qty === 2 && l.unitCents === 800), { balls, gb });
+  ok('…CART-3 sizes from an old page are refused', !(await setCheckoutExtras(c.id, g.id, { balls: { small: 1 } }, actor)).ok);
+  ok('…another course\'s bucket is refused', !(await setCheckoutExtras(c.id, g.id, { buckets: { [theirs.id]: 1 } }, actor)).ok && (await bk(g.id)).rangeBallsTotal === 3000);
+  await prisma.shopItem.update({ where: { id: small.id }, data: { priceCents: 1000 } });
+  await setCheckoutExtras(c.id, g.id, { buckets: { [small.id]: 3 } }, actor);
+  ok('…a price change never reaches it: a 3rd Small is at the booked $8', (await bk(g.id)).rangeBallsTotal === 3 * 800 + 1400);
+  await prisma.shopItem.update({ where: { id: jumbo.id }, data: { active: false } });
+  ok('…a bucket no longer sold can\'t grow', !(await setCheckoutExtras(c.id, g.id, { buckets: { [jumbo.id]: 2 } }, actor)).ok);
+  const off = await setCheckoutExtras(c.id, g.id, { buckets: { [jumbo.id]: 0 } }, actor);
+  ok('…but comes off at its booked price', off.ok && (await bk(g.id)).rangeBallsTotal === 2400 && (await bk(g.id)).totalAmount === 20600 + 6000 + 2400, off);
+  // A booking from before the list: one line at exactly its total, kept or taken off whole — never re-priced.
+  const old = await book({ teeTimeId: tt.id, courseId: c.id, players: 2, greenFeeTotal: 10000, cartFeeTotal: 0, accessFeeTotal: 0, rangeBallsSize: 'small:2', rangeBallsTotal: 1600, totalAmount: 11600 });
+  ok('an older booking: its buckets can\'t be re-counted', !(await setCheckoutExtras(c.id, old.id, { buckets: { booked: 2 } }, actor)).ok);
+  await setCheckoutExtras(c.id, old.id, { buckets: { [small.id]: 1 } }, actor);
+  const o1 = await bk(old.id);
+  ok('…adding a list bucket keeps the old ones at their $16', o1.rangeBallsTotal === 1600 + 1000 && o1.totalAmount === 12600 && o1.rangeBallsSize === '', o1);
+  await setCheckoutExtras(c.id, old.id, { buckets: { booked: 0 } }, actor);
+  const o2 = await bk(old.id);
+  ok('…and they come off whole', o2.rangeBallsTotal === 1000 && o2.totalAmount === 11000, o2);
+  await setCheckoutExtras(c.id, old.id, { buckets: { [small.id]: 0 } }, actor);
+  ok('…none left: nothing stored', (await bk(old.id)).rangeBuckets === null && (await bk(old.id)).rangeBallsTotal === 0);
+  await prisma.course.update({ where: { id: c.id }, data: { rangeBallsFree: true } });
+  await setCheckoutExtras(c.id, old.id, { buckets: { [small.id]: 2 } }, actor);
+  ok('balls with a round: a bucket at checkout is $0', (await bk(old.id)).rangeBallsTotal === 0 && ((await bk(old.id)).rangeBuckets as unknown[]).length === 1);
+  await prisma.course.update({ where: { id: c.id }, data: { rangeBallsFree: false } });
+  // Range turned off: a booking's buckets still come off (never charged for balls it can't have), none go on.
+  await prisma.course.update({ where: { id: c.id }, data: { hasDrivingRange: false } });
+  ok('range off: no bucket can go on', !(await setCheckoutExtras(c.id, g.id, { buckets: { [small.id]: 4 } }, actor)).ok);
+  const offOk = await setCheckoutExtras(c.id, g.id, { buckets: { [small.id]: 0 } }, actor);
+  ok('…but the booking\'s buckets come off, the total follows', offOk.ok && (await bk(g.id)).rangeBallsTotal === 0 && (await bk(g.id)).totalAmount === 20600 + 6000, offOk);
+  await prisma.course.update({ where: { id: c.id }, data: { hasDrivingRange: true } });
+  ok('a bucket can\'t be given sizes or colors', !(await updateItem(c.id, small.id, { name: 'Small', priceCents: 1000, options: [{ label: 'A' }, { label: 'B' }] }))?.ok);
+  const del = await deleteItem(c.id, jumbo.id);
+  ok('a bucket is hidden, never deleted (bookings hold it as booked)', !!del && del.hidden && !!(await prisma.shopItem.findUnique({ where: { id: jumbo.id } })));
+  const asItem = await addItemToBooking(c.id, g.id, small.id, 1, 'staff@test');
+  ok('a bucket can\'t also go on the round as a shop item (one way to pay for it)', !asItem.ok && asItem.status === 409, asItem);
   ok('…more riders than players is refused', !(await setCheckoutExtras(c.id, g.id, { riders: 5 }, actor)).ok);
   ok('…another course can\'t touch it', !(await setCheckoutExtras(other.id, g.id, { riders: 1 }, actor)).ok);
 

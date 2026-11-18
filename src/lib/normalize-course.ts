@@ -3,6 +3,7 @@ import { facilityLines } from '@/lib/facilities';
 import { centsToDollarsOr0 } from './money';
 import { walkingSummary } from './walking';
 import { golferConditionLines } from './course-conditions';
+import { onlineRangeOn } from './range-buckets';
 /**
  * Maps a Prisma Course row (camelCase) onto the snake_case shape the golfer-facing
  * UI (CourseCard, /courses, /courses/[slug]) was built against. Used by every public
@@ -72,9 +73,11 @@ export function normalizeDbCourse(c: any, startingGreenFee = 0) {
     // the course actually charges. Loose types are where a rename stops
     // protecting you, so these read the cents columns and convert explicitly.
     // The wire contract for this normalizer stays DOLLARS.
-    range_balls_small_price: centsToDollarsOr0(c.rangeBallsSmallPriceCents),
-    range_balls_medium_price: centsToDollarsOr0(c.rangeBallsMediumPriceCents),
-    range_balls_large_price: centsToDollarsOr0(c.rangeBallsLargePriceCents),
+    // RANGE-1 (Cam 2026-11-17/18): the course's buckets for the booking page, from its one list — only when it sells
+    // them with tee times (loaders that don't include the list send none). The old size prices are no longer read.
+    range_buckets: onlineRangeOn({ hasDrivingRange: !!c.hasDrivingRange, sellRangeOnline: !!c.sellRangeOnline, rangeBallsFree: c.rangeBallsFree !== false }) && Array.isArray(c.rangeBucketItems)
+      ? (c.rangeBucketItems as { id: string; name: string; rangeBalls: number | null; priceCents: number }[]).map(i => ({ id: i.id, name: i.name, balls: i.rangeBalls, price_cents: i.priceCents }))
+      : [],
     cancellation_hours:      c.cancellationHours ?? 24,
     // BOOKING WINDOWS: the picker greys out days the viewer cannot book.
     public_advance_days:     c.publicAdvanceDays ?? 7,
