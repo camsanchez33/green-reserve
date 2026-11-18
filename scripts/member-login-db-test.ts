@@ -462,7 +462,7 @@ async function main() {
   const bNear = await hb(tNear.id, home.id, homeEmail.toUpperCase());
   const bFar = await hb(tFar.id, home.id, homeEmail, { stripePaymentMethodId: 'pm_test', feePaidCents: 300 });
   await hb(tPast.id, home.id, homeEmail);
-  await hb(tPaid.id, home.id, homeEmail, { paymentStatus: 'paid', paidAt: new Date() });
+  const bPaid = await hb(tPaid.id, home.id, homeEmail, { paymentStatus: 'paid', paidAt: new Date() });
   await hb(tGone.id, home.id, homeEmail, { status: 'cancelled' });
   await hb(tNear.id, home.id, `someone-else@${TAG}.test`);
   await hb(tOther.id, b.id, homeEmail);
@@ -470,12 +470,32 @@ async function main() {
   const up = (hs.body?.upcoming ?? []) as { bookingId: string; manageUrl: string; date: string; time: string; players: number; holes: number; membersOnlyDay: boolean; dueLine: string }[];
   check('Your <Course>: benefits in one line', hs.body?.benefits === '20% off every round and you can book 9 days out. 6 guest passes a year.', hs.body?.benefits);
   check('…renews on the end date when it renews itself', hs.body?.renewsOn === homeEnd && hs.body?.expiresOn === null && hs.body?.autoRenew === true, hs.body);
-  check('…upcoming: this course, this email (any case), confirmed, still to come, soonest first', up.map(u => u.bookingId).join() === [bNear.id, up[1]?.bookingId, bFar.id].join() && up.length === 3, up);
+  check('…upcoming: this course, this email (any case), confirmed, still to come, soonest first', up.map(u => u.bookingId).join() === [bNear.id, bPaid.id, bFar.id].join() && up.length === 3, up);
   check('…each opens its manage page with the emailed token, as a path on this site', up[0]?.manageUrl === `/manage/${bNear.id}?token=${TAG}-tok-1` && up[0].date === tomorrow && up[0].time === '09:00' && up[0].players === 2 && up[0].holes === 18, up[0]);
   check('…no card held: "Total due at the course"', up[0]?.dueLine === 'Total due at the course: $103.00', up[0]);
   check('…paid: "Paid"', up[1]?.dueLine === 'Paid', up[1]);
   check('…card on file, fee taken at booking: "Estimated total at check-in" less the fee', up[2]?.dueLine === 'Estimated total at check-in: $100.00', up[2]);
   check('…a day outside the public window is a members-only day', up[2]?.membersOnlyDay === true && up[0]?.membersOnlyDay === false, up.map(u => u.membersOnlyDay));
+  // Members switched off in Settings (lib/pricing-switch): no member rate is charged, so none is promised.
+  await prisma.course.update({ where: { id: home.id }, data: { hasMemberPricing: false } });
+  const hsOff = await get(`/api/member/${home.slug}/session`, await cookie(home.id, homeEmail));
+  check('…Members pricing off: the line keeps the window and guest passes, not the rate', hsOff.body?.benefits === 'You can book 9 days out. 6 guest passes a year.', hsOff.body?.benefits);
+  await prisma.course.update({ where: { id: home.id }, data: { hasMemberPricing: true } });
+  // More due-line cases and the no-token link, found by id.
+  const tMore = await htt(addDaysStr(todayIn('UTC'), 3), '08:00');
+  const bCardNoFee = await hb(tMore.id, home.id, homeEmail, { stripePaymentMethodId: 'pm_test', feePaidCents: 0 });
+  const bGrown = await hb(tMore.id, home.id, homeEmail, { stripePaymentMethodId: 'pm_test', feePaidCents: 300, accessFeeTotal: 600, totalAmount: 10600 });
+  const bNoTok = await hb(tMore.id, home.id, homeEmail, { checkInToken: null });
+  const upMore = ((await get(`/api/member/${home.slug}/session`, await cookie(home.id, homeEmail))).body?.upcoming ?? []) as { bookingId: string; manageUrl: string; dueLine: string }[];
+  const byId = (id: string) => upMore.find(u => u.bookingId === id);
+  check('…card on file, no fee taken: the whole estimated total', byId(bCardNoFee.id)?.dueLine === 'Estimated total at check-in: $103.00', byId(bCardNoFee.id));
+  check('…a party that grew after the fee was taken: only the fee already taken comes off', byId(bGrown.id)?.dueLine === 'Estimated total at check-in: $103.00', byId(bGrown.id));
+  check('…a booking with no emailed token opens the course page', byId(bNoTok.id)?.manageUrl === `/courses/${home.slug}`, byId(bNoTok.id));
+  // At most 20, soonest first — counted in the query, so today's passed times never shorten the list.
+  for (let i = 0; i < 20; i++) await hb(tPast.id, home.id, homeEmail);
+  for (let i = 0; i < 20; i++) await hb(tFar.id, home.id, homeEmail);
+  const upCap = ((await get(`/api/member/${home.slug}/session`, await cookie(home.id, homeEmail))).body?.upcoming ?? []) as { bookingId: string; date: string }[];
+  check('…the list stops at 20, and a pile of today\'s passed bookings doesn\'t shorten it', upCap.length === 20 && upCap[0]?.bookingId === bNear.id, { n: upCap.length, first: upCap[0] });
   await prisma.courseMembership.updateMany({ where: { courseId: home.id }, data: { autoRenew: false } });
   const hs2 = await get(`/api/member/${home.slug}/session`, await cookie(home.id, homeEmail));
   check('…expires on the end date when it does not renew itself', hs2.body?.expiresOn === homeEnd && hs2.body?.renewsOn === null && hs2.body?.autoRenew === false, hs2.body);

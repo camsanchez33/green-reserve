@@ -8,6 +8,7 @@ import { todayIn, clockIn } from './course-time';
 import { withinWindow } from './booking-window';
 import { rulesFor } from './booking-rules';
 import { memberBenefitParts, type BenefitTier } from './member-benefits';
+import { feeCoveredCents } from './booking-fees';
 import type { WindowCourse } from './booking-window';
 
 const usd = (cents: number) => `$${(cents / 100).toFixed(2)}`;
@@ -15,11 +16,14 @@ const usd = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 /**
  * One sentence of what the golfer's groups give here, e.g. "20% off every round and you can book 9 days out. 6 guest
  * passes a year." `tier` is the live membership's (null when there is none, or it has lapsed), `resident` whether a
- * resident card is good today. Null when neither gives anything.
+ * resident card is good today. `memberPricing` is the course's Members switch (lib/pricing-switch): off, no member rate
+ * is charged anywhere, so none is promised here; the window and guest passes are not prices and stay. Null when
+ * nothing applies.
  */
-export function benefitsSentence(tier: BenefitTier | null, member: boolean, resident: boolean, course: WindowCourse): string | null {
+export function benefitsSentence(tier: BenefitTier | null, member: boolean, resident: boolean, course: WindowCourse, memberPricing = true): string | null {
   if (member) {
-    const parts = memberBenefitParts(tier, course);
+    const priced = tier && !memberPricing ? { ...tier, discountPct: null, greenFeeWeekdayCents: null, greenFeeWeekendCents: null, lineRates: null } : tier;
+    const parts = memberBenefitParts(priced, course);
     const rate = parts.find(p => !p.startsWith('book ') && !p.includes('guest pass'));
     const window = parts.find(p => p.startsWith('book '));
     const passes = parts.find(p => p.includes('guest pass'));
@@ -35,9 +39,9 @@ export function benefitsSentence(tier: BenefitTier | null, member: boolean, resi
 export function dueLine(b: { paymentStatus: string; paidOffline: boolean; paidAt: Date | null; stripePaymentMethodId: string | null; totalAmount: number; accessFeeTotal: number; feePaidCents: number | null }): string {
   if (b.paymentStatus === 'paid' || b.paidOffline || b.paidAt) return 'Paid';
   if (!b.stripePaymentMethodId) return `Total due at the course: ${usd(b.totalAmount)}`;
-  // FEE-AT-BOOKING: the booking fee was taken when they booked; check-in collects the rest.
-  const due = (b.feePaidCents ?? 0) > 0 ? b.totalAmount - b.accessFeeTotal : b.totalAmount;
-  return `Estimated total at check-in: ${usd(due)}`;
+  // FEE-AT-BOOKING: the part of the booking fee already taken is not collected again (lib/booking-fees, as the round
+  // charge counts it, so a party that grew after booking still shows what check-in will take).
+  return `Estimated total at check-in: ${usd(b.totalAmount - feeCoveredCents(b))}`;
 }
 
 export type UpcomingBooking = { bookingId: string; manageUrl: string; date: string; time: string; players: number; holes: number; membersOnlyDay: boolean; dueLine: string };
@@ -52,18 +56,16 @@ export async function upcomingFor(course: { id: string; slug: string; timezone: 
   const today = todayIn(course.timezone, now);
   const clock = clockIn(course.timezone, now);
   const rows = await prisma.booking.findMany({
-    where: { courseId: course.id, status: 'confirmed', golferEmail: ciEquals(email.trim()), teeTime: { date: { gte: today } } },
+    // Still to come on the course's clock: a later day, or today after now (in the query, so `take` is exact).
+    where: { courseId: course.id, status: 'confirmed', golferEmail: ciEquals(email.trim()), OR: [{ teeTime: { date: { gt: today } } }, { teeTime: { date: today, time: { gt: clock } } }] },
     select: {
       id: true, players: true, checkInToken: true, paymentStatus: true, paidOffline: true, paidAt: true, stripePaymentMethodId: true, totalAmount: true, accessFeeTotal: true, feePaidCents: true,
       teeTime: { select: { date: true, time: true, holes: true, product: { select: { publicAdvanceDays: true, minPlayers: true, maxPlayers: true } } } },
     },
     orderBy: [{ teeTime: { date: 'asc' } }, { teeTime: { time: 'asc' } }],
-    take: take + 10,
+    take,
   });
-  return rows
-    .filter(b => b.teeTime.date > today || b.teeTime.time > clock)
-    .slice(0, take)
-    .map(b => ({
+  return rows.map(b => ({
       bookingId: b.id,
       // The link the confirmation email sent to this same address (the log-in already proved the email), as a path on
       // this site (Golfer lane, Build 2026-11-18); a booking with no token gets the course page, as the email does.
