@@ -1,4 +1,5 @@
 'use client';
+import { freshRecents } from '@/lib/admin-palette-pages';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
@@ -18,7 +19,12 @@ const MAX_RECENTS = 5;
 
 function loadRecents(): SearchResult[] {
   if (typeof window === 'undefined') return [];
-  try { return JSON.parse(localStorage.getItem(RECENTS_KEY) ?? '[]'); } catch { return []; }
+  try {
+    const saved: SearchResult[] = JSON.parse(localStorage.getItem(RECENTS_KEY) ?? '[]');
+    const fresh = freshRecents(Array.isArray(saved) ? saved : []);
+    if (JSON.stringify(fresh) !== JSON.stringify(saved)) localStorage.setItem(RECENTS_KEY, JSON.stringify(fresh));
+    return fresh;
+  } catch { return []; }
 }
 
 function saveRecent(item: SearchResult) {
