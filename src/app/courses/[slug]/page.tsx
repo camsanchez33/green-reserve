@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import { notFound } from 'next/navigation';
 import { OG_BASE } from '@/lib/seo';
 import type { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
@@ -42,6 +43,8 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
   // page's layout shift, and waiting for it was most of its LCP.
   const { slug } = await params;
   const initialCourse = await loadPublicCourse(slug);
+  // An unknown course is a real 404 (status and page), not the booking page with a message on it.
+  if (!initialCourse) notFound();
   return (
     <Suspense>
       <CourseDetailPage params={params} initialCourse={initialCourse} />

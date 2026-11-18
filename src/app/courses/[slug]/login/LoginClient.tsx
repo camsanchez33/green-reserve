@@ -21,11 +21,16 @@ export type LoginCourse = {
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-export default function LoginClient({ course, back }: { course: LoginCourse; back: string }) {
+export default function LoginClient({ course, back, linkFailed = false }: { course: LoginCourse; back: string; linkFailed?: boolean }) {
   const router = useRouter();
   const slug = course.slug;
   const backHref = safeBack(back, slug);
-  const backLabel = backHref.startsWith('/book?') ? 'Back to your booking' : 'Back to tee times';
+  // The visible Back links go where a logged-out golfer can be: the Book page or the tee times. (The member page
+  // needs a log-in and would send them straight back here.) After log-in, backHref is used as given.
+  const home = `/courses/${slug}`;
+  // The tee times keep their date and players (the course page reads them from the URL only).
+  const leaveHref = backHref.startsWith('/book?') || backHref === home || backHref.startsWith(`${home}?`) ? backHref : home;
+  const backLabel = leaveHref.startsWith('/book?') ? 'Back to your booking' : 'Back to tee times';
   const [step, setStep] = useState<'email' | 'code'>('email');
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
@@ -105,9 +110,10 @@ export default function LoginClient({ course, back }: { course: LoginCourse; bac
         {/* The site layout's main element is the page's one main landmark; this is its content. */}
         <div className={g.wrap}>
           <div className={g.bk} style={{ maxWidth: 440 }}>
-            <Link href={backHref} className={`${g.lnk} ${g.back}`}>‹ {backLabel}</Link>
+            <Link href={leaveHref} className={`${g.lnk} ${g.back}`}>‹ {backLabel}</Link>
             <h2 ref={headRef} tabIndex={-1}>Log in to {course.name}</h2>
             <p className={g.pol}>{loginLine(course.name, course.login_groups)} No account needed to book a tee time.</p>
+            {linkFailed && !loginOff && step === 'email' && <p className={g.pol} role="status">That emailed log-in link didn&rsquo;t work. Ask for a code instead.</p>}
 
             {loginOff ? (
               <p className={g.pol} role="status">{course.name} doesn&rsquo;t offer log-in online. Ask the pro shop for your rate.</p>
@@ -159,7 +165,7 @@ export default function LoginClient({ course, back }: { course: LoginCourse; bac
             )}
 
             <p className={g.pol} style={{ marginTop: 18 }}>Not set up? Ask the pro shop.</p>
-            <p className={g.pol}>Booking as a guest is fine, no account needed. <Link className={g.lnk} href={backHref}>{backLabel}</Link></p>
+            <p className={g.pol}>Booking as a guest is fine, no account needed. <Link className={g.lnk} href={leaveHref}>{backLabel}</Link></p>
           </div>
         </div>
       </div>

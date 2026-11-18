@@ -105,6 +105,8 @@ type CourseWithBrand = Course & {
   member_login_on?: boolean;
   /** The groups that can log in here (loginGroups, #495). */
   login_groups?: ('members' | 'residents')[];
+  /** #486: the course's "Let golfers set tee time alerts" switch. false = no alert entry points. Absent = on. */
+  tee_time_alerts_on?: boolean;
   gift_card_url?: string;
   photos?: { id: string; url: string; sortOrder: number }[];
   tee_sets?: { name: string; yardage: number; rating: number; slope: number }[];
@@ -216,6 +218,10 @@ export default function CourseDetailPage({
   const [alertName, setAlertName] = useState('');
   const [alertSubmitting, setAlertSubmitting] = useState(false);
   const [alertSent, setAlertSent] = useState(false);
+  // #486: a guest's alert waits for the emailed confirm link ('pending'); a logged-in member's is on at once ('active').
+  const [alertPending, setAlertPending] = useState(false);
+  // An active (logged-in) alert goes to the log-in email, which the server names (masked).
+  const [alertTo, setAlertTo] = useState('');
   const [alertError, setAlertError] = useState('');
 
   const [memberSession, setMemberSession] = useState<ActiveMemberSession | null>(null);
@@ -451,6 +457,7 @@ export default function CourseDetailPage({
     setAlertEmail('');
     setAlertName('');
     setAlertSent(false);
+    setAlertPending(false);
     setAlertError('');
     alertOpener.current = typeof document !== 'undefined' ? (document.activeElement as HTMLElement | null) : null;
     setAlertModal({ teeTimeId, date: selectedDate, courseId: String(course.id) });
@@ -489,6 +496,10 @@ export default function CourseDetailPage({
         setAlertError(d.error || 'That did not go through — try again.');
         return;
       }
+      const done = await r.json().catch(() => ({}));
+      // Fail safe: only an answer that says 'active' reads as set.
+      setAlertPending(done?.status !== 'active');
+      setAlertTo(typeof done?.maskedEmail === 'string' ? done.maskedEmail : '');
       setAlertSent(true);
     } catch {
       setAlertError('Network error — the alert was not set. Check your connection and try again.');
@@ -710,6 +721,7 @@ export default function CourseDetailPage({
   const loginOn = loginOffered(course);
   const loginHref = `/courses/${slug}/login?back=${encodeURIComponent(`/courses/${slug}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`)}`;
   const groupWords = (memberSession?.groups?.length ? memberSession.groups.map(gr => gr.name) : memberSession?.tier?.name ? [memberSession.tier.name] : []).join(' and ');
+  const alertsOn = course.tee_time_alerts_on !== false;
   const shortDay = (ds: string) => { const d = new Date(ds + 'T12:00:00'); return `${d.toLocaleDateString('en-US', { weekday: 'short' })} ${d.getDate()}`; };
   const longDate = (ds: string) => new Date(ds + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
@@ -891,7 +903,7 @@ export default function CourseDetailPage({
             ) : null}
             {bestFewer > 0 && <button type="button" className={g.chip} onClick={() => setPlayers(bestFewer)}>Same day for {bestFewer}</button>}
             {dayHasTimes && <button type="button" className={g.chip} onClick={resetFilters}>Widen my search</button>}
-            <button type="button" className={g.chip} onClick={() => openAlert()}>Tell me when a time opens</button>
+            {alertsOn && <button type="button" className={g.chip} onClick={() => openAlert()}>Tell me when a time opens</button>}
           </div>
         </>)}
       </div>
@@ -914,13 +926,14 @@ export default function CourseDetailPage({
                 return (
                   <button key={t.id} type="button" className={`${g.tc} ${isFull ? g.full : ''}`}
                     aria-label={isFull
-                      ? `${formatTime(t.time)}, ${round}, full. Tell me if it opens`
+                      ? `${formatTime(t.time)}, ${round}, full${alertsOn ? '. Tell me if it opens' : ''}`
                       : `${formatTime(t.time)}, ${round}, ${t.players_available} ${t.players_available === 1 ? 'spot' : 'spots'} open, $${price} per player${hasMemberRate ? `, member price, public price $${t.green_fee}` : ''}`}
-                    onClick={isFull ? () => openAlert(t.id) : () => bookTime(t)}>
+                    disabled={isFull && !alertsOn}
+                    onClick={isFull ? () => { if (alertsOn) openAlert(t.id); } : () => bookTime(t)}>
                     <span className={g.t}>{formatTime(t.time)}</span>
                     <span className={g.c}>{round} · {isFull ? 'Full' : `${t.players_available} open`}</span>
                     <span className={g.b}>
-                      <span>{isFull ? 'Tell me if it opens' : hasMemberRate ? 'Your price' : t.list_green_fee != null ? 'Last-minute' : h ? `${h} holes` : ''}</span>
+                      <span>{isFull ? (alertsOn ? 'Tell me if it opens' : '') : hasMemberRate ? 'Your price' : t.list_green_fee != null ? 'Last-minute' : h ? `${h} holes` : ''}</span>
                       <b>{struck != null && <s>${struck}</s>}${price}</b>
                     </span>
                   </button>
@@ -1154,8 +1167,10 @@ export default function CourseDetailPage({
         <div className={g.modalBack} onClick={closeAlert}>
           <div className={g.modal} role="dialog" aria-modal="true" aria-labelledby="alert-h" onClick={e => e.stopPropagation()}>
             {alertSent ? (<>
-              <h2 id="alert-h">Alert set</h2>
-              <p>We&apos;ll email you when {alertModal.teeTimeId ? 'that time' : 'a time'} opens on {longDate(alertModal.date)}. First come, first served.</p>
+              <h2 id="alert-h">{alertPending ? 'Almost done' : 'Alert set'}</h2>
+              <p>{alertPending
+                ? 'Check your email to turn it on.'
+                : `We'll email ${alertTo || 'you'} when ${alertModal.teeTimeId ? 'that time' : 'a time'} opens on ${longDate(alertModal.date)}. First come, first served.`}</p>
               <button type="button" className={g.btn} onClick={closeAlert} autoFocus>Done</button>
             </>) : (<>
               <h2 id="alert-h">Tell me when a time opens</h2>

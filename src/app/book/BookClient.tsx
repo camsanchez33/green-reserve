@@ -21,6 +21,7 @@ import { CourseHeaderBar } from '@/components/CourseHeaderBar';
 import { describePolicy, policyFrom, afterCutoffLine, insideWindowLine, policyMoney, holdTodayLine, holdsAtCutoff, type CancelPolicy } from '@/lib/cancel-policy';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
 import { LIKE_UNSAFE_EMAIL } from '@/lib/like-exact';
+import { SUPPORT_EMAIL } from '@/lib/contact';
 import { golferLookVars, lookAccentHex, lookMode, lookText, type BookingLook, type CourseLook } from '@/components/golfer/look';
 import g from '@/components/golfer/golfer.module.css';
 import { loginOffered } from '@/app/courses/[slug]/login/login-helpers';
@@ -908,10 +909,29 @@ function CheckoutForm({ onRangeStale, teeTimeId, players, cartSelected, rangeBuc
 }
 
 
+// The Book page's footer, in the course's look (the site footer skips /book). Privacy, Terms and support stay
+// on every state of the page: the form, the confirmation and the errors.
+function BookFooter({ course }: { course: CourseInfo | null | undefined }) {
+  const look = course ? golferLookVars(course) : golferLookVars({});
+  return (
+    <footer className={g.bookfoot} style={look}>
+      <span>Powered by <Link href="/">GreenReserve</Link></span>
+      <span className={g.bookfootLinks}>
+        <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>
+        <Link href="/privacy">Privacy</Link>
+        <Link href="/terms">Terms</Link>
+      </span>
+    </footer>
+  );
+}
+
 export default function BookClient({ initial }: { initial?: BookInitial }) {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-paper" />}>
-      <BookPageInner initial={initial} />
-    </Suspense>
+    <>
+      <Suspense fallback={<div className="min-h-screen bg-paper" />}>
+        <BookPageInner initial={initial} />
+      </Suspense>
+      <BookFooter course={initial?.course} />
+    </>
   );
 }

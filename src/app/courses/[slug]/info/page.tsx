@@ -55,7 +55,7 @@ export default async function CourseInfoPage({ params }: { params: Promise<{ slu
   return (
     <div className="bg-paper min-h-screen">
       <CourseHeader course={frame} accent={accent} active="info" />
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
         {(course.description || facts.length > 0) && (
           <section>
             <h2 className="font-serif font-semibold text-ink text-[28px] leading-none mb-4">About the course</h2>
@@ -137,7 +137,7 @@ export default async function CourseInfoPage({ params }: { params: Promise<{ slu
             </ul>
           </section>
         )}
-      </main>
+      </div>
       <CourseFooter course={frame} accent={accent} />
     </div>
   );

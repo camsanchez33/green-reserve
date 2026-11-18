@@ -1,5 +1,5 @@
 'use client';
-import { use, useEffect, useMemo, useState, FormEvent } from 'react';
+import { use, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Check, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -151,136 +151,6 @@ function PaymentStatusBadge({ status }: { status: string }) {
   return <StatusDot status={s.tone} label={s.label} />;
 }
 
-// ── Sign-in panel ──────────────────────────────────────────────────────────────
-
-function SignInPanel({
-  slug,
-  errorParam,
-}: {
-  slug: string;
-  errorParam: string | null;
-}) {
-  const [email, setEmail] = useState('');
-  const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
-  const [err, setErr] = useState('');
-
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    setSending(true);
-    setErr('');
-    try {
-      const res = await fetch(`/api/member/${slug}/send-code`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim().toLowerCase() }),
-      });
-      if (res.ok) {
-        setSent(true);
-      } else {
-        setErr('Something went wrong. Please try again.');
-      }
-    } catch {
-      setErr('Something went wrong. Please try again.');
-    } finally {
-      setSending(false);
-    }
-  }
-
-  return (
-    <div className="min-h-screen bg-paper flex flex-col">
-      <div className="max-w-md mx-auto w-full px-4 py-16">
-        <Link
-          href={`/courses/${slug}`}
-          className="inline-flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink mb-8"
-        >
-          <ArrowLeft size={14} />
-          Back to course
-        </Link>
-
-        <div className="bg-white rounded-lg border border-line p-8">
-          <div className="mb-6">
-            <h1 className="text-2xl font-serif font-semibold tracking-tight text-ink mt-1">
-              Log in to your account
-            </h1>
-            <p className="text-sm text-ink mt-1">
-              Enter your email — we&apos;ll send you a one-click log-in link.
-            </p>
-          </div>
-
-          {errorParam === 'invalid' && (
-            <div className="flex items-start gap-2 bg-bad/5 border border-bad/20 rounded-md p-3 mb-4 text-sm text-bad">
-              <StatusDot status="bad" />
-              That log-in link has expired or is invalid. Request a new one below.
-            </div>
-          )}
-          {errorParam === 'busy' && (
-            <div className="flex items-start gap-2 bg-warn/5 border border-warn/20 rounded-md p-3 mb-4 text-sm text-warn">
-              <StatusDot status="warn" />
-              Too many log-in attempts from your network. Wait a few minutes and open the link again.
-            </div>
-          )}
-          {errorParam === 'inactive' && (
-            <div className="flex items-start gap-2 bg-warn/5 border border-warn/20 rounded-md p-3 mb-4 text-sm text-warn">
-              <StatusDot status="bad" />
-              Your membership is inactive. Contact the course for assistance.
-            </div>
-          )}
-
-          {sent ? (
-            <div className="text-center py-4">
-              <p className="font-semibold text-ink mb-1">Check your email</p>
-              <p className="text-sm text-ink">
-                If <strong>{email}</strong> is registered as a member, a log-in link is on its way.
-                It expires in 15 minutes.
-              </p>
-              <button
-                onClick={() => { setSent(false); setEmail(''); }}
-                className="mt-4 text-sm text-pine hover:text-pine-hover font-semibold"
-              >
-                Use a different email
-              </button>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label htmlFor="email" className="block text-xs font-medium text-ink-soft mb-1.5">
-                  Email address
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="w-full border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10"
-                />
-              </div>
-              {err && (
-                <p className="text-sm text-bad flex items-center gap-1.5">
-                  <StatusDot status="bad" /> {err}
-                </p>
-              )}
-              <button
-                type="submit"
-                disabled={sending || !email.trim()}
-                className="w-full py-3 rounded-md bg-pine hover:bg-pine-hover disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium text-sm transition-colors flex items-center justify-center gap-2"
-              >
-                {sending && <Loader2 size={15} className="animate-spin" />}
-                {sending ? 'Sending…' : 'Send log-in link'}
-              </button>
-            </form>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Member dashboard ───────────────────────────────────────────────────────────
-
 function MemberDashboard({
   slug,
   session,
@@ -379,8 +249,11 @@ function MemberDashboard({
     router.push(`/book?${qp}`);
   }
 
+  // A failed log-out leaves the session as it was, so the page must say so rather than look logged out.
+  const [signOutErr, setSignOutErr] = useState(false);
   async function handleSignOut() {
-    await fetch(`/api/member/${slug}/logout`, { method: 'POST' });
+    const r = await fetch(`/api/member/${slug}/logout`, { method: 'POST' }).catch(() => null);
+    if (!r || !r.ok) { setSignOutErr(true); return; }
     onSignOut();
   }
 
@@ -415,6 +288,7 @@ function MemberDashboard({
             
             Log out
           </button>
+          {signOutErr && <span role="alert" className="text-xs text-bad">Couldn&rsquo;t log out. Try again.</span>}
         </div>
       </div>
 
@@ -839,6 +713,7 @@ export default function MemberPortalPage({
   const sp = use(searchParams);
   const errorParam = sp?.error ?? null;
 
+  const router = useRouter();
   const [session, setSession] = useState<MemberSession | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -852,6 +727,15 @@ export default function MemberPortalPage({
       .catch(() => setLoading(false));
   }, [slug]);
 
+  // One log-in (Build 2026-11-18): logged out, this page sends the golfer to the course's code log-in, which comes
+  // back here. An old emailed link that failed (?error=…) says so there, in one line that names no reason.
+  useEffect(() => {
+    if (loading || session) return;
+    const q = new URLSearchParams({ back: `/courses/${slug}/member` });
+    if (errorParam) q.set('link', 'failed');
+    router.replace(`/courses/${slug}/login?${q}`);
+  }, [loading, session, slug, errorParam, router]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center">
@@ -861,14 +745,18 @@ export default function MemberPortalPage({
   }
 
   if (!session) {
-    return <SignInPanel slug={slug} errorParam={errorParam} />;
+    return (
+      <div className="min-h-screen bg-paper flex items-center justify-center">
+        <Loader2 size={24} className="animate-spin text-ok" aria-label="Opening Log in" />
+      </div>
+    );
   }
 
   return (
     <MemberDashboard
       slug={slug}
       session={session}
-      onSignOut={() => setSession(null)}
+      onSignOut={() => router.replace(`/courses/${slug}`)}
     />
   );
 }
