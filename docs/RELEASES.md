@@ -50,9 +50,11 @@ domain or left out (staging must never email a real golfer), and no Twilio keys,
 `NEXT_PUBLIC_BASE_URL=https://staging.greenreserve.app`.
 
 **Migrations on staging.** Today `migrate-prod.js` only migrates when `VERCEL_ENV=production`, so staging would run
-new code against an old schema. Change: also migrate when the build sets `MIGRATE_ON_BUILD=1`, and set that
-variable only in the staging-branch Preview scope. Other previews never migrate. This is a config change and needs
-final-reviewer.
+new code against an old schema. Change (PR `build/release-ci`): set `MIGRATE_ON_BUILD` to the staging database's
+**host** (the host in staging's `DIRECT_URL`), scoped to Preview + branch `staging` only. The build migrates only
+when it is a preview of branch `staging` and `DIRECT_URL`'s host equals that value. So the production URL pasted
+into staging's variables by mistake fails the staging build instead of applying unreleased migrations to
+production, and the variable leaking to other previews does nothing. A plain `=1` switch wouldn't catch that paste.
 
 **Crons don't run on staging.** Vercel runs crons only in production. To test a cron on staging, call its route
 by hand with staging's `CRON_SECRET`. Nothing else in this proposal depends on staging crons.
@@ -235,7 +237,8 @@ Each of those is a workflow change that gates merges, so: Build's OK, then final
    new value, and make sure no Preview-scoped variable points at the production database.
 2. Neon: create branch `staging` with **schema only** (no data).
 3. Vercel → Settings → Domains: add `staging.greenreserve.app`, assigned to Git branch `staging`.
-4. Vercel → Environment Variables: the staging set in §2, scoped Preview + branch `staging`.
+4. Vercel → Environment Variables: the staging set in §2, plus `MIGRATE_ON_BUILD` = the staging Neon host, all
+   scoped Preview + branch `staging`.
 5. Stripe (test mode): a webhook endpoint for `https://staging.greenreserve.app` and its signing secret in the
    staging scope.
 6. Do the rollback drill (§6) once before Nov 26.
