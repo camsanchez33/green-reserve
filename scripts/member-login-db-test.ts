@@ -474,6 +474,12 @@ async function main() {
   await prisma.courseMembership.updateMany({ where: { courseId: home.id, inviteEmail: homeEmail }, data: { autoRenewFailedAt: new Date(), expiresAt: new Date(`${addDaysStr(todayIn('UTC'), -1)}T00:00:00Z`) } });
   const hsFail = await get(`/api/member/${home.slug}/session`, await cookie(home.id, homeEmail));
   check('…renewalFailed true after a declined renewal at the end of the term (the Golfer lane\'s "Your renewal didn\'t go through")', hsFail.body?.renewalFailed === true, hsFail.body);
+  // The member turns automatic renewal off from their emailed link: nothing is failing any more (Build 2026-11-18).
+  const homeM = await prisma.courseMembership.findFirstOrThrow({ where: { courseId: home.id, inviteEmail: homeEmail }, select: { id: true } });
+  const off = await fetch(`${BASE_URL}/api/membership/${homeM.id}/auto-renew`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: `${TAG}-home` }) });
+  const hsOffRenew = await get(`/api/member/${home.slug}/session`, await cookie(home.id, homeEmail));
+  check('…and false once auto-renew is turned off (the flag is cleared)', off.status === 200 && hsOffRenew.body?.renewalFailed === false && hsOffRenew.body?.autoRenew === false && (await prisma.courseMembership.findUniqueOrThrow({ where: { id: homeM.id } })).autoRenewFailedAt === null, { status: off.status, body: hsOffRenew.body });
+  await prisma.courseMembership.update({ where: { id: homeM.id }, data: { autoRenew: true, autoRenewFailedAt: new Date() } });
   // Staff moved "Runs until" on by hand (comped, or paid outside): the old flag stays set, but the term is current.
   await prisma.courseMembership.updateMany({ where: { courseId: home.id, inviteEmail: homeEmail }, data: { expiresAt: new Date(`${homeEnd}T00:00:00Z`) } });
   const hsMoved = await get(`/api/member/${home.slug}/session`, await cookie(home.id, homeEmail));
