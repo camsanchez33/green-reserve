@@ -1,0 +1,543 @@
+<title>GreenReserve Assistant Mockup</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600&family=Libre+Franklin:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a mockup strip (screen + look), then one screen at a time. Dashboard and admin reuse the approved
+   charcoal-glass and dark-green-glass tokens; the golfer and homepage screens reuse the approved booking page
+   and homepage tokens. The assistant is a panel at the right on desktop and a full sheet on a phone. */
+:root{
+  --page:#EDEEE9;--page-ink:#141814;--page-muted:#5F645E;--page-line:#D7D9D1;--chip:#FFFFFF;
+  --serif:"EB Garamond",Georgia,"Times New Roman",serif;
+  --sans:"Libre Franklin",-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--page:#121312;--page-ink:#ECEEE8;--page-muted:#9A9F97;--page-line:#2C2E2C;--chip:#1C1D1C;color-scheme:dark}}
+:root[data-theme="dark"]{--page:#121312;--page-ink:#ECEEE8;--page-muted:#9A9F97;--page-line:#2C2E2C;--chip:#1C1D1C;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--sans);font-size:14px;line-height:1.45}
+button,input,textarea,select{font:inherit}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid #4CC183;outline-offset:2px}
+
+/* Mockup strip */
+.strip{max-width:1280px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 12px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+.strip h1{font-family:var(--serif);font-weight:600;font-size:24px;margin:0 auto 0 0;line-height:1.1}
+.seg{display:inline-flex;flex-wrap:wrap;background:var(--chip);border:1px solid var(--page-line);border-radius:999px;padding:3px;gap:2px}
+.seg button{font-size:13px;font-weight:500;border:0;background:transparent;color:var(--page-ink);padding:6px 12px;border-radius:999px;cursor:pointer;min-height:32px}
+.seg button[aria-pressed="true"]{background:var(--page-ink);color:var(--page)}
+.note{max-width:1280px;margin:0 auto 10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));font-size:12.5px;color:var(--page-muted)}
+.stage{max-width:1280px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 32px}
+.screen[hidden]{display:none!important}
+
+/* ---------- Shared app frame (dashboard + admin) ---------- */
+.app{position:relative;isolation:isolate;overflow:hidden;border-radius:24px;background:var(--bg);color:var(--ink);
+  display:grid;grid-template-columns:220px minmax(0,1fr) 380px;min-height:720px;box-shadow:0 0 0 1px var(--page-line)}
+.app.two{grid-template-columns:220px minmax(0,1fr)}
+.app.dash{
+  --bg:#1D1E1D;--panel:rgba(48,50,48,.46);--panel-solid:#2A2B2A;--edge:rgba(255,255,255,.09);
+  --ink:#EDEEEB;--ink-soft:#C6C8C3;--muted:#979A95;--line:rgba(255,255,255,.08);
+  --rail:rgba(30,31,30,.45);--hover:rgba(255,255,255,.05);--active:#323432;
+  --shadow:0 1px 0 rgba(255,255,255,.07) inset,0 12px 34px rgba(0,0,0,.34);
+  --brand:#EDEEEB;--brand-ink:#161716;--course:#2E8F5E;--ok:#6DD39A;--warn:#E3B05C;--bad:#F08C78;
+  --blob1:#4A4D4B;--blob2:#2E302F;--blob3:#3F4240;--bubble:rgba(255,255,255,.08)}
+.app.dash[data-mode="light"]{
+  --bg:#E9EAE6;--panel:rgba(255,255,255,.55);--panel-solid:#F8F8F5;--edge:rgba(255,255,255,.8);
+  --ink:#191B19;--ink-soft:#3E423E;--muted:#62675F;--line:rgba(0,0,0,.08);
+  --rail:rgba(255,255,255,.38);--hover:rgba(255,255,255,.6);--active:#F8F8F5;
+  --shadow:0 1px 0 rgba(255,255,255,.7) inset,0 8px 30px rgba(0,0,0,.07);
+  --brand:#1E201E;--brand-ink:#FFFFFF;--ok:#285A3C;--warn:#7A4A10;--bad:#9A3B26;
+  --blob1:#CDD0CC;--blob2:#DEDFDB;--blob3:#D5D6D2;--bubble:rgba(0,0,0,.05)}
+.app.admin{
+  --bg:#0D1F19;--panel:rgba(22,52,42,.48);--panel-solid:#14302A;--edge:rgba(160,230,195,.14);
+  --ink:#E8F2EC;--ink-soft:#BFD2C7;--muted:#8FA79A;--line:rgba(200,240,220,.10);
+  --rail:rgba(14,36,29,.45);--hover:rgba(60,140,100,.16);--active:rgba(120,210,160,.18);
+  --shadow:0 1px 0 rgba(200,255,225,.08) inset,0 10px 34px rgba(0,0,0,.30);
+  --brand:#4CC183;--brand-ink:#0B1F16;--course:#4CC183;--ok:#6DD39A;--warn:#E3B05C;--bad:#F08C78;
+  --blob1:#1E6B4A;--blob2:#123B2E;--blob3:#3B5E3A;--bubble:rgba(120,210,160,.10)}
+.blob{position:absolute;border-radius:50%;filter:blur(80px);z-index:-1;pointer-events:none}
+.b1{width:520px;height:520px;background:var(--blob1);left:-140px;top:-160px}
+.b2{width:580px;height:580px;background:var(--blob2);right:-180px;top:180px}
+.b3{width:420px;height:420px;background:var(--blob3);left:40%;bottom:-220px}
+.card{background:var(--panel);border:1px solid var(--edge);border-radius:16px;box-shadow:var(--shadow);-webkit-backdrop-filter:blur(22px) saturate(1.2);backdrop-filter:blur(22px) saturate(1.2)}
+@media (prefers-reduced-transparency:reduce){.card,.rail,.asst{-webkit-backdrop-filter:none;backdrop-filter:none}.card{background:var(--panel-solid)}}
+.rail{background:var(--rail);border-right:1px solid var(--line);padding:20px 12px;display:flex;flex-direction:column;gap:16px;min-width:0;-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+.club{display:flex;gap:10px;align-items:center;padding:0 6px}
+.club i{width:30px;height:30px;border-radius:50%;background:var(--course);display:grid;place-items:center;font-style:normal;font-family:var(--serif);font-weight:600;color:#fff;flex:none}
+.club b{font-family:var(--serif);font-size:17px;font-weight:600;line-height:1.1}
+.grp{display:flex;flex-direction:column;gap:2px}
+.grp>b{font-size:12.5px;color:var(--ink);padding:0 10px 4px;font-weight:700}
+.nav{font-size:13.5px;color:var(--ink-soft);padding:8px 10px;border-radius:10px;display:flex;align-items:center;gap:8px}
+.nav.on{background:var(--active);color:var(--ink);font-weight:600;box-shadow:var(--shadow)}
+.nav.on::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--course)}
+.main{padding:20px 22px 26px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.main h2{font-family:var(--serif);font-size:26px;font-weight:600;margin:0;line-height:1.1}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.stat{padding:14px 16px}
+.stat small{display:block;font-size:12.5px;color:var(--muted)}
+.stat b{display:block;font-size:24px;font-weight:600;font-variant-numeric:tabular-nums;margin-top:2px}
+.ghost{opacity:.55;pointer-events:none}
+.btn{font-size:13px;font-weight:600;border:0;background:var(--brand);color:var(--brand-ink);padding:10px 14px;border-radius:10px;cursor:pointer;min-height:40px}
+.btn.sec{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+.dot.ok{background:var(--ok)}.dot.warn{background:var(--warn)}.dot.bad{background:var(--bad)}.dot.off{background:var(--muted)}
+
+/* Assistant panel (dashboard + admin) */
+.asst{border-left:1px solid var(--line);background:var(--rail);display:flex;flex-direction:column;min-width:0;-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+.ahead{display:flex;align-items:center;gap:10px;padding:16px 16px 12px;border-bottom:1px solid var(--line)}
+.ahead h3{margin:0;font-size:15px;font-weight:700;margin-right:auto}
+.ico{display:inline-grid;place-items:center;min-width:32px;height:32px;border-radius:8px;border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:18px;line-height:1}
+.ico:hover{background:var(--hover);color:var(--ink)}
+.knows{margin:12px 16px 0;padding:10px 12px;font-size:12.5px;color:var(--ink-soft);display:flex;flex-direction:column;gap:8px}
+.knows .top{display:flex;gap:8px;align-items:center}
+.knows .top span{margin-right:auto}
+.linkb{border:0;background:none;color:var(--ink);font-weight:600;font-size:12.5px;padding:4px 0;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.klist{display:flex;flex-direction:column;gap:4px;margin:0;padding:0;list-style:none}
+.klist li{display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-top:1px solid var(--line)}
+.klist li em{font-style:normal;color:var(--muted);font-variant-numeric:tabular-nums}
+.chat{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-height:280px}
+.msg{max-width:88%;padding:10px 12px;border-radius:14px;font-size:13.5px;line-height:1.45}
+.msg.me{align-self:flex-end;background:var(--brand);color:var(--brand-ink);border-bottom-right-radius:4px}
+.msg.it{align-self:flex-start;background:var(--bubble);color:var(--ink);border-bottom-left-radius:4px}
+.msg .src{display:block;margin-top:6px;font-size:11.5px;color:var(--muted)}
+.prop{align-self:stretch;padding:12px;display:flex;flex-direction:column;gap:8px;font-size:13px}
+.prop b{font-size:13px}
+.prop .acts{display:flex;gap:8px;flex-wrap:wrap}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 10px}
+.chips button{font-size:12.5px;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:6px 10px;cursor:pointer;min-height:32px}
+.chips button:hover{background:var(--hover)}
+.ask{display:flex;gap:8px;padding:12px 16px 16px;border-top:1px solid var(--line)}
+.ask input{flex:1;min-width:0;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:10px;padding:10px 12px;min-height:42px}
+.typing{align-self:flex-start;font-size:12.5px;color:var(--muted)}
+.typing i{display:inline-block;width:5px;height:5px;border-radius:50%;background:currentColor;margin-right:3px;animation:blink 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes blink{0%,100%{opacity:.25}50%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.typing i{animation:none}}
+
+/* Settings card (dashboard) */
+.set{padding:18px;display:flex;flex-direction:column;gap:14px}
+.set h3{margin:0;font-size:15px;font-weight:700}
+.line{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;padding:12px 0;border-top:1px solid var(--line)}
+.line:first-of-type{border-top:0;padding-top:0}
+.line .txt{min-width:0}
+.line .txt b{display:block;font-size:13.5px;font-weight:600}
+.line .txt small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px;max-width:58ch}
+.sw{position:relative;width:44px;height:26px;border-radius:999px;border:0;background:var(--line);cursor:pointer;flex:none}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--ink);transition:transform .18s}
+.sw[aria-checked="true"]{background:var(--ok)}
+.sw[aria-checked="true"]::after{transform:translateX(18px);background:#fff}
+@media (prefers-reduced-motion:reduce){.sw::after{transition:none}}
+.tones{display:inline-flex;border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
+.tones button{border:0;background:transparent;color:var(--ink-soft);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:13px;min-height:32px}
+.tones button[aria-pressed="true"]{background:var(--active);color:var(--ink);font-weight:600;box-shadow:var(--shadow)}
+.checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px 16px;font-size:13.5px}
+.checks label{display:flex;gap:8px;align-items:center;min-height:32px}
+.field{width:100%;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:10px;padding:10px 12px;min-height:42px}
+.faq{display:flex;flex-direction:column;gap:0}
+.faq .q{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:10px 0;border-top:1px solid var(--line)}
+.faq .q b{font-size:13.5px}
+.faq .q span{color:var(--muted);font-size:12.5px;grid-column:1}
+.faq .q em{font-style:normal;font-size:12px;color:var(--ink-soft);align-self:start;grid-row:1}
+.meter{height:6px;border-radius:999px;background:var(--line);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--ink-soft)}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+
+/* ---------- Public pages: homepage + golfer booking page ---------- */
+.site{position:relative;border-radius:24px;overflow:hidden;box-shadow:0 0 0 1px var(--page-line);min-height:720px;
+  --paper:#FAFAF7;--card:#FFFFFF;--ink:#141814;--soft:#3A3F39;--muted:#6B706A;--line:#E3E4DE;--wash:#F2F3EE;
+  --course:#1F4D3A;--course-ink:#FFFFFF;--pine:#173B2A;background:var(--paper);color:var(--ink);font-size:15px;line-height:1.5;color-scheme:light}
+.site .in{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.hero{position:relative;height:300px;background:
+  radial-gradient(60% 55% at 70% 78%,rgba(146,182,120,.95),rgba(146,182,120,0) 70%),
+  radial-gradient(80% 60% at 20% 85%,rgba(58,94,58,.95),rgba(58,94,58,0) 70%),
+  linear-gradient(180deg,#C9DCE6 0%,#B7CFD9 38%,#7E9E78 58%,#4F7651 78%,#3B5E3F 100%)}
+.hero .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05) 30%,rgba(0,0,0,.45))}
+.hero .in{position:relative;height:100%;display:flex;flex-direction:column;justify-content:flex-end;gap:10px;padding-block:0 28px;color:#fff}
+.hero .logo{font-family:var(--serif);font-size:20px;font-weight:600;letter-spacing:.01em}
+.hero h2{font-family:var(--serif);font-weight:600;font-size:42px;line-height:1.05;margin:0;text-wrap:balance}
+.hero .cta{align-self:flex-start;font-weight:600;font-size:15px;border:0;border-radius:8px;background:#fff;color:var(--pine);padding:12px 20px}
+.feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;padding-block:28px}
+.feat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.feat b{display:block;font-size:15px}
+.feat span{color:var(--muted);font-size:13.5px}
+/* golfer header (from the approved booking page) */
+.gban{height:200px;position:relative;background:
+  radial-gradient(60% 55% at 70% 78%,rgba(146,182,120,.95),rgba(146,182,120,0) 70%),
+  linear-gradient(180deg,#C9DCE6 0%,#B7CFD9 38%,#7E9E78 58%,#4F7651 78%,#3B5E3F 100%)}
+.ghead{position:relative;margin-top:-48px;display:flex;gap:18px;align-items:flex-end;flex-wrap:wrap}
+.glogo{width:96px;height:96px;border-radius:18px;background:var(--card);box-shadow:0 0 0 4px var(--paper),0 6px 18px rgba(0,0,0,.12);display:grid;place-items:center;flex:none}
+.glogo span{width:74px;height:74px;border-radius:50%;background:var(--course);color:var(--course-ink);display:grid;place-items:center;font-family:var(--serif);font-size:30px;font-weight:600}
+.gtitle{flex:1 1 260px;min-width:0;padding-bottom:4px}
+.gtitle h2{font-family:var(--serif);font-weight:600;font-size:36px;line-height:1.02;margin:0}
+.gtitle div{color:var(--muted);font-size:14px;margin-top:4px}
+.gtimes{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;padding-block:22px 40px}
+.tt{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.tt b{display:block;font-size:17px;font-variant-numeric:tabular-nums}
+.tt span{color:var(--muted);font-size:13px}
+.tt.full{background:var(--wash);color:var(--muted)}
+.sect{font-family:var(--serif);font-size:22px;font-weight:600;margin:22px 0 0}
+/* launcher + sheet */
+.launch{position:absolute;right:max(16px,env(safe-area-inset-right,0px));bottom:16px;z-index:3;border:0;border-radius:999px;padding:12px 18px;font-weight:600;font-size:14px;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.18);min-height:44px}
+.site.home .launch{background:var(--pine);color:#fff}
+.site.golf .launch{background:var(--course);color:var(--course-ink)}
+.sheet{position:absolute;right:16px;bottom:72px;z-index:4;width:380px;max-width:calc(100% - 32px);height:520px;max-height:calc(100% - 96px);background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,.22);display:flex;flex-direction:column;overflow:hidden;
+  transform-origin:bottom right;animation:rise .2s ease-out}
+@keyframes rise{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.sheet{animation:none}}
+.sheet[hidden]{display:none}
+.shead{display:flex;align-items:center;gap:10px;padding:14px 14px 12px;border-bottom:1px solid var(--line)}
+.shead b{margin-right:auto;font-size:15px}
+.shead .x{border:0;background:transparent;font-size:20px;width:36px;height:36px;border-radius:8px;cursor:pointer;color:var(--muted)}
+.shead .x:hover{background:var(--wash);color:var(--ink)}
+.sheet .chat{background:var(--card)}
+.sheet .msg.me{background:var(--pine);color:#fff}
+.site.golf .sheet .msg.me{background:var(--course);color:var(--course-ink)}
+.sheet .msg.it{background:var(--wash);color:var(--ink)}
+.sheet .msg .src{color:var(--muted)}
+.sheet .chips button{border-color:var(--line);color:var(--ink)}
+.sheet .chips button:hover{background:var(--wash)}
+.sheet .ask{border-top:1px solid var(--line)}
+.sheet .ask input{background:#fff;border-color:var(--line);color:var(--ink)}
+.sheet .btn{background:var(--pine);color:#fff}
+.site.golf .sheet .btn{background:var(--course);color:var(--course-ink)}
+.sfoot{font-size:11.5px;color:var(--muted);padding:0 16px 12px}
+.quote{border-left:3px solid var(--line);padding:6px 10px;margin:6px 0 0;font-size:13px;color:var(--soft);background:#fff;border-radius:0 8px 8px 0}
+.quote small{display:block;color:var(--muted);font-size:11.5px;margin-top:4px}
+.mk{border:1px dashed currentColor;border-radius:8px;padding:6px 8px;margin-top:6px;font-size:12px;opacity:.8}
+
+/* Phone */
+@media (max-width:900px){
+  .app,.app.two{grid-template-columns:minmax(0,1fr)}
+  .app .rail{display:none}
+  .app:not(.two) .main{display:none}
+  .asst{border-left:0;min-height:680px}
+  .grid2{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:560px){
+  .sheet{left:0;right:0;bottom:0;width:auto;max-width:none;height:82%;max-height:none;border-radius:16px 16px 0 0;transform-origin:bottom center}
+  .hero h2{font-size:32px}
+  .gtitle h2{font-size:28px}
+  .strip h1{font-size:20px;flex-basis:100%}
+}
+</style>
+
+<div class="strip">
+  <h1>Assistant mockup</h1>
+  <div class="seg" role="group" aria-label="Screen">
+    <button type="button" data-s="dash" aria-pressed="true">Dashboard assistant</button>
+    <button type="button" data-s="set" aria-pressed="false">Course settings</button>
+    <button type="button" data-s="adm" aria-pressed="false">Admin assistant</button>
+    <button type="button" data-s="home" aria-pressed="false">Homepage bot</button>
+    <button type="button" data-s="golf" aria-pressed="false">Golfer bot</button>
+  </div>
+  <div class="seg" role="group" aria-label="Dashboard look" id="lookseg">
+    <button type="button" data-look="dark" aria-pressed="true">Charcoal</button>
+    <button type="button" data-look="light" aria-pressed="false">Light</button>
+  </div>
+</div>
+<p class="note" id="note">Mockup only. Example course Maple Run Golf Course, example.com data. Try the suggested questions or type one.</p>
+
+<div class="stage">
+
+<!-- 1 · Dashboard assistant -->
+<section class="screen" id="s-dash" aria-label="Dashboard assistant">
+  <div class="app dash" data-mode="dark">
+    <span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span>
+    <aside class="rail" aria-label="Menu">
+      <div class="club"><i>M</i><b>Maple Run</b></div>
+      <div class="grp"><b>Today</b><span class="nav on">Home</span><span class="nav">Tee sheet</span><span class="nav">Pro shop</span><span class="nav">Support</span></div>
+      <div class="grp"><b>Business</b><span class="nav">Revenue</span><span class="nav">Memberships</span><span class="nav">Events</span><span class="nav">Schedule</span><span class="nav">Analytics</span><span class="nav">Team</span></div>
+      <div class="grp"><b>Settings</b><span class="nav">Settings</span></div>
+    </aside>
+    <div class="main ghost" aria-hidden="true">
+      <h2>Wednesday, Nov 18</h2>
+      <div class="row">
+        <div class="card stat"><small>Players today</small><b>86</b></div>
+        <div class="card stat"><small>Collected today</small><b>$3,412</b></div>
+        <div class="card stat"><small>Open tee times</small><b>14</b></div>
+      </div>
+      <div class="card" style="height:220px"></div>
+      <div class="card" style="height:160px"></div>
+    </div>
+    <aside class="asst" aria-label="Assistant">
+      <div class="ahead"><h3>Assistant</h3><button class="ico" type="button" aria-label="New conversation" title="New conversation">+</button><button class="ico" type="button" aria-label="Close assistant">×</button></div>
+      <div class="card knows">
+        <div class="top"><span class="dot ok"></span><span>Knows Maple Run's settings, rates, policies, closures, events and your 6 notes. Updated 9:14 AM.</span></div>
+        <button class="linkb" type="button" data-toggle="k1" aria-expanded="false">What it knows</button>
+        <ul class="klist" id="k1" hidden>
+          <li>Rates and schedules <em>4 schedules</em></li>
+          <li>Booking policy (word for word) <em>6 lines</em></li>
+          <li>Closed days <em>2 ahead</em></li>
+          <li>Course alert and conditions <em>Cart path only</em></li>
+          <li>Events <em>3 upcoming</em></li>
+          <li>Memberships and benefits <em>3 groups</em></li>
+          <li>Range buckets <em>2</em></li>
+          <li>Your notes <em>6</em></li>
+          <li>Live numbers <em>read when asked</em></li>
+        </ul>
+      </div>
+      <div class="chat" id="c-dash" aria-live="polite"></div>
+      <div class="chips" id="h-dash"></div>
+      <form class="ask" data-chat="dash"><label class="sr" for="i-dash" hidden>Ask the assistant</label><input id="i-dash" autocomplete="off" aria-label="Ask the assistant"><button class="btn" type="submit">Ask</button></form>
+    </aside>
+  </div>
+</section>
+
+<!-- 2 · Course settings → Assistant -->
+<section class="screen" id="s-set" aria-label="Course settings: Assistant" hidden>
+  <div class="app dash two" data-mode="dark">
+    <span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span>
+    <aside class="rail" aria-label="Menu">
+      <div class="club"><i>M</i><b>Maple Run</b></div>
+      <div class="grp"><b>Today</b><span class="nav">Home</span><span class="nav">Tee sheet</span><span class="nav">Pro shop</span><span class="nav">Support</span></div>
+      <div class="grp"><b>Business</b><span class="nav">Revenue</span><span class="nav">Memberships</span><span class="nav">Events</span><span class="nav">Schedule</span><span class="nav">Analytics</span><span class="nav">Team</span></div>
+      <div class="grp"><b>Settings</b><span class="nav on">Settings</span></div>
+    </aside>
+    <div class="main">
+      <h2>Assistant</h2>
+      <div class="grid2">
+        <div class="card set">
+          <div class="line"><div class="txt"><b>Assistant for your staff</b><small>Answers questions about your course and the dashboard, and drafts changes for you to save.</small></div><button class="sw" type="button" role="switch" aria-checked="true" aria-label="Assistant for your staff"></button></div>
+          <div class="line"><div class="txt"><b>Golfer questions on your booking page</b><small>Golfers can ask about your course. It answers only from your own information and never books, cancels or takes payment.</small></div><button class="sw" type="button" role="switch" aria-checked="false" aria-label="Golfer questions on your booking page"></button></div>
+          <div class="line"><div class="txt"><b>Tone</b><small>How it talks to golfers.</small></div>
+            <div class="tones" role="group" aria-label="Tone"><button type="button" aria-pressed="true">Friendly</button><button type="button" aria-pressed="false">Brief</button><button type="button" aria-pressed="false">Formal</button></div></div>
+          <div class="line" style="flex-direction:column"><div class="txt"><b>Golfers can ask about</b></div>
+            <div class="checks">
+              <label><input type="checkbox" checked> Tee times and prices</label>
+              <label><input type="checkbox" checked> Booking and cancellation policy</label>
+              <label><input type="checkbox" checked> Course info and directions</label>
+              <label><input type="checkbox" checked> Events</label>
+              <label><input type="checkbox"> Memberships and log-in</label>
+              <label><input type="checkbox" checked> Range and pro shop</label>
+            </div></div>
+          <div class="line" style="flex-direction:column"><div class="txt"><b>When it doesn't know</b><small>Shown to golfers word for word.</small></div>
+            <input class="field" id="handoff" value="I'm not sure. Please call the pro shop at (555) 010-2200."></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+          <div class="card set">
+            <h3>Your notes</h3>
+            <div class="faq">
+              <div class="q"><b>Do you rent clubs?</b><em>Golfers</em><span>Yes, $35 a set. Ask at the pro shop.</span></div>
+              <div class="q"><b>Is there a dress code?</b><em>Golfers</em><span>Collared shirts. No denim on the course.</span></div>
+              <div class="q"><b>Where do staff park?</b><em>Staff</em><span>Behind the maintenance barn.</span></div>
+              <div class="q"><b>Can we take dogs on the course?</b><em>Golfers</em><span>No, except service animals.</span></div>
+            </div>
+            <div><button class="btn sec" type="button">Add a note</button></div>
+          </div>
+          <div class="card set">
+            <h3>What it knows</h3>
+            <div class="line"><div class="txt"><b>Updated 9:14 AM</b><small>It refreshes on its own whenever you change a setting, rate, closed day, event, alert or note.</small></div><button class="btn sec" type="button" id="refresh">Refresh now</button></div>
+            <div class="line" style="flex-direction:column;gap:6px"><div class="txt"><b>Golfer questions today</b><small>37 of 300. Questions stop for the day at 300, and the answer becomes your "when it doesn't know" line.</small></div><div class="meter" style="width:100%"><i style="width:12%"></i></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 · Admin assistant -->
+<section class="screen" id="s-adm" aria-label="Admin assistant" hidden>
+  <div class="app admin">
+    <span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span>
+    <aside class="rail" aria-label="Admin menu">
+      <div class="club"><i>G</i><b>GreenReserve</b></div>
+      <div class="grp"><b>Platform</b><span class="nav on">Overview</span><span class="nav">Golf courses</span><span class="nav">Onboarding</span><span class="nav">Bookings</span><span class="nav">Golfers</span></div>
+      <div class="grp"><b>Business</b><span class="nav">Revenue</span><span class="nav">Expenses</span><span class="nav">Inquiries</span><span class="nav">Course support</span></div>
+      <div class="grp"><b>Owner</b><span class="nav">Security</span><span class="nav">Audit</span><span class="nav">Company docs</span></div>
+    </aside>
+    <div class="main ghost" aria-hidden="true">
+      <h2>Overview</h2>
+      <div class="row">
+        <div class="card stat"><small>Live courses</small><b>12</b></div>
+        <div class="card stat"><small>Bookings this week</small><b>1,846</b></div>
+        <div class="card stat"><small>Needs attention</small><b>3</b></div>
+      </div>
+      <div class="card" style="height:240px"></div>
+    </div>
+    <aside class="asst" aria-label="Admin assistant">
+      <div class="ahead"><h3>Ask</h3><span style="font-size:12px;color:var(--muted)">Owner only</span><button class="ico" type="button" aria-label="Close">×</button></div>
+      <div class="card knows">
+        <div class="top"><span class="dot ok"></span><span>Knows 14 runbooks, the 5 company docs you marked, and reads live platform numbers. Never changes anything.</span></div>
+        <button class="linkb" type="button" data-toggle="k2" aria-expanded="false">What it knows</button>
+        <ul class="klist" id="k2" hidden>
+          <li>Runbooks <em>14</em></li>
+          <li>Company docs you marked <em>5</em></li>
+          <li>Fee wording (approved) <em>1</em></li>
+          <li>Live numbers <em>read-only</em></li>
+          <li>Private audit notes <em>never</em></li>
+        </ul>
+      </div>
+      <div class="chat" id="c-adm" aria-live="polite"></div>
+      <div class="chips" id="h-adm"></div>
+      <form class="ask" data-chat="adm"><input id="i-adm" autocomplete="off" aria-label="Ask"><button class="btn" type="submit">Ask</button></form>
+    </aside>
+  </div>
+</section>
+
+<!-- 4 · Homepage bot -->
+<section class="screen" id="s-home" aria-label="Homepage bot" hidden>
+  <div class="site home">
+    <div class="hero"><span class="shade"></span><div class="in"><span class="logo">GreenReserve</span><h2>The tee sheet your course deserves.</h2><button class="cta" type="button">Book a demo</button></div></div>
+    <div class="in">
+      <div class="feats">
+        <div class="feat"><b>Tee sheet and online booking</b><span>Every booking on one sheet.</span></div>
+        <div class="feat"><b>Payments</b><span>Paid on their own phone, or at the counter.</span></div>
+        <div class="feat"><b>Pro shop and range</b><span>Register, stock and range buckets.</span></div>
+        <div class="feat"><b>Memberships and log-in</b><span>Member and resident rates.</span></div>
+      </div>
+    </div>
+    <button class="launch" type="button" data-open="sh-home" aria-expanded="true" aria-controls="sh-home">Questions?</button>
+    <div class="sheet" id="sh-home" role="dialog" aria-label="Ask about GreenReserve">
+      <div class="shead"><b>Ask about GreenReserve</b><button class="x" type="button" data-close="sh-home" aria-label="Close">×</button></div>
+      <div class="chat" id="c-home" aria-live="polite"></div>
+      <div class="chips" id="h-home"></div>
+      <form class="ask" data-chat="home"><input id="i-home" autocomplete="off" aria-label="Your question"><button class="btn" type="submit">Ask</button></form>
+      <p class="sfoot">Answers about GreenReserve only. For a tee time, contact your course.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 5 · Golfer bot -->
+<section class="screen" id="s-golf" aria-label="Golfer bot" hidden>
+  <div class="site golf">
+    <div class="gban"></div>
+    <div class="in">
+      <div class="ghead"><div class="glogo"><span>M</span></div><div class="gtitle"><h2>Maple Run Golf Course</h2><div>18 holes · Par 72 · Springfield</div></div></div>
+      <h3 class="sect">Saturday, Nov 21 · Afternoon</h3>
+      <div class="gtimes">
+        <div class="tt"><b>1:10 PM</b><span>4 spots · $52</span></div>
+        <div class="tt"><b>1:20 PM</b><span>2 spots · $52</span></div>
+        <div class="tt full"><b>1:30 PM</b><span>Full</span></div>
+        <div class="tt"><b>1:40 PM</b><span>3 spots · $52</span></div>
+        <div class="tt"><b>2:10 PM</b><span>4 spots · $44</span></div>
+        <div class="tt"><b>2:20 PM</b><span>1 spot · $44</span></div>
+      </div>
+    </div>
+    <button class="launch" type="button" data-open="sh-golf" aria-expanded="true" aria-controls="sh-golf">Questions about Maple Run</button>
+    <div class="sheet" id="sh-golf" role="dialog" aria-label="Questions about Maple Run">
+      <div class="shead"><b>Questions about Maple Run</b><button class="x" type="button" data-close="sh-golf" aria-label="Close">×</button></div>
+      <div class="chat" id="c-golf" aria-live="polite"></div>
+      <div class="chips" id="h-golf"></div>
+      <form class="ask" data-chat="golf"><input id="i-golf" autocomplete="off" aria-label="Your question"><button class="btn" type="submit">Ask</button></form>
+      <p class="sfoot">Answers come from Maple Run's own information. For anything else, call the pro shop at (555) 010-2200.</p>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<script>
+(function(){
+  var PHONE='(555) 010-2200';
+  var POLICY='<div class="quote">Free cancellation up to 24 hours before your tee time.<br>A $20 per player fee applies after that.<small>From Maple Run\'s booking policy, word for word</small></div><div class="mk">Mockup: these lines come from describePolicy(), exactly as the booking page shows them.</div>';
+  var D={
+    dash:{
+      start:[['me','Why can\'t golfers book Saturday morning?'],['it','Saturday Nov 21 before noon is a closed day in Schedule → Closed days, with the reason "Aeration on the front nine". Golfers see the morning greyed out on your booking page. Afternoon times from 1:10 PM are open.<span class="src">From: Closed days · Schedule</span>']],
+      chips:['Open Saturday morning','How did last weekend do?','What does a member pay on Sunday?'],
+      a:{
+        'open saturday morning':['it','Here is the change. Nothing happens until you save it.','prop'],
+        'how did last weekend do?':['it','Last weekend: 212 players, $8,960 collected, 91% of tee times filled. That is 14 more players than the weekend before.<span class="src">From: Analytics · live numbers</span>'],
+        'what does a member pay on sunday?':['it','Members on the Full Member plan pay $28 for 18 holes on weekends, cart included. Their guests pay the public rate, because "Guests pay member rate" is off.<span class="src">From: Memberships · Full Member</span>']
+      },
+      fallback:'I couldn\'t find that in Maple Run\'s settings. Try asking it another way, or tell me which page it is on.'
+    },
+    adm:{
+      start:[['me','Which courses haven\'t connected Stripe yet?'],['it','Two live courses have no connected Stripe account: Cedar Ridge (signed up Nov 9) and Lakeview Municipal (Nov 12). Both still take cash and cards at the counter. The onboarding runbook says to send the Stripe step reminder on day 3.<span class="src">From: Golf courses · Onboarding runbook</span>']],
+      chips:['How do I roll back a release?','What is our fee wording?','Bookings this week vs last'],
+      a:{
+        'how do i roll back a release?':['it','Use instant rollback in Vercel to the last good deployment, then check /api/health. Migrations are additive, so rolling the code back is always safe. Write a 1.0.x note in the changelog.<span class="src">From: Releases runbook</span>'],
+        'what is our fee wording?':['it','"Golfers pay $1.50 per player on each online booking, added to your price." and "No setup fee, no monthly fee, no commission on your green fees." Use only the sentences in the approved fee wording file.<span class="src">From: Fee wording (approved)</span>'],
+        'bookings this week vs last':['it','1,846 bookings this week, 1,702 last week, up 8%. Test courses are left out.<span class="src">From: Bookings · live numbers</span>']
+      },
+      fallback:'That isn\'t in the runbooks or docs I can read. I never guess on platform questions.'
+    },
+    home:{
+      start:[['it','Hi. Ask me anything about GreenReserve for your course.']],
+      chips:['What does it cost?','How do golfers pay?','Can I see a demo?','Can I book a tee time here?'],
+      a:{
+        'what does it cost?':['it','No setup fee, no monthly fee, no commission on your green fees. Golfers pay $1.50 per player on each online booking, added to your price.<span class="src">From: approved fee wording</span>'],
+        'how do golfers pay?':['it','Golfers pay on their own phone with a card, Apple Pay or Google Pay, or at your counter. Your green fee goes to your own Stripe account.<span class="src">From: Payments page</span>'],
+        'can i see a demo?':['it','Yes. Pick a time that works for you.','book'],
+        'can i book a tee time here?':['it','I can\'t book tee times. Please go to your course\'s booking page or call the course directly.']
+      },
+      fallback:'I can only answer questions about GreenReserve. For anything else, book a call with our team.'
+    },
+    golf:{
+      start:[['it','Hi. Ask me about Maple Run: tee times, prices, the course and our policies.']],
+      chips:['What\'s the cancellation policy?','Can I walk on Saturday?','Do you rent clubs?','Can you book 1:30 for me?'],
+      a:{
+        'what\'s the cancellation policy?':['it','Here is Maple Run\'s policy:'+POLICY],
+        'can i walk on saturday?':['it','Walking is allowed on Saturday after 2 PM. Before 2 PM a cart is included in the price.<span class="src">From: Maple Run\'s schedule</span>'],
+        'do you rent clubs?':['it','Yes, $35 a set. Ask at the pro shop when you check in.<span class="src">From: Maple Run\'s notes</span>'],
+        'can you book 1:30 for me?':['it','I can\'t book tee times, and 1:30 PM is full. 1:40 PM has 3 spots. Tap a time on the page to book it, or set an alert for 1:30.'],
+        'is the course wet?':['it','I\'m not sure. Please call the pro shop at '+PHONE+'.']
+      },
+      fallback:'I\'m not sure. Please call the pro shop at '+PHONE+'.'
+    }
+  };
+  function esc(s){return s.replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  function add(k,who,html,extra){
+    var c=document.getElementById('c-'+k);
+    var m=document.createElement('div');m.className='msg '+who;m.innerHTML=html;c.appendChild(m);
+    if(extra==='prop'){
+      var p=document.createElement('div');p.className='card prop';
+      p.innerHTML='<b>Draft: open Saturday Nov 21 morning</b><span>Removes the closed day "Aeration on the front nine". 26 tee times from 6:30 AM become bookable.</span><div class="acts"><button class="btn" type="button">Review and save</button><button class="btn sec" type="button">Not now</button></div>';
+      c.appendChild(p);
+    }
+    if(extra==='book'){
+      var b=document.createElement('div');b.className='msg it';b.innerHTML='<button class="btn" type="button">Book a call</button><span class="src">Opens the Cal.com calendar at the bottom of the page.</span>';c.appendChild(b);
+    }
+    c.scrollTop=c.scrollHeight;
+  }
+  function chips(k){
+    var h=document.getElementById('h-'+k);h.innerHTML='';
+    D[k].chips.forEach(function(t){var b=document.createElement('button');b.type='button';b.textContent=t;b.onclick=function(){ask(k,t)};h.appendChild(b)});
+  }
+  function ask(k,q){
+    q=q.trim();if(!q)return;
+    add(k,'me',esc(q));
+    var c=document.getElementById('c-'+k);
+    var t=document.createElement('div');t.className='typing';t.innerHTML='<i></i><i></i><i></i>';c.appendChild(t);c.scrollTop=c.scrollHeight;
+    setTimeout(function(){
+      t.remove();
+      var r=D[k].a[q.toLowerCase()];
+      if(r)add(k,r[0],r[1],r[2]);else add(k,'it',D[k].fallback);
+    },600);
+  }
+  Object.keys(D).forEach(function(k){
+    D[k].start.forEach(function(m){add(k,m[0],m[1])});
+    chips(k);
+  });
+  document.querySelectorAll('form.ask').forEach(function(f){
+    f.addEventListener('submit',function(e){e.preventDefault();var i=f.querySelector('input');ask(f.dataset.chat,i.value);i.value=''});
+  });
+  document.querySelectorAll('[data-toggle]').forEach(function(b){
+    b.onclick=function(){var l=document.getElementById(b.dataset.toggle);l.hidden=!l.hidden;b.setAttribute('aria-expanded',String(!l.hidden))};
+  });
+  document.querySelectorAll('.sw').forEach(function(s){s.onclick=function(){s.setAttribute('aria-checked',s.getAttribute('aria-checked')==='true'?'false':'true')}});
+  document.querySelectorAll('.tones').forEach(function(g){g.querySelectorAll('button').forEach(function(b){b.onclick=function(){g.querySelectorAll('button').forEach(function(x){x.setAttribute('aria-pressed',String(x===b))})}})});
+  var rf=document.getElementById('refresh');rf.onclick=function(){var t=rf.closest('.line').querySelector('b');t.textContent='Updated just now'};
+  document.querySelectorAll('[data-open]').forEach(function(b){
+    b.onclick=function(){var s=document.getElementById(b.dataset.open);s.hidden=!s.hidden;b.setAttribute('aria-expanded',String(!s.hidden));if(!s.hidden)s.querySelector('input').focus()};
+  });
+  document.querySelectorAll('[data-close]').forEach(function(b){
+    b.onclick=function(){var s=document.getElementById(b.dataset.close);s.hidden=true;var o=document.querySelector('[data-open="'+b.dataset.close+'"]');o.setAttribute('aria-expanded','false');o.focus()};
+  });
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Escape')return;
+    document.querySelectorAll('.sheet').forEach(function(s){if(!s.hidden&&!s.closest('.screen').hidden){s.querySelector('[data-close]').click()}});
+  });
+  var screens=document.querySelectorAll('.strip [data-s]');var look=document.getElementById('lookseg');
+  function show(id){
+    screens.forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.s===id))});
+    document.querySelectorAll('.screen').forEach(function(s){s.hidden=s.id!=='s-'+id});
+    look.hidden=!(id==='dash'||id==='set');
+    try{localStorage.setItem('ai-mock-screen',id)}catch(e){}
+  }
+  screens.forEach(function(b){b.onclick=function(){show(b.dataset.s)}});
+  look.querySelectorAll('button').forEach(function(b){
+    b.onclick=function(){look.querySelectorAll('button').forEach(function(x){x.setAttribute('aria-pressed',String(x===b))});
+      document.querySelectorAll('.app.dash').forEach(function(a){a.dataset.mode=b.dataset.look})};
+  });
+  var start='dash';try{start=localStorage.getItem('ai-mock-screen')||'dash'}catch(e){}
+  show(start);
+})();
+</script>
