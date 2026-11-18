@@ -129,20 +129,25 @@ async function main() {
   ok('…so the first email can no longer turn on a phone it never named', first.ok && (await confirmAlert(first.alert.token)).result === 'missing' && !(await hasSmsConsent(P7, 'alerts')));
   ok('the confirm email and page name the phone’s last four digits', /number ending \$\{escHtml\(data\.phone\.slice\(-4\)\)\}/.test(read('src/lib/email.ts')) && /number ending \$\{alert\.phone\.slice\(-4\)\}/.test(read('src/app/api/alerts/confirm/[token]/route.ts')));
   const keysLapsed = alertRateKeys({ courseId: c.id, email: `${TAG}-l@t.local` }, { courseId: c.id, email: 'Victim@T.local' });
-  ok('a lapsed member typing another email is counted against that email too', keysLapsed.includes('victim@t.local') && keysLapsed.includes(`${TAG}-l@t.local`), keysLapsed);
+  ok('a logged-in golfer typing another email is counted against that email too', keysLapsed.includes('victim@t.local') && keysLapsed.includes(`${TAG}-l@t.local`), keysLapsed);
   ok('a log-in at another course counts only the typed email', JSON.stringify(alertRateKeys({ courseId: 'other', email: 'me@t.local' }, { courseId: c.id, email: 'v@t.local' })) === '["v@t.local"]');
   ok('a member at this course with no typed email counts the log-in email', JSON.stringify(alertRateKeys({ courseId: c.id, email: 'M@t.local' }, { courseId: c.id })) === '["m@t.local"]');
   ok('the route counts every key', /for \(const key of alertRateKeys\(session, body\)\)/.test(read('src/app/api/alerts/route.ts')));
 
   // A live member: on at once, with the log-in email.
+  // gr_member (#483) is an email proven at a course; a live membership adds the member window.
   const m = await prisma.courseMembership.create({ data: { courseId: c.id, inviteEmail: `${TAG}-m@t.local`, status: 'active' } });
-  const mem = await createAlert({ courseId: c.id, dates: [d1], parts: [], players: 3, email: 'typed@else.where', phone: P2, textConsent: true }, { membershipId: m.id, courseId: c.id, email: `${TAG}-m@t.local` });
+  const mem = await createAlert({ courseId: c.id, dates: [d1], parts: [], players: 3, email: 'typed@else.where', phone: P2, textConsent: true }, { courseId: c.id, email: `${TAG}-m@t.local` });
   ok('a logged-in member’s alert is on in one tap', mem.ok && mem.status === 'active', mem);
   ok('…with the log-in email, not a typed one', mem.ok && mem.alert.email === `${TAG}-m@t.local` && mem.maskedEmail.startsWith('t•••@'));
-  const lapsed = await prisma.courseMembership.create({ data: { courseId: c.id, inviteEmail: `${TAG}-l@t.local`, status: 'active', expiresAt: new Date(Date.now() - 400 * 86400_000) } });
-  const lap = await createAlert({ courseId: c.id, dates: [d1], parts: [], players: 1, email: `${TAG}-l@t.local` }, { membershipId: lapsed.id, courseId: c.id, email: `${TAG}-l@t.local` });
-  ok('a lapsed member is a guest (confirm by email)', lap.ok && lap.status === 'pending', lap);
-  const otherCourse = await createAlert({ courseId: c.id, dates: [d1], parts: [], players: 1, email: `${TAG}-o@t.local` }, { membershipId: m.id, courseId: 'another-course', email: `${TAG}-m@t.local` });
+  ok('…and the membership is kept on it (member window)', mem.ok && (await prisma.teeTimeAlert.findUniqueOrThrow({ where: { id: mem.alert.id } })).membershipId === m.id);
+  await prisma.courseMembership.create({ data: { courseId: c.id, inviteEmail: `${TAG}-l@t.local`, status: 'active', expiresAt: new Date(Date.now() - 400 * 86400_000) } });
+  const lap = await createAlert({ courseId: c.id, dates: [d1], parts: [], players: 1, email: 'typed@else.where' }, { courseId: c.id, email: `${TAG}-l@t.local` });
+  const lapRow = lap.ok ? await prisma.teeTimeAlert.findUniqueOrThrow({ where: { id: lap.alert.id } }) : null;
+  ok('a logged-in golfer whose membership lapsed: one tap with the log-in email, public window only', lap.ok && lap.status === 'active' && lapRow?.email === `${TAG}-l@t.local` && lapRow?.membershipId === null, lap);
+  const res = await createAlert({ courseId: c.id, dates: [d1], parts: [], players: 1 }, { courseId: c.id, email: `${TAG}-r@t.local` });
+  ok('a logged-in resident (no membership) is on in one tap too', res.ok && res.status === 'active');
+  const otherCourse = await createAlert({ courseId: c.id, dates: [d1], parts: [], players: 1, email: `${TAG}-o@t.local` }, { courseId: 'another-course', email: `${TAG}-m@t.local` });
   ok('another course’s log-in is a guest here', otherCourse.ok && otherCourse.status === 'pending' && otherCourse.alert.email === `${TAG}-o@t.local`);
   ok('the member sees their own alerts', (await memberAlerts(c.id, `${TAG}-m@t.local`)).length === 1);
 
@@ -159,7 +164,7 @@ async function main() {
   await prisma.teeTime.update({ where: { id: t2.id }, data: { playersBooked: 0, status: 'available' } }); // a midday time opens
   const midTold = await notifyAlertsFor(c.id, [d1]);
   const gMid = gRow ? await prisma.teeTimeAlert.findUniqueOrThrow({ where: { id: gRow.id } }) : null;
-  ok('a midday opening tells the any-time member, not the morning guest', midTold === 1 && !gMid?.notifiedDates.includes(d1), { midTold, nd: gMid?.notifiedDates });
+  ok('a midday opening tells the three any-time logged-in alerts, not the morning guest', midTold === 3 && !gMid?.notifiedDates.includes(d1), { midTold, nd: gMid?.notifiedDates });
 
   await prisma.teeTime.update({ where: { id: t1.id }, data: { playersBooked: 1, status: 'available' } }); // a morning time opens
   const race = await Promise.all([notifyAlertsFor(c.id, [d1]), notifyAlertsFor(c.id, [d1]), notifyAlertsFor(c.id, [d1])]);

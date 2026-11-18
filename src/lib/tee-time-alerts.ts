@@ -6,8 +6,8 @@
 //
 //   - A guest's alert starts 'pending' and turns on only from the emailed confirm link
 //     (a POST from the confirm page: mail scanners prefetch GET links).
-//   - A logged-in member (gr_member at this course, membership live) turns it on in one
-//     tap; the email is the log-in email, never one typed into the form.
+//   - A golfer logged in at this course (gr_member: member or resident, email proven) turns it
+//     on in one tap; the email is the log-in email, never one typed into the form.
 //   - It ends after the last tee time on its last date (course local), or the end of that
 //     day when the date has no times. (Build ruling 2026-11-18: the "unless the course
 //     set a later end" rule belongs to the course alert line, not here.)
@@ -26,6 +26,7 @@ import { teeToUtcMs } from './tee-time-utils';
 import { withinWindow, windowFor } from './booking-window';
 import { rulesFor } from './booking-rules';
 import { membershipLive } from './member-rates';
+import { liveMembershipFor } from './member-session';
 import { consentPhone, recordSmsConsent, type SmsScope } from './sms-consent';
 import { ALERT_SMS_CONSENT_VERSION, ALERT_SMS_CONFIRMATION, alertSmsConsentText } from './sms-consent-copy';
 import { formatTeeDay, formatTeeTime } from './format';
@@ -94,7 +95,9 @@ export type CreateAlertInput = {
   courseId?: unknown; dates?: unknown; parts?: unknown; players?: unknown; teeTimeId?: unknown; wide?: unknown;
   email?: unknown; name?: unknown; phone?: unknown; textConsent?: unknown;
 };
-export type MemberCtx = { membershipId: string; courseId: string; email: string } | null;
+/** gr_member (GOLFER-LOGIN-1, #483): an email proven at a course. Member or resident, it turns an
+ *  alert on in one tap; a live membership here also gives the member booking window. */
+export type MemberCtx = { courseId: string; email: string } | null;
 
 export type CreateAlertResult =
   | { ok: true; status: 'active' | 'pending'; alert: { id: string; token: string; email: string; dates: string[] }; endsOn: string; maskedEmail: string; course: { id: string; name: string; slug: string }; textNew: boolean; phone: string | null; players: number; skipEmail?: boolean }
@@ -134,19 +137,17 @@ export async function createAlert(input: CreateAlertInput, member: MemberCtx, no
   if (!course || !course.active || course.liveStatus !== 'live') return { ok: false, status: 404, body: { error: 'Course not found' } };
   if (!course.teeTimeAlertsOn) return { ok: false, status: 403, body: { error: 'This course isn’t taking tee time alerts.', alertsOff: true } };
 
-  // Who: a live member of THIS course uses the log-in email; anyone else is a guest.
+  // Who: logged in at THIS course (its email proven) uses the log-in email and needs no confirm;
+  // anyone else is a guest. A live membership also gives the member window.
   let membershipId: string | null = null;
   let memberTier: Parameters<typeof windowFor>[1] = null;
   let email = '';
-  if (member && member.courseId === course.id) {
-    const m = await prisma.courseMembership.findUnique({ where: { id: member.membershipId }, include: { tier: true } });
-    if (m && m.courseId === course.id && membershipLive(m, course, now)) {
-      membershipId = m.id;
-      memberTier = { tier: m.tier };
-      email = member.email.trim().toLowerCase();
-    }
-  }
-  if (!membershipId) {
+  const loggedIn = !!member && member.courseId === course.id && !!member.email.trim();
+  if (loggedIn) {
+    email = member!.email.trim().toLowerCase();
+    const m = await liveMembershipFor(course, email);
+    if (m && membershipLive(m, course, now)) { membershipId = m.id; memberTier = { tier: m.tier }; }
+  } else {
     email = typeof input.email === 'string' ? input.email.trim().toLowerCase() : '';
     if (!EMAIL_RE.test(email) || email.length > 200) return bad('Enter your email.', { field: 'email' });
   }
@@ -197,7 +198,7 @@ export async function createAlert(input: CreateAlertInput, member: MemberCtx, no
   if (endsAt.getTime() <= now.getTime()) return bad('Pick dates you can book.', { field: 'dates' });
 
   const consentWording = phone ? alertSmsConsentText(course.name) : null;
-  const status = membershipId ? 'active' : 'pending';
+  const status = loggedIn ? 'active' : 'pending';
 
   // The same alert asked again (same email, dates, parts, players, time) is the same row.
   const existing = await prisma.teeTimeAlert.findFirst({
@@ -205,7 +206,7 @@ export async function createAlert(input: CreateAlertInput, member: MemberCtx, no
   });
   // A guest can't change an alert that is already on (anyone can type any email): same answer,
   // nothing written, nothing sent.
-  if (existing && existing.status === 'active' && !membershipId) {
+  if (existing && existing.status === 'active' && !loggedIn) {
     return {
       ok: true, status: 'pending', alert: { id: existing.id, token: '', email, dates },
       endsOn: dates[dates.length - 1], maskedEmail: maskEmail(email),
@@ -222,10 +223,10 @@ export async function createAlert(input: CreateAlertInput, member: MemberCtx, no
         where: { id: existing.id },
         // A guest re-asking a pending alert gets a NEW confirm link, so only the newest email (which
         // names the phone on it) can turn it on; the older link stops working.
-        data: { ...data, ...(membershipId && existing.status === 'pending' ? { status: 'active', confirmedAt: now } : {}), ...(!membershipId ? { token: newAlertToken() } : {}) },
+        data: { ...data, ...(loggedIn && existing.status === 'pending' ? { status: 'active', confirmedAt: now } : {}), ...(!loggedIn ? { token: newAlertToken() } : {}) },
       })
     : await prisma.teeTimeAlert.create({
-        data: { ...data, courseId: course.id, email, date: dates[0], dates, parts, teeTimeId, status, confirmedAt: membershipId ? now : null, token: newAlertToken() },
+        data: { ...data, courseId: course.id, email, date: dates[0], dates, parts, teeTimeId, status, confirmedAt: loggedIn ? now : null, token: newAlertToken() },
       });
 
   // A member's text consent counts now; a guest's only once the email link is confirmed.

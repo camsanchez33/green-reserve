@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     if (!(await rateLimit('alert:email:' + key, 20, 3600))) return NextResponse.json({ error: 'Too many alerts from this email' }, { status: 429 });
   }
 
-  const r = await createAlert(body, session ? { membershipId: session.membershipId, courseId: session.courseId, email: session.email } : null);
+  const r = await createAlert(body, session ? { courseId: session.courseId, email: session.email } : null);
   if (!r.ok) return NextResponse.json(r.body, { status: r.status });
 
   if (r.status === 'pending') {
