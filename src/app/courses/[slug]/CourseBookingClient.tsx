@@ -100,6 +100,8 @@ type CourseWithBrand = Course & {
   resident_advance_days?: number | null;
   /** Days the course is closed inside the window, with the reason the calendar shows (Build). */
   closed_dates?: { date: string; reason: string }[];
+  /** Course.memberLoginOn: false = no Log in on the page (Settings "Show Log in on your booking page"). */
+  member_login_on?: boolean;
   gift_card_url?: string;
   photos?: { id: string; url: string; sortOrder: number }[];
   tee_sets?: { name: string; yardage: number; rating: number; slope: number }[];
@@ -123,6 +125,8 @@ type ActiveMemberSession = {
   email: string;
   name: string;
   tier: { name: string; color?: string } | null;
+  /** #483: every group this log-in is in here (a membership, a resident card). */
+  groups?: { kind: 'member' | 'resident'; name: string }[];
   source?: 'member';
   /** BOOKING WINDOWS: how far ahead this member can book */
   windowDays?: number;
@@ -649,14 +653,14 @@ export default function CourseDetailPage({
             <div className={`${CARD} p-6 sticky top-20`}>
               <p className="text-[15px] font-semibold text-ink mb-1">Member access</p>
               <p className="text-ink text-sm leading-relaxed mb-5">
-                This is a private club. Tee time booking is reserved for members. Sign in to your member account to view availability and book.
+                This is a private club. Tee time booking is reserved for members. Log in to your member account to view availability and book.
               </p>
               <Link
                 href={`/courses/${slug}/member`}
                 className="block w-full text-center py-3 px-5 text-white text-sm font-medium rounded-md transition-opacity hover:opacity-90"
                 style={{ backgroundColor: course.brand_color || '#173B2A' }}
               >
-                Member sign in
+                Log in
               </Link>
               <p className="text-center text-xs text-ink mt-4">
                 Not a member? Contact the club directly.
@@ -685,6 +689,10 @@ export default function CourseDetailPage({
   const memberWindowDays = course.member_advance_days ?? 14;
   const membersBookEarlier = !memberSession && !!course.has_member_pricing && memberWindowDays > viewerWindowDays;
   const closedOn = new Map((course.closed_dates ?? []).map(c => [c.date, c.reason]));
+  // Log in (item 2): the course's own log-in page, back to this page with its filters afterwards.
+  const loginOn = course.member_login_on !== false;
+  const loginHref = `/courses/${slug}/login?back=${encodeURIComponent(`/courses/${slug}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`)}`;
+  const groupWords = (memberSession?.groups?.length ? memberSession.groups.map(gr => gr.name) : memberSession?.tier?.name ? [memberSession.tier.name] : []).join(' and ');
   const shortDay = (ds: string) => { const d = new Date(ds + 'T12:00:00'); return `${d.toLocaleDateString('en-US', { weekday: 'short' })} ${d.getDate()}`; };
   const longDate = (ds: string) => new Date(ds + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
@@ -758,7 +766,7 @@ export default function CourseDetailPage({
             {memberSession
               ? <p>Logged in{memberSession.tier?.name ? ` as ${memberSession.tier.name}` : ''} · showing {viewerWindowDays} days.{viewerWindowDays > publicDays ? ' Outlined days are members only.' : ''}</p>
               : membersBookEarlier && !previewMode
-                ? <p>Showing {viewerWindowDays} days. <Link className={g.lnk} href={`/courses/${slug}/member`}>Log in</Link> to see your longer window.</p>
+                ? <p>Showing {viewerWindowDays} days.{loginOn ? <> <Link className={g.lnk} href={loginHref}>Log in</Link> to see your longer window.</> : null}</p>
                 : null}
           </div>
         </div>
@@ -842,8 +850,8 @@ export default function CourseDetailPage({
       <div className={g.empty} role="status">
         <h2>{longDate(selectedDate)} isn&rsquo;t open for booking yet</h2>
         <p>{windowNotice.scope === 'member' ? 'Your membership lets you' : 'Golfers can'} book up to {windowNotice.windowDays} days ahead.</p>
-        {membersBookEarlier && !previewMode && (
-          <div className={g.opts}><Link className={g.chip} href={`/courses/${slug}/member`}>Log in to book earlier</Link></div>
+        {membersBookEarlier && !previewMode && loginOn && (
+          <div className={g.opts}><Link className={g.chip} href={loginHref}>Log in to book earlier</Link></div>
         )}
       </div>
     );
@@ -1018,13 +1026,13 @@ export default function CourseDetailPage({
           {!previewMode && (
             <nav className={g.topLinks} aria-label="Your account at this course">
               {memberSession ? (<>
-                <span>Logged in · {memberSession.name}{memberSession.tier?.name ? ` · ${memberSession.tier.name}` : ''}</span>
+                <span>Logged in · {memberSession.name}{groupWords ? ` · ${groupWords}` : ''}</span>
                 <Link className={g.lnk} href={`/courses/${slug}/member`}>Your {course.name}</Link>
                 <button type="button" className={g.lnk} onClick={memberSignOut}>Log out</button>
                 {logoutError && <span role="alert">Couldn&rsquo;t log out. Try again.</span>}
-              </>) : (
-                <Link className={g.lnk} href={`/courses/${slug}/member`}>Log in</Link>
-              )}
+              </>) : loginOn ? (
+                <Link className={g.lnk} href={loginHref}>Log in</Link>
+              ) : null}
             </nav>
           )}
         </header>

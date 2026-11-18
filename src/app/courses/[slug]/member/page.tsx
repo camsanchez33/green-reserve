@@ -201,23 +201,23 @@ function SignInPanel({
         <div className="bg-white rounded-lg border border-line p-8">
           <div className="mb-6">
             <h1 className="text-2xl font-serif font-semibold tracking-tight text-ink mt-1">
-              Sign in to your account
+              Log in to your account
             </h1>
             <p className="text-sm text-ink mt-1">
-              Enter your email — we&apos;ll send you a one-click sign-in link.
+              Enter your email — we&apos;ll send you a one-click log-in link.
             </p>
           </div>
 
           {errorParam === 'invalid' && (
             <div className="flex items-start gap-2 bg-bad/5 border border-bad/20 rounded-md p-3 mb-4 text-sm text-bad">
               <StatusDot status="bad" />
-              That sign-in link has expired or is invalid. Request a new one below.
+              That log-in link has expired or is invalid. Request a new one below.
             </div>
           )}
           {errorParam === 'busy' && (
             <div className="flex items-start gap-2 bg-warn/5 border border-warn/20 rounded-md p-3 mb-4 text-sm text-warn">
               <StatusDot status="warn" />
-              Too many sign-in attempts from your network. Wait a few minutes and open the link again.
+              Too many log-in attempts from your network. Wait a few minutes and open the link again.
             </div>
           )}
           {errorParam === 'inactive' && (
@@ -231,7 +231,7 @@ function SignInPanel({
             <div className="text-center py-4">
               <p className="font-semibold text-ink mb-1">Check your email</p>
               <p className="text-sm text-ink">
-                If <strong>{email}</strong> is registered as a member, a sign-in link is on its way.
+                If <strong>{email}</strong> is registered as a member, a log-in link is on its way.
                 It expires in 15 minutes.
               </p>
               <button
@@ -269,7 +269,7 @@ function SignInPanel({
                 className="w-full py-3 rounded-md bg-pine hover:bg-pine-hover disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium text-sm transition-colors flex items-center justify-center gap-2"
               >
                 {sending && <Loader2 size={15} className="animate-spin" />}
-                {sending ? 'Sending…' : 'Send sign-in link'}
+                {sending ? 'Sending…' : 'Send log-in link'}
               </button>
             </form>
           )}
@@ -413,7 +413,7 @@ function MemberDashboard({
             className="flex items-center gap-1.5 text-xs text-ink-soft hover:text-ink flex-shrink-0"
           >
             
-            Sign out
+            Log out
           </button>
         </div>
       </div>

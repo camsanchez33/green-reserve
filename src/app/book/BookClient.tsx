@@ -56,6 +56,8 @@ export type CourseInfo = {
   booking_look?: CourseLook;
   /** "Have a promo code?" shows only when the course has a live code (Build). Absent = unknown, shown. */
   has_live_promo?: boolean;
+  /** Course.memberLoginOn: false = no Log in (Settings "Show Log in on your booking page"). */
+  member_login_on?: boolean;
   /** The course's IANA timezone, for "is this time already past the free-cancel cutoff" (R-GOLF-009). */
   timezone?: string | null;
   /** PERS-1: the course's own uploads, shown in the header band. */
@@ -534,7 +536,16 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   return (
     <div className={g.root} style={look}>
       <div className={g.site}>
-        <header className={g.top}><h1><Link href={`/courses/${courseSlug}`}>{course.name}</Link></h1></header>
+        <header className={g.top}>
+          <h1><Link href={`/courses/${courseSlug}`}>{course.name}</Link></h1>
+          {/* Item 2: one Log in in the header; it comes back to this Book page, now filled from the log-in. */}
+          {!member && course.member_login_on !== false && (
+            <nav className={g.topLinks} aria-label="Your account at this course">
+              <Link className={g.lnk} href={`/courses/${encodeURIComponent(courseSlug)}/login?back=${encodeURIComponent(`/book?${params.toString()}`)}`}>Log in</Link>
+            </nav>
+          )}
+          {member && <nav className={g.topLinks} aria-label="Your account at this course"><span>Logged in · {member.name || member.email}</span></nav>}
+        </header>
         <main className={g.wrap}>
           <div className={g.bk}>
             <Link href={backToTimesHref(courseSlug, params, players)} className={`${g.lnk} ${g.back}`}>‹ Back to tee times</Link>
