@@ -19,7 +19,7 @@ import { DEFAULT_PUBLIC_WINDOW_DAYS, DEFAULT_MEMBER_WINDOW_DAYS } from '@/lib/bo
  * showing the code box a little too often costs nothing, hiding it costs a golfer the discount.
  * Closed days: every closed day in that span, with staff's reason. Log-in groups: lib/member-session loginGroups.
  */
-export async function bookingPageExtras(c: { id: string; timezone?: string | null; publicAdvanceDays?: number | null; memberAdvanceDays?: number | null; residentAdvanceDays?: number | null; hasResidentPricing?: boolean | null; memberLoginOn?: boolean | null }, now: Date = new Date()): Promise<BookingPageExtras> {
+export async function bookingPageExtras(c: { id: string; timezone: string | null; publicAdvanceDays?: number | null; memberAdvanceDays?: number | null; residentAdvanceDays?: number | null; hasResidentPricing?: boolean | null; memberLoginOn?: boolean | null }, now: Date = new Date()): Promise<BookingPageExtras> {
   const today = todayIn(c.timezone, now);
   const tiers = await prisma.membershipTier.findMany({ where: { courseId: c.id }, select: { advanceBookingDays: true, windowPublic: true } });
   const widest = Math.max(

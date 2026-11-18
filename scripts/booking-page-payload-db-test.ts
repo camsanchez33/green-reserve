@@ -26,6 +26,7 @@ async function cleanup() {
   await prisma.courseSettingChange.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.promoCode.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.blackout.deleteMany({ where: { courseId: { in: ids } } });
+  await prisma.courseMembership.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.membershipTier.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.courseResident.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.course.deleteMany({ where: { id: { in: ids } } });
@@ -146,7 +147,7 @@ async function cleanup() {
   ok('a code that starts after the widest window does not count', p.has_live_promo === false);
 
   // A membership that books further ahead than the course default widens both fields (reviewer repro).
-  await prisma.membershipTier.create({ data: { courseId: course.id, name: 'Thirty-day', advanceBookingDays: 30 } });
+  const thirty = await prisma.membershipTier.create({ data: { courseId: course.id, name: 'Thirty-day', advanceBookingDays: 30 } });
   await prisma.promoCode.updateMany({ where: { courseId: course.id }, data: { startsOn: addDaysStr(today, 25) } });
   p = await loadPublicCourse(`${TAG}-a`);
   ok('a 30-day membership: the day closed at +20 is listed', p.closed_dates.some((d: { date: string }) => d.date === addDaysStr(today, 20)), p.closed_dates);
@@ -159,6 +160,10 @@ async function cleanup() {
   ok('a switched-off code does not count', p.has_live_promo === false);
 
   // GOLFER-LOGIN-1 fields: groups, the Log in switch, and the resident window (which widens closed_dates too).
+  // 'members' follows canLogIn (#499): a tier alone is not enough, an active membership with an email is.
+  ok('a membership tier with nobody on it gives no login_groups', Array.isArray(p.login_groups) && p.login_groups.length === 0, p.login_groups);
+  await prisma.courseMembership.create({ data: { courseId: course.id, tierId: thirty.id, membershipType: 'Thirty-day', status: 'active', inviteEmail: `mem@${TAG}.local`, inviteName: 'Mem Ber', payToken: `${TAG}-mem` } });
+  p = await loadPublicCourse(`${TAG}-a`);
   ok('an active membership makes login_groups ["members"]', JSON.stringify(p.login_groups) === '["members"]', p.login_groups);
   await prisma.course.update({ where: { id: course.id }, data: { hasResidentPricing: true, residentAdvanceDays: 21 } });
   await prisma.courseResident.create({ data: { courseId: course.id, name: 'Res Ident', email: `res@${TAG}.local` } });
