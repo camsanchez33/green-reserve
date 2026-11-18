@@ -99,7 +99,10 @@ check('CLI fails on an unlisted high', unlisted.status === 1 && unlisted.stdout.
 }
 
 const file = JSON.parse(readFileSync('.github/audit-allowlist.json', 'utf8'));
-check('checked-in allowlist holds only the picomatch entry', file.entries.length === 1 && file.entries[0].id === 'GHSA-fc5q-39xc-vjpf' && file.entries[0].package === 'picomatch' && file.entries[0].severity === 'high' && file.entries[0].expires === '2026-12-15');
+// 2026-11-18: npm's audit stopped reporting GHSA-fc5q-39xc-vjpf for picomatch 4.0.5 (withdrawn or re-scoped upstream;
+// already stale on main, independent of the Sentry 11.14 bump), so the entry was removed. A new entry needs Cam;
+// this check then changes with it, in the same PR.
+check('checked-in allowlist is empty', Array.isArray(file.entries) && file.entries.length === 0);
 const wf = readFileSync('.github/workflows/security.yml', 'utf8');
 check('workflow runs the gate', wf.includes('node scripts/audit-gate.mjs') && !/run: npm audit --omit=dev --audit-level=high\b/.test(wf));
 

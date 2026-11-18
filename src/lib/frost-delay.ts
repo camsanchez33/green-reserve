@@ -65,6 +65,8 @@ export async function applyFrostDelay(courseId: string, plan: FrostPlan, courseN
     const r = await moveBooking({
       bookingId: m.bookingId, newTeeTimeId: m.toTeeTimeId, courseId, pricing: 'keep',
       expectFromTeeTimeId: m.fromTeeTimeId, actor: { type: 'staff', id: actorId ?? null },
+      // ALERTS-2: the early times are blocked just below; they never open to golfers.
+      notifyAlerts: false,
     }).catch(() => null);
     if (!r || !r.ok) {
       unplaced.push({ bookingId: m.bookingId, name: m.name, players: m.players, time: m.fromTime });

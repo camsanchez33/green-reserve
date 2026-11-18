@@ -1,6 +1,7 @@
 import { holdChargeKey } from './hold-key';
 import { prisma } from './prisma';
-import { sendCancellationEmail, sendTeeTimeAlertEmail } from './email';
+import { sendCancellationEmail } from './email';
+import { notifyAlertsFor } from './tee-time-alerts';
 import { refundOnConnectedAccount, chargeOnConnectedAccount } from './stripe';
 import { holdRefundCents, hasShareToRefund } from './split-booking-db';
 import { refundSeparateAccessFee, chargeAccessFeeSeparately } from './access-fee';
@@ -272,49 +273,6 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
     return { error: 'This booking was just cancelled or checked in from another screen — refresh to see it.', status: 409 } as const;
   }
 
-  // Find all unnotified alerts for this slot (specific-slot or criteria-based)
-  // ADDTIME-1 (review 2026-11-06): a time kept for staff is never announced to golfers — it isn't bookable online.
-  const alerts = notifySlotAlerts && !booking.teeTime.staffOnly ? await prisma.teeTimeAlert.findMany({
-    where: {
-      notifiedAt: null,
-      OR: [
-        { teeTimeId: booking.teeTimeId },
-        {
-          courseId: booking.courseId,
-          date: booking.teeTime.date,
-          players: { lte: booking.players },
-        },
-      ],
-    },
-  }) : [];
-
-  // For criteria alerts, filter by time window in-memory
-  const matching = alerts.filter((a) => {
-    if (a.teeTimeId) return true;
-    if (a.windowStart && booking.teeTime.time < a.windowStart) return false;
-    if (a.windowEnd && booking.teeTime.time > a.windowEnd) return false;
-    return true;
-  });
-
-  if (matching.length > 0) {
-    await prisma.teeTimeAlert.updateMany({
-      where: { id: { in: matching.map((a) => a.id) } },
-      data: { notifiedAt: new Date() },
-    });
-    for (const alert of matching) {
-      await sendTeeTimeAlertEmail({
-        name: alert.name,
-        email: alert.email,
-        courseName: booking.course.name,
-        courseSlug: booking.course.slug,
-        date: booking.teeTime.date,
-        time: booking.teeTime.time,
-        players: alert.players,
-        unsubscribeToken: alert.token,
-      }).catch(console.error);
-    }
-  }
-
   await sendCancellationEmail({
     golferName: booking.golferName,
     golferEmail: booking.golferEmail,
@@ -361,6 +319,14 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
   // PRICE-3: a round pack's rounds come back by the same rule as the booking fee — before the
   // cutoff, or when the course calls it off or waives; a late cancel or a no-show uses them.
   if (!(!waiveFee && !opts.courseCalledOff && (isLate || !!noShowCharge))) await releaseBookingRounds(bookingId);
+
+  // ALERTS-2: the freed seats may match someone's tee time alert (first come, first served).
+  // ADDTIME-1 (review 2026-11-06): a time kept for staff is never announced to golfers.
+  // Awaited, never throws (lib/tee-time-alerts). Last, after every refund and the round
+  // release, so a slow batch of alert sends can never leave money unreturned.
+  if (notifySlotAlerts && !booking.teeTime.staffOnly && !keepSlotBlocked) {
+    await notifyAlertsFor(booking.courseId, [booking.teeTime.date]);
+  }
 
   // A kept no-show charge reads as a fee kept on every screen, as in the email.
   // noShowFeeKeptCents: the screens name WHICH fee was kept (a no-show charge is not a late fee).
