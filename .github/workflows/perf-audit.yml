@@ -10,7 +10,8 @@ name: Performance audit
 
 on:
   pull_request:
-    branches: [main]
+    # docs/RELEASES.md §11: lane PRs target staging from Nov 30; the budget must gate them there too.
+    branches: [main, staging]
 
 # Read-only token: this job runs a third-party action (setup-chrome) after checkout.
 permissions:
