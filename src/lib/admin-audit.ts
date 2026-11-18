@@ -29,6 +29,8 @@ export const REASON_ACTIONS = new Set([
   'company_document_delete', 'goal_delete', 'course_group_delete', 'schedule_delete',
   // TEST-1
   'data_wipe', 'course_reset',
+  // KEEP-OUTREACH (Cam 2026-11-18)
+  'inquiries_clear',
 ]);
 
 /** Plain words for each action, for the reason box and the Audit page. */
@@ -41,6 +43,7 @@ export const ACTION_LABELS: Record<string, string> = {
   company_document_delete: 'Delete a company document', goal_delete: 'Remove a goal', course_group_delete: 'Delete a course group',
   schedule_delete: 'Delete a schedule',
   data_wipe: 'Clear all test data before launch', course_reset: 'Reset a test course', course_test_mark: 'Mark a course as a test course', course_sample_fill: 'Fill a test course with sample data',
+  inquiries_clear: 'Clear the test inquiries before outreach',
   // recorded without a reason
   course_settings: 'Edit course settings', course_go_live: 'Set a course live', course_featured: 'Feature a course',
   course_create: 'Build a course by hand', course_group_add: 'Add a course group', course_group_edit: 'Edit a course group',
