@@ -37,7 +37,7 @@ check('no alert sheet in preview', course.includes('if (!course || previewMode) 
 
 check('the 15th date is refused and said', sheet.includes('An alert holds up to ${MAX_DATES} dates. Untick one to add another.'));
 check('ticking the text box clears the phone message', sheet.includes('setTextOk(e.target.checked); if (err.phone) setErr('));
-check('the first tile of each month names the month', sheet.includes("i === 0 || d.endsWith('-01') ? { month: 'short' } : { weekday: 'short' }"));
+check('the first tile of each month names the month, even when the 1st is closed', sheet.includes("i === 0 || d.slice(0, 7) !== days[i - 1].slice(0, 7) ? { month: 'short' } : { weekday: 'short' }"));
 check('in preview a full time offers no alert', course.includes('disabled={isFull && (!alertsOn || !!previewMode)}'));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');

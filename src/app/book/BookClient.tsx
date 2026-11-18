@@ -79,10 +79,8 @@ type ConfirmedData = {
   golferEmail: string;
 };
 
-// "Back to tee times": where the golfer picked the time — the member list for a
-// member booking, else the course page with the date, party and filters it had.
+// "Back to tee times": the course page with the date, party and filters it had (there is no member list since item 6).
 export function backToTimesHref(courseSlug: string, params: { get(key: string): string | null }, players: number): string {
-  if (params.get('from') === 'member') return `/courses/${courseSlug}/member`;
   const q = new URLSearchParams();
   const date = params.get('date');
   if (date) q.set('date', date);

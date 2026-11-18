@@ -17,6 +17,9 @@ const NEUTRAL: Record<BookingLook, Record<string, string>> = {
   dark:  { bg: '#111211', paper: '#1A1C1A', card: '#222422', ink: '#EDEEEB', soft: '#C3C6C0', muted: '#A6AAA3', line: '#343734', bad: '#EE9480', 'bad-soft': '#3A2220' },
 };
 
+/** The status colours on Dark (the site's dark values; red the look's own --g-bad). */
+export const DARK_STATUS = { '--color-ok': '#7BD9A4', '--color-warn': '#F2C46B', '--color-bad': NEUTRAL.dark.bad } as const;
+
 const HEX = /^#[0-9a-f]{6}$/i;
 
 /** The preset a stored hex colour is, if it is one (matched on the Light accent, case-insensitive). */
@@ -66,6 +69,9 @@ export function golferLookVars(course: { booking_look?: Partial<CourseLook> | nu
   }
   const vars: Record<string, string> = Object.fromEntries(Object.entries(n).map(([k, v]) => [`--g-${k}`, v]));
   Object.assign(vars, { '--g-acc': acc, '--g-acc-h': hover, '--g-acc-soft': soft, '--g-on-acc': onAcc, '--g-band': band, '--g-on-band': '#FFFFFF', colorScheme: mode });
+  // <StatusDot> draws from the site's --color-ok/warn/bad, which are light-page colours: on Dark they nearly vanish,
+  // so the look lifts them (red is the look's own).
+  if (mode === 'dark') Object.assign(vars, DARK_STATUS);
   return vars as CSSProperties;
 }
 
