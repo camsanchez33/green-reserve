@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import * as Sentry from '@sentry/nextjs';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS, areaGate } from '@/lib/admin-session';
-import { auditAdmin } from '@/lib/admin-audit';
+import { auditAdmin, auditGolferView } from '@/lib/admin-audit';
 import { sendBookingConfirmation, sendCheckInReceiptEmail } from '@/lib/email';
 import { roundChargedTotal, roundApplicationFeeCents } from '@/lib/shop';
 import { confirmationPartsOf, CONFIRMATION_PART_SELECT } from '@/lib/confirmation-parts';
@@ -132,6 +133,16 @@ export async function GET(req: NextRequest) {
       refunded: bookings.reduce((s, b) => s + b.refundedTotal, 0),
     };
 
+    // GOLFER-VIEW (Cam 2026-11-18): every opened record is recorded (who, which golfer, when), at most once per
+    // admin per golfer per 10 minutes. The search and the list are not. No record, no view.
+    const viewName = `${identity.firstName} ${identity.lastName}`.trim() || identity.email;
+    try {
+      await auditGolferView(session, identity.id ? { kind: 'account', id: identity.id, name: viewName } : { kind: 'guest', id: identity.email.toLowerCase(), name: viewName });
+    } catch (err) {
+      console.error(JSON.stringify({ ev: 'golfer_view.audit_failed', error: err instanceof Error ? err.message : String(err) }));
+      Sentry.captureException(err, { tags: { area: 'admin_audit', action: 'golfer_view' } });
+      return NextResponse.json({ error: 'Couldn’t record that you opened this golfer, so it isn’t shown. Try again.' }, { status: 503 });
+    }
     return NextResponse.json({ golfer: { ...identity, bookings, trust } });
   }
 

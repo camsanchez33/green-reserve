@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireOwner, ownerGateError } from '@/lib/admin-session';
-import { ACTION_LABELS } from '@/lib/admin-audit';
+import { auditLabel } from '@/lib/admin-audit';
 
 // BRAIN-1a (Cam 2026-10-22): the owner reads every admin action — filter by
 // person, action or course; newest first, 50 a page. Owner only: it names
@@ -36,10 +36,11 @@ export async function GET(req: NextRequest) {
     entries: page.map(r => ({
       id: r.id, at: r.createdAt.toISOString(),
       who: r.actorName || r.admin.name, adminId: r.adminId,
-      action: r.action, label: ACTION_LABELS[r.action] ?? r.action.replace(/_/g, ' '),
+      // A golfer view's detail is the golfer's name, already in the label ("Viewed golfer <name>").
+      action: r.action, label: auditLabel(r.action, r.detail),
       targetType: r.targetType, targetId: r.targetId,
       courseId: r.courseId, courseName: r.courseId ? courseName.get(r.courseId) ?? null : null,
-      reason: r.reason, detail: r.detail, before: r.before, after: r.after,
+      reason: r.reason, detail: r.action === 'golfer_view' ? '' : r.detail, before: r.before, after: r.after,
     })),
     next: rows.length > PAGE ? page[page.length - 1].createdAt.toISOString() : null,
     admins,
