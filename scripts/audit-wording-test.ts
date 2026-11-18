@@ -66,7 +66,7 @@ ok('6. a twilight period at noon exactly is ignored (no empty afternoon)', norma
 ok('6. a morning period named twilight is ignored', normalizeDbCourse({ id: 'c', slug: 's', name: 'n', schedules: [{ tierName: 'Twilight', startTime: '07:00' }] }).twilight_start === null);
 const golfer = read('src/app/courses/[slug]/CourseBookingClient.tsx');
 // Option A (Cam 2026-11-18): Morning / Mid day / Afternoon tiles replace the Twilight filter; the cards and alert windows share one set of edges.
-ok('6. the page buckets and alert windows use the same edges', golfer.includes("if (hm < '11:00') return 'morning';") && golfer.includes("if (hm < '14:00') return 'midday';") && golfer.includes("afternoon: { windowStart: '14:00', windowEnd: '23:59' }") && golfer.includes('TOD_WINDOWS[tods[0]]'));
+ok('6. the page buckets and alert windows use the same edges', golfer.includes("if (hm < '11:00') return 'morning';") && golfer.includes("if (hm < '14:00') return 'midday';") && read('src/components/golfer/AlertSheet.tsx').includes("return hm < '11:00' ? 'morning' : hm < '14:00' ? 'midday' : 'afternoon';") && read('src/lib/tee-time-alerts.ts').includes("return time < '11:00' ? 'morning' : time < '14:00' ? 'midday' : 'late';"));
 ok('6. both course loaders select the period name and start', read('src/lib/public-course.ts').includes('tierName: true, startTime: true') && read('src/app/api/preview/[courseId]/route.ts').includes('tierName: true, startTime: true'));
 
 // 7

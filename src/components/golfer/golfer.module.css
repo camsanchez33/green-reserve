@@ -188,6 +188,21 @@
 .modal p { color: var(--g-soft); font-size: 14px; margin: 0 0 12px; }
 .ghost { width: 100%; min-height: 44px; border: 1px solid var(--g-line); border-radius: 12px; background: none; cursor: pointer; font-weight: 600; margin-top: 8px; }
 
+/* Tee time alert sheet (item 7): a right panel on a laptop, sliding up on a phone. */
+.sheetScrim { position: fixed; inset: 0; background: rgba(0, 0, 0, .35); z-index: 60; }
+.sheet { position: fixed; top: 0; right: 0; bottom: 0; width: min(440px, 100%); overflow: auto; background: var(--g-paper); color: var(--g-ink); padding: 16px 18px 24px; z-index: 61; box-shadow: -10px 0 30px rgba(0, 0, 0, .25); }
+.shead2 { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
+.shead2 h2 { font-size: 22px; }
+.fixedNote { font-size: 14px; padding: 8px 12px; border-radius: 10px; background: var(--g-acc-soft); margin: 0 0 12px; }
+.dgrid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.dgrid button { min-height: 52px; border: 1px solid var(--g-line); border-radius: 10px; background: var(--g-card); cursor: pointer; font-weight: 600; font-size: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.dgrid button small { font-size: 11px; font-weight: 400; color: var(--g-muted); }
+.dgrid button[aria-pressed="true"] { background: var(--g-acc); border-color: var(--g-acc); color: var(--g-on-acc); }
+.dgrid button[aria-pressed="true"] small { color: var(--g-on-acc); }
+.dgrid[aria-invalid="true"], .todrow[aria-invalid="true"] { outline: 2px solid var(--g-bad); outline-offset: 3px; border-radius: 10px; }
+.pol a { color: var(--g-acc); }
+.altrow { display: flex; justify-content: center; margin: 4px 0 18px; }
+
 @media (max-width: 860px) {
   .grid { grid-template-columns: 1fr; }
   .side { display: none; position: fixed; inset: auto 0 0 0; max-height: 88vh; overflow: auto; background: var(--g-paper); padding: 16px; border-radius: 12px 12px 0 0; z-index: 40; box-shadow: 0 -10px 30px rgba(0, 0, 0, .25); }
@@ -198,6 +213,7 @@
   .btn.sdone { display: flex; margin-top: 12px; position: sticky; bottom: 0; }
   .mbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; position: sticky; top: 0; z-index: 5; background: var(--g-paper); padding: 8px 0 10px; margin-bottom: 6px; font-size: 14px; border-bottom: 1px solid var(--g-line); }
   .filterbtn { display: inline-flex; }
+  .sheet { top: auto; left: 0; width: 100%; max-height: 88vh; border-radius: 12px 12px 0 0; box-shadow: 0 -10px 30px rgba(0, 0, 0, .25); }
   .bookbar { position: sticky; bottom: 0; margin: 0 -16px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); background: var(--g-paper); border-top: 1px solid var(--g-line); z-index: 5; }
   .cinfo { margin: 12px 16px 0; }
   .wrap { padding: 14px 16px 20px; }

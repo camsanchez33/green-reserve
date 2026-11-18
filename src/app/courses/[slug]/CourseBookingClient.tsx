@@ -13,6 +13,7 @@ import { StatusDot } from '@/components/ui/StatusDot';
 import { golferLookVars, type CourseLook } from '@/components/golfer/look';
 import { CourseFooter } from '@/components/golfer/CourseFrame';
 import { loginOffered } from './login/login-helpers';
+import AlertSheet, { alertPartOf, type AlertSheetOpen } from '@/components/golfer/AlertSheet';
 import g from '@/components/golfer/golfer.module.css';
 import { SUPPORT_EMAIL } from '@/lib/contact';
 
@@ -26,12 +27,6 @@ const TODS: { key: TimeOfDay; label: string; hint: string }[] = [
   { key: 'afternoon', label: 'Afternoon', hint: 'After 2 PM' },
 ];
 const ALL_TODS: TimeOfDay[] = ['morning', 'midday', 'afternoon'];
-/** The windows an alert for a time of day covers (the same edges the cards group by). */
-const TOD_WINDOWS: Record<TimeOfDay, { windowStart: string; windowEnd: string }> = {
-  morning:   { windowStart: '05:00', windowEnd: '10:59' },
-  midday:    { windowStart: '11:00', windowEnd: '13:59' },
-  afternoon: { windowStart: '14:00', windowEnd: '23:59' },
-};
 function parseTods(v: string | null): TimeOfDay[] {
   const picked = (v ?? '').split(',').filter((x): x is TimeOfDay => (ALL_TODS as string[]).includes(x));
   return picked.length ? ALL_TODS.filter(t => picked.includes(t)) : ALL_TODS;
@@ -213,16 +208,8 @@ export default function CourseDetailPage({
   const [searchingNext, setSearchingNext] = useState(false);
   const didMount = useRef(false);
 
-  const [alertModal, setAlertModal] = useState<{ teeTimeId?: string; date: string; courseId: string } | null>(null);
-  const [alertEmail, setAlertEmail] = useState('');
-  const [alertName, setAlertName] = useState('');
-  const [alertSubmitting, setAlertSubmitting] = useState(false);
-  const [alertSent, setAlertSent] = useState(false);
-  // #486: a guest's alert waits for the emailed confirm link ('pending'); a logged-in member's is on at once ('active').
-  const [alertPending, setAlertPending] = useState(false);
-  // An active (logged-in) alert goes to the log-in email, which the server names (masked).
-  const [alertTo, setAlertTo] = useState('');
-  const [alertError, setAlertError] = useState('');
+  // Item 7: the tee time alert sheet (components/golfer/AlertSheet), over the booking page.
+  const [alertSheet, setAlertSheet] = useState<AlertSheetOpen | null>(null);
 
   const [memberSession, setMemberSession] = useState<ActiveMemberSession | null>(null);
   const [memberTeeTimes, setMemberTeeTimes] = useState<ActiveTeeTime[]>([]);
@@ -450,62 +437,18 @@ export default function CourseDetailPage({
     setCartFilter('any');
   }
 
-  function openAlert(teeTimeId?: string) {
+  /** Opens the alert sheet: for a full time (pre-filled with it), or for the day, its time of day and the players. */
+  function openAlert(t?: TeeTime) {
     if (!course) return;
-    // B-2: a full slot's alert lives inside its own row now; tapping the same
-    // row again folds it back up. The date-level alert (no slot) keeps the modal.
-    setAlertEmail('');
-    setAlertName('');
-    setAlertSent(false);
-    setAlertPending(false);
-    setAlertError('');
     alertOpener.current = typeof document !== 'undefined' ? (document.activeElement as HTMLElement | null) : null;
-    setAlertModal({ teeTimeId, date: selectedDate, courseId: String(course.id) });
+    setAlertSheet(t
+      ? { day: selectedDate, parts: [], players, slot: { id: String(t.id), time: t.time, label: formatTime(t.time), part: alertPartOf(t.time) } }
+      : { day: selectedDate, parts: tods, players });
   }
 
   function closeAlert() {
-    if (alertSubmitting) return;
-    setAlertModal(null);
-    setAlertSent(false);
+    setAlertSheet(null);
     alertOpener.current?.focus();
-  }
-
-  async function submitAlert() {
-    if (!alertModal || !alertEmail.trim()) return;
-    setAlertSubmitting(true);
-    // One time of day picked: the alert covers it. Several or all: the whole day (the API takes one window).
-    const windows = alertModal.teeTimeId || tods.length !== 1 ? { windowStart: '', windowEnd: '' } : TOD_WINDOWS[tods[0]];
-    setAlertError('');
-    try {
-      const r = await fetch('/api/alerts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          courseId: alertModal.courseId,
-          email: alertEmail.trim(),
-          name: alertName.trim(),
-          date: alertModal.date,
-          windowStart: windows.windowStart,
-          windowEnd: windows.windowEnd,
-          players: alertModal.teeTimeId ? 1 : players,
-          teeTimeId: alertModal.teeTimeId || null,
-        }),
-      });
-      if (!r.ok) {
-        const d = await r.json().catch(() => ({}));
-        setAlertError(d.error || 'That did not go through — try again.');
-        return;
-      }
-      const done = await r.json().catch(() => ({}));
-      // Fail safe: only an answer that says 'active' reads as set.
-      setAlertPending(done?.status !== 'active');
-      setAlertTo(typeof done?.maskedEmail === 'string' ? done.maskedEmail : '');
-      setAlertSent(true);
-    } catch {
-      setAlertError('Network error — the alert was not set. Check your connection and try again.');
-    } finally {
-      setAlertSubmitting(false);
-    }
   }
 
   async function memberSignOut() {
@@ -552,13 +495,13 @@ export default function CourseDetailPage({
     setFiltersOpen(false);
     filterBtnRef.current?.focus();
   }
-  // The phone Filters sheet and the alert close on Escape; the sheet's close button takes focus when it opens.
+  // The phone Filters sheet closes on Escape and keeps focus inside; its close button takes focus when it opens.
   useEffect(() => {
-    if (!filtersOpen && !alertModal) return;
+    if (!filtersOpen) return;
     if (filtersOpen) sideCloseRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Tab') {
-        const box = document.querySelector<HTMLElement>(alertModal ? '[aria-labelledby="alert-h"]' : '#filters');
+        const box = document.querySelector<HTMLElement>('#filters');
         const items = box ? Array.from(box.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], input:not([disabled]), select, textarea')).filter(el => el.offsetParent !== null) : [];
         if (items.length) {
           const first = items[0], last = items[items.length - 1];
@@ -568,13 +511,13 @@ export default function CourseDetailPage({
         return;
       }
       if (e.key !== 'Escape') return;
-      if (alertModal) closeAlert(); else closeFilters();
+      closeFilters();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-    // closeAlert/closeFilters read only refs and setters plus alertSubmitting.
+    // closeFilters reads only a ref and a setter.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtersOpen, alertModal, alertSubmitting]);
+  }, [filtersOpen]);
 
   if (notFound) {
     // AMENDED BIRDIE RULE: no course resolved here, so there's nothing to
@@ -722,6 +665,18 @@ export default function CourseDetailPage({
   const loginHref = `/courses/${slug}/login?back=${encodeURIComponent(`/courses/${slug}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`)}`;
   const groupWords = (memberSession?.groups?.length ? memberSession.groups.map(gr => gr.name) : memberSession?.tier?.name ? [memberSession.tier.name] : []).join(' and ');
   const alertsOn = course.tee_time_alerts_on !== false;
+  // The days an alert can watch: today through this golfer's last bookable day, open days only (#486 allows 14).
+  const alertDays = (() => {
+    const out: string[] = [];
+    const d = new Date(todayStr + 'T12:00:00');
+    while (out.length < 14) {
+      const ds = formatDate(d);
+      if (ds > lastBookableStr) break;
+      if (!closedOn.has(ds)) out.push(ds);
+      d.setDate(d.getDate() + 1);
+    }
+    return out;
+  })();
   const shortDay = (ds: string) => { const d = new Date(ds + 'T12:00:00'); return `${d.toLocaleDateString('en-US', { weekday: 'short' })} ${d.getDate()}`; };
   const longDate = (ds: string) => new Date(ds + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
@@ -929,7 +884,7 @@ export default function CourseDetailPage({
                       ? `${formatTime(t.time)}, ${round}, full${alertsOn ? '. Tell me if it opens' : ''}`
                       : `${formatTime(t.time)}, ${round}, ${t.players_available} ${t.players_available === 1 ? 'spot' : 'spots'} open, $${price} per player${hasMemberRate ? `, member price, public price $${t.green_fee}` : ''}`}
                     disabled={isFull && !alertsOn}
-                    onClick={isFull ? () => { if (alertsOn) openAlert(t.id); } : () => bookTime(t)}>
+                    onClick={isFull ? () => { if (alertsOn) openAlert(t); } : () => bookTime(t)}>
                     <span className={g.t}>{formatTime(t.time)}</span>
                     <span className={g.c}>{round} · {isFull ? 'Full' : `${t.players_available} open`}</span>
                     <span className={g.b}>
@@ -942,6 +897,12 @@ export default function CourseDetailPage({
             </div>
           </section>
         ))}
+        {/* Item 7: an alert row at the end of each day. */}
+        {alertsOn && !previewMode && (
+          <div className={g.altrow}>
+            <button type="button" className={g.chip} onClick={() => openAlert()}>Tell me when a time opens</button>
+          </div>
+        )}
       </>
     );
   }
@@ -1162,38 +1123,10 @@ export default function CourseDetailPage({
       </div>
       <CourseFooter course={course} accent={course.brand_color || '#173B2A'} />
 
-      {/* Alert: the date (or the full time) the golfer wants to hear about. The alerts sheet (item 7) replaces this. */}
-      {alertModal && (
-        <div className={g.modalBack} onClick={closeAlert}>
-          <div className={g.modal} role="dialog" aria-modal="true" aria-labelledby="alert-h" onClick={e => e.stopPropagation()}>
-            {alertSent ? (<>
-              <h2 id="alert-h">{alertPending ? 'Almost done' : 'Alert set'}</h2>
-              <p>{alertPending
-                ? 'Check your email to turn it on.'
-                : `We'll email ${alertTo || 'you'} when ${alertModal.teeTimeId ? 'that time' : 'a time'} opens on ${longDate(alertModal.date)}. First come, first served.`}</p>
-              <button type="button" className={g.btn} onClick={closeAlert} autoFocus>Done</button>
-            </>) : (<>
-              <h2 id="alert-h">Tell me when a time opens</h2>
-              <p>{alertModal.teeTimeId
-                ? `We'll email you if this time opens on ${longDate(alertModal.date)}.`
-                : `We'll email you when a time opens on ${longDate(alertModal.date)}${tods.length === 1 ? `, ${(h => h[0].toLowerCase() + h.slice(1))(TODS.find(t => t.key === tods[0])!.hint)}` : ''}.`}</p>
-              <form noValidate onSubmit={e => { e.preventDefault(); submitAlert(); }}>
-                <div className={g.inp}>
-                  <label className={g.lab} htmlFor="alert-email">Email</label>
-                  <input id="alert-email" type="email" autoComplete="email" autoFocus value={alertEmail} onChange={e => setAlertEmail(e.target.value)}
-                    aria-invalid={alertError ? true : undefined} aria-describedby="alert-err" />
-                </div>
-                <div className={g.inp}>
-                  <label className={g.lab} htmlFor="alert-name">Name (optional)</label>
-                  <input id="alert-name" type="text" autoComplete="name" value={alertName} onChange={e => setAlertName(e.target.value)} />
-                </div>
-                <div className={g.err} id="alert-err" role="alert">{alertError}</div>
-                <button type="submit" className={g.btn} disabled={!alertEmail.trim() || alertSubmitting}>{alertSubmitting ? 'Setting…' : 'Set alert'}</button>
-              </form>
-              <button type="button" className={g.ghost} onClick={closeAlert}>Cancel</button>
-            </>)}
-          </div>
-        </div>
+      {/* Item 7: tee time alerts, over the booking page; focus returns to whatever opened it. */}
+      {alertSheet && (
+        <AlertSheet open={alertSheet} onClose={closeAlert} course={{ id: String(course.id), name: course.name }}
+          days={alertDays} memberEmail={memberSession?.email ?? null} />
       )}
 
       {/* Demo booking intercept modal */}

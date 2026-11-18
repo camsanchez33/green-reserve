@@ -75,7 +75,7 @@ check('the course info page adds no <main> inside the layout\'s', !readFileSync(
 check('the visible Back links never point at the member page (it needs a log-in and would send the golfer back here)', page.includes("const leaveHref = backHref.startsWith('/book?') || backHref === home || backHref.startsWith(`${home}?`) ? backHref : home;") && page.includes('<Link href={leaveHref} className={`${g.lnk} ${g.back}`}>') && page.includes('href={leaveHref}>{backLabel}</Link>') && !page.includes('<Link href={backHref}'));
 check('the failed-link line shows only when Log in is offered', page.includes("{linkFailed && !loginOff && step === 'email' && <p"));
 check('a failed log-out on the member page is said', member.includes("if (!r || !r.ok) { setSignOutErr(true); return; }") && member.includes("Couldn&rsquo;t log out. Try again."));
-check('an alert reads as set only when the server says active, naming the log-in address', course.includes("setAlertPending(done?.status !== 'active');") && course.includes("We'll email ${alertTo || 'you'}"));
+check('an alert reads as on only when the server says active, naming the log-in address', readFileSync('src/components/golfer/AlertSheet.tsx', 'utf8').includes("active: d.status === 'active',") && readFileSync('src/components/golfer/AlertSheet.tsx', 'utf8').includes("d.status === 'active' && typeof d.maskedEmail === 'string' ? d.maskedEmail"));
 
 // The same rule, evaluated: the visible Back link keeps the tee times' date and players, and never the member page.
 {
