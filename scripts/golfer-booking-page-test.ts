@@ -36,7 +36,7 @@ check('the card field text follows the look', lookText('dark').ink === '#EDEEEB'
 const course = readFileSync('src/app/courses/[slug]/CourseBookingClient.tsx', 'utf8');
 check('time of day is tiles, choose any, at least one (and it says so)', course.includes("aria-labelledby=\"tod-label\"") && course.includes("setLiveNote('Keep at least one time of day.')"));
 check('no "Tee off between" or "Price up to" filter (removed in the mockup threads)', !course.includes('type="range"') && !course.includes('maxPrice') && !course.includes('setFromHour'));
-check('picking a time opens its own Book page', course.includes('onClick={isFull ? () => openAlert(t.id) : () => bookTime(t)}') && course.includes('else router.push(`/book?${qp}`);'));
+check('picking a time opens its own Book page', course.includes('onClick={isFull ? () => { if (alertsOn) openAlert(t.id); } : () => bookTime(t)}') && course.includes('else router.push(`/book?${qp}`);'));
 check('a time picked on a group page (?tt=) goes straight to its Book page, replacing the URL so Back works', course.includes('setGroupPick(pick);') && course.includes('bookTime(groupPick, true);') && course.includes('if (replace) router.replace(`/book?${qp}`);'));
 check('the cart filter shows only when walking or riding depends on the time', course.includes('{cartVaries && (') && course.includes('open.some(t => t.cart_required) && open.some(t => !t.cart_required)'));
 check('the course footer (Privacy, Terms, support, policy) stays on the page', course.includes('<CourseFooter course={course}'));
@@ -80,6 +80,10 @@ const coursePageServer = readFileSync('src/app/courses/[slug]/page.tsx', 'utf8')
 check('an unknown course is a real 404', coursePageServer.includes('if (!initialCourse) notFound();') && readFileSync('src/app/courses/[slug]/not-found.tsx', 'utf8').includes('We couldn&apos;t find that course'));
 const siteFooter = readFileSync('src/components/Footer.tsx', 'utf8');
 check('the site footer skips /book, which carries its own footer in the look (Privacy, Terms, support)', siteFooter.includes("if (pathname === '/book' || pathname === '/book/') return null;") && book.includes('<BookFooter course={initial?.course} />') && book.includes('<Link href="/privacy">Privacy</Link>') && book.includes('<Link href="/terms">Terms</Link>'));
+
+// Until the alerts sheet (item 7): the course's switch hides every entry point; a guest is told to confirm by email (#486).
+check('alerts: no entry points when the course turned alerts off', course.includes("const alertsOn = course.tee_time_alerts_on !== false;") && course.includes('{alertsOn && <button type="button" className={g.chip} onClick={() => openAlert()}>') && course.includes('disabled={isFull && !alertsOn}'));
+check('alerts: a guest (status pending) is told to check their email; a member (active) that it is set', course.includes("setAlertPending(done?.status === 'pending');") && course.includes("'Check your email to turn it on.'"));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);
