@@ -26,7 +26,7 @@ export const PALETTE_PAGES: PalettePage[] = [
   { id: 'nav:employees',   label: 'Team',          href: '/admin/employees',  manager: true },
   { id: 'nav:broadcasts',  label: 'Announcements', href: '/admin/announcements', support: true },
   { id: 'nav:system',      label: 'Platform activity', href: '/admin/system',     manager: true },
-  { id: 'nav:profile',     label: 'Settings',      href: '/admin/profile',    always: true, keywords: ['my profile', 'profile', 'password'] },
+  { id: 'nav:profile',     label: 'Settings',      href: '/admin/profile',    always: true, keywords: ['my profile', 'profile'] },
 ];
 
 /** The page row for a saved recent, only if the row still exists at the same address (a moved page drops out). */
@@ -42,7 +42,7 @@ export const pageMatches = (p: PalettePage, lq: string) => p.label.toLowerCase()
  *  under today's label (a page that moved — Pipeline went to /admin/inquiries/all — or was renamed drops out or is
  *  relabelled). Other recents (courses, bookings, the "Bookings matching" row) are untouched. */
 export function freshRecents<T extends { type: string; id: string; href: string; label: string }>(saved: T[]): T[] {
-  return saved.flatMap(r => {
+  return saved.filter(r => r && typeof r === 'object').flatMap(r => {
     if (r.type !== 'nav' || r.id === 'nav:bookings-q') return [r];
     const p = currentPage(r.id, r.href);
     return p ? [{ ...r, label: p.label }] : [];

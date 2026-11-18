@@ -22,7 +22,8 @@ function loadRecents(): SearchResult[] {
   try {
     const saved: SearchResult[] = JSON.parse(localStorage.getItem(RECENTS_KEY) ?? '[]');
     const fresh = freshRecents(Array.isArray(saved) ? saved : []);
-    if (JSON.stringify(fresh) !== JSON.stringify(saved)) localStorage.setItem(RECENTS_KEY, JSON.stringify(fresh));
+    // Saving the cleaned list back is best-effort (storage can be full); the cleaned list is shown either way.
+    if (JSON.stringify(fresh) !== JSON.stringify(saved)) { try { localStorage.setItem(RECENTS_KEY, JSON.stringify(fresh)); } catch { /* keep showing it */ } }
     return fresh;
   } catch { return []; }
 }

@@ -61,6 +61,9 @@ check('Course groups is not on the rail', !items.some(i => i.key === 'groups' ||
   check('…a renamed page keeps its recent under today\'s label', fresh.find(r => r.id === 'nav:revenue')?.label === 'Revenue');
   check('…a page with no row any more drops out', !fresh.some(r => r.id === 'nav:groups'));
   check('…and other recents are untouched', fresh.some(r => r.id === 'nav:bookings-q') && fresh.some(r => r.id === 'course:c1') && fresh.length === 3);
+  check('…a garbled entry in storage is skipped, not fatal', freshRecents([null, ...saved] as unknown as typeof saved).length === 3);
+  // The wiring: the route filters these rows, and the palette cleans recents with them.
+  check('the search route serves PALETTE_PAGES and the palette cleans recents with freshRecents', search.includes('PALETTE_PAGES.filter(') && readFileSync('src/components/admin/CommandPalette.tsx', 'utf8').includes('freshRecents('));
 }
 check('…nor in the search palette (no page row, no group results)', !pages.includes("'nav:groups'") && !pages.includes('/admin/groups') && !search.includes('courseGroup.findMany'));
 
