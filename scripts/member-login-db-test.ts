@@ -469,11 +469,13 @@ async function main() {
   check('Your <Course>: benefits in one line', hs.body?.benefits === '20% off every round and you can book 9 days out. 6 guest passes a year.', hs.body?.benefits);
   check('…renews on the end date when it renews itself', hs.body?.renewsOn === homeEnd && hs.body?.expiresOn === null && hs.body?.autoRenew === true, hs.body);
   check('…renewalFailed false while renewals go through', hs.body?.renewalFailed === false, hs.body);
+  check('…inGrace false mid-term', hs.body?.inGrace === false, hs.body);
   // A decline happens at the end of the term; within the grace days the membership still logs in with its rates.
   await prisma.course.update({ where: { id: home.id }, data: { memberGraceDays: 10 } });
   await prisma.courseMembership.updateMany({ where: { courseId: home.id, inviteEmail: homeEmail }, data: { autoRenewFailedAt: new Date(), expiresAt: new Date(`${addDaysStr(todayIn('UTC'), -1)}T00:00:00Z`) } });
   const hsFail = await get(`/api/member/${home.slug}/session`, await cookie(home.id, homeEmail));
   check('…renewalFailed true after a declined renewal at the end of the term (the Golfer lane\'s "Your renewal didn\'t go through")', hsFail.body?.renewalFailed === true, hsFail.body);
+  check('…inGrace true: the term ended yesterday and the course\'s 10 grace days still give member rates', hsFail.body?.inGrace === true, hsFail.body);
   // The member turns automatic renewal off from their emailed link: nothing is failing any more (Build 2026-11-18).
   const homeM = await prisma.courseMembership.findFirstOrThrow({ where: { courseId: home.id, inviteEmail: homeEmail }, select: { id: true } });
   const off = await fetch(`${BASE_URL}/api/membership/${homeM.id}/auto-renew`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: `${TAG}-home` }) });
@@ -484,6 +486,7 @@ async function main() {
   await prisma.courseMembership.updateMany({ where: { courseId: home.id, inviteEmail: homeEmail }, data: { expiresAt: new Date(`${homeEnd}T00:00:00Z`) } });
   const hsMoved = await get(`/api/member/${home.slug}/session`, await cookie(home.id, homeEmail));
   check('…but false once the term runs into the future again, flag or not', hsMoved.body?.renewalFailed === false && hsMoved.body?.renewsOn === homeEnd, hsMoved.body);
+  check('…and not in grace with the term running', hsMoved.body?.inGrace === false, hsMoved.body);
   await prisma.courseMembership.updateMany({ where: { courseId: home.id, inviteEmail: homeEmail }, data: { autoRenewFailedAt: null } });
   await prisma.course.update({ where: { id: home.id }, data: { memberGraceDays: 0 } });
   check('…upcoming: this course, this email (any case), confirmed, still to come, soonest first', up.map(u => u.bookingId).join() === [bNear.id, bPaid.id, bFar.id].join() && up.length === 3, up);
@@ -531,7 +534,7 @@ async function main() {
   check('…a resident: the resident line, the card\'s expiry, an empty list', rs.body?.benefits === 'The resident rate on your own round.' && rs.body?.expiresOn === homeEnd && rs.body?.renewsOn === null && rs.body?.autoRenew === false && rs.body?.renewalFailed === false && Array.isArray(rs.body?.upcoming) && rs.body.upcoming.length === 0, rs.body);
   await prisma.courseMembership.updateMany({ where: { courseId: home.id }, data: { expiresAt: new Date(Date.now() - 400 * 86400_000) } });
   const hs3 = await get(`/api/member/${home.slug}/session`, await cookie(home.id, homeEmail));
-  check('…a lapsed membership gives no benefits line', hs3.status === 200 && hs3.body?.benefits === null, hs3.body);
+  check('…a lapsed membership gives no benefits line, and is past its grace (not inGrace)', hs3.status === 200 && hs3.body?.benefits === null && hs3.body?.inGrace === false, hs3.body);
 
   // The benefits line (invite email, Your <Course>).
   const tb = { discountPct: null, greenFeeWeekdayCents: null, greenFeeWeekendCents: null, lineRates: null, advanceBookingDays: 9, windowPublic: false, guestPassesPerYear: 6 };

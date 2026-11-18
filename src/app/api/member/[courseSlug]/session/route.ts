@@ -56,7 +56,7 @@ export async function GET(
       tier: null,
       groups,
       benefits,
-      renewsOn: null, expiresOn: resident!.expiresOn || null, autoRenew: false, renewalFailed: false,
+      renewsOn: null, expiresOn: resident!.expiresOn || null, autoRenew: false, renewalFailed: false, inGrace: false,
       upcoming,
     });
   }
@@ -103,6 +103,9 @@ export async function GET(
     // not been moved on since: staff can extend "Runs until" by hand without a payment, which leaves the old flag set.
     // The Golfer lane shows "Your renewal didn't go through" only on this flag.
     renewalFailed: membership.autoRenewFailedAt != null && !(membership.expiresAt && membership.expiresAt.getTime() > Date.now()),
+    // The term has ended but the course's grace days still give member rates (lib/member-rates): the end date is stored
+    // as midnight UTC of the last day, so the term has ended once that is before the course's today. Amber on the page.
+    inGrace: live && !!membership.expiresAt && membership.expiresAt.getTime() < Date.parse(`${todayIn(course.timezone)}T00:00:00Z`),
     upcoming,
   });
 }
