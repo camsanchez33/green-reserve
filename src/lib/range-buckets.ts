@@ -81,6 +81,9 @@ export function priceOnline(request: unknown, list: BucketItem[]): LinesResult {
   if (request === undefined || request === null) return { ok: true, lines: [], total: 0 };
   if (!Array.isArray(request) || request.length > 20) return no(400, 'range', 'Range balls weren’t understood — refresh the page.');
   const byId = new Map(list.filter(i => i.active && i.rangeBalls != null).map(i => [i.id, i]));
+  // The one price an online bucket is charged at; the shown-price check below compares against this same function,
+  // so if online bucket pricing ever changes (a member or promo price) the check follows it.
+  const chargedCents = (it: BucketItem) => it.priceCents;
   const qty = new Map<string, number>();
   for (const r of request) {
     const x = (r && typeof r === 'object' ? r : {}) as Record<string, unknown>;
@@ -91,13 +94,13 @@ export function priceOnline(request: unknown, list: BucketItem[]): LinesResult {
     // page was open is refused, never charged silently.
     if (x.unitCents !== undefined && x.unitCents !== null) {
       if (!isInt(x.unitCents, 0, 1_000_000)) return no(400, 'range', 'Range balls weren’t understood — refresh the page.');
-      if (x.unitCents !== byId.get(x.id)!.priceCents) return no(409, 'range', 'That range bucket’s price changed — refresh the page.');
+      if (x.unitCents !== chargedCents(byId.get(x.id)!)) return no(409, 'range', 'That range bucket’s price changed — refresh the page.');
     }
     const n = (qty.get(x.id) ?? 0) + x.qty;
     if (n > MAX_BUCKETS) return no(400, 'range', `Range balls are 0 to ${MAX_BUCKETS} of each bucket.`);
     qty.set(x.id, n);
   }
-  const lines = [...qty.entries()].map(([id, n]) => lineFor(byId.get(id)!, byId.get(id)!.priceCents, n));
+  const lines = [...qty.entries()].map(([id, n]) => lineFor(byId.get(id)!, chargedCents(byId.get(id)!), n));
   return { ok: true, lines, total: linesTotal(lines) };
 }
 
