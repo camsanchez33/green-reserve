@@ -1,21 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
-import { getMemberSession, activeMembershipFor } from '@/lib/member-session';
+import { loggedInAt, activeMembershipFor } from '@/lib/member-session';
 
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ courseSlug: string }> }
 ) {
   const { courseSlug } = await params;
-  const session = await getMemberSession();
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const course = await prisma.course.findUnique({
     where: { slug: courseSlug },
     select: { id: true, name: true },
   });
-  if (!course || course.id !== session.courseId) {
+  const session = course ? await loggedInAt(course.id) : null;
+  if (!course || !session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

@@ -1645,22 +1645,40 @@ export async function sendAdminSetPasswordEmail(data: {
 export async function sendMemberMagicLink(data: {
   name: string; email: string; courseName: string; magicLink: string;
 }) {
+  // GOLFER-LOGIN-1 (Cam 2026-11-18): "Log in", never "sign in as a member" — residents and other groups get this too.
   const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Sign in to your member account</h1>
+    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Log in to ${escHtml(data.courseName)}</h1>
     <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">
-      Click the button below to sign in to your <strong>${data.courseName}</strong> member portal. This link expires in 15 minutes.
+      Use the button below to log in to <strong>${escHtml(data.courseName)}</strong>. This link works for 15 minutes.
     </p>
     <a href="${data.magicLink}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:6px;font-weight:800;font-size:16px;margin-bottom:16px;">
-      Sign In to Member Portal &rarr;
+      Log in &rarr;
     </a>
     <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">
-      If you didn't request this, you can safely ignore this email.
+      If you didn&rsquo;t try to log in, ignore this email.
     </p>
   `);
   await getResend().emails.send({ meta: { kind: 'member_magic_link' },
     from: FROM_NOREPLY,
     to: data.email,
-    subject: `Sign in to ${data.courseName} member portal`,
+    subject: `Log in to ${data.courseName}`,
+    html,
+  });
+}
+
+// Log in with a code (Cam 2026-11-18, approved mockup "The log-in code"): the per-course log-in code email.
+export async function sendMemberLoginCode(data: { email: string; courseName: string; code: string }) {
+  const shown = `${data.code.slice(0, 3)} ${data.code.slice(3)}`;
+  const html = baseTemplate(`
+    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;">Here&rsquo;s your code to log in to <strong>${escHtml(data.courseName)}</strong>:</p>
+    <div style="font-size:34px;font-weight:700;letter-spacing:.18em;text-align:center;padding:14px 0;background:#F1F2EE;border-radius:10px;margin:0 0 12px;color:#141814;">${shown}</div>
+    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;">It works for 10 minutes.</p>
+    <p style="margin:0;color:#6B706A;font-size:12px;">If you didn&rsquo;t try to log in, ignore this email. Nobody can log in without this code.</p>
+  `);
+  await getResend().emails.send({ meta: { kind: 'member_login_code' },
+    from: FROM_NOREPLY,
+    to: data.email,
+    subject: `Your ${data.courseName} log-in code`,
     html,
   });
 }

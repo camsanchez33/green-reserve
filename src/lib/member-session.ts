@@ -66,10 +66,33 @@ export async function getMemberSession(): Promise<Proven | null> {
   } catch { return null; }
 }
 
-/** The proven email logged in to THIS course, or null. A session from another course never counts here, even in a group. */
+/**
+ * The proven email logged in to THIS course, or null. A session from another course never counts here, even in a
+ * group. A course that turned "Show Log in on your booking page" off (Course.memberLoginOn) recognises no session:
+ * its groups book at the public price online, staff apply their rates at the counter.
+ */
 export async function loggedInAt(courseId: string): Promise<{ email: string } | null> {
   const s = await getMemberSession();
-  return s && s.courseId === courseId ? { email: s.email } : null;
+  if (!s || s.courseId !== courseId) return null;
+  const c = await prisma.course.findUnique({ where: { id: courseId }, select: { memberLoginOn: true } });
+  return c?.memberLoginOn ? { email: s.email } : null;
+}
+
+/**
+ * The groups a golfer can log in as at this course, for the log-in line ("For <Course> members and residents."):
+ * 'members' when the course has an active membership, 'residents' when residents get their rate here and this course
+ * or its group lists at least one card. Empty when the course turned Log in off. Says nothing about any email.
+ */
+export async function loginGroups(course: { id: string; memberLoginOn?: boolean | null; hasResidentPricing?: boolean | null }): Promise<('members' | 'residents')[]> {
+  if (course.memberLoginOn === false) return [];
+  const [tiers, cards] = await Promise.all([
+    prisma.membershipTier.count({ where: { courseId: course.id, active: true } }),
+    residentPricingOn(course) ? prisma.courseResident.count({ where: { courseId: { in: await groupCourseIds(course.id) } } }) : Promise.resolve(0),
+  ]);
+  const out: ('members' | 'residents')[] = [];
+  if (tiers > 0) out.push('members');
+  if (cards > 0) out.push('residents');
+  return out;
 }
 
 // Cam 2026-11-18: a member is recognised only by this course's gr_member session. The G5b path (an active

@@ -18,6 +18,7 @@ import { buildActionQueue } from './admin-action-queue';
 import { draftProblems } from './monthly-review';
 import { sendAdminUrgentAlert, sendAdminDigest } from './email';
 import { securityFindings, purgeOldSecurityEvents } from './security-events';
+import { purgeOldLoginCodes } from './member-login-code';
 import vercelConfig from '../../vercel.json';
 
 const CRONS = ((vercelConfig as { crons?: { path: string; schedule: string }[] }).crons ?? []);
@@ -199,6 +200,8 @@ export async function runAdminChecks(now = new Date()) {
   const digest = await runMorningDigest(now).catch(err => { console.error('Admin digest failed:', err); return 'failed' as const; });
   // SEC-3: security events are kept 90 days.
   const securityPurged = await purgeOldSecurityEvents(now).catch(err => { console.error('Security event purge failed:', err); return -1; });
+  // GOLFER-LOGIN-1: per-course log-in codes are spent within 10 minutes; a day later they go (they hold emails).
+  await purgeOldLoginCodes(now).catch(err => { console.error('Log-in code purge failed:', err); return -1; });
   return { urgent, digest, securityPurged };
 }
 
