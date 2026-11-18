@@ -16,5 +16,7 @@ export default async function LoginPage({ params, searchParams }: {
   const course = await loadPublicCourse(slug);
   if (!course) notFound();
   const back = typeof sp.back === 'string' ? sp.back : '';
-  return <LoginClient course={course as LoginCourse} back={back} />;
+  // An old emailed log-in link that failed comes here from the member page (?link=failed).
+  const linkFailed = sp.link === 'failed';
+  return <LoginClient course={course as LoginCourse} back={back} linkFailed={linkFailed} />;
 }

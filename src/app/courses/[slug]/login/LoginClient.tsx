@@ -21,7 +21,7 @@ export type LoginCourse = {
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-export default function LoginClient({ course, back }: { course: LoginCourse; back: string }) {
+export default function LoginClient({ course, back, linkFailed = false }: { course: LoginCourse; back: string; linkFailed?: boolean }) {
   const router = useRouter();
   const slug = course.slug;
   const backHref = safeBack(back, slug);
@@ -108,6 +108,7 @@ export default function LoginClient({ course, back }: { course: LoginCourse; bac
             <Link href={backHref} className={`${g.lnk} ${g.back}`}>‹ {backLabel}</Link>
             <h2 ref={headRef} tabIndex={-1}>Log in to {course.name}</h2>
             <p className={g.pol}>{loginLine(course.name, course.login_groups)} No account needed to book a tee time.</p>
+            {linkFailed && step === 'email' && <p className={g.pol} role="status">That emailed log-in link didn&rsquo;t work. Ask for a code instead.</p>}
 
             {loginOff ? (
               <p className={g.pol} role="status">{course.name} doesn&rsquo;t offer log-in online. Ask the pro shop for your rate.</p>

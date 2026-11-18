@@ -66,5 +66,11 @@ for (const f of ['src/app/courses/[slug]/CourseBookingClient.tsx', 'src/app/book
   check(`one main landmark: ${f} adds no <main> inside the layout's`, !readFileSync(f, 'utf8').includes('<main'));
 }
 
+// One log-in (Build 2026-11-18): the member page sends a logged-out golfer to the code page and back.
+check('the member page has no second log-in: logged out, it goes to the code page and back', !member.includes('SignInPanel') && member.includes("const q = new URLSearchParams({ back: `/courses/${slug}/member` });") && member.includes('router.replace(`/courses/${slug}/login?${q}`);'));
+check('an old emailed link that failed says so on the code page, without a reason', member.includes("if (errorParam) q.set('link', 'failed');") && page.includes('That emailed log-in link didn&rsquo;t work. Ask for a code instead.'));
+check('logging out on the member page goes to the course page', member.includes('onSignOut={() => router.replace(`/courses/${slug}`)}'));
+check('the course info page adds no <main> inside the layout\'s', !readFileSync('src/app/courses/[slug]/info/page.tsx', 'utf8').includes('<main'));
+
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);
