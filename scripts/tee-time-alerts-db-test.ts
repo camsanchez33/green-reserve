@@ -239,6 +239,18 @@ async function main() {
   ok('…and stays on, with its membership', (await prisma.teeTimeAlert.findUniqueOrThrow({ where: { token: `${TAG}-memday` } })).status === 'active');
   await prisma.course.update({ where: { id: c.id }, data: { memberLoginOn: true } });
   ok('Log in on again: it is told', (await notifyAlertsFor(c.id, [memDay])) === 1);
+  // A membership that lapsed or was cancelled after the alert was made no longer gives the member window (Build 2026-11-18).
+  const memDay2 = addDaysStr(todayIn('UTC'), 11);
+  await tt(memDay2, '10:00', 0);
+  const lapsedM = await prisma.courseMembership.create({ data: { courseId: c.id, inviteEmail: `${TAG}-lapsed2@t.local`, status: 'active', expiresAt: new Date(Date.now() - 400 * 86400_000) } });
+  const cancelledM = await prisma.courseMembership.create({ data: { courseId: c.id, inviteEmail: `${TAG}-cancelled2@t.local`, status: 'cancelled' } });
+  const memAlert = (email: string, membershipId: string, token: string) => prisma.teeTimeAlert.create({ data: { courseId: c.id, email, membershipId, date: memDay2, dates: [memDay2], players: 1, status: 'active', token, endsAt: new Date(Date.now() + 86400_000 * 13) } });
+  await memAlert(`${TAG}-lapsed2@t.local`, lapsedM.id, `${TAG}-lapsed2`);
+  await memAlert(`${TAG}-cancelled2@t.local`, cancelledM.id, `${TAG}-cancelled2`);
+  await memAlert(`${TAG}-m@t.local`, m.id, `${TAG}-live2`);
+  ok('past the public window, only the alert whose membership is still live is told', (await notifyAlertsFor(c.id, [memDay2])) === 1);
+  const told2 = await prisma.teeTimeAlert.findMany({ where: { token: { in: [`${TAG}-lapsed2`, `${TAG}-cancelled2`, `${TAG}-live2`] } }, select: { token: true, notifiedDates: true } });
+  ok('…the live member\'s, not the lapsed or cancelled one\'s', told2.find(x => x.token === `${TAG}-live2`)?.notifiedDates.includes(memDay2) === true && told2.filter(x => x.token !== `${TAG}-live2`).every(x => !x.notifiedDates.includes(memDay2)), told2);
 
   // ── 6. Wiring ─────────────────────────────────────────────────────────────
   ok('TeeTimeAlert is in the launch wipe', WIPED_TABLES.includes('TeeTimeAlert'));

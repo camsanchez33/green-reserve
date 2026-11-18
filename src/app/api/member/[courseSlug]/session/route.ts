@@ -5,7 +5,8 @@ import { centsToDollars, centsToDollarsOr0 } from '@/lib/money';
 import { loggedInAt, activeMembershipFor, residentOn } from '@/lib/member-session';
 import { membershipLive } from '@/lib/member-rates';
 import { todayIn } from '@/lib/course-time';
-import { residentPricingOn } from '@/lib/pricing-switch';
+import { residentPricingOn, memberPricingOn } from '@/lib/pricing-switch';
+import { benefitsSentence, upcomingFor } from '@/lib/member-home';
 
 export async function GET(
   _req: NextRequest,
@@ -15,7 +16,7 @@ export async function GET(
 
   const course = await prisma.course.findUnique({
     where: { slug: courseSlug },
-    select: { id: true, memberAdvanceDays: true, publicAdvanceDays: true, timezone: true, memberGraceDays: true, hasResidentPricing: true },
+    select: { id: true, slug: true, memberAdvanceDays: true, publicAdvanceDays: true, timezone: true, memberGraceDays: true, hasResidentPricing: true, hasMemberPricing: true, minPlayers: true, maxPlayers: true },
   });
   if (!course) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -38,6 +39,11 @@ export async function GET(
   if (membership) groups.push({ kind: 'member', name: membership.tier?.name ?? membership.membershipType, color: membership.tier?.color ?? null });
   if (resident) groups.push({ kind: 'resident', name: 'Resident', expiresOn: resident.expiresOn });
 
+  // "Your <Course>" (Build 2026-11-18): one line of benefits and the upcoming bookings here (lib/member-home).
+  const upcoming = await upcomingFor(course, session.email);
+  const benefits = benefitsSentence(live ? membership!.tier : null, live, !!resident, course, memberPricingOn(course));
+  const ymd = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : null);
+
   if (!membership) {
     return NextResponse.json({
       source: 'member',
@@ -48,6 +54,9 @@ export async function GET(
       membershipType: 'Resident', status: null, paymentStatus: null, startedAt: null, expiresAt: null, lastPaidAt: null,
       tier: null,
       groups,
+      benefits,
+      renewsOn: null, expiresOn: resident!.expiresOn || null, autoRenew: false,
+      upcoming,
     });
   }
 
@@ -82,5 +91,12 @@ export async function GET(
         }
       : null,
     groups,
+    benefits,
+    // The membership's last day: its UTC date, the same day lapseCutoff (lib/member-rates) treats as the last live day
+    // at grace 0, and the date the renewal emails show. A client renders it as a calendar date, not a local time.
+    renewsOn: membership.autoRenew ? ymd(membership.expiresAt) : null,
+    expiresOn: membership.autoRenew ? null : ymd(membership.expiresAt),
+    autoRenew: membership.autoRenew,
+    upcoming,
   });
 }
