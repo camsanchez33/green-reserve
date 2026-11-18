@@ -11,14 +11,13 @@ import { toast } from '@/components/dashboard/Toast';
 import { ImageUpload } from '@/components/dashboard/ImageUpload';
 import CoursePreview from '@/components/dashboard/CoursePreview';
 import CourseLayoutTab from '@/components/dashboard/CourseLayoutTab';
-import { BOOKING_LOOKS, BOOKING_ACCENTS, BOOKING_ACCENT_LABELS, BOOKING_ACCENT_COLOURS, bookingLookOf, type BookingLook, type BookingAccent } from '@/lib/booking-look';
+import { BookingLookRow, BookingLookPopup } from './BookingLookSetting';
 import { type Ctx, type Course, Group, Row, Muted, EditPopup, Field, FIELD, TextEdit, LINK, plural } from './ui';
 
 type Photo = { id: string; url: string; sortOrder: number };
 const s = (v: unknown) => (v == null ? '' : String(v));
 /** The brand colour picker's default (the course has none yet). */
 const DEFAULT_COLOUR = '#173B2A';
-const LOOK_LABELS: Record<BookingLook, string> = { light: 'Light', dark: 'Dark' };
 const cents = (v: unknown) => Math.round(Number(v || 0) * 100);
 export const facilityPreview = (f: Course) => facilityLines({
   ...(f as FacilityFields),
@@ -76,7 +75,7 @@ function LookPopup({ ctx, onClose }: { ctx: Ctx; onClose: () => void }) {
   const [color, setColor] = useState(s(f.brandColor) || DEFAULT_COLOUR);
   return (
     <EditPopup title="Logo and colour" size="lg" onClose={onClose} onSave={() => ctx.save({ brandColor: color })}
-      hint="Receipts, emails and your dashboard.">
+      hint="Top of your booking page, receipts and emails; buttons use the colour.">
       <div data-setup="logo"><ImageUpload label="Your logo" kind="logo" value={s(f.logoUrl)} onUploaded={url => ctx.merge({ logoUrl: url })} hint="Square; a transparent PNG is best. Max 8MB. Saves on upload." /></div>
       <Field label="Your colour">
         <span className="flex items-center gap-2">
@@ -92,43 +91,6 @@ function LookPopup({ ctx, onClose }: { ctx: Ctx; onClose: () => void }) {
           accent={color} logoUrl={s(f.logoUrl)} heroImageUrl={s(f.heroImageUrl)} />
         <p className="text-[12px] text-ink-muted mt-2">Sample times and prices; your real page shows yours.</p>
       </div>
-    </EditPopup>
-  );
-}
-
-/** Booking page look (Cam 2026-11-18): Light or Dark plus one of four preset accents. No red; no free colour. */
-function BookingLookPopup({ ctx, onClose }: { ctx: Ctx; onClose: () => void }) {
-  const cur = bookingLookOf({ bookingLook: ctx.form.bookingLook, bookingAccent: ctx.form.bookingAccent });
-  const [look, setLook] = useState<BookingLook>(cur.look);
-  const [accent, setAccent] = useState<BookingAccent>(cur.accent);
-  const pill = (on: boolean) => `min-h-[44px] px-4 rounded-md border text-[13.5px] font-medium ${on ? 'border-ink text-ink bg-paper' : 'border-line text-ink-soft'}`;
-  return (
-    <EditPopup title="Booking page look" onClose={onClose}
-      onSave={async () => {
-        const r = await dfetch<{ bookingLook: string; bookingAccent: string }>('/api/operator/settings/booking-look', { method: 'PATCH', body: JSON.stringify({ look, accent }) });
-        if (!r.ok) return r.error;
-        ctx.merge({ bookingLook: look, bookingAccent: accent });
-        return null;
-      }}>
-      <fieldset className="flex flex-col gap-1.5 text-[12.5px] text-ink-muted">
-        <legend className="mb-1.5">Look</legend>
-        <div className="flex gap-2">
-          {BOOKING_LOOKS.map(l => (
-            <button key={l} type="button" aria-pressed={look === l} onClick={() => setLook(l)} className={pill(look === l)}>{LOOK_LABELS[l]}</button>
-          ))}
-        </div>
-      </fieldset>
-      <fieldset className="flex flex-col gap-1.5 text-[12.5px] text-ink-muted">
-        <legend className="mb-1.5">Colour</legend>
-        <div className="flex flex-wrap gap-2">
-          {BOOKING_ACCENTS.map(a => (
-            <button key={a} type="button" aria-pressed={accent === a} onClick={() => setAccent(a)} className={pill(accent === a) + ' inline-flex items-center gap-2'}>
-              <i aria-hidden="true" className="w-4 h-4 rounded-full border border-line" style={{ background: BOOKING_ACCENT_COLOURS[a][look].acc }} />
-              {BOOKING_ACCENT_LABELS[a]}
-            </button>
-          ))}
-        </div>
-      </fieldset>
     </EditPopup>
   );
 }
@@ -342,18 +304,13 @@ export function CourseArea({ ctx }: { ctx: Ctx }) {
       </Group>
 
       <Group id="page" title="Booking Page">
-        <Row id="page-look" setup="logo" label="Logo and colour" note="Receipts, emails and your dashboard."
+        <Row id="page-look" setup="logo" label="Logo and colour" note="Top of your booking page, receipts and emails; buttons use the colour."
           value={<span className="inline-flex items-center gap-2">
             {f.logoUrl ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={s(f.logoUrl)} alt="" className="w-6 h-6 rounded-[7px] object-cover" /> : <Muted>No logo</Muted>}
             <i aria-hidden="true" className="w-4 h-4 rounded-full border border-line" style={{ background: s(f.brandColor) || DEFAULT_COLOUR }} />
             <span className="font-mono text-[12.5px]">{s(f.brandColor) || DEFAULT_COLOUR}</span></span>}
           onOpen={edit('look')} />
-        <Row id="page-booking-look" label="Booking page look" note="Buttons use the colour."
-          value={(() => { const bl = bookingLookOf({ bookingLook: f.bookingLook, bookingAccent: f.bookingAccent }); return (
-            <span className="inline-flex items-center gap-2">
-              <i aria-hidden="true" className="w-4 h-4 rounded-full border border-line" style={{ background: BOOKING_ACCENT_COLOURS[bl.accent][bl.look].acc }} />
-              {LOOK_LABELS[bl.look]} · {BOOKING_ACCENT_LABELS[bl.accent]}</span>); })()}
-          onOpen={edit('bookLook')} />
+        <BookingLookRow form={f} onOpen={edit('bookLook')} />
         <Row id="page-hero" setup="hero" label="Banner photo" note="The wide photo behind your name." value={f.heroImageUrl ? 'Added' : notSet} onOpen={edit('hero')} />
         <Row id="page-photos" setup="gallery" label="Photos" note="Up to 8, in the Photos part of your booking page." value={photos ? plural(photos.length, 'photo') : '…'} onOpen={edit('photos')} />
         <Row id="page-desc" setup="description" label="Description" note="The paragraph under your name." value={s(f.description).trim() ? <span className="line-clamp-2 font-normal">{s(f.description)}</span> : notSet} onOpen={edit('desc')} />

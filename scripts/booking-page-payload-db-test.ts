@@ -26,6 +26,7 @@ async function cleanup() {
   await prisma.courseSettingChange.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.promoCode.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.blackout.deleteMany({ where: { courseId: { in: ids } } });
+  await prisma.membershipTier.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.course.deleteMany({ where: { id: { in: ids } } });
   await prisma.courseOperator.deleteMany({ where: { email: `${TAG}@t.local` } });
 }
@@ -129,7 +130,17 @@ async function cleanup() {
 
   await prisma.promoCode.updateMany({ where: { courseId: course.id }, data: { startsOn: addDaysStr(today, 30) } });
   p = await loadPublicCourse(`${TAG}-a`);
-  ok('a code that starts after the public window does not count', p.has_live_promo === false);
+  ok('a code that starts after the widest window does not count', p.has_live_promo === false);
+
+  // A membership that books further ahead than the course default widens both fields (reviewer repro).
+  await prisma.membershipTier.create({ data: { courseId: course.id, name: 'Thirty-day', advanceBookingDays: 30 } });
+  await prisma.promoCode.updateMany({ where: { courseId: course.id }, data: { startsOn: addDaysStr(today, 25) } });
+  p = await loadPublicCourse(`${TAG}-a`);
+  ok('a 30-day membership: the day closed at +20 is listed', p.closed_dates.some((d: { date: string }) => d.date === addDaysStr(today, 20)), p.closed_dates);
+  ok('a 30-day membership: a code starting at +25 counts', p.has_live_promo === true);
+  await prisma.membershipTier.updateMany({ where: { courseId: course.id }, data: { windowPublic: true } });
+  p = await loadPublicCourse(`${TAG}-a`);
+  ok('a membership on the public window does not widen it', !p.closed_dates.some((d: { date: string }) => d.date === addDaysStr(today, 20)) && p.has_live_promo === false);
   await prisma.promoCode.updateMany({ where: { courseId: course.id }, data: { startsOn: null, active: false } });
   p = await loadPublicCourse(`${TAG}-a`);
   ok('a switched-off code does not count', p.has_live_promo === false);

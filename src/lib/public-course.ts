@@ -11,22 +11,30 @@ import { todayIn, addDaysStr } from '@/lib/course-time';
 import { DEFAULT_PUBLIC_WINDOW_DAYS, DEFAULT_MEMBER_WINDOW_DAYS } from '@/lib/booking-window';
 
 /**
- * The booking page's extra fields (Golfer lane item 1). Promo: is any code usable on a
- * tee time inside the PUBLIC window (only a boolean leaves here, never a code). Closed
- * days: from the course's today through its widest window (public or member), since the
- * payload is the same for every viewer.
+ * The booking page's extra fields (Golfer lane item 1). The payload is the same for every
+ * viewer, so both use the WIDEST window anyone can book: the public window, the course's
+ * member default, or any membership's own window (windowFor in lib/booking-window). Promo:
+ * is any code usable on a tee time in that span (only a boolean leaves here, never a code);
+ * showing the code box a little too often costs nothing, hiding it costs a golfer the discount.
+ * Closed days: every closed day in that span, with staff's reason.
  */
 export async function bookingPageExtras(c: { id: string; timezone?: string | null; publicAdvanceDays?: number | null; memberAdvanceDays?: number | null }, now: Date = new Date()): Promise<BookingPageExtras> {
   const today = todayIn(c.timezone, now);
-  const publicDays = c.publicAdvanceDays ?? DEFAULT_PUBLIC_WINDOW_DAYS;
+  const tiers = await prisma.membershipTier.findMany({ where: { courseId: c.id }, select: { advanceBookingDays: true, windowPublic: true } });
+  const widest = Math.max(
+    0,
+    c.publicAdvanceDays ?? DEFAULT_PUBLIC_WINDOW_DAYS,
+    c.memberAdvanceDays ?? DEFAULT_MEMBER_WINDOW_DAYS,
+    // A membership on the public window books no further than the public.
+    ...tiers.map(t => (t.windowPublic ? 0 : t.advanceBookingDays ?? 0)),
+  );
   // Both ends from the same course-local today (lastBookableDate falls back to UTC without a timezone).
-  const lastPublic = addDaysStr(today, Math.max(0, publicDays));
-  const lastAny = addDaysStr(today, Math.max(0, publicDays, c.memberAdvanceDays ?? DEFAULT_MEMBER_WINDOW_DAYS));
+  const lastDay = addDaysStr(today, Math.min(366, widest));
   const [codes, closed] = await Promise.all([
     prisma.promoCode.findMany({ where: { courseId: c.id, active: true }, select: { active: true, startsOn: true, endsOn: true, maxUses: true, usesCount: true } }),
-    prisma.blackout.findMany({ where: { courseId: c.id, date: { gte: today, lte: lastAny } }, select: { date: true, reason: true } }),
+    prisma.blackout.findMany({ where: { courseId: c.id, date: { gte: today, lte: lastDay } }, select: { date: true, reason: true } }),
   ]);
-  return { hasLivePromo: hasLivePromo(codes, today, lastPublic), closedDates: closedDatesIn(closed, today, lastAny) };
+  return { hasLivePromo: hasLivePromo(codes, today, lastDay), closedDates: closedDatesIn(closed, today, lastDay) };
 }
 
 /** The golfer-visible course, exactly as the API serialises it — or null. */
