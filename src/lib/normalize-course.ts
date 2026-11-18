@@ -7,7 +7,7 @@ import { onlineRangeOn } from './range-buckets';
 import { bookingLookOf } from './booking-look';
 
 /** Booking page fields that need their own queries (lib/public-course bookingPageExtras). */
-export type BookingPageExtras = { hasLivePromo: boolean; closedDates: { date: string; reason: string }[] };
+export type BookingPageExtras = { hasLivePromo: boolean; closedDates: { date: string; reason: string }[]; loginGroups: ('members' | 'residents')[] };
 /**
  * Maps a Prisma Course row (camelCase) onto the snake_case shape the golfer-facing
  * UI (CourseCard, /courses, /courses/[slug]) was built against. Used by every public
@@ -92,11 +92,14 @@ export function normalizeDbCourse(c: any, startingGreenFee = 0, extras?: Booking
     // Booking page look (Cam 2026-11-18): Light or Dark plus one preset accent, by name; accent null
     // until the course picks one; until then the golfer pages use brand_color (BOOKING-LOOK-1).
     booking_look:            bookingLookOf(c),
-    // Resident booking window: null until Course.residentAdvanceDays lands (Build, golfer log-in PR 2).
-    resident_advance_days:   null as number | null,
+    // GOLFER-LOGIN-1: whether the booking page shows the per-course Log in ("Show Log in on your booking
+    // page"), and how far ahead a golfer logged in with a resident card can book (null = the public window).
+    member_login_on:         c.memberLoginOn !== false,
+    resident_advance_days:   typeof c.residentAdvanceDays === 'number' ? c.residentAdvanceDays : null,
     // Only on the single-course payload (loadPublicCourse, preview): whether a code box is worth
     // showing (never the codes), and the closed days in the booking window with staff's reason.
-    ...(extras ? { has_live_promo: extras.hasLivePromo, closed_dates: extras.closedDates } : {}),
+    // login_groups: which groups can log in here ('members', 'residents'), for the Log in line; [] when Log in is off.
+    ...(extras ? { has_live_promo: extras.hasLivePromo, closed_dates: extras.closedDates, login_groups: extras.loginGroups } : {}),
     gift_card_url:           c.giftCardUrl ?? '',
     hero_photo_url:          c.heroPhotoUrl ?? '',
     photos: Array.isArray(c.photos)
