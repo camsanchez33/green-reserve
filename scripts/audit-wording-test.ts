@@ -65,11 +65,14 @@ ok('6. no twilight period: none (the page falls back to 4 PM)', normalizeDbCours
 ok('6. a twilight period at noon exactly is ignored (no empty afternoon)', normalizeDbCourse({ id: 'c', slug: 's', name: 'n', schedules: [{ tierName: 'Twilight', startTime: '12:00' }] }).twilight_start === null);
 ok('6. a morning period named twilight is ignored', normalizeDbCourse({ id: 'c', slug: 's', name: 'n', schedules: [{ tierName: 'Twilight', startTime: '07:00' }] }).twilight_start === null);
 const golfer = read('src/app/courses/[slug]/CourseBookingClient.tsx');
-ok('6. the page buckets and alert windows use it', golfer.includes("if (hm < tw) return 'afternoon';") && golfer.includes("windowStart: course?.twilight_start ?? '16:00'") && !golfer.includes('if (h < 16)'));
+// Option A (Cam 2026-11-18): Morning / Mid day / Afternoon tiles replace the Twilight filter; the cards and alert windows share one set of edges.
+ok('6. the page buckets and alert windows use the same edges', golfer.includes("if (hm < '11:00') return 'morning';") && golfer.includes("if (hm < '14:00') return 'midday';") && golfer.includes("afternoon: { windowStart: '14:00', windowEnd: '23:59' }") && golfer.includes('TOD_WINDOWS[tods[0]]'));
 ok('6. both course loaders select the period name and start', read('src/lib/public-course.ts').includes('tierName: true, startTime: true') && read('src/app/api/preview/[courseId]/route.ts').includes('tierName: true, startTime: true'));
 
 // 7
-ok('7. the Walking / Riding switch says when a cart is on', golfer.includes("['Walking', false], ['Riding', true]") && golfer.includes('aria-pressed={withCart === riding}'));
+// Option A: walking or riding is chosen on the Book page (a filter on the times page only when it depends on the time).
+const bookPage = read('src/app/book/BookClient.tsx');
+ok('7. the Walk / Ride choice says when a cart is on', bookPage.includes('value="ride" checked={cartSelected} onChange={() => setCartSelected(true)}') && bookPage.includes('value="walk" checked={!cartSelected}') && golfer.includes("{([['any', 'Either'], ['walk', 'Walk'], ['ride', 'Ride']] as const)"));
 
 // 8
 const settings = read('src/components/dashboard/members/PricingCard.tsx'); // Cam 2026-11-17: the switches live on Memberships

@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
+import { notifyAlertsFor } from '@/lib/tee-time-alerts';
 import { todayIn, isPastIn } from '@/lib/course-time';
 import { livePlayers, timeSpots } from '@/lib/day-fill';
 import { setSeatsClosed } from '@/lib/tee-time-seats';
@@ -209,6 +210,8 @@ export async function POST(req: NextRequest) {
     if ((err as { code?: string })?.code === 'P2002') return NextResponse.json({ error: `There's already a ${time} tee time that day.` }, { status: 409 });
     throw err;
   }
+  // ALERTS-2: a new time online may be what someone's alert is waiting for (awaited by the runtime).
+  if (!teeTime.staffOnly) after(() => notifyAlertsFor(session.courseId, [date]));
   return NextResponse.json(teeTimeToWire(teeTime));
 }
 
@@ -225,6 +228,7 @@ export async function PATCH(req: NextRequest) {
   if (seatsClosed !== undefined && status === undefined && staffOnly === undefined) {
     const r = await setSeatsClosed(session.courseId, String(id), seatsClosed);
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+    alertsAfter(session.courseId, String(id));
     return NextResponse.json(r);
   }
   // ADDTIME-1: open a time online, or keep it for staff. Same permission as blocking (who can sell it).
@@ -232,6 +236,7 @@ export async function PATCH(req: NextRequest) {
   if (typeof staffOnly === 'boolean' && status === undefined) {
     const r = await setStaffOnly(session.courseId, String(id), staffOnly);
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+    if (!staffOnly) alertsAfter(session.courseId, String(id));
     return NextResponse.json({ ok: true, staffOnly });
   }
   // MP-5d: this used to write whatever `status` string arrived. The only two
@@ -257,7 +262,17 @@ export async function PATCH(req: NextRequest) {
   }
   const row = await setTeeTimeBlocked(id, false, { scopeCourseId: session.courseId });
   if (!row) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  alertsAfter(session.courseId, String(id));
   return NextResponse.json(row);
+}
+
+/** ALERTS-2: a time back on sale (or with seats reopened) is checked against alerts after the
+ *  response, inside after() so the runtime waits for it. Never throws. */
+function alertsAfter(courseId: string, teeTimeId: string) {
+  after(async () => {
+    const t = await prisma.teeTime.findFirst({ where: { id: teeTimeId, courseId }, select: { date: true } }).catch(() => null);
+    if (t) await notifyAlertsFor(courseId, [t.date]);
+  });
 }
 
 export async function DELETE(req: NextRequest) {
