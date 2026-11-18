@@ -5,6 +5,7 @@ import { recordBookingEvent, teeTimeInstant, type EventActor } from './booking-e
 // Cam 2026-10-27: nobody new joins a tee time more than LATE_ADD_MINUTES after it went
 // off (late groups already booked can still be checked in; they just can't be added to).
 import { LATE_ADD_MINUTES } from './late-add';
+import { ciEquals } from '@/lib/like-exact';
 export { LATE_ADD_MINUTES, LATE_ADD_MESSAGE } from './late-add';
 
 export class TeeTimeClaimError extends Error {
@@ -156,7 +157,7 @@ async function claimOnce(
           if (code?.onePerGolfer && (email || account)) {
             const used = await tx.booking.findFirst({
               where: { courseId: String(data.courseId), promoCodeId: String(data.promoCodeId), status: { not: 'cancelled' },
-                OR: [...(email ? [{ golferEmail: { equals: email, mode: 'insensitive' as const } }] : []), ...(account ? [{ golferAccountId: account }] : [])] },
+                OR: [...(email ? [{ golferEmail: ciEquals(email) }] : []), ...(account ? [{ golferAccountId: account }] : [])] },
               select: { id: true },
             });
             if (used) throw new TeeTimeClaimError('PROMO_USED');

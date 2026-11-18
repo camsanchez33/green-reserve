@@ -8,6 +8,7 @@ import { prisma } from './prisma';
 import { validItemInput, MAX_ITEM_PRICE_CENTS } from './shop';
 import { MAX_IMPORT_ITEMS, MAX_OPTIONS, type ImportItem } from './shop-import';
 import { isTaxCategory } from './tax-categories';
+import { ciEquals } from '@/lib/like-exact';
 
 export const ITEM_SELECT = { id: true, name: true, category: true, priceCents: true, active: true, sortOrder: true, stockCount: true, sku: true, parentId: true, optionLabel: true, taxCategory: true, photoUrl: true } as const;
 
@@ -80,7 +81,7 @@ async function skuClash(courseId: string, items: ItemIn[], exceptIds: string[] =
   if (!codes.length) return null;
   const taken = await prisma.shopItem.findMany({
     // A hidden item's options keep active: true — only codes the register can still scan count.
-    where: { courseId, active: true, id: { notIn: exceptIds }, AND: [{ OR: [{ parentId: null }, { parent: { active: true } }] }], OR: codes.map(c => ({ sku: { equals: c, mode: 'insensitive' as const } })) },
+    where: { courseId, active: true, id: { notIn: exceptIds }, AND: [{ OR: [{ parentId: null }, { parent: { active: true } }] }], OR: codes.map(c => ({ sku: ciEquals(c) })) },
     select: { name: true, sku: true },
     take: 50,
   });

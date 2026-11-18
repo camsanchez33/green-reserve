@@ -29,6 +29,7 @@ import { computeStripeGoLiveCheck } from '@/lib/go-live-preflight';
 import { hasAcceptedAgreement } from '@/lib/agreement-gate';
 import { deleteInquiryOrPair } from '@/lib/lifecycle';
 import { withAudit, needReason, reasonOf, auditAdmin } from '@/lib/admin-audit';
+import { ciEquals } from '@/lib/like-exact';
 
 // MP-2 (ADMIN_V4 V4-2 leak): this returned the whole CourseInquiry row, which
 // includes detailsToken — the sole credential for the public setup-sheet routes.
@@ -1304,9 +1305,9 @@ async function createLead(body: Record<string, unknown>, session: AdminSession) 
   const existing = await prisma.courseInquiry.findFirst({
     where: {
       status: { in: [LEAD_STATUS, ...ALIVE_STATUSES] },
-      courseName: { equals: courseName, mode: 'insensitive' },
-      ...(city ? { city: { equals: city, mode: 'insensitive' as const } } : {}),
-      ...(state ? { state: { equals: state, mode: 'insensitive' as const } } : {}),
+      courseName: ciEquals(courseName),
+      ...(city ? { city: ciEquals(city) } : {}),
+      ...(state ? { state: ciEquals(state) } : {}),
     },
     select: { id: true, status: true },
   });

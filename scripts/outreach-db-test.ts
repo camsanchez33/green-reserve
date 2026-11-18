@@ -13,7 +13,8 @@ import {
 import { lookupCourses } from '../src/lib/course-lookup';
 import { AGENDA } from '../src/lib/inquiry-call';
 import { NOT_NOW_REASON } from '../src/lib/outreach';
-import { WIPED_TABLES } from '../src/lib/data-reset';
+import { ciEquals } from '../src/lib/like-exact';
+import { WIPED_TABLES, KEPT_TABLES } from '../src/lib/data-reset';
 
 const prisma = new PrismaClient();
 const TAG = 'outreachdbtest';
@@ -32,7 +33,8 @@ async function cleanup() {
 
 async function main() {
   await cleanup();
-  check('CourseContact is in WIPED_TABLES', (WIPED_TABLES as readonly string[]).includes('CourseContact'));
+  // KEEP-OUTREACH (Cam): outreach data survives the launch wipe, contacts with it.
+  check('CourseContact is in KEPT_TABLES, not WIPED_TABLES', (KEPT_TABLES as readonly string[]).includes('CourseContact') && !(WIPED_TABLES as readonly string[]).includes('CourseContact'));
 
   // ── Add a course ──
   const a = await addCourse({ facts: { courseName: `${TAG} Maple Run Golf Course`, city: 'Riverton', state: 'NY', holes: 18, ownerType: 'town', website: 'maplerun-test.example.com' }, contact: { name: 'Dana Whitfield', role: 'Pro shop manager', email: 'dana@maplerun-test.example.com', phone: '(555) 010-2201' }, notes: 'Town budget year starts Jan 1.' }, ADMIN);
@@ -266,7 +268,7 @@ async function main() {
   const wcall = await prisma.call.findFirst({ where: { createdBy: `calcom:${uid}` } });
   check('webhook: answered 200', res.status === 200);
   check('webhook: the call lands on the lead (matched by a contact email), with who and the link', wcall?.inquiryId === target && wcall.attendeeEmail === 'robin.webhook@example.com' && wcall.attendeeName === 'Robin Shaw' && wcall.meetingUrl === 'https://app.cal.com/video/xyz', wcall);
-  check('webhook: no second inquiry was opened', (await prisma.courseInquiry.count({ where: { email: { equals: 'robin.webhook@example.com', mode: 'insensitive' } } })) === 0);
+  check('webhook: no second inquiry was opened', (await prisma.courseInquiry.count({ where: { email: ciEquals('robin.webhook@example.com') } })) === 0);
   check('webhook: the lead is now Call booked', (await listOutreach(now)).stages.find(s => s.key === 'call')!.rows.some(r => r.id === target));
   await prisma.call.deleteMany({ where: { createdBy: `calcom:${uid}` } });
   // A lead whose contact also filled in the public form: the open inquiry wins, as before, and no third one opens.

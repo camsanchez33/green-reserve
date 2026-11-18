@@ -13,6 +13,7 @@ import { noShowClosed, NO_SHOW_CLOSED_ERROR } from './no-show-fee';
 import { recordMove } from './money-ledger';
 import { holdRefundCents, hasShareToRefund, splitOffLateArrivals } from './split-booking-db';
 import { cartCharge, cartRuleOf } from './cart-pricing';
+import { ciEquals } from '@/lib/like-exact';
 
 /**
  * Charging a round, and checking a golfer in, are two different things.
@@ -113,7 +114,7 @@ export async function cartAddOnCentsFor(booking: {
       ...liveMembershipWhere(grace),
       AND: [{ OR: [
         ...(booking.golferAccountId ? [{ golferId: booking.golferAccountId }] : []),
-        ...(booking.golferEmail ? [{ inviteEmail: { equals: booking.golferEmail, mode: 'insensitive' as const } }] : []),
+        ...(booking.golferEmail ? [{ inviteEmail: ciEquals(booking.golferEmail) }] : []),
       ] }],
     },
     include: { tier: { select: { greenFeeWeekdayCents: true, greenFeeWeekendCents: true, cartFeeWeekdayCents: true, cartFeeWeekendCents: true, discountPct: true, guestsPayMemberRate: true, lineRates: true } } },

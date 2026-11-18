@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
 import { normalizeDbCourse } from '@/lib/normalize-course';
+import { ciContains } from '@/lib/like-exact';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
@@ -21,9 +22,9 @@ export async function GET(req: NextRequest) {
   if (featured) where.featured = true;
   if (q) {
     where.OR = [
-      { name: { contains: q, mode: 'insensitive' } },
-      { city: { contains: q, mode: 'insensitive' } },
-      { state: { contains: q, mode: 'insensitive' } },
+      { name: ciContains(q) },
+      { city: ciContains(q) },
+      { state: ciContains(q) },
     ];
   }
 
