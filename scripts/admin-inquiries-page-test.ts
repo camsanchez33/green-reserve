@@ -37,7 +37,7 @@ check('emails beyond the first three, or with a note, stay in the history', read
 {
   const page = read('src/app/admin/inquiries/page.tsx');
   const reset = read('src/lib/data-reset.ts');
-  const pageAt = page.match(/export const TEST_UNTIL = '([^']+)'/)?.[1];
+  const pageAt = page.match(/const TEST_UNTIL = '([^']+)'/)?.[1];
   const resetAt = reset.match(/export const OUTREACH_START = new Date\('([^']+)'\)/)?.[1];
   check('the Outreach test-data line ends when the clear and the wipe stop taking inquiries', !!pageAt && pageAt === resetAt, `${pageAt} vs ${resetAt}`);
   check('…and only shows before then', /Date\.now\(\) < Date\.parse\(TEST_UNTIL\)/.test(page));

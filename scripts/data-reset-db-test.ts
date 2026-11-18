@@ -215,6 +215,9 @@ async function main() {
   await prisma.inquiryStatusEvent.create({ data: { inquiryId: oldTest.id, fromStatus: 'pending', toStatus: 'in_review', trigger: 'admin' } });
   const oldBuilt = await seedInquiry('oldbuilt', { createdAt: new Date('2001-01-01T12:00:00Z'), status: 'live', builtCourseId: r.course.id });
   const fresh2 = await seedInquiry('new', { createdAt: new Date('2001-06-01T04:00:00Z') });
+  // Contacts on the inquiries the clear keeps are not counted as deleted.
+  await prisma.courseContact.create({ data: { inquiryId: oldBuilt.id, name: 'Kept (built)' } });
+  await prisma.courseContact.create({ data: { inquiryId: fresh2.id, name: 'Kept (new)' } });
   const late2 = await clearTestInquiries(new Date(WIPE_ALL_UNTIL.getTime() + 1), cutoff);
   const tooLate = await clearTestInquiries(new Date('2026-11-20T12:00:00Z'), new Date(OUTREACH_START.getTime() + 1));
   check('the clear can never reach an inquiry made from Nov 23 on', !tooLate.ok);

@@ -26,6 +26,10 @@ export type CallRow = {
   nextStep: string | null; followUpAt: string | null;
 };
 type Calls = { upcoming: CallRow[]; past: CallRow[]; calcomUrl: string | null };
+// Until outreach starts, every course on the list is test data: Platform activity's "Clear test inquiries" or the launch
+// wipe removes what was added before this. The same moment as OUTREACH_START in lib/data-reset (a server file);
+// scripts/admin-inquiries-page-test.ts keeps the two equal. The line goes away by itself after it.
+const TEST_UNTIL = '2026-11-23T05:00:00Z';
 type Tab = 'outreach' | 'calls';
 type Filter = 'all' | 'due' | 'snoozed' | 'unprepared' | 'unlogged';
 const FILTERS: Record<Tab, [Filter, string][]> = {
@@ -33,10 +37,6 @@ const FILTERS: Record<Tab, [Filter, string][]> = {
   calls: [['all', 'Everything'], ['unprepared', 'Not prepared'], ['unlogged', 'Not logged yet']],
 };
 // Stage dots, as the mockup: Targets grey, Contacted a lighter green, Replied and Call booked the brand green.
-// Until outreach starts, every course on the list is test data: Platform activity's "Clear test inquiries" or the launch
-// wipe removes what was added before this. The same moment as OUTREACH_START in lib/data-reset (a server file);
-// scripts/admin-inquiries-page-test.ts keeps the two equal. The line goes away by itself after it.
-export const TEST_UNTIL = '2026-11-23T05:00:00Z';
 const STAGE_DOT: Record<string, string> = { target: '', contacted: iq.dOk, replied: iq.dBrand, call: iq.dBrand };
 
 function InquiriesInner() {
