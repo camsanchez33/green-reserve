@@ -199,8 +199,23 @@ async function main() {
   const list = await (await fetch(`${BASE_URL}/api/operator/members`, { headers: { cookie: owner } })).json().catch(() => null);
   const listRow = (Array.isArray(list) ? list : list?.members ?? []).find((x: { id: string }) => x.id === linked.id);
   // One email, one membership: a staff add can't give a second membership an email that already logs in here.
-  const post = async (email: string) => { const r = await fetch(`${BASE_URL}/api/operator/members`, { method: 'POST', headers: { 'Content-Type': 'application/json', cookie: owner }, body: JSON.stringify({ email, name: 'Dup', tierId: tier.id }) }); return r.status; };
-  check('adding a member with an email another membership logs in with is refused', (await post(`edited@${TAG}.test`)) === 409 && (await post(acct2.email)) === 409);
+  const post = async (email: string, extra: Record<string, unknown> = {}) => { const r = await fetch(`${BASE_URL}/api/operator/members`, { method: 'POST', headers: { 'Content-Type': 'application/json', cookie: owner }, body: JSON.stringify({ email, name: 'Dup', tierId: tier.id, ...extra }) }); return { status: r.status, body: await r.json().catch(() => null) }; };
+  check('adding a member with an email another membership logs in with is refused', (await post(`edited@${TAG}.test`)).status === 409 && (await post(acct2.email)).status === 409);
+  // Linked branch: an account with no membership here whose email a member was edited to.
+  const spare = await prisma.golferAccount.create({ data: { email: `spare@${TAG}.test`, firstName: 'Spare', lastName: 'Acct', password: 'x' } });
+  await patch({ email: spare.email });
+  const dupLinked = await post(spare.email);
+  check('…also when the email belongs to an older account (the linked add path)', dupLinked.status === 409 && (await prisma.courseMembership.count({ where: { golferId: spare.id } })) === 0, dupLinked);
+  await patch({ email: `edited@${TAG}.test` });
+  // Invite branch: the stored email in other letter case.
+  await prisma.courseMembership.create({ data: { courseId: a.id, tierId: tier.id, membershipType: 'Gold', status: 'active', inviteEmail: `Mixed.Case@${TAG}.test`, inviteName: 'Mixed', payToken: `${TAG}-mixed` } });
+  check('…and when the stored email differs only in letter case', (await post(`mixed.case@${TAG}.test`)).status === 409);
+  // Counter pick-up: a linked unpaid row whose email was edited is not reused for the old account email.
+  const acct3 = await prisma.golferAccount.create({ data: { email: `acct3@${TAG}.test`, firstName: 'Three', lastName: 'Acct', password: 'x' } });
+  const unpaidRow = await prisma.courseMembership.create({ data: { courseId: a.id, golferId: acct3.id, tierId: tier.id, membershipType: 'Gold', status: 'awaiting_payment', addedBy: 'counter', inviteEmail: `moved3@${TAG}.test`, inviteName: 'Three', payToken: `${TAG}-three` } });
+  const pick = await post(acct3.email, { payFirst: true });
+  const unpaidAfter = await prisma.courseMembership.findUniqueOrThrow({ where: { id: unpaidRow.id } });
+  check('…a counter add for an old account email never picks up a row that logs in as another email', pick.status === 409 && unpaidAfter.inviteEmail === `moved3@${TAG}.test` && unpaidAfter.status === 'awaiting_payment', { pick, unpaidAfter: { inviteEmail: unpaidAfter.inviteEmail, status: unpaidAfter.status } });
 
   // The invite and the dues link go to the member's own email (placeholder addresses: logged, never sent).
   // The Resend client needs a key to be made; placeholder addresses are logged and never handed to it.
@@ -225,7 +240,7 @@ async function main() {
   check('no invite for a cancelled, paused or requested membership', (await sentTo('member_invite_email')).length === 0);
   await prisma.courseMembership.update({ where: { id: ph.id }, data: { status: 'awaiting_payment' } });
   await sendWelcome(ph.id);
-  check('…one still waiting for its dues gets the invite (worded "once your dues are paid")', (await sentTo('member_invite_email')).length === 1);
+  check('…nor one still waiting for its dues (it goes out once they are paid)', (await sentTo('member_invite_email')).length === 0);
   await prisma.courseMembership.delete({ where: { id: ph.id } });
   await prisma.membershipTier.delete({ where: { id: payTier.id } });
   await prisma.golferAccount.delete({ where: { id: phAcct.id } });

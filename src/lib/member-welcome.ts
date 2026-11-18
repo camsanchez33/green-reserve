@@ -1,8 +1,7 @@
 // The email a member gets when the course sets them up (GOLFER-LOGIN-1, Cam 2026-11-18, approved invite): one email
 // for every member, linked to an older golfer account or not — "<Course> set you up as a <group>. Log in at <course
-// page> with this email to get your rates". It goes out for an active membership; one still waiting for its dues
-// says the rates start "once your dues are paid"; any other status gets nothing. Golfer accounts and the set-password
-// invite are retired (GOLFER-SIGNIN-RETIRED).
+// page> with this email to get your rates". It goes out only for an active membership (Build 2026-11-18: no second
+// email before the dues are paid). Golfer accounts and the set-password invite are retired (GOLFER-SIGNIN-RETIRED).
 // Memberships item 1 (Cam 2026-11-16, "they are a member only once paid"): a member added at the counter (addedBy COUNTER_ADDED) pays first, so this goes out once the dues are paid, not when added.
 import { prisma } from './prisma';
 import { sendMemberInviteEmail, sendMembershipReceiptEmail } from './email';
@@ -21,7 +20,7 @@ export async function sendWelcome(membershipId: string): Promise<void> {
       course: { select: { name: true, slug: true, publicAdvanceDays: true, memberAdvanceDays: true } },
     },
   });
-  if (!m || (m.status !== 'active' && m.status !== 'awaiting_payment')) return;
+  if (!m || m.status !== 'active') return;
   // The member's own email (staff can edit it); an older linked account's only when none was ever typed.
   const to = m.inviteEmail || m.golfer?.email || '';
   if (!to) return;
@@ -32,7 +31,6 @@ export async function sendWelcome(membershipId: string): Promise<void> {
     groupName: m.tier?.name ?? m.membershipType ?? 'Member',
     coursePageUrl: `${process.env.NEXT_PUBLIC_URL}/courses/${m.course.slug}`,
     benefits: memberBenefitsLine(m.tier, m.course),
-    duesOwed: m.status === 'awaiting_payment',
   });
 }
 

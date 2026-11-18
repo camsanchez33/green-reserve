@@ -56,7 +56,8 @@ ok('4. createCounterBooking returns it', read('src/lib/counter-pay.ts').includes
 const members = read('src/app/dashboard/members/page.tsx') + read('src/components/dashboard/members/MemberCard.tsx'); // the card holds the words since Memberships (2026-11-16)
 const terms = read('src/lib/analytics-terms.ts');
 ok('5. no more "online bookings get public rates"', !members.includes('online bookings get public rates') && !terms.includes('get public rates until'));
-ok('5. the words name signing in with the email', members.includes('member rates online once they sign in with this email') && terms.includes('Signing in with the email on their membership gives them member rates online'));
+// GOLFER-LOGIN-1: "Log in", never "sign in" (the per-course log-in).
+ok('5. the words name logging in with the email', members.includes('member rates online once they log in with this email') && terms.includes('Logging in with the email on their membership gives them member rates online') && !terms.includes('signed in to GreenReserve'));
 
 // 6
 const tw = normalizeDbCourse({ id: 'c', slug: 's', name: 'n', schedules: [{ tierName: 'Morning', startTime: '06:00' }, { tierName: 'Twilight', startTime: '15:00' }, { tierName: 'twilight 9', startTime: '17:00' }] });
