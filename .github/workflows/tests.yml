@@ -42,7 +42,7 @@ jobs:
       JWT_SECRET: ci-only-not-a-real-secret-0123456789abcdef
       NEXT_PUBLIC_BASE_URL: http://localhost:3000
       TEST_URL: http://localhost:3000
-      SERVER_TESTS: "isolation-test.ts concurrency-test.ts load-test.ts member-portal-price-test.ts"
+      SERVER_TESTS: "isolation-test.ts concurrency-test.ts load-test.ts member-portal-price-test.ts member-login-db-test.ts"
 
     steps:
       - uses: actions/checkout@v7
@@ -91,6 +91,9 @@ jobs:
 
       - name: Member portal prices match booking
         run: npx tsx scripts/member-portal-price-test.ts
+
+      - name: Per-course log-in (members and residents)
+        run: npx tsx scripts/member-login-db-test.ts
 
       - name: Server log
         if: failure()
