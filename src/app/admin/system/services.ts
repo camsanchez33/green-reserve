@@ -189,7 +189,7 @@ export function tools(o: { isOwner: boolean; orphans: Orphans; versions: Version
       : waiting.length ? `${waiting[0].title} ${waiting[0].version} not published${waiting.length > 1 ? ` (+${waiting.length - 1} more)` : ''}` : 'All versions published' });
 
   const w = o.wipe;
-  const total = w ? Object.values(w.wiped).reduce((a, n) => a + n, 0) : 0;
+  const total = w ? Object.values(w.wiped).reduce((a, n) => a + n, 0) + (w.testInquiries ?? 0) : 0;
   const closes = w ? new Date(w.closesAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/New_York' }) : '';
   out.push({ id: 'wipe', g: 'owner', t: 'Before launch: clear test data', does: 'Starts the site clean',
     st: o.wiped !== null ? 'ok' : '',
