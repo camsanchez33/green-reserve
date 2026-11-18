@@ -652,3 +652,8 @@ nohup npx next dev -p 3100 > /tmp/next.log 2>&1 &
 ```
 Sign in as the seeded operator, or mint a `gr_operator` cookie the way the DB tests do. Playwright and Chromium are
 pre-installed (`require('playwright')`). Local only — never a production URL with real data.
+
+- ALERTS-2 (Build ruling 2026-11-18 on Cam's approved alerts mockup, `lanes/golfer.md` item 7): tee time alerts take a list of dates inside the booking window (no open-ended "weekends"); an alert ends after the last tee time on its last date (course local time; end of that day if it has none); it notifies at most once per date until then, first come first served, nothing held. Alert texts use their own consent scope (`SmsConsent.scope = 'alerts'`), never booking-text consent, and the reverse; STOP blocks every scope. The course alert line's own expiry rule is separate.
+- BOOKING-LOOK-1 (Cam 2026-11-18, built #480): the golfer booking pages use `Course.bookingLook` (light/dark) and `Course.bookingAccent`, a preset name (black, green, blue, yellow; never red), set in Settings → Booking page look. `brandColor` stays a free hex for receipts, emails and the dashboard rail.
+- COURSE-SETTINGS-LOG (2026-11-18, #480): course-side settings changes are recorded in `CourseSettingChange` (who, field, before → after), written in the same transaction as the change; the booking page look is the first writer. In WIPED_TABLES.
+- PROMO-BOX (2026-11-18, #480): the public `has_live_promo` is true when an active, not-used-up code for the course overlaps today through the widest bookable day (public, member and each membership's window), so the "Have a promo code?" box shows more often, never less. `closed_dates` uses the same widest window. Only the boolean leaves the server.

@@ -10,7 +10,7 @@ page, Option A, https://claude.ai/artifact/9WAXcybTUBCGCMZ86uKoFb v12) and `lane
 switch, group toggles, "first log-in" toggle, range on/off) are not built. Build only what they show.
 
 1. **Booking page (Option A).** It's the approved page as drawn: the course header, picking a day, filters (calendar,
-   "Tee off between" and "Price up to" sliders, players stepper, tiles for holes and for walking or riding), tee time
+   Morning / Mid day / Afternoon time tiles (choose any; Cam removed the time and price sliders in threads 1bf6acc7 and 9cdc0e4d), players stepper, tiles for holes and for walking or riding), tee time
    cards grouped by part of the day, and "No times match" with a reset. Picking a tee time opens the booking on its
    own page. It wears the course look (Light or Dark plus one preset accent: Black, Green, Blue, Yellow; never red;
    `lanes/build.md` "Booking page look").
