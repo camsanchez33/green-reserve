@@ -32,6 +32,7 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from './prisma';
 import { createSale, cancelSaleIntent, settleOpenSale } from './shop-sales';
+import { ciContains, ciEquals } from '@/lib/like-exact';
 
 type Fail = { ok: false; error: string };
 const fail = (error: string): Fail => ({ ok: false, error });
@@ -89,7 +90,7 @@ export async function holdingsFor(courseId: string, email: string, now = new Dat
   const e = email.trim();
   if (!e) return [];
   const lines = await prisma.shopSaleLine.findMany({
-    where: { roundPackId: { not: null }, sale: { courseId, status: { in: PAID }, customerEmail: { equals: e, mode: 'insensitive' } } },
+    where: { roundPackId: { not: null }, sale: { courseId, status: { in: PAID }, customerEmail: ciEquals(e) } },
     select: LINE_SELECT, take: 100,
   });
   return lines.map(toHolding).filter(h => usable(h, now)).sort((a, b) => (a.expiresAt ?? '9999').localeCompare(b.expiresAt ?? '9999'));
@@ -102,7 +103,7 @@ export async function findHoldings(courseId: string, q: string, opts: { all?: bo
     where: {
       roundPackId: { not: null },
       // Searching by email only for staff who may see emails — else the search would reveal them.
-      sale: { courseId, status: { in: PAID }, ...(t ? { OR: [{ customerName: { contains: t, mode: 'insensitive' } }, ...(opts.byEmail ? [{ customerEmail: { contains: t, mode: 'insensitive' as const } }] : [])] } : {}) },
+      sale: { courseId, status: { in: PAID }, ...(t ? { OR: [{ customerName: ciContains(t) }, ...(opts.byEmail ? [{ customerEmail: ciContains(t) }] : [])] } : {}) },
     },
     select: LINE_SELECT, orderBy: { sale: { paidAt: 'desc' } }, take: opts.all ? 500 : 20,
   });

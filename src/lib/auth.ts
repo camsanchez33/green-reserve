@@ -25,7 +25,8 @@ export async function signToken(payload: { operatorId: string; email: string; sv
     .sign(secret);
 }
 
-export async function signStaffToken(payload: { staffId: string; courseId: string; email: string }) {
+/** `sv`: CourseStaff.sessionVersion at sign-in (Team, Cam 2026-11-17); resolveDashboardSession refuses a mismatch. */
+export async function signStaffToken(payload: { staffId: string; courseId: string; email: string; sv?: number }) {
   return new SignJWT({ ...payload, type: 'staff' })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
@@ -55,7 +56,7 @@ export async function signPendingTwoFactorToken(payload: { operatorId: string })
 // Returns session for both operators and staff — unified shape
 export type DashboardSession =
   | { kind: 'operator'; operatorId: string; email: string; sv?: number }
-  | { kind: 'staff'; staffId: string; courseId: string; email: string };
+  | { kind: 'staff'; staffId: string; courseId: string; email: string; sv?: number };
 
 export async function getOperatorSession(): Promise<DashboardSession | null> {
   const cookieStore = await cookies();
@@ -71,9 +72,9 @@ export async function getOperatorSession(): Promise<DashboardSession | null> {
     return { kind: 'operator', operatorId: p.operatorId, email: p.email, sv: p.sv };
   }
   if (payload.type === 'staff') {
-    const p = payload as { staffId: string; courseId: string; email: string; iat?: number; exp?: number };
+    const p = payload as { staffId: string; courseId: string; email: string; sv?: number; iat?: number; exp?: number };
     await maybeRefreshStaffToken(p, cookieStore);
-    return { kind: 'staff', staffId: p.staffId, courseId: p.courseId, email: p.email };
+    return { kind: 'staff', staffId: p.staffId, courseId: p.courseId, email: p.email, sv: p.sv };
   }
   return null;
 }
@@ -96,7 +97,7 @@ async function maybeRefreshOperatorToken(
 }
 
 async function maybeRefreshStaffToken(
-  p: { staffId: string; courseId: string; email: string; iat?: number; exp?: number },
+  p: { staffId: string; courseId: string; email: string; sv?: number; iat?: number; exp?: number },
   cookieStore: Awaited<ReturnType<typeof cookies>>
 ) {
   if (!p.iat || !p.exp) return;
@@ -104,7 +105,8 @@ async function maybeRefreshStaffToken(
   const total = p.exp - p.iat;
   if (elapsed / total < 0.5) return;
   try {
-    const newToken = await signStaffToken({ staffId: p.staffId, courseId: p.courseId, email: p.email });
+    // Carries the token's own sv: a refresh never makes a dead token live (resolveDashboardSession still compares it).
+    const newToken = await signStaffToken({ staffId: p.staffId, courseId: p.courseId, email: p.email, sv: p.sv });
     cookieStore.set('gr_operator', newToken, {
       httpOnly: true, secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax', maxAge: OPERATOR_MAX_AGE, path: '/',
@@ -190,11 +192,12 @@ async function passwordFingerprint(hash: string): Promise<string> {
   return Array.from(new Uint8Array(digest).slice(0, 12), b => b.toString(16).padStart(2, '0')).join('');
 }
 
-export async function signStaffResetToken(staff: { id: string; password: string }) {
+/** `ttl`: '1h' for a reset; Team's invite link uses 48h (lib/team-welcome INVITE_LINK_TTL). Either way it dies once a password is set. */
+export async function signStaffResetToken(staff: { id: string; password: string }, ttl: '1h' | '48h' = '1h') {
   return new SignJWT({ staffId: staff.id, pf: await passwordFingerprint(staff.password), type: 'staff_reset' })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime('1h')
+    .setExpirationTime(ttl)
     .sign(secret);
 }
 

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS, MANAGER_PLUS } from '@/lib/admin-session';
 import { hasArea, type AdminArea } from '@/lib/admin-areas';
 import { bookingRefLabel, courseRefLabel, parseRef } from '@/lib/booking-ref';
+import { ciContains } from '@/lib/like-exact';
 
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
@@ -32,9 +33,9 @@ export async function GET(req: NextRequest) {
       where: {
         archivedAt: null,
         OR: [
-          { name: { contains: lq, mode: 'insensitive' } },
-          { slug: { contains: lq, mode: 'insensitive' } },
-          { city: { contains: lq, mode: 'insensitive' } },
+          { name: ciContains(lq) },
+          { slug: ciContains(lq) },
+          { city: ciContains(lq) },
           ...(ref && ref.ref == null ? [{ number: ref.course }] : []),
         ],
       },
@@ -45,9 +46,9 @@ export async function GET(req: NextRequest) {
     prisma.courseInquiry.findMany({
       where: {
         OR: [
-          { courseName: { contains: lq, mode: 'insensitive' } },
-          { contactName: { contains: lq, mode: 'insensitive' } },
-          { email: { contains: lq, mode: 'insensitive' } },
+          { courseName: ciContains(lq) },
+          { contactName: ciContains(lq) },
+          { email: ciContains(lq) },
         ],
       },
       select: { id: true, courseName: true, contactName: true, status: true },
@@ -58,9 +59,9 @@ export async function GET(req: NextRequest) {
       ? prisma.golferAccount.findMany({
           where: {
             OR: [
-              { email: { contains: lq, mode: 'insensitive' } },
-              { firstName: { contains: lq, mode: 'insensitive' } },
-              { lastName: { contains: lq, mode: 'insensitive' } },
+              { email: ciContains(lq) },
+              { firstName: ciContains(lq) },
+              { lastName: ciContains(lq) },
               ...(digits.length >= 4 ? [{ phone: { contains: digits } }] : []),
             ],
           },
@@ -75,8 +76,8 @@ export async function GET(req: NextRequest) {
           where: {
             golferAccountId: null,
             OR: [
-              { golferEmail: { contains: lq, mode: 'insensitive' } },
-              { golferName: { contains: lq, mode: 'insensitive' } },
+              { golferEmail: ciContains(lq) },
+              { golferName: ciContains(lq) },
               ...(digits.length >= 4 ? [{ golferPhone: { contains: digits } }] : []),
             ],
           },
@@ -90,8 +91,8 @@ export async function GET(req: NextRequest) {
           where: {
             active: true,
             OR: [
-              { name: { contains: lq, mode: 'insensitive' } },
-              { email: { contains: lq, mode: 'insensitive' } },
+              { name: ciContains(lq) },
+              { email: ciContains(lq) },
             ],
           },
           select: { id: true, name: true, email: true, role: true },
@@ -101,7 +102,7 @@ export async function GET(req: NextRequest) {
     // AW-3: a word from a conversation with a course finds the conversation.
     lq.length >= 3
       ? prisma.messageThread.findMany({
-          where: { messages: { some: { body: { contains: lq, mode: 'insensitive' } } } },
+          where: { messages: { some: { body: ciContains(lq) } } },
           select: { courseId: true, course: { select: { name: true } }, updatedAt: true },
           orderBy: { updatedAt: 'desc' },
           take: 3,

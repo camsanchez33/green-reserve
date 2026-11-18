@@ -7,6 +7,7 @@ import {
   SIGNIN_COOKIE, CODE_TTL_SECONDS, cookieOptions,
   generateCode, macCode, newChallengeId, signChallenge, inertChallenge,
 } from '@/lib/inquiry-signin';
+import { ciEquals } from '@/lib/like-exact';
 
 // SD-11 step 2. The public form answered "yes, I am trying to sign in", so send
 // a code to the address ON FILE and hand back a challenge cookie.
@@ -53,9 +54,9 @@ export async function POST(req: NextRequest) {
     existing = await prisma.courseInquiry.findFirst({
       where: {
         status: { in: ALIVE_STATUSES },
-        courseName: { equals: courseName, mode: 'insensitive' },
-        city: { equals: city, mode: 'insensitive' },
-        state: { equals: state, mode: 'insensitive' },
+        courseName: ciEquals(courseName),
+        city: ciEquals(city),
+        state: ciEquals(state),
       },
       orderBy: { createdAt: 'desc' },
       select: { id: true, status: true, email: true, builtCourseId: true, firstName: true },
