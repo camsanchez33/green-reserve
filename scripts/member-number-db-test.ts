@@ -4,7 +4,6 @@
 import { readFileSync } from 'fs';
 import { prisma } from '../src/lib/prisma';
 import { assignMemberNumber, nextMemberNumber, initials, formatMemberNumber } from '../src/lib/member-number';
-import { joinTier, approveJoin } from '../src/lib/membership-join';
 import { amountsDue } from '../src/lib/membership-dues';
 const TAG = 'memnum2';
 let failed = 0;
@@ -81,16 +80,10 @@ async function cleanup() {
   const leftNow = await prisma.courseMembership.findUniqueOrThrow({ where: { id: left.id }, include: { tier: true } });
   ok('…an unpaid member of the archived tier is off it, with nothing due', leftNow.tierId === null && amountsDue(leftNow).duesCents === 0);
 
-  // Numbers are given where members are made (online join, approval, import).
-  const golfer = await prisma.golferAccount.create({ data: { email: `${TAG}+g@t.local`, firstName: 'G', lastName: 'O', password: 'x' } });
-  const online = await prisma.membershipTier.create({ data: { courseId: c.id, name: 'Online Club', annualFeeCents: 1000, joinOnline: 'instant' } });
-  await prisma.course.update({ where: { id: c.id }, data: { liveStatus: 'live', stripeAccountId: 'acct_x', stripeAccountActive: true } });
-  const jr = await joinTier(c.id, { id: golfer.id, email: golfer.email, name: 'G O', phone: '' }, online.id);
-  ok('an instant online join gets a number', jr.ok && !!(await prisma.courseMembership.findUniqueOrThrow({ where: { id: jr.ok ? jr.membershipId : '' } })).memberNumber, jr);
-  const req = await prisma.courseMembership.create({ data: { courseId: c.id, tierId: online.id, status: 'requested', inviteEmail: `${TAG}+r@t.local`, inviteName: 'R' } });
-  ok('a request has none until approved', !(await prisma.courseMembership.findUniqueOrThrow({ where: { id: req.id } })).memberNumber);
-  await approveJoin(c.id, req.id).catch(() => null);
-  ok('…approval gives it one', !!(await prisma.courseMembership.findUniqueOrThrow({ where: { id: req.id } })).memberNumber);
+  // Numbers are given where members are made: staff adding one (each path of the add) and the import. Join online is
+  // gone for good (GOLFER-SIGNIN-RETIRED).
+  const addRoute = readFileSync('src/app/api/operator/members/route.ts', 'utf8');
+  ok('every staff add gives a number', (addRoute.match(/memberNumber: await assignMemberNumber\(/g) ?? []).length >= 3);
   const imp = readFileSync('src/lib/member-import.ts', 'utf8');
   ok('imported members get a number', imp.includes('.then(made => assignMemberNumber(made.id))'));
   ok('a test-course reset starts numbers again (its members are gone)', readFileSync('src/lib/data-reset.ts', 'utf8').includes("prisma.membershipTier.updateMany({ where: { courseId }, data: { numberLast: 0 } })"));

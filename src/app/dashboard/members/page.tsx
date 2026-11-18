@@ -6,7 +6,7 @@
 // import and reminders. A member opens their card; the plus adds a member; Edit opens the setup.
 // Data: /api/operator/tiers and /api/operator/members. Season passes, dues collected, member numbers, photos and
 // paying when added come from the Memberships data PRs; each shows only once a response carries it.
-import { JoinRequests } from '@/components/dashboard/MemberJoin';
+import { UnpaidMembers } from '@/components/dashboard/MemberJoin';
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import OperatorSidebar from '@/components/OperatorSidebar';
@@ -24,7 +24,7 @@ import { MemberCard } from '@/components/dashboard/members/MemberCard';
 import { AddMember } from '@/components/dashboard/members/AddMember';
 import {
   type Tier, type Member, type Dues, type DuesThisYear, CardHead, Tile, KV, SubHead, ChevronIcon, Dot, LINK,
-  priceLine, JOIN_LABEL, isJoining, monthYear, shortDate, sinceYear, usd0, dollars, DuesText,
+  priceLine, notPaidYet, monthYear, shortDate, sinceYear, usd0, dollars, DuesText,
 } from '@/components/dashboard/members/shared';
 
 // The setup's colours on the tee sheet (the mockup's eight; they read on both looks).
@@ -138,11 +138,11 @@ function MembershipsPageInner() {
   if (loading) return <Shell><h1 className="font-serif text-[30px] sm:text-[34px] leading-none text-ink mt-1">Memberships</h1><p className="text-[13px] text-ink-muted">Loading…</p></Shell>;
 
   const now = new Date();
-  const listed = members.filter(m => !isJoining(m));
+  const listed = members.filter(m => !notPaidYet(m));
   const allOverdue = listed.filter(m => overdue(duesOf(m, now))).length;
   const live = tiers.filter(t => t.active);
   const count = (t: Tier) => t._count?.memberships ?? 0;
-  const asking = (t: Tier) => members.filter(m => isJoining(m) && m.tierId === t.id).length;
+  const unpaid = (t: Tier) => members.filter(m => notPaidYet(m) && m.tierId === t.id).length;
   const hasDues = !!dues && tiers.length > 0;
   const duesTotal = dues?.totalCents ?? 0;
   const duesOfTier = (t: Tier) => dues?.byTier.find(x => x.tierId === t.id)?.cents ?? 0;
@@ -182,8 +182,8 @@ function MembershipsPageInner() {
           <Tile label="Overdue renewals" value={String(late)} title="Active members who haven't paid, or whose membership ran out and wasn't renewed" />
         </div>
         {importOpen && <ImportMembers tiers={[open, ...tiers.filter(t => t.id !== open.id)]} onClose={() => setImportOpen(false)} onImported={loadAll} />}
-        {/* MEM-JOIN: golfers joining this membership online. */}
-        <JoinRequests members={members.filter(m => m.tierId === open.id)} canEdit={canEdit} onChanged={loadAll} />
+        {/* Added at the counter but not paid yet (Memberships item 1): Remove drops them. */}
+        <UnpaidMembers members={members.filter(m => m.tierId === open.id)} canEdit={canEdit} onChanged={loadAll} />
         <div className="grid gap-4 lg:grid-cols-3 items-start">
           <Card className="lg:col-span-2 px-1.5 pt-1.5 pb-2 min-w-0">
             <CardHead title="Members" plus={canEdit && open.active ? { label: 'Add a member', onClick: () => setAdding(true) } : undefined} />
@@ -210,7 +210,6 @@ function MembershipsPageInner() {
             <h2 className="text-[15px] font-semibold text-ink mb-1.5">Details</h2>
             <KV first k="Price" v={priceLine(open)} />
             <KV k="Lasts" v={`${open.termMonths} months from joining`} />
-            <KV k="Joining" v={JOIN_LABEL[open.joinOnline ?? 'off'] ?? JOIN_LABEL.off} />
             <KV k="Renews itself" v={open.autoRenew ? 'Yes' : 'No'} />
             <KV k="Books online" v={`${open.advanceBookingDays} days ahead`} />
             {open.guestPassesPerYear > 0 && <KV k="Guest passes" v={`${open.guestPassesPerYear} a year${open.guestsPayMemberRate ? ', at the member rate' : ''}`} />}
@@ -244,13 +243,13 @@ function MembershipsPageInner() {
             {ms.length === 0 ? (
               <p className="px-3 py-8 text-center text-[13.5px] text-ink-soft">No memberships set up yet.{canEdit ? ' Add one with the plus, then add your members to it.' : ''}</p>
             ) : ms.map(t => {
-              const ask = asking(t);
+              const ask = unpaid(t);
               return (
                 <button key={t.id} type="button" onClick={() => go(t.id)}
                   className="w-full text-left grid grid-cols-[10px_minmax(0,1fr)_auto_16px] sm:grid-cols-[10px_minmax(0,1fr)_auto_110px_16px] gap-3.5 items-center px-3 py-[13px] border-t border-line rounded-[10px] text-ink hover:bg-ink/5">
                   <Dot color={t.color} />
                   <span className="min-w-0"><b className="block font-semibold text-[14px] truncate">{t.name}</b>
-                    {ask > 0 && <small className="block text-[12px] text-warn">{ask} joining online</small>}
+                    {ask > 0 && <small className="block text-[12px] text-warn">{ask} not paid yet</small>}
                     {!t.active && <small className="block text-[12px] text-ink-muted">Not offered</small>}</span>
                   <span className="hidden sm:block text-[13px] text-ink-soft whitespace-nowrap">{priceLine(t)}</span>
                   <span className="text-[12.5px] text-ink-muted text-right whitespace-nowrap"><b className="text-[15px] font-semibold text-ink tabular-nums">{count(t)}</b> members</span>

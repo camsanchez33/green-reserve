@@ -7,9 +7,8 @@ import { prisma } from '../src/lib/prisma';
 import { stripe } from '../src/lib/stripe';
 import { readFileSync } from 'fs';
 import { startDuesOnReader, duesReaderStatus, cancelDuesOnReader, settleStaleDuesReaders, DUES_READER_STALE_MS } from '../src/lib/dues-reader';
-import { declineJoin } from '../src/lib/membership-join';
 import { payDuesByCard } from '../src/lib/dues-payment';
-import { markDuesPaidAtCourse } from '../src/lib/membership-dues';
+import { markDuesPaidAtCourse, removeUnpaidMembership } from '../src/lib/membership-dues';
 import { duesThisYear } from '../src/lib/dues-year';
 import { daySummary } from '../src/lib/register-close';
 const TAG = 'duespay1';
@@ -181,10 +180,10 @@ async function cleanup() {
   // Remove / decline waits while the dues are on the reader.
   const k = await member();
   await startDuesOnReader(c.id, k.id, 'tmr_a', 'staff');
-  const declined2 = await declineJoin(c.id, k.id);
+  const declined2 = await removeUnpaidMembership(c.id, k.id);
   ok('removing an unpaid member waits while their dues are on the reader', !declined2.ok && /being paid/.test(declined2.error) && (await get(k.id)).status === 'awaiting_payment', declined2);
   await cancelDuesOnReader(c.id, k.id, 'staff');
-  ok('…and goes through once the reader is cancelled', (await declineJoin(c.id, k.id)).ok);
+  ok('…and goes through once the reader is cancelled', (await removeUnpaidMembership(c.id, k.id)).ok);
 
   // The register gate and the pay-first add (route code, pinned: these routes need a signed-in session).
   const route = readFileSync('src/app/api/operator/members/route.ts', 'utf8');

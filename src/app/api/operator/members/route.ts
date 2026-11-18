@@ -6,7 +6,7 @@ import { resolveDashboardSession, requirePermission, can } from '@/lib/session';
 import { todayIn } from '@/lib/course-time';
 import { memberRoundStats } from '@/lib/member-stats';
 import { randomUUID } from 'crypto';
-import { markDuesPaidAtCourse, amountsDue } from '@/lib/membership-dues';
+import { markDuesPaidAtCourse, amountsDue, removeUnpaidMembership } from '@/lib/membership-dues';
 import { requireRegisterOpen } from '@/lib/register-open';
 import { duesThisYear } from '@/lib/dues-year';
 import { assignMemberNumber, nextMemberNumber } from '@/lib/member-number';
@@ -245,10 +245,12 @@ export async function PATCH(req: NextRequest) {
     });
     return NextResponse.json(safeRow(updated));
   }
-  // Join online is gone for good (GOLFER-SIGNIN-RETIRED, Cam 2026-11-18): nothing makes a join request now, and an
-  // older screen's Approve or Decline is answered plainly.
-  if (action === 'approve_join' || action === 'decline_join') {
-    return NextResponse.json({ error: 'Joining online is gone. Add members from the membership page.' }, { status: 410 });
+  // Not paid yet → Remove (a member added at the counter who never paid). Join online and its approve/decline are
+  // gone for good (GOLFER-SIGNIN-RETIRED, Cam 2026-11-18).
+  if (action === 'remove_unpaid') {
+    const r = await removeUnpaidMembership(session.courseId, id);
+    if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+    return NextResponse.json({ success: true });
   }
   // MEM-RENEW: staff can turn a member's automatic renewal off (never on — only the golfer agrees to it).
   if (action === 'stop_auto_renew') {

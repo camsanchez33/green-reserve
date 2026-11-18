@@ -6,7 +6,6 @@ import { readFileSync } from 'fs';
 import { prisma } from '../src/lib/prisma';
 import { applyTierRates, parseLineRates, readLineRates, tierCartCents, lineKey } from '../src/lib/tier-rates';
 import { windowFor, generationHorizonDays } from '../src/lib/booking-window';
-import { joinableTiers } from '../src/lib/membership-join';
 import { tierPriceList } from '../src/lib/tier-price-list';
 const TAG = 'tierlines3';
 let failed = 0;
@@ -71,11 +70,6 @@ const tt = (date: string, productId: string | null, green = 6200, cart = 2200) =
   await prisma.course.update({ where: { id: c.id }, data: { cartPricing: 'per_cart' } });
   const pc = await tierPriceList(c.id);
   ok('a per-cart course has no member cart lines', pc.perCart && pc.lines.length === 4 && pc.lines.every(l => l.what === 'green'));
-  // The join offer never advertises flat rates a price-list membership no longer charges.
-  await prisma.membershipTier.create({ data: { courseId: c.id, name: 'Lines Club', annualFeeCents: 1000, joinOnline: 'instant', discountPct: 30, lineRates: { [`green:${p18.id}:wd`]: { cents: 0 } } } });
-  await prisma.membershipTier.create({ data: { courseId: c.id, name: 'Old Club', annualFeeCents: 1000, joinOnline: 'instant', discountPct: 30 } });
-  const offer = await joinableTiers(c.id);
-  ok('the join offer: a price-list membership shows no old "30% off"; an older one still does', offer.find(t => t.name === 'Lines Club')?.discountPct === null && offer.find(t => t.name === 'Old Club')?.discountPct === 30, offer);
   await prisma.membershipTier.deleteMany({ where: { courseId: c.id } });
   await prisma.teeTimeSchedule.deleteMany({ where: { courseId: c.id } });
   await prisma.courseProduct.deleteMany({ where: { courseId: c.id } });

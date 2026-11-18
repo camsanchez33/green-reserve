@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
   const { name, color, greenFeeWeekday, greenFeeWeekend, cartFeeWeekday, cartFeeWeekend,
-          discountPct, advanceBookingDays, guestPassesPerYear, annualFee, initiationFee, termMonths, notes, guestsPayMemberRate, joinOnline, autoRenew, autoRenewRetry, accountOn, accountLimit, accountSettle } = body;
+          discountPct, advanceBookingDays, guestPassesPerYear, annualFee, initiationFee, termMonths, notes, guestsPayMemberRate, autoRenew, autoRenewRetry, accountOn, accountLimit, accountSettle } = body;
   if (!termOk(termMonths)) return NextResponse.json({ error: TERM_BAD }, { status: 400 });
 
   if (!name?.trim()) return NextResponse.json({ error: 'Tier name is required' }, { status: 400 });
@@ -61,8 +61,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Join online is gone for good (GOLFER-SIGNIN-RETIRED, Cam 2026-11-18): golfers buy memberships from the course.
-  // Whatever an older screen sends, a membership is stored as staff-added only.
-  void joinOnline;
+  // A membership is stored as staff-added only, whatever is sent.
   const join = 'off';
 
   // MEM-ACCT: members on this tier can charge to an account, up to its limit (dollars on the wire; blank = none).
