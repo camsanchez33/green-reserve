@@ -46,3 +46,7 @@
 .snd { width: 44px; height: 44px; border: 0; background: none; color: #FFFFFF; display: grid; place-items: center; cursor: pointer; flex: none; }
 .snd:disabled { opacity: .45; cursor: default; }
 .note { margin: 8px 0 0; font-size: 12.5px; color: var(--g-muted); }
+
+/* ?courseId=: one course's chats, with a way back to all of them. */
+.allBtn { font: inherit; font-size: inherit; background: none; border: 0; padding: 0; color: var(--g-ink); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.allBtn:focus-visible { outline: 2px solid var(--g-focus); outline-offset: 2px; }

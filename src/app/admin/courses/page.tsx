@@ -309,7 +309,6 @@ function CoursesContent() {
         )}
 
         <div className={s.foot}>
-          {d?.support && <Link href="/admin/groups">Course groups</Link>}
           {!archived && <a href="/api/admin/courses?format=csv">Download as CSV</a>}
           {archived ? <Link href="/admin/courses">Back to every course</Link>
             : d?.archivedCount ? <Link href="/admin/courses?view=archived">Archived courses ({d.archivedCount})</Link> : null}

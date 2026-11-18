@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
   // BOOKING-REF: "GR4-17" / "4-17" is a booking, "GR4" a course.
   const ref = parseRef(q);
 
-  const [courses, inquiries, golfers, guests, employees, groups, threads, bookings] = await Promise.all([
+  const [courses, inquiries, golfers, guests, employees, threads, bookings] = await Promise.all([
     prisma.course.findMany({
       where: {
         archivedAt: null,
@@ -98,11 +98,6 @@ export async function GET(req: NextRequest) {
           take: 5,
         })
       : Promise.resolve([]),
-    prisma.courseGroup.findMany({
-      where: { OR: [{ name: { contains: lq, mode: 'insensitive' } }, { slug: { contains: lq, mode: 'insensitive' } }] },
-      select: { id: true, name: true, slug: true, _count: { select: { courses: true } } },
-      take: 3,
-    }),
     // AW-3: a word from a conversation with a course finds the conversation.
     lq.length >= 3
       ? prisma.messageThread.findMany({
@@ -125,17 +120,15 @@ export async function GET(req: NextRequest) {
   const staticNav = [
     { id: 'nav:overview',    label: 'Home',          href: '/admin',            always: true },
     { id: 'nav:goals',       label: 'Goals',         href: '/admin/goals',      support: true },
-    { id: 'nav:inquiries',   label: 'Pipeline',      href: '/admin/inquiries',  always: true },
+    { id: 'nav:inquiries',   label: 'Inquiries',     href: '/admin/inquiries',  always: true },
     { id: 'nav:courses',     label: 'Courses',       href: '/admin/courses',    always: true },
-    { id: 'nav:groups',      label: 'Course groups', href: '/admin/groups',     always: true },
     { id: 'nav:support',     label: 'Course support', href: '/admin/support',   always: true },
     { id: 'nav:revenue',     label: 'Money',         href: '/admin/revenue',    support: true },
-    { id: 'nav:golfers',     label: 'Golfer lookup', href: '/admin/golfers',    support: true },
+    { id: 'nav:golfers',     label: 'Golfers',       href: '/admin/golfers',    support: true },
     { id: 'nav:employees',   label: 'Team',          href: '/admin/employees',  manager: true },
     { id: 'nav:broadcasts',  label: 'Announcements', href: '/admin/announcements', support: true },
     { id: 'nav:system',      label: 'Platform activity', href: '/admin/system',     manager: true },
     { id: 'nav:profile',     label: 'My profile',    href: '/admin/profile',    always: true },
-    { id: 'nav:create',      label: 'Build by hand', href: '/admin/create',     manager: true },
   ].filter(n => {
     if (n.always) return true;
     if (n.support && isSupportPlus) return true;
@@ -199,13 +192,6 @@ export async function GET(req: NextRequest) {
       // ADMIN-REDO Bookings: a booking found by its number opens on Bookings (Money); without Money, the golfer.
       href: hasArea(session, 'money') && !b.course.isTest ? `/admin/bookings?id=${b.id}` : b.golferAccountId ? `/admin/golfers?id=${b.golferAccountId}` : `/admin/golfers?guest=${encodeURIComponent(b.golferEmail.toLowerCase())}`,
     })),
-    ...groups.map(g => ({
-      type: 'group' as const,
-      id: `group:${g.id}`,
-      label: g.name,
-      sub: `${g._count.courses} course${g._count.courses === 1 ? '' : 's'} · /g/${g.slug}`,
-      href: '/admin/groups',
-    })),
     ...(Array.isArray(threads) ? threads : []).map(t => ({
       type: 'thread' as const,
       id: `thread:${t.courseId}`,
@@ -230,8 +216,8 @@ export async function GET(req: NextRequest) {
   // AW-11: nothing from an area this person can't open — not even its page name.
   const NAV_AREA: Record<string, AdminArea> = {
     '/admin/problems': 'problems', '/admin/goals': 'company', '/admin/inquiries': 'pipeline', '/admin/courses': 'courses',
-    '/admin/groups': 'courses', '/admin/messages': 'messages', '/admin/support': 'messages', '/admin/revenue': 'money', '/admin/golfers': 'golfers',
-    '/admin/announcements': 'messages', '/admin/bookings': 'money', '/admin/system': 'company', '/admin/employees': 'company', '/admin/create': 'pipeline',
+    '/admin/support': 'messages', '/admin/revenue': 'money', '/admin/golfers': 'golfers',
+    '/admin/announcements': 'messages', '/admin/bookings': 'money', '/admin/system': 'company', '/admin/employees': 'company',
   };
   const TYPE_AREA: Partial<Record<ResultItem['type'], AdminArea>> = {
     course: 'courses', group: 'courses', inquiry: 'pipeline', employee: 'company', golfer: 'golfers', guest: 'golfers', booking: 'golfers', thread: 'messages',

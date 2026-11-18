@@ -82,5 +82,8 @@ Mockup `lanes/admin/goals-mockup.html` (https://claude.ai/artifact/62wRP5X7nS5kM
 Then Audit (mockup with Cam, https://claude.ai/artifact/QgQyTepsYAkcqfpcWYS2Qp), one page at a time,
 mockup first ("as it works today"), nothing built until Cam approves.
 
+## Parked
+- Course groups (Cam 2026-11-18, "get rid of course groups for now"): off the menu, the search palette and the Golf courses page. `/admin/groups`, its API and the golfer `/g/[slug]` pages still work; it comes back when a real county signs.
+
 ## Small follow-ups
 - `admin-areas.ts` Problems help text still says "take, note and hand off" (Build's file; Build does it).

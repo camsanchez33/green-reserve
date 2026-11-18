@@ -38,7 +38,9 @@ function Problem({ got, retry, busy }: { got: { msg: string; status?: number }; 
   );
 }
 
-function ChatList({ onOpen, initialQ }: { onOpen: (id: string) => void; initialQ: string }) {
+// ?courseId= (links from a course's page, its emails and the old Messages screen): that course's chats only, and its
+// one chat opens straight away when there is just one.
+function ChatList({ onOpen, initialQ, courseId, onAll }: { onOpen: (id: string, replace?: boolean) => void; initialQ: string; courseId: string; onAll: () => void }) {
   const [q, setQ] = useState(initialQ); // the top search opens a course's chats with ?q=
   const [got, setGot] = useState<Got<{ threads: ThreadRow[] }> | null>(null);
   const [busy, setBusy] = useState(true);
@@ -52,7 +54,10 @@ function ChatList({ onOpen, initialQ }: { onOpen: (id: string) => void; initialQ
   }, []);
   useEffect(() => { const t = setTimeout(() => load(q), q ? 250 : 0); return () => clearTimeout(t); }, [q, load]);
   const now = new Date();
-  const rows = got?.ok ? got.data.threads : [];
+  const all = got?.ok ? got.data.threads : [];
+  const rows = courseId ? all.filter(t => t.courseId === courseId) : all;
+  const only = courseId && got?.ok && !q.trim() && rows.length === 1 ? rows[0].id : null;
+  useEffect(() => { if (only) onOpen(only, true); }, [only, onOpen]);
   return (
     <section className={`${g.glass} ${s.card}`} aria-label="Course chats">
       <label className={s.search}>
@@ -61,7 +66,8 @@ function ChatList({ onOpen, initialQ }: { onOpen: (id: string) => void; initialQ
       </label>
       {got && !got.ok && <Problem got={got} retry={() => load(q)} busy={busy} />}
       {!got && <div className={r.skel} aria-busy="true" aria-label="Loading chats" />}
-      {got?.ok && rows.length === 0 && <p className={s.empty}>{q.trim() ? 'No chat matches.' : 'No chats yet.'}</p>}
+      {courseId && got?.ok && <p className={s.note}>{rows[0] ? `Only ${rows[0].courseName}'s chats.` : 'No chats with this course yet.'} <button type="button" className={s.allBtn} onClick={onAll}>Show every chat</button></p>}
+      {got?.ok && rows.length === 0 && !courseId && <p className={s.empty}>{q.trim() ? 'No chat matches.' : 'No chats yet.'}</p>}
       {got?.ok && (
         <ul className={`${s.list} ${busy ? s.stale : ''}`}>
           {rows.map(t => (
@@ -161,6 +167,8 @@ function SupportContent() {
   const params = useSearchParams();
   const router = useRouter();
   const id = params.get('id');
+  const courseId = params.get('courseId') ?? '';
+  const open = useCallback((x: string, replace = false) => { const u = `/admin/support?id=${encodeURIComponent(x)}`; if (replace) router.replace(u); else router.push(u); }, [router]);
   // A new ?q= (the top search picked another course, or Back/Forward) starts a fresh list with that search.
   const initialQ = params.get('q') ?? '';
   return (
@@ -168,7 +176,7 @@ function SupportContent() {
       <AdminSidebar active="support" />
       <main className={g.main}>
         <div className={g.head}><h1>Course support</h1></div>
-        {id ? <Chat key={id} id={id} onBack={() => router.push('/admin/support')} /> : <ChatList key={initialQ} initialQ={initialQ} onOpen={x => router.push(`/admin/support?id=${encodeURIComponent(x)}`)} />}
+        {id ? <Chat key={id} id={id} onBack={() => router.push('/admin/support')} /> : <ChatList key={initialQ + '|' + courseId} initialQ={initialQ} courseId={courseId} onOpen={open} onAll={() => router.push('/admin/support')} />}
       </main>
     </>
   );

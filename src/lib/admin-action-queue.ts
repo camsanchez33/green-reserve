@@ -106,7 +106,7 @@ export async function buildActionQueue(now = new Date()): Promise<{ rows: Action
       doThis: 'They’re waiting on a reply — send a quick nudge or a full response.',
       ageDays: worst.signal.ageDays, actionLabel: 'Reply',
       // A chat opens on Course support; a course's earlier messages on Messages, as before.
-      href: worst.chatId ? `/admin/support?id=${worst.chatId}` : `/admin/messages?courseId=${t.courseId}`,
+      href: worst.chatId ? `/admin/support?id=${worst.chatId}` : `/admin/support?courseId=${t.courseId}`,
       fire: { kind: 'send_nudge' as const, courseId: t.courseId },
     }];
   });
