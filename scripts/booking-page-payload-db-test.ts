@@ -171,6 +171,7 @@ async function cleanup() {
   await prisma.course.update({ where: { id: course.id }, data: { hasResidentPricing: false } });
   p = await loadPublicCourse(`${TAG}-a`);
   ok('resident pricing off: no "residents" group and the resident window does not widen closed_dates', JSON.stringify(p.login_groups) === '["members"]' && !p.closed_dates.some((d: { date: string }) => d.date === addDaysStr(today, 18)));
+  ok('resident pricing off: resident_advance_days is null even with the column set', p.resident_advance_days === null);
   await prisma.course.update({ where: { id: course.id }, data: { memberLoginOn: false } });
   p = await loadPublicCourse(`${TAG}-a`);
   ok('Log in switched off: member_login_on false and no groups', p.member_login_on === false && p.login_groups.length === 0);

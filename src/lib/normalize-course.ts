@@ -95,7 +95,8 @@ export function normalizeDbCourse(c: any, startingGreenFee = 0, extras?: Booking
     // GOLFER-LOGIN-1: whether the booking page shows the per-course Log in ("Show Log in on your booking
     // page"), and how far ahead a golfer logged in with a resident card can book (null = the public window).
     member_login_on:         c.memberLoginOn !== false,
-    resident_advance_days:   typeof c.residentAdvanceDays === 'number' ? c.residentAdvanceDays : null,
+    // Null too when the course has resident pricing off, so a stale column never shows a window nobody gets.
+    resident_advance_days:   c.hasResidentPricing && typeof c.residentAdvanceDays === 'number' ? c.residentAdvanceDays : null,
     // Only on the single-course payload (loadPublicCourse, preview): whether a code box is worth
     // showing (never the codes), and the closed days in the booking window with staff's reason.
     // login_groups: which groups can log in here ('members', 'residents'), for the Log in line; [] when Log in is off.
