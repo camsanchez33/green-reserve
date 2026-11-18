@@ -652,3 +652,5 @@ nohup npx next dev -p 3100 > /tmp/next.log 2>&1 &
 ```
 Sign in as the seeded operator, or mint a `gr_operator` cookie the way the DB tests do. Playwright and Chromium are
 pre-installed (`require('playwright')`). Local only — never a production URL with real data.
+
+- ALERTS-2 (Build ruling 2026-11-18 on Cam's approved alerts mockup, `lanes/golfer.md` item 7): tee time alerts take a list of dates inside the booking window (no open-ended "weekends"); an alert ends after the last tee time on its last date (course local time; end of that day if it has none); it notifies at most once per date until then, first come first served, nothing held. Alert texts use their own consent scope (`SmsConsent.scope = 'alerts'`), never booking-text consent, and the reverse; STOP blocks every scope. The course alert line's own expiry rule is separate.

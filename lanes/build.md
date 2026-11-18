@@ -23,10 +23,11 @@ the lane files; merges every PR in dependency order after Cam's review sitting; 
     helpers are deleted.
   - The manage page says "Log in first to keep your member rate" when an expired member moves a booking from the
     emailed link.
-- Tee time alerts (`lanes/golfer.md` item 7): `TeeTimeAlert` grows multiple dates or "weekends", time of day,
-  players, an optional phone with its own alert-text consent, the logged-in one-tap path (no email confirm), the
-  course switch "Let golfers set tee time alerts", and a stop link in every email. Keep the queued expiry rule (an
-  alert ends after the day's last tee time unless the course sets a later end). Additive migration.
+- Tee time alerts (`lanes/golfer.md` item 7): `TeeTimeAlert` grows multiple dates (no "weekends" kind), time of
+  day, players, an optional phone with its own alert-text consent, the logged-in one-tap path (no email confirm), the
+  course switch "Let golfers set tee time alerts", and a stop link in every email. An alert ends after the last tee
+  time on its last date and fires at most once per date (ALERTS-2). Additive migration. The "ends after the day's last
+  tee time unless the course sets a later end" rule belongs to the Course alert LINE, built with Course alert.
 - Range balls on online bookings (`lanes/golfer.md` item 5): the course switch "Sell range balls with tee times";
   buckets from the Range settings priced on the booking as their own line and paid with the round (`describePolicy()`
   wording, `recordMove()` when charged).
