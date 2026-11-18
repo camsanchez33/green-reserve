@@ -145,6 +145,12 @@ async function main() {
   const preBuilt = await seedInquiry('prebuilt', { status: 'live', builtCourseId: r.course.id, createdAt: new Date('2026-11-10T15:00:00Z') });
   await prisma.outreachTouch.create({ data: { inquiryId: preBuilt.id, at: new Date('2026-11-10T16:00:00Z'), channel: 'call', direction: 'out' } });
   const preLead = await seedInquiry('prelead', { status: 'lead', createdAt: new Date('2026-11-22T15:00:00Z') });
+  // Inquiries data (#462): contacts are kept with their lead, and go with a lead made before outreach.
+  await prisma.courseContact.createMany({ data: [
+    { inquiryId: lead.id, name: 'Kept One', email: `${TAG}-kept1@test.local`, decisionMaker: true },
+    { inquiryId: lead.id, name: 'Kept Two' },
+    { inquiryId: preLead.id, name: 'Pre One', email: `${TAG}-pre1@test.local` },
+  ] });
   const checkin = await prisma.call.create({ data: { kind: 'checkin', courseId: t.course.id, scheduledAt: new Date('2030-01-02T15:00:00Z') } });
   const bothCall = await prisma.call.create({ data: { kind: 'discovery', inquiryId: built.id, courseId: t.course.id, scheduledAt: new Date('2030-01-03T15:00:00Z') } });
 
@@ -152,7 +158,7 @@ async function main() {
   await prisma.adminGoal.create({ data: { metric: 'courses_live', target: 1, dueAt: new Date('2030-01-01T00:00:00Z'), createdBy: TAG } });
   const keptBefore = await prisma.adminGoal.count();
   const ROLLBACK = new Error('rollback');
-  type Outreach = { preLead: boolean; preBuilt: boolean; preTouches: number; lead: string | undefined; touches: number; discovery: boolean; checkin: boolean; both: string | null | undefined; built: { status: string; builtCourseId: string | null } | null; builtEvent: string | undefined; unlinked: number };
+  type Outreach = { contacts: number; preContacts: number; preLead: boolean; preBuilt: boolean; preTouches: number; lead: string | undefined; touches: number; discovery: boolean; checkin: boolean; both: string | null | undefined; built: { status: string; builtCourseId: string | null } | null; builtEvent: string | undefined; unlinked: number };
   let inside: { wipedLeft: number; keptLeft: number; ok: boolean; nextCourse: number; refSeqsLeft: number; outreach: Outreach } | null = null;
   try {
     await prisma.$transaction(async tx => {
@@ -162,6 +168,8 @@ async function main() {
       const keptLeft = await tx.adminGoal.count();
       const ev = await tx.inquiryStatusEvent.findFirst({ where: { inquiryId: built.id }, orderBy: { createdAt: 'desc' } });
       const outreach: Outreach = {
+        contacts: await tx.courseContact.count({ where: { inquiryId: lead.id } }),
+        preContacts: await tx.courseContact.count({ where: { inquiryId: preLead.id } }),
         preLead: !!(await tx.courseInquiry.findUnique({ where: { id: preLead.id } })),
         preBuilt: !!(await tx.courseInquiry.findUnique({ where: { id: preBuilt.id } })),
         preTouches: await tx.outreachTouch.count({ where: { inquiryId: preBuilt.id } }),
@@ -190,6 +198,8 @@ async function main() {
   const o = got?.outreach;
   check('…and keeps a lead, its touches and its discovery call', !!o && o.lead === 'lead' && o.touches === 1 && o.discovery, o);
   check('…and deletes an inquiry made before outreach, built or not, with its touches', !!o && !o.preBuilt && !o.preLead && o.preTouches === 0, o);
+  check('…and keeps the lead\'s contacts (KEEP-OUTREACH, #462)', !!o && o.contacts === 2, o);
+  check('…and a lead made before outreach takes its contacts with it', !!o && o.preContacts === 0, o);
   check('…and a course check-in call goes with its course', !!o && !o.checkin, o);
   check('…and an inquiry call that also named the course stays, with no course on it', !!o && o.both === null, o);
   check('…and an inquiry built into a wiped course stays, unlinked and archived with a status event', !!o && o.built?.status === 'archived' && o.built?.builtCourseId === null && o.builtEvent === 'live->archived' && o.unlinked >= 1, o);

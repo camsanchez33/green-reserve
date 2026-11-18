@@ -25,8 +25,9 @@ export const STAGE_LABEL: Record<OutreachStage, string> = Object.fromEntries(OUT
 /** The closed reason "Not now" writes (also in inquiry-status CLOSED_REASONS). */
 export const NOT_NOW_REASON = 'Not now';
 
-/** company/outreach/plan.md: emails start Dec 1 (Cam 2026-11-16). Midnight Eastern. Email 1 is never due before it. */
-export const OUTREACH_START = new Date('2026-12-01T05:00:00Z');
+/** company/outreach/plan.md: emails start Dec 1 (Cam 2026-11-16). Midnight Eastern. Email 1 is never due before it.
+ *  Not data-reset's OUTREACH_START (Nov 23, the launch-wipe cut-off). */
+export const EMAILS_START = new Date('2026-12-01T05:00:00Z');
 
 /** company/outreach/plan.md "Follow-up timing": days after Email 1. */
 export const CADENCE_DAYS = { call: 1, email2: 4, email3: 11, stop: 14 } as const;
@@ -125,7 +126,7 @@ export function outreachNext(inq: OutreachInput, now: Date = new Date()): NextSt
   const emails = emailsSent(inq.touches);
   const d0 = emails[0]?.getTime();
   let step: NextStep['key'], label: string, at: number;
-  if (!emails.length) { step = 'email1'; label = 'Email 1'; at = Math.max(OUTREACH_START.getTime(), now.getTime()); }
+  if (!emails.length) { step = 'email1'; label = 'Email 1'; at = Math.max(EMAILS_START.getTime(), now.getTime()); }
   else {
     const calledAfterFirst = sorted.some(x => x.direction === 'out' && x.channel !== 'email' && t(x.at) >= d0!)
       || inq.calls.some(c => LOGGED(c) && t(c.scheduledAt) >= d0!);
@@ -135,7 +136,7 @@ export function outreachNext(inq: OutreachInput, now: Date = new Date()): NextSt
     else { step = 'close_no_reply'; label = 'No reply — close, recheck in March'; at = d0! + CADENCE_DAYS.stop * DAY; }
   }
   // A follow-up date set by hand wins, except Email 1 still waits for the start date.
-  if (followUp) at = step === 'email1' ? Math.max(followUp.getTime(), OUTREACH_START.getTime()) : followUp.getTime();
+  if (followUp) at = step === 'email1' ? Math.max(followUp.getTime(), EMAILS_START.getTime()) : followUp.getTime();
   return mk(step, label, at);
 }
 
