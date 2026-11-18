@@ -20,7 +20,7 @@ const usd = (cents: number) => `$${(cents / 100).toFixed(2)}`;
  * is charged anywhere, so none is promised here; the window and guest passes are not prices and stay. Null when
  * nothing applies.
  */
-export function benefitsSentence(tier: BenefitTier | null, member: boolean, resident: boolean, course: WindowCourse, memberPricing = true): string | null {
+export function benefitsSentence(tier: BenefitTier | null, member: boolean, resident: boolean, course: WindowCourse, memberPricing: boolean): string | null {
   if (member) {
     const priced = tier && !memberPricing ? { ...tier, discountPct: null, greenFeeWeekdayCents: null, greenFeeWeekendCents: null, lineRates: null } : tier;
     const parts = memberBenefitParts(priced, course);
