@@ -44,7 +44,7 @@ export const KEPT_TABLES = [
 export const WIPED_TABLES = [
   // courses and their setup
   'CourseOperator', 'Course', 'CourseNumberCounter', 'CourseGroup', 'CoursePhoto', 'TeeSet', 'Nine', 'CourseProduct', 'TeeSetNine',
-  'CourseProductTeeSet', 'CourseStaff', 'StaffPermissionChange', 'CourseRole', 'TeamChange', 'MembershipTier', 'TeeTimeSchedule', 'Blackout',
+  'CourseProductTeeSet', 'CourseStaff', 'StaffPermissionChange', 'CourseRole', 'TeamChange', 'CourseSettingChange', 'MembershipTier', 'TeeTimeSchedule', 'Blackout',
   'AgreementAcceptance', 'ShopItem',
   // golfers and activity
   'GolferAccount', 'CourseResident', 'CourseMembership', 'MemberLoginCode', 'MemberTermsAgreement', 'TeeTime', 'Booking', 'TeeTimeAlert', 'PaymentEvent',

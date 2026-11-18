@@ -112,7 +112,7 @@ export function ClosedDays({ blackouts, error, reload, canEdit, publicAdvanceDay
       )}
       {pick && !pick.closed && (
         <Popup title={`Close ${long(pick.date)}?`} onClose={() => !busy && setPick(null)}>
-          <Block label="What’s happening"><input aria-label="What’s happening" value={reason} onChange={e => setReason(e.target.value)} className={FIELD} /></Block>
+          <Block label="What’s happening"><input aria-label="What’s happening" aria-describedby="closed-reason-hint" value={reason} onChange={e => setReason(e.target.value)} className={FIELD} /><p id="closed-reason-hint" className="text-[12px] text-ink-muted mt-1">Golfers see this on your booking page.</p></Block>
           {booked && booked !== 'error' && booked.groups > 0 && (
             <div className="rounded-[12px] border border-warn/45 bg-warn/10 px-3 py-2.5 text-[13px] text-ink">
               <b className="font-semibold">{booked.groups} group{booked.groups === 1 ? '' : 's'} · {booked.players} player{booked.players === 1 ? '' : 's'}</b> {booked.groups === 1 ? 'is' : 'are'} booked that day. They stay booked. <Link href={`/dashboard?date=${pick.date}`} className="underline font-semibold">Cancel and tell them</Link> from the tee sheet.
