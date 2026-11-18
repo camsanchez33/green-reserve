@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
-import { getGolferSession } from '@/lib/auth';
 import { changePartySize } from '@/lib/change-party';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
-  const golferSession = await getGolferSession();
   const ip = clientIp(req);
   const ok = await rateLimit('manage:players:' + ip, 10, 300);
   if (!ok) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
@@ -13,7 +11,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
   const body = await req.json() as { token?: string; newPlayers?: number; termsAccepted?: boolean };
   const { token, newPlayers, termsAccepted } = body;
 
-  if (!newPlayers || !Number.isInteger(newPlayers) || newPlayers < 1 || newPlayers > 4 || (!golferSession && !token)) {
+  if (!newPlayers || !Number.isInteger(newPlayers) || newPlayers < 1 || newPlayers > 4 || !token) {
     return NextResponse.json({ error: 'Missing or invalid parameters' }, { status: 400 });
   }
   if (termsAccepted !== true) {
@@ -21,7 +19,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
   }
 
   try {
-    const { feeRefundError, ...view } = await changePartySize(bookingId, newPlayers, { by: 'golfer', golferId: golferSession?.golferId, token });
+    const { feeRefundError, ...view } = await changePartySize(bookingId, newPlayers, { by: 'golfer', token });
     return NextResponse.json(feeRefundError ? { ...view, feeRefundError } : view);
   } catch (err) {
     const e = err as { code?: string; max?: number; msg?: string };

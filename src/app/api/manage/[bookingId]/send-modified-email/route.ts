@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendBookingModifiedEmail } from '@/lib/email';
-import { getGolferSession } from '@/lib/auth';
 import { canManageBooking } from '@/lib/manage-access';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 
@@ -13,8 +12,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
   const { token } = await req.json() as { token?: string };
-  const golferSession = await getGolferSession();
-  if (!golferSession && !token) return NextResponse.json({ error: 'Missing token' }, { status: 400 });
+  if (!token) return NextResponse.json({ error: 'Missing token' }, { status: 400 });
 
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
@@ -25,7 +23,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
   });
 
   if (!booking) return NextResponse.json({ error: 'Invalid' }, { status: 404 });
-  const authorized = canManageBooking(booking, golferSession?.golferId, token);
+  const authorized = canManageBooking(booking, token);
   if (!authorized) {
     return NextResponse.json({ error: 'Invalid' }, { status: 404 });
   }

@@ -18,8 +18,7 @@ import { chargeBookingFee, releaseUnpaidBooking } from '@/lib/booking-fee';
 import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { centsToDollars } from '@/lib/money';
-import { getGolferSession } from '@/lib/auth';
-import { getMemberSession, getGolferMembership, golferResident } from '@/lib/member-session';
+import { getMemberSession, signedInResident } from '@/lib/member-session';
 import { stripe, ACCESS_FEE_CENTS } from '@/lib/stripe';
 import { sendBookingConfirmation, sendOperatorBookingNotification, sendCancellationWarningEmail, sendCheckInAvailableEmail } from '@/lib/email';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
@@ -60,7 +59,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Too many bookings in a short time. Wait a while and try again, or call the course.' }, { status: 429 });
   }
 
-  const golferSession = await getGolferSession();
+  const memberSession = await getMemberSession();
   let appliedRate = 'standard';
   let appliedTierName = 'standard';
   let appliedTier: { guestsPayMemberRate: boolean } | null = null;
@@ -127,33 +126,14 @@ export async function POST(req: NextRequest) {
   const sizeError = groupSizeError(rules, players);
   if (sizeError) return NextResponse.json({ error: sizeError, code: 'group_size', minPlayers: rules.minPlayers, maxPlayers: rules.maxPlayers }, { status: 400 });
 
-  // Membership tier lookup — check golfer session first, then member session
+  // Membership tier lookup — this course's member sign-in
   let resolvedGreenFeeOverride: number | null = null;
   let resolvedCartFeeOverride: number | null = null;
   // BOOKING WINDOWS: the recognized membership (tier or tierless) decides how
   // far ahead this booking may reach; null = the public window.
   let viewerMembership: { tier: { advanceBookingDays: number; windowPublic: boolean } | null } | null = null;
-  if (golferSession) {
-    // G5b: matches by direct golferId link OR the golfer's OTP-verified email
-    // against an invite-only membership — same recognition as the course page.
-    const golferMembership = await getGolferMembership(teeTimeFull.courseId, teeTimeFull.course);
-    const membership = golferMembership
-      ? await prisma.courseMembership.findUnique({ where: { id: golferMembership.membershipId }, include: { tier: true } })
-      : null;
-    if (membership) viewerMembership = { tier: membership.tier };
-    // Members switched off in Settings: the membership still counts (its window), its rate doesn't.
-    if (membership?.tier && memberPricingOn(teeTimeFull.course)) {
-      const rates = applyTierRates(teeTimeFull, membership.tier);
-      resolvedGreenFeeOverride = rates.greenFeeCents;
-      resolvedCartFeeOverride  = rates.cartFeeCents;
-      appliedTierName = membership.tier.name;
-      appliedRate     = membership.tier.name;
-      appliedTier     = membership.tier;
-    }
-  }
-  // A $0 member rate is a rate (review 2026-10-31): only no membership falls through to the member cookie.
-  if (appliedTier == null) {
-    const memberSession = await getMemberSession();
+  // Cam 2026-11-18: the member is whoever is signed in to THIS course (gr_member); there are no golfer accounts.
+  {
     if (memberSession && memberSession.courseId === teeTimeFull.courseId) {
       const membership = await prisma.courseMembership.findUnique({
         where: { id: memberSession.membershipId },
@@ -198,10 +178,10 @@ export async function POST(req: NextRequest) {
   // A cart is required when this tee time can't be walked (its price-table cell, CART-1).
   const wantsCart = walkingAllowedAt(teeTimeFull) ? !!cartSelected : true;
 
-  // RES-1: a signed-in golfer on the course's resident list pays the resident
-  // rate for one player — themselves. A member rate is never combined with it.
+  // RES-1: a golfer signed in to this course (gr_member) whose email is on the resident list pays the
+  // resident rate for one player — themselves. A member rate is never combined with it.
   const resident = appliedTierName === 'standard' && teeTimeFull.residentRateCents != null && residentPricingOn(teeTimeFull.course)
-    ? await golferResident(teeTimeFull.courseId, teeTimeFull.date) : null;
+    ? await signedInResident(teeTimeFull.courseId, teeTimeFull.date) : null;
   // PRICE-1 (Cam 2026-10-30): a promo code comes off the green fee, SEAT BY SEAT — the member's
   // spot, the resident and each other player each pay their own rate less the code — so the
   // per-seat rates kept on the booking add up to its total and keep the discount through a
@@ -219,20 +199,24 @@ export async function POST(req: NextRequest) {
   // What the booking keeps: whichever of the two set the public price.
   const dealSet = dealWins(teeTimeFull.greenFeeCents, lastMinutePct, demandPct);
   const kept = { lastMinutePct: dealSet ? lastMinutePct : 0, demandPct: dealSet ? 0 : demandPct };
+  let holderEmail = '';
   let pack: { lineId: string; seats: number; coversCart: boolean; greenFeeTotal: number; cartFeeTotal: number; memberRateCents: number | null; memberCartCents: number | null } | null = null;
   if (usePack && !ROUND_PACKS_ON) return NextResponse.json({ error: PACKS_OFF, code: 'pack' }, { status: 410 });
   if (usePack) {
-    if (!golferSession?.email) return NextResponse.json({ error: 'Sign in to use your round pack.', code: 'pack' }, { status: 401 });
+    // The holder is proven by this course's member sign-in (Cam 2026-11-18: no golfer accounts).
+    const holder = memberSession && memberSession.courseId === teeTimeFull.courseId ? memberSession.email : '';
+    if (!holder) return NextResponse.json({ error: 'Sign in as a member to use your round pack.', code: 'pack' }, { status: 401 });
     const h = await holdingById(teeTimeFull.courseId, packLineId);
-    if (!h || h.holderEmail.toLowerCase() !== golferSession.email.trim().toLowerCase()) return NextResponse.json({ error: 'That round pack isn’t yours on this course.', code: 'pack' }, { status: 403 });
+    if (!h || h.holderEmail.toLowerCase() !== holder.trim().toLowerCase()) return NextResponse.json({ error: 'That round pack isn’t yours on this course.', code: 'pack' }, { status: 403 });
     const s = packSeats(h, players);
     if (!s.ok) return NextResponse.json({ error: s.error, code: 'pack' }, { status: 400 });
     const wants = walkingAllowedAt(teeTimeFull) ? !!cartSelected : true;
     const p = packPrice({ players, seats: s.seats, guests: h.guests, coversCart: h.coversCart, publicGreen: pubSeat, cartFee: teeTimeFull.cartFeeCents, cart: wants });
     pack = { lineId: h.lineId, seats: s.seats, coversCart: h.coversCart, ...p };
+    holderEmail = holder;
   }
   if (promoCode !== undefined && promoCode !== null && String(promoCode).trim() !== '') {
-    const p = await applyPromo(teeTimeFull.courseId, promoCode, { date: teeTimeFull.date, time: teeTimeFull.time, rateApplied: !!appliedTier || !!resident, golferEmail: String(golferEmail), golferAccountId: golferSession?.golferId ?? null });
+    const p = await applyPromo(teeTimeFull.courseId, promoCode, { date: teeTimeFull.date, time: teeTimeFull.time, rateApplied: !!appliedTier || !!resident, golferEmail: String(golferEmail), golferAccountId: null });
     if (!p.ok) return NextResponse.json({ error: p.error, code: 'promo' }, { status: 400 });
     promoRow = p.code;
   }
@@ -277,7 +261,7 @@ export async function POST(req: NextRequest) {
   // is copied onto the booking so a later policy change never reaches it.
   // Golfer record (Cam 2026-10-29): the owner's block, or the course's no-show / late-cancel rule,
   // stops booking online — before a card is saved or a seat taken. The counter still books them.
-  const onlineBlock = await onlineBookingBlock(teeTimeFull.courseId, { golferEmail: String(golferEmail ?? ''), golferPhone: String(golferPhone ?? ''), golferAccountId: golferSession?.golferId ?? null });
+  const onlineBlock = await onlineBookingBlock(teeTimeFull.courseId, { golferEmail: String(golferEmail ?? ''), golferPhone: String(golferPhone ?? ''), golferAccountId: null });
   if (onlineBlock) return NextResponse.json({ error: onlineBlock }, { status: 403 });
   const policy = policyFrom(teeTimeFull.course);
   // FEE-AT-BOOKING: with GreenReserve's fee charged at booking, every online booking takes a card.
@@ -335,7 +319,7 @@ export async function POST(req: NextRequest) {
   // PRICE-3: take the pack's rounds now, as the holder; given back if the booking isn't made.
   if (pack) {
     const use = pack;
-    try { await prisma.$transaction(tx => takeRounds(tx, teeTimeFull.courseId, use.lineId, use.seats, { email: golferSession!.email })); }
+    try { await prisma.$transaction(tx => takeRounds(tx, teeTimeFull.courseId, use.lineId, use.seats, { email: holderEmail })); }
     catch (err) {
       if (err instanceof PackError) return NextResponse.json({ error: err.message, code: 'pack' }, { status: 409 });
       throw err;
@@ -347,7 +331,7 @@ export async function POST(req: NextRequest) {
     claimed = await claimTeeTime({
       teeTimeId,
       courseId:         teeTimeFull.courseId,
-      golferAccountId:  golferSession?.golferId || null,
+      golferAccountId:  null,
       golferName,
       golferEmail,
       golferPhone:      golferPhone || '',
@@ -382,7 +366,7 @@ export async function POST(req: NextRequest) {
       autoNoShowMinutesAtBooking: policy.autoNoShowMinutes,
       termsAcceptedAt:  new Date(),
       termsVersion:     await termsVersionNow(),
-    }, { type: 'golfer', id: golferSession?.golferId ?? null }, { online: true }); // ADDTIME-1: never a time kept for staff
+    }, { type: 'golfer', id: null }, { online: true }); // ADDTIME-1: never a time kept for staff
   } catch (err) {
     if (promo) await releaseUse(promo.id);
     if (pack) await giveBack(prisma, pack.lineId, pack.seats);
@@ -532,19 +516,4 @@ export async function POST(req: NextRequest) {
     time:           teeTimeFull.time,
     players,
   });
-}
-
-export async function GET() {
-  const golferSession = await getGolferSession();
-  if (!golferSession) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  const bookings = await prisma.booking.findMany({
-    where: { golferAccountId: golferSession.golferId },
-    include: {
-      teeTime: { select: { date: true, time: true, holes: true, product: { select: { label: true } } } },
-      course:  { select: { name: true, city: true, state: true, slug: true } },
-    },
-    orderBy: { createdAt: 'desc' },
-  });
-  return NextResponse.json(bookings);
 }

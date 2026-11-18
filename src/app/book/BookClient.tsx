@@ -56,7 +56,6 @@ export type CourseInfo = {
   /** PERS-1: optional note shown once the tee time is confirmed. */
   confirmation_note?: string;
 };
-type GolferProfile = { firstName: string; lastName: string; email: string; phone: string };
 type ConfirmedData = {
   courseName: string; date: string; time: string; players: number;
   greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number; accessFeeTotal: number; totalAmount: number;
@@ -165,7 +164,6 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   const [teeTime, setTeeTime] = useState<LiveTeeTime | null>(initial?.teeTime ?? null);
   const [loadError, setLoadError] = useState(initial?.error ?? '');
   const [loadingInfo, setLoadingInfo] = useState(!initial);
-  const [golfer, setGolfer]   = useState<GolferProfile | null>(null);
   const [confirmedData, setConfirmedData] = useState<ConfirmedData | null>(null);
   // PERF (Cam 2026-10-26): Stripe.js costs ~600ms of main-thread time, so even at a
   // card course it loads on the golfer's first touch of (or tab into) the booking
@@ -191,18 +189,14 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   const [rangeBallsSize, setRangeBallsSize] = useState<'' | 'small' | 'medium' | 'large'>('');
 
   useEffect(() => {
-    if (initial) {
-      // Server sent the course + tee time; only the signed-in golfer is left.
-      fetch('/api/golfer/auth/me').then(r => r.ok ? r.json() : null).then(g => { if (g) setGolfer(g); }).catch(() => {});
-      return;
-    }
+    // Server sent the course + tee time. Everyone books as a guest (Cam 2026-11-18: no golfer accounts).
+    if (initial) return;
     if (!courseSlug || !teeTimeId || !date) { setLoadError('Missing booking details.'); setLoadingInfo(false); return; }
 
     Promise.all([
       fetch(`/api/courses/${courseSlug}`).then(r => r.ok ? r.json() : null),
       fetch(`/api/courses/${courseSlug}/tee-times?date=${date}`).then(r => r.ok ? r.json() : []),
-      fetch('/api/golfer/auth/me').then(r => r.ok ? r.json() : null).catch(() => null),
-    ]).then(([courseData, teeTimes, golferData]) => {
+    ]).then(([courseData, teeTimes]) => {
       if (!courseData) { setLoadError('Course not found.'); setLoadingInfo(false); return; }
       setCourse(courseData);
       if (cartParam) setCartSelected(true);
@@ -212,7 +206,6 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
       } else {
         setTeeTime(match);
       }
-      if (golferData) setGolfer(golferData);
       setLoadingInfo(false);
     }).catch(() => { setLoadError('Something went wrong loading this tee time.'); setLoadingInfo(false); });
   }, [courseSlug, teeTimeId, date]);
@@ -236,7 +229,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
         setPacks(Array.isArray(d?.packs) ? d.packs : []);
       })
       .catch(() => { setResidentFee(null); setMemberRate(null); setPacks([]); });
-  }, [golfer, ttId]);
+  }, [ttId]);
 
   const accent = course?.brand_color || '#173B2A';
 
@@ -318,14 +311,6 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
               </div>
             </div>
 
-            <Link
-              href={`/courses/${courseSlug}/account?email=${encodeURIComponent(confirmedData.golferEmail)}`}
-              prefetch={false}
-              className="inline-flex items-center justify-center w-full py-3.5 rounded-md font-medium text-white text-sm mb-3 transition-colors"
-              style={{ backgroundColor: accent }}
-            >
-              View my bookings
-            </Link>
             <Link href={`/courses/${courseSlug}`} className="inline-block text-sm text-ink-soft hover:text-ink transition-colors">
               Back to {confirmedData.courseName}
             </Link>
@@ -541,7 +526,6 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
               <CheckoutForm
                 teeTimeId={teeTime.id}
                 players={players}
-                golfer={golfer}
                 cartSelected={withCart}
                 rangeBallsSize={rangeBallsTotal > 0 ? rangeBallsSize : ''}
                 accent={accent}
@@ -573,13 +557,12 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   );
 }
 
-function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize, accent, needsCard, courseName, onConfirmed, promoCode = '', packLineId = '' }: {
+function CheckoutForm({ teeTimeId, players, cartSelected, rangeBallsSize, accent, needsCard, courseName, onConfirmed, promoCode = '', packLineId = '' }: {
   promoCode?: string;
   /** PRICE-3: the golfer's round pack, when they use it. */
   packLineId?: string;
   teeTimeId: string;
   players: number;
-  golfer: GolferProfile | null;
   cartSelected: boolean;
   rangeBallsSize: string;
   accent: string;
@@ -591,19 +574,11 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
   const stripe   = useStripe();
   const elements = useElements();
 
-  const [name, setName]   = useState(golfer ? `${golfer.firstName} ${golfer.lastName}`.trim() : '');
-  const [email, setEmail] = useState(golfer?.email || '');
-  const [phone, setPhone] = useState(golfer?.phone || '');
+  const [name, setName]   = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
-
-  useEffect(() => {
-    if (golfer) {
-      setName(`${golfer.firstName} ${golfer.lastName}`.trim());
-      setEmail(golfer.email);
-      setPhone(golfer.phone || '');
-    }
-  }, [golfer]);
 
   // The wallet sheet's handler is registered once, so it reads the latest
   // form values from here.

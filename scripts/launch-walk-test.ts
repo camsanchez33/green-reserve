@@ -40,7 +40,9 @@ check('staff can\'t send a pay link before the round\'s day (and the sheet hides
 check('the hourly check-in email, and the daily safety net, wait for the round\'s day', read('src/app/api/cron/hourly/route.ts').includes('if (payLinkOpensOn(booking.course.timezone, booking.teeTime.date, now)) continue;') && read('src/app/api/cron/cancellation-cutoff/route.ts').includes('if (payLinkOpensOn(tz, booking.teeTime.date, now)) continue;'));
 check('…and so does the at-booking email (booked near the cutoff)', read('src/app/api/bookings/route.ts').includes('minsUntilCutoff < 165 && !payLinkOpensOn(teeTimeFull.course.timezone, teeTimeFull.date)'));
 check('the hold email and the policy say the link is for the day of the round', read('src/lib/email.ts').includes('use the button below on the day of your round') && !read('src/lib/email.ts').includes('tap the button below to check in now') && describePolicy({ cancellationHours: 24, lateCancellationFeeCents: 0, noShowFeeCents: 0, checkInWindowHours: 3 } as never).lines.join(' ').includes('On the day of your round, check in and pay online'));
-check('a $0 member rate is a rate: only no membership falls through to the member link', read('src/app/api/bookings/route.ts').includes('if (appliedTier == null) {'));
+// The $0-member-rate fall-through rule needed two sources (golfer session, then member link). Cam 2026-11-18: the
+// member link (gr_member) is the only one now.
+check('the booking route takes the member from the member link alone', read('src/app/api/bookings/route.ts').includes('if (memberSession && memberSession.courseId === teeTimeFull.courseId) {') && !read('src/app/api/bookings/route.ts').includes('getGolferMembership'));
 
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }
 console.log('\nALL PASS');

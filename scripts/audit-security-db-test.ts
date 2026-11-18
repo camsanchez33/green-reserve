@@ -57,7 +57,7 @@ async function cleanup() {
   const race = await Promise.all([book('09:10', `${TAG}+kim@t.local`, null, code.id), book('09:20', `${TAG}+kim@t.local`, null, code.id)]);
   ok('1. two bookings at once by one golfer: only one gets it', race.filter(r => r === 'ok').length === 1, race);
   const route = read('src/app/api/bookings/route.ts');
-  ok('1. the booking route passes the signed-in account and says why', route.includes('golferAccountId: golferSession?.golferId ?? null });') && route.includes("if (err.code === 'PROMO_USED') return NextResponse.json({ error: PROMO_USED"));
+  ok('1. the booking route passes no account (golfer accounts retired 2026-11-18) and says why', route.includes('golferAccountId: null });') && route.includes("if (err.code === 'PROMO_USED') return NextResponse.json({ error: PROMO_USED"));
   ok('1. the counter says why too', read('src/lib/counter-pay.ts').includes("if (err.code === 'PROMO_USED') return { ok: false, status: 409, error: PROMO_USED };"));
 
   // 2. Golfer record

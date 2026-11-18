@@ -1,6 +1,4 @@
 'use client';
-import { CoursePacks } from '@/components/CoursePacks';
-import { CourseJoin } from '@/components/CourseJoin';
 import { describePolicy, policyFrom, afterCutoffShort, insideWindowLine, policyMoney, type CancelPolicy } from '@/lib/cancel-policy';
 import { lastBookableDate } from '@/lib/booking-window';
 import { cartsFor } from '@/lib/cart-pricing';
@@ -153,11 +151,10 @@ type ActiveMemberSession = {
   email: string;
   name: string;
   tier: { name: string; color?: string } | null;
-  source?: 'member' | 'golfer';
+  source?: 'member';
   /** BOOKING WINDOWS: how far ahead this member can book */
   windowDays?: number;
 };
-type GolferProfile = { firstName: string; lastName: string; email: string };
 
 type PreviewMode = { courseId: string; token: string; /** the admin's view-only look — no approve / request changes */ look?: boolean } | null;
 
@@ -237,7 +234,6 @@ export default function CourseDetailPage({
   const [alertError, setAlertError] = useState('');
 
   const [memberSession, setMemberSession] = useState<ActiveMemberSession | null>(null);
-  const [golferProfile, setGolferProfile] = useState<GolferProfile | null>(null);
   const [memberTeeTimes, setMemberTeeTimes] = useState<ActiveTeeTime[]>([]);
   // BOOKING WINDOWS: the API said this date is past the viewer's window.
   const [windowNotice, setWindowNotice] = useState<WindowNotice | null>(null);
@@ -332,8 +328,7 @@ export default function CourseDetailPage({
   }, [slug, selectedDate, course, previewMode]);
 
   // Fetch member session — silent 401 is normal (just means not signed in).
-  // Recognizes EITHER a gr_member session OR a gr_golfer session matched to
-  // an active membership at this course (G5b).
+  // Only this course's member sign-in (gr_member) counts (Cam 2026-11-18: no golfer accounts).
   useEffect(() => {
     if (previewMode) return;
     fetch(`/api/member/${slug}/session`)
@@ -341,16 +336,6 @@ export default function CourseDetailPage({
       .then(data => setMemberSession(data))
       .catch(() => {});
   }, [slug, previewMode]);
-
-  // Golfer header recognition (G5b) — independent of membership: a signed-in
-  // golfer who isn't a member here still gets their name instead of "Sign in".
-  useEffect(() => {
-    if (previewMode) return;
-    fetch('/api/golfer/auth/me')
-      .then(r => r.ok ? r.json() : null)
-      .then(data => setGolferProfile(data))
-      .catch(() => {});
-  }, [previewMode]);
 
   // Member tee times — fetched when member session is active, uses member API for correct pricing
   useEffect(() => {
@@ -531,14 +516,9 @@ export default function CourseDetailPage({
   }
 
   async function memberSignOut() {
-    // Golfer-recognized membership (G5b) rides the gr_golfer session, not
-    // gr_member — clearing the member cookie alone would do nothing and
-    // they'd be "signed back in" as a member on the very next page load.
-    const endpoint = memberSession?.source === 'golfer' ? '/api/golfer/auth/logout' : `/api/member/${slug}/logout`;
-    await fetch(endpoint, { method: 'POST' }).catch(() => {});
+    await fetch(`/api/member/${slug}/logout`, { method: 'POST' }).catch(() => {});
     setMemberSession(null);
     setMemberTeeTimes([]);
-    setGolferProfile(null);
   }
 
   if (notFound) {
@@ -799,16 +779,14 @@ export default function CourseDetailPage({
     );
   }
 
+  // Cam 2026-11-18: no GreenReserve golfer sign-in. A signed-in member sees their chip; everyone else books as a
+  // guest (members sign in from the quiet "Log in" link under the times).
   const signInLink = memberSession ? (
-    <Link href={`/courses/${slug}/account`} className="absolute top-3 right-4 z-10 flex items-center gap-1.5 text-xs font-medium text-white bg-black/55 hover:bg-black/70 rounded-md px-2.5 py-1.5 transition-colors">
+    <Link href={`/courses/${slug}/member`} className="absolute top-3 right-4 z-10 flex items-center gap-1.5 text-xs font-medium text-white bg-black/55 hover:bg-black/70 rounded-md px-2.5 py-1.5 transition-colors">
       <span>{memberSession.name}</span>
       <span className="bg-white/15 rounded px-1.5 py-0.5 text-[10px] font-medium">Member{memberSession.tier?.name ? ` — ${memberSession.tier.name}` : ''}</span>
     </Link>
-  ) : (
-    <Link href={`/courses/${slug}/account`} className="absolute top-3 right-4 z-10 text-xs font-medium text-white bg-black/55 hover:bg-black/70 rounded-md px-2.5 py-1.5 transition-colors">
-      {golferProfile ? `Hi, ${golferProfile.firstName}` : 'Sign in'}
-    </Link>
-  );
+  ) : null;
 
   return (
     <>
@@ -1419,7 +1397,7 @@ export default function CourseDetailPage({
                       href={`/courses/${slug}/member`}
                       className="text-xs text-ink-faint hover:text-ink-muted transition-colors"
                     >
-                      Member? Sign in
+                      Log in
                     </Link>
                   </div>
                 )}
@@ -1435,8 +1413,6 @@ export default function CourseDetailPage({
           ))}
 
           {/* PRICE-3: round packs the course sells online (nothing renders when it sells none). */}
-          {course.joins_online && <CourseJoin slug={slug} accent={accent} className="mt-14" />}
-          {course.sells_packs && <CoursePacks slug={slug} accent={accent} className="mt-14" />}
         </div>
       </div>
       <CourseFooter course={course} accent={accent} />

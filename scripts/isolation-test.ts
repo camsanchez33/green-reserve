@@ -17,7 +17,7 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
-import { signOtpChallenge } from '../src/lib/golfer-otp';
+import { signMemberSessionToken } from '../src/lib/member-session';
 import { todayIn } from '../src/lib/course-time';
 
 const BASE_URL = process.env.TEST_URL || 'http://localhost:3000';
@@ -80,20 +80,10 @@ async function loginOp(email: string, password: string): Promise<string> {
   return getCookie(verifyRes);
 }
 
-// Golfer sign-in is one-time-code only (the password route is gone). The code
-// is only ever emailed/texted, so the script signs the same challenge
-// /api/golfer/auth/otp/request would (same JWT_SECRET as the server) and then
-// goes through the real verify route.
-const GOLFER_TEST_CODE = '424242';
-
-async function loginGolfer(email: string): Promise<string> {
-  const challengeToken = await signOtpChallenge(email, 'email', GOLFER_TEST_CODE);
-  const res = await fetch(`${BASE_URL}/api/golfer/auth/otp/verify`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ challengeToken, code: GOLFER_TEST_CODE }),
-  });
-  return getCookie(res);
+// Cam 2026-11-18: no GreenReserve golfer sign-in. The only golfer-side session is a course's member sign-in
+// (gr_member), which the emailed member link sets; the script signs the same token the verify route would.
+async function memberCookie(membershipId: string, courseId: string, email: string): Promise<string> {
+  return `gr_member=${await signMemberSessionToken({ membershipId, courseId, email })}`;
 }
 
 async function loginAdmin(email: string, password: string): Promise<string> {
@@ -200,8 +190,7 @@ async function seed() {
     update: { passwordHash: hash, role: 'owner', active: true, lockoutUntil: null, failedLoginAttempts: 0 },
   });
 
-  // GOLFER_SPEC G5b — Golfer A is a member at Course A ONLY. Recognition via
-  // the gr_golfer session must never bleed into Course B.
+  // Golfer A is a member at Course A ONLY. Their member sign-in (gr_member) must never bleed into Course B.
   await prisma.courseMembership.deleteMany({ where: { golferId: golferA.id, courseId: courseA.id } });
   const membershipA = await prisma.courseMembership.create({
     data: { golferId: golferA.id, courseId: courseA.id, status: 'active', membershipType: 'Full Member' },
@@ -246,17 +235,17 @@ async function main() {
   console.log('   Seeding fixtures...');
 
   const data = await seed();
-  const { courseA, courseB, bookingA, bookingB } = data;
+  const { courseA, courseB, bookingA, bookingB, membershipA } = data;
 
   const cookieA = await loginOp(`${TS}-opa@test.local`, PASS);
   const cookieB = await loginOp(`${TS}-opb@test.local`, PASS);
-  const golferCookieA = await loginGolfer(`${TS}-golfera@test.local`);
-  const golferCookieB = await loginGolfer(`${TS}-golferb@test.local`);
+  // Golfer A is a member at Course A only (seed); golfer B is a member nowhere and has no session at all.
+  const memberCookieA = await memberCookie(membershipA.id, courseA.id, `${TS}-golfera@test.local`);
   const viewerCookie = await loginAdmin(`${TS}-viewer@test.local`, PASS);
 
   // An empty cookie turns every check below into a logged-out request, which
   // "passes" the deny cases for the wrong reason. Refuse to run that way.
-  const logins = { cookieA, cookieB, golferCookieA, golferCookieB, viewerCookie };
+  const logins = { cookieA, cookieB, memberCookieA, viewerCookie };
   const empty = Object.entries(logins).filter(([, c]) => !c.includes('=') || c.endsWith('='));
   if (empty.length) {
     console.error(`\n❌ Login failed for: ${empty.map(([k]) => k).join(', ')} — the test cannot prove isolation without real sessions.`);
@@ -286,15 +275,14 @@ async function main() {
     await prisma.teeTime.update({ where: { id: bookingA.teeTimeId }, data: { date: roundDate } });
   }
 
-  console.log('\n── Golfer sign-in code is single-use ─────────────────────────────');
-  {
-    // R-AUTH-001: one challenge + code signs in once; replaying it is refused.
-    const challengeToken = await signOtpChallenge(`${TS}-golfera@test.local`, 'email', GOLFER_TEST_CODE);
-    const body = { challengeToken, code: GOLFER_TEST_CODE };
-    const first = await api('/api/golfer/auth/otp/verify', { method: 'POST', body });
-    checkStatus('Golfer OTP: first use signs in → 200', first.status, 200);
-    const again = await api('/api/golfer/auth/otp/verify', { method: 'POST', body });
-    checkStatus('Golfer OTP: the same challenge + code again → 400', again.status, 400);
+  console.log('\n── Retired golfer sign-in (Cam 2026-11-18) ───────────────────────');
+  for (const path of ['/api/golfer/auth/otp/request', '/api/golfer/auth/otp/verify', '/api/golfer/auth/accept-invite']) {
+    const r = await api(path, { method: 'POST', body: {} });
+    checkStatus(`${path} is gone → 404`, r.status, 404);
+  }
+  for (const path of ['/api/golfer/auth/me', '/api/golfer/profile', '/api/golfer/memberships', `/api/courses/${courseA.slug}/account`]) {
+    const r = await api(path, { cookie: memberCookieA });
+    checkStatus(`${path} is gone → 404`, r.status, 404);
   }
 
   console.log('\n── Auth guard: no credentials ────────────────────────────────────');
@@ -303,8 +291,8 @@ async function main() {
     checkStatus('Operator route without cookie → 401', r.status, 401);
   }
   {
-    const r = await api('/api/bookings');
-    checkStatus('Golfer route without cookie → 401', r.status, 401);
+    const r = await api(`/api/member/${courseA.slug}/session`);
+    checkStatus('Member route without cookie → 401', r.status, 401);
   }
   {
     const r = await api('/api/admin/today');
@@ -313,16 +301,16 @@ async function main() {
 
   console.log('\n── Token replay attacks ──────────────────────────────────────────');
   {
-    // Swap cookie name: golfer token presented to operator route
-    const swapped = golferCookieA.replace('gr_golfer=', 'dashboard_session=');
+    // Swap cookie name: member token presented to operator route
+    const swapped = memberCookieA.replace('gr_member=', 'dashboard_session=');
     const r = await api('/api/operator/bookings', { cookie: swapped });
-    checkStatus('Golfer token on operator route → 401', r.status, 401);
+    checkStatus('Member token on operator route → 401', r.status, 401);
   }
   {
-    // Swap cookie name: operator token presented to golfer route
-    const swapped = cookieA.replace('dashboard_session=', 'gr_golfer=');
-    const r = await api('/api/bookings', { cookie: swapped });
-    checkStatus('Operator token on golfer route → 401', r.status, 401);
+    // Swap cookie name: operator token presented to the member route
+    const swapped = cookieA.replace('dashboard_session=', 'gr_member=');
+    const r = await api(`/api/member/${courseA.slug}/session`, { cookie: swapped });
+    checkStatus('Operator token on member route → 401', r.status, 401);
   }
   {
     const r = await api('/api/admin/today', { cookie: 'admin_session=tampered.invalid.token' });
@@ -377,120 +365,50 @@ async function main() {
     }
   }
 
-  console.log('\n── Golfer cross-account booking isolation ────────────────────────');
+  console.log('\n── Golfer booking access is the emailed token only ───────────────');
   {
-    // Golfer B cannot cancel Golfer A's booking
-    const r = await api('/api/bookings/cancel', {
-      method: 'POST', cookie: golferCookieB,
-      body: { bookingId: bookingA.id },
-    });
-    checkStatus('Golfer B cannot cancel Golfer A booking → 403/404', r.status, [403, 404]);
+    // A member signed in at Course A, no token: cannot cancel anyone's booking — not even one at their own course.
+    const r = await api('/api/bookings/cancel', { method: 'POST', cookie: memberCookieA, body: { bookingId: bookingA.id } });
+    checkStatus('Member session without a token cannot cancel → 401', r.status, 401);
+    const wrong = await api('/api/bookings/cancel', { method: 'POST', body: { bookingId: bookingA.id, token: 'wrong-token-xyz' } });
+    checkStatus('Cancel with a wrong token → 403', wrong.status, 403);
   }
   {
-    // Golfer B using Golfer A's check-in token — should be 401/403/404
-    const checkInToken = (await prisma.booking.findUnique({ where: { id: bookingA.id }, select: { checkInToken: true } }))?.checkInToken;
-    if (checkInToken) {
-      const r = await api(`/api/checkin/${bookingA.id}?token=${checkInToken}`, { method: 'POST', cookie: golferCookieB });
-      // Check-in is token-gated — with the correct token it would succeed regardless of golfer
-      // The important thing is: with a WRONG/missing token it should fail
-      const rWrong = await api(`/api/checkin/${bookingA.id}?token=wrong-token-xyz`, { method: 'POST' });
-      checkStatus('Check-in with wrong token → 401/403', rWrong.status, [401, 403, 404]);
-    }
+    const rWrong = await api(`/api/checkin/${bookingA.id}?token=wrong-token-xyz`, { method: 'POST' });
+    checkStatus('Check-in with wrong token → 401/403', rWrong.status, [401, 403, 404]);
   }
   {
-    // Golfer A cannot see Golfer B's bookings in their GET /api/bookings list
-    const r = await api('/api/bookings', { cookie: golferCookieA });
-    const bodyStr = JSON.stringify(r.body);
-    const hasBBooking = bodyStr.includes(bookingB.id);
-    checkStatus('Golfer A bookings returns 200', r.status, 200);
-    check('Golfer A booking list has no Golfer B booking', !hasBBooking, hasBBooking ? `LEAK: ${bookingB.id}` : undefined);
+    const r = await api(`/api/manage/${bookingA.id}`, { cookie: memberCookieA });
+    checkStatus('Manage GET with a session but no token → 400', r.status, 400);
+    const wrong = await api(`/api/manage/${bookingA.id}?token=wrong-token-xyz`);
+    checkStatus('Manage GET with a wrong token → 404', wrong.status, 404);
+    const theirs = (await prisma.booking.findUnique({ where: { id: bookingB.id }, select: { checkInToken: true } }))?.checkInToken;
+    const cross = await api(`/api/manage/${bookingA.id}?token=${encodeURIComponent(theirs ?? '')}`);
+    checkStatus('Manage GET with another booking\'s token → 404', cross.status, 404);
+  }
+  {
+    const r = await api(`/api/manage/${bookingA.id}/change-players`, { method: 'POST', cookie: memberCookieA, body: { newPlayers: 3, termsAccepted: true } });
+    checkStatus('change-players with a session but no token → 400', r.status, 400);
   }
 
-  console.log('\n── Golfer portal cross-course isolation (G5) ──────────────────────');
+  console.log('\n── Member sign-in stays on its own course ────────────────────────');
   {
-    // Golfer A's portal on THEIR OWN course (A) must show their booking
-    const r = await api(`/api/courses/${courseA.slug}/account`, { cookie: golferCookieA });
-    const bodyStr = JSON.stringify(r.body);
-    checkStatus('Golfer A portal on Course A returns 200', r.status, 200);
-    check('Golfer A portal on Course A includes their booking', bodyStr.includes(bookingA.id));
-  }
-  {
-    // Golfer A has no booking at Course B — portal must show it as empty,
-    // and must never leak Course B's other bookings (Golfer B's) into it.
-    const r = await api(`/api/courses/${courseB.slug}/account`, { cookie: golferCookieA });
-    const bodyStr = JSON.stringify(r.body);
-    checkStatus('Golfer A portal on Course B returns 200', r.status, 200);
-    check('Golfer A portal on Course B has no Course A booking', !bodyStr.includes(bookingA.id));
-    check('Golfer A portal on Course B has no Golfer B booking', !bodyStr.includes(bookingB.id));
-  }
-  {
-    const r = await api(`/api/courses/${courseA.slug}/account`);
-    checkStatus('Portal without a golfer session → 401', r.status, 401);
-  }
-  {
-    // Golfer A's portal on Course A (where they ARE a member) surfaces it.
-    const r = await api(`/api/courses/${courseA.slug}/account`, { cookie: golferCookieA });
-    const body = r.body as { membership?: { tierName: string } | null };
-    check('Golfer A portal on Course A shows their membership', !!body.membership, JSON.stringify(body.membership));
-  }
-  {
-    // Same golfer, Course B — they are NOT a member there. Membership
-    // recognition must never bleed across courses via the golfer session.
-    const r = await api(`/api/courses/${courseB.slug}/account`, { cookie: golferCookieA });
-    const body = r.body as { membership?: { tierName: string } | null };
-    check('Golfer A portal on Course B shows NO membership', !body.membership, JSON.stringify(body.membership));
-  }
-
-  console.log('\n── Golfer-session member pricing recognition (G5b) ────────────────');
-  {
-    // Golfer A's session recognized as a member at Course A — same shape as
-    // the existing gr_member session endpoint, so the course page's existing
-    // member-pricing UI just works without a separate code path.
-    const r = await api(`/api/member/${courseA.slug}/session`, { cookie: golferCookieA });
+    const r = await api(`/api/member/${courseA.slug}/session`, { cookie: memberCookieA });
     const body = r.body as { source?: string };
-    checkStatus('Golfer A member-session on Course A → 200', r.status, 200);
-    check('Golfer A member-session on Course A reports source=golfer', body.source === 'golfer', body.source);
+    checkStatus('Member A session on Course A → 200', r.status, 200);
+    check('…from the member sign-in', body.source === 'member', body.source);
   }
   {
-    // Golfer A is NOT a member at Course B — must fall through to 401, not
-    // accidentally recognize them via a stale/cross-course match.
-    const r = await api(`/api/member/${courseB.slug}/session`, { cookie: golferCookieA });
-    checkStatus('Golfer A member-session on Course B → 401', r.status, 401);
+    const r = await api(`/api/member/${courseB.slug}/session`, { cookie: memberCookieA });
+    checkStatus('Member A session on Course B → 401', r.status, 401);
   }
   {
-    // Golfer B is not a member anywhere — must also 401 on Course A.
-    const r = await api(`/api/member/${courseA.slug}/session`, { cookie: golferCookieB });
-    checkStatus('Golfer B (non-member) member-session on Course A → 401', r.status, 401);
-  }
-  {
-    // Member tee-times endpoint mirrors the same cross-course guarantee. The
-    // date must sit inside the member booking window (default 14 days) or the
-    // route answers 403 "outside window" before isolation is even tested.
+    // The date must sit inside the member booking window (default 14 days) or the route answers 403 first.
     const dateStr = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    const rA = await api(`/api/member/${courseA.slug}/tee-times?date=${dateStr}`, { cookie: golferCookieA });
-    checkStatus('Golfer A member tee-times on Course A → 200', rA.status, 200);
-    const rB = await api(`/api/member/${courseB.slug}/tee-times?date=${dateStr}`, { cookie: golferCookieA });
-    checkStatus('Golfer A member tee-times on Course B → 401', rB.status, 401);
-  }
-
-  console.log('\n── Manage-booking session auth (G5 extends token-only routes) ─────');
-  {
-    // Golfer B's session cannot read Golfer A's booking via the manage GET
-    const r = await api(`/api/manage/${bookingA.id}`, { cookie: golferCookieB });
-    checkStatus('Golfer B session on Golfer A manage GET → 404', r.status, 404);
-  }
-  {
-    // Golfer A's OWN session (no token) can read their own booking
-    const r = await api(`/api/manage/${bookingA.id}`, { cookie: golferCookieA });
-    checkStatus('Golfer A session on own manage GET → 200', r.status, 200);
-  }
-  {
-    // Golfer B's session cannot change party size on Golfer A's booking
-    const r = await api(`/api/manage/${bookingA.id}/change-players`, {
-      method: 'POST', cookie: golferCookieB,
-      body: { newPlayers: 3, termsAccepted: true },
-    });
-    checkStatus('Golfer B session cannot change-players on Golfer A booking → 404', r.status, 404);
+    const rA = await api(`/api/member/${courseA.slug}/tee-times?date=${dateStr}`, { cookie: memberCookieA });
+    checkStatus('Member A tee-times on Course A → 200', rA.status, 200);
+    const rB = await api(`/api/member/${courseB.slug}/tee-times?date=${dateStr}`, { cookie: memberCookieA });
+    checkStatus('Member A tee-times on Course B → 401', rB.status, 401);
   }
 
   console.log('\n── Admin viewer role gate ────────────────────────────────────────');

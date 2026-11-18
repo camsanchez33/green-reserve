@@ -30,8 +30,7 @@ check('no fee stays no fee', none.cancellationFeeTotal === 0 && none.noShowFeeTo
 
 // Route guards (source-level, like manage-access-test).
 const src = (p: string) => readFileSync(p, 'utf8');
-const invite = src('src/app/api/golfer/auth/accept-invite/route.ts');
-check('accept-invite never writes an unverified phone', !/phone\s*:/.test(invite.replace(/\/\/.*$/gm, '')));
+// accept-invite (an unverified-phone check lived here) is retired with golfer sign-in (Cam 2026-11-18).
 const bookings = src('src/app/api/bookings/route.ts');
 check('booking creation is rate-limited per IP and per email', bookings.includes('`booking:${clientIp(req)}`') && bookings.includes('booking-email:'));
 check('a SetupIntent backs one booking', bookings.includes('booking-seti:'));

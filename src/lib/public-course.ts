@@ -17,7 +17,7 @@ export async function loadPublicCourse(slug: string) {
       teeSets: { orderBy: { sortOrder: 'asc' as const }, select: { name: true, yardage: true, rating: true, slope: true } },
       nines: { orderBy: { sortOrder: 'asc' as const }, select: { name: true, par: true } },
       // PRICE-3: whether the page shows round packs at all (so it doesn't ask when there are none).
-      _count: { select: { roundPacks: { where: { active: true, sellOnline: true } }, membershipTiers: { where: { active: true, joinOnline: { in: ['instant', 'request'] }, annualFeeCents: { gt: 0 } } } } },
+      _count: { select: { roundPacks: { where: { active: true, sellOnline: true } } } },
     },
   });
 
@@ -31,7 +31,5 @@ export async function loadPublicCourse(slug: string) {
   // ISO strings), so the client component sees one shape either way.
   const payable = dbCourse.stripeAccountActive && !!dbCourse.stripeAccountId;
   const sellsPacks = ROUND_PACKS_ON && dbCourse._count.roundPacks > 0 && payable;
-  // MEM-JOIN: whether the page shows memberships to join online.
-  const joinsOnline = dbCourse._count.membershipTiers > 0 && payable;
-  return JSON.parse(JSON.stringify({ ...normalizeDbCourse(dbCourse, centsToDollarsOr0(cheapestCents)), sells_packs: sellsPacks, joins_online: joinsOnline }));
+  return JSON.parse(JSON.stringify({ ...normalizeDbCourse(dbCourse, centsToDollarsOr0(cheapestCents)), sells_packs: sellsPacks }));
 }

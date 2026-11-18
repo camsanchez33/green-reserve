@@ -17,13 +17,12 @@ export async function GET(
   }
 
   const base = process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
-  // No golfer screen is a dead end — offer the portal and the course page,
+  // No golfer screen is a dead end — offer the course page (Cam 2026-11-18: no golfer portal),
   // not a generic marketplace link, even when the alert's own course can't
   // be resolved (e.g. link already used and the alert row is gone).
   const courseSlug = alert?.course.slug;
   const courseName = alert?.course.name || 'GreenReserve';
   const courseLink = courseSlug ? `${base}/courses/${courseSlug}` : `${base}/courses`;
-  const portalLink = courseSlug ? `${base}/courses/${courseSlug}/account` : base;
 
   const html = `<!DOCTYPE html>
 <html>
@@ -40,8 +39,7 @@ a.secondary{display:block;color:#1b4332;text-decoration:none;padding:8px;font-we
 <div class="card">
 <h1>${alert ? 'You\'ve been unsubscribed' : 'Already removed'}</h1>
 <p>${alert ? 'You won\'t receive any more tee time alerts for this entry.' : 'This alert link has already been used or does not exist.'}</p>
-<a class="primary" href="${portalLink}">View my bookings</a>
-<a class="secondary" href="${courseLink}">Back to ${courseName}</a>
+<a class="primary" href="${courseLink}">Back to ${courseName}</a>
 </div>
 </body>
 </html>`;

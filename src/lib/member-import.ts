@@ -2,7 +2,7 @@
 // first … Add member and Import list at the top"). A course pastes or uploads
 // its member list (CSV); each row becomes a membership on one of its tiers.
 // Nobody is emailed: a member gets member rates as soon as they sign in with the
-// listed email (getGolferMembership matches it), and a pay link can be sent from
+// listed email through the course's member link, and a pay link can be sent from
 // their row. The parsing and checks are pure; importMembers writes.
 import { assignMemberNumber } from './member-number';
 import { randomUUID } from 'crypto';

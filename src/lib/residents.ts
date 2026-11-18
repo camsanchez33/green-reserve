@@ -4,7 +4,7 @@
 //     tee time's resident rate; the rest of the group pays the booked rate;
 //   - staff can set how many of any unpaid group are residents at the counter.
 // Pure rules only (no session, no database) — the signed-in golfer's card is
-// looked up by golferResident() in member-session.ts.
+// looked up by signedInResident() in member-session.ts (the member signed in to the course).
 // The resident rate is TeeTime.residentRateCents (from the schedule, weekday or
 // weekend already resolved). A tee time without one has no resident price.
 // A member-rate booking stays a member booking — residents never stack on it.

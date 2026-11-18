@@ -12,7 +12,7 @@ import { BILLING_EMAIL } from '@/lib/contact';
 type ReceiptData = {
   /** RECEIPT-2: how it was paid (null = not paid yet / cancelled / refunded). */
   payment?: { method: 'cash' | 'card' | 'account'; paidAt: string | null; amountCents: number; card?: string; tenderedCents?: number; changeCents?: number } | null;
-  hasAccount?: boolean; timezone?: string;
+  timezone?: string;
   bookingId: string; bookingRef?: string; golferName: string; courseName: string; courseSlug: string; courseLocation: string; brandColor?: string;
   date: string; time: string; holes: number; productLabel?: string | null; players: number; cartSelected: boolean;
   /** CART-4: shown when the course puts the cart ticket on the receipt. */
@@ -291,7 +291,7 @@ function ReceiptPageInner() {
 
           {data.courseSlug && (
             <div className="no-print max-w-lg mx-auto mt-6">
-              <GolferExitLinks courseSlug={data.courseSlug} courseName={data.courseName} showBookings={!!data.hasAccount} />
+              <GolferExitLinks courseSlug={data.courseSlug} courseName={data.courseName} />
             </div>
           )}
         </div>

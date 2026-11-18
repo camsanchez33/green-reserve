@@ -3,7 +3,6 @@ import { residentPricingOn } from '@/lib/pricing-switch';
 import { prisma } from '@/lib/prisma';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { termsVersionNow } from '@/lib/terms';
-import { getGolferSession } from '@/lib/auth';
 import { canManageBooking } from '@/lib/manage-access';
 import { moveBooking } from '@/lib/move-booking';
 import { residentOn } from '@/lib/member-session';
@@ -23,7 +22,6 @@ const COPY: Record<string, string> = {
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
-  const golferSession = await getGolferSession();
   const ip = clientIp(req);
   const ok = await rateLimit('manage:swap:' + ip, 10, 300);
   if (!ok) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
@@ -31,7 +29,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
   const body = await req.json() as { token?: string; newTeeTimeId?: string; termsAccepted?: boolean };
   const { token, newTeeTimeId, termsAccepted } = body;
 
-  if (!newTeeTimeId || (!golferSession && !token)) {
+  if (!newTeeTimeId || !token) {
     return NextResponse.json({ error: 'Missing token or newTeeTimeId' }, { status: 400 });
   }
   if (termsAccepted !== true) {
@@ -39,7 +37,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
   }
 
   const booking = await prisma.booking.findUnique({ where: { id: bookingId }, select: { checkInToken: true, golferAccountId: true, courseId: true, residentPlayers: true, golferAccount: { select: { email: true } } } });
-  if (!booking || !canManageBooking(booking, golferSession?.golferId, token)) return NextResponse.json({ error: 'Invalid link' }, { status: 404 });
+  if (!booking || !canManageBooking(booking, token)) return NextResponse.json({ error: 'Invalid link' }, { status: 404 });
 
   // RES-1: the resident rate follows the golfer's own swap only while the
   // booking's account is still on the resident list with a card good on the
@@ -54,7 +52,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
   try {
     const r = await moveBooking({
       bookingId, newTeeTimeId, courseId: booking.courseId, pricing: 'new_slot', residentPlayers,
-      actor: { type: 'golfer', id: golferSession?.golferId ?? null }, terms: { version: await termsVersionNow() },
+      actor: { type: 'golfer', id: null }, terms: { version: await termsVersionNow() },
     });
     if (!r.ok) return NextResponse.json({ error: COPY[r.code] ?? r.message }, { status: STATUS[r.code] ?? 409 });
     return NextResponse.json({
