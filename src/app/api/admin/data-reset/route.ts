@@ -3,6 +3,9 @@ import { resolveAdminSession, requireOwner, ownerGateError, stepUpRequired } fro
 import { needReason, reasonOf, auditAdmin } from '@/lib/admin-audit';
 import { previewWipeAll, wipeAll, wipeAllOpen, WIPE_ALL_UNTIL, WIPE_CONFIRM_WORDS as CONFIRM_WORDS } from '@/lib/data-reset';
 
+// The wipe runs in one transaction of up to 120 s (lib/data-reset wipeAll).
+export const maxDuration = 150;
+
 // TEST-1: the launch wipe (src/lib/data-reset.ts). GET counts what it would
 // clear and keep; POST clears it. Owner only, a fresh second step, a reason,
 // and the words typed exactly. Closed for good from WIPE_ALL_UNTIL.
@@ -26,6 +29,6 @@ export async function POST(req: NextRequest) {
   if (body?.confirm !== CONFIRM_WORDS) return NextResponse.json({ error: `Type ${CONFIRM_WORDS} exactly to confirm.` }, { status: 400 });
   const result = await wipeAll();
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: 409 });
-  await auditAdmin(session, { action: 'data_wipe', targetType: 'system', targetId: '', after: result.cleared, reason: reasonOf(body) });
-  return NextResponse.json({ success: true, cleared: result.cleared });
+  await auditAdmin(session, { action: 'data_wipe', targetType: 'system', targetId: '', after: { ...result.cleared, inquiriesUnlinked: result.inquiriesUnlinked }, reason: reasonOf(body) });
+  return NextResponse.json({ success: true, cleared: result.cleared, inquiriesUnlinked: result.inquiriesUnlinked });
 }
