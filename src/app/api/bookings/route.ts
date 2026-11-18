@@ -18,7 +18,7 @@ import { chargeBookingFee, releaseUnpaidBooking } from '@/lib/booking-fee';
 import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { centsToDollars } from '@/lib/money';
-import { getMemberSession, loggedInResident, liveMembershipFor } from '@/lib/member-session';
+import { loggedInAt, loggedInResident, liveMembershipFor } from '@/lib/member-session';
 import { stripe, ACCESS_FEE_CENTS } from '@/lib/stripe';
 import { sendBookingConfirmation, sendOperatorBookingNotification, sendCancellationWarningEmail, sendCheckInAvailableEmail } from '@/lib/email';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
@@ -59,7 +59,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Too many bookings in a short time. Wait a while and try again, or call the course.' }, { status: 429 });
   }
 
-  const memberSession = await getMemberSession();
   let appliedRate = 'standard';
   let appliedTierName = 'standard';
   let appliedTier: { guestsPayMemberRate: boolean } | null = null;
@@ -126,6 +125,11 @@ export async function POST(req: NextRequest) {
   const sizeError = groupSizeError(rules, players);
   if (sizeError) return NextResponse.json({ error: sizeError, code: 'group_size', minPlayers: rules.minPlayers, maxPlayers: rules.maxPlayers }, { status: 400 });
 
+  // Residents log in: the email proven by this course's log-in (gr_member), or null — another course's session, or
+  // this course turned Log in off (lib/member-session loggedInAt).
+  const loggedIn = await loggedInAt(teeTimeFull.courseId);
+  const memberSession = loggedIn ? { ...loggedIn, courseId: teeTimeFull.courseId } : null;
+
   // Membership tier lookup — this course's member sign-in
   let resolvedGreenFeeOverride: number | null = null;
   let resolvedCartFeeOverride: number | null = null;
@@ -159,7 +163,7 @@ export async function POST(req: NextRequest) {
   if (!withinWindow(teeTimeFull.date, bookingWindow.days, new Date(), teeTimeFull.course.timezone)) {
     return NextResponse.json({
       error: bookingWindow.scope === 'member'
-        ? `That date isn’t open yet — your membership lets you book up to ${bookingWindow.days} days ahead.`
+        ? `That date isn’t open yet. Logged in, you can book up to ${bookingWindow.days} days ahead.`
         : `That date isn’t open for booking yet — golfers can book up to ${bookingWindow.days} days ahead${teeTimeFull.course.hasMemberPricing ? '; members can book earlier' : ''}.`,
       code: 'outside_window', windowDays: bookingWindow.days,
     }, { status: 403 });
@@ -203,7 +207,7 @@ export async function POST(req: NextRequest) {
   if (usePack) {
     // The holder is proven by this course's member sign-in (Cam 2026-11-18: no golfer accounts).
     const holder = memberSession && memberSession.courseId === teeTimeFull.courseId ? memberSession.email : '';
-    if (!holder) return NextResponse.json({ error: 'Sign in as a member to use your round pack.', code: 'pack' }, { status: 401 });
+    if (!holder) return NextResponse.json({ error: 'Log in to use your round pack.', code: 'pack' }, { status: 401 });
     const h = await holdingById(teeTimeFull.courseId, packLineId);
     if (!h || h.holderEmail.toLowerCase() !== holder.trim().toLowerCase()) return NextResponse.json({ error: 'That round pack isn’t yours on this course.', code: 'pack' }, { status: 403 });
     const s = packSeats(h, players);

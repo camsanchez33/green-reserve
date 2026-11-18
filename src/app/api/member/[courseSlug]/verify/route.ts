@@ -29,11 +29,17 @@ export async function GET(
   // Confirm token's courseId belongs to this slug
   const course = await prisma.course.findUnique({
     where: { slug: courseSlug },
-    select: { id: true, timezone: true, hasResidentPricing: true },
+    select: { id: true, timezone: true, hasResidentPricing: true, memberLoginOn: true },
   });
   if (!course || course.id !== payload.courseId) {
     await securityEvent(req, { kind: 'signin_failed', surface: 'member', email: payload.email, detail: 'sign-in link for another course' });
     return NextResponse.redirect(failUrl);
+  }
+
+  // The course turned Log in off since the link went out.
+  if (!course.memberLoginOn) {
+    await securityEvent(req, { kind: 'signin_failed', surface: 'member', email: payload.email, detail: 'log-in is off at this course' });
+    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_URL}/courses/${courseSlug}/member?error=inactive`);
   }
 
   // Residents log in (Cam 2026-11-18): still in one of this course's groups when the link is opened — an active
