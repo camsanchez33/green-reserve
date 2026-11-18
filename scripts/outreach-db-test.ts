@@ -8,12 +8,13 @@ import { PrismaClient } from '@prisma/client';
 import { NextRequest } from 'next/server';
 import {
   addCourse, addContact, updateContact, deleteContact, listOutreach, outreachCourse, saidYes, notNow, importPreview, importCommit,
-  updateFacts, listCalls, callDetail, saveCallNotes, logOutreachCall,
+  updateFacts, listCalls, callDetail, saveCallNotes, logOutreachCall, deleteTouch,
 } from '../src/lib/outreach-server';
 import { lookupCourses } from '../src/lib/course-lookup';
 import { AGENDA } from '../src/lib/inquiry-call';
 import { NOT_NOW_REASON } from '../src/lib/outreach';
-import { WIPED_TABLES } from '../src/lib/data-reset';
+import { ciEquals } from '../src/lib/like-exact';
+import { WIPED_TABLES, KEPT_TABLES } from '../src/lib/data-reset';
 
 const prisma = new PrismaClient();
 const TAG = 'outreachdbtest';
@@ -32,7 +33,8 @@ async function cleanup() {
 
 async function main() {
   await cleanup();
-  check('CourseContact is in WIPED_TABLES', (WIPED_TABLES as readonly string[]).includes('CourseContact'));
+  // KEEP-OUTREACH (Cam): outreach data survives the launch wipe, contacts with it.
+  check('CourseContact is in KEPT_TABLES, not WIPED_TABLES', (KEPT_TABLES as readonly string[]).includes('CourseContact') && !(WIPED_TABLES as readonly string[]).includes('CourseContact'));
 
   // ── Add a course ──
   const a = await addCourse({ facts: { courseName: `${TAG} Maple Run Golf Course`, city: 'Riverton', state: 'NY', holes: 18, ownerType: 'town', website: 'maplerun-test.example.com' }, contact: { name: 'Dana Whitfield', role: 'Pro shop manager', email: 'dana@maplerun-test.example.com', phone: '(555) 010-2201' }, notes: 'Town budget year starts Jan 1.' }, ADMIN);
@@ -88,6 +90,21 @@ async function main() {
   const old = await prisma.courseInquiry.create({ data: { status: 'lead', courseName: `${TAG} Old Lead`, contactName: 'Old Contact', contactTitle: 'Owner', email: 'old@example.com', phone: '', address: '', city: 'Oldtown', state: 'NY', zipCode: '', courseType: '', lookingFor: [] } });
   const oldPage = await outreachCourse(old.id, full);
   check('course page: an older lead shows its inquiry contact, marked fromInquiry', oldPage?.contacts.length === 1 && (oldPage.contacts[0] as { fromInquiry?: boolean }).fromInquiry === true);
+  // Editing an older lead's inquiry-row contact replaces it (no seed), and the inquiry takes the new email.
+  const edited = await prisma.courseInquiry.create({ data: { status: 'lead', courseName: `${TAG} Edited Lead`, contactName: 'Old Name', contactTitle: 'GM', email: 'old.email@example.com', phone: '555-0101', address: '', city: 'Edittown', state: 'NY', zipCode: '', courseType: '', lookingFor: [] } });
+  const rep = await addContact(edited.id, { name: 'New Name', role: 'GM', email: 'new.email@example.com', replacesInquiryContact: true });
+  const editedRows = await prisma.courseContact.findMany({ where: { inquiryId: edited.id } });
+  const editedInq = await prisma.courseInquiry.findUniqueOrThrow({ where: { id: edited.id } });
+  check('contact: replacesInquiryContact replaces the inquiry-row contact and its email', rep.ok && editedRows.length === 1 && editedInq.email === 'new.email@example.com' && editedInq.contactName === 'New Name', { editedRows, editedInq });
+  const repAgain = await addContact(edited.id, { name: 'Stale Page', email: 'stale@example.com', replacesInquiryContact: true });
+  check('contact: a replace once contacts exist → 409, nothing added', !repAgain.ok && repAgain.status === 409 && (await prisma.courseContact.count({ where: { inquiryId: edited.id } })) === 1);
+  const pastOutreach = await prisma.courseInquiry.create({ data: { status: 'in_review', courseName: `${TAG} Past Outreach`, contactName: 'Onb Person', contactTitle: '', email: 'onboarding@example.com', phone: '555-0102', address: '', city: 'Onbtown', state: 'NY', zipCode: '', courseType: '', lookingFor: [] } });
+  const repPast = await addContact(pastOutreach.id, { name: 'Someone Else', email: 'elsewhere@example.com', replacesInquiryContact: true });
+  check('contact: a replace on a course past outreach → 409, its email untouched', !repPast.ok && repPast.status === 409 && (await prisma.courseInquiry.findUniqueOrThrow({ where: { id: pastOutreach.id } })).email === 'onboarding@example.com');
+  // Two first saves at once on an older lead seed it once.
+  const racy = await prisma.courseInquiry.create({ data: { status: 'lead', courseName: `${TAG} Racy Lead`, contactName: 'Pat Race', contactTitle: '', email: 'race@example.com', phone: '', address: '', city: 'Racetown', state: 'NY', zipCode: '', courseType: '', lookingFor: [] } });
+  await Promise.all([addContact(racy.id, { name: 'A One' }), addContact(racy.id, { name: 'B Two' })]);
+  check('contact: two first saves at once copy the inquiry contact once', (await prisma.courseContact.count({ where: { inquiryId: racy.id, name: 'Pat Race' } })) === 1 && (await prisma.courseContact.count({ where: { inquiryId: racy.id } })) === 3);
   const seeded = await prisma.courseInquiry.create({ data: { status: 'lead', courseName: `${TAG} Seeded Lead`, contactName: 'Pat GM', contactTitle: 'GM', email: 'pat.gm@example.com', phone: '555-0100', address: '', city: 'Seedtown', state: 'NY', zipCode: '', courseType: '', lookingFor: [] } });
   const addSam = await addContact(seeded.id, { name: 'Sam Pro', role: 'Head pro' });
   const seededRows = await prisma.courseContact.findMany({ where: { inquiryId: seeded.id }, orderBy: { sortOrder: 'asc' } });
@@ -128,6 +145,12 @@ async function main() {
   check('call detail: Join link and who', det?.joinUrl === 'https://cal.example.com/video/abc' && det?.who.name === 'Morgan Hale');
   const saved = await saveCallNotes(futureCall.id, { agendaNotes: { booking_today: 'Phone line only, misses calls on weekends.' }, notes: 'Good call.' });
   check('call notes: saved', saved.ok);
+  await Promise.all([
+    saveCallNotes(futureCall.id, { agendaNotes: { green_fees: '$32–$48.' } }),
+    saveCallNotes(futureCall.id, { agendaNotes: { tee_times: '8-minute gaps.' } }),
+  ]);
+  const bothNotes = await prisma.call.findUniqueOrThrow({ where: { id: futureCall.id } });
+  check('call notes: two saves at once both keep their note', bothNotes.answersJson.includes('$32–$48.') && bothNotes.answersJson.includes('8-minute gaps.') && bothNotes.answersJson.includes('Phone line only'));
   const badNote = await saveCallNotes(futureCall.id, { agendaNotes: { not_a_key: 'x' } });
   check('call notes: an unknown agenda item → 400', !badNote.ok && badNote.status === 400);
   const det2 = await callDetail(futureCall.id, full, now);
@@ -162,6 +185,23 @@ async function main() {
   const fuAt = new Date(now.getTime() + 10 * 86_400_000).toISOString();
   const fu = await logOutreachCall(fuCall.id, { result: 'follow_up', followUpAt: fuAt, nextStep: 'Send town board one-pager' }, ADMIN);
   check('log: follow up sets the course\'s follow-up date', fu.ok && (await prisma.courseInquiry.findUniqueOrThrow({ where: { id: replied } })).nextFollowUpAt?.toISOString() === fuAt);
+  // An autosave and the log at the same moment: the autosaved note survives the log.
+  const raceCall = await prisma.call.create({ data: { kind: 'discovery', inquiryId: replied, scheduledAt: new Date(now.getTime() - 1800_000) } });
+  await Promise.all([
+    saveCallNotes(raceCall.id, { agendaNotes: { cancellation: '24 hours.' } }),
+    logOutreachCall(raceCall.id, { result: 'no_answer', agendaNotes: { people: 'Asked for the GM.' } }, ADMIN),
+  ]);
+  const raced = await prisma.call.findUniqueOrThrow({ where: { id: raceCall.id } });
+  check('log: an autosave at the same moment as the log keeps both notes', raced.outcome === 'no_answer' && raced.answersJson.includes('24 hours.') && raced.answersJson.includes('Asked for the GM.'), raced.answersJson);
+  const fuEvent = await prisma.inquiryStatusEvent.findFirst({ where: { inquiryId: replied, actorName: { startsWith: 'Call logged' } }, orderBy: { createdAt: 'desc' } });
+  check('log: the timeline says how it went, not the next step (viewers read it)', !!fuEvent && !fuEvent.actorName!.includes('one-pager'), fuEvent);
+  // Undo a mis-logged touch.
+  const oops = await prisma.outreachTouch.create({ data: { inquiryId: replied, at: new Date(now.getTime() - 60_000), channel: 'email', direction: 'out' } });
+  const wrongCourse = await deleteTouch(id, oops.id, ADMIN);
+  check('touch: removing it through another course → 404', !wrongCourse.ok && wrongCourse.status === 404);
+  const [undo, undo2] = await Promise.all([deleteTouch(replied, oops.id, ADMIN), deleteTouch(replied, oops.id, ADMIN)]);
+  check('touch: two removes at once → one ok, one 404', [undo, undo2].filter(x => x.ok).length === 1 && [undo, undo2].some(x => !x.ok && x.status === 404));
+  check('touch: removed, and the timeline says so once', (undo.ok || undo2.ok) && !(await prisma.outreachTouch.findUnique({ where: { id: oops.id } })) && (await prisma.inquiryStatusEvent.count({ where: { inquiryId: replied, actorName: { startsWith: 'Removed a logged email' } } })) === 1);
   const nnCall = await prisma.call.create({ data: { kind: 'discovery', inquiryId: contacted, scheduledAt: new Date(now.getTime() - 3600_000) } });
   const badRecheck = await logOutreachCall(nnCall.id, { result: 'not_now', recheckAt: '2020-01-01' }, ADMIN);
   check('log: not now with a past recheck → 400 and the call is not logged', !badRecheck.ok && (await prisma.call.findUniqueOrThrow({ where: { id: nnCall.id } })).outcome === 'scheduled');
@@ -228,7 +268,7 @@ async function main() {
   const wcall = await prisma.call.findFirst({ where: { createdBy: `calcom:${uid}` } });
   check('webhook: answered 200', res.status === 200);
   check('webhook: the call lands on the lead (matched by a contact email), with who and the link', wcall?.inquiryId === target && wcall.attendeeEmail === 'robin.webhook@example.com' && wcall.attendeeName === 'Robin Shaw' && wcall.meetingUrl === 'https://app.cal.com/video/xyz', wcall);
-  check('webhook: no second inquiry was opened', (await prisma.courseInquiry.count({ where: { email: { equals: 'robin.webhook@example.com', mode: 'insensitive' } } })) === 0);
+  check('webhook: no second inquiry was opened', (await prisma.courseInquiry.count({ where: { email: ciEquals('robin.webhook@example.com') } })) === 0);
   check('webhook: the lead is now Call booked', (await listOutreach(now)).stages.find(s => s.key === 'call')!.rows.some(r => r.id === target));
   await prisma.call.deleteMany({ where: { createdBy: `calcom:${uid}` } });
   // A lead whose contact also filled in the public form: the open inquiry wins, as before, and no third one opens.

@@ -29,7 +29,7 @@ async function sendReset(email: string) {
   }
   // SD-9c: tee-sheet staff log in on the same form, so they reset here too.
   const staff = await prisma.courseStaff.findUnique({ where: { email } });
-  if (staff?.active) {
+  if (staff?.active && !staff.removedAt) {
     await sendOperatorPasswordResetEmail({
       operatorName: staff.name,
       operatorEmail: staff.email,

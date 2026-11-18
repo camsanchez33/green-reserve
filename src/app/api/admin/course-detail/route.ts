@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { firstCheckInAfterGoLive } from '@/lib/course-checkin';
 import { prisma } from '@/lib/prisma';
-import { resolveStaffPermissions } from '@/lib/staff-permissions';
+import { resolveMemberPermissions } from '@/lib/team-access';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, SUPPORT_PLUS, areaGate } from '@/lib/admin-session';
 import { sendCourseLiveOrientationEmail } from '@/lib/email';
 import { getApprovalState } from '@/lib/approval-state';
@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
     prisma.booking.findMany({ where: { courseId, status: { in: COMPLETED_BOOKING_STATUSES }, createdAt: { gte: thirtyDaysAgo } }, select: { id: true, golferName: true, golferEmail: true, players: true, totalAmount: true, createdAt: true, teeTime: { select: { date: true, time: true } } }, orderBy: { createdAt: 'desc' }, take: 20 }),
     prisma.booking.count({ where: { courseId, status: { in: COMPLETED_BOOKING_STATUSES } } }),
     prisma.booking.aggregate({ where: { courseId, status: { in: COMPLETED_BOOKING_STATUSES }, createdAt: { gte: thirtyDaysAgo } }, _sum: { greenFeeTotal: true, accessFeeTotal: true, totalAmount: true }, _count: { id: true } }),
-    prisma.courseStaff.findMany({ where: { courseId }, select: { id: true, name: true, email: true, role: true, active: true, permissions: true, preset: true, permissionsSetAt: true } }),
+    prisma.courseStaff.findMany({ where: { courseId, removedAt: null }, select: { id: true, courseId: true, name: true, email: true, role: true, active: true, permissions: true, preset: true, permissionsSetAt: true, roleId: true, grantKeys: true, revokeKeys: true, courseRole: { select: { courseId: true, permissions: true, name: true } } } }),
     // MP-5a: unfiltered, so a cancelled booking read as "Last booking: today".
     prisma.booking.aggregate({ where: { courseId, status: { in: COMPLETED_BOOKING_STATUSES } }, _max: { createdAt: true } }),
     prisma.booking.count({ where: { courseId, status: { in: COMPLETED_BOOKING_STATUSES }, createdAt: { gte: sixtyDaysAgo, lt: thirtyDaysAgo } } }),
@@ -147,9 +147,10 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     course,
     // SP-A: what each person may do, resolved the way the session resolves it (support reads it; the owner edits it).
-    staff: staff.map(({ permissions, preset, permissionsSetAt, ...st }) => {
-      const keys = resolveStaffPermissions({ permissions, permissionsSetAt });
-      return { ...st, preset: permissionsSetAt ? (preset || 'custom') : 'legacy', permissions: keys };
+    // Team (Cam 2026-11-17): a person with a role reads as that role, plus their own overrides.
+    staff: staff.map(({ permissions, preset, permissionsSetAt, roleId, grantKeys, revokeKeys, courseRole, courseId: cid, ...st }) => {
+      const keys = resolveMemberPermissions({ courseId: cid, permissions, permissionsSetAt, roleId, grantKeys, revokeKeys, courseRole });
+      return { ...st, preset: roleId ? (courseRole?.name ?? 'role') : permissionsSetAt ? (preset || 'custom') : 'legacy', permissions: keys };
     }),
     recentBookings,
     totalBookings,

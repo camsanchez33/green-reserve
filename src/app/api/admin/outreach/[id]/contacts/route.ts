@@ -25,7 +25,9 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   if (!body) return NextResponse.json({ error: 'Send the contact.' }, { status: 400 });
   const r = await addContact(id, body);
   if (!r.ok) return failRes(r);
-  await auditAdmin(g.session, { action: 'outreach_contact_add', targetType: 'inquiry', targetId: id, after: { contactId: r.contact.id, role: r.contact.role, decisionMaker: r.contact.decisionMaker } });
+  await auditAdmin(g.session, r.replaced
+    ? { action: 'outreach_contact_replace', targetType: 'inquiry', targetId: id, after: { contactId: r.contact.id, replacedInquiryContact: true, changed: ['contactName', 'contactTitle', 'email', 'phone'] } }
+    : { action: 'outreach_contact_add', targetType: 'inquiry', targetId: id, after: { contactId: r.contact.id, role: r.contact.role, decisionMaker: r.contact.decisionMaker } });
   return NextResponse.json({ success: true, contact: r.contact });
 }
 

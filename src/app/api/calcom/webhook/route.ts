@@ -13,6 +13,7 @@ import { prisma } from '@/lib/prisma';
 import { verifyCalcomSignature, calcomCreatedBy } from '@/lib/calcom';
 import { defaultAgenda, parseJson } from '@/lib/inquiry-call';
 import { ALIVE_STATUSES, CALL_STATUSES } from '@/lib/inquiry-status';
+import { ciEquals } from '@/lib/like-exact';
 
 type Attendee = { name?: string; email?: string; phoneNumber?: string | null };
 type Payload = {
@@ -139,7 +140,7 @@ export async function POST(req: NextRequest) {
     if (email) {
       const matches = await prisma.courseInquiry.findMany({
         where: {
-          email: { equals: email, mode: 'insensitive' },
+          email: ciEquals(email),
           status: { in: [...ALIVE_STATUSES] },
           createdAt: { gte: new Date(Date.now() - 30 * 86_400_000) },
         },
@@ -149,7 +150,7 @@ export async function POST(req: NextRequest) {
       if (matches.length === 1) inq = matches[0];
       if (matches.length === 0) {
         const leads = await prisma.courseInquiry.findMany({
-          where: { status: 'lead', OR: [{ email: { equals: email, mode: 'insensitive' } }, { contacts: { some: { email: { equals: email, mode: 'insensitive' } } } }] },
+          where: { status: 'lead', OR: [{ email: ciEquals(email) }, { contacts: { some: { email: ciEquals(email) } } }] },
           select: INQ_SELECT,
           take: 2,
         });

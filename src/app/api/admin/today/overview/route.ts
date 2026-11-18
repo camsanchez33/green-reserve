@@ -197,7 +197,7 @@ export async function GET() {
       total: problemRows.length + todoRows.length,
       problemsMore: can('problems') ? Math.max(0, problemRows.length - PROB_CAP) : 0,
       todosMore: Math.max(0, todoRows.length - TODO_CAP),
-      todosHref: systemRows.length > TODO_CAP ? '/admin/system' : can('pipeline') ? '/admin/inquiries' : can('courses') ? '/admin/courses' : can('money') ? '/admin/revenue' : '/admin/support',
+      todosHref: systemRows.length > TODO_CAP ? '/admin/system' : can('pipeline') ? '/admin/inquiries/all' : can('courses') ? '/admin/courses' : can('money') ? '/admin/revenue' : '/admin/support',
     } : null,
   });
 }

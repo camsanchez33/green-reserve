@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS, areaGate } from '@/lib/admin-session';
 import { roundChargedTotal, roundApplicationFeeCents } from '@/lib/shop';
+import { ciContains } from '@/lib/like-exact';
 
 const PAGE_SIZE = 50;
 // MP-10: two sources merged by date, each
@@ -43,14 +44,13 @@ export async function GET(req: NextRequest) {
     ...(toDate ? { lte: toDate } : {}),
   };
   const take = page * PAGE_SIZE;
-  const ci = Prisma.QueryMode.insensitive;
 
   const bookingWhere: Prisma.BookingWhereInput = {
     courseId,
     ...(fromDate || toDate ? { createdAt: dateFilter } : {}),
     ...(tokenFilter<Prisma.BookingWhereInput>(search, t => [
-      { golferName: { contains: t, mode: ci } },
-      { golferEmail: { contains: t, mode: ci } },
+      { golferName: ciContains(t) },
+      { golferEmail: ciContains(t) },
     ]) ?? {}),
   };
   const paymentWhere: Prisma.CourseMembershipWhereInput = {
@@ -58,11 +58,11 @@ export async function GET(req: NextRequest) {
     paymentStatus: { in: ['paid', 'paid_offline'] },
     ...(fromDate || toDate ? { lastPaidAt: dateFilter } : {}),
     ...(tokenFilter<Prisma.CourseMembershipWhereInput>(search, t => [
-      { inviteName: { contains: t, mode: ci } },
-      { inviteEmail: { contains: t, mode: ci } },
-      { golfer: { firstName: { contains: t, mode: ci } } },
-      { golfer: { lastName: { contains: t, mode: ci } } },
-      { golfer: { email: { contains: t, mode: ci } } },
+      { inviteName: ciContains(t) },
+      { inviteEmail: ciContains(t) },
+      { golfer: { firstName: ciContains(t) } },
+      { golfer: { lastName: ciContains(t) } },
+      { golfer: { email: ciContains(t) } },
     ]) ?? {}),
   };
 

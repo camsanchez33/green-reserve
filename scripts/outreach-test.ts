@@ -3,8 +3,9 @@
 // Pure: no database. Run: npx tsx scripts/outreach-test.ts
 import {
   outreachStage, outreachNext, lastTouchLabel, emailRows, courseKind, validateFacts, validateContact, nameKey, findDuplicates,
-  parseCsv, importRows, endOfEasternDay, OUTREACH_START, type DupPoolRow,
+  parseCsv, importRows, endOfEasternDay, EMAILS_START, type DupPoolRow,
 } from '../src/lib/outreach';
+import { readFileSync } from 'fs';
 import { toResult } from '../src/lib/course-lookup';
 import { LEAD_ACTIONS, CALL_STATUSES } from '../src/lib/inquiry-status';
 
@@ -29,7 +30,7 @@ check('an unlogged call 3 days ago → still call', outreachStage({ touches: [],
 // ── Next step (company/outreach/plan.md: email 1 day 0, call day 1, email 2 day 4, email 3 day 11) ──
 const before = new Date('2026-11-20T15:00:00Z');
 const n0 = outreachNext({ touches: [], calls: [] }, before);
-check('target before Dec 1: Email 1, due Dec 1, not due today', n0.key === 'email1' && n0.dueAt === OUTREACH_START.toISOString() && !n0.due, n0);
+check('target before Dec 1: Email 1, due Dec 1, not due today', n0.key === 'email1' && n0.dueAt === EMAILS_START.toISOString() && !n0.due, n0);
 const n0b = outreachNext({ touches: [], calls: [] }, now);
 check('target after Dec 1: Email 1 due now', n0b.key === 'email1' && n0b.due, n0b);
 const n1 = outreachNext({ touches: [out(0.1)], calls: [] }, now);
@@ -50,7 +51,7 @@ const fu = new Date(now.getTime() + 30 * DAY);
 const n7 = outreachNext({ touches: [out(5)], calls: [], nextFollowUpAt: fu }, now);
 check('a follow-up date set by hand moves the date', n7.key === 'call_them' && n7.dueAt === fu.toISOString() && !n7.due, n7);
 const n8 = outreachNext({ touches: [], calls: [], nextFollowUpAt: new Date('2026-11-25T15:00:00Z') }, before);
-check('Email 1 never before Dec 1, even with an earlier follow-up date', n8.dueAt === OUTREACH_START.toISOString(), n8);
+check('Email 1 never before Dec 1, even with an earlier follow-up date', n8.dueAt === EMAILS_START.toISOString(), n8);
 const sn = new Date(now.getTime() + 10 * DAY);
 const n9 = outreachNext({ touches: [out(5), inn(1)], calls: [], snoozeUntil: sn }, now);
 check('snoozed: the date moves to the snooze and it is not due', n9.dueAt === sn.toISOString() && !n9.due, n9);
@@ -148,6 +149,17 @@ const hit = toResult({
 check('listing: facts from a Nominatim hit', !!hit && hit.courseName === 'Indian Island Golf Course' && hit.city === 'Riverhead' && hit.state === 'NY' && hit.address === 'Cross River Drive' && hit.osmRef === 'osm:way/385713776' && hit.website === 'example.com/golf' && hit.coursePhone === '+1 631-555-0100' && hit.latitude === 40.92, hit);
 check('listing: no name → skipped', toResult({ osm_type: 'way', osm_id: 1 }) === null);
 check('listing: a bad osm type → skipped', toResult({ osm_type: 'area', osm_id: 1, name: 'X Golf' }) === null);
+
+// ── Every palette page link is area-filtered (the Pipeline entry moved to /admin/inquiries/all) ──
+{
+  const src = readFileSync('src/app/api/admin/search/route.ts', 'utf8');
+  const navHrefs = [...src.matchAll(/id: 'nav:[^']+',\s*label: '[^']*',\s*href: '([^']+)'/g)].map(m => m[1]);
+  const areaBlock = src.slice(src.indexOf('const NAV_AREA'), src.indexOf('const TYPE_AREA'));
+  const OPEN = ['/admin', '/admin/profile'];
+  const missing = navHrefs.filter(h => !OPEN.includes(h) && !areaBlock.includes(`'${h}':`));
+  check(`palette: every page link has an area (${navHrefs.length} links)`, navHrefs.length > 5 && missing.length === 0, missing);
+  check('palette: Pipeline opens the full board', navHrefs.includes('/admin/inquiries/all'));
+}
 
 console.log(failed ? `\n${failed} FAILED` : '\nAll passed');
 process.exit(failed ? 1 : 0);

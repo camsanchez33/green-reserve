@@ -7,6 +7,7 @@ import { prisma } from './prisma';
 import { todayIn, addDaysStr } from './course-time';
 import { groupCourseIds } from './course-group';
 import { bookingRefLabel, parseRef } from './booking-ref';
+import { ciContains } from '@/lib/like-exact';
 
 export type SearchResult =
   | { kind: 'booking'; id: string; ref: string; name: string; date: string; time: string; players: number; status: string; noShow: boolean; href: string }
@@ -24,7 +25,7 @@ export function bySearchOrder<T extends { date: string; time: string }>(rows: T[
     || (rank(a.date) === 2 ? (b.date + b.time).localeCompare(a.date + a.time) : (a.date + a.time).localeCompare(b.date + b.time)));
 }
 
-const contains = (q: string) => ({ contains: q, mode: 'insensitive' as const });
+const contains = ciContains;
 
 export async function operatorSearch(courseId: string, rawQ: string, opts: { contact: boolean; members: boolean }): Promise<SearchResult[]> {
   const q = rawQ.trim().slice(0, 80);
