@@ -26,6 +26,7 @@ import { prisma } from './prisma';
 import { stripe } from './stripe';
 import { ACCESS_FEE_CENTS, EVENT_FEE_ON } from './booking-fees';
 import { recordMove } from './money-ledger';
+import { cashRefused } from '@/lib/takes-cash';
 
 /** LEDGER-1: a payment taken at the course is cash, or another way the course took it (a check, its own card machine). */
 const ledgerMethod = (m: string) => (m === 'cash' ? 'cash' : 'other') as 'cash' | 'other';
@@ -140,6 +141,7 @@ export async function recordCoursePayment(courseId: string, eventId: string, inp
   if (!amountCents) return fail(400, 'Enter the amount taken (up to $100,000).');
   const method = (COURSE_METHODS as readonly string[]).includes(String(input.method)) ? String(input.method) : null;
   if (!method) return fail(400, 'Say how it was paid.');
+  if (method === 'cash') { const off = await cashRefused(courseId); if (off) return fail(409, off); } // Takes cash off
   const who = await playerOf(eventId, input.playerId);
   if (who.error) return who.error;
   const player = who.player;
@@ -250,6 +252,7 @@ async function stopIntent(courseId: string, paymentId: string): Promise<string |
 /** Cancel an open pay link, or record that it was paid another way at the course. */
 export async function settleOpenPayment(courseId: string, paymentId: string, to: 'void' | { method: string }): Promise<Result<null>> {
   if (to !== 'void' && !(COURSE_METHODS as readonly string[]).includes(to.method)) return fail(400, 'Say how it was paid.');
+  if (to !== 'void' && to.method === 'cash') { const off = await cashRefused(courseId); if (off) return fail(409, off); } // Takes cash off
   const stop = await stopIntent(courseId, paymentId);
   if (stop) return fail(409, stop);
   const done = await prisma.courseEventPayment.updateMany({
@@ -414,6 +417,7 @@ export async function refundPayment(courseId: string, paymentId: string, input: 
   const p = await prisma.courseEventPayment.findFirst({ where: { id: paymentId, courseId } });
   if (!p) return fail(404, 'Payment not found.');
   if (p.status !== 'paid') return fail(409, 'Only a paid payment can be refunded.');
+  if (p.method === 'cash') { const off = await cashRefused(courseId); if (off) return fail(409, off); } // Takes cash off: a cash refund is cash out of the drawer
   const left = p.amountCents - p.refundedCents;
   const amountCents = toCents(input.amount);
   if (!amountCents) return fail(400, 'Enter the amount to refund.');

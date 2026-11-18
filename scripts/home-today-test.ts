@@ -73,11 +73,11 @@ ok('…Home can\'t add a range or a line', !('range' in mergeHomeConditions({}, 
 ok('…range and lines are on the card, view and edit, so nothing reaches golfers unseen', readFileSync('src/components/dashboard/home/HomeBoard.tsx', 'utf8').includes("conditionLabel('range', c.detail.range)") && readFileSync('src/components/dashboard/home/HomeBoard.tsx', 'utf8').includes("range: undefined }))}>Remove<"));
 ok('…and Home saves through the merge', readFileSync('src/components/dashboard/home/HomeBoard.tsx', 'utf8').includes('mergeHomeConditions(c.detail, draft)'));
 
-// ── "We take cash" (Cam 2026-11-12; Build: additive, default off, display only) ──
-ok('the column is additive with a default and no backfill', /ADD COLUMN "takesCash" BOOLEAN NOT NULL DEFAULT false;\s*$/.test(readFileSync('prisma/migrations/20261112000000_course_takes_cash/migration.sql', 'utf8')));
-ok('settings saves it (settings.edit route, a boolean)', readFileSync('src/app/api/operator/settings/route.ts', 'utf8').includes("'takesCash'") && readFileSync('src/lib/settings-validation.ts', 'utf8').includes("'takesCash'"));
+// ── "We take cash" (Cam 2026-11-12; since Cam 2026-11-17 OFF means no cash anywhere: scripts/takes-cash-db-test.ts) ──
+ok('it defaults on, existing courses backfilled on (Cam 2026-11-17)', /SET DEFAULT true;[\s\S]*UPDATE "Course" SET "takesCash" = true/.test(readFileSync('prisma/migrations/20261117140000_takes_cash_default/migration.sql', 'utf8')));
+ok('settings saves it (a boolean, owner only)', readFileSync('src/app/api/operator/settings/route.ts', 'utf8').includes("'takesCash'") && readFileSync('src/lib/settings-validation.ts', 'utf8').includes("'takesCash'"));
 ok('Home shows Open the register only when it is on', readFileSync('src/app/dashboard/home/page.tsx', 'utf8').includes('{home?.takesCash && <OpenRegister where="home" />}'));
-ok('it gates nothing: no cash path reads it', !/takesCash/.test(readFileSync('src/lib/register-open.ts', 'utf8')) && !/takesCash/.test(readFileSync('src/lib/register.ts', 'utf8')));
+ok('cash paths read it through one helper (lib/takes-cash)', /cashRefused/.test(readFileSync('src/lib/register-open.ts', 'utf8')) && /cashRefused/.test(readFileSync('src/lib/register.ts', 'utf8')));
 
 // ── The page ──
 const page = readFileSync('src/app/dashboard/home/page.tsx', 'utf8');
