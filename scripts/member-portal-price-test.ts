@@ -24,6 +24,8 @@ const check = (label: string, ok: boolean, detail?: unknown) => {
 async function cleanup() {
   const courses = await prisma.course.findMany({ where: { slug: { startsWith: TAG } }, select: { id: true } });
   const courseId = { in: courses.map(c => c.id) };
+  await prisma.bookingEvent.deleteMany({ where: { courseId } });
+  await prisma.booking.deleteMany({ where: { courseId } });
   await prisma.courseMembership.deleteMany({ where: { courseId } });
   await prisma.courseResident.deleteMany({ where: { courseId } });
   await prisma.golferAccount.deleteMany({ where: { email: { endsWith: `@${TAG}.test` } } });
@@ -32,6 +34,7 @@ async function cleanup() {
   await prisma.courseProduct.deleteMany({ where: { courseId } });
   await prisma.course.deleteMany({ where: { slug: { startsWith: TAG } } });
   await prisma.courseOperator.deleteMany({ where: { email: `${TAG}@test.local` } });
+  await prisma.courseGroup.deleteMany({ where: { slug: `${TAG}-g` } });
 }
 
 async function main() {
@@ -102,6 +105,36 @@ async function main() {
   await prisma.courseResident.create({ data: { courseId: course.id, name: 'Tier', email: tierEmail, expiresOn: '' } });
   const tierRow = await portal(await memberCookie(tierM.id, tierEmail));
   check('…and never on top of a membership price', !!tierRow && tierRow.resident_green_fee == null && Math.round(tierRow.member_green_fee * 100) === 8000, tierRow);
+
+  // Tenant check (Cam 2026-11-18): the online resident rate comes from the member signed in to THIS course. A member
+  // of this course who is also on another course's resident list never gets that course's resident rate there —
+  // not on its own, and not when the two courses are in one group.
+  const resCookie = await memberCookie(resM.id, resEmail);
+  const residentRate = async (teeTimeId: string, cookie?: string) => (await (await fetch(`${BASE_URL}/api/bookings/resident-rate?teeTimeId=${teeTimeId}`, cookie ? { headers: { cookie } } : {})).json()) as { residentGreenFee: number | null };
+  check('the booking page shows a signed-in member on the list the resident rate here', (await residentRate(tt.id, resCookie)).residentGreenFee === 30);
+  check('…and nothing signed out', (await residentRate(tt.id)).residentGreenFee === null);
+  const courseB = await prisma.course.create({ data: { hasResidentPricing: true, name: 'Price Test B', slug: `${TAG}-b`, operatorId: op.id, address: '2 Test Dr', city: 'T', state: 'NY', zipCode: '10001', holes: 18, liveStatus: 'live', active: true, timezone: 'UTC', cancellationHours: 24 } });
+  const ttB = await prisma.teeTime.create({ data: { courseId: courseB.id, date, time: '09:00', holes: 18, greenFeeCents: 10000, cartFeeCents: 2000, residentRateCents: 3000, playersAvailable: 4, playersBooked: 0 } });
+  await prisma.courseResident.create({ data: { courseId: courseB.id, name: 'Res', email: resEmail, expiresOn: '' } });
+  check('a member of course A on course B\'s resident list gets no resident rate at B', (await residentRate(ttB.id, resCookie)).residentGreenFee === null);
+  const group = await prisma.courseGroup.create({ data: { name: 'Price Test Group', slug: `${TAG}-g` } });
+  await prisma.course.updateMany({ where: { id: { in: [course.id, courseB.id] } }, data: { groupId: group.id } });
+  check('…nor when A and B are in one group', (await residentRate(ttB.id, resCookie)).residentGreenFee === null);
+  await prisma.course.updateMany({ where: { id: { in: [course.id, courseB.id] } }, data: { groupId: null } });
+
+  // RES-1 "moves keep it": an online resident booking (no golfer account now) keeps the resident seat on the golfer's
+  // own swap while the member is signed in and the card is good — and loses it without the proof.
+  const ttS1 = await prisma.teeTime.create({ data: { courseId: course.id, date, time: '11:00', holes: 18, greenFeeCents: 10000, cartFeeCents: 2000, residentRateCents: 3000, playersAvailable: 4, playersBooked: 1 } });
+  const ttS2 = await prisma.teeTime.create({ data: { courseId: course.id, date, time: '12:00', holes: 18, greenFeeCents: 10000, cartFeeCents: 2000, residentRateCents: 3000, playersAvailable: 4, playersBooked: 0 } });
+  const swapToken = `${TAG}-swap-token`;
+  const rb = await prisma.booking.create({ data: { teeTimeId: ttS1.id, courseId: course.id, golferName: 'Res', golferEmail: resEmail, players: 1, residentPlayers: 1, residentRateCents: 3000, appliedRate: 'resident', greenFeeTotal: 3000, cartFeeTotal: 0, accessFeeTotal: 150, totalAmount: 3150, status: 'confirmed', paymentStatus: 'no_payment_method', checkInToken: swapToken } });
+  const swap = (to: string, cookie?: string) => fetch(`${BASE_URL}/api/manage/${rb.id}/swap-time`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(cookie ? { cookie } : {}) }, body: JSON.stringify({ token: swapToken, newTeeTimeId: to, termsAccepted: true }) });
+  const s1 = await swap(ttS2.id, resCookie);
+  const after1 = await prisma.booking.findUnique({ where: { id: rb.id }, select: { residentPlayers: true, teeTimeId: true } });
+  check('an online resident\'s own swap, signed in as the member, keeps the resident seat', s1.ok && after1?.teeTimeId === ttS2.id && after1?.residentPlayers === 1, { status: s1.status, after1 });
+  const s2 = await swap(ttS1.id);
+  const after2 = await prisma.booking.findUnique({ where: { id: rb.id }, select: { residentPlayers: true, teeTimeId: true } });
+  check('…and without the member sign-in the swap reprices at the public rate', s2.ok && after2?.teeTimeId === ttS1.id && after2?.residentPlayers === 0, { status: s2.status, after2 });
 
   // Memberships item 3: a membership on "the public window" books as far ahead as the public — the course's, and a
   // round's own shorter one.

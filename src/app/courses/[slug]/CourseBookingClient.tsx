@@ -1412,7 +1412,6 @@ export default function CourseDetailPage({
             </div>
           ))}
 
-          {/* PRICE-3: round packs the course sells online (nothing renders when it sells none). */}
         </div>
       </div>
       <CourseFooter course={course} accent={accent} />

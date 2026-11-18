@@ -5,7 +5,7 @@ import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { termsVersionNow } from '@/lib/terms';
 import { canManageBooking } from '@/lib/manage-access';
 import { moveBooking } from '@/lib/move-booking';
-import { residentOn } from '@/lib/member-session';
+import { residentOn, signedInResident } from '@/lib/member-session';
 
 // The golfer's own "change my time". ACT-1: the move itself — claim, release,
 // price, event — is lib/move-booking.ts, shared with staff moves. The golfer
@@ -39,14 +39,20 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
   const booking = await prisma.booking.findUnique({ where: { id: bookingId }, select: { checkInToken: true, golferAccountId: true, courseId: true, residentPlayers: true, golferAccount: { select: { email: true } } } });
   if (!booking || !canManageBooking(booking, token)) return NextResponse.json({ error: 'Invalid link' }, { status: 404 });
 
-  // RES-1: the resident rate follows the golfer's own swap only while the
-  // booking's account is still on the resident list with a card good on the
-  // new date. Residents staff set at the counter are set again at the counter.
+  // RES-1: the resident rate follows the golfer's own swap only while a PROVEN email is still on the resident list
+  // with a card good on the new date: an older booking's linked account, or (Cam 2026-11-18, no golfer accounts)
+  // the member signed in to this course, which is how an online resident booking gets the rate now. Never the
+  // booking's typed golferEmail. Residents staff set at the counter are set again at the counter.
   let residentPlayers = 0;
   const switches = await prisma.course.findUnique({ where: { id: booking.courseId }, select: { hasResidentPricing: true } });
-  if (booking.residentPlayers > 0 && booking.golferAccount?.email && residentPricingOn(switches)) {
+  if (booking.residentPlayers > 0 && residentPricingOn(switches)) {
     const slot = await prisma.teeTime.findUnique({ where: { id: String(newTeeTimeId) }, select: { date: true } });
-    if (slot && await residentOn(booking.courseId, booking.golferAccount.email, slot.date)) residentPlayers = 1;
+    if (slot) {
+      const card = booking.golferAccount?.email
+        ? await residentOn(booking.courseId, booking.golferAccount.email, slot.date)
+        : await signedInResident(booking.courseId, slot.date);
+      if (card) residentPlayers = 1;
+    }
   }
 
   try {
