@@ -85,8 +85,10 @@ async function check(args) {
   if (!base || !/^https?:\/\//.test(base)) die('check needs --url https://…');
   // A TEST course on the target (isTest, never a real course). An unknown slug still answers 200 with the
   // generic title, so the check needs the course's name in <title> to prove the course page really rendered.
-  const slug = opt(args, 'slug', 'perf-audit');
-  const courseName = opt(args, 'course-name', 'Perf Audit Golf Club');
+  // Optional (Build 2026-11-18): production has no named test course until after the launch wipe.
+  const slug = opt(args, 'slug', null);
+  const courseName = opt(args, 'course-name', null);
+  if (slug && !courseName) die('--slug needs --course-name (the test course\'s name, checked in <title>)');
   const expectSha = opt(args, 'expect-sha', null);
   const results = [];
   const record = (name, ok, note) => {
@@ -119,9 +121,10 @@ async function check(args) {
   }
 
   // 2. Pages. Only the test course; never a real course's pages.
+  if (!slug) console.log('SKIP  course check skipped (no --slug given)');
   const pages = [
     ['home page', '/', null],
-    [`test course page /courses/${slug}`, `/courses/${slug}`, courseName],
+    ...(slug ? [[`test course page /courses/${slug}`, `/courses/${slug}`, courseName]] : []),
     ['course staff sign-in page', '/dashboard/login', null],
     ['admin sign-in page', '/admin/login', null],
   ];

@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { memberPricingOn, residentPricingOn } from '@/lib/pricing-switch';
 import { prisma } from '@/lib/prisma';
-import { getMemberSession, signedInResident } from '@/lib/member-session';
+import { loggedInAt, liveMembershipFor, residentOn } from '@/lib/member-session';
 import { applyTierRates } from '@/lib/tier-rates';
-import { membershipLive } from '@/lib/member-rates';
 import { dealPct, dealRateSeat } from '@/lib/last-minute';
 import { demandPctFor, onlinePublicSeat } from '@/lib/demand-pricing';
 import { holdingsFor, ROUND_PACKS_ON } from '@/lib/round-packs';
@@ -30,16 +29,13 @@ export async function GET(req: NextRequest) {
   const pub = onlinePublicSeat(tt.greenFeeCents, pct, await demandPctFor(tt.course, tt));
   const rated = (cents: number) => Math.min(pub, dealRateSeat(pct, cents, tt.greenFeeCents, tt.course.lastMinuteStack));
   // Cam 2026-11-18: only this course's member sign-in counts (no golfer accounts).
-  const memberSession = await getMemberSession();
-  const signedIn = memberSession && memberSession.courseId === tt.courseId ? memberSession : null;
+  const signedIn = await loggedInAt(tt.courseId);
   // PRICE-3: the signed-in member's own round packs at this course (their member email is the holder).
   const packs = ROUND_PACKS_ON && signedIn ? (await holdingsFor(tt.courseId, signedIn.email)).map(h => ({ lineId: h.lineId, name: h.name, left: h.left, coversCart: h.coversCart, guests: h.guests, expiresAt: h.expiresAt })) : [];
 
   let tier: { name: string; guestsPayMemberRate: boolean; greenFeeWeekdayCents: number | null; greenFeeWeekendCents: number | null; cartFeeWeekdayCents: number | null; cartFeeWeekendCents: number | null; discountPct: number | null; lineRates: unknown } | null = null;
-  if (signedIn) {
-    const m = await prisma.courseMembership.findUnique({ where: { id: signedIn.membershipId }, include: { tier: true } });
-    if (m && m.courseId === tt.courseId && membershipLive(m, grace)) tier = m.tier;
-  }
+  // Residents log in: the logged-in email's live membership here, read now (lib/member-session).
+  if (signedIn) tier = (await liveMembershipFor(grace, signedIn.email))?.tier ?? null;
   // Switched off in Settings (lib/pricing-switch): no member or resident rate is shown, as none is charged.
   if (!memberPricingOn(tt.course)) tier = null;
   if (tier) {
@@ -50,6 +46,6 @@ export async function GET(req: NextRequest) {
       packs,
     });
   }
-  if (tt.residentRateCents == null || !residentPricingOn(tt.course) || !(await signedInResident(tt.courseId, tt.date))) return NextResponse.json({ residentGreenFee: null, member: null, packs });
+  if (tt.residentRateCents == null || !residentPricingOn(tt.course) || !signedIn || !(await residentOn(tt.courseId, signedIn.email, tt.date))) return NextResponse.json({ residentGreenFee: null, member: null, packs });
   return NextResponse.json({ residentGreenFee: rated(tt.residentRateCents) / 100, member: null, packs });
 }

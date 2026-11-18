@@ -22,7 +22,7 @@ check('…and a $0 tier rate prices the round at $0 (cart at the course\'s price
 check('moving a booking shows the right prices (dollars from the route are made cents)', read('src/app/manage/[bookingId]/page.tsx').includes('greenFee: Math.round(t.greenFee * 100), cartFee: Math.round(t.cartFee * 100)'));
 
 // 4. A member signed in by the member link sees the member rate the booking charges.
-check('the booking page asks for the member rate without a golfer sign-in', read('src/app/book/BookClient.tsx').includes("if (!ttId) { setResidentFee(null); setMemberRate(null);") && read('src/app/api/bookings/resident-rate/route.ts').includes('getMemberSession()'));
+check('the booking page asks for the member rate without a golfer sign-in', read('src/app/book/BookClient.tsx').includes("if (!ttId) { setResidentFee(null); setMemberRate(null);") && read('src/app/api/bookings/resident-rate/route.ts').includes('await loggedInAt(tt.courseId)'));
 
 // 6. Payments are the one thing that blocks going live — say so.
 check('Home lists Connect payments first when Stripe isn\'t connected, and not once it is', paymentsMissing(false)[0]?.key === 'payments' && paymentsMissing(false)[0]?.href === '/dashboard/money?tab=payouts' && paymentsMissing(true).length === 0);
