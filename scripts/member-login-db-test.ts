@@ -471,7 +471,7 @@ async function main() {
   check('Your <Course>: benefits in one line', hs.body?.benefits === '20% off every round and you can book 9 days out. 6 guest passes a year.', hs.body?.benefits);
   check('…renews on the end date when it renews itself', hs.body?.renewsOn === homeEnd && hs.body?.expiresOn === null && hs.body?.autoRenew === true, hs.body);
   check('…upcoming: this course, this email (any case), confirmed, still to come, soonest first', up.map(u => u.bookingId).join() === [bNear.id, up[1]?.bookingId, bFar.id].join() && up.length === 3, up);
-  check('…each opens its manage page with the emailed token', up[0]?.manageUrl.endsWith(`/manage/${bNear.id}?token=${TAG}-tok-1`) && up[0].date === tomorrow && up[0].time === '09:00' && up[0].players === 2 && up[0].holes === 18, up[0]);
+  check('…each opens its manage page with the emailed token, as a path on this site', up[0]?.manageUrl === `/manage/${bNear.id}?token=${TAG}-tok-1` && up[0].date === tomorrow && up[0].time === '09:00' && up[0].players === 2 && up[0].holes === 18, up[0]);
   check('…no card held: "Total due at the course"', up[0]?.dueLine === 'Total due at the course: $103.00', up[0]);
   check('…paid: "Paid"', up[1]?.dueLine === 'Paid', up[1]);
   check('…card on file, fee taken at booking: "Estimated total at check-in" less the fee', up[2]?.dueLine === 'Estimated total at check-in: $100.00', up[2]);

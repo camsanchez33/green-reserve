@@ -60,15 +60,14 @@ export async function upcomingFor(course: { id: string; slug: string; timezone: 
     orderBy: [{ teeTime: { date: 'asc' } }, { teeTime: { time: 'asc' } }],
     take: take + 10,
   });
-  const base = process.env.NEXT_PUBLIC_URL || '';
   return rows
     .filter(b => b.teeTime.date > today || b.teeTime.time > clock)
     .slice(0, take)
     .map(b => ({
       bookingId: b.id,
-      // The link the confirmation email sent to this same address (the log-in already proved the email); a booking
-      // with no token gets the course page, as the email does.
-      manageUrl: b.checkInToken ? `${base}/manage/${b.id}?token=${encodeURIComponent(b.checkInToken)}` : `${base}/courses/${course.slug}`,
+      // The link the confirmation email sent to this same address (the log-in already proved the email), as a path on
+      // this site (Golfer lane, Build 2026-11-18); a booking with no token gets the course page, as the email does.
+      manageUrl: b.checkInToken ? `/manage/${b.id}?token=${encodeURIComponent(b.checkInToken)}` : `/courses/${course.slug}`,
       date: b.teeTime.date,
       time: b.teeTime.time,
       players: b.players,
