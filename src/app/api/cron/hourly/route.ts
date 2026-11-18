@@ -208,10 +208,11 @@ export const GET = cronRoute('hourly', async (req: NextRequest) => {
   try { duesReadersSettled = await settleStaleDuesReaders(); } catch (err) { console.error('Dues reader settle failed:', err); }
 
   // ─── 8: AW-5 — the admin's urgent alerts and the morning digest (last: it only reads, and never blocks the steps above) ──
-  // ALERTS-2: end expired tee time alerts and tell the rest about times opened since (never throws).
-  const teeTimeAlerts = await sweepTeeTimeAlerts(now);
-
   const adminChecks = await runAdminChecks(now);
+
+  // ALERTS-2: end expired tee time alerts and tell the rest about times opened since. Last, so
+  // nothing above waits on it (never throws; sends capped per course).
+  const teeTimeAlerts = await sweepTeeTimeAlerts(now);
 
   return NextResponse.json({ success: true, ...results, agreementPdfs, agreementNotices, callReminders, shopTaxRecorded, shopTaxReversed, roundShopTaxRecorded, duesReadersSettled, teeTimeAlerts, adminChecks });
 });

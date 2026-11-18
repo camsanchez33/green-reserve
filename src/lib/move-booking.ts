@@ -116,6 +116,9 @@ export async function moveBooking(opts: {
   /** RES-1: residents to price at the new slot (default: the booking's own).
    *  The golfer's swap re-checks the card for the new slot's date. */
   residentPlayers?: number;
+  /** ALERTS-2: tell tee time alerts the old time has room. Off for a frost delay, which
+   *  blocks the times it moves groups off right after (lib/frost-delay). Default on. */
+  notifyAlerts?: boolean;
   now?: Date;
 }): Promise<MoveOk | MoveFail> {
   const now = opts.now ?? new Date();
@@ -306,7 +309,7 @@ export async function moveBooking(opts: {
       return result;
     }, { isolationLevel: 'Serializable' });
     const opened = freed as { courseId: string; date: string } | null;
-    if (opened) await notifyAlertsFor(opened.courseId, [opened.date]);
+    if (opened && opts.notifyAlerts !== false) await notifyAlertsFor(opened.courseId, [opened.date]);
     return moved;
   } catch (err) {
     if (err instanceof DryRun) return err.result;

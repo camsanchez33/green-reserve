@@ -46,6 +46,9 @@ export function partOf(time: string): AlertPart {
 
 export const MAX_ALERT_DATES = 14;
 const SEND_CAP_PER_DATE = 200;
+/** In a request (a cancel, a move), only this many alerts are told; the hourly sweep tells the
+ *  rest. Keeps a golfer's cancel or staff's move quick however many alerts a date has. */
+export const REQUEST_SEND_CAP = 25;
 const SMS_SCOPE: SmsScope = 'alerts';
 
 export function newAlertToken(): string {
@@ -203,7 +206,9 @@ export async function createAlert(input: CreateAlertInput, member: MemberCtx, no
   const alert = existing
     ? await prisma.teeTimeAlert.update({
         where: { id: existing.id },
-        data: { ...data, ...(membershipId && existing.status === 'pending' ? { status: 'active', confirmedAt: now } : {}) },
+        // A guest re-asking a pending alert gets a NEW confirm link, so only the newest email (which
+        // names the phone on it) can turn it on; the older link stops working.
+        data: { ...data, ...(membershipId && existing.status === 'pending' ? { status: 'active', confirmedAt: now } : {}), ...(!membershipId ? { token: newAlertToken() } : {}) },
       })
     : await prisma.teeTimeAlert.create({
         data: { ...data, courseId: course.id, email, date: dates[0], dates, parts, teeTimeId, status, confirmedAt: membershipId ? now : null, token: newAlertToken() },
@@ -237,24 +242,26 @@ export async function sendAlertTextEnrollment(phone: string, courseId: string): 
 
 // ─── Confirm and stop (by the emailed token) ─────────────────────────────────
 
-export type TokenAlert = { id: string; status: string; dates: string[]; date: string; players: number; course: { name: string; slug: string } };
+export type TokenAlert = { id: string; status: string; dates: string[]; date: string; players: number; phone: string | null; course: { name: string; slug: string } };
 
 export async function alertByToken(token: string): Promise<TokenAlert | null> {
   if (!token || token.length > 100) return null;
   return prisma.teeTimeAlert.findUnique({
     where: { token },
-    select: { id: true, status: true, dates: true, date: true, players: true, course: { select: { name: true, slug: true } } },
+    select: { id: true, status: true, dates: true, date: true, players: true, phone: true, course: { select: { name: true, slug: true } } },
   });
 }
 
 /** Turn a pending alert on. 'ended' when its last date has passed. */
-export async function confirmAlert(token: string, now: Date = new Date()): Promise<{ result: 'confirmed' | 'already' | 'ended' | 'stopped' | 'missing'; alert: TokenAlert | null }> {
+export async function confirmAlert(token: string, now: Date = new Date()): Promise<{ result: 'confirmed' | 'already' | 'ended' | 'stopped' | 'off' | 'missing'; alert: TokenAlert | null }> {
   const alert = await alertByToken(token);
   if (!alert) return { result: 'missing', alert: null };
   if (alert.status === 'active') return { result: 'already', alert };
   if (alert.status === 'stopped') return { result: 'stopped', alert };
   if (alert.status === 'ended') return { result: 'ended', alert };
-  const row = await prisma.teeTimeAlert.findUnique({ where: { id: alert.id }, select: { endsAt: true, phone: true, textConsentAt: true, courseId: true } });
+  const row = await prisma.teeTimeAlert.findUnique({ where: { id: alert.id }, select: { endsAt: true, phone: true, textConsentAt: true, courseId: true, course: { select: { teeTimeAlertsOn: true } } } });
+  // The course turned alerts off since: nothing turns on, no consent is recorded.
+  if (row && !row.course.teeTimeAlertsOn) return { result: 'off', alert };
   if (row?.endsAt && row.endsAt.getTime() <= now.getTime()) {
     await prisma.teeTimeAlert.updateMany({ where: { id: alert.id, status: 'pending' }, data: { status: 'ended' } });
     return { result: 'ended', alert };
@@ -307,16 +314,16 @@ async function openTimes(course: { id: string; timezone: string; publicAdvanceDa
  * Send the opening message to every active alert on these dates that a bookable time now
  * matches. Returns how many alerts were told. Awaited by every caller; never throws.
  */
-export async function notifyAlertsFor(courseId: string, dates: string[], now: Date = new Date()): Promise<number> {
+export async function notifyAlertsFor(courseId: string, dates: string[], now: Date = new Date(), maxSends: number = REQUEST_SEND_CAP): Promise<number> {
   try {
-    return await notifyInner(courseId, dates, now);
+    return await notifyInner(courseId, dates, now, maxSends);
   } catch (err) {
     console.error(JSON.stringify({ ev: 'alerts.notify.fail', courseId, error: err instanceof Error ? err.message : String(err) }));
     return 0;
   }
 }
 
-async function notifyInner(courseId: string, dates: string[], now: Date): Promise<number> {
+async function notifyInner(courseId: string, dates: string[], now: Date, maxSends: number): Promise<number> {
   const course = await prisma.course.findUnique({
     where: { id: courseId },
     select: { id: true, name: true, slug: true, active: true, liveStatus: true, timezone: true, teeTimeAlertsOn: true, publicAdvanceDays: true, minPlayers: true, maxPlayers: true },
@@ -324,8 +331,9 @@ async function notifyInner(courseId: string, dates: string[], now: Date): Promis
   if (!course || !course.teeTimeAlertsOn || !course.active || course.liveStatus !== 'live') return 0;
   const { sendTeeTimeAlertEmail } = await import('./email');
   let told = 0;
+  const today = todayIn(course.timezone, now);
   for (const date of [...new Set(dates)].sort()) {
-    if (!DATE_RE.test(date)) continue;
+    if (!DATE_RE.test(date) || date < today) continue;
     const alerts = await prisma.teeTimeAlert.findMany({
       where: {
         courseId, status: 'active',
@@ -342,6 +350,7 @@ async function notifyInner(courseId: string, dates: string[], now: Date): Promis
     const times = await openTimes(course, date, now);
     if (!times.length) continue;
     for (const a of alerts) {
+      if (told >= maxSends) return told;
       // A guest can't book past the public window (or a round's own shorter one).
       const usable = a.membershipId ? times : times.filter(t => t.publicOk);
       const hit = usable.find(t => alertMatches(a, t));
@@ -382,7 +391,7 @@ async function notifyInner(courseId: string, dates: string[], now: Date): Promis
 }
 
 /**
- * The hourly sweep: end alerts past their end, give old rows an end, then check every
+ * The hourly sweep: end alerts past their end, then check every
  * date with an active alert (catches times the generator or staff opened). Never throws.
  */
 export async function sweepTeeTimeAlerts(now: Date = new Date()): Promise<{ ended: number; told: number }> {
@@ -392,18 +401,13 @@ export async function sweepTeeTimeAlerts(now: Date = new Date()): Promise<{ ende
       where: { status: { in: ['pending', 'active'] }, endsAt: { lte: now } },
       data: { status: 'ended' },
     })).count;
-    // Rows from before ALERTS-2 have no end: give them one (the end of their one date).
-    const legacy = await prisma.teeTimeAlert.findMany({
-      where: { status: 'active', endsAt: null },
-      select: { id: true, courseId: true, date: true, dates: true, course: { select: { timezone: true } } },
-      take: 500,
-    });
-    for (const a of legacy) {
-      const last = alertDates(a).slice(-1)[0];
-      await prisma.teeTimeAlert.update({ where: { id: a.id }, data: { endsAt: await endsAtFor(a.courseId, last, a.course.timezone) } });
-    }
+    // Rows from before ALERTS-2 have no end and are never written here (that would be a backfill):
+    // they keep their one date, and a date that has passed is skipped below.
     const live = await prisma.teeTimeAlert.findMany({
-      where: { status: 'active', endsAt: { gt: now }, course: { teeTimeAlertsOn: true } },
+      where: {
+        status: 'active', course: { teeTimeAlertsOn: true },
+        OR: [{ endsAt: { gt: now } }, { endsAt: null, date: { gte: addDaysStr(todayIn('UTC', now), -1) } }],
+      },
       select: { courseId: true, dates: true, date: true, notifiedDates: true },
     });
     const byCourse = new Map<string, Set<string>>();
@@ -412,7 +416,7 @@ export async function sweepTeeTimeAlerts(now: Date = new Date()): Promise<{ ende
       for (const d of alertDates(a)) if (!a.notifiedDates.includes(d)) set.add(d);
       byCourse.set(a.courseId, set);
     }
-    for (const [courseId, ds] of byCourse) told += await notifyAlertsFor(courseId, [...ds], now);
+    for (const [courseId, ds] of byCourse) told += await notifyAlertsFor(courseId, [...ds], now, SEND_CAP_PER_DATE);
   } catch (err) {
     console.error(JSON.stringify({ ev: 'alerts.sweep.fail', error: err instanceof Error ? err.message : String(err) }));
   }

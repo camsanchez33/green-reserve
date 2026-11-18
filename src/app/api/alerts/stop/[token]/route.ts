@@ -3,7 +3,7 @@
 import { NextRequest } from 'next/server';
 import { alertByToken, stopAlertByToken } from '@/lib/tee-time-alerts';
 import { alertPage, htmlResponse } from '@/lib/alert-pages';
-import { rateLimit, clientIp } from '@/lib/rate-limit';
+import { rateLimit } from '@/lib/rate-limit';
 
 type Ctx = { params: Promise<{ token: string }> };
 
@@ -21,8 +21,9 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
 }
 
 export async function POST(req: NextRequest, { params }: Ctx) {
-  if (!(await rateLimit('alert:stop:' + clientIp(req), 30, 300))) return htmlResponse(alertPage({ title: 'Too many tries', body: 'Wait a minute and try again.' }), 429);
+  // Per link, not per IP: mail apps send one-click stops from shared addresses.
   const { token } = await params;
+  if (!(await rateLimit('alert:stop:' + String(token).slice(0, 64), 20, 300))) return htmlResponse(alertPage({ title: 'Too many tries', body: 'Wait a minute and try again.' }), 429);
   const r = await stopAlertByToken(token);
   if (r.result === 'missing') return htmlResponse(alertPage({ title: 'Already removed', body: 'This alert link has already been used or does not exist.' }), 404);
   return htmlResponse(alertPage({ title: 'Alert stopped', body: 'You won’t get any more emails or texts for this alert.', course: r.alert?.course }));

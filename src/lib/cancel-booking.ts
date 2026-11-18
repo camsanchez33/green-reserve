@@ -273,13 +273,6 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
     return { error: 'This booking was just cancelled or checked in from another screen — refresh to see it.', status: 409 } as const;
   }
 
-  // ALERTS-2: the freed seats may match someone's tee time alert (first come, first served).
-  // ADDTIME-1 (review 2026-11-06): a time kept for staff is never announced to golfers.
-  // Awaited, never throws (lib/tee-time-alerts).
-  if (notifySlotAlerts && !booking.teeTime.staffOnly && !keepSlotBlocked) {
-    await notifyAlertsFor(booking.courseId, [booking.teeTime.date]);
-  }
-
   await sendCancellationEmail({
     golferName: booking.golferName,
     golferEmail: booking.golferEmail,
@@ -326,6 +319,14 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
   // PRICE-3: a round pack's rounds come back by the same rule as the booking fee — before the
   // cutoff, or when the course calls it off or waives; a late cancel or a no-show uses them.
   if (!(!waiveFee && !opts.courseCalledOff && (isLate || !!noShowCharge))) await releaseBookingRounds(bookingId);
+
+  // ALERTS-2: the freed seats may match someone's tee time alert (first come, first served).
+  // ADDTIME-1 (review 2026-11-06): a time kept for staff is never announced to golfers.
+  // Awaited, never throws (lib/tee-time-alerts). Last, after every refund and the round
+  // release, so a slow batch of alert sends can never leave money unreturned.
+  if (notifySlotAlerts && !booking.teeTime.staffOnly && !keepSlotBlocked) {
+    await notifyAlertsFor(booking.courseId, [booking.teeTime.date]);
+  }
 
   // A kept no-show charge reads as a fee kept on every screen, as in the email.
   // noShowFeeKeptCents: the screens name WHICH fee was kept (a no-show charge is not a late fee).

@@ -570,7 +570,7 @@ export async function sendTeeTimeAlertEmail(data: {
 /** ALERTS-2: a guest's alert turns on only from this link (a page with a button; GET changes nothing). */
 export async function sendAlertConfirmEmail(data: {
   email: string; courseName: string; courseSlug: string; courseId: string; token: string;
-  dates: string[]; players: number;
+  dates: string[]; players: number; phone?: string | null;
 }) {
   const base = process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
   const confirmUrl = `${base}/api/alerts/confirm/${encodeURIComponent(data.token)}`;
@@ -579,7 +579,7 @@ export async function sendAlertConfirmEmail(data: {
   const days = data.dates.map(d => new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })).join(', ');
   const html = baseTemplate(`
     <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Turn on your tee time alert</h1>
-    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;">You asked <strong>${course}</strong> to tell you when a time opens on ${escHtml(days)} for ${data.players} player${data.players === 1 ? '' : 's'}. Nothing is sent until you turn it on.</p>
+    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;">You asked <strong>${course}</strong> to tell you when a time opens on ${escHtml(days)} for ${data.players} player${data.players === 1 ? '' : 's'}${data.phone ? `, by email and by text to the number ending ${escHtml(data.phone.slice(-4))}` : ''}. Nothing is sent until you turn it on.</p>
     <a href="${confirmUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:24px;">Turn on alert</a>
     <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Didn&rsquo;t ask for this? Ignore this email and nothing will be sent. <a href="${stop.url}" style="color:#6B706A;">Stop this alert</a></p>
   `);

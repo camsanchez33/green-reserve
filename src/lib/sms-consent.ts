@@ -78,6 +78,30 @@ export async function recordSmsConsent(raw: string, action: 'opt_in' | 'opt_out'
 }
 
 /**
+ * ALERTS-2: a START / UNSTOP / YES reply. It opts the number back into the kinds of text it had
+ * agreed to before, and never into one it didn't. A number that only agreed to alert texts
+ * replying YES must not start getting booking texts. A number with no record at all gets
+ * booking texts, as before ALERTS-2. Returns the scopes that changed.
+ */
+export async function optInByReply(raw: string): Promise<SmsScope[]> {
+  const phone = consentPhone(raw);
+  if (!phone) return [];
+  let scopes: SmsScope[];
+  try {
+    const prior = await prisma.smsConsent.findMany({ where: { phone, action: 'opt_in', scope: { in: ['bookings', 'alerts'] } }, select: { scope: true }, distinct: ['scope'] });
+    scopes = prior.length ? prior.map(r => r.scope as SmsScope) : ['bookings'];
+  } catch (err) {
+    console.error(JSON.stringify({ ev: 'sms_consent.reply_optin.fail', error: err instanceof Error ? err.message : String(err) }));
+    return [];
+  }
+  const changed: SmsScope[] = [];
+  for (const scope of scopes) {
+    if (await recordSmsConsent(phone, 'opt_in', { method: 'sms_reply', scope })) changed.push(scope);
+  }
+  return changed;
+}
+
+/**
  * Opt a number in and, when that's new, send the one-time enrollment confirmation
  * (Twilio requires it). Never throws: a failed confirmation is logged, the consent stands.
  */

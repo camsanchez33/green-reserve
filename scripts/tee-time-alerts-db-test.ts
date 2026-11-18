@@ -11,7 +11,7 @@
 import { readFileSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
 import { prisma } from '../src/lib/prisma';
-import { recordSmsConsent, hasSmsConsent, consentedPhones } from '../src/lib/sms-consent';
+import { recordSmsConsent, hasSmsConsent, consentedPhones, optInByReply } from '../src/lib/sms-consent';
 import { createAlert, confirmAlert, stopAlertByToken, notifyAlertsFor, sweepTeeTimeAlerts, alertMatches, partOf, endsAtFor, memberAlerts, stopMemberAlert } from '../src/lib/tee-time-alerts';
 import { addDaysStr, todayIn } from '../src/lib/course-time';
 import { WIPED_TABLES } from '../src/lib/data-reset';
@@ -21,8 +21,8 @@ let failed = 0;
 const ok = (l: string, c: boolean, d: unknown = '') => { console.log(`${c ? 'PASS' : 'FAIL'}  ${l}${c ? '' : ' — ' + JSON.stringify(d)}`); if (!c) failed++; };
 const read = (p: string) => readFileSync(p, 'utf8');
 // 212-555-03xx: outside the fictional 555-01xx block, never texted here (no Twilio creds in tests).
-const P1 = '+12125550301', P2 = '+12125550302', P3 = '+12125550303', P4 = '+12125550304';
-const PHONES = [P1, P2, P3, P4];
+const P1 = '+12125550301', P2 = '+12125550302', P3 = '+12125550303', P4 = '+12125550304', P5 = '+12125550305', P6 = '+12125550306', P7 = '+12125550307';
+const PHONES = [P1, P2, P3, P4, P5, P6, P7];
 
 async function cleanup() {
   const ids = (await prisma.course.findMany({ where: { slug: { startsWith: TAG } }, select: { id: true } })).map(c => c.id);
@@ -64,6 +64,15 @@ async function main() {
   await prisma.smsConsent.create({ data: { phone: P4, action: 'opt_in', method: 'web_alert', wording: 'x', scope: 'alerts', createdAt: new Date(Date.now() - 60_000) } });
   await prisma.smsConsent.create({ data: { phone: P4, action: 'opt_out', method: 'carrier', wording: 'x' } });
   ok('an old carrier STOP (scope bookings) still ends alert texts', !(await hasSmsConsent(P4, 'alerts')));
+  // A YES / START reply goes back into only the kinds the number agreed to (review 2026-11-18).
+  await recordSmsConsent(P5, 'opt_in', { method: 'web_alert', scope: 'alerts' });
+  const yes = await optInByReply(P5);
+  ok('an alerts-only number replying YES gets no booking texts', yes.length === 0 && !(await hasSmsConsent(P5)) && !(await consentedPhones([P5])).has(P5), yes);
+  await recordSmsConsent(P5, 'opt_out', { method: 'sms_reply' });
+  const back = await optInByReply(P5);
+  ok('…STOP then START brings back alert texts only', JSON.stringify(back) === '["alerts"]' && (await hasSmsConsent(P5, 'alerts')) && !(await hasSmsConsent(P5)), back);
+  ok('a number with no record replying START gets booking texts, as before', JSON.stringify(await optInByReply(P6)) === '["bookings"]' && (await hasSmsConsent(P6)) && !(await hasSmsConsent(P6, 'alerts')));
+  ok('the reply webhook uses optInByReply and answers with the matching confirmation', /optInByReply\(from\)/.test(read('src/app/api/twilio/inbound/route.ts')) && /ALERT_SMS_CONFIRMATION/.test(read('src/app/api/twilio/inbound/route.ts')));
   ok('a repeat alert yes records nothing', !(await recordSmsConsent(P2, 'opt_in', { method: 'web_alert', scope: 'alerts' })));
 
   // Every text sender before ALERTS-2 keeps needing the booking-text yes: only the alert sender passes 'alerts'.
@@ -112,6 +121,14 @@ async function main() {
   const after = gRow ? await prisma.teeTimeAlert.findUniqueOrThrow({ where: { id: gRow.id } }) : null;
   ok('a guest re-asking an alert that’s on gets the same answer and changes nothing', again.ok && again.status === 'pending' && after?.phone === P1 && after?.status === 'active', { again, phone: after?.phone });
 
+  // A stranger re-asking a pending alert with a phone gets a NEW link; the old one stops working.
+  const first = await createAlert({ courseId: c.id, dates: [d2], parts: [], players: 1, email: `${TAG}-v@t.local` }, null);
+  const second = await createAlert({ courseId: c.id, dates: [d2], parts: [], players: 1, email: `${TAG}-v@t.local`, phone: P7, textConsent: true }, null);
+  ok('a re-asked pending alert gets a new confirm link', first.ok && second.ok && first.alert.id === second.alert.id && first.alert.token !== second.alert.token);
+  ok('…so the first email can no longer turn on a phone it never named', first.ok && (await confirmAlert(first.alert.token)).result === 'missing' && !(await hasSmsConsent(P7, 'alerts')));
+  ok('the confirm email and page name the phone’s last four digits', /number ending \$\{escHtml\(data\.phone\.slice\(-4\)\)\}/.test(read('src/lib/email.ts')) && /number ending \$\{alert\.phone\.slice\(-4\)\}/.test(read('src/app/api/alerts/confirm/[token]/route.ts')));
+  ok('the per-email limit is keyed on the email the alert uses', /session && session\.courseId === body\.courseId \? session\.email/.test(read('src/app/api/alerts/route.ts')));
+
   // A live member: on at once, with the log-in email.
   const m = await prisma.courseMembership.create({ data: { courseId: c.id, inviteEmail: `${TAG}-m@t.local`, status: 'active' } });
   const mem = await createAlert({ courseId: c.id, dates: [d1], parts: [], players: 3, email: 'typed@else.where', phone: P2, textConsent: true }, { membershipId: m.id, courseId: c.id, email: `${TAG}-m@t.local` });
@@ -154,6 +171,8 @@ async function main() {
   ok('switch off: new alerts are refused', !off.ok && off.status === 403 && off.body.alertsOff === true, off);
   const late = await prisma.teeTimeAlert.create({ data: { courseId: c.id, email: `${TAG}-z@t.local`, date: d1, dates: [d1], players: 1, status: 'active', token: `${TAG}-z`, endsAt: new Date(Date.now() + 86400_000 * 5) } });
   ok('switch off: nothing is sent', (await notifyAlertsFor(c.id, [d1])) === 0);
+  const offConf = second.ok ? await confirmAlert(second.alert.token) : null;
+  ok('switch off: a confirm turns nothing on and records no consent', offConf?.result === 'off' && !(await hasSmsConsent(P7, 'alerts')), offConf?.result);
   await prisma.course.update({ where: { id: c.id }, data: { teeTimeAlertsOn: true } });
   ok('switch on again: it is', (await notifyAlertsFor(c.id, [d1])) === 1);
 
@@ -166,11 +185,24 @@ async function main() {
   const sw = await sweepTeeTimeAlerts();
   ok('the sweep ends an alert past its last tee time', (await prisma.teeTimeAlert.findUniqueOrThrow({ where: { id: old.id } })).status === 'ended' && sw.ended >= 1, sw);
   const lg = await prisma.teeTimeAlert.findUniqueOrThrow({ where: { id: legacy.id } });
-  ok('…gives an alert from before ALERTS-2 an end, and tells it once', lg.endsAt?.toISOString() === `${d1}T16:40:00.000Z` && lg.notifiedDates.includes(d1), lg);
+  ok('…tells an alert from before ALERTS-2 once, without writing it an end (no backfill)', lg.endsAt === null && lg.notifiedDates.includes(d1), lg);
+  const pastLegacy = await prisma.teeTimeAlert.create({ data: { courseId: c.id, email: `${TAG}-p@t.local`, date: addDaysStr(todayIn('UTC'), -2), players: 1, token: `${TAG}-p` } });
+  await tt(addDaysStr(todayIn('UTC'), -2), '09:00', 0);
+  ok('a date that has passed is never told', (await notifyAlertsFor(c.id, [pastLegacy.date])) === 0);
+
+  // A request (a cancel, a move) tells at most REQUEST_SEND_CAP; the sweep tells the rest.
+  const capDay = addDaysStr(todayIn('UTC'), 4);
+  await tt(capDay, '10:00', 0);
+  await prisma.teeTimeAlert.createMany({ data: Array.from({ length: 30 }, (_, i) => ({ courseId: c.id, email: `${TAG}-cap${i}@t.local`, date: capDay, dates: [capDay], players: 1, status: 'active', token: `${TAG}-cap${i}`, endsAt: new Date(Date.now() + 86400_000 * 6) })) });
+  ok('a request tells at most 25', (await notifyAlertsFor(c.id, [capDay])) === 25);
+  ok('…and the sweep tells the other 5', (await sweepTeeTimeAlerts()).told === 5);
 
   // ── 6. Wiring ─────────────────────────────────────────────────────────────
   ok('TeeTimeAlert is in the launch wipe', WIPED_TABLES.includes('TeeTimeAlert'));
   ok('cancelling tells alerts through the one matcher', /await notifyAlertsFor\(booking\.courseId/.test(read('src/lib/cancel-booking.ts')));
+  const cb = read('src/lib/cancel-booking.ts');
+  ok('cancelling tells alerts only after every refund and the round release', cb.indexOf('await notifyAlertsFor(') > cb.indexOf('await releaseBookingRounds(') && cb.indexOf('await notifyAlertsFor(') > cb.indexOf('await refundBookingFee('));
+  ok('a frost delay moves groups without telling alerts (its early times are blocked next)', /notifyAlerts: false/.test(read('src/lib/frost-delay.ts')) && /opts\.notifyAlerts !== false/.test(read('src/lib/move-booking.ts')));
   ok('moving and shrinking a party do too', /await notifyAlertsFor\(/.test(read('src/lib/move-booking.ts')) && /await notifyAlertsFor\(/.test(read('src/lib/change-party.ts')));
   ok('staff opening a time does, inside after()', (read('src/app/api/operator/tee-times/route.ts').match(/after\(/g) ?? []).length >= 2);
   ok('the hourly cron sweeps alerts', /await sweepTeeTimeAlerts\(now\)/.test(read('src/app/api/cron/hourly/route.ts')));

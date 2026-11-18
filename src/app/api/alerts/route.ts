@@ -17,7 +17,10 @@ export async function POST(req: NextRequest) {
   if (!body || typeof body !== 'object') return NextResponse.json({ error: 'Bad request' }, { status: 400 });
 
   const session = await getMemberSession();
-  const keyEmail = session?.email ?? (typeof body.email === 'string' ? body.email.trim().toLowerCase() : '');
+  // Keyed on the email the alert will use: the log-in email only at the session's own course,
+  // otherwise the typed one (a log-in elsewhere doesn't spend someone else's limit).
+  const typed = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+  const keyEmail = session && session.courseId === body.courseId ? session.email.trim().toLowerCase() : typed;
   if (keyEmail && !(await rateLimit('alert:email:' + keyEmail, 20, 3600))) {
     return NextResponse.json({ error: 'Too many alerts from this email' }, { status: 429 });
   }
@@ -30,7 +33,7 @@ export async function POST(req: NextRequest) {
     try {
       await sendAlertConfirmEmail({
         email: r.alert.email, courseName: r.course.name, courseSlug: r.course.slug, courseId: r.course.id,
-        token: r.alert.token, dates: r.alert.dates, players: r.players,
+        token: r.alert.token, dates: r.alert.dates, players: r.players, phone: r.phone,
       });
     } catch (err) {
       console.error(JSON.stringify({ ev: 'alerts.confirm_email.fail', error: err instanceof Error ? err.message : String(err) }));
