@@ -61,6 +61,12 @@ completed → (staff moves a checked-in group, Cam 2026-10-08) → still complet
 - The inquiry confirmation email links to `/call/[token]` (token-gated, 21 days)
 - **Cal.com is the only scheduler** (Cam 2026-09-29 — the Google Calendar path was never connected and is deleted; do not reintroduce it). The page REDIRECTS to the prefilled public Cal.com booking page (reads Cam's Outlook; an in-page embed rendered blank live — don't retry it without testing against real cal.com); a signed webhook at `/api/calcom/webhook` creates/moves/cancels the inquiry's discovery `Call`. Admins book for a course with "Book on Cal.com" on the inquiry page. Unset `CALCOM_BOOKING_URL` = the page asks the course to reply with times. Admin → System → Call booking shows what the site sees. See `src/lib/calcom.ts`
 
+### Golfer views (GOLFER-VIEW, Cam 2026-11-18: "Yes, record each view")
+- Opening a golfer's record in admin writes an audit row: who, which golfer and when. That covers GET `/api/admin/golfers` with `?id=` (account) or `?guest=` (email). The row is `golfer_view`, with targetType `golfer` or `golfer_guest` and the name at the time in `detail`. Audit reads "Viewed golfer <name>" (`auditLabel()`).
+- At most one row per admin per golfer per 10 minutes, rolling. An advisory lock makes the check and the write one step (`auditGolferView()` in `src/lib/admin-audit.ts`).
+- The list and search are not recorded.
+- Fails closed: if the row can't be written, the record is not shown (503). This is the one exception to "a failed audit never fails the action".
+
 ### Test data (TEST-1, Cam 2026-10-22)
 "Every course and everything right now [is test] — we need a way to make everything like new again." Two owner-only tools in `src/lib/data-reset.ts`, the one deliberate exception to the archive-never-delete doctrine:
 - **Launch wipe** (Admin → Systems → "Before launch: clear test data"): one `TRUNCATE … RESTRICT` over every table in `WIPED_TABLES` — courses, logins, golfers, bookings, the pipeline, messages, announcements, problems. `KEPT_TABLES` is the company side (admin logins and owner sessions, goals, expenses, agreement versions, audit log, cron log; company documents live in blob storage). Preview counts first, step-up, a reason, the words typed. Closes for good at `WIPE_ALL_UNTIL` (midnight Dec 1 2026 Eastern — Cam 2026-10-30 moved it from Nov 1). Stripe is never touched.

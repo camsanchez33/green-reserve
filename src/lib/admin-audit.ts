@@ -9,7 +9,8 @@
 // - The record is written after the action succeeds and is awaited (a route's
 //   un-awaited write dies with the function). A failed record never undoes or
 //   fails the action — a refund that went through stays reported as done — but
-//   it is reported to Sentry and the server log, never swallowed.
+//   it is reported to Sentry and the server log, never swallowed. The one exception is a read:
+//   auditGolferView() throws, and the record isn't shown (GOLFER-VIEW, Cam 2026-11-18).
 // - Only what the action touched goes in before/after; never a password, token,
 //   secret or card detail (`redact`).
 import * as Sentry from '@sentry/nextjs';

@@ -28,6 +28,7 @@ async function main() {
   check('the search and the list are not recorded', (route.match(/auditGolferView\(/g) ?? []).length === 1);
   const audit = readFileSync('src/app/api/admin/audit/route.ts', 'utf8');
   check('the Audit page labels rows with auditLabel', /label: auditLabel\(r\.action, r\.detail\)/.test(audit));
+  check('…and does not repeat the name under a golfer view', /detail: r\.action === 'golfer_view' \? '' : r\.detail/.test(audit));
 
   check('the label reads "Viewed golfer <name>"', auditLabel('golfer_view', 'Pat Lee') === 'Viewed golfer Pat Lee');
   check('…and other actions keep their own words', auditLabel('refund', 'x') === 'Refund' && auditLabel('some_new_thing', '') === 'some new thing');
