@@ -129,7 +129,7 @@ function AnalyticsInner() {
           <Card className="p-6">
             <h1 className="text-[20px] font-serif font-semibold text-ink">{denied ? 'Your login doesn’t include Analytics' : 'Your session ended'}</h1>
             <p className="text-[13.5px] text-ink-soft mt-2">{denied
-              ? 'The course owner can turn on “See analytics” for you in Settings → Staff & permissions.'
+              ? 'The course owner can turn on “See analytics” for you on Team.'
               : 'Sign in again to see your analytics.'}</p>
             <Link href={denied ? '/dashboard' : '/dashboard/login'} className={'inline-flex items-center mt-4 ' + BTN}>{denied ? 'Back to the tee sheet' : 'Sign in'}</Link>
           </Card>
