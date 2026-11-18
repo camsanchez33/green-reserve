@@ -13,7 +13,7 @@ type WipePreview = { open: boolean; closesAt: string; confirmWords: string; wipe
 // The handful of numbers worth reading before the wipe; every table is still cleared.
 const WIPE_SUMMARY: [string, string][] = [
   ['Course', 'courses'], ['CourseOperator', 'course logins'], ['GolferAccount', 'golfer accounts'], ['Booking', 'bookings'],
-  ['CourseInquiry', 'inquiries'], ['Call', 'calls'], ['MessageThread', 'conversations'], ['Announcement', 'announcements'],
+  ['MessageThread', 'conversations'], ['Announcement', 'announcements'],
 ];
 
 export function LaunchWipeCard() {
@@ -56,8 +56,8 @@ export function LaunchWipeCard() {
   return (
     <div className="flex flex-col gap-3 text-[14px]">
       <p className="text-ink-soft">
-        Every course, golfer, booking, inquiry, conversation and announcement on the site is test data until launch. This clears all of it in one go, so the site starts clean.
-        Kept: admin logins, goals, expenses, company documents, agreement versions and the audit record. Stripe is not touched — refund any real test charge there.
+        Every course, golfer, booking, conversation and announcement on the site is test data until launch. This clears all of it in one go, so the site starts clean.
+        Kept: admin logins, goals, expenses, company documents, agreement versions, audit record and outreach from Nov 23. Stripe is not touched — refund any real test charge there.
         Available until {closes}, then it switches off for good.
       </p>
       {done !== null && <p role="status" className="text-ok"><StatusDot status="ok" label="" /> Cleared {done.toLocaleString()} records.</p>}

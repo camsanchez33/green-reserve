@@ -31,10 +31,6 @@
     "uppercase": 1,
     "lucide": 1
   },
-  "src/app/admin/create/page.tsx": {
-    "uppercase": 30,
-    "lucide": 4
-  },
   "src/app/admin/employees/page.tsx": {
     "lucide": 1
   },
@@ -44,22 +40,18 @@
   "src/app/admin/golfers/page.tsx": {
     "lucide": 3
   },
-  "src/app/admin/inquiries/[id]/page.tsx": {
+  "src/app/admin/inquiries/[id]/InquiryRecord.tsx": {
     "card": 2,
     "uppercase": 10,
     "lucide": 9
   },
-  "src/app/admin/inquiries/page.tsx": {
+  "src/app/admin/inquiries/all/page.tsx": {
     "uppercase": 1,
     "input": 1,
     "lucide": 4
   },
   "src/app/admin/login/page.tsx": {
     "uppercase": 2
-  },
-  "src/app/admin/messages/page.tsx": {
-    "input": 3,
-    "lucide": 1
   },
   "src/app/admin/revenue/page.tsx": {
     "lucide": 5

@@ -6,6 +6,7 @@ import { ALIVE_STATUSES, encodeResubmit } from '@/lib/inquiry-status';
 import { rateLimit, evidentiaryIp } from '@/lib/rate-limit';
 import { issueCallInvite, deliverCallInvite, inviteUrl } from '@/lib/call-invite';
 import { ADMIN_EMAIL } from '@/lib/contact';
+import { ciEquals } from '@/lib/like-exact';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -109,9 +110,9 @@ export async function POST(req: NextRequest) {
   const existing = await prisma.courseInquiry.findFirst({
     where: {
       status: { in: ALIVE_STATUSES },
-      courseName: { equals: courseName, mode: 'insensitive' },
-      city: { equals: city, mode: 'insensitive' },
-      state: { equals: state, mode: 'insensitive' },
+      courseName: ciEquals(courseName),
+      city: ciEquals(city),
+      state: ciEquals(state),
     },
     orderBy: { createdAt: 'desc' },
     select: { id: true, status: true, email: true, builtCourseId: true, callInviteToken: true, callInviteExpiresAt: true },

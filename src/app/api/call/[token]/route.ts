@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { rateLimit, evidentiaryIp } from '@/lib/rate-limit';
 import { inviteAgendaLines } from '@/lib/call-invite';
-import { ALIVE_STATUSES } from '@/lib/inquiry-status';
+import { CALL_STATUSES } from '@/lib/inquiry-status';
 import { calcomBookingUrl, calcomEmbedUrl, calcomManageLinks, calcomUidOf } from '@/lib/calcom';
 
 const SLOT_MINUTES = 30;
@@ -35,7 +35,8 @@ type Inq = NonNullable<Awaited<ReturnType<typeof loadInquiry>>>;
 function inviteState(inq: Inq, booked: object | null) {
   // A declined or archived inquiry reads as an expired link — the decline
   // email is written on the same principle: nothing is revealed by this page.
-  if (!ALIVE_STATUSES.includes(inq.status as (typeof ALIVE_STATUSES)[number])) return 'expired';
+  // A course in outreach (lead) invited with "Send Cal.com link" can book too (Inquiries data, Cam 2026-11-17).
+  if (!CALL_STATUSES.includes(inq.status as (typeof CALL_STATUSES)[number])) return 'expired';
   if (booked) return 'ok';
   if (!inq.callInviteExpiresAt || inq.callInviteExpiresAt.getTime() < Date.now()) return 'expired';
   return 'ok';

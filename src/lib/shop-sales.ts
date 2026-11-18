@@ -38,6 +38,7 @@ import { teeTimeInstant } from './booking-events';
 import { recordMove, feeBackCents } from './money-ledger';
 import { addCharge } from './member-account';
 import { cashRefused } from './takes-cash';
+import { ciContains, likeExact } from '@/lib/like-exact';
 
 export const MAX_SALE_CENTS = 1_000_000; // $10,000 — a typo guard
 export const MAX_SALE_LINES = 40;
@@ -906,7 +907,7 @@ export async function findSales(courseId: string, opts: { day?: string; q?: stri
   }
   if (!from) return fail(400, 'Bad day.');
   const q = (opts.q ?? '').trim().slice(0, 80);
-  const contains = { contains: q, mode: 'insensitive' as const };
+  const contains = ciContains(q);
   const digits = q.replace(/\D/g, '');
   // A typed sale number: "1047" or "#1047".
   const asNumber = /^#?\s*(\d{1,9})$/.exec(q);
@@ -927,7 +928,7 @@ export async function findSales(courseId: string, opts: { day?: string; q?: stri
         ...(opts.contact ? [{ customerEmail: contains }, ...(digits.length >= 4 ? [{ customerPhone: { contains: digits } }] : [])] : []),
         { lines: { some: { name: contains } } },
         // The receipt shows the sale's id — its last characters are enough (POS-8: the Sales list shows #XXXXXXXX too).
-        { id: { endsWith: q.replace(/^#/, '').toLowerCase() } },
+        { id: { endsWith: likeExact(q.replace(/^#/, '').toLowerCase()) } },
         ...(saleNumber != null ? [{ number: saleNumber }] : []),
       ] } : {}),
     },

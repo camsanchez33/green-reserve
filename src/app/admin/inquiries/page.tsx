@@ -1,963 +1,222 @@
 'use client';
-import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+// Inquiries (Cam approved the mockup 2026-11-17, lanes/admin/inquiries-mockup.html; lanes/admin.md "Inquiries —
+// APPROVED"). INTERNAL outreach only: the courses we contact, from Target to Said yes, and our calls. "Said yes" hands
+// a course to Onboarding (same inquiry id), which owns setup; Golf courses owns live courses. Two sliding tabs:
+// Outreach (courses grouped by stage, one line each) and Calls (Cal.com bookings and calls set by hand, past ones
+// collapsed). A wordless filter icon, and a bare plus to add a course (managers and up; the routes enforce it).
+// Data: GET /api/admin/outreach and /api/admin/outreach/calls (Build's Inquiries data).
 import Link from 'next/link';
-import { Search, Trash2, ArchiveRestore, RefreshCw } from 'lucide-react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import AdminSidebar from '@/components/admin/AdminSidebar';
-import { StatusDot } from '@/components/ui/StatusDot';
-import { EmptyState } from '@/components/EmptyState';
-import {
-  FUNNEL_SEGMENTS, ARCHIVED_STATUSES, ACTIVE_STATUSES, ALIVE_STATUSES, KNOWN_STATUSES, LEAD_STATUS,
-  STATUS_DOT_MAP, STATUS_LABEL, stageEnteredAt, daysSince, queueSignal,
-  type QueueSignal,
-} from '@/lib/inquiry-status';
-// IC-3: the Next-call column and the calls-this-week count.
-import { nextCall, overdueCall, latestCall, isSameEasternDay, fmtCallClock, easternParts, OUTCOME_LABEL } from '@/lib/inquiry-call';
-import type { NeedItem } from '@/lib/inquiry-needs';
-import { formatDate as fmtDate, formatEasternDay as fmtDay, formatEasternDate as fmtShort } from '@/lib/format';
-import { Modal } from '@/components/ui/Modal';
-import { Eyebrow } from '@/components/ui/Eyebrow';
-import { Card } from '@/components/ui/Card';
-import InquiryBoard from '@/components/admin/InquiryBoard';
-import { useAdminSession } from '@/lib/admin-session-context';
-import { MANAGER_PLUS, SUPPORT_PLUS } from '@/lib/admin-roles';
-import { stepUpFetch, askReason } from '@/lib/step-up-client';
+import { profileStyles as s } from '@/components/admin/ProfileCard';
+import { Dialog } from '../security/Dialog';
+import g from '../admin-glass.module.css';
+import iq from './inquiries.module.css';
+import { api, useCanWrite, LoadError, useToast, dueLabel, dateLabel, whenLabel, directionLabel, ICON, Chevron, ExtIcon, type Res } from './shared';
+import { AddCourse } from './AddCourse';
 
-interface InquiryStatusEvent {
-  id: string; fromStatus: string; toStatus: string;
-  trigger: 'system' | 'admin' | 'course'; actorName: string | null; createdAt: string;
-}
-interface Inquiry {
-  id: string; contactName: string; contactTitle: string; email: string; phone: string;
-  courseName: string; address: string; city: string; state: string; zipCode: string;
-  website: string; courseType: string; currentBookingMethod: string; teeTimesPerDay: number | null;
-  greenFeeRange: string; hasResidentPricing: boolean; hasMemberPricing: boolean;
-  hasCaddies: boolean; pricingNotes: string; lookingFor: string[]; additionalNotes: string;
-  status: string; adminNotes: string; builtCourseId: string | null; createdAt: string;
-  updatedAt?: string;
-  // MP-3 growth columns, put to work in MP-4c.
-  source?: string | null; closedReason?: string | null;
-  snoozeUntil?: string | null; nextFollowUpAt?: string | null;
-  detailsToken?: string | null; detailsJson?: string; needsJson?: string;
-  events: InquiryStatusEvent[];
-  calls?: { id: string; scheduledAt: string; outcome: string; durationMin: number; direction: string; completedAt?: string | null; bookedByCourse?: boolean }[];
-  callSkippedReason?: string | null;
-  /** SC-3: when the "pick a call time" link went out. */
-  callInviteSentAt?: string | null;
-  /** IC-3: computed by the list API (the sheet blobs never ship). */
-  stillNeed?: NeedItem[];
-}
+type Next = { key: string; label: string; dueAt: string; due: boolean };
+type Row = { id: string; courseName: string; town: string; kind: string; stage: string; last: string; next: Next; snoozedUntil: string | null; source: string | null; booksToday: string };
+type Outreach = { stages: { key: string; label: string; hint: string; rows: Row[] }[]; dueToday: number; saidYesThisMonth: number; notNow: { id: string; courseName: string; town: string; recheckAt: string | null }[] };
+type Who = { name: string; role: string; email: string; phone: string; decides: boolean };
+export type CallRow = {
+  id: string; inquiryId: string; courseName: string; town: string; scheduledAt: string; durationMin: number; direction: string;
+  who: Who; stage: string; prepReady: boolean; notLogged: boolean; outcome: string; result: string | null; resultLabel: string | null;
+  nextStep: string | null; followUpAt: string | null;
+};
+type Calls = { upcoming: CallRow[]; past: CallRow[]; calcomUrl: string | null };
+// Until outreach starts, every course on the list is test data: Platform activity's "Clear test inquiries" or the launch
+// wipe removes what was added before this. The same moment as OUTREACH_START in lib/data-reset (a server file);
+// scripts/admin-inquiries-page-test.ts keeps the two equal. The line goes away by itself after it.
+const TEST_UNTIL = '2026-11-23T05:00:00Z';
+type Tab = 'outreach' | 'calls';
+type Filter = 'all' | 'due' | 'snoozed' | 'unprepared' | 'unlogged';
+const FILTERS: Record<Tab, [Filter, string][]> = {
+  outreach: [['all', 'Everything'], ['due', 'Due now'], ['snoozed', 'Snoozed']],
+  calls: [['all', 'Everything'], ['unprepared', 'Not prepared'], ['unlogged', 'Not logged yet']],
+};
+// Stage dots, as the mockup: Targets grey, Contacted a lighter green, Replied and Call booked the brand green.
+const STAGE_DOT: Record<string, string> = { target: '', contacted: iq.dOk, replied: iq.dBrand, call: iq.dBrand };
 
-// AW-6a (Cam 2026-10-21): the default view is the BOARD (InquiryBoard) —
-// Leads · Talking · Setting up · Live, one next step per card. "All" and "Closed" are
-// footer links that keep the table (with bulk Send sheet / Archive in All).
-//
-// The `?tab=` param keeps its old values on purpose so old deep links and
-// bookmarks still land here: 'all' and 'archived' open those views; any other
-// value (a stage key from before the board) just shows the board.
-const SEGMENT_KEYS = FUNNEL_SEGMENTS.map(s => s.key) as string[];
-const VIEW_ALL = 'all';
-const VIEW_CLOSED = 'archived';
-
-// IC-4: the funnel strip is gone (the sheet's Stage column already says it);
-// `?tab=<segment>` still narrows the table, shown as one small pill.
-
-const PAGE_SIZE = 50;
-// A section that runs longer than this is a signal in itself — show the top
-// slice and say how many are behind it rather than rendering a wall.
-const SECTION_CAP = 50;
-// U-A: a row this long in one stage is stalled, and fades back in the queue.
-const STALLED_DAYS = 7;
-
-// IC-3 Next-call cell: "Tue Sep 15" and "Sep 9", always in Eastern.
-// Stages where a discovery call is still ahead of us.
-const SETUP_CALL_STATUSES = new Set(['pending', 'in_review', 'details_requested', 'details_submitted']);
-const COURSE_TYPE_LABEL: Record<string, string> = { public: 'public', private: 'private', 'semi-private': 'semi-private', semi_private: 'semi-private', municipal: 'municipal', resort: 'resort' };
-// MP-4a: time in the CURRENT stage, derived from the event ledger. This used
-// to read updatedAt, which any write bumps — saving an admin note on a
-// three-week-old stalled inquiry made it read "0d" and dropped it out of the
-// stale filter and the longest-in-stage sort.
-const stageStart = (inq: Inquiry) => stageEnteredAt(inq.status, inq.createdAt, inq.events);
-const stageDays = (inq: Inquiry) => daysSince(stageStart(inq));
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const hasBadEmail = (inq: Inquiry) => !!inq.email && !EMAIL_RE.test(inq.email.trim());
-const segmentOf = (status: string) => SEGMENT_KEYS.find(k => {
-  const seg = FUNNEL_SEGMENTS.find(s => s.key === k)!;
-  return (seg.statuses as readonly string[]).includes(status);
-}) || null;
-
-function whyArchived(inq: Inquiry): { reason: string; date: string } {
-  if (inq.status === 'live') return { reason: 'Went live', date: stageStart(inq).toISOString() };
-  // MP-4c: Reject captures a reason now, so "why do we lose leads" has an
-  // answer on the row instead of only in someone's memory.
-  if (inq.status === 'rejected') {
-    return { reason: inq.closedReason ? `Rejected · ${inq.closedReason}` : 'Rejected', date: stageStart(inq).toISOString() };
-  }
-  const lastEvent = inq.events.length > 0 ? inq.events[inq.events.length - 1] : null;
-  const actorName = lastEvent?.actorName || '';
-  if (actorName.toLowerCase().includes('permanently deleted')) return { reason: 'Course deleted', date: lastEvent?.createdAt || inq.updatedAt || inq.createdAt };
-  if (actorName.toLowerCase().includes('archived')) return { reason: 'Course archived', date: lastEvent?.createdAt || inq.updatedAt || inq.createdAt };
-  return { reason: 'Archived', date: inq.updatedAt || inq.createdAt };
-}
-
-function InquiriesListInner() {
+function InquiriesInner() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const { role } = useAdminSession();
+  const params = useSearchParams();
+  const tab: Tab = params.get('tab') === 'calls' ? 'calls' : 'outreach';
+  const canWrite = useCanWrite();
+  const [o, setO] = useState<Res<Outreach> | null>(null);
+  const [c, setC] = useState<Res<Calls> | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [filter, setFilter] = useState<Filter>('all');
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [showPast, setShowPast] = useState(false);
+  const [showNotNow, setShowNotNow] = useState(false);
+  const [toast, say] = useToast();
 
-  // MP-11a: the layout resolved the session; a page never re-checks it.
-  const adminReady = true;
-  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [loadError, setLoadError] = useState('');
-  const [search, setSearch] = useState(searchParams.get('q') || '');
-  const [backfillRan, setBackfillRan] = useState(false);
-  const [page, setPage] = useState(0);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [bulkPreview, setBulkPreview] = useState<{ kind: 'send_sheet' | 'archive'; ids: string[] } | null>(null);
-  const [bulkConfirmText, setBulkConfirmText] = useState('');
-  const [bulkRunning, setBulkRunning] = useState(false);
-  const [bulkResult, setBulkResult] = useState('');
-  const [deleteError, setDeleteError] = useState('');
-  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
-  const [deleteConfirmText, setDeleteConfirmText] = useState('');
-  const [deleteBusy, setDeleteBusy] = useState(false);
-  const [reconcileRan, setReconcileRan] = useState(false);
-  const [reconcileResult, setReconcileResult] = useState('');
+  const load = useCallback(async () => {
+    setBusy(true);
+    const [a, b] = await Promise.all([api<Outreach>('/api/admin/outreach'), api<Calls>('/api/admin/outreach/calls')]);
+    setO(a); setC(b); setBusy(false);
+  }, []);
+  useEffect(() => { load(); }, [load]);
 
-  const rawTab = searchParams.get('tab') || '';
-  const [tab, setTab] = useState(
-    rawTab === VIEW_ALL || rawTab === VIEW_CLOSED || SEGMENT_KEYS.includes(rawTab) ? rawTab : ''
-  );
-  const view: 'queue' | 'all' | 'closed' =
-    tab === VIEW_ALL ? 'all' : tab === VIEW_CLOSED ? 'closed' : 'queue';
-
-  const H = useCallback(() => ({ 'Content-Type': 'application/json' }), []);
-
-  // MP-2b: inquiries became SUPPORT_PLUS in MP-2, and this had no else branch —
-  // a viewer saw an empty pipeline and was told nothing.
-  const loadInquiries = useCallback(async () => {
-    setLoading(true);
-    try {
-      const r = await fetch('/api/admin/inquiries', { headers: H() });
-      if (r.ok) { setInquiries(await r.json()); setLoadError(''); }
-      else {
-        setInquiries([]);
-        // AW-11: a 403 can also be "not in your areas" — the server says which.
-        const body = r.status === 403 ? await r.json().catch(() => ({})) as { error?: string } : {};
-        setLoadError(r.status === 403 ? (body.error || 'Inquiries require support access.')
-          : r.status === 401 ? 'Your session ended — sign in again.'
-          : 'Could not load inquiries. Try again.');
-      }
-    } catch {
-      setInquiries([]);
-      setLoadError('Network error loading inquiries. Check your connection.');
-    } finally {
-      setLoading(false);
-    }
-  }, [H]);
-
-  useEffect(() => {
-    if (adminReady) loadInquiries();
-  }, [adminReady, loadInquiries]);
-
-  // One-time backfill on first visit to Closed
-  useEffect(() => {
-    if (view !== 'closed' || backfillRan || !adminReady) return;
-    setBackfillRan(true);
-    fetch('/api/admin/backfill-orphaned-inquiries', { method: 'POST', headers: H() })
-      .then(r => { if (!r.ok) { setReconcileResult(`Background orphan check could not run (${r.status}) — the Closed list may be missing archived inquiries.`); return null; } return r.json(); })
-      .then(d => { if (d && d.fixed > 0) loadInquiries(); })
-      .catch(() => setReconcileResult('Background orphan check could not run (network) — the Closed list may be missing archived inquiries.'));
-  }, [view, backfillRan, adminReady, H, loadInquiries]);
-
-  // One-time LIFECYCLE PARITY LAW reconciliation sweep (RUN_QUEUE item 6.6)
-  // — also triggered by the first visit to Closed, prints exactly what it
-  // changed (never a silent rewrite of history).
-  useEffect(() => {
-    if (view !== 'closed' || reconcileRan || !adminReady) return;
-    setReconcileRan(true);
-    fetch('/api/admin/reconcile-lifecycle-pairs', { method: 'POST', headers: H() })
-      .then(r => { if (!r.ok) { setReconcileResult(`Lifecycle parity check could not run (${r.status}) — an inquiry and its course may disagree about being archived.`); return null; } return r.json(); })
-      .then(d => {
-        if (d && d.fixed > 0) {
-          setReconcileResult(`Reconciled ${d.fixed} out-of-parity pair${d.fixed === 1 ? '' : 's'}: ${d.changes.map((c: { action: string }) => c.action).join('; ')}`);
-          loadInquiries();
-        }
-      })
-      .catch(() => setReconcileResult('Lifecycle parity check could not run (network) — an inquiry and its course may disagree about being archived.'));
-  }, [view, reconcileRan, adminReady, H, loadInquiries]);
-
-  // DELETION DOCTRINE (RUN_QUEUE): only reachable for UNBUILT inquiries
-  // (gated at the call site below) — the server refuses regardless if this
-  // is ever somehow called on a built one (lifecycle.ts). Typed confirm
-  // required: trimmed + case-insensitive, matching what the server itself
-  // compares against, so this can never disagree with the API about what
-  // "matches."
-  async function deleteInquiry(id: string, name: string, confirmText: string) {
-    setDeleteError('');
-    setDeleteBusy(true);
-    try {
-      const r = await stepUpFetch('/api/admin/inquiries?id=' + id + '&confirmName=' + encodeURIComponent(confirmText), { method: 'DELETE', headers: H() });
-      if (!r.ok) {
-        const d = await r.json().catch(() => ({}));
-        setDeleteError(`Delete failed for "${name}": ${d.error || 'unknown error'}`);
-        setDeleteBusy(false);
-        return;
-      }
-      // Optimistic removal ONLY after a confirmed success — no-silent-failures:
-      // a failed delete (e.g. name mismatch) must never make the row silently
-      // vanish from this view while it is still in the DB.
-      setInquiries(prev => prev.filter(i => i.id !== id));
-      setDeleteTarget(null);
-      setDeleteConfirmText('');
-    } catch {
-      setDeleteError(`Delete failed for "${name}": network error`);
-    }
-    setDeleteBusy(false);
-  }
-
-  // A-02d: Closed's only actions are Restore and Permanently delete — both
-  // route through the same lifecycle service the courses tab uses (LIFECYCLE
-  // PARITY LAW), never a one-sided status flip.
-  async function restoreInquiry(inq: Inquiry) {
-    setDeleteError('');
-    try {
-      await doRestore(inq);
-    } catch {
-      setDeleteError(`Restore failed for "${inq.courseName}": network error — nothing was changed. Check your connection and try again.`);
-    }
-  }
-
-  async function doRestore(inq: Inquiry) {
-    if (inq.builtCourseId) {
-      const r = await stepUpFetch('/api/admin/archive-course', {
-        method: 'POST', headers: H(), body: JSON.stringify({ courseId: inq.builtCourseId, action: 'restore' }),
-      });
-      if (r.ok) { await loadInquiries(); return; }
-      const d = await r.json().catch(() => ({}));
-      setDeleteError(`Restore failed for "${inq.courseName}": ${d.error || 'unknown error'}`);
-      return;
-    }
-    // No linked course (rejected before ever building) — reopen the inquiry
-    // itself. The dedicated 'restore' action computes the target stage
-    // server-side from the event ledger, so the client never guesses it.
-    const r = await fetch('/api/admin/inquiries', {
-      method: 'POST', headers: H(), body: JSON.stringify({ id: inq.id, action: 'restore' }),
-    });
-    if (r.ok) { await loadInquiries(); return; }
-    const d = await r.json().catch(() => ({}));
-    setDeleteError(`Restore failed for "${inq.courseName}": ${d.error || 'unknown error'}`);
-  }
-
-  function detailHref(inq: Inquiry) {
-    const p = new URLSearchParams();
-    if (tab) p.set('tab', tab);
-    if (search) p.set('q', search);
-    const qs = p.toString();
-    return '/admin/inquiries/' + inq.id + (qs ? '?' + qs : '');
-  }
-
-  function goTo(nextTab: string) {
-    setTab(nextTab);
-    setPage(0);
-    setSelected(new Set());
-    const p = new URLSearchParams();
-    if (nextTab) p.set('tab', nextTab);
-    if (search) p.set('q', search);
-    const qs = p.toString();
-    window.history.replaceState(null, '', '/admin/inquiries' + (qs ? '?' + qs : ''));
-  }
-
-  // One signal per inquiry per render pass, from one `now` — two rows must
-  // never be ranked against different clocks.
-  const signals = useMemo(() => {
-    const now = new Date();
-    const m = new Map<string, QueueSignal>();
-    for (const i of inquiries) m.set(i.id, queueSignal(i, now));
-    return m;
-  }, [inquiries]);
-  const sig = (inq: Inquiry) => signals.get(inq.id) as QueueSignal;
-
-  const q = search.toLowerCase().trim();
-  const matchesSearch = (inq: Inquiry) => !q || (
-    inq.courseName.toLowerCase().includes(q) ||
-    inq.contactName.toLowerCase().includes(q) ||
-    inq.email.toLowerCase().includes(q) ||
-    inq.city.toLowerCase().includes(q)
-  );
-  const newestFirst = (a: Inquiry, b: Inquiry) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-
-  const visible = inquiries.filter(matchesSearch);
-
-  // AW-6c: leads are listed in All too (they are on the board), outside the funnel.
-  const allRows = visible.filter(i => i.status === LEAD_STATUS || (ALIVE_STATUSES as readonly string[]).includes(i.status)).sort(newestFirst);
-  const closedRows = visible.filter(i => (ARCHIVED_STATUSES as readonly string[]).includes(i.status)).sort(newestFirst);
-  const flatRows = view === 'all' ? allRows : view === 'closed' ? closedRows : [];
-  const totalPages = Math.max(1, Math.ceil(flatRows.length / PAGE_SIZE));
-  const pagedFlat = flatRows.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-
-  useEffect(() => { setPage(0); }, [q]);
-
-  const countForSegment = (key: string) => inquiries.filter(i => segmentOf(i.status) === key).length;
-  const activeCount = inquiries.filter(i => (ACTIVE_STATUSES as readonly string[]).includes(i.status)).length;
-  const needsYouCount = inquiries.filter(i => signals.get(i.id)?.yourMove).length;
-  const liveAllTimeCount = inquiries.filter(i => i.status === 'live').length;
-  const leadCount = inquiries.filter(i => i.status === LEAD_STATUS).length;
-  const closedCount = inquiries.filter(i => (ARCHIVED_STATUSES as readonly string[]).includes(i.status)).length;
-  // IC-3 §4: scheduled calls Mon–Sun of the current Eastern week.
-  const callsThisWeek = (() => {
-    const today = easternParts(new Date()).date;
-    const t = new Date(today + 'T12:00:00Z');
-    const mon = new Date(t.getTime() - ((t.getUTCDay() + 6) % 7) * 86_400_000).toISOString().slice(0, 10);
-    const sun = new Date(new Date(mon + 'T12:00:00Z').getTime() + 6 * 86_400_000).toISOString().slice(0, 10);
-    let n = 0;
-    for (const i of inquiries) for (const c of i.calls ?? []) {
-      if (c.outcome !== 'scheduled') continue;
-      const d = easternParts(c.scheduledAt).date;
-      if (d >= mon && d <= sun) n++;
-    }
-    return n;
-  })();
-  const aliveCount = inquiries.filter(i => (ALIVE_STATUSES as readonly string[]).includes(i.status)).length;
-
-  // A-02c/A-02d INVARIANT: every inquiry maps to exactly one funnel segment
-  // (or is closed). If a future status is added and forgotten, this catches it
-  // loudly instead of inquiries silently vanishing from the pipeline the way
-  // "Sheet In" once did.
-  const unmappedCount = inquiries.filter(i => !(KNOWN_STATUSES as readonly string[]).includes(i.status)).length;
-  const funnelSum = SEGMENT_KEYS.reduce((sum, key) => sum + countForSegment(key), 0);
-  const invariantBroken = unmappedCount > 0
-    || funnelSum !== activeCount + liveAllTimeCount
-    || aliveCount !== funnelSum
-    || unmappedCount + leadCount + aliveCount + closedCount !== inquiries.length;
-
-  // Bulk lives with the work. Closed is a graveyard (row actions only) and the
-  // All browse mixes live courses in, where a mis-aimed Archive is expensive.
-  // AW-6a: the board has no checkboxes; bulk Send sheet / Archive lives in
-  // All, on rows still in the pipeline (a live course is archived from its page).
-  const canBulkSelect = view === 'all';
-  const selectedRows = inquiries.filter(i => selected.has(i.id));
-  const canSendSheet = selectedRows.length > 0 && selectedRows.every(i => i.status === 'pending');
-
-  function toggleSelected(id: string) {
-    setSelected(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  }
-
-  async function runBulkAction() {
-    if (!bulkPreview) return;
-    // BRAIN-1a: archiving courses needs a reason — asked once for the whole batch.
-    let reason = '';
-    if (bulkPreview.kind !== 'send_sheet' && bulkPreview.ids.some(id => inquiries.find(i => i.id === id)?.builtCourseId)) {
-      const r = await askReason('Archive courses');
-      if (!r) { setBulkResult('Nothing changed — archiving needs a reason.'); return; }
-      reason = r;
-    }
-    setBulkRunning(true);
-    setBulkResult('');
-    let ok = 0, failed = 0;
-    const skipped: string[] = [];
-    for (const id of bulkPreview.ids) {
-      try {
-        // A-02d: "archive" is pair-aware — an inquiry with a built course goes
-        // through the LIFECYCLE PARITY LAW (archivePair, via
-        // /api/admin/archive-course) so the course comes offline too; a
-        // course-less inquiry has nothing to archive, so it is rejected
-        // instead (the same "close it out" outcome the copy promises).
-        const target = inquiries.find(i => i.id === id);
-        const r = bulkPreview.kind === 'send_sheet'
-          ? await fetch('/api/admin/inquiries', { method: 'POST', headers: H(), body: JSON.stringify({ id, action: 'request_details' }) })
-          : target?.builtCourseId
-            ? await fetch('/api/admin/archive-course', { method: 'POST', headers: H(), body: JSON.stringify({ courseId: target.builtCourseId, action: 'archive', reason }) })
-            : await fetch('/api/admin/inquiries', { method: 'POST', headers: H(), body: JSON.stringify({ id, action: 'reject' }) });
-        // Launch walk: a sheet whose email didn't send isn't a success.
-        if (r.ok && (bulkPreview.kind !== 'send_sheet' || (await r.clone().json().catch(() => ({}))).emailSent !== false)) { ok++; continue; }
-        failed++;
-        // MP-5b: archiving a course with standing bookings is refused rather
-        // than done silently. "1 failed" with no reason would send the founder
-        // hunting; name the course and say what to do instead.
-        const d = await r.json().catch(() => ({}));
-        if (d.needsBookingDecision) skipped.push(target?.courseName || id);
-      } catch { failed++; }
-    }
-    setBulkRunning(false);
-    const skippedNote = skipped.length > 0
-      ? ` ${skipped.join(', ')} still ${skipped.length === 1 ? 'has' : 'have'} upcoming bookings — archive ${skipped.length === 1 ? 'it' : 'them'} from the course page, where you can cancel and notify the golfers.`
-      : '';
-    setBulkResult(`${ok} succeeded${failed > 0 ? `, ${failed} failed` : ''}.${skippedNote}`);
-    setSelected(new Set());
-    await loadInquiries();
-  }
-
-  if (!adminReady) return null;
-
-  // ── IC-3: the sheet. One <table>, fixed columns, every row. ──────────
-  // Column widths from the spec (px): course 200 · contact 190 · stage 104 ·
-  // next call 150 · still need 250 · in stage 86 · inquired 96 · action 72.
-  // Below xl the Still-need column hides; below lg In-stage and Inquired do.
-  type RowMode = 'queue' | 'flat' | 'closed';
-  const thCls = 'text-[12.5px] font-semibold text-ink-muted font-medium text-left px-3 py-2 whitespace-nowrap';
-  const tdCls = 'px-3 py-2.5 align-top';
-  const now = new Date();
-
-  const renderNextCall = (inq: Inquiry, mode: RowMode) => {
-    const calls = inq.calls ?? [];
-    const upcoming = nextCall(calls, now);
-    const missed = overdueCall(calls, now);
-    // SC-3 review: a booking link that is still open outranks a cancelled
-    // call — the course can reopen the same link and pick again.
-    const inviteLive = !!inq.callInviteSentAt && mode !== 'closed' && calls.every(c => c.outcome === 'cancelled');
-    if (inviteLive && !upcoming && !missed) {
-      const d = Math.max(0, Math.floor((now.getTime() - new Date(inq.callInviteSentAt!).getTime()) / 86_400_000));
-      return (
-        <>
-          <div className={'text-sm truncate ' + (d >= 5 ? 'text-warn font-medium' : 'text-ink-muted')}>Invite sent · {d}d ago</div>
-          <div className="text-[12px] text-ink-muted truncate">{calls.length ? 'they cancelled once — link still open' : 'no time picked yet'}</div>
-        </>
-      );
-    }
-    const last = latestCall(calls.filter(c => c.outcome !== 'scheduled'));
-    const sub = 'text-[12px] text-ink-muted truncate';
-    if (upcoming) {
-      const today = isSameEasternDay(upcoming.scheduledAt, now);
-      return (
-        <>
-          <div className={today ? 'text-sm text-bad font-semibold truncate' : 'text-sm text-ink font-medium truncate'}>
-            {today ? 'Today' : fmtDay(upcoming.scheduledAt)} · {fmtCallClock(upcoming.scheduledAt)}
-          </div>
-          <div className={sub}>{upcoming.durationMin} min · {upcoming.direction === 'they_call' ? 'they call you' : 'you call them'}{upcoming.bookedByCourse ? ' · they picked it' : ''}</div>
-        </>
-      );
-    }
-    if (missed) {
-      return (
-        <>
-          <div className="text-sm text-pine font-medium truncate hover:underline">Log the call</div>
-          <div className={sub}>was {fmtDay(missed.scheduledAt)}{missed.bookedByCourse ? ' · they picked it' : ''}</div>
-        </>
-      );
-    }
-    if (last) {
-      const at = last.completedAt || last.scheduledAt;
-      const sheetAfter = last.outcome === 'talked' && inq.events.some(e => e.toStatus === 'details_requested' && new Date(e.createdAt).getTime() > new Date(at).getTime());
-      return (
-        <>
-          <div className="text-sm text-ink truncate">{last.outcome === 'talked' ? 'Done' : (OUTCOME_LABEL[last.outcome] || last.outcome)} · {fmtShort(at)}</div>
-          <div className={sub}>{sheetAfter ? 'sheet sent after call' : 'outcome logged'}</div>
-        </>
-      );
-    }
-    if (inq.callSkippedReason) {
-      return (
-        <>
-          <div className="text-sm text-ink-soft truncate">Skipped</div>
-          <div className={sub} title={inq.callSkippedReason}>{inq.callSkippedReason}</div>
-        </>
-      );
-    }
-    if (inq.snoozeUntil && new Date(inq.snoozeUntil).getTime() > now.getTime()) {
-      return (
-        <>
-          <div className="text-sm text-ink-soft truncate">Snoozed → {fmtShort(inq.snoozeUntil)}</div>
-          <div className={sub}>back on that date</div>
-        </>
-      );
-    }
-    if (mode !== 'closed' && SETUP_CALL_STATUSES.has(inq.status)) {
-      return (
-        <Link
-          href={detailHref(inq) + (detailHref(inq).includes('?') ? '&' : '?') + 'call=1'}
-          onClick={e => e.stopPropagation()}
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-pine border border-pine/30 hover:bg-pine/5 rounded-md px-2.5 py-1 transition-colors"
-        >
-          Set up call
-        </Link>
-      );
-    }
-    return <span className="text-sm text-ink-faint">—</span>;
-  };
-
-  const renderStillNeed = (inq: Inquiry, mode: RowMode) => {
-    if (mode === 'closed' || inq.status === 'live') return <span className="text-sm text-ink-faint">—</span>;
-    const items = inq.stillNeed ?? [];
-    if (items.length === 0) {
-      const reviewed = inq.events.some(e => e.toStatus && e.toStatus !== 'pending');
-      if (inq.status === 'pending' && !reviewed) return <span className="text-sm italic text-ink-faint">Not reviewed yet</span>;
-      if (inq.status === 'details_submitted' || inq.status === 'building') return <span className="text-sm text-ok">Nothing — ready to build</span>;
-      return <span className="text-sm text-ink-faint">Nothing outstanding</span>;
-    }
-    const shown = items.slice(0, 3);
-    return (
-      <div className="flex flex-wrap gap-1">
-        {shown.map(n => (
-          <span key={n.key} className="text-[11px] text-ink-soft bg-paper border border-line rounded-md px-1.5 py-0.5 whitespace-nowrap">{n.label}</span>
-        ))}
-        {items.length > 3 && (
-          <span className="text-[11px] text-ink-muted px-1 py-0.5" title={items.slice(3).map(n => n.label).join(', ')}>+{items.length - 3}</span>
-        )}
-      </div>
-    );
-  };
-
-  const renderRow = (inq: Inquiry, mode: RowMode) => {
-    const dot = (STATUS_DOT_MAP[inq.status] || 'neutral') as 'ok' | 'bad' | 'warn' | 'neutral';
-    const s = sig(inq);
-    const days = stageDays(inq);
-    const overdue = mode === 'queue' && s.pressureDays > 0;
-    const closed = mode === 'closed' ? whyArchived(inq) : null;
-    const selectable = canBulkSelect && (ACTIVE_STATUSES as readonly string[]).includes(inq.status);
-    // U-A: pine left edge = your move, faded = stalled. Same signals as before.
-    const yourMove = mode === 'queue' && s.yourMove;
-    const stalled = mode === 'queue' && !s.yourMove && days >= STALLED_DAYS;
-    const href = detailHref(inq);
-    return (
-      <tr
-        key={inq.id}
-        onClick={() => router.push(href)}
-        className={'border-t border-line cursor-pointer hover:bg-pine/[0.02] transition-colors' + (stalled ? ' opacity-60 hover:opacity-100' : '')}
-      >
-        {/* 1 · Course */}
-        <td className={tdCls + (yourMove ? ' border-l-[3px] border-l-pine' : ' border-l-[3px] border-l-transparent')}>
-          <div className="flex items-start gap-2.5 min-w-0">
-            {selectable && (
-              <input
-                type="checkbox"
-                checked={selected.has(inq.id)}
-                onClick={e => e.stopPropagation()}
-                onChange={() => toggleSelected(inq.id)}
-                className="shrink-0 mt-1"
-              />
-            )}
-            <div className="min-w-0">
-              <div className="text-sm font-medium text-ink truncate flex items-center gap-1.5">
-                <span className="truncate">{inq.courseName}</span>
-                {s.resubmits > 0 && (
-                  <span title="Submitted the interest form again while already in the pipeline" className="shrink-0">
-                    
-                  </span>
-                )}
-              </div>
-              <div className="text-[12px] text-ink-muted truncate">
-                {inq.city}, {inq.state}{inq.courseType ? ' · ' + (COURSE_TYPE_LABEL[inq.courseType] || inq.courseType) : ''}
-              </div>
-            </div>
-          </div>
-        </td>
-        {/* 2 · Contact · phone */}
-        <td className={tdCls}>
-          <div className="text-sm text-ink truncate">{inq.contactName}{inq.contactTitle ? ' · ' + inq.contactTitle : ''}</div>
-          <div className="text-[12px] text-ink-muted truncate">{inq.phone || <span className="text-ink-faint">no phone</span>}</div>
-          {hasBadEmail(inq) && (
-            <span className="block mt-0.5" title={inq.email}><StatusDot status="warn" label="Bad email"/></span>
-          )}
-        </td>
-        {/* 3 · Stage */}
-        <td className={tdCls}>
-          {closed ? (
-            <>
-              <div className="text-sm text-ink-soft truncate">{closed.reason}</div>
-              <div className="text-[12px] text-ink-faint">{fmtDate(closed.date)}</div>
-            </>
-          ) : (
-            <StatusDot status={dot} label={STATUS_LABEL[inq.status] || inq.status} />
-          )}
-          {mode === 'queue' && <div className="text-[12px] text-ink-muted truncate mt-0.5" title={s.reason}>{s.reason}</div>}
-        </td>
-        {/* 4 · Next call */}
-        <td className={tdCls}>{renderNextCall(inq, mode)}</td>
-        {/* 5 · Still need from them */}
-        <td className={tdCls + ' hidden xl:table-cell'}>{renderStillNeed(inq, mode)}</td>
-        {/* 6 · In stage */}
-        <td className={tdCls + ' hidden lg:table-cell text-right'}>
-          {closed ? <span className="text-sm text-ink-faint">—</span>
-            : <span className={'text-sm ' + (overdue ? 'text-bad font-medium' : 'text-ink-soft')}>{days}d</span>}
-        </td>
-        {/* 7 · Inquired */}
-        <td className={tdCls + ' hidden lg:table-cell text-right text-sm text-ink-soft whitespace-nowrap'}>{fmtDate(inq.createdAt)}</td>
-        {/* 8 · Action */}
-        <td className={tdCls + ' text-right whitespace-nowrap'}>
-          <div className="inline-flex items-center gap-1 justify-end">
-            {mode === 'closed' && (
-              <>
-                <button
-                  onClick={e => { e.preventDefault(); e.stopPropagation(); restoreInquiry(inq); }}
-                  className="w-7 h-7 flex items-center justify-center rounded-md text-ink-faint hover:text-ok hover:bg-ok/5 transition-colors"
-                  title="Restore"
-                >
-                  <ArchiveRestore className="w-3.5 h-3.5" />
-                </button>
-                {!inq.builtCourseId && (
-                  <button
-                    onClick={e => { e.preventDefault(); e.stopPropagation(); setDeleteTarget({ id: inq.id, name: inq.courseName }); setDeleteConfirmText(''); }}
-                    className="w-7 h-7 flex items-center justify-center rounded-md text-ink-faint hover:text-bad hover:bg-bad/5 transition-colors"
-                    title="Delete permanently"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </>
-            )}
-            <Link href={href} onClick={e => e.stopPropagation()} className="text-xs font-medium text-pine hover:underline px-1">Open</Link>
-          </div>
-        </td>
-      </tr>
-    );
-  };
-
-  type Group = { key: string; title: string; hint: string; rows: Inquiry[]; mode: RowMode };
-
-  const renderGroupHeader = (g: Group, shown: Inquiry[]) => {
-    const allShownSelected = shown.length > 0 && shown.every(i => selected.has(i.id));
-    const toggleSection = () => setSelected(prev => {
-      const next = new Set(prev);
-      if (allShownSelected) shown.forEach(i => next.delete(i.id));
-      else shown.forEach(i => next.add(i.id));
-      return next;
-    });
-    return (
-      <tr key={g.key + ':head'} className="border-t border-line">
-        <td colSpan={8} className="bg-paper px-3 py-1.5">
-          <div className="flex items-baseline gap-2">
-            <Eyebrow as="span">{g.title}</Eyebrow>
-            <span className="text-[11px] text-ink-faint">{g.rows.length}{g.hint ? ' · ' + g.hint : ''}</span>
-            {canBulkSelect && g.mode === 'queue' && (
-              <button onClick={toggleSection} className="ml-auto text-[11px] text-ink-faint hover:text-ink transition-colors">
-                {allShownSelected ? 'Clear' : 'Select all'}
-              </button>
-            )}
-          </div>
-        </td>
-      </tr>
-    );
-  };
-
-  const renderTable = (groups: Group[]) => {
-    const nonEmpty = groups.filter(g => g.rows.length > 0);
-    if (nonEmpty.length === 0) return null;
-    return (
-      <Card className="overflow-x-auto">
-        <table className="w-full table-fixed min-w-[760px]">
-          <thead>
-            <tr className="bg-paper">
-              <th className={thCls + ' w-[200px]'}>Course</th>
-              <th className={thCls + ' w-[190px]'}>Contact · phone</th>
-              <th className={thCls + ' w-[104px]'}>Stage</th>
-              <th className={thCls + ' w-[150px]'}>Next call</th>
-              <th className={thCls + ' w-[250px] hidden xl:table-cell'}>Still need from them</th>
-              <th className={thCls + ' w-[86px] hidden lg:table-cell text-right'}>In stage</th>
-              <th className={thCls + ' w-[96px] hidden lg:table-cell text-right'}>Inquired</th>
-              <th className={thCls + ' w-[72px] text-right'}><span className="sr-only">Open</span></th>
-            </tr>
-          </thead>
-          {nonEmpty.map(g => {
-            const shown = g.rows.slice(0, SECTION_CAP);
-            return (
-              <tbody key={g.key}>
-                {g.title && renderGroupHeader(g, shown)}
-                {shown.map(r => renderRow(r, g.mode))}
-                {g.rows.length > SECTION_CAP && (
-                  <tr className="border-t border-line">
-                    <td colSpan={8} className="px-3 py-2 text-[11px] text-ink-faint">
-                      Showing the top {SECTION_CAP} of {g.rows.length} — narrow it with search or a stage.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            );
-          })}
-        </table>
-      </Card>
-    );
-  };
-
+  const setTab = (t: Tab) => { setFilter('all'); router.replace(t === 'calls' ? '/admin/inquiries?tab=calls' : '/admin/inquiries'); };
+  const outreach = o?.ok ? o.data : null;
+  const calls = c?.ok ? c.data : null;
+  const courseCount = outreach ? outreach.stages.reduce((n, st) => n + st.rows.length, 0) : null;
+  const err = tab === 'outreach' ? (o && !o.ok ? o : null) : (c && !c.ok ? c : null);
 
   return (
-    <div className="min-h-screen bg-paper flex">
-      <AdminSidebar active="inquiries" />
-      <div className="admin-content flex-1 flex flex-col min-h-screen">
-        <div className="px-10 py-8">
-
-          {/* Title + pipeline summary, search + refresh */}
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-            <div>
-              <h1 className="text-[30px] leading-none font-serif font-semibold text-ink">Pipeline</h1>
-              <p className="text-[13.5px] text-ink-soft mt-2">
-                {leadCount} lead{leadCount === 1 ? '' : 's'} · {activeCount} active · {needsYouCount} needs you · {callsThisWeek} call{callsThisWeek === 1 ? '' : 's'} this week · {liveAllTimeCount} live all-time · {closedCount} closed
-              </p>
-              {invariantBroken && (
-                <p className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-medium text-white bg-bad rounded-md px-2 py-1">
-                  {unmappedCount > 0
-                    ? `${unmappedCount} inquir${unmappedCount === 1 ? 'y' : 'ies'} unmapped — status not recognized by the funnel`
-                    : 'Counts don’t add up — alive + closed should equal the total, but doesn’t'}
-                </p>
-              )}
+    <>
+      <AdminSidebar active="outreach" />
+      <main className={g.main}>
+        <div className={g.head}><h1>Inquiries</h1></div>
+        <div className={iq.col}>
+          <div className={iq.head}>
+            <div className={iq.seg} role="tablist" aria-label="Inquiries view">
+              <i className={iq.pill} style={{ transform: tab === 'outreach' ? 'none' : 'translateX(100%)' }} aria-hidden="true" />
+              <button type="button" role="tab" aria-selected={tab === 'outreach'} onClick={() => setTab('outreach')}>Outreach{courseCount !== null && <em>{courseCount}</em>}</button>
+              <button type="button" role="tab" aria-selected={tab === 'calls'} onClick={() => setTab('calls')}>Calls{calls && <em>{calls.upcoming.length}</em>}</button>
             </div>
-            <div className="flex items-center gap-2">
-              {/* ADMIN-C: Manual build left the menu; it lives here, where a course starts. */}
-              {MANAGER_PLUS.includes(role) && (
-                <Link href="/admin/create" className="text-[13px] font-medium px-3 py-2 rounded-md border border-line text-ink hover:border-pine/40">Build by hand</Link>
-              )}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ink-muted pointer-events-none" />
-                <input
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  placeholder="Search..."
-                  className="bg-white border border-line text-ink text-sm rounded-md pl-8 pr-3 py-2 outline-none focus:border-pine/40 w-44 placeholder-ink-faint"
-                />
-              </div>
-              <button
-                onClick={loadInquiries} disabled={loading} aria-label="Refresh" title="Refresh"
-                className="w-9 h-9 flex items-center justify-center text-ink-soft hover:text-ink rounded-md hover:bg-white border border-line transition-colors disabled:opacity-50"
-              >
-                <RefreshCw aria-hidden="true" className={`w-4 h-4 ${loading ? 'animate-spin motion-reduce:animate-none' : ''}`} />
+            <span className={iq.tools}>
+              <button type="button" className={`${iq.ibtn} ${filter !== 'all' ? iq.fon : ''}`} onClick={() => setFilterOpen(true)} aria-label={filter === 'all' ? 'Filter' : `Filter: ${FILTERS[tab].find(f => f[0] === filter)?.[1]}`} title="Filter">
+                <svg {...ICON}><path d="M4 5h16l-6 7.5V19l-4-2v-4.5z" /></svg>{filter !== 'all' && <i className={iq.fdot} />}
               </button>
-              {/* IC-3 §5: every alive + closed row as a CSV. Support+ only since #380 (the route refuses a viewer). */}
-              {SUPPORT_PLUS.includes(role ?? '') && <a
-                href="/api/admin/inquiries?format=csv"
-                download
-                className="flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-white border border-line transition-colors"
-              >
-                Export CSV
-              </a>}
-            </div>
+              {canWrite && <button type="button" className={iq.ibtn} onClick={() => setAdding(true)} aria-label="Add a course" title="Add a course"><svg {...ICON}><path d="M12 5v14M5 12h14" /></svg></button>}
+            </span>
           </div>
 
-          {/* Bulk action bar */}
-          {canBulkSelect && selected.size > 0 && (
-            <div className="flex items-center gap-3 bg-pine/5 border border-pine/20 rounded-lg px-4 py-2.5 mb-3 text-sm">
-              <span className="font-medium text-ink">{selected.size} selected</span>
-              {canSendSheet && (
-                <button
-                  onClick={() => setBulkPreview({ kind: 'send_sheet', ids: Array.from(selected) })}
-                  className="text-xs font-medium text-pine hover:text-pine-hover px-2.5 py-1 rounded-md border border-pine/30 hover:bg-pine/10 transition-colors"
-                >
-                  Send Sheet
-                </button>
-              )}
-              <button
-                onClick={() => setBulkPreview({ kind: 'archive', ids: Array.from(selected) })}
-                className="text-xs font-medium text-bad hover:text-bad px-2.5 py-1 rounded-md border border-bad/30 hover:bg-bad/5 transition-colors"
-              >
-                Archive
-              </button>
-              <button onClick={() => setSelected(new Set())} className="text-xs text-ink-faint hover:text-ink ml-auto transition-colors">
-                Clear selection
-              </button>
-            </div>
-          )}
-          {bulkResult && (
-            <div className="bg-ok/5 border border-ok/20 rounded-lg px-4 py-2.5 mb-3 text-sm text-ok flex items-center justify-between">
-              {bulkResult}
-              <button onClick={() => setBulkResult('')} className="text-ok/60 hover:text-ok">Dismiss</button>
-            </div>
-          )}
-          {deleteError && (
-            <div className="bg-bad/5 border border-bad/20 rounded-lg px-4 py-2.5 mb-3 text-sm text-bad flex items-center justify-between">
-              {deleteError}
-              <button onClick={() => setDeleteError('')} className="text-bad/60 hover:text-bad">Dismiss</button>
-            </div>
-          )}
-          {reconcileResult && (
-            <div className="bg-warn/5 border border-warn/20 rounded-lg px-4 py-2.5 mb-3 text-sm text-warn flex items-center justify-between gap-3">
-              <span>{reconcileResult}</span>
-              <button onClick={() => setReconcileResult('')} className="text-warn/60 hover:text-warn shrink-0">Dismiss</button>
-            </div>
-          )}
+          {err && <LoadError error={err.error} status={err.status} retry={load} busy={busy} />}
+          {tab === 'outreach' && !o && <div className={`${g.glass} ${iq.skel}`} aria-busy="true" aria-label="Loading outreach" />}
+          {tab === 'calls' && !c && <div className={`${g.glass} ${iq.skel}`} aria-busy="true" aria-label="Loading calls" />}
 
-          {loading && <div className="py-20 text-center text-ink-muted text-sm">Loading...</div>}
-          {!loading && loadError && (
-            <div className="rounded-lg border border-bad/20 bg-bad/5 px-5 py-6 text-center">
-              <p className="text-sm text-bad mb-3">{loadError}</p>
-              <button onClick={() => loadInquiries()} className="text-xs font-medium text-ink-soft hover:text-ink px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">Retry</button>
-            </div>
-          )}
-
-          {/* AW-6a: the board IS the queue — Leads · Talking · Setting up · Live, one
-              next step per card. All and Closed (below) keep the table. */}
-          {!loading && !loadError && view === 'queue' && (
-            q && visible.length === 0
-              ? <EmptyState message="No results — clear your search" />
-              : <InquiryBoard inquiries={visible} signal={sig} href={detailHref} canResend={MANAGER_PLUS.includes(role)} onChanged={loadInquiries} />
-          )}
-
-          {!loading && !loadError && view === 'all' && (
-            <div>
-              {pagedFlat.length === 0 && <EmptyState message={q ? 'No results — clear your search' : 'No inquiries yet.'} />}
-              {renderTable([{ key: 'all', title: '', hint: '', rows: pagedFlat, mode: 'flat' }])}
-            </div>
-          )}
-
-          {/* A-02d: Closed is a managed graveyard, not a dump — grouped
-              Rejected vs Archived so the two very different "how it ended"
-              stories never blur together. */}
-          {!loading && !loadError && view === 'closed' && (() => {
-            const rejectedRows = pagedFlat.filter(i => i.status === 'rejected');
-            const archivedOnly = pagedFlat.filter(i => i.status === 'archived');
-            if (pagedFlat.length === 0) {
-              return <EmptyState message={q ? 'No results — clear your search' : 'Nothing closed out yet.'} />;
-            }
-            return renderTable([
-              { key: 'rejected', title: 'Rejected', hint: '', rows: rejectedRows, mode: 'closed' },
-              { key: 'archived', title: 'Archived', hint: '', rows: archivedOnly, mode: 'closed' },
-            ]);
+          {tab === 'outreach' && outreach && (() => {
+            const pass = (r: Row) => filter === 'due' ? r.next.due : filter === 'snoozed' ? !!r.snoozedUntil : true;
+            const stages = outreach.stages.map(st => ({ ...st, rows: st.rows.filter(pass) })).filter(st => st.rows.length);
+            return (
+              <>
+                {Date.now() < Date.parse(TEST_UNTIL) && <p className={iq.foot}>Courses added before Nov 23 are test data and get cleared.</p>}
+                {stages.length === 0 && (
+                  <section className={`${g.glass} ${iq.sec}`}><p className={iq.empty} style={{ borderTop: 0 }}>
+                    {filter !== 'all' ? 'Nothing matches that filter.' : canWrite ? 'No courses in outreach yet. Add one with the plus.' : 'No courses in outreach yet.'}
+                  </p></section>
+                )}
+                {stages.map(st => (
+                  <section key={st.key} className={`${g.glass} ${iq.sec}`} aria-label={st.label}>
+                    <div className={iq.st} title={st.hint}><i className={`${iq.dot} ${STAGE_DOT[st.key] ?? ''}`} aria-hidden="true" /><b>{st.label}</b><span>{st.rows.length}</span></div>
+                    {st.rows.map(r => (
+                      <Link key={r.id} href={`/admin/inquiries/${r.id}`} className={iq.row}>
+                        <span className={iq.n}><b>{r.courseName}</b>{r.town && <small>{r.town}</small>}</span>
+                        <span className={iq.soft}>{r.last || 'Not contacted yet'}</span>
+                        <span className={`${iq.x} ${r.next.due ? iq.due : ''}`}>
+                          {r.snoozedUntil ? `Snoozed until ${dateLabel(r.snoozedUntil)}` : `${r.next.label} · ${dueLabel(r.next.dueAt)}`}
+                        </span>
+                      </Link>
+                    ))}
+                  </section>
+                ))}
+                <p className={iq.foot}>
+                  <span>{outreach.saidYesThisMonth === 1 ? '1 course' : `${outreach.saidYesThisMonth} courses`} said yes this month and moved to Onboarding.</span>
+                  <Link href="/admin/onboarding">Open Onboarding ›</Link>
+                  {outreach.notNow.length > 0 && <button type="button" aria-expanded={showNotNow} onClick={() => setShowNotNow(v => !v)}>Not now · {outreach.notNow.length}</button>}
+                </p>
+                {showNotNow && outreach.notNow.length > 0 && (
+                  <section className={`${g.glass} ${iq.sec}`} aria-label="Not now">
+                    <div className={iq.st}><b>Not now</b><span>{outreach.notNow.length}</span></div>
+                    {outreach.notNow.map(n => (
+                      <Link key={n.id} href={`/admin/inquiries/${n.id}`} className={iq.row}>
+                        <span className={iq.n}><b>{n.courseName}</b>{n.town && <small>{n.town}</small>}</span>
+                        <span />
+                        <span className={iq.x}>{n.recheckAt ? `Recheck ${dateLabel(n.recheckAt)}` : 'No recheck date'}</span>
+                      </Link>
+                    ))}
+                  </section>
+                )}
+                {/* The old Pipeline board (bulk Send sheet and Archive, closed inquiries, the export) until
+                    Build and Cam give those a home. */}
+                <p className={iq.foot}><Link href="/admin/inquiries/all">All inquiries ›</Link></p>
+              </>
+            );
           })()}
 
-          {/* Pagination — only the flat browse views paginate; the queue is
-              capped per section instead. */}
-          {!loading && view !== 'queue' && flatRows.length > PAGE_SIZE && (
-            <div className="flex items-center justify-between mt-4 text-xs text-ink-muted">
-              <span>Page {page + 1} of {totalPages} · {flatRows.length} total</span>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setPage(p => Math.max(0, p - 1))}
-                  disabled={page === 0}
-                  className="px-3 py-1.5 rounded-md border border-line bg-white hover:bg-paper disabled:opacity-40 transition-colors"
-                >
-                  Previous
-                </button>
-                <button
-                  onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
-                  disabled={page >= totalPages - 1}
-                  className="px-3 py-1.5 rounded-md border border-line bg-white hover:bg-paper disabled:opacity-40 transition-colors"
-                >
-                  Next
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Records, demoted out of the work. */}
-          {!loading && (
-            <div className="mt-8 pt-4 border-t border-line-soft flex items-center gap-4 text-xs">
-              {view !== 'queue' && (
-                <button onClick={() => goTo('')} className="text-pine hover:text-pine-hover font-medium transition-colors">
-                  Back to the queue
-                </button>
-              )}
-              <button
-                onClick={() => goTo(VIEW_ALL)}
-                className={'transition-colors ' + (view === 'all' ? 'text-ink font-medium' : 'text-ink-muted hover:text-ink')}
-              >
-                All active ({aliveCount + leadCount})
-              </button>
-              <button
-                onClick={() => goTo(VIEW_CLOSED)}
-                className={'transition-colors ' + (view === 'closed' ? 'text-ink font-medium' : 'text-ink-muted hover:text-ink')}
-              >
-                Closed ({closedCount})
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Bulk action preview + confirm modal */}
-      {bulkPreview && (() => {
-        const targets = inquiries.filter(i => bulkPreview.ids.includes(i.id));
-        const isArchive = bulkPreview.kind === 'archive';
-        const withCourse = targets.filter(t => !!t.builtCourseId).length;
-        const canConfirm = !isArchive || bulkConfirmText.trim().toUpperCase() === 'ARCHIVE';
-        return (
-          <Modal title={isArchive ? `Archive ${targets.length} inquir${targets.length === 1 ? 'y' : 'ies'}?` : `Send setup sheet to ${targets.length} contact${targets.length === 1 ? '' : 's'}?`}
-            titleNode={<div className="text-sm font-medium text-ink mb-1">
-                {isArchive ? `Archive ${targets.length} inquir${targets.length === 1 ? 'y' : 'ies'}?` : `Send setup sheet to ${targets.length} contact${targets.length === 1 ? '' : 's'}?`}
-              </div>}
-            onClose={() => { setBulkPreview(null); setBulkConfirmText(''); }}>
-              <p className="text-xs text-ink-soft mb-3">
-                {isArchive
-                  ? (withCourse > 0
-                    ? `Closes each out. ${withCourse} of these have a built course — archiving takes that course offline too (restorable). The rest have no course yet, so they're marked rejected. Nothing is deleted, and no email is sent. A course with upcoming golfer bookings is skipped here — close it from its own page, where you can cancel and notify them.`
-                    : 'Marks each as rejected/closed. Nothing is deleted, and no email is sent — reject an inquiry on its own page if the course should be told.')
-                  : 'Sends the setup-sheet email to each recipient below.'}
-              </p>
-              <div className="max-h-48 overflow-y-auto space-y-1 mb-4 bg-paper border border-line rounded-md p-2">
-                {targets.map(t => (
-                  <div key={t.id} className="text-xs text-ink-soft flex justify-between gap-2">
-                    <span className="truncate">{t.courseName}</span>
-                    {isArchive && t.builtCourseId && <span className="text-warn shrink-0">+ course</span>}
-                    {!isArchive && <span className="text-ink-faint shrink-0">{t.email}</span>}
+          {tab === 'calls' && calls && (() => {
+            const up = calls.upcoming.filter(k => filter === 'unprepared' ? !k.prepReady : filter === 'unlogged' ? k.notLogged : true);
+            const past = filter === 'all' ? calls.past : [];
+            return (
+              <>
+                <section className={`${g.glass} ${iq.sec}`} aria-label="Upcoming calls">
+                  <div className={iq.st}><b>Upcoming</b><span>{up.length}</span>
+                    {calls.calcomUrl && <a className={`${s.lnk} ${iq.right}`} href={calls.calcomUrl} target="_blank" rel="noopener noreferrer">Open Cal.com <ExtIcon /></a>}
                   </div>
-                ))}
-              </div>
-              {isArchive && (
-                <div className="mb-4">
-                  <label className="block"><span className="block text-[13px] font-semibold text-ink mb-1">Type ARCHIVE to confirm</span>
-                  <input
-                    value={bulkConfirmText}
-                    onChange={e => setBulkConfirmText(e.target.value)}
-                    className="w-full bg-paper border border-line rounded-md px-3 py-2 text-sm outline-none focus:border-bad/40"
-                    placeholder="ARCHIVE"
-                  /></label>
-                </div>
-              )}
-              <div className="flex items-center justify-end gap-2">
-                <button
-                  onClick={() => { setBulkPreview(null); setBulkConfirmText(''); }}
-                  className="text-xs text-ink-muted hover:text-ink px-3 py-1.5 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={async () => { await runBulkAction(); setBulkPreview(null); setBulkConfirmText(''); }}
-                  disabled={!canConfirm || bulkRunning}
-                  className={
-                    'text-xs font-medium px-3 py-1.5 rounded-md text-white transition-colors disabled:opacity-40 ' +
-                    (isArchive ? 'bg-bad hover:bg-bad/90' : 'bg-pine hover:bg-pine-hover')
-                  }
-                >
-                  {bulkRunning ? 'Working…' : isArchive ? 'Archive' : 'Send sheet'}
-                </button>
-              </div>
-          </Modal>
-        );
-      })()}
+                  {up.length > 0 && <div className={`${iq.row} ${iq.calls} ${iq.hd}`} aria-hidden="true"><span>When</span><span>Course and who</span><span>Stage</span><span className={iq.x}>Prep</span></div>}
+                  {up.length === 0 && <p className={iq.empty}>{filter === 'all' ? 'No calls on the calendar.' : 'Nothing matches that filter.'}</p>}
+                  {up.map(k => (
+                    <Link key={k.id} href={`/admin/inquiries/calls/${k.id}`} className={`${iq.row} ${iq.calls}`}>
+                      <span><b className={iq.b2}>{whenLabel(k.scheduledAt)}</b><small className={iq.s2}>{k.durationMin} min · {directionLabel(k.direction)}</small></span>
+                      <span><b className={iq.b2}>{k.courseName}</b><small className={iq.s2}>{[k.who.name, k.who.role].filter(Boolean).join(' · ') || 'No name yet'}</small></span>
+                      <span className={iq.soft}>{k.stage}</span>
+                      <span className={`${iq.x} ${k.notLogged ? iq.late : ''}`}>
+                        {k.notLogged ? 'Not logged' : <><i className={`${iq.dot} ${k.prepReady ? iq.dBrand : iq.dWarn}`} aria-hidden="true" /> {k.prepReady ? 'Prep ready' : 'Not prepared'}</>}
+                      </span>
+                    </Link>
+                  ))}
+                  <p className={iq.hint}>Booked through your Cal.com link. They show up as soon as Cal.com tells us, matched to the course by email.</p>
+                </section>
+                {filter === 'all' && (
+                  <section className={`${g.glass} ${iq.sec}`} aria-label="Past calls">
+                    <button type="button" className={iq.disc} aria-expanded={showPast} onClick={() => setShowPast(v => !v)}><Chevron /><b>Past calls</b><span>{past.length}</span></button>
+                    {showPast && (
+                      <>
+                        {past.length > 0 && <div className={`${iq.row} ${iq.calls} ${iq.hd}`} aria-hidden="true"><span>When</span><span>Course and who</span><span>Outcome</span><span className={iq.x}>Next</span></div>}
+                        {past.length === 0 && <p className={iq.empty}>No past calls.</p>}
+                        {past.map(k => (
+                          <Link key={k.id} href={`/admin/inquiries/calls/${k.id}`} className={`${iq.row} ${iq.calls}`}>
+                            <span><b className={iq.b2}>{whenLabel(k.scheduledAt)}</b><small className={iq.s2}>{k.durationMin} min</small></span>
+                            <span><b className={iq.b2}>{k.courseName}</b><small className={iq.s2}>{[k.who.name, k.who.role].filter(Boolean).join(' · ')}</small></span>
+                            <span className={iq.soft}>{k.resultLabel ?? '—'}</span>
+                            <span className={iq.x}>{[k.nextStep, k.followUpAt ? dateLabel(k.followUpAt) : ''].filter(Boolean).join(' · ') || '—'}</span>
+                          </Link>
+                        ))}
+                      </>
+                    )}
+                  </section>
+                )}
+              </>
+            );
+          })()}
+        </div>
+      </main>
+      {filterOpen && <FilterDialog tab={tab} value={filter} onClose={() => setFilterOpen(false)} onApply={f => { setFilter(f); setFilterOpen(false); }} />}
+      {adding && <AddCourse onClose={() => setAdding(false)} onAdded={id => { setAdding(false); load(); say(id ? <>Added to Targets. <Link href={`/admin/inquiries/${id}`}>Open the course page</Link></> : 'Import done.'); }} />}
+      {toast}
+    </>
+  );
+}
 
-      {/* Permanently delete — unbuilt inquiries only (DELETION DOCTRINE).
-          Typed confirm, trimmed + case-insensitive, matching the server. */}
-      {deleteTarget && (() => {
-        const matches = deleteConfirmText.trim().toLowerCase() === deleteTarget.name.trim().toLowerCase();
-        return (
-          <Modal title={`Permanently delete "${deleteTarget.name}"?`}
-            titleNode={<div className="text-sm font-medium text-ink mb-1">Permanently delete &quot;{deleteTarget.name}&quot;?</div>}
-            onClose={() => { setDeleteTarget(null); setDeleteConfirmText(''); }}>
-              <p className="text-xs text-ink-soft mb-3">This cannot be undone — the inquiry and its history are gone for good.</p>
-              <label className="block"><span className="block text-[13px] font-semibold text-ink mb-1">Type &quot;{deleteTarget.name}&quot; to confirm</span>
-              <input
-                value={deleteConfirmText}
-                onChange={e => setDeleteConfirmText(e.target.value)}
-                className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50 mb-4"
-              /></label>
-              <div className="flex items-center justify-end gap-2">
-                <button
-                  onClick={() => { setDeleteTarget(null); setDeleteConfirmText(''); }}
-                  className="text-xs text-ink-muted hover:text-ink px-3 py-1.5 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => deleteInquiry(deleteTarget.id, deleteTarget.name, deleteConfirmText)}
-                  disabled={!matches || deleteBusy}
-                  className="text-xs font-medium px-3 py-1.5 rounded-md text-white bg-bad hover:bg-bad/90 transition-colors disabled:opacity-40"
-                >
-                  {deleteBusy ? 'Deleting…' : 'Delete permanently'}
-                </button>
-              </div>
-          </Modal>
-        );
-      })()}
-    </div>
+function FilterDialog({ tab, value, onClose, onApply }: { tab: Tab; value: Filter; onClose: () => void; onApply: (f: Filter) => void }) {
+  const [f, setF] = useState(value);
+  return (
+    <Dialog labelId="iq-filter-t" onClose={onClose}>
+      <h4 id="iq-filter-t">Filter</h4>
+      <label className={iq.f}>Show
+        <select value={f} onChange={e => setF(e.target.value as Filter)}>
+          {FILTERS[tab].map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+        </select>
+      </label>
+      <div className={s.line}>
+        <button type="button" className={s.lnk} onClick={() => onApply('all')}>Clear</button>
+        <span style={{ flex: 1 }} />
+        <button type="button" className={`${s.btn} ${s.pri}`} onClick={() => onApply(f)}>Show</button>
+      </div>
+    </Dialog>
   );
 }
 
 export default function InquiriesPage() {
   return (
     <Suspense fallback={null}>
-      <InquiriesListInner />
+      <InquiriesInner />
     </Suspense>
   );
 }

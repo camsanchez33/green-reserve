@@ -46,7 +46,7 @@ export interface PlatformStripe {
 export interface OrphanSweepItem { kind: 'course' | 'inquiry'; id: string; name: string; action: string; reason: string }
 export interface AcknowledgedOrphan { id: string; name: string; archivedAt: string }
 export interface Orphans { checked: boolean; items: OrphanSweepItem[]; acknowledged: AcknowledgedOrphan[]; note: string }
-export type WipePreview = { open: boolean; closesAt: string; confirmWords: string; wiped: Record<string, number>; kept: Record<string, number> };
+export type WipePreview = { open: boolean; closesAt: string; confirmWords: string; wiped: Record<string, number>; kept: Record<string, number>; testInquiries?: number; inquiriesUnlinked?: number; courseCalls?: number };
 
 export type Group = 'run' | 'talk' | 'money' | 'watch' | 'owner';
 export interface Svc { id: string; g: Group; t: string; does: string; st: St; state: string }
@@ -189,7 +189,7 @@ export function tools(o: { isOwner: boolean; orphans: Orphans; versions: Version
       : waiting.length ? `${waiting[0].title} ${waiting[0].version} not published${waiting.length > 1 ? ` (+${waiting.length - 1} more)` : ''}` : 'All versions published' });
 
   const w = o.wipe;
-  const total = w ? Object.values(w.wiped).reduce((a, n) => a + n, 0) : 0;
+  const total = w ? Object.values(w.wiped).reduce((a, n) => a + n, 0) + (w.testInquiries ?? 0) : 0;
   const closes = w ? new Date(w.closesAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/New_York' }) : '';
   out.push({ id: 'wipe', g: 'owner', t: 'Before launch: clear test data', does: 'Starts the site clean',
     st: o.wiped !== null ? 'ok' : '',

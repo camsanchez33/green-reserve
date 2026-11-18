@@ -3,6 +3,7 @@ import { memberPricingOn, residentPricingOn } from '@/lib/pricing-switch';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { liveMembershipWhere } from '@/lib/member-rates';
+import { ciContains } from '@/lib/like-exact';
 
 // Revamp 3 dead end 20 (Cam 2026-10-29): booking a walk-in or phone booking at a
 // member's rate. By default the member shows their membership and staff pick them
@@ -19,7 +20,7 @@ export async function GET(req: NextRequest) {
   const membersOn = memberPricingOn(course);
   const mode = course.counterMemberRate === 'any' ? 'any' : 'member';
   const q = (req.nextUrl.searchParams.get('q') ?? '').trim().slice(0, 80);
-  const contains = { contains: q, mode: 'insensitive' as const };
+  const contains = ciContains(q);
   const [members, tiers] = await Promise.all([
     membersOn && q.length >= 2 ? prisma.courseMembership.findMany({
       where: { courseId: session.courseId, tierId: { not: null }, AND: [liveMembershipWhere(course)], OR: [{ inviteName: contains }, { golfer: { OR: [{ firstName: contains }, { lastName: contains }] } }] },

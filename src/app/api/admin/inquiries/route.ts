@@ -29,6 +29,7 @@ import { computeStripeGoLiveCheck } from '@/lib/go-live-preflight';
 import { hasAcceptedAgreement } from '@/lib/agreement-gate';
 import { deleteInquiryOrPair } from '@/lib/lifecycle';
 import { withAudit, needReason, reasonOf, auditAdmin } from '@/lib/admin-audit';
+import { ciEquals } from '@/lib/like-exact';
 
 // MP-2 (ADMIN_V4 V4-2 leak): this returned the whole CourseInquiry row, which
 // includes detailsToken — the sole credential for the public setup-sheet routes.
@@ -480,8 +481,9 @@ async function handleAction(
   }
 
   // ADMIN-REDO Business analytics (Cam via Build 2026-11-12): log one contact with a course — an
-  // email, call or text we sent ('out') or a reply ('in'). Append-only; allowed on a lead (that is
-  // where outreach happens). Manager+ in Pipeline (the PATCH/POST gates); withAudit records it.
+  // email, call or text we sent ('out') or a reply ('in'). Allowed on a lead (that is where outreach
+  // happens). A mis-logged one can be removed (Inquiries data: POST /api/admin/outreach/[id] delete_touch,
+  // manager+, audited with what it held). Manager+ in Pipeline (the PATCH/POST gates); withAudit records it.
   if (action === 'add_touch') {
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const channel = String(payload?.channel ?? '');
@@ -719,6 +721,15 @@ async function handleAction(
         state: p.state?.trim() || inquiry.state,
       },
     });
+    // Inquiries data: on a lead the CourseContact rows are the truth and these columns mirror the first one,
+    // so the same edit goes to that contact, or the next contact change would undo it.
+    if (inquiry.status === LEAD_STATUS) {
+      const first = await prisma.courseContact.findFirst({ where: { inquiryId }, orderBy: [{ decisionMaker: 'desc' }, { sortOrder: 'asc' }, { createdAt: 'asc' }], select: { id: true } });
+      if (first) {
+        const now = await prisma.courseInquiry.findUnique({ where: { id: inquiryId }, select: { contactName: true, email: true, phone: true } });
+        if (now) await prisma.courseContact.update({ where: { id: first.id }, data: { name: now.contactName || 'Contact', email: now.email, phone: now.phone } });
+      }
+    }
     await logEvent(inquiryId, 'contact_updated', 'contact_updated', 'admin', adminName);
     return NextResponse.json({ success: true });
   }
@@ -1294,9 +1305,9 @@ async function createLead(body: Record<string, unknown>, session: AdminSession) 
   const existing = await prisma.courseInquiry.findFirst({
     where: {
       status: { in: [LEAD_STATUS, ...ALIVE_STATUSES] },
-      courseName: { equals: courseName, mode: 'insensitive' },
-      ...(city ? { city: { equals: city, mode: 'insensitive' as const } } : {}),
-      ...(state ? { state: { equals: state, mode: 'insensitive' as const } } : {}),
+      courseName: ciEquals(courseName),
+      ...(city ? { city: ciEquals(city) } : {}),
+      ...(state ? { state: ciEquals(state) } : {}),
     },
     select: { id: true, status: true },
   });

@@ -16,7 +16,7 @@ import { TX_STATUS, iCls } from './shared';
 import { useCourse } from './context';
 
 export function MoneyTab() {
-  const { detail, txItems, setRefundTarget, setRefundAmount, setRefundReason, setRefundError, refundNote, setRefundNote, txLoading, txError, txPage, setTxPage, txPages, txTotal, txFrom, setTxFrom, txTo, setTxTo, txSearch, setTxSearch, loadTransactions, openOperate } = useCourse();
+  const { detail, txItems, refundNote, setRefundNote, txLoading, txError, txPage, setTxPage, txPages, txTotal, txFrom, setTxFrom, txTo, setTxTo, txSearch, setTxSearch, loadTransactions, openOperate } = useCourse();
   const m = detail.money;
   const vs = m.feesSamePointLastMonth;
   return (
@@ -75,6 +75,8 @@ export function MoneyTab() {
                 </div>
               </Card>
 
+              {/* Admin never refunds a golfer (CLAUDE.md; Build 2026-11-17): the course is the seller and refunds from its dashboard. */}
+              <p className="text-[12.5px] text-ink-muted mb-2">Refunds are done by the course, from its own dashboard.</p>
               {refundNote && (
                 <div className="mb-4 text-sm font-medium px-4 py-2.5 rounded-md border bg-ok/5 text-ok border-ok/20 flex items-center justify-between gap-3">
                   <span>{refundNote}</span>
@@ -123,12 +125,6 @@ export function MoneyTab() {
                                 onClick={() => openOperate(tx.date)}
                                 className="ml-1.5 text-pine hover:underline"
                               >View</button>
-                            )}
-                            {tx.type === 'booking' && (tx.status === 'completed' || tx.status === 'paid') && (
-                              <button
-                                onClick={() => { setRefundTarget(tx); setRefundAmount(''); setRefundReason(''); setRefundError(''); }}
-                                className="ml-1.5 text-ink-muted hover:text-bad hover:underline"
-                              >Refund</button>
                             )}
                           </div>
                           <div className="text-sm font-medium text-ink tabular-nums">{fmtMoney(tx.amount)}</div>

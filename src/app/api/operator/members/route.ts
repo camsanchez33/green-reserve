@@ -18,6 +18,7 @@ import { sendAutoRenewOffEmail } from '@/lib/email';
 import { maybeSendPayLink, NOT_SENT } from '@/lib/membership-pay-link';
 import { approveJoin, declineJoin } from '@/lib/membership-join';
 import { stopAutoRenew, STOP_DATA, memberContact } from '@/lib/membership-autorenew';
+import { ciEquals } from '@/lib/like-exact';
 
 /** Memberships item 2: a whole membership row as a response — never where the photo is stored, only whether there is one. */
 function safeRow<T extends { photoUrl?: string }>(row: T): Omit<T, 'photoUrl'> & { hasPhoto: boolean } {
@@ -281,7 +282,7 @@ export async function PATCH(req: NextRequest) {
     if (body.email !== undefined) {
       const e = String(body.email ?? '').trim().toLowerCase().slice(0, 200);
       if (e && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) return NextResponse.json({ error: 'That email address doesn’t look right.' }, { status: 400 });
-      if (e && e !== membership.inviteEmail.toLowerCase() && await prisma.courseMembership.findFirst({ where: { courseId: session.courseId, id: { not: id }, inviteEmail: { equals: e, mode: 'insensitive' } }, select: { id: true } })) return NextResponse.json({ error: 'Another member already uses that email.' }, { status: 409 });
+      if (e && e !== membership.inviteEmail.toLowerCase() && await prisma.courseMembership.findFirst({ where: { courseId: session.courseId, id: { not: id }, inviteEmail: ciEquals(e) }, select: { id: true } })) return NextResponse.json({ error: 'Another member already uses that email.' }, { status: 409 });
       contact.inviteEmail = e;
     }
     if (body.phone !== undefined) contact.invitePhone = String(body.phone ?? '').trim().slice(0, 30);

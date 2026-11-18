@@ -13,13 +13,21 @@ const ROLE_SETS: Record<string, string[]> = { VIEWER_PLUS, SUPPORT_PLUS, MANAGER
 const items = [...groups.matchAll(/\{ key: '(\w+)',[^}]*?href: '([^']+)'(?:,\s*minRole: (\w+))?/g)].map(m => ({ key: m[1], href: m[2], roles: m[3] ? ROLE_SETS[m[3]] : null }));
 check('the rail lists its items', items.length >= 10);
 
+// Course groups is parked (Cam 2026-11-18): off the rail and out of the search palette; /admin/groups still works.
+const search = readFileSync('src/app/api/admin/search/route.ts', 'utf8');
+check('Course groups is not on the rail', !items.some(i => i.key === 'groups' || i.href === '/admin/groups'));
+check('…nor in the search palette (no page row, no group results)', !search.includes("'nav:groups'") && !search.includes('courseGroup.findMany'));
+
 // The gate of the API behind each page (the page's own data route).
 const GATE: Record<string, string[] | null> = {
   // messages: the Messages page is off the rail (Course support replaces it, Cam 2026-11-12); its page and API keep support+.
-  overview: null, inquiries: VIEWER_PLUS, courses: VIEWER_PLUS, groups: SUPPORT_PLUS, support: SUPPORT_PLUS, announcements: SUPPORT_PLUS,
+  overview: null, inquiries: VIEWER_PLUS, courses: VIEWER_PLUS, support: SUPPORT_PLUS, announcements: SUPPORT_PLUS,
   revenue: SUPPORT_PLUS, expenses: OWNER_ONLY, finance: OWNER_ONLY, business: MANAGER_PLUS, goals: SUPPORT_PLUS, employees: MANAGER_PLUS, system: MANAGER_PLUS, bookings: SUPPORT_PLUS,
-  // golfers: Users & golfers is off the rail (Cam 2026-11-12); its page and API keep their own support+ gate.
+  // Golfers is back on the rail (Cam 2026-11-17, approved mockup): /api/admin/golfers is support+. Inquiries
+  // (outreach) reads /api/admin/inquiries and /api/admin/outreach, both viewer+.
+  golfers: SUPPORT_PLUS, outreach: VIEWER_PLUS,
   company: OWNER_ONLY, audit: OWNER_ONLY, security: OWNER_ONLY,
+  // groups: parked (Cam 2026-11-18) — off the rail; /admin/groups and its API keep support+.
   // problems: off the rail (Cam 2026-11-12) — the list is Overview's Needs attention; /admin/problems redirects there.
 };
 for (const it of items) {
