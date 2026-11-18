@@ -5,7 +5,7 @@
 // Memberships item 1 (Cam 2026-11-16, "they are a member only once paid"): a member added at the counter (addedBy COUNTER_ADDED) pays first, so this goes out once the dues are paid, not when added.
 import { prisma } from './prisma';
 import { sendMemberInviteEmail, sendMembershipReceiptEmail } from './email';
-import { memberBenefitsLine, withoutRates } from './member-benefits';
+import { memberBenefitsLine } from './member-benefits';
 import { memberPricingOn } from './pricing-switch';
 
 /** addedBy for a member added on the Memberships page, who pays before they are a member. */
@@ -31,8 +31,10 @@ export async function sendWelcome(membershipId: string): Promise<void> {
     courseName: m.course.name || 'your course',
     groupName: m.tier?.name ?? m.membershipType ?? 'Member',
     coursePageUrl: `${process.env.NEXT_PUBLIC_URL}/courses/${m.course.slug}`,
-    // Members pricing off (lib/pricing-switch): no member rate is charged, so the invite promises none.
-    benefits: memberBenefitsLine(m.tier && !memberPricingOn(m.course) ? withoutRates(m.tier) : m.tier, m.course),
+    // Members pricing off (lib/pricing-switch): no member rate is charged, so the invite promises none and reads
+    // "Log in at <page> with this email to book." (Build 2026-11-18).
+    benefits: memberPricingOn(m.course) ? memberBenefitsLine(m.tier, m.course) : '',
+    memberPricing: memberPricingOn(m.course),
   });
 }
 
