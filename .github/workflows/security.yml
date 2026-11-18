@@ -5,7 +5,10 @@ name: Security
 # Runs on every PR, on main, and every morning so a flaw published overnight
 # shows up even when nobody pushes. Dev-only packages are left out: they never
 # reach the live site. SEC-2 raised the bar to high once Sentry 11 and the zod /
-# postcss overrides (package.json) left zero flaws.
+# postcss overrides (package.json) left zero flaws. SEC-4 (Cam 2026-11-18):
+# scripts/audit-gate.mjs lets through only advisories in
+# .github/audit-allowlist.json, each with a reason and an expiry; an expired
+# entry fails the gate.
 on:
   pull_request:
   push:
@@ -20,13 +23,14 @@ jobs:
   audit:
     name: Package flaws
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: Fail on a high or critical flaw in what the site ships
-        run: npm audit --omit=dev --audit-level=high
+        run: node scripts/audit-gate.mjs
       - name: List moderate ones too (does not fail)
         if: always()
         run: npm audit --omit=dev --audit-level=moderate || true
