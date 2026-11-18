@@ -26,7 +26,7 @@ import { teeToUtcMs } from './tee-time-utils';
 import { withinWindow, windowFor } from './booking-window';
 import { rulesFor } from './booking-rules';
 import { membershipLive } from './member-rates';
-import { liveMembershipFor } from './member-session';
+import { liveMembershipFor, canLogIn } from './member-session';
 import { consentPhone, recordSmsConsent, type SmsScope } from './sms-consent';
 import { ALERT_SMS_CONSENT_VERSION, ALERT_SMS_CONFIRMATION, alertSmsConsentText } from './sms-consent-copy';
 import { formatTeeDay, formatTeeTime } from './format';
@@ -93,6 +93,7 @@ export function alertMatches(a: MatchAlert, t: MatchTime): boolean {
 
 export type CreateAlertInput = {
   courseId?: unknown; dates?: unknown; parts?: unknown; players?: unknown; teeTimeId?: unknown; wide?: unknown;
+  date?: unknown; windowStart?: unknown; windowEnd?: unknown; // the booking page before the new sheet
   email?: unknown; name?: unknown; phone?: unknown; textConsent?: unknown;
 };
 /** gr_member (GOLFER-LOGIN-1, #483): an email proven at a course. Member or resident, it turns an
@@ -132,7 +133,7 @@ export async function createAlert(input: CreateAlertInput, member: MemberCtx, no
   if (!courseId) return bad('Missing course');
   const course = await prisma.course.findUnique({
     where: { id: courseId },
-    select: { id: true, name: true, slug: true, active: true, liveStatus: true, timezone: true, teeTimeAlertsOn: true, publicAdvanceDays: true, memberAdvanceDays: true, memberGraceDays: true, minPlayers: true, maxPlayers: true },
+    select: { id: true, name: true, slug: true, active: true, liveStatus: true, timezone: true, teeTimeAlertsOn: true, publicAdvanceDays: true, memberAdvanceDays: true, memberGraceDays: true, minPlayers: true, maxPlayers: true, hasResidentPricing: true },
   });
   if (!course || !course.active || course.liveStatus !== 'live') return { ok: false, status: 404, body: { error: 'Course not found' } };
   if (!course.teeTimeAlertsOn) return { ok: false, status: 403, body: { error: 'This course isn’t taking tee time alerts.', alertsOff: true } };
@@ -142,7 +143,9 @@ export async function createAlert(input: CreateAlertInput, member: MemberCtx, no
   let membershipId: string | null = null;
   let memberTier: Parameters<typeof windowFor>[1] = null;
   let email = '';
-  const loggedIn = !!member && member.courseId === course.id && !!member.email.trim();
+  // #483: a session counts only while the email is in a group here now (canLogIn); a cookie whose
+  // membership ended or card expired is a guest, with the email they typed.
+  const loggedIn = !!member && member.courseId === course.id && !!member.email.trim() && !!(await canLogIn(course, member.email));
   if (loggedIn) {
     email = member!.email.trim().toLowerCase();
     const m = await liveMembershipFor(course, email);
@@ -152,8 +155,16 @@ export async function createAlert(input: CreateAlertInput, member: MemberCtx, no
     if (!EMAIL_RE.test(email) || email.length > 200) return bad('Enter your email.', { field: 'email' });
   }
 
+  // The booking page before the new alert sheet sends one `date` with a clock window
+  // (windowStart/windowEnd, empty = any time). Accepted as it always was, so that page keeps working
+  // until the Golfer lane's sheet replaces it.
+  const legacy = input.dates === undefined && typeof input.date === 'string';
+  const clock = (v: unknown) => (typeof v === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(v) ? v : '');
+  const windowStart = legacy ? clock(input.windowStart) : '';
+  const windowEnd = legacy ? clock(input.windowEnd) : '';
+
   // Dates: 1–14, real, not past, inside the window this golfer can book.
-  const rawDates = Array.isArray(input.dates) ? input.dates : [];
+  const rawDates = legacy ? [input.date] : Array.isArray(input.dates) ? input.dates : [];
   const dates = [...new Set(rawDates.filter((d): d is string => typeof d === 'string' && DATE_RE.test(d)))].sort();
   if (!dates.length || dates.length !== rawDates.length) return bad('Pick at least one date.', { field: 'dates' });
   if (dates.length > MAX_ALERT_DATES) return bad(`Pick up to ${MAX_ALERT_DATES} dates.`, { field: 'dates' });
@@ -202,7 +213,7 @@ export async function createAlert(input: CreateAlertInput, member: MemberCtx, no
 
   // The same alert asked again (same email, dates, parts, players, time) is the same row.
   const existing = await prisma.teeTimeAlert.findFirst({
-    where: { courseId: course.id, email, status: { in: ['pending', 'active'] }, dates: { equals: dates }, parts: { equals: parts }, players, teeTimeId },
+    where: { courseId: course.id, email, status: { in: ['pending', 'active'] }, dates: { equals: dates }, parts: { equals: parts }, players, teeTimeId, windowStart, windowEnd },
   });
   // A guest can't change an alert that is already on (anyone can type any email): same answer,
   // nothing written, nothing sent.
@@ -226,7 +237,7 @@ export async function createAlert(input: CreateAlertInput, member: MemberCtx, no
         data: { ...data, ...(loggedIn && existing.status === 'pending' ? { status: 'active', confirmedAt: now } : {}), ...(!loggedIn ? { token: newAlertToken() } : {}) },
       })
     : await prisma.teeTimeAlert.create({
-        data: { ...data, courseId: course.id, email, date: dates[0], dates, parts, teeTimeId, status, confirmedAt: loggedIn ? now : null, token: newAlertToken() },
+        data: { ...data, courseId: course.id, email, date: dates[0], dates, parts, windowStart, windowEnd, teeTimeId, status, confirmedAt: loggedIn ? now : null, token: newAlertToken() },
       });
 
   // A member's text consent counts now; a guest's only once the email link is confirmed.

@@ -145,8 +145,24 @@ async function main() {
   const lap = await createAlert({ courseId: c.id, dates: [d1], parts: [], players: 1, email: 'typed@else.where' }, { courseId: c.id, email: `${TAG}-l@t.local` });
   const lapRow = lap.ok ? await prisma.teeTimeAlert.findUniqueOrThrow({ where: { id: lap.alert.id } }) : null;
   ok('a logged-in golfer whose membership lapsed: one tap with the log-in email, public window only', lap.ok && lap.status === 'active' && lapRow?.email === `${TAG}-l@t.local` && lapRow?.membershipId === null, lap);
+  await prisma.course.update({ where: { id: c.id }, data: { hasResidentPricing: true } });
+  await prisma.courseResident.create({ data: { courseId: c.id, name: 'Rita', email: `${TAG}-r@t.local` } });
   const res = await createAlert({ courseId: c.id, dates: [d1], parts: [], players: 1 }, { courseId: c.id, email: `${TAG}-r@t.local` });
-  ok('a logged-in resident (no membership) is on in one tap too', res.ok && res.status === 'active');
+  ok('a logged-in resident (card good today, no membership) is on in one tap too', res.ok && res.status === 'active');
+  // #483: a cookie whose email is in no group here any more is not logged in — a guest, with the typed email.
+  await prisma.courseMembership.create({ data: { courseId: c.id, inviteEmail: `${TAG}-gone@t.local`, status: 'cancelled' } });
+  const gone = await createAlert({ courseId: c.id, dates: [d1], parts: [], players: 1, email: `${TAG}-typed@t.local` }, { courseId: c.id, email: `${TAG}-gone@t.local` });
+  ok('a session in no group here is a guest: pending, with the email typed', gone.ok && gone.status === 'pending' && gone.alert.email === `${TAG}-typed@t.local`, gone);
+  await prisma.course.update({ where: { id: c.id }, data: { hasResidentPricing: false } });
+  const resOff = await createAlert({ courseId: c.id, dates: [d1], parts: ['late'], players: 1, email: `${TAG}-typed2@t.local` }, { courseId: c.id, email: `${TAG}-r@t.local` });
+  ok('a resident whose course turned resident pricing off is a guest too', resOff.ok && resOff.status === 'pending' && resOff.alert.email === `${TAG}-typed2@t.local`, resOff);
+
+  // The booking page before the new sheet posts { date, windowStart, windowEnd } — it must keep working.
+  const oldPage = await createAlert({ courseId: c.id, email: `${TAG}-old@t.local`, name: 'Old', date: d1, windowStart: '06:00', windowEnd: '11:59', players: 2, teeTimeId: null }, null);
+  const oldRow = oldPage.ok ? await prisma.teeTimeAlert.findUniqueOrThrow({ where: { id: oldPage.alert.id } }) : null;
+  ok('the current booking page’s alert body is still accepted', oldPage.ok && oldPage.status === 'pending' && JSON.stringify(oldRow?.dates) === JSON.stringify([d1]) && oldRow?.windowStart === '06:00' && oldRow?.windowEnd === '11:59', oldPage);
+  const oldSlot = await createAlert({ courseId: c.id, email: `${TAG}-old@t.local`, date: d1, windowStart: '', windowEnd: '', players: 1, teeTimeId: t1.id }, null);
+  ok('…and its full-time alert too', oldSlot.ok && oldSlot.status === 'pending', oldSlot);
   const otherCourse = await createAlert({ courseId: c.id, dates: [d1], parts: [], players: 1, email: `${TAG}-o@t.local` }, { courseId: 'another-course', email: `${TAG}-m@t.local` });
   ok('another course’s log-in is a guest here', otherCourse.ok && otherCourse.status === 'pending' && otherCourse.alert.email === `${TAG}-o@t.local`);
   ok('the member sees their own alerts', (await memberAlerts(c.id, `${TAG}-m@t.local`)).length === 1);
