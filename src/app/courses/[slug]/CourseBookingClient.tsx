@@ -438,9 +438,9 @@ export default function CourseDetailPage({
   }
 
   /** Opens the alert sheet: for a full time (pre-filled with it), or for the day, its time of day and the players. */
-  function openAlert(t?: TeeTime) {
-    if (!course) return;
-    alertOpener.current = typeof document !== 'undefined' ? (document.activeElement as HTMLElement | null) : null;
+  function openAlert(t?: TeeTime, opener?: HTMLElement | null) {
+    if (!course || previewMode) return;
+    alertOpener.current = opener ?? (typeof document !== 'undefined' ? (document.activeElement as HTMLElement | null) : null);
     setAlertSheet(t
       ? { day: selectedDate, parts: [], players, slot: { id: String(t.id), time: t.time, label: formatTime(t.time), part: alertPartOf(t.time) } }
       : { day: selectedDate, parts: tods, players });
@@ -665,11 +665,12 @@ export default function CourseDetailPage({
   const loginHref = `/courses/${slug}/login?back=${encodeURIComponent(`/courses/${slug}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`)}`;
   const groupWords = (memberSession?.groups?.length ? memberSession.groups.map(gr => gr.name) : memberSession?.tier?.name ? [memberSession.tier.name] : []).join(' and ');
   const alertsOn = course.tee_time_alerts_on !== false;
-  // The days an alert can watch: today through this golfer's last bookable day, open days only (#486 allows 14).
+  // The days an alert can watch: today through this golfer's last bookable day, open days only. (An alert holds up to
+  // 14 of them; the sheet enforces that on the picking, not here.)
   const alertDays = (() => {
     const out: string[] = [];
     const d = new Date(todayStr + 'T12:00:00');
-    while (out.length < 14) {
+    for (let guard = 0; guard < 400; guard++) {
       const ds = formatDate(d);
       if (ds > lastBookableStr) break;
       if (!closedOn.has(ds)) out.push(ds);
@@ -858,7 +859,7 @@ export default function CourseDetailPage({
             ) : null}
             {bestFewer > 0 && <button type="button" className={g.chip} onClick={() => setPlayers(bestFewer)}>Same day for {bestFewer}</button>}
             {dayHasTimes && <button type="button" className={g.chip} onClick={resetFilters}>Widen my search</button>}
-            {alertsOn && <button type="button" className={g.chip} onClick={() => openAlert()}>Tell me when a time opens</button>}
+            {alertsOn && !previewMode && <button type="button" className={g.chip} onClick={e => openAlert(undefined, e.currentTarget)}>Tell me when a time opens</button>}
           </div>
         </>)}
       </div>
@@ -884,7 +885,7 @@ export default function CourseDetailPage({
                       ? `${formatTime(t.time)}, ${round}, full${alertsOn ? '. Tell me if it opens' : ''}`
                       : `${formatTime(t.time)}, ${round}, ${t.players_available} ${t.players_available === 1 ? 'spot' : 'spots'} open, $${price} per player${hasMemberRate ? `, member price, public price $${t.green_fee}` : ''}`}
                     disabled={isFull && !alertsOn}
-                    onClick={isFull ? () => { if (alertsOn) openAlert(t); } : () => bookTime(t)}>
+                    onClick={isFull ? (e) => { if (alertsOn) openAlert(t, e.currentTarget); } : () => bookTime(t)}>
                     <span className={g.t}>{formatTime(t.time)}</span>
                     <span className={g.c}>{round} · {isFull ? 'Full' : `${t.players_available} open`}</span>
                     <span className={g.b}>
@@ -900,7 +901,7 @@ export default function CourseDetailPage({
         {/* Item 7: an alert row at the end of each day. */}
         {alertsOn && !previewMode && (
           <div className={g.altrow}>
-            <button type="button" className={g.chip} onClick={() => openAlert()}>Tell me when a time opens</button>
+            <button type="button" className={g.chip} onClick={e => openAlert(undefined, e.currentTarget)}>Tell me when a time opens</button>
           </div>
         )}
       </>

@@ -51,7 +51,8 @@ export default function AlertSheet({ open, onClose, course, days, memberEmail }:
   memberEmail: string | null;
 }) {
   const slot = open.slot;
-  const [dates, setDates] = useState<string[]>([open.day]);
+  // Only a day the grid offers starts picked (a day outside it could never be unticked).
+  const [dates, setDates] = useState<string[]>(days.includes(open.day) ? [open.day] : []);
   const [parts, setParts] = useState<AlertPartKey[]>(open.parts.length ? open.parts : PARTS.map(p => p.key));
   const [players, setPlayers] = useState(Math.min(4, Math.max(1, open.players)));
   const [wide, setWide] = useState(false);
@@ -73,8 +74,9 @@ export default function AlertSheet({ open, onClose, course, days, memberEmail }:
       const items = Array.from(boxRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], input:not([disabled])')).filter(el => el.offsetParent !== null);
       if (!items.length) return;
       const first = items[0], last = items[items.length - 1];
-      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      const at = items.indexOf(document.activeElement as HTMLElement);
+      if (e.shiftKey && at <= 0) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && (at === -1 || at === items.length - 1)) { e.preventDefault(); first.focus(); }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -103,6 +105,7 @@ export default function AlertSheet({ open, onClose, course, days, memberEmail }:
       next.email = !v ? 'Enter your email so we can reach you.' : EMAIL.test(v) ? undefined : 'That doesn’t look like an email. Check for a typo.';
     }
     if (textOk && phone.replace(/\D/g, '').length < 10) next.phone = 'Add a 10-digit mobile number to get texts, or untick the box.';
+    else if (!textOk && phone.trim()) next.phone = 'Tick the box to agree to alert texts, or leave the phone empty.';
     setErr(next);
     const first = (['dates', 'parts', 'email', 'phone'] as const).find(k => next[k]);
     if (first) { boxRef.current?.querySelector<HTMLElement>(`[data-field="${first}"]`)?.focus(); return; }
@@ -126,15 +129,19 @@ export default function AlertSheet({ open, onClose, course, days, memberEmail }:
       const d = await r.json().catch(() => ({}));
       if (!r.ok) {
         const msg = typeof d.error === 'string' ? d.error : 'That didn’t go through. Try again.';
-        const f = d.field === 'dates' ? 'dates' : d.field === 'parts' ? 'parts' : d.field === 'email' ? 'email' : d.field === 'phone' || d.field === 'textConsent' ? 'phone' : null;
-        setErr(f ? { [f]: msg } : { form: msg });
+        let f: 'dates' | 'parts' | 'email' | 'phone' | null = d.field === 'dates' ? 'dates' : d.field === 'parts' ? 'parts' : d.field === 'email' ? 'email' : d.field === 'phone' || d.field === 'textConsent' ? 'phone' : null;
+        // Only a field that is on screen can carry the error; anything else is said on the form line.
+        if ((f === 'email' && memberEmail) || ((f === 'dates' || f === 'parts') && slot)) f = null;
+        // Logged in on the page, but the server no longer sees the log-in (it ran out, or logged out elsewhere).
+        const formMsg = d.field === 'email' && memberEmail ? 'Your log-in has ended. Log in again, or close this and set the alert as a guest.' : msg;
+        setErr(f ? { [f]: msg } : { form: formMsg });
         return;
       }
       // Fail safe: only an answer that says 'active' reads as on.
       setDone({
         active: d.status === 'active',
         to: d.status === 'active' && typeof d.maskedEmail === 'string' ? d.maskedEmail : email.trim(),
-        phone: d.status === 'active' && typeof d.phone === 'string' && d.phone ? phone.trim() : null,
+        phone: d.status === 'active' && textOk ? phone.trim() : null,
         what, ends: shortDate(typeof d.endsOn === 'string' ? d.endsOn : sorted[sorted.length - 1]),
       });
     } catch {
@@ -169,7 +176,7 @@ export default function AlertSheet({ open, onClose, course, days, memberEmail }:
             {slot ? (
               <>
                 <p className={g.fixedNote}><b>{shortDate(open.day)}, {slot.label}</b> · {course.name}</p>
-                <label className={g.sms}>
+                <label className={`${g.sms} ${g.tapRow}`}>
                   <input type="checkbox" checked={wide} onChange={e => setWide(e.target.checked)} />
                   <span>Also tell me about other {PARTS.find(p => p.key === slot.part)!.label.toLowerCase()} times that day</span>
                 </label>
