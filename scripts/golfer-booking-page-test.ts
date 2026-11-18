@@ -75,6 +75,11 @@ check('range balls: their own price line, and the request carries rangeBuckets (
 check('range balls: a 409 code range reloads the bucket list', book.includes("if (res.status === 409 && data.code === 'range') onRangeStale?.();") && book.includes('onRangeStale={reloadBuckets}'));
 
 check('Apple Pay / Google Pay send the current cart and range balls, never a stale render', book.includes('latest.current = { name, email, phone, agreed, promoCode, packLineId, smsOk, cartSelected, rangeBuckets };') && book.includes('cartSelected: latest.current.cartSelected,'));
+// Follow-ups (Build 2026-11-18): a real 404 for an unknown course; the Book page's footer wears the look.
+const coursePageServer = readFileSync('src/app/courses/[slug]/page.tsx', 'utf8');
+check('an unknown course is a real 404', coursePageServer.includes('if (!initialCourse) notFound();') && readFileSync('src/app/courses/[slug]/not-found.tsx', 'utf8').includes('We couldn&apos;t find that course'));
+const siteFooter = readFileSync('src/components/Footer.tsx', 'utf8');
+check('the site footer skips /book, which carries its own footer in the look (Privacy, Terms, support)', siteFooter.includes("if (pathname === '/book' || pathname === '/book/') return null;") && book.includes('<BookFooter course={initial?.course} />') && book.includes('<Link href="/privacy">Privacy</Link>') && book.includes('<Link href="/terms">Terms</Link>'));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);

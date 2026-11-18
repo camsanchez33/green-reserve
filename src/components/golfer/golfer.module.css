@@ -173,6 +173,12 @@
 .bucket { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 0; font-size: 14px; }
 .bucket + .bucket { border-top: 1px solid var(--g-line); }
 
+/* The Book page's own footer (the site footer skips /book). */
+.bookfoot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 16px; padding: 16px 24px; background: var(--g-paper); border-top: 1px solid var(--g-line); color: var(--g-muted); font-size: 12.5px; }
+.bookfoot a { color: var(--g-soft); display: inline-flex; align-items: center; min-height: 44px; }
+.bookfoot a:hover { color: var(--g-ink); }
+.bookfootLinks { display: flex; flex-wrap: wrap; gap: 0 16px; }
+
 /* Modal (alerts until the alerts sheet lands; demo and preview notices) */
 .modalBack { position: fixed; inset: 0; background: rgba(0, 0, 0, .45); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 50; }
 .modal { background: var(--g-card); color: var(--g-ink); border-radius: 12px; padding: 20px; max-width: 400px; width: 100%; }
