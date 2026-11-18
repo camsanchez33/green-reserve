@@ -16,6 +16,7 @@ import { randomBytes } from 'crypto';
 import bcrypt from 'bcryptjs';
 import { Prisma } from '@prisma/client';
 import { prisma } from './prisma';
+import { ciEquals } from './like-exact';
 import { signStaffResetToken } from './auth';
 import { securityEvent } from './security-events';
 import { sendStaffResetLinkEmail, sendStaffWelcomeEmail } from './email';
@@ -250,7 +251,7 @@ export async function teamHistory(courseId: string, targetId?: string, take = 50
 // ── Roles ─────────────────────────────────────────────────────────────────────
 
 async function nameTaken(courseId: string, name: string, exceptId?: string) {
-  const hit = await prisma.courseRole.findFirst({ where: { courseId, name: { equals: name, mode: 'insensitive' }, ...(exceptId ? { id: { not: exceptId } } : {}) }, select: { id: true } });
+  const hit = await prisma.courseRole.findFirst({ where: { courseId, name: ciEquals(name), ...(exceptId ? { id: { not: exceptId } } : {}) }, select: { id: true } });
   return !!hit || name.toLowerCase() === 'owner';
 }
 
