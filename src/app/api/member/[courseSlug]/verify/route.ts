@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verifyMemberMagicToken, signMemberSessionToken } from '@/lib/member-session';
+import { verifyMemberMagicToken, signMemberSessionToken, canLogIn } from '@/lib/member-session';
 import { securityEvent } from '@/lib/security-events';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 
@@ -29,28 +29,24 @@ export async function GET(
   // Confirm token's courseId belongs to this slug
   const course = await prisma.course.findUnique({
     where: { slug: courseSlug },
-    select: { id: true },
+    select: { id: true, timezone: true, hasResidentPricing: true },
   });
   if (!course || course.id !== payload.courseId) {
+    await securityEvent(req, { kind: 'signin_failed', surface: 'member', email: payload.email, detail: 'sign-in link for another course' });
     return NextResponse.redirect(failUrl);
   }
 
-  // Confirm membership is still active
-  const membership = await prisma.courseMembership.findUnique({
-    where: { id: payload.membershipId },
-    select: { status: true },
-  });
-  if (!membership || membership.status !== 'active') {
+  // Residents log in (Cam 2026-11-18): still in one of this course's groups when the link is opened — an active
+  // membership here, or a resident card good today here or in the course's group.
+  if (!(await canLogIn(course, payload.email))) {
+    await securityEvent(req, { kind: 'signin_failed', surface: 'member', email: payload.email, detail: 'not in a group at this course' });
     return NextResponse.redirect(
       `${process.env.NEXT_PUBLIC_URL}/courses/${courseSlug}/member?error=inactive`
     );
   }
 
-  const sessionToken = await signMemberSessionToken({
-    membershipId: payload.membershipId,
-    courseId: payload.courseId,
-    email: payload.email,
-  });
+  const sessionToken = await signMemberSessionToken({ courseId: payload.courseId, email: payload.email });
+  await securityEvent(req, { kind: 'signin_ok', surface: 'member', email: payload.email, detail: 'sign-in link' });
 
   const res = NextResponse.redirect(
     `${process.env.NEXT_PUBLIC_URL}/courses/${courseSlug}/member`

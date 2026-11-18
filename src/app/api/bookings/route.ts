@@ -3,7 +3,7 @@ import { NextRequest, NextResponse, after } from 'next/server';
 import { memberPricingOn, residentPricingOn } from '@/lib/pricing-switch';
 import { onlineBookingBlock } from '@/lib/golfer-record';
 import { applyTierRates } from '@/lib/tier-rates';
-import { membershipLive, memberPlayers, splitTotal, memberSpot } from '@/lib/member-rates';
+import { memberPlayers, splitTotal, memberSpot } from '@/lib/member-rates';
 import { cartCharge, cartRuleOf } from '@/lib/cart-pricing';
 import { groupGreenFee } from '@/lib/residents';
 import { applyPromo, reserveUse, releaseUse, seatAfter, NOTHING_OFF, PROMO_USED, type PromoRow } from '@/lib/promo-codes';
@@ -18,7 +18,7 @@ import { chargeBookingFee, releaseUnpaidBooking } from '@/lib/booking-fee';
 import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { centsToDollars } from '@/lib/money';
-import { getMemberSession, signedInResident } from '@/lib/member-session';
+import { getMemberSession, loggedInResident, liveMembershipFor } from '@/lib/member-session';
 import { stripe, ACCESS_FEE_CENTS } from '@/lib/stripe';
 import { sendBookingConfirmation, sendOperatorBookingNotification, sendCancellationWarningEmail, sendCheckInAvailableEmail } from '@/lib/email';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
@@ -136,12 +136,10 @@ export async function POST(req: NextRequest) {
   // Cam 2026-11-18: the member is whoever is signed in to THIS course (gr_member); there are no golfer accounts.
   {
     if (memberSession && memberSession.courseId === teeTimeFull.courseId) {
-      const membership = await prisma.courseMembership.findUnique({
-        where: { id: memberSession.membershipId },
-        include: { tier: true },
-      });
+      // Residents log in: the session is a proven email; its live membership here is read now (lib/member-session).
       // A lapsed membership (past its end date + the course's grace days) gets public rates and the public window.
-      const live = !!membership && membership.courseId === teeTimeFull.courseId && membershipLive(membership, teeTimeFull.course);
+      const membership = await liveMembershipFor(teeTimeFull.course, memberSession.email);
+      const live = !!membership;
       if (live && !viewerMembership) viewerMembership = { tier: membership!.tier };
       if (live && membership!.tier && memberPricingOn(teeTimeFull.course)) {
         const rates = applyTierRates(teeTimeFull, membership!.tier);
@@ -179,10 +177,10 @@ export async function POST(req: NextRequest) {
   // A cart is required when this tee time can't be walked (its price-table cell, CART-1).
   const wantsCart = walkingAllowedAt(teeTimeFull) ? !!cartSelected : true;
 
-  // RES-1: a golfer signed in to this course (gr_member) whose email is on the resident list pays the
+  // RES-1: a golfer logged in to this course (gr_member, a member or a resident) whose email is on the resident list pays the
   // resident rate for one player — themselves. A member rate is never combined with it.
   const resident = appliedTierName === 'standard' && teeTimeFull.residentRateCents != null && residentPricingOn(teeTimeFull.course)
-    ? await signedInResident(teeTimeFull.courseId, teeTimeFull.date) : null;
+    ? await loggedInResident(teeTimeFull.courseId, teeTimeFull.date) : null;
   // PRICE-1 (Cam 2026-10-30): a promo code comes off the green fee, SEAT BY SEAT — the member's
   // spot, the resident and each other player each pay their own rate less the code — so the
   // per-seat rates kept on the booking add up to its total and keep the discount through a

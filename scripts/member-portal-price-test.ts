@@ -75,7 +75,7 @@ async function main() {
 
   // RES-1: booking charges the signed-in member's own spot the resident rate
   // when no membership price applied and their card is good on the date
-  // (api/bookings: signedInResident + groupGreenFee). The list must show it.
+  // (api/bookings: loggedInResident + groupGreenFee). The list must show it.
   // Cam 2026-11-18: the member sign-in (gr_member) is the only sign-in; its email is the resident's.
   const memberCookie = async (membershipId: string, email: string) => `gr_member=${await signMemberSessionToken({ membershipId, courseId: course.id, email })}`;
   const portal = async (cookie: string) => {

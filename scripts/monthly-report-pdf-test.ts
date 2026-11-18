@@ -70,6 +70,7 @@ console.log(JSON.stringify(out));`);
   const mr = readFileSync('src/lib/monthly-review.ts', 'utf8');
   ok('the review\'s money comes from the ledger', mr.includes('ledgerCovers(m) ? ledgerMonth(courseId, tz, m, now)') && readFileSync('src/lib/analytics-page.ts', 'utf8').includes('allSegments(courseId, tz, r, previousRange(r), now)') && !mr.includes('collectedDollars') && !mr.includes('outstandingCents') && !mr.includes('impactCents'));
 
+  ok('the writer is told range balls are already inside tee + cart and pro shop', mr.includes('rangeAlsoInTeeAndShopDollars is range-ball buckets, and they are ALREADY inside teeAndCartDollars') && mr.includes('never present it as a separate part'));
   if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
   console.log('\nall passed');
 })().catch(e => { console.error(e); process.exit(1); });
