@@ -5,7 +5,29 @@
 import { prisma } from '@/lib/prisma';
 import { ROUND_PACKS_ON } from '@/lib/round-packs-switch';
 import { centsToDollarsOr0 } from '@/lib/money';
-import { normalizeDbCourse } from '@/lib/normalize-course';
+import { normalizeDbCourse, type BookingPageExtras } from '@/lib/normalize-course';
+import { hasLivePromo, closedDatesIn } from '@/lib/booking-look';
+import { todayIn, addDaysStr } from '@/lib/course-time';
+import { DEFAULT_PUBLIC_WINDOW_DAYS, DEFAULT_MEMBER_WINDOW_DAYS } from '@/lib/booking-window';
+
+/**
+ * The booking page's extra fields (Golfer lane item 1). Promo: is any code usable on a
+ * tee time inside the PUBLIC window (only a boolean leaves here, never a code). Closed
+ * days: from the course's today through its widest window (public or member), since the
+ * payload is the same for every viewer.
+ */
+export async function bookingPageExtras(c: { id: string; timezone?: string | null; publicAdvanceDays?: number | null; memberAdvanceDays?: number | null }, now: Date = new Date()): Promise<BookingPageExtras> {
+  const today = todayIn(c.timezone, now);
+  const publicDays = c.publicAdvanceDays ?? DEFAULT_PUBLIC_WINDOW_DAYS;
+  // Both ends from the same course-local today (lastBookableDate falls back to UTC without a timezone).
+  const lastPublic = addDaysStr(today, Math.max(0, publicDays));
+  const lastAny = addDaysStr(today, Math.max(0, publicDays, c.memberAdvanceDays ?? DEFAULT_MEMBER_WINDOW_DAYS));
+  const [codes, closed] = await Promise.all([
+    prisma.promoCode.findMany({ where: { courseId: c.id, active: true }, select: { active: true, startsOn: true, endsOn: true, maxUses: true, usesCount: true } }),
+    prisma.blackout.findMany({ where: { courseId: c.id, date: { gte: today, lte: lastAny } }, select: { date: true, reason: true } }),
+  ]);
+  return { hasLivePromo: hasLivePromo(codes, today, lastPublic), closedDates: closedDatesIn(closed, today, lastAny) };
+}
 
 /** The golfer-visible course, exactly as the API serialises it — or null. */
 export async function loadPublicCourse(slug: string) {
@@ -31,5 +53,6 @@ export async function loadPublicCourse(slug: string) {
   // ISO strings), so the client component sees one shape either way.
   const payable = dbCourse.stripeAccountActive && !!dbCourse.stripeAccountId;
   const sellsPacks = ROUND_PACKS_ON && dbCourse._count.roundPacks > 0 && payable;
-  return JSON.parse(JSON.stringify({ ...normalizeDbCourse(dbCourse, centsToDollarsOr0(cheapestCents)), sells_packs: sellsPacks }));
+  const extras = await bookingPageExtras(dbCourse);
+  return JSON.parse(JSON.stringify({ ...normalizeDbCourse(dbCourse, centsToDollarsOr0(cheapestCents), extras), sells_packs: sellsPacks }));
 }
