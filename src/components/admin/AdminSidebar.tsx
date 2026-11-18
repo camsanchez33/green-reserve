@@ -8,7 +8,7 @@ import CommandPalette from '@/components/admin/CommandPalette';
 import { useAdminSession } from '@/lib/admin-session-context';
 import type { AdminArea } from '@/lib/admin-areas';
 
-export type AdminNavKey = 'overview' | 'bookings' | 'problems' | 'goals' | 'inquiries' | 'courses' | 'groups' | 'employees' | 'announcements' | 'messages' | 'profile' | 'revenue' | 'expenses' | 'finance' | 'support' | 'business' | 'golfers' | 'system' | 'company' | 'audit' | 'security';
+export type AdminNavKey = 'overview' | 'bookings' | 'problems' | 'goals' | 'inquiries' | 'outreach' | 'courses' | 'groups' | 'employees' | 'announcements' | 'messages' | 'profile' | 'revenue' | 'expenses' | 'finance' | 'support' | 'business' | 'golfers' | 'system' | 'company' | 'audit' | 'security';
 
 export default function AdminSidebar({ active, pendingInquiries = 0 }: {
   active: AdminNavKey;
@@ -88,9 +88,12 @@ export default function AdminSidebar({ active, pendingInquiries = 0 }: {
       { key: 'overview', label: 'Overview', href: '/admin' },
       { key: 'courses', label: 'Golf courses', href: '/admin/courses', minRole: VIEWER_PLUS, area: 'courses' },
       // Course groups is parked (Cam 2026-11-18): /admin/groups still works; back when a real county signs.
+      // Inquiries (Cam approved the mockup 2026-11-17): internal outreach, Target to Said yes, before Onboarding.
+      { key: 'outreach', label: 'Inquiries', href: '/admin/inquiries', minRole: VIEWER_PLUS, area: 'pipeline' },
       { key: 'inquiries', label: 'Onboarding', href: '/admin/onboarding', minRole: VIEWER_PLUS, area: 'pipeline' },
       { key: 'bookings', label: 'Bookings', href: '/admin/bookings', minRole: SUPPORT_PLUS, area: 'money' },
-      // Users & golfers is dropped (Cam 2026-11-12): golfers are found on Bookings; a course's people go on its profile later.
+      // Golfers (Cam approved the mockup 2026-11-17; was dropped 2026-11-12): every golfer, their bookings, resends only.
+      { key: 'golfers', label: 'Golfers', href: '/admin/golfers', minRole: SUPPORT_PLUS, area: 'golfers' },
     ] },
     { label: 'Financials', items: [
       // Revenue (Cam 2026-11-12, approved): no badge — failed charges and golfer disputes are the course's, not this page's.

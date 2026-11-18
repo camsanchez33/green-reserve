@@ -1,0 +1,81 @@
+/* Golfers (Cam approved the mockup 2026-11-17, lanes/admin/golfers-mockup.html): one line per golfer, a golfer opens
+   to their numbers, where they've played and every booking. Green-glass tokens (--g-*) from admin-glass.module.css;
+   cards are My profile's (ProfileCard). */
+
+.col { display: flex; flex-direction: column; gap: 16px; max-width: 1080px; width: 100%; }
+.tools { display: flex; gap: 6px; align-items: center; flex: none; }
+.cnt { font-weight: 400; color: var(--g-muted); font-size: 14px; margin-left: 6px; font-variant-numeric: tabular-nums; }
+
+.sr { display: flex; align-items: center; gap: 6px; border: 1px solid var(--g-line); border-radius: 9px; padding: 0 8px; height: 32px; color: var(--g-muted); box-sizing: border-box; }
+.sr input { font: inherit; font-size: 13px; background: transparent; border: 0; outline: none; color: var(--g-ink); width: 150px; }
+.sr:focus-within { outline: 2px solid var(--g-focus); outline-offset: 1px; }
+.ibtn { position: relative; width: 40px; height: 40px; margin: -4px -8px -4px 0; border-radius: 9px; border: 0; background: transparent; color: var(--g-ink); display: grid; place-items: center; cursor: pointer; padding: 0; flex: none; }
+:global([data-theme="dark"]) .ibtn { color: #FFFFFF; }   /* white icon buttons with no box (lanes/admin.md) */
+.ibtn:hover, .fon { background: var(--g-active); }
+.ibtn:focus-visible { outline: 2px solid var(--g-focus); outline-offset: 1px; }
+.fdot { position: absolute; top: 8px; right: 8px; width: 6px; height: 6px; border-radius: 50%; background: var(--g-up); }
+
+/* One line per golfer, and a booking's summary: the same columns. */
+.hd, .row, .bk summary { display: grid; grid-template-columns: 8px minmax(0, 1.4fr) minmax(0, 1.4fr) 70px 100px 16px; gap: 12px; align-items: center; }
+.hd { font-size: 12px; color: var(--g-muted); padding: 10px 0 6px; }
+.row, .bk summary { font: inherit; font-size: 13.5px; color: var(--g-ink); background: none; border: 0; border-top: 1px solid var(--g-line); min-height: 50px; width: 100%; text-align: left; cursor: pointer; padding: 0; box-sizing: border-box; }
+.row:hover, .bk summary:hover { background: var(--g-active); }
+.row:focus-visible, .bk summary:focus-visible { outline: 2px solid var(--g-focus); outline-offset: -2px; }
+.row > span, .bk summary > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.n { font-weight: 500; }
+.n em { font-style: normal; font-size: 11.5px; color: var(--g-muted); border: 1px solid var(--g-line); border-radius: 999px; padding: 0 7px; margin-left: 6px; }
+.soft { color: var(--g-ink-soft); }
+.num { font-variant-numeric: tabular-nums; }
+.ch { color: var(--g-muted); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--g-muted); flex: none; }
+.ok { background: var(--g-up); } .warn { background: var(--g-warn); } .bad { background: var(--g-down); }
+.more { align-self: flex-start; margin-top: 10px; display: flex; gap: 10px; align-items: center; }
+.priv { margin: 8px 0 0; font-size: 12px; color: var(--g-muted); }
+.empty { margin: 10px 0 0; font-size: 13px; color: var(--g-muted); }
+.skel { height: 240px; }
+.back { align-self: flex-start; }
+
+/* A golfer */
+.prob { display: flex; gap: 10px; align-items: center; padding: 12px 16px; font-size: 13.5px; color: var(--g-ink); }
+.ts { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; padding: 4px 0 6px; }
+.t { display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; }
+.t span { font-size: 12px; color: var(--g-muted); white-space: nowrap; }
+.t b { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--g-ink); }
+.t b.tw { color: var(--g-warn); } .t b.tb { color: var(--g-down); }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.kv { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 12px; padding: 10px 0; border-top: 1px solid var(--g-line); font-size: 13.5px; color: var(--g-ink); }
+.kv:first-child { border-top: 0; }
+.kv span:first-child { color: var(--g-muted); }
+.kv span { overflow-wrap: anywhere; }
+.played { grid-template-columns: minmax(0, 1fr) auto; }
+.played span:first-child { color: var(--g-ink); }
+.played span:last-child { color: var(--g-ink-soft); }
+
+.bk summary { grid-template-columns: 8px minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1.2fr) 16px; list-style: none; }
+.bk summary::-webkit-details-marker { display: none; }
+.bk[open] .ch { transform: rotate(90deg); }
+.bd { padding: 6px 0 14px 20px; display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--g-ink); }
+.fail { color: var(--g-down); }
+.tl { list-style: none; margin: 4px 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; }
+.tl li { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 12px; }
+.tl li span:first-child { color: var(--g-muted); font-variant-numeric: tabular-nums; }
+.acts { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+.acts a { color: var(--g-ink); }
+.note { margin: 10px 0 0; font-size: 12.5px; color: var(--g-muted); }
+.flab { display: grid; gap: 5px; font-size: 13px; color: var(--g-muted); }
+
+@media (max-width: 900px) {
+  .hd { display: none; }
+  .hd + .row { border-top: 0; }
+  .row { grid-template-columns: 8px minmax(0, 1fr) 16px; padding: 10px 0; }
+  .row .hideS, .bk summary .hideS { display: none; }
+  .bk summary { grid-template-columns: 8px minmax(0, 1fr) 16px; padding: 10px 0; }
+  .ts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .two { grid-template-columns: minmax(0, 1fr); }
+  .kv, .tl li { grid-template-columns: 100px minmax(0, 1fr); }
+  .played { grid-template-columns: minmax(0, 1fr) auto; }
+  .head { flex-direction: column; align-items: stretch; }
+  .tools { width: 100%; }
+  .sr { flex: 1; }
+  .sr input { width: 100%; }
+}

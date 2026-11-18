@@ -84,7 +84,7 @@ Support (chats) · Light parity. Specs: ADMIN_REDO_SPEC "Course dashboard Home",
 8. **Team — APPROVED** (Cam 2026-11-17, "we are all good"). Mockup `lanes/dashboard/team-mockup.html` (https://claude.ai/artifact/L2SZ76WpfdZMx4krCiubf1) and its threads are the spec. Team is a new rail item under Business.
    - **One view:** roles in rank order, each with its people listed under it as compact rows.
    - **A new course starts with only Owner,** plus Suggested roles the owner can add (never pre-created).
-   - **A Roles tab** sets what each role can access. A person's own page adjusts their access too.
+   - **A Roles tab** sets what each role can access, through about six access areas, each No access / View / Full, with the individual switches under Advanced (Cam: "less buttons"). A mixed set shows as "Custom". Giving View or Full on an area that moves money lists those keys and asks for confirmation; nothing is granted silently. A person's own page adjusts their access too.
    - **Invite** asks for name, email and an optional phone, and sends a full welcome email.
    - **Reset password** emails a link (no temporary password).
    - **Build adds:** editable roles, invite by email, reset links, last active.

@@ -17,7 +17,9 @@ check('old Pricing & cancellation link resolves', page.includes(`'Pricing & canc
 check('old Staff & account link resolves', page.includes(`'Staff & account': { area: 'staff' }`));
 check('old Pro shop link lands on the register', page.includes(`'Pro shop': { area: 'payments', target: 'g-register' }`));
 check('Money links to a section name that still resolves', cx.includes('/dashboard/settings?section=Prices+%26+fees') && page.includes(`'Prices & fees': { area: 'payments' }`));
-check('the staff screen stays reachable until Team is built', page.includes("goArea('staff')") && page.includes('<StaffPermissions />'));
+// TEAM-1: staff moved to Team; every old link to them lands there.
+check('old staff links go to Team', page.includes("router.replace('/dashboard/team')") && page.includes("if (to === 'staff') { router.push('/dashboard/team')"));
+check('the old staff screen is gone from Settings', !page.includes('<StaffPermissions />'));
 check('status strip is gone', !page.includes('staff account{staffCount'));
 check('"Getting paid moved" note is gone', !page.includes('Getting paid moved'));
 check('the photo count waits for the photo list', course.includes("photos ? plural(photos.length, 'photo') : '…'"));
