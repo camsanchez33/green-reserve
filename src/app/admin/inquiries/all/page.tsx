@@ -1,6 +1,6 @@
 'use client';
 // The old Pipeline board, kept whole at /admin/inquiries/all (Admin lane 2026-11-17) when Inquiries became the
-// approved outreach page: bulk Send sheet and Archive, closed inquiries with Restore, Build by hand and the export have
+// approved outreach page: bulk Send sheet and Archive, closed inquiries with Restore and the export have
 // no other home yet. Build and Cam decide where they go; until then nothing is lost.
 import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -700,10 +700,6 @@ function InquiriesListInner() {
               )}
             </div>
             <div className="flex items-center gap-2">
-              {/* ADMIN-C: Manual build left the menu; it lives here, where a course starts. */}
-              {MANAGER_PLUS.includes(role) && (
-                <Link href="/admin/create" className="text-[13px] font-medium px-3 py-2 rounded-md border border-line text-ink hover:border-pine/40">Build by hand</Link>
-              )}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ink-muted pointer-events-none" />
                 <input

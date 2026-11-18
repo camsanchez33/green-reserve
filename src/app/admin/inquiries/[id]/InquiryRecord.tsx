@@ -1032,12 +1032,6 @@ function InquiryDetailInner() {
                     Clear snooze
                   </button>
                 )}
-                {!inq.builtCourseId && !isArchived && !isLead && inq.status !== 'building' && (
-                  <button onClick={() => { setMoreOpen(false); router.push('/admin/create?' + wizardParams.toString()); }}
-                    className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
-                    Manual build (in person)
-                  </button>
-                )}
                 {(isLead || inq.status === 'pending' || inq.status === 'in_review' || inq.status === 'details_requested' || inq.status === 'details_submitted') && (
                   <button onClick={() => { setMoreOpen(false); if (isLead) setRejectNotify(false); setPendingAction('reject'); }} disabled={processing}
                     className="w-full flex items-center gap-2 px-2 py-2 text-xs text-bad hover:bg-bad/5 rounded-md transition-colors">

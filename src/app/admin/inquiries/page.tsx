@@ -128,7 +128,7 @@ function InquiriesInner() {
                     ))}
                   </section>
                 )}
-                {/* The old Pipeline board (bulk Send sheet and Archive, closed inquiries, Build by hand, the export) until
+                {/* The old Pipeline board (bulk Send sheet and Archive, closed inquiries, the export) until
                     Build and Cam give those a home. */}
                 <p className={iq.foot}><Link href="/admin/inquiries/all">All inquiries ›</Link></p>
               </>
