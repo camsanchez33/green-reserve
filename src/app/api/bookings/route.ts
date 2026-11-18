@@ -30,6 +30,7 @@ import { DEMO_COURSE_SLUGS } from '@/lib/demo-courses';
 import { termsVersionNow } from '@/lib/terms';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { confirmationPartsOf } from '@/lib/confirmation-parts';
+import { LIKE_UNSAFE_EMAIL } from '@/lib/like-exact';
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -37,7 +38,8 @@ export async function POST(req: NextRequest) {
 
   if (!teeTimeId || !playersRaw || !golferName || !golferEmail)
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-  if (typeof golferEmail !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(golferEmail.trim()))
+  // % and \ are refused (lib/like-exact): this unverified address is matched to memberships and promo uses.
+  if (typeof golferEmail !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(golferEmail.trim()) || LIKE_UNSAFE_EMAIL.test(golferEmail))
     return NextResponse.json({ error: 'Please enter a valid email address.' }, { status: 400 });
   // Security review: `players` was only truthiness-checked, so a negative
   // count passed the capacity test and REWOUND playersBooked (a full slot

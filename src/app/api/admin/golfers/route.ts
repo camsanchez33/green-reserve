@@ -7,7 +7,8 @@ import { roundChargedTotal, roundApplicationFeeCents } from '@/lib/shop';
 import { confirmationPartsOf, CONFIRMATION_PART_SELECT } from '@/lib/confirmation-parts';
 import { ON_REAL_COURSE } from '@/lib/real-courses';
 import { bookingRefLabel } from '@/lib/booking-ref';
-import { golferLines, isListFilter, matchesFilter, matchesQuery, likeExact, canResendReceipt } from './list';
+import { ciContains, ciEquals } from '@/lib/like-exact';
+import { golferLines, isListFilter, matchesFilter, matchesQuery, canResendReceipt } from './list';
 
 // MP-6d: the Golfers record page. Search finds accounts AND guest bookings by
 // name / email / phone; the record is identity + a trust strip (rounds,
@@ -105,11 +106,11 @@ export async function GET(req: NextRequest) {
       });
       if (!golfer) return NextResponse.json({ error: 'Golfer not found' }, { status: 404 });
       // Guest bookings made with the same email before (or without) signing up belong on the same record.
-      const guests = await prisma.booking.findMany({ where: { golferAccountId: null, golferEmail: { equals: likeExact(golfer.email), mode: 'insensitive' } }, orderBy: { createdAt: 'desc' }, select: BOOKING_SELECT });
+      const guests = await prisma.booking.findMany({ where: { golferAccountId: null, golferEmail: ciEquals(golfer.email) }, orderBy: { createdAt: 'desc' }, select: BOOKING_SELECT });
       identity = { id: golfer.id, email: golfer.email, firstName: golfer.firstName, lastName: golfer.lastName, phone: golfer.phone ?? '', createdAt: golfer.createdAt.toISOString(), isGuest: false };
       rows = [...golfer.bookings, ...guests] as unknown as BookingRow[];
     } else {
-      const guests = await prisma.booking.findMany({ where: { golferAccountId: null, golferEmail: { equals: likeExact(guestEmail), mode: 'insensitive' } }, orderBy: { createdAt: 'desc' }, select: BOOKING_SELECT });
+      const guests = await prisma.booking.findMany({ where: { golferAccountId: null, golferEmail: ciEquals(guestEmail) }, orderBy: { createdAt: 'desc' }, select: BOOKING_SELECT });
       if (guests.length === 0) return NextResponse.json({ error: 'No guest bookings for that email' }, { status: 404 });
       const g = guests[0];
       const [first, ...rest] = g.golferName.split(' ');
@@ -180,9 +181,9 @@ export async function GET(req: NextRequest) {
     prisma.golferAccount.findMany({
       where: {
         OR: [
-          { email: { contains: lq, mode: 'insensitive' } },
-          { firstName: { contains: lq, mode: 'insensitive' } },
-          { lastName: { contains: lq, mode: 'insensitive' } },
+          { email: ciContains(lq) },
+          { firstName: ciContains(lq) },
+          { lastName: ciContains(lq) },
           ...(digits.length >= 4 ? [{ phone: { contains: digits } }] : []),
         ],
       },
@@ -195,8 +196,8 @@ export async function GET(req: NextRequest) {
       where: {
         golferAccountId: null,
         OR: [
-          { golferEmail: { contains: lq, mode: 'insensitive' } },
-          { golferName: { contains: lq, mode: 'insensitive' } },
+          { golferEmail: ciContains(lq) },
+          { golferName: ciContains(lq) },
           ...(digits.length >= 4 ? [{ golferPhone: { contains: digits } }] : []),
         ],
       },

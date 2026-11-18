@@ -2,7 +2,8 @@ import { cookies } from 'next/headers';
 import { getOperatorSession } from './auth';
 import { NextResponse } from 'next/server';
 import { prisma } from './prisma';
-import { ALL_KEYS, deniedMessage, resolveStaffPermissions, type PermissionKey } from './staff-permissions';
+import { ALL_KEYS, deniedMessage, type PermissionKey } from './staff-permissions';
+import { resolveMemberPermissions } from './team-access';
 
 export const ACTIVE_COURSE_COOKIE = 'gr_active_course';
 
@@ -57,6 +58,23 @@ export async function touchStaffSeen(courseId: string, now = new Date()) {
 }
 
 /**
+ * Team "last active" for one staff login: written only when the stored time is
+ * over 15 minutes old (read with the row, so most requests write nothing).
+ * Never fatal, like touchStaffSeen.
+ */
+async function touchPersonActive(staffId: string, last: Date | null, now = new Date()) {
+  if (last && now.getTime() - last.getTime() < SEEN_EVERY_MS) return;
+  try {
+    await prisma.courseStaff.updateMany({
+      where: { id: staffId, OR: [{ lastActiveAt: null }, { lastActiveAt: { lt: new Date(now.getTime() - SEEN_EVERY_MS) } }] },
+      data: { lastActiveAt: now },
+    });
+  } catch (e) {
+    console.error('[session] lastActiveAt write failed', e);
+  }
+}
+
+/**
  * Resolves the courseId for both operator and staff sessions.
  * Use this in all dashboard API routes instead of getOperatorSession() directly.
  *
@@ -76,16 +94,27 @@ export async function resolveDashboardSession(): Promise<ResolvedSession | null>
     // not actually locking them out — the cookie kept working, and the
     // sliding refresh kept reissuing it. Read the row on every request, like
     // the admin session does.
-    const row = await prisma.courseStaff.findUnique({ where: { id: session.staffId }, select: { active: true, courseId: true, permissions: true, permissionsSetAt: true } });
-    if (!row || !row.active) return null;
+    // Team (Cam 2026-11-17): the person's role is read with the row, so a role
+    // or override change applies on their next request, like disable does.
+    const row = await prisma.courseStaff.findUnique({
+      where: { id: session.staffId },
+      select: {
+        active: true, removedAt: true, sessionVersion: true, courseId: true, permissions: true, permissionsSetAt: true, lastActiveAt: true,
+        roleId: true, grantKeys: true, revokeKeys: true, courseRole: { select: { courseId: true, permissions: true } },
+      },
+    });
+    if (!row || !row.active || row.removedAt) return null;
+    // Team: disable, remove and a password reset bump the version, so older tokens die (pre-Team tokens count as 0).
+    if ((session.sv ?? 0) !== row.sessionVersion) return null;
     await touchStaffSeen(row.courseId);
+    await touchPersonActive(session.staffId, row.lastActiveAt);
     return {
       courseId: row.courseId,
       email: session.email,
       operatorId: null,
       staffId: session.staffId,
       isStaff: true,
-      permissions: resolveStaffPermissions(row),
+      permissions: resolveMemberPermissions(row),
     };
   }
 

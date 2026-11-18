@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getGolferSession } from '@/lib/auth';
 import { stripe } from '@/lib/stripe';
 import { rateLimit, evidentiaryIp } from '@/lib/rate-limit';
+import { LIKE_UNSAFE_EMAIL } from '@/lib/like-exact';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -30,7 +31,7 @@ export async function POST(req: NextRequest) {
   }
 
   const { email, name } = await req.json();
-  if (!email || typeof email !== 'string' || !EMAIL_RE.test(email.trim())) {
+  if (!email || typeof email !== 'string' || !EMAIL_RE.test(email.trim()) || LIKE_UNSAFE_EMAIL.test(email)) {
     return NextResponse.json({ error: 'A valid email is required' }, { status: 400 });
   }
   // Also capped per address, so one golfer's inbox cannot be used to mint
