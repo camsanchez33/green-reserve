@@ -5,6 +5,7 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from './prisma';
 import { stripe, membershipFeeCents } from './stripe';
 import { recordMove } from './money-ledger';
+import { cashRefused } from '@/lib/takes-cash';
 
 /** Initiation is only owed on the first payment ever — never by a member who
  *  joined before the course came to GreenReserve (imported, initiationWaived). */
@@ -82,6 +83,7 @@ export async function markDuesPaidAtCourse(courseId: string, membershipId: strin
   if (!Number.isInteger(takenCents) || takenCents < 1 || takenCents > 10_000_000) return fail(400, 'Enter the amount taken (up to $100,000).');
   const method = input.method === 'check' ? 'check' : input.method === 'cash' || input.method === undefined ? 'cash' : null;
   if (!method) return fail(400, 'Say whether it was cash or a check.');
+  if (method === 'cash') { const off = await cashRefused(courseId); if (off) return fail(409, off); } // Takes cash off
 
   const claimed = await prisma.courseMembership.updateMany({ where: { id: membershipId, courseId, duesReaderId: '', OR: [{ duesChargeStartedAt: null }, { duesChargeStartedAt: { lt: new Date(now.getTime() - STALE_MS) } }] }, data: { duesChargeStartedAt: now } });
   if (!claimed.count) return fail(409, membership.duesReaderId ? 'These dues are on the card reader — finish or cancel it first.' : 'A card payment for these dues is going through — wait a few minutes.');

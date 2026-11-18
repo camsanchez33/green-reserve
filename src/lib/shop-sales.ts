@@ -37,6 +37,7 @@ import { todayIn, addDaysStr } from './course-time';
 import { teeTimeInstant } from './booking-events';
 import { recordMove, feeBackCents } from './money-ledger';
 import { addCharge } from './member-account';
+import { cashRefused } from './takes-cash';
 import { ciContains, likeExact } from '@/lib/like-exact';
 
 export const MAX_SALE_CENTS = 1_000_000; // $10,000 — a typo guard
@@ -263,6 +264,9 @@ export async function createSale(opts: {
   /** POS-3 R2: rounds already paid at the counter (settleAtCounter) — lines on the receipt, no tax, no discount, no stock. Cash only. */
   rounds?: { bookingId: string; name: string; amountCents: number }[];
 }): Promise<Result<SaleView & { payToken: string }>> {
+  // Takes cash off. A sale carrying rounds comes only from ringUpCash, which checked before settling them;
+  // checking again here could strand rounds already settled if the owner flipped it mid-sale.
+  if (opts.pay === 'cash' && !(opts.rounds ?? []).length) { const off = await cashRefused(opts.courseId); if (off) return fail(409, off); }
   const rounds = opts.pay === 'cash' ? opts.rounds ?? [] : [];
   const roundsCents = rounds.reduce((n, r) => n + r.amountCents, 0);
   const noItems = rounds.length > 0 && Array.isArray(opts.lines) && opts.lines.length === 0;
@@ -376,6 +380,7 @@ export async function settleOpenSale(courseId: string, saleId: string, to: 'void
   // PRICE-3: a golfer's own online purchase (a round pack) is paid on their link, never marked paid at the counter.
   const ONLINE_ONLY = 'The golfer bought this online — it’s paid on their own link. Void it if it’s not wanted.';
   if (to === 'paid_cash') { const off = await packSaleOff(saleId, courseId); if (off) return fail(410, off); }
+  if (to === 'paid_cash') { const off = await cashRefused(courseId); if (off) return fail(409, off); } // Takes cash off
   const r = await prisma.$transaction(async tx => {
     const done = await tx.shopSale.updateMany({
       where: { id: saleId, courseId, status: 'open', ...(to === 'paid_cash' ? { soldBy: { not: 'online' } } : {}) },
@@ -651,6 +656,8 @@ export async function refundSale(courseId: string, saleId: string, input: { amou
   if (amountCents > left) return fail(400, `At most $${(left / 100).toFixed(2)} can still be refunded on this sale${s.roundsCents ? ' (green fees are refunded from the tee sheet booking)' : ''}.`);
   // MEM-ACCT 1b: an on-account sale is refunded as a credit on the same member's account.
   const method = s.status === 'paid_card' ? 'card' : s.status === 'paid_account' ? 'account' : 'cash';
+  // Takes cash off: a cash sale's refund is cash out of the drawer.
+  if (method === 'cash') { const off = await cashRefused(courseId); if (off) return fail(409, off); }
   const onAccount = method === 'account' ? await prisma.memberCharge.findUnique({ where: { shopSaleId: saleId }, select: { membershipId: true } }) : null;
   if (method === 'account' && !onAccount) return fail(409, 'This sale’s account line is missing — credit the member on Members instead.');
   // By amount, the items go back only when the whole sale is refunded in one go; a return by item restocks its items.
@@ -830,6 +837,8 @@ export async function voidCashSale(courseId: string, saleId: string): Promise<Re
   // MEM-ACCT 1b: an on-account sale rung up by mistake is voided the same way — its line comes off the account, if not billed yet.
   const account = s.status === 'paid_account';
   if ((s.status !== 'paid_cash' && !account) || !s.paidAt) return fail(409, s.status === 'paid_card' ? 'A card sale is refunded, not voided.' : 'Only a paid cash sale can be voided.');
+  // Takes cash off: voiding a cash sale hands cash back from the drawer (on account moves no money).
+  if (!account) { const off = await cashRefused(courseId); if (off) return fail(409, off); }
   if (s.roundsCents > 0) return fail(409, 'This sale paid green fees — undo those on the tee sheet, and refund the items.');
   if (s.refundedCents > 0) return fail(409, 'Part of this sale was refunded — refund the rest instead.');
   if (await prisma.shopSaleLine.findFirst({ where: { saleId, packRoundsUsed: { gt: 0 } }, select: { id: true } })) return fail(409, 'Rounds from the round pack on this sale have been used — it can’t be voided.');

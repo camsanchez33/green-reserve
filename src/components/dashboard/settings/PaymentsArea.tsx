@@ -1,7 +1,7 @@
 'use client';
 // SETTINGS-6: Payments — Cancellations, Sales tax, Register. The cancellation policy, sales tax and card readers are
-// the owner's alone (the routes refuse staff too); a staff login reads the policy and changes nothing here but
-// "Takes cash" when the owner allowed "Edit course settings".
+// the owner's alone (the routes refuse staff too); a staff login reads the policy and changes nothing here.
+// "Takes cash" is the owner's too (TAKES-CASH-1, Cam 2026-11-17: off means no cash anywhere).
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { LATE_FEE_TIMINGS } from '@/lib/cancel-policy';
@@ -181,7 +181,7 @@ export function PaymentsArea({ ctx }: { ctx: Ctx }) {
   useEffect(() => { if (ctx.owner) { loadReaders(); loadTax(); } }, [ctx.owner, loadReaders, loadTax]);
   useEffect(() => { if (pop === '' && ctx.owner) loadTax(); }, [pop, ctx.owner, loadTax]);
 
-  // HOME-3: one switch that saves itself. Today it decides only whether Home asks you to open the register.
+  // One switch that saves itself (owner only). TAKES-CASH-1: off refuses cash everywhere on the server (lib/takes-cash).
   async function flipCash(next: boolean) {
     setCashBusy(true);
     const e = await ctx.save({ takesCash: next });
@@ -220,13 +220,13 @@ export function PaymentsArea({ ctx }: { ctx: Ctx }) {
         </Group>
       )}
 
-      <Group id="register" setup="register" title="Register" note={ctx.owner ? 'Owner only, except Takes cash.' : undefined}>
+      <Group id="register" setup="register" title="Register" note={ctx.owner ? 'Owner only.' : undefined}>
         <div className="w-full grid grid-cols-[minmax(0,1fr)_auto] gap-4 items-start px-3 py-[11px] border-t border-line text-[13.5px]" id="r-register-cash">
           <span className="min-w-0">
             <span className="block font-medium text-ink">Takes cash</span>
-            <small className="block mt-0.5 text-[12.5px] leading-snug text-ink-soft">{cash ? 'On: Home reminds you to open the register before the first sale.' : 'Off: Home doesn’t ask you to open the register.'}</small>
+            <small className="block mt-0.5 text-[12.5px] leading-snug text-ink-soft">{cash ? 'On: you open and count the drawer each day, and staff can take cash.' : 'Off: cash is refused everywhere; card and pay links only.'}</small>
           </span>
-          <Switch on={cash} onChange={flipCash} label="Takes cash" disabled={!ctx.canEdit || cashBusy} />
+          <Switch on={cash} onChange={flipCash} label="Takes cash" disabled={!ctx.owner || cashBusy} />
         </div>
         {ctx.owner && <ReaderList list={readers} onAdd={() => setPop('addreader')} reload={loadReaders} />}
       </Group>

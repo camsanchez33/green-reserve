@@ -22,6 +22,7 @@ import { todayIn } from './course-time';
 import { teeTimeInstant } from './booking-events';
 import { recordMove } from './money-ledger';
 import { stripe } from './stripe';
+import { cashRefused } from '@/lib/takes-cash';
 
 export const DUE_DAYS = 15;
 export const AUTO_CHARGE_DAYS = 3;
@@ -146,6 +147,7 @@ export async function autoChargeStatement(s: Awaited<ReturnType<typeof autoCharg
 export async function markStatementPaidOffline(courseId: string, statementId: string, method: unknown, now = new Date()) {
   const how = method === 'check' ? 'check' : method === 'cash' || method === undefined ? 'cash' : null;
   if (!how) return { ok: false as const, status: 400, error: 'Say whether it was cash or a check.' };
+  if (how === 'cash') { const off = await cashRefused(courseId); if (off) return { ok: false as const, status: 409, error: off }; } // Takes cash off
   const st = await prisma.memberStatement.findFirst({ where: { id: statementId, courseId }, select: { id: true, totalCents: true, feeCents: true, membershipId: true, period: true, status: true, chargeStartedAt: true, paymentIntentId: true, course: { select: { stripeAccountId: true } } } });
   if (!st) return { ok: false as const, status: 404, error: 'That statement isn’t on this course.' };
   // Claim it first (one payment at a time), so a card payment in flight is never stopped mid-way.
