@@ -10,7 +10,7 @@ import { MAX_IMPORT_ITEMS, MAX_OPTIONS, type ImportItem } from './shop-import';
 import { isTaxCategory } from './tax-categories';
 import { ciEquals } from '@/lib/like-exact';
 
-export const ITEM_SELECT = { id: true, name: true, category: true, priceCents: true, active: true, sortOrder: true, stockCount: true, sku: true, parentId: true, optionLabel: true, taxCategory: true, photoUrl: true, rangeBalls: true } as const;
+export const ITEM_SELECT = { id: true, name: true, category: true, priceCents: true, active: true, sortOrder: true, stockCount: true, sku: true, parentId: true, optionLabel: true, taxCategory: true, rangeBalls: true, photoUrl: true } as const;
 
 export const optionName = (item: string, option: string) => `${item} — ${option}`;
 
