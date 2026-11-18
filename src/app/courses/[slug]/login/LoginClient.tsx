@@ -27,7 +27,9 @@ export default function LoginClient({ course, back, linkFailed = false }: { cour
   const backHref = safeBack(back, slug);
   // The visible Back links go where a logged-out golfer can be: the Book page or the tee times. (The member page
   // needs a log-in and would send them straight back here.) After log-in, backHref is used as given.
-  const leaveHref = backHref.startsWith('/book?') ? backHref : `/courses/${slug}`;
+  const home = `/courses/${slug}`;
+  // The tee times keep their date and players (the course page reads them from the URL only).
+  const leaveHref = backHref.startsWith('/book?') || backHref === home || backHref.startsWith(`${home}?`) ? backHref : home;
   const backLabel = leaveHref.startsWith('/book?') ? 'Back to your booking' : 'Back to tee times';
   const [step, setStep] = useState<'email' | 'code'>('email');
   const [email, setEmail] = useState('');

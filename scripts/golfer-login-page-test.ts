@@ -72,10 +72,18 @@ check('an old emailed link that failed says so on the code page, without a reaso
 check('logging out on the member page goes to the course page', member.includes('onSignOut={() => router.replace(`/courses/${slug}`)}'));
 check('the course info page adds no <main> inside the layout\'s', !readFileSync('src/app/courses/[slug]/info/page.tsx', 'utf8').includes('<main'));
 
-check('the visible Back links never point at the member page (it needs a log-in and would send the golfer back here)', page.includes("const leaveHref = backHref.startsWith('/book?') ? backHref : `/courses/${slug}`;") && page.includes('<Link href={leaveHref} className={`${g.lnk} ${g.back}`}>') && page.includes('href={leaveHref}>{backLabel}</Link>') && !page.includes('<Link href={backHref}'));
+check('the visible Back links never point at the member page (it needs a log-in and would send the golfer back here)', page.includes("const leaveHref = backHref.startsWith('/book?') || backHref === home || backHref.startsWith(`${home}?`) ? backHref : home;") && page.includes('<Link href={leaveHref} className={`${g.lnk} ${g.back}`}>') && page.includes('href={leaveHref}>{backLabel}</Link>') && !page.includes('<Link href={backHref}'));
 check('the failed-link line shows only when Log in is offered', page.includes("{linkFailed && !loginOff && step === 'email' && <p"));
 check('a failed log-out on the member page is said', member.includes("if (!r || !r.ok) { setSignOutErr(true); return; }") && member.includes("Couldn&rsquo;t log out. Try again."));
 check('an alert reads as set only when the server says active, naming the log-in address', course.includes("setAlertPending(done?.status !== 'active');") && course.includes("We'll email ${alertTo || 'you'}"));
+
+// The same rule, evaluated: the visible Back link keeps the tee times' date and players, and never the member page.
+{
+  const leave = (back: string, slug = 'maple') => { const home = `/courses/${slug}`; const b = safeBack(back, slug); return b.startsWith('/book?') || b === home || b.startsWith(`${home}?`) ? b : home; };
+  check('Back keeps the tee times\' date and players', leave('/courses/maple?date=2026-12-05&players=4') === '/courses/maple?date=2026-12-05&players=4');
+  check('Back keeps the Book page', leave('/book?tee_time_id=x') === '/book?tee_time_id=x');
+  check('Back from the member page goes to the tee times, not back to /member', leave('/courses/maple/member') === '/courses/maple');
+}
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);
