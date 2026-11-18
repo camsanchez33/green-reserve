@@ -51,10 +51,13 @@ domain or left out (staging must never email a real golfer), and no Twilio keys,
 
 **Migrations on staging.** Today `migrate-prod.js` only migrates when `VERCEL_ENV=production`, so staging would run
 new code against an old schema. Change (PR `build/release-ci`): set `MIGRATE_ON_BUILD` to the staging database's
-**host** (the host in staging's `DIRECT_URL`), scoped to Preview + branch `staging` only. The build migrates only
-when it is a preview of branch `staging` and `DIRECT_URL`'s host equals that value. So the production URL pasted
-into staging's variables by mistake fails the staging build instead of applying unreleased migrations to
-production, and the variable leaking to other previews does nothing. A plain `=1` switch wouldn't catch that paste.
+**host**, copied from the Neon console's `staging` branch (never out of the URL just pasted), scoped to Preview +
+branch `staging` only. The build migrates only when it is a preview of branch `staging`, both `DIRECT_URL` and
+`DATABASE_URL` are on that host (Neon's `-pooler` ignored), **and** the target database holds no real course
+(`Course.isTest = false`). That last check needs no configuration: staging is test courses only, so a real course
+means it's production's data, and the build fails. So the production URL pasted into staging's variables fails
+the staging build instead of applying unreleased migrations to production, and the variable leaking to other
+previews does nothing. Pinned by `scripts/migrate-prod-test.ts`.
 
 **Crons don't run on staging.** Vercel runs crons only in production. To test a cron on staging, call its route
 by hand with staging's `CRON_SECRET`. Nothing else in this proposal depends on staging crons.
