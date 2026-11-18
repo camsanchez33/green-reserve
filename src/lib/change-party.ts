@@ -10,6 +10,7 @@
 // change a paid round, a no-show or a group already checked in.
 //
 // Throws { code } errors the routes turn into words (PARTY_ERRORS).
+import { notifyAlertsFor } from './tee-time-alerts';
 import { prisma } from './prisma';
 import { termsVersionNow } from './terms';
 import { canManageBooking } from './manage-access';
@@ -28,6 +29,8 @@ export type PartyWho = { by: 'golfer'; token?: string } | { by: 'staff'; courseI
 export async function changePartySize(bookingId: string, newPlayers: number, who: PartyWho) {
   // SHOP-FEE-1: read before the transaction (it may query), never inside it.
   const termsVersion = who.by === 'golfer' ? await termsVersionNow() : '';
+  // ALERTS-2: what the party was, so seats it gives back are told to alerts after the commit.
+  let before: { n: number; courseId: string; date: string } | null = null;
   const result = await prisma.$transaction(async (tx) => {
       const booking = await tx.booking.findUnique({
         where: { id: bookingId },
@@ -52,6 +55,7 @@ export async function changePartySize(bookingId: string, newPlayers: number, who
       // Staff at the counter may still change a group whose time has gone (they're standing there), never a no-show.
       if (booking.noShowAt || (who.by === 'golfer' && isPastIn(booking.course.timezone, booking.teeTime.date, booking.teeTime.time))) throw Object.assign(new Error(), { code: 'STARTED' });
       if (booking.players === newPlayers) throw Object.assign(new Error(), { code: 'SAME' });
+      before = { n: booking.players, courseId: booking.courseId, date: booking.teeTime.date };
       // W2-6 slice 3: the course's (or the round's) group size holds on a change too.
       const sizeError = groupSizeError(rulesFor(booking.course, booking.teeTime.product), newPlayers);
       if (sizeError) throw Object.assign(new Error(), { code: 'SIZE', msg: sizeError });
@@ -149,6 +153,9 @@ export async function changePartySize(bookingId: string, newPlayers: number, who
     const r = await refundBookingFee(bookingId, feeBack, `party lowered to ${result.players} before the cutoff`, who.by === 'staff' ? 'operator' : 'golfer');
     if (!r.ok) feeRefundError = 'The party was changed, but the booking fee for the players taken off couldn’t be refunded yet — GreenReserve will follow up.';
   }
+  // ALERTS-2: a smaller party leaves seats open — told to alerts after the commit.
+  const was = before as { n: number; courseId: string; date: string } | null;
+  if (was && result.players < was.n) await notifyAlertsFor(was.courseId, [was.date]);
   return { ...view, feeRefundError };
 
 }

@@ -1,6 +1,6 @@
 import twilio from 'twilio';
 import { logSent, type SendMeta } from './sent-messages';
-import { hasSmsConsent, recordSmsConsent } from './sms-consent';
+import { hasSmsConsent, recordSmsConsent, type SmsScope } from './sms-consent';
 import { SMS_NO_CONSENT } from './sms-consent-copy';
 
 /** SMS-1: thrown when a number hasn't agreed to texts. Staff routes turn it into "read them the script". */
@@ -65,7 +65,13 @@ export function isNorthAmericanNumber(phone: string): boolean {
 export const smsConfigured = () => !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_FROM_NUMBER);
 
 /** PAY-1: one plain text message (the counter's "Text pay link"). Throws on failure. */
-export async function sendSms(to: string, body: string, meta: SendMeta = { kind: 'text' }) {
+/**
+ * ALERTS-2: `consentScope` names the consent this text needs. Every text before tee time
+ * alerts is a booking text, so it defaults to 'bookings'; only the alert sender passes 'alerts'.
+ */
+export async function sendSms(to: string, body: string, meta: SendMeta & { consentScope?: SmsScope } = { kind: 'text' }) {
+  const { consentScope = 'bookings', ...sendMeta } = meta;
+  meta = sendMeta;
   const from = process.env.TWILIO_FROM_NUMBER;
   if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN || !from) {
     throw new Error('Text messages are not set up (Twilio)');
@@ -81,7 +87,7 @@ export async function sendSms(to: string, body: string, meta: SendMeta = { kind:
     throw new Error('That is a sample phone number (555-01xx) — no text was sent.');
   }
   // SMS-1 (Twilio A2P 10DLC): only a number that said yes — on a web form or out loud to staff.
-  if (!(await hasSmsConsent(to))) {
+  if (!(await hasSmsConsent(to, consentScope))) {
     await logSent({ ...meta, channel: 'sms', to, status: 'skipped', error: 'no text consent' });
     throw new SmsNoConsentError();
   }
