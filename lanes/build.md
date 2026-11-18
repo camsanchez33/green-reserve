@@ -10,6 +10,10 @@ the lane files; merges every PR in dependency order after Cam's review sitting; 
 
 ## Queued (not started)
 - Audit data (Cam approved 2026-11-18): /api/admin/audit gains q (search over action, actor, course, reason and changed fields across all dates, LIKE-escaped through like-exact) plus from/until. Owner only.
+- Small Build text fixes: the admin-areas.ts help for 'golfers' still says "resend, cancel and refund"; the search route nav label still says "Golfer lookup".
+- LIKE wildcard escape on email matching: in progress (session_014ceBnuw4aR9nRiD5mdt9bL).
+- The admin course page refund button (useCourseDetail.tsx) goes with the /api/admin/refund removal.
+- Golfers: "Paid in total" leaves out cash rounds; the list needs a SQL rollup past tens of thousands of bookings; audit-on-open waits for Cam.
 - After #458 (Takes cash): the Dashboard lane updates TakesCashToggle wording and owner-only access, and hides cash buttons when `Course.takesCash` is false. Cash routes answer 409 { error, cashOff: true }. Build rewords the "take cash instead" server messages (shop-sales pay-link limits, card-reader minimum) by takesCash.
 - Golfer lane: the golfer confirmation page shows the new confirmation-email parts (arrival, parking, contact, dress code) from #457.
 - #457 Test reader: one Stripe test-mode run of the $0.00 reader display, before courses rely on it.

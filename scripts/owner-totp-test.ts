@@ -46,7 +46,8 @@ async function main() {
   const tok = await signEnrolToken({ adminId: 'a1', secret });
   const back = await verifyEnrolToken(tok);
   check('enrol token round-trips', !!back && back.adminId === 'a1' && back.secret === secret);
-  check('tampered enrol token fails', (await verifyEnrolToken(tok.slice(0, -2) + 'xx')) === null);
+  const tampered = tok.slice(0, -2) + (tok.slice(-2) === 'xx' ? 'yy' : 'xx'); // always differs from the real token
+  check('tampered enrol token fails', tampered !== tok && (await verifyEnrolToken(tampered)) === null);
 
   console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
   process.exit(failed === 0 ? 0 : 1);

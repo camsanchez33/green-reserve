@@ -4,8 +4,8 @@
 // The home lists four areas as cards with no icons: Your course, Booking, Payments, Your account. Search sits in the
 // header as a small icon. Each area has a one-line intro, and its sections run down the side on a wide screen (a bar
 // across the top on a phone). Every editable row opens its own small popup; read-only rows don't look clickable.
-// Staff move to a Team page that isn't built yet, so the existing staff screen stays here (?area=staff), linked from
-// the home. Per-round rules are on Schedule. What needs Build's new data (the confirmation email's own parts and test
+// Staff moved to Team (TEAM-1): old ?area=staff and ?section=Staff links, and the search's staff entry, go there.
+// Per-round rules are on Schedule. What needs Build's new data (the confirmation email's own parts and test
 // send, sales tax from the address, reader test and last seen, Alerts) is hidden until it exists, never faked.
 // Kept from before: the Stripe return redirect, old ?section=…&focus=… links (Money, Home, Finish setting up), the
 // assistant's description card, saves that send only that row's fields, and owner-only rows.
@@ -13,7 +13,6 @@ import { useCallback, useEffect, useMemo, useRef, useState, Suspense, type RefOb
 import { useRouter, useSearchParams } from 'next/navigation';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { StaffNotice } from '@/components/dashboard/StaffNotice';
-import { StaffPermissions } from '@/components/dashboard/StaffPermissions';
 import { LoadError } from '@/components/dashboard/LoadError';
 import { Card } from '@/components/ui/Card';
 import { dfetch } from '@/lib/dashboard-fetch';
@@ -64,9 +63,9 @@ const INDEX: [string, Area | 'staff', string, string?][] = [
   ['Check-in reminder', 'payments', 'r-cancel-checkin', 'pay link'], ['Rain checks', 'payments', 'r-cancel-rain', 'weather'], ['Sales tax', 'payments', 'g-tax'],
   ['Takes cash', 'payments', 'r-register-cash', 'register drawer'], ['Card readers', 'payments', 'r-register-readers', 'terminal'],
   ['Email', 'account', 'r-signin-email'], ['Password', 'account', 'r-signin-pw'], ['Two-step sign-in', 'account', 'r-signin-2fa', 'code 2fa'],
-  ['Staff, roles and permissions', 'staff', '', 'team logins'],
+  ['Team: staff, roles and permissions', 'staff', '', 'team logins invite'],
 ];
-const AREA_NAME: Record<Area | 'staff', string> = { course: 'Your course', booking: 'Booking', payments: 'Payments', account: 'Your account', staff: 'Staff' };
+const AREA_NAME: Record<Area | 'staff', string> = { course: 'Your course', booking: 'Booking', payments: 'Payments', account: 'Your account', staff: 'Team' };
 
 const SearchIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m20 20-4-4" /></svg>;
 const BackIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m15 6-6 6 6 6" /></svg>;
@@ -79,7 +78,7 @@ function Head({ title, onGo, owner, wide }: { title: string; onGo: (area: Area |
     const t = q.trim().toLowerCase();
     // A staff login has no sales tax, readers, password or two-step rows to land on.
     const hidden = owner ? [] : ['g-tax', 'r-register-readers', 'r-signin-pw', 'r-signin-2fa'];
-    return t ? INDEX.filter(h => !hidden.includes(h[2]) && `${h[0]} ${h[3] ?? ''}`.toLowerCase().includes(t)).slice(0, 8) : [];
+    return t ? INDEX.filter(h => !hidden.includes(h[2]) && (owner || h[1] !== 'staff') && `${h[0]} ${h[3] ?? ''}`.toLowerCase().includes(t)).slice(0, 8) : [];
   }, [q, owner]);
   const shut = () => { setOpen(false); setQ(''); };
   return (
@@ -195,7 +194,11 @@ function SettingsInner() {
     return e;
   }, [merge, load]);
 
+  // Staff live on Team now; an old link to them lands there.
+  useEffect(() => { if (view === 'staff') router.replace('/dashboard/team'); }, [view, router]);
+
   const goArea = useCallback((to: string, t?: string) => {
+    if (to === 'staff') { router.push('/dashboard/team'); return; }
     setTarget(t ?? '');
     router.push(to === 'home' ? '/dashboard/settings' : `/dashboard/settings?area=${to}`);
     if (!t) { mainRef.current?.scrollTo({ top: 0 }); window.scrollTo({ top: 0 }); }
@@ -234,7 +237,7 @@ function SettingsInner() {
           {view !== 'home' && (
             <button type="button" onClick={() => goArea('home')} className="self-start inline-flex items-center gap-1 min-h-[40px] -mb-2 text-[13.5px] text-ink-soft hover:text-ink"><BackIcon />Settings</button>
           )}
-          <Head title={view === 'home' ? 'Settings' : view === 'staff' ? 'Staff and permissions' : area!.title} wide={!!area} owner={owner} onGo={(a, t) => goArea(a, t || undefined)} />
+          <Head title={view === 'home' || view === 'staff' ? 'Settings' : area!.title} wide={!!area} owner={owner} onGo={(a, t) => goArea(a, t || undefined)} />
           {loadError && <div className="max-w-[780px]"><LoadError message={`${loadError} Nothing here is your course’s real settings until this loads.`} onRetry={load} /></div>}
 
           {view === 'home' && (
@@ -248,17 +251,7 @@ function SettingsInner() {
                   </button>
                 ))}
               </Card>
-              {/* Staff move to Team once it's built (its mockup is with Cam). Until then the existing screen stays here. */}
-              <button type="button" onClick={() => goArea('staff')} className="self-start text-[13.5px] text-ink-soft hover:text-ink underline underline-offset-[3px] decoration-line py-2">Staff and permissions →</button>
             </>
-          )}
-
-          {view === 'staff' && (
-            <Card className="max-w-[780px] w-full p-5">
-              {!access.loaded ? <p className="text-[13px] text-ink-muted">Loading…</p>
-                : access.isStaff ? <p className="text-[13.5px] text-ink-soft">Staff and their access are managed from the owner’s login.</p>
-                : <StaffPermissions />}
-            </Card>
           )}
 
           {area && (
