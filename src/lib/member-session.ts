@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { prisma } from './prisma';
 import { cardValidOn } from './residents';
 import { groupCourseIds } from './course-group';
+import { ciEquals } from '@/lib/like-exact';
 
 const rawSecret =
   process.env.JWT_SECRET ||
@@ -63,8 +64,9 @@ export async function getMemberSession() {
 
 /**
  * RES-1 online: the resident card of whoever is signed in to THIS course (gr_member, its email proven by the
- * member link), if it is good on `dateYmd`. Cam 2026-11-18: there is no other online sign-in, so a resident
- * who is not a member here gets the resident rate at the counter until resident cards become a membership type.
+ * member link), if it is good on `dateYmd`. Only this course's list (or its group's, GRP-1), never another
+ * course's. Cam 2026-11-18: there is no other online sign-in, so a resident who is not a member here gets the
+ * resident rate at the counter until resident cards become a group under gr_member.
  */
 export async function signedInResident(courseId: string, dateYmd: string) {
   const session = await getMemberSession();
@@ -75,8 +77,9 @@ export async function signedInResident(courseId: string, dateYmd: string) {
 /** The resident card listed under this email at this course — or, for a course
  *  in a group (GRP-1), at any course in the group — if it is good on `dateYmd`. */
 export async function residentOn(courseId: string, emailRaw: string, dateYmd: string) {
-  const email = emailRaw.trim().toLowerCase();
+  const email = emailRaw.trim();
   if (!email) return null;
-  const cards = await prisma.courseResident.findMany({ where: { courseId: { in: await groupCourseIds(courseId) }, email } });
+  // Case-insensitive and exact (lib/like-exact): a list typed "Jo@X.com" still matches, and _ or % never act as wildcards.
+  const cards = await prisma.courseResident.findMany({ where: { courseId: { in: await groupCourseIds(courseId) }, email: ciEquals(email) } });
   return cards.find(r => cardValidOn(r.expiresOn, dateYmd)) ?? null;
 }

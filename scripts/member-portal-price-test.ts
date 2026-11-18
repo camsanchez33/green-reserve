@@ -83,7 +83,8 @@ async function main() {
   // A tierless member who is also a resident.
   const resEmail = `res@${TAG}.test`;
   const resM = await prisma.courseMembership.create({ data: { courseId: course.id, tierId: null, membershipType: 'Member', status: 'active', inviteEmail: resEmail, inviteName: 'Res', payToken: `${TAG}-res` } });
-  await prisma.courseResident.create({ data: { courseId: course.id, name: 'Res', email: resEmail, expiresOn: '' } });
+  // Listed in other letter case: the match is case-insensitive and exact (lib/like-exact).
+  await prisma.courseResident.create({ data: { courseId: course.id, name: 'Res', email: resEmail.toUpperCase(), expiresOn: '' } });
   const resRow = await portal(await memberCookie(resM.id, resEmail));
   const charged = groupGreenFee(3, tt.greenFeeCents, 1, tt.residentRateCents).greenFeeTotal;
   check('a tierless member on the resident list sees their own spot at the resident rate',
