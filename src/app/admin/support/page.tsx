@@ -68,7 +68,7 @@ function ChatList({ onOpen, initialQ, courseId, onAll }: { onOpen: (id: string, 
       </label>
       {got && !got.ok && <Problem got={got} retry={() => load(q)} busy={busy} />}
       {!got && <div className={r.skel} aria-busy="true" aria-label="Loading chats" />}
-      {courseId && got?.ok && <p className={s.note}>{rows[0] ? `Only ${rows[0].courseName}'s chats.` : q.trim() ? 'No chat matches.' : 'No chats with this course yet.'} <button type="button" className={s.allBtn} onClick={onAll}>Show every chat</button></p>}
+      {courseId && got?.ok && <p className={s.note}>{rows[0] ? `Only ${rows[0].courseName}'s chats.` : (loadedQ ?? '').trim() ? 'No chat matches.' : 'No chats with this course yet.'} <button type="button" className={s.allBtn} onClick={onAll}>Show every chat</button></p>}
       {got?.ok && rows.length === 0 && !courseId && <p className={s.empty}>{q.trim() ? 'No chat matches.' : 'No chats yet.'}</p>}
       {got?.ok && (
         <ul className={`${s.list} ${busy ? s.stale : ''}`}>

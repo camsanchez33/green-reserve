@@ -11,7 +11,7 @@ const walk = (d: string): string[] => readdirSync(d).flatMap(n => { const p = jo
 const missing: string[] = [];
 for (const f of walk('src')) {
   const src = readFileSync(f, 'utf8');
-  for (const m of src.matchAll(/['"`(]\/admin\/([a-z][a-z-]*)(?=[/?'"`#)\s$]|$)/g)) {
+  for (const m of src.matchAll(/['"`(}]\/admin\/([a-z][a-z-]*)(?=[/?'"`#)\s$]|$)/g)) {
     const seg = m[1];
     if (!existsSync(`src/app/admin/${seg}/page.tsx`)) missing.push(`${f}: /admin/${seg}`);
   }
