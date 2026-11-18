@@ -13,6 +13,7 @@
 // (reserveUse) before the booking is made, given back if it isn't. What a code took off
 // is kept on the booking (promoDiscountCents).
 import { prisma } from './prisma';
+import { ciEquals } from '@/lib/like-exact';
 
 export type PromoRow = { id: string; code: string; kind: string; value: number; startsOn: string | null; endsOn: string | null; days: number[]; fromTime: string | null; toTime: string | null; maxUses: number | null; usesCount: number; onePerGolfer: boolean; withRates: boolean; active: boolean };
 type Fail = { ok: false; error: string };
@@ -65,7 +66,7 @@ export async function applyPromo(courseId: string, raw: unknown, ctx: { date: st
   // email typed in doesn't get it again). claimTeeTime checks the same again inside the booking's transaction.
   const email = ctx.golferEmail?.trim();
   if (row.onePerGolfer && (email || ctx.golferAccountId)) {
-    const used = await prisma.booking.findFirst({ where: { courseId, promoCodeId: row.id, status: { not: 'cancelled' }, OR: [...(email ? [{ golferEmail: { equals: email, mode: 'insensitive' as const } }] : []), ...(ctx.golferAccountId ? [{ golferAccountId: ctx.golferAccountId }] : [])] }, select: { id: true } });
+    const used = await prisma.booking.findFirst({ where: { courseId, promoCodeId: row.id, status: { not: 'cancelled' }, OR: [...(email ? [{ golferEmail: ciEquals(email) }] : []), ...(ctx.golferAccountId ? [{ golferAccountId: ctx.golferAccountId }] : [])] }, select: { id: true } });
     if (used) return fail(PROMO_USED);
   }
   return { ok: true, code: row };

@@ -3,6 +3,7 @@
 // Analytics, the golfer record (lib/golfer-record) and the online-booking block.
 // A key is per course in use: the same person at two courses is two records
 // (Cam 2026-10-29: "Only their own history").
+import { ciEquals } from '@/lib/like-exact';
 
 /** The placeholder domain counter bookings without an email use (lib/email). Kept here so this file stays client-safe. */
 const PLACEHOLDER = '@noemail.greenreserve.app';
@@ -32,8 +33,8 @@ export function parseGolferKey(raw: string): string | null {
 }
 
 /** The bookings a key matches, as a Prisma OR (email case-insensitive, phone by its digits' tail, account by id). */
-export function keyMatch(key: string): { golferEmail?: { equals: string; mode: 'insensitive' }; golferAccountId?: string; golferPhone?: { endsWith: string } } {
-  if (key.startsWith('e:')) return { golferEmail: { equals: key.slice(2), mode: 'insensitive' } };
+export function keyMatch(key: string): { golferEmail?: ReturnType<typeof ciEquals>; golferAccountId?: string; golferPhone?: { endsWith: string } } {
+  if (key.startsWith('e:')) return { golferEmail: ciEquals(key.slice(2)) };
   if (key.startsWith('a:')) return { golferAccountId: key.slice(2) };
   return { golferPhone: { endsWith: key.slice(-4) } };
 }

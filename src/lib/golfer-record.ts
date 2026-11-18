@@ -19,6 +19,7 @@ import { courseShareCents } from './analytics';
 import { membershipLive } from './member-rates';
 import { todayIn } from './course-time';
 import { groupCourseIds } from './course-group';
+import { ciEquals } from '@/lib/like-exact';
 
 const MONTH_MS = 30.44 * 86_400_000;
 
@@ -122,13 +123,13 @@ export async function golferRecord(courseId: string, key: string, opts: { money:
 
   const [membership, resident, sales, notes, block, recent] = await Promise.all([
     email || accountId ? prisma.courseMembership.findFirst({
-      where: { courseId, OR: [...(accountId ? [{ golferId: accountId }] : []), ...(email ? [{ inviteEmail: { equals: email, mode: 'insensitive' as const } }] : [])] },
+      where: { courseId, OR: [...(accountId ? [{ golferId: accountId }] : []), ...(email ? [{ inviteEmail: ciEquals(email) }] : [])] },
       orderBy: { createdAt: 'desc' }, select: { id: true, status: true, expiresAt: true, paymentStatus: true, tier: { select: { name: true } } },
     }) : null,
     // Residents are one list across a course group (GRP-1).
-    email ? groupCourseIds(courseId).then(ids => prisma.courseResident.findFirst({ where: { courseId: { in: ids }, email: { equals: email, mode: 'insensitive' } }, select: { name: true, cardNumber: true, expiresOn: true } })) : null,
+    email ? groupCourseIds(courseId).then(ids => prisma.courseResident.findFirst({ where: { courseId: { in: ids }, email: ciEquals(email) }, select: { name: true, cardNumber: true, expiresOn: true } })) : null,
     email || phone ? prisma.shopSale.findMany({
-      where: { courseId, status: { in: ['paid_cash', 'paid_card', 'paid_account'] }, OR: [...(email ? [{ customerEmail: { equals: email, mode: 'insensitive' as const } }] : []), ...(phone ? [{ customerPhone: phone }] : [])] },
+      where: { courseId, status: { in: ['paid_cash', 'paid_card', 'paid_account'] }, OR: [...(email ? [{ customerEmail: ciEquals(email) }] : []), ...(phone ? [{ customerPhone: phone }] : [])] },
       orderBy: { createdAt: 'desc' }, take: 50, select: { id: true, totalCents: true, refundedCents: true, roundsCents: true, createdAt: true },
     }) : [],
     prisma.golferNote.findMany({ where: { courseId, golferKey: key }, orderBy: { createdAt: 'desc' }, take: 100, select: { id: true, body: true, bookingId: true, createdBy: true, createdAt: true } }),

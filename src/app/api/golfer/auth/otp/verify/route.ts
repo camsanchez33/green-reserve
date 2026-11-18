@@ -6,6 +6,7 @@ import { verifyOtpChallenge, otpCodeMatches, otpUsedKey } from '@/lib/golfer-otp
 import { signGolferToken } from '@/lib/auth';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { securityEvent } from '@/lib/security-events';
+import { ciEquals } from '@/lib/like-exact';
 
 /** The 10 digits of a US/Canadian number, or null for anything else (a foreign or malformed number). */
 function nanp10(phone: string): string | null {
@@ -22,7 +23,7 @@ function nanp10(phone: string): string | null {
 async function linkGuestBookings(identifier: string, type: 'email' | 'phone', golferId: string) {
   if (type === 'email') {
     await prisma.booking.updateMany({
-      where: { golferAccountId: null, golferEmail: { equals: identifier, mode: 'insensitive' } },
+      where: { golferAccountId: null, golferEmail: ciEquals(identifier) },
       data: { golferAccountId: golferId },
     });
     return;
@@ -81,7 +82,7 @@ export async function POST(req: NextRequest) {
     const phone10 = isEmail ? null : nanp10(challenge.identifier);
     const guestBooking = isEmail
       ? await prisma.booking.findFirst({
-          where: { golferAccountId: null, golferEmail: { equals: challenge.identifier, mode: 'insensitive' } },
+          where: { golferAccountId: null, golferEmail: ciEquals(challenge.identifier) },
           orderBy: { createdAt: 'desc' },
           select: { golferName: true },
         })
