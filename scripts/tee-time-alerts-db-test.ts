@@ -229,6 +229,16 @@ async function main() {
   await prisma.teeTimeAlert.createMany({ data: Array.from({ length: 30 }, (_, i) => ({ courseId: c.id, email: `${TAG}-cap${i}@t.local`, date: capDay, dates: [capDay], players: 1, status: 'active', token: `${TAG}-cap${i}`, endsAt: new Date(Date.now() + 86400_000 * 6) })) });
   ok('a request tells at most 25', (await notifyAlertsFor(c.id, [capDay])) === 25);
   ok('…and the sweep tells the other 5', (await sweepTeeTimeAlerts()).told === 5);
+  // A member's alert past the public window (Build 2026-11-18): while the course has Log in off it falls back to the
+  // public window, since the booking page would refuse the time; switching Log in back on restores it. Nothing deleted.
+  const memDay = addDaysStr(todayIn('UTC'), 10);
+  await tt(memDay, '10:00', 0);
+  await prisma.teeTimeAlert.create({ data: { courseId: c.id, email: `${TAG}-m@t.local`, membershipId: m.id, date: memDay, dates: [memDay], players: 1, status: 'active', token: `${TAG}-memday`, endsAt: new Date(Date.now() + 86400_000 * 12) } });
+  await prisma.course.update({ where: { id: c.id }, data: { memberLoginOn: false } });
+  ok('Log in off: a member alert is not told about a time past the public window', (await notifyAlertsFor(c.id, [memDay])) === 0);
+  ok('…and stays on, with its membership', (await prisma.teeTimeAlert.findUniqueOrThrow({ where: { token: `${TAG}-memday` } })).status === 'active');
+  await prisma.course.update({ where: { id: c.id }, data: { memberLoginOn: true } });
+  ok('Log in on again: it is told', (await notifyAlertsFor(c.id, [memDay])) === 1);
 
   // ── 6. Wiring ─────────────────────────────────────────────────────────────
   ok('TeeTimeAlert is in the launch wipe', WIPED_TABLES.includes('TeeTimeAlert'));

@@ -353,7 +353,7 @@ export async function notifyAlertsFor(courseId: string, dates: string[], now: Da
 async function notifyInner(courseId: string, dates: string[], now: Date, maxSends: number): Promise<number> {
   const course = await prisma.course.findUnique({
     where: { id: courseId },
-    select: { id: true, name: true, slug: true, active: true, liveStatus: true, timezone: true, teeTimeAlertsOn: true, publicAdvanceDays: true, minPlayers: true, maxPlayers: true },
+    select: { id: true, name: true, slug: true, active: true, liveStatus: true, timezone: true, teeTimeAlertsOn: true, publicAdvanceDays: true, minPlayers: true, maxPlayers: true, memberLoginOn: true },
   });
   if (!course || !course.teeTimeAlertsOn || !course.active || course.liveStatus !== 'live') return 0;
   const { sendTeeTimeAlertEmail } = await import('./email');
@@ -378,8 +378,10 @@ async function notifyInner(courseId: string, dates: string[], now: Date, maxSend
     if (!times.length) continue;
     for (const a of alerts) {
       if (told >= maxSends) return told;
-      // A guest can't book past the public window (or a round's own shorter one).
-      const usable = a.membershipId ? times : times.filter(t => t.publicOk);
+      // A guest can't book past the public window (or a round's own shorter one). Neither can a member while the course
+      // has Log in off (Build 2026-11-18): the booking page would refuse the time, so the alert falls back to the public
+      // window. Nothing is deleted; switching Log in back on restores the member window.
+      const usable = a.membershipId && course.memberLoginOn ? times : times.filter(t => t.publicOk);
       const hit = usable.find(t => alertMatches(a, t));
       if (!hit) continue;
       // The claim: only the caller that adds this date sends. Postgres re-checks the
