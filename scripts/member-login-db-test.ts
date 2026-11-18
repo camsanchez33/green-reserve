@@ -55,8 +55,8 @@ async function cleanup() {
   await prisma.sentMessage.deleteMany({ where: { to: { startsWith: `${TAG}-` } } });
   await prisma.memberLoginCode.deleteMany({ where: { email: { endsWith: `@${TAG}.test` } } });
   await prisma.memberTermsAgreement.deleteMany({ where: { email: { endsWith: `@${TAG}.test` } } });
-  // Repeat runs within an hour must not trip the booking, swap or send-code limits (test rows only).
-  await prisma.rateLimit.deleteMany({ where: { OR: [{ key: { contains: `@${TAG}.test` } }, { key: { startsWith: 'manage:swap:' } }] } });
+  // Repeat runs within an hour must not trip the booking, swap, alert or send-code limits (local test buckets only).
+  await prisma.rateLimit.deleteMany({ where: { OR: [{ key: { contains: `@${TAG}.test` } }, { key: { startsWith: 'manage:swap:' } }, { key: { startsWith: 'alert:ip:10.6.' } }, { key: { in: ['booking:unknown', 'booking:127.0.0.1', 'booking:::1', 'booking:::ffff:127.0.0.1'] } }] } });
 }
 
 async function main() {
@@ -416,7 +416,7 @@ async function main() {
   check('…and the booking page preview gives a resident nothing', offSwapRes.residentGreenFee === null && offSwapRes.member === null);
   // No route reads the cookie except through loggedInAt / currentLogIn (which check the switch).
   const { execSync } = await import('child_process');
-  const direct = execSync("git grep -l 'getMemberSession' -- src || true").toString().trim().split('\n').filter(f => f && f !== 'src/lib/member-session.ts');
+  const direct = execSync("git grep -l -e 'getMemberSession' -e \"get('gr_member')\" -e 'get(\"gr_member\")' -- src || true").toString().trim().split('\n').filter(f => f && f !== 'src/lib/member-session.ts');
   check('no route reads the log-in cookie except through loggedInAt', direct.length === 0, direct);
   check('…and loginGroups is empty', (await loginGroups({ ...a, memberLoginOn: false })).length === 0);
   // Only a card someone could log in with now counts toward "residents": not a counter-only card (no email), not an expired one.

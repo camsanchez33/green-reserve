@@ -149,6 +149,13 @@ async function main() {
   await prisma.courseResident.create({ data: { courseId: c.id, name: 'Rita', email: `${TAG}-r@t.local` } });
   const res = await createAlert({ courseId: c.id, dates: [d1], parts: [], players: 1 }, { courseId: c.id, email: `${TAG}-r@t.local` });
   ok('a logged-in resident (card good today, no membership) is on in one tap too', res.ok && res.status === 'active');
+  // Log in switched off (Course.memberLoginOn): createAlert itself treats a member context as a guest, whatever the
+  // caller passed — pending, the typed email, no membership.
+  await prisma.course.update({ where: { id: c.id }, data: { memberLoginOn: false } });
+  const offMem = await createAlert({ courseId: c.id, dates: [d1], parts: [], players: 1, email: `${TAG}-typed-off@t.local` }, { courseId: c.id, email: `${TAG}-m@t.local` });
+  const offRow = offMem.ok ? await prisma.teeTimeAlert.findUniqueOrThrow({ where: { id: offMem.alert.id } }) : null;
+  ok('Log in off: a member context is a guest in createAlert too (pending, typed email, no membership)', offMem.ok && offMem.status === 'pending' && offMem.alert.email === `${TAG}-typed-off@t.local` && offRow?.membershipId === null, offMem);
+  await prisma.course.update({ where: { id: c.id }, data: { memberLoginOn: true } });
   // #483: a cookie whose email is in no group here any more is not logged in — a guest, with the typed email.
   await prisma.courseMembership.create({ data: { courseId: c.id, inviteEmail: `${TAG}-gone@t.local`, status: 'cancelled' } });
   const gone = await createAlert({ courseId: c.id, dates: [d1], parts: [], players: 1, email: `${TAG}-typed@t.local` }, { courseId: c.id, email: `${TAG}-gone@t.local` });
