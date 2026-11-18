@@ -8,9 +8,10 @@ const src = readFileSync('src/app/api/member/[courseSlug]/send-code/route.ts', '
 const post = src.slice(src.indexOf('export async function POST'));
 
 ok('capped per connection, with a security event', /rateLimit\(`member-code:ip:\$\{evidentiaryIp\(req\)\}`, 10, 600\)/.test(post) && post.includes("kind: 'rate_limited', surface: 'member'"));
-ok('capped per address on the course, answering as if sent', /rateLimit\(`member-code:\$\{course\.id\}:\$\{email\}`, 3, 3600\)\)\) \{[\s\S]*?return SUCCESS\(\);/.test(post));
-ok('the membership lookup and the send happen after the response', post.includes('after(sendLink(') && !post.includes('courseMembership') && !post.includes('await sendMemberMagicLink'));
-ok('member or not, the same answer', (post.match(/return SUCCESS\(\);/g) ?? []).length === 2 && !post.includes("status: 500"));
+ok('capped per address on the course, answering as if sent', /rateLimit\(`member-code:\$\{course\.id\}:\$\{email\}`, byCode \? 5 : 3, 3600\)\)\) \{[\s\S]*?return SUCCESS\(\);/.test(post));
+ok('the membership lookup and the send happen after the response', post.includes('after(sendLink(') && post.includes('after(sendCode(') && !post.includes('await sendMemberLoginCode') && !post.includes('await issueLoginCode') && !post.includes('courseMembership') && !post.includes('await sendMemberMagicLink'));
+// Three: over the per-address cap, the code path and the link path (GOLFER-LOGIN-1 log in with a code).
+ok('member or not, the same answer', (post.match(/return SUCCESS\(\);/g) ?? []).length === 3 && !post.includes("status: 500"));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);
