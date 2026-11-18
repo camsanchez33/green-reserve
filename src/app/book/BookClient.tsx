@@ -23,6 +23,7 @@ import { teeToUtcMs } from '@/lib/tee-time-utils';
 import { LIKE_UNSAFE_EMAIL } from '@/lib/like-exact';
 import { golferLookVars, lookAccentHex, lookMode, lookText, type BookingLook, type CourseLook } from '@/components/golfer/look';
 import g from '@/components/golfer/golfer.module.css';
+import { loginOffered } from '@/app/courses/[slug]/login/login-helpers';
 
 // Deferred: only load Stripe when a card is actually needed (fee-policy courses).
 // No-fee courses never touch Stripe JS at all.
@@ -56,6 +57,10 @@ export type CourseInfo = {
   booking_look?: CourseLook;
   /** "Have a promo code?" shows only when the course has a live code (Build). Absent = unknown, shown. */
   has_live_promo?: boolean;
+  /** Course.memberLoginOn: false = no Log in (Settings "Show Log in on your booking page"). */
+  member_login_on?: boolean;
+  /** The groups that can log in here (loginGroups, #495). */
+  login_groups?: ('members' | 'residents')[];
   /** The course's IANA timezone, for "is this time already past the free-cancel cutoff" (R-GOLF-009). */
   timezone?: string | null;
   /** PERS-1: the course's own uploads, shown in the header band. */
@@ -199,13 +204,22 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   const [promoOpen, setPromoOpen] = useState(false);
   // Item 4 (Cam 2026-11-18): logged in at this course (gr_member), Name and Email are filled and read-only,
   // so the booking keeps the member's cart and rate at check-in. A 401 just means a guest.
-  const [member, setMember] = useState<{ name: string; email: string } | null>(null);
+  const [member, setMember] = useState<{ name: string; email: string; groups: string[] } | null>(null);
+  const [logoutErr, setLogoutErr] = useState(false);
+  async function logOut() {
+    // A failed log-out leaves the session as it was, so the header keeps saying so.
+    const r = await fetch(`/api/member/${encodeURIComponent(courseSlug)}/logout`, { method: 'POST' }).catch(() => null);
+    if (!r || !r.ok) { setLogoutErr(true); return; }
+    setLogoutErr(false);
+    // The form was filled read-only from the log-in: start it again as a guest.
+    window.location.reload();
+  }
   useEffect(() => {
     if (!courseSlug) return;
     let live = true;
     fetch(`/api/member/${encodeURIComponent(courseSlug)}/session`)
       .then(r => r.ok ? r.json() : null)
-      .then(d => { if (live && d && typeof d.email === 'string' && d.email) setMember({ name: typeof d.name === 'string' ? d.name : '', email: d.email }); })
+      .then(d => { if (live && d && typeof d.email === 'string' && d.email) setMember({ name: typeof d.name === 'string' ? d.name : '', email: d.email, groups: Array.isArray(d.groups) ? d.groups.map((x: { name?: unknown }) => String(x?.name ?? '')).filter(Boolean) : d.tier?.name ? [String(d.tier.name)] : [] }); })
       .catch(() => {});
     return () => { live = false; };
   }, [courseSlug]);
@@ -534,8 +548,25 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   return (
     <div className={g.root} style={look}>
       <div className={g.site}>
-        <header className={g.top}><h1><Link href={`/courses/${courseSlug}`}>{course.name}</Link></h1></header>
-        <main className={g.wrap}>
+        <header className={g.top}>
+          <h1><Link href={`/courses/${courseSlug}`}>{course.name}</Link></h1>
+          {/* Item 2: one Log in in the header; it comes back to this Book page, now filled from the log-in. */}
+          {!member && loginOffered(course) && (
+            <nav className={g.topLinks} aria-label="Your account at this course">
+              <Link className={g.lnk} href={`/courses/${encodeURIComponent(courseSlug)}/login?back=${encodeURIComponent(`/book?${params.toString()}`)}`}>Log in</Link>
+            </nav>
+          )}
+          {member && (
+            <nav className={g.topLinks} aria-label="Your account at this course">
+              <span>Logged in · {member.name || member.email}{member.groups.length ? ` · ${member.groups.join(' and ')}` : ''}</span>
+              <Link className={g.lnk} href={`/courses/${encodeURIComponent(courseSlug)}/member`}>Your {course.name}</Link>
+              <button type="button" className={g.lnk} onClick={logOut}>Log out</button>
+              {logoutErr && <span role="alert">Couldn&rsquo;t log out. Try again.</span>}
+            </nav>
+          )}
+        </header>
+        {/* The site layout's main element is the page's one main landmark; this is its content. */}
+        <div className={g.wrap}>
           <div className={g.bk}>
             <Link href={backToTimesHref(courseSlug, params, players)} className={`${g.lnk} ${g.back}`}>‹ Back to tee times</Link>
             <h2 id="book-h">Book your tee time</h2>
@@ -573,7 +604,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
               </Elements>
             </div>
           </div>
-        </main>
+        </div>
       </div>
     </div>
   );
