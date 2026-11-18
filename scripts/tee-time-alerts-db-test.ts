@@ -149,6 +149,13 @@ async function main() {
   await prisma.courseResident.create({ data: { courseId: c.id, name: 'Rita', email: `${TAG}-r@t.local` } });
   const res = await createAlert({ courseId: c.id, dates: [d1], parts: [], players: 1 }, { courseId: c.id, email: `${TAG}-r@t.local` });
   ok('a logged-in resident (card good today, no membership) is on in one tap too', res.ok && res.status === 'active');
+  // Log in switched off (Course.memberLoginOn): createAlert itself treats a member context as a guest, whatever the
+  // caller passed — pending, the typed email, no membership.
+  await prisma.course.update({ where: { id: c.id }, data: { memberLoginOn: false } });
+  const offMem = await createAlert({ courseId: c.id, dates: [d1], parts: [], players: 1, email: `${TAG}-typed-off@t.local` }, { courseId: c.id, email: `${TAG}-m@t.local` });
+  const offRow = offMem.ok ? await prisma.teeTimeAlert.findUniqueOrThrow({ where: { id: offMem.alert.id } }) : null;
+  ok('Log in off: a member context is a guest in createAlert too (pending, typed email, no membership)', offMem.ok && offMem.status === 'pending' && offMem.alert.email === `${TAG}-typed-off@t.local` && offRow?.membershipId === null, offMem);
+  await prisma.course.update({ where: { id: c.id }, data: { memberLoginOn: true } });
   // #483: a cookie whose email is in no group here any more is not logged in — a guest, with the typed email.
   await prisma.courseMembership.create({ data: { courseId: c.id, inviteEmail: `${TAG}-gone@t.local`, status: 'cancelled' } });
   const gone = await createAlert({ courseId: c.id, dates: [d1], parts: [], players: 1, email: `${TAG}-typed@t.local` }, { courseId: c.id, email: `${TAG}-gone@t.local` });
@@ -222,6 +229,16 @@ async function main() {
   await prisma.teeTimeAlert.createMany({ data: Array.from({ length: 30 }, (_, i) => ({ courseId: c.id, email: `${TAG}-cap${i}@t.local`, date: capDay, dates: [capDay], players: 1, status: 'active', token: `${TAG}-cap${i}`, endsAt: new Date(Date.now() + 86400_000 * 6) })) });
   ok('a request tells at most 25', (await notifyAlertsFor(c.id, [capDay])) === 25);
   ok('…and the sweep tells the other 5', (await sweepTeeTimeAlerts()).told === 5);
+  // A member's alert past the public window (Build 2026-11-18): while the course has Log in off it falls back to the
+  // public window, since the booking page would refuse the time; switching Log in back on restores it. Nothing deleted.
+  const memDay = addDaysStr(todayIn('UTC'), 10);
+  await tt(memDay, '10:00', 0);
+  await prisma.teeTimeAlert.create({ data: { courseId: c.id, email: `${TAG}-m@t.local`, membershipId: m.id, date: memDay, dates: [memDay], players: 1, status: 'active', token: `${TAG}-memday`, endsAt: new Date(Date.now() + 86400_000 * 12) } });
+  await prisma.course.update({ where: { id: c.id }, data: { memberLoginOn: false } });
+  ok('Log in off: a member alert is not told about a time past the public window', (await notifyAlertsFor(c.id, [memDay])) === 0);
+  ok('…and stays on, with its membership', (await prisma.teeTimeAlert.findUniqueOrThrow({ where: { token: `${TAG}-memday` } })).status === 'active');
+  await prisma.course.update({ where: { id: c.id }, data: { memberLoginOn: true } });
+  ok('Log in on again: it is told', (await notifyAlertsFor(c.id, [memDay])) === 1);
 
   // ── 6. Wiring ─────────────────────────────────────────────────────────────
   ok('TeeTimeAlert is in the launch wipe', WIPED_TABLES.includes('TeeTimeAlert'));

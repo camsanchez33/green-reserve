@@ -133,7 +133,7 @@ export async function createAlert(input: CreateAlertInput, member: MemberCtx, no
   if (!courseId) return bad('Missing course');
   const course = await prisma.course.findUnique({
     where: { id: courseId },
-    select: { id: true, name: true, slug: true, active: true, liveStatus: true, timezone: true, teeTimeAlertsOn: true, publicAdvanceDays: true, memberAdvanceDays: true, memberGraceDays: true, minPlayers: true, maxPlayers: true, hasResidentPricing: true },
+    select: { id: true, name: true, slug: true, active: true, liveStatus: true, timezone: true, teeTimeAlertsOn: true, publicAdvanceDays: true, memberAdvanceDays: true, memberGraceDays: true, minPlayers: true, maxPlayers: true, hasResidentPricing: true, memberLoginOn: true },
   });
   if (!course || !course.active || course.liveStatus !== 'live') return { ok: false, status: 404, body: { error: 'Course not found' } };
   if (!course.teeTimeAlertsOn) return { ok: false, status: 403, body: { error: 'This course isn’t taking tee time alerts.', alertsOff: true } };
@@ -145,7 +145,8 @@ export async function createAlert(input: CreateAlertInput, member: MemberCtx, no
   let email = '';
   // #483: a session counts only while the email is in a group here now (canLogIn); a cookie whose
   // membership ended or card expired is a guest, with the email they typed.
-  const loggedIn = !!member && member.courseId === course.id && !!member.email.trim() && !!(await canLogIn(course, member.email));
+  // A course with Log in off (Course.memberLoginOn) recognises no log-in here either: the golfer is a guest.
+  const loggedIn = !!member && course.memberLoginOn && member.courseId === course.id && !!member.email.trim() && !!(await canLogIn(course, member.email));
   if (loggedIn) {
     email = member!.email.trim().toLowerCase();
     const m = await liveMembershipFor(course, email);
@@ -352,7 +353,7 @@ export async function notifyAlertsFor(courseId: string, dates: string[], now: Da
 async function notifyInner(courseId: string, dates: string[], now: Date, maxSends: number): Promise<number> {
   const course = await prisma.course.findUnique({
     where: { id: courseId },
-    select: { id: true, name: true, slug: true, active: true, liveStatus: true, timezone: true, teeTimeAlertsOn: true, publicAdvanceDays: true, minPlayers: true, maxPlayers: true },
+    select: { id: true, name: true, slug: true, active: true, liveStatus: true, timezone: true, teeTimeAlertsOn: true, publicAdvanceDays: true, minPlayers: true, maxPlayers: true, memberLoginOn: true },
   });
   if (!course || !course.teeTimeAlertsOn || !course.active || course.liveStatus !== 'live') return 0;
   const { sendTeeTimeAlertEmail } = await import('./email');
@@ -377,8 +378,10 @@ async function notifyInner(courseId: string, dates: string[], now: Date, maxSend
     if (!times.length) continue;
     for (const a of alerts) {
       if (told >= maxSends) return told;
-      // A guest can't book past the public window (or a round's own shorter one).
-      const usable = a.membershipId ? times : times.filter(t => t.publicOk);
+      // A guest can't book past the public window (or a round's own shorter one). Neither can a member while the course
+      // has Log in off (Build 2026-11-18): the booking page would refuse the time, so the alert falls back to the public
+      // window. Nothing is deleted; switching Log in back on restores the member window.
+      const usable = a.membershipId && course.memberLoginOn ? times : times.filter(t => t.publicOk);
       const hit = usable.find(t => alertMatches(a, t));
       if (!hit) continue;
       // The claim: only the caller that adds this date sends. Postgres re-checks the
