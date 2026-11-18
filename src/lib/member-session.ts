@@ -80,7 +80,8 @@ export async function loggedInAt(courseId: string): Promise<{ email: string } | 
 
 /**
  * The groups a golfer can log in as at this course, for the log-in line ("For <Course> members and residents."):
- * 'members' when the course has an active membership, 'residents' when residents get their rate here and this course
+ * 'members' when some membership here could log in now (canLogIn's rule: status active, with an email to log in with;
+ * Build 2026-11-18 — not "has an active tier", which disagreed with canLogIn), 'residents' when residents get their rate here and this course
  * or its group lists a card someone could log in with now: one with an email (a counter-only card has none) that is
  * good today on the course's clock, the same rule canLogIn uses. Empty when the course turned Log in off. Says
  * nothing about any email.
@@ -88,14 +89,14 @@ export async function loggedInAt(courseId: string): Promise<{ email: string } | 
 export async function loginGroups(course: { id: string; memberLoginOn?: boolean | null; hasResidentPricing?: boolean | null; timezone?: string | null }): Promise<('members' | 'residents')[]> {
   if (course.memberLoginOn === false) return [];
   const today = todayIn(course.timezone);
-  const [tiers, cards] = await Promise.all([
-    prisma.membershipTier.count({ where: { courseId: course.id, active: true } }),
+  const [members, cards] = await Promise.all([
+    prisma.courseMembership.count({ where: { courseId: course.id, status: 'active', OR: [{ NOT: { inviteEmail: '' } }, { golferId: { not: null } }] } }),
     residentPricingOn(course)
       ? prisma.courseResident.count({ where: { courseId: { in: await groupCourseIds(course.id) }, email: { not: null }, NOT: { email: '' }, OR: [{ expiresOn: '' }, { expiresOn: { gte: today } }] } })
       : Promise.resolve(0),
   ]);
   const out: ('members' | 'residents')[] = [];
-  if (tiers > 0) out.push('members');
+  if (members > 0) out.push('members');
   if (cards > 0) out.push('residents');
   return out;
 }

@@ -402,6 +402,25 @@ async function main() {
   check('loginGroups: counter-only and expired cards don\'t make "residents"', (await loginGroups(lg)).length === 0);
   await prisma.courseResident.create({ data: { courseId: lg.id, name: 'Good', email: `lg-good@${TAG}.test`, expiresOn: '' } });
   check('…a card good today with an email does', JSON.stringify(await loginGroups(lg)) === '["residents"]');
+  // 'members' follows canLogIn too: an active membership with an email, not an active tier.
+  const lgTier = await prisma.membershipTier.create({ data: { courseId: lg.id, name: 'Unused', active: true } });
+  check('loginGroups: an active tier with no members gives no "members"', JSON.stringify(await loginGroups(lg)) === '["residents"]');
+  await prisma.membershipTier.update({ where: { id: lgTier.id }, data: { active: false } });
+  const lgMem = await prisma.courseMembership.create({ data: { courseId: lg.id, tierId: lgTier.id, membershipType: 'Unused', status: 'active', inviteEmail: `lg-mem@${TAG}.test`, inviteName: 'LG', payToken: `${TAG}-lg` } });
+  check('…an active member on an inactive tier does', JSON.stringify(await loginGroups(lg)) === '["members","residents"]');
+  // The two rules agree: loginGroups is non-empty exactly when some email at the course could log in.
+  const agree = async (label: string) => {
+    const [cardRows, memRows] = await Promise.all([prisma.courseResident.findMany({ where: { courseId: lg.id }, select: { email: true } }), prisma.courseMembership.findMany({ where: { courseId: lg.id }, select: { inviteEmail: true } })]);
+    const emails = [...cardRows.map(r => r.email ?? ''), ...memRows.map(r => r.inviteEmail)].filter(Boolean);
+    const any = (await Promise.all(emails.map(e => canLogIn(lg, e)))).some(Boolean);
+    check(`loginGroups agrees with canLogIn: ${label}`, ((await loginGroups(lg)).length > 0) === any, { any, groups: await loginGroups(lg) });
+  };
+  await agree('a member and a resident');
+  await prisma.courseMembership.update({ where: { id: lgMem.id }, data: { status: 'cancelled' } });
+  await prisma.courseResident.deleteMany({ where: { courseId: lg.id, email: `lg-good@${TAG}.test` } });
+  await agree('nobody who can log in');
+  await prisma.courseMembership.update({ where: { id: lgMem.id }, data: { status: 'active' } });
+  await agree('only a member');
   await prisma.course.update({ where: { id: a.id }, data: { memberLoginOn: true } });
 
   // The benefits line (invite email, Your <Course>).
