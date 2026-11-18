@@ -74,8 +74,9 @@ const no = (status: number, code: string, error: string): LinesResult => ({ ok: 
 const lineFor = (it: BucketItem, unitCents: number, qty: number): BucketLine => ({ itemId: it.id, name: it.name, balls: it.rangeBalls, unitCents, qty });
 
 /**
- * Pure: an online booking's buckets from what the page sent ([{ id, qty }]) and the course's active list, at the
- * list price now. Anything not on the list is refused (409 'range') — never booked without what the golfer picked.
+ * Pure: an online booking's buckets from what the page sent ([{ id, qty, unitCents? }]) and the course's active list, at
+ * the list price now. Anything not on the list is refused (409 'range') — never booked without what the golfer picked —
+ * and so is a bucket whose shown price (unitCents) differs from the price it would be charged (409 'range').
  */
 export function priceOnline(request: unknown, list: BucketItem[]): LinesResult {
   if (request === undefined || request === null) return { ok: true, lines: [], total: 0 };

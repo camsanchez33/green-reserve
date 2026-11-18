@@ -78,6 +78,7 @@ const src = (f: string) => readFileSync(f, 'utf8');
 const bk = src('src/app/api/bookings/route.ts');
 ok('bookings route: buckets come only from onlineBuckets over this course\'s list', /onlineBuckets\(teeTimeFull\.course,/.test(bk) && /courseBuckets\(prisma, teeTimeFull\.courseId\)/.test(bk) && !/priceOnline\(/.test(bk));
 ok('…and they are in the round\'s total and stored as booked', /const totalCents\s*=\s*greenFeeTotal \+ cartFeeTotal \+ rangeBallsTotal/.test(bk) && /rangeBuckets: snapshotOf\(buckets\.lines\)/.test(bk));
+ok('the booking page sends the price it showed per bucket (else a raised price is charged silently)', src('src/app/book/BookClient.tsx').includes('unitCents: r.price_cents'));
 const st = src('src/app/api/operator/settings/route.ts');
 ok('settings route: sellRangeOnline is the owner\'s alone', /session\.isStaff && 'sellRangeOnline' in body\) return NextResponse\.json\([^)]*\{ status: 403 \}/.test(st));
 const rb = src('src/app/api/operator/range-buckets/route.ts');
