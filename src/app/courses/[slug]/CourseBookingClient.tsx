@@ -1104,7 +1104,8 @@ export default function CourseDetailPage({
           </section>
         )}
 
-        <main className={g.wrap}>
+        {/* The site layout's <main> is the page's one main landmark; this is its content. */}
+        <div className={g.wrap}>
           {course.type === 'member' ? (
             <div className={g.empty}>
               <h2>Member-only club</h2>
@@ -1144,7 +1145,7 @@ export default function CourseDetailPage({
               </section>
             </div>
           )}
-        </main>
+        </div>
       </div>
       <CourseFooter course={course} accent={course.brand_color || '#173B2A'} />
 

@@ -62,5 +62,9 @@ check('no empty account landmark for a guest when Log in is not offered', course
 
 check('a failed resend puts focus back on the code field', readFileSync('src/app/courses/[slug]/login/LoginClient.tsx', 'utf8').split("(step === 'code' ? codeRef : emailRef).current?.focus()").length === 3);
 
+for (const f of ['src/app/courses/[slug]/CourseBookingClient.tsx', 'src/app/book/BookClient.tsx', 'src/app/courses/[slug]/login/LoginClient.tsx']) {
+  check(`one main landmark: ${f} adds no <main> inside the layout's`, !readFileSync(f, 'utf8').includes('<main'));
+}
+
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);

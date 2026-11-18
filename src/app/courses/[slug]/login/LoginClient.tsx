@@ -102,7 +102,8 @@ export default function LoginClient({ course, back }: { course: LoginCourse; bac
     <div className={g.root} style={golferLookVars(course)}>
       <div className={g.site}>
         <header className={g.top}><h1><Link href={`/courses/${slug}`}>{course.name}</Link></h1></header>
-        <main className={g.wrap}>
+        {/* The site layout's <main> is the page's one main landmark; this is its content. */}
+        <div className={g.wrap}>
           <div className={g.bk} style={{ maxWidth: 440 }}>
             <Link href={backHref} className={`${g.lnk} ${g.back}`}>‹ {backLabel}</Link>
             <h2 ref={headRef} tabIndex={-1}>Log in to {course.name}</h2>
@@ -160,7 +161,7 @@ export default function LoginClient({ course, back }: { course: LoginCourse; bac
             <p className={g.pol} style={{ marginTop: 18 }}>Not set up? Ask the pro shop.</p>
             <p className={g.pol}>Booking as a guest is fine, no account needed. <Link className={g.lnk} href={backHref}>{backLabel}</Link></p>
           </div>
-        </main>
+        </div>
       </div>
       <CourseFooter course={course} accent={course.brand_color || '#173B2A'} />
     </div>
