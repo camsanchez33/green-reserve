@@ -27,6 +27,7 @@ async function cleanup() {
   await prisma.promoCode.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.blackout.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.membershipTier.deleteMany({ where: { courseId: { in: ids } } });
+  await prisma.courseResident.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.course.deleteMany({ where: { id: { in: ids } } });
   await prisma.courseOperator.deleteMany({ where: { email: `${TAG}@t.local` } });
 }
@@ -121,7 +122,9 @@ async function cleanup() {
   const today = todayIn('America/New_York');
   let p = await loadPublicCourse(`${TAG}-a`);
   ok('the payload carries the saved look', JSON.stringify(p.booking_look) === '{"look":"dark","accent":"blue"}');
-  ok('resident_advance_days is null until the column lands', p.resident_advance_days === null);
+  ok('no resident window set: resident_advance_days is null (the public window)', p.resident_advance_days === null);
+  ok('Log in is on by default', p.member_login_on === true);
+  ok('no memberships or resident cards: login_groups is empty', Array.isArray(p.login_groups) && p.login_groups.length === 0);
   ok('no codes: has_live_promo false; no closures: closed_dates empty', p.has_live_promo === false && Array.isArray(p.closed_dates) && p.closed_dates.length === 0);
 
   await prisma.promoCode.create({ data: { courseId: course.id, code: 'SECRETFALL', kind: 'percent', value: 20, note: 'internal: for the Smith outing', startsOn: addDaysStr(today, 2) } });
@@ -154,6 +157,25 @@ async function cleanup() {
   await prisma.promoCode.updateMany({ where: { courseId: course.id }, data: { startsOn: null, active: false } });
   p = await loadPublicCourse(`${TAG}-a`);
   ok('a switched-off code does not count', p.has_live_promo === false);
+
+  // GOLFER-LOGIN-1 fields: groups, the Log in switch, and the resident window (which widens closed_dates too).
+  ok('an active membership makes login_groups ["members"]', JSON.stringify(p.login_groups) === '["members"]', p.login_groups);
+  await prisma.course.update({ where: { id: course.id }, data: { hasResidentPricing: true, residentAdvanceDays: 21 } });
+  await prisma.courseResident.create({ data: { courseId: course.id, name: 'Res Ident', email: `res@${TAG}.local` } });
+  await prisma.blackout.create({ data: { courseId: course.id, date: addDaysStr(today, 18), reason: 'Resident-window day' } });
+  p = await loadPublicCourse(`${TAG}-a`);
+  ok('resident cards add "residents"', JSON.stringify(p.login_groups) === '["members","residents"]', p.login_groups);
+  ok('resident_advance_days carries the course value', p.resident_advance_days === 21);
+  ok('a 21-day resident window lists the day closed at +18', p.closed_dates.some((d: { date: string }) => d.date === addDaysStr(today, 18)), p.closed_dates);
+  ok('the payload never carries a resident’s name or email', !JSON.stringify(p).includes('Res Ident') && !JSON.stringify(p).includes(`res@${TAG}`));
+  await prisma.course.update({ where: { id: course.id }, data: { hasResidentPricing: false } });
+  p = await loadPublicCourse(`${TAG}-a`);
+  ok('resident pricing off: no "residents" group and the resident window does not widen closed_dates', JSON.stringify(p.login_groups) === '["members"]' && !p.closed_dates.some((d: { date: string }) => d.date === addDaysStr(today, 18)));
+  ok('resident pricing off: resident_advance_days is null even with the column set', p.resident_advance_days === null);
+  await prisma.course.update({ where: { id: course.id }, data: { memberLoginOn: false } });
+  p = await loadPublicCourse(`${TAG}-a`);
+  ok('Log in switched off: member_login_on false and no groups', p.member_login_on === false && p.login_groups.length === 0);
+  ok('the list payload carries member_login_on from the row', normalizeDbCourse({ id: 'x', memberLoginOn: false }).member_login_on === false && normalizeDbCourse({ id: 'x' }).member_login_on === true);
 
   await cleanup();
   await prisma.$disconnect();
