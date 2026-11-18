@@ -244,3 +244,24 @@
   .yrow { flex-wrap: wrap; gap: 4px 14px; }
   .yrow > .lnk { margin-left: 0; }
 }
+
+/* The Book page's other states on the look: the confirmation, loading, and the errors. */
+.lede { font-size: 15px; color: var(--g-soft); margin: 0 0 16px; }
+.lede strong { color: var(--g-ink); }
+.cnote { border-left: 3px solid var(--g-acc); padding-left: 14px; margin: 0 0 16px; }
+.cnote b { display: block; font-size: 13px; margin-bottom: 2px; }
+.cnote p { margin: 0; font-size: 14px; white-space: pre-line; }
+.bk .card h3 { margin-top: 2px; }
+.tl { list-style: none; margin: 0; padding: 0; }
+.tlstep { display: flex; gap: 12px; font-size: 14px; }
+.tlstep > div { padding-bottom: 14px; }
+.tlstep:last-child > div { padding-bottom: 0; }
+.tlstep b { display: block; font-size: 13px; }
+.tlstep strong { font-weight: 600; }
+.tlrail { display: flex; flex-direction: column; align-items: center; padding-top: 5px; }
+.tldot { width: 7px; height: 7px; border-radius: 999px; background: var(--g-acc); flex: none; }
+.tlline { width: 1px; flex: 1; margin-top: 4px; background: var(--g-line); }
+.tlsub { display: block; font-size: 12.5px; color: var(--g-soft); margin-top: 2px; }
+.lk { color: var(--g-soft); }
+.lrule { border-top: 1px solid var(--g-line); margin-top: 6px; padding-top: 6px; }
+.loading { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 40vh; color: var(--g-soft); font-size: 14px; }

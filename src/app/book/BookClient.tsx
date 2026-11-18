@@ -16,8 +16,6 @@ import {
 import type { PaymentRequest } from '@stripe/stripe-js';
 import { Loader2 } from 'lucide-react';
 import { ACCESS_FEE_PER_PLAYER, serviceFeeLabel, hoursLabel } from '@/lib/booking-fees';
-import { CARD } from '@/components/ui/Card';
-import { CourseHeaderBar } from '@/components/CourseHeaderBar';
 import { describePolicy, policyFrom, afterCutoffLine, insideWindowLine, policyMoney, holdTodayLine, holdsAtCutoff, type CancelPolicy } from '@/lib/cancel-policy';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
 import { LIKE_UNSAFE_EMAIL } from '@/lib/like-exact';
@@ -118,19 +116,26 @@ function deadlineLabel(dateStr: string, timeStr: string, hoursBefore: number) {
   return `${day} at ${clock} (course time)`;
 }
 
-// One step of the confirmation timeline — a dot, a rule, a line of plain English.
-function TimelineStep({ when, what, last = false, accent }: {
-  when: string; what: React.ReactNode; last?: boolean; accent: string;
-}) {
+// One step of the confirmation timeline — a dot in the course's colour, a rule, a line of plain English.
+function TimelineStep({ when, what, last = false }: { when: string; what: React.ReactNode; last?: boolean }) {
   return (
-    <div className="flex gap-3">
-      <div className="flex flex-col items-center pt-1">
-        <span className="w-[7px] h-[7px] rounded-full shrink-0" style={{ backgroundColor: accent }} />
-        {!last && <span className="w-px flex-1 mt-1" style={{ backgroundColor: '#E6E3D7' }} />}
-      </div>
-      <div className={last ? 'pb-0' : 'pb-4'}>
-        <div className="text-[13px] font-semibold text-ink">{when}</div>
-        <div className="text-sm text-ink mt-0.5 leading-relaxed">{what}</div>
+    <li className={g.tlstep}>
+      <span className={g.tlrail} aria-hidden="true"><span className={g.tldot} />{!last && <span className={g.tlline} />}</span>
+      <div><b>{when}</b><div>{what}</div></div>
+    </li>
+  );
+}
+
+// Every state of the Book page (the form's own markup aside) sits in the course's look: the band with its name,
+// then the content. The site layout's main element is the page's one main landmark; this is its content.
+function LookShell({ course, courseSlug, children }: { course: CourseInfo | null | undefined; courseSlug: string; children: React.ReactNode }) {
+  return (
+    <div className={g.root} style={course ? golferLookVars(course) : golferLookVars({})}>
+      <div className={g.site}>
+        <header className={g.top}>
+          <h1>{course?.name ? (courseSlug ? <Link href={`/courses/${courseSlug}`}>{course.name}</Link> : course.name) : 'Book a tee time'}</h1>
+        </header>
+        <div className={g.wrap}><div className={g.bk}>{children}</div></div>
       </div>
     </div>
   );
@@ -166,6 +171,9 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   const [loadError, setLoadError] = useState(initial?.error ?? '');
   const [loadingInfo, setLoadingInfo] = useState(!initial);
   const [confirmedData, setConfirmedData] = useState<ConfirmedData | null>(null);
+  // The confirmation replaces the form: focus moves to its heading, so a screen reader hears it.
+  const confRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => { if (confirmedData) confRef.current?.focus(); }, [confirmedData]);
   // PERF (Cam 2026-10-26): Stripe.js costs ~600ms of main-thread time, so even at a
   // card course it loads on the golfer's first touch of (or tab into) the booking
   // form — before the agree box, so Apple Pay / Google Pay are ready when it is ticked.
@@ -266,115 +274,104 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
       .catch(() => { setResidentFee(null); setMemberRate(null); setPacks([]); });
   }, [ttId]);
 
-  // The confirmation is not on the look tokens yet; it takes the same accent as the page.
+  // The confirmation, loading and error states wear the course's look too (Light or Dark), like the form.
   const accent = course ? lookAccentHex(course) : '#173B2A';
 
   if (confirmedData) {
+    const lateMoney = policyMoney(Math.round(confirmedData.cancellationFeeTotal * 100));
     return (
-      <div className="min-h-screen bg-paper flex items-center justify-center px-4 py-8">
-        <div className={`${CARD} max-w-lg w-full overflow-hidden`}>
-          <CourseHeaderBar courseName={confirmedData.courseName} accent={accent} photoUrl={course?.hero_image_url} logoUrl={course?.logo_url} />
-          <div className="p-6 sm:p-8 text-center">
-            <h1 className="text-[34px] font-serif leading-none text-ink mb-3">You&apos;re all set</h1>
-            <p className="text-ink-soft mb-6 text-sm">
-              {confirmedData.noCard
-                ? <>Your spot is reserved — <strong className="text-ink">no card required</strong>. Pay at the course or use the check-in link in your confirmation email.</>
-                : FEE_AT_BOOKING_ON
-                  ? <>Your card is on file and <strong className="text-ink">only the ${confirmedData.accessFeeTotal.toFixed(2)} booking fee was charged</strong>. We&apos;ll email you a reminder to check in and pay before your round.</>
-                  : <>Your card is on file but <strong className="text-ink">nothing has been charged</strong>. We&apos;ll email you a reminder to check in and pay before your round.</>}
-            </p>
+      <LookShell course={course} courseSlug={courseSlug}>
+        <h2 ref={confRef} tabIndex={-1}>You&apos;re all set</h2>
+        <p className={g.lede}>
+          {confirmedData.noCard
+            ? <>Your spot is reserved — <strong>no card required</strong>. Pay at the course or use the check-in link in your confirmation email.</>
+            : FEE_AT_BOOKING_ON
+              ? <>Your card is on file and <strong>only the ${confirmedData.accessFeeTotal.toFixed(2)} booking fee was charged</strong>. We&apos;ll email you a reminder to check in and pay before your round.</>
+              : <>Your card is on file but <strong>nothing has been charged</strong>. We&apos;ll email you a reminder to check in and pay before your round.</>}
+        </p>
 
-            {/* PERS-1: the course's own note, in its own words — left-aligned, its colour on the rule. */}
-            {course?.confirmation_note && (
-              <div className="text-left mb-6 pl-4 border-l-[3px]" style={{ borderColor: accent }}>
-                <div className="text-[13px] font-semibold text-ink mb-1">From {confirmedData.courseName}</div>
-                <p className="text-sm text-ink whitespace-pre-line">{course.confirmation_note}</p>
-              </div>
-            )}
-
-            {/* What happens next — the same three facts the policy copy already
-                states, laid out in the order they actually happen. */}
-            <div className="rounded-lg bg-paper/70 p-5 mb-6 text-left">
-              <div className="text-[15px] font-semibold text-ink mb-4">What happens next</div>
-              <TimelineStep
-                accent={accent}
-                when="Today"
-                what={confirmedData.cutoffPassed && confirmedData.cancellationFeeTotal > 0 && holdsAtCutoff({ lateFeeTimingAtBooking: confirmedData.lateFeeTiming })
-                  ? <>Booked · <strong className="text-ink font-medium">{FEE_AT_BOOKING_ON ? `$${confirmedData.accessFeeTotal.toFixed(2)} booking fee charged today; ` : ''}{holdTodayLine(policyMoney(Math.round(confirmedData.cancellationFeeTotal * 100)))}</strong></>
-                  : <>Booked · <strong className="text-ink font-medium">charged today ${(FEE_AT_BOOKING_ON && !confirmedData.noCard ? confirmedData.accessFeeTotal : 0).toFixed(2)}</strong></>}
-              />
-              {/* Wording from cancel-policy.ts (afterCutoffLine / insideWindowLine), by the
-                  booking's own timing; booked past the cutoff, it says so (R-GOLF-009). */}
-              <TimelineStep
-                accent={accent}
-                when={confirmedData.cancellationFeeTotal <= 0 ? 'Any time before your round' : confirmedData.cutoffPassed ? 'Cancellation' : 'Free to cancel until'}
-                what={confirmedData.cancellationFeeTotal <= 0
-                  ? <>Cancel free of charge — this course has no late-cancellation fee.</>
-                  : confirmedData.cutoffPassed
-                    ? <>{insideWindowLine(confirmedData.lateFeeTiming, policyMoney(Math.round(confirmedData.cancellationFeeTotal * 100)))}</>
-                    : <>
-                        {deadlineLabel(confirmedData.date, confirmedData.time, confirmedData.cancellationHours) || `${hoursLabel(confirmedData.cancellationHours)} before your tee time`}
-                        <span className="block text-ink text-xs mt-0.5">
-                          {afterCutoffLine(confirmedData.lateFeeTiming, policyMoney(Math.round(confirmedData.cancellationFeeTotal * 100)))}
-                        </span>
-                      </>}
-              />
-              <TimelineStep
-                last
-                accent={accent}
-                when={displayDate(confirmedData.date)}
-                what={<>
-                  Check in at {formatTime(confirmedData.time)} and pay ${confirmedData.totalAmount.toFixed(2)}
-                  <span className="block text-ink text-xs mt-0.5">
-                    {confirmedData.noCard ? 'At the pro shop, or online with the link in your email.' : 'Online with the link in your email, or at the pro shop.'}
-                  </span>
-                </>}
-              />
-            </div>
-
-            <div className="bg-paper/70 rounded-lg p-5 mb-6 text-left space-y-2 text-sm">
-              <div className="flex justify-between"><span className="text-ink-muted">Date</span><span className="font-medium text-ink">{displayDate(confirmedData.date)}</span></div>
-              <div className="flex justify-between"><span className="text-ink-muted">Tee time</span><span className="font-medium text-ink">{formatTime(confirmedData.time)}</span></div>
-              <div className="flex justify-between"><span className="text-ink-muted">Players</span><span className="font-medium text-ink">{confirmedData.players}</span></div>
-              <div className="border-t border-line mt-2 pt-2 space-y-1.5">
-                <div className="flex justify-between text-ink-soft"><span>Green fee</span><span>${confirmedData.greenFeeTotal.toFixed(2)}</span></div>
-                {confirmedData.cartFeeTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Cart fee</span><span>${confirmedData.cartFeeTotal.toFixed(2)}</span></div>}
-                {confirmedData.rangeBallsTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Range balls</span><span>${confirmedData.rangeBallsTotal.toFixed(2)}</span></div>}
-                <div className="flex justify-between gap-3 text-ink-soft"><span>{serviceFeeLabel(confirmedData.players)}</span><span className="shrink-0">${confirmedData.accessFeeTotal.toFixed(2)}</span></div>
-                <div className="flex justify-between font-semibold text-ink border-t border-line pt-2">
-                  <span>Estimated total at check-in</span><span>${confirmedData.totalAmount.toFixed(2)}</span>
-                </div>
-              </div>
-            </div>
-
-            <Link href={`/courses/${courseSlug}`} className="inline-block text-sm text-ink-soft hover:text-ink transition-colors">
-              Back to {confirmedData.courseName}
-            </Link>
+        {/* PERS-1: the course's own note, in its own words, its colour on the rule. */}
+        {course?.confirmation_note && (
+          <div className={g.cnote}>
+            <b>From {confirmedData.courseName}</b>
+            <p>{course.confirmation_note}</p>
           </div>
-        </div>
-      </div>
+        )}
+
+        {/* What happens next — the same three facts the policy copy already
+            states, laid out in the order they actually happen. */}
+        <section className={g.card} aria-labelledby="bk-next">
+          <h3 id="bk-next">What happens next</h3>
+          <ol className={g.tl}>
+            <TimelineStep
+              when="Today"
+              what={confirmedData.cutoffPassed && confirmedData.cancellationFeeTotal > 0 && holdsAtCutoff({ lateFeeTimingAtBooking: confirmedData.lateFeeTiming })
+                ? <>Booked · <strong>{FEE_AT_BOOKING_ON ? `$${confirmedData.accessFeeTotal.toFixed(2)} booking fee charged today; ` : ''}{holdTodayLine(lateMoney)}</strong></>
+                : <>Booked · <strong>charged today ${(FEE_AT_BOOKING_ON && !confirmedData.noCard ? confirmedData.accessFeeTotal : 0).toFixed(2)}</strong></>}
+            />
+            {/* Wording from cancel-policy.ts (afterCutoffLine / insideWindowLine), by the
+                booking's own timing; booked past the cutoff, it says so (R-GOLF-009). */}
+            <TimelineStep
+              when={confirmedData.cancellationFeeTotal <= 0 ? 'Any time before your round' : confirmedData.cutoffPassed ? 'Cancellation' : 'Free to cancel until'}
+              what={confirmedData.cancellationFeeTotal <= 0
+                ? <>Cancel free of charge — this course has no late-cancellation fee.</>
+                : confirmedData.cutoffPassed
+                  ? <>{insideWindowLine(confirmedData.lateFeeTiming, lateMoney)}</>
+                  : <>
+                      {deadlineLabel(confirmedData.date, confirmedData.time, confirmedData.cancellationHours) || `${hoursLabel(confirmedData.cancellationHours)} before your tee time`}
+                      <span className={g.tlsub}>{afterCutoffLine(confirmedData.lateFeeTiming, lateMoney)}</span>
+                    </>}
+            />
+            <TimelineStep
+              last
+              when={displayDate(confirmedData.date)}
+              what={<>
+                Check in at {formatTime(confirmedData.time)} and pay ${confirmedData.totalAmount.toFixed(2)}
+                <span className={g.tlsub}>
+                  {confirmedData.noCard ? 'At the pro shop, or online with the link in your email.' : 'Online with the link in your email, or at the pro shop.'}
+                </span>
+              </>}
+            />
+          </ol>
+        </section>
+
+        <section className={g.card} aria-label="Your booking">
+          <div className={g.li}><span className={g.lk}>Date</span><b>{displayDate(confirmedData.date)}</b></div>
+          <div className={g.li}><span className={g.lk}>Tee time</span><b>{formatTime(confirmedData.time)}</b></div>
+          <div className={g.li}><span className={g.lk}>Players</span><b>{confirmedData.players}</b></div>
+          <div className={g.lrule}>
+            <div className={`${g.li} ${g.sub}`}><span>Green fee</span><span>${confirmedData.greenFeeTotal.toFixed(2)}</span></div>
+            {confirmedData.cartFeeTotal > 0 && <div className={`${g.li} ${g.sub}`}><span>Cart fee</span><span>${confirmedData.cartFeeTotal.toFixed(2)}</span></div>}
+            {confirmedData.rangeBallsTotal > 0 && <div className={`${g.li} ${g.sub}`}><span>Range balls</span><span>${confirmedData.rangeBallsTotal.toFixed(2)}</span></div>}
+            <div className={`${g.li} ${g.sub}`}><span>{serviceFeeLabel(confirmedData.players)}</span><span>${confirmedData.accessFeeTotal.toFixed(2)}</span></div>
+            <div className={`${g.li} ${g.tot}`}><span>Estimated total at check-in</span><span>${confirmedData.totalAmount.toFixed(2)}</span></div>
+          </div>
+        </section>
+
+        <Link href={`/courses/${courseSlug}`} className={g.lnk}>Back to {confirmedData.courseName}</Link>
+      </LookShell>
     );
   }
 
   if (loadingInfo) {
-    return <div className="min-h-screen bg-paper flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-ink-muted" /></div>;
+    return (
+      <LookShell course={course} courseSlug={courseSlug}>
+        <p className={g.loading} role="status"><Loader2 size={20} className="animate-spin" aria-hidden="true" /> Loading this tee time…</p>
+      </LookShell>
+    );
   }
 
   if (loadError || !teeTime || !course) {
     return (
-      <div className="min-h-screen bg-paper flex items-center justify-center px-4">
-        <div className={`${CARD} max-w-md w-full p-8 text-center`}>
-          
-          <h1 className="font-serif text-[24px] leading-tight text-ink mb-2">Can&apos;t complete this booking</h1>
-          <p className="text-ink-soft text-sm mb-6">{loadError || 'This tee time is no longer available.'}</p>
-          <Link
-            href={courseSlug ? backToTimesHref(courseSlug, params, requestedPlayers) : '/'}
-            className="inline-block px-5 py-2.5 rounded-md text-sm font-medium text-white bg-pine hover:bg-pine-hover transition-colors"
-          >
-            Pick another time
-          </Link>
+      <LookShell course={course} courseSlug={courseSlug}>
+        <div className={g.empty} role="alert">
+          <h2>Can&apos;t complete this booking</h2>
+          <p>{loadError || 'This tee time is no longer available.'}</p>
+          <div className={g.opts}>
+            <Link href={courseSlug ? backToTimesHref(courseSlug, params, requestedPlayers) : '/'} className={`${g.chip} ${g.fill}`}>Pick another time</Link>
+          </div>
         </div>
-      </div>
+      </LookShell>
     );
   }
 
@@ -382,17 +379,15 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   const minPlayers = teeTime.min_players ?? 1;
   if (players < minPlayers) {
     return (
-      <div className="min-h-screen bg-paper flex items-center justify-center px-4">
-        <div className={`${CARD} max-w-md w-full p-8 text-center`}>
-          <h1 className="font-serif text-[24px] leading-tight text-ink mb-2">This tee time is for groups of {minPlayers} or more</h1>
-          <p className="text-ink-soft text-sm mb-6">You picked {players} player{players === 1 ? '' : 's'}. Pick another time, or add players and choose this one again.</p>
-          <Link href={courseSlug ? backToTimesHref(courseSlug, params, requestedPlayers) : '/'}
-            className="inline-block px-5 py-2.5 rounded-md text-sm font-medium text-white transition-colors"
-            style={{ backgroundColor: accent }}>
-            Pick another time
-          </Link>
+      <LookShell course={course} courseSlug={courseSlug}>
+        <div className={g.empty} role="alert">
+          <h2>This tee time is for groups of {minPlayers} or more</h2>
+          <p>You picked {players} player{players === 1 ? '' : 's'}. Pick another time, or add players and choose this one again.</p>
+          <div className={g.opts}>
+            <Link href={courseSlug ? backToTimesHref(courseSlug, params, requestedPlayers) : '/'} className={`${g.chip} ${g.fill}`}>Pick another time</Link>
+          </div>
         </div>
-      </div>
+      </LookShell>
     );
   }
   // The server adds a cart whenever the course, the round or this time's schedule requires one — show the same.
@@ -926,7 +921,7 @@ function BookFooter({ course }: { course: CourseInfo | null | undefined }) {
 export default function BookClient({ initial }: { initial?: BookInitial }) {
   return (
     <>
-      <Suspense fallback={<div className="min-h-screen bg-paper" />}>
+      <Suspense fallback={<LookShell course={initial?.course} courseSlug=""><p className={g.loading} role="status">Loading this tee time…</p></LookShell>}>
         <BookPageInner initial={initial} />
       </Suspense>
       <BookFooter course={initial?.course} />

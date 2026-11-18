@@ -27,6 +27,8 @@ export type YourSession = {
   groups?: SessionGroup[];
   benefits?: string | null;
   renewsOn?: string | null;
+  /** 2b: the membership renews itself (the course charges the saved card). */
+  autoRenew?: boolean;
   upcoming?: Upcoming[];
 };
 
@@ -78,13 +80,20 @@ export function datedStatus(endsOn: string | null | undefined, today: string, re
 }
 
 /** The membership line, or null for a golfer who is only a resident here. */
-export function membershipLine(s: YourSession, today: string = localToday()): { group: string; dot: Dot; when: string | null } | null {
+/** Said, in red, when a membership set to renew itself is past its date (Build 2026-11-18). */
+export const RENEWAL_FAILED = 'Your renewal didn’t go through. Call the pro shop.';
+
+export function membershipLine(s: YourSession, today: string = localToday()): { group: string; dot: Dot; when: string | null; problem?: string } | null {
   const m = s.groups?.find(gr => gr.kind === 'member');
   if (!m && (s.groups?.length || s.membershipType === 'Resident')) return null;
   const group = m?.name ?? s.tier?.name ?? s.membershipType;
   // 2b says when a membership renews; until then (or if the date is unreadable) only the end date is known, so it
   // reads "expires".
-  const st = isDay(s.renewsOn) ? datedStatus(s.renewsOn, today, true) : datedStatus(s.expiresAt, today);
+  const renews = s.autoRenew === true || isDay(s.renewsOn);
+  const day = isDay(s.renewsOn) ? s.renewsOn : s.expiresAt;
+  const st = datedStatus(day, today, renews);
+  // Set to renew and past the date: the renewal failed. A membership that wasn't set to renew just ended.
+  if (renews && st.dot === 'bad') return { group, dot: 'bad', when: null, problem: RENEWAL_FAILED };
   return { group, ...st };
 }
 

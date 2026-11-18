@@ -2,7 +2,7 @@
 // one line of benefits) and the upcoming bookings, each opening its manage page. No statements, no dues.
 // Run: npx tsx scripts/golfer-your-course-test.ts
 import { readFileSync } from 'fs';
-import { datedStatus, membershipLine, residentLine, upcomingWhen, manageHref, longDay, isDay } from '../src/app/courses/[slug]/member/your-course-helpers';
+import { RENEWAL_FAILED, datedStatus, membershipLine, residentLine, upcomingWhen, manageHref, longDay, isDay } from '../src/app/courses/[slug]/member/your-course-helpers';
 import { golferLookVars, DARK_STATUS } from '../src/components/golfer/look';
 
 let failed = 0;
@@ -25,6 +25,9 @@ const base = { name: 'Dana', membershipType: 'full', status: 'active', expiresAt
 const m = membershipLine({ ...base, groups: [{ kind: 'member', name: 'Member', color: null }] }, today);
 check('the membership line: the group name from the session, with its date', m?.group === 'Member' && m?.when === 'expires Mar 31, 2027' && m?.dot === 'ok', m);
 check('2b\'s renewsOn wins over expiresAt', membershipLine({ ...base, renewsOn: '2027-04-30', groups: [{ kind: 'member', name: 'Member', color: null }] }, today)?.when === 'renews Apr 30, 2027');
+check('set to renew and past the date: the renewal failed, in red, with what to do (Build 2026-11-18)', JSON.stringify(membershipLine({ ...base, expiresAt: '2026-11-01', autoRenew: true, groups: [{ kind: 'member', name: 'Member', color: null }] }, today)) === JSON.stringify({ group: 'Member', dot: 'bad', when: null, problem: RENEWAL_FAILED }) && membershipLine({ ...base, renewsOn: '2026-11-01', groups: [{ kind: 'member', name: 'Member', color: null }] }, today)?.problem === RENEWAL_FAILED && RENEWAL_FAILED === 'Your renewal didn’t go through. Call the pro shop.');
+check('not set to renew and past the date: ended, in red', membershipLine({ ...base, expiresAt: '2026-11-01', autoRenew: false, groups: [{ kind: 'member', name: 'Member', color: null }] }, today)?.when === 'ended Nov 1, 2026' && !membershipLine({ ...base, expiresAt: '2026-11-01', groups: [{ kind: 'member', name: 'Member', color: null }] }, today)?.problem);
+check('autoRenew alone makes a running membership read renews', membershipLine({ ...base, autoRenew: true, groups: [{ kind: 'member', name: 'Member', color: null }] }, today)?.when === 'renews Mar 31, 2027');
 check('a resident who is not a member has no membership line, and a resident line', membershipLine({ ...base, membershipType: 'Resident', expiresAt: null, groups: [{ kind: 'resident', name: 'Resident', expiresOn: '2026-12-31' }] }, today) === null
   && residentLine({ ...base, groups: [{ kind: 'resident', name: 'Resident', expiresOn: '2026-12-31' }] }, today)?.when === 'expires Dec 31, 2026');
 check('an upcoming row reads like the mockup', JSON.stringify(upcomingWhen('2026-11-21', '07:40')) === JSON.stringify({ time: '7:40 AM', day: 'Sat Nov 21' }) && upcomingWhen('2026-11-27', '12:05').time === '12:05 PM' && upcomingWhen('2026-11-27', '00:10').time === '12:10 AM');
@@ -33,6 +36,7 @@ check('…never another site, a script URL, or another page', [ 'https://evil.ex
 
 const client = readFileSync('src/app/courses/[slug]/member/YourCourseClient.tsx', 'utf8');
 const page = readFileSync('src/app/courses/[slug]/member/page.tsx', 'utf8');
+check('the failed renewal is shown under the line', client.includes('{member?.problem && <p className={g.formerr}>{member.problem}</p>}'));
 const code = client.replace(/\/\/.*$/gm, '').replace(/\{\/\*[\s\S]*?\*\/\}/g, '');
 check('no statements, no dues, no payments, no booking (item 6)', !/statement|dues|payment|initiation|annual fee/i.test(code) && !code.includes('/book?') && !code.includes('/payments'));
 check('an unknown course is a real 404, in the course look', page.includes('if (!course) notFound();') && client.includes('style={golferLookVars(course)}') && client.includes('<CourseFooter course={course}'));

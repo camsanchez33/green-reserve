@@ -85,5 +85,12 @@ check('the site footer skips /book, which carries its own footer in the look (Pr
 check('alerts: no entry points when the course turned alerts off', course.includes("const alertsOn = course.tee_time_alerts_on !== false;") && course.includes('{alertsOn && !previewMode && <button type="button" className={g.chip} onClick={e => openAlert(undefined, e.currentTarget)}>') && course.includes('disabled={isFull && (!alertsOn || !!previewMode)}'));
 check('alerts: the sheet replaces the old modal (golfer-alerts-sheet-test has the sheet itself)', course.includes('<AlertSheet open={alertSheet}') && !course.includes('alertModal'));
 
+// Every other state of the Book page wears the look too (Build 2026-11-18): the confirmation, loading, the errors.
+check('the confirmation, loading and error states sit in the course look, not the old light page', (book.match(/<LookShell course=\{course\} courseSlug=\{courseSlug\}>/g) ?? []).length === 4 && !book.includes('min-h-screen') && !book.includes('bg-paper') && !book.includes('CourseHeaderBar') && book.includes('<div className={g.root} style={course ? golferLookVars(course) : golferLookVars({})}>'));
+check('the loading states are said (role status), the Suspense fallback included', (book.match(/role="status">.{0,90}Loading this tee time…/g) ?? []).length === 2);
+check('the confirmation heading takes focus when it replaces the form', book.includes('<h2 ref={confRef} tabIndex={-1}>You&apos;re all set</h2>') && book.includes('useEffect(() => { if (confirmedData) confRef.current?.focus(); }, [confirmedData]);'));
+check('the errors are alerts with one way on', (book.match(/<div className=\{g\.empty\} role="alert">/g) ?? []).length === 2 && book.includes("<h2>Can&apos;t complete this booking</h2>"));
+check('the timeline is an ordered list on the look tokens', book.includes('<ol className={g.tl}>') && book.includes('<li className={g.tlstep}>'));
+
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);
