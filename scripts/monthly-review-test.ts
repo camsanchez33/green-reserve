@@ -128,6 +128,7 @@ async function main() {
   check('a covered month carries the ledger fees', dfs?.noShows?.feesRecoveredDollars === 0 && dfs?.cancellations?.lateFeesKeptDollars === 0, JSON.stringify(dfs));
   check('December revenue is the ledger: $100 round + $250 dues', df?.thisMonth?.revenueDollars === 350 && df?.thisMonth?.duesDollars === 250 && df?.thisMonth?.teeAndCartDollars === 100, JSON.stringify(df?.thisMonth));
   check('the change on November is ledger money: $350 − $80', df?.lastMonth?.change?.revenueDollars === 270 && df?.baseline?.revenueDollars === 80 && df?.baseline?.changeFromBaseline?.revenueDollars === 270, JSON.stringify(df));
+  check('the range fact says it overlaps (never a separate part)', df?.thisMonth?.rangeAlsoInTeeAndShopDollars === 0 && !('rangeDollars' in (df?.thisMonth ?? {})), JSON.stringify(df?.thisMonth));
   const decRow = await prisma.monthlyReview.findUnique({ where: { courseId_month: { courseId: led, month: '2026-12' } } });
   const decRev = ((decRow?.metrics as { byArea?: { key: string; thisMonth: number | null; lastMonth: number | null }[] } | null)?.byArea ?? []).find(a => a.key === 'revenue');
   check('By area: revenue from the ledger, this month and last', decRev?.thisMonth === 35000 && decRev?.lastMonth === 8000, JSON.stringify(decRev));

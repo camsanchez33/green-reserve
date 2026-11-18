@@ -8,7 +8,7 @@ import { dayStart } from '../src/lib/ledger-view';
 import { allSegments } from '../src/lib/revenue-extras';
 import { computeAnalytics, previousRange } from '../src/lib/analytics';
 import { shopReport } from '../src/lib/shop-report';
-import { ledgerHeadline, noShowReport, stockValue, shopLedgerCents, projections } from '../src/lib/analytics-page';
+import { ledgerHeadline, noShowReport, stockValue, shopLedgerCents, projections, ledgerMonth } from '../src/lib/analytics-page';
 
 const TAG = 'anpagedbtest';
 let failed = 0;
@@ -165,7 +165,26 @@ async function cleanup() {
   ok('stock value: this course\'s shelf only', s.retailValueCents === 3 * 8000 + 10 * 500 && s.units === 13, s);
   ok('cost where known', s.costValueCents === 3 * 4000 && s.costUnknownItems === 1, s);
   ok('not selling: the jacket last sold in February; balls sold in May', s.notSelling.length === 1 && s.notSelling[0].name === 'Rain jacket' && s.notSelling[0].lastSoldAt === new Date('2031-02-01T15:00:00Z').toISOString(), s.notSelling);
-  ok('shop revenue is the ledger\'s shop + food & beverage (Revenue\'s split)', (await shopLedgerCents(c.id, range, now)) === revenueAll.segments.shopCents + revenueAll.segments.fnbCents && revenueAll.segments.shopCents + revenueAll.segments.fnbCents === 1000);
+  ok('shop revenue is the ledger\'s shop + food & beverage (Revenue\'s split)', (await shopLedgerCents(c.id, range, now)) === revenueAll.segments.shopCents + revenueAll.segments.fnbCents + revenueAll.segments.rangeCents - revenueAll.rangeOnRoundsCents && revenueAll.segments.shopCents + revenueAll.segments.fnbCents === 1000);
+
+  // ── RANGE-1: buckets on a round stay with tee times, buckets at the register with the pro shop (own course) ──
+  const rc = await mk('range');
+  const rt = await tt(rc.id, '2031-05-10');
+  const rb = await bk(rc.id, rt.id, { greenFeeTotal: 10000, rangeBallsTotal: 1600, totalAmount: 11600, paymentStatus: 'paid' });
+  await recordMove({ courseId: rc.id, what: 'round', direction: 'in', method: 'card', account: 'course', amountCents: 11600, stripeId: `pi_${TAG}_rround`, bookingId: rb.id, at: at('2031-05-10', '09:00') });
+  const bucket = await prisma.shopItem.create({ data: { courseId: rc.id, name: 'Small', category: 'Range', priceCents: 800, rangeBalls: 35 } });
+  const glove = await prisma.shopItem.create({ data: { courseId: rc.id, name: 'Glove', category: 'Apparel', priceCents: 1200 } });
+  const rs = await prisma.shopSale.create({ data: { courseId: rc.id, status: 'paid_cash', totalCents: 2000, paidAt: at('2031-05-11', '10:00'), lines: { create: [
+    { shopItemId: bucket.id, name: 'Small', unitPriceCents: 800, quantity: 1 }, { shopItemId: glove.id, name: 'Glove', unitPriceCents: 1200, quantity: 1 }] } } });
+  await recordMove({ courseId: rc.id, what: 'shop', direction: 'in', method: 'cash', account: 'course', amountCents: 2000, saleId: rs.id, at: at('2031-05-11', '10:00') });
+  const rAll = await allSegments(rc.id, tz, range, previousRange(range), now);
+  ok('range: Revenue\'s Range line is both, the round\'s part apart', rAll.segments.rangeCents === 1600 + 800 && rAll.rangeOnRoundsCents === 1600 && rAll.segments.teeCents === 10000 && rAll.segments.shopCents === 1200, { s: rAll.segments, r: rAll.rangeOnRoundsCents });
+  ok('…Pro shop headline: the glove and the register\'s buckets, not the round\'s', (await shopLedgerCents(rc.id, range, now)) === 1200 + 800);
+  const lm = await ledgerMonth(rc.id, tz, '2031-05', now);
+  ok('…monthly review: tee + cart keeps the round\'s buckets, pro shop the register\'s; range is all of them', lm.teeCartCents === 11600 && lm.proShopCents === 2000 && lm.rangeCents === 2400 && lm.grossCents === 13600, lm);
+  // Round ($16) and register ($8) buckets differ, so a swap of the two sides fails too.
+  const rp = (await projections(rc.id, now))!;
+  ok('…projections: the last 30 days\' tee money keeps the round\'s buckets, not the register\'s', rp.last.revenueCents === 11600, rp.last);
 
   // ── Projections ──
   const p = (await projections(c.id, now))!;

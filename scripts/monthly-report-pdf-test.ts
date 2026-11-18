@@ -24,7 +24,7 @@ const ok = (l: string, c: boolean, d: unknown = '') => { console.log(`${c ? 'PAS
 
   ok('pdfText: the true minus (no Helvetica glyph) prints as a hyphen; dashes and bullets are left', pdfText('−10% and −4.5 pts') === '-10% and -4.5 pts' && pdfText('a — b • c') === 'a — b • c');
   const h = { roundsPlayed: 120, fillPct: 64, noShowPct: 2.8 } as Parameters<typeof byAreaOf>[0]['h'];
-  const l = { grossCents: 500000, refundsCents: 0, teeCartCents: 400000, proShopCents: 90000, eventCents: 0, duesCents: 10000 };
+  const l = { grossCents: 500000, refundsCents: 0, teeCartCents: 400000, proShopCents: 90000, rangeCents: 0, eventCents: 0, duesCents: 10000 };
   const area = byAreaOf({ h, l }, null);
   ok('By area: five rows, money from the ledger month', area.map(a => a.key).join() === 'rounds,fill,revenue,no_show_rate,pro_shop' && area.find(a => a.key === 'revenue')?.thisMonth === 500000 && area.find(a => a.key === 'pro_shop')?.thisMonth === 90000 && area.every(a => a.lastMonth === null), area);
 
@@ -70,6 +70,7 @@ console.log(JSON.stringify(out));`);
   const mr = readFileSync('src/lib/monthly-review.ts', 'utf8');
   ok('the review\'s money comes from the ledger', mr.includes('ledgerCovers(m) ? ledgerMonth(courseId, tz, m, now)') && readFileSync('src/lib/analytics-page.ts', 'utf8').includes('allSegments(courseId, tz, r, previousRange(r), now)') && !mr.includes('collectedDollars') && !mr.includes('outstandingCents') && !mr.includes('impactCents'));
 
+  ok('the writer is told range balls are already inside tee + cart and pro shop', mr.includes('rangeAlsoInTeeAndShopDollars is range-ball buckets, and they are ALREADY inside teeAndCartDollars') && mr.includes('never present it as a separate part'));
   if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
   console.log('\nall passed');
 })().catch(e => { console.error(e); process.exit(1); });

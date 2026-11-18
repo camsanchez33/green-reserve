@@ -126,6 +126,9 @@ export async function addItemToBooking(courseId: string, bookingId: string, shop
     if (!item || item.courseId !== courseId || !item.active || (item.parent && !item.parent.active)) return { ok: false, status: 404, error: 'That item is not in your shop.' } as const;
     // W2-7: an item with sizes/colors is sold by its option, never itself.
     if (item._count.options > 0) return { ok: false, status: 400, error: 'Pick a size or color for that item.' } as const;
+    // RANGE-1: buckets on a round go in its own price with the checkout Range balls rows (lib/checkout-extras), so a
+    // round's buckets are paid, refunded and counted one way — never also as a shop item on it.
+    if (item.rangeBalls != null) return { ok: false, status: 409, error: 'Add range buckets with the Range balls rows at checkout. On a round pack or an event time, ring them up as a separate sale at the register.' } as const;
     await tx.bookingShopItem.create({ data: { bookingId, shopItemId: item.id, name: item.name, unitPriceCents: item.priceCents, quantity, addedBy, taxCategory: item.taxCategory } });
     await takeStock(tx, item.id, quantity);
     return { ok: true, ...(await retotal(tx, courseId, bookingId)) } as const;

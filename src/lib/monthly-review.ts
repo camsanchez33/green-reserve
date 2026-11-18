@@ -69,7 +69,7 @@ export const ledgerCovers = (month: string) => month >= LEDGER_FIRST_FULL_MONTH;
 
 const ledgerFacts = (l: LedgerMonth | null) => !l ? {} : ({
   revenueDollars: dollars(l.grossCents), refundsDollars: dollars(l.refundsCents), teeAndCartDollars: dollars(l.teeCartCents),
-  proShopDollars: dollars(l.proShopCents), eventDollars: dollars(l.eventCents), duesDollars: dollars(l.duesCents),
+  proShopDollars: dollars(l.proShopCents), rangeAlsoInTeeAndShopDollars: dollars(l.rangeCents), eventDollars: dollars(l.eventCents), duesDollars: dollars(l.duesCents),
 });
 
 /** "By area" in the written report: this month against the month before, stored with the review. */
@@ -175,6 +175,8 @@ const SYSTEM = `You write the monthly business review for a golf course owner, i
 You are given one JSON object of facts about last month, computed by the software. Reply with the review as JSON matching the schema.
 
 Numbers: use ONLY numbers that appear in the facts, copied exactly (you may drop decimals). Never calculate a new number — no sums, differences, ratios or percentages of your own, and no ratio words (doubled, half, twice, a third); every comparison you need is already in "change" and "changeFromBaseline". Never estimate or invent a figure. If a number you'd want isn't there, say it in words without a number.
+
+Money areas: revenueDollars is the whole. teeAndCartDollars, proShopDollars, eventDollars and duesDollars are its main parts. rangeAlsoInTeeAndShopDollars is range-ball buckets, and they are ALREADY inside teeAndCartDollars (buckets on a round) and proShopDollars (buckets at the register): never present it as a separate part or alongside them as if they added up.
 
 Interpret: explain what the numbers mean for the business and why it matters, in plain words an owner uses. Be specific — name days, hours and figures.
 

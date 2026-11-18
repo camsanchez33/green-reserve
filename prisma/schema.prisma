@@ -116,6 +116,10 @@ model Course {
   rangeBallsSmallPriceCents  Int                   @default(0)
   rangeBallsMediumPriceCents Int                   @default(0)
   rangeBallsLargePriceCents  Int                   @default(0)
+  /// RANGE-1 (Cam 2026-11-17/18): the three price columns above are no longer read — the course's buckets are
+  /// ShopItems with rangeBalls set (lib/range-buckets). This switch puts them on online bookings ("Sell range balls
+  /// with tee times"); off by default.
+  sellRangeOnline            Boolean               @default(false)
   hasPuttingGreen            Boolean               @default(false)
   hasShortGameArea           Boolean               @default(false)
   hasProShop                 Boolean               @default(false)
@@ -795,6 +799,9 @@ model Booking {
   cartSelected               Boolean           @default(false)
   rangeBallsSize             String            @default("")
   rangeBallsTotal            Int               @default(0)
+  /// RANGE-1: the buckets in rangeBallsTotal as booked — [{ itemId, name, balls, unitCents, qty }] — so a bucket keeps
+  /// the price it was booked at. Σ unitCents×qty = rangeBallsTotal. Null = none, or an older booking (rangeBallsSize).
+  rangeBuckets               Json?
   accessFeeTotal             Int
   totalAmount                Int
   // Card-on-file, deferred-payment flow — nothing is charged at booking time.
@@ -1795,6 +1802,9 @@ model ShopItem {
   /// Low-stock email (Cam 2026-11-15): when the email for the current drop to reorderAt was sent; null = not since it
   /// was last above. A database trigger clears it whenever the row stops being low (lib/low-stock.ts).
   lowNoticeAt DateTime?
+  /// RANGE-1 (Cam 2026-11-17): a range bucket and how many balls it holds; null = not a bucket. The course's one
+  /// bucket list (online, checkout, the register, receipts, Revenue's Range line) is its active items with this set.
+  rangeBalls  Int?
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
   sales       BookingShopItem[]

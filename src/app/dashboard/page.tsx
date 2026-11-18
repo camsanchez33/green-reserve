@@ -121,7 +121,7 @@ type Booking = {
   greenFeeTotal?: number; cartFeeTotal?: number; rangeBallsTotal?: number;
   residentRateCents?: number | null; memberRateCents?: number | null; memberCartCents?: number | null;
   /** CART-3: riders (null = all, when a cart is on), per-cart price, and the range-ball buckets ("small:2,large:1"). */
-  cartSelected?: boolean; cartRiders?: number | null; cartUnitCents?: number | null; rangeBallsSize?: string; cartNumbers?: string;
+  cartSelected?: boolean; cartRiders?: number | null; cartUnitCents?: number | null; rangeBallsSize?: string; rangeBuckets?: unknown; cartNumbers?: string;
   /** The golfer's latest staff notes, and this booking's (golfer record). */
   notes?: string[];
 };

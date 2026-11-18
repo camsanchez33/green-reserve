@@ -43,6 +43,8 @@ export async function PATCH(req: NextRequest) {
   if (session.isStaff && 'counterMemberRate' in body) return NextResponse.json({ error: 'Only the course owner can change who gets a member rate at the counter.' }, { status: 403 });
   // Takes cash (Cam 2026-11-17): off means no cash anywhere (lib/takes-cash) — a money switch, the owner's call.
   if (session.isStaff && 'takesCash' in body) return NextResponse.json({ error: 'Only the course owner can change whether the course takes cash.' }, { status: 403 });
+  // RANGE-1: whether golfers can buy buckets with an online booking — what they pay, the owner's call (like cash).
+  if (session.isStaff && 'sellRangeOnline' in body) return NextResponse.json({ error: 'Only the course owner can change whether range balls are sold with tee times.' }, { status: 403 });
   // CART-2: how carts are charged changes every price with a cart — the owner's call.
   if (session.isStaff && 'cartPricing' in body) return NextResponse.json({ error: 'Only the course owner can change how carts are charged.' }, { status: 403 });
   if (session.isStaff && OWNER_ONLY_FIELDS.some(k => k in body)) {
@@ -72,6 +74,8 @@ export async function PATCH(req: NextRequest) {
     'lateFeeBasis','lateFeeTiming','noShowFeeBasis','autoNoShowMinutes','onlineBlockNoShows','onlineBlockLateCancels','onlineBlockMonths',
     'dresscode','minPlayers','maxPlayers',
     'hasDrivingRange','drivingRangeType','rangeBallsFree','hasPuttingGreen','hasShortGameArea',
+    // RANGE-1 (Cam 2026-11-18): "Sell range balls with tee times" — golfers pay for them, so the owner's call (below).
+    'sellRangeOnline',
     'hasProShop','proShopPhone',
     // HOME-3 (Cam 2026-11-12) / Takes cash (Cam 2026-11-17): off refuses every cash path (lib/takes-cash). Owner only (above).
     'takesCash','restaurantType','hasCartGirl','hasLessons','hasClubRental',

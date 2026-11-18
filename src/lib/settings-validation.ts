@@ -63,7 +63,7 @@ const ENUMS: Record<string, string[]> = {
 };
 const BOOLEANS = new Set([
   'hasMemberPricing', 'hasResidentPricing', 'residentProofRequired', 'cartRequired',
-  'hasDrivingRange', 'rangeBallsFree', 'hasPuttingGreen', 'hasShortGameArea', 'hasProShop', 'takesCash',
+  'hasDrivingRange', 'rangeBallsFree', 'sellRangeOnline', 'hasPuttingGreen', 'hasShortGameArea', 'hasProShop', 'takesCash',
   'hasCartGirl', 'hasLessons', 'hasClubRental', 'hasPushCartRental', 'hasBagStorage',
   'hasLockerRoom', 'hasGpsCarts', 'hasTournaments', 'hasCaddies',
 ]);

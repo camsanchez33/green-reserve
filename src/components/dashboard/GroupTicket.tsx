@@ -5,13 +5,13 @@
 // total is the one the check-in confirm already quotes. Shop items are listed by
 // ShopItemsForGroup under it; their fee and tax ride in `extraCents`.
 import { partyFees } from '@/lib/member-rates';
-import { ballCounts, ballWords } from '@/lib/range-balls';
+import { bucketWords } from '@/lib/range-buckets';
 
 export type TicketBooking = {
   players: number; totalAmount: number; accessFeeTotal?: number;
   greenFeeTotal?: number; cartFeeTotal?: number; rangeBallsTotal?: number;
   residentPlayers?: number; residentRateCents?: number | null; memberRateCents?: number | null; memberCartCents?: number | null;
-  cartRiders?: number | null; cartUnitCents?: number | null; rangeBallsSize?: string;
+  cartRiders?: number | null; cartUnitCents?: number | null; rangeBallsSize?: string; rangeBuckets?: unknown;
 };
 export type TicketLine = { label: string; detail: string; cents: number };
 
@@ -32,7 +32,7 @@ export function ticketLines(b: TicketBooking, n: number, withFee = true): { line
     const riding = b.cartRiders != null && b.cartRiders < b.players ? Math.min(n, b.cartRiders) : null;
     if (f.cartFeeTotal > 0) lines.push({ label: 'Cart', detail: riding != null ? `${riding} riding` : '', cents: f.cartFeeTotal });
     // Free buckets still show, so the counter hands them over.
-    const buckets = ballWords(ballCounts(b.rangeBallsSize));
+    const buckets = bucketWords({ rangeBuckets: b.rangeBuckets, rangeBallsSize: b.rangeBallsSize, rangeBallsTotal: b.rangeBallsTotal ?? 0 });
     if ((b.rangeBallsTotal ?? 0) > 0 || buckets) lines.push({ label: 'Range balls', detail: buckets, cents: b.rangeBallsTotal ?? 0 });
     parts = f.greenFeeTotal + f.cartFeeTotal + (b.rangeBallsTotal ?? 0);
   } else {
