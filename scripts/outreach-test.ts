@@ -152,9 +152,10 @@ check('listing: a bad osm type → skipped', toResult({ osm_type: 'area', osm_id
 
 // ── Every palette page link is area-filtered (the Pipeline entry moved to /admin/inquiries/all) ──
 {
-  const src = readFileSync('src/app/api/admin/search/route.ts', 'utf8');
+  const route = readFileSync('src/app/api/admin/search/route.ts', 'utf8');
+  const src = readFileSync('src/lib/admin-palette-pages.ts', 'utf8'); // page rows live in lib/admin-palette-pages
   const navHrefs = [...src.matchAll(/id: 'nav:[^']+',\s*label: '[^']*',\s*href: '([^']+)'/g)].map(m => m[1]);
-  const areaBlock = src.slice(src.indexOf('const NAV_AREA'), src.indexOf('const TYPE_AREA'));
+  const areaBlock = route.slice(route.indexOf('const NAV_AREA'), route.indexOf('const TYPE_AREA'));
   // Pages any login may open, and owner-only rows (no area: the owner has every area, and the row is owner-only).
   const OWNER_ROWS = [...src.matchAll(/href: '([^']+)',\s*owner: true/g)].map(m => m[1]);
   const OPEN = ['/admin', '/admin/profile', ...OWNER_ROWS];

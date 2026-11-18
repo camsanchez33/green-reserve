@@ -3,6 +3,7 @@
 // every result type it returns. Reads the sources. Run: npx tsx scripts/admin-nav-test.ts
 import { readFileSync } from 'fs';
 import { VIEWER_PLUS, SUPPORT_PLUS, MANAGER_PLUS, OWNER_ONLY } from '../src/lib/admin-roles';
+import { PALETTE_PAGES, pageMatches, freshRecents } from '../src/lib/admin-palette-pages';
 
 let failed = 0;
 const check = (label: string, ok: boolean) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}`); if (!ok) failed++; };
@@ -15,12 +16,18 @@ check('the rail lists its items', items.length >= 10);
 
 // Course groups is parked (Cam 2026-11-18): off the rail and out of the search palette; /admin/groups still works.
 const search = readFileSync('src/app/api/admin/search/route.ts', 'utf8');
+const pages = readFileSync('src/lib/admin-palette-pages.ts', 'utf8'); // the palette's page rows (lib/admin-palette-pages)
 check('Course groups is not on the rail', !items.some(i => i.key === 'groups' || i.href === '/admin/groups'));
 // Every page in the menu is also in the search palette (Build 2026-11-18), shown to no wider a role set than the menu.
 {
-  const nav = [...search.matchAll(/\{ id: 'nav:[^']+',\s*label: '[^']*',\s*href: '([^']+)',\s*(always|support|manager|owner): true/g)].map(m => ({ href: m[1], tier: m[2] }));
+  const nav = [...pages.matchAll(/\{ id: 'nav:[^']+',\s*label: '([^']*)',\s*href: '([^']+)',\s*(always|support|manager|owner): true/g)].map(m => ({ label: m[1], href: m[2], tier: m[3] }));
   const TIER: Record<string, string[]> = { always: SUPPORT_PLUS, support: SUPPORT_PLUS, manager: MANAGER_PLUS, owner: OWNER_ONLY }; // the route itself is support+
   const absent = items.filter(i => !nav.some(n => n.href === i.href)).map(i => i.href);
+  // Same words as the menu (Build 2026-11-18): every menu item, including Settings (written label-first in the rail).
+  const railLabels = [...groups.matchAll(/\{ (?:key: '\w+', label: '([^']+)'|label: '([^']+)', key: '\w+'), href: '([^']+)'/g)].map(m => ({ label: m[1] ?? m[2], href: m[3] }));
+  const offLabel = railLabels.filter(r => { const n = nav.find(x => x.href === r.href); return !n || n.label !== r.label; }).map(r => `${r.href} (menu "${r.label}", palette "${nav.find(x => x.href === r.href)?.label ?? 'none'}")`);
+  check('…under exactly the menu\'s label', railLabels.length >= items.length && offLabel.length === 0);
+  if (offLabel.length) console.log('      label:', offLabel.join('; '));
   check('every menu page has a search-palette row', absent.length === 0 && nav.length >= items.length - 1);
   if (absent.length) console.log('      missing:', absent.join(', '));
   const wider = items.flatMap(i => { const n = nav.find(x => x.href === i.href); if (!n || !i.roles) return []; const extra = TIER[n.tier].filter(r => !i.roles!.includes(r)); return extra.length ? [`${i.href} (${extra.join(', ')})`] : []; });
@@ -37,7 +44,28 @@ check('Course groups is not on the rail', !items.some(i => i.key === 'groups' ||
   if (areaOff.length) console.log('      area:', areaOff.join('; '));
   if (wider.length) console.log('      wider:', wider.join('; '));
 }
-check('…nor in the search palette (no page row, no group results)', !search.includes("'nav:groups'") && !search.includes('courseGroup.findMany'));
+// The palette's old words still find the renamed rows, and saved recents follow the pages (Build 2026-11-18).
+{
+  const find = (q: string) => PALETTE_PAGES.filter(p => pageMatches(p, q)).map(p => p.label);
+  check('"revenue" and the old "money" both find Revenue', find('revenue').includes('Revenue') && find('money').includes('Revenue'));
+  check('…"home" finds Overview, "courses" Golf courses, "profile" Settings', find('home').includes('Overview') && find('courses').includes('Golf courses') && find('profile').includes('Settings'));
+  const saved = [
+    { type: 'nav', id: 'nav:inquiries', label: 'Pipeline', href: '/admin/inquiries' },        // from before #466: Pipeline moved
+    { type: 'nav', id: 'nav:revenue', label: 'Money', href: '/admin/revenue' },              // renamed
+    { type: 'nav', id: 'nav:groups', label: 'Course groups', href: '/admin/groups' },        // parked, no row now
+    { type: 'nav', id: 'nav:bookings-q', label: 'Bookings matching "x"', href: '/admin/bookings?q=x' },
+    { type: 'course', id: 'course:c1', label: 'Pine Hollow', href: '/admin/courses/c1' },
+  ];
+  const fresh = freshRecents(saved);
+  check('a saved Pipeline recent from before it moved is dropped (it would open the outreach page)', !fresh.some(r => r.id === 'nav:inquiries'));
+  check('…a renamed page keeps its recent under today\'s label', fresh.find(r => r.id === 'nav:revenue')?.label === 'Revenue');
+  check('…a page with no row any more drops out', !fresh.some(r => r.id === 'nav:groups'));
+  check('…and other recents are untouched', fresh.some(r => r.id === 'nav:bookings-q') && fresh.some(r => r.id === 'course:c1') && fresh.length === 3);
+  check('…a garbled entry in storage is skipped, not fatal', freshRecents([null, ...saved] as unknown as typeof saved).length === 3);
+  // The wiring: the route filters these rows, and the palette cleans recents with them.
+  check('the search route serves PALETTE_PAGES and the palette cleans recents with freshRecents', search.includes('PALETTE_PAGES.filter(') && readFileSync('src/components/admin/CommandPalette.tsx', 'utf8').includes('freshRecents('));
+}
+check('…nor in the search palette (no page row, no group results)', !pages.includes("'nav:groups'") && !pages.includes('/admin/groups') && !search.includes('courseGroup.findMany'));
 
 // The gate of the API behind each page (the page's own data route).
 const GATE: Record<string, string[] | null> = {
