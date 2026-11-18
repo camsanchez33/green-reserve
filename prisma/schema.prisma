@@ -166,6 +166,11 @@ model Course {
   /// Cam 2026-10-29: member rates and the member booking window end this many days after a
   /// membership's expiry date (0 = on expiry). lib/member-rates.ts.
   memberGraceDays            Int                   @default(0)
+  /// GOLFER-LOGIN-1 (Cam 2026-11-18, Settings "Show Log in on your booking page"): whether golfers in this course's
+  /// groups can log in online (the per-course gr_member log-in). Off: they book at the public price online.
+  memberLoginOn              Boolean               @default(true)
+  /// GOLFER-LOGIN-1: how many days ahead a golfer logged in with a resident card can book; null = the public window.
+  residentAdvanceDays        Int?
   /// Cam 2026-10-29: who gets a member rate at the counter. 'member' (default): staff pick the
   /// member — they show their membership — and that membership's live rate applies. 'any': staff
   /// may pick any of the course's memberships for a walk-in or phone booking (the course's call).
@@ -2273,6 +2278,40 @@ model RegisterOpen {
   createdAt         DateTime @default(now())
 
   @@unique([courseId, day, seq])
+}
+
+/// GOLFER-LOGIN-1 (Cam 2026-11-18): the 6-digit code a golfer types to log in to one course (gr_member).
+/// lib/member-login-code.ts only. One live code per course and email (a new one ends the last); used once; 10
+/// minutes; dead after 5 wrong tries. The code itself is never stored, only an HMAC under the server secret.
+model MemberLoginCode {
+  id        String    @id @default(cuid())
+  courseId  String
+  /// Lower-cased.
+  email     String
+  codeHash  String
+  expiresAt DateTime
+  attempts  Int       @default(0)
+  /// Set when the code logs someone in, is replaced, or runs out of tries.
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([courseId, email])
+  @@index([createdAt])
+}
+
+/// GOLFER-LOGIN-1 (Cam 2026-11-18): a golfer's first log-in at a course ticks "I agree to GreenReserve's Terms of
+/// Service and Privacy Policy, and that <Course> and GreenReserve keep my booking history." One row per course,
+/// email and terms version; a new version asks once more (Build 2026-11-18). lib/member-login-code.ts.
+model MemberTermsAgreement {
+  id        String   @id @default(cuid())
+  courseId  String
+  /// Lower-cased.
+  email     String
+  version   String
+  agreedAt  DateTime @default(now())
+  ip        String   @default("")
+
+  @@unique([courseId, email, version])
 }
 
 /// SEC-3 (Cam 2026-10-26, "security has to be insane"): one row per security

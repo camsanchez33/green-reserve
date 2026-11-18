@@ -47,7 +47,7 @@ export const WIPED_TABLES = [
   'CourseProductTeeSet', 'CourseStaff', 'StaffPermissionChange', 'CourseRole', 'TeamChange', 'MembershipTier', 'TeeTimeSchedule', 'Blackout',
   'AgreementAcceptance', 'ShopItem',
   // golfers and activity
-  'GolferAccount', 'CourseResident', 'CourseMembership', 'TeeTime', 'Booking', 'TeeTimeAlert', 'PaymentEvent',
+  'GolferAccount', 'CourseResident', 'CourseMembership', 'MemberLoginCode', 'MemberTermsAgreement', 'TeeTime', 'Booking', 'TeeTimeAlert', 'PaymentEvent',
   'BookingEvent', 'BookingShopItem', 'SentMessage', 'SmsConsent', 'ShopSale', 'ShopSaleCounter', 'ShopSaleLine', 'ShopSaleRefund', 'RegisterClose', 'RegisterOpen', 'MoneyMove', 'ShopStockReceipt', 'PromoCode', 'RoundPack', 'DemandPrice', 'MemberCharge', 'MemberStatement', 'MonthlyReview',
   'GolferNote', 'GolferBlock', 'ShiftNote', 'CourseMonthGoal', 'CourseGoal',
   'CourseEvent', 'CourseEventTask', 'CourseEventPlayer', 'CourseEventPayment', 'CourseEventRefund', 'CourseEventListItem',
@@ -243,6 +243,9 @@ export async function resetTestCourse(courseId: string): Promise<{ ok: true; cle
     // Memberships item 2: member numbers like new too (the members are gone, so nothing can clash).
     prisma.membershipTier.updateMany({ where: { courseId }, data: { numberLast: 0 } }),
     prisma.courseResident.deleteMany({ where: { courseId } }),
+    // GOLFER-LOGIN-1: log-in codes and first-log-in terms ticks, so a reset course asks the box again.
+    prisma.memberLoginCode.deleteMany({ where: { courseId } }),
+    prisma.memberTermsAgreement.deleteMany({ where: { courseId } }),
     prisma.shopSale.deleteMany({ where: { courseId } }),
     // PRO-SHOP sale numbers: like new — its next sale is #1 again. In the transaction, so a failed reset keeps the count.
     prisma.shopSaleCounter.deleteMany({ where: { courseId } }),
