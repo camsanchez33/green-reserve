@@ -23,10 +23,11 @@ the lane files; merges every PR in dependency order after Cam's review sitting; 
     helpers are deleted.
   - The manage page says "Log in first to keep your member rate" when an expired member moves a booking from the
     emailed link.
-- Tee time alerts (`lanes/golfer.md` item 7): `TeeTimeAlert` grows multiple dates or "weekends", time of day,
-  players, an optional phone with its own alert-text consent, the logged-in one-tap path (no email confirm), the
-  course switch "Let golfers set tee time alerts", and a stop link in every email. Keep the queued expiry rule (an
-  alert ends after the day's last tee time unless the course sets a later end). Additive migration.
+- Tee time alerts (`lanes/golfer.md` item 7): `TeeTimeAlert` grows multiple dates (no "weekends" kind), time of
+  day, players, an optional phone with its own alert-text consent, the logged-in one-tap path (no email confirm), the
+  course switch "Let golfers set tee time alerts", and a stop link in every email. An alert ends after the last tee
+  time on its last date and fires at most once per date (ALERTS-2). Additive migration. The "ends after the day's last
+  tee time unless the course sets a later end" rule belongs to the Course alert LINE, built with Course alert.
 - Range balls on online bookings (`lanes/golfer.md` item 5): the course switch "Sell range balls with tee times";
   buckets from the Range settings priced on the booking as their own line and paid with the round (`describePolicy()`
   wording, `recordMove()` when charged).
@@ -35,7 +36,7 @@ the lane files; merges every PR in dependency order after Cam's review sitting; 
   timestamp sorts before `20261117193347_team_roles` (applied fine; note only).
 - Legal list: the Terms must cover a golfer logging in at a course (the first-log-in agree box). Add a version; never
   edit a published file under `legal/`.
-- Booking page look (Cam 2026-11-18): in Settings → Your course → Booking Page, a course picks Light or Dark for its golfer booking pages, plus one accent from four presets (Black, Green, Blue, Yellow, where Yellow is a deep gold so white text passes AA; no Red, Cam: red is for errors) instead of a free colour picker. Data: a new `Course.bookingLook` ('light'|'dark', default 'light', additive), and `brandColor` limited to the four preset values. Existing custom colours are mapped to the nearest preset only with Cam's OK, because that's a backfill; until then they render as they are. The golfer pages (course page, booking page, sign-in, confirmation, manage, pay, receipt) read both, and every combination passes WCAG AA. Build it with the golfer booking page build.
+- Booking page look (Cam 2026-11-18): in Settings → Your course → Booking Page, a course picks Light or Dark for its golfer booking pages, plus one accent from four presets (Black, Green, Blue, Yellow, where Yellow is a deep gold so white text passes AA; no Red, Cam: red is for errors) instead of a free colour picker. Data: a new `Course.bookingLook` ('light'|'dark', default 'light', additive), and a separate `Course.bookingAccent` stored by preset NAME (default 'green', server allowlist, red refused; each preset has light and dark values). `brandColor` stays a free hex for receipts, emails and the dashboard rail, so no backfill is needed (built in #480). The golfer pages (course page, booking page, sign-in, confirmation, manage, pay, receipt) read both, and every combination passes WCAG AA. Build it with the golfer booking page build.
 - Audit data (Cam approved 2026-11-18): /api/admin/audit gains q (search over action, actor, course, reason and changed fields across all dates, LIKE-escaped through like-exact) plus from/until. Owner only.
 - Small Build text fixes: the admin-areas.ts help for 'golfers' still says "resend, cancel and refund"; the search route nav label still says "Golfer lookup".
 - LIKE wildcard escape on email matching: in progress (session_014ceBnuw4aR9nRiD5mdt9bL).
