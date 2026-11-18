@@ -11,8 +11,8 @@
 // Anything else is ignored — this number isn't a support inbox.
 import { NextRequest, NextResponse } from 'next/server';
 import twilio from 'twilio';
-import { recordSmsConsent } from '@/lib/sms-consent';
-import { SMS_CONFIRMATION, SMS_HELP, smsKeyword } from '@/lib/sms-consent-copy';
+import { recordSmsConsent, optInByReply } from '@/lib/sms-consent';
+import { SMS_CONFIRMATION, ALERT_SMS_CONFIRMATION, SMS_HELP, smsKeyword } from '@/lib/sms-consent-copy';
 
 const STOP = new Set(['STOP', 'STOPALL', 'UNSUBSCRIBE', 'CANCEL', 'END', 'QUIT', 'REVOKE', 'OPTOUT']);
 const START = new Set(['START', 'UNSTOP', 'YES']);
@@ -47,8 +47,9 @@ export async function POST(req: NextRequest) {
     return twiml(); // Twilio's own opt-out handling sends the confirmation.
   }
   if (START.has(word)) {
-    const changed = await recordSmsConsent(from, 'opt_in', { method: 'sms_reply' });
-    return twiml(changed ? SMS_CONFIRMATION : undefined);
+    // ALERTS-2: back into only the kinds of text this number had agreed to (lib/sms-consent).
+    const changed = await optInByReply(from);
+    return twiml(changed.includes('bookings') ? SMS_CONFIRMATION : changed.includes('alerts') ? ALERT_SMS_CONFIRMATION : undefined);
   }
   if (HELP.has(word)) return twiml(SMS_HELP);
   return twiml();
