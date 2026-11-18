@@ -6,7 +6,7 @@ import { ADMIN_LINK, safeAdminPath } from '@/lib/admin-ask-links';
 import p from './CommandPalette.module.css';
 
 interface SearchResult {
-  type: 'course' | 'inquiry' | 'golfer' | 'guest' | 'employee' | 'group' | 'thread' | 'booking' | 'nav' | 'ask';
+  type: 'course' | 'inquiry' | 'golfer' | 'guest' | 'employee' | 'thread' | 'booking' | 'nav' | 'ask';
   id: string;
   label: string;
   sub: string;
@@ -33,7 +33,6 @@ const TYPE_LABEL: Record<SearchResult['type'], string> = {
   golfer:   'Golfer',
   guest:    'Guest golfer',
   employee: 'Employee',
-  group:    'Course group',
   thread:   'Conversation',
   booking:  'Booking',
   nav:      'Go to',
@@ -43,9 +42,9 @@ const TYPE_LABEL: Record<SearchResult['type'], string> = {
 // The palette's group headings (Platform activity mockup, Cam 2026-11-15).
 const GROUP: Record<SearchResult['type'], string> = {
   course: 'Courses', booking: 'Bookings', nav: 'Pages', inquiry: 'Inquiries', golfer: 'Golfers', guest: 'Golfers',
-  employee: 'Team', group: 'Course groups', thread: 'Conversations', ask: 'Ask',
+  employee: 'Team', thread: 'Conversations', ask: 'Ask',
 };
-const GROUP_ORDER = ['Ask', 'Courses', 'Bookings', 'Pages', 'Golfers', 'Inquiries', 'Course groups', 'Conversations', 'Team'];
+const GROUP_ORDER = ['Ask', 'Courses', 'Bookings', 'Pages', 'Golfers', 'Inquiries', 'Conversations', 'Team'];
 const ico = (d: React.ReactNode) => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{d}</svg>;
 const ICONS: Record<string, React.ReactNode> = {
   Recent: ico(<><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>),

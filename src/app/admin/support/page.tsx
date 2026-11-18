@@ -8,7 +8,7 @@ import g from '../admin-glass.module.css';
 import r from '../revenue/revenue.module.css';
 import s from './support.module.css';
 import { TERMS, SESSION_ENDED, NOT_YET, loadFailed, sendFailed, TOO_LONG } from './terms';
-import { type ThreadRow, type Thread, MAX_REPLY, isList, isThread, ago, stamp, replyText, preview } from './logic';
+import { type ThreadRow, type Thread, MAX_REPLY, isList, isThread, ago, stamp, replyText, preview, autoOpenChat } from './logic';
 
 // ADMIN-REDO Course support (Cam approved the mockup 2026-11-12, ADMIN_REDO_SPEC.md "Admin Course support"). The admin
 // side of the course dashboard's Support chats, like iMessage: ONE card — a wordless search, then every course chat
@@ -38,9 +38,13 @@ function Problem({ got, retry, busy }: { got: { msg: string; status?: number }; 
   );
 }
 
-function ChatList({ onOpen, initialQ }: { onOpen: (id: string) => void; initialQ: string }) {
+// ?courseId= (links from a course's page, its emails and the old Messages screen): that course's chats only, and its
+// one chat opens straight away when there is just one.
+function ChatList({ onOpen, initialQ, courseId, onAll }: { onOpen: (id: string, replace?: boolean) => void; initialQ: string; courseId: string; onAll: () => void }) {
   const [q, setQ] = useState(initialQ); // the top search opens a course's chats with ?q=
   const [got, setGot] = useState<Got<{ threads: ThreadRow[] }> | null>(null);
+  const [loadedQ, setLoadedQ] = useState<string | null>(null); // the query the shown result was fetched with
+  const opened = useRef(false);
   const [busy, setBusy] = useState(true);
   const seq = useRef(0);
   const load = useCallback(async (query: string) => {
@@ -48,11 +52,14 @@ function ChatList({ onOpen, initialQ }: { onOpen: (id: string) => void; initialQ
     setBusy(true);
     const res = await getJson(`/api/admin/support${query.trim() ? `?q=${encodeURIComponent(query.trim())}` : ''}`, isList, 'The chats');
     if (mine !== seq.current) return; // a later search won
-    setGot(res); setBusy(false);
+    setGot(res); setLoadedQ(query); setBusy(false);
   }, []);
   useEffect(() => { const t = setTimeout(() => load(q), q ? 250 : 0); return () => clearTimeout(t); }, [q, load]);
   const now = new Date();
-  const rows = got?.ok ? got.data.threads : [];
+  const all = got?.ok ? got.data.threads : [];
+  const rows = courseId ? all.filter(t => t.courseId === courseId) : all;
+  const only = got?.ok ? autoOpenChat(courseId, loadedQ, all, opened.current) : null;
+  useEffect(() => { if (only) { opened.current = true; onOpen(only, true); } }, [only, onOpen]);
   return (
     <section className={`${g.glass} ${s.card}`} aria-label="Course chats">
       <label className={s.search}>
@@ -61,7 +68,8 @@ function ChatList({ onOpen, initialQ }: { onOpen: (id: string) => void; initialQ
       </label>
       {got && !got.ok && <Problem got={got} retry={() => load(q)} busy={busy} />}
       {!got && <div className={r.skel} aria-busy="true" aria-label="Loading chats" />}
-      {got?.ok && rows.length === 0 && <p className={s.empty}>{q.trim() ? 'No chat matches.' : 'No chats yet.'}</p>}
+      {courseId && got?.ok && <p className={s.note}>{rows[0] ? `Only ${rows[0].courseName}'s chats.` : (loadedQ ?? '').trim() ? 'No chat matches.' : 'No chats with this course yet.'} <button type="button" className={s.allBtn} onClick={onAll}>Show every chat</button></p>}
+      {got?.ok && rows.length === 0 && !courseId && <p className={s.empty}>{q.trim() ? 'No chat matches.' : 'No chats yet.'}</p>}
       {got?.ok && (
         <ul className={`${s.list} ${busy ? s.stale : ''}`}>
           {rows.map(t => (
@@ -161,6 +169,8 @@ function SupportContent() {
   const params = useSearchParams();
   const router = useRouter();
   const id = params.get('id');
+  const courseId = params.get('courseId') ?? '';
+  const open = useCallback((x: string, replace = false) => { const u = `/admin/support?id=${encodeURIComponent(x)}`; if (replace) router.replace(u); else router.push(u); }, [router]);
   // A new ?q= (the top search picked another course, or Back/Forward) starts a fresh list with that search.
   const initialQ = params.get('q') ?? '';
   return (
@@ -168,7 +178,7 @@ function SupportContent() {
       <AdminSidebar active="support" />
       <main className={g.main}>
         <div className={g.head}><h1>Course support</h1></div>
-        {id ? <Chat key={id} id={id} onBack={() => router.push('/admin/support')} /> : <ChatList key={initialQ} initialQ={initialQ} onOpen={x => router.push(`/admin/support?id=${encodeURIComponent(x)}`)} />}
+        {id ? <Chat key={id} id={id} onBack={() => router.push('/admin/support')} /> : <ChatList key={initialQ + '|' + courseId} initialQ={initialQ} courseId={courseId} onOpen={open} onAll={() => router.push('/admin/support')} />}
       </main>
     </>
   );

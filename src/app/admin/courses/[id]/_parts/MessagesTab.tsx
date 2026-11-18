@@ -84,7 +84,7 @@ export function MessagesTab() {
                       {msgSending ? 'Sending…' : 'Send'}
                     </button>
                   </div>
-                  <div className="text-[10px] text-ink-faint mt-1.5">⌘/Ctrl + Enter to send · <button onClick={() => window.open('/admin/messages?courseId=' + courseId, '_blank')} className="text-pine hover:underline">Open full view</button></div>
+                  <div className="text-[10px] text-ink-faint mt-1.5">⌘/Ctrl + Enter to send · <button onClick={() => window.open('/admin/support?courseId=' + encodeURIComponent(courseId), '_blank')} className="text-pine hover:underline">Open full view</button></div>
                 </div>
               </Card>
             </div>

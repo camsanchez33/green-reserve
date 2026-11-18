@@ -831,13 +831,6 @@ function InquiryDetailInner() {
     (inq.needsJson && inq.needsJson !== '{}' && inq.needsJson !== '')
   );
 
-  const wizardParams = new URLSearchParams({
-    name: inq.courseName || '', city: inq.city || '', state: inq.state || '',
-    zip: inq.zipCode || '', address: inq.address || '', website: inq.website || '',
-    type: inq.courseType || 'public', contactName: inq.contactName || '',
-    contactEmail: inq.email || '', inquiryId: inq.id,
-  });
-
   // IC-2: the call, read once for the header chip, the gate and the tabs.
   const calls = inq.calls ?? [];
   const upcomingCall = nextCall(calls);
@@ -1029,12 +1022,6 @@ function InquiryDetailInner() {
                   <button onClick={() => { setMoreOpen(false); action('unsnooze'); }} disabled={processing}
                     className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
                     Clear snooze
-                  </button>
-                )}
-                {!inq.builtCourseId && !isArchived && !isLead && inq.status !== 'building' && (
-                  <button onClick={() => { setMoreOpen(false); router.push('/admin/create?' + wizardParams.toString()); }}
-                    className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
-                    Manual build (in person)
                   </button>
                 )}
                 {(isLead || inq.status === 'pending' || inq.status === 'in_review' || inq.status === 'details_requested' || inq.status === 'details_submitted') && (

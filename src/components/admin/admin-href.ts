@@ -30,8 +30,6 @@ export const ADMIN_PAGE_GATES: [string, Gate][] = [
   ['/admin/finance', { roles: OWNER_ONLY }],
   ['/admin/messages', { roles: SUPPORT_PLUS, area: 'messages' }],
   ['/admin/announcements', { roles: SUPPORT_PLUS, area: 'messages' }],
-  ['/admin/broadcasts', { roles: SUPPORT_PLUS, area: 'messages' }],
-  ['/admin/create', { roles: MANAGER_PLUS, area: 'pipeline' }],
   ['/admin/activity', { roles: OWNER_ONLY }],
   ['/admin/goals', { roles: SUPPORT_PLUS, area: 'company' }],
   ['/admin/employees', { roles: MANAGER_PLUS, area: 'company' }],
