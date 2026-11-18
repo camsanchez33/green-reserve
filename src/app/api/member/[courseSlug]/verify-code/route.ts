@@ -19,6 +19,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ cou
   try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 }); }
   if (typeof body.email !== 'string' || !body.email.trim() || typeof body.code !== 'string') return NextResponse.json({ error: 'Enter your email and the 6 digits from the message.' }, { status: 400 });
   const email = body.email.trim().toLowerCase();
+  // Not six digits: refused before any try is counted.
+  const typed = body.code.replace(/\D/g, '');
+  if (typed.length !== 6) return NextResponse.json({ error: 'Enter the 6 digits from the message.', code: 'bad_code' }, { status: 400 });
 
   const course = await prisma.course.findUnique({ where: { slug: courseSlug }, select: { id: true, active: true, liveStatus: true, timezone: true, hasResidentPricing: true, memberLoginOn: true } });
   if (!course || !course.active || course.liveStatus !== 'live') return NextResponse.json({ error: 'Course not found' }, { status: 404 });
@@ -35,7 +38,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ cou
     return BAD();
   }
 
-  const checked = await checkLoginCode(course.id, email, body.code);
+  const checked = await checkLoginCode(course.id, email, typed);
   if (!checked.ok) {
     await securityEvent(req, { kind: 'signin_failed', surface: 'member', email, detail: 'log-in code wrong or expired' });
     return BAD();
@@ -49,9 +52,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ cou
 
   const version = await termsVersionNow();
   if (!(await hasAgreed(course.id, email, version))) {
-    if (body.agreeTerms !== true) return NextResponse.json({ error: 'Tick the box to agree before you log in.', code: 'terms_required', termsVersion: version }, { status: 409 });
+    if (body.agreeTerms !== true) {
+      await securityEvent(req, { kind: 'signin_failed', surface: 'member', email, detail: 'log-in code right, terms not yet agreed' });
+      return NextResponse.json({ error: 'Tick the box to agree before you log in.', code: 'terms_required', termsVersion: version }, { status: 409 });
+    }
   }
-  if (!(await useLoginCode(checked.codeId))) return BAD();
+  if (!(await useLoginCode(checked.codeId))) {
+    await securityEvent(req, { kind: 'signin_failed', surface: 'member', email, detail: 'log-in code already used' });
+    return BAD();
+  }
   if (body.agreeTerms === true) await recordAgreement(course.id, email, version, ip);
 
   const token = await signMemberSessionToken({ courseId: course.id, email });

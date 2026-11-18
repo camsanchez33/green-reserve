@@ -33,27 +33,36 @@ export async function issueLoginCode(courseId: string, email: string, now = new 
 export type CheckResult = { ok: true; codeId: string } | { ok: false };
 
 /**
- * Whether `code` is this course's live code for this email. A wrong guess counts a try (the last allowed one ends
- * the code). A right one is NOT used up here: the caller uses it (useLoginCode) once the terms question is settled.
+ * Whether `code` is this course's live code for this email. Only the NEWEST code counts (final-reviewer 2026-11-18:
+ * two sends at the same instant could each leave a live row; an older one never works once a newer one exists). A
+ * try is claimed BEFORE the guess is compared, in one conditional update, so parallel guesses can never compare more
+ * than MAX_TRIES times; the try that reaches the cap ends the code unless it was right. A right code is NOT used up
+ * here: the caller uses it (useLoginCode) once the terms question is settled.
  */
 export async function checkLoginCode(courseId: string, email: string, codeRaw: string, now = new Date()): Promise<CheckResult> {
   const code = String(codeRaw ?? '').replace(/\D/g, '');
   const e = norm(email);
-  const row = await prisma.memberLoginCode.findFirst({ where: { courseId, email: e, usedAt: null, expiresAt: { gt: now } }, orderBy: { createdAt: 'desc' } });
-  if (!row) return { ok: false };
+  const row = await prisma.memberLoginCode.findFirst({ where: { courseId, email: e }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }] });
+  if (!row || row.usedAt || row.expiresAt <= now || row.attempts >= MAX_TRIES) return { ok: false };
+  const claimed = await prisma.memberLoginCode.updateMany({ where: { id: row.id, usedAt: null, attempts: { lt: MAX_TRIES } }, data: { attempts: { increment: 1 } } });
+  if (claimed.count !== 1) return { ok: false };
   const want = Buffer.from(row.codeHash, 'hex');
   const got = Buffer.from(hashCode(courseId, e, code), 'hex');
   if (code.length === 6 && want.length === got.length && timingSafeEqual(want, got)) return { ok: true, codeId: row.id };
-  // Counted atomically, so parallel guesses can't each see the same count.
-  const tries = await prisma.memberLoginCode.update({ where: { id: row.id }, data: { attempts: { increment: 1 } }, select: { attempts: true } });
-  if (tries.attempts >= MAX_TRIES) await prisma.memberLoginCode.updateMany({ where: { id: row.id, usedAt: null }, data: { usedAt: now } });
+  await prisma.memberLoginCode.updateMany({ where: { id: row.id, usedAt: null, attempts: { gte: MAX_TRIES } }, data: { usedAt: now } });
   return { ok: false };
 }
 
-/** Uses the code up; false when someone else used it first (two taps of Log in). */
+/** Uses the code up; false when it was used, replaced or ran out first (two taps of Log in). */
 export async function useLoginCode(codeId: string, now = new Date()): Promise<boolean> {
-  const r = await prisma.memberLoginCode.updateMany({ where: { id: codeId, usedAt: null }, data: { usedAt: now } });
+  const r = await prisma.memberLoginCode.updateMany({ where: { id: codeId, usedAt: null, attempts: { lte: MAX_TRIES } }, data: { usedAt: now } });
   return r.count === 1;
+}
+
+/** Housekeeping (the hourly security check): codes older than a day are of no use to anyone. */
+export async function purgeOldLoginCodes(now = new Date()): Promise<number> {
+  const r = await prisma.memberLoginCode.deleteMany({ where: { createdAt: { lt: new Date(now.getTime() - 24 * 60 * 60 * 1000) } } });
+  return r.count;
 }
 
 /** Whether this email has agreed to `version` of the terms for this course. */

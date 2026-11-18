@@ -2270,12 +2270,6 @@ model RegisterOpen {
   @@unique([courseId, day, seq])
 }
 
-/// SEC-3 (Cam 2026-10-26, "security has to be insane"): one row per security
-/// outcome — a failed or successful sign-in, a lockout, a wrong second factor,
-/// a rate limit tripped, a new owner device — so Admin → Security can show
-/// patterns and the hourly check can flag an attack. Written by
-/// src/lib/security-events.ts only; kept 90 days. Never holds a password, code
-/// or token — only the email typed, the IP and the browser.
 /// GOLFER-LOGIN-1 (Cam 2026-11-18): the 6-digit code a golfer types to log in to one course (gr_member).
 /// lib/member-login-code.ts only. One live code per course and email (a new one ends the last); used once; 10
 /// minutes; dead after 5 wrong tries. The code itself is never stored, only an HMAC under the server secret.
@@ -2310,6 +2304,12 @@ model MemberTermsAgreement {
   @@unique([courseId, email, version])
 }
 
+/// SEC-3 (Cam 2026-10-26, "security has to be insane"): one row per security
+/// outcome — a failed or successful sign-in, a lockout, a wrong second factor,
+/// a rate limit tripped, a new owner device — so Admin → Security can show
+/// patterns and the hourly check can flag an attack. Written by
+/// src/lib/security-events.ts only; kept 90 days. Never holds a password, code
+/// or token — only the email typed, the IP and the browser.
 model SecurityEvent {
   id        String   @id @default(cuid())
   /// 'signin_failed' | 'signin_ok' | 'locked_out' | 'second_factor_failed' | 'step_up_failed' | 'rate_limited' | 'new_device' | 'password_changed' | 'access_changed'

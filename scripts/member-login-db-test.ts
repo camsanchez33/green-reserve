@@ -202,68 +202,112 @@ async function main() {
 
 
   // ── Log in with a code (GOLFER-LOGIN-1) ──
+  // Each block uses its own listed email and clears its limiter keys, so a check tests the logic, never the limiter.
   const vc = async (email: string, code: string, agreeTerms?: boolean, slug = a.slug) => {
-    const r = await fetch(`${BASE_URL}/api/member/${slug}/verify-code`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-forwarded-for': `10.8.${Math.floor(Math.random() * 200)}.1` }, body: JSON.stringify({ email, code, ...(agreeTerms ? { agreeTerms: true } : {}) }) });
+    const r = await fetch(`${BASE_URL}/api/member/${slug}/verify-code`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-forwarded-for': `10.8.${Math.floor(Math.random() * 200)}.${Math.floor(Math.random() * 200)}` }, body: JSON.stringify({ email, code, ...(agreeTerms ? { agreeTerms: true } : {}) }) });
     return { status: r.status, body: await r.json().catch(() => null), cookie: r.headers.get('set-cookie') ?? '' };
   };
+  const clearLimits = () => prisma.rateLimit.deleteMany({ where: { key: { contains: `@${TAG}.test` } } });
+  let nth = 0;
+  const fresh = async (courseId = a.id) => { const email = `code${++nth}@${TAG}.test`; await prisma.courseResident.create({ data: { courseId, name: 'Coda', email, expiresOn: '' } }); await clearLimits(); return email; };
   const version = await termsVersionNow();
-  const codeEmail = `code@${TAG}.test`;
-  await prisma.courseResident.create({ data: { courseId: a.id, name: 'Coda', email: codeEmail, expiresOn: '' } });
+  const other = (c: string) => (c === '000000' ? '000001' : '000000');
+
   // send-code in code mode makes a code only for a listed email, and answers both the same.
+  let e1 = await fresh();
   const sendC = async (email: string) => { const r = await fetch(`${BASE_URL}/api/member/${a.slug}/send-code`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-forwarded-for': `10.7.${Math.floor(Math.random() * 200)}.1` }, body: JSON.stringify({ email, mode: 'code' }) }); return `${r.status} ${await r.text()}`; };
-  const l1 = await sendC(codeEmail.toUpperCase()), u1 = await sendC(`nocode@${TAG}.test`);
+  const l1 = await sendC(e1.toUpperCase()), u1 = await sendC(`nocode@${TAG}.test`);
   check('send-code (code) answers a listed and an unlisted email identically', l1 === u1 && l1.startsWith('200'), { l1, u1 });
   let made = 0;
-  for (let i = 0; i < 40 && !made; i++) { made = await prisma.memberLoginCode.count({ where: { courseId: a.id, email: codeEmail } }); if (!made) await new Promise(r => setTimeout(r, 250)); }
-  check('…a code is made for the listed email (stored lower-cased, hashed)', made === 1 && !!(await prisma.memberLoginCode.findFirst({ where: { email: codeEmail, codeHash: { not: '' } } })));
+  for (let i = 0; i < 40 && !made; i++) { made = await prisma.memberLoginCode.count({ where: { courseId: a.id, email: e1 } }); if (!made) await new Promise(r => setTimeout(r, 250)); }
+  check('…a code is made for the listed email (stored lower-cased, hashed)', made === 1 && !!(await prisma.memberLoginCode.findFirst({ where: { email: e1, codeHash: { not: '' } } })));
   check('…and none for the unlisted one', (await prisma.memberLoginCode.count({ where: { email: `nocode@${TAG}.test` } })) === 0);
 
-  let code = await issueLoginCode(a.id, codeEmail);
-  const wrong = code === '000000' ? '000001' : '000000';
-  const w = await vc(codeEmail, wrong);
+  // Wrong answers all look alike; the terms box after a right code; recorded with its version.
+  e1 = await fresh();
+  let code = await issueLoginCode(a.id, e1);
+  const w = await vc(e1, other(code));
   const never = await vc(`nocode@${TAG}.test`, code);
   check('a wrong code and an email with no code get the same answer', w.status === 400 && never.status === 400 && JSON.stringify(w.body) === JSON.stringify(never.body) && w.body?.code === 'bad_code', { w, never });
-  const first = await vc(codeEmail, code);
+  check('…and a code that isn\'t 6 digits is refused without spending a try', (await vc(e1, '12')).status === 400 && (await prisma.memberLoginCode.findFirst({ where: { email: e1 } }))?.attempts === 1);
+  const first = await vc(e1, code);
   check('first log-in: a right code without the box asks for the terms (409), sets no cookie', first.status === 409 && first.body?.code === 'terms_required' && first.body?.error === 'Tick the box to agree before you log in.' && !first.cookie.includes('gr_member='), first);
-  const agreed = await vc(codeEmail, code, true);
+  const agreed = await vc(e1, code, true);
   check('…the same code with the box ticked logs in', agreed.status === 200 && agreed.cookie.includes('gr_member='), agreed);
-  const rec = await prisma.memberTermsAgreement.findUnique({ where: { courseId_email_version: { courseId: a.id, email: codeEmail, version } } });
+  const rec = await prisma.memberTermsAgreement.findUnique({ where: { courseId_email_version: { courseId: a.id, email: e1, version } } });
   check('…and records the agreement with the terms version', !!rec && rec.version === version);
-  check('…and writes signin_ok', !!(await prisma.securityEvent.findFirst({ where: { email: codeEmail, kind: 'signin_ok', detail: 'log-in code' } })));
-  check('a code works once', (await vc(codeEmail, code, true)).status === 400);
-  code = await issueLoginCode(a.id, codeEmail);
-  const again = await vc(codeEmail, code);
+  check('…and writes signin_ok', !!(await prisma.securityEvent.findFirst({ where: { email: e1, kind: 'signin_ok', detail: 'log-in code' } })));
+  check('a code works once', (await vc(e1, code, true)).status === 400);
+  await clearLimits();
+  code = await issueLoginCode(a.id, e1);
+  const again = await vc(e1, code);
   check('a later log-in needs no box', again.status === 200 && again.cookie.includes('gr_member='), again);
-  // A new terms version asks once more.
   await prisma.memberTermsAgreement.update({ where: { id: rec!.id }, data: { version: '2000-01-01' } });
-  code = await issueLoginCode(a.id, codeEmail);
-  check('a new terms version asks again', (await vc(codeEmail, code)).body?.code === 'terms_required');
-  // A new code ends the last; expiry; tries.
-  const old1 = await issueLoginCode(a.id, codeEmail);
-  const new1 = await issueLoginCode(a.id, codeEmail);
-  check('a new code ends the last one', old1 === new1 || (await vc(codeEmail, old1, true)).status === 400);
-  await prisma.memberLoginCode.updateMany({ where: { email: codeEmail, usedAt: null }, data: { expiresAt: new Date(Date.now() - 1000) } });
-  check('an expired code is refused', (await vc(codeEmail, new1, true)).status === 400);
-  const tried = await issueLoginCode(a.id, codeEmail);
-  const bad = tried === '111111' ? '222222' : '111111';
-  for (let i = 0; i < MAX_TRIES; i++) await vc(codeEmail, bad);
-  check(`after ${MAX_TRIES} wrong tries the right code no longer works`, (await vc(codeEmail, tried, true)).status === 400);
+  code = await issueLoginCode(a.id, e1);
+  check('a new terms version asks again', (await vc(e1, code)).body?.code === 'terms_required');
+
+  // A new code ends the last — also when two are issued at the same instant; expiry.
+  e1 = await fresh();
+  const old1 = await issueLoginCode(a.id, e1);
+  const new1 = await issueLoginCode(a.id, e1);
+  check('a new code ends the last one', old1 === new1 || (await vc(e1, old1, true)).status === 400);
+  await prisma.memberLoginCode.updateMany({ where: { email: e1, usedAt: null }, data: { expiresAt: new Date(Date.now() - 1000) } });
+  check('an expired code is refused', (await vc(e1, new1, true)).status === 400);
+  e1 = await fresh();
+  const burst = await Promise.all([1, 2, 3, 4].map(() => issueLoginCode(a.id, e1)));
+  const newest = await prisma.memberLoginCode.findFirst({ where: { email: e1 }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }] });
+  let worked = 0;
+  for (const c of burst) { const r = await vc(e1, c, true); if (r.status === 200) worked++; await clearLimits(); }
+  check('four codes sent at once: at most one ever works (only the newest counts)', worked <= 1 && !!newest, { worked });
+
+  // Five tries — held against parallel guesses too.
+  e1 = await fresh();
+  const tried = await issueLoginCode(a.id, e1);
+  for (let i = 0; i < MAX_TRIES; i++) await vc(e1, other(tried));
+  const deadRow = await prisma.memberLoginCode.findFirst({ where: { email: e1 } });
+  check(`${MAX_TRIES} wrong tries end the code`, deadRow?.attempts === MAX_TRIES && !!deadRow?.usedAt, deadRow);
+  check('…and the right code no longer works', (await vc(e1, tried, true)).status === 400);
+  e1 = await fresh();
+  const par = await issueLoginCode(a.id, e1);
+  const flood = await Promise.all([...Array(8).fill(other(par)), par].map(c => vc(e1, c, true)));
+  const parRow = await prisma.memberLoginCode.findFirst({ where: { email: e1 } });
+  check(`nine guesses at once compare at most ${MAX_TRIES} times`, (parRow?.attempts ?? 99) <= MAX_TRIES && flood.filter(r => r.status === 200).length <= 1, { attempts: parRow?.attempts, ok: flood.filter(r => r.status === 200).length });
+  // The per-address cap: the 11th verify in an hour is refused even with the right code.
+  e1 = await fresh();
+  for (let i = 0; i < 10; i++) await vc(e1, '000000');
+  await prisma.memberLoginCode.deleteMany({ where: { email: e1 } });
+  const capped = await issueLoginCode(a.id, e1);
+  check('the 11th verify for one address in an hour is refused, right code or not', (await vc(e1, capped, true)).status === 400);
+
   // A code is for one course.
-  const forA = await issueLoginCode(a.id, codeEmail);
-  await prisma.courseResident.create({ data: { courseId: b.id, name: 'Coda', email: codeEmail, expiresOn: '' } });
-  check('a code for course A does not log in at course B', (await vc(codeEmail, forA, true, b.slug)).status === 400);
-  // A card removed after the code went out: the right code still gets the same "didn't work".
-  const late = await issueLoginCode(a.id, codeEmail);
-  await prisma.courseResident.deleteMany({ where: { courseId: a.id, email: codeEmail } });
-  const lateR = await vc(codeEmail, late, true);
+  e1 = await fresh();
+  await prisma.courseResident.create({ data: { courseId: b.id, name: 'Coda', email: e1, expiresOn: '' } });
+  const forA = await issueLoginCode(a.id, e1);
+  check('a code for course A does not log in at course B', (await vc(e1, forA, true, b.slug)).status === 400);
+  // A card removed after the code went out: the right code gets the same "didn't work", and the reason is recorded.
+  e1 = await fresh();
+  const late = await issueLoginCode(a.id, e1);
+  await prisma.courseResident.deleteMany({ where: { courseId: a.id, email: e1 } });
+  const lateR = await vc(e1, late, true);
   check('an email no longer in a group gets the same answer as a wrong code', lateR.status === 400 && lateR.body?.code === 'bad_code' && !lateR.cookie.includes('gr_member='), lateR);
+  check('…recorded as not in a group', !!(await prisma.securityEvent.findFirst({ where: { email: e1, kind: 'signin_failed', detail: 'not in a group at this course' } })));
 
   // ── The course's Log in switch ──
   check('loginGroups: members and residents', JSON.stringify(await loginGroups({ ...a, memberLoginOn: true })) === '["members","residents"]');
+  const offEmail = `offmem@${TAG}.test`;
+  await prisma.courseMembership.create({ data: { courseId: a.id, tierId: tier.id, membershipType: 'Gold', status: 'active', inviteEmail: offEmail, inviteName: 'Off', payToken: `${TAG}-off` } });
+  const offCookie = await cookie(a.id, offEmail);
+  check('(a live member gets the member rate while Log in is on)', !!(await preview(ttA.id, offCookie)).member);
   await prisma.course.update({ where: { id: a.id }, data: { memberLoginOn: false } });
   check('Log in off: send-code says so (404 login_off)', (await fetch(`${BASE_URL}/api/member/${a.slug}/send-code`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: resEmail, mode: 'code' }) })).status === 404);
   check('…verify-code too', (await vc(resEmail, '123456')).body?.code === 'login_off');
   check('…an existing session gets no rate and no session', (await preview(ttA.id, resCookie)).residentGreenFee === null && (await get(`/api/member/${a.slug}/session`, resCookie)).status === 401);
+  const ttOff = await tt(a.id, '13:00');
+  const offBook = await fetch(`${BASE_URL}/api/bookings`, { method: 'POST', headers: { 'Content-Type': 'application/json', cookie: offCookie }, body: JSON.stringify({ teeTimeId: ttOff.id, golferName: 'Off', golferEmail: offEmail, golferPhone: '', players: 1, termsAccepted: true, cartSelected: false }) });
+  const offBody = await offBook.json().catch(() => null);
+  const offSaved = offBody?.bookingId ? await prisma.booking.findUnique({ where: { id: offBody.bookingId }, select: { appliedRate: true, greenFeeTotal: true } }) : null;
+  check('…a member\'s booking is charged the public price', !!offSaved && offSaved.appliedRate === 'standard' && offSaved.greenFeeTotal === 10000, { status: offBook.status, offBody, offSaved });
+  check('…their dues history answers 401', (await get(`/api/member/${a.slug}/payments`, offCookie)).status === 401);
   check('…and loginGroups is empty', (await loginGroups({ ...a, memberLoginOn: false })).length === 0);
   await prisma.course.update({ where: { id: a.id }, data: { memberLoginOn: true } });
 
