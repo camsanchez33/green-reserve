@@ -8,7 +8,7 @@ import CommandPalette from '@/components/admin/CommandPalette';
 import { useAdminSession } from '@/lib/admin-session-context';
 import type { AdminArea } from '@/lib/admin-areas';
 
-export type AdminNavKey = 'overview' | 'bookings' | 'problems' | 'goals' | 'inquiries' | 'outreach' | 'courses' | 'groups' | 'create' | 'employees' | 'announcements' | 'messages' | 'profile' | 'revenue' | 'expenses' | 'finance' | 'support' | 'business' | 'golfers' | 'system' | 'company' | 'audit' | 'security';
+export type AdminNavKey = 'overview' | 'bookings' | 'problems' | 'goals' | 'inquiries' | 'outreach' | 'courses' | 'groups' | 'employees' | 'announcements' | 'messages' | 'profile' | 'revenue' | 'expenses' | 'finance' | 'support' | 'business' | 'golfers' | 'system' | 'company' | 'audit' | 'security';
 
 export default function AdminSidebar({ active, pendingInquiries = 0 }: {
   active: AdminNavKey;
@@ -87,7 +87,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0 }: {
     { label: 'Workspace', items: [
       { key: 'overview', label: 'Overview', href: '/admin' },
       { key: 'courses', label: 'Golf courses', href: '/admin/courses', minRole: VIEWER_PLUS, area: 'courses' },
-      { key: 'groups', label: 'Course groups', href: '/admin/groups', minRole: SUPPORT_PLUS, sub: true, area: 'courses' },
+      // Course groups is parked (Cam 2026-11-18): /admin/groups still works; back when a real county signs.
       // Inquiries (Cam approved the mockup 2026-11-17): internal outreach, Target to Said yes, before Onboarding.
       { key: 'outreach', label: 'Inquiries', href: '/admin/inquiries', minRole: VIEWER_PLUS, area: 'pipeline' },
       { key: 'inquiries', label: 'Onboarding', href: '/admin/onboarding', minRole: VIEWER_PLUS, area: 'pipeline' },

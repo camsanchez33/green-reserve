@@ -88,5 +88,13 @@ Mockup `lanes/admin/goals-mockup.html` (https://claude.ai/artifact/62wRP5X7nS5kM
 One page at a time,
 mockup first ("as it works today"), nothing built until Cam approves.
 
+## Parked
+- Course groups (Cam 2026-11-18, "get rid of course groups for now"): off the menu, the search palette and the Golf courses page. `/admin/groups`, its API and the golfer `/g/[slug]` pages still work; it comes back when a real county signs.
+
+## Retired (Cam 2026-11-18, "get rid of the admin pages that haven't been built yet, we need the messages tab")
+- Messages: Course support is the messages tab. `/admin/messages` redirects there (?id= and ?courseId= kept). Gone with the old screen: Close / Reopen on a thread and its side panel (Build to decide whether Course support needs Close).
+- Build by hand (`/admin/create`): deleted with its links. `/api/admin/create-course` stays until Build retires it.
+- `/admin/broadcasts` (a redirect to Announcements): deleted; `/api/admin/broadcasts` stays (Announcements uses it).
+
 ## Small follow-ups
 - `admin-areas.ts` Problems help text still says "take, note and hand off" (Build's file; Build does it).
