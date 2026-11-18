@@ -8,7 +8,6 @@ import { Prisma } from '@prisma/client';
 import { parseLineRates, type LineRates } from '@/lib/tier-rates';
 import { tierPriceList } from '@/lib/tier-price-list';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
-import { readJoinMode, JOIN_NEEDS_DUES } from '@/lib/membership-join';
 import { readAccountSettings } from '@/lib/member-account';
 
 /** MEM-ACCT: the account limit from the form (dollars): blank = no limit; anything unreadable is refused (NaN), never "no limit". */
@@ -61,10 +60,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Use either flat rates or a discount %, not both' }, { status: 400 });
   }
 
-  // MEM-JOIN: joined online only with dues to pay (lib/membership-join).
-  const join = joinOnline === undefined ? 'off' : readJoinMode(joinOnline);
-  if (!join) return NextResponse.json({ error: 'Pick how golfers join online.' }, { status: 400 });
-  if (join !== 'off' && dollarsToCentsOr0(annualFee) <= 0) return NextResponse.json({ error: JOIN_NEEDS_DUES }, { status: 400 });
+  // Join online is gone for good (GOLFER-SIGNIN-RETIRED, Cam 2026-11-18): golfers buy memberships from the course.
+  // Whatever an older screen sends, a membership is stored as staff-added only.
+  void joinOnline;
+  const join = 'off';
 
   // MEM-ACCT: members on this tier can charge to an account, up to its limit (dollars on the wire; blank = none).
   const acct = readAccountSettings({ accountOn, accountLimitCents: limitCents(accountLimit), accountSettle });
@@ -130,10 +129,9 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: `You already have a tier called “${updates.name.trim()}”. Pick a different name.` }, { status: 409 });
   }
 
-  const join = updates.joinOnline === undefined ? tier.joinOnline : readJoinMode(updates.joinOnline);
-  if (!join) return NextResponse.json({ error: 'Pick how golfers join online.' }, { status: 400 });
+  // Join online is gone for good (GOLFER-SIGNIN-RETIRED): an edit stores 'off' too, whatever is sent.
+  const join = 'off';
   const duesAfter = updates.annualFee != null ? dollarsToCentsOr0(updates.annualFee) : tier.annualFeeCents;
-  if (join !== 'off' && duesAfter <= 0) return NextResponse.json({ error: JOIN_NEEDS_DUES }, { status: 400 });
 
   const acct = readAccountSettings({ accountOn: updates.accountOn, accountLimitCents: limitCents(updates.accountLimit), accountSettle: updates.accountSettle });
   if (!acct.ok) return NextResponse.json({ error: acct.error }, { status: 400 });

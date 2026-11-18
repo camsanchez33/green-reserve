@@ -64,7 +64,7 @@ export async function accountMembers(courseId: string, q = '') {
   for (const s of open) bal.set(s.membershipId, (bal.get(s.membershipId) ?? 0) + (s._sum.totalCents ?? 0));
   return live.map(m => ({
     id: m.id,
-    name: (m.golfer ? `${m.golfer.firstName} ${m.golfer.lastName}`.trim() : '') || m.inviteName,
+    name: m.inviteName || (m.golfer ? `${m.golfer.firstName} ${m.golfer.lastName}`.trim() : ''),
     tierName: m.tier?.name ?? '',
     balanceCents: bal.get(m.id) ?? 0,
     limitCents: m.tier?.accountLimitCents ?? null,

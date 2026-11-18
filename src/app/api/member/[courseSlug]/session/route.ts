@@ -57,9 +57,7 @@ export async function GET(
     // Memberships item 3: a membership on "the public window" books as far ahead as the public (lib/booking-window).
     windowDays: windowFor(course, live ? { tier: membership.tier } : null).days,
     email: fallbackEmail ?? membership.golfer?.email ?? membership.inviteEmail,
-    name: membership.golfer
-      ? `${membership.golfer.firstName} ${membership.golfer.lastName}`
-      : (membership.inviteName || 'Member'),
+    name: membership.inviteName || (membership.golfer ? `${membership.golfer.firstName} ${membership.golfer.lastName}`.trim() : '') || 'Member',
     membershipType: membership.membershipType,
     status: membership.status,
     paymentStatus: membership.paymentStatus,

@@ -49,7 +49,7 @@ export async function POST() {
     const initiationCents = m.lastPaidAt || m.initiationWaived ? 0 : m.tier.initiationFeeCents;
     if (m.tier.annualFeeCents + initiationCents <= 0) { skippedFree++; continue; }
     // The account's current email wins over the invite address, as the list does.
-    const to = m.golfer?.email || m.inviteEmail;
+    const to = m.inviteEmail || m.golfer?.email;
     if (!to) { skippedNoEmail++; continue; }
     if (m.renewalRemindedAt && m.renewalRemindedAt > recent) { skippedRecent++; continue; }
     try {

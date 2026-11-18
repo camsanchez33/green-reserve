@@ -151,8 +151,8 @@ export async function chargeRenewal(membershipId: string, charge: Charger, now =
   return { status: 'paid', amountCents: pi.amount, expiresAt: after.expiresAt };
 }
 
-/** Who a membership email goes to: the account's email first (lib/membership-pay-link). */
+/** Who a membership email goes to: the member's own email (staff edit it), an older linked account's only where none was typed (GOLFER-LOGIN-1). */
 export const memberContact = (m: { inviteName: string; inviteEmail: string; golfer: { email: string; firstName: string; lastName: string } | null }) => ({
-  email: m.golfer?.email || m.inviteEmail,
+  email: m.inviteEmail || m.golfer?.email || '',
   name: m.inviteName || [m.golfer?.firstName, m.golfer?.lastName].filter(Boolean).join(' '),
 });

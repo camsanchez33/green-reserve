@@ -22,6 +22,8 @@ import { issueLoginCode, MAX_TRIES, purgeOldLoginCodes } from '../src/lib/member
 import { termsVersionNow } from '../src/lib/terms';
 import { todayIn, addDaysStr } from '../src/lib/course-time';
 import { groupGreenFee } from '../src/lib/residents';
+import { signToken } from '../src/lib/auth';
+import { memberBenefitsLine } from '../src/lib/member-benefits';
 
 const prisma = new PrismaClient();
 const BASE_URL = process.env.TEST_URL || 'http://localhost:3000';
@@ -173,9 +175,27 @@ async function main() {
   // A membership linked to an older golfer account opens with the account's email only, never a stale inviteEmail.
   const acct = await prisma.golferAccount.create({ data: { email: `acct@${TAG}.test`, firstName: 'Acct', lastName: 'Holder', password: 'x' } });
   await prisma.courseMembership.create({ data: { courseId: a.id, golferId: acct.id, tierId: tier.id, membershipType: 'Gold', status: 'active', inviteEmail: `stale@${TAG}.test`, inviteName: 'Acct', payToken: `${TAG}-acct` } });
-  check('a linked membership: its stale invite email is no log-in', !(await canLogIn(a, `stale@${TAG}.test`)));
-  check('…and gets no member rate', (await preview(ttA.id, await cookie(a.id, `stale@${TAG}.test`))).member === null);
-  check('…while the account email logs in and gets it', !!(await canLogIn(a, acct.email)) && !!(await preview(ttA.id, await cookie(a.id, acct.email))).member);
+  // GOLFER-LOGIN-1 2c (Build 2026-11-18): the member's own email (inviteEmail, which staff edit) logs in; an older
+  // linked account's email only where none was ever typed. All data today is test data, so no backfill.
+  check('a linked membership: the member\'s own email logs in and gets the member rate', !!(await canLogIn(a, `stale@${TAG}.test`)) && !!(await preview(ttA.id, await cookie(a.id, `stale@${TAG}.test`))).member);
+  check('…and the old account email no longer does', !(await canLogIn(a, acct.email)) && (await preview(ttA.id, await cookie(a.id, acct.email))).member === null);
+  const acct2 = await prisma.golferAccount.create({ data: { email: `acct2@${TAG}.test`, firstName: 'Old', lastName: 'Row', password: 'x' } });
+  await prisma.courseMembership.create({ data: { courseId: a.id, golferId: acct2.id, tierId: tier.id, membershipType: 'Gold', status: 'active', inviteEmail: '', inviteName: '', payToken: `${TAG}-acct2` } });
+  check('a linked membership with no member email typed logs in with the account email', !!(await canLogIn(a, acct2.email)));
+
+  // Staff edit a linked member's contact (no golfer account signs in now); the new email logs in, the old one stops.
+  const owner = `gr_operator=${await signToken({ operatorId: op.id, email: op.email })}`;
+  const linked = await prisma.courseMembership.findFirstOrThrow({ where: { golferId: acct.id } });
+  const patch = async (body: Record<string, unknown>) => { const r = await fetch(`${BASE_URL}/api/operator/members`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', cookie: owner }, body: JSON.stringify({ id: linked.id, ...body }) }); return { status: r.status, body: await r.json().catch(() => null) }; };
+  const ed = await patch({ name: 'Renamed Member', email: `edited@${TAG}.test`, phone: '555 0100' });
+  const edited = await prisma.courseMembership.findUniqueOrThrow({ where: { id: linked.id } });
+  check('staff can edit a linked member\'s name, email and phone', ed.status === 200 && edited.inviteEmail === `edited@${TAG}.test` && edited.inviteName === 'Renamed Member' && edited.invitePhone === '555 0100', ed);
+  check('…the edited email logs in, the one before it no longer does', !!(await canLogIn(a, `edited@${TAG}.test`)) && !(await canLogIn(a, `stale@${TAG}.test`)));
+  check('…a linked member can\'t be left with no email', (await patch({ email: '' })).status === 400);
+  check('…nor take an email another member uses (an account email counts where none was typed)', (await patch({ email: acct2.email })).status === 409 && (await patch({ email: memEmail })).status === 409);
+  const list = await (await fetch(`${BASE_URL}/api/operator/members`, { headers: { cookie: owner } })).json().catch(() => null);
+  const listRow = (Array.isArray(list) ? list : list?.members ?? []).find((x: { id: string }) => x.id === linked.id);
+  check('the member list shows the member\'s own contact first', listRow?.email === `edited@${TAG}.test` && listRow?.name === 'Renamed Member', listRow);
 
   // ── Residents switched off ──
   await prisma.course.update({ where: { id: a.id }, data: { hasResidentPricing: false } });
@@ -325,6 +345,12 @@ async function main() {
   check('…their dues history answers 401', (await get(`/api/member/${a.slug}/payments`, offCookie)).status === 401);
   check('…and loginGroups is empty', (await loginGroups({ ...a, memberLoginOn: false })).length === 0);
   await prisma.course.update({ where: { id: a.id }, data: { memberLoginOn: true } });
+
+  // The benefits line (invite email, Your <Course>).
+  const tb = { discountPct: null, greenFeeWeekdayCents: null, greenFeeWeekendCents: null, lineRates: null, advanceBookingDays: 9, windowPublic: false, guestPassesPerYear: 6 };
+  check('benefits: % off, window, passes', memberBenefitsLine({ ...tb, discountPct: 20 }, { publicAdvanceDays: 7 }) === '20% off every round · book 9 days out · 6 guest passes a year');
+  check('benefits: a flat price, one pass', memberBenefitsLine({ ...tb, greenFeeWeekdayCents: 4500, greenFeeWeekendCents: 5000, guestPassesPerYear: 1 }, {}) === 'rounds from $45 · book 9 days out · 1 guest pass a year');
+  check('benefits: the public window says nothing about days', memberBenefitsLine({ ...tb, discountPct: 10, windowPublic: true, guestPassesPerYear: 0 }, {}) === '10% off every round');
 
   await cleanup();
   console.log(failed ? `\n${failed} FAILED` : '\nall passed');

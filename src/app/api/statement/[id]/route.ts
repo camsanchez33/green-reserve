@@ -52,7 +52,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   let customerId: string;
   try {
-    const customer = await stripe.customers.create({ email: m.golfer?.email || m.inviteEmail || undefined, name: m.inviteName || undefined, metadata: { membershipId: m.id, source: 'member_statement' } });
+    const customer = await stripe.customers.create({ email: m.inviteEmail || m.golfer?.email || undefined, name: m.inviteName || undefined, metadata: { membershipId: m.id, source: 'member_statement' } });
     await stripe.paymentMethods.attach(pm, { customer: customer.id });
     customerId = customer.id;
   } catch (err) {
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (saveCard) {
     await prisma.courseMembership.update({ where: { id: m.id }, data: { accountCustomerId: customerId, accountPaymentMethodId: pm, accountCardConsentAt: new Date(), accountCardTerms: statementCardTerms(st.course.name) } });
   }
-  const email = m.golfer?.email || m.inviteEmail;
+  const email = m.inviteEmail || m.golfer?.email;
   if (email) after(sendStatementPaidEmail({ name: m.inviteName || [m.golfer?.firstName, m.golfer?.lastName].filter(Boolean).join(' '), email, courseName: st.course.name, period: st.period, amountCents: paid.amountCents, cardSaved: saveCard, link: statementLink(st) }).catch(console.error));
   return NextResponse.json({ ok: true, amountCents: paid.amountCents, cardSaved: saveCard });
 }

@@ -960,51 +960,29 @@ export async function sendPasswordChangedNotification(data: {
 }
 
 export async function sendMemberInviteEmail(data: {
-  name: string; email: string; courseName: string; tierName: string; setupLink: string;
+  name: string; email: string; courseName: string; groupName: string; coursePageUrl: string; benefits: string; duesOwed: boolean;
 }) {
+  // GOLFER-LOGIN-1 (Cam 2026-11-18, approved mockup "When the course sets someone up"): one invite for every member,
+  // "Log in", never "sign in as a member". A member who still owes dues is told the rates start once they're paid.
+  const shownUrl = data.coursePageUrl.replace(/^https?:[/][/]/, '');
+  const first = (data.name || '').trim().split(' ')[0];
   const html = baseTemplate(`
-    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#EEF3EC;color:#2F6B45;font-size:13px;font-weight:600;padding:4px 14px;border-radius:6px;">⛳ You've been added as a member</span></div>
-    <h1 style="margin:16px 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Welcome, ${data.name}.</h1>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">
-      <strong>${data.courseName}</strong> has added you as a <strong>${data.tierName}</strong> member on GreenReserve.
-      Sign in as a member with this email to book at your member rate online.
+    ${first ? `<p style="margin:0 0 12px;color:#3F453E;font-size:15px;">Hi ${escHtml(first)},</p>` : ''}
+    <p style="margin:0 0 12px;color:#3F453E;font-size:15px;">
+      <strong>${escHtml(data.courseName)}</strong> set you up as a <strong>${escHtml(data.groupName)}</strong>.
+      Log in at ${escHtml(shownUrl)} with this email to get your rates${data.duesOwed ? ' once your dues are paid' : ''}${data.benefits ? `: ${escHtml(data.benefits)}` : '.'}
     </p>
-    <a href="${data.setupLink}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:6px;font-weight:800;font-size:16px;margin-bottom:16px;">
-      Member sign in &rarr;
+    <a href="${data.coursePageUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:6px;font-weight:800;font-size:16px;margin:20px 0 16px;">
+      Log in to ${escHtml(data.courseName)}
     </a>
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">
-      Questions? Reach out to ${data.courseName} directly.
+    <p style="margin:0;color:#6B706A;font-size:12px;">
+      No password. We email you a code each time. Didn&rsquo;t expect this? Call the pro shop. Nothing happens until you log in.
     </p>
   `);
   await getResend().emails.send({ meta: { kind: 'member_invite_email' },
     from: FROM_SUPPORT,
     to: data.email,
-    subject: `You're a member at ${data.courseName}`,
-    html,
-  });
-}
-
-export async function sendMemberLinkedNotification(data: {
-  name: string; email: string; courseName: string; courseSlug?: string; tierName: string;
-}) {
-  const portalUrl = data.courseSlug
-    ? `${process.env.NEXT_PUBLIC_URL}/courses/${data.courseSlug}/member`
-    : process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
-  const html = baseTemplate(`
-    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#EEF3EC;color:#2F6B45;font-size:13px;font-weight:600;padding:4px 14px;border-radius:6px;">⛳ Membership added</span></div>
-    <h1 style="margin:16px 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">You're now a member at ${data.courseName}.</h1>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">
-      You've been added as a <strong>${data.tierName}</strong> member. Your member rate applies
-      when you sign in as a member there with this email and book a tee time.
-    </p>
-    <a href="${portalUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;">
-      Member sign in &rarr;
-    </a>
-  `);
-  await getResend().emails.send({ meta: { kind: 'member_linked_notification', courseSlug: data.courseSlug },
-    from: FROM_SUPPORT,
-    to: data.email,
-    subject: `You're a member at ${data.courseName}`,
+    subject: `${data.courseName} set you up as a ${data.groupName}`,
     html,
   });
 }

@@ -77,10 +77,10 @@ export async function operatorSearch(courseId: string, rawQ: string, opts: { con
     href: b.status === 'cancelled' ? `/dashboard/money?tab=cancellations&q=${encodeURIComponent(b.golferName)}` : `/dashboard?date=${b.date}&q=${encodeURIComponent(b.golferName)}`,
   }));
   for (const m of members) {
-    const name = (m.golfer ? `${m.golfer.firstName} ${m.golfer.lastName}` : m.inviteName).trim() || 'Member';
+    const name = (m.inviteName || (m.golfer ? `${m.golfer.firstName} ${m.golfer.lastName}` : '')).trim() || 'Member';
     // Members audit 22: a member opens their golfer record (bookings, notes, account) — by email for logins
     // that may see contact details, else by their GreenReserve account; Members only when neither is known.
-    const email = (m.golfer?.email || m.inviteEmail || '').trim().toLowerCase();
+    const email = (m.inviteEmail || m.golfer?.email || '').trim().toLowerCase();
     const href = opts.contact && email ? `/dashboard/golfers/${encodeURIComponent(`e:${email}`)}`
       : m.golferId ? `/dashboard/golfers/${encodeURIComponent(`a:${m.golferId}`)}`
       : `/dashboard/members?q=${encodeURIComponent(name)}`;

@@ -279,7 +279,7 @@ export async function createSale(opts: {
   if (opts.pay === 'account') {
     const m = opts.membershipId ? await prisma.courseMembership.findFirst({ where: { id: opts.membershipId, courseId: opts.courseId }, select: { id: true, inviteName: true, inviteEmail: true, golfer: { select: { firstName: true, lastName: true, email: true } } } }) : null;
     if (!m) return fail(400, 'Pick the member whose account it goes on.');
-    member = { id: m.id, name: (m.golfer ? `${m.golfer.firstName} ${m.golfer.lastName}`.trim() : '') || m.inviteName, email: m.golfer?.email || m.inviteEmail || '' };
+    member = { id: m.id, name: m.inviteName || (m.golfer ? `${m.golfer.firstName} ${m.golfer.lastName}`.trim() : ''), email: m.inviteEmail || m.golfer?.email || '' };
   }
   // The pack's rounds are the customer's — found by their email when they book.
   if (hasPack && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(opts.customerEmail ?? '').trim())) return fail(400, 'Add the customer’s email — the round pack is theirs, found by it when they book.');

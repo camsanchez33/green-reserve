@@ -71,7 +71,7 @@ export const GET = cronRoute('send-reminders', async (req: NextRequest) => {
     // Not yet payable (a monthly tier opens 10 days out): left unstamped, so it goes out the day the link works.
     if (paidUntilRenewal(m, m.tier.termMonths)) continue;
     // The account's email wins over the invite address (a self-joined member has no invite address).
-    const to = m.golfer?.email || m.inviteEmail;
+    const to = m.inviteEmail || m.golfer?.email;
     if (!to) continue;
     try {
       await sendMembershipPaymentLinkEmail({

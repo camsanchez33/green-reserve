@@ -16,7 +16,6 @@ import { settleStaleDuesReader } from '@/lib/dues-reader';
 import { sendWelcome, COUNTER_ADDED } from '@/lib/member-welcome';
 import { sendAutoRenewOffEmail } from '@/lib/email';
 import { maybeSendPayLink, NOT_SENT } from '@/lib/membership-pay-link';
-import { approveJoin, declineJoin } from '@/lib/membership-join';
 import { stopAutoRenew, STOP_DATA, memberContact } from '@/lib/membership-autorenew';
 import { ciEquals } from '@/lib/like-exact';
 
@@ -59,9 +58,11 @@ export async function GET(req: NextRequest) {
   const normalized = memberships.map(m => { const st = stats.byMember.get(m.id); return {
     id:             m.id,
     golferId:       m.golferId,
-    name:           m.golfer ? `${m.golfer.firstName} ${m.golfer.lastName}`.trim() : m.inviteName,
-    email:          m.golfer?.email ?? m.inviteEmail,
-    phone:          m.golfer?.phone ?? m.invitePhone,
+    // GOLFER-LOGIN-1: the member's own contact (staff edit it, and its email is the one that logs in); an older
+    // linked account's only where none was ever typed.
+    name:           m.inviteName || (m.golfer ? `${m.golfer.firstName} ${m.golfer.lastName}`.trim() : ''),
+    email:          m.inviteEmail || m.golfer?.email || '',
+    phone:          m.invitePhone || m.golfer?.phone || '',
     tierId:         m.tierId,
     tierName:       m.tier?.name ?? m.membershipType,
     tierColor:      m.tier?.color ?? '#6b7280',
@@ -244,20 +245,14 @@ export async function PATCH(req: NextRequest) {
     });
     return NextResponse.json(safeRow(updated));
   }
-  // MEM-JOIN: answer a golfer's request to join online — approve (the pay link goes out) or decline.
-  if (action === 'approve_join') {
-    const r = await approveJoin(session.courseId, id);
-    if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
-    return NextResponse.json({ success: true, sent: r.sent, note: r.note });
+  // Join online is gone for good (GOLFER-SIGNIN-RETIRED, Cam 2026-11-18): nothing makes a join request now, and an
+  // older screen's Approve or Decline is answered plainly.
+  if (action === 'approve_join' || action === 'decline_join') {
+    return NextResponse.json({ error: 'Joining online is gone. Add members from the membership page.' }, { status: 410 });
   }
   // MEM-RENEW: staff can turn a member's automatic renewal off (never on — only the golfer agrees to it).
   if (action === 'stop_auto_renew') {
     if (!(await stopAutoRenew(id, session.courseId))) return NextResponse.json({ error: 'Automatic renewal is already off.' }, { status: 409 });
-    return NextResponse.json({ success: true });
-  }
-  if (action === 'decline_join') {
-    const r = await declineJoin(session.courseId, id);
-    if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
     return NextResponse.json({ success: true });
   }
   if (action === 'send_pay_link') {
@@ -273,16 +268,18 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ success: true });
   }
 
-  // Revamp 3 dead end 21: a member's details can be edited after they're added. A linked
-  // golfer account owns its own name, email and phone; only an invite's are edited here.
+  // Revamp 3 dead end 21: a member's details can be edited after they're added. GOLFER-LOGIN-1 (Cam 2026-11-18): no
+  // golfer account signs in now, so a member linked to an older account is edited here too; the member's own email
+  // (inviteEmail) is the one that logs in (lib/member-session).
   const contact: { inviteName?: string; inviteEmail?: string; invitePhone?: string } = {};
   if (body.name !== undefined || body.email !== undefined || body.phone !== undefined) {
-    if (membership.golferId) return NextResponse.json({ error: 'This member signs in with their own account — their name, email and phone are theirs to change.' }, { status: 409 });
     if (body.name !== undefined) { const n = String(body.name ?? '').trim().slice(0, 120); if (!n) return NextResponse.json({ error: 'Add the member’s name.' }, { status: 400 }); contact.inviteName = n; }
     if (body.email !== undefined) {
       const e = String(body.email ?? '').trim().toLowerCase().slice(0, 200);
       if (e && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) return NextResponse.json({ error: 'That email address doesn’t look right.' }, { status: 400 });
-      if (e && e !== membership.inviteEmail.toLowerCase() && await prisma.courseMembership.findFirst({ where: { courseId: session.courseId, id: { not: id }, inviteEmail: ciEquals(e) }, select: { id: true } })) return NextResponse.json({ error: 'Another member already uses that email.' }, { status: 409 });
+      // A linked member can't be left without an email: the account's no longer logs in once one was typed.
+      if (!e && membership.golferId) return NextResponse.json({ error: 'Add the member’s email.' }, { status: 400 });
+      if (e && e !== membership.inviteEmail.toLowerCase() && await prisma.courseMembership.findFirst({ where: { courseId: session.courseId, id: { not: id }, OR: [{ inviteEmail: ciEquals(e) }, { inviteEmail: '', golfer: { email: ciEquals(e) } }] }, select: { id: true } })) return NextResponse.json({ error: 'Another member already uses that email.' }, { status: 409 });
       contact.inviteEmail = e;
     }
     if (body.phone !== undefined) contact.invitePhone = String(body.phone ?? '').trim().slice(0, 30);

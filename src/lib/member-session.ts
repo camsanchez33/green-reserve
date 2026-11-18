@@ -99,13 +99,14 @@ export async function loginGroups(course: { id: string; memberLoginOn?: boolean 
 // membership found through the GreenReserve-wide gr_golfer session) is retired with golfer accounts.
 
 /**
- * This course's memberships under an email, case-insensitive and exact (lib/like-exact): an invite's own email, or
- * for a membership linked to an older golfer account, that account's email only (its inviteEmail can be stale, and
- * before this change only the account's address ever got the link). The same rule as membership-join myMembership.
+ * This course's memberships under an email, case-insensitive and exact (lib/like-exact). The member's own email
+ * (inviteEmail, which staff edit) is the one that logs in; an older linked golfer account's email counts only where
+ * no member email was ever typed. GOLFER-LOGIN-1 2c (Build 2026-11-18): staff can now edit a linked member's contact,
+ * so the typed email has to win; every course and member today is test data wiped before launch, so no backfill.
  */
 function membershipEmailWhere(courseId: string, email: string): Prisma.CourseMembershipWhereInput {
   const e = email.trim();
-  return { courseId, OR: [{ golferId: null, inviteEmail: ciEquals(e) }, { golfer: { email: ciEquals(e) } }] };
+  return { courseId, OR: [{ inviteEmail: ciEquals(e) }, { inviteEmail: '', golfer: { email: ciEquals(e) } }] };
 }
 
 /** The membership whose member rates and window apply to this email at this course right now (lib/member-rates), or
@@ -126,7 +127,7 @@ export async function liveMembershipFor(course: { id: string } & LapseRule, emai
  */
 export async function canLogIn(course: { id: string; timezone?: string | null; hasResidentPricing?: boolean | null }, email: string): Promise<{ name: string } | null> {
   const m = await activeMembershipFor(course.id, email);
-  if (m) return { name: (m.golfer ? `${m.golfer.firstName} ${m.golfer.lastName}`.trim() : '') || m.inviteName || 'Member' };
+  if (m) return { name: m.inviteName || (m.golfer ? `${m.golfer.firstName} ${m.golfer.lastName}`.trim() : '') || 'Member' };
   // Residents switched off in Settings (lib/pricing-switch): a resident card gives nothing online, so it is no log-in.
   if (!email.trim() || !residentPricingOn(course)) return null;
   const card = await residentOn(course.id, email, todayIn(course.timezone));
