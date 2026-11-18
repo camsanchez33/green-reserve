@@ -16,6 +16,27 @@ check('the rail lists its items', items.length >= 10);
 // Course groups is parked (Cam 2026-11-18): off the rail and out of the search palette; /admin/groups still works.
 const search = readFileSync('src/app/api/admin/search/route.ts', 'utf8');
 check('Course groups is not on the rail', !items.some(i => i.key === 'groups' || i.href === '/admin/groups'));
+// Every page in the menu is also in the search palette (Build 2026-11-18), shown to no wider a role set than the menu.
+{
+  const nav = [...search.matchAll(/\{ id: 'nav:[^']+',\s*label: '[^']*',\s*href: '([^']+)',\s*(always|support|manager|owner): true/g)].map(m => ({ href: m[1], tier: m[2] }));
+  const TIER: Record<string, string[]> = { always: SUPPORT_PLUS, support: SUPPORT_PLUS, manager: MANAGER_PLUS, owner: OWNER_ONLY }; // the route itself is support+
+  const absent = items.filter(i => !nav.some(n => n.href === i.href)).map(i => i.href);
+  check('every menu page has a search-palette row', absent.length === 0 && nav.length >= items.length - 1);
+  if (absent.length) console.log('      missing:', absent.join(', '));
+  const wider = items.flatMap(i => { const n = nav.find(x => x.href === i.href); if (!n || !i.roles) return []; const extra = TIER[n.tier].filter(r => !i.roles!.includes(r)); return extra.length ? [`${i.href} (${extra.join(', ')})`] : []; });
+  check('…and the palette never shows a page name to a role the menu hides it from', wider.length === 0);
+  // What the tier check stands on: the route is support+ (so `always` = support+), and the owner tier is filtered.
+  check('…the search route refuses below support', /if \(!requireRole\(session, SUPPORT_PLUS\)\) return NextResponse\.json\(\{ error: 'Forbidden' \}, \{ status: 403 \}\)/.test(search));
+  check('…owner rows show only to the owner', search.includes('const isOwner = requireRole(session, OWNER_ONLY);') && search.includes('if (n.owner && isOwner) return true;'));
+  // Each row is area-filtered exactly as the menu item is (AW-11).
+  const railArea = new Map([...groups.matchAll(/href: '([^']+)'[^}]*?area: '(\w+)'/g)].map(m => [m[1], m[2]]));
+  const areaBlock = search.slice(search.indexOf('const NAV_AREA'), search.indexOf('const TYPE_AREA'));
+  const navArea = new Map([...areaBlock.matchAll(/'(\/admin[^']*)': '(\w+)'/g)].map(m => [m[1], m[2]]));
+  const areaOff = [...railArea].filter(([h, a]) => navArea.get(h) !== a).map(([h, a]) => `${h} (menu ${a}, palette ${navArea.get(h) ?? 'none'})`);
+  check('…and each palette row is area-filtered as its menu item is', railArea.size >= 8 && areaOff.length === 0);
+  if (areaOff.length) console.log('      area:', areaOff.join('; '));
+  if (wider.length) console.log('      wider:', wider.join('; '));
+}
 check('…nor in the search palette (no page row, no group results)', !search.includes("'nav:groups'") && !search.includes('courseGroup.findMany'));
 
 // The gate of the API behind each page (the page's own data route).
