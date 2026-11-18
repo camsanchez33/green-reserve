@@ -57,8 +57,10 @@ check('the Log in button never reads "Logging in…" while a new code is being s
 check('the terms box is described by its hint', page.includes("aria-describedby={agreed ? 'li-terms-err' : 'li-terms-hint li-terms-err'}"));
 const bookSrc = readFileSync('src/app/book/BookClient.tsx', 'utf8');
 check('the Book page header, logged in: name and groups, Your <Course>, Log out (failure said)', bookSrc.includes("{member.groups.length ? ` · ${member.groups.join(' and ')}` : ''}") && bookSrc.includes('>Log out</button>') && bookSrc.includes("if (!r || !r.ok) { setLogoutErr(true); return; }"));
-check('the private-club Log in follows the same rule and goes to the code page', course.includes('{loginOffered(course) ? (') && course.includes('href={`/courses/${slug}/login?back=${encodeURIComponent(`/courses/${slug}`)}`}'));
+check('the private-club Log in follows the same rule and goes to the code page', course.includes(') : loginOffered(course) ? (') && course.includes('{memberSession ? (\n                <Link\n                  href={`/courses/${slug}/member`}') && course.includes('href={`/courses/${slug}/login?back=${encodeURIComponent(`/courses/${slug}/member`)}`}') && course.includes('Your {course.name}\n                </Link>\n              ) : loginOffered(course) ? ('));
 check('no empty account landmark for a guest when Log in is not offered', course.includes('{!previewMode && (memberSession || loginOn) && ('));
+
+check('a failed resend puts focus back on the code field', readFileSync('src/app/courses/[slug]/login/LoginClient.tsx', 'utf8').split("(step === 'code' ? codeRef : emailRef).current?.focus()").length === 3);
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);

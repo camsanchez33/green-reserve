@@ -656,12 +656,21 @@ export default function CourseDetailPage({
             <div className={`${CARD} p-6 sticky top-20`}>
               <p className="text-[15px] font-semibold text-ink mb-1">Member access</p>
               <p className="text-ink text-sm leading-relaxed mb-5">
-                This is a private club. Tee time booking is reserved for members. Log in to your member account to view availability and book.
+                This is a private club. Tee time booking is reserved for members.{memberSession ? '' : loginOffered(course) ? ' Log in to your member account to view availability and book.' : ''}
               </p>
-              {/* Item 2: the one Log in, and only when the course offers it (switch on and a group). */}
-              {loginOffered(course) ? (
+              {/* Item 2: the one Log in, and only when the course offers it (switch on and a group). A private club's
+                  members book on the member page, so Log in returns there; logged in, the panel links straight to it. */}
+              {memberSession ? (
                 <Link
-                  href={`/courses/${slug}/login?back=${encodeURIComponent(`/courses/${slug}`)}`}
+                  href={`/courses/${slug}/member`}
+                  className="block w-full text-center py-3 px-5 text-white text-sm font-medium rounded-md transition-opacity hover:opacity-90"
+                  style={{ backgroundColor: course.brand_color || '#173B2A' }}
+                >
+                  Your {course.name}
+                </Link>
+              ) : loginOffered(course) ? (
+                <Link
+                  href={`/courses/${slug}/login?back=${encodeURIComponent(`/courses/${slug}/member`)}`}
                   className="block w-full text-center py-3 px-5 text-white text-sm font-medium rounded-md transition-opacity hover:opacity-90"
                   style={{ backgroundColor: course.brand_color || '#173B2A' }}
                 >

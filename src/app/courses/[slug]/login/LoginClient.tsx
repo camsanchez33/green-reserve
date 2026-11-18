@@ -62,13 +62,13 @@ export default function LoginClient({ course, back }: { course: LoginCourse; bac
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: v, mode: 'code' }),
       });
       const d = await r.json().catch(() => ({}));
-      if (!r.ok) { setFormErr(d.error || 'That didn’t go through. Try again.'); setTimeout(() => emailRef.current?.focus(), 0); return; }
+      if (!r.ok) { setFormErr(d.error || 'That didn’t go through. Try again.'); setTimeout(() => (step === 'code' ? codeRef : emailRef).current?.focus(), 0); return; }
       setStep('code'); setCode(''); setCodeErr(''); setNeedTerms(false); setAgreed(false); setTermsErr('');
       if (again) setNote('If that address can log in, a new code is on its way.');
       setTimeout(() => codeRef.current?.focus(), 0);
     } catch {
       setFormErr('Network error: the code was not sent. Check your connection and try again.');
-      setTimeout(() => emailRef.current?.focus(), 0);
+      setTimeout(() => (step === 'code' ? codeRef : emailRef).current?.focus(), 0);
     } finally { setBusy(''); }
   }
 
