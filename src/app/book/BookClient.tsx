@@ -400,7 +400,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   const perCart = course.cart_pricing === 'per_cart';
   const cartsN = cartsFor(players - (pk?.coversCart ? packSeatsN : 0));
   const cartTotal    = !withCart ? 0 : perCart ? cartsN * teeTime.cart_fee : pk ? (pk.coversCart ? players - packSeatsN : players) * teeTime.cart_fee : (memberRate ? splitTotal(players, memberN, c(memberRate.cartFee), c(teeTime.cart_fee)) / 100 : teeTime.cart_fee * players);
-  const rangeBuckets = (course.range_buckets ?? []).filter(r => (bucketQty[r.id] ?? 0) > 0).map(r => ({ id: r.id, qty: bucketQty[r.id] }));
+  const rangeBuckets = (course.range_buckets ?? []).filter(r => (bucketQty[r.id] ?? 0) > 0).map(r => ({ id: r.id, qty: bucketQty[r.id], unitCents: r.price_cents }));
   const rangeBallsTotal = (course.range_buckets ?? []).reduce((t, r) => t + r.price_cents * (bucketQty[r.id] ?? 0), 0) / 100;
   const accessTotal  = ACCESS_FEE_PER_PLAYER * players;
   // A code that doesn't work with member or resident rates takes nothing off one (the server says so too).
@@ -598,7 +598,7 @@ function CheckoutForm({ onRangeStale, teeTimeId, players, cartSelected, rangeBuc
   teeTimeId: string;
   players: number;
   cartSelected: boolean;
-  rangeBuckets: { id: string; qty: number }[];
+  rangeBuckets: { id: string; qty: number; unitCents: number }[];
   accent: string;
   /** SP-B: false when the course's policy charges nothing — no card is asked for. */
   needsCard: boolean;
