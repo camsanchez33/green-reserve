@@ -13,7 +13,6 @@ export const BOOKING_ACCENTS = ['black', 'green', 'blue', 'yellow'] as const;
 export type BookingLook = (typeof BOOKING_LOOKS)[number];
 export type BookingAccent = (typeof BOOKING_ACCENTS)[number];
 export const DEFAULT_BOOKING_LOOK: BookingLook = 'light';
-export const DEFAULT_BOOKING_ACCENT: BookingAccent = 'green';
 
 /** Display names, in the order Settings shows them. */
 export const BOOKING_ACCENT_LABELS: Record<BookingAccent, string> = { black: 'Black', green: 'Green', blue: 'Blue', yellow: 'Yellow' };
@@ -33,11 +32,15 @@ export const BOOKING_ACCENT_COLOURS: Record<BookingAccent, Record<BookingLook, {
 const isLook = (v: unknown): v is BookingLook => typeof v === 'string' && (BOOKING_LOOKS as readonly string[]).includes(v);
 const isAccent = (v: unknown): v is BookingAccent => typeof v === 'string' && (BOOKING_ACCENTS as readonly string[]).includes(v);
 
-/** What the golfer pages get: always a valid pair, whatever is in the row. */
-export function bookingLookOf(c: { bookingLook?: unknown; bookingAccent?: unknown }): { look: BookingLook; accent: BookingAccent } {
+/**
+ * What the golfer pages get. The accent is null until the course saves one (or when the row
+ * holds anything that isn't a preset): the golfer pages then keep using brand_color, so an
+ * existing course's colour renders as it is (BOOKING-LOOK-1).
+ */
+export function bookingLookOf(c: { bookingLook?: unknown; bookingAccent?: unknown }): { look: BookingLook; accent: BookingAccent | null } {
   return {
     look: isLook(c.bookingLook) ? c.bookingLook : DEFAULT_BOOKING_LOOK,
-    accent: isAccent(c.bookingAccent) ? c.bookingAccent : DEFAULT_BOOKING_ACCENT,
+    accent: isAccent(c.bookingAccent) ? c.bookingAccent : null,
   };
 }
 

@@ -14,7 +14,7 @@ export async function saveBookingLook(courseId: string, input: { look: BookingLo
     if (!before) return null;
     const changes = [
       { field: 'bookingLook', before: before.bookingLook, after: input.look },
-      { field: 'bookingAccent', before: before.bookingAccent, after: input.accent },
+      { field: 'bookingAccent', before: before.bookingAccent ?? '', after: input.accent },
     ].filter(c => c.before !== c.after);
     if (changes.length) {
       await tx.course.update({ where: { id: courseId }, data: { bookingLook: input.look, bookingAccent: input.accent } });

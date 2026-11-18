@@ -156,8 +156,9 @@ model Course {
   bookingLook                String                @default("light")
   /// Booking page look: one preset accent by NAME ('black' | 'green' | 'blue' | 'yellow';
   /// never red, which means a problem). Each preset has its own light and dark values on the
-  /// golfer pages (lib/booking-look). brandColor stays the hex for receipts, emails and the dashboard.
-  bookingAccent              String                @default("green")
+  /// golfer pages (lib/booking-look). Null until the course first saves one: until then the
+  /// golfer pages keep using brandColor, so no existing course is recoloured (BOOKING-LOOK-1).
+  bookingAccent              String?
   establishedYear            Int?
   logoUrl                    String                @default("")
   heroImageUrl               String                @default("")

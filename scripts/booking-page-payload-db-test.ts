@@ -40,7 +40,8 @@ async function cleanup() {
   ok('a missing look is refused', !readBookingLook({ accent: 'green' }).ok);
   ok('an unknown look is refused', !readBookingLook({ look: 'sepia', accent: 'green' }).ok);
   ok('a non-object body is refused', !readBookingLook(null).ok && !readBookingLook('x').ok);
-  ok('a bad stored value reads as the default pair', JSON.stringify(bookingLookOf({ bookingLook: 'neon', bookingAccent: 'red' })) === '{"look":"light","accent":"green"}');
+  ok('a bad stored value reads as Light with no accent (golfer pages fall back to brand_color)', JSON.stringify(bookingLookOf({ bookingLook: 'neon', bookingAccent: 'red' })) === '{"look":"light","accent":null}');
+  ok('an unset accent (null) reads as null, not a default', bookingLookOf({ bookingLook: 'dark', bookingAccent: null }).accent === null);
   ok('a stored pair reads as itself', JSON.stringify(bookingLookOf({ bookingLook: 'dark', bookingAccent: 'yellow' })) === '{"look":"dark","accent":"yellow"}');
 
   // Every preset's button text passes AA (4.5:1) on its accent, in both looks.
@@ -90,7 +91,8 @@ async function cleanup() {
   await cleanup();
   const op = await prisma.courseOperator.create({ data: { name: 'Pat Owner', email: `${TAG}@t.local`, password: 'x' } });
   const course = await prisma.course.create({ data: { name: 'Payload Links', slug: `${TAG}-a`, operatorId: op.id, address: '1 Main', city: 'X', state: 'NJ', zipCode: '07001', holes: 18, timezone: 'America/New_York', active: true, liveStatus: 'live', publicAdvanceDays: 7, memberAdvanceDays: 14 } });
-  ok('a new course is Light with Green', course.bookingLook === 'light' && course.bookingAccent === 'green');
+  ok('a new course is Light with no accent (no default, nothing recoloured)', course.bookingLook === 'light' && course.bookingAccent === null);
+  ok('the payload of a course that never saved a look has accent null', (await loadPublicCourse(`${TAG}-a`)).booking_look.accent === null);
 
   const actor = { type: 'operator' as const, id: op.id, name: 'Pat Owner' };
   const r1 = await saveBookingLook(course.id, { look: 'dark', accent: 'yellow' }, actor);
@@ -98,7 +100,7 @@ async function cleanup() {
   ok('the save writes both fields', r1?.changed === 2 && after?.bookingLook === 'dark' && after?.bookingAccent === 'yellow');
   const log = await prisma.courseSettingChange.findMany({ where: { courseId: course.id }, orderBy: { field: 'asc' } });
   ok('one audit row per changed field, with who, before and after', log.length === 2
-    && log[0].field === 'bookingAccent' && log[0].before === 'green' && log[0].after === 'yellow'
+    && log[0].field === 'bookingAccent' && log[0].before === '' && log[0].after === 'yellow'
     && log[1].field === 'bookingLook' && log[1].before === 'light' && log[1].after === 'dark'
     && log.every(l => l.actorType === 'operator' && l.actorId === op.id && l.actorName === 'Pat Owner'), log);
   const r2 = await saveBookingLook(course.id, { look: 'dark', accent: 'yellow' }, actor);

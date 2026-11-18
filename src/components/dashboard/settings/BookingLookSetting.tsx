@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { BOOKING_LOOKS, BOOKING_ACCENTS, BOOKING_ACCENT_LABELS, BOOKING_ACCENT_COLOURS, bookingLookOf, type BookingLook, type BookingAccent } from '@/lib/booking-look';
-import { type Ctx, type Course, Row, EditPopup } from './ui';
+import { type Ctx, type Course, Row, EditPopup, Muted } from './ui';
 
 const LOOK_LABELS: Record<BookingLook, string> = { light: 'Light', dark: 'Dark' };
 const TITLE = 'Booking page look';
@@ -14,9 +14,9 @@ export function BookingLookRow({ form, onOpen }: { form: Course; onOpen?: () => 
   const bl = bookingLookOf({ bookingLook: form.bookingLook, bookingAccent: form.bookingAccent });
   return (
     <Row id="page-booking-look" label={TITLE} note="Buttons use the colour."
-      value={<span className="inline-flex items-center gap-2">
+      value={bl.accent ? <span className="inline-flex items-center gap-2">
         <i aria-hidden="true" className="w-4 h-4 rounded-full border border-line" style={{ background: BOOKING_ACCENT_COLOURS[bl.accent][bl.look].acc }} />
-        {LOOK_LABELS[bl.look]} · {BOOKING_ACCENT_LABELS[bl.accent]}</span>}
+        {LOOK_LABELS[bl.look]} · {BOOKING_ACCENT_LABELS[bl.accent]}</span> : <Muted>Not set</Muted>}
       onOpen={onOpen} />
   );
 }
@@ -25,11 +25,12 @@ export function BookingLookRow({ form, onOpen }: { form: Course; onOpen?: () => 
 export function BookingLookPopup({ ctx, onClose }: { ctx: Ctx; onClose: () => void }) {
   const cur = bookingLookOf({ bookingLook: ctx.form.bookingLook, bookingAccent: ctx.form.bookingAccent });
   const [look, setLook] = useState<BookingLook>(cur.look);
-  const [accent, setAccent] = useState<BookingAccent>(cur.accent);
+  const [accent, setAccent] = useState<BookingAccent | null>(cur.accent);
   const pill = (on: boolean) => `min-h-[44px] px-4 rounded-md border text-[13.5px] font-medium ${on ? 'border-ink text-ink bg-paper' : 'border-line text-ink-soft'}`;
   return (
-    <EditPopup title={TITLE} onClose={onClose}
+    <EditPopup title={TITLE} onClose={onClose} canSave={!!accent}
       onSave={async () => {
+        if (!accent) return 'Pick a colour.';
         const r = await dfetch<{ bookingLook: string; bookingAccent: string }>('/api/operator/settings/booking-look', { method: 'PATCH', body: JSON.stringify({ look, accent }) });
         if (!r.ok) return r.error;
         ctx.merge({ bookingLook: look, bookingAccent: accent });

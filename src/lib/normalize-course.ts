@@ -89,7 +89,8 @@ export function normalizeDbCourse(c: any, startingGreenFee = 0, extras?: Booking
     // SP-B: the full cancellation & card policy, in cents — describePolicy() turns it into the golfer's words.
     cancel_policy:           policyFrom({ cancellationHours: c.cancellationHours, lateCancellationFeeCents: c.lateCancellationFeeCents ?? 1000, lateFeeBasis: c.lateFeeBasis, lateFeeTiming: c.lateFeeTiming, noShowFeeCents: c.noShowFeeCents, noShowFeeBasis: c.noShowFeeBasis, autoNoShowMinutes: c.autoNoShowMinutes, checkInWindowHours: c.checkInWindowHours }),
     brand_color:             c.brandColor ?? '#173B2A',
-    // Booking page look (Cam 2026-11-18): Light or Dark plus one preset accent, by name.
+    // Booking page look (Cam 2026-11-18): Light or Dark plus one preset accent, by name; accent null
+    // until the course picks one, and then the golfer pages use brand_color (BOOKING-LOOK-1).
     booking_look:            bookingLookOf(c),
     // Resident booking window: null until Course.residentAdvanceDays lands (Build, golfer log-in PR 2).
     resident_advance_days:   null as number | null,

@@ -1,5 +1,5 @@
 -- AlterTable
-ALTER TABLE "Course" ADD COLUMN     "bookingAccent" TEXT NOT NULL DEFAULT 'green',
+ALTER TABLE "Course" ADD COLUMN     "bookingAccent" TEXT,
 ADD COLUMN     "bookingLook" TEXT NOT NULL DEFAULT 'light';
 
 -- CreateTable

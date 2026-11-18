@@ -12,6 +12,7 @@ import { ImageUpload } from '@/components/dashboard/ImageUpload';
 import CoursePreview from '@/components/dashboard/CoursePreview';
 import CourseLayoutTab from '@/components/dashboard/CourseLayoutTab';
 import { RangeBuckets } from './RangeBuckets';
+import { bookingLookOf, BOOKING_ACCENT_COLOURS } from '@/lib/booking-look';
 import { BookingLookRow, BookingLookPopup } from './BookingLookSetting';
 import { type Ctx, type Course, Group, Row, Muted, EditPopup, Field, FIELD, TextEdit, LINK, plural } from './ui';
 
@@ -71,12 +72,18 @@ function AskPopup({ onClose }: { onClose: () => void }) {
   );
 }
 
+/** The booking page's own colour once the course set its look (BOOKING-LOOK-1); null = it still uses the brand colour. */
+function bookingAccentHex(f: Course): string | null {
+  const bl = bookingLookOf({ bookingLook: f.bookingLook, bookingAccent: f.bookingAccent });
+  return bl.accent ? BOOKING_ACCENT_COLOURS[bl.accent][bl.look].acc : null;
+}
+
 function LookPopup({ ctx, onClose }: { ctx: Ctx; onClose: () => void }) {
   const f = ctx.form;
   const [color, setColor] = useState(s(f.brandColor) || DEFAULT_COLOUR);
   return (
     <EditPopup title="Logo and colour" size="lg" onClose={onClose} onSave={() => ctx.save({ brandColor: color })}
-      hint="Receipts, emails and your dashboard.">
+      hint="Receipts, emails, and your booking page until it has its own look.">
       <div data-setup="logo"><ImageUpload label="Your logo" kind="logo" value={s(f.logoUrl)} onUploaded={url => ctx.merge({ logoUrl: url })} hint="Square; a transparent PNG is best. Max 8MB. Saves on upload." /></div>
       <Field label="Your colour">
         <span className="flex items-center gap-2">
@@ -89,7 +96,7 @@ function LookPopup({ ctx, onClose }: { ctx: Ctx; onClose: () => void }) {
         <CoursePreview name={s(f.name)} type={s(f.type) || 'public'} city={s(f.city)} state={s(f.state)}
           holes={typeof f.holes === 'number' ? f.holes : null} par={typeof f.par === 'number' ? f.par : null}
           establishedYear={typeof f.establishedYear === 'number' ? f.establishedYear : null}
-          accent={color} logoUrl={s(f.logoUrl)} heroImageUrl={s(f.heroImageUrl)} />
+          accent={bookingAccentHex(f) ?? color} logoUrl={s(f.logoUrl)} heroImageUrl={s(f.heroImageUrl)} />
         <p className="text-[12px] text-ink-muted mt-2">Sample times and prices; your real page shows yours.</p>
       </div>
     </EditPopup>
@@ -307,7 +314,7 @@ export function CourseArea({ ctx }: { ctx: Ctx }) {
       </Group>
 
       <Group id="page" title="Booking Page">
-        <Row id="page-look" setup="logo" label="Logo and colour" note="Receipts, emails and your dashboard."
+        <Row id="page-look" setup="logo" label="Logo and colour" note="Receipts, emails, and your booking page until it has its own look."
           value={<span className="inline-flex items-center gap-2">
             {f.logoUrl ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={s(f.logoUrl)} alt="" className="w-6 h-6 rounded-[7px] object-cover" /> : <Muted>No logo</Muted>}
             <i aria-hidden="true" className="w-4 h-4 rounded-full border border-line" style={{ background: s(f.brandColor) || DEFAULT_COLOUR }} />
