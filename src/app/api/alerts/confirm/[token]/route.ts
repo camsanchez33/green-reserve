@@ -2,7 +2,7 @@
 import { NextRequest } from 'next/server';
 import { alertByToken, confirmAlert } from '@/lib/tee-time-alerts';
 import { alertPage, htmlResponse } from '@/lib/alert-pages';
-import { rateLimit } from '@/lib/rate-limit';
+import { rateLimit, clientIp } from '@/lib/rate-limit';
 
 type Ctx = { params: Promise<{ token: string }> };
 
@@ -21,8 +21,11 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
 }
 
 export async function POST(req: NextRequest, { params }: Ctx) {
-  // Per link, not per IP: mail apps send one-click stops from shared addresses.
+  // Per link, not per IP (mail apps send one-click stops from shared addresses), and only for a
+  // link that exists, so made-up tokens write nothing. Confirm, which mail apps never POST, keeps an IP limit too.
   const { token } = await params;
+  if (!(await rateLimit('alert:confirm:ip:' + clientIp(req), 30, 300))) return htmlResponse(alertPage({ title: 'Too many tries', body: 'Wait a minute and try again.' }), 429);
+  if (!(await alertByToken(token))) return htmlResponse(alertPage({ title: 'Link not found', body: 'This alert link is no longer valid. You can set a new alert from the course’s booking page.' }), 404);
   if (!(await rateLimit('alert:confirm:' + String(token).slice(0, 64), 20, 300))) return htmlResponse(alertPage({ title: 'Too many tries', body: 'Wait a minute and try again.' }), 429);
   const r = await confirmAlert(token);
   if (r.result === 'missing') return htmlResponse(alertPage({ title: 'Link not found', body: 'This alert link is no longer valid. You can set a new alert from the course’s booking page.' }), 404);

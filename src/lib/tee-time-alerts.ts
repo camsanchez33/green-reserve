@@ -100,6 +100,20 @@ export type CreateAlertResult =
   | { ok: true; status: 'active' | 'pending'; alert: { id: string; token: string; email: string; dates: string[] }; endsOn: string; maskedEmail: string; course: { id: string; name: string; slug: string }; textNew: boolean; phone: string | null; players: number; skipEmail?: boolean }
   | { ok: false; status: number; body: Record<string, unknown> };
 
+/**
+ * The emails an alert request is counted against (the per-email limit). The typed email whenever
+ * one is given (a lapsed member, or a log-in from another course, uses it), plus the log-in email
+ * at its own course. Counting both means no session can spend a typed address's requests
+ * elsewhere.
+ */
+export function alertRateKeys(session: { courseId: string; email: string } | null, body: { courseId?: unknown; email?: unknown }): string[] {
+  const keys = new Set<string>();
+  const typed = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+  if (typed) keys.add(typed);
+  if (session && session.courseId === body.courseId && session.email) keys.add(session.email.trim().toLowerCase());
+  return [...keys];
+}
+
 export function maskEmail(email: string): string {
   const [user, domain] = email.split('@');
   return `${(user || '').slice(0, 1)}•••@${domain || ''}`;

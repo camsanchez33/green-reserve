@@ -12,7 +12,7 @@ import { readFileSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
 import { prisma } from '../src/lib/prisma';
 import { recordSmsConsent, hasSmsConsent, consentedPhones, optInByReply } from '../src/lib/sms-consent';
-import { createAlert, confirmAlert, stopAlertByToken, notifyAlertsFor, sweepTeeTimeAlerts, alertMatches, partOf, endsAtFor, memberAlerts, stopMemberAlert } from '../src/lib/tee-time-alerts';
+import { createAlert, alertRateKeys, confirmAlert, stopAlertByToken, notifyAlertsFor, sweepTeeTimeAlerts, alertMatches, partOf, endsAtFor, memberAlerts, stopMemberAlert } from '../src/lib/tee-time-alerts';
 import { addDaysStr, todayIn } from '../src/lib/course-time';
 import { WIPED_TABLES } from '../src/lib/data-reset';
 
@@ -70,6 +70,7 @@ async function main() {
   ok('an alerts-only number replying YES gets no booking texts', yes.length === 0 && !(await hasSmsConsent(P5)) && !(await consentedPhones([P5])).has(P5), yes);
   await recordSmsConsent(P5, 'opt_out', { method: 'sms_reply' });
   const back = await optInByReply(P5);
+  ok('…stored with the alert wording version', (await prisma.smsConsent.findFirst({ where: { phone: P5, scope: 'alerts', method: 'sms_reply' }, orderBy: { createdAt: 'desc' } }))?.wording === 'alerts-2026-11-18');
   ok('…STOP then START brings back alert texts only', JSON.stringify(back) === '["alerts"]' && (await hasSmsConsent(P5, 'alerts')) && !(await hasSmsConsent(P5)), back);
   ok('a number with no record replying START gets booking texts, as before', JSON.stringify(await optInByReply(P6)) === '["bookings"]' && (await hasSmsConsent(P6)) && !(await hasSmsConsent(P6, 'alerts')));
   ok('the reply webhook uses optInByReply and answers with the matching confirmation', /optInByReply\(from\)/.test(read('src/app/api/twilio/inbound/route.ts')) && /ALERT_SMS_CONFIRMATION/.test(read('src/app/api/twilio/inbound/route.ts')));
@@ -127,7 +128,11 @@ async function main() {
   ok('a re-asked pending alert gets a new confirm link', first.ok && second.ok && first.alert.id === second.alert.id && first.alert.token !== second.alert.token);
   ok('…so the first email can no longer turn on a phone it never named', first.ok && (await confirmAlert(first.alert.token)).result === 'missing' && !(await hasSmsConsent(P7, 'alerts')));
   ok('the confirm email and page name the phone’s last four digits', /number ending \$\{escHtml\(data\.phone\.slice\(-4\)\)\}/.test(read('src/lib/email.ts')) && /number ending \$\{alert\.phone\.slice\(-4\)\}/.test(read('src/app/api/alerts/confirm/[token]/route.ts')));
-  ok('the per-email limit is keyed on the email the alert uses', /session && session\.courseId === body\.courseId \? session\.email/.test(read('src/app/api/alerts/route.ts')));
+  const keysLapsed = alertRateKeys({ courseId: c.id, email: `${TAG}-l@t.local` }, { courseId: c.id, email: 'Victim@T.local' });
+  ok('a lapsed member typing another email is counted against that email too', keysLapsed.includes('victim@t.local') && keysLapsed.includes(`${TAG}-l@t.local`), keysLapsed);
+  ok('a log-in at another course counts only the typed email', JSON.stringify(alertRateKeys({ courseId: 'other', email: 'me@t.local' }, { courseId: c.id, email: 'v@t.local' })) === '["v@t.local"]');
+  ok('a member at this course with no typed email counts the log-in email', JSON.stringify(alertRateKeys({ courseId: c.id, email: 'M@t.local' }, { courseId: c.id })) === '["m@t.local"]');
+  ok('the route counts every key', /for \(const key of alertRateKeys\(session, body\)\)/.test(read('src/app/api/alerts/route.ts')));
 
   // A live member: on at once, with the log-in email.
   const m = await prisma.courseMembership.create({ data: { courseId: c.id, inviteEmail: `${TAG}-m@t.local`, status: 'active' } });

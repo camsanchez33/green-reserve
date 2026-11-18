@@ -21,8 +21,10 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
 }
 
 export async function POST(req: NextRequest, { params }: Ctx) {
-  // Per link, not per IP: mail apps send one-click stops from shared addresses.
+  // Per link, not per IP (mail apps send one-click stops from shared addresses), and only for a
+  // link that exists, so made-up tokens write nothing.
   const { token } = await params;
+  if (!(await alertByToken(token))) return htmlResponse(alertPage({ title: 'Link not found', body: 'This alert link is no longer valid. You can set a new alert from the course’s booking page.' }), 404);
   if (!(await rateLimit('alert:stop:' + String(token).slice(0, 64), 20, 300))) return htmlResponse(alertPage({ title: 'Too many tries', body: 'Wait a minute and try again.' }), 429);
   const r = await stopAlertByToken(token);
   if (r.result === 'missing') return htmlResponse(alertPage({ title: 'Already removed', body: 'This alert link has already been used or does not exist.' }), 404);

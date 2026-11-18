@@ -6,7 +6,7 @@
 // refusing a send with 21610) records an opt-out. Server-only.
 import { prisma } from './prisma';
 import { normalizePhone } from './golfer-otp';
-import { SMS_CONSENT_VERSION } from './sms-consent-copy';
+import { SMS_CONSENT_VERSION, ALERT_SMS_CONSENT_VERSION } from './sms-consent-copy';
 
 export type ConsentMethod = 'web_booking' | 'web_event' | 'web_alert' | 'verbal' | 'sms_reply' | 'carrier';
 
@@ -96,7 +96,7 @@ export async function optInByReply(raw: string): Promise<SmsScope[]> {
   }
   const changed: SmsScope[] = [];
   for (const scope of scopes) {
-    if (await recordSmsConsent(phone, 'opt_in', { method: 'sms_reply', scope })) changed.push(scope);
+    if (await recordSmsConsent(phone, 'opt_in', { method: 'sms_reply', scope, ...(scope === 'alerts' ? { wording: ALERT_SMS_CONSENT_VERSION } : {}) })) changed.push(scope);
   }
   return changed;
 }
