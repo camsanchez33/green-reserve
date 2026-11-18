@@ -22,10 +22,10 @@ Support (chats) · Light parity. Specs: ADMIN_REDO_SPEC "Course dashboard Home",
    - "Your memberships" and "Season passes" lists each show colour, name, price and count, most first, and each has a bare plus. Beside them, "Dues this year" is broken down by each membership and pass, aligned under the third number.
    - A row opens that membership's or pass's own page: three numbers (members, dues, overdue renewals), every member, and Details. There is a plus to add a member, and a member opens their card (photo, number, dues, payments, renew, change, edit, auto-renew, end).
    - Add a member: photo, name, email and phone, an auto member number, and payment by Card reader, Cash or Type a card (Stripe's own fields). They are a member only once paid.
-   - The membership setup runs Name and colour → Joining → Payment (yearly or one time, optional initiation fee, length) → Booking and rates (the public window or further ahead; rates against the course's own price list, blank = public and 0 = free, or % off).
+   - The membership setup runs Name and colour → Payment (yearly or one time, optional initiation fee, length) → Booking and rates (the public window or further ahead; rates against the course's own price list, blank = public and 0 = free, or % off).
    - The season-pass setup runs Name and colour → Price and dates (buy online and/or at the course) → What it gives (price list per round, booking window).
    - Tiles, step bar, normal-size fields, Cancel and Back as plain links.
-   - Joining-online requests, import and reminders move to each membership's page.
+   - Import and reminders move to each membership's page. (No joining-online requests: Join online is gone, GOLFER-SIGNIN-RETIRED, Cam via Build 2026-11-18.)
    - Wire only what Build's data supports; hide the rest, never fake it.
 3. **Events — APPROVED, build it** (Cam 2026-11-17, "events is good"). Mockup `lanes/dashboard/events-mockup.html` (https://claude.ai/artifact/BVqXkiviwzu8ktCdyNNR9H) is the spec, in both looks. All of Cam's comment threads on that artifact are part of the spec.
    - **Lists the course edits.** Every built-in list on the page can be extended by the course (plus) and edited or removed (pencil, popup).
@@ -91,4 +91,6 @@ Support (chats) · Light parity. Specs: ADMIN_REDO_SPEC "Course dashboard Home",
    - **Challenge noted for review:** a role edit changes everyone in it, so the role editor must say how many people it affects before saving.
 
 ## Small follow-ups (do with the next PR that touches the file)
+- **Join online is gone (GOLFER-SIGNIN-RETIRED, Cam via Build 2026-11-18; golfers buy memberships from the course, which adds them).** Golfers can no longer join online, so: remove the "Join online" / "Ask to join" tiles and their hint ("Golfers pay online and are members as soon as it's paid") from `src/components/dashboard/members/MembershipSetup.tsx` and default a new membership to `joinOnline: 'off'`; remove the "Joining" row on `src/app/dashboard/members/page.tsx`. `MembershipTier.joinOnline` stays in the schema. Build then makes `/api/operator/tiers` store `'off'` and drops the dead `joinTier` / `joinableTiers` / `myMembership` helpers in `src/lib/membership-join.ts`.
+- **Residents card copy (GOLFER-SIGNIN-RETIRED).** "a golfer signed in with a listed email books at the resident rate" is now true only for a golfer signed in to the course as a member; a resident who isn't a member gets the rate at the counter until the "Log in" build.
 - `StockTab` side card goes solid at lg after a tap: use `max-lg:fixed max-lg:inset-0`.
