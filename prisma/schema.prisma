@@ -1043,6 +1043,30 @@ model CourseInquiry {
   callInviteToken      String?              @unique
   callInviteSentAt     DateTime?
   callInviteExpiresAt  DateTime?
+  /// Inquiries data (Cam 2026-11-17): the people at the course (role, decision maker, best time).
+  contacts             CourseContact[]
+  // Inquiries data (Cam 2026-11-17): editable public course facts for outreach. All optional;
+  // only name and town are needed to add a course. address/city/state/website/greenFeeRange/
+  // currentBookingMethod/hasResidentPricing above are reused for the rest.
+  /// 'town' | 'county' | 'independent' | 'group' (lib/outreach OWNER_TYPES)
+  ownerType            String?
+  holes                Int?
+  /// The course's own public number (`phone` above is the contact's).
+  coursePhone          String?
+  currentSoftware      String?
+  /// Free text, e.g. "Mar 2027" — what the course told us, not a date we act on.
+  softwareContractEnds String?
+  roundsPerYear        Int?
+  hasProShop           Boolean?
+  hasRange             Boolean?
+  /// Free text, e.g. "Apr – Nov".
+  season               String?
+  /// "Why it fits" tags (lib/outreach FIT_TAGS).
+  fitTags              String[]             @default([])
+  latitude             Float?
+  longitude            Float?
+  /// Public listing it was found from, e.g. "osm:way/123" — the add-course duplicate check reads it.
+  osmRef               String?
 
   // MP-3: the orphan sweep and every lifecycle pairing filter on this.
   @@index([builtCourseId])
@@ -1085,6 +1109,16 @@ model Call {
   /// Google Calendar event id, so reschedule/cancel can move or delete it.
   /// Null when the calendar write failed — the call still stands.
   gcalEventId    String?
+  /// Inquiries data: who booked it on Cal.com, and the meeting link Cal.com sent (null for calls set by hand).
+  attendeeName   String?
+  attendeeEmail  String?
+  meetingUrl     String?
+  /// Inquiries data: the outreach result of a logged call —
+  /// 'said_yes' | 'follow_up' | 'not_now' | 'no_answer' (lib/outreach CALL_RESULTS). `outcome` stays the source
+  /// for everything older (talked / no_answer); this says what the talk decided.
+  result         String?
+  /// The agreed next step, e.g. "Send town board one-pager".
+  nextStep       String?
 
   @@index([inquiryId, scheduledAt])
   @@index([courseId, scheduledAt])
@@ -1111,6 +1145,29 @@ model OutreachTouch {
 
   @@index([inquiryId, at])
   @@index([at])
+}
+
+/// Inquiries data (Cam 2026-11-17): one person at a course in the outreach pipeline. Business contact
+/// details from the course or its public listing only. Several per course; one may be the decision maker.
+model CourseContact {
+  id               String        @id @default(cuid())
+  inquiryId        String
+  inquiry          CourseInquiry @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  name             String
+  role             String        @default("")
+  email            String        @default("")
+  phone            String        @default("")
+  decisionMaker    Boolean       @default(false)
+  /// 'email' | 'phone' | 'text' | '' — how they prefer to be reached
+  preferredChannel String        @default("")
+  /// Free text, e.g. "Weekdays 2–4 PM"
+  bestTime         String        @default("")
+  sortOrder        Int           @default(0)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([inquiryId])
+  @@index([email])
 }
 
 model InquiryStatusEvent {
@@ -1212,25 +1269,25 @@ model OwnerPasskey {
 /// session is good only while it is neither revoked nor expired (4 hours), so
 /// "sign out everywhere" and a stolen cookie both end at the database.
 model OwnerSession {
-  id         String       @id @default(cuid())
-  adminId    String
-  admin      AdminUser    @relation(fields: [adminId], references: [id], onDelete: Cascade)
-  deviceId   String?
-  device     OwnerDevice? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  id          String       @id @default(cuid())
+  adminId     String
+  admin       AdminUser    @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  deviceId    String?
+  device      OwnerDevice? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
   /// How the second factor was proved: 'passkey' | 'totp' | 'recovery' | 'email'.
-  method     String
-  ip         String       @default("")
-  userAgent  String       @default("")
-  createdAt  DateTime     @default(now())
-  expiresAt  DateTime
-  lastSeenAt DateTime     @default(now())
-  revokedAt  DateTime?
+  method      String
+  ip          String       @default("")
+  userAgent   String       @default("")
+  createdAt   DateTime     @default(now())
+  expiresAt   DateTime
+  lastSeenAt  DateTime     @default(now())
+  revokedAt   DateTime?
   /// AW-1c: when this session last proved a second factor (sign-in, or a
   /// "confirm it's you"). Risky actions need it within the last 5 minutes.
-  stepUpAt   DateTime?
+  stepUpAt    DateTime?
   /// Company docs (Cam 2026-11-17): true only after an explicit "confirm it's you" (never the sign-in),
   /// until one action that needs a FRESH check uses it up (freshStepUpRequired). stepUpAt is left alone.
-  stepUpFresh Boolean   @default(false)
+  stepUpFresh Boolean      @default(false)
 
   @@index([adminId])
 }

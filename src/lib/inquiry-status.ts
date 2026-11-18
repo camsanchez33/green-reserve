@@ -32,7 +32,12 @@ export const ALIVE_STATUSES: InquiryStatus[] = [...ACTIVE_STATUSES, 'live'];
 // a lead the admin route allows only LEAD_ACTIONS; "Move to Talking" turns it
 // into an ordinary in_review inquiry.
 export const LEAD_STATUS = 'lead' as const;
-export const LEAD_ACTIONS = ['start_talking', 'add_note', 'update_contact', 'set_source', 'snooze', 'unsnooze', 'reject', 'add_touch'] as const;
+// Inquiries data (Cam 2026-11-17): calcom_link too — "Send Cal.com link" on a course in outreach. It only
+// returns the booking link (no email is sent); the lead keeps its status when it books.
+export const LEAD_ACTIONS = ['start_talking', 'add_note', 'update_contact', 'set_source', 'snooze', 'unsnooze', 'reject', 'add_touch', 'calcom_link'] as const;
+
+/** Inquiries data: the statuses that can hold a discovery call — every open one, and a course in outreach. */
+export const CALL_STATUSES: InquiryStatus[] = [...ALIVE_STATUSES, LEAD_STATUS];
 
 // ADMIN-REDO Business analytics: the outreach log (OutreachTouch). One list, read by the route and the page.
 export const TOUCH_CHANNELS = ['email', 'call', 'text', 'in_person'] as const;
@@ -287,6 +292,8 @@ export const INQUIRY_SOURCES = [
 export const CLOSED_REASONS = [
   'Price', 'Timing — not ready', 'Uses another platform', 'Never responded',
   'Not a fit', 'Duplicate', 'Other',
+  // Inquiries data (Cam 2026-11-17): outreach "Not now" — closed with a recheck date (lib/outreach NOT_NOW_REASON).
+  'Not now',
 ] as const;
 
 

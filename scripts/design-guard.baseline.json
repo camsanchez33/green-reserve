@@ -40,12 +40,12 @@
   "src/app/admin/golfers/page.tsx": {
     "lucide": 3
   },
-  "src/app/admin/inquiries/[id]/page.tsx": {
+  "src/app/admin/inquiries/[id]/InquiryRecord.tsx": {
     "card": 2,
     "uppercase": 10,
     "lucide": 9
   },
-  "src/app/admin/inquiries/page.tsx": {
+  "src/app/admin/inquiries/all/page.tsx": {
     "uppercase": 1,
     "input": 1,
     "lucide": 4

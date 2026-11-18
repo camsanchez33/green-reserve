@@ -121,7 +121,7 @@ export async function GET(req: NextRequest) {
   const staticNav = [
     { id: 'nav:overview',    label: 'Home',          href: '/admin',            always: true },
     { id: 'nav:goals',       label: 'Goals',         href: '/admin/goals',      support: true },
-    { id: 'nav:inquiries',   label: 'Pipeline',      href: '/admin/inquiries',  always: true },
+    { id: 'nav:inquiries',   label: 'Pipeline',      href: '/admin/inquiries/all',  always: true },
     { id: 'nav:courses',     label: 'Courses',       href: '/admin/courses',    always: true },
     { id: 'nav:support',     label: 'Course support', href: '/admin/support',   always: true },
     { id: 'nav:revenue',     label: 'Money',         href: '/admin/revenue',    support: true },
@@ -215,7 +215,7 @@ export async function GET(req: NextRequest) {
 
   // AW-11: nothing from an area this person can't open — not even its page name.
   const NAV_AREA: Record<string, AdminArea> = {
-    '/admin/problems': 'problems', '/admin/goals': 'company', '/admin/inquiries': 'pipeline', '/admin/courses': 'courses',
+    '/admin/problems': 'problems', '/admin/goals': 'company', '/admin/inquiries': 'pipeline', '/admin/inquiries/all': 'pipeline', '/admin/courses': 'courses',
     '/admin/support': 'messages', '/admin/revenue': 'money', '/admin/golfers': 'golfers',
     '/admin/announcements': 'messages', '/admin/bookings': 'money', '/admin/system': 'company', '/admin/employees': 'company',
   };

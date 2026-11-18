@@ -28,8 +28,8 @@ check('the close-out lists each cash movement from the money ledger', close.incl
 const adm = read('src/app/api/admin/inquiries/route.ts');
 check('the setup sheet email is awaited and a failure returned with the link', adm.includes('await sendDetailsRequestEmail({') && adm.includes('emailSent: !emailError') && !adm.includes('after(sendDetailsRequestEmail'));
 check('the go-live email is awaited and a failure returned', adm.includes('await goLiveFn({') && !adm.includes('after(goLiveFn('));
-check('the admin page says so, with the sheet link to send by hand', emailFailedNotice({ emailError: 'Resend down', detailsLink: 'https://x/s' }, 'a@b.c').includes('Send them the sheet link yourself: https://x/s') && emailFailedNotice({}, 'a@b.c').includes('Email a@b.c yourself') && read('src/app/admin/inquiries/[id]/page.tsx').includes('setActionError(emailFailedNotice(d,'));
-check('bulk "send sheet" doesn\'t count an unsent email as done', read('src/app/admin/inquiries/page.tsx').includes('.emailSent !== false)) { ok++; continue; }'));
+check('the admin page says so, with the sheet link to send by hand', emailFailedNotice({ emailError: 'Resend down', detailsLink: 'https://x/s' }, 'a@b.c').includes('Send them the sheet link yourself: https://x/s') && emailFailedNotice({}, 'a@b.c').includes('Email a@b.c yourself') && read('src/app/admin/inquiries/[id]/InquiryRecord.tsx').includes('setActionError(emailFailedNotice(d,'));
+check('bulk "send sheet" doesn\'t count an unsent email as done', read('src/app/admin/inquiries/all/page.tsx').includes('.emailSent !== false)) { ok++; continue; }'));
 check('the inquiry confirmation and the sheet copy log a failure on the inquiry\'s timeline', read('src/app/api/inquiries/route.ts').includes("noteEmailFailed(inquiry.id, 'inquiry confirmation and call invite', err)") && read('src/app/api/inquiries/details/route.ts').includes("noteEmailFailed(inquiry.id, 'copy of their setup sheet', err)"));
 
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }

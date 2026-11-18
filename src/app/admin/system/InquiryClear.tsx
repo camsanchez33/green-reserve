@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { adminFetch } from '@/lib/admin-fetch';
 import s from './system.module.css';
 
-type Preview = { open: boolean; confirmWords: string; before: string; inquiries: number; calls: number; touches: number; keptBuilt: number; keptAfter: number };
+type Preview = { open: boolean; confirmWords: string; before: string; inquiries: number; calls: number; touches: number; contacts: number; keptBuilt: number; keptAfter: number };
 
 export function InquiryClear({ onCleared }: { onCleared: () => void }) {
   const [p, setP] = useState<Preview | null>(null);
@@ -40,7 +40,7 @@ export function InquiryClear({ onCleared }: { onCleared: () => void }) {
   const row = (label: string, n: number) => <div className={s.cnt}><span>{label}</span><b>{n.toLocaleString()}</b></div>;
   return (
     <div className={`${s.box} ${s.bbad}`}>
-      <p className={`${s.clr} ${s.ink}`}>Test inquiries: clear once before outreach starts. Deletes inquiries added before Nov 23 with their calls and touches. The wipe deletes any left.</p>
+      <p className={`${s.clr} ${s.ink}`}>Test inquiries: clear once before outreach starts. Deletes inquiries added before Nov 23 with their calls, touches and contacts. The wipe deletes any left.</p>
       {done && <p className={s.toast} role="status">{done}</p>}
       {err && <p className={s.err} role="alert">{err} <button type="button" className={s.ol} onClick={load}>Try again</button></p>}
       {!p && !err && <p className={s.clr}>Counting…</p>}
@@ -50,6 +50,7 @@ export function InquiryClear({ onCleared }: { onCleared: () => void }) {
             {row('inquiries deleted', p.inquiries)}
             {row('calls', p.calls)}
             {row('touches', p.touches)}
+            {row('contacts', p.contacts)}
             {row('kept until the wipe: became a course', p.keptBuilt)}
             {row('kept: added from Nov 23', p.keptAfter)}
           </div>
