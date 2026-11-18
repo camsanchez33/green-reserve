@@ -12,6 +12,7 @@ import { CHANGE_CATEGORIES } from '@/lib/change-requests';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { golferLookVars, type CourseLook } from '@/components/golfer/look';
 import { CourseFooter } from '@/components/golfer/CourseFrame';
+import { loginOffered } from './login/login-helpers';
 import g from '@/components/golfer/golfer.module.css';
 import { SUPPORT_EMAIL } from '@/lib/contact';
 
@@ -102,6 +103,8 @@ type CourseWithBrand = Course & {
   closed_dates?: { date: string; reason: string }[];
   /** Course.memberLoginOn: false = no Log in on the page (Settings "Show Log in on your booking page"). */
   member_login_on?: boolean;
+  /** The groups that can log in here (loginGroups, #495). */
+  login_groups?: ('members' | 'residents')[];
   gift_card_url?: string;
   photos?: { id: string; url: string; sortOrder: number }[];
   tee_sets?: { name: string; yardage: number; rating: number; slope: number }[];
@@ -690,7 +693,7 @@ export default function CourseDetailPage({
   const membersBookEarlier = !memberSession && !!course.has_member_pricing && memberWindowDays > viewerWindowDays;
   const closedOn = new Map((course.closed_dates ?? []).map(c => [c.date, c.reason]));
   // Log in (item 2): the course's own log-in page, back to this page with its filters afterwards.
-  const loginOn = course.member_login_on !== false;
+  const loginOn = loginOffered(course);
   const loginHref = `/courses/${slug}/login?back=${encodeURIComponent(`/courses/${slug}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`)}`;
   const groupWords = (memberSession?.groups?.length ? memberSession.groups.map(gr => gr.name) : memberSession?.tier?.name ? [memberSession.tier.name] : []).join(' and ');
   const shortDay = (ds: string) => { const d = new Date(ds + 'T12:00:00'); return `${d.toLocaleDateString('en-US', { weekday: 'short' })} ${d.getDate()}`; };

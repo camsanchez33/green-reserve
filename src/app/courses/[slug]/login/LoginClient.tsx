@@ -6,7 +6,7 @@ import { golferLookVars, type CourseLook } from '@/components/golfer/look';
 import { CourseFooter } from '@/components/golfer/CourseFrame';
 import type { CancelPolicy } from '@/lib/cancel-policy';
 import g from '@/components/golfer/golfer.module.css';
-import { loginLine, safeBack } from './login-helpers';
+import { loginLine, safeBack, loginOffered } from './login-helpers';
 
 export type LoginCourse = {
   name: string; slug: string; type: string; brand_color?: string; booking_look?: CourseLook;
@@ -49,7 +49,7 @@ export default function LoginClient({ course, back }: { course: LoginCourse; bac
     return () => { live = false; };
   }, [slug, backHref, router]);
 
-  const loginOff = course.member_login_on === false;
+  const loginOff = !loginOffered(course);
 
   async function sendCode(again = false) {
     setFormErr(''); setNote('');

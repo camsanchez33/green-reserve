@@ -14,3 +14,11 @@ export function safeBack(back: string, slug: string): string {
   if (back === home || back.startsWith(`${home}?`) || back.startsWith(`${home}/`) || back.startsWith('/book?')) return back;
   return home;
 }
+
+/**
+ * Whether the course offers Log in (Build 2026-11-18): its switch is on AND it has a group to log in to (members or
+ * residents). A course with neither shows no Log in. A payload without the fields (#495) counts as off.
+ */
+export function loginOffered(course: { member_login_on?: boolean; login_groups?: readonly string[] }): boolean {
+  return course.member_login_on === true && (course.login_groups?.length ?? 0) > 0;
+}

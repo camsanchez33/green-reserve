@@ -1,7 +1,7 @@
 // Log in (Cam 2026-11-18, lanes/golfer.md item 2) on #490's code API. The two helpers are tested directly; the page
 // behaviours are source guards. Run: npx tsx scripts/golfer-login-page-test.ts
 import { readFileSync } from 'fs';
-import { loginLine, safeBack } from '../src/app/courses/[slug]/login/login-helpers';
+import { loginLine, safeBack, loginOffered } from '../src/app/courses/[slug]/login/login-helpers';
 
 let failed = 0;
 const check = (label: string, ok: boolean, detail?: unknown) => {
@@ -33,11 +33,13 @@ check('the box says what is agreed to, word for word', page.includes('and that {
 check('the tick is sent only once it was asked for', page.includes('...(needTerms ? { agreeTerms: agreed } : {})'));
 check('a wrong code shows the server\'s one answer on the field', page.includes("if (d.code === 'bad_code') { setCodeErr(d.error"));
 check('failures are said, never swallowed', page.includes("Network error: you are not logged in yet.") && page.includes("Network error: the code was not sent."));
-check('a course with log-in switched off says so and asks nothing', page.includes("const loginOff = course.member_login_on === false;"));
+check('a course with log-in switched off, or with no group, says so and asks nothing', page.includes("const loginOff = !loginOffered(course);"));
+check('Log in is offered only with the switch on AND a group', loginOffered({ member_login_on: true, login_groups: ['members'] }) && loginOffered({ member_login_on: true, login_groups: ['residents'] })
+  && !loginOffered({ member_login_on: true, login_groups: [] }) && !loginOffered({ member_login_on: false, login_groups: ['members'] }) && !loginOffered({}));
 
 const course = readFileSync('src/app/courses/[slug]/CourseBookingClient.tsx', 'utf8');
 check('the header Log in goes to the log-in page and back to these tee times', course.includes('const loginHref = `/courses/${slug}/login?back=${encodeURIComponent(') && course.includes('<Link className={g.lnk} href={loginHref}>Log in</Link>'));
-check('no Log in when the course switched it off', course.includes('const loginOn = course.member_login_on !== false;') && course.includes(') : loginOn ? ('));
+check('no Log in when the course switched it off or has no group (course page and Book page)', course.includes('const loginOn = loginOffered(course);') && course.includes(') : loginOn ? (') && readFileSync('src/app/book/BookClient.tsx', 'utf8').includes('{!member && loginOffered(course) && ('));
 check('logged in, the header names the groups', course.includes('Logged in · {memberSession.name}{groupWords ?'));
 const book = readFileSync('src/app/book/BookClient.tsx', 'utf8');
 check('the Book page has the one Log in, coming back to this booking', book.includes('/login?back=${encodeURIComponent(`/book?${params.toString()}`)}'));

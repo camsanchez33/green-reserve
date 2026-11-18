@@ -23,6 +23,7 @@ import { teeToUtcMs } from '@/lib/tee-time-utils';
 import { LIKE_UNSAFE_EMAIL } from '@/lib/like-exact';
 import { golferLookVars, lookAccentHex, lookMode, lookText, type BookingLook, type CourseLook } from '@/components/golfer/look';
 import g from '@/components/golfer/golfer.module.css';
+import { loginOffered } from '@/app/courses/[slug]/login/login-helpers';
 
 // Deferred: only load Stripe when a card is actually needed (fee-policy courses).
 // No-fee courses never touch Stripe JS at all.
@@ -58,6 +59,8 @@ export type CourseInfo = {
   has_live_promo?: boolean;
   /** Course.memberLoginOn: false = no Log in (Settings "Show Log in on your booking page"). */
   member_login_on?: boolean;
+  /** The groups that can log in here (loginGroups, #495). */
+  login_groups?: ('members' | 'residents')[];
   /** The course's IANA timezone, for "is this time already past the free-cancel cutoff" (R-GOLF-009). */
   timezone?: string | null;
   /** PERS-1: the course's own uploads, shown in the header band. */
@@ -539,7 +542,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
         <header className={g.top}>
           <h1><Link href={`/courses/${courseSlug}`}>{course.name}</Link></h1>
           {/* Item 2: one Log in in the header; it comes back to this Book page, now filled from the log-in. */}
-          {!member && course.member_login_on !== false && (
+          {!member && loginOffered(course) && (
             <nav className={g.topLinks} aria-label="Your account at this course">
               <Link className={g.lnk} href={`/courses/${encodeURIComponent(courseSlug)}/login?back=${encodeURIComponent(`/book?${params.toString()}`)}`}>Log in</Link>
             </nav>
