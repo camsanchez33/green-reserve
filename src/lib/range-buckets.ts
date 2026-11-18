@@ -87,6 +87,12 @@ export function priceOnline(request: unknown, list: BucketItem[]): LinesResult {
     if (typeof x.id !== 'string' || !isInt(x.qty, 0, MAX_BUCKETS)) return no(400, 'range', `Range balls are 0 to ${MAX_BUCKETS} of each bucket.`);
     if (x.qty === 0) continue;
     if (!byId.has(x.id)) return no(409, 'range', 'That range bucket isn’t offered any more — refresh the page.');
+    // The price the page showed (optional, so an older page still books at the list price): a price changed while the
+    // page was open is refused, never charged silently.
+    if (x.unitCents !== undefined && x.unitCents !== null) {
+      if (!isInt(x.unitCents, 0, 1_000_000)) return no(400, 'range', 'Range balls weren’t understood — refresh the page.');
+      if (x.unitCents !== byId.get(x.id)!.priceCents) return no(409, 'range', 'That range bucket’s price changed — refresh the page.');
+    }
     const n = (qty.get(x.id) ?? 0) + x.qty;
     if (n > MAX_BUCKETS) return no(400, 'range', `Range balls are 0 to ${MAX_BUCKETS} of each bucket.`);
     qty.set(x.id, n);

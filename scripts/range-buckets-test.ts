@@ -22,6 +22,14 @@ ok('…an unknown id is refused', !priceOnline([{ id: 'nope', qty: 1 }], list).o
 ok('…a fractional, negative or huge count is refused', !priceOnline([{ id: 's', qty: 1.5 }], list).ok && !priceOnline([{ id: 's', qty: -1 }], list).ok && !priceOnline([{ id: 's', qty: 21 }], list).ok);
 ok('…the same bucket twice adds up, within the cap', (() => { const r = priceOnline([{ id: 's', qty: 10 }, { id: 's', qty: 10 }], list); return r.ok && r.lines[0].qty === 20; })() && !priceOnline([{ id: 's', qty: 15 }, { id: 's', qty: 6 }], list).ok);
 ok('…not an array is refused', !priceOnline('s', list).ok);
+// The price the page showed: a price changed while the page was open is refused, never charged silently.
+ok('…the shown price matching the list books', (() => { const r = priceOnline([{ id: 's', qty: 2, unitCents: 600 }], list); return r.ok && r.total === 1200; })());
+const moved = priceOnline([{ id: 's', qty: 1, unitCents: 500 }], list);
+ok('…a price changed since the page loaded is refused (409 range), nothing booked', !moved.ok && moved.status === 409 && moved.code === 'range' && /price changed/.test(moved.error), moved);
+ok('…a lower list price than shown is refused too (the golfer sees the real price first)', !priceOnline([{ id: 'l', qty: 1, unitCents: 1500 }], list).ok);
+ok('…no shown price (an older page) still books at the list price', (() => { const r = priceOnline([{ id: 'l', qty: 1 }], list); return r.ok && r.total === 1400; })());
+ok('…a bad shown price is refused', !priceOnline([{ id: 's', qty: 1, unitCents: '600' }], list).ok && !priceOnline([{ id: 's', qty: 1, unitCents: 6.5 }], list).ok);
+ok('…through onlineBuckets too', !onlineBuckets({ hasDrivingRange: true, sellRangeOnline: true, rangeBallsFree: false }, { rangeBuckets: [{ id: 's', qty: 1, unitCents: 1 }] }, list).ok);
 ok('the switch: range on, sold online, balls not free', onlineRangeOn({ hasDrivingRange: true, sellRangeOnline: true, rangeBallsFree: false }) && !onlineRangeOn({ hasDrivingRange: true, sellRangeOnline: false, rangeBallsFree: false }) && !onlineRangeOn({ hasDrivingRange: true, sellRangeOnline: true, rangeBallsFree: true }) && !onlineRangeOn({ hasDrivingRange: false, sellRangeOnline: true, rangeBallsFree: false }));
 
 // A booking's lines.
