@@ -103,6 +103,18 @@ ok('the total adds up', hp.totalCents === 8500);
   ok('a register sale with a round: the items row is all F&B, no tee', regShop.fnbCents === 533 && !regShop.teeCents, regShop);
   const regRound = splitOf({ what: 'round', direction: 'in', amountCents: 5000, platformFeeCents: 0, bookingId: 'b', saleId: 's' }, { greenFeeTotal: 5000, cartFeeTotal: 0, rangeBallsTotal: 0, shopTaxCents: 0, shopItems: [] }, undefined);
   ok('…and the round row is tee', regRound.teeCents === 5000, regRound);
+  // RANGE-1: buckets are their own Range line — on a round (rangeBallsTotal) and at the register (an item with rangeBalls).
+  const rr = splitOf({ what: 'round', direction: 'in', amountCents: 6600, platformFeeCents: 0, bookingId: 'b', saleId: null }, { greenFeeTotal: 5000, cartFeeTotal: 0, rangeBallsTotal: 1600, shopTaxCents: 0, shopItems: [] }, undefined);
+  ok('a round with buckets: green fee is tee, buckets are Range', rr.teeCents === 5000 && rr.rangeCents === 1600, rr);
+  const rs = splitOf({ what: 'shop', direction: 'in', amountCents: 2160, platformFeeCents: 0, bookingId: null, saleId: 's' }, undefined, { taxCents: 160, lines: [
+    { unitPriceCents: 800, quantity: 1, returnedQty: 0, bookingId: null, shopItem: { category: 'Range', taxCategory: 'general', rangeBalls: 35 } },
+    { unitPriceCents: 1200, quantity: 1, returnedQty: 0, bookingId: null, shopItem: { category: 'Balls', taxCategory: 'general', rangeBalls: null } }] });
+  ok('…a register sale: the bucket and its tax are Range, the rest shop', rs.rangeCents === 864 && rs.shopCents === 1296 && !rs.fnbCents, rs);
+  const RA = allOf([
+    { day: '2026-11-10', minute: 600, method: 'card', direction: 'in', amountCents: 6600, platformFeeCents: 0, split: rr, what: 'round' },
+    { day: '2026-11-10', minute: 610, method: 'cash', direction: 'in', amountCents: 2160, platformFeeCents: 0, split: rs, what: 'shop' },
+  ], { from: '2026-11-10', to: '2026-11-10' }, '2026-11-15', 0);
+  ok('…Range is both; the round\'s part is apart, so reports keep it with tee times (and the register\'s with the shop)', RA.segments.rangeCents === 1600 + 864 && RA.rangeOnRoundsCents === 1600, RA);
   const ret = splitOf({ what: 'shop', direction: 'in', amountCents: 5500, platformFeeCents: 0, bookingId: null, saleId: 's' }, undefined, { taxCents: 0, lines: [
     { unitPriceCents: 5000, quantity: 1, returnedQty: 1, bookingId: null, shopItem: { category: 'Apparel', taxCategory: 'clothing' } },
     { unitPriceCents: 500, quantity: 1, returnedQty: 0, bookingId: null, shopItem: { category: 'Grill', taxCategory: 'food' } }] });

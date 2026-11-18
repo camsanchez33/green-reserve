@@ -69,7 +69,7 @@ export const ledgerCovers = (month: string) => month >= LEDGER_FIRST_FULL_MONTH;
 
 const ledgerFacts = (l: LedgerMonth | null) => !l ? {} : ({
   revenueDollars: dollars(l.grossCents), refundsDollars: dollars(l.refundsCents), teeAndCartDollars: dollars(l.teeCartCents),
-  proShopDollars: dollars(l.proShopCents), eventDollars: dollars(l.eventCents), duesDollars: dollars(l.duesCents),
+  proShopDollars: dollars(l.proShopCents), rangeDollars: dollars(l.rangeCents), eventDollars: dollars(l.eventCents), duesDollars: dollars(l.duesCents),
 });
 
 /** "By area" in the written report: this month against the month before, stored with the review. */

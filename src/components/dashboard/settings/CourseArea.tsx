@@ -11,6 +11,7 @@ import { toast } from '@/components/dashboard/Toast';
 import { ImageUpload } from '@/components/dashboard/ImageUpload';
 import CoursePreview from '@/components/dashboard/CoursePreview';
 import CourseLayoutTab from '@/components/dashboard/CourseLayoutTab';
+import { RangeBuckets } from './RangeBuckets';
 import { type Ctx, type Course, Group, Row, Muted, EditPopup, Field, FIELD, TextEdit, LINK, plural } from './ui';
 
 type Photo = { id: string; url: string; sortOrder: number };
@@ -206,6 +207,8 @@ function AmenitiesPopup({ ctx, onClose }: { ctx: Ctx; onClose: () => void }) {
                       <label className="flex items-center gap-2 text-[13px] text-ink-soft"><input type="checkbox" checked={f.rangeBallsFree !== false} onChange={() => set('rangeBallsFree', f.rangeBallsFree === false)} className="accent-pine" />Balls included with a round</label>
                     </div>
                   )}
+                  {/* RANGE-1: the bucket list and the online switch (Dashboard lane: move into the rebuilt Settings / Pro shop). */}
+                  {!!f[it.key] && it.key === 'hasDrivingRange' && <div className="pl-[26px]"><RangeBuckets /></div>}
                   {!!f[it.key] && it.key === 'hasProShop' && <div className="pl-[26px] mt-2 max-w-xs"><input type="tel" value={s(f.proShopPhone)} onChange={e => set('proShopPhone', e.target.value)} aria-label="Pro shop phone (optional)" className={FIELD} /></div>}
                   {!!f[it.key] && it.key === 'hasClubRental' && <div className="pl-[26px] mt-2">{money('clubRentalRate', 'Price')}</div>}
                   {!!f[it.key] && it.key === 'hasPushCartRental' && <div className="pl-[26px] mt-2">{money('pushCartRate', 'Price')}</div>}
