@@ -1104,7 +1104,7 @@ export default function CourseDetailPage({
           </section>
         )}
 
-        {/* The site layout's <main> is the page's one main landmark; this is its content. */}
+        {/* The site layout's main element is the page's one main landmark; this is its content. */}
         <div className={g.wrap}>
           {course.type === 'member' ? (
             <div className={g.empty}>

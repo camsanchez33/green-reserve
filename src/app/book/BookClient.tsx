@@ -565,7 +565,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
             </nav>
           )}
         </header>
-        {/* The site layout's <main> is the page's one main landmark; this is its content. */}
+        {/* The site layout's main element is the page's one main landmark; this is its content. */}
         <div className={g.wrap}>
           <div className={g.bk}>
             <Link href={backToTimesHref(courseSlug, params, players)} className={`${g.lnk} ${g.back}`}>‹ Back to tee times</Link>

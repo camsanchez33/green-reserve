@@ -102,7 +102,7 @@ export default function LoginClient({ course, back }: { course: LoginCourse; bac
     <div className={g.root} style={golferLookVars(course)}>
       <div className={g.site}>
         <header className={g.top}><h1><Link href={`/courses/${slug}`}>{course.name}</Link></h1></header>
-        {/* The site layout's <main> is the page's one main landmark; this is its content. */}
+        {/* The site layout's main element is the page's one main landmark; this is its content. */}
         <div className={g.wrap}>
           <div className={g.bk} style={{ maxWidth: 440 }}>
             <Link href={backHref} className={`${g.lnk} ${g.back}`}>‹ {backLabel}</Link>
