@@ -4,7 +4,7 @@
 // Run: npx tsx scripts/booking-page-payload-db-test.ts
 import { readFileSync } from 'fs';
 import { prisma } from '../src/lib/prisma';
-import { readBookingLook, bookingLookOf, hasLivePromo, closedDatesIn, BOOKING_ACCENTS, BOOKING_LOOKS, BOOKING_ACCENT_COLOURS } from '../src/lib/booking-look';
+import { readBookingLook, bookingLookOf, previewAccentHex, hasLivePromo, closedDatesIn, BOOKING_ACCENTS, BOOKING_LOOKS, BOOKING_ACCENT_COLOURS } from '../src/lib/booking-look';
 import { saveBookingLook } from '../src/lib/booking-look-save';
 import { loadPublicCourse } from '../src/lib/public-course';
 import { normalizeDbCourse } from '../src/lib/normalize-course';
@@ -50,6 +50,14 @@ async function cleanup() {
     ok(`${a} on ${l}: button text on the accent is AA (${contrast(c.onAcc, c.acc).toFixed(2)}:1)`, contrast(c.onAcc, c.acc) >= 4.5);
     ok(`${a} on ${l}: hover text is AA (${contrast(c.onAcc, c.hover).toFixed(2)}:1)`, contrast(c.onAcc, c.hover) >= 4.5);
   }
+
+  ok('a null accent is refused on save (null means only "not set yet")', !readBookingLook({ look: 'light', accent: null }).ok);
+  // The Settings preview is a light page with white text on the accent: every preset, in either look, is AA there.
+  for (const a of BOOKING_ACCENTS) for (const l of BOOKING_LOOKS) {
+    const hex = previewAccentHex({ bookingLook: l, bookingAccent: a })!;
+    ok(`preview ${a} with ${l} look: white on ${hex} is AA (${contrast('#FFFFFF', hex).toFixed(2)}:1)`, contrast('#FFFFFF', hex) >= 4.5);
+  }
+  ok('no look set: the preview keeps the brand colour', previewAccentHex({ bookingLook: 'dark', bookingAccent: null }) === null);
 
   // ── has_live_promo ──────────────────────────────────────────────────────
   const T = '2026-12-01', L = '2026-12-08';

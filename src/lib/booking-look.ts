@@ -44,6 +44,16 @@ export function bookingLookOf(c: { bookingLook?: unknown; bookingAccent?: unknow
   };
 }
 
+/**
+ * The accent the dashboard's "What golfers see" preview draws. That preview is always a light page
+ * with white text on the accent, so it takes the preset's LIGHT value whatever the look (the dark
+ * values are pale, for dark text). Null = no look set yet: the booking page still uses brand_color.
+ */
+export function previewAccentHex(c: { bookingLook?: unknown; bookingAccent?: unknown }): string | null {
+  const { accent } = bookingLookOf(c);
+  return accent ? BOOKING_ACCENT_COLOURS[accent].light.acc : null;
+}
+
 /** The save body: both fields required, each from its allowlist (red and any hex refused). */
 export function readBookingLook(body: unknown): { ok: true; data: { look: BookingLook; accent: BookingAccent } } | { ok: false; error: string } {
   const b = (body && typeof body === 'object' ? body : {}) as Record<string, unknown>;
