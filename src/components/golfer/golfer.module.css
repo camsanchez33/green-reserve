@@ -264,4 +264,6 @@
 .tlsub { display: block; font-size: 12.5px; color: var(--g-soft); margin-top: 2px; }
 .lk { color: var(--g-soft); }
 .lrule { border-top: 1px solid var(--g-line); margin-top: 6px; padding-top: 6px; }
+.toplogo { width: 36px; height: 36px; border-radius: 8px; background: #FFFFFF; object-fit: contain; padding: 2px; flex: none; }
+.confphoto { height: 140px; background-color: var(--g-band); background-size: cover; background-position: center; }
 .loading { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 40vh; color: var(--g-soft); font-size: 14px; }

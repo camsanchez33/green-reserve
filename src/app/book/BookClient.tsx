@@ -128,13 +128,21 @@ function TimelineStep({ when, what, last = false }: { when: string; what: React.
 
 // Every state of the Book page (the form's own markup aside) sits in the course's look: the band with its name,
 // then the content. The site layout's main element is the page's one main landmark; this is its content.
-function LookShell({ course, courseSlug, children }: { course: CourseInfo | null | undefined; courseSlug: string; children: React.ReactNode }) {
+// With `brand` (the confirmation, PERS-1 Cam 2026-10-05) the course's own logo sits by its name and its photo
+// runs under the band: the same uploads its course page uses.
+function LookShell({ course, courseSlug, children, brand = false }: { course: CourseInfo | null | undefined; courseSlug: string; children: React.ReactNode; brand?: boolean }) {
+  const logo = brand ? course?.logo_url : undefined;
+  const photo = brand ? course?.hero_image_url : undefined;
   return (
     <div className={g.root} style={course ? golferLookVars(course) : golferLookVars({})}>
       <div className={g.site}>
         <header className={g.top}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {logo && <img src={logo} alt="" className={g.toplogo} />}
           <h1>{course?.name ? (courseSlug ? <Link href={`/courses/${courseSlug}`}>{course.name}</Link> : course.name) : 'Book a tee time'}</h1>
         </header>
+        {/* JSON.stringify quotes the URL, so it can't close url() early. */}
+        {photo && <div className={g.confphoto} style={{ backgroundImage: `url(${JSON.stringify(photo)})` }} aria-hidden="true" />}
         <div className={g.wrap}><div className={g.bk}>{children}</div></div>
       </div>
     </div>
@@ -280,7 +288,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   if (confirmedData) {
     const lateMoney = policyMoney(Math.round(confirmedData.cancellationFeeTotal * 100));
     return (
-      <LookShell course={course} courseSlug={courseSlug}>
+      <LookShell course={course} courseSlug={courseSlug} brand>
         <h2 ref={confRef} tabIndex={-1}>You&apos;re all set</h2>
         <p className={g.lede}>
           {confirmedData.noCard
