@@ -133,7 +133,7 @@ export async function createAlert(input: CreateAlertInput, member: MemberCtx, no
   if (!courseId) return bad('Missing course');
   const course = await prisma.course.findUnique({
     where: { id: courseId },
-    select: { id: true, name: true, slug: true, active: true, liveStatus: true, timezone: true, teeTimeAlertsOn: true, publicAdvanceDays: true, memberAdvanceDays: true, memberGraceDays: true, minPlayers: true, maxPlayers: true, hasResidentPricing: true },
+    select: { id: true, name: true, slug: true, active: true, liveStatus: true, timezone: true, teeTimeAlertsOn: true, publicAdvanceDays: true, memberAdvanceDays: true, memberGraceDays: true, minPlayers: true, maxPlayers: true, hasResidentPricing: true, memberLoginOn: true },
   });
   if (!course || !course.active || course.liveStatus !== 'live') return { ok: false, status: 404, body: { error: 'Course not found' } };
   if (!course.teeTimeAlertsOn) return { ok: false, status: 403, body: { error: 'This course isn’t taking tee time alerts.', alertsOff: true } };
@@ -145,7 +145,8 @@ export async function createAlert(input: CreateAlertInput, member: MemberCtx, no
   let email = '';
   // #483: a session counts only while the email is in a group here now (canLogIn); a cookie whose
   // membership ended or card expired is a guest, with the email they typed.
-  const loggedIn = !!member && member.courseId === course.id && !!member.email.trim() && !!(await canLogIn(course, member.email));
+  // A course with Log in off (Course.memberLoginOn) recognises no log-in here either: the golfer is a guest.
+  const loggedIn = !!member && course.memberLoginOn && member.courseId === course.id && !!member.email.trim() && !!(await canLogIn(course, member.email));
   if (loggedIn) {
     email = member!.email.trim().toLowerCase();
     const m = await liveMembershipFor(course, email);

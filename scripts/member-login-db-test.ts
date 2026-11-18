@@ -40,6 +40,7 @@ async function cleanup() {
   const courses = await prisma.course.findMany({ where: { slug: { startsWith: TAG } }, select: { id: true } });
   const courseId = { in: courses.map(c => c.id) };
   await prisma.bookingEvent.deleteMany({ where: { courseId } });
+  await prisma.teeTimeAlert.deleteMany({ where: { courseId } });
   await prisma.moneyMove.deleteMany({ where: { courseId } });
   await prisma.booking.deleteMany({ where: { courseId } });
   await prisma.courseMembership.deleteMany({ where: { courseId } });
@@ -384,6 +385,13 @@ async function main() {
   await prisma.courseMembership.create({ data: { courseId: a.id, tierId: tier.id, membershipType: 'Gold', status: 'active', inviteEmail: offEmail, inviteName: 'Off', payToken: `${TAG}-off` } });
   const offCookie = await cookie(a.id, offEmail);
   check('(a live member gets the member rate while Log in is on)', !!(await preview(ttA.id, offCookie)).member);
+  // Tee time alerts read the log-in too (one tap, the member window, "my alerts").
+  await prisma.course.update({ where: { id: a.id }, data: { teeTimeAlertsOn: true } });
+  const alert = async (c: string, n: number) => { const r = await fetch(`${BASE_URL}/api/alerts`, { method: 'POST', headers: { 'Content-Type': 'application/json', cookie: c, 'x-forwarded-for': `10.6.${n}.1` }, body: JSON.stringify({ courseId: a.id, dates: [date], parts: [], players: 1, email: `alert-guest${n}@${TAG}.test` }) }); return { status: r.status, body: await r.json().catch(() => null) }; };
+  const mine = async (c: string) => (await fetch(`${BASE_URL}/api/alerts/mine?courseId=${a.id}`, { headers: { cookie: c } })).status;
+  const onAlert = await alert(offCookie, 1);
+  check('(with Log in on, a logged-in member\'s alert is on in one tap and "my alerts" answers)', onAlert.status === 200 && onAlert.body?.status === 'active' && (await mine(offCookie)) === 200, onAlert);
+  const myAlert = await prisma.teeTimeAlert.findFirst({ where: { courseId: a.id, email: offEmail }, select: { id: true } });
   await prisma.course.update({ where: { id: a.id }, data: { memberLoginOn: false } });
   check('Log in off: send-code says so (404 login_off)', (await fetch(`${BASE_URL}/api/member/${a.slug}/send-code`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: resEmail, mode: 'code' }) })).status === 404);
   check('…verify-code too', (await vc(resEmail, '123456')).body?.code === 'login_off');
@@ -394,6 +402,22 @@ async function main() {
   const offSaved = offBody?.bookingId ? await prisma.booking.findUnique({ where: { id: offBody.bookingId }, select: { appliedRate: true, greenFeeTotal: true } }) : null;
   check('…a member\'s booking is charged the public price', !!offSaved && offSaved.appliedRate === 'standard' && offSaved.greenFeeTotal === 10000, { status: offBook.status, offBody, offSaved });
   check('…their dues history answers 401', (await get(`/api/member/${a.slug}/payments`, offCookie)).status === 401);
+  // Every route that reads the log-in treats the cookie as a guest's.
+  const activeBefore = await prisma.teeTimeAlert.count({ where: { courseId: a.id, email: offEmail, status: 'active' } });
+  const offAlert = await alert(offCookie, 2);
+  // The guest path emails a confirm link (no mail key in tests, so the answer may be the send error); the row shows it.
+  const guestRow = await prisma.teeTimeAlert.findFirst({ where: { courseId: a.id, email: `alert-guest2@${TAG}.test` }, select: { status: true, membershipId: true } });
+  check('…a tee time alert is a guest\'s: the typed email, waiting for its confirm link, not one tap', !!guestRow && guestRow.status !== 'active' && guestRow.membershipId === null && (await prisma.teeTimeAlert.count({ where: { courseId: a.id, email: offEmail, status: 'active' } })) === activeBefore, { offAlert, guestRow });
+  check('…"my alerts" answers 401', (await mine(offCookie)) === 401);
+  const stop = await fetch(`${BASE_URL}/api/alerts/mine/${myAlert?.id ?? 'x'}/stop`, { method: 'POST', headers: { cookie: offCookie } });
+  check('…stopping "my" alert by the log-in answers 401, and the alert stays on', stop.status === 401 && (await prisma.teeTimeAlert.findUniqueOrThrow({ where: { id: myAlert!.id } })).status === 'active', { status: stop.status });
+  check('…the member tee-time list answers 401', (await get(`/api/member/${a.slug}/tee-times?date=${date}`, offCookie)).status === 401);
+  const offSwapRes = await preview(ttA.id, resCookie);
+  check('…and the booking page preview gives a resident nothing', offSwapRes.residentGreenFee === null && offSwapRes.member === null);
+  // No route reads the cookie except through loggedInAt / currentLogIn (which check the switch).
+  const { execSync } = await import('child_process');
+  const direct = execSync("git grep -l 'getMemberSession' -- src || true").toString().trim().split('\n').filter(f => f && f !== 'src/lib/member-session.ts');
+  check('no route reads the log-in cookie except through loggedInAt', direct.length === 0, direct);
   check('…and loginGroups is empty', (await loginGroups({ ...a, memberLoginOn: false })).length === 0);
   // Only a card someone could log in with now counts toward "residents": not a counter-only card (no email), not an expired one.
   const lg = await prisma.course.create({ data: { ...base, name: 'Login Groups', slug: `${TAG}-lg` } });
