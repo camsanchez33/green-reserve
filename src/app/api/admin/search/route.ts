@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession, requireRole, SUPPORT_PLUS, MANAGER_PLUS } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, SUPPORT_PLUS, MANAGER_PLUS, OWNER_ONLY } from '@/lib/admin-session';
 import { hasArea, type AdminArea } from '@/lib/admin-areas';
 import { bookingRefLabel, courseRefLabel, parseRef } from '@/lib/booking-ref';
 import { ciContains } from '@/lib/like-exact';
@@ -17,6 +17,7 @@ export async function GET(req: NextRequest) {
 
   const isSupportPlus = requireRole(session, SUPPORT_PLUS);
   const isManagerPlus = requireRole(session, MANAGER_PLUS);
+  const isOwner = requireRole(session, OWNER_ONLY);
 
   const lq = q.toLowerCase();
   const digits = q.replace(/\D/g, '');
@@ -124,7 +125,16 @@ export async function GET(req: NextRequest) {
     // Inquiries (the outreach page, in the menu since 2026-11-17); Pipeline stays the full old board.
     { id: 'nav:outreach',    label: 'Inquiries',     href: '/admin/inquiries',  always: true },
     { id: 'nav:inquiries',   label: 'Pipeline',      href: '/admin/inquiries/all',  always: true },
+    { id: 'nav:onboarding',  label: 'Onboarding',    href: '/admin/onboarding', always: true },
     { id: 'nav:courses',     label: 'Courses',       href: '/admin/courses',    always: true },
+    { id: 'nav:bookings',    label: 'Bookings',      href: '/admin/bookings',   support: true },
+    { id: 'nav:business',    label: 'Business analytics', href: '/admin/business', manager: true },
+    // Owner-only pages: the names alone stay out of anyone else's palette, as the menu hides them.
+    { id: 'nav:expenses',    label: 'Expenses',      href: '/admin/expenses',   owner: true },
+    { id: 'nav:finance',     label: 'Financial analytics', href: '/admin/finance', owner: true },
+    { id: 'nav:audit',       label: 'Audit',         href: '/admin/audit',      owner: true },
+    { id: 'nav:security',    label: 'Security',      href: '/admin/security',   owner: true },
+    { id: 'nav:company',     label: 'Company docs',  href: '/admin/company-documents', owner: true },
     { id: 'nav:support',     label: 'Course support', href: '/admin/support',   always: true },
     { id: 'nav:revenue',     label: 'Money',         href: '/admin/revenue',    support: true },
     { id: 'nav:golfers',     label: 'Golfers',       href: '/admin/golfers',    support: true },
@@ -136,6 +146,7 @@ export async function GET(req: NextRequest) {
     if (n.always) return true;
     if (n.support && isSupportPlus) return true;
     if (n.manager && isManagerPlus) return true;
+    if (n.owner && isOwner) return true;
     return false;
   }).filter(n => n.label.toLowerCase().includes(lq));
 
@@ -217,7 +228,7 @@ export async function GET(req: NextRequest) {
 
   // AW-11: nothing from an area this person can't open — not even its page name.
   const NAV_AREA: Record<string, AdminArea> = {
-    '/admin/problems': 'problems', '/admin/goals': 'company', '/admin/inquiries': 'pipeline', '/admin/inquiries/all': 'pipeline', '/admin/courses': 'courses',
+    '/admin/problems': 'problems', '/admin/goals': 'company', '/admin/inquiries': 'pipeline', '/admin/inquiries/all': 'pipeline', '/admin/onboarding': 'pipeline', '/admin/courses': 'courses', '/admin/business': 'courses',
     '/admin/support': 'messages', '/admin/revenue': 'money', '/admin/golfers': 'golfers',
     '/admin/announcements': 'messages', '/admin/bookings': 'money', '/admin/system': 'company', '/admin/employees': 'company',
   };

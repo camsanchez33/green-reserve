@@ -155,7 +155,9 @@ check('listing: a bad osm type → skipped', toResult({ osm_type: 'area', osm_id
   const src = readFileSync('src/app/api/admin/search/route.ts', 'utf8');
   const navHrefs = [...src.matchAll(/id: 'nav:[^']+',\s*label: '[^']*',\s*href: '([^']+)'/g)].map(m => m[1]);
   const areaBlock = src.slice(src.indexOf('const NAV_AREA'), src.indexOf('const TYPE_AREA'));
-  const OPEN = ['/admin', '/admin/profile'];
+  // Pages any login may open, and owner-only rows (no area: the owner has every area, and the row is owner-only).
+  const OWNER_ROWS = [...src.matchAll(/href: '([^']+)',\s*owner: true/g)].map(m => m[1]);
+  const OPEN = ['/admin', '/admin/profile', ...OWNER_ROWS];
   const missing = navHrefs.filter(h => !OPEN.includes(h) && !areaBlock.includes(`'${h}':`));
   check(`palette: every page link has an area (${navHrefs.length} links)`, navHrefs.length > 5 && missing.length === 0, missing);
   check('palette: Pipeline opens the full board', navHrefs.includes('/admin/inquiries/all'));
