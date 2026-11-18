@@ -18,12 +18,11 @@ const MONEY_FIELDS = {
   noShowFee:             'noShowFeeCents', // SP-B
   caddieLooperRate:      'caddieLooperRateCents',
   caddieForeRate:        'caddieForeRateCents',
-  rangeBallsSmallPrice:  'rangeBallsSmallPriceCents',
-  rangeBallsMediumPrice: 'rangeBallsMediumPriceCents',
-  rangeBallsLargePrice:  'rangeBallsLargePriceCents',
   clubRentalRate:        'clubRentalRateCents',
   pushCartRate:          'pushCartRateCents',
 } as const;
+
+const LEGACY_RANGE_COLUMNS = ['rangeBallsSmallPriceCents', 'rangeBallsMediumPriceCents', 'rangeBallsLargePriceCents'];
 
 export const COURSE_MONEY_WIRE_FIELDS = Object.keys(MONEY_FIELDS) as (keyof typeof MONEY_FIELDS)[];
 
@@ -33,6 +32,8 @@ export const COURSE_MONEY_WIRE_FIELDS = Object.keys(MONEY_FIELDS) as (keyof type
  */
 export function courseToWire<T extends Record<string, unknown>>(course: T) {
   const out: Record<string, unknown> = { ...course };
+  // RANGE-1: the old bucket prices are no longer read or written (the bucket list is lib/range-buckets).
+  for (const k of LEGACY_RANGE_COLUMNS) delete out[k];
   for (const [wire, cents] of Object.entries(MONEY_FIELDS)) {
     if (cents in out) {
       out[wire] = centsToDollarsOr0(out[cents] as number | null | undefined);

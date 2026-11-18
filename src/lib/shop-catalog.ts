@@ -10,7 +10,7 @@ import { MAX_IMPORT_ITEMS, MAX_OPTIONS, type ImportItem } from './shop-import';
 import { isTaxCategory } from './tax-categories';
 import { ciEquals } from '@/lib/like-exact';
 
-export const ITEM_SELECT = { id: true, name: true, category: true, priceCents: true, active: true, sortOrder: true, stockCount: true, sku: true, parentId: true, optionLabel: true, taxCategory: true, photoUrl: true } as const;
+export const ITEM_SELECT = { id: true, name: true, category: true, priceCents: true, active: true, sortOrder: true, stockCount: true, sku: true, parentId: true, optionLabel: true, taxCategory: true, photoUrl: true, rangeBalls: true } as const;
 
 export const optionName = (item: string, option: string) => `${item} — ${option}`;
 
@@ -142,6 +142,8 @@ export async function updateItem(courseId: string, id: string, body: Record<stri
   const r = readItem({ ...body, ...(keepItem ? { stockCount: null } : {}), taxCategory: body.taxCategory ?? existing.taxCategory, options: Array.isArray(body.options) ? body.options : existing.options.filter(o => o.active).map(o => ({ id: o.id, label: o.optionLabel, priceCents: o.priceCents === existing.priceCents ? null : o.priceCents, stockCount: o.stockCount, sku: o.sku })) }, keepOpt);
   if (!r.ok) return r;
   const it = r.item;
+  // RANGE-1: a range bucket is one price on the course's bucket list — never an item with sizes or colors.
+  if (existing.rangeBalls != null && it.options.length) return fail(`${it.name} is a range bucket — add another bucket in Settings → Range instead of options.`);
   const active = typeof body.active === 'boolean' ? body.active : existing.active;
   const mine = new Map(existing.options.map(o => [o.id, o]));
   if (it.options.some(o => o.id && !mine.has(o.id))) return null;
@@ -176,10 +178,11 @@ export async function setItemActive(courseId: string, id: string, active: boolea
 
 /** Delete an item (and its options) — or hide it when any of it was ever sold. */
 export async function deleteItem(courseId: string, id: string) {
-  const existing = await prisma.shopItem.findFirst({ where: { id, courseId }, select: { id: true, _count: { select: { sales: true, saleLines: true } }, options: { select: { _count: { select: { sales: true, saleLines: true } } } } } });
+  const existing = await prisma.shopItem.findFirst({ where: { id, courseId }, select: { id: true, rangeBalls: true, _count: { select: { sales: true, saleLines: true } }, options: { select: { _count: { select: { sales: true, saleLines: true } } } } } });
   if (!existing) return null;
   const sold = existing._count.sales + existing._count.saleLines + existing.options.reduce((s, o) => s + o._count.sales + o._count.saleLines, 0);
-  if (sold > 0) {
+  // RANGE-1: a range bucket is only hidden — bookings hold it as booked (Booking.rangeBuckets) with no foreign key.
+  if (sold > 0 || existing.rangeBalls != null) {
     // Hiding the item is enough — its options can't be sold while it's hidden.
     await prisma.shopItem.update({ where: { id }, data: { active: false } });
     return { ok: true as const, hidden: true };

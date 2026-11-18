@@ -1,11 +1,11 @@
 // CART-4: what the starter's sheet and the cart ticket read from the day's tee times (GET /api/operator/tee-times).
-import { ballCounts, ballWords } from '@/lib/range-balls';
+import { bucketWords as bucketsOf } from '@/lib/range-buckets';
 
 export type SheetBooking = {
   id: string; golferName: string; golferPhone: string; players: number; status: string; paymentStatus: string;
   paidOffline?: boolean; roundPaid?: boolean; checkedInPlayers?: number | null; noShowAt?: string | null;
   cartSelected?: boolean; cartRiders?: number | null; cartUnitCents?: number | null; cartNumbers?: string;
-  rangeBallsSize?: string; notes?: string[]; splitFromId?: string | null;
+  rangeBallsSize?: string; rangeBallsTotal?: number; rangeBuckets?: unknown; notes?: string[]; splitFromId?: string | null;
 };
 export type SheetTime = { id: string; date: string; time: string; tee?: string | null; teeRank?: number; status: string; event?: { name: string } | null; bookings?: SheetBooking[] };
 export type CartSettings = { courseName: string; mode: 'off' | 'checkin' | 'required' | 'starter'; ticket: 'off' | 'printed' | 'receipt' | 'both'; columns: string[] };
@@ -16,4 +16,4 @@ export const longDate = (d: string) => new Date(d + 'T12:00:00').toLocaleDateStr
 export const isPaid = (b: SheetBooking) => b.status === 'completed' || !!b.paidOffline || !!b.roundPaid || ['paid', 'paid_offline', 'on_account'].includes(b.paymentStatus);
 export const riding = (b: SheetBooking) => (b.cartSelected ? (b.cartRiders ?? b.players) : 0);
 export const ridingWords = (b: SheetBooking) => { const r = riding(b); return r === 0 ? 'Walking' : r === b.players ? `All ${r}` : `${r} of ${b.players}`; };
-export const bucketWords = (b: SheetBooking) => ballWords(ballCounts(b.rangeBallsSize));
+export const bucketWords = (b: SheetBooking) => bucketsOf({ rangeBuckets: b.rangeBuckets, rangeBallsSize: b.rangeBallsSize, rangeBallsTotal: b.rangeBallsTotal ?? 0 });
