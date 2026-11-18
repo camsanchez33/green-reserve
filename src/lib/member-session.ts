@@ -79,6 +79,18 @@ export async function loggedInAt(courseId: string): Promise<{ email: string } | 
 }
 
 /**
+ * The log-in this cookie carries, for a route that learns the course from the cookie itself (stopping one of your own
+ * alerts): the same rule as loggedInAt — null when the course turned "Show Log in on your booking page" off. Every
+ * other route knows its course and calls loggedInAt(courseId) directly.
+ */
+export async function currentLogIn(): Promise<{ courseId: string; email: string } | null> {
+  const s = await getMemberSession();
+  if (!s) return null;
+  const at = await loggedInAt(s.courseId);
+  return at ? { courseId: s.courseId, email: at.email } : null;
+}
+
+/**
  * The groups a golfer can log in as at this course, for the log-in line ("For <Course> members and residents."):
  * 'members' when some membership here could log in now (canLogIn's rule: status active, with an email to log in with;
  * Build 2026-11-18 — not "has an active tier", which disagreed with canLogIn), 'residents' when residents get their rate here and this course

@@ -4,7 +4,7 @@
 // is the same whatever email was typed (no hint whether it has alerts or an account).
 import { NextRequest, NextResponse } from 'next/server';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
-import { getMemberSession } from '@/lib/member-session';
+import { loggedInAt } from '@/lib/member-session';
 import { createAlert, sendAlertTextEnrollment, alertRateKeys } from '@/lib/tee-time-alerts';
 import { sendAlertConfirmEmail } from '@/lib/email';
 
@@ -16,7 +16,11 @@ export async function POST(req: NextRequest) {
   try { body = await req.json(); } catch { return NextResponse.json({ error: 'Bad request' }, { status: 400 }); }
   if (!body || typeof body !== 'object') return NextResponse.json({ error: 'Bad request' }, { status: 400 });
 
-  const session = await getMemberSession();
+  // The per-course log-in counts only through loggedInAt: this course's cookie, and only while the course has
+  // "Show Log in on your booking page" on (Course.memberLoginOn). Otherwise the golfer is a guest.
+  const courseIdIn = typeof body.courseId === 'string' ? body.courseId : '';
+  const at = courseIdIn ? await loggedInAt(courseIdIn) : null;
+  const session = at ? { courseId: courseIdIn, email: at.email } : null;
   // Every email this request could use is counted (lib/tee-time-alerts alertRateKeys).
   for (const key of alertRateKeys(session, body)) {
     if (!(await rateLimit('alert:email:' + key, 20, 3600))) return NextResponse.json({ error: 'Too many alerts from this email' }, { status: 429 });
