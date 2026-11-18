@@ -185,6 +185,17 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   }
   // RANGE-1: how many of each of the course's buckets (bucket id → count).
   const [bucketQty, setBucketQty] = useState<Record<string, number>>({});
+  /** After a 409 'range': the course's current buckets, keeping counts only for buckets still sold. */
+  async function reloadBuckets() {
+    try {
+      const r = await fetch(`/api/courses/${encodeURIComponent(courseSlug)}`);
+      if (!r.ok) return;
+      const fresh = await r.json() as CourseInfo;
+      const ids = new Set((fresh.range_buckets ?? []).map(b => b.id));
+      setCourse(c => c ? { ...c, range_buckets: fresh.range_buckets ?? [] } : c);
+      setBucketQty(q => Object.fromEntries(Object.entries(q).filter(([id]) => ids.has(id))));
+    } catch { /* the error from the booking is already on the page */ }
+  }
   const [promoOpen, setPromoOpen] = useState(false);
   // Item 4 (Cam 2026-11-18): logged in at this course (gr_member), Name and Email are filled and read-only,
   // so the booking keeps the member's cart and rate at check-in. A 401 just means a guest.
@@ -551,6 +562,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
                   packLineId={pk ? pk.lineId : ''}
                   courseName={course.name}
                   onConfirmed={setConfirmedData}
+                  onRangeStale={reloadBuckets}
                   member={member}
                   payNow={payNow}
                   summary={summary}
@@ -567,7 +579,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   );
 }
 
-function CheckoutForm({ teeTimeId, players, cartSelected, rangeBuckets, accent, needsCard, courseName, onConfirmed, promoCode = '', packLineId = '', member = null, payNow = 0, summary = null, policy = null, look = 'light', holdNow = '' }: {
+function CheckoutForm({ onRangeStale, teeTimeId, players, cartSelected, rangeBuckets, accent, needsCard, courseName, onConfirmed, promoCode = '', packLineId = '', member = null, payNow = 0, summary = null, policy = null, look = 'light', holdNow = '' }: {
   /** The course's look, for the card field (Stripe draws it in its own frame). */
   look?: BookingLook;
   /** Past the cutoff at a hold course: what is charged within the hour (holdTodayLine), instead of "$0 now". */
@@ -592,6 +604,8 @@ function CheckoutForm({ teeTimeId, players, cartSelected, rangeBuckets, accent, 
   needsCard: boolean;
   courseName: string;
   onConfirmed: (data: ConfirmedData) => void;
+  /** RANGE-1: the server refused the range balls (409 code 'range'): reload the bucket list. */
+  onRangeStale?: () => void;
 }) {
   const stripe   = useStripe();
   const elements = useElements();
@@ -655,7 +669,12 @@ function CheckoutForm({ teeTimeId, players, cartSelected, rangeBuckets, accent, 
       }),
     });
     const data = await res.json();
-    if (!res.ok) { setError(data.error || 'Something went wrong. Please try again.'); return false; }
+    if (!res.ok) {
+      setError(data.error || 'Something went wrong. Please try again.');
+      // RANGE-1: a bucket changed or sold out — fetch the course's buckets again (the message says what happened).
+      if (res.status === 409 && data.code === 'range') onRangeStale?.();
+      return false;
+    }
     onConfirmed({
       courseName: data.courseName, date: data.date, time: data.time, players: data.players,
       greenFeeTotal: data.greenFeeTotal, cartFeeTotal: data.cartFeeTotal, rangeBallsTotal: data.rangeBallsTotal,
