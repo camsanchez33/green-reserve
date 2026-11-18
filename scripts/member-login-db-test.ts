@@ -42,6 +42,8 @@ async function cleanup() {
   await prisma.courseOperator.deleteMany({ where: { email: `${TAG}@test.local` } });
   await prisma.courseGroup.deleteMany({ where: { slug: `${TAG}-g` } });
   await prisma.securityEvent.deleteMany({ where: { email: { endsWith: `@${TAG}.test` } } });
+  // Repeat runs within an hour must not trip the booking, swap or send-code limits (test rows only).
+  await prisma.rateLimit.deleteMany({ where: { OR: [{ key: { contains: `@${TAG}.test` } }, { key: { startsWith: 'manage:swap:' } }] } });
 }
 
 async function main() {
