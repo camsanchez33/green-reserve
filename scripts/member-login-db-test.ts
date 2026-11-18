@@ -23,7 +23,7 @@ import { termsVersionNow } from '../src/lib/terms';
 import { todayIn, addDaysStr } from '../src/lib/course-time';
 import { groupGreenFee } from '../src/lib/residents';
 import { signToken } from '../src/lib/auth';
-import { memberBenefitsLine } from '../src/lib/member-benefits';
+import { memberBenefitsLine, withoutRates } from '../src/lib/member-benefits';
 import { sendWelcome } from '../src/lib/member-welcome';
 import { maybeSendPayLink } from '../src/lib/membership-pay-link';
 
@@ -107,7 +107,6 @@ async function main() {
   const far = await fetch(`${BASE_URL}/api/bookings`, { method: 'POST', headers: { 'Content-Type': 'application/json', cookie: resCookie }, body: JSON.stringify({ teeTimeId: ttFar.id, golferName: 'Rita Res', golferEmail: resEmail, golferPhone: '', players: 1, termsAccepted: true, cartSelected: false }) });
   const farBody = await far.json().catch(() => null);
   check('a resident-only session past the public window is refused', far.status === 403 && farBody?.code === 'outside_window', { status: far.status, farBody });
-  check('…and has no dues (payments 404)', (await get(`/api/member/${a.slug}/payments`, resCookie)).status === 404);
   const nobodyCookie = await cookie(a.id, `nobody@${TAG}.test`);
   const ttA2 = await tt(a.id, '10:00');
   const nb = await fetch(`${BASE_URL}/api/bookings`, { method: 'POST', headers: { 'Content-Type': 'application/json', cookie: nobodyCookie }, body: JSON.stringify({ teeTimeId: ttA2.id, golferName: 'Nobody', golferEmail: resEmail, golferPhone: '', players: 2, termsAccepted: true, cartSelected: false }) });
@@ -401,7 +400,6 @@ async function main() {
   const offBody = await offBook.json().catch(() => null);
   const offSaved = offBody?.bookingId ? await prisma.booking.findUnique({ where: { id: offBody.bookingId }, select: { appliedRate: true, greenFeeTotal: true } }) : null;
   check('…a member\'s booking is charged the public price', !!offSaved && offSaved.appliedRate === 'standard' && offSaved.greenFeeTotal === 10000, { status: offBook.status, offBody, offSaved });
-  check('…their dues history answers 401', (await get(`/api/member/${a.slug}/payments`, offCookie)).status === 401);
   // Every route that reads the log-in treats the cookie as a guest's.
   const activeBefore = await prisma.teeTimeAlert.count({ where: { courseId: a.id, email: offEmail, status: 'active' } });
   const offAlert = await alert(offCookie, 2);
@@ -480,6 +478,14 @@ async function main() {
   await prisma.course.update({ where: { id: home.id }, data: { hasMemberPricing: false } });
   const hsOff = await get(`/api/member/${home.slug}/session`, await cookie(home.id, homeEmail));
   check('…Members pricing off: the line keeps the window and guest passes, not the rate', hsOff.body?.benefits === 'You can book 9 days out. 6 guest passes a year.', hsOff.body?.benefits);
+  check('…and the session sends no member rate fields for a page to rebuild a price from', hsOff.body?.tier && hsOff.body.tier.discountPct === null && hsOff.body.tier.greenFeeWeekday === null && hsOff.body.tier.greenFeeWeekend === null && hsOff.body.tier.cartFeeWeekday === null && hsOff.body.tier.cartFeeWeekend === null, hsOff.body?.tier);
+  check('(with it on, the tier\'s rate is sent)', hs.body?.tier?.discountPct === 20, hs.body?.tier);
+  // The invite says the same: no rate with Members pricing off (lib/member-welcome uses the same withoutRates).
+  check('invite benefits with Members pricing off keep the window and passes only', memberBenefitsLine(withoutRates({ discountPct: 20, greenFeeWeekdayCents: null, greenFeeWeekendCents: null, lineRates: null, advanceBookingDays: 9, windowPublic: false, guestPassesPerYear: 6 }), {}) === 'book 9 days out · 6 guest passes a year');
+  const welcomeSrc = (await import('fs')).readFileSync('src/lib/member-welcome.ts', 'utf8');
+  check('…and sendWelcome applies it from the course\'s switch', welcomeSrc.includes('!memberPricingOn(m.course) ? withoutRates(m.tier)') && welcomeSrc.includes('hasMemberPricing: true'));
+  // The dues-history route is gone (no page has used it since #502).
+  check('the member payments route is gone (404)', (await get(`/api/member/${home.slug}/payments`, await cookie(home.id, homeEmail))).status === 404);
   await prisma.course.update({ where: { id: home.id }, data: { hasMemberPricing: true } });
   // More due-line cases and the no-token link, found by id.
   const tMore = await htt(addDaysStr(todayIn('UTC'), 3), '08:00');

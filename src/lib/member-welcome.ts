@@ -5,7 +5,8 @@
 // Memberships item 1 (Cam 2026-11-16, "they are a member only once paid"): a member added at the counter (addedBy COUNTER_ADDED) pays first, so this goes out once the dues are paid, not when added.
 import { prisma } from './prisma';
 import { sendMemberInviteEmail, sendMembershipReceiptEmail } from './email';
-import { memberBenefitsLine } from './member-benefits';
+import { memberBenefitsLine, withoutRates } from './member-benefits';
+import { memberPricingOn } from './pricing-switch';
 
 /** addedBy for a member added on the Memberships page, who pays before they are a member. */
 export const COUNTER_ADDED = 'counter';
@@ -17,7 +18,7 @@ export async function sendWelcome(membershipId: string): Promise<void> {
       status: true, inviteEmail: true, inviteName: true, membershipType: true,
       golfer: { select: { firstName: true, lastName: true, email: true } },
       tier: { select: { name: true, discountPct: true, greenFeeWeekdayCents: true, greenFeeWeekendCents: true, lineRates: true, advanceBookingDays: true, windowPublic: true, guestPassesPerYear: true } },
-      course: { select: { name: true, slug: true, publicAdvanceDays: true, memberAdvanceDays: true } },
+      course: { select: { name: true, slug: true, publicAdvanceDays: true, memberAdvanceDays: true, hasMemberPricing: true } },
     },
   });
   if (!m || m.status !== 'active') return;
@@ -30,7 +31,8 @@ export async function sendWelcome(membershipId: string): Promise<void> {
     courseName: m.course.name || 'your course',
     groupName: m.tier?.name ?? m.membershipType ?? 'Member',
     coursePageUrl: `${process.env.NEXT_PUBLIC_URL}/courses/${m.course.slug}`,
-    benefits: memberBenefitsLine(m.tier, m.course),
+    // Members pricing off (lib/pricing-switch): no member rate is charged, so the invite promises none.
+    benefits: memberBenefitsLine(m.tier && !memberPricingOn(m.course) ? withoutRates(m.tier) : m.tier, m.course),
   });
 }
 

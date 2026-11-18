@@ -41,7 +41,8 @@ export async function GET(
 
   // "Your <Course>" (Build 2026-11-18): one line of benefits and the upcoming bookings here (lib/member-home).
   const upcoming = await upcomingFor(course, session.email);
-  const benefits = benefitsSentence(live ? membership!.tier : null, live, !!resident, course, memberPricingOn(course));
+  const pricing = memberPricingOn(course);
+  const benefits = benefitsSentence(live ? membership!.tier : null, live, !!resident, course, pricing);
   const ymd = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : null);
 
   if (!membership) {
@@ -80,11 +81,12 @@ export async function GET(
           color: membership.tier.color,
           // MP-3 B2a: cents at rest, dollars on the wire — the course page's
           // member-pricing UI formats these as dollars and was not changed.
-          greenFeeWeekday: centsToDollars(membership.tier.greenFeeWeekdayCents),
-          greenFeeWeekend: centsToDollars(membership.tier.greenFeeWeekendCents),
-          cartFeeWeekday: centsToDollars(membership.tier.cartFeeWeekdayCents),
-          cartFeeWeekend: centsToDollars(membership.tier.cartFeeWeekendCents),
-          discountPct: membership.tier.discountPct,
+          // Members pricing off (lib/pricing-switch): no member rate is charged, so none is sent for a page to show.
+          greenFeeWeekday: pricing ? centsToDollars(membership.tier.greenFeeWeekdayCents) : null,
+          greenFeeWeekend: pricing ? centsToDollars(membership.tier.greenFeeWeekendCents) : null,
+          cartFeeWeekday: pricing ? centsToDollars(membership.tier.cartFeeWeekdayCents) : null,
+          cartFeeWeekend: pricing ? centsToDollars(membership.tier.cartFeeWeekendCents) : null,
+          discountPct: pricing ? membership.tier.discountPct : null,
           advanceBookingDays: membership.tier.advanceBookingDays,
           annualFee: centsToDollarsOr0(membership.tier.annualFeeCents),
           initiationFee: membership.initiationWaived ? 0 : centsToDollarsOr0(membership.tier.initiationFeeCents),
