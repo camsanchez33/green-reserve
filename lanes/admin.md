@@ -79,7 +79,13 @@ Mockup `lanes/admin/goals-mockup.html` (https://claude.ai/artifact/62wRP5X7nS5kM
    - One line per golfer, with search and a filter icon.
    - A golfer opens to their numbers and bookings, with Resend confirmation and Resend receipt only. There's NO refund or cancel (CLAUDE.md).
    - **Counsel item (queued in `lanes/build.md`):** a privacy/golfer-terms version that says staff can view a golfer's booking and payment history for support.
-Then Audit (mockup with Cam, https://claude.ai/artifact/QgQyTepsYAkcqfpcWYS2Qp), one page at a time,
+**Audit — APPROVED, build after Golfers and Inquiries merge** (Cam 2026-11-18, "after audit comment is fixed we are good to send that one through"). Mockup `lanes/admin/audit-mockup.html` (https://claude.ai/artifact/QgQyTepsYAkcqfpcWYS2Qp) and its threads are the spec.
+   - **Header:** search with no placeholder words, plus a bare filter icon. The filter covers person, course, action and a From/Until date range.
+   - **List:** entries grouped by date, one line each: what was done, the course, the time. No subtitles.
+   - **Detail:** clicking a line opens who, when, the course, the reason and before → after.
+   - **Golfer views:** "Viewed golfer" entries (Cam 2026-11-18) appear here.
+   - **Build adds:** server-side search across every entry (action, person, course, reason, changed fields, all dates) and a date-range filter on /api/admin/audit. Owner only, as today.
+One page at a time,
 mockup first ("as it works today"), nothing built until Cam approves.
 
 ## Small follow-ups

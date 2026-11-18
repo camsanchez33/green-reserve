@@ -18,6 +18,7 @@ import { Prisma } from '@prisma/client';
 import { prisma } from './prisma';
 import { membershipLive } from './member-rates';
 import { pastDue } from './member-statements';
+import { ciContains } from '@/lib/like-exact';
 
 type Tx = Prisma.TransactionClient;
 type Fail = { ok: false; status: number; error: string };
@@ -46,7 +47,7 @@ export async function accountMembers(courseId: string, q = '') {
   const rows = await prisma.courseMembership.findMany({
     where: {
       courseId, status: 'active', tier: { accountOn: true },
-      ...(term ? { OR: [{ inviteName: { contains: term, mode: 'insensitive' } }, { inviteEmail: { contains: term, mode: 'insensitive' } }, { golfer: { OR: [{ firstName: { contains: term, mode: 'insensitive' } }, { lastName: { contains: term, mode: 'insensitive' } }] } }] } : {}),
+      ...(term ? { OR: [{ inviteName: ciContains(term) }, { inviteEmail: ciContains(term) }, { golfer: { OR: [{ firstName: ciContains(term) }, { lastName: ciContains(term) }] } }] } : {}),
     },
     select: { id: true, inviteName: true, expiresAt: true, status: true, golfer: { select: { firstName: true, lastName: true } }, tier: { select: { name: true, accountLimitCents: true } } },
     orderBy: { inviteName: 'asc' },
