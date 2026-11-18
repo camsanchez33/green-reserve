@@ -13,9 +13,9 @@ export type LoginCourse = {
   address?: string; city?: string; state?: string; phone?: string; website?: string;
   cancellation_hours?: number; late_cancellation_fee?: number; cancel_policy?: CancelPolicy;
   has_member_pricing?: boolean;
-  /** Course.memberLoginOn (Settings "Show Log in on your booking page"). Absent = on. */
+  /** Course.memberLoginOn (Settings "Show Log in on your booking page", #495). Absent = off (loginOffered). */
   member_login_on?: boolean;
-  /** The groups that can log in here (loginGroups). Absent = members only. */
+  /** The groups that can log in here (loginGroups, #495). Absent or empty = no Log in (loginOffered). */
   login_groups?: ('members' | 'residents')[];
 };
 
@@ -33,7 +33,7 @@ export default function LoginClient({ course, back }: { course: LoginCourse; bac
   const [codeErr, setCodeErr] = useState('');
   const [formErr, setFormErr] = useState('');
   const [note, setNote] = useState('');
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<'' | 'send' | 'verify'>('');
   // #490: the first-log-in box is asked for only after a right code (409 terms_required); the same code is sent again.
   const [needTerms, setNeedTerms] = useState(false);
   const [agreed, setAgreed] = useState(false);
@@ -56,19 +56,20 @@ export default function LoginClient({ course, back }: { course: LoginCourse; bac
     const v = email.trim();
     if (!EMAIL.test(v)) { setEmailErr('Enter your email address, like name@domain.com.'); emailRef.current?.focus(); return; }
     setEmailErr('');
-    setBusy(true);
+    setBusy('send');
     try {
       const r = await fetch(`/api/member/${encodeURIComponent(slug)}/send-code`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: v, mode: 'code' }),
       });
       const d = await r.json().catch(() => ({}));
-      if (!r.ok) { setFormErr(d.error || 'That didn’t go through. Try again.'); return; }
+      if (!r.ok) { setFormErr(d.error || 'That didn’t go through. Try again.'); setTimeout(() => emailRef.current?.focus(), 0); return; }
       setStep('code'); setCode(''); setCodeErr(''); setNeedTerms(false); setAgreed(false); setTermsErr('');
       if (again) setNote('If that address can log in, a new code is on its way.');
       setTimeout(() => codeRef.current?.focus(), 0);
     } catch {
       setFormErr('Network error: the code was not sent. Check your connection and try again.');
-    } finally { setBusy(false); }
+      setTimeout(() => emailRef.current?.focus(), 0);
+    } finally { setBusy(''); }
   }
 
   async function verify() {
@@ -77,7 +78,7 @@ export default function LoginClient({ course, back }: { course: LoginCourse; bac
     if (digits.length !== 6) { setCodeErr('Enter the 6 digits from the message.'); codeRef.current?.focus(); return; }
     if (needTerms && !agreed) { setTermsErr('Tick the box to agree before you log in.'); return; }
     setCodeErr(''); setTermsErr('');
-    setBusy(true);
+    setBusy('verify');
     try {
       const r = await fetch(`/api/member/${encodeURIComponent(slug)}/verify-code`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -88,9 +89,11 @@ export default function LoginClient({ course, back }: { course: LoginCourse; bac
       if (r.status === 409 && d.code === 'terms_required') { setNeedTerms(true); setAgreed(false); return; }
       if (d.code === 'bad_code') { setCodeErr(d.error || 'That code didn’t work. Check it, or send a new one.'); codeRef.current?.focus(); return; }
       setFormErr(d.error || 'That didn’t go through. Try again.');
+      setTimeout(() => codeRef.current?.focus(), 0);
     } catch {
       setFormErr('Network error: you are not logged in yet. Check your connection and try again.');
-    } finally { setBusy(false); }
+      setTimeout(() => codeRef.current?.focus(), 0);
+    } finally { setBusy(''); }
   }
 
   useEffect(() => { headRef.current?.focus(); }, []);
@@ -117,7 +120,7 @@ export default function LoginClient({ course, back }: { course: LoginCourse; bac
                   <div className={g.err} id="li-email-err" role="alert">{emailErr}</div>
                 </div>
                 {formErr && <p className={g.formerr} role="alert">{formErr}</p>}
-                <button className={g.btn} type="submit" disabled={busy}>{busy ? 'Sending…' : 'Send code'}</button>
+                <button className={g.btn} type="submit" disabled={!!busy}>{busy === 'send' ? 'Sending…' : 'Send code'}</button>
               </form>
             ) : (
               <>
@@ -135,7 +138,7 @@ export default function LoginClient({ course, back }: { course: LoginCourse; bac
                     <div>
                       <label className={g.agree}>
                         <input type="checkbox" checked={agreed} onChange={e => { setAgreed(e.target.checked); if (e.target.checked) setTermsErr(''); }}
-                          aria-describedby="li-terms-err" autoFocus />
+                          aria-describedby={agreed ? 'li-terms-err' : 'li-terms-hint li-terms-err'} autoFocus />
                         <span>I agree to GreenReserve&rsquo;s <a href="/terms" target="_blank" rel="noopener noreferrer">Terms of Service</a> and <a href="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>, and that {course.name} and GreenReserve keep my booking history.</span>
                       </label>
                       <div className={g.err} id="li-terms-err" role="alert">{termsErr}</div>
@@ -143,11 +146,11 @@ export default function LoginClient({ course, back }: { course: LoginCourse; bac
                   )}
                   {formErr && <p className={g.formerr} role="alert">{formErr}</p>}
                   {needTerms && !agreed && <p className={g.hintline} id="li-terms-hint">Tick the box to agree before you log in.</p>}
-                  <button className={g.btn} type="submit" disabled={busy || (needTerms && !agreed)} aria-describedby={needTerms && !agreed ? 'li-terms-hint' : undefined}>{busy ? 'Logging in…' : 'Log in'}</button>
+                  <button className={g.btn} type="submit" disabled={!!busy || (needTerms && !agreed)} aria-describedby={needTerms && !agreed ? 'li-terms-hint' : undefined}>{busy === 'verify' ? 'Logging in…' : 'Log in'}</button>
                 </form>
                 {note && <p className={g.pol} role="status">{note}</p>}
                 <p className={g.pol}>
-                  <button className={g.lnk} type="button" disabled={busy} onClick={() => sendCode(true)}>Send a new code</button>
+                  <button className={g.lnk} type="button" disabled={!!busy} onClick={() => sendCode(true)}>Send a new code</button>
                   {' · '}
                   <button className={g.lnk} type="button" onClick={() => { setStep('email'); setFormErr(''); setNote(''); setTimeout(() => emailRef.current?.focus(), 0); }}>Use a different email</button>
                 </p>

@@ -19,7 +19,7 @@ check('no groups sent yet: members', loginLine('Maple Run', undefined) === 'For 
 check('the tee times with their filters', safeBack('/courses/maple?date=2026-11-19&players=3', 'maple') === '/courses/maple?date=2026-11-19&players=3');
 check('the Book page', safeBack('/book?tee_time_id=x&course_slug=maple', 'maple') === '/book?tee_time_id=x&course_slug=maple');
 check('a course page under the slug', safeBack('/courses/maple/member', 'maple') === '/courses/maple/member');
-for (const bad of ['//evil.example/x', 'https://evil.example', '/\\evil.example', '/courses/other', '/courses/maplewood', '/admin', '/courses/maple/../../admin', '/courses/maple/./x/../../../admin', '/courses/maple/%2e%2e/admin', '', 'javascript:alert(1)']) {
+for (const bad of ['//evil.example/x', 'https://evil.example', '/\\evil.example', '/courses/other', '/courses/maplewood', '/admin', '/courses/maple/../../admin', '/courses/maple/./x/../../../admin', '/courses/maple/%2e%2e/admin', '/courses/maple/.\t./.\t./admin', '/courses/maple/.\n./.\n./courses/other?x=1', '/courses/maple/.\r./admin', '/courses/maple/..#x', '/courses/maple#x', '/courses/maple/ ../admin', '/book', '/book/../admin', '', 'javascript:alert(1)']) {
   check(`refused, back to the course: ${JSON.stringify(bad)}`, safeBack(bad, 'maple') === '/courses/maple');
 }
 
@@ -28,7 +28,7 @@ check('the code is sent with mode code (the approved screen), never the emailed 
 check('one wording whether or not the email is on the list', page.includes('is on {course.name}&rsquo;s list, we sent a 6-digit code. It works for 10 minutes.') && page.includes('Not set up? Ask the pro shop.'));
 check('the first-log-in box appears only after a right code (409 terms_required), unticked, and Log in waits for it',
   page.includes("if (r.status === 409 && d.code === 'terms_required') { setNeedTerms(true); setAgreed(false); return; }")
-  && page.includes('disabled={busy || (needTerms && !agreed)}') && page.includes('Tick the box to agree before you log in.'));
+  && page.includes('disabled={!!busy || (needTerms && !agreed)}') && page.includes('Tick the box to agree before you log in.'));
 check('the box says what is agreed to, word for word', page.includes('and that {course.name} and GreenReserve keep my booking history.'));
 check('the tick is sent only once it was asked for', page.includes('...(needTerms ? { agreeTerms: agreed } : {})'));
 check('a wrong code shows the server\'s one answer on the field', page.includes("if (d.code === 'bad_code') { setCodeErr(d.error"));
@@ -45,6 +45,20 @@ const book = readFileSync('src/app/book/BookClient.tsx', 'utf8');
 check('the Book page has the one Log in, coming back to this booking', book.includes('/login?back=${encodeURIComponent(`/book?${params.toString()}`)}'));
 const member = readFileSync('src/app/courses/[slug]/member/page.tsx', 'utf8');
 check('no "sign in" left on the member page (item 2: Log in)', !/sign[ -]in|Sign out/i.test(member.replace(/\/\/.*$/gm, '').replace(/\{\/\*[\s\S]*?\*\/\}/g, '').replace(/function SignInPanel|<SignInPanel/g, '')));
+
+// What the browser would do with each accepted value: it must stay on this course's pages or /book.
+for (const raw of ['/courses/maple?date=2026-11-19', '/book?tee_time_id=x', '/courses/maple/member', '/courses/maple/./member', '/courses/maple/x/../member']) {
+  const out = safeBack(raw, 'maple');
+  const landed = new URL(out, 'https://greenreserve.app/courses/maple/login').pathname;
+  check(`accepted values resolve on this course or /book: ${JSON.stringify(raw)} → ${out}`, landed === '/courses/maple' || landed.startsWith('/courses/maple/') || landed === '/book');
+}
+
+check('the Log in button never reads "Logging in…" while a new code is being sent', page.includes("{busy === 'verify' ? 'Logging in…' : 'Log in'}") && page.includes("setBusy('send');"));
+check('the terms box is described by its hint', page.includes("aria-describedby={agreed ? 'li-terms-err' : 'li-terms-hint li-terms-err'}"));
+const bookSrc = readFileSync('src/app/book/BookClient.tsx', 'utf8');
+check('the Book page header, logged in: name and groups, Your <Course>, Log out (failure said)', bookSrc.includes("{member.groups.length ? ` · ${member.groups.join(' and ')}` : ''}") && bookSrc.includes('>Log out</button>') && bookSrc.includes("if (!r || !r.ok) { setLogoutErr(true); return; }"));
+check('the private-club Log in follows the same rule and goes to the code page', course.includes('{loginOffered(course) ? (') && course.includes('href={`/courses/${slug}/login?back=${encodeURIComponent(`/courses/${slug}`)}`}'));
+check('no empty account landmark for a guest when Log in is not offered', course.includes('{!previewMode && (memberSession || loginOn) && ('));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);

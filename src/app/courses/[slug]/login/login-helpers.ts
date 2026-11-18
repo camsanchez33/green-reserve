@@ -7,11 +7,23 @@ export function loginLine(courseName: string, groups: readonly string[] | undefi
   return `For ${courseName} ${list}.`;
 }
 
-/** Where Log in returns to: a path on this site under the course or /book, else the course's tee times. */
+/**
+ * Where Log in returns to: this course's pages or /book, on this site, else the course's tee times. The browser drops
+ * tabs and newlines and resolves dot segments before it navigates, so the path is resolved the same way here and the
+ * RESOLVED path is what is checked and returned (review 2026-11-18).
+ */
 export function safeBack(back: string, slug: string): string {
   const home = `/courses/${slug}`;
-  if (!back || !back.startsWith('/') || back.startsWith('//') || back.includes('\\') || /(^|\/)\.\.?(\/|\?|$)/.test(back.split('?')[0]) || /%2e|%2f|%5c/i.test(back.split('?')[0])) return home;
-  if (back === home || back.startsWith(`${home}?`) || back.startsWith(`${home}/`) || back.startsWith('/book?')) return back;
+  // Control characters, spaces, a fragment or a backslash anywhere: refused outright.
+  if (!back || !back.startsWith('/') || back.startsWith('//') || /[\u0000-\u0020\u007f#\\]/.test(back)) return home;
+  let url: URL;
+  try { url = new URL(back, 'http://same.invalid'); } catch { return home; }
+  if (url.origin !== 'http://same.invalid') return home;
+  // Encoded dots or slashes in the path could still resolve elsewhere on a later decode: refused.
+  if (/%2e|%2f|%5c/i.test(url.pathname)) return home;
+  const p = url.pathname;
+  if (p === home || p.startsWith(`${home}/`)) return p + url.search;
+  if (p === '/book' && url.search) return p + url.search;
   return home;
 }
 

@@ -204,13 +204,22 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   const [promoOpen, setPromoOpen] = useState(false);
   // Item 4 (Cam 2026-11-18): logged in at this course (gr_member), Name and Email are filled and read-only,
   // so the booking keeps the member's cart and rate at check-in. A 401 just means a guest.
-  const [member, setMember] = useState<{ name: string; email: string } | null>(null);
+  const [member, setMember] = useState<{ name: string; email: string; groups: string[] } | null>(null);
+  const [logoutErr, setLogoutErr] = useState(false);
+  async function logOut() {
+    // A failed log-out leaves the session as it was, so the header keeps saying so.
+    const r = await fetch(`/api/member/${encodeURIComponent(courseSlug)}/logout`, { method: 'POST' }).catch(() => null);
+    if (!r || !r.ok) { setLogoutErr(true); return; }
+    setLogoutErr(false);
+    // The form was filled read-only from the log-in: start it again as a guest.
+    window.location.reload();
+  }
   useEffect(() => {
     if (!courseSlug) return;
     let live = true;
     fetch(`/api/member/${encodeURIComponent(courseSlug)}/session`)
       .then(r => r.ok ? r.json() : null)
-      .then(d => { if (live && d && typeof d.email === 'string' && d.email) setMember({ name: typeof d.name === 'string' ? d.name : '', email: d.email }); })
+      .then(d => { if (live && d && typeof d.email === 'string' && d.email) setMember({ name: typeof d.name === 'string' ? d.name : '', email: d.email, groups: Array.isArray(d.groups) ? d.groups.map((x: { name?: unknown }) => String(x?.name ?? '')).filter(Boolean) : d.tier?.name ? [String(d.tier.name)] : [] }); })
       .catch(() => {});
     return () => { live = false; };
   }, [courseSlug]);
@@ -547,7 +556,14 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
               <Link className={g.lnk} href={`/courses/${encodeURIComponent(courseSlug)}/login?back=${encodeURIComponent(`/book?${params.toString()}`)}`}>Log in</Link>
             </nav>
           )}
-          {member && <nav className={g.topLinks} aria-label="Your account at this course"><span>Logged in · {member.name || member.email}</span></nav>}
+          {member && (
+            <nav className={g.topLinks} aria-label="Your account at this course">
+              <span>Logged in · {member.name || member.email}{member.groups.length ? ` · ${member.groups.join(' and ')}` : ''}</span>
+              <Link className={g.lnk} href={`/courses/${encodeURIComponent(courseSlug)}/member`}>Your {course.name}</Link>
+              <button type="button" className={g.lnk} onClick={logOut}>Log out</button>
+              {logoutErr && <span role="alert">Couldn&rsquo;t log out. Try again.</span>}
+            </nav>
+          )}
         </header>
         <main className={g.wrap}>
           <div className={g.bk}>

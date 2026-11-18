@@ -658,13 +658,18 @@ export default function CourseDetailPage({
               <p className="text-ink text-sm leading-relaxed mb-5">
                 This is a private club. Tee time booking is reserved for members. Log in to your member account to view availability and book.
               </p>
-              <Link
-                href={`/courses/${slug}/member`}
-                className="block w-full text-center py-3 px-5 text-white text-sm font-medium rounded-md transition-opacity hover:opacity-90"
-                style={{ backgroundColor: course.brand_color || '#173B2A' }}
-              >
-                Log in
-              </Link>
+              {/* Item 2: the one Log in, and only when the course offers it (switch on and a group). */}
+              {loginOffered(course) ? (
+                <Link
+                  href={`/courses/${slug}/login?back=${encodeURIComponent(`/courses/${slug}`)}`}
+                  className="block w-full text-center py-3 px-5 text-white text-sm font-medium rounded-md transition-opacity hover:opacity-90"
+                  style={{ backgroundColor: course.brand_color || '#173B2A' }}
+                >
+                  Log in
+                </Link>
+              ) : (
+                <p className="text-ink text-sm">Members book through the pro shop{course.phone ? ` at ${course.phone}` : ''}.</p>
+              )}
               <p className="text-center text-xs text-ink mt-4">
                 Not a member? Contact the club directly.
               </p>
@@ -1026,7 +1031,7 @@ export default function CourseDetailPage({
       <div className={g.site}>
         <header className={g.top}>
           <h1>{course.name}</h1>
-          {!previewMode && (
+          {!previewMode && (memberSession || loginOn) && (
             <nav className={g.topLinks} aria-label="Your account at this course">
               {memberSession ? (<>
                 <span>Logged in · {memberSession.name}{groupWords ? ` · ${groupWords}` : ''}</span>
