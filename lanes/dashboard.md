@@ -90,7 +90,20 @@ Support (chats) · Light parity. Specs: ADMIN_REDO_SPEC "Course dashboard Home",
    - **Build adds:** editable roles, invite by email, reset links, last active.
    - **Challenge noted for review:** a role edit changes everyone in it, so the role editor must say how many people it affects before saving.
 
+9. **Settings: golfer log-in, alerts, range balls — APPROVED** (Cam 2026-11-18, "after all those comments are fixed we
+   are good to merge that"). Dashboard screens of `lanes/golfer/login-alerts-mockup.html`. Each is one switch with one
+   line, in both looks, and nothing else.
+   - **"Show Log in on your booking page"**: the line is built from what the course offers, e.g. "Lets your members
+     and residents log in online to get their rates and booking window." It links to "Groups and benefits are set in
+     Memberships." Groups are NOT repeated here.
+   - **"Let golfers set tee time alerts"**: "Golfers can ask to be emailed (or texted, if they agree) when a tee time
+     opens on a day they pick, right from your booking page. First come, first served; nothing is held."
+   - **"Sell range balls with tee times"**: "Golfers can add a bucket when they book. Buckets and prices come from
+     your Range settings."
+   - The Join online and Residents-copy follow-ups are under Small follow-ups (GOLFER-SIGNIN-RETIRED).
+
 ## Small follow-ups (do with the next PR that touches the file)
 - **Join online is gone (GOLFER-SIGNIN-RETIRED, Cam via Build 2026-11-18; golfers buy memberships from the course, which adds them).** Golfers can no longer join online, so: remove the "Join online" / "Ask to join" tiles and their hint ("Golfers pay online and are members as soon as it's paid") from `src/components/dashboard/members/MembershipSetup.tsx` and default a new membership to `joinOnline: 'off'`; remove the "Joining" row on `src/app/dashboard/members/page.tsx`. `MembershipTier.joinOnline` stays in the schema. Build then makes `/api/operator/tiers` store `'off'` and drops the dead `joinTier` / `joinableTiers` / `myMembership` helpers in `src/lib/membership-join.ts`.
 - **Residents card copy (GOLFER-SIGNIN-RETIRED).** "a golfer signed in with a listed email books at the resident rate" is now true only for a golfer signed in to the course as a member; a resident who isn't a member gets the rate at the counter until the "Log in" build.
+- Takes cash follow-ups (#458): hide cash buttons when `Course.takesCash` is off and handle `{ cashOff: true }` on the 409s; tell staff why the switch is disabled (owner only); let staff sell by card at the Register without opening the drawer first; the stale "display only" comment in `home/page.tsx`; delete the unused `TakesCashToggle.tsx`.
 - `StockTab` side card goes solid at lg after a tap: use `max-lg:fixed max-lg:inset-0`.
