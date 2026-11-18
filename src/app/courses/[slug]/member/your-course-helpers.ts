@@ -86,7 +86,11 @@ export function datedStatus(endsOn: string | null | undefined, today: string, re
 /** Said, in red, when a membership set to renew itself is past its date (Build 2026-11-18). */
 export const RENEWAL_FAILED = 'Your renewal didn’t go through. Call the pro shop.';
 
-export function membershipLine(s: YourSession, today: string = localToday()): { group: string; dot: Dot; when: string | null; problem?: string } | null {
+/** Said, with an amber dot, when a membership set to renew is past its date and no charge has failed yet: the charge
+ *  runs after the date and can wait for a notice period (Build 2026-11-18). */
+export const RENEWAL_PENDING = 'Your renewal is being processed.';
+
+export function membershipLine(s: YourSession, today: string = localToday()): { group: string; dot: Dot; when: string | null; problem?: string; note?: string } | null {
   const m = s.groups?.find(gr => gr.kind === 'member');
   if (!m && (s.groups?.length || s.membershipType === 'Resident')) return null;
   const group = m?.name ?? s.tier?.name ?? s.membershipType;
@@ -98,6 +102,7 @@ export function membershipLine(s: YourSession, today: string = localToday()): { 
   const st = datedStatus(day, today, renews);
   // Only the server's own record of a failed charge says the renewal failed (Build 2026-11-18).
   if (s.renewalFailed === true) return { group, dot: 'bad', when: null, problem: RENEWAL_FAILED };
+  if (renews && st.dot === 'bad') return { group, dot: 'warn', when: null, note: RENEWAL_PENDING };
   return { group, ...st };
 }
 

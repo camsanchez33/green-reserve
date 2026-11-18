@@ -230,6 +230,7 @@
 .ysec { margin-top: 20px; }
 .ymem { display: flex; align-items: baseline; gap: 8px; margin: 0 0 4px; font-size: 17px; }
 .ylast { margin: 0; }
+.ymemnote { margin: 0 0 4px; font-size: 14px; color: var(--g-soft); }
 .ylist { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .yrow { display: flex; align-items: center; gap: 14px; min-height: 44px; padding: 12px 16px; border: 1px solid var(--g-line); border-radius: 12px; background: var(--g-card); color: var(--g-ink); text-decoration: none; }
 .ylink:hover { border-color: var(--g-acc); }
