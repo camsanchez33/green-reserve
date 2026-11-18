@@ -10,7 +10,8 @@ export default function Footer() {
 
   if (pathname.startsWith('/admin') || pathname.startsWith('/dashboard') || pathname.startsWith('/cam')) return null;
   // GOLFER-REDO (Cam 2026-11-11): a course's booking page and its Course info tab carry the course's own footer — one footer only.
-  if (/^\/courses\/[^/]+(\/info)?\/?$/.test(pathname)) return null;
+  // Its Log in and Your <Course> pages do too (golfer items 2 and 6).
+  if (/^\/courses\/[^/]+(\/info|\/login|\/member)?\/?$/.test(pathname)) return null;
   // The Book page wears the course's look (Light or Dark) and carries its own footer in it (BookClient).
   if (pathname === '/book' || pathname === '/book/') return null;
 

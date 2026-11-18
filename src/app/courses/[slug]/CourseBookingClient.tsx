@@ -610,10 +610,11 @@ export default function CourseDetailPage({
             <div className={`${CARD} p-6 sticky top-20`}>
               <p className="text-[15px] font-semibold text-ink mb-1">Member access</p>
               <p className="text-ink text-sm leading-relaxed mb-5">
-                This is a private club. Tee time booking is reserved for members.{memberSession ? '' : loginOffered(course) ? ' Log in to your member account to view availability and book.' : ''}
+                This is a private club. Members book through the pro shop{course.phone ? ` at ${course.phone}` : ''}.{memberSession ? '' : loginOffered(course) ? ' Log in to see your membership and upcoming bookings.' : ''}
               </p>
-              {/* Item 2: the one Log in, and only when the course offers it (switch on and a group). A private club's
-                  members book on the member page, so Log in returns there; logged in, the panel links straight to it. */}
+              {/* Item 2: the one Log in, and only when the course offers it (switch on and a group). A private club's tee
+                  times aren't booked online (api/bookings refuses them); Log in opens Your <Course> (membership and
+                  upcoming bookings), and logged in, the panel links straight to it. */}
               {memberSession ? (
                 <Link
                   href={`/courses/${slug}/member`}
@@ -630,9 +631,7 @@ export default function CourseDetailPage({
                 >
                   Log in
                 </Link>
-              ) : (
-                <p className="text-ink text-sm">Members book through the pro shop{course.phone ? ` at ${course.phone}` : ''}.</p>
-              )}
+              ) : null}
               <p className="text-center text-xs text-ink mt-4">
                 Not a member? Contact the club directly.
               </p>

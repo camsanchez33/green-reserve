@@ -81,9 +81,6 @@
     "input": 1,
     "lucide": 1
   },
-  "src/app/courses/[slug]/member/page.tsx": {
-    "lucide": 3
-  },
   "src/app/dashboard/2fa/page.tsx": {
     "card": 1
   },

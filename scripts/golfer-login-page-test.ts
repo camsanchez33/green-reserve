@@ -43,7 +43,8 @@ check('no Log in when the course switched it off or has no group (course page an
 check('logged in, the header names the groups', course.includes('Logged in · {memberSession.name}{groupWords ?'));
 const book = readFileSync('src/app/book/BookClient.tsx', 'utf8');
 check('the Book page has the one Log in, coming back to this booking', book.includes('/login?back=${encodeURIComponent(`/book?${params.toString()}`)}'));
-const member = readFileSync('src/app/courses/[slug]/member/page.tsx', 'utf8');
+const member = readFileSync('src/app/courses/[slug]/member/YourCourseClient.tsx', 'utf8');
+const memberPage = readFileSync('src/app/courses/[slug]/member/page.tsx', 'utf8');
 check('no "sign in" left on the member page (item 2: Log in)', !/sign[ -]in|Sign out/i.test(member.replace(/\/\/.*$/gm, '').replace(/\{\/\*[\s\S]*?\*\/\}/g, '').replace(/function SignInPanel|<SignInPanel/g, '')));
 
 // What the browser would do with each accepted value: it must stay on this course's pages or /book.
@@ -67,14 +68,15 @@ for (const f of ['src/app/courses/[slug]/CourseBookingClient.tsx', 'src/app/book
 }
 
 // One log-in (Build 2026-11-18): the member page sends a logged-out golfer to the code page and back.
-check('the member page has no second log-in: logged out, it goes to the code page and back', !member.includes('SignInPanel') && member.includes("const q = new URLSearchParams({ back: `/courses/${slug}/member` });") && member.includes('router.replace(`/courses/${slug}/login?${q}`);'));
-check('an old emailed link that failed says so on the code page, without a reason', member.includes("if (errorParam) q.set('link', 'failed');") && page.includes('That emailed log-in link didn&rsquo;t work. Ask for a code instead.'));
-check('logging out on the member page goes to the course page', member.includes('onSignOut={() => router.replace(`/courses/${slug}`)}'));
+check('the member page has no second log-in: logged out (401 only), it goes to the code page and back', !member.includes('SignInPanel') && member.includes("if (r.status === 401) { setLoad({ state: 'out' }); return; }") && member.includes("const q = new URLSearchParams({ back: `${home}/member` });") && member.includes('router.replace(`${home}/login?${q}`);'));
+check('a session that fails to load is said, with Try again, never taken for logged out', member.includes("if (!r.ok) { setLoad({ state: 'error' }); return; }") && member.includes('onClick={fetchSession}>Try again</button>'));
+check('an old emailed link that failed says so on the code page, without a reason', member.includes("if (linkFailed) q.set('link', 'failed');") && memberPage.includes("const linkFailed = typeof sp.error === 'string' && sp.error !== '';") && page.includes('That emailed log-in link didn&rsquo;t work. Ask for a code instead.'));
+check('logging out on the member page goes to the course page', member.includes('router.replace(home);'));
 check('the course info page adds no <main> inside the layout\'s', !readFileSync('src/app/courses/[slug]/info/page.tsx', 'utf8').includes('<main'));
 
 check('the visible Back links never point at the member page (it needs a log-in and would send the golfer back here)', page.includes("const leaveHref = backHref.startsWith('/book?') || backHref === home || backHref.startsWith(`${home}?`) ? backHref : home;") && page.includes('<Link href={leaveHref} className={`${g.lnk} ${g.back}`}>') && page.includes('href={leaveHref}>{backLabel}</Link>') && !page.includes('<Link href={backHref}'));
 check('the failed-link line shows only when Log in is offered', page.includes("{linkFailed && !loginOff && step === 'email' && <p"));
-check('a failed log-out on the member page is said', member.includes("if (!r || !r.ok) { setSignOutErr(true); return; }") && member.includes("Couldn&rsquo;t log out. Try again."));
+check('a failed log-out on the member page is said', member.includes("if (!r || !r.ok) { setLogoutError(true); return; }") && member.includes("Couldn&rsquo;t log out. Try again."));
 check('an alert reads as on only when the server says active, naming the log-in address', readFileSync('src/components/golfer/AlertSheet.tsx', 'utf8').includes("active: d.status === 'active',") && readFileSync('src/components/golfer/AlertSheet.tsx', 'utf8').includes("d.status === 'active' && typeof d.maskedEmail === 'string' ? d.maskedEmail"));
 
 // The same rule, evaluated: the visible Back link keeps the tee times' date and players, and never the member page.

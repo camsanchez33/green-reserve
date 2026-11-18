@@ -191,7 +191,7 @@ export default function AlertSheet({ open, onClose, course, days, memberEmail }:
                     {days.map((d, i) => (
                       <button key={d} type="button" aria-pressed={dates.includes(d)} aria-label={shortDate(d)} onClick={() => toggleDate(d)} data-field={i === 0 ? 'dates' : undefined}>
                         {/* The first tile of each month names the month, so a long window can't show two "19"s alike. */}
-                        <small>{new Date(d + 'T12:00:00').toLocaleDateString('en-US', i === 0 || d.endsWith('-01') ? { month: 'short' } : { weekday: 'short' })}</small>{new Date(d + 'T12:00:00').getDate()}
+                        <small>{new Date(d + 'T12:00:00').toLocaleDateString('en-US', i === 0 || d.slice(0, 7) !== days[i - 1].slice(0, 7) ? { month: 'short' } : { weekday: 'short' })}</small>{new Date(d + 'T12:00:00').getDate()}
                       </button>
                     ))}
                   </div>
