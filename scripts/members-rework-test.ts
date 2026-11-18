@@ -23,8 +23,8 @@ check('Dues this year breaks down by membership with a total and the Revenue lin
 check('a row opens that membership\'s own page (?m=)', p.includes("`/dashboard/members?m=${id}`") && p.includes("searchParams.get('m')"));
 check('a membership\'s page: Members, Dues this year (with data), Overdue renewals', p.includes('label="Members"') && p.includes('{hasDues && <Tile label="Dues this year"') && p.includes('const hasDues = !!dues') && p.includes('label="Overdue renewals"'));
 check('the member list: Member, Dues, Rounds this year, Since', p.includes('<span>Member</span><span>Dues</span>') && p.includes('Rounds this year</span>') && p.includes('>Since</span>'));
-check('Details: price, lasts, joining, renews itself, books online, what members pay', ['k="Price"', 'k="Lasts"', 'k="Joining"', 'k="Renews itself"', 'k="Books online"', '<SubHead>What members pay</SubHead>'].every(s => p.includes(s)));
-check('joining requests, import and reminders sit on a membership\'s page', p.indexOf('<JoinRequests') > p.indexOf('/* ── A membership') && p.indexOf('<ImportMembers') > p.indexOf('/* ── A membership') && p.indexOf('remindOverdue}') > p.indexOf('/* ── A membership') && p.indexOf('<JoinRequests') < p.indexOf('/* ── The list'));
+check('Details: price, lasts, renews itself, books online, what members pay (no Joining: Join online is gone)', !p.includes('k="Joining"') && ['k="Price"', 'k="Lasts"', 'k="Renews itself"', 'k="Books online"', '<SubHead>What members pay</SubHead>'].every(s => p.includes(s)));
+check('not paid yet, import and reminders sit on a membership\'s page', p.indexOf('<UnpaidMembers') > p.indexOf('/* ── A membership') && p.indexOf('<ImportMembers') > p.indexOf('/* ── A membership') && p.indexOf('remindOverdue}') > p.indexOf('/* ── A membership') && p.indexOf('<UnpaidMembers') < p.indexOf('/* ── The list') && !p.includes('JoinRequests'));
 check('residents stay on the list page until the post-launch switch', p.indexOf('<ResidentsCard') > p.indexOf('/* ── The list'));
 check('dues status uses the same overdue rule as Remind (unpaid, or expired and not comped)', p.includes("m.paymentStatus === 'comped'") && p.includes("m.paymentStatus === 'unpaid'") && p.includes("m.expiresAt.slice(0, 10) < now.toLocaleDateString('en-CA')"));
 check('a free membership never reads as dues unpaid (owed is checked first)', p.indexOf('owed <= 0') > -1 && p.indexOf('owed <= 0') < p.indexOf("m.paymentStatus === 'unpaid'"));
@@ -32,8 +32,8 @@ check('the member card: membership, dues, since, rounds, payments; number and ph
 check('the card keeps every action: dues at the shop, dues link, change, edit, auto-renew, account, end', ["action: 'mark_paid'", "action: 'send_pay_link'", 'Change membership', 'Edit details', '<AutoRenewStop', '<MemberAccount', 'End membership'].every(s => card.includes(s)));
 check('edit actions only for members.edit', p.includes("const canEdit = access.can('members.edit');") && card.includes('{can.edit && <>') && p.includes('plus={canEdit && open.active'));
 check('Add a member: name, email and phone; no faked number, photo or payment', add.includes('Full name') && add.includes('Phone (optional)') && !/PH-|Card reader|Type a card/.test(add));
-check('the setup runs Name → Joining → Payment → Booking and rates', setup.includes("const STEPS = ['Name', 'Joining', 'Payment', 'Booking and rates'];"));
-check('the setup: Cancel and Back are plain links, tiles for choices', setup.includes('className={LINK} onClick={onClose}>Cancel') && setup.includes('>Back</button>') && setup.includes('<Tiles labelledBy="ms-join"'));
+check('the setup runs Name → Renewal → Payment → Booking and rates', setup.includes("const STEPS = ['Name', 'Renewal', 'Payment', 'Booking and rates'];"));
+check('the setup: Cancel and Back are plain links, tiles for choices', setup.includes('className={LINK} onClick={onClose}>Cancel') && setup.includes('>Back</button>') && setup.includes('<Tiles labelledBy="ms-len"') && !setup.includes('ms-join') && !setup.includes('joinOnline'));
 check('the 1% dues fee is stated plainly', setup.includes('members pay a 1% fee on top') && p.includes('a 1% fee'));
 check('no decorative icons', !/from 'lucide-react'/.test(p + card + add + setup + shared));
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);

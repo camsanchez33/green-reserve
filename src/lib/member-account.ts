@@ -131,7 +131,7 @@ export async function moveCharge(courseId: string, chargeId: unknown, toMembersh
     // A shop sale's receipt goes to whoever it's on now.
     if (line.shopSaleId) {
       const to = await tx.courseMembership.findUniqueOrThrow({ where: { id: toMembershipId }, select: { inviteName: true, inviteEmail: true, golfer: { select: { firstName: true, lastName: true, email: true } } } });
-      await tx.shopSale.update({ where: { id: line.shopSaleId }, data: { customerName: ((to.golfer ? `${to.golfer.firstName} ${to.golfer.lastName}`.trim() : '') || to.inviteName).slice(0, 80), customerEmail: (to.golfer?.email || to.inviteEmail || '').toLowerCase().slice(0, 200), customerPhone: '' } });
+      await tx.shopSale.update({ where: { id: line.shopSaleId }, data: { customerName: (to.inviteName || (to.golfer ? `${to.golfer.firstName} ${to.golfer.lastName}`.trim() : '')).slice(0, 80), customerEmail: (to.inviteEmail || to.golfer?.email || '').toLowerCase().slice(0, 200), customerPhone: '' } });
     }
     return { ok: true as const, id: moved.id, balanceCents: moved.balanceCents };
   }).catch(err => { if (err instanceof MoveRefused) return fail(err.status, err.message); throw err; });

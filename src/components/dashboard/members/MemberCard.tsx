@@ -44,7 +44,7 @@ export function MemberCard({ m, tier, tiers, dues, owed, can, onChanged, onClose
   const saveChange = async () => { if (change && await patch('change', { tierId: change })) { setChange(null); await onChanged(); toast('Membership changed.', 'ok'); } };
   const saveDetails = async () => {
     if (!edit) return;
-    if (await patch('edit', { notes: edit.notes, expiresAt: edit.expiresAt || null, ...(!m.linked ? { name: edit.name, email: edit.email, phone: edit.phone } : {}) })) { setEdit(null); await onChanged(); }
+    if (await patch('edit', { notes: edit.notes, expiresAt: edit.expiresAt || null, name: edit.name, email: edit.email, phone: edit.phone })) { setEdit(null); await onChanged(); }
   };
   const setActive = async (on: boolean) => {
     if (!on && !confirm(`End ${m.name || m.email}'s membership? They stop getting member rates. You can make it active again.`)) return;
@@ -79,7 +79,7 @@ export function MemberCard({ m, tier, tiers, dues, owed, can, onChanged, onClose
         {m.spendThisYearCents != null && <KV k="Spend this year" v={usd0(m.spendThisYearCents)} />}
         <KV k="Last round" v={m.lastRound ? shortDate(m.lastRound) : 'None yet'} />
         {m.autoRenew && <KV k="Renews itself" v="Yes" />}
-        <KV k="Online" v={<span className="font-normal text-ink-soft">{m.linked ? 'Account linked — member rates online.' : m.inviteAccepted ? 'Invite accepted.' : 'Not linked yet — member rates online once they sign in with this email.'}</span>} />
+        <KV k="Online" v={<span className="font-normal text-ink-soft">{'Gets member rates online once they log in with this email.'}</span>} />
         {m.notes && <KV k="Note" v={<span className="font-normal">{m.notes}</span>} />}
       </div>
 
@@ -115,11 +115,11 @@ export function MemberCard({ m, tier, tiers, dues, owed, can, onChanged, onClose
         )}
         {edit && (
           <div className="grid sm:grid-cols-2 gap-2.5 bg-ink/5 rounded-md p-3">
-            {!m.linked && <>
+            <>
               <div className="sm:col-span-2"><Label htmlFor="mc-name">Full name</Label><input id="mc-name" className={INPUT + ' w-full'} value={edit.name} onChange={e => setEdit({ ...edit, name: e.target.value })} /></div>
               <div><Label htmlFor="mc-email">Email</Label><input id="mc-email" type="email" className={INPUT + ' w-full'} value={edit.email} onChange={e => setEdit({ ...edit, email: e.target.value })} /></div>
               <div><Label htmlFor="mc-phone">Phone</Label><input id="mc-phone" type="tel" className={INPUT + ' w-full'} value={edit.phone} onChange={e => setEdit({ ...edit, phone: e.target.value })} /></div>
-            </>}
+            </>
             <div><Label htmlFor="mc-exp">Runs until</Label><input id="mc-exp" type="date" className={INPUT + ' w-full'} value={edit.expiresAt} onChange={e => setEdit({ ...edit, expiresAt: e.target.value })} /></div>
             <div><Label htmlFor="mc-note">Note for your staff</Label><input id="mc-note" className={INPUT + ' w-full'} value={edit.notes} onChange={e => setEdit({ ...edit, notes: e.target.value })} /></div>
             <div className="sm:col-span-2 flex gap-4 items-center">

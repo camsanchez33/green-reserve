@@ -10,7 +10,7 @@ import { AccountFields } from '@/components/dashboard/MemberAccount';
 import { INPUT } from '@/components/ui/field';
 import { type Tier, Popup, StepBar, Tiles, Label, Hint, Money, LINK, LINK_BAD, PRIMARY } from './shared';
 
-const STEPS = ['Name', 'Joining', 'Payment', 'Booking and rates'];
+const STEPS = ['Name', 'Renewal', 'Payment', 'Booking and rates'];
 type Form = Partial<Tier> & { hasInit?: boolean };
 type Mode = 'each' | 'pct';
 const num = (v: unknown) => (v === '' || v == null ? null : Number(v));

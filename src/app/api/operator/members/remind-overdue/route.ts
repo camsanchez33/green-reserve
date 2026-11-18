@@ -48,7 +48,7 @@ export async function POST() {
     if (!m.tier) { skippedFree++; continue; }
     const initiationCents = m.lastPaidAt || m.initiationWaived ? 0 : m.tier.initiationFeeCents;
     if (m.tier.annualFeeCents + initiationCents <= 0) { skippedFree++; continue; }
-    // The account's current email wins over the invite address, as the list does.
+    // The member's own email first, as the list shows it (GOLFER-LOGIN-1).
     const to = m.inviteEmail || m.golfer?.email;
     if (!to) { skippedNoEmail++; continue; }
     if (m.renewalRemindedAt && m.renewalRemindedAt > recent) { skippedRecent++; continue; }

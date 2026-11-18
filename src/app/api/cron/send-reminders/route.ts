@@ -70,7 +70,7 @@ export const GET = cronRoute('send-reminders', async (req: NextRequest) => {
     if (!m.tier || m.tier.annualFeeCents <= 0 || !m.course.stripeAccountActive) continue;
     // Not yet payable (a monthly tier opens 10 days out): left unstamped, so it goes out the day the link works.
     if (paidUntilRenewal(m, m.tier.termMonths)) continue;
-    // The account's email wins over the invite address (a self-joined member has no invite address).
+    // The member's own email first, an older linked account's only where none was typed (GOLFER-LOGIN-1).
     const to = m.inviteEmail || m.golfer?.email;
     if (!to) continue;
     try {

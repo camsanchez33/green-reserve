@@ -125,7 +125,7 @@ export async function POST(req: NextRequest) {
   // than refused as a duplicate: same person, the tier and details as now entered.
   if (payFirst) {
     const unpaid = await prisma.courseMembership.findFirst({
-      where: { courseId: session.courseId, addedBy: COUNTER_ADDED, status: { in: ['awaiting_payment', 'cancelled'] }, lastPaidAt: null, duesChargeStartedAt: null, duesReaderId: '', OR: [{ inviteEmail: lowerEmail }, ...(golfer ? [{ golferId: golfer.id }] : [])] },
+      where: { courseId: session.courseId, addedBy: COUNTER_ADDED, status: { in: ['awaiting_payment', 'cancelled'] }, lastPaidAt: null, duesChargeStartedAt: null, duesReaderId: '', OR: [{ inviteEmail: ciEquals(lowerEmail) }, ...(golfer ? [{ inviteEmail: '', golferId: golfer.id }] : [])] },
       select: { id: true, golferId: true },
     });
     if (unpaid) {
@@ -145,6 +145,10 @@ export async function POST(req: NextRequest) {
     });
     if (existing) {
       return NextResponse.json({ error: `${email} is already a member of this course` }, { status: 409 });
+    }
+    // GOLFER-LOGIN-1: the email that logs in is the membership's own; never let two memberships share it.
+    if (await prisma.courseMembership.findFirst({ where: { courseId: session.courseId, OR: [{ inviteEmail: ciEquals(lowerEmail) }, { inviteEmail: '', golfer: { email: ciEquals(lowerEmail) } }] }, select: { id: true } })) {
+      return NextResponse.json({ error: `${email} already has a membership here` }, { status: 409 });
     }
     const membership = await prisma.courseMembership.create({
       data: {
@@ -178,7 +182,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Name is required for members without an existing account' }, { status: 400 });
     }
     const existingInvite = await prisma.courseMembership.findFirst({
-      where: { courseId: session.courseId, inviteEmail: lowerEmail },
+      where: { courseId: session.courseId, OR: [{ inviteEmail: ciEquals(lowerEmail) }, { inviteEmail: '', golfer: { email: ciEquals(lowerEmail) } }] },
     });
     if (existingInvite) {
       return NextResponse.json({ error: `${email} already has a pending membership` }, { status: 409 });
