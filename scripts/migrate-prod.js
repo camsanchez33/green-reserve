@@ -2,28 +2,23 @@
 /**
  * Runs `prisma migrate deploy` on production Vercel builds, and on the `staging`
  * branch's preview build when it is explicitly set up for it (docs/RELEASES.md §2).
- * Skips silently on every other preview and on local builds, so a branch push can
- * never migrate the production database.
+ * Skips on every other preview and on local builds, so a branch push can never
+ * migrate the production database. The env decision is scripts/migrate-decide.js
+ * (pure, tested by scripts/migrate-prod-test.ts).
  *
- * Staging (Build OK 2026-11-18): set MIGRATE_ON_BUILD to the staging database's
- * HOST (the host in DIRECT_URL, e.g. ep-xxx.us-east-2.aws.neon.tech), scoped to
- * Preview + branch `staging` only. It migrates only when all three hold:
- *   VERCEL_ENV=preview, VERCEL_GIT_COMMIT_REF=staging, and DIRECT_URL's host equals
- *   MIGRATE_ON_BUILD. So the production URL pasted into staging's variables by
- *   mistake fails the staging build instead of applying unreleased migrations to
- *   production, and the variable leaking to other previews does nothing.
+ * Staging (Build OK 2026-11-18): set MIGRATE_ON_BUILD, scoped Preview + branch
+ * `staging` only, to the staging branch's host AS SHOWN IN THE NEON CONSOLE for
+ * the `staging` branch. Never copy it out of the URL you just pasted: if that URL
+ * was production's, the check would match production. Two guards then apply:
+ *   1. DIRECT_URL and DATABASE_URL must both be on that host, or the build fails.
+ *   2. Config-free: before migrating, the target must hold no real course
+ *      (Course.isTest = false). Staging is test courses only, so a real course
+ *      means this is production's data, and the build fails.
  *
  * Used in package.json: "build": "prisma generate && node scripts/migrate-prod.js && next build"
  */
 const { execSync } = require('child_process');
-
-const env = process.env.VERCEL_ENV;
-const branch = process.env.VERCEL_GIT_COMMIT_REF;
-const stagingHost = (process.env.MIGRATE_ON_BUILD || '').trim().toLowerCase();
-
-function dbHost(url) {
-  try { return new URL(url).hostname.toLowerCase(); } catch { return ''; }
-}
+const { decide } = require('./migrate-decide');
 
 function migrate(label) {
   console.log(`[migrate-prod] ${label} — running prisma migrate deploy...`);
@@ -36,16 +31,46 @@ function migrate(label) {
   }
 }
 
-if (env === 'production') {
-  migrate('VERCEL_ENV=production');
-} else if (env === 'preview' && branch === 'staging' && stagingHost) {
-  const host = dbHost(process.env.DIRECT_URL || process.env.DATABASE_URL || '');
-  if (host !== stagingHost) {
-    console.error(`[migrate-prod] staging: the database host (${host || 'none'}) is not MIGRATE_ON_BUILD (${stagingHost}). Refusing to migrate; fix staging's DATABASE_URL/DIRECT_URL.`);
+/** Real (non-test) courses on the target database. 0 on a database with no Course table yet. */
+async function realCourses() {
+  const { PrismaClient } = require('@prisma/client');
+  const prisma = new PrismaClient({ datasources: { db: { url: process.env.DIRECT_URL } } });
+  try {
+    const rows = await prisma.$queryRawUnsafe('SELECT count(*)::int AS n FROM "Course" WHERE "isTest" = false');
+    return rows[0].n;
+  } catch (err) {
+    // A brand-new staging database before its first migration has no Course table: nothing real in it.
+    if (/relation "Course" does not exist|P2010.*42P01|42P01/.test(String(err && err.message))) return 0;
+    throw err;
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+async function main() {
+  const d = decide(process.env);
+  if (d.action === 'skip') {
+    console.log(`[migrate-prod] ${d.label} — skipping prisma migrate deploy.`);
+    return;
+  }
+  if (d.action === 'refuse') {
+    console.error(`[migrate-prod] ${d.reason}`);
     process.exit(1);
   }
-  migrate(`staging preview, database ${host}`);
-} else {
-  console.log(`[migrate-prod] VERCEL_ENV=${env ?? '(none)'}${branch ? `, branch ${branch}` : ''} — skipping prisma migrate deploy.`);
-  process.exit(0);
+  if (d.action === 'migrate-staging') {
+    let n;
+    try {
+      n = await realCourses();
+    } catch (err) {
+      console.error(`[migrate-prod] staging: could not check the database for real courses (${err && err.message}). Refusing to migrate.`);
+      process.exit(1);
+    }
+    if (n > 0) {
+      console.error(`[migrate-prod] staging: the target database holds ${n} real course(s), so it is not the staging database. Refusing to migrate.`);
+      process.exit(1);
+    }
+  }
+  migrate(d.label);
 }
+
+main();
