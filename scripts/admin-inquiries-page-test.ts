@@ -33,5 +33,15 @@ check('…one save at a time, "Saved" only when nothing is waiting', call.includ
 // A logged email with a note, or a fourth email, still shows on the course page.
 check('emails beyond the first three, or with a note, stay in the history', read('src/app/admin/inquiries/[id]/OutreachCourse.tsx').includes("t.direction === 'in' || t.note || !firstThree.has(t.id)"));
 
+// The "test data until Nov 23" line uses the same moment as the clear and the wipe.
+{
+  const page = read('src/app/admin/inquiries/page.tsx');
+  const reset = read('src/lib/data-reset.ts');
+  const pageAt = page.match(/export const TEST_UNTIL = '([^']+)'/)?.[1];
+  const resetAt = reset.match(/export const OUTREACH_START = new Date\('([^']+)'\)/)?.[1];
+  check('the Outreach test-data line ends when the clear and the wipe stop taking inquiries', !!pageAt && pageAt === resetAt, `${pageAt} vs ${resetAt}`);
+  check('…and only shows before then', /Date\.now\(\) < Date\.parse\(TEST_UNTIL\)/.test(page));
+}
+
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');

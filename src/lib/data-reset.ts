@@ -157,14 +157,15 @@ function clearableInquiries(before: Date): Prisma.CourseInquiryWhereInput {
 
 export async function previewClearTestInquiries(before: Date = OUTREACH_START) {
   const where = clearableInquiries(before);
-  const [inquiries, calls, touches, keptBuilt, keptAfter] = await Promise.all([
+  const [inquiries, calls, touches, contacts, keptBuilt, keptAfter] = await Promise.all([
     prisma.courseInquiry.count({ where }),
     prisma.call.count({ where: { inquiry: where } }),
     prisma.outreachTouch.count({ where: { inquiry: where } }),
+    prisma.courseContact.count({ where: { inquiry: where } }),
     prisma.courseInquiry.count({ where: { createdAt: { lt: before }, builtCourseId: { not: null } } }),
     prisma.courseInquiry.count({ where: { createdAt: { gte: before } } }),
   ]);
-  return { inquiries, calls, touches, keptBuilt, keptAfter };
+  return { inquiries, calls, touches, contacts, keptBuilt, keptAfter };
 }
 
 /**

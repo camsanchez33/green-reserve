@@ -211,6 +211,7 @@ async function main() {
   const oldTest = await seedInquiry('old', { createdAt: new Date('2001-01-01T12:00:00Z') });
   await prisma.outreachTouch.create({ data: { inquiryId: oldTest.id, at: new Date('2001-01-02T12:00:00Z'), channel: 'call', direction: 'out' } });
   const oldCall = await prisma.call.create({ data: { kind: 'discovery', inquiryId: oldTest.id, scheduledAt: new Date('2001-01-03T12:00:00Z') } });
+  await prisma.courseContact.create({ data: { inquiryId: oldTest.id, name: 'Old contact' } });
   await prisma.inquiryStatusEvent.create({ data: { inquiryId: oldTest.id, fromStatus: 'pending', toStatus: 'in_review', trigger: 'admin' } });
   const oldBuilt = await seedInquiry('oldbuilt', { createdAt: new Date('2001-01-01T12:00:00Z'), status: 'live', builtCourseId: r.course.id });
   const fresh2 = await seedInquiry('new', { createdAt: new Date('2001-06-01T04:00:00Z') });
@@ -219,10 +220,10 @@ async function main() {
   check('the clear can never reach an inquiry made from Nov 23 on', !tooLate.ok);
   check('clearing test inquiries closes with the launch wipe', !late2.ok && !!(await prisma.courseInquiry.findUnique({ where: { id: oldTest.id } })));
   const pv = await previewClearTestInquiries(cutoff);
-  check('the clear preview counts what it deletes and what it keeps', pv.inquiries === 1 && pv.calls === 1 && pv.touches === 1 && pv.keptBuilt === 1, pv);
+  check('the clear preview counts what it deletes and what it keeps', pv.inquiries === 1 && pv.calls === 1 && pv.touches === 1 && pv.contacts === 1 && pv.keptBuilt === 1, pv);
   const cl = await clearTestInquiries(new Date('2026-11-20T12:00:00Z'), cutoff);
   check('the clear deletes an inquiry added before the day', cl.ok && cl.cleared.inquiries === 1 && !(await prisma.courseInquiry.findUnique({ where: { id: oldTest.id } })), cl);
-  check('…with its calls, touches and status events', !(await prisma.call.findUnique({ where: { id: oldCall.id } }))
+  check('…with its calls, touches, contacts and status events', !(await prisma.call.findUnique({ where: { id: oldCall.id } })) && (await prisma.courseContact.count({ where: { inquiryId: oldTest.id } })) === 0
     && (await prisma.outreachTouch.count({ where: { inquiryId: oldTest.id } })) === 0 && (await prisma.inquiryStatusEvent.count({ where: { inquiryId: oldTest.id } })) === 0);
   check('…and keeps one that became a course (the wipe takes it), and one added from the cut-off on',
     !!(await prisma.courseInquiry.findUnique({ where: { id: oldBuilt.id } })) && !!(await prisma.courseInquiry.findUnique({ where: { id: fresh2.id } })));

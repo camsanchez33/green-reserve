@@ -33,6 +33,10 @@ const FILTERS: Record<Tab, [Filter, string][]> = {
   calls: [['all', 'Everything'], ['unprepared', 'Not prepared'], ['unlogged', 'Not logged yet']],
 };
 // Stage dots, as the mockup: Targets grey, Contacted a lighter green, Replied and Call booked the brand green.
+// Until outreach starts, every course on the list is test data: Platform activity's "Clear test inquiries" or the launch
+// wipe removes what was added before this. The same moment as OUTREACH_START in lib/data-reset (a server file);
+// scripts/admin-inquiries-page-test.ts keeps the two equal. The line goes away by itself after it.
+export const TEST_UNTIL = '2026-11-23T05:00:00Z';
 const STAGE_DOT: Record<string, string> = { target: '', contacted: iq.dOk, replied: iq.dBrand, call: iq.dBrand };
 
 function InquiriesInner() {
@@ -92,6 +96,7 @@ function InquiriesInner() {
             const stages = outreach.stages.map(st => ({ ...st, rows: st.rows.filter(pass) })).filter(st => st.rows.length);
             return (
               <>
+                {Date.now() < Date.parse(TEST_UNTIL) && <p className={iq.foot}>Courses added before Nov 23 are test data and get cleared.</p>}
                 {stages.length === 0 && (
                   <section className={`${g.glass} ${iq.sec}`}><p className={iq.empty} style={{ borderTop: 0 }}>
                     {filter !== 'all' ? 'Nothing matches that filter.' : canWrite ? 'No courses in outreach yet. Add one with the plus.' : 'No courses in outreach yet.'}
