@@ -469,10 +469,17 @@ async function main() {
   check('Your <Course>: benefits in one line', hs.body?.benefits === '20% off every round and you can book 9 days out. 6 guest passes a year.', hs.body?.benefits);
   check('…renews on the end date when it renews itself', hs.body?.renewsOn === homeEnd && hs.body?.expiresOn === null && hs.body?.autoRenew === true, hs.body);
   check('…renewalFailed false while renewals go through', hs.body?.renewalFailed === false, hs.body);
-  await prisma.courseMembership.updateMany({ where: { courseId: home.id, inviteEmail: homeEmail }, data: { autoRenewFailedAt: new Date() } });
+  // A decline happens at the end of the term; within the grace days the membership still logs in with its rates.
+  await prisma.course.update({ where: { id: home.id }, data: { memberGraceDays: 10 } });
+  await prisma.courseMembership.updateMany({ where: { courseId: home.id, inviteEmail: homeEmail }, data: { autoRenewFailedAt: new Date(), expiresAt: new Date(`${addDaysStr(todayIn('UTC'), -1)}T00:00:00Z`) } });
   const hsFail = await get(`/api/member/${home.slug}/session`, await cookie(home.id, homeEmail));
-  check('…renewalFailed true after a declined renewal (the Golfer lane\'s "Your renewal didn\'t go through")', hsFail.body?.renewalFailed === true, hsFail.body);
+  check('…renewalFailed true after a declined renewal at the end of the term (the Golfer lane\'s "Your renewal didn\'t go through")', hsFail.body?.renewalFailed === true, hsFail.body);
+  // Staff moved "Runs until" on by hand (comped, or paid outside): the old flag stays set, but the term is current.
+  await prisma.courseMembership.updateMany({ where: { courseId: home.id, inviteEmail: homeEmail }, data: { expiresAt: new Date(`${homeEnd}T00:00:00Z`) } });
+  const hsMoved = await get(`/api/member/${home.slug}/session`, await cookie(home.id, homeEmail));
+  check('…but false once the term runs into the future again, flag or not', hsMoved.body?.renewalFailed === false && hsMoved.body?.renewsOn === homeEnd, hsMoved.body);
   await prisma.courseMembership.updateMany({ where: { courseId: home.id, inviteEmail: homeEmail }, data: { autoRenewFailedAt: null } });
+  await prisma.course.update({ where: { id: home.id }, data: { memberGraceDays: 0 } });
   check('…upcoming: this course, this email (any case), confirmed, still to come, soonest first', up.map(u => u.bookingId).join() === [bNear.id, bPaid.id, bFar.id].join() && up.length === 3, up);
   check('…each opens its manage page with the emailed token, as a path on this site', up[0]?.manageUrl === `/manage/${bNear.id}?token=${TAG}-tok-1` && up[0].date === tomorrow && up[0].time === '09:00' && up[0].players === 2 && up[0].holes === 18, up[0]);
   check('…no card held: "Total due at the course"', up[0]?.dueLine === 'Total due at the course: $103.00', up[0]);
