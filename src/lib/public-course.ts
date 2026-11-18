@@ -5,7 +5,37 @@
 import { prisma } from '@/lib/prisma';
 import { ROUND_PACKS_ON } from '@/lib/round-packs-switch';
 import { centsToDollarsOr0 } from '@/lib/money';
-import { normalizeDbCourse } from '@/lib/normalize-course';
+import { normalizeDbCourse, type BookingPageExtras } from '@/lib/normalize-course';
+import { hasLivePromo, closedDatesIn } from '@/lib/booking-look';
+import { todayIn, addDaysStr } from '@/lib/course-time';
+import { DEFAULT_PUBLIC_WINDOW_DAYS, DEFAULT_MEMBER_WINDOW_DAYS } from '@/lib/booking-window';
+
+/**
+ * The booking page's extra fields (Golfer lane item 1). The payload is the same for every
+ * viewer, so both use the WIDEST window anyone can book: the public window, the course's
+ * member default, or any membership's own window (windowFor in lib/booking-window). Promo:
+ * is any code usable on a tee time in that span (only a boolean leaves here, never a code);
+ * showing the code box a little too often costs nothing, hiding it costs a golfer the discount.
+ * Closed days: every closed day in that span, with staff's reason.
+ */
+export async function bookingPageExtras(c: { id: string; timezone?: string | null; publicAdvanceDays?: number | null; memberAdvanceDays?: number | null }, now: Date = new Date()): Promise<BookingPageExtras> {
+  const today = todayIn(c.timezone, now);
+  const tiers = await prisma.membershipTier.findMany({ where: { courseId: c.id }, select: { advanceBookingDays: true, windowPublic: true } });
+  const widest = Math.max(
+    0,
+    c.publicAdvanceDays ?? DEFAULT_PUBLIC_WINDOW_DAYS,
+    c.memberAdvanceDays ?? DEFAULT_MEMBER_WINDOW_DAYS,
+    // A membership on the public window books no further than the public.
+    ...tiers.map(t => (t.windowPublic ? 0 : t.advanceBookingDays ?? 0)),
+  );
+  // Both ends from the same course-local today (lastBookableDate falls back to UTC without a timezone).
+  const lastDay = addDaysStr(today, Math.min(366, widest));
+  const [codes, closed] = await Promise.all([
+    prisma.promoCode.findMany({ where: { courseId: c.id, active: true }, select: { active: true, startsOn: true, endsOn: true, maxUses: true, usesCount: true } }),
+    prisma.blackout.findMany({ where: { courseId: c.id, date: { gte: today, lte: lastDay } }, select: { date: true, reason: true } }),
+  ]);
+  return { hasLivePromo: hasLivePromo(codes, today, lastDay), closedDates: closedDatesIn(closed, today, lastDay) };
+}
 
 /** The golfer-visible course, exactly as the API serialises it — or null. */
 export async function loadPublicCourse(slug: string) {
@@ -33,5 +63,6 @@ export async function loadPublicCourse(slug: string) {
   // ISO strings), so the client component sees one shape either way.
   const payable = dbCourse.stripeAccountActive && !!dbCourse.stripeAccountId;
   const sellsPacks = ROUND_PACKS_ON && dbCourse._count.roundPacks > 0 && payable;
-  return JSON.parse(JSON.stringify({ ...normalizeDbCourse({ ...dbCourse, rangeBucketItems: dbCourse.shopItems }, centsToDollarsOr0(cheapestCents)), sells_packs: sellsPacks }));
+  const extras = await bookingPageExtras(dbCourse);
+  return JSON.parse(JSON.stringify({ ...normalizeDbCourse({ ...dbCourse, rangeBucketItems: dbCourse.shopItems }, centsToDollarsOr0(cheapestCents), extras), sells_packs: sellsPacks }));
 }

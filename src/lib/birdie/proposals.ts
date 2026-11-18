@@ -62,7 +62,7 @@ export const PROPOSE_TOOLS: Anthropic.Beta.BetaTool[] = [
       type: 'object',
       properties: {
         date: { type: 'string', description: 'The day, YYYY-MM-DD (course-local), today or later.' },
-        reason: { type: 'string', description: 'Short reason, e.g. "Aeration" or "Member tournament".' },
+        reason: { type: 'string', description: 'Short reason, e.g. "Aeration" or "Member tournament". Golfers see it on the booking page, so never a private detail.' },
       },
       required: ['date'],
       additionalProperties: false,
@@ -250,9 +250,11 @@ async function blockDay(input: Record<string, unknown>, ctx: ToolContext): Promi
     id: cardId(),
     title: `Block ${fmtDate(date)}`,
     changes: [{ label: fmtDate(date), from: 'Open for booking', to: reason ? `Blocked — ${reason}` : 'Blocked' }],
-    note: booked > 0
+    note: (booked > 0
       ? `Open times that day are removed. ${booked} booking${booked === 1 ? '' : 's'} already on that day ${booked === 1 ? 'stays' : 'stay'} — nobody is cancelled (cancelling for weather is the Weather button on the Tee Sheet).`
-      : 'Open times that day are removed. There are no bookings on that day.',
+      : 'Open times that day are removed. There are no bookings on that day.')
+      // Booking page payload (2026-11-18): the reason is shown to golfers (closed_dates).
+      + (reason ? ' Golfers see the reason on your booking page.' : ''),
     call: { method: 'POST', path: '/api/operator/blackouts', body: { date, reason } },
   });
 }

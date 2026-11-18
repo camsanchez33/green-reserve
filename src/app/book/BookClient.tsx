@@ -16,11 +16,13 @@ import {
 import type { PaymentRequest } from '@stripe/stripe-js';
 import { Loader2 } from 'lucide-react';
 import { ACCESS_FEE_PER_PLAYER, serviceFeeLabel, hoursLabel } from '@/lib/booking-fees';
-import { TrustNote } from '@/components/TrustNote';
 import { CARD } from '@/components/ui/Card';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
-import { INPUT_COMPACT } from '@/components/ui/field';
 import { describePolicy, policyFrom, afterCutoffLine, insideWindowLine, policyMoney, holdTodayLine, holdsAtCutoff, type CancelPolicy } from '@/lib/cancel-policy';
+import { teeToUtcMs } from '@/lib/tee-time-utils';
+import { LIKE_UNSAFE_EMAIL } from '@/lib/like-exact';
+import { golferLookVars, lookAccentHex, lookMode, lookText, type BookingLook, type CourseLook } from '@/components/golfer/look';
+import g from '@/components/golfer/golfer.module.css';
 
 // Deferred: only load Stripe when a card is actually needed (fee-policy courses).
 // No-fee courses never touch Stripe JS at all.
@@ -50,6 +52,12 @@ export type CourseInfo = {
   /** SP-B: the full policy (cents). Older payloads fall back to the two fields above. */
   cancel_policy?: CancelPolicy;
   brand_color?: string;
+  /** GOLFER-LOOK: Light or Dark and a preset accent (Course.bookingLook/bookingAccent). */
+  booking_look?: CourseLook;
+  /** "Have a promo code?" shows only when the course has a live code (Build). Absent = unknown, shown. */
+  has_live_promo?: boolean;
+  /** The course's IANA timezone, for "is this time already past the free-cancel cutoff" (R-GOLF-009). */
+  timezone?: string | null;
   /** PERS-1: the course's own uploads, shown in the header band. */
   hero_image_url?: string; logo_url?: string;
   /** PERS-1: optional note shown once the tee time is confirmed. */
@@ -106,17 +114,6 @@ function deadlineLabel(dateStr: string, timeStr: string, hoursBefore: number) {
   return `${day} at ${clock} (course time)`;
 }
 
-// The reserve screen's two sections. CLUB-5 (Cam 2026-10-05, "drop the
-// numbers"): headed by name alone — no numbered circles.
-function StepHeading({ title, note }: { title: string; note?: string }) {
-  return (
-    <div>
-      <h2 className="font-serif text-ink text-[22px] leading-none">{title}</h2>
-      {note && <p className="text-[13px] text-ink mt-1.5">{note}</p>}
-    </div>
-  );
-}
-
 // One step of the confirmation timeline — a dot, a rule, a line of plain English.
 function TimelineStep({ when, what, last = false, accent }: {
   when: string; what: React.ReactNode; last?: boolean; accent: string;
@@ -135,15 +132,16 @@ function TimelineStep({ when, what, last = false, accent }: {
   );
 }
 
-const cardStyle = {
-  style: {
-    base: { fontSize: '15px', color: '#141814', '::placeholder': { color: '#979B94' } },
-    invalid: { color: '#A3452F' },
-  },
-};
+function cardStyleFor(look: BookingLook | undefined) {
+  const t = lookText(look);
+  return {
+    style: {
+      base: { fontSize: '15px', color: t.ink, '::placeholder': { color: t.muted } },
+      invalid: { color: t.bad },
+    },
+  };
+}
 
-const iCls = "w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors";
-const lCls = "block text-[13px] font-semibold text-ink mb-1.5";
 
 // PERF-1: what the server already loaded for this URL (see ./page.tsx). When
 // present the page renders the tee time in its first HTML; the course and tee
@@ -187,6 +185,30 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   }
   // RANGE-1: how many of each of the course's buckets (bucket id → count).
   const [bucketQty, setBucketQty] = useState<Record<string, number>>({});
+  /** After a 409 'range': the course's current buckets, keeping counts only for buckets still sold. */
+  async function reloadBuckets() {
+    try {
+      const r = await fetch(`/api/courses/${encodeURIComponent(courseSlug)}`);
+      if (!r.ok) return;
+      const fresh = await r.json() as CourseInfo;
+      const ids = new Set((fresh.range_buckets ?? []).map(b => b.id));
+      setCourse(c => c ? { ...c, range_buckets: fresh.range_buckets ?? [] } : c);
+      setBucketQty(q => Object.fromEntries(Object.entries(q).filter(([id]) => ids.has(id))));
+    } catch { /* the error from the booking is already on the page */ }
+  }
+  const [promoOpen, setPromoOpen] = useState(false);
+  // Item 4 (Cam 2026-11-18): logged in at this course (gr_member), Name and Email are filled and read-only,
+  // so the booking keeps the member's cart and rate at check-in. A 401 just means a guest.
+  const [member, setMember] = useState<{ name: string; email: string } | null>(null);
+  useEffect(() => {
+    if (!courseSlug) return;
+    let live = true;
+    fetch(`/api/member/${encodeURIComponent(courseSlug)}/session`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (live && d && typeof d.email === 'string' && d.email) setMember({ name: typeof d.name === 'string' ? d.name : '', email: d.email }); })
+      .catch(() => {});
+    return () => { live = false; };
+  }, [courseSlug]);
 
   useEffect(() => {
     // Server sent the course + tee time. Everyone books as a guest (Cam 2026-11-18: no golfer accounts).
@@ -231,7 +253,8 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
       .catch(() => { setResidentFee(null); setMemberRate(null); setPacks([]); });
   }, [ttId]);
 
-  const accent = course?.brand_color || '#173B2A';
+  // The confirmation is not on the look tokens yet; it takes the same accent as the page.
+  const accent = course ? lookAccentHex(course) : '#173B2A';
 
   if (confirmedData) {
     return (
@@ -395,161 +418,180 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   const policy = course.cancel_policy ?? policyFrom({ cancellationHours: course.cancellation_hours, lateCancellationFeeCents: Math.round((course.late_cancellation_fee || 0) * 100) });
   const terms = describePolicy(policy);
 
-  return (
-    <div className="min-h-screen bg-paper">
-      <div className="max-w-2xl mx-auto px-4 py-10">
-        <Link href={backToTimesHref(courseSlug, params, players)} className="inline-flex items-center gap-1.5 text-ink-soft hover:text-ink text-sm mb-6 transition-colors">
-          Back to tee times
-        </Link>
+  // R-GOLF-009: the time's free-cancel cutoff has already passed (course clock) — say what cancelling costs now.
+  const pastCutoff = policy.lateCancellationFeeCents > 0 && !!course.timezone
+    && teeToUtcMs(date, teeTime.time, course.timezone) - policy.cancellationHours * 3600_000 <= Date.now();
+  const lateFeeWords = `${policyMoney(policy.lateCancellationFeeCents)}${policy.lateFeeBasis === 'player' ? ' per player' : ''}`;
+  const pastHold = pastCutoff && holdsAtCutoff({ lateFeeTimingAtBooking: policy.lateFeeTiming });
+  // The free-cancel sentence names a time that has already passed: leave it out once it has.
+  const policyLines = pastCutoff
+    ? terms.lines.filter(l => !l.startsWith('Free cancellation until') && l !== afterCutoffLine(policy.lateFeeTiming, lateFeeWords))
+    : terms.lines;
+  // What leaves the golfer's account today, and what is paid at the course.
+  const payNow = FEE_AT_BOOKING_ON && terms.cardAtBooking ? accessTotal : 0;
+  const payLater = total - payNow;
+  const look = golferLookVars(course);
+  const plWord = `${players} ${players === 1 ? 'player' : 'players'}`;
+  const perRider = perCart ? 'cart (2 riders)' : 'rider';
+  const showPromo = !pk && course.has_live_promo !== false;
 
-        <h1 className="text-[34px] font-serif leading-none text-ink mb-3">Confirm your tee time</h1>
-        <p className="text-ink-soft text-sm mb-8">
-          {terms.cardAtBooking
-            ? FEE_AT_BOOKING_ON
-              ? <>Add your card to book at {course.name}. The booking fee is charged now; your round is paid when you check in.</>
-              : <>Save your card to lock in your tee time at {course.name} — you won&apos;t be charged today.</>
-            : <>Reserve your tee time at {course.name} — no card needed. You pay when you check in.</>}
-        </p>
+  // The cart choice, the range balls and the price box sit between Your details and the card (Option A).
+  const summary = (
+    <>
+      {teeTime.cart_fee > 0 && (cartForced ? (
+        <p className={g.cartrow}><span className={g.lab}>Cart</span> Required at this time · ${teeTime.cart_fee.toFixed(2)}/{perRider}</p>
+      ) : (
+        <fieldset className={g.cartrow}>
+          <legend className={g.lab}>Cart</legend>
+          <label className={g.pill}><input type="radio" name="cart" value="walk" checked={!cartSelected} onChange={() => setCartSelected(false)} /><span>Walk</span></label>
+          <label className={g.pill}><input type="radio" name="cart" value="ride" checked={cartSelected} onChange={() => setCartSelected(true)} /><span>Ride +${teeTime.cart_fee.toFixed(2)}/{perRider}</span></label>
+        </fieldset>
+      ))}
 
-        <div className="grid gap-6">
-          <div className={`${CARD} overflow-hidden`}>
-            <CourseHeaderBar courseName={course.name} accent={accent} photoUrl={course.hero_image_url} logoUrl={course.logo_url} />
-            <div className="p-6 space-y-3 text-sm">
-              <div className="flex justify-between"><span className="text-ink-muted">Date</span><span className="font-medium text-ink">{displayDate(date)}</span></div>
-              <div className="flex justify-between"><span className="text-ink-muted">Tee time</span><span className="font-medium text-ink">{formatTime(teeTime.time)}</span></div>
-              <div className="flex justify-between"><span className="text-ink-muted">Round</span><span className="font-medium text-ink">{teeTime.product_label ? `${teeTime.product_label} · ` : ''}{teeTime.holes} holes</span></div>
-              <div className="flex justify-between"><span className="text-ink-muted">Players</span><span className="font-medium text-ink">{players}</span></div>
-
-              {teeTime.cart_fee > 0 && (
-                <div className="flex items-center justify-between border-t border-line pt-3">
-                  <div>
-                    <p className="font-medium text-ink">Cart</p>
-                    <p className="text-xs text-ink">${teeTime.cart_fee.toFixed(2)} {perCart ? `a cart (2 riders)${withCart ? ` · ${cartsN} cart${cartsN === 1 ? '' : 's'}` : ''}` : 'per player'}</p>
-                  </div>
-                  {cartForced ? (
-                    <span className="text-xs font-medium text-ink-muted">Required</span>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setCartSelected(s => !s)}
-                      className="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
-                      style={cartSelected ? { backgroundColor: accent, color: '#fff' } : { backgroundColor: '#F0EDE2', color: '#6E6D64' }}
-                    >
-                      {cartSelected ? 'Added' : 'Add cart'}
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {(course.range_buckets ?? []).length > 0 && (
-                <div className="border-t border-line pt-3">
-                  <p className="font-medium text-ink mb-2">Range balls</p>
-                  {(course.range_buckets ?? []).map(r => {
-                    const n = bucketQty[r.id] ?? 0;
-                    return (
-                      <div key={r.id} className="flex items-center gap-3 py-1.5">
-                        <span className="text-sm text-ink mr-auto">{r.name}{r.balls ? ` · ${r.balls} balls` : ''} · ${(r.price_cents / 100).toFixed(2)}</span>
-                        <button type="button" aria-label={`One fewer ${r.name}`} disabled={n <= 0} onClick={() => setBucketQty(q => ({ ...q, [r.id]: n - 1 }))} className="w-9 h-9 rounded-md border border-line text-ink disabled:opacity-40">−</button>
-                        <span className="w-6 text-center tabular-nums text-ink">{n}</span>
-                        <button type="button" aria-label={`One more ${r.name}`} disabled={n >= 20} onClick={() => setBucketQty(q => ({ ...q, [r.id]: n + 1 }))} className="w-9 h-9 rounded-md border border-line text-ink disabled:opacity-40">+</button>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-              {course.has_driving_range && course.range_balls_free && (
-                <div className="border-t border-line pt-3">
-                  <p className="text-xs text-pine bg-pine/5 inline-block px-2.5 py-1 rounded-md font-medium border border-pine/20">Range balls included, free of charge</p>
-                </div>
-              )}
-
-              <div className="border-t border-line pt-3 space-y-2">
-                <div className="flex justify-between text-ink-soft"><span>Green fee (×{players})</span><span>${greenTotal.toFixed(2)}</span></div>
-                {!!teeTime.deal_pct && teeTime.list_green_fee != null && <p className="text-[12.5px] text-ink-muted -mt-1">Last-minute, {teeTime.deal_pct}% off: <span className="line-through">${teeTime.list_green_fee.toFixed(2)}</span> ${teeTime.green_fee.toFixed(2)} a player.</p>}
-                {pk && <p className="text-[12.5px] text-ink-muted -mt-1">{packShort ? `Only ${pk.left} round${pk.left === 1 ? '' : 's'} left on your ${pk.name} — book ${pk.left} player${pk.left === 1 ? '' : 's'}.` : `${packSeatsN === players ? 'Everyone plays' : 'You play'} on your ${pk.name}${pk.coversCart ? ', cart included' : ''}.`}</p>}
-                {!pk && memberRate && <p className="text-[12.5px] text-ink-muted -mt-1">{memberRate.name} rate ${memberRate.greenFee.toFixed(2)}{memberN < players ? ` for you; your guests pay $${teeTime.green_fee.toFixed(2)} each` : ''}.</p>}
-                {!pk && residentFee != null && <p className="text-[12.5px] text-ink-muted -mt-1">Resident rate for you (${residentFee.toFixed(2)}){players > 1 ? `; the rest of your group pays $${teeTime.green_fee.toFixed(2)} each` : ''}.</p>}
-                {promoOff > 0 && <div className="flex justify-between text-ink-soft"><span>Code {promo!.code}</span><span>−${promoOff.toFixed(2)}</span></div>}
-                {cartTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Cart fee (×{players})</span><span>${cartTotal.toFixed(2)}</span></div>}
-                {rangeBallsTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Range balls</span><span>${rangeBallsTotal.toFixed(2)}</span></div>}
-                <div className="flex justify-between text-ink-soft">
-                  <span>{serviceFeeLabel(players)}</span>
-                  <span>${accessTotal.toFixed(2)}</span>
-                </div>
-                {packs.length > 0 && (
-                  <label className="flex items-center gap-2 text-sm text-ink pt-1">
-                    <input type="checkbox" checked={!!pk} onChange={e => setPackId(e.target.checked ? packs[0].lineId : '')} className="accent-pine" />
-                    Use my round pack
-                    {packs.length > 1 && pk ? (
-                      <select value={packId} onChange={e => setPackId(e.target.value)} aria-label="Which round pack" className={INPUT_COMPACT + ' ml-1'}>
-                        {packs.map(p => <option key={p.lineId} value={p.lineId}>{p.name} ({p.left} left)</option>)}
-                      </select>
-                    ) : <span className="text-ink-muted">({packs[0].name}, {packs[0].left} left)</span>}
-                  </label>
-                )}
-                {!pk && <div className="flex gap-2 pt-1">
-                  <input value={promoInput} onChange={e => { setPromoInput(e.target.value.toUpperCase()); if (promo) setPromo(null); setPromoError(''); }} placeholder="Promo code" aria-label="Promo code"
-                    className={INPUT_COMPACT + ' flex-1 min-w-0'} />
-                  <button type="button" onClick={() => checkPromo(teeTime.id)} disabled={!promoInput.trim() || promoBusy} className="px-3 py-2 border border-line rounded-md text-sm font-medium text-ink hover:bg-paper disabled:opacity-50">{promoBusy ? 'Checking…' : 'Apply'}</button>
-                </div>}
-                {promoError && <p role="alert" className="text-[12.5px] text-bad">{promoError}</p>}
-                {promoBlocked && <p className="text-[12.5px] text-ink-muted">Code {promo!.code} can’t be used with your {memberRate ? 'member' : 'resident'} rate.</p>}
-                {/* Two lines, always — the number people owe and the number
-                    that leaves their account today are not the same number. */}
-                <div className="border-t border-line pt-3 space-y-1.5">
-                  <div className="flex justify-between items-baseline">
-                    <span className="font-medium text-ink">You&apos;ll pay at check-in</span>
-                    <span className="font-bold text-ink text-xl leading-none tabular-nums">${total.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between items-baseline">
-                    <span className="text-ink-muted">Charged today</span>
-                    <span className="font-medium text-ink-soft">$0.00</span>
-                  </div>
-                </div>
-                <TrustNote className="pt-1">Your green fee goes to the course; the $1.50 per player is GreenReserve&apos;s.</TrustNote>
+      {/* Item 5 (RANGE-1): the course's own buckets, each −/+ from 0, between the cart and the price box.
+          Shown only when the course sells range balls with tee times (range_buckets is empty otherwise). */}
+      {(course.range_buckets ?? []).length > 0 && (
+        <fieldset className={g.card}>
+          <legend className={g.vh}>Range balls</legend>
+          <h3 style={{ marginTop: 0 }} aria-hidden="true">Range balls</h3>
+          {(course.range_buckets ?? []).map(r => {
+            const n = bucketQty[r.id] ?? 0;
+            const label = `${r.name}${r.balls ? ` · ${r.balls} balls` : ''} · $${(r.price_cents / 100).toFixed(2)}`;
+            return (
+              <div key={r.id} className={g.bucket}>
+                <span>{label}</span>
+                <span className={g.stepper} role="group" aria-label={label}>
+                  <button type="button" aria-label={`One fewer ${r.name}`} disabled={n <= 0} onClick={() => setBucketQty(q => ({ ...q, [r.id]: n - 1 }))}>−</button>
+                  <output aria-live="polite" style={{ minWidth: 24, fontSize: 15 }}>{n}</output>
+                  <button type="button" aria-label={`One more ${r.name}`} disabled={n >= 20} onClick={() => setBucketQty(q => ({ ...q, [r.id]: n + 1 }))}>+</button>
+                </span>
               </div>
+            );
+          })}
+        </fieldset>
+      )}
+      {course.has_driving_range && course.range_balls_free && <p className={g.cartrow}>Range balls are included, free of charge.</p>}
+
+      <div className={g.card} aria-label="Price">
+        <div className={g.li}><span>Green fees · {plWord}</span><span>${greenTotal.toFixed(2)}</span></div>
+        {!!teeTime.deal_pct && teeTime.list_green_fee != null && <p className={g.mp}>Last-minute, {teeTime.deal_pct}% off: <s>${teeTime.list_green_fee.toFixed(2)}</s> ${teeTime.green_fee.toFixed(2)} a player.</p>}
+        {pk && <p className={g.mp}>{packShort ? `Only ${pk.left} round${pk.left === 1 ? '' : 's'} left on your ${pk.name} — book ${pk.left} player${pk.left === 1 ? '' : 's'}.` : `${packSeatsN === players ? 'Everyone plays' : 'You play'} on your ${pk.name}${pk.coversCart ? ', cart included' : ''}.`}</p>}
+        {!pk && memberRate && <p className={g.mp}>{memberRate.name} rate ${memberRate.greenFee.toFixed(2)}{memberN < players ? ` for you; your guests pay $${teeTime.green_fee.toFixed(2)} each` : ''}.</p>}
+        {!pk && residentFee != null && <p className={g.mp}>Resident rate for you (${residentFee.toFixed(2)}){players > 1 ? `; the rest of your group pays $${teeTime.green_fee.toFixed(2)} each` : ''}.</p>}
+        {promoOff > 0 && <div className={g.li}><span>Code {promo!.code}</span><span>−${promoOff.toFixed(2)}</span></div>}
+        {cartTotal > 0 && <div className={g.li}><span>Cart · {perCart ? `${cartsN} cart${cartsN === 1 ? '' : 's'}` : plWord}</span><span>${cartTotal.toFixed(2)}</span></div>}
+        {rangeBallsTotal > 0 && <div className={g.li}><span>Range balls</span><span>${rangeBallsTotal.toFixed(2)}</span></div>}
+        {/* Cam (mockup thread b48b908c): one "Fees" line with an (i); the detail is the LQ-2 golfer-facing name. */}
+        <details className={g.feed}>
+          <summary className={g.li}><span>Fees <span className={g.inf} aria-hidden="true">i</span><span className={g.vh}>, show what this is</span></span><span>${accessTotal.toFixed(2)}</span></summary>
+          <p>{serviceFeeLabel(players)}</p>
+        </details>
+        {packs.length > 0 && (
+          <label className={g.sms} style={{ margin: '6px 0' }}>
+            <input type="checkbox" checked={!!pk} onChange={e => setPackId(e.target.checked ? packs[0].lineId : '')} />
+            <span>Use my round pack {packs.length > 1 && pk ? (
+              <select value={packId} onChange={e => setPackId(e.target.value)} aria-label="Which round pack" style={{ minHeight: 44, marginLeft: 4, border: '1px solid var(--g-line)', borderRadius: 8, background: 'var(--g-paper)' }}>
+                {packs.map(p => <option key={p.lineId} value={p.lineId}>{p.name} ({p.left} left)</option>)}
+              </select>
+            ) : <>({packs[0].name}, {packs[0].left} left)</>}</span>
+          </label>
+        )}
+        {/* Two lines, always — the number people owe and the number that leaves their account today are not the same number. */}
+        <div className={`${g.li} ${g.tot}`}><span>Total</span><span>${total.toFixed(2)}</span></div>
+        {pastHold
+          ? <p className={g.mp}>Booked now, {holdTodayLine(lateFeeWords)}.</p>
+          : <div className={`${g.li} ${g.sub}`}><span>Pay now</span><span>${payNow.toFixed(2)}</span></div>}
+        <div className={`${g.li} ${g.sub}`}><span>Pay at the course</span><span>${payLater.toFixed(2)}</span></div>
+        {showPromo && (promoOpen || promo || promoError ? (
+          <div className={g.promoRow}>
+            <label className={g.vh} htmlFor="promo">Promo code</label>
+            <input id="promo" value={promoInput} autoComplete="off" enterKeyHint="done"
+              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); if (promoInput.trim() && !promoBusy) checkPromo(teeTime.id); } }}
+              onChange={e => { setPromoInput(e.target.value.toUpperCase()); if (promo) setPromo(null); setPromoError(''); }} />
+            <button type="button" onClick={() => checkPromo(teeTime.id)} disabled={!promoInput.trim() || promoBusy}>{promoBusy ? 'Checking…' : 'Apply'}</button>
+          </div>
+        ) : (
+          <button className={`${g.lnk} ${g.promo}`} type="button" onClick={() => setPromoOpen(true)}>Have a promo code?</button>
+        ))}
+        {promoError && <p role="alert" className={g.err}>{promoError}</p>}
+        {promoBlocked && <p className={g.mp}>Code {promo!.code} can’t be used with your {memberRate ? 'member' : 'resident'} rate.</p>}
+      </div>
+    </>
+  );
+
+  // SP-B: the course's cancellation terms, in the words describePolicy() gives every golfer surface.
+  const policyLine = (
+    <p className={g.pol}>
+      {pastCutoff && <span><b>{insideWindowLine(policy.lateFeeTiming, lateFeeWords)}</b></span>}
+      {policyLines.map((l, i) => <span key={i}>{l}</span>)}
+      {/* Launch walk (Cam 2026-10-31): "or if you pay at the counter" deleted — nothing charges it since PAY-2. */}
+      {terms.cardAtBooking && !FEE_AT_BOOKING_ON && (
+        <span>When a fee above is charged, the ${(ACCESS_FEE_PER_PLAYER * players).toFixed(2)} booking fee (${ACCESS_FEE_PER_PLAYER.toFixed(2)} per player) is charged to this card too.</span>
+      )}
+    </p>
+  );
+
+  return (
+    <div className={g.root} style={look}>
+      <div className={g.site}>
+        <header className={g.top}><h1><Link href={`/courses/${courseSlug}`}>{course.name}</Link></h1></header>
+        <main className={g.wrap}>
+          <div className={g.bk}>
+            <Link href={backToTimesHref(courseSlug, params, players)} className={`${g.lnk} ${g.back}`}>‹ Back to tee times</Link>
+            <h2 id="book-h">Book your tee time</h2>
+            <div className={`${g.card} ${g.recap}`}>
+              <div>
+                <b>{formatTime(teeTime.time)} · {displayDate(date)}</b>
+                <span>{teeTime.product_label ? `${teeTime.product_label} · ` : ''}{teeTime.holes} holes · {plWord}</span>
+              </div>
+              <Link className={g.lnk} href={backToTimesHref(courseSlug, params, players)} aria-label="Change the tee time">Change</Link>
+            </div>
+
+            {/* SP-B: Stripe JS loads only when this course's policy needs a card —
+                and then only once the golfer starts on the form (stripeWanted). */}
+            <div onPointerDown={() => setStripeWanted(true)} onFocusCapture={() => setStripeWanted(true)}>
+              <Elements stripe={terms.cardAtBooking && stripeWanted ? getStripePromise() : null}>
+                <CheckoutForm
+                  teeTimeId={teeTime.id}
+                  players={players}
+                  cartSelected={withCart}
+                  rangeBuckets={rangeBuckets}
+                  accent={accent}
+                  needsCard={terms.cardAtBooking}
+                  promoCode={promo && !promoBlocked && !pk ? promo.code : ''}
+                  packLineId={pk ? pk.lineId : ''}
+                  courseName={course.name}
+                  onConfirmed={setConfirmedData}
+                  onRangeStale={reloadBuckets}
+                  member={member}
+                  payNow={payNow}
+                  summary={summary}
+                  policy={policyLine}
+                  look={lookMode(course)}
+                  holdNow={pastHold ? holdTodayLine(lateFeeWords) : ''}
+                />
+              </Elements>
             </div>
           </div>
-
-          {/* SP-B: Stripe JS loads only when this course's policy needs a card —
-              and then only once the golfer starts on the form (stripeWanted). */}
-          <div onPointerDown={() => setStripeWanted(true)} onFocusCapture={() => setStripeWanted(true)}>
-            <Elements stripe={terms.cardAtBooking && stripeWanted ? getStripePromise() : null}>
-              <CheckoutForm
-                teeTimeId={teeTime.id}
-                players={players}
-                cartSelected={withCart}
-                rangeBuckets={rangeBuckets}
-                accent={accent}
-                needsCard={terms.cardAtBooking}
-                promoCode={promo && !promoBlocked && !pk ? promo.code : ''}
-                packLineId={pk ? pk.lineId : ''}
-                courseName={course.name}
-                onConfirmed={setConfirmedData}
-              />
-            </Elements>
-          </div>
-
-
-          {/* SP-B: the course's cancellation terms, in the words describePolicy()
-              gives every golfer surface. */}
-          <div className={`${CARD} p-5`}>
-            <p className="text-ink text-sm font-medium mb-1.5">Cancellation policy</p>
-            <ul className="space-y-1">
-              {terms.lines.map((l, i) => <li key={i} className="text-ink-soft text-xs leading-relaxed">{l}</li>)}
-              {/* Launch walk (Cam 2026-10-31): "or if you pay at the counter" deleted — nothing charges it since PAY-2. */}
-              {terms.cardAtBooking && !FEE_AT_BOOKING_ON && (
-                <li className="text-ink-soft text-xs leading-relaxed">When a fee above is charged, the ${(ACCESS_FEE_PER_PLAYER * players).toFixed(2)} booking fee (${ACCESS_FEE_PER_PLAYER.toFixed(2)} per player) is charged to this card too.</li>
-              )}
-            </ul>
-          </div>
-        </div>
+        </main>
       </div>
     </div>
   );
 }
 
-function CheckoutForm({ teeTimeId, players, cartSelected, rangeBuckets, accent, needsCard, courseName, onConfirmed, promoCode = '', packLineId = '' }: {
+function CheckoutForm({ onRangeStale, teeTimeId, players, cartSelected, rangeBuckets, accent, needsCard, courseName, onConfirmed, promoCode = '', packLineId = '', member = null, payNow = 0, summary = null, policy = null, look = 'light', holdNow = '' }: {
+  /** The course's look, for the card field (Stripe draws it in its own frame). */
+  look?: BookingLook;
+  /** Past the cutoff at a hold course: what is charged within the hour (holdTodayLine), instead of "$0 now". */
+  holdNow?: string;
+  /** Logged in at this course: Name and Email come from the log-in and can't be edited here. */
+  member?: { name: string; email: string } | null;
+  /** What the golfer pays today, for the Book button. */
+  payNow?: number;
+  /** The cart, range balls and price box, shown after Your details. */
+  summary?: React.ReactNode;
+  /** The course's cancellation policy, shown just above the agree box. */
+  policy?: React.ReactNode;
   promoCode?: string;
   /** PRICE-3: the golfer's round pack, when they use it. */
   packLineId?: string;
@@ -562,6 +604,8 @@ function CheckoutForm({ teeTimeId, players, cartSelected, rangeBuckets, accent, 
   needsCard: boolean;
   courseName: string;
   onConfirmed: (data: ConfirmedData) => void;
+  /** RANGE-1: the server refused the range balls (409 code 'range'): reload the bucket list. */
+  onRangeStale?: () => void;
 }) {
   const stripe   = useStripe();
   const elements = useElements();
@@ -571,6 +615,26 @@ function CheckoutForm({ teeTimeId, players, cartSelected, rangeBuckets, accent, 
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
+  // Mockup thread 262a4911: a field left invalid turns red with a short message under it; Book moves to the first.
+  const [bad, setBad] = useState<{ name?: string; email?: string; phone?: string }>({});
+  const loginName = member?.name && member.name !== 'Member' ? member.name : '';
+  useEffect(() => {
+    if (!member) return;
+    if (loginName) setName(loginName);
+    setEmail(member.email);
+    // Filled once, when the log-in is known.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [member]);
+  function fieldError(k: 'name' | 'email' | 'phone', v: string): string | undefined {
+    const t = v.trim();
+    if (k === 'name') return t ? undefined : 'Enter your name';
+    if (k === 'email') return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(t) && !LIKE_UNSAFE_EMAIL.test(t) ? undefined : 'Enter a valid email';
+    return !t || t.replace(/\D/g, '').length >= 10 ? undefined : 'Enter a valid mobile number, or leave it blank';
+  }
+  function check(k: 'name' | 'email' | 'phone', v: string, always = false) {
+    if (!always && !v.trim() && !bad[k]) return;
+    setBad(b => ({ ...b, [k]: fieldError(k, v) }));
+  }
 
   // The wallet sheet's handler is registered once, so it reads the latest
   // form values from here.
@@ -580,8 +644,9 @@ function CheckoutForm({ teeTimeId, players, cartSelected, rangeBuckets, accent, 
   // SMS-1 (Twilio A2P 10DLC): text consent is its own box, never pre-ticked, never part of the terms box.
   const [smsOk, setSmsOk] = useState(false);
   // The wallet button's handler is registered once; it reads the code from here, never a stale render.
-  const latest = useRef({ name, email, phone, agreed, promoCode, packLineId, smsOk });
-  latest.current = { name, email, phone, agreed, promoCode, packLineId, smsOk };
+  // The cart and range balls too: on this page they are often chosen after Stripe loads (Your details comes first).
+  const latest = useRef({ name, email, phone, agreed, promoCode, packLineId, smsOk, cartSelected, rangeBuckets });
+  latest.current = { name, email, phone, agreed, promoCode, packLineId, smsOk, cartSelected, rangeBuckets };
 
   /** Create the booking. setupIntentId when a card was saved for it. */
   async function book(who: { name: string; email: string; phone: string }, setupIntentId?: string): Promise<boolean> {
@@ -596,8 +661,8 @@ function CheckoutForm({ teeTimeId, players, cartSelected, rangeBuckets, accent, 
         golferPhone: who.phone,
         // SEC-1: only the SetupIntent — the server reads its customer and card from Stripe.
         ...(setupIntentId ? { setupIntentId } : {}),
-        cartSelected,
-        rangeBuckets,
+        cartSelected: latest.current.cartSelected,
+        rangeBuckets: latest.current.rangeBuckets,
         ...(latest.current.promoCode ? { promoCode: latest.current.promoCode } : {}),
         ...(latest.current.packLineId ? { packLineId: latest.current.packLineId } : {}),
         termsAccepted: latest.current.agreed === true,
@@ -605,7 +670,12 @@ function CheckoutForm({ teeTimeId, players, cartSelected, rangeBuckets, accent, 
       }),
     });
     const data = await res.json();
-    if (!res.ok) { setError(data.error || 'Something went wrong. Please try again.'); return false; }
+    if (!res.ok) {
+      setError(data.error || 'Something went wrong. Please try again.');
+      // RANGE-1: a bucket changed or sold out — fetch the course's buckets again (the message says what happened).
+      if (res.status === 409 && data.code === 'range') onRangeStale?.();
+      return false;
+    }
     onConfirmed({
       courseName: data.courseName, date: data.date, time: data.time, players: data.players,
       greenFeeTotal: data.greenFeeTotal, cartFeeTotal: data.cartFeeTotal, rangeBallsTotal: data.rangeBallsTotal,
@@ -641,7 +711,7 @@ function CheckoutForm({ teeTimeId, players, cartSelected, rangeBuckets, accent, 
     const req = stripe.paymentRequest({
       country: 'US',
       currency: 'usd',
-      total: { label: `${courseName || 'Tee time'} · ${FEE_AT_BOOKING_ON ? 'card held, booking fee charged today' : 'card held, nothing charged today'}`, amount: 0, pending: true },
+      total: { label: `${courseName || 'Tee time'} · ${holdNow ? `card held, ${holdNow}` : FEE_AT_BOOKING_ON ? 'card held, booking fee charged today' : 'card held, nothing charged today'}`, amount: 0, pending: true },
       requestPayerName: true,
       requestPayerEmail: true,
     });
@@ -689,9 +759,12 @@ function CheckoutForm({ teeTimeId, players, cartSelected, rangeBuckets, accent, 
 
   async function handleSubmit() {
     setError('');
-    if (!name.trim() || !email.trim()) { setError('Please enter your name and email.'); return; }
+    // Item 4: name and email are checked together with the box.
+    const errs = { name: fieldError('name', name), email: fieldError('email', email), phone: fieldError('phone', phone) };
+    setBad(errs);
+    const first = (['name', 'email', 'phone'] as const).find(k => errs[k]);
+    if (first) { document.getElementById(`bk-${first}`)?.focus(); return; }
     if (!agreed) { setError('Tick the box to agree to the terms before you book.'); return; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('Please enter a valid email address.'); return; }
     setLoading(true);
     try {
       // SP-B: no card at this course — book straight away; they pay at check-in.
@@ -700,11 +773,11 @@ function CheckoutForm({ teeTimeId, players, cartSelected, rangeBuckets, accent, 
       if (!stripe || !elements) { setError('Payment form is still loading — try again in a moment.'); setLoading(false); return; }
       const cardElement = elements.getElement(CardElement);
       if (!cardElement) { setError('Card details are required.'); setLoading(false); return; }
-      const clientSecret = await newSetupIntent({ name, email });
+      const clientSecret = await newSetupIntent({ name: name.trim(), email: email.trim() });
       if (!clientSecret) { setLoading(false); return; }
 
       const { error: setupError, setupIntent } = await stripe.confirmCardSetup(clientSecret, {
-        payment_method: { card: cardElement, billing_details: { name, email } },
+        payment_method: { card: cardElement, billing_details: { name: name.trim(), email: email.trim() } },
       });
       if (setupError) { setError(setupError.message || 'Your card could not be saved.'); setLoading(false); return; }
 
@@ -715,7 +788,7 @@ function CheckoutForm({ teeTimeId, players, cartSelected, rangeBuckets, accent, 
       setupIntentId = setupIntent.id;
       }
 
-      if (!(await book({ name, email, phone }, setupIntentId))) setLoading(false);
+      if (!(await book({ name: name.trim(), email: email.trim(), phone }, setupIntentId))) setLoading(false);
     } catch {
       setError('Something went wrong. Please try again.');
       setLoading(false);
@@ -724,77 +797,82 @@ function CheckoutForm({ teeTimeId, players, cartSelected, rangeBuckets, accent, 
 
   // INVIOLABLE: No GolferAccount required to book. Name/email are for the
   // confirmation email only — never for registration or sign-up prompts.
+  const fromLogin = !!member;
+  const bookWords = holdNow ? 'Book' : `Book · ${payNow > 0 ? `$${payNow.toFixed(2)}` : '$0'} now`;
   return (
-    <div className={`${CARD} p-6 space-y-5`}>
-      <StepHeading title="Your details" note="Where your confirmation goes — no account is created." />
-      <div>
-        <label className={lCls}>Full name</label>
-        <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="John Smith" className={iCls} />
+    <form noValidate onSubmit={e => { e.preventDefault(); handleSubmit(); }}>
+      <h3>Your details</h3>
+      {fromLogin && <p className={g.hintline}>From your {courseName} log-in.</p>}
+      <div className={g.inp}>
+        <label className={g.lab} htmlFor="bk-name">Name</label>
+        <input id="bk-name" type="text" autoComplete="name" value={name} readOnly={!!loginName}
+          onChange={e => { setName(e.target.value); if (bad.name) check('name', e.target.value, true); }} onBlur={e => check('name', e.target.value)}
+          aria-invalid={bad.name ? true : undefined} aria-describedby="bk-name-err" />
+        <div className={g.err} id="bk-name-err" role="alert">{bad.name ?? ''}</div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label className={lCls}>Email</label>
-          <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="john@example.com" className={iCls} />
-        </div>
-        <div>
-          <label className={lCls}>Phone (optional)</label>
-          <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="(555) 555-5555" className={iCls} />
-        </div>
+      <div className={g.inp}>
+        <label className={g.lab} htmlFor="bk-email">Email</label>
+        <input id="bk-email" type="email" autoComplete="email" value={email} readOnly={fromLogin}
+          onChange={e => { setEmail(e.target.value); if (bad.email) check('email', e.target.value, true); }} onBlur={e => check('email', e.target.value)}
+          aria-invalid={bad.email ? true : undefined} aria-describedby="bk-email-err" />
+        <div className={g.err} id="bk-email-err" role="alert">{bad.email ?? ''}</div>
+      </div>
+      <div className={g.inp}>
+        <label className={g.lab} htmlFor="bk-phone">Mobile (optional)</label>
+        <input id="bk-phone" type="tel" autoComplete="tel" value={phone}
+          onChange={e => { setPhone(e.target.value); if (bad.phone) check('phone', e.target.value, true); }} onBlur={e => check('phone', e.target.value)}
+          aria-invalid={bad.phone ? true : undefined} aria-describedby="bk-phone-err" />
+        <div className={g.err} id="bk-phone-err" role="alert">{bad.phone ?? ''}</div>
       </div>
       {phone.replace(/\D/g, '').length >= 10 && (
-        <label className="flex items-start gap-2.5 text-[12.5px] text-ink-soft leading-snug cursor-pointer select-none">
-          <input type="checkbox" checked={smsOk} onChange={e => setSmsOk(e.target.checked)} className="mt-0.5 w-4 h-4 shrink-0" style={{ accentColor: accent }} />
-          <span>{smsWebConsentText(courseName)} <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline">Terms</a> · <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline">Privacy</a>. Optional — you can book without it.</span>
+        <label className={g.sms}>
+          <input type="checkbox" checked={smsOk} onChange={e => setSmsOk(e.target.checked)} />
+          <span>{smsWebConsentText(courseName)} <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a> · <a href="/privacy" target="_blank" rel="noopener noreferrer">Privacy</a>. Optional — you can book without it.</span>
         </label>
       )}
 
-      <label className="flex items-start gap-2.5 text-[13px] text-ink leading-snug cursor-pointer select-none">
-        <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} className="mt-0.5 w-4 h-4 shrink-0" style={{ accentColor: accent }} />
+      {summary}
+
+      {needsCard && <>
+      <h3>A card to hold your spot</h3>
+      <p className={g.hintline}>{holdNow ? 'The terms below say when your card is charged.' : FEE_AT_BOOKING_ON ? 'Only the booking fee is charged today. The terms below say when else your card can be.' : 'Nothing is charged today. The terms below say when your card can be.'}</p>
+      {walletRequest && agreed && (
+        <>
+          <PaymentRequestButtonElement options={{ paymentRequest: walletRequest, style: { paymentRequestButton: { type: 'book', theme: look === 'dark' ? 'light' : 'dark', height: '48px' } } }} />
+          <p className={g.or}>or enter a card</p>
+        </>
+      )}
+      <div className={g.inp}>
+        <span className={g.lab} id="bk-card-l">Card details</span>
+        <div className={g.cardbox} role="group" aria-labelledby="bk-card-l">
+          <CardElement options={cardStyleFor(look)} />
+        </div>
+        <p className={g.small}>Secured by Stripe.</p>
+      </div>
+      </>}
+
+      {policy}
+
+      <label className={g.agree}>
+        <input type="checkbox" checked={agreed} onChange={e => { setAgreed(e.target.checked); if (e.target.checked) setError(''); }} aria-describedby={agreed ? undefined : 'bk-hint'} />
         <span>
-          I agree to GreenReserve&apos;s <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline">Terms of Service</a> and <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline">Privacy Policy</a> and
+          I agree to GreenReserve&apos;s <a href="/terms" target="_blank" rel="noopener noreferrer">Terms of Service</a> and <a href="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a> and
           to {courseName || 'this course'}&apos;s cancellation policy shown on this page, including that {courseName || 'the course'} and GreenReserve keep my booking history.
         </span>
       </label>
 
-      {needsCard && <>
-      <div className="pt-1 border-t border-line-soft" />
-      <StepHeading title="A card to hold your spot" note={FEE_AT_BOOKING_ON ? 'Only the booking fee is charged today.' : 'Nothing is charged today.'} />
-      {walletRequest && agreed && (
-        <>
-          <PaymentRequestButtonElement options={{ paymentRequest: walletRequest, style: { paymentRequestButton: { type: 'book', theme: 'dark', height: '48px' } } }} />
-          <div className="flex items-center gap-3 text-xs text-ink-muted">
-            <span className="h-px flex-1 bg-line" />or enter a card<span className="h-px flex-1 bg-line" />
-          </div>
-        </>
-      )}
-      <div>
-        <label className={lCls}>Card details</label>
-        <div className="w-full px-4 py-3.5 rounded-md border border-line bg-paper focus-within:border-pine/40 focus-within:ring-2 focus-within:ring-pine/10 transition-all">
-          <CardElement options={cardStyle} />
-        </div>
-        <TrustNote className="mt-1.5">{FEE_AT_BOOKING_ON ? 'Only the booking fee is charged now. The terms above say when else your card can be.' : 'Nothing is charged now. The terms above say when your card can be.'}</TrustNote>
+      <div className={g.bookbar}>
+        {error && <p className={g.formerr} role="alert">{error}</p>}
+        {!agreed && <p className={g.hint} id="bk-hint">Tick the box to agree to the terms before you book{needsCard ? ' (Apple Pay and Google Pay appear once you do)' : ''}.</p>}
+        <button
+          type="submit"
+          disabled={loading || !agreed || (needsCard && !stripe)}
+          className={`${g.btn} ${g.bookbtn}`}
+        >
+          {loading ? <><Loader2 size={18} className="animate-spin" aria-hidden="true" /> {needsCard ? 'Saving card…' : 'Booking…'}</> : bookWords}
+        </button>
       </div>
-      </>}
-
-      {error && <p className="text-bad text-sm">{error}</p>}
-
-      {!needsCard && <TrustNote>No charge until check-in.</TrustNote>}
-      {!agreed && <p className="text-[12px] text-ink-muted text-center">Tick the box above to agree to the terms and book{needsCard ? ' (Apple Pay and Google Pay appear once you do)' : ''}.</p>}
-      <button
-        onClick={handleSubmit}
-        disabled={loading || !agreed || (needsCard && !stripe)}
-        className="w-full py-3.5 rounded-md font-medium text-white text-sm transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        style={{ backgroundColor: accent }}
-      >
-        {loading ? <><Loader2 size={16} className="animate-spin" /> {needsCard ? 'Saving card…' : 'Booking…'}</> : 'Confirm tee time'}
-      </button>
-      {needsCard && (
-      <div className="flex items-center justify-center gap-2 text-ink-muted text-xs">
-        
-        <span>Secured by Stripe</span>
-      </div>
-      )}
-    </div>
+    </form>
   );
 }
 

@@ -51,6 +51,7 @@ const SECTION_TO_AREA: Record<string, { area: View; target?: string }> = {
 const INDEX: [string, Area | 'staff', string, string?][] = [
   ['Name', 'course', 'r-identity-name'], ['Address', 'course', 'r-identity-address', 'location'], ['Status', 'course', 'r-identity-status', 'live'],
   ['Time zone', 'course', 'r-identity-tz', 'clock'], ['Phone', 'course', 'r-identity-phone'], ['Logo and colour', 'course', 'r-page-look', 'color brand'],
+  ['Booking page look', 'course', 'r-page-booking-look', 'light dark theme accent color colour'],
   ['Banner photo', 'course', 'r-page-hero', 'hero image'], ['Photos', 'course', 'r-page-photos', 'gallery pictures'], ['Description', 'course', 'r-page-desc'],
   ['Course type', 'course', 'r-page-type', 'public private'], ['Year opened', 'course', 'r-page-year', 'established'], ['Website', 'course', 'r-page-web'],
   ['Gift cards', 'course', 'r-page-gift'], ['Dress code', 'course', 'r-page-dress'], ['Holes and nines', 'course', 'r-fac-nines', 'par layout'],

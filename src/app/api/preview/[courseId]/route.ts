@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
 import { normalizeDbCourse } from '@/lib/normalize-course';
+import { bookingPageExtras } from '@/lib/public-course';
 import { verifyViewToken } from '@/lib/preview-token';
 import { coursePageDecision } from '@/lib/approval-state';
 import { CHANGES_REQUESTED_PREFIX, LEGACY_CHANGES_REQUESTED_MARKER, isChangesRequestedEvent } from '@/lib/change-requests';
@@ -59,7 +60,7 @@ export async function GET(
   }
 
   return NextResponse.json({
-    ...normalizeDbCourse(dbCourse, centsToDollarsOr0(cheapest?.greenFeeCents)),
+    ...normalizeDbCourse(dbCourse, centsToDollarsOr0(cheapest?.greenFeeCents), await bookingPageExtras(dbCourse)),
     page_approval_status: pageApprovalStatus,
     // Lets the preview banner tell "still pre-live" apart from "already
     // live, stop showing the review-loop controls" (RUN_QUEUE "review loop
