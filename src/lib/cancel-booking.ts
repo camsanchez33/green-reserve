@@ -1,6 +1,7 @@
 import { holdChargeKey } from './hold-key';
 import { prisma } from './prisma';
-import { sendCancellationEmail, sendTeeTimeAlertEmail } from './email';
+import { sendCancellationEmail } from './email';
+import { notifyAlertsFor } from './tee-time-alerts';
 import { refundOnConnectedAccount, chargeOnConnectedAccount } from './stripe';
 import { holdRefundCents, hasShareToRefund } from './split-booking-db';
 import { refundSeparateAccessFee, chargeAccessFeeSeparately } from './access-fee';
@@ -272,47 +273,11 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
     return { error: 'This booking was just cancelled or checked in from another screen — refresh to see it.', status: 409 } as const;
   }
 
-  // Find all unnotified alerts for this slot (specific-slot or criteria-based)
-  // ADDTIME-1 (review 2026-11-06): a time kept for staff is never announced to golfers — it isn't bookable online.
-  const alerts = notifySlotAlerts && !booking.teeTime.staffOnly ? await prisma.teeTimeAlert.findMany({
-    where: {
-      notifiedAt: null,
-      OR: [
-        { teeTimeId: booking.teeTimeId },
-        {
-          courseId: booking.courseId,
-          date: booking.teeTime.date,
-          players: { lte: booking.players },
-        },
-      ],
-    },
-  }) : [];
-
-  // For criteria alerts, filter by time window in-memory
-  const matching = alerts.filter((a) => {
-    if (a.teeTimeId) return true;
-    if (a.windowStart && booking.teeTime.time < a.windowStart) return false;
-    if (a.windowEnd && booking.teeTime.time > a.windowEnd) return false;
-    return true;
-  });
-
-  if (matching.length > 0) {
-    await prisma.teeTimeAlert.updateMany({
-      where: { id: { in: matching.map((a) => a.id) } },
-      data: { notifiedAt: new Date() },
-    });
-    for (const alert of matching) {
-      await sendTeeTimeAlertEmail({
-        name: alert.name,
-        email: alert.email,
-        courseName: booking.course.name,
-        courseSlug: booking.course.slug,
-        date: booking.teeTime.date,
-        time: booking.teeTime.time,
-        players: alert.players,
-        unsubscribeToken: alert.token,
-      }).catch(console.error);
-    }
+  // ALERTS-2: the freed seats may match someone's tee time alert (first come, first served).
+  // ADDTIME-1 (review 2026-11-06): a time kept for staff is never announced to golfers.
+  // Awaited, never throws (lib/tee-time-alerts).
+  if (notifySlotAlerts && !booking.teeTime.staffOnly && !keepSlotBlocked) {
+    await notifyAlertsFor(booking.courseId, [booking.teeTime.date]);
   }
 
   await sendCancellationEmail({

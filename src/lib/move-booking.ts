@@ -30,6 +30,7 @@
 // passed at a course with a late/hold fee: otherwise a golfer inside the window
 // could move weeks out and cancel free (lateness is judged on the tee time the
 // booking holds at cancel), or step past the advance-booking window.
+import { notifyAlertsFor } from './tee-time-alerts';
 import { memberPricingOn, residentPricingOn } from './pricing-switch';
 import type { Prisma } from '@prisma/client';
 import { prisma } from './prisma';
@@ -118,8 +119,10 @@ export async function moveBooking(opts: {
   now?: Date;
 }): Promise<MoveOk | MoveFail> {
   const now = opts.now ?? new Date();
+  // ALERTS-2: the time the booking leaves has room again — told to alerts after the commit.
+  let freed: { courseId: string; date: string } | null = null;
   try {
-    return await prisma.$transaction(async (tx) => {
+    const moved = await prisma.$transaction(async (tx) => {
       const b = await tx.booking.findUnique({
         where: { id: opts.bookingId },
         select: {
@@ -299,8 +302,12 @@ export async function moveBooking(opts: {
         playerCount: b.players, teeTimeAt: teeAt,
         metadata: { from: `${b.teeTime.date} ${b.teeTime.time}`, to: `${slot.date} ${slot.time}`, pricing: opts.pricing, priceChanged, ...(checkedIn ? { checkedIn: true } : {}) },
       });
+      freed = { courseId: b.courseId, date: b.teeTime.date };
       return result;
     }, { isolationLevel: 'Serializable' });
+    const opened = freed as { courseId: string; date: string } | null;
+    if (opened) await notifyAlertsFor(opened.courseId, [opened.date]);
+    return moved;
   } catch (err) {
     if (err instanceof DryRun) return err.result;
     if (err instanceof MoveError) return { ok: false, code: err.code, message: MESSAGES[err.code], ...(err.spotsLeft != null ? { spotsLeft: err.spotsLeft } : {}) };

@@ -74,6 +74,8 @@ export async function PATCH(req: NextRequest) {
     'hasDrivingRange','drivingRangeType','rangeBallsFree','hasPuttingGreen','hasShortGameArea',
     'hasProShop','proShopPhone',
     // HOME-3 (Cam 2026-11-12) / Takes cash (Cam 2026-11-17): off refuses every cash path (lib/takes-cash). Owner only (above).
+    // ALERTS-2 (Cam 2026-11-18): "Let golfers set tee time alerts". Off: no new alerts, none sent.
+    'teeTimeAlertsOn',
     'takesCash','restaurantType','hasCartGirl','hasLessons','hasClubRental',
     'hasPushCartRental','hasBagStorage','hasLockerRoom','hasGpsCarts',
     'hasTournaments','tournamentFrequency','hasCaddies','caddieType','caddieNote',

@@ -8,7 +8,20 @@ import { prisma } from './prisma';
 import { normalizePhone } from './golfer-otp';
 import { SMS_CONSENT_VERSION } from './sms-consent-copy';
 
-export type ConsentMethod = 'web_booking' | 'web_event' | 'verbal' | 'sms_reply' | 'carrier';
+export type ConsentMethod = 'web_booking' | 'web_event' | 'web_alert' | 'verbal' | 'sms_reply' | 'carrier';
+
+/**
+ * ALERTS-2 (Cam 2026-11-18): what a yes covers. Booking texts and tee time alert texts are
+ * agreed to separately, so a yes to one never lets the other through. Every row written
+ * before this is 'bookings'. A STOP (an sms_reply or carrier opt-out, whatever its scope
+ * column says) ends every scope, so it is always counted.
+ */
+export type SmsScope = 'bookings' | 'alerts';
+
+/** The rows that decide a phone's consent for `scope`: its own, plus every STOP. */
+function scopeWhere(scope: SmsScope) {
+  return { OR: [{ scope: { in: [scope, 'all'] } }, { action: 'opt_out', method: { in: ['sms_reply', 'carrier'] } }] };
+}
 
 /** A number worth recording: 10+ digits. Returns E.164, or null. */
 export function consentPhone(raw: string | null | undefined): string | null {
@@ -17,19 +30,19 @@ export function consentPhone(raw: string | null | undefined): string | null {
   return normalizePhone(s);
 }
 
-/** Whether this phone's latest consent row is an opt-in. */
-export async function hasSmsConsent(phone: string): Promise<boolean> {
+/** Whether this phone's latest consent row for `scope` is an opt-in. */
+export async function hasSmsConsent(phone: string, scope: SmsScope = 'bookings'): Promise<boolean> {
   const p = consentPhone(phone);
   if (!p) return false;
-  const last = await prisma.smsConsent.findFirst({ where: { phone: p }, orderBy: { createdAt: 'desc' }, select: { action: true } });
+  const last = await prisma.smsConsent.findFirst({ where: { phone: p, ...scopeWhere(scope) }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], select: { action: true } });
   return last?.action === 'opt_in';
 }
 
 /** Of these phones, the ones that have agreed (E.164). One query. */
-export async function consentedPhones(phones: string[]): Promise<Set<string>> {
+export async function consentedPhones(phones: string[], scope: SmsScope = 'bookings'): Promise<Set<string>> {
   const list = [...new Set(phones.map(consentPhone).filter((p): p is string => !!p))];
   if (!list.length) return new Set();
-  const rows = await prisma.smsConsent.findMany({ where: { phone: { in: list } }, orderBy: { createdAt: 'asc' }, select: { phone: true, action: true } });
+  const rows = await prisma.smsConsent.findMany({ where: { phone: { in: list }, ...scopeWhere(scope) }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }], select: { phone: true, action: true } });
   const latest = new Map<string, string>();
   for (const r of rows) latest.set(r.phone, r.action);
   return new Set([...latest].filter(([, a]) => a === 'opt_in').map(([p]) => p));
@@ -41,14 +54,22 @@ export async function consentedPhones(phones: string[]): Promise<Set<string>> {
  * confirmation only on a real change. Never throws (consent is logged; the booking or
  * sale it rides on must not fail because of it) — returns false on error.
  */
-export async function recordSmsConsent(raw: string, action: 'opt_in' | 'opt_out', ctx: { method: ConsentMethod; courseId?: string | null; bookingId?: string | null; recordedBy?: string }): Promise<boolean> {
+export async function recordSmsConsent(raw: string, action: 'opt_in' | 'opt_out', ctx: { method: ConsentMethod; courseId?: string | null; bookingId?: string | null; recordedBy?: string; scope?: SmsScope; wording?: string }): Promise<boolean> {
   const phone = consentPhone(raw);
   if (!phone) return false;
+  // ALERTS-2: a STOP from the phone (a reply, or the carrier) covers every scope.
+  const isStop = action === 'opt_out' && (ctx.method === 'sms_reply' || ctx.method === 'carrier');
+  const scope: SmsScope = ctx.scope ?? 'bookings';
   try {
-    const last = await prisma.smsConsent.findFirst({ where: { phone }, orderBy: { createdAt: 'desc' }, select: { action: true } });
-    if (last?.action === action) return false;
+    if (!isStop) {
+      const last = await prisma.smsConsent.findFirst({ where: { phone, ...scopeWhere(scope) }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], select: { action: true } });
+      if (last?.action === action) return false;
+    } else {
+      const last = await prisma.smsConsent.findFirst({ where: { phone }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], select: { action: true, method: true } });
+      if (last?.action === 'opt_out' && (last.method === 'sms_reply' || last.method === 'carrier')) return false;
+    }
     // An opt-out with nothing before it is still recorded: a STOP is a STOP.
-    await prisma.smsConsent.create({ data: { phone, action, method: ctx.method, wording: SMS_CONSENT_VERSION, courseId: ctx.courseId ?? null, bookingId: ctx.bookingId ?? null, recordedBy: ctx.recordedBy ?? '' } });
+    await prisma.smsConsent.create({ data: { phone, action, method: ctx.method, wording: ctx.wording ?? SMS_CONSENT_VERSION, courseId: ctx.courseId ?? null, bookingId: ctx.bookingId ?? null, recordedBy: ctx.recordedBy ?? '', scope: isStop ? 'all' : scope } });
     return true;
   } catch (err) {
     console.error(JSON.stringify({ ev: 'sms_consent.record.fail', action, method: ctx.method, error: err instanceof Error ? err.message : String(err) }));

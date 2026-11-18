@@ -46,3 +46,20 @@ export function smsKeyword(body: string): string {
 }
 
 function cap(s: string) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+// ALERTS-2 (Cam 2026-11-18, lanes/golfer.md item 7): tee time alert texts are agreed to on
+// their own, separately from booking texts. The alert sheet's "Also text me" box shows
+// alertSmsConsentText() and nothing else; the alert row keeps that exact text and the time,
+// and the SmsConsent row (scope 'alerts') keeps ALERT_SMS_CONSENT_VERSION. Change a word →
+// bump the version.
+export const ALERT_SMS_CONSENT_VERSION = 'alerts-2026-11-18';
+
+/** The alert sheet's text opt-in box. Never pre-ticked. */
+export function alertSmsConsentText(courseName: string): string {
+  return `Text me when it opens. I agree to receive text messages (SMS) from GreenReserve about this tee time alert at ${courseName || 'the course'}, ` +
+    `up to 1 message per date I picked, only for this alert and separate from booking texts. Msg & data rates may apply. Reply STOP to cancel, HELP for help.`;
+}
+
+/** The enrollment confirmation, sent once when a number first agrees to alert texts. */
+export const ALERT_SMS_CONFIRMATION =
+  `GreenReserve: you'll get a text when a tee time opens for your alert, up to 1 message per date you picked. Msg & data rates may apply. Reply STOP to cancel, HELP for help.`;
