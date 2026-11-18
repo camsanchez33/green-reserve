@@ -56,7 +56,7 @@ export async function GET(
       tier: null,
       groups,
       benefits,
-      renewsOn: null, expiresOn: resident!.expiresOn || null, autoRenew: false,
+      renewsOn: null, expiresOn: resident!.expiresOn || null, autoRenew: false, renewalFailed: false,
       upcoming,
     });
   }
@@ -99,6 +99,9 @@ export async function GET(
     renewsOn: membership.autoRenew ? ymd(membership.expiresAt) : null,
     expiresOn: membership.autoRenew ? null : ymd(membership.expiresAt),
     autoRenew: membership.autoRenew,
+    // The last automatic renewal was declined (lib/membership-autorenew sets it, a paid term clears it). The Golfer lane
+    // shows "Your renewal didn't go through" only on this flag.
+    renewalFailed: membership.autoRenewFailedAt != null,
     upcoming,
   });
 }

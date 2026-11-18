@@ -468,6 +468,11 @@ async function main() {
   const up = (hs.body?.upcoming ?? []) as { bookingId: string; manageUrl: string; date: string; time: string; players: number; holes: number; membersOnlyDay: boolean; dueLine: string }[];
   check('Your <Course>: benefits in one line', hs.body?.benefits === '20% off every round and you can book 9 days out. 6 guest passes a year.', hs.body?.benefits);
   check('…renews on the end date when it renews itself', hs.body?.renewsOn === homeEnd && hs.body?.expiresOn === null && hs.body?.autoRenew === true, hs.body);
+  check('…renewalFailed false while renewals go through', hs.body?.renewalFailed === false, hs.body);
+  await prisma.courseMembership.updateMany({ where: { courseId: home.id, inviteEmail: homeEmail }, data: { autoRenewFailedAt: new Date() } });
+  const hsFail = await get(`/api/member/${home.slug}/session`, await cookie(home.id, homeEmail));
+  check('…renewalFailed true after a declined renewal (the Golfer lane\'s "Your renewal didn\'t go through")', hsFail.body?.renewalFailed === true, hsFail.body);
+  await prisma.courseMembership.updateMany({ where: { courseId: home.id, inviteEmail: homeEmail }, data: { autoRenewFailedAt: null } });
   check('…upcoming: this course, this email (any case), confirmed, still to come, soonest first', up.map(u => u.bookingId).join() === [bNear.id, bPaid.id, bFar.id].join() && up.length === 3, up);
   check('…each opens its manage page with the emailed token, as a path on this site', up[0]?.manageUrl === `/manage/${bNear.id}?token=${TAG}-tok-1` && up[0].date === tomorrow && up[0].time === '09:00' && up[0].players === 2 && up[0].holes === 18, up[0]);
   check('…no card held: "Total due at the course"', up[0]?.dueLine === 'Total due at the course: $103.00', up[0]);
@@ -508,7 +513,7 @@ async function main() {
   await prisma.course.update({ where: { id: home.id }, data: { hasResidentPricing: true } });
   await prisma.courseResident.create({ data: { courseId: home.id, name: 'Home Res', email: `home-res@${TAG}.test`, expiresOn: homeEnd } });
   const rs = await get(`/api/member/${home.slug}/session`, await cookie(home.id, `home-res@${TAG}.test`));
-  check('…a resident: the resident line, the card\'s expiry, an empty list', rs.body?.benefits === 'The resident rate on your own round.' && rs.body?.expiresOn === homeEnd && rs.body?.renewsOn === null && rs.body?.autoRenew === false && Array.isArray(rs.body?.upcoming) && rs.body.upcoming.length === 0, rs.body);
+  check('…a resident: the resident line, the card\'s expiry, an empty list', rs.body?.benefits === 'The resident rate on your own round.' && rs.body?.expiresOn === homeEnd && rs.body?.renewsOn === null && rs.body?.autoRenew === false && rs.body?.renewalFailed === false && Array.isArray(rs.body?.upcoming) && rs.body.upcoming.length === 0, rs.body);
   await prisma.courseMembership.updateMany({ where: { courseId: home.id }, data: { expiresAt: new Date(Date.now() - 400 * 86400_000) } });
   const hs3 = await get(`/api/member/${home.slug}/session`, await cookie(home.id, homeEmail));
   check('…a lapsed membership gives no benefits line', hs3.status === 200 && hs3.body?.benefits === null, hs3.body);
