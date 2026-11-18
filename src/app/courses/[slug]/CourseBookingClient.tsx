@@ -1,43 +1,41 @@
 'use client';
-import { describePolicy, policyFrom, afterCutoffShort, insideWindowLine, policyMoney, type CancelPolicy } from '@/lib/cancel-policy';
+import type { CancelPolicy } from '@/lib/cancel-policy';
 import { lastBookableDate } from '@/lib/booking-window';
-import { cartsFor } from '@/lib/cart-pricing';
-import { teeToUtcMs } from '@/lib/tee-time-utils';
 import { useEffect, useMemo, useState, useRef, use } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Course, TeeTime } from '@/lib/courses-data';
-import { TrustNote } from '@/components/TrustNote';
-import { CARD, Card } from '@/components/ui/Card';
-import { ACCESS_FEE_PER_PLAYER, hoursLabel } from '@/lib/booking-fees';
+import { CARD } from '@/components/ui/Card';
 import { DEMO_COURSE_SLUGS } from '@/lib/demo-courses';
 import { CHANGE_CATEGORIES } from '@/lib/change-requests';
 import { StatusDot } from '@/components/ui/StatusDot';
-import { CourseHeader, CourseFooter } from '@/components/golfer/CourseFrame';
+import { golferLookVars, type CourseLook } from '@/components/golfer/look';
+import { CourseFooter } from '@/components/golfer/CourseFrame';
+import { loginOffered } from './login/login-helpers';
+import g from '@/components/golfer/golfer.module.css';
 import { SUPPORT_EMAIL } from '@/lib/contact';
 
-const STATUS_STYLE: Record<string, string> = {
-  available:   'text-ok',
-  limited:     'text-warn',
-  almost_full: 'text-bad',
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  available:   'Available',
-  limited:     'Limited',
-  almost_full: 'Almost Full',
-};
-
-type TimeOfDay = 'all' | 'morning' | 'afternoon' | 'twilight';
-
-const TOD_OPTIONS: { key: TimeOfDay; label: string }[] = [
-  { key: 'all',       label: 'All Times' },
-  { key: 'morning',   label: 'Morning' },
-  { key: 'afternoon', label: 'Midday' },
-  { key: 'twilight',  label: 'Twilight' },
+// Option A (Cam 2026-11-18, lanes/golfer.md item 1): times of day are tiles, choose any (at least one).
+// The tee time cards group the same way. The "Tee off between" and "Price up to" sliders were removed
+// in the mockup's comment threads.
+type TimeOfDay = 'morning' | 'midday' | 'afternoon';
+const TODS: { key: TimeOfDay; label: string; hint: string }[] = [
+  { key: 'morning',   label: 'Morning',   hint: 'Before 11 AM' },
+  { key: 'midday',    label: 'Mid day',   hint: '11 AM–2 PM' },
+  { key: 'afternoon', label: 'Afternoon', hint: 'After 2 PM' },
 ];
+const ALL_TODS: TimeOfDay[] = ['morning', 'midday', 'afternoon'];
+/** The windows an alert for a time of day covers (the same edges the cards group by). */
+const TOD_WINDOWS: Record<TimeOfDay, { windowStart: string; windowEnd: string }> = {
+  morning:   { windowStart: '05:00', windowEnd: '10:59' },
+  midday:    { windowStart: '11:00', windowEnd: '13:59' },
+  afternoon: { windowStart: '14:00', windowEnd: '23:59' },
+};
+function parseTods(v: string | null): TimeOfDay[] {
+  const picked = (v ?? '').split(',').filter((x): x is TimeOfDay => (ALL_TODS as string[]).includes(x));
+  return picked.length ? ALL_TODS.filter(t => picked.includes(t)) : ALL_TODS;
+}
 
 function formatDate(d: Date) {
   return d.toISOString().split('T')[0];
@@ -55,33 +53,11 @@ function formatTime(t: string) {
   return `${hour}:${m.toString().padStart(2, '0')} ${period}`;
 }
 
-// B-1: "Cancel free until <real date+time>" once a slot is picked. The tee
-// time is a wall-clock time at the course; the arithmetic runs on UTC
-// components and formats in UTC so the golfer's own timezone never shifts it.
-function deadlineLabel(dateStr: string, timeStr: string, hoursBefore: number) {
-  if (!dateStr || !timeStr) return '';
-  const [y, m, d] = dateStr.split('-').map(Number);
-  const [hh, mm] = timeStr.slice(0, 5).split(':').map(Number);
-  if ([y, m, d, hh, mm].some(n => Number.isNaN(n))) return '';
-  const cutoff = new Date(Date.UTC(y, m - 1, d, hh, mm) - hoursBefore * 3600_000);
-  const day = cutoff.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
-  const clock = cutoff.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'UTC' });
-  return `${day}, ${clock}`;
-}
-
-/** Twilight starts where the course's twilight price period does (normalize-course), else 4 PM. */
-function todOf(t: TeeTime, twilightStart: string | null | undefined): TimeOfDay {
-  const tw = twilightStart && /^\d{2}:\d{2}$/.test(twilightStart) ? twilightStart : '16:00';
+function todOf(t: TeeTime): TimeOfDay {
   const hm = t.time.slice(0, 5);
-  if (hm < '12:00') return 'morning';
-  if (hm < tw) return 'afternoon';
-  return 'twilight';
-}
-
-/** The minute before a HH:MM time ("15:00" → "14:59"). */
-function minuteBefore(hm: string): string {
-  const m = Number(hm.slice(0, 2)) * 60 + Number(hm.slice(3, 5)) - 1;
-  return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+  if (hm < '11:00') return 'morning';
+  if (hm < '14:00') return 'midday';
+  return 'afternoon';
 }
 
 function holesOf(t: TeeTime): number | undefined {
@@ -92,17 +68,6 @@ function startOfToday() {
   const d = new Date();
   d.setHours(0, 0, 0, 0);
   return d;
-}
-
-function buildDateStrip() {
-  const dates = [];
-  const today = startOfToday();
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(today);
-    d.setDate(d.getDate() + i);
-    dates.push(d);
-  }
-  return dates;
 }
 
 function monthLabel(d: Date) {
@@ -128,6 +93,18 @@ type CourseWithBrand = Course & {
   /** SP-B: the full policy (cents) — describePolicy() words. */
   cancel_policy?: CancelPolicy;
   brand_color?: string;
+  /** GOLFER-LOOK: the course's Light or Dark look and preset accent (Course.bookingLook/bookingAccent). */
+  booking_look?: CourseLook;
+  /** "Have a promo code?" shows only when the course has a live code (Build). Absent = unknown. */
+  has_live_promo?: boolean;
+  /** How far ahead a resident books, for the calendar note (Build). Absent = not shown. */
+  resident_advance_days?: number | null;
+  /** Days the course is closed inside the window, with the reason the calendar shows (Build). */
+  closed_dates?: { date: string; reason: string }[];
+  /** Course.memberLoginOn: false = no Log in on the page (Settings "Show Log in on your booking page"). */
+  member_login_on?: boolean;
+  /** The groups that can log in here (loginGroups, #495). */
+  login_groups?: ('members' | 'residents')[];
   gift_card_url?: string;
   photos?: { id: string; url: string; sortOrder: number }[];
   tee_sets?: { name: string; yardage: number; rating: number; slope: number }[];
@@ -151,6 +128,8 @@ type ActiveMemberSession = {
   email: string;
   name: string;
   tier: { name: string; color?: string } | null;
+  /** #483: every group this log-in is in here (a membership, a resident card). */
+  groups?: { kind: 'member' | 'resident'; name: string }[];
   source?: 'member';
   /** BOOKING WINDOWS: how far ahead this member can book */
   windowDays?: number;
@@ -204,15 +183,22 @@ export default function CourseDetailPage({
     const p = Number(searchParams.get('players'));
     return [1, 2, 3, 4].includes(p) ? p : 2;
   });
-  const [selectedTime, setSelectedTime] = useState<TeeTime | null>(null);
+  // GRP-1: the time a group page linked (?tt=), once the day's times load with room for it.
+  const [groupPick, setGroupPick] = useState<TeeTime | null>(null);
   // GRP-1: a group page (/g/[slug]) links a time as ?tt={id}; it is picked once
   // the day's times load, if it still has room for the group.
   const pendingPick = useRef(searchParams.get('tt'));
-  // A required cart is each tee time's call (cart_required, from its price-table cell — CART-1).
-  const [withCart, setWithCart] = useState(false);
-  // GOLFER-REDO: the page has no time-of-day control any more, so an old ?tod= link must not hide times silently.
-  const [todFilter, setTodFilter] = useState<TimeOfDay>('all');
-  const [maxPrice, setMaxPrice] = useState<number | null>(null);
+  const [tods, setTods] = useState<TimeOfDay[]>(() => parseTods(searchParams.get('tod')));
+  // Walking or riding, as a filter: shown only when it depends on the time (Cam, mockup thread 11ad6b6e).
+  const [cartFilter, setCartFilter] = useState<'any' | 'walk' | 'ride'>('any');
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [moreInfo, setMoreInfo] = useState(false);
+  const [logoutError, setLogoutError] = useState(false);
+  const [liveNote, setLiveNote] = useState('');
+  // Focus goes back to whatever opened the filters sheet or the alert.
+  const filterBtnRef = useRef<HTMLButtonElement>(null);
+  const sideCloseRef = useRef<HTMLButtonElement>(null);
+  const alertOpener = useRef<HTMLElement | null>(null);
   const [holesFilter, setHolesFilter] = useState<'all' | '9' | '18'>(() => {
     const h = searchParams.get('holes');
     return ['all', '9', '18'].includes(h ?? '') ? (h as 'all' | '9' | '18') : 'all';
@@ -220,7 +206,6 @@ export default function CourseDetailPage({
   // L2: which bookable product the golfer is looking at ('all' until they pick;
   // the selector only shows when the day has more than one product).
   const [productFilter, setProductFilter] = useState<string>(() => searchParams.get('product') || 'all');
-  const [showCal, setShowCal] = useState(false);
   // B-4: the nearest dates (up to two) with a slot that fits the party.
   const [nearestDates, setNearestDates] = useState<string[]>([]);
   const [searchingNext, setSearchingNext] = useState(false);
@@ -299,8 +284,6 @@ export default function CourseDetailPage({
   useEffect(() => {
     if (!course || course.type === 'member' || course.type === 'private') return;
     setLoadingTimes(true);
-    setSelectedTime(null);
-    setMaxPrice(null);
     setNearestDates([]);
     const url = previewMode
       ? `/api/preview/${previewMode.courseId}/tee-times?token=${previewMode.token}&date=${selectedDate}`
@@ -316,7 +299,7 @@ export default function CourseDetailPage({
           // they tapped: shrink the group to fit rather than drop the pick.
           if (pick && pick.players_available > 0) {
             if (pick.players_available < players) setPlayers(pick.players_available);
-            setSelectedTime(pick);
+            setGroupPick(pick);
           }
           return;
         }
@@ -356,13 +339,13 @@ export default function CourseDetailPage({
     const p = new URLSearchParams();
     const todayStr2 = formatDate(startOfToday());
     if (selectedDate !== todayStr2) p.set('date', selectedDate);
-    if (todFilter !== 'all') p.set('tod', todFilter);
+    if (tods.length < ALL_TODS.length) p.set('tod', tods.join(','));
     if (players !== 2) p.set('players', String(players));
     if (holesFilter !== 'all') p.set('holes', holesFilter);
     if (productFilter !== 'all') p.set('product', productFilter);
     const q = p.toString();
     router.replace(`/courses/${slug}${q ? '?' + q : ''}`, { scroll: false });
-  }, [selectedDate, todFilter, players, holesFilter, productFilter, slug, router, previewMode]);
+  }, [selectedDate, tods, players, holesFilter, productFilter, slug, router, previewMode]);
 
   // B-4: when the day is sold out, find the nearest dates (up to two, within
   // a week) that have a slot fitting the current party size — from the same
@@ -414,10 +397,10 @@ export default function CourseDetailPage({
   }, [teeTimes]);
   const productActive = dayProducts.length > 1 && productFilter !== 'all' && dayProducts.some(p => p.id === productFilter) ? productFilter : 'all';
 
-  const priceBounds = useMemo(() => {
-    if (teeTimes.length === 0) return null;
-    const fees = teeTimes.map(t => t.green_fee);
-    return { min: Math.min(...fees), max: Math.max(...fees) };
+  // Walking or riding depends on the time when some of the day's times need a cart and others can be walked.
+  const cartVaries = useMemo(() => {
+    const open = teeTimes.filter(t => t.players_available > 0);
+    return open.some(t => t.cart_required) && open.some(t => !t.cart_required);
   }, [teeTimes]);
 
   // B-4: the day has seats, just not enough for this party — the largest
@@ -442,8 +425,9 @@ export default function CourseDetailPage({
       if (t.players_available > 0 && t.players_available < players) return false;
       // W2-6 slice 3: a round can be for bigger groups only.
       if (t.players_available > 0 && (t.min_players ?? 1) > players) return false;
-      if (todFilter !== 'all' && todOf(t, course?.twilight_start) !== todFilter) return false;
-      if (maxPrice !== null && t.green_fee > maxPrice) return false;
+      if (!tods.includes(todOf(t))) return false;
+      if (cartVaries && cartFilter === 'walk' && t.cart_required) return false;
+      if (cartVaries && cartFilter === 'ride' && !(t.cart_fee > 0 || t.cart_required)) return false;
       if (holesFilter !== 'all') {
         const h = holesOf(t);
         if (h !== undefined && String(h) !== holesFilter) return false;
@@ -451,41 +435,39 @@ export default function CourseDetailPage({
       if (productActive !== 'all' && t.product_id !== productActive) return false;
       return true;
     });
-  }, [memberSession, memberTeeTimes, teeTimes, players, todFilter, maxPrice, holesFilter, productActive, course?.twilight_start]);
-
-  const activeFilterCount =
-    (todFilter !== 'all' ? 1 : 0) +
-    (maxPrice !== null ? 1 : 0) +
-    (holesFilter !== 'all' ? 1 : 0);
+  }, [memberSession, memberTeeTimes, teeTimes, players, tods, cartVaries, cartFilter, holesFilter, productActive]);
 
   function resetFilters() {
-    setTodFilter('all');
-    setMaxPrice(null);
+    setTods(ALL_TODS);
     setHolesFilter('all');
+    setProductFilter('all');
+    setCartFilter('any');
   }
 
   function openAlert(teeTimeId?: string) {
     if (!course) return;
     // B-2: a full slot's alert lives inside its own row now; tapping the same
     // row again folds it back up. The date-level alert (no slot) keeps the modal.
-    if (teeTimeId && alertModal?.teeTimeId === teeTimeId) { setAlertModal(null); return; }
     setAlertEmail('');
     setAlertName('');
     setAlertSent(false);
     setAlertError('');
+    alertOpener.current = typeof document !== 'undefined' ? (document.activeElement as HTMLElement | null) : null;
     setAlertModal({ teeTimeId, date: selectedDate, courseId: String(course.id) });
+  }
+
+  function closeAlert() {
+    if (alertSubmitting) return;
+    setAlertModal(null);
+    setAlertSent(false);
+    alertOpener.current?.focus();
   }
 
   async function submitAlert() {
     if (!alertModal || !alertEmail.trim()) return;
     setAlertSubmitting(true);
-    const todWindows: Record<TimeOfDay, { windowStart: string; windowEnd: string }> = {
-      all:       { windowStart: '', windowEnd: '' },
-      morning:   { windowStart: '06:00', windowEnd: '11:59' },
-      afternoon: { windowStart: '12:00', windowEnd: minuteBefore(course?.twilight_start ?? '16:00') },
-      twilight:  { windowStart: course?.twilight_start ?? '16:00', windowEnd: '23:59' },
-    };
-    const windows = alertModal.teeTimeId ? { windowStart: '', windowEnd: '' } : todWindows[todFilter];
+    // One time of day picked: the alert covers it. Several or all: the whole day (the API takes one window).
+    const windows = alertModal.teeTimeId || tods.length !== 1 ? { windowStart: '', windowEnd: '' } : TOD_WINDOWS[tods[0]];
     setAlertError('');
     try {
       const r = await fetch('/api/alerts', {
@@ -516,10 +498,72 @@ export default function CourseDetailPage({
   }
 
   async function memberSignOut() {
-    await fetch(`/api/member/${slug}/logout`, { method: 'POST' }).catch(() => {});
+    // A failed log-out leaves the session as it was, so the header must keep saying so.
+    const r = await fetch(`/api/member/${slug}/logout`, { method: 'POST' }).catch(() => null);
+    if (!r || !r.ok) { setLogoutError(true); return; }
+    setLogoutError(false);
     setMemberSession(null);
     setMemberTeeTimes([]);
   }
+
+  // Picking a tee time opens its own Book page (Option A).
+  function bookTime(t: TeeTime, replace = false) {
+    if (!course) return;
+    if (previewMode) { setPreviewModal(true); return; }
+    if (isDemo) { setDemoModal(true); return; }
+    const sp = Math.min(players, t.players_available || players);
+    const qp = new URLSearchParams({
+      tee_time_id: String(t.id),
+      course_name: course!.name,
+      course_slug: course!.slug,
+      date: selectedDate,
+      time: t.time,
+      players: String(sp),
+      cart: cartFilter === 'ride' || t.cart_required ? '1' : '0',
+    });
+    // /book's "Back to tee times" rebuilds this page's filters from these.
+    if (tods.length < ALL_TODS.length) qp.set('tod', tods.join(','));
+    if (holesFilter !== 'all') qp.set('holes', holesFilter);
+    if (productFilter !== 'all') qp.set('product', productFilter);
+    if (replace) router.replace(`/book?${qp}`); else router.push(`/book?${qp}`);
+  }
+
+  // GRP-1: a group page's linked time goes straight to its Book page.
+  useEffect(() => {
+    if (!groupPick) return;
+    setGroupPick(null);
+    bookTime(groupPick, true);
+    // bookTime reads the current filters; it runs once per pick.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groupPick]);
+
+  function closeFilters() {
+    setFiltersOpen(false);
+    filterBtnRef.current?.focus();
+  }
+  // The phone Filters sheet and the alert close on Escape; the sheet's close button takes focus when it opens.
+  useEffect(() => {
+    if (!filtersOpen && !alertModal) return;
+    if (filtersOpen) sideCloseRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Tab') {
+        const box = document.querySelector<HTMLElement>(alertModal ? '[aria-labelledby="alert-h"]' : '#filters');
+        const items = box ? Array.from(box.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], input:not([disabled]), select, textarea')).filter(el => el.offsetParent !== null) : [];
+        if (items.length) {
+          const first = items[0], last = items[items.length - 1];
+          if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+          else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        }
+        return;
+      }
+      if (e.key !== 'Escape') return;
+      if (alertModal) closeAlert(); else closeFilters();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+    // closeAlert/closeFilters read only refs and setters plus alertSubmitting.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtersOpen, alertModal, alertSubmitting]);
 
   if (notFound) {
     // AMENDED BIRDIE RULE: no course resolved here, so there's nothing to
@@ -612,15 +656,29 @@ export default function CourseDetailPage({
             <div className={`${CARD} p-6 sticky top-20`}>
               <p className="text-[15px] font-semibold text-ink mb-1">Member access</p>
               <p className="text-ink text-sm leading-relaxed mb-5">
-                This is a private club. Tee time booking is reserved for members. Sign in to your member account to view availability and book.
+                This is a private club. Tee time booking is reserved for members.{memberSession ? '' : loginOffered(course) ? ' Log in to your member account to view availability and book.' : ''}
               </p>
-              <Link
-                href={`/courses/${slug}/member`}
-                className="block w-full text-center py-3 px-5 text-white text-sm font-medium rounded-md transition-opacity hover:opacity-90"
-                style={{ backgroundColor: course.brand_color || '#173B2A' }}
-              >
-                Member sign in
-              </Link>
+              {/* Item 2: the one Log in, and only when the course offers it (switch on and a group). A private club's
+                  members book on the member page, so Log in returns there; logged in, the panel links straight to it. */}
+              {memberSession ? (
+                <Link
+                  href={`/courses/${slug}/member`}
+                  className="block w-full text-center py-3 px-5 text-white text-sm font-medium rounded-md transition-opacity hover:opacity-90"
+                  style={{ backgroundColor: course.brand_color || '#173B2A' }}
+                >
+                  Your {course.name}
+                </Link>
+              ) : loginOffered(course) ? (
+                <Link
+                  href={`/courses/${slug}/login?back=${encodeURIComponent(`/courses/${slug}/member`)}`}
+                  className="block w-full text-center py-3 px-5 text-white text-sm font-medium rounded-md transition-opacity hover:opacity-90"
+                  style={{ backgroundColor: course.brand_color || '#173B2A' }}
+                >
+                  Log in
+                </Link>
+              ) : (
+                <p className="text-ink text-sm">Members book through the pro shop{course.phone ? ` at ${course.phone}` : ''}.</p>
+              )}
               <p className="text-center text-xs text-ink mt-4">
                 Not a member? Contact the club directly.
               </p>
@@ -635,193 +693,270 @@ export default function CourseDetailPage({
     );
   }
 
-  const accent = course.brand_color || '#173B2A';
-  const amenities = course.facilities ?? [];
-  const strip = buildDateStrip();
+  // GOLFER-LOOK: the course's Light or Dark look and its one accent, as --g-* tokens on this page's root.
+  const look = golferLookVars(course);
   const todayStr = formatDate(startOfToday());
   // BOOKING WINDOWS: the viewer's horizon — a member's tier window, else the
   // course's public window. Days beyond it are shown but not bookable.
-  const viewerWindowDays = memberSession?.windowDays ?? course.public_advance_days ?? 7;
+  const publicDays = course.public_advance_days ?? 7;
+  const viewerWindowDays = memberSession?.windowDays ?? publicDays;
   // Counted from the course's today, as the server counts it (lib/booking-window, Revamp 3 fix 8).
   const lastBookableStr = lastBookableDate(viewerWindowDays, new Date(), course.timezone);
-  const beyondWindow = (d: Date) => formatDate(d) > lastBookableStr;
+  const lastPublicStr = lastBookableDate(publicDays, new Date(), course.timezone);
   const memberWindowDays = course.member_advance_days ?? 14;
   const membersBookEarlier = !memberSession && !!course.has_member_pricing && memberWindowDays > viewerWindowDays;
+  const closedOn = new Map((course.closed_dates ?? []).map(c => [c.date, c.reason]));
+  // Log in (item 2): the course's own log-in page, back to this page with its filters afterwards.
+  const loginOn = loginOffered(course);
+  const loginHref = `/courses/${slug}/login?back=${encodeURIComponent(`/courses/${slug}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`)}`;
+  const groupWords = (memberSession?.groups?.length ? memberSession.groups.map(gr => gr.name) : memberSession?.tier?.name ? [memberSession.tier.name] : []).join(' and ');
+  const shortDay = (ds: string) => { const d = new Date(ds + 'T12:00:00'); return `${d.toLocaleDateString('en-US', { weekday: 'short' })} ${d.getDate()}`; };
+  const longDate = (ds: string) => new Date(ds + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
-  const morningItems = filtered.filter(t => todOf(t, course.twilight_start) === 'morning');
-  const afternoonItems = filtered.filter(t => todOf(t, course.twilight_start) === 'afternoon');
-  const twilightItems = filtered.filter(t => todOf(t, course.twilight_start) === 'twilight');
-  const groups = [
-    { key: 'morning',   label: 'Morning',   items: morningItems },
-    { key: 'afternoon', label: 'Midday',    items: afternoonItems },
-    { key: 'twilight',  label: 'Twilight',  items: twilightItems },
-  ].filter(g => g.items.length > 0);
+  const groups = TODS.map(t => ({ ...t, items: filtered.filter(x => todOf(x) === t.key) })).filter(gr => gr.items.length > 0);
+  const openCount = filtered.filter(t => t.players_available > 0).length;
 
   const todayMonth = (() => { const t = startOfToday(); return new Date(t.getFullYear(), t.getMonth(), 1); })();
   const maxMonth = new Date(todayMonth.getFullYear(), todayMonth.getMonth() + 2, 1);
   const canPrevMonth = calMonth > todayMonth;
   const canNextMonth = calMonth < maxMonth;
 
-  function handleBook() {
-    if (!selectedTime) return;
-    if (previewMode) { setPreviewModal(true); return; }
-    if (isDemo) { setDemoModal(true); return; }
-    const qp = new URLSearchParams({
-      tee_time_id: String(selectedTime.id),
-      course_name: course!.name,
-      course_slug: course!.slug,
-      date: selectedDate,
-      time: selectedTime.time,
-      players: String(players),
-      cart: withCart ? '1' : '0',
+  function pickDay(ds: string) {
+    setSelectedDate(ds);
+  }
+  function toggleTod(k: TimeOfDay) {
+    if (tods.length === 1 && tods[0] === k) { setLiveNote('Keep at least one time of day.'); return; }
+    setLiveNote('');
+    setTods(cur => {
+      if (cur.includes(k)) return cur.length === 1 ? cur : cur.filter(x => x !== k);
+      return ALL_TODS.filter(x => x === k || cur.includes(x));
     });
-    // /book's "Back to tee times" rebuilds this page's filters from these.
-    if (todFilter !== 'all') qp.set('tod', todFilter);
-    if (holesFilter !== 'all') qp.set('holes', holesFilter);
-    if (productFilter !== 'all') qp.set('product', productFilter);
-    router.push(`/book?${qp}`);
   }
 
-  // B-1: the trust line's policy facts, from the course itself.
-  const cancelHours = course.cancellation_hours ?? 24;
-  const hasLateFee = (course.late_cancellation_fee ?? 0) > 0;
-  // SP-B: a card is asked for only when the policy can charge one.
-  const coursePolicy = course.cancel_policy ?? policyFrom({ cancellationHours: cancelHours, lateCancellationFeeCents: Math.round((course.late_cancellation_fee ?? 0) * 100) });
-  // FEE-AT-BOOKING: with GreenReserve's fee charged at booking, every booking takes a card.
-  const cardNeeded = describePolicy(coursePolicy).cardAtBooking;
-  // The trust line's fee, worded as describePolicy words it ("$20", "$5 per player").
-  const lateFeeWords = `${policyMoney(coursePolicy.lateCancellationFeeCents)}${coursePolicy.lateFeeBasis === 'player' ? ' per player' : ''}`;
-  // R-GOLF-009: the picked slot's free-cancellation cutoff has already passed (course clock).
-  const slotPastCutoff = hasLateFee && !!selectedTime && !!course.timezone
-    && teeToUtcMs(selectedDate, selectedTime.time, course.timezone) - cancelHours * 3600_000 <= Date.now();
+  const safeSite = course.website && /^https?:\/\//i.test(course.website) ? course.website : '';
+  const directionsUrl = course.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([course.address, course.city, course.state].filter(Boolean).join(', '))}` : '';
+  const telHref = course.phone ? `tel:${course.phone.replace(/[^\d+]/g, '')}` : '';
+  const noteLine = (course.dress_code ?? []).join('. ');
+  const hasMore = !!course.walking_note || (course.facilities?.length ?? 0) > 0;
 
-  // GOLFER-REDO: the picked time's summary — a sticky card on a laptop, a bar at the bottom of a phone.
-  // Same arithmetic the rows use; the server still prices the booking.
-  const sheetSource: ActiveTeeTime[] = memberSession ? memberTeeTimes : teeTimes;
-  const selT = selectedTime ? (sheetSource.find(x => x.id === selectedTime.id) ?? (selectedTime as ActiveTeeTime)) : null;
-  let summaryCard: React.ReactNode = null;
-  let summaryBar: React.ReactNode = null;
-  if (selT) {
-    const sp = Math.min(players, selT.players_available || players);
-    const memberRate = !!(selT.member_green_fee != null && selT.has_member_rate && selT.member_green_fee < selT.green_fee);
-    const greenEach = memberRate ? selT.member_green_fee! : selT.green_fee;
-    const perCartSel = course.cart_pricing === 'per_cart';
-    const cartsSel = perCartSel ? cartsFor(sp) : sp;
-    const cartOn = (withCart || selT.cart_required) && selT.cart_fee > 0;
-    const total = greenEach * sp + (cartOn ? selT.cart_fee : 0) * cartsSel + ACCESS_FEE_PER_PLAYER * sp;
-    const lines = (
-      <div className="space-y-1.5">
-        <div className="flex justify-between text-sm text-ink-soft">
-          <span>Green fee{memberRate ? ' (member)' : ''} × {sp}</span>
-          <span>${(greenEach * sp).toFixed(2)}</span>
-        </div>
-        {cartOn && (
-          <div className="flex justify-between text-sm text-ink-soft">
-            <span>{perCartSel ? `${cartsSel} cart${cartsSel === 1 ? '' : 's'}` : `Cart × ${sp}`}{selT.cart_required ? ' (required)' : ''}</span>
-            <span>${(selT.cart_fee * cartsSel).toFixed(2)}</span>
+  // The filters: the sidebar on a laptop, a sheet from the bottom on a phone.
+  const filters = (
+    <>
+      <div className={g.field}>
+        <span className={g.lab} id="cal-label">Date</span>
+        <div className={g.cal} role="group" aria-labelledby="cal-label">
+          <div className={g.calh}>
+            <button type="button" aria-label="Previous month" disabled={!canPrevMonth} onClick={() => setCalMonth(new Date(calMonth.getFullYear(), calMonth.getMonth() - 1, 1))}>‹</button>
+            <span>{monthLabel(calMonth)}</span>
+            <button type="button" aria-label="Next month" disabled={!canNextMonth} onClick={() => setCalMonth(new Date(calMonth.getFullYear(), calMonth.getMonth() + 1, 1))}>›</button>
           </div>
-        )}
-        <div className="flex justify-between text-sm text-ink-soft">
-          <span>Service fee × {sp}</span>
-          <span>${(ACCESS_FEE_PER_PLAYER * sp).toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between font-semibold text-ink pt-2 border-t border-line">
-          <span>Total</span>
-          <span>${total.toFixed(2)}</span>
-        </div>
-      </div>
-    );
-    const continueBtn = (
-      <button onClick={handleBook} className="w-full py-3 rounded-md font-medium text-white text-sm transition-colors" style={{ backgroundColor: accent }}>
-        Continue to Book →
-      </button>
-    );
-    summaryCard = (
-      <div className="space-y-4">
-        <div>
-          <div className="font-serif font-semibold text-ink text-[22px] leading-none">{formatTime(selT.time)}</div>
-          <div className="text-sm text-ink-muted mt-1.5">{displayDate(selectedDate)}</div>
-        </div>
-        <div>
-          <div className="text-[13px] font-semibold text-ink mb-2">Players</div>
-          <div className="flex gap-1.5">
-            {([1, 2, 3, 4] as const).map(n => {
-              const ok = n <= selT.players_available && n >= (selT.min_players ?? 1);
+          <div className={g.calg}>
+            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => <span key={i} aria-hidden="true">{d}</span>)}
+            {buildMonthGrid(calMonth).map((d, i) => {
+              if (!d) return <span key={`e${i}`} />;
+              const ds = formatDate(d);
+              const opens = new Date(d); opens.setDate(opens.getDate() - viewerWindowDays);
+              const why = ds < todayStr ? 'Past'
+                : closedOn.get(ds) ? closedOn.get(ds)!
+                : ds > lastBookableStr ? `Opens ${opens.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+                : '';
+              // Logged in, the days the longer window opens are outlined and read "members only" (item 3).
+              const membersOnly = !why && !!memberSession && ds > lastPublicStr;
+              const label = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' }) + (why ? `, ${why}` : membersOnly ? ', members only' : '') + (ds === todayStr ? ', today' : '');
               return (
-                <button key={n} disabled={!ok} onClick={() => setPlayers(n)}
-                  className="flex-1 py-2 rounded-md border text-sm font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                  style={sp === n && ok ? { borderColor: accent, backgroundColor: `${accent}12`, color: accent } : { borderColor: 'var(--color-line)', color: 'var(--color-ink-muted)' }}>
-                  {n}
+                <button key={ds} type="button" aria-pressed={ds === selectedDate} aria-disabled={why ? true : undefined}
+                  aria-label={label} title={why || (membersOnly ? 'Members only' : undefined)}
+                  style={membersOnly && ds !== selectedDate ? { boxShadow: 'inset 0 0 0 1.5px var(--g-acc)' } : undefined}
+                  onClick={why ? undefined : () => pickDay(ds)}>
+                  {d.getDate()}
                 </button>
               );
             })}
           </div>
+          <div className={g.calnote}>
+            <p><b>How far ahead you can book</b></p>
+            <ul>
+              <li>Everyone: {publicDays} days</li>
+              {course.resident_advance_days ? <li>Residents (with a resident card): {course.resident_advance_days} days</li> : null}
+              {course.has_member_pricing && memberWindowDays !== publicDays ? <li>Members: {memberWindowDays} days</li> : null}
+            </ul>
+            {memberSession
+              ? <p>Logged in{memberSession.tier?.name ? ` as ${memberSession.tier.name}` : ''} · showing {viewerWindowDays} days.{viewerWindowDays > publicDays ? ' Outlined days are members only.' : ''}</p>
+              : membersBookEarlier && !previewMode
+                ? <p>Showing {viewerWindowDays} days.{loginOn ? <> <Link className={g.lnk} href={loginHref}>Log in</Link> to see your longer window.</> : null}</p>
+                : null}
+          </div>
         </div>
-        {lines}
-        <TrustNote>Your green fee goes to the course; the ${ACCESS_FEE_PER_PLAYER.toFixed(2)} per player service fee is GreenReserve&apos;s.</TrustNote>
-        {continueBtn}
+      </div>
+
+      <div className={g.field}>
+        <span className={g.lab} id="pl-label">Players</span>
+        <div className={g.stepper} role="group" aria-labelledby="pl-label">
+          <button type="button" aria-label="One fewer player" disabled={players <= 1} onClick={() => { setPlayers(Math.max(1, players - 1)); }}>−</button>
+          <output aria-live="polite">{players} {players === 1 ? 'player' : 'players'}</output>
+          <button type="button" aria-label="One more player" disabled={players >= 4} onClick={() => { setPlayers(Math.min(4, players + 1)); }}>+</button>
+        </div>
+      </div>
+
+      <div className={g.field}>
+        <span className={g.lab} id="tod-label">Time of day · choose any</span>
+        <div className={g.todrow} role="group" aria-labelledby="tod-label">
+          {TODS.map(t => {
+            const on = tods.includes(t.key);
+            return (
+              <button key={t.key} type="button" aria-pressed={on} onClick={() => toggleTod(t.key)}>
+                <span className={g.ck} aria-hidden="true">{on ? '✓' : ''}</span>{t.label}<small>{t.hint}</small>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* The rounds the course sells (Cam, mockup thread 2d321156); one round = no filter. */}
+      {dayProducts.length > 1 ? (
+        <div className={g.field}>
+          <span className={g.lab} id="rnd-label">Round</span>
+          <div className={g.rnd} role="group" aria-labelledby="rnd-label">
+            {[{ id: 'all', label: 'Any', holes: undefined as number | undefined }, ...dayProducts].map(p => (
+              <button key={p.id} type="button" aria-pressed={productActive === p.id} onClick={() => { setProductFilter(p.id); }}>
+                <b>{p.label}</b><small>{p.id === 'all' ? 'All rounds' : p.holes ? `${p.holes} holes` : ''}</small>
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : hasHolesData ? (
+        <div className={g.field}>
+          <span className={g.lab} id="rnd-label">Round</span>
+          <div className={g.rnd} role="group" aria-labelledby="rnd-label">
+            {([['all', 'Any', 'All rounds'], ['9', '9 holes', ''], ['18', '18 holes', '']] as const).map(([v, l, h]) => (
+              <button key={v} type="button" aria-pressed={holesFilter === v} onClick={() => setHolesFilter(v)}>
+                <b>{l}</b>{h ? <small>{h}</small> : null}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {cartVaries && (
+        <div className={g.field}>
+          <span className={g.lab} id="cart-label">Cart</span>
+          <div className={g.seg} role="group" aria-labelledby="cart-label">
+            {([['any', 'Either'], ['walk', 'Walk'], ['ride', 'Ride']] as const).map(([v, l]) => (
+              <button key={v} type="button" aria-pressed={cartFilter === v} onClick={() => setCartFilter(v)}>{l}</button>
+            ))}
+          </div>
+          <p className={g.calnote}>Walking and carts depend on the time here.</p>
+        </div>
+      )}
+
+      <p className={g.calnote} role="status">{liveNote}</p>
+      <button className={g.lnk} type="button" onClick={resetFilters}>Reset all</button>
+    </>
+  );
+
+  const nextFit = nearestDates[0];
+  let timesArea: React.ReactNode;
+  if (loadingTimes) {
+    timesArea = (
+      <div className={g.cards} aria-busy="true" aria-label="Loading tee times">
+        {[...Array(8)].map((_, i) => <div key={i} className={g.skel} />)}
       </div>
     );
-    summaryBar = (
-      <div className="fixed inset-x-0 bottom-0 z-40 lg:hidden bg-white border-t border-line px-4 pt-3 pb-[max(12px,env(safe-area-inset-bottom))]">
-        <details className="mb-2">
-          <summary className="flex items-center justify-between cursor-pointer text-sm text-ink list-none">
-            <span><b className="font-semibold">{formatTime(selT.time)}</b> · {displayDate(selectedDate)} · {sp} player{sp === 1 ? '' : 's'}</span>
-            <span className="font-semibold">${total.toFixed(2)}</span>
-          </summary>
-          <div className="pt-3">
-            {lines}
-            <TrustNote className="pt-2">Your green fee goes to the course; the ${ACCESS_FEE_PER_PLAYER.toFixed(2)} per player service fee is GreenReserve&apos;s.</TrustNote>
-          </div>
-        </details>
-        {continueBtn}
+  } else if (windowNotice) {
+    timesArea = (
+      <div className={g.empty} role="status">
+        <h2>{longDate(selectedDate)} isn&rsquo;t open for booking yet</h2>
+        <p>{windowNotice.scope === 'member' ? 'Your membership lets you' : 'Golfers can'} book up to {windowNotice.windowDays} days ahead.</p>
+        {membersBookEarlier && !previewMode && loginOn && (
+          <div className={g.opts}><Link className={g.chip} href={loginHref}>Log in to book earlier</Link></div>
+        )}
       </div>
+    );
+  } else if (openCount === 0) {
+    const dayHasTimes = teeTimes.some(t => t.players_available > 0);
+    timesArea = (
+      <div className={g.empty} role="status">
+        {groupMin > players ? (<>
+          <h2>These times are for groups of {groupMin} or more</h2>
+          <p>You picked {players} player{players === 1 ? '' : 's'}. Add players to see them.</p>
+          <div className={g.opts}><button type="button" className={`${g.chip} ${g.fill}`} onClick={() => setPlayers(groupMin)}>Show times for {groupMin} players</button></div>
+        </>) : (<>
+          <h2>No times match on {longDate(selectedDate)}</h2>
+          <p>{!dayHasTimes ? 'This day is fully booked.' : bestFewer > 0 && !teeTimes.some(t => t.players_available >= players) ? `Nothing has room for ${players} this day.` : 'Try a wider time or more holes.'}</p>
+          <div className={g.opts}>
+            {searchingNext ? <p>Looking for the nearest open days…</p> : nextFit ? (
+              <button type="button" className={`${g.chip} ${g.fill}`} onClick={() => pickDay(nextFit)}>
+                See {shortDay(nextFit)}
+              </button>
+            ) : null}
+            {bestFewer > 0 && <button type="button" className={g.chip} onClick={() => setPlayers(bestFewer)}>Same day for {bestFewer}</button>}
+            {dayHasTimes && <button type="button" className={g.chip} onClick={resetFilters}>Widen my search</button>}
+            <button type="button" className={g.chip} onClick={() => openAlert()}>Tell me when a time opens</button>
+          </div>
+        </>)}
+      </div>
+    );
+  } else {
+    timesArea = (
+      <>
+        <p className={g.count} aria-live="polite">{openCount} {openCount === 1 ? 'time' : 'times'} on {longDate(selectedDate)} · prices are per player</p>
+        {groups.map(gr => (
+          <section key={gr.key} className={g.grp} aria-label={gr.label}>
+            <h2>{gr.label}<small>{gr.items.length} {gr.items.length === 1 ? 'time' : 'times'}</small></h2>
+            <div className={g.cards}>
+              {gr.items.map(t => {
+                const h = holesOf(t);
+                const isFull = t.players_available === 0;
+                const hasMemberRate = !!(t.member_green_fee != null && t.has_member_rate && t.member_green_fee < t.green_fee);
+                const price = hasMemberRate ? t.member_green_fee! : t.green_fee;
+                const struck = hasMemberRate ? t.green_fee : t.list_green_fee != null ? t.list_green_fee : null;
+                const round = t.product_label || (h ? `${h} holes` : 'Tee time');
+                return (
+                  <button key={t.id} type="button" className={`${g.tc} ${isFull ? g.full : ''}`}
+                    aria-label={isFull
+                      ? `${formatTime(t.time)}, ${round}, full. Tell me if it opens`
+                      : `${formatTime(t.time)}, ${round}, ${t.players_available} ${t.players_available === 1 ? 'spot' : 'spots'} open, $${price} per player${hasMemberRate ? `, member price, public price $${t.green_fee}` : ''}`}
+                    onClick={isFull ? () => openAlert(t.id) : () => bookTime(t)}>
+                    <span className={g.t}>{formatTime(t.time)}</span>
+                    <span className={g.c}>{round} · {isFull ? 'Full' : `${t.players_available} open`}</span>
+                    <span className={g.b}>
+                      <span>{isFull ? 'Tell me if it opens' : hasMemberRate ? 'Your price' : t.list_green_fee != null ? 'Last-minute' : h ? `${h} holes` : ''}</span>
+                      <b>{struck != null && <s>${struck}</s>}${price}</b>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        ))}
+      </>
     );
   }
 
-  // Cam 2026-11-18: no GreenReserve golfer sign-in. A signed-in member sees their chip; everyone else books as a
-  // guest (members sign in from the quiet "Log in" link under the times).
-  const signInLink = memberSession ? (
-    <Link href={`/courses/${slug}/member`} className="absolute top-3 right-4 z-10 flex items-center gap-1.5 text-xs font-medium text-white bg-black/55 hover:bg-black/70 rounded-md px-2.5 py-1.5 transition-colors">
-      <span>{memberSession.name}</span>
-      <span className="bg-white/15 rounded px-1.5 py-0.5 text-[10px] font-medium">Member{memberSession.tier?.name ? ` — ${memberSession.tier.name}` : ''}</span>
-    </Link>
-  ) : null;
-
   return (
-    <>
+    <div className={g.root} style={look}>
       {/* Preview banner */}
       {previewMode && course.is_live && (
         // Going live SUPERSEDES the pre-live review loop — an old preview
         // link visited after go-live must never show approve/request-changes
         // controls again. Route to Messages/support instead (V13b sanity
         // check, RUN_QUEUE "review loop doesn't understand already-live").
-        <div className="bg-pine/10 border-b border-pine/20">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center gap-2 text-sm flex-wrap">
-            
-            <span className="text-ink-soft">
-              This course is already live — you&apos;re viewing it as golfers see it. Questions or changes? Message the GreenReserve team from your dashboard, or reply to any of our emails.
-            </span>
-          </div>
+        <div className={g.banner}>
+          This course is already live — you&apos;re viewing it as golfers see it. Questions or changes? Message the GreenReserve team from your dashboard, or reply to any of our emails.
         </div>
       )}
       {previewMode?.look && !course.is_live && (
-        <div className="bg-pine/10 border-b border-pine/20">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 text-sm text-ink-soft">
-            Your look at this page before the course sees it — not live, booking is off. Send them the preview from the inquiry when it&apos;s right.
-          </div>
+        <div className={g.banner}>
+          Your look at this page before the course sees it — not live, booking is off. Send them the preview from the inquiry when it&apos;s right.
         </div>
       )}
       {previewMode && !previewMode.look && !course.is_live && (
-        <div className="bg-pine/10 border-b border-pine/20">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center gap-3 text-sm flex-wrap">
-            
-            <span className="text-ink-soft">
-              Preview of your GreenReserve page &mdash; not live yet. Booking is disabled.
-            </span>
+        <div className={g.banner}>
+          <div className="flex items-center gap-3 flex-wrap">
+            <span>Preview of your GreenReserve page &mdash; not live yet. Booking is disabled.</span>
             <div className="flex items-center gap-2 ml-auto">
               {previewApprovalStatus === 'approved' ? (
-                <span className="text-xs text-ok font-medium flex items-center gap-1"><StatusDot status="ok" />Approved</span>
+                <StatusDot status="ok" label="Approved" />
               ) : (
                 <button onClick={approvePreview} disabled={approvingPreview}
                   className="text-xs font-medium text-white bg-pine hover:bg-pine-hover px-3 py-1.5 rounded-md disabled:opacity-50 transition-colors">
@@ -829,7 +964,7 @@ export default function CourseDetailPage({
                 </button>
               )}
               {previewApprovalStatus === 'changes_requested' ? (
-                <span className="text-xs text-warn font-medium">Changes requested</span>
+                <StatusDot status="warn" label="Changes requested" />
               ) : (
                 <button onClick={() => setShowPreviewChangesModal(true)}
                   className="text-xs font-medium text-ink-soft bg-white border border-line hover:border-line-strong px-3 py-1.5 rounded-md transition-colors">
@@ -838,679 +973,225 @@ export default function CourseDetailPage({
               )}
             </div>
           </div>
-          {(previewApproveError || previewChangesConfirmMsg) && (
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-2 text-xs">
-              {previewApproveError && <p className="text-bad">{previewApproveError}</p>}
-              {previewChangesConfirmMsg && <p className="text-ok">{previewChangesConfirmMsg}</p>}
-            </div>
-          )}
+          {previewApproveError && <p className="text-bad text-xs mt-1">{previewApproveError}</p>}
+          {previewChangesConfirmMsg && <p className="text-xs mt-1">{previewChangesConfirmMsg}</p>}
         </div>
       )}
 
       {/* Request changes modal (preview) — structured categories, V13b */}
       {showPreviewChangesModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-card max-h-[85vh] overflow-y-auto">
-            <div className="text-ink font-medium mb-1">What would you like changed?</div>
-            <div className="text-xs text-ink mb-3">Check everything that applies — you can add a note for each.</div>
+        <div className={g.modalBack}>
+          <div className={g.modal} role="dialog" aria-modal="true" aria-labelledby="chg-h" style={{ maxHeight: '85vh', overflowY: 'auto' }}>
+            <h2 id="chg-h">What would you like changed?</h2>
+            <p>Check everything that applies — you can add a note for each.</p>
             <div className="space-y-2 mb-3">
               {CHANGE_CATEGORIES.map(cat => {
                 const checked = previewChangesChecked.has(cat.key);
                 return (
-                  <div key={cat.key} className="border border-line rounded-md p-3">
+                  <div key={cat.key} className={g.card}>
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input type="checkbox" checked={checked} onChange={() => togglePreviewChangeCategory(cat.key)} />
-                      <span className="text-sm font-medium text-ink">{cat.label}</span>
+                      <span className="text-sm font-medium">{cat.label}</span>
                     </label>
                     {checked && (
                       <textarea
                         value={previewChangesDetails[cat.key] || ''}
                         onChange={e => setPreviewChangesDetails(prev => ({ ...prev, [cat.key]: e.target.value }))}
                         rows={2}
-                        placeholder="What should change?"
-                        className="w-full mt-2 bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 resize-none"
+                        aria-label={`What should change: ${cat.label}`}
+                        className="w-full mt-2 border rounded-md px-3 py-2 text-sm resize-none"
+                        style={{ borderColor: 'var(--g-line)', background: 'var(--g-paper)' }}
                       />
                     )}
                   </div>
                 );
               })}
             </div>
-            {previewChangesError && <p className="text-xs text-bad mb-2">{previewChangesError}</p>}
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => { setShowPreviewChangesModal(false); setPreviewChangesChecked(new Set()); setPreviewChangesDetails({}); setPreviewChangesError(''); }}
-                className="text-xs text-ink-soft hover:text-ink px-3 py-2"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={submitPreviewChanges}
-                disabled={sendingPreviewChanges || previewChangesChecked.size === 0}
-                className="text-xs font-medium text-white bg-pine hover:bg-pine-hover px-4 py-2 rounded-md disabled:opacity-50 transition-colors"
-              >
-                {sendingPreviewChanges ? 'Sending...' : 'Send'}
-              </button>
-            </div>
+            {previewChangesError && <p className={g.formerr}>{previewChangesError}</p>}
+            <button type="button" className={g.btn} onClick={submitPreviewChanges} disabled={sendingPreviewChanges || previewChangesChecked.size === 0}>
+              {sendingPreviewChanges ? 'Sending...' : 'Send'}
+            </button>
+            <button type="button" className={g.ghost}
+              onClick={() => { setShowPreviewChangesModal(false); setPreviewChangesChecked(new Set()); setPreviewChangesDetails({}); setPreviewChangesError(''); }}>
+              Cancel
+            </button>
           </div>
         </div>
       )}
 
       {/* Preview modal */}
       {previewModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-sm w-full shadow-card">
-            <div className="text-ink font-medium mb-2">Booking disabled in preview</div>
-            <p className="text-ink-soft text-sm mb-5">This is a preview page &mdash; bookings are not active yet. Reply to the preview email with any changes you&apos;d like before going live.</p>
-            <button
-              onClick={() => setPreviewModal(false)}
-              className="w-full bg-pine hover:bg-pine-hover text-white rounded-md py-2.5 text-sm font-medium transition-colors"
-            >
-              Got it
-            </button>
+        <div className={g.modalBack}>
+          <div className={g.modal} role="dialog" aria-modal="true" aria-labelledby="pv-h">
+            <h2 id="pv-h">Booking disabled in preview</h2>
+            <p>This is a preview page &mdash; bookings are not active yet. Reply to the preview email with any changes you&apos;d like before going live.</p>
+            <button type="button" className={g.btn} onClick={() => setPreviewModal(false)}>Got it</button>
           </div>
         </div>
       )}
 
       {/* Demo banner */}
       {isDemo && (
-        <div className="bg-pine/10 border-b border-pine/20">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4 flex-wrap text-sm">
-            <span className="text-ink-soft">
-              This is a live demo of a GreenReserve course page — your course gets one just like it, free.
-            </span>
-            <a href="/demo" className="text-pine font-medium hover:underline whitespace-nowrap">
-              Book a demo
-            </a>
-          </div>
+        <div className={g.banner}>
+          This is a live demo of a GreenReserve course page — your course gets one just like it, free. <a href="/demo">Book a demo</a>
         </div>
       )}
 
-      {/* GOLFER-REDO: banner, logo, name, details, Find a tee time, and the two tabs. */}
-      <CourseHeader course={course} accent={accent} active="times" right={signInLink} showTabs={!previewMode} />
+      <div className={g.site}>
+        <header className={g.top}>
+          <h1>{course.name}</h1>
+          {!previewMode && (memberSession || loginOn) && (
+            <nav className={g.topLinks} aria-label="Your account at this course">
+              {memberSession ? (<>
+                <span>Logged in · {memberSession.name}{groupWords ? ` · ${groupWords}` : ''}</span>
+                <Link className={g.lnk} href={`/courses/${slug}/member`}>Your {course.name}</Link>
+                <button type="button" className={g.lnk} onClick={memberSignOut}>Log out</button>
+                {logoutError && <span role="alert">Couldn&rsquo;t log out. Try again.</span>}
+              </>) : loginOn ? (
+                <Link className={g.lnk} href={loginHref}>Log in</Link>
+              ) : null}
+            </nav>
+          )}
+        </header>
 
-      {/* DASH-D (Cam 2026-11-01): today's course conditions, set on the dashboard's Home — a plain line, not an alert. */}
-      {(course.conditions_today?.length ?? 0) > 0 && (
-        <div className="border-b border-line bg-white">
-          <p className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2 text-[13px] text-ink-soft"><span className="font-medium text-ink">Today</span> · {course.conditions_today!.join(' · ')}</p>
-        </div>
-      )}
-
-      {/* Course alert banner */}
-      {course.conditions && (
-        <div className="bg-warn/5 border-b border-warn/20">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center gap-2 text-sm text-warn">
-            
-            <span><span className="font-medium">Course notice:</span> {course.conditions}</span>
-          </div>
-        </div>
-      )}
-
-      {/* B-1: no tab bar. The sheet is the page; About and Photos are sections
-          below it (the framework's fixed section order: identity → book
-          controls → trust line → tee sheet → the place → GreenReserve line). */}
-
-      {/* Main content */}
-      <div className="bg-paper min-h-screen">
-        <div className={`max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 ${selectedTime ? 'pb-40 lg:pb-8' : ''}`}>
-
-          {(course.type === 'member' ? (
-            <div className={`${CARD} max-w-md mx-auto p-8 text-center`}>
-              
-              <h2 className="font-serif font-semibold text-ink text-xl mb-2">Member-only club</h2>
-              <p className="text-ink-soft text-sm mb-5">
-                This is a member-only or invitation-based club. Contact the pro shop for guest access.
-              </p>
-              {course.phone && (
-                <a
-                  href={`tel:${course.phone}`}
-                  className="inline-block w-full py-3 rounded-md font-medium text-sm text-white text-center transition-colors"
-                  style={{ backgroundColor: accent }}
-                >
-                  Call Pro Shop
-                </a>
+        {/* Course information: today's notice (only while one is posted), directions, website, phone and notes. */}
+        {course.type !== 'member' && (
+          <section className={g.cinfo} aria-label="Course information">
+            {course.conditions && (
+              <p className={g.alert}><StatusDot status="warn" /><span><b>Course notice:</b> {course.conditions}</span></p>
+            )}
+            {/* DASH-D (Cam 2026-11-01): today's course conditions, set on the dashboard's Home — a plain line, not an alert. */}
+            {(course.conditions_today?.length ?? 0) > 0 && (
+              <p className={g.cnote} style={{ margin: '0 0 6px' }}><b>Today</b> · {course.conditions_today!.join(' · ')}</p>
+            )}
+            {(directionsUrl || safeSite || telHref) && (
+              <div className={g.crow}>
+                {directionsUrl && (
+                  <a href={directionsUrl} target="_blank" rel="noopener noreferrer">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z" /><circle cx="12" cy="10" r="2.5" /></svg>
+                    <span><b>Directions</b> {[course.address, course.city, course.state].filter(Boolean).join(', ')}</span>
+                  </a>
+                )}
+                {safeSite && (
+                  <a href={safeSite} target="_blank" rel="noopener noreferrer">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" /></svg>
+                    <span><b>Website</b> {safeSite.replace(/^https?:\/\/(www\.)?/i, '').replace(/\/$/, '')}</span>
+                  </a>
+                )}
+                {telHref && (
+                  <a href={telHref}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" /></svg>
+                    <span><b>Call</b> {course.phone}</span>
+                  </a>
+                )}
+              </div>
+            )}
+            <p className={g.cnote}>
+              {noteLine ? `${noteLine}. ` : ''}
+              {hasMore ? (
+                <button className={g.lnk} type="button" aria-expanded={moreInfo} aria-controls="more-info" onClick={() => setMoreInfo(v => !v)}>{moreInfo ? 'Less' : 'More'}</button>
+              ) : (
+                <Link className={g.lnk} href={`/courses/${slug}/info`}>Course details and photos</Link>
               )}
+            </p>
+            {hasMore && moreInfo && (
+              <div className={g.more} id="more-info">
+                {course.walking_note && <p style={{ margin: '0 0 4px' }}>{course.walking_note}</p>}
+                {(course.facilities?.length ?? 0) > 0 && <p style={{ margin: '0 0 4px' }}>{course.facilities!.join(' · ')}</p>}
+                <Link className={g.lnk} href={`/courses/${slug}/info`}>Course details and photos</Link>
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* The site layout's main element is the page's one main landmark; this is its content. */}
+        <div className={g.wrap}>
+          {course.type === 'member' ? (
+            <div className={g.empty}>
+              <h2>Member-only club</h2>
+              <p>This is a member-only or invitation-based club. Contact the pro shop for guest access.</p>
+              {course.phone && <div className={g.opts}><a className={`${g.chip} ${g.fill}`} href={telHref}>Call the pro shop</a></div>}
             </div>
           ) : !mounted ? (
             // PERF-1: the course arrives in the first HTML now, but everything in
             // the booking area hangs off "today" in the GOLFER's timezone (the
-            // date strip, the calendar, "Today", the booking window), which the
-            // server — on UTC — cannot know; rendering it there broke hydration
-            // every US evening. So the shell is server-rendered and this area
-            // fills in on mount. Tall on purpose: anything it pushes is below the fold.
+            // calendar, "Today", the booking window), which the server — on UTC —
+            // cannot know; rendering it there broke hydration every US evening.
+            // So the shell is server-rendered and this area fills in on mount.
             // A <section> with its own key, not a <div>: React must REPLACE it
-            // with the grid, not morph it — a morphed node counts as a layout
-            // shift (measured 0.24), a newly inserted one does not.
-            <section key="booking-placeholder" className="min-h-[900px] animate-pulse" aria-hidden="true">
-              <div className="h-10 bg-line/60 rounded-md mb-4 lg:ml-[292px]" />
-              <div className="space-y-3 lg:ml-[292px]">
-                <div className="h-16 bg-line/60 rounded-md" />
-                <div className="h-16 bg-line/60 rounded-md" />
-                <div className="h-16 bg-line/60 rounded-md" />
-              </div>
+            // with the grid, not morph it — a morphed node counts as a layout shift.
+            <section key="booking-placeholder" className="min-h-[900px]" aria-hidden="true">
+              <div className={g.cards}>{[...Array(8)].map((_, i) => <div key={i} className={g.skel} />)}</div>
             </section>
           ) : (
-            <div key="booking" className="grid lg:grid-cols-[minmax(0,1fr)_320px] gap-6 items-start">
-
-              {/* RIGHT: Tee sheet */}
-              <section id="times" className="min-w-0 scroll-mt-4">
-
-                {/* GOLFER-REDO (Cam 2026-11-11): ONE filter row — dates, players, holes, walking or riding. */}
-                <Card className="p-4 sm:p-5 mb-6 space-y-4">
-                  <div className="flex items-center gap-2">
-                    <div className="flex gap-2 overflow-x-auto pb-1 flex-1" role="group" aria-label="Date">
-                      {strip.map(d => {
-                        const ds = formatDate(d);
-                        const isSelected = ds === selectedDate;
-                        const isToday = ds === todayStr;
-                        const isBeyond = beyondWindow(d);
-                        return (
-                          <button key={ds} disabled={isBeyond} aria-pressed={isSelected}
-                            title={isBeyond ? (membersBookEarlier ? 'Members can book earlier — sign in' : `Opens ${viewerWindowDays} days ahead`) : undefined}
-                            onClick={() => setSelectedDate(ds)}
-                            className="flex-none w-[64px] sm:w-[76px] py-2 rounded-lg text-center transition-colors disabled:cursor-not-allowed"
-                            style={isSelected
-                              ? { border: `1px solid ${accent}`, backgroundColor: `${accent}14`, boxShadow: `inset 0 0 0 1px ${accent}`, color: 'var(--color-ink)' }
-                              : isBeyond
-                                ? { backgroundColor: '#fff', border: '1px dashed var(--color-line)', color: 'var(--color-ink-faint)' }
-                                : { backgroundColor: '#fff', border: '1px solid var(--color-line)', color: 'var(--color-ink)' }}>
-                            <span className="block text-xs text-ink-muted">{isToday ? 'Today' : d.toLocaleDateString('en-US', { weekday: 'short' })}</span>
-                            <span className="block text-xl font-semibold leading-tight">{d.getDate()}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <button type="button" onClick={() => setShowCal(v => !v)} aria-expanded={showCal}
-                      className="flex-none text-[13px] font-medium rounded-md border border-line bg-white px-3 py-2 text-ink-soft hover:text-ink transition-colors">
-                      More dates
-                    </button>
-                  </div>
-                  {showCal && <div className="max-w-xs border-t border-line pt-4">
-                  {/* Calendar */}
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <button
-                        onClick={() => setCalMonth(new Date(calMonth.getFullYear(), calMonth.getMonth() - 1, 1))}
-                        disabled={!canPrevMonth}
-                        className="p-1 rounded text-ink-muted hover:text-ink disabled:opacity-25 transition-colors"
-                      >
-                        <ChevronLeft size={16} />
-                      </button>
-                      <span className="text-sm font-medium text-ink">{monthLabel(calMonth)}</span>
-                      <button
-                        onClick={() => setCalMonth(new Date(calMonth.getFullYear(), calMonth.getMonth() + 1, 1))}
-                        disabled={!canNextMonth}
-                        className="p-1 rounded text-ink-muted hover:text-ink disabled:opacity-25 transition-colors"
-                      >
-                        <ChevronRight size={16} />
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-7 text-center text-[11px] font-medium text-ink-muted mb-1">
-                      {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => <div key={i}>{d}</div>)}
-                    </div>
-                    <div className="grid grid-cols-7 gap-0.5">
-                      {buildMonthGrid(calMonth).map((d, i) => {
-                        if (!d) return <div key={`e${i}`} />;
-                        const ds = formatDate(d);
-                        const isPast = d < startOfToday();
-                        const isBeyond = !isPast && beyondWindow(d);
-                        const isSelected = ds === selectedDate;
-                        const isToday = ds === todayStr;
-                        const base = 'aspect-square flex items-center justify-center rounded-md text-xs font-medium transition-colors';
-                        let cls = 'text-ink hover:bg-line-soft';
-                        if (isPast || isBeyond) cls = 'text-ink-faint cursor-default';
-                        // Today and the selected day both wear the course's colour.
-                        let selStyle: React.CSSProperties = {};
-                        if (isToday && !isSelected) { cls = ''; selStyle = { color: accent, boxShadow: `inset 0 0 0 1px ${accent}4d` }; }
-                        if (isSelected) { cls = ''; selStyle = { backgroundColor: accent, color: '#fff' }; }
-                        return (
-                          <button key={ds} disabled={isPast || isBeyond} onClick={() => setSelectedDate(ds)}
-                            title={isBeyond ? (membersBookEarlier ? 'Members can book earlier — sign in' : `Opens ${viewerWindowDays} days ahead`) : undefined}
-                            className={`${base} ${cls}`} style={selStyle}>
-                            {d.getDate()}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  </div>}
-                  <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[13px] text-ink-muted">Players</span>
-                      <div className="inline-flex rounded-lg border border-line overflow-hidden" role="group" aria-label="Players">
-                        {[1, 2, 3, 4].map(n => (
-                          <button key={n} type="button" aria-pressed={players === n}
-                            onClick={() => { setPlayers(n); setSelectedTime(null); }}
-                            className="px-3.5 py-2 font-medium border-r border-line last:border-r-0 transition-colors"
-                            style={players === n ? { backgroundColor: accent, color: '#fff' } : { backgroundColor: '#fff', color: 'var(--color-ink-soft)' }}>
-                            {n}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    {hasHolesData && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-[13px] text-ink-muted">Holes</span>
-                        <div className="inline-flex rounded-lg border border-line overflow-hidden" role="group" aria-label="Holes">
-                          {(['9', '18'] as const).map(h => (
-                            <button key={h} type="button" aria-pressed={holesFilter === h}
-                              onClick={() => setHolesFilter(holesFilter === h ? 'all' : h)}
-                              className="px-3.5 py-2 font-medium border-r border-line last:border-r-0 transition-colors"
-                              style={holesFilter === h ? { backgroundColor: accent, color: '#fff' } : { backgroundColor: '#fff', color: 'var(--color-ink-soft)' }}>
-                              {h}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {teeTimes.some(t => t.cart_fee > 0 && !t.cart_required) && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-[13px] text-ink-muted">Getting around</span>
-                        <div className="inline-flex rounded-lg border border-line overflow-hidden" role="group" aria-label="Walking or riding">
-                          {([['Walking', false], ['Riding', true]] as const).map(([label, riding]) => (
-                            <button key={label} type="button" aria-pressed={withCart === riding} onClick={() => setWithCart(riding)}
-                              className="px-3.5 py-2 font-medium border-r border-line last:border-r-0 transition-colors"
-                              style={withCart === riding ? { backgroundColor: accent, color: '#fff' } : { backgroundColor: '#fff', color: 'var(--color-ink-soft)' }}>
-                              {label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </Card>
-
-                {/* L2: product selector — only when the day sells more than one product. */}
-                {dayProducts.length > 1 && (
-                  <div className="mb-4">
-                    <div className="text-[13px] font-semibold text-ink mb-2">Which round</div>
-                    <div className="flex flex-wrap gap-2" role="group" aria-label="Which round">
-                      {[{ id: 'all', label: 'All', holes: undefined as number | undefined }, ...dayProducts].map(p => {
-                        const isSel = productActive === p.id;
-                        return (
-                          <button key={p.id} type="button" aria-pressed={isSel}
-                            onClick={() => { setProductFilter(p.id); setSelectedTime(null); }}
-                            className="px-3.5 py-2 rounded-md border text-sm font-medium transition-colors"
-                            style={isSel ? { borderColor: accent, backgroundColor: `${accent}12`, color: accent } : { borderColor: 'var(--color-line)', color: 'var(--color-ink-muted)', backgroundColor: '#fff' }}>
-                            {p.label}{p.holes ? <span className="font-normal opacity-70"> · {p.holes}</span> : null}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Header */}
-                <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-                  <div className="flex items-baseline gap-3 flex-wrap">
-                    <h2 className="font-serif text-ink text-[28px] sm:text-[34px] leading-none">
-                      Tee times for <span style={{ color: accent }}>{displayDate(selectedDate)}</span>
-                    </h2>
-                    {/* Always takes its place (hidden while loading): appearing later, it wrapped onto a second
-                        line on a phone and pushed the page down (perf budget: CLS). */}
-                    <span className={'text-sm text-ink-muted' + (!loadingTimes && teeTimes.length > 0 ? '' : ' invisible')} aria-hidden={loadingTimes || teeTimes.length === 0}>{loadingTimes || teeTimes.length === 0 ? '0 available' : `${filtered.length} available`}</span>
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <button
-                      onClick={() => openAlert()}
-                      className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border border-line bg-white text-ink-soft hover:text-ink transition-colors"
-                    >
-                       Set alert
-                    </button>
-                    {memberSession && (
-                      <div className="flex items-center gap-1.5 text-xs text-ink-muted">
-                        <span className="font-medium text-ink-soft">{memberSession.name}</span>
-                        <span>·</span>
-                        <button onClick={memberSignOut} className="hover:text-ink transition-colors">Sign out</button>
-                      </div>
-                    )}
-                  </div>
+            <div key="booking" className={g.grid}>
+              {filtersOpen && <div className={`${g.scrim} ${g.open}`} onClick={closeFilters} aria-hidden="true" />}
+              <aside id="filters" className={`${g.side} ${filtersOpen ? g.open : ''}`} aria-label="Filters"
+                role={filtersOpen ? 'dialog' : undefined} aria-modal={filtersOpen ? true : undefined}>
+                <div className={g.shead}>
+                  <h2>Filters</h2>
+                  <button ref={sideCloseRef} className={g.close} type="button" aria-label="Close filters" onClick={closeFilters}>×</button>
                 </div>
+                {filters}
+                <button className={`${g.btn} ${g.sdone}`} type="button" onClick={closeFilters}>Show {openCount} {openCount === 1 ? 'time' : 'times'}</button>
+              </aside>
 
-                {/* B-1: the trust line, above the first slot, from the course's
-                    own policy — the same facts /book states after the golfer
-                    has already committed. */}
-                <p className="mb-3 text-[13px] leading-relaxed text-ink-soft">
-                  {!slotPastCutoff && <><b className="text-ink font-semibold">Nothing charged today.</b>{' '}</>}
-                  {hasLateFee
-                    ? (slotPastCutoff
-                        ? <>{insideWindowLine(coursePolicy.lateFeeTiming, lateFeeWords)}</>
-                        : selectedTime
-                        ? <>Cancel free until <b className="text-ink font-medium">{deadlineLabel(selectedDate, selectedTime.time, cancelHours)}</b> (course time), {afterCutoffShort(coursePolicy.lateFeeTiming, lateFeeWords)}.</>
-                        : <>Cancel free until {hoursLabel(cancelHours)} before your tee time, {afterCutoffShort(coursePolicy.lateFeeTiming, lateFeeWords)}.</>)
-                    : cardNeeded ? <>Cancel any time — a card is saved for no-shows.</> : <>No card needed — cancel any time.</>}
-                  {' '}${ACCESS_FEE_PER_PLAYER.toFixed(2)}/player service fee.
-                </p>
-
-                {/* B-4: the day is sold out for this party but the full rows still
-                    render below (each with "Tell me if it opens") — so the nearest
-                    fits sit here, above them, instead of in an empty state that
-                    never shows. */}
-                {/* BOOKING WINDOWS: the soft line under the picker, and the
-                    honest state when a chosen date is past the window. */}
-                {(membersBookEarlier || windowNotice) && !loadingTimes && (
-                  <div className={`${CARD} mb-4 px-4 py-3 text-sm text-ink-soft flex flex-wrap items-center gap-x-3 gap-y-1`}>
-                    {windowNotice ? (
-                      <span>
-                        <b className="font-semibold text-ink">{displayDate(selectedDate)} isn&rsquo;t open for booking yet.</b>{' '}
-                        {windowNotice.scope === 'member' ? 'Your membership lets you' : 'Golfers can'} book up to {windowNotice.windowDays} days ahead.
-                      </span>
-                    ) : (
-                      <span>Golfers can book up to {viewerWindowDays} days ahead.</span>
-                    )}
-                    {membersBookEarlier && !previewMode && (
-                      <a href={`/courses/${slug}/member`} className="font-medium hover:underline" style={{ color: accent }}>Members can book earlier — sign in →</a>
-                    )}
-                  </div>
-                )}
-                {!loadingTimes && teeTimes.length > 0 && !teeTimes.some(t => t.players_available >= players) && (
-                  <div className={`${CARD} mb-4 px-4 py-3.5 flex flex-wrap items-center gap-3`}>
-                    <div className="text-sm text-ink flex-1 min-w-[200px]">
-                      <b className="font-semibold">Nothing fits {players} on {displayDate(selectedDate)}.</b>{' '}
-                      {searchingNext ? 'Looking for the nearest open dates…' : nearestDates.length > 0 ? 'Nearest dates with room:' : bestFewer > 0 ? '' : 'Nothing with room in the next week either.'}
-                    </div>
-                    {!searchingNext && nearestDates.map((ds, i) => (
-                      <button key={ds} onClick={() => setSelectedDate(ds)}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md text-sm font-medium transition-colors"
-                        style={i === 0 ? { backgroundColor: accent, color: '#fff' } : { border: `1px solid ${accent}`, color: accent }}>
-                        {displayDate(ds)} →
-                      </button>
-                    ))}
-                    {bestFewer > 0 && (
-                      <button onClick={() => setPlayers(bestFewer)}
-                        className="inline-flex items-center px-3.5 py-2 rounded-md text-sm font-medium transition-colors"
-                        style={{ border: `1px solid ${accent}`, color: accent }}>
-                        Same day for {bestFewer} →
-                      </button>
-                    )}
-                  </div>
-                )}
-
-                {/* List. It keeps the loading placeholder's height (6 rows × 4rem + gaps), so a
-                    short afternoon list never pulls the page up under the golfer (perf budget: CLS). */}
-                <div className="min-h-[26.5rem]">
-                {loadingTimes ? (
-                  <div className="space-y-2">
-                    {[...Array(6)].map((_, i) => (
-                      <div key={i} className="h-16 bg-line rounded-lg animate-pulse" />
-                    ))}
-                  </div>
-                ) : filtered.length === 0 ? (
-                  <div className={`${CARD} text-center py-16 px-6`}>
-                    
-                    {teeTimes.length === 0 ? (
-                      <div>
-                        <p className="font-serif font-semibold text-ink text-xl mb-1.5">Nothing open on {displayDate(selectedDate)}</p>
-                        <p className="text-ink text-sm mb-5">No times left to book on this date.</p>
-                        {/* B-4: nearest fits — the two closest dates with room for this party. */}
-                        {searchingNext ? (
-                          <p className="text-xs text-ink">Looking for the nearest open dates…</p>
-                        ) : nearestDates.length > 0 ? (
-                          <div className="flex flex-wrap justify-center gap-2">
-                            {nearestDates.map((ds, i) => (
-                              <button
-                                key={ds}
-                                onClick={() => setSelectedDate(ds)}
-                                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-md text-sm font-medium transition-colors"
-                                style={i === 0 ? { backgroundColor: accent, color: '#fff' } : { border: `1px solid ${accent}`, color: accent }}
-                              >
-                                {displayDate(ds)} for {players} →
-                              </button>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-xs text-ink">Nothing with room for {players} in the next week.</p>
-                        )}
-                        <div className="mt-5">
-                          <button
-                            onClick={() => openAlert()}
-                            className="inline-flex items-center gap-1.5 text-xs font-medium text-ink-soft hover:text-ink transition-colors"
-                          >
-                             Tell me if something opens up
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        {groupMin > players ? (<>
-                          <p className="font-serif font-semibold text-ink text-xl mb-1.5">These times are for groups of {groupMin} or more</p>
-                          <p className="text-ink text-sm mb-5">You picked {players} player{players === 1 ? '' : 's'}. Add players to see them.</p>
-                          <button onClick={() => setPlayers(groupMin)} className="inline-flex items-center px-4 py-2.5 rounded-md text-sm font-medium text-white transition-colors mr-2 mb-2" style={{ backgroundColor: accent }}>
-                            Show times for {groupMin} players
-                          </button>
-                        </>) : (<>
-                        <p className="font-serif font-semibold text-ink text-xl mb-1.5">No times match your filters</p>
-                        <p className="text-ink text-sm mb-5">There are tee times on this date — your filters rule them all out.</p>
-                        {/* B-4: same day, smaller party. */}
-                        {bestFewer > 0 && (
-                          <button
-                            onClick={() => setPlayers(bestFewer)}
-                            className="inline-flex items-center px-4 py-2.5 rounded-md text-sm font-medium text-white transition-colors mr-2 mb-2"
-                            style={{ backgroundColor: accent }}
-                          >
-                            Same day for {bestFewer} player{bestFewer === 1 ? '' : 's'} →
-                          </button>
-                        )}
-                        <button
-                          onClick={resetFilters}
-                          className="inline-flex items-center px-4 py-2.5 rounded-md text-sm font-medium border transition-colors"
-                          style={{ borderColor: accent, color: accent }}
-                        >
-                          Clear filters
-                        </button>
-                        </>)}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-7">
-                    {groups.map(g => {
-                      const alertItem = g.items.find(t => t.players_available === 0 && alertModal?.teeTimeId === t.id);
-                      return (
-                      <div key={g.key}>
-                        {todFilter === 'all' && (
-                          <h3 className="text-sm font-semibold text-ink mb-2.5">{g.label}</h3>
-                        )}
-                        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2.5">
-                          {g.items.map(t => {
-                            const isSel = selectedTime?.id === t.id;
-                            const h = holesOf(t);
-                            const isFull = t.players_available === 0;
-                            const hasMemberRate = !!(t.member_green_fee != null && t.has_member_rate && t.member_green_fee < t.green_fee);
-                            const displayGreenFee = hasMemberRate ? t.member_green_fee! : t.green_fee;
-                            return (
-                              <button key={t.id} type="button" aria-pressed={isSel}
-                                className={`text-left rounded-lg border bg-white px-3.5 py-3 flex flex-col gap-0.5 transition-colors hover:border-ink-faint ${isFull ? 'opacity-60' : ''}`}
-                                style={isSel ? { borderColor: accent, backgroundColor: `${accent}14`, boxShadow: `inset 0 0 0 1px ${accent}` } : { borderColor: 'var(--color-line)' }}
-                                onClick={isFull ? () => openAlert(t.id) : () => {
-                                  const next = isSel ? null : t;
-                                  setSelectedTime(next);
-                                  if (next && players > next.players_available) setPlayers(next.players_available);
-                                }}
-                              >
-                                <span className="text-lg font-semibold text-ink tabular-nums whitespace-nowrap">{formatTime(t.time)}</span>
-                                {/* The unit always rides with the number — a bare "$62" reads as the total, which it never is. */}
-                                <span className="text-sm font-semibold" style={{ color: accent }}>${displayGreenFee} a player</span>
-                                <span className="text-xs text-ink-muted">
-                                  {isFull ? 'Full · tell me if it opens' : (
-                                    <>
-                                      {STATUS_LABEL[t.status] && t.status !== 'available' && <span className={STATUS_STYLE[t.status] || 'text-ink-muted'}>{STATUS_LABEL[t.status]} · </span>}
-                                      {t.players_available} {t.players_available === 1 ? 'spot' : 'spots'}
-                                    </>
-                                  )}
-                                </span>
-                                {(h !== undefined && (hasHolesData || t.product_label)) && (
-                                  <span className="text-[11px] text-ink-faint">{t.product_label ? `${t.product_label} · ` : ''}{h} holes{t.product_rating ? ` · ${t.product_rating.toFixed(1)} / ${t.product_slope}` : ''}</span>
-                                )}
-                                {!hasMemberRate && t.list_green_fee != null && (
-                                  <span className="text-[11px] text-ink-faint"><span className="line-through">${t.list_green_fee}</span> · last-minute</span>
-                                )}
-                                {hasMemberRate && (
-                                  <span className="text-[11px] text-ink-faint"><span className="line-through">${t.green_fee}</span> · member rate</span>
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
-                                {alertItem && (
-                                  <div className="mt-3 rounded-lg border px-4 sm:px-5 py-4" style={{ borderColor: `${accent}25`, backgroundColor: `${accent}05` }} onClick={e => e.stopPropagation()}>
-                                    {alertSent ? (
-                                      <p className="text-sm text-ink"><b className="font-semibold">Alert set.</b> We&apos;ll email you the moment {formatTime(alertItem.time)} opens up on {displayDate(selectedDate)}.</p>
-                                    ) : (
-                                      <>
-                                        <p className="text-sm text-ink-soft mb-3">We&apos;ll email you the moment this time opens up. One email, nothing else.</p>
-                                        <div className="flex flex-col sm:flex-row gap-2">
-                                          <input
-                                            type="email"
-                                            placeholder="Your email"
-                                            value={alertEmail}
-                                            onChange={e => setAlertEmail(e.target.value)}
-                                            onKeyDown={e => { if (e.key === 'Enter') submitAlert(); }}
-                                            className="flex-1 bg-white border border-line rounded-md px-3 py-2.5 text-ink placeholder-ink-faint text-sm outline-none focus:ring-2"
-                                            style={{ '--tw-ring-color': `${accent}33` } as React.CSSProperties}
-                                          />
-                                          <button
-                                            onClick={submitAlert}
-                                            disabled={!alertEmail.trim() || alertSubmitting}
-                                            className="px-4 py-2.5 rounded-md text-white text-sm font-medium disabled:opacity-50 transition-opacity"
-                                            style={{ backgroundColor: accent }}
-                                          >
-                                            {alertSubmitting ? 'Setting…' : 'Tell me'}
-                                          </button>
-                                        </div>
-                                        {alertError && <p className="text-xs text-bad mt-2">{alertError}</p>}
-                                      </>
-                                    )}
-                                  </div>
-                                )}
-                      </div>
-                      );
-                    })}
-                  </div>
-                )}
+              <section id="times" className="min-w-0 min-h-[26.5rem]" aria-label="Tee times">
+                <div className={g.mbar}>
+                  <span><b>{shortDay(selectedDate)}</b> · {players} {players === 1 ? 'player' : 'players'}</span>
+                  <button ref={filterBtnRef} className={`${g.chip} ${g.fill} ${g.filterbtn}`} type="button" aria-expanded={filtersOpen} aria-controls="filters" onClick={() => setFiltersOpen(true)}>Filters</button>
                 </div>
-
-                {/* Quiet member sign-in link — unobtrusive, below the slot list */}
-                {!memberSession && (
-                  <div className="mt-6 text-center">
-                    <Link
-                      href={`/courses/${slug}/member`}
-                      className="text-xs text-ink-faint hover:text-ink-muted transition-colors"
-                    >
-                      Log in
-                    </Link>
-                  </div>
-                )}
+                {timesArea}
               </section>
-
-              {/* GOLFER-REDO: the sticky summary on a laptop (always there, so the page doesn't shift when a time is picked)… */}
-              <Card className="hidden lg:block lg:sticky lg:top-6 p-5" aria-label="Your booking">
-                {summaryCard ?? <p className="text-sm text-ink-muted">Pick a time to see what it costs.</p>}
-              </Card>
-              {/* …and the bar at the bottom of a phone. */}
-              {summaryBar}
             </div>
-          ))}
-
+          )}
         </div>
       </div>
-      <CourseFooter course={course} accent={accent} />
+      <CourseFooter course={course} accent={course.brand_color || '#173B2A'} />
 
-      {/* Alert modal */}
-      {alertModal && !alertModal.teeTimeId && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
-          onClick={() => { if (!alertSubmitting) { setAlertModal(null); setAlertSent(false); } }}
-        >
-          <div className="bg-white rounded-lg max-w-sm w-full p-6 shadow-card" onClick={e => e.stopPropagation()}>
-            {alertSent ? (
-              <div className="text-center py-2">
-                <p className="font-serif font-semibold text-ink text-xl mb-1.5">Alert set</p>
-                <p className="text-sm text-ink mb-5">We&apos;ll email you when a spot opens up at {course.name}.</p>
-                <button
-                  onClick={() => { setAlertModal(null); setAlertSent(false); }}
-                  className="w-full py-2.5 rounded-md border border-line text-sm font-medium text-ink-soft hover:text-ink transition-colors"
-                >
-                  Done
-                </button>
-              </div>
-            ) : (
-              <>
-                <div className="flex items-center gap-2 mb-1.5">
-                  
-                  <h3 className="font-serif font-semibold text-ink text-xl leading-none">Get an alert</h3>
+      {/* Alert: the date (or the full time) the golfer wants to hear about. The alerts sheet (item 7) replaces this. */}
+      {alertModal && (
+        <div className={g.modalBack} onClick={closeAlert}>
+          <div className={g.modal} role="dialog" aria-modal="true" aria-labelledby="alert-h" onClick={e => e.stopPropagation()}>
+            {alertSent ? (<>
+              <h2 id="alert-h">Alert set</h2>
+              <p>We&apos;ll email you when {alertModal.teeTimeId ? 'that time' : 'a time'} opens on {longDate(alertModal.date)}. First come, first served.</p>
+              <button type="button" className={g.btn} onClick={closeAlert} autoFocus>Done</button>
+            </>) : (<>
+              <h2 id="alert-h">Tell me when a time opens</h2>
+              <p>{alertModal.teeTimeId
+                ? `We'll email you if this time opens on ${longDate(alertModal.date)}.`
+                : `We'll email you when a time opens on ${longDate(alertModal.date)}${tods.length === 1 ? `, ${(h => h[0].toLowerCase() + h.slice(1))(TODS.find(t => t.key === tods[0])!.hint)}` : ''}.`}</p>
+              <form noValidate onSubmit={e => { e.preventDefault(); submitAlert(); }}>
+                <div className={g.inp}>
+                  <label className={g.lab} htmlFor="alert-email">Email</label>
+                  <input id="alert-email" type="email" autoComplete="email" autoFocus value={alertEmail} onChange={e => setAlertEmail(e.target.value)}
+                    aria-invalid={alertError ? true : undefined} aria-describedby="alert-err" />
                 </div>
-                <p className="text-sm text-ink mb-5">
-                  {alertModal.teeTimeId
-                    ? `We'll notify you if this time opens up on ${displayDate(alertModal.date)}.`
-                    : `We'll notify you when a tee time matching your current filters is available on ${displayDate(alertModal.date)}.`}
-                </p>
-                <div className="space-y-3">
-                  <input
-                    type="email"
-                    placeholder="Your email"
-                    value={alertEmail}
-                    onChange={e => setAlertEmail(e.target.value)}
-                    className="w-full bg-paper border border-line rounded-md px-3 py-2.5 text-ink placeholder-ink-faint text-sm focus:border-pine/40 focus:ring-2 focus:ring-pine/10 outline-none"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Your name (optional)"
-                    value={alertName}
-                    onChange={e => setAlertName(e.target.value)}
-                    className="w-full bg-paper border border-line rounded-md px-3 py-2.5 text-ink placeholder-ink-faint text-sm focus:border-pine/40 focus:ring-2 focus:ring-pine/10 outline-none"
-                  />
+                <div className={g.inp}>
+                  <label className={g.lab} htmlFor="alert-name">Name (optional)</label>
+                  <input id="alert-name" type="text" autoComplete="name" value={alertName} onChange={e => setAlertName(e.target.value)} />
                 </div>
-                {alertError && <p className="text-xs text-bad mt-3">{alertError}</p>}
-                <div className="flex gap-2 mt-5">
-                  <button
-                    onClick={() => setAlertModal(null)}
-                    className="flex-1 py-2.5 rounded-md border border-line text-sm font-medium text-ink-soft hover:text-ink transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={submitAlert}
-                    disabled={!alertEmail.trim() || alertSubmitting}
-                    className="flex-1 py-2.5 rounded-md text-white text-sm font-medium disabled:opacity-50 transition-colors"
-                    style={{ backgroundColor: accent }}
-                  >
-                    {alertSubmitting ? 'Setting…' : 'Set alert'}
-                  </button>
-                </div>
-              </>
-            )}
+                <div className={g.err} id="alert-err" role="alert">{alertError}</div>
+                <button type="submit" className={g.btn} disabled={!alertEmail.trim() || alertSubmitting}>{alertSubmitting ? 'Setting…' : 'Set alert'}</button>
+              </form>
+              <button type="button" className={g.ghost} onClick={closeAlert}>Cancel</button>
+            </>)}
           </div>
         </div>
       )}
 
       {/* Demo booking intercept modal */}
       {demoModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
-          onClick={() => setDemoModal(false)}
-        >
-          <div className="bg-white rounded-lg max-w-sm w-full p-7 shadow-card" onClick={e => e.stopPropagation()}>
-            <h3 className="font-serif font-semibold text-ink text-xl text-center mb-2">Demo course</h3>
-            <p className="text-sm text-ink-soft text-center leading-relaxed mb-6">
-              Bookings are disabled on this demo page. This is where your golfers would receive their confirmation — with your course name, their tee time, and a check-in link.
-            </p>
-            <a
-              href="/demo"
-              className="block w-full text-center py-3 bg-pine hover:bg-pine-hover text-white text-sm font-medium rounded-md transition-colors mb-3"
-            >
-              Book a demo
-            </a>
-            <button
-              onClick={() => setDemoModal(false)}
-              className="block w-full text-center py-3 text-sm text-ink-soft hover:text-ink transition-colors"
-            >
-              Keep exploring
-            </button>
+        <div className={g.modalBack} onClick={() => setDemoModal(false)}>
+          <div className={g.modal} role="dialog" aria-modal="true" aria-labelledby="demo-h" onClick={e => e.stopPropagation()}>
+            <h2 id="demo-h">Demo course</h2>
+            <p>Bookings are disabled on this demo page. This is where your golfers would receive their confirmation — with your course name, their tee time, and a check-in link.</p>
+            <a href="/demo" className={g.btn}>Book a demo</a>
+            <button type="button" className={g.ghost} onClick={() => setDemoModal(false)}>Keep exploring</button>
           </div>
         </div>
       )}
-
-    </>
+    </div>
   );
 }

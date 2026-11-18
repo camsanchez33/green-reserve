@@ -21,7 +21,7 @@ export async function generateMetadata(
   if (course.type === 'private') {
     return {
       title: `${course.name} — Member Portal`,
-      description: `${course.name} is a private club on GreenReserve. Members sign in to book tee times.`,
+      description: `${course.name} is a private club on GreenReserve. Members log in to book tee times.`,
       robots,
     };
   }

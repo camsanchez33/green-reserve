@@ -18,6 +18,7 @@ import { reversePendingShopRefundTax } from '@/lib/shop-sales';
 import { recordPendingRoundShopTax } from '@/lib/round-shop-tax';
 import { runAdminChecks } from '@/lib/admin-checks';
 import { settleStaleDuesReaders } from '@/lib/dues-reader';
+import { sweepTeeTimeAlerts } from '@/lib/tee-time-alerts';
 
 /**
  * Runs every hour (Vercel Pro). Handles all time-sensitive booking actions:
@@ -39,6 +40,8 @@ import { settleStaleDuesReaders } from '@/lib/dues-reader';
  *
  * 6. CALL REMINDERS — SC-3: "Talking tomorrow" to the course 24 h before each
  *    scheduled discovery call, once per call (RateLimit key as the belt).
+ * 7. TEE TIME ALERTS — ALERTS-2: ends alerts past their last tee time and sends
+ *    openings the generator or staff made (lib/tee-time-alerts.ts).
  * 8. ADMIN CHECKS   — AW-5: urgent problems emailed to the admin inbox once each
  *    (lib/admin-checks.ts), and the morning digest on the first run after 7am ET.
  */
@@ -207,5 +210,9 @@ export const GET = cronRoute('hourly', async (req: NextRequest) => {
   // ─── 8: AW-5 — the admin's urgent alerts and the morning digest (last: it only reads, and never blocks the steps above) ──
   const adminChecks = await runAdminChecks(now);
 
-  return NextResponse.json({ success: true, ...results, agreementPdfs, agreementNotices, callReminders, shopTaxRecorded, shopTaxReversed, roundShopTaxRecorded, duesReadersSettled, adminChecks });
+  // ALERTS-2: end expired tee time alerts and tell the rest about times opened since. Last, so
+  // nothing above waits on it (never throws; sends capped per course).
+  const teeTimeAlerts = await sweepTeeTimeAlerts(now);
+
+  return NextResponse.json({ success: true, ...results, agreementPdfs, agreementNotices, callReminders, shopTaxRecorded, shopTaxReversed, roundShopTaxRecorded, duesReadersSettled, teeTimeAlerts, adminChecks });
 });

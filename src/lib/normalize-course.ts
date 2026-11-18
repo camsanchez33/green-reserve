@@ -4,6 +4,10 @@ import { centsToDollarsOr0 } from './money';
 import { walkingSummary } from './walking';
 import { golferConditionLines } from './course-conditions';
 import { onlineRangeOn } from './range-buckets';
+import { bookingLookOf } from './booking-look';
+
+/** Booking page fields that need their own queries (lib/public-course bookingPageExtras). */
+export type BookingPageExtras = { hasLivePromo: boolean; closedDates: { date: string; reason: string }[]; loginGroups: ('members' | 'residents')[] };
 /**
  * Maps a Prisma Course row (camelCase) onto the snake_case shape the golfer-facing
  * UI (CourseCard, /courses, /courses/[slug]) was built against. Used by every public
@@ -12,7 +16,7 @@ import { onlineRangeOn } from './range-buckets';
  * went undefined on real DB courses before).
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function normalizeDbCourse(c: any, startingGreenFee = 0) {
+export function normalizeDbCourse(c: any, startingGreenFee = 0, extras?: BookingPageExtras) {
   const walking = walkingSummary(Array.isArray(c.schedules) ? c.schedules.filter((r: { walkingAllowed?: unknown }) => typeof r?.walkingAllowed === 'boolean') : []);
   // Setup audit 17 (2026-11-01): the golfer page's Twilight filter starts where the course's own
   // twilight price period does (a schedule period named "Twilight"), not at a fixed 4 PM.
@@ -62,6 +66,8 @@ export function normalizeDbCourse(c: any, startingGreenFee = 0) {
     // Deferred-payment booking flow (range balls / cancellation policy display)
     has_driving_range:       c.hasDrivingRange ?? false,
     range_balls_free:        c.rangeBallsFree ?? true,
+    // ALERTS-2: the booking page shows tee time alerts only when this is on.
+    tee_time_alerts_on:      c.teeTimeAlertsOn !== false,
     // CART-2: 'per_cart' = the cart price is one cart for two riders.
     cart_pricing:            c.cartPricing === 'per_cart' ? 'per_cart' : 'per_player',
     // MP-3 B2b — THE HOLE IN THE RENAME. This function takes `c: any`, so the
@@ -85,6 +91,18 @@ export function normalizeDbCourse(c: any, startingGreenFee = 0) {
     // SP-B: the full cancellation & card policy, in cents — describePolicy() turns it into the golfer's words.
     cancel_policy:           policyFrom({ cancellationHours: c.cancellationHours, lateCancellationFeeCents: c.lateCancellationFeeCents ?? 1000, lateFeeBasis: c.lateFeeBasis, lateFeeTiming: c.lateFeeTiming, noShowFeeCents: c.noShowFeeCents, noShowFeeBasis: c.noShowFeeBasis, autoNoShowMinutes: c.autoNoShowMinutes, checkInWindowHours: c.checkInWindowHours }),
     brand_color:             c.brandColor ?? '#173B2A',
+    // Booking page look (Cam 2026-11-18): Light or Dark plus one preset accent, by name; accent null
+    // until the course picks one; until then the golfer pages use brand_color (BOOKING-LOOK-1).
+    booking_look:            bookingLookOf(c),
+    // GOLFER-LOGIN-1: whether the booking page shows the per-course Log in ("Show Log in on your booking
+    // page"), and how far ahead a golfer logged in with a resident card can book (null = the public window).
+    member_login_on:         c.memberLoginOn !== false,
+    // Null too when the course has resident pricing off, so a stale column never shows a window nobody gets.
+    resident_advance_days:   c.hasResidentPricing && typeof c.residentAdvanceDays === 'number' ? c.residentAdvanceDays : null,
+    // Only on the single-course payload (loadPublicCourse, preview): whether a code box is worth
+    // showing (never the codes), and the closed days in the booking window with staff's reason.
+    // login_groups: which groups can log in here ('members', 'residents'), for the Log in line; [] when Log in is off.
+    ...(extras ? { has_live_promo: extras.hasLivePromo, closed_dates: extras.closedDates, login_groups: extras.loginGroups } : {}),
     gift_card_url:           c.giftCardUrl ?? '',
     hero_photo_url:          c.heroPhotoUrl ?? '',
     photos: Array.isArray(c.photos)

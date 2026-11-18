@@ -12,6 +12,8 @@ import { ImageUpload } from '@/components/dashboard/ImageUpload';
 import CoursePreview from '@/components/dashboard/CoursePreview';
 import CourseLayoutTab from '@/components/dashboard/CourseLayoutTab';
 import { RangeBuckets } from './RangeBuckets';
+import { previewAccentHex } from '@/lib/booking-look';
+import { BookingLookRow, BookingLookPopup } from './BookingLookSetting';
 import { type Ctx, type Course, Group, Row, Muted, EditPopup, Field, FIELD, TextEdit, LINK, plural } from './ui';
 
 type Photo = { id: string; url: string; sortOrder: number };
@@ -53,7 +55,7 @@ export const FACILITY_FIELDS = [
   'hasCaddies', 'caddieType', 'caddieLooperRate', 'caddieForeRate', 'caddieNote', 'amenities',
 ];
 
-type Pop = '' | 'ask' | 'tz' | 'phone' | 'look' | 'hero' | 'photos' | 'desc' | 'type' | 'year' | 'web' | 'gift' | 'dress' | 'layout' | 'amen';
+type Pop = '' | 'ask' | 'tz' | 'phone' | 'look' | 'bookLook' | 'hero' | 'photos' | 'desc' | 'type' | 'year' | 'web' | 'gift' | 'dress' | 'layout' | 'amen';
 
 /** Name and address go through GreenReserve: the existing change-request channel (thread, activity ledger, email). */
 function AskPopup({ onClose }: { onClose: () => void }) {
@@ -75,7 +77,7 @@ function LookPopup({ ctx, onClose }: { ctx: Ctx; onClose: () => void }) {
   const [color, setColor] = useState(s(f.brandColor) || DEFAULT_COLOUR);
   return (
     <EditPopup title="Logo and colour" size="lg" onClose={onClose} onSave={() => ctx.save({ brandColor: color })}
-      hint="Top of your booking page, receipts and emails; buttons use the colour.">
+      hint="Receipts, emails, your dashboard; your booking page until its look is set.">
       <div data-setup="logo"><ImageUpload label="Your logo" kind="logo" value={s(f.logoUrl)} onUploaded={url => ctx.merge({ logoUrl: url })} hint="Square; a transparent PNG is best. Max 8MB. Saves on upload." /></div>
       <Field label="Your colour">
         <span className="flex items-center gap-2">
@@ -88,7 +90,7 @@ function LookPopup({ ctx, onClose }: { ctx: Ctx; onClose: () => void }) {
         <CoursePreview name={s(f.name)} type={s(f.type) || 'public'} city={s(f.city)} state={s(f.state)}
           holes={typeof f.holes === 'number' ? f.holes : null} par={typeof f.par === 'number' ? f.par : null}
           establishedYear={typeof f.establishedYear === 'number' ? f.establishedYear : null}
-          accent={color} logoUrl={s(f.logoUrl)} heroImageUrl={s(f.heroImageUrl)} />
+          accent={previewAccentHex(f) ?? color} logoUrl={s(f.logoUrl)} heroImageUrl={s(f.heroImageUrl)} />
         <p className="text-[12px] text-ink-muted mt-2">Sample times and prices; your real page shows yours.</p>
       </div>
     </EditPopup>
@@ -306,12 +308,13 @@ export function CourseArea({ ctx }: { ctx: Ctx }) {
       </Group>
 
       <Group id="page" title="Booking Page">
-        <Row id="page-look" setup="logo" label="Logo and colour" note="Top of your booking page, receipts and emails; buttons use the colour."
+        <Row id="page-look" setup="logo" label="Logo and colour" note="Receipts, emails, your dashboard; your booking page until its look is set."
           value={<span className="inline-flex items-center gap-2">
             {f.logoUrl ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={s(f.logoUrl)} alt="" className="w-6 h-6 rounded-[7px] object-cover" /> : <Muted>No logo</Muted>}
             <i aria-hidden="true" className="w-4 h-4 rounded-full border border-line" style={{ background: s(f.brandColor) || DEFAULT_COLOUR }} />
             <span className="font-mono text-[12.5px]">{s(f.brandColor) || DEFAULT_COLOUR}</span></span>}
           onOpen={edit('look')} />
+        <BookingLookRow form={f} onOpen={edit('bookLook')} />
         <Row id="page-hero" setup="hero" label="Banner photo" note="The wide photo behind your name." value={f.heroImageUrl ? 'Added' : notSet} onOpen={edit('hero')} />
         <Row id="page-photos" setup="gallery" label="Photos" note="Up to 8, in the Photos part of your booking page." value={photos ? plural(photos.length, 'photo') : '…'} onOpen={edit('photos')} />
         <Row id="page-desc" setup="description" label="Description" note="The paragraph under your name." value={s(f.description).trim() ? <span className="line-clamp-2 font-normal">{s(f.description)}</span> : notSet} onOpen={edit('desc')} />
@@ -334,6 +337,7 @@ export function CourseArea({ ctx }: { ctx: Ctx }) {
       {pop === 'tz' && <SelectPopup ctx={ctx} field="timezone" title="Time zone" hint="Your tee sheet's today, and the check-in and cancellation clocks, all run on this." options={US_TIMEZONES.map(z => [z.id, `${z.label} — ${z.id}`])} onClose={close} />}
       {pop === 'phone' && <TextEdit ctx={ctx} field="phone" title="Phone" type="tel" onClose={close} />}
       {pop === 'look' && <LookPopup ctx={ctx} onClose={close} />}
+      {pop === 'bookLook' && <BookingLookPopup ctx={ctx} onClose={close} />}
       {pop === 'hero' && (
         <EditPopup title="Banner photo" onClose={close}>
           <ImageUpload label="Your course photo" kind="hero" value={s(f.heroImageUrl)} onUploaded={url => ctx.merge({ heroImageUrl: url })} hint="Wide landscape, behind your course name. Max 8MB. Saves on upload." />

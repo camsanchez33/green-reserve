@@ -126,6 +126,8 @@ model Course {
   /// HOME-3 (Cam 2026-11-12): the course takes cash and keeps track of the register — Home asks to open it only when on.
   /// Takes cash (Cam 2026-11-17): OFF means no cash anywhere (lib/takes-cash). Default on: a course turns it off on purpose.
   takesCash                  Boolean               @default(true)
+  /// ALERTS-2: "Let golfers set tee time alerts" (default on). Off: the booking page hides alerts, the API refuses new ones, none are sent.
+  teeTimeAlertsOn            Boolean               @default(true)
   proShopPhone               String                @default("")
   restaurantType             String                @default("none")
   hasCartGirl                Boolean               @default(false)
@@ -152,6 +154,13 @@ model Course {
   reviewCount                Int                   @default(0)
   imageGradient              String                @default("linear-gradient(160deg,#071810 0%,#1b4332 60%,#2d6a4f 100%)")
   brandColor                 String                @default("#24513B")
+  /// Booking page look (Cam 2026-11-18): the golfer booking pages are 'light' or 'dark'.
+  bookingLook                String                @default("light")
+  /// Booking page look: one preset accent by NAME ('black' | 'green' | 'blue' | 'yellow';
+  /// never red, which means a problem). Each preset has its own light and dark values on the
+  /// golfer pages (lib/booking-look). Null until the course first saves one: until then the
+  /// golfer pages keep using brandColor, so no existing course is recoloured (BOOKING-LOOK-1).
+  bookingAccent              String?
   establishedYear            Int?
   logoUrl                    String                @default("")
   heroImageUrl               String                @default("")
@@ -471,6 +480,23 @@ model TeamChange {
 
   @@index([courseId, createdAt])
   @@index([targetId])
+}
+
+/// Booking page look (Cam 2026-11-18): the course's settings audit log. One row per field a
+/// course login changed, written in the same transaction as the change. Append-only.
+model CourseSettingChange {
+  id        String   @id @default(cuid())
+  courseId  String
+  /// 'operator' | 'staff'
+  actorType String
+  actorId   String
+  actorName String   @default("")
+  field     String
+  before    String   @default("")
+  after     String   @default("")
+  createdAt DateTime @default(now())
+
+  @@index([courseId, createdAt])
 }
 
 /// SP-A: who changed a staff member's permissions, append-only. No foreign
@@ -992,8 +1018,21 @@ model TeeTimeAlert {
   token       String    @unique @default(cuid())
   notifiedAt  DateTime?
   createdAt   DateTime  @default(now())
+  // ALERTS-2 (Cam 2026-11-18, lanes/golfer.md item 7). `date` stays the first of `dates`.
+  dates              String[]  @default([]) // YYYY-MM-DD, each inside the public booking window when set
+  parts              String[]  @default([]) // 'morning' | 'midday' | 'late'; empty = any time
+  status             String    @default("active") // 'pending' (guest, awaiting the emailed confirm) | 'active' | 'stopped' | 'ended'
+  confirmedAt        DateTime?
+  stoppedAt          DateTime?
+  endsAt             DateTime? // the last tee time on the last date (course local), else the end of that day
+  membershipId       String? // set when a logged-in member (gr_member) turned it on
+  notifiedDates      String[]  @default([]) // at most one opening email per date (the claim)
+  phone              String? // E.164; texted only with the alert-text consent below AND sendSms(scope 'alerts')
+  textConsentAt      DateTime?
+  textConsentWording String?
 
   @@index([courseId, date])
+  @@index([status, endsAt])
 }
 
 model CourseInquiry {
@@ -1452,6 +1491,9 @@ model SmsConsent {
   courseId   String?
   bookingId  String?
   recordedBy String   @default("") // staff id for a verbal yes; "" for the golfer's own
+  // ALERTS-2: what the yes covers. 'bookings' (every text before this), 'alerts' (tee time
+  // alert texts only), 'all' (a STOP, which ends every kind).
+  scope      String   @default("bookings")
   createdAt  DateTime @default(now())
 
   @@index([phone, createdAt])

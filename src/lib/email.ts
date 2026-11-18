@@ -533,24 +533,57 @@ export async function sendCheckInReceiptEmail(data: {
   await getResend().emails.send({ meta: { kind: 'check_in_receipt_email', bookingId: data.bookingId, courseSlug: data.courseSlug }, from: FROM_BILLING, to: data.golferEmail, subject: `Receipt: ${data.courseName} — $${(data.totalAmount / 100).toFixed(2)}`, html });
 }
 
+/** ALERTS-2: the stop link (a page with a Stop button) and the RFC 8058 one-click header. */
+function alertStopUrls(token: string) {
+  const base = process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
+  const url = `${base}/api/alerts/stop/${encodeURIComponent(token)}`;
+  return {
+    url,
+    headers: { 'List-Unsubscribe': `<${url}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' },
+  };
+}
+
+/** ALERTS-2: a tee time opened for an alert. First come, first served; nothing is held. */
 export async function sendTeeTimeAlertEmail(data: {
-  name: string; email: string; courseName: string; courseSlug: string;
-  date: string; time?: string; players: number; unsubscribeToken: string;
+  name: string; email: string; courseName: string; courseSlug: string; courseId?: string;
+  date: string; time?: string; players: number; stopToken: string; lastDate?: string;
 }) {
   const base = process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
-  const bookUrl = `${base}/courses/${data.courseSlug}?date=${data.date}&players=${data.players}`;
-  const unsubUrl = `${base}/api/alerts/unsubscribe/${data.unsubscribeToken}`;
+  const bookUrl = `${base}/courses/${encodeURIComponent(data.courseSlug)}?date=${data.date}&players=${data.players}`;
+  const stop = alertStopUrls(data.stopToken);
+  const day = new Date(data.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  const time = data.time ? (() => { const [h, m] = data.time!.split(':').map(Number); return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`; })() : '';
+  const course = escHtml(data.courseName);
   const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">A spot just opened up</h1>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">Good news &mdash; a tee time you set an alert for at <strong>${data.courseName}</strong> is now available.</p>
+    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">A tee time opened</h1>
+    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">A time you asked about at <strong>${course}</strong> is open for ${data.players} player${data.players === 1 ? '' : 's'}. First to book gets it; nothing is held.</p>
     <div style="background:#F6F4EC;border:1px solid #E3E4DE;border-radius:6px;padding:20px;margin-bottom:24px;">
-      ${data.time ? `<p style="margin:0 0 4px;font-weight:700;color:#141814;font-size:18px;">${data.time}</p>` : ''}
-      <p style="margin:0;color:#3F453E;">${data.date} &middot; ${data.courseName}</p>
+      ${time ? `<p style="margin:0 0 4px;font-weight:700;color:#141814;font-size:18px;">${time}</p>` : ''}
+      <p style="margin:0;color:#3F453E;">${day} &middot; ${course}</p>
     </div>
-    <a href="${bookUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:24px;">Book Now &rarr;</a>
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;"><a href="${unsubUrl}" style="color:#6B706A;">Unsubscribe from tee time alerts</a></p>
+    <a href="${bookUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:24px;">See times and book</a>
+    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">${data.lastDate ? `This alert ends after ${new Date(data.lastDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}. ` : ''}<a href="${stop.url}" style="color:#6B706A;">Stop this alert</a></p>
   `);
-  await getResend().emails.send({ meta: { kind: 'tee_time_alert_email', courseSlug: data.courseSlug }, from: FROM_SUPPORT, to: data.email, subject: `Alert: spot available at ${data.courseName}`, html });
+  await getResend().emails.send({ meta: { kind: 'tee_time_alert_email', courseSlug: data.courseSlug, courseId: data.courseId ?? null }, from: FROM_SUPPORT, to: data.email, subject: `A tee time opened at ${data.courseName}`, html, headers: stop.headers });
+}
+
+/** ALERTS-2: a guest's alert turns on only from this link (a page with a button; GET changes nothing). */
+export async function sendAlertConfirmEmail(data: {
+  email: string; courseName: string; courseSlug: string; courseId: string; token: string;
+  dates: string[]; players: number; phone?: string | null;
+}) {
+  const base = process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
+  const confirmUrl = `${base}/api/alerts/confirm/${encodeURIComponent(data.token)}`;
+  const stop = alertStopUrls(data.token);
+  const course = escHtml(data.courseName);
+  const days = data.dates.map(d => new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })).join(', ');
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Turn on your tee time alert</h1>
+    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;">You asked <strong>${course}</strong> to tell you when a time opens on ${escHtml(days)} for ${data.players} player${data.players === 1 ? '' : 's'}${data.phone ? `, by email and by text to the number ending ${escHtml(data.phone.slice(-4))}` : ''}. Nothing is sent until you turn it on.</p>
+    <a href="${confirmUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:24px;">Turn on alert</a>
+    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Didn&rsquo;t ask for this? Ignore this email and nothing will be sent. <a href="${stop.url}" style="color:#6B706A;">Stop this alert</a></p>
+  `);
+  await getResend().emails.send({ meta: { kind: 'tee_time_alert_confirm', courseSlug: data.courseSlug, courseId: data.courseId }, from: FROM_SUPPORT, to: data.email, subject: `Turn on your tee time alert at ${data.courseName}`, html, headers: stop.headers });
 }
 
 export async function sendReminderEmail(data: {
