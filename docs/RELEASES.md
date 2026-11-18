@@ -160,9 +160,11 @@ the release works. `release.mjs check --url <base>` runs read-only requests, wri
 | `GET /dashboard/login`, `GET /admin/login` | 200, no error page |
 | `GET /api/cron/hourly` without the secret | 401 (503 means `CRON_SECRET` is missing on that deployment) |
 
-Usage: `node scripts/release.mjs check --url https://greenreserve.app --slug <test course> --course-name "<its
-name>" --expect-sha <sha>`. The defaults (`perf-audit`, "Perf Audit Golf Club") exist on the staging seed and in
-CI, **not on production**. Build needs to name the production test course once and put it in the command here.
+Usage: `node scripts/release.mjs check --url https://greenreserve.app --expect-sha <sha> [--slug <test course>
+--course-name "<its name>"]`. The course-page check runs only when `--slug` is given (with `--course-name`);
+without it the script prints "course check skipped" and runs the rest. Production has no named test course
+until after the launch wipe (Build 2026-11-18); Cam names one then, and it goes in this command. On staging
+use `--slug perf-audit --course-name "Perf Audit Golf Club"` (the seed).
 
 It uses a test course only (`REAL_COURSE` filters keep it out of platform numbers), never a real course's pages. A
 failure means rolling back first and debugging after.
