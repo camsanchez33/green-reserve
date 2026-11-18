@@ -71,8 +71,10 @@ check('the agree box sits just above Book', book.indexOf('className={g.agree}') 
 
 // Item 5 (RANGE-1): the course's buckets, −/+ from 0, their own price line, sent as rangeBuckets; a 409 'range' reloads them.
 check('range balls: one row per bucket with −/+ (0 to 20), only when the course sells them', book.includes('{(course.range_buckets ?? []).length > 0 && (') && book.includes('disabled={n >= 20}') && book.includes('aria-label={`One more ${r.name}`}'));
-check('range balls: their own price line, and the request carries rangeBuckets (never the old size)', book.includes('<span>Range balls</span><span>${rangeBallsTotal.toFixed(2)}</span>') && book.includes('        rangeBuckets,\n') && !book.includes('rangeBallsSize'));
+check('range balls: their own price line, and the request carries rangeBuckets (never the old size)', book.includes('<span>Range balls</span><span>${rangeBallsTotal.toFixed(2)}</span>') && book.includes('        rangeBuckets: latest.current.rangeBuckets,\n') && !book.includes('rangeBallsSize'));
 check('range balls: a 409 code range reloads the bucket list', book.includes("if (res.status === 409 && data.code === 'range') onRangeStale?.();") && book.includes('onRangeStale={reloadBuckets}'));
+
+check('Apple Pay / Google Pay send the current cart and range balls, never a stale render', book.includes('latest.current = { name, email, phone, agreed, promoCode, packLineId, smsOk, cartSelected, rangeBuckets };') && book.includes('cartSelected: latest.current.cartSelected,'));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);

@@ -644,8 +644,9 @@ function CheckoutForm({ onRangeStale, teeTimeId, players, cartSelected, rangeBuc
   // SMS-1 (Twilio A2P 10DLC): text consent is its own box, never pre-ticked, never part of the terms box.
   const [smsOk, setSmsOk] = useState(false);
   // The wallet button's handler is registered once; it reads the code from here, never a stale render.
-  const latest = useRef({ name, email, phone, agreed, promoCode, packLineId, smsOk });
-  latest.current = { name, email, phone, agreed, promoCode, packLineId, smsOk };
+  // The cart and range balls too: on this page they are often chosen after Stripe loads (Your details comes first).
+  const latest = useRef({ name, email, phone, agreed, promoCode, packLineId, smsOk, cartSelected, rangeBuckets });
+  latest.current = { name, email, phone, agreed, promoCode, packLineId, smsOk, cartSelected, rangeBuckets };
 
   /** Create the booking. setupIntentId when a card was saved for it. */
   async function book(who: { name: string; email: string; phone: string }, setupIntentId?: string): Promise<boolean> {
@@ -660,8 +661,8 @@ function CheckoutForm({ onRangeStale, teeTimeId, players, cartSelected, rangeBuc
         golferPhone: who.phone,
         // SEC-1: only the SetupIntent — the server reads its customer and card from Stripe.
         ...(setupIntentId ? { setupIntentId } : {}),
-        cartSelected,
-        rangeBuckets,
+        cartSelected: latest.current.cartSelected,
+        rangeBuckets: latest.current.rangeBuckets,
         ...(latest.current.promoCode ? { promoCode: latest.current.promoCode } : {}),
         ...(latest.current.packLineId ? { packLineId: latest.current.packLineId } : {}),
         termsAccepted: latest.current.agreed === true,
