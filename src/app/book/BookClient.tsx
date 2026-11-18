@@ -43,9 +43,8 @@ export type CourseInfo = {
   cart_pricing?: 'per_player' | 'per_cart';
   has_driving_range: boolean;
   range_balls_free: boolean;
-  range_balls_small_price: number;
-  range_balls_medium_price: number;
-  range_balls_large_price: number;
+  /** RANGE-1: the course's buckets when it sells them with tee times; empty = no range balls section. */
+  range_buckets?: { id: string; name: string; balls: number | null; price_cents: number }[];
   cancellation_hours: number;
   late_cancellation_fee: number;
   /** SP-B: the full policy (cents). Older payloads fall back to the two fields above. */
@@ -186,7 +185,8 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
     } catch { setPromoError('Couldn’t check the code — try again.'); }
     setPromoBusy(false);
   }
-  const [rangeBallsSize, setRangeBallsSize] = useState<'' | 'small' | 'medium' | 'large'>('');
+  // RANGE-1: how many of each of the course's buckets (bucket id → count).
+  const [bucketQty, setBucketQty] = useState<Record<string, number>>({});
 
   useEffect(() => {
     // Server sent the course + tee time. Everyone books as a guest (Cam 2026-11-18: no golfer accounts).
@@ -377,11 +377,8 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   const perCart = course.cart_pricing === 'per_cart';
   const cartsN = cartsFor(players - (pk?.coversCart ? packSeatsN : 0));
   const cartTotal    = !withCart ? 0 : perCart ? cartsN * teeTime.cart_fee : pk ? (pk.coversCart ? players - packSeatsN : players) * teeTime.cart_fee : (memberRate ? splitTotal(players, memberN, c(memberRate.cartFee), c(teeTime.cart_fee)) / 100 : teeTime.cart_fee * players);
-  const rangeBallsPrice = rangeBallsSize === 'small' ? course.range_balls_small_price
-    : rangeBallsSize === 'medium' ? course.range_balls_medium_price
-    : rangeBallsSize === 'large' ? course.range_balls_large_price
-    : 0;
-  const rangeBallsTotal = course.range_balls_free ? 0 : rangeBallsPrice;
+  const rangeBuckets = (course.range_buckets ?? []).filter(r => (bucketQty[r.id] ?? 0) > 0).map(r => ({ id: r.id, qty: bucketQty[r.id] }));
+  const rangeBallsTotal = (course.range_buckets ?? []).reduce((t, r) => t + r.price_cents * (bucketQty[r.id] ?? 0), 0) / 100;
   const accessTotal  = ACCESS_FEE_PER_PLAYER * players;
   // A code that doesn't work with member or resident rates takes nothing off one (the server says so too).
   const promoBlocked = !!promo && !promo.withRates && (!!memberRate || residentFee != null);
@@ -444,25 +441,20 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
                 </div>
               )}
 
-              {course.has_driving_range && !course.range_balls_free && (
+              {(course.range_buckets ?? []).length > 0 && (
                 <div className="border-t border-line pt-3">
-                  <p className="font-medium text-ink mb-2">Range balls (optional)</p>
-                  <div className="grid grid-cols-4 gap-2">
-                    {(['', 'small', 'medium', 'large'] as const).map(size => (
-                      <button
-                        key={size || 'none'}
-                        type="button"
-                        onClick={() => setRangeBallsSize(size)}
-                        className="py-2 rounded-md text-xs font-medium capitalize transition-colors"
-                        style={rangeBallsSize === size ? { backgroundColor: accent, color: '#fff' } : { backgroundColor: '#F0EDE2', color: '#6E6D64' }}
-                      >
-                        {size || 'None'}
-                      </button>
-                    ))}
-                  </div>
-                  {rangeBallsSize && (
-                    <p className="text-xs text-ink mt-1.5">${rangeBallsPrice.toFixed(2)} — added to your check-in total</p>
-                  )}
+                  <p className="font-medium text-ink mb-2">Range balls</p>
+                  {(course.range_buckets ?? []).map(r => {
+                    const n = bucketQty[r.id] ?? 0;
+                    return (
+                      <div key={r.id} className="flex items-center gap-3 py-1.5">
+                        <span className="text-sm text-ink mr-auto">{r.name}{r.balls ? ` · ${r.balls} balls` : ''} · ${(r.price_cents / 100).toFixed(2)}</span>
+                        <button type="button" aria-label={`One fewer ${r.name}`} disabled={n <= 0} onClick={() => setBucketQty(q => ({ ...q, [r.id]: n - 1 }))} className="w-9 h-9 rounded-md border border-line text-ink disabled:opacity-40">−</button>
+                        <span className="w-6 text-center tabular-nums text-ink">{n}</span>
+                        <button type="button" aria-label={`One more ${r.name}`} disabled={n >= 20} onClick={() => setBucketQty(q => ({ ...q, [r.id]: n + 1 }))} className="w-9 h-9 rounded-md border border-line text-ink disabled:opacity-40">+</button>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
               {course.has_driving_range && course.range_balls_free && (
@@ -479,7 +471,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
                 {!pk && residentFee != null && <p className="text-[12.5px] text-ink-muted -mt-1">Resident rate for you (${residentFee.toFixed(2)}){players > 1 ? `; the rest of your group pays $${teeTime.green_fee.toFixed(2)} each` : ''}.</p>}
                 {promoOff > 0 && <div className="flex justify-between text-ink-soft"><span>Code {promo!.code}</span><span>−${promoOff.toFixed(2)}</span></div>}
                 {cartTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Cart fee (×{players})</span><span>${cartTotal.toFixed(2)}</span></div>}
-                {rangeBallsTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Range balls ({rangeBallsSize})</span><span>${rangeBallsTotal.toFixed(2)}</span></div>}
+                {rangeBallsTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Range balls</span><span>${rangeBallsTotal.toFixed(2)}</span></div>}
                 <div className="flex justify-between text-ink-soft">
                   <span>{serviceFeeLabel(players)}</span>
                   <span>${accessTotal.toFixed(2)}</span>
@@ -527,7 +519,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
                 teeTimeId={teeTime.id}
                 players={players}
                 cartSelected={withCart}
-                rangeBallsSize={rangeBallsTotal > 0 ? rangeBallsSize : ''}
+                rangeBuckets={rangeBuckets}
                 accent={accent}
                 needsCard={terms.cardAtBooking}
                 promoCode={promo && !promoBlocked && !pk ? promo.code : ''}
@@ -557,14 +549,14 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   );
 }
 
-function CheckoutForm({ teeTimeId, players, cartSelected, rangeBallsSize, accent, needsCard, courseName, onConfirmed, promoCode = '', packLineId = '' }: {
+function CheckoutForm({ teeTimeId, players, cartSelected, rangeBuckets, accent, needsCard, courseName, onConfirmed, promoCode = '', packLineId = '' }: {
   promoCode?: string;
   /** PRICE-3: the golfer's round pack, when they use it. */
   packLineId?: string;
   teeTimeId: string;
   players: number;
   cartSelected: boolean;
-  rangeBallsSize: string;
+  rangeBuckets: { id: string; qty: number }[];
   accent: string;
   /** SP-B: false when the course's policy charges nothing — no card is asked for. */
   needsCard: boolean;
@@ -605,7 +597,7 @@ function CheckoutForm({ teeTimeId, players, cartSelected, rangeBallsSize, accent
         // SEC-1: only the SetupIntent — the server reads its customer and card from Stripe.
         ...(setupIntentId ? { setupIntentId } : {}),
         cartSelected,
-        rangeBallsSize,
+        rangeBuckets,
         ...(latest.current.promoCode ? { promoCode: latest.current.promoCode } : {}),
         ...(latest.current.packLineId ? { packLineId: latest.current.packLineId } : {}),
         termsAccepted: latest.current.agreed === true,

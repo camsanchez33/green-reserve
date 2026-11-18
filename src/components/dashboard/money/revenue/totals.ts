@@ -6,12 +6,14 @@ import type { Sales, RevenueLedgerDay } from './data';
 
 export type Row = { key: string; label: string; note?: string; cents: number };
 
-const segRows = (g: { teeCents: number; cartCents: number; shopCents: number; eventCents: number; fnbCents?: number; duesCents?: number; passesCents?: number; otherCents?: number }): Row[] => [
+const segRows = (g: { teeCents: number; cartCents: number; shopCents: number; eventCents: number; fnbCents?: number; rangeCents?: number; duesCents?: number; passesCents?: number; otherCents?: number }): Row[] => [
   { key: 'tee', label: 'Tee times', note: 'green fees', cents: g.teeCents },
   { key: 'cart', label: 'Carts', cents: g.cartCents },
   { key: 'shop', label: 'Pro shop', cents: g.shopCents },
   { key: 'event', label: 'Events', cents: g.eventCents },
   ...(g.fnbCents !== undefined ? [{ key: 'fnb', label: 'Food & beverage', cents: g.fnbCents }] : []),
+  // RANGE-1 (Cam 2026-11-17): every bucket sold, online with a round or at the register — only when there are some.
+  ...(g.rangeCents ? [{ key: 'range', label: 'Range', cents: g.rangeCents }] : []),
   // Only when there are some: the mockup draws neither row.
   ...(g.duesCents ? [{ key: 'dues', label: 'Memberships', cents: g.duesCents }] : []),
   ...(g.passesCents ? [{ key: 'passes', label: 'Season passes', cents: g.passesCents }] : []),

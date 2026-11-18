@@ -28,12 +28,13 @@ import { rulesFor, groupSizeError, walkingAllowedAt } from '@/lib/booking-rules'
 import { DEMO_COURSE_SLUGS } from '@/lib/demo-courses';
 import { termsVersionNow } from '@/lib/terms';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
+import { asksForBuckets, courseBuckets, onlineBuckets, snapshotOf } from '@/lib/range-buckets';
 import { confirmationPartsOf } from '@/lib/confirmation-parts';
 import { LIKE_UNSAFE_EMAIL } from '@/lib/like-exact';
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { teeTimeId, players: playersRaw, golferName, golferEmail, golferPhone, setupIntentId, cartSelected, rangeBallsSize, termsAccepted, promoCode, packLineId, smsConsent } = body;
+  const { teeTimeId, players: playersRaw, golferName, golferEmail, golferPhone, setupIntentId, cartSelected, rangeBallsSize, rangeBuckets: rangeBucketsRaw, termsAccepted, promoCode, packLineId, smsConsent } = body;
 
   if (!teeTimeId || !playersRaw || !golferName || !golferEmail)
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -239,18 +240,12 @@ export async function POST(req: NextRequest) {
   const cart = cartCharge({ rule: cartRule, cart: wantsCart, players, coveredSeats: pack?.coversCart ? pack.seats : 0, unitCents: teeTimeFull.cartFeeCents, perPlayerTotal: perPlayerCart });
   const cartFeeTotal   = cart.cartFeeTotal;
 
-  let rangeBallsTotal = 0;
-  const ballsSize = String(rangeBallsSize || '');
-  if (teeTimeFull.course.hasDrivingRange && !teeTimeFull.course.rangeBallsFree && ballsSize) {
-    // MP-3 B2b: these are CENTS now, so the x100 that used to convert them is
-    // gone. Leaving it would have charged 100x for range balls.
-    const priceMapCents: Record<string, number> = {
-      small: teeTimeFull.course.rangeBallsSmallPriceCents,
-      medium: teeTimeFull.course.rangeBallsMediumPriceCents,
-      large: teeTimeFull.course.rangeBallsLargePriceCents,
-    };
-    rangeBallsTotal = priceMapCents[ballsSize] || 0;
-  }
+  // RANGE-1 (Cam 2026-11-17/18): range buckets from the course's ONE list (lib/range-buckets onlineBuckets), at the
+  // list price now, inside the round's own price as before — only when the course sells them with tee times.
+  const buckets = onlineBuckets(teeTimeFull.course, { rangeBallsSize, rangeBuckets: rangeBucketsRaw },
+    asksForBuckets(rangeBucketsRaw) ? await courseBuckets(prisma, teeTimeFull.courseId) : []);
+  if (!buckets.ok) return NextResponse.json({ error: buckets.error, code: buckets.code }, { status: buckets.status });
+  const rangeBallsTotal = buckets.total;
 
   const accessFeeTotal = ACCESS_FEE_CENTS * players;
   const totalCents     = greenFeeTotal + cartFeeTotal + rangeBallsTotal + accessFeeTotal;
@@ -348,8 +343,9 @@ export async function POST(req: NextRequest) {
       ...kept,
       cartFeeTotal, cartUnitCents: cart.cartUnitCents, cartRiders: cart.cartRiders,
       cartSelected:     wantsCart,
-      rangeBallsSize:   rangeBallsTotal > 0 ? ballsSize : '',
+      rangeBallsSize:   '',
       rangeBallsTotal,
+      ...(buckets.lines.length ? { rangeBuckets: snapshotOf(buckets.lines)! } : {}),
       accessFeeTotal,
       totalAmount:      totalCents,
       stripeCustomerId:      savedCustomerId,
@@ -505,6 +501,7 @@ export async function POST(req: NextRequest) {
     ...kept,
     cartFeeTotal:   cartFeeTotal   / 100,
     rangeBallsTotal: rangeBallsTotal / 100,
+    rangeBuckets:   buckets.lines.map(l => ({ name: l.name, balls: l.balls, qty: l.qty, unitCents: l.unitCents })),
     accessFeeTotal: accessFeeTotal / 100,
     totalAmount:    totalCents     / 100,
     cancellationFeeTotal: cancellationFeeTotal / 100,
