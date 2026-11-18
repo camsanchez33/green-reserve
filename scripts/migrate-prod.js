@@ -65,8 +65,8 @@ async function main() {
       console.error(`[migrate-prod] staging: could not check the database for real courses (${err && err.message}). Refusing to migrate.`);
       process.exit(1);
     }
-    if (n > 0) {
-      console.error(`[migrate-prod] staging: the target database holds ${n} real course(s), so it is not the staging database. Refusing to migrate.`);
+    if (n !== 0) {
+      console.error(`[migrate-prod] staging: the target database holds ${n} real course(s) (or an unexpected answer), so it is not the staging database. Refusing to migrate.`);
       process.exit(1);
     }
   }

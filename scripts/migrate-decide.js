@@ -27,7 +27,8 @@ function dbHost(url) {
 function decide(env) {
   const vercelEnv = env.VERCEL_ENV;
   const branch = env.VERCEL_GIT_COMMIT_REF;
-  const want = String(env.MIGRATE_ON_BUILD || '').trim().toLowerCase();
+  // The Neon console shows the pooled host by default; accept it the same way as the URLs.
+  const want = String(env.MIGRATE_ON_BUILD || '').trim().toLowerCase().replace(/^([^.]+)-pooler\./, '$1.');
 
   if (vercelEnv === 'production') return { action: 'migrate', label: 'VERCEL_ENV=production' };
 

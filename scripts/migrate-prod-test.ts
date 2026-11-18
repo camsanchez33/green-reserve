@@ -32,11 +32,13 @@ const staging = (over: Record<string, string> = {}) => ({ VERCEL_ENV: 'preview',
 check('production migrates', decide({ VERCEL_ENV: 'production' }).action === 'migrate');
 check('production migrates whatever MIGRATE_ON_BUILD or the branch say', decide({ VERCEL_ENV: 'production', VERCEL_GIT_COMMIT_REF: 'staging', MIGRATE_ON_BUILD: STG, DIRECT_URL: url(PROD) }).action === 'migrate');
 check('local build skips', decide({}).action === 'skip');
-check('development skips', decide({ VERCEL_ENV: 'development', MIGRATE_ON_BUILD: STG, DIRECT_URL: url(STG), DATABASE_URL: pooled(STG) }).action === 'skip');
+check('development on branch staging skips', decide({ VERCEL_ENV: 'development', VERCEL_GIT_COMMIT_REF: 'staging', MIGRATE_ON_BUILD: STG, DIRECT_URL: url(STG), DATABASE_URL: pooled(STG) }).action === 'skip');
+check('no VERCEL_ENV on branch staging skips', decide({ VERCEL_GIT_COMMIT_REF: 'staging', MIGRATE_ON_BUILD: STG, DIRECT_URL: url(STG), DATABASE_URL: pooled(STG) }).action === 'skip');
 check('another preview skips even with the variable leaked and prod URLs', decide({ ...staging({ VERCEL_GIT_COMMIT_REF: 'build/x', DIRECT_URL: url(PROD), DATABASE_URL: pooled(PROD) }) }).action === 'skip');
 check('a branch named staging-2 skips', decide(staging({ VERCEL_GIT_COMMIT_REF: 'staging-2' })).action === 'skip');
 check('staging without MIGRATE_ON_BUILD skips', decide(staging({ MIGRATE_ON_BUILD: '' })).action === 'skip');
 check('staging on its own host migrates (pooled URL matches after -pooler)', decide(staging()).action === 'migrate-staging');
+check('staging accepts the pooled host from the Neon console in MIGRATE_ON_BUILD', decide(staging({ MIGRATE_ON_BUILD: STG.replace(/^([^.]+)\./, '$1-pooler.') })).action === 'migrate-staging');
 check('staging host match ignores case and spaces', decide(staging({ MIGRATE_ON_BUILD: `  ${STG.toUpperCase()} ` })).action === 'migrate-staging');
 check('staging refuses a prod DIRECT_URL', decide(staging({ DIRECT_URL: url(PROD) })).action === 'refuse');
 check('staging refuses a prod DATABASE_URL beside a staging DIRECT_URL', decide(staging({ DATABASE_URL: pooled(PROD) })).action === 'refuse');
@@ -73,12 +75,17 @@ check('script: local build skips', r.code === 0 && !r.migrated, r.out);
 // ---- the config-free guard, against a real Postgres when one is reachable
 async function dbCases() {
   const base = process.env.DIRECT_URL;
-  if (!base) { console.log('SKIP  database cases (no DIRECT_URL)'); return; }
+  // These cases CREATE and DROP a database, so they only ever run against a local server, never a
+  // DIRECT_URL left exported from production work. In CI they must run: a skip there is a failure.
+  const skip = (why: string) => { if (process.env.CI) check(`database cases ran in CI`, false, why); else console.log(`SKIP  database cases (${why})`); };
+  if (!base) { skip('no DIRECT_URL'); return; }
+  const h = new URL(base).hostname;
+  if (h !== 'localhost' && h !== '127.0.0.1') { skip(`DIRECT_URL is ${h}, not a local server`); return; }
   const admin = new PrismaClient({ datasources: { db: { url: base } } });
   try {
     await admin.$queryRawUnsafe('SELECT 1');
   } catch {
-    console.log('SKIP  database cases (DIRECT_URL not reachable)');
+    skip('DIRECT_URL not reachable');
     await admin.$disconnect().catch(() => {});
     return;
   }
