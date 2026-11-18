@@ -47,6 +47,8 @@ async function cleanup() {
   ok('a walk-in paying cash now is refused before the booking is made', bk.indexOf('if (checkInNow) { const off = await cashRefused(') > -1 && bk.indexOf('if (checkInNow) { const off = await cashRefused(') < bk.indexOf('createCounterBooking('));
   const pc = sales.slice(sales.indexOf("if (body.action === 'paid_cash') {"));
   ok('Take cash on an open sale is refused before its card payment is stopped', pc.indexOf('cashRefused(g.session.courseId)') > -1 && pc.indexOf('cashRefused(g.session.courseId)') < pc.indexOf('cancelSaleIntent(') && pc.indexOf('cashRefused(g.session.courseId)') < pc.indexOf('reconcileStuckSale('));
+  const sw = readFileSync('src/components/dashboard/settings/PaymentsArea.tsx', 'utf8');
+  ok('the Settings switch says what Off does and only the owner can flip it', sw.includes('Off: cash is refused everywhere') && sw.includes('disabled={!ctx.owner || cashBusy}') && !sw.includes('except Takes cash'));
   ok('staff cannot change Takes cash', /session\.isStaff && 'takesCash' in body\) return NextResponse\.json\([^)]*\{ status: 403 \}/.test(settings));
 
   await cleanup();
