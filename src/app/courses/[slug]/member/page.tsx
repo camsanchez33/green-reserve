@@ -249,8 +249,11 @@ function MemberDashboard({
     router.push(`/book?${qp}`);
   }
 
+  // A failed log-out leaves the session as it was, so the page must say so rather than look logged out.
+  const [signOutErr, setSignOutErr] = useState(false);
   async function handleSignOut() {
-    await fetch(`/api/member/${slug}/logout`, { method: 'POST' });
+    const r = await fetch(`/api/member/${slug}/logout`, { method: 'POST' }).catch(() => null);
+    if (!r || !r.ok) { setSignOutErr(true); return; }
     onSignOut();
   }
 
@@ -285,6 +288,7 @@ function MemberDashboard({
             
             Log out
           </button>
+          {signOutErr && <span role="alert" className="text-xs text-bad">Couldn&rsquo;t log out. Try again.</span>}
         </div>
       </div>
 

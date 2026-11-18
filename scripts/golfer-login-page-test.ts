@@ -72,5 +72,10 @@ check('an old emailed link that failed says so on the code page, without a reaso
 check('logging out on the member page goes to the course page', member.includes('onSignOut={() => router.replace(`/courses/${slug}`)}'));
 check('the course info page adds no <main> inside the layout\'s', !readFileSync('src/app/courses/[slug]/info/page.tsx', 'utf8').includes('<main'));
 
+check('the visible Back links never point at the member page (it needs a log-in and would send the golfer back here)', page.includes("const leaveHref = backHref.startsWith('/book?') ? backHref : `/courses/${slug}`;") && page.includes('<Link href={leaveHref} className={`${g.lnk} ${g.back}`}>') && page.includes('href={leaveHref}>{backLabel}</Link>') && !page.includes('<Link href={backHref}'));
+check('the failed-link line shows only when Log in is offered', page.includes("{linkFailed && !loginOff && step === 'email' && <p"));
+check('a failed log-out on the member page is said', member.includes("if (!r || !r.ok) { setSignOutErr(true); return; }") && member.includes("Couldn&rsquo;t log out. Try again."));
+check('an alert reads as set only when the server says active, naming the log-in address', course.includes("setAlertPending(done?.status !== 'active');") && course.includes("We'll email ${alertTo || 'you'}"));
+
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);

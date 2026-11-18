@@ -96,6 +96,8 @@
 .tc .b b { color: var(--g-ink); font-size: 14px; white-space: nowrap; }
 .tc .b s { color: var(--g-muted); font-weight: 400; margin-right: 4px; }
 .tc.full { cursor: pointer; opacity: .7; }
+.tc:disabled { cursor: default; }
+.tc:disabled:hover { border-color: var(--g-line); }
 
 /* Empty state */
 .empty { text-align: center; padding: 28px 16px; border: 1px dashed var(--g-line); border-radius: 12px; background: var(--g-card); }

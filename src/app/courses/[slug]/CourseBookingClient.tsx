@@ -220,6 +220,8 @@ export default function CourseDetailPage({
   const [alertSent, setAlertSent] = useState(false);
   // #486: a guest's alert waits for the emailed confirm link ('pending'); a logged-in member's is on at once ('active').
   const [alertPending, setAlertPending] = useState(false);
+  // An active (logged-in) alert goes to the log-in email, which the server names (masked).
+  const [alertTo, setAlertTo] = useState('');
   const [alertError, setAlertError] = useState('');
 
   const [memberSession, setMemberSession] = useState<ActiveMemberSession | null>(null);
@@ -495,7 +497,9 @@ export default function CourseDetailPage({
         return;
       }
       const done = await r.json().catch(() => ({}));
-      setAlertPending(done?.status === 'pending');
+      // Fail safe: only an answer that says 'active' reads as set.
+      setAlertPending(done?.status !== 'active');
+      setAlertTo(typeof done?.maskedEmail === 'string' ? done.maskedEmail : '');
       setAlertSent(true);
     } catch {
       setAlertError('Network error — the alert was not set. Check your connection and try again.');
@@ -1166,7 +1170,7 @@ export default function CourseDetailPage({
               <h2 id="alert-h">{alertPending ? 'Almost done' : 'Alert set'}</h2>
               <p>{alertPending
                 ? 'Check your email to turn it on.'
-                : `We'll email you when ${alertModal.teeTimeId ? 'that time' : 'a time'} opens on ${longDate(alertModal.date)}. First come, first served.`}</p>
+                : `We'll email ${alertTo || 'you'} when ${alertModal.teeTimeId ? 'that time' : 'a time'} opens on ${longDate(alertModal.date)}. First come, first served.`}</p>
               <button type="button" className={g.btn} onClick={closeAlert} autoFocus>Done</button>
             </>) : (<>
               <h2 id="alert-h">Tell me when a time opens</h2>

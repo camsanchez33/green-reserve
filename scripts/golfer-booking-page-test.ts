@@ -83,7 +83,7 @@ check('the site footer skips /book, which carries its own footer in the look (Pr
 
 // Until the alerts sheet (item 7): the course's switch hides every entry point; a guest is told to confirm by email (#486).
 check('alerts: no entry points when the course turned alerts off', course.includes("const alertsOn = course.tee_time_alerts_on !== false;") && course.includes('{alertsOn && <button type="button" className={g.chip} onClick={() => openAlert()}>') && course.includes('disabled={isFull && !alertsOn}'));
-check('alerts: a guest (status pending) is told to check their email; a member (active) that it is set', course.includes("setAlertPending(done?.status === 'pending');") && course.includes("'Check your email to turn it on.'"));
+check('alerts: a guest (status pending) is told to check their email; a member (active) that it is set', course.includes("setAlertPending(done?.status !== 'active');") && course.includes("'Check your email to turn it on.'"));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);
