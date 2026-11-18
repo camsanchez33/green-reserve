@@ -182,7 +182,8 @@ export async function markStatementPaidOffline(courseId: string, statementId: st
 export async function emailStatement(statementId: string): Promise<'sent' | 'no_email' | 'not_found'> {
   const st = await prisma.memberStatement.findUnique({ where: { id: statementId }, select: { id: true, period: true, totalCents: true, dueAt: true, autoChargeAt: true, autoFailedAt: true, autoRetryAt: true, status: true, payToken: true, course: { select: { name: true } }, membership: { select: { inviteName: true, inviteEmail: true, golfer: { select: { email: true, firstName: true, lastName: true } } } }, _count: { select: { lines: true } } } });
   if (!st) return 'not_found';
-  const email = st.membership.golfer?.email || st.membership.inviteEmail;
+  // GOLFER-LOGIN-1: the member's own email first, an older linked account's only where none was typed.
+  const email = st.membership.inviteEmail || st.membership.golfer?.email;
   if (!email) return 'no_email';
   const { sendStatementEmail } = await import('./email');
   await sendStatementEmail({

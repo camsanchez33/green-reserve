@@ -17,7 +17,7 @@ the lane files; merges every PR in dependency order after Cam's review sitting; 
   version; the two-groups rule (lower price, longer window); guest pass use at checkout (a tick per guest, counted
   against `guestPassesPerYear`); the header group label; and the group list for the log-in line. Also, after #477:
   - Rewrite the member emails and pages to "Log in" wording.
-  - The member invite goes out only when the membership is active; otherwise it says "once your dues are paid".
+  - The member invite goes out only once the membership is active (Build 2026-11-18: no email before the dues are paid). Done in 2c.
   - /api/operator/members allows contact edits on golfer-linked members, since no golfer account signs in now.
   - Once the Dashboard lane removes the Join online control, the tiers route stores 'off' and the membership-join
     helpers are deleted.

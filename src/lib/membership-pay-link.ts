@@ -14,8 +14,9 @@ export async function maybeSendPayLink(membershipId: string, isRenewal = false):
     include: { tier: true, course: { select: { name: true, stripeAccountActive: true } }, golfer: { select: { email: true, firstName: true, lastName: true } } },
   });
   if (!m || !m.tier) return 'no_tier';
-  // The account's email wins over the invite address (a self-joined member has no invite address).
-  const to = m.golfer?.email || m.inviteEmail;
+  // The member's own email (staff edit it, and it is the one that logs in); an older linked account's only where none
+  // was typed (GOLFER-LOGIN-1).
+  const to = m.inviteEmail || m.golfer?.email;
   if (!to) return 'no_email';
   // MP-3 B2a: compare in cents, convert to dollars only for the email, which
   // renders $${annualFee.toFixed(2)}.

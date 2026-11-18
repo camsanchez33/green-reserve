@@ -10,7 +10,7 @@ import { prisma } from '../src/lib/prisma';
 import { claimTeeTime, TeeTimeClaimError } from '../src/lib/claim-tee-time';
 import { applyPromo } from '../src/lib/promo-codes';
 import { findSales } from '../src/lib/shop-sales';
-import { joinTier } from '../src/lib/membership-join';
+import { existsSync } from 'fs';
 
 const TAG = 'auditsecuritydbtest';
 let failed = 0;
@@ -74,12 +74,11 @@ async function cleanup() {
   ok('3. with it, found by email; by name, always', byEmailYes.ok && byEmailYes.value.length === 1 && byName.ok && byName.value.length === 1);
   ok('3. the history hides email and phone from a login without the permission', read('src/app/api/operator/shop-sales/route.ts').includes("r.value.map(s => ({ ...s, customerEmail: '', customerPhone: '' }))"));
 
-  // 4. Paused before linked
-  const tier = await prisma.membershipTier.create({ data: { courseId: c.id, name: 'Full', annualFeeCents: 80000, joinOnline: 'instant' } });
-  await prisma.courseMembership.create({ data: { courseId: c.id, tierId: tier.id, inviteName: 'Pat', inviteEmail: `${TAG}+PAT@t.local`, status: 'inactive' } });
-  const j = await joinTier(c.id, { id: g.id, email: `${TAG}+pat@t.local`, name: 'Pat G', phone: '' }, tier.id);
-  ok('4. a paused membership never linked to the golfer still stops joining online', !j.ok && j.status === 409, j);
-  ok('4. …and no new membership was made', (await prisma.courseMembership.count({ where: { courseId: c.id } })) === 1);
+  // 4. Joining online is gone for good (GOLFER-SIGNIN-RETIRED, Cam 2026-11-18): there is no way for a golfer to make
+  // a membership, so a paused one can't be got round. The tiers route stores every membership as staff-added.
+  ok('4. no join-online code is left', !existsSync('src/lib/membership-join.ts') && !read('src/app/api/operator/members/route.ts').includes('approve_join'));
+  ok('4. …and every membership is stored staff-added', (read('src/app/api/operator/tiers/route.ts').match(/const join = 'off';/g) ?? []).length === 2);
+  void g;
 
   await cleanup();
   await prisma.$disconnect();

@@ -10,7 +10,7 @@ import { prisma } from '../src/lib/prisma';
 import { likeExact, ciEquals, ciContains, LIKE_UNSAFE_EMAIL } from '../src/lib/like-exact';
 import { EMAIL_RE, classifyIdentifier } from '../src/lib/golfer-otp';
 import { cartAddOnCentsFor } from '../src/lib/checkin-booking';
-import { myMembership } from '../src/lib/membership-join';
+import { canLogIn } from '../src/lib/member-session';
 import { keyMatch } from '../src/lib/golfer-key';
 
 const TAG = 'likeexactdbtest';
@@ -70,10 +70,12 @@ async function cleanup() {
   ok('check-in: a stored % address still matches itself exactly', (await cartAddOnCentsFor(b(`100%club.${TAG}@t.local`))) === MEMBER);
   ok('check-in: …and only itself', (await cartAddOnCentsFor(b(`100xclub.${TAG}@t.local`))) === PUBLIC);
 
-  // Join lookup (lib/membership-join), unlinked memberships found by email.
+  // The per-course log-in (lib/member-session canLogIn) finds a membership by its email, exactly.
   const g = await prisma.golferAccount.create({ data: { email: `${TAG}+g@t.local`, firstName: 'G', lastName: 'H', password: 'x' } });
-  ok('join: %@gmail.com finds no one else\'s membership', (await myMembership(course.id, g.id, '%@gmail.com')) === null);
-  ok('join: bob_x finds bob_x', !!(await myMembership(course.id, g.id, `bob_x.${TAG}@gmail.com`)));
+  void g;
+  ok('log in: %@gmail.com finds no one else\'s membership', (await canLogIn(course, '%@gmail.com')) === null);
+  ok('log in: bo__x finds no one', (await canLogIn(course, `bo__x.${TAG}@gmail.com`)) === null);
+  ok('log in: bob_x finds bob_x, any case', !!(await canLogIn(course, `BOB_X.${TAG}@gmail.com`)));
 
   // Bookings: the golfer-record key and the sign-in link to guest bookings (otp/verify: ciEquals on golferEmail).
   const tt = await prisma.teeTime.create({ data: { courseId: course.id, date: '2031-07-01', time: '08:00', holes: 18, greenFeeCents: 5000, cartFeeCents: 0, playersAvailable: 4, playersBooked: 0 } });

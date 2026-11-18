@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
   ]);
   return NextResponse.json({
     mode, membersOn, residentsOn: residentPricingOn(course),
-    members: members.map(m => ({ id: m.id, name: (m.golfer ? `${m.golfer.firstName} ${m.golfer.lastName}` : m.inviteName).trim() || 'Member', tier: m.tier?.name ?? '' })),
+    members: members.map(m => ({ id: m.id, name: (m.inviteName || (m.golfer ? `${m.golfer.firstName} ${m.golfer.lastName}` : '')).trim() || 'Member', tier: m.tier?.name ?? '' })),
     tiers,
   });
 }

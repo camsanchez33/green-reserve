@@ -23,7 +23,8 @@ ok('17: a background read never wipes the sheet on a failure', sheet.includes('i
 const members = src('src/components/dashboard/members/MemberCard.tsx');
 const route = src('src/app/api/operator/members/route.ts');
 ok('21: Paid at the shop and Email dues link on members who owe', members.includes("action: 'mark_paid'") && members.includes("action: 'send_pay_link'") && members.includes('Paid at the shop'));
-ok('21: a member can be edited after adding — an invite\'s contact, never a linked account\'s', members.includes('Edit details') && route.includes('if (membership.golferId) return NextResponse.json({ error: \'This member signs in with their own account'));
+// GOLFER-LOGIN-1 2c: no golfer account signs in now, so a linked member's contact is edited here too.
+ok('21: a member can be edited after adding — linked or not', members.includes('Edit details') && !route.includes('This member signs in with their own account') && route.includes("if (!e && membership.golferId) return NextResponse.json({ error: 'Add the member’s email.' }"));
 ok('21: a bad "runs until" date is refused, not a 500', route.includes("Pick the date it runs until, or leave it blank."));
 
 ok('21: the dues link never reports a send that did not happen (no Stripe, no email, nothing owed)', route.includes("if (sent !== 'sent') return NextResponse.json({ error: NOT_SENT[sent] }, { status: 409 });") && src('src/lib/membership-pay-link.ts').includes("return 'no_stripe';"));

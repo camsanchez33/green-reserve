@@ -26,7 +26,7 @@ export const TERMS = {
   comingUp: 'Bookings for tee times that haven’t happened yet, and what they’re worth when they play.',
   // DENSE-5 Members strip.
   notRenewed: 'Active members whose membership ran out and who haven’t paid to renew.',
-  notLinked: 'Members who haven’t signed in to GreenReserve yet. Signing in with the email on their membership gives them member rates online.',
+  notLinked: 'Members who haven’t logged in at your course yet. Logging in with the email on their membership gives them member rates online.',
   memberRounds: 'Checked-in rounds by your members since January 1.',
   memberSpend: 'Green fees, carts and range balls on their checked-in rounds since January 1 — the same as Analytics. Pro-shop items aren’t counted.',
   // HOME-3 (Cam 2026-11-12): the charcoal Home's words.

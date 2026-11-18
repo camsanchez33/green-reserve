@@ -127,3 +127,15 @@ export async function markDuesPaidAtCourse(courseId: string, membershipId: strin
   await recordMove({ courseId, what: 'dues', direction: 'in', method: method === 'cash' ? 'cash' : 'other', account: 'course', amountCents: takenCents, membershipId, actor: 'staff', note: method === 'check' ? 'check at the course' : 'cash at the course' });
   return { ok: true };
 }
+
+/**
+ * Staff drop a membership that was never paid: a member added at the counter who walked away, or an older online
+ * join (Join online is gone, GOLFER-SIGNIN-RETIRED). Memberships item 1: never while the dues are being paid (a card
+ * going through, the card reader), or the payment would land on a cancelled membership. Never a paid member.
+ */
+export async function removeUnpaidMembership(courseId: string, membershipId: string): Promise<{ ok: true } | Fail> {
+  const done = await prisma.courseMembership.updateMany({ where: { id: membershipId, courseId, status: { in: ['requested', 'awaiting_payment'] }, duesReaderId: '', OR: [{ duesChargeStartedAt: null }, { duesChargeStartedAt: { lt: new Date(Date.now() - 10 * 60_000) } }] }, data: { status: 'cancelled' } });
+  if (done.count) return { ok: true };
+  const now = await prisma.courseMembership.findFirst({ where: { id: membershipId, courseId }, select: { duesChargeStartedAt: true, duesReaderId: true } });
+  return fail(409, now && (now.duesReaderId || (now.duesChargeStartedAt && Date.now() - now.duesChargeStartedAt.getTime() < 10 * 60_000)) ? 'These dues are being paid right now — finish or cancel the payment first.' : 'That was already removed or paid — refresh.');
+}

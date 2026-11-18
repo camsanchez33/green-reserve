@@ -11,7 +11,7 @@ export interface Tier {
   greenFeeWeekday: number | null; greenFeeWeekend: number | null;
   cartFeeWeekday: number | null; cartFeeWeekend: number | null;
   discountPct: number | null;
-  advanceBookingDays: number; guestPassesPerYear: number; guestsPayMemberRate?: boolean; joinOnline?: string; autoRenew?: boolean; autoRenewRetry?: boolean;
+  advanceBookingDays: number; guestPassesPerYear: number; guestsPayMemberRate?: boolean; autoRenew?: boolean; autoRenewRetry?: boolean;
   accountOn?: boolean; accountLimitCents?: number | null; accountLimit?: string | null; accountSettle?: string;
   annualFee: number; initiationFee: number; termMonths: number;
   notes: string; active: boolean;
@@ -66,9 +66,8 @@ export function priceLine(t: Pick<Tier, 'annualFee' | 'termMonths' | 'initiation
   const fee = t.annualFee > 0 ? `${dollars(t.annualFee)} ${every}` : 'No dues';
   return fee + (t.initiationFee > 0 ? ` · ${dollars(t.initiationFee)} to join` : '');
 }
-export const JOIN_LABEL: Record<string, string> = { off: 'Staff add members', instant: 'Join online', request: 'Request to join' };
-/** The member list and the card show members, not golfers part-way through joining online. */
-export const isJoining = (m: Member) => m.status === 'requested' || m.status === 'awaiting_payment';
+/** The member list and the card show members, not someone added who hasn't paid yet (the Not paid yet card shows them). */
+export const notPaidYet = (m: Member) => m.status === 'requested' || m.status === 'awaiting_payment';
 
 export const LINK = 'text-[13px] font-semibold text-ink underline underline-offset-[3px] decoration-ink-muted hover:decoration-ink disabled:opacity-50';
 export const LINK_BAD = 'text-[13px] font-semibold text-bad underline underline-offset-[3px] decoration-bad disabled:opacity-50';

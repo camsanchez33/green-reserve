@@ -10,7 +10,7 @@ import { AccountFields } from '@/components/dashboard/MemberAccount';
 import { INPUT } from '@/components/ui/field';
 import { type Tier, Popup, StepBar, Tiles, Label, Hint, Money, LINK, LINK_BAD, PRIMARY } from './shared';
 
-const STEPS = ['Name', 'Joining', 'Payment', 'Booking and rates'];
+const STEPS = ['Name', 'Renewal', 'Payment', 'Booking and rates'];
 type Form = Partial<Tier> & { hasInit?: boolean };
 type Mode = 'each' | 'pct';
 const num = (v: unknown) => (v === '' || v == null ? null : Number(v));
@@ -21,7 +21,7 @@ export function MembershipSetup({ tier, colors, onClose, onSaved, onDelete }: {
 }) {
   const [at, setAt] = useState(0);
   const [f, setF] = useState<Form>(() => tier ? { ...tier, hasInit: tier.initiationFee > 0 } : {
-    name: '', color: colors[0], joinOnline: 'instant', autoRenew: true, autoRenewRetry: true,
+    name: '', color: colors[0], autoRenew: true, autoRenewRetry: true,
     annualFee: 0, initiationFee: 0, hasInit: false, termMonths: 12, advanceBookingDays: 14,
     greenFeeWeekday: null, greenFeeWeekend: null, cartFeeWeekday: null, cartFeeWeekend: null, discountPct: null,
     guestPassesPerYear: 0, notes: '',
@@ -79,10 +79,6 @@ export function MembershipSetup({ tier, colors, onClose, onSaved, onDelete }: {
       </>}
 
       {at === 1 && <>
-        <div><Label id="ms-join">How golfers join</Label>
-          <Tiles labelledBy="ms-join" value={(f.joinOnline ?? 'off') as string} onChange={v => set('joinOnline', v)}
-            options={[['off', 'Staff add them'], ['instant', 'Join online'], ['request', 'Ask to join']]} /></div>
-        <Hint>{({ off: 'Only your staff can add members.', instant: 'Golfers pay online and are members as soon as it’s paid.', request: 'Golfers ask, you approve, then they pay.' } as Record<string, string>)[f.joinOnline ?? 'off']}</Hint>
         <div className="flex flex-col gap-2 text-[13.5px]">
           <label className="flex items-center gap-2"><input type="checkbox" className="accent-pine" checked={!!f.autoRenew} onChange={e => set('autoRenew', e.target.checked)} />Renews itself. Golfers agree when they pay and can turn it off</label>
           {f.autoRenew && <label className="flex items-center gap-2 pl-6"><input type="checkbox" className="accent-pine" checked={f.autoRenewRetry !== false} onChange={e => set('autoRenewRetry', e.target.checked)} />If the card is declined, try once more 3 days later</label>}

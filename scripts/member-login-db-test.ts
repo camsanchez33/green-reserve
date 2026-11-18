@@ -22,6 +22,10 @@ import { issueLoginCode, MAX_TRIES, purgeOldLoginCodes } from '../src/lib/member
 import { termsVersionNow } from '../src/lib/terms';
 import { todayIn, addDaysStr } from '../src/lib/course-time';
 import { groupGreenFee } from '../src/lib/residents';
+import { signToken } from '../src/lib/auth';
+import { memberBenefitsLine } from '../src/lib/member-benefits';
+import { sendWelcome } from '../src/lib/member-welcome';
+import { maybeSendPayLink } from '../src/lib/membership-pay-link';
 
 const prisma = new PrismaClient();
 const BASE_URL = process.env.TEST_URL || 'http://localhost:3000';
@@ -43,10 +47,11 @@ async function cleanup() {
   await prisma.membershipTier.deleteMany({ where: { courseId } });
   await prisma.teeTime.deleteMany({ where: { courseId } });
   await prisma.course.deleteMany({ where: { slug: { startsWith: TAG } } });
-  await prisma.golferAccount.deleteMany({ where: { email: { endsWith: `@${TAG}.test` } } });
+  await prisma.golferAccount.deleteMany({ where: { OR: [{ email: { endsWith: `@${TAG}.test` } }, { email: { startsWith: `${TAG}-` } }] } });
   await prisma.courseOperator.deleteMany({ where: { email: `${TAG}@test.local` } });
   await prisma.courseGroup.deleteMany({ where: { slug: `${TAG}-g` } });
   await prisma.securityEvent.deleteMany({ where: { email: { endsWith: `@${TAG}.test` } } });
+  await prisma.sentMessage.deleteMany({ where: { to: { startsWith: `${TAG}-` } } });
   await prisma.memberLoginCode.deleteMany({ where: { email: { endsWith: `@${TAG}.test` } } });
   await prisma.memberTermsAgreement.deleteMany({ where: { email: { endsWith: `@${TAG}.test` } } });
   // Repeat runs within an hour must not trip the booking, swap or send-code limits (test rows only).
@@ -173,9 +178,75 @@ async function main() {
   // A membership linked to an older golfer account opens with the account's email only, never a stale inviteEmail.
   const acct = await prisma.golferAccount.create({ data: { email: `acct@${TAG}.test`, firstName: 'Acct', lastName: 'Holder', password: 'x' } });
   await prisma.courseMembership.create({ data: { courseId: a.id, golferId: acct.id, tierId: tier.id, membershipType: 'Gold', status: 'active', inviteEmail: `stale@${TAG}.test`, inviteName: 'Acct', payToken: `${TAG}-acct` } });
-  check('a linked membership: its stale invite email is no log-in', !(await canLogIn(a, `stale@${TAG}.test`)));
-  check('…and gets no member rate', (await preview(ttA.id, await cookie(a.id, `stale@${TAG}.test`))).member === null);
-  check('…while the account email logs in and gets it', !!(await canLogIn(a, acct.email)) && !!(await preview(ttA.id, await cookie(a.id, acct.email))).member);
+  // GOLFER-LOGIN-1 2c (Build 2026-11-18): the member's own email (inviteEmail, which staff edit) logs in; an older
+  // linked account's email only where none was ever typed. All data today is test data, so no backfill.
+  check('a linked membership: the member\'s own email logs in and gets the member rate', !!(await canLogIn(a, `stale@${TAG}.test`)) && !!(await preview(ttA.id, await cookie(a.id, `stale@${TAG}.test`))).member);
+  check('…and the old account email no longer does', !(await canLogIn(a, acct.email)) && (await preview(ttA.id, await cookie(a.id, acct.email))).member === null);
+  const acct2 = await prisma.golferAccount.create({ data: { email: `acct2@${TAG}.test`, firstName: 'Old', lastName: 'Row', password: 'x' } });
+  await prisma.courseMembership.create({ data: { courseId: a.id, golferId: acct2.id, tierId: tier.id, membershipType: 'Gold', status: 'active', inviteEmail: '', inviteName: '', payToken: `${TAG}-acct2` } });
+  check('a linked membership with no member email typed logs in with the account email', !!(await canLogIn(a, acct2.email)));
+
+  // Staff edit a linked member's contact (no golfer account signs in now); the new email logs in, the old one stops.
+  const owner = `gr_operator=${await signToken({ operatorId: op.id, email: op.email })}`;
+  const linked = await prisma.courseMembership.findFirstOrThrow({ where: { golferId: acct.id } });
+  const patch = async (body: Record<string, unknown>) => { const r = await fetch(`${BASE_URL}/api/operator/members`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', cookie: owner }, body: JSON.stringify({ id: linked.id, ...body }) }); return { status: r.status, body: await r.json().catch(() => null) }; };
+  const ed = await patch({ name: 'Renamed Member', email: `edited@${TAG}.test`, phone: '555 0100' });
+  const edited = await prisma.courseMembership.findUniqueOrThrow({ where: { id: linked.id } });
+  check('staff can edit a linked member\'s name, email and phone', ed.status === 200 && edited.inviteEmail === `edited@${TAG}.test` && edited.inviteName === 'Renamed Member' && edited.invitePhone === '555 0100', ed);
+  check('…the edited email logs in, the one before it no longer does', !!(await canLogIn(a, `edited@${TAG}.test`)) && !(await canLogIn(a, `stale@${TAG}.test`)));
+  check('…a linked member can\'t be left with no email', (await patch({ email: '' })).status === 400);
+  check('…nor take an email another member uses (an account email counts where none was typed)', (await patch({ email: acct2.email })).status === 409 && (await patch({ email: memEmail })).status === 409);
+  const list = await (await fetch(`${BASE_URL}/api/operator/members`, { headers: { cookie: owner } })).json().catch(() => null);
+  const listRow = (Array.isArray(list) ? list : list?.members ?? []).find((x: { id: string }) => x.id === linked.id);
+  // One email, one membership: a staff add can't give a second membership an email that already logs in here.
+  const post = async (email: string, extra: Record<string, unknown> = {}) => { const r = await fetch(`${BASE_URL}/api/operator/members`, { method: 'POST', headers: { 'Content-Type': 'application/json', cookie: owner }, body: JSON.stringify({ email, name: 'Dup', tierId: tier.id, ...extra }) }); return { status: r.status, body: await r.json().catch(() => null) }; };
+  check('adding a member with an email another membership logs in with is refused', (await post(`edited@${TAG}.test`)).status === 409 && (await post(acct2.email)).status === 409);
+  // Linked branch: an account with no membership here whose email a member was edited to.
+  const spare = await prisma.golferAccount.create({ data: { email: `spare@${TAG}.test`, firstName: 'Spare', lastName: 'Acct', password: 'x' } });
+  await patch({ email: spare.email });
+  const dupLinked = await post(spare.email);
+  check('…also when the email belongs to an older account (the linked add path)', dupLinked.status === 409 && (await prisma.courseMembership.count({ where: { golferId: spare.id } })) === 0, dupLinked);
+  await patch({ email: `edited@${TAG}.test` });
+  // Invite branch: the stored email in other letter case.
+  await prisma.courseMembership.create({ data: { courseId: a.id, tierId: tier.id, membershipType: 'Gold', status: 'active', inviteEmail: `Mixed.Case@${TAG}.test`, inviteName: 'Mixed', payToken: `${TAG}-mixed` } });
+  check('…and when the stored email differs only in letter case', (await post(`mixed.case@${TAG}.test`)).status === 409);
+  // Counter pick-up: a linked unpaid row whose email was edited is not reused for the old account email.
+  const acct3 = await prisma.golferAccount.create({ data: { email: `acct3@${TAG}.test`, firstName: 'Three', lastName: 'Acct', password: 'x' } });
+  const unpaidRow = await prisma.courseMembership.create({ data: { courseId: a.id, golferId: acct3.id, tierId: tier.id, membershipType: 'Gold', status: 'awaiting_payment', addedBy: 'counter', inviteEmail: `moved3@${TAG}.test`, inviteName: 'Three', payToken: `${TAG}-three` } });
+  const pick = await post(acct3.email, { payFirst: true });
+  const unpaidAfter = await prisma.courseMembership.findUniqueOrThrow({ where: { id: unpaidRow.id } });
+  check('…a counter add for an old account email never picks up a row that logs in as another email', pick.status === 409 && unpaidAfter.inviteEmail === `moved3@${TAG}.test` && unpaidAfter.status === 'awaiting_payment', { pick, unpaidAfter: { inviteEmail: unpaidAfter.inviteEmail, status: unpaidAfter.status } });
+
+  // The invite and the dues link go to the member's own email (placeholder addresses: logged, never sent).
+  // The Resend client needs a key to be made; placeholder addresses are logged and never handed to it.
+  process.env.RESEND_API_KEY ||= 're_test_placeholder_only';
+  const PH = '@noemail.greenreserve.app';
+  const ownAddr = `${TAG}-own${PH}`, acctAddr = `${TAG}-acct${PH}`;
+  const phAcct = await prisma.golferAccount.create({ data: { email: acctAddr, firstName: 'Ph', lastName: 'Acct', password: 'x' } });
+  const payTier = await prisma.membershipTier.create({ data: { courseId: a.id, name: 'Paid', annualFeeCents: 10000 } });
+  const ph = await prisma.courseMembership.create({ data: { courseId: a.id, golferId: phAcct.id, tierId: payTier.id, membershipType: 'Paid', status: 'active', inviteEmail: ownAddr, inviteName: 'Ph', payToken: `${TAG}-ph` } });
+  await sendWelcome(ph.id);
+  const sentTo = async (kind: string) => (await prisma.sentMessage.findMany({ where: { kind, to: { in: [ownAddr, acctAddr] } }, select: { to: true } })).map(r => r.to);
+  check('the invite goes to the member\'s own email, not the old account\'s', JSON.stringify(await sentTo('member_invite_email')) === JSON.stringify([ownAddr]));
+  await prisma.course.update({ where: { id: a.id }, data: { stripeAccountActive: true, stripeAccountId: 'acct_test' } });
+  const linkSent = await maybeSendPayLink(ph.id);
+  check('the dues link goes there too', linkSent === 'sent' && JSON.stringify(await sentTo('membership_payment_link_email')) === JSON.stringify([ownAddr]), { linkSent, to: await sentTo('membership_payment_link_email') });
+  await prisma.course.update({ where: { id: a.id }, data: { stripeAccountActive: false, stripeAccountId: '' } });
+  await prisma.sentMessage.deleteMany({ where: { to: { in: [ownAddr, acctAddr] } } });
+  for (const status of ['cancelled', 'inactive', 'requested']) {
+    await prisma.courseMembership.update({ where: { id: ph.id }, data: { status } });
+    await sendWelcome(ph.id);
+  }
+  check('no invite for a cancelled, paused or requested membership', (await sentTo('member_invite_email')).length === 0);
+  await prisma.courseMembership.update({ where: { id: ph.id }, data: { status: 'awaiting_payment' } });
+  await sendWelcome(ph.id);
+  check('…nor one still waiting for its dues (it goes out once they are paid)', (await sentTo('member_invite_email')).length === 0);
+  await prisma.courseMembership.delete({ where: { id: ph.id } });
+  await prisma.membershipTier.delete({ where: { id: payTier.id } });
+  await prisma.golferAccount.delete({ where: { id: phAcct.id } });
+  await prisma.sentMessage.deleteMany({ where: { to: { in: [ownAddr, acctAddr] } } });
+
+  check('the member list shows the member\'s own contact first', listRow?.email === `edited@${TAG}.test` && listRow?.name === 'Renamed Member', listRow);
 
   // ── Residents switched off ──
   await prisma.course.update({ where: { id: a.id }, data: { hasResidentPricing: false } });
@@ -324,7 +395,39 @@ async function main() {
   check('…a member\'s booking is charged the public price', !!offSaved && offSaved.appliedRate === 'standard' && offSaved.greenFeeTotal === 10000, { status: offBook.status, offBody, offSaved });
   check('…their dues history answers 401', (await get(`/api/member/${a.slug}/payments`, offCookie)).status === 401);
   check('…and loginGroups is empty', (await loginGroups({ ...a, memberLoginOn: false })).length === 0);
+  // Only a card someone could log in with now counts toward "residents": not a counter-only card (no email), not an expired one.
+  const lg = await prisma.course.create({ data: { ...base, name: 'Login Groups', slug: `${TAG}-lg` } });
+  await prisma.courseResident.create({ data: { courseId: lg.id, name: 'Counter only', email: null, expiresOn: '' } });
+  await prisma.courseResident.create({ data: { courseId: lg.id, name: 'Expired', email: `lg-old@${TAG}.test`, expiresOn: addDaysStr(todayIn('UTC'), -1) } });
+  check('loginGroups: counter-only and expired cards don\'t make "residents"', (await loginGroups(lg)).length === 0);
+  await prisma.courseResident.create({ data: { courseId: lg.id, name: 'Good', email: `lg-good@${TAG}.test`, expiresOn: '' } });
+  check('…a card good today with an email does', JSON.stringify(await loginGroups(lg)) === '["residents"]');
+  // 'members' follows canLogIn too: an active membership with an email, not an active tier.
+  const lgTier = await prisma.membershipTier.create({ data: { courseId: lg.id, name: 'Unused', active: true } });
+  check('loginGroups: an active tier with no members gives no "members"', JSON.stringify(await loginGroups(lg)) === '["residents"]');
+  await prisma.membershipTier.update({ where: { id: lgTier.id }, data: { active: false } });
+  const lgMem = await prisma.courseMembership.create({ data: { courseId: lg.id, tierId: lgTier.id, membershipType: 'Unused', status: 'active', inviteEmail: `lg-mem@${TAG}.test`, inviteName: 'LG', payToken: `${TAG}-lg` } });
+  check('…an active member on an inactive tier does', JSON.stringify(await loginGroups(lg)) === '["members","residents"]');
+  // The two rules agree: loginGroups is non-empty exactly when some email at the course could log in.
+  const agree = async (label: string) => {
+    const [cardRows, memRows] = await Promise.all([prisma.courseResident.findMany({ where: { courseId: lg.id }, select: { email: true } }), prisma.courseMembership.findMany({ where: { courseId: lg.id }, select: { inviteEmail: true } })]);
+    const emails = [...cardRows.map(r => r.email ?? ''), ...memRows.map(r => r.inviteEmail)].filter(Boolean);
+    const any = (await Promise.all(emails.map(e => canLogIn(lg, e)))).some(Boolean);
+    check(`loginGroups agrees with canLogIn: ${label}`, ((await loginGroups(lg)).length > 0) === any, { any, groups: await loginGroups(lg) });
+  };
+  await agree('a member and a resident');
+  await prisma.courseMembership.update({ where: { id: lgMem.id }, data: { status: 'cancelled' } });
+  await prisma.courseResident.deleteMany({ where: { courseId: lg.id, email: `lg-good@${TAG}.test` } });
+  await agree('nobody who can log in');
+  await prisma.courseMembership.update({ where: { id: lgMem.id }, data: { status: 'active' } });
+  await agree('only a member');
   await prisma.course.update({ where: { id: a.id }, data: { memberLoginOn: true } });
+
+  // The benefits line (invite email, Your <Course>).
+  const tb = { discountPct: null, greenFeeWeekdayCents: null, greenFeeWeekendCents: null, lineRates: null, advanceBookingDays: 9, windowPublic: false, guestPassesPerYear: 6 };
+  check('benefits: % off, window, passes', memberBenefitsLine({ ...tb, discountPct: 20 }, { publicAdvanceDays: 7 }) === '20% off every round · book 9 days out · 6 guest passes a year');
+  check('benefits: a flat price, one pass', memberBenefitsLine({ ...tb, greenFeeWeekdayCents: 4500, greenFeeWeekendCents: 5000, guestPassesPerYear: 1 }, {}) === 'rounds from $45 · book 9 days out · 1 guest pass a year');
+  check('benefits: the public window says nothing about days', memberBenefitsLine({ ...tb, discountPct: 10, windowPublic: true, guestPassesPerYear: 0 }, {}) === '10% off every round');
 
   await cleanup();
   console.log(failed ? `\n${failed} FAILED` : '\nall passed');
