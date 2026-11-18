@@ -5,7 +5,7 @@ import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { termsVersionNow } from '@/lib/terms';
 import { canManageBooking } from '@/lib/manage-access';
 import { moveBooking } from '@/lib/move-booking';
-import { residentOn, signedInResident } from '@/lib/member-session';
+import { residentOn, loggedInResident } from '@/lib/member-session';
 
 // The golfer's own "change my time". ACT-1: the move itself — claim, release,
 // price, event — is lib/move-booking.ts, shared with staff moves. The golfer
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
 
   // RES-1: the resident rate follows the golfer's own swap only while a PROVEN email is still on the resident list
   // with a card good on the new date: an older booking's linked account, or (Cam 2026-11-18, no golfer accounts)
-  // the member signed in to this course, which is how an online resident booking gets the rate now. Never the
+  // the golfer logged in to this course (a member or a resident), which is how an online resident booking gets the rate now. Never the
   // booking's typed golferEmail. Residents staff set at the counter are set again at the counter.
   let residentPlayers = 0;
   const switches = await prisma.course.findUnique({ where: { id: booking.courseId }, select: { hasResidentPricing: true } });
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
     if (slot) {
       const card = booking.golferAccount?.email
         ? await residentOn(booking.courseId, booking.golferAccount.email, slot.date)
-        : await signedInResident(booking.courseId, slot.date);
+        : await loggedInResident(booking.courseId, slot.date);
       if (card) residentPlayers = 1;
     }
   }
