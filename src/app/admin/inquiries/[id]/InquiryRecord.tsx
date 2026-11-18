@@ -832,13 +832,6 @@ function InquiryDetailInner() {
     (inq.needsJson && inq.needsJson !== '{}' && inq.needsJson !== '')
   );
 
-  const wizardParams = new URLSearchParams({
-    name: inq.courseName || '', city: inq.city || '', state: inq.state || '',
-    zip: inq.zipCode || '', address: inq.address || '', website: inq.website || '',
-    type: inq.courseType || 'public', contactName: inq.contactName || '',
-    contactEmail: inq.email || '', inquiryId: inq.id,
-  });
-
   // IC-2: the call, read once for the header chip, the gate and the tabs.
   const calls = inq.calls ?? [];
   const upcomingCall = nextCall(calls);
