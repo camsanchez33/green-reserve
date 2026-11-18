@@ -10,7 +10,7 @@ import { SHOP_FEE_LABEL } from '@/lib/booking-fees';
 import { groupLines, type ShopLineGroup } from '@/lib/shop-lines';
 
 export type ShopLine = { id: string; name: string; unitPriceCents: number; quantity: number };
-type CatalogItem = { id: string; name: string; category: string; priceCents: number; active: boolean; parentId?: string | null; stockCount?: number | null; sku?: string; photoUrl?: string | null };
+type CatalogItem = { id: string; name: string; category: string; priceCents: number; active: boolean; parentId?: string | null; stockCount?: number | null; sku?: string; photoUrl?: string | null; rangeBalls?: number | null };
 
 const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
 const initials = (n: string) => n.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]!.toUpperCase()).join('');
@@ -47,7 +47,8 @@ export default function ShopItemsForGroup({ bookingId, lines, shopFeeCents, shop
     // W2-7: sellable rows only — an item with sizes/colors is picked by its option ("Logo polo — M").
     const parents = new Set(r.data.items.map(i => i.parentId).filter(Boolean));
     const hidden = new Set(r.data.items.filter(i => !i.active).map(i => i.id));
-    const active = r.data.items.filter(i => i.active && !parents.has(i.id) && !(i.parentId && hidden.has(i.parentId))).sort((a, b) => (a.category || '~').localeCompare(b.category || '~') || a.name.localeCompare(b.name));
+    // RANGE-1: range buckets go on a round with checkout's Range balls rows, never as a shop item.
+    const active = r.data.items.filter(i => i.active && i.rangeBalls == null && !parents.has(i.id) && !(i.parentId && hidden.has(i.parentId))).sort((a, b) => (a.category || '~').localeCompare(b.category || '~') || a.name.localeCompare(b.name));
     setCatalog(active);
     return active;
   }

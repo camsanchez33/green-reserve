@@ -18,6 +18,8 @@ export async function loadPublicCourse(slug: string) {
       nines: { orderBy: { sortOrder: 'asc' as const }, select: { name: true, par: true } },
       // PRICE-3: whether the page shows round packs at all (so it doesn't ask when there are none).
       _count: { select: { roundPacks: { where: { active: true, sellOnline: true } } } },
+      // RANGE-1: the bucket list (lib/range-buckets courseBuckets' order); normalizeDbCourse sends it only when sold online.
+      shopItems: { where: { rangeBalls: { not: null }, parentId: null, active: true }, orderBy: [{ sortOrder: 'asc' as const }, { priceCents: 'asc' as const }, { name: 'asc' as const }], select: { id: true, name: true, rangeBalls: true, priceCents: true } },
     },
   });
 
@@ -31,5 +33,5 @@ export async function loadPublicCourse(slug: string) {
   // ISO strings), so the client component sees one shape either way.
   const payable = dbCourse.stripeAccountActive && !!dbCourse.stripeAccountId;
   const sellsPacks = ROUND_PACKS_ON && dbCourse._count.roundPacks > 0 && payable;
-  return JSON.parse(JSON.stringify({ ...normalizeDbCourse(dbCourse, centsToDollarsOr0(cheapestCents)), sells_packs: sellsPacks }));
+  return JSON.parse(JSON.stringify({ ...normalizeDbCourse({ ...dbCourse, rangeBucketItems: dbCourse.shopItems }, centsToDollarsOr0(cheapestCents)), sells_packs: sellsPacks }));
 }

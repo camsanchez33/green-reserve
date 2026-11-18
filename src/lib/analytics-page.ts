@@ -74,14 +74,16 @@ export async function ledgerHeadline(courseId: string, range: Range, now: Date =
 }
 
 /** A month's money from the ledger, the Revenue page's own figures (course part, by payment day). */
-export type LedgerMonth = { grossCents: number; refundsCents: number; teeCartCents: number; proShopCents: number; eventCents: number; duesCents: number };
+/** RANGE-1: round buckets stay in tee + cart and register buckets in the pro shop, as before the Range line; rangeCents is all of them. */
+export type LedgerMonth = { grossCents: number; refundsCents: number; teeCartCents: number; proShopCents: number; rangeCents: number; eventCents: number; duesCents: number };
 export async function ledgerMonth(courseId: string, tz: string, month: string, now: Date = new Date()): Promise<LedgerMonth> {
   const y = Number(month.slice(0, 4)), m = Number(month.slice(5, 7));
   const r = { from: `${month}-01`, to: `${month}-${String(new Date(Date.UTC(y, m, 0)).getUTCDate()).padStart(2, '0')}` };
   const a = await allSegments(courseId, tz, r, previousRange(r), now);
   return {
-    grossCents: a.grossCents, refundsCents: a.refundsCents, teeCartCents: a.segments.teeCents + a.segments.cartCents,
-    proShopCents: a.segments.shopCents + a.segments.fnbCents, eventCents: a.segments.eventCents, duesCents: a.segments.duesCents,
+    grossCents: a.grossCents, refundsCents: a.refundsCents, teeCartCents: a.segments.teeCents + a.segments.cartCents + a.rangeOnRoundsCents,
+    proShopCents: a.segments.shopCents + a.segments.fnbCents + a.segments.rangeCents - a.rangeOnRoundsCents, rangeCents: a.segments.rangeCents,
+    eventCents: a.segments.eventCents, duesCents: a.segments.duesCents,
   };
 }
 
@@ -351,12 +353,13 @@ export async function stockValue(courseId: string, opts: { cost: boolean }, now:
   return stockOf(items.map(i => ({ id: i.id, name: i.name, stockCount: i.stockCount, priceCents: i.priceCents, costCents: i.costCents, createdAt: i.createdAt, hasOptions: i._count.options > 0 })), lastSold, now, opts);
 }
 
-/** The pro shop's revenue for these dates from the ledger: shop and food & beverage (items on rounds included). */
+/** The pro shop's revenue for these dates from the ledger: shop and food & beverage (items on rounds included), and
+ *  (RANGE-1) buckets rung up at the register — the Range category row below counts those. */
 export async function shopLedgerCents(courseId: string, range: Range, now: Date = new Date()): Promise<number | null> {
   const c = await courseTz(courseId);
   if (!c) return null;
   const a = await allSegments(courseId, c.tz, range, previousRange(range), now);
-  return a.segments.shopCents + a.segments.fnbCents;
+  return a.segments.shopCents + a.segments.fnbCents + a.segments.rangeCents - a.rangeOnRoundsCents;
 }
 
 // ─── Projections ────────────────────────────────────────────────────────────
@@ -470,5 +473,5 @@ export async function projections(courseId: string, now: Date = new Date()): Pro
     prisma.blackout.findMany({ where: { courseId, date: { gte: today, lte: to } }, select: { date: true } }),
     allSegments(courseId, c.tz, lastRange, previousRange(lastRange), now),
   ]);
-  return projectionsOf(slots, new Set(blackouts.map(b => b.date)), today, now.getTime(), ledger.segments.teeCents + ledger.segments.cartCents);
+  return projectionsOf(slots, new Set(blackouts.map(b => b.date)), today, now.getTime(), ledger.segments.teeCents + ledger.segments.cartCents + ledger.rangeOnRoundsCents);
 }

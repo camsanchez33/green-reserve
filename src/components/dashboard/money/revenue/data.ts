@@ -27,6 +27,8 @@ export type Sales = {
    *  grossCents = sum(segments) = sum(paid) = the Ledger's Revenue; series/byDow/byHour are money in (gross). */
   all?: { bucket: 'day' | 'week'; grossCents: number; refundsCents: number; netCents: number; beforeGrossCents: number;
     segments: { teeCents: number; cartCents: number; shopCents: number; fnbCents: number; eventCents: number; duesCents: number; otherCents: number;
+      /** Build (RANGE-1, Cam 2026-11-17): range buckets sold, with a round or at the register. */
+      rangeCents?: number;
       /** Build (Revenue by source, Cam 2026-11-16): season passes, in grossCents like every segment. */
       passesCents?: number };
     paid: { onlineCents: number; readerCents: number; cashCents: number; otherCents: number };

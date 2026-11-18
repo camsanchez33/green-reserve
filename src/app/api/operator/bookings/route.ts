@@ -109,7 +109,7 @@ export async function PATCH(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { id, action, paymentMethodId, checkedInPlayers: cipRaw, waiveFee: waiveRaw, via: viaRaw, newTeeTimeId, reprice, dryRun, residentPlayers, cashTenderedCents, amountCents, reason, newPlayers, membershipId, smsConsent, splitPlayers, splitName, splitPhone, thenCash, riders, balls, to: toRawIn } = await req.json();
+  const { id, action, paymentMethodId, checkedInPlayers: cipRaw, waiveFee: waiveRaw, via: viaRaw, newTeeTimeId, reprice, dryRun, residentPlayers, cashTenderedCents, amountCents, reason, newPlayers, membershipId, smsConsent, splitPlayers, splitName, splitPhone, thenCash, riders, balls, buckets, to: toRawIn } = await req.json();
   const waiveFee = action === 'cancel' && waiveRaw === true;
   // SD-5: partial party — how many actually showed (1 .. players-1); absent = all.
   const cip = cipRaw == null ? undefined : Number(cipRaw);
@@ -210,7 +210,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json(r);
   }
   if (action === 'set_extras') {
-    const r = await setCheckoutExtras(session.courseId, id, { riders, balls }, staff);
+    const r = await setCheckoutExtras(session.courseId, id, { riders, balls, buckets }, staff);
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
     return NextResponse.json(r);
   }
