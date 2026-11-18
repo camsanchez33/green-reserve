@@ -1,7 +1,8 @@
 # Releases: how an update reaches live courses (PROPOSAL, not in force)
 
-Status: proposal from the release worker, 2026-11-18, for Build to review before anything is enforced. Nothing here
-changes branch protection, workflows or Vercel settings until Build OKs it and Cam does the dashboard steps.
+Status: Build OK'd the proposal 2026-11-18 (all five points in §13). Stage 1 is in place with this doc,
+`CHANGELOG.md` and `scripts/release.mjs`. The CI and `migrate-prod.js` changes are a separate PR, held for Cam.
+Nothing here changes branch protection or Vercel settings: those are Cam's steps in §12.
 
 Cam's decision (2026-11-18): once real courses are live, updates ship smoothly and never interfere with them.
 Versions are GRV 1.0 at launch, then 1.1, 1.2 for planned updates and 1.0.1 for urgent fixes.
@@ -148,11 +149,15 @@ the release works. `release.mjs check --url <base>` runs read-only requests, wri
 | Check | Pass |
 |---|---|
 | `GET /api/health` | 200, `ok:true`, `db:"up"`, retried for up to 2 minutes after the deploy |
-| `GET /` | 200 |
-| `GET /courses/<test course slug>` | 200 and the course name in the page |
-| the test course's booking page for tomorrow | 200 and at least one tee time rendered |
-| `GET /dashboard/login`, `GET /admin` (sign-in page) | 200 |
-| `GET /api/cron/hourly` without the secret | 401 (the cron gate is still on) |
+| `--expect-sha <merge commit>` (optional) | `/api/health`'s `commit` matches, so a rolled-back or stale build is caught |
+| `GET /` | 200, no error page |
+| `GET /courses/<test course slug>` | 200 **and** the test course's name in `<title>` (an unknown slug also answers 200 with the generic title, so status alone proves nothing) |
+| `GET /dashboard/login`, `GET /admin/login` | 200, no error page |
+| `GET /api/cron/hourly` without the secret | 401 (503 means `CRON_SECRET` is missing on that deployment) |
+
+Usage: `node scripts/release.mjs check --url https://greenreserve.app --slug <test course> --course-name "<its
+name>" --expect-sha <sha>`. The defaults (`perf-audit`, "Perf Audit Golf Club") exist on the staging seed and in
+CI, **not on production**. Build needs to name the production test course once and put it in the command here.
 
 It uses a test course only (`REAL_COURSE` filters keep it out of platform numbers), never a real course's pages. A
 failure means rolling back first and debugging after.
@@ -208,17 +213,18 @@ From Nov 30 (Stage 2):
 
 The CI gates must not get weaker when PRs move to `staging`. Today:
 
-| Workflow | Runs on PRs into | Needed change |
-|---|---|---|
-| `tests.yml` | all branches | none |
-| `schema-check.yml` | all (when `prisma/` changes) | none |
-| `typecheck.yml` | all branches | none |
-| `security.yml` | `main` only | add `staging` |
-| `perf-audit.yml` | `main` only | add `staging` |
-| `codemap.yml` | `main` only | add `staging` |
+| Workflow | PRs | Pushes | Change |
+|---|---|---|---|
+| `tests.yml` | every PR | every branch | none |
+| `typecheck.yml` | every PR | every branch | none |
+| `schema-check.yml` | every PR touching `prisma/` | — | none |
+| `security.yml` | every PR | `main` (+ daily) | push also on `staging` |
+| `codemap.yml` | every PR | `main` | push also on `staging` |
+| `perf-audit.yml` | **PRs into `main` only** | — | PRs into `staging` too |
 
-Without those additions, lane PRs into `staging` would skip the security, performance and codemap gates, and they
-would only run on the release PR, after the code is already on staging. Branch protection on `staging` should copy
+(An earlier draft of this table said security and codemap only ran on PRs into `main`. They run on every PR; only
+their push runs are main-only.) The one real gate gap is `perf-audit.yml`: without the change, lane PRs into
+`staging` would skip the Lighthouse budget, and it would first run on the release PR, after the code is on staging. Branch protection on `staging` should copy
 `main`'s required checks. `main` keeps its protection, and its required checks run on the release PR as well.
 
 Each of those is a workflow change that gates merges, so: Build's OK, then final-reviewer PASS, then Cam merges.
@@ -234,7 +240,7 @@ Each of those is a workflow change that gates merges, so: Build's OK, then final
    staging scope.
 6. Do the rollback drill (§6) once before Nov 26.
 
-## 13. What Build is asked to decide
+## 13. Decisions (Build, 2026-11-18: yes to all five)
 
 1. Two stages, with staging live Nov 30 rather than before launch: yes or no?
 2. Release window 10:15–11:30 PM ET Sun–Thu instead of overnight: yes, or keep overnight with someone awake?
