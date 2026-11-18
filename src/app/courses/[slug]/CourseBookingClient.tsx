@@ -882,14 +882,14 @@ export default function CourseDetailPage({
                 return (
                   <button key={t.id} type="button" className={`${g.tc} ${isFull ? g.full : ''}`}
                     aria-label={isFull
-                      ? `${formatTime(t.time)}, ${round}, full${alertsOn ? '. Tell me if it opens' : ''}`
+                      ? `${formatTime(t.time)}, ${round}, full${alertsOn && !previewMode ? '. Tell me if it opens' : ''}`
                       : `${formatTime(t.time)}, ${round}, ${t.players_available} ${t.players_available === 1 ? 'spot' : 'spots'} open, $${price} per player${hasMemberRate ? `, member price, public price $${t.green_fee}` : ''}`}
-                    disabled={isFull && !alertsOn}
+                    disabled={isFull && (!alertsOn || !!previewMode)}
                     onClick={isFull ? (e) => { if (alertsOn) openAlert(t, e.currentTarget); } : () => bookTime(t)}>
                     <span className={g.t}>{formatTime(t.time)}</span>
                     <span className={g.c}>{round} · {isFull ? 'Full' : `${t.players_available} open`}</span>
                     <span className={g.b}>
-                      <span>{isFull ? (alertsOn ? 'Tell me if it opens' : '') : hasMemberRate ? 'Your price' : t.list_green_fee != null ? 'Last-minute' : h ? `${h} holes` : ''}</span>
+                      <span>{isFull ? (alertsOn && !previewMode ? 'Tell me if it opens' : '') : hasMemberRate ? 'Your price' : t.list_green_fee != null ? 'Last-minute' : h ? `${h} holes` : ''}</span>
                       <b>{struck != null && <s>${struck}</s>}${price}</b>
                     </span>
                   </button>

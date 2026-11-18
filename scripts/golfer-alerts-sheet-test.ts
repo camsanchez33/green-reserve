@@ -14,7 +14,7 @@ check('a "Tell me when a time opens" row at the end of each day', course.include
 check('"Tell me if it opens" on a full time opens the sheet pre-filled with that time', course.includes('if (alertsOn) openAlert(t, e.currentTarget);') && course.includes('slot: { id: String(t.id), time: t.time, label: formatTime(t.time), part: alertPartOf(t.time) }'));
 check('the empty state\'s button opens it with the day, the time of day and the players', course.includes(": { day: selectedDate, parts: tods, players });") && course.includes("{alertsOn && !previewMode && <button type=\"button\" className={g.chip} onClick={e => openAlert(undefined, e.currentTarget)}>Tell me when a time opens</button>}"));
 check('focus goes back to whatever opened it', course.includes('alertOpener.current = opener ?? (typeof document') && course.includes('alertOpener.current?.focus();'));
-check('it offers this golfer\'s whole window of open days; an alert holds up to 14 of them', course.includes('if (ds > lastBookableStr) break;') && course.includes('if (!closedOn.has(ds)) out.push(ds);') && !course.includes('while (out.length < 14)') && lib.includes('export const MAX_ALERT_DATES = 14;') && sheet.includes('const MAX_DATES = 14;') && sheet.includes('cur.length >= MAX_DATES ? cur'));
+check('it offers this golfer\'s whole window of open days; an alert holds up to 14 of them', course.includes('if (ds > lastBookableStr) break;') && course.includes('if (!closedOn.has(ds)) out.push(ds);') && !course.includes('while (out.length < 14)') && lib.includes('export const MAX_ALERT_DATES = 14;') && sheet.includes('const MAX_DATES = 14;') && sheet.includes('if (!dates.includes(d) && dates.length >= MAX_DATES)'));
 
 // The sheet.
 check('a dialog: a right panel on a laptop, sliding up on a phone; Escape closes, Tab stays inside', sheet.includes('role="dialog" aria-modal="true" aria-labelledby="al-h"') && sheet.includes("if (e.key === 'Escape')") && sheet.includes("if (e.key !== 'Tab' || !boxRef.current) return;"));
@@ -30,10 +30,15 @@ check('server errors land on their field, the rest are said (no silent failure)'
 
 check('only an offered day starts picked', sheet.includes('useState<string[]>(days.includes(open.day) ? [open.day] : [])'));
 check('Tab stays inside even from the heading (focus outside the list wraps)', sheet.includes('const at = items.indexOf(document.activeElement as HTMLElement);') && sheet.includes('if (e.shiftKey && at <= 0)') && sheet.includes('(at === -1 || at === items.length - 1)'));
-check('a server error for a field not on screen is said on the form line (an ended log-in is named)', sheet.includes("if ((f === 'email' && memberEmail) || ((f === 'dates' || f === 'parts') && slot)) f = null;") && sheet.includes('Your log-in has ended. Log in again, or close this and set the alert as a guest.'));
+check('a server error for a field not on screen is said on the form line (an ended log-in is named)', sheet.includes("if ((f === 'email' && memberEmail) || ((f === 'dates' || f === 'parts') && slot)) f = null;") && sheet.includes('Your log-in has ended. Reload the page to log in again, or to set the alert as a guest.'));
 check('a phone typed without the box is not dropped silently', sheet.includes("else if (!textOk && phone.trim()) next.phone = 'Tick the box to agree to alert texts, or leave the phone empty.';"));
 check('a member who ticked the box is told texts go too', sheet.includes("phone: d.status === 'active' && textOk ? phone.trim() : null,"));
 check('no alert sheet in preview', course.includes('if (!course || previewMode) return;'));
+
+check('the 15th date is refused and said', sheet.includes('An alert holds up to ${MAX_DATES} dates. Untick one to add another.'));
+check('ticking the text box clears the phone message', sheet.includes('setTextOk(e.target.checked); if (err.phone) setErr('));
+check('the first tile of each month names the month', sheet.includes("i === 0 || d.endsWith('-01') ? { month: 'short' } : { weekday: 'short' }"));
+check('in preview a full time offers no alert', course.includes('disabled={isFull && (!alertsOn || !!previewMode)}'));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);

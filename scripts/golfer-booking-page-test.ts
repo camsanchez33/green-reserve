@@ -82,7 +82,7 @@ const siteFooter = readFileSync('src/components/Footer.tsx', 'utf8');
 check('the site footer skips /book, which carries its own footer in the look (Privacy, Terms, support)', siteFooter.includes("if (pathname === '/book' || pathname === '/book/') return null;") && book.includes('<BookFooter course={initial?.course} />') && book.includes('<Link href="/privacy">Privacy</Link>') && book.includes('<Link href="/terms">Terms</Link>'));
 
 // Until the alerts sheet (item 7): the course's switch hides every entry point; a guest is told to confirm by email (#486).
-check('alerts: no entry points when the course turned alerts off', course.includes("const alertsOn = course.tee_time_alerts_on !== false;") && course.includes('{alertsOn && !previewMode && <button type="button" className={g.chip} onClick={e => openAlert(undefined, e.currentTarget)}>') && course.includes('disabled={isFull && !alertsOn}'));
+check('alerts: no entry points when the course turned alerts off', course.includes("const alertsOn = course.tee_time_alerts_on !== false;") && course.includes('{alertsOn && !previewMode && <button type="button" className={g.chip} onClick={e => openAlert(undefined, e.currentTarget)}>') && course.includes('disabled={isFull && (!alertsOn || !!previewMode)}'));
 check('alerts: the sheet replaces the old modal (golfer-alerts-sheet-test has the sheet itself)', course.includes('<AlertSheet open={alertSheet}') && !course.includes('alertModal'));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');

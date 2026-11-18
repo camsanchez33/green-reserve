@@ -89,7 +89,9 @@ export default function AlertSheet({ open, onClose, course, days, memberEmail }:
 
   function toggleDate(d: string) {
     setErr(e => ({ ...e, dates: undefined }));
-    setDates(cur => cur.includes(d) ? cur.filter(x => x !== d) : cur.length >= MAX_DATES ? cur : [...cur, d]);
+    // At the limit the tap is refused, and said.
+    if (!dates.includes(d) && dates.length >= MAX_DATES) { setErr(e => ({ ...e, dates: `An alert holds up to ${MAX_DATES} dates. Untick one to add another.` })); return; }
+    setDates(cur => cur.includes(d) ? cur.filter(x => x !== d) : [...cur, d]);
   }
   function togglePart(k: AlertPartKey) {
     setErr(e => ({ ...e, parts: undefined }));
@@ -133,7 +135,7 @@ export default function AlertSheet({ open, onClose, course, days, memberEmail }:
         // Only a field that is on screen can carry the error; anything else is said on the form line.
         if ((f === 'email' && memberEmail) || ((f === 'dates' || f === 'parts') && slot)) f = null;
         // Logged in on the page, but the server no longer sees the log-in (it ran out, or logged out elsewhere).
-        const formMsg = d.field === 'email' && memberEmail ? 'Your log-in has ended. Log in again, or close this and set the alert as a guest.' : msg;
+        const formMsg = d.field === 'email' && memberEmail ? 'Your log-in has ended. Reload the page to log in again, or to set the alert as a guest.' : msg;
         setErr(f ? { [f]: msg } : { form: formMsg });
         return;
       }
@@ -188,7 +190,8 @@ export default function AlertSheet({ open, onClose, course, days, memberEmail }:
                   <div className={g.dgrid} role="group" aria-labelledby="al-dates-l" {...invalid('dates')}>
                     {days.map((d, i) => (
                       <button key={d} type="button" aria-pressed={dates.includes(d)} aria-label={shortDate(d)} onClick={() => toggleDate(d)} data-field={i === 0 ? 'dates' : undefined}>
-                        <small>{new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' })}</small>{new Date(d + 'T12:00:00').getDate()}
+                        {/* The first tile of each month names the month, so a long window can't show two "19"s alike. */}
+                        <small>{new Date(d + 'T12:00:00').toLocaleDateString('en-US', i === 0 || d.endsWith('-01') ? { month: 'short' } : { weekday: 'short' })}</small>{new Date(d + 'T12:00:00').getDate()}
                       </button>
                     ))}
                   </div>
@@ -238,7 +241,7 @@ export default function AlertSheet({ open, onClose, course, days, memberEmail }:
             </div>
             {/* Its own box, never pre-ticked, separate from booking texts; the words are alertSmsConsentText() exactly. */}
             <label className={g.sms}>
-              <input type="checkbox" checked={textOk} onChange={e => { setTextOk(e.target.checked); if (!e.target.checked && err.phone) setErr(x => ({ ...x, phone: undefined })); }} />
+              <input type="checkbox" checked={textOk} onChange={e => { setTextOk(e.target.checked); if (err.phone) setErr(x => ({ ...x, phone: undefined })); }} />
               <span>{alertSmsConsentText(course.name)}</span>
             </label>
             <p className={g.pol}>First to book gets it. The alert ends by itself after its last date.</p>
