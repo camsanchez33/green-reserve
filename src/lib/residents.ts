@@ -1,10 +1,10 @@
 // RES-1 (Cam 2026-10-19): resident rates. A resident shows the pro shop their
 // resident card once; staff add them in Members → Residents. From then on:
-//   - a golfer signed in with that email books ONE player (themselves) at the
+//   - a golfer logged in to the course with that email books ONE player (themselves) at the
 //     tee time's resident rate; the rest of the group pays the booked rate;
 //   - staff can set how many of any unpaid group are residents at the counter.
 // Pure rules only (no session, no database) — the signed-in golfer's card is
-// looked up by signedInResident() in member-session.ts (the member signed in to the course).
+// looked up by loggedInResident() in member-session.ts (the golfer logged in to the course, a member or a resident).
 // The resident rate is TeeTime.residentRateCents (from the schedule, weekday or
 // weekend already resolved). A tee time without one has no resident price.
 // A member-rate booking stays a member booking — residents never stack on it.

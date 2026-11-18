@@ -5,11 +5,10 @@ import { demandPctAt, onlinePublicSeat, dealWins, loadDemand } from '@/lib/deman
 import { todayIn, clockIn } from '@/lib/course-time';
 import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
-import { getMemberSession, signedInResident } from '@/lib/member-session';
+import { loggedInAt, liveMembershipFor, residentOn } from '@/lib/member-session';
 import { windowFor, withinWindow, outsideWindowBody } from '@/lib/booking-window';
 import { rulesFor, walkingAllowedAt } from '@/lib/booking-rules';
 import { applyTierRates, readLineRates, lineKey, isWeekend } from '@/lib/tier-rates';
-import { membershipLive } from '@/lib/member-rates';
 
 export async function GET(
   req: NextRequest,
@@ -23,21 +22,18 @@ export async function GET(
   const course = await prisma.course.findUnique({ where: { slug: courseSlug } });
   if (!course) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  // Cam 2026-11-18: only this course's member sign-in (gr_member); there are no golfer accounts.
-  const session = await getMemberSession();
-  if (!session || course.id !== session.courseId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const membershipId = session.membershipId;
+  // Cam 2026-11-18: only this course's log-in (gr_member); there are no golfer accounts. Residents log in: the
+  // session is a proven email; its live membership here is read now (lib/member-session).
+  const session = await loggedInAt(course.id);
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const membership = await prisma.courseMembership.findUnique({
-    where: { id: membershipId },
-    include: { tier: true },
-  });
-  // Booking applies member rates and the member window only to an active
+  // Booking applies member rates and the member window only to a live
   // membership (api/bookings), so this list does too — otherwise a lapsed
   // member sees a member rate and is charged the public one.
+  const membership = await liveMembershipFor(course, session.email);
   // Lapsed (past its end date + the course's grace days, lib/member-rates): public rates and window, as booking charges.
-  const tier = membership && membership.courseId === course.id ? membership.tier : null;
-  const live = !!membership && membership.courseId === course.id && membershipLive(membership, course);
+  const tier = membership ? membership.tier : null;
+  const live = !!membership;
   // Members switched off in Settings (lib/pricing-switch): the window stays, the rate doesn't.
   const pricingTier = live && memberPricingOn(course) ? tier : null;
 
@@ -71,9 +67,9 @@ export async function GET(
   // charge another.
   // RES-1: booking charges ONE player — the signed-in golfer — the tee time's
   // resident rate when no membership price applied and their resident card is
-  // good on the date (api/bookings: signedInResident, groupGreenFee). Same lookup
+  // good on the date (api/bookings: loggedInResident, groupGreenFee). Same lookup
   // here, so the list can show it; the page adds it up the same way.
-  const resident = !pricingTier && residentPricingOn(course) ? await signedInResident(course.id, date) : null;
+  const resident = !pricingTier && residentPricingOn(course) ? await residentOn(course.id, session.email, date) : null;
 
   // Memberships item 3: a membership priced by the price list has a member price wherever one of its green lines is set.
   const lines = pricingTier ? readLineRates(pricingTier.lineRates) : null;

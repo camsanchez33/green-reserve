@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
-import { getMemberSession } from '@/lib/member-session';
+import { getMemberSession, activeMembershipFor } from '@/lib/member-session';
 
 export async function GET(
   _req: NextRequest,
@@ -19,10 +19,8 @@ export async function GET(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const membership = await prisma.courseMembership.findUnique({
-    where: { id: session.membershipId },
-    include: { tier: true },
-  });
+  // Residents log in: the session is a proven email; a resident who isn't a member has no dues here (404).
+  const membership = await activeMembershipFor(course.id, session.email);
   if (!membership) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
   const records: {

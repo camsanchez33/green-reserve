@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse, after } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { signMemberMagicToken } from '@/lib/member-session';
+import { signMemberMagicToken, canLogIn } from '@/lib/member-session';
 import { sendMemberMagicLink } from '@/lib/email';
 import { rateLimit, evidentiaryIp } from '@/lib/rate-limit';
 import { securityEvent } from '@/lib/security-events';
@@ -12,17 +12,14 @@ import { securityEvent } from '@/lib/security-events';
 // logged, not shown; the person sees the usual "check your email" and can ask again.
 const SUCCESS = () => NextResponse.json({ success: true });
 
-async function sendLink(course: { id: string; name: string }, courseSlug: string, email: string) {
-  const membership = await prisma.courseMembership.findFirst({
-    where: { courseId: course.id, status: 'active', OR: [{ inviteEmail: email }, { golfer: { email } }] },
-    include: { golfer: { select: { email: true, firstName: true, lastName: true } } },
-  });
-  if (!membership) return;
-  const memberEmail = membership.golfer?.email ?? membership.inviteEmail;
-  const memberName = membership.golfer ? `${membership.golfer.firstName} ${membership.golfer.lastName}` : (membership.inviteName || 'Member');
-  const token = await signMemberMagicToken({ membershipId: membership.id, courseId: course.id, email: memberEmail });
+// Residents log in (Cam 2026-11-18): anyone in one of the course's groups gets the link — an active member here, or a
+// resident card good today here or in the course's group (lib/member-session canLogIn).
+async function sendLink(course: { id: string; name: string; timezone: string | null; hasResidentPricing: boolean }, courseSlug: string, email: string) {
+  const who = await canLogIn(course, email);
+  if (!who) return;
+  const token = await signMemberMagicToken({ courseId: course.id, email });
   const magicLink = `${process.env.NEXT_PUBLIC_URL}/api/member/${courseSlug}/verify?token=${encodeURIComponent(token)}`;
-  await sendMemberMagicLink({ name: memberName, email: memberEmail, courseName: course.name, magicLink });
+  await sendMemberMagicLink({ name: who.name, email, courseName: course.name, magicLink });
 }
 
 export async function POST(
@@ -38,7 +35,7 @@ export async function POST(
   // Whether a course is live is public (its booking page says so), so this may answer 404.
   const course = await prisma.course.findUnique({
     where: { slug: courseSlug },
-    select: { id: true, name: true, active: true, liveStatus: true },
+    select: { id: true, name: true, active: true, liveStatus: true, timezone: true, hasResidentPricing: true },
   });
   if (!course || !course.active || course.liveStatus !== 'live') {
     return NextResponse.json({ error: 'Course not found' }, { status: 404 });
