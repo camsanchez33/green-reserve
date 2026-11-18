@@ -248,10 +248,10 @@
 /* The Book page's other states on the look: the confirmation, loading, and the errors. */
 .lede { font-size: 15px; color: var(--g-soft); margin: 0 0 16px; }
 .lede strong { color: var(--g-ink); }
-.cnote { border-left: 3px solid var(--g-acc); padding-left: 14px; margin: 0 0 16px; }
-.cnote b { display: block; font-size: 13px; margin-bottom: 2px; }
-.cnote p { margin: 0; font-size: 14px; white-space: pre-line; }
-.bk .card h3 { margin-top: 2px; }
+.confnote { border-left: 3px solid var(--g-acc); padding-left: 14px; margin: 0 0 16px; }
+.confnote b { display: block; font-size: 13px; margin-bottom: 2px; }
+.confnote p { margin: 0; font-size: 14px; white-space: pre-line; }
+.bk .tlcard h3 { margin-top: 2px; }
 .tl { list-style: none; margin: 0; padding: 0; }
 .tlstep { display: flex; gap: 12px; font-size: 14px; }
 .tlstep > div { padding-bottom: 14px; }

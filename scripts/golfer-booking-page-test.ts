@@ -90,7 +90,16 @@ check('the confirmation, loading and error states sit in the course look, not th
 check('the loading states are said (role status), the Suspense fallback included', (book.match(/role="status">.{0,90}Loading this tee time…/g) ?? []).length === 2);
 check('the confirmation heading takes focus when it replaces the form', book.includes('<h2 ref={confRef} tabIndex={-1}>You&apos;re all set</h2>') && book.includes('useEffect(() => { if (confirmedData) confRef.current?.focus(); }, [confirmedData]);'));
 check('the errors are alerts with one way on', (book.match(/<div className=\{g\.empty\} role="alert">/g) ?? []).length === 2 && book.includes("<h2>Can&apos;t complete this booking</h2>"));
-check('the timeline is an ordered list on the look tokens', book.includes('<ol className={g.tl}>') && book.includes('<li className={g.tlstep}>'));
+check('the timeline is an ordered list on the look tokens', book.includes('<ol className={g.tl} role="list">') && book.includes('<li className={g.tlstep}>'));
+
+// A class defined twice in the golfer sheet restyles another page (review 2026-11-18: .cnote hit the course info box).
+{
+  const sheet = readFileSync('src/components/golfer/golfer.module.css', 'utf8').replace(/@media[^{]*\{([^{}]*\{[^{}]*\})*\s*\}/g, '');
+  const tops = [...sheet.matchAll(/^\.([A-Za-z0-9_-]+) \{/gm)].map(m => m[1]);
+  const twice = tops.filter((c, i) => tops.indexOf(c) !== i);
+  check('the golfer sheet defines no top-level class twice', twice.length === 0, twice);
+}
+check('the confirmation note has its own class (not the course page\'s .cnote)', book.includes('<div className={g.confnote}>') && !book.includes('g.cnote'));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);

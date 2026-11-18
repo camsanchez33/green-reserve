@@ -292,7 +292,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
 
         {/* PERS-1: the course's own note, in its own words, its colour on the rule. */}
         {course?.confirmation_note && (
-          <div className={g.cnote}>
+          <div className={g.confnote}>
             <b>From {confirmedData.courseName}</b>
             <p>{course.confirmation_note}</p>
           </div>
@@ -300,9 +300,10 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
 
         {/* What happens next — the same three facts the policy copy already
             states, laid out in the order they actually happen. */}
-        <section className={g.card} aria-labelledby="bk-next">
+        <section className={`${g.card} ${g.tlcard}`} aria-labelledby="bk-next">
           <h3 id="bk-next">What happens next</h3>
-          <ol className={g.tl}>
+          {/* role="list": Safari drops list semantics from an unstyled list. */}
+          <ol className={g.tl} role="list">
             <TimelineStep
               when="Today"
               what={confirmedData.cutoffPassed && confirmedData.cancellationFeeTotal > 0 && holdsAtCutoff({ lateFeeTimingAtBooking: confirmedData.lateFeeTiming })

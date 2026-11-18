@@ -29,6 +29,9 @@ export type YourSession = {
   renewsOn?: string | null;
   /** 2b: the membership renews itself (the course charges the saved card). */
   autoRenew?: boolean;
+  /** 2b: the last renewal charge failed (autoRenewFailedAt is set). Past the date alone isn't a failure: the charge
+   *  runs after the date, can be held for notice, or skipped. */
+  renewalFailed?: boolean;
   upcoming?: Upcoming[];
 };
 
@@ -89,11 +92,12 @@ export function membershipLine(s: YourSession, today: string = localToday()): { 
   const group = m?.name ?? s.tier?.name ?? s.membershipType;
   // 2b says when a membership renews; until then (or if the date is unreadable) only the end date is known, so it
   // reads "expires".
-  const renews = s.autoRenew === true || isDay(s.renewsOn);
+  // An explicit autoRenew wins; without it, a renewsOn date means it renews.
+  const renews = s.autoRenew ?? isDay(s.renewsOn);
   const day = isDay(s.renewsOn) ? s.renewsOn : s.expiresAt;
   const st = datedStatus(day, today, renews);
-  // Set to renew and past the date: the renewal failed. A membership that wasn't set to renew just ended.
-  if (renews && st.dot === 'bad') return { group, dot: 'bad', when: null, problem: RENEWAL_FAILED };
+  // Only the server's own record of a failed charge says the renewal failed (Build 2026-11-18).
+  if (s.renewalFailed === true) return { group, dot: 'bad', when: null, problem: RENEWAL_FAILED };
   return { group, ...st };
 }
 
