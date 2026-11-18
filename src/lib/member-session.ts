@@ -81,13 +81,18 @@ export async function loggedInAt(courseId: string): Promise<{ email: string } | 
 /**
  * The groups a golfer can log in as at this course, for the log-in line ("For <Course> members and residents."):
  * 'members' when the course has an active membership, 'residents' when residents get their rate here and this course
- * or its group lists at least one card. Empty when the course turned Log in off. Says nothing about any email.
+ * or its group lists a card someone could log in with now: one with an email (a counter-only card has none) that is
+ * good today on the course's clock, the same rule canLogIn uses. Empty when the course turned Log in off. Says
+ * nothing about any email.
  */
-export async function loginGroups(course: { id: string; memberLoginOn?: boolean | null; hasResidentPricing?: boolean | null }): Promise<('members' | 'residents')[]> {
+export async function loginGroups(course: { id: string; memberLoginOn?: boolean | null; hasResidentPricing?: boolean | null; timezone?: string | null }): Promise<('members' | 'residents')[]> {
   if (course.memberLoginOn === false) return [];
+  const today = todayIn(course.timezone);
   const [tiers, cards] = await Promise.all([
     prisma.membershipTier.count({ where: { courseId: course.id, active: true } }),
-    residentPricingOn(course) ? prisma.courseResident.count({ where: { courseId: { in: await groupCourseIds(course.id) } } }) : Promise.resolve(0),
+    residentPricingOn(course)
+      ? prisma.courseResident.count({ where: { courseId: { in: await groupCourseIds(course.id) }, email: { not: null }, NOT: { email: '' }, OR: [{ expiresOn: '' }, { expiresOn: { gte: today } }] } })
+      : Promise.resolve(0),
   ]);
   const out: ('members' | 'residents')[] = [];
   if (tiers > 0) out.push('members');

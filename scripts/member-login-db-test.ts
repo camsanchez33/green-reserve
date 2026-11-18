@@ -395,6 +395,13 @@ async function main() {
   check('…a member\'s booking is charged the public price', !!offSaved && offSaved.appliedRate === 'standard' && offSaved.greenFeeTotal === 10000, { status: offBook.status, offBody, offSaved });
   check('…their dues history answers 401', (await get(`/api/member/${a.slug}/payments`, offCookie)).status === 401);
   check('…and loginGroups is empty', (await loginGroups({ ...a, memberLoginOn: false })).length === 0);
+  // Only a card someone could log in with now counts toward "residents": not a counter-only card (no email), not an expired one.
+  const lg = await prisma.course.create({ data: { ...base, name: 'Login Groups', slug: `${TAG}-lg` } });
+  await prisma.courseResident.create({ data: { courseId: lg.id, name: 'Counter only', email: null, expiresOn: '' } });
+  await prisma.courseResident.create({ data: { courseId: lg.id, name: 'Expired', email: `lg-old@${TAG}.test`, expiresOn: addDaysStr(todayIn('UTC'), -1) } });
+  check('loginGroups: counter-only and expired cards don\'t make "residents"', (await loginGroups(lg)).length === 0);
+  await prisma.courseResident.create({ data: { courseId: lg.id, name: 'Good', email: `lg-good@${TAG}.test`, expiresOn: '' } });
+  check('…a card good today with an email does', JSON.stringify(await loginGroups(lg)) === '["residents"]');
   await prisma.course.update({ where: { id: a.id }, data: { memberLoginOn: true } });
 
   // The benefits line (invite email, Your <Course>).
