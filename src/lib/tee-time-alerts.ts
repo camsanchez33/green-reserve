@@ -25,7 +25,7 @@ import { todayIn, clockIn, addDaysStr } from './course-time';
 import { teeToUtcMs } from './tee-time-utils';
 import { withinWindow, windowFor } from './booking-window';
 import { rulesFor } from './booking-rules';
-import { membershipLive } from './member-rates';
+import { membershipLive, liveMembershipWhere } from './member-rates';
 import { liveMembershipFor, canLogIn } from './member-session';
 import { consentPhone, recordSmsConsent, type SmsScope } from './sms-consent';
 import { ALERT_SMS_CONSENT_VERSION, ALERT_SMS_CONFIRMATION, alertSmsConsentText } from './sms-consent-copy';
@@ -353,7 +353,7 @@ export async function notifyAlertsFor(courseId: string, dates: string[], now: Da
 async function notifyInner(courseId: string, dates: string[], now: Date, maxSends: number): Promise<number> {
   const course = await prisma.course.findUnique({
     where: { id: courseId },
-    select: { id: true, name: true, slug: true, active: true, liveStatus: true, timezone: true, teeTimeAlertsOn: true, publicAdvanceDays: true, minPlayers: true, maxPlayers: true, memberLoginOn: true },
+    select: { id: true, name: true, slug: true, active: true, liveStatus: true, timezone: true, teeTimeAlertsOn: true, publicAdvanceDays: true, minPlayers: true, maxPlayers: true, memberLoginOn: true, memberGraceDays: true },
   });
   if (!course || !course.teeTimeAlertsOn || !course.active || course.liveStatus !== 'live') return 0;
   const { sendTeeTimeAlertEmail } = await import('./email');
@@ -376,12 +376,19 @@ async function notifyInner(courseId: string, dates: string[], now: Date, maxSend
     if (!alerts.length) continue;
     const times = await openTimes(course, date, now);
     if (!times.length) continue;
+    // Whose membership still gives the member window now (Build 2026-11-18): an alert keeps the membership it was made
+    // with, but a membership cancelled or lapsed since (lib/member-rates, the rule booking uses) books publicly.
+    const memberIds = [...new Set(alerts.map(a => a.membershipId).filter((id): id is string => !!id))];
+    const liveIds = new Set(memberIds.length
+      ? (await prisma.courseMembership.findMany({ where: { id: { in: memberIds }, courseId, ...liveMembershipWhere(course, now) }, select: { id: true } })).map(m => m.id)
+      : []);
     for (const a of alerts) {
       if (told >= maxSends) return told;
-      // A guest can't book past the public window (or a round's own shorter one). Neither can a member while the course
+      // A guest can't book past the public window (or a round's own shorter one). Nor can a member whose membership has
+      // lapsed or ended since the alert was made (liveIds), nor any member while the course
       // has Log in off (Build 2026-11-18): the booking page would refuse the time, so the alert falls back to the public
       // window. Nothing is deleted; switching Log in back on restores the member window.
-      const usable = a.membershipId && course.memberLoginOn ? times : times.filter(t => t.publicOk);
+      const usable = a.membershipId && liveIds.has(a.membershipId) && course.memberLoginOn ? times : times.filter(t => t.publicOk);
       const hit = usable.find(t => alertMatches(a, t));
       if (!hit) continue;
       // The claim: only the caller that adds this date sends. Postgres re-checks the
