@@ -9,6 +9,8 @@
 //   - a cookie issued before this change (it carries membershipId) still works, by its email
 //   - a lapsed member who is also a resident gets the resident rate; a removed card ends the session's groups
 //   - residents switched off in Settings: a card is no log-in and no rate
+//   - a resident-only session: the public window, no dues, its own swap keeps the seat only with this course's session
+//   - a membership linked to an older golfer account opens with the account's email only
 // Needs the app running (TEST_URL) and its database (a local Postgres). Run: npx tsx scripts/member-login-db-test.ts
 import { PrismaClient } from '@prisma/client';
 import { SignJWT } from 'jose';
@@ -36,6 +38,7 @@ async function cleanup() {
   await prisma.membershipTier.deleteMany({ where: { courseId } });
   await prisma.teeTime.deleteMany({ where: { courseId } });
   await prisma.course.deleteMany({ where: { slug: { startsWith: TAG } } });
+  await prisma.golferAccount.deleteMany({ where: { email: { endsWith: `@${TAG}.test` } } });
   await prisma.courseOperator.deleteMany({ where: { email: `${TAG}@test.local` } });
   await prisma.courseGroup.deleteMany({ where: { slug: `${TAG}-g` } });
   await prisma.securityEvent.deleteMany({ where: { email: { endsWith: `@${TAG}.test` } } });
@@ -83,6 +86,29 @@ async function main() {
   const booked = await book.json().catch(() => null);
   const saved = booked?.bookingId ? await prisma.booking.findUnique({ where: { id: booked.bookingId }, select: { residentPlayers: true, greenFeeTotal: true, appliedRate: true } }) : null;
   check('booking charges the resident seat', !!saved && saved.residentPlayers === 1 && saved.appliedRate === 'resident' && saved.greenFeeTotal === groupGreenFee(2, 10000, 1, 3000).greenFeeTotal, { status: book.status, booked, saved });
+
+  // A resident-only session books at the public window, has no dues, and its own swap keeps the seat only with proof.
+  const ttFar = await prisma.teeTime.create({ data: { courseId: a.id, date: addDaysStr(todayIn('UTC'), 12), time: '09:00', holes: 18, greenFeeCents: 10000, cartFeeCents: 2000, residentRateCents: 3000, playersAvailable: 4, playersBooked: 0 } });
+  const far = await fetch(`${BASE_URL}/api/bookings`, { method: 'POST', headers: { 'Content-Type': 'application/json', cookie: resCookie }, body: JSON.stringify({ teeTimeId: ttFar.id, golferName: 'Rita Res', golferEmail: resEmail, golferPhone: '', players: 1, termsAccepted: true, cartSelected: false }) });
+  const farBody = await far.json().catch(() => null);
+  check('a resident-only session past the public window is refused', far.status === 403 && farBody?.code === 'outside_window', { status: far.status, farBody });
+  check('…and has no dues (payments 404)', (await get(`/api/member/${a.slug}/payments`, resCookie)).status === 404);
+  const nobodyCookie = await cookie(a.id, `nobody@${TAG}.test`);
+  const ttA2 = await tt(a.id, '10:00');
+  const nb = await fetch(`${BASE_URL}/api/bookings`, { method: 'POST', headers: { 'Content-Type': 'application/json', cookie: nobodyCookie }, body: JSON.stringify({ teeTimeId: ttA2.id, golferName: 'Nobody', golferEmail: resEmail, golferPhone: '', players: 2, termsAccepted: true, cartSelected: false }) });
+  const nbBody = await nb.json().catch(() => null);
+  const nbSaved = nbBody?.bookingId ? await prisma.booking.findUnique({ where: { id: nbBody.bookingId }, select: { residentPlayers: true, greenFeeTotal: true } }) : null;
+  check('a session in no group (typing a resident\'s email) books at the public price', !!nbSaved && nbSaved.residentPlayers === 0 && nbSaved.greenFeeTotal === 20000, { status: nb.status, nbBody, nbSaved });
+  if (booked?.bookingId) {
+    const tok = (await prisma.booking.findUnique({ where: { id: booked.bookingId }, select: { checkInToken: true } }))!.checkInToken;
+    const ttA3 = await tt(a.id, '11:00');
+    const ttA4 = await tt(a.id, '12:00');
+    const swap = async (to: string, c: string) => { const r = await fetch(`${BASE_URL}/api/manage/${booked.bookingId}/swap-time`, { method: 'POST', headers: { 'Content-Type': 'application/json', cookie: c }, body: JSON.stringify({ token: tok, newTeeTimeId: to, termsAccepted: true }) }); return { status: r.status, after: await prisma.booking.findUnique({ where: { id: booked.bookingId }, select: { residentPlayers: true, teeTimeId: true } }) }; };
+    const s1 = await swap(ttA3.id, resCookie);
+    check('the resident\'s own swap, logged in, keeps the resident seat', s1.status === 200 && s1.after?.teeTimeId === ttA3.id && s1.after?.residentPlayers === 1, s1);
+    const s2 = await swap(ttA4.id, await cookie(b.id, resEmail));
+    check('…and with a course B session loses it', s2.status === 200 && s2.after?.teeTimeId === ttA4.id && s2.after?.residentPlayers === 0, s2);
+  }
 
   // ── Tenant check ──
   check('a course A session gives nothing at course B', (await get(`/api/member/${b.slug}/session`, resCookie)).status === 401);
@@ -134,6 +160,13 @@ async function main() {
   check('…and a membershipId in a token grants nothing by itself', (await preview(ttA.id, forged)).member === null && (await get(`/api/member/${a.slug}/session`, forged)).status === 401);
   await prisma.courseMembership.update({ where: { id: mem.id }, data: { status: 'cancelled' } });
   check('a cancelled membership is no log-in', !(await canLogIn(a, memEmail)));
+
+  // A membership linked to an older golfer account opens with the account's email only, never a stale inviteEmail.
+  const acct = await prisma.golferAccount.create({ data: { email: `acct@${TAG}.test`, firstName: 'Acct', lastName: 'Holder', password: 'x' } });
+  await prisma.courseMembership.create({ data: { courseId: a.id, golferId: acct.id, tierId: tier.id, membershipType: 'Gold', status: 'active', inviteEmail: `stale@${TAG}.test`, inviteName: 'Acct', payToken: `${TAG}-acct` } });
+  check('a linked membership: its stale invite email is no log-in', !(await canLogIn(a, `stale@${TAG}.test`)));
+  check('…and gets no member rate', (await preview(ttA.id, await cookie(a.id, `stale@${TAG}.test`))).member === null);
+  check('…while the account email logs in and gets it', !!(await canLogIn(a, acct.email)) && !!(await preview(ttA.id, await cookie(a.id, acct.email))).member);
 
   // ── Residents switched off ──
   await prisma.course.update({ where: { id: a.id }, data: { hasResidentPricing: false } });

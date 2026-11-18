@@ -19,7 +19,7 @@ const secret = new TextEncoder().encode(rawSecret);
 
 // Residents log in (Cam 2026-11-18, GOLFER-LOGIN-1): gr_member is "this email, proven, at this course", not one
 // membership. The groups that email is in (a live membership here, a resident card good here or in the course's
-// group) are worked out on every request (groupsAt), so a lapsed membership or an expired card stops counting at
+// group) are worked out on every request (liveMembershipFor, residentOn), so a lapsed membership or an expired card stops counting at
 // once rather than lasting for the cookie's 7 days. Tokens issued before this carried a membershipId; it is ignored,
 // and their email (proven when they were issued) is the identity.
 type Proven = { courseId: string; email: string };
@@ -75,13 +75,18 @@ export async function loggedInAt(courseId: string): Promise<{ email: string } | 
 // Cam 2026-11-18: a member is recognised only by this course's gr_member session. The G5b path (an active
 // membership found through the GreenReserve-wide gr_golfer session) is retired with golfer accounts.
 
-/** This course's memberships under an email (the member's own, or an older linked account's), case-insensitive and exact (lib/like-exact). */
+/**
+ * This course's memberships under an email, case-insensitive and exact (lib/like-exact): an invite's own email, or
+ * for a membership linked to an older golfer account, that account's email only (its inviteEmail can be stale, and
+ * before this change only the account's address ever got the link). The same rule as membership-join myMembership.
+ */
 function membershipEmailWhere(courseId: string, email: string): Prisma.CourseMembershipWhereInput {
   const e = email.trim();
-  return { courseId, OR: [{ inviteEmail: ciEquals(e) }, { golfer: { email: ciEquals(e) } }] };
+  return { courseId, OR: [{ golferId: null, inviteEmail: ciEquals(e) }, { golfer: { email: ciEquals(e) } }] };
 }
 
-/** The membership whose member rates and window apply to this email at this course right now (lib/member-rates), or null. */
+/** The membership whose member rates and window apply to this email at this course right now (lib/member-rates), or
+ *  null. A member's rate still wins over a resident's; the two-groups rule (lower price, longer window) comes later. */
 export async function liveMembershipFor(course: { id: string } & LapseRule, email: string) {
   if (!email.trim()) return null;
   return prisma.courseMembership.findFirst({
@@ -89,15 +94,6 @@ export async function liveMembershipFor(course: { id: string } & LapseRule, emai
     include: { tier: true },
     orderBy: { createdAt: 'asc' },
   });
-}
-
-/**
- * The groups this email is in at this course: a live membership here, and a resident card good on `dateYmd` here or
- * in the course's group (RES-1, GRP-1). In this version a member's rate still wins over a resident's, as before.
- */
-export async function groupsAt(course: { id: string } & LapseRule, email: string, dateYmd: string) {
-  const [membership, resident] = await Promise.all([liveMembershipFor(course, email), residentOn(course.id, email, dateYmd)]);
-  return { membership, resident };
 }
 
 /**
