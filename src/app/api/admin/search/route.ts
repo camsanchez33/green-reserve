@@ -121,6 +121,8 @@ export async function GET(req: NextRequest) {
   const staticNav = [
     { id: 'nav:overview',    label: 'Home',          href: '/admin',            always: true },
     { id: 'nav:goals',       label: 'Goals',         href: '/admin/goals',      support: true },
+    // Inquiries (the outreach page, in the menu since 2026-11-17); Pipeline stays the full old board.
+    { id: 'nav:outreach',    label: 'Inquiries',     href: '/admin/inquiries',  always: true },
     { id: 'nav:inquiries',   label: 'Pipeline',      href: '/admin/inquiries/all',  always: true },
     { id: 'nav:courses',     label: 'Courses',       href: '/admin/courses',    always: true },
     { id: 'nav:support',     label: 'Course support', href: '/admin/support',   always: true },

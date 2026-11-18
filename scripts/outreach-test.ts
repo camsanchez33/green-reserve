@@ -159,6 +159,7 @@ check('listing: a bad osm type → skipped', toResult({ osm_type: 'area', osm_id
   const missing = navHrefs.filter(h => !OPEN.includes(h) && !areaBlock.includes(`'${h}':`));
   check(`palette: every page link has an area (${navHrefs.length} links)`, navHrefs.length > 5 && missing.length === 0, missing);
   check('palette: Pipeline opens the full board', navHrefs.includes('/admin/inquiries/all'));
+  check('palette: Inquiries opens the outreach page, as the menu does', /id: 'nav:outreach',\s*label: 'Inquiries',\s*href: '\/admin\/inquiries',/.test(src));
 }
 
 console.log(failed ? `\n${failed} FAILED` : '\nAll passed');
