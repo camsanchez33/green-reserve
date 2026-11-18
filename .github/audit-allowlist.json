@@ -1,13 +1,4 @@
 {
   "_note": "Advisories the Package flaws gate (scripts/audit-gate.mjs) lets through. Each entry needs Cam's approval, a reason and the approved severity, an expiry (YYYY-MM-DD, allowed through that day, UTC). An expired entry, or one that matches nothing in the audit, fails the gate.",
-  "entries": [
-    {
-      "id": "GHSA-fc5q-39xc-vjpf",
-      "package": "picomatch",
-      "severity": "high",
-      "expires": "2026-12-15",
-      "reason": "build-time only, via Sentry's webpack loader; no patched picomatch published",
-      "approved": "Cam 2026-11-18"
-    }
-  ]
+  "entries": []
 }
