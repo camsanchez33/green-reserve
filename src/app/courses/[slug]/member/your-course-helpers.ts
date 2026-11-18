@@ -104,7 +104,11 @@ export function membershipLine(s: YourSession, today: string = localToday()): { 
   const st = datedStatus(day, today, renews);
   // Only the server's own record of a failed charge says the renewal failed (Build 2026-11-18).
   if (s.renewalFailed === true) return { group, dot: 'bad', when: null, problem: RENEWAL_FAILED };
-  if (renews && st.dot === 'bad') return { group, dot: 'warn', when: null, note: RENEWAL_PENDING };
+  // "Being processed" only while the server can say a charge failed (it sends renewalFailed), and only within the
+  // longest real wait: a 30-day notice plus a day of cron. Past that nothing is coming, so it reads "ended".
+  if (renews && st.dot === 'bad' && typeof s.renewalFailed === 'boolean' && isDay(day) && daysBetween(day, today) <= 31) {
+    return { group, dot: 'warn', when: null, note: RENEWAL_PENDING };
+  }
   return { group, ...st };
 }
 
