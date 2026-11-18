@@ -9,7 +9,8 @@
 // - The record is written after the action succeeds and is awaited (a route's
 //   un-awaited write dies with the function). A failed record never undoes or
 //   fails the action — a refund that went through stays reported as done — but
-//   it is reported to Sentry and the server log, never swallowed.
+//   it is reported to Sentry and the server log, never swallowed. The one exception is a read:
+//   auditGolferView() throws, and the record isn't shown (GOLFER-VIEW, Cam 2026-11-18).
 // - Only what the action touched goes in before/after; never a password, token,
 //   secret or card detail (`redact`).
 import * as Sentry from '@sentry/nextjs';
@@ -64,7 +65,15 @@ export const ACTION_LABELS: Record<string, string> = {
   problem_snooze: 'Snooze a problem', problem_unsnooze: 'Unsnooze a problem',
   dispute_evidence: 'Download a dispute evidence pack',
   cron_rerun: 'Re-run a scheduled job',
+  // reads, recorded (Cam 2026-11-18)
+  golfer_view: 'Viewed golfer',
 };
+
+/** The words the Audit page shows for one row. A golfer view names the golfer, as they were named when opened. */
+export function auditLabel(action: string, detail: string): string {
+  const base = ACTION_LABELS[action] ?? action.replace(/_/g, ' ');
+  return action === 'golfer_view' && detail ? `${base} ${detail}` : base;
+}
 
 export const REASON_MIN = 4;
 export const REASON_MAX = 500;
@@ -158,6 +167,38 @@ export async function auditAdmin(session: Pick<AdminSession, 'adminId' | 'name'>
     console.error(JSON.stringify({ ev: 'admin_audit.write_failed', action: e.action, targetId: e.targetId, error: err instanceof Error ? err.message : String(err) }));
     Sentry.captureException(err, { tags: { area: 'admin_audit', action: e.action } });
   }
+}
+
+/** One golfer view is recorded at most this often, per admin per golfer, so reloads don't flood the record. */
+export const GOLFER_VIEW_EVERY_MS = 10 * 60_000;
+
+/**
+ * GOLFER-VIEW (Cam 2026-11-18, "Yes, record each view"): opening a golfer's record writes who, which
+ * golfer and when — at most once per admin per golfer per 10 minutes. An advisory lock makes the
+ * check and the write one step, so two reloads at once still make one row. Unlike auditAdmin() this
+ * throws when the row can't be written: the view hasn't been shown yet, so the caller refuses it
+ * rather than show a golfer's record with no trace.
+ */
+export async function auditGolferView(
+  session: Pick<AdminSession, 'adminId' | 'name'>,
+  golfer: { kind: 'account' | 'guest'; id: string; name: string },
+  now = new Date(),
+): Promise<'recorded' | 'recent'> {
+  const targetType = golfer.kind === 'account' ? 'golfer' : 'golfer_guest';
+  const targetId = String(golfer.id).slice(0, 190);
+  return prisma.$transaction(async tx => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`golfer-view:${session.adminId}:${targetType}:${targetId}`}))`;
+    const recent = await tx.adminAuditLog.findFirst({
+      where: { adminId: session.adminId, action: 'golfer_view', targetType, targetId, createdAt: { gt: new Date(now.getTime() - GOLFER_VIEW_EVERY_MS) } },
+      select: { id: true },
+    });
+    if (recent) return 'recent';
+    await tx.adminAuditLog.create({ data: {
+      adminId: session.adminId, actorName: session.name || '', action: 'golfer_view', targetType, targetId,
+      detail: golfer.name.slice(0, 200), createdAt: now,
+    } });
+    return 'recorded';
+  });
 }
 
 /** The course a booking belongs to, for the record ('' when it is gone). */
