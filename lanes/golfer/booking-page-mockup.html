@@ -1,337 +1,361 @@
-<title>Course Booking Page Mockup</title>
-<meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600&family=Libre+Franklin:wght@400;500;600;700&display=swap">
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Golfer Booking Page</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600&family=Libre+Franklin:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* Layout: a mockup control strip, then the course page in Cam's order — header (banner, logo, name, details, Find a
-   tee time) → booking (date strip, players, holes, walking/riding, times by part of day, sticky summary) → course
-   information → gallery → facilities → footer. Clean light page; the course's own colour is --course. */
-:root{
-  --paper:#FAFAF7;--card:#FFFFFF;--ink:#141814;--soft:#3A3F39;--muted:#6B706A;--line:#E3E4DE;--wash:#F2F3EE;
-  --ok:#3D7A55;--warn:#9A5B13;--pine:#173B2A;
-  --course:#1F4D3A;--course-ink:#FFFFFF;--course-wash:rgba(31,77,58,.08);
-  --serif:"EB Garamond",Georgia,"Times New Roman",serif;
-  --sans:"Libre Franklin",-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
-  --shadow:0 0 0 1px rgba(20,24,20,.06),0 1px 2px rgba(20,24,20,.06);
-}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#FAFAF7;--card:#FFFFFF;--ink:#141814;color-scheme:light}}
-:root[data-theme="dark"]{--paper:#FAFAF7;--card:#FFFFFF;--ink:#141814;color-scheme:light}
-/* The golfer page is light-only on purpose (a course's own page, matches the live site). */
-body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5}
-.ctl{background:#E9EAE4;border-bottom:1px solid var(--line)}
-.ctl .in{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px;display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;font-size:12.5px;color:var(--muted)}
-.ctl b{color:var(--ink);font-weight:600;margin-right:auto}
-.sw{display:inline-flex;gap:6px;align-items:center}
-.sw button{width:22px;height:22px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px var(--line);cursor:pointer}
-.sw button[aria-pressed="true"]{box-shadow:0 0 0 2px var(--ink)}
-.tg{font:inherit;font-size:12.5px;font-weight:500;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:4px 12px;cursor:pointer}
-.tg[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
-.in{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-button:focus-visible,a:focus-visible{outline:2px solid var(--course);outline-offset:2px}
-a{color:inherit}
-
-/* 1 · Header */
-.banner{height:300px;position:relative;overflow:hidden;background:var(--course)}
-.photo{position:absolute;inset:0;filter:saturate(1.05)}
-.ph-banner{background:
-  radial-gradient(60% 55% at 70% 78%, rgba(146,182,120,.95), rgba(146,182,120,0) 70%),
-  radial-gradient(80% 60% at 20% 85%, rgba(58,94,58,.95), rgba(58,94,58,0) 70%),
-  radial-gradient(70% 50% at 85% 60%, rgba(46,78,50,.9), rgba(46,78,50,0) 70%),
-  linear-gradient(180deg,#C9DCE6 0%,#B7CFD9 38%,#7E9E78 58%,#4F7651 78%,#3B5E3F 100%)}
-.phlabel{position:absolute;right:14px;bottom:10px;font-size:12px;color:#fff;opacity:.85;text-shadow:0 1px 2px rgba(0,0,0,.4);z-index:1}
-.banner .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 45%,rgba(0,0,0,.35))}
-body.nophoto .banner{height:120px}
-body.nophoto .banner .photo,body.nophoto .banner .shade,body.nophoto .banner .phlabel{display:none}
-.head{position:relative;margin-top:-56px;display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap}
-.logo{width:112px;height:112px;border-radius:18px;background:var(--card);box-shadow:0 0 0 4px var(--paper),0 6px 18px rgba(0,0,0,.12);display:grid;place-items:center;flex:none}
-.logo span{width:88px;height:88px;border-radius:50%;background:var(--course);color:var(--course-ink);display:grid;place-items:center;font-family:var(--serif);font-size:34px;font-weight:600}
-.title{flex:1 1 320px;min-width:0;padding-top:68px}
-.title h1{font-family:var(--serif);font-weight:600;font-size:44px;line-height:1.02;margin:0;text-wrap:balance}
-.meta{display:flex;flex-wrap:wrap;gap:4px 14px;color:var(--muted);font-size:14px;margin-top:8px}
-.meta span+span::before{content:"·";margin-right:14px;color:var(--line)}
-.cta{font:inherit;font-weight:600;font-size:15px;border:0;border-radius:8px;background:var(--course);color:var(--course-ink);padding:14px 22px;cursor:pointer;margin-top:74px;text-decoration:none;display:inline-block}
-
-/* Tabs under the header: Tee times · Course info (each its own link) */
-.tabs{margin-top:22px;display:flex;gap:4px;border-bottom:1px solid var(--line)}
-.tabs a{font-size:15px;font-weight:600;color:var(--muted);text-decoration:none;padding:10px 4px;margin-right:20px;border-bottom:2px solid transparent;margin-bottom:-1px}
-.tabs a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--course)}
-.tabs a:hover{color:var(--ink)}
-.view[hidden]{display:none}
-.view#v-info section.blk:first-child{margin-top:28px}
-
-/* 2 · Booking */
-.booking > div{min-width:0}
-.booking{margin-top:32px;display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:24px;align-items:start}
-.panel{background:var(--card);border-radius:10px;box-shadow:var(--shadow)}
-.filters{padding:18px 18px 16px;display:flex;flex-direction:column;gap:16px}
-.dates{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:thin}
-.date{flex:none;width:76px;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 0;text-align:center;cursor:pointer;font:inherit;color:var(--ink)}
-.date small{display:block;font-size:12px;color:var(--muted)}
-.date b{display:block;font-size:20px;font-weight:600;line-height:1.2}
-.date em{display:block;font-style:normal;font-size:11.5px;color:var(--muted)}
-.date[aria-pressed="true"]{border-color:var(--course);background:var(--course-wash);box-shadow:inset 0 0 0 1px var(--course)}
-.row{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center}
-.lab{font-size:13px;color:var(--muted);margin-right:8px}
-.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
-.seg button{font:inherit;font-size:14px;font-weight:500;border:0;border-right:1px solid var(--line);background:var(--card);color:var(--soft);padding:8px 14px;cursor:pointer}
-.seg button:last-child{border-right:0}
-.seg button[aria-pressed="true"]{background:var(--course);color:var(--course-ink)}
-.part{margin-top:22px}
-.part h3{font-size:14px;font-weight:600;margin:0 0 10px;display:flex;gap:8px;align-items:baseline}
-.part h3 span{font-weight:400;color:var(--muted);font-size:13px}
-.times{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
-.tt{font:inherit;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:12px 14px;cursor:pointer;color:var(--ink);display:flex;flex-direction:column;gap:2px;transition:border-color .15s}
-.tt:hover{border-color:var(--course)}
-.tt b{font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
-.tt .p{font-size:14px;font-weight:600;color:var(--course)}
-.tt .s{font-size:12px;color:var(--muted)}
-.tt .s.few{color:var(--warn)}
-.tt[aria-pressed="true"]{border-color:var(--course);box-shadow:inset 0 0 0 1px var(--course);background:var(--course-wash)}
-.tt:disabled{opacity:.45;cursor:not-allowed}
-.summary{position:sticky;top:16px;padding:20px;display:flex;flex-direction:column;gap:12px}
-.summary h2{font-family:var(--serif);font-weight:600;font-size:24px;margin:0;line-height:1.1}
-.summary .when{color:var(--muted);font-size:14px;margin-top:-6px}
-.lines{display:flex;flex-direction:column;gap:6px;font-size:14px;font-variant-numeric:tabular-nums;border-top:1px solid var(--line);padding-top:12px}
-.lines div{display:flex;justify-content:space-between;gap:12px}
-.lines .tot{border-top:1px solid var(--line);padding-top:8px;font-weight:700;font-size:16px}
-.go{font:inherit;font-weight:600;font-size:15px;border:0;border-radius:8px;background:var(--course);color:var(--course-ink);padding:13px;cursor:pointer}
-.go:disabled{opacity:.45;cursor:not-allowed}
-.fine{font-size:12.5px;color:var(--muted)}
-.empty{color:var(--muted);font-size:14px}
-
-/* 3–5 · Information, gallery, facilities */
-section.blk{margin-top:56px}
-section.blk > h2{font-family:var(--serif);font-weight:600;font-size:30px;margin:0 0 4px;line-height:1.1}
-section.blk > p.sub{color:var(--muted);margin:0 0 18px}
-.info{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:20px}
-.about{padding:20px;font-size:15px;color:var(--soft)}
-.about p{margin:0;max-width:62ch}
-.facts{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border-radius:10px;overflow:hidden;box-shadow:var(--shadow);margin-top:16px}
-.facts div{background:var(--card);padding:14px 16px}
-.facts small{display:block;font-size:12.5px;color:var(--muted)}
-.facts b{font-weight:600}
-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
-th,td{text-align:left;padding:11px 18px;border-top:1px solid var(--line);font-size:14px}
-th{border-top:0;font-size:12.5px;color:var(--muted);font-weight:500}
-td:last-child,th:last-child{text-align:right}
-.chip{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;vertical-align:0;box-shadow:0 0 0 1px rgba(0,0,0,.15)}
-.gal{display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:180px 180px;gap:10px}
-.gal div{border-radius:10px;overflow:hidden;position:relative}
-.gal div:first-child{grid-row:1 / 3}
-.gal svg{width:100%;height:100%;display:block}
-.gal span{position:absolute;left:10px;bottom:8px;font-size:12px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5)}
-body.nophoto #gallery{display:none}
-.fac{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
-.fac div{background:var(--card);box-shadow:var(--shadow);border-radius:10px;padding:14px 16px;font-weight:500;display:flex;align-items:center;gap:10px}
-.fac div::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--course);flex:none}
-
-/* 6 · Footer */
-footer{margin-top:64px;border-top:1px solid var(--line);background:var(--card)}
-footer .in{padding-block:28px;display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:24px;font-size:14px}
-footer h4{font-size:13px;font-weight:600;margin:0 0 8px}
-footer p{margin:0 0 4px;color:var(--soft)}
-footer a{color:var(--soft);text-decoration-color:var(--line);text-underline-offset:3px;display:block;margin-bottom:4px}
-.powered{grid-column:1 / -1;border-top:1px solid var(--line);padding-top:16px;color:var(--muted);font-size:12.5px;display:flex;align-items:center;gap:8px}
-.powered svg{width:14px;height:14px}
-
-/* Phone: one column, summary becomes a bar at the bottom */
-.bar{display:none}
+:root{--bg:#EEEFEA;--paper:#FAFAF7;--card:#FFFFFF;--ink:#141814;--soft:#50554F;--muted:#686D67;--line:#E1E3DC;--acc:#173B2A;--acc-h:#0F2C1F;--acc-soft:#E6EEE8;--on-acc:#FFFFFF;--bad:#A3452F;--bad-soft:#FBEAE6;--r:12px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111211;--paper:#1A1C1A;--card:#222422;--ink:#EDEEEB;--soft:#C3C6C0;--muted:#A6AAA3;--line:#343734;--acc:#9CC8AE;--acc-h:#B6DCC5;--acc-soft:#22322A;--on-acc:#10170F;--bad:#EE9480;--bad-soft:#3A2220}}
+:root[data-theme="dark"]{--bg:#111211;--paper:#1A1C1A;--card:#222422;--ink:#EDEEEB;--soft:#C3C6C0;--muted:#A6AAA3;--line:#343734;--acc:#9CC8AE;--acc-h:#B6DCC5;--acc-soft:#22322A;--on-acc:#10170F;--bad:#EE9480;--bad-soft:#3A2220}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 "Libre Franklin",system-ui,sans-serif}
+h1,h2{font-family:"EB Garamond",Georgia,serif;font-weight:600;margin:0}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--acc);outline-offset:2px;border-radius:6px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.note{max-width:1180px;margin:0 auto;padding:16px 16px 0;color:var(--soft);font-size:13px}
+.pick{max-width:1180px;margin:10px auto 0;padding:0 16px;display:flex;gap:6px;flex-wrap:wrap}
+.pick button{min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:var(--card);cursor:pointer;font-weight:500}
+.pick button[aria-pressed="true"]{background:var(--acc);color:var(--on-acc);border-color:var(--acc)}
+.site{max-width:1180px;margin:12px auto 32px;background:var(--paper);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.top{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--card)}
+.top h1{font-size:22px;flex:1}
+.lnk{background:none;border:0;color:var(--acc);font-weight:600;cursor:pointer;min-height:44px;padding:0 4px;text-decoration:underline;text-underline-offset:3px}
+.notice{display:flex;gap:10px;align-items:flex-start;margin:14px 18px 0;padding:10px 14px;border-radius:var(--r);background:var(--acc-soft);font-size:14px}
+.notice p{margin:0;flex:1}.notice .more{display:none;margin-top:6px;color:var(--soft)}
+.notice.open .more{display:block}
+.wrap{padding:16px 18px 20px}
+.lab{display:block;font-size:13px;font-weight:600;color:var(--soft);margin:0 0 6px}
+.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--card)}
+.seg button{flex:1;min-height:44px;border:0;background:none;cursor:pointer;border-left:1px solid var(--line);font-weight:500}
+.seg button:first-child{border-left:0}
+.seg button[aria-pressed="true"]{background:var(--acc);color:var(--on-acc)}
+.field{margin-bottom:16px}
+.range{display:flex;gap:8px;align-items:center}
+.range input[type=range]{flex:1;accent-color:var(--acc);min-height:44px}
+.range output{min-width:66px;font-size:13px;color:var(--soft);text-align:right}
+select{min-height:44px;width:100%;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:0 10px}
+.count{font-size:13px;color:var(--soft);margin:0 0 10px}
+/* calendar */
+.cal{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:8px}
+.calh{display:flex;justify-content:space-between;align-items:center;font-weight:600;font-size:14px;padding:2px 4px 6px}
+.calh button{min-width:44px;min-height:44px;border:0;background:none;cursor:pointer;font-size:18px;color:var(--acc)}
+.calg{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}
+.calg span{font-size:11px;color:var(--muted);padding:4px 0}
+.calg button{min-height:40px;border:0;border-radius:999px;background:none;cursor:pointer}
+.calg button.off{color:var(--muted);opacity:.4;cursor:default;background:none}
+.calg button.off.soon{opacity:.55;text-decoration:line-through;text-decoration-color:transparent}
+.calg button:not(.off){background:var(--card);font-weight:500}
+.calnote ul{margin:2px 0 4px;padding-left:16px}.calnote p{margin:2px 0}
+.cinfo{margin:14px 18px 0;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r);background:var(--card);font-size:14px}
+.cinfo .alert{margin:0 0 10px;padding:8px 10px;border-radius:8px;background:var(--acc-soft);display:flex;gap:8px;align-items:center}
+.cinfo .alert[hidden]{display:none}
+.adot{width:8px;height:8px;border-radius:50%;background:#B7791F;flex:none}
+.crow{display:flex;flex-wrap:wrap;gap:6px 20px}
+.crow a{display:inline-flex;gap:8px;align-items:center;min-height:44px;color:var(--ink);text-decoration:none}
+.crow a svg{color:var(--acc);flex:none}.crow a b{font-weight:600;margin-right:4px}
+.crow a:hover span{text-decoration:underline}
+.cnote{margin:6px 0 0;color:var(--soft)}.cinfo .more{display:none;margin:6px 0 0;color:var(--soft)}.cinfo.open .more{display:block}
+.calnote{font-size:12.5px;color:var(--soft);margin:6px 4px 2px}.calnote .lnk{min-height:32px;padding:0;font-size:12.5px}
+.calg button[aria-pressed="true"]{background:var(--acc);color:var(--on-acc);font-weight:600}
+/* cards A */
+.grp h2{font-size:20px;margin:6px 0 10px}
+.grp h2 small{font-family:"Libre Franklin";font-size:13px;color:var(--muted);font-weight:400;margin-left:8px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:18px}
+.tc{border:1px solid var(--line);border-radius:var(--r);background:var(--card);cursor:pointer;text-align:left;padding:0;overflow:hidden;min-height:44px}
+.tc:hover{border-color:var(--acc)}
+.tc[aria-pressed="true"]{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc)}
+.tc .t{display:block;padding:12px 12px 6px;font-size:22px;font-weight:600}
+.tc .c{display:block;padding:0 12px 10px;font-size:12.5px;color:var(--muted)}
+.tc .b{display:flex;justify-content:space-between;padding:8px 12px;background:var(--acc-soft);font-size:12px;color:var(--soft)}
+.tc .b b{color:var(--ink);font-size:14px}
+/* rows B */
+.strip{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+.strip button{flex:none;width:58px;min-height:62px;border:1px solid var(--line);border-radius:10px;background:var(--card);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;color:var(--soft)}
+.strip button b{font-size:18px;color:var(--ink)}
+.strip button[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
+.strip button[aria-pressed="true"] b{color:var(--on-acc)}
+.frow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}
+.frow select{font-size:14px}
+.rows{border:1px solid var(--line);border-radius:var(--r);background:var(--card);overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;width:100%;min-height:60px;padding:10px 14px;border:0;border-top:1px solid var(--line);background:none;cursor:pointer;text-align:left}
+.row:first-child{border-top:0}
+.row[aria-pressed="true"]{background:var(--acc-soft)}
+.row .t{font-size:18px;font-weight:600;width:84px}
+.row .m{flex:1;font-size:13px;color:var(--soft)}
+.row .p{font-weight:700}
+.sec{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:10px 14px;background:var(--paper);border-top:1px solid var(--line)}
+.sec:first-child{border-top:0}
+/* guided C */
+.step{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
+.step h2{font-size:22px;margin-bottom:12px}
+.step h2 span{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:999px;background:var(--acc);color:var(--on-acc);font:600 15px "Libre Franklin";margin-right:8px;vertical-align:3px}
+.big{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.big button{min-height:64px;border:1px solid var(--line);border-radius:12px;background:var(--paper);cursor:pointer;font-size:17px;font-weight:600}
+.big button small{display:block;font-size:13px;font-weight:400;color:var(--muted)}
+.big button[aria-pressed="true"]{background:var(--acc);color:var(--on-acc);border-color:var(--acc)}
+.big button[aria-pressed="true"] small{color:var(--on-acc)}
+.big3{grid-template-columns:repeat(3,1fr)}
+.stepper{display:flex;align-items:center;gap:16px}
+.stepper button{width:56px;height:56px;border-radius:999px;border:1px solid var(--line);background:var(--paper);font-size:24px;cursor:pointer}
+.stepper output{font-size:28px;font-weight:600;min-width:120px;text-align:center}
+/* layout */
+.a-grid{display:grid;grid-template-columns:280px minmax(0,1fr);gap:20px}
+.a-side{position:sticky;top:12px;align-self:start}
+.has-sum .a-grid{grid-template-columns:260px minmax(0,1fr) 320px}
+.sum{display:none;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;align-self:start;position:sticky;top:12px}
+.has-sum .sum{display:block}
+.sum h2{font-size:22px}
+.sum .when{color:var(--soft);font-size:14px;margin:2px 0 12px}
+.li{display:flex;justify-content:space-between;font-size:14px;padding:4px 0}
+.li.tot{border-top:1px solid var(--line);margin-top:6px;padding-top:8px;font-weight:700}
+.pay{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.pay div{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--paper)}
+.pay div small{display:block;color:var(--muted);font-size:12px}
+.pay div b{font-size:18px}
+.pol{font-size:13px;color:var(--soft);margin:8px 0}
+.inp{margin-bottom:10px}
+.inp input{width:100%;min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--paper);padding:0 12px}
+.inp input[aria-invalid="true"]{border-color:var(--bad);border-width:2px;background:var(--bad-soft)}
+.err{color:var(--bad);font-size:13px;margin-top:4px}
+.btn{width:100%;min-height:50px;border:0;border-radius:12px;background:var(--acc);color:var(--on-acc);font-weight:700;font-size:16px;cursor:pointer}
+.btn:hover{background:var(--acc-h)}
+.close{float:right;min-width:44px;min-height:44px;border:0;background:none;cursor:pointer;font-size:20px;color:var(--soft)}
+.empty{text-align:center;padding:28px 16px;border:1px dashed var(--line);border-radius:var(--r);background:var(--card)}
+.empty p{margin:4px 0 12px;color:var(--soft)}
+.empty .opts{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.chip{min-height:44px;padding:0 14px;border:1px solid var(--acc);border-radius:999px;background:none;color:var(--acc);font-weight:600;cursor:pointer}
+.chip.fill{background:var(--acc);color:var(--on-acc)}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:10px;font-size:14px;z-index:20}
+.filterbtn{display:none}
+.cinfo[hidden]{display:none!important}
+.bkpage.bk1{max-width:600px}.bk1 h2{margin:2px 0 10px}.bk1 h3{margin:16px 0 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px 16px;margin:0 0 12px}
+.bk1 .recap{margin:0 0 12px}.bk1 .recap b{font-size:17px}
+.bk1 fieldset.who,.bk1 div.who.done{margin:0 0 12px}
+.bk1 .inp{margin-bottom:10px}
+.cartrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;border:0;padding:0;margin:6px 0 14px;font-size:14px;color:var(--soft)}
+.cartrow legend{float:left;margin-right:4px}.cartrow .lab{margin:0 4px 0 0;color:var(--ink)}
+.pill{position:relative;display:inline-flex}.pill input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.pill span{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border:1px solid var(--line);border-radius:999px;font-size:14px;color:var(--ink);background:var(--card)}
+.pill input:checked+span{border-color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc);background:var(--acc-soft);font-weight:600}
+.pill input:focus-visible+span{outline:3px solid var(--acc);outline-offset:2px}
+.tots .li.tot{font-size:17px}.tots .li.sub{font-size:13.5px;color:var(--soft);padding:2px 0}
+.tots .promo{font-size:13px;min-height:36px;margin-top:4px;padding:0}
+.pol.small{font-size:12.5px;margin:0 0 12px}
+.bookbar .hint{margin:0 0 6px;font-size:13px;color:var(--soft);text-align:center}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.bookbtn{min-height:60px;font-size:19px;border-radius:var(--r)}
+@media (max-width:860px){.bookbar{position:sticky;bottom:0;margin:0 -16px;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:var(--paper);border-top:1px solid var(--line);z-index:5}}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+fieldset.who{border:1px solid var(--line);border-radius:var(--r);background:var(--card);padding:0;margin:0 0 18px;overflow:hidden}
+.who .opt{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;cursor:pointer;min-height:44px}
+.who .opt+.opt{border-top:1px solid var(--line)}
+.who .opt.on{background:var(--acc-soft)}
+.who .opt input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--acc);flex:none}
+.who .opt b{display:block;font-size:15px}.who .opt small{display:block;font-size:13px;color:var(--soft);margin-top:2px}
+.whoform{padding:4px 16px 14px 48px;background:var(--acc-soft)}
+@media (max-width:480px){.whoform{padding-left:16px}}
+div.who.done{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:var(--r);background:var(--card);padding:6px 16px;margin:0 0 18px;font-size:14px}
+.feed summary{cursor:pointer;list-style:none;min-height:32px;align-items:center}.feed summary::-webkit-details-marker{display:none}
+.feed .inf{display:inline-grid;place-items:center;width:16px;height:16px;border:1px solid var(--muted);border-radius:999px;font-size:11px;font-weight:700;color:var(--soft);margin-left:4px;vertical-align:1px}
+.feed[open] .inf{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
+.feed p{margin:0 0 4px;font-size:13px;color:var(--soft)}
+.mp{margin:0 0 4px;font-size:13px;color:var(--soft)}
+.top{background:var(--band,var(--card));border-bottom-color:transparent}
+.top h1{color:var(--on-band,var(--ink))}.top #signin{color:var(--on-band,var(--acc))}
+.top #signin:focus-visible{outline-color:var(--on-band,var(--acc))}
+.bkpage{max-width:900px;margin:0 auto}.bkpage.si{max-width:440px}
+.bkpage h2{font-size:28px;margin:6px 0 12px}.bkpage h3{font-size:15px;margin:0 0 10px;font-family:"Libre Franklin";font-weight:700}
+.back{min-height:44px;padding:0}
+.recap{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--line);border-radius:var(--r);background:var(--card);margin-bottom:16px}
+.recap b{display:block;font-size:24px}.recap span{display:block;font-size:14px;color:var(--soft)}
+.bkcols{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+.bkpage .sum{display:block;position:static}
+@media (max-width:860px){.bkcols{grid-template-columns:1fr}.bkpage .sum{position:static;max-height:none;box-shadow:none;border-radius:16px}}
+.rnd{display:grid;grid-template-columns:1fr 1fr;gap:6px}.rnd button{min-height:52px;border:1px solid var(--line);border-radius:10px;background:var(--card);cursor:pointer;text-align:left;padding:6px 10px}.rnd button b{display:block;font-size:14px}.rnd button small{display:block;font-size:11.5px;color:var(--muted)}.rnd button[aria-pressed="true"]{border-color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc);background:var(--acc-soft)}
+.demo{max-width:1180px;margin:8px auto 0;padding:0 16px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--soft)}
+.demo button{min-height:36px;padding:0 12px;border-radius:999px;border:1px dashed var(--line);background:var(--card);cursor:pointer;font-size:12.5px}
+.demo button[aria-pressed="true"]{border-style:solid;border-color:var(--acc);color:var(--acc);font-weight:600}
+.fixed{font-size:14px;padding:8px 12px;border-radius:10px;background:var(--acc-soft);margin:0 0 10px}
+.a-side .todrow{grid-template-columns:1fr;gap:6px}
+.a-side .todrow button{display:flex;align-items:center;gap:10px;text-align:left;min-height:44px;padding:0 12px}
+.a-side .todrow button small{display:inline;margin-left:auto;font-size:12px}
+.a-side .tod .ck{position:static;width:18px;height:18px;border:1.5px solid var(--line);border-radius:5px;display:inline-grid;place-items:center;font-size:12px;flex:none}
+.a-side .tod.on .ck{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
+.mbar{display:none}
+.shead,.sdone{display:none}
+.stepper.sm{gap:10px}.stepper.sm button{width:44px;height:44px;font-size:20px}.stepper.sm output{font-size:17px;min-width:90px}
+.todrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.todrow button{min-height:52px;border:1px solid var(--line);border-radius:10px;background:var(--card);cursor:pointer;font-weight:600;font-size:14px;position:relative}
+.todrow button small{display:block;font-size:11.5px;font-weight:400;color:var(--muted)}
+.tod{position:relative}.tod .ck{position:absolute;top:6px;right:8px;font-size:13px}
+.todrow button.on{background:var(--acc-soft);border-color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc)}
+.big button.tod.on{background:var(--acc);color:var(--on-acc)}
 @media (max-width:860px){
-  .booking{grid-template-columns:minmax(0,1fr)}
-  .summary-wrap{display:none}
-  .bar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--card);box-shadow:0 -1px 0 var(--line),0 -6px 18px rgba(0,0,0,.06);
-    padding:12px max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));gap:12px;align-items:center}
-  .bar div{flex:1;min-width:0;font-size:13px;color:var(--muted)}
-  .bar div b{display:block;color:var(--ink);font-size:16px}
-  .bar .go{padding:12px 18px}
-  .info{grid-template-columns:1fr}
-  .gal{grid-template-columns:1fr 1fr;grid-template-rows:160px 120px 120px}
-  .gal div:first-child{grid-column:1 / 3;grid-row:auto}
-  footer .in{grid-template-columns:1fr}
-  body{padding-bottom:84px}
+ .a-grid,.has-sum .a-grid{grid-template-columns:1fr}
+ .a-side{display:none;position:fixed;inset:auto 0 0 0;max-height:88vh;overflow:auto;background:var(--paper);padding:16px;border-radius:18px 18px 0 0;z-index:12;box-shadow:0 -10px 30px rgba(0,0,0,.25)}
+ .a-side.open{display:block}
+ .shead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.shead h2{font-size:22px}
+ .sdone{display:block;margin-top:12px;position:sticky;bottom:0}
+ .mbar{display:flex;align-items:center;justify-content:space-between;gap:10px;position:sticky;top:0;z-index:5;background:var(--paper);padding:8px 0 10px;margin-bottom:6px;font-size:14px;border-bottom:1px solid var(--line)}
+ .filterbtn{display:inline-flex}
+ .sum{position:fixed;left:0;right:0;bottom:0;top:auto;max-height:85vh;overflow:auto;border-radius:18px 18px 0 0;z-index:10;box-shadow:0 -10px 30px rgba(0,0,0,.25)}
+ .frow{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .row .m{font-size:12px}
+ .big3{grid-template-columns:1fr}
 }
-@media (max-width:520px){
-  .banner{height:200px}
-  .head{margin-top:-44px;gap:14px}
-  .title{padding-top:0;flex-basis:100%}
-  .cta{margin-top:0}
-  .logo{width:84px;height:84px;border-radius:14px}.logo span{width:66px;height:66px;font-size:26px}
-  .title h1{font-size:32px}
-  .cta{width:100%;text-align:center}
-}
-@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
-html{scroll-behavior:smooth}
-</style>
-
-<div class="ctl"><div class="in">
-  <b>Golfer booking page mockup · example course and prices · grey-green panels stand in for the course's own photos</b>
-  <span class="sw" role="group" aria-label="Course colour">Course colour
-    <button type="button" data-c="#1F4D3A" style="background:#1F4D3A" aria-label="Forest" aria-pressed="true"></button>
-    <button type="button" data-c="#7A2E2E" style="background:#7A2E2E" aria-label="Burgundy" aria-pressed="false"></button>
-    <button type="button" data-c="#1E3A5F" style="background:#1E3A5F" aria-label="Navy" aria-pressed="false"></button>
-    <button type="button" data-c="#8A6A2F" style="background:#8A6A2F" aria-label="Gold" aria-pressed="false"></button>
-  </span>
-  <span class="sw">Photos <button type="button" class="tg" id="photos" aria-pressed="true" style="width:auto;height:auto;border-radius:999px;box-shadow:none">Course has photos</button></span>
-</div></div>
-
-<!-- 1 · Header -->
-<header>
-  <div class="banner" aria-label="Course banner photo">
-    <div class="photo ph-banner" aria-hidden="true"></div><span class="phlabel">The course's banner photo</span>
-    <span class="shade"></span>
+</style></head>
+<body>
+<p class="note">Golfer booking page, option A (Cam picked it, Nov 18). The filters live in a left sidebar: calendar, players stepper, time of day (choose any), holes, cart. Only matching times show. Picking a time opens its own Book page, with the total split into pay now and pay at the course. Sign in uses a 6-digit code (try 123456). The course picks Light or Dark and one accent in Settings; Yellow is a deep gold so white text stays readable. No red: red means a problem. On a phone the filters fold into a top bar with a Filters sheet. The course alert line shows only while the course has one posted. It ends by itself after that day&rsquo;s last tee time, unless the course picked a later end (&ldquo;until Sunday&rdquo;). Example data only.</p>
+<div class="demo scr" role="group" aria-label="Mockup only: screens"><span>Screens:</span><button type="button" data-scr-top="times" aria-pressed="true">Tee times</button><button type="button" data-scr-top="book" aria-pressed="false">Book</button><button type="button" data-scr-top="bookin" aria-pressed="false">Book · signed in</button><button type="button" data-scr-top="signin" aria-pressed="false">Sign in</button></div>
+<div class="demo" role="group" aria-label="Mockup only: course look"><span>Mockup only &middot; course look:</span><button type="button" data-look="light" aria-pressed="true">Light</button><button type="button" data-look="dark" aria-pressed="false">Dark</button><span style="margin-left:6px">Accent:</span><button type="button" data-ac="black" aria-pressed="false">Black</button><button type="button" data-ac="green" aria-pressed="true">Green</button><button type="button" data-ac="blue" aria-pressed="false">Blue</button><button type="button" data-ac="yellow" aria-pressed="false">Yellow (gold)</button></div>
+<div class="demo" role="group" aria-label="Mockup only: promo codes"><span>Mockup only &middot; promo codes:</span><button type="button" data-pr="1" aria-pressed="true">Course has a live code</button><button type="button" data-pr="0" aria-pressed="false">None live</button></div>
+<div class="demo" role="group" aria-label="Mockup only: course alert"><span>Mockup only · course alert:</span><button type="button" data-al="1" aria-pressed="true">Alert posted</button><button type="button" data-al="0" aria-pressed="false">No alert</button></div>
+<div class="demo" role="group" aria-label="Mockup only: course cart rules"><span>Mockup only · this course&rsquo;s carts:</span><button type="button" data-cv="0" aria-pressed="true">Walk or ride any time</button><button type="button" data-cv="1" aria-pressed="false">Depends on the time</button></div>
+<div class="site" id="site">
+ <header class="top"><h1>Maple Run Golf Course</h1><button class="lnk" type="button" id="signin">Sign in</button></header>
+ <section class="cinfo" id="notice" aria-label="Course information">
+  <p class="alert" id="alertLine"><span class="adot" aria-hidden="true"></span><b>Today:</b> Cart path only on holes 1–9 until noon.</p>
+  <div class="crow">
+   <a href="https://maps.example.com/?q=120+Maple+Run+Rd" target="_blank" rel="noopener"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg><span><b>Directions</b> 120 Maple Run Rd, Riverton, NY</span></a>
+   <a href="https://maple-run.example.com" target="_blank" rel="noopener"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg><span><b>Website</b> maple-run.example.com</span></a>
+   <a href="tel:+15550102200"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg><span><b>Call</b> (555) 010-2200</span></a>
   </div>
-  <div class="in head">
-    <div class="logo"><span>PH</span></div>
-    <div class="title">
-      <h1>Pine Hollow Golf Club</h1>
-      <div class="meta"><span>Saratoga Springs, NY</span><span>Public</span><span>18 holes</span><span>Par 72</span><span>Walking any time</span></div>
-    </div>
-    <a class="cta" href="#tee-times">Find a tee time</a>
-  </div>
-</header>
-
-<main class="in">
-  <nav class="tabs" aria-label="Course page"><a href="#tee-times" id="t-times" aria-current="page">Tee times</a><a href="#course-info" id="t-info">Course info</a></nav>
-  <div class="view" id="v-times">
-  <!-- 2 · Booking -->
-  <div class="booking" id="book">
-    <div>
-      <div class="panel filters">
-        <div class="dates" id="dates" role="group" aria-label="Date"></div>
-        <div class="row">
-          <span><span class="lab">Players</span><span class="seg" id="players" role="group" aria-label="Players"><button type="button">1</button><button type="button" aria-pressed="true">2</button><button type="button">3</button><button type="button">4</button></span></span>
-          <span><span class="lab">Holes</span><span class="seg" id="holes" role="group" aria-label="Holes"><button type="button">9</button><button type="button" aria-pressed="true">18</button></span></span>
-          <span><span class="lab">Getting around</span><span class="seg" id="ride" role="group" aria-label="Walking or riding"><button type="button" aria-pressed="true">Walking</button><button type="button">Riding</button></span></span>
-        </div>
-      </div>
-      <div id="slots"></div>
-    </div>
-    <aside class="summary-wrap"><div class="panel summary" id="summary"></div></aside>
-  </div>
-
-  </div>
-  <div class="view" id="v-info" hidden>
-  <!-- 3 · Course information -->
-  <section class="blk" id="info">
-    <h2>Course information</h2>
-    <p class="sub">What to know before your round.</p>
-    <div class="info">
-      <div>
-        <div class="panel about"><p>A walkable parkland course set among old pines on the edge of Saratoga Springs. Wide fairways off the tee, quick bentgrass greens and a closing stretch along the creek that decides most matches.</p></div>
-        <div class="facts">
-          <div><small>Course</small><b>18 holes · Par 72</b></div>
-          <div><small>Walking</small><b>Walking any time</b></div>
-          <div><small>Carts</small><b>Optional, $22 a rider</b></div>
-          <div><small>Location</small><b>Saratoga Springs, NY</b></div>
-        </div>
-      </div>
-      <div class="panel" style="overflow:hidden">
-        <table><thead><tr><th>Tee</th><th>Yards</th></tr></thead><tbody>
-          <tr><td><span class="chip" style="background:#1A1A1A"></span>Black</td><td>6,840</td></tr>
-          <tr><td><span class="chip" style="background:#2D5DA8"></span>Blue</td><td>6,420</td></tr>
-          <tr><td><span class="chip" style="background:#F2F2EE"></span>White</td><td>6,010</td></tr>
-          <tr><td><span class="chip" style="background:#B8322E"></span>Red</td><td>5,230</td></tr>
-        </tbody></table>
-      </div>
-    </div>
-  </section>
-
-  <!-- 4 · Gallery (optional) -->
-  <section class="blk" id="gallery">
-    <h2>Photos</h2>
-    <p class="sub">From the course.</p>
-    <div class="gal" id="gal"></div>
-  </section>
-
-  <!-- 5 · Facilities -->
-  <section class="blk">
-    <h2>Facilities</h2>
-    <p class="sub">At the course.</p>
-    <div class="fac"><div>Driving range</div><div>Putting green</div><div>Pro shop</div><div>Push carts</div><div>Snack bar</div><div>Locker rooms</div></div>
-  </section>
-  </div>
-</main>
-
-<!-- 6 · Footer -->
-<footer><div class="in">
-  <div><h4>Pine Hollow Golf Club</h4><p>412 Hollow Road, Saratoga Springs, NY 12866</p><p>(518) 555-0142</p><a href="#" onclick="return false">Get directions</a><a href="#" onclick="return false">pinehollowgolf.com</a></div>
-  <div><h4>Before you book</h4><a href="#" onclick="return false">Cancellation policy</a><a href="#" onclick="return false">Manage a booking</a></div>
-  <div><h4>Legal</h4><a href="#" onclick="return false">Privacy</a><a href="#" onclick="return false">Terms</a></div>
-  <div class="powered"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="5" r="2"/><path d="M12 8v6l-3 6M12 14l3 6M8 11l4-1 5-3"/></svg>Booking powered by GreenReserve</div>
-</div></footer>
-
-<div class="bar" id="bar"><div id="barTxt">Pick a tee time</div><button class="go" type="button" id="barGo" disabled>Continue</button></div>
-
+  <p class="cnote">Collared shirts please. Check in at the pro shop 15 minutes before your time. <button class="lnk" type="button" id="moreBtn" aria-expanded="false" aria-controls="moreTxt">More</button></p>
+  <p class="more" id="moreTxt">Carts are assigned at check-in. Walking is allowed after 1 PM on weekends. Range opens at 7 AM; buckets are sold in the pro shop. Frost delays are posted here by 7 AM.</p>
+ </section>
+ <main class="wrap" id="app"></main>
+</div>
+<div id="live" class="sr" aria-live="polite"></div>
 <script>
 (function(){
-  const root=document.documentElement, body=document.body;
-  // Course colour + photos toggles (mockup controls)
-  document.querySelectorAll('.sw button[data-c]').forEach(b=>b.addEventListener('click',()=>{
-    root.style.setProperty('--course',b.dataset.c);
-    const h=b.dataset.c, r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),bl=parseInt(h.slice(5,7),16);
-    root.style.setProperty('--course-wash',`rgba(${r},${g},${bl},.08)`);
-    document.querySelectorAll('.sw button[data-c]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
-  }));
-  const pb=document.getElementById('photos');
-  pb.addEventListener('click',()=>{const on=pb.getAttribute('aria-pressed')!=='true';pb.setAttribute('aria-pressed',String(on));pb.textContent=on?'Course has photos':'No photos yet';body.classList.toggle('nophoto',!on);});
-
-  // Gallery tiles: simple drawn scenes standing in for the course's own photos.
-  const scenes=[['#CFE3EC','#5E9160','#3F6F45','Hole 7 from the tee'],['#E8DCC4','#7FA36A','#56804A','The 18th green'],['#D9E6EE','#6B8F5C','#4A7444','Clubhouse'],['#F0E1CF','#8AA86E','#5D8350','Range'],['#DCE8E2','#5E8A63','#3C6544','Creek on 16']];
-  document.getElementById('gal').innerHTML=scenes.map(([sky,a,b,cap],k)=>`<div style="background:radial-gradient(70% 60% at ${30+k*12}% 85%, ${a}, transparent 72%),radial-gradient(60% 50% at ${80-k*10}% 70%, ${b}, transparent 70%),linear-gradient(180deg,${sky} 0%,${sky} 35%,${a} 62%,${b} 100%)"><span>${cap}</span></div>`).join('');
-
-  // Booking: example times and prices.
-  const st={day:0,players:2,holes:18,ride:'Walking',pick:null};
-  const base=new Date(2026,10,12);
-  const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  const days=[...Array(10)].map((_,i)=>{const d=new Date(base);d.setDate(d.getDate()+i);return d;});
-  const fromPrice=d=>(d.getDay()===0||d.getDay()===6)?58:45;
-  function renderDates(){document.getElementById('dates').innerHTML=days.map((d,i)=>`<button type="button" class="date" data-i="${i}" aria-pressed="${i===st.day}"><small>${i===0?'Today':DOW[d.getDay()]}</small><b>${d.getDate()}</b><em>from $${fromPrice(d)}</em></button>`).join('');}
-  document.getElementById('dates').addEventListener('click',e=>{const b=e.target.closest('.date');if(!b)return;st.day=+b.dataset.i;st.pick=null;render();});
-  function seg(id,key,parse){document.getElementById(id).addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;st[key]=parse(b.textContent);st.pick=null;
-    document.querySelectorAll('#'+id+' button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));render();});}
-  seg('players','players',Number); seg('holes','holes',Number); seg('ride','ride',s=>s);
-
-  const PARTS=[['Morning','before 11'],['Midday','11 to 3'],['Twilight','after 3, lower rate']];
-  function slotsFor(i){
-    const d=days[i], wk=d.getDay()===0||d.getDay()===6, out=[];
-    const times=['7:00','7:10','7:20','7:40','8:00','8:30','9:10','9:50','10:30','11:00','11:40','12:20','1:00','1:50','2:40','3:30','4:10','4:50'];
-    times.forEach((t,k)=>{const h=+t.split(':')[0];const hr=h<7?h+12:h;const part=hr<11?0:hr<15?1:2;
-      const left=((k*7+i*3)%5); const spots=left===0?0:left;
-      let p=(wk?58:45)+(part===2?-15:0); if(st.holes===9)p=Math.round(p*0.6);
-      out.push({t:t+(hr<12?' AM':' PM'),part,spots,price:p});});
-    return out;
-  }
-  const cart=()=>st.ride==='Riding'?22:0;
-  function render(){
-    renderDates();
-    const list=slotsFor(st.day);
-    document.getElementById('slots').innerHTML=PARTS.map(([name,hint],pi)=>{
-      const its=list.filter(x=>x.part===pi);
-      return `<div class="part"><h3>${name} <span>${hint}</span></h3><div class="times">${its.map((x,k)=>{const full=x.spots<st.players;const id=pi+'-'+k;
-        return `<button type="button" class="tt" data-id="${id}" ${full?'disabled':''} aria-pressed="${st.pick&&st.pick.id===id}"><b>${x.t}</b><span class="p">$${x.price + cart()} a player</span><span class="s ${x.spots<=2&&!full?'few':''}">${full?(x.spots?`Only ${x.spots} left`:'Full'):x.spots===4?'4 spots open':`${x.spots} left`}</span></button>`;}).join('')}</div></div>`;
-    }).join('');
-    document.querySelectorAll('.tt').forEach(b=>b.addEventListener('click',()=>{const [pi,k]=b.dataset.id.split('-').map(Number);const x=list.filter(y=>y.part===pi)[k];st.pick={...x,id:b.dataset.id};render();}));
-    renderSummary();
-  }
-  function money(n){return '$'+n.toFixed(2);}
-  function renderSummary(){
-    const s=document.getElementById('summary'), d=days[st.day];
-    const dateTxt=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
-    if(!st.pick){s.innerHTML=`<h2>Your round</h2><div class="when">${dateTxt}</div><p class="empty">Pick a tee time to see the total.</p><button class="go" type="button" disabled>Continue</button>`;
-      document.getElementById('barTxt').innerHTML='Pick a tee time';document.getElementById('barGo').disabled=true;return;}
-    const n=st.players, green=st.pick.price*n, c=cart()*n, fee=1.5*n, tot=green+c+fee;
-    s.innerHTML=`<h2>${st.pick.t}</h2><div class="when">${dateTxt} · ${st.holes} holes · ${n} ${n===1?'player':'players'}</div>
-      <div class="lines"><div><span>Green fee × ${n}</span><span>${money(green)}</span></div>${c?`<div><span>Cart × ${n}</span><span>${money(c)}</span></div>`:''}<div><span>Service fee × ${n}</span><span>${money(fee)}</span></div><div class="tot"><span>Total</span><span>${money(tot)}</span></div></div>
-      <button class="go" type="button">Continue</button><p class="fine">Nothing is charged now. Free cancellation until 24 hours before.</p>`;
-    document.getElementById('barTxt').innerHTML=`<b>${st.pick.t} · ${money(tot)}</b>${n} ${n===1?'player':'players'} · ${st.holes} holes`;
-    document.getElementById('barGo').disabled=false;
-  }
-  render();
-  // Tabs: each view has its own link (#tee-times / #course-info); the live page uses its own URL per tab.
-  function showTab(){const info=location.hash==='#course-info';
-    document.getElementById('v-times').hidden=info;document.getElementById('v-info').hidden=!info;
-    document.getElementById('t-times').setAttribute('aria-current',info?'false':'page');document.getElementById('t-info').setAttribute('aria-current',info?'page':'false');
-    document.getElementById('bar').style.visibility=info?'hidden':'visible';}
-  window.addEventListener('hashchange',showTab);showTab();
+const $=s=>document.querySelector(s);
+const DAYS=[];const base=new Date(2026,10,19);
+for(let i=0;i<10;i++){const d=new Date(base);d.setDate(base.getDate()+i);DAYS.push(d);}
+const dn=d=>d.toLocaleDateString('en-US',{weekday:'short'}),dd=d=>d.getDate(),dl=d=>d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+function times(dayIdx){
+ if(dayIdx===1||CLOSED[dayIdx])return [];// Friday sold out → shows the helpful empty state
+ const out=[];const start=7*60,end=16*60;
+ for(let m=start;m<=end;m+=10){const seed=(m+dayIdx*37)%7;if(seed===3)continue;
+  const nine=m<9*60&&m%20===0;const tw=m>=15*60;
+  out.push({m,round:nine?(m%40===0?'f9':'b9'):'18',holes:nine?9:18,course:RND[nine?(m%40===0?'f9':'b9'):'18'].n,open:nine?2+((m/20)%3):1+((m/10*3+dayIdx)%4),price:tw?36:(nine?28:52),mode:!S.cartVaries?'both':(m<8*60?'ride':(m%30===10?'walk':'both'))});}
+ return out;}
+const S={promo:true,who:null,bsi:'email',bsEmail:'',f:{nm:'',em:'',ph:''},screen:'times',si:'email',siEmail:'',v:'A',day:0,players:2,holes:'any',cart:'any',maxp:80,from:7,to:17,tod:['Morning','Mid day','Late day'],sel:null,sumOpen:false,fOpen:false,cartVaries:false,ride:false,win:7,member:false};
+const CLOSED={5:'Closed for aeration'};
+const RND={'18':{n:'18 holes',h:'Holes 1–18'},f9:{n:'Front 9',h:'Holes 1–9'},b9:{n:'Back 9',h:'Holes 10–18'}};const SOLD=['18','f9','b9'];
+const fmt=m=>{let h=Math.floor(m/60),mm=String(m%60).padStart(2,'0');const ap=h>=12?'PM':'AM';h=h%12||12;return h+':'+mm+' '+ap};
+const part=m=>m<11*60?'Morning':m<14*60?'Mid day':'Late day';
+function fits(t){return t.open>=(S.players==='any'?1:S.players)&&(S.holes==='any'||t.round===String(S.holes))&&(!S.cartVaries||S.cart==='any'||t.mode==='both'||t.mode===S.cart)&&t.m>=S.from*60&&t.m<=S.to*60&&S.tod.includes(part(t.m));}
+function list(){return times(S.day).filter(fits);}
+function say(m){$('#live').textContent=m;}
+function toast(m){const t=document.createElement('div');t.className='toast';t.setAttribute('role','status');t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2600);}
+const segBtns=(name,vals,cur)=>'<div class="seg" role="group" aria-label="'+name+'">'+vals.map(v=>'<button type="button" data-k="'+name+'" data-val="'+v[0]+'" aria-pressed="'+(String(cur)===String(v[0]))+'">'+v[1]+'</button>').join('')+'</div>';
+const TOD=[['Morning','Morning','7–11 AM'],['Mid day','Mid day','11 AM–2 PM'],['Late day','Afternoon','2–5 PM']];
+function todGroup(label,big){return '<div class="field" style="margin-top:'+(big?'12':'0')+'px"><span class="lab" id="todl'+(big?'c':'b')+'">'+label+'</span><div class="'+(big?'big big3':'todrow')+'" role="group" aria-labelledby="todl'+(big?'c':'b')+'">'+TOD.map(x=>{const on=S.tod.includes(x[0]);return '<button type="button" class="tod'+(on?' on':'')+'" data-tod="'+x[0]+'" aria-pressed="'+on+'"><span class="ck" aria-hidden="true">'+(on?'✓':'')+'</span>'+x[1]+'<small>'+x[2]+'</small></button>'}).join('')+'</div></div>';}
+function calendar(){let h='<div class="cal"><div class="calh"><button type="button" aria-label="Previous month">‹</button><span>November 2026</span><button type="button" aria-label="Next month">›</button></div><div class="calg">'+['S','M','T','W','T','F','S'].map(x=>'<span aria-hidden="true">'+x+'</span>').join('');
+ const first=new Date(2026,10,1).getDay();for(let i=0;i<first;i++)h+='<span></span>';
+ for(let d=1;d<=30;d++){const idx=d-19;let why='';if(idx<0)why='Past';else if(CLOSED[idx])why=CLOSED[idx];else if(idx>S.win)why='Opens Nov '+(d-S.win);const ok=!why;h+='<button type="button" '+(ok?'data-day="'+idx+'"':'aria-disabled="true" class="off'+(idx>=0?' soon':'')+'" title="'+why+'"')+' aria-pressed="'+(idx===S.day)+'" aria-label="November '+d+(ok?'':', '+why)+'">'+d+'</button>';}
+ h+='</div><div class="calnote"><p><b>How far ahead you can book</b></p><ul><li>Everyone: 7 days</li><li>Residents (with a resident card): 9 days</li><li>Members: 9 days</li></ul><p>'+(S.member?'Signed in as a member · showing '+S.win+' days.':'Showing 7 days. <button type="button" class="lnk" data-act="member">Sign in</button> to see your longer window.')+'</p></div><div>';
+ return h+'</div></div>';}
+function filters(){const n=S.players;return '<div class="field"><span class="lab">Date</span>'+calendar()+'</div>'+
+ '<div class="field"><span class="lab" id="pl">Players</span><div class="stepper sm" role="group" aria-labelledby="pl"><button type="button" data-act="minus" aria-label="One fewer player">−</button><output aria-live="polite">'+n+(n===1?' player':' players')+'</output><button type="button" data-act="plus" aria-label="One more player">+</button></div></div>'+
+ todGroup('Time of day · choose any')+
+ (SOLD.length>1?'<div class="field"><span class="lab" id="rl">Round</span><div class="rnd" role="group" aria-labelledby="rl">'+[['any','Any','All rounds']].concat(SOLD.map(k=>[k,RND[k].n,RND[k].h])).map(x=>'<button type="button" data-k="holes" data-val="'+x[0]+'" aria-pressed="'+(String(S.holes)===x[0])+'"><b>'+x[1]+'</b><small>'+x[2]+'</small></button>').join('')+'</div></div>':'')+
+ (S.cartVaries?'<div class="field"><span class="lab">Cart</span>'+segBtns('cart',[['any','Either'],['walk','Walk'],['ride','Ride']],S.cart)+'<p class="calnote">Walking and carts depend on the time here.</p></div>':'')+
+ '<button class="lnk" type="button" data-act="reset">Reset all</button>';}
+function empty(){const next=DAYS.findIndex((d,i)=>i>S.day&&times(i).filter(fits).length);
+ return '<div class="empty" role="status"><h2 style="font-size:20px">No times match on '+dl(DAYS[S.day])+'</h2><p>'+(times(S.day).length?'Try a wider time or more holes.':'This day is fully booked.')+'</p><div class="opts">'+(next>0?'<button class="chip fill" type="button" data-day="'+next+'">See '+dn(DAYS[next])+' '+dd(DAYS[next])+' ('+times(next).filter(fits).length+' times)</button>':'')+'<button class="chip" type="button" data-act="reset">Widen my search</button><button class="chip" type="button" data-act="alert">Tell me when a time opens</button></div></div>';}
+function esc(v){return String(v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);}
+const MEMBER_OFF=6;
+function whoCard(){
+ if(S.who==='signed')return '<div class="who done"><span>Signed in as <b>Jordan R.</b> · jordan@example.com</span><button class="lnk" type="button" data-act="notyou">Not you?</button></div>';
+ const si=S.who==='signin',gu=S.who==='guest';
+ let inner='';
+ if(si)inner=S.bsi==='email'?'<form id="bsf" class="whoform" novalidate><div class="inp"><label class="lab" for="bse">Email</label><input id="bse" type="email" autocomplete="email" aria-describedby="bseErr" value="'+esc(S.bsEmail)+'"><div class="err" id="bseErr" role="alert"></div></div><button class="btn" type="submit">Send code</button></form>':'<form id="bsc" class="whoform" novalidate><p class="pol" role="status">Check <b>'+esc(S.bsEmail)+'</b> for a 6-digit code.</p><div class="inp"><label class="lab" for="bscode">6-digit code</label><input id="bscode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" aria-describedby="bscErr" style="letter-spacing:.3em;font-size:20px"><div class="err" id="bscErr" role="alert"></div></div><button class="btn" type="submit">Sign in</button><p class="pol"><button class="lnk" type="button" data-act="resend">Send a new code</button> · <button class="lnk" type="button" data-act="bsother">Use a different email</button></p></form>';
+ return '<fieldset class="who"><legend class="vh">How do you want to book?</legend>'+
+ '<label class="opt'+(gu?' on':'')+'"><input type="radio" name="who" value="guest"'+(gu?' checked':'')+'><span><b>Continue as guest</b><small>No account needed.</small></span></label>'+
+ '<label class="opt'+(si?' on':'')+'"><input type="radio" name="who" value="signin"'+(si?' checked':'')+'><span><b>Sign in for faster booking</b><small>Your details filled in, member and resident prices applied, and your bookings in one place.</small></span></label>'+inner+'</fieldset>';}
+function summary(){if(!S.sel)return '';const t=S.sel,n=S.players;const rides=t.mode==='ride'||(t.mode==='both'&&S.ride);const mem=S.who==='signed',unit=mem?t.price-MEMBER_OFF:t.price;const green=unit*n,cart=(rides?22:0)*n,fee=1.5*n,tot=green+cart+fee,now=0;
+ const cartUI=t.mode==='walk'?'<p class="cartrow"><span class="lab">Cart</span> Walking only at this time</p>':t.mode==='ride'?'<p class="cartrow"><span class="lab">Cart</span> Required at this time · $22/rider</p>':'<fieldset class="cartrow"><legend class="lab">Cart</legend><label class="pill"><input type="radio" name="cart" value="walk"'+(S.ride?'':' checked')+'><span>Walk</span></label><label class="pill"><input type="radio" name="cart" value="ride"'+(S.ride?' checked':'')+'><span>Ride +$22/rider</span></label></fieldset>';
+ const pl=n+(n===1?' player':' players'),ready=S.who==='guest'||S.who==='signed';
+ return '<div class="bkpage bk1"><button class="lnk back" type="button" data-act="close">‹ Back to tee times</button><h2 id="sumh" tabindex="-1">Book your tee time</h2>'+
+ '<div class="card recap"><div><b>'+fmt(t.m)+' · '+dl(DAYS[S.day])+'</b><span>'+t.course+' · '+RND[t.round].h+' · '+pl+'</span></div><button class="lnk" type="button" data-act="close">Change</button></div>'+
+ whoCard()+
+ (ready?'<h3>Your details</h3>':'')+'<form id="bk" novalidate'+(ready?'':' hidden')+'><div class="inp"><label class="lab" for="nm">Name</label><input id="nm" autocomplete="name" aria-describedby="nmErr" value="'+esc(S.f.nm)+'"><div class="err" id="nmErr" role="alert"></div></div><div class="inp"><label class="lab" for="em">Email</label><input id="em" type="email" autocomplete="email" aria-describedby="emErr" value="'+esc(S.f.em)+'"><div class="err" id="emErr" role="alert"></div></div><div class="inp"><label class="lab" for="ph">Mobile (optional)</label><input id="ph" type="tel" autocomplete="tel" aria-describedby="phErr" value="'+esc(S.f.ph)+'"><div class="err" id="phErr" role="alert"></div></div></form>'+
+ cartUI+
+ '<div class="card tots"><div class="li"><span>Green fees · '+n+' × $'+unit+'</span><span>$'+green.toFixed(2)+'</span></div>'+(mem?'<p class="mp">Member price applied · you save $'+(MEMBER_OFF*n).toFixed(2)+'</p>':'')+(cart?'<div class="li"><span>Cart · '+n+' × $22</span><span>$'+cart.toFixed(2)+'</span></div>':'')+'<details class="feed"><summary class="li"><span>Fees <span class="inf" aria-hidden="true">i</span><span class="vh">, show what this is</span></span><span>$'+fee.toFixed(2)+'</span></summary><p>Booking fee · $1.50 × '+pl+'</p></details>'+
+ '<div class="li tot"><span>Total</span><span>$'+tot.toFixed(2)+'</span></div><div class="li sub"><span>Pay now</span><span>$'+now.toFixed(2)+'</span></div><div class="li sub"><span>Pay at the course</span><span>$'+(tot-now).toFixed(2)+'</span></div>'+
+ (S.promo?'<button class="lnk promo" type="button" data-act="promo">Have a promo code?</button>':'')+'</div>'+
+ '<p class="pol small">Free cancellation until 24 hours before your tee time. After that, a $10 per player late-cancel fee applies.</p>'+
+ '<div class="bookbar">'+(ready?'':'<p class="hint" id="bkHint">Choose guest or sign in</p>')+'<button class="btn bookbtn" type="submit" form="bk"'+(ready?'':' disabled aria-describedby="bkHint"')+'>Book · $'+(now?now.toFixed(2):'0')+' now</button></div></div>';}
+function cardsA(){const L=list();if(!L.length)return empty();const groups={};L.forEach(t=>(groups[part(t.m)]=groups[part(t.m)]||[]).push(t));
+ return '<p class="count">'+L.length+' times on '+dl(DAYS[S.day])+'</p>'+Object.keys(groups).map(g=>'<section class="grp"><h2>'+g+'<small>'+groups[g].length+' times</small></h2><div class="cards">'+groups[g].map(t=>'<button type="button" class="tc" data-m="'+t.m+'" aria-pressed="'+(S.sel&&S.sel.m===t.m)+'" aria-label="'+fmt(t.m)+', '+t.course+', '+t.holes+' holes, '+t.open+' spots, $'+t.price+'"><span class="t">'+fmt(t.m)+'</span><span class="c">'+t.course+' · '+t.open+' open</span><span class="b"><span>'+RND[t.round].h+'</span><b>$'+t.price+'</b></span></button>').join('')+'</div></section>').join('');}
+function A(){return '<div class="a-grid"><aside class="a-side'+(S.fOpen?' open':'')+'" id="aside" aria-label="Filters"><div class="shead"><h2>Filters</h2><button class="close" type="button" data-act="filters" aria-label="Close filters">×</button></div>'+filters()+'<button class="btn sdone" type="button" data-act="filters">Show '+list().length+' times</button></aside><section><div class="mbar"><span><b>'+dn(DAYS[S.day])+' '+dd(DAYS[S.day])+'</b> · '+S.players+' players · '+(S.cart==='ride'?'Ride':'Walk')+'</span><button class="chip fill filterbtn" type="button" data-act="filters" aria-expanded="'+S.fOpen+'" aria-controls="aside">Filters</button></div>'+cardsA()+'</section></div>';}
+function signin(){const st=S.si||'email';
+ return '<div class="bkpage si"><button class="lnk back" type="button" data-scr="times">‹ Back to tee times</button><h2 id="sih" tabindex="-1">Sign in to Maple Run</h2><p class="pol" style="margin-top:4px">Sign in to book faster and see your bookings.</p>'+
+ (st==='email'?'<form id="sif" novalidate><div class="inp"><label class="lab" for="sie">Email</label><input id="sie" type="email" autocomplete="email" aria-describedby="sieErr" value="'+(S.siEmail||'')+'"><div class="err" id="sieErr" role="alert"></div></div><button class="btn" type="submit">Send code</button></form>':
+ '<p class="pol" role="status">Check <b>'+S.siEmail+'</b> for a 6-digit code. It works for 10 minutes.</p><form id="sic" novalidate><div class="inp"><label class="lab" for="sicode">6-digit code</label><input id="sicode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" aria-describedby="sicErr" style="letter-spacing:.3em;font-size:20px"><div class="err" id="sicErr" role="alert"></div></div><button class="btn" type="submit">Sign in</button></form><p class="pol"><button class="lnk" type="button" data-act="resend">Send a new code</button> · <button class="lnk" type="button" data-act="otheremail">Use a different email</button></p>')+
+ '<p class="pol" style="margin-top:18px">Member of Maple Run? <button class="lnk" type="button" data-act="memberlink">Members sign in here</button></p><p class="pol">Booking as a guest is fine, no account needed. <button class="lnk" type="button" data-scr="times">Back to tee times</button></p></div>';}
+function render(){const app=$('#app');S.sel&&!list().some(t=>t.m===S.sel.m)&&(S.sel=null);
+ if(S.screen==='book'&&!S.sel)S.sel=list()[0]||null;app.innerHTML=S.screen==='signin'?signin():S.screen==='book'&&S.sel?summary():A();{const ci=document.querySelector('.cinfo');if(ci)ci.hidden=S.screen!=='times';}document.querySelectorAll('[data-scr-top]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.scrTop===(S.screen==='book'&&S.who==='signed'?'bookin':S.screen)));}
+$('#moreBtn').onclick=()=>{const n=$('#notice');n.classList.toggle('open');$('#moreBtn').setAttribute('aria-expanded',n.classList.contains('open'));$('#moreBtn').textContent=n.classList.contains('open')?'Less':'More';};
+document.querySelectorAll('.demo')[3].addEventListener('click',e=>{const b=e.target.closest('[data-al]');if(!b)return;document.getElementById('alertLine').hidden=b.dataset.al==='0';document.querySelectorAll('[data-al]').forEach(x=>x.setAttribute('aria-pressed',x===b));});
+document.querySelectorAll('.demo')[4].addEventListener('click',e=>{const b=e.target.closest('[data-cv]');if(!b)return;S.cartVaries=b.dataset.cv==='1';S.cart='any';S.sel=null;document.querySelectorAll('.demo [data-cv]').forEach(x=>x.setAttribute('aria-pressed',x===b));render();});
+$('#signin').onclick=()=>{if(S.member){memberIn();return;}S.screen='signin';render();$('#sih').focus();};
+const ACC={black:{l:['#1F2328','#000000','#EBECEE'],d:['#E6E8EB','#FFFFFF','#2C2F33','#141814']},
+ green:{l:['#1E6B45','#155234','#E3F0E8'],d:['#7FD1A3','#A3E0BD','#1F3329','#0F1A13']},
+ blue:{l:['#1D4ED8','#1A3FA8','#E7EDFC'],d:['#A8BFF7','#C5D4FA','#222A40','#0E1529']},
+ yellow:{l:['#8A6200','#6E4E00','#F7EDCF'],d:['#E8B931','#F2CF66','#352C14','#1A1400']}};
+const LOOK={look:'light',ac:'green'};
+function applyLook(){const r=document.documentElement,a=ACC[LOOK.ac],dk=LOOK.look==='dark';r.setAttribute('data-theme',LOOK.look);
+ const v=dk?{acc:a.d[0],'acc-h':a.d[1],'acc-soft':a.d[2],'on-acc':a.d[3]}:{acc:a.l[0],'acc-h':a.l[1],'acc-soft':a.l[2],'on-acc':'#FFFFFF'};
+ v.band=a.l[0];v['on-band']='#FFFFFF';if(dk&&LOOK.ac==='black'){v.band='#2C2F33';}
+ for(const k in v)r.style.setProperty('--'+k,v[k]);
+ document.querySelectorAll('[data-look]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.look===LOOK.look));
+ document.querySelectorAll('[data-ac]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.ac===LOOK.ac));}
+document.querySelector('[aria-label="Mockup only: course look"]').addEventListener('click',e=>{const b=e.target.closest('[data-look],[data-ac]');if(!b)return;if(b.dataset.look)LOOK.look=b.dataset.look;else LOOK.ac=b.dataset.ac;applyLook();});
+applyLook();
+document.querySelector('[aria-label="Mockup only: promo codes"]').addEventListener('click',e=>{const b=e.target.closest('[data-pr]');if(!b)return;S.promo=b.dataset.pr==='1';document.querySelectorAll('[data-pr]').forEach(x=>x.setAttribute('aria-pressed',x===b));render();});
+document.querySelector('.demo.scr').addEventListener('click',e=>{const b=e.target.closest('[data-scr-top]');if(!b)return;const v=b.dataset.scrTop;if(v==='bookin'){signedIn();S.screen='book';}else{if(v==='book')notYou(true);S.screen=v;}render();});
+function signedIn(){S.who='signed';S.bsi='email';S.member=true;S.win=9;S.f={nm:S.f.nm||'Jordan R.',em:S.f.em||'jordan@example.com',ph:S.f.ph||'(555) 010-4477'};document.getElementById('signin').textContent='Sign out';}
+function notYou(quiet){S.who=null;S.member=false;S.win=7;if(S.day>S.win)S.day=0;S.f={nm:'',em:'',ph:''};document.getElementById('signin').textContent='Sign in';}
+function memberIn(){S.member=!S.member;S.win=S.member?9:7;if(S.day>S.win)S.day=0;document.getElementById('signin').textContent=S.member?'Sign out':'Sign in';render();toast(S.member?'Signed in as a member. You can book 9 days ahead.':'Signed out.');}
+$('#app').addEventListener('click',e=>{const t=e.target;
+ const day=t.closest('[data-day]');if(day){S.day=+day.dataset.day;S.sel=null;render();say(list().length+' times on '+dl(DAYS[S.day]));return;}
+ const k=t.closest('[data-k]');if(k&&k.dataset.k==='ride'){S.ride=k.dataset.val==='ride';render();const h=document.querySelector('[data-k="ride"][data-val="'+k.dataset.val+'"]');h&&h.focus();return;}if(k){S[k.dataset.k]=isNaN(+k.dataset.val)?k.dataset.val:+k.dataset.val;render();say(list().length+' times match');return;}
+ const td=t.closest('[data-tod]');if(td){const k=td.dataset.tod,i=S.tod.indexOf(k);if(i>=0){if(S.tod.length===1){say('Keep at least one time of day');return;}S.tod.splice(i,1);}else S.tod.push(k);render();say(list().length+' times match');const back=document.querySelector('[data-tod="'+k+'"]');back&&back.focus();return;}
+ const m=t.closest('[data-m]');if(m){S.sel=times(S.day).find(x=>x.m==m.dataset.m);S.screen='book';render();window.scrollTo(0,0);const h=$('#sumh');h&&h.focus();return;}
+ const sc=t.closest('[data-scr]');if(sc){S.screen=sc.dataset.scr;render();window.scrollTo(0,0);const h=$(S.screen==='signin'?'#sih':'#app');h&&h.focus&&h.focus();return;}
+ const a=t.closest('[data-act]');if(!a)return;const act=a.dataset.act;
+ if(act==='reset'){Object.assign(S,{players:2,holes:'any',cart:'any',maxp:80,from:7,to:17,tod:['Morning','Mid day','Late day']});render();}
+ else if(act==='close'){const m0=S.sel&&S.sel.m;S.screen='times';render();const back=document.querySelector('[data-m="'+m0+'"]');back&&back.focus();}
+ else if(act==='filters'){S.fOpen=!S.fOpen;render();const f=S.fOpen?document.querySelector('.shead .close'):document.querySelector('.mbar .filterbtn');f&&f.focus();}
+ else if(act==='member')memberIn();
+ else if(act==='memberlink')toast('Mockup: members get a one-click sign-in link by email today (separate page).');
+ else if(act==='notyou'){notYou();render();const g=document.querySelector('input[name=who]');g&&g.focus();}
+ else if(act==='bsother'){S.bsi='email';render();$('#bse').focus();}
+ else if(act==='resend')toast('If that address can sign in, a new code is on its way.');
+ else if(act==='otheremail'){S.si='email';render();$('#sie').focus();}
+ else if(act==='alert')toast('We\'ll email you when a time opens on '+dl(DAYS[S.day])+'.');
+ else if(act==='promo')toast('A promo code field opens here.');
+ else if(act==='cal')toast('A full calendar opens here.');
+ else if(act==='minus'||act==='plus'){let n=S.players;n=Math.max(1,Math.min(4,n+(act==='plus'?1:-1)));S.players=n;render();}
+});
+$('#app').addEventListener('input',e=>{const r=e.target.dataset.r;if(r){S[r]=+e.target.value;if(S.from>=S.to){r==='from'?S.to=S.from+1:S.from=S.to-1;}render();const el=document.getElementById(r==='from'?'tf':'tt');el&&el.focus();}});
+$('#app').addEventListener('change',e=>{if(e.target.name==='cart'){S.ride=e.target.value==='ride';render();const r=document.querySelector('input[name=cart][value='+e.target.value+']');r&&r.focus();return;}const s=e.target.dataset.s;if(!s)return;const v=e.target.value;S[s]=isNaN(+v)?v:+v;render();say(list().length+' times match');document.querySelector('[data-s="'+s+'"]').focus();});
+const RULE={nm:[v=>v.length>0,'Enter your name'],em:[v=>/^\S+@\S+\.\S+$/.test(v),'Enter a valid email'],ph:[v=>!v||v.replace(/\D/g,'').length>=10,'Enter a valid mobile number, or leave it blank']};
+function chk(id){const i=$('#'+id),r=RULE[id];if(!i||!r)return true;const ok=r[0](i.value.trim()),e=$('#'+id+'Err');
+ if(ok){i.removeAttribute('aria-invalid');if(e.textContent)e.textContent='';}else{i.setAttribute('aria-invalid','true');if(e.textContent!==r[1])e.textContent=r[1];}return ok;}
+$('#app').addEventListener('change',e=>{if(e.target.name==='who'){S.who=e.target.value;S.bsi='email';render();if(S.who==='signin')$('#bse').focus();else{$('#nm').focus();}}});
+$('#app').addEventListener('focusout',e=>{const t=e.target;if(t.closest&&t.closest('#bk')&&RULE[t.id]&&(t.value.trim()||t.getAttribute('aria-invalid')==='true'))chk(t.id);});
+$('#app').addEventListener('input',e=>{const t=e.target;if(t.closest&&t.closest('#bk')&&t.id in S.f)S.f[t.id]=t.value;if(RULE[t.id]&&t.closest('#bk')){if(t.getAttribute('aria-invalid')==='true')chk(t.id);}else if(t.getAttribute&&t.getAttribute('aria-invalid')==='true'){t.removeAttribute('aria-invalid');const er=$('#'+t.id+'Err');if(er)er.textContent='';}});
+$('#app').addEventListener('submit',e=>{e.preventDefault();
+ if(e.target.id==='bsf'){const i=$('#bse'),v=i.value.trim();if(!/^\S+@\S+\.\S+$/.test(v)){i.setAttribute('aria-invalid','true');$('#bseErr').textContent='Enter a valid email';i.focus();return;}S.bsEmail=v;S.bsi='code';render();$('#bscode').focus();return;}
+ if(e.target.id==='bsc'){const i=$('#bscode'),v=i.value.trim(),er=$('#bscErr');if(v!=='123456'){i.setAttribute('aria-invalid','true');er.textContent=/^\d{6}$/.test(v)?'That code didn\'t work. Check it, or send a new one.':'Enter the 6 digits from the message.';i.focus();return;}S.f={nm:'',em:'',ph:''};signedIn();render();$('#sumh').focus();toast('Signed in. Your details are filled in.');return;}
+ if(e.target.id==='sif'){const v=$('#sie').value.trim(),er=$('#sieErr');if(!/^\S+@\S+\.\S+$/.test(v)){$('#sie').setAttribute('aria-invalid','true');er.textContent='Enter your email address, like name@domain.com.';$('#sie').focus();return;}S.siEmail=v;S.si='code';render();$('#sicode').focus();return;}
+ if(e.target.id==='sic'){const v=$('#sicode').value.trim(),er=$('#sicErr');if(!/^\d{6}$/.test(v)){$('#sicode').setAttribute('aria-invalid','true');er.textContent='Enter the 6 digits from the message.';$('#sicode').focus();return;}if(v!=='123456'){$('#sicode').setAttribute('aria-invalid','true');er.textContent='That code didn\'t work. Check it, or send a new one.';$('#sicode').focus();return;}S.member=true;S.win=9;S.screen='times';S.si='email';document.getElementById('signin').textContent='Sign out';render();toast('Signed in. Your details will be filled in when you book.');return;}const bad=['nm','em','ph'].filter(id=>!chk(id));if(bad.length){$('#'+bad[0]).focus();return;}const em=$('#em');toast('Booked. Confirmation sent to '+em.value);});
+render();
 })();
 </script>
+</body></html>

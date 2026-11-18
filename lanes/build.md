@@ -9,6 +9,32 @@ the lane files; merges every PR in dependency order after Cam's review sitting; 
 **Control Room** (Cam watches it): Build alone writes https://claude.ai/artifact/CWmgjgJHTZaTr4XThBuvZL with `ArtifactData`: its own `sessions/<id>` row at start, after each push/merge/blocker and before ending (a `working` row silent 30 min shows as Silent), and the web (`areas`, `items`, `questions`, `lookat`) after every merge, answer and change of plan. Full protocol: `docs/DECISIONS.md` → "Control Room".
 
 ## Queued (not started)
+- Residents log in — NEXT (Cam 2026-11-18). Resident cards become a `gr_member` group, so a resident logs in with the
+  one per-course "Log in" and gets the resident rate online. Until then, the online resident rate works only for a
+  member whose log-in email is on that course's resident list (signedInResident(), after the golfer-sign-in
+  retirement). Money and auth: Opus, final-reviewer.
+- Golfer log-in data (`lanes/golfer.md` items 2–4): record the first-log-in terms tick per golfer per course with its
+  version; the two-groups rule (lower price, longer window); guest pass use at checkout (a tick per guest, counted
+  against `guestPassesPerYear`); the header group label; and the group list for the log-in line. Also, after #477:
+  - Rewrite the member emails and pages to "Log in" wording.
+  - The member invite goes out only when the membership is active; otherwise it says "once your dues are paid".
+  - /api/operator/members allows contact edits on golfer-linked members, since no golfer account signs in now.
+  - Once the Dashboard lane removes the Join online control, the tiers route stores 'off' and the membership-join
+    helpers are deleted.
+  - The manage page says "Log in first to keep your member rate" when an expired member moves a booking from the
+    emailed link.
+- Tee time alerts (`lanes/golfer.md` item 7): `TeeTimeAlert` grows multiple dates or "weekends", time of day,
+  players, an optional phone with its own alert-text consent, the logged-in one-tap path (no email confirm), the
+  course switch "Let golfers set tee time alerts", and a stop link in every email. Keep the queued expiry rule (an
+  alert ends after the day's last tee time unless the course sets a later end). Additive migration.
+- Range balls on online bookings (`lanes/golfer.md` item 5): the course switch "Sell range balls with tee times";
+  buckets from the Range settings priced on the booking as their own line and paid with the round (`describePolicy()`
+  wording, `recordMove()` when charged).
+- #458 Build follow-ups: the server messages that still suggest "take cash instead" (pay-link limits, reader minimums,
+  a $0 sale) follow `takesCash`; add a test that charge to account still settles with cash off; the #458 migration's
+  timestamp sorts before `20261117193347_team_roles` (applied fine; note only).
+- Legal list: the Terms must cover a golfer logging in at a course (the first-log-in agree box). Add a version; never
+  edit a published file under `legal/`.
 - Booking page look (Cam 2026-11-18): in Settings → Your course → Booking Page, a course picks Light or Dark for its golfer booking pages, plus one accent from four presets (Black, Green, Blue, Yellow, where Yellow is a deep gold so white text passes AA; no Red, Cam: red is for errors) instead of a free colour picker. Data: a new `Course.bookingLook` ('light'|'dark', default 'light', additive), and `brandColor` limited to the four preset values. Existing custom colours are mapped to the nearest preset only with Cam's OK, because that's a backfill; until then they render as they are. The golfer pages (course page, booking page, sign-in, confirmation, manage, pay, receipt) read both, and every combination passes WCAG AA. Build it with the golfer booking page build.
 - Audit data (Cam approved 2026-11-18): /api/admin/audit gains q (search over action, actor, course, reason and changed fields across all dates, LIKE-escaped through like-exact) plus from/until. Owner only.
 - Small Build text fixes: the admin-areas.ts help for 'golfers' still says "resend, cancel and refund"; the search route nav label still says "Golfer lookup".
