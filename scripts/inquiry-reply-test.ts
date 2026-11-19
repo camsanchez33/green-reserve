@@ -42,8 +42,9 @@ ok('the reply route sends first and records the reply only after it went', r.ind
 const email = readFileSync('src/lib/email.ts', 'utf8');
 const reply = email.slice(email.indexOf('export async function sendInquiryReply'));
 ok('replies go from admin@ and are logged against the inquiry', /from: FROM_ADMIN/.test(reply.slice(0, 1600)) && /kind: 'inquiry_reply', inquiryId/.test(reply.slice(0, 1600)));
-const alert = email.slice(email.indexOf('export async function sendInquiryNotification'), email.indexOf('export async function sendInquiryReply'));
-ok('the new-question alert opens that inquiry and its reply box', alert.includes('/admin/inquiries/${encodeURIComponent(data.inquiryId)}') && alert.includes('?reply=1'));
+const staff = readFileSync('src/lib/email-staff.ts', 'utf8');
+const alert = staff.slice(staff.indexOf('export function inquiryNotificationEmail'), staff.indexOf('export function lockedOutAlertEmail'));
+ok('the new-question alert opens that inquiry and its reply box', alert.includes('/admin/inquiries/${encodeURIComponent(d.inquiryId)}') && alert.includes('?reply=1'));
 ok('…and its caller passes the inquiry id', readFileSync('src/app/api/inquiries/route.ts', 'utf8').includes('inquiryId: inquiry.id,'));
 
 // Cam 2026-10-27: once answered, the box folds away and the conversation goes on in the course's Messages.
