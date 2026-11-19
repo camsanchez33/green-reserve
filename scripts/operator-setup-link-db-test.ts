@@ -66,7 +66,7 @@ async function cleanup() {
   for (const f of ['src/app/api/preview/send/route.ts', 'src/app/api/admin/create-course/route.ts']) ok(`${f.split('/').slice(-2).join('/')} never mints or returns a password`, !readFileSync(f, 'utf8').includes('tempPassword'));
   const inq = readFileSync('src/app/api/admin/inquiries/route.ts', 'utf8');
   ok('the inquiry route (build, resend, dashboard access) never mints or returns one', !inq.includes('tempPassword'));
-  ok('…and resend / dashboard access leave an owner who already signs in alone', inq.includes('if (alreadyIn) await sendPageReadyInDashboardEmail('));
+  ok('…and resend / dashboard access leave an owner who already signs in alone', inq.includes('if (alreadyIn) await sendDashboardSetupEmail({ operatorName: op.name, operatorEmail: op.email, courseName: inquiry.courseName, setupUrl: null,'));
   const preview = readFileSync('src/app/api/preview/send/route.ts', 'utf8');
   ok('sending a preview never touches the password', !/password:\s*hashed/.test(preview) && preview.includes('hasSetUp(op)'));
 

@@ -515,3 +515,89 @@ export function outreachEmail(d: { subject: string; paragraphs: string[]; sender
     ...plainEmail({ paragraphs: d.paragraphs, signature: signature(d.senderName || 'Cam Sanchez'), footerLine: outreachFooterLine(postalAddress) }),
   };
 }
+
+// ---------- Merged pairs (emails redo: 78 → 72) ----------
+
+/**
+ * Dashboard access for a course in onboarding. One email for both cases (merged with the old
+ * "page ready in your dashboard" email): with a set-your-password link for an owner who has never
+ * signed in, or straight to the dashboard for one who already does (their sign-in is never touched).
+ */
+export function dashboardAccessEmail(d: { operatorName: string; operatorEmail: string; courseName: string; setupUrl: string | null; pageReady: boolean; linkDays: number }): BuiltEmail {
+  const firstName = first(d.operatorName);
+  if (!d.setupUrl) {
+    return gr(`Your ${d.courseName} booking page is ready for a look`, {
+      line: `Your booking page is ready for a look, ${firstName}.`,
+      paragraphs: [`We’ve updated the booking page for ${d.courseName}. Sign in to review it, then approve it or tell us what to change.`],
+      button: { label: 'Review it in your dashboard', url: `${site()}/dashboard` },
+      after: ['Questions? Reply to this email.'],
+    });
+  }
+  const steps = [
+    d.pageReady ? 'Review your booking page, and approve it or tell us what to change.' : 'Look over your booking page as we finish it.',
+    'Sign the operator agreement.',
+    'Connect Stripe so payments reach your bank.',
+  ];
+  return gr(d.pageReady ? `Your ${d.courseName} booking page is ready for a look` : `Set up your ${d.courseName} dashboard`, {
+    line: `${d.pageReady ? 'Your booking page is ready for a look' : 'Your dashboard is ready'}, ${firstName}.`,
+    paragraphs: [`Set your password to get into the GreenReserve dashboard for ${d.courseName}.`],
+    button: { label: 'Set your password', url: d.setupUrl },
+    sections: [{ title: 'Then your dashboard walks you through', notes: steps.map((t, i) => ({ label: String(i + 1), text: t })) }],
+    after: [`The link works once and expires in ${plural(d.linkDays, 'day')}. If it has expired, use “Forgot password” on the sign-in page with ${d.operatorEmail}.`, 'Questions? Reply to this email.'],
+  });
+}
+
+/**
+ * The course went live. One email (merged with the old short "You're live"): an owner who already
+ * had dashboard access gets the short version; one who didn't also gets the map of the dashboard.
+ */
+export function goLiveEmail(d: { courseName: string; courseSlug: string; tour: boolean }): BuiltEmail {
+  const bookingUrl = `${site()}/courses/${d.courseSlug}`;
+  const shown = bookingUrl.replace(/^https?:\/\//, '');
+  const sections = d.tour ? [
+    { title: 'Where everything lives', notes: [
+      { label: 'Settings', text: 'Course info, pricing, policies (walking, cancellation, dress code) and your facilities.' },
+      { label: 'Payments', text: 'Your Stripe connection and payout details, inside Settings.' },
+      { label: 'Schedule', text: 'Your tee time templates: hours, interval, green fees, cart fee, member and resident rates. Changes regenerate future tee times.' },
+      { label: 'Bookings', text: 'Every reservation on your tee sheet, with golfer contact details and payment status.' },
+      { label: 'Members', text: 'Member accounts and tiers, if you offer member pricing.' },
+      { label: 'Staff', text: 'Logins for your pro shop team, without your owner password.' },
+    ] },
+    { title: 'Worth knowing', notes: [
+      { text: FEE_SENTENCES },
+      { text: 'Need to close for a day (weather, maintenance, an outing)? Block it from Schedule.' },
+      { text: 'Payouts come from Stripe on its normal schedule for your account; Settings → Payments shows their status.' },
+    ] },
+  ] : [];
+  return gr(d.tour ? `You're live! Here's how to run ${d.courseName} on GreenReserve` : `You're live! ${d.courseName} is now bookable on GreenReserve`, {
+    line: `${d.courseName} is live on GreenReserve.`,
+    paragraphs: [`Golfers can find and book your tee sheet at ${shown}. New bookings show in your dashboard as they come in.`],
+    sections,
+    button: { label: 'Open your dashboard', url: `${site()}/dashboard` },
+    after: ['Questions, or something looks wrong? Reply to this email: a real person reads it.'],
+  });
+}
+
+/**
+ * After a call (merged with the old "recap plus setup sheet" email): what we wrote down, and, when the
+ * call ended with one, their setup sheet link, what happens next and the fee in LQ-2's words. Plain, from Cam.
+ */
+export function callRecapEmail(d: { contactName: string; courseName: string; scheduledAt?: Date | null; items?: [string, string][]; recap?: string[]; detailsLink?: string | null; liveTarget?: string | null }): BuiltEmail {
+  const when = d.scheduledAt ? d.scheduledAt.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'America/New_York' }) : '';
+  const lines = [...(d.items ?? []).map(([k, v]) => `- ${k}: ${v}`), ...(d.recap ?? []).map(l => `- ${l}`)];
+  const paragraphs = [`Hi ${first(d.contactName)},`,
+    `Thanks for the call about ${d.courseName}${when ? ` on ${when}` : ''}.${lines.length ? ' Here’s what we wrote down:' : ''}`];
+  if (lines.length) paragraphs.push(lines.join('\n'));
+  if (d.detailsLink) {
+    paragraphs.push(`Your setup sheet, built from our call (the first four steps take about 5 minutes; the rest is optional): ${d.detailsLink}`);
+    paragraphs.push(`What happens next${d.liveTarget ? `, aiming for ${d.liveTarget}` : ''}:\n1. Your setup sheet: tee times, prices and cancellation, in your own words.\n2. We build your page and send a private preview for you to approve.\n3. Sign the operator agreement and connect Stripe in your course’s name (about 10 minutes).\n4. Go live: add the link to your website.`);
+    paragraphs.push(FEE_SENTENCES);
+  } else if (lines.length) {
+    paragraphs.push('It will show up filled in on your setup sheet, where you can change any of it.');
+  }
+  paragraphs.push('Anything off? Just reply to this email.');
+  return {
+    subject: subjectLine(d.detailsLink ? `${d.courseName}: recap of our call and your setup sheet` : `What we captured on our call – ${d.courseName}`),
+    ...plainEmail({ paragraphs, signature: signature('Cam Sanchez') }),
+  };
+}

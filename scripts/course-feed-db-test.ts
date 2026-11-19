@@ -35,7 +35,8 @@ async function main() {
   // Static: every email sender names its kind.
   const src = readFileSync('src/lib/email.ts', 'utf8');
   const sends = src.match(/getResend\(\)\.emails\.send\(\{/g) ?? [];
-  const tagged = src.match(/getResend\(\)\.emails\.send\(\{ meta: \{ kind: '[a-z_]+'/g) ?? [];
+  // A merged email (emails redo) names one of two literal kinds: kind: cond ? 'a_email' : 'b_email'.
+  const tagged = src.match(/getResend\(\)\.emails\.send\(\{ meta: \{ kind: (?:'[a-z_]+'|[\w.]+ \? '[a-z_]+' : '[a-z_]+')/g) ?? [];
   check(`every email sender says what it is (${tagged.length}/${sends.length})`, sends.length > 50 && tagged.length === sends.length);
 
   await cleanup();
