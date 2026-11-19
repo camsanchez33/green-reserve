@@ -163,8 +163,12 @@ export async function POST(req: NextRequest) {
   // 2b; Resident pricing on, lib/booking-window), whatever rate applies.
   const residentForWindow = memberSession && residentPricingOn(teeTimeFull.course) && residentWindowDays(teeTimeFull.course) != null
     ? !!(await residentOn(teeTimeFull.courseId, memberSession.email, teeTimeFull.date)) : false;
-  const baseWindow = windowFor({ ...teeTimeFull.course, publicAdvanceDays: rules.publicAdvanceDays }, viewerMembership, { resident: residentForWindow });
-  const bookingWindow = baseWindow.scope === 'member' ? { ...baseWindow, days: Math.max(baseWindow.days, rules.publicAdvanceDays) } : baseWindow;
+  // The viewer's own window is judged against the COURSE's public window (as the list, the session and the benefits line
+  // do); a round's own public window then holds for anyone without one, and a member never gets less than it.
+  const baseWindow = windowFor(teeTimeFull.course, viewerMembership, { resident: residentForWindow });
+  const bookingWindow = baseWindow.ownWindow
+    ? { ...baseWindow, days: Math.max(baseWindow.days, rules.publicAdvanceDays) }
+    : { ...baseWindow, days: rules.publicAdvanceDays };
   if (!withinWindow(teeTimeFull.date, bookingWindow.days, new Date(), teeTimeFull.course.timezone)) {
     return NextResponse.json({
       error: bookingWindow.scope === 'member'

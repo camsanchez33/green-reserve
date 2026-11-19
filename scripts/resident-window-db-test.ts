@@ -35,6 +35,7 @@ async function cleanup() {
   await prisma.courseResident.deleteMany({ where: { courseId } });
   await prisma.membershipTier.deleteMany({ where: { courseId } });
   await prisma.teeTime.deleteMany({ where: { courseId } });
+  await prisma.courseProduct.deleteMany({ where: { courseId } });
   await prisma.courseSettingChange.deleteMany({ where: { courseId } });
   await prisma.courseStaff.deleteMany({ where: { courseId } });
   await prisma.course.deleteMany({ where: { slug: { startsWith: TAG } } });
@@ -122,6 +123,25 @@ async function main() {
   check('…nor at booking', (await book(t15b.id, resEmail, resCk)).status === 403);
   await prisma.course.update({ where: { id: c.id }, data: { hasResidentPricing: true, residentAdvanceDays: null } });
   check('No resident window set: the public window', (await list(15, resCk)).status === 403 && (await get(`/api/member/${c.slug}/session`, resCk)).body?.windowDays === 7);
+
+  // A round with its own shorter public window (Twilight, 3 days). The resident window is judged against the course's
+  // public window everywhere; the round's window then holds for anyone without a window of their own.
+  await prisma.course.update({ where: { id: c.id }, data: { publicAdvanceDays: 14, residentAdvanceDays: 7 } });
+  const twi = await prisma.courseProduct.create({ data: { courseId: c.id, label: 'Twilight', holes: 9, publicAdvanceDays: 3 } });
+  const tw5 = await prisma.teeTime.create({ data: { courseId: c.id, productId: twi.id, date: addDaysStr(today, 5), time: '17:00', holes: 9, greenFeeCents: 5000, cartFeeCents: 0, residentRateCents: 2000, playersAvailable: 4, playersBooked: 0 } });
+  const tw5list = await list(5, resCk);
+  check('a resident window shorter than the course\'s public one: the round\'s own 3-day window holds in the list', tw5list.status === 200 && Array.isArray(tw5list.body) && !tw5list.body.some((x: { id: string }) => x.id === tw5.id), tw5list);
+  const tw5book = await book(tw5.id, resEmail, resCk);
+  check('…and at booking (a crafted request for day 5 is refused at 3 days)', tw5book.status === 403 && tw5book.body?.code === 'outside_window' && tw5book.body?.windowDays === 3, tw5book);
+  await prisma.course.update({ where: { id: c.id }, data: { residentAdvanceDays: 20 } });
+  const tw5list2 = await list(5, resCk);
+  check('a resident window longer than the public one: the round is listed on day 5', tw5list2.status === 200 && Array.isArray(tw5list2.body) && tw5list2.body.some((x: { id: string }) => x.id === tw5.id), tw5list2);
+  check('…and booked', (await book(tw5.id, resEmail, resCk)).status === 200);
+  const tw6 = await prisma.teeTime.create({ data: { courseId: c.id, productId: twi.id, date: addDaysStr(today, 6), time: '17:00', holes: 9, greenFeeCents: 5000, cartFeeCents: 0, residentRateCents: 2000, playersAvailable: 4, playersBooked: 0 } });
+  const guestTw = await fetch(`${BASE_URL}/api/bookings`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ teeTimeId: tw6.id, golferName: 'Guest', golferEmail: `guest@${TAG}.test`, golferPhone: '', players: 1, termsAccepted: true, cartSelected: false }) });
+  const guestBody = await guestTw.json().catch(() => null);
+  check('(a guest still gets the round\'s 3 days)', guestTw.status === 403 && guestBody?.windowDays === 3, { s: guestTw.status, guestBody });
+  await prisma.course.update({ where: { id: c.id }, data: { publicAdvanceDays: 7, residentAdvanceDays: null } });
 
   // ── Settings ──
   const owner = `gr_operator=${await signToken({ operatorId: op.id, email: op.email })}`;

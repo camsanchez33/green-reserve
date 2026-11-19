@@ -122,8 +122,8 @@ export async function PATCH(req: NextRequest) {
     }
   }
   Object.assign(data, money);
-  // The resident booking window is logged when it changes (CourseSettingChange). The Settings page sends the whole
-  // row on every save, so only a real change writes a row. The actor is the signed-in login's own row, never the request.
+  // The resident booking window is logged when it changes (CourseSettingChange); a save that sends the same value
+  // writes no row. The actor is the signed-in login's own row, never the request.
   const actor = 'residentAdvanceDays' in data
     ? session.isStaff
       ? { type: 'staff' as const, id: session.staffId ?? '', name: (await prisma.courseStaff.findUnique({ where: { id: session.staffId ?? '' }, select: { name: true } }))?.name ?? '' }
