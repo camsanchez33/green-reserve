@@ -63,11 +63,12 @@ export async function shortLink(kind: ShortKind, longUrl: string, opts: { course
   if (!target) return longUrl;
   try {
     const now = new Date();
+    // The same long link with the same end reuses its code (an alert re-sent for the same date).
     const existing = await prisma.shortLink.findFirst({
-      where: { kind, target, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] },
-      select: { code: true, expiresAt: true },
+      where: { kind, target, expiresAt: opts.expiresAt ?? null, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] },
+      select: { code: true },
     });
-    if (existing && (opts.expiresAt ?? null)?.getTime() === (existing.expiresAt ?? null)?.getTime()) return `${shortHost()}/${kind}/${existing.code}`;
+    if (existing) return `${shortHost()}/${kind}/${existing.code}`;
     for (let attempt = 0; attempt < 3; attempt++) {
       const code = newCode();
       try {

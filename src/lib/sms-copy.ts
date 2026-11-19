@@ -60,7 +60,7 @@ function fit(courseName: string, make: (name: string) => string): string {
   return text;
 }
 
-const money = (cents: number) => `$${(Math.round(cents) / 100).toFixed(2)}`;
+const money = (cents: number) => `$${(Math.round(cents) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 // ---------- Course texts (mockup "Texts") ----------
 
@@ -74,13 +74,27 @@ export function roundReceiptText(courseName: string, link: string, amountCents?:
   return fit(courseName, n => `${n} receipt: ${amountCents != null ? `${money(amountCents)} paid` : 'your round'}. View: ${link} ${STOP_LINE}`);
 }
 
-/** An event payment link. "Maple Run event: Turkey Shoot Scramble entry fee, $45.00. Pay: …" */
+/**
+ * The payment's label as the text reads it. The built-in labels name the player ("John Smith — entry",
+ * "… — entry for 4"): the name is dropped, since the text goes to that player. A label staff typed is
+ * kept as typed (never lower-cased).
+ */
+export function eventPayLabel(label: string): string {
+  const l = toGsm(label).trim();
+  const builtIn = /^.+? - (entry(?: for \d+)?)$/.exec(l);
+  return builtIn ? builtIn[1] : l;
+}
+
+/** An event payment link. "Maple Run Golf Course event: Turkey Shoot Scramble entry, $45.00. Pay: …" */
 export function eventPayText(courseName: string, eventName: string, label: string, totalCents: number, link: string): string {
-  const make = (n: string, ev: string) => `${n} event: ${ev} ${label.toLowerCase()}, ${money(totalCents)}. Pay: ${link} ${STOP_LINE}`;
-  // A long event name gives way before the course name does.
+  const make = (n: string, ev: string, lb: string) => `${n} event: ${ev}${lb ? ` ${lb}` : ''}, ${money(totalCents)}. Pay: ${link} ${STOP_LINE}`;
+  const over = (n: string, ev: string, lb: string) => smsSegments(toGsm(make(n, ev, lb))).chars > 160;
+  // What gives way first: a long label, then the event name, then the course name. Never the amount or the link.
+  let lb = eventPayLabel(label);
   let ev = toGsm(eventName).trim();
-  while (smsSegments(toGsm(make(courseName, ev))).chars > 160 && ev.length > 16) ev = ev.slice(0, -1).trimEnd();
-  return fit(courseName, n => make(n, ev));
+  while (over(courseName, ev, lb) && lb.length > 12) lb = lb.slice(0, -1).trimEnd();
+  while (over(courseName, ev, lb) && ev.length > 16) ev = ev.slice(0, -1).trimEnd();
+  return fit(courseName, n => make(n, ev, lb));
 }
 
 /** A pro shop pay link. */
@@ -115,7 +129,7 @@ export function optInText(courseName: string | null | undefined): string {
 
 /** The confirmation when a number agrees to tee time alert texts. */
 export function alertOptInText(courseName: string | null | undefined): string {
-  return fit(courseName || 'GreenReserve', n => `${n}: You're set for tee time alert texts, up to 1 per date you picked. Msg & data rates may apply. Reply HELP for help, STOP to opt out.`);
+  return fit(courseName || 'GreenReserve', n => `${n}: You're set for alert texts, 1 per date you picked. Msg & data rates may apply. Reply HELP for help, STOP to opt out.`);
 }
 
 /** The reply to HELP. With the course the number last agreed for: its phone. Mockup: 119 characters. */

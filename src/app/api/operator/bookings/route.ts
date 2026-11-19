@@ -259,7 +259,7 @@ export async function PATCH(req: NextRequest) {
     // ('manual') qualify too; one booked without an email has no token yet, so
     // it gets one here.
     const via = viaRaw === 'sms' ? 'sms' : 'email';
-    const b = await prisma.booking.findUnique({ where: { id }, select: { golferName: true, golferEmail: true, golferPhone: true, checkInToken: true, status: true, totalAmount: true, shopTotalCents: true, shopFeeCents: true, shopTaxCents: true, course: { select: { name: true, timezone: true } }, teeTime: { select: { date: true, time: true } } } });
+    const b = await prisma.booking.findUnique({ where: { id }, select: { golferName: true, golferEmail: true, golferPhone: true, checkInToken: true, status: true, totalAmount: true, shopTotalCents: true, shopFeeCents: true, shopTaxCents: true, accessFeeTotal: true, feePaidCents: true, course: { select: { name: true, timezone: true } }, teeTime: { select: { date: true, time: true } } } });
     if (!b || b.status !== 'confirmed') return NextResponse.json({ error: 'Only a confirmed booking can be sent a pay link.' }, { status: 409 });
     // Launch walk (Cam 2026-10-31): the pay link opens on the round's day — a link sent earlier wouldn't work yet.
     if (payLinkOpensOn(b.course.timezone, b.teeTime.date)) return NextResponse.json({ error: 'The pay link opens on the day of the round — send it then, or take payment at the counter.' }, { status: 409 });

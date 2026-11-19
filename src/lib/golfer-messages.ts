@@ -14,9 +14,9 @@ import { normalizePhone } from './golfer-otp';
 import { formatTeeTime, formatTeeDay } from './format';
 
 export const MAX_MESSAGE_CHARS = 600;
-/** A text carries "{course}: {message}" in this many characters, then the STOP line. */
+/** A text carries "{course} update: {message}" in this many characters, then the STOP line. */
 export const SMS_CHARS = 300;
-export const smsRoom = (courseName: string) => SMS_CHARS - courseName.length - 'GreenReserve (): '.length;
+export const smsRoom = (courseName: string) => SMS_CHARS - courseName.length - ' update: '.length;
 /** Stop well inside the route's maxDuration so a run always finishes and logs. */
 const BUDGET_MS = 240_000;
 

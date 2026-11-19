@@ -45,6 +45,25 @@ async function main() {
   check('the redirect routes are rate limited per connection', readFileSync('src/lib/short-links.ts', 'utf8').includes('rateLimit(`short-link:ip:${evidentiaryIp(req)}`, 60, 600)'));
   check('ShortLink is cleared by the launch wipe', (WIPED_TABLES as readonly string[]).includes('ShortLink'));
 
+  // Reuse respects the end: the same alert link with a later end gets a new code; the same end reuses it.
+  const t2 = `https://greenreserve.test/courses/${TAG}?date=2030-05-02&players=2`;
+  const e1 = new Date(Date.now() + 3600_000), e2 = new Date(Date.now() + 7200_000);
+  const x1 = await shortLink('a', t2, { expiresAt: e1 });
+  check('the same alert link and end reuses its code; a different end gets its own', (await shortLink('a', t2, { expiresAt: e1 })) === x1 && (await shortLink('a', t2, { expiresAt: e2 })) !== x1);
+
+  // HELP and START name the course the number last agreed for (and fall back to GreenReserve).
+  const { lastConsentCourse, textCourse, recordSmsConsent } = await import('../src/lib/sms-consent');
+  const { helpText } = await import('../src/lib/sms-copy');
+  const course = await prisma.course.create({ data: { name: `Short Links GC ${TAG}`, slug: `sl-course-${TAG}`, address: '1', city: 'T', state: 'NY', zipCode: '10990', holes: 18, phone: '(555) 010-3000', proShopPhone: '(555) 010-4000', timezone: 'America/New_York' } as never });
+  const phone = '+15185550123';
+  check('a number with no consent row names no course', (await lastConsentCourse(phone)) === null);
+  await recordSmsConsent(phone, 'opt_in', { method: 'web_booking', courseId: course.id });
+  const named = await lastConsentCourse(phone);
+  check('…after it agrees at a course, HELP names that course and its pro shop phone', named?.name === course.name && named?.phone === '(555) 010-4000' && helpText(named?.name, named?.phone).startsWith(`Short Links GC ${TAG}`.slice(0, 12)) && helpText(named?.name, named?.phone).includes('(555) 010-4000'), named);
+  check('textCourse: unknown id is null, never throws', (await textCourse('no-such-course')) === null && (await textCourse(null)) === null);
+  await prisma.smsConsent.deleteMany({ where: { phone } });
+  await prisma.course.delete({ where: { id: course.id } });
+
   await prisma.shortLink.deleteMany({ where: { target: { contains: TAG } } });
 }
 main().then(async () => { await prisma.$disconnect(); console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`); if (failed) process.exit(1); })

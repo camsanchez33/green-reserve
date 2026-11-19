@@ -18,6 +18,10 @@ const samples = (course: string): Sample[] => [
   { name: 'receipt (round)', text: T.roundReceiptText(course, link('r'), 27000), course },
   { name: 'receipt (round, no amount)', text: T.roundReceiptText(course, link('r')), course },
   { name: 'event pay link', text: T.eventPayText(course, 'Turkey Shoot Scramble', 'Entry fee', 4500, link('p')), course },
+  { name: 'event pay link (built-in "<player> — entry")', text: T.eventPayText(course, 'Turkey Shoot Scramble', 'John Smith — entry', 4500, link('p')), course },
+  { name: 'event pay link (built-in "— entry for 4")', text: T.eventPayText(course, 'Turkey Shoot Scramble', 'John Smith — entry for 4', 18000, link('p')), course },
+  { name: 'event pay link (balance)', text: T.eventPayText(course, 'Member-Guest Invitational', 'Balance for 144 players', 648000, link('p')), course },
+  { name: 'event pay link (80-character typed label)', text: T.eventPayText(course, 'Member-Guest Invitational', 'Deposit to hold the shotgun start for your outing, payable before the end of May', 50000, link('p')), course },
   { name: 'pro shop pay link', text: T.shopPayText(course, 3850, link('p')), course },
   { name: 'pro shop receipt', text: T.shopReceiptText(course, 3850, link('r')), course },
   { name: 'note from the course', text: T.courseNoticeText(course, 'Frost delay. First tee times move back 30 min.'), course },
@@ -46,6 +50,10 @@ check('opt-in wording as the mockup (139 characters)', T.optInText(C) === "Maple
 check('HELP wording as the mockup (119 characters)', T.helpText(C, '(555) 010-2000') === 'Maple Run Golf Course booking texts. Questions? Call (555) 010-2000. Msg & data rates may apply. Reply STOP to opt out.' && T.helpText(C, '(555) 010-2000').length === 119, T.helpText(C, '(555) 010-2000').length);
 check('pay link as the mockup', T.payLinkText(C, '11:40 AM', link('p'), 27000) === `Maple Run Golf Course pay link: $270.00 for your 11:40 AM tee time. Pay: ${link('p')} Reply STOP to opt out.`);
 check('alert as the mockup', T.alertText(C, 'Sat Nov 21', '2:40 PM', 4, link('a')) === `Maple Run Golf Course alert: a tee time opened Sat Nov 21 at 2:40 PM, room for 4. Book: ${link('a')} Reply STOP to opt out.`);
+check('event: the built-in label drops the player name and keeps case (mockup "Turkey Shoot Scramble entry, $45.00")', T.eventPayText(C, 'Turkey Shoot Scramble', 'John Smith — entry', 4500, link('p')) === `Maple Run Golf Course event: Turkey Shoot Scramble entry, $45.00. Pay: ${link('p')} Reply STOP to opt out.`);
+check('event: a label staff typed keeps its case', T.eventPayText(C, 'Turkey Shoot', 'Balance for 144 players', 648000, link('p')).includes('Turkey Shoot Balance for 144 players, $6,480.00.'));
+check('event: a long label gives way before the course name', T.eventPayText(C, 'Member-Guest Invitational', 'x'.repeat(80), 50000, link('p')).startsWith(`${C} event: Member-Guest Invitational`));
+check('alert opt-in keeps a 40-character course name whole', T.alertOptInText('The Old Course at Whispering Pines Club X').startsWith('The Old Course at Whispering Pines Club X: '));
 check('staff code as the mockup', T.staffCodeText('482915') === "GreenReserve code: 482915. It expires in 10 minutes. Don't share it." && T.smsSegments(T.staffCodeText('482915')).segments === 1);
 check('no course to name: GreenReserve and the support address', T.helpText(null, null).startsWith('GreenReserve booking texts. Questions? support@greenreserve.app.') && T.optInText(null).startsWith("GreenReserve: You're set"));
 

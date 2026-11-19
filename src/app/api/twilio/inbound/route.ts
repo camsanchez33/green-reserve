@@ -7,7 +7,7 @@
 //   STOP family  → the number's consent becomes opt_out (Twilio itself also blocks
 //                  further sends and sends the carrier's confirmation).
 //   START family → opt_in again (method sms_reply) + the enrollment confirmation.
-//   HELP / INFO  → the HELP text (lib/sms-consent-copy).
+//   HELP / INFO  → the HELP text naming the course the number last agreed for (lib/sms-copy helpText).
 // Anything else is ignored — this number isn't a support inbox.
 import { NextRequest, NextResponse } from 'next/server';
 import twilio from 'twilio';
