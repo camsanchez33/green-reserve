@@ -73,7 +73,7 @@ async function main() {
   ok('…stored with the alert wording version', (await prisma.smsConsent.findFirst({ where: { phone: P5, scope: 'alerts', method: 'sms_reply' }, orderBy: { createdAt: 'desc' } }))?.wording === 'alerts-2026-11-18');
   ok('…STOP then START brings back alert texts only', JSON.stringify(back) === '["alerts"]' && (await hasSmsConsent(P5, 'alerts')) && !(await hasSmsConsent(P5)), back);
   ok('a number with no record replying START gets booking texts, as before', JSON.stringify(await optInByReply(P6)) === '["bookings"]' && (await hasSmsConsent(P6)) && !(await hasSmsConsent(P6, 'alerts')));
-  ok('the reply webhook uses optInByReply and answers with the matching confirmation', /optInByReply\(from\)/.test(read('src/app/api/twilio/inbound/route.ts')) && /ALERT_SMS_CONFIRMATION/.test(read('src/app/api/twilio/inbound/route.ts')));
+  ok('the reply webhook uses optInByReply and answers with the matching confirmation', /optInByReply\(from\)/.test(read('src/app/api/twilio/inbound/route.ts')) && /alertOptInText\(course\?\.name\)/.test(read('src/app/api/twilio/inbound/route.ts')));
   ok('a repeat alert yes records nothing', !(await recordSmsConsent(P2, 'opt_in', { method: 'web_alert', scope: 'alerts' })));
 
   // Every text sender before ALERTS-2 keeps needing the booking-text yes: only the alert sender passes 'alerts'.

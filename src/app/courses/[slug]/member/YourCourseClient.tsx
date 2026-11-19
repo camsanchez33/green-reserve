@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { golferLookVars } from '@/components/golfer/look';
+import { LookBackground } from '@/components/golfer/useLookBackground';
 import { CourseFooter } from '@/components/golfer/CourseFrame';
 import { StatusDot } from '@/components/ui/StatusDot';
 import g from '@/components/golfer/golfer.module.css';
@@ -60,6 +61,7 @@ export default function YourCourseClient({ course, linkFailed }: { course: Login
 
   return (
     <div className={g.root} style={golferLookVars(course)}>
+      <LookBackground course={course} />
       <div className={g.site}>
         <header className={g.top}>
           <h1><Link href={home}>{course.name}</Link></h1>

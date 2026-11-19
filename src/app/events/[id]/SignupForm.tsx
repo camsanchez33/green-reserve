@@ -5,17 +5,18 @@
 import { smsWebConsentText } from '@/lib/sms-consent-copy';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
-import { Card } from '@/components/ui/Card';
 import { INPUT as FIELD } from '@/components/ui/field';
 
 type Question = { id: string; label: string; required: boolean };
 type Player = { name: string; email: string; phone: string; answers: Record<string, string> };
 const INPUT = `${FIELD} w-full`;
+// BOOKING-LOOK-1: the cards read the look's card colour (white on Light, as Card was); the accent is the look's --g-acc.
+const CARD_L = 'bg-card rounded-lg shadow-card';
 const blank = (): Player => ({ name: '', email: '', phone: '', answers: {} });
 const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-export default function SignupForm({ eventId, accent, maxGroup, questions, payNow, priceCents, feeCents, spotsLeft, courseName }: {
-  eventId: string; accent: string; maxGroup: number; questions: Question[]; payNow: boolean; priceCents: number; feeCents: number; spotsLeft: number | null; courseName: string;
+export default function SignupForm({ eventId, maxGroup, questions, payNow, priceCents, feeCents, spotsLeft, courseName }: {
+  eventId: string; maxGroup: number; questions: Question[]; payNow: boolean; priceCents: number; feeCents: number; spotsLeft: number | null; courseName: string;
 }) {
   const [players, setPlayers] = useState<Player[]>([blank()]);
   const [busy, setBusy] = useState(false);
@@ -43,7 +44,7 @@ export default function SignupForm({ eventId, accent, maxGroup, questions, payNo
   }
 
   if (done) return (
-    <Card className="p-5">
+    <div className={`${CARD_L} p-5`}>
       <h2 className="font-serif text-[24px] font-semibold text-ink">{done.status === 'waitlist' ? 'You’re on the waiting list' : 'You’re signed up'}</h2>
       <p className="text-sm text-ink mt-2">
         {done.status === 'waitlist'
@@ -51,14 +52,14 @@ export default function SignupForm({ eventId, accent, maxGroup, questions, payNo
           : `${done.names.join(', ')} ${done.names.length === 1 ? 'is' : 'are'} on the list.${priceCents > 0 ? ` ${courseName} will collect the entry before the event.` : ''}`}
       </p>
       <p className="text-sm text-ink-soft mt-2">We’ve emailed you the details.</p>
-    </Card>
+    </div>
   );
 
   const total = (priceCents + feeCents) * n;
   return (
     <form onSubmit={submit} className="space-y-4">
       {players.map((p, i) => (
-        <Card key={i} className="p-5">
+        <div key={i} className={`${CARD_L} p-5`}>
           <div className="flex items-baseline justify-between gap-2 mb-3">
             <h2 className="text-[15px] font-semibold text-ink">{i === 0 ? 'You' : `Player ${i + 1}`}</h2>
             {i > 0 && <button type="button" onClick={() => setPlayers(ps => ps.filter((_, j) => j !== i))} className="text-[13px] text-ink-soft hover:text-bad">Remove</button>}
@@ -72,7 +73,7 @@ export default function SignupForm({ eventId, accent, maxGroup, questions, payNo
               <input type="tel" maxLength={40} autoComplete={i === 0 ? 'tel' : 'off'} className={INPUT} value={p.phone} onChange={ev => set(i, { phone: ev.target.value })} /></label>
             {i === 0 && p.phone.replace(/\D/g, '').length >= 10 && (
               <label className="flex items-start gap-2.5 text-[12.5px] text-ink-soft leading-snug cursor-pointer select-none">
-                <input type="checkbox" checked={smsOk} onChange={ev => setSmsOk(ev.target.checked)} className="mt-0.5 w-4 h-4 shrink-0" style={{ accentColor: accent }} />
+                <input type="checkbox" checked={smsOk} onChange={ev => setSmsOk(ev.target.checked)} className="mt-0.5 w-4 h-4 shrink-0" style={{ accentColor: 'var(--g-acc)' }} />
                 <span>{smsWebConsentText(courseName).replace('my booking at', 'my event at')} <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline">Terms</a> · <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline">Privacy</a>. Optional.</span>
               </label>
             )}
@@ -81,14 +82,14 @@ export default function SignupForm({ eventId, accent, maxGroup, questions, payNo
                 <input required={q.required} maxLength={300} className={INPUT} value={p.answers[q.id] ?? ''} onChange={ev => set(i, { answers: { ...p.answers, [q.id]: ev.target.value } })} /></label>
             ))}
           </div>
-        </Card>
+        </div>
       ))}
-      {n < maxGroup && <button type="button" onClick={() => setPlayers(ps => [...ps, blank()])} className="px-3 py-2 rounded-md text-[13px] font-medium bg-white border border-line text-ink hover:bg-paper">Add a player</button>}
+      {n < maxGroup && <button type="button" onClick={() => setPlayers(ps => [...ps, blank()])} className="px-3 py-2 rounded-md text-[13px] font-medium bg-card border border-line text-ink hover:bg-paper">Add a player</button>}
 
       {wouldWait && <p className="text-sm text-ink border-l-[3px] border-warn pl-3">{spotsLeft === 0 ? 'The event is full.' : `Only ${spotsLeft} spot${spotsLeft === 1 ? ' is' : 's are'} left, so your group of ${n} can’t all fit.`} Signing up puts you on the waiting list{payNow ? ' — nothing is charged' : ''}.</p>}
       {error && <p className="text-sm text-bad bg-bad/5 border border-bad/20 rounded-md px-3 py-2" role="alert">{error}</p>}
       {payNow && !wouldWait && <p className="text-sm text-ink">You’ll pay {usd(total)}{feeCents ? ` (including GreenReserve’s ${usd(feeCents)}-per-player service fee)` : ''} on the next page. Your spot{n === 1 ? ' is' : 's are'} held for 30 minutes while you do.</p>}
-      <button type="submit" disabled={busy} className="w-full py-3.5 rounded-md font-medium text-white text-sm flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-70" style={{ backgroundColor: accent || '#173B2A' }}>
+      <button type="submit" disabled={busy} className="w-full py-3.5 rounded-md font-medium text-sm flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-70" style={{ backgroundColor: 'var(--g-acc)', color: 'var(--g-on-acc)' }}>
         {busy ? <><Loader2 size={16} className="animate-spin" /> Signing up…</> : wouldWait ? 'Join the waiting list' : payNow ? 'Continue to payment' : `Sign up${n > 1 ? ` ${n} players` : ''}`}
       </button>
     </form>

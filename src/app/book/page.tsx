@@ -19,7 +19,8 @@ export default async function BookPage({ searchParams }: { searchParams: Promise
   if (!slug || !teeTimeId || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     initial = { course: null, teeTime: null, error: 'Missing booking details.' };
   } else {
-    const [course, times] = await Promise.all([loadPublicCourse(slug), loadPublicTeeTimes(slug, date)]);
+    // viewer: the logged-in golfer's own window (a member's or resident's extra days), as /api/bookings allows it.
+    const [course, times] = await Promise.all([loadPublicCourse(slug), loadPublicTeeTimes(slug, date, { viewer: true })]);
     if (!course) initial = { course: null, teeTime: null, error: 'Course not found.' };
     else {
       const match = times.ok ? times.teeTimes.find(t => String(t.id) === teeTimeId) : undefined;

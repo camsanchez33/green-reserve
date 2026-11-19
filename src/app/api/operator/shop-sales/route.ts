@@ -1,3 +1,5 @@
+import { shopPayText, shopReceiptText } from '@/lib/sms-copy';
+import { shortLink } from '@/lib/short-links';
 import { SMS_NO_CONSENT_STAFF } from '@/lib/sms-consent-copy';
 import { requireRegisterOpen } from '@/lib/register-open';
 import { cashRefused } from '@/lib/takes-cash';
@@ -93,7 +95,7 @@ async function sendLink(courseId: string, sale: SaleView, payToken: string, via:
       const to = normalizePhone(sale.customerPhone);
       if (!to.startsWith('+1')) return 'Pay links can only be texted to US and Canadian numbers — email it instead.';
       // SHOP-FEE-1: the link pays by card, so its amount includes GreenReserve's service fee.
-      await sendSms(to, `GreenReserve: pay $${(saleCardCents(sale) / 100).toFixed(2)} for your ${courseName} pro shop items here (Apple Pay, Google Pay or card): ${payUrl} Reply STOP to opt out.`, { kind: 'shop_pay_link_text', courseId });
+      await sendSms(to, shopPayText(courseName, saleCardCents(sale), await shortLink('p', payUrl, { courseId })), { kind: 'shop_pay_link_text', courseId });
     } else {
       if (!sale.customerEmail || isPlaceholderEmail(sale.customerEmail) || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(sale.customerEmail)) return 'Add an email address to send the link.';
       await sendShopSalePayLinkEmail({ courseId, email: sale.customerEmail, name: sale.customerName, courseName, totalCents: saleCardCents(sale), serviceFeeCents: sale.serviceFeeCents, taxCents: sale.taxCents, lines: sale.lines, payUrl, discountCents: sale.discountCents, discountNote: sale.discountNote });
@@ -299,7 +301,7 @@ export async function PATCH(req: NextRequest) {
         // RECEIPT-3 (Cam 2026-11-09: "this is the receipt text, not even a link"): the text is the link; the page is the receipt.
         const url = await shopReceiptUrl(g.session.courseId, s.id);
         if (!url) return NextResponse.json({ error: 'The receipt link couldn’t be made — try again.' }, { status: 500 });
-        await sendSms(phone, `GreenReserve: your receipt from ${s.course.name} ($${(saleCardCents(s) / 100).toFixed(2)}): ${url} Reply STOP to opt out.`, { kind: 'shop_receipt_text', courseId: g.session.courseId });
+        await sendSms(phone, shopReceiptText(s.course.name, saleCardCents(s), await shortLink('r', url, { courseId: g.session.courseId })), { kind: 'shop_receipt_text', courseId: g.session.courseId });
       } else {
         if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to) || isPlaceholderEmail(to)) return NextResponse.json({ error: 'Enter an email address for the receipt.' }, { status: 400 });
         await sendShopReceiptEmail({ email: to.toLowerCase(), name: s.customerName, courseName: s.course.name, courseId: g.session.courseId, saleId: s.id, saleNumber: s.number, lines: v.lines,
