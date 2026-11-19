@@ -393,7 +393,7 @@
 @media (max-width: 560px) { .fsecs { gap: 64px; padding-block: 40px 64px; } }
 
 /* Contact us pop-up (homepage mockup dialog.cdlg). */
-.cdlg { border: 0; padding: 0; border-radius: 8px; width: min(520px, calc(100vw - 32px)); max-height: calc(100vh - 32px); background: var(--paper); color: var(--ink); box-shadow: 0 24px 60px rgba(0,0,0,.3); font-family: var(--font-sans); }
+.cdlg { border: 0; padding: 0; margin: auto; border-radius: 8px; width: min(520px, calc(100vw - 32px)); max-height: calc(100vh - 32px); background: var(--paper); color: var(--ink); box-shadow: 0 24px 60px rgba(0,0,0,.3); font-family: var(--font-sans); }
 .cdlg::backdrop { background: rgba(15,20,17,.45); }
 .cdlgHd { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 16px 18px 0; }
 .cdlgHd h2 { margin: 0; font-size: 24px; color: var(--forest); }
