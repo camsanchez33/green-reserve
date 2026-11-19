@@ -1,19 +1,26 @@
 'use client';
 import { useEffect, useState, Suspense } from 'react';
+import type { CSSProperties } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { serviceFeeLabel, SHOP_FEE_LABEL } from '@/lib/booking-fees';
 import { GolferExitLinks } from '@/components/GolferExitLinks';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
-import { CARD } from '@/components/ui/Card';
+import { LookFooter } from '@/components/golfer/LookFooter';
+import { lookSiteVars, lookBandHex, type BookingAccent } from '@/components/golfer/look';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { BILLING_EMAIL } from '@/lib/contact';
+
+// BOOKING-LOOK-1: the card reads the look's card colour (white on Light, as CARD was).
+const CARD_L = 'bg-card rounded-lg shadow-card';
 
 type ReceiptData = {
   /** RECEIPT-2: how it was paid (null = not paid yet / cancelled / refunded). */
   payment?: { method: 'cash' | 'card' | 'account'; paidAt: string | null; amountCents: number; card?: string; tenderedCents?: number; changeCents?: number } | null;
   timezone?: string;
   bookingId: string; bookingRef?: string; golferName: string; courseName: string; courseSlug: string; courseLocation: string; brandColor?: string;
+  /** BOOKING-LOOK-1: the course's look; absent or no accent = today's light page. It always prints light. */
+  bookingLook?: { look?: 'light' | 'dark'; accent?: BookingAccent | null } | null;
   date: string; time: string; holes: number; productLabel?: string | null; players: number; cartSelected: boolean;
   /** CART-4: shown when the course puts the cart ticket on the receipt. */
   cartTicket?: { riders: number } | null;
@@ -48,13 +55,17 @@ function paidWhen(iso: string, tz?: string): string {
   try { return new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: tz || undefined }); } catch { return ''; }
 }
 
-function ReceiptPageInner() {
+function ReceiptPageInner({ onLook }: { onLook: (v: CSSProperties | undefined) => void }) {
   const params = useParams();
   const search = useSearchParams();
   const bookingId = String(params.bookingId || '');
   const token = search.get('token') || '';
 
   const [data, setData] = useState<ReceiptData | null>(null);
+  // The page's footer sits outside this component: hand it the look once the booking has loaded.
+  useEffect(() => {
+    onLook(data ? lookSiteVars({ booking_look: data.bookingLook?.accent ? { look: data.bookingLook.look, accent: data.bookingLook.accent } : null, brand_color: data.brandColor }) : undefined);
+  }, [data, onLook]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -92,7 +103,7 @@ function ReceiptPageInner() {
   if (error || !data) {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
-        <div className={`${CARD} max-w-md w-full p-8 text-center`}>
+        <div className={`${CARD_L} max-w-md w-full p-8 text-center`}>
           <h1 className="font-serif text-[24px] leading-tight text-ink mb-2">Receipt not found</h1>
           <p className="text-ink-soft text-sm">{error || 'This link is invalid.'}</p>
         </div>
@@ -126,6 +137,9 @@ function ReceiptPageInner() {
     : isCancelled ? 'Booking total (not charged)'
     : 'Estimated total due at course';
 
+  // BOOKING-LOOK-1: the receipt wears the course look on screen (visual only); print forces black on white below.
+  const lookCourse = { booking_look: data.bookingLook?.accent ? { look: data.bookingLook.look, accent: data.bookingLook.accent } : null, brand_color: data.brandColor };
+  const lookVars = lookSiteVars(lookCourse);
   return (
     <>
       <style>{`
@@ -144,24 +158,24 @@ function ReceiptPageInner() {
           .receipt-card img { display: none !important; }
         }
       `}</style>
-      <div className="min-h-screen bg-paper px-4 py-10 print:bg-white print:py-0">
+      <div style={lookVars} className="min-h-screen bg-paper px-4 py-10 print:bg-white print:py-0">
         <div className="receipt-wrap max-w-lg mx-auto">
           {/* Print button */}
           <div className="no-print flex justify-end mb-4">
             <button
               onClick={() => window.print()}
-              className="flex items-center gap-2 text-sm text-ink-soft hover:text-ink border border-line rounded-md px-4 py-2 bg-white transition-colors"
+              className="flex items-center gap-2 text-sm text-ink-soft hover:text-ink border border-line rounded-md px-4 py-2 bg-card transition-colors"
             >
                Print / Save as PDF
             </button>
           </div>
 
-          <div className={`${CARD} receipt-card overflow-hidden`}>
+          <div className={`${CARD_L} receipt-card overflow-hidden`}>
             {/* The course's bar, not GreenReserve's — this document belongs to
                 the round the golfer played, not to the platform. */}
             <CourseHeaderBar
               courseName={data.courseName}
-              accent={data.brandColor}
+              accent={lookBandHex(lookCourse)}
               right={isCompleted ? 'Receipt' : isCancelled ? 'Cancellation' : 'Booking confirmation'}
             />
 
@@ -301,9 +315,14 @@ function ReceiptPageInner() {
 }
 
 export default function ReceiptPage() {
+  // BOOKING-LOOK-1: the footer wears the course look too (the site footer skips this page).
+  const [lookVars, setLookVars] = useState<CSSProperties | undefined>(undefined);
   return (
-    <Suspense fallback={<div className="min-h-screen bg-paper" />}>
-      <ReceiptPageInner />
-    </Suspense>
+    <>
+      <Suspense fallback={<div className="min-h-screen bg-paper" />}>
+        <ReceiptPageInner onLook={setLookVars} />
+      </Suspense>
+      <LookFooter vars={lookVars} />
+    </>
   );
 }

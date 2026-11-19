@@ -5,6 +5,11 @@ import { usePathname } from 'next/navigation';
 import { isBookingMode, isCourseWorld } from '@/lib/booking-mode';
 import { SUPPORT_EMAIL } from '@/lib/contact';
 
+/** BOOKING-LOOK-1: the golfer pages that wear the course look and carry their own footer in it (LookFooter). */
+function wearsCourseLook(pathname: string): boolean {
+  return /^\/(manage|checkin)\/[^/]+\/?$/.test(pathname) || (/^\/receipt\/[^/]+\/?$/.test(pathname) && !pathname.startsWith('/receipt/shop'));
+}
+
 export default function Footer() {
   const pathname = usePathname();
 
@@ -14,6 +19,8 @@ export default function Footer() {
   if (/^\/courses\/[^/]+(\/info|\/login|\/member)?\/?$/.test(pathname)) return null;
   // The Book page wears the course's look (Light or Dark) and carries its own footer in it (BookClient).
   if (pathname === '/book' || pathname === '/book/') return null;
+  // Manage, the tee-time pay page and the receipt wear the course look and carry their own footer (LookFooter).
+  if (wearsCourseLook(pathname)) return null;
 
   // Course-world pages (course page, member portal, golfer portal) get the
   // minimal text-only "Powered by GreenReserve" footer — no marketing links,

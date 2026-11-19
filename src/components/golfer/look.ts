@@ -80,3 +80,33 @@ export function lookText(look: BookingLook | null | undefined): { ink: string; m
   const n = NEUTRAL[look === 'dark' ? 'dark' : 'light'];
   return { ink: n.ink, muted: n.muted, bad: n.bad };
 }
+
+/** The header band's colour as one hex (CourseHeaderBar takes a hex): the preset's band, or brand_color. */
+export function lookBandHex(course: { booking_look?: Partial<CourseLook> | null; brand_color?: string | null }): string {
+  return (golferLookVars(course) as Record<string, string>)['--g-band'];
+}
+
+/**
+ * For the golfer pages still drawn with the site's classes (manage, the tee-time pay page, the receipt; BOOKING-LOOK-1):
+ * the look's variables plus the site colour tokens those classes read, so the existing markup follows the look.
+ * - A course that has picked a look: the accent replaces pine (buttons, links, rules), in both looks.
+ * - Dark: the neutrals and the status colours swap to the dark values (as .op-look does for the operator pages).
+ * - A course that hasn't picked a look (accent null): nothing changes; today's light page, its brand_color in the band.
+ */
+export function lookSiteVars(course: { booking_look?: Partial<CourseLook> | null; brand_color?: string | null }): CSSProperties {
+  const vars = golferLookVars(course) as Record<string, string>;
+  const bl = course.booking_look;
+  const picked = !!bl && (bl.look === 'light' || bl.look === 'dark') && !!bl.accent && (BOOKING_ACCENTS as readonly string[]).includes(bl.accent);
+  if (!picked) return vars as CSSProperties;
+  Object.assign(vars, { '--color-pine': vars['--g-acc'], '--color-pine-hover': vars['--g-acc-h'], '--color-pine-soft': vars['--g-acc-soft'] });
+  if (lookOf(course).mode === 'dark') {
+    const n = NEUTRAL.dark;
+    Object.assign(vars, {
+      '--color-paper': n.bg, '--color-card': n.card, '--color-ink': n.ink, '--color-ink-soft': n.soft,
+      '--color-ink-muted': n.muted, '--color-ink-faint': n.muted, '--color-line': n.line, '--color-line-soft': '#2A2D2A',
+      '--color-line-strong': '#4A4D4A',
+    });
+  }
+  return vars as CSSProperties;
+}
+
