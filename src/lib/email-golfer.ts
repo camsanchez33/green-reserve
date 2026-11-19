@@ -159,7 +159,7 @@ export function cancellationFeeChargedEmail(d: FeeChargedData, course: EmailCour
     ...from(course),
     preheader: 'Refunded when you check in and pay for your round.',
     line: `Your card was charged ${usd(d.feeAmount)} to hold your tee time.`,
-    paragraphs: [`Free cancellation ended, so the hold was charged. It’s refunded when you check in and pay for your round: use the button below on the day of your round.`],
+    paragraphs: [`Free cancellation ended, so the hold was charged. It’s refunded when you check in and pay for your round${l.pay ? ': use the button below on the day of your round' : ' on the day of your round'}.`],
     rows: [...roundRows(d), { label: 'Charged', value: usd(d.feeAmount) }],
     button: l.pay ? { label: 'Pay', url: l.pay } : undefined,
     small: l.hasToken ? { label: 'Change or cancel booking', url: l.manage } : undefined,

@@ -96,7 +96,7 @@ export function subjectLine(s: string): string {
  * could break the header taken out: "Maple Run Golf Course" <the noreply address from lib/contact>.
  */
 export function courseFrom(courseName: string, address: string): string {
-  const name = String(courseName ?? '').replace(/[\r\n"<>\\]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 78) || 'GreenReserve';
+  const name = String(courseName ?? '').replace(/[\u0000-\u001f\u007f"<>\\]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 78) || 'GreenReserve';
   return `"${name}" <${address}>`;
 }
 
@@ -119,7 +119,7 @@ function colours(i: LetterInput): { bar: string; btn: string; btnInk: string } {
 }
 
 /** "Price", "Paid", "Total" rows carry money: set larger. */
-const isMoneyRow = (label: string) => /^(Price|Paid|Total|Refund|Due|Amount)/i.test(label);
+const isMoneyRow = (label: string) => /^(Price|Paid|Total|Refund|Due|Amount|Charged)\b/i.test(label) && !/^(Paid with|Due by)/i.test(label);
 const br = (s: string) => esc(s).replace(/\r?\n/g, '<br>');
 
 /** The logo image (a 3x PNG: email clients don't show SVG), at `h` px high. 540×101 source. */

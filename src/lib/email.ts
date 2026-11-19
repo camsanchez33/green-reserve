@@ -5,6 +5,7 @@ import { SUPPORT_EMAIL, ADMIN_EMAIL, NOREPLY_EMAIL } from '@/lib/contact';
 import { type ConfirmationParts } from './confirmation-parts';
 import { welcomeParts, type WelcomeInput } from './team-welcome';
 import { prisma } from './prisma';
+import { roundChargeCents } from './booking-fees';
 import { courseFrom, type EmailCourse } from './email-layout';
 import { BOOKING_ACCENT_COLOURS, bookingLookOf } from './booking-look';
 import {
@@ -95,8 +96,9 @@ export async function emailCourse(ref: { bookingId?: string | null; courseId?: s
     let c: { name: string; address: string; city: string; state: string; zipCode: string; phone: string; proShopPhone: string; brandColor: string; bookingLook: string; bookingAccent: string | null } | null = null;
     let booking: { totalCents: number; players: number } | null = null;
     if (ref.bookingId) {
-      const b = await prisma.booking.findUnique({ where: { id: ref.bookingId }, select: { totalAmount: true, players: true, course: { select } } });
-      if (b) { c = b.course; booking = { totalCents: b.totalAmount, players: b.players }; }
+      const b = await prisma.booking.findUnique({ where: { id: ref.bookingId }, select: { totalAmount: true, shopTotalCents: true, shopFeeCents: true, shopTaxCents: true, accessFeeTotal: true, feePaidCents: true, roundChargedCents: true, players: true, course: { select } } });
+      // What the pay page charges (api/checkin roundChargedTotal): the round plus its shop items, their fee and tax, less any fee paid at booking.
+      if (b) { c = b.course; booking = { totalCents: b.roundChargedCents ?? roundChargeCents(b), players: b.players }; }
     }
     if (!c && ref.courseId) c = await prisma.course.findUnique({ where: { id: ref.courseId }, select });
     if (!c && ref.courseSlug) c = await prisma.course.findUnique({ where: { slug: ref.courseSlug }, select });
