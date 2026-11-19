@@ -36,8 +36,8 @@ export type YourSession = {
   renewalFailed?: boolean;
   /** The term has ended but the course's grace days still give member rates (#505). */
   inGrace?: boolean;
-  /** Build is adding it: the server's own word that a renewal charge is still to run. When sent, it replaces the
-   *  31-day rule below. */
+  /** Build is adding it: the server's own word that a renewal charge is still to run after the end date. When sent,
+   *  it replaces the 31-day wait below (a membership set to renew, past its date, is still required). */
   renewalPending?: boolean;
   upcoming?: Upcoming[];
 };
@@ -123,9 +123,10 @@ export function membershipLine(s: YourSession, today: string = localToday()): { 
   // 1. Only the server's own record of a failed charge says the renewal failed.
   if (s.renewalFailed === true) return { group, dot: 'bad', when: null, problem: RENEWAL_FAILED };
   // 2. Being processed.
-  const pending = typeof s.renewalPending === 'boolean'
+  // renewalPending replaces only the 31-day wait: it still needs a membership set to renew whose date has passed.
+  const pending = renews && past && (typeof s.renewalPending === 'boolean'
     ? s.renewalPending
-    : renews && past && typeof s.renewalFailed === 'boolean' && daysBetween(day as string, today) <= 31;
+    : typeof s.renewalFailed === 'boolean' && daysBetween(day as string, today) <= 31);
   if (pending) return { group, dot: 'warn', when: null, note: RENEWAL_PENDING };
   // 3. In the grace days.
   if (s.inGrace === true && isDay(day)) return { group, dot: 'warn', when: null, note: graceNote(day) };
