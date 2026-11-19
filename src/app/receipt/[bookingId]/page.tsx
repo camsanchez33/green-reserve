@@ -7,7 +7,7 @@ import { serviceFeeLabel, SHOP_FEE_LABEL } from '@/lib/booking-fees';
 import { GolferExitLinks } from '@/components/GolferExitLinks';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
 import { LookFooter } from '@/components/golfer/LookFooter';
-import { lookSiteVars, lookBandHex, type BookingAccent } from '@/components/golfer/look';
+import { lookPicked, lookSiteVars, lookBandHex, type BookingAccent } from '@/components/golfer/look';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { BILLING_EMAIL } from '@/lib/contact';
 
@@ -64,7 +64,8 @@ function ReceiptPageInner({ onLook }: { onLook: (v: CSSProperties | undefined) =
   const [data, setData] = useState<ReceiptData | null>(null);
   // The page's footer sits outside this component: hand it the look once the booking has loaded.
   useEffect(() => {
-    onLook(data ? lookSiteVars({ booking_look: data.booking_look?.accent ? { look: data.booking_look.look, accent: data.booking_look.accent } : null, brand_color: data.brandColor }) : undefined);
+    const lc = data ? { booking_look: data.booking_look?.accent ? { look: data.booking_look.look, accent: data.booking_look.accent } : null, brand_color: data.brandColor } : null;
+    onLook(lc && lookPicked(lc) ? lookSiteVars(lc) : undefined);
   }, [data, onLook]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -149,7 +150,7 @@ function ReceiptPageInner({ onLook }: { onLook: (v: CSSProperties | undefined) =
           body { background: #fff !important; color: #000 !important; }
           .receipt-card .p-4 { padding: 1.5mm 0 !important; border: none !important; }
           .receipt-wrap { max-width: 72mm !important; margin: 0 auto !important; }
-          .receipt-card { border: none !important; box-shadow: none !important; max-width: 100% !important; font-size: 11px !important; }
+          .receipt-card { background: #fff !important; border: none !important; box-shadow: none !important; max-width: 100% !important; font-size: 11px !important; }
           .receipt-card * { color: #000 !important; background: transparent !important; border-color: #000 !important; }
           .receipt-card .px-6, .receipt-card .px-4 { padding-left: 0 !important; padding-right: 0 !important; }
           .receipt-card .py-6 { padding-top: 2mm !important; padding-bottom: 2mm !important; }

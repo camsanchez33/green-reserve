@@ -86,6 +86,12 @@ export function lookBandHex(course: { booking_look?: Partial<CourseLook> | null;
   return (golferLookVars(course) as Record<string, string>)['--g-band'];
 }
 
+/** The course has saved a look (a valid booking_look with a preset accent). Without one, a page is exactly as before. */
+export function lookPicked(course: { booking_look?: Partial<CourseLook> | null }): boolean {
+  const bl = course.booking_look;
+  return !!bl && (bl.look === 'light' || bl.look === 'dark') && !!bl.accent && (BOOKING_ACCENTS as readonly string[]).includes(bl.accent);
+}
+
 /**
  * For the golfer pages still drawn with the site's classes (manage, the tee-time pay page, the receipt; BOOKING-LOOK-1):
  * the look's variables plus the site colour tokens those classes read, so the existing markup follows the look.
@@ -95,9 +101,7 @@ export function lookBandHex(course: { booking_look?: Partial<CourseLook> | null;
  */
 export function lookSiteVars(course: { booking_look?: Partial<CourseLook> | null; brand_color?: string | null }): CSSProperties {
   const vars = golferLookVars(course) as Record<string, string>;
-  const bl = course.booking_look;
-  const picked = !!bl && (bl.look === 'light' || bl.look === 'dark') && !!bl.accent && (BOOKING_ACCENTS as readonly string[]).includes(bl.accent);
-  if (!picked) return vars as CSSProperties;
+  if (!lookPicked(course)) return vars as CSSProperties;
   Object.assign(vars, { '--color-pine': vars['--g-acc'], '--color-pine-hover': vars['--g-acc-h'], '--color-pine-soft': vars['--g-acc-soft'] });
   if (lookOf(course).mode === 'dark') {
     const n = NEUTRAL.dark;

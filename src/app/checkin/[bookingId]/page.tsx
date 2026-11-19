@@ -9,7 +9,7 @@ import type { PaymentRequest } from '@stripe/stripe-js';
 import { GolferExitLinks } from '@/components/GolferExitLinks';
 import Link from 'next/link';
 import { LookFooter } from '@/components/golfer/LookFooter';
-import { lookSiteVars, lookBandHex, lookMode, lookText, type BookingAccent } from '@/components/golfer/look';
+import { lookPicked, lookSiteVars, lookBandHex, lookMode, lookText, type BookingAccent } from '@/components/golfer/look';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
 import { SHOP_FEE_LABEL } from '@/lib/booking-fees';
 import { BILLING_EMAIL } from '@/lib/contact';
@@ -38,7 +38,7 @@ function cardStyleFor(look: 'light' | 'dark') {
 
 type CheckInInfo = {
   golferName: string; courseName: string; courseSlug: string; courseAddress: string; brandColor: string; heroImageUrl?: string; logoUrl?: string;
-  /** BOOKING-LOOK-1: the course's look (Course.booking_look / bookingAccent); absent or no accent = today's light page. */
+  /** BOOKING-LOOK-1: the course's look (Course.bookingLook / bookingAccent); absent or no accent = today's light page. */
   booking_look?: { look?: 'light' | 'dark'; accent?: BookingAccent | null } | null;
   date: string; time: string; players: number; holes: number; productLabel?: string | null; status: string;
   totalAmount: number; greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number; accessFeeTotal: number;
@@ -190,7 +190,8 @@ function CheckInPageInner({ onLook }: { onLook: (v: CSSProperties | undefined) =
   const [info, setInfo] = useState<CheckInInfo | null>(null);
   // The page's footer sits outside this component: hand it the look once the booking has loaded.
   useEffect(() => {
-    onLook(info ? lookSiteVars({ booking_look: info.booking_look?.accent ? { look: info.booking_look.look, accent: info.booking_look.accent } : null, brand_color: info.brandColor }) : undefined);
+    const lc = info ? { booking_look: info.booking_look?.accent ? { look: info.booking_look.look, accent: info.booking_look.accent } : null, brand_color: info.brandColor } : null;
+    onLook(lc && lookPicked(lc) ? lookSiteVars(lc) : undefined);
   }, [info, onLook]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');

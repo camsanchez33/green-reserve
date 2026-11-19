@@ -10,7 +10,7 @@ import { GolferExitLinks } from '@/components/GolferExitLinks';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { LookFooter } from '@/components/golfer/LookFooter';
-import { lookSiteVars, lookBandHex, lookMode, lookText, type BookingAccent } from '@/components/golfer/look';
+import { lookPicked, lookSiteVars, lookBandHex, type BookingAccent } from '@/components/golfer/look';
 import { cancelNowWords } from '@/lib/cancel-policy';
 
 // BOOKING-LOOK-1: the card reads the look's card colour (white on Light, as CARD was).
@@ -25,7 +25,7 @@ type BookingInfo = {
   courseAddress: string;
   coursePhone?: string;
   brandColor: string;
-  /** BOOKING-LOOK-1: the course's look (Course.booking_look / bookingAccent); absent or no accent = today's light page. */
+  /** BOOKING-LOOK-1: the course's look (Course.bookingLook / bookingAccent); absent or no accent = today's light page. */
   booking_look?: { look?: 'light' | 'dark'; accent?: BookingAccent | null } | null;
   heroImageUrl?: string; logoUrl?: string;
   date: string;
@@ -131,7 +131,8 @@ function ManagePageInner({ onLook }: { onLook: (v: CSSProperties | undefined) =>
   const [info, setInfo] = useState<BookingInfo | null>(null);
   // The page's footer sits outside this component: hand it the look once the booking has loaded.
   useEffect(() => {
-    onLook(info ? lookSiteVars({ booking_look: info.booking_look?.accent ? { look: info.booking_look.look, accent: info.booking_look.accent } : null, brand_color: info.brandColor }) : undefined);
+    const lc = info ? { booking_look: info.booking_look?.accent ? { look: info.booking_look.look, accent: info.booking_look.accent } : null, brand_color: info.brandColor } : null;
+    onLook(lc && lookPicked(lc) ? lookSiteVars(lc) : undefined);
   }, [info, onLook]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
@@ -232,7 +233,10 @@ function ManagePageInner({ onLook }: { onLook: (v: CSSProperties | undefined) =>
       if (info) setInfo({ ...info, time: data.time, greenFeeTotal: data.greenFeeTotal, cartFeeTotal: data.cartFeeTotal, accessFeeTotal: data.accessFeeTotal, totalAmount: data.totalAmount });
       setView('modified');
       // The change is saved; now the updated confirmation email, and say if it didn't go.
+      // The change is done: free the button before the email, which can be slow.
+      setSwapping(false);
       await sendModifiedEmail();
+      return;
     } catch { setSwapError('Something went wrong. Please try again.'); }
     setSwapping(false);
   }
@@ -251,7 +255,9 @@ function ManagePageInner({ onLook }: { onLook: (v: CSSProperties | undefined) =>
       setModifyResult(updated);
       setInfo({ ...info, players: data.players, greenFeeTotal: data.greenFeeTotal, cartFeeTotal: data.cartFeeTotal, accessFeeTotal: data.accessFeeTotal, totalAmount: data.totalAmount });
       setView('modified');
+      setChangingPlayers(false);
       await sendModifiedEmail();
+      return;
     } catch { setPlayersError('Something went wrong. Please try again.'); }
     setChangingPlayers(false);
   }
@@ -388,7 +394,7 @@ function ManagePageInner({ onLook }: { onLook: (v: CSSProperties | undefined) =>
                       key={slot.id}
                       onClick={() => setSelectedSlot(isSelected ? null : slot)}
                       className={`w-full flex items-center justify-between px-4 py-3.5 rounded-md border text-sm transition-all ${isSelected ? '' : 'border-line hover:border-line-strong'}`}
-                      style={isSelected ? { borderColor: 'var(--g-acc)', backgroundColor: 'var(--g-acc-soft)' } : undefined}
+                      style={isSelected ? { borderColor: 'var(--g-acc)', backgroundColor: lookPicked(lookCourse) ? 'var(--g-acc-soft)' : `${band}0d` } : undefined}
                     >
                       <div className="text-left">
                         <span className="font-medium text-ink">{fmtTime(slot.time)}</span>

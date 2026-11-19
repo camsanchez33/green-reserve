@@ -37,7 +37,18 @@ check('the card field and wallet button follow the look on the pay page', pages.
 check('the cancel button keeps a readable label on Dark (card colour on red, white on Light)', pages.manage.includes('rounded-md bg-bad text-card font-medium'));
 check('the receipt still prints black on white whatever the look', pages.receipt.includes('.receipt-card * { color: #000 !important; background: transparent !important;') && pages.receipt.includes('print:bg-white') && pages.receipt.includes('.no-print, footer, nextjs-portal { display: none !important; }'));
 const footer = readFileSync('src/components/Footer.tsx', 'utf8');
-check('the site footer skips the three pages (not the shop receipt)', footer.includes('if (wearsCourseLook(pathname)) return null;') && footer.includes("!pathname.startsWith('/receipt/shop')"));
+check('the site footer skips the three pages (not the shop receipt)', footer.includes('if (wearsCourseLook(pathname)) return null;') && footer.includes("pathname !== '/receipt/shop'"));
+{
+  const re = /^\/(manage|checkin|receipt)\/[^/]+\/?$/;
+  const wears = (x: string) => re.test(x) && x !== '/receipt/shop' && x !== '/receipt/shop/';
+  check('…by path: /manage/<id>, /checkin/<id>, /receipt/<id> yes; /receipt/shop/<id>, /receipt/shop, /manage no', wears('/manage/abc') && wears('/checkin/abc/') && wears('/receipt/abc') && !wears('/receipt/shop/abc') && !wears('/receipt/shop') && !wears('/manage') && !wears('/manage/a/b'));
+}
+const lookFooter = readFileSync('src/components/golfer/LookFooter.tsx', 'utf8');
+check('no look picked: the footer is the booking-mode lockup exactly as before (review 2026-11-19)', lookFooter.includes('if (!vars) return <BookingModeFooter />;') && footer.includes('if (isBookingMode(pathname)) return <BookingModeFooter />;') && footer.includes('<Image src="/brand/logo.svg"'));
+for (const [name, src] of Object.entries(pages)) check(`${name}: the footer gets the look only when one is picked`, src.includes('onLook(lc && lookPicked(lc) ? lookSiteVars(lc) : undefined);'));
+check('no look picked: the selected slot keeps its 5% brand tint', pages.manage.includes("backgroundColor: lookPicked(lookCourse) ? 'var(--g-acc-soft)' : `${band}0d`"));
+check('a Dark receipt still prints on white (the card itself, not only its children)', pages.receipt.includes('.receipt-card { background: #fff !important;'));
+check('manage: the change frees its button before the (slow) email', pages.manage.includes('      setSwapping(false);\n      await sendModifiedEmail();') && pages.manage.includes('      setChangingPlayers(false);\n      await sendModifiedEmail();'));
 
 // Build 2026-11-19: the "booking changed" email is awaited and its failure said; the change stays saved.
 check('manage: the updated-booking email is awaited, never fire-and-forget', !pages.manage.includes('.catch(() => undefined);') && (pages.manage.match(/await sendModifiedEmail\(\);/g) ?? []).length === 2 && pages.manage.includes("setEmailState(r && r.ok ? 'sent' : 'failed');"));
