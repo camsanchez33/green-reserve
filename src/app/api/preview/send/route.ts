@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, areaGate } from '@/lib/admin-session';
 import { signPreviewToken } from '@/lib/preview-token';
-import { sendDashboardSetupEmail, sendPageReadyInDashboardEmail } from '@/lib/email';
+import { sendDashboardSetupEmail } from '@/lib/email';
 import { issueSetupLink, hasSetUp, SETUP_LINK_DAYS } from '@/lib/operator-setup';
 import { getApprovalState, recordCoursePageDecision } from '@/lib/approval-state';
 import { withAudit } from '@/lib/admin-audit';
@@ -20,7 +20,7 @@ import { withAudit } from '@/lib/admin-audit';
 /** Email the owner about their page. Returns an error message, or null when it went. */
 async function tellOwner(op: { id: string; name: string; email: string; lastLoginAt: Date | null; emailVerified: boolean }, courseName: string): Promise<string | null> {
   try {
-    if (hasSetUp(op)) await sendPageReadyInDashboardEmail({ operatorName: op.name, operatorEmail: op.email, courseName });
+    if (hasSetUp(op)) await sendDashboardSetupEmail({ operatorName: op.name, operatorEmail: op.email, courseName, setupUrl: null, pageReady: true, linkDays: 0 });
     else await sendDashboardSetupEmail({ operatorName: op.name, operatorEmail: op.email, courseName, setupUrl: await issueSetupLink(op.id), pageReady: true, linkDays: SETUP_LINK_DAYS });
     return null;
   } catch (err) {

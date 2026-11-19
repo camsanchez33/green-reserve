@@ -14,7 +14,7 @@ const agreements = readdirSync('legal/documents').flatMap(d => readdirSync(join(
 check('no agreement names the old Outlook inbox or hello@', agreements.every(f => !/thegreenreserve@outlook\.com|hello@greenreserve\.app/.test(readFileSync(f, 'utf8'))));
 const e = readFileSync('src/lib/email.ts', 'utf8');
 const fn = (n: string) => { const i = e.indexOf(`export async function ${n}(`); const j = e.indexOf('\nexport ', i + 1); return e.slice(i, j < 0 ? undefined : j); };
-for (const n of ['sendTwoFactorCodeEmail', 'sendAdminTwoFactorCode', 'sendOperatorPasswordResetEmail', 'sendGolferPasswordResetEmail', 'sendOperatorVerifyEmail', 'sendInquirySigninCode', 'sendOwnerDeviceApproval', 'sendOwnerSignInAlert', 'sendOwnerPasswordChanged'])
+for (const n of ['sendTwoFactorCodeEmail', 'sendAdminTwoFactorCode', 'sendOperatorPasswordResetEmail', 'sendOperatorVerifyEmail', 'sendInquirySigninCode', 'sendOwnerDeviceApproval', 'sendOwnerSignInAlert', 'sendOwnerPasswordChanged'])
   check(`${n} is sent from noreply@ and never asks for a reply`, fn(n).includes('from: FROM_NOREPLY') && !/[Rr]eply (to this email|here)/.test(fn(n)));
 // Emails redo (Cam 2026-11-19): every golfer email comes from the course — its full name at noreply@, no replies
 // (scripts/emails-golfer-test.ts checks all of them).

@@ -1,6 +1,6 @@
 import { Resend } from 'resend';
 import { logSent, type SendMeta } from '@/lib/sent-messages';
-import { SUPPORT_EMAIL, ADMIN_EMAIL, NOREPLY_EMAIL, OUTREACH_POSTAL_ADDRESS } from '@/lib/contact';
+import { ADMIN_EMAIL, NOREPLY_EMAIL, OUTREACH_POSTAL_ADDRESS } from '@/lib/contact';
 import { type ConfirmationParts } from './confirmation-parts';
 import { type WelcomeInput } from './team-welcome';
 import { prisma } from './prisma';
@@ -23,6 +23,7 @@ import {
   inquiryReplyEmail, inquiryDeclinedEmail, callInviteEmail, inquiryNotificationEmail, lockedOutAlertEmail, detailsSubmittedEmail,
   courseApprovedEmail, agreementBumpSummaryEmail, adminUrgentEmail, adminDigestEmail, adminTwoFactorEmail, adminPasswordResetEmail,
   ownerDeviceApprovalEmail, ownerSignInEmail, ownerPasswordChangedEmail, ownerPasskeyChangedEmail, outreachEmail, type DigestFacts,
+  dashboardAccessEmail, goLiveEmail, callRecapEmail,
 } from './email-staff';
 export { courseNoticeEmail };
 
@@ -128,42 +129,6 @@ export async function emailCourse(ref: { bookingId?: string | null; courseId?: s
     console.error('[email] course lookup failed:', err instanceof Error ? err.message : String(err));
     return { course: { name: courseName }, booking: null };
   }
-}
-
-// EMAIL-2 (Cam 2026-10-20: "I don't think this looks professional or clean").
-// One look for every email: a cream page, the GreenReserve lockup above one white
-// sheet (LOGO-1: top-left, a 3x PNG because email clients don't show SVG), and the
-// green golfer alone in the footer (LOGO-2) with the name and the inbox. Headlines
-// are Georgia — the closest face every client has to the site's EB Garamond —
-// and every colour is a brand token (ink #141814, body #3F453E, muted #6B706A,
-// line #E3E4DE, pine #173B2A, cream #F6F4EC); the per-email bodies were moved
-// onto the same tokens in the same pass.
-/** `contact` is the footer's "Questions?" address — the audience's own inbox. */
-function baseTemplate(content: string, contact: string = SUPPORT_EMAIL) {
-  const site = process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
-  return `<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#F6F4EC;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F6F4EC;">
-    <tr><td align="center" style="padding:40px 20px 32px;">
-      <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
-        <tr><td style="padding:0 4px 28px;">
-          <img src="${site}/brand/email-logo-3x.png" width="168" height="32" alt="GreenReserve" style="display:block;border:0;outline:none;text-decoration:none;width:168px;height:32px;" />
-        </td></tr>
-        <tr><td style="background:#ffffff;border-radius:8px;padding:36px 36px 32px;color:#3F453E;font-size:15px;line-height:1.6;">${content}</td></tr>
-        <tr><td align="center" style="padding:28px 4px 0;">
-          <img src="${site}/brand/email-golfer-3x.png" width="22" height="27" alt="" style="display:block;border:0;outline:none;width:22px;height:27px;margin:0 auto 10px;" />
-          <div style="font-size:12px;line-height:1.6;color:#6B706A;">
-            GreenReserve &middot; <a href="https://greenreserve.app" style="color:#6B706A;text-decoration:none;">greenreserve.app</a><br>
-            Questions? <a href="mailto:${contact}" style="color:#6B706A;text-decoration:none;">${contact}</a>
-          </div>
-        </td></tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`;
 }
 
 /** "Jane Smith" → "Jane". Greetings use the first name only (EMAIL-2). */
@@ -371,7 +336,6 @@ export async function sendReminderEmail(data: {
   await getResend().emails.send({ meta: { kind: 'reminder_email', bookingId: data.bookingId, courseSlug: data.courseSlug }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.golferEmail, ...mail(reminderEmail({ ...data, totalCents: ctx.booking?.totalCents }, ctx.course)) });
 }
 
-
 export async function sendOperatorPasswordResetEmail(data: {
   operatorName: string;
   operatorEmail: string;
@@ -423,34 +387,6 @@ export async function sendOperatorVerifyEmail(data: {
   await getResend().emails.send({ meta: { kind: 'operator_verify_email' }, from: FROM_NOREPLY, to: data.operatorEmail, ...mail(operatorVerifyEmail(data)) });
 }
 
-export async function sendGolferPasswordResetEmail(data: {
-  golferName: string;
-  golferEmail: string;
-  resetLink: string;
-}) {
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Reset your password</h1>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">
-      Hi ${escHtml(firstName(data.golferName))} — we got a request to reset the password on your GreenReserve account (${escHtml(data.golferEmail)}).
-      If this wasn't you, you can safely ignore this email.
-    </p>
-    <a href="${data.resetLink}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:6px;font-weight:800;font-size:16px;margin-bottom:16px;">
-      Set a New Password &rarr;
-    </a>
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">
-      This link expires in 1 hour. Questions? Reach us at <a href="mailto:${SUPPORT_EMAIL}" style="color:#3F453E;">${SUPPORT_EMAIL}</a>
-    </p>
-  `);
-  await getResend().emails.send({ meta: { kind: 'golfer_password_reset_email' },
-    from: FROM_NOREPLY,
-    to: data.golferEmail,
-    subject: `Reset your GreenReserve password`,
-    html,
-  });
-}
-
-// Fired right after a correct password when the operator has 2FA enabled —
-// gates issuing the real session cookie until this code is verified.
 /**
  * Cam 2026-10-27: the ONE "your dashboard is ready" email a course owner gets —
  * from the build, a resend, early dashboard access or the preview. No password in
@@ -459,124 +395,14 @@ export async function sendGolferPasswordResetEmail(data: {
  * their booking page, the operator agreement and Stripe.
  */
 export async function sendDashboardSetupEmail(data: {
-  operatorName: string; operatorEmail: string; courseName: string; setupUrl: string;
+  operatorName: string; operatorEmail: string; courseName: string;
+  /** null: an owner who already signs in — the email sends them to the dashboard and never touches their sign-in. */
+  setupUrl: string | null;
   /** The booking page is built and ready for them to review. */
   pageReady: boolean; linkDays: number;
 }) {
-  const steps = [
-    data.pageReady ? 'Review your booking page, and approve it or tell us what to change.' : 'Look over your booking page as we finish it.',
-    'Sign the operator agreement.',
-    'Connect Stripe so payments reach your bank.',
-  ];
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">${data.pageReady ? 'Your booking page is ready for a look' : 'Your dashboard is ready'}, ${escHtml(firstName(data.operatorName))}.</h1>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">Set your password to get into the GreenReserve dashboard for <strong>${escHtml(data.courseName)}</strong>.</p>
-    <a href="${data.setupUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:15px;border-radius:6px;font-weight:600;font-size:16px;margin-bottom:24px;">Set your password</a>
-    <p style="margin:0 0 8px;color:#141814;font-size:15px;font-weight:700;">Then your dashboard walks you through</p>
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:22px;">${steps.map((t, i) => `
-      <tr>
-        <td style="padding:6px 12px 6px 0;width:26px;vertical-align:top;"><div style="width:22px;height:22px;border-radius:11px;background:#173B2A;color:#fff;font-size:12px;font-weight:600;line-height:22px;text-align:center;">${i + 1}</div></td>
-        <td style="padding:7px 0;color:#141814;font-size:14px;line-height:1.5;">${escHtml(t)}</td>
-      </tr>`).join('')}
-    </table>
-    <p style="margin:0;color:#6B706A;font-size:13px;">The link works once and expires in ${data.linkDays} days. If it has expired, use &ldquo;Forgot password&rdquo; on the sign-in page with ${escHtml(data.operatorEmail)}.</p>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'operator_setup_email' },
-    from: FROM_ADMIN,
-    to: data.operatorEmail,
-    subject: subj(data.pageReady ? `Your ${data.courseName} booking page is ready for a look` : `Set up your ${data.courseName} dashboard`),
-    html,
-  });
-}
-
-/** An owner who already signs in: the (updated) page is waiting in their dashboard. Their sign-in is never touched. */
-export async function sendPageReadyInDashboardEmail(data: { operatorName: string; operatorEmail: string; courseName: string }) {
-  const site = process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Your booking page is ready for a look, ${escHtml(firstName(data.operatorName))}.</h1>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">We&rsquo;ve updated the booking page for <strong>${escHtml(data.courseName)}</strong>. Sign in to review it, then approve it or tell us what to change.</p>
-    <a href="${site}/dashboard" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:15px;border-radius:6px;font-weight:600;font-size:16px;">Review it in your dashboard</a>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'operator_page_ready_email' },
-    from: FROM_ADMIN,
-    to: data.operatorEmail,
-    subject: subj(`Your ${data.courseName} booking page is ready for a look`),
-    html,
-  });
-}
-
-export async function sendPreviewEmail(data: {
-  contactName: string;
-  contactEmail: string;
-  courseName: string;
-  previewUrl: string;
-}) {
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Your page is ready for a look</h1>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">
-      Hi ${firstName(data.contactName)} &mdash; we've finished building your GreenReserve page for <strong>${data.courseName}</strong>.
-      Take a look and let us know if anything needs adjusting before we go live.
-    </p>
-    <a href="${data.previewUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:6px;font-weight:600;font-size:16px;margin-bottom:20px;">
-      Preview Your Page &rarr;
-    </a>
-    <div style="background:#F6F4EC;border:1px solid #E3E4DE;border-radius:6px;padding:16px;margin-bottom:20px;">
-      <p style="margin:0;color:#6B706A;font-size:13px;">Booking is disabled on this preview link &mdash; it's only for you to review the layout and information. Reply to this email with any changes and we'll get them in quickly.</p>
-    </div>
-    <p style="margin:0 0 12px;color:#6B706A;font-size:13px;">Want to see your dashboard too? We can send you access &mdash; just reply.</p>
-    <p style="margin:0 0 20px;color:#6B706A;font-size:13px;">When you log in, your Getting Started checklist will walk you through everything, including payments setup.</p>
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">
-      Questions? Reply to this email or reach us at <a href="mailto:${ADMIN_EMAIL}" style="color:#3F453E;">${ADMIN_EMAIL}</a>
-    </p>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'preview_email' },
-    from: FROM_ADMIN,
-    to: data.contactEmail,
-    replyTo: ADMIN_EMAIL,
-    subject: `Preview: Your GreenReserve page for ${data.courseName}`,
-    html,
-  });
-}
-
-// Combined send (RUN_QUEUE "Send Preview = one combined send") — pressing
-// Send Preview now delivers the page preview AND dashboard login access in
-// one email, so a course never has to wait on a second message to start
-// exploring their dashboard. Admin-initiated only, never automatic.
-
-// Sent during Building stage when admin clicks "Send dashboard access" —
-// gives early dashboard access before the course goes live.
-
-// Sent when going live and the operator already has dashboard access —
-// shorter "you're live" framing instead of the full orientation email.
-export async function sendGoLiveSimpleEmail(data: {
-  operatorName: string;
-  operatorEmail: string;
-  courseName: string;
-  courseSlug: string;
-}) {
-  const bookingUrl = `${process.env.NEXT_PUBLIC_URL}/courses/${data.courseSlug}`;
-  const dashboardUrl = `${process.env.NEXT_PUBLIC_URL}/dashboard`;
-  const html = baseTemplate(`
-    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#EEF3EC;color:#2F6B45;font-size:13px;font-weight:600;padding:4px 14px;border-radius:6px;">&#10003; You&rsquo;re live</span></div>
-    <h1 style="margin:16px 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">${data.courseName} is live on GreenReserve.</h1>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">
-      Golfers can find and book your tee sheet at
-      <a href="${bookingUrl}" style="color:#173B2A;font-weight:600;">${bookingUrl.replace('https://', '')}</a>.
-      New bookings will appear in your dashboard as they come in.
-    </p>
-    <a href="${dashboardUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:6px;font-weight:600;font-size:16px;margin-bottom:16px;">
-      View My Dashboard &rarr;
-    </a>
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">
-      Questions? Reply to this email or reach us at <a href="mailto:${ADMIN_EMAIL}" style="color:#3F453E;">${ADMIN_EMAIL}</a>
-    </p>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'go_live_simple_email', courseSlug: data.courseSlug },
-    from: FROM_ADMIN,
-    to: data.operatorEmail,
-    subject: `You're live! ${data.courseName} is now bookable on GreenReserve`,
-    html,
-  });
+  // Emails redo: one email for dashboard access (merged with the old "page ready in your dashboard").
+  await getResend().emails.send({ meta: { kind: data.setupUrl ? 'operator_setup_email' : 'operator_page_ready_email' }, from: FROM_ADMIN, to: data.operatorEmail, ...mail(dashboardAccessEmail(data)) });
 }
 
 export async function sendTwoFactorCodeEmail(data: {
@@ -612,12 +438,6 @@ export async function sendMemberInviteEmail(data: {
   const ctx = await emailCourse({ courseId: data.courseId }, data.courseName);
   await getResend().emails.send({ meta: { kind: 'member_invite_email', courseId: data.courseId }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.email, ...mail(memberInviteEmail(data, ctx.course)) });
 }
-
-// The lead form is public: every field below is attacker-controlled text that
-// is interpolated into HTML delivered to the admin inbox. Escape it.
-const escHtml = (s: string) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-// Subject lines are plain text but still user text: one line, bounded.
-const subj = (s: string) => String(s ?? '').replace(/[\r\n]+/g, ' ').trim().slice(0, 120);
 
 export async function sendInquiryNotification(data: {
   /** Opens that inquiry (and its reply box) straight from the email. */
@@ -706,46 +526,6 @@ export async function sendDetailsSheetConfirmationEmail(data: {
   await getResend().emails.send({ meta: { kind: 'details_sheet_confirmation_email' }, from: FROM_ADMIN, to: data.email, ...mail(detailsSheetConfirmationEmail(data)) });
 }
 
-// CG-1 (Cam 2026-09-29): sent with one click when the discovery call ends —
-// the recap of what we agreed, THEIR setup link (sections chosen by the call),
-// what happens next, and the fee model in writing (LQ-2 approved sentence,
-// verbatim from the go-live email below — do not reword it here).
-export async function sendCallFollowupEmail(data: {
-  contactName: string; email: string; courseName: string; detailsLink: string;
-  recap: string[]; liveTarget: string | null;
-}) {
-  const recapRows = data.recap.map(l => `<li style="margin:0 0 6px;">${escHtml(l)}</li>`).join('');
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Thanks for the call — here&apos;s your setup link</h1>
-    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;line-height:1.6;">
-      Hi ${escHtml(firstName(data.contactName))} — great talking about <strong>${escHtml(data.courseName)}</strong>. Here&apos;s what we covered, and your next step.
-    </p>
-    ${recapRows ? `<p style="margin:0 0 6px;color:#141814;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;">What we discussed</p>
-    <ul style="margin:0 0 20px;padding-left:18px;color:#141814;font-size:14px;line-height:1.5;">${recapRows}</ul>
-    <p style="margin:-12px 0 20px;color:#6B706A;font-size:12px;">Anything off? Just reply and we&apos;ll fix it.</p>` : ''}
-    <a href="${data.detailsLink}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:8px;">
-      Open your setup sheet &rarr;
-    </a>
-    <p style="margin:0 0 20px;color:#6B706A;font-size:13px;text-align:center;">Built from our call. The first four steps take about 5 minutes; the rest is optional.</p>
-    <p style="margin:0 0 6px;color:#141814;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;">What happens next${data.liveTarget ? ` — aiming for ${escHtml(data.liveTarget)}` : ''}</p>
-    <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
-      <tr><td style="padding:9px 0;border-bottom:1px solid #E3E4DE;color:#141814;font-size:14px;font-weight:600;">1. Your setup sheet</td><td style="padding:9px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:14px;">Tee times, prices, cancellation — you type them, so they&apos;re exactly right</td></tr>
-      <tr><td style="padding:9px 0;border-bottom:1px solid #E3E4DE;color:#141814;font-size:14px;font-weight:600;">2. We build your page</td><td style="padding:9px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:14px;">Your booking page and tee sheet, then a private preview for you to approve</td></tr>
-      <tr><td style="padding:9px 0;border-bottom:1px solid #E3E4DE;color:#141814;font-size:14px;font-weight:600;">3. Agreement + Stripe</td><td style="padding:9px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:14px;">Sign the operator agreement and connect Stripe in your course&apos;s name (~10 min)</td></tr>
-      <tr><td style="padding:9px 0;color:#141814;font-size:14px;font-weight:600;">4. Go live</td><td style="padding:9px 0;color:#6B706A;font-size:14px;">Add the link to your website; golfers start booking</td></tr>
-    </table>
-    <p style="margin:0 0 6px;color:#141814;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;">How the fee works</p>
-    <p style="margin:0 0 20px;color:#6B706A;font-size:13px;line-height:1.6;">Golfers pay GreenReserve&apos;s $1.50 per player on top of your price, in the same card payment as your green fee; Stripe&apos;s normal processing fee applies to the payment, and GreenReserve charges you nothing on top of it.</p>
-    <p style="margin:0;color:#6B706A;font-size:12px;">Questions? Reply to this email — ${ADMIN_EMAIL}.</p>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'call_followup_email' },
-    from: FROM_ADMIN,
-    to: data.email,
-    subject: `${data.courseName} — recap of our call + your setup sheet`,
-    html,
-  });
-}
-
 export async function sendDetailsRequestEmail(data: {
   contactName: string; email: string; courseName: string; detailsLink: string;
 }) {
@@ -776,32 +556,14 @@ export async function sendCallReminderEmail(data: {
 // IC-5 §3: after a logged call — what we captured, so the course can correct
 // us before it lands on their setup sheet. Values are user text: escaped.
 export async function sendCallRecapEmail(data: {
-  contactName: string; email: string; courseName: string; scheduledAt: Date; items: [string, string][];
+  contactName: string; email: string; courseName: string; scheduledAt?: Date | null;
+  /** IC-5 §3: what we captured on a logged call (values are their words). */
+  items?: [string, string][];
+  /** CG-1: the call ended with a setup sheet — the recap lines, their link and the live target. */
+  recap?: string[]; detailsLink?: string | null; liveTarget?: string | null;
 }) {
-  const when = data.scheduledAt.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'America/New_York' });
-  const rows = data.items.map(([label, val]) => `
-        <tr>
-          <td style="padding:8px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:13px;width:38%;vertical-align:top;">${escHtml(label)}</td>
-          <td style="padding:8px 0;border-bottom:1px solid #E3E4DE;color:#141814;font-size:13px;">${escHtml(val)}</td>
-        </tr>`).join('');
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Thanks for the call, ${escHtml(data.contactName.split(' ')[0] || data.contactName)}.</h1>
-    <p style="margin:0 0 20px;color:#3F453E;font-size:15px;line-height:1.6;">
-      Here is what we wrote down about <strong>${escHtml(data.courseName)}</strong> on ${when}. It will show up
-      pre-filled on your setup sheet, where you can change any of it — and if something below is off, just reply to this email.
-    </p>
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">${rows}
-    </table>
-    <p style="margin:0;color:#6B706A;font-size:12px;">
-      Questions? Reply to this email — ${ADMIN_EMAIL}.
-    </p>
-  `, ADMIN_EMAIL);
-  const r = await getResend().emails.send({ meta: { kind: 'call_recap_email' },
-    from: FROM_ADMIN,
-    to: data.email,
-    subject: `What we captured on our call — ${subj(data.courseName)}`,
-    html,
-  });
+  // Emails redo: one after-the-call email (merged with the old sendCallFollowupEmail).
+  const r = await getResend().emails.send({ meta: { kind: data.detailsLink ? 'call_followup_email' : 'call_recap_email' }, from: FROM_ADMIN, to: data.email, ...mail(callRecapEmail(data)) });
   if (r.error) throw new Error(r.error.message || 'Resend rejected the email');
 }
 
@@ -836,59 +598,12 @@ export async function sendCourseLiveOrientationEmail(data: {
   operatorEmail: string;
   courseName: string;
   courseSlug: string;
+  /** false: the owner already had dashboard access, so no map of the dashboard (the old short "You're live"). */
+  tour?: boolean;
 }) {
-  const dashboardUrl = `${process.env.NEXT_PUBLIC_URL}/dashboard`;
-  const bookingUrl = `${process.env.NEXT_PUBLIC_URL}/courses/${data.courseSlug}`;
-
-  const sections = [
-    ['Settings', 'Course info, pricing structure, policies (walking/cancellation/dress code), and all your facilities — driving range, pro shop, restaurant, caddies.'],
-    ['Payments', 'Check your Stripe connection status and payout details. Found inside Settings.'],
-    ['Schedule', 'Your tee time templates — hours, interval, green fees, cart fee, member/resident rates. Change this anytime; it regenerates future tee times automatically.'],
-    ['Bookings', 'Every reservation on your tee sheet, with golfer contact info and payment status.'],
-    ['Members', 'If you offer member pricing, manage member accounts and tiers here.'],
-    ['Staff', 'Add staff logins for your pro shop team — they get their own access to bookings and the tee sheet, without your owner credentials.'],
-  ];
-
-  const html = baseTemplate(`
-    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#EEF3EC;color:#2F6B45;font-size:13px;font-weight:600;padding:4px 14px;border-radius:6px;">✓ You're live</span></div>
-    <h1 style="margin:16px 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">${data.courseName} is bookable right now.</h1>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">
-      Golfers can find and book your tee sheet at <a href="${bookingUrl}" style="color:#173B2A;font-weight:600;">${bookingUrl.replace('https://', '')}</a>.
-      Here's a quick map of your dashboard so you know where everything lives.
-    </p>
-
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
-      ${sections.map(([title, desc]) => `
-      <tr>
-        <td style="padding:12px 0;border-bottom:1px solid #E3E4DE;">
-          <p style="margin:0 0 2px;color:#141814;font-size:14px;font-weight:700;">${title}</p>
-          <p style="margin:0;color:#6B706A;font-size:13px;">${desc}</p>
-        </td>
-      </tr>`).join('')}
-    </table>
-
-    <a href="${dashboardUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:6px;font-weight:800;font-size:16px;margin-bottom:20px;">
-      Go to My Dashboard &rarr;
-    </a>
-
-    <div style="background:#F6F4EC;border:1px solid #E3E4DE;border-radius:6px;padding:18px 20px;margin-bottom:8px;">
-      <p style="margin:0 0 6px;color:#141814;font-size:13px;font-weight:700;">A few things worth knowing:</p>
-      <p style="margin:0 0 4px;color:#6B706A;font-size:13px;">• Golfers pay GreenReserve's $1.50 per player on top of your price, in the same card payment as your green fee; Stripe's normal processing fee applies to the payment, and GreenReserve charges you nothing on top of it.</p>
-      <p style="margin:0 0 4px;color:#6B706A;font-size:13px;">• Need to close for a day (weather, maintenance, outing)? Block it from Schedule.</p>
-      <p style="margin:0;color:#6B706A;font-size:13px;">• Payouts come from Stripe on its normal payout schedule for your account — check Settings → Payments for your payout status.</p>
-    </div>
-
-    <p style="margin:16px 0 0;color:#6B706A;font-size:12px;text-align:center;">
-      Questions or something looks wrong? Reply to this email or reach us at <a href="mailto:${ADMIN_EMAIL}" style="color:#3F453E;">${ADMIN_EMAIL}</a> — a real person reads it.
-    </p>
-  `, ADMIN_EMAIL);
-
-  await getResend().emails.send({ meta: { kind: 'course_live_orientation_email', courseSlug: data.courseSlug },
-    from: FROM_ADMIN,
-    to: data.operatorEmail,
-    subject: `You're live! Here's how to run ${data.courseName} on GreenReserve`,
-    html,
-  });
+  // Emails redo: one go-live email (merged with the old sendGoLiveSimpleEmail).
+  const tour = data.tour !== false;
+  await getResend().emails.send({ meta: { kind: tour ? 'course_live_orientation_email' : 'go_live_simple_email', courseSlug: data.courseSlug }, from: FROM_ADMIN, to: data.operatorEmail, ...mail(goLiveEmail({ ...data, tour })) });
 }
 
 // A-05 item 4b — auto-chase reminder for a course that hasn't finished
@@ -905,29 +620,6 @@ export async function sendMembershipPaymentLinkEmail(data: {
 }) {
   const ctx = await emailCourse({ courseId: data.courseId }, data.courseName);
   await getResend().emails.send({ meta: { kind: 'membership_payment_link_email', courseId: data.courseId }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.email, ...mail(duesPayLinkEmail(data, ctx.course)) });
-}
-
-export async function sendAdminSetPasswordEmail(data: {
-  name: string; email: string; setPasswordLink: string;
-}) {
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Set your admin password</h1>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">
-      Hi ${firstName(data.name)} — you've been added as a GreenReserve admin. Click the button below to set your password and activate your account. This link expires in 24 hours.
-    </p>
-    <a href="${data.setPasswordLink}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:6px;font-weight:800;font-size:16px;margin-bottom:16px;">
-      Set My Password &rarr;
-    </a>
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">
-      If you weren't expecting this, you can safely ignore it.
-    </p>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'admin_set_password_email' },
-    from: FROM_NOREPLY,
-    to: data.email,
-    subject: 'Set your GreenReserve admin password',
-    html,
-  });
 }
 
 export async function sendMemberMagicLink(data: {
@@ -973,20 +665,6 @@ export async function sendMembershipReceiptEmail(data: {
 }) {
   const ctx = await emailCourse({ courseId: data.courseId }, data.courseName);
   await getResend().emails.send({ meta: { kind: 'membership_receipt_email', courseId: data.courseId }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.email, ...mail(duesReceiptEmail(data, ctx.course)) });
-}
-
-/**
- * SD-8 review (MEDIUM): everything interpolated below is written by a course
- * and then sent as HTML from GreenReserve's own verified domain, so an
- * unescaped anchor would arrive as a convincing link from a trusted sender.
- */
-export function escapeHtml(s: string): string {
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
 }
 
 export async function sendMessageNotificationEmail(data: {
@@ -1116,7 +794,6 @@ export async function sendShopReceiptEmail(data: {
   const ctx = await emailCourse({ courseId: data.courseId }, data.courseName);
   await getResend().emails.send({ meta: { kind: 'shop_receipt_email', courseId: data.courseId }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.email, ...mail(shopReceiptEmail(data, ctx.course)) });
 }
-
 
 // AW-1: the owner signed in at /cam from a device that hasn't been approved.
 // The link opens a confirm page (a click there approves) — mail scanners that

@@ -12,7 +12,7 @@ import {
 import { stillNeed } from '@/lib/inquiry-needs';
 import { randomBytes } from 'crypto';
 import bcrypt from 'bcryptjs';
-import { sendDashboardSetupEmail, sendPageReadyInDashboardEmail, sendDetailsRequestEmail, sendCourseLiveOrientationEmail, sendGoLiveSimpleEmail, sendInquiryDeclinedEmail } from '@/lib/email';
+import { sendDashboardSetupEmail, sendDetailsRequestEmail, sendCourseLiveOrientationEmail, sendInquiryDeclinedEmail } from '@/lib/email';
 import { generateTeeTimes } from '@/lib/tee-sheet-engine';
 import { resolveAdminSession, requireRole, requireOwner, ownerGateError, MANAGER_PLUS, SUPPORT_PLUS, VIEWER_PLUS, type AdminSession, areaGate } from '@/lib/admin-session';
 import { AGENDA, callGate, fmtCallTime, nextCall, latestCall, parseJson } from '@/lib/inquiry-call';
@@ -21,7 +21,7 @@ import { sendCallInvite, issueCallInvite } from '@/lib/call-invite';
 import { calcomBookingUrl, calcomEmbedUrl } from '@/lib/calcom';
 import { rateLimit } from '@/lib/rate-limit';
 import { firstCheckInAfterGoLive } from '@/lib/course-checkin';
-import { sendCallScheduledEmail, sendCallRecapEmail, sendCallFollowupEmail, sendInquiryReply } from '@/lib/email';
+import { sendCallScheduledEmail, sendCallRecapEmail, sendInquiryReply } from '@/lib/email';
 import { REPLY_EVENT_PREFIX } from '@/lib/inquiry-status';
 import { issueSetupLink, hasSetUp, SETUP_LINK_DAYS } from '@/lib/operator-setup';
 import { encodeChangeAddressed, encodeRequestReReview } from '@/lib/change-requests';
@@ -343,7 +343,7 @@ async function handleAction(
     const liveBy = answers.items.timeline?.fields.liveBy;
     const liveTarget = typeof liveBy === 'string' && liveBy !== 'unsure' ? (LIVE_BY_OPTIONS.find(([v]) => v === liveBy)?.[1] ?? '').toLowerCase() : null;
     try {
-      await sendCallFollowupEmail({
+      await sendCallRecapEmail({
         contactName: inquiry.firstName || inquiry.contactName, email: inquiry.email, courseName: inquiry.courseName,
         detailsLink, recap: callRecapLines(answers), liveTarget: liveTarget || null,
       });
@@ -638,7 +638,7 @@ async function handleAction(
     const op = course.operator;
     const alreadyIn = hasSetUp(op);
     try {
-      if (alreadyIn) await sendPageReadyInDashboardEmail({ operatorName: op.name, operatorEmail: op.email, courseName: inquiry.courseName });
+      if (alreadyIn) await sendDashboardSetupEmail({ operatorName: op.name, operatorEmail: op.email, courseName: inquiry.courseName, setupUrl: null, pageReady: true, linkDays: 0 });
       else await sendDashboardSetupEmail({ operatorName: op.name, operatorEmail: op.email, courseName: inquiry.courseName, setupUrl: await issueSetupLink(op.id), pageReady: inquiry.status === 'building', linkDays: SETUP_LINK_DAYS });
     } catch (err) {
       return NextResponse.json({ error: `The email didn't send (${err instanceof Error ? err.message : 'unknown error'}). Their sign-in is unchanged — try again.` }, { status: 502 });
@@ -689,7 +689,8 @@ async function handleAction(
           select: { actorName: true },
         });
         const hasDashboardAccess = events.some(e => e.actorName?.startsWith('Dashboard access sent'));
-        const goLiveFn = hasDashboardAccess ? sendGoLiveSimpleEmail : sendCourseLiveOrientationEmail;
+        // Emails redo: one go-live email; an owner who already had dashboard access gets it without the dashboard map.
+        const goLiveFn = (d: { operatorName: string; operatorEmail: string; courseName: string; courseSlug: string }) => sendCourseLiveOrientationEmail({ ...d, tour: !hasDashboardAccess });
         // after(): un-awaited, the email and its welcomeEmailSentAt stamp died
         // whenever the function froze after the response (review 2026-09-29).
         // Launch walk (Cam 2026-10-31): awaited, so the employee is told when the course wasn't.
