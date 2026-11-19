@@ -6,6 +6,7 @@
 // list of payments show once the Memberships data PRs return them.
 import { useState } from 'react';
 import { dfetch } from '@/lib/dashboard-fetch';
+import { shownDay, endDateToSend } from '@/lib/member-end-date';
 import { toast } from '@/components/dashboard/Toast';
 import { INPUT } from '@/components/ui/field';
 import { AutoRenewStop } from '@/components/dashboard/MemberJoin';
@@ -21,7 +22,7 @@ export function MemberCard({ m, tier, tiers, dues, owed, can, onChanged, onClose
   // LEDGER-2: what was taken and how — the ledger and the cash drawer need both.
   const [duesForm, setDuesForm] = useState<{ amount: string; method: 'cash' | 'check' } | null>(null);
   const [change, setChange] = useState<string | null>(null);
-  const [edit, setEdit] = useState<{ name: string; email: string; phone: string; expiresAt: string; notes: string } | null>(null);
+  const [edit, setEdit] = useState<{ name: string; email: string; phone: string; expiresAt: string; expiresAtWas: string; notes: string } | null>(null);
   const initials = (m.name || m.email).split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]?.toUpperCase()).join('');
   const owes = dues.kind === 'unpaid' || dues.kind === 'expired' || dues.kind === 'renewing';
 
@@ -44,7 +45,9 @@ export function MemberCard({ m, tier, tiers, dues, owed, can, onChanged, onClose
   const saveChange = async () => { if (change && await patch('change', { tierId: change })) { setChange(null); await onChanged(); toast('Membership changed.', 'ok'); } };
   const saveDetails = async () => {
     if (!edit) return;
-    if (await patch('edit', { notes: edit.notes, expiresAt: edit.expiresAt || null, name: edit.name, email: edit.email, phone: edit.phone })) { setEdit(null); await onChanged(); }
+    // "Runs until" goes only when it was changed, with the day the form showed when it opened (lib/member-end-date).
+    const dates = endDateToSend(edit.expiresAtWas, edit.expiresAt);
+    if (await patch('edit', { notes: edit.notes, ...dates, name: edit.name, email: edit.email, phone: edit.phone })) { setEdit(null); await onChanged(); }
   };
   const setActive = async (on: boolean) => {
     if (!on && !confirm(`End ${m.name || m.email}'s membership? They stop getting member rates. You can make it active again.`)) return;
@@ -130,7 +133,7 @@ export function MemberCard({ m, tier, tiers, dues, owed, can, onChanged, onClose
         )}
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <button type="button" className={LINK} onClick={() => { setError(''); setEdit(null); setChange(m.tierId ?? ''); }}>Change membership</button>
-          <button type="button" className={LINK} onClick={() => { setError(''); setChange(null); setEdit({ name: m.name, email: m.email, phone: m.phone, expiresAt: m.expiresAt ? m.expiresAt.slice(0, 10) : '', notes: m.notes }); }}>Edit details</button>
+          <button type="button" className={LINK} onClick={() => { setError(''); setChange(null); setEdit({ name: m.name, email: m.email, phone: m.phone, expiresAt: shownDay(m.expiresAt), expiresAtWas: shownDay(m.expiresAt), notes: m.notes }); }}>Edit details</button>
           {m.autoRenew && <AutoRenewStop id={m.id} onChanged={onChanged} />}
           {tier?.accountOn && <MemberAccount id={m.id} canCredit={can.credit} canEdit={can.edit} canMove={can.move} />}
           <span className="flex-1" />
