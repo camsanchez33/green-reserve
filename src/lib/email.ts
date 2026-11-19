@@ -994,18 +994,20 @@ export async function sendPasswordChangedNotification(data: {
 
 export async function sendMemberInviteEmail(data: {
   name: string; email: string; courseName: string; groupName: string; coursePageUrl: string; benefits: string;
-  /** Members pricing on at the course (lib/pricing-switch). Off: no rate is promised; the invite says "to book: <window> · <passes>". */
+  /** Members pricing on at the course (lib/pricing-switch). Off: no rate is promised; the invite says "to book. You can book <window> · <passes>." */
   memberPricing: boolean;
 }) {
   // GOLFER-LOGIN-1 (Cam 2026-11-18, approved mockup "When the course sets someone up"): one invite for every member,
   // "Log in", never "sign in as a member". Sent once the membership is active (lib/member-welcome).
   const shownUrl = data.coursePageUrl.replace(/^https?:[/][/]/, '');
+  // Members pricing off (Build 2026-11-19): "…to book. You can book 9 days out · 6 guest passes a year." (no rate).
+  const offLine = !data.benefits ? '' : data.benefits.startsWith('book ') ? `You can ${data.benefits}.` : `${data.benefits[0].toUpperCase()}${data.benefits.slice(1)}.`;
   const first = (data.name || '').trim().split(' ')[0];
   const html = baseTemplate(`
     ${first ? `<p style="margin:0 0 12px;color:#3F453E;font-size:15px;">Hi ${escHtml(first)},</p>` : ''}
     <p style="margin:0 0 12px;color:#3F453E;font-size:15px;">
       <strong>${escHtml(data.courseName)}</strong> set you up as a <strong>${escHtml(data.groupName)}</strong>.
-      Log in at ${escHtml(shownUrl)} with this email ${data.memberPricing ? 'to get your rates' : 'to book'}${data.benefits ? `: ${escHtml(data.benefits)}` : '.'}
+      Log in at ${escHtml(shownUrl)} with this email ${data.memberPricing ? `to get your rates${data.benefits ? `: ${escHtml(data.benefits)}` : '.'}` : `to book.${offLine ? ` ${escHtml(offLine)}` : ''}`}
     </p>
     <a href="${data.coursePageUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:6px;font-weight:800;font-size:16px;margin:20px 0 16px;">
       Log in to ${escHtml(data.courseName)}

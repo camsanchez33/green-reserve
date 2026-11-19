@@ -510,7 +510,7 @@ async function main() {
   const welcomeSrc = (await import('fs')).readFileSync('src/lib/member-welcome.ts', 'utf8');
   check('…and sendWelcome applies it from the course\'s switch', welcomeSrc.includes('benefits: memberBenefitsLine(m.tier && !memberPricingOn(m.course) ? withoutRates(m.tier) : m.tier, m.course)') && welcomeSrc.includes('memberPricing: memberPricingOn(m.course)') && welcomeSrc.includes('hasMemberPricing: true'));
   const emailSrc = (await import('fs')).readFileSync('src/lib/email.ts', 'utf8');
-  check('…the invite reads "with this email to book: <window> · <passes>" with Members pricing off, "to get your rates: …" with it on', emailSrc.includes("with this email ${data.memberPricing ? 'to get your rates' : 'to book'}${data.benefits ? `: ${escHtml(data.benefits)}` : '.'}"));
+  check('…the invite reads "with this email to book. You can book <window> · <passes>." with Members pricing off, "to get your rates: …" with it on', emailSrc.includes("with this email ${data.memberPricing ? `to get your rates${data.benefits ? `: ${escHtml(data.benefits)}` : '.'}` : `to book.${offLine ? ` ${escHtml(offLine)}` : ''}`}") && emailSrc.includes("data.benefits.startsWith('book ') ? `You can ${data.benefits}.`"));
   // The dues-history route is gone (no page has used it since #502).
   check('the member payments route is gone (404)', (await get(`/api/member/${home.slug}/payments`, await cookie(home.id, homeEmail))).status === 404);
   await prisma.course.update({ where: { id: home.id }, data: { hasMemberPricing: true } });
