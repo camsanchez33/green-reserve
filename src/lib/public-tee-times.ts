@@ -99,8 +99,11 @@ export async function loadPublicTeeTimes(slug: string, date: string, opts: { vie
   // BOOKING WINDOWS: the public sees the sheet only as far ahead as the course
   // allows. Enforced here, not just in the picker — the picker reads this.
   const win = opts.viewer ? await viewerWindow(dbCourse, date) : windowFor(dbCourse, null);
-  if (!withinWindow(date, win.days, new Date(), dbCourse.timezone)) {
-    return { ok: false, status: 403, body: outsideWindowBody(win.days, win.scope, dbCourse) as Record<string, unknown> };
+  // As /api/bookings: a viewer with a window of their own never gets less than the public window (a membership's
+  // window shorter than the public one still books what the public books). Without `viewer`, ownWindow is false.
+  const gateDays = win.ownWindow ? Math.max(win.days, windowFor(dbCourse, null).days) : win.days;
+  if (!withinWindow(date, gateDays, new Date(), dbCourse.timezone)) {
+    return { ok: false, status: 403, body: outsideWindowBody(gateDays, win.scope, dbCourse) as Record<string, unknown> };
   }
 
   const teeTimes = await prisma.teeTime.findMany({
@@ -117,10 +120,13 @@ export async function loadPublicTeeTimes(slug: string, date: string, opts: { vie
   const visible = (date === todayLocal
     ? teeTimes.filter(t => t.time > nowLocal)
     : teeTimes)
-    // A round with a shorter window of its own isn't shown past it — except to a viewer with a window of their own
-    // (a member not on the public window, or a resident window past the public): Memberships item 3, as the member
-    // tee-times route and /api/bookings apply it.
-    .filter(t => win.ownWindow || withinWindow(date, rulesFor(dbCourse, t.product).publicAdvanceDays, new Date(), dbCourse.timezone));
+    // A round with a shorter window of its own isn't shown past it — except as far as a viewer's own window reaches
+    // (a member not on the public window, or a resident window past the public): Memberships item 3, the per-round
+    // window /api/bookings enforces (the longer of the viewer's window and the round's).
+    .filter(t => {
+      const round = rulesFor(dbCourse, t.product).publicAdvanceDays;
+      return withinWindow(date, win.ownWindow ? Math.max(win.days, round) : round, new Date(), dbCourse.timezone);
+    });
 
   const demand = await loadDemand(dbCourse);
   return { ok: true, teeTimes: visible.map(t => normalizeDbTeeTime(t, dbCourse, demand)) };

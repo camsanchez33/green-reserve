@@ -120,6 +120,27 @@ async function main() {
   const bm = await book(t10.id, memEmail, memCk);
   check('the member\'s day-10 booking goes through', bm.status === 200 && !!bm.body?.bookingId, bm);
 
+  // A membership window SHORTER than the public one (public 14, tier 7): the member still gets what the public gets,
+  // as /api/bookings allows it — logging in on /book must never take a time away.
+  await prisma.course.update({ where: { id: c.id }, data: { publicAdvanceDays: 14, residentAdvanceDays: null } });
+  const shortTier = await prisma.membershipTier.create({ data: { courseId: c.id, name: 'Seven', annualFeeCents: 10000, advanceBookingDays: 7 } });
+  const shortEmail = `short@${TAG}.test`;
+  await prisma.courseMembership.create({ data: { courseId: c.id, tierId: shortTier.id, membershipType: 'Seven', status: 'active', inviteEmail: shortEmail, inviteName: 'Short', payToken: `${TAG}-short`, expiresAt: new Date(Date.now() + 200 * 86_400_000) } });
+  const shortCk = await cookie(shortEmail);
+  const s10 = await tt(10, '11:00');
+  const sl10 = await list(10, shortCk);
+  check('a 7-day member on a 14-day public course gets day 10 with ?viewer=1', listed(sl10, s10.id), sl10);
+  const ps10 = await page(s10, shortCk);
+  check('…and /book renders it', ps10.status === 200 && !ps10.gone, ps10);
+  const tw10 = await tt(10, '17:30', twi.id);
+  check('…a round with a 5-day public window on day 10 is not listed for them (bookings: max(7, 5) = 7)', !listed(await list(10, shortCk), tw10.id));
+  await prisma.courseProduct.update({ where: { id: twi.id }, data: { publicAdvanceDays: 5 } });
+  check('…(still not with the round at 5 days)', !listed(await list(10, shortCk), tw10.id));
+  const bs10 = await book(s10.id, shortEmail, shortCk);
+  check('…and the day-10 booking goes through', bs10.status === 200 && !!bs10.body?.bookingId, bs10);
+  const btw = await book(tw10.id, shortEmail, shortCk);
+  check('…the round\'s day 10 is refused at booking too', btw.status === 403 && btw.body?.code === 'outside_window', btw);
+
   await cleanup();
   await prisma.$disconnect();
   if (failed) { console.error(`${failed} failed`); process.exit(1); }
