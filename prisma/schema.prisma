@@ -2703,3 +2703,20 @@ model CompanyDocumentVersion {
 
   @@unique([documentId, version])
 }
+
+/// Emails and texts redo (Cam 2026-11-19): a text's short link, greenreserve.app/<kind>/<code>, standing for
+/// a long link we already send (lib/short-links). The code is random (10 characters, ~50 bits) and the
+/// redirect goes to exactly the long link, so it exposes nothing the long link didn't. `target` is the
+/// path and query on our own site; the page it opens still checks its own token, so a link whose token
+/// was replaced stops working with it. `expiresAt` is set where the long link has an end (alerts).
+model ShortLink {
+  code      String    @id
+  /// 'b' booking details · 'p' pay · 'r' receipt · 'a' tee time alert
+  kind      String
+  target    String
+  courseId  String?
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([kind, target])
+}

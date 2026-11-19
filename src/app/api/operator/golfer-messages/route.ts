@@ -4,7 +4,7 @@ import { resolveDashboardSession, requirePermission, can } from '@/lib/session';
 import { rateLimit } from '@/lib/rate-limit';
 import { smsConfigured } from '@/lib/twilio';
 import { birdieEnabled } from '@/lib/birdie/guardrails';
-import { courseNoticeEmail } from '@/lib/email';
+import { courseNoticeEmail, emailCourse } from '@/lib/email';
 import { formatTeeDay, formatTeeTime } from '@/lib/format';
 import { audience, withTextConsent, reach, toCall, checkWindow, sendCourseMessage, smsRoom, noticeText, isVia, MAX_MESSAGE_CHARS, type Via } from '@/lib/golfer-messages';
 
@@ -64,7 +64,9 @@ export async function POST(req: NextRequest) {
   if (b.preview === true) {
     const first = (await audience(session.courseId, w))[0];
     const teeTime = formatTeeTime(first?.teeTime ?? '08:00');
-    const email = courseNoticeEmail({ courseName, dateLabel: formatTeeDay(w.date), teeTime, body: body || '…' });
+    // The same course footer and colour the send uses (MSG-2: the preview is the email as sent).
+    const { course: footer } = await emailCourse({ courseId: session.courseId }, courseName);
+    const email = courseNoticeEmail({ courseName, dateLabel: formatTeeDay(w.date), teeTime, body: body || '…', course: footer });
     return NextResponse.json({ subject: email.subject, html: email.html, text: noticeText(courseName, body || '…'), teeTime });
   }
 

@@ -75,6 +75,14 @@ export function golferLookVars(course: { booking_look?: Partial<CourseLook> | nu
   return vars as CSSProperties;
 }
 
+/**
+ * The page background a golfer page needs behind its own root on Dark (the html and body background, so overscroll and
+ * the space past a short page aren't the site's light paper). Null on Light: the site's own background is already right.
+ */
+export function lookPageBg(course: { booking_look?: Partial<CourseLook> | null; brand_color?: string | null }): string | null {
+  return lookOf(course).mode === 'dark' ? NEUTRAL.dark.bg : null;
+}
+
 /** Plain hex text colours for things drawn outside the page's CSS (the Stripe card field reads no variables). */
 export function lookText(look: BookingLook | null | undefined): { ink: string; muted: string; bad: string } {
   const n = NEUTRAL[look === 'dark' ? 'dark' : 'light'];

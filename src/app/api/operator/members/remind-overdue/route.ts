@@ -57,6 +57,7 @@ export async function POST() {
         name: m.inviteName,
         email: to,
         courseName: course.name,
+        courseId: m.courseId,
         tierName: m.tier.name,
         annualFee: centsToDollarsOr0(m.tier.annualFeeCents),
         initiationFee: centsToDollarsOr0(initiationCents),

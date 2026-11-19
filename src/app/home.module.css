@@ -295,3 +295,65 @@
 @media (prefers-reduced-motion: reduce) {
   .root * { transition: none !important; }
 }
+
+/* Homepage redo (Cam 2026-11-18, lanes/homepage/homepage-mockup.html). Hero A tightened, the overview
+   cards, the compact Free block with the scorecard, the shared bottom block. Group labels are sentence
+   case (TYPE-2), not the mockup's small caps. */
+.root { --cream: #F3EEDF; --muted2: #585D57; --faint2: #6E736C; --sage2: #E4EBDF; }
+.heroA { position: relative; color: #F5F2E8; background: #1E2B22; overflow: hidden; }
+.heroAImg { object-fit: cover; object-position: 50% 60%; z-index: 0; }
+.heroA::after { content: ""; position: absolute; inset: 0; z-index: 1; background: rgba(10,20,14,.42); }
+.heroAIn { position: relative; z-index: 2; display: grid; justify-items: center; gap: 10px; text-align: center; padding: 56px 16px 16px; }
+.heroALogo { width: min(440px, 80vw); height: auto; display: block; }
+.heroALine { margin: 0; font-size: clamp(22px, 3vw, 28px); font-weight: 500; }
+.heroAIn .btn { margin-top: 8px; }
+.btn.cream { background: var(--cream); color: var(--forest) !important; }
+.btn.cream:hover { background: #fff; }
+.btn.ghost { background: var(--paper); color: var(--forest) !important; border: 1px solid var(--forest); }
+.btn.ghost:hover { background: var(--sage2); }
+.down { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; color: inherit; border-radius: 6px; }
+.down:hover { background: rgba(127,127,127,.14); }
+@media (prefers-reduced-motion: no-preference) { html:has(.root) { scroll-behavior: smooth; } }
+
+.h2 { font-size: clamp(34px, 4.4vw, 48px); line-height: 1.08; color: var(--forest); }
+.h2s { font-size: clamp(30px, 3.8vw, 40px); line-height: 1.08; color: var(--forest); }
+.wrap { width: min(1160px, 100% - 32px); margin-inline: auto; }
+.what { padding-block: 72px; }
+.groups { display: grid; gap: 40px; margin-top: 36px; }
+.groupLabel { font-family: var(--font-sans); font-size: 13px; font-weight: 600; color: var(--muted2); }
+.fgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }
+.fgrid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.fcard { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 20px; display: grid; gap: 8px; align-content: start; }
+.fcard b { font-size: 23px; font-weight: 600; color: var(--forest); line-height: 1.15; }
+.fcard p { margin: 0; color: var(--muted2); font-size: 15px; }
+.fcard a { text-decoration: underline; justify-self: start; font-weight: 600; font-size: 14.5px; color: var(--forest); text-underline-offset: 3px; min-height: 32px; display: inline-flex; align-items: center; }
+
+.freeline { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 420px); gap: 40px; align-items: center; padding-block: 24px 80px; }
+.freeline p { margin: 12px 0 0; color: var(--muted2); font-size: 16px; max-width: 52ch; }
+.quietLink { font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }
+.scard { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; box-shadow: var(--lift); overflow: hidden; width: 100%; }
+.scHead { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 14px 16px; background: var(--forest); color: #F5F2E8; }
+.scHead b { font-size: 20px; font-weight: 600; }
+.scHead span { font-size: 13px; color: #C9D6CC; }
+.sc { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.sc th, .sc td { padding: 10px 16px; border-bottom: 1px solid var(--line); text-align: left; font-size: 15px; }
+.sc tr:last-child th, .sc tr:last-child td { border-bottom: 0; }
+.sc th { font-weight: 500; }
+.sc td { text-align: right; font-size: 20px; color: var(--forest); width: 72px; }
+.scTot th { font-weight: 600; }
+.scTot td { font-size: 22px; }
+
+.closer { background: var(--sage2); padding-block: 64px; }
+.closerIn { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: 40px; align-items: start; }
+.closer h2 { font-size: clamp(30px, 3.8vw, 40px); line-height: 1.08; color: var(--forest); }
+.closerIn > div > p { margin: 10px 0 0; color: var(--muted2); font-size: 16px; }
+.contactRow { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; color: var(--muted2); font-size: 16px; }
+.closer .btn { height: 44px; padding: 0 20px; font-size: 15px; }
+
+@media (max-width: 880px) {
+  .fgrid, .fgrid2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .freeline, .closerIn { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+}
+@media (max-width: 560px) {
+  .fgrid, .fgrid2 { grid-template-columns: minmax(0, 1fr); }
+}

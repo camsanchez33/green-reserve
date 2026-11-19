@@ -193,7 +193,7 @@ export async function PATCH(req: NextRequest) {
     for (const m of on) {
       const to = memberContact(m);
       if (!to.email) continue;
-      try { await sendAutoRenewOffEmail({ name: to.name, email: to.email, courseName: course?.name ?? '', tierName: updated.name, endsOn: m.expiresAt }); }
+      try { await sendAutoRenewOffEmail({ name: to.name, email: to.email, courseName: course?.name ?? '', courseId: session.courseId, tierName: updated.name, endsOn: m.expiresAt }); }
       catch (err) { console.error(JSON.stringify({ ev: 'membership.autorenew.tier_off_email_fail', membershipId: m.id, error: err instanceof Error ? err.message : String(err) })); }
     }
   }

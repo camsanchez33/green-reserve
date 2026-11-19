@@ -509,8 +509,10 @@ async function main() {
   check('withoutRates keeps the window and passes only', memberBenefitsLine(withoutRates({ discountPct: 20, greenFeeWeekdayCents: null, greenFeeWeekendCents: null, lineRates: null, advanceBookingDays: 9, windowPublic: false, guestPassesPerYear: 6 }), {}) === 'book 9 days out · 6 guest passes a year');
   const welcomeSrc = (await import('fs')).readFileSync('src/lib/member-welcome.ts', 'utf8');
   check('…and sendWelcome applies it from the course\'s switch', welcomeSrc.includes('benefits: memberBenefitsLine(m.tier && !memberPricingOn(m.course) ? withoutRates(m.tier) : m.tier, m.course)') && welcomeSrc.includes('memberPricing: memberPricingOn(m.course)') && welcomeSrc.includes('hasMemberPricing: true'));
-  const emailSrc = (await import('fs')).readFileSync('src/lib/email.ts', 'utf8');
-  check('…the invite reads "with this email to book. You can book <window> · <passes>." with Members pricing off, "to get your rates: …" with it on', emailSrc.includes("with this email ${data.memberPricing ? `to get your rates${data.benefits ? `: ${escHtml(data.benefits)}` : '.'}` : `to book.${offLine ? ` ${escHtml(offLine)}` : ''}`}") && emailSrc.includes("data.benefits.startsWith('book ') ? `You can ${data.benefits}.`"));
+  const { memberInviteAfter } = await import('../src/lib/email-golfer');
+  check('…the invite reads "with this email address to book. You can book <window> · <passes>." with Members pricing off, "to get your rates: …" with it on',
+    memberInviteAfter({ benefits: 'book 9 days out · 6 guest passes a year', memberPricing: false }) === 'Log in with this email address to book. You can book 9 days out · 6 guest passes a year.'
+    && memberInviteAfter({ benefits: '$6 off every round', memberPricing: true }) === 'Log in with this email address to get your rates: $6 off every round.');
   // The dues-history route is gone (no page has used it since #502).
   check('the member payments route is gone (404)', (await get(`/api/member/${home.slug}/payments`, await cookie(home.id, homeEmail))).status === 404);
   await prisma.course.update({ where: { id: home.id }, data: { hasMemberPricing: true } });
