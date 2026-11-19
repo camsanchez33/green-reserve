@@ -66,27 +66,21 @@ export default function Footer() {
   // presence left on the golfer's booking journey.
   if (isBookingMode(pathname)) return <BookingModeFooter />;
 
-  // H-1 (UI_REVISE_SPEC §5.10): the marketing footer from the approved
-  // prototype — lockup, four links, the year. The fee lines that used to sit
-  // here ("no commission", "$1.50 … paid by the golfer") were removed when the
-  // fee copy was frozen and do not return — the footer carries no fee line.
+  // Homepage redo (Cam 2026-11-18, lanes/homepage.md): logo, Privacy, Terms, Contact and the copyright
+  // line. No Course login link (courses use their bookmark or onboarding link; /dashboard/login still
+  // works) and, as before, no fee line (legal/LQ-2_FEE_COPY.md §5).
   return (
     <footer className="bg-paper border-t border-line">
-      <div className="w-[min(1180px,calc(100%-48px))] mx-auto py-8 flex flex-wrap justify-between items-center gap-x-6 gap-y-3.5 text-sm text-ink-muted max-md:justify-center max-md:text-center">
-        <Link href="/" className="inline-flex items-center hover:opacity-80 transition-opacity" aria-label="GreenReserve">
-          <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={130} height={25} loading="lazy" className="w-[130px] h-auto" />
+      <div className="w-[min(1160px,calc(100%-32px))] mx-auto py-6 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2.5 items-center text-[13.5px] text-ink-muted max-[520px]:grid-cols-1">
+        <Link href="/" className="inline-flex items-center hover:opacity-80 transition-opacity" aria-label="GreenReserve home">
+          <Image src="/brand/logo.svg" unoptimized alt="" width={118} height={22} loading="lazy" className="h-[22px] w-auto" />
         </Link>
-        <nav aria-label="Footer" className="flex flex-wrap gap-x-5 gap-y-2 justify-center">
-          <Link href="/teesheet" className="hover:text-ink transition-colors">The tee sheet</Link>
-          <Link href="/terms" className="hover:text-ink transition-colors">Terms</Link>
-          <Link href="/privacy" className="hover:text-ink transition-colors">Privacy</Link>
-          <Link href="/operator-agreement" className="hover:text-ink transition-colors">Operator agreement</Link>
-          <Link href="/contact" className="hover:text-ink transition-colors">Contact</Link>
-          {/* H-2e §8: the durable route to the dashboard, independent of scroll position. */}
-          <Link href="/dashboard/login" className="hover:text-ink transition-colors">Operator login</Link>
-          <a href={`mailto:${SUPPORT_EMAIL}`} className="hover:text-ink transition-colors">{SUPPORT_EMAIL}</a>
+        <nav aria-label="Footer" className="flex flex-wrap gap-x-[18px] gap-y-2 justify-end max-[520px]:justify-start">
+          <Link href="/privacy" className="inline-flex items-center min-h-[32px] hover:underline">Privacy</Link>
+          <Link href="/terms" className="inline-flex items-center min-h-[32px] hover:underline">Terms</Link>
+          <Link href="/contact" className="inline-flex items-center min-h-[32px] hover:underline">Contact</Link>
         </nav>
-        <span>© {new Date().getFullYear()} GreenReserve LLC</span>
+        <span className="col-span-full text-[12.5px] text-ink-muted">© 2026 GreenReserve. All rights reserved.</span>
       </div>
     </footer>
   );
