@@ -106,7 +106,8 @@ export async function GET(
     // The Golfer lane shows "Your renewal didn't go through" only on this flag.
     renewalFailed: membership.autoRenewFailedAt != null && !(membership.expiresAt && membership.expiresAt.getTime() > Date.now()),
     // An automatic renewal charge will actually be attempted for this term (lib/membership-autorenew renewalWillCharge):
-    // always a boolean. The Golfer lane reads it for "Your renewal is being processed." instead of guessing from dates.
+    // always a boolean. True up to the notice window BEFORE the date too, so "Your renewal is being processed." needs it
+    // AND the date passed. False while a declined card waits for its retry (renewalFailed is true then).
     renewalPending: renewalWillCharge(membership, course),
     // The term has ended but the course's grace days still give member rates (lib/member-rates): the end date's UTC day is
     // the last member day (a paid term may store a time of day), so the term has ended once it is before the course's today. Amber on the page.

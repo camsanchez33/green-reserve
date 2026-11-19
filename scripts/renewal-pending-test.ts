@@ -17,7 +17,7 @@ const base = {
   status: 'active', autoRenew: true, savedCustomerId: 'cus_1', savedPaymentMethodId: 'pm_1', autoRenewFailedAt: null as Date | null, autoRenewRetryAt: null as Date | null,
   autoRenewRemindedFor: null as Date | null, autoRenewRemindedCents: null as number | null, expiresAt: at(10) as Date | null, tier: tier as typeof tier | null,
 };
-const course = { stripeAccountId: 'acct_1', stripeAccountActive: true };
+const course = { stripeAccountId: 'acct_1' as string | null, stripeAccountActive: true };
 const w = (m: Partial<typeof base>, c: Partial<typeof course> = {}) => renewalWillCharge({ ...base, ...m }, { ...course, ...c }, now);
 
 ok('everything in place, 10 days before a yearly renewal: pending', w({}) === true);
