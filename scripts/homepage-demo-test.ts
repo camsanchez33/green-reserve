@@ -49,5 +49,19 @@ check('with Cal.com off the block keeps a Book a call button to /demo', closer.i
 // Labels the product no longer has stay out of the demo.
 for (const gone of ['Take cash · check in', 'Close to new bookings', 'Open to anyone', 'tee times</span>', 'No Card Required']) check(`the demo no longer says "${gone}"`, !demo.includes(gone));
 
+// Contact us pop-up (Homepage redo 4/4): the bottom block opens it, it posts every field the public intake needs,
+// and it sits centred on desktop (preflight zeroes the dialog's own auto margin).
+const bottomBlock = readFileSync('src/components/home/HomeCloser.tsx', 'utf8');
+const dlg = readFileSync('src/components/home/ContactDialog.tsx', 'utf8');
+const inq = readFileSync('src/app/api/inquiries/route.ts', 'utf8');
+const bodyAt = dlg.indexOf('body: JSON.stringify({');
+const sent = bodyAt < 0 ? '' : dlg.slice(bodyAt, dlg.indexOf('}),', bodyAt)); // only the posted body, not the form state
+check('the bottom block opens the Contact us pop-up', bottomBlock.includes('<ContactDialog />') && !bottomBlock.includes('href="/contact"'));
+check('the pop-up posts to the public inquiry intake', dlg.includes("fetch('/api/inquiries'"));
+for (const k of ['firstName', 'lastName', 'email', 'courseName', 'city', 'state', 'additionalNotes', 'hp']) check(`the pop-up sends ${k}, which the intake reads`, new RegExp(`\\b${k}:`).test(sent) && inq.includes(k));
+check('the pop-up state is a select over the two-letter codes the intake dedupes on', /<select id="cState"[^>]*>/.test(dlg) && dlg.includes('US_STATES.map(') && !/<input id="cState"/.test(dlg));
+check('the pop-up honeypot is hardened as the /for-courses one', dlg.includes('name="gr_hp_q7"') && dlg.includes('autoComplete="new-password"') && dlg.includes('data-1p-ignore'));
+check('the pop-up is centred on desktop', /\.cdlg \{[^}]*margin: auto;/.test(readFileSync('src/app/home.module.css', 'utf8')));
+
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }
 console.log('\nALL PASS');

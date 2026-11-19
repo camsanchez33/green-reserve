@@ -10,7 +10,7 @@ import s from './home.module.css';
 // with a down arrow and no top-bar buttons), "What GreenReserve does" with a Learn more link to each
 // feature's own page, one compact Free block (no fee list on Home), then the shared bottom block.
 // Copy rules still hold: NO durations, NO contract terms, fee sentences only from legal/LQ-2_FEE_COPY.md.
-// A server component; the only client JS is the bottom block's Cal.com calendar (CalEmbed).
+// A server component; the only client JS is the shared bottom block's Cal.com calendar (CalEmbed) and Contact us pop-up (ContactDialog).
 
 export default function HomeContent() {
   return (
