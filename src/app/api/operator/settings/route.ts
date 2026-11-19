@@ -1,13 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { prisma } from '@/lib/prisma';
 import { courseToWire, courseMoneyFromWire } from '@/lib/course-wire';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { validateSettingsPatch } from '@/lib/settings-validation';
+import { windowHorizonDays, generateForLongerWindow } from '@/lib/window-generation';
 
 // Never cache — the dashboard's live/draft status must reflect the DB the
 // moment admin flips it, not a stale response served to an already-open tab.
 export const dynamic = 'force-dynamic';
+// A longer booking window generates its new days after the response (lib/window-generation: a 120 s budget).
+export const maxDuration = 150;
+
+/** The fields that set how far ahead someone books, so a save may lengthen the tee sheet the course needs made. */
+const WINDOW_FIELDS = ['publicAdvanceDays', 'memberAdvanceDays', 'residentAdvanceDays', 'hasResidentPricing'];
 
 export async function GET() {
   const session = await resolveDashboardSession();
@@ -129,6 +135,7 @@ export async function PATCH(req: NextRequest) {
       ? { type: 'staff' as const, id: session.staffId ?? '', name: (await prisma.courseStaff.findUnique({ where: { id: session.staffId ?? '' }, select: { name: true } }))?.name ?? '' }
       : { type: 'operator' as const, id: session.operatorId ?? '', name: (await prisma.courseOperator.findUnique({ where: { id: session.operatorId ?? '' }, select: { name: true } }))?.name ?? '' }
     : null;
+  const horizonBefore = WINDOW_FIELDS.some(k => k in data) ? await windowHorizonDays(session.courseId) : null;
   const updated = await prisma.$transaction(async tx => {
     const before = actor ? await tx.course.findUnique({ where: { id: session.courseId }, select: { residentAdvanceDays: true } }) : null;
     const row = await tx.course.update({ where: { id: session.courseId }, data });
@@ -137,6 +144,8 @@ export async function PATCH(req: NextRequest) {
     }
     return row;
   });
+  // A window made longer gets its new days now, not at 03:00 UTC (only if it grew; only this course).
+  if (horizonBefore != null) { const courseId = session.courseId; after(() => generateForLongerWindow(courseId, horizonBefore)); }
 
   // 2FA settings live on CourseOperator, not Course — can't go in the whitelist above.
   if (session.operatorId && ('twoFactorMethod' in body || 'twoFactorPhone' in body)) {

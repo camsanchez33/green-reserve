@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { withPriceSwitch } from '@/lib/pricing-switch';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { prisma } from '@/lib/prisma';
@@ -9,6 +9,10 @@ import { parseLineRates, type LineRates } from '@/lib/tier-rates';
 import { tierPriceList } from '@/lib/tier-price-list';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { readAccountSettings } from '@/lib/member-account';
+import { windowHorizonDays, generateForLongerWindow } from '@/lib/window-generation';
+
+// A membership with a longer window generates its new days after the response (lib/window-generation: a 120 s budget).
+export const maxDuration = 150;
 
 /** MEM-ACCT: the account limit from the form (dollars): blank = no limit; anything unreadable is refused (NaN), never "no limit". */
 const limitCents = (v: unknown) => v === undefined ? undefined : v === '' || v === null ? null : (dollarsToCents(v as string) ?? Number.NaN);
@@ -77,6 +81,7 @@ export async function POST(req: NextRequest) {
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: 400 });
     lineRates = r.value;
   }
+  const horizonBefore = await windowHorizonDays(session.courseId);
   const tier = await withPriceSwitch(session.courseId, () => prisma.membershipTier.create({
     data: {
       ...acct.data,
@@ -107,6 +112,8 @@ export async function POST(req: NextRequest) {
       windowPublic: body.windowPublic === true,
     },
   }));
+  // A new membership's window can reach past the tee sheet made so far (only if it grew; only this course).
+  { const courseId = session.courseId; after(() => generateForLongerWindow(courseId, horizonBefore)); }
   return NextResponse.json(tierToWire(tier), { status: 201 });
 }
 
@@ -146,6 +153,7 @@ export async function PATCH(req: NextRequest) {
   }
   if (updates.windowPublic !== undefined && typeof updates.windowPublic !== 'boolean') return NextResponse.json({ error: 'Pick the public window or a number of days.' }, { status: 400 });
 
+  const horizonBefore = updates.advanceBookingDays != null || updates.windowPublic !== undefined ? await windowHorizonDays(session.courseId) : null;
   const updated = await withPriceSwitch(session.courseId, () => prisma.membershipTier.update({
     where: { id },
     data: {
@@ -173,6 +181,8 @@ export async function PATCH(req: NextRequest) {
       windowPublic:       typeof updates.windowPublic === 'boolean' ? updates.windowPublic : tier.windowPublic,
     },
   }));
+  // A longer window on this membership gets its new days now, not at 03:00 UTC (only if it grew; only this course).
+  if (horizonBefore != null) { const courseId = session.courseId; after(() => generateForLongerWindow(courseId, horizonBefore)); }
   // MEM-RENEW: the course stopped automatic renewal on this tier — its members go back to pay-link renewals, and are told.
   // Audit 2026-10-31: a new term length is a schedule nobody agreed to (yearly → monthly would charge the yearly
   // amount every month), so it stops automatic renewal the same way; members agree again when they next pay.
