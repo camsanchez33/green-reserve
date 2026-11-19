@@ -9,6 +9,12 @@ export type BenefitTier = {
   lineRates: unknown; advanceBookingDays: number | null; windowPublic: boolean; guestPassesPerYear: number;
 };
 
+/** The tier with its prices taken off, for a course with Members pricing off (lib/pricing-switch): no member rate is
+ *  charged then, so none is described. The window and guest passes are not prices and stay. */
+export function withoutRates<T extends BenefitTier>(tier: T): T {
+  return { ...tier, discountPct: null, greenFeeWeekdayCents: null, greenFeeWeekendCents: null, lineRates: null };
+}
+
 const dollars = (c: number) => (c % 100 === 0 ? `$${c / 100}` : `$${(c / 100).toFixed(2)}`);
 
 /** `opts.resident`: the member also holds a resident card good today, so the window said is the one enforced (the longer). */

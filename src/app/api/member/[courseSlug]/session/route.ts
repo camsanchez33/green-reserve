@@ -41,7 +41,8 @@ export async function GET(
 
   // "Your <Course>" (Build 2026-11-18): one line of benefits and the upcoming bookings here (lib/member-home).
   const upcoming = await upcomingFor(course, session.email);
-  const benefits = benefitsSentence(live ? membership!.tier : null, live, !!resident, course, memberPricingOn(course));
+  const pricing = memberPricingOn(course);
+  const benefits = benefitsSentence(live ? membership!.tier : null, live, !!resident, course, pricing);
   const ymd = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : null);
 
   if (!membership) {
@@ -55,7 +56,7 @@ export async function GET(
       tier: null,
       groups,
       benefits,
-      renewsOn: null, expiresOn: resident!.expiresOn || null, autoRenew: false,
+      renewsOn: null, expiresOn: resident!.expiresOn || null, autoRenew: false, renewalFailed: false, inGrace: false,
       upcoming,
     });
   }
@@ -81,11 +82,12 @@ export async function GET(
           color: membership.tier.color,
           // MP-3 B2a: cents at rest, dollars on the wire — the course page's
           // member-pricing UI formats these as dollars and was not changed.
-          greenFeeWeekday: centsToDollars(membership.tier.greenFeeWeekdayCents),
-          greenFeeWeekend: centsToDollars(membership.tier.greenFeeWeekendCents),
-          cartFeeWeekday: centsToDollars(membership.tier.cartFeeWeekdayCents),
-          cartFeeWeekend: centsToDollars(membership.tier.cartFeeWeekendCents),
-          discountPct: membership.tier.discountPct,
+          // Members pricing off (lib/pricing-switch): no member rate is charged, so none is sent for a page to show.
+          greenFeeWeekday: pricing ? centsToDollars(membership.tier.greenFeeWeekdayCents) : null,
+          greenFeeWeekend: pricing ? centsToDollars(membership.tier.greenFeeWeekendCents) : null,
+          cartFeeWeekday: pricing ? centsToDollars(membership.tier.cartFeeWeekdayCents) : null,
+          cartFeeWeekend: pricing ? centsToDollars(membership.tier.cartFeeWeekendCents) : null,
+          discountPct: pricing ? membership.tier.discountPct : null,
           advanceBookingDays: membership.tier.advanceBookingDays,
           annualFee: centsToDollarsOr0(membership.tier.annualFeeCents),
           initiationFee: membership.initiationWaived ? 0 : centsToDollarsOr0(membership.tier.initiationFeeCents),
@@ -98,6 +100,13 @@ export async function GET(
     renewsOn: membership.autoRenew ? ymd(membership.expiresAt) : null,
     expiresOn: membership.autoRenew ? null : ymd(membership.expiresAt),
     autoRenew: membership.autoRenew,
+    // The last automatic renewal was declined (lib/membership-autorenew sets it, a paid term clears it) and the term has
+    // not been moved on since: staff can extend "Runs until" by hand without a payment, which leaves the old flag set.
+    // The Golfer lane shows "Your renewal didn't go through" only on this flag.
+    renewalFailed: membership.autoRenewFailedAt != null && !(membership.expiresAt && membership.expiresAt.getTime() > Date.now()),
+    // The term has ended but the course's grace days still give member rates (lib/member-rates): the end date's UTC day is
+    // the last member day (a paid term may store a time of day), so the term has ended once it is before the course's today. Amber on the page.
+    inGrace: live && !!membership.expiresAt && membership.expiresAt.getTime() < Date.parse(`${todayIn(course.timezone)}T00:00:00Z`),
     upcoming,
   });
 }

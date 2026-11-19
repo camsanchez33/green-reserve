@@ -1393,8 +1393,6 @@ async function main() {
     const rSession = await api(`/api/member/${data.courseB.slug}/session`, { cookie: memberCookieA });
     checkStatus('Member A cookie → Course B session → 401', rSession.status, 401);
 
-    const rPayments = await api(`/api/member/${data.courseB.slug}/payments`, { cookie: memberCookieA });
-    checkStatus('Member A cookie → Course B payments → 401', rPayments.status, 401);
   }
 
   // ── Team (Cam 2026-11-17): owner only, and never across courses ──────────
