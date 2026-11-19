@@ -21,7 +21,7 @@ ok('text: 0 by email, 2 by text (agreed numbers only), 2 to call', t.email === 0
 ok('both: 2 + 2, only the golfer with neither to call', b.email === 2 && b.sms === 2 && b.unreachable === 1);
 ok('texting off: text reaches nobody', reach(list, false, 'text').sms === 0 && reach(list, false, 'text').unreachable === 4);
 ok('who to call is exactly who it misses', toCall(list, true, 'email').map(x => x.name).join() === 'C,D' && toCall(list, true, 'both').map(x => x.name).join() === 'D');
-ok('the text always carries the STOP line', noticeText('Pines', 'Hi').endsWith('Reply STOP to opt out.') && noticeText('Pines', 'Hi').startsWith('GreenReserve (Pines): '));
+ok('the text always carries the STOP line', noticeText('Pines', 'Hi').endsWith('Reply STOP to opt out.') && noticeText('Pines', 'Hi').startsWith('Pines update: '));
 ok('via is only email, text or both', isVia('email') && isVia('both') && !isVia('sms') && !isVia(undefined));
 
 ok('the assistant may not add a number', addedNumbers('First tee is now 9:30.', 'first tee now 9:00').length > 0 && addedNumbers('The first tee is now 9:00.', 'frost, first tee 9:00').length === 0);

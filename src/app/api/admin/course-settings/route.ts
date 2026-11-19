@@ -1,10 +1,14 @@
 import { CANCELLATION_HOURS_MAX } from '@/lib/settings-validation';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { courseToWire, courseMoneyFromWire } from '@/lib/course-wire';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, SUPPORT_PLUS, areaGate } from '@/lib/admin-session';
 import { logSettingsChanged } from '@/lib/course-timeline';
 import { auditAdmin, changedFields } from '@/lib/admin-audit';
+import { windowHorizonDays, generateForLongerWindow, ADMIN_WINDOW_FIELDS, touchesWindow } from '@/lib/window-generation';
+
+// A longer booking window generates its new days after the response (lib/window-generation: a 120 s budget).
+export const maxDuration = 150;
 
 // GET /api/admin/course-settings?courseId=X — full course record for the admin editor
 export async function GET(req: NextRequest) {
@@ -74,7 +78,10 @@ export async function PATCH(req: NextRequest) {
     ? await prisma.course.findUnique({ where: { id: courseId }, select: Object.fromEntries(allKeys.map(k => [k, true])) })
     : null;
   Object.assign(data, money);
+  const horizonBefore = touchesWindow(ADMIN_WINDOW_FIELDS, data) ? await windowHorizonDays(courseId) : null;
   const updated = await prisma.course.update({ where: { id: courseId }, data });
+  // A window made longer gets its new days now, not at 03:00 UTC (only if it grew; only this course).
+  if (horizonBefore != null) { const id = updated.id; after(() => generateForLongerWindow(id, horizonBefore)); }
 
   if (before) {
     const changes = keys

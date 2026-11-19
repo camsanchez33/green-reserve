@@ -54,27 +54,12 @@ export default function Nav() {
   // UI-H-1 (HOMEPAGE_SPEC.md, Cam 2026-10-01) adds "Book a demo" top-right: the
   // approved design repeats it in the nav, hero, See it work and the end band.
   // On phones Operator login drops to the footer (its durable home, §4).
-  if (isHome) {
-    // HOME-2 (Cam 2026-10-07): the homepage opens on the coast photo with the
-    // logo centred on it, so the nav carries no logo of its own there — just
-    // Operator login and Book a demo, light on the photo's dark top scrim.
-    return (
-      <nav className="absolute top-0 left-0 right-0 z-50">
-        <div className="px-6 md:px-10 py-5 flex items-center justify-end gap-4">
-          {/* UI-H-1: Operator login + Book a demo (HOMEPAGE_SPEC.md). /demo
-              redirects to the Cal.com booker, or the inquiry form when it is off. */}
-          <div className="flex items-center gap-4 sm:gap-6">
-            <Link href="/dashboard/login" className="hidden sm:inline text-white/90 hover:text-white text-[15px] font-medium transition-colors">
-              Operator login
-            </Link>
-            <a href="/demo" className="inline-flex items-center h-[42px] px-4 rounded-md bg-pine hover:bg-pine-hover text-white text-[15px] font-semibold transition-colors">
-              Book a demo
-            </a>
-          </div>
-        </div>
-      </nav>
-    );
-  }
+  // Homepage redo (Cam 2026-11-18, lanes/homepage.md): Hero A has no top-bar buttons, so `/` has no bar at
+  // all. The operator login URL (/dashboard/login) still works; courses reach it from their bookmark or
+  // onboarding link.
+  if (isHome) return null;
+  // The feature pages carry their own header (logo + All features).
+  if (pathname.startsWith('/features/')) return null;
 
   // H-2e §6: How it works / Pricing / FAQ are gone for good — on a page this
   // length they jumped one screen and made the top look templated.

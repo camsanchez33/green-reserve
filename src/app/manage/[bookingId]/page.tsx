@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useRef, useState, Suspense } from 'react';
 import type { CSSProperties } from 'react';
 import { partyFees } from '@/lib/member-rates';
 import { cartsFor, resizeCart } from '@/lib/cart-pricing';
@@ -11,6 +11,7 @@ import { CourseHeaderBar } from '@/components/CourseHeaderBar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { LookFooter } from '@/components/golfer/LookFooter';
 import { lookPicked, lookSiteVars, lookBandHex, type BookingAccent } from '@/components/golfer/look';
+import { useLookBackground } from '@/components/golfer/useLookBackground';
 import { cancelNowWords } from '@/lib/cancel-policy';
 
 // BOOKING-LOOK-1: the card reads the look's card colour (white on Light, as CARD was).
@@ -134,6 +135,8 @@ function ManagePageInner({ onLook }: { onLook: (v: CSSProperties | undefined) =>
     const lc = info ? { booking_look: info.booking_look?.accent ? { look: info.booking_look.look, accent: info.booking_look.accent } : null, brand_color: info.brandColor } : null;
     onLook(lc && lookPicked(lc) ? lookSiteVars(lc) : undefined);
   }, [info, onLook]);
+  // On Dark, html and body take the look's background while this page is open (LOOK-BG).
+  useLookBackground(info ? { booking_look: info.booking_look?.accent ? { look: info.booking_look.look, accent: info.booking_look.accent } : null, brand_color: info.brandColor } : null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [expired, setExpired] = useState(false);
@@ -210,12 +213,17 @@ function ManagePageInner({ onLook }: { onLook: (v: CSSProperties | undefined) =>
   // The updated confirmation email, after a change is saved. Its failure is said on the "Booking updated" page; it
   // never undoes the change. (It never throws, so the change's own error handling isn't reached.)
   const [emailState, setEmailState] = useState<'sending' | 'sent' | 'failed'>('sent');
+  // Each change sends its own email, and a golfer can make a second change ("Back to booking") before the first email
+  // answers. Only the latest request may set the line, so "sent" or "couldn't send" always belongs to the latest change.
+  const emailSeq = useRef(0);
   async function sendModifiedEmail() {
+    const seq = ++emailSeq.current;
     setEmailState('sending');
     const r = await fetch(`/api/manage/${bookingId}/send-modified-email`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token }),
     }).catch(() => null);
+    if (seq !== emailSeq.current) return;
     setEmailState(r && r.ok ? 'sent' : 'failed');
   }
 
